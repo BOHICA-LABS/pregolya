@@ -140,7 +140,9 @@ def check_bc(filepath):
 
     fm, raw_keys, error = parse_frontmatter(content)
     if error:
-        return 'WARN', [f'frontmatter-parse-failure: {error}']
+        # FAIL (not WARN): an unparseable BC frontmatter is UNVERIFIED (F-P176-E007 class).
+        # A BC with broken YAML cannot have its schema validated — it must block.
+        return 'FAIL', [f'frontmatter-parse-failure: {error}']
 
     findings = []
     stem = os.path.basename(filepath)[:-3]  # e.g. BC-2.01.001

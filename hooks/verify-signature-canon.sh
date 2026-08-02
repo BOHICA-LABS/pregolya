@@ -97,9 +97,20 @@
 # Preceding line must be: "# Reason: <justification>"
 # Keyed on (file, symbol) — LINE-NUMBER-INDEPENDENT.
 #
+# ILLUSTRATION EXEMPTION — all rules (S1–S5)
+# ───────────────────────────────────────────
+# Content between <!-- discriminator:illustration-start --> and
+# <!-- discriminator:illustration-end --> is EXEMPT from all rules.
+# This is the uniform mechanism for "this documents a prohibited form, not a
+# live declaration" (POL-47).  An ADR defining the canon MUST be able to
+# illustrate prohibited forms inside these markers.
+# S1–S4: lines in illustration regions are added to the exempt set.
+# S5: fences whose opening delimiter falls in an illustration region are skipped.
+# Self-probe: probe_illustration_exempt verifies both directions.
+#
 # CHANGELOG EXEMPTION — S1, S2, S3, S4 (not S5)
 # ───────────────────────────────────────────────
-# S1, S2, S3, and S4 exempt two regions from scanning:
+# S1, S2, S3, and S4 additionally exempt two regions from scanning:
 #   (a) YAML frontmatter — lines between the opening and closing '---' delimiters.
 #   (b) Body ## Changelog sections — lines from '## Changelog' heading to the
 #       next '## ' heading or EOF.
@@ -169,7 +180,7 @@ import sys, glob
 hooks_dir = sys.argv[1]
 scan_dir  = sys.argv[2]
 sys.path.insert(0, hooks_dir)
-from spec_region_utils import changelog_exempt_lines
+from spec_region_utils import changelog_exempt_lines, illustration_exempt_lines
 
 files = sorted(glob.glob(f'{scan_dir}/**/*.md', recursive=True))
 
@@ -184,7 +195,7 @@ for f in files:
     if 'as_retriever(' not in text:
         continue
 
-    exempt = changelog_exempt_lines(lines)
+    exempt = changelog_exempt_lines(lines) | illustration_exempt_lines(lines)
     rel = f.replace(scan_dir.rstrip('/') + '/', '')
     s1a = s1b = 0
     for i, line in enumerate(lines):
@@ -211,7 +222,7 @@ import sys, glob
 hooks_dir = sys.argv[1]
 scan_dir  = sys.argv[2]
 sys.path.insert(0, hooks_dir)
-from spec_region_utils import changelog_exempt_lines
+from spec_region_utils import changelog_exempt_lines, illustration_exempt_lines
 
 files = sorted(glob.glob(f'{scan_dir}/**/*.md', recursive=True))
 
@@ -225,7 +236,7 @@ for f in files:
     if 'VectorStoreRetriever<' not in ''.join(lines):
         continue
 
-    exempt = changelog_exempt_lines(lines)
+    exempt = changelog_exempt_lines(lines) | illustration_exempt_lines(lines)
     rel = f.replace(scan_dir.rstrip('/') + '/', '')
     count = 0
     for i, line in enumerate(lines):
@@ -251,7 +262,7 @@ hooks_dir   = sys.argv[1]
 scan_dir    = sys.argv[2]
 allowlist_f = sys.argv[3]
 sys.path.insert(0, hooks_dir)
-from spec_region_utils import changelog_exempt_lines
+from spec_region_utils import changelog_exempt_lines, illustration_exempt_lines
 
 # Load S3 allowlist: set of rel-paths exempted for &Arc<Self>
 allowed_paths = set()
@@ -282,7 +293,7 @@ for f in files:
             print(f"ALLOWED {rel} {count}")
         continue
 
-    exempt = changelog_exempt_lines(lines)
+    exempt = changelog_exempt_lines(lines) | illustration_exempt_lines(lines)
     count = 0
     for i, line in enumerate(lines):
         if i in exempt:
@@ -326,11 +337,22 @@ clean_probe_tmp() {
 #       flagged (acceptable edge case; formally-stated spec files use single-line
 #       invariant notation per corpus survey).
 run_s5_scanner() {
-  local scan_dir="$1"
-  python3 - "$scan_dir" <<'PYEOF'
-import sys, glob, re
+  local scan_dir="$1" hooks_dir="${2:-}"
+  python3 - "$scan_dir" "${hooks_dir:-}" <<'PYEOF'
+import sys, glob, re, os
 
 scan_root = sys.argv[1]
+hooks_dir = sys.argv[2] if len(sys.argv) > 2 else ''
+# illustration_exempt_lines available when hooks_dir is provided
+if hooks_dir and os.path.isdir(hooks_dir):
+    sys.path.insert(0, hooks_dir)
+    from spec_region_utils import illustration_exempt_lines as _ill_exempt
+    def get_ill_exempt(lines):
+        return _ill_exempt(lines)
+else:
+    def get_ill_exempt(lines):
+        return set()
+
 files = sorted(glob.glob(f'{scan_root}/**/*.md', recursive=True))
 REQUIRED = {'component', 'category', 'retry_hint', 'code', 'message', 'source'}
 FIELD_PAT = re.compile(r'\b(component|category|retry_hint|code|message|source)\s*[=:]')
@@ -379,10 +401,14 @@ for f in files:
 
     # ── Pass 1: locate fenced code blocks ───────────────────────────────────
     # Each rust fence stored as list of its body lines (delimiter lines excluded)
+    # Fences whose opening delimiter falls in an illustration region are skipped —
+    # illustration markers document prohibited forms and must not trip the gate.
     rust_fences = []  # list of [body_line, ...]
     in_fence = False
     fence_start_body = 0
     fence_lang = ''
+    fence_open_line = 0
+    ill_exempt = get_ill_exempt(lines)
 
     for i, line in enumerate(lines):
         s = line.rstrip('\n').strip()
@@ -392,11 +418,13 @@ for f in files:
                 in_fence = True
                 fence_start_body = i + 1
                 fence_lang = (m.group(1) or '').strip()
+                fence_open_line = i
         else:
             if re.match(r'^```\s*$', s):
                 body_lines = lines[fence_start_body:i]
                 body_text = ''.join(body_lines)
-                if fence_is_rust(fence_lang, body_text):
+                # Skip fences that open inside an illustration region
+                if fence_open_line not in ill_exempt and fence_is_rust(fence_lang, body_text):
                     rust_fences.append(body_lines)
                 in_fence = False
 
@@ -685,7 +713,7 @@ import sys, glob
 hooks_dir = sys.argv[1]
 scan_root = sys.argv[2]
 sys.path.insert(0, hooks_dir)
-from spec_region_utils import changelog_exempt_lines
+from spec_region_utils import changelog_exempt_lines, illustration_exempt_lines
 
 files = sorted(glob.glob(f'{scan_root}/**/*.md', recursive=True))
 
@@ -703,7 +731,7 @@ for f in files:
         continue
 
     rel = f.replace(scan_root.rstrip('/') + '/', '')
-    exempt = changelog_exempt_lines(lines)
+    exempt = changelog_exempt_lines(lines) | illustration_exempt_lines(lines)
     file_count = 0
 
     for i, line in enumerate(lines):
@@ -778,6 +806,71 @@ probe_s4() {
 # Proves the exemption is NARROW: banned pattern in changelog must not fire,
 # identical pattern in normative body must fire.
 # ─────────────────────────────────────────────────────────────────────────────
+
+probe_illustration_exempt() {
+  # Confirms that <!-- discriminator:illustration-start/end --> regions are
+  # exempt from ALL five rules.  This is the uniform mechanism for "this
+  # documents a prohibited form, not a live declaration" (POL-47).
+  # An ADR that defines the canon MUST be able to illustrate the prohibited
+  # forms inside illustration markers without tripping the gate.
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/ill-exempt" "$PROBE_TMP/ill-normative"
+  local out
+
+  # ── EXEMPT side: all five prohibited forms inside illustration markers ────
+  cat > "$PROBE_TMP/ill-exempt/probe.md" <<'PROBEOF'
+## Illustration Region
+
+<!-- discriminator:illustration-start -->
+PROHIBITED (S1a): fn as_retriever(self: &Arc<Self>) -> VectorStoreRetriever;
+PROHIBITED (S1b): fn as_retriever(&self) -> VectorStoreRetriever;
+PROHIBITED (S2):  pub struct VectorStoreRetriever<'a> { store: &'a dyn VectorStore }
+PROHIBITED (S3):  fn foo(self: &Arc<Self>) -> Bar;
+PROHIBITED (S4):  let t: Arc<dyn Tool> = wrap(x);
+
+```rust
+fn bad_literal() -> Result<(), PregolyaError> {
+    Err(PregolyaError { component: Component::Core, code: "E-001" })
+}
+```
+<!-- discriminator:illustration-end -->
+
+## Body
+
+No prohibited forms appear outside the illustration region.
+PROBEOF
+
+  out=""
+  out+="$(run_s1_scanner "$HOOKS_DIR" "$PROBE_TMP/ill-exempt")"$'\n'
+  out+="$(run_s2_scanner "$HOOKS_DIR" "$PROBE_TMP/ill-exempt")"$'\n'
+  out+="$(run_s3_scanner "$HOOKS_DIR" "$PROBE_TMP/ill-exempt" "$ALLOWLIST")"$'\n'
+  out+="$(run_s4_scanner "$HOOKS_DIR" "$PROBE_TMP/ill-exempt")"$'\n'
+  out+="$(run_s5_scanner "$PROBE_TMP/ill-exempt" "$HOOKS_DIR")"$'\n'
+  # Strip blank lines for the check
+  local nonempty_out
+  nonempty_out="$(echo "$out" | grep -v '^$' || true)"
+  if [ -n "$nonempty_out" ]; then
+    echo "[SELF-PROBE FAIL] Illustration exemption: prohibited forms inside <!-- discriminator:illustration-start/end --> incorrectly flagged."
+    echo "  Scanner output:"
+    echo "$nonempty_out" | while IFS= read -r line; do echo "    $line"; done
+    clean_probe_tmp; exit 2
+  fi
+
+  # ── NORMATIVE side: identical forms OUTSIDE illustration markers MUST fire ──
+  cat > "$PROBE_TMP/ill-normative/probe.md" <<'PROBEOF'
+## Body
+
+fn as_retriever(self: &Arc<Self>) -> VectorStoreRetriever;
+PROBEOF
+  out="$(run_s1_scanner "$HOOKS_DIR" "$PROBE_TMP/ill-normative")"
+  if ! echo "$out" | grep -qF 'S1A'; then
+    echo "[SELF-PROBE FAIL] Illustration exemption narrow: as_retriever(self: &Arc<Self>) in body prose not detected."
+    clean_probe_tmp; exit 2
+  fi
+
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Illustration exemption (narrow): all 5 rules exempt within markers; body violations still caught."
+}
 
 probe_changelog_exempt() {
   init_probe_tmp
@@ -864,7 +957,7 @@ check_s5() {
         s5_findings+=("${line#FAIL }")
         ;;
     esac
-  done <<< "$(run_s5_scanner "$SPECS_DIR")"
+  done <<< "$(run_s5_scanner "$SPECS_DIR" "$HOOKS_DIR")"
 
   if [ "$s5_file_count" -gt 0 ]; then
     emit FAIL "S5 (D-42/D-49, fence-scoped): PregolyaError full-form literals in Rust fences missing required fields: $s5_total literal(s) across $s5_file_count file(s)"
@@ -994,6 +1087,7 @@ probe_s1
 probe_s2
 probe_s3
 probe_s4
+probe_illustration_exempt
 probe_changelog_exempt
 probe_s5
 echo "[SELF-PROBE] All probes passed — checks are not false-green."

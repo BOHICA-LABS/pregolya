@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 5 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4 + PC-6); Category::SECURITY → Category::Security (PC-3), Category::VAL → Category::Val (PC-3 prose backtick + PC-4 code), Category::TOOL → Category::Tool (PC-6), edge-case table cell Category::VAL → Category::Val (EC-002)."
   - "1.7 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 3 sites: PC-6 inline reference (guard pass described as 'canonicalize_beneath_root succeeds — the confinement check and fs::open are distinct steps'), Invariants call-obligation bullet (root path argument), VP-2.23.006-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout; error-layer distinction (E-SBXD-001 sandbox vs E-TOOLS-001 tool layer) preserved in PC-6 final sentence."
   - "1.8 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC4 E-TOOLS-009 InvalidRegexPattern: ::new(Component::Tools, Category::Val, RetryHint::Never, ...); phantom pattern/compile_error fields removed (message-embedded placeholders). PC6 E-TOOLS-008 traversal I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. TD-VSDD-060 sibling sweep: EC-002/EC-008/TV-003/TV-006 use abbreviated code + JSON-like shorthand — classified (c) message-component descriptions; left as-is."
+  - "1.9 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-3 E-TOOLS-001 → { code: 'E-TOOLS-001', .. }. PC-4 E-TOOLS-009 → { code: 'E-TOOLS-009', .. }. PC-6 E-TOOLS-008 traversal I/O → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -93,11 +94,9 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    informational code E-TOOLS-006 (`GrepResult.capped` payload flag) appears in the structured output
    annotations, not as a thrown error. Callers can detect the cap via `capped: true`.
 3. **Path confinement violation:** Returns
-   `Err(PregolyaError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
-   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
+   `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
 4. **Invalid regex:** Returns
-   `Err(PregolyaError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-009",
-   "InvalidRegexPattern: pattern '<pattern>' failed to compile: <compile_error>"))`.
+   `Err(PregolyaError { code: "E-TOOLS-009", .. })`.
 5. **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
    not an error.
 6. **OS-level I/O error during traversal (fail-the-whole-search):** If an OS-level I/O
@@ -106,8 +105,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    directory listing and open, `NotADirectory` for a path whose type changed mid-traversal,
    or any other `std::io::Error` from the filesystem — the search is aborted immediately.
    The tool returns:
-   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
-   "GrepTool I/O error on '<path>': <io_kind>"))`.
+   `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    Partial results accumulated before the error are NOT returned; the caller receives only
    the `Err` so that the incomplete search is never silently treated as a complete result
    (DI-014). This also applies to I/O errors on the root `path` argument after it passes

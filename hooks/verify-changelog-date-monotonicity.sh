@@ -45,7 +45,14 @@
 #   the adjacent pair comparison and a per-file WARN is emitted.  When NO
 #   entry in a changelog carries a date the file emits PASS (nothing to check).
 #
-# Edge cases (WARN-and-skip, not FAIL — matching sibling script behavior):
+# Edge cases — FAIL (blocking, F-P176-E007 class):
+#   - yaml-parse-error: frontmatter cannot be parsed — file is UNVERIFIED.
+#       An unparseable file must FAIL; it cannot present as a non-failure.
+#       Routing: fix the YAML syntax error in the frontmatter.
+#   - frontmatter-not-dict: valid YAML but not a mapping — structurally malformed.
+#       Routing: correct the frontmatter to be a YAML dict.
+#
+# Edge cases — WARN-and-skip (non-blocking):
 #   - rev-N format entries (e.g. ADR-001, ADR-006): WARN and skip file.
 #   - Single-entry changelog: trivially valid — PASS.
 #   - No changelog (version == "1.0"): trivially valid — PASS.
@@ -181,11 +188,15 @@ for filepath in files:
         fm = yaml.safe_load(fm_text)
     except yaml.YAMLError as e:
         single_line = str(e).replace('\n', ' | ')
-        print(f"SKIP {filepath} yaml-parse-error:{single_line}")
+        # FAIL (not SKIP/WARN): an unparseable file is UNVERIFIED — cannot certify
+        # changelog order for a file whose frontmatter cannot be parsed.
+        # Malformed YAML in a spec file is itself a gate violation (F-P176-E007 class).
+        print(f"FAIL {filepath} yaml-parse-error:{single_line}")
         continue
 
     if not isinstance(fm, dict):
-        print(f"SKIP {filepath} frontmatter-not-dict")
+        # FAIL (not SKIP/WARN): non-dict frontmatter is structurally malformed.
+        print(f"FAIL {filepath} frontmatter-not-dict")
         continue
 
     # Probe both forms unconditionally — short-circuit fix: Form-B is now
@@ -409,11 +420,13 @@ for filepath in all_files:
         fm = yaml.safe_load(fm_text)
     except yaml.YAMLError as e:
         single_line = str(e).replace('\n', ' | ')
-        print(f"SKIP {filepath} yaml-parse-error:{single_line}")
+        # FAIL (not SKIP/WARN): unparseable frontmatter = UNVERIFIED (F-P176-E007 class).
+        print(f"FAIL {filepath} yaml-parse-error:{single_line}")
         continue
 
     if not isinstance(fm, dict):
-        print(f"SKIP {filepath} frontmatter-not-dict")
+        # FAIL (not SKIP/WARN): non-dict frontmatter is structurally malformed.
+        print(f"FAIL {filepath} frontmatter-not-dict")
         continue
 
     # Skip actual BC files identified by document_type
@@ -493,16 +506,14 @@ for filepath in all_files:
                 print(f"FAIL {filepath} form-b:{defect_b}")
         continue
 
-    # rev-N format (e.g. ADR-001, ADR-006): non-standard naming — WARN and skip
-    has_rev = any(REV_RE.match(str(e).strip()) for e in changelog)
-    has_ver = any(VERSION_RE.match(str(e).strip()) for e in changelog)
-    if has_rev and not has_ver:
-        print(f"WARN {filepath} non-standard-rev-format:skipping-date-check")
-        if has_form_b:
-            defect_b = check_form_b_dates(rows_b)
-            if defect_b:
-                print(f"FAIL {filepath} form-b:{defect_b}")
-        continue
+    # rev-N format (e.g. ADR-001, ADR-006): fall through to date extraction.
+    # extract_date() uses DATE_RE (r'\b\d{4}-\d{2}-\d{2}\b') which finds ISO
+    # dates inside rev-N entry strings.  Entries without ISO dates are handled
+    # by the existing partial-date-check-ok mechanism.  Skipping the whole file
+    # was too broad — it classified ADR-001/ADR-006 as UNVERIFIED despite their
+    # entries containing ISO dates that CAN be monotonicity-checked.
+    # (Section 2 BC-files block keeps its own rev-N skip — BC files should not
+    # use rev-N versioning; this widening applies only to non-BC spec files.)
 
     if len(changelog) == 1:
         print(f"PASS {filepath}")

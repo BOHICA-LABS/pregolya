@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.26"
+version: "1.27"
 status: active
 producer: architect
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-01T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -14,6 +14,7 @@ input-hash: "16cdbbb"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.27 (fix-burst-287/F-P176-A009/2026-08-01): Fix stale intro count: '71 module-decomposition modules (69 tiered + 2 exempt)' → '76 module-decomposition modules (70 tiered + 6 definitions-only/exempt)'. Ground truth: crate::module-form path rows in module-decomposition.md total 76; 70 carry a CRITICAL/HIGH/MEDIUM/LOW tier; 6 carry a dash (definitions-only/exempt: memory::skills, core::documents, core::guardrail, core::action_risk, core::context_mutation, core::write_guard). Stale by 5 from v1.22 count (71): +1 tiered (core::tool added FIX-BURST-278-WAVE-A but intro not updated in same burst), +4 definitions-only/exempt (core::guardrail, core::action_risk, core::context_mutation, core::write_guard added in FIX-BURST-277 module-decomposition but intro not updated). Purity-boundary-map row counts unchanged: 34 Pure Core + 38 Effectful Shell + 12 Boundary = 84 total purity-table rows (includes crate-level rows not in module-decomposition)."
   - "1.26 (FIX-BURST-278-WAVE-A/F-P175-D212/2026-07-28): Iron Law — add missing `core::tool` Pure Core row (Tool/DynTool trait definitions; ToolInput/ToolOutput types; blanket DynTool impl maps ToolOutput variants to Result, no I/O; concrete Tool impls are Effectful Shell; ADR-005 / SS-08 / BC-2.08.010). Required by module-decomposition.md §core::tool row addition. Pure Core 33→34; total 83→84."
   - "1.25 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add pregolya-macros crate-level row to Effectful Shell table. pregolya-macros is a proc-macro crate (#[tool], #[entrypoint], #[task] attribute macros); macros::tool/entrypoint/task are Pure Core (added v1.1), but the pregolya-macros crate-level census entry was absent from this table while present in verification-coverage-matrix.md and module-criticality.md, causing a CHECK4 set-diff. Row added after pregolya-community; total 82→83 rows; Effectful Shell 37→38."
   - "1.24 (FIX-BURST-276/2026-07-27): CHECK4 closure — fix one non-canonical Module cell in Boundary Modules table. Row `graph::hitl (pre-tool dispatch)`: parenthetical qualifier was inside the backtick span, making the cell value `graph::hitl (pre-tool dispatch)` (fails `^[a-z_]+::[a-z_]+$` regex). Fixed to `graph::hitl` (pre-tool dispatch) — qualifier now outside backticks, consistent with Pure Core table pattern (graph::bsp_engine (reducer stage), graph::hitl (queue logic) both use the same outside-backticks convention). Row count (82) and purity column splits (33 Pure Core + 37 Effectful Shell + 12 Boundary) unchanged."
@@ -55,7 +56,7 @@ changelog:
 Every pregolya module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 71 module-decomposition modules (69 tiered + 2 exempt) plus
+effectful dependency). All 76 module-decomposition modules (70 tiered + 6 definitions-only/exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
 (84 total rows after FIX-BURST-278: 34 Pure Core + 38 Effectful Shell + 12 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.6"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,8 @@ changelog:
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (Rust struct-literal sketches in PC-2/PC-3/PC-4); Category::SECURITY → Category::Security (PC-2), Category::VAL → Category::Val (PC-3), Category::TOOL → Category::Tool (PC-4)."
   - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical entry point canonicalize_beneath_root at 4 sites: PC-2 raise condition (returns Err not false), EC-002 symlink-target note (canonicalize_beneath_root resolves symlinks before confinement check), Invariants call-obligation bullet, VP-2.23.001-A property description. VP annotation updated: '(PathGuard type is unchanged)' to '(canonicalize_beneath_root_pure is the proof target)'. No error-layer-split issues — E-TOOLS-001 correctly used as tool-layer code throughout; E-SBXD-001 not conflated."
   - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form (#[non_exhaustive] bars external callers from struct literals). PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-002 FileReadExceedsLimit: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC4 E-TOOLS-008 I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (these are message-embedded placeholders, not struct fields). TD-VSDD-060 sibling sweep: EC-005/TV-004 use JSON-like {tool_type, path, io_kind} notation — classified (c) message-component descriptions, not construction examples; left as-is."
+  - "1.7 (fix-burst-287/F-P176-C001/2026-08-01): PC-2 error-routing defect fixed. Prior text routed canonicalize_beneath_root returning Err 'for any reason' to E-TOOLS-001 (SECURITY/Never), conflating OS I/O failures (NotFound, PermissionDenied) with genuine scope-escape violations. Narrowed to: E-TOOLS-001 applies only when canonicalize_beneath_root returns Err because the resolved canonical path lies outside the guard scope (genuine escape — symlink target escapes root, absolute path under a different root). OS-level I/O failures from canonicalize_beneath_root route to PC-4 as E-TOOLS-008 FileIoError. Discrimination note added to PC-2 body. PC-4, EC-005, and TV-004 are already consistent with this rule; no additional edits needed. Defect class: C001 partial-sweep from prior fix propagated to sibling BCs but missed this file and BC-2.23.002."
+  - "1.8 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001: inline → PregolyaError { code: 'E-TOOLS-001', .. }. PC-3 E-TOOLS-002: inline → { code: 'E-TOOLS-002', .. }. PC-4 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -74,21 +76,23 @@ limit.
    `contents` is the full UTF-8 file contents. If the file contains non-UTF-8 bytes, the
    implementation returns them lossily decoded (replacement character U+FFFD) rather than
    erroring — consumers that need strict UTF-8 validation must do so on the returned text.
-2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` for any reason
-   (path is outside scope, is a symlink escaping scope, is an absolute path not under the
-   guard root). The tool returns
-   `Err(PregolyaError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
-   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
-   No I/O is performed; no side effect occurs.
+2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` **because
+   the resolved canonical path lies outside the guard scope** (genuine escape: symlink target
+   resolves outside the workspace root, or absolute path under a different root). The tool returns
+   `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
+   No I/O is performed; no side effect occurs. **Discrimination rule:** if `canonicalize_beneath_root`
+   returns `Err` due to an OS-level I/O failure (e.g., `NotFound` — the file does not exist;
+   `PermissionDenied`), that is **not** a confinement violation; such cases route to PC-4 as
+   `E-TOOLS-008 FileIoError`. The confinement-violation path and the I/O-error path are
+   mutually exclusive: E-TOOLS-001 is raised only for genuine scope-escape errors, never for
+   filesystem I/O errors on a validly-scoped path.
 3. **File size exceeds limit:** `PathGuard` passes but the file's metadata size exceeds
    `max_bytes`. The tool returns
-   `Err(PregolyaError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-002",
-   "FileReadExceedsLimit: file '<path>' is <actual_bytes> bytes, exceeds configured limit of <max_bytes> bytes"))`.
+   `Err(PregolyaError { code: "E-TOOLS-002", .. })`.
    The file is NOT read into memory before this check; the implementation uses
    `std::fs::metadata()` to obtain the size before opening the file.
 4. **File not found or permission denied:** The tool propagates the OS I/O error as
-   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
-   "ReadFileTool I/O error on '<path>': <io_kind>"))`.
+   `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    This is not a path-confinement violation; it is a runtime filesystem error.
 5. VP-003 (workspace confinement Kani proof) coverage extends to `ReadFileTool` without
    modification: `PathGuard` is the same type already proven; no new Kani proof is required.

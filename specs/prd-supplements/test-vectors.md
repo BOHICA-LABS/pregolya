@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "2.9"
+version: "3.0"
 status: active
 producer: product-owner
-timestamp: 2026-07-28T00:00:00Z
+timestamp: 2026-08-01T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "db110eb"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.0 (fix-burst-287/F-P176-D001/2026-08-01): Ground-truth reconciliation — 8 stale registry rows corrected. Prior registry declared 664 canonical + 11 GTV = 675; ground truth (summed from BC bodies) is 676 canonical + 11 GTV = 687. Delta: +12 canonical TVs missing from registry. Rows corrected: BC-2.03.001 (5→6), BC-2.09.001 (7→8), BC-2.12.002 (7→8), BC-2.15.004 (7→9), BC-2.15.006 (6→7), BC-2.17.001 (5→9), BC-2.18.001 (6→7), BC-2.18.004 (4→5). Grand total corrected: 664→676 canonical + 11 GTV = 675→687. Normative ground-truth validation note added to §BC Test Vector Inventory preamble. Root cause: Mechanism 3 (arithmetic identity satisfiable without ground truth — column sum equals declared total at each update step, masking BC-body-vs-registry drift). Adversary finding D001 closed."
   - "2.9 (D-51-census/2026-07-28): BC-2.21.003 TV count 5→6 (+TV-006 overflow-norm guard; EC-006 overflow complement per BC-2.21.003 §Canonical Test Vectors v1.7 add). Grand total 674→675 (663→664 canonical + 11 GTV). Gate #28 resolved: v2.8 body ## Changelog row backfilled."
   - "2.8 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record."
   - "2.7 (F-P152-01/F-P152-03/burst-253/2026-07-24): BC-2.10.005 TV count 5→6 (+TV-006 v1.2 add). BC-2.07.002 GTV count 9→11 (+GTV-010/011 grapheme-cluster discriminators, Python-verified). Group 4 added to §GTV. Grand total 671→674 (663 canonical + 11 GTV)."
@@ -55,7 +56,7 @@ changelog:
 | BC-2.02.004 | SS-02 | 5 | — | `TV-NNN` | **RG** | EphemeralValue cleared after super-step |
 | BC-2.02.005 | SS-02 | 6 | — | `TV-NNN` | | Conditional edge routing |
 | BC-2.02.006 | SS-02 | 6 | — | `TV-NNN` | | Send API fan-out |
-| BC-2.03.001 | SS-03 | 5 | — | `TV-NNN` | | BSP determinism; VP seed |
+| BC-2.03.001 | SS-03 | 6 | — | `TV-NNN` | | BSP determinism; VP seed |
 | BC-2.03.002 | SS-03 | 5 | — | `TV-NNN` | | Concurrent LastValue → InvalidUpdateError |
 | BC-2.03.003 | SS-03 | 5 | — | `TV-NNN` | | Task-identity sort order |
 | BC-2.04.001 | SS-04 | 4 | — | table (unlabelled) | | put_writes before next super-step |
@@ -97,7 +98,7 @@ changelog:
 | BC-2.08.012 | SS-08 | 5 | — | `TV-NNN` | | `#[task]` proc-macro |
 | BC-2.08.013 | SS-08 | 6 | — | `TV-NNN` | | Pluggable tool-call dialect (ToolCallDialect; Hermes ChatML XML) |
 | BC-2.08.014 | SS-08 | 7 | — | `TV-NNN` | | Provider failover chain (ProviderFallbackPolicy; 429/5xx/auth) |
-| BC-2.09.001 | SS-09 | 7 | — | `TV-NNN` | | MCP tool discovery |
+| BC-2.09.001 | SS-09 | 8 | — | `TV-NNN` | | MCP tool discovery |
 | BC-2.09.002 | SS-09 | 7 | — | `TV-NNN` | | ToolInvocation routing |
 | BC-2.09.003 | SS-09 | 5 | — | `TV-NNN` | | Tool-result as untrusted ingress |
 | BC-2.09.004 | SS-09 | 5 | — | `TV-NNN` | **RG** | Bare ToolException re-raise |
@@ -117,7 +118,7 @@ changelog:
 | BC-2.11.005 | SS-11 | 4 | — | table (unlabelled) | | Rejected content never in model context |
 | BC-2.11.006 | SS-11 | 4 | — | table (unlabelled) | | No-hook default: WARNING LOG |
 | BC-2.12.001 | SS-12 | 7 | — | `TV-NNN` | | Thread CRUD |
-| BC-2.12.002 | SS-12 | 7 | — | `TV-NNN` | | Assistant CRUD |
+| BC-2.12.002 | SS-12 | 8 | — | `TV-NNN` | | Assistant CRUD |
 | BC-2.12.003 | SS-12 | 7 | — | `TV-NNN` | | Run lifecycle |
 | BC-2.12.004 | SS-12 | 7 | — | `TV-NNN` | | CronSchedule + proactive run |
 | BC-2.12.005 | SS-12 | 7 | — | `TV-NNN` | | SecurityConfig::default() deny-CORS |
@@ -139,18 +140,18 @@ changelog:
 | BC-2.15.001 | SS-15 | 7 | — | `TV-NNN` | | KV/vector memory across threads |
 | BC-2.15.002 | SS-15 | 7 | — | `TV-NNN` | | User/app/session tier isolation |
 | BC-2.15.003 | SS-15 | 7 | — | `TV-NNN` | | GDPR erasure all tiers |
-| BC-2.15.004 | SS-15 | 7 | — | `TV-NNN` | | SkillStore registry — load-on-demand skill documents |
+| BC-2.15.004 | SS-15 | 9 | — | `TV-NNN` | | SkillStore registry — load-on-demand skill documents |
 | BC-2.15.005 | SS-15 | 7 | — | `TV-NNN` | | Guarded memory and skill writes (MemoryWriteGuard) |
-| BC-2.15.006 | SS-15 | 6 | — | `TV-NNN` | | Frozen-snapshot context mutation (memory-sourced sys prompt) |
+| BC-2.15.006 | SS-15 | 7 | — | `TV-NNN` | | Frozen-snapshot context mutation (memory-sourced sys prompt) |
 | BC-2.16.001 | SS-16 | 5 | — | `TV-NNN` | | Retry keyed by tool_name not args |
 | BC-2.16.002 | SS-16 | 5 | — | `TV-NNN` | | Finite global_limit non-None |
 | BC-2.16.003 | SS-16 | 5 | — | `TV-NNN` | | Circuit breaker after repeated failure |
-| BC-2.17.001 | SS-17 | 5 | — | `TV-NNN` | | Kani harness scope (all 3 VPs) |
+| BC-2.17.001 | SS-17 | 9 | — | `TV-NNN` | | Six P0 + three P1 Kani VP harnesses (VP-001/002/003 + VP-009/010/011) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
-| BC-2.18.001 | SS-18 | 6 | — | `TV-NNN` | | PromptTemplate f-string render; partial binding; strict-undefined guard |
+| BC-2.18.001 | SS-18 | 7 | — | `TV-NNN` | | PromptTemplate f-string render; partial binding; strict-undefined guard |
 | BC-2.18.002 | SS-18 | 4 | — | `TV-NNN` | | ChatPromptTemplate multi-message render; PromptValue + MessageProvenance |
 | BC-2.18.003 | SS-18 | 4 | — | `TV-NNN` | | MessagesPlaceholder expansion; FewShotPromptTemplate composition |
-| BC-2.18.004 | SS-18 | 4 | — | `TV-NNN` | **RG** | injection_guard — TrustRequired slot + Untrusted tag → E-TMPL-001 |
+| BC-2.18.004 | SS-18 | 5 | — | `TV-NNN` | **RG** | injection_guard — TrustRequired slot + Untrusted tag → E-TMPL-001 |
 | BC-2.18.005 | SS-18 | 4 | — | `TV-NNN` | **RG** | SlotTrustPolicy::TrustAll on SystemMessage → E-TMPL-002 at construction |
 | BC-2.19.001 | SS-19 | 4 | — | `TV-NNN` | | LcSerializable round-trip; Serialized::Constructor form |
 | BC-2.19.002 | SS-19 | 4 | — | `TV-NNN` | | lc_secrets() strips credential fields before serialization |
@@ -175,7 +176,9 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (129 authored BCs):** 664 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **675 total vectors** across 129 BC files.
+**Total vectors (129 authored BCs):** 676 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **687 total vectors** across 129 BC files.
+
+> **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
 > **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
@@ -324,6 +327,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.0 | 2026-08-01 | fix-burst-287/F-P176-D001: Ground-truth reconciliation. 8 stale BC rows corrected: BC-2.03.001 (5→6), BC-2.09.001 (7→8), BC-2.12.002 (7→8), BC-2.15.004 (7→9), BC-2.15.006 (6→7), BC-2.17.001 (5→9), BC-2.18.001 (6→7), BC-2.18.004 (4→5). Grand total corrected: 664→676 canonical + 11 GTV = 675→687. BC-2.17.001 Notes updated. Ground-truth validation normative note added. | fix-burst-287 |
 | 2.9 | 2026-07-28 | D-51-census: BC-2.21.003 TV count 5→6 (+TV-006 overflow-norm guard; EC-006 overflow case; BC-2.21.003 §Canonical Test Vectors v1.7 add). Grand total 674→675 (663→664 canonical + 11 GTV). Gate #28 resolved: v2.8 body table row backfilled. | D-51 |
 | 2.8 | 2026-07-27 | fix-burst-276/F-P173-505: D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record. | fix-burst-276/F-P173-505 |
 | 2.7 | 2026-07-24 | F-P152-01/F-P152-03/burst-253: (1) F-P152-01: BC-2.10.005 TV count 5→6 (+TV-006 OnWatermark fraction=1.0 boundary, burst-252 add; v1.2 annotation). (2) F-P152-03: BC-2.07.002 GTV count 9→11 (+GTV-010 NFD combining discriminator, +GTV-011 ZWJ emoji discriminator; both Python-verified against pinned corpus). Group 4 added to §Golden Test Vectors. Grand total 671→674 (663 canonical + 11 GTV). | F-P152-01/F-P152-03 |

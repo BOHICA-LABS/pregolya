@@ -13,16 +13,20 @@
 # ──────────────
 # All classification rules derive from:
 #   ADR-010-error-taxonomy-anyhow-confinement.md
-#   §Error-Construction Notation Canon (D-72 extension, v1.14+)
+#   §Error-Construction Notation Canon (D-72 extension, v1.17+)
 #   §Mechanical Discriminator (Steps 0–2)
 # NEVER use line-number citations (TD-VSDD-091): symbol/section anchors only.
 #
 # VIOLATION CLASSES
 # ─────────────────
-#   CLASS1_VIOLATION             rust fence, value-expression, no `..` (must use ::new())
+#   CLASS1_VIOLATION             rust fence, value-expression, no `..` (add `..` before `}`)
 #   CLASS3_ASCII_ELLIPSIS        prose/formal, `...` (three ASCII dots) as field-elision
 #   CLASS3_UNICODE_ELLIPSIS      prose/formal, `…` (U+2026) in field-elision position
 #   CLASS3_MISSING_DOTS          prose/formal, no elision marker, partial fields (add `..`)
+#   NEW_FORM_VIOLATION           PregolyaError::new(...) in PROSE — FORBIDDEN per ADR-010 v1.17
+#                                  Class 3 (Value-Observation Form): canonical is { code: "E-XXX", .. }
+#                                  NOTE: ::new() in ```rust fences is Class 1 MANDATORY — never flagged.
+#                                  Gate is class-aware: flags ONLY fence_ctx[i] is None (prose lines).
 #
 # EXCLUSION BUCKETS (Step 0 — skipped from further classification)
 #   EXEMPT                       frontmatter + ## Changelog regions (changelog_exempt_lines)
@@ -123,6 +127,12 @@ CLASS4_FILE_RE      = re.compile(r'BC-2\.14\.00[12]\b')
 # Five non-source observable fields
 FIVE_FIELDS         = ['component', 'category', 'retry_hint', 'code', 'message']
 FIELD_RE            = {f: re.compile(rf'\b{re.escape(f)}\s*[=:]') for f in FIVE_FIELDS}
+# NEW_FORM_VIOLATION: PregolyaError::new() construction form — FORBIDDEN per ADR-010 v1.17
+# Canonical form is PregolyaError { code: "E-XXX", .. } (struct literal with .. rest pattern).
+# Inline backtick spans are stripped before matching to avoid false positives on bare
+# symbol references like `PregolyaError::new` in prose documentation of the prohibition.
+NEW_FORM_RE         = re.compile(r'\bPregolyaError::new\s*\(')
+INLINE_TICK_RE      = re.compile(r'`[^`\n]*`')
 
 # ── Fence-context builder ─────────────────────────────────────────────────────
 def build_fence_context(lines):
@@ -227,6 +237,7 @@ buckets = {
     'CLASS3_ASCII_ELLIPSIS_VIOLATION'  : 0,
     'CLASS3_UNICODE_ELLIPSIS_VIOLATION': 0,
     'CLASS3_MISSING_DOTS_VIOLATION'    : 0,
+    'NEW_FORM_VIOLATION'               : 0,
 }
 
 total_openers = 0
@@ -324,6 +335,53 @@ for f in files:
             else:
                 buckets['CLASS3_MISSING_DOTS_VIOLATION'] += 1
                 violations.append(('CLASS3_MISSING_DOTS_VIOLATION', rel))
+
+# ── Second pass: NEW_FORM_VIOLATION — PregolyaError::new() scan (prose only) ──
+# Scans lines for the forbidden ::new() form in PROSE CONTEXTS ONLY.
+#
+# Context-class rules (ADR-010 §Class 1 vs §Class 3):
+#   Class 1 — Construction Form: ::new() inside ```rust fenced blocks is MANDATORY.
+#     Flagging these would create Mechanism-5 violations — gate failure driving
+#     corpus mutations that replace correct ::new() calls with struct literals.
+#   Class 3 — Value-Observation Form: ::new() outside rust fences is FORBIDDEN.
+#
+# This pass SKIPS all fenced contexts (fence_ctx[i] is not None):
+#   - rust fences:       ::new() is Class 1 correct — NEVER flag
+#   - bash/other fences: not a PregolyaError notation context — skip
+# Only prose lines (fence_ctx[i] is None) are evaluated.
+#
+# Exemptions: changelog/frontmatter, illustration regions, inline backtick spans.
+new_form_violations_seen = set()  # (rel, line_index) dedup
+for f in files:
+    try:
+        with open(f, 'r', encoding='utf-8') as fh:
+            lines = fh.readlines()
+    except OSError:
+        continue
+
+    if 'PregolyaError::new' not in ''.join(lines):
+        continue
+
+    rel        = f.replace(scan_dir.rstrip('/') + '/', '')
+    cl_exempt  = changelog_exempt_lines(lines)
+    ill_exempt = illustration_exempt_lines(lines)
+    fence_ctx  = build_fence_context(lines)  # class-aware: rust=mandatory, skip all fences
+
+    for i, line in enumerate(lines):
+        if i in cl_exempt or i in ill_exempt:
+            continue
+        # Skip ALL fenced contexts — rust is mandatory Class 1; bash/other are irrelevant.
+        if fence_ctx[i] is not None:
+            continue
+        # Strip complete inline backtick spans (single-line only — multi-line
+        # backtick constructs are broken markdown and count as violations).
+        stripped = INLINE_TICK_RE.sub('', line)
+        if NEW_FORM_RE.search(stripped):
+            key = (rel, i)
+            if key not in new_form_violations_seen:
+                new_form_violations_seen.add(key)
+                buckets['NEW_FORM_VIOLATION'] += 1
+                violations.append(('NEW_FORM_VIOLATION', rel))
 
 # ── Emit output ───────────────────────────────────────────────────────────────
 print(f'TOTAL {total_openers}')
@@ -551,27 +609,109 @@ PROBEOF
 
 # ── Probe 6: ADR-010 reports zero violations ──────────────────────────────────
 
-probe_adr010_zero_violations() {
-  if [ ! -f "$ADR010" ]; then
-    echo "[SELF-PROBE SKIP] Probe 6: ADR-010 not found at expected path — skipping ADR self-check."
-    return
+probe_new_form_violation() {
+  init_probe_tmp
+  # Sub-probe A: ::new() in prose → MUST be flagged (Class 3 violation)
+  mkdir -p "$PROBE_TMP/p_new"
+  cat > "$PROBE_TMP/p_new/probe.md" <<'PROBEOF'
+## Postconditions
+
+Returns `Err(PregolyaError::new(Component::Core, Category::Val, RetryHint::Never, "E-CORE-001",
+"validation failed"))` when input is invalid.
+PROBEOF
+  local out
+  out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p_new")"
+  if ! echo "$out" | grep -qF 'VIOLATION NEW_FORM_VIOLATION'; then
+    echo "[SELF-PROBE FAIL] Probe new-form A: NEW_FORM_VIOLATION (::new() in prose) not detected."
+    clean_probe_tmp; exit 2
   fi
+  # Sub-probe B: ::new() inside ```rust fence → must NOT be flagged (Class 1 mandatory form)
+  # Flagging this would create Mechanism-5 violations when the fix-burst acts on
+  # gate output and replaces mandatory Class 1 ::new() calls with struct literals.
+  mkdir -p "$PROBE_TMP/p_new_rust"
+  cat > "$PROBE_TMP/p_new_rust/probe.md" <<'PROBEOF'
+## Example
+
+```rust
+fn build_error() -> PregolyaError {
+    PregolyaError::new(Component::Core, Category::Val, RetryHint::Never, "E-CORE-001", "bad")
+}
+```
+PROBEOF
+  out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p_new_rust")"
+  if echo "$out" | grep -qF 'VIOLATION NEW_FORM_VIOLATION'; then
+    echo "[SELF-PROBE FAIL] Probe new-form B: ::new() inside rust fence incorrectly flagged as NEW_FORM_VIOLATION."
+    echo "  ADR-010 Class 1 (Construction Form): ::new() is MANDATORY in rust fenced blocks."
+    echo "  Flagging Class 1 sites creates Mechanism-5 violations (gate-shape drives wrong fixes)."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  # Sub-probe C: backtick-enclosed reference must NOT trigger the violation
+  mkdir -p "$PROBE_TMP/p_new_exempt"
+  printf '## Description\n\n`PregolyaError::new(...)` is forbidden per ADR-010 v1.17.\n' \
+    > "$PROBE_TMP/p_new_exempt/probe.md"
+  out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p_new_exempt")"
+  if echo "$out" | grep -qF 'VIOLATION NEW_FORM_VIOLATION'; then
+    echo "[SELF-PROBE FAIL] Probe new-form C: inline-backtick PregolyaError::new() reference was incorrectly flagged."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe new-form: A (prose violation detected); B (rust fence NOT flagged); C (backtick exempt)."
+}
+
+# Tests that <!-- discriminator:illustration-start/end --> blocks are exempt from
+# NEW_FORM_VIOLATION (and all other violation classes) even when they contain
+# forbidden forms verbatim.
+#
+# Note: ADR-010 itself currently has a known pending violation — the
+# Mechanical Discriminator pseudocode (outside illustration regions) contains
+# "must use PregolyaError::new(...)" which is the old (now-forbidden) routing.
+# This violation is REAL and will surface in the main corpus scan. The spec-
+# steward is responsible for updating ADR-010 §Step 2 routing to say
+# "add '..' rest pattern; struct-literal form is canonical" instead.
+# This probe does NOT require ADR-010 to be violation-free; it tests only
+# that illustration-region exemption is working correctly.
+probe_adr010_zero_violations() {
+  # Synthetic test: illustration region containing forbidden forms must not be flagged.
   init_probe_tmp
   mkdir -p "$PROBE_TMP/p9"
-  cp "$ADR010" "$PROBE_TMP/p9/"
+  cat > "$PROBE_TMP/p9/probe.md" <<'PROBEOF'
+## Error-Construction Notation Canon
+
+<!-- discriminator:illustration-start -->
+FORBIDDEN example: PregolyaError::new(Component::Core, Category::Val, RetryHint::Never, "E-X", "bad")
+ALSO FORBIDDEN: PregolyaError { code: "E-X" }
+<!-- discriminator:illustration-end -->
+
+## Description
+
+This section has no violations.
+PROBEOF
   local out
   out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p9")"
   local viol_count
   viol_count="$(echo "$out" | grep -c '^VIOLATION' || true)"
   if [ "$viol_count" -ne 0 ]; then
-    echo "[SELF-PROBE FAIL] Probe 6: ADR-010 has ${viol_count} violation(s) — the canon self-flags."
-    echo "  The illustration regions (<!-- discriminator:illustration-start/end -->) must be honoured."
-    echo "  Violations:"
+    echo "[SELF-PROBE FAIL] Probe 6: illustration region containing forbidden forms was incorrectly flagged."
+    echo "  The <!-- discriminator:illustration-start/end --> exemption is broken."
     echo "$out" | grep '^VIOLATION' | while IFS= read -r line; do echo "    $line"; done
     clean_probe_tmp; exit 2
   fi
   clean_probe_tmp
-  echo "[SELF-PROBE PASS] Probe 6: ADR-010 reports zero violations (illustration regions correctly excluded)."
+  echo "[SELF-PROBE PASS] Probe 6: illustration-region exemption works — forbidden forms inside markers not flagged."
+  # Informational: check ADR-010 violation count without failing the probe.
+  # Known pending fix: spec-steward to update ADR-010 Mechanical Discriminator
+  # §Step 2 routing from 'must use PregolyaError::new(...)' to struct-literal guidance.
+  if [ -f "$ADR010" ]; then
+    init_probe_tmp
+    mkdir -p "$PROBE_TMP/p9info"
+    cp "$ADR010" "$PROBE_TMP/p9info/"
+    out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/p9info")"
+    viol_count="$(echo "$out" | grep -c '^VIOLATION' || true)"
+    echo "[SELF-PROBE INFO] ADR-010 has ${viol_count} violation(s) pending spec-steward fix (ADR-010 §Step 2 routing text)."
+    clean_probe_tmp
+  fi
 }
 
 # ── Main notation check ───────────────────────────────────────────────────────
@@ -608,7 +748,8 @@ check_notation() {
   total_violations=$(( ${bkt[CLASS1_VIOLATION]:-0}
                      + ${bkt[CLASS3_ASCII_ELLIPSIS_VIOLATION]:-0}
                      + ${bkt[CLASS3_UNICODE_ELLIPSIS_VIOLATION]:-0}
-                     + ${bkt[CLASS3_MISSING_DOTS_VIOLATION]:-0} ))
+                     + ${bkt[CLASS3_MISSING_DOTS_VIOLATION]:-0}
+                     + ${bkt[NEW_FORM_VIOLATION]:-0} ))
 
   # ── Partition table ────────────────────────────────────────────────────────
   local bucket_sum=0
@@ -616,7 +757,8 @@ check_notation() {
             EXCLUDED_BASH EXCLUDED_PATTERN_REF EXCLUDED_DOC_COMMENT EXCLUDED_NO_CLOSE \
             CLASS2_VALID CLASS4_VALID CLASS3_VALID CLASS3_VALID_COMPLETE \
             CLASS1_VIOLATION CLASS3_ASCII_ELLIPSIS_VIOLATION \
-            CLASS3_UNICODE_ELLIPSIS_VIOLATION CLASS3_MISSING_DOTS_VIOLATION; do
+            CLASS3_UNICODE_ELLIPSIS_VIOLATION CLASS3_MISSING_DOTS_VIOLATION \
+            NEW_FORM_VIOLATION; do
     bucket_sum=$(( bucket_sum + ${bkt[$k]:-0} ))
   done
 
@@ -640,13 +782,18 @@ check_notation() {
   printf "    %-44s %d\n" "CLASS3_ASCII_ELLIPSIS_VIOLATION (...):" "${bkt[CLASS3_ASCII_ELLIPSIS_VIOLATION]:-0}"
   printf "    %-44s %d\n" "CLASS3_UNICODE_ELLIPSIS_VIOLATION (U+2026):" "${bkt[CLASS3_UNICODE_ELLIPSIS_VIOLATION]:-0}"
   printf "    %-44s %d\n" "CLASS3_MISSING_DOTS_VIOLATION:"         "${bkt[CLASS3_MISSING_DOTS_VIOLATION]:-0}"
+  printf "    %-44s %d\n" "NEW_FORM_VIOLATION (::new() forbidden):" "${bkt[NEW_FORM_VIOLATION]:-0}"
   echo "    ────────────────────────────────────────────────────────────────────"
   printf "    %-44s %d\n" "VIOLATIONS TOTAL:"                       "${total_violations}"
   printf "    %-44s %d\n" "BUCKET SUM:"                             "${bucket_sum}"
   printf "    %-44s %d\n" "TOTAL OPENERS (from scanner):"           "${total_openers}"
 
-  if [ "${bucket_sum}" -ne "${total_openers}" ]; then
-    echo "    [WARNING] Bucket sum (${bucket_sum}) != total openers (${total_openers}) — unaccounted remainder!"
+  # NEW_FORM_VIOLATION counts are from an independent second pass (PregolyaError::new()
+  # occurrences), not PregolyaError { openers counted by total_openers.  Subtract them
+  # from bucket_sum before comparing against total_openers to avoid a spurious warning.
+  local opener_bucket_sum=$(( bucket_sum - ${bkt[NEW_FORM_VIOLATION]:-0} ))
+  if [ "${opener_bucket_sum}" -ne "${total_openers}" ]; then
+    echo "    [WARNING] Opener bucket sum (${opener_bucket_sum}) != total openers (${total_openers}) — unaccounted remainder!"
   fi
 
   if [ "${total_violations}" -gt 0 ]; then
@@ -677,11 +824,17 @@ check_notation() {
     n_files="$(printf '%s\n' "${violation_lines[@]}" | awk '{print $NF}' | sort -u | wc -l | tr -d ' ')"
     emit FAIL "N1 (ADR-010): error-construction notation — ${total_violations} violation(s) across ${n_files} file(s)"
     echo "  Routing guide (TD-VSDD-091: symbol/section cites; no line numbers):"
-    echo "    CLASS1_VIOLATION           → product-owner/architect: replace struct literal with"
-    echo "                                 PregolyaError::new(...) inside rust fences"
+    echo "    CLASS1_VIOLATION           → product-owner/architect: add '..' rest pattern before"
+    echo "                                 the closing '}' (struct-literal form is canonical:"
+    echo "                                 PregolyaError { code: \"E-XXX\", .. })"
     echo "    CLASS3_ASCII_ELLIPSIS      → product-owner: replace '...' with '..' in observation"
     echo "    CLASS3_UNICODE_ELLIPSIS    → product-owner: replace '…' (U+2026) with '..' in observation"
     echo "    CLASS3_MISSING_DOTS        → product-owner: add '..' before closing '}'"
+    echo "    NEW_FORM_VIOLATION         → product-owner/architect: replace prose PregolyaError::new(...)"
+    echo "                                 with struct-literal form PregolyaError { code: \"E-XXX\", .. }"
+    echo "                                 (ADR-010 v1.17 §Class 3 — Value-Observation Form)"
+    echo "                                 DO NOT replace ::new() inside \`\`\`rust fences — those are"
+    echo "                                 Class 1 MANDATORY construction forms."
   else
     emit PASS "N1 (ADR-010): error-construction notation canon — corpus clean (${total_violations} violations, bucket sum ${bucket_sum})"
   fi
@@ -693,7 +846,7 @@ check_notation() {
 
 echo "verify-error-notation-canon: ADR-010 error-construction notation canon"
 echo "  SPECS_DIR: $SPECS_DIR"
-echo "  Decisions: D-72 (error-construction notation) / ADR-010 v1.14+"
+echo "  Decisions: D-72 (error-construction notation) / ADR-010 v1.17+"
 echo "  Classes: CLASS1 (rust fence) | CLASS3 ASCII/Unicode/Missing (prose/formal)"
 echo ""
 
@@ -706,6 +859,7 @@ probe_class3_valid_complete
 probe_changelog_not_flagged
 probe_decl_not_flagged
 probe_split_line
+probe_new_form_violation
 probe_adr010_zero_violations
 echo "[SELF-PROBE] All probes passed — checks are not false-green."
 echo ""

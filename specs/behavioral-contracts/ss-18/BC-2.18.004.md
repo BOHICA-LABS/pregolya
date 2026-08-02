@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Tmpl, Category::Security, RetryHint::Never, \"E-TMPL-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: SECURITY category default per error-taxonomy.md §E-TMPL-001. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-18/BC-2.18.004.md returns zero fence-scoped literal occurrences after this edit."
   - "1.7 (fix-burst-279/F-P175-B201+B202+B208/ADR-015-D3-Amendment/2026-07-28): THREE changes. (1) §Related BCs: removed false claim that injection_guard fires during the PromptTemplate::format render path (B201 CRIT — PromptTemplate::format is explicitly unguarded; guard fires ONLY in format_messages); replaced with explicit prohibition note on system-position use of PromptTemplate::format output. (2) PC2: updated from HashMap<String, TemplateVar> to HashMap<String, TemplateInput>; injection_guard now covers Scalar(TemplateVar), Messages(MessageListVar), and FewShotExamples arms (B202 CRIT — TemplateInput enum concretized per ADR-015 Decision 3 Amendment). (3) PC5: updated to cover both TemplateInput::Scalar(var) and TemplateInput::Messages(msg_var) trust_level checks against TrustRequired slots; VP-006 Kani proof covers both input arms exhaustively (B202; B208 — MessageListVar guard)."
   - "1.8 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 violations corrected. (1) Description ¶1 E-TMPL-001 cite: CLASS3_ASCII_ELLIPSIS_VIOLATION — replace trailing `...` with `..` field-elision marker. (2) TV-001 expected-output cell: CLASS3_MISSING_DOTDOT — add `, ..` field-elision marker. (3) TV-005 expected-output cell: CLASS3_MISSING_DOTDOT — add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
+  - "1.9 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -186,7 +187,7 @@ _[to be filled after story decomposition — Wave 2 SS-18 security story]_
 
 ## VP Anchors
 
-- VP-2.18.004-A (VP-006 assigned VP-INDEX v1.2; VP-006.md exists)
+- VP-2.18.004-A (VP-006 assigned in VP-INDEX; VP-006.md exists)
 - VP-2.18.004-B
 
 ## Traceability
@@ -198,7 +199,7 @@ _[to be filled after story decomposition — Wave 2 SS-18 security story]_
 | L2 Domain Invariants | DI-008 (injection_guard returns Result; no silent swallowing), DI-014 (E-TMPL-001 propagates as Err; no silent empty substitution or advisory warning) |
 | Architecture Authority | ADR-015 Decision 3 (injection check, pure-core blocker, E-TMPL-001 category SECURITY) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion), R12 (prompt injection risk from D21 scope) |
-| VP Registration | VP-006 (assigned in VP-INDEX v1.2 as VP-006 — Kani P1; pregolya-prompts injection_guard_fail_closed) |
+| VP Registration | VP-006 (assigned in VP-INDEX as VP-006 — Kani P1; pregolya-prompts injection_guard_fail_closed) |
 | Module | pregolya-prompts / prompts::injection_guard |
 | Priority | P1 |
 | Wave | 2 |

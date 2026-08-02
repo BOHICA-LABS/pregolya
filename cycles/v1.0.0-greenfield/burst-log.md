@@ -5967,3 +5967,57 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | Burst-282 Wave B COMPLETE — 180 notation corrections across 51 BC files (B1–B7 batches) + 5 domain-spec/prd sites + 14 D-35 xtask sites; ADR-010 §Error-Construction Notation Canon adopted corpus-wide (D-77 reframe: baseline authoring event); verify-error-notation-canon.sh blocking validator minted; D-35 CLOSED 26/26 (D-84); BC-INDEX v3.27; D-82..D-87 allocated; L-136..L-141 minted; prior checkpoint archived; factory-artifacts pushed. | state-manager | COMPLETE | 176 passes total. Streak 0/3. |
+
+---
+
+### Burst-287 — fix-burst P1D-176 mechanism fixes + 5 CRITs CLOSED (2026-08-01)
+
+**Scope:** Five convergent mechanism fixes (M1..M5) + 5 CRIT closures (C001/C002/D001/D002/E001). 39 factory files changed (33 modified + 6 new). First burst following instrument calibration: stratified adjudication of P1D-176 established 50% false-positive rate in note-closure class. **Burst identity defect:** this is burst 287 (not 286 — `976ede2 wrap(burst-286)` already existed); second burst-number collision in two bursts; no burst-number allocator exists; D-121 registered as process gap.
+
+**M1 — §-anchor convention restriction (ADR-022 minted):** §Name restricted to Form A (real markdown headings, prefix-match). Chained `§X §Y` forms prohibited. 42 normative ADR-target citations measured (10 phantom); migration sweep deferred until anchor gate promoted to blocking. 183 non-ADR §citations convention-bound only (BC 79, ADV-P 42, VP 24, F-P 14, CAP 11, other 13). Advisory `verify-adr-anchor-citations.sh` built; WARN=1 (10 phantoms). POL-19 rewritten: enforcement PENDING. Fabricated count ~170 corrected to 42 measured (217 raw − 133 changelog/frontmatter − 7 fenced − 16 backtick − ~2 illustration − ~16 §Decision-N − 1 chained).
+
+**M2 — DISSOLVED (not a corpus defect):** 7/7 note-closure findings adjudicated FALSE. No body-closure sweep warranted; workstream deleted. Root cause: adversary read historical/archival content (changelog entries, original-decision derivation tables, Forward Amendment blockquotes) as current normative state. D003/D004/D008/D013/A005/A008/A010 all FALSE. Three fabricated filenames confirmed: A005 cited `ADR-015-prompt-injection-safety.md` (actual `-prompt-template-injection-safety.md`); A008 cited `ADR-005-checkpoint-id-type.md` (actual `-logical-clock-checkpoint-ordering.md`); A010 cited `ADR-007-workspace-crate-decomposition.md` (actual `-crate-topology-sdk-split.md`).
+
+**M3 — arithmetic ground truth:** New blocking `verify-tv-registry-count.sh` compares BC-body section rows against registry declared total (not internal identity). A009 census reconciled: module-decomposition = 76 rows (70 tiered + 6 exempt); module-criticality registry = 84 rows (78 tiered + 6 exempt) — two DISTINCT enumerations. CI vacuous-green closed: 5 required checks exit 1 NONCERTIFYING when Cargo.toml absent.
+
+**M4 — #[non_exhaustive] governance (ADR-023 minted):** Governing rule, 2 exception criteria, 6 exempt types, 20 required (12 enums + 8 structs). A029 + C028 BOTH FALSE: A029 — BoundaryType is exempt per ADR-014 (finding wrongly cited ADR-016); C028 — `BC-2.22.001 §compile-fail-gate` does not exist; BC-2.22.001 is the Embeddings contract.
+
+**M5 — ADR-010 §error-construction-notation + POL-17 correction:** Class 1 (rust fences/value expressions) `::new()` MANDATORY; Class 3 (prose/tables/formal statements) `::new()` FORBIDDEN. POL-17 had conflated them. Error-notation-canon rebuilt class-aware: first implementation class-blind reported 48 violations of which 26 were legitimate Class 1 ::new() calls in rust fences (26 wrong corpus mutations averted). True count: 22 Class 3 prose violations, all fixed to 0.
+
+**C001 CLOSED:** BC-2.23.001/BC-2.23.002 §postconditions each — PC-2 now routes non-escape Err correctly; E-TOOLS-001 reserved for genuine path-confinement attacks only. Full SS-23 6-BC sweep confirmed other 4 BCs clean. Real impact: transient disk errors were routed as security violations with retries suppressed.
+
+**C002 CLOSED — ADR-024 minted:** WriteFileTool two-phase create-path fallback triggered ONLY on `ErrorKind::NotFound`. Three-way error routing: `NotFound` on target ≠ confinement violation; `NotFound` on parent → E-TOOLS-008; E-TOOLS-001 exclusively for genuine escapes. `filename = None` → `WorkspaceEscape`. TOCTOU severity LOW with `openat(parent_fd, filename, O_NOFOLLOW)` recorded as v2 path. BC-2.23.002 §postconditions updated; BC-2.23.001 confirmed unaffected.
+
+**D001 CLOSED:** test-vectors.md §grand-total — 687 total (676 canonical + 11 GTV). 8 stale rows corrected. Method defect recorded honestly: product-owner derived 676 as `664 + 12 delta` (arithmetic-identity trap) not an independent sum. Number independently confirmed by devops section-row count.
+
+**D002 CLOSED:** SS-22 = Embeddings (not "DynamicToolLoader" as the finding claimed). bc-authoring-plan v2.62 corrected to pregolya-core + pregolya-openai + pregolya-ollama.
+
+**E001 CLOSED:** POL-19 rewritten to state enforcement PENDING with the measured 42/10 precondition and its derivation method. Advisory `verify-adr-anchor-citations.sh` built. Promotion to blocking awaits migration sweep clearing 10 phantoms.
+
+**ADR-025 minted:** Type signature canon. `discriminator:illustration-start/end` markers adopted as uniform mechanism for documenting prohibited forms without triggering the validator (chosen over allowlist: an allowlist entry silently exempts a real declaration). `verify-signature-canon.sh` extended to honour them in all 5 scanners with two-direction self-probe.
+
+**POL-46 minted (adversary_finding_quality, HIGH):** Six requirements — inline verification command with actual output; every §citation and filename verified real before writing; every count measured not inherited; substance and location reported separately; note-closure verified in current body not changelog; historical-region content identified as historical and cross-checked. Includes the 7/7 dataset, root cause, and BALANCE clause (does not license dismissing findings — same pass produced 5 CONFIRMED CRITs).
+
+**POL-47 minted (artifact_self_validation, HIGH):** Every new/amended ADR/policy must pass its own canon before commit. Grounded in 5 burst-287 instances: ADR-022 §section-anchor-citation-convention shipped volatile version pin; ADR-022 inherited fabricated ~170 count; ADR-023 cited nonexistent section headings; ADR-025 tripped its own signature validator; orchestrator's canon relay reintroduced Class 1/Class 3 conflation.
+
+**Adjudication headline (the most consequential output of this burst):** Independent read-only adjudication of a stratified 12-finding sample from P1D-176, using each finding's OWN stated verification method, pinned to frozen HEAD `9a62edc` via `git show`. Result: 5 CONFIRMED / 1 PARTIALLY TRUE / 6 FALSE → **50% false-positive rate**. 7 of 12 (58%) cite a §Section or field that does not exist. Note-closure class: 7/7 FALSE. Three fabricated filenames. Counts always inflating: ~170→42, 7 legacy codes→0, 6 files→2, 6 stale sites→4. 19 total findings verified; rate not established corpus-wide.
+
+**Convergence reframing:** Trajectory 130→256→189→160 better explained by defect pump (phantom fixes mutate correct files, manufacturing genuine defects for next pass) than by "each pass finds defects created by prior pass's fixes." Two live confirmations this burst: class-blind error-notation gate (26 wrong mutations averted); orchestrator's blanket ::new() prohibition relay. Caveat: only 19 of 160 findings verified.
+
+**Validator suite final state (13 blocking + 2 advisory):** verify-no-version-pins 203 · verify-adr-decision-refs 368 · records-lint 5 (UNVERIFIED=0) · verify-changelog-date-monotonicity 136 (WARN=78; ~63 are partial-date-check-ok not silent skips per devops measurement; actual silent skips = 2) · verify-changelog-date-validity 203 · verify-enum-variant-casing 203 · verify-signature-canon 5 · verify-error-notation-canon 1 · verify-form-a-changelog-direction 203 (WARN=7, UNVERIFIED=0) · verify-arch-anchor-resolution 129 · verify-module-canonicality 8 · verify-bc-frontmatter-schema 129 · verify-tv-registry-count 1. Advisory: verify-changelog-claim-applied WARN=662 · verify-adr-anchor-citations WARN=1 (10 phantoms).
+
+**Orchestrator self-attributed defects (5 recorded in D-122):** (1) blanket ::new() prohibition relay (Class 1/3 conflation reintroduced); (2) D004 mis-routed to no owner; (3) A009 unrouted in Wave 1; (4) predicted phantom-anchor findings reliable (80% false); (5) overstated 77 WARNs as "over a third unchecked" (genuine silent skips = 2 per devops measurement).
+
+**Main-repo second commit:** `.github/workflows/ci.yml` committed to `develop` (D-117 process gap discharged — D-129). Develop will go honestly red until Phase 3 Rust workspace exists (D-119/E023).
+
+**Agents:** architect (ADR-022/023/024/025); spec-steward (POL-46/47/M1/M5); devops-engineer (all 6 validator gate fixes + M3 + CI NONCERTIFYING); product-owner (C001/C002/D001/D002/E001).
+
+**Decisions allocated:** D-121..D-130. **Lessons minted:** L-160..L-169. **Streak:** 0/3 (unchanged — fix burst, not adversary pass).
+
+---
+
+### Archived Phase Step — Burst-283 COMPLETE (archived at burst-287)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| burst-283 COMPLETE — ADR-021 minted (D-95; closes F-P175-C101 CRIT + C113 HIGH); policies.yaml 45 policies (D-91); DEFER-002 CLOSED (D-92); rename decision D-93; TDIV-008 INERT confirmed (D-94); 4 BC bumps BC-INDEX v3.28 (D-97); false-open D-96/D-98; blocking 8→12 (D-101); L-143..L-147; 630 advisories + 14 hash-mismatches (D-100); D-91..D-102; checkpoint v4.43 archived; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. | state-manager | COMPLETE | 176 passes total. Streak 0/3. CRIT=0. |

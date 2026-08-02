@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B): Component::EMBED → Component::Embed, Category::VAL → Category::Val in PC-2 E-EMBED-001 inline code block."
   - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25/2026-07-28): Task 1 — PC-2 construction form alignment. Replace struct-literal `PregolyaError { component: Component::Embed, category: Category::Val, code: ..., message: ... }` (missing `retry_hint` and `source`; barred by `#[non_exhaustive]` for external callers) with canonical `PregolyaError::new(Component::Embed, Category::Val, RetryHint::Never, \"E-EMBED-001\", \"EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths\")` form. Architect proposal verified: 5-arg order (component, category, retry_hint, code, message) matches ADR-010 §Decision pub fn new signature exactly; message matches error-taxonomy E-EMBED-001 canonical prefix `EmbeddingDimensionMismatch:` (distinct from E-VS-002 prefix `DimensionMismatch:` per v1.29 collision fix). No BC semantic change — PC2/PC3 contract preserved; validate_embedding_batch function spec (interface-definitions §core::embeddings) consistent with dimensionality invariants here."
   - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: PC2 partial-batch-error sentence `Err(PregolyaError { ... })` — replaced `...` with `..`. No behavioral change."
+  - "1.7 (fix-burst-287/TD-VSDD-091+ADR-010-C3/2026-08-01): (1) VP-INDEX version pin removed: §VP Anchors 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX'; §Traceability VP Registration 'VP-INDEX v1.2 as' → 'VP-INDEX as' (no §-anchor introduced). (2) ADR-010 Class 3 fix: PC-2 prose PregolyaError::new(Component::Embed, ..., 'E-EMBED-001', ...) → PregolyaError { code: 'E-EMBED-001', .. } (observation form). verify-no-version-pins.sh PASS; verify-error-notation-canon.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -74,8 +75,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
    - All inner `Vec<f32>` have identical length `d` (the model's embedding dimension).
    - If `texts` is empty: `Ok(vec![])` — zero vectors; no error.
    - If the provider returns an inconsistent batch (inner vectors of different lengths):
-     `Err(PregolyaError::new(Component::Embed, Category::Val, RetryHint::Never, "E-EMBED-001",
-     "EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths"))`.
+     `Err(PregolyaError { code: "E-EMBED-001", .. })`.
    - If the provider returns a partial batch error (e.g., rate limit, service error):
      `Err(PregolyaError { .. })` for the whole call — NO silent truncation to a partial
      result set, NO `Vec::new()` fallback (DI-014).
@@ -145,7 +145,7 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 
 ## VP Anchors
 
-- VP-2.22.001-A (VP-008 assigned VP-INDEX v1.2; VP-008.md exists)
+- VP-2.22.001-A (VP-008 assigned in VP-INDEX; VP-008.md exists)
 - VP-2.22.001-B
 - VP-2.22.001-C
 
@@ -158,7 +158,7 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 | L2 Domain Invariants | DI-008 (embed_documents and embed_query return Result; no .unwrap()), DI-014 (batch partial-failure propagates as Err; no silent truncation or Vec::new() fallback) |
 | Architecture Authority | ADR-017 Decisions 1 and 2 (trait placement, async dyn-compat shape, dimensionality contract, batch error semantics) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-008 (assigned in VP-INDEX v1.2 as VP-008 — proptest P1; pregolya-core embeddings) |
+| VP Registration | VP-008 (assigned in VP-INDEX as VP-008 — proptest P1; pregolya-core embeddings) |
 | Module | pregolya-core / core::embeddings |
 | Priority | P1 |
 | Wave | 2 |

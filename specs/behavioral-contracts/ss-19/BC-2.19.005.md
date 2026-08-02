@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.5 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose backtick span)."
   - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-001. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-19/BC-2.19.005.md returns zero fence-scoped literal occurrences after this edit."
   - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-SRLZ-001 allowlist cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, VP anchors, or Red Gate invariants altered."
+  - "1.8 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -163,7 +164,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 security story]_
 
 ## VP Anchors
 
-- VP-2.19.005-A (VP-010 assigned VP-INDEX v1.2; VP-010.md exists)
+- VP-2.19.005-A (VP-010 assigned in VP-INDEX; VP-010.md exists)
 - VP-2.19.005-B
 
 ## Traceability
@@ -175,7 +176,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 security story]_
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic or unsafe unwrap), DI-014 (E-SRLZ-001 propagates as Err; no silent fallthrough, no default-constructed value returned) |
 | Architecture Authority | ADR-016 Decision 3 §Security Invariant (allowlist-first check; E-SRLZ-001 category VAL — registry containment is input validation not a boundary-crossing attack-vector per ADR-010; no id in error message; VP-010 Kani candidacy) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-010 (assigned in VP-INDEX v1.2 as VP-010 — Kani P0; pregolya-core allowlist_rejects_unregistered_id) |
+| VP Registration | VP-010 (assigned in VP-INDEX as VP-010 — Kani P0; pregolya-core allowlist_rejects_unregistered_id) |
 | Module | pregolya-core / core::serializable::reviver |
 | Priority | P0 |
 | Wave | 2 |

@@ -147,8 +147,9 @@ PIN_RE = re.compile(
     r'|BC-2\.\d{2}\.\d{3}\s+v\d+\.\d+'          # 2. BC-2.SS.NNN vX.Y
     r'|VP-\d{3}\s+v\d+\.\d+'                    # 3. VP-NNN vX.Y
     r'|CAP-\d{3}\s+v\d+\.\d+'                   # 4. CAP-NNN vX.Y
-    r'|[a-z0-9][a-z0-9_-]*\.md\s+\(v\d+\.\d+'  # 5. filename.md (vX.Y  [paren form]
-    r'|[a-z0-9][a-z0-9_-]*\.md\s+v\d+\.\d+'    # 6. filename.md vX.Y   [noparen form]
+    r'|[A-Z][A-Z0-9]*-INDEX\s+v\d+\.\d+'        # 5. XXX-INDEX vX.Y (VP-INDEX, BC-INDEX, ARCH-INDEX, L2-INDEX, STORY-INDEX, EVAL-INDEX, etc.)
+    r'|[a-z0-9][a-z0-9_-]*\.md\s+\(v\d+\.\d+'  # 6. filename.md (vX.Y  [paren form]
+    r'|[a-z0-9][a-z0-9_-]*\.md\s+v\d+\.\d+'    # 7. filename.md vX.Y   [noparen form]
     r')'
 )
 

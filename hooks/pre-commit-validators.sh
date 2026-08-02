@@ -14,7 +14,12 @@
 # Validators marked (FAILING) have pre-existing violations tracked to closure
 # via in-flight fix-bursts; they block commits until those violations are cleared.
 #
-#   verify-no-version-pins.sh              — (CLEAN) pinned doc-id vN.N versions block
+#   verify-no-version-pins.sh              — (FAILING) pinned doc-id vN.N versions block.
+#       fix-burst-287 extended PIN_RE to cover compound index names (VP-INDEX, BC-INDEX,
+#       ARCH-INDEX, L2-INDEX, STORY-INDEX, EVAL-INDEX). 7 new FAILs surfaced: VP-INDEX v1.2
+#       and v1.5 pins in BC body normative sections (VP Anchors + Traceability tables) in
+#       BC-2.05.007, BC-2.10.005, BC-2.18.004, BC-2.19.005, BC-2.21.003, BC-2.22.001,
+#       BC-2.23.005. Routing: product-owner de-pin sweep in BC VP-Anchors/Traceability sections.
 #   verify-adr-decision-refs.sh            — (CLEAN) missing ADR decision refs block
 #   records-lint.sh                        — (CLEAN) line-cite and version-pin (D-50) in new content block
 #   verify-changelog-date-monotonicity.sh  — (CLEAN) non-monotone changelog dates block
@@ -29,11 +34,16 @@
 #       S2 (capabilities-p1-p2.md VectorStoreRetriever<), S4 (4 files Arc<dyn Tool>),
 #       S5 (80 files PregolyaError full-form literals). In-flight: architect fix-burst
 #       closes S1/S2/S3; product-owner fix-burst closes S4/S5. Wire date: 2026-07-28.
-#   verify-error-notation-canon.sh        — (FAILING) ADR-010 error-construction notation
-#       D-72 error-construction notation canon | 5 violations in prd-supplements/bc-authoring-plan.md
-#       Pre-existing: 3 × CLASS3_ASCII_ELLIPSIS_VIOLATION, 2 × CLASS3_MISSING_DOTS_VIOLATION.
-#       Routing: product-owner fix-burst replaces '...' with '..' and adds '..' to partial-field
-#       forms in bc-authoring-plan.md. Wire date: 2026-07-29.
+#   verify-error-notation-canon.sh        — (FAILING) ADR-010 v1.17 error-construction notation.
+#       fix-burst-287: (1) CLASS1_VIOLATION routing guide corrected (was "use ::new()", now
+#       "add '..' rest pattern; struct-literal is canonical"). (2) NEW_FORM_VIOLATION class
+#       added — PregolyaError::new() is FORBIDDEN per ADR-010 v1.17; canonical form is
+#       PregolyaError { code: "E-XXX", .. }. (3) 48 violations across 23 files surfaced;
+#       all are NEW_FORM_VIOLATION from prior burst conversions that used ::new(). Routing:
+#       product-owner/architect sweep in BC bodies and ADR bodies to revert ::new() back to
+#       struct-literal { code: "E-XXX", .. } form. Wire date: 2026-07-29.
+#       Note: ADR-010 itself has 1 pending fix (Mechanical Discriminator §Step 2 routing
+#       text); spec-steward to update "must use PregolyaError::new(...)" → struct-literal.
 #   verify-form-a-changelog-direction.sh   — (CLEAN) BC Form-A changelog direction + VERSION-MATCH.
 #       Promoted from advisory at fix-burst-283. Baseline: PASS=199 WARN=7 FAIL=0 BC_UNVERIFIED=0.
 #       WARN=7 are co-existence advisory (both-forms files) — non-blocking. Fires on FAIL or
@@ -52,6 +62,11 @@
 #       red_gate_source, vp_id format, typo detection).
 #       Promoted from advisory at fix-burst-283. Baseline: PASS=129 FAIL=0.
 #       Exit contract changed from "always exits 0" to "exits 1 on FAIL > 0" at promotion.
+#   verify-tv-registry-count.sh            — (CLEAN) TV registry ground-truth validation.
+#       Added fix-burst-287. Compares sum of data rows in BC ## Canonical Test Vectors
+#       sections against §Grand-Total declared canonical total in test-vectors.md.
+#       Ground truth: 676 canonical TVs in 129 BC bodies == 676 declared in registry.
+#       Catches Mechanism-3 drift (registry internal arithmetic drifting from BC bodies).
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -63,6 +78,13 @@
 #       until corpus-wide false-closure sweep clears the advisory finding backlog.
 #       Promotion requires: WARN=0 AND exit contract changed to exit 1 on WARN > 0.
 #       Routing: product-owner + architect joint sweep per P1D-174 findings (FC-1..FC-6).
+#   verify-adr-anchor-citations.sh         — §Named-Section citation existence (advisory).
+#       Added fix-burst-287 (ADR-022 §Decision 3, closes F-P176-E001 CRIT).
+#       42 citations scanned: 32 PASS (valid headings), 10 FAIL (phantom anchors).
+#       Phantom anchors include: §impl PregolyaError (Form B), §Object-Safety** (bold label),
+#       §E-CFG-001 convention (non-heading reference), §DI-012 | table citation (Form C).
+#       Upgrade to BLOCKING after ~170-citation migration sweep (ADR-022 Decision 4).
+#       Promotion requires: WARN=0 AND switch from run_advisory to run_blocking.
 #
 # EXIT CONTRACT
 # ─────────────
@@ -128,11 +150,13 @@ run_blocking "verify-form-a-changelog-direction.sh"
 run_blocking "verify-arch-anchor-resolution.sh"
 run_blocking "verify-module-canonicality.sh"
 run_blocking "verify-bc-frontmatter-schema.sh"
+run_blocking "verify-tv-registry-count.sh"
 
 # ── Advisory validators (run but do not block; see header for promotion paths) ─
 echo ""
 echo "── Advisory validators (non-blocking; see header for promotion paths) ─"
 run_advisory "verify-changelog-claim-applied.sh"
+run_advisory "verify-adr-anchor-citations.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.004
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-3 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-3 + PC-5)."
   - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical canonicalize_beneath_root at 3 sites: PC-1 happy-path ('passes' to 'succeeds'), Invariants call-obligation bullet, VP-2.23.004-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
   - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-008 NotADirectory: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. PC5 E-TOOLS-008 generic I/O: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); same phantom-field removal. TD-VSDD-060 sibling sweep: EC-002/EC-005/TV-004 JSON-like notation classified (c) message-component descriptions; left as-is."
+  - "1.6 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001 → { code: 'E-TOOLS-001', .. }. PC-3 E-TOOLS-008 NotADirectory → { code: 'E-TOOLS-008', .. }. PC-5 E-TOOLS-008 generic I/O → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -79,15 +80,12 @@ filter at the application layer.
    Entries are sorted lexicographically by `name`. Hidden files (names starting with `.`)
    are included unless excluded by `PathGuard` policy.
 2. **Path confinement violation:** Returns
-   `Err(PregolyaError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
-   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
+   `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
 3. **Path is a file, not a directory:** Returns
-   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
-   "ListDirTool I/O error on '<path>': NotADirectory"))`.
+   `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
 4. **Empty directory:** Returns `ToolOutput::Json([])` — zero entries, not an error.
 5. **Permission denied or not found:** Returns
-   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
-   "ListDirTool I/O error on '<path>': <io_kind>"))`.
+   `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
 
 ## Invariants
 

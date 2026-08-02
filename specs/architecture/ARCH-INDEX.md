@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.23"
+version: "1.27"
 status: active
 producer: architect
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-01T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,10 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.27 (fix-burst-287/records-lint-pin/2026-08-01): Fix records-lint L9b failures in v1.26 entry: three version pins removed from changelog prose (ADR-023, purity-boundary-map.md, and module-criticality.md document references changed from versioned to document-name-only form per TD-VSDD-091). Fix typo: canon-govenance → canon-governance in burst slug."
+  - "1.26 (fix-burst-287/canon-governance/2026-08-01): ADR-025 minted — Type Signature Canon: Object Safety and Arc Ownership Patterns (D-43, D-45, D-48). Grounds verify-signature-canon.sh rules S1/S2/S3/S4 in citable ADR headings; hook now enforces rather than defines the canon. POL-18 D-43/D-45/D-48 entries can be repointed to: §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43), §VectorStoreRetriever: No Lifetime Parameter (D-45), §as_retriever Receiver: Arc<Self> Ownership (D-48), §&Arc<Self> Receiver: Standing Prohibition (D-48 General). ADR count 24→25. ADR-023: three phantom §citations fixed (§compile-fail-gate ×2, §public-API-enums). purity-boundary-map.md: stale intro count corrected (71/69/2 → 76/70/6 from ground-truth crate::module-form path row count in module-decomposition.md; +1 tiered core::tool, +4 definitions-only/exempt rows from FIX-BURST-277). module-criticality.md: Census quintuple updated (decomposition_total_rows=76, decomposition_tiered_rows=70, exempt_count=6, registry_rows=84, matched_rows=70); no Classification Summary content changes."
+  - "1.25 (fix-burst-287/F-P176-C002/2026-08-01): ADR-024 minted — WriteFileTool Create-Path Confinement Protocol: parent-canonicalize extension for non-existent target paths (two-phase protocol), TOCTOU residual risk analysis (LOW for standard deployment; v2 mitigation path via rustix+openat+O_NOFOLLOW documented), error routing table (E-TOOLS-001 for genuine escapes, E-TOOLS-008 for missing parent or I/O failure — A missing parent directory and a missing target file do not collapse to NotFound-means-violation), symlinked parent handling (canonicalize follows link; target outside workspace = WorkspaceEscape), atomic write interaction. Product-owner applies to BC-2.23.002 next. ADR count 23→24."
+  - "1.24 (fix-burst-287/CANON-SETTING/2026-08-01): ADR-022 minted — §Named-Section Citation Convention: restriction to real markdown headings, TD-VSDD-091 conflict resolution, machine-verification specification (F-P176-A039+E001). ADR-023 minted — #[non_exhaustive] Governance for Public API Types: governing rule, exception criteria, Exempt Inventory (5 types), Required Inventory (12 enums + 8 structs), BC-2.22.001 gate scope consequence (F-P176-A028+A029+D009+B026+C028). ADR count 21→23. ADR-010 §Class-3 prohibition strengthened — PregolyaError::new() is now explicitly FORBIDDEN in Class 3 prose/observation contexts with full rationale (F-P176-C008 adjudication)."
   - "1.23 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): ADR-021 minted — SecurityConfig TOML representation (Decision 1) and RunnableConfig.configurable field (Decision 2). Resolves mutual unbootability between BC-2.12.005 EC-005 and interface-definitions.md TOML template (C101); resolves fabricated-capability finding for BC-2.12.002 §Description (C113 mislabeled as BC-2.12.005). ADR count 20→21. Document Map unchanged; no new section files."
   - "1.22 (fix-burst-279/gap-corrections/2026-07-28): Gap-fix wave (three corrections to initial wave). (1) ADR-012 §Decision 1 Amendment — Gap 3: empty app_id B101 path corrected from Ok(None) to Err(E-MEMORY-004 NoScopeContext); fail-loud symmetric with B102 (SkillStore). (2) ADR-015 §Decision 3 Amendment — Gap 1: FewShotPromptTemplate adjudication body added (pre-expansion trust check; examples typed as Vec<(TemplateVar, TemplateVar)>); TemplateInput enum concretized (Scalar/Messages/FewShotExamples arms); B201 type-level enforcement design question answered (prohibition retained for v1; API friction outweighs benefit; v2 trigger condition documented). (3) interface-definitions.md §Prompt Templates — Gap 2 (TD-VSDD-060 sweep): TemplateInput enum defined; format_messages signature corrected to HashMap<String, TemplateInput>. (4) VP-006 §Formal invariant + §Kani harness — formal invariant updated to HashMap<String, TemplateInput>; harness extended to cover Scalar, Messages, and FewShotExamples arms."
   - "1.21 (fix-burst-279/F-P175-B101+B102+B201+B202+B208/2026-07-28): Architect security adjudication wave — three architecture files bumped. ADR-012 §Decision 1 Amendment: ContextMutationConfig scope bridge (B101: spec.namespace is key-prefix not app_id; loading uses RunContext.app_id) and SkillStore scope encapsulation (B102: bind MemoryScope::App(app_id) at construction; E-MEMORY-004 on missing app_id). ADR-015 §Decision 3 Amendment: PromptTemplate::format explicitly unguarded (B201); MessageListVar guard added to injection check (B202); TrustLevel severity inversion fixed with severity() method + #[non_exhaustive] + Ord prohibition (B208). interface-definitions.md §Prompt Templates + §RunContext + §SkillStore: TrustLevel enum updated (Copy+non_exhaustive+kani::Arbitrary+severity()); RunContext.app_id field added; SkillStore scope note added; context_mutations doc updated with scope bridge."
@@ -61,7 +65,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 21 files (ADR-001 to ADR-021)
+**ADRs:** `.factory/specs/architecture/decisions/` — 25 files (ADR-001 to ADR-025)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -171,6 +175,10 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | ADR-019 | Rolling Context Compaction Primitive (D23) | accepted — D23 authority | — |
 | ADR-020 | First-Party Tool Library (D23) | accepted — D23 authority | — |
 | ADR-021 | SecurityConfig TOML Representation and RunnableConfig.configurable Field (fix-burst-283) | accepted — architect adjudication F-P175-C101+C113 | — |
+| ADR-022 | §Named-Section Citation Convention: Restriction to Real Markdown Headings (fix-burst-287) | accepted — architect adjudication F-P176-A039+E001 (Mechanism 1) | — |
+| ADR-023 | #[non_exhaustive] Governance for Public API Types (fix-burst-287) | accepted — architect adjudication F-P176-A028+A029+D009+B026+C028 (Mechanism 4) | — |
+| ADR-024 | WriteFileTool Create-Path Confinement Protocol (fix-burst-287 / F-P176-C002) | accepted — architect adjudication F-P176-C002 CRIT; product-owner applies to BC-2.23.002 | — |
+| ADR-025 | Type Signature Canon: Object Safety and Arc Ownership Patterns (D-43, D-45, D-48) (fix-burst-287) | accepted — grounds verify-signature-canon.sh rules S2/S3/S4 in citable ADR headings; hook now enforces ADR rather than defining it | — |
 
 ## Verification Properties (VP-INDEX)
 

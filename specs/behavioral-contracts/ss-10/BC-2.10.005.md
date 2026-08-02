@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.005
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,8 +21,9 @@ vp_id: VP-012
 red_gate: false
 changelog:
   - "1.0 (D23/2026-07-22): Initial BC — D23 rolling compaction, SS-10 CompactionTrigger configuration contract. VP-012 Kani seed."
-  - "1.1 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX v1.5 as VP-012' (VP-INDEX v1.5 burst-232 seeded VP-012 Kani P1)."
+  - "1.1 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX as VP-012' (VP-INDEX v1.5 burst-232 seeded VP-012 Kani P1)."
   - "1.2 (F-P151-04/05, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied. (1) F-P151-04: OnWatermark predicate `< (1.0 - fraction)` → `<= (1.0 - fraction)` (non-strict is load-bearing: strict `<` can never fire when fraction=1.0 and tokens_remaining=0, violating EC-002). Applied at Description, PC2 (predicate + rationale), Invariants (predicate + Kani bound `0 < …` → `0 <=`), EC-002 (explicit `0.0 <= 0.0 = true` arithmetic), EC-004 (predicate), TV-001 (annotation), VP-012 (table row). (2) F-P151-05: f32 → f64 throughout OnWatermark context (Description, PC2 comparison arithmetic, Invariants); f64 preserves integer exactness up to 2^53 tokens (no precision loss for any realistic token count). (3) ADD TV-006: OnWatermark { fraction: 1.0 }, ceiling=100_000, remaining=0 → fires (0.0 <= 0.0), EC-002 boundary."
+  - "1.3 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors and §Traceability VP Registration: 'VP-INDEX v1.5 as' → 'VP-INDEX as' (plain prose, no §-anchor introduced). verify-no-version-pins.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -163,7 +164,7 @@ _[to be filled after story decomposition — Wave 1 SS-10 extension story]_
 
 ## VP Anchors
 
-- VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; pregolya-core `watermark_arithmetic_harness`)
+- VP-012 (assigned in VP-INDEX as VP-012 — Kani P1; pregolya-core `watermark_arithmetic_harness`)
 - VP-2.10.005-B
 - VP-2.10.005-C
 
@@ -176,7 +177,7 @@ _[to be filled after story decomposition — Wave 1 SS-10 extension story]_
 | L2 Domain Invariants | DI-014 (Error Propagation — invalid configuration values propagate as Err; not silently treated as Disabled) |
 | Architecture Authority | ADR-019 Decisions 1 and 2 (CompactionTrigger types in core::budget, BudgetConfig fields) |
 | Binding Decisions | D23 (rolling compaction mandate, SS-10 extension) |
-| VP Registration | VP-012 (assigned in VP-INDEX v1.5 as VP-012 — Kani P1; pregolya-core `watermark_arithmetic_harness`) |
+| VP Registration | VP-012 (assigned in VP-INDEX as VP-012 — Kani P1; pregolya-core `watermark_arithmetic_harness`) |
 | Module | pregolya-core / core::budget (definitions) |
 | Priority | P1 |
 | Wave | 1 |

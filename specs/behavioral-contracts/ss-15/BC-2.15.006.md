@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ changelog:
   - "1.4 (fix-burst-279/F-P175-B101/ADR-012-D1-Amendment/2026-07-28): PC1 scope bridge corrected per architect ADR-012 Decision 1 Amendment (B101 CRIT). ContextSourceSpec.namespace is a key-namespace PREFIX within the tenant partition, NOT the app_id. Corrected call uses MemoryScope::App(run_context.app_id) with composite key format!(\"{}/{}\", spec.namespace, spec.key). run_context.app_id is the system-derived tenant identity (set by execution engine before first super-step; NOT overridable via RunnableConfig caller input). Empty app_id fails loud: all reads return Err(E-MEMORY-004 NoScopeContext) — no silent empty return. EC-006 added for empty app_id at run start. Architecture Anchors scheduler call updated to reflect corrected signature."
   - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep — 3 corrections. (1) EC-003 Scenario: `PregolyaError { ... }` → `PregolyaError { .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (2) EC-003 Expected: `PregolyaError { category: DURABILITY, ... }` → `PregolyaError { category: DURABILITY, .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (3) TV-006: `PregolyaError { category: DURABILITY }` → `PregolyaError { category: DURABILITY, .. }` (Class 3 VIOLATION — no elision marker). All three per ADR-010 §Error-Construction Notation Canon."
   - "1.6 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-007 added for EC-006 (empty app_id at run start → E-MEMORY-004 NoScopeContext fail-loud). EC-006 was introduced in v1.4 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-007 exercises the `run_context.app_id` empty path and verifies `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment §Gap 3 correction."
+  - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — EC-006 Expected behavior multi-line PregolyaError::new(Component::Memory, Category::Security, RetryHint::Never, \"E-MEMORY-004\", ...) collapsed to Err(PregolyaError { code: \"E-MEMORY-004\", .. }). Bare constructor form forbidden in prose context per ADR-010 Class 3 rules."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -151,11 +152,7 @@ context.
 ### EC-006: Empty app_id at run start — fail-loud (ADR-012 Decision 1 Amendment)
 **Scenario:** `graph::scheduler` attempts to load `ContextMutationConfig` sources but
 `run_context.app_id` is empty at the start of the super-step.
-**Expected behavior:** `graph::scheduler` returns `Err(PregolyaError::new(
-    Component::Memory, Category::Security, RetryHint::Never, "E-MEMORY-004",
-    "NoScopeContext: application tenant identity (app_id) is empty; \
-     ContextMutationConfig load requires a valid app_id",
-))` for the ContextMutationConfig load. The run does NOT proceed silently with no memory
+**Expected behavior:** `graph::scheduler` returns `Err(PregolyaError { code: "E-MEMORY-004", .. })` for the ContextMutationConfig load. The run does NOT proceed silently with no memory
 context — it surfaces the missing scope as an error. The execution engine is responsible
 for ensuring `run_context.app_id` is set before the first super-step. Fail-loud: symmetric
 with `SkillStore` construction (BC-2.15.004 PC3), per ADR-012 Decision 1 Amendment §Gap 3

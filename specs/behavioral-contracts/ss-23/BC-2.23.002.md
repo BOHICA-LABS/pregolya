@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.002
-version: "1.5"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,9 +25,13 @@ changelog:
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-5)."
   - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name `PathGuard::check(path)` with canonical entry point `canonicalize_beneath_root` at 4 sites: PC-1 happy-path ('passes' → 'succeeds'), PC-2 raise condition ('returns false' → 'returns `Err`'), Invariants call-obligation bullet, VP-2.23.002-A property description. No error-layer-split issues found — E-TOOLS-001 correctly used as tool-layer code throughout."
   - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC5 E-TOOLS-008 I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (message-embedded placeholders). TD-VSDD-060 sibling sweep: EC-003/EC-004/EC-006/TV-004 JSON-like {tool_type, ...} notation classified (c) message-component descriptions; left as-is."
+  - "1.6 (fix-burst-287/F-P176-C001/2026-08-01): PC-2 error-routing defect fixed. Prior text routed canonicalize_beneath_root returning Err 'for any reason' to E-TOOLS-001 (SECURITY/Never), conflating OS I/O failures with genuine scope-escape violations. Narrowed to: E-TOOLS-001 applies only when canonicalize_beneath_root returns Err because the resolved canonical path lies outside the guard scope (genuine escape). OS-level I/O failures (e.g., NotFound when parent directory does not exist) route to PC-5 as E-TOOLS-008 FileIoError. Discrimination note added to PC-2 body. EC-003 and TV-004 are already consistent with this rule; no additional edits needed. Same root defect as BC-2.23.001 PC-2."
+  - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 2 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001: inline → PregolyaError { code: 'E-TOOLS-001', .. }. PC-5 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
+  - "1.8 (fix-burst-287/F-P176-C002/ADR-024/2026-08-01): ADR-024 create-path update — close CRIT unreachability defect. PC-1 extended: canonicalize_beneath_root Phase 2 two-phase fallback (ADR-024 Decision 1) enables new-file creation when target does not exist but parent is within scope. PC-2 discrimination rule extended with three genuine-escape conditions per ADR-024 Decision 3: (a) Phase 1 symlink escape on existing file; (b) Phase 2 parent resolves outside workspace; (c) path ends in '..' or is filesystem root (filename=None). traces_to and Architecture Anchors updated to include ADR-024. TOCTOU residual risk LOW per ADR-024 Decision 4; v2 mitigation (rustix openat O_NOFOLLOW) deferred."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
+  - architecture/decisions/ADR-024-writefile-create-path-confinement.md
   - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -68,15 +72,28 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 
 ## Postconditions
 
-1. **Happy path:** `canonicalize_beneath_root(workspace_root, path)` succeeds and the write proceeds. The target file
-   contains exactly the bytes of `content`. The tool returns `ToolOutput::Text("written: <path>")`.
-   Parent directories that do not exist are NOT created automatically; callers must ensure the
-   parent directory exists. If the parent directory does not exist, the tool returns an I/O error.
-2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` for any reason.
-   The tool returns
-   `Err(PregolyaError::new(Component::Tools, Category::Security, RetryHint::Never, "E-TOOLS-001",
-   "PathConfinementViolation: path '<path>' is outside the configured PathGuard scope"))`.
-   No I/O is performed; no temporary file is created.
+1. **Happy path:** `canonicalize_beneath_root(workspace_root, path)` succeeds — either via Phase 1
+   (target file already exists; canonical form within scope) or via the Phase 2 two-phase fallback
+   (ADR-024 Decision 1: target file does not yet exist but its parent directory exists and is within
+   scope) — and the write proceeds. The target file contains exactly the bytes of `content`. For new
+   files, Phase 2 resolves the canonical parent and appends the filename; the write then creates the
+   file at that confined path. The tool returns `ToolOutput::Text("written: <path>")`.
+   Parent directories are NOT created automatically; if the parent directory does not exist,
+   `canonicalize_beneath_root` Phase 2 propagates a `NotFound` error for the parent →
+   `E-TOOLS-008 FileIoError` (PC-5).
+2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns
+   `Err(WorkspaceEscape)` for genuine escape conditions (ADR-024 Decision 3):
+   - **(Phase 1)** Target file exists but its resolved canonical form lies outside the workspace root
+     (symlink target escapes workspace).
+   - **(Phase 2)** Target file does not exist; parent directory exists but its canonical form lies
+     outside the workspace root.
+   - **(Phase 2)** Path ends in `..` or is the filesystem root — `Path::file_name()` returns `None`;
+     treated as a traversal attempt.
+   The tool returns `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
+   No I/O is performed; no temporary file is created. **Discrimination rule (ADR-024 Decision 3):**
+   `E-TOOLS-001` is raised exclusively for genuine scope-escape conditions. OS-level I/O failures
+   (`NotFound` from a missing parent directory, `PermissionDenied`) are **not** confinement
+   violations; they route to PC-5 as `E-TOOLS-008 FileIoError`.
 3. **Atomic write semantics:** The implementation writes content to `<path>.ferroctmp_<random>`
    in the same directory, then performs a rename to `<path>`. If the rename fails, the
    temporary file is removed and the error is propagated. The target file is never left in a
@@ -84,8 +101,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 4. **Overwrite existing file:** If `path` already exists, it is replaced atomically. No backup
    is created. The caller is responsible for any desired backup semantics.
 5. **I/O error:** OS-level I/O failure (disk full, permission denied) propagates as
-   `Err(PregolyaError::new(Component::Tools, Category::Tool, RetryHint::Maybe, "E-TOOLS-008",
-   "WriteFileTool I/O error on '<path>': <io_kind>"))`.
+   `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    The temporary file is removed on error.
 
 ## Invariants
@@ -141,6 +157,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (tools::fs WriteFileTool), Decision 3 (High ActionRisk), Decision 4 (retry_eligible: false), Decision 5 (E-TOOLS-001)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — Decision 1 (two-phase `canonicalize_beneath_root` for non-existent paths), Decision 2 (WriteFileTool calling convention unchanged), Decision 3 (error routing table — three genuine-escape conditions), Decision 4 (TOCTOU residual risk LOW), Decision 5 (atomic write compatible)
 - `architecture/module-decomposition.md` — SS-23, `tools::fs` module in pregolya-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell classification
 

@@ -2230,3 +2230,68 @@ Findings are NOT decaying toward zero. Four consecutive full-perimeter passes at
 
 **Convergence dim-5:** Counter 0/3 (unchanged — pass found findings). Next: fix-burst 285 (mechanism fixes + 5 CRITs) then P1D-177 FULL-PERIMETER.
 **Convergence dim-7:** Trajectory tail →130→256→189→160. Lessons L-153..L-155 minted. D-109..D-115 added.
+
+---
+
+## Burst-287 Adjudication and Reframing
+
+### Instrument Calibration — P1D-176 Stratified Sample (burst-287, 2026-08-01)
+
+**Method:** Independent read-only adjudication of a stratified 12-finding sample from P1D-176. Each finding verified using its own stated verification method, pinned to frozen HEAD `9a62edc` via `git show`. 19 total findings verified across the full adjudication exercise.
+
+**Verdict distribution (12-finding stratified sample):** 5 CONFIRMED / 1 PARTIALLY TRUE / 6 FALSE → **50% false-positive rate**
+
+**7 of 12 (58%) cite a §Section or field that does not exist.**
+
+**Reliable finding classes (0% FP):**
+- Direct cross-contradiction (C001/C002 confirmed CRIT)
+- Governing-rule absence (D001/D002/E001 confirmed CRIT)
+- Arithmetic where the reviewer independently measured
+
+**Unreliable finding class — note-closure: 7/7 FALSE**
+- Verified FALSE: D003, D004, D008, D013, A005, A008, A010
+- Root cause (single, mechanical): adversary cannot distinguish historical/archival content from current normative content. Changelog entries describing past fixes, "original decision" derivation tables, and Forward Amendment blockquotes are read as live state.
+- A010 clearest instance: ADR-007's original D7 table ("18 crates"), preserved and labelled as history, was reported as current state while "Authoritative current count: 21" blockquote on the following lines was ignored.
+- A005 instance: "BC-2.18.003 was unanchored" (a gap being found) was reversed into a completed-propagation claim.
+
+**Three fabricated filenames (adversary reasons from inference, not reading):**
+- A005: cited `ADR-015-prompt-injection-safety.md` (actual: `ADR-015-prompt-template-injection-safety.md`)
+- A008: cited `ADR-005-checkpoint-id-type.md` (actual: `ADR-005-logical-clock-checkpoint-ordering.md`)
+- A010: cited `ADR-007-workspace-crate-decomposition.md` (actual: `ADR-007-crate-topology-sdk-split.md`)
+
+**Counts were wrong and always inflating:** `~170`→42, `7 legacy codes`→0, `6 files`→2, `6 stale sites`→4.
+
+**Caveat (record honestly):** Sample is 19 findings verified, not 160. The split is clean and the root cause mechanical, but the FP rate is not established corpus-wide.
+
+### Convergence Reframing (burst-287, 2026-08-01)
+
+The trajectory 130→256→189→160 was previously attributed to "each pass finds defects created by the prior pass's fixes." Better-supported explanation: **roughly half of each pass was never real, and bursts that "fixed" phantom findings mutated correct files, manufacturing genuine defects for the next pass to discover.** A defect pump powered by trusting an uncalibrated instrument.
+
+Two live confirmations this burst:
+1. Class-blind error-notation gate would have driven 26 wrong corpus mutations (replaced 26 mandatory Class 1 `::new()` calls with struct literals)
+2. Orchestrator's imprecise canon relay (blanket `::new()` prohibition) nearly caused the same
+
+**Consequence for convergence assessment:** P1D-177 expected count drop must NOT be read as convergence evidence on its own. It will partly reflect the instrument being fixed (POL-46 now governing the adversary), not solely corpus improvement. This distinction matters for the 3-CLEAN gate: a pass could otherwise be certified clean for the wrong reason.
+
+### Updated Trajectory
+
+| Pass | Findings | Delta | Streak | Note |
+|------|----------|-------|--------|------|
+| P1D-173 | 130 | +110 | 0/3 | Coverage expansion: api-surface + interface-definitions + 13 VP bodies first audit |
+| P1D-174 | 256 | +126 | 0/3 | First BC-body line-by-line + type-coherence audit |
+| P1D-175 | 189 | -67 | 0/3 | Debt-first perimeter; 6 coverage debts discharged; Wave B notation sweep |
+| P1D-176 | 160 | -29 | 0/3 | First pass with policies.yaml rubric; 5 CRITs; 5 mechanisms |
+| fix-burst-287 | — | — | 0/3 | All 5 mechanisms closed; all 5 CRITs closed; instrument calibrated (POL-46/47) |
+
+**Trajectory tail at burst-287:** →130→256→189→160 (fix bursts do not advance streak)
+
+**Total passes to date: 177.**
+
+### Convergence Assessment (updated at burst-287)
+
+Counter: **0/3 unchanged.** Fix bursts do not advance the streak.
+
+All five convergent mechanisms are closed. All five CRITs are closed. The instrument is now calibrated under POL-46. P1D-177 is the first pass in project history with a calibrated adversary instrument. A substantial count drop is expected and should be interpreted cautiously (instrument fix + corpus fix combined, not separable without pass-N+1 data).
+
+**Convergence dim-5:** Counter 0/3. Next: P1D-177 FULL-PERIMETER under POL-46.
+**Convergence dim-7:** Trajectory tail →130→256→189→160. Lessons L-160..L-169 minted. D-121..D-130 added.

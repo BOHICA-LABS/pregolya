@@ -302,11 +302,13 @@ for filepath in all_files:
     try:
         fm = yaml.safe_load(parts[1])
     except yaml.YAMLError as e:
-        print(f"SKIP {filepath} yaml-parse-error:{str(e).replace(chr(10), ' | ')}")
+        # FAIL (not SKIP/WARN): unparseable frontmatter = UNVERIFIED (F-P176-E007 class).
+        print(f"FAIL {filepath} yaml-parse-error:{str(e).replace(chr(10), ' | ')}")
         continue
 
     if not isinstance(fm, dict):
-        print(f"SKIP {filepath} frontmatter-not-dict")
+        # FAIL (not SKIP/WARN): non-dict frontmatter is structurally malformed.
+        print(f"FAIL {filepath} frontmatter-not-dict")
         continue
 
     body = parts[2]

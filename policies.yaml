@@ -32,15 +32,21 @@
 #
 # PHASE ACTIVATION
 # ────────────────
-# Phase-1-active (current): POL-1..POL-31
+# Phase-1-active (current): POL-1..POL-31, POL-46..POL-47
 # Phase-3-binding (code):   POL-32..POL-45 (bind on first commit to crates/)
 #
 # MACHINE GATE COVERAGE
 # ─────────────────────
-# BLOCKING gate today: POL-12 (records-lint + verify-no-version-pins), POL-13 (records-lint),
+# BLOCKING gate today (13 validators per pre-commit-validators.sh):
+#   POL-12 (records-lint + verify-no-version-pins), POL-13 (records-lint),
 #   POL-15 (verify-changelog-date-monotonicity), POL-16 (verify-enum-variant-casing),
 #   POL-17 (verify-error-notation-canon), POL-18 (verify-signature-canon),
-#   POL-19 (verify-adr-decision-refs + verify-adr-self-version-refs).
+#   POL-19 (verify-adr-decision-refs §Decision N integer form + verify-adr-self-version-refs;
+#     §Named-Section form: adversary-only pending ADR-022 §Decision 3 implementation);
+#   also blocking (no POL-N assigned): verify-changelog-date-validity.sh,
+#   verify-form-a-changelog-direction.sh, verify-arch-anchor-resolution.sh,
+#   verify-module-canonicality.sh, verify-bc-frontmatter-schema.sh,
+#   verify-tv-registry-count.sh (added fix-burst-287).
 # ADVISORY gate today: POL-6 (verify-arch-anchor-resolution, verify-module-canonicality),
 #   POL-14 (verify-form-a-changelog-direction), POL-20 (verify-bc-frontmatter-schema),
 #   POL-21 (verify-changelog-claim-applied).
@@ -54,10 +60,60 @@
 #   and STATE.md Decisions Log D-56, D-57, D-85, D-89. Created fix-burst-283.
 #   Previously absent — all 176 adversarial passes ran without project-policy rubric
 #   injection (STATE.md D-78). Enforcement-coverage gap now visible per policy.
+# 1.1 (fix-burst-287/F-P176-A007+C008+E001/2026-08-01): Four policy corrections
+#   for F-P176 governance findings. (1) POL-17 (error_notation_canon) — F-P176-C008
+#   CONFIRMED: removed false claim that PregolyaError::new() is valid in Class 3
+#   contexts; ADR-010 §Class 3 explicitly forbids ::new() in prose/table/formal-
+#   statement contexts (adjudication: fix-burst-287). Scoped ::new() to Class 1
+#   (rust fence, value-expression position) only. Corrected violation class names
+#   (CLASS3_ASCII_ELLIPSIS_VIOLATION, CLASS3_MISSING_DOTS_VIOLATION) and updated
+#   verification steps to distinguish Class 1 vs Class 3 contexts.
+#   (2) POL-16 (enum_variant_casing_canon) — F-P176-A007 CONFIRMED: replaced
+#   phantom §Enum Variant Casing anchor (no such heading in ADR-010) with real
+#   heading §Decision (prefix-matches ## Decision: PregolyaError at all library
+#   boundaries…) which contains the Category casing canon paragraph. Per ADR-022
+#   §Decision 1: only real markdown headings are valid § targets.
+#   (3) POL-18 (type_signature_canon) — F-P176-A007 CONFIRMED: replaced phantom
+#   §Type Signature Canon anchor (no such heading in ADR-010) with state decisions
+#   D-42, D-43, D-45, D-48. D-42 PregolyaError constructor form anchors to
+#   ADR-010 §Class 1 (real heading). D-43 (DynTool) and D-45/D-48 (as_retriever)
+#   have no ADR-010 heading — canonical form defined by verify-signature-canon.sh
+#   rule specification. Updated verification steps to remove phantom anchor.
+#   (4) POL-19 (adr_decision_reference_integrity) — F-P176-E001 CRIT CONFIRMED:
+#   verify-adr-decision-refs.sh CITE_RE covers §Decision N integer form only;
+#   §Named-Section citations (ADR-NNN §SectionName) have zero blocking machine
+#   coverage. Updated description with measured scope: 42 normative-prose
+#   ADR-target citations (changelogs, frontmatter, fenced, backtick, illustration,
+#   and §Decision N forms excluded from count) of which 10 are currently phantom;
+#   verify-adr-anchor-citations.sh (ADR-022 §Decision 3) exists but is advisory
+#   (exits 0, unwired); promotion to blocking is the expected next step after the
+#   42-citation sweep. Blocking validator roster grew from 12 to 13 this burst
+#   (verify-tv-registry-count.sh added).
+# 1.2 (fix-burst-287/POL-18-ADR-025+ADR-022-D5+POL-46-47/2026-08-01): Four changes.
+#   (1) POL-18 (type_signature_canon) — repoint D-43, D-45, D-48 citations from
+#   provisional "canonical form defined by verify-signature-canon.sh rule specification"
+#   to real ADR-025 headings. All four grep-verified against ADR-025 body before writing
+#   per ADR-022 §Decision 1: §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43)
+#   (line 55); §VectorStoreRetriever: No Lifetime Parameter (D-45) (line 95);
+#   §as_retriever Receiver: Arc<Self> Ownership (D-48) (line 131); §&Arc<Self> Receiver:
+#   Standing Prohibition (D-48 General) (line 172). ADR-025 minted by architect this
+#   burst closing governance inversion where verify-signature-canon.sh was canon source.
+#   (2) POL-19 (adr_decision_reference_integrity) — add ADR-022 §Decision 5 alignment:
+#   machine enforcement is ADR-target-only; 183 non-ADR §citations convention-bound
+#   (BC: 79, ADV-P: 42, VP: 24, F-P: 14, CAP: 11, other: 13); chained double-§ forms
+#   (ADR-NNN §X §Y) prohibited. Added verification step 6 for chained-§ check.
+#   (3) POL-46 (adversary_finding_quality) minted — five requirements for every adversary
+#   finding: inline verification command with actual output, §citations grep-verified,
+#   counts measured not inherited, substance/location reported separately, note-closure
+#   verified in current body not changelog. Severity HIGH. Grounds fix-burst-287
+#   measured 50% false-positive rate (6/12), 58% phantom §citation rate (7/12).
+#   (4) POL-47 (artifact_self_validation) minted — every new/amended ADR and policy must
+#   pass its own canon checks before done. Severity HIGH. Grounds four artifacts in
+#   fix-burst-287 that each carried a defect of the class they were created to fix.
 
 metadata:
-  version: "1.0"
-  last_updated: "2026-07-30"
+  version: "1.2"
+  last_updated: "2026-08-01"
 
 policies:
 
@@ -281,8 +337,8 @@ policies:
 
   - id: 16
     name: enum_variant_casing_canon
-    description: "Enum variant identifiers in spec pseudocode and BC postcondition tables must follow ADR-010 §Enum Variant Casing. PascalCase for all data-bearing and unit variants. SCREAMING_CASE is retracted (Direction B retracted; F-P168-01). Enforced by verify-enum-variant-casing.sh."
-    adopted: "ADR-010 §Enum Variant Casing, F-P168-01"
+    description: "Enum variant identifiers in spec pseudocode and BC postcondition tables must follow the Category casing canon in ADR-010 §Decision. PascalCase for all data-bearing and unit variants. SCREAMING_CASE is retracted (Direction B retracted; F-P168-01). Enforced by verify-enum-variant-casing.sh."
+    adopted: "ADR-010 §Decision (Category casing canon paragraph), F-P168-01"
     severity: HIGH
     enforced_by: [hooks/verify-enum-variant-casing.sh, adversary-prompt]
     scope: [bc, architecture]
@@ -290,26 +346,26 @@ policies:
     verification_steps:
       - "Run hooks/verify-enum-variant-casing.sh: verify FAIL=0"
       - "Scan BC postcondition tables for SCREAMING_CASE enum forms — flag as violation"
-      - "Verify Category:: enum citations use PascalCase as specified in ADR-010 §Enum Variant Casing"
+      - "Verify Category:: enum citations use PascalCase per ADR-010 §Decision — the Category casing canon paragraph specifies PascalCase for Rust variant identifiers (Category::Val, Category::Auth, etc.)"
 
   - id: 17
     name: error_notation_canon
-    description: "PregolyaError construction in spec pseudocode must follow ADR-010 §Error-Construction Notation Canon. Required forms: ::new() constructor (Class 3 valid) or complete field set with rest-pattern '..' (Class 3 valid-complete). Forbidden: ASCII-ellipsis '...' (CLASS1 violation) and missing rest-pattern on partial field sets (CLASS2 violation). Enforced by verify-error-notation-canon.sh."
+    description: "PregolyaError expressions in spec pseudocode must follow ADR-010 §Error-Construction Notation Canon by context class: Class 1 (rust fence, value-expression position) MUST use PregolyaError::new(component, category, retry_hint, code, message); Class 3 (prose, table cells, formal-statement blocks) MUST use struct-observation form PregolyaError { code: \"E-XXX-001\", .. } with `..` rest-pattern when eliding fields — PregolyaError::new() is FORBIDDEN in Class 3 contexts per ADR-010 §Class 3; Class 2 (rust fence, pattern position) MUST include `..` rest pattern. Forbidden everywhere: `...` ASCII-ellipsis as field-elision marker (CLASS3_ASCII_ELLIPSIS_VIOLATION) and missing `..` on partial field sets (CLASS3_MISSING_DOTS_VIOLATION). Enforced by verify-error-notation-canon.sh."
     adopted: "ADR-010 §Error-Construction Notation Canon, D-82, D-83"
     severity: HIGH
     enforced_by: [hooks/verify-error-notation-canon.sh, adversary-prompt]
     scope: [bc, architecture, prd]
     lint_hook: null
     verification_steps:
-      - "Run hooks/verify-error-notation-canon.sh: verify FAIL=0 (CLASS1_VIOLATIONS=0, CLASS2_VIOLATIONS=0)"
-      - "For each PregolyaError literal in BC pseudocode: verify it uses ::new() constructor or includes '..' rest-pattern"
+      - "Run hooks/verify-error-notation-canon.sh: verify FAIL=0 (CLASS3_ASCII_ELLIPSIS_VIOLATION=0, CLASS3_MISSING_DOTS_VIOLATION=0)"
+      - "For each PregolyaError occurrence: determine context class first. Class 1 (rust fence, value-expression): verify PregolyaError::new() is used. Class 3 (prose/table/formal-statement): verify struct-observation form with `..` is used; flag any PregolyaError::new() call in Class 3 context — that is a violation per ADR-010 §Class 3"
       - "Flag '...' (three ASCII dots) in PregolyaError struct literals — that is the forbidden form"
       - "Verify bucket sum in validator output equals the total opener count (guards against narrowed-scope false-pass per D-57)"
 
   - id: 18
     name: type_signature_canon
-    description: "Type signatures in spec pseudocode must follow canonical forms established in ADR-010 §Type Signature Canon: D-42 PregolyaError constructor form, D-43 DynTool, D-45/D-48 as_retriever receiver and return type. Enforced by verify-signature-canon.sh rules S1–S5."
-    adopted: "ADR-010 §Type Signature Canon, D-42, D-43, D-45, D-48"
+    description: "Type signatures in spec pseudocode must follow canonical forms per ADR-010 and ADR-025: D-42 PregolyaError constructor form per ADR-010 §Class 1; D-43 DynTool object-safe dispatch form per ADR-025 §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43); D-45 VectorStoreRetriever no-lifetime-parameter form per ADR-025 §VectorStoreRetriever: No Lifetime Parameter (D-45); D-48 as_retriever Arc<Self> receiver per ADR-025 §as_retriever Receiver: Arc<Self> Ownership (D-48); D-48 general &Arc<Self> prohibition per ADR-025 §&Arc<Self> Receiver: Standing Prohibition (D-48 General). Enforced by verify-signature-canon.sh rules S1–S5."
+    adopted: "ADR-010 §Class 1 for D-42 (PregolyaError ctor form); ADR-025 §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43) for D-43; ADR-025 §VectorStoreRetriever: No Lifetime Parameter (D-45) for D-45; ADR-025 §as_retriever Receiver: Arc<Self> Ownership (D-48) and ADR-025 §&Arc<Self> Receiver: Standing Prohibition (D-48 General) for D-48"
     severity: HIGH
     enforced_by: [hooks/verify-signature-canon.sh, adversary-prompt]
     scope: [bc, architecture, prd]
@@ -317,13 +373,13 @@ policies:
     verification_steps:
       - "Run hooks/verify-signature-canon.sh: verify FAIL=0 across all rule classes (S1–S5)"
       - "Verify PregolyaError construction sites use the ::new() constructor form (rule S1b)"
-      - "Verify DynTool and VectorStoreRetriever type parameters match ADR-010 §Type Signature Canon (rule S2)"
-      - "Verify as_retriever receiver and return type matches the canonical form from D-45/D-48 (rules S3, S4)"
+      - "Verify DynTool type parameter uses Arc<dyn DynTool> form per ADR-025 §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43); verify VectorStoreRetriever has no angle-bracket suffix per ADR-025 §VectorStoreRetriever: No Lifetime Parameter (D-45) — enforced by verify-signature-canon.sh rules S4 and S2"
+      - "Verify as_retriever receiver uses Arc<Self> form per ADR-025 §as_retriever Receiver: Arc<Self> Ownership (D-48); verify no &Arc<Self> receiver appears in trait methods per ADR-025 §&Arc<Self> Receiver: Standing Prohibition (D-48 General) — enforced by verify-signature-canon.sh rules S1 and S3"
       - "Any violation not in signature-canon-allowlist.txt is a blocker; allowlist entries must have justification and fix-burst anchor"
 
   - id: 19
     name: adr_decision_reference_integrity
-    description: "All cross-references from BC/story/spec files to ADR decision anchors must resolve to real sections in the cited ADR file. Phantom ADR citations (fabricated ADR numbers or non-existent section names) block convergence."
+    description: "All §Decision N integer citations from BC/story/spec files must resolve to a real numbered decision in the cited ADR file; enforced by verify-adr-decision-refs.sh (CITE_RE covers §Decision N form only). §Named-Section citations (ADR-NNN §SectionName) require that the named heading exists as a real markdown heading (prefix-match per ADR-022 §Decision 1); blocking machine enforcement for this form is PENDING: verify-adr-anchor-citations.sh exists (ADR-022 §Decision 3 implementation) but is ADVISORY-only (exits 0, not wired into pre-commit-validators.sh as of fix-burst-287). Measured scope at fix-burst-287: 42 normative-prose ADR-target citations (total corpus occurrences minus changelogs, frontmatter, fenced code blocks, inline backtick spans, illustration regions, and §Decision N forms already gated by verify-adr-decision-refs.sh), of which 10 are currently phantom. A 42-citation sweep is a single-burst job; promotion to blocking is the expected next step once that sweep clears. Adversary-prompt provides coverage until promotion. Machine enforcement scope (ADR-022 §Decision 5): the anchor gate is ADR-target-only; 183 non-ADR §citations (BC: 79, ADV-P: 42, VP: 24, F-P: 14, CAP: 11, other: 13) are convention-bound but not machine-enforced — authors must apply Form A discipline per ADR-022 §Decision 1; violations in non-ADR targets are caught by adversarial review per-burst. Chained double-§ forms are prohibited per ADR-022 §Decision 5 — each citation must be a single §anchor in a single document (writing §SectionA then §SectionB sequentially in one citation is prohibited as ambiguous)."
     adopted: "hooks/verify-adr-decision-refs.sh creation"
     severity: HIGH
     enforced_by: [hooks/verify-adr-decision-refs.sh, hooks/verify-adr-self-version-refs.sh, adversary-prompt]
@@ -332,9 +388,10 @@ policies:
     verification_steps:
       - "Run hooks/verify-adr-decision-refs.sh: verify exit 0 with no FAIL lines"
       - "Run hooks/verify-adr-self-version-refs.sh: verify exit 0 with no FAIL lines"
-      - "For any BC citing an ADR: open that ADR file and confirm the cited section anchor exists verbatim"
+      - "For any BC citing an ADR by §Decision N form: verify-adr-decision-refs.sh covers this mechanically. For any BC citing an ADR by §Named-Section form (ADR-NNN §SectionName): open that ADR file and confirm the cited heading exists as a real markdown heading using prefix-match per ADR-022 §Decision 1 — this is adversary scope (no machine gate). Machine enforcement is ADR-target-only per ADR-022 §Decision 5; §citations to non-ADR targets (BC, VP, ADV-P, CAP, F-P) are convention-bound only — apply Form A discipline and flag violations per-burst"
       - "For VP files citing an ADR decision: confirm the decision text supports the verification property's rationale"
       - "Flag fabricated ADR citations (ADR number exists but cited section does not match real ADR content)"
+      - "Flag any chained double-§ form per ADR-022 §Decision 5 — two §anchors sequentially in one citation (e.g. §SectionA then §SectionB) are ambiguous and prohibited; replace with separate single-anchor citations to each target document"
 
   - id: 20
     name: bc_frontmatter_schema_compliance
@@ -706,3 +763,39 @@ policies:
       - "For each mod.rs: verify no 'impl ', 'fn ', 'struct ', 'enum ', or 'type ' declaration appears in the file body"
       - "Verify mod.rs files contain only pub use, pub mod, use, and optionally doc comments"
       - "Flag any mod.rs file with logic (type definitions, function bodies, impl blocks)"
+
+  # ── GOVERNANCE QUALITY POLICIES ────────────────────────────────────────────
+  # Phase-1-active. Govern adversarial review output and spec authorship quality.
+  # Source: fix-burst-287 measured calibration of P1D-176 adversarial pass.
+
+  - id: 46
+    name: adversary_finding_quality
+    description: "Every finding emitted by an adversarial pass must satisfy six requirements before the orchestrator routes it to a fix burst: (1) an inline verification command with its actual executed output — not a prose description of what to run; (2) every §citation AND every filename in the finding verified as real before writing — §citations by grep -q '^#{1,6} <text>' <file>, filenames by ls or git show — a finding citing a nonexistent heading or a wrong filename is invalid regardless of substantive accuracy; (3) every numeric count produced by a command at pass-time, not inherited from a prior report — inheriting a count is prohibited; (4) defect substance and defect location reported separately — a wrong coordinate does not invalidate a genuine defect and must not suppress it, but must also not route a fix to the wrong file; (5) note-closure claims verified by string-search in the current document body (outside changelog sections) — a changelog entry stating 'X was fixed' is evidence about the past, not the present; (6) claims derived from historical regions (changelog entries, original-decision derivation tables, Forward Amendment blockquotes) explicitly identified as historical and cross-checked against the current normative body before reporting — those regions exist to preserve history and will read as defects if treated as live state. Recommendation for devops/architect: extend the discriminator:illustration-start/end marker pattern to delimit historical regions, enabling gates and adversary instructions to exclude them by construction rather than by authoring discipline. Rationale measured in fix-burst-287: stratified adjudication of 12 P1D-176 findings found 6/12 FALSE (50%); 7/12 (58%) cited a §section or field not in the file; note-closure findings verified 7 for 7 FALSE (D003, D004, D008, D013, A005, A008, A010) — every one reduced to the same root cause: the adversary read historical/archival content as live state (A010 read an original D7 derivation table's 18-crate count, ignoring the immediately following 'Authoritative current count: 21' blockquote; A005 reversed a changelog finding into a completion claim; A008 fabricated a completion entry and inflated its grep count from 4 to 6); three findings cited fabricated filenames (A005: ADR-015-prompt-injection-safety.md, actual ADR-015-prompt-template-injection-safety.md; A008: ADR-005-checkpoint-id-type.md, actual ADR-005-logical-clock-checkpoint-ordering.md; A010: ADR-007-workspace-crate-decomposition.md, actual ADR-007-crate-topology-sdk-split.md) — the pattern indicates the adversary reasons about the corpus from inference rather than reading it. Counts were wrong in the inflating direction every time (~170→42, 7→0, 6→2, 12→13). BALANCE: this policy does NOT license dismissing findings. The same pass produced five CRITs all CONFIRMED and fixed (C001, C002, D001, D002, E001). Direct-contradiction and governing-rule-absence findings verified at 0% false. The adversary is reliable about whether a defect exists and unreliable about its location and currency. The requirement is verification before routing in both directions: do not fix a phantom, do not dismiss a real defect because its coordinates are wrong."
+    adopted: "fix-burst-287 adversarial calibration measurement (P1D-176 stratified adjudication — 12 findings, 5 CONFIRMED, 1 PARTIAL, 6 FALSE; note-closure 7/7 FALSE)"
+    severity: HIGH
+    enforced_by: [adversary-prompt, orchestrator-rule]
+    scope: [bc, vp, di, cap, story, hs, architecture, prd, nfr]
+    lint_hook: null
+    verification_steps:
+      - "For each finding in this pass: confirm it contains an inline verification command AND its actual output — a finding with only 'Verification: run X' and no output is non-compliant per requirement 1"
+      - "For each §citation in a finding: run grep -q '^#{1,6} <cited-text>' <target-file> and confirm exit 0 before finalizing — a citation to a nonexistent heading is a POL-46 violation per requirement 2"
+      - "For each filename cited in a finding: verify the file exists (ls <path> or git show <path>) before writing the finding — fabricated filenames are a POL-46 violation per requirement 2"
+      - "For each numeric count in a finding (files, occurrences, fields, codes, etc.): state the command that produced it in this pass — verify it was measured, not inherited from a prior report or adversary finding, per requirement 3"
+      - "For each finding: separate the substance claim ('the defect is X') from the location claim ('it appears in Y at Z') — if location is uncertain, say so; do not suppress a real defect because its coordinate is wrong, per requirement 4"
+      - "For each note-closure claim (asserting a note or section text exists in a file body): run grep -n '<claimed-text>' <file> scoped to the normative body (exclude ## Changelog and frontmatter) and confirm a match — a changelog entry stating a past fix is not evidence the text exists now, per requirement 5"
+      - "For each claim grounded in a changelog entry, a historical derivation table, or a Forward Amendment blockquote: label it explicitly as historical and cross-check the corresponding current normative section before reporting the finding — do not treat archived state as live state, per requirement 6"
+
+  - id: 47
+    name: artifact_self_validation
+    description: "Every new or amended ADR and governance policy document must demonstrate compliance with its own canon before being committed: (1) §citations must resolve to real headings in the target document (ADR-022 §Decision 1) — grep-verify each one; (2) volatile version-pin forms must be absent (POL-12); (3) chained double-§ forms must be absent (ADR-022 §Decision 5); (4) the rule the document introduces must demonstrably apply to the document itself. Rationale from fix-burst-287: four documents each carried a defect of the exact class they were created to fix — (1) ADR-022 migration precondition inherited the fabricated ~170 count from adversary finding E001, the very class ADR-022 was written to prevent; (2) ADR-023 cited §14-public-enums and §compile-fail-gate (neither a real heading) in the burst that restricted §citations to real headings; (3) ADR-022 gate-update protocol instructed future agents to edit a nonexistent §compile-fail-gate section; (4) ADR-010 adjudication note flattened a context-dependent rule into a blanket prohibition that would have driven 26 wrong corpus mutations. The architect independently confirmed the two-step self-check: (a) grep every §citation in the new document against its target, (b) confirm at least one location where the document's own rule is demonstrably applied to itself. The mechanism is consistent: an author setting a rule attends to the rule, not to their own compliance with it. An ADR or policy is not done until it passes the checks it mandates on others."
+    adopted: "fix-burst-287 four-artifact self-violation pattern; architect endorsement of two-step self-check"
+    severity: HIGH
+    enforced_by: [adversary-prompt, orchestrator-rule]
+    scope: [architecture, prd]
+    lint_hook: null
+    verification_steps:
+      - "For each new or amended ADR or policy: grep-verify every §citation in the document body by running grep -q '^#{1,6} <cited-text>' <target-file> for each — report any that exit non-zero as POL-47 violations before the document is committed"
+      - "For each new or amended ADR or policy: run hooks/verify-no-version-pins.sh scoped to the file; verify FAIL=0 for the file itself"
+      - "For each new or amended ADR or policy: grep for the pattern of two consecutive §-anchors ('§[^ ]+' followed by '§') in the document body; verify no chained double-§ forms per ADR-022 §Decision 5"
+      - "For each new or amended ADR or policy introducing a restriction: identify at least one location in the document itself where the restriction was applied — if none exists, flag as POL-47 violation (architect two-step self-check step b)"
+      - "For each new or amended policy citing a numeric corpus measurement: verify the count source is stated as a devops-engineer command output in the same burst, not an adversary report count — cite the measurement command explicitly in the policy description"

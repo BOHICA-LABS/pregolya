@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::VAL → Category::Val (PC-2), Category::TOOL → Category::Tool (PC-5)."
   - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 1 site: VP-2.23.003-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
   - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-003 EditOldStringNotFound: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC5 E-TOOLS-008 file-not-found: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (message-embedded placeholders). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
+  - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 2 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-003: inline → PregolyaError { code: 'E-TOOLS-003', .. }. PC-5 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -76,8 +77,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
    `ToolOutput::Text("edited: <path> (<n> replacements)")` when `replace_all: true`.
 2. **Exact-match not found (default mode, `fuzzy_threshold: None`):** `old_string` is not
    present in the file verbatim. The tool returns
-   `Err(PregolyaError::new(Component::Tools, Category::Val, RetryHint::Never, "E-TOOLS-003",
-   "EditOldStringNotFound: old_string not found in '<path>'"))`.
+   `Err(PregolyaError { code: "E-TOOLS-003", .. })`.
    The file is NOT modified.
 3. **Fuzzy fallback (opt-in, `fuzzy_threshold: Some(t)`):** If exact match fails, the tool
    uses `similar::TextDiff` to compute the `ratio()` between `old_string` and each contiguous
@@ -87,8 +87,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
    always tried first.
 4. **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
    No I/O performed.
-5. **File not found:** Returns `Err(PregolyaError::new(Component::Tools, Category::Tool,
-   RetryHint::Maybe, "E-TOOLS-008", "EditFileTool I/O error on '<path>': <io_kind>"))`.
+5. **File not found:** Returns `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
 6. **Conditional retry safe:** `old_string` not found (E-TOOLS-003) is structurally a no-op
    (the file was not modified). Re-retrying after E-TOOLS-003 is safe without re-approval
    because no state was changed. This is the only retry-safe failure mode; write failures

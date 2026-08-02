@@ -244,11 +244,15 @@ for filepath in files:
     except yaml.YAMLError as e:
         # Flatten multi-line YAMLError to single line to keep bash loop clean
         single_line = str(e).replace('\n', ' | ')
-        print(f"SKIP {filepath} yaml-parse-error:{single_line}")
+        # FAIL (not SKIP/UNVERIFIED): unparseable frontmatter = UNVERIFIED (F-P176-E007 class).
+        # Consistent with verify-changelog-date-{monotonicity,validity}.sh and
+        # verify-bc-frontmatter-schema.sh — yaml-parse-error carries FAIL severity suite-wide.
+        print(f"FAIL {filepath} yaml-parse-error:{single_line}")
         continue
 
     if not isinstance(fm, dict):
-        print(f"SKIP {filepath} frontmatter-not-dict")
+        # FAIL (not SKIP/UNVERIFIED): non-dict frontmatter is structurally malformed.
+        print(f"FAIL {filepath} frontmatter-not-dict")
         continue
 
     # Skip non-BC documents that happen to match the glob (defensive)
@@ -494,11 +498,13 @@ for filepath in all_files:
         fm = yaml.safe_load(fm_text)
     except yaml.YAMLError as e:
         single_line = str(e).replace('\n', ' | ')
-        print(f"SKIP {filepath} yaml-parse-error:{single_line}")
+        # FAIL (not SKIP/UNVERIFIED): unparseable frontmatter = UNVERIFIED (F-P176-E007 class).
+        print(f"FAIL {filepath} yaml-parse-error:{single_line}")
         continue
 
     if not isinstance(fm, dict):
-        print(f"SKIP {filepath} frontmatter-not-dict")
+        # FAIL (not SKIP/UNVERIFIED): non-dict frontmatter is structurally malformed.
+        print(f"FAIL {filepath} frontmatter-not-dict")
         continue
 
     # Skip actual BC files (document_type == 'behavioral-contract')

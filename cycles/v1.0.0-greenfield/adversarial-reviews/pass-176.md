@@ -68,6 +68,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 
 ### F-P176-C001 (CRIT)
 
+> **ADJUDICATED: CONFIRMED — burst-287, 2026-08-01.** Verified at frozen HEAD `9a62edc` using the stated method. CLOSED: BC-2.23.001/BC-2.23.002 §postconditions each. Do NOT re-fix.
+
 **File:** `BC-2.23.001`, `BC-2.23.002`
 **Section:** §PC-2
 **Defect:** PC-2 in both BCs maps `canonicalize_beneath_root` returning `Err` "for any reason" to `E-TOOLS-001 PathConfinementViolation` (SECURITY / never-retry class). This contradicts PC-4, EC-005, and TV-004 in the same files, which require `E-TOOLS-008 FileIoError NotFound` for I/O failures on valid paths. `BC-2.23.006` PC-6 carries the correct disambiguation (SECURITY-class only for escape attempts; I/O failures take the FileIoError path). A sweep that touched five sibling BCs to propagate the disambiguation missed `BC-2.23.001` and `BC-2.23.002`.
@@ -78,6 +80,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 ---
 
 ### F-P176-C002 (CRIT)
+
+> **ADJUDICATED: CONFIRMED — burst-287, 2026-08-01.** Verified: no `exists: false` pre-check in any SS-23 BC (full SS-23 read performed). CLOSED: ADR-024 minted + BC-2.23.002 §postconditions. Do NOT re-fix.
 
 **File:** `BC-2.23.001` (WriteFileTool create-new-file entry point)
 **Section:** §PC-5 / §Preconditions
@@ -91,6 +95,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 
 ### F-P176-D001 (CRIT)
 
+> **ADJUDICATED: CONFIRMED — burst-287, 2026-08-01.** Registry verified against independent BC-body section-row count by devops. 687 total (676+11). CLOSED: test-vectors.md §grand-total. Do NOT re-fix.
+
 **File:** `test-vectors.md`
 **Section:** §Grand-Total / §TV-Registry
 **Defect:** `test-vectors.md` §Grand-Total declares 664 canonical TVs + 11 GTVs = 675. Ground truth from summing BC-level TV counts is 676 canonical + 11 GTVs = 687. Twelve vectors are missing from the registry. Eight stale rows were identified: BCs BC-2.03.001, BC-2.09.001, BC-2.12.002, BC-2.15.004, BC-2.15.006, BC-2.17.001, BC-2.18.001, BC-2.18.004 each had TV counts updated in prior fix-bursts but the registry §TV-Registry rows were not updated. The column sum arithmetic is internally self-consistent at every step (the registry sums to its own declared total) — the arithmetic identity does not detect the ground-truth mismatch. This is Mechanism 3: arithmetic identities satisfiable without ground truth.
@@ -102,6 +108,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 
 ### F-P176-D002 (CRIT)
 
+> **ADJUDICATED: CONFIRMED — burst-287, 2026-08-01.** Finding's "DynamicToolLoader" label for SS-22 is incorrect (SS-22 = Embeddings), but the core routing defect (pregolya-community assignment) was confirmed real by cross-checking 4 artifacts. CLOSED: bc-authoring-plan.md §ss-22. Do NOT re-fix.
+
 **File:** `bc-authoring-plan.md`
 **Section:** §Subsystem → CAP Mapping
 **Defect:** §Subsystem → CAP Mapping assigns SS-22 (DynamicToolLoader / runtime tool registration) to `pregolya-community` (described in the mapping as post-v1, LOW-tier, not-in-tree). Every other artifact that references SS-22 — ARCH-INDEX §crate-table, dependency-graph §edge-table, module-decomposition §ss-22 row, and all 3 SS-22 BCs — assigns SS-22 to `pregolya-core` (core runtime) + `pregolya-openai`/`pregolya-ollama` (provider bindings). The `pregolya-community` assignment would route all SS-22 BCs to a crate that does not exist in the v1 roster, making every SS-22 story unimplementable.
@@ -112,6 +120,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 ---
 
 ### F-P176-E001 (CRIT)
+
+> **ADJUDICATED: CONFIRMED — burst-287, 2026-08-01.** Zero machine coverage for named-section anchors verified by reading hook source. CLOSED: POL-19 rewritten to enforcement PENDING + advisory verify-adr-anchor-citations.sh built. Promotion to blocking awaits migration sweep (42 citations, 10 phantom). Do NOT re-fix.
 
 **File:** `policies.yaml` + `hooks/verify-adr-decision-refs.sh` + `hooks/verify-arch-anchor-resolution.sh`
 **Section:** §POL-19 (ADR anchor enforcement)
@@ -185,6 +195,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 
 #### F-P176-A005 — ADR-015 §Changelog note-closure: injection-guard propagation claimed complete; not applied
 
+> **ADJUDICATED: FALSE — burst-287, 2026-08-01.** Note-closure class. Adversary cited fabricated filename `ADR-015-prompt-injection-safety.md` (actual: `ADR-015-prompt-template-injection-safety.md`). Root cause: historical changelog content read as current normative state. Do NOT fix. Do NOT route.
+
 **Severity:** HIGH
 **File:** `specs/architecture/decisions/ADR-015-prompt-injection-safety.md`
 **Section:** §Changelog
@@ -218,6 +230,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 ---
 
 #### F-P176-A008 — ADR-005 §Changelog note-closure: CheckpointId disambiguation propagation claimed; 6 stale sites remain
+
+> **ADJUDICATED: FALSE — burst-287, 2026-08-01.** Note-closure class. Adversary cited fabricated filename `ADR-005-checkpoint-id-type.md` (actual: `ADR-005-logical-clock-checkpoint-ordering.md`). Root cause: historical changelog content read as current normative state. Do NOT fix. Do NOT route.
 
 **Severity:** HIGH
 **File:** `specs/architecture/decisions/ADR-005-checkpoint-id-type.md`
@@ -253,6 +267,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 ### Slice A MED Findings (23)
 
 #### F-P176-A010 — ADR-007 §Changelog note-closure: D23 propagation claimed complete; crate-count stale
+
+> **ADJUDICATED: FALSE — burst-287, 2026-08-01.** Note-closure class. Adversary cited fabricated filename `ADR-007-workspace-crate-decomposition.md` (actual: `ADR-007-crate-topology-sdk-split.md`). Read ADR-007's original D7 table ("18 crates," preserved as history) as current state; ignored "Authoritative current count: 21" blockquote on following lines. Do NOT fix. Do NOT route.
 
 **Severity:** MED
 **File:** `specs/architecture/decisions/ADR-007-workspace-crate-decomposition.md`
@@ -1372,6 +1388,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 
 #### F-P176-D003 — prd.md §5 §error-codes note-closure: propagation claimed complete; 7 domain-spec grep hits remain
 
+> **ADJUDICATED: FALSE — burst-287, 2026-08-01.** Note-closure class. Adversary cited `§5 §error-codes note` — no such section/note heading exists in prd.md at frozen HEAD `9a62edc`. Root cause: historical changelog or note content read as current normative claim. Do NOT fix. Do NOT route.
+
 **Severity:** HIGH
 **File:** `specs/prd.md`
 **Section:** §5 / §error-codes note
@@ -1382,6 +1400,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 ---
 
 #### F-P176-D004 — bc-authoring-plan.md §gate-registry §Note: gate #37 claimed added and wired; not in validators
+
+> **ADJUDICATED: FALSE — burst-287, 2026-08-01.** Note-closure class. `§gate-registry §Note` is not a real section heading in bc-authoring-plan.md at frozen HEAD `9a62edc`; gate #37 does not appear in the gate registry. Root cause: historical planning note read as a current normative state claim. Do NOT fix. Do NOT route.
 
 **Severity:** HIGH
 **File:** `specs/prd-supplements/bc-authoring-plan.md`
@@ -1426,6 +1446,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 ---
 
 #### F-P176-D008 — domain-spec/capabilities-p1-p2.md §CAP-029 §note: VP-009 MMR-framing claimed corrected; VP-009 §property-statement still stale
+
+> **ADJUDICATED: FALSE — burst-287, 2026-08-01.** Note-closure class. `§CAP-029 §note` is not a real section heading; it is a changelog inline note. Root cause: historical note about a past fix read as a current normative state claim. VP-009 §property-statement was verified current at frozen HEAD `9a62edc`. Do NOT fix. Do NOT route.
 
 **Severity:** HIGH
 **File:** `specs/domain-spec/capabilities-p1-p2.md`
@@ -1481,6 +1503,8 @@ Five root-cause mechanisms explain why 160 findings exist on a perimeter that ha
 ---
 
 #### F-P176-D013 — domain-spec/entities-server.md §RunState §note: completed-at migration claimed; §RunState body not updated
+
+> **ADJUDICATED: FALSE — burst-287, 2026-08-01.** Note-closure class. `§RunState §note` is not a real section heading; it is a changelog inline note. Root cause: historical note read as a current normative state claim. §RunState body was verified current at frozen HEAD `9a62edc`. Do NOT fix. Do NOT route.
 
 **Severity:** MED
 **File:** `specs/domain-spec/entities-server.md`

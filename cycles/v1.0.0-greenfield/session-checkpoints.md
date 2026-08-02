@@ -2186,3 +2186,22 @@ verify-no-version-pins: PASS=198; records-lint: PASS=5 (diff-state; clean-tree r
 
 ### ARCHIVE METADATA
 Date: 2026-07-31 | Archived at: burst-286 session wrap (2026-07-31) | STATE.md: 4.47 → 4.48 | burst-285 COMPLETE: container rename COMPLETE (D-116); E011/E012 CLOSED; E013 registered (default_branch = factory-artifacts); D-116..D-119 allocated; L-156..L-158 minted; develop `f1b8cbf`; streak 0/3
+
+---
+
+## Archived Checkpoint v4.49 (burst-286 wrap → superseded by burst-287)
+
+### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **0/3 after 177 passes**. P1D-176 COMPLETE (2026-07-30): 160 findings (5C/45H/80M/30L-OBS); frozen HEAD `9a62edc`. 5 CRITs: C001/C002 (WriteFileTool error routing + unreachable create path), D001 (TV registry 12 behind ground truth), D002 (SS-22 wrong crate in bc-authoring-plan), E001 (POL-19 §anchor gate phantom). 5 convergent mechanisms (D-110..D-114). E013 OPEN: default_branch is `factory-artifacts` (D-118; human auth required). **WORKSPACE INIT INCOMPLETE**: Justfile, lefthook.yml, rust-toolchain.toml, Cargo.toml, and crates/ are all absent — `just check` unavailable; five branch-protection CI checks (CI/fmt, CI/clippy, CI/test, CI/build, CI/file-size-gate) short-circuit on "Skip (no workspace yet)" per F-P176-E023 (D-119). **NEXT: fix-burst 286** — mechanism fixes first (M1..M5), then 5 CRITs.
+
+### NEXT-ACTION
+fix-burst 286: orchestrator routes mechanism fixes to architect (M1/M4), spec-steward (M1/M5), devops-engineer (M1/M2/M3/M5), product-owner (5 CRITs + M3 D001/D002), business-analyst (D-108 D021). Mechanism fixes first — they prevent regeneration and close many findings at once.
+
+### HEADS
+develop `f1b8cbf` — clean, PUSHED. factory-artifacts `7ea92d0` — PUSHED (residual-sweep: 4 forward-routing citations burst-285→286). Story worktrees: NONE. Open PRs: NONE.
+
+**Validator baselines (burst-285 state record final; 12 blocking validators):**
+records-lint: PASS=2 WARN=0 FAIL=0 UNVERIFIED=3; verify-no-version-pins: PASS=198; verify-adr-decision-refs: PASS; verify-changelog-date-monotonicity: PASS=131; verify-changelog-date-validity: PASS; verify-enum-variant-casing: PASS=198; verify-signature-canon: PASS=5; verify-error-notation-canon: PASS=1 (353 openers; 0 violations); verify-form-a-changelog-direction: PASS=198 WARN=7; verify-arch-anchor-resolution: PASS=129; verify-module-canonicality: PASS=8; verify-bc-frontmatter-schema: PASS=129.
+
+### ARCHIVE METADATA
+Date: 2026-08-01 | Archived at: burst-287 close (2026-08-01) | STATE.md: 4.49 → 4.50 | burst-287 (fix-burst P1D-176 mechanism fixes + 5 CRITs) COMPLETE; D-121..D-130 allocated; L-160..L-169 minted; 13 blocking validators PASS; develop `f1b8cbf`; streak 0/3
