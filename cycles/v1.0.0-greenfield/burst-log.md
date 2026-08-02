@@ -6016,6 +6016,14 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 
 ---
 
+### Archived Phase Step — Burst-284 COMPLETE (archived at burst-288 state record / P1D-177)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| burst-284 COMPLETE — ferrochain → pregolya rename (D-103); 353 files / ~6,300 identifiers; D-103..D-108; L-148..L-152; 12 blocking validators PASS; checkpoint v4.44 archived; factory-artifacts pushed; streak stays 0/3. | state-manager | COMPLETE | 176 passes total. Streak 0/3. CRIT=0. |
+
+---
+
 ### Archived Phase Step — Burst-283 COMPLETE (archived at burst-287)
 
 | Step | Agent | Status | Output |

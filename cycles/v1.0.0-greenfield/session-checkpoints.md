@@ -2205,3 +2205,16 @@ records-lint: PASS=2 WARN=0 FAIL=0 UNVERIFIED=3; verify-no-version-pins: PASS=19
 
 ### ARCHIVE METADATA
 Date: 2026-08-01 | Archived at: burst-287 close (2026-08-01) | STATE.md: 4.49 → 4.50 | burst-287 (fix-burst P1D-176 mechanism fixes + 5 CRITs) COMPLETE; D-121..D-130 allocated; L-160..L-169 minted; 13 blocking validators PASS; develop `f1b8cbf`; streak 0/3
+
+---
+
+### Archived Session Checkpoint v4.50 (archived at P1D-177 state record / burst-288 prep)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **0/3 after 177 passes**. burst-287 COMPLETE (2026-08-01): all 5 mechanisms + 5 CRITs from P1D-176 closed. Instrument calibrated: 50% FP in note-closure class (7/7 FALSE); adversary cannot distinguish historical from current normative content. **NEXT: P1D-177 FULL-PERIMETER under POL-46** (first calibrated-instrument pass). Expected count drop must NOT be read as convergence — instrument fix + corpus fix combined. E013 OPEN: default_branch = `factory-artifacts` (D-118; human auth required). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING until workspace exists (D-119/E023/D-128).
+
+#### HEADS
+develop `f1b8cbf` — STALE (actual: `644d1ad`; corrected in v4.51). factory-artifacts: see `git -C .factory log -1`. Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-01 | Archived at: P1D-177 state record (burst-288 prep, 2026-08-02) | STATE.md: 4.50 → 4.51 | P1D-177 COMPLETE: 60 findings (3C/20H/19M/18L-OBS); 3 CRITs; partial-fix propagation dominant; D-131..D-135; L-170..L-173; 178 passes total; streak 0/3

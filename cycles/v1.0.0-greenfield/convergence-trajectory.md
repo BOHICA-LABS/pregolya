@@ -2295,3 +2295,64 @@ All five convergent mechanisms are closed. All five CRITs are closed. The instru
 
 **Convergence dim-5:** Counter 0/3. Next: P1D-177 FULL-PERIMETER under POL-46.
 **Convergence dim-7:** Trajectory tail →130→256→189→160. Lessons L-160..L-169 minted. D-121..D-130 added.
+
+---
+
+## Pass P1D-177 — 2026-08-02 (CLOSED)
+
+### Pass Details
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P1D-177 |
+| Date | 2026-08-02 |
+| Frozen HEAD | `cd6f79d` |
+| Total Findings | 60 (3 CRIT / 20 HIGH / 19 MED / 18 LOW-OBS) |
+| Discarded Candidates | 54 (per POL-46: 10/6/6+2/22/10 across slices A/B/C/D/E) |
+| Streak | 0/3 unchanged |
+| Verdict | NOT CLEAN (strict) / NOT CLEAN (PR-merge) |
+
+### Key Finding
+
+**First pass under POL-46 calibrated instrument.** Count drop (160→60) reflects instrument calibration + corpus improvement combined — not separable. Do NOT read as convergence evidence alone.
+
+**All 3 CRITs in burst-287 artifacts.** Dominant mechanism: partial-fix propagation within a single burst (~10 instances traceable to burst-287).
+
+**3 CRITs:**
+1. C-01 (Slice C): BC-2.13.005 EC-003 vs ADR-024 Phase-2 direct contradiction (orchestrator-verified verbatim)
+2. C-02 (Slice C): ADR-024 confinement proof unsound — dangling symlink = non-canonical path outside root; "dangling" appears 0 times in ADR-024; falsifies VP-3 [P0]
+3. E01 (Slice E): ADR-010 Class 1 zero blocking coverage + verify-error-notation-canon CLASS1_VIOLATION routing inverts canon
+
+**A-vs-C adjudication (D-131):** Slice A probed 5 attack shapes; Slice C found 6th (dangling-target symlink). Slice C correct. Coverage gap in A's probe set. L-170 codified.
+
+**Orchestrator self-attributed:** 3 dispatch defects (D-135): Bash-pin instruction, supplement count 10 vs 7, D002 misframing "nonexistent crate" vs wave/lifecycle error.
+
+**POL-46 instrument defect (D-133):** req-1 unsatisfiable — Bash denied in adversary tool profile. All 5 slices disclosed; verbatim quotation substituted. L-171 codified.
+
+**Slice E ground-truth table:** 5/13 validators genuinely independent; 4 self-referential; 2 hardcoded; 1 inverts ADR; 1 certifies without counting.
+
+### Updated Trajectory
+
+| Pass | Findings | Delta | Streak | Note |
+|------|----------|-------|--------|------|
+| P1D-173 | 130 | +110 | 0/3 | Coverage expansion |
+| P1D-174 | 256 | +126 | 0/3 | First BC-body line-by-line audit |
+| P1D-175 | 189 | -67 | 0/3 | Debt-first; Wave B notation sweep |
+| P1D-176 | 160 | -29 | 0/3 | First with policies.yaml rubric; 5 CRITs; 5 mechanisms |
+| fix-burst-287 | — | — | 0/3 | All 5 mechanisms + CRITs closed; POL-46/47 minted |
+| **P1D-177** | **60** | **-100** | **0/3** | **First calibrated-instrument pass; 3 CRITs; partial-fix propagation dominant** |
+
+**Trajectory tail at P1D-177:** →130→256→189→160→**60**
+
+**Total passes to date: 178.**
+
+### Convergence Assessment (updated at P1D-177)
+
+Counter: **0/3 unchanged.** Adversary pass with findings — streak does not advance.
+
+P1D-177 closed with 60 findings including 3 CRITs. All 3 CRITs are in burst-287 artifacts. The count reduction from 160 to 60 reflects both instrument calibration (POL-46 filtering) and corpus improvement; these contributions are not separable from a single pass. The 3-CLEAN gate requires three consecutive CLEAN passes from this point.
+
+**Burst-288 required before P1D-178.** Priority: ADR-024 security redesign (C-02/C-01/C-H01/C-H02/C-H03) → E01 Class-1 + inverted routing → E04/E05 gate hardening → partial-fix structural remedy → POL-46 amendment → HIGH tail.
+
+**Convergence dim-5:** Counter 0/3. Next: burst-288 (ADR-024 security redesign + gate hardening) then P1D-178.
+**Convergence dim-7:** Trajectory tail →130→256→189→160→60. Lessons L-170..L-173 minted. D-131..D-135 added.
