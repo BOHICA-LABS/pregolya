@@ -1,12 +1,20 @@
 # pregolya CI pipeline
 #
-# Tolerant of pre-workspace state: every Rust job is guarded by
+# Gate enforcement state: every Rust job is guarded by
 #   `if: hashFiles('Cargo.toml') != ''`
-# so the workflow goes green on the bootstrap commit (no Cargo sources yet)
-# and automatically becomes enforcing once the Phase 3 workspace lands.
+# When Cargo.toml is absent the "Skip (no workspace yet)" step runs `exit 1`
+# — the job FAILS rather than passing vacuously.  A pass on a required status
+# check while measuring nothing would certify unmeasured state (Mechanism-3
+# defect).  Branch protection therefore REQUIRES the Phase 3 workspace commit
+# before any PR can merge against develop.
 #
 # File-size gate (D12) is additionally guarded on xtask existence:
 #   `if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''`
+# Same non-certifying-fail policy applies when either is absent.
+#
+# IMPORTANT: factory-artifacts branch commits are excluded from CI by
+# `branches-ignore: factory-artifacts` so .factory/ artifacts can be pushed
+# without triggering these failing jobs.
 #
 # Action SHA pins (update when bumping versions):
 #   actions/checkout           v4.2.2  → 11bd71901bbe5b1630ceea73d27597364c9af683
@@ -66,7 +74,13 @@ jobs:
 
       - name: Skip (no workspace yet)
         if: hashFiles('Cargo.toml') == ''
-        run: echo "No Cargo.toml — workspace not yet initialised; fmt check skipped."
+        run: |
+          set -euo pipefail
+          echo "NONCERTIFYING: No Cargo.toml present — this job cannot validate anything."
+          echo "A vacuous pass (exit 0) on a required status check certifies nothing and"
+          echo "allows branch protection to be satisfied by an empty repository."
+          echo "This job fails intentionally until the Phase 3 workspace (Cargo.toml) is committed."
+          exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # clippy — deny warnings
@@ -101,7 +115,11 @@ jobs:
 
       - name: Skip (no workspace yet)
         if: hashFiles('Cargo.toml') == ''
-        run: echo "No Cargo.toml — workspace not yet initialised; clippy skipped."
+        run: |
+          set -euo pipefail
+          echo "NONCERTIFYING: No Cargo.toml present — this job cannot validate anything."
+          echo "This job fails intentionally until the Phase 3 workspace (Cargo.toml) is committed."
+          exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # test — cargo test (all crates, all features)
@@ -135,7 +153,11 @@ jobs:
 
       - name: Skip (no workspace yet)
         if: hashFiles('Cargo.toml') == ''
-        run: echo "No Cargo.toml — workspace not yet initialised; tests skipped."
+        run: |
+          set -euo pipefail
+          echo "NONCERTIFYING: No Cargo.toml present — this job cannot validate anything."
+          echo "This job fails intentionally until the Phase 3 workspace (Cargo.toml) is committed."
+          exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # build — cargo build --release (smoke-check linkage)
@@ -169,7 +191,11 @@ jobs:
 
       - name: Skip (no workspace yet)
         if: hashFiles('Cargo.toml') == ''
-        run: echo "No Cargo.toml — workspace not yet initialised; build skipped."
+        run: |
+          set -euo pipefail
+          echo "NONCERTIFYING: No Cargo.toml present — this job cannot validate anything."
+          echo "This job fails intentionally until the Phase 3 workspace (Cargo.toml) is committed."
+          exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # file-size-gate — D12: cargo xtask check-file-size
@@ -211,4 +237,9 @@ jobs:
 
       - name: Skip (workspace or xtask not yet initialised)
         if: hashFiles('Cargo.toml') == '' || hashFiles('xtask/Cargo.toml') == ''
-        run: echo "Workspace or xtask crate not present — file-size gate deferred to Phase 3."
+        run: |
+          set -euo pipefail
+          echo "NONCERTIFYING: Cargo.toml or xtask/Cargo.toml absent — this job cannot validate anything."
+          echo "This job fails intentionally until both the workspace (Cargo.toml) and xtask crate"
+          echo "(xtask/Cargo.toml) are committed (Phase 3)."
+          exit 1
