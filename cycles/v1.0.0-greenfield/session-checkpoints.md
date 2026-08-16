@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "07ee207"
+input-hash: "8c4767f"
 traces_to: STATE.md
 ---
 
@@ -2264,3 +2264,14 @@ develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: froz
 
 #### ARCHIVE METADATA
 Date: 2026-08-16 | Archived at: burst-292 close | STATE.md: 4.60 → 4.61 | burst-292 COMPLETE: closed P1D-183 F1-F4+LOW; D-152; streak 0/3 UNCHANGED; 184 passes total
+
+### Archived Session Checkpoint v4.65 (archived at burst-295 close / P1D-187 queued)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **UNCHANGED 0/3 after 187 passes** (P1D-186 COMPLETE NOT CLEAN; streak UNCHANGED per D-143). P1D-186 (2026-08-16): 3 findings (0C/0H/1M/2L) — F-186-01 (MED) ferroctmp brand-residue BC-2.23.002 §PC-3+ADR-024 ×3 (burst-284 rename miss; canonical token .pregolyatmp_) + F-186-02 (LOW) ferrograph product-brief.md §MarketIntel + F-186-03 (LOW) Wave-TBD placeholder ADR-010 §non-exhaustive-gate pregolya-tools/SS-23 (Wave 1 from BC frontmatter); D-157. **NEXT: burst-295** (architect ADR-024/ADR-010 ferroctmp+Wave-TBD fix; product-owner BC-2.23.002/product-brief ferroctmp+ferrograph fix; devops records-lint brand-token check → then next adversary pass). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run `git -C .factory log -1 --format='%h'` for current factory-artifacts HEAD. Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-16 | Archived at: burst-295 close (2026-08-16) | STATE.md: 4.65 → 4.66 | burst-295 COMPLETE: closed P1D-186 F-1/F-2/F-3 (.ferroctmp_→.pregolyatmp_ ×4, ferrograph→pregolya-graph, Wave-TBD→Wave-1); records-lint L12 recurrence guard; BC-INDEX §Changelog; D-158; streak 0/3 UNCHANGED

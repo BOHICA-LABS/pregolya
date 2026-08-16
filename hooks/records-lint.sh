@@ -69,6 +69,24 @@
 #        Routing: finding author (replace hex digest literal with artifact+section anchor
 #                 cite, e.g. `input-hash refreshed (ADR-014 §Decision 2 edited)`).
 #
+#   L12 — Dead-Brand-Token Recurrence Guard (BLOCKING): newly-authored additions in
+#        specs/**/*.md must not contain ferrochain-era brand tokens:
+#        `ferrochain`, `ferroctmp`, `ferrograph`, `FerrochainError` (case-insensitive).
+#        Scoped to specs/ tree ONLY — planning/ is explicitly out of scope (legitimate
+#        rename documentation, naming-decision-study, rename-sweep-manifest, and
+#        decisions-archive all live there). Existing content in HEAD is grandfathered
+#        via git diff HEAD scoping (covers ADR-010 lines 19/179 FerrochainError corrective
+#        notes without needing explicit per-file allowlist entries).
+#        Exclusions:
+#          DE1 — Historical/clarifier qualifiers: lines where the dead brand token
+#                appears adjacent to a rename/historical marker. Covers: "formerly
+#                'ferrograph'", "renamed from ferrochain", "ferrochain-era",
+#                "ferrochain→pregolya" (transition arrow), "not FerrochainError".
+#          DE2 — Scoping: planning/ files are out of scope (diff restricted to specs/).
+#        Routing: finding author (replace dead brand token with canonical pregolya-*
+#                 equivalent: ferrochain→pregolya, ferrograph→pregolya-graph,
+#                 ferroctmp→pregolya-checkpoint, FerrochainError→PregolyaError).
+#
 # SELF-PROBE: Each check self-probes against a synthetic violation before running on
 #             the real corpus. A self-probe failure means the check would be false-green —
 #             the script exits 2 immediately (script bug, not lint violation).
@@ -217,6 +235,19 @@ CONTENT_HASH_CE4='\([0-9a-f]{6,12}[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}\)'
 # AND a real hash digest would be skipped (false negative). This is an accepted trade-off:
 # changelog entries mixing numeric Rust literals with hash citations should be split.
 RUST_LITERAL_EXCL='\b[0-9][0-9a-f]*(f32|f64|f16|f128)\b|\b0b[01]+\b'
+
+# L12 dead-brand-token pattern (case-insensitive ERE).
+# Matches ferrochain-era brand tokens retired in the D-117 rename sweep.
+# FerrochainError lowercases to ferrochainerror — grep -i matches it with this pattern.
+DEAD_BRAND_PATTERN='ferrochain|ferroctmp|ferrograph|ferrochainerror'
+
+# L12 historical/clarifier exclusion pattern (case-insensitive ERE).
+# Lines where the dead brand token appears adjacent to a rename/historical marker
+# are exempt — they document the rename, not a live usage of the old brand.
+# Covers: "formerly 'ferrograph'", "renamed from ferrochain", "ferrochain-era",
+# "ferrochain→pregolya" (Unicode right-arrow transition), "not FerrochainError".
+# The → character is Unicode U+2192 (RIGHT ARROW) — used throughout the corpus.
+DEAD_BRAND_HIST_EXCL='formerly|renamed[[:space:]]+from|ferrochain-era|ferrograph-era|ferroctmp-era|ferrochain[[:space:]]*→|ferroctmp[[:space:]]*→|ferrograph[[:space:]]*→|→[[:space:]]*pregolya|not[[:space:]]+ferrochainerror'
 
 # ── Counters ─────────────────────────────────────────────────────────────────
 
@@ -455,6 +486,59 @@ EOF
     fi
   fi
   probe_must_fail "L11" "addition line containing 40-char SHA-1 content-hash digest in changelog prose"
+
+  # ── L12 self-probes: dead-brand-token recurrence guard ───────────────────────
+  # Tests three outcomes:
+  #   (a) Synthetic NEW spec-body line containing .ferroctmp_ → CAUGHT (positive detection)
+  #   (b) Lines with historical-clarifier qualifiers → NOT caught (DE1 exemption)
+  #   (c) planning/ line with ferrochain → NOT caught (DE2 scope exemption)
+  #
+  # The inline helper mirrors the check_l12 logic: path-scope check, then DE1
+  # historical exclusion, then dead-brand detection. Uses config vars
+  # DEAD_BRAND_HIST_EXCL and DEAD_BRAND_PATTERN (defined in Config section).
+
+  _L12_CHECK() {
+    local filepath="$1" diffline="$2"
+    # DE2: scope check — specs/ paths only; planning/ and all other paths are out-of-scope
+    case "$filepath" in
+      specs/*) : ;;
+      *) echo 0; return ;;
+    esac
+    # Only + additions (not +++ diff headers, not context or deletion lines)
+    case "$diffline" in
+      "+++"*) echo 0; return ;;
+      "+"*)   : ;;
+      *)      echo 0; return ;;
+    esac
+    # DE1: historical/clarifier exclusion (case-insensitive)
+    if echo "$diffline" | grep -qiE "${DEAD_BRAND_HIST_EXCL}"; then
+      echo 0; return
+    fi
+    # Dead brand detection (case-insensitive)
+    if echo "$diffline" | grep -qiE "${DEAD_BRAND_PATTERN}"; then
+      echo 1
+    else
+      echo 0
+    fi
+  }
+
+  # Probe (a): synthetic NEW spec-body line with .ferroctmp_ is CAUGHT
+  PROBE_EXIT=$(_L12_CHECK "specs/prd.md" "+The module registers .ferroctmp_ handles internally.")
+  probe_must_fail "L12-probe-a" "specs/ addition line containing .ferroctmp_ is caught as dead-brand violation"
+
+  # Probe (b1): "formerly 'ferrograph'" passes (historical-clarifier allowance)
+  PROBE_EXIT=$(_L12_CHECK "specs/domain-spec/entities.md" "+See formerly 'ferrograph' — renamed to pregolya-graph (D-117).")
+  probe_must_not_fail "L12-probe-b1" "line with 'formerly ferrograph' passes (historical-clarifier allowance)"
+
+  # Probe (b2): "not FerrochainError" passes (historical-clarifier allowance)
+  PROBE_EXIT=$(_L12_CHECK "specs/behavioral-contracts/bc-001.md" "+Note: not FerrochainError — use PregolyaError (D-117 rename).")
+  probe_must_not_fail "L12-probe-b2" "line with 'not FerrochainError' passes (historical-clarifier allowance)"
+
+  # Probe (c): planning/ line with ferrochain passes (out of scope — planning/ is exempt from L12)
+  PROBE_EXIT=$(_L12_CHECK "planning/rename-sweep-manifest.md" "+ferrochain was the original project name before the D-117 rename.")
+  probe_must_not_fail "L12-probe-c" "planning/ line with ferrochain passes (out of scope)"
+
+  unset -f _L12_CHECK
 
   rm -rf "$PROBE_TMP"
   trap - EXIT
@@ -787,6 +871,78 @@ check_l11() {
   fi
 }
 
+# ── Check L12 — Dead-Brand-Token Recurrence Guard ────────────────────────────
+# Newly-authored additions in specs/**/*.md must not contain ferrochain-era brand
+# tokens: ferrochain, ferroctmp, ferrograph, FerrochainError (case-insensitive).
+# Scoped to specs/ tree ONLY via git diff HEAD pathspec — planning/ is out of scope
+# (legitimate rename documentation lives there). Existing content in HEAD is
+# grandfathered via git diff HEAD scoping (covers ADR-010 lines 19/179).
+#
+# Exclusions:
+#   DE1 — Historical/clarifier qualifiers (DEAD_BRAND_HIST_EXCL):
+#          "formerly '...token'", "renamed from token", "token-era",
+#          "token→pregolya" (transition arrow), "not FerrochainError".
+#   DE2 — Scope: planning/ files excluded via diff pathspec ('specs/' only).
+#
+# Self-probes: see run_self_probes() L12 section.
+
+check_l12() {
+  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- 'specs/' 2>/dev/null || true)"
+
+  if [ -z "$DIFF_OUTPUT" ]; then
+    emit UNVERIFIED "L12: no diff relative to HEAD in specs/ — dead-brand-token check is UNVERIFIED on a clean tree (not checked, not passed)"
+    return
+  fi
+
+  L12_COUNT=0
+  L12_LINES=""
+  L12_CURRENT_MD=false  # track whether the current file in the diff is a .md file
+
+  while IFS= read -r diffline; do
+    # Track current file from diff header (+++ b/path/to/file.ext)
+    case "$diffline" in
+      "+++ b/"*)
+        case "$diffline" in
+          *".md") L12_CURRENT_MD=true ;;
+          *)      L12_CURRENT_MD=false ;;
+        esac
+        continue
+        ;;
+    esac
+    # Skip non-.md files
+    [ "$L12_CURRENT_MD" = false ] && continue
+    # Only check + additions (not +++ diff headers, not context or deletion lines)
+    case "$diffline" in
+      "+++"*) continue ;;
+      "+"*)   : ;;
+      *)      continue ;;
+    esac
+    # DE1: historical/clarifier qualifier exemption (case-insensitive)
+    if echo "$diffline" | grep -qiE "${DEAD_BRAND_HIST_EXCL}"; then
+      continue
+    fi
+    # Dead brand token detection (case-insensitive)
+    if echo "$diffline" | grep -qiE "${DEAD_BRAND_PATTERN}"; then
+      L12_COUNT=$((L12_COUNT + 1))
+      L12_LINES="${L12_LINES}
+       $(echo "$diffline" | cut -c1-120)"
+    fi
+  done <<< "$DIFF_OUTPUT"
+
+  if [ "$L12_COUNT" -gt 0 ]; then
+    emit FAIL "L12: dead-brand-token ban — $L12_COUNT newly-added line(s) in specs/ contain ferrochain-era brand tokens"
+    echo "  Tokens: ferrochain / ferroctmp / ferrograph / FerrochainError (case-insensitive)"
+    echo "  These brand tokens were retired in the ferrochain→pregolya rename (D-117)."
+    echo "  Use canonical replacements: ferrochain→pregolya, ferrograph→pregolya-graph,"
+    echo "  ferroctmp→pregolya-checkpoint, FerrochainError→PregolyaError."
+    echo "  Exempt: historical-clarifier context (formerly, renamed from, *-era, →pregolya, not FerrochainError)."
+    echo "  Exempt: planning/ files (out of scope — rename documentation lives there)."
+    echo "  Affected lines:${L12_LINES}"
+  else
+    emit PASS "L12: dead-brand-token ban — no ferrochain-era tokens in newly-authored specs/ additions"
+  fi
+}
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 echo "records-lint: pregolya factory records discipline"
@@ -820,6 +976,10 @@ echo "--- L11: Content-Hash Digest Ban (newly-authored record/changelog/spec pro
 check_l11
 
 echo ""
+echo "--- L12: Dead-Brand-Token Recurrence Guard (newly-authored specs/ additions) ---"
+check_l12
+
+echo ""
 echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL UNVERIFIED=$UNVERIFIED"
 
 if [ "$FAIL" -gt 0 ]; then
@@ -832,6 +992,8 @@ if [ "$FAIL" -gt 0 ]; then
   echo "  L9b violations → finding author (replace doc vN.N with doc §Section-Anchor) [D-50]"
   echo "  L10 violations → finding author (replace 7-hex SHA with artifact+section anchor cite) [ADVISORY]"
   echo "  L11 violations → finding author (replace 8+ char hex digest with artifact+section anchor cite)"
+  echo "  L12 violations → finding author (replace dead brand token: ferrochain→pregolya,"
+  echo "                   ferrograph→pregolya-graph, ferroctmp→pregolya-checkpoint, FerrochainError→PregolyaError)"
   exit 1
 else
   echo "RESULT: PASS"

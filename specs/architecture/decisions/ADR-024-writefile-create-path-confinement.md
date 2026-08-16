@@ -8,7 +8,7 @@ status: accepted
 date: 2026-08-16
 producer: architect
 timestamp: 2026-08-16T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ subsystems_affected: [SS-13, SS-23]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.5 (burst-295/F-P186-F1/2026-08-16): Fix stale ferrochain-era brand residue in §Decision 5 body. Replace all three occurrences of `.ferroctmp_` with `.pregolyatmp_`: (1) atomic-write description prose; (2) `format!` expression; (3) `.join` expression. Token is now `.pregolyatmp_<random>` matching BC-2.23.002 PC-3 canonical form."
   - "1.4 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Fix phantom §-citation in §Decision 1 Phase 2 body. 'BC-2.17.001 §no-path-escapes-sandbox-root' → 'BC-2.17.001 §Postconditions'. Rationale: BC-2.17.001 has no §no-path-escapes-sandbox-root heading; the no-path-escapes property is described in §Postconditions prose (verified by heading grep). Real heading is §Postconditions."
   - "1.3 (burst-290/F-180-07/2026-08-16): Three phantom/malformed §-citation fixes (live body only). (1) §Phase-2 Postconditions PC-4 blockquote (~line 186): `§Confinement-Proof` (hyphenated) → `§Confinement Proof — Phase 2` (real heading with space and em-dash suffix). (2) §Source / Origin (~line 444): `§Confinement-Proof` → `§Confinement Proof — Phase 2`. (3) §Phase-2 Postconditions PC-3 note (~line 173): `ADR-024 §Phase-2-Fallback` (phantom, section renamed in v1.1) → `ADR-024 §Phase-2 Postconditions` (current authoritative heading for Phase 2 behavior)."
   - "1.2 (burst-289/F-178-02/2026-08-16): §Consumers table status corrections — all 6 consumer BCs (BC-2.13.004, BC-2.13.005, BC-2.23.001, BC-2.23.003, BC-2.23.004, BC-2.23.006) verified as citing ADR-024 (burst-288 propagation complete; each has multiple ADR-024 hits). Updated Required Citation Status from MISSING to Present for all 6. Propagation-owner directive and §Consequences bullet updated to past tense and extended to include BC-2.23.004 and BC-2.23.006 (both were omitted from the directive and Consequences in v1.1)."
@@ -307,12 +308,12 @@ processes, or a dedicated security audit finding that classifies the TOCTOU wind
 
 ## Decision 5 — Atomic write interaction with confinement
 
-The atomic write protocol in BC-2.23.002 (write to `<path>.ferroctmp_<random>`, rename to
+The atomic write protocol in BC-2.23.002 (write to `<path>.pregolyatmp_<random>`, rename to
 `<path>`) is compatible with Decision 1. After Phase 2 resolves `canonical_path`:
 
-- Temp file: `canonical_parent.join(format!(".ferroctmp_{}", random_suffix))` — within the
+- Temp file: `canonical_parent.join(format!(".pregolyatmp_{}", random_suffix))` — within the
   canonicalized parent, beneath workspace root.
-- Write temp file at `canonical_parent.join(".ferroctmp_<N>")` → same confinement guarantee.
+- Write temp file at `canonical_parent.join(".pregolyatmp_<N>")` → same confinement guarantee.
 - Rename to `canonical_path = canonical_parent.join(filename)` — same directory, same scope.
 - If rename fails: remove temp file. No file outside workspace root is ever created.
 

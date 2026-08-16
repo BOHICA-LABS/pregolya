@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.002
-version: "1.9"
+version: "2.0"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -29,6 +29,7 @@ changelog:
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 2 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001: inline → PregolyaError { code: 'E-TOOLS-001', .. }. PC-5 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "1.8 (fix-burst-287/F-P176-C002/ADR-024/2026-08-01): ADR-024 create-path update — close CRIT unreachability defect. PC-1 extended: canonicalize_beneath_root Phase 2 two-phase fallback (ADR-024 Decision 1) enables new-file creation when target does not exist but parent is within scope. PC-2 discrimination rule extended with three genuine-escape conditions per ADR-024 Decision 3: (a) Phase 1 symlink escape on existing file; (b) Phase 2 parent resolves outside workspace; (c) path ends in '..' or is filesystem root (filename=None). traces_to and Architecture Anchors updated to include ADR-024. TOCTOU residual risk LOW per ADR-024 Decision 4; v2 mitigation (rustix openat O_NOFOLLOW) deferred."
   - "1.9 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions + §Confinement-Proof citation extension — update Architecture Anchors to cite §Phase-2 Postconditions PC-3 (dangling-symlink → PathNotFound → E-TOOLS-008) and PC-4 (Ok-path confinement proof). PC-5 extended: dangling-symlink case (canonicalize_beneath_root Phase 2 step (d) returns Err(SandboxError::PathNotFound)) added as an explicit E-TOOLS-008 route per ADR-024 Decision 3 / PC-3. §Architecture Authority in Traceability updated to reference ADR-024 PC-3 + PC-4."
+  - "2.0 (burst-295/F-1-MED/P1D-186/2026-08-16): PC-3 stale brand residue corrected — atomic-write temp-file prefix '.ferroctmp_<random>' → '.pregolyatmp_<random>'. ferroctmp was the ferrochain-era internal token; canonical pregolya atomic-write temp prefix is 'pregolyatmp_'. D-134 ferro-residue sweep: sole live-body occurrence across behavioral-contracts + prd-supplements + domain-spec subtrees."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -38,7 +39,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "b407795"
+input-hash: "79a1d89"
 extracted_from: null
 modified: []
 deprecated: null
@@ -95,7 +96,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
    `E-TOOLS-001` is raised exclusively for genuine scope-escape conditions. OS-level I/O failures
    (`NotFound` from a missing parent directory, `PermissionDenied`) are **not** confinement
    violations; they route to PC-5 as `E-TOOLS-008 FileIoError`.
-3. **Atomic write semantics:** The implementation writes content to `<path>.ferroctmp_<random>`
+3. **Atomic write semantics:** The implementation writes content to `<path>.pregolyatmp_<random>`
    in the same directory, then performs a rename to `<path>`. If the rename fails, the
    temporary file is removed and the error is propagated. The target file is never left in a
    partial-write state observable by concurrent readers.

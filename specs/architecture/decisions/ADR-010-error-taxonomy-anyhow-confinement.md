@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.19"
+version: "1.20"
 changelog:
+  - "1.20 (burst-295/F-P186-F3/2026-08-16): Replace `(Wave TBD)` with `(Wave 1)` in §Component Axis Expansion (D23) non-exhaustive gate update requirement. pregolya-tools = SS-23; all SS-23 BCs carry wave: 1; wave is mechanically determinable in scope (CLAUDE.md Rule 6)."
   - "1.19 (burst-290/F-180-06/2026-08-16): Rewrite stale present-tense obligations in §Class 3 adjudication note (~line 178) to past-tense facts. The note formerly claimed `verify-error-notation-canon.sh` gates `FerrochainError` (not `PregolyaError`) and has no Class 3 `::new()` detection — this was the opposite of the current HEAD state. Corrected to: the hook gates `PregolyaError`; `NEW_FORM_VIOLATION` detection for `PregolyaError::new()` in prose contexts was added in burst-287. POL-17 scoping obligation was a separate spec-steward task; corrected note references the obligation as already routed rather than pending."
   - "1.18 (burst-288/F-P177-E01/2026-08-15): Add §Class 1 Scanner Contract to unambiguously specify CLASS1_VIOLATION for devops scanner. (1) Define value-expression-position indicators vs pattern-position indicators in rust fences. (2) State explicitly: adding `..` to a value-expression position occurrence does NOT resolve a Class 1 violation — `#[non_exhaustive]` bars struct-literal construction (E0639) from external crates regardless of `..`; the `..` rest-pattern applies to patterns (Class 2), not to construction literals. (3) CLASS1_VIOLATION remedy is ALWAYS `::new()` replacement. (4) Update §Mechanical Discriminator Step 2 rust-fence branch to check position type BEFORE checking `..`; value-expression position → Class 1 (regardless of `..` presence); pattern position + `..` → Class 2 VALID; pattern position + no `..` → CLASS2_MISSING_REST: add `..`."
   - "1.17 (fix-burst-287/F-P176-C008/2026-08-01): Adjudicate ADR-010 vs POL-17 contradiction (Mechanism 5). Strengthen §Class-3 prohibition: `PregolyaError::new()` is now explicitly FORBIDDEN (not merely 'not used') in Class 3 prose/observation contexts. Add canonical-form summary to §Class-3 header. State rationale for why construction syntax is wrong in description contexts. POL-17 must be corrected by spec-steward to scope its 'allowed construction form' claim to Class 1 contexts only — that correction is outside this ADR's scope."
@@ -564,7 +565,7 @@ Adding `Component::Tools` (one variant) to the D21 gate update requirement:
    **18** (17 named + `Custom`).
 3. **Expected symbol list** — add `Component::Tools`.
 
-The implementer who creates `pregolya-tools/src/error.rs` (Wave TBD) owns this gate update.
+The implementer who creates `pregolya-tools/src/error.rs` (Wave 1) owns this gate update.
 The gate file must be updated in the SAME commit that adds `Component::Tools` to `error.rs`.
 
 `Component::Tools` ↔ `TOOLS` in prose/code.

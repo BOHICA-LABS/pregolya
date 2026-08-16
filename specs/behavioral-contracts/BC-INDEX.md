@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.42"
+version: "3.43"
 status: active
 producer: state-manager
 timestamp: 2026-08-16T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.43 (burst-295/F-1-MED+F-2-LOW/P1D-186/2026-08-16): 1 BC version bump + 1 non-BC doc bump — ferro brand residue clearing. BC-2.23.002 (v1.9→v2.0): PC-3 atomic-write temp-file prefix '.ferroctmp_<random>' → '.pregolyatmp_<random>' (ferrochain-era brand residue, code-bearing; canonical token is 'pregolyatmp_'). product-brief (v1.11→v1.12): §Market Intelligence Summary 'ferrograph' → 'pregolya-graph (formerly ferrograph)'. D-134 ferro-residue sweep: zero additional occurrences found in behavioral-contracts + prd-supplements + domain-spec subtrees. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1 unchanged."
   - "3.42 (burst-294/F-185-01+F-185-02/2026-08-16): 2 BC version bumps — BC-2.19.004 (v1.2→v1.3): EC-005 and Invariant §3 raised-panic mandate removed; remap-chain detection is a startup validation unit test (VP-2.19.004-B), not a runtime panic! — mirrors BC-2.19.006 EC-001/VP-2.19.006-B pattern; DI-008 Traceability row unchanged (already correct). BC-2.01.003 (v1.5→v1.6): Invariant §recursion_limit-layer-disambiguation 'at depth N' bare-N placeholder corrected to 'at depth <depth>' (angle-bracket convention; harmonizes with PC5 E-CORE-006 canonical template). D-134 sweep: BC-2.19.004 EC-005 was the sole raised-panic mandate in all 129 BCs. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.41 (burst-293/F-P184-F04/2026-08-16): VP Seed table VP-011 NE/Security Anchor cell: 'ADR-018 Decision 1' → 'ADR-018 Decision 3'. Decision 3 is the fail-closed dispatch mandate (6-step route_pre_tool_decision protocol; Deny → ToolOutput::Error; hook panic → Reject); Decision 1 is only the trait definition and placement. VP-011 §Source/Origin and §Proof Harness Skeleton both correctly cite Decision 3 — this table cell was the sole mis-anchor. D-134 sibling sweep: grep for 'VP-011.*Decision 1' across specs — sole occurrence was this row; no other live-body docs require amendment. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.40 (burst-291/D-134-cont/2026-08-16): 3 BC version bumps — §-anchor phantom sweep (non-ADR phantoms in SS-03, SS-10, SS-12). BC-2.03.001 (v1.8→v1.9): 'error-taxonomy.md §GRAPH' → 'error-taxonomy.md §Component: GRAPH' (§GRAPH matches no heading; real heading is '### Component: GRAPH (pregolya-graph)'). BC-2.10.006 (v1.7→v1.8): 'interface-definitions.md §BudgetInfo' → 'interface-definitions.md §BudgetPolicy' (§BudgetInfo matches no heading; BudgetInfo is a field inline under §BudgetPolicy). BC-2.12.002 (v1.4→v1.5): two phantom corrections — Description '§Run-Config Merge Precedence Invariant' → '§Invariants'; EC-006 same + 'interface-definitions.md §RunnableConfig configurable field doc' → 'interface-definitions.md §RunnableConfig — Struct Definition' (sentence restructured with comma separator). Also non-BC file bumps: product-brief (v1.10→v1.11), ubiquitous-language-core (v1.11→v1.12), bc-authoring-plan (v2.64→v2.65). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
