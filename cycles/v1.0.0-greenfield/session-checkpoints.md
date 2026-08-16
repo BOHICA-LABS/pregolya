@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "fc05ef3"
+input-hash: "07ee207"
 traces_to: STATE.md
 ---
 
@@ -2218,3 +2218,16 @@ develop `f1b8cbf` — STALE (actual: `644d1ad`; corrected in v4.51). factory-art
 
 #### ARCHIVE METADATA
 Date: 2026-08-01 | Archived at: P1D-177 state record (burst-288 prep, 2026-08-02) | STATE.md: 4.50 → 4.51 | P1D-177 COMPLETE: 60 findings (3C/20H/19M/18L-OBS); 3 CRITs; partial-fix propagation dominant; D-131..D-135; L-170..L-173; 178 passes total; streak 0/3
+
+---
+
+### Archived Session Checkpoint v4.51 (archived at burst-288 close / P1D-178 queued)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **0/3 after 178 passes**. P1D-177 COMPLETE (2026-08-02): 60 findings (3C/20H/19M/18L-OBS); 3 CRITs all in burst-287 artifacts (C-02 ADR-024 confinement unsound / C-01 BC-2.13.005 vs ADR-024 / E01 Class-1 zero coverage+inverted routing); dominant mech partial-fix propagation ~10 burst-287 instances; A-vs-C adjudication C-02 CRIT (D-131); POL-46 req-1 unsatisfiable (D-133); Slice E 5/13 validators genuinely independent. **NEXT: burst-288** — (1) ADR-024 security redesign; (2) E01 Class-1 + inverted routing; (3) E04/E05 gate hardening; (4) partial-fix structural remedy (D-134); (5) POL-46 amendment or Bash grant; (6) HIGH tail. E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING until workspace exists.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). factory-artifacts `9473a2e` — PUSHED (P1D-177 state record complete). Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-02 | Archived at: burst-288 close (2026-08-15) | STATE.md: 4.51 → 4.52 | burst-288 COMPLETE: fix-burst P1D-177 (3C+20H+MED/LOW); ADR-024; D-136..D-138; L-174..L-175; frozen HEAD c3cb55c; streak 0/3

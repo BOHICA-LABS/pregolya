@@ -6029,3 +6029,9 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | burst-283 COMPLETE — ADR-021 minted (D-95; closes F-P175-C101 CRIT + C113 HIGH); policies.yaml 45 policies (D-91); DEFER-002 CLOSED (D-92); rename decision D-93; TDIV-008 INERT confirmed (D-94); 4 BC bumps BC-INDEX v3.28 (D-97); false-open D-96/D-98; blocking 8→12 (D-101); L-143..L-147; 630 advisories + 14 hash-mismatches (D-100); D-91..D-102; checkpoint v4.43 archived; factory-artifacts pushed; develop unchanged at `46725ad`; streak stays 0/3. | state-manager | COMPLETE | 176 passes total. Streak 0/3. CRIT=0. |
+
+### Archived Phase Step — P1D-176 COMPLETE (archived at burst-288)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| P1D-176 COMPLETE — 160 findings (5C/45H/80M/30L-OBS); 5 CRITs: C001 PC-2 error routing, C002 WriteFileTool unreachable, D001 TV registry 12 behind ground truth, D002 SS-22 wrong crate, E001 POL-19 §anchor enforcement phantom; 5 convergent mechanisms; first pass with policies.yaml POL-1..POL-31 active; D-109..D-115; L-153..L-155; 177 passes total; checkpoint v4.45 archived; factory-artifacts pushed. | state-manager | COMPLETE | 177 passes total. Streak 0/3. |
