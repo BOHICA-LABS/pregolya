@@ -11,11 +11,12 @@ date: "2026-08-01"
 subsystems_affected: ["all"]
 supersedes: []
 superseded_by: null
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D43, D45, D48]
 changelog:
+  - "1.3 (burst-292/P1D-183-F2/2026-08-16): Fix internal rule-count contradiction. §Context and §Decision intro stated 'rules S2, S3, S4' / 'three canonical ... forms'; corrected to 'rules S1, S2, S3, S4' / 'four canonical ... forms'. S1 (as_retriever Arc<Self> receiver) is grounded by ADR-025 per §as_retriever Receiver §Rule origin (verify-signature-canon.sh S1), §Consequences (rules S1/S2/S3/S4), and §Source/Origin (CANON TABLE rules S1/S2/S3/S4). Three sites corrected: §Context inline-rule-comment reference, §Context canonical-form body reference, §Decision intro. No other 'S2, S3, S4' or 'three canonical' sites found in the live body (existing §Consequences and §Source/Origin were already correct)."
   - "1.2 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Alternatives Considered section per ADR template (LOW finding: date boundary conditions)."
   - "1.1 (fix-burst-287/illustration-markers/2026-08-01): Add discriminator:illustration-start/end markers around all prohibited-form examples, problem descriptions, and validator prose in each decision section. The ADR documents the prohibition by naming the prohibited forms; the markers exempt these illustrative regions from verify-signature-canon.sh scan so the scanner enforces normative signatures only. Content unchanged; no new decisions."
   - "1.0 (fix-burst-287/canon-inversion/2026-08-01): Initial decision — promote D-43 (DynTool), D-45 (VectorStoreRetriever no lifetime), and D-48 (as_retriever receiver + &Arc<Self> prohibition) from shell-script rule comments to ratified ADR headings. Grounds verify-signature-canon.sh rules S2, S3, S4 in citable architectural authority. `§Type Signature Canon` policy citations (POL-18 D-43/D-45/D-48 entries) can now be repointed from `adopted: [UNGOVERNED]` to these headings. Source: fix-burst-287 coordinator message identifying governance inversion — 'the validator has become the source of canon rather than an enforcer of it.'"
@@ -43,7 +44,7 @@ Three adjudicated decisions govern Rust type-signature forms in the pregolya cod
 <!-- discriminator:illustration-end -->
 
 These three decisions were adjudicated at the time of FIX-BURST-277 but were recorded ONLY as
-inline rule comments in `hooks/verify-signature-canon.sh` (rules S2, S3, S4). No ADR heading
+inline rule comments in `hooks/verify-signature-canon.sh` (rules S1, S2, S3, S4). No ADR heading
 existed. The hook cited "D-43", "D-45", "D-48" in its CANON TABLE but had no document to
 enforce — the script defined the canon it was supposed to certify.
 
@@ -54,7 +55,7 @@ be cited by a BC or a story, (c) changes silently when someone edits the regex, 
 circular by construction.
 
 This ADR provides the canonical-form definitions as real markdown headings, grounded in what
-`verify-signature-canon.sh` rules S2, S3, S4 actually assert (read verbatim from the CANON
+`verify-signature-canon.sh` rules S1, S2, S3, S4 actually assert (read verbatim from the CANON
 TABLE in the hook). Where the hook's comment and any existing prose disagree, this ADR
 adjudicates and states which won.
 
@@ -62,7 +63,7 @@ adjudicates and states which won.
 
 ## Decision
 
-Ratify three canonical type-signature forms as ADR headings, grounding `verify-signature-canon.sh` rules S2, S3, S4 in this ADR:
+Ratify four canonical type-signature forms as ADR headings, grounding `verify-signature-canon.sh` rules S1, S2, S3, S4 in this ADR:
 
 1. **D-43 — DynTool dispatch:** `Arc<dyn DynTool + Send + Sync>` is the canonical form; `Arc<dyn Tool>` is E0038 (not object-safe) and prohibited.
 <!-- discriminator:illustration-start -->

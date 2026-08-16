@@ -6065,3 +6065,15 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-08-16
 **Status:** COMPLETE
 **Output:** Fix-burst P1D-180 (8 findings 3H/3M/2L+PG): F-180-01..03 HIGH phantom/chained-§ citations in api-surface+BC-2.06.001 fixed; F-180-04..06 MED phantom citations in test-vectors+ADR-020+ADR-010 stale note fixed; F-180-07/08 LOW api-surface pseudo-slug anchors fixed; F-180-PG verify-adr-anchor-citations.sh promoted BLOCKING (14th validator); POL-19 DISCHARGED; ADR-022 Decision 4 deferral CLOSED; 12→0 live-body phantoms. D-144..D-146 (exhaustive). L-178..L-179. 181 passes total. Streak 0/3.
+
+## P1D-180 Pass Record — Archived from STATE.md Current Phase Steps at burst-292 close
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** P1D-180 adversary pass — NOT CLEAN(strict) NOT CLEAN(PR-merge); 8 findings 3H/3M/2L + 1 process-gap; dominant class: phantom/prohibited ADR §Named-Section citations (chained-§, bare-§, pseudo-slug forms); fresh-context deep-read of ADR-target anchor axis (previously sampled); F-180-01..08 + F-180-PG; STREAK RESET 1/3→0/3; pass-180.md persisted; frozen HEAD b682a70. 181 passes total. Streak 0/3.
+
+## Burst 292 — Fix-burst P1D-183 F1-F4+LOW COMPLETE
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** Fix-burst P1D-183 (4 findings 0C/1H/3M + 1 LOW): F2 HIGH ADR-025 — Context + Decision corrected to "S1, S2, S3, S4 / four canonical forms" (S1-omission in Context approx. line 46 and Decision approx. line 65); F3 MED ARCH-INDEX — ADR-025 registry row "S2/S3/S4"→"S1/S2/S3/S4"; F1 MED module-decomposition — VP-012 anchor rewritten to boolean trigger-fires-iff property (check_watermark_trigger returns bool, not a token count); F4 MED tooling-selection — fuzz-target names corrected to fuzz_checkpoint_serde.rs / fuzz_graph_execution.rs (per BC-2.17.002 SoT); D-134 sibling-sweep caught + fixed ADR-002 (same stale checkpoint_roundtrip name); LOW tooling-selection §Kani Async Constraint list updated from stale 3-fn illustrative trio to authoritative 5-module set. Files changed: module-decomposition, ADR-025, ARCH-INDEX, tooling-selection, ADR-002. D-152. Gate: PASS 14/14. Streak UNCHANGED 0/3 (fix-burst; spec content changed). 184 passes total.

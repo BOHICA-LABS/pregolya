@@ -2,19 +2,20 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.41"
+version: "1.42"
 status: active
 producer: architect
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "f056990"
+input-hash: "9558579"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.42 (burst-292/P1D-183-F1/2026-08-16): Fix VP-012 anchor text in §VP anchors (SS-23): replace mischaracterization 'check_watermark_trigger never produces a token count exceeding the hard limit; no overflow' with the actual arithmetic property — returns true iff (tokens_remaining as f64) / (ceiling as f64) <= (1.0 - fraction); non-strict <= is load-bearing (EC-002: fraction=1.0 fires when remaining=0). Root error: check_watermark_trigger returns bool, not a token count; prior text described a non-existent overflow property. Source of truth: VP-012 §Property Statement, verification-architecture.md §VP-012, BC-2.10.005. No other VP-012 mischaracterization sites found in this file."
   - "1.41 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §xtask subcommands blockquote and list: `deny-client-new` → `check-client-timeout` (NE-04, 2 sites); `deny-expect-in-lib` → `check-no-panic` (NE-07, 2 sites); `lint-no-panic` removed from NE-07 blockquote example (was variant name, now `check-no-panic` canonical); blockquote resolution note updated from 'resolved at implementation time' to D-35 canonical-form declaration. §Provider Embeddings NE anchors: `deny-client-new` → `check-client-timeout` (1 site). Canonical `check-<subject>` form per D-35."
   - "1.40 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Update `core::embeddings` description to register `validate_embedding_batch` as a `pub` free function in the module's function surface. Function is the production dimensionality validation gate for all Embeddings impls; VP-008 proptest harnesses call it directly. Visibility `pub` — cross-crate callers: pregolya-openai and pregolya-ollama provider embeddings impls. Criticality unchanged (HIGH; VP-008 proptest P1 drives the tier independently of function count)."
   - "1.39 (FIX-BURST-278/F-P175-D102+D110+D111+D212/2026-07-28): Four findings closed. (1) F-P175-D102 — `vectorstores::retriever` row: the lifetime-parameterized VectorStoreRetriever wrapping `&dyn VectorStore` → `VectorStoreRetriever` owning `Arc<dyn VectorStore>` (no lifetime; `'static`; per ADR-014 D-48 fix). (2) F-P175-D110+D111 — Iron Law blockquote census: `71 total (69 tiered / 2 exempt) per module-criticality.md canonical registry` clarified to attribute 71 to this file's own universe (module-decomposition.md table rows); registry total is 83 (77 tiered + 6 definitions-only/exempt). Also fix `= 77 rows total` in module-criticality.md is `= 77 tiered rows` (propagated there separately). (3) F-P175-D212 — add missing `core::tool` row (Tool trait + DynTool + ToolInput + ToolOutput; HIGH; SS-08) to pregolya-core section; module was present in api-surface.md but absent from module-decomposition.md."
@@ -450,9 +451,7 @@ risk tier defaults, retry classification, and `E-TOOLS-*` error namespace.
 **VP anchors:**
 - VP-011 (Kani P0, seeded burst-232) — `graph::hitl::pre_tool_dispatch`: fail-closed Deny;
   Deny never allows tool invocation (ADR-018 Decision 3 / BC-2.05.007).
-- VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic: `check_watermark_trigger` never produces
-  a token count exceeding the hard limit; no overflow; BC-2.10.005, pregolya-core,
-  core::budget (ADR-019 Decision 3 step 1).
+- VP-012 (Kani P1, seeded burst-232) — OnWatermark arithmetic: `check_watermark_trigger(tokens_remaining, ceiling, fraction)` returns `true` iff `(tokens_remaining as f64) / (ceiling as f64) <= (1.0 - fraction)`; non-strict `<=` is load-bearing (EC-002: fraction=1.0 fires when remaining=0); no overflow, no NaN within bounded domain; BC-2.10.005, pregolya-core, core::budget (ADR-019 Decision 3 step 1).
 - VP-013 (Kani P1, seeded burst-232) — `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)`
   on a `BashTool` instance always return `Err(E-TOOLS-007)`, never succeed (ADR-020 Decision 3 / BashTool risk floor /
   BC-2.23.005).

@@ -2253,3 +2253,14 @@ develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). factory-artifacts 
 
 #### ARCHIVE METADATA
 Date: 2026-08-16 | Archived at: P1D-179 state record (2026-08-16) | STATE.md: 4.53 → 4.54 | P1D-179 CLEAN(strict): ZERO findings; streak 1/3; D-143 streak-semantics; 180 passes total
+
+### Archived Session Checkpoint v4.60 (archived at burst-292 close)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **0/3 after 184 passes** (P1D-183 NOT CLEAN; 4 findings 1H/3M; streak RESET). P1D-183 COMPLETE (2026-08-16): F2 HIGH ADR-025 S1-omission (Context/Decision say S2/S3/S4; Consequences/Source-Origin/§as_retriever say S1/S2/S3/S4); F3 MED ARCH-INDEX ADR-025 registry row S2/S3/S4 vs body; F1 MED module-decomp VP-012 token-count mischaracterization; F4 MED tooling-selection fuzz-target filename drift; D-151. **NEXT: burst-292** (architect fixes F1-F4 on frozen HEAD `11c89f1`), then P1D-184 (streak restart; deep-read residual: ADR-002/003/004/005/006/007/008/011/012/013/014/015/017/021/022/023/024 bodies; VP-001/009/011/013 bodies; api-surface.md; BC bodies SS-01/02/07/11/12/15 + remainder of SS-16/17/19). Spec content: frozen at `11c89f1`. E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING until workspace exists.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: frozen at `11c89f1` (burst-291 fix commit). Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-16 | Archived at: burst-292 close | STATE.md: 4.60 → 4.61 | burst-292 COMPLETE: closed P1D-183 F1-F4+LOW; D-152; streak 0/3 UNCHANGED; 184 passes total

@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: tooling-selection
-version: "1.6"
+version: "1.7"
 status: active
 producer: architect
-timestamp: 2026-07-26T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "0615229"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.7 (burst-292/P1D-183-F4+LOW/2026-08-16): (F4) Fix stale fuzz-target filenames in §Fuzzing table: checkpoint_roundtrip.rs → fuzz_checkpoint_serde.rs; graph_engine_boundary.rs → fuzz_graph_execution.rs. Authoritative names per BC-2.17.002 and verification-architecture.md §Fuzzing Targets. (LOW) Update §Kani Async Constraint sync-core mandate to the authoritative 5-module set (checkpoint::session_index, checkpoint::clock, graph::bsp_engine, graph::hitl, core::budget) per verification-architecture.md §Kani Async Constraint; prior 3-function illustrative list named individual function symbols (reduce_super_step, storage_address, get_next_version) and omitted graph::hitl and core::budget VP targets. get_next_version has no VP; graph::hitl (VP-011) and core::budget (VP-012) do."
   - "1.6 (burst-288/F-P177-A04/2026-08-15): Fix stale proptest count in §Test Strategy Summary live body: '3 of 12 CRITICAL + 7 of 28 HIGH = 10 modules' → '3 of 12 CRITICAL + 7 of 29 HIGH = 10 modules'. HIGH tier count was bumped 28→29 (core::tool added to verification-coverage-matrix.md §Coverage by Criticality Tier) but this live-body sibling was not updated in the same burst."
   - "1.5 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §Security Linting Invocation row: `cargo xtask deny-client-new` → `cargo xtask check-client-timeout`; `cargo xtask deny-expect-in-lib` → `cargo xtask check-no-panic`. Canonical `check-<subject>` form per D-35."
   - "1.4 (FIX-BURST-276/F-P173-803/2026-07-27): F-P173-803 — fix proptest gate in §Test Strategy Summary. Actual proptest coverage is 3 of 12 CRITICAL tiers (graph::bsp_engine, checkpoint::session_index, checkpoint::clock) and 7 of 28 HIGH tiers (core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget). Replace 'Every PR (CRITICAL/HIGH modules)' with actual coverage count and stated obligation. See verification-coverage-matrix.md §Coverage by Criticality Tier for current counts. Derivation: counted from per-module table proptest column in verification-coverage-matrix.md — rows with yes or VP-NNN in proptest column, grouped by tier per module-criticality.md tier assignments."
@@ -58,9 +59,10 @@ pregolya-core), VP-013 (BashTool risk floor / pregolya-tools)
 **Constraint — no async support:** Kani 0.67.0 has NO native async/.await support.
 Harnesses must target the synchronous pure core of each module. The async orchestration
 layer (ADR-001 Alt-B Tokio runtime) is not Kani-verifiable; the sync reducer cores it
-calls ARE. This drives the sync-core mandate: `graph::bsp_engine::reduce_super_step`,
-`checkpoint::session_index::storage_address`, and `checkpoint::clock::get_next_version` MUST be
-extractable as sync functions. See verification-architecture.md § Kani Async Constraint.
+calls ARE. This drives the sync-core mandate: `checkpoint::session_index`, `checkpoint::clock`,
+`graph::bsp_engine`, `graph::hitl`, and `core::budget` MUST expose sync pure-core functions
+as Kani verification targets. See verification-architecture.md §Kani Async Constraint for the
+sync function signatures required per module.
 
 **Constraint — purity:** Any harness that reaches I/O code will produce a verification
 failure. The purity-boundary-map.md classifications are the prerequisite for Kani scope.
@@ -89,7 +91,7 @@ Use `proptest!` macro for invariant-style tests (e.g., `reduce(permute(v)) == re
 |----------|-------|
 | Crate | `cargo-fuzz` (libFuzzer) |
 | Version target | 0.13.2 (verified 2026-07) |
-| Fuzz targets | `fuzz/fuzz_targets/checkpoint_roundtrip.rs`, `fuzz/fuzz_targets/graph_engine_boundary.rs` |
+| Fuzz targets | `fuzz/fuzz_targets/fuzz_checkpoint_serde.rs`, `fuzz/fuzz_targets/fuzz_graph_execution.rs` |
 | Invocation | `cargo fuzz run <target> -- -max_total_time=300` |
 | CI gate | Phase 6; fuzz corpus committed in `fuzz/corpus/` |
 | Corpus seeding | Use known-good checkpoint artifacts as corpus seeds |
