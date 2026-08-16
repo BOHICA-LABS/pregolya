@@ -2347,12 +2347,14 @@ All five convergent mechanisms are closed. All five CRITs are closed. The instru
 | **P1D-179** | **0** | **-5** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); ZERO findings; 5 candidates all discarded; 7 burst-289 regression targets SOUND; streak 1/3 STARTED; D-143 streak-semantics; frozen spec c4c4b10** |
 | fix-burst-290 | — | — | 0/3 | 8 findings (3H/3M/2L+PG) closed; ADR §-citation phantom class corpus-sweep 12→0 live phantoms (architect 13 fixes; product-owner 9 fixes); verify-adr-anchor-citations.sh promoted advisory→BLOCKING (13→14); EXPECTED_BLOCKING_COUNT bumped; POL-19 migration sweep DISCHARGED; D-144..D-146; L-178..L-179 |
 | **P1D-180** | **8** | **+8** | **0/3** | **NOT CLEAN strict/PR-merge; 3H/3M/2L+PG; dominant class: phantom/prohibited ADR §Named-Section citations (chained-§, bare-§); previously-sampled axis deep-read; STREAK RESET 1/3→0/3** |
+| fix-burst-290 | — | — | 0/3 | 8 findings (3H/3M/2L+PG) closed; ADR §-citation phantom class corpus-sweep 12→0 live phantoms (architect 13 fixes; product-owner 9 fixes); verify-adr-anchor-citations.sh promoted advisory→BLOCKING (13→14); EXPECTED_BLOCKING_COUNT bumped; POL-19 migration sweep DISCHARGED; D-144..D-146; L-178..L-179 |
+| **P1D-181** | **0** | **-8** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); ZERO findings; 4 candidates all discarded; Slice-D census DEEP-READ independent recount all EXACT (error-taxonomy 111; nfr-catalog 14; observability 11 active SAP-1 clean; domain-spec CAP 38/DI 15/DEC 13/ASM 9/R 9/FM 19; BC-triple-agreement 129=51+75+3); streak 1/3 STARTED; D-147; frozen spec 4059654** |
 
-**Trajectory tail at P1D-180:** →130→256→189→160→60→5→0→**8**
+**Trajectory tail at P1D-181:** →130→256→189→160→60→5→0→8→**0**
 
-**Total passes to date: 181.**
+**Total passes to date: 182.**
 
-### Convergence Assessment (updated at P1D-180)
+### Convergence Assessment (updated at P1D-181)
 
 Counter: **0/3 RESET.** P1D-180 found 8 findings — streak reset from 1/3 to 0/3.
 
