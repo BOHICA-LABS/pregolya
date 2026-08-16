@@ -11,11 +11,12 @@ date: "2026-07-30"
 subsystems_affected: ["SS-12"]
 supersedes: []
 superseded_by: null
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D13]
 changelog:
+  - "1.3 (burst-293/F-P184-F01/2026-08-16): Fix incorrect rationale in §Decision 2 Rationale point 4. Old text falsely claimed 'RunnableConfig is not currently declared #[non_exhaustive] (the struct's internal use makes that impractical; callers construct it)' — incorrect: RunnableConfig was added to ADR-023 Required Inventory in burst-288 (D-03) and MUST carry #[non_exhaustive]. New text: RunnableConfig IS #[non_exhaustive] per ADR-023 Decision 4; #[non_exhaustive] blocks external struct-literal construction (E0639) but not same-crate construction within pregolya-core; external callers use Default::default(); field addition remains backward-compatible. PO directive added to §Effect on existing artifacts: add #[non_exhaustive] to interface-definitions.md §RunnableConfig struct declaration and confirm Default construction path. D-134 sibling sweep: no other live-body doc claims RunnableConfig lacks #[non_exhaustive]."
   - "1.2 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Fix phantom §-citation in §Decision 2 merge-semantics bullet. 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants, Run-Config Merge Precedence rule'. Rationale: BC-2.12.003 has no subheading §Run-Config Merge Precedence Invariant; the rule is a list item within §Invariants (verified by heading grep). Also sibling-fixed in api-surface.md RunnableConfig row."
   - "1.1 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Rationale (H2), Source / Origin sections per ADR template (LOW finding: date boundary conditions)."
   - "1.0 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Initial decision — two adjudications from P1D-175 Slice C1. Decision 1: SecurityConfig TOML representation — resolve mutual unbootability between BC-2.12.005 EC-005 and the interface-definitions.md sample config. Decision 2: RunnableConfig.configurable field addition — resolve BC-2.12.002 fabricated-capability finding (mislabeled as BC-2.12.005 by adversary; actual defect in BC-2.12.002)."
@@ -83,7 +84,7 @@ This is the LangGraph-parity field identified in the semport analysis (semport �
 1. **Semport mandate.** The semport `rust-translation-strategy.md §RunnableConfig mapping §11` explicitly includes `configurable: Map<String,Value>` in the proposed `RunnableConfig` struct. This field was omitted from the initial architecture phase without a recorded decision.
 2. **LangGraph parity is the design requirement.** BC-2.12.002 §Description states the Assistant concept is LangGraph-parity (D13). LangGraph `Assistants` store a `configurable` dict keyed to graph-specific parameter names (e.g., `"model"`, `"system_prompt"`, `"tools"`). The graph reads its parameters from `config.configurable` at execution time. Without `configurable`, pregolya graphs have no standard channel for receiving per-run model or system-prompt overrides that differ from graph to graph.
 3. **Preserves typed-field precedent.** The strongly-typed fields `budget_config` and `context_mutations` cover pregolya-specific behaviors that require precise type-level enforcement. The `configurable` map covers the "pass-through to graph logic" use case where each graph defines its own parameters — a generic map is correct here because no single graph schema applies across all graphs.
-4. **No `#[non_exhaustive]` conflict.** `RunnableConfig` is not currently declared `#[non_exhaustive]` (the struct's internal use makes that impractical; callers construct it). Adding a new `Option<…>` field is a backward-compatible extension — existing construction sites using struct-literal form add the field as `configurable: None`.
+4. **`RunnableConfig` is `#[non_exhaustive]` per ADR-023 — field addition remains backward-compatible.** `RunnableConfig` carries `#[non_exhaustive]` (Required Inventory, ADR-023 Decision 4, added burst-288 D-03). `#[non_exhaustive]` blocks EXTERNAL struct-literal construction (E0639) but NOT same-crate construction within pregolya-core; internal construction sites add `configurable: None` to any existing struct-literal. External callers construct `RunnableConfig` via `Default::default()` — struct-literal construction from external crates is E0639 for `#[non_exhaustive]` types. Adding `configurable: Option<…>` is backward-compatible for external consumers: `Default::default()` returns `None` for the field automatically, and external callers never used struct-literal form.
 
 ### Type details
 
@@ -97,7 +98,7 @@ pub configurable: Option<HashMap<String, serde_json::Value>>,
 
 ### Effect on existing artifacts
 
-- `interface-definitions.md` §RunnableConfig: add `configurable` field with doc comment.
+- `interface-definitions.md` §RunnableConfig: add `configurable` field with doc comment. **PO action required (F-01 / burst-293 directive):** also add `#[non_exhaustive]` to the `RunnableConfig` struct declaration — the attribute is listed in ADR-023 Required Inventory since burst-288 but is absent from the interface-definitions declaration. Confirm that `RunnableConfig` derives or implements `Default` so that external callers have a construction path; `Default::default()` is the only valid external construction path for a `#[non_exhaustive]` struct.
 - `api-surface.md` §pregolya-core Public Types `RunnableConfig` row: add `configurable` to the field summary.
 - BC-2.12.002 §Description: product-owner must replace the fabricated list with language reflecting what `RunnableConfig.configurable` actually carries (see §Product-Owner Handoff below).
 - BC-2.12.004 §Invariants: product-owner must remove the fabricated field reference `RunnableConfig.missed_fire_policy` (discovered in TD-VSDD-060 sibling sweep; this field does not exist in `RunnableConfig`).

@@ -11,12 +11,13 @@ date: "2026-07-13"
 subsystems_affected: ["SS-08"]
 supersedes: []
 superseded_by: null
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 ne_anchors: [NE-05]
 changelog:
+  - "1.2 (burst-293/F-P184-F05/2026-08-16): Fix §Source/Origin Enforcement line: 'CI lint gate cargo xtask check-client-timeout pattern' → 'CI lint gate cargo xtask deny-description-cache-key pattern'. check-client-timeout is the HTTP-timeout gate (ADR-007/NE-04/DI-009); ADR-011's own gate is deny-description-cache-key, named correctly three times in the ADR body. D-134 sibling sweep: all other check-client-timeout occurrences in other files correctly refer to the HTTP-timeout gate — no other file requires amendment."
   - "1.1 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Source / Origin section per ADR template (LOW finding: date boundary conditions)."
   - "1.0 (D17/2026-07-13): Initial ADR — content-hash cache-key contract anchoring NE-05; prohibits description-proxy and partial-content cache keys."
 ---
@@ -157,5 +158,5 @@ The `sha2` crate (SHA-256) provides a collision-resistant hash in the Rust ecosy
 
 - **NE anchor:** NE-05 (Negative Evidence — adk-rust P-17 description-proxy cache key failure mode).
 - **Decision obligation:** D17 NE adoption commitment; all 17 NEs anchored in PRD §9.
-- **Enforcement:** CI lint gate `cargo xtask check-client-timeout` pattern; story acceptance criterion anchor.
+- **Enforcement:** CI lint gate `cargo xtask deny-description-cache-key` pattern; story acceptance criterion anchor.
 - **Authoring context:** D17 design session (2026-07-13); pregolya Phase 1a.

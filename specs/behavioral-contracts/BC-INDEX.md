@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.40"
+version: "3.41"
 status: active
 producer: state-manager
 timestamp: 2026-08-16T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.41 (burst-293/F-P184-F04/2026-08-16): VP Seed table VP-011 NE/Security Anchor cell: 'ADR-018 Decision 1' → 'ADR-018 Decision 3'. Decision 3 is the fail-closed dispatch mandate (6-step route_pre_tool_decision protocol; Deny → ToolOutput::Error; hook panic → Reject); Decision 1 is only the trait definition and placement. VP-011 §Source/Origin and §Proof Harness Skeleton both correctly cite Decision 3 — this table cell was the sole mis-anchor. D-134 sibling sweep: grep for 'VP-011.*Decision 1' across specs — sole occurrence was this row; no other live-body docs require amendment. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.40 (burst-291/D-134-cont/2026-08-16): 3 BC version bumps — §-anchor phantom sweep (non-ADR phantoms in SS-03, SS-10, SS-12). BC-2.03.001 (v1.8→v1.9): 'error-taxonomy.md §GRAPH' → 'error-taxonomy.md §Component: GRAPH' (§GRAPH matches no heading; real heading is '### Component: GRAPH (pregolya-graph)'). BC-2.10.006 (v1.7→v1.8): 'interface-definitions.md §BudgetInfo' → 'interface-definitions.md §BudgetPolicy' (§BudgetInfo matches no heading; BudgetInfo is a field inline under §BudgetPolicy). BC-2.12.002 (v1.4→v1.5): two phantom corrections — Description '§Run-Config Merge Precedence Invariant' → '§Invariants'; EC-006 same + 'interface-definitions.md §RunnableConfig configurable field doc' → 'interface-definitions.md §RunnableConfig — Struct Definition' (sentence restructured with comma separator). Also non-BC file bumps: product-brief (v1.10→v1.11), ubiquitous-language-core (v1.11→v1.12), bc-authoring-plan (v2.64→v2.65). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.39 (burst-291/D-134/2026-08-16): 8 BC version bumps — §-anchor phantom sweep (non-ADR phantoms in SS-13 and SS-19). SS-13: BC-2.13.001 (v1.1→v1.2): §NE catalog NE-01 phantom → §Security Defaults — PRD Carry-Forward (NE-01). BC-2.13.002 (v1.3→v1.4): §NE catalog NE-01 phantom → §Security Defaults — PRD Carry-Forward (NE-01). BC-2.13.003 (v1.1→v1.2): §NE catalog NE-01 phantom → §Security Defaults — PRD Carry-Forward (NE-01). BC-2.13.004 (v1.5→v1.6): §NE catalog NE-02 phantom → §Security Defaults — PRD Carry-Forward (NE-02); input-hash drift corrected (ADR-024 added to inputs at burst-288 but hash not updated). BC-2.13.005 (v1.3→v1.4): §NE catalog NE-02 phantom → §Security Defaults — PRD Carry-Forward (NE-02); input-hash drift corrected. BC-2.13.006 (v1.2→v1.3): §NE catalog NE-16 phantom → §Security Defaults — PRD Carry-Forward (NE-16). SS-19: BC-2.19.005 (v1.8→v1.9): error-taxonomy.md §E-SRLZ-001 (row: VAL) phantom → error-taxonomy.md §Component: SRLZ. BC-2.19.006 (v1.6→v1.7): error-taxonomy.md §E-SRLZ-002 (row: VAL) phantom → error-taxonomy.md §Component: SRLZ. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.38 (burst-290/F-180-04, 2026-08-16): Fix live-body phantom ADR §-citation in Red Gate BCs table. BC-2.20.002 row §Anchor column: `ADR-014 Consequences §DI-012` → `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` (no heading §DI-012 exists in ADR-014; DI-012 mechanization is governed by `## Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)`). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
@@ -110,7 +111,7 @@ changelog:
 | VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
 | VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani | ADR-014 Decision 2 §Hardening note |
 | VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani | ADR-016 Decision 3 §Security Invariant |
-| VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani | ADR-018 Decision 1 |
+| VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani | ADR-018 Decision 3 |
 | VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani | ADR-019 Decision 3 |
 | VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani | ADR-020 Decision 3 |
 

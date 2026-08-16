@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.13"
+version: "1.14"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.14 (burst-293/F-P184-F02/2026-08-16): Fix two 'document_index carried as structured context field' occurrences that contradict Decision 5. (1) §Consequences E-VS-004 bullet: 'document_index carried as structured context field' → 'document_index interpolated into the message string via key=value per ADR-010 §Error-Construction Notation Canon'. (2) §PO Obligations E-VS-004 paragraph: same replacement, removing the stale 'gate #33 Form 3 convention' parenthetical. No other 'context field' residue found in live body (changelog entries grandfathered). D-134 sibling sweep: test-vectors.md 2.1 row has 'document_index context field' in a changelog entry — grandfathered. BC-2.21.002 and BC-INDEX changelog entries reference removed phantom field — grandfathered."
   - "1.13 (burst-290/F-180-phantom-citations/2026-08-16): Three phantom ADR §-citation fixes (live body only; changelog entries grandfathered). (1) §Decision 1 object-safety note (~line 124): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait` (real heading per ADR-005). (2) §Decision 5 zero-norm message form (~line 397): `ADR-010 §impl PregolyaError adjudication` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading). (3) §Source / Origin (~line 656): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait`."
   - "1.12 (FIX-BURST-278/F-P175-D48-receiver+D217-SearchType/2026-07-28): D-48 overturn of D-45 (two items). (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>`. The prior reference-to-Arc receiver form is NOT a dyn-compatible receiver (it is not one of the standard vtable-dispatchable receiver types: `self`, `&self`, `&mut self`, `Box<Self>`, `Rc<Self>`, `Arc<Self>`, `Pin<P>`); using a reference-to-Arc receiver makes `VectorStore` non-object-safe under E0038, destroying `Arc<dyn VectorStore>` and blocking the SS-20 RAG seam. `Arc<Self>` IS a dyn-compatible receiver — `Arc<dyn VectorStore>` can dispatch through it. This is the second E0038 object-safety failure in the project (first: `Tool` via `DynTool` in ADR-005). The stale 'Wave C PO correction required' note removed from doc comment (BC-2.20.003 PC-2 amendment is routed to product-owner via FIX-BURST-278 Wave B routing spec). (2) F-P175-D217 — `SearchType` enum missing `#[non_exhaustive]` per BC-2.20.003 INV-1; added. Object-safety comment updated: `as_retriever` uses `Arc<Self>` receiver (dyn-compatible), not `&self`."
   - "1.11 (FIX-BURST-277-WAVE-B/F-P174-retriever-lifetime+F-P174-303+F-P174-as-retriever-fallible/2026-07-27): Three related fixes. (1) F-P174-retriever-lifetime — the lifetime-parameterized `VectorStoreRetriever` held `store: &'a dyn VectorStore`, making it a non-`'static` type. Coercing it to `Arc<dyn Retriever + 'static>` (required for graph node injection and `tokio::spawn`) fails with a lifetime bound error. Fix: `VectorStoreRetriever` drops the lifetime parameter; `store` field becomes `Arc<dyn VectorStore>` (owned Arc, `'static`). `VectorStoreRetriever` is now `'static` and coerces cleanly to `Arc<dyn Retriever>`. (2) F-P174-as-retriever-fallible — `as_retriever` was infallible (returning the now-removed lifetime-parameterized type via `&self` receiver) but BC-2.20.003 INV-2 and TV-004/TV-005 require `Err(E-VS-003)` on invalid config (lambda_mult outside [0,1], fetch_k < k for MMR). Fix: signature becomes `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` (D-48 further corrected the intermediate receiver form in v1.12). The receiver allows the implementation to `Arc::clone` and store the `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`. BC-2.20.003 PC-2 (infallible) is therefore incorrect and requires a Wave C PO correction; the architecture source of truth is this ADR and interface-definitions.md. (3) F-P174-303 — remove phantom `context:` field from Decision 5 write-time zero-norm code sketch; `document_index` is carried in `message` via key=value interpolation per ADR-010 adjudication. Propagate to interface-definitions.md and api-surface.md."
@@ -680,7 +681,7 @@ applicability. Two separate crates with a clear boundary is correct.
 - **E-VS-004** (Decision 5): new write-time zero-norm error code minted in the `VS` namespace
   (E-VS-003 is taken — VectorStoreRetriever config validation, error-taxonomy.md);
   `add_texts` and `from_texts_sync` reject documents whose embedding has L2 norm == 0.0 before
-  persistence; `document_index` carried as structured context field. `E-VS-004` minted in
+  persistence; `document_index` interpolated into the `message` string via key=value per ADR-010 §Error-Construction Notation Canon. `E-VS-004` minted in
   error-taxonomy v1.27/D21 (VS namespace; write-time zero-norm rejection; BC-2.21.002).
 - **GuardedDocuments** (Decision 6): new newtype in `core::retriever`; no public constructor;
   sole constructor is `GuardedDocuments::rag_ingress(docs, &dyn GuardrailHook)` — `async fn`;
@@ -708,8 +709,7 @@ applicability. Two separate crates with a clear boundary is correct.
 
 `E-VS-004` minted (error-taxonomy v1.27/D21) — write-time zero-norm rejection in the `VS` namespace
 (`pregolya-vectorstores`); `add_texts` and `from_texts_sync` reject documents whose
-embedding has L2 norm == 0.0 before persistence; `document_index` carried as structured
-context field (gate #33 Form 3 convention). BC-2.21.002 write-time contract row authority.
+embedding has L2 norm == 0.0 before persistence; `document_index` interpolated into the `message` string via key=value per ADR-010 §Error-Construction Notation Canon (F-P174-303). BC-2.21.002 write-time contract row authority.
 
 ### BC-2.20.002 Anchor Corrections (F-P130-02 — burst-225)
 

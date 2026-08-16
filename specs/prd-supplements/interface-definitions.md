@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.73"
+version: "2.74"
 status: active
 producer: product-owner
 timestamp: 2026-08-16T00:00:00Z
 phase: 1d
 changelog:
+  - "2.74 (burst-293/F-01/ADR-023/2026-08-16): §RunnableConfig — apply architect F-01 adjudication. (1) Add `#[non_exhaustive]` to struct declaration — ADR-023 §Required Inventory is authoritative; CLAUDE.md §Code Conventions mandates `#[non_exhaustive]` on all public API surface config structs. (2) Add `#[derive(Debug, Clone)]` to struct declaration. (3) Add `impl Default for RunnableConfig` with `recursion_limit: 25`; `#[derive(Default)]` intentionally absent: `usize::default()` yields 0, which would violate the recursion_limit = 25 default semantics per BC-2.01.003 PC5 and BC-2.03.001 PC5. (4) Doc comment updated: 'All fields are optional at construction except recursion_limit' → external-construction guidance via `RunnableConfig::default()`; struct-literal construction barred outside pregolya-core by `#[non_exhaustive]` (E0639). (5) D-134 sibling sweep: BC corpus already uses `RunnableConfig::default()` throughout — BC-2.01.003 §Canonical Test Vectors TV-001 and BC-2.04.002 §Canonical Test Vectors confirmed correct; no BC changes required."
   - "2.73 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — two phantom BC-2.12.003 §Run-Config Merge Precedence Invariant citations corrected. §Run-Config Merge Precedence Invariant is not a heading in BC-2.12.003 (the item is a bold entry within § Invariants, not its own heading). Corrected to BC-2.12.003 §Invariants at §RunnableConfig doc comment (line 299 context) and §Runs table row. Grandfathered: changelog entry 2.4 citing the same phantom anchor (historical, not a live-body citation)."
   - "2.72 (burst-290/F-180-03, 2026-08-16): Fix live-body phantom ADR §-citation in §StreamEvent Rust code comment. `ADR-023 §exhaustive-by-design` → `ADR-023 §Exempt Enums` (no heading §exhaustive-by-design exists in ADR-023; StreamEvent's exhaustive-match exemption is documented under `### Exempt Enums` within `## Decision 3 — Exempt Inventory`)."
   - "2.71 (F-178-01/F-178-04, burst-289, 2026-08-16): F-178-01 — StreamEvent §StreamEvent: (a) count updated 15→16 variants; breakdown corrected to '11 execution lifecycle + 1 guardrail observability + 2 per-tool-call approval [D23/ADR-018] + 1 compaction [D23/ADR-019] + 1 error [F-P177-B01/ADR-023]'; (b) `Error` variant added to the Rust enum body after `CompactionEvent` with field inventory matching BC-2.06.001 PC2 (run_id, parent_ids, error_code, error_message); (c) BC anchor updated: 'updated D23 15 variants' extended with 'updated F-P177-B01/ADR-023 16 variants'. F-178-04 — §§changelog entry 2.70 phantom anchor: `BC-2.10.003 §recursion_limit_canon (BC-2.03.001)` replaced with `BC-2.03.001 §Description`; `§recursion_limit_canon` is not a heading in BC-2.03.001 (grep ^#{1,6} confirms); the formula lives in the §Description section."
@@ -89,7 +90,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "5debce6"
+input-hash: "bebf43c"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -237,7 +238,12 @@ halt produces a run-level failure embedded in `Run.error` (see embedded omission
 /// the graph-level or system defaults.
 ///
 /// Module: `pregolya-core/src/config.rs` (`core::config`), re-exported at crate root.
-/// All fields are optional at construction except `recursion_limit` (has a default).
+/// External callers construct via `RunnableConfig::default()` (yields `recursion_limit = 25`,
+/// all `Option` fields `None`). Direct struct-literal construction is barred outside
+/// `pregolya-core` by `#[non_exhaustive]` (E0639). Fields may be assigned after
+/// `default()` construction via the mutable field syntax.
+#[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct RunnableConfig {
     /// Maximum Runnable call depth (Runnable-layer) and graph super-step count
     /// (graph-engine-layer). Default: 25. Dual-layer semantics documented above in
@@ -306,6 +312,28 @@ pub struct RunnableConfig {
     /// (semport §RunnableConfig mapping §11).
     /// Authority: BC-2.12.002 (Assistant config field), ADR-021 Decision 2.
     pub configurable: Option<HashMap<String, serde_json::Value>>,
+}
+
+impl Default for RunnableConfig {
+    /// Constructs `RunnableConfig` with production defaults.
+    ///
+    /// `recursion_limit` defaults to **25** — the canonical pregolya/langchain-core default
+    /// (BC-2.01.003 PC5, BC-2.03.001 PC5). `#[derive(Default)]` is intentionally absent:
+    /// `usize::default()` yields 0, which would violate the recursion_limit = 25 default
+    /// semantics. All `Option` fields default to `None`.
+    ///
+    /// External construction path: `RunnableConfig { ..RunnableConfig::default() }` is
+    /// valid inside `pregolya-core` (same crate); external crates must use `RunnableConfig::default()`
+    /// then assign fields mutably, because `#[non_exhaustive]` bars struct-literal forms (E0639).
+    fn default() -> Self {
+        Self {
+            recursion_limit: 25,
+            thread_id: None,
+            budget_config: None,
+            context_mutations: None,
+            configurable: None,
+        }
+    }
 }
 ```
 
