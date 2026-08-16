@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.12"
+version: "1.13"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.13 (burst-290/F-180-phantom-citations/2026-08-16): Three phantom ADR §-citation fixes (live body only; changelog entries grandfathered). (1) §Decision 1 object-safety note (~line 124): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait` (real heading per ADR-005). (2) §Decision 5 zero-norm message form (~line 397): `ADR-010 §impl PregolyaError adjudication` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading). (3) §Source / Origin (~line 656): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait`."
   - "1.12 (FIX-BURST-278/F-P175-D48-receiver+D217-SearchType/2026-07-28): D-48 overturn of D-45 (two items). (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>`. The prior reference-to-Arc receiver form is NOT a dyn-compatible receiver (it is not one of the standard vtable-dispatchable receiver types: `self`, `&self`, `&mut self`, `Box<Self>`, `Rc<Self>`, `Arc<Self>`, `Pin<P>`); using a reference-to-Arc receiver makes `VectorStore` non-object-safe under E0038, destroying `Arc<dyn VectorStore>` and blocking the SS-20 RAG seam. `Arc<Self>` IS a dyn-compatible receiver — `Arc<dyn VectorStore>` can dispatch through it. This is the second E0038 object-safety failure in the project (first: `Tool` via `DynTool` in ADR-005). The stale 'Wave C PO correction required' note removed from doc comment (BC-2.20.003 PC-2 amendment is routed to product-owner via FIX-BURST-278 Wave B routing spec). (2) F-P175-D217 — `SearchType` enum missing `#[non_exhaustive]` per BC-2.20.003 INV-1; added. Object-safety comment updated: `as_retriever` uses `Arc<Self>` receiver (dyn-compatible), not `&self`."
   - "1.11 (FIX-BURST-277-WAVE-B/F-P174-retriever-lifetime+F-P174-303+F-P174-as-retriever-fallible/2026-07-27): Three related fixes. (1) F-P174-retriever-lifetime — the lifetime-parameterized `VectorStoreRetriever` held `store: &'a dyn VectorStore`, making it a non-`'static` type. Coercing it to `Arc<dyn Retriever + 'static>` (required for graph node injection and `tokio::spawn`) fails with a lifetime bound error. Fix: `VectorStoreRetriever` drops the lifetime parameter; `store` field becomes `Arc<dyn VectorStore>` (owned Arc, `'static`). `VectorStoreRetriever` is now `'static` and coerces cleanly to `Arc<dyn Retriever>`. (2) F-P174-as-retriever-fallible — `as_retriever` was infallible (returning the now-removed lifetime-parameterized type via `&self` receiver) but BC-2.20.003 INV-2 and TV-004/TV-005 require `Err(E-VS-003)` on invalid config (lambda_mult outside [0,1], fetch_k < k for MMR). Fix: signature becomes `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` (D-48 further corrected the intermediate receiver form in v1.12). The receiver allows the implementation to `Arc::clone` and store the `Arc<dyn VectorStore>` in `VectorStoreRetriever.store`. BC-2.20.003 PC-2 (infallible) is therefore incorrect and requires a Wave C PO correction; the architecture source of truth is this ADR and interface-definitions.md. (3) F-P174-303 — remove phantom `context:` field from Decision 5 write-time zero-norm code sketch; `document_index` is carried in `message` via key=value interpolation per ADR-010 adjudication. Propagate to interface-definitions.md and api-surface.md."
   - "1.10 (FIX-BURST-274/timestamp-convention/2026-07-26): Restore frozen original-acceptance timestamp per ADR decision-date convention (Gate #28 Rule 5): `timestamp: 2026-07-23T00:00:00Z` → `2026-07-21T00:00:00Z`. Date field already correct at 2026-07-21. Timestamp was incorrectly bumped to 2026-07-23 in burst-238/f4819b2."
@@ -121,7 +122,7 @@ pub trait Retriever: Send + Sync {
 
 Object-safety: `&self` receiver, no generic type params, no `impl Trait` return (desugared
 by `#[async_trait]` to `Pin<Box<dyn Future<Output = ...> + Send + '_>>`). `Arc<dyn Retriever>`
-compiles without E0038. Consistent with ADR-005 §Object-Safety.
+compiles without E0038. Consistent with ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait.
 
 ### VectorStore trait (pregolya-vectorstores)
 
@@ -394,7 +395,7 @@ Both codes are in the `VS` namespace (`pregolya-vectorstores`). `E-VS-004` minte
 error-taxonomy v1.27/D21 (see §PO Obligations for mint record).
 
 **`document_index` placement:** interpolated into the `message` field via key=value format
-per ADR-010 §impl PregolyaError adjudication (F-P174-303 — `context` field rejected; no `serde_json::Map`
+per ADR-010 §Error-Construction Notation Canon (F-P174-303 — `context` field rejected; no `serde_json::Map`
 added to `PregolyaError`). The `message` string carries all structured diagnostics.
 
 ### Write-time check sketch
@@ -653,7 +654,7 @@ applicability. Two separate crates with a clear boundary is correct.
 - **semport/core/rust-translation-strategy.md §8**: `Document`, `Embeddings`, `Retriever`,
   `VectorStore` difficulty assessment (🟢–🟡); in-memory VectorStore recommendation (plain
   `Vec<f32>` cosine, avoid `ndarray` in core).
-- **ADR-005 §Object-Safety**: `&self` receiver + `#[async_trait]` desugaring precedent for
+- **ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait**: `&self` receiver + `#[async_trait]` desugaring precedent for
   dyn-compatible async trait methods; `Arc<dyn CheckpointSaver>` pattern.
 - **DI-012 / BC-2.11.001**: `BoundaryType::RAGRetrieval` existing variant confirms the
   guardrail seam already covers VectorStore-backed retrieval — no BoundaryType extension needed.

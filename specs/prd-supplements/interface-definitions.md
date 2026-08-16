@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.71"
+version: "2.72"
 status: active
 producer: product-owner
 timestamp: 2026-08-16T00:00:00Z
 phase: 1d
 changelog:
+  - "2.72 (burst-290/F-180-03, 2026-08-16): Fix live-body phantom ADR §-citation in §StreamEvent Rust code comment. `ADR-023 §exhaustive-by-design` → `ADR-023 §Exempt Enums` (no heading §exhaustive-by-design exists in ADR-023; StreamEvent's exhaustive-match exemption is documented under `### Exempt Enums` within `## Decision 3 — Exempt Inventory`)."
   - "2.71 (F-178-01/F-178-04, burst-289, 2026-08-16): F-178-01 — StreamEvent §StreamEvent: (a) count updated 15→16 variants; breakdown corrected to '11 execution lifecycle + 1 guardrail observability + 2 per-tool-call approval [D23/ADR-018] + 1 compaction [D23/ADR-019] + 1 error [F-P177-B01/ADR-023]'; (b) `Error` variant added to the Rust enum body after `CompactionEvent` with field inventory matching BC-2.06.001 PC2 (run_id, parent_ids, error_code, error_message); (c) BC anchor updated: 'updated D23 15 variants' extended with 'updated F-P177-B01/ADR-023 16 variants'. F-178-04 — §§changelog entry 2.70 phantom anchor: `BC-2.10.003 §recursion_limit_canon (BC-2.03.001)` replaced with `BC-2.03.001 §Description`; `§recursion_limit_canon` is not a heading in BC-2.03.001 (grep ^#{1,6} confirms); the formula lives in the §Description section."
   - "2.70 (F-P177-D02+F-P177-B02-sibling, burst-288, 2026-08-15): (1) D-02 HIGH: Add `#[non_exhaustive]` to `ToolCallPreview` struct declaration. ADR-023 §required-types inventory lists ToolCallPreview as required; the missing annotation was a production-grade violation. (2) B02-sibling HIGH: Change `steps_remaining: Option<u32>` → `Option<i64>` in §BudgetInfo block. Rationale: BC-2.03.001 §Description establishes execution proceeds to recursion_limit + 1 steps; at that step steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (already signed i64)."
   - "2.69 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Two architect adjudications from P1D-175 Slice C1 applied. (1) F-P175-C101 ADR-021 Decision 1: TOML sample config debug_route_key corrected — present-but-empty form 'debug_route_key = \"\"' replaced with commented-absent form. Present-but-empty deserializes via serde to Option::Some(\"\") which BC-2.12.005 EC-005 defines as E-SERVER-013 startup failure; the secure default is absence of the key (None via serde default). BC-2.12.005 body is unchanged — EC-005/TV-007/E-SERVER-013 are correct and remain load-bearing. (2) F-P175-C113 ADR-021 Decision 2: add configurable: Option<HashMap<String, Value>> field to RunnableConfig struct. This is the LangGraph-parity configurable map (semport rust-translation-strategy §RunnableConfig mapping §11); graphs use it to read model, tool-set, and system-prompt overrides at execution time. Enables the Assistant 'reusable agent persona' concept in BC-2.12.002. BC-2.12.002 §Description product-owner handoff: replace fabricated 'model, tools, system prompt overrides, checkpointer config' text; see ADR-021 Decision 2 and fix-burst-283 handoff spec."
@@ -1094,7 +1095,7 @@ pub enum StreamEvent {
     // Run error event — wire: error  (F-P177-B01/ADR-023, burst-288; 16th variant)
     // Emitted when a node returns Err(PregolyaError) during execution.
     // Stream closes after this event; RunEnd is NOT emitted (BC-2.06.001 EC-005).
-    // ADR-023 §exhaustive-by-design — StreamEvent is exhaustively matched by consumers;
+    // ADR-023 §Exempt Enums — StreamEvent is exhaustively matched by consumers;
     // this is the final variant in the taxonomy.
     // Causal ordering: replaces RunEnd on the failure path (no further events after Error).
     Error {

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.005
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-020
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -22,6 +22,9 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
 input-hash: "d42a460"
+changelog:
+  - "1.0 (initial): base BC authored."
+  - "1.1 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in Traceability §Error Code Minted: `ADR-012 §Consequences/Error Codes` → `ADR-012 §Error Codes` (no heading §Consequences/Error Codes exists in ADR-012; the error-codes section is `### Error Codes` under `## Consequences`)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -188,7 +191,7 @@ _[to be filled after story decomposition]_
 | Source L2 Capability | CAP-020 |
 | Capability Anchor Justification | CAP-020 ("Self-Improvement Primitives (Skill Registry, Guarded Memory Writes, Frozen-Snapshot Context Mutation)") per capabilities-p1-p2.md §CAP-020 — this BC specifies the "guarded memory/skill writes" primitive named in CAP-020(b): MemoryWriteGuard validate → Allow/Deny/Transform; injection scanning; E-MEMORY-007 on Deny |
 | L2 Domain Invariants | DI-008 (Library Constructor Result Contract — Deny returns Err not panic), DI-012 (Guardrail Coverage at Ingress Boundaries — write guard extends fail-closed safety posture to the write path, complementing DI-012's read-path guardrail coverage), DI-014 (Error Propagation — E-MEMORY-007 propagates as Err; no silent swallowing) |
-| Error Code Minted | E-MEMORY-007 MemoryWriteGuardDenied — SECURITY, broken, Never. Minted by this BC per ADR-012 §Consequences/Error Codes. MEMORY namespace had 6 live codes (E-MEMORY-001 through E-MEMORY-006); E-MEMORY-007 is next. Taxonomy row: sub-burst 2. |
+| Error Code Minted | E-MEMORY-007 MemoryWriteGuardDenied — SECURITY, broken, Never. Minted by this BC per ADR-012 §Error Codes. MEMORY namespace had 6 live codes (E-MEMORY-001 through E-MEMORY-006); E-MEMORY-007 is next. Taxonomy row: sub-burst 2. |
 | Decision Authority | D20; ADR-012 Decision 1 (Primitive C) + Decision 2 (new seam, no BoundaryType amendment) |
 | Domain D Forcing Function | domain-d-hermes-agent.md req 4 — "injection scanning" noted for MEMORY.md guarded facts; guarded write semantics prevent agent from corrupting its own memory with injected instructions |
 | Priority | P1 |

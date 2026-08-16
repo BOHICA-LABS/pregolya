@@ -67,6 +67,13 @@
 #       sections against §Grand-Total declared canonical total in test-vectors.md.
 #       Ground truth: 676 canonical TVs in 129 BC bodies == 676 declared in registry.
 #       Catches Mechanism-3 drift (registry internal arithmetic drifting from BC bodies).
+#   verify-adr-anchor-citations.sh         — (CLEAN) §Named-Section citation existence.
+#       Promoted to BLOCKING at burst-290 (closes F-180-PG PROCESS). Architecture +
+#       product-owner swept corpus to ZERO live-body phantom ADR §-citations before
+#       promotion. Gate now also detects: (1) chained double-§ forms ADR-NNN §X §Y
+#       (ADR-022 §Decision 5 prohibited); (2) bare §Section citations in normative
+#       prose without ADR-NNN prefix and without same-file heading resolution.
+#       Illustration regions (discriminator:illustration-start/end) are now excluded.
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -78,13 +85,6 @@
 #       until corpus-wide false-closure sweep clears the advisory finding backlog.
 #       Promotion requires: WARN=0 AND exit contract changed to exit 1 on WARN > 0.
 #       Routing: product-owner + architect joint sweep per P1D-174 findings (FC-1..FC-6).
-#   verify-adr-anchor-citations.sh         — §Named-Section citation existence (advisory).
-#       Added fix-burst-287 (ADR-022 §Decision 3, closes F-P176-E001 CRIT).
-#       42 citations scanned: 32 PASS (valid headings), 10 FAIL (phantom anchors).
-#       Phantom anchors include: §impl PregolyaError (Form B), §Object-Safety** (bold label),
-#       §E-CFG-001 convention (non-heading reference), §DI-012 | table citation (Form C).
-#       Upgrade to BLOCKING after ~170-citation migration sweep (ADR-022 Decision 4).
-#       Promotion requires: WARN=0 AND switch from run_advisory to run_blocking.
 #
 # EXIT CONTRACT
 # ─────────────
@@ -102,7 +102,7 @@ PASSED_VALIDATORS=()
 PASS_COUNT=0
 # Single source of truth for the expected blocking validator roster size.
 # Update this constant when adding or removing a blocking validator.
-EXPECTED_BLOCKING_COUNT=13
+EXPECTED_BLOCKING_COUNT=14
 
 # run_blocking runs a validator and records failure in FAILED_VALIDATORS
 run_blocking() {
@@ -167,12 +167,12 @@ run_blocking "verify-arch-anchor-resolution.sh"
 run_blocking "verify-module-canonicality.sh"
 run_blocking "verify-bc-frontmatter-schema.sh"
 run_blocking "verify-tv-registry-count.sh"
+run_blocking "verify-adr-anchor-citations.sh"
 
 # ── Advisory validators (run but do not block; see header for promotion paths) ─
 echo ""
 echo "── Advisory validators (non-blocking; see header for promotion paths) ─"
 run_advisory "verify-changelog-claim-applied.sh"
-run_advisory "verify-adr-anchor-citations.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

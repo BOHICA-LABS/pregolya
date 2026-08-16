@@ -8,7 +8,7 @@ status: accepted
 date: 2026-08-16
 producer: architect
 timestamp: 2026-08-16T00:00:00Z
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ subsystems_affected: [SS-13, SS-23]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.3 (burst-290/F-180-07/2026-08-16): Three phantom/malformed §-citation fixes (live body only). (1) §Phase-2 Postconditions PC-4 blockquote (~line 186): `§Confinement-Proof` (hyphenated) → `§Confinement Proof — Phase 2` (real heading with space and em-dash suffix). (2) §Source / Origin (~line 444): `§Confinement-Proof` → `§Confinement Proof — Phase 2`. (3) §Phase-2 Postconditions PC-3 note (~line 173): `ADR-024 §Phase-2-Fallback` (phantom, section renamed in v1.1) → `ADR-024 §Phase-2 Postconditions` (current authoritative heading for Phase 2 behavior)."
   - "1.2 (burst-289/F-178-02/2026-08-16): §Consumers table status corrections — all 6 consumer BCs (BC-2.13.004, BC-2.13.005, BC-2.23.001, BC-2.23.003, BC-2.23.004, BC-2.23.006) verified as citing ADR-024 (burst-288 propagation complete; each has multiple ADR-024 hits). Updated Required Citation Status from MISSING to Present for all 6. Propagation-owner directive and §Consequences bullet updated to past tense and extended to include BC-2.23.004 and BC-2.23.006 (both were omitted from the directive and Consequences in v1.1)."
   - "1.1 (burst-288/P1D-177-C01+C02+C-H01/2026-08-15): Confinement-proof redesign (C-02): redesigned §Decision 1 Phase 2 to add dangling-symlink guard (step d), relabeled Phase 2 steps as a-h; added §Confinement-Proof with full attack-surface catalog AS-01..AS-09 and soundness argument replacing unsound bare-filename claim. Dangling-symlink authoritative decision (C-01): Phase 2 step (d) returns Err(SandboxError::PathNotFound) for dangling-target symlinks, resolving contradiction with BC-2.13.005 §EC-003; §Phase-2 Postconditions PC-3 is the authoritative cross-reference anchor. Phase-2 postconditions (C-H01): authored PC-1 through PC-5 as formal postconditions in new §Phase-2 Postconditions section. Added §Consumers enumerating all six BCs that must cite this ADR: BC-2.13.004, BC-2.13.005, BC-2.23.001, BC-2.23.003, BC-2.23.004, BC-2.23.006 (propagation owner: product-owner per C-H02); PC-5 applicability confirmed for BC-2.23.004 (ListDirTool) and BC-2.23.006 (GrepTool) in burst-288 follow-up."
   - "1.0 (fix-burst-287/F-P176-C002/2026-08-01): Initial decision — close CRIT unreachability defect in WriteFileTool create-path. Product-owner confirmed no exists-check pre-guard in SS-23; architect adjudication of parent-canonicalize protocol, TOCTOU window, and error routing. Prerequisite to product-owner BC-2.23.002 update."
@@ -170,7 +171,7 @@ cannot be established, so the operation is rejected.
 
 > **Authoritative behavior decision for C-01 (P1D-177):** A dangling-target symlink at the
 > final path component MUST cause Phase 2 to return `Err(SandboxError::PathNotFound)`. This
-> is the authoritative decision resolving the contradiction between ADR-024 §Phase-2-Fallback
+> is the authoritative decision resolving the contradiction between ADR-024 §Phase-2 Postconditions
 > (v1.0, which returned `Ok` on `ErrorKind::NotFound`) and BC-2.13.005 §EC-003 (which requires
 > `Err(SandboxError::PathNotFound)` for a dangling symlink). The resolution: `ErrorKind::NotFound`
 > from Phase 1 is the *activation condition* for Phase 2, not the error code to surface to
@@ -183,7 +184,7 @@ cannot be established, so the operation is rejected.
 > its `Err(SandboxError::PathNotFound)` verdict is consistent with PC-3 above.
 
 **PC-4** — If Phase 2 returns `Ok(path)`, then `path = canonical_parent.join(filename)` where
-all five soundness invariants in §Confinement-Proof hold simultaneously:
+all five soundness invariants in §Confinement Proof — Phase 2 hold simultaneously:
 (a) `canonical_parent` is beneath `canonical_base` (step g);
 (b) `canonical_parent` is a fully-canonicalized path with no symlink or `..` components;
 (c) `filename` contains no path separator;
@@ -441,4 +442,4 @@ agent re-calls WriteFileTool).
 - **BC-2.13.005 §EC-003**: Dangling symlink → `Err(SandboxError::PathNotFound)`. Authority for Phase 2 step (d)'s error code. PC-3 of this ADR formalizes the implementation that makes EC-003 reachable.
 - **DI-007**: Workspace Path Confinement — the invariant that `canonicalize_beneath_root` upholds.
 - **VP-003** (BC-2.17.001): Kani harness — Phase 6 formal proof of workspace confinement; must be extended to cover the two-phase protocol including the dangling-symlink guard.
-- **P1D-177 §Orchestrator Adjudication** (L-170): A verified-clean claim backed by an enumerated-but-incomplete probe set is itself a false-clean generator. This is the lesson that drives the complete attack-surface catalog in §Confinement-Proof.
+- **P1D-177 §Orchestrator Adjudication** (L-170): A verified-clean claim backed by an enumerated-but-incomplete probe set is itself a false-clean generator. This is the lesson that drives the complete attack-surface catalog in §Confinement Proof — Phase 2.

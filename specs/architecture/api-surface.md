@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.23"
+version: "1.24"
 status: active
 producer: architect
 timestamp: 2026-08-16T00:00:00Z
 changelog:
+  - "1.24 (burst-290/F-180-01+02+08/2026-08-16): Three phantom/malformed ADR §-citation fixes. (1) F-180-08 — §Public Rust Traits blockquote line 77: `ADR-005 §Adjacent Adjudications corrected list` → `ADR-005 §Adjacent Trait Object-Safety Adjudications` (real heading per ADR-005). (2) F-180-01 — §Public Traits (pregolya-vectorstores) blockquote line 175: chained double-§ `ADR-014 §Decision 2 §Object-safety` split into `ADR-014 §Decision 2` and `ADR-005 §Adjacent Trait Object-Safety Adjudications` per ADR-022 §Decision 5 prescribed fix. (3) F-180-02 — §Error Type line 282: `ADR-010 §impl PregolyaError — sole sanctioned paths` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading; real governing section is Error-Construction Notation Canon)."
   - "1.23 (burst-289/F-178-01/2026-08-16): StreamEvent variant count corrected 15→16 in §pregolya-graph Public Types table. Variant 16 (StreamEvent::Error) was added in burst-288 per EC-005 mandate; api-surface.md was not updated in that burst. BC-2.06.001 §Postconditions (PC2) is the authoritative enumeration."
   - "1.22 (fix-burst-283/F-P175-C113/ADR-021-Decision-2/2026-07-30): RunnableConfig row updated — add configurable: Option<HashMap<String, Value>> field. LangGraph-parity configurable map (semport §RunnableConfig mapping §11); enables Assistant 'reusable agent persona' design in BC-2.12.002. Graphs read model, tool-set, system-prompt overrides from this map at execution time. BC anchor: BC-2.12.002, ADR-021 Decision 2."
   - "1.21 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add §Public Functions (pregolya-core) section registering `validate_embedding_batch` as a `pub` free function in `core::embeddings`. Visibility `pub` — cross-crate callers are pregolya-openai and pregolya-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2, INV-2, EC-003, EC-004. Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1). Resolves F-P175-A24-followup: the function was introduced by VP-008 redesign in FIX-BURST-280 but was absent from api-surface.md, making a VP body its sole signature authority (the F-P175-B117 phantom-signature defect class). TD-VSDD-060 sibling sweep included in burst report."
@@ -35,7 +36,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "8c9f842"
+input-hash: "530b620"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -74,7 +75,7 @@ This file documents pregolya's public API surface: the public Rust traits by cra
 > re-exposes the tool API via object-safe `invoke_dyn(&self, Value) -> Result<Value, PregolyaError>`.
 > A blanket impl provides `T: Tool + Send + Sync + 'static → DynTool` automatically.
 > `Arc<dyn DynTool>` is the composition seam for all dynamic dispatch sites.
-> Wave C BC-side migration (ADR-005 §Adjacent Adjudications corrected list — 3 sites):
+> Wave C BC-side migration (ADR-005 §Adjacent Trait Object-Safety Adjudications — 3 sites):
 > `BC-2.09.001` (Description + PC2), `BC-2.09.002 PC1`, and `BC-2.09.007` (ToolRegistry:
 > `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>`) — `Arc<dyn pregolya_core::Tool>` (non-object-safe E0038)
 > → `Arc<dyn DynTool>` (MCP tool discovery/invocation BCs; BC-2.09.007 ToolRegistry).
@@ -172,7 +173,7 @@ This file documents pregolya's public API surface: the public Rust traits by cra
 > `Retriever + 'static`, enabling `Arc<dyn Retriever>` coercion without a lifetime bound error.
 > `VectorStore::as_retriever` signature: `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` —
 > fallible; returns `Err(E-VS-003)` when store configuration is invalid for retrieval
-> (ADR-014 Decision 2). `Arc<Self>` is a dyn-compatible receiver (ADR-014 §Decision 2 §Object-safety).
+> (ADR-014 §Decision 2). `Arc<Self>` is a dyn-compatible receiver (ADR-014 §Decision 2; dyn-compatibility precedent: ADR-005 §Adjacent Trait Object-Safety Adjudications).
 
 ## Crates with No Public Traits
 
@@ -279,7 +280,7 @@ cross-thread aggregate query for schedule-fired runs only.
 
 `#[non_exhaustive] PregolyaError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: String /* Human-readable; MUST NOT contain credentials */, source: Option<Arc<dyn std::error::Error + Send + Sync>> /* Causal chain; MUST NOT appear in HTTP responses (DI-010); Arc not Box — Arc preserves Clone (F-P173-211 adjudication, ADR-010 §Decision) */ }`
 
-Construction (ADR-010 §impl PregolyaError — sole sanctioned paths):
+Construction (ADR-010 §Error-Construction Notation Canon — sole sanctioned paths):
 - `PregolyaError::new(component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: impl Into<String>) -> Self` — `source` defaults to `None`.
 - `.with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self` — builder; threads a causal error into the chain. Chain as needed: `PregolyaError::new(...).with_source(Arc::new(e))`.
 - Struct literal construction is barred by `#[non_exhaustive]` (E0639) from external crates.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.009
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,9 +13,10 @@ capability: CAP-009
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
   - "1.1 (F-P97-01, 2026-07-17): Module field resolved from variant-phrasing placeholder 'pregolya-macros, pregolya-core [architect to confirm crate→subsystem in Phase 1b]' to sibling-canonical 'pregolya-macros (re-exported pregolya-core)' per BC-2.08.010/011/012 and module-decomposition.md v1.10 §pregolya-macros. Phase 1b closed 2026-07-14; placeholder class no longer accepted (F-P96-01)."
+  - "1.2 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in PC-2: `ADR-004 §Version pin` → `ADR-004 §Decision` (no heading §Version pin exists in ADR-004; the version pin statement is a bold bullet item inside `## Decision`)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "d2b6920"
+input-hash: "8b0b26c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -56,7 +57,7 @@ required field, type change, `additionalProperties` addition/removal) DO break t
 1. A public Rust type `T` in a pregolya crate derives `schemars::JsonSchema` and is used
    as the argument schema for a tool definition (directly or via `#[tool]` proc-macro
    expansion per ADR-008).
-2. schemars ≥ 1.x (version-pinned per ADR-004 §Version pin: schemars 1.x, verified 1.2.1,
+2. schemars ≥ 1.x (version-pinned per ADR-004 §Decision: schemars 1.x, verified 1.2.1,
    2026-02) is a direct dependency of pregolya-core. The 1.x `schemars::Schema` type is
    used — NOT the deprecated 0.8-era `schemars::schema::RootSchema`.
 3. An insta snapshot file for `T` exists at the expected path (e.g.,

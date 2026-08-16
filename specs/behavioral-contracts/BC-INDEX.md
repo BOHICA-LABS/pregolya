@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.37"
+version: "3.38"
 status: active
 producer: state-manager
 timestamp: 2026-08-16T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.38 (burst-290/F-180-04, 2026-08-16): Fix live-body phantom ADR §-citation in Red Gate BCs table. BC-2.20.002 row §Anchor column: `ADR-014 Consequences §DI-012` → `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` (no heading §DI-012 exists in ADR-014; DI-012 mechanization is governed by `## Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)`). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.37 (F-178-01/F-178-04, burst-289, 2026-08-16): 1 BC version bump — phantom §-anchor sweep + StreamEvent 15→16 sibling sweep. BC-2.10.003 (v1.11→v1.12): 3 phantom `BC-2.03.001 §recursion_limit_canon` anchor citations replaced with `BC-2.03.001 §Description` (heading exists; §recursion_limit_canon does not). interface-definitions v2.70→v2.71: StreamEvent 16-variant sweep (F-178-01 — add Error variant to enum body, update count '15→16 variants', update BC anchor note) + phantom anchor fix in v2.70 changelog (F-178-04). product-brief v1.9→v1.10: StreamEvent 15→16 variants in Callbacks Out-of-Scope description. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.36 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): 2 BC version bumps — phantom §Named-Section anchor sweep (§HTTP Status Codes NNN row pattern). BC-2.14.002 (v1.6→v1.7): 9 phantom-anchor occurrences in PC3 Known-overrides block corrected; row-number qualifiers parenthesized in §HTTP Status Codes (404 row), (409 row), (422 row), (503 row), (404 + 422 rows) forms. BC-2.05.005 (v1.6→v1.7): 2 phantom-anchor occurrences in PC3 prose and TV-003 Notes corrected to §HTTP Status Codes (422 row). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2)."
   - "3.35 (burst-288/F-P177-C-LOW-SS16/2026-08-15): 1 BC version bump — phantom §Named-Section anchor fix. BC-2.16.001 (v1.6→v1.7): EC-001 §Reference line removed §P-63 phantom anchor; P-63 is a table-row identifier in COMPARATIVE-ASSESSMENT.md, not a section heading. Replaced with parenthetical form. BC census UNCHANGED: 129 total."
@@ -91,7 +92,7 @@ changelog:
 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | ADR-015 Decision 3 §Security Invariant 1 |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | ADR-015 Decision 2 §Security Invariant 2 |
 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | ADR-016 Decision 3 §Security Invariant |
-| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context | ADR-014 Consequences §DI-012 |
+| BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context | ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization) |
 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | ADR-014 Decision 2 §Hardening note |
 | BC-2.22.002 | EmbeddingsOpenAI — OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); Batch Partial-Failure as Err | DI-010 Credential Opacity |
 

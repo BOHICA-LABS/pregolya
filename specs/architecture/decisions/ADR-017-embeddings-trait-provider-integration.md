@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-22, SS-08]
 changelog:
+  - "1.7 (burst-290/F-180-phantom-citations/2026-08-16): Two phantom ADR §-citation fixes (live body only). (1) §Decision 2 object-safety note (~line 93): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait`. (2) §Source / Origin (~line 229): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait`."
   - "1.6 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §Consequences DI-009 enforcement note: `deny-client-new` → `check-client-timeout`. Canonical `check-<subject>` form per D-35."
   - "1.5 (FIX-BURST-270/P1D-168-casing/2026-07-25): PascalCase canon sweep — §Dimensionality contract PregolyaError sketch: Category::VAL → Category::Val per ADR-010 §Direction-B-PascalCase adjudication."
   - "1.4 (burst-240/2026-07-23): F-P140-06 — fix §Dimensionality contract PregolyaError sketch: non-canonical `category: VALIDATION` → `category: Category::VAL` per ADR-016 v1.2 adjudication (VALIDATION is not a canonical Category variant; canonical abbreviated form is VAL per error-taxonomy). F-P140-08 — remove un-minted error code E-EMBED-003 from two sites: (1) §Provider explicitly excluded body: '`E-EMBED-003 UnsupportedOperation`' → 'an UnsupportedOperation error'; (2) §Alt B heading: 'returning E-EMBED-003' → 'returning an UnsupportedOperation error'. E-EMBED-003 was never minted (error-taxonomy EMBED namespace has exactly 1 code: E-EMBED-001). E-EMBED-002 implied gap also removed."
@@ -90,7 +91,7 @@ pub trait Embeddings: Send + Sync {
 
 Object-safety: `&self` receivers, no generic type params, `#[async_trait]` desugaring
 to `Pin<Box<dyn Future<...> + Send + '_>>`. `Arc<dyn Embeddings>` compiles without E0038.
-Pattern follows ADR-005 §Object-Safety and the Retriever trait shape (ADR-014).
+Pattern follows ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait and the Retriever trait shape (ADR-014).
 
 ### Dimensionality contract
 
@@ -226,7 +227,7 @@ respective provider crates. An intermediary crate adds complexity with no benefi
 - **D21 (burst 216)**: ecosystem-parity scope expansion for embeddings.
 - **semport/core/rust-translation-strategy.md §8**: `Embeddings` trait difficulty 🟢,
   `Vec<f32>` cosine recommendation, `ndarray` avoidance in core.
-- **ADR-005 §Object-Safety**: `&self` + `#[async_trait]` dyn-compatible async trait precedent.
+- **ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait**: `&self` + `#[async_trait]` dyn-compatible async trait precedent.
 - **ADR-014**: VectorStore depends on `Embeddings` for in-memory backend and factory.
 - **DI-009**: mandatory 30-second timeout for outbound HTTP clients (`EmbeddingsOpenAI`,
   `EmbeddingsOllama` reqwest clients).

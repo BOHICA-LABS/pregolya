@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.004
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -15,7 +15,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "5ba9f5f"
+input-hash: "9ed444f"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -28,6 +28,7 @@ changelog:
   - "1.2 (F-P110-02, 2026-07-18): Fix TV-002 E-SBXD-001 WorkspaceEscape struct — 2-field form `{ resolved, root }` missing `requested`. Canonical 3-field form `{ requested, resolved, root }` per BC-2.13.005 Invariant-2 (cross-anchor consistency under gate #33 v2.37). TV-002 fix: add `requested: \"/workspace/../etc/passwd\"`. TD-VSDD-060 file-wide sweep: only one E-SBXD-001 struct site in this file (line 108 in Canonical Test Vectors). The prior in-file sweep missed this because the secondary anchor BC-2.13.004 was not scoped by the TD-VSDD-060 sweep anchored 'in-file' rather than 'across ALL anchor BCs' — the systemic root cause corrected in bc-authoring-plan gate #33 v2.37."
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.4 (burst-288/P1D-177-C-H03/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — §Traceability §Binding Decisions: ADR-024 Decision 1 (two-phase protocol) + §Phase-2 Postconditions PC-4 (Ok-path confinement proof) added; PC-4 is the formal proof that directly implements what EC-004's parent-canonicalize protocol specifies. Postcondition 5 (write/create new file): traces-to note citing ADR-024 Decision 1 Phase 2 + PC-4 added. Architecture Anchors: ADR-024 §Decision 1/§Confinement-Proof/§PC-4 added. inputs: ADR-024 added."
+  - "1.5 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix two live-body phantom ADR §-citations. PC-5 trailing reference and Architecture Anchors: `§Confinement-Proof` (hyphen form) → `ADR-024 §Confinement Proof — Phase 2` (real heading is `## Confinement Proof — Phase 2` in ADR-024; hyphen was dropped to space + em-dash)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -80,7 +81,7 @@ formally prove that no file operation can observe content outside the declared w
    canonicalized and verified to be beneath the root; the new filename is then appended
    (ADR-024 Decision 1 Phase 2 two-phase protocol; confinement proof for the `Ok(path)` return
    per ADR-024 §Phase-2 Postconditions PC-4: `canonical_parent.join(filename) ⊆ canonical_base`
-   holds unconditionally under the five soundness invariants in §Confinement-Proof)
+   holds unconditionally under the five soundness invariants in ADR-024 §Confinement Proof — Phase 2)
 6. String depth-counting of `..` segments is NOT used as sole or partial validation
 
 ## Invariants
@@ -148,7 +149,7 @@ formally prove that no file operation can observe content outside the declared w
 - `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::path_guard` row: `canonicalize_beneath_root(base, path)`; `Err E-SBXD-001` on workspace escape; `WorkspaceFs` facade routes all workspace file ops (CRITICAL, SS-13)
 - `architecture/purity-boundary-map.md §Pure Core` — `sandbox::path_guard` row: VP-003 Kani P0 target; pure path arithmetic after OS resolution
 - `architecture/verification-architecture.md` — VP-003 workspace-confinement Kani harness (`workspace_confinement_harness`)
-- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Decision 1 (two-phase protocol implementing EC-004's parent-canonicalize semantics); §Confinement-Proof (attack-surface catalog AS-01..AS-09 + soundness argument for Phase 2 `Ok` returns); §Phase-2 Postconditions PC-4 (formal confinement guarantee for `Ok(canonical_parent.join(filename))` — the theoretical basis for the VP-003 Kani harness Phase 2 extension)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Decision 1 (two-phase protocol implementing EC-004's parent-canonicalize semantics); ADR-024 §Confinement Proof — Phase 2 (attack-surface catalog AS-01..AS-09 + soundness argument for Phase 2 `Ok` returns); §Phase-2 Postconditions PC-4 (formal confinement guarantee for `Ok(canonical_parent.join(filename))` — the theoretical basis for the VP-003 Kani harness Phase 2 extension)
 
 ## Story Anchor
 
