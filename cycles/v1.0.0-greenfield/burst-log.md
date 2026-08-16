@@ -6047,3 +6047,9 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-07-31
 **Status:** COMPLETE
 **Output:** Three v4.47 checkpoint defects corrected: (1) burst-285 collision → renumbered to 286 everywhere; (2) factory-artifacts SHA deferred by run-instruction → literal `a192f18` in HEADS; (3) workspace-init absent (Justfile/lefthook.yml/rust-toolchain.toml/Cargo.toml/crates/ missing; `just check` unavailable; F-P176-E023); D-88..D-108 (sample) archived; D-120; L-159; verify-sha-currency.sh macOS awk fix; STATE.md compacted to ~199 lines; all work committed and pushed. 177 passes total. Streak 0/3.
+
+## Burst 287 — Fix-burst P1D-176 COMPLETE (Archived from STATE.md Current Phase Steps at P1D-179 state record)
+
+**Date:** 2026-08-01
+**Status:** COMPLETE
+**Output:** Fix-burst P1D-176: all 5 mechanisms closed (ADR-022/023/024/025 minted; M2 DISSOLVED 7/7 FALSE); all 5 CRITs closed; 12→13 blocking validators; POL-46/47 minted; instrument calibrated (50% FP adjudication; note-closure 7/7 FALSE; root cause = adversary cannot distinguish historical from current); main-repo ci.yml committed (D-129); D-121..D-130 (sample); L-160..L-169. 177 passes total. Streak 0/3.
