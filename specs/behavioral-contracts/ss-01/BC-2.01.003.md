@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-002
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
   - "1.2 (ADV-P1D-PASS-56): F-P56-01 — added code: E-CORE-006 to PC5, invariant §layer-disambiguation, EC-004, and TV-004. The Runnable-layer recursion halt was codeless while its graph-engine counterpart (E-GRAPH-017) carried a code. E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken) minted in error-taxonomy.md v1.7."
   - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-CORE-006 message-prefix correction at all three BC sites. (1) PC5: was 'recursion limit exceeded' (no prefix, no depth); corrected to 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>' (adds universal <ErrorName>: prefix and harmonizes with EC-004/invariant which already specified depth). (2) Invariant §layer-disambiguation: added 'RecursionLimitExceeded:' prefix to message string. (3) EC-004: added 'RecursionLimitExceeded:' prefix. All three sites now produce the canonical template 'RecursionLimitExceeded: recursion limit exceeded at depth <depth>'. Corresponding taxonomy E-CORE-006 detail corrected from 'nested invoke/stream call depth <depth> exceeded recursion_limit <limit>' to 'recursion limit exceeded at depth <depth>' (BC wins on content). interface-definitions.md dual-layer table row for Runnable-layer also updated to add prefix."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.5 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Six sites corrected: PC1 single-line (E-CORE-003, `, ..` added); PC5 single-line (E-CORE-006, `, ..` added before closing `})`); invariant §layer-disambiguation multiline continuation line (E-CORE-006, `, ..` added before closing `})`); EC-001 multiline continuation line (E-CORE-003, `, ..` added); EC-004 multiline continuation line (E-CORE-006, `, ..` added); TV-004 table-cell (E-CORE-006, `, ..` added). All spans have category/code (plus message where present) but lack component and retry_hint."
+  - "1.6 (burst-294/F-185-02/2026-08-16): Invariant §recursion_limit-layer-disambiguation — 'at depth N' bare-N placeholder corrected to 'at depth <depth>' (angle-bracket placeholder convention; harmonizes with PC5 and EC-004 canonical template for E-CORE-006). D-134 sibling sweep: sole occurrence of bare-N template placeholder in BC-2.01.003; no other bare-N placeholders present."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "2912cbf"
+input-hash: "704fde2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -86,7 +87,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
   is read by TWO independent enforcement layers that share the same `RunnableConfig` key:
   (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained
   Runnables; exceeding it returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-006,
-  message: "RecursionLimitExceeded: recursion limit exceeded at depth N", .. })` — no run-level halt, just a Runnable call error.
+  message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })` — no run-level halt, just a Runnable call error.
   (2) **BC-2.03.001 PC5 (graph-engine-layer):** counts BSP super-steps per invocation segment;
   exceeding it transitions the entire run to `failed` with `Err(E-GRAPH-017
   GraphRecursionLimitExceeded)`. Both layers enforce `recursion_limit = 25` by default; the

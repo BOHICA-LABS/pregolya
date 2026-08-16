@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.004
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,12 +14,13 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (F-P170-02/burst-272/2026-07-25): Re-anchor Architecture Anchors and Traceability Architecture Authority from ADR-016 Decision 5 to Decision 4 — OLD_CORE_NAMESPACES_MAPPING, remap-before-lookup, and remap-then-registry-lookup ordering are specified in Decision 4 (Legacy Namespace Remapping); Decision 5 is One-Way Python Checkpoint Import Tool Compatibility (unrelated). Drop 'remap-chain validation' from ADR attribution — not stated in ADR-016 Decision 4; retained in Invariant 3 as a BC-local design decision. This is the uniform +1 off-by-one shift as F-P170-01 (BC-2.19.003 Decision 4→2)."
   - "1.2 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-003 expected-output cell: `PregolyaError { code: \"E-SRLZ-001\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
+  - "1.3 (burst-294/F-185-01/2026-08-16): EC-005 and Invariant §3 — remove raised-panic mandate (`RemapChainDetected` panic!). Remap-chain detection is expressed as a startup validation unit test (VP-2.19.004-B), NOT a `panic!` in `Reviver::new()`. Pattern mirrors BC-2.19.006 EC-001 / VP-2.19.006-B (disjoint-set check via startup validation unit test). DI-008 Traceability row already correctly states 'revive returns Result; no panic on remap lookup' — no change required. VP-2.19.004-B already framed this as 'startup validation test (runs in CI)' — now EC-005 and Invariant §3 are consistent with it. D-134 corpus sweep: BC-2.19.004 EC-005 was the sole raised-panic mandate in all 129 BCs."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dc48c59"
+input-hash: "e7b7c2e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -80,8 +81,10 @@ succeeds without requiring the caller to pre-process the id.
    and rebuild. This is intentional: runtime-mutable remap tables would create a
    dynamic-injection vector.
 3. Remap chains are not supported — if a legacy alias maps to another alias (which would then
-   need further remapping), this is a programming error caught at startup via a remap-chain
-   validation check.
+   need further remapping), this is a programming error detected by a startup validation unit
+   test (runs in CI); the test asserts that no key in `OLD_CORE_NAMESPACES_MAPPING` maps to
+   a value that is itself also a key in the table. No `panic!` is raised in `Reviver::new()` —
+   the check is expressed as a test assertion, not a runtime guard (VP-2.19.004-B).
 4. Every entry in `OLD_CORE_NAMESPACES_MAPPING` must map to an id that resolves in the registry;
    if the canonical id is not registered, revive still returns `Err(E-SRLZ-001)`.
 
@@ -93,7 +96,7 @@ succeeds without requiring the caller to pre-process the id.
 | EC-002 | Legacy id is in the remap table but the canonical type is not registered | `Err(E-SRLZ-001)` — remap found, canonical lookup failed; error message includes the canonical id |
 | EC-003 | Legacy id is NOT in the remap table and NOT in the registry | `Err(E-SRLZ-001)` — treated as unknown type (same as BC-2.19.005's gate) |
 | EC-004 | Two distinct legacy aliases map to the same canonical id | Both deserialize to the same type; both succeed if the canonical type is registered |
-| EC-005 | `OLD_CORE_NAMESPACES_MAPPING` contains a remap-chain (A → B → C) | Startup validation panics with `RemapChainDetected` — caught in CI; not a production runtime path |
+| EC-005 | `OLD_CORE_NAMESPACES_MAPPING` contains a remap-chain (A → B → C) | Detected by a startup validation unit test (VP-2.19.004-B) that asserts no key in `OLD_CORE_NAMESPACES_MAPPING` maps to a value that is itself also a key in the table; the test fails in CI if a remap-chain is introduced — no `panic!` is raised in `Reviver::new()` at runtime |
 
 ## Canonical Test Vectors
 
