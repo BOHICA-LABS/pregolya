@@ -6053,3 +6053,9 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-08-01
 **Status:** COMPLETE
 **Output:** Fix-burst P1D-176: all 5 mechanisms closed (ADR-022/023/024/025 minted; M2 DISSOLVED 7/7 FALSE); all 5 CRITs closed; 12→13 blocking validators; POL-46/47 minted; instrument calibrated (50% FP adjudication; note-closure 7/7 FALSE; root cause = adversary cannot distinguish historical from current); main-repo ci.yml committed (D-129); D-121..D-130 (sample); L-160..L-169. 177 passes total. Streak 0/3.
+
+## Burst 289 — Fix-burst P1D-178 COMPLETE (Archived from STATE.md Current Phase Steps at P1D-182 state record)
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** Fix-burst P1D-178 (5 findings 0C/1H/3M/1L, all burst-288 partial-fix residue): F-178-01 StreamEvent count corpus-sweep ×8 sites (16 variants); F-178-02 ADR-024 §Consumers 6 MISSING→PRESENT + BC-2.23.004/006 added; F-178-03 ADR-023 phantom anchor fixed + stale directive removed; F-178-04 BC-2.10.003 §Description phantom §recursion_limit_canon removed ×3 sites; F-178-05 LOW label clarified; D-139..D-142 (exhaustive); L-176..L-177; input-hashes swept. 179 passes total. Streak 0/3.
