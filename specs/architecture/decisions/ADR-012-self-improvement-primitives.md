@@ -8,7 +8,7 @@ status: accepted
 date: 2026-07-15
 producer: architect
 timestamp: 2026-07-15T00:00:00Z
-version: "1.10"
+version: "1.11"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D20]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-15]
 changelog:
+  - "1.11 (burst-291/D-134-phantom-fix/2026-08-16): Fix phantom §-citation in §Decision 1 body. 'bc-authoring-plan.md §Gate #27 §Key ownership rules' → 'bc-authoring-plan.md §Authoring Guidelines for Sub-Burst Agents (gate #27 Key ownership rules)'. Rationale: bc-authoring-plan.md has no §Gate #27 heading; gate #27 is a numbered list item within §Authoring Guidelines for Sub-Burst Agents. Heading existence verified via grep ^# on the file. Chained §§ form removed; parenthetical qualifier preserves the gate #27 reference as prose."
   - "1.10 (fix-burst-279/gap-3-B101-empty-app_id/2026-07-28): Correct B101 empty-app_id failure mode: `run_context.app_id` empty MUST return `Err(E-MEMORY-004 NoScopeContext)` — NOT `Ok(None)`. v1.9 incorrectly stated the empty-app_id case silently returns `Ok(None)`. Changed §Decision 1 Amendment F-P175-B101 §Security argument and RunContext `app_id` doc-comment. Fail-loud policy is now symmetric with B102 (SkillStore construction fail-loud). NO-SILENT-EMPTY enforced on both B101 and B102 paths."
   - "1.9 (fix-burst-279/F-P175-B101+F-P175-B102/2026-07-28): Decision 1 Amendment — ContextMutationConfig scope bridge and SkillStore scope encapsulation. B101: `spec.namespace` is a key-namespace prefix, NOT the tenant `app_id`; loading uses `MemoryScope::App(run_context.app_id)` with composite key `{namespace}/{key}` (system-derived tenant identity, not caller-supplied). B102: SkillStore binds `MemoryScope::App(app_id)` at construction time; trait methods remain scopeless; E-MEMORY-004 NoScopeContext raised when no app_id derivable. RunContext gains `app_id: String` field (system-derived, set before first super-step, not overridable via RunnableConfig). E-MEMORY-004 NoScopeContext minted by PO — see routing spec burst-279."
   - "1.8 (fix-burst-276/F-P173-505/2026-07-27): Records hygiene — remove bare commit SHA from v1.6 changelog entry; burst-238 alone is the stable citable anchor (TD-VSDD-091). No semantic change."
@@ -61,7 +62,7 @@ This ADR decides four questions:
 **Chosen:** Definitions in pregolya-core / routing + enforcement in pregolya-memory.
 Follows the ADR-009 Option 3 split (BudgetPolicy trait in core, BudgetEngine in graph)
 and the guardrail placement canon (GuardrailHook trait in pregolya-core, invocation
-pipeline in pregolya-graph per bc-authoring-plan.md §Gate #27 §Key ownership rules).
+pipeline in pregolya-graph per bc-authoring-plan.md §Authoring Guidelines for Sub-Burst Agents (gate #27 Key ownership rules)).
 
 ### Primitive A — Skill Registry
 

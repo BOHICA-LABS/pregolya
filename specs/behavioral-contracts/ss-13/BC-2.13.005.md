@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.005
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -15,7 +15,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "5ba9f5f"
+input-hash: "d8f8c49"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -34,6 +34,7 @@ changelog:
   - "1.1 (CENSUS-P109, 2026-07-18): Fix TV-002 and TV-003 E-SBXD-001 WorkspaceEscape struct — both rows used `{ resolved: \"/etc/passwd\" }` (single field) missing `requested` and `root`. Canonical 3-field form `{ requested, resolved, root }` per PC4/Invariant-2/VP-2.13.005-C. TV-002 fix: add `requested: \"/workspace/link_a\"`; TV-003 fix: add `requested: \"/workspace/rel_escape\"`. Both rows also missing `root: \"/workspace\"`. TD-VSDD-060 sweep: no other E-SBXD-001 struct sites in file."
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.3 (burst-288/P1D-177-C01/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — §Traceability §Binding Decisions: ADR-024 §Phase-2 Postconditions PC-3 added as governing authority for EC-003 dangling-symlink PathNotFound decision (per ADR-024 §Consumers obligation). EC-003 Expected Behavior updated: per ADR-024 §Decision 1 Phase 2 step (d), `symlink_metadata(joined)` detects the dangling symlink directly (is_symlink()=true → Err(SandboxError::PathNotFound)); prior text cited canonicalize's IoError::NotFound which was the pre-§Decision-1-Phase-2 description. Error verdict unchanged: Err(SandboxError::PathNotFound), not WorkspaceEscape. Architecture Anchors: ADR-024 §Decision 1 step (d) + §PC-3 added. inputs: ADR-024 added."
+  - "1.4 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-02 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-02)."
 priority: P1
 wave: 1
 ---
@@ -123,7 +124,7 @@ This BC directly covers domain edge case DEC-011.
 | Source Analysis | P-65 NOT-APPLICABLE (must-not-inherit: `validate_relative_path` string-only — permits symlink escapes); NE-02 (pregolya requirement: canonical real-path check); DEC-011 (domain edge case: Workspace Symlink Escape); assessment-parts/part-3 §NE-02 |
 | Reference Evidence | adk-rust P-65: `validate_relative_path` never calls `canonicalize`, never resolves symlinks — pregolya INVERTS this. DEC-011 in edge-cases.md documents this exact scenario. No positive upstream reference — greenfield. |
 | Binding Decisions | NE-02, DI-007; ADR-024 §Phase-2 Postconditions PC-3 (dangling-symlink final component → `Err(SandboxError::PathNotFound)` — governing authority for EC-003 error-routing decision; per ADR-024 §Consumers obligation, this BC must cite ADR-024 as the implementing authority for step (d) of the two-phase `canonicalize_beneath_root` protocol) |
-| Forcing Functions | DEC-011 ("Workspace Symlink Escape" domain edge case); product-brief.md §NE catalog NE-02 |
+| Forcing Functions | DEC-011 ("Workspace Symlink Escape" domain edge case); product-brief.md §Security Defaults — PRD Carry-Forward (NE-02) |
 | Architecture Module | pregolya-sandbox / WorkspaceFs facade (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 

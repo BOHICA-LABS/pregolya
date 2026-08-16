@@ -1,7 +1,7 @@
 ---
 document_type: product-brief
 level: L1
-version: "1.10"
+version: "1.11"
 status: approved
 producer: product-owner
 timestamp: 2026-08-16T00:00:00Z
@@ -20,6 +20,7 @@ input-hash: "53d83c5"
 traces_to: ""
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 changelog:
+  - "v1.11 (burst-291/D-134/2026-08-16): §Risk Register Summary phantom anchor corrected. 'risks.md §F-10' → 'risks.md §Dual Risk ID Reconciliation' (real heading is '## Dual Risk ID Reconciliation (F-10)'; §F-10 alone matches no heading in risks.md). TD-VSDD-060 sweep: sole §F-10 occurrence in live body text."
   - "v1.10 (F-178-01, burst-289, 2026-08-16): §Out of Scope Callbacks section: StreamEvent variant count corrected 15→16. BC-2.06.001 PC2 (v1.10) is the canonical 16-variant authority (added StreamEvent::Error as the 16th variant per F-P177-B01/ADR-023 §exhaustive-by-design). The Callbacks section description is a current-state claim about the live StreamEvent taxonomy and must match the authoritative BC. TD-VSDD-060 sweep: sole live '15 variants' site in product-brief.md; all other count references are historical changelog entries (exempt)."
   - "v1.9 (fix-burst-280-corr/F-P175-C207-brief/F-P175-C208/2026-07-28): C207 brief-side and C208 residue cleared. (1) C207: §Out of Scope Python runtime bullet corrected — 'one-way Python-checkpoint import tool is in scope' removed; disposition is definitively out of v1 scope per ADR-002 (post-v1 stretch; no roster slot, no SS, no capability in closed Phase 1b architecture). (2) C208: three simultaneously out-of-scope/pending items resolved with definitive decisions: voice/canvas/device-node bridges → out of v1 scope (no SS-NN, no CAP, no roster slot in closed Phase 1b architecture; SS registry has 23 subsystems covering none of these); OCSF telemetry normalization → out of v1 scope (integration-layer concern per domain-a §5; pregolya event surface is typed astream_events v2 taxonomy per SS-06/CAP-007; no SS, ADR, or capability in closed Phase 1b architecture); SEC/SOC 2 compliance semantics → out of v1 scope (operator-layer concern per domain-a §4; no SS, ADR, or capability in closed Phase 1b architecture). (3) §Open Questions: OCSF and SEC/SOC 2 references removed from Phase-1 architect gate items list; all gate items now resolved (D9 → ADR-001; D5 → ADR-004/ADR-008; OCSF and SEC/SOC 2 scope decisions resolved above)."
   - "v1.8 (fix-burst-280/F-P175-C201/C202/C203/C204/C205/C206/C209/2026-07-28): Seven findings closed across §In Scope, §Who Is It For, §Success Criteria, §Out of Scope, §Overflow. (1) C201/C203 §In Scope Wave 1: added `pregolya-tools` (SS-23/CAP-034..038/ADR-018/ADR-019/ADR-020/D23), `pregolya-macros` (ADR-008); extended `pregolya-graph` bullet with PreToolCallHook per-tool-call HITL hook (D23/ADR-018/SS-05/CAP-006 extension); extended `pregolya-checkpoint` bullet with rolling compaction (D23/ADR-019/SS-10); added CAP-017 and CAP-018 Wave-1 promotion note (SS-15/SS-16 promoted to Wave 1 per D23). (2) C203 §In Scope Wave 2: `pregolya-mcp` bullet extended with inbound MCP server role (CAP-021/D19/ADR-013); `pregolya-memory` bullet extended with self-improvement primitives (CAP-020/D20/ADR-012). (3) C202 §Who Is It For: added Domain D (Hermes Agent) and Domain E (Agentic Coding CLI) persona rows. (4) Frontmatter `inputs:` extended with domain-d-hermes-agent.md and domain-e-agentic-coding-assistant.md. (5) Frontmatter `decisions:` extended with D19/D20/D22. (6) C202 §Success Criteria holdout gate: corrected from three domains to five domains; source references extended with domain-d and domain-e. (7) C206 §In Scope Cross-cutting: VP obligation count corrected from three to six P0 obligations (VP-001/VP-002/VP-003/VP-009/VP-010/VP-011); anchors updated to reflect D17-Q7 plus D21 plus D23 expansion. (8) C206 §Overflow Differentiator Traceability: formally-verified core VP anchor column updated from three VP references to all six P0 VPs. (9) C204/C205 §Overflow Risk Register: source authority note corrected (STATE.md R-N shorthand; downstream spec authoring uses risks.md R-NNN canonical IDs per risks.md §F-10); R4 and R7 removed (archived as resolved in STATE.md); R6 row updated to describe regenerated script covering all 21 crates with 3-way AVAILABLE/OWNED/SQUATTED/UNKNOWN classification; open HIGH risks R12/R13/R14 added from STATE.md. (10) C209 §Out of Scope: CAP-002 live BA imperative removed; replaced with completed-status note."
@@ -317,7 +318,7 @@ market-intel gate PASSED per STATE.md)
 
 ### Risk Register Summary
 Source: STATE.md Risk Register — synchronized. Risk IDs (R-N) follow STATE.md operational shorthand;
-downstream BC and spec authoring uses canonical risks.md R-NNN form per risks.md §F-10.
+downstream BC and spec authoring uses canonical risks.md R-NNN form per risks.md §Dual Risk ID Reconciliation.
 R4 and R7 were archived as resolved; they no longer appear in this table.
 
 | Risk ID | Summary | Severity | Mitigation |

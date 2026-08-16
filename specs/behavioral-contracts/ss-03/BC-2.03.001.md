@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,7 +15,7 @@ capability: CAP-004
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — port graph super-step ceiling. Added PC5 (super-step ceiling halt via E-GRAPH-017), PC6 (per-invocation-segment semantics for interrupted/resumed runs), EC-006 (ceiling exceeded edge case), TV-006 (cyclic graph test vector). Reference Evidence section updated with upstream LangGraph evidence. This is the primary enforcing BC for E-GRAPH-017."
   - "1.2 (ADV-P1D-PASS-50): F-P50-01 — fix arithmetic in EC-006 Scenario (false claim 6 > 6 corrected to 7 > stop = 6; unified to 1-indexed super-step labels per TV-006 convention, resolving OBS-P50-1 mixed-indexing observation). Correct PC6 resume bound from N × recursion_limit to N × (recursion_limit + 1) — each invocation segment allows recursion_limit + 1 super-steps before halt (TV-006 arithmetic: recursion_limit=3 → 4 steps execute; recursion_limit=5 → 6 steps execute)."
@@ -25,6 +25,7 @@ changelog:
   - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.7 (F-P160-01, 2026-07-25): Fix burst 261 — correct Description super-step ceiling prose from 'exceeds config.recursion_limit' to the precise formula 'step_at_invoke_start + config.recursion_limit + 1' (recursion_limit + 1 super-steps execute within the invocation segment before the guard fires). Concrete examples added (limit=5 → 6 steps execute then halt; limit=25 → 26 steps execute then halt). PC5/PC6/EC-006/TV-006 are the authoritative normative sites; Description now agrees with them in spirit. TD-VSDD-060 sweep: VP-BC208002-01 in BC-2.08.002 also fixed in same burst (same off-by-one in VP description; no other normative prose sites found with the stale formula)."
   - "1.8 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Four sites corrected: PC5 single-line (E-GRAPH-017, `, ..` added before closing `})`); EC-005 multiline continuation line (E-GRAPH-006, `, ..` added); EC-006 multiline continuation line (E-GRAPH-017, `, ..` added); TV-006 table-cell (E-GRAPH-017, `, ..` added). All spans have category/code/message but lack component and retry_hint (or lack category in the E-GRAPH-006 span)."
+  - "1.9 (burst-291/D-134/2026-08-16): §Description: phantom anchor corrected. 'error-taxonomy.md §GRAPH' → 'error-taxonomy.md §Component: GRAPH' (real heading is '### Component: GRAPH (pregolya-graph)'; §GRAPH alone matches no heading in error-taxonomy.md). TD-VSDD-060 sweep: sole §GRAPH occurrence in this file's live body."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "2912cbf"
+input-hash: "704fde2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -119,7 +120,7 @@ infinite-loop guard (`GraphRecursionError`, `graph/behavioral-intent.md §1.3`:
   `DEFAULT_RECURSION_LIMIT = 25` in `langchain_core.runnables.config` (the Runnable-layer
   default). Pregolya aligns BOTH layers (Runnable-depth and graph-super-step) at 25 per
   `RunnableConfig` convention.
-- pregolya error code: E-GRAPH-017 `GraphRecursionLimitExceeded` (error-taxonomy.md §GRAPH).
+- pregolya error code: E-GRAPH-017 `GraphRecursionLimitExceeded` (error-taxonomy.md §Component: GRAPH).
 
 ## Edge Cases
 

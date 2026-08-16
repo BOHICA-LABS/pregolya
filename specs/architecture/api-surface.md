@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.24"
+version: "1.25"
 status: active
 producer: architect
 timestamp: 2026-08-16T00:00:00Z
 changelog:
+  - "1.25 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Fix phantom §-citation in RunnableConfig table row. 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants (Run-Config Merge Precedence)'. Rationale: BC-2.12.003 has no §Run-Config Merge Precedence Invariant subheading; the rule is a list item within §Invariants. Also sibling-fixed in ADR-021 Decision 2 body. input-hash refreshed (inputs changed since last hash computation; pre-existing drift resolved)."
   - "1.24 (burst-290/F-180-01+02+08/2026-08-16): Three phantom/malformed ADR §-citation fixes. (1) F-180-08 — §Public Rust Traits blockquote line 77: `ADR-005 §Adjacent Adjudications corrected list` → `ADR-005 §Adjacent Trait Object-Safety Adjudications` (real heading per ADR-005). (2) F-180-01 — §Public Traits (pregolya-vectorstores) blockquote line 175: chained double-§ `ADR-014 §Decision 2 §Object-safety` split into `ADR-014 §Decision 2` and `ADR-005 §Adjacent Trait Object-Safety Adjudications` per ADR-022 §Decision 5 prescribed fix. (3) F-180-02 — §Error Type line 282: `ADR-010 §impl PregolyaError — sole sanctioned paths` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading; real governing section is Error-Construction Notation Canon)."
   - "1.23 (burst-289/F-178-01/2026-08-16): StreamEvent variant count corrected 15→16 in §pregolya-graph Public Types table. Variant 16 (StreamEvent::Error) was added in burst-288 per EC-005 mandate; api-surface.md was not updated in that burst. BC-2.06.001 §Postconditions (PC2) is the authoritative enumeration."
   - "1.22 (fix-burst-283/F-P175-C113/ADR-021-Decision-2/2026-07-30): RunnableConfig row updated — add configurable: Option<HashMap<String, Value>> field. LangGraph-parity configurable map (semport §RunnableConfig mapping §11); enables Assistant 'reusable agent persona' design in BC-2.12.002. Graphs read model, tool-set, system-prompt overrides from this map at execution time. BC anchor: BC-2.12.002, ADR-021 Decision 2."
@@ -36,7 +37,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "530b620"
+input-hash: "72acdea"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -84,7 +85,7 @@ This file documents pregolya's public API surface: the public Rust traits by cra
 
 | Type | Role | SS | BC Anchors |
 |------|------|----|-----------|
-| `RunnableConfig` | Per-invocation config: `recursion_limit` (default 25), `thread_id`, `budget_config: Option<BudgetConfig>` (per-run budget override — `None` inherits `GraphConfig::budget_config`; `Some` overrides for that run; used by `BudgetResume::Extend`), `context_mutations: Option<ContextMutationConfig>`, `configurable: Option<HashMap<String, Value>>` (graph-specific key-value overrides — model, tools, system_prompt; LangGraph-parity field; graphs read their parameters at execution time via this map; merge semantics: run-level keys win over Assistant-stored keys per BC-2.12.003 §Run-Config Merge Precedence Invariant; ADR-021 Decision 2) | SS-01 | BC-2.01.003 PC5, BC-2.10.003 PC7/TV-004, BC-2.10.004 PC6, BC-2.15.006 PC1, BC-2.12.002 |
+| `RunnableConfig` | Per-invocation config: `recursion_limit` (default 25), `thread_id`, `budget_config: Option<BudgetConfig>` (per-run budget override — `None` inherits `GraphConfig::budget_config`; `Some` overrides for that run; used by `BudgetResume::Extend`), `context_mutations: Option<ContextMutationConfig>`, `configurable: Option<HashMap<String, Value>>` (graph-specific key-value overrides — model, tools, system_prompt; LangGraph-parity field; graphs read their parameters at execution time via this map; merge semantics: run-level keys win over Assistant-stored keys per BC-2.12.003 §Invariants (Run-Config Merge Precedence); ADR-021 Decision 2) | SS-01 | BC-2.01.003 PC5, BC-2.10.003 PC7/TV-004, BC-2.10.004 PC6, BC-2.15.006 PC1, BC-2.12.002 |
 | `ActionRisk` | Risk classification enum for tool dispatch; 4 variants: `ReadOnly`/`Low`/`Medium`/`High` (`#[non_exhaustive]`); relocated from `pregolya-graph::hitl` to `pregolya-core` (`core::action_risk`) per dependency-inversion precedent — `pregolya-tools` consumes it at compile time without a `pregolya-graph` dep (F-P170-06/ADR-020 adjudication) | SS-05 | BC-2.05.006, BC-2.23.005 |
 | `BudgetConfig` | Budget ceiling + on_ceiling policy; embedded in `RunnableConfig.budget_config` (per-run override) and `GraphConfig.budget_config` (graph-level default); defined in `core::budget` (pregolya-core — ADR-009 Option 3) | SS-10 | BC-2.10.001 |
 | `CompactionTrigger` | `Disabled \| OnWatermark{fraction: f64} \| OnMessageCount{count: usize} \| OnTokenCount{tokens: u64}`; field in `BudgetConfig.compaction_trigger`; defined in `core::budget` (pregolya-core — ADR-019 Decision 1) | SS-10 | BC-2.10.005 |

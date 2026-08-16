@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-016 Decision 3 §Security Invariant — Reviver must reject unknown type ids at all times; allowlist test must COMPILE and FAIL before Reviver::revive() is implemented; VP-010 Kani candidate"
@@ -30,6 +30,7 @@ changelog:
   - "1.6 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-001. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-19/BC-2.19.005.md returns zero fence-scoped literal occurrences after this edit."
   - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-SRLZ-001 allowlist cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, VP anchors, or Red Gate invariants altered."
   - "1.8 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
+  - "1.9 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Invariant 3: §E-SRLZ-001 (row: VAL) is a phantom anchor (no §E-SRLZ-001 heading exists in error-taxonomy.md; individual error codes are not section headings). Corrected to §Component: SRLZ, resolving to heading '### Component: SRLZ (pregolya-core::serializable)'."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -112,7 +113,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
    membership rules (E-SBXD-001 workspace escape, E-GRAPH-013 approver-role gate,
    E-MEMORY-007 write injection, E-TMPL-001 prompt injection). Deserialization containment
    enforced by registry lookup is input validation, not a boundary-crossing attack-vector
-   event. This adjudication is recorded in error-taxonomy.md §E-SRLZ-001 (row: VAL).
+   event. This adjudication is recorded in error-taxonomy.md §Component: SRLZ.
 4. The `E-SRLZ-001` message text is fixed (`"unknown-serializable: type id not in registry"`);
    it does NOT include the received id in the message to avoid leaking attacker-controlled
    data into structured logs (gate #33 STRUCT-PLACEHOLDER PARITY: the message format has

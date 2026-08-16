@@ -6,16 +6,17 @@ slug: server-config-surface-runnable-config-configurable
 title: "SecurityConfig TOML Representation and RunnableConfig.configurable Field (fix-burst-283 / F-P175-C101 + F-P175-C113)"
 status: accepted
 producer: architect
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 date: "2026-07-30"
 subsystems_affected: ["SS-12"]
 supersedes: []
 superseded_by: null
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D13]
 changelog:
+  - "1.2 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Fix phantom §-citation in §Decision 2 merge-semantics bullet. 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants, Run-Config Merge Precedence rule'. Rationale: BC-2.12.003 has no subheading §Run-Config Merge Precedence Invariant; the rule is a list item within §Invariants (verified by heading grep). Also sibling-fixed in api-surface.md RunnableConfig row."
   - "1.1 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Rationale (H2), Source / Origin sections per ADR template (LOW finding: date boundary conditions)."
   - "1.0 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Initial decision — two adjudications from P1D-175 Slice C1. Decision 1: SecurityConfig TOML representation — resolve mutual unbootability between BC-2.12.005 EC-005 and the interface-definitions.md sample config. Decision 2: RunnableConfig.configurable field addition — resolve BC-2.12.002 fabricated-capability finding (mislabeled as BC-2.12.005 by adversary; actual defect in BC-2.12.002)."
 ---
@@ -92,7 +93,7 @@ pub configurable: Option<HashMap<String, serde_json::Value>>,
 
 - `None` (default): no graph-specific overrides; graph uses its built-in defaults.
 - `Some(map)`: graph inspects specific keys. Key names are graph-defined and unvalidated by the framework at `RunnableConfig` construction time — validation is graph-internal.
-- Merge semantics (BC-2.12.003 §Run-Config Merge Precedence Invariant): when a Run request supplies a `config.configurable` map, it is deep-merged over the Assistant's stored `configurable` map at the key level, with run-level keys winning on collision. Merge is applied at run-creation time.
+- Merge semantics (BC-2.12.003 §Invariants, Run-Config Merge Precedence rule): when a Run request supplies a `config.configurable` map, it is deep-merged over the Assistant's stored `configurable` map at the key level, with run-level keys winning on collision. Merge is applied at run-creation time.
 
 ### Effect on existing artifacts
 

@@ -2,19 +2,20 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-server
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/semport/reference-manifest.md
-input-hash: "8894007"
+input-hash: "53ef285"
 traces_to: L2-INDEX.md
 decisions: [D2, D13, D17]
 changelog:
+  - "1.6 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — §TrustLevel (line 77 context) is a phantom anchor (TrustLevel is a bold term entry within '## Prompts, Serialization, and Retrieval Terms (D21 Additions)' in ubiquitous-language-core.md; no ## or ### TrustLevel heading exists). Corrected to ubiquitous-language-core.md §Prompts, Serialization, and Retrieval Terms."
   - "1.5 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record."
   - "1.4 (2026-07-21): F-P131-05 adjudication (burst-226) — §ProvenanceTag: disambiguation note added clarifying that ProvenanceTag (SS-11, no trust-level dimension) is distinct from TrustLevel (SS-18, pregolya-prompts: prompts::template; ADR-015 §Decision 3). Changelog table updated. TD-VSDD-060 sweep: no ProvenanceTag trust-variant residue in this file."
   - "1.3 (2026-07-19): F-P117-01 — add summary_halt to Run status lifecycle. Terminal set now: completed | failed | cancelled | summary_halt. summary_halt reached via in_progress to summary_halt on the OnCeiling::Summarize path (BC-2.12.003 PC7/PC8); first-class terminal state per product-owner adjudication. Body changelog table row added. Whole-file sweep: no other terminal-set enumerations found."
@@ -74,7 +75,7 @@ Authority: entities-server.md §ProvenanceTag.
 **Disambiguation (ADR-015 §Decision 3, burst-226):** `ProvenanceTag` is the SS-11 ingress-boundary
 audit record with three structural fields — it has NO trust-level dimension and carries no variants
 named Untrusted, UserInput, or Trusted. Template-composition trust is handled by `TrustLevel`
-(`pregolya-prompts: prompts::template`; see ubiquitous-language-core.md §TrustLevel).
+(`pregolya-prompts: prompts::template`; see ubiquitous-language-core.md §Prompts, Serialization, and Retrieval Terms).
 The two types serve distinct axes and must not be conflated.
 
 **GuardrailHook**

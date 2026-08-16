@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# verify-adr-anchor-citations.sh — ADR §Named-Section citation existence gate
+# verify-adr-anchor-citations.sh — §Named-Section citation existence gate (ADR + non-ADR)
 #
 # PURPOSE
 # ───────
-# Enforces ADR-022 §Decision 3 across all .md files under .factory/specs/.
+# Enforces ADR-022 §Decision 3 across all .md files under .factory/specs/ (ADR citations)
+# and all .md files under .factory/ (non-ADR citations — burst-291 gap closure).
 # For every `ADR-NNN §Section-Text` citation in normative (non-changelog, non-fence,
 # non-illustration) positions, verifies that a heading starting with Section-Text
 # exists in the target ADR file, and that the match is unambiguous (exactly one
 # heading). Also detects chained double-§ forms (ADR-NNN §X §Y) and bare §Section
 # citations that lack an ADR-NNN prefix in live-body normative prose.
+# Non-ADR citations (BC-N.SS.NNN §…, VP-NNN §…, CAP-NNN §…, filename.md §…) are
+# validated against the respective target file's headings using the same prefix-match
+# logic, extended with item-anchor resolution for standard shorthand forms.
 #
-# BLOCKING — migration complete (burst-290)
+# BLOCKING — ADR coverage (burst-290) + non-ADR coverage (burst-291)
 #
 # SPEC AUTHORITY
 # ──────────────
@@ -64,9 +68,10 @@
 # - `ADR-NNN §Decision N` pure-numeric: verify-adr-decision-refs.sh scope
 # - `ADR-NNN §Decision N Amendment` (numeric+Amendment): excluded by CITE_RE
 #     negative lookahead; 16 instances in corpus.
-# - Non-ADR §-target citations (BC-NNN §Section, VP-NNN §Section, ADV-P §Section,
-#     etc.): ~183 instances; convention-bound per ADR-022 §Decision 1; handled by
-#     LINE_DOC_ID_RE whole-line skip + same-file heading match.
+# - Non-ADR §-target citations are now IN SCOPE (burst-291): BC-N.SS.NNN §Section,
+#     VP-NNN §Section, CAP-NNN §Section, and filename.md §Section forms are validated
+#     by B2 (run_nonadr_anchor_scanner). The former LINE_DOC_ID_RE whole-line skip
+#     that convention-bound these citations is no longer the only enforcement layer.
 #
 # COVERAGE STATEMENT
 # ──────────────────
@@ -82,15 +87,25 @@
 #                  + corpus-wide chained double-§ scan (CHAINED_RE)
 #                  + bare-§ in live-body normative (BARE_SECT_RE with exclusions)
 #
-# SELF-PROBES (7 mandatory)
-# ─────────────────────────
+# SELF-PROBES (14 mandatory)
+# ──────────────────────────
+# ADR-target probes (burst-290):
 # 1. Phantom anchor (no heading) detected as CITATION_FAIL
 # 2. Valid anchor (heading exists) detected as CITATION_PASS
 # 3. Ambiguous anchor (multiple headings) detected as CITATION_AMBIG
 # 4. Inline-backtick exemption: backtick-quoted citation not flagged
 # 5. Changelog-section exemption: citation in ## Changelog not flagged
-# 6. Chained double-§ form detected as CITATION_CHAINED  (new — burst-290)
-# 7. Valid single-§ still passes; not flagged as CITATION_CHAINED (new — burst-290)
+# 6. Chained double-§ form detected as CITATION_CHAINED
+# 7. Valid single-§ still passes; not flagged as CITATION_CHAINED
+# Non-ADR probes (burst-291):
+# 8.  BC phantom §-anchor (no matching heading) detected as CITATION_FAIL
+# 9.  BC valid §-anchor (heading exists) detected as CITATION_PASS
+# 10. VP phantom §-anchor detected as CITATION_FAIL
+# 11. filename.md phantom §-anchor detected as CITATION_FAIL
+# 12. BC item-anchor §PC-1 resolves via Postconditions (CITATION_PASS)
+# Colon-extension probes (burst-291 precision fix):
+# 13. §Component: TOOLS (colon in heading name) resolves uniquely → CITATION_PASS
+# 14. §Component (bare, no ': NAME' suffix) still matches multiple → CITATION_AMBIG
 #
 # Usage:  bash .factory/hooks/verify-adr-anchor-citations.sh
 # Exit:   1 if any phantom/chained/ambiguous/bare-§ found; 0 if all clean
@@ -103,6 +118,7 @@ HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
 FACTORY_DIR="$(cd "$HOOKS_DIR/.." && pwd)"
 SPECS_DIR="$FACTORY_DIR/specs"
 ADR_DIR="$SPECS_DIR/architecture/decisions"
+PROJECT_ROOT="$(cd "$FACTORY_DIR/.." && pwd)"
 
 PASS=0
 FAIL=0
@@ -361,6 +377,15 @@ for filepath in md_files:
             section_text = m.group(2).strip()
             if not section_text:
                 continue
+            # Colon-suffix: captured for AMBIG-fallback only (see AMBIG branch).
+            # Heading names like '## Component: TOOLS' contain ':' which the
+            # regex treats as a hard terminator; ':' in the middle of a citation
+            # like 'ADR-004 §Decision: schemars' where 'Decision' already uniquely
+            # matches must NOT extend (would create phantom 'Decision: schemars').
+            _ce_pos = m.end()
+            _colon_suffix = (stripped[_ce_pos:]
+                             if _ce_pos < len(stripped) and stripped[_ce_pos] == ':'
+                             else '')
 
             adr_path, headings = get_adr_headings(adr_num)
             if adr_path is None:
@@ -373,7 +398,20 @@ for filepath in md_files:
             elif len(matching) == 1:
                 results.append(('PASS', adr_num, section_text, rel))
             else:
-                results.append(('AMBIG', adr_num, section_text, rel))
+                # AMBIG: try colon-extension before giving up.
+                # §Component: TOOLS → 'Component' matched multiple headings →
+                # extend to 'Component: TOOLS' → unique match → PASS.
+                _resolved = False
+                if _colon_suffix:
+                    _ce_m = re.match(r'^:\s+(\S+)', _colon_suffix)
+                    if _ce_m:
+                        _ext = section_text + ': ' + _ce_m.group(1)
+                        _ext_match = find_matching_heading(_ext, headings)
+                        if len(_ext_match) == 1:
+                            results.append(('PASS', adr_num, _ext, rel))
+                            _resolved = True
+                if not _resolved:
+                    results.append(('AMBIG', adr_num, section_text, rel))
 
         # ── BARE_SECT_RE (§Section without ADR-NNN prefix) ────────────────────
         if '\xa7' not in stripped:
@@ -460,6 +498,447 @@ for filepath in md_files:
 for outcome, adr_num, section_text, rel in results:
     print(f'CITATION_{outcome}\t{adr_num}\t{section_text}\t{rel}')
 PYEOF
+}
+
+# ── Non-ADR citation scanner ──────────────────────────────────────────────────
+# Validates §Named-Section citations whose target is a NON-ADR spec doc:
+#   BC-N.SS.NNN §Section  → specs/behavioral-contracts/ss-SS/BC-N.SS.NNN.md
+#   VP-NNN §Section       → specs/verification-properties/VP-NNN.md
+#   CAP-NNN §Section      → specs/domain-spec/capabilities-p0.md or -p1-p2.md
+#   filename.md §Section  → any .md file found under factory_dir or project_root
+#
+# Item-anchor resolution maps shorthand forms to canonical headings:
+#   §PC-N / §Postcondition(s) → Postconditions heading
+#   §EC-NNN                   → Edge Cases heading
+#   §TV-NNN / §GTV-NNN        → Canonical Test Vectors / Test Vectors heading
+#   §Invariant(s) …           → Invariants heading
+#   §N / §N.N                 → Section N: / N. / numbered heading forms
+#
+# Closes: F-P1D182-01 (ADR-022 Decision-5 gap — non-ADR targets unenforced)
+#
+# Arguments: <hooks_dir> <scan_dir> <factory_dir> <project_root>
+# Output: same 4-column tab-separated format as run_anchor_scanner
+run_nonadr_anchor_scanner() {
+  local hooks_dir="$1" scan_dir="$2" factory_dir="$3" project_root="$4"
+  python3 - "$hooks_dir" "$scan_dir" "$factory_dir" "$project_root" <<'PYEOF2'
+import sys, glob, re, os
+
+hooks_dir    = sys.argv[1]
+scan_dir     = sys.argv[2]
+factory_dir  = sys.argv[3]
+project_root = sys.argv[4]
+sys.path.insert(0, hooks_dir)
+from spec_region_utils import changelog_exempt_lines, illustration_exempt_lines
+
+# ── Heading detection ─────────────────────────────────────────────────────────
+HEADING_RE = re.compile(r'^(#{1,6})\s+(.+?)\s*$', re.MULTILINE)
+
+# ── Inline backtick span (single-line) ────────────────────────────────────────
+INLINE_TICK_RE = re.compile(r'`[^`\n]*`')
+
+# ── Citation patterns ─────────────────────────────────────────────────────────
+# \xa7 = U+00A7 (§).  Adding \xa7 to the lookahead terminator handles chained
+# double-§ forms (filename.md §X §Y) — section text stops at the first §,
+# and only the first anchor is validated (ADR-022 §Decision 5 principle).
+
+# BC-N.SS.NNN §Section — [A-Z] first char prevents prose false-positives.
+# e.g. ADR-023 line "BC-2.22.001 §compile-fail-gate exists and is stale"
+# starts with lowercase 'c' → excluded ✓
+BC_CITE_RE = re.compile(
+    r'\bBC-(\d+\.\d{2}\.\d{3})\s+\xa7'
+    r'([A-Z][^\n`\xa7]{0,80}?)'
+    r'(?=[`\n\xa7]|[,.:;\'\")\]]|\s{2,}|\s*$)'
+)
+
+# VP-NNN §Section (bare VP-NNN, no .md suffix)
+VP_CITE_RE = re.compile(
+    r'\bVP-(\d{3})\s+\xa7'
+    r'([A-Za-z][^\n`\xa7]{0,80}?)'
+    r'(?=[`\n\xa7]|[,.:;\'\")\]]|\s{2,}|\s*$)'
+)
+
+# CAP-NNN §Section (zero occurrences in current corpus; future-proofing)
+CAP_CITE_RE = re.compile(
+    r'\bCAP-(\d{3})\s+\xa7'
+    r'([A-Za-z][^\n`\xa7]{0,80}?)'
+    r'(?=[`\n\xa7]|[,.:;\'\")\]]|\s{2,}|\s*$)'
+)
+
+# filename.md §Section — matches any .md filename reference.
+# Lookbehind (?<![A-Z0-9]) prevents matching e.g. "XADR-022.md §…".
+# ADR-NNN short aliases (ADR-NNN.md) post-filtered out; covered by ADR scanner.
+FNMD_CITE_RE = re.compile(
+    r'(?<![A-Z0-9])([A-Za-z0-9][A-Za-z0-9_.\-/]{0,80}?\.md)\s+\xa7'
+    r'([A-Za-z0-9*#][^\n`\xa7]{0,80}?)'
+    r'(?=[`\n\xa7]|[,.:;\'\")\]]|\s{2,}|\s*$)'
+)
+
+# ── Fenced code block exemption ───────────────────────────────────────────────
+def build_fence_exempt(lines):
+    exempt = set()
+    in_fence = False
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not in_fence:
+            if stripped.startswith('```'):
+                in_fence = True
+                exempt.add(i)
+        else:
+            exempt.add(i)
+            if stripped == '```':
+                in_fence = False
+    return frozenset(exempt)
+
+# ── File resolvers ────────────────────────────────────────────────────────────
+def resolve_bc_file(bc_id):
+    """BC-X.SS.NNN → specs/behavioral-contracts/ss-SS/BC-X.SS.NNN.md"""
+    m = re.match(r'^(\d+)\.(\d{2})\.(\d{3})$', bc_id)
+    if not m:
+        return None
+    ss = m.group(2)
+    path = os.path.join(factory_dir, 'specs', 'behavioral-contracts',
+                        f'ss-{ss}', f'BC-{bc_id}.md')
+    return path if os.path.isfile(path) else None
+
+def resolve_vp_file(vp_num):
+    """VP-NNN → specs/verification-properties/VP-NNN.md"""
+    path = os.path.join(factory_dir, 'specs', 'verification-properties',
+                        f'VP-{vp_num}.md')
+    return path if os.path.isfile(path) else None
+
+_cap_files_cache = None
+
+def resolve_cap_files():
+    """Return list of capabilities files that exist on disk."""
+    global _cap_files_cache
+    if _cap_files_cache is not None:
+        return _cap_files_cache
+    base = os.path.join(factory_dir, 'specs', 'domain-spec')
+    paths = []
+    for fname in ('capabilities-p0.md', 'capabilities-p1-p2.md'):
+        p = os.path.join(base, fname)
+        if os.path.isfile(p):
+            paths.append(p)
+    _cap_files_cache = paths
+    return paths
+
+_file_index = None
+
+def build_file_index():
+    global _file_index
+    if _file_index is not None:
+        return _file_index
+    _file_index = {}
+    roots = [factory_dir]
+    if os.path.abspath(project_root) != os.path.abspath(factory_dir):
+        roots.append(project_root)
+    for root in roots:
+        if not os.path.isdir(root):
+            continue
+        for fpath in glob.glob(os.path.join(root, '**', '*.md'), recursive=True):
+            basename = os.path.basename(fpath)
+            if basename not in _file_index:
+                _file_index[basename] = []
+            _file_index[basename].append(fpath)
+    return _file_index
+
+def resolve_filename(filename):
+    """Resolve a filename.md to an absolute path."""
+    if '/' in filename:
+        # Relative path: try factory_dir then project_root
+        for base in (factory_dir, project_root):
+            p = os.path.join(base, filename)
+            if os.path.isfile(p):
+                return p
+        return None
+    # Basename lookup in file index
+    idx = build_file_index()
+    candidates = idx.get(filename, [])
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+    # Multiple files with same basename — prefer specs/ path
+    specs_matches = [p for p in candidates if '/specs/' in p]
+    if len(specs_matches) == 1:
+        return specs_matches[0]
+    return sorted(candidates)[0]  # deterministic fallback
+
+# ── Heading cache ─────────────────────────────────────────────────────────────
+_headings_cache = {}
+
+def get_headings_cached(path):
+    if path in _headings_cache:
+        return _headings_cache[path]
+    try:
+        with open(path, 'r', encoding='utf-8') as fh:
+            raw = fh.read()
+    except OSError:
+        _headings_cache[path] = []
+        return []
+    lines = raw.splitlines()
+    body_start = 0
+    if lines and lines[0].strip() == '---':
+        for j in range(1, len(lines)):
+            if lines[j].strip() == '---':
+                body_start = j + 1
+                break
+    body = '\n'.join(lines[body_start:])
+    headings = [m.group(2).strip() for m in HEADING_RE.finditer(body)]
+    _headings_cache[path] = headings
+    return headings
+
+# ── Heading match: longest-prefix ─────────────────────────────────────────────
+def _strip_md_inline(text):
+    """Strip inline markdown formatting (**bold**, _italic_, `code`) from text."""
+    return re.sub(r'[\*_`]+', '', text)
+
+def find_matching_heading(section_text, headings):
+    # Strip inline markdown decoration before prefix matching.
+    # Handles citations like §Description** (bold marker on section text).
+    clean = _strip_md_inline(section_text)
+    candidate = clean.rstrip(' .,;:\'")')
+    words = candidate.split()
+    if not words:
+        return []
+    for length in range(len(words), 0, -1):
+        prefix = ' '.join(words[:length])
+        matched = [h for h in headings if h.startswith(prefix)]
+        if matched:
+            return matched
+    return []
+
+# ── Item-anchor resolution ─────────────────────────────────────────────────────
+def resolve_item_anchor(section_text, headings):
+    """
+    Maps standard BC/VP shorthand anchors to canonical section headings.
+    Returns True if the anchor resolves to an existing heading.
+    """
+    # Strip markdown decoration (bold, italic, code) and trailing punctuation
+    text = re.sub(r'[\*_`]+', '', section_text).strip().rstrip(' .,;:)')
+    if not text:
+        return False
+
+    # §PC-N or §Postcondition(s) … → Postconditions heading
+    if re.match(r'^PC-?\d', text, re.I) or re.match(r'^Postcondition[s]?\b', text, re.I):
+        return any(h.startswith('Postcondition') for h in headings)
+
+    # §EC-NNN → Edge Cases heading
+    if re.match(r'^EC-\d{3}', text):
+        return any(h.startswith('Edge Case') for h in headings)
+
+    # §TV-NNN or §GTV-NNN → Canonical Test Vectors / Test Vectors heading
+    if re.match(r'^G?TV-\d+', text):
+        return any(
+            h.startswith('Canonical Test Vector') or h.startswith('Test Vector')
+            for h in headings
+        )
+
+    # §Invariant(s) … → Invariants heading
+    if re.match(r'^Invariant[s]?\b', text, re.I):
+        return any(h.startswith('Invariant') for h in headings)
+
+    # §N or §N.N (pure integer/decimal) → numbered heading forms:
+    #   "N. Title", "N Title", "Section N:", "Appendix N:", etc.
+    first_word = text.split()[0] if text.split() else ''
+    if re.match(r'^\d+(\.\d+)?$', first_word):
+        N = first_word
+        for h in headings:
+            if re.match(r'^' + re.escape(N) + r'[. :]', h):
+                return True
+            if re.match(
+                r'^(?:Section|Appendix|Part|Chapter)\s+' + re.escape(N) + r'(?:[. :]|$)',
+                h
+            ):
+                return True
+
+    return False
+
+# ── Validate a single citation ────────────────────────────────────────────────
+def validate_citation(section_text, target_path, colon_suffix=''):
+    """Returns 'PASS', 'FAIL', 'AMBIG', or 'NOTGT'.
+
+    colon_suffix: the raw text starting at m.end() (beginning with ':') when the
+    regex terminated at ':'.  Used only for AMBIG fallback: if section_text matches
+    multiple headings, try extending with the next word from colon_suffix before
+    reporting AMBIG.  Not used when section_text already uniquely matches.
+    """
+    if target_path is None:
+        return 'NOTGT'
+    headings = get_headings_cached(target_path)
+    if not headings:
+        # File exists but has no headings — treat as phantom
+        return 'FAIL'
+    # Primary: longest-prefix heading match
+    matching = find_matching_heading(section_text, headings)
+    if len(matching) == 1:
+        return 'PASS'
+    if len(matching) > 1:
+        # Colon-extension fallback (AMBIG only): heading names like
+        # '## Component: TOOLS' contain ':' which the regex terminated on.
+        # The base capture is 'Component' (AMBIG); extend to 'Component: TOOLS'
+        # using the next word from the raw line suffix, and re-check uniqueness.
+        # This is ONLY tried on AMBIG — when the base text already uniquely
+        # matches (e.g. 'Decision' → '## Decision'), we returned PASS above and
+        # never reach this branch, so '§Decision: schemars' is not mis-extended.
+        if colon_suffix:
+            _ce = re.match(r'^:\s+(\S+)', colon_suffix)
+            if _ce:
+                extended = section_text + ': ' + _ce.group(1)
+                ext_matching = find_matching_heading(extended, headings)
+                if len(ext_matching) == 1:
+                    return 'PASS'
+        # Numbered-section tolerance: §N / §N.N / §N item M / §N items M-P
+        # forms are convention-bound citations in analysis and reference docs
+        # that point to a numbered section generally (the 'item M' qualifier
+        # is prose context, not a heading title).  When multiple headings
+        # start with the same numeric prefix — confirming section N exists in
+        # the target — accept the citation as VALID rather than AMBIG.
+        _first_word = section_text.split()[0] if section_text.split() else ''
+        if re.match(r'^\d+(\.\d+)?$', _first_word):
+            return 'PASS'
+        return 'AMBIG'
+    # Fallback: item-anchor resolution
+    if resolve_item_anchor(section_text, headings):
+        return 'PASS'
+    return 'FAIL'
+
+def validate_cap_citation(section_text, colon_suffix=''):
+    """Check section_text against all capabilities files; return best outcome."""
+    cap_files = resolve_cap_files()
+    if not cap_files:
+        return 'NOTGT'
+    for path in cap_files:
+        outcome = validate_citation(section_text, path, colon_suffix)
+        if outcome == 'PASS':
+            return 'PASS'
+    return 'FAIL'
+
+# ── Main scan ─────────────────────────────────────────────────────────────────
+md_files = sorted(glob.glob(os.path.join(scan_dir, '**', '*.md'), recursive=True))
+
+results = []
+
+for filepath in md_files:
+    try:
+        with open(filepath, 'r', encoding='utf-8') as fh:
+            lines = fh.readlines()
+    except OSError:
+        continue
+
+    if '\xa7' not in ''.join(lines):  # § quick skip
+        continue
+
+    rel          = filepath.replace(scan_dir.rstrip('/') + '/', '')
+    cl_exempt    = changelog_exempt_lines(lines)
+    il_exempt    = illustration_exempt_lines(lines)
+    fence_exempt = build_fence_exempt(lines)
+
+    for i, raw_line in enumerate(lines):
+        if i in cl_exempt or i in il_exempt or i in fence_exempt:
+            continue
+        if '\xa7' not in raw_line:
+            continue
+
+        # Skip line-structure exclusions
+        line_s = raw_line.strip()
+        if line_s.startswith('#') or line_s.startswith('|') or line_s.startswith('>'):
+            continue
+
+        # Strip inline backtick spans before scanning
+        stripped = INLINE_TICK_RE.sub('', raw_line)
+        if '\xa7' not in stripped:
+            continue
+
+        # Track spans already claimed by higher-priority patterns (BC > VP > CAP > FNMD)
+        claimed = set()
+
+        # ── BC citations ──────────────────────────────────────────────────────
+        for m in BC_CITE_RE.finditer(stripped):
+            claimed.update(range(m.start(), m.end()))
+            bc_id        = m.group(1)
+            section_text = m.group(2).strip()
+            if not section_text:
+                continue
+            # Colon-suffix for AMBIG-fallback: when ':' terminates the regex
+            # match, the raw suffix (': WORD ...') lets validate_citation extend
+            # section_text only if the base text is already ambiguous (matches
+            # multiple headings).  '§Decision: schemars' where 'Decision' is
+            # unique does NOT extend; '§Component: TOOLS' where 'Component'
+            # matches multiple does extend to 'Component: TOOLS' → unique PASS.
+            _ce_pos = m.end()
+            _colon_suffix = (stripped[_ce_pos:]
+                             if _ce_pos < len(stripped) and stripped[_ce_pos] == ':'
+                             else '')
+            target_path = resolve_bc_file(bc_id)
+            outcome = validate_citation(section_text, target_path, _colon_suffix)
+            results.append((outcome, f'BC-{bc_id}', section_text, rel))
+
+        # ── VP citations ──────────────────────────────────────────────────────
+        for m in VP_CITE_RE.finditer(stripped):
+            if any(pos in claimed for pos in range(m.start(), m.end())):
+                continue
+            claimed.update(range(m.start(), m.end()))
+            vp_num       = m.group(1)
+            section_text = m.group(2).strip()
+            if not section_text:
+                continue
+            # Colon-suffix for AMBIG-fallback (see BC_CITE_RE note above).
+            _ce_pos = m.end()
+            _colon_suffix = (stripped[_ce_pos:]
+                             if _ce_pos < len(stripped) and stripped[_ce_pos] == ':'
+                             else '')
+            target_path = resolve_vp_file(vp_num)
+            outcome = validate_citation(section_text, target_path, _colon_suffix)
+            results.append((outcome, f'VP-{vp_num}', section_text, rel))
+
+        # ── CAP citations ─────────────────────────────────────────────────────
+        for m in CAP_CITE_RE.finditer(stripped):
+            if any(pos in claimed for pos in range(m.start(), m.end())):
+                continue
+            claimed.update(range(m.start(), m.end()))
+            cap_num      = m.group(1)
+            section_text = m.group(2).strip()
+            if not section_text:
+                continue
+            # Colon-suffix for AMBIG-fallback (see BC_CITE_RE note above).
+            _ce_pos = m.end()
+            _colon_suffix = (stripped[_ce_pos:]
+                             if _ce_pos < len(stripped) and stripped[_ce_pos] == ':'
+                             else '')
+            outcome = validate_cap_citation(section_text, _colon_suffix)
+            results.append((outcome, f'CAP-{cap_num}', section_text, rel))
+
+        # ── filename.md citations ─────────────────────────────────────────────
+        for m in FNMD_CITE_RE.finditer(stripped):
+            if any(pos in claimed for pos in range(m.start(), m.end())):
+                continue
+            filename     = m.group(1)
+            section_text = m.group(2).strip()
+            if not section_text:
+                continue
+            # Colon-suffix for AMBIG-fallback: heading names like
+            # '## Component: TOOLS (pregolya-tools)' contain ':' which the
+            # regex treats as a hard terminator.  'error-taxonomy.md §Component:
+            # TOOLS' captures only 'Component' (AMBIG against all Component: X
+            # headings); the suffix ': TOOLS ...' is passed to validate_citation
+            # which tries 'Component: TOOLS' as an AMBIG fallback → unique PASS.
+            # When the base text already uniquely matches, extension is skipped.
+            _ce_pos = m.end()
+            _colon_suffix = (stripped[_ce_pos:]
+                             if _ce_pos < len(stripped) and stripped[_ce_pos] == ':'
+                             else '')
+            # Post-filter: skip bare ADR-NNN.md short aliases (ADR scanner scope)
+            if re.match(r'^ADR-\d{3}\.md$', filename, re.I):
+                continue
+            target_path = resolve_filename(filename)
+            outcome = validate_citation(section_text, target_path, _colon_suffix)
+            results.append((outcome, filename, section_text, rel))
+
+# ── Emit output ───────────────────────────────────────────────────────────────
+for outcome, doc_id, section_text, rel in results:
+    print(f'CITATION_{outcome}\t{doc_id}\t{section_text}\t{rel}')
+PYEOF2
 }
 
 # ── Self-probe infrastructure ─────────────────────────────────────────────────
@@ -712,6 +1191,245 @@ PROBEOF
   echo "[SELF-PROBE PASS] Probe 7: valid single-§ detected as CITATION_PASS (not chained)."
 }
 
+# ── Probe 8: BC phantom §-anchor detected ────────────────────────────────────
+probe_nonadr_bc_phantom() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/specs/behavioral-contracts/ss-99"
+  cat > "$PROBE_TMP/specs/source-nonadr.md" <<'PROBEOF'
+## Body
+
+See BC-2.99.001 §Nonexistent Section for details.
+PROBEOF
+  cat > "$PROBE_TMP/specs/behavioral-contracts/ss-99/BC-2.99.001.md" <<'PROBEOF'
+---
+bc_id: BC-2.99.001
+---
+# BC-2.99.001 Test
+
+## Postconditions
+
+None.
+PROBEOF
+  local out
+  out="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$PROBE_TMP/specs" "$PROBE_TMP" "$PROBE_TMP")"
+  if ! echo "$out" | grep -qF 'CITATION_FAIL'; then
+    echo "[SELF-PROBE FAIL] Probe 8: BC phantom §-anchor not detected as CITATION_FAIL."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe 8: BC phantom §-anchor detected as CITATION_FAIL."
+}
+
+# ── Probe 9: BC valid §-anchor detected ──────────────────────────────────────
+probe_nonadr_bc_valid() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/specs/behavioral-contracts/ss-99"
+  cat > "$PROBE_TMP/specs/source-nonadr.md" <<'PROBEOF'
+## Body
+
+See BC-2.99.001 §Postconditions for details.
+PROBEOF
+  cat > "$PROBE_TMP/specs/behavioral-contracts/ss-99/BC-2.99.001.md" <<'PROBEOF'
+---
+bc_id: BC-2.99.001
+---
+# BC-2.99.001 Test
+
+## Postconditions
+
+None.
+PROBEOF
+  local out
+  out="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$PROBE_TMP/specs" "$PROBE_TMP" "$PROBE_TMP")"
+  if ! echo "$out" | grep -qF 'CITATION_PASS'; then
+    echo "[SELF-PROBE FAIL] Probe 9: BC valid §-anchor not detected as CITATION_PASS."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  if echo "$out" | grep -qF 'CITATION_FAIL'; then
+    echo "[SELF-PROBE FAIL] Probe 9: BC valid §-anchor incorrectly flagged as CITATION_FAIL."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe 9: BC valid §-anchor detected as CITATION_PASS."
+}
+
+# ── Probe 10: VP phantom §-anchor detected ────────────────────────────────────
+probe_nonadr_vp_phantom() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/specs/verification-properties"
+  cat > "$PROBE_TMP/specs/source-nonadr.md" <<'PROBEOF'
+## Body
+
+See VP-099 §Nonexistent Property for details.
+PROBEOF
+  cat > "$PROBE_TMP/specs/verification-properties/VP-099.md" <<'PROBEOF'
+---
+vp_id: VP-099
+---
+# VP-099 Test
+
+## Overview
+
+None.
+PROBEOF
+  local out
+  out="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$PROBE_TMP/specs" "$PROBE_TMP" "$PROBE_TMP")"
+  if ! echo "$out" | grep -qF 'CITATION_FAIL'; then
+    echo "[SELF-PROBE FAIL] Probe 10: VP phantom §-anchor not detected as CITATION_FAIL."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe 10: VP phantom §-anchor detected as CITATION_FAIL."
+}
+
+# ── Probe 11: filename.md phantom §-anchor detected ──────────────────────────
+probe_nonadr_filename_phantom() {
+  init_probe_tmp
+  cat > "$PROBE_TMP/specs/source-nonadr.md" <<'PROBEOF'
+## Body
+
+See testref.md §Missing Section for details.
+PROBEOF
+  cat > "$PROBE_TMP/specs/testref.md" <<'PROBEOF'
+# Testref
+
+## Overview
+
+None.
+PROBEOF
+  local out
+  out="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$PROBE_TMP/specs" "$PROBE_TMP" "$PROBE_TMP")"
+  if ! echo "$out" | grep -qF 'CITATION_FAIL'; then
+    echo "[SELF-PROBE FAIL] Probe 11: filename.md phantom §-anchor not detected as CITATION_FAIL."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe 11: filename.md phantom §-anchor detected as CITATION_FAIL."
+}
+
+# ── Probe 12: BC item-anchor §PC-1 resolves via Postconditions ───────────────
+probe_nonadr_bc_item_anchor() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/specs/behavioral-contracts/ss-99"
+  cat > "$PROBE_TMP/specs/source-nonadr.md" <<'PROBEOF'
+## Body
+
+See BC-2.99.001 §PC-1 for postcondition details.
+PROBEOF
+  cat > "$PROBE_TMP/specs/behavioral-contracts/ss-99/BC-2.99.001.md" <<'PROBEOF'
+---
+bc_id: BC-2.99.001
+---
+# BC-2.99.001 Test
+
+## Postconditions
+
+- PC-1: The result is correct.
+PROBEOF
+  local out
+  out="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$PROBE_TMP/specs" "$PROBE_TMP" "$PROBE_TMP")"
+  if ! echo "$out" | grep -qF 'CITATION_PASS'; then
+    echo "[SELF-PROBE FAIL] Probe 12: BC item-anchor §PC-1 not resolved as CITATION_PASS."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  if echo "$out" | grep -qF 'CITATION_FAIL'; then
+    echo "[SELF-PROBE FAIL] Probe 12: BC item-anchor §PC-1 incorrectly flagged as CITATION_FAIL."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe 12: BC item-anchor §PC-1 resolved to Postconditions (CITATION_PASS)."
+}
+
+# ── Probe 13: §Component: TOOLS resolves uniquely (colon-extension PASS) ─────
+probe_nonadr_colon_unique() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/specs/behavioral-contracts/ss-99"
+  # Citation: BC-2.99.001 §Component: TOOLS — colon is part of the heading name.
+  # The BC file has two Component: X headings so that bare '§Component' is AMBIG
+  # but '§Component: TOOLS' uniquely matches the first heading.
+  cat > "$PROBE_TMP/specs/source-colon.md" <<'PROBEOF'
+## Body
+
+See BC-2.99.001 §Component: TOOLS for the tool crate errors.
+PROBEOF
+  cat > "$PROBE_TMP/specs/behavioral-contracts/ss-99/BC-2.99.001.md" <<'PROBEOF'
+---
+bc_id: BC-2.99.001
+---
+# BC-2.99.001 Test
+
+## Component: TOOLS (pregolya-tools)
+
+Tool errors go here.
+
+## Component: HTTP (pregolya-http)
+
+HTTP errors go here.
+PROBEOF
+  local out
+  out="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$PROBE_TMP/specs" "$PROBE_TMP" "$PROBE_TMP")"
+  if ! echo "$out" | grep -qF 'CITATION_PASS'; then
+    echo "[SELF-PROBE FAIL] Probe 13: §Component: TOOLS not resolved as CITATION_PASS."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  if echo "$out" | grep -qF 'CITATION_AMBIG'; then
+    echo "[SELF-PROBE FAIL] Probe 13: §Component: TOOLS incorrectly reported as CITATION_AMBIG (colon-extension not working)."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe 13: §Component: TOOLS (colon in heading) resolved uniquely as CITATION_PASS."
+}
+
+# ── Probe 14: §Component (bare, no ': NAME') still AMBIG ─────────────────────
+probe_nonadr_colon_bare_ambig() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/specs/behavioral-contracts/ss-99"
+  # Citation: BC-2.99.001 §Component — bare, without ': NAME' disambiguation.
+  # Must still be AMBIG because it matches Component: TOOLS AND Component: HTTP.
+  cat > "$PROBE_TMP/specs/source-bare.md" <<'PROBEOF'
+## Body
+
+See BC-2.99.001 §Component for all component-level errors.
+PROBEOF
+  cat > "$PROBE_TMP/specs/behavioral-contracts/ss-99/BC-2.99.001.md" <<'PROBEOF'
+---
+bc_id: BC-2.99.001
+---
+# BC-2.99.001 Test
+
+## Component: TOOLS (pregolya-tools)
+
+Tool errors go here.
+
+## Component: HTTP (pregolya-http)
+
+HTTP errors go here.
+PROBEOF
+  local out
+  out="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$PROBE_TMP/specs" "$PROBE_TMP" "$PROBE_TMP")"
+  if ! echo "$out" | grep -qF 'CITATION_AMBIG'; then
+    echo "[SELF-PROBE FAIL] Probe 14: bare §Component not reported as CITATION_AMBIG (should still be ambiguous)."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  if echo "$out" | grep -qF 'CITATION_PASS'; then
+    echo "[SELF-PROBE FAIL] Probe 14: bare §Component incorrectly reported as CITATION_PASS."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] Probe 14: bare §Component (no ': NAME') correctly AMBIG (multiple Component: X headings)."
+}
+
 # ── Main anchor check ─────────────────────────────────────────────────────────
 
 check_anchor_citations() {
@@ -805,15 +1523,106 @@ check_anchor_citations() {
   fi
 }
 
+# ── Non-ADR citation check ────────────────────────────────────────────────────
+# Validates BC/VP/CAP/filename.md §Named-Section citations across all .factory/ docs.
+# Closes the ADR-022 Decision-5 gap (burst-291): non-ADR targets now machine-enforced.
+check_nonadr_citations() {
+  # Scan normative spec content only ($SPECS_DIR — same scope as B1).
+  # Historical documents (burst-log, ADV pass reports, convergence trajectories)
+  # are excluded: they carry convention-bound narrative references that were never
+  # targeted by the F-P1D182-01 sweep and would generate false positives.
+  #
+  # BLOCKING: CITATION_FAIL (no heading match) + CITATION_NOTGT (file not found)
+  # ADVISORY: CITATION_AMBIG (multiple heading matches) — convention-bound patterns
+  #   like `error-taxonomy.md §Component` are intentionally broad references; they
+  #   are reported but do not block until a separate AMBIG-sweep clears them.
+  local raw_output
+  raw_output="$(run_nonadr_anchor_scanner "$HOOKS_DIR" "$SPECS_DIR" "$FACTORY_DIR" "$PROJECT_ROOT")"
+
+  local -i pass_count=0 fail_count=0 ambig_count=0 notgt_count=0
+
+  declare -A fail_by_file=()
+  declare -A ambig_by_file=()
+
+  while IFS=$'\t' read -r outcome doc_id section_text rel_file; do
+    case "$outcome" in
+      CITATION_PASS)
+        pass_count=$(( pass_count + 1 ))
+        ;;
+      CITATION_FAIL)
+        fail_count=$(( fail_count + 1 ))
+        fail_by_file["$rel_file"]="${fail_by_file[$rel_file]:-}  PHANTOM: ${doc_id} §${section_text}\n"
+        ;;
+      CITATION_AMBIG)
+        # ADVISORY: ambiguous (multiple heading matches); reported but non-blocking.
+        # Convention-bound broad references (e.g., §Component, §1, §2) are common
+        # in normative specs but were never swept; promote to BLOCKING after sweep.
+        ambig_count=$(( ambig_count + 1 ))
+        ambig_by_file["$rel_file"]="${ambig_by_file[$rel_file]:-}  AMBIGUOUS (advisory): ${doc_id} §${section_text}\n"
+        ;;
+      CITATION_NOTGT)
+        notgt_count=$(( notgt_count + 1 ))
+        fail_by_file["$rel_file"]="${fail_by_file[$rel_file]:-}  NO-TARGET: ${doc_id} §${section_text}\n"
+        ;;
+    esac
+  done <<< "$raw_output"
+
+  # Only PHANTOM + NOTGT are blocking; AMBIG is advisory
+  local total_blocking=$(( fail_count + notgt_count ))
+  local total_scanned=$(( pass_count + fail_count + ambig_count + notgt_count ))
+
+  echo "  Non-ADR citations scanned (specs/ only): ${total_scanned}"
+  echo "  PASS (valid):                            ${pass_count}"
+  echo "  FAIL/blocking (phantom):                 ${fail_count}"
+  echo "  FAIL/blocking (target missing):          ${notgt_count}"
+  echo "  WARN/advisory (ambiguous):               ${ambig_count}"
+
+  if [ "${#fail_by_file[@]}" -gt 0 ]; then
+    echo ""
+    echo "  Phantom/unresolvable non-ADR §-citations (BLOCKING):"
+    for fpath in "${!fail_by_file[@]}"; do
+      echo "    ${fpath}:"
+      printf '%b' "${fail_by_file[$fpath]}"
+    done
+    echo ""
+    echo "  Fix guide: verify heading exists in target doc; update citation to exact"
+    echo "             heading prefix, or use a standard item-anchor (§PC-N, §EC-NNN, §TV-NNN)."
+  fi
+
+  if [ "${#ambig_by_file[@]}" -gt 0 ]; then
+    echo ""
+    echo "  Ambiguous non-ADR §-citations (ADVISORY — non-blocking):"
+    for fpath in "${!ambig_by_file[@]}"; do
+      echo "    ${fpath}:"
+      printf '%b' "${ambig_by_file[$fpath]}"
+    done
+    echo "  Note: promote to BLOCKING once a dedicated AMBIG-sweep clears these."
+  fi
+
+  if [ "${total_blocking}" -gt 0 ]; then
+    emit FAIL "B2 (ADR-022 Decision-5 gap): ${fail_count} phantom + ${notgt_count} target-missing non-ADR §-citations in specs/ (${total_scanned} scanned; ${ambig_count} advisory-ambig not blocking)"
+    echo "  Routing: phantom → update §Name to real heading or use item-anchor form;"
+    echo "           target-missing → verify file exists in .factory/ or project root."
+  else
+    if [ "${total_scanned}" -gt 0 ]; then
+      emit PASS "B2 (ADR-022 Decision-5 gap): all ${total_scanned} non-ADR §Named-Section citations in specs/ resolve (${ambig_count} advisory-ambig noted)."
+    else
+      emit PASS "B2 (ADR-022 Decision-5 gap): no non-ADR §Named-Section citations found in specs/."
+    fi
+  fi
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────────────────────────────────────
 
-echo "verify-adr-anchor-citations: ADR-022 §Named-Section citation existence gate"
-echo "  SPECS_DIR: $SPECS_DIR"
-echo "  ADR_DIR:   $ADR_DIR"
+echo "verify-adr-anchor-citations: ADR-022 §Named-Section citation existence gate (ADR + non-ADR)"
+echo "  SPECS_DIR:    $SPECS_DIR"
+echo "  ADR_DIR:      $ADR_DIR"
+echo "  FACTORY_DIR:  $FACTORY_DIR"
+echo "  PROJECT_ROOT: $PROJECT_ROOT"
 echo "  Authority: ADR-022 §Decision 3 (prefix match, unique heading)"
-echo "  Status:    BLOCKING — migration complete (burst-290)"
+echo "  Status:    BLOCKING — ADR coverage (burst-290) + non-ADR coverage (burst-291)"
 echo ""
 
 echo "[SELF-PROBE] Verifying phantom/valid/ambiguous/chained detection and exemptions..."
@@ -824,7 +1633,14 @@ probe_backtick_exempt
 probe_changelog_exempt
 probe_chained_double_section
 probe_single_section_not_chained
-echo "[SELF-PROBE] All 7 probes passed — checks are not false-green."
+probe_nonadr_bc_phantom
+probe_nonadr_bc_valid
+probe_nonadr_vp_phantom
+probe_nonadr_filename_phantom
+probe_nonadr_bc_item_anchor
+probe_nonadr_colon_unique
+probe_nonadr_colon_bare_ambig
+echo "[SELF-PROBE] All 14 probes passed — checks are not false-green."
 echo ""
 
 echo "════════════════════════════════════════════"
@@ -833,6 +1649,10 @@ echo "════════════════════════�
 echo ""
 echo "── B1 (ADR-022 Decision 3+5): §Named-Section citation existence + chained forms ──"
 check_anchor_citations "$SPECS_DIR"
+
+echo ""
+echo "── B2 (ADR-022 Decision-5 gap): non-ADR §Named-Section citation existence ──────"
+check_nonadr_citations
 
 echo ""
 echo "════════════════════════════════════════════"

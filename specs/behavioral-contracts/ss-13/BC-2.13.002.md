@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.002
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -26,6 +26,7 @@ changelog:
   - "1.1 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'sandbox.process_no_isolation_execute' to the mandated WARN-level log emission per observability census (SAP-1). PC1 and VP-2.13.002-A updated to specify the structured event_type field."
   - "1.2 (burst-235/F-P135-05/2026-07-22): Add DI-015 (Subprocess Execution Timeout) to di_anchors and Traceability — ProcessBackend co-enforces DI-015 at the sandbox layer via .kill_on_drop(true); add PC-6 (kill-on-drop subprocess guarantee) and INV-6 (.kill_on_drop(true) mandate). Architect adjudication F-P135-05."
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
+  - "1.4 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -129,7 +130,7 @@ enforcement).
 | Source Analysis | P-61 NOT-APPLICABLE (must-not-inherit: process backend as Cargo default); P-62 NOT-APPLICABLE (must-not-inherit: silent policy-strictness decoupling); P-49 ADOPT (truthful BackendCapabilities — honest false values drive loud warning); NE-01 (pregolya requirement: loud opt-in); assessment-parts/part-3 §NE-01 |
 | Reference Evidence | No upstream LangChain or adk-rust equivalent for loud-warning on process backend — greenfield behavior. adk-rust P-49 ADOPT provides the honest-capabilities shape but no warning mechanism; pregolya adds the warning layer on top. |
 | Binding Decisions | NE-01, DI-006 |
-| Forcing Functions | Domain C OpenClaw §4 (host-first execution default is §4 design lesson contra pregolya; pregolya inverts); product-brief.md §NE catalog NE-01 |
+| Forcing Functions | Domain C OpenClaw §4 (host-first execution default is §4 design lesson contra pregolya; pregolya inverts); product-brief.md §Security Defaults — PRD Carry-Forward (NE-01) |
 | Architecture Module | pregolya-sandbox (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 

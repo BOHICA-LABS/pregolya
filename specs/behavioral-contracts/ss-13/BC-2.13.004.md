@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.004
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-08-16T00:00:00Z
@@ -15,7 +15,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "9ed444f"
+input-hash: "d8f8c49"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -29,6 +29,7 @@ changelog:
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.4 (burst-288/P1D-177-C-H03/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — §Traceability §Binding Decisions: ADR-024 Decision 1 (two-phase protocol) + §Phase-2 Postconditions PC-4 (Ok-path confinement proof) added; PC-4 is the formal proof that directly implements what EC-004's parent-canonicalize protocol specifies. Postcondition 5 (write/create new file): traces-to note citing ADR-024 Decision 1 Phase 2 + PC-4 added. Architecture Anchors: ADR-024 §Decision 1/§Confinement-Proof/§PC-4 added. inputs: ADR-024 added."
   - "1.5 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix two live-body phantom ADR §-citations. PC-5 trailing reference and Architecture Anchors: `§Confinement-Proof` (hyphen form) → `ADR-024 §Confinement Proof — Phase 2` (real heading is `## Confinement Proof — Phase 2` in ADR-024; hyphen was dropped to space + em-dash)."
+  - "1.6 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-02 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-02)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -135,7 +136,7 @@ formally prove that no file operation can observe content outside the declared w
 | Source Analysis | P-65 NOT-APPLICABLE (must-not-inherit: string-only path safety without symlink resolution); NE-02 (pregolya requirement: canonicalize_beneath_root at access time); assessment-parts/part-2 §6 Sandbox Cluster; assessment-parts/part-3 §NE-02 |
 | Reference Evidence | adk-rust `validate_relative_path` (P-65) counts `..` segments without filesystem contact — pregolya INVERTS this. No upstream LangChain equivalent for canonicalize-based path confinement. greenfield design. |
 | Binding Decisions | NE-02, DI-007; ADR-024 Decision 1 (two-phase `canonicalize_beneath_root` protocol for non-existent paths — Phase 2 directly implements the parent-canonicalize protocol specified in EC-004); ADR-024 §Phase-2 Postconditions PC-4 (confinement proof for `Ok(path)` returns from Phase 2: `canonical_parent.join(filename) ⊆ canonical_base` under five soundness invariants) |
-| Forcing Functions | product-brief.md §NE catalog NE-02 ("All workspace file operations must call canonicalize_beneath_root(base, path) at access time"); DEC-011 (Domain edge case: Workspace Symlink Escape) |
+| Forcing Functions | product-brief.md §Security Defaults — PRD Carry-Forward (NE-02) ("All workspace file operations must call canonicalize_beneath_root(base, path) at access time"); DEC-011 (Domain edge case: Workspace Symlink Escape) |
 | Architecture Module | pregolya-sandbox / WorkspaceFs facade (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 

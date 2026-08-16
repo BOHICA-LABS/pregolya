@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,19 +14,20 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
   - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.4 (fix-burst-283/F-P175-C113/2026-07-30): §Description corrected — replace fabricated 'model, tools, system prompt overrides, checkpointer config' clause with accurate RunnableConfig field inventory per ADR-021 Decision 2 (configurable map added; LangGraph parity). Add EC-006 and TV-008 for configurable-key collision merge precedence (run-level key wins per BC-2.12.003 §Run-Config Merge Precedence Invariant and interface-definitions.md §RunnableConfig configurable field doc)."
+  - "1.5 (burst-291/D-134/2026-08-16): Three phantom §-anchor citations corrected. (1) §Description 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants' (§Run-Config Merge Precedence Invariant matches no heading; it is a bold bullet inside §Invariants). (2) EC-006 same correction plus 'interface-definitions.md §RunnableConfig configurable field doc' → 'interface-definitions.md §RunnableConfig — Struct Definition' (§RunnableConfig configurable field doc matches no heading; RunnableConfig struct is defined under '#### RunnableConfig — Struct Definition (F-P92-02)'). Sentence restructured with comma separator so BC_CITE_RE stops at §Invariants, not at '.md'. TD-VSDD-060 sweep: both §Run-Config Merge Precedence Invariant occurrences in live body text corrected."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "62186cc"
+input-hash: "5854acc"
 extracted_from: null
 modified: []
 deprecated: null
@@ -46,7 +47,7 @@ a `RunnableConfig` carrying execution parameters (`recursion_limit`, `thread_id`
 by referencing an Assistant, and the Run inherits the Assistant's config; run-supplied
 `config`, `metadata`, and `context` are deep-merged over the Assistant's stored values
 with run-level keys winning at the leaf level (merge precedence canon — see BC-2.12.003
-§Run-Config Merge Precedence Invariant, F-P33-02). Versions
+§Invariants, F-P33-02). Versions
 are immutable snapshots; `set_latest` updates the "current" pointer without mutating
 any existing version. No wire-compatibility with LangGraph Platform (D13).
 
@@ -145,7 +146,7 @@ callers must use the versions list.
 
 ### EC-006: Configurable-key collision between assistant-stored and run-supplied config
 **Scenario:** Assistant "a1" is stored with `config.configurable = { "model": "gpt-4o", "temperature": 0.7 }`. A `POST /threads/t1/runs { assistant_id: "a1", config: { configurable: { "model": "claude-opus-4-5" } } }` arrives with a run-level `configurable` that carries only `"model"`.
-**Expected behavior:** The effective `configurable` used by the executor is `{ "model": "claude-opus-4-5", "temperature": 0.7 }`. Run-level key `"model"` wins over the assistant-stored value; key `"temperature"` is absent from the run-level map so the assistant-stored value is retained. Merge is at the top-level key of the `configurable` map (not a recursive deep-merge of values). Authority: BC-2.12.003 §Run-Config Merge Precedence Invariant and interface-definitions.md §RunnableConfig `configurable` field doc.
+**Expected behavior:** The effective `configurable` used by the executor is `{ "model": "claude-opus-4-5", "temperature": 0.7 }`. Run-level key `"model"` wins over the assistant-stored value; key `"temperature"` is absent from the run-level map so the assistant-stored value is retained. Merge is at the top-level key of the `configurable` map (not a recursive deep-merge of values). Authority: BC-2.12.003 §Invariants, interface-definitions.md §RunnableConfig — Struct Definition.
 
 ## Canonical Test Vectors
 

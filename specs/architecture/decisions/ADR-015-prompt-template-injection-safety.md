@@ -7,8 +7,8 @@ title: "Prompt Template Rendering and Injection Safety: Slot Trust Model, Proven
 status: accepted
 date: "2026-07-20"
 producer: architect
-timestamp: 2026-07-20T00:00:00Z
-version: "1.11"
+timestamp: 2026-08-16T00:00:00Z
+version: "1.12"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.12 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Two phantom error-taxonomy §-citations fixed in §F-P131-05 and §F-P131-04 RESOLVED bodies. (1) 'error-taxonomy §E-TMPL-001' → 'error-taxonomy.md §Component: TMPL' (E-TMPL-001 raise-condition update note). (2) 'error-taxonomy §E-TMPL-003' → 'error-taxonomy.md §Component: TMPL' (E-TMPL-003 engine-neutral description note). Rationale: error-taxonomy.md has no §E-TMPL-001 or §E-TMPL-003 heading; individual error codes are table rows within §Component: TMPL (pregolya-prompts). Additionally: escape unescaped `|t|` closure syntax in two table cells (lines 501/502) to fix pre-existing validate-table-cell-count hook failure."
   - "1.11 (fix-burst-279/gap-corrections/2026-07-28): Three gap corrections to v1.10. (1) Gap 1 (BLOCKING): FewShotPromptTemplate adjudication body added to §Decision 3 Amendment — FewShotPromptTemplate Example Trust Check: pre-expansion trust check over Vec<(TemplateVar,TemplateVar)> examples; FewShotExamples arm in TemplateInput injection guard code sketch; security argument (fail-closed, fires before inner example_template.format()); example trust level convention table. (2) Gap 1 (continued): §Decision 3 Amendment — TemplateInput Enum Concretized added before B201 section; TemplateInput enum definition with Scalar/Messages/FewShotExamples arms; #[non_exhaustive]; format_messages signature declared as HashMap<String, TemplateInput>. (3) Gap 1 (continued): §Decision 3 Amendment — B201 Type-Level Enforcement Assessment added: type-level wrapper feasibility assessed (feasible but API friction disproportionate); prohibition-as-invariant retained for v1; v2 trigger condition documented. v1.10 was missing all three bodies."
   - "1.10 (fix-burst-279/F-P175-B201+F-P175-B202+F-P175-B208+B202-fewshot/2026-07-28): Decision 3 Amendment — four injection-safety gaps closed. (1) B201: PromptTemplate::format explicitly declared unguarded; system-position output from the single-message surface is prohibited; callers MUST use ChatPromptTemplate::format_messages for any system-role content; type-level enforcement assessed and deferred — see §B201 type-level question. (2) B202 MessageListVar: injection check extended to cover MessageListVar.trust_level for MessagesPlaceholder slots in TrustRequired position. (3) B202 FewShot: FewShotPromptTemplate example inputs promoted from Vec<(String,String)> to Vec<(TemplateVar,TemplateVar)>; pre-expansion trust check added for TrustRequired outer slots; inner PromptTemplate::format never called when outer guard fires. (4) B208: TrustLevel severity inversion fixed — add severity() -> u8 (Untrusted=2, UserInput=1, Trusted=0); #[non_exhaustive] added; #[derive(Ord)] explicitly prohibited. format_messages signature corrected to HashMap<String, TemplateInput>; TemplateInput enum concretized. Sweeps: ADR-015 prose at §Iteration determinism invariant and §Security Invariant 1 updated; interface-definitions.md format_messages signature and TemplateInput enum added; VP-006 formal invariant updated."
   - "1.9 (FIX-BURST-278/Wave-C-S5/2026-07-28): S5 canon — two PregolyaError struct literals in Rust fences converted to PregolyaError::new(component, category, RetryHint::Never, code, message) canonical constructor form per D-42/D-49. (1) Decision 2 from_messages guard: E-TMPL-002 struct literal → PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, ...). (2) Decision 3 injection check: E-TMPL-001 struct literal → PregolyaError::new(Component::Tmpl, Category::Security, RetryHint::Never, ...). RetryHint::Never confirmed for both codes (SECURITY/InjectionAttempt and VAL/SystemSlotPolicy are non-retriable by construction per error-taxonomy)."
@@ -498,8 +499,8 @@ The corrected injection check (updated in the code sketch above) handles both in
 
 | Input type | Guard action |
 |------------|-------------|
-| `TemplateInput::Scalar(TemplateVar)` | Check `var.trust_level.is_some_and(|t| t.is_untrusted())` |
-| `TemplateInput::Messages(MessageListVar)` | Check `msg_var.trust_level.is_some_and(|t| t.is_untrusted())` |
+| `TemplateInput::Scalar(TemplateVar)` | Check `var.trust_level.is_some_and(\|t\| t.is_untrusted())` |
+| `TemplateInput::Messages(MessageListVar)` | Check `msg_var.trust_level.is_some_and(\|t\| t.is_untrusted())` |
 
 The `MessageListVar` path was unguarded in prior code; this amendment closes the gap.
 The `format_messages` signature now takes `HashMap<String, TemplateInput>` (the enum
@@ -755,11 +756,11 @@ All `ProvenanceTag`-for-trust replacements in the SS-18 BC layer and interface-d
 - **BC-2.18.002 INV-2:** `ProvenanceTag` severity ordering replaced with `TrustLevel` severity ordering.
 - **BC-2.09.003 PC1:** Outdated `ProvenanceTag::McpToolResult { server_name, tool_name }` (pre-PASS-58) replaced with canonical SS-11 struct form `ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id, sequence_position }`.
 - **interface-definitions §Prompt Templates:** `TemplateVar.trust_level: Option<TrustLevel>` and `MessageProvenance.highest_trust_level: Option<TrustLevel>` are the canonical shapes. The `None → Trusted` rule for absent `trust_level` is documented. Crossed BC-assignment references in the §Prompt Templates section corrected: `ChatPromptTemplate` multi-message formatting traces to BC-2.18.002; strict-undefined / `E-TMPL-003` behavior traces to BC-2.18.001.
-- **error-taxonomy §E-TMPL-001:** Raise-condition updated: `TrustLevel::Untrusted` is the trigger (not `ProvenanceTag::Untrusted`).
+- **error-taxonomy.md §Component: TMPL:** E-TMPL-001 raise-condition updated: `TrustLevel::Untrusted` is the trigger (not `ProvenanceTag::Untrusted`).
 
 ### F-P131-04: Universal strict-undefined contract — RESOLVED (burst-226)
 
-- **error-taxonomy §E-TMPL-003:** Description is engine-neutral: "raised by both the f-string (default) and jinja2 engines when a template variable is referenced but absent from the input variable map." BC anchor: BC-2.18.001 (not BC-2.18.002).
+- **error-taxonomy.md §Component: TMPL:** E-TMPL-003 description is engine-neutral: "raised by both the f-string (default) and jinja2 engines when a template variable is referenced but absent from the input variable map." BC anchor: BC-2.18.001 (not BC-2.18.002).
 - **interface-definitions §Prompt Templates:** Crossed BC-assignment for strict-undefined behavior corrected (see F-P131-05 above).
 
 ## BA Handoffs (burst-226 adjudications) — RESOLVED

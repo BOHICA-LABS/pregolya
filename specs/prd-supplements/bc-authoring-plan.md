@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.63"
+version: "2.65"
 status: active
 producer: product-owner
 total_standing_gates: 37
-timestamp: 2026-08-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "3545c20"
+input-hash: "714d16d"
 traces_to: prd.md
 total_bcs: 129
 total_batches: 20
@@ -18,6 +18,8 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.65 (burst-291/D-134-cont/2026-08-16): Two phantom §-anchor citations corrected in live body text. (1) Line ~758 gate #31 text: 'ADV-P1D-PASS-24.md §WIRE-OBJECT class' → 'ADV-P1D-PASS-24.md §NEW CLASS: Wire-Object Field-Set Coherence' (real heading at line 126 of ADV-P1D-PASS-24.md; §WIRE-OBJECT matches no heading). Gate regex parses §NEW CLASS (stops at colon) → prefix-matches '## NEW CLASS: Wire-Object Field-Set Coherence' uniquely — PASS. (2) Line ~2591 batch-20 text: 'interface-definitions.md §IngressContent' → 'interface-definitions.md §GuardrailHook' (IngressContent enum is defined inline within §GuardrailHook; §IngressContent matches no heading in interface-definitions.md). TD-VSDD-060 sweep: sole §WIRE-OBJECT and sole §IngressContent occurrences in live body text."
+  - "2.64 (burst-291/D-134/2026-08-16): §-anchor phantom sweep. (1) §Authoring Guidelines for Sub-Burst Agents (guideline #17-C) (4 sites): no heading §17-C exists in this file; guideline #17-C is a numbered list item within §Authoring Guidelines for Sub-Burst Agents. Corrected to §Authoring Guidelines for Sub-Burst Agents (guideline #17-C). (2) §Coverage by Criticality Tier bare self-reference (2 sites at lines 1114/1122 context): no such heading in this file; target heading lives in verification-coverage-matrix.md (architecture/); added explicit file prefix verification-coverage-matrix.md §Coverage by Criticality Tier. (3) §CRITICAL Module Security Profile (1 site): no such heading in module-criticality.md; CRITICAL security profiles are in §Per-Module Risk Assessment. Corrected to module-criticality.md §Per-Module Risk Assessment. Cross-owner: verification-coverage-matrix.md §Coverage by Criticality Tier heading validity left to architect agent."
   - "2.63 (burst-288/F-P177-D01/2026-08-15): Full §Subsystem → CAP Mapping sweep (D-134 structural remedy). All 23 rows cross-checked against ARCH-INDEX §Subsystem Registry (authoritative source). Five divergent rows corrected: SS.06 pregolya-graph → pregolya-graph, pregolya-core (ARCH-INDEX SS-06 primary crates include both); SS.11 pregolya-core/graph → pregolya-graph (ARCH-INDEX SS-11 primary crate is pregolya-graph); SS.13 pregolya-graph/sandbox → pregolya-sandbox (ARCH-INDEX SS-13 primary crate is pregolya-sandbox; pregolya-graph owns zero SS-13 modules); SS.17 all (formal verification) → xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox (ARCH-INDEX SS-17 primary crates enumerated); SS.20 pregolya-vectorstores → pregolya-core, pregolya-vectorstores (ARCH-INDEX SS-20 primary crates include both). D-135 note: these are crate-assignment routing errors; pregolya-community IS a valid roster crate (post-v1 row 8); no phantom-crate errors. Eighteen rows verified matching ARCH-INDEX: SS.01, SS.02, SS.03, SS.04, SS.05, SS.07, SS.08, SS.09, SS.10, SS.12, SS.14, SS.15, SS.16, SS.18, SS.19, SS.21, SS.22, SS.23."
   - "2.62 (fix-burst-287/F-P176-D002+D004/2026-08-01): TWO FINDINGS VERIFIED. (1) F-P176-D002 CONFIRMED: §Subsystem → CAP Mapping SS-22 crate corrected from `pregolya-community` (post-v1, absent from 21-crate v1 roster per ARCH-INDEX §Canonical Crate Roster row 8 status=post-v1) to `pregolya-core, pregolya-openai, pregolya-ollama`. Four concurring artifacts: ARCH-INDEX §Subsystem Registry SS-22 row (`pregolya-core, pregolya-openai, pregolya-ollama`); module-decomposition §Provider Embeddings Modules (SS-22) (`core::embeddings` in pregolya-core; `openai::embeddings` in pregolya-openai; `ollama::embeddings` in pregolya-ollama); BC-2.22.001 frontmatter `crate: pregolya-core`; BC-2.22.002 frontmatter `crate: pregolya-openai`; BC-2.22.003 frontmatter `crate: pregolya-ollama`. bc-authoring-plan.md was the lone outlier. (2) F-P176-D004 note-half FALSE: adversary finding claimed a §Note in bc-authoring-plan.md asserts gate #37 was wired to pre-commit-validators.sh. String-presence check (`grep 'wired to pre-commit' bc-authoring-plan.md`) returned empty — no such note exists. Gate #37 (LAYER-SCOPED SWEEP BAN) is a process gate with no machine hook; its text at §37 accurately describes a manual standing gate and makes no wired-validator claim. No text change to gate #37."
   - "2.61 (ERROR-NOTATION-CANON/WAVE-B/2026-07-29): FIVE ADR-010 §Error-Construction Notation Canon violations fixed. (1) Three CLASS3_ASCII_ELLIPSIS_VIOLATION sites in gate text — `...` (three-dot) elision markers replaced with canonical `..`: gate #30 trigger-text sentence (×2) and gate #33 Step B wrapper-form example sentence. (2) Two CLASS3_MISSING_DOTS_VIOLATION sites — `, ..` added before closing `}` to mark elided fields: gate #30 motivating-instance struct observation (`{ category: INTERNAL, message: \"...\", .. }`) and gate #33 wrapper-form discipline bare-struct example (`{ category: X, code: E-YYY-NNN, .. }`). verify-error-notation-canon.sh: FAIL=5 → FAIL=0."
@@ -754,7 +756,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     `grep -n "updated_at\|completed_at" .factory/specs/prd-supplements/interface-definitions.md .factory/specs/domain-spec/entities-server.md .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md`
     Both `updated_at` and `completed_at` must appear in all three files.
 
-    Source of truth: ADV-P1D-PASS-24.md §WIRE-OBJECT class.
+    Source of truth: ADV-P1D-PASS-24.md §NEW CLASS: Wire-Object Field-Set Coherence.
 
 19. **Retired-identifier residue grep (added P26 — standing gate):**
     Whenever a rename canon is set (method name, field name, type identifier, route path),
@@ -843,7 +845,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
 
 21. **HTTP status-code table edit → census re-run trigger (added P27 — standing gate):** [process-gap]
     Any burst that edits the interface-definitions.md §HTTP Status Codes table (row add,
-    row remove, row narrowing, or row widening) MUST re-run the full §17-C census
+    row remove, row narrowing, or row widening) MUST re-run the full §Authoring Guidelines for Sub-Burst Agents (guideline #17-C)
     (guideline #17 above) IN THE SAME BURST and update every affected census row before
     the burst closes.
 
@@ -855,13 +857,13 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     - Changing a row's description without changing codes → no census update needed (description-only)
 
     **Rationale:** ADV-P1D-PASS-27 §OBS-P27-2 found that the P26 OBS-1 narrowing of the 422
-    wildcard (E-GRAPH-* → enumerated list) left the §17-C census row for E-GRAPH-002 citing
+    wildcard (E-GRAPH-* → enumerated list) left the §Authoring Guidelines for Sub-Burst Agents (guideline #17-C) row for E-GRAPH-002 citing
     the retired wildcard as its PASS evidence — making the census row a false PASS. The census
     must be re-run whenever the table it verifies against changes.
 
     **Deferred process improvement (machine-enforcement recommendation, OBS-P27-2):** The
     orchestrator should consider a CI/hook implementation: a grep script that re-runs the
-    §17-C census after any commit touching interface-definitions.md §HTTP Status Codes and
+    §Authoring Guidelines for Sub-Burst Agents (guideline #17-C) after any commit touching interface-definitions.md §HTTP Status Codes and
     fails if any census row cites a wildcard pattern that no longer exists in the table row.
     This would make the census machine-enforceable rather than relying on burst discipline.
     Log at cycle close for v1.1 planning.
@@ -892,7 +894,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     "(E-CHKPT-001, -002, -003, -004, -006) go to the 500 row" omitted E-CHKPT-007, which
     IS in the 500 row. E-CHKPT-007 was added to the 500 row at v2.11 (pass-56-completion)
     without updating the 422 row's sibling enumeration. The gap survived 10 passes because
-    gate #21 checked code→row membership (§17-C census) but not inter-row routing
+    gate #21 checked code→row membership (§Authoring Guidelines for Sub-Burst Agents (guideline #17-C)) but not inter-row routing
     enumeration completeness.
 
     Source: ADV-P1D-PASS-27 §OBS-P27-2 [process-gap]; ADV-P1D-PASS-67 §OBS-P67-1 [process-gap].
@@ -1111,7 +1113,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
       **Registry→Decomposition (tier-divergence class):** For each module row in
       `module-criticality.md`, verify the assigned tier matches the Criticality column in
       `module-decomposition.md`. Any mismatch is a HIGH-severity finding regardless of class.
-    - Tier-summary row check: cross-check the §Coverage by Criticality Tier summary row
+    - Tier-summary row check: cross-check the verification-coverage-matrix.md §Coverage by Criticality Tier summary row
       (CRITICAL/HIGH/MEDIUM/LOW counts and total) against the arch-registry
       (`.factory/specs/module-criticality.md`) §Classification Summary — recompute from the
       arch-registry; do not trust a hardcoded example.
@@ -1119,7 +1121,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
       from the `verification-coverage-matrix.md` per-module table is blocked. That table's
       columns are `Module | Crate | Kani | proptest | fuzz | Integration | Notes` — there is
       NO Criticality or Tier column. Until the architect adds the `Tier` column per F-P173-812,
-      tier counts are cross-checked solely by comparing the §Coverage by Criticality Tier summary
+      tier counts are cross-checked solely by comparing the verification-coverage-matrix.md §Coverage by Criticality Tier summary
       row against the arch-registry §Classification Summary. Attempting to derive tier counts
       from the per-module table requires either a non-existent column lookup (impossible) or
       mirroring from a sibling document — both prohibited by this gate.
@@ -1312,7 +1314,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     **Census command (run after every Part B census):**
     ```bash
     # For each module in module-criticality.md §Module Classification, extract (module, owning_crate).
-    # Section-scoped to avoid sweeping §Tier Definitions, §CRITICAL Module Security Profile,
+    # Section-scoped to avoid sweeping §Tier Definitions, module-criticality.md §Per-Module Risk Assessment,
     # and §Anti-Patterns rows (which have different headers and produce junk pairs).
     # Note: do NOT use 'grep -n' here — the NN: prefix breaks the header filter.
     # Header-derived column extraction (F-P173-319): the header row is passed to awk NR==1,
@@ -2587,8 +2589,8 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
        - **E-CORE-007** — `<boundary>` sourced from `ProvenanceTag.boundary_type` (available
          as the `provenance_tag` argument to `GuardrailHook::evaluate()`); `<content_type>`
          sourced from the `IngressContent` variant discriminant (available as the `content`
-         argument) and renders as the **BARE variant name** per interface-definitions.md §IngressContent
-         (authoritative definition; F-P112-01 adjudication). Both are deterministically available
+         argument) and renders as the **BARE variant name** per interface-definitions.md §GuardrailHook
+         (authoritative definition; F-P112-01 adjudication; IngressContent enum defined inline under §GuardrailHook). Both are deterministically available
          at the panic catch site — no runtime computation or I/O required. BC-2.11.002 names
          `BoundaryType::ToolResult` / `"ToolResult"`; BC-2.11.003 names `BoundaryType::RAGRetrieval` /
          `"RagChunk"`; BC-2.11.004 names `BoundaryType::MemoryIngress` / `"MemoryItem"`.

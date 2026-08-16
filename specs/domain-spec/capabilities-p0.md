@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.9"
+version: "1.10"
 status: active
 producer: business-analyst
 timestamp: 2026-08-16T00:00:00Z
@@ -16,6 +16,7 @@ input-hash: "5666269"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17, D21]
 changelog:
+  - "v1.10 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — 13 phantom product-brief §-citations in Grounding fields. (1) §Scope Wave 0 (4 sites) → §In Scope: no heading §Scope Wave 0 exists; Wave 0 content is within ##/### In Scope section. (2) §Scope Wave 1 (5 sites) → §In Scope: same reason. (3) §Scope cross-cutting (2 sites) → §In Scope: same reason. (4) §Overflow Competitive Differentiator Traceability (1 site) → §Competitive Differentiator Traceability: heading is '### Competitive Differentiator Traceability' without 'Overflow' prefix. (5) Overflow §Security-PRD-Carry-Forward NE-07 (1 site) → product-brief.md §Security Defaults — PRD Carry-Forward (NE-07): heading is '### Security Defaults — PRD Carry-Forward'; NE-07 is a table row within it."
   - "v1.9 (F-178-01, burst-289, 2026-08-16): CAP-007 StreamEvent count corrected 15→16 (burst-288 added StreamEvent::Error as 16th variant per EC-005/BC-2.06.001 §Postconditions PC2). Stale interface-definitions version pin 'v2.34' removed from live body text per TD-VSDD-091/D18-P84-A. TD-VSDD-060 sweep: sole '15' total-count citation in capabilities-p0.md body text — fixed."
   - "v1.8 (burst-241 OBS-P141-B, 2026-07-23): CAP-007: replace stale '12 variants total' absolute claim with forward-reference note '12-variant base; extended to 15 by D23 (CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction)'. CAP-007 legitimately defines the 12-variant BASE; a cross-referencing reader consulting the base spec was misled into believing 12 was the final count. TD-VSDD-060 sweep: sole stale absolute '12' streaming count in domain-spec/; all other '12' occurrences are historical changelog entries or already describe the 12-variant base correctly."
   - "v1.7 (2026-07-20): CAP-002 D21 reversal — PromptTemplate/ChatPromptTemplate flipped from 'post-v1/community' to v1 deliverables (SS-18/pregolya-prompts, CAP-022/CAP-023); standalone OutputParser remains post-v1; with_structured_output covered by provider conformance (CAP-009), not a separate OutputParser. Prior v1.6 clarification partially superseded by D21 scope expansion (burst 216). D21 added to decisions list."
@@ -50,11 +51,11 @@ ServerToolResult, NonStandard — per BC-2.01.001 PC2; tool results are ToolMess
 BC-2.09.002. Guarantee that no caller can observe raw untyped content where a typed variant
 is expected.
 
-**Grounding:** product-brief.md §Scope Wave 0 — `pregolya-core` typed message/content
+**Grounding:** product-brief.md §In Scope — `pregolya-core` typed message/content
 primitives (Runnable, Message, ContentBlock).
 **Anchor justification:** CAP-001 covers typed content construction because the brief mandates
 `pregolya-core` typed ContentBlock as the API-surface root primitive and market
-differentiator #4 (product-brief §Overflow Competitive Differentiator Traceability).
+differentiator #4 (product-brief.md §Competitive Differentiator Traceability).
 
 ### CAP-002: Runnable Trait Abstraction (Compose, Pipe, Chain)
 
@@ -76,7 +77,7 @@ flipped and what did not:
 
 Provides the universal composition protocol across all pregolya crates.
 
-**Grounding:** product-brief.md §Scope Wave 0 — "Runnable" is the core LangChain v1 semantic
+**Grounding:** product-brief.md §In Scope — "Runnable" is the core LangChain v1 semantic
 primitive (reference-manifest.md, semport Corpus 1 langchain==1.3.13). The brief lists
 `(Runnable, Message, ContentBlock)` as Wave 0 foundation. D21 (burst 216) supersedes the
 product-brief §Out-of-Scope entry for PromptTemplate for the purposes of v1 scope.
@@ -91,7 +92,7 @@ reducer functions (LastValue, Append, BarrierValue, NamedBarrierValue, Ephemeral
 BinaryOperatorAggregate), typed edges including conditional edges, and Send API for
 dynamic fan-out.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-graph` LangGraph StateGraph engine,
+**Grounding:** product-brief.md §In Scope — `pregolya-graph` LangGraph StateGraph engine,
 BSP scheduling, Send API fan-out, conditional edges.
 **Anchor justification:** CAP-003 covers graph definition because the brief names StateGraph and
 the LangGraph port as the P0 lead differentiator (D7).
@@ -103,7 +104,7 @@ all scheduled PregelTasks execute; then all channel reducers apply in determinis
 task-identity-sorted order. Concurrent writes to the same LastValue channel raise
 InvalidUpdateError rather than silently racing.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-graph` BSP scheduling with
+**Grounding:** product-brief.md §In Scope — `pregolya-graph` BSP scheduling with
 deterministic reducer order (CONFLICT-1/NE-17/D17); brief §Scope "BSP scheduling with
 deterministic reducer order (CONFLICT-1/NE-17)."
 **Anchor justification:** CAP-004 covers BSP execution because it is the execution model the
@@ -117,7 +118,7 @@ output is stored before the next super-step begins. Checkpoint IDs use a monoton
 clock, not wall-clock. Backends: SQLite (default), in-memory; msgpack wire format [D11.2].
 Postgres stretch target.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-checkpoint` three-tier durable
+**Grounding:** product-brief.md §In Scope — `pregolya-checkpoint` three-tier durable
 checkpointing, per-task put_writes (CONFLICT-2/D11.3/D17-Q3), monotonic logical-clock
 checkpoint IDs (CONFLICT-4), msgpack wire format [locked: D11.2], SQLite + in-memory
 backends [locked: D11.3].
@@ -132,7 +133,7 @@ state durably. Accept one or more resume values externally (human decision, appr
 command, or correction). Deliver resume values in strict FIFO order to the interrupted
 node, which re-executes from the start of its super-step with the resume value available.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-graph` full HITL interrupt/resume
+**Grounding:** product-brief.md §In Scope — `pregolya-graph` full HITL interrupt/resume
 contract per CONFLICT-3/D17-Q2: "per-task scratchpad, FIFO resume-value delivery,
 node-re-executes-from-start, Command(resume=value) API."
 **Anchor justification:** CAP-006 covers HITL because it is explicitly named as a Phase-1 BC
@@ -149,7 +150,7 @@ interface-definitions §StreamEvent) — 12-variant base; extended to 16 by D23 
 run_id, parent_ids chain, and phase-specific payload. Streaming and unary runs drive
 the same engine and produce identical final answers.
 
-**Grounding:** product-brief.md §Scope Wave 1 — `pregolya-server` streaming and unary run
+**Grounding:** product-brief.md §In Scope — `pregolya-server` streaming and unary run
 equivalence (NE-13/D17), CONFLICT-5 typed per-phase event taxonomy. Brief §Scope "streaming
 and unary run equivalence (NE-13/D17)."
 **Anchor justification:** CAP-007 covers structured streaming because NE-13 (streaming stub
@@ -162,7 +163,7 @@ code points (not bytes), with configurable overlap. On non-ASCII text, chunk bou
 must be identical to the reference LangChain Python implementation (which also uses
 code-point counts, not byte counts). Provide explicit test vectors for emoji and CJK inputs.
 
-**Grounding:** product-brief.md §Scope Wave 0 — `pregolya-splitters` with "explicit BC for
+**Grounding:** product-brief.md §In Scope — `pregolya-splitters` with "explicit BC for
 code-point vs byte-length boundary parity on non-ASCII input (R8/D17-Q9)."
 **Anchor justification:** CAP-008 covers splitters because the brief names R8 as a High risk
 and D17-Q9 mandates it as a Phase-1 BC backlog item. The code-point/byte-length distinction
@@ -185,7 +186,7 @@ EvidenceJournal. When the ceiling is reached, degrade gracefully: halt the run, 
 to a HITL interrupt, or issue a final summarize call (summary_halt), according to the budget
 configuration's `on_ceiling` setting (`BudgetConfig::on_ceiling` — `OnCeiling::Halt | Escalate | Summarize`).
 
-**Grounding:** product-brief.md §Scope cross-cutting — Phase-1 BC backlog D17-Q4: "budget
+**Grounding:** product-brief.md §In Scope — Phase-1 BC backlog D17-Q4: "budget
 governance allow/escalate/deny policy trait, composable, append-only evidence journal —
 Domain B dark-factory holdout requires it."
 **Anchor justification:** CAP-012 covers budget governance because D17-Q4 explicitly mandates
@@ -202,7 +203,7 @@ reject (replace with an error block), or redact. The guardrail seam is in the
 InvocationContext; it fires unconditionally — there is no opt-out code path for tool-result
 ingress.
 
-**Grounding:** product-brief.md §Scope cross-cutting — Phase-1 BC backlog D17-Q8:
+**Grounding:** product-brief.md §In Scope — Phase-1 BC backlog D17-Q8:
 "content provenance-tag seam + guardrail hook at tool-result, RAG, and memory ingress —
 Domain A SOC analyst holdout."
 **Anchor justification:** CAP-013 covers guardrail-on-ingress because D17-Q8 makes it a
@@ -219,8 +220,8 @@ dimension (auth, validation, timeout, provider, internal, etc.), carrying a Retr
 machine code, and RFC-7807-compatible emission. No `.unwrap()` or `.expect()` in non-test
 code; CI lint gate enforces this. All library constructors return `Result`.
 
-**Grounding:** product-brief.md §Scope Wave 0 — PregolyaError 2D component×category error
-taxonomy (CONFLICT-6/D17); Overflow §Security-PRD-Carry-Forward NE-07.
+**Grounding:** product-brief.md §In Scope — PregolyaError 2D component×category error
+taxonomy (CONFLICT-6/D17); product-brief.md §Security Defaults — PRD Carry-Forward (NE-07).
 **Anchor justification:** CAP-016 covers the error taxonomy because CONFLICT-6 (adopted from
 adk-rust P-01/P-04) is named in the brief's Wave 0 scope and NE-07 is in the security
 carry-forward table.

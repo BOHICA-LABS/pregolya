@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.72"
+version: "2.73"
 status: active
 producer: product-owner
 timestamp: 2026-08-16T00:00:00Z
 phase: 1d
 changelog:
+  - "2.73 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — two phantom BC-2.12.003 §Run-Config Merge Precedence Invariant citations corrected. §Run-Config Merge Precedence Invariant is not a heading in BC-2.12.003 (the item is a bold entry within § Invariants, not its own heading). Corrected to BC-2.12.003 §Invariants at §RunnableConfig doc comment (line 299 context) and §Runs table row. Grandfathered: changelog entry 2.4 citing the same phantom anchor (historical, not a live-body citation)."
   - "2.72 (burst-290/F-180-03, 2026-08-16): Fix live-body phantom ADR §-citation in §StreamEvent Rust code comment. `ADR-023 §exhaustive-by-design` → `ADR-023 §Exempt Enums` (no heading §exhaustive-by-design exists in ADR-023; StreamEvent's exhaustive-match exemption is documented under `### Exempt Enums` within `## Decision 3 — Exempt Inventory`)."
   - "2.71 (F-178-01/F-178-04, burst-289, 2026-08-16): F-178-01 — StreamEvent §StreamEvent: (a) count updated 15→16 variants; breakdown corrected to '11 execution lifecycle + 1 guardrail observability + 2 per-tool-call approval [D23/ADR-018] + 1 compaction [D23/ADR-019] + 1 error [F-P177-B01/ADR-023]'; (b) `Error` variant added to the Rust enum body after `CompactionEvent` with field inventory matching BC-2.06.001 PC2 (run_id, parent_ids, error_code, error_message); (c) BC anchor updated: 'updated D23 15 variants' extended with 'updated F-P177-B01/ADR-023 16 variants'. F-178-04 — §§changelog entry 2.70 phantom anchor: `BC-2.10.003 §recursion_limit_canon (BC-2.03.001)` replaced with `BC-2.03.001 §Description`; `§recursion_limit_canon` is not a heading in BC-2.03.001 (grep ^#{1,6} confirms); the formula lives in the §Description section."
   - "2.70 (F-P177-D02+F-P177-B02-sibling, burst-288, 2026-08-15): (1) D-02 HIGH: Add `#[non_exhaustive]` to `ToolCallPreview` struct declaration. ADR-023 §required-types inventory lists ToolCallPreview as required; the missing annotation was a production-grade violation. (2) B02-sibling HIGH: Change `steps_remaining: Option<u32>` → `Option<i64>` in §BudgetInfo block. Rationale: BC-2.03.001 §Description establishes execution proceeds to recursion_limit + 1 steps; at that step steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (already signed i64)."
@@ -296,7 +297,7 @@ pub struct RunnableConfig {
     /// - `Some(map)`: graph reads its parameters from the map via
     ///   `config.configurable.as_ref().and_then(|m| m.get("key"))`.
     ///
-    /// **Merge semantics (BC-2.12.003 §Run-Config Merge Precedence Invariant):** when a
+    /// **Merge semantics (BC-2.12.003 §Invariants):** when a
     /// Run request supplies `config.configurable`, it is merged over the Assistant's
     /// stored `configurable` map at the key level; run-level keys win on collision.
     /// Merge is applied at run-creation time before dispatch to the executor.
@@ -2136,7 +2137,7 @@ an explicit documented exemption.
 
 | Method | Path | Description | BC Anchor |
 |--------|------|-------------|-----------|
-| POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`); run-supplied `config`/`metadata`/`context` deep-merge over the Assistant's stored values, run wins at leaf key (BC-2.12.003 §Run-Config Merge Precedence Invariant, F-P33-02) | BC-2.12.003 |
+| POST | `/threads/{thread_id}/runs` | Create and start a run (async; returns 202 with `run_id`); run-supplied `config`/`metadata`/`context` deep-merge over the Assistant's stored values, run wins at leaf key (BC-2.12.003 §Invariants, F-P33-02) | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs` | List runs for a thread; `?status=queued\|in_progress\|completed\|failed\|interrupted\|cancelled\|summary_halt` filter + canonical pagination (`?limit=N` default 10 max 100, `?offset=N`; `created_at` DESC) — F-P31-01 | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}` | Get run status and result | BC-2.12.003 |
 | GET | `/threads/{thread_id}/runs/{run_id}/stream` | Stream run output as server-sent events (SSE; happy path emits run_start, node_start/stream/end, run_end; **run_end is emitted on completion only** — interrupted runs terminate with interrupt envelope as terminal frame, failed runs terminate with error SSE event; neither emits run_end; BC-2.06.001 PC2+EC-005, BC-2.12.007 EC-001/EC-003). **Guardrail decisions (F-P99-01):** `guardrail_decision` events are emitted for non-Pass guardrail outcomes (Fail/Transform only — Pass not streamed); fire within the tool lifecycle window (before `tool_end`) for ToolResult boundary, and within the node lifecycle window for RAG/Memory boundaries; see §StreamEvent for complete taxonomy and ordering. **ToolEnd content semantics:** `tool_end.data` carries POST-guardrail content — raw rejected payloads are never emitted in any SSE event (BC-2.11.005 INV-5). BC-2.11.002/003/004 PC3/PC4 (per-boundary), ADR-006 rev-3. **Tool approval events (D23/ADR-018):** `tool_approval_request` is emitted BEFORE the run is suspended into `interrupted` state when `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval`; it carries `run_id`, `tool_name`, `tool_args`, `action_risk`, and `prompt`. `tool_approval_resolved` is emitted AFTER the interrupt is consumed and BEFORE the decision is applied, on `Command(resume=PreToolDecision)` delivery; it carries `run_id`, `tool_name`, `decision`, `reason`, and `modified_args`. Both events fire within the NodeStart/NodeEnd window, before the ToolStart window for the same tool call; see §PreToolCallHook and BC-2.06.004/005. **Compaction event (D23/ADR-019):** `compaction_event` is emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); it carries `run_id`, `trigger`, `parent_ids`, `compacted_start`, `compacted_end`, `summary_token_count`, and `tokens_remaining_after`; fires after StepEnd and before the next StepStart; see §Compaction and BC-2.06.006. | BC-2.12.007 |

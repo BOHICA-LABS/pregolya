@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.001
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -23,6 +23,7 @@ lifecycle_status: active
 introduced: v1.0.0-greenfield
 changelog:
   - "1.1 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
+  - "1.2 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -116,7 +117,7 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 | Source Analysis | P-61 NOT-APPLICABLE (adk-rust default ProcessBackend = must-not-inherit); P-62 NOT-APPLICABLE (policy strictness decoupled from enforcement = must-not-inherit); P-49 ADOPT (truthful BackendCapabilities); NE-01 (adk-rust default no-isolation is counter-example); assessment-parts/part-2 §6 Sandbox Cluster; assessment-parts/part-3 §NE-01 |
 | Reference Evidence | Upstream adk-rust: ProcessBackend is default feature (P-61); pregolya INVERTS this. No LangChain equivalent — greenfield design derived from NE-01 counter-example. P-48 ADOPT (bubblewrap deny-by-default) confirms enforcing-backend posture is correct for Linux; WASM analog for cross-platform. |
 | Binding Decisions | NE-01, DI-006 |
-| Forcing Functions | Domain C OpenClaw §4 (tool-execution sandboxing: "recommend default-on isolation"); product-brief.md §NE catalog NE-01 |
+| Forcing Functions | Domain C OpenClaw §4 (tool-execution sandboxing: "recommend default-on isolation"); product-brief.md §Security Defaults — PRD Carry-Forward (NE-01) |
 | Architecture Module | pregolya-sandbox (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 

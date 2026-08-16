@@ -6059,3 +6059,9 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-08-16
 **Status:** COMPLETE
 **Output:** Fix-burst P1D-178 (5 findings 0C/1H/3M/1L, all burst-288 partial-fix residue): F-178-01 StreamEvent count corpus-sweep ×8 sites (16 variants); F-178-02 ADR-024 §Consumers 6 MISSING→PRESENT + BC-2.23.004/006 added; F-178-03 ADR-023 phantom anchor fixed + stale directive removed; F-178-04 BC-2.10.003 §Description phantom §recursion_limit_canon removed ×3 sites; F-178-05 LOW label clarified; D-139..D-142 (exhaustive); L-176..L-177; input-hashes swept. 179 passes total. Streak 0/3.
+
+## Burst 290 — Fix-burst P1D-180 COMPLETE (Archived from STATE.md Current Phase Steps at burst-291 state record)
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** Fix-burst P1D-180 (8 findings 3H/3M/2L+PG): F-180-01..03 HIGH phantom/chained-§ citations in api-surface+BC-2.06.001 fixed; F-180-04..06 MED phantom citations in test-vectors+ADR-020+ADR-010 stale note fixed; F-180-07/08 LOW api-surface pseudo-slug anchors fixed; F-180-PG verify-adr-anchor-citations.sh promoted BLOCKING (14th validator); POL-19 DISCHARGED; ADR-022 Decision 4 deferral CLOSED; 12→0 live-body phantoms. D-144..D-146 (exhaustive). L-178..L-179. 181 passes total. Streak 0/3.

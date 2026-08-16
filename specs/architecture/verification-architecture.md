@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.14"
+version: "2.15"
 status: active
 producer: architect
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
-input-hash: "8a41048"
+input-hash: "e4216d8"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -579,10 +579,10 @@ Formal statement:
   (r == Medium ∨ r == High) → check_risk_floor(r) == Ok(())
 ```
 
-**RESOLVED (burst-232, 2026-07-22; casing corrected FIX-BURST-270):** BC-2.23.005 §Category was corrected to `Category::Val`
+**RESOLVED (burst-232, 2026-07-22; casing corrected FIX-BURST-270):** BC-2.23.005 §Postconditions (PC-4) category corrected to `Category::Val`
 (same burst that seeded VP-013). The prior `Category::CONFIGURATION` label was non-canonical
-(not present in the 12-category axis per ADR-010). BC-2.23.005 §Category = VAL (taxonomy code), Rust identifier = `Category::Val`, consistent with
-error-taxonomy §TOOLS and this VP harness. No active contradictions.
+(not present in the 12-category axis per ADR-010). BC-2.23.005 §Postconditions (PC-4) category = VAL (taxonomy code), Rust identifier = `Category::Val`, consistent with
+error-taxonomy.md §Component: TOOLS and this VP harness. No active contradictions.
 
 **Kani harness:** See `VP-013.md` §Proof Harness Skeleton for the complete three-harness set
 (`risk_floor_rejects_below_medium`, `risk_floor_accepts_at_or_above_medium`,
@@ -634,10 +634,11 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.15 | 2026-08-16 | architect | FIX-BURST-291 / F-P1D182-01 + D-134 | Phantom §-anchor fixes in §VP-013 RESOLVED block and §VP-013 changelog row. Live-body: 'BC-2.23.005 §Category was corrected to' → 'BC-2.23.005 §Postconditions (PC-4) category corrected to'; 'BC-2.23.005 §Category = VAL' → 'BC-2.23.005 §Postconditions (PC-4) category = VAL'; 'error-taxonomy §TOOLS' → 'error-taxonomy.md §Component: TOOLS' (two sites: §VP-013 body line and §VP-013 Changelog row 2.11 '→' targets). Rationale: BC-2.23.005 has no §Category heading; category field lives in §Postconditions PC-4. error-taxonomy.md has no §TOOLS heading; real heading is §Component: TOOLS (pregolya-tools). |
 | 2.14 | 2026-07-28 | architect | FIX-BURST-280 / F-P175-A24 companion | VP-008 section redesign to remove self-proving mock rationale. Prior §VP-008 stated "Mock embeddings implementation makes the contract hold by construction" — this perpetuated the F-P175-A24 defect (harnesses certifying mock internals, not production code). Replaced with description of `validate_embedding_batch` production function approach: mocks supply raw inputs only; production validator is the assertion target. Proptest sketch updated to call `validate_embedding_batch` directly. EC-003 and EC-004 negative harnesses (VP-008-D/E) noted. MockEmbeddings::new_fixed_dim(128) self-proving sketch removed. |
 | 2.13 | 2026-07-27 | architect | CHECK4-vparch closure | Canonicalize all Module cells in §Committed VP Obligations table (13 rows) and §Test-Sufficient table (7 rows → 9 rows) to `crate::module` or ARCH-INDEX canonical crate-name form. VP table: replace all `pregolya-X / y-name` two-part notation — graph::bsp_engine, checkpoint::session_index, sandbox::path_guard, mcp::adapter, mcp::client, prompts::injection_guard, core::serializable (×2: VP-007 LcSerializable + VP-010 Reviver aspect), core::embeddings, vectorstores::similarity, graph::hitl, core::budget, tools::shell. VP-007 and VP-010 both map to core::serializable; aspect distinction preserved via BC Anchor (BC-2.19.001 vs BC-2.19.005), Tool (proptest vs Kani), Phase (3 vs 6), and Priority (P1 vs P0) columns — rows not merged. Test-Sufficient table: pregolya-server handlers → pregolya-server; Provider crates (unresolvable single mapping) → split into pregolya-openai + pregolya-anthropic + pregolya-ollama (3 rows); pregolya-sandbox backends → pregolya-sandbox with path_guard exclusion note; Budget governance (journal) → graph::budget; Content provenance/guardrail → graph::provenance. pregolya-mcp and pregolya-splitters already canonical — left unchanged. Section headings (VP-001..013 prose entries) updated to canonical form for consistency; VP-010 heading uses `core::serializable — Reviver aspect` to distinguish from VP-007. Total Module cells: 22 (was 20; +2 from Provider crates split into 3 rows). |
 | 2.12 | 2026-07-27 | architect | FIX-BURST-276 / F-P173-501+503 | F-P173-501 — §VP-001 section: update formal statement from `sorts by task_id` to `sorts by (task_id: &str, channel_name: &str) lexicographic ascending`; add channel_name tiebreaker note and lexicographic hazard explanation; update harness sketch to use string TaskId and (TaskId, String, ChannelUpdate) tuple, replacing TaskId(i as u64) with bounded-string construction per VP-001.md §Proof Harness Skeleton. F-P173-503 — §VP-009 section: update formal statement to add overflow path (!norm.is_finite() covers +Inf from sum-of-squares overflow); update harness sketch conditional from (norm == 0.0) to (norm == 0.0 OR !norm.is_finite()); add overflow note. Source of truth for both: VP-001.md and VP-009.md §Proof Harness Skeleton respectively. |
-| 2.11 | 2026-07-25 | architect | FIX-BURST-273 / F-P171a-10+11 | F-P171a-10 — replace §VP-013 Kani harness sketch (2 harnesses, missing `risk_floor_accepts_at_or_above_medium`) with pointer to `VP-013.md` §Proof Harness Skeleton; VP-013.md is authoritative per Source-of-Truth Precedence rule 4; pointer names all three canonical harnesses to eliminate drift surface. F-P171a-11 — de-pin two live-body version pins in §VP-013 RESOLVED block: 'BC-2.23.005 was amended to `Category::Val` in v1.1' → 'BC-2.23.005 §Category was corrected to `Category::Val`'; 'BC-2.23.005 v1.1 = VAL' → 'BC-2.23.005 §Category = VAL'. Allowlist entry `architecture/verification-architecture.md :: BC-2.23.005 v1.1` is now dead — devops to remove. |
+| 2.11 | 2026-07-25 | architect | FIX-BURST-273 / F-P171a-10+11 | F-P171a-10 — replace §VP-013 Kani harness sketch (2 harnesses, missing `risk_floor_accepts_at_or_above_medium`) with pointer to `VP-013.md` §Proof Harness Skeleton; VP-013.md is authoritative per Source-of-Truth Precedence rule 4; pointer names all three canonical harnesses to eliminate drift surface. F-P171a-11 — de-pin two live-body version pins in §VP-013 RESOLVED block: 'BC-2.23.005 was amended to `Category::Val` (burst-232)' → 'BC-2.23.005 §Postconditions (PC-4) category corrected to `Category::Val`'; 'BC-2.23.005 category = VAL (burst-232)' → 'BC-2.23.005 §Postconditions (PC-4) category = VAL'. Allowlist entry for the BC-2.23.005 version-pin in verification-architecture.md (F-P171a-11 de-pin) is now dead — devops to remove. |
 | 2.10 | 2026-07-25 | architect | FIX-BURST-272 / F-P170-05 sibling + DEFECT-2 | Purge phantom `ActionRisk::Critical` from §VP-013 body — sibling of VP-013.md F-P170-05 purge that verification-architecture.md missed. (1) Formal statement: remove `∨ r == Critical` disjunct. (2) `risk_floor_exhaustive_coverage` harness: `kani::assume(idx <= 4)` → `kani::assume(idx <= 3)`; `_ => ActionRisk::Critical` → `_ => ActionRisk::High`; assert message `"Medium/High/Critical must pass floor check"` → `"Medium/High must pass floor check"`. (3) Feasibility line: `5-variant enum` → `4-variant enum`. |
 | 2.9 | 2026-07-25 | architect | FIX-BURST-270 / P1D-168-casing | PascalCase canon sweep — §VP-013 RESOLVED note: `` `Category::VAL` `` → `` `Category::Val` `` per ADR-010 v1.9 Direction B adjudication. |
 | 2.8 | 2026-07-24 | architect | FIX-BURST-255 / F-P154-01 | F-P154-01 (HIGH) VP-011 internal contradiction + totality gap: adjudicate PendingHumanApproval routing design — Option A peel-off. PendingHumanApproval is handled by async `pre_tool_dispatch` wrapper BEFORE `route_pre_tool_decision` is called (interrupt issued; run suspended; `route_pre_tool_decision` not invoked). Fix property prose from "neither Proceed nor Reject returned" (impossible given DispatchOutcome type) to peel-off design. Fix formal statement: remove PendingHumanApproval clause from `route_pre_tool_decision` quantifier block; add wildcard arm clause (fail-closed Reject); add separate `pre_tool_dispatch` peel-off block. Fix `#[non_exhaustive]` note: "each proof function targets one variant" → "four proof functions target three routable variants (Deny/Approve/Edit) + hook-error; `PendingHumanApproval` has no dedicated proof function". Corresponds to VP-011.md v1.2→v1.3. |

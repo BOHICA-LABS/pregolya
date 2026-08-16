@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.006
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -33,6 +33,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-11): F-P11-04 — E-SBXD-004 and E-SBXD-005 error codes added to PC6, EC-002, and EC-005 (error-taxonomy.md expansion; bc-authoring-plan.md E-code×variant gate)."
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
+  - "1.3 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-16 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-16)."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -133,7 +134,7 @@ than silently running unsandboxed.
 | Source Analysis | P-60 NOT-APPLICABLE (must-not-inherit: `(allow default)` then selective deny = allow-all-reads; credential exfiltration surface); NE-16 (pregolya requirement: deny-by-default with explicit allow rules); P-48 ADOPT (Linux bubblewrap deny-by-default is the positive reference model — macOS Seatbelt must match this posture); assessment-parts/part-3 §NE-16 |
 | Reference Evidence | adk-rust P-60: macOS Seatbelt profile uses `(allow default)` as base — sandboxed code can read SSH keys, AWS credentials, browser cookies. pregolya INVERTS this. P-48 (Linux bubblewrap deny-by-default via `--unshare-*`) is the positive model that macOS must match. No upstream positive Seatbelt reference — greenfield. |
 | Binding Decisions | NE-16, DI-006 |
-| Forcing Functions | product-brief.md §NE catalog NE-16 (implied by NE-01 enforcing-default posture applied to macOS platform); assessment-parts/part-3 §NE-16 ("asymmetry must not exist silently") |
+| Forcing Functions | product-brief.md §Security Defaults — PRD Carry-Forward (NE-16) (implied by NE-01 enforcing-default posture applied to macOS platform); assessment-parts/part-3 §NE-16 ("asymmetry must not exist silently") |
 | Architecture Module | pregolya-sandbox / macOS Seatbelt backend (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
 

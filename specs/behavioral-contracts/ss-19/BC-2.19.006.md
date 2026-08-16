@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
@@ -24,6 +24,7 @@ changelog:
   - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::SRLZ → Component::Srlz (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + PC-5 prose backtick span)."
   - "1.5 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-002. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-19/BC-2.19.006.md returns zero fence-scoped literal occurrences after this edit."
   - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-001 expected-output cell: `PregolyaError { code: \"E-SRLZ-002\", message: \"...\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
+  - "1.7 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — PC-5: §E-SRLZ-002 (row: VAL) is a phantom anchor (no §E-SRLZ-002 heading exists in error-taxonomy.md; individual error codes are not section headings). Corrected to §Component: SRLZ, resolving to heading '### Component: SRLZ (pregolya-core::serializable)'."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -89,7 +90,7 @@ available in pregolya." The error is propagated as `Err`; it is never a silent `
 5. `category: Category::Val` — a monolith type id in a serialized envelope is a validation
    failure: the type path is recognized as a known langchain-monolith namespace but is not
    supported in pregolya. ADR-010 adjudicates E-SRLZ-002 as VAL (recorded in
-   error-taxonomy.md §E-SRLZ-002 (row: VAL)). `COMPATIBILITY` is not a canonical member of
+   error-taxonomy.md §Component: SRLZ). `COMPATIBILITY` is not a canonical member of
    the 12-member category enum; it was never a valid assignment.
 
 ## Invariants

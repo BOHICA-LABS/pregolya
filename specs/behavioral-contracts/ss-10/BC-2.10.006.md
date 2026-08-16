@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -27,6 +27,7 @@ changelog:
   - "1.5 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. Invariants §Compaction × PendingHumanApproval updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.6 (F-P151-02/07, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied + F-P151-06 invariant generalization. (1) F-P151-02: All `compacted_range`/`messages[compacted_range]`/`compacted_range.len()` sites → flat form (`messages[compacted_start..=compacted_end]`; count decrease `(compacted_end - compacted_start)`; CompactionSummary inline to flat fields `compacted_start: usize, compacted_end: usize`). Step 5 EvidenceJournal entry updated to `{ compacted_start, compacted_end, … }`. EC-002/TV-003/VP-2.10.006-C/DI-014 rows `put_writes` → `put`. EC-004 flat form. (2) F-P151-07: Step 4 `put_writes` → `get_next_version` + `put` (between-super-steps full-blob write; `put_writes` is per-task within-super-step only; `put` preserves BC-2.04.001 Inv-5 append-only). (3) F-P151-06: Compaction × suspend non-interaction invariant generalized from PendingHumanApproval-only to all three suspend classes: (a) generic `interrupt()` parks (BC-2.05.001 PC5), (b) budget-escalation interrupts (BC-2.10.004 PC4), (c) PendingHumanApproval (BC-2.05.007 PC-4 / BC-2.05.008 PC-4)."
   - "1.7 (date-monotonicity/burst-273/2026-07-25): Gate #28 Rule 4 TEMPORAL-NEIGHBOR SWEEP — entry 1.4 date corrected 2026-07-22 → 2026-07-23 (burst-239 ran on 2026-07-23; the '2026-07-22' date was a burst-239 batching error consistent with burst-240/239 entries corrected in interface-definitions.md v2.57 and error-taxonomy.md v1.41)."
+  - "1.8 (burst-291/D-134/2026-08-16): §Description phantom anchor corrected. 'interface-definitions.md §BudgetInfo' → 'interface-definitions.md §BudgetPolicy' (BudgetInfo is a field defined inline under §BudgetPolicy; §BudgetInfo alone matches no heading in interface-definitions.md). TD-VSDD-060 sweep: sole §BudgetInfo occurrence in live body text."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "985b0ba"
+input-hash: "7602791"
 extracted_from: null
 modified: []
 deprecated: null
@@ -110,7 +111,7 @@ tokens_remaining_after: RunContext.budget_info.tokens_remaining }` is appended t
 `EvidenceJournal` (BC-2.10.001 append-only journal). This entry provides an audit trail
 of when and why compaction occurred. The `tokens_remaining_after` field is typed
 `Option<i64>` — matching `RunContext.budget_info.tokens_remaining: Option<i64>`
-(interface-definitions.md §BudgetInfo): `None` when no token ceiling is configured;
+(interface-definitions.md §BudgetPolicy): `None` when no token ceiling is configured;
 negative when accumulated > ceiling on the Deny path.
 
 **Step 6 — Streaming event:**

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.2"
+version: "3.3"
 status: active
 producer: product-owner
 timestamp: 2026-08-16T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "db110eb"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.3 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — four phantom citations fixed. (1) §GTV below (line 38 context): no heading §GTV exists; corrected to §Golden Test Vectors — BC-2.07.002. (2) §GTV (line 87 context, same phantom): same fix. (3) §GTV (line 185 GTV convention blockquote): same fix. (4) §Test Vectors (line 199 context): BC bodies use heading '## Canonical Test Vectors', not '## Test Vectors'; corrected to §Canonical Test Vectors. TV counts and grand totals UNCHANGED."
   - "3.2 (burst-290/F-180-04, 2026-08-16): Fix live-body phantom ADR §-citation in Red Gate Vector Summary table. BC-2.20.002 row §Anchor column: `ADR-014 §DI-012` → `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` (no heading §DI-012 exists in ADR-014; DI-012 mechanization is governed by `## Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)`). TV count and grand totals UNCHANGED."
   - "3.1 (burst-288/F-P177-C-SS17/2026-08-15): BC-2.17.001 Notes VP enumeration corrected — was '(VP-001/002/003 + VP-009/010/011)' missing P1 harnesses VP-006/012/013; corrected to '(VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1))'. TV count and grand totals UNCHANGED (687 = 676 canonical + 11 GTV)."
   - "3.0 (fix-burst-287/F-P176-D001/2026-08-01): Ground-truth reconciliation — 8 stale registry rows corrected. Prior registry declared 664 canonical + 11 GTV = 675; ground truth (summed from BC bodies) is 676 canonical + 11 GTV = 687. Delta: +12 canonical TVs missing from registry. Rows corrected: BC-2.03.001 (5→6), BC-2.09.001 (7→8), BC-2.12.002 (7→8), BC-2.15.004 (7→9), BC-2.15.006 (6→7), BC-2.17.001 (5→9), BC-2.18.001 (6→7), BC-2.18.004 (4→5). Grand total corrected: 664→676 canonical + 11 GTV = 675→687. Normative ground-truth validation note added to §BC Test Vector Inventory preamble. Root cause: Mechanism 3 (arithmetic identity satisfiable without ground truth — column sum equals declared total at each update step, masking BC-body-vs-registry drift). Adversary finding D001 closed."
@@ -35,7 +36,7 @@ changelog:
 > authoritative source in `behavioral-contracts/ss-NN/BC-S.SS.NNN.md`.
 >
 > **Golden Test Vectors (GTVs):** BC-2.07.002 contains the normative golden vector
-> set for non-ASCII splitter parity. These GTVs are reproduced in §GTV below because
+> set for non-ASCII splitter parity. These GTVs are reproduced in §Golden Test Vectors — BC-2.07.002 below because
 > they constitute the Red Gate acceptance data — the test-writer needs them inline
 > without loading the full BC file.
 >
@@ -84,7 +85,7 @@ changelog:
 | BC-2.06.005 | SS-06 | 3 | — | `TV-NNN` | | `tool_approval_resolved` StreamEvent (event 14); payload on Command(resume=…) |
 | BC-2.06.006 | SS-06 | 4 | — | `TV-NNN` | | `compaction_event` StreamEvent (event 15); payload; emission after compaction completes |
 | BC-2.07.001 | SS-07 | 7 | — | `TV-NNN` | | Code-point chunk size (not bytes) |
-| BC-2.07.002 | SS-07 | 3 | 11 | `TV-NNN` + GTV | **RG** | Non-ASCII parity (see §GTV below); (v1.6 adds GTV-010/011 grapheme-cluster discriminators) |
+| BC-2.07.002 | SS-07 | 3 | 11 | `TV-NNN` + GTV | **RG** | Non-ASCII parity (see §Golden Test Vectors — BC-2.07.002); (v1.6 adds GTV-010/011 grapheme-cluster discriminators) |
 | BC-2.07.003 | SS-07 | 7 | — | `TV-NNN` | | Short doc < chunk_size → single chunk |
 | BC-2.08.001 | SS-08 | 4 | — | `TV-NNN` | | Streaming conformance |
 | BC-2.08.002 | SS-08 | 5 | — | `TV-NNN` | | Tool-call round-trip conformance |
@@ -182,7 +183,7 @@ changelog:
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
-> **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §GTV). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
+> **GTV convention:** The TV Count column counts standard canonical vectors; the GTV Count column counts golden test vectors (Red Gate acceptance data reproduced in §Golden Test Vectors — BC-2.07.002). Grand totals are expressed as `<TV Count> + <GTV Count> = <total>` to prevent ambiguity.
 
 **Red Gate BCs (11):** BC-2.02.003, BC-2.02.004, BC-2.07.002, BC-2.09.004, BC-2.09.005, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.20.002, BC-2.21.003, BC-2.22.002
 
@@ -196,7 +197,7 @@ changelog:
 > see each BC file's `## Test Vectors` section for the full `TV-NNN` rows.
 
 Canonical per-BC vector tables reside in the individual BC files
-(`behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Test Vectors`). No inline per-subsystem
+(`behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`). No inline per-subsystem
 duplication exists in this supplement by design — the BC Test Vector Inventory table above
 is the authoritative index. To inspect a specific BC's vectors, load the corresponding BC file.
 

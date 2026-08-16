@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.11"
+version: "1.12"
 status: active
 producer: business-analyst
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
+  - "1.12 (burst-291/D-134/2026-08-16): §TrustLevel definition phantom anchor corrected. 'ubiquitous-language-server.md §ProvenanceTag' → 'ubiquitous-language-server.md §Server Terms' (ProvenanceTag is a bold-bullet under §Server Terms, not a heading; §ProvenanceTag alone matches no heading in ubiquitous-language-server.md). Citation to entities-server.md §ProvenanceTag unchanged — valid heading '### ProvenanceTag' exists there. TD-VSDD-060 sweep: sole §ProvenanceTag reference to ubiquitous-language-server.md in this file."
   - "1.11 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected at two term entries. (1) VectorStoreRetriever term: 'via VectorStore::as_retriever(self: Arc<Self>)' extended to show Result<VectorStoreRetriever, PregolyaError> fallible return and Err(E-VS-003 InvalidConfig) on invalid config. (2) VectorStore term: 'returns VectorStoreRetriever' corrected to 'returns Result<VectorStoreRetriever, PregolyaError>'; Err(E-VS-003 InvalidConfig) note added. Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
   - "1.10 (fix-burst-278/wave-b/2026-07-28): TD-VSDD-060 sibling sweep — two borrow-based forms corrected in VectorStoreRetriever and VectorStore term definitions. (1) VectorStoreRetriever term: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (verifiable: borrow-backed VectorStoreRetriever form absent from this file). (2) VectorStore term: as_retriever updated to show self: Arc<Self> receiver; 'All instance methods use &self' corrected to 'Other instance methods use &self; as_retriever takes Arc<Self>' (verifiable: verify-signature-canon S1b returns zero hits for this file). Both ground in D-48."
   - "1.9 (FC-4/burst-277/2026-07-28): Sibling-sweep fix — same 'PO BC obligations' stale-completed-delegation class as capabilities-p1-p2.md v1.18. §PreToolDecision definition: '\"skip-hook-on-resume\" invariant, PO BC obligation)' → '\"skip-hook-on-resume\" invariant, BC-2.05.008)'. BC-2.05.008 covers the invariant. TD-VSDD-060 sweep: sole 'PO BC obligation' occurrence in this file (grep 'PO BC obligation' ubiquitous-language-core.md returns zero hits after this fix)."
@@ -23,7 +24,7 @@ inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/semport/reference-manifest.md
-input-hash: "8894007"
+input-hash: "24354b1"
 traces_to: L2-INDEX.md
 decisions: [D2, D17, D21, D23]
 ---
@@ -302,7 +303,7 @@ pregolya: `pregolya_ollama::embeddings::EmbeddingsOllama`.
 **TrustLevel**
 Template-variable trust classifier for the SS-18 template composition layer
 (`pregolya-prompts: prompts::template`). **Distinct from and independent of `ProvenanceTag`**
-(SS-11 ingress-boundary audit struct — see ubiquitous-language-server.md §ProvenanceTag and
+(SS-11 ingress-boundary audit struct — see ubiquitous-language-server.md §Server Terms and
 entities-server.md §ProvenanceTag). Three variants with severity ordering
 `Untrusted > UserInput > Trusted`:
 - `Untrusted` — content derived from an external/adversarial source (e.g., a RAG retrieval

@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.21"
+version: "1.22"
 status: active
 producer: business-analyst
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -13,10 +13,11 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "8f508e0"
+input-hash: "5b1c25f"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "1.22 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — two error-taxonomy component shortcode phantoms fixed. (1) CAP-029 §VS — VAL... context: §VS is a shortcode, not a heading (heading is '### Component: VS (pregolya-vectorstores)'). Corrected to error-taxonomy.md §Component: VS. (2) CAP-031 §EMBED — VAL... context: same pattern; corrected to error-taxonomy.md §Component: EMBED (heading '### Component: EMBED (pregolya-core::embeddings)')."
   - "1.21 (F-P175-D101/fix-burst-283/2026-07-30): Close F-P175-D101 (CRIT) — as_retriever fallibility and receiver form omitted from two CAP bodies. (1) CAP-027: 'Constructed via VectorStore::as_retriever()' corrected to show self: Arc<Self> receiver and Result<VectorStoreRetriever, PregolyaError> fallible return with Err(E-VS-003 InvalidConfig) on invalid config. (2) CAP-028: 'as_retriever(self: Arc<Self>) → VectorStoreRetriever' corrected to '→ Result<VectorStoreRetriever, PregolyaError>'; fallibility note added (Err(E-VS-003 InvalidConfig) on invalid config). Grounds: interface-definitions.md §VectorStore Trait (as_retriever fallible return, F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2. TD-VSDD-060 sibling sweep: entities-graph.md §VectorStore §Instance methods and ubiquitous-language-core.md §VectorStore/§VectorStoreRetriever terms corrected in this burst."
   - "1.20 (wave-b-tail/D-35-xtask-rename-notation/2026-07-29): Two Class 3 notation violations and one xtask rename. (1) CAP-029 zero-norm guard prose: PregolyaError { code: \"E-VS-001\" } → PregolyaError { code: \"E-VS-001\", .. } — Class 3 VIOLATION (partial fields, missing ..) per ADR-010 §Error-Construction Notation Canon. (2) CAP-031 dimensionality contract prose: PregolyaError { code: \"E-EMBED-001\" } → PregolyaError { code: \"E-EMBED-001\", .. } — Class 3 VIOLATION (same class). (3) CAP-032 DI-009 CI-gate prose: workspace CI gate `deny-client-new` → `check-client-timeout` (D-80 canonical check-<subject> form). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib) found in live body text."
   - "1.19 (fix-burst-278/wave-b/2026-07-28): Sites 8a and 8b per wave-b-po-routing-spec §Item-8. (1) CAP-027 Site 8a: VectorStoreRetriever lifetime annotation removed — type is 'static, owns Arc<dyn VectorStore>; verifiable: verify-signature-canon S2 returns zero hits. (2) CAP-027 adjacent to Site 8a: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (same paragraph); verifiable: borrow-backed VectorStoreRetriever form absent from this file. (3) CAP-028 Site 8b: as_retriever receiver corrected from bare self-ref to self: Arc<Self>; return-type lifetime annotation removed; verifiable: verify-signature-canon S1b returns zero hits. (4) CAP-027 config bullets k, fetch_k, lambda_mult: Err(E-VS-003 InvalidConfig) rejection semantics added per D-44 — rejected not clamped (verifiable: grep 'E-VS-003 InvalidConfig' capabilities-p1-p2.md returns three hits, one per config bullet). TD-VSDD-060 sibling sweep: same borrow-backed class found and corrected in entities-graph.md §VectorStore/§Relationships-Summary and ubiquitous-language-core.md §VectorStoreRetriever/§VectorStore this burst."
@@ -380,8 +381,7 @@ placeholder construction is permitted. Text queries are converted to query vecto
 Cosine similarity is computed from `Vec<f32>` inner products (no ndarray — semport §8 avoidance).
 **Zero-norm guard (ADR-014 Decision 2 §Hardening note):** before any cosine division, the implementation
 checks `norm = vec.iter().map(|x| x*x).sum::<f32>().sqrt()`. If `norm == 0.0`:
-`return Err(PregolyaError { code: "E-VS-001", .. })` (registered in error-taxonomy §VS —
-VAL, zero-norm cosine guard, BC-2.21.003). A zero-length embedding produces NaN that silently corrupts ranking — this guard
+`return Err(PregolyaError { code: "E-VS-001", .. })` (registered in error-taxonomy.md §Component: VS — E-VS-001, VAL, zero-norm cosine guard, BC-2.21.003). A zero-length embedding produces NaN that silently corrupts ranking — this guard
 is two lines and is unconditional. Implements `VectorStoreFactory` for `from_texts_sync`.
 
 **Grounding:** D21/SS-21. ADR-017 Decision 4 specifies the InMemoryVectorStore struct
@@ -428,8 +428,7 @@ Embeddings>` compiles without E0038. **Dimensionality contract** (MUST hold for 
 (1) `embed_documents(texts).len() == texts.len()` — one vector per input; (2) all returned
 vectors have identical length (the model's embedding dimension); (3) `embed_query` returns a
 vector of the same length as any `embed_documents` vector for the same model. Contract violation
-→ `Err(PregolyaError { code: "E-EMBED-001", .. })` (registered in error-taxonomy §EMBED —
-VAL, dimensionality contract violation, BC-2.22.001). Batch failure (e.g., provider rate limit mid-batch) → entire call returns `Err` —
+→ `Err(PregolyaError { code: "E-EMBED-001", .. })` (registered in error-taxonomy.md §Component: EMBED — E-EMBED-001, VAL, dimensionality contract violation, BC-2.22.001). Batch failure (e.g., provider rate limit mid-batch) → entire call returns `Err` —
 no silent partial-batch degradation to a truncated or empty Vec (DI-014). VP-008 proptest
 candidate (any valid Embeddings impl returns vectors with consistent length across embed_documents
 and embed_query).
