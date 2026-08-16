@@ -2,18 +2,19 @@
 document_type: domain-spec-section
 level: L2
 section: events
-version: "1.12"
+version: "1.13"
 status: active
 producer: business-analyst
-timestamp: 2026-07-25T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "eb2c18b"
+input-hash: "96c7a16"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17, D18, D21, D23]
 changelog:
+  - "1.13 (F-178-01, burst-289, 2026-08-16): §StreamEventEmitted Trigger: added `error` event 16 (burst-288 StreamEvent::Error — on node Err(PregolyaError); stream closes after; RunEnd NOT emitted per EC-005). StreamEvent taxonomy count corrected 15→16. TD-VSDD-060 sweep: sole '15' total-count citation in events.md body text — fixed. Grounding: BC-2.06.001 §Postconditions PC2."
   - "1.12 (burst-273/2026-07-25): Date-monotonicity repair: v1.9 changelog date 2026-07-22 → 2026-07-23 (burst-242; corroborating carrier: api-surface.md v1.9 burst-242/2026-07-23). TD-VSDD-060 temporal-neighbor sweep: no additional inversions found in this file."
   - "1.11 (2026-07-25): TD-VSDD-091 BC-pin sweep — de-pin live normative prose: ToolInvoked stream events 'BC-2.06.001 v1.3' → 'BC-2.06.001'. Version pins belong in changelog entries only; live body cites bare BC IDs."
   - "1.10 (2026-07-24): Fix burst 252 BA — ADR-019 v1.4 compaction type canon applied at §CompactionExecuted. (1) Outcome: `messages[compacted_range]` → `messages[compacted_start..=compacted_end]`; CompactionEvent struct → flat `{ compacted_start, compacted_end, … }`. (2) EvidenceJournal entry fields: `compacted_range (RangeInclusive<usize>)` → flat `compacted_start (usize), compacted_end (usize)`. (3) Stream event payload: `compacted_turns: { start, end }` → flat `compacted_start, compacted_end`; mandatory `parent_ids: Vec<RunId>` added. (4) Non-fatal failure paths: `put_writes failure` → `put failure`. TD-VSDD-060 sweep: zero compacted_range / compacted_turns / RangeInclusive occurrences remain in this file's body text (changelog exempt); `put_writes` mentions reviewed — checkpoint-task-write reference in §PregelTask/DI-002 context is legitimate; §CompactionExecuted was the only compaction-related site."
@@ -150,7 +151,7 @@ A BudgetPolicy evaluated a token/cost tally for the current Run.
 
 ### StreamEventEmitted
 A typed streaming event was emitted by the execution engine.
-- **Trigger:** Any phase transition (run/step/node/tool start|stream|end), guardrail outcome (Fail/Transform — emitted as `guardrail_decision`; Pass is not streamed), pre-tool approval suspension (`tool_approval_request` event 13 — on `PendingHumanApproval`; D23 per BC-2.06.004), pre-tool approval resolution (`tool_approval_resolved` event 14 — on `Command(resume=PreToolDecision)`; D23 per BC-2.06.005), or post-compaction-commit notification (`compaction_event` event 15 — D23 per BC-2.06.006). **StreamEvent taxonomy: 15 variants** (12-variant base per BC-2.06.001 — includes `guardrail_decision` — + events 13/14/15 per D23).
+- **Trigger:** Any phase transition (run/step/node/tool start|stream|end), guardrail outcome (Fail/Transform — emitted as `guardrail_decision`; Pass is not streamed), pre-tool approval suspension (`tool_approval_request` event 13 — on `PendingHumanApproval`; D23 per BC-2.06.004), pre-tool approval resolution (`tool_approval_resolved` event 14 — on `Command(resume=PreToolDecision)`; D23 per BC-2.06.005), post-compaction-commit notification (`compaction_event` event 15 — D23 per BC-2.06.006), or node error termination (`error` event 16 — on node `Err(PregolyaError)`; stream closes after; RunEnd NOT emitted; burst-288 per EC-005/BC-2.06.001). **StreamEvent taxonomy: 16 variants** (12-variant base per BC-2.06.001 — includes `guardrail_decision` — + events 13/14/15 per D23 + event 16 error terminal per EC-005/burst-288).
 - **Outcome:** Delivered to all active stream subscribers. Execution-lifecycle events have unary-equivalent content (DI-011 execution-path equivalence); `guardrail_decision` is stream-observer-only — not delivered to unary callers, whose guardrail outcomes are observable via error blocks in the final output (BC-2.06.003). `tool_approval_request` and `tool_approval_resolved` are notification-only events (no unary equivalent — approval dialogs are stream-consumer surfaces only; BC-2.06.004/005). `compaction_event` is a post-commit observer notification (not reflected in unary response payload; BC-2.06.006).
 
 ---

@@ -5,10 +5,10 @@ adr_id: "006"
 slug: streaming-event-taxonomy
 title: "Streaming Event Taxonomy (CONFLICT-5: typed enum vs stringly-typed)"
 status: accepted
-date: 2026-07-14
+date: 2026-08-16
 producer: architect
-timestamp: 2026-07-14T12:00:00Z
-version: "rev-5"
+timestamp: 2026-08-16T00:00:00Z
+version: "rev-6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D23]
@@ -16,6 +16,7 @@ subsystems_affected: ["SS-06", "SS-11"]
 supersedes: null
 superseded_by: null
 changelog:
+  - "rev-6 (burst-289/F-178-01/2026-08-16): Forward-amendment 2 — variant count 15→16. burst-288 added StreamEvent::Error as the 16th variant per EC-005 mandate. Second forward-amendment blockquote added to §Status section. BC-2.06.001 §Postconditions (PC2) remains the canonical enumeration authority."
   - "rev-5 (FIX-BURST-269/F-P167-03/2026-07-25): Variant-count forward-amendment. The rev-4 'Status' section stated 'The 12-variant StreamEvent enum' reflecting the original D17+rev-3 count. D23 grew the enum to 15 via ADR-018 (+ToolApprovalRequest #13, +ToolApprovalResolved #14) and ADR-019 (+CompactionEvent #15). Add forward-amendment blockquote to Status section; BC-2.06.001 is the canonical enumeration per its existing authority statement. Add D23 to decisions frontmatter."
   - "rev-4 (F-P100-02, 2026-07-17): Citation-completeness amendment — no behavioral change. Downstream-amendments scope note (body §Status + Source/Origin emission citation) extended to include BC-2.11.003 PC3/PC4 (RagChunk boundary) and BC-2.11.004 PC3/PC4 (MemoryItem boundary). Rev-3 correctly added GuardrailDecision for all three ingress boundaries but listed only BC-2.11.002 PC3/PC4 (ToolResult) in the amendment scope; the RagChunk and MemoryItem boundary BCs carry symmetric GuardrailDecision emission postconditions. Sibling fix: BC-2.11.002/003/004 PC3/PC4 alignment propagated to interface-definitions.md v2.34→v2.35 /stream row and §StreamEvent BC anchor."
   - "rev-3 (F-P99-01, 2026-07-17): Axis (a) Add GuardrailDecision (12th variant). Fires for non-Pass guardrail outcomes (Fail/Transform only; Pass not streamed) at tool-result, RAG, and memory ingress boundaries. Rationale: audit-log-only is insufficient for Domain A SOC live-analyst use case (domain-a-soc-analyst.md §5 — 'Prompt-injection isolation of untrusted tool output' NEW); SSE consumer has no in-band signal of rejected/rewritten content without this variant. Axis (b) ToolEnd carries POST-guardrail content — raw rejected payloads must not exit the security boundary via the stream (same isolation guarantee as model input buffer per BC-2.11.005 PC1; streaming a blocked prompt-injection payload to UI/analytics consumers defeats the guardrail). Axis (c) Ordering: GuardrailDecision fires BEFORE ToolEnd within the ToolStart/ToolEnd window for ToolResult boundary; within NodeStart/NodeEnd window for RagChunk/MemoryItem boundaries. Axis (d) StreamEvent variant count 11→12; wire token guardrail_decision added; supporting types IngressBoundary/GuardrailDecisionKind/GuardrailSeverityWire defined. GuardrailDecision events are stream-observer notifications only — not emitted in unary mode; underlying GuardrailHook::evaluate fires on both paths per DI-012. Downstream BC amendments required: BC-2.06.001 PC2/PC4/new-EC-006, BC-2.11.002 PC3/PC4, BC-2.11.005 PC1/new-INV-5, BC-2.06.003 new-INV note."
@@ -166,7 +167,9 @@ DI-011 (Streaming/Unary Run Equivalence) further constrains the design: a string
 
 Decision is accepted. The `StreamEvent` enum and the rev-3 additions (`GuardrailDecision` variant, post-guardrail `ToolEnd` semantics, ordering specification) are spec-only; implementation is Phase 3. Rev-4 is a citation-completeness amendment only (F-P100-02). Downstream BC amendments (BC-2.06.001 PC2/PC4/new-EC-006, BC-2.11.002 PC3/PC4, BC-2.11.003 PC3/PC4, BC-2.11.004 PC3/PC4, BC-2.11.005 PC1/new-INV-5, BC-2.06.003 new-INV note) are required before Phase 3 story decomposition for SS-06 and SS-11.
 
-> **Forward Amendment (FIX-BURST-269, 2026-07-25):** The "12-variant" count stated in rev-4 reflected the D17 original (11 variants, rev-1) plus the rev-3 `GuardrailDecision` addition (12 total). D23 grew the enum to **15 variants** via ADR-018 (+`ToolApprovalRequest` #13, +`ToolApprovalResolved` #14) and ADR-019 (+`CompactionEvent` #15). The rev-4 variant count is therefore stale; the current count is 15. **BC-2.06.001 is the canonical enumeration authority for variant names and wire tokens** — this was already stated in the decision body and remains the source of truth. ADR-006 defers enumeration to BC-2.06.001.
+> **Forward Amendment (FIX-BURST-269, 2026-07-25):** The "12-variant" count stated in rev-4 reflected the D17 original (11 variants, rev-1) plus the rev-3 `GuardrailDecision` addition (12 total). D23 grew the enum to **15 variants** via ADR-018 (+`ToolApprovalRequest` #13, +`ToolApprovalResolved` #14) and ADR-019 (+`CompactionEvent` #15). The rev-4 variant count is therefore stale; the count as of D23 is 15. **BC-2.06.001 is the canonical enumeration authority for variant names and wire tokens** — this was already stated in the decision body and remains the source of truth. ADR-006 defers enumeration to BC-2.06.001.
+>
+> **Forward Amendment 2 (burst-289/F-178-01, 2026-08-16):** burst-288 added `StreamEvent::Error` as the **16th variant** per EC-005 (failed-run stream termination mandate). The current variant count is **16**. **BC-2.06.001 §Postconditions (PC2) remains the canonical enumeration authority.**
 
 ## Alternatives Considered
 

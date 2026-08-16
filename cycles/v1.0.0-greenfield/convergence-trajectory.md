@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "412c654"
+input-hash: "c305abd"
 traces_to: STATE.md
 ---
 
@@ -2341,18 +2341,20 @@ All five convergent mechanisms are closed. All five CRITs are closed. The instru
 | P1D-176 | 160 | -29 | 0/3 | First with policies.yaml rubric; 5 CRITs; 5 mechanisms |
 | fix-burst-287 | — | — | 0/3 | All 5 mechanisms + CRITs closed; POL-46/47 minted |
 | **P1D-177** | **60** | **-100** | **0/3** | **First calibrated-instrument pass; 3 CRITs; partial-fix propagation dominant** |
+| fix-burst-288 | — | — | 0/3 | 3C+20H+MED/LOW closed; ADR-024 confinement redesign; StreamEvent::Error 16th variant; 6 gate fixes; POL-46 req-1 amended; D-136..D-138; L-174..L-175 |
+| **P1D-178** | **5** | **-55** | **0/3** | **All findings burst-288 partial-fix residue; 10 regression targets CLEAN; 0C/1H/3M/1L; RECORDS LABEL: NO (MED findings present); E03 refuted 3rd time; PG-178-01 StreamEvent count-drift; PG-178-02 BC-anchor unenforced** |
 
-**Trajectory tail at P1D-177:** →130→256→189→160→**60**
+**Trajectory tail at P1D-178:** →130→256→189→160→60→**5**
 
-**Total passes to date: 178.**
+**Total passes to date: 179.**
 
-### Convergence Assessment (updated at P1D-177)
+### Convergence Assessment (updated at P1D-178)
 
 Counter: **0/3 unchanged.** Adversary pass with findings — streak does not advance.
 
-P1D-177 closed with 60 findings including 3 CRITs. All 3 CRITs are in burst-287 artifacts. The count reduction from 160 to 60 reflects both instrument calibration (POL-46 filtering) and corpus improvement; these contributions are not separable from a single pass. The 3-CLEAN gate requires three consecutive CLEAN passes from this point.
+P1D-178 closed with 5 findings (0C/1H/3M/1L). All findings are burst-288 partial-fix residue. Burst-288's 10 substantive fixes were all verified sound by regression targets. The count reduction (60→5) reflects burst-288's effectiveness on the core issues; the 5 remaining findings are propagation gaps and phantom anchors introduced by burst-288's own edits.
 
-**Burst-288 required before P1D-178.** Priority: ADR-024 security redesign (C-02/C-01/C-H01/C-H02/C-H03) → E01 Class-1 + inverted routing → E04/E05 gate hardening → partial-fix structural remedy → POL-46 amendment → HIGH tail.
+**Burst-289 COMPLETE (2026-08-16).** All 5 findings closed: StreamEvent count sweep corpus-complete (8 sites reconciled to 16; BC-2.06.001 §Postconditions PC2 single count authority); phantom anchors fixed in ADR-023 + BC-2.10.003; ADR-024 §Consumers reconciled; ambiguous label clarified. D-139..D-142. L-176..L-177.
 
-**Convergence dim-5:** Counter 0/3. Next: burst-288 (ADR-024 security redesign + gate hardening) then P1D-178.
-**Convergence dim-7:** Trajectory tail →130→256→189→160→60. Lessons L-170..L-173 minted. D-131..D-135 added.
+**Convergence dim-5:** Counter 0/3. Next: P1D-179 FULL-PERIMETER on frozen HEAD (burst-289 state commit SHA).
+**Convergence dim-7:** Trajectory tail →130→256→189→160→60→5. Lessons L-174..L-177 minted. D-136..D-142 added.

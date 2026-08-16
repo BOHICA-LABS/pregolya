@@ -5,10 +5,10 @@ adr_id: "024"
 slug: writefile-create-path-confinement
 title: "WriteFileTool Create-Path Confinement Protocol: Parent-Canonicalize Extension, TOCTOU Analysis, and Error Routing (fix-burst-287 / F-P176-C002)"
 status: accepted
-date: 2026-08-15
+date: 2026-08-16
 producer: architect
-timestamp: 2026-08-01T00:00:00Z
-version: "1.1"
+timestamp: 2026-08-16T00:00:00Z
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ subsystems_affected: [SS-13, SS-23]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.2 (burst-289/F-178-02/2026-08-16): §Consumers table status corrections — all 6 consumer BCs (BC-2.13.004, BC-2.13.005, BC-2.23.001, BC-2.23.003, BC-2.23.004, BC-2.23.006) verified as citing ADR-024 (burst-288 propagation complete; each has multiple ADR-024 hits). Updated Required Citation Status from MISSING to Present for all 6. Propagation-owner directive and §Consequences bullet updated to past tense and extended to include BC-2.23.004 and BC-2.23.006 (both were omitted from the directive and Consequences in v1.1)."
   - "1.1 (burst-288/P1D-177-C01+C02+C-H01/2026-08-15): Confinement-proof redesign (C-02): redesigned §Decision 1 Phase 2 to add dangling-symlink guard (step d), relabeled Phase 2 steps as a-h; added §Confinement-Proof with full attack-surface catalog AS-01..AS-09 and soundness argument replacing unsound bare-filename claim. Dangling-symlink authoritative decision (C-01): Phase 2 step (d) returns Err(SandboxError::PathNotFound) for dangling-target symlinks, resolving contradiction with BC-2.13.005 §EC-003; §Phase-2 Postconditions PC-3 is the authoritative cross-reference anchor. Phase-2 postconditions (C-H01): authored PC-1 through PC-5 as formal postconditions in new §Phase-2 Postconditions section. Added §Consumers enumerating all six BCs that must cite this ADR: BC-2.13.004, BC-2.13.005, BC-2.23.001, BC-2.23.003, BC-2.23.004, BC-2.23.006 (propagation owner: product-owner per C-H02); PC-5 applicability confirmed for BC-2.23.004 (ListDirTool) and BC-2.23.006 (GrepTool) in burst-288 follow-up."
   - "1.0 (fix-burst-287/F-P176-C002/2026-08-01): Initial decision — close CRIT unreachability defect in WriteFileTool create-path. Product-owner confirmed no exists-check pre-guard in SS-23; architect adjudication of parent-canonicalize protocol, TOCTOU window, and error routing. Prerequisite to product-owner BC-2.23.002 update."
 ---
@@ -327,18 +328,19 @@ reference to ADR-024 so that changes to this ADR trigger review of the consuming
 
 | BC | Role | Required Citation Status |
 |----|------|--------------------------|
-| BC-2.13.004 | Implements `canonicalize_beneath_root`; §EC-004 is the source authority for Phase 2 semantics | MISSING — must add ADR-024 to §Traceability §Binding Decisions |
-| BC-2.13.005 | §EC-003 (dangling symlink → PathNotFound) is the cross-reference anchor for PC-3 | MISSING — must add ADR-024 to §Traceability §Binding Decisions; EC-003 must confirm alignment with PC-3 |
+| BC-2.13.004 | Implements `canonicalize_beneath_root`; §EC-004 is the source authority for Phase 2 semantics | Present |
+| BC-2.13.005 | §EC-003 (dangling symlink → PathNotFound) is the cross-reference anchor for PC-3 | Present |
 | BC-2.23.002 | WriteFileTool — primary consumer of Phase 2 create-path semantics | Present |
-| BC-2.23.003 | EditFileTool — Phase 2 runs when path does not exist; PC-5 explains the Ok-then-NotFound-at-open sequence | MISSING — must reference ADR-024 §Phase-2 Postconditions PC-5 |
-| BC-2.23.001 | ReadFileTool — same Phase 2 Ok-then-NotFound pattern as EditFileTool | MISSING — must reference ADR-024 §Phase-2 Postconditions PC-5 |
-| BC-2.23.004 | ListDirTool — calls `canonicalize_beneath_root` for the directory path; if path does not exist, Phase 2 returns `Ok(path)`, then `fs::read_dir` returns `NotFound` → E-TOOLS-008 (EC-005). Identical Ok-then-NotFound-at-OS-call pattern as ReadFileTool/EditFileTool | MISSING — must reference ADR-024 §Phase-2 Postconditions PC-5 |
-| BC-2.23.006 | GrepTool — calls `canonicalize_beneath_root` for the root `path` argument; if root path does not exist, Phase 2 returns `Ok(path)`, then `fs::open`/`read_dir` returns `NotFound` → E-TOOLS-008 via PC-6 fail-the-whole-search. PC-5 applies to the root path argument; recursive sub-paths are discovered by walking (they exist when canonicalize is called) so Phase 2 does not arise for those | MISSING — must reference ADR-024 §Phase-2 Postconditions PC-5 |
+| BC-2.23.003 | EditFileTool — Phase 2 runs when path does not exist; PC-5 explains the Ok-then-NotFound-at-open sequence | Present |
+| BC-2.23.001 | ReadFileTool — same Phase 2 Ok-then-NotFound pattern as EditFileTool | Present |
+| BC-2.23.004 | ListDirTool — calls `canonicalize_beneath_root` for the directory path; if path does not exist, Phase 2 returns `Ok(path)`, then `fs::read_dir` returns `NotFound` → E-TOOLS-008 (EC-005). Identical Ok-then-NotFound-at-OS-call pattern as ReadFileTool/EditFileTool | Present |
+| BC-2.23.006 | GrepTool — calls `canonicalize_beneath_root` for the root `path` argument; if root path does not exist, Phase 2 returns `Ok(path)`, then `fs::open`/`read_dir` returns `NotFound` → E-TOOLS-008 via PC-6 fail-the-whole-search. PC-5 applies to the root path argument; recursive sub-paths are discovered by walking (they exist when canonicalize is called) so Phase 2 does not arise for those | Present |
 | Provider WriteFileTool BCs (pregolya-openai, pregolya-ollama) | Any WriteFileTool variant using `canonicalize_beneath_root` inherits Phase 2 confinement semantics | MISSING — must cite ADR-024 when authored |
 
-**Propagation owner:** product-owner is responsible for propagating ADR-024 citations to
-BC-2.13.004, BC-2.13.005, BC-2.23.001, BC-2.23.003, and any provider WriteFileTool BCs
-(per P1D-177 finding C-H02, §Slice C).
+**Propagation owner:** product-owner propagated ADR-024 citations (burst-288) to
+BC-2.13.004, BC-2.13.005, BC-2.23.001, BC-2.23.003, BC-2.23.004, and BC-2.23.006
+(per P1D-177 finding C-H02, §Slice C). Provider WriteFileTool BCs must cite ADR-024
+when authored.
 
 ---
 
@@ -413,8 +415,9 @@ agent re-calls WriteFileTool).
   behavior.
 - Product-owner MAY update BC-2.13.004 §Description to clarify that `canonicalize_beneath_root`
   implements the two-phase protocol internally for non-existent paths, consistent with §EC-004.
-- Product-owner MUST propagate ADR-024 citations to BC-2.13.004, BC-2.13.005, BC-2.23.001,
-  BC-2.23.003, and any provider WriteFileTool BCs per §Consumers above.
+- Product-owner propagated ADR-024 citations (burst-288) to BC-2.13.004, BC-2.13.005,
+  BC-2.23.001, BC-2.23.003, BC-2.23.004, and BC-2.23.006 per §Consumers — BCs That Must
+  Cite This ADR above. Provider WriteFileTool BCs must cite ADR-024 when authored.
 - The Phase 3 implementer extends `sandbox::path_guard::canonicalize_beneath_root` with Phase 2
   logic per Decision 1, including the dangling-symlink guard in step (d).
 - VP-003 Kani harness must be extended in Phase 6 to cover the two-phase protocol including

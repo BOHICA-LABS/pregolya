@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.26"
+version: "1.27"
 status: active
 producer: business-analyst
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "40fe43d"
+input-hash: "9ead452"
 traces_to: .factory/specs/product-brief.md
 sections:
   - capabilities-p0.md
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.27 (F-178-01, burst-289, 2026-08-16): Document Map events.md row: StreamEvent taxonomy count corrected 15→16 variants (BC-2.06.001 §Postconditions PC2 authority — burst-288 added StreamEvent::Error as 16th variant). Sibling-sweep: capabilities-p0.md and events.md updated identically in this burst."
   - "v1.26 (burst-284/2026-07-30): Paper-fix repair — fabricated section anchors in two section shards repaired per TD-VSDD-059. entities-graph.md (burst-273 changelog entry: 'api-surface.md §burst-242/2026-07-23' → 'api-surface.md changelog entry burst-242/2026-07-23'; §burst-242/2026-07-23 resolves to 0 headings in api-surface.md; burst-242 identifier is the stable form). risks.md (R-003 mitigation: 'reference-manifest.md §langchain-pin' → 'reference-manifest.md §langchain — Package Layout'; §langchain-pin resolves to 0 headings; §langchain — Package Layout is a real heading at line 36 of reference-manifest.md). L2-INDEX.md burst-276 changelog entry verified semantically complete after version-pin removal: bounded-contexts.md and capabilities-p1-p2.md changes remain described by finding IDs F-P173-104/F-P173-106/F-P173-702."
   - "v1.25 (F-P175-D101/fix-burst-283/2026-07-30): as_retriever fallibility correction across three shards (F-P175-D101 CRIT close). capabilities-p1-p2.md (CAP-027 receiver+Result return added; CAP-028 non-fallible form corrected to Result<VectorStoreRetriever, PregolyaError>). entities-graph.md (§VectorStore §Instance methods non-fallible form corrected). ubiquitous-language-core.md (§VectorStoreRetriever and §VectorStore term entries corrected to show Result return and Err(E-VS-003 InvalidConfig)). Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2."
   - "v1.24 (fix-burst-280/wave-c/2026-07-28): Document Map Lines→Size column replacement. Rationale: a precise numeric line-count estimate held in a separate index file decays silently on every shard edit — no gate detects the drift; this burst found four cells stale by +64 to +174 lines (capabilities-p0.md, entities-server.md, ubiquitous-language-server.md, bounded-contexts.md). This is the same structural-decay class TD-VSDD-091 addresses for file:NNN citations — not a pinned cite, but the same unbounded-drift property with no detection gate. S/M/L/XL bands update only when a shard crosses a tier boundary, which coincides with the DF-021 split review; maintenance cost is already paid at that trigger. Column name diverges from the upstream template's Tokens column by orchestrator authorization (Path 2, fix-burst-280); spec-steward holds the governance record — this divergence is intentional, not accidental drift. Band assignments (all 14 rows): XL: capabilities-p1-p2.md; L: entities-graph.md, ubiquitous-language-core.md, bounded-contexts.md; S: assumptions.md, risks.md, differentiators.md; M: all remaining."
@@ -89,7 +90,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings/HITL/Compaction | entities-graph.md | L | architect, product-owner | Core primitives, graph, checkpoint + D21: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType + D23: PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary |
 | Entities — Server/Policy/Provider | entities-server.md | M | architect, product-owner | Server, governance, and provider entities |
 | Domain Invariants | invariants.md | M | product-owner, architect | DI-NNN business rules (15 invariants) |
-| Domain Events | events.md | M | architect | Processing stages, triggers, preconditions; StreamEvent taxonomy 15 variants (D23); ToolApprovalRaised/Resolved + CompactionExecuted domain events (D23) |
+| Domain Events | events.md | M | architect | Processing stages, triggers, preconditions; StreamEvent taxonomy 16 variants (D23 + burst-288 error terminal event); ToolApprovalRaised/Resolved + CompactionExecuted domain events (D23) |
 | Edge Cases | edge-cases.md | M | story-writer, test-writer | DEC-NNN domain-level edge cases (13 cases) |
 | Assumptions | assumptions.md | S | product-owner, test-writer | ASM-NNN with validation methods (9 assumptions) |
 | Risks | risks.md | S | product-owner, architect | R-NNN risk register (9 risks) |

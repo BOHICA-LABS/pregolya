@@ -2231,3 +2231,14 @@ develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). factory-artifacts 
 
 #### ARCHIVE METADATA
 Date: 2026-08-02 | Archived at: burst-288 close (2026-08-15) | STATE.md: 4.51 → 4.52 | burst-288 COMPLETE: fix-burst P1D-177 (3C+20H+MED/LOW); ADR-024; D-136..D-138; L-174..L-175; frozen HEAD c3cb55c; streak 0/3
+
+### Archived Session Checkpoint v4.52 (archived at burst-289 close / P1D-179 queued)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **0/3 after 178 passes**. burst-288 COMPLETE (2026-08-15): fix-burst P1D-177 — 3 CRITs CLOSED (C-02 ADR-024 confinement redesign/C-01 BC-2.13.005 EC-003 vs ADR-024 reconciled/E01 verify-error-notation-canon rebuilt); StreamEvent::Error 16th variant (BC-2.06.001); 20H+MED/LOW closed; 6 gate fixes (roster 13/13 + WARN 662→15 + branch-detect + records-lint-INDEX + census); POL-46 req-1 amended (D-133 Option B); D-136..D-138 (exhaustive); L-174..L-175. BC-INDEX; 129 BCs unchanged. **NEXT: P1D-178** on frozen HEAD `c3cb55c`. E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING until workspace exists.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). factory-artifacts `c3cb55c` — burst-288 committed+pushed (2026-08-15). Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-15 | Archived at: burst-289 close (2026-08-16) | STATE.md: 4.52 → 4.53 | burst-289 COMPLETE: fix-burst P1D-178 (0C/1H/3M/1L); StreamEvent count sweep; ADR-023/BC-2.10.003 phantom anchors; ADR-024 §Consumers; D-139..D-142; L-176..L-177; streak 0/3

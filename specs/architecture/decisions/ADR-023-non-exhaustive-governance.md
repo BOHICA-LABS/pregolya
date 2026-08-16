@@ -6,9 +6,9 @@ slug: non-exhaustive-governance
 title: "#[non_exhaustive] Governance for Public API Types (fix-burst-287 / F-P176-A028 + A029 + D009 + B026 + C028)"
 status: accepted
 producer: architect
-timestamp: 2026-08-01T00:00:00Z
-date: "2026-08-15"
-version: "1.3"
+timestamp: 2026-08-16T00:00:00Z
+date: "2026-08-16"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
@@ -16,6 +16,7 @@ subsystems_affected: ["all"]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.4 (burst-289/F-178-03+F-178-05/2026-08-16): Two findings closed. (F-178-03) Fix two phantom anchor citations: §Exempt Enums StreamEvent rationale and §Consequences both cited 'SS-06 §StreamEvent-Variants' — that heading does not exist in any SS-06 BC (variants live in BC-2.06.001 §Postconditions PC2, verified by heading grep). Both sites now cite 'BC-2.06.001 §Postconditions'. Both stale action-required directives updated to past tense: StreamEvent::Error was added to BC-2.06.001 §Postconditions (PC2) in burst-288 (v1.10). (F-178-05) Required Inventory enum header label corrected: '17 original + corpus-scan additions as of burst-288' was arithmetically misleading — '17 original' does not match the actual pre-burst-288 count of 12 (11 D17/D21/D23 table rows + TemplateInput). New label: '12 pre-burst-288 + 6 burst-288 D-03 additions = 18 total; 17 table rows below + TemplateInput'. Arithmetic totals unchanged (confirmed correct by adversary)."
   - "1.3 (burst-288/F-P177-A02+D-02+D-03+B01/2026-08-15): Four HIGH findings from P1D-177 closed. (A02) Fix Decision 4 heading and §Rationale: heading renamed from 'Required inventory and BC-2.22.001 compile-fail gate scope' to 'Required Inventory and compile-fail gate scope' — the old heading incorrectly implied BC-2.22.001 IS the gate scope document; §Rationale paragraph that read 'The compile-fail gate (BC-2.22.001) is the enforcement mechanism' was false (no gate exists yet) and replaced with accurate statement. (D-02) ToolCallPreview verified in Required Inventory; product-owner cross-owner routing note added to confirm #[non_exhaustive] attribute presence in interface-definitions.md. (D-03) Expand type inventory by 22 missing public types discovered in corpus-wide scan: 6 new Required enums, 3 new Exempt enums, 11 new Required structs, 2 new Exempt structs. Gate scope count updated from 20 to 37 Required Inventory types (18 enums + 19 structs). Exempt count updated from 6 to 11 (9 enums + 2 structs). (B01) StreamEvent governance resolved: EC-005 mandates terminal error SSE event requiring StreamEvent::Error as 16th variant; variant count updated 15 → 16; Exempt Inventory rationale updated noting Error variant must be added before Phase 3 implementation. Product-owner cross-owner routing note: add StreamEvent::Error variant to SS-06 §StreamEvent-Variants."
   - "1.2 (fix-burst-287/ADR-022-self-compliance/2026-08-01): Fix three phantom §citations that violated ADR-022 (restriction to real markdown headings). (1) Decision 4 struct note: removed 'BC-2.22.001 §compile-fail-gate text refers only to enums' — §compile-fail-gate is not a real heading anywhere in the BC corpus; restated as plain prose. (2) Gate update protocol step 3: removed 'Update BC-2.22.001 §compile-fail-gate' instruction — phantom heading citation; replaced with conditional prose. (3) Source/Origin D009: removed 'interface-definitions.md §public-API-enums' — no such heading exists in interface-definitions.md; public API enum declarations appear across the body of that document. (4) Rationale: correct 'five exempt enums' → 'six exempt enums' (BoundaryType added in v1.1)."
   - "1.1 (fix-burst-287/2026-08-01): Post-verification corrections. (1) A029 confirmed FALSE: BoundaryType does NOT carry #[non_exhaustive] per ADR-014 §Decision 6 body ('canonical 3-variant closed set, PASS-58 canon, not #[non_exhaustive]'); ADR-016 citation in the finding was wrong ADR. Add BoundaryType to Exempt Inventory (Criterion A). (2) C028 confirmed FALSE: BC-2.22.001 §compile-fail-gate does not exist anywhere in BC corpus (grep: zero hits). Removed false claim from Context and Consequences; replaced with accurate statement that no compile-fail gate exists and one must be created in Phase 3. (3) Correct ADR-016 → ADR-014 in A029 Affected-findings line."
@@ -78,7 +79,7 @@ The following types are explicitly exempt from the `#[non_exhaustive]` requireme
 
 | Type | Crate | Criterion | Rationale |
 |------|-------|-----------|-----------|
-| `StreamEvent` | pregolya-graph (via pregolya-core) | A | ADR-006 §Status explicitly states "Exhaustive match enforcement: any new variant added to `StreamEvent` causes compile errors at all match sites, making omissions impossible to ship undetected." Exhaustive matching is a design goal — consumer code that handles all events is structurally correct code. New events constitute a streaming protocol revision and require a version bump, not an additive extension. **Authoritative variant set: 16 variants including `StreamEvent::Error`.** EC-005 mandates a terminal error SSE event; `StreamEvent::Error` is the 16th variant and MUST be present in the implementation before Phase 3 begins. The exhaustive-match design goal is preserved — adding `Error` forces all consumers to handle the error path at compile time, which is the correct behavior. Cross-owner routing: product-owner must add `StreamEvent::Error` to SS-06 §StreamEvent-Variants (16th variant). |
+| `StreamEvent` | pregolya-graph (via pregolya-core) | A | ADR-006 §Status explicitly states "Exhaustive match enforcement: any new variant added to `StreamEvent` causes compile errors at all match sites, making omissions impossible to ship undetected." Exhaustive matching is a design goal — consumer code that handles all events is structurally correct code. New events constitute a streaming protocol revision and require a version bump, not an additive extension. **Authoritative variant set: 16 variants including `StreamEvent::Error`.** EC-005 mandates a terminal error SSE event; `StreamEvent::Error` is the 16th variant. The exhaustive-match design goal is preserved — adding `Error` forces all consumers to handle the error path at compile time, which is the correct behavior. Completed: `StreamEvent::Error` was added to BC-2.06.001 §Postconditions (PC2) as the 16th variant in burst-288. |
 | `MemoryScope` | pregolya-core | A | Three-tier storage partition (User/App/Session) is semantically closed. The storage-layer SQL WHERE predicate maps each variant to a distinct partition key. Adding a fourth scope tier would require a storage schema migration, not just a Rust additive extension. Callers that exhaustively match `MemoryScope` enforce correct partition routing — the compile error on variant addition is the desired behavior. |
 | `WriteGuardDecision` | pregolya-core | A | Three-way protocol contract (Allow/Deny/Transform) for the MemoryWriteGuard hook. All three outcomes must be handled by the guard dispatch layer. Adding a fourth outcome would change the dispatch contract, not extend it. Missing a variant in the dispatch match is a logic error the compiler should catch. |
 | `MemoryWriteRequest` | pregolya-core | A | Three-way write operation enum (Add/Replace/Remove). The write guard and memory store implementations must handle all three. The complete set of fundamental write operations is closed: Add, Replace, Remove covers the full CRUD-without-read surface. |
@@ -105,7 +106,7 @@ The types listed below constitute the **Required Inventory** — types that MUST
 
 ### Required Inventory (post-D23)
 
-**Public enums with `#[non_exhaustive]` (17 original + corpus-scan additions as of burst-288 — 18 total including TemplateInput):**
+**Public enums with `#[non_exhaustive]` (12 pre-burst-288 + 6 burst-288 D-03 additions = 18 total; 17 table rows below + TemplateInput):**
 
 | Type | Crate / Module | First introduced | BC anchor |
 |------|---------------|-----------------|-----------|
@@ -201,7 +202,7 @@ The Required Inventory is the authoritative scope definition for the compile-fai
 - The nine exempt enums (StreamEvent, MemoryScope, WriteGuardDecision, MemoryWriteRequest, SlotTrustPolicy, BoundaryType, IngressBoundary, GuardrailDecisionKind, GuardrailSeverityWire) and two exempt structs (GuardedDocuments, RunnableSequence) correctly do NOT carry `#[non_exhaustive]`. Their absence is documented and justified in the Exempt Inventory.
 - No compile-fail gate for the Required Inventory exists yet. A BC for `tests/external/non_exhaustive_gate/` must be authored in Phase 2. The gate MUST cover all 37 Required Inventory types (18 enums + 19 structs). The previous count of 20 types reflected only the initial D17/D21/D23 corpus sweep; burst-288 D-03 added 17 additional types identified via a full interface-definitions.md scan.
 - Product-owner action required: add `#[non_exhaustive]` to `ToolCallPreview` in interface-definitions.md (D-02 routing note in Required Inventory struct table).
-- Product-owner action required: add `StreamEvent::Error` as the 16th variant to SS-06 §StreamEvent-Variants before Phase 3 implementation (B01; EC-005 mandates terminal error SSE event).
+- Product-owner action completed: `StreamEvent::Error` added as the 16th variant to BC-2.06.001 §Postconditions (PC2) in burst-288 (EC-005 mandate fulfilled).
 - Future capability additions (D24+) that introduce new public types MUST reference this ADR and follow the gate update protocol.
 
 ---

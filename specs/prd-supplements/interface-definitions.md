@@ -1,13 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.70"
+version: "2.71"
 status: active
 producer: product-owner
-timestamp: 2026-08-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1d
 changelog:
-  - "2.70 (F-P177-D02+F-P177-B02-sibling, burst-288, 2026-08-15): (1) D-02 HIGH: Add `#[non_exhaustive]` to `ToolCallPreview` struct declaration. ADR-023 §required-types inventory lists ToolCallPreview as required; the missing annotation was a production-grade violation. (2) B02-sibling HIGH: Change `steps_remaining: Option<u32>` → `Option<i64>` in §BudgetInfo block. Rationale: BC-2.10.003 §recursion_limit_canon (BC-2.03.001) establishes execution proceeds to recursion_limit + 1 steps; at that step steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (already signed i64)."
+  - "2.71 (F-178-01/F-178-04, burst-289, 2026-08-16): F-178-01 — StreamEvent §StreamEvent: (a) count updated 15→16 variants; breakdown corrected to '11 execution lifecycle + 1 guardrail observability + 2 per-tool-call approval [D23/ADR-018] + 1 compaction [D23/ADR-019] + 1 error [F-P177-B01/ADR-023]'; (b) `Error` variant added to the Rust enum body after `CompactionEvent` with field inventory matching BC-2.06.001 PC2 (run_id, parent_ids, error_code, error_message); (c) BC anchor updated: 'updated D23 15 variants' extended with 'updated F-P177-B01/ADR-023 16 variants'. F-178-04 — §§changelog entry 2.70 phantom anchor: `BC-2.10.003 §recursion_limit_canon (BC-2.03.001)` replaced with `BC-2.03.001 §Description`; `§recursion_limit_canon` is not a heading in BC-2.03.001 (grep ^#{1,6} confirms); the formula lives in the §Description section."
+  - "2.70 (F-P177-D02+F-P177-B02-sibling, burst-288, 2026-08-15): (1) D-02 HIGH: Add `#[non_exhaustive]` to `ToolCallPreview` struct declaration. ADR-023 §required-types inventory lists ToolCallPreview as required; the missing annotation was a production-grade violation. (2) B02-sibling HIGH: Change `steps_remaining: Option<u32>` → `Option<i64>` in §BudgetInfo block. Rationale: BC-2.03.001 §Description establishes execution proceeds to recursion_limit + 1 steps; at that step steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (already signed i64)."
   - "2.69 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Two architect adjudications from P1D-175 Slice C1 applied. (1) F-P175-C101 ADR-021 Decision 1: TOML sample config debug_route_key corrected — present-but-empty form 'debug_route_key = \"\"' replaced with commented-absent form. Present-but-empty deserializes via serde to Option::Some(\"\") which BC-2.12.005 EC-005 defines as E-SERVER-013 startup failure; the secure default is absence of the key (None via serde default). BC-2.12.005 body is unchanged — EC-005/TV-007/E-SERVER-013 are correct and remain load-bearing. (2) F-P175-C113 ADR-021 Decision 2: add configurable: Option<HashMap<String, Value>> field to RunnableConfig struct. This is the LangGraph-parity configurable map (semport rust-translation-strategy §RunnableConfig mapping §11); graphs use it to read model, tool-set, and system-prompt overrides at execution time. Enables the Assistant 'reusable agent persona' concept in BC-2.12.002. BC-2.12.002 §Description product-owner handoff: replace fabricated 'model, tools, system prompt overrides, checkpointer config' text; see ADR-021 Decision 2 and fix-burst-283 handoff spec."
   - "2.68 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add `validate_embedding_batch` free function spec to §Embeddings Trait (core::embeddings, pregolya-core). Function is `pub`; cross-crate callers are pregolya-openai and pregolya-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2 (batch dimensionality contract → E-EMBED-001), INV-2 (consistent inner length), EC-003 (count mismatch), EC-004 (zero-length vector). Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1; test harnesses call this function directly per FIX-BURST-280 structural redesign — F-P175-A24 self-proving mock fix). TD-VSDD-060 sibling sweep for unregistered VP-body symbols: see FIX-BURST-280-corr report."
   - "2.67 (fix-burst-279/gap-2-TemplateInput+format_messages/2026-07-28): Gap 2 (BLOCKING) TD-VSDD-060 sweep — format_messages signature and TemplateInput enum. (1) Added `TemplateInput` enum definition (§Prompt Templates, before SlotTrustPolicy): three arms — Scalar(TemplateVar), Messages(MessageListVar), FewShotExamples(Vec<(TemplateVar, TemplateVar)>); #[non_exhaustive]; replaces former bare HashMap<String, TemplateVar> parameter. (2) `format_messages` signature corrected: parameter type `HashMap<String, TemplateVar>` → `HashMap<String, TemplateInput>` (breaking change per ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized). This is the architect-owned portion of the TD-VSDD-060 sweep; BC-2.18.002/004 PO routing in wave-b-po-routing-spec-279.md item 6 and item 7."
@@ -86,7 +87,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "761ed22"
+input-hash: "5debce6"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -980,9 +981,10 @@ pub struct MemoryEntry {
 ### StreamEvent
 
 The complete streaming event taxonomy emitted by `pregolya-graph` during a run and
-serialized to SSE by `pregolya-server`. **15 variants** (11 execution lifecycle + 1
+serialized to SSE by `pregolya-server`. **16 variants** (11 execution lifecycle + 1
 guardrail observability + 2 per-tool-call approval [D23/ADR-018] + 1 compaction
-[D23/ADR-019]). All variants carry `run_id` and `parent_ids` (BC-2.06.002).
+[D23/ADR-019] + 1 error [F-P177-B01/ADR-023]). All variants carry `run_id` and
+`parent_ids` (BC-2.06.002).
 
 ```rust
 /// Streaming events emitted during graph execution.
@@ -1089,6 +1091,20 @@ pub enum StreamEvent {
         /// None when no token ceiling is configured; negative i64 when accumulated > ceiling.
         tokens_remaining_after: Option<i64>,
     },
+    // Run error event — wire: error  (F-P177-B01/ADR-023, burst-288; 16th variant)
+    // Emitted when a node returns Err(PregolyaError) during execution.
+    // Stream closes after this event; RunEnd is NOT emitted (BC-2.06.001 EC-005).
+    // ADR-023 §exhaustive-by-design — StreamEvent is exhaustively matched by consumers;
+    // this is the final variant in the taxonomy.
+    // Causal ordering: replaces RunEnd on the failure path (no further events after Error).
+    Error {
+        run_id:        RunId,
+        parent_ids:    Vec<RunId>,
+        /// Error code from PregolyaError::code (e.g. "E-GRAPH-017").
+        error_code:    String,
+        /// Error message from PregolyaError::message.
+        error_message: String,
+    },
 }
 
 /// Causal ordering (BC-2.06.001 PC4 — updated D23/2026-07-22):
@@ -1134,7 +1150,7 @@ pub enum GuardrailSeverityWire { Critical, High, Medium, Low }
 ```
 
 **BC anchor:**
-BC-2.06.001 PC2 (variant enumeration + ToolEnd output semantics — updated D23 15 variants),
+BC-2.06.001 PC2 (variant enumeration + ToolEnd output semantics — updated D23 15 variants; updated F-P177-B01/ADR-023 16 variants),
 BC-2.06.001 PC4 (causal ordering — updated D23/2026-07-22),
 BC-2.06.002 (run_id + parent_ids on every variant),
 BC-2.06.003 (streaming/unary execution equivalence; GuardrailDecision stream-only notification),

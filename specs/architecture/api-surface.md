@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.22"
+version: "1.23"
 status: active
 producer: architect
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
+  - "1.23 (burst-289/F-178-01/2026-08-16): StreamEvent variant count corrected 15→16 in §pregolya-graph Public Types table. Variant 16 (StreamEvent::Error) was added in burst-288 per EC-005 mandate; api-surface.md was not updated in that burst. BC-2.06.001 §Postconditions (PC2) is the authoritative enumeration."
   - "1.22 (fix-burst-283/F-P175-C113/ADR-021-Decision-2/2026-07-30): RunnableConfig row updated — add configurable: Option<HashMap<String, Value>> field. LangGraph-parity configurable map (semport §RunnableConfig mapping §11); enables Assistant 'reusable agent persona' design in BC-2.12.002. Graphs read model, tool-set, system-prompt overrides from this map at execution time. BC anchor: BC-2.12.002, ADR-021 Decision 2."
   - "1.21 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add §Public Functions (pregolya-core) section registering `validate_embedding_batch` as a `pub` free function in `core::embeddings`. Visibility `pub` — cross-crate callers are pregolya-openai and pregolya-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2, INV-2, EC-003, EC-004. Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1). Resolves F-P175-A24-followup: the function was introduced by VP-008 redesign in FIX-BURST-280 but was absent from api-surface.md, making a VP body its sole signature authority (the F-P175-B117 phantom-signature defect class). TD-VSDD-060 sibling sweep included in burst report."
   - "1.20 (FIX-BURST-278/L9b-de-pin/2026-07-28): L9b de-pin: one version-pin-to-section-anchor conversion in the FIX-BURST-277-WAVE-B-errata changelog entry. ADR-005 version pin replaced with ADR-005 §Adjacent Trait Object-Safety Adjudications (Wave C migration list cross-reference)."
@@ -34,7 +35,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "f2f4f26"
+input-hash: "8c9f842"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -200,7 +201,7 @@ omissions falsifiable rather than silent.
 | `StateGraph<State>` | Graph builder: nodes, edges, channels | SS-02 | BC-2.02.001–006 |
 | `GraphConfig` | Execution config: checkpoint_saver, interrupt_before/after | SS-03 | BC-2.03.001 |
 | `Command` | HITL resume carrier: `Command(resume=value)` | SS-05 | BC-2.05.004 |
-| `StreamEvent` | Streaming event enum; run_id + parent_ids; 15 variants (D23 adds ToolApprovalRequest/Resolved/CompactionEvent as variants 13–15) | SS-06 | BC-2.06.001–006 |
+| `StreamEvent` | Streaming event enum; run_id + parent_ids; 16 variants (D23 adds ToolApprovalRequest/Resolved/CompactionEvent as variants 13–15; burst-288 adds StreamEvent::Error as 16th variant — BC-2.06.001 §Postconditions PC2) | SS-06 | BC-2.06.001–006 |
 
 ## Public Traits and Types (pregolya-tools)
 

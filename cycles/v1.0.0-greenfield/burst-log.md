@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "fc05ef3"
+input-hash: "[pending-recompute]"
 traces_to: STATE.md
 ---
 
@@ -6035,3 +6035,15 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | P1D-176 COMPLETE — 160 findings (5C/45H/80M/30L-OBS); 5 CRITs: C001 PC-2 error routing, C002 WriteFileTool unreachable, D001 TV registry 12 behind ground truth, D002 SS-22 wrong crate, E001 POL-19 §anchor enforcement phantom; 5 convergent mechanisms; first pass with policies.yaml POL-1..POL-31 active; D-109..D-115; L-153..L-155; 177 passes total; checkpoint v4.45 archived; factory-artifacts pushed. | state-manager | COMPLETE | 177 passes total. Streak 0/3. |
+
+## Burst 285 — Container Rename COMPLETE (Archived from STATE.md Current Phase Steps at burst-289)
+
+**Date:** 2026-07-31
+**Status:** COMPLETE
+**Output:** Container rename COMPLETE (D-116): GitHub rename BOHICA-LABS/ferrochain→pregolya (branch protection verified identical; develop `644d1ad`); main-repo commit `644d1ad` (ci.yml D-129); working dir renamed to `/Users/jmagady/Dev/pregolya`; 12 blocking validators PASS; E011/E012 CLOSED; E013 registered (default_branch = factory-artifacts, owner human); D-116..D-119 (sample); L-156..L-158; checkpoint v4.46 archived; factory-artifacts pushed. 177 passes total. Streak 0/3.
+
+## Burst 286 — Burst-286 Wrap COMPLETE (Archived from STATE.md Current Phase Steps at burst-289)
+
+**Date:** 2026-07-31
+**Status:** COMPLETE
+**Output:** Three v4.47 checkpoint defects corrected: (1) burst-285 collision → renumbered to 286 everywhere; (2) factory-artifacts SHA deferred by run-instruction → literal `a192f18` in HEADS; (3) workspace-init absent (Justfile/lefthook.yml/rust-toolchain.toml/Cargo.toml/crates/ missing; `just check` unavailable; F-P176-E023); D-88..D-108 (sample) archived; D-120; L-159; verify-sha-currency.sh macOS awk fix; STATE.md compacted to ~199 lines; all work committed and pushed. 177 passes total. Streak 0/3.

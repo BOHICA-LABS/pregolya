@@ -2,20 +2,21 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p0
-version: "1.8"
+version: "1.9"
 status: active
 producer: business-analyst
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "0658559"
+input-hash: "5666269"
 traces_to: L2-INDEX.md
 decisions: [D1, D7, D8, D11, D13, D17, D21]
 changelog:
+  - "v1.9 (F-178-01, burst-289, 2026-08-16): CAP-007 StreamEvent count corrected 15→16 (burst-288 added StreamEvent::Error as 16th variant per EC-005/BC-2.06.001 §Postconditions PC2). Stale interface-definitions version pin 'v2.34' removed from live body text per TD-VSDD-091/D18-P84-A. TD-VSDD-060 sweep: sole '15' total-count citation in capabilities-p0.md body text — fixed."
   - "v1.8 (burst-241 OBS-P141-B, 2026-07-23): CAP-007: replace stale '12 variants total' absolute claim with forward-reference note '12-variant base; extended to 15 by D23 (CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction)'. CAP-007 legitimately defines the 12-variant BASE; a cross-referencing reader consulting the base spec was misled into believing 12 was the final count. TD-VSDD-060 sweep: sole stale absolute '12' streaming count in domain-spec/; all other '12' occurrences are historical changelog entries or already describe the 12-variant base correctly."
   - "v1.7 (2026-07-20): CAP-002 D21 reversal — PromptTemplate/ChatPromptTemplate flipped from 'post-v1/community' to v1 deliverables (SS-18/pregolya-prompts, CAP-022/CAP-023); standalone OutputParser remains post-v1; with_structured_output covered by provider conformance (CAP-009), not a separate OutputParser. Prior v1.6 clarification partially superseded by D21 scope expansion (burst 216). D21 added to decisions list."
   - "v1.6 (2026-07-20): CAP-002 scope clarification added — listed Runnable examples (model call, prompt template, output parser, tool, graph) are user-implementable instances; pregolya ships the trait and composition machinery in v1 only; PromptTemplate / OutputParser first-party impls are post-v1/community deliverables. Grounded in product-brief v1.3 out-of-scope dispositions and audit Q1 GAP. input-hash updated (drift: 8fe3546→2b2bd5a)."
@@ -143,8 +144,8 @@ in D17-Q2 and the brief states "cannot be retrofitted post-graph-design." Both D
 Emit typed per-phase streaming events: run_start / run_stream / run_end, step_start /
 step_end, node_start / node_stream / node_end, tool_start / tool_stream / tool_end,
 guardrail_decision (Fail/Transform outcomes only; Pass is not streamed — F-P99-01,
-interface-definitions §StreamEvent v2.34) — 12-variant base; extended to 15 by D23
-(CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction) — each carrying a
+interface-definitions §StreamEvent) — 12-variant base; extended to 16 by D23 + burst-288
+(CAP-034 events 13-14 tool-approval, CAP-035 event 15 compaction, burst-288 event 16 error terminal per EC-005) — each carrying a
 run_id, parent_ids chain, and phase-specific payload. Streaming and unary runs drive
 the same engine and produce identical final answers.
 

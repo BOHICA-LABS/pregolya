@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-012
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from pregolya-graph/src/budget/policy.rs to pregolya-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: pregolya-core (BudgetPolicy + OnCeiling types) / pregolya-graph (halt path in pregel loop)."
   - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
@@ -25,14 +25,15 @@ changelog:
   - "1.8 (F-P97-05, 2026-07-17): VP table Phase-column axis normalized. VP-BUDGET-06 and VP-BUDGET-07 'Wave 1' corrected to 'Phase 1' to match the SS-10 convention established by VP-BUDGET-01/02/04/05 (all Phase 1). The v1.2 additions used the wave axis; the column carries the VSDD pipeline phase, not the wave. No behavioral change."
   - "1.9 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.10 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — Description: `PregolyaError { component: BUDGET, category: POLICY, code: \"E-BUDGET-001\" }` had 3/5 fields (missing retry_hint, message); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3. PC5 full-field observation (all 5 fields present) already valid — no change."
-  - "1.11 (F-P177-B02, burst-288, 2026-08-15): Change `steps_remaining: Option<u32>` → `Option<i64>` in PC5, PC9, Architecture Anchors §BudgetInfo struct, and Invariants explanation. Rationale: BC-2.03.001 §recursion_limit_canon establishes execution runs to recursion_limit + 1 steps; at step recursion_limit + 1, steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (signed for same reasons)."
+  - "1.11 (F-P177-B02, burst-288, 2026-08-15): Change `steps_remaining: Option<u32>` → `Option<i64>` in PC5, PC9, Architecture Anchors §BudgetInfo struct, and Invariants explanation. Rationale: BC-2.03.001 §Description establishes execution runs to recursion_limit + 1 steps; at step recursion_limit + 1, steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (signed for same reasons)."
+  - "1.12 (F-178-04, burst-289, 2026-08-16): Three phantom `BC-2.03.001 §recursion_limit_canon` anchor citations replaced with `BC-2.03.001 §Description` — the heading `##  Description` exists in BC-2.03.001 and contains the recursion_limit+1 formula; `§recursion_limit_canon` is not a heading anywhere in BC-2.03.001 (grep `^#{1,6}` confirms). Sites corrected: (a) changelog entry 1.11 rationale sentence; (b) PC9 parenthetical `(the final allowed step per …)`; (c) Invariants signed-type explanation. Behavioral content unchanged; anchor is the only correction."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "29f431a"
+input-hash: "d3f2d08"
 extracted_from: null
 modified: []
 deprecated: null
@@ -104,7 +105,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
    be negative if Deny was just triggered); `steps_remaining: Some(recursion_limit - current_step)`.
    Values are `None` when the corresponding budget dimension is not configured. `steps_remaining`
    is `Option<i64>` (signed) because at step `recursion_limit + 1` (the final allowed step per
-   BC-2.03.001 §recursion_limit_canon), `steps_remaining = recursion_limit - (recursion_limit + 1) = -1`,
+   BC-2.03.001 §Description), `steps_remaining = recursion_limit - (recursion_limit + 1) = -1`,
    which would underflow a `u32`; the signed type is required for correctness. Graph nodes
    may read `budget_info` from `RunContext` and inject it into model prompts to allow the
    model to adapt its strategy as budget decreases.
@@ -127,7 +128,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
   Arithmetic: for a ceiling `C` (in tokens, `C > 0`) and accumulated usage `U` (in tokens,
   `U >= 0`), `tokens_remaining = C - U as i64`. When `U > C`, `tokens_remaining < 0`.
 - `budget_info.steps_remaining` is of type `Option<i64>` (signed) for the same reason:
-  BC-2.03.001 §recursion_limit_canon establishes that execution proceeds through step
+  BC-2.03.001 §Description establishes that execution proceeds through step
   `recursion_limit + 1`; at that step, `steps_remaining = recursion_limit - (recursion_limit + 1) = -1`.
   A `u32` would underflow; `i64` matches the design precedent of `tokens_remaining`.
 

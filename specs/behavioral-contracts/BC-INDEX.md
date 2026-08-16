@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.36"
+version: "3.37"
 status: active
 producer: state-manager
-timestamp: 2026-08-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.37 (F-178-01/F-178-04, burst-289, 2026-08-16): 1 BC version bump — phantom §-anchor sweep + StreamEvent 15→16 sibling sweep. BC-2.10.003 (v1.11→v1.12): 3 phantom `BC-2.03.001 §recursion_limit_canon` anchor citations replaced with `BC-2.03.001 §Description` (heading exists; §recursion_limit_canon does not). interface-definitions v2.70→v2.71: StreamEvent 16-variant sweep (F-178-01 — add Error variant to enum body, update count '15→16 variants', update BC anchor note) + phantom anchor fix in v2.70 changelog (F-178-04). product-brief v1.9→v1.10: StreamEvent 15→16 variants in Callbacks Out-of-Scope description. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.36 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): 2 BC version bumps — phantom §Named-Section anchor sweep (§HTTP Status Codes NNN row pattern). BC-2.14.002 (v1.6→v1.7): 9 phantom-anchor occurrences in PC3 Known-overrides block corrected; row-number qualifiers parenthesized in §HTTP Status Codes (404 row), (409 row), (422 row), (503 row), (404 + 422 rows) forms. BC-2.05.005 (v1.6→v1.7): 2 phantom-anchor occurrences in PC3 prose and TV-003 Notes corrected to §HTTP Status Codes (422 row). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2)."
   - "3.35 (burst-288/F-P177-C-LOW-SS16/2026-08-15): 1 BC version bump — phantom §Named-Section anchor fix. BC-2.16.001 (v1.6→v1.7): EC-001 §Reference line removed §P-63 phantom anchor; P-63 is a table-row identifier in COMPARATIVE-ASSESSMENT.md, not a section heading. Replaced with parenthetical form. BC census UNCHANGED: 129 total."
   - "3.34 (burst-288/F-P177-B01+B02+B03/2026-08-15): 3 BC version bumps + interface-definitions v2.69→v2.70 — P1D-177 HIGH findings. BC-2.06.001 (v1.9→v1.10): StreamEvent::Error added as 16th variant (F-P177-B01); H1 title 15 Variants→16 Variants; Full Catalog row title synced. BC-2.10.003 (v1.10→v1.11): steps_remaining type Option<u32>→Option<i64> (F-P177-B02); interface-definitions §BudgetInfo sibling-swept same change. BC-2.12.003 (v1.5→v1.6): interrupted→cancelled arc added to PC7 (9th arc); PC10 authorization extended to interrupted Runs (F-P177-B03). interface-definitions: ToolCallPreview gains #[non_exhaustive] (F-P177-D02); steps_remaining u32→i64 in §BudgetInfo block (B02-sibling). BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2)."
@@ -263,6 +264,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.37 | 2026-08-16 | burst-289/F-178-01+F-178-04: 1 BC version bump — phantom §-anchor sweep + StreamEvent 15→16 sibling sweep. BC-2.10.003 (v1.11→v1.12): 3 `BC-2.03.001 §recursion_limit_canon` phantom anchors → `BC-2.03.001 §Description` (F-178-04). interface-definitions v2.70→v2.71: StreamEvent Error variant added to enum body, count 15→16, BC anchor extended (F-178-01) + phantom anchor in v2.70 changelog (F-178-04). product-brief v1.9→v1.10: StreamEvent 15→16 (F-178-01). BC census UNCHANGED: 129. | burst-289 F-178-01+F-178-04 |
 | 3.36 | 2026-08-15 | burst-288/F-P177-C-LOW-SS14: 2 BC version bumps — phantom §HTTP Status Codes NNN row anchor sweep. BC-2.14.002 (v1.6→v1.7): 9 sites corrected (§HTTP Status Codes 404/409/422/503/404+422 row qualifiers parenthesized). BC-2.05.005 (v1.6→v1.7): 2 sites corrected (§HTTP Status Codes 422 row parenthesized). BC census UNCHANGED: 129. | burst-288 F-P177-C-LOW-SS14 |
 | 3.35 | 2026-08-15 | burst-288/F-P177-C-LOW-SS16: BC-2.16.001 (v1.6→v1.7) — phantom §P-63 anchor removed from EC-001 §Reference line; replaced with parenthetical form. BC census UNCHANGED: 129. | burst-288 F-P177-C-LOW-SS16 |
 | 3.34 | 2026-08-15 | burst-288/F-P177-B01+B02+B03: 3 BC version bumps. BC-2.06.001 (v1.9→v1.10): StreamEvent::Error 16th variant; H1 title + Full Catalog row synced. BC-2.10.003 (v1.10→v1.11): steps_remaining Option<u32>→Option<i64>. BC-2.12.003 (v1.5→v1.6): interrupted→cancelled arc added to PC7 (9th arc); PC10 authorization extended. BC census UNCHANGED: 129. | burst-288 F-P177-B01+B02+B03 |
