@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,15 +27,18 @@ changelog:
   - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 1 site: VP-2.23.003-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
   - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-003 EditOldStringNotFound: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC5 E-TOOLS-008 file-not-found: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (message-embedded placeholders). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 2 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-003: inline → PregolyaError { code: 'E-TOOLS-003', .. }. PC-5 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
+  - "1.8 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — EditFileTool Ok-then-NotFound-at-open behavior. PC-5 extended: when canonicalize_beneath_root returns Ok(path) via Phase 2 (ADR-024 §Phase-2 Postconditions PC-5), path may not yet exist on disk; EditFileTool precondition 3 requires an existing file, so the subsequent OS open returns NotFound, propagated as E-TOOLS-008. This behavior is expected — Phase 2 running does not imply the file exists. traces_to + inputs + Architecture Anchors + §Architecture Authority updated to reference ADR-024 §Phase-2 Postconditions PC-5."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
+  - architecture/decisions/ADR-024-writefile-create-path-confinement.md
   - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
+  - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "b407795"
+input-hash: "fa4e8c2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -88,6 +91,13 @@ controls whether all occurrences are replaced (default false — first occurrenc
 4. **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
    No I/O performed.
 5. **File not found:** Returns `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
+   **ADR-024 PC-5 note:** `canonicalize_beneath_root` Phase 2 may return `Ok(path)` for a
+   path whose parent is within scope even when the target file does not yet exist. `EditFileTool`
+   precondition 3 requires the path to resolve to an *existing* file; Phase 2 running does not
+   mean the file exists (ADR-024 §Phase-2 Postconditions PC-5: `Ok(path)` from Phase 2 is a
+   creation-target path, not a file-existence guarantee). The subsequent OS `open()` call returns
+   `NotFound`, which is propagated as `E-TOOLS-008` here. This is expected — `EditFileTool` does
+   not create files.
 6. **Conditional retry safe:** `old_string` not found (E-TOOLS-003) is structurally a no-op
    (the file was not modified). Re-retrying after E-TOOLS-003 is safe without re-approval
    because no state was changed. This is the only retry-safe failure mode; write failures
@@ -147,6 +157,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (EditFileTool contract, `EditConfig::fuzzy_threshold`, `similar = "3"` opt-in), Decision 3 (High ActionRisk), Decision 4 (conditional retry classification), Decision 5 (E-TOOLS-001/003), Decision 7 (`similar` crate pin `"3"` Apache-2.0 MSRV 1.85)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Phase-2 Postconditions PC-5 (EditFileTool receives `Ok(path)` from Phase 2 when the requested file does not yet exist; the subsequent OS `open()` call returns `NotFound`, which must be propagated as `E-TOOLS-008 FileIoError` — `Ok` from `canonicalize_beneath_root` does NOT mean the file exists; EditFileTool does not create files); §Decision 2 (EditFileTool calling convention unchanged — no create-mode parameter)
 - `architecture/module-decomposition.md` — SS-23, `tools::fs` module in pregolya-tools
 
 ## Story Anchor
@@ -166,7 +177,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Source L2 Capability | CAP-036 |
 | Capability Anchor Justification | CAP-036 ("First-Party Filesystem Tools (tools::fs — ReadFileTool, WriteFileTool, EditFileTool, ListDirTool)") per capabilities-p1-p2.md §CAP-036 — this BC specifies EditFileTool's exact-match semantics, E-TOOLS-003 error, opt-in fuzzy fallback via EditConfig::fuzzy_threshold, and conditional retry safety that CAP-036 names as part of the tools::fs surface |
 | L2 Domain Invariants | DI-014 (Error Propagation — E-TOOLS-003 propagates as Err; no silent success on no-match) |
-| Architecture Authority | ADR-020 Decisions 2, 3, 4, 5, and 7 (EditFileTool contract, fuzzy threshold, similar dep pin, retry classification, E-TOOLS-001/003) |
+| Architecture Authority | ADR-020 Decisions 2, 3, 4, 5, and 7 (EditFileTool contract, fuzzy threshold, similar dep pin, retry classification, E-TOOLS-001/003); ADR-024 §Phase-2 Postconditions PC-5 (EditFileTool receives `Ok(path)` from Phase 2 when file does not exist; subsequent `open()` returns `NotFound` → E-TOOLS-008 — EditFileTool does not create files) and §Decision 2 (calling convention unchanged) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-003 reuse; VP-2.23.003-B/C (unit tests) |
 | Module | pregolya-tools / tools::fs |

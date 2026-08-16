@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "1.9"
+version: "2.0"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,15 +29,18 @@ changelog:
   - "1.7 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 3 sites: PC-6 inline reference (guard pass described as 'canonicalize_beneath_root succeeds — the confinement check and fs::open are distinct steps'), Invariants call-obligation bullet (root path argument), VP-2.23.006-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout; error-layer distinction (E-SBXD-001 sandbox vs E-TOOLS-001 tool layer) preserved in PC-6 final sentence."
   - "1.8 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC4 E-TOOLS-009 InvalidRegexPattern: ::new(Component::Tools, Category::Val, RetryHint::Never, ...); phantom pattern/compile_error fields removed (message-embedded placeholders). PC6 E-TOOLS-008 traversal I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. TD-VSDD-060 sibling sweep: EC-002/EC-008/TV-003/TV-006 use abbreviated code + JSON-like shorthand — classified (c) message-component descriptions; left as-is."
   - "1.9 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-3 E-TOOLS-001 → { code: 'E-TOOLS-001', .. }. PC-4 E-TOOLS-009 → { code: 'E-TOOLS-009', .. }. PC-6 E-TOOLS-008 traversal I/O → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
+  - "2.0 (burst-288/P1D-177-ITEM2/2026-08-15): ADR-024 §Phase-2 Postconditions PC-5 consumer (ROOT PATH ONLY) — GrepTool calls canonicalize_beneath_root for the root path argument; when path does not exist, Phase 2 returns Ok(canonical_parent.join(basename)); subsequent fs::open or fs::read_dir surfaces NotFound → E-TOOLS-008 via the PC-6 fail-the-whole-search path. Recursive sub-paths walk a confirmed-existing directory so Phase 2 does not arise for them. PC-6 text extended with ADR-024 §Phase-2 Postconditions PC-5 note (root path only). ADR-024 §Phase-2 Postconditions PC-5 added to §Traceability §Binding Decisions. ADR-024 added to traces_to + inputs + §Architecture Anchors."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
   - domain-spec/invariants.md#DI-014
+  - architecture/decisions/ADR-024-writefile-create-path-confinement.md
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "b407795"
+  - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
+input-hash: "2533603"
 extracted_from: null
 modified: []
 deprecated: null
@@ -111,6 +114,13 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    (DI-014). This also applies to I/O errors on the root `path` argument after it passes
    `canonicalize_beneath_root` succeeds — the confinement check and the subsequent `fs::open` are distinct steps;
    an I/O error at open time is E-TOOLS-008, not E-TOOLS-001.
+   (ADR-024 §Phase-2 Postconditions PC-5, ROOT PATH ONLY: when the root `path` argument
+   does not exist, `canonicalize_beneath_root` Phase 2 returns
+   `Ok(canonical_parent.join(basename))` — a creation-target path, not an existence
+   guarantee. The subsequent `fs::open` or `fs::read_dir` call surfaces `NotFound`, which
+   enters this fail-the-whole-search path as `E-TOOLS-008`. This PC-5 note applies to the
+   root `path` argument only; recursive sub-paths walk a confirmed-existing directory, so
+   Phase 2 does not arise for them.)
 
 ## Invariants
 
@@ -175,6 +185,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-008 OS-error paths minted burst-234; E-TOOLS-009 minted burst-233 — appended to ADR-020 Decision 5 §E-TOOLS-* table (burst-238 sweep: satisfied)), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
 - `architecture/module-decomposition.md` — SS-23, `tools::search` module in pregolya-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell (filesystem traversal)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Phase-2 Postconditions PC-5 (ROOT PATH ONLY: Ok(canonical_parent.join(basename)) from Phase 2 is a creation-target path, not an existence guarantee; GrepTool root-path NotFound enters the fail-the-whole-search path as E-TOOLS-008 per PC-6; recursive sub-paths walk a confirmed-existing directory, Phase 2 does not arise for them)
 
 ## Story Anchor
 
@@ -194,7 +205,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Capability Anchor Justification | CAP-038 ("First-Party Search Tool (tools::search — GrepTool)") per capabilities-p1-p2.md §CAP-038 — this BC specifies GrepTool's in-process regex semantics, linear-time `regex` crate guarantee, max_results 100 capping, hermetic no-subprocess invariant, PathGuard scope validation, and E-TOOLS-001/008/009 raised error codes (E-TOOLS-006 is a non-raised payload flag: GrepResult.capped) that CAP-038 names as the distinct search surface warranting its own CAP band |
 | L2 Domain Invariants | DI-014 (Error Propagation — path violations, invalid patterns, and OS-level I/O errors during traversal all propagate as Err; zero matches returns Ok([]) not Err; capping is non-fatal; E-TOOLS-008 is the carrier for traversal I/O errors — gate #33 reverse anchor: this BC now cites E-TOOLS-008 in PC-6/EC-008/TV-006 matching taxonomy v1.32 forward anchor) |
 | Architecture Authority | ADR-020 Decisions 2, 3, 5, and 7 (GrepTool contract, regex dep pin, ReadOnly ActionRisk, E-TOOLS-001/006) |
-| Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
+| Binding Decisions | D23 (first-party tool library scope, SS-23 creation); ADR-024 §Phase-2 Postconditions PC-5 (ROOT PATH ONLY: Ok from Phase 2 is a creation-target path, not an existence guarantee; GrepTool root-path NotFound → E-TOOLS-008 via fail-the-whole-search per PC-6; recursive sub-paths walk a confirmed-existing dir, Phase 2 does not arise for them) |
 | VP Registration | VP-2.23.006-A/B/C (unit/integration tests) |
 | Module | pregolya-tools / tools::search |
 | Priority | P1 |

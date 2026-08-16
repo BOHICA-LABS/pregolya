@@ -7,11 +7,16 @@ title: "Type Signature Canon: Object Safety and Arc Ownership Patterns (D-43, D-
 status: accepted
 producer: architect
 timestamp: 2026-08-01T00:00:00Z
-version: "1.1"
+date: "2026-08-01"
+subsystems_affected: ["all"]
+supersedes: []
+superseded_by: null
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D43, D45, D48]
 changelog:
+  - "1.2 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Alternatives Considered section per ADR template (LOW finding: date boundary conditions)."
   - "1.1 (fix-burst-287/illustration-markers/2026-08-01): Add discriminator:illustration-start/end markers around all prohibited-form examples, problem descriptions, and validator prose in each decision section. The ADR documents the prohibition by naming the prohibited forms; the markers exempt these illustrative regions from verify-signature-canon.sh scan so the scanner enforces normative signatures only. Content unchanged; no new decisions."
   - "1.0 (fix-burst-287/canon-inversion/2026-08-01): Initial decision — promote D-43 (DynTool), D-45 (VectorStoreRetriever no lifetime), and D-48 (as_retriever receiver + &Arc<Self> prohibition) from shell-script rule comments to ratified ADR headings. Grounds verify-signature-canon.sh rules S2, S3, S4 in citable architectural authority. `§Type Signature Canon` policy citations (POL-18 D-43/D-45/D-48 entries) can now be repointed from `adopted: [UNGOVERNED]` to these headings. Source: fix-burst-287 coordinator message identifying governance inversion — 'the validator has become the source of canon rather than an enforcer of it.'"
 ---
@@ -52,6 +57,18 @@ This ADR provides the canonical-form definitions as real markdown headings, grou
 `verify-signature-canon.sh` rules S2, S3, S4 actually assert (read verbatim from the CANON
 TABLE in the hook). Where the hook's comment and any existing prose disagree, this ADR
 adjudicates and states which won.
+
+---
+
+## Decision
+
+Ratify three canonical type-signature forms as ADR headings, grounding `verify-signature-canon.sh` rules S2, S3, S4 in this ADR:
+
+1. **D-43 — DynTool dispatch:** `Arc<dyn DynTool + Send + Sync>` is the canonical form; `Arc<dyn Tool>` is E0038 (not object-safe) and prohibited.
+<!-- discriminator:illustration-start -->
+2. **D-45 — VectorStoreRetriever:** The canonical trait has no lifetime parameter; `VectorStoreRetriever<'_>` in any signature is prohibited.
+3. **D-48 — `as_retriever` receiver and `&Arc<Self>` standing prohibition:** `fn as_retriever(self: Arc<Self>) -> Arc<dyn VectorStoreRetriever + Send + Sync>` is canonical; `&self` and `&Arc<Self>` receivers are prohibited for `as_retriever` and for any future `Arc<Self>` dispatch method.
+<!-- discriminator:illustration-end -->
 
 ---
 
@@ -282,3 +299,14 @@ A dedicated ADR (rather than adding to ADR-010 error taxonomy) is appropriate be
 - **ADR-014 Decision 2**: `as_retriever` fallibility — `Err(E-VS-003)` on invalid config.
 - **fix-burst-287 coordinator message**: governance-inversion finding — validator was source of
   canon rather than enforcer of it.
+
+## Alternatives Considered
+
+<!-- discriminator:illustration-start -->
+| Alternative | Reason Rejected |
+|-------------|-----------------|
+| Continue encoding canonical forms as shell-script CANON TABLE comments only | Creates a governance inversion: the hook becomes the source of canon rather than an enforcer. Architectural decisions require citable ADR headings that BCs and spec citations can reference. REJECT. |
+| D-43: `Box<dyn Tool + Send + Sync>` instead of `Arc<dyn DynTool + Send + Sync>` | `Box` precludes shared ownership across async tasks; `Arc` is required for multi-owner dispatch in Tokio multi-threaded runtime (ADR-001 Alt-B). `DynTool` is needed because `Tool` is not object-safe (generic `run` return type). REJECT. |
+| D-45: Keep lifetime parameter on `VectorStoreRetriever<'a>` | Lifetime parameters prevent `dyn VectorStoreRetriever` trait objects from being stored in `Arc` (requires `+ 'static`). Static dispatch coercion requires `'static` lifetime on the trait. REJECT. |
+| D-48: `&self` receiver for `as_retriever` | `&self` cannot yield an `Arc<dyn VectorStoreRetriever>` without a `Weak` back-reference or external `Arc` injection — both are non-trivial and error-prone. `self: Arc<Self>` provides the owned `Arc` directly. REJECT. |
+<!-- discriminator:illustration-end -->

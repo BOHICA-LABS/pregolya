@@ -591,7 +591,7 @@ while IFS= read -r line; do
       ;;
     G25-CRATE-LEVEL)
       G25_CRATE_LEVEL_LINE="$rest"
-      echo "  GATE-25 crate-level rows: $rest"
+      echo "  GATE-25: crate-level rows: $rest"
       ;;
     G25-UNMATCHED)
       G25_UNMATCHED_LINE="$rest"

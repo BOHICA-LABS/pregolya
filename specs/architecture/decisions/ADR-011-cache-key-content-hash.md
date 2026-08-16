@@ -7,13 +7,17 @@ title: "Cache-Key Content-Hash Contract (NE-05)"
 status: accepted
 producer: architect
 timestamp: 2026-07-13T00:00:00Z
-version: "1.0"
+date: "2026-07-13"
+subsystems_affected: ["SS-08"]
+supersedes: []
+superseded_by: null
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17]
 ne_anchors: [NE-05]
-supersedes: []
 changelog:
+  - "1.1 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Source / Origin section per ADR template (LOW finding: date boundary conditions)."
   - "1.0 (D17/2026-07-13): Initial ADR — content-hash cache-key contract anchoring NE-05; prohibits description-proxy and partial-content cache keys."
 ---
 
@@ -142,3 +146,16 @@ specification for the lint gate's semantic contract.
 - Two agents with identical descriptions but different resolved instructions MUST produce
   different cache keys. This is a testable correctness invariant and SHOULD be an
   integration test in the story that implements provider caching.
+
+## Rationale
+
+NE-05 (comparative analysis of adk-rust P-17) demonstrates that description-proxy cache keys cause correctness failures: two agents with identical descriptions but different resolved instructions would collide on the same cache entry, returning stale responses. The content-hash contract eliminates this class of correctness failures by construction — the hash input MUST include the full resolved instruction content, not a proxy.
+
+The `sha2` crate (SHA-256) provides a collision-resistant hash in the Rust ecosystem with stable API and no unsafe code. SHA-256 is the standard choice for content-addressable systems in Rust.
+
+## Source / Origin
+
+- **NE anchor:** NE-05 (Negative Evidence — adk-rust P-17 description-proxy cache key failure mode).
+- **Decision obligation:** D17 NE adoption commitment; all 17 NEs anchored in PRD §9.
+- **Enforcement:** CI lint gate `cargo xtask check-client-timeout` pattern; story acceptance criterion anchor.
+- **Authoring context:** D17 design session (2026-07-13); pregolya Phase 1a.

@@ -19,7 +19,10 @@
 #
 # VIOLATION CLASSES
 # ─────────────────
-#   CLASS1_VIOLATION             rust fence, value-expression, no `..` (add `..` before `}`)
+#   CLASS1_VIOLATION             rust fence, value-expression, struct literal without `..` — use ::new()
+#   VALUE_CLASS1_VIOLATION       rust fence, value-expression, struct literal WITH `..` — also use ::new()
+#                                (Class 1 mandates ::new() in value-expression position; struct-literal
+#                                 with `..` is Class 2 VALID only in match/matches!() pattern positions)
 #   CLASS3_ASCII_ELLIPSIS        prose/formal, `...` (three ASCII dots) as field-elision
 #   CLASS3_UNICODE_ELLIPSIS      prose/formal, `…` (U+2026) in field-elision position
 #   CLASS3_MISSING_DOTS          prose/formal, no elision marker, partial fields (add `..`)
@@ -51,9 +54,10 @@
 #   illustration_exempt_lines()   <!-- discriminator:illustration-start/end --> detection
 #   find_pregolya_error_openers() single-line and split-line opener detection
 #
-# SELF-PROBES (6 mandatory)
+# SELF-PROBES (7 mandatory)
 # ─────────────────────────
 #   1. Each violation sub-class (CLASS1, ASCII_ELLIPSIS, UNICODE_ELLIPSIS, MISSING_DOTS) detected
+#   1e. VALUE_CLASS1_VIOLATION: rust fence + '..' + value-expression fires; match-arm does not
 #   2. CLASS3_VALID_COMPLETE NOT flagged
 #   3. Changelog line quoting `...` → `..` NOT flagged
 #   4. pub struct / impl PregolyaError NOT flagged
@@ -217,6 +221,35 @@ def has_unicode_elision(span):
 def all_five_fields(span):
     return all(FIELD_RE[f].search(span) for f in FIVE_FIELDS)
 
+def is_pattern_context(lines, opener):
+    """Returns True if PregolyaError { } is in a PATTERN EXPRESSION context (Class 2 valid):
+    match arm, matches!(), or let-destructuring. Returns False for value-expression position
+    (Class 1 — struct literal forbidden; must use ::new()).
+
+    ADR-010 §Class 2: pattern positions = match arms ('=>'), matches!(), let destructuring.
+    ADR-010 §Class 1: value-expression positions must use ::new().
+
+    Heuristics (in priority order):
+      H1: 'matches!' appears in the 3 lines preceding the opener
+      H2: '}) =>' or '} =>' (closing-brace immediately before arrow) in a 20-line window
+          starting at the opener — unambiguous match-arm indicator in Rust
+    """
+    ol = opener['opener_line']
+
+    # H1: matches!() macro — PregolyaError { .. } is a macro argument
+    pre_start = max(0, ol - 3)
+    for i in range(pre_start, ol + 1):
+        if 'matches!' in lines[i]:
+            return True
+
+    # H2: match arm indicator — closing brace immediately followed by optional ')' then '=>'
+    MATCH_ARM_RE = re.compile(r'\}\s*\)?\s*=>')
+    for i in range(ol, min(len(lines), ol + 20)):
+        if MATCH_ARM_RE.search(lines[i]):
+            return True
+
+    return False  # default: value-expression position (Class 1 — use ::new())
+
 # ── Main scan ─────────────────────────────────────────────────────────────────
 files = sorted(glob.glob(f'{scan_dir}/**/*.md', recursive=True))
 
@@ -234,6 +267,7 @@ buckets = {
     'CLASS3_VALID'                     : 0,
     'CLASS3_VALID_COMPLETE'            : 0,
     'CLASS1_VIOLATION'                 : 0,
+    'VALUE_CLASS1_VIOLATION'           : 0,
     'CLASS3_ASCII_ELLIPSIS_VIOLATION'  : 0,
     'CLASS3_UNICODE_ELLIPSIS_VIOLATION': 0,
     'CLASS3_MISSING_DOTS_VIOLATION'    : 0,
@@ -315,7 +349,11 @@ for f in files:
         # Step 2 — Classify
         if rust_fence:
             if has_two_dot(span):
-                buckets['CLASS2_VALID'] += 1
+                if is_pattern_context(lines, opr):
+                    buckets['CLASS2_VALID'] += 1
+                else:
+                    buckets['VALUE_CLASS1_VIOLATION'] += 1
+                    violations.append(('VALUE_CLASS1_VIOLATION', rel))
             elif is_class4_file:
                 buckets['CLASS4_VALID'] += 1
             else:
@@ -607,6 +645,82 @@ PROBEOF
   echo "[SELF-PROBE PASS] Probe 5: split-line opener: valid form detected as CLASS3_VALID; violation form detected as CLASS3_MISSING_DOTS_VIOLATION."
 }
 
+# ── Probe for VALUE_CLASS1_VIOLATION: struct literal with .. in value-expression position ──
+# Added for E01 (burst-288): verifies the Class 1 positive-obligation scanner fires on
+# struct literal WITH '..' in a rust fence value-expression position. Also verifies that
+# the match-arm form (CLASS2 pattern context) does NOT fire VALUE_CLASS1_VIOLATION.
+
+probe_value_class1_violation() {
+  # Sub-probe A: rust fence + '..' + value-expression → must fire VALUE_CLASS1_VIOLATION
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/pvc_a"
+  cat > "$PROBE_TMP/pvc_a/probe.md" <<'PROBEOF'
+## Postconditions
+
+```rust
+fn example() -> Result<(), PregolyaError> {
+    return Err(PregolyaError { code: "E-CORE-001", category: Val, .. });
+}
+```
+PROBEOF
+  local out
+  out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/pvc_a")"
+  if ! echo "$out" | grep -qF 'VIOLATION VALUE_CLASS1_VIOLATION'; then
+    echo "[SELF-PROBE FAIL] Probe value-class1 A: VALUE_CLASS1_VIOLATION (rust fence, '..' in value-expr) not detected."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+
+  # Sub-probe B: rust fence + '..' + match arm (has '=>') → must be CLASS2_VALID, NOT fire
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/pvc_b"
+  cat > "$PROBE_TMP/pvc_b/probe.md" <<'PROBEOF'
+## Postconditions
+
+```rust
+match result {
+    Err(PregolyaError { code: "E-CORE-001", .. }) => { /* handle */ }
+    Ok(v) => return Ok(v),
+}
+```
+PROBEOF
+  out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/pvc_b")"
+  if echo "$out" | grep -qF 'VIOLATION VALUE_CLASS1_VIOLATION'; then
+    echo "[SELF-PROBE FAIL] Probe value-class1 B: match-arm form incorrectly flagged as VALUE_CLASS1_VIOLATION."
+    echo "  Match-arm patterns (CLASS2) should NOT trigger VALUE_CLASS1_VIOLATION."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$out" | grep -qF 'BUCKET CLASS2_VALID 1'; then
+    echo "[SELF-PROBE FAIL] Probe value-class1 B: match-arm form not counted as CLASS2_VALID."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+
+  # Sub-probe C: rust fence + '..' + matches!() → must be CLASS2_VALID, NOT fire
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/pvc_c"
+  cat > "$PROBE_TMP/pvc_c/probe.md" <<'PROBEOF'
+## Postconditions
+
+```rust
+assert!(matches!(result, Err(PregolyaError { code: "E-CORE-001", .. })));
+```
+PROBEOF
+  out="$(run_notation_scanner "$HOOKS_DIR" "$PROBE_TMP/pvc_c")"
+  if echo "$out" | grep -qF 'VIOLATION VALUE_CLASS1_VIOLATION'; then
+    echo "[SELF-PROBE FAIL] Probe value-class1 C: matches!() form incorrectly flagged as VALUE_CLASS1_VIOLATION."
+    echo "  matches!() patterns (CLASS2) should NOT trigger VALUE_CLASS1_VIOLATION."
+    echo "  Output: $out"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+
+  echo "[SELF-PROBE PASS] Probe value-class1: A (value-expr fires); B (match-arm CLASS2_VALID, not flagged); C (matches!() not flagged)."
+}
+
 # ── Probe 6: ADR-010 reports zero violations ──────────────────────────────────
 
 probe_new_form_violation() {
@@ -746,6 +860,7 @@ check_notation() {
 
   local total_violations=0
   total_violations=$(( ${bkt[CLASS1_VIOLATION]:-0}
+                     + ${bkt[VALUE_CLASS1_VIOLATION]:-0}
                      + ${bkt[CLASS3_ASCII_ELLIPSIS_VIOLATION]:-0}
                      + ${bkt[CLASS3_UNICODE_ELLIPSIS_VIOLATION]:-0}
                      + ${bkt[CLASS3_MISSING_DOTS_VIOLATION]:-0}
@@ -756,7 +871,7 @@ check_notation() {
   for k in EXEMPT EXCLUDED_ILLUSTRATION EXCLUDED_DECL CLASS0_EXEMPT \
             EXCLUDED_BASH EXCLUDED_PATTERN_REF EXCLUDED_DOC_COMMENT EXCLUDED_NO_CLOSE \
             CLASS2_VALID CLASS4_VALID CLASS3_VALID CLASS3_VALID_COMPLETE \
-            CLASS1_VIOLATION CLASS3_ASCII_ELLIPSIS_VIOLATION \
+            CLASS1_VIOLATION VALUE_CLASS1_VIOLATION CLASS3_ASCII_ELLIPSIS_VIOLATION \
             CLASS3_UNICODE_ELLIPSIS_VIOLATION CLASS3_MISSING_DOTS_VIOLATION \
             NEW_FORM_VIOLATION; do
     bucket_sum=$(( bucket_sum + ${bkt[$k]:-0} ))
@@ -779,6 +894,7 @@ check_notation() {
   printf "    %-44s %d\n" "CLASS3_VALID_COMPLETE (all 5 fields):"  "${bkt[CLASS3_VALID_COMPLETE]:-0}"
   echo "    ── Violation buckets ───────────────────────────────────────────────"
   printf "    %-44s %d\n" "CLASS1_VIOLATION (rust, no ..):"        "${bkt[CLASS1_VIOLATION]:-0}"
+  printf "    %-44s %d\n" "VALUE_CLASS1_VIOLATION (rust, .. val-expr):" "${bkt[VALUE_CLASS1_VIOLATION]:-0}"
   printf "    %-44s %d\n" "CLASS3_ASCII_ELLIPSIS_VIOLATION (...):" "${bkt[CLASS3_ASCII_ELLIPSIS_VIOLATION]:-0}"
   printf "    %-44s %d\n" "CLASS3_UNICODE_ELLIPSIS_VIOLATION (U+2026):" "${bkt[CLASS3_UNICODE_ELLIPSIS_VIOLATION]:-0}"
   printf "    %-44s %d\n" "CLASS3_MISSING_DOTS_VIOLATION:"         "${bkt[CLASS3_MISSING_DOTS_VIOLATION]:-0}"
@@ -824,9 +940,15 @@ check_notation() {
     n_files="$(printf '%s\n' "${violation_lines[@]}" | awk '{print $NF}' | sort -u | wc -l | tr -d ' ')"
     emit FAIL "N1 (ADR-010): error-construction notation — ${total_violations} violation(s) across ${n_files} file(s)"
     echo "  Routing guide (TD-VSDD-091: symbol/section cites; no line numbers):"
-    echo "    CLASS1_VIOLATION           → product-owner/architect: add '..' rest pattern before"
-    echo "                                 the closing '}' (struct-literal form is canonical:"
-    echo "                                 PregolyaError { code: \"E-XXX\", .. })"
+    echo "    CLASS1_VIOLATION           → product-owner/architect: use PregolyaError::new() —"
+    echo "                                 struct-literal form in rust-fence value-expression"
+    echo "                                 position is FORBIDDEN per ADR-010 §Class-1 (::new()"
+    echo "                                 is MANDATORY; adding '..' produces CLASS2 pattern form,"
+    echo "                                 which is only valid in match/matches!() contexts)"
+    echo "    VALUE_CLASS1_VIOLATION     → product-owner/architect: struct literal with '..' in a"
+    echo "                                 rust-fence VALUE-EXPRESSION position — convert to"
+    echo "                                 PregolyaError::new(...) per ADR-010 §Class-1 positive"
+    echo "                                 obligation (::new() MUST be used for construction)"
     echo "    CLASS3_ASCII_ELLIPSIS      → product-owner: replace '...' with '..' in observation"
     echo "    CLASS3_UNICODE_ELLIPSIS    → product-owner: replace '…' (U+2026) with '..' in observation"
     echo "    CLASS3_MISSING_DOTS        → product-owner: add '..' before closing '}'"
@@ -860,6 +982,7 @@ probe_changelog_not_flagged
 probe_decl_not_flagged
 probe_split_line
 probe_new_form_violation
+probe_value_class1_violation
 probe_adr010_zero_violations
 echo "[SELF-PROBE] All probes passed — checks are not false-green."
 echo ""

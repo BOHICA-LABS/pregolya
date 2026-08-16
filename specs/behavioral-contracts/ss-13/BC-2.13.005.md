@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.005
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -14,7 +14,8 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "af2d76a"
+  - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
+input-hash: "5ba9f5f"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -32,6 +33,7 @@ removal_reason: null
 changelog:
   - "1.1 (CENSUS-P109, 2026-07-18): Fix TV-002 and TV-003 E-SBXD-001 WorkspaceEscape struct — both rows used `{ resolved: \"/etc/passwd\" }` (single field) missing `requested` and `root`. Canonical 3-field form `{ requested, resolved, root }` per PC4/Invariant-2/VP-2.13.005-C. TV-002 fix: add `requested: \"/workspace/link_a\"`; TV-003 fix: add `requested: \"/workspace/rel_escape\"`. Both rows also missing `root: \"/workspace\"`. TD-VSDD-060 sweep: no other E-SBXD-001 struct sites in file."
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
+  - "1.3 (burst-288/P1D-177-C01/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — §Traceability §Binding Decisions: ADR-024 §Phase-2 Postconditions PC-3 added as governing authority for EC-003 dangling-symlink PathNotFound decision (per ADR-024 §Consumers obligation). EC-003 Expected Behavior updated: per ADR-024 §Decision 1 Phase 2 step (d), `symlink_metadata(joined)` detects the dangling symlink directly (is_symlink()=true → Err(SandboxError::PathNotFound)); prior text cited canonicalize's IoError::NotFound which was the pre-§Decision-1-Phase-2 description. Error verdict unchanged: Err(SandboxError::PathNotFound), not WorkspaceEscape. Architecture Anchors: ADR-024 §Decision 1 step (d) + §PC-3 added. inputs: ADR-024 added."
 priority: P1
 wave: 1
 ---
@@ -89,7 +91,7 @@ This BC directly covers domain edge case DEC-011.
 |----|-------------|-------------------|
 | EC-001 | Symlink at `/workspace/internal_link` points to `/workspace/subdir/file.txt` (within root) | `canonicalize` resolves to `/workspace/subdir/file.txt`; beneath root; `Ok(resolved_path)` — internal symlinks are permitted |
 | EC-002 | Chained symlinks: `/workspace/link_a → /workspace/link_b → /etc/passwd` | `canonicalize` follows the full chain; resolves to `/etc/passwd`; `Err(E-SBXD-001: WorkspaceEscape)` |
-| EC-003 | Dangling symlink: target path does not exist | `std::fs::canonicalize` returns `IoError::NotFound`; propagated as `Err(SandboxError::PathNotFound)` — not a workspace escape error |
+| EC-003 | Dangling symlink: symlink entry exists but target path does not exist | ADR-024 §Decision 1 Phase 2 step (d): `std::fs::symlink_metadata(joined)` returns `Ok(m)` where `m.file_type().is_symlink() = true` — the symlink entry is present but its target is absent. Returns `Err(SandboxError::PathNotFound)` per ADR-024 §Phase-2 Postconditions PC-3. Not a workspace escape error — the symlink entry itself is inside the workspace; confinement of the target cannot be verified, so the operation is rejected with PathNotFound. |
 | EC-004 | Relative symlink: `/workspace/rel_link → ../etc/passwd` | `canonicalize` resolves relative to the symlink's parent directory (`/workspace`), yielding `/etc/passwd`; `Err(E-SBXD-001: WorkspaceEscape)` |
 | EC-005 | Symlink to a directory outside root: `/workspace/etc_dir → /etc` | `canonicalize` resolves to `/etc`; not beneath root; `Err(E-SBXD-001: WorkspaceEscape)` — directory symlinks are subject to the same check |
 
@@ -120,7 +122,7 @@ This BC directly covers domain edge case DEC-011.
 | L2 Domain Invariants | DI-007 (Workspace Path Confinement) |
 | Source Analysis | P-65 NOT-APPLICABLE (must-not-inherit: `validate_relative_path` string-only — permits symlink escapes); NE-02 (pregolya requirement: canonical real-path check); DEC-011 (domain edge case: Workspace Symlink Escape); assessment-parts/part-3 §NE-02 |
 | Reference Evidence | adk-rust P-65: `validate_relative_path` never calls `canonicalize`, never resolves symlinks — pregolya INVERTS this. DEC-011 in edge-cases.md documents this exact scenario. No positive upstream reference — greenfield. |
-| Binding Decisions | NE-02, DI-007 |
+| Binding Decisions | NE-02, DI-007; ADR-024 §Phase-2 Postconditions PC-3 (dangling-symlink final component → `Err(SandboxError::PathNotFound)` — governing authority for EC-003 error-routing decision; per ADR-024 §Consumers obligation, this BC must cite ADR-024 as the implementing authority for step (d) of the two-phase `canonicalize_beneath_root` protocol) |
 | Forcing Functions | DEC-011 ("Workspace Symlink Escape" domain edge case); product-brief.md §NE catalog NE-02 |
 | Architecture Module | pregolya-sandbox / WorkspaceFs facade (filled by architect) |
 | Stories | S-N.MM (filled by story-writer) |
@@ -133,6 +135,7 @@ This BC directly covers domain edge case DEC-011.
 ## Architecture Anchors
 
 - `architecture/module-decomposition.md §pregolya-sandbox` — `sandbox::path_guard` row: `std::fs::canonicalize()` follows symlinks before prefix check; `Err E-SBXD-001`; symlink-escape detection as consequence of access-time canonicalization (CRITICAL, SS-13)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Decision 1 Phase 2 step (d): `symlink_metadata(joined)` detects dangling-symlink final component (`is_symlink()=true` → `Err(SandboxError::PathNotFound)`); §Phase-2 Postconditions PC-3: governing authority for EC-003 error code and rationale (confinement unverifiable for dangling-symlink target)
 
 ## Story Anchor
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (D23/2026-07-22): Add retry-approval ordering invariant per ADR-018 Decision 3. Specifies the fixed dispatch sequence: circuit_breaker.check → pre_tool_dispatch → tool.invoke → retry_policy.record(result); record(result) fires unconditionally after invoke regardless of approval path."
   - "1.5 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.6 (burst-271/F-P169-01/2026-07-25): Fix mis-anchor in Invariants — Retry-Approval Ordering section cited ADR-018 Decision 3 (Dispatch in graph::hitl::pre_tool_dispatch) instead of the correct Decision 6 (Retry / Approval Ordering). Authority pointer corrected; in-body sequence text was already correct and unchanged."
+  - "1.7 (F-P177-C-LOW-SS16, burst-288, 2026-08-15): Remove phantom §Named-Section anchor. EC-001 §Reference line had `COMPARATIVE-ASSESSMENT §P-63 REJECT rationale` — P-63 is a table-row identifier in COMPARATIVE-ASSESSMENT.md, not a section heading; `§P-63` is a phantom anchor. Replaced with `COMPARATIVE-ASSESSMENT (P-63 reject rationale)` — preserves the informational reference without implying a named section."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -108,7 +109,7 @@ three calls fail.
 `attempt_limit` (e.g., 3) is reached, the combinator stops after the third call and
 returns `E-RETRY-001`. The model does NOT receive a fourth attempt by supplying yet another
 arg variation.
-**Reference:** FM-012, NE-09, COMPARATIVE-ASSESSMENT §P-63 REJECT rationale.
+**Reference:** FM-012, NE-09, COMPARATIVE-ASSESSMENT (P-63 reject rationale).
 
 ### EC-002: Two Tools Same-Name Collision
 **Scenario:** Two independently-registered tools happen to share the same `tool_name`

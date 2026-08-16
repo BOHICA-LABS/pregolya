@@ -7,11 +7,16 @@ title: "§Named-Section Citation Convention: Restriction to Real Markdown Headin
 status: accepted
 producer: architect
 timestamp: 2026-08-01T00:00:00Z
-version: "1.2"
+date: "2026-08-15"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17]
+subsystems_affected: ["all"]
+supersedes: null
+superseded_by: null
 changelog:
+  - "1.3 (burst-288/F-P177-A01/2026-08-15): Reconcile §Decision 3 rule 5 vs §Decision 4 step 2 ambiguous-prefix conflict. Decision 4 step 2 was underdetermined: it treated any 'heading found' result as 'valid, no change' without distinguishing the one-match (unambiguous, valid) case from the multiple-match (ambiguous, invalid per Decision 3 rule 5) case. Fix: add step 2b and step 2c to Decision 4 to explicitly handle ambiguous-prefix citations — tighten the cited prefix to uniquely identify the intended heading using the known-replacements table or a description-qualified suffix. Add enumeration of 3 live corpus ambiguous-prefix instances requiring sweep and their prescribed resolutions."
   - "1.2 (fix-burst-287/measured-migration-count/2026-08-01): Correct fabricated migration count in Decision 4 and Consequences. '~170 citations across ~85 files' replaced with devops-measured figures: 42 normative-prose ADR-target §citations (217 raw occurrences minus 133 changelog/frontmatter exempt, minus 7 fenced-code, 16 inline-backtick, ~2 illustration, ~16 §Decision-N, 1 double-§ edge-case). 10 of the 42 are currently phantom. Sweep is a single-burst task, not a deferred campaign; gate can be promoted to BLOCKING sooner than v1.0/1.1 assumed. Note irony recorded: ADR-022's own migration precondition inherited the inflated count from CRIT E001 — fourth artifact this burst to carry a defect of the class it was created to fix. Add Decision 5: scope rule (ADR-target-only machine enforcement; Form A spirit binds all §-citations by convention; non-ADR targets adjudicated per-burst); chained double-§ forms prohibited."
   - "1.1 (fix-burst-287/2026-08-01): Correct self-consistency defects per DIRECTIVE 2. Fix Form A example to use exact ADR-010 heading text (Class 3, not Class-3). Tighten Decision 1 legal-form and Decision 3 validator spec to use prefix matching (heading must START WITH citation text; parenthetical suffixes allowed). Correct two migration-guidance citations (Class 1, Class 3 — no hyphens). Add DIRECTIVE 1 insight: reviewers, not only fix-burst agents, invent phantom anchors."
   - "1.0 (fix-burst-287/F-P176-A039+F-P176-E001/2026-08-01): Initial decision — close Mechanism 1 (§-anchor unverifiability). Restricts §Name citation convention to real markdown headings. Resolves structural conflict between TD-VSDD-091 (anti-volatile-pin) and machine-verifiable anchor resolution. Prerequisite to devops-engineer gate implementation."
@@ -109,7 +114,12 @@ This is a single-burst sweep, not a deferred multi-burst campaign. **This migrat
 
 For each `ADR-NNN §Name` citation in a live spec body:
 1. Check whether a line `^#{1,6} Name` exists in `ADR-NNN-*.md` body.
-2. **If yes:** Citation is valid. No change.
+2. **If yes — one match (unambiguous):** Citation is valid. No change.
+2a. **If yes — multiple matches (ambiguous prefix, Decision 3 rule 5 FAIL):** The prefix matches more than one heading in the target ADR. This is NOT valid. The citation MUST be tightened: extend `Name` to a longer prefix that uniquely identifies the intended heading, or include the parenthetical suffix that distinguishes it (e.g., `§Component Axis Expansion (D21) — 12 → 16` instead of `§Component Axis Expansion`). Use the `grep -c "^#{1,6} Name" target.md` count to confirm uniqueness after tightening.
+2b. **Known ambiguous-prefix instances requiring sweep resolution** (3 live instances identified by P1D-177):
+   - Any bare `ADR-010 §#[non_exhaustive] gate update requirement` citation (without D21 or D23 qualifier) — matches both `### #[non_exhaustive] gate update requirement` (D21 context) and `#### #[non_exhaustive] gate update requirement (D23)`; tighten to whichever heading is intended, qualified by the D-decision suffix.
+   - Any bare `ADR-010 §Component Axis Expansion` citation (without D21/D23 qualifier) — matches both `## Component Axis Expansion (D21) — 12 → 16` and `## Component Axis Expansion (D23) — 16 → 17`; tighten to the fully qualified heading.
+   - The sweep burst MUST grep for all citations matching these patterns and resolve each by tightening to the unambiguous qualified form. If additional ambiguous-prefix instances are discovered during the sweep, apply step 2a to each.
 3. **If no (phantom anchor):** Determine the intended target.
    - If the intent is a specific numbered decision, replace with `ADR-NNN Decision N`.
    - If the intent is a real section heading with a different name, replace `§Name` with `§Actual-Heading-Text`.
@@ -148,6 +158,19 @@ This means the corpus has two tiers:
 - Correct: `ADR-014 §Decision 2` and `ADR-005 §Adjacent Trait Object-Safety Adjudications` (in separate references)
 
 The one known double-§ occurrence (`api-surface.md`) is in the sweep task for Decision 4.
+
+---
+
+## Alternatives Considered
+
+**Alternative 1 — Allow Form B (bold-label citations) alongside Form A.**
+Rejected. Machine verification of Form B requires semantic understanding of which inline bold labels carry citation significance — there is no structural marker distinguishing a bold label intended as a citation target from bold text used for emphasis. All three forms are syntactically identical at the `§` callsite; a validator cannot distinguish them without parsing the target document for bold labels (brittle, implementation-complex). Restricting to Form A (real headings) preserves full machine-verifiability with a simple `grep` implementation.
+
+**Alternative 2 — Keep Form C (slugified pseudo-anchors) as a supported third form.**
+Rejected. Form C citations (containing `/` separators or combining a slug with a finding ID) have no structural basis in the target document — there is no corresponding heading, only a constructed identifier. They exist solely as a workaround for TD-VSDD-091's L9b de-pin requirement applied without checking heading existence. The production-grade resolution is to require real headings, not to formalize the workaround as a convention.
+
+**Alternative 3 — Restrict Form A citations to exact-match-only (no prefix matching).**
+Rejected in favor of prefix matching. ADR headings commonly carry parenthetical suffixes that identify D-decision numbers, version annotations, or qualifying remarks (e.g., `### Class 1 — Construction Form (MUST use \`::new()\`)`). Requiring exact-match citations would force authors to include the entire parenthetical in every citation, increasing fragility — a change to the parenthetical suffix would break all citations. Prefix matching correctly anchors citations to the stable leading text of a heading while tolerating parenthetical additions. Rule 5 (uniqueness requirement) prevents prefix matching from creating ambiguous citations.
 
 ---
 

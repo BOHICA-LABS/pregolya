@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ changelog:
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core / pregolya-server per module-decomposition.md v1.10."
   - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added above TV table. TV-001/TV-002/TV-005 use ALL-CAPS prose shorthand notation (`component: CORE, category: VAL`, etc.) which is BC-2.14.001 rendering convention for table cells — NOT compilable Rust. Actual test construction uses PregolyaError::new(...). No behavioral change."
   - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: TV-005 Input `PregolyaError { category: INTERNAL, ... }` — replaced `...` with `..`. TV-001 and TV-002 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.5 remain accurate). No behavioral change."
+  - "1.7 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): Remove phantom §Named-Section anchors in PC3 Known-overrides block. Nine `interface-definitions.md §HTTP Status Codes NNN row` references used row-number qualifiers as part of the §-anchor name (e.g., `§HTTP Status Codes 404 row`) — but the actual section heading is `§HTTP Status Codes`; row numbers are not headings. Fixed by parenthesizing each row qualifier: `§HTTP Status Codes (404 row)`, `§HTTP Status Codes (409 row)`, `§HTTP Status Codes (422 row)`, `§HTTP Status Codes (503 row)`, `§HTTP Status Codes (404 + 422 rows)`. Nine sites corrected; no behavioral change."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -87,30 +88,30 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    Known overrides as of v1.0.0 (complete enumeration — F-P26-01):
    - `E-SERVER-002 (RunNotFound)` → **404** despite `Category::Val` → 400.
      Rationale: "not found" responses use 404 per REST convention; 400 is for input-shape errors.
-     Source: BC-2.12.003; interface-definitions.md §HTTP Status Codes 404 row.
+     Source: BC-2.12.003; interface-definitions.md §HTTP Status Codes (404 row).
    - `E-SERVER-003 (ThreadNotFound)` → **404** despite `Category::Val` → 400.
-     Source: BC-2.12.001; interface-definitions.md §HTTP Status Codes 404 row.
+     Source: BC-2.12.001; interface-definitions.md §HTTP Status Codes (404 row).
    - `E-SERVER-006 (ScheduleNotFound)` → **404** despite `Category::Val` → 400.
-     Source: BC-2.12.004; interface-definitions.md §HTTP Status Codes 404 row.
+     Source: BC-2.12.004; interface-definitions.md §HTTP Status Codes (404 row).
    - `E-SERVER-008 (ThreadStateConflict)` → **409** despite `Category::Policy` → 403.
      Rationale: the conflict is a state-machine constraint (active run present), not a
      security or permission gate — 409 Conflict is semantically correct.
-     Source: BC-2.12.001; interface-definitions.md §HTTP Status Codes 409 row.
+     Source: BC-2.12.001; interface-definitions.md §HTTP Status Codes (409 row).
    - `E-SERVER-009 (AssistantNotFound)` — context-dependent dual override:
      - Direct lookup (`GET /assistants/{id}`) → **404** despite `Category::Val` → 400.
      - Run creation body (invalid `assistant_id` in POST body) → **422** despite `Category::Val` → 400.
-     Source: BC-2.12.002, BC-2.12.003 PC3; interface-definitions.md §HTTP Status Codes 404 + 422 rows.
+     Source: BC-2.12.002, BC-2.12.003 PC3; interface-definitions.md §HTTP Status Codes (404 + 422 rows).
    - `E-SERVER-010 (AssistantVersionNotFound)` → **404** despite `Category::Val` → 400.
-     Source: BC-2.12.002; interface-definitions.md §HTTP Status Codes 404 row.
+     Source: BC-2.12.002; interface-definitions.md §HTTP Status Codes (404 row).
    - `E-SERVER-011 (GraphNotFound)` → **422** despite `Category::Val` → 400.
      Rationale: graph_id in assistant creation body is a semantic (not structural) validation
      failure — the body is well-formed but references an unregistered resource.
-     Source: BC-2.12.002 EC-005; interface-definitions.md §HTTP Status Codes 422 row.
+     Source: BC-2.12.002 EC-005; interface-definitions.md §HTTP Status Codes (422 row).
    - `E-SERVER-016 (IdempotencyLockTimeout)` → **503** despite `Category::Timeout` → 504.
      Rationale: the lock timeout is a transient server-side serialization delay, not a
      provider/upstream timeout — 503 is the correct retryable-service-unavailable code.
      `RetryHint::Later` + `Retry-After` header are emitted. Source: BC-2.12.006 EC-002;
-     interface-definitions.md §HTTP Status Codes 503 row; F-P25-01.
+     interface-definitions.md §HTTP Status Codes (503 row); F-P25-01.
    - `E-GRAPH-002 (NoActiveInterrupt)` → **422** despite `Category::Policy` → 403.
      Rationale: the resume endpoint (`POST /threads/{thread_id}/runs/{run_id}/resume`)
      receives a well-formed request for a run with no active interrupt slot — this is a
@@ -119,7 +120,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
      rejection (403 would mean "you are not permitted to perform this action"). 422
      conveys "the run exists and you are authorized, but there is nothing to resume."
      Canon established pass-23; prior 409 entry retired. Source: BC-2.05.005 TV-003;
-     interface-definitions.md §HTTP Status Codes 422 row; F-P27-01.
+     interface-definitions.md §HTTP Status Codes (422 row); F-P27-01.
 4. The `Content-Type` header of the response is `application/problem+json` (not
    `application/json`) when a `ProblemDetail` is emitted.
 5. A `PregolyaError` without an HTTP context (e.g. raised in a CLI tool) can still call

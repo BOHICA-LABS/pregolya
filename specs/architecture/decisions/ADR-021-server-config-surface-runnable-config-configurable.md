@@ -7,11 +7,16 @@ title: "SecurityConfig TOML Representation and RunnableConfig.configurable Field
 status: accepted
 producer: architect
 timestamp: 2026-07-30T00:00:00Z
-version: "1.0"
+date: "2026-07-30"
+subsystems_affected: ["SS-12"]
+supersedes: []
+superseded_by: null
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D13]
 changelog:
+  - "1.1 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Rationale (H2), Source / Origin sections per ADR template (LOW finding: date boundary conditions)."
   - "1.0 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Initial decision — two adjudications from P1D-175 Slice C1. Decision 1: SecurityConfig TOML representation — resolve mutual unbootability between BC-2.12.005 EC-005 and the interface-definitions.md sample config. Decision 2: RunnableConfig.configurable field addition — resolve BC-2.12.002 fabricated-capability finding (mislabeled as BC-2.12.005 by adversary; actual defect in BC-2.12.002)."
 ---
 
@@ -139,5 +144,20 @@ No VP changes required. VP-SEC-01 and VP-SEC-02 (anchored in BC-2.12.005) are un
 |----|-----------|
 | BC-2.12.005 | Authoritative source for `debug_route_key` gate behavior; EC-005/TV-007/E-SERVER-013 validated and unchanged by Decision 1 |
 | BC-2.12.002 | "Reusable agent persona" concept; config field typed as `RunnableConfig`; product-owner must update §Description per Decision 2 |
+
+---
+
+## Rationale
+
+Decision 1 (SecurityConfig TOML): `debug_route_key` must be typed as `Option<String>` because the BC-2.12.005 security contract (EC-005, TV-007, E-SERVER-013) is gated on the field being absent, not on it being an empty string. Empty-string-as-disabled is operationally ambiguous and non-standard serde behavior. The absent-field pattern is the correct Rust idiom for optional TOML configuration.
+
+Decision 2 (RunnableConfig.configurable): LangGraph's `configurable` map is intentionally untyped — different graphs use different keys. Adding `configurable: Option<HashMap<String, Value>>` restores LangGraph parity without coupling pregolya-server's schema to graph implementations. The semport analysis (F-P175-C113) confirmed this field is required for the LangGraph Assistants API.
+
+## Source / Origin
+
+- **Finding mandate:** F-P175-C101 (CRIT — mutual unbootability, fix-burst-283) and F-P175-C113 (HIGH — fabricated RunnableConfig capabilities, fix-burst-283).
+- **Decision authority:** D13 (server config surface).
+- **BC traceability:** BC-2.12.005 (SecurityConfig gate), BC-2.12.002 (RunnableConfig Assistants concept).
+- **Authoring context:** fix-burst-283 architect adjudication (2026-07-30).
 
 ---

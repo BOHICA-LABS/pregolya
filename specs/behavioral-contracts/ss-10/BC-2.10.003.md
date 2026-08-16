@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.8 (F-P97-05, 2026-07-17): VP table Phase-column axis normalized. VP-BUDGET-06 and VP-BUDGET-07 'Wave 1' corrected to 'Phase 1' to match the SS-10 convention established by VP-BUDGET-01/02/04/05 (all Phase 1). The v1.2 additions used the wave axis; the column carries the VSDD pipeline phase, not the wave. No behavioral change."
   - "1.9 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.10 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — Description: `PregolyaError { component: BUDGET, category: POLICY, code: \"E-BUDGET-001\" }` had 3/5 fields (missing retry_hint, message); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3. PC5 full-field observation (all 5 fields present) already valid — no change."
+  - "1.11 (F-P177-B02, burst-288, 2026-08-15): Change `steps_remaining: Option<u32>` → `Option<i64>` in PC5, PC9, Architecture Anchors §BudgetInfo struct, and Invariants explanation. Rationale: BC-2.03.001 §recursion_limit_canon establishes execution runs to recursion_limit + 1 steps; at step recursion_limit + 1, steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (signed for same reasons)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -68,7 +69,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
 3. The execution engine is currently at an evaluation point (post-LLM-call or
    post-tool-invocation) within a super-step.
 4. *(Summarize variant)* `BudgetConfig` with `on_ceiling = OnCeiling::Summarize { summarize_prompt: String }` is configured in `GraphConfig.budget_config`. The `summarize_prompt` is a non-empty string injected as a `HumanMessage` before the final LLM call.
-5. *(Remaining-budget exposure)* A `BudgetConfig` is active (any `on_ceiling` variant). `graph::budget_engine` populates `RunContext.budget_info: BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` at each super-step boundary before dispatching tasks.
+5. *(Remaining-budget exposure)* A `BudgetConfig` is active (any `on_ceiling` variant). `graph::budget_engine` populates `RunContext.budget_info: BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<i64> }` at each super-step boundary before dispatching tasks.
 
 ## Postconditions
 
@@ -101,7 +102,10 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
 9. *(Remaining-budget exposure)* `RunContext.budget_info` is populated by `graph::budget_engine`
    at each super-step boundary: `tokens_remaining: Some(ceiling - accumulated_tokens)` (may
    be negative if Deny was just triggered); `steps_remaining: Some(recursion_limit - current_step)`.
-   Values are `None` when the corresponding budget dimension is not configured. Graph nodes
+   Values are `None` when the corresponding budget dimension is not configured. `steps_remaining`
+   is `Option<i64>` (signed) because at step `recursion_limit + 1` (the final allowed step per
+   BC-2.03.001 §recursion_limit_canon), `steps_remaining = recursion_limit - (recursion_limit + 1) = -1`,
+   which would underflow a `u32`; the signed type is required for correctness. Graph nodes
    may read `budget_info` from `RunContext` and inject it into model prompts to allow the
    model to adapt its strategy as budget decreases.
 
@@ -122,6 +126,10 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
   negative at the moment a Deny is triggered (the ceiling was exceeded on the current call).
   Arithmetic: for a ceiling `C` (in tokens, `C > 0`) and accumulated usage `U` (in tokens,
   `U >= 0`), `tokens_remaining = C - U as i64`. When `U > C`, `tokens_remaining < 0`.
+- `budget_info.steps_remaining` is of type `Option<i64>` (signed) for the same reason:
+  BC-2.03.001 §recursion_limit_canon establishes that execution proceeds through step
+  `recursion_limit + 1`; at that step, `steps_remaining = recursion_limit - (recursion_limit + 1) = -1`.
+  A `u32` would underflow; `i64` matches the design precedent of `tokens_remaining`.
 
 ## Edge Cases
 
@@ -195,7 +203,7 @@ the sub-agent's halt.
 
 - `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — halt path in `tick()`: after `Deny` decision, no new task scheduling; allow in-flight tasks to settle; call `put_writes`; transition run to `failed`; Summarize path: inject `HumanMessage(summarize_prompt)`, issue one final LLM call, return `summary_halt` result; budget_info population at each super-step boundary
 - `pregolya-graph/src/budget.rs` (`graph::budget`) — `PregolyaError` variant for `E-BUDGET-001 BudgetCeilingReached`
-- `pregolya-core/src/budget.rs` — `BudgetConfig::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (per ADR-009 Option 3 and interface-definitions v2.29 §BudgetConfig); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<u32> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
+- `pregolya-core/src/budget.rs` — `BudgetConfig::on_ceiling` field: `OnCeiling::Halt | OnCeiling::Escalate | OnCeiling::Summarize { summarize_prompt: String }` (per ADR-009 Option 3 and interface-definitions v2.29 §BudgetConfig); `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<i64> }` struct; `RunContext.budget_info: BudgetInfo` field (v1.2 addition)
 
 ## Story Anchor
 

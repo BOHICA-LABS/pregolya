@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -36,6 +36,7 @@ changelog:
   - "1.7 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.8 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. PC2 ToolApprovalResolved bullet and Related BCs updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.9 (F-P151-03, burst-252, 2026-07-24): PC2 CompactionEvent bullet — wire shape updated to adjudicated flat form: `compacted_turns (RangeInclusive<usize>)` → `compacted_start (usize)` + `compacted_end (usize)`; `parent_ids (Vec<RunId>)` added (BC-2.06.002 Inv-2 mandate — every StreamEvent variant carries parent_ids). Sibling-sweep: BC-2.06.006 v1.4 and interface-definitions.md v2.53 updated identically (F-P151-03)."
+  - "1.10 (F-P177-B01, burst-288, 2026-08-15): Add StreamEvent::Error as 16th variant (EC-005 mandate). PC2 extended with Error bullet after CompactionEvent; EC-005 updated to reference StreamEvent::Error by name with explicit field inventory; H1 title updated 15 Variants → 16 Variants. ADR-023 lists StreamEvent as exhaustive-by-design; variant count is now 16."
 extracted_from: null
 modified: []
 deprecated: null
@@ -46,7 +47,7 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.06.001: Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision; tool_approval_request/resolved; compaction_event) — 15 Variants
+# BC-2.06.001: Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision; tool_approval_request/resolved; compaction_event; error) — 16 Variants
 
 ## Description
 
@@ -88,6 +89,7 @@ Wire format is pregolya-native (not LangChain astream_events v2 wire compat) per
    - `StreamEvent::ToolApprovalRequest` — emitted BEFORE `interrupt()` when `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval`; carries `run_id`, `tool_name`, `tool_args`, `action_risk` (Option<ActionRisk>), `prompt` (human-facing approval request text); causal ordering and interrupt semantics specified in BC-2.06.004
    - `StreamEvent::ToolApprovalResolved` — emitted AFTER interrupt consumed, BEFORE decision applied, on `Command(resume=PreToolDecision)` delivery for a suspended approval; carries `run_id`, `tool_name`, `decision` (PreToolDecision variant), `reason` (Option<String>), `modified_args` (Option<ToolArgs>); causal ordering specified in BC-2.06.005
    - `StreamEvent::CompactionEvent` — emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); carries `run_id`, `parent_ids` (Vec<RunId>), `trigger` (CompactionTrigger variant), `compacted_start` (usize), `compacted_end` (usize), `summary_token_count` (u64), `tokens_remaining_after` (Option<i64>); causal ordering specified in BC-2.06.006
+   - `StreamEvent::Error` — emitted when a node returns `Err(PregolyaError)` during execution; carries `run_id`, `parent_ids` (Vec<RunId>), `error_code` (String), `error_message` (String); stream closes after this event; `RunEnd` is NOT emitted (EC-005); this is the 16th variant (ADR-023 §exhaustive-by-design — StreamEvent is exhaustively matched by consumers)
 3. Each event carries `run_id` (UUID) and `parent_ids` (ordered ancestry list) per BC-2.06.002.
 4. Events are emitted in the following causal ordering (updated F-P99-01):
    ```
@@ -147,9 +149,10 @@ by traversing `parent_ids` (see BC-2.06.002).
 
 ### EC-005: Node raises error mid-run (failed-run stream termination — adjudicated from PC2)
 **Scenario:** A node function returns `Err(PregolyaError)` during execution.
-**Expected behavior:** The execution engine emits an `error` SSE event carrying the
-`PregolyaError` payload; the event stream then closes. `RunEnd` is NOT emitted for
-a failed run — `RunEnd` is reserved for the completion path (PC2: "once at run completion").
+**Expected behavior:** The execution engine emits `StreamEvent::Error` carrying `run_id`,
+`parent_ids` (Vec<RunId>), `error_code` (String from `PregolyaError::code`), `error_message`
+(String from `PregolyaError::message`); the event stream then closes. `RunEnd` is NOT emitted
+for a failed run — `RunEnd` is reserved for the completion path (PC2: "once at run completion").
 The run record transitions to `failed` status, queryable via `GET /threads/{thread_id}/runs/{run_id}`.
 No partial or ghost `RunEnd` event with `status: "failed"` is emitted.
 **Adjudication note (F-P46-01, ADV-P1D-PASS-46):** PC2's completion-only `RunEnd` contract

@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.0"
+version: "3.1"
 status: active
 producer: product-owner
-timestamp: 2026-08-01T00:00:00Z
+timestamp: 2026-08-15T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "db110eb"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.1 (burst-288/F-P177-C-SS17/2026-08-15): BC-2.17.001 Notes VP enumeration corrected — was '(VP-001/002/003 + VP-009/010/011)' missing P1 harnesses VP-006/012/013; corrected to '(VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1))'. TV count and grand totals UNCHANGED (687 = 676 canonical + 11 GTV)."
   - "3.0 (fix-burst-287/F-P176-D001/2026-08-01): Ground-truth reconciliation — 8 stale registry rows corrected. Prior registry declared 664 canonical + 11 GTV = 675; ground truth (summed from BC bodies) is 676 canonical + 11 GTV = 687. Delta: +12 canonical TVs missing from registry. Rows corrected: BC-2.03.001 (5→6), BC-2.09.001 (7→8), BC-2.12.002 (7→8), BC-2.15.004 (7→9), BC-2.15.006 (6→7), BC-2.17.001 (5→9), BC-2.18.001 (6→7), BC-2.18.004 (4→5). Grand total corrected: 664→676 canonical + 11 GTV = 675→687. Normative ground-truth validation note added to §BC Test Vector Inventory preamble. Root cause: Mechanism 3 (arithmetic identity satisfiable without ground truth — column sum equals declared total at each update step, masking BC-body-vs-registry drift). Adversary finding D001 closed."
   - "2.9 (D-51-census/2026-07-28): BC-2.21.003 TV count 5→6 (+TV-006 overflow-norm guard; EC-006 overflow complement per BC-2.21.003 §Canonical Test Vectors v1.7 add). Grand total 674→675 (663→664 canonical + 11 GTV). Gate #28 resolved: v2.8 body ## Changelog row backfilled."
   - "2.8 (fix-burst-276/F-P173-505/2026-07-27): D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record."
@@ -146,7 +147,7 @@ changelog:
 | BC-2.16.001 | SS-16 | 5 | — | `TV-NNN` | | Retry keyed by tool_name not args |
 | BC-2.16.002 | SS-16 | 5 | — | `TV-NNN` | | Finite global_limit non-None |
 | BC-2.16.003 | SS-16 | 5 | — | `TV-NNN` | | Circuit breaker after repeated failure |
-| BC-2.17.001 | SS-17 | 9 | — | `TV-NNN` | | Six P0 + three P1 Kani VP harnesses (VP-001/002/003 + VP-009/010/011) |
+| BC-2.17.001 | SS-17 | 9 | — | `TV-NNN` | | Six P0 + three P1 Kani VP harnesses (VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1)) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
 | BC-2.18.001 | SS-18 | 7 | — | `TV-NNN` | | PromptTemplate f-string render; partial binding; strict-undefined guard |
 | BC-2.18.002 | SS-18 | 4 | — | `TV-NNN` | | ChatPromptTemplate multi-message render; PromptValue + MessageProvenance |
@@ -327,6 +328,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.1 | 2026-08-15 | burst-288/F-P177-C-SS17: BC-2.17.001 Notes VP enumeration corrected — VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1). TV count and grand totals UNCHANGED (687 = 676 canonical + 11 GTV). | burst-288 F-P177-C-SS17 |
 | 3.0 | 2026-08-01 | fix-burst-287/F-P176-D001: Ground-truth reconciliation. 8 stale BC rows corrected: BC-2.03.001 (5→6), BC-2.09.001 (7→8), BC-2.12.002 (7→8), BC-2.15.004 (7→9), BC-2.15.006 (6→7), BC-2.17.001 (5→9), BC-2.18.001 (6→7), BC-2.18.004 (4→5). Grand total corrected: 664→676 canonical + 11 GTV = 675→687. BC-2.17.001 Notes updated. Ground-truth validation normative note added. | fix-burst-287 |
 | 2.9 | 2026-07-28 | D-51-census: BC-2.21.003 TV count 5→6 (+TV-006 overflow-norm guard; EC-006 overflow case; BC-2.21.003 §Canonical Test Vectors v1.7 add). Grand total 674→675 (663→664 canonical + 11 GTV). Gate #28 resolved: v2.8 body table row backfilled. | D-51 |
 | 2.8 | 2026-07-27 | fix-burst-276/F-P173-505: D-28 banner added to body ## Changelog section, declaring Form A (frontmatter changelog:) authoritative; body table preserved as historical record. | fix-burst-276/F-P173-505 |

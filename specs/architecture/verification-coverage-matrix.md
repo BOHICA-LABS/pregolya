@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.4"
+version: "3.5"
 status: active
 producer: architect
 timestamp: 2026-07-27T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "25af441"
+input-hash: "ac898d4"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.5 (burst-288/F-P177-A04/2026-08-15): Fix stale coverage gap note: 'Actual proptest coverage is 3 of 12 CRITICAL and 7 of 28 HIGH' → '7 of 29 HIGH'. The HIGH tier count was bumped from 28 to 29 in §Coverage by Criticality Tier (core::tool added) and the tier table was correctly updated to 29, but the coverage gap prose note was not updated in the same burst. Tier table row HIGH '7 of 29' was already correct; only the prose note was stale."
   - "3.4 (FIX-BURST-278-WAVE-A/F-P175-D212/2026-07-28): Iron Law — add `core::tool` HIGH row (pregolya-core SS-08; Tool/DynTool trait seam; Arc<dyn DynTool> composition; BC-2.08.010; no Kani VP; Integration=yes). Required by module-decomposition.md §core::tool row addition. Coverage-by-Criticality-Tier: HIGH 28→29. Preamble updated 83→84, tiered 77→78. Coverage gap note updated 28→29 HIGH modules."
   - "3.3 (FIX-BURST-277-WAVE-B/2026-07-28): Item 6 module census — add 6 definitions-only/exempt rows to Per-Module Coverage Status table: core::documents (definitions-only, D21/SS-20, ADR-014 Decision 2), memory::skills (routing-overlay/exempt, D20/SS-15, ADR-012 Decision 4), core::guardrail (definitions-only, SS-11, ADR-014 Decision 6), core::action_risk (definitions-only, SS-05, F-P170-06/ADR-020), core::context_mutation (definitions-only, D20/SS-01, ADR-012), core::write_guard (definitions-only, D20/SS-15, ADR-012). All have Tier=— (no kill rate obligation), no VP targets, no Kani/proptest/fuzz. Preamble updated 77→83. Tiered count (CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77) unchanged — definitions-only/exempt rows are outside the tiered universe."
   - "3.2 (FIX-BURST-276-CHECK4/2026-07-27): CHECK4 canonicality closure — rename three crate-level BaseChatModel provider rows to full canonical crate names: `openai` → `pregolya-openai`, `anthropic` → `pregolya-anthropic`, `ollama` → `pregolya-ollama`. Aligns with established pattern: pregolya-macros and pregolya-standard-tests already use full crate names in this file; purity-boundary-map.md already uses these names generating the same expected SET-DIFF in-here-not-decomp WARNs (crate-level rows are not in module-decomp canonical set because the Provider Crates section is excluded from decomp scanning). Row Notes updated to remove stale 'no canonical crate::module name' wording; full crate names ARE canonical via ARCH-INDEX.md roster. No VP or coverage count changes; census sextuple unchanged."
@@ -169,7 +170,7 @@ changelog:
 | MEDIUM | 35 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | n/a (xtask and pregolya-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
 
-> **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 28 HIGH (derivation: counted proptest column = yes/VP-NNN from per-module table above, grouped by tier). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 29 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.
+> **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 29 HIGH (derivation: counted proptest column = yes/VP-NNN from per-module table above, grouped by tier). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 29 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.
 
 ## Mutation Kill Rate Gates (cargo-mutants)
 

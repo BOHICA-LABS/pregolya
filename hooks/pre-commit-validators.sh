@@ -98,7 +98,11 @@ set -uo pipefail
 
 HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
 FAILED_VALIDATORS=()
+PASSED_VALIDATORS=()
 PASS_COUNT=0
+# Single source of truth for the expected blocking validator roster size.
+# Update this constant when adding or removing a blocking validator.
+EXPECTED_BLOCKING_COUNT=13
 
 # run_blocking runs a validator and records failure in FAILED_VALIDATORS
 run_blocking() {
@@ -107,6 +111,7 @@ run_blocking() {
 
   if [ ! -f "$script" ]; then
     echo "[SKIP] $name — script not found at $script"
+    FAILED_VALIDATORS+=("$name (MISSING — script not found)")
     return
   fi
 
@@ -114,6 +119,7 @@ run_blocking() {
   echo "── $name ──────────────────────────────"
   if bash "$script"; then
     PASS_COUNT=$((PASS_COUNT + 1))
+    PASSED_VALIDATORS+=("$name")
   else
     FAILED_VALIDATORS+=("$name")
   fi
@@ -134,7 +140,17 @@ run_advisory() {
   bash "$script" || true  # exit code is explicitly ignored
 }
 
+# ── Branch detection (robust; suite runs unconditionally) ─────────────────────
+# Do NOT gate on `git branch --show-current` — it returns empty string in detached
+# HEAD / rebase / bisect / cherry-pick, causing silent bypass of all validators.
+# `symbolic-ref --short` also fails in detached HEAD but we capture it explicitly
+# and still run the suite rather than silently passing.
+# --no-verify bypass note: git commit --no-verify skips this entire hook chain.
+# The factory-artifacts branch protection does not enforce --no-verify prevention;
+# rely on team discipline and CI audit to detect unauthorized bypasses.
+FACTORY_BRANCH="$(git -C "$HOOKS_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "(unknown)")"
 echo "factory-artifacts pre-commit gate — running blocking validators"
+echo "  branch: $FACTORY_BRANCH (suite runs unconditionally regardless of branch state)"
 echo "================================================================"
 
 # ── Blocking validators ───────────────────────────────────────────────────────
@@ -161,7 +177,27 @@ run_advisory "verify-adr-anchor-citations.sh"
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""
 echo "================================================================"
-echo "Blocking validators passed: $PASS_COUNT"
+echo "Blocking validators passed: $PASS_COUNT / $EXPECTED_BLOCKING_COUNT expected"
+
+# ── Per-validator census (computed from actual run results) ───────────────────
+# Replaces the static (CLEAN)/(FAILING) comment-block annotations.
+# Reports actual run outcome, not an authored snapshot.
+echo ""
+echo "Per-validator census (computed from this run):"
+for v in "${PASSED_VALIDATORS[@]}"; do
+  printf "  PASS   : %s\n" "$v"
+done
+for v in "${FAILED_VALIDATORS[@]}"; do
+  printf "  FAIL   : %s\n" "$v"
+done
+
+# ── Roster assertion (E04) ────────────────────────────────────────────────────
+TOTAL_RAN=$(( PASS_COUNT + ${#FAILED_VALIDATORS[@]} ))
+if [ "$TOTAL_RAN" -ne "$EXPECTED_BLOCKING_COUNT" ]; then
+  echo ""
+  echo "GATE: FAIL — roster mismatch: expected $EXPECTED_BLOCKING_COUNT blocking validators, only $TOTAL_RAN ran (check for missing scripts)"
+  exit 1
+fi
 
 if [ "${#FAILED_VALIDATORS[@]}" -gt 0 ]; then
   echo ""
@@ -174,5 +210,6 @@ if [ "${#FAILED_VALIDATORS[@]}" -gt 0 ]; then
   exit 1
 fi
 
-echo "GATE: PASS — all blocking validators passed"
+echo ""
+echo "GATE: PASS — all $EXPECTED_BLOCKING_COUNT blocking validators passed"
 exit 0

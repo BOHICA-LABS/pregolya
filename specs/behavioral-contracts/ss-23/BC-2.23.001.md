@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-15T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -28,15 +28,18 @@ changelog:
   - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form (#[non_exhaustive] bars external callers from struct literals). PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-002 FileReadExceedsLimit: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC4 E-TOOLS-008 I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (these are message-embedded placeholders, not struct fields). TD-VSDD-060 sibling sweep: EC-005/TV-004 use JSON-like {tool_type, path, io_kind} notation — classified (c) message-component descriptions, not construction examples; left as-is."
   - "1.7 (fix-burst-287/F-P176-C001/2026-08-01): PC-2 error-routing defect fixed. Prior text routed canonicalize_beneath_root returning Err 'for any reason' to E-TOOLS-001 (SECURITY/Never), conflating OS I/O failures (NotFound, PermissionDenied) with genuine scope-escape violations. Narrowed to: E-TOOLS-001 applies only when canonicalize_beneath_root returns Err because the resolved canonical path lies outside the guard scope (genuine escape — symlink target escapes root, absolute path under a different root). OS-level I/O failures from canonicalize_beneath_root route to PC-4 as E-TOOLS-008 FileIoError. Discrimination note added to PC-2 body. PC-4, EC-005, and TV-004 are already consistent with this rule; no additional edits needed. Defect class: C001 partial-sweep from prior fix propagated to sibling BCs but missed this file and BC-2.23.002."
   - "1.8 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001: inline → PregolyaError { code: 'E-TOOLS-001', .. }. PC-3 E-TOOLS-002: inline → { code: 'E-TOOLS-002', .. }. PC-4 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
+  - "1.9 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — ReadFileTool Ok-then-NotFound-at-open behavior. PC-4 extended: when canonicalize_beneath_root returns Ok(path) via Phase 2 (ADR-024 §Phase-2 Postconditions PC-5), path may not yet exist on disk; the subsequent OS open() returns NotFound, propagated as E-TOOLS-008. traces_to + inputs + Architecture Anchors + §Architecture Authority updated to reference ADR-024 §Phase-2 Postconditions PC-5."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
+  - architecture/decisions/ADR-024-writefile-create-path-confinement.md
   - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
+  - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "b407795"
+input-hash: "fa4e8c2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -94,6 +97,13 @@ limit.
 4. **File not found or permission denied:** The tool propagates the OS I/O error as
    `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    This is not a path-confinement violation; it is a runtime filesystem error.
+   **ADR-024 PC-5 note:** `canonicalize_beneath_root` Phase 2 may return `Ok(path)` for a
+   path whose parent is within scope even when the target file does not yet exist on disk —
+   `Ok(path)` from Phase 2 is a *creation-target* path, not a guarantee the file exists
+   (ADR-024 §Phase-2 Postconditions PC-5). `ReadFileTool` is NOT a create-path caller; when
+   Phase 2 activates for a ReadFileTool invocation, the subsequent OS `open()` call will
+   return `NotFound`, which is propagated as `E-TOOLS-008` here. This is the correct and
+   expected behavior.
 5. VP-003 (workspace confinement Kani proof) coverage extends to `ReadFileTool` without
    modification: `PathGuard` is the same type already proven; no new Kani proof is required.
 
@@ -153,6 +163,7 @@ limit.
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (tools::fs module), Decision 3 (ActionRisk defaults), Decision 5 (E-TOOLS-001/002 error namespace)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Phase-2 Postconditions PC-5 (ReadFileTool and EditFileTool receive `Ok(path)` from Phase 2 when the requested file does not yet exist; the subsequent OS `open()` call returns `NotFound`, which must be propagated as `E-TOOLS-008 FileIoError` — `Ok` from `canonicalize_beneath_root` does NOT imply the file exists); §Decision 2 (ReadFileTool calling convention unchanged — no create-mode parameter needed)
 - `architecture/module-decomposition.md` — SS-23, `tools::fs` module in pregolya-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell classification
 
@@ -173,7 +184,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Source L2 Capability | CAP-036 |
 | Capability Anchor Justification | CAP-036 ("First-Party Filesystem Tools (tools::fs — ReadFileTool, WriteFileTool, EditFileTool, ListDirTool)") per capabilities-p1-p2.md §CAP-036 — this BC specifies the ReadFileTool behavioral contract including PathGuard-confinement, max_bytes size limit, E-TOOLS-001/002 error codes, and ReadOnly risk tier that CAP-036 names as part of the tools::fs surface |
 | L2 Domain Invariants | DI-014 (Error Propagation — validation failures propagate as Err; no silent empty fallback) |
-| Architecture Authority | ADR-020 Decisions 2, 3, and 5 (tools::fs module, ActionRisk defaults, E-TOOLS-001/002 namespace) |
+| Architecture Authority | ADR-020 Decisions 2, 3, and 5 (tools::fs module, ActionRisk defaults, E-TOOLS-001/002 namespace); ADR-024 §Phase-2 Postconditions PC-5 (ReadFileTool receives `Ok(path)` from Phase 2 when file does not exist; subsequent `open()` returns `NotFound` → E-TOOLS-008) and §Decision 2 (ReadFileTool calling convention unchanged) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-003 reuse (no new VP-INDEX entry); VP-2.23.001-B/C (unit tests) |
 | Module | pregolya-tools / tools::fs |

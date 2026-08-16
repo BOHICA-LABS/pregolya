@@ -3,35 +3,23 @@
 #
 # PURPOSE
 # ───────
-# Detects false closures where a changelog entry claims a change was made but the
-# body of the same file still reflects the pre-change state. Four heuristics:
+# Detects false closures where a changelog entry claims an input-hash change was
+# made but the frontmatter `input-hash:` field does not match the claimed value.
 #
-#   (a) REMOVAL CLAIMS — changelog entry contains "remove[d]/drop[ped]/eliminat[ed]/
-#       delet[ed]/replac[ed/ing]" + a quoted or backtick-wrapped term; checks if that
-#       term still appears verbatim in the body (Form-B section excluded from search).
+# ACTIVE HEURISTIC (burst-288 narrowing, E08 fix):
+#   (c) INPUT-HASH CLAIMS — changelog entry claims "input-hash [updated/refreshed/
+#       bumped/set] to HASH"; verifies frontmatter `input-hash:` matches the claim.
+#       This is the 1 decidable heuristic retained after burst-288 narrowing.
 #
-#   (b) RENAME CLAIMS — changelog entry contains "OLD → NEW" (U+2192) or "OLD -> NEW"
-#       (ASCII arrow); checks if the old form OLD still appears verbatim in the body
-#       (Form-B section excluded from search).
-#       OLD is the token immediately before the arrow; NEW is the token immediately after.
-#
-#   (e) FROM-X CLAIMS — changelog entry contains "from `X` to" where X is a
-#       backtick-quoted term; checks if X (backtick-normalized) still appears in the
-#       body (Form-B section excluded). Backtick normalization: both the search term
-#       and body are stripped of backtick characters before comparison, so
-#       "from `sorts by task_id` to" catches a surviving "`sorts by `task_id`" in body.
-#
-#   (c) INPUT-HASH CLAIMS — changelog entry (Form-A frontmatter list or Form-B body
-#       table) claims "input-hash [updated/refreshed/bumped/set] to HASH" or
-#       "input-hash: HASH"; verifies that the frontmatter `input-hash:` field matches
-#       the claimed hash value.
-#
-#   (d) VERSION CLAIMS — Form-A changelog entry that starts with version X claims
-#       that is the current version; verifies frontmatter `version:` matches the
-#       last (newest) changelog entry's version (VERSION-MATCH, Rule 2). Separately
-#       verifies Form-B first-row version matches frontmatter version (Rule 4).
-#       NOTE: Heuristic (d) overlaps with verify-form-a-changelog-direction.sh
-#       VERSION-MATCH checks — findings here are advisory cross-validation.
+# REMOVED HEURISTICS (burst-288 per E08, P1D-177):
+#   (a) removal claims — phrase-grep heuristic; undecidable; 3 of 5 heuristics
+#   (b) rename claims  — phrase-grep heuristic; undecidable
+#   (d) version claims — redundant: already covered by the blocking gate
+#                        verify-form-a-changelog-direction.sh
+#   (e) from-X claims  — phrase-grep heuristic; undecidable
+#   These 4 heuristics produced the WARN=662 count at P1D-177 frozen HEAD.
+#   After narrowing to (c) only, WARN count reflects only genuine input-hash
+#   mismatches — a much smaller, actionable set.
 #
 # SCOPE
 # ─────
@@ -92,7 +80,7 @@ import sys, os, re, glob, yaml
 
 specs_root = sys.argv[1]
 
-# ── File discovery ─────────────────────────────────────────────────────────────
+# -- File discovery -----------------------------------------------------------
 
 all_md_files = []
 for root, dirs, files in os.walk(specs_root):
@@ -102,7 +90,7 @@ for root, dirs, files in os.walk(specs_root):
             all_md_files.append(os.path.join(root, fn))
 all_md_files.sort()
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 def parse_frontmatter(content):
     """Return (fm_dict, body_text) or (None, content) on parse failure."""
@@ -136,124 +124,29 @@ def get_form_b_entries(body):
             rows.append(line)
     return rows
 
-# ── Heuristic (a): Removal claims ─────────────────────────────────────────────
+def strip_body_changelog(body):
+    """Strip the Form-B ## Changelog section from body (non-greedy: stop at next ## heading).
+    Also strips fenced code blocks and illustration regions to prevent false matches."""
+    # Non-greedy: stop at next ## heading or end of string
+    body_no_cl = re.sub(r'\n## Changelog\n.*?(?=\n## |\Z)', '', body, flags=re.DOTALL)
+    # Strip fenced code blocks (``` ... ```)
+    body_no_cl = re.sub(r'```[^`]*?```', '', body_no_cl, flags=re.DOTALL)
+    # Strip illustration regions
+    body_no_cl = re.sub(
+        r'<!--\s*discriminator:illustration-start\s*-->.*?<!--\s*discriminator:illustration-end\s*-->',
+        '', body_no_cl, flags=re.DOTALL)
+    return body_no_cl
 
-# Patterns that introduce a term claimed to be removed or replaced
-REMOVAL_VERB_RE = re.compile(
-    r'\b(?:remove[sd]?|remov(?:ing|al)|drop(?:ped)?|drop(?:ping)?|'
-    r'eliminat(?:ed?|ing)|delet(?:ed?|ing)|replac(?:ed?|ing|ement))\b',
-    re.IGNORECASE
-)
+# -- Heuristic (c): Input-hash claims (ONLY ACTIVE HEURISTIC) ----------------
+# All other heuristics (a, b, d, e) removed in burst-288 per E08 fix:
+#   (a) removal claims -- undecidable phrase-grep heuristic removed
+#   (b) rename claims  -- undecidable phrase-grep heuristic removed
+#   (d) version claims -- redundant (verify-form-a-changelog-direction.sh already blocks)
+#   (e) from-X claims  -- undecidable phrase-grep heuristic removed
+# Input-hash comparison is the 1 decidable heuristic; it remains.
 
-# Quoted phrase: 'X', "X", or `X` — short snippet, not a full sentence
-QUOTED_TERM_RE = re.compile(r"[`'\"]([^`'\"]{1,80})[`'\"]")
-# Code token in backticks
-BACKTICK_TERM_RE = re.compile(r'`([^`]{1,60})`')
-
-def check_removal_claims(filepath, fm, body_no_cl, changelog_entries):
-    """Return list of (entry_text, term, reason) for each removal claim not applied.
-    body_no_cl: body text with Form-B ## Changelog section stripped."""
-    findings = []
-    for entry in changelog_entries:
-        if not REMOVAL_VERB_RE.search(entry):
-            continue
-        # Extract quoted/backtick terms following a removal verb
-        quoted = QUOTED_TERM_RE.findall(entry)
-        for term in quoted:
-            term_stripped = term.strip()
-            if len(term_stripped) < 3:
-                continue
-            # Skip terms that look like version numbers
-            if re.match(r'^\d+\.\d+', term_stripped):
-                continue
-            # Check if term still appears in body (Form-B section excluded)
-            if term_stripped in body_no_cl:
-                findings.append((entry[:120], term_stripped,
-                    f"removal claim for '{term_stripped}' but term still in body"))
-    return findings
-
-# ── Heuristic (b): Rename/replacement claims ──────────────────────────────────
-
-# Arrow forms: "OLD → NEW" (U+2192) or "OLD -> NEW"
-# We capture the token(s) immediately before and after the arrow
-ARROW_RE = re.compile(r'([^\s→>|,;:]{2,60})\s*(?:→|->)\s*([^\s→>|,;:]{2,60})')
-
-# CODE_ID_RE: old_term must look like a code symbol, not a generic word or value.
-# True renames involve: snake_case (_), module paths (::), method calls (),
-# camelCase ([a-z][A-Z]), or CAPS-CAPS-NNN error-code format.
-# Generic words (MEDIUM, CRITICAL, failure, update), tier labels, boolean values,
-# date strings, and version strings are FPs in heuristic (b) and are excluded here.
-CODE_ID_RE = re.compile(r'[_:()]|[a-z][A-Z]|^[A-Z]+-[A-Z]+-\d')
-
-def check_rename_claims(filepath, fm, body_no_cl, changelog_entries):
-    """Return list of (entry_text, old_term, reason) for rename claims not applied.
-    body_no_cl: body text with Form-B ## Changelog section stripped."""
-    findings = []
-    for entry in changelog_entries:
-        for m in ARROW_RE.finditer(entry):
-            old_term = m.group(1).strip().strip('`\'"')
-            new_term = m.group(2).strip().strip('`\'"')
-            # Skip pure version transitions (e.g. "1.3 → 1.4", "v1.2 → v1.3")
-            if re.match(r'^v?\d+[\.\d]*$', old_term):
-                continue
-            # Skip date strings (YYYY-MM-DD)
-            if re.match(r'^\d{4}-\d{2}-\d{2}', old_term):
-                continue
-            # Skip terms starting with a digit (count/numeric transitions)
-            if old_term and old_term[0].isdigit():
-                continue
-            # Skip very short terms (noise)
-            if len(old_term) < 4:
-                continue
-            # Skip non-identifier terms — arrow must involve a code symbol.
-            # Generic words (MEDIUM, failure, update), tier labels (CRITICAL),
-            # boolean values (false/true), and bare ALL-CAPS words without the
-            # CAPS-CAPS-NNN error-code format are FPs here.
-            if not CODE_ID_RE.search(old_term):
-                continue
-            # If the old form still appears in body, the rename wasn't applied
-            if old_term in body_no_cl:
-                findings.append((entry[:120], old_term,
-                    f"rename claim '{old_term} → {new_term}' but old form still in body"))
-    return findings
-
-# ── Heuristic (e): From-X-to-Y claims ────────────────────────────────────────
-# Catches: "update X from `OLD` to `NEW`" — verifies OLD (backtick-normalized)
-# is absent from body. Backtick normalization: strip backticks from both the
-# extracted term and the body before comparison, so "from `sorts by task_id`"
-# catches a surviving "sorts by `task_id`" in body.
-
-FROM_BACKTICK_RE = re.compile(r'\bfrom\s+`([^`]{4,80})`')
-
-def _strip_backticks(s):
-    return s.replace('`', '')
-
-def check_from_x_claims(filepath, fm, body_no_cl, changelog_entries):
-    """Return list of (entry_text, term, reason) for from-X claims not applied.
-    body_no_cl: body text with Form-B ## Changelog section stripped."""
-    findings = []
-    body_normalized = _strip_backticks(body_no_cl)
-    for entry in changelog_entries:
-        for m in FROM_BACKTICK_RE.finditer(entry):
-            old_term = m.group(1).strip()
-            if len(old_term) < 4:
-                continue
-            # Skip pure version transitions (e.g. "from `1.3` to")
-            if re.match(r'^\d+[\.\d]*$', old_term):
-                continue
-            # Normalize: strip backticks from both term and body for comparison
-            old_normalized = _strip_backticks(old_term)
-            if old_normalized in body_normalized:
-                findings.append((entry[:120], old_term,
-                    f"'from `{old_term}`' claim but normalized term still in body"))
-    return findings
-
-# ── Heuristic (c): Input-hash claims ──────────────────────────────────────────
-
-# Pattern: "input-hash [updated/refreshed/bumped/changed] to HASH"
-# or: "input-hash: HASH" in prose (not a YAML field assignment)
 INPUT_HASH_CLAIM_RE = re.compile(
-    r'input[-_]hash\s*(?:updated?|refreshed?|bumped?|changed?|set|→|->\s*)?\s*'
+    r'input[-_]hash\s*(?:updated?|refreshed?|bumped?|changed?|set|\u2192|->\s*)?\s*'
     r'(?:to\s+)?([0-9a-f]{6,40})\b',
     re.IGNORECASE
 )
@@ -261,9 +154,9 @@ INPUT_HASH_CLAIM_RE = re.compile(
 def check_input_hash_claims(filepath, fm, body, changelog_entries):
     """Return list of (entry_text, claimed_hash, reason) for input-hash mismatches."""
     findings = []
-    fm_hash = str(fm.get('input-hash', '') or '').strip().strip('"\'')
+    fm_hash = str(fm.get('input-hash', '') or '').strip().strip("\"'")
     if not fm_hash:
-        return []  # No input-hash field — nothing to verify against
+        return []  # No input-hash field -- nothing to verify against
 
     for entry in changelog_entries:
         for m in INPUT_HASH_CLAIM_RE.finditer(entry):
@@ -279,51 +172,7 @@ def check_input_hash_claims(filepath, fm, body, changelog_entries):
                     f"input-hash '{fm_hash}'"))
     return findings
 
-# ── Heuristic (d): Version claims ─────────────────────────────────────────────
-
-# Check that Form-A last entry version matches frontmatter version:
-# (This is also checked by verify-form-a-changelog-direction.sh — here it's
-# a cross-check in advisory mode.)
-VERSION_RE = re.compile(r'^(\d+\.\d+(?:\.\d+)*)[\s:(]')
-
-def check_version_claims(filepath, fm, changelog_entries):
-    """Return list of (entry_text, claimed_version, reason) for version mismatches."""
-    findings = []
-    fm_version = str(fm.get('version', '') or '').strip()
-    if not fm_version or not changelog_entries:
-        return []
-
-    # BC files use ascending (last entry is newest); detect document_type
-    doc_type = str(fm.get('document_type', '')).strip()
-    is_bc = (doc_type == 'behavioral-contract')
-
-    versions = []
-    for entry in changelog_entries:
-        entry_str = str(entry).strip()
-        m = VERSION_RE.match(entry_str)
-        if m:
-            versions.append((m.group(1), entry_str))
-
-    if not versions:
-        return []
-
-    if is_bc:
-        # BC: last entry should match frontmatter version
-        last_ver, last_entry = versions[-1]
-        if last_ver != fm_version:
-            findings.append((last_entry[:120], last_ver,
-                f"BC Form-A last-entry version '{last_ver}' does not match "
-                f"frontmatter version '{fm_version}'"))
-    else:
-        # Non-BC: first entry should match frontmatter version
-        first_ver, first_entry = versions[0]
-        if first_ver != fm_version:
-            findings.append((first_entry[:120], first_ver,
-                f"Form-A first-entry version '{first_ver}' does not match "
-                f"frontmatter version '{fm_version}'"))
-    return findings
-
-# ── Per-file scan ─────────────────────────────────────────────────────────────
+# -- Per-file scan ------------------------------------------------------------
 
 file_findings = {}  # filepath -> list of (heuristic, entry_text, term, reason)
 
@@ -345,37 +194,16 @@ for filepath in all_md_files:
     if not all_entries:
         continue
 
-    # Strip Form-B ## Changelog section from body before string-presence checks.
-    # This prevents false positives where the claimed-removed term only appears
-    # inside the changelog table itself (not in actual document content).
-    body_no_changelog = re.sub(r'\n## Changelog\n.*', '', body, flags=re.DOTALL)
-
     ffindings = []
 
-    # Heuristic (a): removal claims (body search excludes Form-B changelog section)
-    for (entry, term, reason) in check_removal_claims(filepath, fm, body_no_changelog, all_entries):
-        ffindings.append(('a-removal', entry, term, reason))
-
-    # Heuristic (b): rename/replacement claims (body search excludes Form-B section)
-    for (entry, old_term, reason) in check_rename_claims(filepath, fm, body_no_changelog, all_entries):
-        ffindings.append(('b-rename', entry, old_term, reason))
-
-    # Heuristic (e): from-X-to-Y claims (body search excludes Form-B section)
-    for (entry, old_term, reason) in check_from_x_claims(filepath, fm, body_no_changelog, all_entries):
-        ffindings.append(('e-from-x', entry, old_term, reason))
-
-    # Heuristic (c): input-hash claims
+    # Heuristic (c): input-hash claims (only active heuristic)
     for (entry, claimed, reason) in check_input_hash_claims(filepath, fm, body, all_entries):
         ffindings.append(('c-input-hash', entry, claimed, reason))
-
-    # Heuristic (d): version claims
-    for (entry, ver, reason) in check_version_claims(filepath, fm, form_a_entries):
-        ffindings.append(('d-version', entry, ver, reason))
 
     if ffindings:
         file_findings[filepath] = ffindings
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# -- Output -------------------------------------------------------------------
 
 total_findings = sum(len(v) for v in file_findings.values())
 print(f"SUMMARY total-files-with-findings={len(file_findings)} total-findings={total_findings}")
@@ -433,13 +261,11 @@ echo ""
 echo "verify-changelog-claim-applied: PASS=$PASS WARN=$WARN FAIL=$FAIL"
 echo "  Advisory findings: $FINDINGS_COUNT false-closure candidate(s)"
 echo ""
-echo "Heuristics (all advisory — non-blocking):"
-echo "  (a) removal claims: changelog 'remove/drop/replace X' but X still in body"
-echo "  (b) rename claims:  changelog 'X → Y' but old form X still in body"
-echo "  (c) input-hash:     changelog 'input-hash updated to HASH' but FM hash differs"
-echo "  (d) version claims: Form-A last/first entry version != frontmatter version"
-echo "  (e) from-X claims:  changelog 'from \`X\` to' but X (backtick-normalized) still in body"
-echo "  Body checks for (a),(b),(e) exclude the Form-B ## Changelog table section."
+echo "Active heuristic (burst-288 narrowing — only decidable heuristic retained):"
+echo "  (c) input-hash: changelog 'input-hash updated to HASH' but FM input-hash differs"
+echo "Removed heuristics (E08/P1D-177 — undecidable or redundant):"
+echo "  (a) removal claims, (b) rename claims, (e) from-X claims — undecidable phrase-grep"
+echo "  (d) version claims — redundant with verify-form-a-changelog-direction.sh blocking gate"
 echo ""
 echo "RESULT: PASS (advisory — non-blocking)"
 # Always exit 0 — advisory check

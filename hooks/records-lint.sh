@@ -147,9 +147,10 @@ LINE_CITE_PATTERN='\b[a-zA-Z0-9_.-]+\.(rs|md|toml|yaml|yml|ts|js|py|json|sh|txt)
 # pins. This deliberately disagrees with verify-no-version-pins.sh (full-corpus
 # scan; changelogs exempt) — the two rules have different scoping rationales.
 #
-# Pattern covers the same six forms as verify-no-version-pins.sh PIN_RE:
+# Pattern covers the same forms as verify-no-version-pins.sh PIN_RE (burst-288 parity):
 #   1. ADR-NNN vX.Y       2. BC-2.SS.NNN vX.Y   3. VP-NNN vX.Y
-#   4. CAP-NNN vX.Y       5. filename.md (vX.Y   6. filename.md vX.Y
+#   4. CAP-NNN vX.Y       5. XXX-INDEX vX.Y (VP-INDEX, BC-INDEX, ARCH-INDEX, etc. — burst-288)
+#   6. filename.md (vX.Y  7. filename.md vX.Y
 VERSION_PIN_PATTERN='(ADR-[0-9]+|BC-2\.[0-9]{2}\.[0-9]{3}|VP-[0-9]{3}|CAP-[0-9]{3})[[:space:]]+v[0-9]+\.[0-9]+|[a-z0-9][a-z0-9_-]*\.md[[:space:]]+\(?v[0-9]+\.[0-9]+'
 
 # L10 hash-digest pattern.
@@ -377,7 +378,7 @@ EOF
     esac
     content="${diffline#"+"}"
     match="$(echo "$content" | grep -oE \
-      '(ADR-[0-9]+|BC-2\.[0-9]{2}\.[0-9]{3}|VP-[0-9]{3}|CAP-[0-9]{3})[[:space:]]+v[0-9]+\.[0-9]+|[a-z0-9][a-z0-9_-]*\.md[[:space:]]+\(?v[0-9]+\.[0-9]+' \
+      '(ADR-[0-9]+|BC-2\.[0-9]{2}\.[0-9]{3}|VP-[0-9]{3}|CAP-[0-9]{3}|[A-Z][A-Z0-9]*-INDEX)[[:space:]]+v[0-9]+\.[0-9]+|[a-z0-9][a-z0-9_-]*\.md[[:space:]]+\(?v[0-9]+\.[0-9]+' \
       || true)"
     [ -z "$match" ] && echo 0 && return
     first_date="$(echo "$content" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1 || echo "")"
@@ -401,6 +402,12 @@ EOF
   # interface-definitions.md (ADR-005 v1.9, date 2026-07-28) MUST FIRE
   PROBE_EXIT=$(_L9B_CHECK "+  - \"2.62 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Add §DynTool; ADR-005 v1.9 carries corrected Wave C list.\"")
   probe_must_fail "L9b-outcome-D" "regression: real-format frontmatter changelog entry with ADR-005 v1.9 dated 2026-07-28 fires"
+
+  # Outcome E: INDEX-name version pin (burst-288 gap) — newly-authored INDEX entry MUST FIRE
+  # INDEX-style pins (VP-INDEX v1.2, BC-INDEX v1.5, etc.) were missed by VP_RE1 before the
+  # burst-288 fix; this probe proves the gap is now closed.
+  PROBE_EXIT=$(_L9B_CHECK "+  - \"1.3 (burst-288/2026-08-15): See VP-INDEX v1.2 for traceability table.\"")
+  probe_must_fail "L9b-outcome-E" "INDEX-name version pin 'VP-INDEX v1.2' with 2026-08-15 date fires"
 
   unset -f _L9B_CHECK
 
@@ -582,7 +589,7 @@ import sys, re, subprocess
 factory_dir  = sys.argv[1]
 D50_BOUNDARY = "2026-07-24"
 
-VP_RE1  = re.compile(r'(?:ADR-\d+|BC-2\.\d{2}\.\d{3}|VP-\d{3}|CAP-\d{3})\s+v\d+\.\d+')
+VP_RE1  = re.compile(r'(?:ADR-\d+|BC-2\.\d{2}\.\d{3}|VP-\d{3}|CAP-\d{3}|[A-Z][A-Z0-9]*-INDEX)\s+v\d+\.\d+')
 VP_RE2  = re.compile(r'[a-z0-9][a-z0-9_-]*\.md\s+\(?v\d+\.\d+')
 DATE_RE = re.compile(r'\b(\d{4}-\d{2}-\d{2})\b')
 

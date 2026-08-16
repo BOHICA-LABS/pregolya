@@ -58,6 +58,27 @@
 #   - No changelog (version == "1.0"): trivially valid — PASS.
 #   - No changelog (version > "1.0"): WARN (non-blocking).
 #   - Zero parseable ISO dates across all entries: PASS (no data).
+#
+# WARN vs FAIL disambiguation:
+#   FAIL — actual date ordering violation: a later-added entry has an OLDER date
+#          than the entry below it. This is a substantive defect: a changelog
+#          entry was back-dated or inserted in the wrong position. Always blocking.
+#   WARN — non-blocking advisory condition. Three categories:
+#     (a) "WARN-and-skip": the file cannot be monotonicity-checked (rev-N format
+#         entries, empty changelog, non-list changelog, changelog-empty-or-invalid).
+#         The file is SKIPPED for date comparison — not failed. Remediation is
+#         structural (fix the format), not date reordering.
+#     (b) "partial-date-check-ok": some entries lack ISO dates, so those pairs
+#         are skipped. The pairs that DO have dates passed monotonicity. Non-blocking
+#         because the undated entries are advisory at most (not provably wrong).
+#     (c) "both-changelog-forms": file has both Form-A frontmatter and Form-B body
+#         table. Gate convention violation — only one form expected. Remediation
+#         path is a product-owner decision (retire the body table or backfill it);
+#         blocking would be premature until the remediation path is clear.
+#
+#   Implication: any SKIP output from the Python scanner becomes WARN in the bash
+#   processing layer — it is not PASS (we did not certify the file) and not FAIL
+#   (we did not find a violation). WARN correctly models "unverifiable due to format".
 #   - Some entries lack an ISO date: WARN and skip undated pair-members;
 #     continue validating dated adjacent pairs.
 #

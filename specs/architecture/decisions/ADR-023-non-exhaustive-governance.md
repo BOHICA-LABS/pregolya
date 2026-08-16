@@ -7,11 +7,16 @@ title: "#[non_exhaustive] Governance for Public API Types (fix-burst-287 / F-P17
 status: accepted
 producer: architect
 timestamp: 2026-08-01T00:00:00Z
-version: "1.2"
+date: "2026-08-15"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
+subsystems_affected: ["all"]
+supersedes: null
+superseded_by: null
 changelog:
+  - "1.3 (burst-288/F-P177-A02+D-02+D-03+B01/2026-08-15): Four HIGH findings from P1D-177 closed. (A02) Fix Decision 4 heading and §Rationale: heading renamed from 'Required inventory and BC-2.22.001 compile-fail gate scope' to 'Required Inventory and compile-fail gate scope' — the old heading incorrectly implied BC-2.22.001 IS the gate scope document; §Rationale paragraph that read 'The compile-fail gate (BC-2.22.001) is the enforcement mechanism' was false (no gate exists yet) and replaced with accurate statement. (D-02) ToolCallPreview verified in Required Inventory; product-owner cross-owner routing note added to confirm #[non_exhaustive] attribute presence in interface-definitions.md. (D-03) Expand type inventory by 22 missing public types discovered in corpus-wide scan: 6 new Required enums, 3 new Exempt enums, 11 new Required structs, 2 new Exempt structs. Gate scope count updated from 20 to 37 Required Inventory types (18 enums + 19 structs). Exempt count updated from 6 to 11 (9 enums + 2 structs). (B01) StreamEvent governance resolved: EC-005 mandates terminal error SSE event requiring StreamEvent::Error as 16th variant; variant count updated 15 → 16; Exempt Inventory rationale updated noting Error variant must be added before Phase 3 implementation. Product-owner cross-owner routing note: add StreamEvent::Error variant to SS-06 §StreamEvent-Variants."
   - "1.2 (fix-burst-287/ADR-022-self-compliance/2026-08-01): Fix three phantom §citations that violated ADR-022 (restriction to real markdown headings). (1) Decision 4 struct note: removed 'BC-2.22.001 §compile-fail-gate text refers only to enums' — §compile-fail-gate is not a real heading anywhere in the BC corpus; restated as plain prose. (2) Gate update protocol step 3: removed 'Update BC-2.22.001 §compile-fail-gate' instruction — phantom heading citation; replaced with conditional prose. (3) Source/Origin D009: removed 'interface-definitions.md §public-API-enums' — no such heading exists in interface-definitions.md; public API enum declarations appear across the body of that document. (4) Rationale: correct 'five exempt enums' → 'six exempt enums' (BoundaryType added in v1.1)."
   - "1.1 (fix-burst-287/2026-08-01): Post-verification corrections. (1) A029 confirmed FALSE: BoundaryType does NOT carry #[non_exhaustive] per ADR-014 §Decision 6 body ('canonical 3-variant closed set, PASS-58 canon, not #[non_exhaustive]'); ADR-016 citation in the finding was wrong ADR. Add BoundaryType to Exempt Inventory (Criterion A). (2) C028 confirmed FALSE: BC-2.22.001 §compile-fail-gate does not exist anywhere in BC corpus (grep: zero hits). Removed false claim from Context and Consequences; replaced with accurate statement that no compile-fail gate exists and one must be created in Phase 3. (3) Correct ADR-016 → ADR-014 in A029 Affected-findings line."
   - "1.0 (fix-burst-287/F-P176-A028+A029+D009+B026+C028/2026-08-01): Initial decision — close Mechanism 4 (#[non_exhaustive] applied ad hoc). Establishes governing rule, exception criteria, and Exempt Inventory."
@@ -73,20 +78,26 @@ The following types are explicitly exempt from the `#[non_exhaustive]` requireme
 
 | Type | Crate | Criterion | Rationale |
 |------|-------|-----------|-----------|
-| `StreamEvent` | pregolya-graph (via pregolya-core) | A | ADR-006 §Status explicitly states "Exhaustive match enforcement: any new variant added to `StreamEvent` causes compile errors at all match sites, making omissions impossible to ship undetected." Exhaustive matching is a design goal — consumer code that handles all events is structurally correct code. New events constitute a streaming protocol revision and require a version bump, not an additive extension. |
+| `StreamEvent` | pregolya-graph (via pregolya-core) | A | ADR-006 §Status explicitly states "Exhaustive match enforcement: any new variant added to `StreamEvent` causes compile errors at all match sites, making omissions impossible to ship undetected." Exhaustive matching is a design goal — consumer code that handles all events is structurally correct code. New events constitute a streaming protocol revision and require a version bump, not an additive extension. **Authoritative variant set: 16 variants including `StreamEvent::Error`.** EC-005 mandates a terminal error SSE event; `StreamEvent::Error` is the 16th variant and MUST be present in the implementation before Phase 3 begins. The exhaustive-match design goal is preserved — adding `Error` forces all consumers to handle the error path at compile time, which is the correct behavior. Cross-owner routing: product-owner must add `StreamEvent::Error` to SS-06 §StreamEvent-Variants (16th variant). |
 | `MemoryScope` | pregolya-core | A | Three-tier storage partition (User/App/Session) is semantically closed. The storage-layer SQL WHERE predicate maps each variant to a distinct partition key. Adding a fourth scope tier would require a storage schema migration, not just a Rust additive extension. Callers that exhaustively match `MemoryScope` enforce correct partition routing — the compile error on variant addition is the desired behavior. |
 | `WriteGuardDecision` | pregolya-core | A | Three-way protocol contract (Allow/Deny/Transform) for the MemoryWriteGuard hook. All three outcomes must be handled by the guard dispatch layer. Adding a fourth outcome would change the dispatch contract, not extend it. Missing a variant in the dispatch match is a logic error the compiler should catch. |
 | `MemoryWriteRequest` | pregolya-core | A | Three-way write operation enum (Add/Replace/Remove). The write guard and memory store implementations must handle all three. The complete set of fundamental write operations is closed: Add, Replace, Remove covers the full CRUD-without-read surface. |
 | `SlotTrustPolicy` | pregolya-prompts | A | Binary predicate (TrustAll/TrustRequired) representing whether a template slot accepts untrusted variables. The two variants map to a security binary: either the slot requires trusted input, or it does not. Adding a third variant would constitute a new security policy level — a protocol revision requiring new injection_guard logic. Construction-time exhaustive checking against slot assignments is correct behavior. |
-| `BoundaryType` | pregolya-core (core::guardrail) | A | Canonical 3-variant closed set (ToolResult | RAGRetrieval | MemoryIngress) per PASS-58 canon and ADR-014 Decision 6. Explicitly documented as "not #[non_exhaustive]" in ADR-014 body. Every guardrail entry point must be classified; a missing match arm is a guardrail bypass (security regression). New ingress paths constitute protocol additions requiring explicit guardrail design, not additive extension. Authority: BC-2.11.001 through BC-2.11.004. Note: F-P176-A029 incorrectly claimed BoundaryType "carries #[non_exhaustive] without governing rule" — it does not carry the attribute; the exemption was ungoverned, which this entry corrects. |
+| `BoundaryType` | pregolya-core (core::guardrail) | A | Canonical 3-variant closed set (ToolResult \| RAGRetrieval \| MemoryIngress) per PASS-58 canon and ADR-014 Decision 6. Explicitly documented as "not #[non_exhaustive]" in ADR-014 body. Every guardrail entry point must be classified; a missing match arm is a guardrail bypass (security regression). New ingress paths constitute protocol additions requiring explicit guardrail design, not additive extension. Authority: BC-2.11.001 through BC-2.11.004. Note: F-P176-A029 incorrectly claimed BoundaryType "carries #[non_exhaustive] without governing rule" — it does not carry the attribute; the exemption was ungoverned, which this entry corrects. |
+| `IngressBoundary` | pregolya-core (core::guardrail) | A | Three-way ingress boundary classification (ToolResult \| RagChunk \| MemoryItem) defined by the guardrail protocol topology. Adding a fourth boundary requires a guardrail protocol change (a new ingress path), not an additive library extension. Exhaustive matching at dispatch sites enforces complete protocol coverage; a missing arm is a guardrail bypass. (burst-288, D-03) |
+| `GuardrailDecisionKind` | pregolya-core (core::guardrail) | A | Binary Fail/Transform guardrail decision outcome. The guardrail result-dispatch protocol has exactly two non-Pass outcomes; adding a third kind would change the protocol semantics. Missing a branch is a security regression. The binary model maps directly to the SSE wire protocol for guardrail events. (burst-288, D-03) |
+| `GuardrailSeverityWire` | pregolya-core (core::guardrail) | A | Four-tier wire severity (Critical \| High \| Medium \| Low) mapping to the SSE event protocol. New severity levels require SSE protocol revision; exhaustive matching at consumer sites enforces complete coverage. The four-tier model is an established security classification standard (CVSS-aligned). (burst-288, D-03) |
 
 ### Exempt Structs
 
-There are no exempt structs. All public struct types in the pregolya published crate API surface MUST carry `#[non_exhaustive]`.
+| Type | Crate | Criterion | Rationale |
+|------|-------|-----------|-----------|
+| `GuardedDocuments` | pregolya-core (core::rag_ingress) | B | Tuple struct with private inner field (`Vec<Document>` declared without `pub`). External crates cannot construct it regardless of `#[non_exhaustive]`; callers receive `GuardedDocuments` only via `rag_ingress()` return value. Adding `#[non_exhaustive]` provides no additional protection beyond the private-field seal. (burst-288, D-03) |
+| `RunnableSequence<I, O>` | pregolya-core | B | Generic pipeline composition type returned from `.pipe()`. External callers receive it as a result of calling API methods but cannot construct it (struct fields are private composition internals; the generic parameters are inferred by the compiler). Adding `#[non_exhaustive]` on this return-only type provides no protection beyond the private-field seal. (burst-288, D-03) |
 
 ---
 
-## Decision 4 — Required inventory and BC-2.22.001 compile-fail gate scope
+## Decision 4 — Required Inventory and compile-fail gate scope
 
 The types listed below constitute the **Required Inventory** — types that MUST carry `#[non_exhaustive]`. This is the authoritative scope for the compile-fail gate.
 
@@ -94,7 +105,7 @@ The types listed below constitute the **Required Inventory** — types that MUST
 
 ### Required Inventory (post-D23)
 
-**Public enums with `#[non_exhaustive]` (11 as of D23):**
+**Public enums with `#[non_exhaustive]` (17 original + corpus-scan additions as of burst-288 — 18 total including TemplateInput):**
 
 | Type | Crate / Module | First introduced | BC anchor |
 |------|---------------|-----------------|-----------|
@@ -109,10 +120,16 @@ The types listed below constitute the **Required Inventory** — types that MUST
 | `TrustLevel` | pregolya-prompts::injection_guard | D21 (ADR-015) | BC-2.18.004 |
 | `SearchType` | pregolya-vectorstores | D21 (ADR-014) | BC-2.20.003 |
 | `FilterClause` | pregolya-vectorstores | D21 (ADR-014) | BC-2.21.004 |
+| `GuardrailResult` | pregolya-core (core::guardrail) | burst-288 (D-03) | — (Phase 2 BC) |
+| `IngressContent` | pregolya-core (core::guardrail) | burst-288 (D-03) | — (Phase 2 BC) |
+| `GuardrailSeverity` | pregolya-core (core::guardrail) | burst-288 (D-03) | — (Phase 2 BC) |
+| `PolicyDecision` | pregolya-core (core::budget) | burst-288 (D-03) | — (Phase 2 BC) |
+| `OnCeiling` | pregolya-core (core::budget) | burst-288 (D-03) | — (Phase 2 BC) |
+| `Serialized` | pregolya-core (core::serializable) | burst-288 (D-03) | — (Phase 2 BC) |
 
-**Note on TemplateInput:** `TemplateInput` (pregolya-prompts, ADR-015 §Decision 3 Amendment, fix-burst-279) carries `#[non_exhaustive]` and was added post-D21. It is part of the Required Inventory. Its late addition reflects the amendment history; it should be included in the compile-fail gate. Total confirmed non-exhaustive enums: **12** (including TemplateInput).
+**Note on TemplateInput:** `TemplateInput` (pregolya-prompts, ADR-015 §Decision 3 Amendment, fix-burst-279) carries `#[non_exhaustive]` and was added post-D21. It is part of the Required Inventory. Its late addition reflects the amendment history; it should be included in the compile-fail gate. Total confirmed non-exhaustive enums: **18** (including TemplateInput; 17 from this table + TemplateInput).
 
-**Public structs with `#[non_exhaustive]` (8 as of D23):**
+**Public structs with `#[non_exhaustive]` (19 as of burst-288):**
 
 | Type | Crate / Module | First introduced |
 |------|---------------|-----------------|
@@ -124,8 +141,21 @@ The types listed below constitute the **Required Inventory** — types that MUST
 | `MessageProvenance` | pregolya-prompts | D21 (ADR-015) |
 | `ToolConfig` | pregolya-tools | D23 (ADR-020) |
 | `ToolCallPreview` | pregolya-graph::graph::hitl | D23 (ADR-018) |
+| `RunnableConfig` | pregolya-core | burst-288 (D-03) |
+| `BudgetConfig` | pregolya-core (core::budget) | burst-288 (D-03) |
+| `SkillDescriptor` | pregolya-memory | burst-288 (D-03) |
+| `MemoryEntry` | pregolya-memory | burst-288 (D-03) |
+| `ConversationSnapshot` | pregolya-core (core::budget) | burst-288 (D-03) |
+| `CompactionSummary` | pregolya-core (core::budget) | burst-288 (D-03) |
+| `ToolInput` | pregolya-core (core::tool) | burst-288 (D-03) |
+| `VectorStoreRetriever` | pregolya-vectorstores | burst-288 (D-03) |
+| `TemplateVar` | pregolya-prompts | burst-288 (D-03) |
+| `LcEntry` | pregolya-core (core::serializable) | burst-288 (D-03) |
+| `Reviver` | pregolya-core (core::serializable) | burst-288 (D-03) |
 
-**Note:** Compile-fail gate for structs verifies that struct-literal construction fails (E0639) from external crates. When the product-owner authors the gate BC in Phase 2, the gate scope MUST cover both enums and structs — all 20 Required Inventory types (12 enums + 8 structs). Enums-only coverage would leave the struct prohibition unverified.
+**Cross-owner routing (D-02):** `ToolCallPreview` is listed in this Required Inventory but the attribute MUST be verified present in interface-definitions.md. A corpus-wide scan (burst-288) confirms `ToolCallPreview` at the interface-definitions declaration site does NOT carry `#[non_exhaustive]`. Product-owner action required: add `#[non_exhaustive]` to `ToolCallPreview` in interface-definitions.md. This is a product-owner owned file; the architect records the gap here.
+
+**Note:** Compile-fail gate for structs verifies that struct-literal construction fails (E0639) from external crates. When the product-owner authors the gate BC in Phase 2, the gate scope MUST cover both enums and structs — all 37 Required Inventory types (18 enums + 19 structs). Enums-only coverage would leave the struct prohibition unverified.
 
 ### Gate update protocol
 
@@ -139,6 +169,19 @@ The gate update protocol applies equally to new enums and new structs.
 
 ---
 
+## Alternatives Considered
+
+**Alternative 1 — Apply `#[non_exhaustive]` only to enums, not structs.**
+Rejected. The production-grade default requires protecting all additive evolution surfaces. Adding a field to a public struct is a semver-breaking change for downstream code that constructs the struct with a literal (E0639). Pregolya library crates expose configuration structs (`RunnableConfig`, `BudgetConfig`, `ToolConfig`, etc.) that downstream callers construct; these structs will gain fields as the library evolves. Leaving struct construction unrestricted forces a major-version bump for every field addition.
+
+**Alternative 2 — Use builder patterns instead of `#[non_exhaustive]` for structs.**
+Rejected for Phase 1. Builder patterns are a valid design pattern for large configuration structs and are not mutually exclusive with `#[non_exhaustive]`. However, mandating builders for every struct at this stage would require architectural refactoring across all public configuration types before any implementation. The correct approach: apply `#[non_exhaustive]` now (low-effort, correct by default) and migrate specific structs to builders where the ergonomic benefit justifies it (future architecture decision per struct).
+
+**Alternative 3 — Enumerate exempt types without a governing ADR; rely on case-by-case adversarial review.**
+Rejected. This was the status quo before this ADR (ad hoc application) and produced the P1D-176 findings that drove ADR-023's creation. Case-by-case review has no authoritative scope, produces re-litigation at every new type, and cannot distinguish a correctly exhaustive type from a type that simply wasn't annotated. A governing rule with an explicit Exempt Inventory is the only mechanism that makes the distinction machine-verifiable.
+
+---
+
 ## Rationale
 
 The `#[non_exhaustive]` attribute is the Rust standard mechanism for library-side additive evolution. Its default application to all public API types is consistent with the following precedents in this codebase:
@@ -146,17 +189,19 @@ The `#[non_exhaustive]` attribute is the Rust standard mechanism for library-sid
 - ADR-010: applied to `PregolyaError` at F-P173-619 for exactly this reason.
 - ADR-015 Decision 3 Amendment: applied to `TrustLevel` at F-P175-B208.
 
-The Exempt Inventory (Decision 3) is small and principled: all six exempt enums are closed by an external protocol contract or represent a fundamental operation set, where exhaustive matching is the correct behavior for downstream correctness.
+The Exempt Inventory (Decision 3) is small and principled: all nine exempt enums are closed by an external protocol contract or represent a fundamental operation set, where exhaustive matching is the correct behavior for downstream correctness. The two exempt structs (GuardedDocuments, RunnableSequence) are sealed by private fields regardless of `#[non_exhaustive]`, making the attribute redundant.
 
-The compile-fail gate (BC-2.22.001) is the enforcement mechanism for the Required Inventory. Without a governing ADR, the gate had no authoritative scope to reference. This ADR supplies that scope.
+The Required Inventory is the authoritative scope definition for the compile-fail gate once authored. No compile-fail gate for the Required Inventory exists yet (no `tests/external/non_exhaustive_gate/` directory exists; no BC defines this gate — F-P176-C028's claim to the contrary was a false positive). This ADR supplies the scope that Phase 2 BC authorship requires. The assertion "BC-2.22.001 is the enforcement mechanism" was incorrect and has been removed (burst-288, A02).
 
 ---
 
 ## Consequences
 
 - All new public API surface enums and structs in pregolya MUST carry `#[non_exhaustive]` at authoring time unless they appear in Decision 3.
-- The six exempt enums (StreamEvent, MemoryScope, WriteGuardDecision, MemoryWriteRequest, SlotTrustPolicy, BoundaryType) correctly do NOT carry `#[non_exhaustive]`. Their absence is now documented and justified in the Exempt Inventory.
-- No compile-fail gate for the Required Inventory exists yet. A BC for `tests/external/non_exhaustive_gate/` must be authored in Phase 2. The gate MUST cover all 20 Required Inventory types (12 enums + 8 structs).
+- The nine exempt enums (StreamEvent, MemoryScope, WriteGuardDecision, MemoryWriteRequest, SlotTrustPolicy, BoundaryType, IngressBoundary, GuardrailDecisionKind, GuardrailSeverityWire) and two exempt structs (GuardedDocuments, RunnableSequence) correctly do NOT carry `#[non_exhaustive]`. Their absence is documented and justified in the Exempt Inventory.
+- No compile-fail gate for the Required Inventory exists yet. A BC for `tests/external/non_exhaustive_gate/` must be authored in Phase 2. The gate MUST cover all 37 Required Inventory types (18 enums + 19 structs). The previous count of 20 types reflected only the initial D17/D21/D23 corpus sweep; burst-288 D-03 added 17 additional types identified via a full interface-definitions.md scan.
+- Product-owner action required: add `#[non_exhaustive]` to `ToolCallPreview` in interface-definitions.md (D-02 routing note in Required Inventory struct table).
+- Product-owner action required: add `StreamEvent::Error` as the 16th variant to SS-06 §StreamEvent-Variants before Phase 3 implementation (B01; EC-005 mandates terminal error SSE event).
 - Future capability additions (D24+) that introduce new public types MUST reference this ADR and follow the gate update protocol.
 
 ---

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.69"
+version: "2.70"
 status: active
 producer: product-owner
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-15T00:00:00Z
 phase: 1d
 changelog:
+  - "2.70 (F-P177-D02+F-P177-B02-sibling, burst-288, 2026-08-15): (1) D-02 HIGH: Add `#[non_exhaustive]` to `ToolCallPreview` struct declaration. ADR-023 §required-types inventory lists ToolCallPreview as required; the missing annotation was a production-grade violation. (2) B02-sibling HIGH: Change `steps_remaining: Option<u32>` → `Option<i64>` in §BudgetInfo block. Rationale: BC-2.10.003 §recursion_limit_canon (BC-2.03.001) establishes execution proceeds to recursion_limit + 1 steps; at that step steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (already signed i64)."
   - "2.69 (fix-burst-283/F-P175-C101+F-P175-C113/2026-07-30): Two architect adjudications from P1D-175 Slice C1 applied. (1) F-P175-C101 ADR-021 Decision 1: TOML sample config debug_route_key corrected — present-but-empty form 'debug_route_key = \"\"' replaced with commented-absent form. Present-but-empty deserializes via serde to Option::Some(\"\") which BC-2.12.005 EC-005 defines as E-SERVER-013 startup failure; the secure default is absence of the key (None via serde default). BC-2.12.005 body is unchanged — EC-005/TV-007/E-SERVER-013 are correct and remain load-bearing. (2) F-P175-C113 ADR-021 Decision 2: add configurable: Option<HashMap<String, Value>> field to RunnableConfig struct. This is the LangGraph-parity configurable map (semport rust-translation-strategy §RunnableConfig mapping §11); graphs use it to read model, tool-set, and system-prompt overrides at execution time. Enables the Assistant 'reusable agent persona' concept in BC-2.12.002. BC-2.12.002 §Description product-owner handoff: replace fabricated 'model, tools, system prompt overrides, checkpointer config' text; see ADR-021 Decision 2 and fix-burst-283 handoff spec."
   - "2.68 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Add `validate_embedding_batch` free function spec to §Embeddings Trait (core::embeddings, pregolya-core). Function is `pub`; cross-crate callers are pregolya-openai and pregolya-ollama provider embeddings impls. BC anchors: BC-2.22.001 PC-2 (batch dimensionality contract → E-EMBED-001), INV-2 (consistent inner length), EC-003 (count mismatch), EC-004 (zero-length vector). Error anchor: E-EMBED-001. VP anchor: VP-008 (proptest P1; test harnesses call this function directly per FIX-BURST-280 structural redesign — F-P175-A24 self-proving mock fix). TD-VSDD-060 sibling sweep for unregistered VP-body symbols: see FIX-BURST-280-corr report."
   - "2.67 (fix-burst-279/gap-2-TemplateInput+format_messages/2026-07-28): Gap 2 (BLOCKING) TD-VSDD-060 sweep — format_messages signature and TemplateInput enum. (1) Added `TemplateInput` enum definition (§Prompt Templates, before SlotTrustPolicy): three arms — Scalar(TemplateVar), Messages(MessageListVar), FewShotExamples(Vec<(TemplateVar, TemplateVar)>); #[non_exhaustive]; replaces former bare HashMap<String, TemplateVar> parameter. (2) `format_messages` signature corrected: parameter type `HashMap<String, TemplateVar>` → `HashMap<String, TemplateInput>` (breaking change per ADR-015 §Decision 3 Amendment — TemplateInput Enum Concretized). This is the architect-owned portion of the TD-VSDD-060 sweep; BC-2.18.002/004 PO routing in wave-b-po-routing-spec-279.md item 6 and item 7."
@@ -666,7 +667,7 @@ pub struct BudgetConfig {
 > Option<BudgetInfo>` at each super-step boundary. Fields:
 > `tokens_remaining: Option<i64>` — `ceiling - accumulated_tokens` (signed; may be negative
 > when a Deny has just been triggered because `accumulated > ceiling`; `None` if no token
-> ceiling is configured), `steps_remaining: Option<u32>` — `recursion_limit - current_step`
+> ceiling is configured), `steps_remaining: Option<i64>` — `recursion_limit - current_step`
 > (`None` if no step limit is configured).
 > Authority: BC-2.10.003 PC5 (remaining-budget exposure postcondition),
 > BC-2.10.003 INV (signed arithmetic rationale for `Option<i64>`),
@@ -1173,6 +1174,7 @@ pub enum ActionRisk { ReadOnly, Low, Medium, High }
 /// The tool call preview presented to the hook before invocation.
 /// BC anchor: BC-2.05.007 PC3 (ToolCallPreview constructed read-only before pre_invoke call; action_risk populated from #[tool(action_risk = ...)] annotation).
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ToolCallPreview {
     pub tool_name:   String,
     pub tool_args:   serde_json::Value,

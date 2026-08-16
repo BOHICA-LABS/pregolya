@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.002
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-15T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -28,6 +28,7 @@ changelog:
   - "1.6 (fix-burst-287/F-P176-C001/2026-08-01): PC-2 error-routing defect fixed. Prior text routed canonicalize_beneath_root returning Err 'for any reason' to E-TOOLS-001 (SECURITY/Never), conflating OS I/O failures with genuine scope-escape violations. Narrowed to: E-TOOLS-001 applies only when canonicalize_beneath_root returns Err because the resolved canonical path lies outside the guard scope (genuine escape). OS-level I/O failures (e.g., NotFound when parent directory does not exist) route to PC-5 as E-TOOLS-008 FileIoError. Discrimination note added to PC-2 body. EC-003 and TV-004 are already consistent with this rule; no additional edits needed. Same root defect as BC-2.23.001 PC-2."
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 2 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001: inline → PregolyaError { code: 'E-TOOLS-001', .. }. PC-5 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "1.8 (fix-burst-287/F-P176-C002/ADR-024/2026-08-01): ADR-024 create-path update — close CRIT unreachability defect. PC-1 extended: canonicalize_beneath_root Phase 2 two-phase fallback (ADR-024 Decision 1) enables new-file creation when target does not exist but parent is within scope. PC-2 discrimination rule extended with three genuine-escape conditions per ADR-024 Decision 3: (a) Phase 1 symlink escape on existing file; (b) Phase 2 parent resolves outside workspace; (c) path ends in '..' or is filesystem root (filename=None). traces_to and Architecture Anchors updated to include ADR-024. TOCTOU residual risk LOW per ADR-024 Decision 4; v2 mitigation (rustix openat O_NOFOLLOW) deferred."
+  - "1.9 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions + §Confinement-Proof citation extension — update Architecture Anchors to cite §Phase-2 Postconditions PC-3 (dangling-symlink → PathNotFound → E-TOOLS-008) and PC-4 (Ok-path confinement proof). PC-5 extended: dangling-symlink case (canonicalize_beneath_root Phase 2 step (d) returns Err(SandboxError::PathNotFound)) added as an explicit E-TOOLS-008 route per ADR-024 Decision 3 / PC-3. §Architecture Authority in Traceability updated to reference ADR-024 PC-3 + PC-4."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -103,6 +104,12 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 5. **I/O error:** OS-level I/O failure (disk full, permission denied) propagates as
    `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    The temporary file is removed on error.
+   **Dangling-symlink case (ADR-024 Decision 3 / PC-3):** if `canonicalize_beneath_root`
+   Phase 2 step (d) detects that the final path component is a dangling symlink
+   (`std::fs::symlink_metadata(joined)` returns `Ok(m)` with `is_symlink() = true`), it
+   returns `Err(SandboxError::PathNotFound)`. This is NOT a confinement violation; it is an
+   unresolvable-target condition. WriteFileTool propagates this as
+   `Err(PregolyaError { code: "E-TOOLS-008", .. })` (same as other I/O failures).
 
 ## Invariants
 
@@ -157,7 +164,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 ## Architecture Anchors
 
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (tools::fs WriteFileTool), Decision 3 (High ActionRisk), Decision 4 (retry_eligible: false), Decision 5 (E-TOOLS-001)
-- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — Decision 1 (two-phase `canonicalize_beneath_root` for non-existent paths), Decision 2 (WriteFileTool calling convention unchanged), Decision 3 (error routing table — three genuine-escape conditions), Decision 4 (TOCTOU residual risk LOW), Decision 5 (atomic write compatible)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — Decision 1 (two-phase `canonicalize_beneath_root` for non-existent paths, including step (d) dangling-symlink guard via `symlink_metadata`), Decision 2 (WriteFileTool calling convention unchanged), Decision 3 (error routing table — three genuine-escape conditions + dangling-symlink `Err(SandboxError::PathNotFound)` → E-TOOLS-008), Decision 4 (TOCTOU residual risk LOW), Decision 5 (atomic write compatible); §Phase-2 Postconditions PC-3 (dangling-symlink → `Err(SandboxError::PathNotFound)` — governing authority for PC-5 dangling-symlink routing); PC-4 (Ok-path confinement proof — `canonical_parent.join(filename) ⊆ canonical_base` holds under five soundness invariants; guarantees WriteFileTool write stays within workspace)
 - `architecture/module-decomposition.md` — SS-23, `tools::fs` module in pregolya-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell classification
 
@@ -178,7 +185,7 @@ _[to be filled after story decomposition — Wave 1 SS-23 story]_
 | Source L2 Capability | CAP-036 |
 | Capability Anchor Justification | CAP-036 ("First-Party Filesystem Tools (tools::fs — ReadFileTool, WriteFileTool, EditFileTool, ListDirTool)") per capabilities-p1-p2.md §CAP-036 — this BC specifies WriteFileTool's PathGuard-confinement, atomic write semantics, High ActionRisk, no-auto-retry policy, and E-TOOLS-001 error code that CAP-036 names as part of the tools::fs surface |
 | L2 Domain Invariants | DI-014 (Error Propagation — I/O failures and path violations propagate as Err; no silent success) |
-| Architecture Authority | ADR-020 Decisions 2, 3, 4, and 5 (WriteFileTool contract, High ActionRisk, retry_eligible: false, E-TOOLS-001) |
+| Architecture Authority | ADR-020 Decisions 2, 3, 4, and 5 (WriteFileTool contract, High ActionRisk, retry_eligible: false, E-TOOLS-001); ADR-024 Decisions 1–5 (two-phase `canonicalize_beneath_root`, calling convention, error routing, TOCTOU, atomic write) + §Phase-2 Postconditions PC-3 (dangling-symlink → E-TOOLS-008) and PC-4 (Ok-path confinement proof) |
 | Binding Decisions | D23 (first-party tool library scope, SS-23 creation) |
 | VP Registration | VP-003 reuse; VP-2.23.002-B/C (unit tests) |
 | Module | pregolya-tools / tools::fs |

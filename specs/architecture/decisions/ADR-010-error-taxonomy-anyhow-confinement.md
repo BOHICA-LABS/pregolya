@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.17"
+version: "1.18"
 changelog:
+  - "1.18 (burst-288/F-P177-E01/2026-08-15): Add §Class 1 Scanner Contract to unambiguously specify CLASS1_VIOLATION for devops scanner. (1) Define value-expression-position indicators vs pattern-position indicators in rust fences. (2) State explicitly: adding `..` to a value-expression position occurrence does NOT resolve a Class 1 violation — `#[non_exhaustive]` bars struct-literal construction (E0639) from external crates regardless of `..`; the `..` rest-pattern applies to patterns (Class 2), not to construction literals. (3) CLASS1_VIOLATION remedy is ALWAYS `::new()` replacement. (4) Update §Mechanical Discriminator Step 2 rust-fence branch to check position type BEFORE checking `..`; value-expression position → Class 1 (regardless of `..` presence); pattern position + `..` → Class 2 VALID; pattern position + no `..` → CLASS2_MISSING_REST: add `..`."
   - "1.17 (fix-burst-287/F-P176-C008/2026-08-01): Adjudicate ADR-010 vs POL-17 contradiction (Mechanism 5). Strengthen §Class-3 prohibition: `PregolyaError::new()` is now explicitly FORBIDDEN (not merely 'not used') in Class 3 prose/observation contexts. Add canonical-form summary to §Class-3 header. State rationale for why construction syntax is wrong in description contexts. POL-17 must be corrected by spec-steward to scope its 'allowed construction form' claim to Class 1 contexts only — that correction is outside this ADR's scope."
   - "1.16 (NOTATION-GAP-FIX/D-76-CORR/2026-07-29): Close two Mechanical Discriminator gaps identified in the Wave B pilot batch and correct the authoritative BC violation count. (1) Gap 1 — Unicode ellipsis U+2026 not named as a forbidden elision marker: Class 3 rule and Step 2 discriminator named only `...` (three ASCII dots) as a forbidden field-elision marker; `…` fell into an unnamed branch; pilot Wave B correctly replaced 3 instances in BC-2.08.004 by re-derivation but required per-agent reasoning on each occurrence. Fix: `…` (U+2026) is now a named class, CLASS3_UNICODE_ELLIPSIS_VIOLATION, distinct from CLASS3_ASCII_ELLIPSIS_VIOLATION (`...`); applies when `…` appears in field-elision position (unquoted, not inside a double-quoted string value such as `message: \"…\"`); canonical replacement is `..`; added to both Class 3 normative rule text and Step 2 discriminator. 1 live corpus violation in B2 scope: BC-2.09.007 §Scenario. (2) Gap 2 — Split-line opener form undetectable: discriminator required `PregolyaError {` on a single line; 2 corpus sites open with `PregolyaError` at end-of-line and `{` on the following line (BC-2.08.003 §EC-002 and BC-2.08.007 §PC2); these were invisible to the v1.15 detector. Fix: `spec_region_utils.py` gains `find_pregolya_error_openers(raw_lines)` — returns both single-line openers (form=single) and split-line openers (form=split); a split-line `pub struct PregolyaError` / `{` still classifies EXCLUDED_DECL because the EXCLUDED_DECL check operates on the opener_line content. Step 0, Step 1b, and Step 2 updated. (3) Count correction: the authoritative count recorded as 170 (D-76, v1.15) was complete with respect to the then-current single-line-only detector. With the 2 split-line sites included, the true figure is 172. Reconciliation chain: 144 (discriminator with 4 defects) → 158 (unbounded literal pattern) → 170 (multiline-aware, single-line-only opener) → 172 (split-line opener support included). See §Classification Procedure."
   - "1.15 (FIX-BURST-281-WAVE-A-CORR/D-72/2026-07-29): Correct §Mechanical Discriminator — fix four verified defects in the v1.14 discriminator algorithm. (1) Defect 1 — Multiline span blindspot: the v1.14 grep checked for `..` on the SAME LINE as `PregolyaError {`, failing to detect spans where `..` is on a continuation line. Fix: discriminator now brace-counts the ENTIRE `{ ... }` span (up to 15-line lookahead) using spec_region_utils.py for region context; all classification checks (including the `..` test) operate on the full span, not just the opening line. Confirmed: 43 normative multiline spans in BC corpus, all correctly classified; raw rg count 48 includes 5 `PregolyaError {` pattern-mentions in changelog text that lack a matching `}` in scope (EXCLUDED_NO_CLOSE). (2) Defect 2 — Canon flags its own illustration regions: the discriminator previously flagged 10 lines inside ADR-010's FORBIDDEN-examples block and worked-examples table, making the canon self-flag and forcing a standing WARN on every CI run. Fix: (a) bash/sh fenced blocks that QUOTE the pattern are EXCLUDED_BASH; (b) pattern-name references (bare `PregolyaError {` immediately followed by `` ` ``) are EXCLUDED_PATTERN_REF; (c) doc-comment lines (`///`) inside rust fences are EXCLUDED_DOC_COMMENT; (d) intentional illustration regions marked with `<!-- discriminator:illustration-start -->` / `<!-- discriminator:illustration-end -->` HTML comment pairs are EXCLUDED_ILLUSTRATION per spec_region_utils.py `illustration_exempt_lines()`. Self-test B post-fix: ADR-010 reports ZERO violations. (3) Defect 3 — Declaration/impl forms not excluded: `pub struct PregolyaError {` and `impl PregolyaError {` are now EXCLUDED_DECL in Step 0. (4) Defect 4 (named) — grep-v false-negative class: old `grep -v '\\.\\.'` matched `..` ANYWHERE on the opening line, not just in the PregolyaError span, causing false exclusions when `..` appeared in adjacent fix-instruction text. New discriminator checks `..` in the EXTRACTED SPAN only. Delta decomposition (current corpus): old-style grep gives 169; new discriminator gives 170; delta +1 is entirely Defect 4 (1 BC site where `..` appeared on the opening line outside the span). Effect A (multiline span has `..`, old grep would over-count): 0 — no normative multiline span contains `..` in this corpus. Authoritative BC corpus count: 170 violations (133 Class 3 missing-`..`, 37 Class 3 three-dot ASCII) across 51 files; 14 CLASS3_VALID_COMPLETE; 33 EXEMPT/excluded. Wave B sweep (product-owner) proceeds from the authoritative count of 170."
@@ -115,6 +116,35 @@ Struct literal `PregolyaError { field: val, … }` without `..` in a value-expre
 <!-- discriminator:illustration-end -->
 
 **Rationale:** This is compilable code targeting external crates. `#[non_exhaustive]` bars struct-literal construction (E0639) outside `pregolya-core`. Spec must match production requirements.
+
+**Class 1 Scanner Contract (burst-288, F-P177-E01):**
+
+CLASS1_VIOLATION triggers when: (a) the occurrence is inside a rust-fenced code block (language = "rust"), AND (b) the occurrence is in value-expression position, AND (c) the occurrence is not already a PregolyaError::new constructor call.
+
+<!-- discriminator:illustration-start -->
+**Value-expression position indicators** (code PRODUCES a value):
+- After `return Err(` — e.g., `return Err(PregolyaError { code: "E-XXX", .. })`
+- After `let <name> =` (not a destructuring pattern) — e.g., `let err = PregolyaError { code: "E-XXX", .. };`
+- After `=` in an assignment expression
+- As a function's direct return expression (implicit return at end of block)
+- Inside `Err(...)` or `Ok(...)` as a wrapping constructor argument
+
+**Pattern position indicators** (code MATCHES a value, not PRODUCES one):
+- Inside a `match` arm (after `=>` or before `=>` on the LHS)
+- Inside `matches!(expr, Err(PregolyaError { code: "E-XXX", .. }))` — the second argument is always a pattern
+- After `let ... =` in a destructuring binding (the LHS `PregolyaError { field, .. }` is a pattern)
+<!-- discriminator:illustration-end -->
+
+**Critical distinction — adding `..` does NOT resolve a Class 1 violation:**
+`PregolyaError { code: "E-X", .. }` in value-expression position is still a CLASS1_VIOLATION. `#[non_exhaustive]` bars struct-literal construction from external crates via E0639 (struct expression); this error fires regardless of `..` presence. The `..` rest-pattern applies only to struct patterns (pattern position, Class 2) — not to struct literal construction. A devops scanner that checks only for `..` presence will produce false negatives (CLASS1_VIOLATION occurrences with `..` classified as valid).
+
+**CLASS1_VIOLATION remedy is ALWAYS `::new()` replacement.** Adding `..` converts the syntactic form but does NOT make the construction valid from external crates — it merely converts a Class 2 missing-`..` concern into a Class 1 violation with `..` present. The only correct remediation is:
+<!-- discriminator:illustration-start -->
+```
+PregolyaError { .. }  →  PregolyaError::new(component, category, retry_hint, code, message)
+```
+<!-- discriminator:illustration-end -->
+Adding `..` to satisfy a different lint (e.g., a Class 3 missing-`..` check) when the occurrence is in value-expression position is the WRONG fix. The position determines the class; the class determines the remedy.
 
 ### Class 2 — Pattern Form (MUST include `..`)
 
@@ -222,12 +252,32 @@ classifying. Count `{` and `}` characters (up to 15-line lookahead) to determine
 
 ```
 IF rust_fence:
-  IF occurrence span contains `..` (two-dot rest pattern, not part of `...`):
-    → Class 2 VALID
-  IF span does NOT contain `..` AND file is BC-2.14.001 or BC-2.14.002:
-    → Class 4 VALID (verify // defining-crate annotation present)
-  IF span does NOT contain `..` AND file is NOT BC-2.14.001/002:
-    → Class 1 VIOLATION: must use PregolyaError::new(...)
+  # Determine position type BEFORE checking `..`.
+  # `..` presence alone is NOT sufficient to classify as Class 2 VALID —
+  # value-expression position is CLASS1_VIOLATION regardless of `..`.
+  Determine position_type:
+    VALUE_EXPRESSION: span is preceded (within 3 lines before opener) by `return Err(`,
+      `let <ident> =` (non-destructuring), plain `=` assignment, or the span is the
+      trailing expression in a block. Also: span is directly inside `Err(...)` or `Ok(...)`.
+    PATTERN_POSITION: span appears on the LHS of a match arm (before `=>`), inside
+      `matches!(`, or after `let ... =` in a destructuring binding (LHS pattern).
+    UNKNOWN: cannot determine from context (treat as VALUE_EXPRESSION; safe over-flagging)
+
+  IF position_type == VALUE_EXPRESSION:
+    IF file is BC-2.14.001 or BC-2.14.002:
+      → Class 4 VALID (defining-crate exception; verify // defining-crate annotation present)
+    ELSE:
+      → Class 1 VIOLATION: must use PregolyaError::new constructor (see §Class-1)
+      NOTE: presence of `..` in value-expression position does NOT change this classification.
+      `PregolyaError { .., field: val }` in value-expression is still E0639 from external crates.
+      Remedy: replace entire `PregolyaError { .. }` literal with PregolyaError::new call.
+
+  IF position_type == PATTERN_POSITION:
+    IF occurrence span contains `..` (two-dot rest pattern, not part of `...`):
+      → Class 2 VALID
+    ELSE:
+      → CLASS2_MISSING_REST: missing `..` rest pattern in pattern context.
+      Remedy: add `..` before closing `}` of the pattern.
 
 IF formal_stmt OR prose:
   IF span contains `..` (two-dot rest pattern, not part of `...`):

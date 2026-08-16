@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.62"
+version: "2.63"
 status: active
 producer: product-owner
 total_standing_gates: 37
-timestamp: 2026-08-01T00:00:00Z
+timestamp: 2026-08-15T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 75
 p2_count: 3
 changelog:
+  - "2.63 (burst-288/F-P177-D01/2026-08-15): Full §Subsystem → CAP Mapping sweep (D-134 structural remedy). All 23 rows cross-checked against ARCH-INDEX §Subsystem Registry (authoritative source). Five divergent rows corrected: SS.06 pregolya-graph → pregolya-graph, pregolya-core (ARCH-INDEX SS-06 primary crates include both); SS.11 pregolya-core/graph → pregolya-graph (ARCH-INDEX SS-11 primary crate is pregolya-graph); SS.13 pregolya-graph/sandbox → pregolya-sandbox (ARCH-INDEX SS-13 primary crate is pregolya-sandbox; pregolya-graph owns zero SS-13 modules); SS.17 all (formal verification) → xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox (ARCH-INDEX SS-17 primary crates enumerated); SS.20 pregolya-vectorstores → pregolya-core, pregolya-vectorstores (ARCH-INDEX SS-20 primary crates include both). D-135 note: these are crate-assignment routing errors; pregolya-community IS a valid roster crate (post-v1 row 8); no phantom-crate errors. Eighteen rows verified matching ARCH-INDEX: SS.01, SS.02, SS.03, SS.04, SS.05, SS.07, SS.08, SS.09, SS.10, SS.12, SS.14, SS.15, SS.16, SS.18, SS.19, SS.21, SS.22, SS.23."
   - "2.62 (fix-burst-287/F-P176-D002+D004/2026-08-01): TWO FINDINGS VERIFIED. (1) F-P176-D002 CONFIRMED: §Subsystem → CAP Mapping SS-22 crate corrected from `pregolya-community` (post-v1, absent from 21-crate v1 roster per ARCH-INDEX §Canonical Crate Roster row 8 status=post-v1) to `pregolya-core, pregolya-openai, pregolya-ollama`. Four concurring artifacts: ARCH-INDEX §Subsystem Registry SS-22 row (`pregolya-core, pregolya-openai, pregolya-ollama`); module-decomposition §Provider Embeddings Modules (SS-22) (`core::embeddings` in pregolya-core; `openai::embeddings` in pregolya-openai; `ollama::embeddings` in pregolya-ollama); BC-2.22.001 frontmatter `crate: pregolya-core`; BC-2.22.002 frontmatter `crate: pregolya-openai`; BC-2.22.003 frontmatter `crate: pregolya-ollama`. bc-authoring-plan.md was the lone outlier. (2) F-P176-D004 note-half FALSE: adversary finding claimed a §Note in bc-authoring-plan.md asserts gate #37 was wired to pre-commit-validators.sh. String-presence check (`grep 'wired to pre-commit' bc-authoring-plan.md`) returned empty — no such note exists. Gate #37 (LAYER-SCOPED SWEEP BAN) is a process gate with no machine hook; its text at §37 accurately describes a manual standing gate and makes no wired-validator claim. No text change to gate #37."
   - "2.61 (ERROR-NOTATION-CANON/WAVE-B/2026-07-29): FIVE ADR-010 §Error-Construction Notation Canon violations fixed. (1) Three CLASS3_ASCII_ELLIPSIS_VIOLATION sites in gate text — `...` (three-dot) elision markers replaced with canonical `..`: gate #30 trigger-text sentence (×2) and gate #33 Step B wrapper-form example sentence. (2) Two CLASS3_MISSING_DOTS_VIOLATION sites — `, ..` added before closing `}` to mark elided fields: gate #30 motivating-instance struct observation (`{ category: INTERNAL, message: \"...\", .. }`) and gate #33 wrapper-form discipline bare-struct example (`{ category: X, code: E-YYY-NNN, .. }`). verify-error-notation-canon.sh: FAIL=5 → FAIL=0."
   - "2.60 (FIX-BURST-276-WAVE-C/F-P173-304+F-P173-407/2026-07-27): TWO FINDINGS CLOSED. (1) F-P173-304 HIGH [process-gap]: Gate #25 Part C blocking identity 3 (composite-key uniqueness) lacked a census command and recorded evaluation — burst-275 recorded a quintuple census but identity 3 was never evaluated with inline derivation. Fix: census command added to identity 3 block (awk header-derived extraction of all (Module, Qualifier) composite key pairs piped through sort|uniq -d; any duplicate pair prints inline — self-revealing failure, not an assertion). Evaluation recorded for burst-276-Wave-C: sextuple (decomposition_total_rows=71, decomposition_tiered_rows=69, exempt_count=2, registry_rows=77, registry_distinct_modules=76, matched_rows=69); both difference sets empty; command output empty (zero duplicate (Module, Qualifier) pairs). The 1-row gap (registry_rows=77 vs registry_distinct_modules=76) is the single multi-aspect row: core::serializable appears twice with Qualifiers 'reviver-allowlist CRITICAL' vs 'round-trip HIGH' — DISTINCT Qualifiers, identity 3 PASSES. Four-failure-mode falsifiability argument (F-P173-304 requirement, THE TRAP AVOIDED — no fifth-generation tautology): (a) same (Module, Qualifier) duplicate on two rows — DETECTED: sort|uniq -d prints the duplicate key inline; identity 3 FAILS LOUDLY. (b) module present in decomposition but absent from registry — NOT DETECTED by identity 3: command output is empty regardless; this is identity 2's domain (difference set in matched_rows). (c) module with wrong tier in registry — NOT DETECTED by identity 3: unique composite key, no duplicate output; tier-diff check (Registry→Decomposition direction) covers this. (d) extra module in one list but not the other — NOT DETECTED by identity 3: same reasoning as (b); identity 2 in both directions covers this. Assessment: identity 3 covers failure mode (a) only; modes (b)–(d) require identity 2 and the tier-diff check. Together identities 0–3 plus tier-diff form a complete sensor over the four failure modes; no single identity need cover all four. (2) F-P173-407 MED: DEC-013 orphan corrected. Pass-42 adversarial probe recorded '13/13 CLEAN' (all 13 domain edge cases anchored to a BC with explicit DEC citation) but DEC-013 (Provider Streaming Interrupted by Transport Error) was a one-directional reference: edge-cases.md cited BC-2.08.007 as anchor but BC-2.08.007 carried no reciprocal DEC-013 citation. Fix: BC-2.08.007 updated to cite DEC-013 in traces_to frontmatter and Traceability DEC References row; edge-cases.md anchor text strengthened to a labelled BC-anchor line. Canonical DEC count derivation: 13 = count of ###-DEC-NNN headings in domain-spec/edge-cases.md (DEC-001 through DEC-013, sequential, no gaps). The pass-42 '13/13 CLEAN' probe claim is now accurate."
@@ -71,21 +72,21 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | SS.03 | CAP-004 | pregolya-graph | P0 |
 | SS.04 | CAP-005 | pregolya-checkpoint | P0 |
 | SS.05 | CAP-006 | pregolya-graph | P0 |
-| SS.06 | CAP-007 | pregolya-graph | P0 |
+| SS.06 | CAP-007 | pregolya-graph, pregolya-core | P0 |
 | SS.07 | CAP-008 | pregolya-splitters | P0 |
 | SS.08 | CAP-009, CAP-011 | pregolya-\<provider\>, pregolya-standard-tests | P1 |
 | SS.09 | CAP-010, CAP-021 | pregolya-mcp | P1 |
 | SS.10 | CAP-012 | pregolya-graph | P0 |
-| SS.11 | CAP-013 | pregolya-core/graph | P0 |
+| SS.11 | CAP-013 | pregolya-graph | P0 |
 | SS.12 | CAP-014 | pregolya-server | P1 |
-| SS.13 | CAP-015 | pregolya-graph/sandbox | P1 |
+| SS.13 | CAP-015 | pregolya-sandbox | P1 |
 | SS.14 | CAP-016 | pregolya-core | P0 |
 | SS.15 | CAP-017 (P1), CAP-020 (P1) | pregolya-memory | P1 |
 | SS.16 | CAP-018 | pregolya-core | P1 |
-| SS.17 | CAP-019 | all (formal verification) | P2 |
+| SS.17 | CAP-019 | xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox | P2 |
 | SS.18 | CAP-022, CAP-023 | pregolya-prompts | P1 |
 | SS.19 | CAP-024, CAP-025 | pregolya-core | P1 |
-| SS.20 | CAP-026, CAP-027 | pregolya-vectorstores | P1 |
+| SS.20 | CAP-026, CAP-027 | pregolya-core, pregolya-vectorstores | P1 |
 | SS.21 | CAP-028, CAP-029, CAP-030 | pregolya-vectorstores | P1 |
 | SS.22 | CAP-031, CAP-032, CAP-033 | pregolya-core, pregolya-openai, pregolya-ollama | P1 |
 | SS.23 | CAP-034, CAP-035, CAP-036, CAP-037, CAP-038 | pregolya-tools | P1 |

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: tooling-selection
-version: "1.5"
+version: "1.6"
 status: active
 producer: architect
 timestamp: 2026-07-26T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "0615229"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.6 (burst-288/F-P177-A04/2026-08-15): Fix stale proptest count in §Test Strategy Summary live body: '3 of 12 CRITICAL + 7 of 28 HIGH = 10 modules' → '3 of 12 CRITICAL + 7 of 29 HIGH = 10 modules'. HIGH tier count was bumped 28→29 (core::tool added to verification-coverage-matrix.md §Coverage by Criticality Tier) but this live-body sibling was not updated in the same burst."
   - "1.5 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §Security Linting Invocation row: `cargo xtask deny-client-new` → `cargo xtask check-client-timeout`; `cargo xtask deny-expect-in-lib` → `cargo xtask check-no-panic`. Canonical `check-<subject>` form per D-35."
   - "1.4 (FIX-BURST-276/F-P173-803/2026-07-27): F-P173-803 — fix proptest gate in §Test Strategy Summary. Actual proptest coverage is 3 of 12 CRITICAL tiers (graph::bsp_engine, checkpoint::session_index, checkpoint::clock) and 7 of 28 HIGH tiers (core::runnable, core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget). Replace 'Every PR (CRITICAL/HIGH modules)' with actual coverage count and stated obligation. See verification-coverage-matrix.md §Coverage by Criticality Tier for current counts. Derivation: counted from per-module table proptest column in verification-coverage-matrix.md — rows with yes or VP-NNN in proptest column, grouped by tier per module-criticality.md tier assignments."
   - "1.3 (FIX-BURST-275/F-P172b-08+09/2026-07-26): F-P172b-09 — replace phantom symbol `checkpoint::session_index::derive_key` with correct `checkpoint::session_index::storage_address` in §Kani async constraint paragraph. Rationale: `storage_address` is the sync Kani harness target per verification-architecture.md VP-002 harness (`session_tenancy_harness`); `derive_key` is not a real symbol in the checkpoint module surface (phantom); VP-002 anchors to `checkpoint::session_index`, not `checkpoint::clock`. F-P172b-08 — add `pregolya-core` and `pregolya-memory` to proptest Cargo integration row (proptest P1 obligations VP-007 LcSerializable round-trip [pregolya-core SS-19] and VP-008 dimensionality contract [pregolya-core SS-22] and memory write-guard invariants [pregolya-memory SS-15] require proptest in those crates); add SS-19 (LC Serialization VP-007) and SS-22 (Embeddings VP-008) to proptest §Target."
@@ -127,7 +128,7 @@ Key rules:
 | Verification Level | Tools | When |
 |-------------------|-------|------|
 | Unit tests | `cargo test` | Every PR |
-| Property tests | proptest | Every PR (modules with proptest targets: 3 of 12 CRITICAL + 7 of 28 HIGH = 10 modules; see verification-coverage-matrix.md §Coverage by Criticality Tier; **coverage obligation:** expand proptest to all CRITICAL/HIGH modules by Phase 5) |
+| Property tests | proptest | Every PR (modules with proptest targets: 3 of 12 CRITICAL + 7 of 29 HIGH = 10 modules; see verification-coverage-matrix.md §Coverage by Criticality Tier; **coverage obligation:** expand proptest to all CRITICAL/HIGH modules by Phase 5) |
 | Integration tests | `cargo test --test *` | Every PR |
 | Soak tests | custom harness | Phase 3 per-story (durability) |
 | Mutation testing | cargo-mutants | Phase 3 per-story (CRITICAL); Phase 5 full sweep |

@@ -7,14 +7,18 @@ title: "Proc-Macro Attributes: #[tool], #[entrypoint], #[task] (D17-Q6)"
 status: accepted
 producer: architect
 timestamp: 2026-07-14T12:00:00Z
+date: "2026-07-14"
+subsystems_affected: ["all"]
+supersedes: []
+superseded_by: null
 phase: 1b
 gate: ADR-004
 gate_note: "Gated on ADR-004 (serde/schemars). ADR-008 may not finalize until ADR-004 is accepted. The schemars derive is required for #[tool] schema generation."
 traces_to: ARCH-INDEX.md
 decisions: [D5, D17]
-supersedes: []
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Rationale, Alternatives Considered, Source / Origin sections per ADR template (LOW finding: date boundary conditions)."
   - "1.1 (FIX-BURST-273/F-P171a-09/2026-07-25): Add Decision 2 — `action_risk` attribute parameter, emitted absolute path, and proc-macro hygiene rule. At original authoring, no `action_risk` attribute existed; ADR-018 Decision 6 and ADR-020 Decision 3 subsequently introduced the attribute (D23). Decision 2 records the emitted-path contract (::pregolya_core::action_risk::ActionRisk) so Phase 3 implementers do not re-derive it. Also introduce version/changelog frontmatter fields absent at original authoring."
   - "1.0 (D17-Q6/2026-07-14): Initial ADR — proc-macro attributes adopted; gate: ADR-004 accepted."
 ---
@@ -98,9 +102,30 @@ for risk-tier visibility in `ToolCallPreview`.
 burst-229). The postcondition that the `action_risk` field is correctly populated in
 `ToolCallPreview` at dispatch time is covered by BC-2.08.010 §Postconditions.
 
+## Rationale
+
+- D17-Q6 mandates proc-macro ergonomics for tool registration (`#[tool]`), graph entrypoint wiring (`#[entrypoint]`), and task registration (`#[task]`).
+- The proc-macro crate (`pregolya-macros`) is a standard Rust pattern for deriving boilerplate from attribute annotations; no other mechanism provides compile-time schema generation from user-defined argument types.
+- ADR-004 accepted schemars as the schema generation backend; `#[tool]` derives `schemars::JsonSchema` on the annotated struct, so ADR-008 is unblocked only after ADR-004 is accepted.
+- Manual `impl Tool` pattern remains valid for users who do not want proc-macro ergonomics — `#[tool]` is additive, not required.
+
 ## Consequences
 
-- `pregolya-macros` proc-macro crate added to workspace if ADR-004 accepted.
+- `pregolya-macros` proc-macro crate added to workspace (ADR-004 accepted — gate satisfied).
 - Phase-1b BC additions for `#[tool]`, `#[entrypoint]`, `#[task]` routed through product-owner after this ADR finalizes.
 - xtask linting may need updating to recognize proc-macro-expanded code.
 - Decision 2 (D23): `#[tool]` macro implementer must use `::pregolya_core::action_risk::ActionRisk::<Variant>` in all emitted tokens for `action_risk`; no bare `ActionRisk::High` in the expansion output.
+
+## Alternatives Considered
+
+| Alternative | Reason Rejected |
+|-------------|-----------------|
+| Manual `impl Tool` only (no proc-macro) | Valid ergonomically but D17-Q6 mandates proc-macro support; the two patterns coexist (additive). |
+| build.rs code generation | Harder to compose with serde/schemars derives; lacks attribute syntax ergonomics; more complex for users. |
+| Derive macros only (no attribute macros) | Derive macros cannot annotate individual functions; `#[tool]` must annotate async `fn` signatures, which requires an attribute macro. |
+
+## Source / Origin
+
+- **Decision mandate:** D17-Q6 — proc-macro attribute design gated on D5 (ADR-004 accepted).
+- **Gate resolution:** ADR-004 accepted (schemars 1.x) satisfies the D5 gate; ADR-008 finalizes.
+- **Authoring context:** D5/D17 design session (2026-07-14); pregolya Phase 1a.

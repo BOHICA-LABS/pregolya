@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.4 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication: BC-2.10.003 PC8(d) explicitly asserts the Run status IS summary_halt '(not failed)'; entities-server.md §91 agrees). H1 title and Description: add summary_halt to state machine enumeration. PC7: add in_progress → summary_halt arc (OnCeiling::Summarize path per BC-2.10.003 PC8(c)(d)). PC8: terminal set {completed, failed, cancelled} → {completed, failed, cancelled, summary_halt}. PC13: completed_at terminal set gains summary_halt. PC18: status filter enum gains 'summary_halt'. PC19: deletable terminal states gain summary_halt. Output invariant: output populated when status ∈ {completed, summary_halt} (summary_halt output = summarize model response per BC-2.10.003 PC8(c)); null in all other states. Traceability state machine description updated."
   - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-003: replaced `PregolyaError { ... }` with `PregolyaError { .. }` — CLASS3_ASCII_ELLIPSIS_VIOLATION (three-dot ASCII form forbidden in prose/observation context; canonical elision marker is two dots per ADR-010 §Error-Construction Notation Canon)."
+  - "1.6 (F-P177-B03, burst-288, 2026-08-15): Add `interrupted → cancelled` arc to PC7 (9th arc); extend PC10 to authorize cancellation of `interrupted` Runs. Resolves deadlock: PC19 directed callers to cancel an interrupted Run before deletion, but the arc was absent from PC7 and unauthorized by PC10, making interrupted Runs permanently undeletable."
 extracted_from: null
 modified: []
 deprecated: null
@@ -93,6 +94,7 @@ LangGraph Platform (D13).
    in_progress → summary_halt  (OnCeiling::Summarize path: budget ceiling hit; one final summarize LLM call completes; model response returned as output — BC-2.10.003 PC8(c)(d))
    queued      → cancelled     (POST .../cancel called before executor picks up the run)
    interrupted → in_progress   (caller posts resume value via POST .../runs/{run_id}/resume)
+   interrupted → cancelled     (POST .../cancel called on an interrupted run)
    ```
 8. Terminal states (no further transitions possible): `completed`, `failed`, `cancelled`, and `summary_halt`.
    `interrupted` is **not** terminal — it is a pausable/resumable state.
@@ -103,7 +105,7 @@ LangGraph Platform (D13).
 
 ### Cancel Run (`POST /threads/{thread_id}/runs/{run_id}/cancel`)
 
-10. Cancels a `queued` or `in_progress` Run. Signals the executor to stop and transitions
+10. Cancels a `queued`, `in_progress`, or `interrupted` Run. Signals the executor to stop and transitions
     the Run to `cancelled` status.
 11. Cancellation is best-effort: if the run completes naturally before the cancellation
     signal is processed, the status will be `completed` or `failed`, not `cancelled`.

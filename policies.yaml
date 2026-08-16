@@ -93,10 +93,10 @@
 #   (1) POL-18 (type_signature_canon) — repoint D-43, D-45, D-48 citations from
 #   provisional "canonical form defined by verify-signature-canon.sh rule specification"
 #   to real ADR-025 headings. All four grep-verified against ADR-025 body before writing
-#   per ADR-022 §Decision 1: §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43)
-#   (line 55); §VectorStoreRetriever: No Lifetime Parameter (D-45) (line 95);
-#   §as_retriever Receiver: Arc<Self> Ownership (D-48) (line 131); §&Arc<Self> Receiver:
-#   Standing Prohibition (D-48 General) (line 172). ADR-025 minted by architect this
+#   per ADR-022 §Decision 1: §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43);
+#   §VectorStoreRetriever: No Lifetime Parameter (D-45);
+#   §as_retriever Receiver: Arc<Self> Ownership (D-48); §&Arc<Self> Receiver:
+#   Standing Prohibition (D-48 General). ADR-025 minted by architect this
 #   burst closing governance inversion where verify-signature-canon.sh was canon source.
 #   (2) POL-19 (adr_decision_reference_integrity) — add ADR-022 §Decision 5 alignment:
 #   machine enforcement is ADR-target-only; 183 non-ADR §citations convention-bound
@@ -110,10 +110,21 @@
 #   (4) POL-47 (artifact_self_validation) minted — every new/amended ADR and policy must
 #   pass its own canon checks before done. Severity HIGH. Grounds four artifacts in
 #   fix-burst-287 that each carried a defect of the class they were created to fix.
+# 1.3 (burst-288/P1D-177-E02+D133/2026-08-15): Two changes.
+#   (1) CHANGELOG 1.2 line-number pins removed (F-P177-E02 / POL-12): four
+#   (line NNN) annotations in the 1.2 §POL-18 notation entry removed per
+#   TD-VSDD-091; §DynTool: Canonical Object-Safe Tool Dispatch Form (D-43),
+#   §VectorStoreRetriever: No Lifetime Parameter (D-45), §as_retriever Receiver:
+#   Arc<Self> Ownership (D-48), §&Arc<Self> Receiver: Standing Prohibition
+#   (D-48 General) heading references retained without bare line numbers.
+#   (2) POL-46 requirement 1 amended (D-133 Option B): verbatim file+section
+#   quotation accepted as equivalent evidence to executed-command output when
+#   adversary tool profile denies Bash; intent preserved — findings must be
+#   evidenced, not asserted; description and verification_steps[0] updated.
 
 metadata:
-  version: "1.2"
-  last_updated: "2026-08-01"
+  version: "1.3"
+  last_updated: "2026-08-15"
 
 policies:
 
@@ -770,14 +781,14 @@ policies:
 
   - id: 46
     name: adversary_finding_quality
-    description: "Every finding emitted by an adversarial pass must satisfy six requirements before the orchestrator routes it to a fix burst: (1) an inline verification command with its actual executed output — not a prose description of what to run; (2) every §citation AND every filename in the finding verified as real before writing — §citations by grep -q '^#{1,6} <text>' <file>, filenames by ls or git show — a finding citing a nonexistent heading or a wrong filename is invalid regardless of substantive accuracy; (3) every numeric count produced by a command at pass-time, not inherited from a prior report — inheriting a count is prohibited; (4) defect substance and defect location reported separately — a wrong coordinate does not invalidate a genuine defect and must not suppress it, but must also not route a fix to the wrong file; (5) note-closure claims verified by string-search in the current document body (outside changelog sections) — a changelog entry stating 'X was fixed' is evidence about the past, not the present; (6) claims derived from historical regions (changelog entries, original-decision derivation tables, Forward Amendment blockquotes) explicitly identified as historical and cross-checked against the current normative body before reporting — those regions exist to preserve history and will read as defects if treated as live state. Recommendation for devops/architect: extend the discriminator:illustration-start/end marker pattern to delimit historical regions, enabling gates and adversary instructions to exclude them by construction rather than by authoring discipline. Rationale measured in fix-burst-287: stratified adjudication of 12 P1D-176 findings found 6/12 FALSE (50%); 7/12 (58%) cited a §section or field not in the file; note-closure findings verified 7 for 7 FALSE (D003, D004, D008, D013, A005, A008, A010) — every one reduced to the same root cause: the adversary read historical/archival content as live state (A010 read an original D7 derivation table's 18-crate count, ignoring the immediately following 'Authoritative current count: 21' blockquote; A005 reversed a changelog finding into a completion claim; A008 fabricated a completion entry and inflated its grep count from 4 to 6); three findings cited fabricated filenames (A005: ADR-015-prompt-injection-safety.md, actual ADR-015-prompt-template-injection-safety.md; A008: ADR-005-checkpoint-id-type.md, actual ADR-005-logical-clock-checkpoint-ordering.md; A010: ADR-007-workspace-crate-decomposition.md, actual ADR-007-crate-topology-sdk-split.md) — the pattern indicates the adversary reasons about the corpus from inference rather than reading it. Counts were wrong in the inflating direction every time (~170→42, 7→0, 6→2, 12→13). BALANCE: this policy does NOT license dismissing findings. The same pass produced five CRITs all CONFIRMED and fixed (C001, C002, D001, D002, E001). Direct-contradiction and governing-rule-absence findings verified at 0% false. The adversary is reliable about whether a defect exists and unreliable about its location and currency. The requirement is verification before routing in both directions: do not fix a phantom, do not dismiss a real defect because its coordinates are wrong."
+    description: "Every finding emitted by an adversarial pass must satisfy six requirements before the orchestrator routes it to a fix burst: (1) inline verification evidence in one of two accepted forms — (A) a verification command with its actual executed output embedded in the finding, or (B) verbatim quoted text read directly from the artifact (exact text with file path and section reference) when the adversary tool profile denies Bash execution; a finding with only a prose description of what to run and no attached evidence is non-compliant regardless of tool profile (D-133); (2) every §citation AND every filename in the finding verified as real before writing — §citations by grep -q '^#{1,6} <text>' <file>, filenames by ls or git show — a finding citing a nonexistent heading or a wrong filename is invalid regardless of substantive accuracy; (3) every numeric count produced by a command at pass-time, not inherited from a prior report — inheriting a count is prohibited; (4) defect substance and defect location reported separately — a wrong coordinate does not invalidate a genuine defect and must not suppress it, but must also not route a fix to the wrong file; (5) note-closure claims verified by string-search in the current document body (outside changelog sections) — a changelog entry stating 'X was fixed' is evidence about the past, not the present; (6) claims derived from historical regions (changelog entries, original-decision derivation tables, Forward Amendment blockquotes) explicitly identified as historical and cross-checked against the current normative body before reporting — those regions exist to preserve history and will read as defects if treated as live state. Recommendation for devops/architect: extend the discriminator:illustration-start/end marker pattern to delimit historical regions, enabling gates and adversary instructions to exclude them by construction rather than by authoring discipline. Rationale measured in fix-burst-287: stratified adjudication of 12 P1D-176 findings found 6/12 FALSE (50%); 7/12 (58%) cited a §section or field not in the file; note-closure findings verified 7 for 7 FALSE (D003, D004, D008, D013, A005, A008, A010) — every one reduced to the same root cause: the adversary read historical/archival content as live state (A010 read an original D7 derivation table's 18-crate count, ignoring the immediately following 'Authoritative current count: 21' blockquote; A005 reversed a changelog finding into a completion claim; A008 fabricated a completion entry and inflated its grep count from 4 to 6); three findings cited fabricated filenames (A005: ADR-015-prompt-injection-safety.md, actual ADR-015-prompt-template-injection-safety.md; A008: ADR-005-checkpoint-id-type.md, actual ADR-005-logical-clock-checkpoint-ordering.md; A010: ADR-007-workspace-crate-decomposition.md, actual ADR-007-crate-topology-sdk-split.md) — the pattern indicates the adversary reasons about the corpus from inference rather than reading it. Counts were wrong in the inflating direction every time (~170→42, 7→0, 6→2, 12→13). BALANCE: this policy does NOT license dismissing findings. The same pass produced five CRITs all CONFIRMED and fixed (C001, C002, D001, D002, E001). Direct-contradiction and governing-rule-absence findings verified at 0% false. The adversary is reliable about whether a defect exists and unreliable about its location and currency. The requirement is verification before routing in both directions: do not fix a phantom, do not dismiss a real defect because its coordinates are wrong."
     adopted: "fix-burst-287 adversarial calibration measurement (P1D-176 stratified adjudication — 12 findings, 5 CONFIRMED, 1 PARTIAL, 6 FALSE; note-closure 7/7 FALSE)"
     severity: HIGH
     enforced_by: [adversary-prompt, orchestrator-rule]
     scope: [bc, vp, di, cap, story, hs, architecture, prd, nfr]
     lint_hook: null
     verification_steps:
-      - "For each finding in this pass: confirm it contains an inline verification command AND its actual output — a finding with only 'Verification: run X' and no output is non-compliant per requirement 1"
+      - "For each finding in this pass: confirm it contains inline verification evidence — either (A) an executed command with its actual output embedded, or (B) verbatim quoted text from the artifact with file path and section reference (D-133: equivalent form when adversary Bash access is denied in tool profile) — a finding with only 'Verification: run X' and no actual evidence attached is non-compliant per requirement 1"
       - "For each §citation in a finding: run grep -q '^#{1,6} <cited-text>' <target-file> and confirm exit 0 before finalizing — a citation to a nonexistent heading is a POL-46 violation per requirement 2"
       - "For each filename cited in a finding: verify the file exists (ls <path> or git show <path>) before writing the finding — fabricated filenames are a POL-46 violation per requirement 2"
       - "For each numeric count in a finding (files, occurrences, fields, codes, etc.): state the command that produced it in this pass — verify it was measured, not inherited from a prior report or adversary finding, per requirement 3"
