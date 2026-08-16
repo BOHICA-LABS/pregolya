@@ -2275,3 +2275,14 @@ develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run 
 
 #### ARCHIVE METADATA
 Date: 2026-08-16 | Archived at: burst-295 close (2026-08-16) | STATE.md: 4.65 → 4.66 | burst-295 COMPLETE: closed P1D-186 F-1/F-2/F-3 (.ferroctmp_→.pregolyatmp_ ×4, ferrograph→pregolya-graph, Wave-TBD→Wave-1); records-lint L12 recurrence guard; BC-INDEX §Changelog; D-158; streak 0/3 UNCHANGED
+
+### Archived Session Checkpoint v4.66 (archived at P1D-187 bookkeeping commit / streak 1/3)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **UNCHANGED 0/3 after 187 passes** (burst-295 COMPLETE D-158; streak UNCHANGED per D-143). burst-295 (2026-08-16): closed P1D-186 F-1/F-2/F-3 — .ferroctmp_→.pregolyatmp_ ×4 (ADR-024 §Atomic-Write-Pattern + BC-2.23.002 §PC-3) + ferrograph→"pregolya-graph (formerly 'ferrograph')" (product-brief §MarketIntel) + Wave-TBD→Wave-1 (ADR-010 §non-exhaustive-gate) + records-lint L12 dead-brand-token recurrence guard; BC-INDEX §Changelog. **NEXT: P1D-187** (adversary pass 1/3; deep-read SS-03/04/06/09/10/11/12/14/15/18/20/21/22 + SS-05 001-004/008 + SS-08 001-012 + broad regression toward 3-CLEAN). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run `git -C .factory log -1 --format='%h'` for current factory-artifacts HEAD. Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-16 | Archived at: P1D-187 bookkeeping (2026-08-16) | STATE.md: 4.66 → 4.67 | P1D-187 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); ZERO findings; 6 candidates discarded; streak 1/3 STARTED; D-159; 188 passes total
