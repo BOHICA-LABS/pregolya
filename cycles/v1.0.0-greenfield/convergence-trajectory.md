@@ -2343,18 +2343,32 @@ All five convergent mechanisms are closed. All five CRITs are closed. The instru
 | **P1D-177** | **60** | **-100** | **0/3** | **First calibrated-instrument pass; 3 CRITs; partial-fix propagation dominant** |
 | fix-burst-288 | — | — | 0/3 | 3C+20H+MED/LOW closed; ADR-024 confinement redesign; StreamEvent::Error 16th variant; 6 gate fixes; POL-46 req-1 amended; D-136..D-138; L-174..L-175 |
 | **P1D-178** | **5** | **-55** | **0/3** | **All findings burst-288 partial-fix residue; 10 regression targets CLEAN; 0C/1H/3M/1L; RECORDS LABEL: NO (MED findings present); E03 refuted 3rd time; PG-178-01 StreamEvent count-drift; PG-178-02 BC-anchor unenforced** |
+| fix-burst-289 | — | — | 0/3 | All 5 P1D-178 findings closed; StreamEvent count sweep ×8 sites; ADR-023+BC-2.10.003 phantom anchors fixed; ADR-024 §Consumers reconciled; D-139..D-142; L-176..L-177 |
+| **P1D-179** | **0** | **-5** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); ZERO findings; 5 candidates all discarded; 7 burst-289 regression targets SOUND; streak 1/3 STARTED; D-143 streak-semantics; frozen spec c4c4b10** |
+| fix-burst-290 | — | — | 0/3 | 8 findings (3H/3M/2L+PG) closed; ADR §-citation phantom class corpus-sweep 12→0 live phantoms (architect 13 fixes; product-owner 9 fixes); verify-adr-anchor-citations.sh promoted advisory→BLOCKING (13→14); EXPECTED_BLOCKING_COUNT bumped; POL-19 migration sweep DISCHARGED; D-144..D-146; L-178..L-179 |
+| **P1D-180** | **8** | **+8** | **0/3** | **NOT CLEAN strict/PR-merge; 3H/3M/2L+PG; dominant class: phantom/prohibited ADR §Named-Section citations (chained-§, bare-§); previously-sampled axis deep-read; STREAK RESET 1/3→0/3** |
 
-**Trajectory tail at P1D-178:** →130→256→189→160→60→**5**
+**Trajectory tail at P1D-180:** →130→256→189→160→60→5→0→**8**
 
-**Total passes to date: 179.**
+**Total passes to date: 181.**
 
-### Convergence Assessment (updated at P1D-178)
+### Convergence Assessment (updated at P1D-180)
 
-Counter: **0/3 unchanged.** Adversary pass with findings — streak does not advance.
+Counter: **0/3 RESET.** P1D-180 found 8 findings — streak reset from 1/3 to 0/3.
 
 P1D-178 closed with 5 findings (0C/1H/3M/1L). All findings are burst-288 partial-fix residue. Burst-288's 10 substantive fixes were all verified sound by regression targets. The count reduction (60→5) reflects burst-288's effectiveness on the core issues; the 5 remaining findings are propagation gaps and phantom anchors introduced by burst-288's own edits.
 
 **Burst-289 COMPLETE (2026-08-16).** All 5 findings closed: StreamEvent count sweep corpus-complete (8 sites reconciled to 16; BC-2.06.001 §Postconditions PC2 single count authority); phantom anchors fixed in ADR-023 + BC-2.10.003; ADR-024 §Consumers reconciled; ambiguous label clarified. D-139..D-142. L-176..L-177.
 
-**Convergence dim-5:** Counter 0/3. Next: P1D-179 FULL-PERIMETER on frozen HEAD (burst-289 state commit SHA).
-**Convergence dim-7:** Trajectory tail →130→256→189→160→60→5. Lessons L-174..L-177 minted. D-136..D-142 added.
+**P1D-179 (2026-08-16): CLEAN(strict)+CLEAN(PR-merge).** ZERO findings; 5 candidates raised and discarded; streak advanced to 1/3. D-143 streak-semantics clarified (spec frozen c4c4b10; bookkeeping commit does not reset streak). Trajectory tail →130→256→189→160→60→5→0.
+
+**P1D-180 (2026-08-16): NOT CLEAN — 8 findings (3H/3M/2L + 1 PG). Streak RESET 1/3→0/3.**
+
+Dominant class: phantom / prohibited ADR §Named-Section citations. The `verify-adr-anchor-citations.sh` gate was advisory (WARN mode) and carried ~10–12 known phantoms under ADR-022 Decision 4 deferred without a human-authorized story anchor. Fresh-context deep-read of the ADR-target anchor axis (previously only sampled) surfaced the full backlog. Fix-burst-290 swept the phantom class corpus-wide (12→0 live phantoms in architecture/ files) and promoted the gate from advisory to BLOCKING (14th blocking validator). POL-19 migration sweep DISCHARGED; ADR-022 Decision 4 deferral CLOSED.
+
+**Key insight (L-178):** Previously-converged ≠ correct. A sampled-axis pass that produces CLEAN only means "no findings in the sample." Deep-reading a previously-sampled axis is the highest-value convergence mechanism — it surfaces backlog that sampling missed.
+
+**Burst-290 COMPLETE (2026-08-16).** All 8 findings + PG closed. D-144..D-146. L-178..L-179.
+
+**Convergence dim-5:** Counter 0/3 RESET. Next: P1D-181 FULL-PERIMETER (streak pass 1/3 restart) on new frozen HEAD (burst-290 fix+state commit SHA).
+**Convergence dim-7:** Trajectory tail →130→256→189→160→60→5→0→8. Lessons L-178..L-179 minted. D-144..D-146 added.
