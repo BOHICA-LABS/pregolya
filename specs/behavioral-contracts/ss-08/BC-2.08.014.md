@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.014
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,19 +13,20 @@ capability: CAP-009
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 changelog:
   - "1.1 (ADV-P81-01): F-P81-01 — TV-007 had fabricated PascalCase variant name `E-CORE-005 ValidationFailed`; no such variant exists in error-taxonomy.md (E-CORE-005 message is plain prose). Fixed to canonical bare-code form matching sibling BC-2.08.002 TV-005: `Err(PregolyaError { category: VAL, code: E-CORE-005 })`."
   - "1.2 (F-P108-01, 2026-07-18): EC-004 and TV-005 expanded to use two separate fields `last_error_code` and `last_provider` instead of single `last_error` field. Root cause: the taxonomy Message Format for E-PROV-010 uses two distinct placeholders `<last_error_code>/<last_provider>` that cannot be rendered from a single combined field; BC-wins rule applies. EC-004: `{ providers_attempted: 3, last_error: \"E-PROV-008/provider-b\" }` → `{ providers_attempted: 3, last_error_code: \"E-PROV-008\", last_provider: \"provider-b\" }`. TV-005: expanded from bare form with inline `providers_attempted: 3` annotation to full struct with all three fields. Sibling sweep (all E-PROV-010 sites in this BC): PC5 uses message-template form with `<last_error_code>/<last_provider>` placeholders (already correctly separated); Description and TV-006 use bare form (no struct fields; not subject to parity check). PASS after fix."
   - "1.3 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-006 message reworded from 'ProviderFallbackPolicy.chain must not be empty' to 'Validation failed for 'ProviderFallbackPolicy.chain': must not be empty' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-007 bare form unchanged — PASS-ABBREV via EC-006. Note: EC-006 was added after the ADV-P1D-PASS-56 census and was not in that census; discovered by F-P112-02 corpus-wide sweep."
   - "1.4 (fix-burst-276/2026-07-27): Update EC-006 and TV-007 to cite E-PROV-011 FallbackChainEmpty instead of E-CORE-005. E-PROV-011 was minted in error-taxonomy.md in the same burst specifically to back ProviderFallbackPolicy::new() empty-chain validation; E-CORE-005 (CORE component) would misattribute the component — PROV namespace is the correct home per ADR-010 §E-CFG-001 convention. EC-006: code E-CORE-005 → E-PROV-011; message updated from E-CORE-005 canonical format ('Validation failed for ...') to E-PROV-011 STATIC message ('FallbackChainEmpty: ProviderFallbackPolicy.chain must not be empty'). TV-007: code E-CORE-005 → E-PROV-011; bare form remains PASS-ABBREV via EC-006. All other E-CORE-005 citations in this BC (none — verified by sweep) are unaffected."
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-006 and §Canonical Test Vectors TV-007: PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-006; category, code at TV-007); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 1 already-valid (Class 3 complete observation at §Postconditions PC5 — all 5 non-source fields present), 1 exempt (changelog)."
+  - "1.6 (F-P188-02/burst-297/2026-08-16): Error Code Minted callout and Traceability row omitted E-PROV-011 FallbackChainEmpty. BC-2.08.014 is the sole taxonomy anchor for both E-PROV-010 ProviderChainExhausted (exhaustion-time, POLICY) AND E-PROV-011 FallbackChainEmpty (construction-time VAL, minted in fix-burst-276/F-P173-610). Both codes are used in this BC body (EC-004/TV-005 for E-PROV-010; EC-006/TV-007 for E-PROV-011). Callout updated to 'Error codes minted here (E-PROV-010, E-PROV-011)'; Traceability row extended to list both codes. D-134 Sweep B: this was the sole missing-mint occurrence across all 6 Error-Code-Minted BCs. input-hash updated to current (59d2766)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "5a688d9"
+input-hash: "59d2766"
 extracted_from: null
 modified: []
 deprecated: null
@@ -50,9 +51,11 @@ in the chain are exhausted, `Err(E-PROV-010 ProviderChainExhausted)` is returned
 contract is distinct from per-tool retry (SS-16 / CAP-018): that governs tool-level retries
 on the same provider; this governs provider-level failover to a different provider.
 
-> **Error code minted here (E-PROV-010).** `E-PROV-010 ProviderChainExhausted` is
-> introduced by this BC. Category: POLICY. Severity: broken. RetryHint: Never.
-> Taxonomy row registration: sub-burst 2.
+> **Error codes minted here (E-PROV-010, E-PROV-011).** `E-PROV-010 ProviderChainExhausted`
+> (Category: POLICY, Severity: broken, RetryHint: Never) is raised when all providers in the
+> fallback chain are exhausted. `E-PROV-011 FallbackChainEmpty` (Category: VAL, Severity:
+> broken, RetryHint: Never) is raised at `ProviderFallbackPolicy::new()` when `chain` is empty.
+> Taxonomy row registration: E-PROV-010 sub-burst 2; E-PROV-011 fix-burst-276/F-P173-610.
 
 ## Preconditions
 
@@ -196,7 +199,7 @@ _[to be filled after story decomposition]_
 | Source L2 Capability | CAP-009 |
 | Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies provider-level failover semantics (ordered fallback chain on 429/5xx/auth) which extends the "provider abstraction" surface of CAP-009; as stated in CAP-009: "Architecture uses standalone SDK crate split (HS-6/D17-Q5)" — failover is a conformance-level concern about how pregolya-<provider> handles multi-provider scenarios |
 | L2 Domain Invariants | DI-008 (constructors return Result; empty chain is Err not panic), DI-009 (Outbound Connection Timeout — each provider call in the chain must set a connection timeout; BC-2.08.014 does not override DI-009), DI-010 (Credential Opacity — credentials from the fallback chain never appear in logs or error messages), DI-014 (Error Propagation — E-PROV-010 propagates as Err) |
-| Error Code Minted | E-PROV-010 ProviderChainExhausted — POLICY, broken, Never. PROV namespace had 9 live codes after E-PROV-009 (from BC-2.08.013); E-PROV-010 is next. Taxonomy row: sub-burst 2. |
+| Error Code Minted | E-PROV-010 ProviderChainExhausted (POLICY, broken, Never) — raised when all providers in the ordered fallback chain are exhausted; sole anchor. E-PROV-011 FallbackChainEmpty (VAL, broken, Never) — raised by `ProviderFallbackPolicy::new()` when `chain` is empty; sole anchor. PROV namespace: 11 live codes (E-PROV-001 through E-PROV-011). Taxonomy rows: E-PROV-010 sub-burst 2; E-PROV-011 fix-burst-276/F-P173-610. |
 | Domain D Forcing Function | domain-d-hermes-agent.md req 10 — "[PARTIAL CAP-018/SS-16 + CAP-009/SS-08] … provider-level ordered fallback chain — retrying a DIFFERENT provider on 429/5xx/auth, with optional credential-refresh before failover — is not specified in any BC" |
 | Priority | P1 |
 | Wave | Wave 2 |

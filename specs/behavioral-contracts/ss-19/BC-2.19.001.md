@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.001
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,13 +14,14 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 di_anchors: [DI-008]
 vp_seed: true
 vp_id: VP-007
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (burst-222/2026-07-21): VP-007 proptest seed assigned. BC-2.19.001 is the round-trip contract (serialize→Serialized::Constructor→Reviver::revive→semantically-equivalent value) that VP-007 will verify via property-based testing. Assignment rationale: H1 title contains 'Round-Trip' explicitly and postcondition 3 specifies the semantic equivalence invariant that proptest exercises. Architect to author VP-007 body in Phase 6."
+  - "1.2 (burst-297/Sweep-A/2026-08-16): DI-008 Traceability cell tightened — 'LcSerializable and Reviver constructors return Result' implied Reviver::new() is fallible, which contradicts BC-2.19.003 PC2 (Reviver::new() returns a plain Reviver instance, not Result). The fallible operation is revive(); LcSerializable::serialize() returns Serialized directly (also infallible, per PC1). Fixed cell to: 'revive returns Result; Reviver::new() is infallible; LcSerializable::serialize returns Serialized (infallible); no .unwrap() in non-test code'. Corpus-wide Sweep A: this was the only remaining named-constructor ambiguity after BC-2.19.003 fix (same burst). input-hash updated to current (e7b7c2e)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dc48c59"
+input-hash: "e7b7c2e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -139,7 +140,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 |-------|-------|
 | Source L2 Capability | CAP-024 |
 | Capability Anchor Justification | CAP-024 ("LcSerializable Round-Trip (Serialize → Serialized → Deserialize → Equivalent Value)") per capabilities-p1-p2.md §CAP-024 — this BC specifies the serialize→Serialized::Constructor→deserialize→equivalent-value behavioral contract including the opt-out type handling that CAP-024 identifies as the core lc-JSON round-trip obligation |
-| L2 Domain Invariants | DI-008 (LcSerializable and Reviver constructors return Result; no .unwrap() in non-test code) |
+| L2 Domain Invariants | DI-008 (revive returns Result; Reviver::new() is infallible; LcSerializable::serialize returns Serialized (infallible); no .unwrap() in non-test code) |
 | Architecture Authority | ADR-016 Decisions 1 and 2 (crate placement core::serializable, LcSerializable trait, Serialized enum, LcEntry struct) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | pregolya-core / core::serializable |

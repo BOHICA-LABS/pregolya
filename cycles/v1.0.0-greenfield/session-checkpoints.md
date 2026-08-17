@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "8c4767f"
+input-hash: "7f19399"
 traces_to: STATE.md
 ---
 
@@ -2286,3 +2286,14 @@ develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run 
 
 #### ARCHIVE METADATA
 Date: 2026-08-16 | Archived at: P1D-187 bookkeeping (2026-08-16) | STATE.md: 4.66 → 4.67 | P1D-187 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); ZERO findings; 6 candidates discarded; streak 1/3 STARTED; D-159; 188 passes total
+
+### Archived Session Checkpoint v4.70 (archived at burst-297 wrap)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **0/3 after 189 passes** (P1D-188 NOT CLEAN D-160; streak RESET 1/3→0/3 per D-143). P1D-188 (2026-08-16): NOT CLEAN; 2 findings (0C/0H/1M/1L); F-P188-01 MED BC-2.19.003 DI-008 Reviver::new()-returns-Result contradiction + F-P188-02 LOW BC-2.08.014 E-PROV-011 Error-Code-Minted omission; sibling-drift propagation class. **NEXT: burst-297** (product-owner: fix F-P188-01/02 + corpus-wide DI-008-attribution + Error-Code-Minted-completeness sweeps) then pass-189. E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run `git -C .factory log -1 --format='%h'` for current factory-artifacts HEAD. Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-16 | Archived at: burst-297 wrap (2026-08-16) | STATE.md: 4.70 → 4.71 | burst-297 COMPLETE: closed F-P188-01/02 + DI-008-attribution sweep (42 cells, 2 FAIL fixed: BC-2.19.003 §Traceability + BC-2.19.001 §Traceability) + Error-Code-Minted sweep (6 rows, 1 FAIL fixed: BC-2.08.014 §Traceability); BC-INDEX §Changelog; D-161; streak UNCHANGED 0/3

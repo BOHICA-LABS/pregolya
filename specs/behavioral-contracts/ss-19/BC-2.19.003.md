@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.003
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,13 +14,14 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-16T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (F-P130-08/2026-07-21): TV-001/TV-002 made falsifiable. Removed hedged magic-number assertion `registry_size() == 141 (or the current count…)`. TV-001 now asserts relational equality to `LANGCHAIN_CORE_REGISTRY.len()` named constant; TV-002 asserts feature-gated delta `registry_size() >= core_count + 1`. The literal 141 is retained as informative prose only."
   - "1.2 (F-P170-01/burst-272/2026-07-25): Re-anchor Architecture Anchors and Traceability Architecture Authority from ADR-016 Decision 4 to Decision 2 — the inventory crate, feature-gated partner registration, and OnceLock initialization are all defined in Decision 2 (Registry Mechanism); Decision 4 is Legacy Namespace Remapping and Version Tolerance (OLD_CORE_NAMESPACES_MAPPING). Drop fabricated 'duplicate detection' clause (not attributed in ADR-016). De-pin 'version 0.3.24' in PC1 per TD-VSDD-091 (version pins in normative body text decay on patch bumps)."
   - "1.3 (FIX-BURST-277-WAVE-C/FC-2-genuine-removal/2026-07-28): Genuine completion of v1.2 false-closure FC-2. v1.2 claimed 'Drop fabricated duplicate detection clause' but the term survived in Invariant 2 ('duplicate registration detection') and EC-003 ('DuplicateRegistration'). Decision on merits: ADR-016 Decision 2 specifies inventory::iter for registry construction with no duplicate-detection semantics; the inventory crate does not natively panic on duplicate submissions; the DuplicateRegistration panic behavior was fabricated without specification backing. Removal: (1) Invariant 2: panic-on-duplicate language replaced with last-write-wins HashMap semantics. (2) EC-003: DuplicateRegistration panic removed; replaced with last-write-wins HashMap behavior and a CI assertion recommendation. (3) DI-008 Traceability: 'except duplicate detection' exception removed. TD-VSDD-060 sibling sweep: no other SS-19 BCs contain duplicate-detection language."
+  - "1.4 (F-P188-01/burst-297/2026-08-16): DI-008 Traceability cell corrected — 'Reviver::new() returns Result' was wrong. PC2 explicitly states Reviver::new() returns a plain Reviver instance (infallible); Reviver::new() calls inventory::iter at link-time and cannot fail. The fallible operation is revive(), not the constructor. Fixed cell to: 'revive returns Result; Reviver::new() is infallible; no panic on registry initialization' — matching the pattern of siblings BC-2.19.004/005/006. D-134 Sweep A: this was the only named-constructor mis-attribution among all 42 DI-008 Traceability cells corpus-wide (BC-2.19.001 was also fixed in the same burst). input-hash updated to current (e7b7c2e)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dc48c59"
+input-hash: "e7b7c2e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -143,7 +144,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 |-------|-------|
 | Source L2 Capability | CAP-025 |
 | Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the inventory-based link-time registration mechanism, feature-gated partner entries, and OnceLock allowlist derivation, which CAP-025 identifies as the registry substrate for the Reviver's allowlist-containment model |
-| L2 Domain Invariants | DI-008 (Reviver::new() returns Result; no panic on registry initialization) |
+| L2 Domain Invariants | DI-008 (revive returns Result; Reviver::new() is infallible; no panic on registry initialization) |
 | Architecture Authority | ADR-016 Decision 2 (inventory crate, feature-gated partner registration, OnceLock initialization) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | pregolya-core / core::serializable::registry |
