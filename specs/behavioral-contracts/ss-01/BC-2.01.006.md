@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.006
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableParallel branch failure: fail-fast semantics, structured error with branch key, no partial results. LCEL composition scope expansion (D-170); ADR-026 §Decision 2."
   - "1.1 (burst-302b/D-171/2026-08-17): Notation fix — §Invariants JoinError bullet: PregolyaError { category: Internal } → PregolyaError { category: Internal, .. } per ADR-010 §Class-3 positive obligation (CLASS3_MISSING_DOTS_VIOLATION; verify-error-notation-canon gate)."
+  - "1.2 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "208fc08"
+input-hash: "bd61ed4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -52,7 +53,7 @@ errors rather than being silently ignored or causing the combinator to hang.
 
 1. A `RunnableParallel` with `N ≥ 1` configured branches has been constructed
    (per BC-2.01.005 postconditions).
-2. `invoke_dyn(input, config)` is called; one or more branches will return `Err` at
+2. `invoke(input, config)` is called; one or more branches will return `Err` at
    runtime.
 3. All branch tasks have been spawned and are in-flight via `JoinSet`.
 
@@ -60,7 +61,7 @@ errors rather than being silently ignored or causing the combinator to hang.
 
 1. The first branch error detected via `JoinSet::join_next()` triggers `set.abort_all()`
    — all remaining in-flight branch tasks receive a cancellation signal immediately.
-2. `invoke_dyn` returns `Err(PregolyaError { category: EXEC, code: "E-CORE-009",
+2. `invoke` returns `Err(PregolyaError { category: EXEC, code: "E-CORE-009",
    message: "RunnableParallelBranchFailure: branch '<key>' failed: <cause>", .. })`
    where `<key>` is the name of the failing branch and `<cause>` is the error message
    from the originating branch error.
@@ -69,14 +70,14 @@ errors rather than being silently ignored or causing the combinator to hang.
 4. A Tokio task panic (the `join_next()` returns `Err(JoinError)` due to a panic in the
    branch task) maps to `Err(PregolyaError { category: Internal, .. })` — the panic is
    treated as an Internal invariant violation, not silently swallowed.
-5. For `stream_dyn`: the first `Err` from any branch stream aborts all branch streams and
+5. For `stream`: the first `Err` from any branch stream aborts all branch streams and
    propagates the error to the caller. No partial chunk sequence is emitted after the
    first error.
 
 ## Invariants
 
 - **Fail-fast, abort-all:** the combinator MUST call `JoinSet::abort_all()` after the
-  first error is detected, before returning from `invoke_dyn`. There is no
+  first error is detected, before returning from `invoke`. There is no
   "collect all errors" mode in v1.
 - **No partial result on failure:** returning `Ok(Value::Object(...))` with fewer than `N`
   keys is a contract violation. If the result is `Ok`, it MUST have exactly `N` keys
@@ -90,14 +91,14 @@ errors rather than being silently ignored or causing the combinator to hang.
   §Class 1 (programming-error invariant violations). This ensures structured error
   propagation rather than payload leakage through raw panic messages.
 - **DI-014 enforcement:** no branch error may be silently discarded; every branch failure
-  must surface as an `Err` return from `invoke_dyn`.
+  must surface as an `Err` return from `invoke`.
 
 ## Edge Cases
 
 ### EC-001: First branch fails before others complete
 
 **Scenario:** Branch "a" fails immediately; branches "b" and "c" are still in-flight.
-**Expected behavior:** `set.abort_all()` called; `invoke_dyn` returns
+**Expected behavior:** `set.abort_all()` called; `invoke` returns
 `Err(PregolyaError { category: EXEC, code: "E-CORE-009",
 message: "RunnableParallelBranchFailure: branch 'a' failed: <cause>", .. })`.
 Branches "b" and "c" receive cancellation; their partial results are discarded.
@@ -112,7 +113,7 @@ treat any branch failure as a full failure and retry the entire parallel if appr
 
 ### EC-003: Branch task panics (JoinError)
 
-**Scenario:** Branch "slow" panics inside its `invoke_dyn` — `JoinSet::join_next()`
+**Scenario:** Branch "slow" panics inside its `invoke` — `JoinSet::join_next()`
 returns `Err(JoinError)`.
 **Expected behavior:** The JoinError is mapped to
 `Err(PregolyaError { category: Internal, .. })`. `abort_all()` is called on remaining
@@ -127,7 +128,7 @@ but those are dropped). Exactly one `Err` is returned.
 
 ### EC-005: Zero-branch parallel invocation (no failure possible)
 
-**Scenario:** `RunnableParallel::new([]).invoke_dyn(...)` — N = 0.
+**Scenario:** `RunnableParallel::new([]).invoke(...)` — N = 0.
 **Expected behavior:** Per BC-2.01.005 PC-6, returns `Ok(Value::Object(Map::new()))`.
 No tasks spawned; no error possible; this edge case is technically under BC-2.01.005,
 documented here as a contrast point.
@@ -156,7 +157,7 @@ documented here as a contrast point.
 
 ## Architecture Anchors
 
-- `pregolya-core/src/runnables/parallel.rs` — `RunnableParallel::invoke_dyn` failure path: `join_next()` Err branch, `abort_all()` call, error construction with branch key
+- `pregolya-core/src/runnables/parallel.rs` — `RunnableParallel::invoke` failure path: `join_next()` Err branch, `abort_all()` call, error construction with branch key
 - ADR-026 §Decision 2 — fail-fast with abort semantics, structured error with branch key, JoinError → Internal mapping
 
 ## Story Anchor

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line (E-CORE-004, `, ..` added); EC-001 3-line multiline span closure (E-CORE-004, `, ..` added before closing `})`); TV-004 table-cell (E-CORE-004, `, ..` added). All spans have category/code/message but lack component and retry_hint."
+  - "1.3 (BURST-303/O-P194-A/2026-08-17): Precondition 2 generic-arity reconciliation — replaced type-erased `DynRunnable<Value, Value>` pipelines with canonical `Arc<dyn DynRunnable>` form per architect DynRunnable canon (O-P194-A). DynRunnable is a non-generic trait; Value is the runtime boundary type, not a type parameter."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "2912cbf"
+input-hash: "25564b7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,7 +52,7 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 
 1. Two Runnables `A: Runnable<Input=I, Output=M>` and `B: Runnable<Input=M, Output=O>` are in scope.
 2. The output type of `A` matches the input type of `B` (enforced at compile time for typed
-   Runnables; checked at runtime for type-erased `DynRunnable<Value, Value>` pipelines).
+   Runnables; checked at runtime for type-erased `Arc<dyn DynRunnable>` pipelines).
 3. The resulting `RunnableSequence` will be used in non-test code.
 
 ## Postconditions

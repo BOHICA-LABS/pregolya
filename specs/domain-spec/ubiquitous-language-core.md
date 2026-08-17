@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.13"
+version: "1.14"
 status: active
 producer: business-analyst
 timestamp: 2026-08-17T00:00:00Z
 changelog:
+  - "1.14 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) — RunnableAssign entry: Err(E-CORE-MMM) → Err(E-CORE-010) (VAL, RunnableAssignNonDictInput, anchor BC-2.01.008). F-P194-03 (MED) — three type-path canonicalizations: RunnableParallel pregolya_core::runnable::parallel::RunnableParallel → pregolya_core::runnables::RunnableParallel; RunnablePassthrough pregolya_core::runnable::passthrough::RunnablePassthrough → pregolya_core::runnables::RunnablePassthrough; RunnableAssign pregolya_core::runnable::parallel::RunnableAssign → pregolya_core::runnables::RunnableAssign (plural flat re-export per ADR-026 §Decision 2). TD-VSDD-060 sweep: zero E-CORE-MMM and zero pregolya_core::runnable:: (singular submodule) forms remain in live body."
   - "1.13 (burst-302b/D-170/2026-08-17): D-170 LCEL composition additions — new section 'D170 Additions — LCEL Map/Passthrough Composition': RunnableParallel, RunnablePassthrough, RunnableAssign (ADR-026 / CAP-039). 3 new terms; total: 29 (D21) + 13 (D23) + 3 (D170) = prior terms + 3. D170 added to decisions list. Distinguishes all three from RunnableSequence. RunnableAssign production via RunnablePassthrough::assign noted."
   - "1.12 (burst-291/D-134/2026-08-16): §TrustLevel definition phantom anchor corrected. 'ubiquitous-language-server.md §ProvenanceTag' → 'ubiquitous-language-server.md §Server Terms' (ProvenanceTag is a bold-bullet under §Server Terms, not a heading; §ProvenanceTag alone matches no heading in ubiquitous-language-server.md). Citation to entities-server.md §ProvenanceTag unchanged — valid heading '### ProvenanceTag' exists there. TD-VSDD-060 sweep: sole §ProvenanceTag reference to ubiquitous-language-server.md in this file."
   - "1.11 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected at two term entries. (1) VectorStoreRetriever term: 'via VectorStore::as_retriever(self: Arc<Self>)' extended to show Result<VectorStoreRetriever, PregolyaError> fallible return and Err(E-VS-003 InvalidConfig) on invalid config. (2) VectorStore term: 'returns VectorStoreRetriever' corrected to 'returns Result<VectorStoreRetriever, PregolyaError>'; Err(E-VS-003 InvalidConfig) note added. Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
@@ -447,7 +448,7 @@ and composes via `pipe()`. Distinct from `RunnableSequence` (CAP-001/CAP-003), w
 branches in serial — RunnableParallel fans them out in parallel on the same input.
 One of the two main LCEL composition primitives (the other being RunnableSequence).
 Corresponds to `RunnableParallel` / `RunnableMap` in LangChain v1
-(`langchain_core.runnables.base`). In pregolya: `pregolya_core::runnable::parallel::RunnableParallel`.
+(`langchain_core.runnables.base`). In pregolya: `pregolya_core::runnables::RunnableParallel`.
 Authority: ADR-026 §Decision 1 / BC-2.01.005 / BC-2.01.006.
 
 **RunnablePassthrough**
@@ -459,21 +460,19 @@ is always the unmodified input. Streaming passes each chunk through unchanged. I
 parallel branch fetches RAG context (as one branch in a RunnableParallel). Distinct from
 RunnableSequence (serial chaining) and RunnableParallel (fan-out): RunnablePassthrough is an
 identity transform on a single value with an optional read-only side channel. Corresponds to
-`RunnablePassthrough` in LangChain v1 (`langchain_core.runnables.passthrough`). In pregolya:
-`pregolya_core::runnable::passthrough::RunnablePassthrough`.
+`RunnablePassthrough` in LangChain v1 (`langchain_core.runnables.passthrough`). In pregolya: `pregolya_core::runnables::RunnablePassthrough`.
 Authority: ADR-026 §Decision 3 / BC-2.01.007.
 
 **RunnableAssign**
 A dict-augmentation primitive created by `RunnablePassthrough::assign(pairs)`, where `pairs`
 is an ordered iterator of `(key, runnable)` entries. Internally wraps a `RunnableParallel` as
 its `mapper`. Input must be a JSON object (`Value::Object`); non-object input returns
-`Err(E-CORE-MMM)` at invoke time. Output: the input dict merged with the mapper's output dict,
+`Err(E-CORE-010)` at invoke time. Output: the input dict merged with the mapper's output dict,
 where mapper keys overwrite input keys on collision (`{**input, **mapper.invoke(input)}`).
 Propagates any branch failure from the internal mapper as a structured error (DI-016, DI-014).
 Implements `DynRunnable`; composes via `pipe()`. Canonical use: augmenting a chain's running
 dict with additional computed fields (e.g., adding a `"context"` key from a retriever while
 preserving all prior keys). **Not constructed directly** — always produced via
 `RunnablePassthrough::assign(...)`. Corresponds to `RunnableAssign` in LangChain v1
-(`langchain_core.runnables.passthrough`). In pregolya:
-`pregolya_core::runnable::parallel::RunnableAssign`.
+(`langchain_core.runnables.passthrough`). In pregolya: `pregolya_core::runnables::RunnableAssign`.
 Authority: ADR-026 §Decision 4 / BC-2.01.008.

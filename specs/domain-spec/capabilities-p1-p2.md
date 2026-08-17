@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.23"
+version: "1.24"
 status: active
 producer: business-analyst
 timestamp: 2026-08-17T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "faffcd7"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170]
 changelog:
+  - "1.24 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) error-code placeholder resolution — CAP-039 §RunnableParallel fail-fast body: E-CORE-NNN → E-CORE-009 (EXEC, RunnableParallelBranchFailure, anchor BC-2.01.006); CAP-039 §RunnableAssign body: E-CORE-MMM → E-CORE-010 (VAL, RunnableAssignNonDictInput, anchor BC-2.01.008). F-P194-03 (MED) module-path canonicalization — CAP-039 module placement: non-canonical 3-level paths (pregolya-core::core::runnable::parallel / ::passthrough) → canonical 2-level form (core::runnable) per ADR-026 and module-registry canon. TD-VSDD-060 sweep: zero E-CORE-NNN/MMM remain in live body; zero 3-level runnable submodule paths remain in live body."
   - "1.23 (burst-302b/D-170/2026-08-17): D-170 LCEL composition scope expansion — CAP-039 authored (RunnableParallel, RunnablePassthrough, RunnableAssign; SS-01/pregolya-core). New section 'P1 — LCEL Map/Passthrough Composition (Wave 1, D-170)' added before P2 section. P1 count 26→27; total section CAPs 29→30; L2 total 38→39. D170 added to decisions list. BCs BC-2.01.005–008 and VP-014 referenced (product-owner authoring in parallel)."
   - "1.22 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — two error-taxonomy component shortcode phantoms fixed. (1) CAP-029 §VS — VAL... context: §VS is a shortcode, not a heading (heading is '### Component: VS (pregolya-vectorstores)'). Corrected to error-taxonomy.md §Component: VS. (2) CAP-031 §EMBED — VAL... context: same pattern; corrected to error-taxonomy.md §Component: EMBED (heading '### Component: EMBED (pregolya-core::embeddings)')."
   - "1.21 (F-P175-D101/fix-burst-283/2026-07-30): Close F-P175-D101 (CRIT) — as_retriever fallibility and receiver form omitted from two CAP bodies. (1) CAP-027: 'Constructed via VectorStore::as_retriever()' corrected to show self: Arc<Self> receiver and Result<VectorStoreRetriever, PregolyaError> fallible return with Err(E-VS-003 InvalidConfig) on invalid config. (2) CAP-028: 'as_retriever(self: Arc<Self>) → VectorStoreRetriever' corrected to '→ Result<VectorStoreRetriever, PregolyaError>'; fallibility note added (Err(E-VS-003 InvalidConfig) on invalid config). Grounds: interface-definitions.md §VectorStore Trait (as_retriever fallible return, F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2. TD-VSDD-060 sibling sweep: entities-graph.md §VectorStore §Instance methods and ubiquitous-language-core.md §VectorStore/§VectorStoreRetriever terms corrected in this burst."
@@ -752,7 +753,7 @@ concurrently (via `tokio::task::JoinSet`) on the same input, returning a
 order (deterministic; matches Python 3.7+ insertion-ordered `Mapping`).
 **Fail-fast error semantics:** the first branch failure aborts all remaining in-flight
 branches (`JoinSet::abort_all()`) and returns
-`Err(PregolyaError { category: EXEC, code: E-CORE-NNN, message: "RunnableParallelBranchFailure: branch '<key>' failed: <cause>", .. })`
+`Err(PregolyaError { category: EXEC, code: E-CORE-009, message: "RunnableParallelBranchFailure: branch '<key>' failed: <cause>", .. })`
 identifying the failing branch key; no partial output dictionary is produced (DI-016, DI-014).
 If `Ok(output)`, `output` contains exactly one key for every configured branch — no key
 silently absent (DI-016). Constructor: `RunnableParallel::new(pairs)`.
@@ -769,14 +770,14 @@ Streaming passes each chunk through unchanged. Constructors: `RunnablePassthroug
 **(3) RunnableAssign** (via `RunnablePassthrough::assign(pairs)`) — augments a dict input
 with additional computed keys by internally wrapping a `RunnableParallel` as its mapper.
 Input MUST be a `serde_json::Value::Object`; non-object input returns
-`Err(PregolyaError { category: VAL, code: E-CORE-MMM, message: "RunnableAssignNonDictInput: ..", .. })`.
+`Err(PregolyaError { category: VAL, code: E-CORE-010, message: "RunnableAssignNonDictInput: ..", .. })`.
 Output: `{**input, **mapper.invoke(input)}` — mapper keys overwrite on key collision
 (Python parity: `{**value, **mapper.invoke(value)}`).
 
 All three types implement `DynRunnable` and compose freely via `pipe()` (BC-2.01.004).
 All three are `#[non_exhaustive]` per ADR-023 Required Inventory. Module placement:
-`pregolya-core::core::runnable::parallel` (RunnableParallel + RunnableAssign) and
-`pregolya-core::core::runnable::passthrough` (RunnablePassthrough).
+`core::runnable` in `pregolya-core` (canonical 2-level module-registry form per ADR-026;
+all three types reside in this module).
 
 Enables canonical LangChain patterns: RAG context-fetch + question pass-through,
 multi-model fan-out, structured field extraction. Second of the two main LCEL composition
@@ -786,7 +787,7 @@ primitives alongside RunnableSequence (CAP-001/CAP-003).
 keyed dict output), BC-2.01.006 (fail-fast branch failure propagation + abort-remaining +
 no partial results), BC-2.01.007 (RunnablePassthrough identity + inspect side-effect
 contract), BC-2.01.008 (RunnableAssign dict augmentation + input-must-be-object + mapper-
-wins-on-collision). **VP:** VP-014 (proptest P1, `core::runnable::parallel`,
+wins-on-collision). **VP:** VP-014 (proptest P1, `core::runnable`,
 key-completeness property: Ok(output) → output.len() == configured branch count).
 
 **Grounding:** D-170 human-directed Phase-1 approval-gate scope expansion (burst-302).

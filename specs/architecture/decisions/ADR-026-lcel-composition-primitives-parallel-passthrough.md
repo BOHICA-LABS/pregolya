@@ -11,11 +11,12 @@ date: "2026-08-17"
 subsystems_affected: ["SS-01"]
 supersedes: []
 superseded_by: null
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D_BURST302_TBD]
 changelog:
+  - "1.1 (burst-303/F-P194-01/2026-08-17): Fix method surface mismatch — change invoke_dyn→invoke and stream_dyn→stream everywhere in ADR body to match canonical DynRunnable trait declared in interface-definitions.md §DynRunnable and RunnableSequence. Affects: §Context (DynRunnable::invoke_dyn reference), §Decision 2 (async fn invoke_dyn code block → async fn invoke; branch.invoke_dyn → branch.invoke; stream_dyn → stream in Streaming section), §Decision 3 (behavioral properties 1 and 2), §Decision 4 (behavioral properties 1 and 2; mapper.invoke_dyn → mapper.invoke), §VP Recommendation (invoke_dyn reference). The DynTool pattern (invoke_dyn/stream_dyn) is distinct from DynRunnable (invoke/stream); confusing them is a method-surface mismatch."
   - "1.0 (burst-302/scope-expansion/2026-08-17): Initial decision — human-directed Phase-1 approval-gate scope expansion. Adds RunnableParallel, RunnablePassthrough, and RunnableAssign to pregolya v1. Five decisions: (1) RunnableParallel type representation and key ordering; (2) concurrent execution and error handling; (3) RunnablePassthrough identity semantics; (4) RunnableAssign dict augmentation; (5) pipe composition and module placement."
 ---
 
@@ -75,7 +76,7 @@ Reference files (read-only):
 ### Pregolya architecture integration constraints
 
 - Pregolya uses `DynRunnable` for type-erased composition (interface-definitions.md
-  §DynRunnable and RunnableSequence). `DynRunnable::invoke_dyn` takes and returns
+  §DynRunnable and RunnableSequence). `DynRunnable::invoke` takes and returns
   `serde_json::Value`. Both new types MUST implement `DynRunnable` to compose via
   `pipe()` (BC-2.01.004).
 - Error propagation: CLAUDE.md §Code Conventions mandates "No silent empty returns
@@ -133,7 +134,7 @@ IndexMap's insertion order (= `steps` key order).
 Use `tokio::task::JoinSet` for fan-out:
 
 ```rust
-async fn invoke_dyn(
+async fn invoke(
     &self,
     input: serde_json::Value,
     config: Option<RunnableConfig>,
@@ -145,7 +146,7 @@ async fn invoke_dyn(
         let config = config.clone();
         let key = key.clone();
         set.spawn(async move {
-            let out = branch.invoke_dyn(input, config).await?;
+            let out = branch.invoke(input, config).await?;
             Ok::<(String, serde_json::Value), PregolyaError>((key, out))
         });
     }
@@ -189,8 +190,8 @@ form. Key behavioral properties:
 
 ### Streaming
 
-For `stream_dyn(input: Value)`:
-- Spawn one task per branch that calls `branch.stream_dyn(input.clone())`.
+For `stream(input: Value)`:
+- Spawn one task per branch that calls `branch.stream(input.clone())`.
 - Merge streams via `tokio::sync::mpsc` channel or `futures::stream::select_all`;
   each chunk is a `serde_json::Value::Object` with one key (the branch name) and the
   chunk value — equivalent to Python's `AddableDict({key: chunk})`.
@@ -222,9 +223,9 @@ pub struct RunnablePassthrough {
 ```
 
 Behavioral properties:
-1. `invoke_dyn(input, config)` → calls `inspect_fn(input)` if present (side effect only,
+1. `invoke(input, config)` → calls `inspect_fn(input)` if present (side effect only,
    no mutation), then returns `Ok(input)` — exact same value passed through.
-2. `stream_dyn(input, config)` → passes each chunk through unchanged; calls `inspect_fn`
+2. `stream(input, config)` → passes each chunk through unchanged; calls `inspect_fn`
    on the reassembled input after stream exhaustion (mirroring Python's `transform` behavior
    which accumulates then calls `func`).
 3. The `inspect_fn` MUST NOT alter the return value; it is a read-only callback.
@@ -266,15 +267,15 @@ impl RunnablePassthrough {
 ```
 
 Behavioral properties:
-1. `invoke_dyn(input, config)`:
+1. `invoke(input, config)`:
    a. Validate: if `input` is not `Value::Object(...)`, return
       `Err(PregolyaError { category: VAL, code: E-CORE-MMM, .. })`.
-   b. Run `self.mapper.invoke_dyn(input.clone(), config.clone()).await?` to get the
+   b. Run `self.mapper.invoke(input.clone(), config.clone()).await?` to get the
       augmentation map.
    c. Merge: start with `input`'s object fields; overwrite/insert with mapper output
       fields. **Mapper output keys take precedence** (matching Python's `{**value, **mapper.invoke(value)}`).
    d. Return `Ok(Value::Object(merged_map))`.
-2. `stream_dyn(input, config)`: split input stream into two copies; run
+2. `stream(input, config)`: split input stream into two copies; run
    passthrough stream and mapper stream in parallel; yield passthrough chunks first
    (filtered to exclude mapper-output keys), then mapper chunks — matching Python's
    `_transform` safetee pattern.
@@ -390,7 +391,7 @@ _(To be filled by product-owner during BC authoring.)_
 **VP-014 recommended** (proptest, P1, module `core::runnable::parallel`):
 
 Property: For any `RunnableParallel` with `N` configured branches and any input:
-- If `invoke_dyn` returns `Ok(output)`: `output.as_object().unwrap().len() == N` (no key
+- If `invoke` returns `Ok(output)`: `output.as_object().unwrap().len() == N` (no key
   silently dropped from a successful result).
 - Each key in the output corresponds exactly to a configured branch key (no phantom keys,
   no missing keys).

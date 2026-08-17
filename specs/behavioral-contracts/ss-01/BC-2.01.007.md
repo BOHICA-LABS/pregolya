@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.007
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-08-17T00:00:00Z
 di_anchors: [DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnablePassthrough identity pass-through semantics and inspect side-effect contract. LCEL composition scope expansion (D-170); ADR-026 §Decision 3."
+  - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "208fc08"
+input-hash: "bd61ed4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -39,7 +40,7 @@ removal_reason: null
 
 ## Description
 
-`RunnablePassthrough` is pregolya-core's zero-cost identity runnable: `invoke_dyn(input)`
+`RunnablePassthrough` is pregolya-core's zero-cost identity runnable: `invoke(input)`
 always returns `Ok(input.clone())` — the output is structurally identical to the input.
 An optional `inspect_fn: Arc<dyn Fn(&serde_json::Value) + Send + Sync>` may be attached
 for read-only side effects (logging, tracing, debug inspection). The inspect function is
@@ -52,13 +53,13 @@ It is also the construction entry point for `RunnableAssign` (via `RunnablePasst
 1. `RunnablePassthrough::new()` is called (no inspect function), OR
    `RunnablePassthrough::with_inspect(f)` is called with a `Fn(&Value) + Send + Sync + 'static`
    closure.
-2. The resulting `RunnablePassthrough` is invoked via `invoke_dyn(input, config)`.
+2. The resulting `RunnablePassthrough` is invoked via `invoke(input, config)`.
 3. If an `inspect_fn` is present, it is callable with the input reference without
    panicking (caller responsibility).
 
 ## Postconditions
 
-1. `invoke_dyn(input, config)` returns `Ok(input.clone())` — the returned value is
+1. `invoke(input, config)` returns `Ok(input.clone())` — the returned value is
    structurally and semantically identical to the input. The output is a deep clone, not
    the same owned value.
 2. If `inspect_fn` is `Some(f)`: `f(&input)` is called exactly once with an immutable
@@ -66,10 +67,10 @@ It is also the construction entry point for `RunnableAssign` (via `RunnablePasst
    synchronous; the function must not block the async executor.
 3. If `inspect_fn` is `None`: no side-effect call occurs.
 4. The return value of `inspect_fn` (if any) is discarded. `inspect_fn` cannot alter
-   the output of `invoke_dyn`.
-5. `stream_dyn(input, config)` passes each incoming chunk through unchanged — each chunk
+   the output of `invoke`.
+5. `stream(input, config)` passes each incoming chunk through unchanged — each chunk
    in the stream is `Ok(chunk)` with the chunk value equal to the received chunk.
-6. For `stream_dyn` with an `inspect_fn`: the function is called once after the stream
+6. For `stream` with an `inspect_fn`: the function is called once after the stream
    is exhausted with the accumulated input value (the reassembled whole, if addable, or
    the last chunk if not addable). This mirrors the Python `RunnablePassthrough.transform`
    behavior of accumulating then calling `func`.
@@ -78,12 +79,12 @@ It is also the construction entry point for `RunnableAssign` (via `RunnablePasst
 
 ## Invariants
 
-- **True identity:** `invoke_dyn(v, cfg) == Ok(v.clone())` for all `v`. The return value
+- **True identity:** `invoke(v, cfg) == Ok(v.clone())` for all `v`. The return value
   is a fresh clone of the input — not the same owned `Value`, but structurally identical.
 - **Inspect does not alter output:** `f(&input)` is called, but the return value is
   discarded. `inspect_fn` has no mechanism to mutate `input` or the return value (it
   receives only `&Value`, not `&mut Value`).
-- **Infallibility:** `RunnablePassthrough::invoke_dyn` NEVER returns `Err`. If a caller
+- **Infallibility:** `RunnablePassthrough::invoke` NEVER returns `Err`. If a caller
   receives `Err` from a pipeline containing `RunnablePassthrough`, the error originated
   upstream or downstream.
 - **Streaming identity:** each chunk passes through unchanged; no buffering in the
@@ -95,13 +96,13 @@ It is also the construction entry point for `RunnableAssign` (via `RunnablePasst
 
 ### EC-001: Input is `Value::Null`
 
-**Scenario:** `invoke_dyn(Value::Null, None)` with no inspect function.
+**Scenario:** `invoke(Value::Null, None)` with no inspect function.
 **Expected behavior:** Returns `Ok(Value::Null)`. No special handling for Null.
 
 ### EC-002: inspect_fn panics
 
 **Scenario:** `inspect_fn` panics with "inspection failed".
-**Expected behavior:** The panic propagates up from `invoke_dyn`. This is a programming
+**Expected behavior:** The panic propagates up from `invoke`. This is a programming
 error in the inspect function; `RunnablePassthrough` does not catch panics in `inspect_fn`
 (the inspect contract requires the function to be non-panicking in production use).
 The panic will be caught by the `JoinSet` task boundary if inside a `RunnableParallel`
@@ -109,7 +110,7 @@ The panic will be caught by the `JoinSet` task boundary if inside a `RunnablePar
 
 ### EC-003: Streaming — inspect_fn accumulation
 
-**Scenario:** `stream_dyn` emits 5 addable chunks (`Value::String` chunks from an LLM);
+**Scenario:** `stream` emits 5 addable chunks (`Value::String` chunks from an LLM);
 `inspect_fn` is present.
 **Expected behavior:** All 5 chunks pass through as-is to the downstream consumer.
 After the upstream stream is exhausted, `inspect_fn` is called once with the accumulated
@@ -129,18 +130,18 @@ for logging, but does not alter it. The pipeline behaves identically to `prompt.
 **Scenario:** `RunnablePassthrough::with_inspect(|v| { counter.fetch_add(1, Relaxed); })`
 where `counter` is an `Arc<AtomicUsize>`.
 **Expected behavior:** The closure is valid since it implements `Fn(&Value) + Send + Sync`.
-Each `invoke_dyn` call increments the counter once. Concurrent calls from parallel branches
+Each `invoke` call increments the counter once. Concurrent calls from parallel branches
 serialize on the atomic increment.
 
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `RunnablePassthrough::new().invoke_dyn(Value::String("hello".into()), None)` | `Ok(Value::String("hello".into()))` | Identity pass-through; no inspect |
-| TV-002 | `RunnablePassthrough::new().invoke_dyn(Value::Object({...}), None)` | `Ok(Value::Object({...}))` — structurally identical object | Object identity |
-| TV-003 | `with_inspect(log_fn).invoke_dyn(v, None)` | `Ok(v.clone())` AND `log_fn` called once with `&v` | Inspect called before return |
-| TV-004 | `invoke_dyn(v)` where v is a large nested JSON tree | `Ok(v.clone())` — deep clone, not alias | Deep clone invariant |
-| TV-005 | `stream_dyn` with 3 chunks; inspect_fn present | All 3 chunks emitted unchanged; inspect_fn called once after exhaustion | Streaming identity + inspect accumulation |
+| TV-001 | `RunnablePassthrough::new().invoke(Value::String("hello".into()), None)` | `Ok(Value::String("hello".into()))` | Identity pass-through; no inspect |
+| TV-002 | `RunnablePassthrough::new().invoke(Value::Object({...}), None)` | `Ok(Value::Object({...}))` — structurally identical object | Object identity |
+| TV-003 | `with_inspect(log_fn).invoke(v, None)` | `Ok(v.clone())` AND `log_fn` called once with `&v` | Inspect called before return |
+| TV-004 | `invoke(v, None)` where v is a large nested JSON tree | `Ok(v.clone())` — deep clone, not alias | Deep clone invariant |
+| TV-005 | `stream` with 3 chunks; inspect_fn present | All 3 chunks emitted unchanged; inspect_fn called once after exhaustion | Streaming identity + inspect accumulation |
 
 ## Verification Properties
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.005
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-08-17T00:00:00Z
 di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableParallel construction and concurrent invocation. LCEL composition scope expansion (D-170); ADR-026 §Decision 1."
+  - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "208fc08"
+input-hash: "bd61ed4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -53,14 +54,14 @@ pregolya `Runnable`.
    where each key is a non-empty `String`.
 2. The resulting `RunnableParallel` holds `N ≥ 0` configured branches in insertion order
    (an `IndexMap<String, Arc<dyn DynRunnable>>`).
-3. The caller invokes `invoke_dyn(input, config)` on the constructed `RunnableParallel`.
+3. The caller invokes `invoke(input, config)` on the constructed `RunnableParallel`.
 4. All `N` branches are available (not dropped or deallocated) at invocation time.
 
 ## Postconditions
 
 1. `RunnableParallel::new(steps)` returns a `RunnableParallel` containing all provided
    branches in the same relative order as the input iterator.
-2. `invoke_dyn(input, config)` fans out `N` Tokio tasks concurrently — all tasks launch
+2. `invoke(input, config)` fans out `N` Tokio tasks concurrently — all tasks launch
    before any result is awaited; each task receives an independent clone of `input` and
    `config`.
 3. On success (all `N` branches return `Ok`): returns
@@ -85,7 +86,7 @@ pregolya `Runnable`.
   `config.clone()`; no branch can observe mutations made by another branch (each has its
   own owned copy).
 - **DynRunnable implementation:** `RunnableParallel` implements `DynRunnable`
-  (both `invoke_dyn` and `stream_dyn`), enabling composition via `pipe()` (BC-2.01.004).
+  (both `invoke` and `stream`), enabling composition via `pipe()` (BC-2.01.004).
 - **`#[non_exhaustive]` struct:** external callers construct via `RunnableParallel::new(...)`;
   struct-literal construction is barred (ADR-023 §Required Inventory).
 
@@ -93,20 +94,20 @@ pregolya `Runnable`.
 
 ### EC-001: Zero-branch RunnableParallel
 
-**Scenario:** `RunnableParallel::new([])` with no branches; `invoke_dyn` called.
+**Scenario:** `RunnableParallel::new([])` with no branches; `invoke` called.
 **Expected behavior:** Returns `Ok(Value::Object(Map::new()))` — an empty object.
 No tasks spawned, no `join_next` awaited. This is a degenerate but valid configuration.
 
 ### EC-002: Single-branch RunnableParallel
 
-**Scenario:** One branch only; `invoke_dyn` called.
+**Scenario:** One branch only; `invoke` called.
 **Expected behavior:** Returns `Ok(Value::Object({ "key": branch_output }))`. The single
 task runs as a fan-out of one. Output is a one-key object; no concurrency overhead, but
 still goes through the `JoinSet` path (no special-casing for `N == 1`).
 
 ### EC-003: Input value is `Value::Null`
 
-**Scenario:** `invoke_dyn(Value::Null, None)` on a three-branch parallel.
+**Scenario:** `invoke(Value::Null, None)` on a three-branch parallel.
 **Expected behavior:** All three branches receive `Value::Null` as input. Each branch runs
 its own logic on `Value::Null`. The output is a three-key object with each branch's
 response. No input-type validation at the `RunnableParallel` level (branches validate
@@ -114,7 +115,7 @@ their own inputs).
 
 ### EC-004: Input is a large JSON array
 
-**Scenario:** `invoke_dyn(Value::Array(vec![...100_items...]))` on a two-branch parallel.
+**Scenario:** `invoke(Value::Array(vec![...100_items...]))` on a two-branch parallel.
 **Expected behavior:** Each branch receives a clone of the full array. No truncation.
 Memory usage: O(branches × input_size) per invocation.
 
@@ -130,17 +131,17 @@ uniform output types.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `RunnableParallel::new([("upper", upper_fn), ("lower", lower_fn)]).invoke_dyn(Value::String("Hello"), None)` | `Ok(Object({ "upper": "HELLO", "lower": "hello" }))` | Happy path: 2-branch parallel, string input |
-| TV-002 | `RunnableParallel::new([]).invoke_dyn(Value::Null, None)` | `Ok(Object({}))` | Zero-branch returns empty object |
+| TV-001 | `RunnableParallel::new([("upper", upper_fn), ("lower", lower_fn)]).invoke(Value::String("Hello"), None)` | `Ok(Object({ "upper": "HELLO", "lower": "hello" }))` | Happy path: 2-branch parallel, string input |
+| TV-002 | `RunnableParallel::new([]).invoke(Value::Null, None)` | `Ok(Object({}))` | Zero-branch returns empty object |
 | TV-003 | 3-branch parallel where output order should equal insertion order `["a", "b", "c"]` regardless of which branch finishes first | `Object` keys in order `["a", "b", "c"]` | Insertion-order invariant |
 | TV-004 | 2-branch parallel; inspect that both branches receive `Value::Number(1)` (the same input) | Both branches invoked with `Value::Number(1)` | Independent input-clone invariant |
-| TV-005 | `invoke_dyn` on a parallel with `N == 1` branch | `Ok(Object({ "only": <output> }))` | Single-branch degenerate case |
+| TV-005 | `invoke` on a parallel with `N == 1` branch | `Ok(Object({ "only": <output> }))` | Single-branch degenerate case |
 
 ## Verification Properties
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-014 | For any N-branch RunnableParallel, if `invoke_dyn` returns `Ok(output)`: `output.as_object().len() == N` AND output key set equals configured branch key set | proptest | 3 |
+| VP-014 | For any N-branch RunnableParallel, if `invoke` returns `Ok(output)`: `output.as_object().len() == N` AND output key set equals configured branch key set | proptest | 3 |
 
 ## Related BCs
 

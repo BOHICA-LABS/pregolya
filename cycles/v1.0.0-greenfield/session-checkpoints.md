@@ -2329,3 +2329,16 @@ Date: 2026-08-17 | Archived at: P1D-192 state record (2026-08-17) | STATE.md: 4.
 
 #### ARCHIVE METADATA
 Date: 2026-08-17 | Archived at: P1D-193 state record (2026-08-17) | STATE.md: 4.77 → 4.78 | P1D-193 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); 0 findings; review HEAD 5c4a961; spec-frozen 1262ebe; streak 2/3 → 3/3 CONVERGED; Phase-1d cascade CLOSED; D-167; 194 passes total
+
+---
+
+### Checkpoint v4.81 (archived at burst-303 state record — 2026-08-17)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). **D-171 CLOSED (2026-08-17)**: burst-302b completed D-170 LCEL scope-expansion authoring — CAP-039+DI-016+BC-2.01.005–008+VP-014+E-CORE-009/010+interface-definitions committed. New corpus: BC 129→133 (51 P0/79 P1/3 P2), CAP 38→39, DI 15→16, VP 13→14, errors 111→113, ADR 25→26. Convergence streak **0/3 — re-convergence required (scope expansion D-170)**. NEXT: P1D-194 (adversary re-pass on expanded perimeter). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+**Validator baselines (burst-302b; 14 blocking + 1 advisory):**
+verify-no-version-pins: PASS=203+ · verify-adr-decision-refs: PASS=368+ · records-lint: PASS · verify-changelog-date-monotonicity: PASS=136+ (WARN=78+) · verify-changelog-date-validity: PASS · verify-enum-variant-casing: PASS · verify-signature-canon: PASS=5 · verify-error-notation-canon: PASS · verify-form-a-changelog-direction: PASS (WARN=7+) · verify-arch-anchor-resolution: PASS=133+ · verify-module-canonicality: PASS=8 · verify-bc-frontmatter-schema: PASS=133 · verify-tv-registry-count: PASS · verify-adr-anchor-citations: PASS (BLOCKING; 252 cites 0 phantom). Advisory: verify-changelog-claim-applied WARN=15+.
+
+#### ARCHIVE METADATA
+Date: 2026-08-17 | Archived at: burst-303 state record (2026-08-17) | STATE.md: 4.81 → 4.82 | burst-303 COMPLETE: P1D-194 5-finding cascade closed (2H/1M/2L); D-172 minted; BCs BC-2.01.003/BC-2.01.004/BC-2.01.005–008 bumped (F-P194-01/02/03+O-P194-A/B); VP-014 §harness aligned; BC-INDEX §Changelog 3.49; VP-INDEX §Changelog 1.9; streak 0/3 (fix-burst; spec content changed); NEXT P1D-195

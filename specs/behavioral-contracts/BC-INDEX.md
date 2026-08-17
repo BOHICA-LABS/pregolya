@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.48"
+version: "3.49"
 status: active
 producer: state-manager
 timestamp: 2026-08-17T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.49 (burst-303/D-172/2026-08-17): 6 BC version bumps — F-P194-01 (HIGH): DynRunnable method-surface invoke_dyn/stream_dyn → invoke/stream + config Option<RunnableConfig> per ADR-026 §Decision 1: BC-2.01.005 (v1.0→v1.1), BC-2.01.006 (v1.1→v1.2), BC-2.01.007 (v1.0→v1.1), BC-2.01.008 (v1.0→v1.1). F-P194-02 (HIGH): E-CORE-NNN/MMM placeholders → E-CORE-009/010 in BC-2.01.005 and BC-2.01.006 (parallel-authoring error-code race). F-P194-03 (MED): module-canon core::runnable::parallel/passthrough → core::runnable; public paths pregolya_core::runnables::{…} corrected in BC-2.01.003/BC-2.01.005/BC-2.01.006. O-P194-A (LOW): DynRunnable adjudicated NON-generic; BC-2.01.003 (v1.6→v1.7) DynRunnable<Value,Value> → Arc<dyn DynRunnable>; BC-2.01.004 (v1.2→v1.3) same. O-P194-B (LOW): interface-definitions ADR-026 §Decision attribution split into single-§ citations per POL-19 (architect). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1s unchanged."
   - "3.48 (burst-302b/D-171/2026-08-17): Notation fix — BC-2.01.006 (v1.0→v1.1): §Invariants JoinError bullet corrected: PregolyaError struct literal missing '..' — corrected per ADR-010 §Class-3 positive obligation (verify-error-notation-canon gate). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1 unchanged."
   - "3.47 (burst-302b/D-171/2026-08-17): Add 4 BCs (all P1, CAP-039, SS-01, Wave 1): BC-2.01.005 RunnableParallel Construction and Concurrent Invocation (di_anchors DI-016+DI-014), BC-2.01.006 RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results (di_anchors DI-016+DI-014), BC-2.01.007 RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract (di_anchor DI-014), BC-2.01.008 RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation (di_anchors DI-016+DI-014). VP-014 seeded (proptest P1, BC-2.01.005+BC-2.01.006, DI-016). BC census 129→133 (51 P0 / 79 P1 / 3 P2); VP Seed 11→12; VP-INDEX 13→14. SS-01 range 001–004 → 001–008. LCEL scope expansion (D-170/D-171)."
   - "3.46 (burst-300/stale-ProvenanceTag-residue/2026-08-16): 1 BC version bump — BC-2.18.002 §Architecture Anchors + §Traceability Architecture Authority: two stale ProvenanceTag→TrustLevel migration residues from burst-226 (ADR-015 Decision 3) closed. (1) §Architecture Anchors ADR-015 bullet: 'Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)' → 'Decision 3 (PromptValue, MessageProvenance, TrustLevel classification)'. (2) §Traceability Architecture Authority row: 'ProvenanceTag pass-through and severity ordering' → 'TrustLevel classification and severity ordering'. Census per D-143 sweep-the-class (D-164): ~102 ProvenanceTag occurrences across 34 files; 2 STALE trust-trigger residues fixed (BC-2.18.002); 1 OBS ADR-015 subtitle corrected by architect; ~70 legitimate SS-11 ingress-boundary struct refs retained (BC-2.11.001/DI-012); ~29 historical changelog refs retained as audit trail. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."

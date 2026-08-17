@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: invariants
-version: "1.4"
+version: "1.5"
 status: active
 producer: business-analyst
 timestamp: 2026-08-17T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "17e75c3"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D170]
 changelog:
+  - "v1.5 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) — DI-016 body: E-CORE-NNN → E-CORE-009 (EXEC, RunnableParallelBranchFailure, anchor BC-2.01.006). F-P194-03 (MED) — DI-016 Enforcer: core::runnable::parallel → core::runnable (canonical 2-level module-registry form per ADR-026). TD-VSDD-060 sweep: zero E-CORE-NNN remain in live body; zero 3-level runnable submodule paths remain in live body."
   - "v1.4 (burst-302b/D-170/2026-08-17): DI-016 added — RunnableParallel Key-Completeness and Branch-Failure Propagation. New section 'LCEL Composition Invariants' added. Census: 15→16 invariants. D170 added to decisions list. Enforcer: BC-2.01.005 + BC-2.01.006; VP-014 proptest property is verification vehicle."
   - "v1.3 (2026-07-22): Fix burst 235 — DI-015 Enforcer bullet corrected per F-P135-05 architect adjudication (SPLIT enforcement): added co-enforcer BC-2.13.002 (sandbox::process ProcessBackend, .kill_on_drop(true)); clarified that tokio::time::timeout wraps sandbox execute() call in BashTool, not tokio::process::Command directly (which is spawned internally by sandbox::process). input-hash refreshed."
   - "v1.2 (2026-07-22): Fix burst 234 — DI-015 (Subprocess Execution Timeout, Mandatory) added per F-P134-06 architect adjudication; no subprocess-execution-timeout invariant existed in DI-001..014. Census: 14→15 invariants. New section: Tool Execution Invariants. input-hash refreshed (0dac18e)."
@@ -182,14 +183,14 @@ indefinitely. Distinct from DI-009 (which governs outbound HTTP-client connectio
 For any `RunnableParallel` invocation: if the result is `Ok(output)`, then `output` contains
 exactly one key for every configured branch — no key is silently absent or dropped. If any
 branch fails, the result is `Err(PregolyaError)` containing the failing branch's key
-(`E-CORE-NNN` category EXEC, message `"RunnableParallelBranchFailure: branch '<key>' failed: <cause>"`);
+(`E-CORE-009` category EXEC, message `"RunnableParallelBranchFailure: branch '<key>' failed: <cause>"`);
 all remaining in-flight branches are aborted (`JoinSet::abort_all()`); no partial output
 dictionary is returned. This invariant prohibits silent degradation to an incomplete or empty
 output dict where branch-failure data must propagate — consistent with DI-014 (Error
 Propagation: No Silent Swallowing).
 
 - **Source:** D-170 (burst-302 human-directed Phase-1 scope expansion; ADR-026 §New Domain Invariant Recommendation — explicitly recommends this invariant)
-- **Enforcer:** `core::runnable::parallel` — JoinSet abort-on-first-error + structured
+- **Enforcer:** `core::runnable` — JoinSet abort-on-first-error + structured
   PregolyaError with branch key identification; BC-2.01.005 (RunnableParallel concurrent
   invocation, keyed dict output) and BC-2.01.006 (fail-fast branch failure propagation,
   abort-remaining, no partial results) are the BC enforcement surfaces; VP-014 (proptest P1,
