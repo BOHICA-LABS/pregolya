@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.29"
+version: "1.30"
 status: active
 producer: architect
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.30 (burst-302a/D-170/2026-08-17): ADR-026 registered — LCEL Composition Primitives: RunnableParallel and RunnablePassthrough (burst-302 scope expansion; D-170 human ruling). ADR count 25→26. Document Map updated to 26 files (ADR-001 to ADR-026)."
   - "1.29 (burst-292/P1D-183-F3/2026-08-16): Fix ADR-025 row in §ADR Registry: 'grounds verify-signature-canon.sh rules S2/S3/S4' → 'S1/S2/S3/S4'. S1 (as_retriever Arc<Self> receiver rule) is grounded by ADR-025 per ADR-025 §Consequences and §Source/Origin; v1.26 changelog entry already stated S1/S2/S3/S4 correctly but the live ADR Registry table cell was not updated in that burst."
   - "1.28 (FIX-BURST-291/F-P1D182-01/2026-08-16): Fix phantom §-anchors in D23 VP seeding blockquote. 'BC-2.23.005 §Category amended to VAL in burst-232' → 'BC-2.23.005 §Postconditions (PC-4) category amended to VAL in burst-232'; 'error-taxonomy §TOOLS' → 'error-taxonomy.md §Component: TOOLS'. Rationale: BC-2.23.005 has no §Category heading (category field in §Postconditions PC-4); error-taxonomy.md has no §TOOLS heading (real heading §Component: TOOLS (pregolya-tools))."
   - "1.27 (fix-burst-287/records-lint-pin/2026-08-01): Fix records-lint L9b failures in v1.26 entry: three version pins removed from changelog prose (ADR-023, purity-boundary-map.md, and module-criticality.md document references changed from versioned to document-name-only form per TD-VSDD-091). Fix typo: canon-govenance → canon-governance in burst slug."
@@ -67,7 +68,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 25 files (ADR-001 to ADR-025)
+**ADRs:** `.factory/specs/architecture/decisions/` — 26 files (ADR-001 to ADR-026)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -181,6 +182,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | ADR-023 | #[non_exhaustive] Governance for Public API Types (fix-burst-287) | accepted — architect adjudication F-P176-A028+A029+D009+B026+C028 (Mechanism 4) | — |
 | ADR-024 | WriteFileTool Create-Path Confinement Protocol (fix-burst-287 / F-P176-C002) | accepted — architect adjudication F-P176-C002 CRIT; product-owner applies to BC-2.23.002 | — |
 | ADR-025 | Type Signature Canon: Object Safety and Arc Ownership Patterns (D-43, D-45, D-48) (fix-burst-287) | accepted — grounds verify-signature-canon.sh rules S1/S2/S3/S4 in citable ADR headings; hook now enforces ADR rather than defining it | — |
+| ADR-026 | LCEL Composition Primitives: RunnableParallel and RunnablePassthrough (burst-302 scope expansion) | accepted (D-170) | — |
 
 ## Verification Properties (VP-INDEX)
 
