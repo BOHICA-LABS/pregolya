@@ -4,7 +4,7 @@ level: L3
 version: "1.7"
 status: active
 producer: architect
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-07-27T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 changelog:
