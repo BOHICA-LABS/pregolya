@@ -6089,3 +6089,15 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-08-16
 **Status:** COMPLETE
 **Output:** closed P1D-185 F-185-01 (MED BC-2.19.004 §EC-005+Invariant 3: raise-panic→startup-validation unit test mirrors BC-2.19.006 EC-001/VP-2.19.006-B pattern; asserts no OLD_CORE_NAMESPACES_MAPPING key maps to value that is itself a key; test fails in CI; NO panic! in Reviver::new() at runtime; NO new error-taxonomy code); resolves DI-008/ADR-016 §Decision 3 Property 4 contradiction; VP-2.19.004-B + Traceability already consistent; D-134 corpus sweep: BC-2.19.004 §EC-005 confirmed SOLE raise-panic mandate across 129 BCs. F-185-02 (LOW BC-2.01.003): Invariant layer-disambiguation E-CORE-006 template "at depth N"→"at depth <depth>" (canonical angle-bracket placeholder; harmonizes PC5/EC-004; sole bare-N placeholder). Files bumped: BC-2.19.004, BC-2.01.003, BC-INDEX §Changelog. D-156. GATE: PASS 14/14. 186 passes total. Streak UNCHANGED 0/3.
+
+## P1D-186 — Archived from STATE.md Current Phase Steps at burst-298 wrap
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** P1D-186 adversary pass — CLEAN(strict)=NO CLEAN(PR-merge)=NO; 3 findings (0C/0H/1M/2L); F-186-01 (MED) ferroctmp brand-residue: BC-2.23.002 §PC-3 + ADR-024 §Atomic-Write-Pattern still use `.ferroctmp_` path prefix (ferrochain-era name; renamed container is pregolya); F-186-02 (LOW) product-brief §MarketIntel ferrograph reference; F-186-03 (LOW) ADR-010 §non-exhaustive-gate Wave-TBD placeholder; STREAK UNCHANGED 0/3; 187 passes total. D-157.
+
+## Burst 295 — Fix-burst P1D-186 COMPLETE (Archived from STATE.md Current Phase Steps at burst-298 wrap)
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** closed P1D-186 F-186-01 (MED) .ferroctmp_→.pregolyatmp_ ×4 sites (ADR-024 §Atomic-Write-Pattern ×3 + BC-2.23.002 §PC-3 ×1); F-186-02 (LOW) product-brief §MarketIntel ferrograph→"pregolya-graph (formerly 'ferrograph')"; F-186-03 (LOW) ADR-010 §non-exhaustive-gate Wave-TBD→Wave-1. records-lint L12 dead-brand-token guard minted: bans ferrochain/ferroctmp/ferrograph/FerrochainError in newly-authored specs/ additions; 3 self-probes pass; EXPECTED_BLOCKING_COUNT unchanged at 14 (records-lint already counted). BC-INDEX §Changelog. D-158. GATE: PASS 14/14. 187 passes total. Streak UNCHANGED 0/3. NEXT P1D-187.

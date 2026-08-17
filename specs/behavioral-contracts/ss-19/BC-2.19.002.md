@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.002
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ di_anchors: [DI-008, DI-010]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (burst-227/F-P132-08/2026-07-21): Clarify serde field-name convention: lc_secrets() returns serde-serialized names (not Rust field names). Invariant 3 extended. TV-001 note updated: 'api_key field absent' → 'openai_api_key (serde-serialized name) absent from kwargs'."
+  - "1.2 (burst-298/F-P189-01/2026-08-16): §Traceability DI-008 cell corrected — prior text attributed Result return to LcSerializable::serialize (infallible; returns Serialized::Constructor directly; no failure path) and to lc_secrets() stripping (infallible HashMap remove operations). Corrected to: LcSerializable::serialize returns Serialized (infallible); lc_secrets() stripping is infallible; Reviver::revive returns Result; no .unwrap() in non-test code. Reconciles with DI-008 definition and siblings BC-2.19.001 §Traceability (corrected burst-297), BC-2.19.003-006 §Traceability (all already correctly attributed to revive op only). input-hash updated to e7b7c2e."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "dc48c59"
+input-hash: "e7b7c2e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -142,7 +143,7 @@ _[to be filled after story decomposition — Wave 2 SS-19 story]_
 |-------|-------|
 | Source L2 Capability | CAP-024 |
 | Capability Anchor Justification | CAP-024 ("LcSerializable Round-Trip (Serialize → Serialized → Deserialize → Equivalent Value)") per capabilities-p1-p2.md §CAP-024 — credential stripping is a mandatory property of the round-trip: the Serialized envelope must never carry credential values, which CAP-024's safety property list identifies as a core constraint on the serialization surface |
-| L2 Domain Invariants | DI-008 (serialize/revive return Result; no unwrap), DI-010 (credential opacity — credential values never transit AI context or serialized form; lc_secrets() stripping is the mechanism) |
+| L2 Domain Invariants | DI-008 (LcSerializable::serialize returns Serialized (infallible); lc_secrets() stripping is infallible; Reviver::revive returns Result; no .unwrap() in non-test code), DI-010 (credential opacity — credential values never transit AI context or serialized form; lc_secrets() stripping is the mechanism) |
 | Architecture Authority | ADR-016 Decision 3 (lc_secrets() stripping obligation, constructor convention for credential injection) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | pregolya-core / core::serializable |
