@@ -6101,3 +6101,33 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-08-16
 **Status:** COMPLETE
 **Output:** closed P1D-186 F-186-01 (MED) .ferroctmp_→.pregolyatmp_ ×4 sites (ADR-024 §Atomic-Write-Pattern ×3 + BC-2.23.002 §PC-3 ×1); F-186-02 (LOW) product-brief §MarketIntel ferrograph→"pregolya-graph (formerly 'ferrograph')"; F-186-03 (LOW) ADR-010 §non-exhaustive-gate Wave-TBD→Wave-1. records-lint L12 dead-brand-token guard minted: bans ferrochain/ferroctmp/ferrograph/FerrochainError in newly-authored specs/ additions; 3 self-probes pass; EXPECTED_BLOCKING_COUNT unchanged at 14 (records-lint already counted). BC-INDEX §Changelog. D-158. GATE: PASS 14/14. 187 passes total. Streak UNCHANGED 0/3. NEXT P1D-187.
+
+## P1D-187 — Archived from STATE.md Current Phase Steps at burst-299 wrap
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** P1D-187 adversary pass — CLEAN(strict)=YES CLEAN(PR-merge)=YES; ZERO findings; 188 passes total; streak 1/3 STARTED (first pass after burst-295 ferro-residue fix); 6 candidates developed and all discarded; deep-read SS-03/04/06/08-007/09/10/11/12/15/18/22 + ADR-010 full + interface-definitions §StreamEvent/§GuardrailHook/§IngressContent/§IngressBoundary; every BC shard fresh-context deep-read ≥1× this streak; D-159; pass-187.md persisted; sidecar-learning.md Stop-hook marker swept. Streak 1/3 STARTED.
+
+## P1D-188 — Archived from STATE.md Current Phase Steps at burst-299 wrap
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** P1D-188 adversary pass — CLEAN(strict)=NO CLEAN(PR-merge)=NO; 2 findings (0C/0H/1M/1L); 189 passes total; STREAK RESET 1/3→0/3; body-deep-read BC-2.05.001-004 + BC-2.19.001/002/003 + BC-2.14.001/003 + BC-2.08.004/013/014 + BC-2.20.001 + BC-2.21.002 + BC-2.10.005 + BC-2.18.001 (17 bodies); F-P188-01 MED BC-2.19.003 DI-008 Reviver::new()-returns-Result contradiction (contradicts own PC2+VP-007+verification-architecture; siblings BC-2.19.004/005/006 DI-008 correctly attribute Result to revive op) + F-P188-02 LOW BC-2.08.014 Error-Code-Minted row/callout omit E-PROV-011 FallbackChainEmpty; D-160; pass-188.md persisted; sidecar-learning.md Stop-hook marker swept. Streak RESET 1/3→0/3.
+
+## Burst 297 — Fix-burst P1D-188 COMPLETE (Archived from STATE.md Current Phase Steps at burst-299 wrap)
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** closed P1D-188 F-P188-01 (MED) BC-2.19.003 §Traceability DI-008 Traceability cell corrected "Reviver::new() returns Result"→"revive returns Result; Reviver::new() is infallible" + F-P188-02 (LOW) BC-2.08.014 §Traceability Error-Code-Minted row+callout add E-PROV-011 FallbackChainEmpty. SWEEP A (DI-008 constructor-vs-revive attribution, 42 cells audited): 2 FAIL fixed (BC-2.19.003 §Traceability+BC-2.19.001 §Traceability), 40 PASS, zero remaining. SWEEP B (Error-Code-Minted-row completeness, 6 rows audited): 1 FAIL fixed (BC-2.08.014 §Traceability), 5 PASS, zero remaining. BC-INDEX §Changelog. D-161. GATE: PASS 14/14. Streak UNCHANGED 0/3 (fix-burst; spec content changed). 189 passes. NEXT P1D-189.
+
+## P1D-189 — Archived from STATE.md Current Phase Steps at burst-299 wrap
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** P1D-189 adversary pass — CLEAN(strict)=NO CLEAN(PR-merge)=NO; 1 finding (0C/0H/1M/0L); 190 passes total; STREAK UNCHANGED 0/3 (fix-burst per D-143); body-deep-read SS-19 (all 6 BCs); F-P189-01 MED BC-2.19.002 §Traceability DI-008 cell: serialize+lc_secrets attributed Result (both infallible — burst-297 sibling-sweep miss; BC-2.19.002 unchecked in burst-297 sweep) + burst-297 §Changelog census 42 overcount (true census 35); D-162 (pending burst-298); pass-189.md persisted; sidecar-learning.md Stop-hook marker swept.
+
+## Burst 298 — Fix-burst P1D-189 COMPLETE (Archived from STATE.md Current Phase Steps at burst-299 wrap)
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** closed P1D-189 F-P189-01 (MED) BC-2.19.002 §Traceability DI-008 cell corrected (infallible LcSerializable::serialize returns Serialized; infallible lc_secrets() stripping; fallible Reviver::revive returns Result only; no .unwrap() in non-test code). DI-008 §Traceability class re-swept: true census 35 cells (burst-297 §Changelog claimed 42 — overcount; also declared zero-remaining — false-PASS as BC-2.19.002 was unchecked); 34 PASS, 1 FIXED; zero remaining. BC-INDEX §Changelog. D-162. GATE: PASS 14/14. Streak UNCHANGED 0/3 (fix-burst; spec content changed per D-143). 190 passes. NEXT P1D-190.

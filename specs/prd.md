@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.21"
+version: "1.22"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "2616796"
+input-hash: "6b67fce"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.22 (burst-299/F-P190-01/2026-08-16): §2.18 BC-2.18.004 catalog row title corrected — 'Untrusted ProvenanceTag' → 'TrustLevel::Untrusted' (POL-7 H1 parity; burst-226/ADR-015 Decision 3 TrustLevel migration residue in prd.md; BC-2.18.004 H1 is authoritative source of truth per bc_h1_is_title_source_of_truth). ProvenanceTag residue census: 2 occurrences swept — BC-2.11.001 catalog row (§2.11) is legitimate ingress-boundary provenance concept, retained unchanged; BC-2.18.004 catalog row (§2.18) was stale trust-level trigger reference, fixed. input-hash updated to 6b67fce."
   - "v1.21 (wave-b-tail/D-35-xtask-rename/2026-07-29): §9 NE rollup table xtask name corrections (D-80 residue). (1) NE-04 Anchor column: 'cargo xtask deny-client-new' → 'cargo xtask check-client-timeout' (canonical check-<subject> form; NE-04/DI-009 gate). (2) NE-07 Anchor column: 'deny-expect-in-lib lint' → 'check-no-panic lint' (NE-07/check-no-panic gate). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib, deny-client-new) found in live body text. Error-construction notation: sole PregolyaError { in body text (§3 Interface Definition) is CLASS0_EXEMPT (Type Schema Form — component: Component field-type listing) per ADR-010 §Error-Construction Notation Canon; zero notation violations."
   - "v1.20 (fix-burst-280-corr/F-P175-C207-prd/F-P175-C208/2026-07-28): C207 prd-side and C208 residue cleared. (1) C207: §1.5 Python runtime bullet corrected — 'one-way Python-checkpoint import tool is in scope' removed; disposition is out of v1 scope per ADR-002 (post-v1 stretch; no roster slot, no SS, no capability in closed Phase 1b architecture). (2) C208: §1.5 OCSF telemetry normalization and SEC/SOC 2 compliance semantics pending-qualifier language removed; both are definitively out of v1 scope (no SS, ADR, or capability in closed Phase 1b architecture; OCSF rationale anchored to domain-a §5 and SS-06/CAP-007 astream_events v2 taxonomy; SEC/SOC 2 rationale anchored to domain-a §4)."
   - "v1.19 (fix-burst-280/F-P175-C201/C202/2026-07-28): Sibling sweep from product-brief.md fixes. (1) C202 §1.2 Solution Vision: 'Three design-forcing holdout domains' → 'Five design-forcing holdout domains'; Domain D (Hermes Agent, CAP-020/CAP-021) and Domain E (Agentic Coding CLI, CAP-017/CAP-018/CAP-034..038) bullets added. (2) §1.4 Target Users: Domain D and Domain E persona rows added. (3) Frontmatter `decisions:` extended with D19/D20/D22 (previously absent; L2-INDEX decisions had included them since D19/D20 authoring)."
@@ -384,7 +385,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | P1 | DI-008, DI-014 | ss-18/BC-2.18.001.md |
 | BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | P1 | DI-008 | ss-18/BC-2.18.002.md |
 | BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | P1 | DI-008 | ss-18/BC-2.18.003.md |
-| BC-2.18.004 | injection_guard — SystemMessage Slot with Untrusted ProvenanceTag Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 | DI-008, DI-014 | ss-18/BC-2.18.004.md |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 | DI-008, DI-014 | ss-18/BC-2.18.004.md |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 | DI-008, DI-014 | ss-18/BC-2.18.005.md |
 
 ### 2.19 LC Serialization (CAP-024, CAP-025) — P0/P1/P2
