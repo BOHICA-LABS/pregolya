@@ -265,3 +265,5 @@ Session-end markers for the VSDD factory. Run /session-review to synthesize.
 - Session ended at 2026-08-17T11:48:45Z (awaiting /session-review)
 - Session ended at 2026-08-17T12:04:41Z (awaiting /session-review)
 - burst-304 (2026-08-18): L-184 [PROCESS-GAP] corpus-wide grep discipline for canonical-form fix-bursts (architecture-layer sibling-sweep miss class) — tagged for session-reviewer synthesis
+- Session ended at 2026-08-17T13:13:23Z (awaiting /session-review)
+- Session ended at 2026-08-17T13:21:43Z (awaiting /session-review)
