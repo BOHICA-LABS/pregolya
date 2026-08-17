@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "fa06b80"
+input-hash: "767c3c5"
 traces_to: STATE.md
 ---
 
@@ -6178,4 +6178,41 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 
 **Date:** 2026-08-17
 **Status:** COMPLETE
-**Output:** P1D-193 adversary pass — CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; review HEAD 5c4a961; spec-frozen 1262ebe; 194 passes total; streak 2/3 → 3/3 CONVERGED (D-167); Phase-1d adversarial cascade CLOSED. Third-slice deep-read (fresh axes not repeated from P1D-191/192): (a) NFR-catalog ↔ VP/BC arithmetic — NFR-013 map-row ↔ VP-013 ↔ BC-2.23.005 triangle closed; NFR-014 proactive entry well-formed; (b) purity-boundary-map census 34+38+12=84 matches module-decomp total 84 (D-130); (c) DI-015 bidirectionality — cited in BC §Traceability cells; BC body framing consistent with domain spec; no orphan; (d) VP-013/BC-2.23.005 risk-floor triangle — VP §Seed-BC ↔ BC §Traceability VP row ↔ BC §PC-1 all consistent; (e) StreamEvent 16-variant propagation — ADR-024 §Decision count 16 stable; no live-body contradiction in BC-2.14.001; historical changelog counts treated as audit-trail (historical-region caution); (f) BC-INDEX title/DI cross-check — 5 sampled §BC-Roster rows match H1 titles; sampled DI citations resolve. Continuity spot-checks PASS (DI-008 ss-19 CLEAN; ProvenanceTag→TrustLevel BC-2.18.002 body CLEAN). Historical-region caution applied throughout. 5 discards raised and all FALSE. Novelty ZERO. D-167. GATE: PASS 14/14. BC-5.39.001 3-CLEAN satisfied on frozen anchor 1262ebe. NEXT: pre-Phase-1-gate consistency-validator audit + input-hash drift check → human Phase-1 approval gate.
+**Output:** P1D-193 adversary pass — CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; review HEAD 5c4a961; spec-frozen 1262ebe; 194 passes total; streak 2/3 → 3/3 CONVERGED (D-167); Phase-1d adversarial cascade CLOSED.
+
+---
+
+## burst-304 — Fix-Burst Narrative (2026-08-18)
+
+**Date:** 2026-08-18
+**Status:** COMPLETE
+**Scope:** P1D-195 fix-burst — 6 findings closed. All residual SIBLINGS of burst-303 per-file sweep that missed the architecture-decision layer (ADR-005/026) and cross-cutting docs.
+
+**Findings closed:**
+- F-P195-01 (HIGH): `invoke_dyn` residual in DynRunnable context — 3 files: `verification-architecture.md` §VP-014 (3 sites: property + formal statement + rationale), `error-taxonomy.md` §E-CORE-009/010 raise-condition annotations, `capabilities-p1-p2.md` CAP-039 RunnablePassthrough description.
+- F-P195-02 (HIGH): `core::runnable::parallel` / `core::runnable::passthrough` live-body — `verification-architecture.md` §VP-014 heading + `ADR-026` §Consequences items 2+4, §VP-Recommendation, §New Domain Invariant Enforcer.
+- F-P195-03 (MED): `E-CORE-NNN` / `E-CORE-MMM` placeholder residual — `ADR-026` §Decision 2 code sketch + §Decision 2 behavioral property 3 (2 sites) + §Decision 4 doc comment + §Decision 4 behavioral property 1a + §Error placeholder section + §Interface-Definitions Additions.
+- F-P195-04 (MED): `DynRunnable<Value, Value>` generic form — `ADR-005` §Adjacent Trait Object-Safety Adjudications: 3 live-body sites replaced with canonical `Arc<dyn DynRunnable>`.
+- F-P195-05 (LOW): `DI-016` Enforcer now names `BC-2.01.005/006/008` — `domain-spec/invariants.md` v1.6 update.
+- OBS-B (OBS): `verification-coverage-matrix.md` HIGH-tier module double-count — HIGH 30→29 (two `core::runnable` rows represented ONE module, not two; proptest count corrected '8 of 30'→'7 of 29').
+
+**Artifacts bumped:**
+- `specs/architecture/verification-architecture.md` → v2.17
+- `specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md` → v1.2
+- `specs/architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md` → v1.14
+- `specs/architecture/verification-coverage-matrix.md` → v3.8
+- `specs/prd-supplements/error-taxonomy.md` → v1.50
+- `specs/domain-spec/capabilities-p1-p2.md` → v1.25
+- `specs/domain-spec/invariants.md` → v1.6
+- `sidecar-learning.md` (5 session-end timestamps + L-184 burst-304 tag)
+
+**Corpus-wide grep gate (STEP 1 — OBS-A remedy):** All 4 patterns confirmed ZERO live-body residual:
+1. `invoke_dyn` / `stream_dyn`: all remaining occurrences are changelog rows or legitimate DynTool contexts (interface-definitions §DynTool, api-surface.md, module-decomposition.md, ADR-025, purity-boundary-map.md, ADR-005 DynTool code sketch). PASS.
+2. `core::runnable::parallel` / `core::runnable::passthrough`: one non-changelog occurrence in `verification-coverage-matrix.md §"See note:" annotation` explicitly labeled "(3-level path core::runnable::parallel non-canonical)" — explanatory history note, NOT a prescriptive module-path reference. All other occurrences are changelog rows. PASS.
+3. `E-CORE-NNN` / `E-CORE-MMM`: all occurrences in changelog rows. PASS.
+4. `DynRunnable<`: all occurrences in changelog rows. PASS.
+
+**Decision minted:** D-173
+**Lesson codified:** L-184 [PROCESS-GAP / SWEEP-DISCIPLINE] corpus-wide grep discipline for canonical-form fix-bursts
+**Streak:** 0/3 (fix-burst; BC-5.39.001 — spec content changed)
+**NEXT:** P1D-196 adversary re-pass Third-slice deep-read (fresh axes not repeated from P1D-191/192): (a) NFR-catalog ↔ VP/BC arithmetic — NFR-013 map-row ↔ VP-013 ↔ BC-2.23.005 triangle closed; NFR-014 proactive entry well-formed; (b) purity-boundary-map census 34+38+12=84 matches module-decomp total 84 (D-130); (c) DI-015 bidirectionality — cited in BC §Traceability cells; BC body framing consistent with domain spec; no orphan; (d) VP-013/BC-2.23.005 risk-floor triangle — VP §Seed-BC ↔ BC §Traceability VP row ↔ BC §PC-1 all consistent; (e) StreamEvent 16-variant propagation — ADR-024 §Decision count 16 stable; no live-body contradiction in BC-2.14.001; historical changelog counts treated as audit-trail (historical-region caution); (f) BC-INDEX title/DI cross-check — 5 sampled §BC-Roster rows match H1 titles; sampled DI citations resolve. Continuity spot-checks PASS (DI-008 ss-19 CLEAN; ProvenanceTag→TrustLevel BC-2.18.002 body CLEAN). Historical-region caution applied throughout. 5 discards raised and all FALSE. Novelty ZERO. D-167. GATE: PASS 14/14. BC-5.39.001 3-CLEAN satisfied on frozen anchor 1262ebe. NEXT: pre-Phase-1-gate consistency-validator audit + input-hash drift check → human Phase-1 approval gate.

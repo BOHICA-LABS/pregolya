@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.24"
+version: "1.25"
 status: active
 producer: business-analyst
 timestamp: 2026-08-17T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "faffcd7"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170]
 changelog:
+  - "1.25 (burst-304/F-P195-01/2026-08-17): F-P195-01 (HIGH) invoke_dyn residual in CAP-039 RunnablePassthrough description: 'invoke_dyn(input, config)' → 'invoke(input, config)'. Canon: DynRunnable method is invoke (not invoke_dyn — that is DynTool's method). TD-VSDD-060 sweep: zero other invoke_dyn occurrences in DynRunnable/RunnableParallel/RunnablePassthrough/RunnableAssign context in live body; zero E-CORE-NNN/MMM, core::runnable::parallel/::passthrough, or DynRunnable< residuals in live body."
   - "1.24 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) error-code placeholder resolution — CAP-039 §RunnableParallel fail-fast body: E-CORE-NNN → E-CORE-009 (EXEC, RunnableParallelBranchFailure, anchor BC-2.01.006); CAP-039 §RunnableAssign body: E-CORE-MMM → E-CORE-010 (VAL, RunnableAssignNonDictInput, anchor BC-2.01.008). F-P194-03 (MED) module-path canonicalization — CAP-039 module placement: non-canonical 3-level paths (pregolya-core::core::runnable::parallel / ::passthrough) → canonical 2-level form (core::runnable) per ADR-026 and module-registry canon. TD-VSDD-060 sweep: zero E-CORE-NNN/MMM remain in live body; zero 3-level runnable submodule paths remain in live body."
   - "1.23 (burst-302b/D-170/2026-08-17): D-170 LCEL composition scope expansion — CAP-039 authored (RunnableParallel, RunnablePassthrough, RunnableAssign; SS-01/pregolya-core). New section 'P1 — LCEL Map/Passthrough Composition (Wave 1, D-170)' added before P2 section. P1 count 26→27; total section CAPs 29→30; L2 total 38→39. D170 added to decisions list. BCs BC-2.01.005–008 and VP-014 referenced (product-owner authoring in parallel)."
   - "1.22 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — two error-taxonomy component shortcode phantoms fixed. (1) CAP-029 §VS — VAL... context: §VS is a shortcode, not a heading (heading is '### Component: VS (pregolya-vectorstores)'). Corrected to error-taxonomy.md §Component: VS. (2) CAP-031 §EMBED — VAL... context: same pattern; corrected to error-taxonomy.md §Component: EMBED (heading '### Component: EMBED (pregolya-core::embeddings)')."
@@ -760,7 +761,7 @@ silently absent (DI-016). Constructor: `RunnableParallel::new(pairs)`.
 Alias: `RunnableMap = RunnableParallel`.
 
 **(2) RunnablePassthrough** — passes input through unchanged
-(`invoke_dyn(input, config)` → `Ok(input)` — exact same value, no copy except where needed
+(`invoke(input, config)` → `Ok(input)` — exact same value, no copy except where needed
 for type ownership). Optional `inspect_fn: Option<Arc<dyn Fn(&serde_json::Value) + Send + Sync>>`
 called for side effects (logging, tracing, metrics) without altering the return value; the
 inspect function MUST NOT alter the return value — read-only callback contract.

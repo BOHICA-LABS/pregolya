@@ -11,11 +11,12 @@ date: "2026-08-17"
 subsystems_affected: ["SS-01"]
 supersedes: []
 superseded_by: null
-version: "1.1"
+version: "1.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D_BURST302_TBD]
 changelog:
+  - "1.2 (burst-304/F-P195-02/F-P195-03/2026-08-17): Module-path canon + error-code placeholder resolution. F-P195-02 (HIGH): §Consequences item 2: `core::runnable::parallel` + `core::runnable::passthrough` → `core::runnable` (files parallel.rs / passthrough.rs; canonical 2-level registry form per module-decomp and ADR-026 §Decision 5). §Consequences item 4: `targeting `core::runnable::parallel`` → `targeting `core::runnable``. §VP Recommendation: `module `core::runnable::parallel`` → `module `core::runnable``. §New Domain Invariant Enforcer: `core::runnable::parallel` via JoinSet → `core::runnable` (via parallel.rs JoinSet). F-P195-03 (MED): §Decision 2 code sketch: `E-CORE-NNN` → `E-CORE-009`. §Decision 2 behavioral property 3: E-CORE-NNN → E-CORE-009 (two sites). §Error new-code placeholder section: reframed as resolved record (codes minted: E-CORE-009 EXEC / E-CORE-010 VAL). §Decision 4 doc comment + behavioral property 1a: E-CORE-MMM → E-CORE-010. §Consequences item 5: reframed as resolved (codes minted). §Interface-Definitions Additions: E-CORE-NNN → E-CORE-009; E-CORE-MMM → E-CORE-010."
   - "1.1 (burst-303/F-P194-01/2026-08-17): Fix method surface mismatch — change invoke_dyn→invoke and stream_dyn→stream everywhere in ADR body to match canonical DynRunnable trait declared in interface-definitions.md §DynRunnable and RunnableSequence. Affects: §Context (DynRunnable::invoke_dyn reference), §Decision 2 (async fn invoke_dyn code block → async fn invoke; branch.invoke_dyn → branch.invoke; stream_dyn → stream in Streaming section), §Decision 3 (behavioral properties 1 and 2), §Decision 4 (behavioral properties 1 and 2; mapper.invoke_dyn → mapper.invoke), §VP Recommendation (invoke_dyn reference). The DynTool pattern (invoke_dyn/stream_dyn) is distinct from DynRunnable (invoke/stream); confusing them is a method-surface mismatch."
   - "1.0 (burst-302/scope-expansion/2026-08-17): Initial decision — human-directed Phase-1 approval-gate scope expansion. Adds RunnableParallel, RunnablePassthrough, and RunnableAssign to pregolya v1. Five decisions: (1) RunnableParallel type representation and key ordering; (2) concurrent execution and error handling; (3) RunnablePassthrough identity semantics; (4) RunnableAssign dict augmentation; (5) pipe composition and module placement."
 ---
@@ -158,7 +159,7 @@ async fn invoke(
     while let Some(join_result) = set.join_next().await {
         let branch_result = join_result.map_err(|e| PregolyaError::new(
             "parallel", ErrorCategory::Internal, RetryHint::NoRetry,
-            "E-CORE-NNN", format!("JoinError in RunnableParallel: {e}"),
+            "E-CORE-009", format!("JoinError in RunnableParallel: {e}"),
         ))??;
         raw.push(branch_result);
     }
@@ -183,8 +184,8 @@ form. Key behavioral properties:
    `set.abort_all()` to cancel remaining in-flight branches; return the error
    immediately. No partial result dictionary is produced.
 3. Error wraps the failing branch's key in the message:
-   `PregolyaError { category: EXEC, code: <new E-CORE-NNN>, message: "RunnableParallel branch '<key>' failed: <cause>", .. }`.
-   The product-owner mints `E-CORE-NNN` in `error-taxonomy.md` during BC authoring.
+   `PregolyaError { category: EXEC, code: E-CORE-009, message: "RunnableParallel branch '<key>' failed: <cause>", .. }`.
+   Minted as `E-CORE-009` in `error-taxonomy.md` (burst-302b/BC-2.01.006 authoring).
 4. JoinError (tokio task panic) maps to `PregolyaError { category: Internal, .. }` per
    ADR-010 §Class 1.
 
@@ -197,16 +198,13 @@ For `stream(input: Value)`:
   chunk value — equivalent to Python's `AddableDict({key: chunk})`.
 - First stream error aborts all branch streams and propagates.
 
-### Error new-code placeholder
+### Error codes (minted)
 
-Product-owner must mint two new error codes in `error-taxonomy.md` during BC-2.01.005/006 authoring:
-- `E-CORE-NNN` (category EXEC): RunnableParallel branch failure; message template
+Codes minted in `error-taxonomy.md` (burst-302b/BC-2.01.005/006 authoring):
+- `E-CORE-009` (category EXEC): RunnableParallel branch failure; message template
   `"RunnableParallelBranchFailure: branch '<key>' failed: <cause>"`.
-- `E-CORE-MMM` (category VAL): RunnableAssign non-dict input; message template
+- `E-CORE-010` (category VAL): RunnableAssign non-dict input; message template
   `"RunnableAssignNonDictInput: input to RunnablePassthrough.assign() must be a JSON object"`.
-
-Exact code numbers assigned during BC authoring to avoid conflicts with any codes minted
-between this ADR and BC authoring.
 
 ---
 
@@ -254,7 +252,7 @@ impl RunnablePassthrough {
     /// input dict and its output is inserted at `key` in the result.
     ///
     /// # Errors
-    /// Returns `Err(PregolyaError { category: VAL, code: E-CORE-MMM, .. })` at invoke time
+    /// Returns `Err(PregolyaError { category: VAL, code: E-CORE-010, .. })` at invoke time
     /// if the input is not a JSON object.
     pub fn assign(
         pairs: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
@@ -269,7 +267,7 @@ impl RunnablePassthrough {
 Behavioral properties:
 1. `invoke(input, config)`:
    a. Validate: if `input` is not `Value::Object(...)`, return
-      `Err(PregolyaError { category: VAL, code: E-CORE-MMM, .. })`.
+      `Err(PregolyaError { category: VAL, code: E-CORE-010, .. })`.
    b. Run `self.mapper.invoke(input.clone(), config.clone()).await?` to get the
       augmentation map.
    c. Merge: start with `input`'s object fields; overwrite/insert with mapper output
@@ -342,9 +340,9 @@ these types is CAP-039 (SS-01 scope; product-owner and business-analyst author n
 1. **SS-01 BC range expands** from 001–004 to 001–008. State-manager updates ARCH-INDEX
    Subsystem Registry SS-01 row (`BCs: BC-2.01.001–008`) after BC authoring.
 
-2. **`module-criticality.md` new rows**: `core::runnable::parallel` (RunnableParallel +
-   RunnableAssign) and `core::runnable::passthrough` (RunnablePassthrough) must be
-   classified. Recommendation: HIGH criticality (concurrent fan-out correctness, error
+2. **`module-criticality.md` new rows**: `core::runnable` (the `core::runnable` module gains
+   files parallel.rs: RunnableParallel + RunnableAssign; and passthrough.rs: RunnablePassthrough)
+   must be classified. Recommendation: HIGH criticality (concurrent fan-out correctness, error
    propagation, dict-augmentation merge semantics — HIGH kill rate ≥ 90%).
 
 3. **`purity-boundary-map.md` new rows**: Both new modules are Pure Core (no I/O,
@@ -353,12 +351,13 @@ these types is CAP-039 (SS-01 scope; product-owner and business-analyst author n
    to add rows during burst-302 cleanup or next consistency pass.
 
 4. **`verification-coverage-matrix.md` and VP-INDEX**: One new VP recommended
-   (VP-014 — proptest, P1) targeting `core::runnable::parallel`. Product-owner authors
+   (VP-014 — proptest, P1) targeting `core::runnable`. Product-owner authors
    VP-014 during BC authoring; state-manager propagates to VP-INDEX and
    verification-architecture.md per VP-INDEX propagation obligation.
 
-5. **`error-taxonomy.md`**: Product-owner mints two new `E-CORE-NNN` codes per
-   Decision 2 and Decision 4 error-code placeholders.
+5. **`error-taxonomy.md`**: Codes minted (burst-302b/BC authoring): `E-CORE-009` (EXEC,
+   RunnableParallelBranchFailure) per Decision 2; `E-CORE-010` (VAL, RunnableAssignNonDictInput)
+   per Decision 4.
 
 6. **`interface-definitions.md`**: Architect (or product-owner per routing) adds
    `RunnableParallel`, `RunnablePassthrough`, and `RunnableAssign` struct + method
@@ -388,7 +387,7 @@ _(To be filled by product-owner during BC authoring.)_
 
 ## VP Recommendation
 
-**VP-014 recommended** (proptest, P1, module `core::runnable::parallel`):
+**VP-014 recommended** (proptest, P1, module `core::runnable`):
 
 Property: For any `RunnableParallel` with `N` configured branches and any input:
 - If `invoke` returns `Ok(output)`: `output.as_object().unwrap().len() == N` (no key
@@ -416,7 +415,7 @@ and `RunnableSequence` section:
 ///
 /// Returns a JSON object with one key per branch; key order follows insertion order.
 /// Branch errors are fail-fast: first error aborts remaining branches and returns
-/// `Err(E-CORE-NNN)` identifying the failing branch key.
+/// `Err(E-CORE-009)` identifying the failing branch key.
 ///
 /// Authority: BC-2.01.005 (construction + invocation), BC-2.01.006 (error propagation),
 ///            ADR-026 §Decision 1 and §Decision 2.
@@ -449,7 +448,7 @@ impl RunnablePassthrough {
     /// Create a `RunnableAssign` that augments a dict input with computed keys.
     ///
     /// Input at invoke time must be a JSON object; returns
-    /// `Err(E-CORE-MMM)` otherwise.
+    /// `Err(E-CORE-010)` otherwise.
     ///
     /// Authority: BC-2.01.008, ADR-026 §Decision 4.
     pub fn assign(
@@ -487,7 +486,7 @@ The product-owner / business-analyst team should consider adding `DI-016` to
 > output) where branch failure data should propagate — consistent with DI-014
 > (Error Propagation: No Silent Swallowing).
 
-Enforcer: `core::runnable::parallel` via `JoinSet` abort-on-first-error + structured
+Enforcer: `core::runnable` (via parallel.rs `JoinSet`) abort-on-first-error + structured
 error. VP-014 proptest property verifies the completeness half (`Ok → N keys`).
 BC-2.01.006 verifies the fail-fast error half.
 

@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: invariants
-version: "1.5"
+version: "1.6"
 status: active
 producer: business-analyst
 timestamp: 2026-08-17T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "17e75c3"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D170]
 changelog:
+  - "v1.6 (burst-304/F-P195-05/2026-08-17): F-P195-05 (MED) DI-016 enforcer omission — BC-2.01.008 (RunnableAssign) added to DI-016 BC enforcement surfaces. BC-2.01.008 di_anchors [DI-016, DI-014]; its PC-4 enforces mapper-error-propagates-as-Err with no partial merged output, which is DI-016's branch-failure-propagation property via RunnableAssign's internal RunnableParallel mapper. Bidirectional invariant↔BC binding now complete (POL-2 req 4). BC-2.01.007 (RunnablePassthrough) correctly excluded — it does not anchor DI-016. DI-016 statement otherwise intact."
   - "v1.5 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) — DI-016 body: E-CORE-NNN → E-CORE-009 (EXEC, RunnableParallelBranchFailure, anchor BC-2.01.006). F-P194-03 (MED) — DI-016 Enforcer: core::runnable::parallel → core::runnable (canonical 2-level module-registry form per ADR-026). TD-VSDD-060 sweep: zero E-CORE-NNN remain in live body; zero 3-level runnable submodule paths remain in live body."
   - "v1.4 (burst-302b/D-170/2026-08-17): DI-016 added — RunnableParallel Key-Completeness and Branch-Failure Propagation. New section 'LCEL Composition Invariants' added. Census: 15→16 invariants. D170 added to decisions list. Enforcer: BC-2.01.005 + BC-2.01.006; VP-014 proptest property is verification vehicle."
   - "v1.3 (2026-07-22): Fix burst 235 — DI-015 Enforcer bullet corrected per F-P135-05 architect adjudication (SPLIT enforcement): added co-enforcer BC-2.13.002 (sandbox::process ProcessBackend, .kill_on_drop(true)); clarified that tokio::time::timeout wraps sandbox execute() call in BashTool, not tokio::process::Command directly (which is spawned internally by sandbox::process). input-hash refreshed."
@@ -192,8 +193,11 @@ Propagation: No Silent Swallowing).
 - **Source:** D-170 (burst-302 human-directed Phase-1 scope expansion; ADR-026 §New Domain Invariant Recommendation — explicitly recommends this invariant)
 - **Enforcer:** `core::runnable` — JoinSet abort-on-first-error + structured
   PregolyaError with branch key identification; BC-2.01.005 (RunnableParallel concurrent
-  invocation, keyed dict output) and BC-2.01.006 (fail-fast branch failure propagation,
-  abort-remaining, no partial results) are the BC enforcement surfaces; VP-014 (proptest P1,
+  invocation, keyed dict output), BC-2.01.006 (fail-fast branch failure propagation,
+  abort-remaining, no partial results), and BC-2.01.008 (RunnableAssign mapper error
+  propagation as Err, no partial merged output — RunnableAssign wraps a RunnableParallel
+  mapper and its PC-4 enforces the same branch-failure-propagation property) are the BC
+  enforcement surfaces; VP-014 (proptest P1,
   property: `Ok(output)` → `output.as_object().len() == configured_branch_count`) is the
   verification vehicle
 - **Invariant class:** process correctness, reliability

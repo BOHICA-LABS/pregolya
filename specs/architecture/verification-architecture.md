@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.16"
+version: "2.17"
 status: active
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
-input-hash: "17951bb"
+input-hash: "0cbd2dc"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -569,9 +569,9 @@ which is rejected at BudgetConfig construction (EC-001 in BC-2.10.005).
 
 ---
 
-**VP-014 — RunnableParallel Key-Completeness** (`core::runnable::parallel`) `proptest P1 Phase 3`
+**VP-014 — RunnableParallel Key-Completeness** (`core::runnable`) `proptest P1 Phase 3`
 
-Property: For any N-branch `RunnableParallel` invocation where `invoke_dyn` returns `Ok(output)`:
+Property: For any N-branch `RunnableParallel` invocation where `invoke` returns `Ok(output)`:
 `output.as_object().unwrap().len() == N` AND the output key set exactly equals the configured
 branch key set passed to `RunnableParallel::new(steps)`. Holds for all N ≥ 0.
 
@@ -579,14 +579,14 @@ Formal statement (DI-016 key-completeness half):
 ```
 ∀ steps: IndexMap<String, Arc<dyn DynRunnable>>, ∀ input: Value:
   let N = steps.len();
-  if let Ok(output) = RunnableParallel::new(steps).invoke_dyn(input, None).await {
+  if let Ok(output) = RunnableParallel::new(steps).invoke(input, None).await {
     output.as_object().unwrap().len() == N
     ∧ output.as_object().unwrap().keys().collect::<HashSet<_>>()
         == steps.keys().collect::<HashSet<_>>()
   }
 ```
 
-Why proptest not Kani: `invoke_dyn` is an `async fn` using `JoinSet` (Tokio). Kani 0.67.0
+Why proptest not Kani: `invoke` is an `async fn` using `JoinSet` (Tokio). Kani 0.67.0
 has no native async support. proptest with identity-branch runnables (zero I/O, infallible)
 exercises the actual Tokio runtime and verifies the key-set property over random inputs.
 
@@ -667,6 +667,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.17 | 2026-08-17 | architect | burst-304 / F-P195-01 + F-P195-02 | VP-014 method-surface and module-path alignment (POL-9 propagation from VP-014.md). §VP-014 heading: `core::runnable::parallel` → `core::runnable` (canonical 2-level registry form; F-P195-02). §VP-014 property, formal statement, and rationale: `invoke_dyn` → `invoke` (three sites; F-P195-01). Canon: DynRunnable method is `invoke`/`stream`; `invoke_dyn`/`stream_dyn` belong to DynTool only (ADR-026 §Decision 5; interface-definitions.md §DynRunnable). |
 | 2.16 | 2026-08-17 | product-owner | burst-302b / D-170 | Add VP-014 (proptest P1, BC-2.01.005 + BC-2.01.006, module core::runnable::parallel, crate pregolya-core, DI-016). LCEL composition scope expansion (D-170; ADR-026). VP-014 proves the RunnableParallel key-completeness property: for any N-branch RunnableParallel where invoke_dyn returns Ok(output), output.as_object().len() == N AND output key set == configured branch key set. Why proptest not Kani: invoke_dyn is async with Tokio JoinSet fan-out; Kani 0.67.0 has no native async support. §Section Content narrative updated (thirteen→fourteen). Committed VP Obligations table: add VP-014 row; update total line (13→14, P1 7→8, proptest 2→3). Should Prove section: add VP-014 entry. New BC inputs added: BC-2.01.005, BC-2.01.006. Input-hash updated (new inputs added). |
 | 2.15 | 2026-08-16 | architect | FIX-BURST-291 / F-P1D182-01 + D-134 | Phantom §-anchor fixes in §VP-013 RESOLVED block and §VP-013 changelog row. Live-body: 'BC-2.23.005 §Category was corrected to' → 'BC-2.23.005 §Postconditions (PC-4) category corrected to'; 'BC-2.23.005 §Category = VAL' → 'BC-2.23.005 §Postconditions (PC-4) category = VAL'; 'error-taxonomy §TOOLS' → 'error-taxonomy.md §Component: TOOLS' (two sites: §VP-013 body line and §VP-013 Changelog row 2.11 '→' targets). Rationale: BC-2.23.005 has no §Category heading; category field lives in §Postconditions PC-4. error-taxonomy.md has no §TOOLS heading; real heading is §Component: TOOLS (pregolya-tools). |
 | 2.14 | 2026-07-28 | architect | FIX-BURST-280 / F-P175-A24 companion | VP-008 section redesign to remove self-proving mock rationale. Prior §VP-008 stated "Mock embeddings implementation makes the contract hold by construction" — this perpetuated the F-P175-A24 defect (harnesses certifying mock internals, not production code). Replaced with description of `validate_embedding_batch` production function approach: mocks supply raw inputs only; production validator is the assertion target. Proptest sketch updated to call `validate_embedding_batch` directly. EC-003 and EC-004 negative harnesses (VP-008-D/E) noted. MockEmbeddings::new_fixed_dim(128) self-proving sketch removed. |

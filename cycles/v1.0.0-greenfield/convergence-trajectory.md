@@ -2426,3 +2426,16 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **Convergence dim-5:** Counter **3/3 CONVERGED**. Phase-1d cascade CLOSED. BC-5.39.001 3-CLEAN satisfied. Post-D21/D23 scope-expansion re-convergence complete.
 **Convergence dim-7:** Trajectory tail →160→60→5→0→8→0→1→4→5→2→3→0→2→1→1→0→0→**0**. D-167 added.
 **NEXT:** Pre-Phase-1-gate fresh-context consistency-validator audit + input-hash drift check → human Phase-1 approval gate (D-167).
+
+---
+
+### D-170 LCEL Scope Expansion — Re-convergence Arc (from burst-302a)
+
+**Streak RESET** 3/3 CONVERGED → 0/3 (D-170; 2026-08-17). Prior 3-CLEAN on frozen anchor `1262ebe` is historical. Re-convergence required on expanded perimeter (CAP-039, DI-016, BC-2.01.005–008, VP-014, E-CORE-009/010, ADR-026).
+
+**P1D-194 (2026-08-17): NOT CLEAN.** 5 findings (2H/1M/2L). Root causes: (a) parallel-authoring error-code race (BA placeholders E-CORE-NNN/MMM, PO minted E-CORE-009/010); (b) architect method-surface slip (invoke_dyn/stream_dyn vs DynRunnable's invoke/stream); (c) module-canon 3-level vs 2-level path. burst-303 closed all 5 (D-172). Streak: 0/3 (fix-burst). NEXT: P1D-195.
+
+**P1D-195 (2026-08-18): NOT CLEAN.** 6 findings (2H/2M/1L/1OBS). All residual SIBLINGS of burst-303 per-file sweep — architecture-decision layer (ADR-005/ADR-026) and cross-cutting docs (verification-architecture, error-taxonomy) that burst-303 missed. burst-304 closed all 6 (D-173). Corpus-wide grep gate passed (4 patterns, zero live-body residual). L-184 codified [PROCESS-GAP/SWEEP-DISCIPLINE]. Streak: 0/3 (fix-burst; BC-5.39.001). NEXT: P1D-196.
+
+**Convergence dim-5 (post-D170 re-convergence):** Counter **0/3**. Re-convergence in progress on expanded LCEL perimeter (D-170/D-171). Two fix-bursts (burst-303/burst-304) have closed all findings from P1D-194 and P1D-195.
+**Convergence dim-7 (post-D170 trajectory tail):** →1(P1D-194)→fix-burst-303→6(P1D-195)→fix-burst-304. NEXT: P1D-196.
