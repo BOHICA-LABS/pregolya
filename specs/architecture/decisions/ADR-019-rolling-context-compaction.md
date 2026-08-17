@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-22"
 producer: architect
 timestamp: 2026-07-22T00:00:00Z
-version: "1.7"
+version: "1.8"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-10, SS-04]
 changelog:
+  - "1.8 (BURST-311/F-P202-01/2026-08-17): Rename four search_history-as-FTS-mechanism references → fts_search (F-P202-01 HIGH drift; fts_search is the canonical CheckpointSaver trait method per BC-2.04.008 §Description; search_history is the agent-callable Tool per BC-2.04.008 PC5). (1) Context paragraph: 'checkpoint FTS (`search_history`, BC-2.04.008)' → 'checkpoint FTS (`fts_search`, BC-2.04.008)'. (2) ConversationSnapshot struct comment: 'from checkpoint FTS (BC-2.04.008 search_history)' → 'from checkpoint FTS (BC-2.04.008 `fts_search` call)'. (3) Decision 3 step 2: '`CheckpointSaver::search_history` (BC-2.04.008)' → '`CheckpointSaver::fts_search` (BC-2.04.008)'. (4) Source/Origin BC-2.04.008 bullet: '`search_history` FTS — the mechanism' → '`fts_search` FTS (Tool wrapper: `search_history`) — the mechanism' (Tool name preserved per BC-2.04.008 PC5). BC-2.04.008 body unchanged — it is the canonical authority."
   - "1.7 (FIX-BURST-278/F-P175-D219/2026-07-28): Convert two stale future-tense `PO BC obligation` delegations to past-tense facts (search term: singular `PO BC obligation`). (1) SS-06 delegation: BC-2.06.006 authoring obligation → completed; BC-2.06.006 exists. (2) SS-10 delegation: BC-2.10.005 and BC-2.10.006 authoring obligation → completed; both BCs exist."
   - "1.6 (FIX-BURST-262/F-P161-01/2026-07-25): De-pin live-body BC version pin per TD-VSDD-091 BC-pin variant: Context paragraph — BC-2.10.003 v1.2 → BC-2.10.003."
   - "1.5 (FIX-BURST-254/2026-07-24): F-P153-02 — annotate Decision 4 trigger field with wire-serialization clarification: on the SSE wire the field serializes as the bare variant-name string (\"OnWatermark\" | \"OnMessageCount\" | \"OnTokenCount\") per BC-2.06.006 PC1 — NOT serde's default full-variant form with nested fields ({\"OnWatermark\":{\"fraction\":0.8}}). Coherence check of remaining Decision 4 fields against BC-2.06.006 PC1: run_id, parent_ids, compacted_start, compacted_end, summary_token_count, tokens_remaining_after all match exactly — no other divergence found."
@@ -49,7 +50,7 @@ and journal-entry logic. Within-session compaction is the v1 scope; cross-sessio
 integration with CAP-017 (now Wave 1 per D23 item 3) is additive.
 
 `budget_info.tokens_remaining` is already exposed to nodes mid-run (BC-2.10.001 PC3,
-`RunContext`). The checkpoint FTS (`search_history`, BC-2.04.008) can retrieve recent
+`RunContext`). The checkpoint FTS (`fts_search`, BC-2.04.008) can retrieve recent
 conversation turns. The frozen-snapshot context mutation (BC-2.15.006) injects memory
 items into the next run's system prompt. The infrastructure exists; it needs a framework
 coordination layer.
@@ -76,7 +77,7 @@ pub enum CompactionTrigger {
 }
 
 /// Read-only snapshot of recent conversation history, produced by the budget engine
-/// from checkpoint FTS (BC-2.04.008 search_history).
+/// from checkpoint FTS (BC-2.04.008 `fts_search` call).
 #[non_exhaustive]
 pub struct ConversationSnapshot {
     /// Ordered slice of (turn_index, Message) pairs selected for compaction.
@@ -136,7 +137,7 @@ per ADR-009) evaluates `CompactionTrigger` after each super-step:
    `tokens_used / ceiling >= fraction`) using `budget_info` in `RunContext`. This is a pure
    arithmetic comparison (VP-012, Kani P1, seeded burst-232). `fraction = 0.8` fires when
    ≥80% consumed; `fraction = 1.0` fires only when tokens_remaining == 0.
-2. **History snapshot:** query `CheckpointSaver::search_history` (BC-2.04.008) to retrieve
+2. **History snapshot:** query `CheckpointSaver::fts_search` (BC-2.04.008) to retrieve
    the `count` most recent turns (or all turns up to the token estimate threshold).
 3. **Compact:** call `compaction_policy.compact(&snapshot, &run_ctx).await`.
 4. **Apply:** call `CheckpointSaver::get_next_version` to obtain a new CheckpointId, then
@@ -262,7 +263,7 @@ Frozen-snapshot is a next-run-start mechanism; it cannot extend the current run.
   rolling-compaction primitive (CAP addition) or accept application-layer orchestration."
 - **BC-2.10.001/003:** existing budget governance BCs; `EvidenceJournal` and `OnCeiling`
   are the context for this extension.
-- **BC-2.04.008:** `search_history` FTS — the mechanism for building `ConversationSnapshot`.
+- **BC-2.04.008:** `fts_search` FTS (Tool wrapper: `search_history`) — the mechanism for building `ConversationSnapshot`.
 - **BC-2.15.006:** frozen-snapshot context mutation — explicitly NOT used for within-session
   compaction (see Decision 3 and Rationale).
 - **ADR-009:** precedent for `core::budget` definitions-only + `graph::budget` execution

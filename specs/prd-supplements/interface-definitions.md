@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.76"
+version: "2.77"
 status: active
 producer: product-owner
 timestamp: 2026-08-17T00:00:00Z
 phase: 1d
 changelog:
+  - "2.77 (BURST-311/F-P202-01/2026-08-17): §CheckpointSaver — add missing `fts_search` trait method and fix snapshot-assembly doc reference (F-P202-01 HIGH, BC-2.04.008 trait-method vs Tool wrapper drift). (1) Added `async fn fts_search(query: &str, config: FtsSearchConfig) -> Result<Vec<FtsSearchResult>, PregolyaError>` to the CheckpointSaver trait after `get_next_version`; doc comment covers PC3 limit guard (E-CHKPT-008/FtsLimitZero at config.limit=0), EC-002 malformed FTS5 (E-CHKPT-008 at fts_search call time), and EC-006 FTS5-unavailable (E-CHKPT-009). (2) BC anchor note: 'BC-2.04.001 through BC-2.04.007' → 'BC-2.04.001 through BC-2.04.008'; per-method precision for `fts_search` appended. (3) Gate #31 type note: heading and body extended with FtsSearchConfig and FtsSearchResult as RESOLVED types per BC-2.04.008 PC1/PC3 (pregolya-checkpoint/src/fts.rs). (4) ConversationSnapshot doc comment (~§Compaction): 'snapshot assembly from search_history' → 'snapshot assembly from `CheckpointSaver::fts_search` call' (`fts_search` is the trait method called by BudgetEngine; `search_history` is the agent-callable Tool wrapper per BC-2.04.008 PC5). TD-VSDD-060 sibling sweep: two live-body search_history-as-method sites corrected (§CheckpointSaver BC anchor note and §Compaction ConversationSnapshot doc comment); changelog entries citing search_history in v2.26/v2.23 are historical records (grandfathered per TD-VSDD-091)."
   - "2.76 (burst-303/F-P194-01+O-P194-B/2026-08-17): Two corrections to LCEL type blocks (D-170). F-P194-01: Fix invoke_dyn→invoke in RunnablePassthrough doc comment (Zero-cost identity runnable) and RunnableAssign doc comment (invoke_dyn validates → invoke(input, config) validates). The canonical DynRunnable trait uses async fn invoke/stream (not invoke_dyn/stream_dyn, which belongs to DynTool); doc comments must match the trait surface. O-P194-B: Split compound ADR-026 §Decision 1 citation in BC anchor footer — separate into four single-§ citations per POL-19/ADR-022 §Decision 5 no-chained-§ rule: §Decision 1 (IndexMap representation, key ordering), §Decision 2 (fail-fast abort), §Decision 3 (zero-cost identity), §Decision 4 (dict-input validation)."
   - "2.75 (burst-302b/D-170/2026-08-17): Add RunnableParallel, RunnablePassthrough, RunnableAssign type signatures to §Core Primitives (pregolya-core: core::runnable), after the DynRunnable/RunnableSequence BC anchor block and before §RunnableConfig Key Reference. Signatures are verbatim from ADR-026 §Interface-Definitions Additions (committed at D-170). Three blocks added: (1) RunnableParallel — IndexMap fan-out, `new(steps)` constructor; (2) RunnablePassthrough — identity with inspect_fn, `new()` / `with_inspect(f)` / `assign(pairs)` constructors; (3) RunnableAssign — `#[non_exhaustive]` struct, constructed via `RunnablePassthrough::assign`, no public constructor. BC anchors: BC-2.01.005 (RunnableParallel construction/invocation), BC-2.01.006 (branch failure/E-CORE-009), BC-2.01.007 (passthrough identity/inspect contract), BC-2.01.008 (dict augmentation/E-CORE-010/mapper-wins). ADR-026 §Decision 1–4 authority."
   - "2.74 (burst-293/F-01/ADR-023/2026-08-16): §RunnableConfig — apply architect F-01 adjudication. (1) Add `#[non_exhaustive]` to struct declaration — ADR-023 §Required Inventory is authoritative; CLAUDE.md §Code Conventions mandates `#[non_exhaustive]` on all public API surface config structs. (2) Add `#[derive(Debug, Clone)]` to struct declaration. (3) Add `impl Default for RunnableConfig` with `recursion_limit: 25`; `#[derive(Default)]` intentionally absent: `usize::default()` yields 0, which would violate the recursion_limit = 25 default semantics per BC-2.01.003 PC5 and BC-2.03.001 PC5. (4) Doc comment updated: 'All fields are optional at construction except recursion_limit' → external-construction guidance via `RunnableConfig::default()`; struct-literal construction barred outside pregolya-core by `#[non_exhaustive]` (E0639). (5) D-134 sibling sweep: BC corpus already uses `RunnableConfig::default()` throughout — BC-2.01.003 §Canonical Test Vectors TV-001 and BC-2.04.002 §Canonical Test Vectors confirmed correct; no BC changes required."
@@ -92,7 +93,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "af7b046"
+input-hash: "504f9cb"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -553,12 +554,35 @@ pub trait CheckpointSaver: Send + Sync {
     ) -> Result<CheckpointId, PregolyaError> {
         MonotonicClock::get_next_version(current, channel)
     }
+
+    /// Full-text search over checkpoint history (FTS5 index covering conversation messages,
+    /// tool call arguments, and tool results).
+    ///
+    /// Returns BM25-ranked results ordered by `rank` ascending (most relevant first).
+    /// Returns `Ok(vec![])` when no matches exist — not an error (BC-2.04.008 PC4/EC-001).
+    /// This is a pure read; it does not write to or affect the FTS5 index (BC-2.04.008 Invariants).
+    ///
+    /// # Arguments
+    /// - `query`: FTS5 query string; phrase syntax supported (e.g., `"\"Paris weather\""`).
+    ///   Malformed FTS5 syntax returns `Err(E-CHKPT-008)` at call time (BC-2.04.008 EC-002).
+    /// - `config`: `FtsSearchConfig { thread_id: Option<&str>, limit: usize }`.
+    ///   `config.limit = 0` returns `Err(E-CHKPT-008 FtsLimitZero)` (BC-2.04.008 PC6/EC-004).
+    ///
+    /// # Errors
+    /// - `Err(E-CHKPT-008)` — `FtsLimitZero` (`config.limit == 0`) or malformed FTS5 query syntax.
+    /// - `Err(E-CHKPT-009)` — `Fts5Unavailable` (FTS5 not compiled into SQLite build;
+    ///   normally caught at `CheckpointSaver::new()` construction time per BC-2.04.008 EC-006).
+    async fn fts_search(
+        &self,
+        query: &str,
+        config: FtsSearchConfig,
+    ) -> Result<Vec<FtsSearchResult>, PregolyaError>;
 }
 ```
 
-**BC anchor:** BC-2.04.001 through BC-2.04.007; `put` method: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1; `get_next_version` provided method: BC-2.04.003 PC1/PC5
+**BC anchor:** BC-2.04.001 through BC-2.04.008; `put` method: BC-2.04.002 PC4/EC-002, BC-2.04.001 EC-003, BC-2.04.006 PC2, BC-2.04.007 PC1+INV-1; `get_next_version` provided method: BC-2.04.003 PC1/PC5; `fts_search` method: BC-2.04.008 PC1/PC3–PC6, EC-001–006
 
-> **Gate #31 type note — `CheckpointConfig`, `ChannelName`, `ChannelValue`, `TaskId`, `CheckpointTuple`, `Checkpoint`, `CheckpointMetadata`, `CheckpointId`:** `CheckpointConfig` is the checkpoint-addressing config; not formally enumerated as a spec-level struct — logically derived from BC-2.04.006 triple-address invariant (`thread_id: Uuid`, `checkpoint_ns: NamespaceId`, `checkpoint_id: Option<LogicalClockId>`); flagged corpus-unresolved for architect. `ChannelName` and `ChannelValue` are defined in entities-graph.md §GraphState (`Map<ChannelName, ChannelValue>`). `TaskId` is defined in VP-001.md (Kani harness: `TaskId(i as u64)` newtype around u64). `CheckpointTuple` is defined in entities-graph.md §CheckpointTuple. `Checkpoint` and `CheckpointMetadata` are defined in entities-graph.md §Checkpoint (`Checkpoint` has fields `checkpoint_id: LogicalClockId`, `thread_id`, `checkpoint_ns: NamespaceId`, `parent_checkpoint_id: Option<LogicalClockId>`, `state: GraphState`, `metadata: CheckpointMetadata`, `pending_sends: Vec<Send>`; `CheckpointMetadata` is the inline metadata sub-type on `Checkpoint`). `CheckpointId` is a newtype over `u64` per ADR-005 / BC-2.04.003 Architecture Anchors (monotonic logical clock; `get_next_version` produces instances).
+> **Gate #31 type note — `CheckpointConfig`, `ChannelName`, `ChannelValue`, `TaskId`, `CheckpointTuple`, `Checkpoint`, `CheckpointMetadata`, `CheckpointId`, `FtsSearchConfig`, `FtsSearchResult`:** `CheckpointConfig` is the checkpoint-addressing config; not formally enumerated as a spec-level struct — logically derived from BC-2.04.006 triple-address invariant (`thread_id: Uuid`, `checkpoint_ns: NamespaceId`, `checkpoint_id: Option<LogicalClockId>`); flagged corpus-unresolved for architect. `ChannelName` and `ChannelValue` are defined in entities-graph.md §GraphState (`Map<ChannelName, ChannelValue>`). `TaskId` is defined in VP-001.md (Kani harness: `TaskId(i as u64)` newtype around u64). `CheckpointTuple` is defined in entities-graph.md §CheckpointTuple. `Checkpoint` and `CheckpointMetadata` are defined in entities-graph.md §Checkpoint (`Checkpoint` has fields `checkpoint_id: LogicalClockId`, `thread_id`, `checkpoint_ns: NamespaceId`, `parent_checkpoint_id: Option<LogicalClockId>`, `state: GraphState`, `metadata: CheckpointMetadata`, `pending_sends: Vec<Send>`; `CheckpointMetadata` is the inline metadata sub-type on `Checkpoint`). `CheckpointId` is a newtype over `u64` per ADR-005 / BC-2.04.003 Architecture Anchors (monotonic logical clock; `get_next_version` produces instances). `FtsSearchConfig` and `FtsSearchResult` are RESOLVED — defined in `pregolya-checkpoint/src/fts.rs` per BC-2.04.008 Architecture Anchors: `FtsSearchConfig { thread_id: Option<&str>, limit: usize }` (BC-2.04.008 PC3); `FtsSearchResult { checkpoint_id: CheckpointId, thread_id: String, checkpoint_ns: String, message_role: MessageRole, content_snippet: String, rank: f64 }` (BC-2.04.008 PC1; BM25 rank ascending = most relevant first).
 
 ### GuardrailHook
 
@@ -1372,7 +1396,7 @@ pub enum CompactionTrigger {
 }
 
 /// Snapshot of recent conversation turns assembled from checkpoint FTS (BC-2.04.008).
-/// BC anchor: BC-2.10.006 Step 1 (snapshot assembly from search_history).
+/// BC anchor: BC-2.10.006 Step 1 (snapshot assembly from `CheckpointSaver::fts_search` call).
 #[derive(Debug, Clone)]
 pub struct ConversationSnapshot {
     pub turns:           Vec<(usize, Message)>,

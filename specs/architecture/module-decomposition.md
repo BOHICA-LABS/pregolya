@@ -2,19 +2,20 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.42"
+version: "1.43"
 status: active
 producer: architect
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "9558579"
+input-hash: "8dba296"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.43 (burst-311/D-181/2026-08-17): D-181 fts_search canon propagation — graph::budget row: change trait-method reference from CheckpointSaver::search_history to CheckpointSaver::fts_search. Canon per D-181: fts_search is the CheckpointSaver trait method (BC-2.04.008 authoritative); search_history names only the agent-callable Tool wrapper. Full corpus grep confirmed: no other trait-method residuals in architecture-owned files. system-overview.md §Changelog FIX-BURST-276 historical entry excluded per records-lint policy (historical entries are grandfathered). Non-architecture residuals in behavioral-contracts (BC-2.04.008, BC-2.10.006) flagged for routing."
   - "1.42 (burst-292/P1D-183-F1/2026-08-16): Fix VP-012 anchor text in §VP anchors (SS-23): replace mischaracterization 'check_watermark_trigger never produces a token count exceeding the hard limit; no overflow' with the actual arithmetic property — returns true iff (tokens_remaining as f64) / (ceiling as f64) <= (1.0 - fraction); non-strict <= is load-bearing (EC-002: fraction=1.0 fires when remaining=0). Root error: check_watermark_trigger returns bool, not a token count; prior text described a non-existent overflow property. Source of truth: VP-012 §Property Statement, verification-architecture.md §VP-012, BC-2.10.005. No other VP-012 mischaracterization sites found in this file."
   - "1.41 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §xtask subcommands blockquote and list: `deny-client-new` → `check-client-timeout` (NE-04, 2 sites); `deny-expect-in-lib` → `check-no-panic` (NE-07, 2 sites); `lint-no-panic` removed from NE-07 blockquote example (was variant name, now `check-no-panic` canonical); blockquote resolution note updated from 'resolved at implementation time' to D-35 canonical-form declaration. §Provider Embeddings NE anchors: `deny-client-new` → `check-client-timeout` (1 site). Canonical `check-<subject>` form per D-35."
   - "1.40 (FIX-BURST-280-corr/F-P175-A24-followup/2026-07-28): Update `core::embeddings` description to register `validate_embedding_batch` as a `pub` free function in the module's function surface. Function is the production dimensionality validation gate for all Embeddings impls; VP-008 proptest harnesses call it directly. Visibility `pub` — cross-crate callers: pregolya-openai and pregolya-ollama provider embeddings impls. Criticality unchanged (HIGH; VP-008 proptest P1 drives the tier independently of function count)."
@@ -141,7 +142,7 @@ content provenance.
 | `graph::bsp_engine` | Super-step executor: task dispatch, `versions_seen` map, task-identity sort (`sort_by_task_id`), `reduce_super_step` (VP-001 pure-function Kani target), `apply_writes`, `InvalidUpdateError`; task-identity types: `WriteRecord { task_id, channel_name, value }`, `PregelTask`; `_reapply_writes_to_succeeded_nodes`; super-step-end `finish()` dispatch on channels (`pregolya-graph/src/bsp_engine.rs`) | CRITICAL | SS-03 |
 | `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification; per-task interrupt bookkeeping: `InterruptScratchpad`, `interrupt_counter` (per-task resume-slot index); `PreToolCallHook` trait + `ToolCallPreview` + `PreToolDecision` (Approve/Deny/Edit/PendingHumanApproval) + `ToolApprovalRequest` + `AlwaysApprovePolicy` (ADR-018); `pre_tool_dispatch` routing function — fail-closed Deny invariant (VP-011, Kani P0, seeded burst-232); `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>` hook registration (`pregolya-graph/src/hitl.rs`) | CRITICAL | SS-05 |
 | `graph::scheduler` | Outer orchestrator loop + actor-scheduler synthesis (ADR-001 Alternative B; D9 gate passed 2026-07-14); orchestrator state machine (`Idle→Dispatching→Collecting→Reducing→Checkpointing→Idle`); actor scheduler (Tokio MPSC, `Dispatch(task_id, future)` / `Completed(task_id, output)` messages); `ExecutionContext { run_id: Uuid, parent_ids: Vec<Uuid> }` propagated into nested invocations; `CompiledGraph::run()` top-level entry point; tick() Collecting phase: LLM-call / tool-invocation evaluation callsites for budget and UntrackedValue sanitization (`pregolya-graph/src/scheduler.rs`) | CRITICAL | SS-03 |
-| `graph::budget` | `BudgetEngine` dispatch (allow/escalate/deny via `BudgetPolicy` trait from pregolya-core), `EvidenceJournal`, ceiling halt/escalate — trait definitions live in `core::budget` per ADR-009 Option 3; compaction engine: evaluates `CompactionTrigger` after each super-step, builds `ConversationSnapshot` via `CheckpointSaver::search_history` (BC-2.04.008), calls `CompactionPolicy::compact()`, applies mid-run message-window mutation, appends `CompactionEvent` to `EvidenceJournal`, emits `compaction_event` streaming event (ADR-019) | HIGH | SS-10 |
+| `graph::budget` | `BudgetEngine` dispatch (allow/escalate/deny via `BudgetPolicy` trait from pregolya-core), `EvidenceJournal`, ceiling halt/escalate — trait definitions live in `core::budget` per ADR-009 Option 3; compaction engine: evaluates `CompactionTrigger` after each super-step, builds `ConversationSnapshot` via `CheckpointSaver::fts_search` (BC-2.04.008), calls `CompactionPolicy::compact()`, applies mid-run message-window mutation, appends `CompactionEvent` to `EvidenceJournal`, emits `compaction_event` streaming event (ADR-019) | HIGH | SS-10 |
 | `graph::provenance` | `ProvenanceTag` attachment at ingress boundaries, `GuardrailHook` dispatch | HIGH | SS-11 |
 | `graph::event_emitter` | `StreamEvent` enum (RunStart/Stream/End, NodeStart/End, ToolStart/End, StepEnd); streaming event emission — emission callsites inside `tick()` (NodeStart/End, ToolStart/End) and `after_tick()` (StepEnd) are in `graph::scheduler`; run_id + parent_ids correlation; `StreamEvent` base fields: `run_id: Uuid`, `parent_ids: Vec<Uuid>` (`pregolya-graph/src/event_emitter.rs`) | MEDIUM | SS-06 |
 

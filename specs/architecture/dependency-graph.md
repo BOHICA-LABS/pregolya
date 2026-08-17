@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.6"
+version: "1.7"
 status: active
 producer: architect
 timestamp: 2026-07-26T00:00:00Z
@@ -11,10 +11,11 @@ inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/prd.md
   - .factory/specs/module-criticality.md
-input-hash: "1f16b4c"
+input-hash: "f021f75"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D21, D23]
 changelog:
+  - "1.7 (BURST-311/F-P202-01/2026-08-17): Rename CheckpointSaver::search_history → CheckpointSaver::fts_search at two live-body sites (F-P202-01 HIGH drift; fts_search is the canonical CheckpointSaver trait method per BC-2.04.008 §Description; search_history is the agent-callable Tool wrapper per BC-2.04.008 PC5). (1) Crate DAG annotation: 'graph::budget uses CheckpointSaver::search_history (BC-2.04.008)' → 'graph::budget uses CheckpointSaver::fts_search (BC-2.04.008)'. (2) Edge Table pregolya-graph→pregolya-checkpoint rationale: 'uses CheckpointSaver::search_history to build' → 'uses CheckpointSaver::fts_search to build'. TD-VSDD-060 sibling sweep: the two corrected sites are the only live-body search_history-as-method occurrences in this file; changelog entry 1.6 retains the old name as historical record (grandfathered per TD-VSDD-091)."
   - "1.6 (FIX-BURST-275/F-P172b-07+08+16+17/2026-07-26): F-P172b-07 — add missing Edge Table row `pregolya-graph → pregolya-checkpoint` (runtime; graph::budget builds ConversationSnapshot via CheckpointSaver::search_history per BC-2.04.008 compaction engine; this edge exists in the Crate DAG nesting but was absent from Edge Table). F-P172b-07 sibling sweep (TD-VSDD-060) — 3-way DAG↔Edge-Table↔Build-Order diff complete: no other missing edges found; all DAG visual nesting edges verified against Edge Table; Build Order Wave 1 position ordering validates (pregolya-graph at position 8 after pregolya-checkpoint at position 5 is correct given this new runtime edge). F-P172b-16 — add `pregolya` facade crate (#1 per ARCH-INDEX Canonical Crate Roster) everywhere it was absent: Crate DAG (terminal re-export node after all impl crates), Edge Table (one row listing all 14 impl crate dependencies), Build Order position 20. F-P172b-17 — fix Crate DAG pregolya-checkpoint annotation: remove 'uses core: CheckpointSaver' (CheckpointSaver is DEFINED in pregolya-checkpoint::checkpoint::saver, not imported from core); correct to 'uses core: PregolyaError'. TD-VSDD-060 sibling sweep: Edge Table pregolya-checkpoint row rationale also corrected (CheckpointSaver removed, PregolyaError only). F-P172b-08 — update Cross-Cutting Dependencies Kani row from 3 crates to 7 crates (add pregolya-vectorstores, pregolya-core, pregolya-prompts, pregolya-tools per VP catalog expansion in D21/D23); update proptest row to add pregolya-splitters, pregolya-core, pregolya-memory (proptest P1 obligations VP-007/VP-008 + memory write-guard invariants require proptest in those crates). OBS-P172b-A — add `specs/module-criticality.md` to inputs."
   - "1.5 (FIX-BURST-273/F-P171a-06/2026-07-25): Add two missing Edge Table rows: (1) pregolya-tools → pregolya-macros (build; #[tool] proc-macro used directly in pregolya-tools implementations per ADR-020 Decision 1 / ADR-008); (2) pregolya-core → pregolya-macros (build; re-exports proc-macro items from pregolya-macros per ADR-008 Decision 2). The Crate DAG annotation and Topological Build Order already documented both edges; the Edge Table was inconsistent. Amend §Invariant: 'pregolya-core MUST NOT depend on any other pregolya crate' to add the proc-macro exception (build-time only, no runtime circular dependency)."
   - "1.4 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication propagation. Crate DAG: update pregolya-tools annotation — ActionRisk is now sourced from pregolya-core (core::action_risk), not pregolya-graph; annotation rewritten to reflect this. Edge Table: update pregolya-tools→pregolya-core rationale to include ActionRisk."
@@ -42,7 +43,7 @@ pregolya-core
   ├── pregolya-graph          (uses core: Runnable, Message, PregolyaError)
   │   ├── pregolya-checkpoint (uses core: PregolyaError; defines CheckpointSaver internally)
   │   │   └── pregolya-server (uses graph + checkpoint: runs + threads + cron)
-  │   └── [pregolya-graph → pregolya-checkpoint: graph::budget uses CheckpointSaver::search_history (BC-2.04.008)]
+  │   └── [pregolya-graph → pregolya-checkpoint: graph::budget uses CheckpointSaver::fts_search (BC-2.04.008)]
   │
   ├── pregolya-splitters      (uses core: PregolyaError only; isolated)
   │
@@ -82,7 +83,7 @@ pregolya (facade)             (re-exports public API from all impl crates; termi
 |------|----|------|-----------|
 | pregolya-graph | pregolya-core | runtime | Runnable, Message, ContentBlock, PregolyaError |
 | pregolya-graph | pregolya-sandbox | runtime | Tool execution dispatch (via trait object) |
-| pregolya-graph | pregolya-checkpoint | runtime | graph::budget uses CheckpointSaver::search_history to build ConversationSnapshot for compaction engine (BC-2.04.008 / ADR-019) |
+| pregolya-graph | pregolya-checkpoint | runtime | graph::budget uses CheckpointSaver::fts_search to build ConversationSnapshot for compaction engine (BC-2.04.008 / ADR-019) |
 | pregolya-checkpoint | pregolya-core | runtime | PregolyaError |
 | pregolya-server | pregolya-graph | runtime | Runs invoke the graph engine |
 | pregolya-server | pregolya-checkpoint | runtime | Threads/runs read/write checkpoints |

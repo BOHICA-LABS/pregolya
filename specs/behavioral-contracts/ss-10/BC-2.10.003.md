@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.12"
+version: "1.13"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,13 +27,14 @@ changelog:
   - "1.10 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — Description: `PregolyaError { component: BUDGET, category: POLICY, code: \"E-BUDGET-001\" }` had 3/5 fields (missing retry_hint, message); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3. PC5 full-field observation (all 5 fields present) already valid — no change."
   - "1.11 (F-P177-B02, burst-288, 2026-08-15): Change `steps_remaining: Option<u32>` → `Option<i64>` in PC5, PC9, Architecture Anchors §BudgetInfo struct, and Invariants explanation. Rationale: BC-2.03.001 §Description establishes execution runs to recursion_limit + 1 steps; at step recursion_limit + 1, steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (signed for same reasons)."
   - "1.12 (F-178-04, burst-289, 2026-08-16): Three phantom `BC-2.03.001 §recursion_limit_canon` anchor citations replaced with `BC-2.03.001 §Description` — the heading `##  Description` exists in BC-2.03.001 and contains the recursion_limit+1 formula; `§recursion_limit_canon` is not a heading anywhere in BC-2.03.001 (grep `^#{1,6}` confirms). Sites corrected: (a) changelog entry 1.11 rationale sentence; (b) PC9 parenthetical `(the final allowed step per …)`; (c) Invariants signed-type explanation. Behavioral content unchanged; anchor is the only correction."
+  - "1.13 (burst-311/OBS-P202-A/2026-08-17): §Edge Cases EC block reordered for ascending EC-ID file order (EC-001, EC-002, EC-003, EC-004, EC-005). EC-005 (Summarize Deny recursion) was appearing before EC-004 (Sub-agent ceiling) in the file. Blocks swapped so EC-004 precedes EC-005. EC IDs are NOT renumbered per POL-1 append-only. Behavioral content unchanged."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "d3f2d08"
+input-hash: "d9d7e07"
 extracted_from: null
 modified: []
 deprecated: null
@@ -157,14 +158,6 @@ precedence over the budget error). The run state is `failed` for both reasons. T
 `EvidenceJournal` entry for the `Deny` decision was already written (journal write precedes
 `put_writes` in the halt sequence); the journal entry survives even if checkpoint write fails.
 
-### EC-005: Summarize prompt itself triggers Deny (recursive budget exhaustion)
-**Scenario:** `on_ceiling = Summarize`; budget `Deny` received on step 3; summarize LLM
-call is issued; that call's token usage also triggers `PolicyDecision::Deny` from
-`BudgetPolicy::evaluate`.
-**Expected behavior:** The summarize LLM call result is discarded. The run transitions to
-`failed` with `Err(E-BUDGET-001 BudgetCeilingReached)` (halt semantics). No recursive
-summarize attempt. The `JournalEntry` for the original `Deny` is preserved.
-
 ### EC-004: Sub-agent run hits its ceiling; parent run continues
 **Scenario:** A nested sub-agent run has `on_ceiling = halt` and hits its Deny at 10k tokens.
 The parent run has a separate policy with a 200k ceiling (not yet reached).
@@ -172,6 +165,14 @@ The parent run has a separate policy with a 200k ceiling (not yet reached).
 node that invoked it. The parent node can choose to handle the error (log and continue),
 propagate it, or trigger its own escalation. The parent run is not automatically halted by
 the sub-agent's halt.
+
+### EC-005: Summarize prompt itself triggers Deny (recursive budget exhaustion)
+**Scenario:** `on_ceiling = Summarize`; budget `Deny` received on step 3; summarize LLM
+call is issued; that call's token usage also triggers `PolicyDecision::Deny` from
+`BudgetPolicy::evaluate`.
+**Expected behavior:** The summarize LLM call result is discarded. The run transitions to
+`failed` with `Err(E-BUDGET-001 BudgetCeilingReached)` (halt semantics). No recursive
+summarize attempt. The `JournalEntry` for the original `Deny` is preserved.
 
 ## Canonical Test Vectors
 

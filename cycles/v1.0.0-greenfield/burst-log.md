@@ -1,8 +1,9 @@
 ---
 document_type: burst-log
 level: ops
-version: "1.2"
+version: "1.3"
 changelog:
+  - "1.3 (burst-311/2026-08-17): burst-306 archive entry (5-row rolling window) + burst-311 COMPLETE entry appended"
   - "1.2 (burst-308/2026-08-17): burst-307 archive entry (5-row rolling window) + burst-308 COMPLETE entry appended"
   - "1.1 (burst-306/2026-08-17): burst-302b archive entry + burst-306 COMPLETE entry appended"
 status: in-progress
@@ -6362,3 +6363,38 @@ P1D-197 COMPLETE (2026-08-17) — CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findi
 **Decision minted:** D-180
 **Streak:** UNCHANGED 0/3 (pre-emptive fix; streak was already 0/3 from fix-burst-309; BC-5.39.001)
 **NEXT:** P1D-202 — adversary streak restart (0/3); spec perimeter frozen at 32ff285 + EXEC category + E-CORE-011 + prd.md §5 CORE fully propagated; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 114 err
+
+---
+
+## burst-306 COMPLETE — archived from Current Phase Steps (burst-311 rolling-window displacement)
+
+**Archived step row (was row 5 in Current Phase Steps; displaced when burst-311 added as row 1):**
+burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH prd.md §7 RTM 4 rows missing + §7 totals 129→133/75→79 P1 + §5b count + §2.01 header CAP-039 + §5 CORE E-CORE-009/010; F-P198-02 MED bc-authoring-plan frontmatter total_bcs 129→133 p1_count 75→79 + Summary + SS.01 + Batch-1 +4 rows + DI-016 row. PRD-layer sibling-sweep miss from burst-302b index-sync (third sibling-sweep-under-scoping instance). D-176 minted. L-185 codified. prd.md §7-RTM + bc-authoring-plan §Batch-1 landed. STREAK RESET 0/3 (BC-5.39.001). NEXT P1D-199.
+
+---
+
+## burst-311 COMPLETE (2026-08-17) — CheckpointSaver::fts_search trait-method canon (P1D-202 findings)
+
+**Burst summary:** P1D-202 adversary returned 3 findings (1H/2OBS). F-P202-01 (HIGH): Multiple spec files cited search_history as the CheckpointSaver trait method rather than fts_search. Disambiguation: fts_search is the TRAIT METHOD on CheckpointSaver; search_history is the agent-callable Tool wrapper (BC-2.04.008 PC5, exposed via search_history_tool()). Two-wave sweep: Wave-1b caught by grep gate (module-decomposition.md residual); Wave-2 closed §Preconditions item 2 + §Postconditions Step 1 in BC-2.10.006; Wave-2b closed TV-004 + VP-ref + Related-BCs cross-references. OBS-P202-A: BC-2.10.003 §Edge Cases EC block reordered ascending EC-ID order (EC-001..EC-005; behavioral content unchanged). OBS-P202-B: VP-014 §FormalInvariant aligned to Vec<(String, Arc<dyn DynRunnable>)> per BC-2.01.005 PC1 and ADR-026 §Decision 1; IndexMap is INTERNAL container. BC census UNCHANGED 133 (51/79/3). Grep gate blocked 2 incomplete-sweep commits (reinforces L-184).
+
+**Files written (specialists — working tree pre-modified):**
+- `specs/prd-supplements/interface-definitions.md` v2.77 — fts_search added to §CheckpointSaver trait method surface (architect).
+- `specs/architecture/decisions/ADR-019-*.md` v1.8 — fts_search canon aligned (architect).
+- `specs/architecture/dependency-graph.md` v1.7 — fts_search canon aligned (architect).
+- `specs/architecture/module-decomposition.md` v1.43 — Wave-1b residual closed; fts_search canon aligned (architect).
+- `specs/behavioral-contracts/ss-10/BC-2.10.006.md` v2.0 — two-wave fts_search trait-method canon sweep: Wave-2 (§Preconditions item 2 + §Postconditions Step 1) + Wave-2b (TV-004 + VP-2.10.006-A + Related-BCs ×2) (product-owner).
+- `specs/behavioral-contracts/ss-04/BC-2.04.001.md` v1.6 — Inv-5 clarified to fts_search trait method canon (product-owner).
+- `specs/behavioral-contracts/ss-10/BC-2.10.003.md` v1.13 — §Edge Cases EC block reordered ascending EC-ID order (product-owner).
+- `specs/verification-properties/VP-014.md` v1.2 — formal invariant aligned to Vec<(String, Arc<dyn DynRunnable>)>; IndexMap is internal container (architect).
+- `sidecar-learning.md` — burst-311 lessons appended (session-reviewer).
+
+**Files written (state-manager — this burst):**
+- `.factory/STATE.md` v4.90→v4.91 — burst-311 recorded; D-181 minted; streak UNCHANGED 0/3; trajectory-tail →1→4→3→3; session resume checkpoint v4.90→v4.91; Current Phase Steps rolling window (burst-311 added, burst-306 archived); Historical Content BC/VP/Architecture sections updated; Convergence Status trajectory tail updated; NEXT P1D-203.
+- `specs/behavioral-contracts/BC-INDEX.md` §Changelog — BC-2.10.006 §Preconditions/§Postconditions/TV-004, BC-2.04.001 §Invariants, BC-2.10.003 §Edge Cases; v3.52 row added.
+- `specs/verification-properties/VP-INDEX.md` §Changelog — VP-014 §FormalInvariant; v1.11 entry added.
+- `cycles/v1.0.0-greenfield/burst-log.md` — burst-306 archive + burst-311 this entry; frontmatter v1.3.
+- `cycles/v1.0.0-greenfield/session-checkpoints.md` — v4.90 checkpoint archived.
+
+**Decision minted:** D-181
+**Streak:** UNCHANGED 0/3 (OBS findings do not reset streak; streak was already 0/3; BC-5.39.001)
+**NEXT:** P1D-203 — adversary streak restart (0/3); spec perimeter frozen; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 114 err. COVERAGE NOTE: prioritize CAP H1 titles (POL-4/5) and ADR §Decision-N headings (POL-19) in P1D-203.

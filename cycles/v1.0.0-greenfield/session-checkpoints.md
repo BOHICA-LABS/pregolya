@@ -2387,3 +2387,20 @@ develop `644d1ad` — clean, PUSHED. Validator baselines: burst-304 final; 14 bl
 
 #### ARCHIVE METADATA
 Date: 2026-08-17 | Archived at: burst-306 state record (2026-08-17) | STATE.md: 4.85 → 4.86 | P1D-197 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); 0 findings; streak 2/3 ACTIVE; D-175 minted. Replaced by v4.86 (burst-306 COMPLETE; P1D-198 NOT CLEAN 2 findings; PRD-layer propagated; streak RESET 0/3; NEXT P1D-199).
+
+---
+
+### Checkpoint v4.90
+
+#### RESUME IN ONE BREATH
+
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). **burst-310 COMPLETE (2026-08-17)**: D-180 minted. E-CORE-011 propagated to prd.md §5 CORE examples row (pre-emptive; last carrier site missed by burst-309 mint sweep); E-CORE-011 carrier class fully closed corpus-wide. prd.md §5 CORE. burst-309 context: P1D-201 NOT CLEAN (3 findings 1H/1M/1L — F-P201-01 E-CORE-011 mint + F-P201-02 BC-2.20.002 phantom §DI-012 + F-P201-03 BC-2.17.001 gloss); all closed by burst-309; error-code census 113→114. Streak 0/3 (pre-emptive fix; streak already 0/3 from fix-burst-309). 133 BCs (51/79/3), 39 CAP, 16 DI, 14 VP, 26 ADR, 114 err. COVERAGE NOTE: P1D-201 adversary sampled ss-04/05/10/12/13/21 BC bodies only — deep-read obligation open for P1D-202/203. NEXT: P1D-202 (streak restart; spec perimeter frozen at 32ff285 + EXEC category + E-CORE-011 + prd.md §5 CORE fully propagated; 3-CLEAN required before Phase-1 gate closes). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### KNOWN-OPEN / DEFERRED
+- **NEXT: P1D-202** — adversary streak restart (0/3) on frozen anchor 32ff285 + EXEC category + E-CORE-011 (P1D-201 NOT CLEAN D-179; streak 0/3 fix-burst; burst-310 pre-emptive carrier fix D-180). 3-CLEAN required before Phase-1 gate closes. COVERAGE NOTE: prioritize ss-04/05/10/12/13/21 BC bodies in P1D-202/203 deep-read.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED. Validator baselines: burst-310 final; 14 blocking + 1 advisory.
+
+#### ARCHIVE METADATA
+Date: 2026-08-17 | Archived at: burst-311 state record | STATE.md: 4.90 → 4.91 | burst-310 COMPLETE; D-180 minted; E-CORE-011 carrier closed corpus-wide; streak UNCHANGED 0/3 (pre-emptive fix); NEXT P1D-202. Replaced by v4.91 (burst-311 COMPLETE; P1D-202 NOT CLEAN 3 findings 1H/2OBS; fts_search trait-method canon sweep; D-181 minted; streak UNCHANGED 0/3; NEXT P1D-203).

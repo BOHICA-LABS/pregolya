@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "de174ac"
+input-hash: "d5af117"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-04
@@ -27,6 +27,7 @@ changelog:
   - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to two adjudicated targets: (1) 'prd-supplements/interface-definitions.md §CheckpointSaver' for trait signatures (put_writes, get_tuple, list); (2) 'architecture/module-decomposition.md §pregolya-checkpoint' for checkpoint::saver row. No BC body content changed."
   - "1.4 (2026-07-22, F-P139-01a, burst-239): Add Invariant 5 — checkpoint append-only / records-never-deleted general invariant. This invariant was absent from all SS-04 BCs: BC-2.10.006 cited 'BC-2.04.001 immutability' for original-record preservation but BC-2.04.001 contained only four write-timing invariants with no explicit never-deleted property. BC-2.04.004 Inv-2 covers only fork-scoped immutability. Inv-5 here covers the general case (any in-run operation, including compaction). BC-2.10.006 Description, Invariants, and Related BCs updated to cite BC-2.04.001 Inv-5 (F-P139-01b, same burst)."
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-002 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.6 (burst-311/F-P202-01/2026-08-17): Architect adjudication applied — fts_search IS the CheckpointSaver trait method; search_history is ONLY the callable Tool wrapper (search_history_tool()). Inv-5 loose 'search_history API (BC-2.04.008)' clarified to 'fts_search trait method (BC-2.04.008; exposed to agents as the search_history Tool via search_history_tool())'. Preserves surrounding sentence intent."
 modified: []
 extracted_from: null
 deprecated: null
@@ -83,7 +84,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
    `put` or recorded via `put_writes`) is never deleted or mutated in place by any in-run
    operation, including compaction. Compaction writes a new checkpoint entry with the
    compacted window; all prior records remain in the store and are readable via the
-   `search_history` API (BC-2.04.008).
+   `fts_search` trait method (BC-2.04.008; exposed to agents as the `search_history` Tool via `search_history_tool()`).
 
 ## Edge Cases
 
