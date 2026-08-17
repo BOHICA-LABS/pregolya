@@ -6311,3 +6311,54 @@ Grepped entire `.factory/specs/` tree for `12 categor` and `12-category`. Zero l
 **Streak:** 0/3 (fix-burst; spec content changed; BC-5.39.001)
 **NEXT:** P1D-201 — adversary streak restart (0/3); spec perimeter includes EXEC 13th category; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 113 err
 **NEXT:** P1D-199 — adversary streak restart (0/3); spec perimeter frozen at 32ff285; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 113 err
+
+---
+
+## burst-309 COMPLETE (2026-08-17) — P1D-201 3-finding fix
+
+**Archived from Current Phase Steps (5-row rolling window — burst-309 displaced burst-308):**
+- burst-308 COMPLETE (2026-08-17): P1D-200 CLOSED (1H/2M/1OBS) — EXEC 13th-category propagation; D-178; L-186; streak 0/3 (fix-burst).
+- P1D-196 COMPLETE (2026-08-17): CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen anchor 32ff285; streak 0/3→1/3 STARTED; D-174.
+
+**Burst summary:** P1D-201 NOT CLEAN (1H/1M/1L). 3 findings closed:
+- F-P201-01 (HIGH): E-CORE-011 minted — INTERNAL/RunnableParallelTaskPanic (JoinSet::join_next() Err(JoinError) task-panic path, distinct from E-CORE-009 EXEC/branch-returned-Err). RetryHint Never. ADR-026 §Decision 2+§Error codes minted. BC-2.01.006 (v1.2→v1.3) PC-4/EC-003/TV-003. error-taxonomy census 113→114.
+- F-P201-02 (MED): BC-2.20.002 (v1.4→v1.5) — 4 phantom §DI-012 citations corrected to ADR-014 §Decision 6. Root cause: burst-290 index-only fix never propagated to BC body (sibling-propagation miss).
+- F-P201-03 (LOW): BC-2.17.001 (v1.4→v1.5) — DI-014 gloss completed.
+
+**Files written (product-owner — working tree pre-modified):**
+- `specs/prd-supplements/error-taxonomy.md` — E-CORE-011 INTERNAL/RunnableParallelTaskPanic minted; census 113→114.
+- `specs/architecture/decisions/ADR-026.md` §Decision 2 + §Error codes minted — E-CORE-011 entry added.
+- `specs/behavioral-contracts/ss-01/BC-2.01.006.md` v1.2→v1.3 — PC-4/EC-003/TV-003 + Error-Code-Minted row.
+- `specs/behavioral-contracts/ss-20/BC-2.20.002.md` v1.4→v1.5 — 4 phantom §DI-012 → ADR-014 §Decision 6.
+- `specs/behavioral-contracts/ss-17/BC-2.17.001.md` v1.4→v1.5 — DI-014 gloss.
+- `specs/behavioral-contracts/BC-INDEX.md` §Changelog v3.51.
+
+**Decision minted:** D-179
+**Streak:** 0/3 (fix-burst; BC-5.39.001 RESET)
+**NEXT:** P1D-202 — adversary streak restart (0/3); perimeter EXPANDED +E-CORE-011 (census 114) +ADR-026 §Error-codes-minted; 133 BCs = 51/79/3
+
+---
+
+## P1D-197 COMPLETE — archived from Current Phase Steps (burst-310 rolling-window displacement)
+
+**Archived step row (was row 5 in Current Phase Steps; displaced when burst-310 added as row 1):**
+P1D-197 COMPLETE (2026-08-17) — CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; review HEAD e42f067 (STATE-only bookkeeping; per D-143 does NOT reset streak); frozen anchor 32ff285; streak 1/3→2/3 ACTIVE. Independent different-slice deep-read covered 7 axes (error-taxonomy 113-code census, DI-001..016 orphan scan, VP-INDEX arithmetic 14, BC census 133, 5 BC bodies deep-read, LCEL BC-2.01.005/006/007/008 re-confirmed, coverage-matrix dual-row prefix disposed NOT-DEFECT). Novelty LOW. D-175 minted. NEXT P1D-198 (streak 3/3 cascade-closing).
+
+---
+
+## burst-310 COMPLETE (2026-08-17) — E-CORE-011 prd.md §5 CORE carrier propagation (pre-emptive)
+
+**Burst summary:** Pre-emptive carrier propagation fix. E-CORE-011 minted in burst-309 but its final carrier site (prd.md §5 CORE examples set) was missed by the burst-309 mint sweep. burst-310 closes the gap before P1D-202 adversary can find it. E-CORE-011 carrier class now fully closed corpus-wide: error-taxonomy + BC-2.01.006 body + ADR-026 §Error-codes-minted + BC-INDEX Error-Code-Minted + prd.md §5 CORE examples set. Confirms L-185/L-186 discipline: a new error code propagates to all carrier sites including prd.md §5 examples set.
+
+**Files written (product-owner — working tree pre-modified):**
+- `specs/prd.md` §5 CORE — E-CORE-011 INTERNAL/RunnableParallelTaskPanic row added to CORE examples set.
+- `sidecar-learning.md` — burst-310 pre-emptive fix lesson appended.
+
+**Files written (state-manager — this burst):**
+- `.factory/STATE.md` v4.89→v4.90 — burst-310 recorded; D-180 minted; streak UNCHANGED 0/3; trajectory-tail →2→1→4→3; session resume checkpoint v4.89→v4.90; Current Phase Steps rolling window (burst-310 added, P1D-197 archived); Historical Content PRD row updated; Session checkpoints v4.88→v4.89.
+- `cycles/v1.0.0-greenfield/burst-log.md` — burst-309 narrative + P1D-197 archive + burst-310 this entry; frontmatter v1.2.
+- `cycles/v1.0.0-greenfield/session-checkpoints.md` — v4.89 checkpoint archived.
+
+**Decision minted:** D-180
+**Streak:** UNCHANGED 0/3 (pre-emptive fix; streak was already 0/3 from fix-burst-309; BC-5.39.001)
+**NEXT:** P1D-202 — adversary streak restart (0/3); spec perimeter frozen at 32ff285 + EXEC category + E-CORE-011 + prd.md §5 CORE fully propagated; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 114 err

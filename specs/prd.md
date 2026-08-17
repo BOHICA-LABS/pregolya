@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.24"
+version: "1.25"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.25 (burst-310/F-P202-01/2026-08-17): §5 CORE examples row: E-CORE-011 RunnableParallelTaskPanic (INTERNAL) added to the set of CORE examples alongside E-CORE-009/010 (burst-309 mint miss — §5 was the only live-body SET enumeration that lacked E-CORE-011; all other sites enumerate E-CORE-009 and E-CORE-010 in specific per-BC contexts, not as the CORE-code set). error-taxonomy.md §CORE table (E-CORE-011 row minted burst-309) and BC-2.01.006 (E-CORE-011 in PC-4/EC-003/TV-003 since burst-309) are unchanged. No BC body or supplement needed updating — L-185/L-186 carrier discipline satisfied. POL-12 compliant (no line-cites)."
   - "v1.24 (burst-307/P1D-199/F-P199-01/2026-08-17): DI-016 enforcer mis-anchoring corrected — 006↔007 swap introduced by burst-306. §2.01 table: BC-2.01.006 DI column DI-014 → DI-014, DI-016 (RunnableParallel branch-failure DOES anchor DI-016 per di_anchors frontmatter [DI-016, DI-014]); BC-2.01.007 DI column DI-014, DI-016 → DI-014 (RunnablePassthrough identity does NOT anchor DI-016 per di_anchors frontmatter [DI-014]). DI-016 enforcer set now {BC-2.01.005, BC-2.01.006, BC-2.01.008} consistent with invariants.md and BC frontmatter source of truth (POL-46). BC-2.01.005 and BC-2.01.008 rows confirmed correct (DI-014, DI-016 — no change). §7 RTM carries no DI column — no RTM change needed."
   - "v1.23 (burst-306/F-P198-01/2026-08-17): LCEL composition scope expansion propagated to PRD layer — burst-302b index-layer sync miss (F-P198-01). §2.01 header updated to include CAP-039 (P1, Wave 1, ADR-026); CAP-039 LCEL narrative callout added. Four new BC rows added: BC-2.01.005 (RunnableParallel Construction and Concurrent Invocation, DI-014/DI-016), BC-2.01.006 (RunnableParallel Branch Failure — Fail-Fast, DI-014), BC-2.01.007 (RunnablePassthrough Identity Pass-Through, DI-014/DI-016), BC-2.01.008 (RunnableAssign Dict Augmentation, DI-014/DI-016). §5 CORE row: E-CORE-009 RunnableParallelBranchFailure + E-CORE-010 RunnableAssignNonDictInput added to examples (error-taxonomy.md census 111→113 per burst-302b/D-170). §5b BC file count 129→133. §7 RTM: four rows added (BC-2.01.005–008, CAP-039, pregolya-core, P1); totals 129→133 (51 P0 / 75→79 P1 / 3 P2). Corpus-wide count-carrier sweep: no other in-domain stale counts found — test-vectors.md, observability.md, and ARCH-INDEX.md live-body counts already correct at 133/14/16/26 from burst-302b. input-hash updated to 3e72a8e (inputs changed: capabilities-p1-p2.md added CAP-039; invariants.md added DI-016)."
   - "v1.22 (burst-299/F-P190-01/2026-08-16): §2.18 BC-2.18.004 catalog row title corrected — 'Untrusted ProvenanceTag' → 'TrustLevel::Untrusted' (POL-7 H1 parity; burst-226/ADR-015 Decision 3 TrustLevel migration residue in prd.md; BC-2.18.004 H1 is authoritative source of truth per bc_h1_is_title_source_of_truth). ProvenanceTag residue census: 2 occurrences swept — BC-2.11.001 catalog row (§2.11) is legitimate ingress-boundary provenance concept, retained unchanged; BC-2.18.004 catalog row (§2.18) was stale trust-level trigger reference, fixed. input-hash updated to 6b67fce."
@@ -544,7 +545,7 @@ Summary:
 
 | Range | Component | Level | Examples |
 |-------|-----------|-------|---------|
-| E-CORE-001–099 | pregolya-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection, E-CORE-009 RunnableParallelBranchFailure, E-CORE-010 RunnableAssignNonDictInput |
+| E-CORE-001–099 | pregolya-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection, E-CORE-009 RunnableParallelBranchFailure, E-CORE-010 RunnableAssignNonDictInput, E-CORE-011 RunnableParallelTaskPanic |
 | E-GRAPH-001–099 | pregolya-graph | crate | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
 | E-CHKPT-001–099 | pregolya-checkpoint | crate | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
 | E-SERVER-001–099 | pregolya-server | crate | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
