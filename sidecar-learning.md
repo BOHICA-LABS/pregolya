@@ -265,7 +265,11 @@ Session-end markers for the VSDD factory. Run /session-review to synthesize.
 - Session ended at 2026-08-17T11:48:45Z (awaiting /session-review)
 - Session ended at 2026-08-17T12:04:41Z (awaiting /session-review)
 - burst-304 (2026-08-18): L-184 [PROCESS-GAP] corpus-wide grep discipline for canonical-form fix-bursts (architecture-layer sibling-sweep miss class) — tagged for session-reviewer synthesis
+- burst-306 (2026-08-17): L-185 [PROCESS-GAP] count-carrier set completeness — PRD-layer carriers (prd.md §7 RTM/totals/§5b + bc-authoring-plan frontmatter/Summary/Batch) are mandatory sweep targets alongside *-INDEX files; P1D-198 found both stale from burst-302b LCEL expansion (third sibling-sweep-under-scoping instance); D-176; tagged for session-reviewer synthesis
 - Session ended at 2026-08-17T13:13:23Z (awaiting /session-review)
 - Session ended at 2026-08-17T13:21:43Z (awaiting /session-review)
 - Session ended at 2026-08-17T13:56:53Z (awaiting /session-review)
 - Session ended at 2026-08-17T14:04:53Z (awaiting /session-review)
+- Session ended at 2026-08-17T14:29:37Z (awaiting /session-review)
+- Session ended at 2026-08-17T14:38:46Z (awaiting /session-review)
+- Session ended at 2026-08-17T14:57:10Z (awaiting /session-review)

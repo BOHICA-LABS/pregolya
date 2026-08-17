@@ -1,13 +1,15 @@
 ---
 document_type: burst-log
 level: ops
-version: "1.0"
+version: "1.1"
+changelog:
+  - "1.1 (burst-306/2026-08-17): burst-302b archive entry + burst-306 COMPLETE entry appended"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T01:00:00Z
+timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "767c3c5"
+input-hash: "[live-state]"
 traces_to: STATE.md
 ---
 
@@ -6237,3 +6239,35 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Decision minted:** D-175
 **Streak:** 2/3 ACTIVE (BC-5.39.001; spec perimeter frozen at 32ff285; per D-143 STATE-only bookkeeping does NOT reset streak)
 **NEXT:** P1D-198 — adversary streak attempt 3/3 (cascade-closing); spec perimeter unchanged since 32ff285
+
+---
+
+## burst-302b COMPLETE (archived from Current Phase Steps at burst-306)
+
+**Trigger:** D-170 LCEL scope-expansion authoring fully committed.
+
+**Summary:** CAP-039+DI-016 (business-analyst), BC-2.01.005–008+VP-014+E-CORE-009/010+interface-definitions (product-owner), ADR-026 (architect, burst-302a). All artifacts committed atomically. Corpus: BC 129→133 (51 P0/79 P1/3 P2), CAP 38→39, DI 15→16, VP 13→14, errors 111→113. D-171 minted. Streak 0/3.
+
+**Output:** NEXT: P1D-194 (adversary re-pass on expanded perimeter; re-convergence toward 3-CLEAN).
+
+---
+
+## burst-306 (2026-08-17) — PRD-layer count/RTM propagation for LCEL expansion (P1D-198 fix)
+
+**Trigger:** P1D-198 adversary pass NOT CLEAN; F-P198-01 (HIGH) prd.md RTM/totals/CAP-039 stale from burst-302b LCEL expansion; F-P198-02 (MED) bc-authoring-plan.md census stale (total_bcs 129/p1_count 75 not updated to 133/79). Third instance of sibling-sweep-under-scoping class.
+
+**Files written (product-owner):**
+- `specs/prd.md` v1.23 — §7 RTM +4 BC rows (BC-2.01.005/006/007/008); §7 totals 129→133 BCs / 75→79 P1; §5b BC file count 129→133; §2.01 header +CAP-039; §5 CORE E-CORE-009/010 narrative; F-P198-01 CLOSED.
+- `specs/prd-supplements/bc-authoring-plan.md` v2.66 — frontmatter total_bcs 129→133 p1_count 75→79; Summary row; SS.01 map +CAP-039; Batch-1 +4 rows; DI-016 coverage row; 16/16 DIs confirmed; F-P198-02 CLOSED.
+
+**Files written (state-manager):**
+- `cycles/v1.0.0-greenfield/lessons.md` — L-185 count-carrier-set completeness discipline appended; frontmatter v1.1 + [live-state].
+- `cycles/v1.0.0-greenfield/session-checkpoints.md` — v4.85 checkpoint archived; frontmatter v1.1 + [live-state].
+- `cycles/v1.0.0-greenfield/burst-log.md` — burst-302b archived (5-row rolling window); burst-306 this entry; frontmatter v1.1 + [live-state].
+- `sidecar-learning.md` — burst-306 L-185 entry appended.
+- `.factory/STATE.md` v4.85 → v4.86 — burst-306 recorded; D-176 minted; streak RESET 2/3→0/3; backlog P1 P1D-198→P1D-199; Historical Content PRD v1.22→v1.23 + bc-authoring-plan v2.65→v2.66 + lessons 184→185; Phase 1 Gate tail updated with P1D-198 result + "133 BCs"; session resume checkpoint v4.85→v4.86.
+
+**Decision minted:** D-176
+**Lesson codified:** L-185
+**Streak:** RESET 0/3 (P1D-198 NOT CLEAN; BC-5.39.001)
+**NEXT:** P1D-199 — adversary streak restart (0/3); spec perimeter frozen at 32ff285; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 113 err

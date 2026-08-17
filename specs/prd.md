@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.22"
+version: "1.23"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "6b67fce"
+input-hash: "3e72a8e"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.23 (burst-306/F-P198-01/2026-08-17): LCEL composition scope expansion propagated to PRD layer — burst-302b index-layer sync miss (F-P198-01). §2.01 header updated to include CAP-039 (P1, Wave 1, ADR-026); CAP-039 LCEL narrative callout added. Four new BC rows added: BC-2.01.005 (RunnableParallel Construction and Concurrent Invocation, DI-014/DI-016), BC-2.01.006 (RunnableParallel Branch Failure — Fail-Fast, DI-014), BC-2.01.007 (RunnablePassthrough Identity Pass-Through, DI-014/DI-016), BC-2.01.008 (RunnableAssign Dict Augmentation, DI-014/DI-016). §5 CORE row: E-CORE-009 RunnableParallelBranchFailure + E-CORE-010 RunnableAssignNonDictInput added to examples (error-taxonomy.md census 111→113 per burst-302b/D-170). §5b BC file count 129→133. §7 RTM: four rows added (BC-2.01.005–008, CAP-039, pregolya-core, P1); totals 129→133 (51 P0 / 75→79 P1 / 3 P2). Corpus-wide count-carrier sweep: no other in-domain stale counts found — test-vectors.md, observability.md, and ARCH-INDEX.md live-body counts already correct at 133/14/16/26 from burst-302b. input-hash updated to 3e72a8e (inputs changed: capabilities-p1-p2.md added CAP-039; invariants.md added DI-016)."
   - "v1.22 (burst-299/F-P190-01/2026-08-16): §2.18 BC-2.18.004 catalog row title corrected — 'Untrusted ProvenanceTag' → 'TrustLevel::Untrusted' (POL-7 H1 parity; burst-226/ADR-015 Decision 3 TrustLevel migration residue in prd.md; BC-2.18.004 H1 is authoritative source of truth per bc_h1_is_title_source_of_truth). ProvenanceTag residue census: 2 occurrences swept — BC-2.11.001 catalog row (§2.11) is legitimate ingress-boundary provenance concept, retained unchanged; BC-2.18.004 catalog row (§2.18) was stale trust-level trigger reference, fixed. input-hash updated to 6b67fce."
   - "v1.21 (wave-b-tail/D-35-xtask-rename/2026-07-29): §9 NE rollup table xtask name corrections (D-80 residue). (1) NE-04 Anchor column: 'cargo xtask deny-client-new' → 'cargo xtask check-client-timeout' (canonical check-<subject> form; NE-04/DI-009 gate). (2) NE-07 Anchor column: 'deny-expect-in-lib lint' → 'check-no-panic lint' (NE-07/check-no-panic gate). TD-VSDD-060 sweep: zero additional superseded names (lint-no-timeout, lint-no-panic, deny-expect-in-lib, deny-client-new) found in live body text. Error-construction notation: sole PregolyaError { in body text (§3 Interface Definition) is CLASS0_EXEMPT (Type Schema Form — component: Component field-type listing) per ADR-010 §Error-Construction Notation Canon; zero notation violations."
   - "v1.20 (fix-burst-280-corr/F-P175-C207-prd/F-P175-C208/2026-07-28): C207 prd-side and C208 residue cleared. (1) C207: §1.5 Python runtime bullet corrected — 'one-way Python-checkpoint import tool is in scope' removed; disposition is out of v1 scope per ADR-002 (post-v1 stretch; no roster slot, no SS, no capability in closed Phase 1b architecture). (2) C208: §1.5 OCSF telemetry normalization and SEC/SOC 2 compliance semantics pending-qualifier language removed; both are definitively out of v1 scope (no SS, ADR, or capability in closed Phase 1b architecture; OCSF rationale anchored to domain-a §5 and SS-06/CAP-007 astream_events v2 taxonomy; SEC/SOC 2 rationale anchored to domain-a §4)."
@@ -172,7 +173,15 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 > All BCs carry `subsystem: SS-NN` per ARCH-INDEX.md (backfilled Phase 1b, 2026-07-14).
 > Full authoring plan: `prd-supplements/bc-authoring-plan.md`.
 
-### 2.01 Core Primitives (CAP-001, CAP-002) — P0
+### 2.01 Core Primitives (CAP-001, CAP-002, CAP-039) — P0/P1
+
+> **Burst-302b LCEL composition expansion (D-170/ADR-026).** CAP-039 adds four LCEL
+> combinators to pregolya-core (Wave 1): RunnableParallel fan-out (BC-2.01.005/006),
+> RunnablePassthrough identity (BC-2.01.007), and RunnableAssign dict augmentation
+> (BC-2.01.008). Fail-fast branch-failure propagation uses E-CORE-009; non-dict input
+> validation raises E-CORE-010. DI-016 (LCEL Composition Contracts) is the new domain
+> invariant; ADR-026 governs the implementation contract. VP-014 is the proptest P1 seed
+> for composition-output semantics.
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
@@ -180,6 +189,10 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.01.002 | Message type-safety (AiMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | DI-008 | ss-01/BC-2.01.002.md |
 | BC-2.01.003 | Runnable trait invocation — invoke, stream, batch | P0 | — | ss-01/BC-2.01.003.md |
 | BC-2.01.004 | Runnable pipe composition (A \| B = AB chain) | P0 | — | ss-01/BC-2.01.004.md |
+| BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | P1 | DI-014, DI-016 | ss-01/BC-2.01.005.md |
+| BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | P1 | DI-014 | ss-01/BC-2.01.006.md |
+| BC-2.01.007 | RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract | P1 | DI-014, DI-016 | ss-01/BC-2.01.007.md |
+| BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | P1 | DI-014, DI-016 | ss-01/BC-2.01.008.md |
 
 ### 2.02 StateGraph Definition (CAP-003) — P0
 
@@ -530,7 +543,7 @@ Summary:
 
 | Range | Component | Level | Examples |
 |-------|-----------|-------|---------|
-| E-CORE-001–099 | pregolya-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection |
+| E-CORE-001–099 | pregolya-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection, E-CORE-009 RunnableParallelBranchFailure, E-CORE-010 RunnableAssignNonDictInput |
 | E-GRAPH-001–099 | pregolya-graph | crate | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
 | E-CHKPT-001–099 | pregolya-checkpoint | crate | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
 | E-SERVER-001–099 | pregolya-server | crate | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
@@ -555,7 +568,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 ## 5b. Test Vectors
 
 > **Supplement:** `prd-supplements/test-vectors.md` — consolidated test-vector catalog
-> indexing the canonical test vectors embedded in all 129 BC files.
+> indexing the canonical test vectors embedded in all 133 BC files.
 > Primary consumers: test-writer, holdout-evaluator.
 
 ---
@@ -623,6 +636,10 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.01.002 | CAP-001 | pregolya-core | P0 | U |
 | BC-2.01.003 | CAP-002 | pregolya-core | P0 | U, I |
 | BC-2.01.004 | CAP-002 | pregolya-core | P0 | U |
+| BC-2.01.005 | CAP-039 | pregolya-core | P1 | U, I |
+| BC-2.01.006 | CAP-039 | pregolya-core | P1 | U |
+| BC-2.01.007 | CAP-039 | pregolya-core | P1 | U, P |
+| BC-2.01.008 | CAP-039 | pregolya-core | P1 | U |
 | BC-2.02.001 | CAP-003 | pregolya-graph | P0 | U |
 | BC-2.02.002 | CAP-003 | pregolya-graph | P0 | U, P |
 | BC-2.02.003 | CAP-003, R-005 | pregolya-graph | P0 | U, P |
@@ -749,7 +766,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.23.005 | CAP-037, DI-014, DI-015 | pregolya-tools | P1 | U, K |
 | BC-2.23.006 | CAP-038, DI-014 | pregolya-tools | P1 | U |
 
-**Totals:** 129 BCs — 51 P0 / 75 P1 / 3 P2
+**Totals:** 133 BCs — 51 P0 / 79 P1 / 3 P2
 
 ---
 

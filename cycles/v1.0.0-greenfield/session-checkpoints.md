@@ -1,13 +1,13 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.0"
+version: "1.1"
 status: archive
 producer: state-manager
-timestamp: 2026-07-14T01:00:00Z
+timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "fa06b80"
+input-hash: "[live-state]"
 traces_to: STATE.md
 ---
 
@@ -2368,3 +2368,22 @@ verify-no-version-pins: PASS=203+ · verify-adr-decision-refs: PASS=368+ · reco
 
 #### ARCHIVE METADATA
 Date: 2026-08-17 | Archived at: P1D-197 state record (2026-08-17) | STATE.md: 4.84 → 4.85 | P1D-197 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); 0 findings; review HEAD e42f067; frozen anchor 32ff285; streak 1/3 → 2/3 ACTIVE; D-175 minted; different-slice deep-read 7 axes all CLEAN; NEXT P1D-198
+
+---
+
+### Checkpoint v4.85
+
+#### RESUME IN ONE BREATH
+
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). **P1D-197 COMPLETE (2026-08-17)**: D-175 minted. CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; review HEAD e42f067 (STATE-only bookkeeping; per D-143 does NOT reset streak); frozen anchor 32ff285. Independent different-slice deep-read: error-taxonomy 113-code census (13 categories incl. EXEC all BC-anchored; retired tombstoned; RetryHint consistent), DI-001..016 orphan scan PASS, VP-INDEX arithmetic 14=6P0+8P1=9Kani+3proptest+2integration multi-source PASS, BC census 133 + POL-7 sample 5 PASS, 5 BC bodies deep-read PASS, LCEL BCs DI-016+E-CORE re-confirmed, cosmetic discard NOT-DEFECT. Convergence streak **2/3 ACTIVE (BC-5.39.001; D-143 STATE-only bookkeeping does NOT reset streak)**. NEXT: P1D-198 (streak 3/3 cascade-closing; spec perimeter frozen at 32ff285). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### KNOWN-OPEN / DEFERRED
+- **NEXT: P1D-198** — adversary streak attempt 3/3 (cascade-closing) on frozen anchor 32ff285. 3-CLEAN required before Phase-1 gate closes.
+- DEFER-003/DEFER-004: as recorded in STATE.md v4.85. bc-authoring-plan.md dual-changelog divergence frontmatter v2.65 / body v2.40 (backlog P4).
+- Human/vendor: E013 (default_branch), R14/R6, B1 (direnv allow), TDIV-008 (engine path_allow).
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED. Validator baselines: burst-304 final; 14 blocking + 1 advisory; verify-bc-frontmatter-schema PASS=133.
+
+#### ARCHIVE METADATA
+Date: 2026-08-17 | Archived at: burst-306 state record (2026-08-17) | STATE.md: 4.85 → 4.86 | P1D-197 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); 0 findings; streak 2/3 ACTIVE; D-175 minted. Replaced by v4.86 (burst-306 COMPLETE; P1D-198 NOT CLEAN 2 findings; PRD-layer propagated; streak RESET 0/3; NEXT P1D-199).

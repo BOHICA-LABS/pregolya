@@ -1,23 +1,24 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.65"
+version: "2.66"
 status: active
 producer: product-owner
 total_standing_gates: 37
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "714d16d"
+input-hash: "e4da046"
 traces_to: prd.md
-total_bcs: 129
+total_bcs: 133
 total_batches: 20
 p0_count: 51
-p1_count: 75
+p1_count: 79
 p2_count: 3
 changelog:
+  - "2.66 (burst-306/F-P198-02/2026-08-17): LCEL composition scope expansion propagated — burst-302b index-layer sync miss. Frontmatter: total_bcs 129→133, p1_count 75→79. Summary table: Total BCs 129→133, P1 75→79, Subsystems covered CAP-001–CAP-038 → CAP-001–CAP-039. SS.01 subsystem map: CAP-001, CAP-002 → CAP-001, CAP-002, CAP-039; priority P0 → P0/P1. Batch 1 count 8→12; four rows added: BC-2.01.005 (RunnableParallel Construction and Concurrent Invocation, CAP-039, DI-014/DI-016, Wave 1), BC-2.01.006 (RunnableParallel Branch Failure — Fail-Fast, CAP-039, DI-014, Wave 1), BC-2.01.007 (RunnablePassthrough Identity Pass-Through, CAP-039, DI-014/DI-016, Wave 1), BC-2.01.008 (RunnableAssign Dict Augmentation, CAP-039, DI-014/DI-016, Wave 1). DI coverage: DI-014 enforcer list extended with BC-2.01.005/006/007/008; DI-016 row added (enforcers: BC-2.01.005, BC-2.01.007, BC-2.01.008); coverage 15/15→16/16. Note: DI-008 enforcer list correctly omits BC-2.01.005–008 (they anchor DI-016/DI-014, not DI-008, per di_anchors frontmatter). input-hash updated to e4da046."
   - "2.65 (burst-291/D-134-cont/2026-08-16): Two phantom §-anchor citations corrected in live body text. (1) Line ~758 gate #31 text: 'ADV-P1D-PASS-24.md §WIRE-OBJECT class' → 'ADV-P1D-PASS-24.md §NEW CLASS: Wire-Object Field-Set Coherence' (real heading at line 126 of ADV-P1D-PASS-24.md; §WIRE-OBJECT matches no heading). Gate regex parses §NEW CLASS (stops at colon) → prefix-matches '## NEW CLASS: Wire-Object Field-Set Coherence' uniquely — PASS. (2) Line ~2591 batch-20 text: 'interface-definitions.md §IngressContent' → 'interface-definitions.md §GuardrailHook' (IngressContent enum is defined inline within §GuardrailHook; §IngressContent matches no heading in interface-definitions.md). TD-VSDD-060 sweep: sole §WIRE-OBJECT and sole §IngressContent occurrences in live body text."
   - "2.64 (burst-291/D-134/2026-08-16): §-anchor phantom sweep. (1) §Authoring Guidelines for Sub-Burst Agents (guideline #17-C) (4 sites): no heading §17-C exists in this file; guideline #17-C is a numbered list item within §Authoring Guidelines for Sub-Burst Agents. Corrected to §Authoring Guidelines for Sub-Burst Agents (guideline #17-C). (2) §Coverage by Criticality Tier bare self-reference (2 sites at lines 1114/1122 context): no such heading in this file; target heading lives in verification-coverage-matrix.md (architecture/); added explicit file prefix verification-coverage-matrix.md §Coverage by Criticality Tier. (3) §CRITICAL Module Security Profile (1 site): no such heading in module-criticality.md; CRITICAL security profiles are in §Per-Module Risk Assessment. Corrected to module-criticality.md §Per-Module Risk Assessment. Cross-owner: verification-coverage-matrix.md §Coverage by Criticality Tier heading validity left to architect agent."
   - "2.63 (burst-288/F-P177-D01/2026-08-15): Full §Subsystem → CAP Mapping sweep (D-134 structural remedy). All 23 rows cross-checked against ARCH-INDEX §Subsystem Registry (authoritative source). Five divergent rows corrected: SS.06 pregolya-graph → pregolya-graph, pregolya-core (ARCH-INDEX SS-06 primary crates include both); SS.11 pregolya-core/graph → pregolya-graph (ARCH-INDEX SS-11 primary crate is pregolya-graph); SS.13 pregolya-graph/sandbox → pregolya-sandbox (ARCH-INDEX SS-13 primary crate is pregolya-sandbox; pregolya-graph owns zero SS-13 modules); SS.17 all (formal verification) → xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox (ARCH-INDEX SS-17 primary crates enumerated); SS.20 pregolya-vectorstores → pregolya-core, pregolya-vectorstores (ARCH-INDEX SS-20 primary crates include both). D-135 note: these are crate-assignment routing errors; pregolya-community IS a valid roster crate (post-v1 row 8); no phantom-crate errors. Eighteen rows verified matching ARCH-INDEX: SS.01, SS.02, SS.03, SS.04, SS.05, SS.07, SS.08, SS.09, SS.10, SS.12, SS.14, SS.15, SS.16, SS.18, SS.19, SS.21, SS.22, SS.23."
@@ -57,19 +58,19 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 
 | Metric | Value |
 |--------|-------|
-| Total BCs | 129 |
+| Total BCs | 133 |
 | P0 (must-have) | 51 |
-| P1 (should-have) | 75 |
+| P1 (should-have) | 79 |
 | P2 (nice-to-have) | 3 |
 | Batches | 20 |
 | BCs per batch (max) | 9 (Batch 9 only — Step-E exception; planning cap remains 8) |
-| Subsystems covered | 23 (SS.01–SS.23, mapping CAP-001–CAP-038) |
+| Subsystems covered | 23 (SS.01–SS.23, mapping CAP-001–CAP-039) |
 
 ## Subsystem → CAP Mapping
 
 | Subsection | CAP(s) | Crate | Priority |
 |-----------|--------|-------|----------|
-| SS.01 | CAP-001, CAP-002 | pregolya-core | P0 |
+| SS.01 | CAP-001, CAP-002, CAP-039 | pregolya-core | P0/P1 |
 | SS.02 | CAP-003 | pregolya-graph | P0 |
 | SS.03 | CAP-004 | pregolya-graph | P0 |
 | SS.04 | CAP-005 | pregolya-checkpoint | P0 |
@@ -151,10 +152,11 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | DI-011 | BC-2.06.001, BC-2.06.003, BC-2.08.001, BC-2.12.007 |
 | DI-012 | BC-2.09.003, BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006, BC-2.15.005, BC-2.20.001, BC-2.20.002 |
 | DI-013 | BC-2.12.005 |
-| DI-014 | BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003, BC-2.05.007, BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.06.006, BC-2.10.005, BC-2.10.006, BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004, BC-2.23.005, BC-2.23.006 |
+| DI-014 | BC-2.01.005, BC-2.01.006, BC-2.01.007, BC-2.01.008, BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003, BC-2.05.007, BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.06.006, BC-2.10.005, BC-2.10.006, BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004, BC-2.23.005, BC-2.23.006 |
 | DI-015 | BC-2.23.005, BC-2.13.002 |
+| DI-016 | BC-2.01.005, BC-2.01.007, BC-2.01.008 |
 
-**Coverage: 15/15 DIs enforced. Zero orphan invariants.**
+**Coverage: 16/16 DIs enforced. Zero orphan invariants.**
 
 ---
 
@@ -172,7 +174,7 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 > it does not create a third build wave. Source: OBS-P45-1 (ADV-P1D-PASS-45).
 
 ### Batch 1 — Core Primitives + Error Taxonomy Foundation (P0 first principles)
-*8 BCs — SS.01 + SS.14 partial*
+*12 BCs — SS.01 + SS.14 partial (8 original P0; +4 CAP-039 LCEL P1 added burst-302b)*
 
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
@@ -180,6 +182,10 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | BC-2.01.002 | Message type-safety (AiMessage/HumanMessage/SystemMessage/ToolMessage) | P0 | CAP-001 | DI-008 | Wave 0 |
 | BC-2.01.003 | Runnable trait invocation — invoke, stream, batch | P0 | CAP-002 | — | Wave 0 |
 | BC-2.01.004 | Runnable pipe composition (A \| B = AB chain) | P0 | CAP-002 | — | Wave 0 |
+| BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | P1 | CAP-039 | DI-014, DI-016 | Wave 1 |
+| BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | P1 | CAP-039 | DI-014 | Wave 1 |
+| BC-2.01.007 | RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract | P1 | CAP-039 | DI-014, DI-016 | Wave 1 |
+| BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | P1 | CAP-039 | DI-014, DI-016 | Wave 1 |
 | BC-2.14.001 | PregolyaError 2D component × category struct with RetryHint and machine code | P0 | CAP-016 | DI-008, DI-014 | Wave 0 |
 | BC-2.14.002 | RFC-7807 compatible problem emission from PregolyaError | P0 | CAP-016 | — | Wave 0 |
 | BC-2.14.003 | All library constructors return Result; no .unwrap()/.expect()/assert! in non-test (NE-07) | P0 | CAP-016 | DI-008 | Wave 0 |
