@@ -6216,3 +6216,24 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Lesson codified:** L-184 [PROCESS-GAP / SWEEP-DISCIPLINE] corpus-wide grep discipline for canonical-form fix-bursts
 **Streak:** 0/3 (fix-burst; BC-5.39.001 — spec content changed)
 **NEXT:** P1D-196 adversary re-pass Third-slice deep-read (fresh axes not repeated from P1D-191/192): (a) NFR-catalog ↔ VP/BC arithmetic — NFR-013 map-row ↔ VP-013 ↔ BC-2.23.005 triangle closed; NFR-014 proactive entry well-formed; (b) purity-boundary-map census 34+38+12=84 matches module-decomp total 84 (D-130); (c) DI-015 bidirectionality — cited in BC §Traceability cells; BC body framing consistent with domain spec; no orphan; (d) VP-013/BC-2.23.005 risk-floor triangle — VP §Seed-BC ↔ BC §Traceability VP row ↔ BC §PC-1 all consistent; (e) StreamEvent 16-variant propagation — ADR-024 §Decision count 16 stable; no live-body contradiction in BC-2.14.001; historical changelog counts treated as audit-trail (historical-region caution); (f) BC-INDEX title/DI cross-check — 5 sampled §BC-Roster rows match H1 titles; sampled DI citations resolve. Continuity spot-checks PASS (DI-008 ss-19 CLEAN; ProvenanceTag→TrustLevel BC-2.18.002 body CLEAN). Historical-region caution applied throughout. 5 discards raised and all FALSE. Novelty ZERO. D-167. GATE: PASS 14/14. BC-5.39.001 3-CLEAN satisfied on frozen anchor 1262ebe. NEXT: pre-Phase-1-gate consistency-validator audit + input-hash drift check → human Phase-1 approval gate.
+
+---
+
+## Burst: P1D-197 State Record — burst-305 (2026-08-17)
+
+**Type:** STATE-only bookkeeping burst (no spec content changed; per D-143 does NOT reset streak)
+**Trigger:** P1D-197 adversary pass CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; streak advances 1/3 → 2/3.
+
+**Files written this burst:**
+- `cycles/v1.0.0-greenfield/adversarial-reviews/pass-197.md` — new CLEAN pass record; review HEAD e42f067; frozen anchor 32ff285; 7-axis different-slice deep-read (error-taxonomy census, DI orphan scan, VP-INDEX arithmetic multi-source, BC census + POL-7 sample, 5 BC bodies, LCEL re-confirm, cosmetic discard); 0 findings; D-175
+- `cycles/v1.0.0-greenfield/convergence-trajectory.md` — appended P1D-197 entry; updated dim-5 counter 1/3→2/3; updated dim-7 trajectory tail
+- `cycles/v1.0.0-greenfield/session-checkpoints.md` — archived v4.84 checkpoint (replaced by v4.85 in STATE.md)
+- `cycles/v1.0.0-greenfield/burst-log.md` — this entry (burst-302a archived per 5-row rolling window)
+- `.factory/STATE.md` v4.84 → v4.85 — P1D-197 recorded; D-175 minted; streak 1/3→2/3 ACTIVE; convergence counter updated to 2/3; backlog P1 advanced to P1D-198; session resume checkpoint updated to v4.85
+
+**Also archived this burst:**
+- `burst-302a COMPLETE` (oldest Current Phase Steps row) archived per 5-row rolling window rule
+
+**Decision minted:** D-175
+**Streak:** 2/3 ACTIVE (BC-5.39.001; spec perimeter frozen at 32ff285; per D-143 STATE-only bookkeeping does NOT reset streak)
+**NEXT:** P1D-198 — adversary streak attempt 3/3 (cascade-closing); spec perimeter unchanged since 32ff285

@@ -2342,3 +2342,29 @@ verify-no-version-pins: PASS=203+ · verify-adr-decision-refs: PASS=368+ · reco
 
 #### ARCHIVE METADATA
 Date: 2026-08-17 | Archived at: burst-303 state record (2026-08-17) | STATE.md: 4.81 → 4.82 | burst-303 COMPLETE: P1D-194 5-finding cascade closed (2H/1M/2L); D-172 minted; BCs BC-2.01.003/BC-2.01.004/BC-2.01.005–008 bumped (F-P194-01/02/03+O-P194-A/B); VP-014 §harness aligned; BC-INDEX §Changelog 3.49; VP-INDEX §Changelog 1.9; streak 0/3 (fix-burst; spec content changed); NEXT P1D-195
+
+---
+
+### Checkpoint v4.84 (archived at P1D-197 state record — 2026-08-17)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). **P1D-196 COMPLETE (2026-08-17)**: D-174 minted. CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen anchor 32ff285. All 5 LCEL canonical-form patterns corpus-wide CLEAN (invoke_dyn→invoke, core::runnable 2-level, E-CORE-009/010 resolved, DynRunnable<>→Arc<dyn DynRunnable>, DI-016 bidirectional). VP-INDEX 14 VPs; BC census 133. Convergence streak **1/3 STARTED (BC-5.39.001; first CLEAN on expanded LCEL perimeter; D-143 STATE-only bookkeeping does NOT reset streak)**. NEXT: P1D-197 (streak 2/3; spec perimeter frozen at 32ff285). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### KNOWN-OPEN / DEFERRED
+- **NEXT: P1D-197** — adversary streak attempt 2/3 on frozen anchor 32ff285 (P1D-196 CLEAN strict+PR-merge; D-174; streak 1/3 STARTED). 3-CLEAN required before Phase-1 gate closes.
+- ADR+non-ADR §-citation phantom class: 0 remaining (burst-291 swept; gate #14 BLOCKING).
+- verify-changelog-claim-applied WARN=15 — advisory; backlog P3.
+- 83 unlabeled test vectors (ss-04/ss-11/ss-13) — PROPOSAL pending human permission.
+- Human/vendor: E013, R14/R6, B1, TDIV-008.
+- bc-authoring-plan.md dual-changelog divergence — backlog P4.
+- DEFER-003: orphaned-agent resume procedure gap.
+- DEFER-004: PROPOSED mechanical grep-lint for canonical-form drift.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run `git -C .factory log -1 --format='%h'` for current factory-artifacts HEAD. Story worktrees: NONE. Open PRs: NONE.
+
+**Validator baselines (burst-304 final; 14 blocking + 1 advisory):**
+verify-no-version-pins: PASS=203+ · verify-adr-decision-refs: PASS=368+ · records-lint: PASS · verify-changelog-date-monotonicity: PASS=136+ (WARN=78+) · verify-changelog-date-validity: PASS · verify-enum-variant-casing: PASS · verify-signature-canon: PASS=5 · verify-error-notation-canon: PASS · verify-form-a-changelog-direction: PASS (WARN=7+) · verify-arch-anchor-resolution: PASS=133+ · verify-module-canonicality: PASS=8 · verify-bc-frontmatter-schema: PASS=133 · verify-tv-registry-count: PASS · verify-adr-anchor-citations: PASS (BLOCKING; 252 cites 0 phantom; 14 self-probes). Advisory: verify-changelog-claim-applied WARN=15+.
+
+#### ARCHIVE METADATA
+Date: 2026-08-17 | Archived at: P1D-197 state record (2026-08-17) | STATE.md: 4.84 → 4.85 | P1D-197 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); 0 findings; review HEAD e42f067; frozen anchor 32ff285; streak 1/3 → 2/3 ACTIVE; D-175 minted; different-slice deep-read 7 axes all CLEAN; NEXT P1D-198
