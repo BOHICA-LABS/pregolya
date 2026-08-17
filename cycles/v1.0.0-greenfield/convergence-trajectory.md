@@ -2400,12 +2400,13 @@ Dominant class: phantom / prohibited ADR §Named-Section citations. The `verify-
 | P1D-190 | 1 | 0 | 0/3 | NOT CLEAN; 0C/0H/1M; F-P190-01 prd §BC-2.18.004 pre-migration term; frozen HEAD 268b7dc; burst-299+300 COMPLETE; D-163/D-164 |
 | fix-burst-299+300 | — | — | 0/3 | D-163 prd §BC-2.18.004 TrustLevel::Untrusted; D-164 ProvenanceTag→TrustLevel residue class retired CORPUS-WIDE |
 | **P1D-191** | **0** | **-1** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); 0 findings; DI-008/ProvenanceTag re-verification CONFIRMED; streak 1/3 STARTED; D-165; frozen HEAD 1262ebe; 192 passes total** |
+| **P1D-192** | **0** | **0** | **2/3** | **CLEAN(strict)+CLEAN(PR-merge); 0 findings; different-slice deep-read (VP anchors, DI orphan, BC census, ADR count 25, POL-19 §Decision anchors, PROV error-taxonomy, VP-INDEX arithmetic, POL-16/17 canon) all CLEAN; streak 1/3 → 2/3; D-166; review HEAD 8655881; spec-frozen 1262ebe; 193 passes total** |
 
-**Trajectory tail at P1D-191:** →60→5→0→8→0→1→4→5→2→3→0→2→1→1→**0**
+**Trajectory tail at P1D-192:** →60→5→0→8→0→1→4→5→2→3→0→2→1→1→0→**0**
 
-**Total passes to date: 192.**
+**Total passes to date: 193.**
 
-### Convergence Assessment (updated at P1D-191)
+### Convergence Assessment (updated at P1D-192)
 
 Counter: **1/3 STREAK ACTIVE.** P1D-191 CLEAN(strict)+CLEAN(PR-merge) — streak advanced from 0/3 to 1/3.
 
@@ -2417,5 +2418,7 @@ Counter: **1/3 STREAK ACTIVE.** P1D-191 CLEAN(strict)+CLEAN(PR-merge) — streak
 
 **P1D-191 (2026-08-17): CLEAN(strict)+CLEAN(PR-merge).** ZERO findings. Mandatory re-verification axes: DI-008 attribution (all 6 SS-19 §Traceability cells CONFIRMED), ProvenanceTag→TrustLevel residue class (ADR-015 §Title, BC-2.18.002 §Architecture-Anchors + §Traceability, prd §BC-2.18.004 CONFIRMED CLEAN), DI-001..015 orphan scan (all 15 cited), VP-INDEX arithmetic (13=6P0+7P1=9Kani+2proptest+2integration), BC census (129=51+75+3). 4 discards raised and found FALSE. Streak advanced 0/3→1/3. D-165. Per D-143, the STATE-only bookkeeping commit recording this result does NOT reset the streak; spec perimeter remains frozen at 1262ebe while factory-artifacts HEAD advances.
 
-**Convergence dim-5:** Counter 1/3 ACTIVE. Next: P1D-192 (streak attempt 2/3; spec perimeter unchanged since 1262ebe).
-**Convergence dim-7:** Trajectory tail →160→60→5→0→8→0→1→4→5→2→3→0→2→1→1→0. D-165 added.
+**P1D-192 (2026-08-17): CLEAN(strict)+CLEAN(PR-merge).** ZERO findings. Different-slice deep-read coverage: VP-anchor existence (all 13 VP-INDEX §VP-Seed-Table anchor BCs resolve to real files), DI orphan scan (DI-001..015 all cited), BC census (129=51+75+3), ADR count (25 in decisions/), POL-19 §Decision anchors (ADR-015/016/018/019 Decision 3 sampled — all resolve), error-taxonomy PROV (E-PROV-001..011 all present; E-PROV-011 burst-297 fix confirmed live in BC-2.08.014), VP-INDEX arithmetic (13=6P0+7P1=9Kani+2proptest+2integration; reconciles with verification-architecture §coverage-matrix), POL-16/17 canon (BC-2.18.002 body: no live-body trust-trigger violations; all ProvenanceTag occurrences are historical changelog or structural SS-11 ingress-boundary refs). Mandatory continuity spot-checks PASS (DI-008 ss-19; ProvenanceTag→TrustLevel BC-2.18.002 body). 4 discards raised and found FALSE. Streak advanced 1/3→2/3. D-166. Per D-143, the STATE-only bookkeeping commit recording this result does NOT reset the streak; spec perimeter remains frozen at 1262ebe while factory-artifacts HEAD advances.
+
+**Convergence dim-5:** Counter 2/3 ACTIVE. Next: P1D-193 (streak attempt 3/3; cascade-closing attempt; spec perimeter unchanged since 1262ebe; one more CLEAN closes the Phase-1d cascade per D-166).
+**Convergence dim-7:** Trajectory tail →160→60→5→0→8→0→1→4→5→2→3→0→2→1→1→0→0. D-166 added.
