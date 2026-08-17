@@ -1,12 +1,13 @@
 ---
 document_type: burst-log
 level: ops
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (burst-308/2026-08-17): burst-307 archive entry (5-row rolling window) + burst-308 COMPLETE entry appended"
   - "1.1 (burst-306/2026-08-17): burst-302b archive entry + burst-306 COMPLETE entry appended"
 status: in-progress
 producer: state-manager
-timestamp: 2026-08-17T18:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -6270,4 +6271,43 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Decision minted:** D-176
 **Lesson codified:** L-185
 **Streak:** RESET 0/3 (P1D-198 NOT CLEAN; BC-5.39.001)
+
+---
+
+## burst-307 ARCHIVE (5-row rolling window — archived at burst-308)
+
+burst-307 COMPLETE (2026-08-17) — P1D-199 CLOSED (0C/1H): F-P199-01 HIGH DI-016 enforcer 006↔007 mis-anchoring (burst-306-introduced); prd.md §2.01 DI-016 column corrected from BC-2.01.007 to BC-2.01.006; bc-authoring-plan §DI-coverage {005,007,008}→{005,006,008} + §Batch-1 BC-2.01.007 plus-sign corrected; invariants.md confirmed already correct. Four-way consistency verified (prd.md §2.01 + bc-authoring-plan §DI-coverage + §Batch-1 + invariants.md). D-177 minted. All other burst-306 propagations confirmed clean by P1D-199 adversary. records-lint L10 WARN advisory (7-hex SHA in bc-authoring-plan changelog prose) non-blocking. Streak 0/3 (fix-burst; BC-5.39.001). NEXT: P1D-200 (streak restart; 133 BCs = 51/79/3; spec perimeter frozen at 32ff285).
+
+---
+
+## burst-308 (2026-08-17) — EXEC 13th error-category propagation to ADR-010/ADR-020/ADR-026/BC-2.14.001/002/VP-013/verification-architecture (P1D-200 fix)
+
+**Trigger:** P1D-200 adversary pass NOT CLEAN; F-P200-01 (HIGH) BC-2.14.001 still listed 12 categories (EXEC omitted); F-P200-02 (MED) BC-2.14.002 HTTP mapping + VP-013 + verification-architecture still referenced 12-category axis; F-P200-03 (MED) ADR-026 EXEC category message missing from §Error Codes; F-P200-04 (OBS) ADR-026 code sketch used non-canonical category form. EXEC was added as 13th error category in error-taxonomy v1.49 (burst-302b) but propagation to BC-2.14.001/002, VP-013, verification-architecture, ADR-010 §Category Axis Expansion (D26), and ADR-020 §E-TOOLS-008 adjudication was missed.
+
+**STEP 1 — Corpus-wide grep gate:**
+Grepped entire `.factory/specs/` tree for `12 categor` and `12-category`. Zero live-body residuals. All 9 grep hits are in changelog/history sections (version entries describing the 12→13 transition, or prior-burst entries that accurately cited 12 categories at their time of writing). GATE PASSED.
+
+**Files written (architect — working tree pre-modified):**
+- `specs/architecture/decisions/ADR-010-error-taxonomy-anyhow-confinement.md` v1.21 — §Category Axis Expansion (D26) section added; EXEC as 13th category enumerated; D26 supersedes the D21/D23 "12 — no new category warranted" stance (append-only).
+- `specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md` v1.3 — F-P200-03 EXEC category message in §Error Codes; F-P200-04 sketch canon updated to `Category::Exec`.
+- `specs/architecture/decisions/ADR-020-first-party-tool-library.md` v1.12 — §E-TOOLS-008 adjudication live body: '12-category canonical axis' → '13-category canonical axis'.
+- `specs/architecture/verification-architecture.md` v2.18 — §VP-013 RESOLVED block: '(not present in the 12-category axis per ADR-010)' → '(not present in the 13-category axis per ADR-010)'.
+
+**Files written (product-owner — working tree pre-modified):**
+- `specs/behavioral-contracts/ss-14/BC-2.14.001.md` v1.8 — Category axis expanded 12→13; EXEC added as 13th category to enumeration; counter updated '12 categories, unchanged' → '13 categories (EXEC added by D26)'.
+- `specs/behavioral-contracts/ss-14/BC-2.14.002.md` v1.8 — PC3 categorical table EXEC→500 (library-layer-only); VP-BC214002-02 '12 categories' → '13 categories (EXEC included)'; §Notes section added.
+- `specs/verification-properties/VP-013.md` v1.15 — §BC Contradictions Flagged RESOLVED block: '12-category axis' → '13-category axis'.
+- `sidecar-learning.md` — burst-308 L-186 entry appended.
+
+**Files written (state-manager — this burst):**
+- `specs/behavioral-contracts/BC-INDEX.md` §Changelog v3.50 — BC-2.14.001 §Category-Enum +EXEC + BC-2.14.002 §PC3 EXEC→500 + §Notes (burst-308/D-178).
+- `specs/verification-properties/VP-INDEX.md` §Changelog v1.10 — VP-013 §BC-Contradictions-Flagged 12→13-category axis (burst-308/D-178).
+- `cycles/v1.0.0-greenfield/lessons.md` v1.2 — L-186 AXIS-CARRIER propagation discipline appended.
+- `cycles/v1.0.0-greenfield/burst-log.md` — burst-307 archived (5-row rolling window); burst-308 this entry; frontmatter v1.2.
+- `.factory/STATE.md` v4.87 → v4.88 — burst-308 recorded; D-178 minted; L-186 codified; streak RESET 0/3 (fix-burst); backlog P1 P1D-200→P1D-201; Historical Content architecture + BC sections updated (burst-308 propagation), lessons 185→186; session resume checkpoint v4.87→v4.88.
+
+**Decision minted:** D-178
+**Lesson codified:** L-186
+**Streak:** 0/3 (fix-burst; spec content changed; BC-5.39.001)
+**NEXT:** P1D-201 — adversary streak restart (0/3); spec perimeter includes EXEC 13th category; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 113 err
 **NEXT:** P1D-199 — adversary streak restart (0/3); spec perimeter frozen at 32ff285; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 113 err

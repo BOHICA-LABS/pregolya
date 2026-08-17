@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.20"
+version: "1.21"
 changelog:
+  - "1.21 (burst-308/F-P200-01/2026-08-17): Category Axis Expansion D26 — adjudicate ADR-010 vs ADR-026 conflict on EXEC as 13th category. Decision: Option A — EXEC is a legitimate 13th category (none of CONCURRENCY/INTERNAL/TOOL/VAL fit 'an orchestrated branch returned an error and is being wrapped to identify which branch failed'). (1) Add §Category Axis Expansion (D26) section recording the adjudication, EXEC definition, HTTP mapping (library-layer-only, no new BC-2.14.002 row), and #[non_exhaustive] gate update requirement. (2) PregolyaError struct `category` comment: supersede '12 — unchanged' with '13 — expanded by D26 (EXEC added)'. (3) Component count summary table footer: mark 'Category axis: 12 — unchanged / No new category is warranted' as superseded-through-D23; add D26 expansion row. (4) §Rationale 'No new category was warranted for D21 or D23' — append supersession note referencing D26. POL-1 append-only applied to all three supersession sites."
   - "1.20 (burst-295/F-P186-F3/2026-08-16): Replace `(Wave TBD)` with `(Wave 1)` in §Component Axis Expansion (D23) non-exhaustive gate update requirement. pregolya-tools = SS-23; all SS-23 BCs carry wave: 1; wave is mechanically determinable in scope (CLAUDE.md Rule 6)."
   - "1.19 (burst-290/F-180-06/2026-08-16): Rewrite stale present-tense obligations in §Class 3 adjudication note (~line 178) to past-tense facts. The note formerly claimed `verify-error-notation-canon.sh` gates `FerrochainError` (not `PregolyaError`) and has no Class 3 `::new()` detection — this was the opposite of the current HEAD state. Corrected to: the hook gates `PregolyaError`; `NEW_FORM_VIOLATION` detection for `PregolyaError::new()` in prose contexts was added in burst-287. POL-17 scoping obligation was a separate spec-steward task; corrected note references the obligation as already routed rather than pending."
   - "1.18 (burst-288/F-P177-E01/2026-08-15): Add §Class 1 Scanner Contract to unambiguously specify CLASS1_VIOLATION for devops scanner. (1) Define value-expression-position indicators vs pattern-position indicators in rust fences. (2) State explicitly: adding `..` to a value-expression position occurrence does NOT resolve a Class 1 violation — `#[non_exhaustive]` bars struct-literal construction (E0639) from external crates regardless of `..`; the `..` rest-pattern applies to patterns (Class 2), not to construction literals. (3) CLASS1_VIOLATION remedy is ALWAYS `::new()` replacement. (4) Update §Mechanical Discriminator Step 2 rust-fence branch to check position type BEFORE checking `..`; value-expression position → Class 1 (regardless of `..` presence); pattern position + `..` → Class 2 VALID; pattern position + no `..` → CLASS2_MISSING_REST: add `..`."
@@ -64,7 +65,7 @@ crate. All public functions return `Result<T, PregolyaError>`.
 #[derive(Debug, Clone)]
 pub struct PregolyaError {
     pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the PregolyaError type definition (as of D23 — 17 components): CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS
-    pub category: Category,       // canonical Category Codes (12 — unchanged): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY
+    pub category: Category,       // canonical Category Codes (13 — expanded by D26: EXEC added; see §Category Axis Expansion (D26)): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY | EXEC
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     pub code: &'static str,       // "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
     pub message: String,          // Human-readable; MUST NOT contain credentials
@@ -508,7 +509,7 @@ surfaced directly (SECURITY→403, VAL→400) but no per-endpoint overrides are 
 | v1.1 (D21) | **16** | + TMPL SRLZ VS EMBED |
 | as of D23 | **17** | + TOOLS |
 
-Category axis: **12 — unchanged** (VAL AUTH RATE TIMEOUT TRANSPORT INTERNAL DURABILITY POLICY TOOL CONCURRENCY SECURITY TENANCY). No new category is warranted.
+Category axis through D23: **12** (VAL AUTH RATE TIMEOUT TRANSPORT INTERNAL DURABILITY POLICY TOOL CONCURRENCY SECURITY TENANCY). _[Superseded by D26: "No new category is warranted" was the D21/D23 position; EXEC was introduced as the 13th category by D26 (burst-308); see §Category Axis Expansion (D26).]_
 
 ## Component Axis Expansion (D23) — 16 → 17
 
@@ -570,6 +571,75 @@ The gate file must be updated in the SAME commit that adds `Component::Tools` to
 
 `Component::Tools` ↔ `TOOLS` in prose/code.
 
+## Category Axis Expansion (D26) — 12 → 13
+
+D26 (burst-308, 2026-08-17) introduced `EXEC` as the 13th error category, minted by
+ADR-026 for E-CORE-009 (RunnableParallel branch failure). The component axis is unchanged at 17.
+
+### Adjudication: why EXEC is a legitimate 13th category
+
+ADR-026 Decision 2 defines E-CORE-009 with category `EXEC` for `RunnableParallel` branch
+failures — when a concurrently-dispatched branch returns a `PregolyaError`, the parent wraps
+that error to identify WHICH branch failed. This is a new semantic: "an orchestrated child step
+returned an error." The fitness of each existing category was evaluated:
+
+| Category | Fitness for E-CORE-009 | Ruling |
+|----------|------------------------|--------|
+| CONCURRENCY | Covers concurrency-safety violations (race conditions, ordering invariants, deadlocks) | Rejected: CONCURRENCY implies the error IS a concurrency-safety problem, not that it occurred during concurrent execution. A branch may fail with a VAL error; labelling the wrapper CONCURRENCY misrepresents the cause. |
+| INTERNAL | For unexpected internal state errors / task panics (JoinError path — behavioral property 4) | Rejected: merging JoinError and branch-failure erases the semantic distinction between "task panicked" (unexpected, no client action useful) and "branch's own logic returned an error" (expected propagation with observable cause chain). |
+| TOOL | For tool-execution errors (E-TOOLS-* codes, SS-23, pregolya-tools) | Rejected: `RunnableParallel` branches are `DynRunnable` instances, not `Tool` instances in the pregolya taxonomy. |
+| VAL | Input validation failures | Rejected: branch failure is not an input constraint violation at the `RunnableParallel` level. |
+
+**Decision:** None of the 12 existing categories fits cleanly. EXEC is semantically orthogonal:
+a parent orchestration operation completed its concurrency management but a dispatched child
+returned an error. The parent wraps the child error to preserve child identity (branch key)
+in the error message. This admission follows the same appendable-ADR principle established
+by the Component Axis Expansion precedent (D21/D23).
+
+### EXEC — Execution orchestration failure
+
+**Definition:** A parent orchestration operation (fan-out, pipeline stage, subtask dispatch)
+completed its own concurrency management, but a child/branch that was dispatched returned an
+error. The parent wraps the child `PregolyaError` to identify which child failed, enabling
+callers to locate the failing branch.
+
+**Canonical code:** `E-CORE-009` — `RunnableParallelBranchFailure: branch '<key>' failed: <cause>`.
+The child's `PregolyaError` is chained via `.with_source()` for observability and retry-hint
+propagation.
+
+**RetryHint:** `RetryHint::Never` — the retry decision belongs to the child error's own
+`retry_hint` (accessible via the `source` chain). The wrapper itself does not retry.
+
+**HTTP mapping disposition:** EXEC is a **library-layer-only category**. No RFC-7807 status
+row is needed in BC-2.14.002. Like TOOL, CONCURRENCY, and DURABILITY, EXEC failures surface
+via the `to_problem()` categorical fallback (INTERNAL → 500) at the pregolya-server layer —
+the HTTP client cannot meaningfully distinguish or retry a branch-execution failure without
+inspecting the source chain, which MUST NOT be exposed in HTTP responses (DI-010 credential
+leak risk). **The PO does NOT need to add a new row to BC-2.14.002's Known-overrides
+enumeration.**
+
+### Category count summary
+
+| Version | Count | Categories |
+|---------|-------|-----------|
+| v1.0–D23 (D17 through D23) | 12 | VAL AUTH RATE TIMEOUT TRANSPORT INTERNAL DURABILITY POLICY TOOL CONCURRENCY SECURITY TENANCY |
+| D26 (burst-308) | **13** | + EXEC |
+
+### #[non_exhaustive] gate update requirement (D26)
+
+The `Category` enum is a public API surface type and carries `#[non_exhaustive]`.
+Adding `Category::Exec` (one variant) triggers the gate update rule from CLAUDE.md: **update
+ALL three locations** when the non-exhaustive gate grows:
+
+1. **Gate crate** — `tests/external/<gate-name>/`: add `Category::Exec` to the expected
+   symbol list.
+2. **Expected count constant** — update from 12 to 13.
+3. **Expected symbol list** — add `Category::Exec`.
+
+The implementer who creates `pregolya-core/src/error.rs` (Wave 1) owns this gate update.
+This change is coordinate with the Component gate update (D23: 17 → 18); both updates
+occur in the same `pregolya-core/src/error.rs` commit.
+
 ## Rationale
 
 The 2D `component × category` model provides structured, machine-readable error information
@@ -591,9 +661,12 @@ The component axis expansion rationale (D21 and D23) is recorded inline in the �
 Expansion sections above. The governing principle: new crate → new component; intra-crate logical
 subsystem → component following RETRY/CRON/BUDGET precedent; cross-crate concern → single component
 (PROV/EMBED pattern). No new category was warranted for either D21 or D23 — all error conditions
-map to existing VAL, SECURITY, TIMEOUT, or other established categories. The D23 TOOLS component
-also establishes the RetryHint::Never divergence precedent for TIMEOUT-category codes where retry
-would be futile without caller action (E-TOOLS-004 BashTimeout).
+map to existing VAL, SECURITY, TIMEOUT, or other established categories. _[Superseded in part by
+D26 (burst-308): D26 introduced EXEC as the first category expansion (RunnableParallel branch-failure
+propagation); the D21/D23 "no new category warranted" was correct for those points; D26 is the first
+case where no existing category fits cleanly; see §Category Axis Expansion (D26).]_ The D23 TOOLS
+component also establishes the RetryHint::Never divergence precedent for TIMEOUT-category codes where
+retry would be futile without caller action (E-TOOLS-004 BashTimeout).
 
 ## Consequences
 

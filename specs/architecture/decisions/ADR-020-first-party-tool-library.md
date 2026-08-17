@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-23"
 producer: architect
 timestamp: 2026-07-23T00:00:00Z
-version: "1.11"
+version: "1.12"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D23]
@@ -16,6 +16,7 @@ subsystems_affected: [SS-23]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.12 (burst-308/2026-08-17): D26 axis-expansion propagation — §E-TOOLS-008 category adjudication live body: update '12-category canonical axis' → '13-category canonical axis'. EXEC is the 13th category per ADR-010 §Category Axis Expansion (D26). Changelog entry 1.2 historical record ('confirmed via ADR-010 12-category axis') preserved unchanged. Zero live-body '12-category' axis references remain."
   - "1.11 (burst-290/F-180-05/2026-08-16): Fix phantom citation in §Decision 5 E-TOOLS-008 category adjudication (~line 239): `ADR-010 §Category axis — OS errors` → `ADR-010 §Component Axis Expansion (D23) — 16 → 17` (real heading; `§Category axis` has no matching heading in ADR-010; the category discussion for TOOLS errors lives in the Component Axis Expansion section that introduced the TOOLS component)."
   - "1.10 (F-P170-16/burst-272/2026-07-25): Fix retired symbol name in §Consequences Positive Properties VP-013 sentence — `BashTool::set_risk(ReadOnly)` and `set_risk(Low)` → `ToolConfig::override_risk(ActionRisk::ReadOnly)` and `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance. Makes ADR internally self-consistent with Decision 3 canonical form."
   - "1.9 (FIX-BURST-272/F-P170-06/2026-07-25): ActionRisk dependency adjudication. Relocate ActionRisk from pregolya-graph::hitl to pregolya-core (module core::action_risk) per F-P170-06 option-b decision, following BudgetPolicy/GuardrailHook/MemoryWriteGuard dependency-inversion precedent. (1) Context section: update ActionRisk location from pregolya-graph::hitl to pregolya-core::action_risk. (2) Decision 1 dependency graph: remove pregolya-graph row; add ActionRisk to pregolya-core line; replace unsound macro-binding escape hatch paragraph with correct dependency-inversion explanation. The macro-binding claim was incorrect: proc-macro expansions resolve in the annotated crate's namespace and cannot supply crate-level dependency edges; pregolya-macros has no pregolya-graph dependency and cannot re-export ActionRisk. No circular dependency concern: pregolya-graph already depends on pregolya-core and re-exports core::action_risk as ActionRisk."
@@ -236,7 +237,7 @@ A new error component namespace `E-TOOLS-*` is established for errors originatin
 
 **E-TOOLS-008 category adjudication (F-P133-03, burst-233):** BC-2.23.001–004 and
 BC-2.23.006 reference OS-level filesystem errors with non-canonical "I/O" and "VALIDATION"
-category labels; neither appears in the 12-category canonical axis (ADR-010). Adjudicated
+category labels; neither appears in the 13-category canonical axis (ADR-010). Adjudicated
 category: **TOOL** ("tool execution failures" per ADR-010 §Component Axis Expansion (D23) — 16 → 17 — OS errors
 discovered during file tool execution are not VAL [path is syntactically valid input], not
 SECURITY [path passed PathGuard; E-TOOLS-001 covers the confinement violation case], not

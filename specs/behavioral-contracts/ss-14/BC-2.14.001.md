@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (FIX-BURST-276-TD091/2026-07-27): TD-VSDD-091 anti-volatile-pin repair — PC8 last sentence: replace live-body sibling-artifact version pin with stable section anchor. ADR-010 §Decision (the section containing the PregolyaError struct definition and canonical #[non_exhaustive] #[derive(Debug, Clone)] form) replaces a specific version number. Sibling-sweep of this file live body: no additional version pins found. BC-INDEX split unchanged (BC-2.14.001 remains P0)."
   - "1.6 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added to PC1, TV-001 Notes, and TV-002 Notes. These three sites use struct-literal construction `PregolyaError { ... }` intentionally: (a) this BC defines the PregolyaError struct itself, not a usage BC; (b) the tests run within pregolya-core where #[non_exhaustive] does NOT bar struct-literal construction from the defining crate; (c) external callers use PregolyaError::new(...) per PC8/ADR-010 §Decision. No behavioral change. TD-VSDD-060 sibling-sweep confirmed: all other PregolyaError { ... } sites in BC-2.14.001 body are prose shorthand (ALL-CAPS) or the struct definition in PC8 — no additional in-crate construction forms present."
   - "1.7 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). Three Class 3 violations corrected: EC-001 `PregolyaError { component: CHKPT, category: DURABILITY }` — added `, ..` (CLASS3 VIOLATION, 2/5 fields); Related BCs `PregolyaError { category: VAL }` — added `, ..` (CLASS3 VIOLATION, 1/5 fields); TV-002 Input `...` field-elision marker — replaced with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). PC1, TV-001, and PC8 unchanged: PC1 and TV-001 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.6 remain accurate); PC8 `pub struct PregolyaError { … }` is EXCLUDED_DECL. No behavioral change."
+  - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). Description: EXEC added as 13th category to the enumeration; counter updated from '12 categories, unchanged' to '13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))'. TD-VSDD-060 sibling sweep: EXEC not listed elsewhere in BC-2.14.001 live body (no other Category enumeration site). No behavioral change to PregolyaError struct."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "d9b0a8f"
+input-hash: "b7931bb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,7 +52,7 @@ Every error emitted by the pregolya library crate family is an instance of `Preg
 a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE, GRAPH,
 CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET, TMPL, SRLZ, VS, EMBED, TOOLS —
 17 components as of D23) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
-INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY — 12 categories, unchanged). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
+INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY, EXEC — 13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
 a machine-readable `code` string (e.g. `E-CORE-001`), a human-readable `message` (MUST NOT
 contain credentials per DI-010), and a causal `source: Option<Arc<dyn std::error::Error + Send + Sync>>`
 (MUST NOT be exposed in HTTP responses; `Arc` not `Box` — `Arc::clone` increments the refcount

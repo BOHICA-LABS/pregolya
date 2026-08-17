@@ -11,11 +11,12 @@ date: "2026-08-17"
 subsystems_affected: ["SS-01"]
 supersedes: []
 superseded_by: null
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D_BURST302_TBD]
 changelog:
+  - "1.3 (burst-308/F-P200-03+04/2026-08-17): Two Decision 2 sketch corrections. F-P200-03 (MED): behavioral property 3 message template corrected from `\"RunnableParallel branch '<key>' failed: <cause>\"` to canonical form `\"RunnableParallelBranchFailure: branch '<key>' failed: <cause>\"` (matching §Error codes minted form and error-taxonomy E-CORE-009 message template). F-P200-04 (OBS): illustrative sketch aligned to canonical types — (1) `ErrorCategory::Internal` → `Category::Internal` (PascalCase canon per ADR-010); (2) `RetryHint::NoRetry` → `RetryHint::Never` (canonical variant name); (3) `\"E-CORE-009\"` removed from JoinError→Internal path (E-CORE-009 is the EXEC branch-failure code per BC-2.01.006 PC-4; JoinError maps to Category::Internal WITHOUT E-CORE-009); (4) E-CORE-009 wrapping added inside spawned task where branch key is in scope; (5) `\"parallel\"` string-literal → `Component::Core` (canonical Component enum path)."
   - "1.2 (burst-304/F-P195-02/F-P195-03/2026-08-17): Module-path canon + error-code placeholder resolution. F-P195-02 (HIGH): §Consequences item 2: `core::runnable::parallel` + `core::runnable::passthrough` → `core::runnable` (files parallel.rs / passthrough.rs; canonical 2-level registry form per module-decomp and ADR-026 §Decision 5). §Consequences item 4: `targeting `core::runnable::parallel`` → `targeting `core::runnable``. §VP Recommendation: `module `core::runnable::parallel`` → `module `core::runnable``. §New Domain Invariant Enforcer: `core::runnable::parallel` via JoinSet → `core::runnable` (via parallel.rs JoinSet). F-P195-03 (MED): §Decision 2 code sketch: `E-CORE-NNN` → `E-CORE-009`. §Decision 2 behavioral property 3: E-CORE-NNN → E-CORE-009 (two sites). §Error new-code placeholder section: reframed as resolved record (codes minted: E-CORE-009 EXEC / E-CORE-010 VAL). §Decision 4 doc comment + behavioral property 1a: E-CORE-MMM → E-CORE-010. §Consequences item 5: reframed as resolved (codes minted). §Interface-Definitions Additions: E-CORE-NNN → E-CORE-009; E-CORE-MMM → E-CORE-010."
   - "1.1 (burst-303/F-P194-01/2026-08-17): Fix method surface mismatch — change invoke_dyn→invoke and stream_dyn→stream everywhere in ADR body to match canonical DynRunnable trait declared in interface-definitions.md §DynRunnable and RunnableSequence. Affects: §Context (DynRunnable::invoke_dyn reference), §Decision 2 (async fn invoke_dyn code block → async fn invoke; branch.invoke_dyn → branch.invoke; stream_dyn → stream in Streaming section), §Decision 3 (behavioral properties 1 and 2), §Decision 4 (behavioral properties 1 and 2; mapper.invoke_dyn → mapper.invoke), §VP Recommendation (invoke_dyn reference). The DynTool pattern (invoke_dyn/stream_dyn) is distinct from DynRunnable (invoke/stream); confusing them is a method-surface mismatch."
   - "1.0 (burst-302/scope-expansion/2026-08-17): Initial decision — human-directed Phase-1 approval-gate scope expansion. Adds RunnableParallel, RunnablePassthrough, and RunnableAssign to pregolya v1. Five decisions: (1) RunnableParallel type representation and key ordering; (2) concurrent execution and error handling; (3) RunnablePassthrough identity semantics; (4) RunnableAssign dict augmentation; (5) pipe composition and module placement."
@@ -147,7 +148,14 @@ async fn invoke(
         let config = config.clone();
         let key = key.clone();
         set.spawn(async move {
-            let out = branch.invoke(input, config).await?;
+            // Branch failure path: wrap with E-CORE-009 (Category::Exec), identifying the branch
+            let out = branch.invoke(input, config).await.map_err(|cause| PregolyaError::new(
+                Component::Core,
+                Category::Exec,
+                RetryHint::Never,
+                "E-CORE-009",
+                format!("RunnableParallelBranchFailure: branch '{}' failed: {}", key, cause.message),
+            ))?;
             Ok::<(String, serde_json::Value), PregolyaError>((key, out))
         });
     }
@@ -157,9 +165,13 @@ async fn invoke(
     // join_next() returns tasks in completion order; re-insert in steps order below
     let mut raw: Vec<(String, serde_json::Value)> = Vec::with_capacity(self.steps.len());
     while let Some(join_result) = set.join_next().await {
-        let branch_result = join_result.map_err(|e| PregolyaError::new(
-            "parallel", ErrorCategory::Internal, RetryHint::NoRetry,
-            "E-CORE-009", format!("JoinError in RunnableParallel: {e}"),
+        // JoinError (task panic): Category::Internal; NOT E-CORE-009 (per BC-2.01.006 PC-4)
+        let branch_result = join_result.map_err(|je| PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-NNN", // existing CORE INTERNAL code per BC-2.01.006 PC-4; not E-CORE-009
+            format!("RunnableParallel task panic: {je}"),
         ))??;
         raw.push(branch_result);
     }
@@ -184,7 +196,7 @@ form. Key behavioral properties:
    `set.abort_all()` to cancel remaining in-flight branches; return the error
    immediately. No partial result dictionary is produced.
 3. Error wraps the failing branch's key in the message:
-   `PregolyaError { category: EXEC, code: E-CORE-009, message: "RunnableParallel branch '<key>' failed: <cause>", .. }`.
+   `PregolyaError { category: EXEC, code: E-CORE-009, message: "RunnableParallelBranchFailure: branch '<key>' failed: <cause>", .. }`.
    Minted as `E-CORE-009` in `error-taxonomy.md` (burst-302b/BC-2.01.006 authoring).
 4. JoinError (tokio task panic) maps to `PregolyaError { category: Internal, .. }` per
    ADR-010 §Class 1.

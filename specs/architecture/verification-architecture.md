@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.17"
+version: "2.18"
 status: active
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
-input-hash: "0cbd2dc"
+input-hash: "41a2095"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -614,7 +614,7 @@ Formal statement:
 
 **RESOLVED (burst-232, 2026-07-22; casing corrected FIX-BURST-270):** BC-2.23.005 §Postconditions (PC-4) category corrected to `Category::Val`
 (same burst that seeded VP-013). The prior `Category::CONFIGURATION` label was non-canonical
-(not present in the 12-category axis per ADR-010). BC-2.23.005 §Postconditions (PC-4) category = VAL (taxonomy code), Rust identifier = `Category::Val`, consistent with
+(not present in the 13-category axis per ADR-010). BC-2.23.005 §Postconditions (PC-4) category = VAL (taxonomy code), Rust identifier = `Category::Val`, consistent with
 error-taxonomy.md §Component: TOOLS and this VP harness. No active contradictions.
 
 **Kani harness:** See `VP-013.md` §Proof Harness Skeleton for the complete three-harness set
@@ -667,6 +667,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.18 | 2026-08-17 | architect | burst-308 / F-P200-02 | Category-axis reference correction in §VP-013 RESOLVED block. "(not present in the 12-category axis per ADR-010)" → "(not present in the 13-category axis per ADR-010)". Rationale: ADR-010 §Category Axis Expansion (D26) expanded the category axis from 12 to 13 (EXEC added) in this burst; CONFIGURATION has never been a valid category, pre- or post-D26 expansion. |
 | 2.17 | 2026-08-17 | architect | burst-304 / F-P195-01 + F-P195-02 | VP-014 method-surface and module-path alignment (POL-9 propagation from VP-014.md). §VP-014 heading: `core::runnable::parallel` → `core::runnable` (canonical 2-level registry form; F-P195-02). §VP-014 property, formal statement, and rationale: `invoke_dyn` → `invoke` (three sites; F-P195-01). Canon: DynRunnable method is `invoke`/`stream`; `invoke_dyn`/`stream_dyn` belong to DynTool only (ADR-026 §Decision 5; interface-definitions.md §DynRunnable). |
 | 2.16 | 2026-08-17 | product-owner | burst-302b / D-170 | Add VP-014 (proptest P1, BC-2.01.005 + BC-2.01.006, module core::runnable::parallel, crate pregolya-core, DI-016). LCEL composition scope expansion (D-170; ADR-026). VP-014 proves the RunnableParallel key-completeness property: for any N-branch RunnableParallel where invoke_dyn returns Ok(output), output.as_object().len() == N AND output key set == configured branch key set. Why proptest not Kani: invoke_dyn is async with Tokio JoinSet fan-out; Kani 0.67.0 has no native async support. §Section Content narrative updated (thirteen→fourteen). Committed VP Obligations table: add VP-014 row; update total line (13→14, P1 7→8, proptest 2→3). Should Prove section: add VP-014 entry. New BC inputs added: BC-2.01.005, BC-2.01.006. Input-hash updated (new inputs added). |
 | 2.15 | 2026-08-16 | architect | FIX-BURST-291 / F-P1D182-01 + D-134 | Phantom §-anchor fixes in §VP-013 RESOLVED block and §VP-013 changelog row. Live-body: 'BC-2.23.005 §Category was corrected to' → 'BC-2.23.005 §Postconditions (PC-4) category corrected to'; 'BC-2.23.005 §Category = VAL' → 'BC-2.23.005 §Postconditions (PC-4) category = VAL'; 'error-taxonomy §TOOLS' → 'error-taxonomy.md §Component: TOOLS' (two sites: §VP-013 body line and §VP-013 Changelog row 2.11 '→' targets). Rationale: BC-2.23.005 has no §Category heading; category field lives in §Postconditions PC-4. error-taxonomy.md has no §TOOLS heading; real heading is §Component: TOOLS (pregolya-tools). |

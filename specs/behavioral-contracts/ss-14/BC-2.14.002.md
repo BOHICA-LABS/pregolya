@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ changelog:
   - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added above TV table. TV-001/TV-002/TV-005 use ALL-CAPS prose shorthand notation (`component: CORE, category: VAL`, etc.) which is BC-2.14.001 rendering convention for table cells — NOT compilable Rust. Actual test construction uses PregolyaError::new(...). No behavioral change."
   - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: TV-005 Input `PregolyaError { category: INTERNAL, ... }` — replaced `...` with `..`. TV-001 and TV-002 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.5 remain accurate). No behavioral change."
   - "1.7 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): Remove phantom §Named-Section anchors in PC3 Known-overrides block. Nine `interface-definitions.md §HTTP Status Codes NNN row` references used row-number qualifiers as part of the §-anchor name (e.g., `§HTTP Status Codes 404 row`) — but the actual section heading is `§HTTP Status Codes`; row numbers are not headings. Fixed by parenthesizing each row qualifier: `§HTTP Status Codes (404 row)`, `§HTTP Status Codes (409 row)`, `§HTTP Status Codes (422 row)`, `§HTTP Status Codes (503 row)`, `§HTTP Status Codes (404 + 422 rows)`. Nine sites corrected; no behavioral change."
+  - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). PC3 categorical table: `Category::Exec → 500` added as 13th entry (library-layer-only; INTERNAL-tier fallback at pregolya-server). VP-BC214002-02 description: '12 categories' → '13 categories (EXEC included; no category returns 200)'. §Notes section added: EXEC library-layer-only disposition; no Known-overrides row per architect D26 decision; parameterized test accepts EXEC→500 via INTERNAL-tier fallback. No behavioral change to RFC-7807 emission."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "d9b0a8f"
+input-hash: "b7931bb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -81,6 +82,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    - `Category::Durability` → 500
    - `Category::Internal` → 500
    - `Category::Tool` → 422
+   - `Category::Exec` → 500 *(library-layer-only; INTERNAL-tier fallback at pregolya-server per ADR-010 §Category Axis Expansion (D26); no Known-overrides row)*
 
    **Per-endpoint status overrides (F-P25-01 — OBS-1 carve-out):** A resource BC may specify
    a status code that differs from the categorical default above. The per-endpoint status takes
@@ -197,7 +199,11 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-BC214002-01 | `ProblemDetail` output is valid RFC-7807 JSON (type_uri is a URI, title is a string, detail is present) | Unit test + JSON schema validation | Wave 0 |
-| VP-BC214002-02 | HTTP status code mapping covers all 12 categories (no category returns 200) | Parameterized unit test over Category enum variants | Wave 0 |
+| VP-BC214002-02 | HTTP status code mapping covers all 13 categories (EXEC included; no category returns 200) | Parameterized unit test over Category enum variants | Wave 0 |
+
+## Notes
+
+- **EXEC category (D26):** `Category::Exec` is a library-layer-only error category added by D26 per ADR-010 §Category Axis Expansion (D26). At the `pregolya-server` HTTP layer, `EXEC` errors receive the categorical fallback `INTERNAL → 500`; there is no dedicated Known-overrides row for `EXEC` in PC3. The parameterized test (VP-BC214002-02) must map `Category::Exec` to 500 via the INTERNAL-tier fallback — `EXEC` does not return 200 and the VP passes for this variant.
 
 ## Related BCs
 
