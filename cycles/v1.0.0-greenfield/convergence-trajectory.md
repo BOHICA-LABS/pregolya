@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "6af4d86"
+input-hash: "3775431"
 traces_to: STATE.md
 ---
 
@@ -2401,14 +2401,15 @@ Dominant class: phantom / prohibited ADR §Named-Section citations. The `verify-
 | fix-burst-299+300 | — | — | 0/3 | D-163 prd §BC-2.18.004 TrustLevel::Untrusted; D-164 ProvenanceTag→TrustLevel residue class retired CORPUS-WIDE |
 | **P1D-191** | **0** | **-1** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); 0 findings; DI-008/ProvenanceTag re-verification CONFIRMED; streak 1/3 STARTED; D-165; frozen HEAD 1262ebe; 192 passes total** |
 | **P1D-192** | **0** | **0** | **2/3** | **CLEAN(strict)+CLEAN(PR-merge); 0 findings; different-slice deep-read (VP anchors, DI orphan, BC census, ADR count 25, POL-19 §Decision anchors, PROV error-taxonomy, VP-INDEX arithmetic, POL-16/17 canon) all CLEAN; streak 1/3 → 2/3; D-166; review HEAD 8655881; spec-frozen 1262ebe; 193 passes total** |
+| **P1D-193** | **0** | **0** | **3/3 CONVERGED** | **CLEAN(strict)+CLEAN(PR-merge); 0 findings; third-slice deep-read (NFR-catalog ↔ VP/BC arithmetic, purity-boundary-map census 84=34+38+12, DI-015 bidirectionality, VP-013/BC-2.23.005 risk-floor triangle, StreamEvent 16-variant propagation, BC-INDEX title/DI cross-check) all CLEAN; historical-region caution applied; novelty ZERO; streak 2/3 → 3/3 CONVERGED; D-167; Phase-1d cascade CLOSED; review HEAD 5c4a961; spec-frozen 1262ebe; 194 passes total** |
 
-**Trajectory tail at P1D-192:** →60→5→0→8→0→1→4→5→2→3→0→2→1→1→0→**0**
+**Trajectory tail at P1D-193:** →60→5→0→8→0→1→4→5→2→3→0→2→1→1→0→0→**0**
 
-**Total passes to date: 193.**
+**Total passes to date: 194.**
 
-### Convergence Assessment (updated at P1D-192)
+### Convergence Assessment (updated at P1D-193 — CASCADE CLOSED)
 
-Counter: **1/3 STREAK ACTIVE.** P1D-191 CLEAN(strict)+CLEAN(PR-merge) — streak advanced from 0/3 to 1/3.
+Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193 all CLEAN(strict)+CLEAN(PR-merge) on frozen spec anchor `1262ebe`. BC-5.39.001 3-CLEAN protocol satisfied. Post-D21/D23 scope-expansion re-convergence complete after ~190 passes.
 
 **P1D-182 through P1D-186 (2026-08-16): Five consecutive NOT CLEAN passes.** New finding classes: phantom BC-target §Category anchor (P1D-182); ADR-025 S1-omission + reference-drift (P1D-183); cross-ADR content-contradiction (P1D-184); DI-008 attribution contradiction in BC-2.19.004 + BC-2.01.003 placeholder (P1D-185); ferroctmp brand-residue class (P1D-186). Each closed by the corresponding fix-burst.
 
@@ -2420,5 +2421,8 @@ Counter: **1/3 STREAK ACTIVE.** P1D-191 CLEAN(strict)+CLEAN(PR-merge) — streak
 
 **P1D-192 (2026-08-17): CLEAN(strict)+CLEAN(PR-merge).** ZERO findings. Different-slice deep-read coverage: VP-anchor existence (all 13 VP-INDEX §VP-Seed-Table anchor BCs resolve to real files), DI orphan scan (DI-001..015 all cited), BC census (129=51+75+3), ADR count (25 in decisions/), POL-19 §Decision anchors (ADR-015/016/018/019 Decision 3 sampled — all resolve), error-taxonomy PROV (E-PROV-001..011 all present; E-PROV-011 burst-297 fix confirmed live in BC-2.08.014), VP-INDEX arithmetic (13=6P0+7P1=9Kani+2proptest+2integration; reconciles with verification-architecture §coverage-matrix), POL-16/17 canon (BC-2.18.002 body: no live-body trust-trigger violations; all ProvenanceTag occurrences are historical changelog or structural SS-11 ingress-boundary refs). Mandatory continuity spot-checks PASS (DI-008 ss-19; ProvenanceTag→TrustLevel BC-2.18.002 body). 4 discards raised and found FALSE. Streak advanced 1/3→2/3. D-166. Per D-143, the STATE-only bookkeeping commit recording this result does NOT reset the streak; spec perimeter remains frozen at 1262ebe while factory-artifacts HEAD advances.
 
-**Convergence dim-5:** Counter 2/3 ACTIVE. Next: P1D-193 (streak attempt 3/3; cascade-closing attempt; spec perimeter unchanged since 1262ebe; one more CLEAN closes the Phase-1d cascade per D-166).
-**Convergence dim-7:** Trajectory tail →160→60→5→0→8→0→1→4→5→2→3→0→2→1→1→0→0. D-166 added.
+**P1D-193 (2026-08-17): CLEAN(strict)+CLEAN(PR-merge). CASCADE CLOSED 3/3.** ZERO findings. Third-slice deep-read coverage (fresh axes not repeated from P1D-191 or P1D-192): (a) NFR-catalog ↔ VP/BC arithmetic — NFR-013 map-row cites VP-013; VP-013 §Seed-BC targets BC-2.23.005; BC-2.23.005 §Traceability cites both; triangle closed; NFR-014 proactive entry well-formed; (b) purity-boundary-map census 34+38+12=84 matches module-decomp total 84; (c) DI-015 bidirectionality — cited in BC §Traceability cells; BC body framing consistent with domain spec DI-015 wording; no orphan; (d) VP-013/BC-2.23.005 risk-floor triangle — VP §Seed-BC ↔ BC §Traceability VP row ↔ BC §PC-1 risk-floor prose all consistent; (e) StreamEvent 16-variant propagation — ADR-024 §Decision count 16 stable; no live-body contradiction in BC-2.14.001; pre-burst-288 counts in changelog/audit-trail classified as historical-region (not findings); (f) BC-INDEX title/DI cross-check — 5 sampled §BC-Roster rows match H1 titles in source files; sampled DI citations resolve. Mandatory continuity spot-checks PASS (DI-008 ss-19; ProvenanceTag→TrustLevel BC-2.18.002 body). Historical-region caution applied throughout. 5 discards raised and found FALSE. Novelty ZERO. Streak advanced 2/3→3/3. D-167. Phase-1d adversarial cascade CLOSED. BC-5.39.001 3-CLEAN satisfied on frozen anchor 1262ebe.
+
+**Convergence dim-5:** Counter **3/3 CONVERGED**. Phase-1d cascade CLOSED. BC-5.39.001 3-CLEAN satisfied. Post-D21/D23 scope-expansion re-convergence complete.
+**Convergence dim-7:** Trajectory tail →160→60→5→0→8→0→1→4→5→2→3→0→2→1→1→0→0→**0**. D-167 added.
+**NEXT:** Pre-Phase-1-gate fresh-context consistency-validator audit + input-hash drift check → human Phase-1 approval gate (D-167).

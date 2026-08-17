@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "77b6eba"
+input-hash: "fa06b80"
 traces_to: STATE.md
 ---
 
@@ -6167,3 +6167,15 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-08-17
 **Status:** COMPLETE
 **Output:** P1D-192 adversary pass — CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; review HEAD 8655881; spec-frozen 1262ebe; 193 passes total; streak 1/3 → 2/3 ACTIVE (D-166); different-slice deep-read: VP-anchor existence (all 13 VP-INDEX anchor BCs resolve), DI orphan (DI-001..015 all cited), BC census (129=51+75+3), ADR count (25), POL-19 §Decision anchors (ADR-015/016/018/019 Decision 3 sampled — all PASS), error-taxonomy PROV (E-PROV-001..011 present; E-PROV-011 burst-297 fix confirmed live in BC-2.08.014), VP-INDEX arithmetic (13=6P0+7P1=9Kani+2proptest+2integration; reconciles with verification-architecture §coverage-matrix), POL-16/17 canon (BC-2.18.002 body: no live-body violations); continuity spot-checks: DI-008 ss-19 CLEAN, ProvenanceTag→TrustLevel BC-2.18.002 body CLEAN; 4 discards raised and all FALSE; novelty LOW. D-166. GATE: PASS 14/14. Per D-143, STATE-only bookkeeping commit does NOT reset the streak; spec perimeter stays frozen at 1262ebe while factory-artifacts HEAD advances. NEXT P1D-193 (cascade-closing attempt 3/3; one more CLEAN closes Phase-1d).
+
+## P1D-190 — Archived from STATE.md Current Phase Steps at P1D-193 state record
+
+**Date:** 2026-08-16 (archived 2026-08-17)
+**Status:** COMPLETE (archived)
+**Output:** P1D-190 adversary pass — CLEAN(strict)=NO CLEAN(PR-merge)=NO; 1 finding (0C/0H/1M/0L); 191 passes total; STREAK UNCHANGED 0/3 (fix-burst per D-143); frozen HEAD reviewed 268b7dc; F-P190-01 MED prd §BC-2.18.004 catalog row carries pre-migration term "Untrusted ProvenanceTag" (stale vs ADR-015 Decision 3 migrated title "TrustLevel::Untrusted"; POL-7/POL-4 H1 parity gap). NOTE: mandatory DI-008/E-PROV-011 re-verification this pass CONFIRMED burst-297/298 closures complete and load-bearing (no residual, no missed sibling, no paper-fix). D-163 (pending burst-299). Streak UNCHANGED 0/3 (fix-burst imminent; per D-143 spec content changes do not affect streak until next adversary pass).
+
+## P1D-193 — State Record (2026-08-17)
+
+**Date:** 2026-08-17
+**Status:** COMPLETE
+**Output:** P1D-193 adversary pass — CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; review HEAD 5c4a961; spec-frozen 1262ebe; 194 passes total; streak 2/3 → 3/3 CONVERGED (D-167); Phase-1d adversarial cascade CLOSED. Third-slice deep-read (fresh axes not repeated from P1D-191/192): (a) NFR-catalog ↔ VP/BC arithmetic — NFR-013 map-row ↔ VP-013 ↔ BC-2.23.005 triangle closed; NFR-014 proactive entry well-formed; (b) purity-boundary-map census 34+38+12=84 matches module-decomp total 84 (D-130); (c) DI-015 bidirectionality — cited in BC §Traceability cells; BC body framing consistent with domain spec; no orphan; (d) VP-013/BC-2.23.005 risk-floor triangle — VP §Seed-BC ↔ BC §Traceability VP row ↔ BC §PC-1 all consistent; (e) StreamEvent 16-variant propagation — ADR-024 §Decision count 16 stable; no live-body contradiction in BC-2.14.001; historical changelog counts treated as audit-trail (historical-region caution); (f) BC-INDEX title/DI cross-check — 5 sampled §BC-Roster rows match H1 titles; sampled DI citations resolve. Continuity spot-checks PASS (DI-008 ss-19 CLEAN; ProvenanceTag→TrustLevel BC-2.18.002 body CLEAN). Historical-region caution applied throughout. 5 discards raised and all FALSE. Novelty ZERO. D-167. GATE: PASS 14/14. BC-5.39.001 3-CLEAN satisfied on frozen anchor 1262ebe. NEXT: pre-Phase-1-gate consistency-validator audit + input-hash drift check → human Phase-1 approval gate.
