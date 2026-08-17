@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "[pending-recompute]"
+input-hash: "77b6eba"
 traces_to: STATE.md
 ---
 
@@ -6137,3 +6137,21 @@ verify-no-version-pins PASS=198 FAIL=0; records-lint PASS=5 FAIL=0; verify-signa
 **Date:** 2026-08-16
 **Status:** COMPLETE
 **Output:** Retired ProvenanceTag→TrustLevel migration-residue class CORPUS-WIDE per D-143 sweep-the-class discipline (D-164). Census: ~102 ProvenanceTag occurrences across 34 files — 2 STALE trust-trigger fixed (BC-2.18.002 §Architecture-Anchors bullet 'ProvenanceTag pass-through' → 'TrustLevel classification'; §Traceability Architecture Authority row same concept-rename); 1 OBS title-drift fixed (ADR-015 subtitle 'ProvenanceTag Integration' → 'TrustLevel Classification', Option A); ~70 legitimate ingress-boundary refs retained (distinct SS-11 struct per BC-2.11.001/DI-012); ~29 historical changelog refs retained. BC-2.18.002 §Architecture Anchors + §Traceability (product-owner). ADR-015 §Title subtitle (architect). Input-hash: BC-2.18.002 PO-set 9dde8c9 (accounts for all 3 inputs including ADR-015 §Title subtitle working-tree state); BC-2.18.001/003/004/005 have pre-existing P8 backlog input-hash mismatches (not touched per scope guard; drift predates this burst). BC-INDEX §Changelog (v3.45 backfill + v3.46 new entry). D-164. GATE: PASS 14/14. Streak UNCHANGED 0/3 (fix-burst; spec content changed per D-143). 191 passes. NEXT P1D-191.
+
+## P1D-190 — Archived from STATE.md Current Phase Steps at P1D-191 state record
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** P1D-190 adversary pass — CLEAN(strict)=NO CLEAN(PR-merge)=NO; 1 finding (0C/0H/1M/0L); 191 passes total; STREAK UNCHANGED 0/3; frozen HEAD reviewed 268b7dc; F-P190-01 MED prd §BC-2.18.004 catalog row carries pre-migration term "Untrusted ProvenanceTag" (stale vs ADR-015 Decision 3 migrated title "TrustLevel::Untrusted"; POL-7/POL-4 H1 parity gap). NOTE: mandatory DI-008/E-PROV-011 re-verification this pass CONFIRMED burst-297/298 closures complete and load-bearing (no residual, no missed sibling, no paper-fix). D-163 (pending burst-299). pass-190.md persisted. Streak UNCHANGED 0/3.
+
+## Burst 299 — Fix-burst P1D-190 COMPLETE (Archived from STATE.md Current Phase Steps at P1D-191 state record)
+
+**Date:** 2026-08-16
+**Status:** COMPLETE
+**Output:** closed P1D-190 F-P190-01 (MED) prd §BC-2.18.004 catalog row pre-migration term "Untrusted ProvenanceTag" corrected to TrustLevel::Untrusted (POL-7 H1 parity; burst-226 ADR-015 Decision 3 NON-EXHAUSTIVE migration). ProvenanceTag sweep census: 3 occurrences total (1 STALE fixed [BC-2.18.004 catalog row], 1 LEGITIMATE retained [BC-2.11.001 ingress-boundary tag], 1 changelog audit-trail retained). D-163. GATE: PASS 14/14. Streak UNCHANGED 0/3 (fix-burst; spec content changed per D-143). 191 passes. NEXT P1D-191.
+
+## P1D-191 — State Record (2026-08-17)
+
+**Date:** 2026-08-17
+**Status:** COMPLETE
+**Output:** P1D-191 adversary pass — CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen HEAD 1262ebe; 192 passes total; streak 0/3 → 1/3 STARTED (D-165); mandatory re-verification: DI-008 (all 6 SS-19 §Traceability cells CONFIRMED), ProvenanceTag→TrustLevel residue class (ADR-015 §Title, BC-2.18.002 §Architecture-Anchors + §Traceability, prd §BC-2.18.004 CONFIRMED CLEAN), DI-001..015 orphan scan CLEAN, VP-INDEX arithmetic 13=6P0+7P1=9Kani+2proptest+2integration CONFIRMED, BC census 129=51+75+3 CONFIRMED, H1↔INDEX title sample CLEAN; 4 discards raised and all FALSE; novelty LOW. D-165. GATE: PASS 14/14. Per D-143, STATE-only bookkeeping commit does NOT reset the streak; spec perimeter stays frozen at 1262ebe while factory-artifacts HEAD advances. NEXT P1D-192 (streak 2/3 attempt).

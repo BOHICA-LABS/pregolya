@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T15:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
-input-hash: "c305abd"
+input-hash: "6af4d86"
 traces_to: STATE.md
 ---
 
@@ -2374,3 +2374,48 @@ Dominant class: phantom / prohibited ADR §Named-Section citations. The `verify-
 
 **Convergence dim-5:** Counter 0/3 RESET. Next: P1D-181 FULL-PERIMETER (streak pass 1/3 restart) on new frozen HEAD (burst-290 fix+state commit SHA).
 **Convergence dim-7:** Trajectory tail →130→256→189→160→60→5→0→8. Lessons L-178..L-179 minted. D-144..D-146 added.
+
+---
+
+### Passes P1D-182 through P1D-191
+
+| Pass | Findings | Delta | Streak | Note |
+|------|----------|-------|--------|------|
+| **P1D-181** | **0** | **-8** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); streak 1/3 STARTED; D-147; frozen spec 4059654** |
+| P1D-182 | 1 | +1 | 0/3 | NOT CLEAN; 0C/0H/1M; phantom BC-target §Category anchor; STREAK RESET; burst-291 COMPLETE |
+| fix-burst-291 | — | — | 0/3 | F-P182-01 phantom anchor closed |
+| P1D-183 | 4 | +3 | 0/3 | NOT CLEAN; 0C/1H/3M; ADR-025 S1-omission + reference-drift class; burst-292 COMPLETE; D-151/D-152 |
+| fix-burst-292 | — | — | 0/3 | F1-F4+LOW closed; D-152 |
+| P1D-184 | 5 | +1 | 0/3 | NOT CLEAN; 0C/1H/3M/1L; cross-ADR content-contradiction class; burst-293 COMPLETE; D-153/D-154 |
+| fix-burst-293 | — | — | 0/3 | F-01..F-05 closed; D-154 |
+| P1D-185 | 2 | -3 | 0/3 | NOT CLEAN; 0C/0H/1M/1L; BC-2.19.004 DI-008 contradiction + BC-2.01.003 placeholder; perimeter deep-read COMPLETE; burst-294 COMPLETE; D-155/D-156 |
+| fix-burst-294 | — | — | 0/3 | D-155/D-156 |
+| P1D-186 | 3 | +1 | 0/3 | NOT CLEAN; 0C/0H/1M/2L; ferroctmp brand-residue (BC-2.23.002/ADR-024); burst-295 COMPLETE; D-157/D-158 |
+| fix-burst-295 | — | — | 0/3 | D-158; records-lint L12 dead-brand-token guard minted |
+| **P1D-187** | **0** | **-3** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); 6 candidates discarded; streak 1/3 STARTED; D-159** |
+| P1D-188 | 2 | +2 | 0/3 | NOT CLEAN; 0C/0H/1M/1L; F-P188-01 DI-008 Reviver::new()-returns-Result contradiction + F-P188-02 E-PROV-011 omission; STREAK RESET; burst-297 COMPLETE; D-160/D-161 |
+| fix-burst-297 | — | — | 0/3 | D-161; DI-008 42-cell sweep (2 FAIL fixed); Error-Code-Minted 6-row sweep (1 FAIL fixed) |
+| P1D-189 | 1 | -1 | 0/3 | NOT CLEAN; 0C/0H/1M; F-P189-01 BC-2.19.002 §Traceability DI-008 burst-297 sibling-sweep miss; frozen HEAD eb04499; burst-298 COMPLETE; D-162 |
+| fix-burst-298 | — | — | 0/3 | D-162; DI-008 re-sweep census corrected 42→35; BC-2.19.002 §Traceability fixed |
+| P1D-190 | 1 | 0 | 0/3 | NOT CLEAN; 0C/0H/1M; F-P190-01 prd §BC-2.18.004 pre-migration term; frozen HEAD 268b7dc; burst-299+300 COMPLETE; D-163/D-164 |
+| fix-burst-299+300 | — | — | 0/3 | D-163 prd §BC-2.18.004 TrustLevel::Untrusted; D-164 ProvenanceTag→TrustLevel residue class retired CORPUS-WIDE |
+| **P1D-191** | **0** | **-1** | **1/3** | **CLEAN(strict)+CLEAN(PR-merge); 0 findings; DI-008/ProvenanceTag re-verification CONFIRMED; streak 1/3 STARTED; D-165; frozen HEAD 1262ebe; 192 passes total** |
+
+**Trajectory tail at P1D-191:** →60→5→0→8→0→1→4→5→2→3→0→2→1→1→**0**
+
+**Total passes to date: 192.**
+
+### Convergence Assessment (updated at P1D-191)
+
+Counter: **1/3 STREAK ACTIVE.** P1D-191 CLEAN(strict)+CLEAN(PR-merge) — streak advanced from 0/3 to 1/3.
+
+**P1D-182 through P1D-186 (2026-08-16): Five consecutive NOT CLEAN passes.** New finding classes: phantom BC-target §Category anchor (P1D-182); ADR-025 S1-omission + reference-drift (P1D-183); cross-ADR content-contradiction (P1D-184); DI-008 attribution contradiction in BC-2.19.004 + BC-2.01.003 placeholder (P1D-185); ferroctmp brand-residue class (P1D-186). Each closed by the corresponding fix-burst.
+
+**P1D-187 (2026-08-16): CLEAN(strict)+CLEAN(PR-merge).** 6 candidates raised and discarded; streak advanced to 1/3. D-159.
+
+**P1D-188 through P1D-190 (2026-08-16): Three consecutive NOT CLEAN passes.** DI-008 attribution class (Reviver::new()-returns-Result contradiction) surfaced as a recurrent mechanism requiring corpus-wide re-sweep (burst-297 + burst-298 census correction). ProvenanceTag→TrustLevel migration residue found in prd §BC-2.18.004 (P1D-190); class retired corpus-wide by burst-299+300. D-160..D-164.
+
+**P1D-191 (2026-08-17): CLEAN(strict)+CLEAN(PR-merge).** ZERO findings. Mandatory re-verification axes: DI-008 attribution (all 6 SS-19 §Traceability cells CONFIRMED), ProvenanceTag→TrustLevel residue class (ADR-015 §Title, BC-2.18.002 §Architecture-Anchors + §Traceability, prd §BC-2.18.004 CONFIRMED CLEAN), DI-001..015 orphan scan (all 15 cited), VP-INDEX arithmetic (13=6P0+7P1=9Kani+2proptest+2integration), BC census (129=51+75+3). 4 discards raised and found FALSE. Streak advanced 0/3→1/3. D-165. Per D-143, the STATE-only bookkeeping commit recording this result does NOT reset the streak; spec perimeter remains frozen at 1262ebe while factory-artifacts HEAD advances.
+
+**Convergence dim-5:** Counter 1/3 ACTIVE. Next: P1D-192 (streak attempt 2/3; spec perimeter unchanged since 1262ebe).
+**Convergence dim-7:** Trajectory tail →160→60→5→0→8→0→1→4→5→2→3→0→2→1→1→0. D-165 added.

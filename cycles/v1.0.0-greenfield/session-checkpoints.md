@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-07-14T01:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "7f19399"
+input-hash: "77b6eba"
 traces_to: STATE.md
 ---
 
@@ -2297,3 +2297,14 @@ develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run 
 
 #### ARCHIVE METADATA
 Date: 2026-08-16 | Archived at: burst-297 wrap (2026-08-16) | STATE.md: 4.70 → 4.71 | burst-297 COMPLETE: closed F-P188-01/02 + DI-008-attribution sweep (42 cells, 2 FAIL fixed: BC-2.19.003 §Traceability + BC-2.19.001 §Traceability) + Error-Code-Minted sweep (6 rows, 1 FAIL fixed: BC-2.08.014 §Traceability); BC-INDEX §Changelog; D-161; streak UNCHANGED 0/3
+
+### Archived Session Checkpoint v4.75 (archived at P1D-191 state record)
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). Streak **UNCHANGED 0/3 after 191 passes** (burst-300 COMPLETE D-164; spec content changed per D-143; streak UNCHANGED per D-143). burst-299+300 (2026-08-16): closed P1D-190 F-P190-01 (MED) prd §BC-2.18.004 "Untrusted ProvenanceTag"→TrustLevel::Untrusted (burst-299; D-163); then ProvenanceTag→TrustLevel migration-residue class retired CORPUS-WIDE by burst-300 (D-164): ~102 ProvenanceTag occurrences across 34 files; 2 STALE trust-trigger fixed (BC-2.18.002 §Architecture-Anchors + §Traceability); 1 OBS ADR-015 subtitle fixed; ~70 legitimate SS-11 ingress-boundary refs retained; ~29 changelog audit-trail refs retained. **NEXT: P1D-191** (adversary pass 1/3 restart; mandatory DI-008 + ProvenanceTag→TrustLevel re-verification per POL-23/POL-24). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### HEADS
+develop `644d1ad` — clean, PUSHED (ci.yml burst-287 D-129). Spec content: run `git -C .factory log -1 --format='%h'` for current factory-artifacts HEAD. Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-16 | Archived at: P1D-191 state record (2026-08-17) | STATE.md: 4.75 → 4.76 | P1D-191 COMPLETE: CLEAN(strict)+CLEAN(PR-merge); 0 findings; frozen HEAD 1262ebe; streak 0/3 → 1/3 STARTED; D-165; 192 passes total
