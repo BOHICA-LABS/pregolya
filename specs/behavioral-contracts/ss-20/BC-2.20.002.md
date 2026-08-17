@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.002
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,13 +17,14 @@ producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
 di_anchors: [DI-012, DI-014]
 red_gate: true
-red_gate_source: "ADR-014 Decision 2 Consequences §DI-012 — 'documents returned by Retriever::get_relevant_documents enter the graph context as BoundaryType::RAGRetrieval'; guardrail coverage test must COMPILE and FAIL before any graph node wires Arc<dyn Retriever>"
+red_gate_source: "ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization) — 'documents returned by Retriever::get_relevant_documents enter the graph context as BoundaryType::RAGRetrieval'; guardrail coverage test must COMPILE and FAIL before any graph node wires Arc<dyn Retriever>"
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval; SECURITY MANDATORY per architect handoff"
   - "1.1 (F-P224/H-3/2026-07-21): VP-2.20.002-A replaced with typed-wrapper specification per architect handoff (H-5 from F-P129-08). Old VP was non-mechanizable ('code review + unit test per graph node'). New VP: graph nodes accept `&GuardedDocuments`; passing `Vec<Document>` directly is a compile-time type error enforced by the type system (ADR-014 Decision 6 / purity-boundary-map). Red Gate = compile_fail test."
   - "1.2 (F-P130-02/F-P130-04/2026-07-21): (1) Replace 3 nonexistent `pregolya-guardrail` crate references with canonical `pregolya-core: core::guardrail` per ADR-014 v1.4 PO Obligations. (2) Add DI-014 to di_anchors — PC2/PC4 and EC-002 already cite DI-014 in body; frontmatter was missing the anchor."
   - "1.3 (burst-226/F-P131-01/2026-07-21): PC2 updated per ADR-014 v1.5 severity-bifurcated Fail semantics: Critical Fail → Err(E-CORE-008) propagated, run failed; Non-Critical Fail → error-entry Document substituted at position, batch continues. VP-2.20.002-B scope narrowed to Critical path only. EC-002 updated to reflect Critical-only abort semantics."
   - "1.4 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to 1b115d2 (drift from burst-226 ADR-014 content changes)."
+  - "1.5 (burst-309/F-P201-02/2026-08-17): Fix 4 phantom ADR §-citations. All 4 sites cited `ADR-014 Decision 2 Consequences §DI-012` or `ADR-014 Consequences §DI-012` — ADR-014 has no heading `§DI-012` and no `Consequences` subsection under Decision 2. Corrected to canonical form `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` per BC-INDEX Red-Gate table (burst-290/changelog 3.38) and confirmed heading existence in ADR-014 §Decision 6. Sites updated: (1) frontmatter red_gate_source, (2) Red-Gate callout blockquote, (3) Architecture Anchors, (4) Traceability Architecture Authority. Semantic intent preserved: DI-012 mechanization via the GuardedDocuments typed wrapper is the guardrail coverage confirmation anchor."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "d4c75fa"
+input-hash: "2fc120a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -46,7 +47,7 @@ removal_reason: null
 
 # BC-2.20.002: BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context (DI-012 Coverage Obligation)
 
-> **Red Gate test required** — ADR-014 Consequences §DI-012: the guardrail coverage
+> **Red Gate test required** — ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization): the guardrail coverage
 > test must COMPILE and FAIL before any graph node implementation wires
 > `Arc<dyn Retriever>`. This BC does NOT redefine `BoundaryType::RAGRetrieval`
 > (that is BC-2.11.001 territory). This BC asserts the **coverage obligation**:
@@ -134,7 +135,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 
 ## Architecture Anchors
 
-- `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — Decision 2 Consequences §DI-012 (RAGRetrieval guardrail coverage confirmation)
+- `architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md` — §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization) (RAGRetrieval guardrail coverage confirmation)
 - `architecture/decisions/ADR-012-self-improvement-primitives.md` / BC-2.11.001 — BoundaryType::RAGRetrieval origin and definition (DO NOT modify)
 - `architecture/purity-boundary-map.md` — `pregolya-core: core::guardrail` guardrail boundary enforcement
 
@@ -153,7 +154,7 @@ _[to be filled after story decomposition — Wave 2 SS-20 security story]_
 | Source L2 Capability | CAP-026 |
 | Capability Anchor Justification | CAP-026 ("Retriever Trait — get_relevant_documents; Arc<dyn Retriever> Seam; DI-012 RAGRetrieval Guardrail Coverage") per capabilities-p1-p2.md §CAP-026 — the DI-012 RAGRetrieval Guardrail Coverage component of CAP-026 is the exact obligation this BC formalizes; CAP-026 explicitly states that all Documents entering graph context via any Retriever pass BoundaryType::RAGRetrieval |
 | L2 Domain Invariants | DI-012 (guardrail at ingress boundaries — RAGRetrieval boundary applies to all documents entering graph context from a Retriever, regardless of Retriever backend), DI-014 (no silent error swallowing — guardrail failures propagate via `?`, no `Vec::new()` fallback that drops failing documents) |
-| Architecture Authority | ADR-014 Decision 2 Consequences §DI-012 |
+| Architecture Authority | ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization) |
 | Cross-Reference | BC-2.11.001 (authority for BoundaryType::RAGRetrieval definition — this BC references, does not redefine) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | pregolya-core / core::retriever (trait); pregolya-graph / graph-nodes (obligation falls on callers) |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — architect-confirmed 6 P0 + 3 P1 Kani obligations. Title updated. Description 'exactly three' → 'six P0 (D17-Q7+D21+D23) + three P1'. OQR-3 note: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; 'harnesses'/'are Phase-6 artifacts'. Preconditions: +BC-2.21.003/2.19.005/2.05.007; 'nine VP obligations (6 P0 + 3 P1)'. Postconditions: +VP-009/010/011 (P0) + VP-006/012/013 (P1); P0 failures block Phase-7; P1 failures block Phase-6 only; 'nine'. Invariants: lock expanded to D17-Q7+D21+D23; six P0 + three P1. EC-002 title/content: 'Fewer than Six P0 VPs Pass'. EC-003: nine (6 P0 + 3 P1). TV-006..009 added. Verification Properties updated. Related BCs +3. Architecture Anchors +3. Traceability DI +DI-014. traces_to +DI-014 +3 BCs."
   - "1.3 (burst-254/F-P153-01/2026-07-24): VP-012 predicate corrected: strict `<` → non-strict `<=`; f64 arithmetic and domain (0 <= tokens_remaining <= ceiling) made explicit; load-bearing non-strict note added (EC-002 fraction=1.0, tokens_remaining=0 boundary must fire). VP-011 bullet modernized: Deny-only description replaced with full 4-variant PreToolDecision fail-closed coverage (Approve/Deny/Edit/PendingHumanApproval); Proceed reachable only from Approve and valid-Edit; Deny and invalid-Edit route to Reject; hook errors shielded to Deny; PendingHumanApproval suspends via BC-2.05.001 and never invokes the tool — per VP-011.md v1.2 L4 authority. No f32 arithmetic or old-bounds references found in remaining VP-001..013 bullets."
   - "1.4 (burst-255/F-P154-02/2026-07-24): VP-011 bullet realigned per VP-011.md v1.3 architect adjudication (Option A): Kani harness covers three routable PreToolDecision variants (Approve/Deny/Edit) + hook-error path only; PendingHumanApproval peeled off upstream in async pre_tool_dispatch wrapper before route_pre_tool_decision is called — non-invocation covered by BC-2.05.008 integration tests, not Kani; #[non_exhaustive] wildcard arm returns Reject (fail-closed forward safety). Removed overclaim 'all four variants' from VP-011 bullet. Changelog reordered desc→asc per gate #28 Rule 6 (burst-255 in-scope compliance fix)."
+  - "1.5 (burst-309/F-P201-03/2026-08-17): Traceability L2 Domain Invariants DI-014 gloss corrected. Was 'Data Integrity'; corrected to canonical name per invariants.md §DI-014: 'Error Propagation (No Silent Swallowing)'. DI-014 ID and VP targets (VP-009/010/011) unchanged."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
   - domain-spec/invariants.md#DI-001
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "6af602f"
+input-hash: "6095990"
 extracted_from: null
 modified: []
 deprecated: null
@@ -224,7 +225,7 @@ _[to be filled after story decomposition — Phase-6 story]_
 |-------|-------|
 | Source L2 Capability | CAP-019 |
 | Capability Anchor Justification | CAP-019 ("Formal Verification Pipeline (Kani + cargo-fuzz)") per capabilities-p1-p2.md §CAP-019 — this BC specifies the exact Kani harness scope that CAP-019 identifies as the D17-Q7-locked VP obligations for BSP determinism, session tenancy, and workspace confinement |
-| L2 Domain Invariants | DI-001 (BSP Reducer Determinism — VP-001 target), DI-005 (Session Triple-Address Uniqueness — VP-002 target), DI-007 (Workspace Path Confinement — VP-003 target), DI-014 (Data Integrity — VP-009/010/011 targets) |
+| L2 Domain Invariants | DI-001 (BSP Reducer Determinism — VP-001 target), DI-005 (Session Triple-Address Uniqueness — VP-002 target), DI-007 (Workspace Path Confinement — VP-003 target), DI-014 (Error Propagation (No Silent Swallowing) — VP-009/010/011 targets) |
 | NE References | NE-17 (BSP nondeterminism counter-example → VP-1), NE-12 (identity-triple collapse → VP-2), NE-02 (workspace escape → VP-3) |
 | FM References | FM-001 (Non-Deterministic Reducer Order — VP-1 targets this), FM-005 (Cross-Tenant State Read — VP-2 targets this) |
 | Phase anchor | OQR-3 — behavioral invariants are Phase-1 BCs; Kani proof deliverables are Phase-6 artifacts |
