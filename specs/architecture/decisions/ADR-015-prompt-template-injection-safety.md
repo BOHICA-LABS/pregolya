@@ -3,12 +3,12 @@ document_type: adr
 level: L3
 adr_id: "015"
 slug: prompt-template-injection-safety
-title: "Prompt Template Rendering and Injection Safety: Slot Trust Model, ProvenanceTag Integration, and Template Engine Selection"
+title: "Prompt Template Rendering and Injection Safety: Slot Trust Model, TrustLevel Classification, and Template Engine Selection"
 status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-08-16T00:00:00Z
-version: "1.12"
+version: "1.13"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.13 (BURST-300/title-subtitle-align/2026-08-16): Title subtitle corrected — 'ProvenanceTag Integration' replaced with 'TrustLevel Classification'. The v1.0 subtitle implied ProvenanceTag was the SS-18 template-trust integration point; §Decision 3 heading and §TrustLevel — template-variable trust classifier section (established in burst-226) set TrustLevel as the SS-18-local trust classifier, explicitly distinct from ProvenanceTag (SS-11 ingress-boundary struct). The §Relationship to ProvenanceTag section in §Decision 3 is a concept-delineation note, not a titled deliverable — it explains how developers translate an ingress ProvenanceTag into a TrustLevel, not how ProvenanceTag integrates into template trust. ADR body content unchanged; title alignment only."
   - "1.12 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Two phantom error-taxonomy §-citations fixed in §F-P131-05 and §F-P131-04 RESOLVED bodies. (1) 'error-taxonomy §E-TMPL-001' → 'error-taxonomy.md §Component: TMPL' (E-TMPL-001 raise-condition update note). (2) 'error-taxonomy §E-TMPL-003' → 'error-taxonomy.md §Component: TMPL' (E-TMPL-003 engine-neutral description note). Rationale: error-taxonomy.md has no §E-TMPL-001 or §E-TMPL-003 heading; individual error codes are table rows within §Component: TMPL (pregolya-prompts). Additionally: escape unescaped `|t|` closure syntax in two table cells (lines 501/502) to fix pre-existing validate-table-cell-count hook failure."
   - "1.11 (fix-burst-279/gap-corrections/2026-07-28): Three gap corrections to v1.10. (1) Gap 1 (BLOCKING): FewShotPromptTemplate adjudication body added to §Decision 3 Amendment — FewShotPromptTemplate Example Trust Check: pre-expansion trust check over Vec<(TemplateVar,TemplateVar)> examples; FewShotExamples arm in TemplateInput injection guard code sketch; security argument (fail-closed, fires before inner example_template.format()); example trust level convention table. (2) Gap 1 (continued): §Decision 3 Amendment — TemplateInput Enum Concretized added before B201 section; TemplateInput enum definition with Scalar/Messages/FewShotExamples arms; #[non_exhaustive]; format_messages signature declared as HashMap<String, TemplateInput>. (3) Gap 1 (continued): §Decision 3 Amendment — B201 Type-Level Enforcement Assessment added: type-level wrapper feasibility assessed (feasible but API friction disproportionate); prohibition-as-invariant retained for v1; v2 trigger condition documented. v1.10 was missing all three bodies."
   - "1.10 (fix-burst-279/F-P175-B201+F-P175-B202+F-P175-B208+B202-fewshot/2026-07-28): Decision 3 Amendment — four injection-safety gaps closed. (1) B201: PromptTemplate::format explicitly declared unguarded; system-position output from the single-message surface is prohibited; callers MUST use ChatPromptTemplate::format_messages for any system-role content; type-level enforcement assessed and deferred — see §B201 type-level question. (2) B202 MessageListVar: injection check extended to cover MessageListVar.trust_level for MessagesPlaceholder slots in TrustRequired position. (3) B202 FewShot: FewShotPromptTemplate example inputs promoted from Vec<(String,String)> to Vec<(TemplateVar,TemplateVar)>; pre-expansion trust check added for TrustRequired outer slots; inner PromptTemplate::format never called when outer guard fires. (4) B208: TrustLevel severity inversion fixed — add severity() -> u8 (Untrusted=2, UserInput=1, Trusted=0); #[non_exhaustive] added; #[derive(Ord)] explicitly prohibited. format_messages signature corrected to HashMap<String, TemplateInput>; TemplateInput enum concretized. Sweeps: ADR-015 prose at §Iteration determinism invariant and §Security Invariant 1 updated; interface-definitions.md format_messages signature and TemplateInput enum added; VP-006 formal invariant updated."

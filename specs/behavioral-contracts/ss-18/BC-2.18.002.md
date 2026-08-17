@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.1 (burst-226/F-P131-05/2026-07-21): TrustLevel migration — INV-2 'ProvenanceTag severity ordering' → 'TrustLevel severity ordering'. PC3: MessageProvenance.tag → MessageProvenance.highest_trust_level; ProvenanceTag → TrustLevel in provenance aggregation context. EC-001, EC-002 updated: ProvenanceTag → TrustLevel; tag field → highest_trust_level. TV-001, TV-002: Provenance.tag → Provenance.highest_trust_level; ProvenanceTag variants → TrustLevel variants."
   - "1.2 (burst-227/F-P132-03/2026-07-21): Complete TrustLevel migration residue from v1.1 partial propagation. PC2: 'ProvenanceTag' → 'trust_level: Option<TrustLevel>'. EC-003: 'MessageProvenance.tag = None' → 'highest_trust_level = None'. TV-001: 'tag: None' → 'trust_level: None'. VP-2.18.002-A: 'MessageProvenance.tag' → 'MessageProvenance.highest_trust_level' and 'tag' → 'TrustLevel'."
   - "1.3 (fix-burst-279/F-P175-B202+B208+B221/ADR-015-D3-Amendment/2026-07-28): FOUR changes. (1) PC1 signature: format_messages parameter updated from HashMap<String, TemplateVar> to HashMap<String, TemplateInput> (TemplateInput enum concretized: Scalar/Messages/FewShotExamples arms; ADR-015 Decision 3 Amendment). (2) PC2: updated to HashMap<String, TemplateInput> with per-arm trust classification (B202 CRIT; breaking type change). (3) INV-2: updated to reference TrustLevel::severity() method for aggregate computation; Ord::max() and derived Ord on TrustLevel explicitly prohibited — declaration order is inverse of security severity (B208 HIGH fail-open fix; ADR-015 Decision 3 Amendment). (4) PC3 + INV-3: None case broadened from 'template-literal slots' to 'no variables substituted OR all substituted variables carried trust_level: None' — TV-001 showed non-literal slot yielding None when trust_level: None (B221 semantic correction; ADR-015 correct disjunction)."
+  - "1.4 (burst-300/stale-ProvenanceTag-residue/2026-08-16): Two STALE ProvenanceTag→TrustLevel residues closed. (1) §Architecture Anchors ADR-015 bullet: 'Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)' → 'Decision 3 (PromptValue, MessageProvenance, TrustLevel classification)' — ADR-015 Decision 3 heading was renamed TrustLevel Classification and Injection Prevention in v1.3 (burst-226); ProvenanceTag is the SS-11 ingress-boundary struct, not the SS-18 trust classifier. (2) §Traceability Architecture Authority row: 'ProvenanceTag pass-through and severity ordering' → 'TrustLevel classification and severity ordering' — same concept rename; severity ordering is TrustLevel::severity() domain per ADR-015 Decision 3 Amendment F-P175-B208."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "5af97cb"
+input-hash: "9dde8c9"
 extracted_from: null
 modified: []
 deprecated: null
@@ -139,7 +140,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 ## Architecture Anchors
 
 - `architecture/module-decomposition.md` — SS-18 module, `prompts::chat_template` + `prompts::prompt_value`
-- `architecture/decisions/ADR-015-prompt-template-injection-safety.md` — Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)
+- `architecture/decisions/ADR-015-prompt-template-injection-safety.md` — Decision 3 (PromptValue, MessageProvenance, TrustLevel classification)
 - `architecture/purity-boundary-map.md` — `pregolya-prompts / prompts::chat_template` Pure Core
 
 ## Story Anchor
@@ -157,7 +158,7 @@ _[to be filled after story decomposition — Wave 2 SS-18 story]_
 | Source L2 Capability | CAP-022 |
 | Capability Anchor Justification | CAP-022 ("PromptTemplate and ChatPromptTemplate as Runnable (f-string Default, Jinja2 Optional)") per capabilities-p1-p2.md §CAP-022 — this BC specifies the ChatPromptTemplate multi-message rendering contract and the PromptValue output type carrying per-message MessageProvenance, which CAP-022 identifies as the multi-message rendering surface of pregolya-prompts |
 | L2 Domain Invariants | DI-008 (ChatPromptTemplate construction returns Result; no unwrap/expect in non-test code) |
-| Architecture Authority | ADR-015 Decision 3 (PromptValue structure, MessageProvenance, ProvenanceTag pass-through and severity ordering) |
+| Architecture Authority | ADR-015 Decision 3 (PromptValue structure, MessageProvenance, TrustLevel classification and severity ordering) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | pregolya-prompts / prompts::chat_template, prompts::prompt_value |
 | Priority | P1 |
