@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.15"
+version: "2.16"
 status: active
 producer: architect
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -24,7 +24,9 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
-input-hash: "e4216d8"
+  - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
+  - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
+input-hash: "17951bb"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -36,7 +38,7 @@ decisions: [D17, D21, D23]
 
 ## [Section Content]
 
-This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the thirteen committed VP obligations (VP-001–VP-013), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1).
+This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the fourteen committed VP obligations (VP-001–VP-014), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -68,7 +70,7 @@ on a `Future` will fail at verification time. Consequences:
 
 ## Committed VP Obligations (D17-Q7 + R11 + D21 + D23)
 
-Thirteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer):
+Fourteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -85,8 +87,9 @@ Thirteen VPs committed before v1.0 release — VP-001..005 (original five) plus 
 | VP-011 | BC-2.05.007 | DI-014 | `graph::hitl` | Kani | 6 | P0 |
 | VP-012 | BC-2.10.005 | DI-014 | `core::budget` | Kani | 6 | P1 |
 | VP-013 | BC-2.23.005 | DI-014 | `tools::shell` | Kani | 6 | P1 |
+| VP-014 | BC-2.01.005 + BC-2.01.006 | DI-016 | `core::runnable` | proptest | 3 | P1 |
 
-**Total: 13 VPs — 6 P0 / 7 P1 | Tool breakdown: Kani ×9, proptest ×2, integration ×2**
+**Total: 14 VPs — 6 P0 / 8 P1 | Tool breakdown: Kani ×9, proptest ×3, integration ×2**
 
 ## Provable Properties Catalog
 
@@ -566,6 +569,36 @@ which is rejected at BudgetConfig construction (EC-001 in BC-2.10.005).
 
 ---
 
+**VP-014 — RunnableParallel Key-Completeness** (`core::runnable::parallel`) `proptest P1 Phase 3`
+
+Property: For any N-branch `RunnableParallel` invocation where `invoke_dyn` returns `Ok(output)`:
+`output.as_object().unwrap().len() == N` AND the output key set exactly equals the configured
+branch key set passed to `RunnableParallel::new(steps)`. Holds for all N ≥ 0.
+
+Formal statement (DI-016 key-completeness half):
+```
+∀ steps: IndexMap<String, Arc<dyn DynRunnable>>, ∀ input: Value:
+  let N = steps.len();
+  if let Ok(output) = RunnableParallel::new(steps).invoke_dyn(input, None).await {
+    output.as_object().unwrap().len() == N
+    ∧ output.as_object().unwrap().keys().collect::<HashSet<_>>()
+        == steps.keys().collect::<HashSet<_>>()
+  }
+```
+
+Why proptest not Kani: `invoke_dyn` is an `async fn` using `JoinSet` (Tokio). Kani 0.67.0
+has no native async support. proptest with identity-branch runnables (zero I/O, infallible)
+exercises the actual Tokio runtime and verifies the key-set property over random inputs.
+
+**Proptest harness:** See `VP-014.md` §Proof Harness Skeleton for the complete harness.
+Strategy: `proptest::collection::hash_set` generates arbitrary distinct branch keys (0..=20),
+each branch is an identity `DynRunnable`, and the output key set is asserted equal to the input key set.
+
+Feasibility: HIGH. Identity-branch runnables are pure and infallible; zero I/O; no LLM API keys
+required. 256 proptest cases at N ≤ 20 completes in < 1 minute.
+
+---
+
 **VP-013 — BashTool Risk Floor** (`tools::shell`) `Kani P1 Phase 6`
 
 Property: For all `ActionRisk r ∈ {ReadOnly, Low}`, `check_risk_floor(r)` returns
@@ -634,6 +667,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.16 | 2026-08-17 | product-owner | burst-302b / D-170 | Add VP-014 (proptest P1, BC-2.01.005 + BC-2.01.006, module core::runnable::parallel, crate pregolya-core, DI-016). LCEL composition scope expansion (D-170; ADR-026). VP-014 proves the RunnableParallel key-completeness property: for any N-branch RunnableParallel where invoke_dyn returns Ok(output), output.as_object().len() == N AND output key set == configured branch key set. Why proptest not Kani: invoke_dyn is async with Tokio JoinSet fan-out; Kani 0.67.0 has no native async support. §Section Content narrative updated (thirteen→fourteen). Committed VP Obligations table: add VP-014 row; update total line (13→14, P1 7→8, proptest 2→3). Should Prove section: add VP-014 entry. New BC inputs added: BC-2.01.005, BC-2.01.006. Input-hash updated (new inputs added). |
 | 2.15 | 2026-08-16 | architect | FIX-BURST-291 / F-P1D182-01 + D-134 | Phantom §-anchor fixes in §VP-013 RESOLVED block and §VP-013 changelog row. Live-body: 'BC-2.23.005 §Category was corrected to' → 'BC-2.23.005 §Postconditions (PC-4) category corrected to'; 'BC-2.23.005 §Category = VAL' → 'BC-2.23.005 §Postconditions (PC-4) category = VAL'; 'error-taxonomy §TOOLS' → 'error-taxonomy.md §Component: TOOLS' (two sites: §VP-013 body line and §VP-013 Changelog row 2.11 '→' targets). Rationale: BC-2.23.005 has no §Category heading; category field lives in §Postconditions PC-4. error-taxonomy.md has no §TOOLS heading; real heading is §Component: TOOLS (pregolya-tools). |
 | 2.14 | 2026-07-28 | architect | FIX-BURST-280 / F-P175-A24 companion | VP-008 section redesign to remove self-proving mock rationale. Prior §VP-008 stated "Mock embeddings implementation makes the contract hold by construction" — this perpetuated the F-P175-A24 defect (harnesses certifying mock internals, not production code). Replaced with description of `validate_embedding_batch` production function approach: mocks supply raw inputs only; production validator is the assertion target. Proptest sketch updated to call `validate_embedding_batch` directly. EC-003 and EC-004 negative harnesses (VP-008-D/E) noted. MockEmbeddings::new_fixed_dim(128) self-proving sketch removed. |
 | 2.13 | 2026-07-27 | architect | CHECK4-vparch closure | Canonicalize all Module cells in §Committed VP Obligations table (13 rows) and §Test-Sufficient table (7 rows → 9 rows) to `crate::module` or ARCH-INDEX canonical crate-name form. VP table: replace all `pregolya-X / y-name` two-part notation — graph::bsp_engine, checkpoint::session_index, sandbox::path_guard, mcp::adapter, mcp::client, prompts::injection_guard, core::serializable (×2: VP-007 LcSerializable + VP-010 Reviver aspect), core::embeddings, vectorstores::similarity, graph::hitl, core::budget, tools::shell. VP-007 and VP-010 both map to core::serializable; aspect distinction preserved via BC Anchor (BC-2.19.001 vs BC-2.19.005), Tool (proptest vs Kani), Phase (3 vs 6), and Priority (P1 vs P0) columns — rows not merged. Test-Sufficient table: pregolya-server handlers → pregolya-server; Provider crates (unresolvable single mapping) → split into pregolya-openai + pregolya-anthropic + pregolya-ollama (3 rows); pregolya-sandbox backends → pregolya-sandbox with path_guard exclusion note; Budget governance (journal) → graph::budget; Content provenance/guardrail → graph::provenance. pregolya-mcp and pregolya-splitters already canonical — left unchanged. Section headings (VP-001..013 prose entries) updated to canonical form for consistency; VP-010 heading uses `core::serializable — Reviver aspect` to distinguish from VP-007. Total Module cells: 22 (was 20; +2 from Provider crates split into 3 rows). |

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.74"
+version: "2.75"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1d
 changelog:
+  - "2.75 (burst-302b/D-170/2026-08-17): Add RunnableParallel, RunnablePassthrough, RunnableAssign type signatures to §Core Primitives (pregolya-core: core::runnable), after the DynRunnable/RunnableSequence BC anchor block and before §RunnableConfig Key Reference. Signatures are verbatim from ADR-026 §Interface-Definitions Additions (committed at D-170). Three blocks added: (1) RunnableParallel — IndexMap fan-out, `new(steps)` constructor; (2) RunnablePassthrough — identity with inspect_fn, `new()` / `with_inspect(f)` / `assign(pairs)` constructors; (3) RunnableAssign — `#[non_exhaustive]` struct, constructed via `RunnablePassthrough::assign`, no public constructor. BC anchors: BC-2.01.005 (RunnableParallel construction/invocation), BC-2.01.006 (branch failure/E-CORE-009), BC-2.01.007 (passthrough identity/inspect contract), BC-2.01.008 (dict augmentation/E-CORE-010/mapper-wins). ADR-026 §Decision 1–4 authority."
   - "2.74 (burst-293/F-01/ADR-023/2026-08-16): §RunnableConfig — apply architect F-01 adjudication. (1) Add `#[non_exhaustive]` to struct declaration — ADR-023 §Required Inventory is authoritative; CLAUDE.md §Code Conventions mandates `#[non_exhaustive]` on all public API surface config structs. (2) Add `#[derive(Debug, Clone)]` to struct declaration. (3) Add `impl Default for RunnableConfig` with `recursion_limit: 25`; `#[derive(Default)]` intentionally absent: `usize::default()` yields 0, which would violate the recursion_limit = 25 default semantics per BC-2.01.003 PC5 and BC-2.03.001 PC5. (4) Doc comment updated: 'All fields are optional at construction except recursion_limit' → external-construction guidance via `RunnableConfig::default()`; struct-literal construction barred outside pregolya-core by `#[non_exhaustive]` (E0639). (5) D-134 sibling sweep: BC corpus already uses `RunnableConfig::default()` throughout — BC-2.01.003 §Canonical Test Vectors TV-001 and BC-2.04.002 §Canonical Test Vectors confirmed correct; no BC changes required."
   - "2.73 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — two phantom BC-2.12.003 §Run-Config Merge Precedence Invariant citations corrected. §Run-Config Merge Precedence Invariant is not a heading in BC-2.12.003 (the item is a bold entry within § Invariants, not its own heading). Corrected to BC-2.12.003 §Invariants at §RunnableConfig doc comment (line 299 context) and §Runs table row. Grandfathered: changelog entry 2.4 citing the same phantom anchor (historical, not a live-body citation)."
   - "2.72 (burst-290/F-180-03, 2026-08-16): Fix live-body phantom ADR §-citation in §StreamEvent Rust code comment. `ADR-023 §exhaustive-by-design` → `ADR-023 §Exempt Enums` (no heading §exhaustive-by-design exists in ADR-023; StreamEvent's exhaustive-match exemption is documented under `### Exempt Enums` within `## Decision 3 — Exempt Inventory`)."
@@ -90,7 +91,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "bebf43c"
+input-hash: "d11a951"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -208,6 +209,71 @@ pub struct RunnableSequence<I, O> {
 **BC anchor:** BC-2.01.003 EC-001 (`DynRunnable` object-safe composition path),
 BC-2.01.004 PC5/EC-001/TV-004 (`E-CORE-004` on type-boundary mismatch at `DynRunnable::invoke`),
 BC-2.01.004 PC1/PC4/TV-002 (`RunnableSequence` concrete type, flattening invariant, inspectable structure)
+
+---
+
+**`RunnableParallel` — Fan-Out Composition Primitive** (D-170/burst-302b)
+
+```rust
+/// Fan-out combinator: runs all branches concurrently against the same input.
+/// Output is a `serde_json::Value::Object` with exactly one key per branch,
+/// in `steps` insertion order regardless of task-completion order.
+/// Construction: `RunnableParallel::new(steps)` where `steps` is an iterator of
+///   `(impl Into<String>, Arc<dyn DynRunnable>)` pairs.
+/// Module: `pregolya-core/src/runnables/parallel.rs`.
+#[non_exhaustive]
+pub struct RunnableParallel {
+    steps: IndexMap<String, Arc<dyn DynRunnable>>,
+}
+impl RunnableParallel {
+    pub fn new(
+        steps: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    ) -> Self;
+}
+```
+
+**`RunnablePassthrough` — Identity Runnable with Optional Inspect Side-Effect** (D-170/burst-302b)
+
+```rust
+/// Zero-cost identity runnable. `invoke_dyn(input, config)` always returns `Ok(input.clone())`.
+/// Optional `inspect_fn` is called once with `&input` before the Ok return; its return value
+/// is discarded. `inspect_fn` is never called on the error path (RunnablePassthrough never fails).
+/// Factory for `RunnableAssign`: `RunnablePassthrough::assign(pairs)`.
+/// Module: `pregolya-core/src/runnables/passthrough.rs`.
+#[non_exhaustive]
+pub struct RunnablePassthrough {
+    inspect_fn: Option<Arc<dyn Fn(&serde_json::Value) + Send + Sync>>,
+}
+impl RunnablePassthrough {
+    pub fn new() -> Self;
+    pub fn with_inspect(f: impl Fn(&serde_json::Value) + Send + Sync + 'static) -> Self;
+    pub fn assign(
+        pairs: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    ) -> RunnableAssign;
+}
+```
+
+**`RunnableAssign` — Dict Augmentation** (D-170/burst-302b)
+
+```rust
+/// Dict augmentation runnable. Always constructed via `RunnablePassthrough::assign(pairs)`.
+/// `invoke_dyn` validates that `input` is `Value::Object`; on non-Object input returns
+/// `Err(PregolyaError { category: VAL, code: "E-CORE-010", .. })`.
+/// On success merges mapper output over input: mapper keys overwrite input keys on collision.
+/// Module: `pregolya-core/src/runnables/passthrough.rs` (same file as `RunnablePassthrough`).
+#[non_exhaustive]
+pub struct RunnableAssign {
+    mapper: RunnableParallel,
+}
+```
+
+**BC anchor:** BC-2.01.005 PC1–PC6 (`RunnableParallel` construction, concurrent invocation,
+N-key output, insertion-order), BC-2.01.006 PC1–PC5 (branch failure, fail-fast, structured
+`E-CORE-009` error with branch key, no partial result), BC-2.01.007 PC1–PC7 (`RunnablePassthrough`
+identity semantics, inspect contract, infallibility), BC-2.01.008 PC1–PC5 (`RunnableAssign`
+construction via `RunnablePassthrough::assign`, non-dict `E-CORE-010`, merge semantics
+mapper-wins-on-collision). ADR-026 §Decision 1 (IndexMap representation, fail-fast abort,
+zero-cost identity, dict-input validation).
 
 #### RunnableConfig Key Reference — `recursion_limit` Dual-Layer Interpretation (F-P49-02, ADV-P1D-PASS-49)
 

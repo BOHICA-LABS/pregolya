@@ -1,13 +1,14 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: architect
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.8 (burst-302b/D-170/2026-08-17): Add VP-014 — RunnableParallel key-completeness proptest P1 (BC-2.01.005 + BC-2.01.006, module core::runnable::parallel, crate pregolya-core, DI-016). LCEL composition scope expansion (D-170). Arithmetic: total 13→14 (P0 6→6 unchanged, P1 7→8); proptest 2→3; Kani/integration unchanged. Status:draft 13→14."
   - "1.7 (FIX-BURST-276/2026-07-27): CHECK4 closure — canonicalize all 13 Module cells in VP Catalog from hyphenated short forms to crate::module form. Canonical source: module-decomposition.md. Mappings: bsp-engine→graph::bsp_engine (graph::bsp_engine row), session-index→checkpoint::session_index (checkpoint::session_index row), path-guard→sandbox::path_guard (sandbox::path_guard row), mcp-adapter→mcp::adapter (mcp::adapter row), mcp-client→mcp::client (mcp::client row), injection_guard→prompts::injection_guard (prompts::injection_guard row), serializable→core::serializable (core::serializable LcSerializable round-trip aspect VP-007), embeddings→core::embeddings (core::embeddings row VP-008), vectorstores-similarity→vectorstores::similarity (vectorstores::similarity row VP-009), serializable-reviver→core::serializable (core::serializable Reviver aspect VP-010), hitl→graph::hitl (graph::hitl row VP-011), core-budget→core::budget (core::budget row VP-012), tools-shell→tools::shell (tools::shell row VP-013). Arithmetic invariant unchanged: 13 VPs, counts unmodified."
   - "1.6 (FIX-BURST-257/2026-07-24): OBS-P156-B — add VP priority clarification note: VP priority is the VERIFICATION-priority axis (proof criticality), distinct from the anchor BC's implementation priority; a P0 VP may anchor a P1 BC (examples: VP-003 Kani P0 anchors P1 BC-2.13.004; VP-011 Kani P0 anchors P1 BC-2.05.007). Note added in preamble blockquote and Summary section. No VP catalog rows changed; arithmetic invariant unchanged."
   - "1.5 (burst-232/2026-07-22): D23 VP layer — add VP-011..013 (3 Kani P0/P1); total 10→13, P0 5→6, P1 5→7, Kani 6→9. VP-011 (Kani P0, BC-2.05.007, graph::hitl): PreToolCallHook fail-closed dispatch. VP-012 (Kani P1, BC-2.10.005, core-budget): OnWatermark arithmetic. VP-013 (Kani P1, BC-2.23.005, tools-shell): BashTool risk floor."
@@ -25,7 +26,7 @@ changelog:
 > (Provable Properties Catalog + P0 list) and `verification-coverage-matrix.md`
 > (VP-to-Module table + Totals row) in the same burst.
 >
-> Arithmetic invariant: total (13) = P0 (6) + P1 (7) = Kani (9) + proptest (2) + integration (2).
+> Arithmetic invariant: total (14) = P0 (6) + P1 (8) = Kani (9) + proptest (3) + integration (2).
 >
 > **VP Priority vs BC Priority (OBS-P156-B):** The `Priority` column here is the
 > **verification-priority axis** — it reflects proof criticality (how urgently this property
@@ -45,14 +46,14 @@ changelog:
 
 | Metric | Count |
 |--------|-------|
-| Total VPs | 13 |
+| Total VPs | 14 |
 | Priority P0 (verification-priority) | 6 |
-| Priority P1 (verification-priority) | 7 |
+| Priority P1 (verification-priority) | 8 |
 | Kani | 9 |
-| proptest | 2 |
+| proptest | 3 |
 | fuzz | 0 |
 | integration | 2 |
-| Status: draft | 13 |
+| Status: draft | 14 |
 | Status: active | 0 |
 | Status: passed | 0 |
 
@@ -73,3 +74,4 @@ changelog:
 | VP-011 | BC-2.05.007 | graph::hitl | Kani | 6 | P0 | draft | DI-014 | pregolya-graph | `deny_excludes_tool_invocation` | VP-011.md |
 | VP-012 | BC-2.10.005 | core::budget | Kani | 6 | P1 | draft | DI-014 | pregolya-core | `watermark_arithmetic_harness` | VP-012.md |
 | VP-013 | BC-2.23.005 | tools::shell | Kani | 6 | P1 | draft | DI-014 | pregolya-tools | `risk_floor_rejects_below_medium` | VP-013.md |
+| VP-014 | BC-2.01.005 + BC-2.01.006 | core::runnable | proptest | 3 | P1 | draft | DI-016 | pregolya-core | n/a (proptest) | VP-014.md |

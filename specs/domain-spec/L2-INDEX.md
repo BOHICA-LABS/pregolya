@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.27"
+version: "1.28"
 status: active
 producer: business-analyst
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.28 (burst-302b/D-171/2026-08-17): ID Registry CAP count 38→39 (CAP-039 LCEL Map/Passthrough Composition: RunnableParallel and RunnablePassthrough, authored business-analyst); DI count 15→16 (DI-016 RunnableParallel Key-Completeness and Branch-Failure Propagation, authored business-analyst). Priority Distribution: P1 26→27 (CAP-039 P1). Document Map: capabilities-p1-p2.md description extended (CAP-039). LCEL scope expansion D-170/D-171."
   - "v1.27 (F-178-01, burst-289, 2026-08-16): Document Map events.md row: StreamEvent taxonomy count corrected 15→16 variants (BC-2.06.001 §Postconditions PC2 authority — burst-288 added StreamEvent::Error as 16th variant). Sibling-sweep: capabilities-p0.md and events.md updated identically in this burst."
   - "v1.26 (burst-284/2026-07-30): Paper-fix repair — fabricated section anchors in two section shards repaired per TD-VSDD-059. entities-graph.md (burst-273 changelog entry: 'api-surface.md §burst-242/2026-07-23' → 'api-surface.md changelog entry burst-242/2026-07-23'; §burst-242/2026-07-23 resolves to 0 headings in api-surface.md; burst-242 identifier is the stable form). risks.md (R-003 mitigation: 'reference-manifest.md §langchain-pin' → 'reference-manifest.md §langchain — Package Layout'; §langchain-pin resolves to 0 headings; §langchain — Package Layout is a real heading at line 36 of reference-manifest.md). L2-INDEX.md burst-276 changelog entry verified semantically complete after version-pin removal: bounded-contexts.md and capabilities-p1-p2.md changes remain described by finding IDs F-P173-104/F-P173-106/F-P173-702."
   - "v1.25 (F-P175-D101/fix-burst-283/2026-07-30): as_retriever fallibility correction across three shards (F-P175-D101 CRIT close). capabilities-p1-p2.md (CAP-027 receiver+Result return added; CAP-028 non-fallible form corrected to Result<VectorStoreRetriever, PregolyaError>). entities-graph.md (§VectorStore §Instance methods non-fallible form corrected). ubiquitous-language-core.md (§VectorStoreRetriever and §VectorStore term entries corrected to show Result return and Err(E-VS-003 InvalidConfig)). Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 §Decision 2."
@@ -86,10 +87,10 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Section | File | Size | Primary Consumer | Purpose |
 |---------|------|------|-----------------|---------|
 | Capabilities — P0 | capabilities-p0.md | M | product-owner, architect, story-writer | CAP-001–008 (Wave 0/1) + CAP-012, CAP-013, CAP-016 (D17-elevated to P0; cross-cutting Wave 0/1); CAP-002 revised v1.7 (D21 reversal) |
-| Capabilities — P1/P2 | capabilities-p1-p2.md | XL | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-017–018 (D23 Wave 1 promotions), CAP-020–038 (D21 + D23 additions); P2: CAP-019 only |
+| Capabilities — P1/P2 | capabilities-p1-p2.md | XL | product-owner, architect, story-writer | P1: CAP-009–011, CAP-014–015, CAP-017–018 (D23 Wave 1 promotions), CAP-020–038 (D21 + D23 additions), CAP-039 (D-170 LCEL scope expansion); P2: CAP-019 only |
 | Entities — Core/Graph/Checkpoint/Retrieval/Serialization/VectorStore/Embeddings/HITL/Compaction | entities-graph.md | L | architect, product-owner | Core primitives, graph, checkpoint + D21: Document, PromptValue, TrustLevel, Serialized, VectorStore, Embeddings, MetadataFilter, SearchType + D23: PreToolCallHook, PreToolDecision, ToolCallPreview, ToolApprovalRequest, CompactionTrigger, CompactionPolicy, ConversationSnapshot, CompactionSummary |
 | Entities — Server/Policy/Provider | entities-server.md | M | architect, product-owner | Server, governance, and provider entities |
-| Domain Invariants | invariants.md | M | product-owner, architect | DI-NNN business rules (15 invariants) |
+| Domain Invariants | invariants.md | M | product-owner, architect | DI-NNN business rules (16 invariants) |
 | Domain Events | events.md | M | architect | Processing stages, triggers, preconditions; StreamEvent taxonomy 16 variants (D23 + burst-288 error terminal event); ToolApprovalRaised/Resolved + CompactionExecuted domain events (D23) |
 | Edge Cases | edge-cases.md | M | story-writer, test-writer | DEC-NNN domain-level edge cases (13 cases) |
 | Assumptions | assumptions.md | S | product-owner, test-writer | ASM-NNN with validation methods (9 assumptions) |
@@ -116,8 +117,8 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 
 | ID Format | Count | Section |
 |-----------|-------|---------|
-| CAP-NNN | 38 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009–011, CAP-014–015, CAP-017–038) |
-| DI-NNN | 15 | invariants.md |
+| CAP-NNN | 39 | capabilities-p0.md (CAP-001–008, CAP-012, CAP-013, CAP-016) + capabilities-p1-p2.md (CAP-009–011, CAP-014–015, CAP-017–039) |
+| DI-NNN | 16 | invariants.md |
 | DEC-NNN | 13 | edge-cases.md |
 | ASM-NNN | 9 | assumptions.md |
 | R-NNN | 9 | risks.md |
@@ -130,7 +131,7 @@ expressed as a Rust async-native port of the LangChain v1 semantic surface.
 | Priority | Count | Capabilities |
 |----------|-------|-------------|
 | P0 (must-have) | 11 | CAP-001, CAP-002, CAP-003, CAP-004, CAP-005, CAP-006, CAP-007, CAP-008, CAP-012, CAP-013, CAP-016 |
-| P1 (should-have) | 26 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-017 (D23), CAP-018 (D23), CAP-020, CAP-021, CAP-022, CAP-023, CAP-024, CAP-025, CAP-026, CAP-027, CAP-028, CAP-029, CAP-030, CAP-031, CAP-032, CAP-033, CAP-034, CAP-035, CAP-036, CAP-037, CAP-038 |
+| P1 (should-have) | 27 | CAP-009, CAP-010, CAP-011, CAP-014, CAP-015, CAP-017 (D23), CAP-018 (D23), CAP-020, CAP-021, CAP-022, CAP-023, CAP-024, CAP-025, CAP-026, CAP-027, CAP-028, CAP-029, CAP-030, CAP-031, CAP-032, CAP-033, CAP-034, CAP-035, CAP-036, CAP-037, CAP-038, CAP-039 (D-170) |
 | P2 (nice-to-have) | 1 | CAP-019 |
 
 > **Priority note (ADV-P1D-PASS-21):** CAP-012, CAP-013, and CAP-016 were elevated from P1 to P0

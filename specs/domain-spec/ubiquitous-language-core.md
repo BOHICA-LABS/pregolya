@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.12"
+version: "1.13"
 status: active
 producer: business-analyst
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 changelog:
+  - "1.13 (burst-302b/D-170/2026-08-17): D-170 LCEL composition additions — new section 'D170 Additions — LCEL Map/Passthrough Composition': RunnableParallel, RunnablePassthrough, RunnableAssign (ADR-026 / CAP-039). 3 new terms; total: 29 (D21) + 13 (D23) + 3 (D170) = prior terms + 3. D170 added to decisions list. Distinguishes all three from RunnableSequence. RunnableAssign production via RunnablePassthrough::assign noted."
   - "1.12 (burst-291/D-134/2026-08-16): §TrustLevel definition phantom anchor corrected. 'ubiquitous-language-server.md §ProvenanceTag' → 'ubiquitous-language-server.md §Server Terms' (ProvenanceTag is a bold-bullet under §Server Terms, not a heading; §ProvenanceTag alone matches no heading in ubiquitous-language-server.md). Citation to entities-server.md §ProvenanceTag unchanged — valid heading '### ProvenanceTag' exists there. TD-VSDD-060 sweep: sole §ProvenanceTag reference to ubiquitous-language-server.md in this file."
   - "1.11 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected at two term entries. (1) VectorStoreRetriever term: 'via VectorStore::as_retriever(self: Arc<Self>)' extended to show Result<VectorStoreRetriever, PregolyaError> fallible return and Err(E-VS-003 InvalidConfig) on invalid config. (2) VectorStore term: 'returns VectorStoreRetriever' corrected to 'returns Result<VectorStoreRetriever, PregolyaError>'; Err(E-VS-003 InvalidConfig) note added. Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
   - "1.10 (fix-burst-278/wave-b/2026-07-28): TD-VSDD-060 sibling sweep — two borrow-based forms corrected in VectorStoreRetriever and VectorStore term definitions. (1) VectorStoreRetriever term: backing-store form corrected from borrow-ref to Arc<dyn VectorStore> (verifiable: borrow-backed VectorStoreRetriever form absent from this file). (2) VectorStore term: as_retriever updated to show self: Arc<Self> receiver; 'All instance methods use &self' corrected to 'Other instance methods use &self; as_retriever takes Arc<Self>' (verifiable: verify-signature-canon S1b returns zero hits for this file). Both ground in D-48."
@@ -24,9 +25,9 @@ inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/semport/reference-manifest.md
-input-hash: "24354b1"
+input-hash: "febc364"
 traces_to: L2-INDEX.md
-decisions: [D2, D17, D21, D23]
+decisions: [D2, D17, D21, D23, D170]
 ---
 
 # Ubiquitous Language — Core Primitives and Graph Terms
@@ -424,3 +425,55 @@ without system tool availability). `ActionRisk::ReadOnly`. `max_results` cap (de
 E-TOOLS-006 `SearchResultsCapped` informational). Returns matches with file path and line number.
 Path validated by PathGuard for directory scoping. No sandbox execution — reads in-process.
 Authority: ADR-020 / CAP-038.
+
+---
+
+## D170 Additions — LCEL Map/Passthrough Composition
+
+> D-170 (burst-302, 2026-08-17) — human-directed Phase-1 approval-gate scope expansion.
+> Adds the second of the two main LCEL composition primitives alongside RunnableSequence.
+> Reference corpus: langchain==1.3.13 (Corpus 1, pinned).
+> Architecture authority: ADR-026 / CAP-039.
+
+**RunnableParallel** (also: **RunnableMap**)
+A fan-out composition primitive that invokes a named dict of branches concurrently against the
+same input and returns a dict keyed by branch name with each branch's output. Branches are held
+as `Arc<dyn DynRunnable>` in an `IndexMap<String, …>` — insertion order is preserved, making
+output key order deterministic. All branches launch simultaneously; the first branch failure
+aborts all remaining branches and propagates as a structured error identifying the failing
+branch key (DI-016, DI-014 — no partial output dict, no silent swallowing). Streaming yields
+per-branch chunks interleaved as `{branch_name: chunk}` objects. Implements `DynRunnable`
+and composes via `pipe()`. Distinct from `RunnableSequence` (CAP-001/CAP-003), which chains
+branches in serial — RunnableParallel fans them out in parallel on the same input.
+One of the two main LCEL composition primitives (the other being RunnableSequence).
+Corresponds to `RunnableParallel` / `RunnableMap` in LangChain v1
+(`langchain_core.runnables.base`). In pregolya: `pregolya_core::runnable::parallel::RunnableParallel`.
+Authority: ADR-026 §Decision 1 / BC-2.01.005 / BC-2.01.006.
+
+**RunnablePassthrough**
+An identity composition primitive that returns its input unchanged. Optionally accepts an
+`inspect_fn: Arc<dyn Fn(&Value) + Send + Sync>` for side-effect observation (logging, tracing)
+that reads the input value without mutating or influencing the return value — the return value
+is always the unmodified input. Streaming passes each chunk through unchanged. Implements
+`DynRunnable`; composes via `pipe()`. Canonical use: pass a question through unchanged while a
+parallel branch fetches RAG context (as one branch in a RunnableParallel). Distinct from
+RunnableSequence (serial chaining) and RunnableParallel (fan-out): RunnablePassthrough is an
+identity transform on a single value with an optional read-only side channel. Corresponds to
+`RunnablePassthrough` in LangChain v1 (`langchain_core.runnables.passthrough`). In pregolya:
+`pregolya_core::runnable::passthrough::RunnablePassthrough`.
+Authority: ADR-026 §Decision 3 / BC-2.01.007.
+
+**RunnableAssign**
+A dict-augmentation primitive created by `RunnablePassthrough::assign(pairs)`, where `pairs`
+is an ordered iterator of `(key, runnable)` entries. Internally wraps a `RunnableParallel` as
+its `mapper`. Input must be a JSON object (`Value::Object`); non-object input returns
+`Err(E-CORE-MMM)` at invoke time. Output: the input dict merged with the mapper's output dict,
+where mapper keys overwrite input keys on collision (`{**input, **mapper.invoke(input)}`).
+Propagates any branch failure from the internal mapper as a structured error (DI-016, DI-014).
+Implements `DynRunnable`; composes via `pipe()`. Canonical use: augmenting a chain's running
+dict with additional computed fields (e.g., adding a `"context"` key from a retriever while
+preserving all prior keys). **Not constructed directly** — always produced via
+`RunnablePassthrough::assign(...)`. Corresponds to `RunnableAssign` in LangChain v1
+(`langchain_core.runnables.passthrough`). In pregolya:
+`pregolya_core::runnable::parallel::RunnableAssign`.
+Authority: ADR-026 §Decision 4 / BC-2.01.008.

@@ -1,15 +1,17 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.46"
+version: "3.48"
 status: active
 producer: state-manager
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.48 (burst-302b/D-171/2026-08-17): Notation fix — BC-2.01.006 (v1.0→v1.1): §Invariants JoinError bullet corrected: PregolyaError struct literal missing '..' — corrected per ADR-010 §Class-3 positive obligation (verify-error-notation-canon gate). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1 unchanged."
+  - "3.47 (burst-302b/D-171/2026-08-17): Add 4 BCs (all P1, CAP-039, SS-01, Wave 1): BC-2.01.005 RunnableParallel Construction and Concurrent Invocation (di_anchors DI-016+DI-014), BC-2.01.006 RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results (di_anchors DI-016+DI-014), BC-2.01.007 RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract (di_anchor DI-014), BC-2.01.008 RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation (di_anchors DI-016+DI-014). VP-014 seeded (proptest P1, BC-2.01.005+BC-2.01.006, DI-016). BC census 129→133 (51 P0 / 79 P1 / 3 P2); VP Seed 11→12; VP-INDEX 13→14. SS-01 range 001–004 → 001–008. LCEL scope expansion (D-170/D-171)."
   - "3.46 (burst-300/stale-ProvenanceTag-residue/2026-08-16): 1 BC version bump — BC-2.18.002 §Architecture Anchors + §Traceability Architecture Authority: two stale ProvenanceTag→TrustLevel migration residues from burst-226 (ADR-015 Decision 3) closed. (1) §Architecture Anchors ADR-015 bullet: 'Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)' → 'Decision 3 (PromptValue, MessageProvenance, TrustLevel classification)'. (2) §Traceability Architecture Authority row: 'ProvenanceTag pass-through and severity ordering' → 'TrustLevel classification and severity ordering'. Census per D-143 sweep-the-class (D-164): ~102 ProvenanceTag occurrences across 34 files; 2 STALE trust-trigger residues fixed (BC-2.18.002); 1 OBS ADR-015 subtitle corrected by architect; ~70 legitimate SS-11 ingress-boundary struct refs retained (BC-2.11.001/DI-012); ~29 historical changelog refs retained as audit trail. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.45 (burst-298/F-P189-01/2026-08-16): 1 BC version bump — BC-2.19.002 §Traceability: DI-008 §Traceability cell corrected — burst-297 attributed Result return to LcSerializable::serialize (infallible; returns Serialized::Constructor directly; no failure path) and to lc_secrets() stripping (infallible HashMap remove operations); only Reviver::revive is fallible. Cell corrected to: LcSerializable::serialize returns Serialized (infallible); lc_secrets() stripping is infallible; Reviver::revive returns Result; no .unwrap() in non-test code. Reconciles with siblings BC-2.19.001 §Traceability (corrected at burst-297) and BC-2.19.003/004/005/006 §Traceability (all already correctly attributed to revive op only). DI-008 §Traceability attribution class re-swept: 35 total §Traceability cells (burst-297 §Changelog claimed 42 cells — overcount; true census is 35; burst-297 also declared zero remaining mis-attributions — false-PASS as BC-2.19.002 §Traceability was not swept); 34 PASS, 1 FIXED (BC-2.19.002); zero remaining mis-attributions. Correction supersedes burst-297 §Changelog census claim. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
   - "3.44 (burst-297/F-P188-01+F-P188-02+Sweep-A+Sweep-B/2026-08-16): 3 BC version bumps — F-P188-01 MED: BC-2.19.003 (v1.3→v1.4): DI-008 Traceability cell corrected — 'Reviver::new() returns Result' → 'revive returns Result; Reviver::new() is infallible; no panic on registry initialization'; Reviver::new() is infallible per BC-2.19.003 PC2 and siblings BC-2.19.004/005/006. F-P188-02 LOW: BC-2.08.014 (v1.5→v1.6): Error Code Minted callout + Traceability row missing E-PROV-011 FallbackChainEmpty — added to both locations; BC-2.08.014 is the sole anchor for both E-PROV-010 and E-PROV-011. Sweep A: BC-2.19.001 (v1.1→v1.2): DI-008 Traceability cell tightened — 'LcSerializable and Reviver constructors return Result' implied Reviver::new() fallible; fixed to 'revive returns Result; Reviver::new() is infallible; LcSerializable::serialize returns Serialized (infallible); no .unwrap() in non-test code'. Sweep A census: 42 DI-008 Traceability cells checked — 2 FAIL (BC-2.19.003, BC-2.19.001), 40 PASS; zero remaining mis-attributions. Sweep B census: 6 Error-Code-Minted BCs checked — 1 FAIL (BC-2.08.014 missing E-PROV-011), 5 PASS; zero remaining omissions. BC census UNCHANGED: 129 total (51 P0 / 75 P1 / 3 P2). H1s unchanged."
@@ -66,26 +68,27 @@ changelog:
 
 # BC-INDEX: pregolya Behavioral Contracts
 
-> **129 BCs total — 51 P0 / 75 P1 / 3 P2 | 11 Red Gate | 11 VP Seed | 13 VPs registered**
+> **133 BCs total — 51 P0 / 79 P1 / 3 P2 | 11 Red Gate | 12 VP Seed | 14 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
 > SS-23 (First-Party Tools) added D23 first-class approval hook + compaction expansion (2026-07-22).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
-> VP-INDEX: 13 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
+> VP-INDEX: 14 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
 > VP-006–VP-010 assigned in VP-INDEX (burst-223, 2026-07-21) and authored — VP-006.md–VP-010.md all complete;
-> VP-011–VP-013 seeds assigned D23 burst-232 and authored — VP-011.md–VP-013.md all complete).
+> VP-011–VP-013 seeds assigned D23 burst-232 and authored — VP-011.md–VP-013.md all complete;
+> VP-014 proptest P1 seeded burst-302b and authored — VP-014.md complete).
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Total BCs | 129 |
+| Total BCs | 133 |
 | Priority P0 | 51 |
-| Priority P1 | 75 |
+| Priority P1 | 79 |
 | Priority P2 | 3 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 11 |
+| VP Seed BCs | 12 |
 | Subsection groups | 23 (SS-2.01 – SS-2.23) |
 
 ## Red Gate BCs
@@ -119,8 +122,9 @@ changelog:
 | VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani | ADR-018 Decision 3 |
 | VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani | ADR-019 Decision 3 |
 | VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani | ADR-020 Decision 3 |
+| VP-014 | BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | Proptest | DI-016 key-completeness (ADR-026 §Decision 1) |
 
-_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22). All 13 VP body files (VP-001 through VP-013) exist as of burst-250+._
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17). All 14 VP body files (VP-001 through VP-014) exist as of burst-302b._
 
 ## Full BC Catalog
 
@@ -130,6 +134,10 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.01.002 | Message Type-Safety (AiMessage / HumanMessage / SystemMessage / ToolMessage) | CAP-001 | | DI-008 | P0 | | | ss-01/BC-2.01.002.md |
 | BC-2.01.003 | Runnable Trait Invocation — invoke, stream, batch | CAP-002 | | | P0 | | | ss-01/BC-2.01.003.md |
 | BC-2.01.004 | Runnable Pipe Composition (A.pipe(B) = AB Chain) | CAP-002 | | | P0 | | | ss-01/BC-2.01.004.md |
+| BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | CAP-039 | | DI-016, DI-014 | P1 | | **VP** | ss-01/BC-2.01.005.md |
+| BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | CAP-039 | | DI-016, DI-014 | P1 | | **VP** | ss-01/BC-2.01.006.md |
+| BC-2.01.007 | RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract | CAP-039 | | DI-014 | P1 | | | ss-01/BC-2.01.007.md |
+| BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | CAP-039 | | DI-016, DI-014 | P1 | | | ss-01/BC-2.01.008.md |
 | BC-2.02.001 | StateGraph Node Definition with Typed Channel Assignment | CAP-003 | | | P0 | | | ss-02/BC-2.02.001.md |
 | BC-2.02.002 | LastValue / Append / BarrierValue Channel Semantics and Reducer Wiring | CAP-003 | | DI-001 | P0 | | | ss-02/BC-2.02.002.md |
 | BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate — R10) | CAP-003 | | | P0 | **RG** | | ss-02/BC-2.02.003.md |
@@ -273,6 +281,8 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.48 | 2026-08-17 | burst-302b/D-171: Notation fix — BC-2.01.006 (v1.0→v1.1): §Invariants JoinError bullet: PregolyaError struct literal missing '..' corrected per ADR-010 §Class-3 (verify-error-notation-canon gate). BC census UNCHANGED: 133. | burst-302b D-171 |
+| 3.47 | 2026-08-17 | burst-302b/D-171: Add 4 BCs (P1, CAP-039, SS-01): BC-2.01.005–008 (RunnableParallel construction+invocation, branch failure, RunnablePassthrough identity+inspect, RunnableAssign dict augmentation). VP-014 seeded (proptest P1). BC census 129→133 (51 P0 / 79 P1 / 3 P2); VP Seed 11→12; VPs 13→14. SS-01 range 001–004 → 001–008. | burst-302b D-171 |
 | 3.46 | 2026-08-16 | burst-300/stale-ProvenanceTag-residue: 1 BC version bump — BC-2.18.002 §Architecture Anchors + §Traceability Architecture Authority: ADR-015 Decision 3 bullet + §Traceability Architecture Authority row corrected ProvenanceTag→TrustLevel (burst-226 migration residue; D-164 corpus-wide sweep per D-143 sweep-the-class). BC census UNCHANGED: 129. | burst-300 stale-ProvenanceTag-residue |
 | 3.45 | 2026-08-16 | burst-298/F-P189-01: 1 BC version bump — BC-2.19.002 §Traceability: DI-008 §Traceability cell corrected (LcSerializable::serialize infallible returns Serialized; lc_secrets() stripping infallible; Reviver::revive fallible returns Result; no .unwrap() in non-test code). DI-008 re-sweep corrected census 42→35 cells (burst-297 §Changelog overcount). BC census UNCHANGED: 129. | burst-298 F-P189-01 |
 | 3.44 | 2026-08-16 | burst-297/F-P188-01+F-P188-02+Sweep-A+Sweep-B: 3 BC version bumps — BC-2.19.003 (v1.3→v1.4): DI-008 Traceability cell corrected (Reviver::new() infallible, fallible operation is revive). BC-2.08.014 (v1.5→v1.6): Error Code Minted row + callout extended to include E-PROV-011 FallbackChainEmpty. BC-2.19.001 (v1.1→v1.2): DI-008 Traceability cell tightened (both Reviver::new() and LcSerializable::serialize infallible). Sweep A: 42 DI-008 cells checked, 2 fixed. Sweep B: 6 Error-Code-Minted rows checked, 1 fixed. BC census UNCHANGED: 129. | burst-297 F-P188-01+F-P188-02+Sweep-A+Sweep-B |

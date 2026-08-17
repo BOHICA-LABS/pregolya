@@ -1,19 +1,20 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.3"
+version: "3.4"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-17T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "db110eb"
+input-hash: "b53d1d3"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.4 (burst-302b/D-171/2026-08-17): LCEL composition scope expansion (D-170) — Add 4 new BC rows: BC-2.01.005 (5 TV), BC-2.01.006 (5 TV), BC-2.01.007 (5 TV), BC-2.01.008 (6 TV). Grand total: 676→697 canonical + 11 GTV = 687→708 total. BC count 129→133."
   - "3.3 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — four phantom citations fixed. (1) §GTV below (line 38 context): no heading §GTV exists; corrected to §Golden Test Vectors — BC-2.07.002. (2) §GTV (line 87 context, same phantom): same fix. (3) §GTV (line 185 GTV convention blockquote): same fix. (4) §Test Vectors (line 199 context): BC bodies use heading '## Canonical Test Vectors', not '## Test Vectors'; corrected to §Canonical Test Vectors. TV counts and grand totals UNCHANGED."
   - "3.2 (burst-290/F-180-04, 2026-08-16): Fix live-body phantom ADR §-citation in Red Gate Vector Summary table. BC-2.20.002 row §Anchor column: `ADR-014 §DI-012` → `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` (no heading §DI-012 exists in ADR-014; DI-012 mechanization is governed by `## Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)`). TV count and grand totals UNCHANGED."
   - "3.1 (burst-288/F-P177-C-SS17/2026-08-15): BC-2.17.001 Notes VP enumeration corrected — was '(VP-001/002/003 + VP-009/010/011)' missing P1 harnesses VP-006/012/013; corrected to '(VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1))'. TV count and grand totals UNCHANGED (687 = 676 canonical + 11 GTV)."
@@ -53,6 +54,10 @@ changelog:
 | BC-2.01.002 | SS-01 | 5 | — | `TV-NNN` | | Message type-safety: wrong type rejects |
 | BC-2.01.003 | SS-01 | 5 | — | `TV-NNN` | | Runnable invoke/stream/batch dispatch |
 | BC-2.01.004 | SS-01 | 5 | — | `TV-NNN` | | Pipe A\|B produces AB chain |
+| BC-2.01.005 | SS-01 | 5 | — | `TV-NNN` | | RunnableParallel construction and concurrent invocation (D-170) |
+| BC-2.01.006 | SS-01 | 5 | — | `TV-NNN` | | RunnableParallel branch failure — fail-fast, structured error E-CORE-009 (D-170) |
+| BC-2.01.007 | SS-01 | 5 | — | `TV-NNN` | | RunnablePassthrough identity semantics and inspect contract (D-170) |
+| BC-2.01.008 | SS-01 | 6 | — | `TV-NNN` | | RunnableAssign dict augmentation — mapper-wins, non-dict E-CORE-010 (D-170) |
 | BC-2.02.001 | SS-02 | 5 | — | `TV-NNN` | | StateGraph node + channel happy path |
 | BC-2.02.002 | SS-02 | 6 | — | `TV-NNN` | | Reducer semantics: LastValue/Append/Barrier |
 | BC-2.02.003 | SS-02 | 5 | — | `TV-NNN` | **RG** | NamedBarrierValue missing-writer → default |
@@ -179,7 +184,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (129 authored BCs):** 676 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **687 total vectors** across 129 BC files.
+**Total vectors (133 authored BCs):** 697 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **708 total vectors** across 133 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -330,6 +335,8 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.4 | 2026-08-17 | burst-302b/D-171: LCEL scope expansion — add 4 BC rows (BC-2.01.005: 5 TV, BC-2.01.006: 5 TV, BC-2.01.007: 5 TV, BC-2.01.008: 6 TV). Grand total 676→697 canonical + 11 GTV = 708. BC count 129→133. | burst-302b/D-171 |
+| 3.3 | 2026-08-16 | burst-291/D-134: §-anchor phantom sweep — four phantom §GTV/§Test Vectors citations corrected. TV counts and grand totals UNCHANGED. | burst-291/D-134 |
 | 3.2 | 2026-08-16 | burst-290/F-180-04: Fix live-body phantom ADR §-citation in Red Gate Vector Summary table. BC-2.20.002 row §Anchor column: `ADR-014 §DI-012` → `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)`. TV count and grand totals UNCHANGED. | burst-290/F-180-04 |
 | 3.1 | 2026-08-15 | burst-288/F-P177-C-SS17: BC-2.17.001 Notes VP enumeration corrected — VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1). TV count and grand totals UNCHANGED (687 = 676 canonical + 11 GTV). | burst-288 F-P177-C-SS17 |
 | 3.0 | 2026-08-01 | fix-burst-287/F-P176-D001: Ground-truth reconciliation. 8 stale BC rows corrected: BC-2.03.001 (5→6), BC-2.09.001 (7→8), BC-2.12.002 (7→8), BC-2.15.004 (7→9), BC-2.15.006 (6→7), BC-2.17.001 (5→9), BC-2.18.001 (6→7), BC-2.18.004 (4→5). Grand total corrected: 664→676 canonical + 11 GTV = 675→687. BC-2.17.001 Notes updated. Ground-truth validation normative note added. | fix-burst-287 |

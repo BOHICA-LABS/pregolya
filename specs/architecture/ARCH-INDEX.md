@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.30"
+version: "1.31"
 status: active
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.31 (burst-302b/D-171/2026-08-17): SS-01 BC range extended 001–004 → 001–008 (BC-2.01.005–008; LCEL RunnableParallel/RunnablePassthrough/RunnableAssign; D-170/D-171). VP table: 13→14 VPs (VP-014 proptest P1 added; total proptest 2→3). BC grand total 129→133 historical note updated."
   - "1.30 (burst-302a/D-170/2026-08-17): ADR-026 registered — LCEL Composition Primitives: RunnableParallel and RunnablePassthrough (burst-302 scope expansion; D-170 human ruling). ADR count 25→26. Document Map updated to 26 files (ADR-001 to ADR-026)."
   - "1.29 (burst-292/P1D-183-F3/2026-08-16): Fix ADR-025 row in §ADR Registry: 'grounds verify-signature-canon.sh rules S2/S3/S4' → 'S1/S2/S3/S4'. S1 (as_retriever Arc<Self> receiver rule) is grounded by ADR-025 per ADR-025 §Consequences and §Source/Origin; v1.26 changelog entry already stated S1/S2/S3/S4 correctly but the live ADR Registry table cell was not updated in that burst."
   - "1.28 (FIX-BURST-291/F-P1D182-01/2026-08-16): Fix phantom §-anchors in D23 VP seeding blockquote. 'BC-2.23.005 §Category amended to VAL in burst-232' → 'BC-2.23.005 §Postconditions (PC-4) category amended to VAL in burst-232'; 'error-taxonomy §TOOLS' → 'error-taxonomy.md §Component: TOOLS'. Rationale: BC-2.23.005 has no §Category heading (category field in §Postconditions PC-4); error-taxonomy.md has no §TOOLS heading (real heading §Component: TOOLS (pregolya-tools))."
@@ -86,11 +87,11 @@ changelog:
 > **Source of truth** for subsystem names and SS-NN IDs. BC frontmatter `subsystem:`,
 > BC-INDEX subsystem column, story `subsystems:`, and PRD references MUST use exact Name.
 > State-manager backfills all BC files with SS-NN after this index is committed.
-> (95 at the time of the D20 backfill; 129 as of D23)
+> (95 at the time of the D20 backfill; 129 as of D23; 133 as of D-170/D-171)
 
 | SS ID | Name | PRD Section | Primary Crate(s) | BCs | Wave |
 |-------|------|-------------|------------------|-----|------|
-| SS-01 | Core Primitives | 2.01 | pregolya-core | BC-2.01.001–004 | 1 |
+| SS-01 | Core Primitives | 2.01 | pregolya-core | BC-2.01.001–008 | 1 |
 | SS-02 | StateGraph Definition | 2.02 | pregolya-graph | BC-2.02.001–006 | 1 |
 | SS-03 | BSP Execution Engine | 2.03 | pregolya-graph | BC-2.03.001–003 | 1 |
 | SS-04 | Durable Checkpointing | 2.04 | pregolya-checkpoint | BC-2.04.001–008 | 1 |
@@ -186,7 +187,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 
 ## Verification Properties (VP-INDEX)
 
-13 VPs total (6 Kani P0 + 3 Kani P1 + 2 proptest P1 + 2 integration P1 — see VP-INDEX):
+14 VPs total (6 Kani P0 + 3 Kani P1 + 3 proptest P1 + 2 integration P1 — see VP-INDEX):
 
 | VP | BC Anchor | Module | Tool | Priority | Status |
 |----|-----------|--------|------|----------|--------|
@@ -203,5 +204,6 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-011 | BC-2.05.007 (PreToolCallHook fail-closed) | `graph::hitl` | Kani | P0 | draft |
 | VP-012 | BC-2.10.005 (OnWatermark arithmetic) | `core::budget` | Kani | P1 | draft |
 | VP-013 | BC-2.23.005 (BashTool risk floor) | `tools::shell` | Kani | P1 | draft |
+| VP-014 | BC-2.01.005 + BC-2.01.006 (RunnableParallel key-completeness) | `core::runnable` | proptest | P1 | draft |
 
 > **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 §Postconditions (PC-4) category amended to VAL in burst-232 (error-taxonomy.md §Component: TOOLS; consistent with VP-013 harness).
