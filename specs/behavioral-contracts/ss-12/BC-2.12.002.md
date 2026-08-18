@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,13 +21,14 @@ changelog:
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.4 (fix-burst-283/F-P175-C113/2026-07-30): §Description corrected — replace fabricated 'model, tools, system prompt overrides, checkpointer config' clause with accurate RunnableConfig field inventory per ADR-021 Decision 2 (configurable map added; LangGraph parity). Add EC-006 and TV-008 for configurable-key collision merge precedence (run-level key wins per BC-2.12.003 §Run-Config Merge Precedence Invariant and interface-definitions.md §RunnableConfig configurable field doc)."
   - "1.5 (burst-291/D-134/2026-08-16): Three phantom §-anchor citations corrected. (1) §Description 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants' (§Run-Config Merge Precedence Invariant matches no heading; it is a bold bullet inside §Invariants). (2) EC-006 same correction plus 'interface-definitions.md §RunnableConfig configurable field doc' → 'interface-definitions.md §RunnableConfig — Struct Definition' (§RunnableConfig configurable field doc matches no heading; RunnableConfig struct is defined under '#### RunnableConfig — Struct Definition (F-P92-02)'). Sentence restructured with comma separator so BC_CITE_RE stops at §Invariants, not at '.md'. TD-VSDD-060 sweep: both §Run-Config Merge Precedence Invariant occurrences in live body text corrected."
+  - "1.6 (BURST-312/F-P203-01/2026-08-17): Capability Anchor Justification quote-fidelity fix — 'Assistant (named agent config with graph reference)' corrected to verbatim CAP-014 text 'Assistant (named agent config)'; the phrase 'with graph reference' does not appear in capabilities-p1-p2.md §CAP-014. F-P203-01."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "5854acc"
+input-hash: "4a5b9f8"
 extracted_from: null
 modified: []
 deprecated: null
@@ -188,7 +189,7 @@ _[to be filled after verification-architecture phase]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-014 |
-| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Assistant resource CRUD, which is explicitly listed as the second of the four managed resources: "Assistant (named agent config with graph reference)" |
+| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Assistant resource CRUD, which is explicitly listed as the second of the four managed resources: "Assistant (named agent config)" |
 | L2 Domain Invariants | — |
 | DEC Reference | — |
 | Risk Source | — |

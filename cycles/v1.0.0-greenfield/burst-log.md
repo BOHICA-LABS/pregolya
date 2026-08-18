@@ -6398,3 +6398,21 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 **Decision minted:** D-181
 **Streak:** UNCHANGED 0/3 (OBS findings do not reset streak; streak was already 0/3; BC-5.39.001)
 **NEXT:** P1D-203 — adversary streak restart (0/3); spec perimeter frozen; 133 BCs = 51/79/3 / 39 CAP / 16 DI / 14 VP / 26 ADR / 114 err. COVERAGE NOTE: prioritize CAP H1 titles (POL-4/5) and ADR §Decision-N headings (POL-19) in P1D-203.
+
+---
+
+## Burst-312 (2026-08-17) — P1D-203 Fix: BC-2.01.005/BC-2.12.002 Anchor Quote Fidelity [D-182]
+
+**Agent:** state-manager (commit/bookkeeping); product-owner (BC content, prior session)
+**Trigger:** P1D-203 NOT CLEAN — 2 findings (1MED/1LOW) closed
+**Files touched:** BC-2.01.005.md §Traceability (F-P203-02), BC-2.12.002.md §Traceability (F-P203-01), BC-INDEX.md §Changelog (3.52→3.53), STATE.md §Decisions-Log (D-182), burst-log.md, sidecar-learning.md
+
+**Findings closed:**
+- F-P203-02 (MED): BC-2.01.005 §Traceability Capability Anchor Justification cited ADR-026 §Decision 1 for both type representation AND concurrent execution. §Decision 1 covers type representation (IndexMap) and key ordering only; concurrent execution is §Decision 2 (JoinSet fan-out). Fix: two separate single-§ citations per POL-19 — §Decision 1 (RunnableParallel: Type Representation and Key Ordering) and §Decision 2 (RunnableParallel: Concurrent Execution and Error Handling).
+- F-P203-01 (LOW): BC-2.12.002 §Traceability Capability Anchor Justification cited 'Assistant (named agent config with graph reference)'. Verbatim CAP-014 text from capabilities-p1-p2.md §CAP-014 is 'Assistant (named agent config)' — phrase 'with graph reference' absent. Fix: quote corrected to verbatim CAP-014 text.
+
+**Adversary verified corpus-wide (P1D-203):** (a) CAP-title↔BC-justification ~60 quotes CLEAN; (b) ADR §Decision-N citation resolution CLEAN. Only 2 fine quote-fidelity slips remained.
+
+**Decision minted:** D-182
+**Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
+**NEXT:** P1D-204 — adversary streak restart (0/3); spec perimeter frozen at 32ff285 + EXEC + E-CORE-011 + fts_search + ADR §Decision-N heading + CAP-title verbatim; 133 BCs = 51/79/3.

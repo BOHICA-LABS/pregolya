@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.005
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableParallel construction and concurrent invocation. LCEL composition scope expansion (D-170); ADR-026 §Decision 1."
   - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
+  - "1.2 (BURST-312/F-P203-02/2026-08-17): Capability Anchor Justification quote-fidelity fix — replaced single ADR-026 §Decision 1 citation that incorrectly claimed 'type representation and concurrent execution' (Decision 1 covers key ordering only; concurrent execution is Decision 2) with two separate single-§ citations per POL-19: §Decision 1 (RunnableParallel: Type Representation and Key Ordering) and §Decision 2 (RunnableParallel: Concurrent Execution and Error Handling). F-P203-02."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "bd61ed4"
+input-hash: "d8b7b92"
 extracted_from: null
 modified: []
 deprecated: null
@@ -170,7 +171,7 @@ _[to be filled after story decomposition]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-039 |
-| Capability Anchor Justification | CAP-039 ("LCEL Map/Passthrough Composition: RunnableParallel and RunnablePassthrough") per capabilities-p1-p2.md §CAP-039 (D-170) — this BC describes the construction and concurrent invocation behavior of `RunnableParallel`, which is the primary component of CAP-039 per ADR-026 §Decision 1 (type representation and concurrent execution). |
+| Capability Anchor Justification | CAP-039 ("LCEL Map/Passthrough Composition: RunnableParallel and RunnablePassthrough") per capabilities-p1-p2.md §CAP-039 (D-170) — this BC describes the construction and concurrent invocation behavior of `RunnableParallel`, which is the primary component of CAP-039; the construction behavior per ADR-026 §Decision 1 (RunnableParallel: Type Representation and Key Ordering) and the concurrent invocation behavior per ADR-026 §Decision 2 (RunnableParallel: Concurrent Execution and Error Handling). |
 | L2 Domain Invariants | DI-016 (RunnableParallel Key-Completeness and Branch-Failure Propagation); DI-014 (Error Propagation: No Silent Swallowing — errors from branches must propagate as Err, not degrade to empty results) |
 | NE References | — |
 | Priority | P1 |
