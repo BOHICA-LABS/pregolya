@@ -4,7 +4,7 @@ level: ops
 version: "5.01"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-18T19:01:00Z"
+timestamp: "2026-08-18T19:04:00Z"
 phase: 1
 inputs: []
 input-hash: "[live-state]"
@@ -159,7 +159,7 @@ Pregolya — Phase 1 (Spec Crystallization), greenfield+semport, /Users/jmagady/
 
 ### HEADS
 - develop `644d1ad` — clean, PUSHED; unchanged the entire session (no code/workspace-init work).
-- factory-artifacts — HEAD = this burst-320 bookkeeping commit (STATE.md v5.01; P1D-209 CLEAN D-191; streak 1/3 ACTIVE; verify-sha-currency: PASS).
+- factory-artifacts `2dbf6cd` — PUSHED (burst-320: STATE.md v5.01; P1D-209 CLEAN D-191; streak 1/3 ACTIVE; verify-sha-currency: PASS; self-referential — becomes HEAD~1 after this HEADS-update commit).
 - Story worktrees: NONE. Open PRs: NONE. verify-sha-currency: PASS.
 
 ### CURRENT WORKSTREAM — Phase-1 re-convergence (post-LCEL-expansion, 2nd convergence)
@@ -186,7 +186,7 @@ L-184 canonical-form corpus-wide grep sweep before closure; L-185 count-carrier 
 
 ### OPS NOTES FOR NEXT SESSION
 - Concurrency discipline: exactly ONE .factory writer at a time (state-manager serialized after specialists); corpus-wide grep gates at commit blocked 2 incomplete-sweep commits this session — keep using them for canonical-form/carrier changes.
-- STATE.md is large (v5.01, ~239 lines); consider running /vsdd-factory:compact-state early next session to extract historical Current-Phase-Steps rows + older decision text to cycle files before approaching the 500-line hard limit.
+- STATE.md is large (v5.01, ~238 lines); consider running /vsdd-factory:compact-state early next session to extract historical Current-Phase-Steps rows + older decision text to cycle files before approaching the 500-line hard limit.
 
 ### VALIDATOR BASELINES (burst-316; 14 blocking + 1 advisory)
 verify-no-version-pins: PASS=209+ · verify-adr-decision-refs: PASS=399+ · records-lint: PASS (L10 WARN advisory — 7-hex SHA in bc-authoring-plan changelog prose, non-blocking; L12 dead-brand-token check added burst-295) · verify-changelog-date-monotonicity: PASS=142+ (WARN=78+) · verify-changelog-date-validity: PASS · verify-enum-variant-casing: PASS · verify-signature-canon: PASS=5 · verify-error-notation-canon: PASS · verify-form-a-changelog-direction: PASS (WARN=7+) · verify-arch-anchor-resolution: PASS=133+ · verify-module-canonicality: PASS=8 · verify-bc-frontmatter-schema: PASS=133 · verify-tv-registry-count: PASS · **verify-adr-anchor-citations: PASS (BLOCKING; generalized to non-ADR targets; B1 60+B2 198 = 258 cites 0 phantom; 14 self-probes)**. Advisory: verify-changelog-claim-applied WARN=15+.
