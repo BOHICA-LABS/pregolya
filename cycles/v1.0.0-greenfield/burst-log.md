@@ -6546,3 +6546,42 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 
 **Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
 **NEXT:** P1D-207 — adversary streak restart (0/3); 3-CLEAN required before Phase-1 gate closes.
+
+---
+
+### Archived Current-Phase-Steps Row — burst-317-wrap COMPLETE (2026-08-18)
+
+*Archived from STATE.md v5.02 (5-row rolling window; replaced by P1D-211 STATE-record entry at burst-322).*
+
+**burst-317-wrap COMPLETE (2026-08-18)** — D-187 session-wrap RESUME SNAPSHOT; STATE.md (burst-317-wrap); spec perimeter UNCHANGED (D-143; streak 0/3 preserved; no spec file touched; sidecar stop-hook marker included). v4.96 checkpoint archived to cycles/v1.0.0-greenfield/session-checkpoints.md.
+
+**Agent:** state-manager | **Status:** COMPLETE | Streak 0/3 (STATE-only wrap; BC-5.39.001 unchanged). NEXT P1D-207 (streak restart).
+
+---
+
+### Burst-322 STATE-Record (2026-08-18) — P1D-211 CLEAN + Light Compaction
+
+**Purpose:** Record P1D-211 CLEAN(strict)+CLEAN(PR-merge); advance streak to 1/3; perform light in-place STATE.md compaction (18 decision rows → 5 compressed; burst-317-wrap row archived); archive v5.02 session checkpoint.
+
+**Pass result:**
+- P1D-211 CLEAN(strict)=YES, CLEAN(PR-merge)=YES; 0 findings. Fresh-context adversary pass on frozen spec anchor 79eb2f3 (post-F-P210-01 fix-burst).
+- Deep-read slice: BC bodies ss-06/BC-2.06.001+006, ss-03/BC-2.03.002+003; H1↔BC-INDEX sync across ss-03/04/05/06/07/08/09/12/13/14 (~55 BCs, zero drift); prd.md §5 error taxonomy + §7 RTM (133 rows = 51 P0/79 P1/3 P2 confirmed); error-taxonomy 13-category axis incl. EXEC; CAP-004 verbatim anchors in BC-2.03.002/003; ADR-023 §Exempt Enums resolution; ADR supersedes/superseded_by back-refs across all 26 ADRs (no supersession relationships → no back-ref defects). All corpus-wide canonical-form checks PASS.
+- Both recent fix confirmations CLEAN corpus-wide: (1) category casing (category: INTERNAL; zero live-body bare `Internal`); (2) module count (83 total / HIGH 28 / 77 tiered; purity-boundary-map "84" is the correct independent purity partition, not a residual).
+
+**Streak bookkeeping:**
+- Streak 0/3 → 1/3 STARTED (first CLEAN(strict) on the post-F-P210-01 frozen anchor 79eb2f3).
+- Per D-143/D-165: STATE-only bookkeeping commit does NOT reset streak; frozen SPEC anchor remains 79eb2f3; bookkeeping HEAD advances while spec content stays frozen.
+
+**Compaction performed:**
+- Archived `burst-317-wrap COMPLETE` from Current Phase Steps to burst-log.md (this file; 5-row rolling window).
+- Compressed 18 verbose Decision Log rows (D-165..D-166, D-168..D-169, D-172..D-177, D-179..D-184, D-187..D-188) to 5 summary rows per existing compression pattern. All compressed content preserved in git history on factory-artifacts branch.
+- Archived v5.02 Session Resume Checkpoint to cycles/v1.0.0-greenfield/session-checkpoints.md.
+
+**Files touched:**
+- `.factory/STATE.md` (state-manager — D-193 minted; v5.02→v5.03; compaction; streak 1/3; NEXT P1D-212)
+- `.factory/cycles/v1.0.0-greenfield/burst-log.md` (state-manager — this entry + burst-317-wrap archive)
+- `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` (state-manager — v5.02 checkpoint archived)
+
+**Decision minted:** D-193 — P1D-211 CLEAN(strict)=YES CLEAN(PR-merge)=YES; streak 0/3→1/3 STARTED; frozen anchor 79eb2f3. NEXT P1D-212.
+**Streak:** 1/3 ACTIVE (BC-5.39.001; D-143 STATE-only advance does not reset)
+**NEXT:** P1D-212 — adversary streak 2/3 attempt; spec perimeter frozen at 79eb2f3.

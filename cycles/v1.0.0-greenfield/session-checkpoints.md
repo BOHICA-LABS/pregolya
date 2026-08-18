@@ -2476,3 +2476,20 @@ develop `644d1ad` — clean, PUSHED. Spec content frozen at burst-316. Validator
 
 #### ARCHIVE METADATA
 Date: 2026-08-18 | Archived at: burst-317-wrap session-wrap | STATE.md: 4.96 → 4.97 | burst-316 COMPLETE; D-186 minted; capabilities-p1-p2 §CAP-038 GrepResult.capped canon; streak 0/3; NEXT P1D-207. Replaced by v4.97 (D-187 session-wrap RESUME SNAPSHOT; spec perimeter UNCHANGED).
+
+---
+
+### Archived Checkpoint — STATE.md v5.02 (archived at burst-322 state record)
+
+*From STATE.md v5.02, burst-321 COMPLETE. Superseded by v5.03 (P1D-211 CLEAN; streak 1/3 STARTED; D-193; burst-322).*
+
+#### RESUME IN ONE BREATH
+Pregolya — Phase 1 (Spec Crystallization), greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase-1d adversarial cascade is RE-CONVERGING after the human-directed LCEL scope expansion (D-170). P1D-209 was CLEAN strict+PR-merge (D-191; streak 1/3). P1D-210 found 1 MED F-P210-01 (module census double-count 84→83; RESET; D-192). fix-burst-321 CLOSED (module-criticality v2.11 + verification-coverage-matrix v3.9 + tooling-selection v1.8; purity-boundary-map 84 verified independent/correct, NOT changed; VP arithmetic 14=9+3+2 UNCHANGED; L-188 minted). STREAK IS NOW 0/3 RESET. NEXT: dispatch adversary pass P1D-211 (streak restart 0/3; spec perimeter = fix-burst-321 HEAD); three consecutive CLEAN(strict) passes needed → pre-gate consistency audit + input-hash drift check → Phase 1 CLOSES on human's ALREADY-GRANTED conditional approval → Phase 2 (Story Decomposition).
+
+#### HEADS (at time of archival)
+develop `644d1ad` — clean, PUSHED; unchanged the entire session.
+factory-artifacts burst-321 content at 7e291e0; HEADS SHA currency fix at 79eb2f3; run `git -C .factory log -1 --format='%h'` for current HEAD.
+Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-18 | Archived at: burst-322 state record | STATE.md: 5.02 → 5.03 | P1D-211 CLEAN strict+PR-merge; D-193 minted; streak 0/3→1/3 STARTED; frozen anchor 79eb2f3; NEXT P1D-212. Light compaction: D-165..D-166/D-168..D-169/D-172..D-177/D-179..D-184/D-187..D-188 compressed (18 rows → 5); burst-317-wrap COMPLETE archived to burst-log.md.
