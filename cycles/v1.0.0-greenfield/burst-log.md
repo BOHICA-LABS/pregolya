@@ -1,8 +1,9 @@
 ---
 document_type: burst-log
 level: ops
-version: "1.4"
+version: "1.5"
 changelog:
+  - "1.5 (burst-316/2026-08-18): burst-311 archive entry (5-row rolling window) + burst-316 COMPLETE entry appended"
   - "1.4 (burst-315/2026-08-17): burst-310 archive entry (5-row rolling window) + burst-315 COMPLETE entry appended"
   - "1.3 (burst-311/2026-08-17): burst-306 archive entry (5-row rolling window) + burst-311 COMPLETE entry appended"
   - "1.2 (burst-308/2026-08-17): burst-307 archive entry (5-row rolling window) + burst-308 COMPLETE entry appended"
@@ -6511,3 +6512,37 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 **Decision minted:** D-185
 **Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
 **NEXT:** P1D-206 — adversary streak restart (0/3) on the now-fully-audited perimeter; 3-CLEAN required before Phase-1 gate closes.
+
+---
+
+### Archived Current-Phase-Steps Row — burst-311 COMPLETE (2026-08-17)
+
+*Archived from STATE.md v4.96 (5-row rolling window; replaced by burst-316 entry).*
+
+**burst-311 COMPLETE (2026-08-17)** — P1D-202 CLOSED (1HIGH/2OBS): F-P202-01 (HIGH) CheckpointSaver::fts_search trait-method canon (search_history=TOOL WRAPPER; fts_search=TRAIT METHOD); 8 files updated: interface-definitions.md §CheckpointSaver, ADR-019, dependency-graph.md, module-decomposition.md, BC-2.10.006, BC-2.04.001 §Invariants Inv-5, BC-2.10.003 §EC-block asc-reorder (OBS-P202-A), VP-014 §FormalInvariant Vec canon (OBS-P202-B). Grep gate blocked 2 incomplete-sweep commits. BC census UNCHANGED 133 (51/79/3).
+
+**Agent:** state-manager | **Status:** COMPLETE | Streak 0/3 (fix-burst; BC-5.39.001). NEXT P1D-203 (streak restart).
+
+---
+
+### Burst-316 COMPLETE (2026-08-18) — capabilities-p1-p2 §CAP-038 E-TOOLS-006 GrepResult.capped Canon (P1D-206 F-P206-01)
+
+**Purpose:** Close the final GrepTool-name informal-name sibling in the domain-spec capability shards. The sibling `SearchResultsCapped` (informal name) appeared in capabilities-p1-p2.md §CAP-038 body; the canonical form is the payload field path `GrepResult.capped` per error-taxonomy §E-TOOLS-006 + BC-2.23.006 PC-2. ubiquitous-language-core.md §GrepResult was fixed in burst-315; this was the remaining un-swept capability shard.
+
+**Findings closed (1 total; 1MED):**
+- **F-P206-01 (MED):** `capabilities-p1-p2.md` §CAP-038 body — E-TOOLS-006 cited `SearchResultsCapped` (informal name) instead of canonical payload field `GrepResult.capped`. Fixed by business-analyst (v1.25→v1.26). Changelog entry added (burst-316/F-P206-01/2026-08-18). Grep gate PASSED: zero live-body `SearchResultsCapped` in domain-spec files.
+
+**STEP 1 grep gate result:**
+- `SearchResultsCapped` in domain-spec: 0 live-body occurrences (only changelog line 20 of capabilities-p1-p2.md, as expected). PASSED.
+
+**Files touched:**
+- `specs/domain-spec/capabilities-p1-p2.md` (business-analyst fix — §CAP-038 E-TOOLS-006 body + §Changelog, v1.25→v1.26)
+- `.factory/STATE.md` (state-manager — D-186 minted; burst-316 COMPLETE; v4.95→v4.96)
+- `.factory/cycles/v1.0.0-greenfield/burst-log.md` (state-manager — this entry + burst-311 archive)
+
+**Versions bumped:** capabilities-p1-p2.md §CAP-038 (E-TOOLS-006 body fix); STATE.md §Decisions Log (D-186 minted); burst-log.md (this entry)
+
+**Decision minted:** D-186 — burst-316 closed the final GrepTool-name sibling; the retired informal name `SearchResultsCapped` now has zero live-body domain-spec occurrences (canonical `GrepResult.capped` per error-taxonomy §E-TOOLS-006 + BC-2.23.006). ADR-020's mnemonic-label table intentionally retains the mnemonic Name column (not a defect). Streak remains 0/3. NEXT P1D-207.
+
+**Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
+**NEXT:** P1D-207 — adversary streak restart (0/3); 3-CLEAN required before Phase-1 gate closes.

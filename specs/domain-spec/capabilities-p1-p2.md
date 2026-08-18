@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.25"
+version: "1.26"
 status: active
 producer: business-analyst
 timestamp: 2026-08-17T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "faffcd7"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170]
 changelog:
+  - "1.26 (burst-316/F-P206-01/2026-08-18): F-P206-01 (MED) CAP-038 E-TOOLS-006 name: retired informal name 'SearchResultsCapped' replaced with canonical payload field path per error-taxonomy §E-TOOLS-006 and BC-2.23.006. Before: 'E-TOOLS-006 `SearchResultsCapped` on ceiling (informational — partial results returned)'. After: 'E-TOOLS-006 (`GrepResult.capped` — informational payload field, not a raised Err; partial results returned on ceiling)'. Authority: error-taxonomy §E-TOOLS-006 canonical payload field path GrepResult.capped (established burst-247/F-P146-02); BC-2.23.006 PC-2. Corpus sweep: sole SearchResultsCapped live-body occurrence in domain-spec; zero others found. ADR-020 §First-Party Tool Error Codes mnemonic-label table correctly excluded (intentional label column). TD-VSDD-060 sweep: sole E-TOOLS-006/SearchResultsCapped occurrence in this file."
   - "1.25 (burst-304/F-P195-01/2026-08-17): F-P195-01 (HIGH) invoke_dyn residual in CAP-039 RunnablePassthrough description: 'invoke_dyn(input, config)' → 'invoke(input, config)'. Canon: DynRunnable method is invoke (not invoke_dyn — that is DynTool's method). TD-VSDD-060 sweep: zero other invoke_dyn occurrences in DynRunnable/RunnableParallel/RunnablePassthrough/RunnableAssign context in live body; zero E-CORE-NNN/MMM, core::runnable::parallel/::passthrough, or DynRunnable< residuals in live body."
   - "1.24 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) error-code placeholder resolution — CAP-039 §RunnableParallel fail-fast body: E-CORE-NNN → E-CORE-009 (EXEC, RunnableParallelBranchFailure, anchor BC-2.01.006); CAP-039 §RunnableAssign body: E-CORE-MMM → E-CORE-010 (VAL, RunnableAssignNonDictInput, anchor BC-2.01.008). F-P194-03 (MED) module-path canonicalization — CAP-039 module placement: non-canonical 3-level paths (pregolya-core::core::runnable::parallel / ::passthrough) → canonical 2-level form (core::runnable) per ADR-026 and module-registry canon. TD-VSDD-060 sweep: zero E-CORE-NNN/MMM remain in live body; zero 3-level runnable submodule paths remain in live body."
   - "1.23 (burst-302b/D-170/2026-08-17): D-170 LCEL composition scope expansion — CAP-039 authored (RunnableParallel, RunnablePassthrough, RunnableAssign; SS-01/pregolya-core). New section 'P1 — LCEL Map/Passthrough Composition (Wave 1, D-170)' added before P2 section. P1 count 26→27; total section CAPs 29→30; L2 total 38→39. D170 added to decisions list. BCs BC-2.01.005–008 and VP-014 referenced (product-owner authoring in parallel)."
@@ -713,7 +714,7 @@ hermetic and unit-testable without system tool availability). `ActionRisk::ReadO
 
 Accepts: `{ pattern: String, path: String, recursive: bool, case_insensitive: bool,
 max_results: usize }`. Results capped at `max_results` (default 100); E-TOOLS-006
-`SearchResultsCapped` on ceiling (informational — partial results returned). Returns
+(`GrepResult.capped` — informational payload field, not a raised Err; partial results returned on ceiling). Returns
 matches with file path and line number. Path argument validated by PathGuard for directory
 scoping (E-TOOLS-001 on out-of-guard paths). No sandbox execution — in-process std::fs.
 No retry enrollment needed (pure read, idempotent).
