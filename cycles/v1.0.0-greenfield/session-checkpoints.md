@@ -2493,3 +2493,20 @@ Story worktrees: NONE. Open PRs: NONE.
 
 #### ARCHIVE METADATA
 Date: 2026-08-18 | Archived at: burst-322 state record | STATE.md: 5.02 → 5.03 | P1D-211 CLEAN strict+PR-merge; D-193 minted; streak 0/3→1/3 STARTED; frozen anchor 79eb2f3; NEXT P1D-212. Light compaction: D-165..D-166/D-168..D-169/D-172..D-177/D-179..D-184/D-187..D-188 compressed (18 rows → 5); burst-317-wrap COMPLETE archived to burst-log.md.
+
+---
+
+### Archived Checkpoint — STATE.md v5.03 (archived at burst-323 state record)
+
+*From STATE.md v5.03, burst-322 COMPLETE. Superseded by v5.04 (P1D-212 CLEAN; streak 2/3 ACTIVE; D-194; burst-323).*
+
+#### RESUME IN ONE BREATH
+Pregolya — Phase 1 (Spec Crystallization), greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase-1d adversarial cascade is RE-CONVERGING after the human-directed LCEL scope expansion (D-170). P1D-211 was CLEAN strict+PR-merge (D-193; streak 1/3). STREAK IS NOW 1/3 ACTIVE; frozen anchor 79eb2f3. NEXT: dispatch adversary pass P1D-212 (streak 2/3; spec perimeter unchanged since 79eb2f3); if CLEAN: streak 2/3 → then P1D-213 (streak 3/3 cascade-closing). After 3-CLEAN: pre-Phase-1-gate consistency-validator audit + /vsdd-factory:check-input-drift → Phase 1 CLOSES on human's ALREADY-GRANTED conditional approval → Phase 2 (Story Decomposition).
+
+#### HEADS (at time of archival)
+develop `644d1ad` — clean, PUSHED; unchanged the entire session.
+factory-artifacts: run `git -C .factory log -1 --format='%h'` for current HEAD; spec-frozen anchor 79eb2f3.
+Story worktrees: NONE. Open PRs: NONE.
+
+#### ARCHIVE METADATA
+Date: 2026-08-18 | Archived at: burst-323 state record | STATE.md: 5.03 → 5.04 | P1D-212 CLEAN strict+PR-merge; D-194 minted; streak 1/3→2/3 ACTIVE; frozen anchor 79eb2f3; NEXT P1D-213 (streak 3/3 cascade-closing). VP-body deep-read all 14 VPs completed; all ADR §Decision citations verified.
