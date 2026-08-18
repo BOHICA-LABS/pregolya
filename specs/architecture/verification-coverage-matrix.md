@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.8"
+version: "3.9"
 status: active
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "b342a4c"
+input-hash: "a559567"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.9 (F-P210-01/2026-08-18): Census reconciliation — Resolution B. Both documents enumerate the same 83 distinct modules; coverage-matrix's prior HIGH=29/tiered=78 double-counted core::serializable (one module with CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable aspects). Preamble updated to acknowledge both collapse-pairs and clarify 83 distinct modules. HIGH 29→28 (core::serializable counted once in CRITICAL, its highest tier). Tiered 78→77. Coverage by Criticality Tier HIGH row: 29→28 modules, proptest denominator 7 of 29→7 of 28. Coverage gap note denominators updated. tooling-selection.md §Test Strategy Summary sibling updated in same burst."
   - "3.8 (burst-304/OBS-B/2026-08-17): OBS-B double-count fix. The two `core::runnable` rows in Per-Module Coverage Status (pipe associativity + VP-014 key-completeness) represent ONE HIGH-tier module, not two. v3.6 incorrectly added `core::runnable::parallel` as a new HIGH-tier module (bumping HIGH 29→30), but since v3.7 canonicalized that path to `core::runnable` (the same module already in HIGH tier), the count was inflated. Corrections: (1) Per-Module header: HIGH 30 → 29; = 79 tiered → = 78 tiered. (2) Coverage by Criticality Tier HIGH row: modules 30 → 29; proptest '8 of 30: core::runnable, core::runnable/VP-014, ...' → '7 of 29: core::runnable, ...' (one module, two proptest aspects). (3) Coverage gap note: '8 of 30 HIGH' → '7 of 29 HIGH'. Arithmetic invariant unchanged: 14 total VPs; Kani 9 + proptest 3 + integration 2 = 14. Input-hash updated (VP-INDEX.md drift from burst-303 inputs)."
   - "3.7 (burst-303/F-P194-03/2026-08-17): Fix non-canonical 3-level module path in Coverage by Criticality Tier HIGH proptest list and preamble note. `core::runnable::parallel/VP-014` → `core::runnable/VP-014` (canonical 2-level registry form per module-decomposition.md and the per-module table note added in v3.6: 'burst-302b VP-014 absorbed into core::runnable (3-level path core::runnable::parallel non-canonical)'). Preamble note: `core::runnable::parallel addition` → `core::runnable/VP-014 addition`. No count or structural changes."
   - "3.6 (burst-302b/D-170/2026-08-17): Add VP-014 (proptest P1, core::runnable::parallel, pregolya-core, BC-2.01.005 + BC-2.01.006, DI-016). LCEL composition scope expansion (D-170). VP-to-Module table: add VP-014 row; Totals 13→14 VPs, proptest 2→3. Per-Module Coverage Status: add core::runnable::parallel row (HIGH tier, pregolya-core, proptest VP-014, D-170/SS-01; RunnableParallel key-completeness). Coverage by Criticality Tier HIGH proptest: 7 of 29 → 8 of 30 (new module added to HIGH tier; HIGH count 29→30 since core::runnable::parallel is a new HIGH-tier module; proptest count +1). Arithmetic invariant: total 13→14, P1 7→8, proptest 2→3. Preamble updated."
@@ -75,9 +76,9 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers 85 architecture entries (84 from prior bursts + burst-302b core::runnable/VP-014 addition: D-170/SS-01 RunnableParallel key-completeness; absorbed into existing HIGH-tier core::runnable module).
-> Tiered groupings: CRITICAL 12 / HIGH 29 / MEDIUM 35 / LOW 2 = 78 tiered. Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
-> Note: Two Per-Module rows exist for `core::runnable` (pipe associativity + VP-014 key-completeness) as distinct proptest aspects — same pattern as `core::serializable` (VP-007 round-trip + VP-010 reviver). These two rows represent ONE HIGH-tier module in the tier count.
+> This table covers 85 physical rows (84 from prior bursts + burst-302b core::runnable/VP-014 addition: D-170/SS-01 RunnableParallel key-completeness; absorbed into existing HIGH-tier core::runnable module).
+> Two collapse-pairs reduce 85 physical rows to 83 distinct modules: (1) `core::runnable`: 2 rows for 1 HIGH module (pipe-associativity + VP-014 key-completeness); (2) `core::serializable`: 2 rows for 1 module spanning CRITICAL (VP-010 Reviver) and HIGH (VP-007 LcSerializable round-trip), counted once in CRITICAL as its highest tier per F-P210-01.
+> Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77 tiered (77 distinct tiered modules). Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -172,11 +173,11 @@ changelog:
 | Tier | Modules | Kani VPs | proptest (actual current) | fuzz | Kill Rate Target |
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | 3 of 12: graph::bsp_engine, checkpoint::session_index, checkpoint::clock | subset | ≥ 95% |
-| HIGH | 29 | 3 (VP-006, VP-012, VP-013) | 7 of 29: core::runnable (pipe assoc. + VP-014), core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget | subset | ≥ 90% |
+| HIGH | 28 | 3 (VP-006, VP-012, VP-013) | 7 of 28: core::runnable (pipe assoc. + VP-014), core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget | subset | ≥ 90% |
 | MEDIUM | 35 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | n/a (xtask and pregolya-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
 
-> **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 29 HIGH (derivation: counted unique modules with proptest column = yes/VP-NNN from per-module table above, grouped by tier; `core::runnable` counted once despite two per-module rows). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 29 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.
+> **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 28 HIGH (derivation: counted unique modules with proptest column = yes/VP-NNN from per-module table above, grouped by tier; `core::runnable` counted once despite two per-module rows; `core::serializable`/VP-007 counted in HIGH tier coverage fractions as it targets the HIGH-tier LcSerializable aspect). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 28 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.
 
 ## Mutation Kill Rate Gates (cargo-mutants)
 

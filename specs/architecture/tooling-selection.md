@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: tooling-selection
-version: "1.7"
+version: "1.8"
 status: active
 producer: architect
 timestamp: 2026-08-16T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "0615229"
+input-hash: "77eb9cb"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.8 (F-P210-01/2026-08-18): TD-VSDD-060 sibling sweep — §Test Strategy Summary proptest row: HIGH denominator 7 of 29→7 of 28 to match corrected HIGH distinct-module count (core::serializable removed from HIGH count per census reconciliation; counted once in CRITICAL as its highest tier)."
   - "1.7 (burst-292/P1D-183-F4+LOW/2026-08-16): (F4) Fix stale fuzz-target filenames in §Fuzzing table: checkpoint_roundtrip.rs → fuzz_checkpoint_serde.rs; graph_engine_boundary.rs → fuzz_graph_execution.rs. Authoritative names per BC-2.17.002 and verification-architecture.md §Fuzzing Targets. (LOW) Update §Kani Async Constraint sync-core mandate to the authoritative 5-module set (checkpoint::session_index, checkpoint::clock, graph::bsp_engine, graph::hitl, core::budget) per verification-architecture.md §Kani Async Constraint; prior 3-function illustrative list named individual function symbols (reduce_super_step, storage_address, get_next_version) and omitted graph::hitl and core::budget VP targets. get_next_version has no VP; graph::hitl (VP-011) and core::budget (VP-012) do."
   - "1.6 (burst-288/F-P177-A04/2026-08-15): Fix stale proptest count in §Test Strategy Summary live body: '3 of 12 CRITICAL + 7 of 28 HIGH = 10 modules' → '3 of 12 CRITICAL + 7 of 29 HIGH = 10 modules'. HIGH tier count was bumped 28→29 (core::tool added to verification-coverage-matrix.md §Coverage by Criticality Tier) but this live-body sibling was not updated in the same burst."
   - "1.5 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §Security Linting Invocation row: `cargo xtask deny-client-new` → `cargo xtask check-client-timeout`; `cargo xtask deny-expect-in-lib` → `cargo xtask check-no-panic`. Canonical `check-<subject>` form per D-35."
@@ -130,7 +131,7 @@ Key rules:
 | Verification Level | Tools | When |
 |-------------------|-------|------|
 | Unit tests | `cargo test` | Every PR |
-| Property tests | proptest | Every PR (modules with proptest targets: 3 of 12 CRITICAL + 7 of 29 HIGH = 10 modules; see verification-coverage-matrix.md §Coverage by Criticality Tier; **coverage obligation:** expand proptest to all CRITICAL/HIGH modules by Phase 5) |
+| Property tests | proptest | Every PR (modules with proptest targets: 3 of 12 CRITICAL + 7 of 28 HIGH = 10 modules; see verification-coverage-matrix.md §Coverage by Criticality Tier; **coverage obligation:** expand proptest to all CRITICAL/HIGH modules by Phase 5) |
 | Integration tests | `cargo test --test *` | Every PR |
 | Soak tests | custom harness | Phase 3 per-story (durability) |
 | Mutation testing | cargo-mutants | Phase 3 per-story (CRITICAL); Phase 5 full sweep |

@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.10"
+version: "2.11"
 status: active
 producer: architect
 timestamp: 2026-08-01T00:00:00Z
@@ -10,11 +10,12 @@ inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "710f965"
+input-hash: "dccf21e"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.11 (F-P210-01/2026-08-18): Census reconciliation — Resolution B confirmed. module-criticality.md and verification-coverage-matrix.md enumerate the same 83 distinct modules; module-criticality's prior Total=84 was a row count that double-counted core::serializable (one module with aspects in both CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable). Counting each distinct module once in its highest tier: core::serializable belongs to CRITICAL. Corrections: HIGH 29→28 (remove core::serializable LcSerializable row from HIGH distinct-module count), Total 84→83, tiered-rows comment 78→77. Classification Summary now reflects distinct-module counts."
   - "2.10 (fix-burst-287/F-P176-A009/2026-08-01): Census re-verification after multi-burst accumulation. Ground truth: crate::module-form path rows in module-decomposition.md total 76; 70 carry a CRITICAL/HIGH/MEDIUM/LOW tier; 6 carry a dash (definitions-only/exempt: memory::skills, core::documents, core::guardrail, core::action_risk, core::context_mutation, core::write_guard). No content changes to Classification Summary (Total=84 already correct: 78 tiered + 6 definitions-only). Updated Census quintuple: decomposition_total_rows=76, decomposition_tiered_rows=70, exempt_count=6, registry_rows=84, matched_rows=70. Identity 1: 76=70+6 ✓. Identity 2: 70 tiered decomp = 70 module-level tiered registry rows ✓ (78 registry tiered − 8 crate-level = 70). State of prior Census sextuple (v2.5, 2026-07-27): (71, 69, 2, 77, ?, 69) — stale by +5 decomp rows (+1 tiered core::tool, +4 definitions-only from FIX-BURST-277). Gate check recommendation: the gate verifying purity-boundary-map intro row count must compare against the crate::module-form path row count in module-decomposition.md directly; a gate that only checks purity-boundary-map internal arithmetic passes while stale."
   - "2.9 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — NE Catalog Enforcement Mechanism cells: `cargo xtask deny-client-new` → `cargo xtask check-client-timeout` (NE-04); `cargo xtask deny-expect-in-lib` → `cargo xtask check-no-panic` (NE-07). Superseded variant names forbidden; canonical `check-<subject>` form per D-35."
   - "2.8 (FIX-BURST-278-WAVE-A/F-P175-D212/2026-07-28): Iron Law — add `core::tool` HIGH row (pregolya-core SS-08; Tool/DynTool trait seam; DynTool blanket impl; ToolOutput variant mapping; no Kani VP; BC-2.08.010; no kill rate exception). Required by module-decomposition.md §core::tool row addition. Classification Summary: HIGH 28→29; Total 83→84. GATE-25 arithmetic post-fix: 84(total) − 77(module-level) = 7(crate-level) ✓."
@@ -182,13 +183,13 @@ changelog:
 | Tier | Module Count |
 |------|-------------|
 | CRITICAL | 12 |
-| HIGH | 29 |
+| HIGH | 28 |
 | MEDIUM | 35 |
 | LOW | 2 |
 | — (definitions-only/exempt) | 6 |
-| **Total** | **84** |
+| **Total** | **83** |
 
-> Module/crate breakdown: 12 CRITICAL module-level + 25 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 34 MEDIUM module-level + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 78 tiered rows.
+> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 34 MEDIUM module-level + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 77 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier).
 
 ## CRITICAL Module — Security Profile
 
