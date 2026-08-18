@@ -6401,6 +6401,29 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 
 ---
 
+## Burst-313 (2026-08-17) — P1D-204 Fix: VP-014 Mirror-Sibling Sweep (§Decision split + new()-arg type) [D-183]
+
+**Agent:** state-manager (commit/bookkeeping); product-owner (VP-014 §Source Contract, prior session); architect (verification-architecture §VP-014 formal statement, prior session)
+**Trigger:** P1D-204 NOT CLEAN — 2 findings (2MED) — un-swept VP-014 mirror-siblings of burst-311/312 fixes
+**Files touched:** VP-014.md §Changelog (v1.2→v1.3), verification-architecture.md §Changelog (v2.18→v2.19), VP-INDEX.md §Changelog (v1.11→v1.12), STATE.md §Decisions-Log (D-183), burst-log.md, lessons.md (L-187), sidecar-learning.md
+
+**Findings closed:**
+- F-P204-01 (MED): VP-014 §Source Contract ADR anchor cited ADR-026 §Decision 1 for JoinSet fan-out, completion-order collection, and re-insertion — all §Decision 2 machinery. §Decision 1 covers type representation and key ordering only; concurrent execution is §Decision 2. Fix: split into two single-§ citations per POL-19 (mirrors burst-312 fix applied to sibling BC-2.01.005). Corpus sweep confirmed zero remaining in-domain §Decision-1-attributing-JoinSet sites.
+- F-P204-02 (MED): verification-architecture.md §VP-014 formal statement still used `IndexMap<String, Arc<dyn DynRunnable>>` as the `new()` argument type — un-swept mirror-sibling of OBS-P202-B which was applied to VP-014.md §FormalInvariant but not to the mirror in verification-architecture. Fix: stale IndexMap new()-arg replaced with canonical `Vec<(String, Arc<dyn DynRunnable>)>` (iterator-of-pairs). IndexMap is the INTERNAL container built by new(), not the argument type (ADR-026 §Decision 1 / BC-2.01.005 PC1).
+
+**STEP 1 grep gates (PASSED):**
+- IndexMap as new() argument residuals: ZERO live-body residuals. All occurrences in interface-definitions.md §RunnableParallel struct field, BC-2.01.005 §Construction Preconditions, ADR-026 §Decision 1 newtype struct definition are internal-container usages — correct.
+- ADR-026 §Decision 1 attributing JoinSet/fan-out/concurrent: ZERO live-body residuals. Grep matches in changelog rows (historical) and VP-014.md §Source Contract (false-positive: `.*` spans across §Decision 1 + §Decision 2 on same line; the line is correct).
+
+**STEP 2 records-lint:** PASS=6 WARN=0 FAIL=0. No L9 violations in interface-definitions.md or any file.
+
+**Decision minted:** D-183
+**Lesson codified:** L-187 (VP-mirror-site extension discipline)
+**Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
+**NEXT:** P1D-205 — adversary streak restart (0/3); spec perimeter includes VP-014 mirror-site completeness; 133 BCs = 51/79/3.
+
+---
+
 ## Burst-312 (2026-08-17) — P1D-203 Fix: BC-2.01.005/BC-2.12.002 Anchor Quote Fidelity [D-182]
 
 **Agent:** state-manager (commit/bookkeeping); product-owner (BC content, prior session)

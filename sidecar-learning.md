@@ -297,3 +297,8 @@ Session-end markers for the VSDD factory. Run /session-review to synthesize.
 - Session ended at 2026-08-17T23:29:38Z (awaiting /session-review)
 - Session ended at 2026-08-17T23:35:05Z (awaiting /session-review)
 - Session ended at 2026-08-17T23:39:07Z (awaiting /session-review)
+- Session ended at 2026-08-18T00:58:33Z (awaiting /session-review)
+- Session ended at 2026-08-18T01:04:42Z (awaiting /session-review)
+- Session ended at 2026-08-18T01:09:14Z (awaiting /session-review)
+- Session ended at 2026-08-18T01:13:03Z (awaiting /session-review)
+- Session ended at 2026-08-18T17:10:00Z — burst-313 COMPLETE: VP-014 mirror-sibling sweep (F-P204-01/02 closed; D-183 minted; L-187 VP-mirror-site extension discipline codified). STATE.md v4.93. (awaiting /session-review)

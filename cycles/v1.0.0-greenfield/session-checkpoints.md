@@ -2404,3 +2404,21 @@ develop `644d1ad` — clean, PUSHED. Validator baselines: burst-310 final; 14 bl
 
 #### ARCHIVE METADATA
 Date: 2026-08-17 | Archived at: burst-311 state record | STATE.md: 4.90 → 4.91 | burst-310 COMPLETE; D-180 minted; E-CORE-011 carrier closed corpus-wide; streak UNCHANGED 0/3 (pre-emptive fix); NEXT P1D-202. Replaced by v4.91 (burst-311 COMPLETE; P1D-202 NOT CLEAN 3 findings 1H/2OBS; fts_search trait-method canon sweep; D-181 minted; streak UNCHANGED 0/3; NEXT P1D-203).
+
+---
+
+### Archived Checkpoint — STATE.md v4.92 (archived at burst-313 state record)
+
+*From STATE.md v4.92, burst-312 COMPLETE. Superseded by v4.93 (burst-313 COMPLETE).*
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). **burst-312 COMPLETE (2026-08-17)**: D-182 minted. P1D-203 NOT CLEAN(strict)=NO (2 findings 1MED/1LOW): F-P203-02 (MED) BC-2.01.005 ADR-026 §Decision 1/2 citation split — §Decision 1 = RunnableParallel: Type Representation and Key Ordering; §Decision 2 = RunnableParallel: Concurrent Execution and Error Handling; F-P203-01 (LOW) BC-2.12.002 CAP-014 verbatim quote corrected — 'Assistant (named agent config with graph reference)' → 'Assistant (named agent config)'. Streak UNCHANGED 0/3 (fix-burst; BC-5.39.001). 133 BCs (51/79/3), 39 CAP, 16 DI, 14 VP, 26 ADR, 114 err.
+
+#### NEXT-ACTION (at time of archival)
+P1D-204 adversary streak restart (0/3). Spec perimeter frozen at 32ff285 + EXEC + E-CORE-011 + fts_search/search_history + ADR §Decision-N heading + CAP-title verbatim; 3-CLEAN required before Phase-1 gate closes.
+
+#### HEADS (at time of archival)
+develop `644d1ad` — clean, PUSHED. Validator baselines: burst-312 final; 14 blocking + 1 advisory.
+
+#### ARCHIVE METADATA
+Date: 2026-08-17 | Archived at: burst-313 state record | STATE.md: 4.92 → 4.93 | burst-312 COMPLETE; D-182 minted; P1D-203 NOT CLEAN 1MED/1LOW; ADR-026 §Decision 1/2 + CAP-014 verbatim; streak 0/3; NEXT P1D-204. Replaced by v4.93 (burst-313 COMPLETE; D-183; P1D-204 NOT CLEAN 2MED; VP-014 mirror-sibling sweep; streak 0/3; NEXT P1D-205).

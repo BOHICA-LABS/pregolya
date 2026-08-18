@@ -1,13 +1,14 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.11"
+version: "1.12"
 status: active
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.12 (burst-313/F-P204-01/2026-08-17): VP-014 (v1.2→v1.3) — §Source Contract ADR anchor corrected: split single ADR-026 §Decision 1 citation that mis-attributed JoinSet fan-out, completion-order collection, and re-insertion (§Decision 2 machinery) to §Decision 1 (type representation and key ordering only) into two single-§ citations per POL-19: §Decision 1 (type representation and key ordering) and §Decision 2 (concurrent execution and error handling). Mirrors burst-312 fix applied to sibling BC-2.01.005. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
   - "1.11 (burst-311/OBS-P202-B/2026-08-17): VP-014 (v1.1→v1.2) — formal invariant aligned to canonical new() argument type Vec<(String, Arc<dyn DynRunnable>)> per BC-2.01.005 PC1 and ADR-026 §Decision 1 (OBS-P202-B). IndexMap is the internal container built by new(), not the argument type. Harness skeleton and Proof Obligations were already correct (Vec-of-pairs form); formal invariant now matches. Key-completeness property preserved. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
   - "1.10 (burst-308/D26-EXEC-propagation/2026-08-17): VP-013 (v1.14→v1.15) — §BC Contradictions Flagged RESOLVED block: '12-category axis' → '13-category axis' per ADR-010 §Category Axis Expansion (D26). EXEC is the 13th category added by D26; the prior `Category::CONFIGURATION` label was non-canonical both before and after D26 expansion. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
   - "1.9 (burst-303/D-172/2026-08-17): VP-014 (v1.0→v1.1) — harness-text alignment: DynRunnable method-surface corrected from invoke_dyn/stream_dyn to invoke/stream + config Option<RunnableConfig> per ADR-026 §Decision 1 (F-P194-01). Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."

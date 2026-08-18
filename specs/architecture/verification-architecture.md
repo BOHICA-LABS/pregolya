@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.18"
+version: "2.19"
 status: active
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
-input-hash: "41a2095"
+input-hash: "f52703e"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -577,12 +577,17 @@ branch key set passed to `RunnableParallel::new(steps)`. Holds for all N ≥ 0.
 
 Formal statement (DI-016 key-completeness half):
 ```
-∀ steps: IndexMap<String, Arc<dyn DynRunnable>>, ∀ input: Value:
-  let N = steps.len();
-  if let Ok(output) = RunnableParallel::new(steps).invoke(input, None).await {
-    output.as_object().unwrap().len() == N
-    ∧ output.as_object().unwrap().keys().collect::<HashSet<_>>()
-        == steps.keys().collect::<HashSet<_>>()
+// new() accepts an iterator of (key, runnable) pairs — the canonical argument type
+// per BC-2.01.005 PC1. IndexMap is the INTERNAL container built by new(), not the
+// argument type (ADR-026 §Decision 1).
+∀ steps: Vec<(String, Arc<dyn DynRunnable>)>, ∀ input: Value:
+  let key_set: HashSet<String> = steps.iter().map(|(k, _)| k.clone()).collect();
+  let N = key_set.len();
+  let result = RunnableParallel::new(steps).invoke(input, None).await;
+  if let Ok(output) = result {
+    let obj = output.as_object().unwrap();
+    obj.len() == N
+    ∧ obj.keys().cloned().collect::<HashSet<_>>() == key_set
   }
 ```
 
@@ -667,6 +672,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.19 | 2026-08-17 | architect | BURST-313 / F-P204-02 | VP-014 formal statement corrected: stale `new()` argument type `IndexMap<String, Arc<dyn DynRunnable>>` replaced with canonical `Vec<(String, Arc<dyn DynRunnable>)>` (iterator-of-pairs). IndexMap is the INTERNAL container built by `new()`, not the argument type (ADR-026 §Decision 1 / BC-2.01.005 PC1). Formal invariant rewritten: quantifier uses Vec-of-pairs, extracts `key_set` from pairs via iterator map-collect, derives `N = key_set.len()`. Adds clarifying comment that IndexMap is internal. Key-completeness property preserved. Source of truth: VP-014.md §Changelog (burst-311/OBS-P202-B). No §Decision 1/2 split required — arch block does not attribute JoinSet/concurrent execution to §Decision 1. Corpus sweep: only this site was a stale new()-arg; interface-definitions.md §RunnableParallel struct definition, BC-2.01.005 §Construction Preconditions, ADR-026 §Decision 1 are struct-field/internal-container usages (correct). |
 | 2.18 | 2026-08-17 | architect | burst-308 / F-P200-02 | Category-axis reference correction in §VP-013 RESOLVED block. "(not present in the 12-category axis per ADR-010)" → "(not present in the 13-category axis per ADR-010)". Rationale: ADR-010 §Category Axis Expansion (D26) expanded the category axis from 12 to 13 (EXEC added) in this burst; CONFIGURATION has never been a valid category, pre- or post-D26 expansion. |
 | 2.17 | 2026-08-17 | architect | burst-304 / F-P195-01 + F-P195-02 | VP-014 method-surface and module-path alignment (POL-9 propagation from VP-014.md). §VP-014 heading: `core::runnable::parallel` → `core::runnable` (canonical 2-level registry form; F-P195-02). §VP-014 property, formal statement, and rationale: `invoke_dyn` → `invoke` (three sites; F-P195-01). Canon: DynRunnable method is `invoke`/`stream`; `invoke_dyn`/`stream_dyn` belong to DynTool only (ADR-026 §Decision 5; interface-definitions.md §DynRunnable). |
 | 2.16 | 2026-08-17 | product-owner | burst-302b / D-170 | Add VP-014 (proptest P1, BC-2.01.005 + BC-2.01.006, module core::runnable::parallel, crate pregolya-core, DI-016). LCEL composition scope expansion (D-170; ADR-026). VP-014 proves the RunnableParallel key-completeness property: for any N-branch RunnableParallel where invoke_dyn returns Ok(output), output.as_object().len() == N AND output key set == configured branch key set. Why proptest not Kani: invoke_dyn is async with Tokio JoinSet fan-out; Kani 0.67.0 has no native async support. §Section Content narrative updated (thirteen→fourteen). Committed VP Obligations table: add VP-014 row; update total line (13→14, P1 7→8, proptest 2→3). Should Prove section: add VP-014 entry. New BC inputs added: BC-2.01.005, BC-2.01.006. Input-hash updated (new inputs added). |
