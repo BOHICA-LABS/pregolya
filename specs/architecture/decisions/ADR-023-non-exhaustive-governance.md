@@ -6,9 +6,9 @@ slug: non-exhaustive-governance
 title: "#[non_exhaustive] Governance for Public API Types (fix-burst-287 / F-P176-A028 + A029 + D009 + B026 + C028)"
 status: accepted
 producer: architect
-timestamp: 2026-08-16T00:00:00Z
-date: "2026-08-16"
-version: "1.5"
+timestamp: 2026-08-17T00:00:00Z
+date: "2026-08-17"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
@@ -16,6 +16,7 @@ subsystems_affected: ["all"]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.6 (burst-314/P1D-205-F-P205-02/2026-08-17): Add RunnableParallel, RunnablePassthrough, RunnableAssign to Required Inventory struct table (structs 19→22, total 37→40). ADR-026 §Decision 1/3/4 declares all three as public API surface structs carrying #[non_exhaustive]; gate-update-protocol requires same-change inventory addition. Adjudication: Option A (Required) — all three structs are explicitly re-exported public API (pregolya_core::runnables + prelude), ADR-026 author already applied the attribute and cited ADR-023 §Required Inventory as authority, and Criterion B's MAY carve-out requires explicit Exempt Inventory entry which was never recorded. CLAUDE.md §Code Conventions convention (#[non_exhaustive] on ALL public API surface types) corroborates. BC anchors: BC-2.01.005/006 (RunnableParallel), BC-2.01.007 (RunnablePassthrough), BC-2.01.008 (RunnableAssign). Updated: §Decision 4 struct header (19→22), gate scope note (37→40, 19 structs→22 structs), §Consequences count (37→40, 19 structs→22 structs)."
   - "1.5 (burst-293/F-P184-F03/2026-08-16): Fix §Decision 3 Exempt Structs GuardedDocuments row: module path 'core::rag_ingress' → 'core::retriever'. rag_ingress is a method name (GuardedDocuments::rag_ingress), not a module; the module is core::retriever per ADR-014 Decision 6, interface-definitions.md, module-decomposition.md, module-criticality.md, and verification-coverage-matrix.md. D-134 sibling sweep: grep for 'core::rag_ingress' across .factory/specs — sole occurrence was this table cell; no other live-body docs require amendment."
   - "1.4 (burst-289/F-178-03+F-178-05/2026-08-16): Two findings closed. (F-178-03) Fix two phantom anchor citations: §Exempt Enums StreamEvent rationale and §Consequences both cited 'SS-06 §StreamEvent-Variants' — that heading does not exist in any SS-06 BC (variants live in BC-2.06.001 §Postconditions PC2, verified by heading grep). Both sites now cite 'BC-2.06.001 §Postconditions'. Both stale action-required directives updated to past tense: StreamEvent::Error was added to BC-2.06.001 §Postconditions (PC2) in burst-288 (v1.10). (F-178-05) Required Inventory enum header label corrected: '17 original + corpus-scan additions as of burst-288' was arithmetically misleading — '17 original' does not match the actual pre-burst-288 count of 12 (11 D17/D21/D23 table rows + TemplateInput). New label: '12 pre-burst-288 + 6 burst-288 D-03 additions = 18 total; 17 table rows below + TemplateInput'. Arithmetic totals unchanged (confirmed correct by adversary)."
   - "1.3 (burst-288/F-P177-A02+D-02+D-03+B01/2026-08-15): Four HIGH findings from P1D-177 closed. (A02) Fix Decision 4 heading and §Rationale: heading renamed from 'Required inventory and BC-2.22.001 compile-fail gate scope' to 'Required Inventory and compile-fail gate scope' — the old heading incorrectly implied BC-2.22.001 IS the gate scope document; §Rationale paragraph that read 'The compile-fail gate (BC-2.22.001) is the enforcement mechanism' was false (no gate exists yet) and replaced with accurate statement. (D-02) ToolCallPreview verified in Required Inventory; product-owner cross-owner routing note added to confirm #[non_exhaustive] attribute presence in interface-definitions.md. (D-03) Expand type inventory by 22 missing public types discovered in corpus-wide scan: 6 new Required enums, 3 new Exempt enums, 11 new Required structs, 2 new Exempt structs. Gate scope count updated from 20 to 37 Required Inventory types (18 enums + 19 structs). Exempt count updated from 6 to 11 (9 enums + 2 structs). (B01) StreamEvent governance resolved: EC-005 mandates terminal error SSE event requiring StreamEvent::Error as 16th variant; variant count updated 15 → 16; Exempt Inventory rationale updated noting Error variant must be added before Phase 3 implementation. Product-owner cross-owner routing note: add StreamEvent::Error variant to SS-06 §StreamEvent-Variants."
@@ -131,7 +132,7 @@ The types listed below constitute the **Required Inventory** — types that MUST
 
 **Note on TemplateInput:** `TemplateInput` (pregolya-prompts, ADR-015 §Decision 3 Amendment, fix-burst-279) carries `#[non_exhaustive]` and was added post-D21. It is part of the Required Inventory. Its late addition reflects the amendment history; it should be included in the compile-fail gate. Total confirmed non-exhaustive enums: **18** (including TemplateInput; 17 from this table + TemplateInput).
 
-**Public structs with `#[non_exhaustive]` (19 as of burst-288):**
+**Public structs with `#[non_exhaustive]` (19 as of burst-288 + 3 burst-314 ADR-026 additions = 22 total):**
 
 | Type | Crate / Module | First introduced |
 |------|---------------|-----------------|
@@ -154,10 +155,13 @@ The types listed below constitute the **Required Inventory** — types that MUST
 | `TemplateVar` | pregolya-prompts | burst-288 (D-03) |
 | `LcEntry` | pregolya-core (core::serializable) | burst-288 (D-03) |
 | `Reviver` | pregolya-core (core::serializable) | burst-288 (D-03) |
+| `RunnableParallel` | pregolya-core (core::runnable) | ADR-026 burst-302, §Decision 1; BC-2.01.005/006 |
+| `RunnablePassthrough` | pregolya-core (core::runnable) | ADR-026 burst-302, §Decision 3; BC-2.01.007 |
+| `RunnableAssign` | pregolya-core (core::runnable) | ADR-026 burst-302, §Decision 4; BC-2.01.008 |
 
 **Cross-owner routing (D-02):** `ToolCallPreview` is listed in this Required Inventory but the attribute MUST be verified present in interface-definitions.md. A corpus-wide scan (burst-288) confirms `ToolCallPreview` at the interface-definitions declaration site does NOT carry `#[non_exhaustive]`. Product-owner action required: add `#[non_exhaustive]` to `ToolCallPreview` in interface-definitions.md. This is a product-owner owned file; the architect records the gap here.
 
-**Note:** Compile-fail gate for structs verifies that struct-literal construction fails (E0639) from external crates. When the product-owner authors the gate BC in Phase 2, the gate scope MUST cover both enums and structs — all 37 Required Inventory types (18 enums + 19 structs). Enums-only coverage would leave the struct prohibition unverified.
+**Note:** Compile-fail gate for structs verifies that struct-literal construction fails (E0639) from external crates. When the product-owner authors the gate BC in Phase 2, the gate scope MUST cover both enums and structs — all 40 Required Inventory types (18 enums + 22 structs). Enums-only coverage would leave the struct prohibition unverified.
 
 ### Gate update protocol
 
@@ -201,7 +205,7 @@ The Required Inventory is the authoritative scope definition for the compile-fai
 
 - All new public API surface enums and structs in pregolya MUST carry `#[non_exhaustive]` at authoring time unless they appear in Decision 3.
 - The nine exempt enums (StreamEvent, MemoryScope, WriteGuardDecision, MemoryWriteRequest, SlotTrustPolicy, BoundaryType, IngressBoundary, GuardrailDecisionKind, GuardrailSeverityWire) and two exempt structs (GuardedDocuments, RunnableSequence) correctly do NOT carry `#[non_exhaustive]`. Their absence is documented and justified in the Exempt Inventory.
-- No compile-fail gate for the Required Inventory exists yet. A BC for `tests/external/non_exhaustive_gate/` must be authored in Phase 2. The gate MUST cover all 37 Required Inventory types (18 enums + 19 structs). The previous count of 20 types reflected only the initial D17/D21/D23 corpus sweep; burst-288 D-03 added 17 additional types identified via a full interface-definitions.md scan.
+- No compile-fail gate for the Required Inventory exists yet. A BC for `tests/external/non_exhaustive_gate/` must be authored in Phase 2. The gate MUST cover all 40 Required Inventory types (18 enums + 22 structs). The previous count of 20 types reflected only the initial D17/D21/D23 corpus sweep; burst-288 D-03 added 17 additional types identified via a full interface-definitions.md scan.
 - Product-owner action required: add `#[non_exhaustive]` to `ToolCallPreview` in interface-definitions.md (D-02 routing note in Required Inventory struct table).
 - Product-owner action completed: `StreamEvent::Error` added as the 16th variant to BC-2.06.001 §Postconditions (PC2) in burst-288 (EC-005 mandate fulfilled).
 - Future capability additions (D24+) that introduce new public types MUST reference this ADR and follow the gate update protocol.

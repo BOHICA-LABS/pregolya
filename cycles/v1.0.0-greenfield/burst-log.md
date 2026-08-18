@@ -6439,3 +6439,42 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 **Decision minted:** D-182
 **Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
 **NEXT:** P1D-204 — adversary streak restart (0/3); spec perimeter frozen at 32ff285 + EXEC + E-CORE-011 + fts_search + ADR §Decision-N heading + CAP-title verbatim; 133 BCs = 51/79/3.
+
+---
+
+## Burst-309 (2026-08-17) — P1D-201 Fix: E-CORE-011 Mint + BC-2.20.002 phantom §DI-012 + BC-2.17.001 DI-014 [D-179]
+
+**Agent:** state-manager (commit/bookkeeping); product-owner + architect (spec content, prior session)
+**Trigger:** P1D-201 NOT CLEAN — 3 findings (1H/1M/1L) closed
+**Files touched:** error-taxonomy.md §E-CORE-011 (v1.50→v1.51), BC-2.01.006.md §Changelog (E-CORE-011 PC-4/EC-003/TV-003), ADR-026.md §Decision 2+§Error-codes-minted, BC-2.20.002.md §Changelog (4 phantom §DI-012→ADR-014 §Decision 6), BC-2.17.001.md §Changelog (DI-014 gloss), BC-INDEX.md §Changelog, STATE.md §Decisions-Log (D-179), burst-log.md, sidecar-learning.md
+
+**Findings closed:**
+- F-P201-01 (HIGH): E-CORE-011 minted (INTERNAL/RunnableParallelTaskPanic; RetryHint Never; ADR-026 §Decision 2+§Error-codes-minted; BC-2.01.006 PC-4/EC-003/TV-003; distinct from E-CORE-009 EXEC path where branch returned Err). Error code census 113→114.
+- F-P201-02 (MED): BC-2.20.002 §Traceability had 4 phantom §DI-012 citations pointing to a non-existent subsection. Correct target: ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization). Root cause: burst-290 index-only fix never propagated to BC body (sibling-propagation miss).
+- F-P201-03 (LOW): BC-2.17.001 DI-014 gloss incomplete.
+
+**Decision minted:** D-179
+**Streak:** 0/3 (fix-burst; BC-5.39.001)
+**NEXT:** P1D-202 — adversary streak restart (0/3); spec perimeter EXPANDED +E-CORE-011 census 114; +ADR-026 §Error-codes-minted.
+
+---
+
+## Burst-314 (2026-08-17) — P1D-205 Fix: EXEC RetryHint=Never + ADR-023 LCEL-struct Required Inventory [D-184]
+
+**Agent:** state-manager (commit/bookkeeping); product-owner (error-taxonomy content); architect (ADR-023 content)
+**Trigger:** P1D-205 NOT CLEAN — 2 findings (1HIGH/1MED) closed
+**Files touched:** error-taxonomy.md (§E-CORE-009 RetryHint; F-P205-01), ADR-023-non-exhaustive-governance.md (§Required Inventory +3 structs; F-P205-02), STATE.md §Decisions-Log (D-184), burst-log.md, sidecar-learning.md
+
+**Findings closed:**
+- F-P205-01 (HIGH): E-CORE-009 RetryHint was `Maybe` (burst-302b v1.49 original). ADR-010 §Category Axis Expansion (D26) §EXEC explicitly mandates `RetryHint::Never` — the retry decision belongs to the child error's own `retry_hint` via the source chain; the wrapper itself does not retry. The burst-302b v1.49 value was authored before the burst-308 ADR-010 EXEC adjudication and was stale from the pre-adjudication draft. Fix: (1) Error Categories table EXEC row: Default RetryHint `Maybe` → `Never`. (2) E-CORE-009 row: RetryHint annotation updated to `Never (EXEC default — the wrapper does not retry; the retry decision belongs to the child error's own retry_hint via the source chain, per ADR-010 §EXEC)`. Corpus sweep: E-CORE-009 is the only EXEC-category code; no divergence blockquote entry needed. Census UNCHANGED: 114 live codes.
+- F-P205-02 (MED): ADR-023 Required Inventory was missing RunnableParallel, RunnablePassthrough, and RunnableAssign structs (count 37, 19 structs). Architect adjudicated Option A (Required): all three are explicitly re-exported public API (pregolya_core::runnables + prelude), ADR-026 author already applied `#[non_exhaustive]` and cited ADR-023 §Required Inventory as authority, Criterion B's MAY carve-out requires explicit Exempt Inventory entry which was never recorded. RunnableSequence's Exempt status is a consistent Criterion-B carve-out (no follow-up). ADR-023 §Required Inventory: struct count 19→22, total 37→40.
+
+**STEP 1 grep gates (PASSED):**
+- E-CORE-009 RetryHint=Maybe in EXEC live body: ZERO remaining (all occurrences in changelog history only).
+- Non-exhaustive "37"/"19 structs" inventory count carriers: ZERO stale sites in corpus (ADR-023 itself updated; ARCH-INDEX carries no count; BC-INDEX/VP-INDEX no change).
+
+**input-hash refresh:** error-taxonomy.md input-hash updated b9ddfc5 → 0d4e920 (PO-flagged drift).
+
+**Decision minted:** D-184
+**Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
+**NEXT:** P1D-206 — adversary streak restart (0/3); convergence trajectory on expanded perimeter (P1D-194..205) oscillating ~1-2 findings/pass; orchestrator plans comprehensive residual-coverage audit to front-load remaining un-audited surface before resuming 3-CLEAN streak.

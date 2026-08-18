@@ -2422,3 +2422,21 @@ develop `644d1ad` — clean, PUSHED. Validator baselines: burst-312 final; 14 bl
 
 #### ARCHIVE METADATA
 Date: 2026-08-17 | Archived at: burst-313 state record | STATE.md: 4.92 → 4.93 | burst-312 COMPLETE; D-182 minted; P1D-203 NOT CLEAN 1MED/1LOW; ADR-026 §Decision 1/2 + CAP-014 verbatim; streak 0/3; NEXT P1D-204. Replaced by v4.93 (burst-313 COMPLETE; D-183; P1D-204 NOT CLEAN 2MED; VP-014 mirror-sibling sweep; streak 0/3; NEXT P1D-205).
+
+---
+
+### Archived Checkpoint — STATE.md v4.93 (archived at burst-314 state record)
+
+*From STATE.md v4.93, burst-313 COMPLETE. Superseded by v4.94 (burst-314 COMPLETE).*
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). **burst-313 COMPLETE (2026-08-17)**: D-183 minted. P1D-204 NOT CLEAN(strict)=NO (2 findings 2MED): F-P204-01 (MED) VP-014 §Source Contract ADR-026 §Decision 1/2 citation split — §Decision 1 = Type Representation and Key Ordering; §Decision 2 = Concurrent Execution and Error Handling; F-P204-02 (MED) verification-architecture §VP-014 formal statement corrected IndexMap→Vec-of-pairs as new() argument type (un-swept mirror-sibling of OBS-P202-B). Streak UNCHANGED 0/3 (fix-burst; BC-5.39.001). 133 BCs (51/79/3), 39 CAP, 16 DI, 14 VP, 26 ADR, 114 err.
+
+#### NEXT-ACTION (at time of archival)
+P1D-205 adversary streak restart (0/3). Spec perimeter frozen at 32ff285 + EXEC + E-CORE-011 + fts_search + ADR §Decision-N heading + CAP-title verbatim + VP-014 mirror-site completeness; 3-CLEAN required before Phase-1 gate closes.
+
+#### HEADS (at time of archival)
+develop `644d1ad` — clean, PUSHED. Validator baselines: burst-313 final; 14 blocking + 1 advisory.
+
+#### ARCHIVE METADATA
+Date: 2026-08-17 | Archived at: burst-314 state record | STATE.md: 4.93 → 4.94 | burst-313 COMPLETE; D-183 minted; P1D-204 NOT CLEAN 2MED; VP-014 mirror-sibling sweep; streak 0/3; NEXT P1D-205. Replaced by v4.94 (burst-314 COMPLETE; D-184; P1D-205 NOT CLEAN 1HIGH/1MED; EXEC RetryHint + ADR-023 LCEL structs; streak 0/3; NEXT P1D-206).
