@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: ubiquitous-language-core
-version: "1.14"
+version: "1.15"
 status: active
 producer: business-analyst
 timestamp: 2026-08-17T00:00:00Z
 changelog:
+  - "1.15 (burst-315/F-AUD-C-01/2026-08-17): §GrepTool E-TOOLS-006 reference: retired informal name 'SearchResultsCapped' replaced with canonical payload field path per error-taxonomy §E-TOOLS-006. Old text: 'E-TOOLS-006 `SearchResultsCapped` informational'. New text: 'E-TOOLS-006 (GrepResult.capped — informational payload field, not a raised Err)'. Authority: error-taxonomy §E-TOOLS-006 (canonical payload field path GrepResult.capped established burst-247/F-P146-02). TD-VSDD-060 sweep: sole E-TOOLS-006/SearchResultsCapped occurrence in this file."
   - "1.14 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) — RunnableAssign entry: Err(E-CORE-MMM) → Err(E-CORE-010) (VAL, RunnableAssignNonDictInput, anchor BC-2.01.008). F-P194-03 (MED) — three type-path canonicalizations: RunnableParallel pregolya_core::runnable::parallel::RunnableParallel → pregolya_core::runnables::RunnableParallel; RunnablePassthrough pregolya_core::runnable::passthrough::RunnablePassthrough → pregolya_core::runnables::RunnablePassthrough; RunnableAssign pregolya_core::runnable::parallel::RunnableAssign → pregolya_core::runnables::RunnableAssign (plural flat re-export per ADR-026 §Decision 2). TD-VSDD-060 sweep: zero E-CORE-MMM and zero pregolya_core::runnable:: (singular submodule) forms remain in live body."
   - "1.13 (burst-302b/D-170/2026-08-17): D-170 LCEL composition additions — new section 'D170 Additions — LCEL Map/Passthrough Composition': RunnableParallel, RunnablePassthrough, RunnableAssign (ADR-026 / CAP-039). 3 new terms; total: 29 (D21) + 13 (D23) + 3 (D170) = prior terms + 3. D170 added to decisions list. Distinguishes all three from RunnableSequence. RunnableAssign production via RunnablePassthrough::assign noted."
   - "1.12 (burst-291/D-134/2026-08-16): §TrustLevel definition phantom anchor corrected. 'ubiquitous-language-server.md §ProvenanceTag' → 'ubiquitous-language-server.md §Server Terms' (ProvenanceTag is a bold-bullet under §Server Terms, not a heading; §ProvenanceTag alone matches no heading in ubiquitous-language-server.md). Citation to entities-server.md §ProvenanceTag unchanged — valid heading '### ProvenanceTag' exists there. TD-VSDD-060 sweep: sole §ProvenanceTag reference to ubiquitous-language-server.md in this file."
@@ -423,7 +424,7 @@ returns first 256 KiB with `truncated = true` (E-TOOLS-005 informational; non-fa
 First-party `Tool` in `pregolya-tools::tools::search` (SS-23). In-process regex pattern
 matching using the `regex` crate (NOT shelling out to system grep — hermetic; unit-testable
 without system tool availability). `ActionRisk::ReadOnly`. `max_results` cap (default 100;
-E-TOOLS-006 `SearchResultsCapped` informational). Returns matches with file path and line number.
+E-TOOLS-006 (GrepResult.capped — informational payload field, not a raised Err)). Returns matches with file path and line number.
 Path validated by PathGuard for directory scoping. No sandbox execution — reads in-process.
 Authority: ADR-020 / CAP-038.
 

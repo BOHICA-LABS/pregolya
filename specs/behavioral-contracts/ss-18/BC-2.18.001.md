@@ -2,8 +2,8 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "1.7"
-status: draft
+version: "1.8"
+status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): PC4 E-TMPL-003 construction example converted from struct-literal form to canonical PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, ...) form. Struct-literal is barred for external-crate callers by #[non_exhaustive]; test-writers outside pregolya-core must use ::new(). TD-VSDD-060 sibling sweep: TV-004 and TV-007 use abbreviated {code, message}-only shorthand — those are verification-field descriptions, not compilable construction expressions; classified (c) and left as-is."
   - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-003 inline cite: add `, ..` field-elision marker. (2) TV-004 expected-output cell: add `, ..` field-elision marker. (3) TV-007 expected-output cell: add `, ..` field-elision marker; `...` inside message-string value is inside a quoted string (not field-elision position) and is left as-is. No security semantics or VP anchors altered."
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 violations. (1) PC-4: multi-line PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-003\", ...) in prose postcondition → Err(PregolyaError { code: \"E-TMPL-003\", .. }). (2) INV-1: multi-line PregolyaError::new(..., \"E-TMPL-004\", ...) in invariant prose → Err(PregolyaError { code: \"E-TMPL-004\", .. }). (3) EC-007: PregolyaError::new(..., \"E-TMPL-004\", ...) in table cell → Err(PregolyaError { code: \"E-TMPL-004\", .. }). Bare constructor form forbidden in prose/table context per ADR-010 Class 3 rules."
+  - "1.8 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "5af97cb"
+input-hash: "273b937"
 extracted_from: null
 modified: []
 deprecated: null

@@ -2,11 +2,12 @@
 document_type: domain-spec-section
 level: L2
 section: entities-server
-version: "1.16"
+version: "1.17"
 status: active
 producer: business-analyst
 timestamp: 2026-07-27T00:00:00Z
 changelog:
+  - "1.17 (burst-315/F-AUD-C-02/2026-08-17): §PregolyaError category field: append EXEC as 13th Category variant. Prior text listed 12 codes (VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY); EXEC was added burst-302b/D-170 per ADR-010 §Category Axis Expansion but was not propagated to this L2 entity definition. Fix: appended '| EXEC' so all 13 taxonomy codes are present. Authority: error-taxonomy §Error Categories (EXEC row) + ADR-010 §Category Axis Expansion (D26)."
   - "1.16 (2026-07-29): Error-construction notation correction per ADR-010 §Error-Construction Notation Canon. 1 CLASS3_UNICODE_ELLIPSIS_VIOLATION corrected: replaced `…` (U+2026) in field-elision position with `..` in PregolyaError { category: TOOL, … } (MCPTool §Error, DEC-012 reference). The `…` appeared after `, ` (comma-whitespace), placing it in field-elision position per the discriminator."
   - "1.15 (2026-07-27): F-P173-211 — source field corrected from Box<dyn StdError> to Arc<dyn std::error::Error + Send + Sync> (Box does not implement Clone, causing E0277 on #[derive(Clone)] in pregolya-core error type; Arc refcount-clone resolves this without requiring inner error to be Clone). message constraint added: MUST NOT contain credentials (DI-010). source constraint added: MUST NOT be exposed in HTTP responses. Naming adjudications: (1) component field retains L2 domain name PregolyaComponent with explicit Rust cross-ref to Component; (2) category variants aligned from PascalCase English (third-rendering) to taxonomy codes per casing canon, type name corrected from ErrorCategory to Category."
   - "1.14 (2026-07-25): TD-VSDD-091 BC-pin sweep — de-pin live normative prose: OnCeiling variants annotation 'BC-2.10.003 v1.2 + BC-2.10.004' → 'BC-2.10.003 + BC-2.10.004'. Version pins belong in changelog entries only; live body cites bare BC IDs."
@@ -27,7 +28,7 @@ phase: 1a
 inputs:
   - .factory/specs/product-brief.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "eb2c18b"
+input-hash: "17e75c3"
 traces_to: L2-INDEX.md
 decisions: [D11, D13, D17]
 ---
@@ -164,7 +165,7 @@ A connection to a model provider implementing the ChatModel Runnable interface.
 
 ### PregolyaError
 The 2D error type for all pregolya crates.
-- **Fields:** component: PregolyaComponent (L2 domain name; Rust: `Component` — enum covering all pregolya crate names, 17 variants as of D23), category: Category (taxonomy codes: VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: String (wire representation; Rust: `&'static str` per api-surface.md — e.g. `"E-CORE-001"`; fixed F-P25-03 from incorrect `u32`), message: String (MUST NOT contain credentials — DI-010), source: Option<Arc<dyn std::error::Error + Send + Sync>> (causal error chain; MUST NOT be exposed in HTTP responses; Arc preserves Clone — fixed F-P173-211 from non-cloneable `Box<dyn StdError>`)
+- **Fields:** component: PregolyaComponent (L2 domain name; Rust: `Component` — enum covering all pregolya crate names, 17 variants as of D23), category: Category (taxonomy codes: VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY | EXEC), retry_hint: RetryHint (Never | Maybe | Later(Duration)), code: String (wire representation; Rust: `&'static str` per api-surface.md — e.g. `"E-CORE-001"`; fixed F-P25-03 from incorrect `u32`), message: String (MUST NOT contain credentials — DI-010), source: Option<Arc<dyn std::error::Error + Send + Sync>> (causal error chain; MUST NOT be exposed in HTTP responses; Arc preserves Clone — fixed F-P173-211 from non-cloneable `Box<dyn StdError>`)
 - **Source:** CONFLICT-6 — adk-rust P-01/P-04 adopted; Python exception hierarchy does not translate to Rust.
 - **RFC-7807:** PregolyaError supports serialization to RFC-7807 Problem Details JSON for HTTP error responses.
 

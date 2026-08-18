@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -13,8 +13,8 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "0e57127"
-traces_to: domain-spec/L2-INDEX.md
+input-hash: "e40e148"
+traces_to: domain-spec/capabilities-p0.md#CAP-013
 origin: greenfield
 subsystem: SS-11
 capability: CAP-013
@@ -26,6 +26,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-59): F-P59-02 — EC-002 description and TV fixed to typecheck against Transform { new_content: IngressContent }. Bare ContentBlock::text('[REDACTED]') → IngressContent::ToolResult(ContentBlock::text('[REDACTED]')); EC-002 description updated to reflect IngressContent wrapper (same-boundary rule). ToolResult used as the concrete example boundary per BC-2.11.002 EC-003 authority."
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). PC1 — extended with streaming surface isolation clause: ToolEnd.data carries post-guardrail content; GuardrailDecision carries metadata only; zero rejected bytes in any StreamEvent payload. New INV-5 — streaming surface subject to same content isolation; GuardrailDecision carries metadata only; enforced structurally via ordering."
   - "1.4 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
+  - "1.5 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
 modified: []
 extracted_from: null
 deprecated: null

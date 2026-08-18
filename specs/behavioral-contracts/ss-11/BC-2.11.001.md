@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.001
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -14,8 +14,8 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "6c2f7d0"
-traces_to: domain-spec/L2-INDEX.md
+input-hash: "c68fb70"
+traces_to: domain-spec/capabilities-p0.md#CAP-013
 origin: greenfield
 subsystem: SS-11
 capability: CAP-013
@@ -25,6 +25,7 @@ changelog:
   - "1.0 (initial): base BC authored (greenfield burst 72)."
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated to match (16-BC re-anchor sweep)."
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
+  - "1.3 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
 modified: []
 extracted_from: null
 deprecated: null

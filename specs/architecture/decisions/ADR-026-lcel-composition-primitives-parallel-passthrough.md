@@ -11,11 +11,12 @@ date: "2026-08-17"
 subsystems_affected: ["SS-01"]
 supersedes: []
 superseded_by: null
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D_BURST302_TBD]
 changelog:
+  - "1.5 (burst-315/F-B1/2026-08-17): Decision 2 collect-loop sketch: replace `.unwrap()` with `.ok_or_else(|| PregolyaError::new(Component::Core, Category::Internal, RetryHint::Never, \"E-CORE-011\", format!(\"RunnableParallelTaskPanic: task panicked: missing branch key '{key}'\")))?` — eliminates no-unwrap convention violation (CLAUDE.md §Code Conventions). The key-presence invariant holds when the JoinSet loop completes without early-return error, but `.unwrap()` on an `Option` is forbidden in non-test code regardless of logical guarantee. E-CORE-011 (INTERNAL, minted burst-309) is the canonical expression for this programming-error invariant violation on the task-panic path. Disclaimer note retained."
   - "1.4 (burst-309/F-P201-01/2026-08-17): Mint E-CORE-011 (INTERNAL, broken, BC-2.01.006 PC-4, RetryHint Never) for the RunnableParallel JoinError/task-panic path. Highest existing CORE code was E-CORE-010; no existing INTERNAL code covers a JoinSet task panic (E-CORE-007 is GuardrailHookPanic; E-CORE-004 is pipe-composition failure; E-CORE-006 is recursion-limit). (1) §Decision 2 collect-loop sketch JoinError branch: `'E-CORE-NNN'` → `'E-CORE-011'`; comment updated. (2) Behavioral property 4: code field added (`code: E-CORE-011`). (3) §Error codes minted: E-CORE-011 row added. Near-name check: RunnableParallelTaskPanic vs RunnableParallelBranchFailure (E-CORE-009) — distinct paths (task panic at JoinSet level vs branch Err return) — no collision. Branch key is NOT available at the JoinError catch site (JoinSet::join_next yields JoinError only; key lives inside the task closure); message template omits `<key>`."
   - "1.3 (burst-308/F-P200-03+04/2026-08-17): Two Decision 2 sketch corrections. F-P200-03 (MED): behavioral property 3 message template corrected from `\"RunnableParallel branch '<key>' failed: <cause>\"` to canonical form `\"RunnableParallelBranchFailure: branch '<key>' failed: <cause>\"` (matching §Error codes minted form and error-taxonomy E-CORE-009 message template). F-P200-04 (OBS): illustrative sketch aligned to canonical types — (1) `ErrorCategory::Internal` → `Category::Internal` (PascalCase canon per ADR-010); (2) `RetryHint::NoRetry` → `RetryHint::Never` (canonical variant name); (3) `\"E-CORE-009\"` removed from JoinError→Internal path (E-CORE-009 is the EXEC branch-failure code per BC-2.01.006 PC-4; JoinError maps to Category::Internal WITHOUT E-CORE-009); (4) E-CORE-009 wrapping added inside spawned task where branch key is in scope; (5) `\"parallel\"` string-literal → `Component::Core` (canonical Component enum path)."
   - "1.2 (burst-304/F-P195-02/F-P195-03/2026-08-17): Module-path canon + error-code placeholder resolution. F-P195-02 (HIGH): §Consequences item 2: `core::runnable::parallel` + `core::runnable::passthrough` → `core::runnable` (files parallel.rs / passthrough.rs; canonical 2-level registry form per module-decomp and ADR-026 §Decision 5). §Consequences item 4: `targeting `core::runnable::parallel`` → `targeting `core::runnable``. §VP Recommendation: `module `core::runnable::parallel`` → `module `core::runnable``. §New Domain Invariant Enforcer: `core::runnable::parallel` via JoinSet → `core::runnable` (via parallel.rs JoinSet). F-P195-03 (MED): §Decision 2 code sketch: `E-CORE-NNN` → `E-CORE-009`. §Decision 2 behavioral property 3: E-CORE-NNN → E-CORE-009 (two sites). §Error new-code placeholder section: reframed as resolved record (codes minted: E-CORE-009 EXEC / E-CORE-010 VAL). §Decision 4 doc comment + behavioral property 1a: E-CORE-MMM → E-CORE-010. §Consequences item 5: reframed as resolved (codes minted). §Interface-Definitions Additions: E-CORE-NNN → E-CORE-009; E-CORE-MMM → E-CORE-010."
@@ -180,7 +181,13 @@ async fn invoke(
     for key in self.steps.keys() {
         let val = raw.iter().find(|(k, _)| k == key)
             .map(|(_, v)| v.clone())
-            .unwrap(); // guaranteed: all tasks complete
+            .ok_or_else(|| PregolyaError::new(
+                Component::Core,
+                Category::Internal,
+                RetryHint::Never,
+                "E-CORE-011",
+                format!("RunnableParallelTaskPanic: task panicked: missing branch key '{key}'"),
+            ))?; // all tasks complete above; missing key is programming-error invariant violation
         results.insert(key.clone(), val);
     }
     Ok(serde_json::Value::Object(

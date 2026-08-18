@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.004
-version: "1.9"
+version: "1.10"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -13,8 +13,8 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "8490641"
-traces_to: domain-spec/L2-INDEX.md
+input-hash: "005e8a6"
+traces_to: domain-spec/capabilities-p0.md#CAP-013
 origin: greenfield
 subsystem: SS-11
 capability: CAP-013
@@ -31,6 +31,7 @@ changelog:
   - "1.7 (F-P112-01, 2026-07-18): <content_type> bare-form adjudication (symmetric with BC-2.11.002 exemplar). ADJUDICATED: BARE variant name per interface-definitions.md §IngressContent. EC-004 and TV panic row: rendered value changed from 'IngressContent::MemoryItem' to 'MemoryItem'; source description updated from 'content variant discriminant' to 'IngressContent variant discriminant'. bc-authoring-plan gate #33 registry updated to v2.39."
   - "1.8 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.9 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Two sites corrected: EC-004 table-cell and TV panic-row carry `{ category: INTERNAL, code: E-CORE-007 }` spans; added `, ..` to each. Spans lack component, retry_hint, and message."
+  - "1.10 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
 modified: []
 extracted_from: null
 deprecated: null

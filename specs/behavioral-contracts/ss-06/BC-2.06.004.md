@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.004
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,15 +21,14 @@ red_gate: false
 changelog:
   - "1.0 (D23/2026-07-22): Initial BC — D23 streaming event taxonomy extension, event 13 tool_approval_request."
   - "1.1 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.2 (BURST-315/F-A1/2026-08-17): Remove spurious ADR-019-rolling-context-compaction.md from traces_to and inputs — copy-paste residue; ADR-019 governs compaction (SS-07), which is disjoint from the per-tool-call approval hook (CAP-034). ADR-018 is the correct sole architectural input. Symmetric with the BC-2.06.006 burst-285 ADR-019 purge."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
-  - architecture/decisions/ADR-019-rolling-context-compaction.md
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
-  - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
-input-hash: "47be1bd"
+input-hash: "5828b87"
 extracted_from: null
 modified: []
 deprecated: null

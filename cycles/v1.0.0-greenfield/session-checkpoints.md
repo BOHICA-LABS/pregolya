@@ -2440,3 +2440,21 @@ develop `644d1ad` — clean, PUSHED. Validator baselines: burst-313 final; 14 bl
 
 #### ARCHIVE METADATA
 Date: 2026-08-17 | Archived at: burst-314 state record | STATE.md: 4.93 → 4.94 | burst-313 COMPLETE; D-183 minted; P1D-204 NOT CLEAN 2MED; VP-014 mirror-sibling sweep; streak 0/3; NEXT P1D-205. Replaced by v4.94 (burst-314 COMPLETE; D-184; P1D-205 NOT CLEAN 1HIGH/1MED; EXEC RetryHint + ADR-023 LCEL structs; streak 0/3; NEXT P1D-206).
+
+---
+
+### Archived Checkpoint — STATE.md v4.94 (archived at burst-315 state record)
+
+*From STATE.md v4.94, burst-314 COMPLETE. Superseded by v4.95 (burst-315 COMPLETE).*
+
+#### RESUME IN ONE BREATH
+**Pregolya** Phase 1, greenfield+semport. Working dir: `/Users/jmagady/Dev/pregolya`. GitHub repo: `BOHICA-LABS/pregolya`. Container rename COMPLETE (D-116). **burst-314 COMPLETE (2026-08-17)**: D-184 minted. P1D-205 NOT CLEAN(strict)=NO (2 findings 1HIGH/1MED): F-P205-01 (HIGH) E-CORE-009 RetryHint Maybe→Never per ADR-010 §EXEC — EXEC default is RetryHint::Never (retry belongs to child error's retry_hint via source chain); burst-302b (pre-EXEC-adjudication draft) authored before burst-308 EXEC adjudication; F-P205-02 (MED) ADR-023 Required Inventory +3 LCEL structs [RunnableParallel/RunnablePassthrough/RunnableAssign] Option A (struct count 19→22, total 37→40; ADR-026 author applied #[non_exhaustive] + cited ADR-023 §Required Inventory; no Exempt entry recorded). error-taxonomy §E-CORE-009 + ADR-023 §Required Inventory corrected. Streak 0/3 (fix-burst; BC-5.39.001). 133 BCs (51/79/3), 39 CAP, 16 DI, 14 VP, 26 ADR, 114 err. NEXT: P1D-206 (streak restart; oscillating ~1-2 findings/pass on expanded perimeter; orchestrator plans comprehensive residual-coverage audit to front-load un-audited surface before resuming 3-CLEAN streak). E013 OPEN: default_branch = `factory-artifacts` (D-118). **WORKSPACE INIT INCOMPLETE**: Cargo.toml, crates/, Justfile absent; 5 CI checks NONCERTIFYING.
+
+#### NEXT-ACTION (at time of archival)
+P1D-206 adversary streak restart (0/3). Comprehensive residual-coverage audit planned (3 parallel validators covering previously un-audited surface); 3-CLEAN required before Phase-1 gate closes. Spec perimeter: 133 BCs + 26 ADRs + domain-spec + supplements + VPs.
+
+#### HEADS (at time of archival)
+develop `644d1ad` — clean, PUSHED. Validator baselines: burst-314 final; 14 blocking + 1 advisory.
+
+#### ARCHIVE METADATA
+Date: 2026-08-17 | Archived at: burst-315 state record | STATE.md: 4.94 → 4.95 | burst-314 COMPLETE; D-184 minted; P1D-205 NOT CLEAN 1HIGH/1MED; EXEC RetryHint + ADR-023 LCEL structs; streak 0/3; NEXT P1D-206. Replaced by v4.95 (burst-315 COMPLETE; D-185; comprehensive residual-coverage audit 8 findings closed; streak 0/3; NEXT P1D-206).

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.002
-version: "1.11"
+version: "1.12"
 status: active
 producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
@@ -13,8 +13,8 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "0e57127"
-traces_to: domain-spec/L2-INDEX.md
+input-hash: "e40e148"
+traces_to: domain-spec/capabilities-p0.md#CAP-013
 origin: greenfield
 subsystem: SS-11
 capability: CAP-013
@@ -33,6 +33,7 @@ changelog:
   - "1.9 (F-P122-01, 2026-07-19): image_url residue corrected to canonical ContentBlock variant vocabulary (CANON PC2: Image is a ContentBlock variant with type tag 'image', not an image_url type). EC-002: illustrative example 'text + image_url' → 'ContentBlock::Text + ContentBlock::Image'. EC-003: illustrative example 'image_url block → text error block' → 'ContentBlock::Image → ContentBlock::Text error block'. Semantics preserved: mixed Text+Image ingress (EC-002) and Image-to-Text Transform (EC-003) remain unchanged; only the type vocabulary is corrected."
   - "1.10 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.11 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Two sites corrected: EC-001 table-cell and TV panic-row both carry `{ category: INTERNAL, code: E-CORE-007 }` spans; added `, ..` to each. Spans lack component, retry_hint, and message."
+  - "1.12 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
 modified: []
 extracted_from: null
 deprecated: null

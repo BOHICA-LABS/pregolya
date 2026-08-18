@@ -1,8 +1,9 @@
 ---
 document_type: burst-log
 level: ops
-version: "1.3"
+version: "1.4"
 changelog:
+  - "1.4 (burst-315/2026-08-17): burst-310 archive entry (5-row rolling window) + burst-315 COMPLETE entry appended"
   - "1.3 (burst-311/2026-08-17): burst-306 archive entry (5-row rolling window) + burst-311 COMPLETE entry appended"
   - "1.2 (burst-308/2026-08-17): burst-307 archive entry (5-row rolling window) + burst-308 COMPLETE entry appended"
   - "1.1 (burst-306/2026-08-17): burst-302b archive entry + burst-306 COMPLETE entry appended"
@@ -6478,3 +6479,35 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 **Decision minted:** D-184
 **Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
 **NEXT:** P1D-206 — adversary streak restart (0/3); convergence trajectory on expanded perimeter (P1D-194..205) oscillating ~1-2 findings/pass; orchestrator plans comprehensive residual-coverage audit to front-load remaining un-audited surface before resuming 3-CLEAN streak.
+
+---
+
+### Archived Current-Phase-Steps Row — burst-310 COMPLETE (2026-08-17)
+
+*Archived from STATE.md v4.95 (5-row rolling window; replaced by burst-315 entry).*
+
+**burst-310 COMPLETE (2026-08-17)** — E-CORE-011 propagated to prd.md §5 CORE examples row (D-180; pre-emptive; last carrier site missed by burst-309 mint sweep); E-CORE-011 carrier class fully closed corpus-wide. prd.md §5 CORE +E-CORE-011 row. Confirms L-185/L-186: error-code mint propagates to error-taxonomy + BC body + ADR + BC-INDEX + prd.md §5 examples set.
+
+**Agent:** state-manager | **Status:** COMPLETE | Streak UNCHANGED 0/3 (pre-emptive fix; BC-5.39.001). NEXT P1D-202 (streak restart).
+
+---
+
+### Burst-315 COMPLETE (2026-08-17) — Comprehensive Residual-Coverage Audit Batch Fix
+
+**Purpose:** Close all 8 findings surfaced by the 3-parallel-validator residual-coverage audit (3 fresh-context read-only consistency-validators A/B/C covering previously un-audited surface this cycle).
+
+**Findings closed (8 total; 1H/1M/6L):**
+- **F-AUD-C-02 (HIGH):** `domain-spec/entities-server.md` §PregolyaError category field — EXEC was missing from the 13-variant Category enum (burst-302b/D-170 added EXEC per ADR-010 but did not propagate to the L2 entity definition; fix: appended `| EXEC` to the 13-code taxonomy list). business-analyst fix. entities-server.md §Changelog.
+- **F-B2 (MED):** `BC-2.04.006` PC2 configurable HashMap access — post-ADR-021 configurable field pattern not reflected. product-owner fix. BC-2.04.006 §Changelog.
+- **F-AUD-C-01 (LOW):** `domain-spec/ubiquitous-language-core.md` §GrepTool — GrepResult.capped field description. business-analyst fix. ubiquitous-language-core.md §Changelog.
+- **F-B1 (LOW):** `ADR-026` §Decision 2 sketch — `.unwrap()` in illustrative code sketch replaced with `ok_or_else` returning `E-CORE-011`. architect fix. ADR-026 §Changelog.
+- **F-B3 (LOW):** `ADR-023` D-02 ToolCallPreview closure — D-02 closure note added; L9b de-pin applied. architect fix. ADR-023 §Changelog.
+- **F-A1 (LOW):** `BC-2.06.004` + `BC-2.06.005` — spurious ADR-019 residue removed (copy-paste from compaction domain; CAP-034 governs these, not ADR-019). product-owner fix. BC-2.06.004 §Changelog; BC-2.06.005 §Changelog.
+- **F-A2 (LOW):** `BC-2.11.001..006` (SS-11) — traces_to corrected to capabilities-p0 §CAP-013 (was capabilities-p1-p2 §CAP-013). product-owner fix. BC-2.11.001→v1.3/002→v1.12/003→v1.10/004→v1.10/005→v1.5/006→v1.4.
+- **F-A3 (LOW):** `BC-2.18.001..005` (SS-18) — frontmatter status draft→active (5 prompt-template BCs promoted). product-owner fix. BC-2.18.001→v1.8/002→v1.5/003→v1.4/004→v1.10/005→v1.6.
+
+**Coverage note:** 3 parallel validators covered BC bodies ss-02/06/08/09/11/14/15/18/22 (59/59 deep-read), cross-ADR pairwise (ADR-002/005/014/021/023/026), domain-spec shards + error-taxonomy 114-code/13-category census, interface-definitions signatures. The ENTIRE Phase-1 corpus (133 BCs + 26 ADRs + domain-spec + supplements + VPs) has now been fresh-context audited this convergence cycle.
+
+**Decision minted:** D-185
+**Streak:** UNCHANGED 0/3 (fix-burst; BC-5.39.001)
+**NEXT:** P1D-206 — adversary streak restart (0/3) on the now-fully-audited perimeter; 3-CLEAN required before Phase-1 gate closes.

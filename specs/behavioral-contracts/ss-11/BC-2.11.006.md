@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.006
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-07-21T00:00:00Z
@@ -12,8 +12,8 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "ee9dd99"
-traces_to: domain-spec/L2-INDEX.md
+input-hash: "724179d"
+traces_to: domain-spec/capabilities-p0.md#CAP-013
 origin: greenfield
 subsystem: SS-11
 capability: CAP-013
@@ -24,6 +24,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated (16-BC re-anchor sweep)."
   - "1.2 (burst-226/F-P131-02/2026-07-21): Canonical no-hook WARN emission adjudicated — unified event_type 'guardrail.unregistered_passthrough' replaces prose-specified-only WARN. Merged field schema: {boundary_type, ingress_id, item_count, timestamp} base + conditional {server_name, tool_name} when ToolResult from MCP. PC2, INV-2, test vectors updated. ONE log line per boundary crossing (no double-logging with BC-2.09.003)."
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
+  - "1.4 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
 modified: []
 extracted_from: null
 deprecated: null

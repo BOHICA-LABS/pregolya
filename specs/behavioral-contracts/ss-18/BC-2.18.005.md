@@ -2,8 +2,8 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.5"
-status: draft
+version: "1.6"
+status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
 origin: greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: Component::TMPL → Component::Tmpl (PC-1 code block), Category::VAL → Category::Val (PC-1 code block + Invariant 3 prose)."
   - "1.4 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-TMPL-002. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-18/BC-2.18.005.md returns zero fence-scoped literal occurrences after this edit."
   - "1.5 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-002 inline cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
+  - "1.6 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "5af97cb"
+input-hash: "273b937"
 extracted_from: null
 modified: []
 deprecated: null
