@@ -1,17 +1,17 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.97"
+version: "4.98"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-18T06:46:00Z"
+timestamp: "2026-08-18T14:06:00Z"
 phase: 1
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: pregolya
 mode: greenfield+semport
-current_step: "burst-317-wrap COMPLETE (2026-08-18) — D-187 session-wrap RESUME SNAPSHOT. STATE.md v4.96→v4.97. Spec perimeter UNCHANGED (D-143; streak 0/3 preserved; no spec file touched). v4.96 checkpoint archived. 133 BCs (51/79/3). NEXT: P1D-207 (streak restart). trajectory-tail →3→2→2→2 (P1D-202=3, P1D-203=2, P1D-204=2, P1D-205=2, burst-314/315/316=fix, burst-317-wrap=STATE-only)."
+current_step: "burst-318-housekeeping COMPLETE (2026-08-18) — D-188 sidecar stop-hook markers (3) committed + HEADS SHA WARN cleared. STATE.md v4.97→v4.98. Spec perimeter UNCHANGED (D-143; streak 0/3 preserved; no spec file touched). 133 BCs (51/79/3). NEXT: P1D-207 (streak restart). trajectory-tail →3→2→2→2 (P1D-202=3, P1D-203=2, P1D-204=2, P1D-205=2; burst-318=STATE/sidecar-only)."
 current_cycle: v1.0.0-greenfield
 convergence_status: "0/3 — streak UNCHANGED (burst-316 fix-burst; D-186; 2026-08-18; capabilities-p1-p2 §CAP-038 GrepResult.capped canon): capabilities-p1-p2.md §CAP-038 E-TOOLS-006 informal name SearchResultsCapped → canonical GrepResult.capped (error-taxonomy §E-TOOLS-006 + BC-2.23.006 PC-2); final GrepTool-name sibling — ubiquitous-language-core fixed burst-315. BC census UNCHANGED 133 (51/79/3). NEXT P1D-207 (streak restart). Trajectory (post-D170): →1(P1D-194)→fix→6(P1D-195)→fix→0(P1D-196)→0(P1D-197)→2(P1D-198)→fix(burst-306)→1(P1D-199)→fix(burst-307)→4(P1D-200)→fix(burst-308)→3(P1D-201)→fix(burst-309)→pre-fix(burst-310)→3(P1D-202)→fix(burst-311)→2(P1D-203)→fix(burst-312)→2(P1D-204)→fix(burst-313)→2(P1D-205)→fix(burst-314)→fix(burst-315/comprehensive)→fix(burst-316). Full metrics: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: ~234 lines (wc-l); margin from soft-target: +34 lines over 200-line soft; margin from actual: 266 lines to hard-limit (500). burst-317-wrap COMPLETE (D-187); session-wrap RESUME SNAPSHOT; spec perimeter UNCHANGED; streak 0/3; NEXT P1D-207. Consider /compact-state before next burst to slim Current-Phase-Steps + older decisions. -->
+<!-- STATE.md SIZE BUDGET: ~235 lines (wc-l); margin from soft-target: +35 lines over 200-line soft; margin from actual: 265 lines to hard-limit (500). burst-318-housekeeping COMPLETE (D-188); sidecar markers + HEADS SHA WARN cleared; spec perimeter UNCHANGED; streak 0/3; NEXT P1D-207. Consider /compact-state before next burst to slim Current-Phase-Steps + older decisions. -->
 
 # Pipeline State: pregolya
 
@@ -37,7 +37,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2 (curated-subset), langchain-mcp-adapters==0.3.0 (SHA a61c783a), adk-rust v1.0.0 (SHA a6c79b6f, Corpus 5 per D16). Full pins: semport/reference-manifest.md v1.4.0 |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-08-18 — burst-317-wrap COMPLETE: D-187 session-wrap RESUME SNAPSHOT; STATE.md v4.96→v4.97; spec perimeter UNCHANGED (D-143; streak 0/3 preserved). 133 BCs (51/79/3). NEXT: P1D-207 (streak restart; 3-CLEAN before Phase-1 gate closes). trajectory-tail →3→2→2→2 |
+| **Last Updated** | 2026-08-18 — burst-318-housekeeping COMPLETE: D-188 sidecar stop-hook markers + HEADS SHA WARN cleared; STATE.md v4.97→v4.98; spec perimeter UNCHANGED. 133 BCs (51/79/3). NEXT: P1D-207 (streak restart). trajectory-tail →3→2→2→2 |
 
 ## Phase Progress
 
@@ -103,6 +103,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-185 | **burst-315 comprehensive residual-coverage audit COMPLETE — 8 findings closed across 3 specialists: F-AUD-C-02 entities-server.md §PregolyaError EXEC category missing (domain-spec: entities-server §PregolyaError updated); ubiquitous-language-core.md §GrepResult GrepResult.capped fix; F-B2 (MED) BC-2.04.006 PC2 configurable HashMap access aligned with ADR-021 §RunnableConfig §configurable; F-A1 (LOW) BC-2.06.004 + BC-2.06.005 spurious ADR-019 inputs/traces_to removed (CAP-034 governs approval-event BCs, not ADR-019); F-A2 (LOW) BC-2.11.001..006 traces_to corrected to capabilities-p0 §CAP-013; F-A3 (LOW) BC-2.18.001..005 frontmatter status draft→active (5 prompt-template contracts promoted per residual-coverage-audit); ADR-023 §Changelog + ADR-026 §Changelog architect minor version bumps. BC census UNCHANGED 133 (51/79/3). L-186 extended: domain-spec/entities-server.md §PregolyaError added to AXIS-CARRIER category-carrier checklist (burst-308 EXEC sweep missed this L2 entity definition site). Streak 0/3 (fix-burst). NEXT P1D-206 (streak restart on fully-audited perimeter).** | Comprehensive residual-coverage audit front-loaded remaining un-audited surface; entities-server.md §PregolyaError AXIS-CARRIER site added to L-186 checklist | Phase 1 | 2026-08-17 | state-manager/orchestrator |
 | D-186 | **burst-316 closed the final GrepTool-name sibling; the retired informal name `SearchResultsCapped` now has zero live-body domain-spec occurrences (canonical `GrepResult.capped` per error-taxonomy §E-TOOLS-006 + BC-2.23.006). ADR-020's mnemonic-label table intentionally retains the mnemonic Name column (not a defect). Streak remains 0/3. NEXT P1D-207.** | Final GrepTool-name sibling closed; SearchResultsCapped retired corpus-wide | Phase 1 | 2026-08-18 | state-manager/orchestrator |
 | D-187 | **Session-wrap RESUME SNAPSHOT committed (burst-317-wrap). STATE.md v4.96→v4.97. Spec perimeter UNCHANGED (D-143; streak 0/3 preserved; no spec file touched; sidecar stop-hook marker included). v4.96 checkpoint archived to cycles/v1.0.0-greenfield/session-checkpoints.md. NEXT: P1D-207 (adversary streak restart; 3-CLEAN required before Phase-1 gate closes; human conditional approval D-170 covers closure — no re-ask needed).** | SESSION-WRAP: durable zero-context RESUME SNAPSHOT; TD-VSDD-053 single-commit | Phase 1/ops | 2026-08-18 | state-manager |
+| D-188 | **Housekeeping burst-318: committed 3 sidecar stop-hook session-end markers (2026-08-18T07:40:10Z, 13:48:30Z, 13:53:00Z) + HEADS SHA WARN cleared (factory-artifacts `6f189ba` cited; self-referential wrap case per verify-sha-currency.sh — becomes HEAD~1 after this commit). STATE.md v4.97→v4.98. Streak 0/3 UNCHANGED. Spec perimeter frozen at burst-316. NEXT: P1D-207.** | STATE/sidecar-only housekeeping; verify-sha-currency WARN cleared; TD-VSDD-053 single-commit | Phase 1/ops | 2026-08-18 | state-manager |
 
 ## Risk Register
 
@@ -140,7 +141,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 ## Concurrent Cycles
 
-None active (burst-317-wrap COMPLETE — D-187; streak 0/3; P1D-207 pending). Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
+None active (burst-318-housekeeping COMPLETE — D-188; streak 0/3; P1D-207 pending). Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 
 ## Convergence Status
 
@@ -148,18 +149,18 @@ Counter: **0/3 — streak UNCHANGED (burst-316 fix-burst; D-186; 2026-08-18; cap
 
 ## Session Resume Checkpoint
 
-<!-- v4.97 checkpoint replaces v4.96 — v4.96 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- v4.98 checkpoint replaces v4.97 — v4.96+v4.97 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
 Pregolya — Phase 1 (Spec Crystallization), greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase-1d adversarial cascade is RE-CONVERGING (streak 0/3) after the human-directed LCEL scope expansion (D-170: RunnableParallel/RunnablePassthrough/RunnableAssign brought in-scope at the Phase-1 approval gate). The LCEL additions are COMPLETE and the ENTIRE Phase-1 corpus was comprehensively fresh-context audited this cycle (bursts 297–316) with all findings closed. NEXT: dispatch adversary pass P1D-207 (streak-restart attempt) on the current factory-artifacts HEAD; 3 consecutive CLEAN(strict) → pre-gate consistency audit + input-hash drift check → Phase 1 CLOSES on the human's ALREADY-GRANTED conditional approval → Phase 2 (Story Decomposition).
 
 ### HEADS
 - develop `644d1ad` — clean, PUSHED; unchanged the entire session (no code/workspace-init work).
-- factory-artifacts — current HEAD after this wrap commit (spec content frozen since burst-316; this wrap commit changes only STATE §checkpoint, NOT specs); PUSHED.
+- factory-artifacts `6f189ba` — PUSHED (spec content frozen since burst-316; burst-318 housekeeping: sidecar stop-hook markers + HEADS SHA WARN cleared; streak 0/3 UNCHANGED; NOT a spec change).
 - Story worktrees: NONE. Open PRs: NONE. verify-sha-currency: PASS.
 
 ### CURRENT WORKSTREAM — Phase-1 re-convergence (post-LCEL-expansion, 2nd convergence)
-- Frozen spec anchor for the 3-CLEAN streak = spec content as of burst-316 (this wrap commit is STATE-only; specs unchanged). Streak 0/3 (BC-5.39.001; resets on any spec-content push).
+- Frozen spec anchor for the 3-CLEAN streak = spec content as of burst-316 (burst-318 is STATE/sidecar-only; specs unchanged). Streak 0/3 (BC-5.39.001; resets on any spec-content push).
 - RESUME NEXT-ACTION: dispatch `vsdd-factory:adversary` P1D-207 — fresh context, Read/Grep/Glob only (form-B verbatim evidence mandatory, no Bash), inject Phase-1-active policy rubric POL-1..31 + POL-46..47 from .factory/policies.yaml (POL-32..45 dormant — no crates/), require dual report "CLEAN(strict): yes/no" + "CLEAN(PR-merge): yes/no", cite the frozen HEAD. If CLEAN(strict): record streak 1/3 (STATE-only bookkeeping commit does not reset per D-143), then two more passes for 3/3. If NOT CLEAN: route findings by owner (BC/PRD/error-taxonomy → product-owner; L2 domain-spec → business-analyst; ADR/architecture → architect; index/STATE → state-manager), fix-burst, run corpus-wide grep gate on any canonical-form/carrier/axis change (L-184/185/186/187), then re-pass.
 - After 3-CLEAN: pre-Phase-1-gate consistency-validator audit (fresh context) + /vsdd-factory:check-input-drift; if GATE-CLEAN → CLOSE Phase 1 (human conditional approval D-170 already covers it — do NOT re-ask) → Phase 2 Story Decomposition (epics, dependency graph, wave schedule, holdout scenarios Domains A+B per D8).
 
@@ -170,7 +171,7 @@ Phase-1 approval GRANTED CONDITIONAL on completing the LCEL scope additions (hum
 133 BCs (51 P0 / 79 P1 / 3 P2); 39 CAPs; 16 DIs; 14 VPs (6 P0/8 P1 = 9 Kani/3 proptest/2 integration); 26 ADRs; 114 error codes / 13 categories (EXEC=13th, D-178); ~697 TVs. New LCEL artifacts: ADR-026, CAP-039, DI-016, BC-2.01.005–008, VP-014, E-CORE-009(EXEC)/E-CORE-010(VAL)/E-CORE-011(INTERNAL task-panic).
 
 ### DECISION DELTA (this session; full text in Decisions Log)
-D-161..D-187 (sample). Key: D-167 (Phase-1d 3/3 CONVERGED on the PRE-expansion perimeter, P1D-191/192/193); D-170 (HUMAN LCEL scope expansion + Phase-1 conditional approval — reset convergence); D-171 (LCEL authoring complete); D-172..D-184 (sample) (re-convergence fix cascade: DynRunnable invoke/stream canon, module-canon core::runnable, PRD count-carrier propagation, DI-016 enforcer set, EXEC 13th-category + full propagation, fts_search trait canon, E-CORE-011 mint, VP-mirror sweeps, EXEC RetryHint=Never, ADR-023 non-exhaustive inventory); D-185 (comprehensive residual-coverage audit — 3 parallel validators covered the entire un-audited surface; 8 findings closed burst-315); D-186 (final GrepTool GrepResult.capped sibling); D-187 (session-wrap RESUME SNAPSHOT; STATE.md v4.96→v4.97; spec perimeter UNCHANGED).
+D-161..D-188 (sample). Key: D-167 (Phase-1d 3/3 CONVERGED on the PRE-expansion perimeter, P1D-191/192/193); D-170 (HUMAN LCEL scope expansion + Phase-1 conditional approval — reset convergence); D-171 (LCEL authoring complete); D-172..D-184 (sample) (re-convergence fix cascade: DynRunnable invoke/stream canon, module-canon core::runnable, PRD count-carrier propagation, DI-016 enforcer set, EXEC 13th-category + full propagation, fts_search trait canon, E-CORE-011 mint, VP-mirror sweeps, EXEC RetryHint=Never, ADR-023 non-exhaustive inventory); D-185 (comprehensive residual-coverage audit — 3 parallel validators covered the entire un-audited surface; 8 findings closed burst-315); D-186 (final GrepTool GrepResult.capped sibling); D-187 (session-wrap RESUME SNAPSHOT; STATE.md v4.96→v4.97; spec perimeter UNCHANGED); D-188 (housekeeping burst-318: sidecar markers + HEADS SHA WARN cleared; STATE.md v4.97→v4.98; streak 0/3 UNCHANGED).
 
 ### LESSONS CODIFIED (this session)
 L-184 canonical-form corpus-wide grep sweep before closure; L-185 count-carrier set (BC-INDEX/L2-INDEX/ARCH-INDEX/VP-INDEX/test-vectors/prd.md §7-RTM+§5b/bc-authoring-plan/STATE); L-186 axis-carrier set for taxonomy elements (incl. entities-server §PregolyaError for the Category enum); L-187 VP-mirror set (VP-XXX.md + verification-architecture + verification-coverage-matrix).
@@ -182,7 +183,7 @@ L-184 canonical-form corpus-wide grep sweep before closure; L-185 count-carrier 
 
 ### OPS NOTES FOR NEXT SESSION
 - Concurrency discipline: exactly ONE .factory writer at a time (state-manager serialized after specialists); corpus-wide grep gates at commit blocked 2 incomplete-sweep commits this session — keep using them for canonical-form/carrier changes.
-- STATE.md is large (v4.97, ~234 lines); consider running /vsdd-factory:compact-state early next session to extract historical Current-Phase-Steps rows + older decision text to cycle files before approaching the 500-line hard limit.
+- STATE.md is large (v4.98, ~236 lines); consider running /vsdd-factory:compact-state early next session to extract historical Current-Phase-Steps rows + older decision text to cycle files before approaching the 500-line hard limit.
 
 ### VALIDATOR BASELINES (burst-316; 14 blocking + 1 advisory)
 verify-no-version-pins: PASS=209+ · verify-adr-decision-refs: PASS=399+ · records-lint: PASS (L10 WARN advisory — 7-hex SHA in bc-authoring-plan changelog prose, non-blocking; L12 dead-brand-token check added burst-295) · verify-changelog-date-monotonicity: PASS=142+ (WARN=78+) · verify-changelog-date-validity: PASS · verify-enum-variant-casing: PASS · verify-signature-canon: PASS=5 · verify-error-notation-canon: PASS · verify-form-a-changelog-direction: PASS (WARN=7+) · verify-arch-anchor-resolution: PASS=133+ · verify-module-canonicality: PASS=8 · verify-bc-frontmatter-schema: PASS=133 · verify-tv-registry-count: PASS · **verify-adr-anchor-citations: PASS (BLOCKING; generalized to non-ADR targets; B1 60+B2 198 = 258 cites 0 phantom; 14 self-probes)**. Advisory: verify-changelog-claim-applied WARN=15+.
@@ -220,7 +221,7 @@ verify-no-version-pins: PASS=209+ · verify-adr-decision-refs: PASS=399+ · reco
 | Architecture: ADR-023 §Changelog (burst-315: ToolCallPreview closure + L9b de-pin; burst-314: Required Inventory +3 LCEL structs RunnableParallel/RunnablePassthrough/RunnableAssign, struct count 19→22, total 37→40); ADR-026 §Changelog (burst-315: sketch ok_or_else returning E-CORE-011; burst-309: E-CORE-011 minted; burst-308: §Error-Codes EXEC message + sketch canon; burst-304: module-path+E-CORE resolution); ADR-019 (burst-311: fts_search canon); dependency-graph.md (burst-311: fts_search canon); module-decomposition.md (burst-311: fts_search canon Wave-1b residual); verification-architecture.md §Changelog (burst-313: §VP-014 formal statement IndexMap→Vec-of-pairs; burst-308: VP-013 §BC-Contradictions-Flagged 12→13-category axis; burst-304: invoke_dyn→invoke §VP-014 ×3 + §VP-014 heading module-path); ADR-020 §Changelog (burst-308: §E-TOOLS-008 12→13-category axis); ADR-010 §Changelog (burst-308: §Category-Axis-Expansion D26 added; enum +EXEC); ADR-005 §Changelog (burst-304: DynRunnable<Value,Value>→Arc<dyn DynRunnable> ×3); ARCH-INDEX §Changelog (burst-302b: SS-01 BC range 001–008, VP 13→14; burst-292: §ADR-025 registry row fixed) + 9 section files + ADRs 001..026 — ADR-026 (burst-302a: LCEL composition primitives); ADR-015 (burst-300: title "ProvenanceTag Integration"→"TrustLevel Classification"); ADR-024 §Atomic-Write-Pattern (burst-295: .ferroctmp_→.pregolyatmp_ ×3); ADR-010 §non-exhaustive-gate (burst-295: Wave-TBD→Wave-1); ADR-021 §rationale (burst-293: same-crate construction clarified); ADR-014 §Consequences (burst-293: document_index carry-method ×2); ADR-023 §Decision-3 (burst-293: GuardedDocuments core::rag_ingress→core::retriever); ADR-011 §Source (burst-293: gate name corrected); ADR-025 (burst-292: §Context/§Decision S1-omission corrected); ADR-002 (burst-292: §Consequences fuzz-target sibling-sweep); module-decomposition (burst-292: §VP-012 boolean-trigger anchor); burst-291: ADR-005/ADR-012/ADR-015/ADR-021/ADR-024 phantom §-citations fixed | `.factory/specs/architecture/` + `decisions/` |
 | product-brief §MarketIntel (burst-295: ferrograph→"pregolya-graph (formerly 'ferrograph')"; burst-291: §NE catalog phantom §-citation fixed) | `.factory/specs/product-brief.md` |
 | Validation report archive (passes 1–10, 3,478 lines) | `cycles/v0.0.0-pre-pipeline/validation-report-archive.md` |
-| Session checkpoints bursts 5–78, bursts 176–270 pre-commit, v4.45..v4.96 (v4.96 archived at burst-317-wrap session-wrap) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints bursts 5–78, bursts 176–270 pre-commit, v4.45..v4.97 (v4.96 archived at burst-317-wrap; v4.97 archived at burst-318-housekeeping) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (187 lessons; burst-315: L-186 EXTENDED — domain-spec/entities-server.md §PregolyaError added to AXIS-CARRIER category-carrier checklist; burst-313: L-187 VP-mirror-site extension discipline; burst-308: L-186 AXIS-CARRIER propagation discipline; burst-306: L-185 count-carrier-set completeness; burst-304: L-184 corpus-wide grep discipline; burst-303: L-183 parallel-authoring error-code race; burst-291: L-180/L-181 build/extend gate + parser precision; burst-290: L-178/L-179) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Holdout domain briefs A–E | `.factory/planning/holdout-domains/domain-{a,b,c,d,e}-*.md` |
 | Reference corpus manifest (§versions) | `.factory/semport/reference-manifest.md` |
