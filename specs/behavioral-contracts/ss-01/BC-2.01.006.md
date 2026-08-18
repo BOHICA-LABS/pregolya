@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.006
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.1 (burst-302b/D-171/2026-08-17): Notation fix — §Invariants JoinError bullet: PregolyaError { category: Internal } → PregolyaError { category: Internal, .. } per ADR-010 §Class-3 positive obligation (CLASS3_MISSING_DOTS_VIOLATION; verify-error-notation-canon gate)."
   - "1.2 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
   - "1.3 (burst-309/F-P201-01/2026-08-17): Add E-CORE-011 code annotation to the Tokio-task-panic (JoinError) path in PC-4, EC-003, TV-003, and Traceability Error Code Minted. E-CORE-011 (INTERNAL/RunnableParallelTaskPanic) is the structured error code for the panic path where no branch key is available at the JoinError catch site. Distinct from E-CORE-009 (EXEC/RunnableParallelBranchFailure) which covers the branch-returned-Err path where the key is available."
+  - "1.4 (P1D-208/F-P208-01/2026-08-18): §Category casing canon — E-CORE-011 INTERNAL category rendered as bare PascalCase `Internal` corrected to ALL-CAPS taxonomy code `INTERNAL` at §Postconditions PC-4, §Invariants, §Edge Cases EC-003, §Canonical Test Vectors TV-003 per ADR-010 §Category casing canon (matches sibling E-CORE-009 `EXEC` form); sibling-swept 4 prose category references (§Description, §Invariants label, §Postconditions prose, §Architecture Anchors) Internal→INTERNAL per TD-VSDD-060."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "824609c"
+input-hash: "6b2addc"
 extracted_from: null
 modified: []
 deprecated: null
@@ -47,7 +48,7 @@ aborts all remaining in-flight branches immediately (`JoinSet::abort_all()`) and
 structured `PregolyaError` that identifies the failing branch by key. No partial output
 dictionary is ever returned — the result is either a complete `N`-key object or an `Err`.
 This satisfies DI-014 (No Silent Swallowing) and DI-016 (Key-Completeness and Branch-Failure
-Propagation). Tokio task panics (JoinError) are similarly surfaced as structured Internal
+Propagation). Tokio task panics (JoinError) are similarly surfaced as structured INTERNAL
 errors rather than being silently ignored or causing the combinator to hang.
 
 ## Preconditions
@@ -69,9 +70,9 @@ errors rather than being silently ignored or causing the combinator to hang.
 3. **No partial output dictionary is returned on failure.** The caller receives only the
    `Err`; there is no `Ok(partial_map)` path for partial success.
 4. A Tokio task panic (the `join_next()` returns `Err(JoinError)` due to a panic in the
-   branch task) maps to `Err(PregolyaError { category: Internal, code: "E-CORE-011",
+   branch task) maps to `Err(PregolyaError { category: INTERNAL, code: "E-CORE-011",
    message: "RunnableParallelTaskPanic: task panicked: <detail>", .. })` — the panic is
-   treated as an Internal invariant violation, not silently swallowed.
+   treated as an INTERNAL invariant violation, not silently swallowed.
 5. For `stream`: the first `Err` from any branch stream aborts all branch streams and
    propagates the error to the caller. No partial chunk sequence is emitted after the
    first error.
@@ -88,8 +89,8 @@ errors rather than being silently ignored or causing the combinator to hang.
 - **Structured error with branch key:** the error message MUST include the failing branch's
   key (`<key>` placeholder); a structureless "execution failed" without identification of
   the failing branch violates this BC.
-- **JoinError maps to Internal:** Tokio task panics (JoinError) are not re-raised as-is;
-  they are wrapped in a `PregolyaError { category: Internal, .. }` — consistent with ADR-010
+- **JoinError maps to INTERNAL:** Tokio task panics (JoinError) are not re-raised as-is;
+  they are wrapped in a `PregolyaError { category: INTERNAL, .. }` — consistent with ADR-010
   §Class 1 (programming-error invariant violations). This ensures structured error
   propagation rather than payload leakage through raw panic messages.
 - **DI-014 enforcement:** no branch error may be silently discarded; every branch failure
@@ -118,7 +119,7 @@ treat any branch failure as a full failure and retry the entire parallel if appr
 **Scenario:** Branch "slow" panics inside its `invoke` — `JoinSet::join_next()`
 returns `Err(JoinError)`.
 **Expected behavior:** The JoinError is mapped to
-`Err(PregolyaError { category: Internal, code: "E-CORE-011",
+`Err(PregolyaError { category: INTERNAL, code: "E-CORE-011",
 message: "RunnableParallelTaskPanic: task panicked: <detail>", .. })`.
 `abort_all()` is called on remaining tasks. The panic is not re-raised via
 `std::panic::resume_unwind`.
@@ -143,7 +144,7 @@ documented here as a contrast point.
 |---|-------|-----------------|-------|
 | TV-001 | 2-branch parallel; branch "slow" returns `Err(PregolyaError { .. })` | `Err(PregolyaError { category: EXEC, code: "E-CORE-009", message: "RunnableParallelBranchFailure: branch 'slow' failed: <cause>", .. })` | Happy-path failure; branch key in error |
 | TV-002 | 2-branch parallel; branch "fast" succeeds, branch "slow" fails | `Err(PregolyaError { category: EXEC, code: "E-CORE-009", .. })` — NO partial object with "fast" key | No partial result on failure |
-| TV-003 | Branch task panics (JoinError path) | `Err(PregolyaError { category: Internal, code: "E-CORE-011", .. })` | JoinError → Internal (E-CORE-011) |
+| TV-003 | Branch task panics (JoinError path) | `Err(PregolyaError { category: INTERNAL, code: "E-CORE-011", .. })` | JoinError → INTERNAL (E-CORE-011) |
 | TV-004 | 3-branch parallel; branch "b" fails first; inspect that branches "a" and "c" receive abort signal | `abort_all()` called; only 1 Err returned | Abort-all on first error |
 | TV-005 | Stream invocation; first error on branch "x" at chunk 3 | Stream emits up to 2 chunks, then `Err`; no subsequent chunks | Streaming fail-fast |
 
@@ -162,7 +163,7 @@ documented here as a contrast point.
 ## Architecture Anchors
 
 - `pregolya-core/src/runnables/parallel.rs` — `RunnableParallel::invoke` failure path: `join_next()` Err branch, `abort_all()` call, error construction with branch key
-- ADR-026 §Decision 2 — fail-fast with abort semantics, structured error with branch key, JoinError → Internal mapping
+- ADR-026 §Decision 2 — fail-fast with abort semantics, structured error with branch key, JoinError → INTERNAL mapping
 
 ## Story Anchor
 

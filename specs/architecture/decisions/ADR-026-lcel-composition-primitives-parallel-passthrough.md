@@ -11,11 +11,12 @@ date: "2026-08-17"
 subsystems_affected: ["SS-01"]
 supersedes: []
 superseded_by: null
-version: "1.5"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D_BURST302_TBD]
 changelog:
+  - "1.6 (P1D-208/F-P208-01/2026-08-18): §Decision 2 Key behavioral properties item 4 — E-CORE-011 INTERNAL category rendered as bare `Internal` corrected to ALL-CAPS taxonomy code `INTERNAL` per ADR-010 §Category casing canon (matches sibling item 3 `EXEC` form)."
   - "1.5 (burst-315/F-B1/2026-08-17): Decision 2 collect-loop sketch: replace `.unwrap()` with `.ok_or_else(|| PregolyaError::new(Component::Core, Category::Internal, RetryHint::Never, \"E-CORE-011\", format!(\"RunnableParallelTaskPanic: task panicked: missing branch key '{key}'\")))?` — eliminates no-unwrap convention violation (CLAUDE.md §Code Conventions). The key-presence invariant holds when the JoinSet loop completes without early-return error, but `.unwrap()` on an `Option` is forbidden in non-test code regardless of logical guarantee. E-CORE-011 (INTERNAL, minted burst-309) is the canonical expression for this programming-error invariant violation on the task-panic path. Disclaimer note retained."
   - "1.4 (burst-309/F-P201-01/2026-08-17): Mint E-CORE-011 (INTERNAL, broken, BC-2.01.006 PC-4, RetryHint Never) for the RunnableParallel JoinError/task-panic path. Highest existing CORE code was E-CORE-010; no existing INTERNAL code covers a JoinSet task panic (E-CORE-007 is GuardrailHookPanic; E-CORE-004 is pipe-composition failure; E-CORE-006 is recursion-limit). (1) §Decision 2 collect-loop sketch JoinError branch: `'E-CORE-NNN'` → `'E-CORE-011'`; comment updated. (2) Behavioral property 4: code field added (`code: E-CORE-011`). (3) §Error codes minted: E-CORE-011 row added. Near-name check: RunnableParallelTaskPanic vs RunnableParallelBranchFailure (E-CORE-009) — distinct paths (task panic at JoinSet level vs branch Err return) — no collision. Branch key is NOT available at the JoinError catch site (JoinSet::join_next yields JoinError only; key lives inside the task closure); message template omits `<key>`."
   - "1.3 (burst-308/F-P200-03+04/2026-08-17): Two Decision 2 sketch corrections. F-P200-03 (MED): behavioral property 3 message template corrected from `\"RunnableParallel branch '<key>' failed: <cause>\"` to canonical form `\"RunnableParallelBranchFailure: branch '<key>' failed: <cause>\"` (matching §Error codes minted form and error-taxonomy E-CORE-009 message template). F-P200-04 (OBS): illustrative sketch aligned to canonical types — (1) `ErrorCategory::Internal` → `Category::Internal` (PascalCase canon per ADR-010); (2) `RetryHint::NoRetry` → `RetryHint::Never` (canonical variant name); (3) `\"E-CORE-009\"` removed from JoinError→Internal path (E-CORE-009 is the EXEC branch-failure code per BC-2.01.006 PC-4; JoinError maps to Category::Internal WITHOUT E-CORE-009); (4) E-CORE-009 wrapping added inside spawned task where branch key is in scope; (5) `\"parallel\"` string-literal → `Component::Core` (canonical Component enum path)."
@@ -206,7 +207,7 @@ form. Key behavioral properties:
 3. Error wraps the failing branch's key in the message:
    `PregolyaError { category: EXEC, code: E-CORE-009, message: "RunnableParallelBranchFailure: branch '<key>' failed: <cause>", .. }`.
    Minted as `E-CORE-009` in `error-taxonomy.md` (burst-302b/BC-2.01.006 authoring).
-4. JoinError (tokio task panic) maps to `PregolyaError { category: Internal, code: E-CORE-011, .. }` per
+4. JoinError (tokio task panic) maps to `PregolyaError { category: INTERNAL, code: E-CORE-011, .. }` per
    ADR-010 §Class 1.
 
 ### Streaming
