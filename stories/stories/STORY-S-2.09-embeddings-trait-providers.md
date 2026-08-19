@@ -18,7 +18,7 @@ input-hash: "6d39b0a"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.06, S-1.02]
-blocks: []
+blocks: [S-6.01]
 behavioral_contracts:
   - BC-2.22.001
   - BC-2.22.002

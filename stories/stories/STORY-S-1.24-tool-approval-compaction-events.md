@@ -1,8 +1,8 @@
 ---
 document_type: story
-level: L4
+level: ops
 story_id: S-1.24
-epic_id: EPIC-1
+epic_id: E-09
 version: "1.0"
 status: draft
 producer: story-writer
@@ -25,7 +25,7 @@ blocks: [S-1.25]
 behavioral_contracts: [BC-2.06.004, BC-2.06.005, BC-2.06.006]
 verification_properties: []
 priority: P1
-cycle: 1
+cycle: v1.0.0-greenfield
 wave: 1
 target_module: pregolya-graph
 subsystems: [SS-06]
@@ -58,11 +58,11 @@ Comfortable within context window. No split required.
 
 ## Behavioral Contracts
 
-| BC ID | Title | Version | Red Gate? |
-|-------|-------|---------|-----------|
-| BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — payload, causal ordering before interrupt | v1.2 | No |
-| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — payload, emission on resume | v1.3 | No |
-| BC-2.06.006 | `compaction_event` StreamEvent (Event 15) — payload, parent_ids mandatory | v1.4 | No |
+| BC ID | Title | Red Gate? |
+|-------|-------|-----------|
+| BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — payload, causal ordering before interrupt | No |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — payload, emission on resume | No |
+| BC-2.06.006 | `compaction_event` StreamEvent (Event 15) — payload, parent_ids mandatory | No |
 
 ## Acceptance Criteria
 

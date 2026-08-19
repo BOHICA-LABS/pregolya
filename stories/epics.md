@@ -5,7 +5,7 @@ status: active
 producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
-traces_to: .factory/specs/architectural/ARCH-INDEX.md
+traces_to: .factory/specs/architecture/ARCH-INDEX.md
 ---
 
 # Epics — pregolya Phase 2

@@ -1,8 +1,8 @@
 ---
 document_type: story
-level: L4
+level: ops
 story_id: S-1.23
-epic_id: EPIC-1
+epic_id: E-12
 version: "1.0"
 status: draft
 producer: story-writer
@@ -19,11 +19,11 @@ traces_to:
   - behavioral-contracts/BC-2.05.008
 points: 5
 depends_on: [S-1.20, S-1.17]
-blocks: [S-1.24]
+blocks: [S-1.24, S-6.01]
 behavioral_contracts: [BC-2.05.007, BC-2.05.008]
 verification_properties: [VP-011]
 priority: P1
-cycle: 1
+cycle: v1.0.0-greenfield
 wave: 1
 target_module: pregolya-graph
 subsystems: [SS-05]
@@ -56,10 +56,10 @@ Comfortable within context window. No split required.
 
 ## Behavioral Contracts
 
-| BC ID | Title | Version | Red Gate? |
-|-------|-------|---------|-----------|
-| BC-2.05.007 | PreToolCallHook — 4-branch pre-invoke dispatch gate | v1.4 | No |
-| BC-2.05.008 | Skip-hook-on-resume invariant after PendingHumanApproval | v1.2 | No |
+| BC ID | Title | Red Gate? |
+|-------|-------|-----------|
+| BC-2.05.007 | PreToolCallHook — 4-branch pre-invoke dispatch gate | No |
+| BC-2.05.008 | Skip-hook-on-resume invariant after PendingHumanApproval | No |
 
 ## Acceptance Criteria
 

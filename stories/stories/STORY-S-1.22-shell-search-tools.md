@@ -1,8 +1,8 @@
 ---
 document_type: story
-level: L4
+level: ops
 story_id: S-1.22
-epic_id: EPIC-1
+epic_id: E-13
 version: "1.0"
 status: draft
 producer: story-writer
@@ -23,7 +23,7 @@ blocks: []
 behavioral_contracts: [BC-2.23.005, BC-2.23.006]
 verification_properties: [VP-013]
 priority: P1
-cycle: 1
+cycle: v1.0.0-greenfield
 wave: 1
 target_module: pregolya-tools
 subsystems: [SS-23]
@@ -57,10 +57,10 @@ Comfortable within context window. No split required.
 
 ## Behavioral Contracts
 
-| BC ID | Title | Version | Red Gate? |
-|-------|-------|---------|-----------|
-| BC-2.23.005 | BashTool — sandboxed shell with non-lowerable Medium risk floor | v1.10 | No |
-| BC-2.23.006 | GrepTool — hermetic in-process regex search with confinement | v2.0 | No |
+| BC ID | Title | Red Gate? |
+|-------|-------|-----------|
+| BC-2.23.005 | BashTool — sandboxed shell with non-lowerable Medium risk floor | No |
+| BC-2.23.006 | GrepTool — hermetic in-process regex search with confinement | No |
 
 ## Acceptance Criteria
 

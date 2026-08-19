@@ -1,8 +1,8 @@
 ---
 document_type: story
-level: L4
+level: ops
 story_id: S-1.27
-epic_id: EPIC-1
+epic_id: E-14
 version: "1.0"
 status: draft
 producer: story-writer
@@ -27,7 +27,7 @@ blocks: []
 behavioral_contracts: [BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007]
 verification_properties: []
 priority: P1
-cycle: 1
+cycle: v1.0.0-greenfield
 wave: 1
 target_module: pregolya-server
 subsystems: [SS-12]
@@ -60,12 +60,12 @@ Comfortable within context window. No split required.
 
 ## Behavioral Contracts
 
-| BC ID | Title | Version | Red Gate? |
-|-------|-------|---------|-----------|
-| BC-2.12.004 | CronSchedule — fresh isolated session per firing, skip missed-fire policy | v1.7 | No |
-| BC-2.12.005 | SecurityConfig::default — CORS denied, debug route gated (DI-013) | v1.5 | No |
-| BC-2.12.006 | Store trait seams — IdempotencyStore, RateLimitStore, RunStore | v1.3 | No |
-| BC-2.12.007 | SSE streaming — same engine as unary (DI-011); 5 event types | v1.4 | No |
+| BC ID | Title | Red Gate? |
+|-------|-------|-----------|
+| BC-2.12.004 | CronSchedule — fresh isolated session per firing, skip missed-fire policy | No |
+| BC-2.12.005 | SecurityConfig::default — CORS denied, debug route gated (DI-013) | No |
+| BC-2.12.006 | Store trait seams — IdempotencyStore, RateLimitStore, RunStore | No |
+| BC-2.12.007 | SSE streaming — same engine as unary (DI-011); 5 event types | No |
 
 ## Acceptance Criteria
 

@@ -1,8 +1,8 @@
 ---
 document_type: story
-level: L4
+level: ops
 story_id: S-1.21
-epic_id: EPIC-1
+epic_id: E-13
 version: "1.0"
 status: draft
 producer: story-writer
@@ -27,7 +27,7 @@ blocks: [S-1.22]
 behavioral_contracts: [BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004]
 verification_properties: [VP-003]
 priority: P1
-cycle: 1
+cycle: v1.0.0-greenfield
 wave: 1
 target_module: pregolya-tools
 subsystems: [SS-23]
@@ -60,12 +60,12 @@ Comfortable within context window. No split required.
 
 ## Behavioral Contracts
 
-| BC ID | Title | Version | Red Gate? |
-|-------|-------|---------|-----------|
-| BC-2.23.001 | ReadFileTool — PathGuard-confined byte read, 1 MiB cap | v1.9 | No |
-| BC-2.23.002 | WriteFileTool — PathGuard-confined atomic write | v2.0 | No |
-| BC-2.23.003 | EditFileTool — exact-match / fuzzy replace with atomic write | v1.8 | No |
-| BC-2.23.004 | ListDirTool — depth-1 directory listing with DirEntry | v1.7 | No |
+| BC ID | Title | Red Gate? |
+|-------|-------|-----------|
+| BC-2.23.001 | ReadFileTool — PathGuard-confined byte read, 1 MiB cap | No |
+| BC-2.23.002 | WriteFileTool — PathGuard-confined atomic write | No |
+| BC-2.23.003 | EditFileTool — exact-match / fuzzy replace with atomic write | No |
+| BC-2.23.004 | ListDirTool — depth-1 directory listing with DirEntry | No |
 
 ## Acceptance Criteria
 

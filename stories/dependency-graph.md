@@ -42,7 +42,7 @@ S-1.04 (Runnable Trait)
 
 S-1.05 (LCEL)
   depends_on: [S-1.04]
-  blocks: [none; VP-014 proptest exercised in Phase 6]
+  blocks: S-6.01
 
 S-1.06 (Retry/Circuit Breaker)
   depends_on: [S-1.04, S-1.02]
@@ -66,7 +66,7 @@ S-1.08 (Recursive Splitter)
 
 S-1.09 (Sandbox)
   depends_on: [S-1.01, S-1.02]
-  blocks: S-1.21, S-1.22, S-2.10
+  blocks: S-1.21, S-1.22, S-2.10, S-6.01
 
 S-1.10 (Checkpoint Core)
   depends_on: [S-1.04, S-1.02]
@@ -126,7 +126,7 @@ S-1.22 (Bash + Grep Tools)
 
 S-1.23 (PreToolCallHook)
   depends_on: [S-1.20, S-1.17]
-  blocks: S-1.24
+  blocks: S-1.24, S-6.01
 
 S-1.24 (Approval + Compaction Events)
   depends_on: [S-1.23, S-1.17, S-1.18]
@@ -134,7 +134,7 @@ S-1.24 (Approval + Compaction Events)
 
 S-1.25 (Compaction Execution)
   depends_on: [S-1.10, S-1.18, S-1.24]
-  blocks: [none in v1 stories]
+  blocks: S-6.01
 ```
 
 ### Wave 1 — pregolya-server (E-14)

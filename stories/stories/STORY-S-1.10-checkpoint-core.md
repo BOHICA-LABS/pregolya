@@ -2,7 +2,7 @@
 document_type: story
 level: ops
 story_id: S-1.10
-epic_id: E-01
+epic_id: E-05
 version: "1.0"
 status: draft
 producer: story-writer
@@ -22,7 +22,7 @@ input-hash: "53af882"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.04, S-1.02]
-blocks: [S-1.11]
+blocks: [S-1.11, S-6.01]
 behavioral_contracts: [BC-2.04.001, BC-2.04.002, BC-2.04.003, BC-2.04.004, BC-2.04.005, BC-2.04.006, BC-2.04.007]
 verification_properties: [VP-002]
 priority: P0

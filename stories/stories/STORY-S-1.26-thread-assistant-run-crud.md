@@ -1,8 +1,8 @@
 ---
 document_type: story
-level: L4
+level: ops
 story_id: S-1.26
-epic_id: EPIC-1
+epic_id: E-14
 version: "1.0"
 status: draft
 producer: story-writer
@@ -25,7 +25,7 @@ blocks: [S-1.27]
 behavioral_contracts: [BC-2.12.001, BC-2.12.002, BC-2.12.003]
 verification_properties: []
 priority: P1
-cycle: 1
+cycle: v1.0.0-greenfield
 wave: 1
 target_module: pregolya-server
 subsystems: [SS-12]
@@ -58,11 +58,11 @@ Comfortable within context window. No split required.
 
 ## Behavioral Contracts
 
-| BC ID | Title | Version | Red Gate? |
-|-------|-------|---------|-----------|
-| BC-2.12.001 | Thread CRUD — create, get, list, delete with cascade-delete | v1.4 | No |
-| BC-2.12.002 | Assistant CRUD — immutable version snapshots, configurable map | v1.6 | No |
-| BC-2.12.003 | Run lifecycle — 9-arc state machine, Run-Config Merge | v1.6 | No |
+| BC ID | Title | Red Gate? |
+|-------|-------|-----------|
+| BC-2.12.001 | Thread CRUD — create, get, list, delete with cascade-delete | No |
+| BC-2.12.002 | Assistant CRUD — immutable version snapshots, configurable map | No |
+| BC-2.12.003 | Run lifecycle — 9-arc state machine, Run-Config Merge | No |
 
 ## Acceptance Criteria
 

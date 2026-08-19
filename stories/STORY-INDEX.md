@@ -31,8 +31,8 @@ input-hash: "pending"
 | Wave 6 stories | 1 |
 | Total Epics | 22 |
 | BCs covered | 133 / 133 |
-| Stories with VP anchor | 10 |
-| Stories with Red Gate BCs | 9 |
+| Stories with VP anchor | 12 |
+| Stories with Red Gate BCs | 8 |
 
 ## Story Inventory
 
@@ -420,6 +420,6 @@ input-hash: "pending"
 | VP-009 | BC-2.21.003 | S-2.03 | P0 | pregolya-vectorstores |
 | VP-010 | BC-2.19.005 | S-2.01 | P0 | pregolya-core |
 | VP-011 | BC-2.05.007 | S-1.23 | P0 | pregolya-graph |
-| VP-012 | BC-2.10.005 | S-1.25 | P1 | pregolya-core |
+| VP-012 | BC-2.10.005 | S-1.25 | P1 | pregolya-core (watermark_arithmetic_harness) |
 | VP-013 | BC-2.23.005 | S-1.22 | P1 | pregolya-tools |
 | VP-014 | BC-2.01.005 | S-1.05 | P1 | pregolya-core |
