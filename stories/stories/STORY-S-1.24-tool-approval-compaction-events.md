@@ -33,7 +33,7 @@ estimated_days: 2
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: N/A — BCs authored (BC-2.06.004 v1.2, BC-2.06.005 v1.3, BC-2.06.006 v1.4)
+# BC status: N/A — BCs authored (BC-2.06.004, BC-2.06.005, BC-2.06.006)
 ---
 
 # STORY-S-1.24: Tool Approval and Compaction Streaming Events (Events 13, 14, 15)
@@ -105,8 +105,8 @@ For the same `run_id` + `tool_name`, `tool_approval_resolved` is only emitted af
 The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MANDATORY — must not be null or empty), `trigger` (CompactionTrigger variant string), `compacted_start` (message index), `compacted_end` (message index), `summary_token_count` (u64), `tokens_remaining_after` (Option<i64> — null when no token ceiling; negative on Deny path).
 (traces to BC-2.06.006 postcondition 2)
 
-### AC-010: compaction_event — parent_ids is mandatory per BC-2.06.002 Inv-2
-`parent_ids` field on `CompactionEvent` payload must be a non-null, non-empty array. Emitting a `compaction_event` with `parent_ids: null` or `parent_ids: []` violates BC-2.06.002 Invariant 2 and must not occur.
+### AC-010: compaction_event — parent_ids is mandatory (non-null, non-empty array)
+`parent_ids` field on `CompactionEvent` payload must be a non-null, non-empty array. Emitting a `compaction_event` with `parent_ids: null` or `parent_ids: []` violates the CompactionEvent structural invariant (BC-2.06.006 invariant 1) and must not occur.
 (traces to BC-2.06.006 invariant 1)
 
 ## Architecture Mapping

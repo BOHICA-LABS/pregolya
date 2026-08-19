@@ -35,7 +35,7 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: N/A — BCs authored (BC-2.12.004 v1.7, BC-2.12.005 v1.5, BC-2.12.006 v1.3, BC-2.12.007 v1.4)
+# BC status: N/A — BCs authored (BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007)
 ---
 
 # STORY-S-1.27: CronSchedule, SecurityConfig, Store Seams, and SSE Streaming

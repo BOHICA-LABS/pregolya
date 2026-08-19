@@ -33,7 +33,7 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: N/A — BCs authored (BC-2.12.001 v1.4, BC-2.12.002 v1.6, BC-2.12.003 v1.6)
+# BC status: N/A — BCs authored (BC-2.12.001, BC-2.12.002, BC-2.12.003)
 ---
 
 # STORY-S-1.26: Thread, Assistant, and Run CRUD REST Endpoints
@@ -180,7 +180,7 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 ## Architecture Compliance Rules
 
 1. **Route handlers must not depend on concrete store implementations.** Thread/Assistant/Run route handlers use `Arc<dyn ThreadStore>`, `Arc<dyn AssistantStore>`, `Arc<dyn RunStore>` — never concrete types. This is VP-STORE-01 (no concrete store in route handlers).
-2. **`interrupted → cancelled` arc is load-bearing.** The 9-arc state machine was updated in BC-2.12.003 v1.6 to add this arc. The transition validator must include it.
+2. **`interrupted → cancelled` arc is load-bearing.** The 9-arc state machine includes this arc (BC-2.12.003 §StateTransitions). The transition validator must include it.
 3. **Versions list is `version ASC` (not `created_at DESC`).** The assistant versions endpoint is the documented exemption from the canonical created_at DESC ordering.
 4. **Leaf-level merge, not whole-map replacement.** `configurable_merge` performs per-key override at leaf level. A run providing `{ "model": "gpt-4" }` must not erase other assistant keys not present in the run config.
 5. **`summary_halt` is terminal and directly deletable.** Do not require a cancel step before deleting a `summary_halt` run.

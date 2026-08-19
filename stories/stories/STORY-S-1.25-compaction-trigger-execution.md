@@ -31,7 +31,7 @@ estimated_days: 2
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: N/A — BCs authored (BC-2.10.005 v1.3, BC-2.10.006 v2.0)
+# BC status: N/A — BCs authored (BC-2.10.005, BC-2.10.006)
 ---
 
 # STORY-S-1.25: Compaction Trigger Configuration and 7-Step Execution Cycle

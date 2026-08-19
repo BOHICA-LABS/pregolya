@@ -31,7 +31,7 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: N/A — BCs authored (BC-2.23.005 v1.10, BC-2.23.006 v2.0)
+# BC status: N/A — BCs authored (BC-2.23.005, BC-2.23.006)
 ---
 
 # STORY-S-1.22: Shell and Search Tools (BashTool, GrepTool)

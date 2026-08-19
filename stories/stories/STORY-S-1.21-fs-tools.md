@@ -35,7 +35,7 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: N/A — BCs authored (BC-2.23.001 v1.9, BC-2.23.002 v2.0, BC-2.23.003 v1.8, BC-2.23.004 v1.7)
+# BC status: N/A — BCs authored (BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004)
 ---
 
 # STORY-S-1.21: Filesystem Tools (ReadFile, WriteFile, EditFile, ListDir)

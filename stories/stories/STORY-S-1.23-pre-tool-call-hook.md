@@ -31,7 +31,7 @@ estimated_days: 2
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: N/A — BCs authored (BC-2.05.007 v1.4, BC-2.05.008 v1.2)
+# BC status: N/A — BCs authored (BC-2.05.007, BC-2.05.008)
 ---
 
 # STORY-S-1.23: Pre-Tool-Call Hook (PreToolCallHook / PreToolDecision)
@@ -100,7 +100,7 @@ A resume `Command(resume=PendingHumanApproval)` is invalid. The engine rejects t
 (traces to BC-2.05.008 postcondition 2)
 
 ### AC-010: ToolApprovalRequest persisted via msgpack for process-restart durability
-The `ToolApprovalRequest` interrupt payload is persisted using the msgpack checkpoint mechanism (BC-2.04.002) so that a process restart can reconstruct the pending approval state. FIFO ordering of pending approvals is maintained per BC-2.05.002.
+The `ToolApprovalRequest` interrupt payload is persisted using the msgpack checkpoint mechanism so that a process restart can reconstruct the pending approval state. FIFO ordering of pending approvals is maintained per the approval queue invariant (see BC-2.05.008 invariant 1).
 (traces to BC-2.05.008 invariant 1)
 
 ## Architecture Mapping
@@ -153,15 +153,15 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 - [ ] Implement `pre_tool_dispatch` — 4-branch dispatch with fallback Deny on panic
 - [ ] Implement skip-hook-on-resume: extract `pre_tool_dispatch` branch from resume path
 - [ ] Validate `Command(resume=PendingHumanApproval)` returns error
-- [ ] Implement `ToolApprovalRequest` msgpack serialization (BC-2.04.002)
+- [ ] Implement `ToolApprovalRequest` msgpack serialization (msgpack checkpoint mechanism from S-1.20)
 - [ ] Run `just iter pregolya-graph` — all tests green
 
 ## Previous Story Intelligence
 
 **From S-1.20 (HITL Interrupt/Resume Core):**
 - `interrupt(T)` is the function that suspends graph execution. For PendingHumanApproval, call `interrupt(ToolApprovalRequest { .. })`.
-- `Command(resume=<decision>)` is the struct kwarg form for resume commands. Do NOT use `Command::Resume(...)` enum variant form — that notation was corrected in BC-2.06.005 changelog v1.2 (F-P142-03).
-- Msgpack checkpoint for interrupt payloads is handled by BC-2.04.002 persistence machinery established in S-1.20.
+- `Command(resume=<decision>)` is the struct kwarg form for resume commands. Do NOT use `Command::Resume(...)` enum variant form — that notation was corrected in the F-P142-03 fix cycle (see S-1.20 implementation notes).
+- Msgpack checkpoint for interrupt payloads is handled by the msgpack persistence machinery established in S-1.20.
 
 **From S-1.17 (Streaming Event Types):**
 - The `StreamEvent` enum was established in S-1.17. Events 13 (`tool_approval_request`) and 14 (`tool_approval_resolved`) are added by S-1.24 (which depends on this story). S-1.23 only defines the hook mechanics; streaming events are wired in S-1.24.
