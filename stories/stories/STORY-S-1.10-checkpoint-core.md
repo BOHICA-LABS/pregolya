@@ -1,0 +1,231 @@
+---
+document_type: story
+level: ops
+story_id: S-1.10
+epic_id: E-01
+version: "1.0"
+status: draft
+producer: story-writer
+timestamp: 2026-08-18T00:00:00Z
+phase: 2
+inputs:
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.001.md
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.002.md
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.003.md
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.004.md
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.005.md
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.006.md
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.007.md
+  - .factory/specs/architecture/module-decomposition.md
+  - .factory/specs/architecture/dependency-graph.md
+input-hash: "53af882"
+traces_to: .factory/stories/STORY-INDEX.md
+points: 13
+depends_on: [S-1.04, S-1.02]
+blocks: [S-1.11]
+behavioral_contracts: [BC-2.04.001, BC-2.04.002, BC-2.04.003, BC-2.04.004, BC-2.04.005, BC-2.04.006, BC-2.04.007]
+verification_properties: [VP-002]
+priority: P0
+cycle: v1.0.0-greenfield
+wave: 1
+target_module: pregolya-checkpoint
+subsystems: [SS-04]
+estimated_days: 5
+assumption_validations: []
+risk_mitigations: []
+tdd_mode: strict
+---
+
+# S-1.10: Checkpoint Core — put_writes, Durability Tiers, Monotonic Clock, Fork, Crash Recovery, Encryption
+
+## Narrative
+
+- **As a** pregolya library user orchestrating stateful graph executions
+- **I want to** have a `CheckpointSaver` implementation that persists per-task writes before super-step boundaries, enforces monotonic checkpoint IDs, supports fork-via-pointer (no state copy), recovers cleanly from crashes, and encrypts all written data at rest
+- **So that** long-running graph executions are crash-safe at sub-step granularity, concurrent threads cannot collide on storage addresses, forks are cheap (no state duplication), and all persisted state is encrypted without caller intervention
+
+## Behavioral Contracts
+
+| BC | Title | Covered ACs |
+|----|-------|------------|
+| BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | AC-001..AC-004 |
+| BC-2.04.002 | DurabilityTier — Sync Default, Async Opt-in, Exit Opt-in | AC-005..AC-007 |
+| BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | AC-008..AC-010 |
+| BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | AC-011..AC-012 |
+| BC-2.04.005 | Crash Recovery — Committed Tasks Not Re-executed on Resume | AC-013..AC-015 |
+| BC-2.04.006 | Session Triple-Address Uniqueness — VP-002 Kani Seed | AC-016..AC-019 |
+| BC-2.04.007 | Encryption at Rest — Symmetric Coverage (put AND put_writes) | AC-020..AC-022 |
+
+## VP-002 ANCHOR (Kani P0)
+
+This story builds `pregolya-checkpoint/src/session_index.rs` containing `SessionKey`, `storage_address`, and the session triple-address logic. The `storage_address` pure function is the test vehicle for the VP-002 Kani harness (Phase 6 formal hardening). Per VP-002, `session_tenancy_harness` and `no_bare_thread_id_addressing` Kani proofs verify injectivity of `storage_address` over the bounded input space.
+
+**Subsystem anchor justification:** SS-04 owns this story's scope because SS-04 is the Checkpoint subsystem (pregolya-checkpoint crate) per ARCH-INDEX Subsystem Registry.
+
+**Dependency anchor justification:** S-1.10 depends on S-1.04 because the `Runnable` trait and `PregolyaError` infrastructure (S-1.04) define the trait-based execution model that `CheckpointSaver` extends. S-1.10 depends on S-1.02 because error-policy enforcement (S-1.02) governs how `E-CHKPT-*` errors propagate through the graph runtime.
+
+## Acceptance Criteria
+
+### AC-001 (traces to BC-2.04.001 postcondition 1 — per-task put_writes before apply_writes)
+For each completed `PregelTask`, `put_writes(config, writes, task_id)` is called and submitted to the backend BEFORE `apply_writes` is invoked for the current super-step. This ordering is verified by querying the `pending_writes` table before `apply_writes` executes. Verified by `test_BC_2_04_001_put_writes_precedes_apply_writes()`.
+
+### AC-002 (traces to BC-2.04.001 postcondition 5 — special channel negative indices)
+Special-channel writes use negative write indices: `ERROR=-1`, `SCHEDULED=-2`, `INTERRUPT=-3`, `RESUME=-4`. These never collide with regular writes (non-negative indices). Dedup is last-write-wins for special channels. Verified by `test_BC_2_04_001_special_channel_negative_indices()`.
+
+### AC-003 (traces to BC-2.04.001 invariant 1 — per-task not batched)
+`put_writes` is called as each task finishes, not batched at super-step end. A 3-task super-step produces 3 `put_writes` calls in task-completion order, not 1 batched call. Verified by `test_BC_2_04_001_put_writes_per_task_not_batched()`.
+
+### AC-004 (traces to BC-2.04.001 edge case EC-002 — put_writes storage failure)
+If `put_writes` storage backend returns an error, the error surfaces as `Err(PregolyaError { category: DURABILITY, code: "E-CHKPT-001", message: "CheckpointWriteFailed: put_writes for task '<task_id>' failed — backend error: <backend_error>", .. })` and `apply_writes` is NOT called. The run transitions to `failed`. Verified by `test_BC_2_04_001_put_writes_storage_failure_halts_run()`.
+
+### AC-005 (traces to BC-2.04.002 postcondition 1 — Sync default)
+`DurabilityTier::Sync` is the default when constructing a `CheckpointSaver` without explicit tier configuration. With `Sync`, all `put_writes` futures are fully resolved (storage confirmed) before the super-step boundary. Verified by `test_BC_2_04_002_sync_is_default_tier()`.
+
+### AC-006 (traces to BC-2.04.002 postcondition 2 — Async tier)
+With `DurabilityTier::Async`, `put_writes` futures are submitted (queued) before the next super-step begins and joined before the run exits. The super-step boundary does NOT wait for storage confirmation. Verified by `test_BC_2_04_002_async_tier_futures_joined_on_exit()`.
+
+### AC-007 (traces to BC-2.04.002 edge case EC-003 — unknown tier validation)
+Constructing a `CheckpointSaver` with an unknown/invalid durability tier string returns `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'durability': unknown tier \"<value>\"", .. })`. Verified by `test_BC_2_04_002_unknown_tier_validation_error()`.
+
+### AC-008 (traces to BC-2.04.003 postcondition 1 — monotonic IDs)
+`get_next_version(current, channel)` returns a `CheckpointId` that is strictly greater than `current`. The implementation uses a monotonic logical clock (NOT `Uuid::new_v4()` or any wall-clock UUID). Verified by `test_BC_2_04_003_get_next_version_monotonic()`.
+
+### AC-009 (traces to BC-2.04.003 postcondition 3 — UUID rejected)
+If a `CheckpointId` derived from a random UUID (wall-clock or v4) is presented as `current`, `get_next_version` rejects it with `Err(PregolyaError { code: "E-CHKPT-002", message: "MonotonicClockRegression: checkpoint_id must be monotonic: random UUID rejected", .. })`. Verified by `test_BC_2_04_003_random_uuid_rejected()`.
+
+### AC-010 (traces to BC-2.04.003 invariant 1 — cross-restart monotonicity via ADR-005)
+After a process restart, `get_next_version` sources `current` from the persisted maximum `CheckpointId` in the storage backend (ADR-005 rev-2 cross-restart monotonicity). Post-restart IDs are always strictly greater than any pre-restart ID for the same `(thread_id, checkpoint_ns)`. Verified by `test_BC_2_04_003_cross_restart_monotonicity()`.
+
+### AC-011 (traces to BC-2.04.004 postcondition 1 — fork via parent pointer)
+`CheckpointSaver::fork(parent_checkpoint_id)` creates a new fork checkpoint with `metadata.parents[checkpoint_ns] == parent_checkpoint_id` — no state is copied. The fork checkpoint contains only the parent pointer. Verified by `test_BC_2_04_004_fork_via_parent_pointer_no_copy()`.
+
+### AC-012 (traces to BC-2.04.004 postcondition 2 — fork gets new ID via get_next_version)
+The fork checkpoint's `checkpoint_id` is obtained via `get_next_version`, ensuring it is monotonically greater than the parent's ID. No two fork siblings share the same `checkpoint_id`. Verified by `test_BC_2_04_004_fork_checkpoint_id_from_get_next_version()`.
+
+### AC-013 (traces to BC-2.04.005 postcondition 1 — crash recovery)
+On resume after crash, tasks that were fully committed (their `put_writes` was confirmed in storage) are NOT re-executed. The recovery mechanism reads the `pending_writes` table to determine which tasks completed before the crash. Verified by `test_BC_2_04_005_committed_tasks_not_re_executed()`.
+
+### AC-014 (traces to BC-2.04.005 postcondition 2 — skip-on-reapply set)
+The skip-on-reapply set is: `ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME`. `SCHEDULED` is NOT in the skip-on-reapply set — it is re-executed on resume. Verified by `test_BC_2_04_005_skip_on_reapply_set_excludes_scheduled()`.
+
+### AC-015 (traces to BC-2.04.005 edge case EC-006 — get_tuple read failure)
+If `get_tuple` returns an error during recovery, the error surfaces as `Err(PregolyaError { code: "E-CHKPT-003", message: "CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>", .. })`. Verified by `test_BC_2_04_005_get_tuple_failure_propagates()`.
+
+### AC-016 (traces to BC-2.04.006 postcondition 1 — session triple-address VP-002 seed)
+`pregolya-checkpoint/src/session_index.rs` exports `pub fn storage_address(key: &SessionKey) -> StorageAddress` as a pure function (no database I/O). `SessionKey` is a struct with `thread_id: String`, `checkpoint_ns: String`, `checkpoint_id: CheckpointId`. `StorageAddress` implements `PartialEq`. The `#[cfg(kani)]` proof harness skeleton is present in the file per VP-002. Verified by `test_BC_2_04_006_session_key_and_storage_address_types_exist()`.
+
+### AC-017 (traces to BC-2.04.006 postcondition 2 — configurable thread_id key)
+`thread_id` is accessed from `config.configurable` via `config.configurable.as_ref().and_then(|m| m.get("thread_id"))`. A missing `thread_id` key returns `Err(PregolyaError { code: "E-CORE-005", message: "Validation failed: missing 'thread_id' in configurable", .. })`. Verified by `test_BC_2_04_006_missing_thread_id_validation_error()`.
+
+### AC-018 (traces to BC-2.04.006 invariant 1 — no bare thread_id addressing)
+No backend implementation may use bare `thread_id` as a sole primary key. Every storage operation includes the full `(thread_id, checkpoint_ns, checkpoint_id)` triple. Verified by `test_BC_2_04_006_full_triple_used_in_storage_key()` (inspects generated SQL or storage key construction).
+
+### AC-019 (traces to BC-2.04.006 edge case EC-005 — session address collision)
+If a storage collision occurs (two `SessionKey` triples map to the same address), the error surfaces as `Err(PregolyaError { code: "E-CHKPT-005", message: "SessionAddressCollision: ...", .. })`. In practice this is prevented by the monotonic clock (AC-008/AC-010) but the error code must exist and be returned if a collision is detected. Verified by `test_BC_2_04_006_session_address_collision_error()`.
+
+### AC-020 (traces to BC-2.04.007 postcondition 1 — symmetric encryption coverage)
+`EncryptedSerializer` wraps `CheckpointSaver` and encrypts BOTH `put` AND `put_writes` paths. There is no unencrypted write path when `EncryptedSerializer` is in the chain. Verified by `test_BC_2_04_007_encrypted_serializer_covers_both_paths()`.
+
+### AC-021 (traces to BC-2.04.007 postcondition 2 — empty key material rejected)
+Constructing `EncryptedSerializer` with empty key material returns `Err(PregolyaError { code: "E-CORE-005", message: "Validation failed for 'encryption_key': key material must not be empty", .. })`. Verified by `test_BC_2_04_007_empty_key_rejected()`.
+
+### AC-022 (traces to BC-2.04.007 edge case EC-002 — key rotation)
+Attempting to rotate an encryption key returns `Err(PregolyaError { code: "E-CHKPT-004", message: "EncryptionKeyRotationFailed: ...", .. })` classified as INTERNAL severity. Reading data written with a different key (cipher header mismatch) returns `Err(PregolyaError { code: "E-CHKPT-007", message: "CipherHeaderMissing: ...", .. })`. Verified by `test_BC_2_04_007_key_rotation_error()` and `test_BC_2_04_007_cipher_header_missing_error()`.
+
+## Token Budget Estimate
+
+| Component | Estimated Tokens |
+|-----------|-----------------|
+| Story spec (this file) | ~7,000 |
+| BC files (7 BCs: BC-2.04.001..007) | ~12,000 |
+| VP-002 file | ~2,000 |
+| ADR-005 (logical clock ordering) | ~1,500 |
+| Architecture module-decomposition.md (SS-04 section) | ~1,200 |
+| pregolya-checkpoint crate skeleton | ~4,000 |
+| Test files | ~5,000 |
+| **Total** | **~32,700** |
+
+Exceeds the single-load threshold. Implementer strategy: load BCs in groups (BC-2.04.001/002 together for put_writes+durability; BC-2.04.003/004 for clock+fork; BC-2.04.005/006 for recovery+session-index; BC-2.04.007 standalone for encryption). Load only the group relevant to the current failing test.
+
+## Tasks
+
+- [ ] Create `pregolya-checkpoint/Cargo.toml`
+- [ ] Create `pregolya-checkpoint/src/lib.rs` — `CheckpointSaver` trait, `CheckpointTuple`, `DurabilityTier` enum
+- [ ] Create `pregolya-checkpoint/src/session_index.rs` — `SessionKey`, `StorageAddress`, `storage_address` pure fn, `#[cfg(kani)]` harness skeleton per VP-002
+- [ ] Create `pregolya-checkpoint/src/saver.rs` — concrete `SqliteCheckpointSaver` implementing `put_writes`, `put`, `get_tuple`, `list`
+- [ ] Create `pregolya-checkpoint/src/clock.rs` — `MonotonicClock` implementing `get_next_version`, cross-restart persistence via persisted-max seeding (ADR-005 rev-2)
+- [ ] Create `pregolya-checkpoint/src/fork.rs` — `fork` method producing parent-pointer checkpoint with no state copy
+- [ ] Create `pregolya-checkpoint/src/recovery.rs` — crash recovery logic: read pending_writes, skip-on-reapply set enforcement
+- [ ] Create `pregolya-checkpoint/src/encryption.rs` — `EncryptedSerializer` wrapping `CheckpointSaver`; symmetric coverage; E-CHKPT-004/007
+- [ ] Write unit tests for all 22 ACs
+- [ ] Add `#[cfg(kani)]` proof harness skeleton in `session_index.rs` per VP-002 spec (bodies todo!() for Phase 6)
+- [ ] Add `pregolya-checkpoint` to workspace `Cargo.toml` members
+- [ ] Run `just iter pregolya-checkpoint` — all tests green
+
+## Previous Story Intelligence
+
+- S-1.04 (Runnable Trait and Pipe) established the `Runnable` trait surface and `PregolyaError` used throughout. `CheckpointSaver` extends the same async-first, Arc-DI wiring pattern.
+- S-1.02 (Error Policy Enforcement) established the `ErrorPolicy` propagation chain. `E-CHKPT-*` errors with `broken` severity halt execution per that policy.
+- N/A for previous checkpoint stories — this is the first checkpoint story.
+
+## Architecture Compliance Rules
+
+Derived from `architecture/module-decomposition.md §pregolya-checkpoint` and ADR-005:
+
+1. `storage_address` in `session_index.rs` MUST be a pure function (no database I/O, no async). This is required for Kani provability (VP-002). The function maps `SessionKey → StorageAddress` deterministically.
+2. `CheckpointId` is `u64` (ADR-005 rev-2) — NOT a UUID type. `get_next_version` returns `u64` values monotonically greater than the current maximum.
+3. `DurabilityTier::Sync` is the default — any constructor that does not explicitly specify the tier MUST default to `Sync`.
+4. `put_writes` and `put` MUST both be encrypted when `EncryptedSerializer` is in the chain. There must be no code path that bypasses encryption.
+5. Skip-on-reapply set: `{ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME}`. `SCHEDULED` is NOT in this set. This must be enforced as a named const or enum discriminant set in the implementation.
+6. Fork creates a checkpoint with `metadata.parents[checkpoint_ns] = parent_checkpoint_id` and NO state payload copy. The fork storage operation writes only the parent pointer, not all prior state.
+7. All checkpoint records are append-only (Invariant 5 of BC-2.04.001): no `UPDATE` or `DELETE` operations on checkpoint rows.
+8. All constructors return `Result` per DI-008 (Library Constructor Result Contract). No panics in constructors.
+9. `event_type` values used in this story that must be registered in the Canonical Structured Event Catalog: none mandatory for this story's core path (checkpoint operations are storage events, not agent-visible events). If tracing is added for observability, those event types must be registered.
+
+## Library & Framework Requirements
+
+Derived from `architecture/dependency-graph.md` external dependency table:
+
+| Library | Version | Usage |
+|---------|---------|-------|
+| `rusqlite` | 0.31.x | SQLite backend for `SqliteCheckpointSaver` and `pending_writes` table |
+| `serde` | 1.x | Serialization of checkpoint payloads |
+| `serde_json` | 1.x | JSON encoding of checkpoint state |
+| `aes-gcm` | 0.10.x | Symmetric encryption for `EncryptedSerializer` (AES-256-GCM) |
+| `tokio` | 1.x | Async runtime for async `CheckpointSaver` methods |
+| `tracing` | 0.1.x | Structured event logging |
+| `pregolya-core` | workspace path | `PregolyaError`, `Runnable` |
+
+**Forbidden Dependencies:** `pregolya-checkpoint` MUST NOT depend on `pregolya-graph` (checkpoint is a primitive that graph depends on, not the other way around). Build fails if this dependency appears.
+
+## File Structure Requirements
+
+Files to CREATE:
+- `/pregolya-checkpoint/Cargo.toml`
+- `/pregolya-checkpoint/src/lib.rs`
+- `/pregolya-checkpoint/src/session_index.rs` — VP-002 Kani proof vehicle
+- `/pregolya-checkpoint/src/saver.rs`
+- `/pregolya-checkpoint/src/clock.rs`
+- `/pregolya-checkpoint/src/fork.rs`
+- `/pregolya-checkpoint/src/recovery.rs`
+- `/pregolya-checkpoint/src/encryption.rs`
+- `/pregolya-checkpoint/tests/put_writes_tests.rs`
+- `/pregolya-checkpoint/tests/durability_tier_tests.rs`
+- `/pregolya-checkpoint/tests/clock_tests.rs`
+- `/pregolya-checkpoint/tests/fork_tests.rs`
+- `/pregolya-checkpoint/tests/recovery_tests.rs`
+- `/pregolya-checkpoint/tests/session_index_tests.rs`
+- `/pregolya-checkpoint/tests/encryption_tests.rs`
+
+Files to MODIFY:
+- `/Cargo.toml` — add `"pregolya-checkpoint"` to `[workspace] members`
+
+## Edge Cases
+
+| ID | Description | Expected Behavior |
+|----|-------------|-------------------|
+| EC-001 | Task produces zero writes (zero-output node) | `put_writes(config, [], task_id)` is called; task recorded committed; super-step proceeds normally |
+| EC-002 | `DurabilityTier::Exit` — no put_writes mid-run | Zero `put_writes` calls during run; all writes submitted as one `put` at graph exit; crash loses in-progress run |
+| EC-003 | Fork then resume from fork checkpoint | Fork checkpoint's parent pointer enables traversal back to parent state; no data duplication |
+| EC-004 | Encrypted saver + wrong key on read | `Err(E-CHKPT-007 CipherHeaderMissing)` — classified INTERNAL; caller cannot decrypt without the original key |
+| EC-005 | `SCHEDULED` channel task on crash-resume | `SCHEDULED` is NOT in skip-on-reapply set; it is re-enqueued and executed on resume |
