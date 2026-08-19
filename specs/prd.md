@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.25"
+version: "1.26"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "3e72a8e"
+input-hash: "ed88ab0"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.26 (burst-325/D-196/2026-08-18): input-hash refreshed (metadata hygiene; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Hash was stale since v1.23 authoring; inputs capabilities-p1-p2.md and invariants.md changed at burst-306 but hash was not propagated at v1.24/v1.25. No normative content changed in this entry. Phase-1 gate-closure burst."
   - "v1.25 (burst-310/F-P202-01/2026-08-17): §5 CORE examples row: E-CORE-011 RunnableParallelTaskPanic (INTERNAL) added to the set of CORE examples alongside E-CORE-009/010 (burst-309 mint miss — §5 was the only live-body SET enumeration that lacked E-CORE-011; all other sites enumerate E-CORE-009 and E-CORE-010 in specific per-BC contexts, not as the CORE-code set). error-taxonomy.md §CORE table (E-CORE-011 row minted burst-309) and BC-2.01.006 (E-CORE-011 in PC-4/EC-003/TV-003 since burst-309) are unchanged. No BC body or supplement needed updating — L-185/L-186 carrier discipline satisfied. POL-12 compliant (no line-cites)."
   - "v1.24 (burst-307/P1D-199/F-P199-01/2026-08-17): DI-016 enforcer mis-anchoring corrected — 006↔007 swap introduced by burst-306. §2.01 table: BC-2.01.006 DI column DI-014 → DI-014, DI-016 (RunnableParallel branch-failure DOES anchor DI-016 per di_anchors frontmatter [DI-016, DI-014]); BC-2.01.007 DI column DI-014, DI-016 → DI-014 (RunnablePassthrough identity does NOT anchor DI-016 per di_anchors frontmatter [DI-014]). DI-016 enforcer set now {BC-2.01.005, BC-2.01.006, BC-2.01.008} consistent with invariants.md and BC frontmatter source of truth (POL-46). BC-2.01.005 and BC-2.01.008 rows confirmed correct (DI-014, DI-016 — no change). §7 RTM carries no DI column — no RTM change needed."
   - "v1.23 (burst-306/F-P198-01/2026-08-17): LCEL composition scope expansion propagated to PRD layer — burst-302b index-layer sync miss (F-P198-01). §2.01 header updated to include CAP-039 (P1, Wave 1, ADR-026); CAP-039 LCEL narrative callout added. Four new BC rows added: BC-2.01.005 (RunnableParallel Construction and Concurrent Invocation, DI-014/DI-016), BC-2.01.006 (RunnableParallel Branch Failure — Fail-Fast, DI-014), BC-2.01.007 (RunnablePassthrough Identity Pass-Through, DI-014/DI-016), BC-2.01.008 (RunnableAssign Dict Augmentation, DI-014/DI-016). §5 CORE row: E-CORE-009 RunnableParallelBranchFailure + E-CORE-010 RunnableAssignNonDictInput added to examples (error-taxonomy.md census 111→113 per burst-302b/D-170). §5b BC file count 129→133. §7 RTM: four rows added (BC-2.01.005–008, CAP-039, pregolya-core, P1); totals 129→133 (51 P0 / 75→79 P1 / 3 P2). Corpus-wide count-carrier sweep: no other in-domain stale counts found — test-vectors.md, observability.md, and ARCH-INDEX.md live-body counts already correct at 133/14/16/26 from burst-302b. input-hash updated to 3e72a8e (inputs changed: capabilities-p1-p2.md added CAP-039; invariants.md added DI-016)."

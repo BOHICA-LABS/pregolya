@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.9"
+version: "3.10"
 status: active
 producer: architect
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "a559567"
+input-hash: "a406f0b"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.10 (burst-325/D-196/2026-08-18): input-hash confirmed current (metadata hygiene sweep; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Binary compute-input-hash verified MATCH — inputs VP-INDEX.md, module-decomposition.md, and module-criticality.md unchanged since hash was last recomputed at v3.8. No normative content changed. Phase-1 gate-closure burst."
   - "3.9 (F-P210-01/2026-08-18): Census reconciliation — Resolution B. Both documents enumerate the same 83 distinct modules; coverage-matrix's prior HIGH=29/tiered=78 double-counted core::serializable (one module with CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable aspects). Preamble updated to acknowledge both collapse-pairs and clarify 83 distinct modules. HIGH 29→28 (core::serializable counted once in CRITICAL, its highest tier). Tiered 78→77. Coverage by Criticality Tier HIGH row: 29→28 modules, proptest denominator 7 of 29→7 of 28. Coverage gap note denominators updated. tooling-selection.md §Test Strategy Summary sibling updated in same burst."
   - "3.8 (burst-304/OBS-B/2026-08-17): OBS-B double-count fix. The two `core::runnable` rows in Per-Module Coverage Status (pipe associativity + VP-014 key-completeness) represent ONE HIGH-tier module, not two. v3.6 incorrectly added `core::runnable::parallel` as a new HIGH-tier module (bumping HIGH 29→30), but since v3.7 canonicalized that path to `core::runnable` (the same module already in HIGH tier), the count was inflated. Corrections: (1) Per-Module header: HIGH 30 → 29; = 79 tiered → = 78 tiered. (2) Coverage by Criticality Tier HIGH row: modules 30 → 29; proptest '8 of 30: core::runnable, core::runnable/VP-014, ...' → '7 of 29: core::runnable, ...' (one module, two proptest aspects). (3) Coverage gap note: '8 of 30 HIGH' → '7 of 29 HIGH'. Arithmetic invariant unchanged: 14 total VPs; Kani 9 + proptest 3 + integration 2 = 14. Input-hash updated (VP-INDEX.md drift from burst-303 inputs)."
   - "3.7 (burst-303/F-P194-03/2026-08-17): Fix non-canonical 3-level module path in Coverage by Criticality Tier HIGH proptest list and preamble note. `core::runnable::parallel/VP-014` → `core::runnable/VP-014` (canonical 2-level registry form per module-decomposition.md and the per-module table note added in v3.6: 'burst-302b VP-014 absorbed into core::runnable (3-level path core::runnable::parallel non-canonical)'). Preamble note: `core::runnable::parallel addition` → `core::runnable/VP-014 addition`. No count or structural changes."

@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: invariants
-version: "1.6"
+version: "1.7"
 status: active
 producer: business-analyst
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "17e75c3"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D170]
 changelog:
+  - "v1.7 (burst-325/D-196/2026-08-18): input-hash confirmed current (metadata hygiene sweep; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Binary compute-input-hash verified MATCH — inputs product-brief.md and COMPARATIVE-ASSESSMENT.md unchanged since hash was set at v1.3. No normative content changed. Phase-1 gate-closure burst."
   - "v1.6 (burst-304/F-P195-05/2026-08-17): F-P195-05 (MED) DI-016 enforcer omission — BC-2.01.008 (RunnableAssign) added to DI-016 BC enforcement surfaces. BC-2.01.008 di_anchors [DI-016, DI-014]; its PC-4 enforces mapper-error-propagates-as-Err with no partial merged output, which is DI-016's branch-failure-propagation property via RunnableAssign's internal RunnableParallel mapper. Bidirectional invariant↔BC binding now complete (POL-2 req 4). BC-2.01.007 (RunnablePassthrough) correctly excluded — it does not anchor DI-016. DI-016 statement otherwise intact."
   - "v1.5 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) — DI-016 body: E-CORE-NNN → E-CORE-009 (EXEC, RunnableParallelBranchFailure, anchor BC-2.01.006). F-P194-03 (MED) — DI-016 Enforcer: core::runnable::parallel → core::runnable (canonical 2-level module-registry form per ADR-026). TD-VSDD-060 sweep: zero E-CORE-NNN remain in live body; zero 3-level runnable submodule paths remain in live body."
   - "v1.4 (burst-302b/D-170/2026-08-17): DI-016 added — RunnableParallel Key-Completeness and Branch-Failure Propagation. New section 'LCEL Composition Invariants' added. Census: 15→16 invariants. D170 added to decisions list. Enforcer: BC-2.01.005 + BC-2.01.006; VP-014 proptest property is verification vehicle."

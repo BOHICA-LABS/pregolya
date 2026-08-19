@@ -1,10 +1,10 @@
 ---
 document_type: domain-spec-index
 level: L2
-version: "1.28"
+version: "1.29"
 status: active
 producer: business-analyst
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
-input-hash: "9ead452"
+input-hash: "8ab469d"
 traces_to: .factory/specs/product-brief.md
 sections:
   - capabilities-p0.md
@@ -33,6 +33,7 @@ sections:
   - bounded-contexts.md
 decisions: [D1, D2, D3, D4, D6, D7, D8, D11, D12, D13, D17, D19, D20, D21, D23]
 changelog:
+  - "v1.29 (burst-325/D-196/2026-08-18): input-hash refreshed (metadata hygiene; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Hash was stale since v1.3 authoring; holdout domain input files have been updated since then. No normative content changed. Phase-1 gate-closure burst."
   - "v1.28 (burst-302b/D-171/2026-08-17): ID Registry CAP count 38→39 (CAP-039 LCEL Map/Passthrough Composition: RunnableParallel and RunnablePassthrough, authored business-analyst); DI count 15→16 (DI-016 RunnableParallel Key-Completeness and Branch-Failure Propagation, authored business-analyst). Priority Distribution: P1 26→27 (CAP-039 P1). Document Map: capabilities-p1-p2.md description extended (CAP-039). LCEL scope expansion D-170/D-171."
   - "v1.27 (F-178-01, burst-289, 2026-08-16): Document Map events.md row: StreamEvent taxonomy count corrected 15→16 variants (BC-2.06.001 §Postconditions PC2 authority — burst-288 added StreamEvent::Error as 16th variant). Sibling-sweep: capabilities-p0.md and events.md updated identically in this burst."
   - "v1.26 (burst-284/2026-07-30): Paper-fix repair — fabricated section anchors in two section shards repaired per TD-VSDD-059. entities-graph.md (burst-273 changelog entry: 'api-surface.md §burst-242/2026-07-23' → 'api-surface.md changelog entry burst-242/2026-07-23'; §burst-242/2026-07-23 resolves to 0 headings in api-surface.md; burst-242 identifier is the stable form). risks.md (R-003 mitigation: 'reference-manifest.md §langchain-pin' → 'reference-manifest.md §langchain — Package Layout'; §langchain-pin resolves to 0 headings; §langchain — Package Layout is a real heading at line 36 of reference-manifest.md). L2-INDEX.md burst-276 changelog entry verified semantically complete after version-pin removal: bounded-contexts.md and capabilities-p1-p2.md changes remain described by finding IDs F-P173-104/F-P173-106/F-P173-702."
