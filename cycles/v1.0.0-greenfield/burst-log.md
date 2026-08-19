@@ -6585,3 +6585,49 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 **Decision minted:** D-193 — P1D-211 CLEAN(strict)=YES CLEAN(PR-merge)=YES; streak 0/3→1/3 STARTED; frozen anchor 79eb2f3. NEXT P1D-212.
 **Streak:** 1/3 ACTIVE (BC-5.39.001; D-143 STATE-only advance does not reset)
 **NEXT:** P1D-212 — adversary streak 2/3 attempt; spec perimeter frozen at 79eb2f3.
+
+---
+
+## Burst: fix-burst-321 COMPLETE (ARCHIVED at burst-326 — 5-row rolling window)
+
+**Date:** 2026-08-18
+**Agent:** implementer/product-owner (fix specialists)
+**State Version:** STATE.md v4.99/v5.00 (fix-burst; streak-reset event)
+
+**Summary:** Closed F-P210-01 (1 MED finding from P1D-210): verification-coverage-matrix + module-criticality module census off by one — core::serializable was double-counted across CRITICAL and HIGH aspects. Resolution B: total 84→83, HIGH 29→28, tiered 78→77. Sibling sweep closed tooling-selection §Test-Strategy-Summary "7 of 29 HIGH"→"7 of 28 HIGH" (TD-VSDD-060). VP arithmetic 14=9Kani+3proptest+2integration UNCHANGED. purity-boundary-map "84 total rows" verified INDEPENDENT/CORRECT (purity-partition is a different universe; NOT changed). module-decomposition §Iron Law already reads "83 (77 tiered + 6 exempt)" — independent corroboration. BC census UNCHANGED 133 (51/79/3). L-188 minted (cross-document enumeration diff discipline). STREAK RESET 0/3 (fix-burst). NEXT: P1D-211 (streak restart on fixed census; frozen spec anchor = fix-burst-321 HEAD = 79eb2f3).
+
+**Files touched:**
+- `.factory/specs/prd-supplements/module-criticality.md` (v2.11; Classification Summary HIGH 29→28 / total 84→83 / tiered 78→77; F-P210-01 Resolution B)
+- `.factory/specs/prd-supplements/verification-coverage-matrix.md` (v3.9; §Coverage-by-Criticality-Tier HIGH 29→28; denominators 29→28; "83 distinct modules")
+- `.factory/specs/prd-supplements/tooling-selection.md` (v1.8; §Test-Strategy-Summary proptest row "7 of 28 HIGH"; TD-VSDD-060 sibling sweep)
+
+**Decision minted:** D-192 — P1D-210 NOT CLEAN 1 MED; module double-count fixed; STREAK RESET 0/3. L-188 codified.
+**Streak:** 0/3 RESET (fix-burst; BC-5.39.001)
+**NEXT:** P1D-211 — adversary streak restart 0/3; frozen spec anchor = fix-burst-321 HEAD (79eb2f3).
+
+---
+
+## Burst: burst-326 Phase-2 Structural Decomposition COMPLETE (2026-08-18)
+
+**Date:** 2026-08-18
+**Agent:** story-writer (structural decomp); state-manager (this entry)
+**State Version:** STATE.md v5.06 → v5.07
+
+**Summary:** Phase-2 structural decomposition COMPLETE. story-writer authored the full story skeleton: 39 stories across 22 epics (294 story points total). Wave plan: Wave 1 = 27 stories (pregolya-core + pregolya-graph + partner crates per D7 priority), Wave 2 = 11 stories (remaining integration/observability), Wave 6 = 1 story (formal-harness bootstrap). 133/133 BC coverage proven (100% map in STORY-INDEX.md); dependency graph acyclic; critical path S-1.01→S-1.25 (10 stories / 74 pts); 14/14 VP anchors; 11/11 Red Gate BCs. 3 gap-register entries are IN-SCOPE resolutions (not deferrals): GAP-001 BC-2.19.004 P2 startup-guard → S-2.01; GAP-002 Kani harness bootstrap → S-6.01; GAP-003 VP-004/VP-005 live MCP integration tests #[ignore] per SID-1 with in-process mock substitute. Decision D-198 minted. STATE.md bumped v5.06→v5.07 (timestamp 2026-08-19T03:30:00Z). Session Resume Checkpoint v5.07 written; v5.06 archived to session-checkpoints.md. fix-burst-321 COMPLETE archived to burst-log (5-row rolling window).
+
+**Files committed (stories/*):**
+- `.factory/stories/STORY-INDEX.md` (story-writer — 39-story inventory; 133/133 BC coverage map; 14/14 VP anchor map; 11/11 Red Gate BCs; critical path S-1.01→S-1.25)
+- `.factory/stories/epics.md` (story-writer — 22 epic definitions)
+- `.factory/stories/dependency-graph.md` (story-writer — inter-story DAG acyclic; critical path; traceability matrices; 3-entry gap register GAP-001..003)
+- `.factory/stories/wave-schedule.md` (story-writer — Wave1=27/Wave2=11/Wave6=1; D7 priority: pregolya-core→graph→partners→rest)
+- `.factory/stories/sprint-state.yaml` (story-writer — 39-story state skeleton)
+
+**Files updated (state-manager):**
+- `.factory/STATE.md` (state-manager — D-198 minted; v5.06→v5.07; Phase 2 IN PROGRESS structural decomp COMPLETE; SESSION RESUME CHECKPOINT v5.07; banner fixed 225 lines wc-l)
+- `.factory/cycles/v1.0.0-greenfield/burst-log.md` (state-manager — fix-burst-321 archive + this entry)
+- `.factory/cycles/v1.0.0-greenfield/session-checkpoints.md` (state-manager — v5.06 checkpoint archived)
+- `.factory/sidecar-learning.md` (stop-hook markers)
+
+**Decision minted:** D-198 — Phase-2 structural decomposition COMPLETE; 39 stories/22 epics/294 pts; Wave1=27/Wave2=11/Wave6=1; D7 priority honored; 133/133 BC coverage; DAG acyclic; 3 gap-register entries IN-SCOPE.
+**Convergence:** Phase-1 CLOSED (D-197); Phase-2 structural decomp COMPLETE (D-198); 0/3 (no adversarial passes yet; per-story spec authoring NEXT).
+**NEXT:** Per-story spec authoring (story-writer, Wave 1 first); holdout scenarios Domains A+B (product-owner, D8); Phase-2 adversarial story convergence 3-CLEAN before Phase-2 gate.

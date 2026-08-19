@@ -2510,3 +2510,13 @@ Story worktrees: NONE. Open PRs: NONE.
 
 #### ARCHIVE METADATA
 Date: 2026-08-18 | Archived at: burst-323 state record | STATE.md: 5.03 → 5.04 | P1D-212 CLEAN strict+PR-merge; D-194 minted; streak 1/3→2/3 ACTIVE; frozen anchor 79eb2f3; NEXT P1D-213 (streak 3/3 cascade-closing). VP-body deep-read all 14 VPs completed; all ADR §Decision citations verified.
+
+---
+
+## Archived Session Resume Checkpoint — STATE.md v5.06 (burst-325 Phase-1 gate-closure)
+
+#### ARCHIVE METADATA
+Date: 2026-08-18 | Archived at: burst-326 Phase-2 structural decomp | STATE.md: 5.06 → 5.07 | Phase-1 gate CLOSED (D-197; burst-325); Phase-2 Story Decomposition started 2026-08-18. Input-hash drift resolved D-196. Convergence 3/3 on frozen anchor 79eb2f3 (P1D-211/212/213; D-195). NEXT: Phase-2 structural decomposition (story-writer).
+
+#### v5.06 RESUME IN ONE BREATH
+Pregolya — Phase 1 COMPLETE; Phase 2 (Story Decomposition) STARTED, greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED 2026-08-18 (D-197; burst-325). 3/3 CONVERGED on frozen anchor 79eb2f3 (P1D-211/212/213; D-195). D-170 conditional approval SATISFIED. CORPUS: 133 BCs (51/79/3); 39 CAPs; 16 DIs; 14 VPs; 26 ADRs; 114 error codes/13 categories; ~697 TVs; 83 modules (CRIT 12/HIGH 28/MED 35/LOW 2/exempt 6). NEXT: Phase-2 structural decomposition — story-writer epics + dependency graph + wave schedule.
