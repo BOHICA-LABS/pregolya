@@ -214,7 +214,7 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 7. [ ] Register `E-VS-001` (`Component::Vs, Category::Val, RetryHint::Never`) and `E-VS-005` in error taxonomy
 8. [ ] Update `pregolya-vectorstores/src/lib.rs` — `pub mod store; pub mod filter;`
 9. [ ] Create compile-fail tests for VectorStore dyn-compat, VectorStoreFactory Sized split, and MetadataFilter/FilterClause non-exhaustive
-10. [ ] Write VP-009 Kani harness stub in `pregolya-vectorstores/src/proofs/` for Phase 6 formal hardening
+10. [ ] Create `crates/pregolya-vectorstores/src/proofs/zero_norm_guard.rs` — `#[cfg(kani)]` `zero_norm_guard_fail_closed` stub (body `todo!()` for Phase 6 formal hardening; VP-009)
 11. [ ] Run `cargo nextest run -p pregolya-vectorstores` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
@@ -231,7 +231,7 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 |------|--------|-------------|
 | `VectorStore` trait uses `&self` receivers only (dyn-compatible, not `&mut self`) | BC-2.21.001 invariant 1; ADR-014 Decision 3 | Compile-time E0038 check |
 | `VectorStoreFactory` has `Sized` bound — E0038-safe split | BC-2.21.001 postcondition 5 | Compile-fail test |
-| Zero-norm guard condition is `norm == 0.0 || !norm.is_finite()` (both arms required) | BC-2.21.003 postcondition 1 | Code review; VP-009 Kani proof |
+| Zero-norm guard condition is `norm == 0.0 \|\| !norm.is_finite()` (both arms required) | BC-2.21.003 postcondition 1 | Code review; VP-009 Kani proof |
 | No ndarray dependency — Vec<f32> cosine only | BC-2.21.002 postcondition 4 | Cargo.toml inspection; deny ndarray |
 | `Arc<dyn Embeddings>` DI at constructor (no placeholder) | BC-2.21.002 postcondition 1; CLAUDE.md Arc-DI rule | Code review; no `Arc::new(Embeddings::placeholder())` |
 | Default `similarity_search_with_filter` returns `Err(E-VS-005)` on non-empty filter — NOT `Ok(vec![])` | BC-2.21.004 invariant 1 | Unit test AC-018 |
@@ -256,6 +256,6 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 | `pregolya-vectorstores/src/store/in_memory.rs` | CREATE | `InMemoryVectorStore` |
 | `pregolya-vectorstores/src/filter.rs` | CREATE | `MetadataFilter` + `FilterClause` |
 | `pregolya-vectorstores/src/lib.rs` | MODIFY | Add `pub mod store; pub mod filter;` |
-| `pregolya-vectorstores/src/proofs/zero_norm.rs` | CREATE | VP-009 Kani harness stub (Phase 6 target) |
+| `pregolya-vectorstores/src/proofs/zero_norm_guard.rs` | CREATE | VP-009 Kani harness stub — `zero_norm_guard_fail_closed` (body `todo!()` for Phase 6) |
 | `pregolya-vectorstores/tests/external/vectorstore-dyn-compat/main.rs` | CREATE | E0038 compile-time gate |
 | `pregolya-vectorstores/tests/external/filter-non-exhaustive/main.rs` | CREATE | MetadataFilter/FilterClause non-exhaustive compile-fail gate |

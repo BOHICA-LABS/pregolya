@@ -47,7 +47,7 @@ As a system operator, I want `CompactionTrigger` configuration variants — `Dis
 | This story spec | ~4,000 |
 | BC files (2 BCs: BC-2.10.005–006) | ~8,000 |
 | Architecture module-decomposition.md | ~3,000 |
-| Target source files (pregolya-core/src/budget.rs, pregolya-graph/src/graph/budget/) | ~8,000 |
+| Target source files (pregolya-core/src/budget.rs, pregolya-graph/src/budget/) | ~8,000 |
 | Test files | ~9,000 |
 | S-1.10 (checkpoint core) interface | ~3,000 |
 | S-1.18 (evidence journal) interface | ~2,000 |
@@ -69,7 +69,7 @@ Comfortable within context window. No split required.
 (traces to BC-2.10.005 postcondition 1)
 
 ### AC-002: check_watermark_trigger arithmetic uses non-strict <= (VP-012 anchor)
-The free function `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool` in `pregolya_core::core::budget` fires when `tokens_remaining as f64 / ceiling as f64 <= (1.0 - fraction)` computed in `f64`. The `<=` operator is NON-STRICT — this is load-bearing: `fraction = 1.0` requires `0.0 <= 0.0 = true`. Using strict `<` is a behavioral defect. This free function is the VP-012 proof vehicle; the Kani harness is `watermark_arithmetic_harness` in `pregolya-core`.
+The free function `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool` in `pregolya_core::budget` fires when `tokens_remaining as f64 / ceiling as f64 <= (1.0 - fraction)` computed in `f64`. The `<=` operator is NON-STRICT — this is load-bearing: `fraction = 1.0` requires `0.0 <= 0.0 = true`. Using strict `<` is a behavioral defect. This free function is the VP-012 proof vehicle; the Kani harness is `watermark_arithmetic_harness` in `pregolya-core`.
 (traces to BC-2.10.005 postcondition 2)
 
 ### AC-003: CompactionTrigger construction rejects degenerate values
@@ -81,7 +81,7 @@ The free function `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, 
 (traces to BC-2.10.005 invariant 1)
 
 ### AC-005: VP-012 seed — check_watermark_trigger <= correctness (Kani anchor)
-This story is the VP-012 anchor. The Kani harness `watermark_arithmetic_harness` in `pregolya-core` must verify: for `fraction = 1.0`, the threshold check `0.0 <= 0.0` returns `true` (fires). For `fraction = 0.0` (rejected at construction), no invocation. The test `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` exercises the boundary: `fraction = 1.0` fires when `tokens_remaining = 0`, `ceiling = 0`.
+This story is the VP-012 anchor. The Kani harness `watermark_arithmetic_harness` in `crates/pregolya-core/src/proofs/watermark.rs` must verify: for `fraction = 1.0`, the threshold check `0.0 <= 0.0` returns `true` (fires). For `fraction = 0.0` (rejected at construction), no invocation. The test `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` exercises the boundary: `fraction = 1.0` fires when `tokens_remaining = 0`, `ceiling = 0`.
 (traces to BC-2.10.005 postcondition 2)
 
 ### AC-006: 7-step compaction cycle — correct step ordering
@@ -115,12 +115,12 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 
 | Component | Module | Crate | Pure/Effectful |
 |-----------|--------|-------|---------------|
-| `CompactionTrigger` enum | `pregolya_core::core::budget` | pregolya-core | Pure (enum + arithmetic config) |
-| `BudgetConfig` (compaction_trigger/compaction_policy fields) | `pregolya_core::core::budget` | pregolya-core | Pure (configuration) |
-| `check_watermark_trigger(tokens_remaining, ceiling, fraction)` | `pregolya_core::core::budget` | pregolya-core | Pure (arithmetic gate; VP-012 Kani proof vehicle) |
-| `run_compaction` | `pregolya_graph::graph::budget` | pregolya-graph | Effectful (calls checkpoint put, emits event) |
+| `CompactionTrigger` enum | `pregolya_core::budget` | pregolya-core | Pure (enum + arithmetic config) |
+| `BudgetConfig` (compaction_trigger/compaction_policy fields) | `pregolya_core::budget` | pregolya-core | Pure (configuration) |
+| `check_watermark_trigger(tokens_remaining, ceiling, fraction)` | `pregolya_core::budget` | pregolya-core | Pure (arithmetic gate; VP-012 Kani proof vehicle) |
+| `run_compaction` | `pregolya_graph::budget` | pregolya-graph | Effectful (calls checkpoint put, emits event) |
 
-**Subsystem anchor:** SS-10 owns this story's scope because SS-10 is the Budget Governance and Compaction subsystem per ARCH-INDEX Subsystem Registry. `CompactionTrigger` configuration and `check_watermark_trigger` (pure arithmetic) live in pregolya-core::core::budget; the 7-step compaction execution (`run_compaction`) lives in pregolya-graph::graph::budget. Both halves are SS-10 responsibility. The streaming event emission (step 6) is wired from SS-10 into SS-06 via `emit_compaction_event` from S-1.24.
+**Subsystem anchor:** SS-10 owns this story's scope because SS-10 is the Budget Governance and Compaction subsystem per ARCH-INDEX Subsystem Registry. `CompactionTrigger` configuration and `check_watermark_trigger` (pure arithmetic) live in `pregolya_core::budget` (file `pregolya-core/src/budget.rs`); the 7-step compaction execution (`run_compaction`) lives in `pregolya_graph::budget` (file `pregolya-graph/src/budget/executor.rs`). Both halves are SS-10 responsibility. The streaming event emission (step 6) is wired from SS-10 into SS-06 via `emit_compaction_event` from S-1.24.
 
 **Dependency anchors:**
 - Depends on S-1.10: `CheckpointSaver::put` and `fts_search` trait methods established in S-1.10 (checkpoint core). Compaction cycle calls `put` in step 4.
@@ -131,10 +131,10 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 
 | Function / Type | Pure or Effectful | Reason |
 |----------------|-------------------|--------|
-| `CompactionTrigger` (pregolya-core) | Pure | Enum in pregolya-core::core::budget; no I/O |
+| `CompactionTrigger` (pregolya-core) | Pure | Enum in `pregolya_core::budget`; no I/O |
 | `check_watermark_trigger(tokens_remaining, ceiling, fraction)` (pregolya-core) | Pure | Arithmetic only; no I/O; VP-012 Kani harness vehicle (`watermark_arithmetic_harness`) |
 | `BudgetConfig::new` (pregolya-core) | Pure | Validates and stores compaction_trigger/compaction_policy config |
-| `run_compaction` (pregolya-graph) | Effectful | In pregolya-graph::graph::budget; calls checkpoint put, evidence journal, stream emit |
+| `run_compaction` (pregolya-graph) | Effectful | In `pregolya_graph::budget`; calls checkpoint put, evidence journal, stream emit |
 
 ## Edge Cases
 
@@ -152,8 +152,9 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 ## Tasks
 
 - [ ] Create `crates/pregolya-core/src/budget.rs` — `CompactionTrigger` (#[non_exhaustive] enum with 4 variants: Disabled, OnWatermark, OnMessageCount, OnTokenCount), `BudgetConfig` compaction_trigger/compaction_policy fields, `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool` free fn with non-strict `<=`
-- [ ] Create `crates/pregolya-graph/src/graph/budget/mod.rs` (re-exports only)
-- [ ] Create `crates/pregolya-graph/src/graph/budget/executor.rs` — `run_compaction` implementing 7-step cycle; calls `check_watermark_trigger` from pregolya-core
+- [ ] Create `crates/pregolya-core/src/proofs/watermark.rs` — `#[cfg(kani)]` `watermark_arithmetic_harness` stub (body `todo!()` for Phase 6 formal hardening; VP-012)
+- [ ] Create `crates/pregolya-graph/src/budget/mod.rs` (re-exports only)
+- [ ] Create `crates/pregolya-graph/src/budget/executor.rs` — `run_compaction` implementing 7-step cycle; calls `check_watermark_trigger` from pregolya-core; writes to `EvidenceJournal` (S-1.18 module `pregolya_graph::budget::journal`) at step 5
 - [ ] Write failing tests for AC-001..AC-010 before any implementation
 - [ ] Write `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` — VP-012 boundary test (uses `check_watermark_trigger(0, 0, 1.0)` → true)
 - [ ] Implement `check_watermark_trigger` in pregolya-core with `<=` (NOT `<`)
@@ -176,14 +177,14 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 
 ## Architecture Compliance Rules
 
-1. **Non-strict `<=` in `check_watermark_trigger` is load-bearing.** The function lives in `pregolya-core::core::budget`. Using strict `<` is a behavioral defect. The Kani proof (VP-012, harness `watermark_arithmetic_harness` in pregolya-core) will fail with `<`. Do not substitute.
+1. **Non-strict `<=` in `check_watermark_trigger` is load-bearing.** The function lives in `pregolya_core::budget` (`pregolya-core/src/budget.rs`). Using strict `<` is a behavioral defect. The Kani proof (VP-012, harness `watermark_arithmetic_harness` in `crates/pregolya-core/src/proofs/watermark.rs`) will fail with `<`. Do not substitute.
 2. **7-step ordering is fixed.** Steps must execute in order 1→7. Swapping step 4 and step 5 is incorrect (EvidenceJournal must follow checkpoint write).
 3. **Abort-on-compact-error means no mutation.** If step 2 fails, the working state must remain unmodified. The mid-run REPLACE (step 3) must only execute after step 2 succeeds.
 4. **Compaction trigger check at super-step boundary only.** The trigger check must appear in the super-step loop, not inside any node execution.
 5. **`#[non_exhaustive]`** on `CompactionTrigger` (public API surface enum).
-6. **`mod.rs` re-export only.** `pregolya-graph/src/graph/budget/mod.rs` contains only `pub use` declarations. Logic belongs in `executor.rs`.
+6. **`mod.rs` re-export only.** `pregolya-graph/src/budget/mod.rs` contains only `pub use` declarations. Logic belongs in `executor.rs`.
 7. **No `unwrap()` / `expect()` in production code.**
-8. **Forbidden dependency:** `pregolya-graph::compaction` must NOT depend on `pregolya-server` or `pregolya-tools`.
+8. **Forbidden dependency:** `pregolya-graph::budget` must NOT depend on `pregolya-server` or `pregolya-tools`.
 
 ## Library & Framework Requirements
 
@@ -200,16 +201,17 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 crates/pregolya-core/
   src/
     budget.rs                          # CompactionTrigger (#[non_exhaustive]), BudgetConfig (compaction_trigger/compaction_policy), check_watermark_trigger free fn
+    proofs/
+      watermark.rs                     # #[cfg(kani)] watermark_arithmetic_harness stub (VP-012; todo!() body for Phase 6)
 
 crates/pregolya-graph/
   src/
-    graph/
-      budget/
-        mod.rs                         # re-export only
-        executor.rs                    # run_compaction — 7-step cycle (effectful)
+    budget/
+      mod.rs                           # re-export only (shares module tree with S-1.18: composed.rs, journal.rs)
+      executor.rs                      # run_compaction — 7-step cycle (effectful); writes to EvidenceJournal (pregolya_graph::budget::journal)
   tests/
     compaction_tests.rs                # unit tests: trigger variants, arithmetic boundary, 7-step cycle, abort-on-error
 ```
 
-**Files to create (new):** `pregolya-core/src/budget.rs`, `pregolya-graph/src/graph/budget/mod.rs`, `pregolya-graph/src/graph/budget/executor.rs`.
-**Files to modify (existing):** `pregolya-core/src/lib.rs` (add `pub mod budget`), `pregolya-graph/src/lib.rs` (update graph module), super-step loop to add trigger check calling `check_watermark_trigger` from pregolya-core.
+**Files to create (new):** `pregolya-core/src/budget.rs` (extended with CompactionTrigger fields), `pregolya-core/src/proofs/watermark.rs`, `pregolya-graph/src/budget/executor.rs`.
+**Files to modify (existing):** `pregolya-core/src/lib.rs` (add `pub mod budget` if not already present from S-1.18), `pregolya-graph/src/budget/mod.rs` (add `pub use executor::*;` — S-1.18 already creates this file), super-step loop to add trigger check calling `check_watermark_trigger` from pregolya-core.

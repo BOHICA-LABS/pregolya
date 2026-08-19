@@ -149,6 +149,17 @@ input-hash: "pending"
 
 ---
 
+## Conventions
+
+> **Story title and BC-table "Title" cells** are story-scoped intent summaries written by the
+> story-writer to capture implementation focus. They are NOT canonical BC titles.
+> The canonical BC titles are authoritative in `BC-INDEX.md` (POL-7).
+> The story BC-table column labelled "Title" (or "Description") should be read as "Intent" —
+> a paraphrase that may differ from the BC-INDEX H1 in wording while pointing to the same contract.
+> BC IDs and AC traces (`traces to BC-S.SS.NNN`) are the authoritative cross-references.
+
+---
+
 ## BC to Story Coverage Map
 
 > **All 133 BCs covered. Zero silent gaps.**

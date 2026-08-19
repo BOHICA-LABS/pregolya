@@ -2560,3 +2560,13 @@ Date: 2026-08-19 | Archived at: compact-state burst (v5.18) | STATE.md: 5.17 →
 
 #### v5.17 RESUME IN ONE BREATH
 Pregolya — Phase 2 (Story Decomposition) IN PROGRESS, greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase 1 CLOSED 2026-08-18 (D-197; burst-325). Phase-2 structural decomposition COMPLETE (burst-326; D-198; 2026-08-18): 22 epics / 39 stories / 294 pts; Wave1=27, Wave2=11, Wave6=1; 133/133 BC coverage; DAG acyclic; D7 priority honored. Per-story authoring COMPLETE (39/39): Wave 1 (bursts 327-331; D-199..D-203); Wave 2 (bursts 332-333; D-204..D-205); Wave 6 (burst-334; D-206). Holdout scenarios COMPLETE (burst-335; D-207; 2026-08-19): Domain A HS-A-001..HS-A-007 (7/5 must-pass); Domain B HS-B-001..HS-B-007 (7/4 must-pass); 14 total / 9 must-pass = 64%; SEALED until Phase 4. NEXT: Phase-2 adversarial story convergence 3-CLEAN (BC-5.39.001) + fresh-context pre-Phase-2-gate consistency audit; then Phase-2 gate → Phase 3.
+
+---
+
+## Archived Session Resume Checkpoint — STATE.md v5.19 (P2A-001 fix-burst COMPLETE)
+
+#### ARCHIVE METADATA
+Date: 2026-08-19 | Archived at: v5.20 P2A-002 fix-burst + session wrap | STATE.md: 5.19 → 5.20 | Phase-2 adversarial P2A-001 fix-burst COMPLETE (D-208; 8 findings: 1C/1H/3M/3L closed); streak 0/3. NEXT: P2A-002.
+
+#### v5.19 RESUME IN ONE BREATH
+Pregolya — Phase 2 (Story Decomposition) IN PROGRESS, greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase 1 CLOSED 2026-08-18 (D-197; burst-325). Phase-2 structural decomposition COMPLETE (burst-326; D-198): 22 epics / 39 stories / 294 pts; 133/133 BC coverage; DAG acyclic. Per-story authoring COMPLETE (39/39; D-199..D-206 (sample)). Holdout scenarios COMPLETE (D-207; burst-335): 14 total / 9 must-pass = 64%; SEALED until Phase 4. P2A-001 fix-burst COMPLETE (D-208; 2026-08-19): 8 findings (1C/1H/3M/3L) closed — S-1.25 VP-012 crate re-anchor to pregolya-core::core::budget, 24 epic_id corrections across story files, STORY-INDEX census (VP-anchor 10→12, RedGate 9→8), S-6.01 reciprocity, records-tier. trajectory-tail →0→0→0→8; streak 0/3. NEXT: P2A-002.

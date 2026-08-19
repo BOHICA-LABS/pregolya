@@ -58,7 +58,7 @@ tdd_mode: strict
 
 ## VP-002 ANCHOR (Kani P0)
 
-This story builds `pregolya-checkpoint/src/session_index.rs` containing `SessionKey`, `storage_address`, and the session triple-address logic. The `storage_address` pure function is the test vehicle for the VP-002 Kani harness (Phase 6 formal hardening). Per VP-002, `session_tenancy_harness` and `no_bare_thread_id_addressing` Kani proofs verify injectivity of `storage_address` over the bounded input space.
+This story builds `pregolya-checkpoint/src/session_index.rs` containing `SessionKey`, `storage_address`, and the session triple-address logic. The `storage_address` pure function is the proof vehicle for the VP-002 Kani harness (Phase 6 formal hardening). The Kani harness stub `session_tenancy_harness` lives in `crates/pregolya-checkpoint/src/proofs/session_tenancy.rs` — authored (as `todo!()`) in this story, completed in S-6.01. Per VP-002, the harness verifies injectivity of `storage_address` over the bounded input space.
 
 **Subsystem anchor justification:** SS-04 owns this story's scope because SS-04 is the Checkpoint subsystem (pregolya-checkpoint crate) per ARCH-INDEX Subsystem Registry.
 
@@ -112,7 +112,7 @@ The skip-on-reapply set is: `ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME`.
 If `get_tuple` returns an error during recovery, the error surfaces as `Err(PregolyaError { code: "E-CHKPT-003", message: "CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>", .. })`. Verified by `test_BC_2_04_005_get_tuple_failure_propagates()`.
 
 ### AC-016 (traces to BC-2.04.006 postcondition 1 — session triple-address VP-002 seed)
-`pregolya-checkpoint/src/session_index.rs` exports `pub fn storage_address(key: &SessionKey) -> StorageAddress` as a pure function (no database I/O). `SessionKey` is a struct with `thread_id: String`, `checkpoint_ns: String`, `checkpoint_id: CheckpointId`. `StorageAddress` implements `PartialEq`. The `#[cfg(kani)]` proof harness skeleton is present in the file per VP-002. Verified by `test_BC_2_04_006_session_key_and_storage_address_types_exist()`.
+`pregolya-checkpoint/src/session_index.rs` exports `pub fn storage_address(key: &SessionKey) -> StorageAddress` as a pure function (no database I/O). `SessionKey` is a struct with `thread_id: String`, `checkpoint_ns: String`, `checkpoint_id: CheckpointId`. `StorageAddress` implements `PartialEq`. The `#[cfg(kani)]` proof harness `session_tenancy_harness` lives in `crates/pregolya-checkpoint/src/proofs/session_tenancy.rs` (stub authored in this story; completed in S-6.01). Verified by `test_BC_2_04_006_session_key_and_storage_address_types_exist()`.
 
 ### AC-017 (traces to BC-2.04.006 postcondition 2 — configurable thread_id key)
 `thread_id` is accessed from `config.configurable` via `config.configurable.as_ref().and_then(|m| m.get("thread_id"))`. A missing `thread_id` key returns `Err(PregolyaError { code: "E-CORE-005", message: "Validation failed: missing 'thread_id' in configurable", .. })`. Verified by `test_BC_2_04_006_missing_thread_id_validation_error()`.
@@ -131,6 +131,35 @@ Constructing `EncryptedSerializer` with empty key material returns `Err(Pregolya
 
 ### AC-022 (traces to BC-2.04.007 edge case EC-002 — key rotation)
 Attempting to rotate an encryption key returns `Err(PregolyaError { code: "E-CHKPT-004", message: "EncryptionKeyRotationFailed: ...", .. })` classified as INTERNAL severity. Reading data written with a different key (cipher header mismatch) returns `Err(PregolyaError { code: "E-CHKPT-007", message: "CipherHeaderMissing: ...", .. })`. Verified by `test_BC_2_04_007_key_rotation_error()` and `test_BC_2_04_007_cipher_header_missing_error()`.
+
+## Architecture Mapping
+
+| Component | Module | Crate | Pure/Effectful |
+|-----------|--------|-------|---------------|
+| `storage_address(key: &SessionKey) -> StorageAddress` | `pregolya_checkpoint::session_index` | pregolya-checkpoint | Pure (deterministic bijection; VP-002 Kani proof vehicle `session_tenancy_harness`) |
+| `SessionKey`, `StorageAddress` | `pregolya_checkpoint::session_index` | pregolya-checkpoint | Pure (data types; no I/O) |
+| `CheckpointSaver` trait, `CheckpointTuple`, `DurabilityTier` | `pregolya_checkpoint` (`lib.rs`) | pregolya-checkpoint | Pure (trait and enum definitions; no I/O) |
+| `SqliteCheckpointSaver` (`put`, `put_writes`, `get_tuple`, `list`) | `pregolya_checkpoint::saver` | pregolya-checkpoint | Effectful Shell (SQLite reads and writes via `rusqlite`) |
+| `MonotonicClock::get_next_version` | `pregolya_checkpoint::clock` | pregolya-checkpoint | Effectful Shell (reads persisted-max `CheckpointId` from SQLite; ADR-005 rev-2 cross-restart monotonicity) |
+| `fork` | `pregolya_checkpoint::fork` | pregolya-checkpoint | Effectful Shell (writes parent-pointer checkpoint row to SQLite; no state payload copied) |
+| `recovery` module | `pregolya_checkpoint::recovery` | pregolya-checkpoint | Effectful Shell (reads `pending_writes` table from SQLite to build committed-task set) |
+| `EncryptedSerializer` | `pregolya_checkpoint::encryption` | pregolya-checkpoint | Effectful Shell (wraps `put` and `put_writes` with AES-256-GCM; no unencrypted write path) |
+| `session_tenancy_harness` (VP-002 Kani stub) | `pregolya_checkpoint::proofs::session_tenancy` | pregolya-checkpoint | Pure (`#[cfg(kani)]`; stub body `todo!()` for Phase 6; proof vehicle for VP-002) |
+
+**Subsystem anchor:** SS-04 owns this story's scope because SS-04 is the Checkpoint subsystem (pregolya-checkpoint crate) per ARCH-INDEX Subsystem Registry. Pure-core / effectful-shell boundary: `storage_address` and data types are the pure core; `SqliteCheckpointSaver`, `MonotonicClock`, `fork`, `recovery`, and `EncryptedSerializer` are effectful shells. The VP-002 Kani harness stub lives at `crates/pregolya-checkpoint/src/proofs/session_tenancy.rs`.
+
+## Purity Classification
+
+| Function / Type | Pure or Effectful | Reason |
+|----------------|-------------------|--------|
+| `storage_address(key: &SessionKey) -> StorageAddress` (`pregolya_checkpoint::session_index`) | Pure | Deterministic bijection; no database I/O; VP-002 Kani harness vehicle (`session_tenancy_harness`) |
+| `SessionKey`, `StorageAddress`, `CheckpointId`, `DurabilityTier` | Pure | Data types and enum definitions; no I/O |
+| `CheckpointSaver` trait | Pure | Trait definition only; no I/O side effects in the trait itself |
+| `SqliteCheckpointSaver::put_writes` / `put` / `get_tuple` / `list` (`pregolya_checkpoint::saver`) | Effectful Shell | Reads and writes to SQLite via `rusqlite` |
+| `MonotonicClock::get_next_version` (`pregolya_checkpoint::clock`) | Effectful Shell | Reads persisted-max `CheckpointId` from SQLite; ADR-005 rev-2 cross-restart monotonicity |
+| `fork` (`pregolya_checkpoint::fork`) | Effectful Shell | Writes parent-pointer checkpoint row to SQLite; no state payload copied |
+| `recovery` module (`pregolya_checkpoint::recovery`) | Effectful Shell | Reads `pending_writes` table from SQLite to build committed-task set |
+| `EncryptedSerializer` (`pregolya_checkpoint::encryption`) | Effectful Shell | Applies AES-256-GCM to `put` and `put_writes`; no unencrypted write path |
 
 ## Token Budget Estimate
 
@@ -151,14 +180,14 @@ Exceeds the single-load threshold. Implementer strategy: load BCs in groups (BC-
 
 - [ ] Create `pregolya-checkpoint/Cargo.toml`
 - [ ] Create `pregolya-checkpoint/src/lib.rs` — `CheckpointSaver` trait, `CheckpointTuple`, `DurabilityTier` enum
-- [ ] Create `pregolya-checkpoint/src/session_index.rs` — `SessionKey`, `StorageAddress`, `storage_address` pure fn, `#[cfg(kani)]` harness skeleton per VP-002
+- [ ] Create `pregolya-checkpoint/src/session_index.rs` — `SessionKey`, `StorageAddress`, `storage_address` pure fn
 - [ ] Create `pregolya-checkpoint/src/saver.rs` — concrete `SqliteCheckpointSaver` implementing `put_writes`, `put`, `get_tuple`, `list`
 - [ ] Create `pregolya-checkpoint/src/clock.rs` — `MonotonicClock` implementing `get_next_version`, cross-restart persistence via persisted-max seeding (ADR-005 rev-2)
 - [ ] Create `pregolya-checkpoint/src/fork.rs` — `fork` method producing parent-pointer checkpoint with no state copy
 - [ ] Create `pregolya-checkpoint/src/recovery.rs` — crash recovery logic: read pending_writes, skip-on-reapply set enforcement
 - [ ] Create `pregolya-checkpoint/src/encryption.rs` — `EncryptedSerializer` wrapping `CheckpointSaver`; symmetric coverage; E-CHKPT-004/007
 - [ ] Write unit tests for all 22 ACs
-- [ ] Add `#[cfg(kani)]` proof harness skeleton in `session_index.rs` per VP-002 spec (bodies todo!() for Phase 6)
+- [ ] Create `crates/pregolya-checkpoint/src/proofs/session_tenancy.rs` — `#[cfg(kani)]` `session_tenancy_harness` stub (body `todo!()` for Phase 6 formal hardening; VP-002)
 - [ ] Add `pregolya-checkpoint` to workspace `Cargo.toml` members
 - [ ] Run `just iter pregolya-checkpoint` — all tests green
 
@@ -203,7 +232,8 @@ Derived from `architecture/dependency-graph.md` external dependency table:
 Files to CREATE:
 - `/pregolya-checkpoint/Cargo.toml`
 - `/pregolya-checkpoint/src/lib.rs`
-- `/pregolya-checkpoint/src/session_index.rs` — VP-002 Kani proof vehicle
+- `/pregolya-checkpoint/src/session_index.rs` — `SessionKey`, `StorageAddress`, `storage_address` pure fn
+- `/pregolya-checkpoint/src/proofs/session_tenancy.rs` — VP-002 Kani harness stub (`session_tenancy_harness`; body `todo!()` for Phase 6)
 - `/pregolya-checkpoint/src/saver.rs`
 - `/pregolya-checkpoint/src/clock.rs`
 - `/pregolya-checkpoint/src/fork.rs`

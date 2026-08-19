@@ -235,7 +235,8 @@ Verified by `test_BC_2_19_006_monolith_and_registry_disjoint()`.
 9. [ ] Add `pub mod serializable;` to `pregolya-core/src/lib.rs`
 10. [ ] Register `inventory` crate in `pregolya-core/Cargo.toml`
 11. [ ] Add startup validation test for remap-chain absence (AC-015) and monolith-registry disjoint (AC-023)
-12. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
+12. [ ] Create `crates/pregolya-core/src/proofs/reviver_allowlist.rs` — `#[cfg(kani)]` `allowlist_rejects_unregistered_id` stub (body `todo!()` for Phase 6 formal hardening; VP-010)
+13. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -280,6 +281,7 @@ The `inventory` crate (dtolnay) is a new dependency for this story. Add to `preg
 | `pregolya-core/src/serializable/legacy_remap.rs` | CREATE | `OLD_CORE_NAMESPACES_MAPPING` static map |
 | `pregolya-core/src/serializable/monolith.rs` | CREATE | `LANGCHAIN_MONOLITH_TYPES` static set |
 | `pregolya-core/src/serializable/reviver.rs` | CREATE | `Reviver` struct, `new()`, `revive()`, allowlist check, credential stripping |
+| `pregolya-core/src/proofs/reviver_allowlist.rs` | CREATE | VP-010 Kani harness stub — `allowlist_rejects_unregistered_id` (body `todo!()` for Phase 6) |
 | `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod serializable;` |
 | `pregolya-core/Cargo.toml` | MODIFY | Add `inventory` dependency |
 | `pregolya-core/tests/serializable_integration.rs` | CREATE | Feature-flag integration tests (BC-2.19.003 TV-002 pattern) |

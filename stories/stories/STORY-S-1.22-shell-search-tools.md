@@ -173,6 +173,7 @@ This story is the VP-013 anchor. The Kani harness for VP-013 must verify: for al
 - [ ] Implement `GrepTool::invoke` — `regex = "1"` in-process, fail-whole-search on I/O error, cap at 100
 - [ ] Add `regex = { version = "1", default-features = false, features = ["std"] }` to `pregolya-tools/Cargo.toml`
 - [ ] Verify `GrepTool::action_risk()` returns `ActionRisk::ReadOnly`
+- [ ] Create `crates/pregolya-tools/src/proofs/risk_floor.rs` — `#[cfg(kani)]` `risk_floor_rejects_below_medium` stub (body `todo!()` for Phase 6 formal hardening; VP-013)
 - [ ] Run `just iter pregolya-tools` — all tests green
 
 ## Previous Story Intelligence
@@ -230,5 +231,5 @@ crates/pregolya-tools/
     grep_tool_tests.rs               # unit + integration: confinement, cap, partial-fail
 ```
 
-**Files to create (new):** all shell/ and search/ modules; config.rs.
+**Files to create (new):** all shell/ and search/ modules; config.rs; `src/proofs/risk_floor.rs` (VP-013 Kani harness stub — `risk_floor_rejects_below_medium`; body `todo!()` for Phase 6).
 **Files to modify (existing):** `pregolya-tools/Cargo.toml` (add regex dep), `src/lib.rs` (add pub use).

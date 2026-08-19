@@ -58,7 +58,7 @@ tdd_mode: strict
 
 ## VP-003 ANCHOR (Kani P0)
 
-This story builds the `sandbox::path_guard` module containing `canonicalize_beneath_root` and its pure companion `canonicalize_beneath_root_pure`. The `canonicalize_beneath_root_pure` function is the test vehicle for the VP-003 Kani harness (Phase 6 formal hardening). The pure function MUST be extracted as a public function in `pregolya-sandbox/src/path_guard.rs` so that the formal-verifier can access it in the `#[cfg(kani)]` proof harness at the path specified in VP-003.
+This story builds the `sandbox::path_guard` module containing `canonicalize_beneath_root` and its pure companion `canonicalize_beneath_root_pure`. The `canonicalize_beneath_root_pure` function is the proof vehicle for the VP-003 Kani harness (Phase 6 formal hardening). The pure function MUST be extracted as a public function in `pregolya-sandbox/src/path_guard.rs`. The Kani harness stub `workspace_confinement_harness` lives in `crates/pregolya-sandbox/src/proofs/workspace_confinement.rs` — authored (as `todo!()`) in this story, completed in S-6.01.
 
 **Subsystem anchor justification:** SS-13 owns this story's scope because SS-13 is the Sandbox subsystem (pregolya-sandbox crate) per ARCH-INDEX Subsystem Registry — it defines the enforcing backend, path guard, and policy enforcement components.
 
@@ -129,6 +129,34 @@ When the macOS kernel does not support the required Seatbelt operations, `new_ma
 ### AC-021 (traces to BC-2.13.007 postcondition 3 — no wildcards, DEBUG log)
 `env_allowlist` does not support wildcards. An entry containing `*` returns `Err(PregolyaError { code: "E-SBXD-006", message: "InvalidEnvAllowlistPattern: wildcard patterns are not supported in env_allowlist", .. })`. Before each execution, a DEBUG trace event is emitted with `event_type = "sandbox.env_sanitized"` containing the count of stripped and forwarded variables. Verified by `test_BC_2_13_007_wildcard_rejected()` and `test_BC_2_13_007_sanitization_debug_log()`.
 
+## Architecture Mapping
+
+| Component | Module | Crate | Pure/Effectful |
+|-----------|--------|-------|---------------|
+| `canonicalize_beneath_root_pure` | `pregolya_sandbox::path_guard` | pregolya-sandbox | Pure (symbolic `..` resolution; VP-003 Kani proof vehicle `workspace_confinement_harness`) |
+| `canonicalize_beneath_root` | `pregolya_sandbox::path_guard` | pregolya-sandbox | Effectful (calls `std::fs::canonicalize`; delegates to pure model for prefix check) |
+| `WorkspaceFs` | `pregolya_sandbox::path_guard` | pregolya-sandbox | Effectful Shell (workspace file op facade; routes all access through `canonicalize_beneath_root`) |
+| `Sandbox`, `SandboxConfig`, `SandboxPolicy`, `BackendCapabilities` | `pregolya_sandbox` | pregolya-sandbox | Pure (configuration and capability descriptor types) |
+| `ProcessBackend` | `pregolya_sandbox::backend::process` | pregolya-sandbox | Effectful Shell (spawns `tokio::process::Child`; emits WARN tracing event; `kill_on_drop(true)`) |
+| `SandboxBackend` (WASM enforcing stub) | `pregolya_sandbox::backend::wasm` | pregolya-sandbox | Effectful Shell (enforcing WASM isolation backend; stub bodies in this story) |
+| `new_macos_seatbelt` | `pregolya_sandbox::seatbelt` | pregolya-sandbox | Effectful Shell (`#[cfg(target_os = "macos")]`; invokes macOS kernel Seatbelt API) |
+| `env_sanitizer` module | `pregolya_sandbox::env_sanitizer` | pregolya-sandbox | Pure (stateless allowlist filter on env map; no process I/O) |
+| `workspace_confinement_harness` (VP-003 Kani stub) | `pregolya_sandbox::proofs::workspace_confinement` | pregolya-sandbox | Pure (`#[cfg(kani)]`; stub body `todo!()` for Phase 6; proof vehicle for VP-003) |
+
+**Subsystem anchor:** SS-13 owns this story's scope because SS-13 is the Sandbox subsystem (pregolya-sandbox crate) per ARCH-INDEX Subsystem Registry. The split-layer boundary in `path_guard.rs`: `canonicalize_beneath_root_pure` (pure, Kani-provable) is called by `canonicalize_beneath_root` (effectful, OS-calling). The VP-003 Kani harness stub lives at `crates/pregolya-sandbox/src/proofs/workspace_confinement.rs`.
+
+## Purity Classification
+
+| Function / Type | Pure or Effectful | Reason |
+|----------------|-------------------|--------|
+| `canonicalize_beneath_root_pure` (`pregolya_sandbox::path_guard`) | Pure | Symbolic `..` resolution only; no `std::fs` calls; VP-003 Kani harness vehicle (`workspace_confinement_harness`) |
+| `canonicalize_beneath_root` (`pregolya_sandbox::path_guard`) | Effectful Shell | Calls `std::fs::canonicalize`; delegates to pure model for confinement check |
+| `WorkspaceFs` (`pregolya_sandbox::path_guard`) | Effectful Shell | Wraps all workspace file ops; invokes `canonicalize_beneath_root` at access time |
+| `SandboxConfig`, `SandboxPolicy`, `BackendCapabilities` | Pure | Configuration and capability descriptor types; no I/O |
+| `ProcessBackend::execute` (`pregolya_sandbox::backend::process`) | Effectful Shell | Spawns `tokio::process::Child`; emits WARN tracing event; sets `kill_on_drop(true)` |
+| `new_macos_seatbelt` (`pregolya_sandbox::seatbelt`) | Effectful Shell | `#[cfg(target_os = "macos")]`; invokes macOS kernel Seatbelt API |
+| `env_sanitizer` module (`pregolya_sandbox::env_sanitizer`) | Pure | Stateless allowlist filter; no process or filesystem I/O |
+
 ## Token Budget Estimate
 
 | Component | Estimated Tokens |
@@ -156,7 +184,7 @@ Near but within the 20-30% context window threshold. Implementer should load onl
 - [ ] Create `pregolya-sandbox/src/env_sanitizer.rs` — env allowlist enforcement, wildcard rejection, DEBUG log
 - [ ] Write unit tests for all 21 ACs
 - [ ] Write integration test for real symlink escape (AC-013, AC-014) using tempdir
-- [ ] Add `#[cfg(kani)]` proof harness skeleton in `path_guard.rs` per VP-003 (bodies `todo!()` for Phase 6)
+- [ ] Create `crates/pregolya-sandbox/src/proofs/workspace_confinement.rs` — `#[cfg(kani)]` `workspace_confinement_harness` stub (body `todo!()` for Phase 6 formal hardening; VP-003)
 - [ ] Add `pregolya-sandbox` to workspace `Cargo.toml` members
 - [ ] Run `just iter pregolya-sandbox` — all tests green
 
@@ -198,7 +226,8 @@ Derived from `architecture/dependency-graph.md` external dependency table:
 Files to CREATE:
 - `/pregolya-sandbox/Cargo.toml`
 - `/pregolya-sandbox/src/lib.rs`
-- `/pregolya-sandbox/src/path_guard.rs` — VP-003 Kani proof vehicle
+- `/pregolya-sandbox/src/path_guard.rs` — `canonicalize_beneath_root` (OS-calling) + `canonicalize_beneath_root_pure` (Kani-provable pure model)
+- `/pregolya-sandbox/src/proofs/workspace_confinement.rs` — VP-003 Kani harness stub (`workspace_confinement_harness`; body `todo!()` for Phase 6)
 - `/pregolya-sandbox/src/backend/mod.rs`
 - `/pregolya-sandbox/src/backend/process.rs`
 - `/pregolya-sandbox/src/backend/wasm.rs`

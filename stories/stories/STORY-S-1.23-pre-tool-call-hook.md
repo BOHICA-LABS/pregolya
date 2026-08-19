@@ -154,6 +154,7 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 - [ ] Implement skip-hook-on-resume: extract `pre_tool_dispatch` branch from resume path
 - [ ] Validate `Command(resume=PendingHumanApproval)` returns error
 - [ ] Implement `ToolApprovalRequest` msgpack serialization (msgpack checkpoint mechanism from S-1.20)
+- [ ] Create `crates/pregolya-graph/src/proofs/pre_tool_hook.rs` — `#[cfg(kani)]` `deny_excludes_tool_invocation` stub (body `todo!()` for Phase 6 formal hardening; VP-011)
 - [ ] Run `just iter pregolya-graph` — all tests green
 
 ## Previous Story Intelligence
@@ -202,5 +203,5 @@ crates/pregolya-graph/
     pre_tool_hook_tests.rs           # unit tests: all 4 branches, panic fallback, skip-on-resume
 ```
 
-**Files to create (new):** `hooks/pre_tool.rs`, `hooks/approval.rs`, `executor/tool_dispatch.rs`.
+**Files to create (new):** `hooks/pre_tool.rs`, `hooks/approval.rs`, `executor/tool_dispatch.rs`, `src/proofs/pre_tool_hook.rs` (VP-011 Kani harness stub — `deny_excludes_tool_invocation`; body `todo!()` for Phase 6).
 **Files to modify (existing):** `pregolya-graph/src/hooks/mod.rs` (add pub use), `pregolya-graph/src/executor/mod.rs` (add pub use tool_dispatch).
