@@ -2520,3 +2520,13 @@ Date: 2026-08-18 | Archived at: burst-326 Phase-2 structural decomp | STATE.md: 
 
 #### v5.06 RESUME IN ONE BREATH
 Pregolya — Phase 1 COMPLETE; Phase 2 (Story Decomposition) STARTED, greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED 2026-08-18 (D-197; burst-325). 3/3 CONVERGED on frozen anchor 79eb2f3 (P1D-211/212/213; D-195). D-170 conditional approval SATISFIED. CORPUS: 133 BCs (51/79/3); 39 CAPs; 16 DIs; 14 VPs; 26 ADRs; 114 error codes/13 categories; ~697 TVs; 83 modules (CRIT 12/HIGH 28/MED 35/LOW 2/exempt 6). NEXT: Phase-2 structural decomposition — story-writer epics + dependency graph + wave schedule.
+
+---
+
+## Archived Session Resume Checkpoint — STATE.md v5.07 (burst-326 Phase-2 structural decomp)
+
+#### ARCHIVE METADATA
+Date: 2026-08-18 | Archived at: burst-327 Phase-2 Batch-1 per-story authoring | STATE.md: 5.07 → 5.08 | Phase-2 structural decomp COMPLETE (D-198; burst-326); 39 stories/22 epics/294 pts; Wave1=27/Wave2=11/Wave6=1; 133/133 BC coverage; DAG acyclic; D7 priority honored. Per-story authoring Batch 1 started (S-1.01..S-1.06).
+
+#### v5.07 RESUME IN ONE BREATH
+Pregolya — Phase 2 (Story Decomposition) IN PROGRESS, greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase 1 CLOSED 2026-08-18 (D-197; burst-325). Phase-2 structural decomposition COMPLETE (burst-326; D-198; 2026-08-18): 22 epics / 39 stories / 294 pts; Wave1=27, Wave2=11, Wave6=1; 133/133 BC coverage; DAG acyclic; D7 priority honored. NEXT: per-story spec authoring — batched per-epic bursts starting Wave 1; then product-owner holdout scenarios Domains A+B (D8, sealed until Phase 4); then Phase-2 adversarial story convergence 3-CLEAN before Phase-2 gate.
