@@ -2540,3 +2540,13 @@ Date: 2026-08-18 | Archived at: burst-328 Phase-2 Batch-2 per-story authoring | 
 
 #### v5.08 RESUME IN ONE BREATH
 Pregolya — Phase 2 (Story Decomposition) IN PROGRESS, greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase 1 CLOSED 2026-08-18 (D-197; burst-325). Phase-2 structural decomposition COMPLETE (burst-326; D-198; 2026-08-18): 22 epics / 39 stories / 294 pts; Wave1=27, Wave2=11, Wave6=1; 133/133 BC coverage; DAG acyclic; D7 priority honored. Per-story authoring Batch 1 COMPLETE (burst-327; D-199; 2026-08-18): S-1.01..S-1.06 (pregolya-core foundation); 6/39 story specs authored; 13 BCs, 81 ACs, all BC-traced; sprint-state S-1.01..S-1.06 spec-ready. NEXT: Wave 1 Batch 2 (S-1.07..S-1.13; macros/splitters/sandbox/checkpoint/memory), then S-1.14..S-1.27, then Wave 2, Wave 6; holdout scenarios Domains A+B (D8); Phase-2 adversarial story convergence 3-CLEAN.
+
+---
+
+## Archived Session Resume Checkpoint — STATE.md v5.09 (burst-328 Phase-2 Wave-1-Batch-2 per-story authoring)
+
+#### ARCHIVE METADATA
+Date: 2026-08-19 | Archived at: burst-329 Phase-2 Batch-3 per-story authoring | STATE.md: 5.09 → 5.10 | Phase-2 per-story authoring Batch 2 COMPLETE (D-200; burst-328); S-1.07..S-1.13 (7/39 story specs; ~15 BCs; 109 ACs; VP-002/VP-003 anchors; R8 GTV parity Red Gate; GDPR erasure+DI-012 write-guard); sprint-state S-1.07..S-1.13 spec-ready; 13/39 total. NEXT: Batch 3 (S-1.14..S-1.20 pregolya-graph).
+
+#### v5.09 RESUME IN ONE BREATH
+Pregolya — Phase 2 (Story Decomposition) IN PROGRESS, greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase 1 CLOSED 2026-08-18 (D-197; burst-325). Phase-2 structural decomposition COMPLETE (burst-326; D-198; 2026-08-18): 22 epics / 39 stories / 294 pts; Wave1=27, Wave2=11, Wave6=1; 133/133 BC coverage; DAG acyclic; D7 priority honored. Per-story authoring Batches 1-2 COMPLETE: Batch 1 (burst-327; D-199; 2026-08-18): S-1.01..S-1.06 (6/39; 13 BCs; 81 ACs; all BC-traced); Batch 2 (burst-328; D-200; 2026-08-19): S-1.07..S-1.13 (7/39; ~15 BCs; 109 ACs; all BC-traced; VP-002 checkpoint::session_index anchor in S-1.10; VP-003 sandbox::path_guard anchor in S-1.09; R8 splitter GTV parity Red Gate in S-1.08; GDPR erasure+DI-012 write-guard in S-1.12/S-1.13); sprint-state S-1.07..S-1.13 spec-ready; 13/39 total. NEXT: Wave 1 Batch 3 (S-1.14..S-1.20 pregolya-graph channels/reducers/BSP/streaming/budget/guardrail/HITL-core), then S-1.21..S-1.27 tools/server, then Wave 2 (S-2.01..S-2.11), Wave 6 (S-6.01); holdout scenarios Domains A+B (D8); Phase-2 adversarial story convergence 3-CLEAN.
