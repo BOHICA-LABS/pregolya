@@ -6631,3 +6631,172 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 **Decision minted:** D-198 — Phase-2 structural decomposition COMPLETE; 39 stories/22 epics/294 pts; Wave1=27/Wave2=11/Wave6=1; D7 priority honored; 133/133 BC coverage; DAG acyclic; 3 gap-register entries IN-SCOPE.
 **Convergence:** Phase-1 CLOSED (D-197); Phase-2 structural decomp COMPLETE (D-198); 0/3 (no adversarial passes yet; per-story spec authoring NEXT).
 **NEXT:** Per-story spec authoring (story-writer, Wave 1 first); holdout scenarios Domains A+B (product-owner, D8); Phase-2 adversarial story convergence 3-CLEAN before Phase-2 gate.
+
+---
+
+## Burst: burst-327 Phase-2 per-story authoring Wave 1 Batch 1 (2026-08-18)
+
+**Date:** 2026-08-18
+**Agent:** story-writer; state-manager
+**State Version:** STATE.md v5.07 → v5.08
+
+**Summary:** story-writer authored 6 story specs: S-1.01 (pregolya-error-struct; BC-2.14.001/002; 15 ACs), S-1.02 (error-policy-enforcement; BC-2.14.003..006; 14 ACs), S-1.03 (message-type-system; BC-2.01.001/002; 12 ACs), S-1.04 (runnable-trait-and-pipe; BC-2.01.003/004; 12 ACs), S-1.05 (lcel-composition-primitives; BC-2.01.005..008; 14 ACs; AC-010 re-traced to BC-2.01.007 PC7+EC-002 during authoring QA), S-1.06 (tool-retry-circuit-breaker; BC-2.16.001..003; 14 ACs). 6 stories, 13 BCs, 81 ACs, all BC-traced. Critical-path stories S-1.01/S-1.03/S-1.04 included. Sprint-state S-1.01..S-1.06 spec-ready. Authoring progress: 6/39.
+
+**Decision minted:** D-199
+**Convergence:** Phase-1 CLOSED (D-197); Phase-2 per-story authoring in progress 6/39. Phase-1 anchor 79eb2f3 unchanged.
+**NEXT:** Wave 1 Batch 2 (S-1.07..S-1.27).
+
+---
+
+## Burst: burst-328 Phase-2 per-story authoring Wave 1 Batch 2 (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** story-writer; state-manager
+**State Version:** STATE.md v5.08 → v5.09
+
+**Summary:** story-writer authored 7 story specs: S-1.07 (proc-macro-attributes; BC-2.08.010/011/012; 15 ACs), S-1.08 (recursive-text-splitter; BC-2.07.001/002/003; 12 ACs; R8 GTV parity Red Gate), S-1.09 (sandbox-backend-path-guard; BC-2.13.001..007; 21 ACs; VP-003 anchor), S-1.10 (checkpoint-core; BC-2.04.001..007; 22 ACs; VP-002 anchor), S-1.11 (checkpoint-fts-search; BC-2.04.008; 7 ACs), S-1.12 (memory-kv-vector-gdpr; BC-2.15.001/002/003; 15 ACs), S-1.13 (skillstore-write-guard-context-mutation; BC-2.15.004/005/006; 17 ACs). 7 stories, ~15 BCs, 109 ACs, all BC-traced. VP-002/VP-003 anchored. Authoring progress: 13/39.
+
+**Decision minted:** D-200
+**Convergence:** Phase-2 per-story authoring in progress 13/39.
+**NEXT:** Wave 1 Batch 3 (S-1.14..S-1.20 pregolya-graph).
+
+---
+
+## Burst: burst-329 Phase-2 per-story authoring Wave 1 Batch 3 (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** story-writer; state-manager
+**State Version:** STATE.md v5.09 → v5.10
+
+**Summary:** story-writer authored 7 story specs: S-1.14 (stategraph-node-channel-reducers; BC-2.02.001..004; 10 ACs), S-1.15 (conditional-edge-send-fanout; BC-2.02.005..006; 11 ACs), S-1.16 (bsp-super-step-determinism; BC-2.03.001..003; 10 ACs; VP-001 Kani anchor `bsp_determinism_harness`), S-1.17 (streaming-event-types-run-id-parity; BC-2.06.001..003; 12 ACs), S-1.18 (budget-policy-evidence-journal-halt-escalate; BC-2.10.001..004; 16 ACs), S-1.19 (guardrail-hook-ingress-boundaries; BC-2.11.001..006; 23 ACs), S-1.20 (hitl-interrupt-resume-core; BC-2.05.001..006; 23 ACs). 7 stories, 28 BCs, ~105 ACs, all BC-traced. VP-001 bsp_engine Kani vehicle anchored. Authoring progress: 20/39.
+
+**Decision minted:** D-201
+**Convergence:** Phase-2 per-story authoring in progress 20/39.
+**NEXT:** Wave 1 Batch 4 (S-1.21..S-1.27 tools/server).
+
+---
+
+## Burst: burst-330 Phase-2 per-story authoring Wave 1 Batch 4 / Wave 1 FULLY AUTHORED (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** story-writer; state-manager
+**State Version:** STATE.md v5.10 → v5.11
+
+**Summary:** story-writer authored 7 story specs: S-1.21 (fs-tools; BC-2.23.001..004; VP-003 reuse), S-1.22 (shell-search-tools; BC-2.23.005..006; VP-013 anchor), S-1.23 (pre-tool-call-hook; BC-2.05.007..008; VP-011 anchor), S-1.24 (tool-approval-compaction-events; BC-2.06.004..006), S-1.25 (compaction-trigger-execution; BC-2.10.005..006; VP-012 anchor), S-1.26 (thread-assistant-run-crud; BC-2.12.001..003), S-1.27 (cron-security-stores-streaming; BC-2.12.004..007). VP-011 (graph::hitl route_pre_tool_decision+shield_hook_result), VP-012 (core::budget check_watermark_trigger OnWatermark <=), VP-013 (tools::shell check_risk_floor) anchored. Wave 1 FULLY AUTHORED: 27/27 stories (S-1.01..S-1.27) spec-ready. Authoring progress: 27/39.
+
+**Decision minted:** D-202
+**Convergence:** Wave 1 FULLY AUTHORED (27/27 spec-ready). Phase-2 per-story authoring in progress 27/39.
+**NEXT:** Wave 2 (S-2.01..S-2.11); Wave 6 (S-6.01); holdout scenarios Domains A+B (D8).
+
+---
+
+## Burst: burst-331 TD-VSDD-091/POL-12 version-pin remediation forward-fix (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** state-manager
+**State Version:** STATE.md v5.11 → v5.12
+
+**Summary:** S-1.21..S-1.27 `# BC status:` comment lines cleaned (vN.N pins stripped; 7 files, 14 lines). burst-330 committed pre-fix staged content (Edit fixes applied after `git add`; records-lint did not catch pins in `# BC status:` comment-line format on staged new files — hook-coverage gap noted as process observation for devops DEFER). Remediated fix-forward per git-safety. Wave 1 authoring remains COMPLETE (27/39).
+
+**Decision minted:** D-203
+**Convergence:** Wave 1 FULLY AUTHORED (27/27 spec-ready).
+**NEXT:** Wave 2 Batch 1 (S-2.01..S-2.06).
+
+---
+
+## Burst: burst-332 Phase-2 per-story authoring Wave 2 Batch 1 (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** story-writer; state-manager
+**State Version:** STATE.md v5.12 → v5.13
+
+**Summary:** story-writer authored 6 story specs: S-2.01 (lc-serialization-reviver-allowlist; BC-2.19.001..006; GAP-001 BC-2.19.004 P2 legacy namespace resolved in S-2.01 NOT deferred; VP-007 serialization round-trip Kani anchor; VP-010 allowlist Kani anchor), S-2.02 (retriever-trait-guarded-documents; BC-2.20.001..003), S-2.03 (vectorstore-trait-inmemory-zero-norm-filter; BC-2.21.001..004; VP-009 cosine zero-norm Kani anchor), S-2.04 (prompt-template-core; BC-2.22.001..004), S-2.05 (prompt-injection-safety-guard; BC-2.18.004..005; VP-006 Kani anchor), S-2.06 (provider-sdk-split-architecture; BC-2.24.001..003). 6 stories, 97 ACs, all BC-traced; VP-006/007/009/010 anchored; GAP-001 resolved; authoring agent died from API connection loss after writing all 6 files; orchestrator verified completeness. Sprint-state S-2.01..S-2.06 spec-ready. Authoring progress: 33/39.
+
+**Decision minted:** D-204
+**Convergence:** Wave 2 Batch 1 COMPLETE (33/39 spec-ready).
+**NEXT:** Wave 2 Batch 2 (S-2.07..S-2.11); Wave 6 (S-6.01); holdout scenarios Domains A+B.
+
+---
+
+## Burst: burst-333 Phase-2 per-story authoring Wave 2 Batch 2 / Wave 2 FULLY AUTHORED (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** story-writer; state-manager
+**State Version:** STATE.md v5.13 → v5.14
+
+**Summary:** story-writer authored 5 story specs: S-2.07 (chat-model-core-conformance; 24 ACs), S-2.08 (advanced-provider-features; 19 ACs), S-2.09 (embeddings-trait-providers; 16 ACs; VP-008 Kani anchor), S-2.10 (mcp-client-tool-discovery-invocation; 25 ACs; VP-004/VP-005 anchored; SID-1 mock substitutes; R11 test-void coverage), S-2.11 (mcp-server-tool-advertisement; 13 ACs). 5 stories, 97 ACs, all BC-traced. Wave 2 FULLY AUTHORED (11/11 stories S-2.01..S-2.11 spec-ready). S-2.06 epic_id E-08→E-19 corrected. Authoring progress: 38/39.
+
+**Decision minted:** D-205
+**Convergence:** Wave 2 FULLY AUTHORED (38/39 spec-ready).
+**NEXT:** Wave 6 (S-6.01); holdout scenarios Domains A+B (D8).
+
+---
+
+## Burst: burst-334 Wave 6 COMPLETE / Per-story authoring COMPLETE (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** story-writer; state-manager
+**State Version:** STATE.md v5.14 → v5.16
+
+**Summary:** story-writer authored S-6.01 (formal-verification-pipeline; BC-2.17.001/BC-2.17.002; 12 VP harnesses VP-001/002/003/006/007/008/009/010/011/012/013/014; VP-004/005 Phase-3 integration at S-2.10 per SID-1; GAP-002 execution-ordering vehicle in dependency-graph; Kani Linux/macOS-only; 19 ACs; 0 version pins). ALL 39 story specs AUTHORED (Wave 1: 27, Wave 2: 11, Wave 6: 1). Per-story authoring COMPLETE. Sprint-state S-6.01 spec-ready (all 39 spec-ready). story-writer honored source-of-truth precedence (CLAUDE.md §Source-of-Truth Precedence): sprint-state.yaml S-6.01 verification_properties list = 12 VPs superseded orchestrator prose estimate of 14.
+
+**Decision minted:** D-206
+**Convergence:** Per-story authoring COMPLETE (39/39 spec-ready). Phase-1 anchor 79eb2f3 unchanged.
+**NEXT:** product-owner authors holdout scenarios Domains A+B (D8); Phase-2 adversarial convergence 3-CLEAN.
+
+---
+
+## Burst: burst-335 Phase-2 holdout scenarios Domains A+B COMPLETE (2026-08-19)
+
+**Date:** 2026-08-19
+**Agent:** product-owner; state-manager
+**State Version:** STATE.md v5.16 → v5.17
+
+**Summary:** product-owner authored 14 holdout scenarios. Domain A Virtual SOC Analyst (HS-A-001..HS-A-007): 5 must-pass (HS-A-001 single-alert-triage, HS-A-002 parallel-enrichment-fanout, HS-A-003 durable-investigation-surviving-restart, HS-A-004 risk-tiered-hitl-before-containment, HS-A-007 prompt-injection-resistance) + 2 should-pass (HS-A-005 real-world-attack-corpus MITRE ATT&CK, HS-A-006 high-volume-concurrent). Domain B Dark Factory / Autonomous Pipeline (HS-B-001..HS-B-007): 4 must-pass (HS-B-001 spec-driven-pipeline-traversal, HS-B-002 checkpoint-resume-after-crash, HS-B-003 human-approval-interrupt-phase-boundary, HS-B-005 parallel-subagent-fanout-with-synthesis) + 3 should-pass (HS-B-004 convergence-loop-fixed-point, HS-B-006 budget-bounded-run, HS-B-007 real-world-spec-corpus-pipeline OpenAPI 3.1). Totals: 14 scenarios, 9 must-pass = 64% (> required 60% Phase-4 gate), 1 security probe (HS-A-007). Strict information asymmetry confirmed: spec-free evaluator narratives; BC/VP IDs in frontmatter + Behavioral Contract Linkage metadata only. SEALED until Phase-4. HS-INDEX.md input-hash corrected to 3102b0a.
+
+**Files committed:**
+- `.factory/holdout-scenarios/HS-A-001..HS-A-007` (product-owner)
+- `.factory/holdout-scenarios/HS-B-001..HS-B-007` (product-owner)
+- `.factory/holdout-scenarios/HS-INDEX.md` (product-owner; input-hash 3102b0a)
+
+**Decision minted:** D-207
+**Convergence:** Holdout scenarios COMPLETE (14 scenarios; 9 must-pass = 64%; SEALED until Phase 4). Phase-2 authoring COMPLETE.
+**NEXT:** Phase-2 adversarial story convergence 3-CLEAN (adversary, BC-5.39.001).
+
+---
+
+## Phase-1d Convergence Decisions Archive (D-167..D-194) — Extracted from STATE.md v5.17 at compact-state burst
+
+*Extracted 2026-08-19 during STATE.md compact-state maintenance burst (v5.17→v5.18). These decision rows were present as full-text rows in STATE.md v5.17 and have been compressed in STATE.md v5.18 to a single summary row. Full text preserved here for audit traceability.*
+
+**D-167 (Phase 1 / 2026-08-17 / state-manager+orchestrator):** Phase-1d adversarial cascade CONVERGED 3/3 on frozen spec anchor 1262ebe (P1D-191/192/193 all CLEAN strict+PR-merge). Post-D23-expansion adversarial convergence achieved after ~190 passes. Phase-1d cascade CLOSED. NEXT: pre-Phase-1-gate fresh-context consistency-validator audit + input-hash drift check, then human approval gate.
+
+**D-168..D-169 (compressed; Phase 1 / 2026-08-17):** D-168 PROCESS-GAP DEFERRAL — orphaned prior-session agent collision (no committed-state damage; DEFER-003; L-182). D-169 pre-Phase-1-gate consistency audit GATE-CLEAN (2 records-tier items burst-301: VP-INDEX timestamp LOW; ARCH-INDEX input-hash OBS; OPEN: RunnableParallel/RunnablePassthrough scope-confirmation carried to gate; streak UNCHANGED 3/3 CONVERGED per TD-RECORDS-MICRO-BURST-001).
+
+**D-170 (Phase 1 / 2026-08-17 / human senior architect):** Human-directed Phase-1 scope expansion at the approval gate — RunnableParallel/RunnablePassthrough (+ `.assign`) LCEL composition primitives brought IN SCOPE for v1. ADR-026 minted (architect, burst-302). Phase-1 approval CONDITIONAL on completion. Convergence streak RESET 3/3 CONVERGED → 0/3 (scope expansion changes spec perimeter). Re-convergence required.
+
+**D-171 (Phase 1 / 2026-08-17 / state-manager+orchestrator):** D-170 LCEL scope-expansion authoring COMPLETE (burst-302a ADR-026 + burst-302b CAP-039+DI-016+BC-2.01.005–008+VP-014+E-CORE-009/010+interface-definitions). New corpus counts: BC 129→133 (51/79/3), CAP 38→39, DI 15→16, VP 13→14, error codes 111→113, ADR 25→26. Streak remains 0/3; re-convergence required.
+
+**D-172..D-177 (compressed; Phase 1 / 2026-08-17):** D-172 P1D-194 5 integration-drift findings closed burst-303; D-173 P1D-195 6 findings closed burst-304; D-174 P1D-196 CLEAN streak 1/3 STARTED expanded LCEL perimeter; D-175 P1D-197 CLEAN streak 2/3 ACTIVE; D-176 P1D-198 NOT CLEAN 2 findings burst-306 closed both; D-177 P1D-199 NOT CLEAN 1H DI-016 enforcer mis-anchored (burst-307 corrected; streak UNCHANGED 0/3).
+
+**D-178 (Phase 1 / 2026-08-17 / architect):** EXEC adjudicated as legitimate 13th error Category — architect ruling via ADR-010 §Category Axis Expansion (D26). EXEC covers concurrent branch/subtask execution failures from RunnableParallel fan-out; no existing category (CONCURRENCY/INTERNAL/TOOL/VAL) cleanly fits. Axis-carrier fully updated: error-taxonomy; ADR-010; BC-2.14.001/002; ADR-020; VP-013; verification-architecture; ADR-026. P1D-200 F-P200-01/02/03/04 ALL CLOSED. L-186 codified (AXIS-CARRIER propagation discipline). BC census UNCHANGED 133.
+
+**D-179..D-184 (compressed; Phase 1 / 2026-08-17):** D-179 P1D-201 3 findings (E-CORE-011 minted; BC-2.20.002 phantom; BC-2.17.001 DI-014 gloss); D-180 burst-310 pre-emptive E-CORE-011 → prd.md §5; D-181 P1D-202 3 findings (CheckpointSaver::fts_search trait-method canon; 8 files); D-182 P1D-203 2 findings (BC-2.01.005 §Traceability ADR citation split; BC-2.12.002 CAP-014 verbatim); D-183 P1D-204 2 findings (VP-014 mirror-siblings; L-187); D-184 P1D-205 2 findings (E-CORE-009 RetryHint Maybe→Never; ADR-023 +3 LCEL structs 19→22/37→40).
+
+**D-185 (Phase 1 / 2026-08-17 / state-manager+orchestrator):** burst-315 comprehensive residual-coverage audit COMPLETE — 8 findings closed: F-AUD-C-02 entities-server.md §PregolyaError EXEC category missing; ubiquitous-language-core.md §GrepResult fix; BC-2.04.006 PC2 HashMap configurable access; BC-2.06.004/005 spurious ADR-019 removed; BC-2.11.001..006 traces_to corrected; BC-2.18.001..005 draft→active. L-186 extended: domain-spec/entities-server.md §PregolyaError added to AXIS-CARRIER checklist.
+
+**D-186 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** burst-316 closed the final GrepTool-name sibling; `SearchResultsCapped` now has zero live-body domain-spec occurrences (canonical `GrepResult.capped` per error-taxonomy §E-TOOLS-006 + BC-2.23.006). ADR-020 mnemonic-label table intentionally retains mnemonic Name column (not a defect).
+
+**D-187..D-188 (compressed; Phase 1 / 2026-08-18):** D-187 session-wrap RESUME SNAPSHOT burst-317-wrap (spec perimeter UNCHANGED; streak 0/3; v4.96 archived). D-188 housekeeping burst-318 (3 sidecar stop-hook markers + HEADS SHA WARN cleared; streak 0/3 UNCHANGED).
+
+**D-189 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-207 CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; review HEAD a54d426 (STATE-only bookkeeping). Streak 0/3 → 1/3 STARTED. Per D-143, STATE-only CLEAN-pass bookkeeping commits do NOT reset streak.
+
+**D-190 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-208 NOT CLEAN; 1 MED finding F-P208-01: E-CORE-011 INTERNAL category rendered as bare PascalCase `Internal` instead of canonical `INTERNAL` in BC-2.01.006 and ADR-026 (canonical-form drift; introduced in burst-302b/D-170 LCEL content). fix-burst-319: BC-2.01.006 (8 live-body sites); ADR-026 (1 site); corpus-wide grep gate PASSED. STREAK RESET 1/3→0/3. Another sibling-sweep-miss class instance — PO fixed struct literals but missed prose siblings; orchestrator grep gate caught them.
+
+**D-191 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-209 CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen spec anchor 57c74e4; streak 0/3→1/3 STARTED. All corpus-wide canonical-form checks PASS; fix-burst-319 INTERNAL casing fix confirmed clean.
+
+**D-192 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-210 NOT CLEAN; 1 MED finding F-P210-01: verification-coverage-matrix + module-criticality module census off by one (core::serializable double-counted across CRITICAL and HIGH). fix-burst-321 CLOSED: module-criticality v2.11 + verification-coverage-matrix v3.9 (total 84→83 / HIGH 29→28 / tiered 78→77; Resolution B). purity-boundary-map "84" INDEPENDENT/CORRECT (different enumeration). L-188 minted (cross-document enumeration diff discipline). STREAK RESET 1/3→0/3.
+
+**D-193 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-211 CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen anchor 79eb2f3; streak 0/3→1/3 STARTED. BC bodies ss-06/BC-2.06.001+006, ss-03/BC-2.03.002+003 deep-read; prd.md §5+§7 (133 rows confirmed); error-taxonomy 13-category axis; all 26 ADR supersedes/superseded_by back-refs CLEAN.
+
+**D-194 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-212 CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen anchor 79eb2f3; streak 1/3→2/3 ACTIVE. Fresh-context: ALL 14 VP bodies read in full (VP-INDEX arithmetic 14=6P0+8P1=9Kani+3proptest+2integration; ADR §Decision citations all resolve; VP-014→ADR-026; VP-012→ADR-019; VP-006→ADR-015). Observability Canonical Structured Event Catalog (11 active+1 retired; every row has full schema). nfr-catalog NFR-001..014. invariants.md all 16 DIs coherent. All corpus-wide canonical-form checks PASS.
