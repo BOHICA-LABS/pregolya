@@ -2,7 +2,7 @@
 document_type: story
 level: ops
 story_id: S-2.06
-epic_id: E-08
+epic_id: E-19
 version: "1.0"
 status: draft
 producer: story-writer
