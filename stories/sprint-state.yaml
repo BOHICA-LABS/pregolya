@@ -290,7 +290,7 @@ stories:
 
   - story_id: S-1.21
     wave: 1
-    status: not-started
+    status: spec-ready
     bcs: [BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004]
     vps: []
     points: 8
@@ -302,7 +302,7 @@ stories:
 
   - story_id: S-1.22
     wave: 1
-    status: not-started
+    status: spec-ready
     bcs: [BC-2.23.005, BC-2.23.006]
     vps: [VP-013]
     points: 8
@@ -318,7 +318,7 @@ stories:
 
   - story_id: S-1.23
     wave: 1
-    status: not-started
+    status: spec-ready
     bcs: [BC-2.05.007, BC-2.05.008]
     vps: [VP-011]
     points: 5
@@ -330,7 +330,7 @@ stories:
 
   - story_id: S-1.24
     wave: 1
-    status: not-started
+    status: spec-ready
     bcs: [BC-2.06.004, BC-2.06.005, BC-2.06.006]
     vps: []
     points: 5
@@ -342,7 +342,7 @@ stories:
 
   - story_id: S-1.25
     wave: 1
-    status: not-started
+    status: spec-ready
     bcs: [BC-2.10.005, BC-2.10.006]
     vps: [VP-012]
     points: 5
@@ -358,7 +358,7 @@ stories:
 
   - story_id: S-1.26
     wave: 1
-    status: not-started
+    status: spec-ready
     bcs: [BC-2.12.001, BC-2.12.002, BC-2.12.003]
     vps: []
     points: 8
@@ -370,7 +370,7 @@ stories:
 
   - story_id: S-1.27
     wave: 1
-    status: not-started
+    status: spec-ready
     bcs: [BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007]
     vps: []
     points: 8
