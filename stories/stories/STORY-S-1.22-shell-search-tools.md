@@ -19,7 +19,7 @@ traces_to:
   - behavioral-contracts/BC-2.23.006
 points: 8
 depends_on: [S-1.09, S-1.21, S-1.06]
-blocks: []
+blocks: [S-6.01]
 behavioral_contracts: [BC-2.23.005, BC-2.23.006]
 verification_properties: [VP-013]
 priority: P1

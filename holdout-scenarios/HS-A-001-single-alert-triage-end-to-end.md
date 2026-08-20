@@ -17,7 +17,7 @@ epic_id: N/A
 behavioral_contracts:
   - BC-2.08.001
   - BC-2.06.001
-  - BC-2.01.001
+  - BC-2.01.004
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
@@ -68,7 +68,7 @@ A security analyst builds a minimal alert-triage agent using the pregolya framew
 |-------|--------------|-----------------|
 | BC-2.08.001 | Chat model invocation returns typed structured output | Verdict deserialized from chat completion |
 | BC-2.06.001 | Streaming events delivered before final result | Intermediate token events observed |
-| BC-2.01.001 | Runnable composition produces typed output | Alert record flows through composition to verdict |
+| BC-2.01.004 | Runnable composition produces typed output | Alert record flows through composition to verdict |
 
 ---
 
@@ -115,4 +115,4 @@ A security analyst builds a minimal alert-triage agent using the pregolya framew
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses a synthetic alert fixture, not a real-world corpus. Category is `integration-boundaries`.
+Not applicable — this scenario uses a synthetic alert fixture, not a real-world corpus. No real-world corpus is required for this integration-boundaries test.

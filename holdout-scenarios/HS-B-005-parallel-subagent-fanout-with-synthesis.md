@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -15,9 +15,9 @@ must_pass: true
 priority: must-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.04.001
-  - BC-2.04.002
-  - BC-2.08.001
+  - BC-2.02.002
+  - BC-2.02.006
+  - BC-2.08.003
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
@@ -35,6 +35,9 @@ coverage_areas:
   - graph_execution
   - composition
   - providers
+changelog:
+  - "1.0 (initial, 2026-08-18): base scenario authored."
+  - "1.1 (F-P2A003-02, P2A-003-fix-burst, 2026-08-19): BC-linkage re-anchoring sweep — 3 BCs re-anchored in frontmatter behavioral_contracts and BC-linkage table to semantically-correct IDs verified against BC-INDEX."
 ---
 
 # Holdout Scenario HS-B-005: Parallel Sub-Agent Fan-Out with Context Isolation and Result Synthesis
@@ -72,9 +75,9 @@ A DTU mock chat provider returns a plausible finding report for each specialist'
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.04.001 | Fan-out dispatches sub-agents in parallel with isolated state | Three sub-agents run concurrently; each gets disjoint state |
-| BC-2.04.002 | Fan-in join collects all sub-agent results | Three reports aggregated at join node |
-| BC-2.08.001 | Each sub-agent chat model call produces typed structured output | Finding reports are typed records, not raw strings |
+| BC-2.02.006 | Fan-out dispatches sub-agents in parallel with isolated state | Three sub-agents run concurrently; each gets disjoint state |
+| BC-2.02.002 | Fan-in join collects all sub-agent results | Three reports aggregated at join node |
+| BC-2.08.003 | Each sub-agent chat model call produces typed structured output | Finding reports are typed records, not raw strings |
 
 ---
 

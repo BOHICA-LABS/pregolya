@@ -145,7 +145,7 @@ input-hash: "pending"
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
-| S-6.01 | Formal Verification Pipeline — Kani Harness Obligations and cargo-fuzz Targets | BC-2.17.001, BC-2.17.002 | SS-17 | xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox | P2 | 8 | [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09] | draft |
+| S-6.01 | Formal Verification Pipeline — Kani Harness Obligations and cargo-fuzz Targets | BC-2.17.001, BC-2.17.002 | SS-17 | xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox | P2 | 8 | [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09, S-2.05, S-1.22] | draft |
 
 ---
 
@@ -433,4 +433,4 @@ input-hash: "pending"
 | VP-011 | BC-2.05.007 | S-1.23 | P0 | pregolya-graph |
 | VP-012 | BC-2.10.005 | S-1.25 | P1 | pregolya-core (watermark_arithmetic_harness) |
 | VP-013 | BC-2.23.005 | S-1.22 | P1 | pregolya-tools |
-| VP-014 | BC-2.01.005 | S-1.05 | P1 | pregolya-core |
+| VP-014 | BC-2.01.005 + BC-2.01.006 | S-1.05 | P1 | pregolya-core |

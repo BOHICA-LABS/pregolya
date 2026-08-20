@@ -17,7 +17,7 @@ epic_id: N/A
 behavioral_contracts:
   - BC-2.05.001
   - BC-2.05.002
-  - BC-2.11.001
+  - BC-2.05.008
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
@@ -71,7 +71,7 @@ An investigation concludes that a workstation should be isolated from the networ
 |-------|--------------|-----------------|
 | BC-2.05.001 | Graph execution pauses at interrupt point; durably persisted | Run parks at containment gate |
 | BC-2.05.002 | Resume value delivered to the correct node on resume | Approval/denial signal resumes the correct pending action |
-| BC-2.11.001 | Checkpoint written at interrupt; resumable from a fresh process | Durable park survives process termination |
+| BC-2.05.008 | Checkpoint written at interrupt; resumable from a fresh process | Durable park survives process termination |
 
 ---
 
@@ -116,4 +116,4 @@ An investigation concludes that a workstation should be isolated from the networ
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic incident fixtures and a DTU containment service mock. Category is `integration-boundaries`.
+Not applicable — this scenario uses synthetic incident fixtures and a DTU containment service mock, not a real-world corpus. No real-world corpus is required for this integration-boundaries test.

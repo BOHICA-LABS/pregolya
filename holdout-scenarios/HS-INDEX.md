@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario-index
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -12,6 +12,9 @@ inputs:
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
 input-hash: "3102b0a"
 traces_to: .factory/specs/prd.md
+changelog:
+  - "1.0 (initial, 2026-08-18): base index authored."
+  - "1.1 (F-P2A003-06, P2A-003-fix-burst, 2026-08-19): Phase-4 gate wording updated to reference both sealed domains (A+B) with explanatory note re five design-forcing analysis domains; HS-B-006 title corrected in index table."
 ---
 
 # Holdout Scenario Index
@@ -26,7 +29,9 @@ traces_to: .factory/specs/prd.md
 
 - Mean holdout satisfaction ≥ 0.85 (across all active scenarios)
 - Each `must_pass` scenario individually ≥ 0.60
-- All five holdout domains pass their domain-level gate
+- Both sealed holdout domains (Domain A and Domain B) pass their domain-level gate
+
+> **Note on domain count:** The product brief references five design-forcing holdout analysis domains (D8, D22). Of these, two were promoted to sealed Phase 4 acceptance scenarios: Domain A (Virtual SOC Analyst) and Domain B (Dark Factory / Autonomous Software Pipeline). The three remaining design-forcing domains were not promoted to sealed scenarios at Phase 2. The gate criterion above applies to the two sealed domains only.
 
 ---
 
@@ -55,7 +60,7 @@ traces_to: .factory/specs/prd.md
 | HS-B-003 | Human Approval Interrupt at Phase Boundary — Cross-Process Resume | integration-boundaries | must-pass | hitl, checkpoint_resume, graph_execution, server | active |
 | HS-B-004 | Convergence Loop Terminates at Fixed Point — Streak Resets on New Finding | edge-case-combinations | should-pass | graph_execution, checkpoint_resume | active |
 | HS-B-005 | Parallel Sub-Agent Fan-Out with Context Isolation and Result Synthesis | integration-boundaries | must-pass | graph_execution, composition, providers | active |
-| HS-B-006 | Budget-Bounded Run — Graceful Ceiling Handling | edge-case-combinations | should-pass | graph_execution, checkpoint_resume | active |
+| HS-B-006 | Budget-Bounded Run — Graceful Ceiling Handling with No Silent Overrun | edge-case-combinations | should-pass | graph_execution, checkpoint_resume | active |
 | HS-B-007 | Real-World Specification Corpus Pipeline — Known-Good and Known-Incomplete | real-world-corpus | should-pass | composition, providers, retrieval, streaming, structured_output | active |
 
 **Domain B totals:** 7 scenarios, 4 must-pass, 3 should-pass.

@@ -65,7 +65,28 @@ The FTS5 index is updated in the same SQLite transaction as the checkpoint write
 If the SQLite build used at runtime does not include the FTS5 extension (e.g., compiled without `SQLITE_ENABLE_FTS5`), `fts_search` returns `Err(PregolyaError { code: "E-CHKPT-009", message: "Fts5Unavailable: the SQLite FTS5 extension is not available in this build", .. })`. Verified by `test_BC_2_04_008_fts5_unavailable_error()`.
 
 ### AC-007 (traces to BC-2.04.008 invariant 1 — append-only index consistency)
-Because checkpoint records are append-only (BC-2.04.001 Invariant 5), the FTS index is also append-only — FTS entries are never deleted or updated during a run. The FTS index accurately reflects the append-only checkpoint write history. Verified by `test_BC_2_04_008_fts_index_append_only()`.
+Checkpoint records are append-only by design: writes add rows, never update or delete them. The FTS index mirrors this append-only invariant — FTS entries are never deleted or updated during a run. The FTS index accurately reflects the full append-only checkpoint write history. Verified by `test_BC_2_04_008_fts_index_append_only()`.
+
+## Architecture Mapping
+
+| Unit / Type | Module Path | Crate | Pure / Effectful |
+|-------------|-------------|-------|-----------------|
+| `FtsSearchConfig`, `FtsSearchResult` structs | `pregolya_checkpoint::fts` | pregolya-checkpoint | Pure (data type definitions; no I/O) |
+| `CheckpointSaver::fts_search` trait method | `pregolya_checkpoint::saver` | pregolya-checkpoint | Effectful Shell (executes SQLite FTS5 SELECT query via `rusqlite`) |
+| FTS5 virtual table schema creation and same-transaction index update (`SqliteCheckpointSaver`) | `pregolya_checkpoint::fts` | pregolya-checkpoint | Effectful Shell (SQLite DDL `CREATE VIRTUAL TABLE` + DML `INSERT` into FTS table via `rusqlite`) |
+| `search_history_tool()` factory function | `pregolya_checkpoint::fts` | pregolya-checkpoint | Effectful Shell (returns a `Tool` impl whose `invoke` delegates to `fts_search` and performs SQLite reads) |
+
+**Subsystem anchor:** SS-04 owns this story's scope because SS-04 is the Durable Checkpointing subsystem (`pregolya-checkpoint` crate) per ARCH-INDEX Subsystem Registry. Pure-core / effectful-shell boundary: `FtsSearchConfig` and `FtsSearchResult` are pure data types; all SQLite FTS5 interactions (`fts_search` execution, schema init, index update, `search_history_tool` invoke) are effectful shells.
+
+## Purity Classification
+
+| Function / Type | Pure or Effectful | Reason |
+|----------------|-------------------|--------|
+| `FtsSearchConfig`, `FtsSearchResult` | Pure | Data type definitions; no I/O side effects |
+| `SqliteCheckpointSaver::fts_search` | Effectful Shell | Executes SQLite FTS5 SELECT via `rusqlite`; reads from persistent storage |
+| FTS5 virtual table schema init | Effectful Shell | SQLite `CREATE VIRTUAL TABLE` DDL executed on connection init via `rusqlite` |
+| FTS5 index update (same-transaction as `put_writes`) | Effectful Shell | SQLite `INSERT` into FTS virtual table in the same `rusqlite` transaction as the checkpoint write |
+| `search_history_tool()` return value's `Tool::invoke` | Effectful Shell | Delegates to `fts_search`; performs SQLite FTS5 reads on each agent invocation |
 
 ## Token Budget Estimate
 

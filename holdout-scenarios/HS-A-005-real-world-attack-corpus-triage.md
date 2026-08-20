@@ -15,9 +15,8 @@ must_pass: false
 priority: should-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.08.001
-  - BC-2.04.001
   - BC-2.08.003
+  - BC-2.01.003
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
@@ -72,8 +71,8 @@ Source: MITRE ATT&CK Evaluations program — Enterprise evaluation baseline logs
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.08.001 | Chat model invocation returns typed structured output | Triage verdicts deserialized from provider responses |
-| BC-2.04.001 | Graph execution completes batch without crash | Batch of 10+ alerts processed without failure |
+| BC-2.08.003 | Chat model invocation returns typed structured output | Triage verdicts deserialized from provider responses |
+| BC-2.01.003 | Graph execution completes batch without crash | Batch of 10+ alerts processed without failure |
 | BC-2.08.003 | Structured output schema enforced | `disposition`, `confidence`, `summary` fields present on every verdict |
 
 ---

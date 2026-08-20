@@ -122,7 +122,7 @@ S-1.21 (File System Tools)
 
 S-1.22 (Bash + Grep Tools)
   depends_on: [S-1.09, S-1.21, S-1.06]
-  blocks: S-2.10
+  blocks: S-2.10, S-6.01
 
 S-1.23 (PreToolCallHook)
   depends_on: [S-1.20, S-1.17]
@@ -178,7 +178,7 @@ S-2.04 (Prompt Templates Core)
 
 S-2.05 (Injection Safety Guard)
   depends_on: [S-2.04]
-  blocks: [none in v1 stories]
+  blocks: S-6.01
 ```
 
 ### Wave 2 — Provider crates (E-19, E-20)
@@ -217,7 +217,7 @@ S-2.11 (MCP Server)
 
 ```
 S-6.01 (Kani + cargo-fuzz)
-  depends_on: [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09]
+  depends_on: [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09, S-2.05, S-1.22]
   blocks: [none — terminal node]
 ```
 

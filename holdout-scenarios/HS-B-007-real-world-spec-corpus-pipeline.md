@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -15,8 +15,7 @@ must_pass: false
 priority: should-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.01.001
-  - BC-2.08.001
+  - BC-2.01.004
   - BC-2.08.003
   - BC-2.21.001
 inputs:
@@ -38,6 +37,9 @@ coverage_areas:
   - retrieval
   - streaming
   - structured_output
+changelog:
+  - "1.0 (initial, 2026-08-18): base scenario authored."
+  - "1.1 (F-P2A003-02, P2A-003-fix-burst, 2026-08-19): BC-linkage re-anchoring sweep — 2 BCs re-anchored in frontmatter behavioral_contracts and BC-linkage table to semantically-correct IDs verified against BC-INDEX."
 ---
 
 # Holdout Scenario HS-B-007: Real-World Specification Corpus Pipeline — Known-Good and Known-Incomplete
@@ -81,8 +83,8 @@ This stub document is authored by the evaluator for the test (15–20 lines of Y
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.01.001 | Runnable composition processes a multi-step pipeline | Spec intake → chunking → analysis → report composition |
-| BC-2.08.001 | Chat model invocation produces typed structured output | Analysis report returned as typed record |
+| BC-2.01.004 | Runnable composition processes a multi-step pipeline | Spec intake → chunking → analysis → report composition |
+| BC-2.08.003 | Chat model invocation produces typed structured output | Analysis report returned as typed record |
 | BC-2.08.003 | Structured output schema enforced for report fields | verdict, ambiguity_count, completeness_score all typed |
 | BC-2.21.001 | Vector store retrieval returns relevant chunks | Large spec chunked and queried by analysis stage |
 

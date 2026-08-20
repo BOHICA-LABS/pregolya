@@ -15,8 +15,8 @@ must_pass: true
 priority: must-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.04.001
-  - BC-2.09.001
+  - BC-2.02.006
+  - BC-2.09.002
   - BC-2.01.006
 inputs:
   - .factory/specs/prd.md
@@ -66,8 +66,8 @@ A SOC triage agent must enrich an alert by querying three independent sources in
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.04.001 | Parallel fan-out (Send API) executes branches concurrently | Three enrichment tool calls dispatched simultaneously |
-| BC-2.09.001 | MCP tool integration — tool call dispatched and result returned | Threat-intel and endpoint tool calls succeed |
+| BC-2.02.006 | Parallel fan-out (Send API) executes branches concurrently | Three enrichment tool calls dispatched simultaneously |
+| BC-2.09.002 | MCP tool integration — tool call dispatched and result returned | Threat-intel and endpoint tool calls succeed |
 | BC-2.01.006 | Parallel branch failure surfaced, not swallowed | Identity lookup error becomes a partial-failure record |
 
 ---
@@ -113,4 +113,4 @@ A SOC triage agent must enrich an alert by querying three independent sources in
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic alert fixtures and DTU mock tool servers, not a real-world corpus. Category is `integration-boundaries`.
+Not applicable — this scenario uses synthetic alert fixtures and DTU mock tool servers, not a real-world corpus. No real-world corpus is required for this integration-boundaries test.

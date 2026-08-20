@@ -7,6 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
+input-hash: "4973427"
 traces_to: STORY-INDEX.md
 ---
 
@@ -180,7 +181,7 @@ traces_to: STORY-INDEX.md
 
 > The critical path is the longest chain of sequentially-dependent stories.
 > Total: **S-1.01 → S-1.03 → S-1.04 → S-1.14 → S-1.15 → S-1.16 → S-1.20 → S-1.23 → S-1.24 → S-1.25**
-> = 10 stories, 74 points.
+> = 10 stories, 69 points.
 
 | Sequence Position | Story | Points | Depends On |
 |------------------|-------|--------|-----------|
@@ -195,7 +196,7 @@ traces_to: STORY-INDEX.md
 | 9 | S-1.24 | 5 | S-1.23, S-1.17, S-1.18 |
 | 10 | S-1.25 | 5 | S-1.10, S-1.18, S-1.24 |
 
-**Critical path total: 74 points across 10 sequential stories.**
+**Critical path total: 69 points across 10 sequential stories.**
 Note: S-1.10 (checkpoint) and S-1.17/S-1.18 (streaming events / budget) are in parallel with the
 critical path backbone (nodes 4–7) but both feed into the critical path at S-1.16 and S-1.20.
 Their implementation should be co-scheduled with the S-1.14 batch to avoid becoming the

@@ -98,6 +98,24 @@ A document whose code-point count is ≤ `chunk_size` is returned as a single-el
 ### AC-012 (traces to BC-2.07.003 postcondition 3 — no panic)
 `split_text` on any valid `RecursiveCharacterTextSplitter` (correctly constructed) never panics. Verified by `test_BC_2_07_003_no_panic_on_valid_splitter()` using proptest with arbitrary string inputs.
 
+## Architecture Mapping
+
+| Unit / Type | Module Path | Crate | Pure / Effectful |
+|-------------|-------------|-------|-----------------|
+| `RecursiveCharacterTextSplitter` struct, `split_text` method | `pregolya_splitters` (`lib.rs` / `splitter.rs`) | pregolya-splitters | Pure (synchronous fn; code-point arithmetic only; no I/O) |
+| Constructor `RecursiveCharacterTextSplitter::new` | `pregolya_splitters` (`lib.rs`) | pregolya-splitters | Pure (in-memory validation; no I/O) |
+| GTV Red Gate test harness (11 GTV test functions) | `pregolya_splitters::tests::red_gate` | pregolya-splitters | Pure (`#[cfg(test)]`) |
+| Proptest no-panic property test | `pregolya_splitters::tests::proptest_tests` | pregolya-splitters | Pure (`#[cfg(test)]`) |
+
+**Subsystem anchor:** SS-07 owns this story's scope because SS-07 is the Text Splitting subsystem (`pregolya-splitters` crate) per ARCH-INDEX Subsystem Registry. Pure-core / effectful-shell boundary: the entire `RecursiveCharacterTextSplitter` is pure core — synchronous, deterministic, no I/O, no async. The crate must not depend on any async runtime.
+
+## Purity Classification
+
+| Function / Type | Pure or Effectful | Reason |
+|----------------|-------------------|--------|
+| `RecursiveCharacterTextSplitter::new(chunk_size, overlap, separators)` | Pure | In-memory constructor; validates invariants deterministically; no I/O |
+| `RecursiveCharacterTextSplitter::split_text(&self, text: &str) -> Result<Vec<String>, PregolyaError>` | Pure | Deterministic text transform; code-point arithmetic (`str.chars().count()`) only; synchronous; no I/O; R8 risk mitigation |
+
 ## Token Budget Estimate
 
 | Component | Estimated Tokens |

@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -18,7 +18,7 @@ behavioral_contracts:
   - BC-2.05.001
   - BC-2.05.002
   - BC-2.05.004
-  - BC-2.11.001
+  - BC-2.04.005
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
@@ -37,6 +37,9 @@ coverage_areas:
   - checkpoint_resume
   - graph_execution
   - server
+changelog:
+  - "1.0 (initial, 2026-08-18): base scenario authored."
+  - "1.1 (F-P2A003-02, P2A-003-fix-burst, 2026-08-19): BC-linkage re-anchoring sweep — 1 BC re-anchored in frontmatter behavioral_contracts and BC-linkage table to semantically-correct IDs verified against BC-INDEX."
 ---
 
 # Holdout Scenario HS-B-003: Human Approval Interrupt at Phase Boundary — Cross-Process Resume
@@ -73,7 +76,7 @@ A multi-phase pipeline pauses at a "phase gate" awaiting human sign-off before a
 | BC-2.05.001 | Graph pauses at interrupt; emits structured interrupt value | Pipeline parks at phase boundary with approval request |
 | BC-2.05.002 | Resume value delivered to the correct pending node | Approval/denial signal routes to the phase gate node |
 | BC-2.05.004 | Phase 1 state (plan) available to Phase 2 after resume | Implementation Phase reads Planning Phase output from restored state |
-| BC-2.11.001 | Interrupt state persisted; resumable from fresh process | Approval request survives process termination |
+| BC-2.04.005 | Interrupt state persisted; resumable from fresh process | Approval request survives process termination |
 
 ---
 

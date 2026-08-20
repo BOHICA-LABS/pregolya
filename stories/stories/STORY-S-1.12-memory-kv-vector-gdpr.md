@@ -95,6 +95,29 @@ If the erasure transaction partially fails (e.g., vector backend deletion succee
 ### AC-015 (traces to BC-2.15.003 postcondition 4 — unattributed app-scoped entries log)
 App-scoped entries without an `author_id` (created by system, not attributable to a user) are NOT erased by `gdpr_erase`. Before returning, `gdpr_erase` emits a tracing DEBUG event with `event_type = "memory.gdpr_unattributed_session_entries"` if any such entries exist for the user's sessions. Verified by `test_BC_2_15_003_unattributed_entries_debug_log()`.
 
+## Architecture Mapping
+
+| Unit / Type | Module Path | Crate | Pure / Effectful |
+|-------------|-------------|-------|-----------------|
+| `MemoryStore` trait, `MemoryScope` enum, `GdprErasureReceipt` | `pregolya_memory` (`lib.rs`) | pregolya-memory | Pure (trait and data type definitions; no I/O) |
+| `MemoryScope` scope-to-SQL-WHERE mapping | `pregolya_memory::scope` | pregolya-memory | Pure (deterministic enum-to-SQL predicate; no I/O) |
+| `SqliteMemoryStore` (`memory_set`, `memory_get`, `memory_delete`, `vector_search`, `hybrid_search`) | `pregolya_memory::store` | pregolya-memory | Effectful Shell (SQLite reads and writes via `rusqlite`; optional vector backend query) |
+| `gdpr_erase` transactional erasure | `pregolya_memory::gdpr` | pregolya-memory | Effectful Shell (`BEGIN IMMEDIATE` / `COMMIT` SQLite transaction via `rusqlite`; tracing DEBUG event emission on unattributed entries) |
+| `EphemeralMemoryStore` (in-memory test backend) | `pregolya_memory::ephemeral` | pregolya-memory | Pure (in-memory `HashMap`; `#[cfg(test)]`) |
+
+**Subsystem anchor:** SS-15 owns this story's scope because SS-15 is the Long-Horizon Memory subsystem (`pregolya-memory` crate) per ARCH-INDEX Subsystem Registry. Pure-core / effectful-shell boundary: `MemoryStore` trait, `MemoryScope`, and `GdprErasureReceipt` are pure core (data/trait definitions); `SqliteMemoryStore`, `gdpr_erase`, and the vector backend interaction are effectful shells. `EphemeralMemoryStore` is pure-core for test use.
+
+## Purity Classification
+
+| Function / Type | Pure or Effectful | Reason |
+|----------------|-------------------|--------|
+| `MemoryStore` trait, `MemoryScope`, `GdprErasureReceipt` | Pure | Type and trait definitions; no I/O side effects |
+| `MemoryScope` scope-to-SQL-WHERE mapping | Pure | Deterministic pure function; produces SQL predicate strings from enum variants; no database access |
+| `SqliteMemoryStore::memory_set` / `memory_get` / `memory_delete` | Effectful Shell | SQLite DML (INSERT, SELECT, DELETE) via `rusqlite`; persistent I/O |
+| `SqliteMemoryStore::vector_search` / `hybrid_search` | Effectful Shell | SQLite SELECT + optional `Arc<dyn VectorBackend>` query; persistent I/O |
+| `MemoryStore::gdpr_erase` (`SqliteMemoryStore` impl) | Effectful Shell | `BEGIN IMMEDIATE` SQLite transaction across all three tiers; tracing DEBUG event emission on unattributed entries |
+| `EphemeralMemoryStore` (`#[cfg(test)]`) | Pure | In-memory `HashMap`; no persistent I/O; no side effects outside the object |
+
 ## Token Budget Estimate
 
 | Component | Estimated Tokens |

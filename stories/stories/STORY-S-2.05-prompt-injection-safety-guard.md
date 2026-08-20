@@ -17,7 +17,7 @@ input-hash: "b093c92"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
-blocks: []
+blocks: [S-6.01]
 behavioral_contracts: [BC-2.18.004, BC-2.18.005]
 verification_properties: [VP-006]
 priority: P1

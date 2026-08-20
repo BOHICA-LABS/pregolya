@@ -16,7 +16,6 @@ priority: should-pass
 epic_id: N/A
 behavioral_contracts:
   - BC-2.10.001
-  - BC-2.10.002
   - BC-2.10.003
 inputs:
   - .factory/specs/prd.md
@@ -68,7 +67,7 @@ A pipeline run is configured with a token budget ceiling. When cumulative token 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
 | BC-2.10.001 | Budget governance evaluates ceiling before each stage | Ceiling check fires before Stage 3 |
-| BC-2.10.002 | On-ceiling halt policy: run halts and emits budget-exhausted status | halt variant produces `status: "budget_exhausted"` |
+| BC-2.10.003 | On-ceiling halt policy: run halts and emits budget-exhausted status | halt variant produces `status: "budget_exhausted"` |
 | BC-2.10.003 | On-ceiling summarize policy: degraded-mode stage executes within remaining budget | summarize variant produces `status: "completed_degraded"` |
 
 ---
@@ -113,4 +112,4 @@ A pipeline run is configured with a token budget ceiling. When cumulative token 
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic pipeline stages with controlled token usage. Category is `edge-case-combinations`.
+Not applicable — this scenario uses synthetic pipeline stages with controlled token usage, not a real-world corpus. The authoritative category classification is in the frontmatter `category:` field.

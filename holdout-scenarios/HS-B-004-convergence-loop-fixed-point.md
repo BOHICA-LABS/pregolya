@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -15,9 +15,9 @@ must_pass: false
 priority: should-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.04.003
+  - BC-2.02.005
+  - BC-2.04.001
   - BC-2.04.004
-  - BC-2.11.001
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
@@ -34,6 +34,9 @@ risk_source: null
 coverage_areas:
   - graph_execution
   - checkpoint_resume
+changelog:
+  - "1.0 (initial, 2026-08-18): base scenario authored."
+  - "1.1 (F-P2A003-02, P2A-003-fix-burst, 2026-08-19): BC-linkage re-anchoring sweep — 2 BCs re-anchored in frontmatter behavioral_contracts and BC-linkage table to semantically-correct IDs verified against BC-INDEX."
 ---
 
 # Holdout Scenario HS-B-004: Convergence Loop Terminates at Fixed Point — Streak Resets on New Finding
@@ -70,9 +73,9 @@ A review-fix cycle is modeled as a cyclic subgraph. The cycle terminates when th
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.04.003 | Conditional edge routes to loop-continue vs. loop-exit based on state | Streak < 3 → continue; streak == 3 → exit |
+| BC-2.02.005 | Conditional edge routes to loop-continue vs. loop-exit based on state | Streak < 3 → continue; streak == 3 → exit |
 | BC-2.04.004 | Cyclic subgraph executes bounded iterations; per-iteration checkpoint written | Each iteration checkpointed; state accumulates across iterations |
-| BC-2.11.001 | Checkpoint written per iteration; state available on resume | convergence state (clean_streak, total_iterations) persisted |
+| BC-2.04.001 | Checkpoint written per iteration; state available on resume | convergence state (clean_streak, total_iterations) persisted |
 
 ---
 

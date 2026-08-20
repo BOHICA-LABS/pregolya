@@ -15,8 +15,8 @@ must_pass: false
 priority: should-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.04.001
-  - BC-2.04.002
+  - BC-2.02.006
+  - BC-2.03.001
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
@@ -64,8 +64,8 @@ Twenty alerts arrive simultaneously and must be triaged in parallel. No alert sh
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.04.001 | Fan-out over a dynamic collection executes concurrently | Twenty triage runs dispatched in parallel |
-| BC-2.04.002 | Scheduler does not starve low-priority runs | All twenty alerts complete regardless of severity ordering |
+| BC-2.02.006 | Fan-out over a dynamic collection executes concurrently | Twenty triage runs dispatched in parallel |
+| BC-2.03.001 | Scheduler does not starve low-priority runs | All twenty alerts complete regardless of severity ordering |
 
 ---
 
@@ -110,4 +110,4 @@ Twenty alerts arrive simultaneously and must be triaged in parallel. No alert sh
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic concurrent alert fixtures. Category is `edge-case-combinations`.
+Not applicable — this scenario uses synthetic concurrent alert fixtures, not a real-world corpus. No real-world corpus is required for this edge-case-combinations test.

@@ -15,9 +15,9 @@ must_pass: true
 priority: must-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.04.001
-  - BC-2.04.003
-  - BC-2.08.001
+  - BC-2.03.001
+  - BC-2.02.005
+  - BC-2.08.003
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
@@ -69,9 +69,9 @@ Input specification: `{ spec_id: "SPEC-001", description: "A function that compu
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.04.001 | StateGraph executes nodes in specified order | Parse → Plan → Validate → Output sequential execution |
-| BC-2.04.003 | Conditional edge routes based on node output | "valid" branch taken when Validate returns valid |
-| BC-2.08.001 | Chat model produces typed structured output | Plan and output records are typed, not raw strings |
+| BC-2.03.001 | StateGraph executes nodes in specified order | Parse → Plan → Validate → Output sequential execution |
+| BC-2.02.005 | Conditional edge routes based on node output | "valid" branch taken when Validate returns valid |
+| BC-2.08.003 | Chat model produces typed structured output | Plan and output records are typed, not raw strings |
 
 ---
 
@@ -116,4 +116,4 @@ Input specification: `{ spec_id: "SPEC-001", description: "A function that compu
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses a synthetic specification fixture. Category is `integration-boundaries`.
+Not applicable — this scenario uses a synthetic specification fixture, not a real-world corpus. The authoritative category classification is in the frontmatter `category:` field.

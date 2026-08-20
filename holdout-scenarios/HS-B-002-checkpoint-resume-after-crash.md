@@ -15,9 +15,9 @@ must_pass: true
 priority: must-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.11.001
-  - BC-2.11.002
   - BC-2.04.001
+  - BC-2.04.005
+  - BC-2.03.003
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
@@ -65,9 +65,9 @@ A wave of five parallel work-units is launched. After three complete, the proces
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.11.001 | Checkpoint persisted after each super-step; resumable | WU-1/2/3 state survives process termination |
-| BC-2.11.002 | Resume starts at the correct pending super-step; no double-execution | WU-4 and WU-5 are the only units executed in the resumed run |
-| BC-2.04.001 | Fan-out results aggregated correctly at join | Final output has all five unit results |
+| BC-2.04.001 | Checkpoint persisted after each super-step; resumable | WU-1/2/3 state survives process termination |
+| BC-2.04.005 | Resume starts at the correct pending super-step; no double-execution | WU-4 and WU-5 are the only units executed in the resumed run |
+| BC-2.03.003 | Fan-out results aggregated correctly at join | Final output has all five unit results |
 
 ---
 

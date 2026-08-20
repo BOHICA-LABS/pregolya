@@ -101,6 +101,30 @@ After loading at run start, `ContextMutationConfig` is immutable for the duratio
 ### AC-017 (traces to BC-2.15.006 invariant 2 — ADR-011 cache-key obligation)
 The cache key for the loaded context content includes the loaded content itself (not just the spec). This is the ADR-011 cache-key obligation — the cache key must reflect the content so that content changes invalidate the cache. Verified by `test_BC_2_15_006_cache_key_includes_content()`.
 
+## Architecture Mapping
+
+| Unit / Type | Module Path | Crate | Pure / Effectful |
+|-------------|-------------|-------|-----------------|
+| `WriteGuardDecision`, `MemoryWriteRequest`, `MemoryWriteGuard` trait | `pregolya_core::write_guard` | pregolya-core | Pure (trait and enum definitions; no I/O) |
+| `ContextMutationConfig`, `ContextSourceSpec` | `pregolya_core::context_mutation` | pregolya-core | Pure (data type definitions; no I/O) |
+| `SkillStoreImpl` (`load_skill`, `list_skills`, `skill_exists`; App scope bound at construction) | `pregolya_memory::skill_store` | pregolya-memory | Effectful Shell (reads from underlying `Arc<dyn MemoryStore>` via SQLite-backed production store) |
+| `MemoryWriteGuard` enforcement logic (`catch_unwind`, decision application, `E-MEMORY-007`) | `pregolya_memory::write_guard` | pregolya-memory | Pure (synchronous `validate` call; `catch_unwind` is deterministic; no I/O in enforcement path itself) |
+| Built-in injection scanner (role prefix and invisible Unicode detection) | `pregolya_memory::write_guard` | pregolya-memory | Pure (deterministic string scan; no I/O) |
+| `ContextMutationConfig` loader (pre-first-super-step; `Arc<ContextMutationConfig>` frozen snapshot) | `pregolya_graph::scheduler` | pregolya-graph | Effectful Shell (reads from `MemoryStore` once; produces immutable `Arc` snapshot for the run) |
+
+**Subsystem anchor:** SS-15 owns this story's primary scope because SS-15 is the Long-Horizon Memory subsystem (`pregolya-memory` and the `pregolya-core` type primitives) per ARCH-INDEX Subsystem Registry. The `pregolya-graph::scheduler` component participates via SS-03 (BSP Execution Engine) for the context mutation loading path. Pure-core / effectful-shell boundary: all type definitions in `pregolya-core` are pure core; the enforcement logic in `pregolya-memory::write_guard` is pure (synchronous scan); `SkillStoreImpl` and the scheduler's config loader are effectful shells.
+
+## Purity Classification
+
+| Function / Type | Pure or Effectful | Reason |
+|----------------|-------------------|--------|
+| `WriteGuardDecision`, `MemoryWriteRequest`, `MemoryWriteGuard` trait (`pregolya-core`) | Pure | Type and trait definitions; no I/O |
+| `ContextMutationConfig`, `ContextSourceSpec` (`pregolya-core`) | Pure | Data type definitions; no I/O |
+| `MemoryWriteGuard::validate` (enforcement call with `catch_unwind`) | Pure | Synchronous fn; deterministic `catch_unwind` boundary; no I/O in the enforcement path; panicking guard is caught and converted to `Deny` |
+| Built-in role-prefix and invisible-Unicode scanner | Pure | Deterministic string scan (`str::starts_with`, Unicode code-point range checks); no I/O |
+| `SkillStoreImpl::load_skill` / `list_skills` / `skill_exists` | Effectful Shell | Reads from underlying `Arc<dyn MemoryStore>` (SQLite-backed in production); performs database reads |
+| `pregolya_graph::scheduler` context mutation config loading | Effectful Shell | Reads `ContextMutationConfig` from `MemoryStore` once pre-first-super-step; stores as `Arc<ContextMutationConfig>` frozen snapshot |
+
 ## Token Budget Estimate
 
 | Component | Estimated Tokens |

@@ -2450,3 +2450,27 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 
 **Convergence dim-5 (post-D170 re-convergence):** Counter **2/3 — streak ACTIVE (D-194; 2026-08-18)**. P1D-211 CLEAN (streak 1/3, D-193); P1D-212 CLEAN (streak 2/3, D-194) — both on frozen anchor 79eb2f3. NEXT P1D-213 (streak 3/3 cascade-closing; on CLEAN → 3/3 CONVERGED → pre-Phase-1-gate consistency-validator audit + /vsdd-factory:check-input-drift → Phase 1 closes on D-170 conditional approval).
 **Convergence dim-7 (post-D170 trajectory tail):** →fix(burst-321)→0(P1D-211 CLEAN streak 1/3)→0(P1D-212 CLEAN streak 2/3). NEXT: P1D-213 (streak 3/3).
+
+---
+
+### Phase-1 Final Pass (D-195)
+
+**P1D-213 (2026-08-18): CLEAN(strict)+CLEAN(PR-merge). Streak 2/3→3/3 CONVERGED.** ZERO findings. Frozen anchor 79eb2f3. 215 passes total. D-195. Phase-1d adversarial cascade CLOSED. BC-5.39.001 3-CLEAN satisfied: P1D-211/212/213 all CLEAN(strict) on 79eb2f3.
+
+**Convergence dim-5 (Phase-1 FINAL):** Counter **3/3 CONVERGED (D-195; 2026-08-18)**. Phase-1 gate CLOSED (burst-325; D-197).
+
+---
+
+### Phase-2 Story Decomposition Adversarial Cascade (BC-5.39.001)
+
+**P2A-001 (2026-08-19): NOT CLEAN. Streak RESET 0/3.** 8 findings (1C/1H/3M/3L). CRIT: S-1.25 VP-012 CompactionTrigger execution vehicle mis-anchored pregolya-graph→pregolya-core::core::budget. HIGH: 24 epic_id mismatches across story files. MED: STORY-INDEX VP-anchor census 10→12; RedGate BCs 9→8; S-6.01 missing 9 reverse-edges. LOW: epics.md typo; frontmatter level/cycle fields; BC-table Version column. All 8 closed by fix-burst. D-208 minted. NEXT P2A-002.
+
+**Convergence dim-5 (Phase-2 P2A-001):** Counter **0/3 — NOT CLEAN (D-208; 2026-08-19)**. Fix-burst dispatched; streak 0/3. trajectory-tail →0→0→0→8.
+
+**P2A-002 (2026-08-19): NOT CLEAN. Streak RESET 0/3.** 3 findings (2H/1L). HIGH: S-1.25 budget module paths conflicted with S-1.18 → aligned pregolya_core::budget/pregolya_graph::budget. HIGH: 7/9 Kani proof stubs lacked canonical src/proofs/<name>.rs provenance — all 9 reconciled. LOW: title-paraphrase convention → STORY-INDEX §Conventions note. Also: template drift S-1.09+S-1.10 fixed (§Architecture Mapping + §Purity Classification). All 3+drift closed by fix-burst. D-209 minted. NEXT P2A-003.
+
+**Convergence dim-5 (Phase-2 P2A-002):** Counter **0/3 — NOT CLEAN (D-209; 2026-08-19)**. Fix-burst dispatched; streak 0/3. trajectory-tail →0→0→8→3.
+
+**P2A-003 (2026-08-20): NOT CLEAN. Streak RESET 0/3.** 7 findings (2H/4M/1OBS). HIGH F-01: 5 story specs (S-1.07/08/11/12/13) missing §Architecture Mapping+§Purity Classification + edge cases (S-1.07) + BC-ID rephrase POL-8 (S-1.11). HIGH F-02: holdout BC-linkage gaps — re-anchored 14 scenarios (HS-A-001/007+HS-B-003/004/005/007+8 extra). MED F-03: S-6.01 depends_on +=S-2.05/S-1.22+reciprocal blocks (DAG still acyclic). MED F-04: wave-schedule critical path 74→69. MED F-05: STORY-INDEX VP-014 anchor →BC-2.01.005+BC-2.01.006 (POL-9). MED F-06: HS-INDEX gate wording. OBS F-07: HS-A stray Category body reconciled. All 7 closed by fix-burst. D-210 minted. NEXT P2A-004.
+
+**Convergence dim-5 (Phase-2 P2A-003):** Counter **0/3 — NOT CLEAN (D-210; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →0→8→3→7. NEXT: P2A-004 (streak restart 1/3 attempt).

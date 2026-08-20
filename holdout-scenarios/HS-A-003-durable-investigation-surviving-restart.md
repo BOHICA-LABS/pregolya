@@ -15,9 +15,9 @@ must_pass: true
 priority: must-pass
 epic_id: N/A
 behavioral_contracts:
-  - BC-2.11.001
   - BC-2.04.001
-  - BC-2.05.001
+  - BC-2.04.005
+  - BC-2.04.002
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
@@ -66,9 +66,9 @@ A security investigation spans four sequential stages: (1) initial triage, (2) d
 
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
-| BC-2.11.001 | Checkpoint written after each super-step; resumable from stored state | Stage 1+2 results persisted; resume starts at Stage 3 |
-| BC-2.04.001 | Graph execution resumes at correct node after checkpoint restore | Stage 3 is the next node, not Stage 1 or Stage 2 |
-| BC-2.05.001 | Graph state survives process boundary | Resumed process has full prior-stage context |
+| BC-2.04.001 | Checkpoint written after each super-step; resumable from stored state | Stage 1+2 results persisted; resume starts at Stage 3 |
+| BC-2.04.005 | Graph execution resumes at correct node after checkpoint restore | Stage 3 is the next node, not Stage 1 or Stage 2 |
+| BC-2.04.002 | Graph state survives process boundary | Resumed process has full prior-stage context |
 
 ---
 
@@ -115,4 +115,4 @@ A security investigation spans four sequential stages: (1) initial triage, (2) d
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses a synthetic incident fixture. Category is `integration-boundaries`.
+Not applicable — this scenario uses a synthetic incident fixture, not a real-world corpus. No real-world corpus is required for this integration-boundaries test.

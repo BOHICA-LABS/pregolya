@@ -95,6 +95,27 @@ The generated `MyProcessTaskNode` implements a `register_into(graph: &mut StateG
 ### AC-015 (traces to BC-2.08.012 edge case EC-001 — non-async task)
 `#[task]` on a synchronous (non-async) function emits a compile error: `"#[task] requires an async function"`. Verified by compile-fail test `test_BC_2_08_012_sync_fn_compile_error`.
 
+## Architecture Mapping
+
+| Unit / Type | Module Path | Crate | Pure / Effectful |
+|-------------|-------------|-------|-----------------|
+| `#[tool]` attribute macro (struct generation, `Args`, `ActionRisk` impl, compile-fail gates) | `pregolya_macros::tool` | pregolya-macros | Pure (compile-time `TokenStream` transform; no runtime I/O) |
+| `#[entrypoint]` attribute macro (START edge wiring, at-most-one gate, async compatibility) | `pregolya_macros::entrypoint` | pregolya-macros | Pure (compile-time `TokenStream` transform; no runtime I/O) |
+| `#[task]` attribute macro (`Node` struct, `register_into` generation, async-required gate) | `pregolya_macros::task` | pregolya-macros | Pure (compile-time `TokenStream` transform; no runtime I/O) |
+| Compile-fail test harness (`trybuild`) | `pregolya_macros::tests::compile-fail` | pregolya-macros | Pure (`#[cfg(test)]`; compile-time only) |
+
+**Subsystem anchor:** SS-08 owns this story's scope because BC-2.08.010–012 fall under PRD section 2.08 per ARCH-INDEX Subsystem Registry. The `pregolya-macros` crate (ADR-008) is the implementation target — it delivers compile-time `#[tool]`, `#[entrypoint]`, and `#[task]` attribute macros, which are the code-generation layer enabling provider-conformant tool and graph wiring without hand-written boilerplate. Pure-core / effectful-shell boundary: all macro expansion logic is pure (compile-time token transforms); the generated `invoke` body (user-provided async function) is effectful but lives in the user's crate, not in `pregolya-macros`.
+
+## Purity Classification
+
+| Function / Type | Pure or Effectful | Reason |
+|----------------|-------------------|--------|
+| `#[tool]` macro expansion | Pure | Compile-time `TokenStream` transform via `syn` + `quote`; no I/O side effects at runtime |
+| `#[entrypoint]` macro expansion | Pure | Compile-time `TokenStream` transform; no I/O side effects at runtime |
+| `#[task]` macro expansion | Pure | Compile-time `TokenStream` transform; no I/O side effects at runtime |
+| Generated `<Name>Tool::invoke` (user-provided function body, wrapped by macro) | Effectful Shell | User-provided async function body; macro wraps but does not execute it — effectfulness is the user's responsibility |
+| Compile-fail tests (`trybuild`) | Pure (`#[cfg(test)]`) | Compile-check harness only; no production I/O |
+
 ## Token Budget Estimate
 
 | Component | Estimated Tokens |
@@ -177,3 +198,13 @@ Files to CREATE:
 Files to MODIFY:
 - `/Cargo.toml` — add `"pregolya-macros"` to `[workspace] members`
 - `/pregolya-core/Cargo.toml` — add `pregolya-macros` dependency; re-export macros via `pub use pregolya_macros::*` in `pregolya-core/src/lib.rs`
+
+## Edge Cases
+
+| ID | Description | Expected Behavior |
+|----|-------------|-------------------|
+| EC-001 | Generated `<PascalCaseName>Tool` or `<PascalCaseName>Args` collides with existing identifier in the same module | Macro emits compile error rather than silently shadowing (AC-006) |
+| EC-002 | `#[tool(action_risk = "InvalidVariant")]` with a value not in `{Low, Medium, High, Critical}` | Macro emits compile error: `"#[tool] action_risk must be one of: Low, Medium, High, Critical"` (AC-007) |
+| EC-003 | `#[tool]` on a function whose return type is not `Result<T, PregolyaError>` | Macro emits compile error: `"#[tool] function must return Result<T, PregolyaError>"` (AC-005) |
+| EC-004 | Two functions in the same `StateGraph` builder annotated with `#[entrypoint]` | Macro expansion emits compile error: `"#[entrypoint] may be applied to at most one function per graph"` (AC-009) |
+| EC-005 | `#[task]` applied to a synchronous (non-async) function | Macro emits compile error: `"#[task] requires an async function"` (AC-015) |
