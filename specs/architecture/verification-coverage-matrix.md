@@ -11,7 +11,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "566099a"
+input-hash: "a58d5f9"
 traces_to: ARCH-INDEX.md
 changelog:
   - "3.10 (burst-325/D-196/2026-08-18): input-hash confirmed current (metadata hygiene sweep; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Binary compute-input-hash verified MATCH — inputs VP-INDEX.md, module-decomposition.md, and module-criticality.md unchanged since hash was last recomputed at v3.8. No normative content changed. Phase-1 gate-closure burst."

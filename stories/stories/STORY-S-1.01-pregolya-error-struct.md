@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "5afd853"
+input-hash: "b38053a"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: []

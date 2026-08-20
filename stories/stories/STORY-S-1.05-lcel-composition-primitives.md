@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "86c8d85"
+input-hash: "7ea1a89"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04]
@@ -98,18 +98,18 @@ Merge is always `{**input, **mapper_output}`: input keys not in mapper remain un
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|----------------|
-| `RunnableParallel` | `pregolya-core/src/runnables/parallel.rs` | effectful (JoinSet, async) |
-| `RunnablePassthrough` | `pregolya-core/src/runnables/passthrough.rs` | pure-core (invoke is synchronous clone) |
-| `RunnableAssign` | `pregolya-core/src/runnables/assign.rs` | effectful (delegates to RunnableParallel mapper) |
-| Module root | `pregolya-core/src/runnables/mod.rs` | re-export-only |
+| `RunnableParallel` | `pregolya-core/src/runnable/parallel.rs` | effectful (JoinSet, async) |
+| `RunnablePassthrough` | `pregolya-core/src/runnable/passthrough.rs` | pure-core (invoke is synchronous clone) |
+| `RunnableAssign` | `pregolya-core/src/runnable/assign.rs` | effectful (delegates to RunnableParallel mapper) |
+| Module root | `pregolya-core/src/runnable/mod.rs` | re-export-only |
 
 ## Purity Classification
 
 | Module | Classification | Justification |
 |--------|---------------|---------------|
-| `pregolya-core/src/runnables/passthrough.rs` | pure-core | `invoke` clones the input value; no I/O, no async needed (though async trait impl required for trait compat). |
-| `pregolya-core/src/runnables/parallel.rs` | effectful | Spawns Tokio tasks via `JoinSet::spawn`; requires Tokio runtime. |
-| `pregolya-core/src/runnables/assign.rs` | effectful | Delegates to `RunnableParallel` mapper internally. |
+| `pregolya-core/src/runnable/passthrough.rs` | pure-core | `invoke` clones the input value; no I/O, no async needed (though async trait impl required for trait compat). |
+| `pregolya-core/src/runnable/parallel.rs` | effectful | Spawns Tokio tasks via `JoinSet::spawn`; requires Tokio runtime. |
+| `pregolya-core/src/runnable/assign.rs` | effectful | Delegates to `RunnableParallel` mapper internally. |
 
 ## Edge Cases
 
@@ -131,7 +131,7 @@ Merge is always `{**input, **mapper_output}`: input keys not in mapper remain un
 | BC-2.01.007.md (~150 lines) | ~2,200 |
 | BC-2.01.008.md (~160 lines) | ~2,400 |
 | `module-decomposition.md` (SS-01 section) | ~500 |
-| `runnables/` files (~100 lines each × 3 files) | ~4,500 |
+| `runnable/` files (~100 lines each × 3 files) | ~4,500 |
 | Test + proptest files (~150 lines) | ~2,250 |
 | Tool outputs | ~500 |
 | **Total** | **~21,650** |
@@ -143,15 +143,15 @@ Merge is always `{**input, **mapper_output}`: input keys not in mapper remain un
 1. [ ] Write failing tests for AC-001 through AC-014 (test-writer)
 2. [ ] Write `proptest_BC_2_01_005_output_completeness_VP014` proptest (test-writer)
 3. [ ] Verify Red Gate
-4. [ ] Create `pregolya-core/src/runnables/mod.rs` — re-exports only
-5. [ ] Create `pregolya-core/src/runnables/parallel.rs` — `RunnableParallel` with `IndexMap`, `JoinSet::abort_all` fail-fast
-6. [ ] Create `pregolya-core/src/runnables/passthrough.rs` — `RunnablePassthrough` with optional `inspect_fn: Arc<dyn Fn(&Value) + Send + Sync>`
-7. [ ] Create `pregolya-core/src/runnables/assign.rs` — `RunnableAssign` backed by `RunnableParallel` mapper
+4. [ ] Create `pregolya-core/src/runnable/mod.rs` — re-exports only
+5. [ ] Create `pregolya-core/src/runnable/parallel.rs` — `RunnableParallel` with `IndexMap`, `JoinSet::abort_all` fail-fast
+6. [ ] Create `pregolya-core/src/runnable/passthrough.rs` — `RunnablePassthrough` with optional `inspect_fn: Arc<dyn Fn(&Value) + Send + Sync>`
+7. [ ] Create `pregolya-core/src/runnable/assign.rs` — `RunnableAssign` backed by `RunnableParallel` mapper
 8. [ ] Implement `RunnablePassthrough::assign(pairs)` factory method
 9. [ ] Implement E-CORE-009, E-CORE-010, E-CORE-011 error constructions
 10. [ ] Implement abort-all on first branch failure (BC-2.01.006)
 11. [ ] Implement mapper-wins-on-collision merge semantics (BC-2.01.008)
-12. [ ] Add `pub mod runnables;` to `pregolya-core/src/lib.rs`
+12. [ ] Add `pub mod runnable;` to `pregolya-core/src/lib.rs`
 13. [ ] Add proptest dep to `pregolya-core/Cargo.toml` dev-dependencies
 14. [ ] Run `cargo nextest run -p pregolya-core` — all tests including proptest pass
 
@@ -165,13 +165,13 @@ S-1.04 established: `Arc<dyn DynRunnable>` as the type-erased composition handle
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `runnables/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review |
+| `runnable/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review |
 | `RunnableParallel` MUST call `abort_all()` before returning Err | BC-2.01.006 invariant | Unit test captures abort signal via channel |
 | No partial `Ok` on failure — only complete N-key `Ok` or `Err` | BC-2.01.006 invariant (DI-016) | Test: fast-succeeds/slow-fails → assert Err |
 | mapper-wins-on-collision: `{**input, **mapper_output}` semantics | BC-2.01.008 postcondition 2 | Table-driven merge test |
 | `IndexMap` used for insertion-order preservation | BC-2.01.005 postcondition 2 | Compile-time: `IndexMap` import; runtime: order assertion |
 
-**Forbidden dependencies for `pregolya-core/src/runnables/passthrough.rs`:** No direct tokio spawn; passthrough.rs should not create tasks. The async implementation is a thin wrapper.
+**Forbidden dependencies for `pregolya-core/src/runnable/passthrough.rs`:** No direct tokio spawn; passthrough.rs should not create tasks. The async implementation is a thin wrapper.
 
 ## Library & Framework Requirements (MANDATORY)
 
@@ -186,9 +186,9 @@ S-1.04 established: `Arc<dyn DynRunnable>` as the type-erased composition handle
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-core/src/runnables/mod.rs` | CREATE | Re-export-only module root |
-| `pregolya-core/src/runnables/parallel.rs` | CREATE | `RunnableParallel` |
-| `pregolya-core/src/runnables/passthrough.rs` | CREATE | `RunnablePassthrough` |
-| `pregolya-core/src/runnables/assign.rs` | CREATE | `RunnableAssign` |
-| `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod runnables;` |
+| `pregolya-core/src/runnable/mod.rs` | CREATE | Re-export-only module root |
+| `pregolya-core/src/runnable/parallel.rs` | CREATE | `RunnableParallel` |
+| `pregolya-core/src/runnable/passthrough.rs` | CREATE | `RunnablePassthrough` |
+| `pregolya-core/src/runnable/assign.rs` | CREATE | `RunnableAssign` |
+| `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod runnable;` |
 | `pregolya-core/Cargo.toml` | MODIFY | Add `proptest` to `[dev-dependencies]`, `indexmap` to `[dependencies]` |

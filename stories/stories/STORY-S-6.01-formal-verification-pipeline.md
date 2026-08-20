@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/verification-architecture.md
-input-hash: "2ffbb1c"
+input-hash: "7bc0685"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09, S-2.05, S-1.22]

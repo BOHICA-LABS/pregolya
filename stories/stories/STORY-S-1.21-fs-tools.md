@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "10fb3a6"
+input-hash: "5419d6a"
 traces_to:
   - behavioral-contracts/BC-2.23.001
   - behavioral-contracts/BC-2.23.002
@@ -133,7 +133,7 @@ The returned `Vec<DirEntry>` is sorted ascending by `name`. An empty directory r
 | `WriteFileTool` | `pregolya_tools::fs::write` | pregolya-tools | Effectful (filesystem I/O) |
 | `EditFileTool` | `pregolya_tools::fs::edit` | pregolya-tools | Effectful (filesystem I/O) |
 | `ListDirTool` | `pregolya_tools::fs::list` | pregolya-tools | Effectful (filesystem I/O) |
-| `PathGuard` / `canonicalize_beneath_root` | `pregolya_tools::sandbox` (from S-1.09) | pregolya-tools | Pure (canonicalization logic) |
+| `PathGuard` / `canonicalize_beneath_root` | `pregolya_tools::sandbox` (from S-1.09) | pregolya-tools | Effectful Shell (calls std::fs::canonicalize; delegates to pure model for confinement check) |
 | `DirEntry`, `EntryKind` | `pregolya_tools::fs::types` | pregolya-tools | Pure (data types) |
 | `EditConfig` | `pregolya_tools::fs::edit` | pregolya-tools | Pure (config) |
 
@@ -148,7 +148,7 @@ The returned `Vec<DirEntry>` is sorted ascending by `name`. An empty directory r
 
 | Function / Trait impl | Pure or Effectful | Reason |
 |----------------------|-------------------|--------|
-| `canonicalize_beneath_root` | Pure | Deterministic path arithmetic; no side effects |
+| `canonicalize_beneath_root` | Effectful Shell | Calls std::fs::canonicalize; delegates to pure model for confinement check |
 | `EditConfig::new(fuzzy_threshold)` | Pure | Validates threshold bounds; returns Err on 0.0 |
 | `ReadFileTool::invoke` | Effectful | Opens and reads filesystem |
 | `WriteFileTool::invoke` | Effectful | Creates temp file, writes, renames |

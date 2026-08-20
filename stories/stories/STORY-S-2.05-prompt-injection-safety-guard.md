@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "77a9bba"
+input-hash: "5a24e8f"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]

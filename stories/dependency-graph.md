@@ -66,7 +66,7 @@ S-1.08 (Recursive Splitter)
 
 S-1.09 (Sandbox)
   depends_on: [S-1.01, S-1.02]
-  blocks: S-1.21, S-1.22, S-2.10, S-6.01
+  blocks: S-1.21, S-1.22, S-6.01
 
 S-1.10 (Checkpoint Core)
   depends_on: [S-1.04, S-1.02]

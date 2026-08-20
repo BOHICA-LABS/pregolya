@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c4dd02d"
+input-hash: "530e9b8"
 traces_to:
   - behavioral-contracts/BC-2.12.001
   - behavioral-contracts/BC-2.12.002

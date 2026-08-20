@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3442224"
+input-hash: "4c620be"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-2.10]
@@ -189,13 +189,13 @@ contain known credential types (`OpenAiApiKey`, `AnthropicApiKey`). Verified by
 
 ## Previous Story Intelligence (MANDATORY)
 
-S-2.10 established `MultiServerMcpClient`, `McpSessionGuard`, `ToolRegistry` foundations,
-and the `pregolya-mcp` crate structure. S-2.11 adds the complementary server role in the
-same crate. The `ToolRegistry` type introduced for the client side (or defined as shared
-infrastructure in S-2.10) is reused here — the server reads from the same `ToolRegistry`.
-
-If S-2.10 created `pregolya-mcp/src/registry.rs`, use it. If `ToolRegistry` was defined
-inline in `client.rs` in S-2.10, extract it to `registry.rs` in this story.
+S-2.10 established `MultiServerMcpClient`, `McpSessionGuard`, and the `pregolya-mcp` crate
+structure (files: `client.rs`, `session.rs`, `tool.rs`, `interceptor.rs`, `guardrail.rs`,
+`exception.rs`, `lib.rs`). S-2.10 does NOT create `registry.rs` or `ToolRegistry`.
+S-2.11 introduces `ToolRegistry` for the first time (task 4 creates
+`pregolya-mcp/src/registry.rs`). S-2.11 adds the complementary server role in the same crate,
+with `ToolRegistry` serving both the server's `tools/list` handler and (via shared access)
+the client-side tool resolution.
 
 S-1.06 established `DynTool` as the object-safe dispatch seam. The `tools/call` handler
 calls `DynTool::invoke(args)`. Use `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>`

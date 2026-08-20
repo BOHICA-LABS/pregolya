@@ -13,7 +13,7 @@ producer: state-manager
 timestamp: 2026-08-17T00:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "f45eac4"
+input-hash: "418159b"
 traces_to: STATE.md
 ---
 
@@ -6800,3 +6800,7 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 **D-193 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-211 CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen anchor 79eb2f3; streak 0/3→1/3 STARTED. BC bodies ss-06/BC-2.06.001+006, ss-03/BC-2.03.002+003 deep-read; prd.md §5+§7 (133 rows confirmed); error-taxonomy 13-category axis; all 26 ADR supersedes/superseded_by back-refs CLEAN.
 
 **D-194 (Phase 1 / 2026-08-18 / state-manager+orchestrator):** P1D-212 CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; frozen anchor 79eb2f3; streak 1/3→2/3 ACTIVE. Fresh-context: ALL 14 VP bodies read in full (VP-INDEX arithmetic 14=6P0+8P1=9Kani+3proptest+2integration; ADR §Decision citations all resolve; VP-014→ADR-026; VP-012→ADR-019; VP-006→ADR-015). Observability Canonical Structured Event Catalog (11 active+1 retired; every row has full schema). nfr-catalog NFR-001..014. invariants.md all 16 DIs coherent. All corpus-wide canonical-form checks PASS.
+
+**D-208..D-211 Phase-Progress rows (archived from STATE.md v5.27; 2026-08-20):** Phase Progress detail rows for "2: adversary passes P2A-001..004" (NOT CLEAN each; 8+3+7+3=21 findings; fix-bursts dispatched D-208..D-211; trajectory-tail →0→0→8→3→7→3; 0/3) and "2: fix bursts post-P2A-001..004" (all 21 findings closed in-scope; census unchanged; trajectory-tail →0→0→0→8→3→7→3; 0/3 → NEXT P2A-005) archived to create room in STATE.md Phase Progress table for P2A-008 rows. Full details in D-208..D-211 rows in STATE.md Decisions Log and convergence-trajectory.md.
+
+**P2A-003 fix-burst Current-Phase-Steps row (archived from STATE.md v5.27; 2026-08-20):** P2A-003 fix-burst (2026-08-20) — 7 findings closed (2H/4M/1OBS): F-01 5 story specs §Architecture Mapping+§Purity Classification + edge cases + BC-ID rephrase; F-02 14 HS BC-linkage re-anchored; F-03 S-6.01 DAG reciprocal; F-04 wave-schedule 74→69; F-05 STORY-INDEX VP-014 anchor; F-06 HS-INDEX gate wording; F-07 HS-A stray Category. D-210 minted. State-manager COMPLETE. Story specs + HS files + wave-schedule + STORY-INDEX + HS-INDEX. Streak 0/3. NEXT: P2A-004.

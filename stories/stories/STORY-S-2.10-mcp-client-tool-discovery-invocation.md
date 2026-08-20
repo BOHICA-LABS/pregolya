@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "674f7dd"
+input-hash: "c659985"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -282,8 +282,7 @@ Verified by `test_BC_2_09_005_client_is_send_sync_clone()`.
 12. [ ] Write compile-fail test for AC-024 (`client.close()` must not compile)
 13. [ ] Write SID-1 mock tests: `test_BC_2_09_004_bare_tool_exception_reraise_unit_mock()` and `test_BC_2_09_005_no_live_connections_unit()` (non-ignored)
 14. [ ] Register `guardrail.unregistered_passthrough` in Canonical Structured Event Catalog (SAP-1)
-15. [ ] Add `E-MCP-005` to error taxonomy (minted by BC-2.09.006; register here as taxonomy sub-burst)
-16. [ ] Run `cargo nextest run -p pregolya-mcp` — all ACs green
+15. [ ] Run `cargo nextest run -p pregolya-mcp` — all ACs green
 
 ## Previous Story Intelligence (MANDATORY)
 

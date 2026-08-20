@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "420efe1"
+input-hash: "b9f6b34"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.04]

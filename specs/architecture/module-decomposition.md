@@ -2,19 +2,20 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.43"
+version: "1.44"
 status: active
 producer: architect
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-20T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "1300e89"
+input-hash: "5e00377"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.44 (P2A008-F04/2026-08-20): F-P2A008-04 module-name canonicalization — extend core::runnable row description to cover all composition combinators in scope: RunnableParallel (fan-out/fan-in, BC-2.01.005–006), RunnablePassthrough (BC-2.01.007), RunnableAssign (BC-2.01.008) alongside the existing Runnable trait and RunnableSequence pipe combinator. Canonical module path set to pregolya-core/src/runnable/ (singular). This establishes core::runnable as the single authority for all Runnable composition primitives; no new module row added. VP-014.md harness import and target path aligned to singular form in same burst."
   - "1.43 (burst-311/D-181/2026-08-17): D-181 fts_search canon propagation — graph::budget row: change trait-method reference from CheckpointSaver::search_history to CheckpointSaver::fts_search. Canon per D-181: fts_search is the CheckpointSaver trait method (BC-2.04.008 authoritative); search_history names only the agent-callable Tool wrapper. Full corpus grep confirmed: no other trait-method residuals in architecture-owned files. system-overview.md §Changelog FIX-BURST-276 historical entry excluded per records-lint policy (historical entries are grandfathered). Non-architecture residuals in behavioral-contracts (BC-2.04.008, BC-2.10.006) flagged for routing."
   - "1.42 (burst-292/P1D-183-F1/2026-08-16): Fix VP-012 anchor text in §VP anchors (SS-23): replace mischaracterization 'check_watermark_trigger never produces a token count exceeding the hard limit; no overflow' with the actual arithmetic property — returns true iff (tokens_remaining as f64) / (ceiling as f64) <= (1.0 - fraction); non-strict <= is load-bearing (EC-002: fraction=1.0 fires when remaining=0). Root error: check_watermark_trigger returns bool, not a token count; prior text described a non-existent overflow property. Source of truth: VP-012 §Property Statement, verification-architecture.md §VP-012, BC-2.10.005. No other VP-012 mischaracterization sites found in this file."
   - "1.41 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — §xtask subcommands blockquote and list: `deny-client-new` → `check-client-timeout` (NE-04, 2 sites); `deny-expect-in-lib` → `check-no-panic` (NE-07, 2 sites); `lint-no-panic` removed from NE-07 blockquote example (was variant name, now `check-no-panic` canonical); blockquote resolution note updated from 'resolved at implementation time' to D-35 canonical-form declaration. §Provider Embeddings NE anchors: `deny-client-new` → `check-client-timeout` (1 site). Canonical `check-<subject>` form per D-35."
@@ -75,7 +76,7 @@ credential security primitives, streaming event types.
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
-| `core::runnable` | `Runnable<I,O>` trait + `RunnableSequence` pipe combinator | HIGH | SS-01 |
+| `core::runnable` | `Runnable<I,O>` trait + composition combinators: `RunnableSequence` (pipe), `RunnableParallel` (fan-out/fan-in, BC-2.01.005–006), `RunnablePassthrough` (BC-2.01.007), `RunnableAssign` (BC-2.01.008); module path: `pregolya-core/src/runnable/` | HIGH | SS-01 |
 | `core::message` | `Message` enum (AiMessage/HumanMessage/SystemMessage/ToolMessage), ContentBlock | HIGH | SS-01 |
 | `core::error` | `PregolyaError` 2D struct (Component × Category), RFC-7807 emission | CRITICAL | SS-14 |
 | `core::credentials` | API key newtypes with redacted Debug; no Serialize; no Deref<Target=str> | CRITICAL | SS-14 |

@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "8d4506a"
+input-hash: "634731b"
 traces_to: STORY-INDEX.md
 ---
 
