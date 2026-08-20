@@ -123,4 +123,4 @@ A DTU mock chat provider returns a plausible finding report for each specialist'
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic work-unit artifacts. Category is `integration-boundaries`.
+Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.

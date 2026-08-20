@@ -113,4 +113,4 @@ A SOC triage agent must enrich an alert by querying three independent sources in
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic alert fixtures and DTU mock tool servers, not a real-world corpus. No real-world corpus is required for this integration-boundaries test.
+Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.

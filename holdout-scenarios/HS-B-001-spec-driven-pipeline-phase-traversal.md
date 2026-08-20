@@ -116,4 +116,4 @@ Input specification: `{ spec_id: "SPEC-001", description: "A function that compu
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses a synthetic specification fixture, not a real-world corpus. The authoritative category classification is in the frontmatter `category:` field.
+Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.

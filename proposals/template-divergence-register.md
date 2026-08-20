@@ -151,6 +151,20 @@ MUST register the divergence at creation time, not retroactively.
 | Routing | `vsdd-factory:product-owner` — confirm whether omission is intentional or an oversight. If intentional, update this entry to AUTHORIZED-DOCUMENTED. If unintentional, add `traces_to: .factory/specs/prd.md` to all prd-supplement frontmatter. |
 | Date | 2026-07-28 |
 
+### TDIV-009 — Holdout scenario files: `## Category: real-world-corpus` section mandatory for ALL scenarios (hook-enforced)
+
+| Field | Value |
+|-------|-------|
+| Artifacts | All holdout-scenario files: `.factory/holdout-scenarios/HS-*.md` |
+| Upstream template | `holdout-scenario-template.md` (vendor, engine plugin cache — read-only, not project-overridable) |
+| Divergence | The vendor template mandates `## Category: real-world-corpus` as a required H2 section for every holdout scenario. The `validate-template-compliance` hook therefore requires the literal heading `## Category: real-world-corpus` in ALL scenario files, regardless of the scenario's actual category. This is semantically incorrect for scenarios whose frontmatter `category:` field is `integration-boundaries`, `edge-case-combinations`, or `security-probes` — twelve of the fifteen scenarios fall into these non-RWC categories. |
+| Classification | AUTHORIZED-DOCUMENTED (human-waived, P2A-006) |
+| Authorizing decision | Human, P2A-006 fix-burst, 2026-08-20. Waived as a known vendor-template limitation. |
+| Sanctioned in-project handling | Retain the `## Category: real-world-corpus` heading verbatim in all scenario files (hook compliance). For non-real-world-corpus scenarios, replace the section body with the self-disambiguating form: "Not applicable — this scenario's category is `<actual-category>` (see the frontmatter `category:` field). No real-world corpus is required for this `<actual-category>` test." For real-world-corpus scenarios (HS-A-005, HS-B-007), the section body contains the required corpus detail table with `corpus_source`, `corpus_size`, `known_edge_cases`, `false_positive_threshold`, and `false_negative_threshold` fields. |
+| Durable fix (vendor action) | Engine-vendor template change to mark the section conditional — e.g., add documentation such as "Required only for scenarios with `category: real-world-corpus`" so the `validate-template-compliance` hook's filter can skip the section check for non-RWC scenarios. Tracked as a STATE.md vendor-action blocking-issue; the fix requires an upstream engine template change and cannot be applied from inside a consumer project. |
+| Engine template notes | The upstream `holdout-scenario-template.md` was not amended; amending it from inside a consumer project would affect all other vsdd-factory projects. |
+| Date | 2026-08-20 |
+
 ---
 
 ## Process-Gap Finding
@@ -180,3 +194,4 @@ MUST register the divergence at creation time, not retroactively.
 | TDIV-006 | BC files | `behavioral-contract-template.md` | `bc_id`, `priority`, `wave` added; `traces_to` as list | AUTHORIZED-UNDOCUMENTED | product-owner |
 | TDIV-007 | prd-supplements | `prd-supplement-*-template.md` | `traces_to: prd.md` absent | AUTHORIZED-UNDOCUMENTED (confirm) | product-owner |
 | TDIV-008 | spec-steward output paths | Engine artifact path registry | spec-steward designated paths unregistered | DEFECT [process-gap] | devops-engineer |
+| TDIV-009 | All `HS-*.md` holdout-scenario files | `holdout-scenario-template.md` (vendor) | `## Category: real-world-corpus` H2 section hook-enforced on ALL scenarios; semantically applicable only to `real-world-corpus` category | AUTHORIZED-DOCUMENTED (human-waived, P2A-006) | product-owner |

@@ -112,4 +112,4 @@ A pipeline run is configured with a token budget ceiling. When cumulative token 
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic pipeline stages with controlled token usage, not a real-world corpus. The authoritative category classification is in the frontmatter `category:` field.
+Not applicable — this scenario's category is `edge-case-combinations` (see the frontmatter `category:` field). No real-world corpus is required for this `edge-case-combinations` test.

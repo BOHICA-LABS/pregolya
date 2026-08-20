@@ -116,4 +116,4 @@ An investigation concludes that a workstation should be isolated from the networ
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic incident fixtures and a DTU containment service mock, not a real-world corpus. No real-world corpus is required for this integration-boundaries test.
+Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.

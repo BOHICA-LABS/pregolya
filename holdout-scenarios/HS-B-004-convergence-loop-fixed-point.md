@@ -120,4 +120,4 @@ A review-fix cycle is modeled as a cyclic subgraph. The cycle terminates when th
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses a synthetic convergence fixture. Category is `edge-case-combinations`.
+Not applicable — this scenario's category is `edge-case-combinations` (see the frontmatter `category:` field). No real-world corpus is required for this `edge-case-combinations` test.

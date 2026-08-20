@@ -125,4 +125,4 @@ A multi-phase pipeline pauses at a "phase gate" awaiting human sign-off before a
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses a synthetic pipeline fixture. Category is `integration-boundaries`.
+Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.

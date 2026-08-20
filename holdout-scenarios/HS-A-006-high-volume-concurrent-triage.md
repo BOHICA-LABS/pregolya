@@ -110,4 +110,4 @@ Twenty alerts arrive simultaneously and must be triaged in parallel. No alert sh
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic concurrent alert fixtures, not a real-world corpus. No real-world corpus is required for this edge-case-combinations test.
+Not applicable — this scenario's category is `edge-case-combinations` (see the frontmatter `category:` field). No real-world corpus is required for this `edge-case-combinations` test.

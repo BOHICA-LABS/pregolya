@@ -114,4 +114,4 @@ A wave of five parallel work-units is launched. After three complete, the proces
 
 ## Category: real-world-corpus
 
-Not applicable — this scenario uses synthetic work-unit fixtures. Category is `integration-boundaries`.
+Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.
