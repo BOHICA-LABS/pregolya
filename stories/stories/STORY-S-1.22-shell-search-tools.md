@@ -13,13 +13,13 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "975cb13"
+input-hash: "2c37d9b"
 traces_to:
   - behavioral-contracts/BC-2.23.005
   - behavioral-contracts/BC-2.23.006
 points: 8
 depends_on: [S-1.09, S-1.21, S-1.06]
-blocks: [S-6.01]
+blocks: [S-2.10, S-6.01]
 behavioral_contracts: [BC-2.23.005, BC-2.23.006]
 verification_properties: [VP-013]
 priority: P1

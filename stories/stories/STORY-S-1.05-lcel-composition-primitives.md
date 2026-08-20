@@ -15,11 +15,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8146f09"
+input-hash: "86c8d85"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04]
-blocks: [S-1.07, S-6.01]
+blocks: [S-6.01]
 behavioral_contracts: [BC-2.01.005, BC-2.01.006, BC-2.01.007, BC-2.01.008]
 verification_properties: [VP-014]
 priority: P1
@@ -40,6 +40,15 @@ tdd_mode: strict
 - **As a** pregolya library user building parallel-fan-out workflows
 - **I want to** have `RunnableParallel` (concurrent fan-out with abort-all on failure), `RunnablePassthrough` (identity passthrough with optional inspection), and `RunnableAssign` (dict augmentation via `assign`)
 - **So that** I can build LangChain Expression Language (LCEL)-compatible pipelines that fan out to multiple branches, pass-through values for inspection, and augment dictionaries with computed keys — with deterministic, structured error propagation
+
+## Behavioral Contracts
+
+| BC | Title | Covered ACs |
+|----|-------|------------|
+| BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | AC-001..AC-004 |
+| BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | AC-005..AC-007 |
+| BC-2.01.007 | RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract | AC-008..AC-010 |
+| BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | AC-011..AC-014 |
 
 ## Acceptance Criteria
 

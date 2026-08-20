@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "e6e84aa"
+input-hash: "8d4506a"
 traces_to: STORY-INDEX.md
 ---
 
@@ -67,18 +67,18 @@ traces_to: STORY-INDEX.md
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.11 | 3 | XS | 1 story/agent |
-| B | S-1.13 | 8 | M | 1 story/agent |
-| C | S-1.14 | 8 | M | 1 story/agent |
+| B | S-1.14 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1f — Graph tier 1 + tools (depends on 1e)
+#### Sub-batch 1f — Graph tier 1 + tools + memory-graph (depends on 1e)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
-| A | S-1.15 | 5 | S | 1 story/agent |
-| B | S-1.17 | 5 | S | 1 story/agent |
-| C | S-1.18 | 8 | M | 1 story/agent |
-| D | S-1.19 | 13 | XL | 1 story/agent |
-| E | S-1.21 | 8 | M | 1 story/agent |
+| A | S-1.13 | 8 | M | 1 story/agent |
+| B | S-1.15 | 5 | S | 1 story/agent |
+| C | S-1.17 | 5 | S | 1 story/agent |
+| D | S-1.18 | 8 | M | 1 story/agent |
+| E | S-1.19 | 13 | XL | 1 story/agent |
+| F | S-1.21 | 8 | M | 1 story/agent |
 
 #### Sub-batch 1g — BSP engine + Bash tool (depends on 1f)
 

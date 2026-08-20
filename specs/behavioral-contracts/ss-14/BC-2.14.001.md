@@ -33,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "b7931bb"
+input-hash: "54a8bcf"
 extracted_from: null
 modified: []
 deprecated: null

@@ -12,7 +12,7 @@ inputs:
   - .factory/planning/market-intel.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "3f9a9c0"
+input-hash: "b738dc1"
 traces_to: L2-INDEX.md
 decisions: [D1, D2, D7, D11, D17]
 changelog:

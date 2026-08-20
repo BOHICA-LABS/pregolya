@@ -38,7 +38,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "d9e4270"
+input-hash: "176a9b6"
 extracted_from: null
 modified: []
 deprecated: null

@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "11a6d3e"
+input-hash: "10fb3a6"
 traces_to:
   - behavioral-contracts/BC-2.23.001
   - behavioral-contracts/BC-2.23.002
@@ -137,7 +137,7 @@ The returned `Vec<DirEntry>` is sorted ascending by `name`. An empty directory r
 | `DirEntry`, `EntryKind` | `pregolya_tools::fs::types` | pregolya-tools | Pure (data types) |
 | `EditConfig` | `pregolya_tools::fs::edit` | pregolya-tools | Pure (config) |
 
-**Subsystem anchor:** SS-23 owns this story's scope because SS-23 is the Tool Implementations subsystem per ARCH-INDEX Subsystem Registry. SS-23 contains all concrete tool structs that implement the `DynTool` object-safe trait; PathGuard is provided by SS-22 (sandbox backend, built in S-1.09) and consumed here.
+**Subsystem anchor:** SS-23 owns this story's scope because SS-23 is the Tool Implementations subsystem per ARCH-INDEX Subsystem Registry. SS-23 contains all concrete tool structs that implement the `DynTool` object-safe trait; PathGuard is provided by SS-13 (Sandboxed Tool Execution, built in S-1.09) and consumed here.
 
 **Dependency anchors:**
 - Depends on S-1.09: `PathGuard` and `canonicalize_beneath_root` are built in S-1.09 (sandbox backend). S-1.21 cannot compile without the confinement API.

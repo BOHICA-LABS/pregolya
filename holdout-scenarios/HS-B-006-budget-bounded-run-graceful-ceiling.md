@@ -20,7 +20,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "0d02bf4"
+input-hash: "5e990da"
 traces_to: .factory/planning/holdout-domains/domain-b-dark-factory.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2

@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "bd61ed4"
+input-hash: "98a93c5"
 extracted_from: null
 modified: []
 deprecated: null

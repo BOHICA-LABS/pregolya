@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/ubiquitous-language-core.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/semport/graph/module-inventory.md
-input-hash: "0793d72"
+input-hash: "262eaa9"
 ---
 
 # Naming Decision Record — Pregolya

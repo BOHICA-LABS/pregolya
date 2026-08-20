@@ -22,7 +22,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/specs/architecture/decisions/ADR-013-mcp-server-module-placement.md
-input-hash: "a1dfec3"
+input-hash: "73c8a33"
 traces_to: prd.md
 primary_consumers: [architect, test-writer, formal-verifier]
 architect_note: "Obligation discharged — ARCH-INDEX.md produced 2026-07-13 at Phase 1b; crate-to-subsystem mapping and Architecture Module column populated by architect in authoritative file .factory/specs/module-criticality.md. This PO-draft is superseded and frozen."

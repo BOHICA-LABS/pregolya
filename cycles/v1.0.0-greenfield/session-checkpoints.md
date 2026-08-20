@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "[live-state]"
+input-hash: "f45eac4"
 traces_to: STATE.md
 ---
 

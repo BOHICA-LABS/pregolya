@@ -14,10 +14,10 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "481494d"
+input-hash: "76f1726"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
-depends_on: [S-1.12, S-1.04]
+depends_on: [S-1.12, S-1.04, S-1.14]
 blocks: []
 behavioral_contracts: [BC-2.15.004, BC-2.15.005, BC-2.15.006]
 verification_properties: []
@@ -25,7 +25,7 @@ priority: P1
 cycle: v1.0.0-greenfield
 wave: 1
 target_module: pregolya-memory
-subsystems: [SS-15]
+subsystems: [SS-15, SS-03]
 estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
@@ -112,7 +112,7 @@ The cache key for the loaded context content includes the loaded content itself 
 | Built-in injection scanner (role prefix and invisible Unicode detection) | `pregolya_memory::write_guard` | pregolya-memory | Pure (deterministic string scan; no I/O) |
 | `ContextMutationConfig` loader (pre-first-super-step; `Arc<ContextMutationConfig>` frozen snapshot) | `pregolya_graph::scheduler` | pregolya-graph | Effectful Shell (reads from `MemoryStore` once; produces immutable `Arc` snapshot for the run) |
 
-**Subsystem anchor:** SS-15 owns this story's primary scope because SS-15 is the Long-Horizon Memory subsystem (`pregolya-memory` and the `pregolya-core` type primitives) per ARCH-INDEX Subsystem Registry. The `pregolya-graph::scheduler` component participates via SS-03 (BSP Execution Engine) for the context mutation loading path. Pure-core / effectful-shell boundary: all type definitions in `pregolya-core` are pure core; the enforcement logic in `pregolya-memory::write_guard` is pure (synchronous scan); `SkillStoreImpl` and the scheduler's config loader are effectful shells.
+**Subsystem anchor:** SS-15 owns this story's primary scope because SS-15 is the Long-Horizon Memory subsystem (`pregolya-memory` and the `pregolya-core` type primitives) per ARCH-INDEX Subsystem Registry. SS-03 (BSP Execution Engine) is co-anchored because the `pregolya_graph::scheduler` context mutation loader is placed in `pregolya-graph/src/scheduler.rs`, which falls within SS-03's `pregolya-graph` crate scope per ARCH-INDEX Subsystem Registry. Pure-core / effectful-shell boundary: all type definitions in `pregolya-core` are pure core; the enforcement logic in `pregolya-memory::write_guard` is pure (synchronous scan); `SkillStoreImpl` and the scheduler's config loader are effectful shells.
 
 ## Purity Classification
 
@@ -158,6 +158,7 @@ Within the 20-30% agent context window threshold. Note this story touches three 
 
 - S-1.12 (Memory KV/Vector/GDPR) established `MemoryStore` trait, `MemoryScope`, `SqliteMemoryStore`, and the ephemeral test backend. `SkillStore` is built as an overlay on top of the existing `MemoryStore` trait. Load S-1.12 context before implementing S-1.13.
 - S-1.04 (Runnable Trait and Pipe) established `pregolya-core` crate structure. Adding `write_guard.rs` and `context_mutation.rs` to `pregolya-core` follows the same module pattern.
+- S-1.14 (StateGraph Node + Channel Reducers) established the `pregolya-graph` crate, including its `Cargo.toml`, `src/lib.rs`, and module scaffold. `pregolya-graph/src/scheduler.rs` cannot be created until the `pregolya-graph` crate exists. Implementer must load S-1.14 context first to confirm the crate layout and `lib.rs` re-export conventions before adding `scheduler.rs`.
 - The graph scheduler (in `pregolya-graph`) has not been covered in prior Wave 1 stories. This is the first story touching `pregolya-graph/src/scheduler.rs`. The implementer should verify that a scheduler skeleton exists before implementing the context mutation loading.
 
 ## Architecture Compliance Rules

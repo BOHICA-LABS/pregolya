@@ -15,7 +15,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "d8f8c49"
+input-hash: "df3ab85"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13

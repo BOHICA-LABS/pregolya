@@ -1,19 +1,20 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.4"
+version: "3.5"
 status: active
 producer: product-owner
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-20T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "b53d1d3"
+input-hash: "ae7f84b"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.5 (P2A-005-fix-burst/D-212/2026-08-20): BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added by product-owner — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total: 697→698 canonical + 11 GTV = 708→709 total."
   - "3.4 (burst-302b/D-171/2026-08-17): LCEL composition scope expansion (D-170) — Add 4 new BC rows: BC-2.01.005 (5 TV), BC-2.01.006 (5 TV), BC-2.01.007 (5 TV), BC-2.01.008 (6 TV). Grand total: 676→697 canonical + 11 GTV = 687→708 total. BC count 129→133."
   - "3.3 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — four phantom citations fixed. (1) §GTV below (line 38 context): no heading §GTV exists; corrected to §Golden Test Vectors — BC-2.07.002. (2) §GTV (line 87 context, same phantom): same fix. (3) §GTV (line 185 GTV convention blockquote): same fix. (4) §Test Vectors (line 199 context): BC bodies use heading '## Canonical Test Vectors', not '## Test Vectors'; corrected to §Canonical Test Vectors. TV counts and grand totals UNCHANGED."
   - "3.2 (burst-290/F-180-04, 2026-08-16): Fix live-body phantom ADR §-citation in Red Gate Vector Summary table. BC-2.20.002 row §Anchor column: `ADR-014 §DI-012` → `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` (no heading §DI-012 exists in ADR-014; DI-012 mechanization is governed by `## Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)`). TV count and grand totals UNCHANGED."
@@ -74,7 +75,7 @@ changelog:
 | BC-2.04.005 | SS-04 | 5 | — | table (unlabelled) | | Crash recovery; completed not re-run |
 | BC-2.04.006 | SS-04 | 4 | — | table (unlabelled) | | Triple-address uniqueness; VP seed |
 | BC-2.04.007 | SS-04 | 4 | — | table (unlabelled) | | Encryption covers state AND events |
-| BC-2.04.008 | SS-04 | 6 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process) |
+| BC-2.04.008 | SS-04 | 7 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process); §Invariant-5 EC-007+TV-007 FtsEncryptionIncompatible |
 | BC-2.05.001 | SS-05 | 5 | — | `TV-NNN` | | Interrupt + durable suspend |
 | BC-2.05.002 | SS-05 | 5 | — | `TV-NNN` | | FIFO resume order |
 | BC-2.05.003 | SS-05 | 5 | — | `TV-NNN` | | Node re-executes from start on resume |
@@ -184,7 +185,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (133 authored BCs):** 697 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **708 total vectors** across 133 BC files.
+**Total vectors (133 authored BCs):** 698 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **709 total vectors** across 133 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -335,6 +336,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.5 | 2026-08-20 | P2A-005-fix-burst/D-212: BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total 697→698 canonical + 11 GTV = 709. | P2A-005-fix-burst/D-212 |
 | 3.4 | 2026-08-17 | burst-302b/D-171: LCEL scope expansion — add 4 BC rows (BC-2.01.005: 5 TV, BC-2.01.006: 5 TV, BC-2.01.007: 5 TV, BC-2.01.008: 6 TV). Grand total 676→697 canonical + 11 GTV = 708. BC count 129→133. | burst-302b/D-171 |
 | 3.3 | 2026-08-16 | burst-291/D-134: §-anchor phantom sweep — four phantom §GTV/§Test Vectors citations corrected. TV counts and grand totals UNCHANGED. | burst-291/D-134 |
 | 3.2 | 2026-08-16 | burst-290/F-180-04: Fix live-body phantom ADR §-citation in Red Gate Vector Summary table. BC-2.20.002 row §Anchor column: `ADR-014 §DI-012` → `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)`. TV count and grand totals UNCHANGED. | burst-290/F-180-04 |

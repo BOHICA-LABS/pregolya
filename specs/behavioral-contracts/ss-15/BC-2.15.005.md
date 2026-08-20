@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "d42a460"
+input-hash: "9510ea3"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in Traceability §Error Code Minted: `ADR-012 §Consequences/Error Codes` → `ADR-012 §Error Codes` (no heading §Consequences/Error Codes exists in ADR-012; the error-codes section is `### Error Codes` under `## Consequences`)."

@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/verification-architecture.md
-input-hash: "8bcf23e"
+input-hash: "2ffbb1c"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09, S-2.05, S-1.22]
@@ -372,6 +372,18 @@ stories must be merged before S-6.01 is dispatched.
 
 - **S-2.09 (Embeddings)** established the dimensionality invariant proptest VP-008 in
   `core::embeddings` — must still pass post-integration.
+
+- **S-2.05 (Injection Safety Guard)** established `injection_guard` in `prompts::injection_guard`
+  and stubbed `injection_guard_fail_closed` as `todo!()` in
+  `crates/pregolya-prompts/src/proofs/injection_guard.rs` — VP-006 harness (P1). S-6.01
+  fills the stub body. The harness must prove `injection_guard` raises `E-TMPL-001` for
+  untrusted content in a `SystemMessage` slot and is fail-closed on unknown `TrustLevel` variants.
+
+- **S-1.22 (Bash + Grep Tools)** established `BashTool` in `pregolya-tools` and stubbed
+  `risk_floor_rejects_below_medium` as `todo!()` in
+  `crates/pregolya-tools/src/proofs/risk_floor.rs` — VP-013 harness (P1). S-6.01
+  fills the stub body. The harness must prove that `ReadOnly` and `Low` `ActionRisk`
+  values on `BashTool` always return `Err(E-TOOLS-007)` (non-lowerable `Medium` risk floor).
 
 **GAP-002 context:** GAP-002 in the dependency graph documented that Kani harness EXECUTION
 requires all Wave-1+2 crates compiled. The harness stubs authored per-story in Waves 1 and 2

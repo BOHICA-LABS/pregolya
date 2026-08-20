@@ -34,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "68ef16c"
+input-hash: "91e5664"
 extracted_from: null
 modified: []
 deprecated: null

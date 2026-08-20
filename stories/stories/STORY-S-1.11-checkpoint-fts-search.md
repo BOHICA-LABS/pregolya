@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "e2fcc3d"
+input-hash: "42e3686"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.10]
@@ -42,7 +42,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.04.008 | Full-Text Search Over Checkpoint History via SQLite FTS5 | AC-001..AC-007 |
+| BC-2.04.008 | Full-Text Search Over Checkpoint History via SQLite FTS5 | AC-001..AC-008 |
 
 ## Acceptance Criteria
 
@@ -66,6 +66,9 @@ If the SQLite build used at runtime does not include the FTS5 extension (e.g., c
 
 ### AC-007 (traces to BC-2.04.008 invariant 1 — append-only index consistency)
 Checkpoint records are append-only by design: writes add rows, never update or delete them. The FTS index mirrors this append-only invariant — FTS entries are never deleted or updated during a run. The FTS index accurately reflects the full append-only checkpoint write history. Verified by `test_BC_2_04_008_fts_index_append_only()`.
+
+### AC-008 (traces to BC-2.04.008 edge case EC-007 — FtsEncryptionIncompatible)
+`CheckpointSaver::new()` with FTS5 enabled and `EncryptedSerializer` configured returns `Err(PregolyaError { code: "E-CHKPT-010", message: "FtsEncryptionIncompatible: ...", .. })` at construction time. FTS5 and `EncryptedSerializer` are mutually exclusive — the error fires before any DDL executes and no checkpoint tables are created. Verified by `test_BC_2_04_008_fts_encryption_incompatible()`.
 
 ## Architecture Mapping
 
@@ -92,12 +95,12 @@ Checkpoint records are append-only by design: writes add rows, never update or d
 
 | Component | Estimated Tokens |
 |-----------|-----------------|
-| Story spec (this file) | ~2,500 |
-| BC-2.04.008 | ~2,000 |
+| Story spec (this file) | ~2,800 |
+| BC-2.04.008 | ~2,300 |
 | Architecture module-decomposition.md (SS-04 section) | ~600 |
 | pregolya-checkpoint existing code (S-1.10 context) | ~3,000 |
-| Test files | ~2,000 |
-| **Total** | **~10,100** |
+| Test files | ~2,200 |
+| **Total** | **~10,900** |
 
 Well within the 20-30% agent context window threshold.
 
@@ -109,7 +112,8 @@ Well within the 20-30% agent context window threshold.
 - [ ] Implement FTS index update in the same SQLite transaction as `put_writes` and `put`
 - [ ] Implement `fts_search` query execution against FTS5 table
 - [ ] Implement `search_history_tool()` factory function returning a `Tool` wrapping `fts_search`
-- [ ] Write unit tests for all 7 ACs (AC-001..AC-007)
+- [ ] Return `Err(E-CHKPT-010 FtsEncryptionIncompatible)` at construction time when both FTS5 and `EncryptedSerializer` are configured (BC-2.04.008 EC-007 / AC-008)
+- [ ] Write unit tests for all 8 ACs (AC-001..AC-008), including `test_BC_2_04_008_fts_encryption_incompatible()`
 - [ ] Run `just iter pregolya-checkpoint` — all tests green (including S-1.10 tests)
 
 ## Previous Story Intelligence
@@ -128,6 +132,7 @@ Derived from `architecture/module-decomposition.md §pregolya-checkpoint`:
 5. `search_history_tool` returns a value that implements `Tool` (from `pregolya-core`). It must NOT be an `Arc<dyn Tool>` — return a concrete type that can be boxed by the caller.
 6. No `unwrap()` / `expect()` in non-test code.
 7. `FtsSearchResult` and `FtsSearchConfig` must carry `#[non_exhaustive]`.
+8. When `EncryptedSerializer` is configured, FTS5 MUST NOT be enabled simultaneously. `SqliteCheckpointSaver::new()` MUST return `Err(E-CHKPT-010 FtsEncryptionIncompatible)` at construction time when both are set — before any DDL executes. The FTS5 virtual table stores plaintext payload content in the SQLite file, which violates the at-rest encryption guarantee when `EncryptedSerializer` is active. This is a VAL error (caller configuration mistake), not an INTERNAL error.
 
 ## Library & Framework Requirements
 
@@ -145,7 +150,7 @@ Same as S-1.10 (inherits crate context):
 
 Files to CREATE:
 - `/pregolya-checkpoint/src/fts.rs` — `FtsSearchConfig`, `FtsSearchResult`, FTS5 schema, FTS index update logic
-- `/pregolya-checkpoint/tests/fts_tests.rs` — tests for AC-001..AC-007
+- `/pregolya-checkpoint/tests/fts_tests.rs` — tests for AC-001..AC-008
 
 Files to MODIFY:
 - `/pregolya-checkpoint/src/saver.rs` — add `fts_search` to `CheckpointSaver` trait; add `search_history_tool()` factory
@@ -160,4 +165,4 @@ Files to MODIFY:
 | EC-002 | FTS5 extension absent from SQLite | `Err(E-CHKPT-009 Fts5Unavailable)` |
 | EC-003 | `thread_id: Some("nonexistent")` in FtsSearchConfig | Returns `Ok(vec![])` — no results, no error |
 | EC-004 | Query is an empty string `""` | Implementation-defined: either `Ok(vec![])` or returns all results up to limit. Must not panic |
-| EC-005 | Checkpoint written with `EncryptedSerializer` (S-1.10) | FTS index stores plaintext content alongside the encrypted checkpoint; search still works (content is indexed before encryption, or the FTS content is stored unencrypted with the assumption that the FTS content field is not the primary secret) — this design choice MUST be documented in a code comment and in the BC |
+| EC-005 | FTS5 enabled simultaneously with `EncryptedSerializer` | Construction-time `Err(E-CHKPT-010 FtsEncryptionIncompatible)` — FTS5 stores plaintext message content, tool call arguments, and tool results in the SQLite database file; this would write plaintext state and event payload to disk, violating the at-rest encryption guarantee (no plaintext payload may reach persistent storage when `EncryptedSerializer` is active). FTS5 and `EncryptedSerializer` are mutually exclusive by design; `CheckpointSaver::new()` returns the error before any DDL executes. See BC-2.04.008 EC-007 and AC-008. |

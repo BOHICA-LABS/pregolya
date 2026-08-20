@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.008
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,6 +13,7 @@ changelog:
   - "1.3 (2026-07-15, F-P78-04/D18-P78-A): PC6 message string corrected — added 'FtsLimitZero: ' prefix per universal <Name>: <detail> convention (D18-P78-A adjudication). Updated 'got 0' to 'got <limit>' for parametric template consistency with taxonomy row E-CHKPT-008. No change to EC-004 or TV-004 (those use variant name only, no message string)."
   - "1.4 (2026-07-15, F-P82-01): PC3 corrected — `query: &str` was incorrectly listed as a field of `FtsSearchConfig`. Fixed: `query` is the standalone first parameter of `fts_search` (not a config field); `FtsSearchConfig` fields are `thread_id: Option<&str>` and `limit: usize` only. Signature (Description block), PC1, EC-002, TV-001 all agree with this fix; only PC3 carried the contradiction. No other content changed."
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). PC6 multiline observation confirmed Class 3 VALID (all 5 non-source fields present — no change). EC-002 body: replaced forbidden `...` (three-dot ASCII) with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). EC-006 multiline body: added `..` rest-pattern marker (4 of 5 fields present, missing retry_hint; ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.6 (F-P2A005-06, 2026-08-19): Resolve FTS5-vs-encryption-at-rest design decision (S-1.11 EC-005 'implementation-defined' placeholder). Added Invariant 5: FTS5 and EncryptedSerializer are mutually exclusive — FTS5 stores plaintext payload content in the SQLite file, violating BC-2.04.007 invariant 3 (no plaintext state or event payload may be written to disk). Added EC-007: construction-time Err when both are configured. Minted E-CHKPT-010 FtsEncryptionIncompatible (VAL, broken, Never). Added TV-007. Updated Traceability Error Codes Minted row."
 origin: greenfield
 priority: P1
 subsystem: SS-04
@@ -26,7 +27,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "bc7d17b"
+input-hash: "7572f35"
 modified: []
 extracted_from: null
 deprecated: null
@@ -81,10 +82,11 @@ concurrent reads). The search capability is also registered as a callable `Tool`
    `Err(PregolyaError { component: CHKPT, category: VAL, code: "E-CHKPT-008",
    message: "FtsLimitZero: FtsSearchConfig.limit must be > 0; got <limit>", retry_hint: Never })`.
 
-> **Error codes minted here (E-CHKPT-008, E-CHKPT-009).**
+> **Error codes minted here (E-CHKPT-008, E-CHKPT-009, E-CHKPT-010).**
 > - `E-CHKPT-008 FtsLimitZero` — VAL, broken, Never. Covers: (1) `limit = 0` input (PC6/EC-004); (2) malformed FTS5 query syntax (EC-002). Both are VAL caller-input rejections.
 > - `E-CHKPT-009 Fts5Unavailable` — INTERNAL, broken, Never. Covers: FTS5 extension not compiled into SQLite build (EC-006). INTERNAL — deployment/environment error, not a caller input error.
-> Taxonomy rows registered: sub-burst 2.
+> - `E-CHKPT-010 FtsEncryptionIncompatible` — VAL, broken, Never. Covers: FTS5 and EncryptedSerializer simultaneously configured (EC-007). VAL — caller configuration error; enabling both would violate BC-2.04.007 invariant 3. Minted F-P2A005-06.
+> Taxonomy rows registered: sub-burst 2 (E-CHKPT-008, E-CHKPT-009); F-P2A005-06 (E-CHKPT-010).
 
 ## Invariants
 
@@ -99,6 +101,15 @@ concurrent reads). The search capability is also registered as a callable `Tool`
   the same process are safe (SQLite WAL mode supports concurrent readers).
 - `limit` must be a positive integer > 0. Arithmetic check: for any `limit: usize` where
   `limit > 0`, the result `Vec` length is in the range `[0, limit]` inclusive.
+- **FTS5 and `EncryptedSerializer` are mutually exclusive:** the FTS5 virtual table
+  (`fts_checkpoint_bodies`) stores plaintext message content, tool call arguments, and
+  tool results in the SQLite database file. Enabling FTS5 alongside an `EncryptedSerializer`
+  would write plaintext state and event payload content to disk, directly violating
+  BC-2.04.007 §Invariants invariant 3 ("Plaintext of any state blob or per-task write
+  payload is never written to any storage medium or flushed to disk, even temporarily").
+  `CheckpointSaver::new()` MUST return `Err(E-CHKPT-010 FtsEncryptionIncompatible)` at
+  construction time when both FTS5 and `EncryptedSerializer` are configured; no checkpoint
+  tables are created in this case. See EC-007.
 
 ## Edge Cases
 
@@ -139,6 +150,15 @@ message: "Fts5Unavailable: FTS5 extension not available in this SQLite build —
 
 > **Resolution (D20 sub-burst 2):** The ambiguity between `limit = 0` (VAL) and FTS5-unavailable (INTERNAL) is resolved by splitting into two codes: `E-CHKPT-008` (VAL) for caller-input errors (limit=0, malformed FTS5 query syntax) and `E-CHKPT-009` (INTERNAL) for deployment/environment errors (FTS5 not compiled in). Different categories → different codes per taxonomy governance. EC-006 uses `E-CHKPT-009` exclusively.
 
+### EC-007: FTS5 enabled simultaneously with EncryptedSerializer
+**Scenario:** `CheckpointSaver` is constructed with both FTS5 indexing enabled and an
+`EncryptedSerializer` configured as the serializer backend.
+**Expected behavior:** `CheckpointSaver::new()` returns
+`Err(PregolyaError { component: CHKPT, category: VAL, code: "E-CHKPT-010",
+message: "FtsEncryptionIncompatible: FTS5 full-text search stores plaintext message content in the SQLite database file; enabling FTS5 alongside EncryptedSerializer would write plaintext payload to disk, violating BC-2.04.007 invariant 3 (no plaintext state or event payload may reach persistent storage); disable FTS5 or remove EncryptedSerializer", .. })`.
+No checkpoint tables are created; the error surfaces before any DDL is executed.
+(DI-008: fail at construction time, not at first write or search call.)
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -149,6 +169,7 @@ message: "Fts5Unavailable: FTS5 extension not available in this SQLite build —
 | TV-004 | `FtsSearchConfig { limit: 0, … }` | `Err(E-CHKPT-008 FtsLimitZero)` | Limit-zero guard |
 | TV-005 | Write 10 checkpoints with "error"; `fts_search("error", config { limit: 3 })` | `Ok(vec![…])` with `len() <= 3` | Limit enforcement |
 | TV-006 | Graph node calls `search_history` tool mid-run | `ToolMessage` with FTS results returned | Tool integration |
+| TV-007 | `CheckpointSaver::new()` with FTS5 enabled and `EncryptedSerializer` configured | `Err(PregolyaError { code: "E-CHKPT-010", .. })` at construction time; no tables created | EC-007 |
 
 ## Verification Properties
 
@@ -183,7 +204,7 @@ _[to be filled after story decomposition]_
 | Source L2 Capability | CAP-005 |
 | Capability Anchor Justification | CAP-005 ("Durable Three-Tier Checkpointing (Sync Default; Per-Task put_writes)") per capabilities-p0.md §CAP-005 — this BC extends the SQLite checkpoint backend (specified in CAP-005 as "SQLite (default)") with an FTS5 full-text search index over checkpoint bodies, enabling conversation history to be queried as a callable tool; FTS is an additive query layer over the same checkpoint store |
 | L2 Domain Invariants | DI-002 (Per-Task Durability — FTS5 index updated in same transaction as checkpoint write; FTS results consistent with what's checkpointed), DI-008 (Library Constructor Result Contract — FtsSearchConfig with limit=0 returns Err at construction time, not panic), DI-014 (Error Propagation — storage errors propagate as Err; empty result is Ok(vec[]) not an error) |
-| Error Codes Minted | E-CHKPT-008 FtsLimitZero (VAL, broken, Never) — caller-input rejections: limit=0 and malformed FTS5 query syntax. E-CHKPT-009 Fts5Unavailable (INTERNAL, broken, Never) — FTS5 extension not compiled into SQLite build. CHKPT namespace had 7 live codes (E-CHKPT-001 through E-CHKPT-007); E-CHKPT-008 and E-CHKPT-009 are next. Split adjudicated in D20 sub-burst 2: different categories (VAL vs INTERNAL) require separate codes per taxonomy governance. |
+| Error Codes Minted | E-CHKPT-008 FtsLimitZero (VAL, broken, Never) — caller-input rejections: limit=0 and malformed FTS5 query syntax. E-CHKPT-009 Fts5Unavailable (INTERNAL, broken, Never) — FTS5 extension not compiled into SQLite build. CHKPT namespace had 7 live codes (E-CHKPT-001 through E-CHKPT-007); E-CHKPT-008 and E-CHKPT-009 minted D20 sub-burst 2: different categories (VAL vs INTERNAL) require separate codes per taxonomy governance. E-CHKPT-010 FtsEncryptionIncompatible (VAL, broken, Never) — construction-time error when FTS5 and EncryptedSerializer are simultaneously configured; FTS5 plaintext storage violates BC-2.04.007 §Invariants invariant 3; minted F-P2A005-06. |
 | Domain D Forcing Function | domain-d-hermes-agent.md req 8 — "[PARTIAL CAP-005/SS-04 + CAP-017/SS-15] … FTS over the full checkpoint/conversation history (tool calls + reasoning traces) exposed as a first-class callable agent tool is absent" |
 | Priority | P1 |
 | Wave | Wave 2 |

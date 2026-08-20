@@ -15,11 +15,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "7939b82"
+input-hash: "8bd31d3"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.14, S-1.04, S-1.10]
-blocks: []
+blocks: [S-1.24, S-1.25]
 behavioral_contracts: [BC-2.10.001, BC-2.10.002, BC-2.10.003, BC-2.10.004]
 verification_properties: []
 priority: P0

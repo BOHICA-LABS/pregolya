@@ -13,11 +13,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "923aa7a"
+input-hash: "6483501"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
-blocks: [S-1.05, S-1.06, S-1.07]
+blocks: [S-1.05, S-1.06, S-1.07, S-1.10, S-1.12, S-1.13, S-1.14, S-1.17, S-1.18, S-1.19, S-1.21, S-1.26, S-2.01, S-2.02, S-2.03, S-2.04, S-2.06, S-2.10]
 behavioral_contracts: [BC-2.01.003, BC-2.01.004]
 verification_properties: []
 priority: P0

@@ -20,7 +20,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "7442088"
+input-hash: "b45cace"
 traces_to: .factory/planning/holdout-domains/domain-a-soc-analyst.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2

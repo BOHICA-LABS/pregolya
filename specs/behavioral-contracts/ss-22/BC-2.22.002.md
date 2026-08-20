@@ -33,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "f83822c"
+input-hash: "94c1172"
 extracted_from: null
 modified: []
 deprecated: null

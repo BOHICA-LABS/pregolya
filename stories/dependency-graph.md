@@ -24,11 +24,11 @@ traces_to: .factory/stories/STORY-INDEX.md
 ```
 S-1.01 (PregolyaError)
   depends_on: []
-  blocks: S-1.02, S-1.03, S-1.08, S-1.09
+  blocks: S-1.02, S-1.03, S-1.08, S-1.09, S-1.14
 
 S-1.02 (Error Policy)
   depends_on: [S-1.01]
-  blocks: S-1.04, S-1.09, S-1.10, S-1.12, S-2.01, S-2.04, S-2.09
+  blocks: S-1.04, S-1.06, S-1.09, S-1.10, S-1.12, S-2.01, S-2.04, S-2.09
 
 S-1.03 (Message Types)
   depends_on: [S-1.01]
@@ -38,7 +38,7 @@ S-1.04 (Runnable Trait)
   depends_on: [S-1.03, S-1.02]
   blocks: S-1.05, S-1.06, S-1.07, S-1.10, S-1.12, S-1.13, S-1.14,
           S-1.17, S-1.18, S-1.19, S-1.21, S-1.26, S-2.01, S-2.02,
-          S-2.03, S-2.04, S-2.06
+          S-2.03, S-2.04, S-2.06, S-2.10
 
 S-1.05 (LCEL)
   depends_on: [S-1.04]
@@ -81,7 +81,7 @@ S-1.12 (Memory Persistence)
   blocks: S-1.13
 
 S-1.13 (SkillStore/WriteGuard)
-  depends_on: [S-1.12, S-1.04]
+  depends_on: [S-1.12, S-1.04, S-1.14]
   blocks: [none in v1 stories]
 ```
 
@@ -90,7 +90,7 @@ S-1.13 (SkillStore/WriteGuard)
 ```
 S-1.14 (StateGraph Nodes + Channels)
   depends_on: [S-1.04, S-1.01]
-  blocks: S-1.15, S-1.17, S-1.18, S-1.19
+  blocks: S-1.13, S-1.15, S-1.16, S-1.17, S-1.18, S-1.19
 
 S-1.15 (Conditional Edges + Send)
   depends_on: [S-1.14]
@@ -234,8 +234,8 @@ S-6.01 (Kani + cargo-fuzz)
 | 1b | S-1.02, S-1.03 | Both depend only on S-1.01 |
 | 1c | S-1.04, S-1.08 | S-1.04 depends on 1b; S-1.08 depends on S-1.01 only |
 | 1d | S-1.05, S-1.06, S-1.07, S-1.09, S-1.10, S-1.12 | All depend on S-1.04 and/or S-1.02; none depend on each other |
-| 1e | S-1.11, S-1.13, S-1.14, S-1.15 (after S-1.14), S-1.21 (after S-1.07+S-1.09) | S-1.11 dep S-1.10; S-1.13 dep S-1.12; S-1.14 dep S-1.04; S-1.21 dep S-1.07+S-1.09+S-1.04 |
-| 1f | S-1.15, S-1.17, S-1.18, S-1.19, S-1.22 | S-1.15 dep S-1.14; S-1.17/18/19 dep S-1.14; S-1.22 dep S-1.09+S-1.21+S-1.06 |
+| 1e | S-1.11, S-1.14, S-1.15 (after S-1.14), S-1.21 (after S-1.07+S-1.09) | S-1.11 dep S-1.10; S-1.14 dep S-1.04; S-1.21 dep S-1.07+S-1.09+S-1.04 |
+| 1f | S-1.13, S-1.15, S-1.17, S-1.18, S-1.19, S-1.22 | S-1.13 dep S-1.12+S-1.04+S-1.14; S-1.15 dep S-1.14; S-1.17/18/19 dep S-1.14; S-1.22 dep S-1.09+S-1.21+S-1.06 |
 | 1g | S-1.16 | Dep S-1.14+S-1.15+S-1.10 |
 | 1h | S-1.20 | Dep S-1.16+S-1.17+S-1.10 |
 | 1i | S-1.23 | Dep S-1.20+S-1.17 |

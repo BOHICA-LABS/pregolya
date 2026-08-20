@@ -39,7 +39,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "fa4e8c2"
+input-hash: "97c63f5"
 extracted_from: null
 modified: []
 deprecated: null

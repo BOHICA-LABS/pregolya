@@ -14,11 +14,11 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "4270699"
+input-hash: "5afd853"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: []
-blocks: [S-1.02, S-1.03, S-1.08, S-1.09]
+blocks: [S-1.02, S-1.03, S-1.08, S-1.09, S-1.14]
 behavioral_contracts: [BC-2.14.001, BC-2.14.002]
 verification_properties: []
 priority: P0
