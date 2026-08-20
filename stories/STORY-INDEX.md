@@ -158,6 +158,14 @@ input-hash: "pending"
 > a paraphrase that may differ from the BC-INDEX H1 in wording while pointing to the same contract.
 > BC IDs and AC traces (`traces to BC-S.SS.NNN`) are the authoritative cross-references.
 
+> **`verification_properties` frontmatter field** holds canonical VP-INDEX IDs (`VP-0NN`) or `[]`.
+> BC-local VP IDs (defined within a BC's §Verification Properties section and deliberately NOT
+> registered in VP-INDEX) are documented in the story body, not in this frontmatter field.
+> Example: S-1.08 uses VP-SPLIT-01..08 (BC-local, BC-2.07.001/002/003 §Verification Properties);
+> these appear in the S-1.08 body's §Behavioral Contracts note, not in the frontmatter array.
+> A validator checking `verification_properties ⊆ VP-INDEX` must not flag S-1.08 as having gaps
+> because its frontmatter correctly holds `[]`.
+
 ---
 
 ## BC to Story Coverage Map

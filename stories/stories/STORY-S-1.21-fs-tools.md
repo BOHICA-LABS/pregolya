@@ -25,7 +25,7 @@ points: 8
 depends_on: [S-1.09, S-1.04, S-1.07]
 blocks: [S-1.22]
 behavioral_contracts: [BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004]
-verification_properties: [VP-003]
+verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 1

@@ -20,7 +20,7 @@ points: 8
 depends_on: [S-1.01]
 blocks: []
 behavioral_contracts: [BC-2.07.001, BC-2.07.002, BC-2.07.003]
-verification_properties: [VP-SPLIT-01, VP-SPLIT-02, VP-SPLIT-03, VP-SPLIT-04, VP-SPLIT-05, VP-SPLIT-06, VP-SPLIT-07, VP-SPLIT-08]
+verification_properties: []
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1
@@ -47,6 +47,16 @@ tdd_mode: strict
 | BC-2.07.001 | Code-Point Chunk Sizing — str.chars().count() NOT str.len() | AC-001..AC-005 |
 | BC-2.07.002 | Python Parity — 11 Golden Test Vectors (GTV-001..011) — RED GATE | AC-006..AC-009 |
 | BC-2.07.003 | Edge-Case Correctness — Short Doc Single Chunk, Empty Input Returns [] | AC-010..AC-012 |
+
+> **BC-local Verification Properties (VP-SPLIT-01..08):** These VPs are defined in
+> BC-2.07.001/002/003 §Verification Properties and are deliberately BC-local — they are NOT
+> registered in VP-INDEX (which holds only canonical VP-0NN IDs). VP-SPLIT-01..05 drive
+> code-point sizing property tests (BC-2.07.001); VP-SPLIT-06..07 drive proptest/fuzz for
+> the short-document path (BC-2.07.003 PC non-empty sub-case); VP-SPLIT-08 drives the
+> empty-input unit test (BC-2.07.003 PC5). The `verification_properties` frontmatter field
+> holds `[]` for this story because no VP-INDEX-registered VPs anchor here; all formal
+> verification for this story is expressed through BC-local VP-SPLIT IDs, documented here
+> per story convention (see STORY-INDEX §Conventions).
 
 ## RED GATE DISCIPLINE (BC-2.07.002)
 

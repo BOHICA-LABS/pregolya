@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "4973427"
+input-hash: "e6e84aa"
 traces_to: STORY-INDEX.md
 ---
 
@@ -179,7 +179,10 @@ traces_to: STORY-INDEX.md
 
 ## Critical Path
 
-> The critical path is the longest chain of sequentially-dependent stories.
+> The critical path is the longest chain of sequentially-dependent **implementation stories**
+> (Wave 1 + Wave 2). S-6.01 (Phase-6 formal-verification terminal aggregator) is excluded from
+> this measurement: it depends on nearly all implementation stories by design and would trivially
+> dominate any chain, making critical-path analysis uninformative for implementation scheduling.
 > Total: **S-1.01 → S-1.03 → S-1.04 → S-1.14 → S-1.15 → S-1.16 → S-1.20 → S-1.23 → S-1.24 → S-1.25**
 > = 10 stories, 69 points.
 
