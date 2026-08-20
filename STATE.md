@@ -1,10 +1,10 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "5.24"
+version: "5.25"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-20T15:37:00Z"
+timestamp: "2026-08-20T17:15:00Z"
 phase: 2
 inputs: []
 input-hash: "[live-state]"
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: 208 lines (wc-l) | margin from soft-target (200L): -8 lines | margin from actual wc-l: 0 lines | v5.24 P2A-006 fix-burst + D-213 + TDIV-009-VENDOR (2026-08-20). -->
+<!-- STATE.md SIZE BUDGET: 196 lines (wc-l) | margin from soft-target (200L): +4 lines | margin from actual wc-l: 0 lines | compact-state v5.25 (2026-08-20): CORPUS STATE, DECISION DELTA, LESSONS CODIFIED, VALIDATOR BASELINES archived to cycles/v1.0.0-greenfield/session-checkpoints.md. -->
 
 # Pipeline State: pregolya
 
@@ -37,7 +37,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-08-20 — P2A-006 fix-burst + D-213 minted; STATE.md v5.24. TDIV-009-VENDOR blocking-issue recorded. trajectory-tail →7→3→8→2. NEXT: Phase-2 adversarial P2A-007. |
+| **Last Updated** | 2026-08-20 — compact-state v5.25; STATE.md 208→196 lines; trajectory-tail →7→3→8→2. NEXT: Phase-2 adversarial P2A-007. |
 
 ## Phase Progress
 
@@ -142,7 +142,7 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 
 ## Session Resume Checkpoint
 
-<!-- v5.24 checkpoint replaces v5.23 — v5.23 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- v5.25 checkpoint replaces v5.24 — v5.24 historical sections (CORPUS STATE, DECISION DELTA, LESSONS CODIFIED, VALIDATOR BASELINES) archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
 Pregolya (Rust port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 COMPLETE (3/3 converged, gate closed D-197). Phase 2 content COMPLETE (39 story specs, 133/133 BC coverage; 14 holdout scenarios sealed). In Phase-2 adversarial story convergence (BC-5.39.001 3-CLEAN, streak 0/3). NEXT: adversary **P2A-007** (streak restart 1/3 attempt) on the post-P2A-006-fix HEAD. Inject rubric note: F-02 holdout `## Category:` heading is HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. OBS-1 process-gap open (DAG reciprocity validator — codification required before Phase-2 gate close).
@@ -160,15 +160,6 @@ Pregolya (Rust port of langchain/langgraph), greenfield+semport, /Users/jmagady/
 ### PENDING USER-APPROVED WORK
 None pending (Phase 2→3 autonomous per DIRECTIVE 1; Phase-1 closed under D-170).
 
-### CORPUS STATE (Phase-1-close snapshot; P2A-001..006 (sample) fix-bursts do not change BC/VP/ADR counts except E-CHKPT-010)
-133 BCs (51 P0 / 79 P1 / 3 P2); 39 CAPs; 16 DIs; 14 VPs (6 P0/8 P1); 26 ADRs; **115 error codes / 13 categories** (E-CHKPT-010 FtsEncryptionIncompatible minted P2A-005 F-06); ~698 TVs; **83 distinct modules (CRIT 12 / HIGH 28 / MED 35 / LOW 2 / exempt 6; tiered 77)**. Phase-2: 39/39 story specs COMPLETE. 14/14 holdout scenarios SEALED. STORY-INDEX census: VP-anchor 12, RedGate BCs 8. wave-schedule critical path: 69 pts.
-
-### DECISION DELTA (P2A-006 fix-burst v5.24)
-D-213 minted (2026-08-20): P2A-006 NOT CLEAN (1M/1OBS); fix-burst CLOSED all 2; TDIV-009-VENDOR recorded; streak 0/3. D-212: P2A-005 (7 findings). D-208..D-211 (sample): P2A-001..004. Prior: D-207 (holdouts). See burst-log for full detail.
-
-### LESSONS CODIFIED (P2A-006 fix-burst)
-No new lessons minted — story-writer/PO/state-manager remediation. See cycles/v1.0.0-greenfield/lessons.md.
-
 ### PRODUCT BACKLOG PRIORITY (Phase 2)
 1. **P2A-007** — Phase-2 adversarial story convergence re-pass (adversary, BC-5.39.001; streak 0/3 → target 3/3; rubric note: TDIV-009 holdout heading accepted)
 2. **OBS-1** — DAG reciprocity validator codification (devops-engineer; required before Phase-2 gate close)
@@ -182,10 +173,7 @@ No new lessons minted — story-writer/PO/state-manager remediation. See cycles/
 - Pre-existing human/vendor actions OPEN: E013 (repo default_branch → main); R14/R6 (cargo login + publish-all.sh for 21 pregolya-* names); B1 (direnv allow .); TDIV-008 (engine path_allow, vendor). WORKSPACE INIT INCOMPLETE (Cargo.toml/crates/Justfile absent — Phase-3 prerequisite).
 
 ### OPS NOTES FOR NEXT SESSION
-P2A-006 fix-burst COMPLETE (D-213; 2 findings). STATE.md v5.24. TDIV-009-VENDOR recorded. Next: P2A-007 adversarial re-pass (adversary dispatch, fresh-context; rubric note: TDIV-009 accepted) → 3-CLEAN per BC-5.39.001 → pre-Phase-2-gate consistency audit → Phase-2 gate → Phase 3.
-
-### VALIDATOR BASELINES (burst-325; 14 blocking + 1 advisory — unchanged by Phase-2 authoring + P2A-001..006 (sample) fix-bursts)
-verify-no-version-pins: PASS=209+ · verify-adr-decision-refs: PASS=399+ · records-lint: PASS (L10 WARN advisory — 7-hex SHA in bc-authoring-plan changelog prose, non-blocking) · verify-changelog-date-monotonicity: PASS · verify-changelog-date-validity: PASS · verify-enum-variant-casing: PASS · verify-signature-canon: PASS=5 · verify-error-notation-canon: PASS · verify-form-a-changelog-direction: PASS · verify-arch-anchor-resolution: PASS=133+ · verify-module-canonicality: PASS=8 · verify-bc-frontmatter-schema: PASS=133 · verify-tv-registry-count: PASS · **verify-adr-anchor-citations: PASS (BLOCKING; B1 60+B2 198 = 258 cites 0 phantom; 14 self-probes)**.
+compact-state v5.25 COMPLETE. STATE.md 208→196 lines. CORPUS STATE/DECISION DELTA/LESSONS CODIFIED/VALIDATOR BASELINES archived to session-checkpoints.md. Next: P2A-007 adversarial re-pass (adversary dispatch, fresh-context; rubric note: TDIV-009 accepted) → 3-CLEAN per BC-5.39.001 → pre-Phase-2-gate consistency audit → Phase-2 gate → Phase 3.
 
 ### PENDING HUMAN ACTIONS
 1. **E013 (Medium)** — Set `default_branch` to `main` (D-118). `gh repo edit --default-branch main`.
@@ -199,7 +187,7 @@ verify-no-version-pins: PASS=209+ · verify-adr-decision-refs: PASS=399+ · reco
 |---------|----------|
 | Burst narratives (bursts 1–336; Phase-2 per-story authoring + holdout scenarios; P2A-001..006 (sample) fix-bursts) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-006) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
-| Session checkpoints (v4.45..v5.23 archived; v5.10..v5.17 in git history of STATE.md) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints (v4.45..v5.24 archived; v5.24 historical sub-sections extracted 2026-08-20) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (188+ lessons) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Resolved blockers (R1–R5, R7, R9) | `cycles/v1.0.0-greenfield/blocking-issues-resolved.md` |
 | Spec artifacts (133 BCs; 14 VPs; 26 ADRs; PRD; L2 domain spec; architecture) | `.factory/specs/` |

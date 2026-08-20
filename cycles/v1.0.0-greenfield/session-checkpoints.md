@@ -2570,3 +2570,21 @@ Date: 2026-08-19 | Archived at: v5.20 P2A-002 fix-burst + session wrap | STATE.m
 
 #### v5.19 RESUME IN ONE BREATH
 Pregolya — Phase 2 (Story Decomposition) IN PROGRESS, greenfield+semport, /Users/jmagady/Dev/pregolya (GitHub BOHICA-LABS/pregolya). Phase 1 CLOSED 2026-08-18 (D-197; burst-325). Phase-2 structural decomposition COMPLETE (burst-326; D-198): 22 epics / 39 stories / 294 pts; 133/133 BC coverage; DAG acyclic. Per-story authoring COMPLETE (39/39; D-199..D-206 (sample)). Holdout scenarios COMPLETE (D-207; burst-335): 14 total / 9 must-pass = 64%; SEALED until Phase 4. P2A-001 fix-burst COMPLETE (D-208; 2026-08-19): 8 findings (1C/1H/3M/3L) closed — S-1.25 VP-012 crate re-anchor to pregolya-core::core::budget, 24 epic_id corrections across story files, STORY-INDEX census (VP-anchor 10→12, RedGate 9→8), S-6.01 reciprocity, records-tier. trajectory-tail →0→0→0→8; streak 0/3. NEXT: P2A-002.
+
+---
+
+## Extracted from STATE.md on 2026-08-20 — STATE.md v5.24 Session Checkpoint Historical Sections
+
+The following sub-sections were extracted from the STATE.md v5.24 Session Resume Checkpoint during compact-state v5.25. They are verbose/historical rather than resume-critical and are archived here per content-routing rules.
+
+### CORPUS STATE (Phase-1-close snapshot; P2A-001..006 (sample) fix-bursts do not change BC/VP/ADR counts except E-CHKPT-010)
+133 BCs (51 P0 / 79 P1 / 3 P2); 39 CAPs; 16 DIs; 14 VPs (6 P0/8 P1); 26 ADRs; **115 error codes / 13 categories** (E-CHKPT-010 FtsEncryptionIncompatible minted P2A-005 F-06); ~698 TVs; **83 distinct modules (CRIT 12 / HIGH 28 / MED 35 / LOW 2 / exempt 6; tiered 77)**. Phase-2: 39/39 story specs COMPLETE. 14/14 holdout scenarios SEALED. STORY-INDEX census: VP-anchor 12, RedGate BCs 8. wave-schedule critical path: 69 pts.
+
+### DECISION DELTA (P2A-006 fix-burst v5.24)
+D-213 minted (2026-08-20): P2A-006 NOT CLEAN (1M/1OBS); fix-burst CLOSED all 2; TDIV-009-VENDOR recorded; streak 0/3. D-212: P2A-005 (7 findings). D-208..D-211 (sample): P2A-001..004. Prior: D-207 (holdouts). See burst-log for full detail.
+
+### LESSONS CODIFIED (P2A-006 fix-burst)
+No new lessons minted — story-writer/PO/state-manager remediation. See cycles/v1.0.0-greenfield/lessons.md.
+
+### VALIDATOR BASELINES (burst-325; 14 blocking + 1 advisory — unchanged by Phase-2 authoring + P2A-001..006 (sample) fix-bursts)
+verify-no-version-pins: PASS=209+ · verify-adr-decision-refs: PASS=399+ · records-lint: PASS (L10 WARN advisory — 7-hex SHA in bc-authoring-plan changelog prose, non-blocking) · verify-changelog-date-monotonicity: PASS · verify-changelog-date-validity: PASS · verify-enum-variant-casing: PASS · verify-signature-canon: PASS=5 · verify-error-notation-canon: PASS · verify-form-a-changelog-direction: PASS · verify-arch-anchor-resolution: PASS=133+ · verify-module-canonicality: PASS=8 · verify-bc-frontmatter-schema: PASS=133 · verify-tv-registry-count: PASS · **verify-adr-anchor-citations: PASS (BLOCKING; B1 60+B2 198 = 258 cites 0 phantom; 14 self-probes)**.
