@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -17,7 +17,7 @@ epic_id: N/A
 behavioral_contracts:
   - BC-2.02.005
   - BC-2.04.001
-  - BC-2.04.004
+  - BC-2.03.001
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
@@ -35,6 +35,7 @@ coverage_areas:
   - graph_execution
   - checkpoint_resume
 changelog:
+  - "1.2 (F-P2A007-02, P2A-007-fix-burst, 2026-08-20): BC-2.04.004 mis-anchor corrected — BC-2.04.004 (Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork) replaced with BC-2.03.001 (BSP Super-Step Execution Determinism — Kani VP Seed (NE-17)) in frontmatter behavioral_contracts and §Behavioral Contract Linkage table. HS-B-004 performs no fork; BC-2.04.004 governs fork lineage and was never exercised by this scenario. BC-2.03.001 governs the super-step ceiling halt (E-GRAPH-017) directly exercised by the Edge Condition: max-iterations guard fires before convergence. Clause updated to match BC-2.03.001 scope. Note: 1.1 claim 'verified against BC-INDEX' was incorrect for the BC-2.04.004 anchor."
   - "1.0 (initial, 2026-08-18): base scenario authored."
   - "1.1 (F-P2A003-02, P2A-003-fix-burst, 2026-08-19): BC-linkage re-anchoring sweep — 2 BCs re-anchored in frontmatter behavioral_contracts and BC-linkage table to semantically-correct IDs verified against BC-INDEX."
 ---
@@ -74,7 +75,7 @@ A review-fix cycle is modeled as a cyclic subgraph. The cycle terminates when th
 | BC ID | Clause Tested | Scenario Aspect |
 |-------|--------------|-----------------|
 | BC-2.02.005 | Conditional edge routes to loop-continue vs. loop-exit based on state | Streak < 3 → continue; streak == 3 → exit |
-| BC-2.04.004 | Cyclic subgraph executes bounded iterations; per-iteration checkpoint written | Each iteration checkpointed; state accumulates across iterations |
+| BC-2.03.001 | Super-step ceiling (recursion_limit) halts loop with E-GRAPH-017 when max-iterations reached before convergence | Edge condition: max-iterations guard fires; loop terminates with structured error, not panic |
 | BC-2.04.001 | Checkpoint written per iteration; state available on resume | convergence state (clean_streak, total_iterations) persisted |
 
 ---

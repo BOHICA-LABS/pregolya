@@ -166,6 +166,8 @@ input-hash: "pending"
 > A validator checking `verification_properties ⊆ VP-INDEX` must not flag S-1.08 as having gaps
 > because its frontmatter correctly holds `[]`.
 
+> **Status axes:** `STORY-INDEX` `Status: draft` = story-document lifecycle_status (pre-merge); `sprint-state.yaml` `status: spec-ready` = Phase-3 delivery-readiness. Distinct vocabularies; both intentionally uniform pre-Phase-3.
+
 ---
 
 ## BC to Story Coverage Map
