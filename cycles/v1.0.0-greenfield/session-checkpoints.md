@@ -2611,3 +2611,26 @@ dispatch `vsdd-factory:adversary` **P2A-009** — fresh context, Phase-1-active 
 
 #### v5.27 OPS NOTES
 compact-state v5.27 COMPLETE. P2A-008 fix-burst COMPLETE (D-215; 5 findings 4M/1L). P2A-001..004 Phase-Progress rows + P2A-003 step row archived to burst-log. Next: P2A-009 adversarial re-pass.
+
+---
+
+## Extracted from STATE.md on 2026-08-20 — STATE.md v5.28 Session Checkpoint (replaced by v5.29)
+
+### v5.28 RESUME IN ONE BREATH
+Pregolya (Rust port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 COMPLETE (3/3 converged, gate closed D-197). Phase 2 content COMPLETE (39 story specs, 133/133 BC coverage; 14 holdout scenarios sealed). In Phase-2 adversarial story convergence (BC-5.39.001 3-CLEAN, streak 0/3). NEXT: adversary **P2A-010** (streak restart 1/3 attempt) on the post-P2A-009-fix HEAD. Inject rubric note: F-02 holdout `## Category:` heading is HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. OBS-1 process-gap open. P2A-009 was Level-2 partial — P2A-010 must read un-read slice (S-1.05–1.13, S-1.21–1.23, S-2.01, S-2.03–2.05, S-2.10, S-2.11, S-6.01, all 14 holdouts).
+
+#### v5.28 HEADS
+- develop `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: (run `git -C .factory log -1 --format='%h'` for HEAD at time of v5.28)
+- Story worktrees: NONE. Open PRs: NONE.
+
+#### v5.28 NEXT-ACTION
+dispatch `vsdd-factory:adversary` **P2A-010** — fresh context, Phase-1-active POL rubric + TDIV-009 accepted note, Form-B, dual CLEAN verdict; prioritize un-read slice (S-1.05–1.13, S-1.21–1.23, S-2.01, S-2.03–2.05, S-2.10, S-2.11, S-6.01, all 14 holdouts). Streak 0/3 → target 3/3.
+
+#### v5.28 PRODUCT BACKLOG
+1. P2A-010 (adversary, BC-5.39.001; streak 0/3 → target 3/3; rubric: TDIV-009 accepted; un-read slice mandatory)
+2. OBS-1 (DAG reciprocity validator; required before Phase-2 gate close)
+3. Pre-Phase-2-gate consistency audit → Phase 3
+
+#### v5.28 OPS NOTES
+compact-state v5.28 COMPLETE. P2A-009 fix-burst COMPLETE (D-216; 8 findings 1C/3H/3M/1L). P2A-005..006 Phase-Progress pairs archived to burst-log. Next: P2A-010 adversarial re-pass.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.2 (burst-236/OBS-P136-A/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX as VP-011' (VP-INDEX v1.5 burst-232 seeded VP-011 Kani P0)."
   - "1.3 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. PC-4 updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.4 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors and §Traceability VP Registration: 'VP-INDEX v1.5 as' → 'VP-INDEX as' (plain prose, no §-anchor introduced). verify-no-version-pins.sh PASS."
+  - "1.5 (fix-burst-P2A-010/F-P2A010-08/2026-08-20): Add PC-7 (Pure Routing Core — VP-011 proof surface): formally define `route_pre_tool_decision`, `shield_hook_result`, and `DispatchOutcome` as required named items in `graph::hitl`. These are the VP-011 Kani proof targets; Kani 0.67.0 cannot target `pre_tool_dispatch` directly (async), so pure extraction is required. Update §Invariants fail-closed Deny text to name `route_pre_tool_decision`. Update §Verification Properties VP-011 row to reference the pure functions and DispatchOutcome by name."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -91,13 +92,52 @@ under no code path does a `Deny` decision allow the tool to execute.
    is fail-closed under all error conditions.
 6. **No hook configured:** `pre_tool_dispatch` returns `Ok(A)` immediately (equivalent to
    Approve) without calling `pre_invoke`. Existing graphs unaffected.
+7. **Pure Routing Core (VP-011 Proof Surface):** The implementation MUST define the following
+   type and extract the following two named pure-core synchronous functions in `graph::hitl`.
+   These are the VP-011 Kani proof targets. Extraction is required because Kani 0.67.0 has no
+   native async support and cannot target `pre_tool_dispatch` (async) directly.
+
+   `DispatchOutcome` enum (in `graph::hitl`):
+   - `Proceed(Option<serde_json::Value>)` — `None` = proceed with original args (Approve path);
+     `Some(args)` = proceed with modified args (valid Edit path). The effectful `pre_tool_dispatch`
+     wrapper resolves the final arg value before calling `tool.invoke`.
+   - `Reject(String)` — tool MUST NOT be invoked; reason propagated to model context as
+     `ToolOutput::Error(reason)`.
+
+   `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` (pure, sync, no I/O):
+   Maps the three routable `PreToolDecision` variants plus the `#[non_exhaustive]` wildcard to
+   their dispatch outcome. `PendingHumanApproval` is peeled off upstream by the async
+   `pre_tool_dispatch` wrapper before this function is called (Option A design):
+   - `Deny { reason }` → `Reject(reason)` (fail-closed; `Proceed` is structurally unreachable
+     from this arm — this is the VP-011 primary invariant)
+   - `Approve` → `Proceed(None)` (signal to use original args from wrapper context)
+   - `Edit { modified_args }` where `modified_args.is_object()` →
+     `Proceed(Some(modified_args))`
+   - `Edit { modified_args }` where `!modified_args.is_object()` →
+     `Reject("invalid modified_args")`
+   - `_ (#[non_exhaustive] wildcard)` → `Reject("unexpected_variant")` (fail-closed safety for
+     `PendingHumanApproval` if it unexpectedly bypasses the peel-off, and for any future
+     `PreToolDecision` variants)
+
+   `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision`
+   (pure, sync, no I/O):
+   - `Err(_)` → `PreToolDecision::Deny { reason: "hook error: <detail>" }` (step 2 of
+     ADR-018 Decision 3 dispatch sequence)
+   - `Ok(d)` → `d`
+
+   The async `pre_tool_dispatch` wrapper calls these functions in order: first
+   `shield_hook_result` on the raw hook result (or constructs `Deny` on panic-catch), then
+   peels off `PendingHumanApproval` if present (issuing interrupt via BC-2.05.001 machinery),
+   then calls `route_pre_tool_decision` on the remaining routable variant.
 
 ## Invariants
 
 - **Fail-closed Deny (VP-011 Kani seed):** `PreToolDecision::Deny` ALWAYS results in
   `ToolOutput::Error(reason)` being returned WITHOUT invoking the tool. Under no control flow
-  path does a Deny decision allow tool execution. This is a pure routing decision provable
-  by Kani: the Deny branch contains no call to `tool.invoke`.
+  path does a Deny decision allow tool execution. The property is proved by Kani via the
+  pure-core `route_pre_tool_decision` function (PC-7): `Deny { reason }` returns
+  `DispatchOutcome::Reject(reason)` and `DispatchOutcome::Proceed` is structurally unreachable
+  from the `Deny` arm.
 - `pre_tool_dispatch` is called for EVERY tool invocation — there is no bypass, no
   tool-whitelist that skips the hook.
 - Hook failure (panic or error) is treated as Deny, not Approve. This is the fail-closed
@@ -136,7 +176,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-011 (Kani P0 candidate) | PreToolDecision::Deny never results in tool.invoke being called — pure routing guarantee | Kani exhaustive proof: Deny branch has no call to invoke; no side-channel to tool execution |
+| VP-011 (Kani P0) | `route_pre_tool_decision(Deny{..})` returns `DispatchOutcome::Reject` only; `DispatchOutcome::Proceed` unreachable from `Deny` arm; `shield_hook_result(Err(_))` → `Deny{..}`; `#[non_exhaustive]` wildcard → `Reject` (fail-closed) — all proved over pure-core sync functions (PC-7) | Kani exhaustive proof targeting `route_pre_tool_decision` and `shield_hook_result` in `graph::hitl`; async `pre_tool_dispatch` excluded from Kani scope (no native async support in Kani 0.67.0) |
 | VP-2.05.007-B | Hook panic treated as Deny (fail-closed); tool not invoked | Unit test: hook impl that panics; assert ToolOutput::Error returned |
 | VP-2.05.007-C | Edit path validates modified_args is JSON object; falls back to Deny if not | Unit test: hook returns Edit with invalid args; assert ToolOutput::Error |
 

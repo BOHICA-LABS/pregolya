@@ -64,7 +64,7 @@ Verified by a mock that tracks whether any message was assembled before the guar
 ### AC-003 (traces to BC-2.18.004 postcondition 2)
 When injection is detected, the error is:
 `Err(PregolyaError::new(Component::Tmpl, Category::Security, RetryHint::Never, "E-TMPL-001",
-"InjectionAttempt: variable '{<var_name>}' carries untrusted provenance but slot '<slot_role>' requires TrustRequired policy"))`.
+"InjectionAttempt: variable '<var_name>' carries untrusted provenance but slot '<slot_role>' requires TrustRequired policy"))`.
 Both `var_name` and `slot_role` are dynamically interpolated into the message.
 Verified by `test_BC_2_18_004_e_tmpl_001_dynamic_message_contains_var_and_role()`.
 

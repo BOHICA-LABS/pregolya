@@ -62,7 +62,7 @@ The FTS5 index is updated in the same SQLite transaction as the checkpoint write
 `fts_search` with `FtsSearchConfig { limit: 0, .. }` returns `Err(PregolyaError { code: "E-CHKPT-008", message: "FtsLimitZero: limit must be > 0", .. })`. Verified by `test_BC_2_04_008_fts_limit_zero_error()`.
 
 ### AC-006 (traces to BC-2.04.008 edge case EC-002 — Fts5Unavailable)
-If the SQLite build used at runtime does not include the FTS5 extension (e.g., compiled without `SQLITE_ENABLE_FTS5`), `fts_search` returns `Err(PregolyaError { code: "E-CHKPT-009", message: "Fts5Unavailable: the SQLite FTS5 extension is not available in this build", .. })`. Verified by `test_BC_2_04_008_fts5_unavailable_error()`.
+If the SQLite build does not include the FTS5 extension (e.g., compiled without `SQLITE_ENABLE_FTS5`) and FTS is requested, `CheckpointSaver::new()` returns `Err(PregolyaError { code: "E-CHKPT-009", message: "Fts5Unavailable: FTS5 extension not available in this SQLite build — recompile SQLite with FTS5 support or use a pre-built distribution that includes it", .. })` at construction time — before any DDL executes. The error fires during construction, not at query time. Verified by `test_BC_2_04_008_fts5_unavailable_error()`.
 
 ### AC-007 (traces to BC-2.04.008 invariant 1 — append-only index consistency)
 Checkpoint records are append-only by design: writes add rows, never update or delete them. The FTS index mirrors this append-only invariant — FTS entries are never deleted or updated during a run. The FTS index accurately reflects the full append-only checkpoint write history. Verified by `test_BC_2_04_008_fts_index_append_only()`.
@@ -162,7 +162,7 @@ Files to MODIFY:
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | `fts_search` with `limit: 0` | `Err(E-CHKPT-008 FtsLimitZero)` |
-| EC-002 | FTS5 extension absent from SQLite | `Err(E-CHKPT-009 Fts5Unavailable)` |
+| EC-002 | FTS5 extension absent from SQLite build (detected at construction) | `CheckpointSaver::new()` returns `Err(E-CHKPT-009 Fts5Unavailable)` at construction time — not at query time |
 | EC-003 | `thread_id: Some("nonexistent")` in FtsSearchConfig | Returns `Ok(vec![])` — no results, no error |
 | EC-004 | Query is an empty string `""` | Implementation-defined: either `Ok(vec![])` or returns all results up to limit. Must not panic |
 | EC-005 | FTS5 enabled simultaneously with `EncryptedSerializer` | Construction-time `Err(E-CHKPT-010 FtsEncryptionIncompatible)` — FTS5 stores plaintext message content, tool call arguments, and tool results in the SQLite database file; this would write plaintext state and event payload to disk, violating the at-rest encryption guarantee (no plaintext payload may reach persistent storage when `EncryptedSerializer` is active). FTS5 and `EncryptedSerializer` are mutually exclusive by design; `CheckpointSaver::new()` returns the error before any DDL executes. See BC-2.04.008 EC-007 and AC-008. |

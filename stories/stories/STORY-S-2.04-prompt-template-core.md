@@ -72,7 +72,7 @@ Verified by `test_BC_2_18_001_format_substitutes_vars_and_escapes()`.
 ### AC-004 (traces to BC-2.18.001 postcondition 4)
 `PromptTemplate::format` with a missing variable returns
 `Err(PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, "E-TMPL-003",
-"undefined-template-variable: '{<var_name>}' is not bound in the provided values"))`.
+"UndefinedVariable: variable '<var_name>' is not defined in the template context"))`.
 The error message contains the variable name (dynamic interpolation for E-TMPL-003).
 Verified by `test_BC_2_18_001_missing_var_returns_e_tmpl_003()`.
 

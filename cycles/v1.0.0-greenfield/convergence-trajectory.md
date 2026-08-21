@@ -2523,3 +2523,36 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-216 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-010 (must complete un-read slice).
 
 **Convergence dim-5 (Phase-2 P2A-009):** Counter **0/3 — NOT CLEAN (D-216; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →2→3→4→8. NEXT: P2A-010 (streak restart 1/3 attempt; un-read slice mandatory). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted.
+
+---
+
+### P2A-010 — Pass 10 (2026-08-20, fix-burst post-pass-10)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P2A-010 | 2026-08-20 | 10 | 0 | 5 | 3 | 2 | MEDIUM | 0/3 | NOT CLEAN |
+
+**Coverage:** Un-read-slice pass — completed coverage of S-1.05–1.13, S-1.21–1.23, S-2.01, S-2.03–2.05, S-2.10, S-2.11, S-6.01, and all 14 holdout scenarios (deferred from P2A-009). Full corpus now covered.
+
+**Findings:**
+- F-P2A010-01 (HIGH): S-1.06 AC-002 error category RETRY→POLICY (E-RETRY-003 is in POLICY category per error-taxonomy.md; story had RETRY).
+- F-P2A010-02 (HIGH): S-1.07 ActionRisk enum canonical form — variants corrected to `{ReadOnly, Low, Med, High}` (not `{Low, Med, High, Critical}`); `path` attribute form corrected per api-surface/D-25.
+- F-P2A010-03 (HIGH): S-1.14 4× error category `GRAPH(Component)`→`VAL` (4 error codes in AC sections used non-canonical GRAPH(Component) category label; taxonomy canonical is VAL for those codes).
+- F-P2A010-04 (HIGH, POL-6): S-1.23 PreTool/HITL surface — hooks::pre_tool and executor::tool_dispatch module paths relocated to canonical `graph::hitl`; 3 pure-routing deliverables added (`route_pre_tool_decision`, `shield_hook_result`, `DispatchOutcome`); AC-011 added (Pure-core router functions — VP-011 Kani proof targets); SS-05 subsystem name corrected to 'HITL Interrupt / Resume'.
+- F-P2A010-05 (HIGH): S-1.08 E-SPLIT-001/E-SPLIT-002 error code names corrected to `ZeroChunkSize` / `OverlapExceedsChunk` (canonical per error-taxonomy.md).
+- F-P2A010-06 (MED): S-2.04 E-TMPL-003 renamed `UndefinedVariable` (canonical per error-taxonomy.md; story had non-canonical alias).
+- F-P2A010-07 (MED): S-1.11 E-CHKPT-009 raise site moved from fts_search runtime→`CheckpointSaver::new()` construction (fail-fast at construction when FTS+encryption both enabled; matches canonical message from error-taxonomy.md).
+- F-P2A010-08 (MED): VP-011 pure-routing surface — product-owner added BC-2.05.007 PC-7 (postcondition 7) defining `route_pre_tool_decision`, `shield_hook_result`, and `DispatchOutcome` as required named items in `graph::hitl` with fail-closed Deny semantics; VP-011 updated to v1.5 citing PC-7 as proof-surface authority; S-1.23 gained 3 pure-routing deliverables and AC-011; S-6.01 VP-011 narrative and AC-003 aligned (Kani harness was previously un-compilable due to missing pure-sync vehicle).
+- F-P2A010-09 (LOW): S-1.23 SS-05 subsystem name corrected to 'HITL Interrupt / Resume' (canonical per ARCH-INDEX; was 'PreToolCallHook').
+- F-P2A010-10 (LOW): S-1.09 E-SBXD-006 canonical message corrected; S-2.05 brace variance in error struct literal normalized.
+- PGAP-1 (process-gap): No mechanical gate diffs story AC error-message strings against error-taxonomy.md §Message Format. P2A-010 found ~6 divergences (S-1.06/07/08/09/11/14, S-2.04/05). Codification required before Phase-2 gate close. Recorded as PGAP-MSGDRIFT.
+
+**Regression check:** All P2A-003..009 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (accepted per rubric note). TDIV-009-VENDOR accepted. Established TDIV-009 rubric note held.
+
+**VP-011 pure-routing surface note:** BC-2.05.007 §PC-7 adds the pure-core routing requirement; VP-011 cites PC-7 as the proof-surface authority for `route_pre_tool_decision` and `shield_hook_result`. This makes the Kani harness compilable (pure sync functions = verifiable without async executor). No BC/VP count change — these are amendments to existing docs.
+
+**Corpus unchanged:** 133 BC / 14 VP / 115 EC / 12 VP-anchor / 8 RG.
+
+**D-217 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-011 (full corpus now covered; streak restart 1/3 attempt).
+
+**Convergence dim-5 (Phase-2 P2A-010):** Counter **0/3 — NOT CLEAN (D-217; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →3→4→8→10. NEXT: P2A-011 (streak restart 1/3 attempt; full corpus coverage now complete). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT open (AC message-string drift; no mechanical gate yet).

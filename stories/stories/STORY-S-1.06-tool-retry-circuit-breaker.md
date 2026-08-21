@@ -46,7 +46,7 @@ tdd_mode: strict
 `ToolRetryPolicy` stores per-tool limits keyed by `tool_name: &str` (NOT by args hash). Two tool invocations with identical `tool_name` but different arguments share the same retry counter. Verified by `test_BC_2_16_001_keyed_by_tool_name_only()`.
 
 ### AC-002 (traces to BC-2.16.001 postcondition 2)
-When per-tool retry limit is exhausted, the returned error is `Err(PregolyaError { category: RETRY, code: "E-RETRY-001", message: "RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts", .. })`. Verified by `test_BC_2_16_001_per_tool_limit_exhausted()`.
+When per-tool retry limit is exhausted, the returned error is `Err(PregolyaError { category: POLICY, code: "E-RETRY-001", message: "RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts", .. })`. Verified by `test_BC_2_16_001_per_tool_limit_exhausted()`.
 
 ### AC-003 (traces to BC-2.16.001 postcondition 3)
 Constructing a `ToolRetryPolicy` with `attempt_limit: 0` returns `Err(PregolyaError { category: VAL, code: "E-RETRY-004", message: "InvalidRetryLimit: attempt limit must be > 0", .. })`. Verified by `test_BC_2_16_001_zero_limit_construction_error()`.

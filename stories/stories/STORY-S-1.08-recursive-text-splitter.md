@@ -76,10 +76,10 @@ The Red Gate test file must compile but all 11 GTV tests must FAIL (return Err o
 Chunk size is measured in Unicode code points via `str.chars().count()`, NOT byte length (`str.len()`). A test with input containing multi-byte UTF-8 characters (e.g., `"🦀"` = 1 code point, 4 bytes; `"é"` = 1 code point, 2+ bytes depending on normalization) demonstrates that `chunk_size` counts code points. Verified by `test_BC_2_07_001_codepoint_sizing_vs_byte_len()`.
 
 ### AC-002 (traces to BC-2.07.001 postcondition 2)
-Constructing a `RecursiveCharacterTextSplitter` with `chunk_size: 0` returns `Err(PregolyaError { category: VAL, code: "E-SPLIT-001", message: "InvalidChunkSize: chunk_size must be > 0", .. })`. Verified by `test_BC_2_07_001_zero_chunk_size_error()`.
+Constructing a `RecursiveCharacterTextSplitter` with `chunk_size: 0` returns `Err(PregolyaError { category: VAL, code: "E-SPLIT-001", message: "ZeroChunkSize: chunk_size must be > 0 code points; got 0", .. })`. Verified by `test_BC_2_07_001_zero_chunk_size_error()`.
 
 ### AC-003 (traces to BC-2.07.001 postcondition 3)
-Constructing with `overlap >= chunk_size` returns `Err(PregolyaError { category: VAL, code: "E-SPLIT-002", message: "InvalidOverlap: overlap must be < chunk_size", .. })`. The check uses code-point counts for both `chunk_size` and `overlap`. Verified by `test_BC_2_07_001_overlap_ge_chunk_size_error()`.
+Constructing with `overlap >= chunk_size` returns `Err(PregolyaError { category: VAL, code: "E-SPLIT-002", message: "OverlapExceedsChunk: overlap <overlap> must be < chunk_size <chunk_size>", .. })`. The check uses code-point counts for both `chunk_size` and `overlap`. Verified by `test_BC_2_07_001_overlap_ge_chunk_size_error()`.
 
 ### AC-004 (traces to BC-2.07.001 postcondition 4)
 Each separator in the configured list is tried in order. The first separator that produces chunks within the `chunk_size` limit is used. If no separator splits sufficiently, the splitter falls back to hard-splitting at `chunk_size` code-point boundaries. Verified by `test_BC_2_07_001_separator_cascade_order()`.

@@ -60,7 +60,7 @@ tdd_mode: strict
 `StateGraph::builder()` followed by `add_node(name, async_fn)` and channel schema registration compiles and does not error for a valid graph. Verified by `test_BC_2_02_001_builder_accepts_valid_graph()`.
 
 ### AC-002 (traces to BC-2.02.001 postcondition 2 — compile errors on invalid graph; add_node errors on duplicate name)
-`compile()` returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-008, .. })` when the graph has no reachable path from `START` (no entry edge or zero nodes). `add_node()` returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-009, .. })` when a node name is already registered. Writing to an unregistered channel key returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-007, .. })` at runtime from `invoke`/`stream` at the `apply_writes` stage — this is NOT a compile-time error. Verified by `test_BC_2_02_001_compile_rejects_invalid_graphs()`.
+`compile()` returns `Err(PregolyaError { category: VAL, code: E-GRAPH-008, .. })` when the graph has no reachable path from `START` (no entry edge or zero nodes). `add_node()` returns `Err(PregolyaError { category: VAL, code: E-GRAPH-009, .. })` when a node name is already registered. Writing to an unregistered channel key returns `Err(PregolyaError { category: VAL, code: E-GRAPH-007, .. })` at runtime from `invoke`/`stream` at the `apply_writes` stage — this is NOT a compile-time error. Verified by `test_BC_2_02_001_compile_rejects_invalid_graphs()`.
 
 ### AC-003 (traces to BC-2.02.001 postcondition 3 — channels materialised at compile time)
 All channels declared in the state schema are materialised before the first super-step begins; no channel is created lazily during execution. Verified by `test_BC_2_02_001_channels_materialised_at_compile()`.
@@ -87,7 +87,7 @@ An `EphemeralValue<T>` channel's value is not written to the checkpoint and is a
 A checkpoint snapshot of graph state taken after a super-step that wrote an `EphemeralValue<T>` contains no key for that channel. Verified by `test_BC_2_02_004_ephemeral_value_not_in_checkpoint()`.
 
 ### AC-011 (traces to BC-2.02.003 EC-003 — NamedBarrierValue duplicate writer raises E-GRAPH-004)
-When a declared writer of a `NamedBarrierValue` channel writes twice in the same super-step (e.g., two `Send` tasks bearing the same writer name both deliver to the channel in that step), the engine returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-004, .. })` with fields `{ channel, writer, step }`. Verified by `test_BC_2_02_003_named_barrier_duplicate_writer_error()`.
+When a declared writer of a `NamedBarrierValue` channel writes twice in the same super-step (e.g., two `Send` tasks bearing the same writer name both deliver to the channel in that step), the engine returns `Err(PregolyaError { category: VAL, code: E-GRAPH-004, .. })` with fields `{ channel, writer, step }`. Verified by `test_BC_2_02_003_named_barrier_duplicate_writer_error()`.
 
 ## Architecture Mapping
 

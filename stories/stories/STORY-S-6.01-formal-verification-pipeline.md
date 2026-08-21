@@ -93,7 +93,7 @@ for each of the six P0 VPs:
 | VP-003 | `workspace_confinement_harness` | `canonicalize_beneath_root(base, path)` stays within `base` or returns `Err(WorkspaceEscape)` — no escape path |
 | VP-009 | `zero_norm_guard_fail_closed` | Zero-norm vector guard returns `E-VS-001` before any cosine division — no NaN propagation |
 | VP-010 | `allowlist_rejects_unregistered_id` | Unregistered type id raises `E-SRLZ-001` and never dispatches a constructor |
-| VP-011 | `deny_excludes_tool_invocation` | `Deny { .. }` routes to `DispatchOutcome::Reject`; `Approve` to `Proceed`; invalid-`Edit` falls back to `Reject`; hook errors shielded to `Deny { .. }` before routing; `#[non_exhaustive]` wildcard arm returns `Reject` |
+| VP-011 | `deny_excludes_tool_invocation` | `Deny { .. }` routes to `DispatchOutcome::Reject`; `Approve` to `DispatchOutcome::Proceed`; invalid-`Edit` falls back to `DispatchOutcome::Reject`; hook errors shielded to `Deny { .. }` before routing; `#[non_exhaustive]` wildcard arm returns `DispatchOutcome::Reject` |
 
 Any of these six VPs resulting in VERIFICATION FAILED is a blocking Phase-7 convergence-gate
 failure per BC-2.17.001 postcondition 3 and NFR-003.
@@ -356,12 +356,14 @@ stories must be merged before S-6.01 is dispatched.
   `core::serializable` — VP-010 harness was stubbed in S-2.01. The proptest VP-007 suite
   (round-trip) was authored in S-2.01 and must still pass.
 
-- **S-1.23 (PreToolCallHook)** established `route_pre_tool_decision` and
-  `shield_hook_result` in `graph::hitl` — VP-011 harness was stubbed in S-1.23. Critical
-  constraint from S-1.23: `PendingHumanApproval` is peeled off upstream in `pre_tool_dispatch`
-  before `route_pre_tool_decision` is called; the Kani harness covers only the three routable
-  variants (Approve/Deny/Edit) + hook-error path per BC-2.17.001 postcondition 1 VP-011
-  specification.
+- **S-1.23 (PreToolCallHook)** delivers `route_pre_tool_decision`, `shield_hook_result`, and
+  `DispatchOutcome` as named pure-core sync items in `graph::hitl` per S-1.23 AC-011 (Pure
+  Routing Core postcondition) — the VP-011 Kani harness (`deny_excludes_tool_invocation` in
+  `src/proofs/pre_tool_hook.rs`) calls these directly and must compile against S-1.23's
+  implementation. Critical constraint from S-1.23: `PendingHumanApproval` is peeled off
+  upstream in the async `pre_tool_dispatch` wrapper before `route_pre_tool_decision` is called;
+  the Kani harness covers only the three routable variants (Approve/Deny/Edit) + hook-error path
+  per BC-2.17.001 postcondition 1 VP-011 specification.
 
 - **S-1.25 (Compaction)** established `OnWatermark` arithmetic in `core::budget` — VP-012
   harness was stubbed in S-1.25. The non-strict `<=` boundary (fraction=1.0,

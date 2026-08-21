@@ -57,7 +57,7 @@ tdd_mode: strict
 `#[tool]` generates an `Args` struct named `<PascalCaseName>Args` that derives `serde::Deserialize` and `schemars::JsonSchema` (schemars 1.x). The generated `json_schema()` method on the `Tool` impl returns the schema produced by `schemars`. Verified by `test_BC_2_08_010_args_struct_schema()`.
 
 ### AC-003 (traces to BC-2.08.010 postcondition 3)
-`#[tool(action_risk = "High")]` emits the `action_risk()` method returning `Some(::pregolya_core::action_risk::ActionRisk::High)` using the fully-qualified path (no unqualified variant names). `#[tool]` without the attribute emits `action_risk()` returning `None`. Verified by `test_BC_2_08_010_action_risk_fully_qualified()`.
+`#[tool(action_risk = ActionRisk::High)]` emits the `action_risk()` method returning `Some(::pregolya_core::action_risk::ActionRisk::High)` using the fully-qualified path (no unqualified variant names). `#[tool]` without the attribute emits `action_risk()` returning `None`. Verified by `test_BC_2_08_010_action_risk_fully_qualified()`.
 
 ### AC-004 (traces to BC-2.08.010 postcondition 4)
 The function body annotated with `#[tool]` is moved into the generated `Tool::invoke` implementation. The original function is replaced by the macro expansion; no duplicate definition exists. Verified by `test_BC_2_08_010_invoke_body_moved()`.
@@ -69,7 +69,7 @@ The function signature wrapped by `#[tool]` MUST return `Result<T, PregolyaError
 If the generated `<PascalCaseName>Tool` or `<PascalCaseName>Args` name would collide with an existing identifier in the same module, the macro emits a compile error rather than silently shadowing. Verified by compile-fail test `test_BC_2_08_010_name_collision_compile_error`.
 
 ### AC-007 (traces to BC-2.08.010 edge case EC-003 — invalid action_risk value)
-`#[tool(action_risk = "InvalidVariant")]` emits a compile error: `"#[tool] action_risk must be one of: Low, Medium, High, Critical"`. Verified by compile-fail test `test_BC_2_08_010_invalid_action_risk_compile_error`.
+`#[tool(action_risk = ActionRisk::Critical)]` emits a compile error: `"#[tool] action_risk must be one of: ReadOnly, Low, Medium, High"`. Verified by compile-fail test `test_BC_2_08_010_invalid_action_risk_compile_error`.
 
 ### AC-008 (traces to BC-2.08.011 postcondition 1)
 `#[entrypoint]` applied to a function auto-wires the `START` edge to the annotated function's generated node in the `StateGraph`. The generated wiring calls `graph.set_entry_point(node_name)`. Verified by `test_BC_2_08_011_start_edge_wired()`.
@@ -204,7 +204,7 @@ Files to MODIFY:
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Generated `<PascalCaseName>Tool` or `<PascalCaseName>Args` collides with existing identifier in the same module | Macro emits compile error rather than silently shadowing (AC-006) |
-| EC-002 | `#[tool(action_risk = "InvalidVariant")]` with a value not in `{Low, Medium, High, Critical}` | Macro emits compile error: `"#[tool] action_risk must be one of: Low, Medium, High, Critical"` (AC-007) |
+| EC-002 | `#[tool(action_risk = ActionRisk::Critical)]` with a value not in `{ReadOnly, Low, Medium, High}` | Macro emits compile error: `"#[tool] action_risk must be one of: ReadOnly, Low, Medium, High"` (AC-007) |
 | EC-003 | `#[tool]` on a function whose return type is not `Result<T, PregolyaError>` | Macro emits compile error: `"#[tool] function must return Result<T, PregolyaError>"` (AC-005) |
 | EC-004 | Two functions in the same `StateGraph` builder annotated with `#[entrypoint]` | Macro expansion emits compile error: `"#[entrypoint] may be applied to at most one function per graph"` (AC-009) |
 | EC-005 | `#[task]` applied to a synchronous (non-async) function | Macro emits compile error: `"#[task] requires an async function"` (AC-015) |

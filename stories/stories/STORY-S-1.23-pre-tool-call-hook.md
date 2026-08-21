@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "d2a7f93"
+input-hash: "a0cbc81"
 traces_to:
   - behavioral-contracts/BC-2.05.007
   - behavioral-contracts/BC-2.05.008
@@ -47,7 +47,7 @@ As a platform operator, I want a `PreToolCallHook` dispatch gate that intercepts
 | This story spec | ~4,000 |
 | BC files (2 BCs: BC-2.05.007–008) | ~7,000 |
 | Architecture module-decomposition.md | ~3,000 |
-| Target source files (pregolya-graph/src/hooks/) | ~7,000 |
+| Target source files (`pregolya-graph/src/hitl.rs`) | ~7,000 |
 | Test files | ~8,000 |
 | S-1.20 (HITL interrupt/resume core) interface | ~3,000 |
 | **Total estimate** | **~32,000** |
@@ -103,16 +103,23 @@ A resume `Command(resume=PendingHumanApproval)` is invalid. The engine rejects t
 The `ToolApprovalRequest` interrupt payload is persisted using the msgpack checkpoint mechanism so that a process restart can reconstruct the pending approval state. FIFO ordering of pending approvals is maintained per the approval queue invariant (see BC-2.05.008 invariant 1).
 (traces to BC-2.05.008 invariant 1)
 
+### AC-011: Pure-core router functions — fail-closed routing (VP-011 Kani proof targets)
+`route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` and `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` are implemented as named pure sync functions in `pregolya_graph::hitl`. `DispatchOutcome` has variants `Proceed(Option<serde_json::Value>)` and `Reject(String)`. Routing semantics: `Deny{reason}` → `Reject(reason)`; `Approve` → `Proceed(None)`; `Edit{modified_args}` where `modified_args` is a JSON object → `Proceed(Some(modified_args))`; `Edit{modified_args}` where `modified_args` is NOT a JSON object → `Reject("invalid modified_args")`; `#[non_exhaustive]` wildcard arm → `Reject("unexpected_variant")`; `shield_hook_result(Err(_))` → `Deny{reason: "hook error: <detail>"}`. The VP-011 Kani harness stub (`deny_excludes_tool_invocation` in `src/proofs/pre_tool_hook.rs`) calls `route_pre_tool_decision` and `shield_hook_result` directly and MUST compile against this implementation.
+(traces to BC-2.05.007 postcondition 7)
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
 |-----------|--------|-------|---------------|
-| `PreToolCallHook` trait | `pregolya_graph::hooks::pre_tool` | pregolya-graph | Pure (trait definition) |
-| `PreToolDecision` enum | `pregolya_graph::hooks::pre_tool` | pregolya-graph | Pure (enum) |
-| `pre_tool_dispatch` | `pregolya_graph::executor::tool_dispatch` | pregolya-graph | Effectful (calls hook, may interrupt run) |
-| `ToolApprovalRequest` | `pregolya_graph::hooks::approval` | pregolya-graph | Pure (data type) |
+| `PreToolCallHook` trait | `pregolya_graph::hitl` | pregolya-graph | Pure (trait definition) |
+| `PreToolDecision` enum | `pregolya_graph::hitl` | pregolya-graph | Pure (enum) |
+| `DispatchOutcome` enum | `pregolya_graph::hitl` | pregolya-graph | Pure (enum — `Proceed(Option<serde_json::Value>)` / `Reject(String)`) |
+| `route_pre_tool_decision` | `pregolya_graph::hitl` | pregolya-graph | Pure (sync, no I/O — VP-011 Kani proof target per BC-2.05.007 PC-7) |
+| `shield_hook_result` | `pregolya_graph::hitl` | pregolya-graph | Pure (sync, no I/O — VP-011 Kani proof target per BC-2.05.007 PC-7) |
+| `pre_tool_dispatch` | `pregolya_graph::hitl` | pregolya-graph | Effectful (async wrapper; calls hook, peels `PendingHumanApproval`, may interrupt run) |
+| `ToolApprovalRequest` | `pregolya_graph::hitl` | pregolya-graph | Pure (data type) |
 
-**Subsystem anchor:** SS-05 owns this story's scope because SS-05 is the Graph Execution Engine subsystem per ARCH-INDEX Subsystem Registry. `pre_tool_dispatch` is a gate within the graph's tool-call dispatch cycle that executes before `DynTool::invoke`. The hook trait and decision enum are core graph execution contracts.
+**Subsystem anchor:** SS-05 owns this story's scope because SS-05 is the HITL Interrupt / Resume subsystem per ARCH-INDEX Subsystem Registry. `pre_tool_dispatch` is a gate within the graph's tool-call dispatch cycle that executes before `DynTool::invoke`. The hook trait, decision enum, and pure-routing functions are core HITL contracts.
 
 **Dependency anchors:**
 - Depends on S-1.20: HITL interrupt/resume core machinery (`interrupt()`, `Command(resume=...)`) is built in S-1.20. Pre-tool-call hook uses `interrupt(ToolApprovalRequest)` to suspend the run.
@@ -123,8 +130,11 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 | Function / Type | Pure or Effectful | Reason |
 |----------------|-------------------|--------|
 | `PreToolDecision` | Pure | Enum with no side effects |
+| `DispatchOutcome` | Pure | Enum with no side effects (`Proceed` / `Reject`) |
 | `PreToolCallHook::pre_invoke` | Pure (trait contract) | Returns decision; no I/O by contract |
-| `pre_tool_dispatch` | Effectful | May call hook, may interrupt run, may invoke tool |
+| `route_pre_tool_decision` | Pure (sync) | Pure match over `PreToolDecision` → `DispatchOutcome`; no I/O, no await — VP-011 Kani proof target per BC-2.05.007 PC-7 |
+| `shield_hook_result` | Pure (sync) | Pure conversion `Result<PreToolDecision, HookError>` → `PreToolDecision`; `Err(_)` → `Deny{reason: "hook error: <detail>"}`, `Ok(d)` → `d`; no I/O — VP-011 Kani proof target per BC-2.05.007 PC-7 |
+| `pre_tool_dispatch` | Effectful | Async wrapper; calls hook, shields result, peels `PendingHumanApproval` interrupt, calls `route_pre_tool_decision` for routable variants |
 | `ToolApprovalRequest` | Pure | Data type; serialization is separate |
 
 ## Edge Cases
@@ -143,18 +153,23 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 
 ## Tasks
 
-- [ ] Create `crates/pregolya-graph/src/hooks/mod.rs` (re-exports only)
-- [ ] Create `crates/pregolya-graph/src/hooks/pre_tool.rs` — `PreToolCallHook` trait, `PreToolDecision` enum
-- [ ] Create `crates/pregolya-graph/src/hooks/approval.rs` — `ToolApprovalRequest` struct
-- [ ] Create `crates/pregolya-graph/src/executor/tool_dispatch.rs` — `pre_tool_dispatch` function
-- [ ] Write failing tests for AC-001..AC-010 before any implementation
-- [ ] Write `test_AC_007_deny_branch_no_invoke_kani_seed` — mock hook returning Deny, assert tool not called
-- [ ] Implement `PreToolDecision` enum — Approve / Deny { reason } / Edit { modified_args } / PendingHumanApproval { prompt }
-- [ ] Implement `pre_tool_dispatch` — 4-branch dispatch with fallback Deny on panic
-- [ ] Implement skip-hook-on-resume: extract `pre_tool_dispatch` branch from resume path
-- [ ] Validate `Command(resume=PendingHumanApproval)` returns error
+- [ ] Create `crates/pregolya-graph/src/hitl.rs` — single module for all PreTool/HITL surface items
+- [ ] Register module: add `pub mod hitl;` in `crates/pregolya-graph/src/lib.rs`
+- [ ] Implement `DispatchOutcome` enum: `Proceed(Option<serde_json::Value>)` / `Reject(String)` in `hitl.rs` (BC-2.05.007 PC-7)
+- [ ] Implement `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` — pure sync; `Deny{reason}` → `Reject(reason)`; `Approve` → `Proceed(None)`; `Edit{obj}` where obj is JSON object → `Proceed(Some(obj))`; `Edit{non-obj}` → `Reject("invalid modified_args")`; `#[non_exhaustive]` wildcard → `Reject("unexpected_variant")` (BC-2.05.007 PC-7; VP-011 Kani target)
+- [ ] Implement `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` — pure sync; `Err(_)` → `Deny{reason: "hook error: <detail>"}`, `Ok(d)` → `d` (BC-2.05.007 PC-7; VP-011 Kani target)
+- [ ] Implement `PreToolDecision` enum — `#[non_exhaustive]`; variants: `Approve` / `Deny { reason: String }` / `Edit { modified_args: serde_json::Value }` / `PendingHumanApproval { prompt: String }`
+- [ ] Implement `PreToolCallHook` trait in `hitl.rs`
+- [ ] Implement `pre_tool_dispatch` — async wrapper: calls hook, shields result via `shield_hook_result`, peels `PendingHumanApproval` (calls `interrupt(ToolApprovalRequest{..})`), calls `route_pre_tool_decision` for remaining variants
+- [ ] Implement `ToolApprovalRequest` struct (msgpack-serializable) in `hitl.rs`
 - [ ] Implement `ToolApprovalRequest` msgpack serialization (msgpack checkpoint mechanism from S-1.20)
-- [ ] Create `crates/pregolya-graph/src/proofs/pre_tool_hook.rs` — `#[cfg(kani)]` `deny_excludes_tool_invocation` stub (body `todo!()` for Phase 6 formal hardening; VP-011)
+- [ ] Write failing tests for AC-001..AC-011 before any implementation
+- [ ] Write `test_AC_007_deny_branch_no_invoke_kani_seed` — mock hook returning Deny, assert tool not called
+- [ ] Write `test_AC_011_route_pre_tool_decision_*` — unit tests for all routing arms in `route_pre_tool_decision` and `shield_hook_result`
+- [ ] Implement skip-hook-on-resume: `pre_tool_dispatch` is NOT called on resume path
+- [ ] Validate `Command(resume=PendingHumanApproval)` returns error
+- [ ] Create `crates/pregolya-graph/src/proofs/pre_tool_hook.rs` — `#[cfg(kani)]` `deny_excludes_tool_invocation` stub (body `todo!()` for Phase 6 formal hardening; VP-011); harness calls `route_pre_tool_decision` and `shield_hook_result` directly
+- [ ] Verify Kani harness stub compiles: `cargo kani -p pregolya-graph --harness deny_excludes_tool_invocation` aborts with `todo!()` (not a compile error)
 - [ ] Run `just iter pregolya-graph` — all tests green
 
 ## Previous Story Intelligence
@@ -175,7 +190,7 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 2. **Deny branch has zero calls to tool.invoke.** This is a structural requirement (VP-011), not just a test. The Deny arm of `pre_tool_dispatch` must contain no call to `tool.invoke` in its source — not even a conditional one.
 3. **Hook panic → Deny (fail-closed).** The pre_tool_dispatch implementation must wrap hook execution in a catch-unwind or equivalent. A panicking hook must not propagate to crash the executor.
 4. **PendingHumanApproval on resume → immediate error.** No special handling; return early with error before any hook or tool invocation.
-5. **`mod.rs` re-export only.** `hooks/mod.rs` contains only `pub use` declarations.
+5. **`mod.rs` re-export only.** `hitl/mod.rs` (if a `src/hitl/` subdirectory is used instead of `src/hitl.rs`) contains only `pub use` declarations. No logic in `mod.rs` files.
 6. **`#[non_exhaustive]`** on `PreToolDecision` (public API surface enum — future variants possible).
 7. **No `unwrap()` / `expect()` in production code.**
 
@@ -193,15 +208,21 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 ```
 crates/pregolya-graph/
   src/
-    hooks/
-      mod.rs                         # re-export only: pub use pre_tool::*; pub use approval::*;
-      pre_tool.rs                    # PreToolCallHook trait, PreToolDecision enum
-      approval.rs                    # ToolApprovalRequest struct (msgpack-serializable)
-    executor/
-      tool_dispatch.rs               # pre_tool_dispatch — 4-branch dispatch, panic fallback
+    hitl.rs                          # All PreTool/HITL surface items:
+                                     #   PreToolCallHook trait
+                                     #   PreToolDecision enum (#[non_exhaustive])
+                                     #   DispatchOutcome enum (Proceed(Option<serde_json::Value>) / Reject(String))
+                                     #   route_pre_tool_decision (pure sync — VP-011 Kani proof target)
+                                     #   shield_hook_result (pure sync — VP-011 Kani proof target)
+                                     #   pre_tool_dispatch (async wrapper)
+                                     #   ToolApprovalRequest struct (msgpack-serializable)
+    proofs/
+      pre_tool_hook.rs               # VP-011 Kani harness stub — deny_excludes_tool_invocation
+                                     #   (body todo!() for Phase 6 formal hardening)
   tests/
-    pre_tool_hook_tests.rs           # unit tests: all 4 branches, panic fallback, skip-on-resume
+    pre_tool_hook_tests.rs           # unit tests: all 4 branches + pure-router arms (AC-001..AC-011),
+                                     #   panic fallback, skip-on-resume
 ```
 
-**Files to create (new):** `hooks/pre_tool.rs`, `hooks/approval.rs`, `executor/tool_dispatch.rs`, `src/proofs/pre_tool_hook.rs` (VP-011 Kani harness stub — `deny_excludes_tool_invocation`; body `todo!()` for Phase 6).
-**Files to modify (existing):** `pregolya-graph/src/hooks/mod.rs` (add pub use), `pregolya-graph/src/executor/mod.rs` (add pub use tool_dispatch).
+**Files to create (new):** `src/hitl.rs` (all HITL surface items per above), `src/proofs/pre_tool_hook.rs` (VP-011 Kani harness stub — `deny_excludes_tool_invocation`; body `todo!()` for Phase 6).
+**Files to modify (existing):** `pregolya-graph/src/lib.rs` (add `pub mod hitl;` declaration).

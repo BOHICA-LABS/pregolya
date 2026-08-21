@@ -127,7 +127,7 @@ When the macOS kernel does not support the required Seatbelt operations, `new_ma
 `SandboxConfig { env_allowlist: vec!["PATH".to_string(), "HOME".to_string()], .. }` causes only `PATH` and `HOME` to be forwarded to the child process. All other env vars are stripped. Verified by `test_BC_2_13_007_allowlisted_vars_forwarded()`.
 
 ### AC-021 (traces to BC-2.13.007 postcondition 3 — no wildcards, DEBUG log)
-`env_allowlist` does not support wildcards. An entry containing `*` returns `Err(PregolyaError { code: "E-SBXD-006", message: "InvalidEnvAllowlistPattern: wildcard patterns are not supported in env_allowlist", .. })`. Before each execution, a DEBUG trace event is emitted with `event_type = "sandbox.env_sanitized"` containing the count of stripped and forwarded variables. Verified by `test_BC_2_13_007_wildcard_rejected()` and `test_BC_2_13_007_sanitization_debug_log()`.
+`env_allowlist` does not support wildcards. An entry containing `*` returns `Err(PregolyaError { code: "E-SBXD-006", message: "InvalidEnvAllowlistPattern: entry '<pattern>' contains wildcard characters — only exact variable names are supported in v1", .. })`. Before each execution, a DEBUG trace event is emitted with `event_type = "sandbox.env_sanitized"` containing the count of stripped and forwarded variables. Verified by `test_BC_2_13_007_wildcard_rejected()` and `test_BC_2_13_007_sanitization_debug_log()`.
 
 ## Architecture Mapping
 
