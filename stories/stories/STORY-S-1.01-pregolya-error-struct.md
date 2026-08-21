@@ -40,6 +40,13 @@ tdd_mode: strict
 - **I want to** have a single well-typed `PregolyaError` struct with orthogonal Component × Category dimensions, RetryHint, and `to_problem()` for RFC-7807 emission
 - **So that** every crate in the pregolya family can propagate structured errors that carry machine-readable codes, semantic retry guidance, and safe HTTP serialization — without exposing credentials, without panicking, and without ambiguous error shapes
 
+## Behavioral Contracts
+
+| BC | Title | Covered ACs |
+|----|-------|------------|
+| BC-2.14.001 | PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | AC-001..AC-008, AC-015 |
+| BC-2.14.002 | RFC-7807 Compatible Problem Emission from PregolyaError | AC-009..AC-014 |
+
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.14.001 postcondition 1)

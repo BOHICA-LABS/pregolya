@@ -59,7 +59,7 @@ The FTS5 index is updated in the same SQLite transaction as the checkpoint write
 `search_history_tool()` returns a `Tool`-implementing type that wraps `fts_search`. The tool is callable by agents via the standard `Tool::invoke` interface. When the tool is invoked with a query string and optional thread_id, it calls `fts_search` on the underlying `CheckpointSaver` and returns the results serialized as a `ToolOutput`. Verified by `test_BC_2_04_008_search_history_tool_invocable()`.
 
 ### AC-005 (traces to BC-2.04.008 edge case EC-001 — FtsLimitZero)
-`fts_search` with `FtsSearchConfig { limit: 0, .. }` returns `Err(PregolyaError { code: "E-CHKPT-008", message: "FtsLimitZero: limit must be > 0", .. })`. Verified by `test_BC_2_04_008_fts_limit_zero_error()`.
+`fts_search` with `FtsSearchConfig { limit: 0, .. }` returns `Err(PregolyaError { code: "E-CHKPT-008", message: "FtsLimitZero: FtsSearchConfig.limit must be > 0; got <limit>", .. })`. Verified by `test_BC_2_04_008_fts_limit_zero_error()`.
 
 ### AC-006 (traces to BC-2.04.008 edge case EC-002 — Fts5Unavailable)
 If the SQLite build does not include the FTS5 extension (e.g., compiled without `SQLITE_ENABLE_FTS5`) and FTS is requested, `CheckpointSaver::new()` returns `Err(PregolyaError { code: "E-CHKPT-009", message: "Fts5Unavailable: FTS5 extension not available in this SQLite build — recompile SQLite with FTS5 support or use a pre-built distribution that includes it", .. })` at construction time — before any DDL executes. The error fires during construction, not at query time. Verified by `test_BC_2_04_008_fts5_unavailable_error()`.

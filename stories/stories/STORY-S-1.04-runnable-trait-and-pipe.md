@@ -39,6 +39,13 @@ tdd_mode: strict
 - **I want to** have a `Runnable` trait with `invoke`, `stream`, and `batch` methods, and a `pipe` operator that chains two runnables into a `RunnableSequence`
 - **So that** I can compose complex LLM workflows from simple building-block types without writing boilerplate orchestration code
 
+## Behavioral Contracts
+
+| BC | Title | Covered ACs |
+|----|-------|------------|
+| BC-2.01.003 | Runnable Trait Invocation — invoke, stream, batch | AC-001..AC-007 |
+| BC-2.01.004 | Runnable Pipe Composition (A.pipe(B) = AB Chain) | AC-008..AC-012 |
+
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.01.003 postcondition 1)
@@ -71,7 +78,7 @@ When `DynRunnable::invoke` is called with a `Value` that cannot be deserialized 
 `a.pipe(b).pipe(c)` flattens into `RunnableSequence { first: a, middle: [b], last: c }` — NOT nested `RunnableSequence<RunnableSequence<...>, c>`. The `first` field is always the first runnable in the chain. Verified by `test_BC_2_01_004_pipe_flattens_sequence()`.
 
 ### AC-010 (traces to BC-2.01.004 postcondition 3)
-For `DynRunnable` pipeline composition where a type boundary mismatch is detected at construction time, the error is `Err(PregolyaError { code: "E-CORE-004", message: "Pipe composition failed: type boundary mismatch: <detail>", .. })`. Verified by `test_BC_2_01_004_pipe_type_mismatch_error()`.
+For `DynRunnable` pipeline composition where a type boundary mismatch is detected at construction time, the error is `Err(PregolyaError { code: "E-CORE-004", message: "Pipe composition failed: type boundary mismatch between stage <n> output and stage <n+1> input", .. })`. Verified by `test_BC_2_01_004_pipe_type_mismatch_error()`.
 
 ### AC-011 (traces to BC-2.01.004 postcondition 4)
 Streaming through a `RunnableSequence` propagates chunks: each step must buffer non-streaming steps and stream out chunks from streaming steps. A two-stage sequence where step A is streaming and step B is non-streaming: stream collects all A's chunks, calls B.invoke, emits B's single output as one chunk. Verified by `test_BC_2_01_004_streaming_through_sequence()`.

@@ -60,7 +60,7 @@ tdd_mode: strict
 `SkillStore` has no write methods. There is no `memory_set`, `memory_delete`, or any mutation method. `SkillStore` is strictly read-only. Verified by `test_BC_2_15_004_skill_store_no_write_methods()` (compile check: calling `store.memory_set(...)` on a `SkillStore` value fails to compile).
 
 ### AC-004 (traces to BC-2.15.004 postcondition 4 — empty app_id fail-closed)
-`SkillStore::new(store, "")` with empty `app_id` stores the empty ID but all subsequent calls (`load_skill`, `list_skills`, `skill_exists`) return `Err(PregolyaError { code: "E-MEMORY-004", message: "NoScopeContext: SkillStore constructed with empty app_id", category: SECURITY, .. })`. This is fail-closed behavior — the empty app_id is not silently treated as global scope. Verified by `test_BC_2_15_004_empty_app_id_fail_closed()` covering all three methods (TV-009 coverage).
+`SkillStore::new(store, "")` with empty `app_id` stores the empty ID but all subsequent calls (`load_skill`, `list_skills`, `skill_exists`) return `Err(PregolyaError { code: "E-MEMORY-004", message: "NoScopeContext: application tenant identity (app_id) is empty or unavailable; memory scope requires a non-empty app_id", category: SECURITY, .. })`. This is fail-closed behavior — the empty app_id is not silently treated as global scope. Verified by `test_BC_2_15_004_empty_app_id_fail_closed()` covering all three methods (TV-009 coverage).
 
 ### AC-005 (traces to BC-2.15.004 postcondition 5 — load_skill not-found)
 `load_skill("nonexistent_skill_id")` returns `Ok(None)` — not-found is not an error. Only infrastructure failures (database error, scope access denied) return `Err`. Verified by `test_BC_2_15_004_load_skill_not_found_is_ok_none()`.
@@ -93,7 +93,7 @@ When `validate` returns `Transform { sanitized }`, the memory write proceeds wit
 The memory scope used for context mutation lookup is `MemoryScope::App(run_context.app_id)`. The lookup key is formatted as `format!("{}/{}", spec.namespace, spec.key)`. The namespace itself is NOT used as the scope — `MemoryScope::App(spec.namespace)` is WRONG. Verified by `test_BC_2_15_006_scope_is_app_id_not_namespace()`.
 
 ### AC-015 (traces to BC-2.15.006 postcondition 3 — empty app_id fail-loud)
-If `run_context.app_id` is empty at context mutation loading time, the scheduler returns `Err(PregolyaError { code: "E-MEMORY-004", message: "NoScopeContext: context mutation requires a non-empty app_id in RunContext", .. })`. The graph run does NOT proceed with an empty app_id. Verified by `test_BC_2_15_006_empty_app_id_fails_load()`.
+If `run_context.app_id` is empty at context mutation loading time, the scheduler returns `Err(PregolyaError { code: "E-MEMORY-004", message: "NoScopeContext: application tenant identity (app_id) is empty or unavailable; memory scope requires a non-empty app_id", .. })`. The graph run does NOT proceed with an empty app_id. Verified by `test_BC_2_15_006_empty_app_id_fails_load()`.
 
 ### AC-016 (traces to BC-2.15.006 postcondition 4 — frozen for run duration, visible next run)
 After loading at run start, `ContextMutationConfig` is immutable for the duration of the run. Any changes to the underlying memory store during the run are NOT reflected (ADR-012 INV-1 cache-coherence invariant). Changes are visible in the NEXT run (next call to `scheduler.start()`). Verified by `test_BC_2_15_006_config_frozen_during_run()`.

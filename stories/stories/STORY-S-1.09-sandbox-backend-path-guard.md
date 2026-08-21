@@ -73,7 +73,7 @@ This story builds the `sandbox::path_guard` module containing `canonicalize_bene
 `ProcessBackend` (non-isolating) is only constructable via `Sandbox::unsafe_process_no_isolation()`. There is no public `Sandbox::new_process()` or any other constructor path that creates a `ProcessBackend` without the `unsafe_` naming. Verified by `test_BC_2_13_001_process_backend_requires_unsafe_constructor()`.
 
 ### AC-003 (traces to BC-2.13.001 postcondition 3 — no enforcing backend compile error)
-When no enforcing backend feature is enabled (all of `sandbox-wasm`, `sandbox-container` disabled), `Sandbox::new(config)` returns `Err(PregolyaError { code: "E-SBXD-003", message: "SandboxInitFailed: no enforcing backend compiled — enable the 'sandbox-wasm' or 'sandbox-container' feature", .. })`. Verified by `test_BC_2_13_001_no_enforcing_backend_error()` (feature-gated test).
+When no enforcing backend feature is enabled (all of `sandbox-wasm`, `sandbox-container` disabled), `Sandbox::new(config)` returns `Err(PregolyaError { code: "E-SBXD-003", message: "SandboxInitFailed: cannot initialize WASM/container sandbox backend: <reason>", .. })`. Verified by `test_BC_2_13_001_no_enforcing_backend_error()` (feature-gated test).
 
 ### AC-004 (traces to BC-2.13.002 postcondition 1 — WARN log per execute)
 Every call to `ProcessBackend::execute(command)` emits a tracing WARN event with `event_type = "sandbox.process_no_isolation_execute"` BEFORE the subprocess is spawned. The log is emitted once per call, not per construction. Verified by `test_BC_2_13_002_warn_log_per_execute()` using a tracing subscriber capture.

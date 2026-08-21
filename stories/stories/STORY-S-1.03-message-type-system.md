@@ -39,6 +39,13 @@ tdd_mode: strict
 - **I want to** have a complete, serde-serializable `Message` enum and `ContentBlock` enum that cover all LangChain-parity message roles and content types
 - **So that** I can pass structured messages through chains, preserve unknown block types without data loss, and receive structured `PregolyaError` when an unknown role appears
 
+## Behavioral Contracts
+
+| BC | Title | Covered ACs |
+|----|-------|------------|
+| BC-2.01.001 | Typed ContentBlock Sequence Construction (No Raw Content Where Typed Expected) | AC-001..AC-006 |
+| BC-2.01.002 | Message Type-Safety (AiMessage / HumanMessage / SystemMessage / ToolMessage) | AC-007..AC-012 |
+
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.01.001 postcondition 1)
@@ -57,7 +64,7 @@ tdd_mode: strict
 `ContentBlock` has `#[non_exhaustive]` applied. An external-crate match without a wildcard arm fails to compile. `ContentBlock` implements `Debug`, `Clone`. Verified by compile-fail test.
 
 ### AC-006 (traces to BC-2.01.001 edge case EC-001 — E-CORE-001)
-When strict content block validation mode is active and a block has an unrecognized type tag with no fallback, the error is `Err(PregolyaError { code: "E-CORE-001", message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>': <detail>", .. })`. In the default (non-strict) mode, `NonStandard` is returned instead. Verified by `test_BC_2_01_001_strict_mode_error()`.
+When strict content block validation mode is active and a block has an unrecognized type tag with no fallback, the error is `Err(PregolyaError { code: "E-CORE-001", message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`. In the default (non-strict) mode, `NonStandard` is returned instead. Verified by `test_BC_2_01_001_strict_mode_error()`.
 
 ### AC-007 (traces to BC-2.01.002 postcondition 1)
 `Message` is an enum with at minimum: `Ai(AiMessage)`, `Human(HumanMessage)`, `System(SystemMessage)`, `Tool(ToolMessage)`. Each inner type has a `content: MessageContent` field. `Tool(ToolMessage)` has `tool_call_id: String` (not `Option<String>`). Verified by `test_BC_2_01_002_message_variants()`.

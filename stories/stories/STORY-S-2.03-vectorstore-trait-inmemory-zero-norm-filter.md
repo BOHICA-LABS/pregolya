@@ -146,7 +146,7 @@ Verified by `test_BC_2_21_004_filter_non_exhaustive_compile_fail()`.
 ### AC-017 (traces to BC-2.21.004 postcondition 2)
 `VectorStore::similarity_search_with_filter` default implementation: if
 `filter.filters.is_empty()` delegates to `similarity_search`; if filter is non-empty returns
-`Err(PregolyaError { code: "E-VS-005", message: "FilterUnsupported: this store does not support metadata filtering", .. })`.
+`Err(PregolyaError { code: "E-VS-005", message: "FilterUnsupported: metadata filter is not supported by this VectorStore implementation", .. })`.
 Verified by `test_BC_2_21_004_default_filter_impl_returns_err_e_vs_005()`.
 
 ### AC-018 (traces to BC-2.21.004 invariant 1)

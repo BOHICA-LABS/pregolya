@@ -41,6 +41,15 @@ tdd_mode: strict
 - **I want to** have CI-enforced policies that prevent panics in production code, require HTTP client timeouts, protect API key material from leaking via Debug, and mandate Result propagation for validation failures
 - **So that** every crate in the pregolya family has uniform safety guarantees — no surprise panics in production, no hanging HTTP calls, no credential leakage, and no silent null-coercion for invalid input
 
+## Behavioral Contracts
+
+| BC | Title | Covered ACs |
+|----|-------|------------|
+| BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003 |
+| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006 |
+| BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref\<Target=str\> | AC-007..AC-010 |
+| BC-2.14.006 | Validation Failures Propagate Err(PregolyaError); No Silent None | AC-011..AC-014 |
+
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.14.003 postcondition 1)

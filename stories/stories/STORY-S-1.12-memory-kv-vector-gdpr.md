@@ -87,7 +87,7 @@ If no scope context is available (e.g., anonymous call without scope), returns `
 `gdpr_erase` returns `Ok(GdprErasureReceipt { user_id, erased_at, user_scoped_count, app_scoped_authored_count, session_scoped_count })`. All five fields are present. `app_scoped_authored_count` counts app-scoped entries where `author_id == user_id` (not all app-scoped entries). Verified by `test_BC_2_15_003_gdpr_erase_receipt_fields()`.
 
 ### AC-013 (traces to BC-2.15.003 postcondition 3 — AdminContext required)
-`gdpr_erase` called without `AdminContext` returns `Err(PregolyaError { code: "E-MEMORY-006", message: "InsufficientPrivilege: GDPR erasure requires AdminContext", .. })`. No data is erased. Verified by `test_BC_2_15_003_gdpr_erase_requires_admin_context()`.
+`gdpr_erase` called without `AdminContext` returns `Err(PregolyaError { code: "E-MEMORY-006", message: "InsufficientPrivilege: operation '<operation>' requires <required>", .. })`. No data is erased. Verified by `test_BC_2_15_003_gdpr_erase_requires_admin_context()`.
 
 ### AC-014 (traces to BC-2.15.003 edge case EC-001 — ErasurePartialFailure)
 If the erasure transaction partially fails (e.g., vector backend deletion succeeds but KV deletion fails), the error surfaces as `Err(PregolyaError { code: "E-MEMORY-005", message: "ErasurePartialFailure: ...", .. })`. The transaction is rolled back — no partial erasure persists. Verified by `test_BC_2_15_003_erasure_partial_failure_rollback()` (mock backend that fails mid-transaction).

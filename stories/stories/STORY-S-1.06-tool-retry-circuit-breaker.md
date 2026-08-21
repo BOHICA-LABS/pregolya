@@ -40,6 +40,14 @@ tdd_mode: strict
 - **I want to** have a `ToolRetryPolicy` keyed by tool name, a `RetryPolicy` with a global budget, and a `CircuitBreaker` that trips after consecutive failures
 - **So that** transient tool failures are automatically retried up to a configured limit, global retry budgets are enforced across all tools in a run, and circuit breakers prevent cascading failures by fast-failing tools that have proven consistently unreliable
 
+## Behavioral Contracts
+
+| BC | Title | Covered ACs |
+|----|-------|------------|
+| BC-2.16.001 | Per-Tool Retry Policy Keyed by tool_name (Not Args Hash) | AC-001..AC-004, AC-013 |
+| BC-2.16.002 | Finite global_limit Non-None Default for All Retry Policies | AC-005..AC-007 |
+| BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | AC-008..AC-012, AC-014 |
+
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.16.001 postcondition 1)
@@ -49,7 +57,7 @@ tdd_mode: strict
 When per-tool retry limit is exhausted, the returned error is `Err(PregolyaError { category: POLICY, code: "E-RETRY-001", message: "RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts", .. })`. Verified by `test_BC_2_16_001_per_tool_limit_exhausted()`.
 
 ### AC-003 (traces to BC-2.16.001 postcondition 3)
-Constructing a `ToolRetryPolicy` with `attempt_limit: 0` returns `Err(PregolyaError { category: VAL, code: "E-RETRY-004", message: "InvalidRetryLimit: attempt limit must be > 0", .. })`. Verified by `test_BC_2_16_001_zero_limit_construction_error()`.
+Constructing a `ToolRetryPolicy` with `attempt_limit: 0` returns `Err(PregolyaError { category: VAL, code: "E-RETRY-004", message: "InvalidRetryLimit: attempt_limit must be > 0; got 0", .. })`. Verified by `test_BC_2_16_001_zero_limit_construction_error()`.
 
 ### AC-004 (traces to BC-2.16.001 postcondition 4 — Retry-Approval Ordering per ADR-018 Decision 6)
 The retry dispatch ordering for a tool invocation is: `circuit_breaker.check(tool_name)` → `pre_tool_dispatch` hook → `tool.invoke(args)` → `retry_policy.record(result)`. Circuit breaker check happens BEFORE the tool is invoked; recording happens AFTER. A unit test using mock objects verifies the ordering. Verified by `test_BC_2_16_001_retry_approval_ordering()`.

@@ -115,7 +115,7 @@ If `get_tuple` returns an error during recovery, the error surfaces as `Err(Preg
 `pregolya-checkpoint/src/session_index.rs` exports `pub fn storage_address(key: &SessionKey) -> StorageAddress` as a pure function (no database I/O). `SessionKey` is a struct with `thread_id: String`, `checkpoint_ns: String`, `checkpoint_id: CheckpointId`. `StorageAddress` implements `PartialEq`. The `#[cfg(kani)]` proof harness `session_tenancy_harness` lives in `crates/pregolya-checkpoint/src/proofs/session_tenancy.rs` (stub authored in this story; completed in S-6.01). Verified by `test_BC_2_04_006_session_key_and_storage_address_types_exist()`.
 
 ### AC-017 (traces to BC-2.04.006 postcondition 2 — configurable thread_id key)
-`thread_id` is accessed from `config.configurable` via `config.configurable.as_ref().and_then(|m| m.get("thread_id"))`. A missing `thread_id` key returns `Err(PregolyaError { code: "E-CORE-005", message: "Validation failed: missing 'thread_id' in configurable", .. })`. Verified by `test_BC_2_04_006_missing_thread_id_validation_error()`.
+`thread_id` is accessed from `config.configurable` via `config.configurable.as_ref().and_then(|m| m.get("thread_id"))`. A missing `thread_id` key returns `Err(PregolyaError { code: "E-CORE-005", message: "Validation failed for 'thread_id': missing from configurable", .. })`. Verified by `test_BC_2_04_006_missing_thread_id_validation_error()`.
 
 ### AC-018 (traces to BC-2.04.006 invariant 1 — no bare thread_id addressing)
 No backend implementation may use bare `thread_id` as a sole primary key. Every storage operation includes the full `(thread_id, checkpoint_ns, checkpoint_id)` triple. Verified by `test_BC_2_04_006_full_triple_used_in_storage_key()` (inspects generated SQL or storage key construction).
