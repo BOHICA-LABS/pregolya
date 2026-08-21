@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.33"
+version: "1.34"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.34 (fix-burst-P2A017/2026-08-21): Exhaustive Primary Crate(s) sweep (P2A017 sibling-sweep gap closure). FIX 1 (SS-10 P2A017-01 MED): SS-10 Primary Crate(s) pregolya-graph → pregolya-graph, pregolya-core; pregolya-core homes BC-2.10.005 (check_watermark_trigger watermark arithmetic / VP-012 Kani P1 target in core::budget). SS-10 scope note added. FIX 2 (SS-06 P2A017-02 MED): ADR-006 §Consequences establishes StreamEvent as a public type in pregolya-core (core::events). SS-06 Primary Crate(s) pregolya-graph, pregolya-core confirmed correct (no ARCH-INDEX change needed). SS-08 core::tool scope note added documenting expected Primary Crate(s) exclusion of pregolya-core (SS-08 module tag correct; no BC-2.08.xxx homed in core::tool; module-decomposition.md graph::event_emitter double-definition fixed in same burst). FIX 3 (SS-08/core::tool P2A017-03 LOW): SS-08 tag confirmed correct; pregolya-core not added to SS-08 Primary Crate(s); SS-08 scope note documents expected divergence. Corpus sweep: all 23 SS rows verified — only SS-10 diverged."
   - "1.33 (fix-burst-P2A016/2026-08-21): Two P2A-016 architecture-layer items resolved. (1) Primary Crate(s) convention established in Subsystem Registry preamble: crates that home the subsystem's own BCs. SS-08 already conforms (all 8 crates home BC-2.08.xxx BCs). SS-17 stays at 4 crates; SS-17 scope note added clarifying that S-6.01 additionally targets 5 more crates per VP-to-crate map but those home no BC under SS-17. (2) pregolya facade v1 accounting: ruling (a) — facade assembled incrementally from workspace-init stub; no dedicated story; annotation wording produced for story-writer to add to Crate Implementation Order in wave-schedule."
   - "1.32 (fix-burst-P2A015/2026-08-21): SS-08 Primary Crate(s) expanded — added pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk (D17-Q5 wire-client crates) and pregolya-macros (proc-macro crate; BC-2.08.010–012 numbered under SS-08) to SS-08 registry row. Grounds: (1) SDK crates are governed by BC-2.08.006 which also governs the adapter crates already in SS-08; S-2.06 targets all six crates under subsystems: SS-08. (2) pregolya-macros BC numbering (BC-2.08.010–012) is the authoritative SS-08 anchor per subsystem-registry source-of-truth rules. Also: de-pin two stale VP-INDEX version cites from v1.6 changelog prose (records-lint TD-VSDD-091 compliance; both cites were historical snapshot references in changelog entries)."
   - "1.31 (burst-302b/D-171/2026-08-17): SS-01 BC range extended 001–004 → 001–008 (BC-2.01.005–008; LCEL RunnableParallel/RunnablePassthrough/RunnableAssign; D-170/D-171). VP table: 13→14 VPs (VP-014 proptest P1 added; total proptest 2→3). BC grand total 129→133 historical note updated."
@@ -104,7 +105,7 @@ changelog:
 | SS-07 | Text Splitting | 2.07 | pregolya-splitters | BC-2.07.001–003 | 1 |
 | SS-08 | Provider Conformance + Standard Tests | 2.08 | pregolya-openai, pregolya-anthropic, pregolya-ollama, pregolya-standard-tests, pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk, pregolya-macros | BC-2.08.001–014 | 2 |
 | SS-09 | MCP Tool Adapter | 2.09 | pregolya-mcp | BC-2.09.001–007 | 2 |
-| SS-10 | Budget Governance | 2.10 | pregolya-graph | BC-2.10.001–006 | 1 |
+| SS-10 | Budget Governance | 2.10 | pregolya-graph, pregolya-core | BC-2.10.001–006 | 1 |
 | SS-11 | Content Provenance / Guardrail | 2.11 | pregolya-graph | BC-2.11.001–006 | 1 |
 | SS-12 | Durable-Run HTTP Server | 2.12 | pregolya-server | BC-2.12.001–007 | 1 |
 | SS-13 | Sandboxed Tool Execution | 2.13 | pregolya-sandbox | BC-2.13.001–007 | 1 |
@@ -126,6 +127,10 @@ changelog:
 > **D23 Capability Additions (v1.6):** SS-23 (First-Party Tool Library) via ADR-020 — pregolya-tools new crate (crate #21); tools::fs (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool), tools::shell (BashTool), tools::search (GrepTool). SS-05 (HITL) extended with per-tool-call PreToolCallHook API per ADR-018 — sub-node granularity HITL (PreToolCallHook trait, PreToolDecision enum). SS-10 (Budget Governance) extended with rolling compaction primitive per ADR-019 — CompactionTrigger/CompactionPolicy/CompactionSummary types in core::budget; compaction engine in graph::budget. SS-15 (Long-Horizon Memory) promoted Wave 2→1 (CAP-017 multi-session memory, D23 item 3). SS-16 (Tool Retry + Circuit Breaker) promoted Wave 2→1 (CAP-018 tool retry, D23 item 4).
 
 > **SS-17 scope note:** `Primary Crate(s)` correctly lists xtask (homes BC-2.17.001–002) plus pregolya-graph, pregolya-checkpoint, and pregolya-sandbox (the first three Kani-proof target crates with VP-001/002/003). S-6.01 `target_module` additionally includes pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools, and fuzz to complete VP obligations in those crates; the VPs involved (VP-006/007/008/009/010/011/012/013/014) anchor to BCs owned by SS-18, SS-19, SS-21, SS-22, SS-23, SS-05, SS-10 respectively — none home a BC under SS-17, so those crates are excluded from `Primary Crate(s)` per the convention above.
+
+> **SS-08 core::tool scope note (P2A017-03):** `core::tool` (pregolya-core) is correctly tagged SS-08 in module-decomposition.md — the `Tool` trait and `DynTool` facade are the composition seam for all dynamic tool dispatch in the SS-08 provider conformance and macro system. pregolya-core is intentionally EXCLUDED from SS-08 `Primary Crate(s)` because `core::tool` homes no BC numbered under SS-08 directly: BC-2.08.010 (the `#[tool]` macro contract) is homed in pregolya-macros (which re-exports from pregolya-core per BC-2.08.009 module field), not in core::tool. The `Tool` trait is a prerequisite of BC-2.08.010 and of SS-23 first-party tool implementations, but a prerequisite is not the same as homing the BC. The SS-08 module tag (functional classification) and the Primary Crate(s) exclusion (BC-homing classification) are two independent dimensions; the divergence is expected and correct.
+
+> **SS-10 scope note (P2A017-01):** `core::budget` (pregolya-core) homes BC-2.10.005 — the `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool` pure-core function (VP-012 Kani P1 target; watermark arithmetic postcondition; ADR-019 Decision 3 step 1). pregolya-core is therefore included in SS-10 `Primary Crate(s)`. The budget dispatch engine (`BudgetEngine`, `EvidenceJournal`, compaction trigger evaluation, compaction execution) lives in `graph::budget` (pregolya-graph) per ADR-009 Option 3 core-definitions/graph-dispatch split; BC-2.10.001–004 and BC-2.10.006 are homed in pregolya-graph.
 
 ## Canonical Crate Roster (Source of Truth)
 

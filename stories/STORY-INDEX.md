@@ -74,7 +74,7 @@ input-hash: "pending"
 | S-1.14 | StateGraph Node Definition and Channel Reducer Semantics | BC-2.02.001, BC-2.02.002, BC-2.02.003, BC-2.02.004 | SS-02 | pregolya-graph | P0 | 8 | [S-1.04, S-1.01] | draft |
 | S-1.15 | Conditional Edge Routing and Send API Dynamic Fan-Out | BC-2.02.005, BC-2.02.006 | SS-02 | pregolya-graph | P0 | 5 | [S-1.14] | draft |
 | S-1.16 | BSP Super-Step Execution Determinism | BC-2.03.001, BC-2.03.002, BC-2.03.003 | SS-03 | pregolya-graph | P0 | 13 | [S-1.14, S-1.15, S-1.10, S-1.13] | draft |
-| S-1.17 | Streaming Event Types, run_id Correlation and Run Parity | BC-2.06.001, BC-2.06.002, BC-2.06.003 | SS-06 | pregolya-graph | P0 | 5 | [S-1.14, S-1.04] | draft |
+| S-1.17 | Streaming Event Types, run_id Correlation and Run Parity | BC-2.06.001, BC-2.06.002, BC-2.06.003 | SS-06 | [pregolya-core, pregolya-graph] | P0 | 5 | [S-1.14, S-1.04] | draft |
 | S-1.18 | Budget Policy Evaluation, EvidenceJournal and Ceiling Halt and Escalate | BC-2.10.001, BC-2.10.002, BC-2.10.003, BC-2.10.004 | SS-10 | pregolya-graph | P0 | 8 | [S-1.14, S-1.04, S-1.10] | draft |
 | S-1.19 | GuardrailHook at All Ingress Boundaries — Tool-Result, RAG, Memory | BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006 | SS-11 | pregolya-graph | P0 | 13 | [S-1.14, S-1.04] | draft |
 | S-1.20 | HITL Interrupt and Resume Core — FIFO Queue, Risk Classification, Command API | BC-2.05.001, BC-2.05.002, BC-2.05.003, BC-2.05.004, BC-2.05.005, BC-2.05.006 | SS-05 | pregolya-graph | P0 | 13 | [S-1.16, S-1.17, S-1.10] | draft |

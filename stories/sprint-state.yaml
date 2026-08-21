@@ -244,7 +244,7 @@ stories:
     points: 5
     tdd_mode: strict
     priority: P0
-    crate: pregolya-graph
+    crate: [pregolya-core, pregolya-graph]
     pr_url: ~
     merged_sha: ~
 

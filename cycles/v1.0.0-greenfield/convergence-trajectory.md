@@ -2713,3 +2713,31 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-224 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-017.
 
 **Convergence dim-5 (Phase-2 P2A-016):** Counter **0/3 — NOT CLEAN (D-224; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →3→5→5→3. NEXT: P2A-017 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. VERIFY-NEXT-PASS: P2A-017 should confirm dep-graph 10-batch Wave-1 structure is internally consistent with DAG edges and matches wave-schedule batch ordering.
+
+---
+
+## Pass P2A-017 — Phase-2 Story-Decomposition Adversarial Review
+
+**Date:** 2026-08-21
+**Agent:** vsdd-factory:adversary (fresh context)
+**Scope:** Full Phase-2 corpus — 39 stories, 14 holdout scenarios (sealed), STORY-INDEX, sprint-state, dep-graph, wave-schedule, epics, ARCH-INDEX, module-decomposition, BC-INDEX, VP-INDEX, error-taxonomy, all spec supplements.
+**Finding count:** 3 (2 MED + 1 LOW)
+**Streak:** 0/3 (pre-pass); NOT CLEAN; streak remains 0/3 post-pass.
+**Prior HEAD:** post-P2A-016 fix-burst frozen HEAD (D-224)
+
+**Findings:**
+- P2A017-01 (MED, POL-6/POL-24): SS-10 Primary Crate(s) column omitted pregolya-core, despite pregolya-core homing BC-2.10.005 (token-budget enforcement) and VP-012 (core::budget verification property). The Primary Crate(s) convention (established in D-224 for SS-17 and extended to SS-10 here) requires listing ALL crates that home SS-owned BCs. pregolya-core added to SS-10 Primary Crate(s). POL-24 sibling-sweep: all 23 SS rows (SS-01..SS-23) cross-checked via three-source method (module-decomposition SS-tags + VP-INDEX + BC→SS numbering); only SS-10 required a fix; 22 others MATCH — class exhausted.
+- P2A017-02 (MED, POL-6/POL-4): SS-06 StreamEvent taxonomy ownership gap — StreamEvent was listed under pregolya-graph in module-decomposition (graph::event_emitter module), creating ambiguity about whether StreamEvent is CORE or graph-scoped. ADR-006 §Consequences adjudicates StreamEvent as CORE canonical (emitted by core execution engine, consumed by all layers). Fix: module-decomposition graph::event_emitter rescoped to emission-only (emits StreamEvent; does NOT define it); StreamEvent definition attributed to core::events in pregolya-core. S-1.17 (streaming-event-types-run-id-parity) triad synced: target_module expanded to [pregolya-core, pregolya-graph]; core::events File Structure entry added; AC-001 re-traced to core::events.
+- P2A017-03 (LOW): SS-08 core::tool scope — scope note queried whether pregolya-core should appear in SS-08 Primary Crate(s). Confirmed: Tool trait is defined in pregolya-core (Phase-3 prerequisite), but SS-08 BCs home to pregolya-graph (graph tool-calling integration). pregolya-core exclusion from SS-08 Primary Crate(s) is valid and correct. Scope note added to ARCH-INDEX SS-08 to prevent future re-flagging.
+
+**In-scope reconciliation (not scored):**
+- 23-SS Primary-Crate exhaustive sweep: three-source cross-check (module-decomp SS-tags + VP-INDEX + BC-section numbering) verified all 23 rows — only SS-10 required a fix. Class exhausted per POL-24 (D-225).
+- S-1.17 BC set (BC-2.06.001–003) UNCHANGED; no BC/VP renumber (POL-1).
+
+**Regression check:** All P2A-003..016 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (human-accepted D-220). OBS-1 + PGAP-MSGDRIFT recorded gaps — no new concrete instances found. CLEAN(strict)=NO; CLEAN(PR-merge)=NO (2 MED findings present).
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1). ARCH-INDEX updated. module-decomposition updated. S-1.17 triad updated.
+
+**D-225 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-018.
+
+**Convergence dim-5 (Phase-2 P2A-017):** Counter **0/3 — NOT CLEAN (D-225; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →3→5→3→3. NEXT: P2A-018 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. Primary Crate(s) convention swept ALL 23 SS rows (P2A-017; D-225) — do NOT re-flag SS registry crate-lists absent a NEW concrete BC-homing divergence. VERIFY-NEXT-PASS: P2A-018 should confirm SS-10 lists pregolya-core under Primary Crate(s), module-decomposition graph::event_emitter is emission-only, and S-1.17 target_module lists both pregolya-core and pregolya-graph.

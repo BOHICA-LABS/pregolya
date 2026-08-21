@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "2ecdb26"
+input-hash: "90ef359"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14, S-1.04]
@@ -24,7 +24,7 @@ verification_properties: []
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1
-target_module: pregolya-graph
+target_module: [pregolya-core, pregolya-graph]
 subsystems: [SS-06]
 estimated_days: 2
 assumption_validations: []
@@ -54,8 +54,8 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.06.001 postcondition 1 — 16 StreamEvent variants defined)
-`StreamEvent` is an enum with exactly 16 variants: `RunStart`, `RunStream`, `RunEnd`, `StepStart`, `StepEnd`, `NodeStart`, `NodeStream`, `NodeEnd`, `ToolStart`, `ToolStream`, `ToolEnd`, `GuardrailDecision`, `ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent`, and `Error`. The enum carries `#[non_exhaustive]`. Verified by `test_BC_2_06_001_stream_event_has_16_variants()`.
+### AC-001 (traces to BC-2.06.001 postcondition 1 — 16 StreamEvent variants defined in core::events)
+`StreamEvent` is an enum with exactly 16 variants: `RunStart`, `RunStream`, `RunEnd`, `StepStart`, `StepEnd`, `NodeStart`, `NodeStream`, `NodeEnd`, `ToolStart`, `ToolStream`, `ToolEnd`, `GuardrailDecision`, `ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent`, and `Error`. The enum is defined in `pregolya-core/src/events.rs` (`core::events`) and carries `#[non_exhaustive]`. Verified by `test_BC_2_06_001_stream_event_has_16_variants()`.
 
 ### AC-002 (traces to BC-2.06.001 postcondition 2 — causal ordering invariants)
 Events maintain causal order: `RunStart` precedes all other run events; `StepStart` precedes `NodeStart` for nodes in that step; `NodeStart` precedes `NodeStream` and `NodeEnd` for the same node; `ToolStart` precedes `ToolStream` and `ToolEnd` for the same tool call. `StepEnd` has no `Stream` variant. Verified by `test_BC_2_06_001_causal_ordering_invariants()`.
@@ -94,9 +94,10 @@ The streaming path uses the same BSP engine and the same node execution logic as
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|---------------|
-| `StreamEvent` enum definition | `pregolya-graph/src/event_emitter.rs` | Pure (type definition) |
+| `StreamEvent` enum definition (16 variants, `Serialize`/`Deserialize`, `run_id`/`parent_ids`) | `pregolya-core/src/events.rs` (`core::events`) | Pure (type definition; per ADR-006 §Consequences) |
+| Event emission abstraction | `pregolya-graph/src/event_emitter.rs` (`graph::event_emitter`) | Effectful (emits `StreamEvent` values; type defined in `core::events`) |
 | Event emission in BSP engine | `pregolya-graph/src/bsp_engine.rs` | Effectful (sends to event channel) |
-| Event emission in scheduler | `pregolya-graph/src/scheduler.rs` | Effectful (run lifecycle events) |
+| Event emission in scheduler — NodeStart/NodeEnd/ToolStart/ToolEnd (`tick()`), StepEnd (`after_tick()`) | `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) | Effectful (emits `StreamEvent` values; type defined in `core::events`) |
 | `run()` unary executor | `pregolya-graph/src/scheduler.rs` | Effectful |
 | `stream()` streaming executor | `pregolya-graph/src/scheduler.rs` | Effectful (tokio channel + yield) |
 
@@ -104,7 +105,8 @@ The streaming path uses the same BSP engine and the same node execution logic as
 
 | Module | Classification | Justification |
 |--------|---------------|---------------|
-| `event_emitter.rs` (`StreamEvent` enum) | pure-core | Type definitions + `#[non_exhaustive]`; no execution logic |
+| `pregolya-core/src/events.rs` (`StreamEvent` enum, `core::events`) | pure-core | Type definitions + `#[non_exhaustive]`; no execution logic; canonical home per ADR-006 §Consequences |
+| `pregolya-graph/src/event_emitter.rs` (event emission abstraction) | effectful-shell | Emits `StreamEvent` values (type defined in `core::events`) to tokio channel |
 | `bsp_engine.rs` (event emission sites) | effectful-shell | Sends events to unbounded tokio channel |
 | `scheduler.rs` (run/stream dispatch) | effectful-shell | Orchestrates async execution; no pure-fn extraction needed for this story |
 
@@ -125,23 +127,25 @@ The streaming path uses the same BSP engine and the same node execution logic as
 | This story spec | ~3,000 |
 | BC files (3 BCs) | ~4,500 |
 | S-1.14 context (StateGraph, channels) | ~1,500 |
-| `event_emitter.rs` new file | ~800 |
+| `pregolya-core/src/events.rs` new file (enum definition) | ~600 |
+| `pregolya-graph/src/event_emitter.rs` new file (emission abstraction) | ~400 |
 | `bsp_engine.rs` event emission additions | ~1,000 |
 | `scheduler.rs` run/stream additions | ~1,500 |
 | Test files | ~2,500 |
-| **Total** | **~14,800** |
+| **Total** | **~15,000** |
 | Agent context window | ~200K (Sonnet) |
 | **Budget usage** | **~7.4%** |
 
 ## Tasks (MANDATORY)
 
 1. [ ] Write failing tests for all 12 ACs in `pregolya-graph/tests/streaming_events.rs`
-2. [ ] Create `pregolya-graph/src/event_emitter.rs` — `StreamEvent` enum with 16 variants, `#[non_exhaustive]`, `run_id` + `parent_ids` fields
-3. [ ] Add `StreamEvent` emission sites to `pregolya-graph/src/bsp_engine.rs` — NodeStart/NodeEnd/NodeStream per node execution
-4. [ ] Add `StreamEvent` emission to `pregolya-graph/src/scheduler.rs` — RunStart/RunEnd/StepStart/StepEnd
-5. [ ] Implement `run()` unary executor and `stream()` streaming executor in `scheduler.rs` — same BSP engine, different output shape
-6. [ ] Register all `event_type` values in Canonical Structured Event Catalog (SAP-1)
-7. [ ] Run `cargo nextest run -p pregolya-graph --no-fail-fast` — all tests green
+2. [ ] Create `pregolya-core/src/events.rs` — `StreamEvent` enum with all 16 variants, `#[non_exhaustive]`, `Serialize`/`Deserialize` derives, `run_id` + `parent_ids` base correlation fields (per ADR-006 §Consequences)
+3. [ ] Create `pregolya-graph/src/event_emitter.rs` — event emission abstraction that emits `StreamEvent` values (type from `core::events`) to tokio channel
+4. [ ] Add `StreamEvent` emission sites to `pregolya-graph/src/bsp_engine.rs` — NodeStart/NodeEnd/NodeStream per node execution
+5. [ ] Add `StreamEvent` emission to `pregolya-graph/src/scheduler.rs` — RunStart/RunEnd/StepStart/StepEnd; NodeStart/NodeEnd/ToolStart/ToolEnd in `tick()`, StepEnd in `after_tick()`
+6. [ ] Implement `run()` unary executor and `stream()` streaming executor in `scheduler.rs` — same BSP engine, different output shape
+7. [ ] Register all `event_type` values in Canonical Structured Event Catalog (SAP-1)
+8. [ ] Run `cargo nextest run -p pregolya-core -p pregolya-graph --no-fail-fast` — all tests green
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -172,8 +176,10 @@ The streaming path uses the same BSP engine and the same node execution logic as
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-graph/src/event_emitter.rs` | create | `StreamEvent` enum (16 variants), `#[non_exhaustive]`, `run_id`, `parent_ids` |
+| `pregolya-core/src/events.rs` | create | `StreamEvent` enum (all 16 variants), `Serialize`/`Deserialize` derives, `run_id`/`parent_ids` base correlation fields per BC-2.06.002; `#[non_exhaustive]` |
+| `pregolya-graph/src/event_emitter.rs` | create | Event emission abstraction; emits `StreamEvent` values (type defined in `core::events`) to tokio channel |
 | `pregolya-graph/src/bsp_engine.rs` | modify | Node-level `StreamEvent` emission (NodeStart/Stream/End) |
-| `pregolya-graph/src/scheduler.rs` | modify | Run/step-level events; `run()` unary + `stream()` streaming executors |
-| `pregolya-graph/src/lib.rs` | modify | Re-export `StreamEvent` from `event_emitter` module |
+| `pregolya-graph/src/scheduler.rs` | modify | Run/step-level events; `run()` unary + `stream()` streaming executors; NodeStart/NodeEnd/ToolStart/ToolEnd emitted in `tick()`, StepEnd in `after_tick()` |
+| `pregolya-core/src/lib.rs` | modify | Re-export `StreamEvent` from `events` module |
+| `pregolya-graph/src/lib.rs` | modify | Re-export `event_emitter` module; re-export `StreamEvent` via `pregolya-core` |
 | `pregolya-graph/tests/streaming_events.rs` | create | AC-001..AC-012 tests |

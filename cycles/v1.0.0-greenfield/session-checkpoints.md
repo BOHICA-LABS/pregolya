@@ -2693,3 +2693,16 @@ P2A-014 fix-burst COMPLETE (D-222; 3 findings 1M/1L/1OBS; 7 files; census unchan
 
 #### v5.35 OPS NOTES
 P2A-015 fix-burst COMPLETE (D-223; 5 findings 1H/1M/3L; S-2.06 6-crate triad + ARCH-INDEX SS-08 + wave-schedule Tiers 6-9 + community post-v1 + STORY-INDEX stale clause + S-2.10/11 BC inline; D-206 12→14 VPs reconciliation; census 133 BC/14 VP). VERIFY-NEXT-PASS for P2A-016: confirm S-2.06 lists all 6 crates (3 adapter + 3 sdk) and wave-schedule tier assignments consistent with D17-Q5.
+
+---
+
+### v5.36 (archived 2026-08-21 — replaced by v5.37)
+
+**RESUME IN ONE BREATH:** Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak 0/3. Adversary passes P2A-001..P2A-016 all returned NOT CLEAN and were fix-burst-closed D-208..D-224 (sample); zero regressions across all passes. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass P2A-017 on the current post-fix-burst factory-artifacts HEAD.
+
+**Finding trajectory P2A-001..016:** 8→3→7→3→8→2→3→4→8→10→4→2→5→3→5→3. Streak 0/3. NEXT: P2A-017.
+
+**Decision delta (v5.36):** D-224 minted (P2A-016 fix-burst COMPLETE; 2M/1L ALL CLOSED; dep-graph §TopSort 13-batch→10-batch canonical; wave-schedule Wave-1 reconciled + pregolya facade annotation; ARCH-INDEX Primary-Crate convention preamble + SS-17 scope note). Human F-02/TDIV-009 waiver in effect (D-220).
+
+#### v5.36 OPS NOTES
+P2A-016 fix-burst COMPLETE (D-224; 3 findings 2M/1L; dep-graph 13-batch→canonical 10-batch Wave-1; wave-schedule Wave-1 batch structure + pregolya facade annotation row; ARCH-INDEX Subsystem Registry preamble + SS-17 scope note; census 133 BC/14 VP). VERIFY-NEXT-PASS for P2A-017: confirm dep-graph §TopSort 10-batch Wave-1 structure is internally consistent and matches wave-schedule batch ordering.
