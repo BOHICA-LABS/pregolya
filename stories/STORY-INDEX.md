@@ -19,7 +19,7 @@ input-hash: "pending"
 
 > **39 stories total — 27 Wave 1 / 11 Wave 2 / 1 Wave 6**
 > **BC coverage: 133 BCs — 51 P0 / 79 P1 / 3 P2 — all covered**
-> **Story files:** Individual STORY-NNN specs live in `.factory/stories/stories/` (written in subsequent bursts)
+> **Story files:** Individual STORY-NNN specs live in `.factory/stories/stories/`
 
 ## Census
 
@@ -127,7 +127,7 @@ input-hash: "pending"
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
-| S-2.06 | Provider SDK Split Architecture — Standalone SDK Crate and Adapter Crate Pattern | BC-2.08.006 | SS-08 | pregolya-openai, pregolya-anthropic, pregolya-ollama | P1 | 3 | [S-1.04] | draft |
+| S-2.06 | Provider SDK Split Architecture — Standalone SDK Crate and Adapter Crate Pattern | BC-2.08.006 | SS-08 | pregolya-openai, pregolya-anthropic, pregolya-ollama, pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk | P1 | 3 | [S-1.04] | draft |
 | S-2.07 | Chat Model Core Conformance — Streaming, Tool-Call, Structured Output, Error Fidelity | BC-2.08.001, BC-2.08.002, BC-2.08.003, BC-2.08.004, BC-2.08.005, BC-2.08.007 | SS-08 | pregolya-openai, pregolya-anthropic, pregolya-ollama | P1 | 13 | [S-2.06, S-1.07, S-1.06] | draft |
 | S-2.08 | Advanced Provider Features — Eval Scoring, Schema Stability, Tool Dialects, Failover Chain | BC-2.08.008, BC-2.08.009, BC-2.08.013, BC-2.08.014 | SS-08 | pregolya-openai, pregolya-anthropic, pregolya-ollama, pregolya-standard-tests | P1 | 8 | [S-2.07] | draft |
 | S-2.09 | Embeddings Trait and Provider Implementations — OpenAI and Ollama Embeddings | BC-2.22.001, BC-2.22.002, BC-2.22.003 | SS-22 | pregolya-core, pregolya-openai, pregolya-ollama | P1 | 8 | [S-2.06, S-1.02] | draft |

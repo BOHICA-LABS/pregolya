@@ -2657,3 +2657,32 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-222 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-015.
 
 **Convergence dim-5 (Phase-2 P2A-014):** Counter **0/3 — NOT CLEAN (D-222; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →5→3. NEXT: P2A-015 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. VERIFY-NEXT-PASS: P2A-015 should independently confirm S-2.07's removal of the BC-2.08.006 body reference did NOT drop BC-2.08.006 below its coverage floor (it should remain covered by S-2.06).
+
+---
+
+### P2A-015 — Pass 15 (2026-08-21, fix-burst post-pass-15)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P2A-015 | 2026-08-21 | 5 | 0 | 1 | 1 | 0 | 3 | MEDIUM | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass. D17-Q5 SDK-split under-propagation root cause newly identified; wave-schedule tier structure, ARCH-INDEX SS-08 crate registry, and S-2.06 target_module set swept against D17-Q5 decision record.
+
+**Findings:**
+- P2A015-01 (HIGH, POL-6/8): Three wire-client SDK crates (pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk) were absent from S-2.06 `target_module` set, wave-schedule Tier-6 assignment, and ARCH-INDEX SS-08 registry. Root cause: D17-Q5 SDK-split decision split these crates from their adapter counterparts but the split was never propagated into the story specs or wave planning. S-2.06 target_module expanded from 3 adapter crates to 6 (adapter + sdk triad). Sprint-state updated to match. Wave-schedule Tier-6 updated with 3 sdk crates; adapter crates moved to Tier-7; pregolya-mcp-adapters moved to Tier-8; xtask moved to Tier-9; pregolya-community moved to post-v1 (P2A015-02).
+- P2A015-02 (MED, POL-6): wave-schedule listed pregolya-community in v1 tier. pregolya-community is not a v1 deliverable per product scope; moved to post-v1 section.
+- OBS-1: S-2.10 and S-2.11 `behavioral_contracts` frontmatter used block-sequence format; normalized to inline array (consistent with D-219 normalization applied to all other stories).
+- OBS-2: STORY-INDEX contained a stale "(written in subsequent bursts)" clause that was no longer accurate post all-story authoring completion; removed.
+- OBS-3: ARCH-INDEX SS-08 did not list pregolya-macros (proc-macro crate with BCs numbered under SS-08 as BC-2.08.010–012); added to SS-08 crate registry. Also: two stale VP-INDEX version cites in ARCH-INDEX changelog prose were de-pinned per TD-VSDD-091 records-lint.
+
+**In-scope reconciliation (not scored):**
+- D-206 bookkeeping: original per-story-authoring-complete note said "12 VPs"; authoritative VP-INDEX + ARCH-INDEX total is 14 VPs (LCEL expansion per D-171 added VP-014 after D-206 was originally authored). Corrected to 14 VPs in D-206 compressed row. No spec content changed; bookkeeping reconciliation per D-196 precedent.
+- BC-2.08.006 coverage floor VERIFIED INTACT: S-2.06 remains the covering story for BC-2.08.006; expanding S-2.06 from 3 to 6 target crates broadens coverage, does not narrow it. Floor not breached (P2A-015 VERIFY-NEXT-PASS from P2A-014 confirmed satisfied).
+
+**Regression check:** All P2A-003..014 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged. OBS-1 + PGAP-MSGDRIFT recorded gaps — no new concrete instances found. CLEAN(strict)=NO; CLEAN(PR-merge)=NO (1H + 1M findings present).
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1). No bcs: set changes — Token Budget counts unaffected. DAG/reciprocity UNCHANGED this burst. ARCH-INDEX bumped to v1.32 (crate registry addition to SS-08).
+
+**D-223 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-016.
+
+**Convergence dim-5 (Phase-2 P2A-015):** Counter **0/3 — NOT CLEAN (D-223; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →2→5→3→5. NEXT: P2A-016 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. VERIFY-NEXT-PASS: P2A-016 should confirm S-2.06 now lists all 6 crates (3 adapter + 3 sdk) and wave-schedule tier assignments are internally consistent with D17-Q5 SDK-split decision.

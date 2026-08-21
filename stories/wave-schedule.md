@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "5e051ad"
+input-hash: "755e2bf"
 traces_to: STORY-INDEX.md
 ---
 
@@ -220,12 +220,15 @@ actual critical path constraint.
 | 3 | pregolya-graph | 1 | D7 priority 2 |
 | 4 | pregolya-tools | 1 | Dep sandbox + macros |
 | 5 | pregolya-server | 1 | Dep graph + checkpoint |
-| 6 | pregolya-vectorstores | 2 | Wave 2 |
-| 6 | pregolya-prompts | 2 | Wave 2 |
-| 6 | pregolya-openai | 2 | D7 partners priority |
-| 6 | pregolya-anthropic | 2 | D7 partners priority |
-| 6 | pregolya-ollama | 2 | D7 partners priority |
-| 6 | pregolya-standard-tests | 2 | Shared test infra for providers |
-| 6 | pregolya-community | 2 | Partial (embeddings only) |
-| 7 | pregolya-mcp | 2 | Dep tools + graph |
-| 8 | xtask (formal) | 6 | Terminal — all crates compiled |
+| 6 | pregolya-vectorstores | 2 | Wave 2; no internal pregolya-* deps |
+| 6 | pregolya-prompts | 2 | Wave 2; no internal pregolya-* deps |
+| 6 | pregolya-openai-sdk | 2 | D17-Q5 wire client; no pregolya-core dep (builds before adapter) |
+| 6 | pregolya-anthropic-sdk | 2 | D17-Q5 wire client; no pregolya-core dep (builds before adapter) |
+| 6 | pregolya-ollama-sdk | 2 | D17-Q5 wire client; no pregolya-core dep (builds before adapter) |
+| 7 | pregolya-openai | 2 | D7 partners priority; dep openai-sdk (tier 6) |
+| 7 | pregolya-anthropic | 2 | D7 partners priority; dep anthropic-sdk (tier 6) |
+| 7 | pregolya-ollama | 2 | D7 partners priority; dep ollama-sdk (tier 6) |
+| 7 | pregolya-standard-tests | 2 | Shared test infra for providers |
+| 8 | pregolya-mcp | 2 | Dep tools + graph |
+| 9 | xtask (formal) | 6 | Terminal — all crates compiled |
+| — | pregolya-community | post-v1 | Zero v1 scope per ADR-007 + ARCH-INDEX roster; no v1 stories target this crate |

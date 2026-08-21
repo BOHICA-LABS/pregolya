@@ -18,9 +18,7 @@ traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-2.10]
 blocks: []
-behavioral_contracts:
-  - BC-2.09.006
-  - BC-2.09.007
+behavioral_contracts: [BC-2.09.006, BC-2.09.007]
 verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield

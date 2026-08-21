@@ -2658,3 +2658,25 @@ dispatch `vsdd-factory:adversary` **P2A-014**, fresh context, Read/Grep/Glob onl
 
 #### v5.33 OPS NOTES
 P2A-013 fix-burst COMPLETE (D-221; 5 findings 1H/3M/1L; 14 files; DAG acyclic; census unchanged 133/14). P2A-010+011 fix-burst rows archived to burst-log. Next: P2A-014 adversarial re-pass on frozen HEAD.
+
+---
+
+### v5.34 RESUME IN ONE BREATH
+Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak **0/3**. Adversary passes P2A-001..P2A-014 all returned NOT CLEAN and were fix-burst-closed D-208..D-222 (sample); zero regressions across all passes. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass **P2A-015** on the current post-fix-burst factory-artifacts HEAD (frozen-HEAD baseline reset by this fix-burst push).
+
+#### v5.34 HEADS
+- develop `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: run `git -C .factory log -1 --format='%h'` for the current HEAD. PUSHED to origin.
+- Worktrees: NONE. Open PRs: NONE.
+
+#### v5.34 NEXT-ACTION
+dispatch `vsdd-factory:adversary` **P2A-015**, fresh context, Read/Grep/Glob only, Form-B verbatim evidence, FULL Phase-1-active POL rubric (POL-1..31 + POL-46/47) injected, with the ACCEPTED/DO-NOT-REFLAG note (F-02/TDIV-009 waived; OBS-1 + PGAP-MSGDRIFT missing-validator gaps recorded), dual `CLEAN (strict)/CLEAN (PR-merge)` verdict, on the post-P2A-014-fix-burst frozen HEAD (streak 0/3). VERIFY-NEXT-PASS: confirm S-2.07's removal of BC-2.08.006 body reference did NOT drop BC-2.08.006 below its coverage floor (should remain covered by S-2.06).
+
+#### v5.34 PRODUCT BACKLOG
+1. P2A-015 (adversary, BC-5.39.001; streak 0/3 → target 3/3; rubric: TDIV-009 accepted; full corpus pass; VERIFY BC-2.08.006 coverage)
+2. OBS-1 (DAG reciprocity validator; required before Phase-2 gate close)
+3. PGAP-MSGDRIFT mechanical gate codification (devops scope, human authorization required)
+4. Pre-Phase-2-gate consistency audit → Phase 3
+
+#### v5.34 OPS NOTES
+P2A-014 fix-burst COMPLETE (D-222; 3 findings 1M/1L/1OBS; 7 files; census unchanged 133/14). 39-story target-crate sweep exhausted class. S-2.07 BC-2.08.006 prose cross-ref added (traceability intact). Next: P2A-015 adversarial re-pass on frozen HEAD.
