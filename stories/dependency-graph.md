@@ -81,7 +81,7 @@ S-1.12 (Memory Persistence)
   blocks: S-1.13
 
 S-1.13 (SkillStore/WriteGuard)
-  depends_on: [S-1.12, S-1.04, S-1.14]
+  depends_on: [S-1.12, S-1.04, S-1.14, S-1.17]
   blocks: S-1.16
 ```
 
@@ -94,19 +94,19 @@ S-1.14 (StateGraph Nodes + Channels)
 
 S-1.15 (Conditional Edges + Send)
   depends_on: [S-1.14]
-  blocks: S-1.16
+  blocks: S-1.16, S-1.17
 
 S-1.16 (BSP Engine)
-  depends_on: [S-1.14, S-1.15, S-1.10, S-1.13]
+  depends_on: [S-1.14, S-1.15, S-1.10, S-1.13, S-1.17, S-1.18]
   blocks: S-1.20, S-1.26, S-6.01
 
 S-1.17 (Streaming Events)
-  depends_on: [S-1.14, S-1.04]
-  blocks: S-1.20, S-1.23, S-1.24
+  depends_on: [S-1.14, S-1.04, S-1.15]
+  blocks: S-1.13, S-1.16, S-1.18, S-1.20, S-1.23, S-1.24
 
 S-1.18 (Budget/EvidenceJournal)
-  depends_on: [S-1.14, S-1.04, S-1.10]
-  blocks: S-1.24, S-1.25
+  depends_on: [S-1.14, S-1.04, S-1.10, S-1.17]
+  blocks: S-1.16, S-1.24, S-1.25
 
 S-1.19 (GuardrailHook)
   depends_on: [S-1.14, S-1.04]
@@ -234,12 +234,14 @@ S-6.01 (Kani + cargo-fuzz)
 | 1b | S-1.02, S-1.03, S-1.08 | All depend only on S-1.01 |
 | 1c | S-1.04, S-1.09 | S-1.04 dep S-1.02+S-1.03 (1b); S-1.09 dep S-1.01+S-1.02 (1a+1b) |
 | 1d | S-1.05, S-1.06, S-1.07, S-1.10, S-1.12, S-1.14 | All deps satisfied by 1a–1c; none depend on each other |
-| 1e | S-1.11, S-1.13, S-1.15, S-1.17, S-1.18, S-1.19, S-1.21 | All deps in 1a–1d; none depend on each other |
-| 1f | S-1.16, S-1.22 | S-1.16 dep S-1.15+S-1.13 (1e); S-1.22 dep S-1.21 (1e)+S-1.06 (1d) |
-| 1g | S-1.20, S-1.26 | S-1.20 dep S-1.16 (1f); S-1.26 dep S-1.16 (1f) |
-| 1h | S-1.23, S-1.27 | S-1.23 dep S-1.20 (1g); S-1.27 dep S-1.26 (1g) |
-| 1i | S-1.24 | Dep S-1.23 (1h)+S-1.17+S-1.18 (1e) |
-| 1j | S-1.25 | Dep S-1.10 (1d)+S-1.18 (1e)+S-1.24 (1i) |
+| 1e | S-1.11, S-1.15, S-1.19, S-1.21 | All deps in 1a–1d; none depend on each other; S-1.13/S-1.17/S-1.18 removed — see 1f/1g |
+| 1f | S-1.17, S-1.22 | S-1.17 dep S-1.15 (1e)+S-1.14+S-1.04 (1d); S-1.22 dep S-1.21 (1e)+S-1.06 (1d); no intra-batch edges |
+| 1g | S-1.13, S-1.18 | S-1.13 dep S-1.17 (1f)+S-1.12+S-1.14 (1d); S-1.18 dep S-1.17 (1f)+S-1.14+S-1.10 (1d); concurrent — disjoint scheduler.rs regions per coordination note |
+| 1h | S-1.16 | Dep S-1.13+S-1.18 (1g)+S-1.17 (1f)+S-1.15 (1e)+S-1.14+S-1.10 (1d) |
+| 1i | S-1.20, S-1.26 | S-1.20 dep S-1.16 (1h)+S-1.17 (1f)+S-1.10 (1d); S-1.26 dep S-1.16 (1h)+S-1.10 (1d) |
+| 1j | S-1.23, S-1.27 | S-1.23 dep S-1.20 (1i)+S-1.17 (1f); S-1.27 dep S-1.26 (1i) |
+| 1k | S-1.24 | Dep S-1.23 (1j)+S-1.17 (1f)+S-1.18 (1g) |
+| 1l | S-1.25 | Dep S-1.10 (1d)+S-1.18 (1g)+S-1.24 (1k) |
 
 ### Wave 2 — Topological Batches
 

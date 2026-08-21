@@ -15,11 +15,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b6db228"
+input-hash: "e39dee4"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
-depends_on: [S-1.14, S-1.04, S-1.10]
-blocks: [S-1.24, S-1.25]
+depends_on: [S-1.14, S-1.04, S-1.10, S-1.17]
+blocks: [S-1.16, S-1.24, S-1.25]
 behavioral_contracts: [BC-2.10.001, BC-2.10.002, BC-2.10.003, BC-2.10.004]
 verification_properties: []
 priority: P0
@@ -167,9 +167,12 @@ When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the r
 
 | Story | Key Decisions | Patterns Established | Gotchas Discovered |
 |-------|--------------|---------------------|-------------------|
-| S-1.14 | Channel + reducer foundation; `scheduler.rs` skeleton | `mod.rs` re-export only | Budget eval in scheduler; do not put I/O in trait `evaluate` |
+| S-1.14 | Channel + reducer foundation; `bsp_engine.rs` partial creation (reduce phase, finish dispatch) | `mod.rs` re-export only | Budget eval in scheduler; do not put I/O in trait `evaluate` |
+| S-1.17 | `run()`/`stream()` executors added to `scheduler.rs`; event emission callsites in `tick()`/`after_tick()` | S-1.17 creates the `run()` method body; budget evaluation in S-1.18 hooks into the per-super-step section | Confirm `run()` signature (incl budget_config param) before adding budget hooks |
 | S-1.10 | `CheckpointStore` trait; `SqliteCheckpointStore` | SQLite is the persistence backend | `EvidenceJournal` must use `pregolya-checkpoint` SQLite backend, not a separate DB connection |
 | S-1.04 | `PregolyaError` with category + code; `E-BUDGET-*` codes in taxonomy | `retry_hint: Never` for policy denials | Confirm `E-BUDGET-001` and `E-BUDGET-002` codes are in error taxonomy before use |
+
+**Coordination note:** Coordinate `pregolya-graph/src/scheduler.rs` changes between S-1.13 (pre-super-step `ContextMutationConfig` initialization — before the super-step loop) and S-1.18 (per-super-step budget evaluation — inside the loop). Both depend on S-1.17's `run()` executor skeleton. The second PR to merge must rebase on the first.
 
 ## Architecture Compliance Rules (MANDATORY)
 

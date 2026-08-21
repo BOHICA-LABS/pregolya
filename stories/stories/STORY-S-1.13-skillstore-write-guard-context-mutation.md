@@ -14,10 +14,10 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3db17ea"
+input-hash: "8da33dd"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
-depends_on: [S-1.12, S-1.04, S-1.14]
+depends_on: [S-1.12, S-1.04, S-1.14, S-1.17]
 blocks: [S-1.16]
 behavioral_contracts: [BC-2.15.004, BC-2.15.005, BC-2.15.006]
 verification_properties: []
@@ -147,7 +147,7 @@ Within the 20-30% agent context window threshold. Note this story touches three 
 - [ ] Create `pregolya-memory/src/skill_store.rs` — `SkillStoreImpl` implementing `SkillStore` trait; App scope bound at construction; empty app_id fail-closed
 - [ ] Create `pregolya-memory/src/write_guard.rs` — enforcement: call `validate`, catch panics, apply `WriteGuardDecision`, return E-MEMORY-007 on Deny
 - [ ] Add built-in injection scanner to `pregolya-memory/src/write_guard.rs` — role prefix detection, invisible Unicode detection
-- [ ] Create/modify `pregolya-graph/src/scheduler.rs` — load `ContextMutationConfig` once pre-first-super-step; scope as `MemoryScope::App(run_context.app_id)`; key format `"{namespace}/{key}"`; empty app_id fail-loud
+- [ ] Modify `pregolya-graph/src/scheduler.rs` — add `ContextMutationConfig` pre-super-step loader (before super-step loop in the `run()` method established by S-1.17); scope as `MemoryScope::App(run_context.app_id)`; key format `"{namespace}/{key}"`; empty app_id fail-loud
 - [ ] Export `SkillStore` trait and types from `pregolya-memory/src/lib.rs`
 - [ ] Export `WriteGuardDecision`, `MemoryWriteRequest`, `MemoryWriteGuard` from `pregolya-core/src/lib.rs`
 - [ ] Export `ContextMutationConfig`, `ContextSourceSpec` from `pregolya-core/src/lib.rs`
@@ -159,7 +159,9 @@ Within the 20-30% agent context window threshold. Note this story touches three 
 - S-1.12 (Memory KV/Vector/GDPR) established `MemoryStore` trait, `MemoryScope`, `SqliteMemoryStore`, and the ephemeral test backend. `SkillStore` is built as an overlay on top of the existing `MemoryStore` trait. Load S-1.12 context before implementing S-1.13.
 - S-1.04 (Runnable Trait and Pipe) established `pregolya-core` crate structure. Adding `write_guard.rs` and `context_mutation.rs` to `pregolya-core` follows the same module pattern.
 - S-1.14 (StateGraph Node + Channel Reducers) established the `pregolya-graph` crate, including its `Cargo.toml`, `src/lib.rs`, and module scaffold. `pregolya-graph/src/scheduler.rs` cannot be created until the `pregolya-graph` crate exists. Implementer must load S-1.14 context first to confirm the crate layout and `lib.rs` re-export conventions before adding `scheduler.rs`.
-- The graph scheduler (in `pregolya-graph`) has not been covered in prior Wave 1 stories. This is the first story touching `pregolya-graph/src/scheduler.rs`. The implementer should verify that a scheduler skeleton exists before implementing the context mutation loading.
+- The graph scheduler (in `pregolya-graph`) is created by S-1.15 (PUSH task queue skeleton, TASKS topic, `ctx.send()`). S-1.17 (which this story depends on) adds the `run()`/`stream()` executors. This story inserts the `ContextMutationConfig` pre-super-step loader into the `run()` method body established by S-1.17. Load S-1.15 and S-1.17 context before adding the context-mutation initialization.
+
+**Coordination note:** Coordinate `pregolya-graph/src/scheduler.rs` changes between S-1.13 (pre-super-step `ContextMutationConfig` initialization — before the super-step loop) and S-1.18 (per-super-step budget evaluation — inside the loop). Both depend on S-1.17's `run()` executor skeleton. The second PR to merge must rebase on the first.
 
 ## Architecture Compliance Rules
 
@@ -200,7 +202,7 @@ Files to CREATE:
 Files to MODIFY:
 - `/pregolya-core/src/lib.rs` — re-export from `write_guard` and `context_mutation`
 - `/pregolya-memory/src/lib.rs` — re-export from `skill_store` and `write_guard`
-- `/pregolya-graph/src/scheduler.rs` — add context mutation config loading (create file if first scheduler story)
+- `/pregolya-graph/src/scheduler.rs` — modify — add `ContextMutationConfig` pre-super-step loader; file created by S-1.15, `run()` executor added by S-1.17; this story adds pre-loop initialization only
 
 ## Edge Cases
 

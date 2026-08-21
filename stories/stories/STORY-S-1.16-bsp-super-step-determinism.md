@@ -14,10 +14,10 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "48c95ce"
+input-hash: "38c2a40"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
-depends_on: [S-1.14, S-1.15, S-1.10, S-1.13]
+depends_on: [S-1.14, S-1.15, S-1.10, S-1.13, S-1.17, S-1.18]
 blocks: [S-1.20, S-1.26, S-6.01]
 behavioral_contracts: [BC-2.03.001, BC-2.03.002, BC-2.03.003]
 verification_properties: [VP-001]
@@ -145,7 +145,9 @@ The sort comparator uses the `task_id` string (not a numeric hash) as the primar
 | Story | Key Decisions | Patterns Established | Gotchas Discovered |
 |-------|--------------|---------------------|-------------------|
 | S-1.14 | `WriteRecord { task_id, channel_name, value }` struct defined in `types.rs`; channel materialisation at compile | `mod.rs` re-export only; all channels in `channels/` | Concurrent-write detection must happen during reduce (not write time) — AC-007 |
-| S-1.15 | `add_conditional_edges` + path_fn catch_unwind; PUSH task queue in `scheduler.rs` | `scheduler.rs` skeleton is partially established by S-1.15 | Coordinate bsp_engine.rs changes between S-1.14 (Red Gate tests), S-1.15 (path dispatch), and S-1.16 (reduce_super_step extraction) |
+| S-1.15 | `add_conditional_edges` + path_fn catch_unwind; PUSH task queue in `scheduler.rs` | S-1.15 creates `scheduler.rs` skeleton (PUSH task queue, TASKS topic, `ctx.send()`); S-1.17 adds `run()`/`stream()` executors | Coordinate bsp_engine.rs changes between S-1.14 (Red Gate tests), S-1.15 (path dispatch), and S-1.16 (reduce_super_step extraction) |
+| S-1.17 | `StreamEvent` enum (16 variants); `run()`/`stream()` executors in `scheduler.rs`; event emission in `tick()`/`after_tick()` | `scheduler.rs::run()` method body exists when S-1.16 adds ceiling + run ID checks; S-1.16 modifies scheduler.rs — ensure rebase on S-1.17 | S-1.16 adds ceiling check and run ID collision detection to the `scheduler.rs` established by S-1.17 |
+| S-1.18 | `BudgetPolicy` trait; per-super-step budget evaluation in `scheduler.rs` | Budget evaluation is inside the super-step loop; ceiling check (E-GRAPH-017) is also per-step — both must coexist without conflict | S-1.16 and S-1.18 both modify the per-super-step section of `scheduler.rs`; the second PR to merge must rebase on the first |
 | S-1.10 | Checkpoint core — `CheckpointStore` trait, sqlite backend | `bsp_engine.rs::finish()` writes to checkpoint; `reduce_super_step` must NOT call checkpoint (pure) | Ensure `reduce_super_step` is extracted before `finish()` so the Kani harness is a clean pure-fn target |
 
 ## Architecture Compliance Rules (MANDATORY)

@@ -13,11 +13,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "804e815"
+input-hash: "da28b11"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
-blocks: [S-1.16]
+blocks: [S-1.16, S-1.17]
 behavioral_contracts: [BC-2.02.005, BC-2.02.006]
 verification_properties: []
 priority: P0
@@ -135,7 +135,7 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 2. [ ] Extend `pregolya-graph/src/definition.rs` — `add_conditional_edges(source, path_fn, path_map?)`
 3. [ ] Add path_fn panic safety to `pregolya-graph/src/bsp_engine.rs` using `catch_unwind`
 4. [ ] Add path_map compile-time validation in `compile()`
-5. [ ] Create `pregolya-graph/src/scheduler.rs` (if not created in S-1.14) — PUSH task queue, TASKS topic
+5. [ ] Create `pregolya-graph/src/scheduler.rs` — PUSH task queue, TASKS topic (S-1.15 is the owner and creator of this file)
 6. [ ] Add `task_id` hash function to `pregolya-graph/src/types.rs` — xxh3_128 with canonical key components
 7. [ ] Add `UntrackedValue` sanitization in `types.rs`
 8. [ ] Add `ctx.send(target, value)` to node execution context
@@ -174,6 +174,6 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 |------|--------|---------|
 | `pregolya-graph/src/definition.rs` | modify | Add `add_conditional_edges(source, path_fn, path_map?)` |
 | `pregolya-graph/src/bsp_engine.rs` | modify | Add `catch_unwind` around path_fn dispatch; `E-GRAPH-011` error |
-| `pregolya-graph/src/scheduler.rs` | create/modify | PUSH task queue, TASKS topic, `ctx.send()` |
+| `pregolya-graph/src/scheduler.rs` | create | PUSH task queue, TASKS topic, `ctx.send()` — S-1.15 creates this file (scheduler.rs skeleton) |
 | `pregolya-graph/src/types.rs` | modify | Add `task_id` hash fn, `UntrackedValue`, `PushTask` struct |
 | `pregolya-graph/tests/conditional_send_fanout.rs` | create | AC-001..AC-011 tests |

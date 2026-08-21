@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "cb744c4"
+input-hash: "9f0df4d"
 traces_to: STORY-INDEX.md
 ---
 
@@ -19,7 +19,7 @@ traces_to: STORY-INDEX.md
 |--------|-------|
 | Total stories | 39 |
 | Total waves | 3 (Wave 1, Wave 2, Wave 6) |
-| Max parallelism (groups per wave) | 7 groups in Wave 1 / sub-batch 1e |
+| Max parallelism (groups per wave) | 4 groups in Wave 1 / sub-batch 1e (was 7; restructured by P2A-020 scheduler ownership ruling) |
 | Estimated agent spawns | 39 implementer agents total |
 
 ## Wave Plan
@@ -68,41 +68,51 @@ traces_to: STORY-INDEX.md
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.11 | 3 | XS | 1 story/agent |
-| B | S-1.13 | 8 | M | 1 story/agent |
-| C | S-1.15 | 5 | S | 1 story/agent |
-| D | S-1.17 | 5 | S | 1 story/agent |
-| E | S-1.18 | 8 | M | 1 story/agent |
-| F | S-1.19 | 13 | XL | 1 story/agent |
-| G | S-1.21 | 8 | M | 1 story/agent |
+| B | S-1.15 | 5 | S | 1 story/agent |
+| C | S-1.19 | 13 | XL | 1 story/agent |
+| D | S-1.21 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1f — BSP engine + Bash tool (depends on 1e)
+#### Sub-batch 1f — Streaming events + Bash tool (depends on 1e)
+
+| Group | Stories | Points | Complexity | Agent Scope |
+|-------|---------|--------|-----------|-------------|
+| A | S-1.17 | 5 | S | 1 story/agent |
+| B | S-1.22 | 8 | M | 1 story/agent |
+
+#### Sub-batch 1g — Context mutation + budget policy (depends on 1f; concurrent — disjoint scheduler.rs regions)
+
+| Group | Stories | Points | Complexity | Agent Scope |
+|-------|---------|--------|-----------|-------------|
+| A | S-1.13 | 8 | M | 1 story/agent |
+| B | S-1.18 | 8 | M | 1 story/agent |
+
+#### Sub-batch 1h — BSP engine determinism (depends on 1g)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.16 | 13 | XL | 1 story/agent |
-| B | S-1.22 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1g — HITL core + server CRUD (depends on 1f)
+#### Sub-batch 1i — HITL core + server CRUD (depends on 1h)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.20 | 13 | XL | 1 story/agent |
 | B | S-1.26 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1h — PreToolCallHook + server security config (depends on 1g)
+#### Sub-batch 1j — PreToolCallHook + server security config (depends on 1i)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.23 | 5 | S | 1 story/agent |
 | B | S-1.27 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1i — Approval + compaction events (depends on S-1.23, S-1.17, S-1.18)
+#### Sub-batch 1k — Approval + compaction events (depends on S-1.23, S-1.17, S-1.18)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.24 | 5 | S | 1 story/agent |
 
-#### Sub-batch 1j — Compaction execution (depends on S-1.10, S-1.18, S-1.24)
+#### Sub-batch 1l — Compaction execution (depends on S-1.10, S-1.18, S-1.24)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
@@ -173,8 +183,8 @@ traces_to: STORY-INDEX.md
 > (Wave 1 + Wave 2). S-6.01 (Phase-6 formal-verification terminal aggregator) is excluded from
 > this measurement: it depends on nearly all implementation stories by design and would trivially
 > dominate any chain, making critical-path analysis uninformative for implementation scheduling.
-> Total: **S-1.01 → S-1.03 → S-1.04 → S-1.14 → S-1.15 → S-1.16 → S-1.20 → S-1.23 → S-1.24 → S-1.25**
-> = 10 stories, 69 points.
+> Total: **S-1.01 → S-1.03 → S-1.04 → S-1.14 → S-1.15 → S-1.17 → {S-1.13 | S-1.18} → S-1.16 → S-1.20 → S-1.23 → S-1.24 → S-1.25**
+> = 12 stories, 82 points (S-1.13 and S-1.18 run concurrently in batch 1g; both feed S-1.16).
 
 | Sequence Position | Story | Points | Depends On |
 |------------------|-------|--------|-----------|
@@ -183,17 +193,20 @@ traces_to: STORY-INDEX.md
 | 3 | S-1.04 | 5 | S-1.03, S-1.02 |
 | 4 | S-1.14 | 8 | S-1.04 |
 | 5 | S-1.15 | 5 | S-1.14 |
-| 6 | S-1.16 | 13 | S-1.14, S-1.15, S-1.10, S-1.13 |
-| 7 | S-1.20 | 13 | S-1.16, S-1.17, S-1.10 |
-| 8 | S-1.23 | 5 | S-1.20, S-1.17 |
-| 9 | S-1.24 | 5 | S-1.23, S-1.17, S-1.18 |
-| 10 | S-1.25 | 5 | S-1.10, S-1.18, S-1.24 |
+| 6 | S-1.17 | 5 | S-1.14, S-1.04, S-1.15 |
+| 7a | S-1.13 | 8 | S-1.12, S-1.04, S-1.14, S-1.17 (concurrent with S-1.18) |
+| 7b | S-1.18 | 8 | S-1.14, S-1.04, S-1.10, S-1.17 (concurrent with S-1.13) |
+| 8 | S-1.16 | 13 | S-1.14, S-1.15, S-1.10, S-1.13, S-1.17, S-1.18 |
+| 9 | S-1.20 | 13 | S-1.16, S-1.17, S-1.10 |
+| 10 | S-1.23 | 5 | S-1.20, S-1.17 |
+| 11 | S-1.24 | 5 | S-1.23, S-1.17, S-1.18 |
+| 12 | S-1.25 | 5 | S-1.10, S-1.18, S-1.24 |
 
-**Critical path total: 69 points across 10 sequential stories.**
-Note: S-1.10 (checkpoint) and S-1.17/S-1.18 (streaming events / budget) are in parallel with the
-critical path backbone (nodes 4–7) but both feed into the critical path at S-1.16 and S-1.20.
-Their implementation should be co-scheduled with the S-1.14 batch to avoid becoming the
-actual critical path constraint.
+**Critical path total: 82 points across 12 sequential positions (positions 7a/7b are concurrent).**
+Note: S-1.17 is now on the critical path backbone (positions 5→6→7→8). S-1.15 is also on the
+critical path because S-1.17 depends on it. S-1.10 (checkpoint) feeds into S-1.18 (concurrent with
+S-1.13 at position 7) and into S-1.16 at position 8. Co-schedule S-1.10 with the S-1.14 batch
+to avoid it becoming the actual critical path constraint.
 
 ## Crate Implementation Order
 

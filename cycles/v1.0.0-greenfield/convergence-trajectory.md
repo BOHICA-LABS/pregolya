@@ -2741,3 +2741,88 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-225 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-018.
 
 **Convergence dim-5 (Phase-2 P2A-017):** Counter **0/3 — NOT CLEAN (D-225; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →3→5→3→3. NEXT: P2A-018 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. Primary Crate(s) convention swept ALL 23 SS rows (P2A-017; D-225) — do NOT re-flag SS registry crate-lists absent a NEW concrete BC-homing divergence. VERIFY-NEXT-PASS: P2A-018 should confirm SS-10 lists pregolya-core under Primary Crate(s), module-decomposition graph::event_emitter is emission-only, and S-1.17 target_module lists both pregolya-core and pregolya-graph.
+
+---
+
+## Pass P2A-018 — Phase-2 Story-Decomposition Adversarial Review
+
+**Date:** 2026-08-21
+**Agent:** vsdd-factory:adversary (fresh context)
+**Scope:** Full Phase-2 corpus — 39 stories, 14 holdout scenarios (sealed), STORY-INDEX, sprint-state, dep-graph, wave-schedule, epics, ARCH-INDEX, module-decomposition, BC-INDEX, VP-INDEX, error-taxonomy, all spec supplements.
+**Finding count:** 0
+**Streak:** 0/3 (pre-pass); CLEAN(strict)=YES; streak advances to 1/3.
+**Prior HEAD:** post-P2A-017 fix-burst frozen HEAD (D-225)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P2A-018 | 2026-08-21 | 0 | 0 | 0 | 0 | 0 | 0 | ZERO | 1/3 | CLEAN |
+
+**Coverage:** Full corpus pass on post-P2A-017 fix-burst HEAD. All P2A-001..017 fixes HELD. SS-10 Primary Crate(s) confirmed listing pregolya-core. module-decomposition graph::event_emitter confirmed emission-only. S-1.17 target_module confirmed [pregolya-core, pregolya-graph]. No new findings in any dimension.
+
+**Regression check:** All P2A-001..017 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (human-accepted D-220). OBS-1 + PGAP-MSGDRIFT recorded gaps — open, no new instances. CLEAN(strict)=YES; CLEAN(PR-merge)=YES. Streak advances 0/3 → 1/3.
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1).
+
+**Convergence dim-5 (Phase-2 P2A-018):** Counter **1/3 — CLEAN (2026-08-21)**. Streak 0/3 → 1/3. trajectory-tail →3→3→0. NEXT: P2A-019 (streak 1/3 → 2/3 attempt on SAME frozen HEAD per BC-5.39.001 frozen-HEAD rule).
+
+---
+
+## Pass P2A-019 — Phase-2 Story-Decomposition Adversarial Review
+
+**Date:** 2026-08-21
+**Agent:** vsdd-factory:adversary (fresh context)
+**Scope:** Full Phase-2 corpus — 39 stories, 14 holdout scenarios (sealed), STORY-INDEX, sprint-state, dep-graph, wave-schedule, epics, ARCH-INDEX, module-decomposition, BC-INDEX, VP-INDEX, error-taxonomy, all spec supplements.
+**Finding count:** 0
+**Streak:** 1/3 (pre-pass); CLEAN(strict)=YES; streak advances to 2/3.
+**Prior HEAD:** same frozen HEAD as P2A-018 (post-P2A-017 fix-burst; D-225) — no commits between P2A-018 and P2A-019.
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P2A-019 | 2026-08-21 | 0 | 0 | 0 | 0 | 0 | 0 | ZERO | 2/3 | CLEAN |
+
+**Coverage:** Full corpus pass on same frozen HEAD. All P2A-001..017 fixes HELD (second independent confirmation). No new findings in any dimension. All prior VERIFY-NEXT-PASS items confirmed correct.
+
+**Regression check:** All P2A-001..017 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (human-accepted D-220). OBS-1 + PGAP-MSGDRIFT recorded gaps — open, no new instances. CLEAN(strict)=YES; CLEAN(PR-merge)=YES. Streak advances 1/3 → 2/3.
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1).
+
+**Convergence dim-5 (Phase-2 P2A-019):** Counter **2/3 — CLEAN (2026-08-21)**. Streak 1/3 → 2/3. trajectory-tail →3→0→0. NEXT: P2A-020 (streak 2/3 → 3/3 attempt on SAME frozen HEAD per BC-5.39.001 frozen-HEAD rule). One more CLEAN(strict) achieves Phase-2 convergence.
+
+---
+
+## Pass P2A-020 — Phase-2 Story-Decomposition Adversarial Review
+
+**Date:** 2026-08-21
+**Agent:** vsdd-factory:adversary (fresh context)
+**Scope:** Full Phase-2 corpus — 39 stories, 14 holdout scenarios (sealed), STORY-INDEX, sprint-state, dep-graph, wave-schedule, epics, ARCH-INDEX, module-decomposition, BC-INDEX, VP-INDEX, error-taxonomy, all spec supplements.
+**Finding count:** 2 (1 MED + 1 LOW)
+**Streak:** 2/3 (pre-pass); NOT CLEAN; streak RESET 0/3.
+**Prior HEAD:** same frozen HEAD as P2A-018/019 (post-P2A-017 fix-burst; D-225) — no commits between P2A-019 and P2A-020.
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P2A-020 | 2026-08-21 | 2 | 0 | 0 | 1 | 1 | 0 | LOW | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass on same frozen HEAD. scheduler.rs file-ownership dimension identified as a new defect class not previously swept.
+
+**Findings:**
+- F-P2A020-01 (MED, POL-4/BC-5.46): scheduler.rs ownership conflict — four stories (S-1.13, S-1.15, S-1.17, S-1.18) in the same batch made mutually-inconsistent claims about who creates and who modifies scheduler.rs, including false claims (S-1.18 credited S-1.14 with building a scheduler skeleton it never builds; S-1.13 falsely claimed to be the first story touching scheduler.rs). Fix: architect ruled S-1.15 CREATES scheduler.rs skeleton; S-1.17 adds run()/stream(); S-1.13 adds ContextMutationConfig pre-loop loader; S-1.18 adds per-super-step budget eval; S-1.16 adds ceiling/run_id checks. Five new DAG edges added: S-1.17 dep S-1.15; S-1.13/S-1.18/S-1.16 dep S-1.17; S-1.16 dep S-1.18. batch-1e split into sequential chain S-1.15→S-1.17→{S-1.13∥S-1.18}→S-1.16 (Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts). DAG acyclic confirmed.
+- F-P2A020-02 (LOW): S-1.16 depends_on S-1.13 rationale absent from story spec. D-221 had established this edge but S-1.16 lacked inline PSI documentation. Fix: S-1.16 PSI rows added documenting the dependency rationale. D-221 S-1.16↔S-1.13 edge CONFIRMED.
+
+**Regression check:** All P2A-001..017 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (human-accepted D-220). OBS-1 + PGAP-MSGDRIFT recorded gaps — open, no new instances. CLEAN(strict)=NO (1 MED, 1 LOW); CLEAN(PR-merge)=NO (1 MED). Streak RESET 2/3 → 0/3. D-226 minted.
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1). No BC/VP/ADR changes. Content defect (not process-gap).
+
+**D-226 minted.** Fix-burst dispatched. Streak RESET 0/3. NEXT: P2A-020 fix-burst then P2A-021.
+
+### P2A-020 Fix-Burst (2026-08-21)
+
+**Files touched:** STORY-S-1.13, STORY-S-1.15, STORY-S-1.16, STORY-S-1.17, STORY-S-1.18 (5 story specs); STORY-INDEX.md; stories/dependency-graph.md; stories/wave-schedule.md (8 files total).
+
+**F-P2A020-01 CLOSED:** scheduler.rs ownership model established and propagated to all affected stories. Five new DAG edges committed (S-1.17←S-1.15; S-1.13←S-1.17; S-1.18←S-1.17; S-1.16←S-1.17; S-1.16←S-1.18). Wave-1 batch count 10→12 (batch-1e split into 3 sequential sub-batches). Critical path 10→12 stories, 69→82 pts. DAG acyclic confirmed. False claims removed from S-1.13 and S-1.18.
+
+**F-P2A020-02 CLOSED:** S-1.16 PSI rows added documenting the depends_on S-1.13 rationale (ContextMutationConfig required by ceiling/run_id checks). D-221 S-1.16↔S-1.13 CONFIRMED.
+
+**Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). No ADR changes. DAG ACYCLIC.
+
+**Convergence dim-5 (Phase-2 P2A-020):** Counter **0/3 — NOT CLEAN (D-226; 2026-08-21)**. Streak RESET 2/3 → 0/3. trajectory-tail →3→0→0→2. Fix-burst COMPLETE. NEXT: P2A-021 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 MED present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-021: (1) F-02/TDIV-009 vendor-template limitation waived (D-220); (2) OBS-1 + PGAP-MSGDRIFT open gaps — report NEW instances only; (3) Primary Crate(s) convention swept ALL 23 SS rows (D-225) — do NOT re-flag absent NEW concrete BC-homing divergence; (4) scheduler.rs ownership model ESTABLISHED (D-226) — do NOT re-flag the coordination model itself.

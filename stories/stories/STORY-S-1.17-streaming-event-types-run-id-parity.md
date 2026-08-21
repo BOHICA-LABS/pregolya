@@ -17,8 +17,8 @@ inputs:
 input-hash: "90ef359"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
-depends_on: [S-1.14, S-1.04]
-blocks: [S-1.20, S-1.23, S-1.24]
+depends_on: [S-1.14, S-1.04, S-1.15]
+blocks: [S-1.13, S-1.16, S-1.18, S-1.20, S-1.23, S-1.24]
 behavioral_contracts: [BC-2.06.001, BC-2.06.002, BC-2.06.003]
 verification_properties: []
 priority: P0
@@ -151,8 +151,11 @@ The streaming path uses the same BSP engine and the same node execution logic as
 
 | Story | Key Decisions | Patterns Established | Gotchas Discovered |
 |-------|--------------|---------------------|-------------------|
-| S-1.14 | Channel + reducer foundation; `bsp_engine.rs` reduce logic | `mod.rs` re-export only | Streaming path MUST use the same `reduce_super_step` as unary — no separate implementation |
+| S-1.14 | Channel + reducer foundation; `bsp_engine.rs` partial creation (reduce phase, finish dispatch) | `mod.rs` re-export only | Streaming path MUST use the same `reduce_super_step` as unary — no separate implementation |
+| S-1.15 | Conditional edges + Send API; `scheduler.rs` skeleton created — PUSH task queue, TASKS topic, `ctx.send()` | `scheduler.rs` file exists; S-1.17 adds `run()`/`stream()` executors and event emission | Confirm `scheduler.rs` exists and load its skeleton context before adding `run()` executor |
 | S-1.04 | `PregolyaError` struct with category + code | All errors structured | `StreamEvent::Error` carries `PregolyaError` directly |
+
+**Coordination note:** Coordinate `pregolya-graph/src/scheduler.rs` changes between S-1.13 (pre-super-step `ContextMutationConfig` initialization — before the super-step loop) and S-1.18 (per-super-step budget evaluation — inside the loop). Both depend on S-1.17's `run()` executor skeleton. The second PR to merge must rebase on the first.
 
 ## Architecture Compliance Rules (MANDATORY)
 
