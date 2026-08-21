@@ -168,7 +168,7 @@ If a second SSE or unary execution request arrives for a `run_id` that is alread
 
 ## Tasks
 
-- [ ] Create `crates/pregolya-server/src/cron/mod.rs` — `CronSchedule`, `CronScheduler`
+- [ ] Create `crates/pregolya-server/src/cron/schedule.rs` — `CronSchedule`, `CronScheduler`, skip policy; create `crates/pregolya-server/src/cron/mod.rs` as re-export-only (`pub mod schedule; pub use schedule::{CronSchedule, CronScheduler};`)
 - [ ] Create `crates/pregolya-server/src/security.rs` — `SecurityConfig`, validate on startup (flat; no `config/` subdir)
 - [ ] Create `crates/pregolya-server/src/store/idempotency.rs` — `IdempotencyStore` trait + in-memory impl
 - [ ] Create `crates/pregolya-server/src/store/rate_limit.rs` — `RateLimitStore` trait + in-memory impl

@@ -159,7 +159,7 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|----------------|
-| `VectorStore` trait + `VectorStoreFactory` trait | `pregolya-vectorstores/src/store/mod.rs` | pure-core (trait definitions) |
+| `VectorStore` trait + `VectorStoreFactory` trait | `pregolya-vectorstores/src/store/vector_store.rs` | pure-core (trait definitions + default `similarity_search_with_filter` impl) |
 | `InMemoryVectorStore` impl | `pregolya-vectorstores/src/store/in_memory.rs` | effectful (calls async Embeddings) |
 | `MetadataFilter` + `FilterClause` | `pregolya-vectorstores/src/filter.rs` | pure-core |
 | `cosine_similarity` fn | `pregolya-vectorstores/src/store/cosine.rs` | pure-core (pure math, no I/O) |
@@ -169,7 +169,7 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 
 | Module | Classification | Justification |
 |--------|---------------|---------------|
-| `pregolya-vectorstores/src/store/mod.rs` | pure-core | Trait definitions only. |
+| `pregolya-vectorstores/src/store/vector_store.rs` | pure-core | Trait definitions + default `similarity_search_with_filter` impl. `store/mod.rs` is re-export-only. |
 | `pregolya-vectorstores/src/store/cosine.rs` | pure-core | Pure math; no I/O. Zero-norm guard is a pure conditional. |
 | `pregolya-vectorstores/src/filter.rs` | pure-core | Data types only. |
 | `pregolya-vectorstores/src/store/in_memory.rs` | effectful | Calls `embeddings.embed_documents().await`. |
@@ -207,7 +207,7 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 
 1. [ ] Write failing tests for AC-001 through AC-018 (test-writer); verify Red Gate (AC-011 must FAIL before zero-norm guard implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
-3. [ ] Create `pregolya-vectorstores/src/store/mod.rs` — `VectorStore` async trait (`&self` receivers, `#[async_trait]`), `VectorStoreFactory` with `Sized` bound; default `similarity_search_with_filter`
+3. [ ] Create `pregolya-vectorstores/src/store/vector_store.rs` — `VectorStore` async trait (`&self` receivers, `#[async_trait]`), `VectorStoreFactory` with `Sized` bound, and default `similarity_search_with_filter` impl returning `Err(E-VS-005)` on non-empty filter; create `pregolya-vectorstores/src/store/mod.rs` as re-export-only (`pub mod vector_store; pub mod cosine; pub mod in_memory; pub use vector_store::{VectorStore, VectorStoreFactory};`)
 4. [ ] Create `pregolya-vectorstores/src/store/cosine.rs` — `cosine_similarity(a: &[f32], b: &[f32]) -> Result<f32, PregolyaError>` with zero-norm guard `if norm == 0.0 || !norm.is_finite()`
 5. [ ] Create `pregolya-vectorstores/src/store/in_memory.rs` — `InMemoryVectorStore`, `Arc<dyn Embeddings>` DI constructor, `RwLock<Vec<(Document, Vec<f32>)>>` storage, batch embed on `add_documents`
 6. [ ] Create `pregolya-vectorstores/src/filter.rs` — `MetadataFilter` and `FilterClause` (both `#[non_exhaustive]`)
@@ -236,6 +236,7 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 | `Arc<dyn Embeddings>` DI at constructor (no placeholder) | BC-2.21.002 postcondition 1; CLAUDE.md Arc-DI rule | Code review; no `Arc::new(Embeddings::placeholder())` |
 | Default `similarity_search_with_filter` returns `Err(E-VS-005)` on non-empty filter — NOT `Ok(vec![])` | BC-2.21.004 invariant 1 | Unit test AC-018 |
 | E-VS-001 message is STATIC — no variable interpolation | BC-2.21.003 postcondition 2 | String equality test |
+| `store/mod.rs` is re-export-only — no trait or type definitions; logic lives in named files (`vector_store.rs`, `cosine.rs`, `in_memory.rs`) | CLAUDE.md §Forbidden patterns (mod.rs logic rule) | Code review; `mod.rs` contains only `pub mod` and `pub use` declarations |
 
 **Forbidden dependencies:** `pregolya-vectorstores/src/store/cosine.rs` must NOT depend on `ndarray`, `nalgebra`, or any external linear-algebra crate. `pregolya-vectorstores` must NOT depend on `pregolya-graph`.
 
@@ -251,7 +252,8 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-vectorstores/src/store/mod.rs` | CREATE | `VectorStore` async trait + `VectorStoreFactory` |
+| `pregolya-vectorstores/src/store/vector_store.rs` | CREATE | `VectorStore` async trait + `VectorStoreFactory` + default `similarity_search_with_filter` impl |
+| `pregolya-vectorstores/src/store/mod.rs` | CREATE | Re-export only: `pub mod vector_store; pub mod cosine; pub mod in_memory; pub use vector_store::{VectorStore, VectorStoreFactory};` |
 | `pregolya-vectorstores/src/store/cosine.rs` | CREATE | `cosine_similarity` with zero-norm guard |
 | `pregolya-vectorstores/src/store/in_memory.rs` | CREATE | `InMemoryVectorStore` |
 | `pregolya-vectorstores/src/filter.rs` | CREATE | `MetadataFilter` + `FilterClause` |

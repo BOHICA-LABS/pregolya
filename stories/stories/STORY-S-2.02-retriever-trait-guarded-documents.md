@@ -139,7 +139,8 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|----------------|
-| `Retriever` trait + `Document` struct | `pregolya-core/src/retriever/mod.rs`, `pregolya-core/src/documents/mod.rs` | pure-core (trait definition) |
+| `Retriever` trait | `pregolya-core/src/retriever/retriever.rs` | pure-core (trait definition; `retriever/mod.rs` is re-export-only) |
+| `Document` struct | `pregolya-core/src/documents/document.rs` | pure-core (data carrier; `documents/mod.rs` is re-export-only) |
 | `GuardedDocuments` typed wrapper | `pregolya-core/src/retriever/guarded.rs` | effectful (invokes guardrail async fn) |
 | `VectorStoreRetriever` concrete impl | `pregolya-vectorstores/src/retriever.rs` | effectful (delegates to store async methods) |
 | Compile-fail tests | `pregolya-core/tests/external/retriever-dyn-compat/`, `tests/external/document-non-exhaustive/`, `pregolya-vectorstores/tests/external/rag-guardrail-compile-fail/` | test-only |
@@ -148,8 +149,8 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 
 | Module | Classification | Justification |
 |--------|---------------|---------------|
-| `pregolya-core/src/retriever/mod.rs` | pure-core | Trait definition only; no I/O. |
-| `pregolya-core/src/documents/mod.rs` | pure-core | Plain data carrier struct. |
+| `pregolya-core/src/retriever/retriever.rs` | pure-core | Trait definition only; no I/O. `retriever/mod.rs` is re-export-only. |
+| `pregolya-core/src/documents/document.rs` | pure-core | Plain data carrier struct. `documents/mod.rs` is re-export-only. |
 | `pregolya-core/src/retriever/guarded.rs` | effectful (invokes guardrail async fn) | GuardedDocuments::rag_ingress calls async guardrail hook. |
 | `pregolya-vectorstores/src/retriever.rs` | effectful | Delegates to async VectorStore methods. |
 
@@ -183,8 +184,8 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 
 1. [ ] Write failing tests for AC-001 through AC-017 (test-writer); verify Red Gate (AC-007 must FAIL before `GuardedDocuments` wrapper is implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
-3. [ ] Create `pregolya-core/src/documents/mod.rs` — `Document` struct with `#[non_exhaustive]`
-4. [ ] Create `pregolya-core/src/retriever/mod.rs` — `Retriever` async trait with `#[async_trait]`; re-exports
+3. [ ] Create `pregolya-core/src/documents/document.rs` — `Document` struct with `#[non_exhaustive]`; create `pregolya-core/src/documents/mod.rs` as re-export-only (`pub mod document; pub use document::Document;`)
+4. [ ] Create `pregolya-core/src/retriever/retriever.rs` — `Retriever` async trait with `#[async_trait]`, single required method `get_relevant_documents`; create `pregolya-core/src/retriever/mod.rs` as re-export-only (`pub mod retriever; pub mod guarded; pub use retriever::Retriever;`)
 5. [ ] Create `pregolya-core/src/retriever/guarded.rs` — `GuardedDocuments` typed wrapper; `rag_ingress()` method with Critical/Non-Critical fail semantics; `E-CORE-008` error emission
 6. [ ] Add `pub mod retriever; pub mod documents;` to `pregolya-core/src/lib.rs`
 7. [ ] Create `pregolya-vectorstores/src/retriever.rs` — `VectorStoreRetriever` (no lifetime, `Arc<dyn VectorStore>`), `SearchType` enum (`#[non_exhaustive]`), `as_retriever()` fallible constructor, config validation (`k ≥ 1`, `fetch_k ≥ k` for MMR, `lambda_mult ∈ [0.0, 1.0]`)
@@ -209,6 +210,7 @@ BC-2.20.003 specifies `as_retriever(self: Arc<Self>)` as the constructor for `Ve
 | `GuardedDocuments` typed wrapper prevents `Vec<Document>` as graph context input | BC-2.20.002 postcondition; ADR-014 §Decision 6 | Compile-fail test (AC-007) |
 | `GuardedDocuments::rag_ingress` returns `Err(E-CORE-008)` on Critical Fail | BC-2.20.002 postcondition 2; ADR-014 Decision 6 | Unit test AC-008 |
 | `Document` is `#[non_exhaustive]` | BC-2.20.001 postcondition 4 | Compile-fail test AC-004 |
+| `retriever/mod.rs` and `documents/mod.rs` are re-export-only — trait and struct definitions live in named files (`retriever/retriever.rs`, `documents/document.rs`) | CLAUDE.md §Forbidden patterns (mod.rs logic rule) | Code review; `mod.rs` contains only `pub mod` and `pub use` declarations |
 
 **Forbidden dependencies:** `pregolya-core/src/retriever/` must NOT depend on `pregolya-vectorstores`. `VectorStoreRetriever` in `pregolya-vectorstores` depends on `pregolya-core` — not vice versa.
 
@@ -224,8 +226,10 @@ BC-2.20.003 specifies `as_retriever(self: Arc<Self>)` as the constructor for `Ve
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-core/src/documents/mod.rs` | CREATE | `Document` struct (`#[non_exhaustive]`, Clone, Debug, Serialize, Deserialize) |
-| `pregolya-core/src/retriever/mod.rs` | CREATE | `Retriever` async trait + re-exports |
+| `pregolya-core/src/documents/document.rs` | CREATE | `Document` struct (`#[non_exhaustive]`, Clone, Debug, Serialize, Deserialize) |
+| `pregolya-core/src/documents/mod.rs` | CREATE | Re-export only: `pub mod document; pub use document::Document;` |
+| `pregolya-core/src/retriever/retriever.rs` | CREATE | `Retriever` async trait (`#[async_trait]`, `get_relevant_documents` required method) |
+| `pregolya-core/src/retriever/mod.rs` | CREATE | Re-export only: `pub mod retriever; pub mod guarded; pub use retriever::Retriever;` |
 | `pregolya-core/src/retriever/guarded.rs` | CREATE | `GuardedDocuments` typed wrapper; `rag_ingress()` |
 | `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod retriever; pub mod documents;` |
 | `pregolya-vectorstores/src/lib.rs` | CREATE | Crate root for pregolya-vectorstores; `pub mod retriever;` |

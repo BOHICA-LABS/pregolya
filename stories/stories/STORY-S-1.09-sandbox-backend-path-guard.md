@@ -137,8 +137,9 @@ When the macOS kernel does not support the required Seatbelt operations, `new_ma
 | `canonicalize_beneath_root` | `pregolya_sandbox::path_guard` | pregolya-sandbox | Effectful (calls `std::fs::canonicalize`; delegates to pure model for prefix check) |
 | `WorkspaceFs` | `pregolya_sandbox::path_guard` | pregolya-sandbox | Effectful Shell (workspace file op facade; routes all access through `canonicalize_beneath_root`) |
 | `Sandbox`, `SandboxConfig`, `SandboxPolicy`, `BackendCapabilities` | `pregolya_sandbox` | pregolya-sandbox | Pure (configuration and capability descriptor types) |
+| `SandboxBackend` trait | `pregolya_sandbox::backend::sandbox_backend` | pregolya-sandbox | Pure (trait definition; defines `execute` and `capabilities` interface; `backend/mod.rs` is re-export-only) |
 | `ProcessBackend` | `pregolya_sandbox::backend::process` | pregolya-sandbox | Effectful Shell (spawns `tokio::process::Child`; emits WARN tracing event; `kill_on_drop(true)`) |
-| `SandboxBackend` (WASM enforcing stub) | `pregolya_sandbox::backend::wasm` | pregolya-sandbox | Effectful Shell (enforcing WASM isolation backend; stub bodies in this story) |
+| `SandboxBackend` WASM enforcing stub | `pregolya_sandbox::backend::wasm` | pregolya-sandbox | Effectful Shell (enforcing WASM isolation backend; stub bodies in this story) |
 | `new_macos_seatbelt` | `pregolya_sandbox::seatbelt` | pregolya-sandbox | Effectful Shell (`#[cfg(target_os = "macos")]`; invokes macOS kernel Seatbelt API) |
 | `env_sanitizer` module | `pregolya_sandbox::env_sanitizer` | pregolya-sandbox | Pure (stateless allowlist filter on env map; no process I/O) |
 | `workspace_confinement_harness` (VP-003 Kani stub) | `pregolya_sandbox::proofs::workspace_confinement` | pregolya-sandbox | Pure (`#[cfg(kani)]`; stub body `todo!()` for Phase 6; proof vehicle for VP-003) |
@@ -177,7 +178,7 @@ Near but within the 20-30% context window threshold. Implementer should load onl
 - [ ] Create `pregolya-sandbox/Cargo.toml` with `sandbox-wasm` as default feature
 - [ ] Create `pregolya-sandbox/src/lib.rs` — public API: `Sandbox`, `SandboxConfig`, `SandboxPolicy`, `BackendCapabilities`
 - [ ] Create `pregolya-sandbox/src/path_guard.rs` — `canonicalize_beneath_root` (OS-calling) and `canonicalize_beneath_root_pure` (Kani-provable pure model); `WorkspaceFs` facade
-- [ ] Create `pregolya-sandbox/src/backend/mod.rs` — `SandboxBackend` trait, enforcing/process variants
+- [ ] Create `pregolya-sandbox/src/backend/sandbox_backend.rs` — `SandboxBackend` trait definition (methods: `execute`, `capabilities`); create `pregolya-sandbox/src/backend/mod.rs` as re-export-only (`pub mod sandbox_backend; pub mod process; pub mod wasm; pub use sandbox_backend::SandboxBackend;`)
 - [ ] Create `pregolya-sandbox/src/backend/process.rs` — `ProcessBackend` with WARN log per execute, `.kill_on_drop(true)`
 - [ ] Create `pregolya-sandbox/src/backend/wasm.rs` — WASM enforcing backend stub (todo!() bodies for Phase 3)
 - [ ] Create `pregolya-sandbox/src/seatbelt.rs` — macOS Seatbelt profile generator (deny-by-default)
@@ -207,6 +208,7 @@ Derived from `architecture/module-decomposition.md §pregolya-sandbox` and ADR-0
 7. macOS Seatbelt code MUST be `#[cfg(target_os = "macos")]` gated to prevent compilation failures on Linux.
 8. All public types (`SandboxConfig`, `SandboxPolicy`, `BackendCapabilities`, `SandboxError` variants) MUST carry `#[non_exhaustive]`.
 9. `event_type` values used in this story that must be registered in the Canonical Structured Event Catalog: `"sandbox.process_no_isolation_execute"` (WARN, per-execute), `"sandbox.env_sanitized"` (DEBUG, per-execute).
+10. `backend/mod.rs` is re-export-only — the `SandboxBackend` trait definition lives in `backend/sandbox_backend.rs`; `backend/mod.rs` contains only `pub mod sandbox_backend; pub mod process; pub mod wasm;` and `pub use` re-exports. No impl blocks, trait definitions, or type definitions in `mod.rs`. | CLAUDE.md §Forbidden patterns (mod.rs logic rule) |
 
 ## Library & Framework Requirements
 
@@ -228,7 +230,8 @@ Files to CREATE:
 - `/pregolya-sandbox/src/lib.rs`
 - `/pregolya-sandbox/src/path_guard.rs` — `canonicalize_beneath_root` (OS-calling) + `canonicalize_beneath_root_pure` (Kani-provable pure model)
 - `/pregolya-sandbox/src/proofs/workspace_confinement.rs` — VP-003 Kani harness stub (`workspace_confinement_harness`; body `todo!()` for Phase 6)
-- `/pregolya-sandbox/src/backend/mod.rs`
+- `/pregolya-sandbox/src/backend/sandbox_backend.rs` — `SandboxBackend` trait definition
+- `/pregolya-sandbox/src/backend/mod.rs` — re-export only: `pub mod sandbox_backend; pub mod process; pub mod wasm; pub use sandbox_backend::SandboxBackend;`
 - `/pregolya-sandbox/src/backend/process.rs`
 - `/pregolya-sandbox/src/backend/wasm.rs`
 - `/pregolya-sandbox/src/seatbelt.rs`

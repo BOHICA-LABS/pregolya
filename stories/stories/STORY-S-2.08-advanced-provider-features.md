@@ -20,11 +20,7 @@ traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.07]
 blocks: []
-behavioral_contracts:
-  - BC-2.08.008
-  - BC-2.08.009
-  - BC-2.08.013
-  - BC-2.08.014
+behavioral_contracts: [BC-2.08.008, BC-2.08.009, BC-2.08.013, BC-2.08.014]
 verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
@@ -67,9 +63,9 @@ Verified by `test_BC_2_08_008_eval_score_arithmetic_mean()`.
 cases in a 4-case run where 2 pass: `score = 2.0 / 2.0 = 1.0`, not `2.0 / 4.0`.
 Verified by `test_BC_2_08_008_infra_error_excluded_from_numerator_and_denominator()`.
 
-### AC-003 (traces to BC-2.08.008 postcondition 3)
+### AC-003 (traces to BC-2.08.008 postcondition 5)
 When ALL cases are `InfraError`, `score()` returns
-`Err(PregolyaError { code: "E-CORE-005", .. })` — not `Ok(0.0)` or `Ok(f64::NAN)`.
+`Err(EvalError::AllCasesInfraError)` — not `Ok(0.0)` or `Ok(f64::NAN)`.
 Verified by `test_BC_2_08_008_all_cases_infra_error_returns_err()`.
 
 ### AC-004 (traces to BC-2.08.008 postcondition 4)
@@ -180,7 +176,7 @@ by 429, 5xx, or auth failures. Verified by
 
 | ID | Scenario | Expected Behavior |
 |----|----------|-------------------|
-| EC-001 | Single case, InfraError | `Err(E-CORE-005)` — all cases are InfraError |
+| EC-001 | Single case, InfraError | `Err(EvalError::AllCasesInfraError)` — all cases are InfraError |
 | EC-002 | Chain with one provider; that provider returns 429 | `Err(E-PROV-010)` — chain exhausted after one entry |
 | EC-003 | `credential_refresh` callback panics | Panic propagates; not caught by failover — callers must not panic in callbacks |
 | EC-004 | HermesChatMlXml with `<tools>` already in system prompt | Behavior: append second `<tools>` block — this is a misuse; the AC only covers the normal path of one bind_tools call |

@@ -2556,3 +2556,49 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-217 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-011 (full corpus now covered; streak restart 1/3 attempt).
 
 **Convergence dim-5 (Phase-2 P2A-010):** Counter **0/3 — NOT CLEAN (D-217; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →3→4→8→10. NEXT: P2A-011 (streak restart 1/3 attempt; full corpus coverage now complete). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT open (AC message-string drift; no mechanical gate yet).
+
+---
+
+### P2A-011 — Pass 11 (2026-08-20, fix-burst post-pass-11)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P2A-011 | 2026-08-20 | 4 | 0 | 1 | 1 | 2 | LOW | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass after P2A-010 closed the un-read-slice gap.
+
+**Findings:**
+- F-01 (HIGH, PGAP-MSGDRIFT): CORPUS-WIDE AC error-message↔error-taxonomy sibling-sweep — 10 drift instances fixed verbatim to taxonomy Message Format: SW-1 (S-1.09 E-SBXD-003, S-1.10 E-CORE-005, S-1.11 E-CHKPT-008, S-1.12 E-MEMORY-006, S-1.13 E-MEMORY-004 ×2, S-2.03 E-VS-005) + SW-2 (S-1.03 E-CORE-001, S-1.04 E-CORE-004, S-1.06 E-RETRY-004). Message-drift content class now exhaustively swept corpus-wide.
+- F-02 (MED): VP-011.md §harness-path Kani-harness file path corrected hitl_fail_closed.rs→proofs/pre_tool_hook.rs; separated harness-file from proof-target-module (graph::hitl); consistent with S-1.23/S-6.01.
+- F-03 (LOW): Added `## Behavioral Contracts` body table to 5 early-core stories S-1.01/02/03/04/06.
+- F-04 (LOW): HS-B-004 linkage cell dropped raw E-GRAPH-017 identifier (parity with 13 other holdouts).
+
+**Regression check:** All P2A-003..010 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (accepted per rubric note). TDIV-009-VENDOR accepted.
+
+**Corpus unchanged:** 133 BC / 14 VP / 115 EC / 12 VP-anchor / 8 RG. PGAP-MSGDRIFT: content instances now exhausted corpus-wide; mechanical gate remains an OPEN codification proposal (devops scope, pending human authorization).
+
+**D-218 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-012 (msgdrift class exhausted — expect zero msgdrift next pass).
+
+**Convergence dim-5 (Phase-2 P2A-011):** Counter **0/3 — NOT CLEAN (D-218; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →3→4→8→10→4. NEXT: P2A-012 (streak restart 1/3 attempt; msgdrift class exhausted corpus-wide). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open).
+
+---
+
+### P2A-012 — Pass 12 (2026-08-20, fix-burst post-pass-12)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P2A-012 | 2026-08-20 | 2 | 0 | 2 | 0 | 0 | LOW | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass. msgdrift class exhaustively swept — zero msgdrift findings as expected.
+
+**Findings:**
+- F-01 (HIGH, POL-4): S-2.08 AC-003/EC-001 error-type mis-anchor — used E-CORE-005 (generic VAL validation code) instead of `EvalError::AllCasesInfraError` per BC-2.08.008 PC5/EC-001/EC-003/TV-004 (infra-outage domain error, not caller validation); AC-003 postcondition ref corrected 3→5; pre-existing `behavioral_contracts` frontmatter normalized to inline form.
+- F-02 (HIGH pattern, POL-6/POL-24 + CLAUDE.md forbidden-pattern): mod.rs-logic violations across 4 stories — S-2.03 (VectorStore trait + VectorStoreFactory + default impl relocated to store/vector_store.rs), S-2.02 (Retriever relocated to retriever/retriever.rs; Document to documents/document.rs), S-1.09 (SandboxBackend relocated to backend/sandbox_backend.rs), S-1.27 (CronSchedule/CronScheduler relocated to cron/schedule.rs + §Tasks-vs-compliance-rule self-contradiction resolved); all mod.rs now re-export-only + compliance rule added to each.
+
+**Regression check:** All P2A-003..011 fixes HELD. corpus-wide msgdrift sweep confirmed exhaustive (zero residual). F-02/TDIV-009, OBS-1, PGAP-MSGDRIFT not re-raised. CLEAN(strict)=NO; CLEAN(PR-merge)=NO (2 HIGH findings).
+
+**Corpus unchanged:** 133 BC / 14 VP / 115 EC / 12 VP-anchor / 8 RG.
+
+**D-219 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-013.
+
+**Convergence dim-5 (Phase-2 P2A-012):** Counter **0/3 — NOT CLEAN (D-219; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →4→8→10→4→2. NEXT: P2A-013 (streak restart 1/3 attempt; full coverage + msgdrift + mod.rs-layout + error-type axes now swept). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open).
