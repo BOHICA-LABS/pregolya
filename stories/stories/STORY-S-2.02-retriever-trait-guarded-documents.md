@@ -24,7 +24,7 @@ verification_properties: []
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 2
-target_module: pregolya-core
+target_module: [pregolya-core, pregolya-vectorstores]
 subsystems: [SS-20]
 estimated_days: 2
 assumption_validations: []

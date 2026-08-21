@@ -2629,3 +2629,31 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-221 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-014.
 
 **Convergence dim-5 (Phase-2 P2A-013):** Counter **0/3 — NOT CLEAN (D-221; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →4→2→5. NEXT: P2A-014 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open.
+
+---
+
+### P2A-014 — Pass 14 (2026-08-21, fix-burst post-pass-14)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P2A-014 | 2026-08-21 | 3 | 0 | 0 | 1 | 1 | LOW | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass. Target-crate frontmatter consistency axis for Wave-2 stories newly swept; STORY-INDEX subsystem cell parity and wave-schedule critical-path illustrative alignment checked.
+
+**Findings:**
+- P2A014-01 (MED, POL-6): 5 Wave-2 stories' `target_module` frontmatter under-specified vs STORY-INDEX + sprint-state — expanded to full built-crate set: S-2.02 `[pregolya-core, pregolya-vectorstores]`; S-2.06/S-2.07 `[pregolya-openai, pregolya-anthropic, pregolya-ollama]`; S-2.08 `[pregolya-openai, pregolya-anthropic, pregolya-ollama, pregolya-standard-tests]`; S-2.09 `[pregolya-core, pregolya-openai, pregolya-ollama]`. SIBLING SWEEP: all 39 stories verified — 5 fixed, 34 already coherent; target-crate triad class now EXHAUSTED corpus-wide (D-221 precedent extended).
+- P2A014-02 (LOW, POL-6/4): STORY-INDEX S-1.13 Subsystem cell read `SS-15` but story frontmatter declares `subsystems: [SS-15, SS-03]` (pregolya-memory + pregolya-graph); cell corrected to `SS-15, SS-03`. S-1.13 confirmed sole multi-subsystem story in Wave 1.
+- P2A014-03 (OBS): wave-schedule Critical Path S-1.16 Depends-On cell did not include S-1.13; appended S-1.13 to align illustrative critical-path view to the authoritative depends_on set established by D-221.
+
+**In-scope hygiene (not scored as findings; recorded per burst instructions):**
+- `behavioral_contracts` frontmatter normalization: block-sequence→inline array in S-2.07 + S-2.09 (consistent with D-219 normalization).
+- S-2.07 body §Architecture Compliance Rules cross-BC reference `BC-2.08.006 postcondition 1` replaced with prose cross-ref to the S-2.06 SDK-split contract; traceability preserved; BC-2.08.006 remains covered by S-2.06.
+- wave-schedule + STORY-INDEX input-hash refreshed (bookkeeping per D-196).
+
+**Regression check:** All P2A-003..013 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (accepted per rubric note). OBS-1 + PGAP-MSGDRIFT recorded gaps — no new concrete instances found. CLEAN(strict)=NO; CLEAN(PR-merge)=NO (1 MED + 1 LOW + 1 OBS findings present).
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1). DAG/reciprocity UNCHANGED this burst. Token Budget counts unaffected.
+
+**D-222 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-015.
+
+**Convergence dim-5 (Phase-2 P2A-014):** Counter **0/3 — NOT CLEAN (D-222; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →5→3. NEXT: P2A-015 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. VERIFY-NEXT-PASS: P2A-015 should independently confirm S-2.07's removal of the BC-2.08.006 body reference did NOT drop BC-2.08.006 below its coverage floor (it should remain covered by S-2.06).

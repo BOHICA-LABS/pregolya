@@ -22,7 +22,7 @@ verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
-target_module: pregolya-openai
+target_module: [pregolya-openai, pregolya-anthropic, pregolya-ollama]
 subsystems: [SS-08]
 estimated_days: 1
 assumption_validations: []

@@ -22,18 +22,12 @@ traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-2.06, S-1.07, S-1.06]
 blocks: [S-2.08]
-behavioral_contracts:
-  - BC-2.08.001
-  - BC-2.08.002
-  - BC-2.08.003
-  - BC-2.08.004
-  - BC-2.08.005
-  - BC-2.08.007
+behavioral_contracts: [BC-2.08.001, BC-2.08.002, BC-2.08.003, BC-2.08.004, BC-2.08.005, BC-2.08.007]
 verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
-target_module: pregolya-openai
+target_module: [pregolya-openai, pregolya-anthropic, pregolya-ollama]
 subsystems: [SS-08]
 estimated_days: 5
 assumption_validations: []
@@ -278,7 +272,7 @@ per ADR-005 §Adjacent Trait Object-Safety Adjudications).
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| Provider adapters depend on `pregolya-core` + respective `-sdk` crate only | BC-2.08.006 postcondition 1; module-decomposition SS-08 | `cargo deny` dep check |
+| Provider adapters depend on `pregolya-core` + respective `-sdk` crate only | S-2.06 SDK split architecture contract; module-decomposition SS-08 | `cargo deny` dep check |
 | No `unwrap()`/`expect()` in non-test code paths | CLAUDE.md Code Conventions | Clippy + code review |
 | No `println!`/`eprintln!` in adapter crates | CLAUDE.md Code Conventions | Clippy |
 | All public API surface types carry `#[non_exhaustive]` | CLAUDE.md Code Conventions | compile-fail gate |

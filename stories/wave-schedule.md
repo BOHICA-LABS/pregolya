@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "634731b"
+input-hash: "5e051ad"
 traces_to: STORY-INDEX.md
 ---
 
@@ -193,7 +193,7 @@ traces_to: STORY-INDEX.md
 | 3 | S-1.04 | 5 | S-1.03, S-1.02 |
 | 4 | S-1.14 | 8 | S-1.04 |
 | 5 | S-1.15 | 5 | S-1.14 |
-| 6 | S-1.16 | 13 | S-1.14, S-1.15, S-1.10 |
+| 6 | S-1.16 | 13 | S-1.14, S-1.15, S-1.10, S-1.13 |
 | 7 | S-1.20 | 13 | S-1.16, S-1.17, S-1.10 |
 | 8 | S-1.23 | 5 | S-1.20, S-1.17 |
 | 9 | S-1.24 | 5 | S-1.23, S-1.17, S-1.18 |

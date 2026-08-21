@@ -19,15 +19,12 @@ traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.06, S-1.02]
 blocks: [S-6.01]
-behavioral_contracts:
-  - BC-2.22.001
-  - BC-2.22.002
-  - BC-2.22.003
+behavioral_contracts: [BC-2.22.001, BC-2.22.002, BC-2.22.003]
 verification_properties: [VP-008]
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
-target_module: pregolya-core
+target_module: [pregolya-core, pregolya-openai, pregolya-ollama]
 subsystems: [SS-22]
 estimated_days: 3
 assumption_validations: []

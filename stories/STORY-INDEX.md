@@ -65,7 +65,7 @@ input-hash: "pending"
 | S-1.10 | Checkpoint Core — put_writes, Durability Tiers, Monotonic Clock, Fork, Crash Recovery, Encryption | BC-2.04.001, BC-2.04.002, BC-2.04.003, BC-2.04.004, BC-2.04.005, BC-2.04.006, BC-2.04.007 | SS-04 | pregolya-checkpoint | P0 | 13 | [S-1.04, S-1.02] | draft |
 | S-1.11 | FTS Conversation Search Over Checkpoint History | BC-2.04.008 | SS-04 | pregolya-checkpoint | P1 | 3 | [S-1.10] | draft |
 | S-1.12 | Memory KV and Vector Persistence, Tenant Tier Isolation and GDPR Erasure | BC-2.15.001, BC-2.15.002, BC-2.15.003 | SS-15 | pregolya-memory | P1 | 8 | [S-1.04, S-1.02] | draft |
-| S-1.13 | SkillStore Registry, Guarded Memory Writes and Frozen-Snapshot Context Mutation | BC-2.15.004, BC-2.15.005, BC-2.15.006 | SS-15 | [pregolya-core, pregolya-memory, pregolya-graph] | P1 | 8 | [S-1.12, S-1.04, S-1.14] | draft |
+| S-1.13 | SkillStore Registry, Guarded Memory Writes and Frozen-Snapshot Context Mutation | BC-2.15.004, BC-2.15.005, BC-2.15.006 | SS-15, SS-03 | [pregolya-core, pregolya-memory, pregolya-graph] | P1 | 8 | [S-1.12, S-1.04, S-1.14] | draft |
 
 ### Wave 1 — pregolya-graph (StateGraph, BSP, HITL, Streaming, Budget, Guardrail)
 

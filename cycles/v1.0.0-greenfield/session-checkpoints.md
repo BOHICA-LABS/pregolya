@@ -2634,3 +2634,27 @@ dispatch `vsdd-factory:adversary` **P2A-010** — fresh context, Phase-1-active 
 
 #### v5.28 OPS NOTES
 compact-state v5.28 COMPLETE. P2A-009 fix-burst COMPLETE (D-216; 8 findings 1C/3H/3M/1L). P2A-005..006 Phase-Progress pairs archived to burst-log. Next: P2A-010 adversarial re-pass.
+
+---
+
+## Extracted from STATE.md on 2026-08-21 — STATE.md v5.33 Session Checkpoint (replaced by v5.34)
+
+### v5.33 RESUME IN ONE BREATH
+Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak **0/3**. Adversary passes P2A-001..P2A-013 all returned NOT CLEAN and were fix-burst-closed D-208..D-221 (sample); zero regressions across all passes. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass **P2A-014** on the current post-fix-burst factory-artifacts HEAD (frozen-HEAD baseline reset by this fix-burst push).
+
+#### v5.33 HEADS
+- develop `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: run `git -C .factory log -1 --format='%h'` for the current HEAD. PUSHED to origin.
+- Worktrees: NONE. Open PRs: NONE.
+
+#### v5.33 NEXT-ACTION
+dispatch `vsdd-factory:adversary` **P2A-014**, fresh context, Read/Grep/Glob only, Form-B verbatim evidence, FULL Phase-1-active POL rubric (POL-1..31 + POL-46/47) injected, with the ACCEPTED/DO-NOT-REFLAG note (F-02/TDIV-009 waived; OBS-1 + PGAP-MSGDRIFT missing-validator gaps recorded), dual `CLEAN (strict)/CLEAN (PR-merge)` verdict, on the post-P2A-013-fix-burst frozen HEAD (streak 0/3). If CLEAN(strict) → streak 1/3.
+
+#### v5.33 PRODUCT BACKLOG
+1. P2A-014 (adversary, BC-5.39.001; streak 0/3 → target 3/3; rubric: TDIV-009 accepted; full corpus pass)
+2. OBS-1 (DAG reciprocity validator; required before Phase-2 gate close)
+3. PGAP-MSGDRIFT mechanical gate codification (devops scope, human authorization required)
+4. Pre-Phase-2-gate consistency audit → Phase 3
+
+#### v5.33 OPS NOTES
+P2A-013 fix-burst COMPLETE (D-221; 5 findings 1H/3M/1L; 14 files; DAG acyclic; census unchanged 133/14). P2A-010+011 fix-burst rows archived to burst-log. Next: P2A-014 adversarial re-pass on frozen HEAD.
