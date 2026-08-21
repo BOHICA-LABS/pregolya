@@ -169,8 +169,8 @@ Derived from `architecture/dependency-graph.md` external dependency table:
 | `syn` | 2.x | Parse proc-macro input TokenStream |
 | `quote` | 1.x | Generate output TokenStream |
 | `proc-macro2` | 1.x | Token manipulation |
-| `schemars` | 1.x | Derived `JsonSchema` on generated Args structs (ADR-004) |
-| `serde` | 1.x | Derived `Deserialize` on generated Args structs |
+| `schemars` | workspace pin | Derived `JsonSchema` on generated Args structs (ADR-004) |
+| `serde` | workspace pin | Derived `Deserialize` on generated Args structs |
 | `trybuild` | 1.x | Compile-fail test harness for AC-005..AC-007, AC-009, AC-010, AC-015 |
 
 All versions are pinned via the workspace `Cargo.toml`. Do not introduce versions not present in the workspace dependency table.

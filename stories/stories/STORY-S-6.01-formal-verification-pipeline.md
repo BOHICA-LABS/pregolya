@@ -24,7 +24,7 @@ verification_properties: [VP-001, VP-002, VP-003, VP-006, VP-007, VP-008, VP-009
 priority: P2
 cycle: v1.0.0-greenfield
 wave: 6
-target_module: xtask
+target_module: [xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools, fuzz]
 subsystems: [SS-17]
 estimated_days: 3
 assumption_validations: []

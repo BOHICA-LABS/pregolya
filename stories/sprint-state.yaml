@@ -192,7 +192,7 @@ stories:
     points: 8
     tdd_mode: strict
     priority: P1
-    crate: pregolya-memory
+    crate: [pregolya-core, pregolya-memory, pregolya-graph]
     pr_url: ~
     merged_sha: ~
 
@@ -348,7 +348,7 @@ stories:
     points: 5
     tdd_mode: strict
     priority: P1
-    crate: pregolya-graph
+    crate: [pregolya-core, pregolya-graph]
     pr_url: ~
     merged_sha: ~
 
@@ -544,6 +544,6 @@ stories:
     points: 8
     tdd_mode: strict
     priority: P2
-    crate: [xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools]
+    crate: [xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools, fuzz]
     pr_url: ~
     merged_sha: ~

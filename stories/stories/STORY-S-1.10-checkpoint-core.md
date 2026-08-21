@@ -218,11 +218,11 @@ Derived from `architecture/dependency-graph.md` external dependency table:
 | Library | Version | Usage |
 |---------|---------|-------|
 | `rusqlite` | 0.31.x | SQLite backend for `SqliteCheckpointSaver` and `pending_writes` table |
-| `serde` | 1.x | Serialization of checkpoint payloads |
-| `serde_json` | 1.x | JSON encoding of checkpoint state |
+| `serde` | workspace pin | Serialization of checkpoint payloads |
+| `serde_json` | workspace pin | JSON encoding of checkpoint state |
 | `aes-gcm` | 0.10.x | Symmetric encryption for `EncryptedSerializer` (AES-256-GCM) |
-| `tokio` | 1.x | Async runtime for async `CheckpointSaver` methods |
-| `tracing` | 0.1.x | Structured event logging |
+| `tokio` | workspace pin | Async runtime for async `CheckpointSaver` methods |
+| `tracing` | workspace pin | Structured event logging |
 | `pregolya-core` | workspace path | `PregolyaError`, `Runnable` |
 
 **Forbidden Dependencies:** `pregolya-checkpoint` MUST NOT depend on `pregolya-graph` (checkpoint is a primitive that graph depends on, not the other way around). Build fails if this dependency appears.

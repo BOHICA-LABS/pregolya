@@ -82,7 +82,7 @@ S-1.12 (Memory Persistence)
 
 S-1.13 (SkillStore/WriteGuard)
   depends_on: [S-1.12, S-1.04, S-1.14]
-  blocks: [none in v1 stories]
+  blocks: S-1.16
 ```
 
 ### Wave 1 — pregolya-graph (E-07 through E-12)
@@ -97,7 +97,7 @@ S-1.15 (Conditional Edges + Send)
   blocks: S-1.16
 
 S-1.16 (BSP Engine)
-  depends_on: [S-1.14, S-1.15, S-1.10]
+  depends_on: [S-1.14, S-1.15, S-1.10, S-1.13]
   blocks: S-1.20, S-1.26, S-6.01
 
 S-1.17 (Streaming Events)
@@ -236,7 +236,7 @@ S-6.01 (Kani + cargo-fuzz)
 | 1d | S-1.05, S-1.06, S-1.07, S-1.09, S-1.10, S-1.12 | All depend on S-1.04 and/or S-1.02; none depend on each other |
 | 1e | S-1.11, S-1.14, S-1.15 (after S-1.14), S-1.21 (after S-1.07+S-1.09) | S-1.11 dep S-1.10; S-1.14 dep S-1.04; S-1.21 dep S-1.07+S-1.09+S-1.04 |
 | 1f | S-1.13, S-1.15, S-1.17, S-1.18, S-1.19, S-1.22 | S-1.13 dep S-1.12+S-1.04+S-1.14; S-1.15 dep S-1.14; S-1.17/18/19 dep S-1.14; S-1.22 dep S-1.09+S-1.21+S-1.06 |
-| 1g | S-1.16 | Dep S-1.14+S-1.15+S-1.10 |
+| 1g | S-1.16 | Dep S-1.14+S-1.15+S-1.10+S-1.13 |
 | 1h | S-1.20 | Dep S-1.16+S-1.17+S-1.10 |
 | 1i | S-1.23 | Dep S-1.20+S-1.17 |
 | 1j | S-1.24 | Dep S-1.23+S-1.17+S-1.18 |

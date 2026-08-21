@@ -2602,3 +2602,30 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-219 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-013.
 
 **Convergence dim-5 (Phase-2 P2A-012):** Counter **0/3 — NOT CLEAN (D-219; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →4→8→10→4→2. NEXT: P2A-013 (streak restart 1/3 attempt; full coverage + msgdrift + mod.rs-layout + error-type axes now swept). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open).
+
+**Convergence dim-5 (Phase-2 P2A-012):** Counter **0/3 — NOT CLEAN (D-219; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →4→2. NEXT: P2A-013 (streak restart 1/3 attempt; mod.rs-logic class exhausted). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open).
+
+---
+
+### P2A-013 — Pass 13 (2026-08-21, fix-burst post-pass-13)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P2A-013 | 2026-08-21 | 5 | 0 | 1 | 3 | 1 | LOW | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass. mod.rs-logic and msgdrift classes exhausted; target-crate consistency and DAG completeness axes newly swept.
+
+**Findings:**
+- F-P2A013-01 (MED, POL-8/4): S-2.05 BC-table cell BC-2.18.004 priority P0→P1 (canonical priority per BC-file, STORY-INDEX, and own frontmatter is P1; story BC-table had P0).
+- F-P2A013-02 (HIGH, POL-4/6): S-1.13 `target_module` field declared `pregolya-memory` only; story delivers files in pregolya-core, pregolya-memory, and pregolya-graph — corrected to `[pregolya-core, pregolya-memory, pregolya-graph]`; STORY-INDEX + sprint-state reconciled.
+- F-P2A013-03 (MED, POL-3/4): S-6.01 target-crate set inconsistent — frontmatter, STORY-INDEX, and sprint-state diverged; reconciled to canonical 9-crate set `[xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools, fuzz]` (architect-adjudicated Q2). S-1.25 frontmatter confirmed correct; STORY-INDEX + sprint-state updated to `[pregolya-core, pregolya-graph]` (pregolya-core = VP-012 watermark_arithmetic_harness proof vehicle).
+- F-P2A013-04 (MED, POL-4/DAG): missing DAG edge — S-1.16 (BSP super-step determinism) depends on S-1.13 (SkillStore write-guard + context mutation) for the context-mutation capability; edge S-1.16 depends_on S-1.13 + reciprocal S-1.13 blocks S-1.16 added across dependency-graph.md + both story frontmatters + STORY-INDEX (architect-adjudicated Q1; DAG confirmed acyclic; no batch-boundary changes). No ADR change.
+- F-P2A013-05 (LOW, POL-12): 6 stories (S-1.07, S-1.09, S-1.10, S-1.11, S-1.12, S-1.13) contained embedded version literals (1.x / 0.1.x) in Library tables → replaced with `workspace pin`.
+
+**Regression check:** All P2A-003..012 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (accepted per rubric note). OBS-1 + PGAP-MSGDRIFT recorded gaps — no new concrete instances found. CLEAN(strict)=NO; CLEAN(PR-merge)=NO (1H + 3M findings present).
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1). DAG edge addition (S-1.16→S-1.13) is structural correction per architect adjudication Q1; acyclic confirmed. Token Budget counts unaffected.
+
+**D-221 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-014.
+
+**Convergence dim-5 (Phase-2 P2A-013):** Counter **0/3 — NOT CLEAN (D-221; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →4→2→5. NEXT: P2A-014 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open.

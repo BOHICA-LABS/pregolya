@@ -18,13 +18,13 @@ input-hash: "3db17ea"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.12, S-1.04, S-1.14]
-blocks: []
+blocks: [S-1.16]
 behavioral_contracts: [BC-2.15.004, BC-2.15.005, BC-2.15.006]
 verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 1
-target_module: pregolya-memory
+target_module: [pregolya-core, pregolya-memory, pregolya-graph]
 subsystems: [SS-15, SS-03]
 estimated_days: 3
 assumption_validations: []
@@ -182,8 +182,8 @@ Derived from `architecture/module-decomposition.md §pregolya-memory` and `§pre
 | `pregolya-core` | workspace path | `WriteGuardDecision`, `MemoryWriteRequest`, `ContextMutationConfig` (types defined here) |
 | `pregolya-memory` | workspace path | `MemoryStore`, `MemoryScope` (enforcement defined here) |
 | `pregolya-graph` | workspace path | `scheduler.rs` context mutation loading |
-| `tokio` | 1.x | Async scheduler methods |
-| `tracing` | 0.1.x | Structured logging |
+| `tokio` | workspace pin | Async scheduler methods |
+| `tracing` | workspace pin | Structured logging |
 
 **Forbidden Dependencies:** `pregolya-core/src/write_guard.rs` and `pregolya-core/src/context_mutation.rs` MUST NOT import from `pregolya-memory` or `pregolya-graph` — they are `pregolya-core` primitives. The dependency direction is: `pregolya-graph` → `pregolya-memory` → `pregolya-core`.
 

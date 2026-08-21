@@ -169,10 +169,10 @@ Derived from `architecture/dependency-graph.md` external dependency table:
 | Library | Version | Usage |
 |---------|---------|-------|
 | `rusqlite` | 0.31.x, feature `bundled` | SQLite backend for KV and FTS storage |
-| `serde` | 1.x | Serialization of stored values |
-| `serde_json` | 1.x | JSON encoding of values |
-| `tokio` | 1.x | Async trait methods |
-| `tracing` | 0.1.x | `"memory.gdpr_unattributed_session_entries"` DEBUG event |
+| `serde` | workspace pin | Serialization of stored values |
+| `serde_json` | workspace pin | JSON encoding of values |
+| `tokio` | workspace pin | Async trait methods |
+| `tracing` | workspace pin | `"memory.gdpr_unattributed_session_entries"` DEBUG event |
 | `pregolya-core` | workspace path | `PregolyaError` |
 
 **Optional vector backend:** The vector storage backend (e.g., sqlite-vss or an external vector DB) is optional. When not configured, `vector_search` returns E-MEMORY-001. The concrete backend type is configurable via `MemoryStoreConfig`. Do not hardcode a specific vector library — use a trait object `Arc<dyn VectorBackend>`.

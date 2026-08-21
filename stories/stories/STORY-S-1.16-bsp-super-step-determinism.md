@@ -17,7 +17,7 @@ inputs:
 input-hash: "48c95ce"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
-depends_on: [S-1.14, S-1.15, S-1.10]
+depends_on: [S-1.14, S-1.15, S-1.10, S-1.13]
 blocks: [S-1.20, S-1.26, S-6.01]
 behavioral_contracts: [BC-2.03.001, BC-2.03.002, BC-2.03.003]
 verification_properties: [VP-001]

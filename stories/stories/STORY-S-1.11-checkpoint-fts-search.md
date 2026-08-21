@@ -141,7 +141,7 @@ Same as S-1.10 (inherits crate context):
 | Library | Version | Usage |
 |---------|---------|-------|
 | `rusqlite` | 0.31.x | FTS5 virtual table and queries; feature `bundled` required to ensure FTS5 is compiled in |
-| `serde` | 1.x | Serialize `FtsSearchResult` for `ToolOutput` |
+| `serde` | workspace pin | Serialize `FtsSearchResult` for `ToolOutput` |
 | `pregolya-core` | workspace path | `Tool` trait, `PregolyaError` |
 
 **Critical note:** `rusqlite` must be compiled with the `bundled` feature to ensure SQLite FTS5 is available. If `bundled` is not enabled and the system SQLite lacks FTS5, AC-006 (`E-CHKPT-009`) fires at runtime. The `bundled` feature should be enabled in `pregolya-checkpoint/Cargo.toml` to guarantee FTS5 availability.

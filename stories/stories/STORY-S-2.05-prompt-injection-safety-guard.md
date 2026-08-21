@@ -43,7 +43,7 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.18.004 | injection_guard in format_messages — TrustLevel Severity Ordering; Fires BEFORE PromptValue Produced; E-TMPL-001 SECURITY/InjectionAttempt (Red Gate) | P0 |
+| BC-2.18.004 | injection_guard in format_messages — TrustLevel Severity Ordering; Fires BEFORE PromptValue Produced; E-TMPL-001 SECURITY/InjectionAttempt (Red Gate) | P1 |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) (Red Gate) | P1 |
 
 ## Acceptance Criteria

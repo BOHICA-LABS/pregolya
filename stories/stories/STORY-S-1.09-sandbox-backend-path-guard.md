@@ -216,8 +216,8 @@ Derived from `architecture/dependency-graph.md` external dependency table:
 
 | Library | Version | Usage |
 |---------|---------|-------|
-| `tokio` | 1.x | Async subprocess execution in ProcessBackend; `process::Command` |
-| `tracing` | 0.1.x | WARN/DEBUG structured events (event_type catalog) |
+| `tokio` | workspace pin | Async subprocess execution in ProcessBackend; `process::Command` |
+| `tracing` | workspace pin | WARN/DEBUG structured events (event_type catalog) |
 | `tempfile` | 3.x | Integration tests for real symlink creation (dev-dependency) |
 | `pregolya-core` | workspace path | `PregolyaError` |
 
