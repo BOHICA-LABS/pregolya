@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.32"
+version: "1.33"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.33 (fix-burst-P2A016/2026-08-21): Two P2A-016 architecture-layer items resolved. (1) Primary Crate(s) convention established in Subsystem Registry preamble: crates that home the subsystem's own BCs. SS-08 already conforms (all 8 crates home BC-2.08.xxx BCs). SS-17 stays at 4 crates; SS-17 scope note added clarifying that S-6.01 additionally targets 5 more crates per VP-to-crate map but those home no BC under SS-17. (2) pregolya facade v1 accounting: ruling (a) — facade assembled incrementally from workspace-init stub; no dedicated story; annotation wording produced for story-writer to add to Crate Implementation Order in wave-schedule."
   - "1.32 (fix-burst-P2A015/2026-08-21): SS-08 Primary Crate(s) expanded — added pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk (D17-Q5 wire-client crates) and pregolya-macros (proc-macro crate; BC-2.08.010–012 numbered under SS-08) to SS-08 registry row. Grounds: (1) SDK crates are governed by BC-2.08.006 which also governs the adapter crates already in SS-08; S-2.06 targets all six crates under subsystems: SS-08. (2) pregolya-macros BC numbering (BC-2.08.010–012) is the authoritative SS-08 anchor per subsystem-registry source-of-truth rules. Also: de-pin two stale VP-INDEX version cites from v1.6 changelog prose (records-lint TD-VSDD-091 compliance; both cites were historical snapshot references in changelog entries)."
   - "1.31 (burst-302b/D-171/2026-08-17): SS-01 BC range extended 001–004 → 001–008 (BC-2.01.005–008; LCEL RunnableParallel/RunnablePassthrough/RunnableAssign; D-170/D-171). VP table: 13→14 VPs (VP-014 proptest P1 added; total proptest 2→3). BC grand total 129→133 historical note updated."
   - "1.30 (burst-302a/D-170/2026-08-17): ADR-026 registered — LCEL Composition Primitives: RunnableParallel and RunnablePassthrough (burst-302 scope expansion; D-170 human ruling). ADR count 25→26. Document Map updated to 26 files (ADR-001 to ADR-026)."
@@ -89,6 +90,8 @@ changelog:
 > BC-INDEX subsystem column, story `subsystems:`, and PRD references MUST use exact Name.
 > State-manager backfills all BC files with SS-NN after this index is committed.
 > (95 at the time of the D20 backfill; 129 as of D23; 133 as of D-170/D-171)
+>
+> **`Primary Crate(s)` convention:** crates that home this subsystem's own BCs. A subsystem's stories may build or run proofs in additional crates; those appear in the story's `target_module` list but are not listed here unless they home a BC numbered under this subsystem.
 
 | SS ID | Name | PRD Section | Primary Crate(s) | BCs | Wave |
 |-------|------|-------------|------------------|-----|------|
@@ -121,6 +124,8 @@ changelog:
 > **D21 Capability Additions (v1.5):** SS-18 (Prompt Templates) via ADR-015 — pregolya-prompts new crate; injection safety pure-core guard. SS-19 (LC Serialization) via ADR-016 — core::serializable in pregolya-core; inventory-based static registry; 141 core entries + feature-gated partner registration. SS-20 (Document Retrieval) via ADR-014 — Retriever trait + Document type in pregolya-core; VectorStoreRetriever in pregolya-vectorstores. SS-21 (VectorStore Abstraction) via ADR-014 — pregolya-vectorstores new crate; in-memory backend + MMR. SS-22 (Embeddings) via ADR-017 — Embeddings trait in pregolya-core; impls in pregolya-openai + pregolya-ollama (pregolya-anthropic excluded: no embedding API).
 
 > **D23 Capability Additions (v1.6):** SS-23 (First-Party Tool Library) via ADR-020 — pregolya-tools new crate (crate #21); tools::fs (ReadFileTool/WriteFileTool/EditFileTool/ListDirTool), tools::shell (BashTool), tools::search (GrepTool). SS-05 (HITL) extended with per-tool-call PreToolCallHook API per ADR-018 — sub-node granularity HITL (PreToolCallHook trait, PreToolDecision enum). SS-10 (Budget Governance) extended with rolling compaction primitive per ADR-019 — CompactionTrigger/CompactionPolicy/CompactionSummary types in core::budget; compaction engine in graph::budget. SS-15 (Long-Horizon Memory) promoted Wave 2→1 (CAP-017 multi-session memory, D23 item 3). SS-16 (Tool Retry + Circuit Breaker) promoted Wave 2→1 (CAP-018 tool retry, D23 item 4).
+
+> **SS-17 scope note:** `Primary Crate(s)` correctly lists xtask (homes BC-2.17.001–002) plus pregolya-graph, pregolya-checkpoint, and pregolya-sandbox (the first three Kani-proof target crates with VP-001/002/003). S-6.01 `target_module` additionally includes pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools, and fuzz to complete VP obligations in those crates; the VPs involved (VP-006/007/008/009/010/011/012/013/014) anchor to BCs owned by SS-18, SS-19, SS-21, SS-22, SS-23, SS-05, SS-10 respectively — none home a BC under SS-17, so those crates are excluded from `Primary Crate(s)` per the convention above.
 
 ## Canonical Crate Roster (Source of Truth)
 

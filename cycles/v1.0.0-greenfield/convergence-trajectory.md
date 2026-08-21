@@ -2686,3 +2686,30 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **D-223 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-016.
 
 **Convergence dim-5 (Phase-2 P2A-015):** Counter **0/3 — NOT CLEAN (D-223; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →2→5→3→5. NEXT: P2A-016 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. VERIFY-NEXT-PASS: P2A-016 should confirm S-2.06 now lists all 6 crates (3 adapter + 3 sdk) and wave-schedule tier assignments are internally consistent with D17-Q5 SDK-split decision.
+
+---
+
+### P2A-016 — Pass 16 (2026-08-21, fix-burst post-pass-16)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P2A-016 | 2026-08-21 | 3 | 0 | 0 | 2 | 1 | 0 | LOW | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass on post-P2A-015-fix-burst HEAD. DAG/derived-view consistency, wave-schedule internal structure, ARCH-INDEX subsystem registry, and pregolya facade accounting reviewed per VERIFY-NEXT-PASS note from P2A-015.
+
+**Findings:**
+- P2A016-01 (MED, POL-4/DAG-derived-view): dep-graph §Topological Sort violated its own no-intra-batch-dependency rule: S-1.15 was co-listed with its dependency S-1.14 in the same batch, and S-1.15 appeared in two batches (duplicate). Batch grouping also diverged from wave-schedule. Both docs reconciled to a single canonical 10-batch Wave-1 structure derived from the authoritative DAG edges. DAG EDGES UNCHANGED; acyclic confirmed. Each Wave-1 story appears exactly once; zero intra-batch edges verified.
+- P2A016-02 (MED, POL-6): pregolya facade (roster #1, v1) was absent from wave-schedule §Crate Implementation Order. Architect ruling (a): facade is re-export-only, Cargo.toml-scaffolded at workspace init, incrementally populated, no dedicated story (ADR-007 §Consequences). Story-writer added an explicit annotation row in §Crate Implementation Order to document the accounting.
+- P2A016-LOW (LOW): SS-17 Primary-Crate convention gap — ARCH-INDEX Subsystem Registry lacked a definition of the `Primary Crate(s)` column, making SS-17's 4-crate list appear to abbreviate. Architect resolved by adding a `Primary Crate(s)` convention definition to the Subsystem Registry preamble and a SS-17 scope note blockquote clarifying that S-6.01 additionally targets other crates whose BCs are not owned by SS-17.
+
+**In-scope reconciliation (not scored):**
+- DAG edges + crate-canonicality (all 39) + VP arithmetic + BC census/coverage + error semantics independently VERIFIED CONVERGED by adversary during P2A-016; residual defects confined to two derived views (now fixed).
+- SS-08 independently verified by adversary to already conform to the new Primary-Crate convention (all 8 crates in SS-08 home BC-2.08.xxx BCs).
+
+**Regression check:** All P2A-003..015 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (human-accepted). OBS-1 + PGAP-MSGDRIFT recorded gaps — no new concrete instances found. CLEAN(strict)=NO; CLEAN(PR-merge)=NO (2 MED findings present).
+
+**Corpus unchanged where census applies:** 133 BC / 14 VP; no BC/VP/story renumber (POL-1). No bcs: set changes — Token Budget counts unaffected. DAG EDGES UNCHANGED (only derived batch-grouping views reconciled).
+
+**D-224 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-017.
+
+**Convergence dim-5 (Phase-2 P2A-016):** Counter **0/3 — NOT CLEAN (D-224; 2026-08-21)**. Fix-burst dispatched; streak 0/3. trajectory-tail →3→5→5→3. NEXT: P2A-017 (streak restart 1/3 attempt on new post-fix-burst frozen HEAD). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted. PGAP-MSGDRIFT content instances exhausted (mechanical gate still open). OBS-1 DAG-reciprocity gap remains open. VERIFY-NEXT-PASS: P2A-017 should confirm dep-graph 10-batch Wave-1 structure is internally consistent with DAG edges and matches wave-schedule batch ordering.

@@ -2680,3 +2680,16 @@ dispatch `vsdd-factory:adversary` **P2A-015**, fresh context, Read/Grep/Glob onl
 
 #### v5.34 OPS NOTES
 P2A-014 fix-burst COMPLETE (D-222; 3 findings 1M/1L/1OBS; 7 files; census unchanged 133/14). 39-story target-crate sweep exhausted class. S-2.07 BC-2.08.006 prose cross-ref added (traceability intact). Next: P2A-015 adversarial re-pass on frozen HEAD.
+
+---
+
+### v5.35 (archived 2026-08-21 — replaced by v5.36)
+
+**RESUME IN ONE BREATH:** Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak 0/3. Adversary passes P2A-001..P2A-015 all returned NOT CLEAN and were fix-burst-closed D-208..D-223 (sample); zero regressions across all passes. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass P2A-016 on the current post-fix-burst factory-artifacts HEAD.
+
+**Finding trajectory P2A-001..015:** 8→3→7→3→8→2→3→4→8→10→4→2→5→3→5. Streak 0/3. NEXT: P2A-016.
+
+**Decision delta (v5.35):** D-223 minted (P2A-015 fix-burst COMPLETE; 1H/1M/3L ALL CLOSED; D17-Q5 SDK-split propagated corpus-wide; D-206 12→14 VPs reconciliation; BC-2.08.006 VERIFIED). Human F-02/TDIV-009 waiver in effect (D-220).
+
+#### v5.35 OPS NOTES
+P2A-015 fix-burst COMPLETE (D-223; 5 findings 1H/1M/3L; S-2.06 6-crate triad + ARCH-INDEX SS-08 + wave-schedule Tiers 6-9 + community post-v1 + STORY-INDEX stale clause + S-2.10/11 BC inline; D-206 12→14 VPs reconciliation; census 133 BC/14 VP). VERIFY-NEXT-PASS for P2A-016: confirm S-2.06 lists all 6 crates (3 adapter + 3 sdk) and wave-schedule tier assignments consistent with D17-Q5.

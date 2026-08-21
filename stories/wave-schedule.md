@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "755e2bf"
+input-hash: "cb744c4"
 traces_to: STORY-INDEX.md
 ---
 
@@ -19,7 +19,7 @@ traces_to: STORY-INDEX.md
 |--------|-------|
 | Total stories | 39 |
 | Total waves | 3 (Wave 1, Wave 2, Wave 6) |
-| Max parallelism (groups per wave) | 6 groups in Wave 1 / sub-batch 1d |
+| Max parallelism (groups per wave) | 7 groups in Wave 1 / sub-batch 1e |
 | Estimated agent spawns | 39 implementer agents total |
 
 ## Wave Plan
@@ -37,86 +37,76 @@ traces_to: STORY-INDEX.md
 |-------|---------|--------|-----------|-------------|
 | A | S-1.01 | 5 | S | 1 story/agent |
 
-#### Sub-batch 1b — pregolya-core tier 1 (depends on S-1.01)
+#### Sub-batch 1b — pregolya-core tier 1 + pregolya-splitters (depends on S-1.01)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.02 | 5 | S | 1 story/agent |
 | B | S-1.03 | 5 | S | 1 story/agent |
+| C | S-1.08 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1c — pregolya-core Runnable + pregolya-splitters (depends on 1b)
+#### Sub-batch 1c — pregolya-core Runnable + pregolya-sandbox (depends on 1b)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.04 | 5 | S | 1 story/agent |
-| B | S-1.08 | 8 | M | 1 story/agent |
+| B | S-1.09 | 13 | XL | 1 story/agent |
 
-#### Sub-batch 1d — Dependent crates tier 1 (depends on 1c) — max parallelism
+#### Sub-batch 1d — Dependent crates tier 1 (depends on 1c)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.05 | 8 | M | 1 story/agent |
 | B | S-1.06 | 5 | S | 1 story/agent |
 | C | S-1.07 | 5 | S | 1 story/agent |
-| D | S-1.09 | 13 | XL | 1 story/agent |
-| E | S-1.10 | 13 | XL | 1 story/agent |
-| F | S-1.12 | 8 | M | 1 story/agent |
+| D | S-1.10 | 13 | XL | 1 story/agent |
+| E | S-1.12 | 8 | M | 1 story/agent |
+| F | S-1.14 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1e — Secondary dependents (depends on 1d)
+#### Sub-batch 1e — Dependent crates tier 2 + graph tier 1 (depends on 1d) — max parallelism
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.11 | 3 | XS | 1 story/agent |
-| B | S-1.14 | 8 | M | 1 story/agent |
+| B | S-1.13 | 8 | M | 1 story/agent |
+| C | S-1.15 | 5 | S | 1 story/agent |
+| D | S-1.17 | 5 | S | 1 story/agent |
+| E | S-1.18 | 8 | M | 1 story/agent |
+| F | S-1.19 | 13 | XL | 1 story/agent |
+| G | S-1.21 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1f — Graph tier 1 + tools + memory-graph (depends on 1e)
-
-| Group | Stories | Points | Complexity | Agent Scope |
-|-------|---------|--------|-----------|-------------|
-| A | S-1.13 | 8 | M | 1 story/agent |
-| B | S-1.15 | 5 | S | 1 story/agent |
-| C | S-1.17 | 5 | S | 1 story/agent |
-| D | S-1.18 | 8 | M | 1 story/agent |
-| E | S-1.19 | 13 | XL | 1 story/agent |
-| F | S-1.21 | 8 | M | 1 story/agent |
-
-#### Sub-batch 1g — BSP engine + Bash tool (depends on 1f)
+#### Sub-batch 1f — BSP engine + Bash tool (depends on 1e)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.16 | 13 | XL | 1 story/agent |
 | B | S-1.22 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1h — HITL core (depends on S-1.16, S-1.17, S-1.10)
+#### Sub-batch 1g — HITL core + server CRUD (depends on 1f)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.20 | 13 | XL | 1 story/agent |
+| B | S-1.26 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1i — PreToolCallHook (depends on S-1.20, S-1.17)
+#### Sub-batch 1h — PreToolCallHook + server security config (depends on 1g)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.23 | 5 | S | 1 story/agent |
+| B | S-1.27 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1j — Approval + compaction events (depends on S-1.23, S-1.17, S-1.18)
+#### Sub-batch 1i — Approval + compaction events (depends on S-1.23, S-1.17, S-1.18)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.24 | 5 | S | 1 story/agent |
 
-#### Sub-batch 1k — Compaction execution + server CRUD (depends on S-1.10, S-1.18, S-1.24 / S-1.16, S-1.10)
+#### Sub-batch 1j — Compaction execution (depends on S-1.10, S-1.18, S-1.24)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
 | A | S-1.25 | 5 | S | 1 story/agent |
-| B | S-1.26 | 8 | M | 1 story/agent |
-
-#### Sub-batch 1l — Server security config (depends on S-1.26)
-
-| Group | Stories | Points | Complexity | Agent Scope |
-|-------|---------|--------|-----------|-------------|
-| A | S-1.27 | 8 | M | 1 story/agent |
 
 ---
 
@@ -231,4 +221,5 @@ actual critical path constraint.
 | 7 | pregolya-standard-tests | 2 | Shared test infra for providers |
 | 8 | pregolya-mcp | 2 | Dep tools + graph |
 | 9 | xtask (formal) | 6 | Terminal — all crates compiled |
+| — | pregolya (facade) | v1 (incremental) | Re-export-only umbrella; Cargo.toml stub scaffolded at workspace init (namespace reservation); `pub use` re-exports assembled incrementally as member-crate stories land; no dedicated story (ADR-007 §Consequences) |
 | — | pregolya-community | post-v1 | Zero v1 scope per ADR-007 + ARCH-INDEX roster; no v1 stories target this crate |
