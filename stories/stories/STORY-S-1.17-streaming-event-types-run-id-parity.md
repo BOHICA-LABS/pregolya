@@ -94,7 +94,7 @@ The streaming path uses the same BSP engine and the same node execution logic as
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|---------------|
-| `StreamEvent` enum definition | `pregolya-graph/src/event.rs` | Pure (type definition) |
+| `StreamEvent` enum definition | `pregolya-graph/src/event_emitter.rs` | Pure (type definition) |
 | Event emission in BSP engine | `pregolya-graph/src/bsp_engine.rs` | Effectful (sends to event channel) |
 | Event emission in scheduler | `pregolya-graph/src/scheduler.rs` | Effectful (run lifecycle events) |
 | `run()` unary executor | `pregolya-graph/src/scheduler.rs` | Effectful |
@@ -104,7 +104,7 @@ The streaming path uses the same BSP engine and the same node execution logic as
 
 | Module | Classification | Justification |
 |--------|---------------|---------------|
-| `event.rs` (`StreamEvent` enum) | pure-core | Type definitions + `#[non_exhaustive]`; no execution logic |
+| `event_emitter.rs` (`StreamEvent` enum) | pure-core | Type definitions + `#[non_exhaustive]`; no execution logic |
 | `bsp_engine.rs` (event emission sites) | effectful-shell | Sends events to unbounded tokio channel |
 | `scheduler.rs` (run/stream dispatch) | effectful-shell | Orchestrates async execution; no pure-fn extraction needed for this story |
 
@@ -125,7 +125,7 @@ The streaming path uses the same BSP engine and the same node execution logic as
 | This story spec | ~3,000 |
 | BC files (3 BCs) | ~4,500 |
 | S-1.14 context (StateGraph, channels) | ~1,500 |
-| `event.rs` new file | ~800 |
+| `event_emitter.rs` new file | ~800 |
 | `bsp_engine.rs` event emission additions | ~1,000 |
 | `scheduler.rs` run/stream additions | ~1,500 |
 | Test files | ~2,500 |
@@ -136,7 +136,7 @@ The streaming path uses the same BSP engine and the same node execution logic as
 ## Tasks (MANDATORY)
 
 1. [ ] Write failing tests for all 12 ACs in `pregolya-graph/tests/streaming_events.rs`
-2. [ ] Create `pregolya-graph/src/event.rs` — `StreamEvent` enum with 16 variants, `#[non_exhaustive]`, `run_id` + `parent_ids` fields
+2. [ ] Create `pregolya-graph/src/event_emitter.rs` — `StreamEvent` enum with 16 variants, `#[non_exhaustive]`, `run_id` + `parent_ids` fields
 3. [ ] Add `StreamEvent` emission sites to `pregolya-graph/src/bsp_engine.rs` — NodeStart/NodeEnd/NodeStream per node execution
 4. [ ] Add `StreamEvent` emission to `pregolya-graph/src/scheduler.rs` — RunStart/RunEnd/StepStart/StepEnd
 5. [ ] Implement `run()` unary executor and `stream()` streaming executor in `scheduler.rs` — same BSP engine, different output shape
@@ -172,8 +172,8 @@ The streaming path uses the same BSP engine and the same node execution logic as
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-graph/src/event.rs` | create | `StreamEvent` enum (16 variants), `#[non_exhaustive]`, `run_id`, `parent_ids` |
+| `pregolya-graph/src/event_emitter.rs` | create | `StreamEvent` enum (16 variants), `#[non_exhaustive]`, `run_id`, `parent_ids` |
 | `pregolya-graph/src/bsp_engine.rs` | modify | Node-level `StreamEvent` emission (NodeStart/Stream/End) |
 | `pregolya-graph/src/scheduler.rs` | modify | Run/step-level events; `run()` unary + `stream()` streaming executors |
-| `pregolya-graph/src/lib.rs` | modify | Re-export `StreamEvent` from `event` module |
+| `pregolya-graph/src/lib.rs` | modify | Re-export `StreamEvent` from `event_emitter` module |
 | `pregolya-graph/tests/streaming_events.rs` | create | AC-001..AC-012 tests |

@@ -140,7 +140,7 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 | Component | Module | Pure/Effectful |
 |-----------|--------|----------------|
 | `Retriever` trait + `Document` struct | `pregolya-core/src/retriever/mod.rs`, `pregolya-core/src/documents/mod.rs` | pure-core (trait definition) |
-| `GuardedDocuments` typed wrapper | `pregolya-core/src/retriever/guarded.rs` | pure-core |
+| `GuardedDocuments` typed wrapper | `pregolya-core/src/retriever/guarded.rs` | effectful (invokes guardrail async fn) |
 | `VectorStoreRetriever` concrete impl | `pregolya-vectorstores/src/retriever.rs` | effectful (delegates to store async methods) |
 | Compile-fail tests | `pregolya-core/tests/external/retriever-dyn-compat/`, `tests/external/document-non-exhaustive/`, `pregolya-vectorstores/tests/external/rag-guardrail-compile-fail/` | test-only |
 

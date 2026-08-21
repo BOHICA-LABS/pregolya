@@ -113,9 +113,9 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 
 | Component | Module | Crate | Pure/Effectful |
 |-----------|--------|-------|---------------|
-| `StreamEvent::ToolApprovalRequest` variant | `pregolya_graph::event_emitter` | pregolya-graph | Pure (enum variant addition) |
-| `StreamEvent::ToolApprovalResolved` variant | `pregolya_graph::event_emitter` | pregolya-graph | Pure (enum variant addition) |
-| `StreamEvent::CompactionEvent` variant | `pregolya_graph::event_emitter` | pregolya-graph | Pure (enum variant addition) |
+| `StreamEvent::ToolApprovalRequest` variant | `pregolya_graph::event_emitter` | pregolya-graph | Pure (variant defined in S-1.17; S-1.24 wires emission only) |
+| `StreamEvent::ToolApprovalResolved` variant | `pregolya_graph::event_emitter` | pregolya-graph | Pure (variant defined in S-1.17; S-1.24 wires emission only) |
+| `StreamEvent::CompactionEvent` variant | `pregolya_graph::event_emitter` | pregolya-graph | Pure (variant defined in S-1.17; S-1.24 wires emission only) |
 | `event_emitter::emit_tool_approval_request` | `pregolya_graph::event_emitter` | pregolya-graph | Effectful (channel send) |
 | `event_emitter::emit_tool_approval_resolved` | `pregolya_graph::event_emitter` | pregolya-graph | Effectful (channel send) |
 | `event_emitter::emit_compaction_event` | `pregolya_graph::event_emitter` | pregolya-graph | Effectful (channel send) |
@@ -124,7 +124,7 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 
 **Dependency anchors:**
 - Depends on S-1.23: `pre_tool_dispatch` (built in S-1.23) is the emission site for events 13 and 14. S-1.24 adds the emit calls to the PendingHumanApproval branch and the resume path.
-- Depends on S-1.17: `StreamEvent` enum established in S-1.17. S-1.24 extends it with 3 new variants (events 13, 14, 15).
+- Depends on S-1.17: `StreamEvent` enum established in S-1.17 with all 16 variants already defined, including `ToolApprovalRequest` (event 13), `ToolApprovalResolved` (event 14), and `CompactionEvent` (event 15). S-1.24 does NOT add new variant definitions — it wires the emission call sites (emit functions + call sites in `tool_dispatch.rs` and `compaction/executor.rs`) for these three events.
 - Depends on S-1.18: `EvidenceJournal` and `CheckpointSaver::put` (built in S-1.18) are called before `emit_compaction_event` — the compaction event is emitted after checkpoint write completes.
 
 ## Purity Classification
@@ -154,7 +154,7 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 
 ## Tasks
 
-- [ ] Add `StreamEvent::ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent` variants to `event_emitter.rs`
+- [ ] Wire emission call sites for events 13/14/15 (`ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent`) — variants already defined in S-1.17; this story adds only the emit functions (`emit_tool_approval_request`, `emit_tool_approval_resolved`, `emit_compaction_event`) and the call sites in `tool_dispatch.rs` and `compaction/executor.rs`
 - [ ] Write failing tests for AC-001..AC-010 before any implementation
 - [ ] Implement `emit_tool_approval_request` — fire-and-forget channel send, called in PendingHumanApproval branch of `pre_tool_dispatch` BEFORE `interrupt()`
 - [ ] Implement `emit_tool_approval_resolved` — fire-and-forget channel send, called on resume BEFORE decision applied
@@ -172,7 +172,7 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 - `Command(resume=<decision>)` struct kwarg form is established. Do NOT use `Command::Resume(...)` enum variant form.
 
 **From S-1.17 (Streaming Event Types):**
-- `StreamEvent` enum is `#[non_exhaustive]` — adding new variants in S-1.24 requires updating the enum file. No changes to existing variant serialization.
+- `StreamEvent` enum is `#[non_exhaustive]` — all 16 variants (including `ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent`) were fully defined in S-1.17. S-1.24 does NOT add new variant definitions; it only wires the emission call sites. No changes to the enum definition or existing variant serialization.
 - The streaming channel is an async broadcast/mpsc channel. Fire-and-forget send semantics: use `try_send` or similar non-blocking send; do not await a full channel.
 
 **From S-1.18 (Budget Policy & Evidence Journal):**
@@ -202,13 +202,13 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 ```
 crates/pregolya-graph/
   src/
-    event_emitter.rs                 # add: ToolApprovalRequest, ToolApprovalResolved, CompactionEvent variants
-                                     # add: emit_tool_approval_request, emit_tool_approval_resolved, emit_compaction_event
+    event_emitter.rs                 # add: emit_tool_approval_request, emit_tool_approval_resolved, emit_compaction_event
+                                     # (ToolApprovalRequest, ToolApprovalResolved, CompactionEvent variants defined in S-1.17)
   tests/
     streaming_events_tests.rs        # integration: event ordering, payload validation, fire-and-forget
 ```
 
 **Files to modify (existing):**
-- `pregolya-graph/src/event_emitter.rs` — add 3 new `StreamEvent` variants and emit functions
+- `pregolya-graph/src/event_emitter.rs` — add emit functions for `ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent` (variants already defined in S-1.17; no new variant additions)
 - `pregolya-graph/src/executor/tool_dispatch.rs` — add emit call in PendingHumanApproval branch and resume path
 - `pregolya-graph/src/compaction/executor.rs` — add emit call after checkpoint put (step 6 of compaction cycle)

@@ -89,7 +89,7 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|---------------|
-| Conditional edge registration | `pregolya-graph/src/graph/state.rs` | Pure (builder extension) |
+| Conditional edge registration | `pregolya-graph/src/definition.rs` | Pure (builder extension) |
 | path_fn panic safety | `pregolya-graph/src/bsp_engine.rs` | Effectful (catch_unwind) |
 | Send API / PUSH task queue | `pregolya-graph/src/scheduler.rs` | Effectful (TASKS topic write) |
 | Task ID hash | `pregolya-graph/src/types.rs` | Pure (xxh3_128 deterministic) |
@@ -99,7 +99,7 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 
 | Module | Classification | Justification |
 |--------|---------------|---------------|
-| `graph/state.rs` (conditional edge builder) | pure-core | Registers routing functions; no I/O |
+| `definition.rs` (conditional edge builder) | pure-core | Registers routing functions; no I/O |
 | `types.rs` (task_id hash, UntrackedValue sanitize) | pure-core | Deterministic hash + data transformation |
 | `bsp_engine.rs` (path_fn dispatch with catch_unwind) | effectful-shell | catch_unwind is a side-effecting runtime safety mechanism |
 | `scheduler.rs` (PUSH task queue, TASKS topic) | effectful-shell | Writes to task queue (I/O) |
@@ -132,7 +132,7 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 ## Tasks (MANDATORY)
 
 1. [ ] Write failing tests for all 11 ACs in `pregolya-graph/tests/conditional_send_fanout.rs`
-2. [ ] Extend `pregolya-graph/src/graph/state.rs` — `add_conditional_edges(source, path_fn, path_map?)`
+2. [ ] Extend `pregolya-graph/src/definition.rs` — `add_conditional_edges(source, path_fn, path_map?)`
 3. [ ] Add path_fn panic safety to `pregolya-graph/src/bsp_engine.rs` using `catch_unwind`
 4. [ ] Add path_map compile-time validation in `compile()`
 5. [ ] Create `pregolya-graph/src/scheduler.rs` (if not created in S-1.14) — PUSH task queue, TASKS topic
@@ -172,7 +172,7 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-graph/src/graph/state.rs` | modify | Add `add_conditional_edges(source, path_fn, path_map?)` |
+| `pregolya-graph/src/definition.rs` | modify | Add `add_conditional_edges(source, path_fn, path_map?)` |
 | `pregolya-graph/src/bsp_engine.rs` | modify | Add `catch_unwind` around path_fn dispatch; `E-GRAPH-011` error |
 | `pregolya-graph/src/scheduler.rs` | create/modify | PUSH task queue, TASKS topic, `ctx.send()` |
 | `pregolya-graph/src/types.rs` | modify | Add `task_id` hash fn, `UntrackedValue`, `PushTask` struct |

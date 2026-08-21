@@ -2495,3 +2495,31 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **P2A-008 (2026-08-20): NOT CLEAN. Streak 0/3.** 5 findings (4M/1L). MED F-P2A008-01: dependency-graph.md spurious reverse-edge S-1.09→S-2.10 removed — full 39-story reciprocity re-sweep confirms this was the sole defect (78 other edges consistent). MED F-P2A008-02 (POL-4): S-1.21 `canonicalize_beneath_root` §Architecture Mapping + §Purity Classification reclassified Pure→Effectful Shell (owner S-1.09 precedence: calls std::fs::canonicalize; S-1.21 calls S-1.09's function, inheriting its effectfulness). MED F-P2A008-03 (POL-8): S-2.10 out-of-scope E-MCP-005 taxonomy task removed (taxonomy authoring belongs to S-2.11/BC-2.09.006; already registered in the appropriate story). MED F-P2A008-04 (POL-4/9): Runnable-composition module-name drift adjudicated by architect → canonical `core::runnable` (singular); module-decomposition §core::runnable (row description covers RunnableParallel/Passthrough/Assign combinators); VP-014 §verification-target harness import and target path aligned to singular form; S-1.05 module paths aligned. LOW F-P2A008-05: S-2.11 Previous Story Intelligence narrative corrected (S-2.11 introduces ToolRegistry, not S-2.10; S-2.10 is MCP client). Regression check: all P2A-003..007 fixes HELD; F-02/TDIV-009 vendor-heading NOT re-flagged (accepted). Corpus unchanged (133 BC / 14 VP / 115 EC / 12 VP-anchor / 8 RG). All 5 findings closed by fix-burst. D-215 minted. Streak 0/3. NEXT P2A-009.
 
 **Convergence dim-5 (Phase-2 P2A-008):** Counter **0/3 — NOT CLEAN (D-215; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →8→2→3→4. NEXT: P2A-009 (streak restart 1/3 attempt). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted.
+
+---
+
+### P2A-009 — Pass 9 (2026-08-20, burst 339)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|---------|
+| P2A-009 | 2026-08-20 | 8 | 1 | 3 | 3 | 1 | HIGH | 0/3 | NOT CLEAN |
+
+**Findings:**
+- F-P2A009-01 (CRIT, POL-4): S-1.14 AC-008 Red-Gate contract INVERSION — missing NamedBarrierValue writer → NO error / no-trigger per BC-2.02.003 PC1–3 (was falsely Err E-GRAPH-004); Red-Gate test renamed `_error`→`_no_trigger`; NEW AC-011 added for the real E-GRAPH-004 duplicate-writer case.
+- F-P2A009-02 (HIGH): S-1.14 AC-007 BarrierValue missing-writer → no-error / halt-naturally (BC-2.02.002).
+- F-P2A009-03 (HIGH): S-1.14 AC-002/EC-005 E-GRAPH-008 (UnreachableGraph) / E-GRAPH-009 (DuplicateNodeName) swap corrected; EC-001 E-GRAPH-007 reframed runtime-not-compile.
+- F-P2A009-04 (HIGH, POL-6): S-1.17 StreamEvent module event.rs→event_emitter.rs (module-decomposition + BC-2.06.001 canonical).
+- F-P2A009-05 (MED, POL-4): S-1.24 reframed emission-only (variants owned by S-1.17).
+- F-P2A009-06 (MED): S-2.06 E-CORE-005 Category::Config→Category::Val + canonical message (reused existing VAL code; taxonomy unchanged, 115 error codes).
+- F-P2A009-07 (MED, POL-6): architect Disposition A — S-1.27 config::security→security + routes::sse→streaming; S-1.14/S-1.15 graph/state.rs→definition.rs (canonical flat modules; no spec change needed).
+- F-P2A009-08 (LOW): S-2.02 guarded.rs Architecture-Mapping purity class pure→effectful.
+
+**Regression check:** All P2A-003..008 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (accepted per rubric note).
+
+**Coverage note (Level-2 partial):** S-1.05–1.13, S-1.21–1.23, S-2.01, S-2.03–2.05, S-2.10, S-2.11, S-6.01, and all 14 holdout scenarios NOT re-read this pass. P2A-010 must complete this slice before streak can be trusted as 1/3.
+
+**Corpus unchanged:** 133 BC / 14 VP / 115 EC / 12 VP-anchor / 8 RG.
+
+**D-216 minted.** Fix-burst COMPLETE. Streak 0/3. NEXT P2A-010 (must complete un-read slice).
+
+**Convergence dim-5 (Phase-2 P2A-009):** Counter **0/3 — NOT CLEAN (D-216; 2026-08-20)**. Fix-burst dispatched; streak 0/3. trajectory-tail →2→3→4→8. NEXT: P2A-010 (streak restart 1/3 attempt; un-read slice mandatory). Rubric notes carried forward: F-02 holdout `## Category:` heading HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. TDIV-009-VENDOR accepted.

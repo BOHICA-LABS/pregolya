@@ -65,8 +65,11 @@ Verified by `test_BC_2_08_006_reqwest_rustls_tls_only()` — grep workspace for 
 ### AC-003 (traces to BC-2.08.006 postcondition 3)
 Each SDK builder (e.g., `OpenAiSdkBuilder`) requires `.timeout(Duration)` to be called before
 `.build()`. If `.timeout()` is never called, `build()` returns:
-`Err(PregolyaError::new(Component::Core, Category::Config, RetryHint::Never, "E-CORE-005",
-"missing-timeout: reqwest client must have an explicit timeout; call .timeout(Duration) on the builder"))`.
+`Err(PregolyaError::new(Component::Core, Category::Val, RetryHint::Never, "E-CORE-005",
+"Validation failed for 'timeout': must be set; use .timeout(Duration) on the builder"))`.
+`Category::Val` is correct for E-CORE-005 (VAL per error-taxonomy.md; a missing required builder
+field is a construction-time validation failure; `Category::Config` is not a defined category).
+The message must follow the canonical E-CORE-005 format: `"Validation failed for '<field>': <reason>"`.
 Verified by `test_BC_2_08_006_sdk_builder_missing_timeout_returns_e_core_005()`.
 
 ### AC-004 (traces to BC-2.08.006 postcondition 4)
@@ -168,7 +171,7 @@ Verified by `test_BC_2_08_006_no_silent_default_timeout()`.
 8. [ ] Create `pregolya-openai/Cargo.toml` — depends on `pregolya-core` + `pregolya-openai-sdk`; create `src/lib.rs` stub
 9. [ ] Create `pregolya-anthropic/Cargo.toml` + `src/lib.rs` stub — depends on pregolya-core + pregolya-anthropic-sdk
 10. [ ] Create `pregolya-ollama/Cargo.toml` + `src/lib.rs` stub — depends on pregolya-core + pregolya-ollama-sdk
-11. [ ] Register `E-CORE-005` (`Component::Core, Category::Config, RetryHint::Never`) in error taxonomy
+11. [ ] Confirm `E-CORE-005` in error taxonomy (already registered as `Component::Core, Category::Val, RetryHint::Never`; no new registration required — verify the row exists in error-taxonomy.md §Component: CORE)
 12. [ ] Add all 6 crates to workspace root `Cargo.toml` members list
 13. [ ] Run `cargo nextest run -p pregolya-openai-sdk -p pregolya-anthropic-sdk -p pregolya-ollama-sdk` — all tests pass
 
@@ -180,8 +183,10 @@ S-1.04 established `Runnable` and `pregolya-core` foundational types. The adapte
 split and the SDK builders — no Runnable implementations yet.
 
 S-1.02 established `PregolyaError` with `Component`, `Category`, `RetryHint`. `E-CORE-005`
-uses `Component::Core, Category::Config, RetryHint::Never`. Register the code in the
-error taxonomy before implementation.
+uses `Component::Core, Category::Val, RetryHint::Never`. The code is already registered in
+error-taxonomy.md §Component: CORE; verify the row exists before implementation — no new
+registration required. `Category::Config` is not a defined category in the taxonomy; the
+correct enum variant for VAL-category codes is `Category::Val`.
 
 The CLAUDE.md code convention "reqwest TLS backend — rustls-tls mandatory" applies to
 ALL reqwest deps workspace-wide. This story is the FIRST time reqwest is added to the

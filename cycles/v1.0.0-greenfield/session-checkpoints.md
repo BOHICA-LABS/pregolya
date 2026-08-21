@@ -2588,3 +2588,26 @@ No new lessons minted — story-writer/PO/state-manager remediation. See cycles/
 
 ### VALIDATOR BASELINES (burst-325; 14 blocking + 1 advisory — unchanged by Phase-2 authoring + P2A-001..006 (sample) fix-bursts)
 verify-no-version-pins: PASS=209+ · verify-adr-decision-refs: PASS=399+ · records-lint: PASS (L10 WARN advisory — 7-hex SHA in bc-authoring-plan changelog prose, non-blocking) · verify-changelog-date-monotonicity: PASS · verify-changelog-date-validity: PASS · verify-enum-variant-casing: PASS · verify-signature-canon: PASS=5 · verify-error-notation-canon: PASS · verify-form-a-changelog-direction: PASS · verify-arch-anchor-resolution: PASS=133+ · verify-module-canonicality: PASS=8 · verify-bc-frontmatter-schema: PASS=133 · verify-tv-registry-count: PASS · **verify-adr-anchor-citations: PASS (BLOCKING; B1 60+B2 198 = 258 cites 0 phantom; 14 self-probes)**.
+
+---
+
+## Extracted from STATE.md on 2026-08-20 — STATE.md v5.27 Session Checkpoint (replaced by v5.28)
+
+### v5.27 RESUME IN ONE BREATH
+Pregolya (Rust port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 COMPLETE (3/3 converged, gate closed D-197). Phase 2 content COMPLETE (39 story specs, 133/133 BC coverage; 14 holdout scenarios sealed). In Phase-2 adversarial story convergence (BC-5.39.001 3-CLEAN, streak 0/3). NEXT: adversary **P2A-009** (streak restart 1/3 attempt) on the post-P2A-008-fix HEAD. Inject rubric note: F-02 holdout `## Category:` heading is HUMAN-ACCEPTED (TDIV-009) — do NOT re-flag. OBS-1 process-gap open (DAG reciprocity validator — codification required before Phase-2 gate close).
+
+#### v5.27 HEADS
+- develop `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: (run `git -C .factory log -1 --format='%h'` for HEAD at time of v5.27)
+- Story worktrees: NONE. Open PRs: NONE.
+
+#### v5.27 NEXT-ACTION
+dispatch `vsdd-factory:adversary` **P2A-009** — fresh context, Phase-1-active POL rubric (POL-1..31+46/47), form-B verbatim evidence, dual CLEAN(strict)/CLEAN(PR-merge) verdict, deep-read fresh story slice + re-derive coverage matrices + regression-check P2A-001..008 (sample) fixes held. TDIV-009-note: F-02 holdout `## Category:` heading HUMAN-ACCEPTED — do NOT re-flag. Streak 0/3 → target 3/3.
+
+#### v5.27 PRODUCT BACKLOG
+1. P2A-009 (adversary, BC-5.39.001; streak 0/3 → target 3/3; rubric note: TDIV-009 holdout heading accepted)
+2. OBS-1 (DAG reciprocity validator; required before Phase-2 gate close)
+3. Pre-Phase-2-gate consistency audit → Phase 3
+
+#### v5.27 OPS NOTES
+compact-state v5.27 COMPLETE. P2A-008 fix-burst COMPLETE (D-215; 5 findings 4M/1L). P2A-001..004 Phase-Progress rows + P2A-003 step row archived to burst-log. Next: P2A-009 adversarial re-pass.

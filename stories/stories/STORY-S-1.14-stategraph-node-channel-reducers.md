@@ -51,7 +51,7 @@ tdd_mode: strict
 |----|-------|------------|
 | BC-2.02.001 | StateGraph Builder API — Node and Channel Registration | AC-001..AC-003 |
 | BC-2.02.002 | Channel Semantics — LastValue, Append, BarrierValue | AC-004..AC-007 |
-| BC-2.02.003 | NamedBarrierValue Missing-Writer Detection (Red Gate) | AC-008 |
+| BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate) | AC-008, AC-011 |
 | BC-2.02.004 | EphemeralValue Cleared After Each Super-Step (Red Gate) | AC-009..AC-010 |
 
 ## Acceptance Criteria
@@ -59,8 +59,8 @@ tdd_mode: strict
 ### AC-001 (traces to BC-2.02.001 postcondition 1 — builder accepts valid node and channel registration)
 `StateGraph::builder()` followed by `add_node(name, async_fn)` and channel schema registration compiles and does not error for a valid graph. Verified by `test_BC_2_02_001_builder_accepts_valid_graph()`.
 
-### AC-002 (traces to BC-2.02.001 postcondition 2 — compile errors on invalid graph)
-`compile()` returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-007, .. })` when a node references a non-existent channel, `E-GRAPH-008` when a node name is already registered, and `E-GRAPH-009` when the graph has no entry point. Verified by `test_BC_2_02_001_compile_rejects_invalid_graphs()`.
+### AC-002 (traces to BC-2.02.001 postcondition 2 — compile errors on invalid graph; add_node errors on duplicate name)
+`compile()` returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-008, .. })` when the graph has no reachable path from `START` (no entry edge or zero nodes). `add_node()` returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-009, .. })` when a node name is already registered. Writing to an unregistered channel key returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-007, .. })` at runtime from `invoke`/`stream` at the `apply_writes` stage — this is NOT a compile-time error. Verified by `test_BC_2_02_001_compile_rejects_invalid_graphs()`.
 
 ### AC-003 (traces to BC-2.02.001 postcondition 3 — channels materialised at compile time)
 All channels declared in the state schema are materialised before the first super-step begins; no channel is created lazily during execution. Verified by `test_BC_2_02_001_channels_materialised_at_compile()`.
@@ -74,11 +74,11 @@ When two tasks in the same super-step both write to the same `LastValue<T>` chan
 ### AC-006 (traces to BC-2.02.002 postcondition 2 — Append channel accumulates in deterministic order)
 An `Append`/`BinaryOperatorAggregate<T,Op>` channel accumulates every write from the current super-step. Values are ordered by `(task_id, channel_name)` lexicographic ascending via sorted `Vec<WriteRecord { task_id, channel_name, value }>` before reduction — not via unordered `HashMap` iteration. Verified by `test_BC_2_02_002_append_channel_deterministic_order()`.
 
-### AC-007 (traces to BC-2.02.002 postcondition 3 — BarrierValue blocks until all writers complete)
-A `BarrierValue` channel does not unblock until all expected writers have written in the current super-step. If any expected writer fails to write, the engine emits an error. Verified by `test_BC_2_02_002_barrier_value_blocks_until_all_writers()`.
+### AC-007 (traces to BC-2.02.002 postcondition 3 — BarrierValue unavailable until all writers complete; no error on missing write)
+A `BarrierValue` channel becomes `available()` only after all registered upstream writers have each delivered exactly one write in the current super-step. If any expected writer fails to deliver in that step, the channel is NOT available; the downstream node is NOT triggered; no error is raised. If no other nodes are triggered, the graph halts naturally (run transitions to `completed`). Verified by `test_BC_2_02_002_barrier_value_blocks_until_all_writers()`.
 
-### AC-008 (traces to BC-2.02.003 postcondition 1 — NamedBarrierValue missing-writer error; RED GATE)
-When a `NamedBarrierValue` channel has a declared writer that does not write in the current super-step, the engine returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-004, .. })` with fields `{ channel, writer, step }`. This test MUST be written before any implementation and MUST fail on stubs before the feature is implemented (Red Gate discipline, BC-2.02.003). Verified by `test_BC_2_02_003_named_barrier_missing_writer_error()`.
+### AC-008 (traces to BC-2.02.003 postconditions 1/2/3 — NamedBarrierValue missing-writer causes silent non-trigger, no error; RED GATE)
+When a `NamedBarrierValue` channel has a declared writer that does not deliver a write in the current super-step, the channel's `is_available()` returns `false`; the downstream node is NOT triggered; no error is raised; the run does NOT transition to `failed`. This test MUST be written before any implementation and MUST fail on stubs before the feature is implemented (Red Gate discipline, BC-2.02.003 — the default stub behavior is likely to raise an error or fail to implement the no-trigger contract). Verified by `test_BC_2_02_003_named_barrier_missing_writer_no_trigger()`.
 
 ### AC-009 (traces to BC-2.02.004 postcondition 1 — EphemeralValue absent from checkpoint; RED GATE)
 An `EphemeralValue<T>` channel's value is not written to the checkpoint and is absent at the start of the next super-step. This test MUST be written before any implementation and MUST fail on stubs (Red Gate discipline, BC-2.02.004). Verified by `test_BC_2_02_004_ephemeral_value_absent_after_step()`.
@@ -86,11 +86,14 @@ An `EphemeralValue<T>` channel's value is not written to the checkpoint and is a
 ### AC-010 (traces to BC-2.02.004 postcondition 2 — EphemeralValue absent from checkpoint snapshot)
 A checkpoint snapshot of graph state taken after a super-step that wrote an `EphemeralValue<T>` contains no key for that channel. Verified by `test_BC_2_02_004_ephemeral_value_not_in_checkpoint()`.
 
+### AC-011 (traces to BC-2.02.003 EC-003 — NamedBarrierValue duplicate writer raises E-GRAPH-004)
+When a declared writer of a `NamedBarrierValue` channel writes twice in the same super-step (e.g., two `Send` tasks bearing the same writer name both deliver to the channel in that step), the engine returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-004, .. })` with fields `{ channel, writer, step }`. Verified by `test_BC_2_02_003_named_barrier_duplicate_writer_error()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|---------------|
-| StateGraph builder | `pregolya-graph/src/graph/state.rs` | Pure (builder, no I/O) |
+| StateGraph builder | `pregolya-graph/src/definition.rs` | Pure (builder, no I/O) |
 | LastValue channel | `pregolya-graph/src/channels/last_value.rs` | Pure (data + reduce logic) |
 | Append/BinaryOperator channel | `pregolya-graph/src/channels/append.rs` | Pure |
 | BarrierValue channel | `pregolya-graph/src/channels/barrier.rs` | Pure |
@@ -104,7 +107,7 @@ A checkpoint snapshot of graph state taken after a super-step that wrote an `Eph
 | Module | Classification | Justification |
 |--------|---------------|---------------|
 | `channels/` (all five channel types) | pure-core | No I/O; deterministic data transformation with immutable inputs |
-| `graph/state.rs` (builder + compile) | pure-core | Validation and construction; no side effects |
+| `definition.rs` (builder + compile) | pure-core | Validation and construction; no side effects |
 | `types.rs` (WriteRecord, ChannelKind) | pure-core | Data types only |
 | `bsp_engine.rs` (reduce_super_step, finish) | effectful-shell | Calls checkpoint write (I/O) in finish(); pure reduce logic extracted for Kani harness in S-1.16 |
 
@@ -112,11 +115,11 @@ A checkpoint snapshot of graph state taken after a super-step that wrote an `Eph
 
 | ID | Scenario | Expected Behavior |
 |----|----------|-------------------|
-| EC-001 | Node references channel not in schema | `compile()` returns `E-GRAPH-007 { channel, .. }` |
+| EC-001 | Node writes to unregistered channel key at runtime | `invoke`/`stream` returns `E-GRAPH-007 UnknownChannelKey { node_id, key }` at the `apply_writes` stage; not a compile-time error |
 | EC-002 | Two tasks write same `LastValue` channel in one super-step | `E-GRAPH-001 { channel, task_ids, step }` — deterministic error, not UB |
 | EC-003 | `NamedBarrierValue` writer list is empty | Treated as immediately ready; no blocking, no error |
 | EC-004 | `EphemeralValue` read before any write in current super-step | Returns `None`; no panic; no `unwrap` |
-| EC-005 | `compile()` called on graph with zero nodes | `E-GRAPH-009 { .. }` |
+| EC-005 | `compile()` called on graph with zero nodes | `E-GRAPH-008 { .. }` — zero nodes means no reachable path from `START` (UnreachableGraph) |
 | EC-006 | Append channel receives zero writes in super-step | Channel retains prior accumulated value; no error |
 
 ## Token Budget Estimate (MANDATORY)
@@ -126,7 +129,7 @@ A checkpoint snapshot of graph state taken after a super-step that wrote an `Eph
 | This story spec | ~3,500 |
 | BC files (4 BCs) | ~6,000 |
 | `channels/` module stubs (5 files) | ~1,500 |
-| `graph/state.rs` stub | ~800 |
+| `definition.rs` stub | ~800 |
 | `bsp_engine.rs` partial (reduce only) | ~1,200 |
 | Test files (unit + Red Gate) | ~3,000 |
 | Error taxonomy reference | ~500 |
@@ -137,7 +140,7 @@ A checkpoint snapshot of graph state taken after a super-step that wrote an `Eph
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write Red Gate failing test for `test_BC_2_02_003_named_barrier_missing_writer_error()` — verify it fails on stubs
+1. [ ] Write Red Gate failing test for `test_BC_2_02_003_named_barrier_missing_writer_no_trigger()` — verify it fails on stubs (stub must not implement the is_available()=false / no-trigger / no-error contract)
 2. [ ] Write Red Gate failing test for `test_BC_2_02_004_ephemeral_value_absent_after_step()` — verify it fails on stubs
 3. [ ] Write full AC test suite in `pregolya-graph/tests/channel_semantics.rs`
 4. [ ] Create `pregolya-graph/src/channels/mod.rs` (re-export only)
@@ -146,11 +149,12 @@ A checkpoint snapshot of graph state taken after a super-step that wrote an `Eph
 7. [ ] Create `pregolya-graph/src/channels/barrier.rs` — `BarrierValue`
 8. [ ] Create `pregolya-graph/src/channels/named_barrier.rs` — `NamedBarrierValue` (declared writers)
 9. [ ] Create `pregolya-graph/src/channels/ephemeral.rs` — `EphemeralValue<T>` (not in checkpoint)
-10. [ ] Create `pregolya-graph/src/graph/state.rs` — `StateGraph::builder()` + `compile()`
+10. [ ] Create `pregolya-graph/src/definition.rs` — `StateGraph::builder()` + `compile()` (flat layout; no `graph/` subdir)
 11. [ ] Create `pregolya-graph/src/types.rs` — `WriteRecord`, `CompiledStateGraph`, `ChannelKind`
 12. [ ] Register `graph.channel.reduced` in Canonical Structured Event Catalog (SAP-1)
 13. [ ] Verify `#[non_exhaustive]` on all public enums and structs in channels and types
 14. [ ] Run `cargo nextest run -p pregolya-graph --no-fail-fast` — all tests green
+15. [ ] Write test for `test_BC_2_02_003_named_barrier_duplicate_writer_error()` — covers AC-011 (E-GRAPH-004 DuplicateBarrierWrite; BC-2.02.003 EC-003); add to `pregolya-graph/tests/channel_semantics.rs`
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -196,8 +200,7 @@ Exact versions are pinned in the workspace root `Cargo.toml`. Consult `.factory/
 | `pregolya-graph/src/channels/barrier.rs` | create | `BarrierValue` (all-writers-required) |
 | `pregolya-graph/src/channels/named_barrier.rs` | create | `NamedBarrierValue` with declared-writers list |
 | `pregolya-graph/src/channels/ephemeral.rs` | create | `EphemeralValue<T>` — cleared in `bsp_engine.finish()`, not in checkpoint |
-| `pregolya-graph/src/graph/mod.rs` | create | Re-export only |
-| `pregolya-graph/src/graph/state.rs` | create | `StateGraph`, `StateGraphBuilder`, `compile()` returning `CompiledStateGraph` |
+| `pregolya-graph/src/definition.rs` | create | `StateGraph`, `StateGraphBuilder`, `compile()` returning `CompiledStateGraph` (flat layout; no `graph/` subdir) |
 | `pregolya-graph/src/types.rs` | create | `WriteRecord`, `CompiledStateGraph`, `ChannelKind` |
 | `pregolya-graph/src/bsp_engine.rs` | create (partial) | `reduce_super_step`, `finish` — shared with S-1.16 |
-| `pregolya-graph/tests/channel_semantics.rs` | create | AC-001..AC-010 + Red Gate tests |
+| `pregolya-graph/tests/channel_semantics.rs` | create | AC-001..AC-011 + Red Gate tests |

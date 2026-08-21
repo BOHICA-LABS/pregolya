@@ -126,10 +126,10 @@ If a second SSE or unary execution request arrives for a `run_id` that is alread
 | Component | Module | Crate | Pure/Effectful |
 |-----------|--------|-------|---------------|
 | `CronScheduler` | `pregolya_server::cron` | pregolya-server | Effectful (timer + thread creation) |
-| `SecurityConfig` | `pregolya_server::config::security` | pregolya-server | Pure (configuration struct) |
+| `SecurityConfig` | `pregolya_server::security` | pregolya-server | Pure (configuration struct) |
 | `IdempotencyStore` trait | `pregolya_server::store::idempotency` | pregolya-server | Pure (trait) |
 | `RateLimitStore` trait | `pregolya_server::store::rate_limit` | pregolya-server | Pure (trait) |
-| `SseRoutes` | `pregolya_server::routes::sse` | pregolya-server | Effectful (SSE stream + engine) |
+| `SseRoutes` | `pregolya_server::streaming` | pregolya-server | Effectful (SSE stream + engine) |
 | `InMemoryRunStore` | `pregolya_server::store::run_memory` | pregolya-server | Effectful (in-memory state) |
 | `SqliteRunStore` | `pregolya_server::store::run_sqlite` | pregolya-server | Effectful (SQLite I/O) |
 
@@ -169,12 +169,12 @@ If a second SSE or unary execution request arrives for a `run_id` that is alread
 ## Tasks
 
 - [ ] Create `crates/pregolya-server/src/cron/mod.rs` — `CronSchedule`, `CronScheduler`
-- [ ] Create `crates/pregolya-server/src/config/security.rs` — `SecurityConfig`, validate on startup
+- [ ] Create `crates/pregolya-server/src/security.rs` — `SecurityConfig`, validate on startup (flat; no `config/` subdir)
 - [ ] Create `crates/pregolya-server/src/store/idempotency.rs` — `IdempotencyStore` trait + in-memory impl
 - [ ] Create `crates/pregolya-server/src/store/rate_limit.rs` — `RateLimitStore` trait + in-memory impl
 - [ ] Create `crates/pregolya-server/src/store/run_memory.rs` — `InMemoryRunStore`
 - [ ] Create `crates/pregolya-server/src/store/run_sqlite.rs` — `SqliteRunStore`
-- [ ] Create `crates/pregolya-server/src/routes/sse.rs` — SSE streaming endpoint
+- [ ] Create `crates/pregolya-server/src/streaming.rs` — SSE streaming endpoint (flat; no `routes/` subdir)
 - [ ] Write failing tests for AC-001..AC-013 before any implementation
 - [ ] Implement `SecurityConfig::default()` — empty allowed_origins, no debug key
 - [ ] Implement `SecurityConfig::validate()` — reject `debug_route_key: Some("")`
@@ -231,16 +231,13 @@ crates/pregolya-server/
     cron/
       mod.rs                         # re-export only
       schedule.rs                    # CronSchedule, CronScheduler, skip policy
-    config/
-      mod.rs                         # re-export only
-      security.rs                    # SecurityConfig (#[non_exhaustive])
+    security.rs                      # SecurityConfig (#[non_exhaustive]) — flat; no config/ subdir (server::security, DI-013)
     store/
       idempotency.rs                 # IdempotencyStore trait + InMemoryIdempotencyStore
       rate_limit.rs                  # RateLimitStore trait + InMemoryRateLimitStore (token-bucket)
       run_memory.rs                  # InMemoryRunStore
       run_sqlite.rs                  # SqliteRunStore (durable)
-    routes/
-      sse.rs                         # SSE streaming endpoint (same CompiledGraph engine)
+    streaming.rs                     # SSE streaming endpoint (same CompiledGraph engine) — flat; no routes/ subdir (server::streaming, DI-011)
   tests/
     cron_tests.rs                    # firing isolation, skip policy, queue-full WARN
     security_config_tests.rs         # defaults, CORS wildcard WARN, empty debug key rejection
@@ -248,5 +245,5 @@ crates/pregolya-server/
     sse_streaming_tests.rs           # event types, node_stream name, run_end on completion only
 ```
 
-**Files to create (new):** all cron/, config/, and new store/ and sse files.
+**Files to create (new):** all cron/ files, `security.rs` (flat), new store/ files, and `streaming.rs` (flat).
 **Files to modify (existing):** `pregolya-server/src/lib.rs` (register new routes, store construction), `pregolya-server/Cargo.toml` (add cron, rusqlite if not present), Canonical Structured Event Catalog (3 new event_type rows).
