@@ -11,20 +11,19 @@ phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-20/BC-2.20.001.md
   - .factory/specs/behavioral-contracts/ss-20/BC-2.20.002.md
-  - .factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "754d7f4"
+input-hash: "bf61636"
 traces_to: .factory/stories/STORY-INDEX.md
-points: 8
+points: 5
 depends_on: [S-1.19, S-1.04]
 blocks: [S-2.03]
-behavioral_contracts: [BC-2.20.001, BC-2.20.002, BC-2.20.003]
+behavioral_contracts: [BC-2.20.001, BC-2.20.002]
 verification_properties: []
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 2
-target_module: [pregolya-core, pregolya-vectorstores]
+target_module: pregolya-core
 subsystems: [SS-20]
 estimated_days: 2
 assumption_validations: []
@@ -46,7 +45,6 @@ tdd_mode: strict
 |----|-------|---------|
 | BC-2.20.001 | Retriever Trait — get_relevant_documents Async Dyn-Compatible; Document Carrier Type; Arc<dyn Retriever> Graph Seam | P1 |
 | BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context (DI-012 Coverage Obligation) | P0 |
-| BC-2.20.003 | VectorStoreRetriever — SearchType Enum (Similarity / SimilarityScoreThreshold / Mmr); k / fetch_k / lambda_mult Configuration; Constructed via as_retriever() | P1 |
 
 ## Acceptance Criteria
 
@@ -84,7 +82,7 @@ for the Retriever seam.
 **RED GATE**: This test must COMPILE and FAIL before any graph node wires `Arc<dyn Retriever>`.
 A graph node that calls `get_relevant_documents` and attempts to pass `Vec<Document>` directly to
 `inject_context(docs: &GuardedDocuments)` produces a compile-time type error. Test in
-`tests/external/rag-guardrail-compile-fail/`. Verified by `test_BC_2_20_002_vec_document_not_guarded_compile_fail_rg()`.
+`pregolya-core/tests/external/rag-guardrail-compile-fail/`. Verified by `test_BC_2_20_002_vec_document_not_guarded_compile_fail_rg()`.
 
 ### AC-008 (traces to BC-2.20.002 postcondition 2)
 `GuardedDocuments::rag_ingress(docs, guardrail, BoundaryType::RAGRetrieval)` with a Critical Fail
@@ -108,33 +106,6 @@ The coverage obligation applies to ALL Retriever implementations — custom in-m
 return externally ingested content and must be treated as a RAGRetrieval boundary. Verified by
 `test_BC_2_20_002_coverage_obligation_all_retriever_impls()`.
 
-### AC-012 (traces to BC-2.20.003 postcondition 1)
-`SearchType::Similarity` — `VectorStoreRetriever::get_relevant_documents(query)` dispatches to
-`store.similarity_search(query, k)`. Verified by `test_BC_2_20_003_similarity_search_type_dispatches()`.
-
-### AC-013 (traces to BC-2.20.003 postcondition 2)
-`SearchType::SimilarityScoreThreshold { score_threshold }` dispatches to
-`similarity_search_with_score` and filters to score ≥ threshold. Returns fewer than `k` docs
-when few pass the threshold. Verified by `test_BC_2_20_003_score_threshold_filters_results()`.
-
-### AC-014 (traces to BC-2.20.003 postcondition 3)
-`SearchType::Mmr` dispatches to `store.max_marginal_relevance_search(query, k, fetch_k, lambda_mult)`.
-Verified by `test_BC_2_20_003_mmr_dispatches_to_store()`.
-
-### AC-015 (traces to BC-2.20.003 postcondition 5)
-`VectorStore::as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`
-is a fallible Arc<Self>-receiver constructor. `lambda_mult = 1.5` returns
-`Err(PregolyaError { code: "E-VS-003", .. })`. Verified by `test_BC_2_20_003_as_retriever_invalid_lambda_mult_error()`.
-
-### AC-016 (traces to BC-2.20.003 invariant 1)
-`SearchType` is `#[non_exhaustive]`. External match arms without `_` wildcard fail to compile.
-Verified by compile-fail test `tests/external/search-type-non-exhaustive/`.
-
-### AC-017 (traces to BC-2.20.003 invariant 5)
-`VectorStoreRetriever` has no lifetime parameter; `store: Arc<dyn VectorStore>` internal field
-allows `VectorStoreRetriever: Retriever + 'static`. `Arc<dyn Retriever>` coercion succeeds.
-Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
-
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -142,8 +113,7 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 | `Retriever` trait | `pregolya-core/src/retriever/retriever.rs` | pure-core (trait definition; `retriever/mod.rs` is re-export-only) |
 | `Document` struct | `pregolya-core/src/documents/document.rs` | pure-core (data carrier; `documents/mod.rs` is re-export-only) |
 | `GuardedDocuments` typed wrapper | `pregolya-core/src/retriever/guarded.rs` | effectful (invokes guardrail async fn) |
-| `VectorStoreRetriever` concrete impl | `pregolya-vectorstores/src/retriever.rs` | effectful (delegates to store async methods) |
-| Compile-fail tests | `pregolya-core/tests/external/retriever-dyn-compat/`, `tests/external/document-non-exhaustive/`, `pregolya-vectorstores/tests/external/rag-guardrail-compile-fail/` | test-only |
+| Compile-fail tests | `pregolya-core/tests/external/retriever-dyn-compat/`, `tests/external/document-non-exhaustive/`, `tests/external/rag-guardrail-compile-fail/` | test-only |
 
 ## Purity Classification
 
@@ -152,7 +122,6 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 | `pregolya-core/src/retriever/retriever.rs` | pure-core | Trait definition only; no I/O. `retriever/mod.rs` is re-export-only. |
 | `pregolya-core/src/documents/document.rs` | pure-core | Plain data carrier struct. `documents/mod.rs` is re-export-only. |
 | `pregolya-core/src/retriever/guarded.rs` | effectful (invokes guardrail async fn) | GuardedDocuments::rag_ingress calls async guardrail hook. |
-| `pregolya-vectorstores/src/retriever.rs` | effectful | Delegates to async VectorStore methods. |
 
 ## Edge Cases
 
@@ -161,36 +130,32 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 | EC-001 | Empty `Vec<Document>` from retriever | No guardrail call needed (no content to gate); `Vec::new()` is NOT a policy violation |
 | EC-002 | Backend unavailable (network error) | `Err(PregolyaError { .. })` propagated; no Vec::new() fallback |
 | EC-003 | Large result set (10,000 docs) | All 10,000 docs returned — no silent truncation at trait level |
-| EC-004 | `lambda_mult` outside `[0.0, 1.0]` | `Err(E-VS-003)` at `as_retriever()` time |
-| EC-005 | `fetch_k < k` for MMR search type | `Err(E-VS-003)` at `as_retriever()` time |
-| EC-006 | `k = 0` | `Err(E-VS-003)` — k must be ≥ 1 |
 
 ## Token Budget Estimate (MANDATORY)
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~4,200 |
-| BC files (3 BCs) | ~9,500 |
+| This story spec | ~3,200 |
+| BC files (2 BCs) | ~6,500 |
 | `module-decomposition.md` (SS-20 section) | ~400 |
 | `ADR-014-vectorstore-retriever-abstraction.md` | ~2,500 |
-| Module files (~80 lines each × 4 files) | ~2,800 |
+| Module files (~80 lines each × 3 files) | ~2,100 |
 | Test files (~120 lines) | ~1,800 |
 | Tool outputs | ~500 |
-| **Total** | **~21,700** |
+| **Total** | **~17,000** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~11%** |
+| **Budget usage** | **~8.5%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-017 (test-writer); verify Red Gate (AC-007 must FAIL before `GuardedDocuments` wrapper is implemented)
+1. [ ] Write failing tests for AC-001 through AC-011 (test-writer); verify Red Gate (AC-007 must FAIL before `GuardedDocuments` wrapper is implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
 3. [ ] Create `pregolya-core/src/documents/document.rs` — `Document` struct with `#[non_exhaustive]`; create `pregolya-core/src/documents/mod.rs` as re-export-only (`pub mod document; pub use document::Document;`)
 4. [ ] Create `pregolya-core/src/retriever/retriever.rs` — `Retriever` async trait with `#[async_trait]`, single required method `get_relevant_documents`; create `pregolya-core/src/retriever/mod.rs` as re-export-only (`pub mod retriever; pub mod guarded; pub use retriever::Retriever;`)
 5. [ ] Create `pregolya-core/src/retriever/guarded.rs` — `GuardedDocuments` typed wrapper; `rag_ingress()` method with Critical/Non-Critical fail semantics; `E-CORE-008` error emission
 6. [ ] Add `pub mod retriever; pub mod documents;` to `pregolya-core/src/lib.rs`
-7. [ ] Create `pregolya-vectorstores/src/retriever.rs` — `VectorStoreRetriever` (no lifetime, `Arc<dyn VectorStore>`), `SearchType` enum (`#[non_exhaustive]`), `as_retriever()` fallible constructor, config validation (`k ≥ 1`, `fetch_k ≥ k` for MMR, `lambda_mult ∈ [0.0, 1.0]`)
-8. [ ] Create compile-fail tests for dyn-compat, non-exhaustive Document, SearchType non-exhaustive, and RAG guardrail bypass
-9. [ ] Run `cargo nextest run -p pregolya-core -p pregolya-vectorstores` — all tests pass
+7. [ ] Create compile-fail tests for dyn-compat and non-exhaustive Document; create `pregolya-core/tests/external/rag-guardrail-compile-fail/main.rs` (Red Gate: Vec<Document> not accepted where GuardedDocuments required)
+8. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -198,15 +163,13 @@ S-1.19 (GuardrailHook) established `BoundaryType::RAGRetrieval` in `pregolya-cor
 
 S-1.04 established `Runnable` trait. `Retriever` is a separate trait in `pregolya-core` — it does NOT extend `Runnable`. The `async-trait` crate is already in pregolya-core's dependencies from S-1.04.
 
-BC-2.20.003 specifies `as_retriever(self: Arc<Self>)` as the constructor for `VectorStoreRetriever`. This story creates the `pregolya-vectorstores` crate with its `retriever.rs` module, but does NOT create `InMemoryVectorStore` (that is S-2.03). The `VectorStore` trait itself is defined in S-2.03; `VectorStoreRetriever` here can reference the trait via forward declaration or stub.
+BC-2.20.003 (VectorStoreRetriever, SearchType, as_retriever) is delivered in S-2.03 after the VectorStore trait is defined. This story's scope is pregolya-core only: Retriever trait, Document struct, GuardedDocuments wrapper.
 
 ## Architecture Compliance Rules (MANDATORY)
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `Retriever` trait in `pregolya-core`, NOT `pregolya-vectorstores` | BC-2.20.001 invariant 4; ADR-014 Decision 1 | Dependency graph check; no pregolya-vectorstores dep in pregolya-graph for this seam |
-| `VectorStoreRetriever` has NO lifetime parameter | BC-2.20.003 invariant 5; ADR-014 Decision 2 | Type signature inspection; compile-time test |
-| `as_retriever(self: Arc<Self>)` is synchronous (no `.await`) | BC-2.20.003 invariant (ADR-014 Decision 2) | No async annotation on `as_retriever` |
 | `GuardedDocuments` typed wrapper prevents `Vec<Document>` as graph context input | BC-2.20.002 postcondition; ADR-014 §Decision 6 | Compile-fail test (AC-007) |
 | `GuardedDocuments::rag_ingress` returns `Err(E-CORE-008)` on Critical Fail | BC-2.20.002 postcondition 2; ADR-014 Decision 6 | Unit test AC-008 |
 | `Document` is `#[non_exhaustive]` | BC-2.20.001 postcondition 4 | Compile-fail test AC-004 |
@@ -232,10 +195,6 @@ BC-2.20.003 specifies `as_retriever(self: Arc<Self>)` as the constructor for `Ve
 | `pregolya-core/src/retriever/mod.rs` | CREATE | Re-export only: `pub mod retriever; pub mod guarded; pub use retriever::Retriever;` |
 | `pregolya-core/src/retriever/guarded.rs` | CREATE | `GuardedDocuments` typed wrapper; `rag_ingress()` |
 | `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod retriever; pub mod documents;` |
-| `pregolya-vectorstores/src/lib.rs` | CREATE | Crate root for pregolya-vectorstores; `pub mod retriever;` |
-| `pregolya-vectorstores/src/retriever.rs` | CREATE | `VectorStoreRetriever`, `SearchType` (`#[non_exhaustive]`) |
-| `pregolya-vectorstores/Cargo.toml` | CREATE | New crate; depends on pregolya-core, async-trait, tokio |
 | `pregolya-core/tests/external/retriever-dyn-compat/main.rs` | CREATE | E0038 compile-time gate |
 | `pregolya-core/tests/external/document-non-exhaustive/main.rs` | CREATE | `#[non_exhaustive]` compile-fail gate |
-| `pregolya-vectorstores/tests/external/search-type-non-exhaustive/main.rs` | CREATE | SearchType non-exhaustive compile-fail gate |
-| `pregolya-vectorstores/tests/external/rag-guardrail-compile-fail/main.rs` | CREATE | Red Gate: Vec<Document> not accepted where GuardedDocuments required |
+| `pregolya-core/tests/external/rag-guardrail-compile-fail/main.rs` | CREATE | Red Gate: Vec<Document> not accepted where GuardedDocuments required |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.001
-version: "1.3"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,8 @@ changelog:
   - "1.1 (FIX-BURST-277-WAVE-C/ADR-014-Decision-2-infallibility/2026-07-28): as_retriever infallibility contradiction resolved. PC-2 contradicted BC-2.20.003 Inv-2, TV-004/TV-005, and DI-008 by declaring as_retriever infallible. ADR-014 Decision 2 is authority: fallible signature with no lifetime parameter. Changes: (1) Description: prior `&self`-receiver infallible form -> `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`; VectorStoreRetriever owns Arc<dyn VectorStore>. (2) PC2 method entry: updated to fallible Arc<Self>-receiver signature. (3) Invariant 4: lifetime-bound type and borrowed `&'_ dyn VectorStore` -> Ok(VectorStoreRetriever) owns Arc<dyn VectorStore>; Result return noted. (4) EC-005: borrowed store receiver -> Arc<dyn VectorStore>; non-static VectorStoreRetriever -> Ok(VectorStoreRetriever). (5) Related BCs: VectorStoreRetriever wraps &dyn VectorStore -> owns Arc<dyn VectorStore>."
   - "1.2 (FIX-BURST-278-WAVE-B/D-48-receiver-sweep/2026-07-28): D-48 receiver sweep — all non-dyn-compatible receiver forms corrected to `Arc<Self>` in Description, Postcondition PC-2 method entry, and Edge Case EC-005. See wave-b-po-routing-spec.md Routing Item 7."
   - "1.3 (FIX-BURST-278-WAVE-C/D-48-ratification/2026-07-28): PO ratification of D-48 receiver sweep (wave-b-po-routing-spec.md Routing Items 7a–7c). Substantive verification: (1) PC-2 method list reads 'as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>' — correct fallible Arc<Self>-receiver form per D-48; CORRECT. (2) Inv-4 states 'constructs Ok(VectorStoreRetriever) that owns an Arc<dyn VectorStore> clone, or returns Err(E-VS-003) on invalid config' — consistent with BC-2.20.003 Inv-2 and error-taxonomy.md §E-VS-003; COHERENT. (3) EC-005 reads 'as_retriever(self: Arc<Self>) called via Arc<dyn VectorStore> with valid config' — correct; CORRECT. (4) No non-dyn-compatible borrowed-Arc receiver residue: file confirmed zero occurrences. Ratification: COHERENT."
+  - "1.4 (P2A-021/add-documents-canon/2026-08-21): Canonical ingestion method renamed add_texts → add_documents (Option i — single Document-centric method) per P2A-021 architect-surfaced naming inconsistency ruling. Reference evidence: langchain_core/vectorstores/base.py confirms add_documents is the modern preferred API; add_texts is the legacy parallel-vectors form. Greenfield Rust port has no backward-compat constraint. Changes: (1) PC-2 method entry: add_texts(&self, texts, metadatas) → Result<Vec<String>, PregolyaError> → add_documents(&self, docs: Vec<Document>) → Result<Vec<String>, PregolyaError>; description updated from 'ingests texts' to 'ingests documents'. (2) PC-4: add_texts → add_documents. (3) EC-001: add_texts / texts → add_documents / docs. (4) TV-002: store.add_texts(vec![...], None) → store.add_documents(vec![Document{..}, Document{..}]). Capability anchor justification verbatim quote (CAP-028 name from capabilities-p1-p2.md) left unchanged — capabilities-p1-p2.md §CAP-028 needs add_texts→add_documents alignment (business-analyst scope; flagged to orchestrator)."
+  - "1.5 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs). Capability Anchor Justification verbatim quote synced: add_texts → add_documents to match updated CAP-028 title."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-028
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -29,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "97d9bcd"
+input-hash: "7d516c6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -67,8 +69,8 @@ method returns a concrete (non-opaque) fallible result, validating configuration
 1. `Arc<dyn VectorStore>` compiles without E0038 — confirmed by a compile-time test in
    `tests/external/vectorstore-dyn-compat/`.
 2. `VectorStore` trait instance methods:
-   - `add_texts(&self, texts, metadatas) → Result<Vec<String>, PregolyaError>` — ingests
-     texts, returns assigned document IDs.
+   - `add_documents(&self, docs: Vec<Document>) → Result<Vec<String>, PregolyaError>` — ingests
+     documents, returns assigned document IDs.
    - `similarity_search(&self, query, k) → Result<Vec<Document>, PregolyaError>` — returns
      the top-k documents.
    - `similarity_search_with_score(&self, query, k) → Result<Vec<(Document, f32)>, PregolyaError>`
@@ -80,7 +82,7 @@ method returns a concrete (non-opaque) fallible result, validating configuration
 3. `VectorStoreFactory` trait (separate, `Sized`-bounded):
    - `from_texts_sync(texts, embedding: Arc<dyn Embeddings>, config: Self::Config) → impl Future<Output = Result<Self, PregolyaError>> + Send`
    - Can only be called on a concrete type (not through `dyn VectorStore`).
-4. `add_texts` uses `&self` (interior mutability via `RwLock` in concrete impls). External
+4. `add_documents` uses `&self` (interior mutability via `RwLock` in concrete impls). External
    vectorstore backends are stateless from the client's perspective.
 
 ## Invariants
@@ -101,7 +103,7 @@ method returns a concrete (non-opaque) fallible result, validating configuration
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | `add_texts` with empty `texts` vec | `Ok(vec![])` — zero IDs assigned; no error; idempotent |
+| EC-001 | `add_documents` with empty `docs` vec | `Ok(vec![])` — zero IDs assigned; no error; idempotent |
 | EC-002 | `similarity_search` with `k` larger than the number of indexed documents | `Ok(all_docs)` — returns all available documents (fewer than k); not an error |
 | EC-003 | `delete` with an ID that does not exist | Implementation-defined: either `Ok(())` (idempotent delete) or `Err(...)` (strict delete). The BC does NOT mandate one behavior — implementors must document which semantics they apply. |
 | EC-004 | `Arc<dyn VectorStore>` called across threads concurrently | `VectorStore: Send + Sync` ensures safety; interior mutability via `RwLock` serializes writes in the in-memory impl |
@@ -112,7 +114,7 @@ method returns a concrete (non-opaque) fallible result, validating configuration
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
 | TV-001 | `Arc<dyn VectorStore>` compile-time check (any impl) | Compiles without E0038 | compile-time gate |
-| TV-002 | `store.add_texts(vec!["doc 1", "doc 2"], None) → Result` | `Ok(vec!["id-0", "id-1"])` or similar ID assignments | happy-path |
+| TV-002 | `store.add_documents(vec![Document { page_content: "doc 1", .. }, Document { page_content: "doc 2", .. }]) → Result` | `Ok(vec!["id-0", "id-1"])` or similar ID assignments | happy-path |
 | TV-003 | `store.similarity_search("hello", 3)` on store with 5 docs | `Ok(vec![<3 ranked docs>])` | happy-path |
 | TV-004 | `store.delete(&["id-0"])` | `Ok(())` | happy-path |
 | TV-005 | `VectorStoreFactory::from_texts_sync(texts, arc_embeddings, Config::default())` on concrete type | `Ok(store_instance)` — factory constructor works on concrete type | happy-path (factory) |
@@ -137,7 +139,7 @@ method returns a concrete (non-opaque) fallible result, validating configuration
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-21 story]_
+S-2.03
 
 ## VP Anchors
 
@@ -148,7 +150,7 @@ _[to be filled after story decomposition — Wave 2 SS-21 story]_
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-028 |
-| Capability Anchor Justification | CAP-028 ("VectorStore Trait — add_texts; Similarity Search; MMR; delete; as_retriever (Concrete Return for Dyn-Compat)") per capabilities-p1-p2.md §CAP-028 — this BC specifies the full VectorStore trait instance-method surface, the VectorStoreFactory Sized-bounded separation for E0038 safety, and the as_retriever concrete-return-type requirement that CAP-028 identifies as the foundational document-index contract |
+| Capability Anchor Justification | CAP-028 ("VectorStore Trait — add_documents; Similarity Search; MMR; delete; as_retriever (Concrete Return for Dyn-Compat)") per capabilities-p1-p2.md §CAP-028 — this BC specifies the full VectorStore trait instance-method surface, the VectorStoreFactory Sized-bounded separation for E0038 safety, and the as_retriever concrete-return-type requirement that CAP-028 identifies as the foundational document-index contract |
 | L2 Domain Invariants | DI-008 (all VectorStore methods return Result; no .unwrap() on search or mutation results) |
 | Architecture Authority | ADR-014 Decision 2 (VectorStore trait, VectorStoreFactory separation, as_retriever concrete return, &self rationale) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |

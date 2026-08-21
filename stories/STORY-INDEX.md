@@ -108,13 +108,13 @@ input-hash: "pending"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-2.01 | LC Serialization Round-Trip, Inventory Registry and Reviver Allowlist Security | BC-2.19.001, BC-2.19.002, BC-2.19.003, BC-2.19.004, BC-2.19.005, BC-2.19.006 | SS-19 | pregolya-core | P0 | 13 | [S-1.04, S-1.02] | draft |
-| S-2.02 | Retriever Trait, GuardedDocuments and RAGRetrieval Guardrail Coverage | BC-2.20.001, BC-2.20.002, BC-2.20.003 | SS-20 | pregolya-core, pregolya-vectorstores | P0 | 8 | [S-1.19, S-1.04] | draft |
+| S-2.02 | Retriever Trait, GuardedDocuments and RAGRetrieval Guardrail Coverage | BC-2.20.001, BC-2.20.002 | SS-20 | pregolya-core | P0 | 5 | [S-1.19, S-1.04] | draft |
 
 ### Wave 2 — pregolya-vectorstores (VectorStore Abstraction)
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
-| S-2.03 | VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard and MetadataFilter | BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004 | SS-21 | pregolya-vectorstores | P0 | 8 | [S-2.02, S-1.04] | draft |
+| S-2.03 | VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard and MetadataFilter | BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003 | SS-21 | pregolya-vectorstores | P0 | 10 | [S-2.02, S-1.04] | draft |
 
 ### Wave 2 — pregolya-prompts (Prompt Templates and Injection Safety)
 
@@ -394,7 +394,7 @@ input-hash: "pending"
 |-------|---------------------|-------|---------|
 | BC-2.20.001 | Retriever Trait — Arc<dyn Retriever> Graph Seam | S-2.02 | P1 |
 | BC-2.20.002 | RAGRetrieval Guardrail Coverage Obligation (RG) | S-2.02 | P0 |
-| BC-2.20.003 | VectorStoreRetriever SearchType Config | S-2.02 | P1 |
+| BC-2.20.003 | VectorStoreRetriever SearchType Config | S-2.03 | P1 |
 
 ### SS-21 VectorStore Abstraction (4 BCs)
 

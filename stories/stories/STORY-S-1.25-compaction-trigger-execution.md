@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "7b33280"
+input-hash: "45decc6"
 traces_to:
   - behavioral-contracts/BC-2.10.005
   - behavioral-contracts/BC-2.10.006
@@ -119,6 +119,7 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 | `BudgetConfig` (compaction_trigger/compaction_policy fields) | `pregolya_core::budget` | pregolya-core | Pure (configuration) |
 | `check_watermark_trigger(tokens_remaining, ceiling, fraction)` | `pregolya_core::budget` | pregolya-core | Pure (arithmetic gate; VP-012 Kani proof vehicle) |
 | `run_compaction` | `pregolya_graph::budget` | pregolya-graph | Effectful (calls checkpoint put, emits event) |
+| super-step compaction trigger check | `pregolya-graph/src/scheduler.rs` | pregolya-graph | Effectful (reads run state at super-step boundary; calls `core::budget::check_watermark_trigger`) |
 
 **Subsystem anchor:** SS-10 owns this story's scope because SS-10 is the Budget Governance and Compaction subsystem per ARCH-INDEX Subsystem Registry. `CompactionTrigger` configuration and `check_watermark_trigger` (pure arithmetic) live in `pregolya_core::budget` (file `pregolya-core/src/budget.rs`); the 7-step compaction execution (`run_compaction`) lives in `pregolya_graph::budget` (file `pregolya-graph/src/budget/executor.rs`). Both halves are SS-10 responsibility. The streaming event emission (step 6) is wired from SS-10 into SS-06 via `emit_compaction_event` from S-1.24.
 
@@ -214,4 +215,6 @@ crates/pregolya-graph/
 ```
 
 **Files to create (new):** `pregolya-core/src/budget.rs` (extended with CompactionTrigger fields), `pregolya-core/src/proofs/watermark.rs`, `pregolya-graph/src/budget/executor.rs`.
-**Files to modify (existing):** `pregolya-core/src/lib.rs` (add `pub mod budget` if not already present from S-1.18), `pregolya-graph/src/budget/mod.rs` (add `pub use executor::*;` — S-1.18 already creates this file), super-step loop to add trigger check calling `check_watermark_trigger` from pregolya-core.
+**Files to modify (existing):** `pregolya-core/src/lib.rs` (add `pub mod budget` if not already present from S-1.18), `pregolya-graph/src/budget/mod.rs` (add `pub use executor::*;` — S-1.18 already creates this file), `pregolya-graph/src/scheduler.rs` (super-step-loop compaction trigger check — calls `core::budget::check_watermark_trigger` at super-step boundary).
+
+**Scheduler.rs coordination note:** S-1.25 is in sub-batch 1l — transitively after all other scheduler modifiers (S-1.16 in 1h modifies ceiling/run-ID; S-1.18 in 1g modifies budget evaluation; both feed S-1.16 which feeds S-1.25 via the S-1.25→S-1.24→S-1.23→S-1.20→S-1.16 chain). No new `depends_on` edge is required: the existing DAG guarantees S-1.25 merges after S-1.16 and S-1.18. The compaction trigger check is additive in the per-super-step section — it must be positioned AFTER the budget evaluation from S-1.18 and AFTER the ceiling check from S-1.16.

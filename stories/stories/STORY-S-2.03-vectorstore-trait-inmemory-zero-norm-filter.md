@@ -13,33 +13,34 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.002.md
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.003.md
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.004.md
+  - .factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8c98174"
+input-hash: "7aa199e"
 traces_to: .factory/stories/STORY-INDEX.md
-points: 8
+points: 10
 depends_on: [S-2.02, S-1.04]
 blocks: [S-6.01]
-behavioral_contracts: [BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004]
+behavioral_contracts: [BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003]
 verification_properties: [VP-009]
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 2
 target_module: pregolya-vectorstores
 subsystems: [SS-21]
-estimated_days: 2
+estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 ---
 
-# S-2.03: VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard, and MetadataFilter
+# S-2.03: VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard and MetadataFilter
 
 ## Narrative
 
 - **As a** pregolya library user building RAG pipelines
-- **I want to** interact with vector stores through `Arc<dyn VectorStore>`, backed by an `InMemoryVectorStore` that uses `Arc<dyn Embeddings>` for document embedding and Vec<f32> cosine similarity
-- **So that** I can develop and test vector search logic locally without an external service, with a zero-norm guard that provably never produces NaN cosine similarity, and a `MetadataFilter` contract that prevents partial filter-unsupported implementations from silently returning wrong results
+- **I want to** interact with vector stores through `Arc<dyn VectorStore>`, backed by an `InMemoryVectorStore` that uses `Arc<dyn Embeddings>` for document embedding and Vec<f32> cosine similarity, and obtain a `VectorStoreRetriever` via `as_retriever`
+- **So that** I can develop and test vector search logic locally without an external service, with a zero-norm guard that provably never produces NaN cosine similarity, a `MetadataFilter` contract that prevents partial filter-unsupported implementations from silently returning wrong results, and a `VectorStoreRetriever` that dispatches to the correct search strategy via `SearchType`
 
 ## Behavioral Contracts
 
@@ -49,6 +50,7 @@ tdd_mode: strict
 | BC-2.21.002 | InMemoryVectorStore — Arc<dyn Embeddings> DI, RwLock Storage, Vec<f32> Cosine Similarity | P1 |
 | BC-2.21.003 | InMemoryVectorStore Cosine Similarity Zero-Norm Guard: norm == 0.0 OR !norm.is_finite() → E-VS-001; VP-009 Kani P0 Proof | P0 |
 | BC-2.21.004 | MetadataFilter — FilterClause::Eq / Ne / In #[non_exhaustive]; Default similarity_search_with_filter Impl Returns Err(E-VS-005) on Non-Empty Filter | P1 |
+| BC-2.20.003 | VectorStoreRetriever — SearchType Enum (Similarity / SimilarityScoreThreshold / Mmr); k / fetch_k / lambda_mult Configuration; Constructed via as_retriever() | P1 |
 
 ## Acceptance Criteria
 
@@ -155,6 +157,36 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 `Err(E-VS-005)`, never `Ok(vec![])`. Verified by
 `test_BC_2_21_004_no_silent_empty_return_on_unsupported_filter()`.
 
+### AC-019 (traces to BC-2.21.001 postcondition 2)
+`VectorStore::max_marginal_relevance_search(&self, query: &str, k: usize, fetch_k: usize, lambda_mult: f32) -> Result<Vec<Document>, PregolyaError>` exists on the VectorStore trait and is implemented in `InMemoryVectorStore`. The implementation fetches `fetch_k` candidates by similarity, then selects `k` using Maximal Marginal Relevance scoring.
+Verified by `test_BC_2_21_001_max_marginal_relevance_search_dispatches()`.
+
+### AC-020 (traces to BC-2.21.001 postcondition 2 + BC-2.20.003 postcondition 5)
+`VectorStore::as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` is a synchronous (no `.await`) `Arc<Self>`-receiver constructor. Returns a concrete `VectorStoreRetriever` with no lifetime parameter. Valid config: `lambda_mult ∈ [0.0, 1.0]`, `k ≥ 1`, `fetch_k ≥ k` (for Mmr search type). Invalid config returns `Err(PregolyaError { code: "E-VS-003", .. })`.
+Tests: `test_BC_2_21_001_as_retriever_valid_config()` and `test_BC_2_21_001_as_retriever_invalid_config()`.
+
+### AC-021 (traces to BC-2.20.003 postcondition 1)
+`SearchType::Similarity` — `VectorStoreRetriever::get_relevant_documents(query)` dispatches to
+`store.similarity_search(query, k)`. Verified by `test_BC_2_20_003_similarity_search_type_dispatches()`.
+
+### AC-022 (traces to BC-2.20.003 postcondition 2)
+`SearchType::SimilarityScoreThreshold { score_threshold }` dispatches to
+`similarity_search_with_score` and filters to score ≥ threshold. Returns fewer than `k` docs
+when few pass the threshold. Verified by `test_BC_2_20_003_score_threshold_filters_results()`.
+
+### AC-023 (traces to BC-2.20.003 postcondition 3)
+`SearchType::Mmr` dispatches to `store.max_marginal_relevance_search(query, k, fetch_k, lambda_mult)`.
+Verified by `test_BC_2_20_003_mmr_dispatches_to_store()`.
+
+### AC-024 (traces to BC-2.20.003 invariant 1)
+`SearchType` is `#[non_exhaustive]`. External match arms without `_` wildcard fail to compile.
+Verified by compile-fail test `pregolya-vectorstores/tests/external/search-type-non-exhaustive/`.
+
+### AC-025 (traces to BC-2.20.003 invariant 5)
+`VectorStoreRetriever` has no lifetime parameter; `store: Arc<dyn VectorStore>` internal field
+allows `VectorStoreRetriever: Retriever + 'static`. `Arc<dyn Retriever>` coercion succeeds.
+Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -163,7 +195,8 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 | `InMemoryVectorStore` impl | `pregolya-vectorstores/src/store/in_memory.rs` | effectful (calls async Embeddings) |
 | `MetadataFilter` + `FilterClause` | `pregolya-vectorstores/src/filter.rs` | pure-core |
 | `cosine_similarity` fn | `pregolya-vectorstores/src/store/cosine.rs` | pure-core (pure math, no I/O) |
-| Compile-fail tests | `pregolya-vectorstores/tests/external/vectorstore-dyn-compat/`, `tests/external/filter-non-exhaustive/` | test-only |
+| `VectorStoreRetriever` concrete impl | `pregolya-vectorstores/src/retriever.rs` | effectful (delegates to async VectorStore methods) |
+| Compile-fail tests | `pregolya-vectorstores/tests/external/vectorstore-dyn-compat/`, `tests/external/filter-non-exhaustive/`, `tests/external/search-type-non-exhaustive/`, `tests/external/rag-guardrail-compile-fail/` | test-only |
 
 ## Purity Classification
 
@@ -173,6 +206,7 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 | `pregolya-vectorstores/src/store/cosine.rs` | pure-core | Pure math; no I/O. Zero-norm guard is a pure conditional. |
 | `pregolya-vectorstores/src/filter.rs` | pure-core | Data types only. |
 | `pregolya-vectorstores/src/store/in_memory.rs` | effectful | Calls `embeddings.embed_documents().await`. |
+| `pregolya-vectorstores/src/retriever.rs` | effectful | Delegates to async VectorStore methods; holds `Arc<dyn VectorStore>`. |
 
 ## Edge Cases
 
@@ -186,44 +220,51 @@ override `similarity_search_with_filter`. This is NOT a silent empty-return — 
 | EC-006 | `similarity_search_with_filter` with empty filter | Delegates to `similarity_search` — no error |
 | EC-007 | `similarity_search_with_filter` with non-empty filter on default impl | `Err(E-VS-005)` — fail-safe |
 | EC-008 | `delete` with empty slice | `Ok(())` immediately — no lock contention |
+| EC-009 | `lambda_mult` outside `[0.0, 1.0]` in `as_retriever` | `Err(E-VS-003)` at `as_retriever()` time |
+| EC-010 | `fetch_k < k` for Mmr search type in `as_retriever` | `Err(E-VS-003)` at `as_retriever()` time |
+| EC-011 | `k = 0` in `as_retriever` | `Err(E-VS-003)` — k must be ≥ 1 |
 
 ## Token Budget Estimate (MANDATORY)
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~4,800 |
-| BC files (4 BCs) | ~12,000 |
+| This story spec | ~5,800 |
+| BC files (5 BCs) | ~15,000 |
 | `module-decomposition.md` (SS-21 section) | ~400 |
 | ADR for vectorstore abstraction | ~2,000 |
-| Module files (~100 lines each × 4 files) | ~3,600 |
+| Module files (~100 lines each × 5 files) | ~4,500 |
 | Test files (~150 lines) | ~2,200 |
 | VP-009 kani harness spec (~50 lines) | ~700 |
 | Tool outputs | ~500 |
-| **Total** | **~26,200** |
+| **Total** | **~31,100** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~13%** |
+| **Budget usage** | **~15.5%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-018 (test-writer); verify Red Gate (AC-011 must FAIL before zero-norm guard implemented)
+1. [ ] Write failing tests for AC-001 through AC-025 (test-writer); verify Red Gate (AC-011 must FAIL before zero-norm guard implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
-3. [ ] Create `pregolya-vectorstores/src/store/vector_store.rs` — `VectorStore` async trait (`&self` receivers, `#[async_trait]`), `VectorStoreFactory` with `Sized` bound, and default `similarity_search_with_filter` impl returning `Err(E-VS-005)` on non-empty filter; create `pregolya-vectorstores/src/store/mod.rs` as re-export-only (`pub mod vector_store; pub mod cosine; pub mod in_memory; pub use vector_store::{VectorStore, VectorStoreFactory};`)
-4. [ ] Create `pregolya-vectorstores/src/store/cosine.rs` — `cosine_similarity(a: &[f32], b: &[f32]) -> Result<f32, PregolyaError>` with zero-norm guard `if norm == 0.0 || !norm.is_finite()`
-5. [ ] Create `pregolya-vectorstores/src/store/in_memory.rs` — `InMemoryVectorStore`, `Arc<dyn Embeddings>` DI constructor, `RwLock<Vec<(Document, Vec<f32>)>>` storage, batch embed on `add_documents`
-6. [ ] Create `pregolya-vectorstores/src/filter.rs` — `MetadataFilter` and `FilterClause` (both `#[non_exhaustive]`)
-7. [ ] Register `E-VS-001` (`Component::Vs, Category::Val, RetryHint::Never`) and `E-VS-005` in error taxonomy
-8. [ ] Update `pregolya-vectorstores/src/lib.rs` — `pub mod store; pub mod filter;`
-9. [ ] Create compile-fail tests for VectorStore dyn-compat, VectorStoreFactory Sized split, and MetadataFilter/FilterClause non-exhaustive
-10. [ ] Create `crates/pregolya-vectorstores/src/proofs/zero_norm_guard.rs` — `#[cfg(kani)]` `zero_norm_guard_fail_closed` stub (body `todo!()` for Phase 6 formal hardening; VP-009)
-11. [ ] Run `cargo nextest run -p pregolya-vectorstores` — all tests pass
+3. [ ] Create `pregolya-vectorstores/Cargo.toml` — new crate; depends on pregolya-core, async-trait, tokio, serde_json; `default-features = false, features = ["rustls-tls"]` for reqwest if needed
+4. [ ] Create `pregolya-vectorstores/src/store/vector_store.rs` — `VectorStore` async trait (`&self` receivers, `#[async_trait]`) including `add_documents`, `similarity_search`, `similarity_search_with_score`, `delete`, `max_marginal_relevance_search`, and `as_retriever` methods; `VectorStoreFactory` with `Sized` bound; default `similarity_search_with_filter` impl returning `Err(E-VS-005)` on non-empty filter; create `pregolya-vectorstores/src/store/mod.rs` as re-export-only (`pub mod vector_store; pub mod cosine; pub mod in_memory; pub use vector_store::{VectorStore, VectorStoreFactory};`)
+5. [ ] Create `pregolya-vectorstores/src/store/cosine.rs` — `cosine_similarity(a: &[f32], b: &[f32]) -> Result<f32, PregolyaError>` with zero-norm guard `if norm == 0.0 || !norm.is_finite()`
+6. [ ] Create `pregolya-vectorstores/src/store/in_memory.rs` — `InMemoryVectorStore`, `Arc<dyn Embeddings>` DI constructor, `RwLock<Vec<(Document, Vec<f32>)>>` storage, batch embed on `add_documents`, MMR algorithm for `max_marginal_relevance_search`
+7. [ ] Create `pregolya-vectorstores/src/filter.rs` — `MetadataFilter` and `FilterClause` (both `#[non_exhaustive]`)
+8. [ ] Create `pregolya-vectorstores/src/retriever.rs` — `VectorStoreRetriever` (no lifetime param, `store: Arc<dyn VectorStore>`), `SearchType` enum (`#[non_exhaustive]` with `Similarity`, `SimilarityScoreThreshold { score_threshold }`, `Mmr` variants), dispatch logic in `get_relevant_documents` (Similarity→similarity_search, SimilarityScoreThreshold→similarity_search_with_score+filter, Mmr→max_marginal_relevance_search), lambda_mult/k/fetch_k validation at `as_retriever()` time returning `Err(E-VS-003)` on invalid config
+9. [ ] Register `E-VS-001` (`Component::Vs, Category::Val, RetryHint::Never`) and `E-VS-003`, `E-VS-005` in error taxonomy
+10. [ ] Create `pregolya-vectorstores/src/lib.rs` — `pub mod store; pub mod filter; pub mod retriever;`
+11. [ ] Create compile-fail tests: VectorStore dyn-compat, VectorStoreFactory Sized split, MetadataFilter/FilterClause non-exhaustive, SearchType non-exhaustive, RAG guardrail bypass
+12. [ ] Create `crates/pregolya-vectorstores/src/proofs/zero_norm_guard.rs` — `#[cfg(kani)]` `zero_norm_guard_fail_closed` stub (body `todo!()` for Phase 6 formal hardening; VP-009)
+13. [ ] Run `cargo nextest run -p pregolya-vectorstores` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
 
-S-2.02 established `Arc<dyn Retriever>`, `Document`, and `GuardedDocuments` in `pregolya-core`. This story creates `VectorStore` in `pregolya-vectorstores`. `VectorStoreRetriever` (from S-2.02's `pregolya-vectorstores/src/retriever.rs`) calls the `VectorStore` methods defined in this story — the trait contract for `similarity_search` etc. is now defined here; S-2.02 stubbed the `VectorStore` reference forward.
+S-2.02 delivered `Retriever` trait, `Document`, and `GuardedDocuments` in `pregolya-core`. This story creates the entire `pregolya-vectorstores` crate: `VectorStore` trait (including `max_marginal_relevance_search` and `as_retriever`), `InMemoryVectorStore`, `VectorStoreRetriever`, `SearchType`, `MetadataFilter`, and the MMR algorithm.
 
 S-1.04 established `Runnable` trait. `VectorStore` is NOT a `Runnable` — do not add `pipe` or `invoke` to it. `Embeddings` trait is defined elsewhere (likely S-1.XX, SS-14 or similar); `Arc<dyn Embeddings>` is a dependency. If `Embeddings` is not yet available, create a minimal stub trait in `pregolya-vectorstores` or `pregolya-core` for compilation.
 
 The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both conditions required. The prior art in the CLIP workstream showed that `norm == 0.0`-only guards passed review but missed the infinity overflow path, discovered only in a follow-on adversarial pass. This two-condition form closes that gap.
+
+`VectorStoreRetriever` has NO lifetime parameter — the internal `store: Arc<dyn VectorStore>` field gives it `'static` eligibility. The `as_retriever(self: Arc<Self>)` method is synchronous (no `.await`). These two invariants were established in the BC-2.20.003 contract and must not be relaxed.
 
 ## Architecture Compliance Rules (MANDATORY)
 
@@ -237,6 +278,8 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 | Default `similarity_search_with_filter` returns `Err(E-VS-005)` on non-empty filter — NOT `Ok(vec![])` | BC-2.21.004 invariant 1 | Unit test AC-018 |
 | E-VS-001 message is STATIC — no variable interpolation | BC-2.21.003 postcondition 2 | String equality test |
 | `store/mod.rs` is re-export-only — no trait or type definitions; logic lives in named files (`vector_store.rs`, `cosine.rs`, `in_memory.rs`) | CLAUDE.md §Forbidden patterns (mod.rs logic rule) | Code review; `mod.rs` contains only `pub mod` and `pub use` declarations |
+| `VectorStoreRetriever` has NO lifetime parameter | BC-2.20.003 invariant 5; ADR-014 Decision 2 | Type signature inspection; compile-time test (AC-025) |
+| `as_retriever(self: Arc<Self>)` is synchronous (no `.await`) | BC-2.20.003 invariant (ADR-014 Decision 2) | No async annotation on `as_retriever` |
 
 **Forbidden dependencies:** `pregolya-vectorstores/src/store/cosine.rs` must NOT depend on `ndarray`, `nalgebra`, or any external linear-algebra crate. `pregolya-vectorstores` must NOT depend on `pregolya-graph`.
 
@@ -252,12 +295,16 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-vectorstores/src/store/vector_store.rs` | CREATE | `VectorStore` async trait + `VectorStoreFactory` + default `similarity_search_with_filter` impl |
+| `pregolya-vectorstores/Cargo.toml` | CREATE | New crate; depends on pregolya-core, async-trait, tokio, serde_json |
+| `pregolya-vectorstores/src/lib.rs` | CREATE | `pub mod store; pub mod filter; pub mod retriever;` |
+| `pregolya-vectorstores/src/store/vector_store.rs` | CREATE | `VectorStore` async trait + `VectorStoreFactory` + default `similarity_search_with_filter` impl + `max_marginal_relevance_search` + `as_retriever` |
 | `pregolya-vectorstores/src/store/mod.rs` | CREATE | Re-export only: `pub mod vector_store; pub mod cosine; pub mod in_memory; pub use vector_store::{VectorStore, VectorStoreFactory};` |
 | `pregolya-vectorstores/src/store/cosine.rs` | CREATE | `cosine_similarity` with zero-norm guard |
-| `pregolya-vectorstores/src/store/in_memory.rs` | CREATE | `InMemoryVectorStore` |
+| `pregolya-vectorstores/src/store/in_memory.rs` | CREATE | `InMemoryVectorStore` with MMR implementation |
 | `pregolya-vectorstores/src/filter.rs` | CREATE | `MetadataFilter` + `FilterClause` |
-| `pregolya-vectorstores/src/lib.rs` | MODIFY | Add `pub mod store; pub mod filter;` |
+| `pregolya-vectorstores/src/retriever.rs` | CREATE | `VectorStoreRetriever` (no lifetime, `Arc<dyn VectorStore>`), `SearchType` (`#[non_exhaustive]`), dispatch to store methods, lambda_mult/k/fetch_k validation |
 | `pregolya-vectorstores/src/proofs/zero_norm_guard.rs` | CREATE | VP-009 Kani harness stub — `zero_norm_guard_fail_closed` (body `todo!()` for Phase 6) |
 | `pregolya-vectorstores/tests/external/vectorstore-dyn-compat/main.rs` | CREATE | E0038 compile-time gate |
 | `pregolya-vectorstores/tests/external/filter-non-exhaustive/main.rs` | CREATE | MetadataFilter/FilterClause non-exhaustive compile-fail gate |
+| `pregolya-vectorstores/tests/external/search-type-non-exhaustive/main.rs` | CREATE | SearchType non-exhaustive compile-fail gate |
+| `pregolya-vectorstores/tests/external/rag-guardrail-compile-fail/main.rs` | CREATE | Red Gate: Vec<Document> not accepted where GuardedDocuments required |

@@ -287,7 +287,7 @@ S-6.01 (Kani + cargo-fuzz)
 | SS-17 Formal Verification | BC-2.17.001–002 | S-6.01 | Full |
 | SS-18 Prompts | BC-2.18.001–005 | S-2.04, S-2.05 | Full |
 | SS-19 LC Serialization | BC-2.19.001–006 | S-2.01 | Full |
-| SS-20 Retrieval | BC-2.20.001–003 | S-2.02 | Full |
+| SS-20 Retrieval | BC-2.20.001–003 | S-2.02 (BC-2.20.001–002), S-2.03 (BC-2.20.003) | Full |
 | SS-21 VectorStore | BC-2.21.001–004 | S-2.03 | Full |
 | SS-22 Embeddings | BC-2.22.001–003 | S-2.09 | Full |
 | SS-23 Tools | BC-2.23.001–006 | S-1.21, S-1.22 | Full |

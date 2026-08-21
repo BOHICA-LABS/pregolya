@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "5.38"
+version: "5.39"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-21T16:03:00Z"
+timestamp: "2026-08-21T17:34:00Z"
 phase: 2
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: pregolya
 mode: greenfield+semport
-current_step: "P2A-020 fix-burst COMPLETE (D-226; 2026-08-21): NOT CLEAN (1M/1L) ALL CLOSED — scheduler.rs ownership model established; 5 new DAG edges; Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts. P2A-018/019 CLEAN(strict) streak 1/3→2/3; streak RESET 0/3 by P2A-020. trajectory-tail →3→0→0→2. NEXT: P2A-021 on post-fix-burst HEAD."
+current_step: "P2A-021 fix-burst COMPLETE (D-227; 2026-08-21): NOT CLEAN (1H/3M/1L) ALL CLOSED — VectorStore trait ordering S-2.02→S-2.03; add_documents rename swept corpus-wide; BC anchor fills; S-1.25/S-1.16 PSI rewords. trajectory-tail →0→0→2→5. Streak 0/3. NEXT: P2A-022 on post-fix-burst HEAD."
 current_cycle: v1.0.0-greenfield
-convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (P1-pass-211/212/213; D-195). Phase 2 IN PROGRESS: per-story authoring COMPLETE 39/39; holdout scenarios COMPLETE 14/14 (SEALED). P2A-001..020 (sample) fix-bursts COMPLETE. P2A-018 CLEAN(strict) streak 1/3; P2A-019 CLEAN(strict) streak 2/3; P2A-020 NOT CLEAN (1M/1L; D-226; fix-burst COMPLETE 2026-08-21) streak RESET 0/3. NEXT: Phase-2 adversarial P2A-021. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
+convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (P1-pass-211/212/213; D-195). Phase 2 IN PROGRESS: per-story authoring COMPLETE 39/39; holdout scenarios COMPLETE 14/14 (SEALED). P2A-001..021 (sample) fix-bursts COMPLETE. P2A-021 NOT CLEAN (1H/3M/1L; D-227; fix-burst COMPLETE 2026-08-21) streak RESET 0/3. NEXT: Phase-2 adversarial P2A-022. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: 197 lines (wc-l) | margin from soft-target (200L): 3 lines | margin from actual: 0 lines | compact-state v5.38 (2026-08-21): P2A-020 fix-burst COMPLETE (D-226). P2A-018/019 CLEAN; P2A-020 streak-reset. NEXT: P2A-021. -->
+<!-- STATE.md SIZE BUDGET: 200 lines (wc-l) | margin from soft-target (200L): 0 lines | margin from actual: 0 lines | compact-state v5.39 (2026-08-21): P2A-021 fix-burst COMPLETE (D-227). VectorStore ordering; add_documents rename sweep; BC anchors. Compaction recommended before next large STATE write. NEXT: P2A-022. -->
 
 # Pipeline State: pregolya
 
@@ -37,7 +37,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-08-21 — compact-state v5.38; P2A-020 fix-burst COMPLETE (D-226); P2A-018/019 CLEAN(strict) streak 1/3→2/3; P2A-020 1M/1L ALL CLOSED; streak RESET 0/3; scheduler.rs ownership model; trajectory-tail →3→0→0→2. NEXT: Phase-2 adversarial P2A-021. |
+| **Last Updated** | 2026-08-21 — compact-state v5.39; P2A-021 fix-burst COMPLETE (D-227); VectorStore trait ordering S-2.02→S-2.03; add_documents rename swept corpus-wide; BC anchor fills; S-1.25/S-1.16 PSI rewords; streak RESET 0/3; trajectory-tail →0→0→2→5. NEXT: Phase-2 adversarial P2A-022. |
 
 ## Phase Progress
 
@@ -45,14 +45,16 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
 | 1: Spec Crystallization | COMPLETE | 2026-07-14 | 2026-08-18 | 3/3 CONVERGED on frozen anchor 79eb2f3 (P1-pass-211/212/213; D-195); input-hash drift resolved (D-196); Phase-1 gate CLOSED (D-197; burst-325). ~215 adversarial passes total. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md | trajectory-tail →1→0→0→0; 3/3 CONVERGED |
-| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..020 (sample) fix-bursts COMPLETE D-208..D-226 (sample). NEXT: P2A-021. | trajectory-tail →3→3→0→0→2; 0/3. NEXT: P2A-021. |
-| 2: passes P2A-012..P2A-016 + fix-bursts (COMPRESSED) | COMPLETE | 2026-08-20 | 2026-08-21 | P2A-012..016 + fix-bursts ALL COMPLETE (D-219..D-224). 17 findings (2H/7M/7L/1OBS) all closed: mod.rs-logic ×4 (P2A-012); target_module/BC-priority/DAG S-1.16→S-1.13 (P2A-013); Wave-2 target-crate sweep (P2A-014); D17-Q5 SDK-split corpus-wide (P2A-015); dep-graph 10-batch canonical (P2A-016). Census 133 BC/14 VP. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md. | compressed; detail in trajectory |
+| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..021 (sample) fix-bursts COMPLETE D-208..D-227 (sample). NEXT: P2A-022. | trajectory-tail →3→3→0→0→2→5; 0/3. NEXT: P2A-022. |
+| 2: passes P2A-012..P2A-016 + fix-bursts (COMPRESSED) | COMPLETE | 2026-08-20 | 2026-08-21 | P2A-012..016 + fix-bursts ALL COMPLETE (D-219..D-224 (sample)). 17 findings (2H/7M/7L/1OBS) all closed: mod.rs-logic ×4 (P2A-012); target_module/BC-priority/DAG S-1.16→S-1.13 (P2A-013); Wave-2 target-crate sweep (P2A-014); D17-Q5 SDK-split corpus-wide (P2A-015); dep-graph 10-batch canonical (P2A-016). Census 133 BC/14 VP. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md. | compressed; detail in trajectory |
 | 2: adversary pass-17 (P2A-017) | COMPLETE | 2026-08-21 | 2026-08-21 | NOT CLEAN: 3 findings (2M/1L); fix-burst dispatched (D-225). P2A017-01 (MED,POL-6/24) SS-10 Primary Crate(s) omitted pregolya-core; added. P2A017-02 (MED,POL-6/4) SS-06 StreamEvent CORE canonical per ADR-006 §Consequences; graph::event_emitter rescoped; S-1.17 triad synced. P2A017-03 (LOW) SS-08 core::tool scope confirmed correct; scope note added. EXHAUSTIVE SWEEP: all 23 SS rows verified; only SS-10 fixed (POL-24 satisfied). | trajectory-tail →3→5→3→5→3; 0/3 (NOT CLEAN; streak 0/3) |
 | 2: fix burst (post-pass-17 P2A-017) | COMPLETE | 2026-08-21 | 2026-08-21 | P2A-017: all 3 findings closed (D-225); SS-10 Primary Crate(s) +pregolya-core; module-decomposition graph::event_emitter emission-only rescope; S-1.17 target_module→[pregolya-core,pregolya-graph] + core::events entry + AC-001 re-trace; ARCH-INDEX updated; module-decomposition updated; 23-SS Primary-Crate sweep exhausted class. Census 133 BC / 14 VP. Streak 0/3. NEXT P2A-018. | trajectory-tail →5→3→5→3→3; 0/3 → NEXT P2A-018 |
 | 2: adversary pass-18 (P2A-018) | COMPLETE | 2026-08-21 | 2026-08-21 | CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; streak 1/3. All prior fixes HELD; no new-dimension findings found. | trajectory-tail →3→3→0; streak 1/3 |
 | 2: adversary pass-19 (P2A-019) | COMPLETE | 2026-08-21 | 2026-08-21 | CLEAN(strict)=YES CLEAN(PR-merge)=YES; 0 findings; streak 2/3. All prior fixes HELD. | trajectory-tail →3→0→0; streak 2/3 |
 | 2: adversary pass-20 (P2A-020) | COMPLETE | 2026-08-21 | 2026-08-21 | NOT CLEAN: 2 findings (1M/1L); streak RESET 0/3; fix-burst dispatched (D-226). F-P2A020-01 (MED,POL-4/46) scheduler.rs ownership conflict; 4 stories inconsistent/false claims. F-P2A020-02 (LOW) S-1.16→S-1.13 rationale absent. | trajectory-tail →0→0→2; streak RESET 0/3 |
 | 2: fix burst (post-pass-20 P2A-020) | COMPLETE | 2026-08-21 | 2026-08-21 | P2A-020: all 2 findings closed (D-226). F-P2A020-01 CLOSED: scheduler.rs ownership model (S-1.15 creates; S-1.17 run/stream; S-1.13/S-1.18/S-1.16 layer); 5 new DAG edges; Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts. F-P2A020-02 CLOSED: S-1.16→S-1.13 rationale documented. Census 133 BC/14 VP; DAG acyclic. Streak 0/3. NEXT P2A-021. | trajectory-tail →0→0→2; 0/3 → NEXT P2A-021 |
+| 2: adversary pass-21 (P2A-021) | COMPLETE | 2026-08-21 | 2026-08-21 | NOT CLEAN: 5 findings (1H/3M/1L); streak RESET 0/3; fix-burst dispatched (D-227). P2A021-01 (HIGH): VectorStore trait ordering inversion; S-2.02/S-2.03 delivery reorder. P2A021-02/03/04 (MED): orphaned-methods BC-2.21.001 PC-2 + S-2.03 ACs; S-1.25 scheduler.rs traceability; wave-schedule max-parallelism 4→6. P2A021-05 (LOW): S-1.16 PSI reworded. add_texts→add_documents rename swept corpus-wide (TD-VSDD-060). | trajectory-tail →0→0→2→5; streak RESET 0/3 |
+| 2: fix burst (post-pass-21 P2A-021) | COMPLETE | 2026-08-21 | 2026-08-21 | P2A-021: all 5 findings closed (D-227). BC anchor fills: BC-2.20.003/BC-2.21.001/002/003/004 → S-2.03. Census 133 BC / 14 VP; DAG edges UNCHANGED; no renumber. Streak 0/3. NEXT P2A-022. | trajectory-tail →0→0→2→5; 0/3 → NEXT P2A-022 |
 | 3: TDD Implementation | not-started | | | | — |
 | 4: Holdout Evaluation | not-started | | | | — |
 | 5: Adversarial Refinement | not-started | | | | — |
@@ -64,11 +66,11 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 <!-- Keep last 5 rows only. Older rows archived to cycles/v1.0.0-greenfield/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| P2A-017 fix-burst (2026-08-21) — 3 findings closed (2M/1L): SS-10 Primary Crate(s) +pregolya-core; module-decomposition graph::event_emitter emission-only rescope + SS-06 StreamEvent CORE canonical (ADR-006 §Consequences); S-1.17 target_module→[pregolya-core,pregolya-graph] + core::events File Structure + AC-001 re-trace; ARCH-INDEX updated; module-decomposition updated; 23-SS Primary-Crate sweep exhausted class. D-225 minted. | state-manager | COMPLETE | ARCH-INDEX + module-decomp + 3 story-writer files + STATE.md + trajectory. Census 133 BC / 14 VP. Streak 0/3. NEXT: P2A-018. |
-| P2A-018 CLEAN pass (2026-08-21) — 0 findings. CLEAN(strict)=YES CLEAN(PR-merge)=YES; all P2A-001..017 fixes HELD. Streak advances 0/3→1/3. | vsdd-factory:adversary | COMPLETE | 0 findings. Streak 1/3. |
 | P2A-019 CLEAN pass (2026-08-21) — 0 findings. CLEAN(strict)=YES CLEAN(PR-merge)=YES; all prior fixes HELD. Streak advances 1/3→2/3. | vsdd-factory:adversary | COMPLETE | 0 findings. Streak 2/3. |
 | P2A-020 NOT CLEAN pass (2026-08-21) — 2 findings (1M/1L). F-P2A020-01 (MED,POL-4/46) scheduler.rs ownership — 4 stories mutually-inconsistent incl. false claims. F-P2A020-02 (LOW) S-1.16→S-1.13 rationale absent. Streak RESET 0/3. D-226 minted. Fix-burst dispatched. | vsdd-factory:adversary | COMPLETE | 2 findings. Streak RESET 0/3. |
 | P2A-020 fix-burst (2026-08-21) — all 2 findings closed (D-226). F-P2A020-01 CLOSED: scheduler.rs ownership model (S-1.15 creates; S-1.17 run/stream; S-1.13/S-1.18/S-1.16 layer); 5 new DAG edges (S-1.17 dep S-1.15; S-1.13/S-1.18/S-1.16 dep S-1.17; S-1.16 dep S-1.18); Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts. F-P2A020-02 CLOSED: S-1.16→S-1.13 rationale documented via PSI rows. D-221 S-1.16↔S-1.13 CONFIRMED. | state-manager | COMPLETE | 8 files + STATE.md + trajectory. Census 133 BC/14 VP. DAG acyclic. Streak 0/3. NEXT: P2A-021. |
+| P2A-021 NOT CLEAN pass (2026-08-21) — 5 findings (1H/3M/1L). P2A021-01 (HIGH) VectorStore trait ordering inversion; P2A021-02 (MED) orphaned methods BC-2.21.001 PC-2; P2A021-03 (MED) S-1.25 scheduler.rs traceability; P2A021-04 (MED) wave-schedule max-parallelism 4→6; P2A021-05 (LOW) S-1.16 PSI reword. add_texts→add_documents rename swept corpus-wide (TD-VSDD-060). D-227 minted. Streak RESET 0/3. | vsdd-factory:adversary | COMPLETE | 5 findings. Streak RESET 0/3. |
+| P2A-021 fix-burst (2026-08-21) — all 5 findings closed (D-227). VectorStore S-2.02→pregolya-core (2 BCs, 5 pts); S-2.03→vectorstores (5 BCs, 10 pts, MMR/as_retriever ACs). add_documents rename: capabilities, entities, 4 BCs, module-decomp, ADR-014, purity-map, S-2.03. BC-2.20.003+BC-2.21.001/002/003/004 anchors → S-2.03. Census 133 BC/14 VP. DAG UNCHANGED. | state-manager | COMPLETE | ~20 files + STATE.md + trajectory. Census 133 BC/14 VP. DAG UNCHANGED. Streak 0/3. NEXT: P2A-022. |
 
 ## Decisions Log
 
@@ -100,6 +102,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-224 | **Phase-2 adversarial P2A-016 NOT CLEAN (2M/1L) ALL CLOSED. P2A016-01 (MED, POL-4/DAG-derived-view): dep-graph §TopSort violated its own no-intra-batch rule (S-1.15 co-listed with dep S-1.14; S-1.15 duplicated in two batches); batch grouping also diverged from wave-schedule. Both docs reconciled to single canonical 10-batch Wave-1 structure derived from authoritative DAG edges. DAG EDGES UNCHANGED; acyclic confirmed. P2A016-02 (MED, POL-6): pregolya facade (roster #1, v1) absent from wave-schedule §Crate Implementation Order; architect ruling (a): re-export-only, no dedicated story per ADR-007 §Consequences; story-writer added explicit annotation row. P2A016-LOW: SS-17 Primary-Crate convention gap; architect added `Primary Crate(s)` convention definition to ARCH-INDEX Subsystem Registry preamble + SS-17 scope note blockquote. No ADR change. No ID renumber (POL-1); no DAG EDGE changes (only derived batch-grouping views reconciled); no bcs: set changes — Token Budget unaffected; census 133 BC / 14 VP; streak 0/3. NEXT P2A-017.** | Phase-2 adversarial convergence pass 16; 3 findings closed (2M/1L) | Phase 2 | 2026-08-21 | architect/story-writer/state-manager |
 | D-225 | **Phase-2 adversarial P2A-017 NOT CLEAN (2M/1L) ALL CLOSED. P2A017-01 (MED, POL-6/24): SS-10 Primary Crate(s) omitted pregolya-core (homes BC-2.10.005/VP-012 core::budget); added. P2A017-02 (MED, POL-6/4): SS-06 StreamEvent taxonomy adjudicated CORE canonical per ADR-006 §Consequences; module-decomposition graph::event_emitter rescoped to emission-only; S-1.17 target_module→[pregolya-core,pregolya-graph] + core::events File Structure entry + AC-001 re-trace (triad synced). P2A017-03 (LOW): SS-08 core::tool scope note confirmed correct — Tool trait is Phase-3 prerequisite, not BC-homing crate; pregolya-core exclusion from SS-08 Primary Crate(s) valid. EXHAUSTIVE SWEEP: all 23 SS rows (SS-01..SS-23) verified via three-source cross-check (module-decomp SS-tags + VP-INDEX + BC→SS numbering); only SS-10 required a FIX; 22 others MATCH — POL-24 sibling-sweep SATISFIED. No BC/VP/story renumber (POL-1); S-1.17 BC set unchanged (BC-2.06.001–003); census 133 BC / 14 VP; ARCH-INDEX updated; module-decomposition updated. Streak 0/3. NEXT P2A-018.** | Phase-2 adversarial pass 17; 3 findings closed (2M/1L); Primary Crate(s) convention swept corpus-wide | Phase 2 | 2026-08-21 | architect/story-writer/state-manager |
 | D-226 | **Phase-2 adversarial P2A-020 NOT CLEAN (1M/1L) ALL CLOSED. STREAK HISTORY: P2A-018 CLEAN(strict)=YES streak 1/3; P2A-019 CLEAN(strict)=YES streak 2/3; P2A-020 NOT CLEAN streak RESET 0/3. F-P2A020-01 (MED, POL-4/46) CLOSED: scheduler.rs ownership ambiguity — 4 same-batch stories (S-1.13/S-1.15/S-1.17/S-1.18) made mutually-inconsistent claims incl. false ones (S-1.18 credited S-1.14 with a scheduler skeleton it never builds; S-1.13 falsely claimed first-touch). Architect ruling: S-1.15 CREATES scheduler.rs skeleton; S-1.17 adds run()/stream(); S-1.13 adds ContextMutationConfig pre-loop loader; S-1.18 adds per-super-step budget eval; S-1.16 adds ceiling/run_id checks. New DAG edges: S-1.17 dep S-1.15; S-1.13/S-1.18/S-1.16 dep S-1.17; S-1.16 dep S-1.18. batch-1e split into sequential chain S-1.15→S-1.17→{S-1.13∥S-1.18}→S-1.16 (Wave-1 10→12 batches; DAG acyclic; critical path 10→12 stories/69→82 pts). F-P2A020-02 (LOW) CLOSED: S-1.16 depends_on S-1.13 rationale absent → documented via PSI rows. D-221 S-1.16↔S-1.13 edge CONFIRMED. No BC/VP/story renumber (POL-1); census 133 BC/14 VP; DAG ACYCLIC; no ADR change. Content defect (not process-gap). Streak 0/3. NEXT P2A-021.** | Phase-2 adversarial pass 20; 2 findings closed (1M/1L); scheduler.rs ownership model + 5 new DAG edges; streak history P2A-018/019 CLEAN then P2A-020 reset | Phase 2 | 2026-08-21 | architect/story-writer/state-manager |
+| D-227 | **Phase-2 adversarial P2A-021 NOT CLEAN (1H/3M/1L) ALL CLOSED. P2A021-01 (HIGH): VectorStore trait ordering inversion — VectorStoreRetriever + as_retriever delivery moved S-2.02→S-2.03; S-2.02 scope→pregolya-core (2 BCs, 5 pts); S-2.03 absorbs whole pregolya-vectorstores crate (5 BCs incl BC-2.20.003, 10 pts, +MMR/as_retriever ACs); "forward declaration or stub" language removed. P2A021-02 (MED): orphaned methods VectorStoreRetriever::similarity_search_with_score + as_retriever added to BC-2.21.001 PC-2 + S-2.03 ACs (AC-019 MMR, AC-020 as_retriever). P2A021-03 (MED): S-1.25 scheduler.rs traceability added (File Structure + Architecture Mapping + coordination note; batch 1l, no new DAG edge). P2A021-04 (MED): wave-schedule Max-parallelism corrected 4→6 (sub-batch 1d). P2A021-05 (LOW): S-1.16 PSI reworded ("run() body established by S-1.17"). CONTRACT-NAME RENAME (TD-VSDD-060 sibling-sweep): add_texts→add_documents corpus-wide (capabilities-p1-p2.md CAP-028/029, entities-graph.md, BC-2.21.001/002, module-decomposition.md, ADR-014, purity-boundary-map.md, S-2.03 ACs); zero live add_texts remain. BC ANCHOR FILLS: BC-2.20.003, BC-2.21.001/002/003/004 anchors → S-2.03. No BC/VP/story renumber (POL-1); DAG edges UNCHANGED; census 133 BC / 14 VP; no new ADR. Streak 0/3. NEXT P2A-022.** | Pass 21; 5 findings (1H/3M/1L) closed; VectorStore ordering; add_documents rename sweep; BC anchor fills | Phase 2 | 2026-08-21 | architect/product-owner/business-analyst/story-writer/state-manager |
 
 ## Risk Register
 
@@ -139,18 +142,18 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 ## Concurrent Cycles
 
-None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout scenarios COMPLETE 14/14 (SEALED). P2A-001..020 (sample) fix-bursts COMPLETE. NEXT: P2A-021. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
+None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout scenarios COMPLETE 14/14 (SEALED). P2A-001..021 (sample) fix-bursts COMPLETE. NEXT: P2A-022. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 
 ## Convergence Status
 
-Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout scenarios COMPLETE 14/14 (SEALED). P2A-001..020 (sample) fix-bursts COMPLETE. P2A-018 CLEAN(strict) streak 1/3; P2A-019 CLEAN(strict) streak 2/3; P2A-020 NOT CLEAN (1M/1L; D-226; fix-burst COMPLETE 2026-08-21) streak RESET 0/3. NEXT: Phase-2 adversarial P2A-021. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md.
+Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout scenarios COMPLETE 14/14 (SEALED). P2A-001..021 (sample) fix-bursts COMPLETE. P2A-021 NOT CLEAN (1H/3M/1L; D-227; fix-burst COMPLETE 2026-08-21) streak RESET 0/3. NEXT: Phase-2 adversarial P2A-022. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md.
 
 ## Session Resume Checkpoint
 
-<!-- v5.38 checkpoint replaces v5.37 — v5.37 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- v5.39 checkpoint replaces v5.38 — v5.38 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak **0/3**. Adversary passes P2A-001..P2A-020 run; P2A-018/019 CLEAN(strict) (streak 1/3→2/3); P2A-020 NOT CLEAN (1M/1L; D-226; scheduler.rs ownership model; Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts) — streak RESET 0/3. Fix-burst COMPLETE. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass **P2A-021** on the current post-fix-burst factory-artifacts HEAD (frozen-HEAD baseline reset by this fix-burst push).
+Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak **0/3**. Adversary passes P2A-001..P2A-021 run; P2A-018/019 CLEAN(strict) (streak 1/3→2/3); P2A-020 NOT CLEAN (1M/1L; D-226; scheduler.rs ownership); P2A-021 NOT CLEAN (1H/3M/1L; D-227; VectorStore ordering + add_documents rename + BC anchors) — streak RESET 0/3 (P2A-021 reset). Fix-burst COMPLETE. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass **P2A-022** on the current post-fix-burst factory-artifacts HEAD (frozen-HEAD baseline reset by this fix-burst push).
 
 ### HEADS
 - develop `644d1ad` — clean, PUSHED, untouched.
@@ -158,10 +161,11 @@ Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 - Worktrees: NONE. Open PRs: NONE.
 
 ### CURRENT WORKSTREAM — Phase-2 adversarial story convergence
-- Streak **0/3** (BC-5.39.001). P2A-018/019 were CLEAN(strict); P2A-020 found a real defect (scheduler.rs ownership), resetting streak.
-- Finding trajectory P2A-001..020: 8→3→7→3→8→2→3→4→8→10→4→2→5→3→5→3→3→0→0→2. Axes swept: VP anchors; subsystem-name canon; error-code categories; error-message strings; DAG reciprocity; holdout BC-linkage; purity; VP-011; error-type semantics; mod.rs layout; BC-table priority; target-crate frontmatter; DAG S-1.16→S-1.13; version-literal pins; Wave-2 target-crate; STORY-INDEX subsystem; SDK-split D17-Q5; dep-graph 10-batch; pregolya facade; SS-10 Primary Crate(s) (D-225); SS-06 StreamEvent CORE canonical (D-225); scheduler.rs ownership model (D-226).
-- **RESUME NEXT-ACTION:** dispatch `vsdd-factory:adversary` **P2A-021**, fresh context, Read/Grep/Glob only, Form-B verbatim evidence, FULL POL rubric (POL-1..31 + POL-46/47). ACCEPTED/DO-NOT-REFLAG: (1) F-02/TDIV-009 vendor-template limitation waived (D-220); (2) OBS-1 + PGAP-MSGDRIFT open gaps — report NEW instances only; (3) Primary Crate(s) convention swept ALL 23 SS rows (P2A-017; D-225) — do NOT re-flag absent NEW concrete BC-homing divergence; (4) scheduler.rs ownership model ESTABLISHED (D-226) — do NOT re-flag the coordination model. Dual CLEAN(strict)/CLEAN(PR-merge) verdict, frozen-HEAD baseline. CLEAN(strict) → streak 1/3 → P2A-022/023 on SAME HEAD to 3/3.
+- Streak **0/3** (BC-5.39.001). P2A-020 RESET (scheduler.rs ownership); P2A-021 RESET (VectorStore ordering + add_documents rename).
+- Finding trajectory P2A-001..021: 8→3→7→3→8→2→3→4→8→10→4→2→5→3→5→3→3→0→0→2→5. Axes swept: VP anchors; subsystem-name canon; error-code categories; error-message strings; DAG reciprocity; holdout BC-linkage; purity; VP-011; error-type semantics; mod.rs layout; BC-table priority; target-crate frontmatter; DAG S-1.16→S-1.13; version-literal pins; Wave-2 target-crate; STORY-INDEX subsystem; SDK-split D17-Q5; dep-graph 10-batch; pregolya facade; SS-10 Primary Crate(s) (D-225); SS-06 StreamEvent CORE canonical (D-225); scheduler.rs ownership (D-226); VectorStore trait ordering S-2.02→S-2.03 (D-227); add_documents rename corpus-wide (D-227).
+- **RESUME NEXT-ACTION:** dispatch `vsdd-factory:adversary` **P2A-022**, fresh context, Read/Grep/Glob only, Form-B verbatim evidence, FULL POL rubric (POL-1..31 + POL-46/47). ACCEPTED/DO-NOT-REFLAG: (1) F-02/TDIV-009 vendor-template limitation waived (D-220); (2) OBS-1 + PGAP-MSGDRIFT open gaps — report NEW instances only; (3) Primary Crate(s) convention swept ALL 23 SS rows (D-225) — do NOT re-flag absent NEW concrete BC-homing divergence; (4) scheduler.rs ownership model ESTABLISHED (D-226) — do NOT re-flag the coordination model; (5) add_documents is the canonical VectorStore ingestion method (was add_texts; rename swept corpus-wide D-227) — do NOT re-flag. Dual CLEAN(strict)/CLEAN(PR-merge) verdict, frozen-HEAD baseline. CLEAN(strict) → streak 1/3 → P2A-023/024 on SAME HEAD to 3/3.
 - **OPS LEARNING (this session):** (a) `sidecar-learning.md` session-hook re-dirties the tree after every agent stop — a streak-transparent `chore:` hygiene commit needed before each adversary dispatch (adversary/wave-gate dispatches BLOCKED on dirty tree; fix-burst dispatches are not); (b) PROPOSED: gitignore `sidecar-learning.md` in `.factory/.gitignore` — DEFER-004 class; requires human authorization before implementing.
+- STATE.md over soft target — schedule /compact-state before the next large STATE write.
 
 ### PENDING USER-APPROVED WORK
 None pending (Phase 2→3 autonomous per DIRECTIVE 1). **F-02/TDIV-009 WAIVED** (vendor-template limitation; D-220).
@@ -173,7 +177,7 @@ None pending (Phase 2→3 autonomous per DIRECTIVE 1). **F-02/TDIV-009 WAIVED** 
 - Human actions: E013 (default_branch→main), R6/R14 (cargo login + publish-all.sh), B1 (direnv allow .), TDIV-008 (vendor). WORKSPACE INIT incomplete (Phase-3 prerequisite).
 
 ### DECISION DELTA (this session)
-D-226 minted (P2A-020 fix-burst COMPLETE; 1M/1L ALL CLOSED; scheduler.rs ownership model; 5 new DAG edges; Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts). P2A-018/019 CLEAN(strict) streak history 1/3→2/3→RESET 0/3. Human F-02/TDIV-009 waiver in effect (D-220).
+D-226 minted (P2A-020; scheduler.rs ownership). D-227 minted (P2A-021; VectorStore ordering + add_documents rename + BC anchor fills). P2A-018/019 CLEAN(strict); P2A-020/021 RESET. Human F-02/TDIV-009 waiver in effect (D-220).
 
 ### PENDING HUMAN ACTIONS
 1. **E013 (Medium)** — `gh repo edit --default-branch main`.
@@ -185,9 +189,9 @@ D-226 minted (P2A-020 fix-burst COMPLETE; 1M/1L ALL CLOSED; scheduler.rs ownersh
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–343; Phase-2 per-story authoring + holdout scenarios; P2A-001..020 (sample) fix-bursts + session wrap D-220) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
-| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-020) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
-| Session checkpoints (v4.45..v5.37 archived; v5.37 replaced 2026-08-21) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Burst narratives (bursts 1–343; Phase-2 per-story authoring + holdout scenarios; P2A-001..021 (sample) fix-bursts + session wrap D-220) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-021) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
+| Session checkpoints (v4.45..v5.38 archived; v5.38 replaced 2026-08-21) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (188+ lessons) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Resolved blockers (R1–R5, R7, R9) | `cycles/v1.0.0-greenfield/blocking-issues-resolved.md` |
 | Spec artifacts (133 BCs; 14 VPs; 26 ADRs; PRD; L2 domain spec; architecture) | `.factory/specs/` |

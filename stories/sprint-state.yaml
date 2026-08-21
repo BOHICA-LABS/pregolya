@@ -399,12 +399,12 @@ stories:
   - story_id: S-2.02
     wave: 2
     status: spec-ready
-    bcs: [BC-2.20.001, BC-2.20.002, BC-2.20.003]
+    bcs: [BC-2.20.001, BC-2.20.002]
     vps: []
-    points: 8
+    points: 5
     tdd_mode: strict
     priority: P0
-    crate: [pregolya-core, pregolya-vectorstores]
+    crate: pregolya-core
     pr_url: ~
     merged_sha: ~
 
@@ -415,9 +415,9 @@ stories:
   - story_id: S-2.03
     wave: 2
     status: spec-ready
-    bcs: [BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004]
+    bcs: [BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003]
     vps: [VP-009]
-    points: 8
+    points: 10
     tdd_mode: strict
     priority: P0
     crate: pregolya-vectorstores

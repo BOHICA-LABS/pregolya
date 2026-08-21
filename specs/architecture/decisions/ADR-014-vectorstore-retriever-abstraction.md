@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.14"
+version: "1.15"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.15 (P2A-021/2026-08-21): VectorStore ingestion method rename — add_texts → add_documents throughout live body (code block, prose, Decision 5 guard text, Consequences, PO Obligations). Changelog entries grandfathered per records-lint policy. Sibling sweep (TD-VSDD-060): 7 live-body occurrences updated; 1 historical changelog entry grandfathered unchanged."
   - "1.14 (burst-293/F-P184-F02/2026-08-16): Fix two 'document_index carried as structured context field' occurrences that contradict Decision 5. (1) §Consequences E-VS-004 bullet: 'document_index carried as structured context field' → 'document_index interpolated into the message string via key=value per ADR-010 §Error-Construction Notation Canon'. (2) §PO Obligations E-VS-004 paragraph: same replacement, removing the stale 'gate #33 Form 3 convention' parenthetical. No other 'context field' residue found in live body (changelog entries grandfathered). D-134 sibling sweep: test-vectors.md 2.1 row has 'document_index context field' in a changelog entry — grandfathered. BC-2.21.002 and BC-INDEX changelog entries reference removed phantom field — grandfathered."
   - "1.13 (burst-290/F-180-phantom-citations/2026-08-16): Three phantom ADR §-citation fixes (live body only; changelog entries grandfathered). (1) §Decision 1 object-safety note (~line 124): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait` (real heading per ADR-005). (2) §Decision 5 zero-norm message form (~line 397): `ADR-010 §impl PregolyaError adjudication` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading). (3) §Source / Origin (~line 656): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait`."
   - "1.12 (FIX-BURST-278/F-P175-D48-receiver+D217-SearchType/2026-07-28): D-48 overturn of D-45 (two items). (1) F-P175-D48 — `as_retriever` receiver corrected to `self: Arc<Self>`. The prior reference-to-Arc receiver form is NOT a dyn-compatible receiver (it is not one of the standard vtable-dispatchable receiver types: `self`, `&self`, `&mut self`, `Box<Self>`, `Rc<Self>`, `Arc<Self>`, `Pin<P>`); using a reference-to-Arc receiver makes `VectorStore` non-object-safe under E0038, destroying `Arc<dyn VectorStore>` and blocking the SS-20 RAG seam. `Arc<Self>` IS a dyn-compatible receiver — `Arc<dyn VectorStore>` can dispatch through it. This is the second E0038 object-safety failure in the project (first: `Tool` via `DynTool` in ADR-005). The stale 'Wave C PO correction required' note removed from doc comment (BC-2.20.003 PC-2 amendment is routed to product-owner via FIX-BURST-278 Wave B routing spec). (2) F-P175-D217 — `SearchType` enum missing `#[non_exhaustive]` per BC-2.20.003 INV-1; added. Object-safety comment updated: `as_retriever` uses `Arc<Self>` receiver (dyn-compatible), not `&self`."
@@ -136,11 +137,10 @@ defined as an associated method on a separate `VectorStoreFactory` trait, NOT on
 // pregolya-vectorstores: vectorstores::store
 #[async_trait]
 pub trait VectorStore: Send + Sync {
-    /// Add texts (and optional metadata) to the store. Returns document IDs.
-    async fn add_texts(
+    /// Add documents to the store. Returns document IDs.
+    async fn add_documents(
         &self,
-        texts: Vec<String>,
-        metadatas: Option<Vec<serde_json::Map<String, serde_json::Value>>>,
+        documents: Vec<Document>,
     ) -> Result<Vec<String>, PregolyaError>;
 
     /// Standard k-nearest-neighbor similarity search.
@@ -242,7 +242,7 @@ for async methods; `Arc<Self>` for `as_retriever`); all async methods are desuga
 `#[async_trait]`; `as_retriever` returns a concrete struct (not an opaque type).
 `Arc<dyn VectorStore>` compiles without E0038.
 
-`add_texts` uses `&self` (not `&mut self`) because external VectorStore backends (Qdrant,
+`add_documents` uses `&self` (not `&mut self`) because external VectorStore backends (Qdrant,
 Chroma, pgvector) are fundamentally stateless from the client perspective — mutations go
 to the remote server. The in-memory backend uses interior mutability (`RwLock`).
 
@@ -344,7 +344,7 @@ are parallel but NON-OVERLAPPING abstractions with distinct purposes:
 | Purpose | Long-horizon agent memory (persistent across runs) | RAG document retrieval (external document index) |
 | Scope | Session-scoped; owned by the agent | Stateless from agent's perspective; externally managed |
 | GDPR | Explicit erasure protocol (BC-2.15.002) | NOT scoped here |
-| Write path | Guarded via `memory::write_guard` (ADR-012) | Unguarded add_texts (no injection scanning) |
+| Write path | Guarded via `memory::write_guard` (ADR-012) | Unguarded add_documents (no injection scanning) |
 | Read path | `MemoryStore::search` (keyword/vector/hybrid within agent's own data) | `VectorStore::similarity_search` (document retrieval for RAG) |
 | Guardrail | RAG results entering agent context go through `BoundaryType::RAGRetrieval` (DI-012) | Same — RAG results from VectorStore enter via DI-012 guardrail |
 | CAP ownership | CAP-017 (self-improvement, memory retrieval) | New CAP under D21 |
@@ -382,7 +382,7 @@ The store is effectively unusable until the bad document is deleted.
 
 ### Decision
 
-`add_texts` and `from_texts_sync` MUST reject any document whose embedding vector has
+`add_documents` and `from_texts_sync` MUST reject any document whose embedding vector has
 L2 norm == 0.0 at write time, before the document is persisted to the index.
 
 **Error code:** `E-VS-004` (new code; NOT a reuse of `E-VS-001`; E-VS-003 is already taken by VectorStoreRetriever config validation per error-taxonomy.md)
@@ -402,7 +402,7 @@ added to `PregolyaError`). The `message` string carries all structured diagnosti
 ### Write-time check sketch
 
 ```rust
-// in add_texts / from_texts_sync, after embedding generation, before index write:
+// in add_documents / from_texts_sync, after embedding generation, before index write:
 for (i, embedding) in embeddings.iter().enumerate() {
     let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
     if norm == 0.0 {
@@ -680,7 +680,7 @@ applicability. Two separate crates with a clear boundary is correct.
   all VectorStore-backed retrievers — no extension needed.
 - **E-VS-004** (Decision 5): new write-time zero-norm error code minted in the `VS` namespace
   (E-VS-003 is taken — VectorStoreRetriever config validation, error-taxonomy.md);
-  `add_texts` and `from_texts_sync` reject documents whose embedding has L2 norm == 0.0 before
+  `add_documents` and `from_texts_sync` reject documents whose embedding has L2 norm == 0.0 before
   persistence; `document_index` interpolated into the `message` string via key=value per ADR-010 §Error-Construction Notation Canon. `E-VS-004` minted in
   error-taxonomy v1.27/D21 (VS namespace; write-time zero-norm rejection; BC-2.21.002).
 - **GuardedDocuments** (Decision 6): new newtype in `core::retriever`; no public constructor;
@@ -708,7 +708,7 @@ applicability. Two separate crates with a clear boundary is correct.
 ### E-VS-004 (carried from Decision 5)
 
 `E-VS-004` minted (error-taxonomy v1.27/D21) — write-time zero-norm rejection in the `VS` namespace
-(`pregolya-vectorstores`); `add_texts` and `from_texts_sync` reject documents whose
+(`pregolya-vectorstores`); `add_documents` and `from_texts_sync` reject documents whose
 embedding has L2 norm == 0.0 before persistence; `document_index` interpolated into the `message` string via key=value per ADR-010 §Error-Construction Notation Canon (F-P174-303). BC-2.21.002 write-time contract row authority.
 
 ### BC-2.20.002 Anchor Corrections (F-P130-02 — burst-225)

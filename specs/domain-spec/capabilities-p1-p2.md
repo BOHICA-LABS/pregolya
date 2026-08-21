@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.26"
+version: "1.27"
 status: active
 producer: business-analyst
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/product-brief.md
@@ -17,6 +17,7 @@ input-hash: "faffcd7"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170]
 changelog:
+  - "1.27 (P2A-021/2026-08-21): CAP-028 ingestion-method name reconciled: add_texts→add_documents (add_texts is legacy; add_documents(docs: Vec<Document>) is the canonical modern primary per LangChain reference). Four live-body sites updated in capabilities-p1-p2.md: (1) CAP-028 heading token; (2) CAP-028 method signature form; (3) CAP-028 &self-receiver rationale sentence; (4) CAP-029 'generated at ... time' clause. TD-VSDD-060 sweep: entities-graph.md §VectorStore also contains a live add_texts reference — outside business-analyst capability-doc scope; reported for routing to entities-doc owner."
   - "1.26 (burst-316/F-P206-01/2026-08-18): F-P206-01 (MED) CAP-038 E-TOOLS-006 name: retired informal name 'SearchResultsCapped' replaced with canonical payload field path per error-taxonomy §E-TOOLS-006 and BC-2.23.006. Before: 'E-TOOLS-006 `SearchResultsCapped` on ceiling (informational — partial results returned)'. After: 'E-TOOLS-006 (`GrepResult.capped` — informational payload field, not a raised Err; partial results returned on ceiling)'. Authority: error-taxonomy §E-TOOLS-006 canonical payload field path GrepResult.capped (established burst-247/F-P146-02); BC-2.23.006 PC-2. Corpus sweep: sole SearchResultsCapped live-body occurrence in domain-spec; zero others found. ADR-020 §First-Party Tool Error Codes mnemonic-label table correctly excluded (intentional label column). TD-VSDD-060 sweep: sole E-TOOLS-006/SearchResultsCapped occurrence in this file."
   - "1.25 (burst-304/F-P195-01/2026-08-17): F-P195-01 (HIGH) invoke_dyn residual in CAP-039 RunnablePassthrough description: 'invoke_dyn(input, config)' → 'invoke(input, config)'. Canon: DynRunnable method is invoke (not invoke_dyn — that is DynTool's method). TD-VSDD-060 sweep: zero other invoke_dyn occurrences in DynRunnable/RunnableParallel/RunnablePassthrough/RunnableAssign context in live body; zero E-CORE-NNN/MMM, core::runnable::parallel/::passthrough, or DynRunnable< residuals in live body."
   - "1.24 (burst-303/F-P194-02/F-P194-03/2026-08-17): F-P194-02 (HIGH) error-code placeholder resolution — CAP-039 §RunnableParallel fail-fast body: E-CORE-NNN → E-CORE-009 (EXEC, RunnableParallelBranchFailure, anchor BC-2.01.006); CAP-039 §RunnableAssign body: E-CORE-MMM → E-CORE-010 (VAL, RunnableAssignNonDictInput, anchor BC-2.01.008). F-P194-03 (MED) module-path canonicalization — CAP-039 module placement: non-canonical 3-level paths (pregolya-core::core::runnable::parallel / ::passthrough) → canonical 2-level form (core::runnable) per ADR-026 and module-registry canon. TD-VSDD-060 sweep: zero E-CORE-NNN/MMM remain in live body; zero 3-level runnable submodule paths remain in live body."
@@ -353,18 +354,18 @@ bearing object-safety choice documented in ADR-014 (dyn-compatible via non-opaqu
 > modules in pregolya-openai and pregolya-ollama. pregolya-anthropic has NO embedding
 > impl (Anthropic has no public embedding API — ADR-017 Decision 3).
 
-### CAP-028: VectorStore Trait — add_texts; Similarity Search; MMR; delete; as_retriever (Concrete Return for Dyn-Compat)
+### CAP-028: VectorStore Trait — add_documents; Similarity Search; MMR; delete; as_retriever (Concrete Return for Dyn-Compat)
 
 Provide the `VectorStore` async trait (`pregolya-vectorstores: vectorstores::store`) with
 instance methods only — all `&self` receivers, dyn-compatible via `#[async_trait]` desugaring:
-`add_texts(texts, metadatas)` (returns Vec<String> of assigned document IDs),
+`add_documents(docs: Vec<Document>)` (returns Vec<String> of assigned document IDs),
 `similarity_search(query, k)` (k-nearest documents),
 `similarity_search_with_score(query, k)` (returns Vec<(Document, f32)> with scores ∈ [0.0, 1.0]),
 `max_marginal_relevance_search(query, k, fetch_k, lambda_mult)` (diversity-aware MMR retrieval),
 `delete(ids)`, and `as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, PregolyaError>` (concrete, non-opaque fallible return — `Err(E-VS-003 InvalidConfig)` on invalid config; required to preserve VectorStore dyn-compatibility, ADR-014 Decision 2 §Object-safety).
 Static constructors (`from_texts`) live on the separate `VectorStoreFactory` trait (Sized-bounded,
 NOT on the VectorStore vtable) — this split is required for E0038-safe `Arc<dyn VectorStore>`.
-`add_texts` uses `&self` (not `&mut self`) because external backends are stateless from the
+`add_documents` uses `&self` (not `&mut self`) because external backends are stateless from the
 client perspective; the in-memory backend uses `RwLock` interior mutability (CAP-029).
 
 **Grounding:** D21/SS-21. ADR-014 Decision 2 specifies the VectorStore trait instance method
@@ -385,7 +386,7 @@ struct `InMemoryVectorStore`) backed by `RwLock<Vec<(Document, Vec<f32>)>>` (doc
 pre-computed embedding vector). Constructed with `Arc<dyn Embeddings>` injected at creation
 time via `VectorStoreFactory::from_texts_sync` — Arc-DI wiring per workspace convention; no
 placeholder construction is permitted. Text queries are converted to query vectors via the injected
-`Embeddings` impl at search time. Document vectors are generated at `add_texts` time.
+`Embeddings` impl at search time. Document vectors are generated at `add_documents` time.
 Cosine similarity is computed from `Vec<f32>` inner products (no ndarray — semport §8 avoidance).
 **Zero-norm guard (ADR-014 Decision 2 §Hardening note):** before any cosine division, the implementation
 checks `norm = vec.iter().map(|x| x*x).sum::<f32>().sqrt()`. If `norm == 0.0`:

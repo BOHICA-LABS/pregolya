@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.003
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.5 (FIX-BURST-278-WAVE-B/D-48-receiver-sweep/2026-07-28): D-48 receiver sweep — all non-dyn-compatible receiver forms corrected to `Arc<Self>` in Description, Precondition PC-2, Postcondition PC-5, Edge Case EC-006, and VP-2.20.003-A inline spec. Related BCs stale description fixed: 'wraps a &dyn VectorStore' → 'owns Arc<dyn VectorStore>'. See wave-b-po-routing-spec.md Routing Items 6/6g."
   - "1.6 (FIX-BURST-278-WAVE-C/D-48-ratification/2026-07-28): PO ratification of D-48 receiver sweep (wave-b-po-routing-spec.md Routing Items 6a–6g). Substantive verification: (1) Inv-2 states 'validated against [0.0, 1.0]; rejected with Err(PregolyaError{code:E-VS-003})' — matches error-taxonomy.md §E-VS-003 and PC-5 fallible semantics; COHERENT. (2) TV-004/TV-005 show PregolyaError{code:E-VS-003} in table cells (S5-exempt prose); error semantics correct. (3) PC-5 reads 'as_retriever(self: Arc<Self>)' — dyn-compatible per D-48; CORRECT. (4) No non-dyn-compatible borrowed-Arc receiver residue: file confirmed zero occurrences. (5) No lifetime-parameterized VectorStoreRetriever residue: file confirmed zero occurrences. Ratification: COHERENT."
   - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_MISSING_DOTDOT violations corrected. (1) Invariant 2 inline E-VS-003 reject cite: add `, ..` field-elision marker. (2) TV-004 expected-output cell: add `, ..` field-elision marker. (3) TV-005 expected-output cell: add `, ..` field-elision marker. Zero-space `PregolyaError{code:E-VS-003}` in frontmatter changelog entry 1.6 (historical record, no space before brace) is EXEMPT — not modified per append-only record protocol."
+  - "1.8 (P2A-021/story-anchor/2026-08-21): Story Anchor set to S-2.03 — VectorStoreRetriever / as_retriever delivery moved from S-2.02 to S-2.03 per architect P2A-021 build-ordering ruling (VectorStoreRetriever depends on the VectorStore trait, which is delivered in S-2.03)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-027
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -143,7 +144,7 @@ internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, e
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-20 story]_
+S-2.03
 
 ## VP Anchors
 

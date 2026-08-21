@@ -2826,3 +2826,61 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). No ADR changes. DAG ACYCLIC.
 
 **Convergence dim-5 (Phase-2 P2A-020):** Counter **0/3 — NOT CLEAN (D-226; 2026-08-21)**. Streak RESET 2/3 → 0/3. trajectory-tail →3→0→0→2. Fix-burst COMPLETE. NEXT: P2A-021 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 MED present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-021: (1) F-02/TDIV-009 vendor-template limitation waived (D-220); (2) OBS-1 + PGAP-MSGDRIFT open gaps — report NEW instances only; (3) Primary Crate(s) convention swept ALL 23 SS rows (D-225) — do NOT re-flag absent NEW concrete BC-homing divergence; (4) scheduler.rs ownership model ESTABLISHED (D-226) — do NOT re-flag the coordination model itself.
+
+---
+
+## Phase-2 Adversarial Pass P2A-021 (2026-08-21)
+
+**Pass type:** Phase-2 story decomposition adversarial review — full corpus pass.
+
+**Prior HEAD:** post-P2A-020 fix-burst frozen HEAD (commit `aa2b107` + sidecar hygiene `19f7b8e` — streak-transparent chore). No spec-content changes between P2A-020 fix-burst and P2A-021 dispatch.
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | OBS | Novelty | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|---------|
+| P2A-021 | 2026-08-21 | 5 | 0 | 1 | 3 | 1 | 0 | MED | 0/3 | NOT CLEAN |
+
+**Coverage:** Full corpus pass on frozen HEAD. VectorStore trait ordering dimension identified as a new defect class not previously swept.
+
+**Findings:**
+
+- P2A021-01 (HIGH, POL-4/BC-5.46): VectorStore trait ordering inversion — VectorStoreRetriever and as_retriever delivery mis-assigned to S-2.02 (pregolya-core) when they belong with the full VectorStore trait implementation in S-2.03 (pregolya-vectorstores). Fix: S-2.02 scope narrowed to pregolya-core (2 BCs, 5 pts); S-2.03 absorbs the whole pregolya-vectorstores crate (5 BCs, 10 pts, +MMR/as_retriever ACs). "Forward declaration or stub" language removed from S-2.02.
+
+- P2A021-02 (MED, POL-4): orphaned methods — VectorStoreRetriever::similarity_search_with_score and as_retriever were not covered in BC-2.21.001 PC-2 or in S-2.03 ACs. Fix: BC-2.21.001 PC-2 updated to include both methods; S-2.03 gains AC-019 (MMR similarity search with score) and AC-020 (as_retriever conversion).
+
+- P2A021-03 (MED, POL-4): S-1.25 scheduler.rs traceability absent — S-1.25 (compaction trigger execution) modifies scheduler.rs but had no File Structure entry, no Architecture Mapping row, and no cross-story coordination note documenting the interaction with S-1.15/S-1.17/S-1.18. Fix: File Structure, Architecture Mapping, and coordination note added; wave-schedule batch 1l placement confirmed (no new DAG edge needed — coordination only).
+
+- P2A021-04 (MED, POL-4): wave-schedule Max-parallelism column showed 4 for sub-batch 1d when 6 stories are runnable in parallel (S-1.13 ∥ S-1.18 ∥ S-1.16 plus S-1.11 ∥ S-1.12 ∥ S-1.10 = up to 6). Fix: Max-parallelism corrected 4→6.
+
+- P2A021-05 (LOW): S-1.16 PSI entry for the S-1.17 dependency used vague language ("run() machinery requires the core scheduler skeleton"). Fix: PSI reworded to "run() body established by S-1.17; S-1.16 ceiling/run_id logic layers on top."
+
+- CONTRACT-NAME RENAME (TD-VSDD-060 sibling-sweep): add_texts→add_documents corpus-wide. The canonical VectorStore ingestion method was named add_texts in the domain spec and some BCs but add_documents in others (ADR-014, purity-boundary-map). Architect adjudication: add_documents is canonical. All occurrences swept: capabilities-p1-p2.md (CAP-028/CAP-029), entities-graph.md, BC-2.21.001, BC-2.21.002, module-decomposition.md, ADR-014, purity-boundary-map.md, S-2.03 ACs. Zero live add_texts references remain post-sweep.
+
+- BC ANCHOR FILLS: BC-2.20.003, BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004 all had empty `traces_to:` anchors. Fix: all five anchors updated to traces_to: S-2.03.
+
+**Regression check:** All P2A-001..020 fixes HELD. F-02/TDIV-009 vendor-template heading NOT re-flagged (human-accepted D-220). OBS-1 + PGAP-MSGDRIFT recorded gaps — open, no new instances. CLEAN(strict)=NO (1 HIGH, 3 MED, 1 LOW); CLEAN(PR-merge)=NO (1 HIGH, 3 MED). Streak RESET 0/3. D-227 minted.
+
+**Corpus changes from fix-burst:** 133 BC / 14 VP — UNCHANGED count (no renumber per POL-1). BC content updated in BC-2.20.003, BC-2.21.001/002/003/004. Story specs updated: S-2.02, S-2.03, S-1.25, S-1.16. STORY-INDEX, dependency-graph, wave-schedule, sprint-state updated.
+
+**D-227 minted.** Fix-burst dispatched. Streak RESET 0/3. NEXT: P2A-022 on post-fix-burst HEAD (fresh frozen baseline).
+
+### P2A-021 Fix-Burst (2026-08-21)
+
+**Files touched:** BC-2.20.003.md; BC-2.21.001.md; BC-2.21.002.md; BC-2.21.003.md; BC-2.21.004.md; capabilities-p1-p2.md; entities-graph.md; ADR-014-vectorstore-retriever-abstraction.md; module-decomposition.md; purity-boundary-map.md; STORY-S-2.02-retriever-trait-guarded-documents.md; STORY-S-2.03-vectorstore-trait-inmemory-zero-norm-filter.md; STORY-S-1.25-compaction-trigger-execution.md; STORY-S-1.16-bsp-super-step-determinism.md; STORY-INDEX.md; dependency-graph.md; wave-schedule.md; sprint-state.yaml; sidecar-learning.md; STATE.md (19 specialist files + STATE.md + convergence-trajectory.md).
+
+**P2A021-01 CLOSED:** S-2.02 scope narrowed — 2 BCs (BC-2.20.001, BC-2.20.002), 5 story pts; pregolya-core target confirmed. S-2.03 expanded — 5 BCs (BC-2.20.003 + BC-2.21.001/002/003/004), 10 pts; pregolya-vectorstores target; MMR/as_retriever ACs (AC-019, AC-020) added. "Forward declaration or stub" language removed from S-2.02. STORY-INDEX updated with revised pt totals.
+
+**P2A021-02 CLOSED:** BC-2.21.001 PC-2 updated — similarity_search_with_score and as_retriever methods explicitly listed. S-2.03 AC-019 (MMR with score vector) and AC-020 (as_retriever → Retriever boxed trait object) added.
+
+**P2A021-03 CLOSED:** S-1.25 File Structure entry added (scheduler.rs), Architecture Mapping row added (SchedulerState compaction trigger), cross-story coordination note added (reads SchedulerState built by S-1.15/S-1.17/S-1.18). Batch 1l placement confirmed; no new DAG edges (this is read-only coordination, not a build dependency).
+
+**P2A021-04 CLOSED:** wave-schedule batch-1d Max-parallelism 4→6.
+
+**P2A021-05 CLOSED:** S-1.16 PSI reworded — "run() body established by S-1.17; S-1.16 ceiling/run_id logic layers on top."
+
+**CONTRACT-NAME RENAME CLOSED:** All add_texts occurrences replaced corpus-wide with add_documents. Zero add_texts remain. TD-VSDD-060 sibling-sweep EXHAUSTED.
+
+**BC ANCHOR FILLS CLOSED:** BC-2.20.003 + BC-2.21.001/002/003/004 traces_to anchors → S-2.03.
+
+**Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). No ADR changes. DAG edges UNCHANGED (S-1.25 coordination note is NOT a DAG dependency). sprint-state updated (wave batch 1d max-parallelism, S-2.02/S-2.03 pt corrections).
+
+**Convergence dim-5 (Phase-2 P2A-021):** Counter **0/3 — NOT CLEAN (D-227; 2026-08-21)**. Streak RESET 0/3. trajectory-tail →0→0→2→5. Fix-burst COMPLETE. NEXT: P2A-022 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 HIGH present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-022: (1) F-02/TDIV-009 vendor-template limitation waived (D-220); (2) OBS-1 + PGAP-MSGDRIFT open gaps — report NEW instances only; (3) Primary Crate(s) convention swept ALL 23 SS rows (D-225) — do NOT re-flag absent NEW concrete BC-homing divergence; (4) scheduler.rs ownership model ESTABLISHED (D-226) — do NOT re-flag the coordination model; (5) add_documents is the canonical VectorStore ingestion method (rename swept corpus-wide D-227; TD-VSDD-060 exhausted) — do NOT re-flag.

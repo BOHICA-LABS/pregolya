@@ -15,6 +15,28 @@ traces_to: STATE.md
 
 ---
 
+### Archived Checkpoint — STATE.md v5.38 (archived 2026-08-21 — replaced by v5.39)
+
+*From STATE.md v5.38 (post-P2A-020 fix-burst D-226). Superseded by v5.39 upon P2A-021 fix-burst COMPLETE (D-227).*
+
+#### RESUME IN ONE BREATH
+Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak **0/3**. Adversary passes P2A-001..P2A-020 run; P2A-018/019 CLEAN(strict) (streak 1/3→2/3); P2A-020 NOT CLEAN (1M/1L; D-226; scheduler.rs ownership model; Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts) — streak RESET 0/3. Fix-burst COMPLETE. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass **P2A-021** on the current post-fix-burst factory-artifacts HEAD (frozen-HEAD baseline reset by this fix-burst push).
+
+#### HEADS (at time of archival)
+- develop `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: run `git -C .factory log -1 --format='%h'` for the current HEAD (19f7b8e at time of archival — sidecar hygiene chore on top of P2A-020 fix-burst aa2b107). PUSHED to origin.
+- Worktrees: NONE. Open PRs: NONE.
+
+#### CURRENT WORKSTREAM (at time of archival)
+- Streak **0/3** (BC-5.39.001). P2A-018/019 were CLEAN(strict); P2A-020 found a real defect (scheduler.rs ownership), resetting streak.
+- Finding trajectory P2A-001..020: 8→3→7→3→8→2→3→4→8→10→4→2→5→3→5→3→3→0→0→2.
+- RESUME NEXT-ACTION: P2A-021 on frozen HEAD 19f7b8e. ACCEPTED/DO-NOT-REFLAG: (1) F-02/TDIV-009 vendor-template limitation waived (D-220); (2) OBS-1 + PGAP-MSGDRIFT open gaps — report NEW instances only; (3) Primary Crate(s) swept ALL 23 SS rows (D-225); (4) scheduler.rs ownership ESTABLISHED (D-226).
+
+#### DECISION DELTA (at time of archival)
+D-226 minted (P2A-020 fix-burst COMPLETE; 1M/1L ALL CLOSED; scheduler.rs ownership model; 5 new DAG edges; Wave-1 10→12 batches; critical path 10→12 stories/69→82 pts). P2A-018/019 CLEAN(strict) streak history 1/3→2/3→RESET 0/3. Human F-02/TDIV-009 waiver in effect (D-220).
+
+---
+
 ### Archived Checkpoint — STATE.md v4.45 (archived at v4.46 — burst-285 burst init)
 
 *From STATE.md v4.45, burst-284 COMPLETE. Superseded by v4.46 upon P1D-176 persistence.*

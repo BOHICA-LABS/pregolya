@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.10"
+version: "1.11"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -32,6 +32,7 @@ changelog:
   - "1.8 (fix-burst-276/2026-07-27): Propagate E-VS-001 message widening (error-taxonomy.md v1.45, same burst). Human decision: rename conceptual variant ZeroNormEmbedding → DegenerateNormEmbedding; widen STATIC message from 'zero-norm embedding vector' → 'degenerate-norm embedding vector: norm is zero or non-finite'. Three live message-text sites updated: (1) Description code block `message:` field, (2) PC-1 code block `message:` field, (3) Invariant 4 message-text citation. The old message implied zero-norm-only and misdescribed the overflow arm now covered by the v1.7 guard. No guard condition, BC title, BC code, or BC priority changed; Invariant 4 semantics (STATIC, no placeholder) unchanged — only the quoted message string updated."
   - "1.9 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — two fence-scoped PregolyaError struct literals (Description rust fence + PC-1 postcondition fence, both missing retry_hint, source fields) → PregolyaError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-VS-001. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-21/BC-2.21.003.md returns zero fence-scoped literal occurrences after this edit."
   - "1.10 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
+  - "1.11 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs, including this zero-norm guard contract)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -41,7 +42,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "97d9bcd"
+input-hash: "377aba5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -189,7 +190,7 @@ two lines and has negligible performance overhead compared to the cosine computa
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-21 security-hardening story]_
+S-2.03
 
 ## VP Anchors
 

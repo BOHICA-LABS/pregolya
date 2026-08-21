@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.45"
+version: "1.46"
 status: active
 producer: architect
-timestamp: 2026-08-20T00:00:00Z
+timestamp: 2026-08-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -15,6 +15,7 @@ input-hash: "5e00377"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.46 (P2A-021/2026-08-21): VectorStore method alignment — vectorstores::store row: add_texts → add_documents (method now takes Vec<Document>; grounded in LangChain reference, P2A-021 fix-burst). Sibling sweep (TD-VSDD-060): no other add_texts occurrences in this file."
   - "1.45 (fix-burst-P2A017/2026-08-21): FIX 2 (P2A017-02 MED): resolve graph::event_emitter double-definition — description rewritten to describe emission logic only; removes erroneous claim of defining `StreamEvent` enum. Canonical home of StreamEvent is `core::events` (pregolya-core) per ADR-006 §Consequences ('StreamEvent is a public type in pregolya-core'). `graph::event_emitter` now correctly describes its role as emitter (manages emitter channel, emission callsites in scheduler). Story-writer follow-up required: S-1.17 target_module is incomplete (pregolya-core missing; StreamEvent type must be authored in pregolya-core/src/events.rs). FIX 3 (P2A017-03 LOW): SS-08 tag on core::tool confirmed correct; no module-decomposition row change needed; SS-08 scope note added to ARCH-INDEX in same burst."
   - "1.44 (P2A008-F04/2026-08-20): F-P2A008-04 module-name canonicalization — extend core::runnable row description to cover all composition combinators in scope: RunnableParallel (fan-out/fan-in, BC-2.01.005–006), RunnablePassthrough (BC-2.01.007), RunnableAssign (BC-2.01.008) alongside the existing Runnable trait and RunnableSequence pipe combinator. Canonical module path set to pregolya-core/src/runnable/ (singular). This establishes core::runnable as the single authority for all Runnable composition primitives; no new module row added. VP-014.md harness import and target path aligned to singular form in same burst."
   - "1.43 (burst-311/D-181/2026-08-17): D-181 fts_search canon propagation — graph::budget row: change trait-method reference from CheckpointSaver::search_history to CheckpointSaver::fts_search. Canon per D-181: fts_search is the CheckpointSaver trait method (BC-2.04.008 authoritative); search_history names only the agent-callable Tool wrapper. Full corpus grep confirmed: no other trait-method residuals in architecture-owned files. system-overview.md §Changelog FIX-BURST-276 historical entry excluded per records-lint policy (historical entries are grandfathered). Non-architecture residuals in behavioral-contracts (BC-2.04.008, BC-2.10.006) flagged for routing."
@@ -403,7 +404,7 @@ constructor pattern), in-memory VectorStore backend, MMR selection algorithm, `V
 
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
-| `vectorstores::store` | `VectorStore` trait (`add_texts`, `similarity_search`, `similarity_search_with_score`, `max_marginal_relevance_search`, `delete`, `as_retriever`); `VectorStoreFactory` trait; `MetadataFilter` type | MEDIUM | SS-21 |
+| `vectorstores::store` | `VectorStore` trait (`add_documents`, `similarity_search`, `similarity_search_with_score`, `max_marginal_relevance_search`, `delete`, `as_retriever`); `VectorStoreFactory` trait; `MetadataFilter` type | MEDIUM | SS-21 |
 | `vectorstores::retriever` | `VectorStoreRetriever` owning `Arc<dyn VectorStore>` (no lifetime; `'static`; satisfies `Arc<dyn Retriever + 'static>`); impl `Retriever`; `SearchType` enum (`#[non_exhaustive]`; Similarity / SimilarityScoreThreshold / Mmr) | MEDIUM | SS-20 |
 | `vectorstores::memory` | In-memory VectorStore backend; `Arc<dyn Embeddings>` injection via constructor; interior mutability via `RwLock`; `Vec<f32>` cosine similarity; no `ndarray` dep | MEDIUM | SS-21 |
 | `vectorstores::similarity` | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, PregolyaError>`; zero-norm IEEE-754 guard (E-VS-001) before division; pure `Vec<f32>` inner product, no `ndarray`, no I/O; called by `vectorstores::memory`, `vectorstores::mmr`, and any future VectorStore backend | CRITICAL | SS-21 |

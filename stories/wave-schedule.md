@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "9f0df4d"
+input-hash: "3b62f1e"
 traces_to: STORY-INDEX.md
 ---
 
@@ -19,7 +19,7 @@ traces_to: STORY-INDEX.md
 |--------|-------|
 | Total stories | 39 |
 | Total waves | 3 (Wave 1, Wave 2, Wave 6) |
-| Max parallelism (groups per wave) | 4 groups in Wave 1 / sub-batch 1e (was 7; restructured by P2A-020 scheduler ownership ruling) |
+| Max parallelism (groups per wave) | 6 groups in Wave 1 / sub-batch 1d (sub-batch 1e has 4 groups after P2A-020 scheduler ownership ruling restructuring) |
 | Estimated agent spawns | 39 implementer agents total |
 
 ## Wave Plan
@@ -52,7 +52,7 @@ traces_to: STORY-INDEX.md
 | A | S-1.04 | 5 | S | 1 story/agent |
 | B | S-1.09 | 13 | XL | 1 story/agent |
 
-#### Sub-batch 1d — Dependent crates tier 1 (depends on 1c)
+#### Sub-batch 1d — Dependent crates tier 1 (depends on 1c) — max parallelism (6 groups)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
@@ -63,7 +63,7 @@ traces_to: STORY-INDEX.md
 | E | S-1.12 | 8 | M | 1 story/agent |
 | F | S-1.14 | 8 | M | 1 story/agent |
 
-#### Sub-batch 1e — Dependent crates tier 2 + graph tier 1 (depends on 1d) — max parallelism
+#### Sub-batch 1e — Dependent crates tier 2 + graph tier 1 (depends on 1d)
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
@@ -134,7 +134,7 @@ traces_to: STORY-INDEX.md
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
-| A | S-2.02 | 8 | M | 1 story/agent |
+| A | S-2.02 | 5 | S | 1 story/agent |
 | B | S-2.05 | 8 | M | 1 story/agent |
 | C | S-2.07 | 13 | XL | 1 story/agent |
 | D | S-2.09 | 8 | M | 1 story/agent |
@@ -143,7 +143,7 @@ traces_to: STORY-INDEX.md
 
 | Group | Stories | Points | Complexity | Agent Scope |
 |-------|---------|--------|-----------|-------------|
-| A | S-2.03 | 8 | M | 1 story/agent |
+| A | S-2.03 | 10 | M | 1 story/agent |
 | B | S-2.08 | 8 | M | 1 story/agent |
 | C | S-2.10 | 8 | M | 1 story/agent |
 

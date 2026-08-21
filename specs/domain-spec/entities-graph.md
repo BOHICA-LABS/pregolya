@@ -2,10 +2,10 @@
 document_type: domain-spec-section
 level: L2
 section: entities-graph
-version: "1.16"
+version: "1.17"
 status: active
 producer: business-analyst
-timestamp: 2026-07-30T00:00:00Z
+timestamp: 2026-08-21T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/product-brief.md
@@ -14,6 +14,7 @@ input-hash: "17e75c3"
 traces_to: L2-INDEX.md
 decisions: [D11, D17, D21, D23]
 changelog:
+  - "v1.17 (P2A-021/2026-08-21): §VectorStore §Instance methods: add_texts→add_documents(docs: Vec<Document>) — canonical modern primary per LangChain reference (add_texts is legacy). TD-VSDD-060 sweep: sole add_texts live-body occurrence in this file; entities-server.md contains zero add_texts occurrences."
   - "v1.16 (burst-284/2026-07-30): Paper-fix repair — fabricated section anchor in burst-273 changelog entry replaced with resolvable form. 'api-surface.md §burst-242/2026-07-23' had no matching heading in api-surface.md (headings are section names, not burst identifiers); replaced with 'api-surface.md changelog entry burst-242/2026-07-23'. api-surface.md carries a burst-242 changelog entry dated 2026-07-23, which is the corroborating carrier for the date-monotonicity repair recorded in the burst-273 entry. TD-VSDD-059 closure: citation now resolves to real content."
   - "v1.15 (F-P175-D101/fix-burst-283/2026-07-30): TD-VSDD-060 sibling sweep — as_retriever fallibility corrected. §VectorStore §Instance methods: 'as_retriever(self: Arc<Self>) → VectorStoreRetriever' corrected to '→ Result<VectorStoreRetriever, PregolyaError>'; fallibility note added (Err(E-VS-003 InvalidConfig) on invalid config). Grounds: interface-definitions.md §VectorStore Trait (F-P174-as-retriever-fallible/fix-burst-277) and ADR-014 Decision 2."
   - "v1.14 (fix-burst-278/wave-b/2026-07-28): TD-VSDD-060 sibling sweep — two borrow-based stale forms corrected. (1) VectorStore entity §Instance methods: receiver qualifier corrected from 'all-&self, dyn-compatible' to '&self-unless-noted, all dyn-compatible'; as_retriever method updated to show self: Arc<Self> receiver (verifiable: verify-signature-canon S1b returns zero hits for this file). (2) Relationships Summary: VectorStoreRetriever backed-by form corrected from borrow-ref to Arc-ownership (verifiable: borrow-backed VectorStoreRetriever form absent from this file). Both ground in D-48: VectorStoreRetriever owns Arc<dyn VectorStore>; Arc<Self> receiver is dyn-compatible."
@@ -225,7 +226,7 @@ represents a value in lc-JSON format.
 ### VectorStore
 The abstract document-index trait; the dyn-compatible contract for all embedding-backed
 document stores (ADR-014 Decision 2).
-- **Instance methods (`&self` unless noted, all dyn-compatible):** add_texts (returns Vec<String> IDs),
+- **Instance methods (`&self` unless noted, all dyn-compatible):** add_documents(docs: Vec<Document>) (returns Vec<String> IDs),
   similarity_search(query, k), similarity_search_with_score(query, k), max_marginal_relevance_search
   (query, k, fetch_k, lambda_mult), delete(ids), as_retriever(self: Arc<Self>) → Result<VectorStoreRetriever, PregolyaError> (concrete,
   non-opaque fallible return — `Err(E-VS-003 InvalidConfig)` on invalid config; `Arc<Self>` receiver is dyn-compatible)

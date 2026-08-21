@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.004
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
   - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — PC8 already cited DI-014 in body ('empty result is valid; it is not silently replaced with unfiltered results'); frontmatter anchor was missing."
   - "1.2 (burst-226/F-P131-07/2026-07-21): INV-3 fail-safe default — default similarity_search_with_filter returns Err(E-VS-005 FilterUnsupported) on non-empty filter; empty filter (vacuously true) still delegates to similarity_search. Removes lossy fallback language. EC-005 updated: non-overriding adapter returns Err(E-VS-005), not lossy result. Per ADR-014 v1.5 Decision 2 F-P131-07 adjudication."
+  - "1.3 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-030
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "97d9bcd"
+input-hash: "377aba5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -142,7 +143,7 @@ post-filter on the similarity result set. Both `MetadataFilter` and `FilterClaus
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-21 story]_
+S-2.03
 
 ## VP Anchors
 
