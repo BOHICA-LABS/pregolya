@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "5fd206d"
+input-hash: "b54cfce"
 traces_to:
   - behavioral-contracts/BC-2.23.005
   - behavioral-contracts/BC-2.23.006
@@ -113,7 +113,7 @@ Providing a regex pattern that fails to compile returns `Err(PregolyaError { cod
 (traces to BC-2.23.006 invariant 1)
 
 ### AC-013: VP-013 seed — ToolConfig::override_risk call-time validation (Kani anchor)
-This story is the VP-013 anchor. The Kani harness for VP-013 must verify: for all `ActionRisk` variants `r`, `BashTool::validate_risk(r)` returns `Ok` iff `r >= ActionRisk::Medium`, else `Err`. The test vector `test_AC_013_bash_risk_floor_kani_seed` exercises both the rejection of `ReadOnly` and the acceptance of `Medium`.
+This story is the VP-013 anchor. `check_risk_floor(risk: ActionRisk) -> Result<(), PregolyaError>` is defined as a pure-core synchronous function in `pregolya_tools::shell::bash` (`bash.rs`); `ToolConfig::override_risk` delegates to it for floor enforcement. The Kani harness `risk_floor_rejects_below_medium` (VP-013) verifies: for all `ActionRisk` variants `r`, `check_risk_floor(r)` returns `Ok(())` iff `r >= ActionRisk::Medium`, else `Err(PregolyaError { code: "E-TOOLS-007", .. })`. The test vector `test_AC_013_bash_risk_floor_kani_seed` exercises both the rejection of `ReadOnly` and the acceptance of `Medium`.
 (traces to BC-2.23.005 invariant 1)
 
 ## Architecture Mapping
@@ -124,7 +124,8 @@ This story is the VP-013 anchor. The Kani harness for VP-013 must verify: for al
 | `BashOutput` | `pregolya_tools::shell::bash` | pregolya-tools | Pure (data type) |
 | `GrepTool` | `pregolya_tools::search::grep` | pregolya-tools | Effectful (filesystem traversal) |
 | `GrepResult`, `GrepMatch` | `pregolya_tools::search::grep` | pregolya-tools | Pure (data types) |
-| `ToolConfig::override_risk` | `pregolya_tools::config` | pregolya-tools | Pure (builder-consuming validator) |
+| `check_risk_floor` | `pregolya_tools::shell::bash` | pregolya-tools | Pure (pure-core synchronous risk floor check; VP-013 Kani proof vehicle) |
+| `ToolConfig::override_risk` | `pregolya_tools::config` | pregolya-tools | Pure (builder-consuming validator; delegates to `check_risk_floor` for floor enforcement) |
 | `canonicalize_beneath_root` | `pregolya_tools::sandbox` | pregolya-tools | Pure |
 
 **Subsystem anchor:** SS-23 owns this story's scope because SS-23 is the Tool Implementations subsystem per ARCH-INDEX Subsystem Registry. `BashTool` and `GrepTool` are concrete tool implementations in SS-23. The risk floor policy is enforced within SS-23 at `ToolConfig` construction time.
@@ -138,7 +139,8 @@ This story is the VP-013 anchor. The Kani harness for VP-013 must verify: for al
 
 | Function / Type | Pure or Effectful | Reason |
 |----------------|-------------------|--------|
-| `ToolConfig::override_risk` | Pure | Builder validator; no I/O |
+| `check_risk_floor` | Pure | Pure-core enum comparison; VP-013 Kani proof vehicle; no I/O |
+| `ToolConfig::override_risk` | Pure | Builder validator; delegates to `check_risk_floor`; no I/O |
 | `BashTool::action_risk` | Pure | Returns constant variant |
 | `BashTool::invoke` | Effectful | Spawns process, waits, captures output |
 | `GrepTool::invoke` | Effectful | Traverses filesystem, reads files |
@@ -168,7 +170,8 @@ This story is the VP-013 anchor. The Kani harness for VP-013 must verify: for al
 - [ ] Create `crates/pregolya-tools/src/config.rs` — `ToolConfig::override_risk` builder-consuming validator
 - [ ] Write failing tests for AC-001..AC-013 before any implementation
 - [ ] Write `test_AC_013_bash_risk_floor_kani_seed` — exercises VP-013 property
-- [ ] Implement `ToolConfig::override_risk` — return `Err` for `ActionRisk` below Medium
+- [ ] Define `check_risk_floor(risk: ActionRisk) -> Result<(), PregolyaError>` in `shell/bash.rs` — pure-core synchronous floor check: `risk < ActionRisk::Medium` → `Err(PregolyaError { code: "E-TOOLS-007", .. })`, else `Ok(())`; VP-013 Kani proof vehicle
+- [ ] Implement `ToolConfig::override_risk` — delegates to `check_risk_floor`; returns its `Err` for `ActionRisk` below Medium; no duplicated floor logic
 - [ ] Implement `BashTool::invoke` — tokio::time::timeout(30s), 262,144-byte cap, non-zero exit Ok
 - [ ] Implement `GrepTool::invoke` — `regex = "1"` in-process, fail-whole-search on I/O error, cap at 100
 - [ ] Add `regex = { version = "1", default-features = false, features = ["std"] }` to `pregolya-tools/Cargo.toml`
@@ -221,7 +224,7 @@ crates/pregolya-tools/
     lib.rs                           # add pub use shell::*; pub use search::*; pub use config::*;
     shell/
       mod.rs                         # re-export only
-      bash.rs                        # BashTool, BashOutput, BashConfig
+      bash.rs                        # BashTool, BashOutput, BashConfig, check_risk_floor (pure-core VP-013 Kani proof vehicle)
     search/
       mod.rs                         # re-export only
       grep.rs                        # GrepTool, GrepResult, GrepMatch

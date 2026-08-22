@@ -2954,3 +2954,31 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). S-2.09 bcs set unchanged — Token Budget BC count (3) unaffected. DAG edges UNCHANGED (acyclic). No ADR change. No VP-INDEX arithmetic change.
 
 **Convergence dim-5 (Phase-2 P2A-022):** Counter **0/3 — NOT CLEAN (D-229; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-023 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 HIGH present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-023 (in addition to items 1–6 from P2A-022): (7) VP-008 validate_embedding_batch design canonical: validator in pregolya-core/src/embeddings.rs; proptest in-crate embeddings.rs #[cfg(test)] 5 families A–E feeding raw mock outputs into production validator; BC-2.22.001 Invariant 6 is the enforcement-point contract — do NOT re-flag (D-229); (8) VP-012 watermark harness basename is watermark.rs; harness_fn watermark_arithmetic_harness unchanged — do NOT re-flag (D-229).
+
+---
+
+### P2A-023 Adversary Pass (2026-08-21)
+
+**Verdict:** CLEAN(strict)=NO CLEAN(PR-merge)=NO
+
+**Findings (1 total — 0C/0H/1M/0L/0OBS):**
+
+- **P2A023-01 (MED, POL-4/9):** VP-013 function-name/module divergence. VP-013.md specifies the canonical Kani proof vehicle as `check_risk_floor` (pure-core fn) in `tools::shell` (specifically `tools::shell/bash.rs` after D-228's path fix). Anchor story S-1.22 named `override_risk`/`validate_risk` in `tools::config` and never built `check_risk_floor`. This is a residual of D-228, which corrected only the file path (`shell.rs→shell/bash.rs`) but did not reconcile the function name or module assignment. The adversary confirmed all other 13 VP anchors (VP-001..012, VP-014), the full DAG, wave schedule, census counts, and POL-8 were CLEAN. VP-013 was the lone residual.
+
+**Census at pass:** 133 BC / 14 VP — UNCHANGED. No renumber (POL-1).
+
+**Convergence dim-5 (Phase-2 P2A-023):** Counter **0/3 — NOT CLEAN (D-230; 2026-08-21)**. Streak RESET 0/3. trajectory-tail →2→5→2→1. Fix-burst dispatched.
+
+---
+
+### P2A-023 Fix-Burst (2026-08-21)
+
+**Files touched (story-writer — 1 file):** stories/stories/STORY-S-1.22-shell-search-tools.md (aligned VP-013 proof vehicle: named `check_risk_floor` pure-core fn in tools::shell/bash.rs; AC-013 references `check_risk_floor` with Ok/Err-at-Medium + E-TOOLS-007; ToolConfig::override_risk now delegates to check_risk_floor; internal AC↔Tasks name split resolved; input-hash refreshed b54cfce).
+
+**P2A023-01 CLOSED:** S-1.22 aligned to VP-013. `check_risk_floor` is the pure-core proof vehicle in `tools::shell/bash.rs`. `ToolConfig::override_risk` delegates to `check_risk_floor`. AC-013 references `check_risk_floor` with Ok/Err-at-Medium + E-TOOLS-007. BC-consistency verified: BC-2.23.005 governs the public `override_risk` call-site and error code E-TOOLS-007; VP-013 governs the extracted pure `check_risk_floor` fn — different abstraction layers, no conflict. AC-013's trace to BC-2.23.005 Invariant 1 is unchanged. VP-013.md, verification-architecture.md, and coverage-matrix.md were already canonical — no VP or arch-doc change needed.
+
+**Note:** This is the third consecutive VP-anchor residual cascade (D-228 corrected 7 paths; D-229 closed VP-008 anchor drift; D-230 closes VP-013 fn-name/module). Reinforces the PROCESS-GAP-CANDIDATE for a mechanical VP-anchor-consistency validator (DEFER-004 class; human authorization required before implementing).
+
+**Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). DAG edges UNCHANGED (acyclic). No ADR change. No VP-INDEX arithmetic change.
+
+**Convergence dim-5 (Phase-2 P2A-023):** Counter **0/3 — NOT CLEAN (D-230; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-024 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 MED present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-024 (in addition to items 1–8 from P2A-023): (9) VP-013 proof vehicle = `check_risk_floor` (pure-core fn, tools::shell/bash.rs); `ToolConfig::override_risk` delegates to `check_risk_floor`; AC-013 references `check_risk_floor` with Ok/Err-at-Medium + E-TOOLS-007; BC-2.23.005 governs public `override_risk` call-site; VP-013 governs extracted pure `check_risk_floor` — different layers, canonical (D-230) — do NOT re-flag.
