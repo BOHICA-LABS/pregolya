@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.003
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). Four Class 3 violations corrected: §Postconditions PC5 refusal exit path, §Invariants StructuredOutputRefused observation, §EC-001 refusal postcondition, and §Canonical Test Vectors TV-004 table cell — all PregolyaError value-observations with partial fields (category, code, or category+code+message present; component and retry_hint absent); added `, ..` before closing `}` at each site. All occurrences reconciled: 4 corrected (Class 3), 0 exempt."
   - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): §EC-002 split-line form: PregolyaError on preceding line, `{ category: VAL, code: \"E-PROV-005\", message: \"StructuredOutputParseError: missing required field 'answer'\" }` on continuation — component and retry_hint absent; added `, ..` before closing `}`. Split-line form does not exempt from the Class 3 normative rule (mechanism blindness is not an exemption). All occurrences reconciled: 5 corrected (Class 3), 0 exempt."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "2a785d4"
+input-hash: "86e470d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -160,7 +161,7 @@ premature parsing.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.07
 
 ## VP Anchors
 

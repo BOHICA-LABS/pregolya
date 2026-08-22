@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.10"
+version: "1.11"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -31,6 +31,7 @@ changelog:
   - "1.8 (F-P171a-02b/burst-273/2026-07-25): Lifecycle adjudication — ToolConfig::override_risk is a builder-consuming validator (signature: override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>); it returns Err immediately at call time; the registry never receives an invalid ToolConfig. Deliberate spec amendment per CLAUDE.md precedence rule 1 (BC supersedes for contract semantics). (1) PC-4 header: 'Risk floor violation at startup' → 'Risk floor violation at ToolConfig::override_risk call time'. (2) PC-4 body: 'At ToolRegistry::register time' → 'At ToolConfig::override_risk call time'. (3) EC-004 Description: 'at registry time' → 'at ToolConfig::override_risk call time'. TD-VSDD-060 sibling sweep: VP-013.md §BC Traceability EC-004/EC-005 and §Proof Harness cite 'registry time' and 'registration logic' — routed to architect for VP-013 body update (architect scope)."
   - "1.9 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-004 BashTimeout: ::new(Component::Tools, Category::Timeout, RetryHint::Never, ...). PC4 E-TOOLS-007 BashRiskTierViolation: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
   - "1.10 (fix-burst-287/TD-VSDD-091+ADR-010-C3/2026-08-01): (1) VP-INDEX version pin removed: §VP Anchors and §Traceability VP Registration 'VP-INDEX v1.5 as' → 'VP-INDEX as' (no §-anchor introduced). (2) ADR-010 Class 3 fix: PC-3 E-TOOLS-004 and PC-4 E-TOOLS-007 prose PregolyaError::new(...) → PregolyaError { code: 'E-TOOLS-004', .. } and { code: 'E-TOOLS-007', .. } (observation form). 2 violations corrected. verify-no-version-pins.sh PASS; verify-error-notation-canon.sh PASS."
+  - "1.11 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.22 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -40,7 +41,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "19a1053"
+input-hash: "5dcadf6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -184,7 +185,7 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-23 story]_
+S-1.22
 
 ## VP Anchors
 

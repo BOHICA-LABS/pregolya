@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.7 (F-P160-01, 2026-07-25): Fix burst 261 — correct Description super-step ceiling prose from 'exceeds config.recursion_limit' to the precise formula 'step_at_invoke_start + config.recursion_limit + 1' (recursion_limit + 1 super-steps execute within the invocation segment before the guard fires). Concrete examples added (limit=5 → 6 steps execute then halt; limit=25 → 26 steps execute then halt). PC5/PC6/EC-006/TV-006 are the authoritative normative sites; Description now agrees with them in spirit. TD-VSDD-060 sweep: VP-BC208002-01 in BC-2.08.002 also fixed in same burst (same off-by-one in VP description; no other normative prose sites found with the stale formula)."
   - "1.8 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Four sites corrected: PC5 single-line (E-GRAPH-017, `, ..` added before closing `})`); EC-005 multiline continuation line (E-GRAPH-006, `, ..` added); EC-006 multiline continuation line (E-GRAPH-017, `, ..` added); TV-006 table-cell (E-GRAPH-017, `, ..` added). All spans have category/code/message but lack component and retry_hint (or lack category in the E-GRAPH-006 span)."
   - "1.9 (burst-291/D-134/2026-08-16): §Description: phantom anchor corrected. 'error-taxonomy.md §GRAPH' → 'error-taxonomy.md §Component: GRAPH' (real heading is '### Component: GRAPH (pregolya-graph)'; §GRAPH alone matches no heading in error-taxonomy.md). TD-VSDD-060 sweep: sole §GRAPH occurrence in this file's live body."
+  - "1.10 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.16 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -193,7 +194,7 @@ message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <s
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.16
 
 ## VP Anchors
 

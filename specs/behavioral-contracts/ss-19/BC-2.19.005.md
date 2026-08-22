@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.9"
+version: "1.10"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -31,6 +31,7 @@ changelog:
   - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-SRLZ-001 allowlist cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, VP anchors, or Red Gate invariants altered."
   - "1.8 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
   - "1.9 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Invariant 3: §E-SRLZ-001 (row: VAL) is a phantom anchor (no §E-SRLZ-001 heading exists in error-taxonomy.md; individual error codes are not section headings). Corrected to §Component: SRLZ, resolving to heading '### Component: SRLZ (pregolya-core::serializable)'."
+  - "1.10 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -40,7 +41,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "cc7c8e1"
+input-hash: "2567224"
 extracted_from: null
 modified: []
 deprecated: null
@@ -161,7 +162,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-19 security story]_
+S-2.01
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.005
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,13 +23,14 @@ changelog:
   - "1.1 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.2 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. H1 title, Description, PC-2, PC-4, TV-001/002/003 updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.3 (BURST-315/F-A1/2026-08-17): Remove spurious ADR-019-rolling-context-compaction.md from traces_to and inputs — copy-paste residue symmetric with BC-2.06.004; ADR-019 governs compaction (SS-07), which is disjoint from the per-tool-call approval hook (CAP-034). ADR-018 is the correct sole architectural input."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
-input-hash: "1edfa70"
+input-hash: "2dc86b0"
 extracted_from: null
 modified: []
 deprecated: null
@@ -134,7 +135,7 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-06 extension story]_
+S-1.24
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.001
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (burst-222/2026-07-21): VP-007 proptest seed assigned. BC-2.19.001 is the round-trip contract (serialize→Serialized::Constructor→Reviver::revive→semantically-equivalent value) that VP-007 will verify via property-based testing. Assignment rationale: H1 title contains 'Round-Trip' explicitly and postcondition 3 specifies the semantic equivalence invariant that proptest exercises. Architect to author VP-007 body in Phase 6."
   - "1.2 (burst-297/Sweep-A/2026-08-16): DI-008 Traceability cell tightened — 'LcSerializable and Reviver constructors return Result' implied Reviver::new() is fallible, which contradicts BC-2.19.003 PC2 (Reviver::new() returns a plain Reviver instance, not Result). The fallible operation is revive(); LcSerializable::serialize() returns Serialized directly (also infallible, per PC1). Fixed cell to: 'revive returns Result; Reviver::new() is infallible; LcSerializable::serialize returns Serialized (infallible); no .unwrap() in non-test code'. Corpus-wide Sweep A: this was the only remaining named-constructor ambiguity after BC-2.19.003 fix (same burst). input-hash updated to current (e7b7c2e)."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "cc7c8e1"
+input-hash: "2567224"
 extracted_from: null
 modified: []
 deprecated: null
@@ -128,7 +129,7 @@ serialization is attempted and `Serialized::NotImplemented` is produced instead.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-19 story]_
+S-2.01
 
 ## VP Anchors
 

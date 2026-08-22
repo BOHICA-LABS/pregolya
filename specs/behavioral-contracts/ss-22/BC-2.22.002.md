@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.002
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings; SECURITY: OpenAiApiKey credential opacity"
   - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC2/INV-5 specify the mandatory 30s timeout but did not cite DI-009; add BC-2.14.004 cross-reference in PC2 and INV-5 prose."
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 6 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC6, INV-4, EC-003, EC-004, EC-005, TV-004 each had `Err(PregolyaError { ... })` — replaced `...` with `..` in all six. Xtask rename: VP-2.22.002-C `deny-client-new` → `check-client-timeout`. No behavioral change."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-032
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "94c1172"
+input-hash: "1953e2c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -153,7 +154,7 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-22 story]_
+S-2.09
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Six sites corrected: PC1 single-line (E-CORE-003, `, ..` added); PC5 single-line (E-CORE-006, `, ..` added before closing `})`); invariant §layer-disambiguation multiline continuation line (E-CORE-006, `, ..` added before closing `})`); EC-001 multiline continuation line (E-CORE-003, `, ..` added); EC-004 multiline continuation line (E-CORE-006, `, ..` added); TV-004 table-cell (E-CORE-006, `, ..` added). All spans have category/code (plus message where present) but lack component and retry_hint."
   - "1.6 (burst-294/F-185-02/2026-08-16): Invariant §recursion_limit-layer-disambiguation — 'at depth N' bare-N placeholder corrected to 'at depth <depth>' (angle-bracket placeholder convention; harmonizes with PC5 and EC-004 canonical template for E-CORE-006). D-134 sibling sweep: sole occurrence of bare-N template placeholder in BC-2.01.003; no other bare-N placeholders present."
   - "1.7 (BURST-303/O-P194-A/2026-08-17): EC-001 generic-arity reconciliation — replaced `DynRunnable<Value, Value>` generic form with canonical non-generic `Arc<dyn DynRunnable>` per architect DynRunnable canon (O-P194-A). DynRunnable is a non-generic trait; Value is the runtime boundary type, not a type parameter."
+  - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -154,7 +155,7 @@ code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at 
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.04
 
 ## VP Anchors
 

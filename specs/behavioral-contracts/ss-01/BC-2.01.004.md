@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line (E-CORE-004, `, ..` added); EC-001 3-line multiline span closure (E-CORE-004, `, ..` added before closing `})`); TV-004 table-cell (E-CORE-004, `, ..` added). All spans have category/code/message but lack component and retry_hint."
   - "1.3 (BURST-303/O-P194-A/2026-08-17): Precondition 2 generic-arity reconciliation — replaced type-erased `DynRunnable<Value, Value>` pipelines with canonical `Arc<dyn DynRunnable>` form per architect DynRunnable canon (O-P194-A). DynRunnable is a non-generic trait; Value is the runtime boundary type, not a type parameter."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -148,7 +149,7 @@ No error unless the output type of `a` does not match the input type of `a`.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.04
 
 ## VP Anchors
 

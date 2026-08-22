@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.13"
+version: "1.14"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.11 (F-P177-B02, burst-288, 2026-08-15): Change `steps_remaining: Option<u32>` → `Option<i64>` in PC5, PC9, Architecture Anchors §BudgetInfo struct, and Invariants explanation. Rationale: BC-2.03.001 §Description establishes execution runs to recursion_limit + 1 steps; at step recursion_limit + 1, steps_remaining = recursion_limit - (recursion_limit + 1) = -1, which underflows u32. Aligns with tokens_remaining design precedent (signed for same reasons)."
   - "1.12 (F-178-04, burst-289, 2026-08-16): Three phantom `BC-2.03.001 §recursion_limit_canon` anchor citations replaced with `BC-2.03.001 §Description` — the heading `##  Description` exists in BC-2.03.001 and contains the recursion_limit+1 formula; `§recursion_limit_canon` is not a heading anywhere in BC-2.03.001 (grep `^#{1,6}` confirms). Sites corrected: (a) changelog entry 1.11 rationale sentence; (b) PC9 parenthetical `(the final allowed step per …)`; (c) Invariants signed-type explanation. Behavioral content unchanged; anchor is the only correction."
   - "1.13 (burst-311/OBS-P202-A/2026-08-17): §Edge Cases EC block reordered for ascending EC-ID file order (EC-001, EC-002, EC-003, EC-004, EC-005). EC-005 (Summarize Deny recursion) was appearing before EC-004 (Sub-agent ceiling) in the file. Blocks swapped so EC-004 precedes EC-005. EC IDs are NOT renumbered per POL-1 append-only. Behavioral content unchanged."
+  - "1.14 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -209,7 +210,7 @@ summarize attempt. The `JournalEntry` for the original `Deny` is preserved.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.18
 
 ## VP Anchors
 

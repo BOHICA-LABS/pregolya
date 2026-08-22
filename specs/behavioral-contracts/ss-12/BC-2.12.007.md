@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,13 +24,14 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "0cb496e"
+input-hash: "577002e"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-03 — replace non-canonical `node_delta` with canonical `node_stream` at PC2, EC-004, and TV-002. BC-2.06.001 is the streaming taxonomy authority; `node_delta` was never a valid variant. Added to retired-identifier registry (bc-authoring-plan.md gate #19)."
   - "1.2 (ADV-P1D-PASS-46): F-P46-01 — fix streaming × interrupt seam contradiction with BC-2.06.001 (the declared streaming taxonomy authority). TV-005: remove `run_end.status = interrupted`; interrupt envelope is the terminal SSE frame, no run_end emitted. EC-003: fix 'stream ends with status: interrupted' → stream truncates after interrupt envelope; run status queryable via REST only. EC-001: resolve hedge '(or a run_end with status: failed)' — definitive: stream closes with no run_end on failure; authority is BC-2.06.001 EC-005 (completion-only RunEnd contract)."
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server / pregolya-graph per module-decomposition.md v1.10."
   - "1.4 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -171,7 +172,7 @@ normally.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.27
 
 ## VP Anchors
 

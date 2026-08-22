@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.003
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-* (all crates) / xtask (lint gate) per module-decomposition.md v1.10."
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: EC-002 `PregolyaError { ... }` — replaced `...` with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION); TV-002 Expected Output — added `, ..` (CLASS3 VIOLATION, 2/5 fields). Xtask rename (D-35/D-80): 5 occurrences of `cargo xtask lint-no-panic` → `cargo xtask check-no-panic` in PC4, TV-003, TV-004, VP-DI008-01, Architecture Anchors. No behavioral change."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -152,7 +153,7 @@ is in `#[cfg(test)]` scope.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.02
 
 ## VP Anchors
 

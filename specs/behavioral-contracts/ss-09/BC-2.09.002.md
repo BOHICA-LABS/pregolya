@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.002
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): PC1: migrate non-object-safe Arc<dyn pregolya_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications. Authority: ADR-005 §Adjacent Adjudications, interface-definitions.md §DynTool."
   - "1.5 (FIX-BURST-278-WAVE-C/S4-gate+F-P175-D210/2026-07-28): (1) S4 gate (D-43) — frontmatter changelog §v1.4 entry annotated 'non-object-safe' before 'Arc<dyn pregolya_core::Tool>': hazard-naming historical record; annotation makes the S4-exemption machine-verifiable (the migration documented that form as E0038/non-object-safe by intent). PC-1 body 'direct dyn pregolya_core::Tool is non-object-safe' is already exempt. (2) F-P175-D210 (HIGH) — Description, PC-4, and TV-003 exposed raw McpError::ToolExecution at a public boundary with no taxonomy code, contradicting the all-errors-are-PregolyaError rule. Fix: all three sites updated to PregolyaError{code:E-MCP-007} with McpError::ToolExecution preserved in .source() per BC-2.09.004 PC-1 pattern. E-MCP-007 McpToolExecutionError (TOOL, broken, Maybe) minted in error-taxonomy.md same burst. Authority: error-taxonomy.md §E-MCP-007. Verifiable: grep 'Err(McpError::ToolExecution)' specs/behavioral-contracts/ss-09/BC-2.09.002.md returns zero occurrences in public-surface sites. (3) records-lint L9b de-pin — prior changelog entry contained an error-taxonomy version-pin in the E-MCP-006 minting note; de-pinned to stable section anchor 'error-taxonomy.md §E-MCP-006' per TD-VSDD-091 version-pin ban."
   - "1.6 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — nine violations corrected (line 20 frontmatter EXEMPT): Description (3/5, added `..`); PC4 (3/5, added `..`); PC5 multiline (4/5, added `..`); PC6 multiline (4/5, added `..`); PC8 (2/5, added `..`); EC-004 multiline (4/5, added `..`); TV-003 (3/5, added `..`); TV-004 (3/5, added `..`); TV-005 (3/5, added `..`). All per ADR-010 §Error-Construction Notation Canon Class 3."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -30,7 +31,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "17b1a43"
+input-hash: "988ae50"
 extracted_from: null
 modified: []
 deprecated: null
@@ -174,11 +175,11 @@ _No Kani VP seed required for this BC. Unit and integration tests are sufficient
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.10
 
 ## VP Anchors
 
-_[to be filled after verification-architecture phase]_
+S-2.10
 
 ## Traceability
 

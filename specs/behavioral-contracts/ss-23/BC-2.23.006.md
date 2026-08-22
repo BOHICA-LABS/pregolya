@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "2.0"
+version: "2.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "1.8 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC4 E-TOOLS-009 InvalidRegexPattern: ::new(Component::Tools, Category::Val, RetryHint::Never, ...); phantom pattern/compile_error fields removed (message-embedded placeholders). PC6 E-TOOLS-008 traversal I/O error: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. TD-VSDD-060 sibling sweep: EC-002/EC-008/TV-003/TV-006 use abbreviated code + JSON-like shorthand — classified (c) message-component descriptions; left as-is."
   - "1.9 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-3 E-TOOLS-001 → { code: 'E-TOOLS-001', .. }. PC-4 E-TOOLS-009 → { code: 'E-TOOLS-009', .. }. PC-6 E-TOOLS-008 traversal I/O → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "2.0 (burst-288/P1D-177-ITEM2/2026-08-15): ADR-024 §Phase-2 Postconditions PC-5 consumer (ROOT PATH ONLY) — GrepTool calls canonicalize_beneath_root for the root path argument; when path does not exist, Phase 2 returns Ok(canonical_parent.join(basename)); subsequent fs::open or fs::read_dir surfaces NotFound → E-TOOLS-008 via the PC-6 fail-the-whole-search path. Recursive sub-paths walk a confirmed-existing directory so Phase 2 does not arise for them. PC-6 text extended with ADR-024 §Phase-2 Postconditions PC-5 note (root path only). ADR-024 §Phase-2 Postconditions PC-5 added to §Traceability §Binding Decisions. ADR-024 added to traces_to + inputs + §Architecture Anchors."
+  - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.22 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -40,7 +41,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "da1fa5d"
+input-hash: "c276465"
 extracted_from: null
 modified: []
 deprecated: null
@@ -189,7 +190,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-23 story]_
+S-1.22
 
 ## VP Anchors
 

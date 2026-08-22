@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder: EvidenceJournal and append API remain in pregolya-graph; SQLite backend in pregolya-checkpoint. No Architecture Anchor crate changes (all existing anchors already correct per ADR-009 split)."
   - "1.2 (F-P94-03 sweep, 2026-07-17): Fix two Deny-halt characterizations that omit the three-way on_ceiling dispatch. TV-002 Note: 'Deny recorded before halt' → 'Deny recorded before engine dispatch (on_ceiling=Halt scenario)' — TV-002 tests a specific Halt scenario so the note is now explicit. Related BCs BC-2.10.003 line: 'Deny entries are written before the halt is executed' → 'Deny entries are written before engine dispatch (halt / HITL interrupt / summarize call); see BC-2.10.003 for halt and summarize paths'."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -146,7 +147,7 @@ that completed any LLM call or tool invocation.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.18
 
 ## VP Anchors
 

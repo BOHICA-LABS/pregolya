@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.007
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ di_anchors: [DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnablePassthrough identity pass-through semantics and inspect side-effect contract. LCEL composition scope expansion (D-170); ADR-026 §Decision 3."
   - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
+  - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "98a93c5"
+input-hash: "4ccce82"
 extracted_from: null
 modified: []
 deprecated: null
@@ -165,7 +166,7 @@ proptest and unit tests are sufficient to verify the clone-identity invariant._
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.05
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.3 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. PC-4 updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.4 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors and §Traceability VP Registration: 'VP-INDEX v1.5 as' → 'VP-INDEX as' (plain prose, no §-anchor introduced). verify-no-version-pins.sh PASS."
   - "1.5 (fix-burst-P2A-010/F-P2A010-08/2026-08-20): Add PC-7 (Pure Routing Core — VP-011 proof surface): formally define `route_pre_tool_decision`, `shield_hook_result`, and `DispatchOutcome` as required named items in `graph::hitl`. These are the VP-011 Kani proof targets; Kani 0.67.0 cannot target `pre_tool_dispatch` directly (async), so pure extraction is required. Update §Invariants fail-closed Deny text to name `route_pre_tool_decision`. Update §Verification Properties VP-011 row to reference the pure functions and DispatchOutcome by name."
+  - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.23 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "febe7fa"
+input-hash: "5a451cb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -197,7 +198,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-05 extension story]_
+S-1.23
 
 ## VP Anchors
 

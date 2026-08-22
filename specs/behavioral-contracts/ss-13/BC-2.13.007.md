@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.007
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,7 +20,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "65178f8"
+input-hash: "6865de2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -29,6 +29,8 @@ replacement: null
 retired: null
 removed: null
 removal_reason: null
+changelog:
+  - "1.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 ---
 
 # BC-2.13.007: Environment Variable Sanitization at Sandbox Execution Boundary
@@ -162,7 +164,7 @@ misconfigured allowlist.)
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.09
 
 ## VP Anchors
 

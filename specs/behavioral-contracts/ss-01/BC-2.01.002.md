@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.002
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line span (E-CORE-002, bare wrapper missing `, ..`); EC-002 multiline span continuation line (E-CORE-002, `, ..` added before closing `})`); TV-004 table-cell span (E-CORE-002, `, ..` added). All spans have category/code but lack component and retry_hint."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -144,7 +145,7 @@ code interprets it as a control signal, not as a content-bearing message.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.03
 
 ## VP Anchors
 

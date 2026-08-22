@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.012
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.0 (2026-07-13): initial authoring — Greenfield batch 13"
   - "1.1 (2026-07-14): Architecture Anchor pregolya-core/src/graph/builder.rs corrected to pregolya-graph/src/graph/state.rs — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
+  - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -132,7 +133,7 @@ user-defined node names (they collide with the graph's internal routing symbols)
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.07
 
 ## VP Anchors
 
@@ -157,5 +158,6 @@ _[to be filled after story decomposition]_
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-08-22 | §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change) | story-anchor-backfill |
 | 1.1 | 2026-07-14 | Architecture Anchor `pregolya-core/src/graph/builder.rs` corrected to `pregolya-graph/src/graph/state.rs` — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 13 |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.4 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-TMPL-002. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-18/BC-2.18.005.md returns zero fence-scoped literal occurrences after this edit."
   - "1.5 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-002 inline cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
   - "1.6 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "172de17"
+input-hash: "e8f793e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -137,7 +138,7 @@ so the error is detected as early as possible regardless of whether the template
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-18 security story]_
+S-2.05
 
 ## VP Anchors
 

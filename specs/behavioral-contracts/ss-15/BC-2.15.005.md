@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.005
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,10 +21,11 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "9510ea3"
+input-hash: "bda5443"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in Traceability §Error Code Minted: `ADR-012 §Consequences/Error Codes` → `ADR-012 §Error Codes` (no heading §Consequences/Error Codes exists in ADR-012; the error-codes section is `### Error Codes` under `## Consequences`)."
+  - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -178,7 +179,7 @@ namespaces.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.13
 
 ## VP Anchors
 

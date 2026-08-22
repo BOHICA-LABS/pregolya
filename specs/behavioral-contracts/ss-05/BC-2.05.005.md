@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.005
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,7 @@ changelog:
   - "1.5 (F-P119-01 + OBS-1 + OBS-2, fix burst 122, 2026-07-19): F-P119-01: Description updated to enumerate all non-interrupted statuses including summary_halt; Preconditions §2 adds clause (e) summary_halt (run terminated via OnCeiling::Summarize; BC-2.10.003 PC8(d) + BC-2.12.003 PC8); Canonical Test Vectors adds TV-006 (summary_halt guard). OBS-1 adjudication — production-grade totality chosen over delegation narrowing: BC-2.05.005 guard must be total over ALL non-interrupted run_status values because queued (never-started run has no interrupt slot before first node executes) and cancelled (in-flight slots discarded at cancellation) are equally unable to have an active interrupt; Preconditions §2 adds clauses (f) queued and (g) cancelled; TVs add TV-007 (queued guard) and TV-008 (cancelled guard); BC-2.05.004 Invariants already correctly enumerated all six statuses — both BCs now coherent. OBS-2: VP-HITL-10 rewritten precisely — 'six non-interrupted run_status values (completed, failed, in_progress, summary_halt, queued, cancelled) plus the interrupted-slots-consumed scenario (PC2(d)/TV-002) — 7 total parameterized test cases'. TD-VSDD-060 sweep: Preconditions §2 normative guard list (clauses a-g): now total over all 7 guard cases; VP-HITL-10 parameterized count: rewritten with derivable 7-case enumeration; Related BCs lifecycle list (~line 138, BC-2.12.003 lifecycle reference): not a guard enumeration, already exhaustive, exempt; all E-GRAPH-002 {run_status} struct sites (EC-001/002/003/004, TV-001 through TV-008): specific concrete values, correctly exempt."
   - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.7 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): Remove phantom §Named-Section anchors. Two `interface-definitions.md §HTTP Status Codes 422 row` references used a row-number qualifier as part of the §-anchor name — but the actual section heading is `§HTTP Status Codes`; row numbers are not headings. Fixed by parenthesizing the qualifier: `§HTTP Status Codes (422 row)`. Two sites corrected (PC3 prose and TV-003 Notes column); no behavioral change."
+  - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -159,7 +160,7 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.20
 
 ## VP Anchors
 

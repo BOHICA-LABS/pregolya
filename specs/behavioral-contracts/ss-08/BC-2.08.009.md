@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.009
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-08-16T00:00:00Z
 changelog:
   - "1.1 (F-P97-01, 2026-07-17): Module field resolved from variant-phrasing placeholder 'pregolya-macros, pregolya-core [architect to confirm crate→subsystem in Phase 1b]' to sibling-canonical 'pregolya-macros (re-exported pregolya-core)' per BC-2.08.010/011/012 and module-decomposition.md v1.10 §pregolya-macros. Phase 1b closed 2026-07-14; placeholder class no longer accepted (F-P96-01)."
   - "1.2 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in PC-2: `ADR-004 §Version pin` → `ADR-004 §Decision` (no heading §Version pin exists in ADR-004; the version pin statement is a bold bullet item inside `## Decision`)."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "3c23d7c"
+input-hash: "5f7e704"
 extracted_from: null
 modified: []
 deprecated: null
@@ -180,7 +181,7 @@ semver-major bump. Downstream callers that previously called the tool without pr
 
 ## Story Anchor
 
-_[to be filled after story decomposition — anchored to the `#[tool]` proc-macro story per ADR-008]_
+S-2.08
 
 ## VP Anchors
 

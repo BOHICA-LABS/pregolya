@@ -3284,3 +3284,53 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **ACCEPTED/DO-NOT-REFLAG for P2A-031 (in addition to items 1–19 from P2A-028/029):** (20) MCP tool-name prefix = single underscore `{server}_{tool}` per langchain-mcp-adapters reference (BC-2.09.001 PC6/TV-005) — do NOT re-flag double-underscore (D-236); (21) provider connection-refused = E-PROV-012 ProviderConnectionError (TRANSPORT; no HTTP status required) — do NOT re-flag E-PROV-008 for connection-refused (D-236); (22) S-2.10 AC-002→PC1/Inv3/EC-007, AC-003→PC5, AC-004→PC6, AC-005→PC7/EC-006 + AC-026 (PC3) + AC-027 (PC8) are canonical — do NOT re-flag mis-numbering or missing PC3/PC8 coverage (D-236); (23) error-code census is 118 (43 HTTP + 23 individual + 52 blanket) — canonical, do NOT re-flag as 117 (D-236).
 
 **Convergence dim-5 (Phase-2 P2A-030):** Counter **0/3 — RESET (D-236; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-031 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
+
+---
+
+### P2A-031 Adversary Pass (2026-08-22)
+
+**Scope:** Phase-2 story decomposition — all 39 stories, 133 BCs, 14 VPs. Focus: fresh-context adversarial review of current factory-artifacts HEAD (post-P2A-030 fix-burst). Form-B verbatim evidence required.
+
+**Finding count:** 2 (1 HIGH, 1 MED)
+
+| ID | Severity | Rule | Summary |
+|----|----------|------|---------|
+| P2A031-01 | HIGH | POL-4/8 | S-2.08 AC→PC trace drift across BC-2.08.008/013/014 — AC traces pointed to wrong PC/INV/EC references causing phantom coverage; BC-2.08.013 PC2/PC4/PC7 and BC-2.08.014 PC4/PC7 had no covering story ACs |
+| P2A031-02 | MED | POL-4 | S-2.07 AC-001/003 mistraced BC-2.08.001 compound PC2 — should trace BC-2.07.001 postconditions; PC1 (non-empty concat result) and PC4 (first-chunk delivery time <5s) had no covering story ACs |
+
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO
+
+**D-237 minted.** Fix-burst dispatched. Also covers D-238 (proactive maintenance: corpus-wide BC §Story Anchor backfill).
+
+**Convergence dim-5 (Phase-2 P2A-031):** Counter **0/3 — NOT CLEAN (D-237; 2026-08-22)**. Streak RESET 0/3.
+
+---
+
+### P2A-031 Fix-Burst (2026-08-22)
+
+**Files touched:**
+- `stories/stories/STORY-S-2.08-advanced-provider-features.md` (AC→PC traces corrected across BC-2.08.008/013/014; 5 new covering ACs appended: BC-2.08.013 PC2/PC4/PC7, BC-2.08.014 PC4/PC7) [story-writer]
+- `stories/stories/STORY-S-2.07-chat-model-core-conformance.md` (AC-001/003 retraced to correct BC-2.07.001 PC mappings; 2 new covering ACs appended: PC1 non-empty concat result, PC4 first-chunk delivery time <5s) [story-writer]
+- 109 BC files under `specs/behavioral-contracts/**` (§Story Anchor backfilled from STORY-INDEX forward map; version bump + changelog row + input-hash repair per file; zero coverage gaps — every BC maps to ≥1 story) [product-owner]
+- `sidecar-learning.md` (session learning update) [session-reviewer]
+
+**P2A031-01 CLOSED:** S-2.08 AC→PC traces renumbered to canonical BC-2.08.008/013/014 PC/INV/EC assignments. Five new covering ACs appended (no existing AC/BC ID renumbered per POL-1): BC-2.08.013 PC2 (streaming events emitted); BC-2.08.013 PC4 (async cancellation); BC-2.08.013 PC7 (token usage reported); BC-2.08.014 PC4 (structured output schema); BC-2.08.014 PC7 (tool use round-trip). Phantom coverage eliminated.
+
+**P2A031-02 CLOSED:** S-2.07 AC-001/003 retraced from erroneous BC-2.08.001 compound PC2 reference to correct BC-2.07.001 postconditions. Two new covering ACs appended: PC1 (chat model returns non-empty String concat of all chunks) and PC4 (first chunk delivered within 5 seconds). All existing AC IDs preserved (POL-1; new ACs appended).
+
+**D-238 — Proactive maintenance (Canonical Principle Rule 6):** 109 BC files §Story Anchor fields were `_[to be filled…]_` placeholders across all subsystems. STORY-INDEX forward map (all 39 stories) used to identify covering stories per BC. Zero coverage gaps: every BC maps to ≥1 story. §Story Anchor field + version bump + changelog row + input-hash repair per BC file. No postcondition/invariant/TV/AC content changed. Unfilled-anchor finding class CLOSED.
+
+**Error-code census:** UNCHANGED (43 HTTP + 23 individual + 52 blanket = 118 total). error-taxonomy UNCHANGED. BC census UNCHANGED (133). VP UNCHANGED (14). Stories UNCHANGED (39). DAG UNCHANGED.
+
+**Root cause P2A031-01:** S-2.08 AC→PC traces were off-by-position — all cited one column over from the correct PC. Two postconditions (BC-2.08.013 PC2/PC4/PC7 and BC-2.08.014 PC4/PC7) had zero story coverage as a result of the systematic drift.
+
+**Root cause P2A031-02:** S-2.07 AC-001/003 cited BC-2.08.001 (a different subsystem's BC) instead of the correct BC-2.07.001. PC1 (non-empty result) and PC4 (timing) were uncovered.
+
+**Root cause D-238:** §Story Anchor fields were initialized as placeholders during Phase-2 authoring and never backfilled — a class of proactive maintenance that the adversary would eventually flag in a later pass.
+
+**Note:** No ID renumber (POL-1; all new ACs appended at end). No BC-set count changes. Token Budgets unaffected. DAG UNCHANGED. Census 39 stories / 133 BC / 14 VP / 22 epics / 118 EC — UNCHANGED. Streak 0/3. NEXT: P2A-032.
+
+**ACCEPTED/DO-NOT-REFLAG for P2A-032 (in addition to items 1–22 from P2A-030):** (23) ALL 109 BC §Story Anchors backfilled from STORY-INDEX (D-238); zero coverage gaps; unfilled-anchor class CLOSED — do NOT re-flag unfilled Story Anchor placeholders; (24) S-2.08 AC→PC traces corrected across BC-2.08.008/013/014 + 5 covering ACs appended; S-2.07 AC-001/003 retraced to correct BC-2.07.001 PC mappings + 2 covering ACs appended (D-237) — do NOT re-flag these trace mappings or coverage gaps.
+
+**Convergence dim-5 (Phase-2 P2A-031):** Counter **0/3 — RESET (D-237/D-238; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-032 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).

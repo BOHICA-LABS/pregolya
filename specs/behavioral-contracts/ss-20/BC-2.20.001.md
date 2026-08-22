@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.001
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval"
   - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — EC-002 already cited DI-014 in body ('error propagated, not swallowed; no Vec::new() fallback on partial failure'); frontmatter anchor was missing."
   - "1.2 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_ASCII_ELLIPSIS_VIOLATION violations corrected. PC-2 failure arm, EC-002 expected-output, and TV-003 expected-output: `PregolyaError { ... }` → `PregolyaError { .. }` (replace `...` with `..` field-elision marker). No security semantics or VP anchors altered."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "97d9bcd"
+input-hash: "869996f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -131,7 +132,7 @@ Object-safety is achieved via `&self` receiver and `#[async_trait]` desugaring
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-20 story]_
+S-2.02
 
 ## VP Anchors
 

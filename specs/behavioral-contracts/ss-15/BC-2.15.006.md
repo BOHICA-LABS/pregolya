@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep — 3 corrections. (1) EC-003 Scenario: `PregolyaError { ... }` → `PregolyaError { .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (2) EC-003 Expected: `PregolyaError { category: DURABILITY, ... }` → `PregolyaError { category: DURABILITY, .. }` (CLASS3_ASCII_ELLIPSIS_VIOLATION). (3) TV-006: `PregolyaError { category: DURABILITY }` → `PregolyaError { category: DURABILITY, .. }` (Class 3 VIOLATION — no elision marker). All three per ADR-010 §Error-Construction Notation Canon."
   - "1.6 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-007 added for EC-006 (empty app_id at run start → E-MEMORY-004 NoScopeContext fail-loud). EC-006 was introduced in v1.4 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-007 exercises the `run_context.app_id` empty path and verifies `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment §Gap 3 correction."
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — EC-006 Expected behavior multi-line PregolyaError::new(Component::Memory, Category::Security, RetryHint::Never, \"E-MEMORY-004\", ...) collapsed to Err(PregolyaError { code: \"E-MEMORY-004\", .. }). Bare constructor form forbidden in prose context per ADR-010 Class 3 rules."
+  - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "9510ea3"
+input-hash: "bda5443"
 extracted_from: null
 modified: []
 deprecated: null
@@ -192,7 +193,7 @@ correction — NO-SILENT-EMPTY enforced on both B101 and B102 paths.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.13
 
 ## VP Anchors
 

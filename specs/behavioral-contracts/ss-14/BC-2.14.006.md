@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.006
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-004, TV-001, TV-004, TV-005 each had a specific 'Validation failed for...' message matching E-CORE-005 but no code field. Added code: E-CORE-005 to all five sites."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.3 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 8 violations corrected: Description `PregolyaError { category: VAL, ... }` — replaced `...` with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION); EC-002 `PregolyaError { category: VAL, ... }` — same fix; EC-001, EC-004, TV-001, TV-004, TV-005 — each added `, ..` (CLASS3 VIOLATION, 3/5 fields); TV-002 — added `, ..` (CLASS3 VIOLATION, 2/5 fields). PC1 unchanged — Class 3 VALID (all 5 non-source fields present). No behavioral change."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-014
@@ -122,7 +123,7 @@ coordinator returns `None` on validation failure rather than propagating the err
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.02
 
 ## VP Anchors
 

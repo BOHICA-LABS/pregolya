@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.003
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.2 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'per ADR-015 v1.3 semantics' → 'per ADR-015 Decision 3 §MessagesPlaceholder trust derivation' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to d2cc4f4 (drift from burst-227 ADR-015 content changes)."
   - "1.3 (fix-burst-279/F-P175-B202/ADR-015-D3-Amendment/2026-07-28): FewShotPromptTemplate example type change and pre-guard note. PC2: FewShot examples promoted from Vec<(String, String)> to Vec<(TemplateVar, TemplateVar)> — each component carries optional trust_level so the outer injection_guard in format_messages can check trust levels before calling example_template.format() (prior Vec<(String, String)> had no trust classification; this closes the FewShot injection path per ADR-015 Decision 3 Amendment). PC5: added pre-guard note — before rendering each pair, format_messages injection_guard checks trust level of both example_input and example_output TemplateVar components against SlotTrustPolicy; if either carries TrustLevel::Untrusted in a TrustRequired slot, format_messages returns Err(E-TMPL-001) before any example_template.format() call (fail-closed per ADR-015 Decision 3 Amendment, B202 CRIT)."
   - "1.4 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-023
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "172de17"
+input-hash: "e8f793e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -155,7 +156,7 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-18 story]_
+S-2.04
 
 ## VP Anchors
 

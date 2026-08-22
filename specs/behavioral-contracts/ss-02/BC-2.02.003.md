@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-004 struct expanded to include step field missing from prior struct form. Was: { channel, writer } (2 fields — missing taxonomy placeholder '<n>' for super-step). Now: { channel, writer, step } (3 fields, 1:1 with taxonomy '<channel>', '<writer>', '<n>'). EC-003 and TV-004 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -147,7 +148,7 @@ name, writer: "ghost" })`; no compiled graph is produced.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.14
 
 ## VP Anchors
 

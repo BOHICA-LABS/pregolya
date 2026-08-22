@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "a7e190e"
+input-hash: "db3c1d2"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-2.06, S-1.07, S-1.06]
@@ -57,7 +57,7 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.08.001 postcondition 1)
+### AC-001 (traces to BC-2.08.001 postcondition 2)
 The `stream_lifecycle` oracle in `pregolya-standard-tests` validates that a streaming
 invocation emits exactly: a `MessageStart` event at position 0, zero or more `ContentBlockDelta`
 events, and a `MessageFinish` event as the final event. No extra lifecycle events appear between
@@ -71,7 +71,7 @@ before block index N reaches `ContentBlockFinish`. Delta events for block K carr
 `block_index: K` consistently across all deltas for that block. Verified by
 `test_BC_2_08_001_sequential_block_indices()`.
 
-### AC-003 (traces to BC-2.08.001 postcondition 3)
+### AC-003 (traces to BC-2.08.001 postcondition 2)
 Concatenating all `ContentBlockDelta.text` values for block K equals the `text` field of the
 `ContentBlockFinish` event for block K. Verified by
 `test_BC_2_08_001_delta_accumulation_equals_finish_payload()`.
@@ -187,6 +187,23 @@ error event occurs, all subsequent poll results are `Err` or `Ready(None)` (stre
 The `Ok` arm of the stream item type is never returned after the first `Err` item.
 Verified by `test_BC_2_08_007_no_partial_ok_after_transport_error()`.
 
+### AC-025 (traces to BC-2.08.001 postcondition 1)
+`test_stream` and `test_astream` for each provider (OpenAI, Anthropic, Ollama) yield at least
+one `AiMessageChunk` — the stream does not terminate immediately with zero chunks. Concatenating
+all chunks via the core merge function produces a non-empty `AiMessage` with at least one
+non-empty `ContentBlock::Text`. Verified by `test_BC_2_08_001_stream_yields_at_least_one_chunk_openai()`,
+`test_BC_2_08_001_stream_yields_at_least_one_chunk_anthropic()`, and
+`test_BC_2_08_001_stream_yields_at_least_one_chunk_ollama()` (cassette-backed).
+
+### AC-026 (traces to BC-2.08.001 postcondition 4)
+`test_stream_time` passes for each provider: from stream invocation to the arrival of the first
+`AiMessageChunk`, elapsed time is less than 5 seconds when using the fixture cassette layer (the
+cassette adds no artificial latency). This verifies the streaming implementation does not buffer
+the entire response before emitting the first chunk. Verified by
+`test_BC_2_08_001_stream_first_chunk_latency_openai()`,
+`test_BC_2_08_001_stream_first_chunk_latency_anthropic()`, and
+`test_BC_2_08_001_stream_first_chunk_latency_ollama()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -237,7 +254,7 @@ Verified by `test_BC_2_08_007_no_partial_ok_after_transport_error()`.
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-024 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-026 (test-writer step)
 2. [ ] Confirm no Red Gate BCs in this story — proceed to implementation after test stubs
 3. [ ] Add `UsageMetadata` sub-detail fields to `pregolya-core/src/message.rs`
 4. [ ] Implement `OpenAiChatModel::stream` — stream lifecycle, block index tracking, delta accumulation
@@ -251,7 +268,7 @@ Verified by `test_BC_2_08_007_no_partial_ok_after_transport_error()`.
 12. [ ] Add `test_agent_loop()` (non-ignored) to `pregolya-standard-tests`
 13. [ ] Implement `bind_tools` guard: check `has_tool_calling()` before registering tools
 14. [ ] Implement recursion limit guard in agent loop dispatch
-15. [ ] Run `cargo nextest run -p pregolya-openai -p pregolya-anthropic -p pregolya-ollama -p pregolya-standard-tests` — all 24 ACs green
+15. [ ] Run `cargo nextest run -p pregolya-openai -p pregolya-anthropic -p pregolya-ollama -p pregolya-standard-tests` — all 26 ACs green
 
 ## Previous Story Intelligence (MANDATORY)
 

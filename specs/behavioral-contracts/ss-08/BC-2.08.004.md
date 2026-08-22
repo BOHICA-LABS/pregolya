@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.004
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.5 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) PC3 had bare `Err(PregolyaError { category: RATE, code: E-PROV-001, retry_hint: Later(Duration) })` without message; added inline message template. (2) PC5 had `Err(PregolyaError { category: VAL, code: E-CORE-005, … })` with Unicode-ellipsis; expanded to full message template. (3) EC-002 had `Err(PregolyaError { category: VAL, code: E-PROV-006, … })` with Unicode-ellipsis; expanded to full message template; TV-002 PASS-ABBREV via EC-002. (4) EC-003 had bare `Err(PregolyaError { category: RATE, code: E-PROV-001, retry_hint: RetryHint::Later(…) })` without message; added inline message template; TV-003 PASS-ABBREV via EC-003."
   - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 15 Class 3 violations corrected across §Postconditions (PC1–PC5), §Edge Cases (EC-001–EC-005), and §Canonical Test Vectors (TV-001–TV-005): (a) PC1, PC2, PC4 — Unicode ellipsis `…` replaced with `..` rest pattern (partial-field category-only observations); (b) PC3, PC5, EC-001, EC-002, EC-003, EC-004, EC-005, TV-001, TV-002, TV-003, TV-004, TV-005 — `, ..` added before closing `}` (partial-field observations with category, code, message, or retry_hint present; component absent or retry_hint absent). All occurrences reconciled: 15 corrected (Class 3), 1 exempt (changelog, 1 line)."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "2a785d4"
+input-hash: "86e470d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -169,7 +170,7 @@ format: <first 256 chars>", .. })`. No panic. The partial body is included for d
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.07
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC6 had `Err(PregolyaError { category: VAL, code: E-CORE-001 })` bare wrapper; E-CORE-001 has `<n>` (block position) and `<type>` (type tag) placeholders. Added inline `message:` template to PC6; added EC-006 with concrete placeholder values as the authoritative full-form site."
   - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). PC6 multiline span: added `, ..` before closing `})` on continuation line (fields category/code/message present; component and retry_hint absent — elision marker required). EC-006 multiline span: same correction on its continuation line."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -157,7 +158,7 @@ faithfully; no extras data is silently dropped.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.03
 
 ## VP Anchors
 

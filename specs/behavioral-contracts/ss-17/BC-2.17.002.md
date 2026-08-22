@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,13 +19,14 @@ changelog:
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to fuzz/ per module-decomposition.md v1.10."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 had `Err(PregolyaError { code: E-GRAPH-008 })` with message only in prose (not in the struct); E-GRAPH-008 has <reason> placeholder. Inlined the example message from the prose into the struct as the authoritative concrete form; fuzz oracle semantics note retained (oracle tests code discriminant, not message text)."
   - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-002: added `, ..` before closing brace in partial PregolyaError observation `PregolyaError { code: E-GRAPH-008, message: \"...\" }` — Class 3 VIOLATION (component, category, and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-6.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "7833e3a"
+input-hash: "1c81eb5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -168,7 +169,7 @@ the fuzzer.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Phase-6 story]_
+S-6.01
 
 ## VP Anchors
 

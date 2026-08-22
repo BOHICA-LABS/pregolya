@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -32,6 +32,7 @@ changelog:
   - "1.8 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 violations corrected. (1) Description ¶1 E-TMPL-001 cite: CLASS3_ASCII_ELLIPSIS_VIOLATION — replace trailing `...` with `..` field-elision marker. (2) TV-001 expected-output cell: CLASS3_MISSING_DOTDOT — add `, ..` field-elision marker. (3) TV-005 expected-output cell: CLASS3_MISSING_DOTDOT — add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
   - "1.9 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
   - "1.10 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
+  - "1.11 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -41,7 +42,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "172de17"
+input-hash: "e8f793e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -184,7 +185,7 @@ enforcement of that invariant.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-18 security story]_
+S-2.05
 
 ## VP Anchors
 

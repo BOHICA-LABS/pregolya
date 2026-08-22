@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.005
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
+  - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "2a785d4"
+input-hash: "86e470d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -158,7 +159,7 @@ No error is returned; the field is simply absent.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.07
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "3d88a8b"
+input-hash: "92a884e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -40,6 +40,7 @@ changelog:
   - "1.5 (burst-259/F-P158-02/2026-07-24): EC-004 queue-full boundary predicate corrected from 'exceeds' (>) to 'meets or exceeds' (>=). ScheduleQueueFull fires when queue_depth >= max_queue_depth (at capacity); 'exceeds' incorrectly implied strictly-greater-than. Consistent with observability.md Recurrence column and error-taxonomy.md E-CRON-003 (updated same burst-259)."
   - "1.6 (burst-264/2026-07-25): Architecture Anchors filesystem path corrected src/scheduler/ → src/cron/ per module-decomposition v1.26 adjudication (canonical module server::cron)."
   - "1.7 (fix-burst-283/TD-VSDD-060-sibling/2026-07-30): Architect sibling-site sweep: 'No missed-fire accumulation' invariant referenced RunnableConfig.missed_fire_policy, which does not exist (not added by ADR-021; absent from LangGraph Cron TypedDict and ADK-Rust CreateCronJobRequest in reference corpus). Option A applied: fixed skip policy for missed firings; no per-schedule missed-fire override available in v1. Removed internally-contradictory 'Exactly one Run is created for each elapsed scheduled time' clause."
+  - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -176,7 +177,7 @@ queue_depth }` error.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.27
 
 ## VP Anchors
 

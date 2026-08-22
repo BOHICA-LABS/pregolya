@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,7 @@ changelog:
   - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): Description + PC2: migrate Arc<dyn pregolya_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications (dyn Tool is non-object-safe; DynTool is the object-safe seam; blanket impl auto-implements DynTool for T: Tool + Send + Sync + 'static; definition in interface-definitions.md §DynTool)."
   - "1.5 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two violations corrected: (1) PC7 `PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002 }` had 3/5 fields; added `, ..`. (2) EC-006 §Expected behavior multiline span (4/5 fields, missing retry_hint); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
   - "1.6 (P2A029-fix/2026-08-22): Two adjudications from adversary pass P2A-029. (1) P2A029-01 (HIGH) — fail-closed pagination overflow: Invariant 3 amended from ok-truncated (silent drop of discovered tools) to Err fail-closed, applying the CANONICAL PRINCIPLE no-silent-partial-result rule. PC1 clarified to reflect the abort path. EC-007 and TV-009 added for the >1000-page overflow scenario. New code: E-MCP-008 McpPaginationLimitExceeded (POLICY, broken), minted in error-taxonomy.md same burst. (2) P2A029-02 (MED) — unknown-server discovery error: PC9 added (authoritative full-form site for E-MCP-009 gate #33); EC-008 and TV-010 added. New code: E-MCP-009 McpServerNotConfigured (VAL, broken), minted in error-taxonomy.md same burst. Story-writer handoff: re-anchor S-2.10 AC-002 from stale E-MCP-002 to E-MCP-008; re-anchor S-2.10 EC-001 from stale E-MCP-004 to E-MCP-009."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -204,11 +205,11 @@ _No Kani VP seed required for this BC. Unit tests and integration tests are suff
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.10
 
 ## VP Anchors
 
-_[to be filled after verification-architecture phase]_
+S-2.10
 
 ## Traceability
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.005
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,11 +26,12 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "a956060"
+input-hash: "dad5395"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): OBS-P46-1 — align VP-005 phrasing to sibling BC-2.09.004 VP-004 convention. 'compile+pass but network assertion fails' → 'compile+fail — test compiles and runs but the network-I/O assertion inside it fails'. Same semantic; consistent phrasing across both R11 Red Gate BCs."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -155,7 +156,7 @@ Note: callers are better served by cloning (which is cheap) than by Arc-wrapping
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.10
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-002, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-002 which has `<global_limit>` placeholder. Added `message:` template inline; `<global_limit>` sourced from `RetryPolicy.global_limit` (type `NonZeroU32`, deterministically available at raise site). Pattern matches BC-2.16.003 PC2 (CircuitBreakerOpen inline message precedent)."
   - "1.3 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.4 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.unlimited_policy_constructed' to the mandated WARN-level construction warning per observability census (SAP-1). PC4 and EC-003 updated with structured event_type field."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "22e59a4"
+input-hash: "2d32b1d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -141,7 +142,7 @@ overridden cleanly. No warning is emitted (3 is a finite value).
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.06
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.013
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,6 +13,7 @@ capability: CAP-009
 changelog:
   - "1.1 (OBS-P77-B, 2026-07-15): Architecture Anchor corrected — 'built-in enum variants' → 'built-in trait implementations'. ToolCallDialect is an object-safe pluggable trait (per BC body Description and interface-definitions v2.23); NativeOpenAiJson, NativeAnthropic, HermesChatMlXml are concrete struct implementations of that trait, not enum variants."
   - "1.2 (F-P108-03, 2026-07-18): EC-002 expanded from 2-field catch-all `{ dialect, reason }` to 4-field explicit struct `{ dialect, element, offset, parse_error }`. Adjudication: the taxonomy Message Format for E-PROV-009 has 4 distinct placeholders (`<dialect>`, `<element>`, `<n>`, `<parse_error>`); the `<n>` offset is MID-message (not trailing), making a catch-all `reason` structurally unable to render independent `<element>` and `<n>` values. Expanded variant: `{ dialect: \"HermesChatMlXml\", element: \"<tool_call>\", offset: 2, parse_error: \"key must be a string\" }`. Sibling sweep (all E-PROV-009 sites in this BC): PC8 uses PregolyaError message-template form (correctly shows 4 values in message string); PC9, EC-005, TV-006 use bare form (no struct fields; not subject to parity check). No taxonomy change needed — E-PROV-009 message format already shows 4 placeholders."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 wave: 2
 phase: 1b
 producer: product-owner
@@ -22,7 +23,7 @@ traces_to:
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "eb139cd"
+input-hash: "a403241"
 extracted_from: null
 modified: []
 deprecated: null
@@ -172,7 +173,7 @@ with the implementor's error message embedded. (DI-014: error not swallowed.)
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.08
 
 ## VP Anchors
 

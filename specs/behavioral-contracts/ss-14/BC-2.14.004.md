@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5, EC-003, and TV-004 all carried `Err(PregolyaError { category: TIMEOUT, code: \"E-PROV-002\" })` bare wrappers; E-PROV-002 has `<duration>` placeholder. Added inline `message:` template at all three sites; `<duration>` sourced from the configured HTTP client timeout value at the raise site."
   - "1.3 (burst-240/F-P140-02/2026-07-22): E-PROV-002 message generalized — PC5, EC-003, and TV-004 previously used 'ProviderTimeout: stream chunk timeout after <duration>' (stream-specific message); updated to 'ProviderTimeout: request timed out after <duration>' to match taxonomy E-PROV-002 v1.34. This BC covers unary HTTP request timeout (no stream, no chunk); the 'stream chunk' message was semantically wrong for this path. The generalized message is accurate: a unary HTTP client timeout IS a request timeout after the configured duration."
   - "1.4 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 5 CLASS3 VIOLATIONS corrected — PC5 multiline span added `, ..` before `}`; EC-003 multiline span added `, ..` before `}`; TV-004 Expected Output added `, ..`; Related BCs `PregolyaError { category: TIMEOUT }` added `, ..`; Traceability `PregolyaError { category: TIMEOUT }` added `, ..`. Xtask rename: 3 occurrences of `cargo xtask lint-no-timeout` → `cargo xtask check-client-timeout` in PC3, VP-DI009-01, Architecture Anchors. No behavioral change."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -161,7 +162,7 @@ request. The timeout applies to each individual request, not the client's lifeti
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.02
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -38,6 +38,7 @@ changelog:
   - "1.9 (F-P151-03, burst-252, 2026-07-24): PC2 CompactionEvent bullet — wire shape updated to adjudicated flat form: `compacted_turns (RangeInclusive<usize>)` → `compacted_start (usize)` + `compacted_end (usize)`; `parent_ids (Vec<RunId>)` added (BC-2.06.002 Inv-2 mandate — every StreamEvent variant carries parent_ids). Sibling-sweep: BC-2.06.006 v1.4 and interface-definitions.md v2.53 updated identically (F-P151-03)."
   - "1.10 (F-P177-B01, burst-288, 2026-08-15): Add StreamEvent::Error as 16th variant (EC-005 mandate). PC2 extended with Error bullet after CompactionEvent; EC-005 updated to reference StreamEvent::Error by name with explicit field inventory; H1 title updated 15 Variants → 16 Variants. ADR-023 lists StreamEvent as exhaustive-by-design; variant count is now 16."
   - "1.11 (burst-290/F-180-03, 2026-08-16): Fix live-body phantom ADR §-citation in PC-2 StreamEvent::Error bullet: `ADR-023 §exhaustive-by-design` → `ADR-023 §Exempt Enums` (no heading §exhaustive-by-design exists in ADR-023; StreamEvent's exhaustive-match exemption is documented under `### Exempt Enums` within `## Decision 3 — Exempt Inventory`)."
+  - "1.12 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.17 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -215,7 +216,7 @@ the zero-bytes guarantee on all emitted events.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.17
 
 ## VP Anchors
 

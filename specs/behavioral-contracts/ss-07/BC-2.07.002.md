@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.5 (OBS-P148-04/OBS-P148-05/burst-249/2026-07-24): GTV-008 PROVISIONAL resolved (corrected expected value); GTV-003 separator-logic resolved (corrected expected value); Invariant splitter reference reconciled to in-tree langchain-text-splitters==1.1.2 per reference-manifest.md. Note: Form-B v1.5 row contained a false input-hash claim (the claimed value was never written to the frontmatter at any commit) — corrected in v1.7 (FC-5)."
   - "1.6 (F-P152-03/burst-253/2026-07-24): GTV-010 and GTV-011 grapheme-cluster discriminators added; 9 to 11 GTVs Python-verified against pinned in-tree langchain-text-splitters==1.1.2; VP-SPLIT-04 range extended to GTV-001..011"
   - "1.7 (FIX-BURST-277-WAVE-C/FC-5-genuine-fix/2026-07-28): False closure FC-5 resolved. Form-B v1.5 row contained a false input-hash claim; git history confirms the claimed hash value was never written to the frontmatter — the burst-249 commit held a different value, and the dispatcher log from 2026-07-24 recorded a computed-vs-stored mismatch at burst time (the commit landed with a value different from what was computed during the burst). Form-B v1.5 false hash claim removed. input-hash updated to current computed value per frontmatter. Form-A changelog added (migrated from Form-B historical record)."
+  - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-008
   - domain-spec/edge-cases.md#DEC-001
@@ -205,7 +206,7 @@ Additional baseline:
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.08
 
 ## VP Anchors
 

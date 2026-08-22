@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-004: added `, ..` before closing brace in partial PregolyaError observation `PregolyaError { category: DURABILITY, code: E-MEMORY-008, message: \"...\" }` — Class 3 VIOLATION (component and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
   - "1.5 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-009 added for EC-006 (SkillStore constructed with empty app_id → E-MEMORY-004 NoScopeContext fail-closed). EC-006 was introduced in v1.3 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-009 exercises `SkillStore::new(store, \"\")` and verifies all three trait methods (`load_skill`, `list_skills`, `skill_exists`) return `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment."
   - "1.6 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — EC-006 Expected behavior multi-line PregolyaError::new(Component::Memory, Category::Security, RetryHint::Never, \"E-MEMORY-004\", ...) collapsed to Err(PregolyaError { code: \"E-MEMORY-004\", .. }). Bare constructor form forbidden in prose context per ADR-010 Class 3 rules."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "9510ea3"
+input-hash: "bda5443"
 extracted_from: null
 modified: []
 deprecated: null
@@ -173,7 +174,7 @@ at service boundary; B102 CRIT correction).
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.13
 
 ## VP Anchors
 

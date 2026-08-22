@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: TV-005 Input `PregolyaError { category: INTERNAL, ... }` — replaced `...` with `..`. TV-001 and TV-002 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.5 remain accurate). No behavioral change."
   - "1.7 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): Remove phantom §Named-Section anchors in PC3 Known-overrides block. Nine `interface-definitions.md §HTTP Status Codes NNN row` references used row-number qualifiers as part of the §-anchor name (e.g., `§HTTP Status Codes 404 row`) — but the actual section heading is `§HTTP Status Codes`; row numbers are not headings. Fixed by parenthesizing each row qualifier: `§HTTP Status Codes (404 row)`, `§HTTP Status Codes (409 row)`, `§HTTP Status Codes (422 row)`, `§HTTP Status Codes (503 row)`, `§HTTP Status Codes (404 + 422 rows)`. Nine sites corrected; no behavioral change."
   - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). PC3 categorical table: `Category::Exec → 500` added as 13th entry (library-layer-only; INTERNAL-tier fallback at pregolya-server). VP-BC214002-02 description: '12 categories' → '13 categories (EXEC included; no category returns 200)'. §Notes section added: EXEC library-layer-only disposition; no Known-overrides row per architect D26 decision; parameterized test accepts EXEC→500 via INTERNAL-tier fallback. No behavioral change to RFC-7807 emission."
+  - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "54a8bcf"
+input-hash: "25682ca"
 extracted_from: null
 modified: []
 deprecated: null
@@ -217,7 +218,7 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.01
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 carried `Err(PregolyaError { category: TRANSPORT, code: E-PROV-003, … })` with Unicode-ellipsis abbreviation; cross-BC reference to BC-2.08.007 does not satisfy PASS-ABBREV (same-BC requirement). Expanded `…` to explicit inline message template with `<provider>` and `<tokens>` placeholders; cross-BC reference retained as informational note."
   - "1.4 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-003: PregolyaError value-observation in prose missing required `..` rest pattern (partial fields: category, code, message; missing component, retry_hint); added `, ..` before closing `}`. All occurrences reconciled: 1 corrected (Class 3), 2 exempt (changelog)."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "2a785d4"
+input-hash: "86e470d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -157,7 +158,7 @@ single-response cassette that bypasses streaming logic.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.07
 
 ## VP Anchors
 

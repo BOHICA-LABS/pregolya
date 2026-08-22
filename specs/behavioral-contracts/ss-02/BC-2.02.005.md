@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.005
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01, 2026-07-18): E-GRAPH-011 ConditionalEdgePanic struct corrected from single-field to two-field form. Was: { source: 'source_node' } (1 field — wrong field name, missing panic message). Now: { source_node: <edge source node name>, message: <captured panic text> } (2 fields, 1:1 with taxonomy placeholders '<source_node>' and '<message>'). Root cause: EC-003 prose 'preserving the panic message as the error source' was ambiguous — 'source' was used as the error source (i.e., a catch-all field), conflating node name and panic text. Fix: PC5 struct updated; EC-003 struct updated and ambiguous 'error source' prose clarified; TV-005 struct updated. Three-site sibling sweep within file (TD-VSDD-060) — all uses updated."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.15 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -151,7 +152,7 @@ from the run; the graph fails. Missing path_map entries are not silently ignored
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.15
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (FIX-BURST-280-WAVE-C/F-P175-A25-T2/2026-07-28): Task 2 — explicit annotation added to PC1, TV-001 Notes, and TV-002 Notes. These three sites use struct-literal construction `PregolyaError { ... }` intentionally: (a) this BC defines the PregolyaError struct itself, not a usage BC; (b) the tests run within pregolya-core where #[non_exhaustive] does NOT bar struct-literal construction from the defining crate; (c) external callers use PregolyaError::new(...) per PC8/ADR-010 §Decision. No behavioral change. TD-VSDD-060 sibling-sweep confirmed: all other PregolyaError { ... } sites in BC-2.14.001 body are prose shorthand (ALL-CAPS) or the struct definition in PC8 — no additional in-crate construction forms present."
   - "1.7 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). Three Class 3 violations corrected: EC-001 `PregolyaError { component: CHKPT, category: DURABILITY }` — added `, ..` (CLASS3 VIOLATION, 2/5 fields); Related BCs `PregolyaError { category: VAL }` — added `, ..` (CLASS3 VIOLATION, 1/5 fields); TV-002 Input `...` field-elision marker — replaced with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). PC1, TV-001, and PC8 unchanged: PC1 and TV-001 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.6 remain accurate); PC8 `pub struct PregolyaError { … }` is EXCLUDED_DECL. No behavioral change."
   - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). Description: EXEC added as 13th category to the enumeration; counter updated from '12 categories, unchanged' to '13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))'. TD-VSDD-060 sibling sweep: EXEC not listed elsewhere in BC-2.14.001 live body (no other Category enumeration site). No behavioral change to PregolyaError struct."
+  - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "54a8bcf"
+input-hash: "25682ca"
 extracted_from: null
 modified: []
 deprecated: null
@@ -185,7 +186,7 @@ chain preserves the original `PregolyaError`'s fields when downcast with `anyhow
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.01
 
 ## VP Anchors
 

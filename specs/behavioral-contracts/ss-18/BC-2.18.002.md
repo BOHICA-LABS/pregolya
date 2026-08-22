@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.3 (fix-burst-279/F-P175-B202+B208+B221/ADR-015-D3-Amendment/2026-07-28): FOUR changes. (1) PC1 signature: format_messages parameter updated from HashMap<String, TemplateVar> to HashMap<String, TemplateInput> (TemplateInput enum concretized: Scalar/Messages/FewShotExamples arms; ADR-015 Decision 3 Amendment). (2) PC2: updated to HashMap<String, TemplateInput> with per-arm trust classification (B202 CRIT; breaking type change). (3) INV-2: updated to reference TrustLevel::severity() method for aggregate computation; Ord::max() and derived Ord on TrustLevel explicitly prohibited — declaration order is inverse of security severity (B208 HIGH fail-open fix; ADR-015 Decision 3 Amendment). (4) PC3 + INV-3: None case broadened from 'template-literal slots' to 'no variables substituted OR all substituted variables carried trust_level: None' — TV-001 showed non-literal slot yielding None when trust_level: None (B221 semantic correction; ADR-015 correct disjunction)."
   - "1.4 (burst-300/stale-ProvenanceTag-residue/2026-08-16): Two STALE ProvenanceTag→TrustLevel residues closed. (1) §Architecture Anchors ADR-015 bullet: 'Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)' → 'Decision 3 (PromptValue, MessageProvenance, TrustLevel classification)' — ADR-015 Decision 3 heading was renamed TrustLevel Classification and Injection Prevention in v1.3 (burst-226); ProvenanceTag is the SS-11 ingress-boundary struct, not the SS-18 trust classifier. (2) §Traceability Architecture Authority row: 'ProvenanceTag pass-through and severity ordering' → 'TrustLevel classification and severity ordering' — same concept rename; severity ordering is TrustLevel::severity() domain per ADR-015 Decision 3 Amendment F-P175-B208."
   - "1.5 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
+  - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "172de17"
+input-hash: "e8f793e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -146,7 +147,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-18 story]_
+S-2.04
 
 ## VP Anchors
 

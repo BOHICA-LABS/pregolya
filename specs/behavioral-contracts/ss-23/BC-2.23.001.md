@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.9"
+version: "1.10"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.7 (fix-burst-287/F-P176-C001/2026-08-01): PC-2 error-routing defect fixed. Prior text routed canonicalize_beneath_root returning Err 'for any reason' to E-TOOLS-001 (SECURITY/Never), conflating OS I/O failures (NotFound, PermissionDenied) with genuine scope-escape violations. Narrowed to: E-TOOLS-001 applies only when canonicalize_beneath_root returns Err because the resolved canonical path lies outside the guard scope (genuine escape — symlink target escapes root, absolute path under a different root). OS-level I/O failures from canonicalize_beneath_root route to PC-4 as E-TOOLS-008 FileIoError. Discrimination note added to PC-2 body. PC-4, EC-005, and TV-004 are already consistent with this rule; no additional edits needed. Defect class: C001 partial-sweep from prior fix propagated to sibling BCs but missed this file and BC-2.23.002."
   - "1.8 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001: inline → PregolyaError { code: 'E-TOOLS-001', .. }. PC-3 E-TOOLS-002: inline → { code: 'E-TOOLS-002', .. }. PC-4 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "1.9 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — ReadFileTool Ok-then-NotFound-at-open behavior. PC-4 extended: when canonicalize_beneath_root returns Ok(path) via Phase 2 (ADR-024 §Phase-2 Postconditions PC-5), path may not yet exist on disk; the subsequent OS open() returns NotFound, propagated as E-TOOLS-008. traces_to + inputs + Architecture Anchors + §Architecture Authority updated to reference ADR-024 §Phase-2 Postconditions PC-5."
+  - "1.10 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -39,7 +40,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "97c63f5"
+input-hash: "81ff585"
 extracted_from: null
 modified: []
 deprecated: null
@@ -169,7 +170,7 @@ limit.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-23 story]_
+S-1.21
 
 ## VP Anchors
 

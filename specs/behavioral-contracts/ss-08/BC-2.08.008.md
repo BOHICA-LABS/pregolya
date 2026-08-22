@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.008
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.2 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'eval.judge_infra_error' to PC3 InfraError WARN emission per observability census (SAP-1). PC3 updated with structured event_type field."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-011
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "3600056"
+input-hash: "9cbacaa"
 extracted_from: null
 modified: []
 deprecated: null
@@ -152,7 +153,7 @@ the conformance suite must enforce sequential execution via a single-task execut
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.08
 
 ## VP Anchors
 

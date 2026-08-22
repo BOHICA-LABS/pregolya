@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.006
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.2 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
   - "1.3 (burst-309/F-P201-01/2026-08-17): Add E-CORE-011 code annotation to the Tokio-task-panic (JoinError) path in PC-4, EC-003, TV-003, and Traceability Error Code Minted. E-CORE-011 (INTERNAL/RunnableParallelTaskPanic) is the structured error code for the panic path where no branch key is available at the JoinError catch site. Distinct from E-CORE-009 (EXEC/RunnableParallelBranchFailure) which covers the branch-returned-Err path where the key is available."
   - "1.4 (P1D-208/F-P208-01/2026-08-18): §Category casing canon — E-CORE-011 INTERNAL category rendered as bare PascalCase `Internal` corrected to ALL-CAPS taxonomy code `INTERNAL` at §Postconditions PC-4, §Invariants, §Edge Cases EC-003, §Canonical Test Vectors TV-003 per ADR-010 §Category casing canon (matches sibling E-CORE-009 `EXEC` form); sibling-swept 4 prose category references (§Description, §Invariants label, §Postconditions prose, §Architecture Anchors) Internal→INTERNAL per TD-VSDD-060."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "98a93c5"
+input-hash: "4ccce82"
 extracted_from: null
 modified: []
 deprecated: null
@@ -167,7 +168,7 @@ documented here as a contrast point.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.05
 
 ## VP Anchors
 

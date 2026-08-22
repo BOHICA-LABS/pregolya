@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "821f666"
+input-hash: "37b5b45"
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC18 list-runs endpoint — add limit (default 10, max 100; values > 100 clamped) and offset pagination params + declare created_at DESC ordering (pagination coherence canon)."
   - "1.2 (ADV-P1D-PASS-33): F-P33-02 add Run-Config Merge Precedence invariant — run-supplied config/metadata/context deep-merge over Assistant's stored values, run wins at leaf key. Upstream-check result: no contradicting semantics in BC-2.01.003 or semport behavioral-intent §2.3; leaf-level deep-merge adopted as spec canon."
@@ -29,6 +29,7 @@ changelog:
   - "1.4 (F-P117-01, fix burst 120, 2026-07-19): summary_halt promoted to first-class terminal Run status throughout (Option 1 adjudication: BC-2.10.003 PC8(d) explicitly asserts the Run status IS summary_halt '(not failed)'; entities-server.md §91 agrees). H1 title and Description: add summary_halt to state machine enumeration. PC7: add in_progress → summary_halt arc (OnCeiling::Summarize path per BC-2.10.003 PC8(c)(d)). PC8: terminal set {completed, failed, cancelled} → {completed, failed, cancelled, summary_halt}. PC13: completed_at terminal set gains summary_halt. PC18: status filter enum gains 'summary_halt'. PC19: deletable terminal states gain summary_halt. Output invariant: output populated when status ∈ {completed, summary_halt} (summary_halt output = summarize model response per BC-2.10.003 PC8(c)); null in all other states. Traceability state machine description updated."
   - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-003: replaced `PregolyaError { ... }` with `PregolyaError { .. }` — CLASS3_ASCII_ELLIPSIS_VIOLATION (three-dot ASCII form forbidden in prose/observation context; canonical elision marker is two dots per ADR-010 §Error-Construction Notation Canon)."
   - "1.6 (F-P177-B03, burst-288, 2026-08-15): Add `interrupted → cancelled` arc to PC7 (9th arc); extend PC10 to authorize cancellation of `interrupted` Runs. Resolves deadlock: PC19 directed callers to cancel an interrupted Run before deletion, but the arc was absent from PC7 and unauthorized by PC10, making interrupted Runs permanently undeletable."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -219,11 +220,11 @@ pregolya-graph engine are sufficient._
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.26
 
 ## VP Anchors
 
-_[to be filled after verification-architecture phase]_
+S-1.26
 
 ## Traceability
 

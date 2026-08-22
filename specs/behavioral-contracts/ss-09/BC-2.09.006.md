@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.006
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,12 +16,13 @@ producer: product-owner
 timestamp: 2026-07-15T00:00:00Z
 changelog:
   - "1.1 (pass-72 fix, 2026-07-15): OBS-P72 fix — Architecture Anchors: ADR-012 citation replaced with ADR-013. ADR-012 governs self-improvement primitives (SkillStore, write_guard, context_mutation); it has no MCP content. CAP-021 / BC-2.09.006 (MCP server role) is governed by ADR-013 minted by architect in this burst."
+  - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "eb139cd"
+input-hash: "a403241"
 extracted_from: null
 modified: []
 deprecated: null
@@ -157,7 +158,7 @@ in-flight; no new requests are accepted after shutdown begins.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.11
 
 ## VP Anchors
 

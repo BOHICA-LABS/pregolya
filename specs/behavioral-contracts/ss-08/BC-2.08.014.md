@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.014
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,12 +21,13 @@ changelog:
   - "1.4 (fix-burst-276/2026-07-27): Update EC-006 and TV-007 to cite E-PROV-011 FallbackChainEmpty instead of E-CORE-005. E-PROV-011 was minted in error-taxonomy.md in the same burst specifically to back ProviderFallbackPolicy::new() empty-chain validation; E-CORE-005 (CORE component) would misattribute the component — PROV namespace is the correct home per ADR-010 §E-CFG-001 convention. EC-006: code E-CORE-005 → E-PROV-011; message updated from E-CORE-005 canonical format ('Validation failed for ...') to E-PROV-011 STATIC message ('FallbackChainEmpty: ProviderFallbackPolicy.chain must not be empty'). TV-007: code E-CORE-005 → E-PROV-011; bare form remains PASS-ABBREV via EC-006. All other E-CORE-005 citations in this BC (none — verified by sweep) are unaffected."
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-006 and §Canonical Test Vectors TV-007: PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-006; category, code at TV-007); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 1 already-valid (Class 3 complete observation at §Postconditions PC5 — all 5 non-source fields present), 1 exempt (changelog)."
   - "1.6 (F-P188-02/burst-297/2026-08-16): Error Code Minted callout and Traceability row omitted E-PROV-011 FallbackChainEmpty. BC-2.08.014 is the sole taxonomy anchor for both E-PROV-010 ProviderChainExhausted (exhaustion-time, POLICY) AND E-PROV-011 FallbackChainEmpty (construction-time VAL, minted in fix-burst-276/F-P173-610). Both codes are used in this BC body (EC-004/TV-005 for E-PROV-010; EC-006/TV-007 for E-PROV-011). Callout updated to 'Error codes minted here (E-PROV-010, E-PROV-011)'; Traceability row extended to list both codes. D-134 Sweep B: this was the sole missing-mint occurrence across all 6 Error-Code-Minted BCs. input-hash updated to current (59d2766)."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "eb139cd"
+input-hash: "a403241"
 extracted_from: null
 modified: []
 deprecated: null
@@ -186,7 +187,7 @@ No runtime failover attempt occurs. (DI-008.)
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.08
 
 ## VP Anchors
 

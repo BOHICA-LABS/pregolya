@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-03/04 phases Post-v1→v1 phase (OBS-P159-A adjudication: tenant isolation is Wave-1 security-critical behavior; Post-v1 VP deferral contradicts promotion) — F-P159-01 post-promotion body sweep."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.12 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "e5e884a"
+input-hash: "6ced13e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -169,7 +170,7 @@ operator's explicit privilege level.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.12
 
 ## VP Anchors
 

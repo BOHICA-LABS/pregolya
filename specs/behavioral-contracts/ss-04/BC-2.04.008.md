@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.008
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,7 @@ changelog:
   - "1.4 (2026-07-15, F-P82-01): PC3 corrected — `query: &str` was incorrectly listed as a field of `FtsSearchConfig`. Fixed: `query` is the standalone first parameter of `fts_search` (not a config field); `FtsSearchConfig` fields are `thread_id: Option<&str>` and `limit: usize` only. Signature (Description block), PC1, EC-002, TV-001 all agree with this fix; only PC3 carried the contradiction. No other content changed."
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). PC6 multiline observation confirmed Class 3 VALID (all 5 non-source fields present — no change). EC-002 body: replaced forbidden `...` (three-dot ASCII) with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). EC-006 multiline body: added `..` rest-pattern marker (4 of 5 fields present, missing retry_hint; ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.6 (F-P2A005-06, 2026-08-19): Resolve FTS5-vs-encryption-at-rest design decision (S-1.11 EC-005 'implementation-defined' placeholder). Added Invariant 5: FTS5 and EncryptedSerializer are mutually exclusive — FTS5 stores plaintext payload content in the SQLite file, violating BC-2.04.007 invariant 3 (no plaintext state or event payload may be written to disk). Added EC-007: construction-time Err when both are configured. Minted E-CHKPT-010 FtsEncryptionIncompatible (VAL, broken, Never). Added TV-007. Updated Traceability Error Codes Minted row."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 origin: greenfield
 priority: P1
 subsystem: SS-04
@@ -191,7 +192,7 @@ No checkpoint tables are created; the error surfaces before any DDL is executed.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.11
 
 ## VP Anchors
 

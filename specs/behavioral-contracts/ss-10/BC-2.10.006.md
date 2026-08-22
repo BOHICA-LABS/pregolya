@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "2.0"
+version: "2.1"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "1.8 (burst-291/D-134/2026-08-16): §Description phantom anchor corrected. 'interface-definitions.md §BudgetInfo' → 'interface-definitions.md §BudgetPolicy' (BudgetInfo is a field defined inline under §BudgetPolicy; §BudgetInfo alone matches no heading in interface-definitions.md). TD-VSDD-060 sweep: sole §BudgetInfo occurrence in live body text."
   - "1.9 (burst-311/F-P202-01/2026-08-17): Architect adjudication applied — fts_search IS the CheckpointSaver trait method; search_history is ONLY the callable Tool wrapper (search_history_tool()). Two trait-method references renamed: (a) §Preconditions item 2: CheckpointSaver::search_history → CheckpointSaver::fts_search; (b) §Postconditions Step 1: CheckpointSaver::search_history → CheckpointSaver::fts_search. search_history Tool name preserved throughout."
   - "2.0 (burst-311/D-181/2026-08-17): Complete fts_search/search_history disambiguation sweep (Wave-2b). Four remaining trait-method-context references renamed search_history → fts_search: (a) TV-004 'search_history API' → 'fts_search (trait method)'; (b) VP-2.10.006-A 'call search_history' → 'call fts_search'; (c) Related BCs BC-2.04.001 dependency 'history readable via search_history' → 'history readable via fts_search (trait method)'; (d) Related BCs BC-2.04.008 dependency 'search_history FTS for ConversationSnapshot assembly' → 'fts_search (CheckpointSaver trait method) for ConversationSnapshot assembly'. No Tool-context search_history references changed — BC-2.04.008 confirmed clean."
+  - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.25 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -38,7 +39,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "176a9b6"
+input-hash: "835857f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -199,7 +200,7 @@ The run proceeds from the next super-step with the compacted context window acti
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-10 extension story]_
+S-1.25
 
 ## VP Anchors
 

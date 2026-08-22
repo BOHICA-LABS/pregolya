@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.004
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
   - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — nine violations corrected: Description (3/5 fields), PC1 (4/5), Invariants `{ category: TOOL }` (1/5), EC-001 (3/5), EC-002 (2/5), EC-003 (1/5), TV-001 (2/5), TV-002 CLASS3_ASCII_ELLIPSIS_VIOLATION (`...` → `..`), Architecture Anchors (3/5). All receive `..` per ADR-010 §Error-Construction Notation Canon Class 3."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -30,7 +31,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "42f617f"
+input-hash: "be56a05"
 extracted_from: null
 modified: []
 deprecated: null
@@ -153,7 +154,7 @@ the isError path.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.10
 
 ## VP Anchors
 

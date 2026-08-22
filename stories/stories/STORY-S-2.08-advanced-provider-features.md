@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.014.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "68f3954"
+input-hash: "4a4f44e"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.07]
@@ -58,7 +58,7 @@ tdd_mode: strict
 A run with 3 Pass + 1 Fail + 2 InfraError returns `Ok(3.0 / 4.0)` = `Ok(0.75)`.
 Verified by `test_BC_2_08_008_eval_score_arithmetic_mean()`.
 
-### AC-002 (traces to BC-2.08.008 postcondition 2)
+### AC-002 (traces to BC-2.08.008 postcondition 1)
 `InfraError` outcomes are excluded from both the numerator and denominator. Two InfraError
 cases in a 4-case run where 2 pass: `score = 2.0 / 2.0 = 1.0`, not `2.0 / 4.0`.
 Verified by `test_BC_2_08_008_infra_error_excluded_from_numerator_and_denominator()`.
@@ -68,7 +68,7 @@ When ALL cases are `InfraError`, `score()` returns
 `Err(EvalError::AllCasesInfraError)` — not `Ok(0.0)` or `Ok(f64::NAN)`.
 Verified by `test_BC_2_08_008_all_cases_infra_error_returns_err()`.
 
-### AC-004 (traces to BC-2.08.008 postcondition 4)
+### AC-004 (traces to BC-2.08.008 postcondition 3)
 For each `InfraError` outcome, the harness emits:
 `tracing::warn!(event_type = "eval.judge_infra_error", reason = %reason)`.
 The `event_type` value is exactly `"eval.judge_infra_error"` (registered in the Canonical
@@ -102,22 +102,22 @@ field against a committed snapshot that expects the original name).
 format: `[{"type":"function","function":{"name":...,"description":...,"parameters":...}}]`.
 Verified by `test_BC_2_08_013_native_openai_json_serialization()`.
 
-### AC-010 (traces to BC-2.08.013 postcondition 2)
+### AC-010 (traces to BC-2.08.013 postcondition 3)
 `ToolCallDialect::NativeAnthropic` serializes tool definitions as the Anthropic `tools` array
 format: `[{"name":...,"description":...,"input_schema":{...}}]`.
 Verified by `test_BC_2_08_013_native_anthropic_serialization()`.
 
-### AC-011 (traces to BC-2.08.013 postcondition 3)
+### AC-011 (traces to BC-2.08.013 postcondition 5)
 `ToolCallDialect::HermesChatMlXml` injects `<tools>[{...}]</tools>` into the system prompt
 as a serialized JSON array wrapped in XML tags. Verified by
 `test_BC_2_08_013_hermes_chatml_xml_injects_system_prompt()`.
 
-### AC-012 (traces to BC-2.08.013 postcondition 4)
+### AC-012 (traces to BC-2.08.013 postcondition 6)
 `ToolCallDialect::HermesChatMlXml` parses assistant responses containing
 `<tool_call>{json}</tool_call>` tags and extracts the tool call name and arguments.
 Verified by `test_BC_2_08_013_hermes_chatml_xml_parses_tool_call_response()`.
 
-### AC-013 (traces to BC-2.08.013 postcondition 5)
+### AC-013 (traces to BC-2.08.013 postcondition 8)
 A malformed `<tool_call>` response (invalid JSON inside the XML tag, or no closing tag)
 returns `Err(PregolyaError { code: "E-PROV-009", .. })`. Verified by
 `test_BC_2_08_013_malformed_hermes_xml_returns_e_prov_009()`.
@@ -137,21 +137,59 @@ An authentication failure (E-PROV-004) from the primary provider triggers the
 that also fails, failover proceeds to the next provider. Verified by
 `test_BC_2_08_014_auth_failure_triggers_credential_refresh_then_failover()`.
 
-### AC-017 (traces to BC-2.08.014 postcondition 4)
+### AC-017 (traces to BC-2.08.014 postcondition 5)
 When all providers in the chain are exhausted, the chain returns
 `Err(PregolyaError { code: "E-PROV-010", .. })`. Verified by
 `test_BC_2_08_014_chain_exhausted_returns_e_prov_010()`.
 
-### AC-018 (traces to BC-2.08.014 postcondition 5)
+### AC-018 (traces to BC-2.08.014 invariant 4 and EC-006)
 Constructing a `ProviderFallbackPolicy` with an empty `chain` returns
 `Err(PregolyaError { code: "E-PROV-011", .. })` at construction time — not at invocation time.
 Verified by `test_BC_2_08_014_empty_chain_returns_e_prov_011_at_construction()`.
 
-### AC-019 (traces to BC-2.08.014 invariant 1)
+### AC-019 (traces to BC-2.08.014 postcondition 6)
 A `TIMEOUT` error (E-PROV-002) from the primary provider does NOT trigger failover. The
 timeout propagates directly to the caller as `Err(E-PROV-002)`. Failover is only triggered
 by 429, 5xx, or auth failures. Verified by
 `test_BC_2_08_014_timeout_does_not_trigger_failover()`.
+
+### AC-020 (traces to BC-2.08.013 postcondition 2)
+`ToolCallDialect::NativeOpenAiJson` parses model responses containing `tool_calls` JSON
+objects to `Vec<ContentBlock::ToolCall { id, name, args }>`. A response body containing
+`{"tool_calls":[{"id":"call_1","type":"function","function":{"name":"get_weather",
+"arguments":"{\"location\":\"Paris\"}"}}]}` yields
+`ToolCall { id: "call_1", name: "get_weather", args: {"location": "Paris"} }`.
+Verified by `test_BC_2_08_013_native_openai_json_parses_tool_call_response()`.
+
+### AC-021 (traces to BC-2.08.013 postcondition 4)
+`ToolCallDialect::NativeAnthropic` parses model responses containing `tool_use` content
+blocks to `Vec<ContentBlock::ToolCall { id, name, args }>`. An Anthropic response body
+containing `{"type":"tool_use","id":"toolu_01","name":"search","input":{"query":"Paris"}}`
+yields `ToolCall { id: "toolu_01", name: "search", args: {"query": "Paris"} }`.
+Verified by `test_BC_2_08_013_native_anthropic_parses_tool_use_response()`.
+
+### AC-022 (traces to BC-2.08.013 postcondition 7)
+A `HermesChatMlXml` response containing both plain text and a `<tool_call>` tag yields
+`AiMessage.content = [ContentBlock::Text("I'll check the weather for you. "),
+ContentBlock::ToolCall { name: "get_weather", args: {"location": "Paris"} }]`.
+Text content outside `<tool_call>` tags is preserved as `ContentBlock::Text` — not
+discarded. Partial-text and tool-call co-occurrence in the same response is valid.
+Verified by `test_BC_2_08_013_hermes_text_outside_tags_preserved()`.
+
+### AC-023 (traces to BC-2.08.014 postcondition 4)
+Fallback providers in `chain` are attempted in declaration order: if the primary fails with
+a trigger error and `chain = [provider-a, provider-b]`, provider-a is attempted before
+provider-b. If provider-a also returns a trigger error, provider-b is attempted next.
+A chain with primary→provider-a (both 5xx) followed by provider-b (200) returns provider-b's
+response. Verified by `test_BC_2_08_014_chain_traversal_in_declaration_order()`.
+
+### AC-024 (traces to BC-2.08.014 postcondition 7 and invariant 5 — DI-010)
+During a failover sequence (including any credential refresh attempt), no credential value
+from the primary or fallback provider configuration appears in any log line, tracing event,
+or `PregolyaError.message` field. The `PregolyaError` emitted on chain exhaustion
+(E-PROV-010) identifies providers by name only — not by key material.
+Verified by `test_BC_2_08_014_credentials_absent_from_logs_and_errors_during_failover()`
+(tracing subscriber capture + error message assertion).
 
 ## Architecture Mapping
 
@@ -198,7 +236,7 @@ by 429, 5xx, or auth failures. Verified by
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-019 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-024 (test-writer step)
 2. [ ] No Red Gate BCs — proceed to implementation after test stubs
 3. [ ] Create `pregolya-standard-tests/src/eval.rs` — `EvalHarness`, `EvalOutcome`, `eval_score()`
 4. [ ] Implement score aggregation: exclude InfraError, arithmetic mean, AllInfraError → Err
@@ -212,7 +250,7 @@ by 429, 5xx, or auth failures. Verified by
 12. [ ] Implement empty-chain guard at `ProviderFallbackPolicy::new` → Err(E-PROV-011)
 13. [ ] Create `pregolya-standard-tests/src/schema_snapshots.rs` — snapshot test helpers
 14. [ ] Write schema snapshot tests for all public tool input types; generate initial snapshots
-15. [ ] Run `cargo nextest run -p pregolya-standard-tests -p pregolya-core` — all 19 ACs green
+15. [ ] Run `cargo nextest run -p pregolya-standard-tests -p pregolya-core` — all 24 ACs green
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -232,12 +270,12 @@ for dialect selection, but the serialization logic must be callable via `&dyn` i
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `eval_score()` excludes InfraError from denominator | BC-2.08.008 postcondition 2 | Unit test AC-002 |
-| AllCasesInfraError → `Err`, never `Ok(0.0)` | BC-2.08.008 postcondition 3 | Unit test AC-003 |
+| `eval_score()` excludes InfraError from denominator | BC-2.08.008 postcondition 1 | Unit test AC-002 |
+| AllCasesInfraError → `Err`, never `Ok(0.0)` | BC-2.08.008 postcondition 5 | Unit test AC-003 |
 | Schema snapshots use canonicalized JSON (alphabetically sorted keys) | BC-2.08.009 postcondition 2 | Snapshot helper enforces sorting |
 | `tracing::warn!` with `event_type = "eval.judge_infra_error"` registered in catalog | SAP-1 | Catalog row required before PR merge |
-| TIMEOUT (E-PROV-002) does NOT trigger failover | BC-2.08.014 invariant 1 | Unit test AC-019 |
-| Empty chain detected at construction, not invocation | BC-2.08.014 postcondition 5 | Unit test AC-018 |
+| TIMEOUT (E-PROV-002) does NOT trigger failover | BC-2.08.014 postcondition 6 | Unit test AC-019 |
+| Empty chain detected at construction, not invocation | BC-2.08.014 invariant 4 and EC-006 | Unit test AC-018 |
 | `ToolCallDialect` is object-safe | ADR-005 §Adjacent Trait Object-Safety Adjudications | Compile-fail test |
 
 **Forbidden dependencies:** `pregolya-standard-tests` must NOT depend on `pregolya-graph`,

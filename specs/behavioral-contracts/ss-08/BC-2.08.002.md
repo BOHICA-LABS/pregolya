@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-005 message reworded from 'model <name> does not support tool calling' to 'Validation failed for 'model': model '<name>' does not support tool calling' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-005 bare form unchanged — PASS-ABBREV via EC-005."
   - "1.5 (F-P160-01 TD-VSDD-060 sweep, 2026-07-25): Fix burst 261 — VP-BC208002-01 description had 'without exceeding config.recursion_limit (default 25) super-steps' which implies ≤25 steps execute before halt; corrected to 'within recursion_limit + 1 super-steps per invocation segment' (stop = step_at_invoke_start + recursion_limit + 1; default limit=25 → up to 26 steps execute before halt). Normative authority is BC-2.03.001 PC5; this VP description now agrees."
   - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-005 and §Canonical Test Vectors TV-005: PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-005; category, code at TV-005); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line)."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "2a785d4"
+input-hash: "86e470d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -170,7 +171,7 @@ a model that ignores the tools at inference time.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.07
 
 ## VP Anchors
 

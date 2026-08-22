@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,13 +22,14 @@ changelog:
   - "1.4 (fix-burst-283/F-P175-C113/2026-07-30): §Description corrected — replace fabricated 'model, tools, system prompt overrides, checkpointer config' clause with accurate RunnableConfig field inventory per ADR-021 Decision 2 (configurable map added; LangGraph parity). Add EC-006 and TV-008 for configurable-key collision merge precedence (run-level key wins per BC-2.12.003 §Run-Config Merge Precedence Invariant and interface-definitions.md §RunnableConfig configurable field doc)."
   - "1.5 (burst-291/D-134/2026-08-16): Three phantom §-anchor citations corrected. (1) §Description 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants' (§Run-Config Merge Precedence Invariant matches no heading; it is a bold bullet inside §Invariants). (2) EC-006 same correction plus 'interface-definitions.md §RunnableConfig configurable field doc' → 'interface-definitions.md §RunnableConfig — Struct Definition' (§RunnableConfig configurable field doc matches no heading; RunnableConfig struct is defined under '#### RunnableConfig — Struct Definition (F-P92-02)'). Sentence restructured with comma separator so BC_CITE_RE stops at §Invariants, not at '.md'. TD-VSDD-060 sweep: both §Run-Config Merge Precedence Invariant occurrences in live body text corrected."
   - "1.6 (BURST-312/F-P203-01/2026-08-17): Capability Anchor Justification quote-fidelity fix — 'Assistant (named agent config with graph reference)' corrected to verbatim CAP-014 text 'Assistant (named agent config)'; the phrase 'with graph reference' does not appear in capabilities-p1-p2.md §CAP-014. F-P203-01."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "821f666"
+input-hash: "37b5b45"
 extracted_from: null
 modified: []
 deprecated: null
@@ -178,11 +179,11 @@ _No Kani VP seed required. Integration tests against in-process pregolya-server 
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.26
 
 ## VP Anchors
 
-_[to be filled after verification-architecture phase]_
+S-1.26
 
 ## Traceability
 

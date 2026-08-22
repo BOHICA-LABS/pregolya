@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,12 +18,13 @@ changelog:
   - "1.0 (2026-07-15, initial): base BC authored — MCP server tool call dispatch via ToolRegistry."
   - "1.1 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Architecture Anchors — ToolRegistry type corrected: `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>` (architect scope — planned implementation signature; dyn Tool is non-object-safe per ADR-005 §Adjacent Trait Object-Safety Adjudications; ToolRegistry must use DynTool for vtable dispatch)."
   - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): (1) EC-002 §Scenario: CLASS3_UNICODE_ELLIPSIS_VIOLATION — `PregolyaError { … }` corrected to `PregolyaError { .. }` per ADR-010 §Error-Construction Notation Canon Class 3 (discriminator sub-class CLASS3_UNICODE_ELLIPSIS_VIOLATION: U+2026 in brace-whitespace field-elision position). (2) v1.1 frontmatter entry: de-pinned volatile ADR-005 version pin to section anchor `ADR-005 §Adjacent Trait Object-Safety Adjudications` per TD-VSDD-091."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "eb139cd"
+input-hash: "a403241"
 extracted_from: null
 modified: []
 deprecated: null
@@ -163,7 +164,7 @@ semantics as BC-2.09.006 PC-3 for `tools/list`).
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.11
 
 ## VP Anchors
 

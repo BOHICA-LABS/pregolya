@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.001
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-07-13T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-007 struct expanded from single-field to two-field form. Was: { key } (1 field — missing node_id). Now: { node_id, key } (2 fields, 1:1 with taxonomy message placeholders '<node_id>' and '<key>'). EC-001 and TV-005 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun (pass-106 sweep wrongly passed this code)."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -144,7 +145,7 @@ transitions to `failed`.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.14
 
 ## VP Anchors
 

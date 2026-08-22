@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: PC2 partial-batch-error sentence `Err(PregolyaError { ... })` — replaced `...` with `..`. No behavioral change."
   - "1.7 (fix-burst-287/TD-VSDD-091+ADR-010-C3/2026-08-01): (1) VP-INDEX version pin removed: §VP Anchors 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX'; §Traceability VP Registration 'VP-INDEX v1.2 as' → 'VP-INDEX as' (no §-anchor introduced). (2) ADR-010 Class 3 fix: PC-2 prose PregolyaError::new(Component::Embed, ..., 'E-EMBED-001', ...) → PregolyaError { code: 'E-EMBED-001', .. } (observation form). verify-no-version-pins.sh PASS; verify-error-notation-canon.sh PASS."
   - "1.8 (P2A-022/2026-08-21): Add Invariant 6 — Shared production validator. Names validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError> in core::embeddings as the single enforcement point for the dimensionality contract; all Embeddings impls must call it before returning Ok from embed_documents. Returns Err(E-EMBED-001) on count mismatch, zero-length inner vector, or inconsistent inner lengths. Structural requirement ensures VP-008 proptest harnesses fail rather than pass vacuously if validate_embedding_batch is removed or regressed. Traceability VP Registration updated with Invariant 6 anchor note. Per architect's ruling, P2A-022 fix-burst."
+  - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -143,7 +144,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-22 story]_
+S-2.09
 
 ## VP Anchors
 

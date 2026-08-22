@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by generic interrupt() (PC5: super-step boundary has not advanced) is not at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -155,7 +156,7 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.20
 
 ## VP Anchors
 

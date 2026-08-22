@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp / pregolya-core (guardrail hook traits) per module-decomposition.md v1.10."
   - "1.2 (burst-226/F-P131-05+F-P131-02/2026-07-21): (1) PC1: ProvenanceTag::McpToolResult{server_name, tool_name} replaced with canonical SS-11 struct form ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <uuid>, sequence_position: <n> } per ADR-015 v1.3 adjudication. Server/tool identity moves to guardrail audit log. (2) PC4/EC-002/TV-003: canonical guardrail.unregistered_passthrough emission per item-4 adjudication — unified event_type with BC-2.11.006; merged field schema {boundary_type, ingress_id, item_count, timestamp} + MCP conditional {server_name, tool_name}. Invariants updated accordingly."
   - "1.3 (burst-227/F-P132-06/2026-07-21): Architecture Anchors: correct ProvenanceTag type-kind label from 'enum' to 'struct' (ProvenanceTag is a struct in pregolya-core/src/guardrail.rs)."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "4e519e1"
+input-hash: "6b3355d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -141,11 +142,11 @@ _No Kani VP seed required. This BC's obligation is covered by DI-012's VP obliga
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.10
 
 ## VP Anchors
 
-_[to be filled after verification-architecture phase]_
+S-2.10
 
 ## Traceability
 

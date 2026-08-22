@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-01/02 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.12 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "9e00c1e"
+input-hash: "0188f70"
 extracted_from: null
 modified: []
 deprecated: null
@@ -167,7 +168,7 @@ configured"`. This is NOT an error; hybrid search degrades gracefully to keyword
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.12
 
 ## VP Anchors
 

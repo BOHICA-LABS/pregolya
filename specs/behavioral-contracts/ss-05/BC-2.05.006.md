@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,6 +13,7 @@ changelog:
   - "1.4 (F-P110-CENSUS, 2026-07-18): Fix EC-005 E-GRAPH-014 InterruptApprovalTimeout struct — 2-field form `{ tier, deadline_utc }` missing `run_id`. Taxonomy message format `interrupt for run '<run_id>' (tier '<tier>') expired at deadline '<deadline_utc>'` has 3 distinct placeholders; struct must be a SUPERSET of all taxonomy placeholders (gate #33 Step B check 2). Added `run_id: \"<run_id>\"` as first field. TD-VSDD-060 sweep: only one E-GRAPH-014 struct site in this file (EC-005 line ~148); TV-006 uses bare-variant form (no struct fields — not subject to parity check)."
   - "1.5 (F-P170-propagation/burst-272/2026-07-25): Architecture Anchors update — ActionRisk enum source path corrected from pregolya-graph/src/hitl/action_risk.rs to pregolya-core/src/action_risk.rs per F-P170-06 architect adjudication (ActionRisk relocates to pregolya-core as core::action_risk; pregolya-graph::hitl re-exports it). PreToolCallHook itself stays in pregolya-graph::hitl per ADR-018 Decision 1."
   - "1.6 (F-P171a-04+F-P171a-13/burst-273/2026-07-25): (1) F-P171a-04: ActionRisk is #[non_exhaustive]; §Preconditions-3, §Invariants 'closed exhaustive' claim, and VP-HITL-13 all incorrectly stated no-wildcard-arm requirement. CLAUDE.md mandates wildcard arm for all cross-crate #[non_exhaustive] matches. Fixed: PC-3 updated to note #[non_exhaustive] + cross-crate wildcard arm requirement; Invariants updated to #[non_exhaustive] framing + wildcard-arm-fails-closed-to-High policy; VP-HITL-13 updated to verify wildcard arm IS present (compile check). (2) F-P171a-13: Module Traceability row missing pregolya-core (ActionRisk source per F-P170-06 adjudication). Added: 'pregolya-core (ActionRisk enum) / pregolya-graph (RiskGatePolicy, policy eval) / pregolya-server (resume endpoint)'."
+  - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -206,7 +207,7 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.20
 
 ## VP Anchors
 

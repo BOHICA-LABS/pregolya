@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.5 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — PC-1 postcondition fence: PregolyaError struct literal (missing retry_hint, source fields) → PregolyaError::new(Component::Srlz, Category::Val, RetryHint::Never, \"E-SRLZ-002\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-SRLZ-002. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-19/BC-2.19.006.md returns zero fence-scoped literal occurrences after this edit."
   - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-001 expected-output cell: `PregolyaError { code: \"E-SRLZ-002\", message: \"...\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
   - "1.7 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — PC-5: §E-SRLZ-002 (row: VAL) is a phantom anchor (no §E-SRLZ-002 heading exists in error-taxonomy.md; individual error codes are not section headings). Corrected to §Component: SRLZ, resolving to heading '### Component: SRLZ (pregolya-core::serializable)'."
+  - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "cc7c8e1"
+input-hash: "2567224"
 extracted_from: null
 modified: []
 deprecated: null
@@ -141,7 +142,7 @@ available in pregolya." The error is propagated as `Err`; it is never a silent `
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-19 story]_
+S-2.01
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.010
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -32,6 +32,7 @@ changelog:
   - "1.1 (D23/2026-07-22): Add optional `action_risk` attribute parameter (`action_risk = ActionRisk::High`) per ADR-018 Decision 6. PC3 updated to document optional attribute; PC1 extended with `action_risk()` method on generated struct; `ToolCallPreview.action_risk` carries the value when `pre_tool_dispatch` hook is called. New EC-005: omitting `action_risk` defaults to `None` (no risk tier constraint). Related BCs: BC-2.05.004 and BC-2.23.005 forward refs added."
   - "1.2 (burst-234/F-P134-03/2026-07-22): Fix mis-anchor — replace both BC-2.05.004 references with BC-2.05.007. PC-1 body and Related BCs both cited BC-2.05.004 (Command-resume API) for the PreToolCallHook / ToolCallPreview / pre_tool_dispatch contract; that contract lives in BC-2.05.007 (PreToolCallHook Dispatch). BC-2.05.004 is the Command(resume=value) programmatic-resume API — unrelated to pre_tool_dispatch. Verified: BC-2.05.007 §Preconditions PC-3 explicitly defines ToolCallPreview construction and §Invariants Retry-ordering clause confirms pre_tool_dispatch dispatch. Reciprocal link added to BC-2.05.007 Related BCs. TD-VSDD-060 sibling sweep: one PC-1 site + one Related BCs site — both corrected in this burst."
   - "1.3 (F-P171a-09+F-P171a-03sibling/burst-273/2026-07-25): (1) F-P171a-09: PC-1 action_risk() bullet extended with ADR-008 Decision 2 emitted-path contract: macro expansion emits ::pregolya_core::action_risk::ActionRisk::<Variant> (fully-qualified path); MUST NOT assume ActionRisk in annotated crate scope; omitting action_risk → ToolCallPreview.action_risk = None with no default variant applied by framework. (2) F-P171a-03 sibling: Related BCs BC-2.23.005 annotation corrected — 'BashTool sets action_risk = ActionRisk::Medium as a risk floor' was wrong on two counts: default annotation is ActionRisk::High (not Medium); Medium is the non-lowerable floor. Fixed to 'BashTool declares action_risk = ActionRisk::High and enforces a non-lowerable Medium floor'."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -169,7 +170,7 @@ on the caller's behalf.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.07
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.006
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.2 (F-P117-01, fix burst 120, 2026-07-19): PC7 — add summary_halt to the enumerated transition set (RunStore must persist all lifecycle transitions including the budget-summarize terminal state per BC-2.10.003 PC8(d) and BC-2.12.003 PC8 post-fix)."
   - "1.3 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.rate_limit_store_in_memory' to EC-005 startup WARN emission per observability census (SAP-1). EC-005 and Invariants updated."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "d6a34d3"
+input-hash: "32e487b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -186,7 +187,7 @@ A `WARN` log is emitted at startup if no distributed `RateLimitStore` is configu
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.27
 
 ## VP Anchors
 

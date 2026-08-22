@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.002
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (burst-226/F-P131-01/2026-07-21): PC2 updated per ADR-014 v1.5 severity-bifurcated Fail semantics: Critical Fail → Err(E-CORE-008) propagated, run failed; Non-Critical Fail → error-entry Document substituted at position, batch continues. VP-2.20.002-B scope narrowed to Critical path only. EC-002 updated to reflect Critical-only abort semantics."
   - "1.4 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to 1b115d2 (drift from burst-226 ADR-014 content changes)."
   - "1.5 (burst-309/F-P201-02/2026-08-17): Fix 4 phantom ADR §-citations. All 4 sites cited `ADR-014 Decision 2 Consequences §DI-012` or `ADR-014 Consequences §DI-012` — ADR-014 has no heading `§DI-012` and no `Consequences` subsection under Decision 2. Corrected to canonical form `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` per BC-INDEX Red-Gate table (burst-290/changelog 3.38) and confirmed heading existence in ADR-014 §Decision 6. Sites updated: (1) frontmatter red_gate_source, (2) Red-Gate callout blockquote, (3) Architecture Anchors, (4) Traceability Architecture Authority. Semantic intent preserved: DI-012 mechanization via the GuardedDocuments typed wrapper is the guardrail coverage confirmation anchor."
+  - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "97d9bcd"
+input-hash: "869996f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -141,7 +142,7 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-20 security story]_
+S-2.02
 
 ## VP Anchors
 

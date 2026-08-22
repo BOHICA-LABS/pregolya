@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). TV-001 table-cell span (E-GRAPH-001) corrected: has code/category/message but lacks component and retry_hint; added `, ..`. PC3 span (E-GRAPH-001) already carries all five non-source fields (component/category/code/retry_hint/message) — CLASS3_VALID_COMPLETE, no change."
+  - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.16 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -135,7 +136,7 @@ This is the enforcement mechanism for DI-001's concurrent-write prohibition.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.16
 
 ## VP Anchors
 

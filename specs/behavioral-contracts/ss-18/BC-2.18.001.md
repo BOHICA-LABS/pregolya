@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-003 inline cite: add `, ..` field-elision marker. (2) TV-004 expected-output cell: add `, ..` field-elision marker. (3) TV-007 expected-output cell: add `, ..` field-elision marker; `...` inside message-string value is inside a quoted string (not field-elision position) and is left as-is. No security semantics or VP anchors altered."
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 violations. (1) PC-4: multi-line PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-003\", ...) in prose postcondition → Err(PregolyaError { code: \"E-TMPL-003\", .. }). (2) INV-1: multi-line PregolyaError::new(..., \"E-TMPL-004\", ...) in invariant prose → Err(PregolyaError { code: \"E-TMPL-004\", .. }). (3) EC-007: PregolyaError::new(..., \"E-TMPL-004\", ...) in table cell → Err(PregolyaError { code: \"E-TMPL-004\", .. }). Bare constructor form forbidden in prose/table context per ADR-010 Class 3 rules."
   - "1.8 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
+  - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "172de17"
+input-hash: "e8f793e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -153,7 +154,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-18 story]_
+S-2.04
 
 ## VP Anchors
 

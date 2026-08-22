@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.005
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,13 +24,14 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "11d8e77"
+input-hash: "5560f41"
 changelog:
   - "1.1 (ADV-P1D-PASS-26): F-P26-04 removed debug_route_path reference from invariant — debug route is fixed at /_debug (minimal config surface decision; TVs do not depend on a configurable path)."
   - "1.2 (ADV-P1D-PASS-27): F-P27-05 removed stale '(or the configured debug route path)' parenthetical from PC4 — residue of the pre-P26-04 configurable-path design; path is fixed at /_debug."
   - "1.3 (ADV-P1D-PASS-28): OBS-P28-1 removed inline fix-annotation residue from PC4 body — the F-P27-05 inline parenthetical '(F-P27-05: removed ...) was annotation residue in the postcondition text; correction is preserved only in the changelog."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.5 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.security_config_cors_wildcard' to EC-003 and Invariants WARN emission per observability census (SAP-1)."
+  - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -162,7 +163,7 @@ would effectively disable the gate — this must not be permitted.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.27
 
 ## VP Anchors
 

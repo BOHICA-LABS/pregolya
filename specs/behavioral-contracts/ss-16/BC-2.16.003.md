@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.003
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.3 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.circuit_breaker_disabled' to CircuitBreaker::always_closed() WARN emission (PC5 and EC-005) and 'retry.circuit_probe_failed' to half-open probe failure DEBUG emission (EC-003) per observability census (SAP-1)."
   - "1.4 (burst-259/F-P158-01/2026-07-24): Drop tool_name from retry.circuit_breaker_disabled emission in EC-005. CircuitBreaker::always_closed() is a zero-argument constructor; tool_name is unavailable at construction time. EC-005 message template updated to tool-agnostic form consistent with sibling retry.unlimited_policy_constructed. Observability catalog and this BC aligned."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - domain-spec/failure-modes.md#FM-012
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/failure-modes.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "c0827d0"
+input-hash: "b3b2630"
 extracted_from: null
 modified: []
 deprecated: null
@@ -155,7 +156,7 @@ The tool is always invoked regardless of failure count.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.06
 
 ## VP Anchors
 

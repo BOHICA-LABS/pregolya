@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.006
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,13 +24,14 @@ changelog:
   - "1.2 (burst-236/F-P136-04/2026-07-23): PC1 JSON payload `tokens_remaining_after` type fixed: `<u64>` → `<i64 | null>`. Source is `RunContext.budget_info.tokens_remaining: Option<i64>` (interface-definitions.md §BudgetInfo v2.21). When no token ceiling is configured (OnMessageCount/OnTokenCount triggers fire), `tokens_remaining` is `None` → u64 has no representation; may also be negative (i64) on Deny. Invariants updated to note the `Option<i64>` source type. BC-2.10.006 Step 5 and interface-def §StreamEvent CompactionEvent updated identically (three-site reconciliation F-P136-04)."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (F-P151-03, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied. (1) PC1 JSON payload → flat wire shape: `compacted_turns: { start, end }` removed; replaced with `compacted_start: <usize>` + `compacted_end: <usize>` (flat inclusive bounds per interface-definitions.md §Compaction CompactionSummary). (2) `parent_ids: [\"<parent_run_id>\"]` added to PC1 JSON (BC-2.06.002 Inv-2 mandate — every StreamEvent variant carries parent_ids). (3) PC1 field descriptions updated: `compacted_turns`/`CompactionSummary.compacted_range` references replaced with `compacted_start`/`compacted_end` flat-field descriptions (inclusive bounds, slice note). (4) Invariants: add parent_ids mandatory note citing BC-2.06.002 Inv-2. (5) EC-005 + TV-001 + TV-004 updated to flat + parent_ids wire shape."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
-input-hash: "050b022"
+input-hash: "b4d3360"
 extracted_from: null
 modified: []
 deprecated: null
@@ -153,7 +154,7 @@ host to update context-window visualization without polling.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-06 extension story]_
+S-1.24
 
 ## VP Anchors
 

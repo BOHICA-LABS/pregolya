@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.002
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (burst-227/F-P132-08/2026-07-21): Clarify serde field-name convention: lc_secrets() returns serde-serialized names (not Rust field names). Invariant 3 extended. TV-001 note updated: 'api_key field absent' → 'openai_api_key (serde-serialized name) absent from kwargs'."
   - "1.2 (burst-298/F-P189-01/2026-08-16): §Traceability DI-008 cell corrected — prior text attributed Result return to LcSerializable::serialize (infallible; returns Serialized::Constructor directly; no failure path) and to lc_secrets() stripping (infallible HashMap remove operations). Corrected to: LcSerializable::serialize returns Serialized (infallible); lc_secrets() stripping is infallible; Reviver::revive returns Result; no .unwrap() in non-test code. Reconciles with DI-008 definition and siblings BC-2.19.001 §Traceability (corrected burst-297), BC-2.19.003-006 §Traceability (all already correctly attributed to revive op only). input-hash updated to e7b7c2e."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "cc7c8e1"
+input-hash: "2567224"
 extracted_from: null
 modified: []
 deprecated: null
@@ -131,7 +132,7 @@ no configuration knob overrides it (DI-010).
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-19 story]_
+S-2.01
 
 ## VP Anchors
 

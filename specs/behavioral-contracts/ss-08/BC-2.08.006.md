@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.006
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider>-sdk / pregolya-<provider> per module-decomposition.md v1.10."
   - "1.4 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-002 message reworded from 'timeout must be set; use .timeout(Duration::from_secs(30))' to 'Validation failed for 'timeout': must be set; use .timeout(Duration::from_secs(30))' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-002 bare form unchanged — PASS-ABBREV via EC-002."
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): (1) Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon): §EC-002 and §Canonical Test Vectors TV-002 — PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-002; category, code at TV-002); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line). (2) D-35/D-80 xtask rename: §Verification Properties VP-BC208006-02 table cell — `deny-expect-in-lib` → `check-no-panic`."
+  - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-008
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/entities-server.md
   - .factory/semport/partners/behavioral-intent.md
-input-hash: "9c01284"
+input-hash: "34b246c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -158,7 +159,7 @@ only that dependency compiles. No graph-runtime types leak into the SDK public A
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.06
 
 ## VP Anchors
 

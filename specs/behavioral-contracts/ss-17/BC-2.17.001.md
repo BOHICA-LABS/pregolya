@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (burst-254/F-P153-01/2026-07-24): VP-012 predicate corrected: strict `<` → non-strict `<=`; f64 arithmetic and domain (0 <= tokens_remaining <= ceiling) made explicit; load-bearing non-strict note added (EC-002 fraction=1.0, tokens_remaining=0 boundary must fire). VP-011 bullet modernized: Deny-only description replaced with full 4-variant PreToolDecision fail-closed coverage (Approve/Deny/Edit/PendingHumanApproval); Proceed reachable only from Approve and valid-Edit; Deny and invalid-Edit route to Reject; hook errors shielded to Deny; PendingHumanApproval suspends via BC-2.05.001 and never invokes the tool — per VP-011.md v1.2 L4 authority. No f32 arithmetic or old-bounds references found in remaining VP-001..013 bullets."
   - "1.4 (burst-255/F-P154-02/2026-07-24): VP-011 bullet realigned per VP-011.md v1.3 architect adjudication (Option A): Kani harness covers three routable PreToolDecision variants (Approve/Deny/Edit) + hook-error path only; PendingHumanApproval peeled off upstream in async pre_tool_dispatch wrapper before route_pre_tool_decision is called — non-invocation covered by BC-2.05.008 integration tests, not Kani; #[non_exhaustive] wildcard arm returns Reject (fail-closed forward safety). Removed overclaim 'all four variants' from VP-011 bullet. Changelog reordered desc→asc per gate #28 Rule 6 (burst-255 in-scope compliance fix)."
   - "1.5 (burst-309/F-P201-03/2026-08-17): Traceability L2 Domain Invariants DI-014 gloss corrected. Was 'Data Integrity'; corrected to canonical name per invariants.md §DI-014: 'Error Propagation (No Silent Swallowing)'. DI-014 ID and VP targets (VP-009/010/011) unchanged."
+  - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-6.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
   - domain-spec/invariants.md#DI-001
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "7833e3a"
+input-hash: "1c81eb5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -213,7 +214,7 @@ proof.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Phase-6 story]_
+S-6.01
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.003
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.2 (F-P170-01/burst-272/2026-07-25): Re-anchor Architecture Anchors and Traceability Architecture Authority from ADR-016 Decision 4 to Decision 2 — the inventory crate, feature-gated partner registration, and OnceLock initialization are all defined in Decision 2 (Registry Mechanism); Decision 4 is Legacy Namespace Remapping and Version Tolerance (OLD_CORE_NAMESPACES_MAPPING). Drop fabricated 'duplicate detection' clause (not attributed in ADR-016). De-pin 'version 0.3.24' in PC1 per TD-VSDD-091 (version pins in normative body text decay on patch bumps)."
   - "1.3 (FIX-BURST-277-WAVE-C/FC-2-genuine-removal/2026-07-28): Genuine completion of v1.2 false-closure FC-2. v1.2 claimed 'Drop fabricated duplicate detection clause' but the term survived in Invariant 2 ('duplicate registration detection') and EC-003 ('DuplicateRegistration'). Decision on merits: ADR-016 Decision 2 specifies inventory::iter for registry construction with no duplicate-detection semantics; the inventory crate does not natively panic on duplicate submissions; the DuplicateRegistration panic behavior was fabricated without specification backing. Removal: (1) Invariant 2: panic-on-duplicate language replaced with last-write-wins HashMap semantics. (2) EC-003: DuplicateRegistration panic removed; replaced with last-write-wins HashMap behavior and a CI assertion recommendation. (3) DI-008 Traceability: 'except duplicate detection' exception removed. TD-VSDD-060 sibling sweep: no other SS-19 BCs contain duplicate-detection language."
   - "1.4 (F-P188-01/burst-297/2026-08-16): DI-008 Traceability cell corrected — 'Reviver::new() returns Result' was wrong. PC2 explicitly states Reviver::new() returns a plain Reviver instance (infallible); Reviver::new() calls inventory::iter at link-time and cannot fail. The fallible operation is revive(), not the constructor. Fixed cell to: 'revive returns Result; Reviver::new() is infallible; no panic on registry initialization' — matching the pattern of siblings BC-2.19.004/005/006. D-134 Sweep A: this was the only named-constructor mis-attribution among all 42 DI-008 Traceability cells corpus-wide (BC-2.19.001 was also fixed in the same burst). input-hash updated to current (e7b7c2e)."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-016-lc-json-deserialization-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "cc7c8e1"
+input-hash: "2567224"
 extracted_from: null
 modified: []
 deprecated: null
@@ -132,7 +133,7 @@ registry — it is never a hand-edited list.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 2 SS-19 story]_
+S-2.01
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.004
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-008 NotADirectory: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. PC5 E-TOOLS-008 generic I/O: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); same phantom-field removal. TD-VSDD-060 sibling sweep: EC-002/EC-005/TV-004 JSON-like notation classified (c) message-component descriptions; left as-is."
   - "1.6 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001 → { code: 'E-TOOLS-001', .. }. PC-3 E-TOOLS-008 NotADirectory → { code: 'E-TOOLS-008', .. }. PC-5 E-TOOLS-008 generic I/O → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "1.7 (burst-288/P1D-177-ITEM2/2026-08-15): ADR-024 §Phase-2 Postconditions PC-5 consumer — ListDirTool calls canonicalize_beneath_root for the directory path; when path does not exist, Phase 2 returns Ok(canonical_parent.join(dirname)); subsequent fs::read_dir surfaces NotFound → E-TOOLS-008 per EC-005. PC-5 text extended with ADR-024 §Phase-2 Postconditions PC-5 note. ADR-024 §Phase-2 Postconditions PC-5 added to §Traceability §Binding Decisions. ADR-024 added to traces_to + inputs + §Architecture Anchors."
+  - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -37,7 +38,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-020-first-party-tool-library.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "da1fa5d"
+input-hash: "c276465"
 extracted_from: null
 modified: []
 deprecated: null
@@ -147,7 +148,7 @@ filter at the application layer.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-23 story]_
+S-1.21
 
 ## VP Anchors
 

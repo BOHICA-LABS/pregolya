@@ -2,12 +2,13 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.001
-version: "1.4"
+version: "1.5"
 changelog:
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-01..003 renumbered to VP-SPLIT-01..03 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — below >5 threshold — so renumber is the production-grade correct call over documenting the convention). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-splitters per module-decomposition.md v1.10."
   - "1.3 (2026-07-22, F-P139-03, burst-239): TV-005 corrected — empty string expected output changed from '[\"\"]` or `[]`' to `[]` only. Sibling fix to BC-2.07.003 PC5 (F-P139-03 same burst): BC-2.07.003 EC-005 and VP-SPLIT-08 already mandate `[]`; BC-2.07.003 PC5 previously hedged 'either acceptable' but that was the internal contradiction. TV-005 now aligns with the mandated `[]` behavior."
   - "1.4 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two EC violations corrected: EC-001 and EC-002 `PregolyaError` struct observations had partial fields (code + message, 2/5) with no `..` rest pattern. Added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
+  - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "92f6c3f"
+input-hash: "76a5dd5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -147,7 +148,7 @@ non-ASCII input, which is a correctness regression addressed by R8.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.08
 
 ## VP Anchors
 

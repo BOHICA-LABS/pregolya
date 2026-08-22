@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.008
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.0 (D23/2026-07-22): Initial BC — D23 per-tool-call approval hook, SS-05 skip-hook-on-resume invariant."
   - "1.1 (2026-07-22, F-P139-07, burst-239): (a) Related BCs: 'BC-2.05.007 PC-1 through PC-4 applied on resume' corrected to 'PC-1 through PC-3' — PC-4 is PendingHumanApproval, the trigger path that issued the interrupt, and is never a valid resume decision delivered by the caller. (b) EC-006 added: explicit behavior when Command::Resume(PendingHumanApproval { .. }) is delivered — invalid payload, returns Err per BC-2.05.004 contract."
   - "1.2 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. H1 title, Description, PC-1/2/3, Invariants, EC-001/004/006, TV-001/002/003, Related BCs, Traceability updated. Zero Command:: enum-variant residue remains in live body text."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.23 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "febe7fa"
+input-hash: "5a451cb"
 extracted_from: null
 modified: []
 deprecated: null
@@ -146,7 +147,7 @@ decision out-of-band.
 
 ## Story Anchor
 
-_[to be filled after story decomposition — Wave 1 SS-05 extension story]_
+S-1.23
 
 ## VP Anchors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (FIX-BURST-276-WAVE-C/F-P173-407/2026-07-27): DEC-013 anchor added bidirectionally. DEC-013 (Provider Streaming Interrupted by Transport Error in domain-spec/edge-cases.md) named this BC as its anchor but this BC carried no reciprocal DEC-013 citation, making DEC-013 an orphan per F-P173-407. Fix: domain-spec/edge-cases.md#DEC-013 added to traces_to frontmatter; DEC References row added to Traceability table. DEC-013's scenario (TCP reset yields Err(Transport); per-chunk stall yields Err(Timeout); no truncated Ok(AiMessage)) is exactly the contract in PC1 and PC2 — the anchor is semantically correct."
   - "1.7 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): (1) Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon): 8 Class 3 violations corrected — §Description category-union observation (added `, ..`); §Postconditions PC1 Unicode `…` replaced with `..` after message field; §EC-001, §EC-003 bare two-field observations (added `, ..`); §EC-004 three-field observation (added `, ..`); §Canonical Test Vectors TV-001, TV-003, TV-005 bare two- and three-field observations (added `, ..`). All occurrences reconciled: 8 corrected (Class 3), 1 exempt (changelog). (2) D-35/D-80 xtask rename: §Traceability Test Types cell — `deny-client-new` → `check-client-timeout`."
   - "1.8 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): §Postconditions PC2 split-line form: PregolyaError on preceding line, `{ category: TRANSPORT, … }` on continuation — Unicode `…` replaced with `..` (only `category` present; `component`, `code`, `message`, `retry_hint` absent; rest pattern required per Class 3 normative rule; split-line form does not exempt from the rule)."
+  - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "91e5664"
+input-hash: "bece768"
 extracted_from: null
 modified: []
 deprecated: null
@@ -164,7 +165,7 @@ and fails the build. No runtime behavior change — this is a static enforcement
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-2.07
 
 ## VP Anchors
 

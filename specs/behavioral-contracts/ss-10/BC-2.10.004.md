@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (F-P95-03 + coordinator CAP-012-v1.3 update, 2026-07-17): (a) Preconditions restructured: malformed 1a/1b/2/2b numbering (PC1b and PC2b were verbatim duplicates of the Deny+on_ceiling=Escalate trigger; no plain PC1 existed) replaced with clean PC1 (config context: BudgetConfig active in GraphConfig.budget_config), PC2 (trigger — two alternatives: soft-ceiling path Escalate + `on_ceiling` NOT consulted; OR hard-ceiling path Deny + on_ceiling=OnCeiling::Escalate). PC3 and PC4 (CheckpointSaver, evaluation point) unchanged in content, renumbered from 3 and 4 (were already correct ordinals, now references are cleaned). One statement of the Deny+Escalate trigger total. (b) Capability Anchor Justification updated to CAP-012 v1.3 verbatim: old quote used two-mode 'halt the run, or escalate to a HITL interrupt' text; new quote enumerates all three modes per v1.3: 'halt the run, escalate to a HITL interrupt, or issue a final summarize call (summary_halt), according to the budget configuration\\'s `on_ceiling` setting (`BudgetConfig::on_ceiling` — `OnCeiling::Halt | Escalate | Summarize`)'. Cite sweep: BC-2.10.001 v1.4→v1.5 updated 'PC1b/PC2b' references → 'PC2 (hard-ceiling path)' (lines 79+151)."
   - "1.7 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.8 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by budget-escalation interrupt (PC4: evaluation point within a super-step → run transitions to `interrupted`) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during a budget-escalation interrupt park window."
+  - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
   - domain-spec/capabilities-p0.md#CAP-006
@@ -183,7 +184,7 @@ block the parent — it surfaces as an explicit result.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.18
 
 ## VP Anchors
 

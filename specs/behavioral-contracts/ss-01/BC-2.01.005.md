@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.005
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableParallel construction and concurrent invocation. LCEL composition scope expansion (D-170); ADR-026 §Decision 1."
   - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
   - "1.2 (BURST-312/F-P203-02/2026-08-17): Capability Anchor Justification quote-fidelity fix — replaced single ADR-026 §Decision 1 citation that incorrectly claimed 'type representation and concurrent execution' (Decision 1 covers key ordering only; concurrent execution is Decision 2) with two separate single-§ citations per POL-19: §Decision 1 (RunnableParallel: Type Representation and Key Ordering) and §Decision 2 (RunnableParallel: Concurrent Execution and Error Handling). F-P203-02."
+  - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "98a93c5"
+input-hash: "4ccce82"
 extracted_from: null
 modified: []
 deprecated: null
@@ -160,7 +161,7 @@ uniform output types.
 
 ## Story Anchor
 
-_[to be filled after story decomposition]_
+S-1.05
 
 ## VP Anchors
 
