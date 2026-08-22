@@ -6865,3 +6865,13 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 | P2A-019 CLEAN pass (2026-08-21) — 0 findings. CLEAN(strict)=YES CLEAN(PR-merge)=YES; all prior fixes HELD. Streak advances 1/3→2/3. | vsdd-factory:adversary | COMPLETE | 0 findings. Streak 2/3. |
 
 *(Archived when VP-anchor fix-burst row was added to Current Phase Steps; table capped at 5 rows.)*
+
+---
+
+## Archived Phase Steps Rows — P2A-025 fix-burst, P2A-026 NOT CLEAN, P2A-026 fix-burst (rotated from STATE.md Current Phase Steps; 2026-08-22)
+
+| P2A-025 fix-burst (2026-08-21) — all 3 findings closed (D-232). P2A025-01 CLOSED: S-1.18 phantom backend::sqlite path repointed to SqliteCheckpointSaver/saver.rs. P2A025-02 CLOSED: CheckpointStore→CheckpointSaver / SqliteCheckpointStore→SqliteCheckpointSaver corpus-wide (3 stories; 36 others + indices clean). OBS-1 CLOSED: S-1.20 async put_writes wording. Arithmetic sweep CLEAN. Census 39 stories/133 BC/14 VP; DAG UNCHANGED. | state-manager | COMPLETE | 3 story files + STATE.md + trajectory + sidecar. Census 39 stories/133 BC/14 VP. Streak 0/3. NEXT: P2A-026. |
+| P2A-026 NOT CLEAN pass (2026-08-22) — 2 findings (1H/1M). P2A026-01 (HIGH,POL-4/24) interface-definitions.md VectorStore still declared add_texts — P2A-021/D-227 sibling-sweep missed authority doc; reconciled to canonical 7-method add_documents surface (BC-2.21.001 PC-2). P2A026-02 (MED,POL-4) api-surface.md StreamEvent listed under §pregolya-graph — canonical home §pregolya-core (ADR-006; P2A-017/D-225 sibling-sweep gap). D-233 minted. Fix-burst dispatched. Streak RESET 0/3. | vsdd-factory:adversary | COMPLETE | 2 findings (1H/1M). Streak RESET 0/3. |
+| P2A-026 fix-burst (2026-08-22) — all 2 findings closed (D-233). P2A026-01 CLOSED: interface-definitions.md VectorStore surface reconciled to add_documents canonical form (lambda_mult f64; delete &[String]; filter &MetadataFilter; VectorStoreRetriever.lambda_mult f64; v2.77→2.78). P2A026-02 CLOSED: api-surface.md StreamEvent relocated §pregolya-core (ADR-006 §Consequences; v1.25→1.26); graph-section sweep clean. Both P2A-021/P2A-017 sibling-sweep tail gaps. Census 39 stories/133 BC/14 VP; DAG UNCHANGED. | state-manager | COMPLETE | 2 spec files + STATE.md + trajectory + sidecar. Census 39 stories/133 BC/14 VP. Streak 0/3. NEXT: P2A-027. |
+
+*(Archived when P2A-028 CLEAN + P2A-029 NOT CLEAN + P2A-029 fix-burst rows were added to Current Phase Steps; table capped at 5 rows.)*

@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.5"
+version: "3.6"
 status: active
 producer: product-owner
-timestamp: 2026-08-20T00:00:00Z
+timestamp: 2026-08-22T10:55:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "ae7f84b"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.6 (P2A-029-fix-burst/D-235/2026-08-22): BC-2.09.001 §PC9 amendment — TV-009 (overflow Err/E-MCP-008) + TV-010 (unknown-server Err/E-MCP-009) added. TV count 8→10. Grand total 698→700 canonical + 11 GTV = 711."
   - "3.5 (P2A-005-fix-burst/D-212/2026-08-20): BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added by product-owner — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total: 697→698 canonical + 11 GTV = 708→709 total."
   - "3.4 (burst-302b/D-171/2026-08-17): LCEL composition scope expansion (D-170) — Add 4 new BC rows: BC-2.01.005 (5 TV), BC-2.01.006 (5 TV), BC-2.01.007 (5 TV), BC-2.01.008 (6 TV). Grand total: 676→697 canonical + 11 GTV = 687→708 total. BC count 129→133."
   - "3.3 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — four phantom citations fixed. (1) §GTV below (line 38 context): no heading §GTV exists; corrected to §Golden Test Vectors — BC-2.07.002. (2) §GTV (line 87 context, same phantom): same fix. (3) §GTV (line 185 GTV convention blockquote): same fix. (4) §Test Vectors (line 199 context): BC bodies use heading '## Canonical Test Vectors', not '## Test Vectors'; corrected to §Canonical Test Vectors. TV counts and grand totals UNCHANGED."
@@ -107,7 +108,7 @@ changelog:
 | BC-2.08.012 | SS-08 | 5 | — | `TV-NNN` | | `#[task]` proc-macro |
 | BC-2.08.013 | SS-08 | 6 | — | `TV-NNN` | | Pluggable tool-call dialect (ToolCallDialect; Hermes ChatML XML) |
 | BC-2.08.014 | SS-08 | 7 | — | `TV-NNN` | | Provider failover chain (ProviderFallbackPolicy; 429/5xx/auth) |
-| BC-2.09.001 | SS-09 | 8 | — | `TV-NNN` | | MCP tool discovery |
+| BC-2.09.001 | SS-09 | 10 | — | `TV-NNN` | | MCP tool discovery |
 | BC-2.09.002 | SS-09 | 7 | — | `TV-NNN` | | ToolInvocation routing |
 | BC-2.09.003 | SS-09 | 5 | — | `TV-NNN` | | Tool-result as untrusted ingress |
 | BC-2.09.004 | SS-09 | 5 | — | `TV-NNN` | **RG** | Bare ToolException re-raise |
@@ -185,7 +186,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (133 authored BCs):** 698 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **709 total vectors** across 133 BC files.
+**Total vectors (133 authored BCs):** 700 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **711 total vectors** across 133 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -336,6 +337,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.6 | 2026-08-22 | P2A-029-fix-burst/D-235: BC-2.09.001 §PC9 amendment — TV-009 (overflow Err/E-MCP-008) + TV-010 (unknown-server Err/E-MCP-009) added. TV count 8→10. Grand total 698→700 canonical + 11 GTV = 711. | P2A-029-fix-burst/D-235 |
 | 3.5 | 2026-08-20 | P2A-005-fix-burst/D-212: BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total 697→698 canonical + 11 GTV = 709. | P2A-005-fix-burst/D-212 |
 | 3.4 | 2026-08-17 | burst-302b/D-171: LCEL scope expansion — add 4 BC rows (BC-2.01.005: 5 TV, BC-2.01.006: 5 TV, BC-2.01.007: 5 TV, BC-2.01.008: 6 TV). Grand total 676→697 canonical + 11 GTV = 708. BC count 129→133. | burst-302b/D-171 |
 | 3.3 | 2026-08-16 | burst-291/D-134: §-anchor phantom sweep — four phantom §GTV/§Test Vectors citations corrected. TV counts and grand totals UNCHANGED. | burst-291/D-134 |

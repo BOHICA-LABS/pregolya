@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,6 +13,7 @@ changelog:
   - "1.3 (CENSUS-P109, 2026-07-18): Expand TV-004 E-MCP-002 McpTransportError struct from `{ server: \"math\", ... }` to `{ server: \"math\", transport_error: \"connection refused\" }` — `...` abbreviation failed PASS-ABBREV rule (no defining full-struct PC/EC site in BC; TV-004 was the sole struct site). TD-VSDD-060 sweep: no other E-MCP-002 struct sites in file."
   - "1.4 (FIX-BURST-277-WAVE-C/ADR-005-DynTool/2026-07-28): Description + PC2: migrate Arc<dyn pregolya_core::Tool> -> Arc<dyn DynTool> per ADR-005 §Adjacent Trait Object-Safety Adjudications (dyn Tool is non-object-safe; DynTool is the object-safe seam; blanket impl auto-implements DynTool for T: Tool + Send + Sync + 'static; definition in interface-definitions.md §DynTool)."
   - "1.5 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two violations corrected: (1) PC7 `PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002 }` had 3/5 fields; added `, ..`. (2) EC-006 §Expected behavior multiline span (4/5 fields, missing retry_hint); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
+  - "1.6 (P2A029-fix/2026-08-22): Two adjudications from adversary pass P2A-029. (1) P2A029-01 (HIGH) — fail-closed pagination overflow: Invariant 3 amended from ok-truncated (silent drop of discovered tools) to Err fail-closed, applying the CANONICAL PRINCIPLE no-silent-partial-result rule. PC1 clarified to reflect the abort path. EC-007 and TV-009 added for the >1000-page overflow scenario. New code: E-MCP-008 McpPaginationLimitExceeded (POLICY, broken), minted in error-taxonomy.md same burst. (2) P2A029-02 (MED) — unknown-server discovery error: PC9 added (authoritative full-form site for E-MCP-009 gate #33); EC-008 and TV-010 added. New code: E-MCP-009 McpServerNotConfigured (VAL, broken), minted in error-taxonomy.md same burst. Story-writer handoff: re-anchor S-2.10 AC-002 from stale E-MCP-002 to E-MCP-008; re-anchor S-2.10 EC-001 from stale E-MCP-004 to E-MCP-009."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -30,7 +31,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "17b1a43"
+input-hash: "988ae50"
 extracted_from: null
 modified: []
 deprecated: null
@@ -64,8 +65,12 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 
 ## Postconditions
 
-1. For each targeted server, `list_tools()` is called with cursor following
-   (`MAX_ITERATIONS=1000` pagination bound per upstream); all pages are consumed.
+1. For each targeted server, `list_tools()` is called with cursor following until either
+   all pages are retrieved (cursor absent) or `MAX_ITERATIONS=1000` is reached; on the
+   success path (≤1000 pages), all pages are consumed. If `MAX_ITERATIONS` is reached
+   before the server signals completion, the call returns
+   `Err(PregolyaError { component: MCP, category: POLICY, code: E-MCP-008, .. })`
+   per EC-007; no partial tool list is returned (fail-closed).
 2. Each `rmcp::model::Tool` from the server is converted into
    `Arc<dyn DynTool>` via `convert_mcp_tool`. (`DynTool` is the object-safe dispatch
    seam per ADR-005 §Adjacent Trait Object-Safety Adjudications; `convert_mcp_tool`
@@ -82,6 +87,12 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
    `Err(PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002, .. })`.
 8. A server that returns an empty tool list (`[]`) is not an error; an empty `Vec`
    is returned for that server.
+9. When `server_name = Some(name)` and `name` is not in the configured server set,
+   returns `Err(PregolyaError { component: MCP, category: VAL, code: E-MCP-009,
+   message: "McpServerNotConfigured: no MCP server named 'name' is configured", .. })`
+   (where `'name'` = the unknown server name from the caller's argument). This is the
+   authoritative full-form site for E-MCP-009 gate #33; EC-008 and TV-010 PASS-ABBREV
+   via this PC9.
 
 ## Invariants
 
@@ -90,7 +101,12 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 - The session used for `list_tools` is created on-demand (RAII `OnDemand` session
   source) and torn down after the listing completes; no session is retained.
 - `MAX_ITERATIONS=1000` is the hard pagination bound; if a server returns more than
-  1,000 pages, the final page's cursor is dropped and the tool list is returned as-is.
+  1,000 pages, the listing aborts and returns
+  `Err(PregolyaError { component: MCP, category: POLICY, code: E-MCP-008,
+  message: "McpPaginationLimitExceeded: server '<server>' exceeded MAX_ITERATIONS=1000
+  pagination calls", .. })`. No partial tool list is returned; fail-closed semantics apply
+  (silently returning a truncated set would drop discovered tools without signalling the
+  caller — a silent-partial-result violation of the production-grade default).
 
 ## Edge Cases
 
@@ -134,6 +150,27 @@ failure for that server — same propagation pattern as EC-004 transport failure
 (`JoinSet` aborts on first error in multi-server fan-out). The caller must reconfigure
 or remove the non-implementing server.
 
+### EC-007: Pagination overflow — server exceeds MAX_ITERATIONS=1000 (E-MCP-008)
+**Scenario:** A reachable MCP server responds to repeated `list_tools` cursor requests
+returning a non-null `nextCursor` on every response, never signalling completion. On the
+1000th page retrieval, `MAX_ITERATIONS` is reached without the server returning a null
+cursor.
+**Expected behavior:** Returns `Err(PregolyaError { component: MCP, category: POLICY,
+code: E-MCP-008, message: "McpPaginationLimitExceeded: server 'math' exceeded
+MAX_ITERATIONS=1000 pagination calls", .. })`. No partial tool list is returned; any tools
+discovered across the first 999 pages are discarded (fail-closed semantics — returning
+a truncated set would silently drop tools, violating the production-grade no-silent-partial
+rule). This is the authoritative full-form site for E-MCP-008 gate #33; TV-009
+PASS-ABBREV via this EC-007.
+
+### EC-008: Filter by unknown server name (E-MCP-009)
+**Scenario:** `get_tools(Some("nonexistent_server"))` where `"nonexistent_server"` is
+not in the configured server set (no `Connection` entry with that name exists).
+**Expected behavior:** Returns `Err(PregolyaError { component: MCP, category: VAL,
+code: E-MCP-009, message: "McpServerNotConfigured: no MCP server named
+'nonexistent_server' is configured", .. })` per PC9. No MCP network call is made;
+the check is local against the configured server map. TV-010 PASS-ABBREV via PC9.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -146,6 +183,8 @@ or remove the non-implementing server.
 | TV-006 | Server with 250 tools across 3 pages | `Ok(vec![250 tools])` | Cursor pagination |
 | TV-007 | Server returns empty `tools: []` | `Ok(vec![])` | Empty server |
 | TV-008 | 1 server; `list_tools` call returns JSON-RPC -32601 MethodNotFound | `Err(E-MCP-003 McpNotImplemented { server: "math", method: "tools/list" })` | EC-006: server does not implement MCP tools protocol |
+| TV-009 | Server returns non-null cursor on 1000th `list_tools` response | `Err(E-MCP-008 McpPaginationLimitExceeded { server: "math" })` | EC-007: pagination overflow — fail-closed (PASS-ABBREV via EC-007) |
+| TV-010 | `get_tools(Some("nonexistent_server"))` | `Err(E-MCP-009 McpServerNotConfigured { server: "nonexistent_server" })` | EC-008: unknown server filter (PASS-ABBREV via PC9) |
 
 ## Verification Properties
 

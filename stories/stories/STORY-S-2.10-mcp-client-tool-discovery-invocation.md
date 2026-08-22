@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c659985"
+input-hash: "7a8a52e"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -60,10 +60,13 @@ tdd_mode: strict
 returns all tools from the named server. Each tool is an `Arc<dyn DynTool>` constructed
 via `convert_mcp_tool`. Verified by `test_BC_2_09_001_get_tools_single_server()`.
 
-### AC-002 (traces to BC-2.09.001 postcondition 2)
-`list_tools()` cursor pagination respects a `MAX_ITERATIONS = 1000` guard. A server with more
-than 1000 paginated calls is aborted with `Err(PregolyaError { code: "E-MCP-002", .. })` to
-prevent infinite loops. Verified by `test_BC_2_09_001_pagination_max_iterations_guard()`.
+### AC-002 (traces to BC-2.09.001 postcondition 2 / EC-007)
+`list_tools()` cursor pagination respects a `MAX_ITERATIONS = 1000` guard. A server that
+requires more than 1000 paginated calls is aborted fail-closed with
+`Err(PregolyaError { code: "E-MCP-008", .. })` (McpPaginationLimitExceeded; POLICY category)
+to prevent infinite loops. Silent truncation is not permitted. The error message form is:
+`McpPaginationLimitExceeded: server '<server>' exceeded MAX_ITERATIONS=1000 pagination calls`.
+Verified by `test_BC_2_09_001_pagination_max_iterations_guard()`.
 
 ### AC-003 (traces to BC-2.09.001 postcondition 3)
 `get_tools(None)` (all servers) uses `tokio::task::JoinSet` to fan out discovery concurrently
@@ -240,7 +243,7 @@ Verified by `test_BC_2_09_005_client_is_send_sync_clone()`.
 
 | ID | Scenario | Expected Behavior |
 |----|----------|-------------------|
-| EC-001 | `get_tools(Some("nonexistent_server"))` | `Err(PregolyaError { code: "E-MCP-004", .. })` — tool not found for that server |
+| EC-001 | `get_tools(Some("nonexistent_server"))` (traces to BC-2.09.001 PC9/EC-008) | `Err(PregolyaError { code: "E-MCP-009", .. })` (McpServerNotConfigured; VAL) — message: `McpServerNotConfigured: no MCP server named '<server>' is configured` |
 | EC-002 | Tool invocation with `McpSessionGuard` that fails to connect | `Err(E-MCP-002)` from session creation; no tool code executed |
 | EC-003 | Guardrail returns `Reject` with empty reason string | `ToolMessage{status:Error, content: [text: "(rejected by guardrail)"]}` — fallback text |
 | EC-004 | `tool_name_prefix: true` with server name containing `__` | Prefix uses `"<server_name>__<tool>"` verbatim — no escaping of the separator |

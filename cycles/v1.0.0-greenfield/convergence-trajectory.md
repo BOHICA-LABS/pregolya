@@ -3172,3 +3172,68 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **ACCEPTED/DO-NOT-REFLAG for P2A-028 (in addition to items 1–14 from P2A-027):** (15) canonical VectorStore types per ADR-014 Decision 2: `lambda_mult: f32` (consistent with `Vec<(Document,f32)>` similarity scores) and `delete(&self, ids: &[&str])` (consistent with TV-004); D-233 f64/&[String] claim superseded by D-234 — do NOT re-flag.
 
 **Convergence dim-5 (Phase-2 P2A-027):** Counter **0/3 — RESET (D-234; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-028 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
+
+---
+
+### Adversary Pass P2A-028 (2026-08-22)
+
+**Date:** 2026-08-22
+**Status:** CLEAN
+**Findings:** 0
+**Streak:** 1/3
+
+**No findings.** All prior fixes from P2A-001..027 HELD. CLEAN(strict)=YES. CLEAN(PR-merge)=YES.
+
+**CLEAN(strict):** YES
+**CLEAN(PR-merge):** YES
+
+**Convergence dim-5 (Phase-2 P2A-028):** Counter **1/3 — CLEAN(strict) (2026-08-22)**. Streak advances 0/3→1/3. NEXT: P2A-029 on SAME frozen HEAD.
+
+---
+
+### Adversary Pass P2A-029 (2026-08-22)
+
+**Date:** 2026-08-22
+**Status:** NOT CLEAN
+**Findings:** 2 (1 HIGH, 1 MED)
+**Streak:** RESET 0/3
+
+#### Finding P2A029-01 (HIGH, POL-8/4)
+**Subject:** S-2.10 AC-002 pagination overflow behavior contradicts BC-2.09.001
+**Evidence:** S-2.10 AC-002 specifies that tool discovery with >1000 pages returns `Err(E-MCP-002)` (fail-closed). BC-2.09.001 original behavior was `Ok` with silent truncation at 1000 pages. The story's more-restrictive production-grade posture (fail-closed) contradicted the BC's lenient behavior. E-MCP-002 was also the wrong category (TRANSPORT, not POLICY) for a pagination limit violation.
+**Fix required:** Production-grade RAISE per Canonical Principle — BC-2.09.001 must be amended to fail-closed. Mint E-MCP-008 (McpPaginationLimitExceeded, POLICY). Re-anchor S-2.10 AC-002 to E-MCP-008.
+
+#### Finding P2A029-02 (MED, POL-4)
+**Subject:** S-2.10 EC-001 mis-anchors unknown-server discovery to E-MCP-004 (ToolNotFound)
+**Evidence:** S-2.10 EC-001 "MCP server not configured → Err(E-MCP-004)" is incorrect. E-MCP-004 is ToolNotFound which requires a `tool_name` context field — structurally wrong for a server-not-found error. Unknown-server discovery failure needs its own code.
+**Fix required:** Mint E-MCP-009 McpServerNotConfigured (VAL). Add BC-2.09.001 PC9/EC-008 anchoring this failure. Re-anchor S-2.10 EC-001 to E-MCP-009.
+
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO
+
+**D-235 minted.** Fix-burst dispatched.
+
+**Convergence dim-5 (Phase-2 P2A-029):** Counter **0/3 — NOT CLEAN (D-235; 2026-08-22)**. Streak RESET 1/3→0/3.
+
+---
+
+### P2A-029 Fix-Burst (2026-08-22)
+
+**Files touched:**
+- `specs/prd-supplements/error-taxonomy.md` (E-MCP-008 McpPaginationLimitExceeded POLICY + E-MCP-009 McpServerNotConfigured VAL added; MCP namespace 7→9; census 115→117; v1.53→1.54) [product-owner]
+- `specs/behavioral-contracts/ss-09/BC-2.09.001.md` (PC9 added: overflow Err(E-MCP-008) fail-closed + unknown-server Err(E-MCP-009); EC-007/EC-008/TV-009/TV-010 added; v1.5→1.6) [product-owner]
+- `stories/stories/STORY-S-2.10-mcp-client-tool-discovery-invocation.md` (AC-002 E-MCP-002→E-MCP-008; EC-001 E-MCP-004→E-MCP-009; 4 legitimate E-MCP-002 transport uses KEPT) [story-writer]
+
+**P2A029-01 CLOSED:** Production-grade RAISE applied per Canonical Principle. BC-2.09.001 amended — >1000-page MCP tool pagination overflow now returns `Err(E-MCP-008 McpPaginationLimitExceeded, POLICY)` fail-closed (no silent partial). E-MCP-008 minted in MCP namespace (POLICY category, HTTP-429-class). BC-2.09.001 §PC9 amended (1.5→1.6) with PC9/EC-007. S-2.10 AC-002 re-anchored to E-MCP-008.
+
+**P2A029-02 CLOSED:** E-MCP-009 McpServerNotConfigured (VAL) minted. BC-2.09.001 PC9/EC-008 added anchoring unknown-server discovery failure. S-2.10 EC-001 re-anchored from E-MCP-004 to E-MCP-009. 4 legitimate E-MCP-002 (transport-layer connection) uses in S-2.10 correctly KEPT — these are connection-level transport errors, not pagination/discovery errors, and are not renumbered (POL-1).
+
+**Error-code census reconciliation:** 43 HTTP + 22 individual + 52 blanket = 117 total (MCP blanket 7→9). error-taxonomy v1.53→1.54. BC census UNCHANGED (133). VP UNCHANGED (14). Stories UNCHANGED (39). DAG UNCHANGED.
+
+**Root cause:** P2A029-01: Story AC was production-grade correct (fail-closed) but the BC allowed silent truncation — canonical principle required raising the BC to match the stricter posture. P2A029-02: EC-001 used structurally-wrong error code E-MCP-004 (ToolNotFound needs tool_name) for a server-not-found scenario.
+
+**Note:** No ID renumber (POL-1). No BC-set count changes. Token Budgets unaffected. DAG UNCHANGED. Census 39 stories / 133 BC / 14 VP / 22 epics — UNCHANGED. Streak 0/3. NEXT: P2A-030.
+
+**ACCEPTED/DO-NOT-REFLAG for P2A-030 (in addition to items 1–15 from P2A-029):** (16) MCP pagination overflow raises E-MCP-008 McpPaginationLimitExceeded (POLICY, fail-closed) per BC-2.09.001 PC9/EC-007 — do NOT re-flag as silent truncation (D-235); (17) unknown MCP server discovery raises E-MCP-009 McpServerNotConfigured (VAL) per BC-2.09.001 PC9/EC-008 — do NOT re-flag E-MCP-004 (D-235); (18) error-code census is 117 (MCP namespace 9 codes: 43 HTTP + 22 individual + 52 blanket) — canonical, do NOT re-flag as 115 (D-235); (19) 4 E-MCP-002 uses in S-2.10 are legitimate transport-layer errors — do NOT re-flag (D-235).
+
+**Convergence dim-5 (Phase-2 P2A-029):** Counter **0/3 — RESET (D-235; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-030 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
