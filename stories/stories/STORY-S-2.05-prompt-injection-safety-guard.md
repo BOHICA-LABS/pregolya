@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "5a24e8f"
+input-hash: "cdac1e4"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
@@ -151,7 +151,8 @@ Verified by `test_BC_2_18_005_e_tmpl_002_category_val_not_security()`.
 | Component | Module | Pure/Effectful |
 |-----------|--------|----------------|
 | `TrustLevel` enum + `severity()` method | `pregolya-prompts/src/trust.rs` | pure-core |
-| `injection_guard` function | `pregolya-prompts/src/chat_template.rs` (inline, called from `format_messages`) | pure-core |
+| `injection_guard` module / `check_slot_trust()` fn | `pregolya-prompts/src/injection_guard.rs` | pure-core (standalone module; VP-006 Kani proof vehicle) |
+| `format_messages` delegation to `injection_guard::check_slot_trust()` | `pregolya-prompts/src/chat_template.rs` | pure-core (no inline guard logic; delegates to injection_guard) |
 | `SystemMessage policy guard` in `from_messages` | `pregolya-prompts/src/chat_template.rs` | pure-core |
 | VP-006 Kani harness | `pregolya-prompts/src/proofs/injection_guard.rs` | test/proof-only |
 | Compile-fail test: TrustLevel no Ord | `pregolya-prompts/tests/external/trust-level-no-ord/` | test-only |
@@ -161,8 +162,8 @@ Verified by `test_BC_2_18_005_e_tmpl_002_category_val_not_security()`.
 | Module | Classification | Justification |
 |--------|---------------|---------------|
 | `pregolya-prompts/src/trust.rs` | pure-core | TrustLevel is a data enum; severity() is a pure integer lookup. |
-| `injection_guard` (inline in chat_template.rs) | pure-core | Pure iteration over slot/variable pairs; no I/O. |
-| `from_messages` policy guard | pure-core | Pure construction-time check; no I/O. |
+| `pregolya-prompts/src/injection_guard.rs` | pure-core | `check_slot_trust()` is a standalone pure fn (VP-006 Kani proof vehicle); pure iteration over slot/variable pairs; no I/O. |
+| `pregolya-prompts/src/chat_template.rs` (format_messages, from_messages) | pure-core | Delegates guard to `injection_guard::check_slot_trust()`; no inline guard logic; from_messages policy check is a pure construction-time check. |
 
 ## Edge Cases
 
@@ -197,19 +198,22 @@ Verified by `test_BC_2_18_005_e_tmpl_002_category_val_not_security()`.
 1. [ ] Write failing tests for AC-001 through AC-015 (test-writer); verify BOTH Red Gates (AC-001 and AC-010 must FAIL before guards are implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
 3. [ ] Create `pregolya-prompts/src/trust.rs` — `TrustLevel` enum (`#[non_exhaustive]`, NO `Ord`/`PartialOrd` derives), `severity() -> u8` method
-4. [ ] Update `pregolya-prompts/src/chat_template.rs` — add `injection_guard` (source-order evaluation, severity-based check, returns `Err(E-TMPL-001)` on violation); add SystemMessage `TrustAll` rejection in `from_messages`
-5. [ ] Extend `TemplateVar` (from S-2.04) with `trust_level: TrustLevel` field; default to `TrustLevel::Trusted`
-6. [ ] Register E-TMPL-001 (`Component::Tmpl, Category::Security, RetryHint::Never`) in error taxonomy
-7. [ ] Verify E-TMPL-002 (`Component::Tmpl, Category::Val, RetryHint::Never`) is registered (from S-2.04)
-8. [ ] Create `pregolya-prompts/src/proofs/injection_guard.rs` — VP-006 Kani harness stub for Phase 6 formal hardening
-9. [ ] Create compile-fail test `tests/external/trust-level-no-ord/` asserting `TrustLevel` does NOT implement `Ord`
-10. [ ] Run `cargo nextest run -p pregolya-prompts` — all tests pass
+4. [ ] Create `pregolya-prompts/src/injection_guard.rs` — `check_slot_trust()` pure fn (source-order slot evaluation, severity-based check per `TrustLevel::severity()`, returns `Err(E-TMPL-001)` on violation; VP-006 Kani proof vehicle)
+5. [ ] Update `pregolya-prompts/src/chat_template.rs` — delegate `format_messages` guard to `injection_guard::check_slot_trust()` (no inline guard logic); add SystemMessage `TrustAll` rejection in `from_messages`
+6. [ ] Extend `TemplateVar` (from S-2.04) with `trust_level: TrustLevel` field; default to `TrustLevel::Trusted`
+7. [ ] Register E-TMPL-001 (`Component::Tmpl, Category::Security, RetryHint::Never`) in error taxonomy
+8. [ ] Verify E-TMPL-002 (`Component::Tmpl, Category::Val, RetryHint::Never`) is registered (from S-2.04)
+9. [ ] Create `pregolya-prompts/src/proofs/injection_guard.rs` — VP-006 Kani harness stub for Phase 6 formal hardening
+10. [ ] Create compile-fail test `tests/external/trust-level-no-ord/` asserting `TrustLevel` does NOT implement `Ord`
+11. [ ] Run `cargo nextest run -p pregolya-prompts` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
 
 S-2.04 established `ChatPromptTemplate`, `SlotTrustPolicy`, `TemplateVar`, and `format_messages`.
-This story EXTENDS `chat_template.rs` — it does NOT rewrite it. The `injection_guard` is
-added inside `format_messages` as an internal step BEFORE the message list is assembled.
+This story EXTENDS `chat_template.rs` — it does NOT rewrite it. The injection guard logic
+lives in a STANDALONE module `pregolya-prompts/src/injection_guard.rs` as the pure function
+`check_slot_trust()`. The `format_messages` method in `chat_template.rs` delegates to
+`injection_guard::check_slot_trust()` — it does NOT contain inline guard logic.
 The `from_messages` SystemMessage check (AC-010) is added inside the existing `from_messages`
 function.
 
@@ -250,8 +254,9 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 | File | Action | Purpose |
 |------|--------|---------|
 | `pregolya-prompts/src/trust.rs` | CREATE | `TrustLevel` enum + `severity()` — no `Ord` derives |
-| `pregolya-prompts/src/chat_template.rs` | MODIFY | Add `injection_guard` to `format_messages`; add SystemMessage TrustAll check to `from_messages` |
+| `pregolya-prompts/src/injection_guard.rs` | CREATE | pure `check_slot_trust()` fn (TrustLevel severity ordering; fires before PromptValue produced) — VP-006 Kani proof vehicle |
+| `pregolya-prompts/src/chat_template.rs` | MODIFY | delegates to `injection_guard::check_slot_trust()` in `format_messages` (no inline guard logic); adds SystemMessage `TrustAll` check in `from_messages` |
 | `pregolya-prompts/src/template_input.rs` | MODIFY | Add `trust_level: TrustLevel` to `TemplateVar` with default `TrustLevel::Trusted` |
-| `pregolya-prompts/src/lib.rs` | MODIFY | Add `pub mod trust;` |
+| `pregolya-prompts/src/lib.rs` | MODIFY | Add `pub mod trust;` and `pub mod injection_guard;` |
 | `pregolya-prompts/src/proofs/injection_guard.rs` | CREATE | VP-006 Kani harness stub |
 | `pregolya-prompts/tests/external/trust-level-no-ord/main.rs` | CREATE | Compile-fail: TrustLevel no Ord |

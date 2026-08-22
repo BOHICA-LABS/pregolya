@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.19"
+version: "2.20"
 status: active
 producer: architect
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
-input-hash: "1249c69"
+input-hash: "b832d00"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -77,7 +77,7 @@ Fourteen VPs committed before v1.0 release — VP-001..005 (original five) plus 
 | VP-001 | BC-2.03.001 | DI-001 | `graph::bsp_engine` | Kani | 6 | P0 |
 | VP-002 | BC-2.04.006 | DI-005 | `checkpoint::session_index` | Kani | 6 | P0 |
 | VP-003 | BC-2.13.004 | DI-007 | `sandbox::path_guard` | Kani | 6 | P0 |
-| VP-004 | BC-2.09.004 | DI-014 | `mcp::adapter` | integration | 3 | P1 |
+| VP-004 | BC-2.09.004 | DI-014 | `mcp::exception` | integration | 3 | P1 |
 | VP-005 | BC-2.09.005 | DI-014 | `mcp::client` | integration | 3 | P1 |
 | VP-006 | BC-2.18.004 | DI-014 | `prompts::injection_guard` | Kani | 6 | P1 |
 | VP-007 | BC-2.19.001 | DI-008 | `core::serializable` | proptest | 3 | P1 |
@@ -672,6 +672,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.20 | 2026-08-21 | architect | INVESTIGATE-RECONCILE | VP-004 Module column: `mcp::adapter` → `mcp::exception` in Provable Properties Catalog table. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property targets `mcp::exception`. Arithmetic invariant unchanged: 14 VPs, 6 P0 / 8 P1, Kani 9 + proptest 3 + integration 2. |
 | 2.19 | 2026-08-17 | architect | BURST-313 / F-P204-02 | VP-014 formal statement corrected: stale `new()` argument type `IndexMap<String, Arc<dyn DynRunnable>>` replaced with canonical `Vec<(String, Arc<dyn DynRunnable>)>` (iterator-of-pairs). IndexMap is the INTERNAL container built by `new()`, not the argument type (ADR-026 §Decision 1 / BC-2.01.005 PC1). Formal invariant rewritten: quantifier uses Vec-of-pairs, extracts `key_set` from pairs via iterator map-collect, derives `N = key_set.len()`. Adds clarifying comment that IndexMap is internal. Key-completeness property preserved. Source of truth: VP-014.md §Changelog (burst-311/OBS-P202-B). No §Decision 1/2 split required — arch block does not attribute JoinSet/concurrent execution to §Decision 1. Corpus sweep: only this site was a stale new()-arg; interface-definitions.md §RunnableParallel struct definition, BC-2.01.005 §Construction Preconditions, ADR-026 §Decision 1 are struct-field/internal-container usages (correct). |
 | 2.18 | 2026-08-17 | architect | burst-308 / F-P200-02 | Category-axis reference correction in §VP-013 RESOLVED block. "(not present in the 12-category axis per ADR-010)" → "(not present in the 13-category axis per ADR-010)". Rationale: ADR-010 §Category Axis Expansion (D26) expanded the category axis from 12 to 13 (EXEC added) in this burst; CONFIGURATION has never been a valid category, pre- or post-D26 expansion. |
 | 2.17 | 2026-08-17 | architect | burst-304 / F-P195-01 + F-P195-02 | VP-014 method-surface and module-path alignment (POL-9 propagation from VP-014.md). §VP-014 heading: `core::runnable::parallel` → `core::runnable` (canonical 2-level registry form; F-P195-02). §VP-014 property, formal statement, and rationale: `invoke_dyn` → `invoke` (three sites; F-P195-01). Canon: DynRunnable method is `invoke`/`stream`; `invoke_dyn`/`stream_dyn` belong to DynTool only (ADR-026 §Decision 5; interface-definitions.md §DynRunnable). |

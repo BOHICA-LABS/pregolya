@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.11"
+version: "2.12"
 status: active
 producer: architect
-timestamp: 2026-08-01T00:00:00Z
+timestamp: 2026-08-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "804f78f"
+input-hash: "7eb42a4"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.12 (INVESTIGATE-RECONCILE/2026-08-21): Module Classification table — rename `mcp::adapter` → `mcp::exception` (MEDIUM tier, pregolya-mcp, SS-09). Story S-2.10 creates no `adapter.rs`; VP-004 property (bare ToolException type-identity) lives in `mcp::exception`. Criticality MEDIUM unchanged. Input-hash refreshed (module-decomposition.md drift)."
   - "2.11 (F-P210-01/2026-08-18): Census reconciliation — Resolution B confirmed. module-criticality.md and verification-coverage-matrix.md enumerate the same 83 distinct modules; module-criticality's prior Total=84 was a row count that double-counted core::serializable (one module with aspects in both CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable). Counting each distinct module once in its highest tier: core::serializable belongs to CRITICAL. Corrections: HIGH 29→28 (remove core::serializable LcSerializable row from HIGH distinct-module count), Total 84→83, tiered-rows comment 78→77. Classification Summary now reflects distinct-module counts."
   - "2.10 (fix-burst-287/F-P176-A009/2026-08-01): Census re-verification after multi-burst accumulation. Ground truth: crate::module-form path rows in module-decomposition.md total 76; 70 carry a CRITICAL/HIGH/MEDIUM/LOW tier; 6 carry a dash (definitions-only/exempt: memory::skills, core::documents, core::guardrail, core::action_risk, core::context_mutation, core::write_guard). No content changes to Classification Summary (Total=84 already correct: 78 tiered + 6 definitions-only). Updated Census quintuple: decomposition_total_rows=76, decomposition_tiered_rows=70, exempt_count=6, registry_rows=84, matched_rows=70. Identity 1: 76=70+6 ✓. Identity 2: 70 tiered decomp = 70 module-level tiered registry rows ✓ (78 registry tiered − 8 crate-level = 70). State of prior Census sextuple (v2.5, 2026-07-27): (71, 69, 2, 77, ?, 69) — stale by +5 decomp rows (+1 tiered core::tool, +4 definitions-only from FIX-BURST-277). Gate check recommendation: the gate verifying purity-boundary-map intro row count must compare against the crate::module-form path row count in module-decomposition.md directly; a gate that only checks purity-boundary-map internal arithmetic passes while stale."
   - "2.9 (D-35-rename-sweep/2026-07-28): D-35 canonical xtask naming sweep — NE Catalog Enforcement Mechanism cells: `cargo xtask deny-client-new` → `cargo xtask check-client-timeout` (NE-04); `cargo xtask deny-expect-in-lib` → `cargo xtask check-no-panic` (NE-07). Superseded variant names forbidden; canonical `check-<subject>` form per D-35."
@@ -83,7 +84,7 @@ changelog:
 | `checkpoint::sqlite` | — | pregolya-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
 | `splitters::recursive` | — | pregolya-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::client` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
-| `mcp::adapter` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| `mcp::exception` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::server` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::wasm` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::policy` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |

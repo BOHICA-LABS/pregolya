@@ -2728,3 +2728,13 @@ P2A-015 fix-burst COMPLETE (D-223; 5 findings 1H/1M/3L; S-2.06 6-crate triad + A
 
 #### v5.36 OPS NOTES
 P2A-016 fix-burst COMPLETE (D-224; 3 findings 2M/1L; dep-graph 13-batch→canonical 10-batch Wave-1; wave-schedule Wave-1 batch structure + pregolya facade annotation row; ARCH-INDEX Subsystem Registry preamble + SS-17 scope note; census 133 BC/14 VP). VERIFY-NEXT-PASS for P2A-017: confirm dep-graph §TopSort 10-batch Wave-1 structure is internally consistent and matches wave-schedule batch ordering.
+
+---
+
+## Archived Checkpoint v5.40 (replaced by v5.41; 2026-08-21)
+
+### RESUME IN ONE BREATH (v5.40)
+Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak 0/3. Adversary passes P2A-001..P2A-021 run; P2A-018/019 CLEAN(strict) (streak 1/3→2/3); P2A-020 NOT CLEAN (1M/1L; D-226; scheduler.rs ownership); P2A-021 NOT CLEAN (1H/3M/1L; D-227; VectorStore ordering + add_documents rename + BC anchors) — streak RESET 0/3 (P2A-021 reset). Fix-burst COMPLETE. NEXT: dispatch fresh vsdd-factory:adversary pass P2A-022 on the current post-fix-burst factory-artifacts HEAD.
+
+### DECISION DELTA (v5.40)
+D-226 minted (P2A-020; scheduler.rs ownership). D-227 minted (P2A-021; VectorStore ordering + add_documents rename + BC anchor fills). P2A-018/019 CLEAN(strict); P2A-020/021 RESET. Human F-02/TDIV-009 waiver in effect (D-220).

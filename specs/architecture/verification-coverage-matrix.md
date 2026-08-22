@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.10"
+version: "3.11"
 status: active
 producer: architect
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-21T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "a58d5f9"
+input-hash: "aaf969c"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.11 (INVESTIGATE-RECONCILE/2026-08-21): VP-004 module rename: `mcp::adapter` → `mcp::exception` in VP-to-Module table and Per-Module Coverage Status table. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property lives in `mcp::exception`. Arithmetic invariant unchanged: total 14 VPs, Kani 9 + proptest 3 + integration 2 = 14. Input-hash refreshed (VP-INDEX.md and module-decomposition.md drift)."
   - "3.10 (burst-325/D-196/2026-08-18): input-hash confirmed current (metadata hygiene sweep; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Binary compute-input-hash verified MATCH — inputs VP-INDEX.md, module-decomposition.md, and module-criticality.md unchanged since hash was last recomputed at v3.8. No normative content changed. Phase-1 gate-closure burst."
   - "3.9 (F-P210-01/2026-08-18): Census reconciliation — Resolution B. Both documents enumerate the same 83 distinct modules; coverage-matrix's prior HIGH=29/tiered=78 double-counted core::serializable (one module with CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable aspects). Preamble updated to acknowledge both collapse-pairs and clarify 83 distinct modules. HIGH 29→28 (core::serializable counted once in CRITICAL, its highest tier). Tiered 78→77. Coverage by Criticality Tier HIGH row: 29→28 modules, proptest denominator 7 of 29→7 of 28. Coverage gap note denominators updated. tooling-selection.md §Test Strategy Summary sibling updated in same burst."
   - "3.8 (burst-304/OBS-B/2026-08-17): OBS-B double-count fix. The two `core::runnable` rows in Per-Module Coverage Status (pipe associativity + VP-014 key-completeness) represent ONE HIGH-tier module, not two. v3.6 incorrectly added `core::runnable::parallel` as a new HIGH-tier module (bumping HIGH 29→30), but since v3.7 canonicalized that path to `core::runnable` (the same module already in HIGH tier), the count was inflated. Corrections: (1) Per-Module header: HIGH 30 → 29; = 79 tiered → = 78 tiered. (2) Coverage by Criticality Tier HIGH row: modules 30 → 29; proptest '8 of 30: core::runnable, core::runnable/VP-014, ...' → '7 of 29: core::runnable, ...' (one module, two proptest aspects). (3) Coverage gap note: '8 of 30 HIGH' → '7 of 29 HIGH'. Arithmetic invariant unchanged: 14 total VPs; Kani 9 + proptest 3 + integration 2 = 14. Input-hash updated (VP-INDEX.md drift from burst-303 inputs)."
@@ -61,7 +62,7 @@ changelog:
 | VP-001 | BSP Super-Step Determinism | graph::bsp_engine | pregolya-graph | Kani | BC-2.03.001 | 6 | draft |
 | VP-002 | Session Triple-Address Uniqueness | checkpoint::session_index | pregolya-checkpoint | Kani | BC-2.04.006 | 6 | draft |
 | VP-003 | Workspace Path Confinement | sandbox::path_guard | pregolya-sandbox | Kani | BC-2.13.004 | 6 | draft |
-| VP-004 | MCP ToolException Type-Identity Preservation | mcp::adapter | pregolya-mcp | integration | BC-2.09.004 | 3 | draft |
+| VP-004 | MCP ToolException Type-Identity Preservation | mcp::exception | pregolya-mcp | integration | BC-2.09.004 | 3 | draft |
 | VP-005 | MultiServerMcpClient Holds No Live Connections | mcp::client | pregolya-mcp | integration | BC-2.09.005 | 3 | draft |
 | VP-006 | injection_guard Fail-Closed | prompts::injection_guard | pregolya-prompts | Kani | BC-2.18.004 | 6 | draft |
 | VP-007 | LcSerializable Round-Trip | core::serializable | pregolya-core | proptest | BC-2.19.001 | 3 | draft |
@@ -110,7 +111,7 @@ changelog:
 | pregolya-anthropic | pregolya-anthropic | — | — | — | yes | Conformance suite (crate-level BaseChatModel impl; canonical crate name per ARCH-INDEX.md roster; Provider Crates section excluded from module-decomp canonical set) |
 | pregolya-ollama | pregolya-ollama | — | — | — | yes | Conformance suite (crate-level BaseChatModel impl; canonical crate name per ARCH-INDEX.md roster; Provider Crates section excluded from module-decomp canonical set) |
 | mcp::client | pregolya-mcp | — | — | — | yes | integration red_gate (BC-2.09.005); no-live-connections |
-| mcp::adapter | pregolya-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
+| mcp::exception | pregolya-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
 | mcp::server | pregolya-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
 | pregolya-macros | pregolya-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness (no canonical crate::module name for this roll-up — macros::tool/entrypoint/task are the canonical rows) |
 | macros::tool | pregolya-macros | — | — | — | yes | HIGH; `#[tool]` proc-macro ToolDefinition generation; compile-time TokenStream expansion; integration-tested via expansion correctness; BC-2.08.010 |

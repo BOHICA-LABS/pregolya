@@ -2884,3 +2884,40 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). No ADR changes. DAG edges UNCHANGED (S-1.25 coordination note is NOT a DAG dependency). sprint-state updated (wave batch 1d max-parallelism, S-2.02/S-2.03 pt corrections).
 
 **Convergence dim-5 (Phase-2 P2A-021):** Counter **0/3 — NOT CLEAN (D-227; 2026-08-21)**. Streak RESET 0/3. trajectory-tail →0→0→2→5. Fix-burst COMPLETE. NEXT: P2A-022 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 HIGH present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-022: (1) F-02/TDIV-009 vendor-template limitation waived (D-220); (2) OBS-1 + PGAP-MSGDRIFT open gaps — report NEW instances only; (3) Primary Crate(s) convention swept ALL 23 SS rows (D-225) — do NOT re-flag absent NEW concrete BC-homing divergence; (4) scheduler.rs ownership model ESTABLISHED (D-226) — do NOT re-flag the coordination model; (5) add_documents is the canonical VectorStore ingestion method (rename swept corpus-wide D-227; TD-VSDD-060 exhausted) — do NOT re-flag.
+
+---
+
+### D-228 Fix-Burst: VP-Anchor Module-Path Reconciliation (2026-08-21; pre-P2A-022)
+
+**Type:** Proactive fix-burst (NOT a scored adversarial pass; no CLEAN verdict). Surfaced during P2A-022 attempts — two runs died to API connection errors mid-investigation; both independently flagged the same VP-harness-path class before terminating. Architect verified + resolved corpus-wide.
+
+**Streak:** 0/3 UNCHANGED. This fix-burst does NOT advance or reset the 3-CLEAN streak (not a pass).
+
+**Files touched (architect — 14 files):** VP-004.md; VP-007.md; VP-009.md; VP-010.md; VP-012.md; VP-013.md; VP-INDEX.md; verification-architecture.md; verification-coverage-matrix.md; module-decomposition.md; purity-boundary-map.md; ARCH-INDEX.md; decisions/ADR-013-mcp-server-module-placement.md; module-criticality.md.
+**Files touched (story-writer — 2 files):** stories/STORY-S-2.05-prompt-injection-safety-guard.md; stories/STORY-S-2.03-vectorstore-trait-inmemory-zero-norm-filter.md.
+
+**VP-004 CLOSED:** Module path corrected mcp::adapter→mcp::exception. Propagated to: VP-INDEX, verification-architecture, verification-coverage-matrix, module-decomposition (pure counts 34→35 / shell counts 38→37; total 84 UNCHANGED), purity-boundary-map, ARCH-INDEX, module-criticality, ADR-013.
+
+**VP-007 CLOSED:** Target file corrected serializable.rs→serializable/traits.rs (traits submodule split per story architecture).
+
+**VP-009 CLOSED:** Harness comment corrected cosine_guard.rs→zero_norm_guard.rs (canonical guard name per VP-009 proof vehicle).
+
+**VP-010 CLOSED:** Target file corrected serializable.rs→serializable/reviver.rs (reviver submodule).
+
+**VP-012 CLOSED:** Removed ambiguous "(or core/budget.rs)" clause from harness path — single canonical path now stated.
+
+**VP-013 CLOSED:** Target corrected shell.rs→shell/bash.rs (bash-specific submodule).
+
+**S-2.05 CLOSED:** injection_guard extracted into standalone pure module prompts/src/injection_guard.rs (VP-006 Kani proof vehicle); chat_template.rs now delegates to it. Canonical shared-primitive placement.
+
+**S-2.03 CLOSED:** cosine_similarity+zero-norm moved to standalone vectorstores/src/similarity.rs (VP-009 proof vehicle); removed store/cosine.rs reference; in_memory now imports crate::similarity. Canonical shared-primitive per F-P129-11.
+
+**VP-INDEX arithmetic:** UNCHANGED — 14 VP = 6 P0 + 8 P1 = 9 Kani + 3 proptest + 2 integration. No VP added/removed/reclassified.
+
+**Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). No ADR change. DAG edges UNCHANGED (acyclic). Token Budgets UNCHANGED (no bcs set changes).
+
+**Phase-6-blocking class:** Harnesses must import proof vehicles at declared paths (confirmed at formal hardening). All 14 VPs now have harness paths matching their anchor-story-built proof vehicle locations. Closed corpus-wide.
+
+**Convergence:** Counter 0/3 — streak UNCHANGED. NEXT: fresh P2A-022 on current HEAD (full cascade ceremony required per BC-5.39.001). ACCEPTED/DO-NOT-REFLAG for P2A-022 (in addition to items 1–5 from P2A-021): VP-anchor module paths reconciled corpus-wide (D-228) — do NOT re-flag VP harness-path locations; injection_guard standalone in prompts/src/injection_guard.rs; cosine/zero-norm in vectorstores/src/similarity.rs; VP-004 mcp module is mcp::exception.
+
+**OPS NOTE:** P2A-022 adversary died twice to API connection error mid-investigation; both runs independently surfaced the VP-harness-path class. Retry P2A-022 until a full verdict (all findings enumerated, dual CLEAN verdict) is obtained.

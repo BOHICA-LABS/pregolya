@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.29"
+version: "1.30"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "5e895bd"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.30 (INVESTIGATE-RECONCILE/2026-08-21): Structural reclassification — `mcp::adapter (invoke)` removed from Effectful Shell; `mcp::exception` added to Pure Core. Story S-2.10 builds no `adapter.rs`; VP-004 property (bare ToolException type-identity via McpError downcast) lives in `mcp::exception`, a pure synchronous error-inspection module with no I/O. VP-004 integration test is required for mock MCP server setup, not because the module itself is effectful. Iron Law update: removed Effectful Shell row 'Tool call over transport' (which was `mcp::client`'s concern anyway); added Pure Core row with downcast description. Counts: Pure Core 34→35, Effectful Shell 38→37, total 84 unchanged."
   - "1.29 (P2A-021/2026-08-21): VectorStore method alignment — replace add_texts with add_documents in two live Effectful Shell / Boundary Modules table rows (vectorstores::memory + vectorstores::store). No changelog entries affected."
   - "1.28 (burst-288/F-P177-A03/2026-08-15): Fix `graph::hitl` Boundary row Pure part label: incorrectly named `pre_tool_dispatch` as the Pure part. `pre_tool_dispatch` is the Boundary function — it calls async `pre_invoke` first, then routes; it is NOT directly Kani-verifiable. The Kani targets are the extracted pure sync functions `route_pre_tool_decision` + `shield_hook_result` that must be extracted from `pre_tool_dispatch` before Phase 6 (per Purity Enforcement Rule 3 and VP-011). 'Pure part: `pre_tool_dispatch` routing function' corrected to 'Pure extraction target (Kani): `route_pre_tool_decision` + `shield_hook_result` (extraction required before Phase 6)'."
   - "1.27 (fix-burst-287/F-P176-A009/2026-08-01): Fix stale intro count: '71 module-decomposition modules (69 tiered + 2 exempt)' → '76 module-decomposition modules (70 tiered + 6 definitions-only/exempt)'. Ground truth: crate::module-form path rows in module-decomposition.md total 76; 70 carry a CRITICAL/HIGH/MEDIUM/LOW tier; 6 carry a dash (definitions-only/exempt: memory::skills, core::documents, core::guardrail, core::action_risk, core::context_mutation, core::write_guard). Stale by 5 from v1.22 count (71): +1 tiered (core::tool added FIX-BURST-278-WAVE-A but intro not updated in same burst), +4 definitions-only/exempt (core::guardrail, core::action_risk, core::context_mutation, core::write_guard added in FIX-BURST-277 module-decomposition but intro not updated). Purity-boundary-map row counts unchanged: 34 Pure Core + 38 Effectful Shell + 12 Boundary = 84 total purity-table rows (includes crate-level rows not in module-decomposition)."
@@ -60,7 +61,7 @@ no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
 effectful dependency). All 76 module-decomposition modules (70 tiered + 6 definitions-only/exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(84 total rows after FIX-BURST-278: 34 Pure Core + 38 Effectful Shell + 12 Boundary).
+(84 total rows after INVESTIGATE-RECONCILE: 35 Pure Core + 37 Effectful Shell + 12 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -106,6 +107,7 @@ side effects. Kani proofs operate here.
 | `vectorstores::mmr` | pregolya-vectorstores | Maximal Marginal Relevance selection: calls `vectorstores::similarity::cosine_similarity` for pairwise distances; pure diversity-penalty scoring pass; no network, no I/O; inputs: query embedding + candidate embeddings + params; output: ranked document indices (ADR-014 / SS-21; F-P129-11 burst-224) | — |
 | `vectorstores::similarity` | pregolya-vectorstores | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, PregolyaError>`; IEEE-754 zero-norm L2-guard (checks `a.iter().map(\|x\| x*x).sum::<f32>().sqrt() == 0.0 \|\| b…`); returns `Err(E-VS-001)` on zero-norm; pure `Vec<f32>` inner product; no `ndarray`, no I/O; called by vectorstores::memory, vectorstores::mmr, and any future VectorStore backend (ADR-014 / SS-21; F-P129-11 burst-224) | VP-009 |
 | `tools::config` | pregolya-tools | `ToolConfig` — shared per-tool framework configuration; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>` builder-consuming validator: compares `risk` against the tool's floor (for BashTool, `risk < ActionRisk::Medium` → `Err(E-TOOLS-007)`); `#[non_exhaustive]`; zero I/O, no async, no state — pure enum comparison at construction time per VP-013 §Source Contract (ADR-020 Decision 3 / BC-2.23.005 / SS-23) | — |
+| `mcp::exception` | pregolya-mcp | Bare ToolException re-raise detection; type-identity preservation via McpError downcast; pure synchronous error source chain pattern match: `err.source().downcast_ref::<McpError>()` + `matches!(e, McpError::ToolExecution { .. })`; no I/O, no async, no global state (R11 / BC-2.09.004 / SS-09) | VP-004 (integration-tested; integration harness required for mock MCP server setup; module logic is pure) |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`
@@ -138,7 +140,6 @@ Kani is not applicable here.
 | `pregolya-anthropic` (invoke) | pregolya-anthropic | reqwest HTTP call to api.anthropic.com | Integration (DTU) |
 | `pregolya-ollama` (invoke) | pregolya-ollama | reqwest HTTP call to localhost:11434 | Integration |
 | `mcp::client` | pregolya-mcp | MCP transport (stdio / HTTP SSE) | Integration |
-| `mcp::adapter` (invoke) | pregolya-mcp | Tool call over transport | Integration |
 | `memory::sqlite` | pregolya-memory | SQLite I/O for long-horizon memory | Integration |
 | `memory::in_memory` | pregolya-memory | In-memory HashMap store (deterministic for tests) | Unit |
 | `memory::search` | pregolya-memory | Search execution (may invoke embedding/vector backend) | Integration |

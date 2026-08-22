@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.46"
+version: "1.47"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -15,6 +15,7 @@ input-hash: "5e00377"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.47 (INVESTIGATE-RECONCILE/2026-08-21): MCP section — rename `mcp::adapter` → `mcp::exception` (module row description, section header criticality list, VP anchors line). Story S-2.10 creates no `adapter.rs`; the ToolException bare re-raise behavior (R11 / VP-004) lives in `mcp::exception` (`src/exception.rs`). Description updated: '`ToolInvocation` routing; ToolException re-raise with type identity' → 'Bare ToolException re-raise detection; type-identity preservation via McpError downcast'. POL-9 cascade propagated to VP-INDEX, VP-004.md, verification-architecture, verification-coverage-matrix, and purity-boundary-map in same burst."
   - "1.46 (P2A-021/2026-08-21): VectorStore method alignment — vectorstores::store row: add_texts → add_documents (method now takes Vec<Document>; grounded in LangChain reference, P2A-021 fix-burst). Sibling sweep (TD-VSDD-060): no other add_texts occurrences in this file."
   - "1.45 (fix-burst-P2A017/2026-08-21): FIX 2 (P2A017-02 MED): resolve graph::event_emitter double-definition — description rewritten to describe emission logic only; removes erroneous claim of defining `StreamEvent` enum. Canonical home of StreamEvent is `core::events` (pregolya-core) per ADR-006 §Consequences ('StreamEvent is a public type in pregolya-core'). `graph::event_emitter` now correctly describes its role as emitter (manages emitter channel, emission callsites in scheduler). Story-writer follow-up required: S-1.17 target_module is incomplete (pregolya-core missing; StreamEvent type must be authored in pregolya-core/src/events.rs). FIX 3 (P2A017-03 LOW): SS-08 tag on core::tool confirmed correct; no module-decomposition row change needed; SS-08 scope note added to ARCH-INDEX in same burst."
   - "1.44 (P2A008-F04/2026-08-20): F-P2A008-04 module-name canonicalization — extend core::runnable row description to cover all composition combinators in scope: RunnableParallel (fan-out/fan-in, BC-2.01.005–006), RunnablePassthrough (BC-2.01.007), RunnableAssign (BC-2.01.008) alongside the existing Runnable trait and RunnableSequence pipe combinator. Canonical module path set to pregolya-core/src/runnable/ (singular). This establishes core::runnable as the single authority for all Runnable composition primitives; no new module row added. VP-014.md harness import and target path aligned to singular form in same burst."
@@ -235,19 +236,19 @@ The SDK crates have no pregolya-core dep and are publishable standalone. Enforce
 > as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law.
 > Current module universe: 71 total (69 tiered / 2 exempt: `core::documents`, `memory::skills`) by this file's own table rows. The module-criticality.md registry total is 83 (77 tiered + 6 definitions-only/exempt rows added in FIX-BURST-277) — the difference is the 6 definitions-only/exempt module rows and the 6 crate-level roll-up rows that appear in the registry but are not in this file's tiered table. `eval::judge` was the 57th module when added in v1.32 by the module-decomp's own running count from gate-25 baseline; the canonical registry subsequently recorded additional modules (tracked in matrix v2.5/v2.6) bringing the total to 71.
 
-## pregolya-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, adapter, server)
+## pregolya-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, exception, server)
 
 | Module | Responsibility | Criticality |
 |--------|---------------|-------------|
 | `mcp::client` | `MultiServerMcpClient`; no live connections until invoke (R11) | MEDIUM |
 | `mcp::discovery` | Tool discovery and registration from MCP server at runtime | MEDIUM |
-| `mcp::adapter` | `ToolInvocation` routing; ToolException re-raise with type identity (R11) | MEDIUM |
+| `mcp::exception` | Bare ToolException re-raise detection; type-identity preservation via McpError downcast (R11) | MEDIUM |
 | `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam; external untrusted-input entry point for tool invocations arriving from MCP clients (BC-2.09.003) | HIGH |
 | `mcp::server` | MCP server endpoint: exposes registered tools to external MCP clients; accepts inbound tool-call requests, dispatches to registered tools, and returns serialized responses (CAP-021/D20/ADR-013) | MEDIUM |
 
 **BC anchors:** BC-2.09.001–007 (CAP-021: BCs 006–007 cover server-side tool exposure and response serialization contracts).
 
-**VP anchors:** `mcp::adapter` is VP-004 target; `mcp::client` is VP-005 target (both integration-tier, Phase 3).
+**VP anchors:** `mcp::exception` is VP-004 target; `mcp::client` is VP-005 target (both integration-tier, Phase 3).
 
 ## pregolya-memory (SS-15) — HIGH (write_guard) / MEDIUM (store, sqlite, in_memory, search, skills)
 

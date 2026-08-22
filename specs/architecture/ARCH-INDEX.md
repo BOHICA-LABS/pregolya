@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.34"
+version: "1.35"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.35 (INVESTIGATE-RECONCILE/2026-08-21): VP Registry table — VP-004 Module column: `mcp::adapter` → `mcp::exception`. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property targets `mcp::exception`. POL-9 cascade complete."
   - "1.34 (fix-burst-P2A017/2026-08-21): Exhaustive Primary Crate(s) sweep (P2A017 sibling-sweep gap closure). FIX 1 (SS-10 P2A017-01 MED): SS-10 Primary Crate(s) pregolya-graph → pregolya-graph, pregolya-core; pregolya-core homes BC-2.10.005 (check_watermark_trigger watermark arithmetic / VP-012 Kani P1 target in core::budget). SS-10 scope note added. FIX 2 (SS-06 P2A017-02 MED): ADR-006 §Consequences establishes StreamEvent as a public type in pregolya-core (core::events). SS-06 Primary Crate(s) pregolya-graph, pregolya-core confirmed correct (no ARCH-INDEX change needed). SS-08 core::tool scope note added documenting expected Primary Crate(s) exclusion of pregolya-core (SS-08 module tag correct; no BC-2.08.xxx homed in core::tool; module-decomposition.md graph::event_emitter double-definition fixed in same burst). FIX 3 (SS-08/core::tool P2A017-03 LOW): SS-08 tag confirmed correct; pregolya-core not added to SS-08 Primary Crate(s); SS-08 scope note documents expected divergence. Corpus sweep: all 23 SS rows verified — only SS-10 diverged."
   - "1.33 (fix-burst-P2A016/2026-08-21): Two P2A-016 architecture-layer items resolved. (1) Primary Crate(s) convention established in Subsystem Registry preamble: crates that home the subsystem's own BCs. SS-08 already conforms (all 8 crates home BC-2.08.xxx BCs). SS-17 stays at 4 crates; SS-17 scope note added clarifying that S-6.01 additionally targets 5 more crates per VP-to-crate map but those home no BC under SS-17. (2) pregolya facade v1 accounting: ruling (a) — facade assembled incrementally from workspace-init stub; no dedicated story; annotation wording produced for story-writer to add to Crate Implementation Order in wave-schedule."
   - "1.32 (fix-burst-P2A015/2026-08-21): SS-08 Primary Crate(s) expanded — added pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk (D17-Q5 wire-client crates) and pregolya-macros (proc-macro crate; BC-2.08.010–012 numbered under SS-08) to SS-08 registry row. Grounds: (1) SDK crates are governed by BC-2.08.006 which also governs the adapter crates already in SS-08; S-2.06 targets all six crates under subsystems: SS-08. (2) pregolya-macros BC numbering (BC-2.08.010–012) is the authoritative SS-08 anchor per subsystem-registry source-of-truth rules. Also: de-pin two stale VP-INDEX version cites from v1.6 changelog prose (records-lint TD-VSDD-091 compliance; both cites were historical snapshot references in changelog entries)."
@@ -205,7 +206,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-001 | BC-2.03.001 (BSP determinism) | `graph::bsp_engine` | Kani | P0 | draft |
 | VP-002 | BC-2.04.006 (session tenancy) | `checkpoint::session_index` | Kani | P0 | draft |
 | VP-003 | BC-2.13.004 (workspace confinement) | `sandbox::path_guard` | Kani | P0 | draft |
-| VP-004 | BC-2.09.004 (MCP ToolException) | `mcp::adapter` | integration | P1 | draft |
+| VP-004 | BC-2.09.004 (MCP ToolException) | `mcp::exception` | integration | P1 | draft |
 | VP-005 | BC-2.09.005 (MCP no live connections) | `mcp::client` | integration | P1 | draft |
 | VP-006 | BC-2.18.004 (injection_guard fail-closed) | `prompts::injection_guard` | Kani | P1 | draft |
 | VP-007 | BC-2.19.001 (serializable round-trip) | `core::serializable` | proptest | P1 | draft |

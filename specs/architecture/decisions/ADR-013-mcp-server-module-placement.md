@@ -11,11 +11,12 @@ date: "2026-07-15"
 subsystems_affected: ["SS-09"]
 supersedes: []
 superseded_by: null
-version: "1.5"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D19, D20]
 changelog:
+  - "1.6 (INVESTIGATE-RECONCILE/2026-08-21): Rename `mcp::adapter` → `mcp::exception` across all live references (module listing, criticality tier comparison, ToolRegistry shared-registry reference). Story S-2.10 creates no `adapter.rs`; the outbound exception handling lives in `mcp::exception`. ToolRegistry shared-registry reference (line 129) updated to `mcp::client` (correct consumer of the registry for outbound dispatch). Decision and Rationale are unchanged; this is a canonical module name propagation."
   - "1.5 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Rationale, Source / Origin sections per ADR template (LOW finding: date boundary conditions)."
   - "1.4 (FIX-BURST-276/F-P173-706/2026-07-27): Forward-amend all three 18-crate roster references to 21-crate: (1) Decision crate-roster count; (2) Rationale item 2 roster-freeze statement; (3) Alternatives Considered table reject rationale. Update \"19th crate\" references to \"22nd crate\" (current roster is 21; a new mcp-server crate would be #22). Add forward-amendment blockquote after Decision crate-roster statement. The \"no new crate\" decision holds unchanged; mcp::server remains in pregolya-mcp. Roster expanded from 18 to 21 by D21+D23 — see ARCH-INDEX.md §Canonical Crate Roster."
   - "1.3 (FIX-BURST-274/TD-VSDD-091/2026-07-26): De-pin BC version citation in Attribution Note: `BC-2.09.006 v1.1` → `BC-2.09.006` per TD-VSDD-091 BC-pin variant. Completes the intended burst-262 de-pin fix where only the frontmatter version was bumped (1.2→1.3) without applying the body change."
@@ -33,7 +34,7 @@ changelog:
 CAP-021 (D20 capability addition) introduces an MCP **server** role for pregolya: the
 framework must be able to expose its own registered tools to external MCP clients, not only
 consume external MCP servers as a client. This is distinct from the existing client-side
-responsibilities of pregolya-mcp (`mcp::client`, `mcp::adapter`, `mcp::discovery`,
+responsibilities of pregolya-mcp (`mcp::client`, `mcp::exception`, `mcp::discovery`,
 `mcp::ingress`).
 
 The architectural question: where does the `mcp::server` execution module live?
@@ -59,7 +60,7 @@ Supported transports (from BC-2.09.006/007): stdio (standard MCP transport) and 
 (`pregolya-mcp/src/server.rs`).
 
 **Module universe:** 34 → **35** (+1 MEDIUM execution row; MEDIUM tier consistent with
-`mcp::client` and `mcp::adapter` classification — server-side inbound dispatch is
+`mcp::client` and `mcp::exception` classification — server-side inbound dispatch is
 correctness-important but not a Kani VP target at v1).
 
 **Crate roster:** 21 published crates — **unchanged by ADR-013**. `mcp::server` is a
@@ -76,7 +77,7 @@ new module within the existing `pregolya-mcp` crate; no new crate is introduced.
 
 ## Rationale
 
-1. **Cohesion:** All MCP protocol handling (client, adapter, ingress, discovery, server)
+1. **Cohesion:** All MCP protocol handling (client, exception, ingress, discovery, server)
    belongs in one crate. Client and server share MCP type definitions, serialization
    helpers, and transport abstractions. Splitting into two crates would require extracting
    a shared MCP types crate or duplicating protocol types — neither of which is warranted
@@ -95,7 +96,7 @@ new module within the existing `pregolya-mcp` crate; no new crate is introduced.
 
 4. **Criticality tier (MEDIUM):** `mcp::server` provides inbound tool-call dispatch but
    is not a security boundary in the same class as `path-guard` or `session-index`. It is
-   analogous to `mcp::adapter` (outbound dispatch, MEDIUM) — correctness matters but Kani
+   analogous to `mcp::exception` (error-detection in outbound path, MEDIUM) — correctness matters but Kani
    proof is not warranted at v1.
 
 ### Module Interface
@@ -126,7 +127,7 @@ pub enum McpServerTransport {
 }
 ```
 
-The `ToolRegistry` is the same registry used by `mcp::adapter` for outbound dispatch,
+The `ToolRegistry` is the same registry used by `mcp::client` for outbound dispatch,
 ensuring the exposed tool set is always consistent with the registered tool set.
 `McpServerConfig` wraps `McpServerTransport` alongside any additional server-lifecycle
 options; `McpServerHandle` provides a handle for graceful shutdown and health querying.

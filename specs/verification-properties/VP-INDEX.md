@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.13"
+version: "1.14"
 status: active
 producer: architect
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-21T00:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.14 (INVESTIGATE-RECONCILE/2026-08-21): Fix VP-004 Module column: `mcp::adapter` → `mcp::exception`. Story S-2.10 creates no `adapter.rs`; VP-004 property (bare ToolException type-identity, R11) is implemented in `mcp::exception`. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2. POL-9 cascade propagated same-burst to verification-architecture, verification-coverage-matrix, module-decomposition, purity-boundary-map, and VP-004.md."
   - "1.13 (burst-325/D-196/2026-08-18): input-hash: \"[live-index]\" sentinel added (metadata hygiene; Q2 alignment with BC-INDEX and ARCH-INDEX index convention; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). VP-INDEX is an index document with no declared inputs field; sentinel marks it as live-index class per index convention. No VP catalog rows or arithmetic invariant changed."
   - "1.12 (burst-313/F-P204-01/2026-08-17): VP-014 (v1.2→v1.3) — §Source Contract ADR anchor corrected: split single ADR-026 §Decision 1 citation that mis-attributed JoinSet fan-out, completion-order collection, and re-insertion (§Decision 2 machinery) to §Decision 1 (type representation and key ordering only) into two single-§ citations per POL-19: §Decision 1 (type representation and key ordering) and §Decision 2 (concurrent execution and error handling). Mirrors burst-312 fix applied to sibling BC-2.01.005. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
   - "1.11 (burst-311/OBS-P202-B/2026-08-17): VP-014 (v1.1→v1.2) — formal invariant aligned to canonical new() argument type Vec<(String, Arc<dyn DynRunnable>)> per BC-2.01.005 PC1 and ADR-026 §Decision 1 (OBS-P202-B). IndexMap is the internal container built by new(), not the argument type. Harness skeleton and Proof Obligations were already correct (Vec-of-pairs form); formal invariant now matches. Key-completeness property preserved. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
@@ -70,7 +71,7 @@ changelog:
 | VP-001 | BC-2.03.001 | graph::bsp_engine | Kani | 6 | P0 | draft | DI-001 | pregolya-graph | `bsp_determinism_harness` | VP-001.md |
 | VP-002 | BC-2.04.006 | checkpoint::session_index | Kani | 6 | P0 | draft | DI-005 | pregolya-checkpoint | `session_tenancy_harness` | VP-002.md |
 | VP-003 | BC-2.13.004 | sandbox::path_guard | Kani | 6 | P0 | draft | DI-007 | pregolya-sandbox | `workspace_confinement_harness` | VP-003.md |
-| VP-004 | BC-2.09.004 | mcp::adapter | integration | 3 | P1 | draft | DI-014 | pregolya-mcp | n/a (integration test) | VP-004.md |
+| VP-004 | BC-2.09.004 | mcp::exception | integration | 3 | P1 | draft | DI-014 | pregolya-mcp | n/a (integration test) | VP-004.md |
 | VP-005 | BC-2.09.005 | mcp::client | integration | 3 | P1 | draft | DI-014 | pregolya-mcp | n/a (integration test) | VP-005.md |
 | VP-006 | BC-2.18.004 | prompts::injection_guard | Kani | 6 | P1 | draft | DI-014 | pregolya-prompts | `injection_guard_fail_closed` | VP-006.md |
 | VP-007 | BC-2.19.001 | core::serializable | proptest | 3 | P1 | draft | DI-008 | pregolya-core | n/a (proptest) | VP-007.md |
