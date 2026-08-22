@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.54"
+version: "3.55"
 status: active
 producer: state-manager
-timestamp: 2026-08-17T18:30:00Z
+timestamp: 2026-08-22T18:30:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.55 (D-241/2026-08-22): Changelog currency fix — 2026-08-22 BC amendments recorded: BC-2.09.001 (v1.6→v1.7) E-MCP-008/009 overflow/tool-count fail-closed postcondition §PC9 added per P2A-029/D-235; BC-2.22.003 (v1.3→v1.4) E-PROV-012 ProviderConnectionError minted per P2A-030/D-236. Three new error codes registered in error-taxonomy.md: E-MCP-008 (MCP overflow fail-closed, burst-P2A-029), E-MCP-009 (MCP tool-count limit fail-closed, burst-P2A-029), E-PROV-012 (ProviderConnectionError, burst-P2A-030). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2)."
   - "3.54 (burst-315/D-185/2026-08-17): 14 BC version bumps — F-B2 (MED): BC-2.04.006 (v1.7→v1.8): PC2 configurable HashMap access post-ADR-021 (HashMap field access aligned with ADR-021 §RunnableConfig §configurable). F-A1 (LOW): BC-2.06.004 (v1.1→v1.2) + BC-2.06.005 (v1.2→v1.3): ADR-019 compaction residue removed from approval-event behavioral contracts (spurious ADR-019 inputs/traces_to; CAP-034 governs these, not ADR-019). F-A2 (LOW): BC-2.11.001 (v1.2→v1.3), BC-2.11.002 (v1.11→v1.12), BC-2.11.003 (v1.9→v1.10), BC-2.11.004 (v1.9→v1.10), BC-2.11.005 (v1.4→v1.5), BC-2.11.006 (v1.3→v1.4): traces_to corrected to capabilities-p0 §CAP-013. F-A3 (LOW): BC-2.18.001 (v1.7→v1.8), BC-2.18.002 (v1.4→v1.5), BC-2.18.003 (v1.3→v1.4), BC-2.18.004 (v1.9→v1.10), BC-2.18.005 (v1.5→v1.6): frontmatter status draft→active (all five prompt-template behavioral contracts promoted per residual-coverage-audit). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1s unchanged."
   - "3.53 (burst-312/F-P203-02+F-P203-01/2026-08-17): 2 BC version bumps — F-P203-02 (MED): BC-2.01.005 (v1.1→v1.2): Capability Anchor Justification split single ADR-026 §Decision 1 citation into two single-§ citations per POL-19 (§Decision 1 = RunnableParallel: Type Representation and Key Ordering; §Decision 2 = RunnableParallel: Concurrent Execution and Error Handling). F-P203-01 (LOW): BC-2.12.002 (v1.5→v1.6): Capability Anchor Justification verbatim CAP-014 quote corrected — 'Assistant (named agent config with graph reference)' → 'Assistant (named agent config)' (phrase 'with graph reference' absent from capabilities-p1-p2.md §CAP-014). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1s unchanged."
   - "3.52 (burst-311/D-181/2026-08-17): 3 BC version bumps — F-P202-01 (HIGH) fts_search trait-method canon propagation: BC-2.10.006 (v1.8→v2.0): two-wave disambiguation sweep (Wave-2: §Preconditions item 2 + §Postconditions Step 1; Wave-2b: TV-004 + VP-2.10.006-A + Related-BCs ×2 — ALL engine-internal search_history-as-trait-method refs renamed to CheckpointSaver::fts_search per D-181 adjudication; fts_search is the CheckpointSaver trait method; search_history is the agent-callable Tool wrapper only). BC-2.04.001 (v1.5→v1.6): Inv-5 'search_history API (BC-2.04.008)' → 'fts_search trait method (BC-2.04.008; exposed to agents as the search_history Tool via search_history_tool())' (fts_search canon clarification). OBS-P202-A (OBS): BC-2.10.003 (v1.12→v1.13): §Edge Cases EC block reordered ascending EC-ID order (EC-001 through EC-005; behavioral content unchanged). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1s unchanged."

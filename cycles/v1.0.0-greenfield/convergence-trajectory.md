@@ -3534,3 +3534,38 @@ stash@{0} in main worktree holds superseded route-around edits from the pre-vali
 ### Convergence Counter
 
 **Phase-2 P2A-032 fix-burst COMPLETE (D-240; 2026-08-22).** Streak 0/3. NEXT: fresh `vsdd-factory:adversary` P2A-033 on new HEAD.
+
+---
+
+## P2A-033 Pass Record (2026-08-22)
+
+**Verdict: NOT CLEAN** — 2 findings (1 MED + 1 LOW). D-241 minted.
+
+| Finding | Severity | Description | Status |
+|---------|----------|-------------|--------|
+| F1 | MED | epics.md E-16 rollup (8) does not match authoritative per-story points (S-2.02=5, net rollup=5); E-17 rollup (8) does not match (S-2.03=10, net rollup=10); grand total of all 22 epic rollups must equal 300. | CLOSED |
+| F2 | LOW | BC-INDEX changelog stale: BC-2.09.001 advanced to v1.7 (E-MCP-008/009 postcondition §PC9 per P2A-029/D-235) and BC-2.22.003 advanced to v1.4 (E-PROV-012 per P2A-030/D-236) on 2026-08-22, but BC-INDEX frontmatter still at v3.54/2026-08-17 with no changelog row recording these amendments or the three new error codes. | CLOSED |
+
+**Adversary confirmations (P2A-033):**
+- DAG reciprocity intact (depends_on ↔ blocks verified)
+- AC→BC semantics sound (no structural tracing gaps found)
+- verify-ac-pc-trace.sh BLOCKING with 0 DRIFT / 519 citations / 39 stories (POL-48 holding)
+- No paper-fixes detected
+
+**Streak:** RESET 0/3. NEXT: P2A-034.
+
+## P2A-033 Fix-Burst Record (2026-08-22)
+
+**D-241 ALL CLOSED.** Single-commit burst per TD-VSDD-053.
+
+**F1 Fix (story-writer):** epics.md — E-16 rollup 8→5 (per S-2.02 authoritative 5 story-points); E-17 rollup 8→10 (per S-2.03 authoritative 10 story-points); all 22 epic rollups now verified to sum to grand total 300. Summary headings updated to match corrected rollup values.
+
+**F2 Fix (state-manager):** BC-INDEX frontmatter — changelog row 3.55 added (D-241 anchor): BC-2.09.001 (v1.6→v1.7) §PC9 E-MCP-008/009 overflow fail-closed per P2A-029/D-235; BC-2.22.003 (v1.3→v1.4) E-PROV-012 ProviderConnectionError per P2A-030/D-236; three new EC registered in error-taxonomy.md (E-MCP-008, E-MCP-009, E-PROV-012). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2).
+
+**Files committed:** `stories/epics.md`, `specs/behavioral-contracts/BC-INDEX.md`, `STATE.md`, `cycles/v1.0.0-greenfield/convergence-trajectory.md`, `sidecar-learning.md`.
+
+**Count-propagation sweep (TD-S-7.02 defensive sweep):** BC census 133 unchanged — no propagation needed. New BC-INDEX version v3.55 appears only in BC-INDEX.md frontmatter; no other index files cite BC-INDEX version. Sweep complete.
+
+### Convergence Counter
+
+**Phase-2 P2A-033 fix-burst COMPLETE (D-241; 2026-08-22).** Streak 0/3. NEXT: fresh `vsdd-factory:adversary` P2A-034 on new HEAD.

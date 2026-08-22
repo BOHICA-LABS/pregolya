@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "5.53"
+version: "5.54"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-22T17:58:00Z"
+timestamp: "2026-08-22T19:28:47Z"
 phase: 2
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: pregolya
 mode: greenfield+semport
-current_step: "P2A-032 RESOLVED (validator-first; D-240; 2026-08-22): 45/59 drift citations were parser false-positives; 14 genuine re-anchored across 8 stories. verify-ac-pc-trace.sh BLOCKING (0 DRIFT/519 citations/39 stories; count 14→15); POL-48 registered; S-MAINT-001 added (BC format normalization, out-of-wave). Streak 0/3. NEXT: adversary P2A-033. trajectory-tail →3→2→1→0"
+current_step: "P2A-033 NOT CLEAN (1 MED F1 + 1 LOW F2) ALL CLOSED (D-241; 2026-08-22): F1 epics.md E-16/E-17 rollup reconciled; all 22 epic rollups now sum to 300. F2 BC-INDEX changelog brought current (D-241): BC-2.09.001 §PC9 + BC-2.22.003 §Error-Code-Minted + E-MCP-008/009/E-PROV-012. BC census UNCHANGED 133 (51/79/3). Streak 0/3. NEXT: adversary P2A-034. trajectory-tail →2→0→2→0"
 current_cycle: v1.0.0-greenfield
-convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..031 COMPLETE D-208..D-238 (sample). P2A-032 RESOLVED (D-240; validator-first; 14 genuine fixes; verify-ac-pc-trace.sh BLOCKING 0/519; POL-48). Streak 0/3. NEXT: P2A-033. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
+convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..033 COMPLETE D-208..D-241 (sample). P2A-033 NOT CLEAN (D-241; 1 MED F1 + 1 LOW F2; ALL CLOSED). BC census UNCHANGED 133 (51/79/3). Streak 0/3. NEXT: P2A-034. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: 187 lines (wc-l) | margin from soft-target (200L): +13 lines | margin from actual: +13 lines | v5.53 (2026-08-22): P2A-032 RESOLVED (D-240); validator-first fix; verify-ac-pc-trace.sh BLOCKING 0/519; POL-48; S-MAINT-001. Streak 0/3. NEXT: P2A-033. -->
+<!-- STATE.md SIZE BUDGET: 189 lines (wc-l) | margin from soft-target (200L): +11 lines | margin from actual: +11 lines | v5.54 (2026-08-22): P2A-033 NOT CLEAN (1M+1L) ALL CLOSED (D-241); BC-INDEX §Changelog updated; epics.md reconciled. Streak 0/3. NEXT: P2A-034. -->
 
 # Pipeline State: pregolya
 
@@ -37,7 +37,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-08-22 — v5.53; P2A-032 RESOLVED (D-240; validator-first; 14 genuine fixes; verify-ac-pc-trace.sh BLOCKING 0/519; POL-48; S-MAINT-001 added). Streak 0/3. NEXT: P2A-033. trajectory-tail →3→2→1→0 |
+| **Last Updated** | 2026-08-22 — v5.54; P2A-033 NOT CLEAN (D-241; 1 MED F1 + 1 LOW F2; ALL CLOSED). BC-INDEX §Changelog updated; epics.md E-16/E-17 reconciled; all 22 epic rollups sum to 300. BC census UNCHANGED 133 (51/79/3). Streak 0/3. NEXT: P2A-034. trajectory-tail →2→0→2→0 |
 
 ## Phase Progress
 
@@ -45,10 +45,11 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
 | 1: Spec Crystallization | COMPLETE | 2026-07-14 | 2026-08-18 | 3/3 CONVERGED on frozen anchor 79eb2f3 (P1-pass-211/212/213; D-195); input-hash drift resolved (D-196); Phase-1 gate CLOSED (D-197; burst-325). ~215 adversarial passes total. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md | trajectory-tail →1→0→0→0; 3/3 CONVERGED |
-| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..031 fix-bursts COMPLETE D-208..D-238 (sample). P2A-032 RESOLVED (D-240; validator-first). NEXT: P2A-033. | trajectory-tail →2→3→2→1→RESOLVED; 0/3. NEXT: P2A-033. |
+| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..033 fix-bursts COMPLETE D-208..D-241 (sample). P2A-033 NOT CLEAN (D-241; ALL CLOSED). NEXT: P2A-034. | trajectory-tail →2→0→2→0; 0/3. NEXT: P2A-034. |
 | 2: P2A-001..031 (compressed; archived burst-log+trajectory 2026-08-22) | COMPLETE | 2026-08-19 | 2026-08-22 | 31 passes + fix-bursts. P2A-001..026 (sample): mixed findings ALL CLOSED (D-208..D-233 (sample)). P2A-027..031 NOT CLEAN (D-234..D-238): P2A-027 D-233 type-flip REVERTED (ADR-014 D2 canonical); P2A-028 CLEAN(strict) streak 1/3; P2A-029 E-MCP-008/009 minted + 115→117 EC; P2A-030 single-underscore + E-PROV-012 + 117→118 EC; P2A-031 S-2.08/S-2.07 AC-trace + D-238 109 Story Anchor backfill (unfilled-anchor class CLOSED). Full: cycles/v1.0.0-greenfield/convergence-trajectory.md + burst-log.md. Census 133 BC/14 VP/118 EC throughout. | trajectory-tail →0→2→3→2; streak RESET after P2A-031 |
 | 2: adversary pass-32 (P2A-032) NOT CLEAN → RESOLVED | COMPLETE | 2026-08-22 | 2026-08-22 | CORPUS-WIDE AC→PC drift (1 HIGH class; 59 citations/17 stories; 45 false-positives from parser blind-spots; 14 genuine). VALIDATOR-FIRST (D-239→D-240). verify-ac-pc-trace.sh 3 parser blind-spots found + fixed. RESOLVED (D-240). | trajectory-tail →2→3→2→1→RESOLVED; streak RESET 0/3 |
-| 2: P2A-032 fix burst COMPLETE (validator-first; D-240) | COMPLETE | 2026-08-22 | 2026-08-22 | 14 genuine AC re-anchors (8 stories). verify-ac-pc-trace.sh BLOCKING; 0/519 DRIFT. POL-48. S-MAINT-001. | trajectory-tail →RESOLVED; 0/3. NEXT: P2A-033. |
+| 2: P2A-032 fix burst COMPLETE (validator-first; D-240) | COMPLETE | 2026-08-22 | 2026-08-22 | 14 genuine AC re-anchors (8 stories). verify-ac-pc-trace.sh BLOCKING; 0/519 DRIFT. POL-48. S-MAINT-001. | trajectory-tail →RESOLVED; 0/3. |
+| 2: adversary pass-33 (P2A-033) NOT CLEAN → ALL CLOSED (D-241) | COMPLETE | 2026-08-22 | 2026-08-22 | F1 (MED): epics.md E-16 rollup 8→5; E-17 rollup 8→10; all 22 epic rollups now sum to 300. F2 (LOW): BC-INDEX §Changelog updated (D-241): BC-2.09.001 (v1.6→v1.7) §PC9 + BC-2.22.003 (v1.3→v1.4) + E-MCP-008/E-MCP-009/E-PROV-012. DAG reciprocity intact. AC→BC semantics sound. 519 citations CLEAN (POL-48). BC census UNCHANGED 133 (51/79/3). | trajectory-tail →0→2→0; streak RESET 0/3. NEXT: P2A-034. |
 | 3: TDD Implementation | not-started | | | | — |
 | 4: Holdout Evaluation | not-started | | | | — |
 | 5: Adversarial Refinement | not-started | | | | — |
@@ -59,11 +60,11 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| P2A-031 NOT CLEAN pass (2026-08-22) — 2 findings (1H/1M). P2A031-01 (HIGH): S-2.08 AC→PC trace drift. P2A031-02 (MED): S-2.07 AC-001/003 mistrace. D-237 minted. Streak RESET 0/3. | vsdd-factory:adversary | COMPLETE | 2 findings (1H/1M). Streak RESET 0/3. |
-| P2A-031 fix-burst (2026-08-22) — all 2 findings closed (D-237) + D-238 corpus-wide BC Story-Anchor backfill (109 Story Anchor fields; unfilled-anchor class CLOSED). Census UNCHANGED 39/133/14/118. | state-manager | COMPLETE | ~111 files + STATE.md + trajectory + sidecar. Streak 0/3. NEXT: P2A-032. |
 | P2A-032 NOT CLEAN pass (2026-08-22) — CORPUS-WIDE AC→PC drift detected; ~73% of citation-bearing stories drifted. Human authorized validator-first approach (D-239). verify-ac-pc-trace.sh built ADVISORY. Streak RESET 0/3. | vsdd-factory:adversary + devops-engineer | COMPLETE | 59 drift citations across 17 stories. Streak 0/3. NEXT: batch-fix. |
 | SESSION WRAP (2026-08-22) — D-239 minted; verify-ac-pc-trace.sh committed to hooks/; RESUME SNAPSHOT v5.52 written; convergence-trajectory.md P2A-032 entry appended. | state-manager | COMPLETE | STATE.md v5.52 + trajectory + sidecar + hooks/verify-ac-pc-trace.sh. Single commit per TD-VSDD-053. |
-| P2A-032 FIX-BURST (2026-08-22) — D-240; 14 genuine AC re-anchors (8 stories); verify-ac-pc-trace.sh parser-fixed+BLOCKING (0/519 DRIFT); pre-commit wired (14→15); POL-48; S-MAINT-001; STATE.md v5.53. | state-manager | COMPLETE | 8 story files + hooks + policies.yaml + STORY-INDEX + STATE.md + trajectory. Single commit per TD-VSDD-053. |
+| P2A-032 FIX-BURST (2026-08-22) — D-240; 14 genuine AC re-anchors (8 stories); verify-ac-pc-trace.sh parser-fixed+BLOCKING (0/519 DRIFT); pre-commit wired (14→15); POL-48; S-MAINT-001; STATE.md (burst). | state-manager | COMPLETE | 8 story files + hooks + policies.yaml + STORY-INDEX + STATE.md + trajectory. Single commit per TD-VSDD-053. |
+| P2A-033 NOT CLEAN pass (2026-08-22) — 2 findings (1 MED F1 + 1 LOW F2). F1 epics.md E-16/E-17 rollup mismatch. F2 BC-INDEX §Changelog stale (BC-2.09.001 §PC9 + BC-2.22.003 §Error-Code-Minted + 3 new EC unrecorded). D-241 minted. Streak RESET 0/3. | vsdd-factory:adversary | COMPLETE | 2 findings (1M/1L). Streak RESET 0/3. NEXT: fix-burst. |
+| P2A-033 FIX-BURST (2026-08-22) — D-241 ALL CLOSED; epics.md E-16 8→5 / E-17 8→10 (22 rollups now sum to 300); BC-INDEX §Changelog updated (D-241; BC census UNCHANGED 133). STATE.md (this burst). | state-manager | COMPLETE | epics.md + BC-INDEX + STATE.md + trajectory + sidecar. Single commit per TD-VSDD-053. |
 
 ## Decisions Log
 
@@ -82,6 +83,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-238 | **109 BC §Story Anchor fields backfilled from STORY-INDEX. Zero coverage gaps. Unfilled-anchor finding class CLOSED. No postcondition/invariant/TV/AC content changed. Census UNCHANGED.** | Corpus-wide BC §Story Anchor backfill; unfilled-anchor class CLOSED | Phase 2 | 2026-08-22 | product-owner/state-manager |
 | D-239 | **P2A-032 NOT CLEAN: corpus-wide AC→PC drift — ~73% of citation-bearing stories (17/20) drifted (CHECK 1 nonexistent + CHECK 2 code-absent). Human (senior architect) DECISION 2026-08-22: VALIDATOR-FIRST. DEFER-004-class devops auth granted. verify-ac-pc-trace.sh ADVISORY built; 59 drift citations/17 stories. Streak 0/3. NEXT: PO adjudicates S-2.06 gap, story-writer batch-fix parallel forks, re-run to 0, flip blocking, P2A-033.** | P2A-032 corpus-wide AC→PC drift; validator-first; verify-ac-pc-trace.sh ADVISORY; 59/17 stories | Phase 2 | 2026-08-22 | human (senior architect)/devops-engineer/state-manager |
 | D-240 | **P2A-032 RESOLVED via validator-first fix. verify-ac-pc-trace.sh had 3 parser blind-spots (numbered invariants; table edge cases; off-by-one extraction) → 45/59 drift citations false-positive; 14 genuine across 8 stories (S-1.03/1.13/1.16/1.17/1.18/1.20/2.03/2.06). Genuine ACs re-anchored (code-absent → PC/EC with asserted error code; S-2.06 AC-006 → BC-2.14.005 PC-2 + POLICY-8 propagation). Validator made format-agnostic; re-verified 0 DRIFT/519 citations/39 stories; flipped BLOCKING; wired pre-commit-validators.sh (14→15); POL-48 registered. S-MAINT-001 (BC format normalization, EPIC-MAINT, out-of-wave, draft). stash@{0} holds superseded route-around edits. Streak 0/3. NEXT: P2A-033.** | P2A-032 RESOLVED; validator-first fix; verify-ac-pc-trace.sh BLOCKING; POL-48; S-MAINT-001 | Phase 2 | 2026-08-22 | product-owner/story-writer/devops-engineer/state-manager |
+| D-241 | **P2A-033 NOT CLEAN (1 MED F1 + 1 LOW F2) ALL CLOSED. F1: epics.md E-16/E-17 point rollups reconciled to authoritative per-story points (E-16 rollup 8→5 per S-2.02=5; E-17 rollup 8→10 per S-2.03=10); all 22 epic rollups now sum to grand total 300. F2: BC-INDEX §Changelog brought current (D-241) for the 2026-08-22 BC-2.09.001 (v1.6→v1.7) §PC9 / BC-2.22.003 (v1.3→v1.4) amendments + error codes E-MCP-008/E-MCP-009/E-PROV-012; BC census UNCHANGED 133 (51/79/3). Adversary confirmed DAG reciprocity intact, AC→BC semantics sound, 519 citations mechanically clean (POL-48), no paper-fixes. Streak remains 0/3. NEXT: adversary P2A-034 on new HEAD.** | P2A-033 NOT CLEAN; epics.md E-16/E-17 rollup fix; BC-INDEX §Changelog currency; streak 0/3 | Phase 2 | 2026-08-22 | story-writer/state-manager |
 
 ## Risk Register
 
@@ -119,18 +121,18 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 ## Concurrent Cycles
 
-None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..032 COMPLETE. P2A-032 RESOLVED (D-240; validator-first; verify-ac-pc-trace.sh BLOCKING; POL-48). NEXT: P2A-033.
+None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..033 COMPLETE. P2A-033 NOT CLEAN (D-241; ALL CLOSED; BC census UNCHANGED 133). Streak 0/3. NEXT: P2A-034.
 
 ## Convergence Status
 
-Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS. P2A-028 CLEAN(strict)=YES (streak 1/3). P2A-029/030/031/032 NOT CLEAN (streak RESET each). P2A-032 RESOLVED (D-240; validator-first; verify-ac-pc-trace.sh BLOCKING; 0/519 DRIFT; POL-48). Streak 0/3. NEXT: P2A-033.
+Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS. P2A-028 CLEAN(strict)=YES (streak 1/3). P2A-029/030/031/032/033 NOT CLEAN (streak RESET each). P2A-033 NOT CLEAN (D-241; 1M F1 epics.md rollup + 1L F2 BC-INDEX §Changelog; ALL CLOSED). Streak 0/3. NEXT: P2A-034.
 
 ## Session Resume Checkpoint
 
-<!-- v5.53 checkpoint replaces v5.52 — v5.52 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- v5.54 checkpoint replaces v5.53 — v5.53 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase-2 Story Decomposition adversarial convergence (BC-5.39.001 3-CLEAN), streak 0/3. P2A-032 RESOLVED: validator-first fix complete (D-240; 2026-08-22) — verify-ac-pc-trace.sh now BLOCKING (0 DRIFT/519 citations/39 stories), wired into pre-commit + POL-48 registered. 14 genuine AC citations re-anchored across 8 stories. S-MAINT-001 added (out-of-wave BC format normalization, EPIC-MAINT). NEXT: dispatch fresh adversary P2A-033 on new HEAD.
+pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase-2 Story Decomposition adversarial convergence (BC-5.39.001 3-CLEAN), streak 0/3. P2A-033 NOT CLEAN fix-burst COMPLETE (D-241; 2026-08-22): F1 epics.md E-16/E-17 rollup reconciled (all 22 rollups sum to 300); F2 BC-INDEX §Changelog updated (BC-2.09.001 §PC9 + BC-2.22.003 §Error-Code-Minted + E-MCP-008/009/E-PROV-012 recorded). BC census UNCHANGED 133 (51/79/3). NEXT: dispatch fresh adversary P2A-034 on new HEAD.
 
 ### HEADS
 - develop: `644d1ad` — clean, PUSHED, untouched.
@@ -138,18 +140,18 @@ pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 - Worktrees: NONE. Open PRs: NONE.
 
 ### RESUME NEXT-ACTION (exact, ordered)
-1. **adversary P2A-033**: fresh `vsdd-factory:adversary` pass on new HEAD. verify-ac-pc-trace.sh is now BLOCKING so any new AC-citation drift is caught at pre-commit. Instruct output-size discipline + retry protocol (adversary dies to API connection mid-run on long outputs).
-2. **state-manager**: If P2A-033 CLEAN(strict): update counter (1/3). If NOT CLEAN: dispatch fix burst per finding severity (BC-5.39.001 3-CLEAN cascade).
+1. **adversary P2A-034**: fresh `vsdd-factory:adversary` pass on new HEAD. verify-ac-pc-trace.sh is BLOCKING (0 DRIFT/519 citations/39 stories). Instruct output-size discipline + retry protocol.
+2. **state-manager**: If P2A-034 CLEAN(strict): update counter (1/3). If NOT CLEAN: dispatch fix burst per finding severity (BC-5.39.001 3-CLEAN cascade).
 3. Phase-2→3 is autonomous per DIRECTIVE 1 on 3/3 CLEAN.
 
 ### PENDING USER-APPROVED WORK
-No fix-burst pending. P2A-033 dispatching next (autonomous per DIRECTIVE 1). Phase-2→3 autonomous on 3/3 CLEAN.
+No fix-burst pending. P2A-034 dispatching next (autonomous per DIRECTIVE 1). Phase-2→3 autonomous on 3/3 CLEAN.
 
 ### DECISION DELTA (this session, not yet in prior snapshots)
-D-237 (P2A-031 AC-trace fix; S-2.08/S-2.07; 7 covering ACs). D-238 (109 BC §Story Anchors backfilled; unfilled-anchor class CLOSED). D-239 (P2A-032 NOT CLEAN; validator-first plan approved). D-240 (this burst: P2A-032 RESOLVED; 45/59 false positives; 14 genuine fixes; verify-ac-pc-trace.sh BLOCKING; POL-48; S-MAINT-001).
+D-239 (P2A-032 NOT CLEAN; validator-first plan approved). D-240 (P2A-032 RESOLVED; 45/59 false positives; 14 genuine fixes; verify-ac-pc-trace.sh BLOCKING; POL-48; S-MAINT-001). D-241 (P2A-033 NOT CLEAN; epics.md E-16/E-17 rollup reconciled; BC-INDEX §Changelog updated; BC census UNCHANGED).
 
 ### STASH NOTE
-stash@{0} in main worktree holds superseded route-around edits (droppable after confirming P2A-033 dispatches cleanly against new HEAD).
+stash@{0} in main worktree holds superseded route-around edits (droppable after confirming P2A-034 dispatches cleanly against new HEAD).
 
 ### OPEN ITEMS FOR PHASE-2 GATE
 - verify-ac-pc-trace.sh BLOCKING (POL-48) — REALIZED via D-240. DEFER-004 remains open for broader scope.
@@ -158,7 +160,7 @@ stash@{0} in main worktree holds superseded route-around edits (droppable after 
 - Human actions: E013 (default_branch→main), R6/R14 (cargo login + publish-all.sh), B1 (direnv allow).
 - Human verification: D-235 RAISE review at BC-2.09.001 §PC9 (overflow fail-closed; human may override at Phase-2 gate).
 - WORKSPACE INIT incomplete (Cargo.toml/crates/ absent — Phase-3 prerequisite).
-- Full ACCEPTED/DO-NOT-REFLAG for P2A-033: cycles/v1.0.0-greenfield/convergence-trajectory.md §P2A-032 Fix-Burst (items 28–30) + §P2A-032 pass record (items 25–27).
+- Full ACCEPTED/DO-NOT-REFLAG for P2A-034: cycles/v1.0.0-greenfield/convergence-trajectory.md §P2A-033 Fix-Burst + §P2A-033 pass record.
 
 ### OPS LEARNINGS (carry forward)
 - sidecar-learning.md re-dirties after every agent stop — streak-transparent `chore:` hygiene commit before each adversary/wave-gate dispatch (fix-burst dispatches are NOT tree-gated).
@@ -176,9 +178,9 @@ stash@{0} in main worktree holds superseded route-around edits (droppable after 
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–344+; Phase-2 per-story authoring + holdout scenarios; P2A-001..032 fix-bursts + D-226..D-240 (sample) archived 2026-08-22) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
-| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-032; D-228..D-240 (sample) fix-bursts) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
-| Session checkpoints (v4.45..v5.52 archived; v5.52 replaced 2026-08-22) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Burst narratives (bursts 1–344+; Phase-2 per-story authoring + holdout scenarios; P2A-001..033 fix-bursts + D-226..D-241 (sample) archived 2026-08-22) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-033; D-228..D-241 (sample) fix-bursts) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
+| Session checkpoints (v4.45..v5.53 archived; v5.53 replaced 2026-08-22) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (188+ lessons) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Resolved blockers (R1–R5, R7, R9, R12/R13) | `cycles/v1.0.0-greenfield/blocking-issues-resolved.md` |
 | Spec artifacts (133 BC / 14 VP / 26 ADR; PRD; L2 domain spec; architecture) | `.factory/specs/` |

@@ -32,8 +32,8 @@ traces_to: .factory/specs/architecture/ARCH-INDEX.md
 | E-13 | First-Party Tool Library | 1 | S-1.21, S-1.22 | 16 | SS-23 | pregolya-tools |
 | E-14 | Durable-Run HTTP Server | 1 | S-1.26, S-1.27 | 16 | SS-12 | pregolya-server |
 | E-15 | LC Serialization / Round-Trip Registry | 2 | S-2.01 | 13 | SS-19 | pregolya-core |
-| E-16 | Document Retrieval | 2 | S-2.02 | 8 | SS-20 | pregolya-core, pregolya-vectorstores |
-| E-17 | VectorStore Abstraction | 2 | S-2.03 | 8 | SS-21 | pregolya-vectorstores |
+| E-16 | Document Retrieval | 2 | S-2.02 | 5 | SS-20 | pregolya-core, pregolya-vectorstores |
+| E-17 | VectorStore Abstraction | 2 | S-2.03 | 10 | SS-21 | pregolya-vectorstores |
 | E-18 | Prompt Templates and Injection Safety | 2 | S-2.04, S-2.05 | 16 | SS-18 | pregolya-prompts |
 | E-19 | Provider SDK Conformance | 2 | S-2.06, S-2.07, S-2.08 | 24 | SS-08 | pregolya-openai, pregolya-anthropic, pregolya-ollama |
 | E-20 | Embeddings Trait and Providers | 2 | S-2.09 | 8 | SS-22 | pregolya-core, pregolya-openai, pregolya-ollama |
@@ -137,12 +137,12 @@ Axum-based HTTP server: Thread/Assistant/Run CRUD, `CronSchedule` proactive run,
 
 `LcSerializable` round-trip (VP-007 proptest P1), `lc_secrets()` credential stripping, OnceLock allowlist-based type registry, legacy namespace remap (`OLD_CORE_NAMESPACES_MAPPING`, P2), reviver allowlist containment fail-closed (VP-010 Kani P0, Red Gate), and langchain-monolith type ID rejection. Security-critical serialization path.
 
-### E-16 — Document Retrieval (Wave 2, 8 pts)
+### E-16 — Document Retrieval (Wave 2, 5 pts)
 
 `Retriever` trait as `Arc<dyn Retriever>` graph seam, RAGRetrieval guardrail coverage obligation
 (BC-2.20.002 Red Gate), and `VectorStoreRetriever` search-type configuration.
 
-### E-17 — VectorStore Abstraction (Wave 2, 8 pts)
+### E-17 — VectorStore Abstraction (Wave 2, 10 pts)
 
 `VectorStore` trait (instance-method surface), `InMemoryVectorStore` with `Arc` DI, `RwLock`,
 Vec<f32> cosine similarity, zero-norm vector guard (VP-009 Kani P0, Red Gate), and
