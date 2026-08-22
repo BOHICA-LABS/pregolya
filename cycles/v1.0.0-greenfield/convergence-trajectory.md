@@ -3028,3 +3028,57 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **Census:** 39 stories / 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). DAG edge change: S-2.03↔S-2.09 (still acyclic). No ADR change. No VP-INDEX arithmetic change.
 
 **Convergence dim-5 (Phase-2 P2A-024):** Counter **0/3 — NOT CLEAN (D-231; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-025 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). ACCEPTED/DO-NOT-REFLAG for P2A-025 (in addition to items 1–9 from P2A-024): (10) VP-012 seed test-vector ceiling is 100_000 — `check_watermark_trigger(0, 0, 100_000.0)` = `0.0/100_000.0 ≤ 0.0 → true` (D-231) — do NOT re-flag seed arithmetic; (11) S-2.03 `depends_on` S-2.09: S-2.09 defines the `Embeddings` trait in pregolya-core/src/embeddings.rs (SS-22, Wave-2); DAG acyclic confirmed; Wave-2 batch order unchanged (2b S-2.09 before 2c S-2.03) (D-231) — do NOT re-flag.
+
+---
+
+## P2A-025 Pass (2026-08-21)
+
+**Pass number:** P2A-025
+**Date:** 2026-08-21
+**Status:** NOT CLEAN
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO
+**Findings:** 3 (2 HIGH, 0 MED, 1 LOW, 0 OBS)
+**Streak:** RESET 0/3
+**Decision:** D-232
+
+### Findings
+
+- **P2A025-01 (HIGH, POL-4):** S-1.18 phantom checkpoint SQLite module path. AC-007, the Arch Mapping section, and Compliance Rules all cited `pregolya-checkpoint::backend::sqlite` and `src/backend/sqlite.rs`. No such module or directory exists. The real S-1.10 artifact is `SqliteCheckpointSaver` in `checkpoint::saver` (`pregolya-checkpoint/src/saver.rs`). S-1.10 File Structure confirms `saver.rs` is the only checkpoint file — no `backend/` subdirectory, no `sqlite.rs`.
+
+- **P2A025-02 (HIGH, POL-4/5, TD-VSDD-060 sibling-sweep):** Phantom trait/type names `CheckpointStore` and `SqliteCheckpointStore` appeared in S-1.16, S-1.18, and S-1.20. The canonical names established by S-1.10 + api-surface + module-decomposition + ADR-005 are `CheckpointSaver` and `SqliteCheckpointSaver`. TD-VSDD-060 sibling-sweep confirmed the phantom names appeared in exactly 3 stories; 36 other stories and all indices were clean.
+
+- **OBS-1 (LOW):** S-1.20 referred to `put_writes` as "synchronous write API." ADR-003 specifies this is an async operation (`async fn put_writes`). Wording misrepresented the API contract.
+
+**RECORDS-ONLY test:** NO (2 HIGH findings present) — full cascade ceremony required.
+
+**Census at pass:** 39 stories / 133 BC / 14 VP — UNCHANGED. No renumber (POL-1).
+
+**Arithmetic sweep:** Exhaustive numeric test-vector sweep across all stories returned CLEAN — VP-anchor / DAG / VP-INDEX arithmetic re-derived clean. That axis is now exhausted.
+
+**Convergence dim-5 (Phase-2 P2A-025):** Counter **0/3 — NOT CLEAN (D-232; 2026-08-21)**. Streak RESET 0/3. Fix-burst dispatched.
+
+---
+
+### P2A-025 Fix-Burst (2026-08-21)
+
+**Files touched (story-writer — 3 files):**
+- `stories/stories/STORY-S-1.16-bsp-super-step-determinism.md` (CheckpointStore→CheckpointSaver; PSI updated)
+- `stories/stories/STORY-S-1.18-budget-policy-evidence-journal-halt-escalate.md` (phantom `backend::sqlite` path repointed to `SqliteCheckpointSaver` in `checkpoint::saver` (`saver.rs`) at AC-007, Arch Mapping, and Compliance Rules; CheckpointStore→CheckpointSaver / SqliteCheckpointStore→SqliteCheckpointSaver at 3 sites)
+- `stories/stories/STORY-S-1.20-hitl-interrupt-resume-core.md` (CheckpointStore::put_writes→CheckpointSaver::put_writes ×2; OBS-1 async wording aligned to ADR-003)
+
+**P2A025-01 CLOSED:** S-1.18 phantom module path repointed. AC-007, Arch Mapping, and Compliance Rules now reference `SqliteCheckpointSaver` in `checkpoint::saver` (`pregolya-checkpoint/src/saver.rs`). No `backend/` directory, no `sqlite.rs` — only `saver.rs` per S-1.10 File Structure.
+
+**P2A025-02 CLOSED:** `CheckpointStore`→`CheckpointSaver` / `SqliteCheckpointStore`→`SqliteCheckpointSaver` corpus-wide. Sibling sweep confirmed exactly 3 stories required changes (S-1.16, S-1.18, S-1.20); 36 other stories and all indices were already clean (PSI references, BC traces, ADR-005 citations all used canonical names).
+
+**OBS-1 CLOSED:** S-1.20 `put_writes` wording corrected to "Sync-durability-tier write API (async fn put_writes; storage confirmed before super-step)" per ADR-003.
+
+**Note:** Exhaustive arithmetic sweep across all numeric test vectors in all stories returned CLEAN — VP-anchor / DAG / VP-INDEX arithmetic re-derived clean. No defects on the arithmetic axis; that axis is now exhausted.
+
+**Note:** No Token Budget changes. No BC-set changes. DAG edges UNCHANGED. No ID renumber (POL-1).
+
+**Census:** 39 stories / 133 BC / 14 VP — UNCHANGED. DAG UNCHANGED. Streak 0/3. NEXT: P2A-026.
+
+**ACCEPTED/DO-NOT-REFLAG for P2A-026 (in addition to items 1–11 from P2A-025):** (12) checkpoint trait = `CheckpointSaver` / `SqliteCheckpointSaver` in `checkpoint::saver` (`pregolya-checkpoint/src/saver.rs`); no `backend::sqlite` module exists — canonical (D-232) — do NOT re-flag. Arithmetic sweep exhausted — do NOT re-flag numeric test-vector arithmetic.
+
+**Convergence dim-5 (Phase-2 P2A-025):** Counter **0/3 — NOT CLEAN (D-232; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-026 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).

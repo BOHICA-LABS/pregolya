@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "d8c6ed5"
+input-hash: "63bbdaa"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.16, S-1.17, S-1.10]
@@ -198,7 +198,7 @@ The deadline for risk-gate HITL responses is evaluated lazily at resume time —
 |-------|--------------|---------------------|-------------------|
 | S-1.16 | `scheduler.rs` has super-step ceiling + run state management | Scheduler owns run lifecycle state machine | Interrupt is a run state transition: `running` → `interrupted` → `running` (on resume). The 7 guard cases are state checks on this machine |
 | S-1.17 | `StreamEvent` defined; run/step events emitted in scheduler | Streaming events emitted via channel from scheduler | `StreamEvent::RunEnd` must NOT be emitted when run is in `interrupted` state |
-| S-1.10 | `CheckpointStore::put_writes()` is the synchronous write API | Checkpoint backend is SQLite; `put_writes` returns `Result<(), PregolyaError>` | INTERRUPT marker uses `put_writes` not `put_checkpoint` — it is a pending-writes entry, not a full checkpoint snapshot |
+| S-1.10 | `CheckpointSaver::put_writes()` is the Sync-durability-tier write API (`async fn put_writes`; storage confirmed before super-step) | Checkpoint backend is SQLite; `put_writes` returns `Result<(), PregolyaError>` | INTERRUPT marker uses `put_writes` not `put_checkpoint` — it is a pending-writes entry, not a full checkpoint snapshot |
 
 ## Architecture Compliance Rules (MANDATORY)
 
@@ -219,7 +219,7 @@ The deadline for risk-gate HITL responses is evaluated lazily at resume time —
 | `serde_json` | workspace-pinned | `InterruptPayload.value` and `Command.resume` are `serde_json::Value` |
 | `tokio` | workspace-pinned | Async scheduler; `put_writes` is called in async context |
 | `tracing` | workspace-pinned | Structured events for interrupt/resume lifecycle |
-| `pregolya-checkpoint` | workspace path | `CheckpointStore::put_writes` for INTERRUPT marker |
+| `pregolya-checkpoint` | workspace path | `CheckpointSaver::put_writes` for INTERRUPT marker |
 
 **Forbidden Dependencies:** `pregolya-core/src/action_risk.rs` must NOT import from `pregolya-graph`. Dependency direction: `pregolya-graph` → `pregolya-core`.
 

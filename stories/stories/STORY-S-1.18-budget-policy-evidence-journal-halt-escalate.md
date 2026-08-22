@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "e39dee4"
+input-hash: "a528560"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.14, S-1.04, S-1.10, S-1.17]
@@ -75,7 +75,7 @@ Each sub-agent spawned via the Send API receives an independent `BudgetPolicy` e
 `JournalEntry` contains: `run_id: Uuid`, `sub_agent_id: Option<Uuid>`, `evaluation_point: String`, `token_usage: TokenUsage`, `policy_name: String`, `decision: PolicyDecision`, `reason: Option<String>`, `timestamp: DateTime<Utc>`. Verified by `test_BC_2_10_002_journal_entry_fields()`.
 
 ### AC-007 (traces to BC-2.10.002 postcondition 3 — journal backed by SQLite checkpoint)
-`EvidenceJournal` persists entries to the SQLite checkpoint backend (`pregolya-checkpoint/src/backend/sqlite.rs`). Verified by `test_BC_2_10_002_journal_backed_by_sqlite()`.
+`EvidenceJournal` persists entries to the SQLite checkpoint backend via `SqliteCheckpointSaver` in `pregolya-checkpoint/src/saver.rs`. Verified by `test_BC_2_10_002_journal_backed_by_sqlite()`.
 
 ### AC-008 (traces to BC-2.10.002 invariant 1 — E-BUDGET-002 on journal write failure)
 If the journal fails to write an entry (I/O error, constraint violation), the budget evaluation returns `Err(PregolyaError { category: BUDGET, code: E-BUDGET-002, .. })`. The graph run does not proceed as if the journal write succeeded. Verified by `test_BC_2_10_002_journal_write_failure_returns_error()`.
@@ -114,7 +114,7 @@ When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the r
 | `EvidenceJournal` | `pregolya-graph/src/budget/journal.rs` | Effectful (SQLite writes) |
 | Scheduler budget evaluation | `pregolya-graph/src/scheduler.rs` | Effectful (calls evaluate, calls interrupt) |
 | `BudgetInfo` in node context | `pregolya-graph/src/types.rs` | Pure (data type) |
-| SQLite journal backend | `pregolya-checkpoint/src/backend/sqlite.rs` | Effectful (I/O) |
+| SQLite journal backend | `pregolya-checkpoint/src/saver.rs` (`SqliteCheckpointSaver`) | Effectful (I/O) |
 
 ## Purity Classification
 
@@ -169,7 +169,7 @@ When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the r
 |-------|--------------|---------------------|-------------------|
 | S-1.14 | Channel + reducer foundation; `bsp_engine.rs` partial creation (reduce phase, finish dispatch) | `mod.rs` re-export only | Budget eval in scheduler; do not put I/O in trait `evaluate` |
 | S-1.17 | `run()`/`stream()` executors added to `scheduler.rs`; event emission callsites in `tick()`/`after_tick()` | S-1.17 creates the `run()` method body; budget evaluation in S-1.18 hooks into the per-super-step section | Confirm `run()` signature (incl budget_config param) before adding budget hooks |
-| S-1.10 | `CheckpointStore` trait; `SqliteCheckpointStore` | SQLite is the persistence backend | `EvidenceJournal` must use `pregolya-checkpoint` SQLite backend, not a separate DB connection |
+| S-1.10 | `CheckpointSaver` trait; `SqliteCheckpointSaver` | SQLite is the persistence backend | `EvidenceJournal` must use `pregolya-checkpoint` SQLite backend, not a separate DB connection |
 | S-1.04 | `PregolyaError` with category + code; `E-BUDGET-*` codes in taxonomy | `retry_hint: Never` for policy denials | Confirm `E-BUDGET-001` and `E-BUDGET-002` codes are in error taxonomy before use |
 
 **Coordination note:** Coordinate `pregolya-graph/src/scheduler.rs` changes between S-1.13 (pre-super-step `ContextMutationConfig` initialization — before the super-step loop) and S-1.18 (per-super-step budget evaluation — inside the loop). Both depend on S-1.17's `run()` executor skeleton. The second PR to merge must rebase on the first.
@@ -179,7 +179,7 @@ When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the r
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `BudgetPolicy::evaluate` is synchronous (not async) | BC-2.10.001 postcondition 1 | Trait signature: `fn evaluate` not `async fn evaluate` |
-| `EvidenceJournal` uses SQLite checkpoint backend — not a separate DB | BC-2.10.002 architecture anchors | Import path check: `pregolya-checkpoint::backend::sqlite` |
+| `EvidenceJournal` uses SQLite checkpoint backend — not a separate DB | BC-2.10.002 architecture anchors | Import path check: `pregolya-checkpoint::saver` (`SqliteCheckpointSaver`) |
 | `E-BUDGET-001` has `retry_hint: Never` | BC-2.10.003 invariant 1 | Unit test `test_BC_2_10_003_e_budget_001_retry_hint_never()` |
 | `Escalate` always triggers HITL interrupt — even when `on_ceiling = Halt` | BC-2.10.004 postcondition 1 | Unit test `test_BC_2_10_004_escalate_always_triggers_interrupt()` |
 | `pregolya-core/src/budget.rs` must NOT import from `pregolya-graph` | Dependency direction: graph → core | `cargo deny` + import scan |
