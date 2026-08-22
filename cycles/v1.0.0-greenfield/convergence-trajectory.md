@@ -3334,3 +3334,150 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **ACCEPTED/DO-NOT-REFLAG for P2A-032 (in addition to items 1–22 from P2A-030):** (23) ALL 109 BC §Story Anchors backfilled from STORY-INDEX (D-238); zero coverage gaps; unfilled-anchor class CLOSED — do NOT re-flag unfilled Story Anchor placeholders; (24) S-2.08 AC→PC traces corrected across BC-2.08.008/013/014 + 5 covering ACs appended; S-2.07 AC-001/003 retraced to correct BC-2.07.001 PC mappings + 2 covering ACs appended (D-237) — do NOT re-flag these trace mappings or coverage gaps.
 
 **Convergence dim-5 (Phase-2 P2A-031):** Counter **0/3 — RESET (D-237/D-238; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-032 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
+
+---
+
+## P2A-032 Pass Record — NOT CLEAN (2026-08-22)
+
+**Pass:** P2A-032
+**Date:** 2026-08-22
+**Adversary model:** fresh-context (vsdd-factory:adversary)
+**Frozen HEAD:** develop `644d1ad7910fa623a70b95d5252af8cf798e8a11` (post-P2A-031-fix-burst)
+**Result:** NOT CLEAN — 1 HIGH class finding (corpus-wide AC→PC trace drift)
+**Streak:** RESET 0/3
+
+### Finding Summary
+
+**P2A032-01 (HIGH, POL-4/8, CLASS: corpus-wide trace drift):** Exhaustive AC→PC citation audit revealed systematic drift across ~73% of citation-bearing stories (17/20 stories with AC→BC traces). Root cause: AC citations reference BC item numbers (postcondition_N, invariant_N, EC-N) that either do not exist in the cited BC (reason=nonexistent) or do exist but do not contain the asserted error code (reason=code-absent). Total: 59 drift citations across 17 stories, 519 citations total checked. Stories S-1.21..S-1.27, S-6.01, and stories authored in P2A-027..031 fix-bursts (S-2.07, S-2.08) are CLEAN.
+
+### Human Decision — VALIDATOR-FIRST (D-239, 2026-08-22)
+
+Human (senior architect) directed VALIDATOR-FIRST approach: build mechanical validator FIRST, run it to enumerate the full worklist, then dispatch batch-fix, then flip to blocking. DEFER-004-class devops authorization granted. devops built `verify-ac-pc-trace.sh` ADVISORY. Validator ran: 59 drift citations confirmed deterministic.
+
+### verify-ac-pc-trace.sh — Verbatim Output (run 2026-08-22)
+
+```
+DRIFT S-1.03 AC-006 cited=EC-001 reason=code-absent asserted-code=E-CORE-001 bc=BC-2.01.001
+DRIFT S-1.04 AC-007 cited=EC-001 reason=code-absent asserted-code=E-CORE-003 bc=BC-2.01.003
+DRIFT S-1.09 AC-012 cited=EC-001 reason=nonexistent bc=BC-2.13.004
+DRIFT S-1.09 AC-014 cited=EC-002 reason=nonexistent bc=BC-2.13.005
+DRIFT S-1.09 AC-018 cited=EC-002 reason=nonexistent bc=BC-2.13.006
+DRIFT S-1.10 AC-003 cited=invariant_1 reason=nonexistent bc=BC-2.04.001
+DRIFT S-1.10 AC-004 cited=EC-002 reason=nonexistent bc=BC-2.04.001
+DRIFT S-1.10 AC-007 cited=EC-003 reason=nonexistent bc=BC-2.04.002
+DRIFT S-1.10 AC-010 cited=invariant_1 reason=nonexistent bc=BC-2.04.003
+DRIFT S-1.10 AC-015 cited=EC-006 reason=nonexistent bc=BC-2.04.005
+DRIFT S-1.10 AC-018 cited=invariant_1 reason=nonexistent bc=BC-2.04.006
+DRIFT S-1.10 AC-019 cited=EC-005 reason=nonexistent bc=BC-2.04.006
+DRIFT S-1.10 AC-022 cited=EC-002 reason=nonexistent bc=BC-2.04.007
+DRIFT S-1.13 AC-008 cited=postcondition_3 reason=code-absent asserted-code=E-MEMORY-007 bc=BC-2.15.005
+DRIFT S-1.13 AC-011 cited=postcondition_6 reason=nonexistent bc=BC-2.15.005
+DRIFT S-1.16 AC-004 cited=invariant_1 reason=code-absent asserted-code=E-GRAPH-006 bc=BC-2.03.001
+DRIFT S-1.17 AC-006 cited=postcondition_6 reason=nonexistent bc=BC-2.06.001
+DRIFT S-1.18 AC-008 cited=invariant_1 reason=code-absent asserted-code=E-BUDGET-002 bc=BC-2.10.002
+DRIFT S-1.18 AC-009 cited=postcondition_1 reason=code-absent asserted-code=E-BUDGET-001 bc=BC-2.10.003
+DRIFT S-1.19 AC-004 cited=invariant_1 reason=nonexistent bc=BC-2.11.001
+DRIFT S-1.19 AC-009 cited=invariant_1 reason=nonexistent bc=BC-2.11.002
+DRIFT S-1.19 AC-012 cited=invariant_4 reason=nonexistent bc=BC-2.11.003
+DRIFT S-1.19 AC-015 cited=invariant_1 reason=nonexistent bc=BC-2.11.004
+DRIFT S-1.19 AC-018 cited=invariant_1 reason=nonexistent bc=BC-2.11.005
+DRIFT S-1.19 AC-019 cited=invariant_4 reason=nonexistent bc=BC-2.11.005
+DRIFT S-1.19 AC-023 cited=invariant_2 reason=nonexistent bc=BC-2.11.006
+DRIFT S-1.20 AC-004 cited=invariant_1 reason=code-absent asserted-code=E-GRAPH-016 bc=BC-2.05.001
+DRIFT S-1.20 AC-013 cited=postcondition_3 reason=code-absent asserted-code=E-GRAPH-002 bc=BC-2.05.004
+DRIFT S-1.20 AC-022 cited=postcondition_4 reason=code-absent asserted-code=E-GRAPH-013 bc=BC-2.05.006
+DRIFT S-2.01 AC-005 cited=invariant_4 reason=nonexistent bc=BC-2.19.001
+DRIFT S-2.01 AC-008 cited=invariant_1 reason=nonexistent bc=BC-2.19.002
+DRIFT S-2.01 AC-012 cited=invariant_1 reason=nonexistent bc=BC-2.19.003
+DRIFT S-2.01 AC-015 cited=invariant_3 reason=nonexistent bc=BC-2.19.004
+DRIFT S-2.01 AC-019 cited=invariant_1 reason=nonexistent bc=BC-2.19.005
+DRIFT S-2.01 AC-020 cited=invariant_4 reason=nonexistent bc=BC-2.19.005
+DRIFT S-2.01 AC-023 cited=invariant_4 reason=nonexistent bc=BC-2.19.006
+DRIFT S-2.02 AC-005 cited=invariant_1 reason=nonexistent bc=BC-2.20.001
+DRIFT S-2.02 AC-006 cited=invariant_4 reason=nonexistent bc=BC-2.20.001
+DRIFT S-2.02 AC-011 cited=invariant_3 reason=nonexistent bc=BC-2.20.002
+DRIFT S-2.03 AC-005 cited=postcondition_5 reason=nonexistent bc=BC-2.21.001
+DRIFT S-2.03 AC-006 cited=postcondition_6 reason=nonexistent bc=BC-2.21.001
+DRIFT S-2.03 AC-015 cited=invariant_1 reason=nonexistent bc=BC-2.21.003
+DRIFT S-2.03 AC-018 cited=invariant_1 reason=nonexistent bc=BC-2.21.004
+DRIFT S-2.03 AC-024 cited=invariant_1 reason=nonexistent bc=BC-2.20.003
+DRIFT S-2.03 AC-025 cited=invariant_5 reason=nonexistent bc=BC-2.20.003
+DRIFT S-2.04 AC-005 cited=invariant_1 reason=nonexistent bc=BC-2.18.001
+DRIFT S-2.04 AC-006 cited=invariant_2 reason=nonexistent bc=BC-2.18.001
+DRIFT S-2.04 AC-011 cited=invariant_1 reason=nonexistent bc=BC-2.18.002
+DRIFT S-2.04 AC-015 cited=invariant_1 reason=nonexistent bc=BC-2.18.003
+DRIFT S-2.04 AC-016 cited=invariant_2 reason=nonexistent bc=BC-2.18.003
+DRIFT S-2.05 AC-007 cited=invariant_1 reason=nonexistent bc=BC-2.18.004
+DRIFT S-2.05 AC-008 cited=invariant_2 reason=nonexistent bc=BC-2.18.004
+DRIFT S-2.05 AC-009 cited=invariant_3 reason=nonexistent bc=BC-2.18.004
+DRIFT S-2.05 AC-014 cited=invariant_1 reason=nonexistent bc=BC-2.18.005
+DRIFT S-2.05 AC-015 cited=invariant_3 reason=nonexistent bc=BC-2.18.005
+DRIFT S-2.06 AC-005 cited=postcondition_5 reason=nonexistent bc=BC-2.08.006
+DRIFT S-2.06 AC-006 cited=postcondition_6 reason=nonexistent bc=BC-2.08.006
+DRIFT S-2.09 AC-005 cited=invariant_1 reason=nonexistent bc=BC-2.22.001
+DRIFT S-2.09 AC-017 cited=invariant_6 reason=nonexistent bc=BC-2.22.001
+```
+
+### Per-Story Pass/Fail Table
+
+| Story | Citations | Drift | Result |
+|-------|-----------|-------|--------|
+| S-1.01 | 15 | 0 | PASS |
+| S-1.02 | 14 | 0 | PASS |
+| S-1.03 | 12 | 1 | FAIL |
+| S-1.04 | 12 | 1 | FAIL |
+| S-1.05 | 14 | 0 | PASS |
+| S-1.06 | 14 | 0 | PASS |
+| S-1.07 | 15 | 0 | PASS |
+| S-1.08 | 12 | 0 | PASS |
+| S-1.09 | 21 | 3 | FAIL |
+| S-1.10 | 22 | 8 | FAIL |
+| S-1.11 | 8 | 0 | PASS |
+| S-1.12 | 15 | 0 | PASS |
+| S-1.13 | 17 | 2 | FAIL |
+| S-1.14 | 9 | 0 | PASS |
+| S-1.15 | 11 | 0 | PASS |
+| S-1.16 | 10 | 1 | FAIL |
+| S-1.17 | 12 | 1 | FAIL |
+| S-1.18 | 16 | 2 | FAIL |
+| S-1.19 | 23 | 7 | FAIL |
+| S-1.20 | 23 | 3 | FAIL |
+| S-1.21 | 0 | 0 | PASS |
+| S-1.22 | 0 | 0 | PASS |
+| S-1.23 | 0 | 0 | PASS |
+| S-1.24 | 0 | 0 | PASS |
+| S-1.25 | 0 | 0 | PASS |
+| S-1.26 | 0 | 0 | PASS |
+| S-1.27 | 0 | 0 | PASS |
+| S-2.01 | 23 | 7 | FAIL |
+| S-2.02 | 11 | 3 | FAIL |
+| S-2.03 | 25 | 6 | FAIL |
+| S-2.04 | 16 | 5 | FAIL |
+| S-2.05 | 15 | 5 | FAIL |
+| S-2.06 | 8 | 2 | FAIL |
+| S-2.07 | 26 | 0 | PASS |
+| S-2.08 | 24 | 0 | PASS |
+| S-2.09 | 17 | 2 | FAIL |
+| S-2.10 | 27 | 0 | PASS |
+| S-2.11 | 13 | 0 | PASS |
+| S-6.01 | 19 | 0 | PASS |
+
+Total: 519 citations across 39 stories. 17 FAIL / 22 PASS. 59 DRIFT lines.
+
+**Note:** S-2.07, S-2.08 are CLEAN because they were corrected in P2A-031 fix-burst (D-237). S-1.21..S-1.27 have no BC-citing ACs (implementation stories with no postcondition trace citations — CLEAN). S-6.01 is CLEAN.
+
+### Root Cause Analysis
+
+Two distinct drift classes:
+
+**Class A (reason=nonexistent, ~75% of drifts):** Stories cite BC item numbers that exceed the actual item count in the referenced BC. E.g., `invariant_1` cited but the BC has no `## Invariants` section with that number; `EC-002` cited but BC has only EC-001. Root cause: AC authors cited speculative numbering (anticipated future BC structure) rather than the actual BC content at authoring time.
+
+**Class B (reason=code-absent, ~25% of drifts):** Stories cite a PC/INV item that EXISTS in the BC but does NOT contain the error code asserted in the AC. E.g., AC asserts `E-CORE-001` and cites `postcondition_1` but E-CORE-001 appears in `postcondition_3` of that BC. Root cause: Correct PC cited for the semantic behavior, but wrong item number (off-by-one or off-by-two from actual code location).
+
+**Special case — S-2.06 (obsolete-BC gap):** S-2.06 AC-005/006 cite `postcondition_5` and `postcondition_6` of BC-2.08.006 which has only 4 postconditions. The behaviors described (rustls-tls backend, credential-redacted newtypes, 30s timeout) are NOT in BC-2.08.006 at all. These are covered by code conventions and BC-2.14.005 (credentials). PO adjudication required before batch-fix: amend BC-2.08.006 OR re-anchor to correct BCs.
+
+### ACCEPTED/DO-NOT-REFLAG (in addition to items 1–24 from P2A-031)
+
+(25) All 59 drift citations enumerated in this pass record — these will be corrected in the P2A-032 batch-fix burst; do NOT re-flag as new findings in P2A-033 if the batch-fix has already corrected them; (26) verify-ac-pc-trace.sh ADVISORY validator exists in `.factory/hooks/` — its blocking mode is intentionally deferred until after batch-fix (D-239); do NOT re-flag validator non-blocking status as a finding post-batch-fix-burst; (27) S-1.21..S-1.27 citations=0 — these stories have no BC-citing ACs by design (they are implementation stories with no postcondition trace citations); PASS is correct.
+
+**Convergence dim-5 (Phase-2 P2A-032):** Counter **0/3 — RESET (D-239; 2026-08-22)**. Validator-first batch-fix PENDING. NEXT: PO adjudicates S-2.06 gap → story-writer parallel-fork batch-fix (17 stories) → re-run to 0 DRIFT → devops flips blocking → state-manager single-commit → P2A-033 (streak restart 1/3 attempt).

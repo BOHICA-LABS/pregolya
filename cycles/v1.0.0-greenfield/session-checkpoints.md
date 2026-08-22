@@ -2766,3 +2766,20 @@ Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 
 ### DECISION DELTA (v5.45)
 D-226 minted (P2A-020; scheduler.rs ownership). D-227 minted (P2A-021; VectorStore ordering + add_documents rename + BC anchor fills). D-228 minted (VP-anchor module-path reconciliation; 7 VP harness-path divergences + 2 story extractions; Phase-6-blocking class closed corpus-wide). D-229 minted (P2A-022; VP-008 anchor drift + VP-012 basename; BC-2.22.001 Invariant 6 added; S-2.09 VP-008 alignment; streak 0/3). D-230 minted (P2A-023; VP-013 fn-name/module alignment check_risk_floor; S-1.22 aligned; streak 0/3). D-231 minted (P2A-024; VP-012 seed ceiling 0→100_000; S-2.03↔S-2.09 DAG edge; count-propagation reconciled 39 stories; streak 0/3). D-232 minted (P2A-025; CheckpointSaver canonical rename corpus-wide; phantom backend::sqlite path; async put_writes wording; arithmetic sweep CLEAN; streak 0/3). P2A-018/019 CLEAN(strict); P2A-020/021/022/023/024/025 RESET. Human F-02/TDIV-009 waiver in effect (D-220).
+
+---
+
+## Archived Checkpoint v5.51 (replaced by v5.52 on 2026-08-22)
+
+*Archived from STATE.md when v5.52 SESSION WRAP replaced v5.51.*
+
+### RESUME IN ONE BREATH
+Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 stories, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak **0/3**. Adversary passes P2A-001..P2A-031 run; P2A-018/019 CLEAN(strict) (streak 1/3→2/3); P2A-020..027/029/030/031 NOT CLEAN (D-226..D-237 (sample)); P2A-028 CLEAN(strict) streak 1/3; P2A-029/030/031 RESET. D-237 P2A-031 fix-burst + D-238 corpus-wide BC Story-Anchor backfill (109 BCs; unfilled-anchor class CLOSED) COMPLETE. NEXT: dispatch a FRESH `vsdd-factory:adversary` pass **P2A-032** on current factory-artifacts HEAD.
+
+### HEADS (at v5.51)
+- develop `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: `git -C .factory log -1 --format='%h'` for HEAD (per TD-VSDD-053, no literal SHA pin).
+- Worktrees: NONE. Open PRs: NONE.
+
+### DECISION DELTA (v5.51)
+D-237 minted (P2A-031 1H/1M: S-2.08 AC→PC trace drift + 5 covering ACs; S-2.07 AC-001/003 retrace + 2 covering ACs; streak RESET 0/3). D-238 minted (corpus-wide BC §Story Anchor backfill; 109 BCs; zero coverage gaps; unfilled-anchor class CLOSED). P2A-018/019/028 CLEAN(strict); P2A-020..027/029/030/031 (sample) RESET. Human F-02/TDIV-009 waiver in effect (D-220).
