@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "710a7eb"
+input-hash: "3605837"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.06, S-1.02]
@@ -186,7 +186,7 @@ No harness tests mock internals; all assertions exercise production code.
 |----|----------|-------------------|
 | EC-001 | Empty `texts` vec passed to `embed_documents` | `Ok(vec![])` — empty input is valid; zero-length result |
 | EC-002 | `OpenAiApiKey` printed with `{:?}` | Output is `"<redacted>"` — never leaks key material |
-| EC-003 | Ollama legacy mode, 3 texts, 2nd fails network | `Err(E-PROV-008)` — no partial result |
+| EC-003 | Ollama legacy mode, 3 texts, 2nd fails network (connection refused before response) | `Err(PregolyaError { code: "E-PROV-012", message: "ProviderConnectionError: cannot connect to provider '<provider>': <transport_error>", .. })` — no partial result (traces to BC-2.22.003 EC-003) |
 | EC-004 | Provider returns vectors of length 0 | `Err(E-EMBED-001)` — zero-dimension embeddings are invalid |
 | EC-005 | `text-embedding-ada-002` model used via `EmbeddingsOpenAI` | Emits `embeddings.legacy_model_warning`; proceeds with the request |
 

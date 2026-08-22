@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.003
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
   - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC4/INV-2 specify the mandatory 30s timeout (including localhost) but did not cite DI-009; add BC-2.14.004 cross-reference in PC4 and INV-2 prose."
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 9 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC2, PC5, EC-001, EC-002, EC-003, EC-004, EC-005, TV-004, TV-005 each had `Err(PregolyaError { ... })` — replaced `...` with `..` in all nine. No behavioral change."
+  - "1.3 (P2A030-03/2026-08-22): EC-003 amended — replace bare generic `Err(PregolyaError { .. })` with full-form E-PROV-012 ProviderConnectionError citation. A connection-refused failure has no HTTP status, so E-PROV-008 (ProviderHttpError) cannot render for this path; E-PROV-012 was minted in error-taxonomy.md same burst to cover pre-response provider connection failures. EC-003 is the authoritative full-form gate #33 site for E-PROV-012. Story-writer handoff: re-anchor S-2.09 EC-003 from E-PROV-008 to E-PROV-012."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-033
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "94c1172"
+input-hash: "1953e2c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -111,7 +112,7 @@ unconditional and applies even for `localhost` targets.
 |----|-------------|-------------------|
 | EC-001 | `use_legacy_endpoint: false`, Ollama binary predates `/api/embed` (returns 404) | `Err(PregolyaError { .. })` — 404 propagates; no silent fallback to `/api/embeddings` |
 | EC-002 | `use_legacy_endpoint: true`, batch of 5 texts; 3rd request returns 500 | `Err(PregolyaError { .. })` — first 2 embeddings discarded; Err for whole call |
-| EC-003 | Ollama process not running (connection refused) | `Err(PregolyaError { .. })` wrapping the reqwest connection error; no retry |
+| EC-003 | Ollama process not running (connection refused) | `Err(PregolyaError { component: PROV, category: TRANSPORT, code: E-PROV-012, message: "ProviderConnectionError: cannot connect to provider 'http://localhost:11434': connection refused", .. })` — no retry; reqwest OS-level error is in `.source()`. This is the authoritative full-form gate #33 site for E-PROV-012; any future TV for this failure path PASS-ABBREVs via this EC-003. |
 | EC-004 | Model not pulled locally (Ollama returns 404 with body `"model not found"`) | `Err(PregolyaError { .. })` — error message includes model name if safe to include |
 | EC-005 | Request takes > 30 seconds (slow local model) | `Err(PregolyaError { .. })` wrapping the reqwest timeout; 30s applies even for localhost |
 | EC-006 | `embed_documents(vec![])` with legacy endpoint | `Ok(vec![])` — zero requests sent; not an error |

@@ -3237,3 +3237,50 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **ACCEPTED/DO-NOT-REFLAG for P2A-030 (in addition to items 1–15 from P2A-029):** (16) MCP pagination overflow raises E-MCP-008 McpPaginationLimitExceeded (POLICY, fail-closed) per BC-2.09.001 PC9/EC-007 — do NOT re-flag as silent truncation (D-235); (17) unknown MCP server discovery raises E-MCP-009 McpServerNotConfigured (VAL) per BC-2.09.001 PC9/EC-008 — do NOT re-flag E-MCP-004 (D-235); (18) error-code census is 117 (MCP namespace 9 codes: 43 HTTP + 22 individual + 52 blanket) — canonical, do NOT re-flag as 115 (D-235); (19) 4 E-MCP-002 uses in S-2.10 are legitimate transport-layer errors — do NOT re-flag (D-235).
 
 **Convergence dim-5 (Phase-2 P2A-029):** Counter **0/3 — RESET (D-235; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-030 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
+
+---
+
+### P2A-030 Adversary Pass (2026-08-22)
+
+**Scope:** Phase-2 story decomposition — all 39 stories, 133 BCs, 14 VPs. Focus: fresh-context adversarial review of current factory-artifacts HEAD (post-P2A-029 fix-burst). Form-B verbatim evidence required.
+
+**Finding count:** 3 (1 HIGH, 2 MED)
+
+| ID | Severity | Rule | Summary |
+|----|----------|------|---------|
+| P2A030-01 | HIGH | POL-4 | S-2.10 AC-004/EC-004 used double-underscore `{server_name}__{tool.name}` prefix; BC-2.09.001 PC6/TV-005 specify single-underscore canonical form; langchain-mcp-adapters reference uses `f"{server_name}_{tool.name}"` |
+| P2A030-02 | MED | POL-4/8 | S-2.10 AC→PC traces systematically mis-numbered: AC-002 cited PC4 (correct PC1/Inv3/EC-007), AC-003 cited PC4 (correct PC5), AC-004 cited PC5 (correct PC6), AC-005 cited PC6 (correct PC7/EC-006); PC3 (raw args_schema no synthesis) and PC8 (empty-list Ok) had no coverage ACs |
+| P2A030-03 | MED | POL-4 | S-2.09 EC-003 used E-PROV-008 (HttpApiError, requires HTTP status code) for connection-refused scenario; connection-refused occurs before any HTTP response; BC-2.22.003 EC-003 also had generic Err form without full-form error code |
+
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO
+
+**D-236 minted.** Fix-burst dispatched.
+
+**Convergence dim-5 (Phase-2 P2A-030):** Counter **0/3 — NOT CLEAN (D-236; 2026-08-22)**. Streak RESET 0/3.
+
+---
+
+### P2A-030 Fix-Burst (2026-08-22)
+
+**Files touched:**
+- `specs/prd-supplements/error-taxonomy.md` (E-PROV-012 ProviderConnectionError TRANSPORT added; individual namespace 22→23; census 117→118; v1.54→1.55) [product-owner]
+- `specs/behavioral-contracts/ss-22/BC-2.22.003.md` (EC-003 generic Err form → full-form Err(E-PROV-012 ProviderConnectionError); v1.2→1.3) [product-owner]
+- `stories/stories/STORY-S-2.10-mcp-client-tool-discovery-invocation.md` (AC-004/EC-004 double-underscore → single-underscore; AC-002 trace PC4→PC1/Inv3/EC-007; AC-003 trace PC4→PC5; AC-004 trace PC5→PC6; AC-005 trace PC6→PC7/EC-006; AC-026 added PC3 raw args_schema coverage; AC-027 added PC8 empty-list Ok coverage) [story-writer]
+- `stories/stories/STORY-S-2.09-embeddings-trait-providers.md` (EC-003 E-PROV-008→E-PROV-012 ProviderConnectionError) [story-writer]
+
+**P2A030-01 CLOSED:** Single-underscore `{server}_{tool}` is canonical per langchain-mcp-adapters reference `f"{server_name}_{tool.name}"` and BC-2.09.001 PC6/TV-005. BC-2.09.001 PC6 UNCHANGED (already correct). S-2.10 AC-004 and EC-004 updated to single underscore.
+
+**P2A030-02 CLOSED:** All AC→PC trace mappings corrected to canonical BC-2.09.001 PC assignments. AC-026 added covering PC3 (raw args_schema preserved, no synthesis). AC-027 added covering PC8 (empty tool list returns Ok(vec![])). No existing AC/BC ID renumbered (POL-1; AC-026/027 appended at end).
+
+**P2A030-03 CLOSED:** E-PROV-012 ProviderConnectionError minted in TRANSPORT category (renders without HTTP status code — structurally correct for connection-refused which occurs before HTTP response). BC-2.22.003 EC-003 updated to full-form Err(E-PROV-012). S-2.09 EC-003 re-anchored to E-PROV-012. error-taxonomy v1.54→1.55.
+
+**Error-code census reconciliation:** 43 HTTP + 23 individual + 52 blanket = 118 total (+1 TRANSPORT individual E-PROV-012). error-taxonomy v1.54→1.55. BC census UNCHANGED (133). VP UNCHANGED (14). Stories UNCHANGED (39). DAG UNCHANGED. Token Budgets unaffected.
+
+**Root cause:** P2A030-01: Double-underscore was a transcription error in S-2.10 — single-underscore was always canonical. P2A030-02: AC→PC trace assignments were consistently off by one position in the PC numbering, and two postconditions (PC3/PC8) had no story coverage. P2A030-03: E-PROV-008 is HTTP-category (requires HTTP status) — structurally wrong for a transport-level failure; minting a dedicated TRANSPORT code (E-PROV-012) is the production-grade fix.
+
+**Note:** No ID renumber (POL-1). No BC-set count changes. DAG UNCHANGED. Census 39 stories / 133 BC / 14 VP / 22 epics — UNCHANGED. Streak 0/3. NEXT: P2A-031.
+
+**ACCEPTED/DO-NOT-REFLAG for P2A-031 (in addition to items 1–19 from P2A-028/029):** (20) MCP tool-name prefix = single underscore `{server}_{tool}` per langchain-mcp-adapters reference (BC-2.09.001 PC6/TV-005) — do NOT re-flag double-underscore (D-236); (21) provider connection-refused = E-PROV-012 ProviderConnectionError (TRANSPORT; no HTTP status required) — do NOT re-flag E-PROV-008 for connection-refused (D-236); (22) S-2.10 AC-002→PC1/Inv3/EC-007, AC-003→PC5, AC-004→PC6, AC-005→PC7/EC-006 + AC-026 (PC3) + AC-027 (PC8) are canonical — do NOT re-flag mis-numbering or missing PC3/PC8 coverage (D-236); (23) error-code census is 118 (43 HTTP + 23 individual + 52 blanket) — canonical, do NOT re-flag as 117 (D-236).
+
+**Convergence dim-5 (Phase-2 P2A-030):** Counter **0/3 — RESET (D-236; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-031 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).

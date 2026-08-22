@@ -60,7 +60,7 @@ tdd_mode: strict
 returns all tools from the named server. Each tool is an `Arc<dyn DynTool>` constructed
 via `convert_mcp_tool`. Verified by `test_BC_2_09_001_get_tools_single_server()`.
 
-### AC-002 (traces to BC-2.09.001 postcondition 2 / EC-007)
+### AC-002 (traces to BC-2.09.001 postcondition 1 + Invariant 3 + EC-007)
 `list_tools()` cursor pagination respects a `MAX_ITERATIONS = 1000` guard. A server that
 requires more than 1000 paginated calls is aborted fail-closed with
 `Err(PregolyaError { code: "E-MCP-008", .. })` (McpPaginationLimitExceeded; POLICY category)
@@ -68,17 +68,17 @@ to prevent infinite loops. Silent truncation is not permitted. The error message
 `McpPaginationLimitExceeded: server '<server>' exceeded MAX_ITERATIONS=1000 pagination calls`.
 Verified by `test_BC_2_09_001_pagination_max_iterations_guard()`.
 
-### AC-003 (traces to BC-2.09.001 postcondition 3)
+### AC-003 (traces to BC-2.09.001 postcondition 5)
 `get_tools(None)` (all servers) uses `tokio::task::JoinSet` to fan out discovery concurrently
 across all configured servers. Results from all servers are merged into a single flat list.
 Verified by `test_BC_2_09_001_get_tools_all_servers_joinset_fanout()`.
 
-### AC-004 (traces to BC-2.09.001 postcondition 4)
+### AC-004 (traces to BC-2.09.001 postcondition 6)
 When `tool_name_prefix: true` is configured, each discovered tool's name is prefixed with
-the server name: `"<server_name>__<original_name>"`. Verified by
+the server name: `"<server_name>_<original_name>"`. Verified by
 `test_BC_2_09_001_tool_name_prefix_flag()`.
 
-### AC-005 (traces to BC-2.09.001 postcondition 5)
+### AC-005 (traces to BC-2.09.001 postcondition 7 + EC-006)
 A transport-level failure during discovery returns `Err(PregolyaError { code: "E-MCP-002", .. })`.
 A JSON-RPC -32601 response (method not found, e.g., server doesn't support `tools/list`)
 returns `Err(PregolyaError { code: "E-MCP-003", .. })`. Verified by
@@ -218,6 +218,18 @@ Verified by compile-fail test `test_BC_2_09_005_no_close_method_compile_fail()`.
 shared across tasks, and cloned without duplicating network resources (there are none).
 Verified by `test_BC_2_09_005_client_is_send_sync_clone()`.
 
+### AC-026 (traces to BC-2.09.001 postcondition 3 + invariant 1)
+The `args_schema` field of every `Arc<dyn DynTool>` produced by `convert_mcp_tool` is
+the raw `serde_json::Value` from `tool.inputSchema` verbatim — no pydantic model, schemars
+schema, or any other schema synthesis is performed by `pregolya-mcp`. If the server provides
+no `inputSchema`, `args_schema` is `Value::Null`. Verified by
+`test_BC_2_09_001_args_schema_raw_no_synthesis()`.
+
+### AC-027 (traces to BC-2.09.001 postcondition 8)
+A server that returns an empty tool list (`tools: []`) for any valid transport is not an
+error. `get_tools` returns `Ok(vec![])` for that server. Verified by
+`test_BC_2_09_001_empty_tool_list_ok()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -246,7 +258,7 @@ Verified by `test_BC_2_09_005_client_is_send_sync_clone()`.
 | EC-001 | `get_tools(Some("nonexistent_server"))` (traces to BC-2.09.001 PC9/EC-008) | `Err(PregolyaError { code: "E-MCP-009", .. })` (McpServerNotConfigured; VAL) — message: `McpServerNotConfigured: no MCP server named '<server>' is configured` |
 | EC-002 | Tool invocation with `McpSessionGuard` that fails to connect | `Err(E-MCP-002)` from session creation; no tool code executed |
 | EC-003 | Guardrail returns `Reject` with empty reason string | `ToolMessage{status:Error, content: [text: "(rejected by guardrail)"]}` — fallback text |
-| EC-004 | `tool_name_prefix: true` with server name containing `__` | Prefix uses `"<server_name>__<tool>"` verbatim — no escaping of the separator |
+| EC-004 | `tool_name_prefix: true` with server name containing `__` | Prefix uses `"<server_name>_<tool>"` verbatim — no escaping of the separator |
 | EC-005 | JoinSet fan-out where one server times out | Timeout error for that server is included as `Err` in merged results; other servers' tools still returned as `Ok` entries |
 
 ## Token Budget Estimate (MANDATORY)
@@ -257,16 +269,16 @@ Verified by `test_BC_2_09_005_client_is_send_sync_clone()`.
 | BC files (5 BCs) | ~11,000 |
 | `module-decomposition.md` SS-09 section | ~500 |
 | `pregolya-mcp/src/` (new module, 6 files) | ~3,000 |
-| Test file stubs (AC-001 to AC-025) | ~3,000 |
+| Test file stubs (AC-001 to AC-027) | ~3,200 |
 | SID-1 mock test infrastructure | ~1,000 |
 | Tool outputs | ~500 |
-| **Total** | **~23,500** |
+| **Total** | **~23,700** |
 | Agent context window | 200K (Sonnet) |
 | **Budget usage** | **~12%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-025 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-027 (test-writer step)
 2. [ ] **Red Gate check AC-019:** confirm `test_BC_2_09_004_bare_tool_exception_reraise_unit_mock()` FAILS before implementation
 3. [ ] **Red Gate check AC-022:** confirm `test_BC_2_09_005_no_live_connections_unit()` FAILS before implementation (if naive impl connects eagerly)
 4. [ ] Create `pregolya-mcp/src/client.rs` — `MultiServerMcpClient`, `MultiServerMcpConfig` (config-only, no connections)
