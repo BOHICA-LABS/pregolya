@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.78"
+version: "2.79"
 status: active
 producer: product-owner
 timestamp: 2026-08-22T00:00:00Z
 phase: 1d
 changelog:
+  - "2.79 (P2A-027/REVERT-D233/2026-08-22): REVERT D-233 signature flips — both unsupported per POL-46: (1) max_marginal_relevance_search lambda_mult f64→f32 (ADR-014 Decision 2 explicit f32; D-233's 'BC-2.21.001 canonical' citation unsupported — BC does not type lambda_mult; f32 consistent with Vec<(Document,f32)> scores); (2) VectorStoreRetriever.lambda_mult f64→f32 (ADR-014 Decision 2 struct field explicit f32); (3) delete ids &[String]→&[&str] (ADR-014 Decision 2 + BC-2.21.001 PC-2 + TV-004 all &[&str]; D-233's 'BC-2.21.001 PC-5 canonical' citation wrong — PC-5 is the as_retriever postcondition, not delete)."
   - "2.78 (P2A026-01/2026-08-22): §VectorStore Trait — P2A-021 add_documents rename propagated to interface-definitions.md (signature authority). Exhaustive surface reconciliation against BC-2.21.001 PC-2 + ADR-014 Decision 2 canonical. Seven changes: (1) add_texts→add_documents: method renamed; parameter list changed from (texts: Vec<String>, metadatas: Option<Vec<serde_json::Map<String, serde_json::Value>>>) to (docs: Vec<Document>); doc comment updated from 'Add texts (with optional per-text metadata) to the store' to 'Add documents to the store'; BC-anchor-comment updated from 'add_texts semantics' to 'add_documents semantics'. (2) max_marginal_relevance_search: lambda_mult type f32→f64 per BC-2.21.001 canonical (P2A-021 addition); VectorStoreRetriever.lambda_mult field corrected f32→f64 for internal consistency. (3) delete: ids param &[&str]→&[String] per BC-2.21.001 PC-5 canonical. (4) similarity_search_with_filter: filter param MetadataFilter→&MetadataFilter (borrowed ref) per BC-2.21.004 canonical; default body unchanged (filter.filters.is_empty() auto-derefs). Methods similarity_search and similarity_search_with_score verified already correct; no change required. as_retriever verified already correct per F-P174-as-retriever-fallible. TD-VSDD-060 sibling sweep: sole live-body add_texts site was the trait method declaration above; corrected; zero live-body add_texts occurrences remaining. Changelog entries 2.42 ('add_texts / from_texts_sync') and 2.59 ('add_texts') are historical records, grandfathered per TD-VSDD-091."
   - "2.77 (BURST-311/F-P202-01/2026-08-17): §CheckpointSaver — add missing `fts_search` trait method and fix snapshot-assembly doc reference (F-P202-01 HIGH, BC-2.04.008 trait-method vs Tool wrapper drift). (1) Added `async fn fts_search(query: &str, config: FtsSearchConfig) -> Result<Vec<FtsSearchResult>, PregolyaError>` to the CheckpointSaver trait after `get_next_version`; doc comment covers PC3 limit guard (E-CHKPT-008/FtsLimitZero at config.limit=0), EC-002 malformed FTS5 (E-CHKPT-008 at fts_search call time), and EC-006 FTS5-unavailable (E-CHKPT-009). (2) BC anchor note: 'BC-2.04.001 through BC-2.04.007' → 'BC-2.04.001 through BC-2.04.008'; per-method precision for `fts_search` appended. (3) Gate #31 type note: heading and body extended with FtsSearchConfig and FtsSearchResult as RESOLVED types per BC-2.04.008 PC1/PC3 (pregolya-checkpoint/src/fts.rs). (4) ConversationSnapshot doc comment (~§Compaction): 'snapshot assembly from search_history' → 'snapshot assembly from `CheckpointSaver::fts_search` call' (`fts_search` is the trait method called by BudgetEngine; `search_history` is the agent-callable Tool wrapper per BC-2.04.008 PC5). TD-VSDD-060 sibling sweep: two live-body search_history-as-method sites corrected (§CheckpointSaver BC anchor note and §Compaction ConversationSnapshot doc comment); changelog entries citing search_history in v2.26/v2.23 are historical records (grandfathered per TD-VSDD-091)."
   - "2.76 (burst-303/F-P194-01+O-P194-B/2026-08-17): Two corrections to LCEL type blocks (D-170). F-P194-01: Fix invoke_dyn→invoke in RunnablePassthrough doc comment (Zero-cost identity runnable) and RunnableAssign doc comment (invoke_dyn validates → invoke(input, config) validates). The canonical DynRunnable trait uses async fn invoke/stream (not invoke_dyn/stream_dyn, which belongs to DynTool); doc comments must match the trait surface. O-P194-B: Split compound ADR-026 §Decision 1 citation in BC anchor footer — separate into four single-§ citations per POL-19/ADR-022 §Decision 5 no-chained-§ rule: §Decision 1 (IndexMap representation, key ordering), §Decision 2 (fail-fast abort), §Decision 3 (zero-cost identity), §Decision 4 (dict-input validation)."
@@ -1750,12 +1751,12 @@ pub trait VectorStore: Send + Sync {
         query: &str,
         k: usize,
         fetch_k: usize,
-        lambda_mult: f64,
+        lambda_mult: f32,
     ) -> Result<Vec<Document>, PregolyaError>;
 
     /// Delete documents by stable ID. Returns Ok(()) even if some IDs do not exist.
     /// BC anchor: BC-2.21.001 PC5
-    async fn delete(&self, ids: &[String]) -> Result<(), PregolyaError>;
+    async fn delete(&self, ids: &[&str]) -> Result<(), PregolyaError>;
 
     /// Construct a `VectorStoreRetriever` over this store.
     ///
@@ -1830,7 +1831,7 @@ pub struct VectorStoreRetriever {
     search_type: SearchType,
     k: usize,
     fetch_k: usize,
-    lambda_mult: f64,
+    lambda_mult: f32,
 }
 
 /// Dispatch enum for VectorStoreRetriever search strategy.

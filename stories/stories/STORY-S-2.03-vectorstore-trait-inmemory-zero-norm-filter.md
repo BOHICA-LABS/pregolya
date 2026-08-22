@@ -81,7 +81,7 @@ on `VectorStore`. The split is compile-time verified.
 Verified by `test_BC_2_21_001_vectorstore_factory_sized_split()`.
 
 ### AC-006 (traces to BC-2.21.001 postcondition 6)
-`VectorStore::delete(&self, ids: &[String]) -> Result<(), PregolyaError>` removes documents
+`VectorStore::delete(&self, ids: &[&str]) -> Result<(), PregolyaError>` removes documents
 by ID. Deleting non-existent IDs is a no-op (returns `Ok(())`). Verified by
 `test_BC_2_21_001_delete_nonexistent_noop()`.
 

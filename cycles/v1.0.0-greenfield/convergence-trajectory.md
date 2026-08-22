@@ -3130,3 +3130,45 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **ACCEPTED/DO-NOT-REFLAG for P2A-027 (in addition to items 1–12 from P2A-026):** (13) interface-definitions.md VectorStore surface = canonical 7-method `add_documents` form (`add_documents(docs: Vec<Document>)`; `lambda_mult f64`; `delete &[String]`; `filter &MetadataFilter`; `VectorStoreRetriever.lambda_mult f64`) — do NOT re-flag (D-233); (14) api-surface.md StreamEvent listed under §pregolya-core Public Types with ADR-006 §Consequences attribution — do NOT re-flag (D-233).
 
 **Convergence dim-5 (Phase-2 P2A-026):** Counter **0/3 — RESET (D-233; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-027 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
+
+---
+
+### Adversary Pass P2A-027 (2026-08-22)
+
+**Date:** 2026-08-22
+**Status:** NOT CLEAN
+**Findings:** 1 (1 HIGH)
+**Streak:** RESET 0/3
+
+#### Finding P2A027-01 (HIGH, POL-24/4/46)
+**Subject:** D-233 introduced two unsupported type flips in interface-definitions.md
+**Evidence:** D-233 changed `lambda_mult: f32 → f64` and `delete(&self, ids: &[&str]) → &[String]` in interface-definitions.md. The cited source "PC-5" is the `as_retriever` postcondition — not the `delete` postcondition; it does not govern the delete parameter type. BC-2.21.001 does not type lambda_mult at all. ADR-014 Decision 2 explicitly mandates `f32` for similarity scores (consistent with `Vec<(Document,f32)>`) and `&[&str]` for delete ids (consistent with TV-004). The D-233 flips thus contradicted the governing architecture authority.
+**Fix required:** Revert the two unsupported flips; obtain architect adjudication confirming ADR-014 Decision 2 is the authority.
+
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO
+
+**D-234 minted.** Fix-burst dispatched.
+
+**Convergence dim-5 (Phase-2 P2A-027):** Counter **0/3 — NOT CLEAN (D-234; 2026-08-22)**. Streak RESET 0/3.
+
+---
+
+### P2A-027 Fix-Burst (2026-08-22)
+
+**Files touched:**
+- `specs/prd-supplements/interface-definitions.md` (REVERTED: lambda_mult f64→f32 ×2 + delete &[String]→&[&str]; v2.78→2.79) [product-owner]
+- `specs/behavioral-contracts/ss-21/BC-2.21.001.md` (PC-2 lambda_mult typed explicit f32; v1.5→1.6) [product-owner]
+- `stories/stories/STORY-S-2.03-vectorstore-trait-inmemory-zero-norm-filter.md` (AC-006 delete param reverted to &[&str]) [story-writer]
+
+**Architect adjudication:** ADR-014 Decision 2 is the governing authority — canonical `lambda_mult: f32` (consistent with `Vec<(Document,f32)>` similarity scores) and `delete(&self, ids: &[&str])` (consistent with TV-004). ADR-014 UNCHANGED (already canonical). Adjudication only; no file edits by architect.
+
+**P2A027-01 CLOSED:** D-233 flips reverted corpus-wide. Five other VectorStore method reconciliations from D-233 (`add_documents`, `similarity_search`, `similarity_search_with_score`, `as_retriever`, `similarity_search_with_filter`) remain correct — only the two unsupported flips reverted.
+
+**Root cause:** Orchestrator self-correction — D-233 dispatch asserted type changes without first verifying the governing ADR (ADR-014 Decision 2). Process lesson: sweep the full authority set (ADR+BC+interface-definitions+api-surface+module-decomp+story) before directing any signature/type/name change.
+
+**Note:** No ID renumber (POL-1). No BC-set changes. Token Budgets unaffected. DAG UNCHANGED. Census 39 stories / 133 BC / 14 VP / 22 epics — UNCHANGED. Streak 0/3. NEXT: P2A-028.
+
+**ACCEPTED/DO-NOT-REFLAG for P2A-028 (in addition to items 1–14 from P2A-027):** (15) canonical VectorStore types per ADR-014 Decision 2: `lambda_mult: f32` (consistent with `Vec<(Document,f32)>` similarity scores) and `delete(&self, ids: &[&str])` (consistent with TV-004); D-233 f64/&[String] claim superseded by D-234 — do NOT re-flag.
+
+**Convergence dim-5 (Phase-2 P2A-027):** Counter **0/3 — RESET (D-234; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-028 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
