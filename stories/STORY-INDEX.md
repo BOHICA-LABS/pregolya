@@ -114,7 +114,7 @@ input-hash: "pending"
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
-| S-2.03 | VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard and MetadataFilter | BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003 | SS-21 | pregolya-vectorstores | P0 | 10 | [S-2.02, S-1.04] | draft |
+| S-2.03 | VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard and MetadataFilter | BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003 | SS-21 | pregolya-vectorstores | P0 | 10 | [S-2.02, S-1.04, S-2.09] | draft |
 
 ### Wave 2 — pregolya-prompts (Prompt Templates and Injection Safety)
 

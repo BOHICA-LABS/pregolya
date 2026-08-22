@@ -165,7 +165,7 @@ S-2.02 (Retriever Trait)
 
 ```
 S-2.03 (VectorStore Trait + InMemoryVectorStore)
-  depends_on: [S-2.02, S-1.04]
+  depends_on: [S-2.02, S-1.04, S-2.09]
   blocks: S-6.01
 ```
 
@@ -198,7 +198,7 @@ S-2.08 (Advanced Provider Features)
 
 S-2.09 (Embeddings Trait + Providers)
   depends_on: [S-2.06, S-1.02]
-  blocks: S-6.01
+  blocks: S-2.03, S-6.01
 ```
 
 ### Wave 2 — pregolya-mcp (E-21)
@@ -249,7 +249,7 @@ S-6.01 (Kani + cargo-fuzz)
 |-------|---------|-----------|
 | 2a | S-2.01, S-2.04, S-2.06 | S-2.01 dep S-1.04+S-1.02; S-2.04 dep S-1.04+S-1.02; S-2.06 dep S-1.04 |
 | 2b | S-2.02, S-2.05, S-2.07, S-2.09 | S-2.02 dep S-1.19+S-1.04; S-2.05 dep S-2.04; S-2.07 dep S-2.06+S-1.07+S-1.06; S-2.09 dep S-2.06+S-1.02 |
-| 2c | S-2.03, S-2.08, S-2.10 | S-2.03 dep S-2.02+S-1.04; S-2.08 dep S-2.07; S-2.10 dep S-1.19+S-1.04+S-1.22 |
+| 2c | S-2.03, S-2.08, S-2.10 | S-2.03 dep S-2.02+S-1.04+S-2.09; S-2.08 dep S-2.07; S-2.10 dep S-1.19+S-1.04+S-1.22 |
 | 2d | S-2.11 | Dep S-2.10 |
 
 ### Wave 6

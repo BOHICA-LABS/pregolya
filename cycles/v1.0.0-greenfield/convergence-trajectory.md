@@ -2982,3 +2982,49 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). DAG edges UNCHANGED (acyclic). No ADR change. No VP-INDEX arithmetic change.
 
 **Convergence dim-5 (Phase-2 P2A-023):** Counter **0/3 — NOT CLEAN (D-230; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-024 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 MED present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-024 (in addition to items 1–8 from P2A-023): (9) VP-013 proof vehicle = `check_risk_floor` (pure-core fn, tools::shell/bash.rs); `ToolConfig::override_risk` delegates to `check_risk_floor`; AC-013 references `check_risk_floor` with Ok/Err-at-Medium + E-TOOLS-007; BC-2.23.005 governs public `override_risk` call-site; VP-013 governs extracted pure `check_risk_floor` — different layers, canonical (D-230) — do NOT re-flag.
+
+---
+
+## P2A-024 Pass (2026-08-21)
+
+**Pass number:** P2A-024
+**Date:** 2026-08-21
+**Status:** NOT CLEAN
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO
+**Findings:** 2 (2 HIGH, 0 MED, 0 LOW, 0 OBS)
+**Streak:** RESET 0/3
+**Decision:** D-231
+
+### Findings
+
+- **P2A024-01 (HIGH, POL-4):** S-1.25 VP-012 seed test vector arithmetically impossible. `check_watermark_trigger(0, 0, 1.0)` computes `0.0 / 0.0 = NaN` and `NaN <= 0.0 = false`, contradicting AC-005/EC-001/Tasks which claimed the result is `true`. The seed ceiling value of `0` diverges from BC-2.10.005 TV-006 (ceiling=100_000) and VP-012.md which requires ceiling∈(0,2^24]. This made the acceptance criterion unverifiable and the test vector nonsensical.
+
+- **P2A024-02 (HIGH, POL-4/5 + create-before-use):** S-2.03 used `Arc<dyn Embeddings>` but the trait's sole definer (S-2.09) was not a DAG ancestor of S-2.03. The PSI falsely attributed the trait to "likely S-1.XX/SS-14" and proposed a forbidden duplicate-stub fallback. This violates POL-5 (no create-before-define) and the create-before-use principle.
+
+**Census at pass:** 39 stories / 133 BC / 14 VP — UNCHANGED. No renumber (POL-1).
+
+**Convergence dim-5 (Phase-2 P2A-024):** Counter **0/3 — NOT CLEAN (D-231; 2026-08-21)**. Streak RESET 0/3. Fix-burst dispatched.
+
+---
+
+### P2A-024 Fix-Burst (2026-08-21)
+
+**Files touched (story-writer — 5 files):**
+- `stories/stories/STORY-S-1.25-compaction-trigger-execution.md` (VP-012 seed: ceiling 0→100_000 in AC-005/EC-001/Tasks; NaN path eliminated)
+- `stories/stories/STORY-S-2.03-vectorstore-trait-inmemory-zero-norm-filter.md` (depends_on += S-2.09; PSI rewritten to name S-2.09 as Embeddings trait definer; stub fallback removed)
+- `stories/stories/STORY-S-2.09-embeddings-trait-providers.md` (blocks += S-2.03)
+- `stories/dependency-graph.md` (S-2.03↔S-2.09 edge added with 2-clause rationale)
+- `stories/STORY-INDEX.md` (S-2.03 depends_on cell += S-2.09)
+
+**P2A024-01 CLOSED:** S-1.25 ceiling corrected to 100_000. `check_watermark_trigger(0, 0, 100_000.0)` = `0.0/100_000.0 = 0.0 <= 0.0 → true`. No NaN. No special-casing of ceiling==0. Seed arithmetic is now correct and verifiable. VP-012.md and BC-2.10.005 TV-006 were already canonical (ceiling=100_000); only S-1.25 needed updating.
+
+**P2A024-02 CLOSED:** S-2.03 `depends_on` S-2.09 added to frontmatter. Reciprocal `blocks` S-2.03 added to S-2.09 frontmatter. S-2.03↔S-2.09 edge added to dependency-graph.md with 2-clause rationale (create-before-use; Embeddings trait defined in Wave-2 by S-2.09). STORY-INDEX.md S-2.03 row updated. Acyclicity confirmed: S-2.09's full chain is S-2.06←S-1.04←{S-1.03,S-1.02}←S-1.01 (excludes S-2.03; no cycle). Wave-2 batch ordering unchanged (2b contains S-2.09, 2c contains S-2.03; no intra-batch dependency violations). PSI rewritten to correctly identify S-2.09 as the Embeddings trait definer (pregolya-core/src/embeddings.rs, SS-22, Wave-2) and remove the forbidden stub-fallback proposal.
+
+**Count-propagation reconciliation (D-231):** STATE.md 'critical-path depth' compressed rows (Phase Progress + D-226) contained the text "10→12 stories" referring to critical-path sequential depth (not total project story count). Reworded to "critical-path depth 10→12 seq" to eliminate the ambiguous `12 stories` substring that triggered the validate-count-propagation hook. Authoritative total: 39 stories (STORY-INDEX.md: 27 Wave-1 + 11 Wave-2 + 1 Wave-6 = 39; 22 epics; 133 BC; 14 VP).
+
+**RECORDS-ONLY test:** NO (2 HIGH findings present) — full cascade ceremony required. Streak RESET 0/3.
+
+**Census:** 39 stories / 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). DAG edge change: S-2.03↔S-2.09 (still acyclic). No ADR change. No VP-INDEX arithmetic change.
+
+**Convergence dim-5 (Phase-2 P2A-024):** Counter **0/3 — NOT CLEAN (D-231; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-025 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). ACCEPTED/DO-NOT-REFLAG for P2A-025 (in addition to items 1–9 from P2A-024): (10) VP-012 seed test-vector ceiling is 100_000 — `check_watermark_trigger(0, 0, 100_000.0)` = `0.0/100_000.0 ≤ 0.0 → true` (D-231) — do NOT re-flag seed arithmetic; (11) S-2.03 `depends_on` S-2.09: S-2.09 defines the `Embeddings` trait in pregolya-core/src/embeddings.rs (SS-22, Wave-2); DAG acyclic confirmed; Wave-2 batch order unchanged (2b S-2.09 before 2c S-2.03) (D-231) — do NOT re-flag.

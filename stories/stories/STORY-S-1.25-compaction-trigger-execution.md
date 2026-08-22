@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "45decc6"
+input-hash: "bcb1144"
 traces_to:
   - behavioral-contracts/BC-2.10.005
   - behavioral-contracts/BC-2.10.006
@@ -81,7 +81,7 @@ The free function `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, 
 (traces to BC-2.10.005 invariant 1)
 
 ### AC-005: VP-012 seed — check_watermark_trigger <= correctness (Kani anchor)
-This story is the VP-012 anchor. The Kani harness `watermark_arithmetic_harness` in `crates/pregolya-core/src/proofs/watermark.rs` must verify: for `fraction = 1.0`, the threshold check `0.0 <= 0.0` returns `true` (fires). For `fraction = 0.0` (rejected at construction), no invocation. The test `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` exercises the boundary: `fraction = 1.0` fires when `tokens_remaining = 0`, `ceiling = 0`.
+This story is the VP-012 anchor. The Kani harness `watermark_arithmetic_harness` in `crates/pregolya-core/src/proofs/watermark.rs` must verify: for `fraction = 1.0`, the threshold check `0.0 <= 0.0` returns `true` (fires). For `fraction = 0.0` (rejected at construction), no invocation. The test `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` exercises the boundary: `fraction = 1.0` fires when `tokens_remaining = 0`, `ceiling = 100_000` — `check_watermark_trigger(0, 100_000, 1.0)` computes `0.0 / 100_000 = 0.0 <= 0.0 → true`.
 (traces to BC-2.10.005 postcondition 2)
 
 ### AC-006: 7-step compaction cycle — correct step ordering
@@ -141,7 +141,7 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.10.005 EC-1 | `OnWatermark { fraction: 1.0 }`, `tokens_remaining = 0` | `check_watermark_trigger(0, 0, 1.0)` returns true (`0.0 <= 0.0`) |
+| EC-001 | BC-2.10.005 EC-1 | `OnWatermark { fraction: 1.0 }`, `tokens_remaining = 0`, `ceiling = 100_000` | `check_watermark_trigger(0, 100_000, 1.0)` returns true (`0.0 / 100_000 = 0.0 <= 0.0`) |
 | EC-002 | BC-2.10.005 EC-2 | `OnWatermark { fraction: 0.0 }` | `Err` at construction |
 | EC-003 | BC-2.10.005 EC-3 | `OnMessageCount { count: 0 }` | `Err` at construction |
 | EC-004 | BC-2.10.005 EC-4 | `OnTokenCount { tokens: 0 }` | `Err` at construction |
@@ -157,7 +157,7 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 - [ ] Create `crates/pregolya-graph/src/budget/mod.rs` (re-exports only)
 - [ ] Create `crates/pregolya-graph/src/budget/executor.rs` — `run_compaction` implementing 7-step cycle; calls `check_watermark_trigger` from pregolya-core; writes to `EvidenceJournal` (S-1.18 module `pregolya_graph::budget::journal`) at step 5
 - [ ] Write failing tests for AC-001..AC-010 before any implementation
-- [ ] Write `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` — VP-012 boundary test (uses `check_watermark_trigger(0, 0, 1.0)` → true)
+- [ ] Write `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` — VP-012 boundary test (uses `check_watermark_trigger(0, 100_000, 1.0)` → true; `0.0 / 100_000 = 0.0 <= 0.0`)
 - [ ] Implement `check_watermark_trigger` in pregolya-core with `<=` (NOT `<`)
 - [ ] Implement 7-step cycle in pregolya-graph: verify step ordering in test
 - [ ] Verify abort-on-compact-error: mock compaction fn returning Err, assert steps 3-7 not executed

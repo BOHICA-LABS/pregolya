@@ -19,7 +19,7 @@ inputs:
 input-hash: "77be9d0"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 10
-depends_on: [S-2.02, S-1.04]
+depends_on: [S-2.02, S-1.04, S-2.09]
 blocks: [S-6.01]
 behavioral_contracts: [BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003]
 verification_properties: [VP-009]
@@ -260,7 +260,7 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 
 S-2.02 delivered `Retriever` trait, `Document`, and `GuardedDocuments` in `pregolya-core`. This story creates the entire `pregolya-vectorstores` crate: `VectorStore` trait (including `max_marginal_relevance_search` and `as_retriever`), `InMemoryVectorStore`, `VectorStoreRetriever`, `SearchType`, `MetadataFilter`, and the MMR algorithm.
 
-S-1.04 established `Runnable` trait. `VectorStore` is NOT a `Runnable` — do not add `pipe` or `invoke` to it. `Embeddings` trait is defined elsewhere (likely S-1.XX, SS-14 or similar); `Arc<dyn Embeddings>` is a dependency. If `Embeddings` is not yet available, create a minimal stub trait in `pregolya-vectorstores` or `pregolya-core` for compilation.
+S-1.04 established `Runnable` trait. `VectorStore` is NOT a `Runnable` — do not add `pipe` or `invoke` to it. The `Embeddings` trait is defined by **S-2.09** in `pregolya-core/src/embeddings.rs` (SS-22, Wave 2); S-2.03 `depends_on` includes S-2.09, so the trait is available before this story is dispatched. Do NOT create a stub or duplicate trait definition — single-creator ownership is enforced.
 
 The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both conditions required. The prior art in the CLIP workstream showed that `norm == 0.0`-only guards passed review but missed the infinity overflow path, discovered only in a follow-on adversarial pass. This two-condition form closes that gap.
 
