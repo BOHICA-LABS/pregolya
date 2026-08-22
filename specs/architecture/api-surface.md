@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.25"
+version: "1.26"
 status: active
 producer: architect
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-22T00:00:00Z
 changelog:
+  - "1.26 (fix-burst-P2A026/P2A026-02/2026-08-22): Move StreamEvent row from §pregolya-graph Public Types to §pregolya-core Public Types. Canonical home is pregolya-core (`core::events`) per ADR-006 §Consequences ('StreamEvent is a public type in pregolya-core') and module-decomposition.md §F-P2A017-02 fix (v1.45 corrected the erroneous graph-defines-StreamEvent claim). Presenting it under §pregolya-graph Public Types mis-stated crate ownership. Inclusion criterion note extended to document StreamEvent's criterion (b) rationale. Sweep: all four §pregolya-graph Public Types rows verified — StateGraph (SS-02/graph::definition), GraphConfig (SS-03/graph::scheduler), Command (SS-05/graph::hitl) are correctly attributed; only StreamEvent was misattributed. No other cross-section misattributions found."
   - "1.25 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Fix phantom §-citation in RunnableConfig table row. 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants (Run-Config Merge Precedence)'. Rationale: BC-2.12.003 has no §Run-Config Merge Precedence Invariant subheading; the rule is a list item within §Invariants. Also sibling-fixed in ADR-021 Decision 2 body. input-hash refreshed (inputs changed since last hash computation; pre-existing drift resolved)."
   - "1.24 (burst-290/F-180-01+02+08/2026-08-16): Three phantom/malformed ADR §-citation fixes. (1) F-180-08 — §Public Rust Traits blockquote line 77: `ADR-005 §Adjacent Adjudications corrected list` → `ADR-005 §Adjacent Trait Object-Safety Adjudications` (real heading per ADR-005). (2) F-180-01 — §Public Traits (pregolya-vectorstores) blockquote line 175: chained double-§ `ADR-014 §Decision 2 §Object-safety` split into `ADR-014 §Decision 2` and `ADR-005 §Adjacent Trait Object-Safety Adjudications` per ADR-022 §Decision 5 prescribed fix. (3) F-180-02 — §Error Type line 282: `ADR-010 §impl PregolyaError — sole sanctioned paths` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading; real governing section is Error-Construction Notation Canon)."
   - "1.23 (burst-289/F-178-01/2026-08-16): StreamEvent variant count corrected 15→16 in §pregolya-graph Public Types table. Variant 16 (StreamEvent::Error) was added in burst-288 per EC-005 mandate; api-surface.md was not updated in that burst. BC-2.06.001 §Postconditions (PC2) is the authoritative enumeration."
@@ -37,7 +38,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "afb875e"
+input-hash: "530bb25"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -90,8 +91,9 @@ This file documents pregolya's public API surface: the public Rust traits by cra
 | `BudgetConfig` | Budget ceiling + on_ceiling policy; embedded in `RunnableConfig.budget_config` (per-run override) and `GraphConfig.budget_config` (graph-level default); defined in `core::budget` (pregolya-core — ADR-009 Option 3) | SS-10 | BC-2.10.001 |
 | `CompactionTrigger` | `Disabled \| OnWatermark{fraction: f64} \| OnMessageCount{count: usize} \| OnTokenCount{tokens: u64}`; field in `BudgetConfig.compaction_trigger`; defined in `core::budget` (pregolya-core — ADR-019 Decision 1) | SS-10 | BC-2.10.005 |
 | `ProvenanceTag` | Content source tag attached at every ingress boundary; parameter to `GuardrailHook::evaluate` in pregolya-core; defined in pregolya-core (`core::guardrail` area — cannot be in pregolya-graph without creating a circular core→graph dependency) | SS-11 | BC-2.11.001 |
+| `StreamEvent` | Streaming event enum; run_id + parent_ids; 16 variants (D23 adds ToolApprovalRequest/Resolved/CompactionEvent as variants 13–15; burst-288 adds StreamEvent::Error as 16th variant — BC-2.06.001 §Postconditions PC2); defined in `core::events` (pregolya-core) per ADR-006 §Consequences; emitted by `graph::event_emitter`, consumed cross-crate by pregolya-server SSE streaming endpoint | SS-06 | BC-2.06.001–006 |
 
-> **Public Types inclusion criterion (F-P171a-19 adjudication, extended F-P173-201):** A type earns a row in
+> **Public Types inclusion criterion (F-P171a-19 adjudication, extended F-P173-201, P2A026-02):** A type earns a row in
 > §pregolya-core Public Types when (a) it is consumed by a downstream crate as a
 > standalone API input or output independent of any trait method signature — i.e., the
 > downstream crate passes it directly as a function argument or struct field without
@@ -104,6 +106,11 @@ This file documents pregolya's public API surface: the public Rust traits by cra
 > `ProvenanceTag` meets criterion (b): it is a pregolya-core type (parameter to
 > `GuardrailHook::evaluate`; GuardrailHook is defined in pregolya-core) — cataloguing
 > it under pregolya-graph would imply core depends on graph, which is forbidden.
+> `StreamEvent` meets criterion (b): defined in `core::events` per ADR-006 §Consequences
+> ("StreamEvent is a public type in pregolya-core"); module-decomposition.md §graph::event_emitter
+> row explicitly states its role as emitter only (type defined in pregolya-core); cataloguing
+> it under pregolya-graph would imply graph defines a type that pregolya-server consumes
+> independently, introducing a phantom circular dependency.
 > Types such as `GuardrailResult`, `IngressContent`, `BoundaryType`, `WriteGuardDecision`,
 > `MemoryWriteRequest`, `PolicyDecision`, and `OnCeiling` do not currently meet either
 > criterion — they appear only in trait method signatures and are not standalone
@@ -203,7 +210,6 @@ omissions falsifiable rather than silent.
 | `StateGraph<State>` | Graph builder: nodes, edges, channels | SS-02 | BC-2.02.001–006 |
 | `GraphConfig` | Execution config: checkpoint_saver, interrupt_before/after | SS-03 | BC-2.03.001 |
 | `Command` | HITL resume carrier: `Command(resume=value)` | SS-05 | BC-2.05.004 |
-| `StreamEvent` | Streaming event enum; run_id + parent_ids; 16 variants (D23 adds ToolApprovalRequest/Resolved/CompactionEvent as variants 13–15; burst-288 adds StreamEvent::Error as 16th variant — BC-2.06.001 §Postconditions PC2) | SS-06 | BC-2.06.001–006 |
 
 ## Public Traits and Types (pregolya-tools)
 

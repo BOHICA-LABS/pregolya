@@ -3082,3 +3082,51 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **ACCEPTED/DO-NOT-REFLAG for P2A-026 (in addition to items 1–11 from P2A-025):** (12) checkpoint trait = `CheckpointSaver` / `SqliteCheckpointSaver` in `checkpoint::saver` (`pregolya-checkpoint/src/saver.rs`); no `backend::sqlite` module exists — canonical (D-232) — do NOT re-flag. Arithmetic sweep exhausted — do NOT re-flag numeric test-vector arithmetic.
 
 **Convergence dim-5 (Phase-2 P2A-025):** Counter **0/3 — NOT CLEAN (D-232; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-026 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
+
+---
+
+### Adversary Pass P2A-026 (2026-08-22)
+
+**Date:** 2026-08-22
+**Status:** NOT CLEAN
+**Findings:** 2 (1 HIGH, 1 MED)
+**Streak:** RESET 0/3
+
+#### Finding P2A026-01 (HIGH, POL-4/24)
+**Subject:** interface-definitions.md VectorStore trait still declares `add_texts`
+**Evidence:** interface-definitions.md VectorStore surface had `add_texts(texts: Vec<String>, metadatas: Option<Vec<Metadata>>)` — P2A-021/D-227 sibling sweep renamed the BC and story files but missed this authority/summary doc.
+**Fix required:** Reconcile VectorStore 7-method surface to BC-2.21.001 PC-2 canonical form.
+
+#### Finding P2A026-02 (MED, POL-4)
+**Subject:** api-surface.md lists StreamEvent under §pregolya-graph Public Types
+**Evidence:** api-surface.md §pregolya-graph Public Types contained StreamEvent — canonical home is §pregolya-core (core::events, ADR-006 §Consequences + module-decomposition). P2A-017/D-225 sibling-sweep corrected module-decomposition but missed api-surface.md.
+**Fix required:** Relocate StreamEvent to §pregolya-core Public Types with ADR-006 attribution.
+
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO
+
+**D-233 minted.** Fix-burst dispatched.
+
+**Convergence dim-5 (Phase-2 P2A-026):** Counter **0/3 — NOT CLEAN (D-233; 2026-08-22)**. Streak RESET 0/3.
+
+---
+
+### P2A-026 Fix-Burst (2026-08-22)
+
+**Files touched:**
+- `specs/prd-supplements/interface-definitions.md` (VectorStore 7-method surface reconciled to canonical `add_documents` form; lambda_mult f32→f64; delete &[String]; filter &MetadataFilter; VectorStoreRetriever.lambda_mult f64; v2.77→2.78) [product-owner]
+- `specs/architecture/api-surface.md` (StreamEvent relocated from §pregolya-graph to §pregolya-core Public Types with ADR-006 §Consequences attribution; graph-section sweep clean; v1.25→1.26) [architect]
+
+**P2A026-01 CLOSED:** interface-definitions.md VectorStore surface reconciled. Seven-method canonical form per BC-2.21.001 PC-2: `add_documents(docs: Vec<Document>)`; `similarity_search(query, k)`; `similarity_search_with_score(query, k)`; `max_marginal_relevance_search(query, k, fetch_k)`; `delete(ids: &[String])`; `filter(filter: &MetadataFilter)`; `as_retriever(config)`. `lambda_mult` corrected f32→f64. `VectorStoreRetriever.lambda_mult` corrected f32→f64. Zero live `add_texts` remain (2 changelog occurrences grandfathered per TD-VSDD-091).
+
+**P2A026-02 CLOSED:** api-surface.md StreamEvent relocated to §pregolya-core Public Types section. ADR-006 §Consequences attribution added. Full §pregolya-graph section sweep confirmed no other misattribution. v1.25→1.26.
+
+**Root cause:** Both findings are authority/summary-doc propagation gaps from prior fix-burst sibling sweeps: P2A-021/D-227 renamed add_texts→add_documents in BC and story files but missed interface-definitions.md; P2A-017/D-225 relocated StreamEvent in module-decomposition but missed api-surface.md.
+
+**Note:** No BC-set changes. No story changes. No VP changes. DAG UNCHANGED. No ID renumber (POL-1).
+
+**Census:** 39 stories / 133 BC / 14 VP — UNCHANGED. DAG UNCHANGED. Streak 0/3. NEXT: P2A-027.
+
+**ACCEPTED/DO-NOT-REFLAG for P2A-027 (in addition to items 1–12 from P2A-026):** (13) interface-definitions.md VectorStore surface = canonical 7-method `add_documents` form (`add_documents(docs: Vec<Document>)`; `lambda_mult f64`; `delete &[String]`; `filter &MetadataFilter`; `VectorStoreRetriever.lambda_mult f64`) — do NOT re-flag (D-233); (14) api-surface.md StreamEvent listed under §pregolya-core Public Types with ADR-006 §Consequences attribution — do NOT re-flag (D-233).
+
+**Convergence dim-5 (Phase-2 P2A-026):** Counter **0/3 — RESET (D-233; 2026-08-22)**. Fix-burst COMPLETE. NEXT: P2A-027 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt).
