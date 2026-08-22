@@ -2921,3 +2921,36 @@ Counter: **3/3 CONVERGED.** Phase-1d adversarial cascade CLOSED. P1D-191/192/193
 **Convergence:** Counter 0/3 — streak UNCHANGED. NEXT: fresh P2A-022 on current HEAD (full cascade ceremony required per BC-5.39.001). ACCEPTED/DO-NOT-REFLAG for P2A-022 (in addition to items 1–5 from P2A-021): VP-anchor module paths reconciled corpus-wide (D-228) — do NOT re-flag VP harness-path locations; injection_guard standalone in prompts/src/injection_guard.rs; cosine/zero-norm in vectorstores/src/similarity.rs; VP-004 mcp module is mcp::exception.
 
 **OPS NOTE:** P2A-022 adversary died twice to API connection error mid-investigation; both runs independently surfaced the VP-harness-path class. Retry P2A-022 until a full verdict (all findings enumerated, dual CLEAN verdict) is obtained.
+
+---
+
+### P2A-022 Pass (2026-08-21)
+
+**Type:** Scored adversarial pass. NOT CLEAN (strict). Streak RESET 0/3.
+
+**Verdict:** CLEAN(strict)=NO CLEAN(PR-merge)=NO
+
+**Findings (2 total — 1H/1M):**
+
+- **P2A022-01 (HIGH, POL-4/9/6):** VP-008 anchor drift. S-2.09 built the VP-008 proptest harness in pregolya-standard-tests using the mock-comparison pattern VP-008 explicitly rejects ("do NOT wire a mock that returns pre-baked expected values and assert mock_output == expected"). Production validate_embedding_batch validator entirely omitted from S-2.09 scope. VP-008 requires the production validator to live in pregolya-core/src/embeddings.rs and the proptest to feed raw mock outputs into the production validator. BC-2.22.001 had no Invariant covering the shared-validator contract.
+- **P2A022-02 (MED, POL-4/9):** VP-012 harness basename mismatch. VP-012 recorded `harness_basename: watermark_arithmetic.rs` while both S-1.25 and S-6.01 use `watermark.rs` as the proof vehicle filename. D-228 closed the ambiguous "(or core/budget.rs)" clause but left the basename unreconciled.
+
+**Census at pass:** 133 BC / 14 VP — UNCHANGED. No renumber (POL-1).
+
+**Convergence dim-5 (Phase-2 P2A-022):** Counter **0/3 — NOT CLEAN (D-229; 2026-08-21)**. Streak RESET 0/3. trajectory-tail →0→2→5→2. Fix-burst dispatched.
+
+---
+
+### P2A-022 Fix-Burst (2026-08-21)
+
+**Files touched (product-owner — 1 file):** specs/behavioral-contracts/ss-22/BC-2.22.001.md (Invariant 6 added; v1.7→1.8; input-hash refreshed).
+**Files touched (architect — 1 file):** specs/verification-properties/VP-012.md (harness basename watermark_arithmetic.rs→watermark.rs; v1.6→1.7).
+**Files touched (story-writer — 1 file):** stories/stories/STORY-S-2.09-embeddings-trait-providers.md (aligned to VP-008: production validate_embedding_batch in pregolya-core/src/embeddings.rs; proptest moved into embeddings.rs #[cfg(test)] with 5 property families A–E; pregolya-standard-tests harness row removed; AC-017 added tracing BC-2.22.001 Invariant 6; input-hash refreshed).
+
+**P2A022-01 CLOSED:** BC-2.22.001 Invariant 6 added — validate_embedding_batch is the single enforcement-point for embedding batch validation; must return Err(E-EMBED-001) on count-mismatch, zero-len, or inconsistent-len inputs; no caller bypasses or reimplements this check (shared-validator contract). S-2.09 acceptance criteria aligned to VP-008: validator implemented in pregolya-core/src/embeddings.rs; proptest in-crate #[cfg(test)] with 5 property families A–E (count invariant, zero-len rejection, inconsistent-len rejection, valid pass-through, error type contract), each feeding raw mock outputs directly into the production validator function; AC-017 added tracing BC-2.22.001 Invariant 6; pregolya-standard-tests harness row removed (was never in target_module). VP-008 content itself unchanged (was already canonical).
+
+**P2A022-02 CLOSED:** VP-012 harness_basename corrected watermark_arithmetic.rs→watermark.rs. Sole occurrence. harness_fn watermark_arithmetic_harness unchanged (function name is canonical and independent of file basename).
+
+**Census:** 133 BC / 14 VP — UNCHANGED. No BC/VP/story renumber (POL-1). S-2.09 bcs set unchanged — Token Budget BC count (3) unaffected. DAG edges UNCHANGED (acyclic). No ADR change. No VP-INDEX arithmetic change.
+
+**Convergence dim-5 (Phase-2 P2A-022):** Counter **0/3 — NOT CLEAN (D-229; 2026-08-21)**. Streak RESET 0/3. Fix-burst COMPLETE. NEXT: P2A-023 on new post-fix-burst frozen HEAD (streak restart 1/3 attempt). RECORDS-ONLY test: NO (1 HIGH present) — full cascade ceremony required. ACCEPTED/DO-NOT-REFLAG for P2A-023 (in addition to items 1–6 from P2A-022): (7) VP-008 validate_embedding_batch design canonical: validator in pregolya-core/src/embeddings.rs; proptest in-crate embeddings.rs #[cfg(test)] 5 families A–E feeding raw mock outputs into production validator; BC-2.22.001 Invariant 6 is the enforcement-point contract — do NOT re-flag (D-229); (8) VP-012 watermark harness basename is watermark.rs; harness_fn watermark_arithmetic_harness unchanged — do NOT re-flag (D-229).

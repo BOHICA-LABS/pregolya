@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.5 (FIX-BURST-280-WAVE-C/F-P175-A25/2026-07-28): Task 1 — PC-2 construction form alignment. Replace struct-literal `PregolyaError { component: Component::Embed, category: Category::Val, code: ..., message: ... }` (missing `retry_hint` and `source`; barred by `#[non_exhaustive]` for external callers) with canonical `PregolyaError::new(Component::Embed, Category::Val, RetryHint::Never, \"E-EMBED-001\", \"EmbeddingDimensionMismatch: embedding batch returned inconsistent vector lengths\")` form. Architect proposal verified: 5-arg order (component, category, retry_hint, code, message) matches ADR-010 §Decision pub fn new signature exactly; message matches error-taxonomy E-EMBED-001 canonical prefix `EmbeddingDimensionMismatch:` (distinct from E-VS-002 prefix `DimensionMismatch:` per v1.29 collision fix). No BC semantic change — PC2/PC3 contract preserved; validate_embedding_batch function spec (interface-definitions §core::embeddings) consistent with dimensionality invariants here."
   - "1.6 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). One CLASS3_ASCII_ELLIPSIS_VIOLATION corrected: PC2 partial-batch-error sentence `Err(PregolyaError { ... })` — replaced `...` with `..`. No behavioral change."
   - "1.7 (fix-burst-287/TD-VSDD-091+ADR-010-C3/2026-08-01): (1) VP-INDEX version pin removed: §VP Anchors 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX'; §Traceability VP Registration 'VP-INDEX v1.2 as' → 'VP-INDEX as' (no §-anchor introduced). (2) ADR-010 Class 3 fix: PC-2 prose PregolyaError::new(Component::Embed, ..., 'E-EMBED-001', ...) → PregolyaError { code: 'E-EMBED-001', .. } (observation form). verify-no-version-pins.sh PASS; verify-error-notation-canon.sh PASS."
+  - "1.8 (P2A-022/2026-08-21): Add Invariant 6 — Shared production validator. Names validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError> in core::embeddings as the single enforcement point for the dimensionality contract; all Embeddings impls must call it before returning Ok from embed_documents. Returns Err(E-EMBED-001) on count mismatch, zero-length inner vector, or inconsistent inner lengths. Structural requirement ensures VP-008 proptest harnesses fail rather than pass vacuously if validate_embedding_batch is removed or regressed. Traceability VP Registration updated with Invariant 6 anchor note. Per architect's ruling, P2A-022 fix-burst."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -36,7 +37,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "94c1172"
+input-hash: "1953e2c"
 extracted_from: null
 modified: []
 deprecated: null
@@ -98,6 +99,7 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
 4. **No `ndarray`** — return type is `Vec<f32>` (standard library). No heavy linear algebra
    dep is pulled into pregolya-core.
 5. `Embeddings: Send + Sync` — all impls must be thread-safe for use in multi-threaded Tokio tasks.
+6. **Shared production validator** — A public function `validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` in `core::embeddings` is the single enforcement point for the dimensionality contract. All `Embeddings` implementations call this function before returning `Ok` from `embed_documents`; the validation gate is NOT duplicated in individual impls or placed only in test mocks. `validate_embedding_batch` returns `Err(E-EMBED-001)` on: count mismatch (`vecs.len() != texts.len()`), any zero-length inner vector, or inconsistent inner lengths across `vecs`. This structure ensures VP-008 proptest harnesses fail — rather than pass vacuously — if `validate_embedding_batch` is removed or regressed.
 
 ## Edge Cases
 
@@ -158,7 +160,7 @@ _[to be filled after story decomposition — Wave 2 SS-22 story]_
 | L2 Domain Invariants | DI-008 (embed_documents and embed_query return Result; no .unwrap()), DI-014 (batch partial-failure propagates as Err; no silent truncation or Vec::new() fallback) |
 | Architecture Authority | ADR-017 Decisions 1 and 2 (trait placement, async dyn-compat shape, dimensionality contract, batch error semantics) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-008 (assigned in VP-INDEX as VP-008 — proptest P1; pregolya-core embeddings) |
+| VP Registration | VP-008 (assigned in VP-INDEX as VP-008 — proptest P1; pregolya-core embeddings; Invariant 6 is the structural BC anchor for the validate_embedding_batch single-enforcement-point obligation) |
 | Module | pregolya-core / core::embeddings |
 | Priority | P1 |
 | Wave | 2 |

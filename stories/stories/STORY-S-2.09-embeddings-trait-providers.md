@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "f46bdd3"
+input-hash: "710a7eb"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.06, S-1.02]
@@ -138,13 +138,28 @@ In legacy serial mode, if any per-text request fails, the entire `embed_document
 returns `Err`. Partial results from earlier texts are discarded. Verified by
 `test_BC_2_22_003_legacy_partial_failure_returns_err()`.
 
+### AC-017 (traces to BC-2.22.001 invariant 6)
+`validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>`
+is a public production function in `pregolya-core/src/embeddings.rs` (not test-only). All
+`Embeddings` implementations (`EmbeddingsOpenAI`, `EmbeddingsOllama`) call it before returning
+`Ok` from `embed_documents`. It returns `Err(PregolyaError { code: "E-EMBED-001", .. })` on:
+(1) `vecs.len() != texts.len()`; (2) any inner `vecs[i].len() == 0`; (3) inconsistent inner
+lengths across `vecs`. Empty input (`texts.is_empty()`) returns `Ok(())`. Verified by the
+VP-008 proptest harness (5 families A–E) in `pregolya-core/src/embeddings.rs`
+`#[cfg(test)] mod tests`.
+
 ## VP-008 Anchor
 
-VP-008 is the `proptest` property test for the `Embeddings` trait invariant: for any model
-implementing `Embeddings`, `embed_query(text)` must produce a vector of the same dimension
-as `embed_documents([text])[0]`. S-2.09 is the **anchor story** for VP-008 (SS-22 owns this
-subsystem; this story is where the `Embeddings` trait is introduced and where the
-property test vehicle lives). The test-writer creates `proptest_BC_2_22_001_embed_query_matches_documents_dim()` driven by VP-008 seed data.
+VP-008 is the `proptest` property test for the `Embeddings` dimensionality contract. S-2.09 is the **anchor story** for VP-008 (SS-22 owns this subsystem; this story is where the `Embeddings` trait and the shared production validator `validate_embedding_batch` are introduced).
+
+The VP-008 proptest harness lives in `pregolya-core/src/embeddings.rs` `#[cfg(test)] mod tests` — NOT in `pregolya-standard-tests`. It tests the production `validate_embedding_batch` function directly. The `RawMockEmbeddings` mock contains NO validation logic and returns raw vectors only; each of the 5 harness families calls the PRODUCTION `validate_embedding_batch` directly:
+- **VP-008-A:** random valid batch → `validate_embedding_batch` returns `Ok(())`
+- **VP-008-B:** empty input → `validate_embedding_batch` returns `Ok(())`
+- **VP-008-C:** ragged inner lengths → `Err(E-EMBED-001)` from production validator
+- **VP-008-D:** count mismatch → `Err(E-EMBED-001)` from production validator
+- **VP-008-E:** zero-length inner vector → `Err(E-EMBED-001)` from production validator
+
+No harness tests mock internals; all assertions exercise production code.
 
 ## Architecture Mapping
 
@@ -154,7 +169,7 @@ property test vehicle lives). The test-writer creates `proptest_BC_2_22_001_embe
 | `EmbeddingsOpenAI` | `pregolya-openai/src/embeddings.rs` | effectful (reqwest HTTP) |
 | `EmbeddingsOllama` | `pregolya-ollama/src/embeddings.rs` | effectful (reqwest HTTP) |
 | `OpenAiEmbeddingModel` enum | `pregolya-openai/src/embeddings.rs` | pure-core (data type) |
-| Dimension invariant checker | `pregolya-core/src/embeddings.rs` | pure-core (length comparison) |
+| `validate_embedding_batch` production fn | `pregolya-core/src/embeddings.rs` | pure-core (Vec length arithmetic; no I/O/async) |
 
 ## Purity Classification
 
@@ -163,7 +178,7 @@ property test vehicle lives). The test-writer creates `proptest_BC_2_22_001_embe
 | `Embeddings` trait | pure-core | No I/O; only defines the async method signatures |
 | `EmbeddingsOpenAI` | effectful | Issues HTTP requests to OpenAI `/v1/embeddings` endpoint |
 | `EmbeddingsOllama` | effectful | Issues HTTP requests to Ollama `/api/embed` or `/api/embeddings` |
-| Dimension validation | pure-core | Pure length checks on the returned `Vec<Vec<f32>>` |
+| `validate_embedding_batch` / embeddings.rs test harness | pure-core | VP-008 Kani/proptest is pure |
 
 ## Edge Cases
 
@@ -185,7 +200,7 @@ property test vehicle lives). The test-writer creates `proptest_BC_2_22_001_embe
 | `pregolya-core/src/embeddings.rs` (new) | ~500 |
 | Provider embeddings files (2 files) | ~1,500 |
 | Test files (~100 lines) | ~1,500 |
-| VP-008 proptest file | ~600 |
+| VP-008 proptest harness (in `pregolya-core/src/embeddings.rs` `#[cfg(test)] mod tests`) | ~800 |
 | Tool outputs | ~400 |
 | **Total** | **~15,000** |
 | Agent context window | 200K (Sonnet) |
@@ -193,7 +208,7 @@ property test vehicle lives). The test-writer creates `proptest_BC_2_22_001_embe
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-016, including Red Gate AC-006 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-017, including Red Gate AC-006 (test-writer step)
 2. [ ] **Red Gate check:** confirm `test_BC_2_22_002_openai_api_key_debug_is_redacted()` FAILS before implementation (stub uses derived Debug)
 3. [ ] Define `Embeddings` trait in `pregolya-core/src/embeddings.rs` with `async_trait`
 4. [ ] Write hand-coded `impl fmt::Debug for OpenAiApiKey` returning `"<redacted>"` (resolves Red Gate AC-006)
@@ -204,9 +219,10 @@ property test vehicle lives). The test-writer creates `proptest_BC_2_22_001_embe
 9. [ ] Register `embeddings.legacy_model_warning` in Canonical Structured Event Catalog (SAP-1)
 10. [ ] Implement `EmbeddingsOllama::embed_documents` — batch `/api/embed` + legacy `/api/embeddings`
 11. [ ] Implement `EmbeddingsOllama::embed_query` — single text via batch path
-12. [ ] Add VP-008 proptest harness in `pregolya-standard-tests/src/proptest_embeddings.rs`
-13. [ ] Run `cargo nextest run -p pregolya-core -p pregolya-openai -p pregolya-ollama` — all ACs green
-14. [ ] Confirm Red Gate AC-006 passes after implementation
+12. [ ] Define `pub fn validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` as a NON-test production fn in `pregolya-core/src/embeddings.rs` (per VP-008 §Proof Method + BC-2.22.001 Invariant 6): (1) Err(E-EMBED-001) if `vecs.len() != texts.len()`; (2) Ok(()) if `vecs.is_empty()`; (3) Err(E-EMBED-001) if any inner vec len == 0; (4) Err(E-EMBED-001) if any inner vec len != vecs[0].len(). All Embeddings impls (EmbeddingsOpenAI, EmbeddingsOllama) call it before returning Ok from embed_documents. Error construction per ADR-010 + error-taxonomy (E-EMBED-001).
+13. [ ] Write VP-008 proptest harness (5 property families A–E) in `pregolya-core/src/embeddings.rs` `#[cfg(test)] mod tests` per VP-008 §Proof Harness Skeleton: (A) `prop_validate_embedding_batch_accepts_valid` — random (dim 1..=4096, n 1..=64) uniform batch → Ok(()); (B) `prop_validate_embedding_batch_accepts_empty` — validate_embedding_batch(&[],&[]) → Ok(()); (C) `ragged_batch_rejected_by_production_validator` — 2 texts, vecs=[768-dim,512-dim] → Err code E-EMBED-001; (D) `count_mismatch_rejected_by_production_validator` — 3 texts, 2 vecs → Err(E-EMBED-001); (E) `zero_length_vector_rejected_by_production_validator` — 2 texts, vecs=[768-dim,0-dim] → Err(E-EMBED-001). Mock `RawMockEmbeddings { dim }` contains NO validation logic — returns raw vectors only; each family calls the PRODUCTION `validate_embedding_batch` directly.
+14. [ ] Run `cargo nextest run -p pregolya-core -p pregolya-openai -p pregolya-ollama` — all ACs green
+15. [ ] Confirm Red Gate AC-006 passes after implementation
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -234,6 +250,7 @@ not `&mut self` — implementations must not require interior mutability for the
 | `reqwest` with `rustls-tls`; `.timeout(Duration::from_secs(30))` | BC-2.22.002 postcondition 5; CLAUDE.md | Test AC-010; workspace dependency audit |
 | No auto-fallback between Ollama endpoints | BC-2.22.003 postcondition 4 | Test AC-015 |
 | `embeddings.legacy_model_warning` registered in Structured Event Catalog | SAP-1 | Pre-PR catalog row check |
+| `validate_embedding_batch` called by all `embed_documents` impls before returning Ok | BC-2.22.001 Invariant 6; VP-008 §Proof Obligations | Unit/proptest — removing `validate_embedding_batch` fails VP-008-A/C/D/E |
 
 **Forbidden dependencies:** `pregolya-core` embeddings module must NOT depend on `pregolya-openai`,
 `pregolya-ollama`, `pregolya-graph`, `pregolya-mcp`, or any other implementation crate. The
@@ -254,9 +271,8 @@ dependency from `pregolya-core` to any provider adapter crate MUST fail the buil
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-core/src/embeddings.rs` | CREATE | `Embeddings` trait definition |
+| `pregolya-core/src/embeddings.rs` | CREATE | `Embeddings` trait definition + production `validate_embedding_batch` fn + VP-008 proptest harness in `#[cfg(test)] mod tests` |
 | `pregolya-openai/src/embeddings.rs` | CREATE | `EmbeddingsOpenAI`, `OpenAiEmbeddingModel`, credential Debug |
 | `pregolya-ollama/src/embeddings.rs` | CREATE | `EmbeddingsOllama` batch + legacy endpoints |
-| `pregolya-standard-tests/src/proptest_embeddings.rs` | CREATE | VP-008 proptest harness |
 | `pregolya-openai/src/lib.rs` | MODIFY | Re-export `EmbeddingsOpenAI` |
 | `pregolya-ollama/src/lib.rs` | MODIFY | Re-export `EmbeddingsOllama` |

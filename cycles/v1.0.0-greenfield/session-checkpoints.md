@@ -2738,3 +2738,13 @@ Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 
 ### DECISION DELTA (v5.40)
 D-226 minted (P2A-020; scheduler.rs ownership). D-227 minted (P2A-021; VectorStore ordering + add_documents rename + BC anchor fills). P2A-018/019 CLEAN(strict); P2A-020/021 RESET. Human F-02/TDIV-009 waiver in effect (D-220).
+
+---
+
+## Archived Checkpoint v5.41 (replaced by v5.42; 2026-08-21)
+
+### RESUME IN ONE BREATH (v5.41)
+Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase 1 CLOSED. Phase 2 Story Decomposition: content COMPLETE (39 story specs, 133/133 BC coverage, 14 holdout scenarios SEALED). Currently in Phase-2 adversarial story-decomposition convergence (BC-5.39.001 3-CLEAN); streak 0/3. Adversary passes P2A-001..P2A-021 run; P2A-018/019 CLEAN(strict) (streak 1/3→2/3); P2A-020 NOT CLEAN (1M/1L; D-226; scheduler.rs ownership); P2A-021 NOT CLEAN (1H/3M/1L; D-227; VectorStore ordering + add_documents rename + BC anchors) — streak RESET 0/3 (P2A-021 reset). D-228 VP-anchor fix-burst COMPLETE (7 VP harness-path divergences closed corpus-wide; Phase-6-blocking class; streak UNCHANGED 0/3). NEXT: dispatch a FRESH vsdd-factory:adversary pass P2A-022 on the current post-fix-burst factory-artifacts HEAD (frozen-HEAD baseline reset by D-228 push).
+
+### DECISION DELTA (v5.41)
+D-226 minted (P2A-020; scheduler.rs ownership). D-227 minted (P2A-021; VectorStore ordering + add_documents rename + BC anchor fills). D-228 minted (VP-anchor module-path reconciliation; 7 VP harness-path divergences + 2 story extractions; Phase-6-blocking class closed corpus-wide). P2A-018/019 CLEAN(strict); P2A-020/021 RESET. Human F-02/TDIV-009 waiver in effect (D-220).
