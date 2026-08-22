@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.002.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "af5efb4"
+input-hash: "431744e"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]
@@ -63,7 +63,7 @@ tdd_mode: strict
 ### AC-005 (traces to BC-2.01.001 postcondition 5)
 `ContentBlock` has `#[non_exhaustive]` applied. An external-crate match without a wildcard arm fails to compile. `ContentBlock` implements `Debug`, `Clone`. Verified by compile-fail test.
 
-### AC-006 (traces to BC-2.01.001 edge case EC-001 — E-CORE-001)
+### AC-006 (traces to BC-2.01.001 edge case EC-006 — E-CORE-001)
 When strict content block validation mode is active and a block has an unrecognized type tag with no fallback, the error is `Err(PregolyaError { code: "E-CORE-001", message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`. In the default (non-strict) mode, `NonStandard` is returned instead. Verified by `test_BC_2_01_001_strict_mode_error()`.
 
 ### AC-007 (traces to BC-2.01.002 postcondition 1)

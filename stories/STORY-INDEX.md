@@ -149,6 +149,16 @@ input-hash: "pending"
 
 ---
 
+### Maintenance — EPIC-MAINT (out-of-wave)
+
+> Product-story census is **39** (unchanged). S-MAINT-001 is a housekeeping story outside the wave schedule; it does not block Phase-3.
+
+| ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
+|----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
+| S-MAINT-001 | BC Corpus Section Formatting Normalization | [] | — | .factory/specs/behavioral-contracts/ | P2 | 5 | [] | draft |
+
+---
+
 ## Conventions
 
 > **Story title and BC-table "Title" cells** are story-scoped intent summaries written by the

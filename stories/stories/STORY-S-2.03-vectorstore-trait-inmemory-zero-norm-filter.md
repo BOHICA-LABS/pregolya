@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "77be9d0"
+input-hash: "98e8500"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 10
 depends_on: [S-2.02, S-1.04, S-2.09]
@@ -74,13 +74,13 @@ fewer. Verified by `test_BC_2_21_001_similarity_search_at_most_k()`.
 `VectorStore::similarity_search_with_score` returns `Vec<(Document, f32)>` with scores in
 `[-1.0, 1.0]`. Verified by `test_BC_2_21_001_similarity_search_score_range()`.
 
-### AC-005 (traces to BC-2.21.001 postcondition 5)
+### AC-005 (traces to BC-2.21.001 postcondition 3 — VectorStoreFactory Sized-bounded)
 `VectorStoreFactory` is a separate trait with a `Sized` bound for methods that are not
 object-safe (e.g., `from_texts`). `VectorStoreFactory: Sized` ensures E0038 is impossible
 on `VectorStore`. The split is compile-time verified.
 Verified by `test_BC_2_21_001_vectorstore_factory_sized_split()`.
 
-### AC-006 (traces to BC-2.21.001 postcondition 6)
+### AC-006 (traces to BC-2.21.001 postcondition 2 — instance-methods list: delete/MMR/as_retriever)
 `VectorStore::delete(&self, ids: &[&str]) -> Result<(), PregolyaError>` removes documents
 by ID. Deleting non-existent IDs is a no-op (returns `Ok(())`). Verified by
 `test_BC_2_21_001_delete_nonexistent_noop()`.

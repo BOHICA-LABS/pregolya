@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "a528560"
+input-hash: "c2bf9cb"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.14, S-1.04, S-1.10, S-1.17]
@@ -77,10 +77,10 @@ Each sub-agent spawned via the Send API receives an independent `BudgetPolicy` e
 ### AC-007 (traces to BC-2.10.002 postcondition 3 — journal backed by SQLite checkpoint)
 `EvidenceJournal` persists entries to the SQLite checkpoint backend via `SqliteCheckpointSaver` in `pregolya-checkpoint/src/saver.rs`. Verified by `test_BC_2_10_002_journal_backed_by_sqlite()`.
 
-### AC-008 (traces to BC-2.10.002 invariant 1 — E-BUDGET-002 on journal write failure)
+### AC-008 (traces to BC-2.10.002 edge case EC-001 — E-BUDGET-002 on journal write failure)
 If the journal fails to write an entry (I/O error, constraint violation), the budget evaluation returns `Err(PregolyaError { category: BUDGET, code: E-BUDGET-002, .. })`. The graph run does not proceed as if the journal write succeeded. Verified by `test_BC_2_10_002_journal_write_failure_returns_error()`.
 
-### AC-009 (traces to BC-2.10.003 postcondition 1 — OnCeiling::Halt produces E-BUDGET-001)
+### AC-009 (traces to BC-2.10.003 postcondition 5 — OnCeiling::Halt produces E-BUDGET-001)
 When `PolicyDecision::Deny` is returned and `BudgetConfig.on_ceiling = OnCeiling::Halt`, the scheduler halts the run and returns `Err(PregolyaError { category: BUDGET, code: E-BUDGET-001, retry_hint: Never, .. })`. No further nodes execute. Verified by `test_BC_2_10_003_halt_on_ceiling_returns_e_budget_001()`.
 
 ### AC-010 (traces to BC-2.10.003 postcondition 2 — OnCeiling::Summarize calls one final LLM)

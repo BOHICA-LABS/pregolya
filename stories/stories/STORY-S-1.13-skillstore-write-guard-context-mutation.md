@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8da33dd"
+input-hash: "c8bf3aa"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.12, S-1.04, S-1.14, S-1.17]
@@ -71,7 +71,7 @@ tdd_mode: strict
 ### AC-007 (traces to BC-2.15.005 postcondition 2 — fail-closed on panic)
 If a custom `MemoryWriteGuard` implementation panics inside `validate`, the panic is caught via `std::panic::catch_unwind` and the result is `Deny { reason: "write guard panicked" }`. The memory write does NOT proceed when the guard panics. Verified by `test_BC_2_15_005_panic_fails_closed()` (custom guard that always panics).
 
-### AC-008 (traces to BC-2.15.005 postcondition 3 — E-MEMORY-007 on Deny)
+### AC-008 (traces to BC-2.15.005 postcondition 2 — E-MEMORY-007 on Deny)
 When `validate` returns `Deny`, the memory write returns `Err(PregolyaError { code: "E-MEMORY-007", message: "MemoryWriteGuardDenied: ...", category: SECURITY, severity: broken, .. })`. The error is classified SECURITY and severity `broken` (never a transient retry). Verified by `test_BC_2_15_005_deny_produces_e_memory_007()`.
 
 ### AC-009 (traces to BC-2.15.005 postcondition 4 — built-in role prefix scanner)
@@ -80,7 +80,7 @@ The built-in `MemoryWriteGuard` implementation scans for role injection prefixes
 ### AC-010 (traces to BC-2.15.005 postcondition 5 — invisible Unicode scanner)
 The built-in scanner also detects invisible Unicode in the write value: U+200B..U+200F (zero-width spaces), U+FEFF (BOM), U+202A..U+202E (bidirectional overrides). If detected, returns `Deny { reason: "invisible Unicode detected" }`. Verified by `test_BC_2_15_005_invisible_unicode_denied()` with each code point range.
 
-### AC-011 (traces to BC-2.15.005 postcondition 6 — Transform decision)
+### AC-011 (traces to BC-2.15.005 postcondition 3 — Transform decision)
 When `validate` returns `Transform { sanitized }`, the memory write proceeds with `sanitized` content (not the original). The `Remove` variant of content sanitization (removing invisible chars) always produces `Allow` from the built-in scanner after sanitization. Verified by `test_BC_2_15_005_transform_decision_uses_sanitized()`.
 
 ### AC-012 (traces to BC-2.15.005 invariant 1 — type split)

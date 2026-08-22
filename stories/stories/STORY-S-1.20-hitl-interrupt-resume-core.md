@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "63bbdaa"
+input-hash: "cf7c625"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.16, S-1.17, S-1.10]
@@ -69,7 +69,7 @@ The INTERRUPT marker is written via synchronous `put_writes` to the checkpoint, 
 ### AC-003 (traces to BC-2.05.001 postcondition 3 — interrupt_id is unique per call)
 Each `interrupt(value)` call generates a unique `interrupt_id` (UUID v4). Multiple `interrupt()` calls in the same run produce distinct `interrupt_id` values. Verified by `test_BC_2_05_001_interrupt_id_is_unique()`.
 
-### AC-004 (traces to BC-2.05.001 invariant 1 — E-GRAPH-016 on INTERRUPT marker write failure)
+### AC-004 (traces to BC-2.05.001 edge case EC-001 — E-GRAPH-016 on INTERRUPT marker write failure)
 If `put_writes` fails during INTERRUPT marker write, the scheduler returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-016, .. })`. The run does not continue with a partial checkpoint. Verified by `test_BC_2_05_001_marker_write_failure_returns_e_graph_016()`.
 
 ### AC-005 (traces to BC-2.05.002 postcondition 1 — resume value delivered FIFO to interrupted task)
@@ -96,7 +96,7 @@ Re-executing the node with the scratchpad populated is idempotent: repeated `Com
 ### AC-012 (traces to BC-2.05.004 postcondition 2 — Command.PARENT shorthand maps to parent run)
 `Command.PARENT` as a `goto` target resolves to the parent run's ID (for subgraph-spawned tasks). Using `Command.PARENT` on a top-level run returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-015, .. })`. Verified by `test_BC_2_05_004_command_parent_resolves_or_errors()`.
 
-### AC-013 (traces to BC-2.05.004 postcondition 3 — Command on non-interrupted run returns E-GRAPH-002)
+### AC-013 (traces to BC-2.05.004 edge case EC-004 — Command on non-interrupted run returns E-GRAPH-002)
 Sending `Command(resume=v)` to a run that is not in interrupted state returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-002, .. })` with fields `{ thread_id, run_status }`. Verified by `test_BC_2_05_004_command_on_non_interrupted_run_returns_e_graph_002()`.
 
 ### AC-014 (traces to BC-2.05.004 invariant 1 — interrupt_id field is canonical in Command)
@@ -123,7 +123,7 @@ An unrecognised `ActionRisk` variant (future addition, deserialised from a newer
 ### AC-021 (traces to BC-2.05.006 postcondition 3 — risk gate triggers interrupt for configured threshold)
 When a tool call carries `ActionRisk` at or above the configured `RiskGatePolicy` threshold, the scheduler calls `interrupt()` with `HitlInterruptPayload { action_risk, action, context }` before the tool executes. Verified by `test_BC_2_05_006_risk_gate_triggers_interrupt()`.
 
-### AC-022 (traces to BC-2.05.006 postcondition 4 — E-GRAPH-013 on risk gate rejection)
+### AC-022 (traces to BC-2.05.006 edge case EC-001 — E-GRAPH-013 on risk gate rejection)
 When the HITL operator rejects a risk-gated action, the scheduler returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-013, .. })`. The tool is not called. Verified by `test_BC_2_05_006_risk_gate_rejection_e_graph_013()`.
 
 ### AC-023 (traces to BC-2.05.006 invariant 1 — lazy deadline evaluation for risk gate)

@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "90ef359"
+input-hash: "5b3f30f"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14, S-1.04, S-1.15]
@@ -69,7 +69,7 @@ Events maintain causal order: `RunStart` precedes all other run events; `StepSta
 ### AC-005 (traces to BC-2.06.001 postcondition 5 — StreamEvent::Error as 16th variant)
 `StreamEvent::Error { run_id, error: PregolyaError, .. }` is the 16th variant. It can be emitted at any point during execution when an unrecoverable error occurs. Verified by `test_BC_2_06_001_error_variant_emittable()`.
 
-### AC-006 (traces to BC-2.06.001 postcondition 6 — RunEnd only for completed and summary_halt)
+### AC-006 (traces to BC-2.06.001 edge case EC-005 — RunEnd only for completed and summary_halt)
 `RunEnd` is emitted only when the run transitions to `completed` or `summary_halt` final states. Runs that end in `failed`, `cancelled`, or `interrupted` states do NOT emit `RunEnd`. Verified by `test_BC_2_06_001_run_end_only_for_completed_or_summary_halt()`.
 
 ### AC-007 (traces to BC-2.06.002 postcondition 1 — every event carries run_id)

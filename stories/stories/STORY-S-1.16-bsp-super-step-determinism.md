@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "881926f"
+input-hash: "4149f6a"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.15, S-1.10, S-1.13, S-1.17, S-1.18]
@@ -63,7 +63,7 @@ When the current step count exceeds `step_at_invoke_start + recursion_limit + 1`
 ### AC-003 (traces to BC-2.03.001 postcondition 3 — custom recursion_limit respected)
 When `RunnableConfig::recursion_limit` is set to a value other than 25, the ceiling uses the configured value. Verified by `test_BC_2_03_001_custom_recursion_limit()`.
 
-### AC-004 (traces to BC-2.03.001 invariant 1 — E-GRAPH-006 on run ID collision)
+### AC-004 (traces to BC-2.03.001 edge case EC-005 — E-GRAPH-006 on run ID collision)
 If two concurrent runs attempt to use the same `run_id`, the engine returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-006, .. })` with field `{ run_id }`. Verified by `test_BC_2_03_001_run_id_collision_error()`.
 
 ### AC-005 (traces to BC-2.03.001 postcondition 4 — VP-001 Kani harness anchored here)

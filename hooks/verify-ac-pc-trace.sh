@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-ac-pc-trace.sh — pregolya factory-artifacts ADVISORY validator
+# verify-ac-pc-trace.sh — pregolya factory-artifacts BLOCKING validator
 #
 # PURPOSE
 # ───────
@@ -37,21 +37,19 @@
 # All .factory/stories/stories/STORY-S-*.md files (39 stories).
 # Self-scope exclusion: this file is in .factory/hooks/ and is never parsed.
 #
-# EXIT CONTRACT (ADVISORY MODE)
-# ─────────────────────────────
-# Always exits 0. Does NOT block commits.
+# EXIT CONTRACT (BLOCKING MODE)
+# ──────────────────────────────
+# Exits 1 when DRIFT > 0 (blocks commits). Exits 0 when DRIFT == 0.
 # Emits DRIFT lines for each flagged citation.
-# Ends with: RESULT: ADVISORY (N drift citations across M stories)
-#
-# Post-batch-fix flip: wire into pre-commit-validators.sh and flip to exit 1
-# on FAIL after the P2A-032 batch-fix clears the worklist.
+# Ends with: RESULT: FAIL (N drift citations across M stories)
+#         or RESULT: PASS (0 drift citations across M stories)
 #
 # POL-26: Edit/Write tools only for .factory/ mutations.
 # POL-30: Self-scope exclusion — hooks dir excluded from lint scope.
 # TD-VSDD-091: No file:NNN line citations in comments or output text.
 #
 # Usage:  bash .factory/hooks/verify-ac-pc-trace.sh
-# Exit:   0 always (advisory mode)
+# Exit:   0 when DRIFT==0; 1 when DRIFT>0 (blocking mode)
 
 set -euo pipefail
 
@@ -169,8 +167,10 @@ def count_bullet_items(section_text):
 
 
 def get_ec_ids(section_text):
-    """Return set of EC-NNN IDs found in ### EC-NNN: headers."""
-    return set(re.findall(r'###\s+(EC-\d+)\b', section_text))
+    """Return set of EC-NNN IDs found in ### EC-NNN: headers or table rows."""
+    header_ids = set(re.findall(r'###\s+(EC-\d+)\b', section_text))
+    table_ids  = set(re.findall(r'^\|\s*(EC-\d+)\s*\|', section_text, re.MULTILINE))
+    return header_ids | table_ids
 
 
 def get_item_text(section_text, section_type, number_or_ec):
@@ -198,31 +198,56 @@ def get_item_text(section_text, section_type, number_or_ec):
         return '\n'.join(item_lines)
 
     elif section_type == 'invariant':
-        # Ordinal bullet: the N-th bullet item
         n = number_or_ec
         lines = section_text.split('\n')
-        count = 0
-        capturing = False
-        item_lines = []
-        for line in lines:
-            if re.match(r'^-\s', line):
-                count += 1
-                if count == n:
-                    capturing = True
-                    item_lines.append(line)
+        # Detect list style: numbered (^\d+\.) wins over bullet (^-)
+        is_numbered = any(re.match(r'^\d+\.\s', l) for l in lines)
+        if is_numbered:
+            # Walk numbered items, match by label (N. text) like postcondition branch
+            capturing = False
+            item_lines = []
+            for line in lines:
+                lm = re.match(r'^(\d+)\.\s', line)
+                if lm:
+                    if int(lm.group(1)) == n:
+                        capturing = True
+                        item_lines.append(line)
+                    elif capturing:
+                        break
                 elif capturing:
-                    break
-            elif capturing:
-                # continuation lines (indented)
-                if line.startswith('  ') or line.startswith('\t') or line == '':
                     item_lines.append(line)
-                else:
-                    break
-        return '\n'.join(item_lines)
+            return '\n'.join(item_lines)
+        else:
+            # Bullet style: the N-th bullet item (ordinal)
+            count = 0
+            capturing = False
+            item_lines = []
+            for line in lines:
+                if re.match(r'^-\s', line):
+                    count += 1
+                    if count == n:
+                        capturing = True
+                        item_lines.append(line)
+                    elif capturing:
+                        break
+                elif capturing:
+                    # continuation lines (indented)
+                    if line.startswith('  ') or line.startswith('\t') or line == '':
+                        item_lines.append(line)
+                    else:
+                        break
+            return '\n'.join(item_lines)
 
     elif section_type == 'edge_case':
-        # EC-NNN block: from ### EC-NNN: to next ### or ##
         ec_id = number_or_ec  # e.g. 'EC-001'
+        # Detect table format: section has rows matching | EC-NNN |
+        if re.search(r'^\|\s*EC-\d+\s*\|', section_text, re.MULTILINE):
+            # Table format: return the full matching row so error codes are visible
+            for row in section_text.split('\n'):
+                if re.match(r'^\|\s*' + re.escape(ec_id) + r'\s*\|', row):
+                    return row
+            return ''
+        # Header-block format: ### EC-NNN: to next ### or ##
         pattern = re.compile(
             r'^###\s+' + re.escape(ec_id) + r'\b',
             re.MULTILINE
@@ -231,9 +256,10 @@ def get_item_text(section_text, section_type, number_or_ec):
         if not m:
             return ''
         start = m.start()
-        # Find next ### or ## heading
-        next_h = re.search(r'^#{2,3} ', section_text[start+1:], re.MULTILINE)
-        end = start + 1 + next_h.start() if next_h else len(section_text)
+        # Search from m.end() so the current ### line is never re-matched
+        rest = section_text[m.end():]
+        next_h = re.search(r'^#{2,3} ', rest, re.MULTILINE)
+        end = m.end() + next_h.start() if next_h else len(section_text)
         return section_text[start:end]
 
     return ''
@@ -268,7 +294,7 @@ def load_bc(bc_id):
         'ec_section':    ec_section,
         'pc_numbers':    count_numbered_items(pc_section),
         'pc_max':        max(count_numbered_items(pc_section), default=0),
-        'inv_count':     count_bullet_items(inv_section),
+        'inv_count':     max(len(count_numbered_items(inv_section)), count_bullet_items(inv_section)),
         'pre_numbers':   count_numbered_items(pre_section),
         'pre_max':       max(count_numbered_items(pre_section), default=0),
         'ec_ids':        get_ec_ids(ec_section),
@@ -503,14 +529,12 @@ echo "           reason=code-absent when code is in AC but absent from the speci
 echo "  CHECK 3: Keyword-overlap heuristic (suppressed in v1 — advisory only at AC level)"
 echo "           reason=low-overlap (reserved for future use)"
 echo ""
-echo "Per-story pass/fail above. DRIFT lines are the fix worklist for P2A-032 batch-fix."
+echo "Per-story pass/fail above."
 echo ""
-echo "NOT WIRED as blocking yet — flip to exit 1 after P2A-032 batch-fix clears the worklist:"
-echo "  1. Add to .factory/hooks/pre-commit-validators.sh"
-echo "  2. Change advisory mode (always exits 0) to blocking (exit 1 on DRIFT > 0)"
-echo "  3. Register in .factory/policies.yaml as active hook"
-echo ""
-echo "RESULT: ADVISORY ($DRIFT drift citations across $STORIES_WITH_DRIFT stories)"
-
-# Advisory mode: always exit 0
-exit 0
+if [ "$DRIFT" -gt 0 ]; then
+  echo "RESULT: FAIL ($DRIFT drift citations across $STORIES_WITH_DRIFT stories)"
+  exit 1
+else
+  echo "RESULT: PASS (0 drift citations across $STORIES_WITH_DRIFT stories)"
+  exit 0
+fi

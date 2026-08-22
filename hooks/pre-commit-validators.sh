@@ -67,6 +67,11 @@
 #       sections against §Grand-Total declared canonical total in test-vectors.md.
 #       Ground truth: 676 canonical TVs in 129 BC bodies == 676 declared in registry.
 #       Catches Mechanism-3 drift (registry internal arithmetic drifting from BC bodies).
+#   verify-ac-pc-trace.sh                  — (CLEAN) AC→BC postcondition/invariant/precondition/edge-case
+#       citation existence. Exits 1 when any cited item is absent from the referenced BC
+#       (reason=nonexistent) or an asserted error code is absent from the specifically-cited
+#       item (reason=code-absent). Promoted to blocking with 0 DRIFT across 519 citations / 39
+#       stories (human-authorized 2026-08-22). POL-48.
 #   verify-adr-anchor-citations.sh         — (CLEAN) §Named-Section citation existence.
 #       Promoted to BLOCKING at burst-290 (closes F-180-PG PROCESS). Architecture +
 #       product-owner swept corpus to ZERO live-body phantom ADR §-citations before
@@ -102,7 +107,7 @@ PASSED_VALIDATORS=()
 PASS_COUNT=0
 # Single source of truth for the expected blocking validator roster size.
 # Update this constant when adding or removing a blocking validator.
-EXPECTED_BLOCKING_COUNT=14
+EXPECTED_BLOCKING_COUNT=15
 
 # run_blocking runs a validator and records failure in FAILED_VALIDATORS
 run_blocking() {
@@ -168,6 +173,7 @@ run_blocking "verify-module-canonicality.sh"
 run_blocking "verify-bc-frontmatter-schema.sh"
 run_blocking "verify-tv-registry-count.sh"
 run_blocking "verify-adr-anchor-citations.sh"
+run_blocking "verify-ac-pc-trace.sh"
 
 # ── Advisory validators (run but do not block; see header for promotion paths) ─
 echo ""

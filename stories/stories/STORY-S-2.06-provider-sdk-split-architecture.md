@@ -12,12 +12,12 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b9f6b34"
+input-hash: "3c2f849"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.04]
 blocks: [S-2.07, S-2.09]
-behavioral_contracts: [BC-2.08.006]
+behavioral_contracts: [BC-2.08.006, BC-2.14.005]
 verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
@@ -43,6 +43,7 @@ tdd_mode: strict
 | BC | Title | Priority |
 |----|-------|---------|
 | BC-2.08.006 | Provider SDK Two-Crate Split: pregolya-<provider>-sdk (wire client, no pregolya-core dep) + pregolya-<provider> (adapter); reqwest rustls-tls mandatory; SDK builder timeout enforcement (E-CORE-005) | P1 |
+| BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | P0 |
 
 ## Acceptance Criteria
 
@@ -79,7 +80,7 @@ timeout. The reqwest client is constructed with `ClientBuilder::new()` + `.timeo
 + `.build()`.
 Verified by `test_BC_2_08_006_sdk_builder_with_timeout_ok()`.
 
-### AC-005 (traces to BC-2.08.006 postcondition 5)
+### AC-005 (traces to BC-2.08.006 postcondition 1 — crate-separation topology)
 SDK crates (`pregolya-openai-sdk` etc.) have NO dependency on any `pregolya-*` adapter crate.
 The dependency graph is:
 ```
@@ -89,7 +90,7 @@ pregolya-openai       → depends on pregolya-core + pregolya-openai-sdk
 Any SDK crate that gains a `pregolya-core` dependency fails a CI cargo-deny check.
 Verified by `test_BC_2_08_006_sdk_dep_graph_acyclic_no_core()`.
 
-### AC-006 (traces to BC-2.08.006 postcondition 6)
+### AC-006 (traces to BC-2.14.005 postcondition 2 — credential newtype REDACTED Debug)
 API key types in SDK crates (`OpenAiApiKey`, `AnthropicApiKey`, `OllamaBaseUrl`) are
 newtypes with REDACTED `Debug` implementations:
 ```
@@ -149,15 +150,15 @@ Verified by `test_BC_2_08_006_no_silent_default_timeout()`.
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
 | This story spec | ~3,200 |
-| BC files (1 BC) | ~3,500 |
+| BC files (2 BCs) | ~6,000 |
 | `module-decomposition.md` (SS-08 section) | ~400 |
 | 6 × Cargo.toml stubs (~15 lines each) | ~500 |
 | 6 × lib.rs stubs (~30 lines each) | ~1,000 |
 | Test files (~80 lines) | ~1,200 |
 | Tool outputs | ~500 |
-| **Total** | **~10,300** |
+| **Total** | **~12,800** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~5%** |
+| **Budget usage** | **~6.4%** |
 
 ## Tasks (MANDATORY)
 
@@ -201,7 +202,7 @@ workspace — set the correct pattern from the start. Future crates inherit this
 | `native-tls`, `default-tls`, `native-tls-alpn`, `native-tls-vendored` absent from all Cargo.toml files | CLAUDE.md Code Conventions | grep check in CI |
 | SDK builder `.build()` without `.timeout()` returns `Err(E-CORE-005)` | BC-2.08.006 postcondition 3 | Unit test AC-003 |
 | No silent 30s default timeout in builder | BC-2.08.006 invariant 2 | Unit test AC-008 |
-| Credential newtypes have REDACTED `Debug` — no `Display` | CLAUDE.md Code Conventions; BC-2.08.006 postcondition 6 | Unit tests AC-006 |
+| Credential newtypes have REDACTED `Debug` — no `Display` | CLAUDE.md Code Conventions; BC-2.14.005 postcondition 2 | Unit tests AC-006 |
 | `lib.rs` and `mod.rs` are re-export-only | CLAUDE.md Code Conventions | Code review |
 
 **Forbidden dependencies:** `pregolya-openai-sdk`, `pregolya-anthropic-sdk`, `pregolya-ollama-sdk` must NOT depend on `pregolya-core`, `pregolya-graph`, `pregolya-prompts`, `pregolya-vectorstores`, or any other `pregolya-*` crate. SDK crates must be independently publishable to crates.io with zero internal dependencies.

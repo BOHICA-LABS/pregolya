@@ -810,3 +810,18 @@ policies:
       - "For each new or amended ADR or policy: grep for the pattern of two consecutive §-anchors ('§[^ ]+' followed by '§') in the document body; verify no chained double-§ forms per ADR-022 §Decision 5"
       - "For each new or amended ADR or policy introducing a restriction: identify at least one location in the document itself where the restriction was applied — if none exists, flag as POL-47 violation (architect two-step self-check step b)"
       - "For each new or amended policy citing a numeric corpus measurement: verify the count source is stated as a devops-engineer command output in the same burst, not an adversary report count — cite the measurement command explicitly in the policy description"
+
+  - id: 48
+    name: story_ac_bc_citation_integrity
+    description: "Every story acceptance-criterion BC citation — of the form (traces to BC-S.SS.NNN <section> <n>) where section is postcondition/invariant/precondition/edge case and n is the item number or EC-NNN — must reference an item that actually exists in the referenced BC file. The cited numbered postcondition, invariant, precondition, or edge-case identifier must exist in the corresponding BC section. Additionally, if the AC text asserts an error code (E-XXX-NNN), that code must appear in the text of the specifically-cited item (not merely elsewhere in the BC). Enforced mechanically by hooks/verify-ac-pc-trace.sh (BLOCKING: exits 1 when DRIFT > 0). The validator is format-agnostic: invariants may be numbered or bullet-list items; edge cases may use ### EC-NNN header blocks or table rows. Scope: stories, phase-2 onward."
+    adopted: "human-authorized 2026-08-22 — P2A-032 batch-fix cleared 0 DRIFT across 519 citations / 39 stories; promoted from advisory to blocking"
+    severity: HIGH
+    enforced_by: [hooks/verify-ac-pc-trace.sh, adversary-prompt, story-writer]
+    scope: [story]
+    lint_hook: null
+    verification_steps:
+      - "Run hooks/verify-ac-pc-trace.sh: verify exit 0 and RESULT: PASS — any DRIFT line is a POL-48 violation"
+      - "For each DRIFT reason=nonexistent: the cited section item number does not exist in the BC — update AC to cite an existing item or fix the BC"
+      - "For each DRIFT reason=code-absent: the AC asserts an error code not present in the specifically-cited item — verify the trace number is correct or update the BC item to include the code"
+      - "Validator is format-agnostic: numbered invariants (1. …) and bullet invariants (- …) are both parsed; edge cases in ### EC-NNN: header-block format and pipe-table row format are both parsed"
+      - "Slash-separated multi-cite forms (postconditions 1/2/3) and PC-shorthand table formats are excluded from machine scope — verify these manually by reading the cited BC items"

@@ -3481,3 +3481,56 @@ Two distinct drift classes:
 (25) All 59 drift citations enumerated in this pass record — these will be corrected in the P2A-032 batch-fix burst; do NOT re-flag as new findings in P2A-033 if the batch-fix has already corrected them; (26) verify-ac-pc-trace.sh ADVISORY validator exists in `.factory/hooks/` — its blocking mode is intentionally deferred until after batch-fix (D-239); do NOT re-flag validator non-blocking status as a finding post-batch-fix-burst; (27) S-1.21..S-1.27 citations=0 — these stories have no BC-citing ACs by design (they are implementation stories with no postcondition trace citations); PASS is correct.
 
 **Convergence dim-5 (Phase-2 P2A-032):** Counter **0/3 — RESET (D-239; 2026-08-22)**. Validator-first batch-fix PENDING. NEXT: PO adjudicates S-2.06 gap → story-writer parallel-fork batch-fix (17 stories) → re-run to 0 DRIFT → devops flips blocking → state-manager single-commit → P2A-033 (streak restart 1/3 attempt).
+
+---
+
+## P2A-032 Fix-Burst — Resolution Record (2026-08-22; D-240)
+
+### Summary
+
+**Status: RESOLVED** — validator-first fix burst COMPLETE (D-240; human-authorized 2026-08-22, senior architect).
+
+**Root cause confirmed:** verify-ac-pc-trace.sh had THREE parser blind-spots yielding false-positive DRIFT:
+
+- **(A) Numbered invariants not counted:** invariants recognized only as bullet lists; 40 of 133 BCs write `## Invariants` as numbered lists (BC-2.04, BC-2.11, BC-2.13, BC-2.18, BC-2.19, BC-2.20, BC-2.21, BC-2.22 families) — yielded false-positive "nonexistent" citations for stories citing `invariant_N`
+- **(B) Table-format edge cases not recognized:** edge cases recognized only via `### EC-NNN` headers; 53 of 133 BCs use Markdown-table edge cases — yielded false-positive "nonexistent" citations for stories citing `ec_N`
+- **(C) Off-by-one in edge-case text extraction:** spurious code-absent classifications on otherwise-valid citations
+
+**False positive count:** 45 of 59 DRIFT citations were false positives produced by these parser defects. Genuine drift: 14 citations across 8 stories.
+
+### Genuine Fixes Applied
+
+14 genuine AC citation re-anchors across 8 stories (S-1.03, S-1.13, S-1.16, S-1.17, S-1.18, S-1.20, S-2.03, S-2.06):
+
+- **S-1.03, S-1.13, S-1.16, S-1.17, S-1.18, S-1.20, S-2.03:** code-absent citations re-anchored to the BC location containing the asserted error code; over-cited postconditions retraced to correct existing PC/EC items
+- **S-2.06 AC-006:** re-anchored to BC-2.14.005 PC-2 (API Key Newtype with Redacted Debug) with POLICY-8 frontmatter propagation and BC-table update — PO-adjudicated resolution; the behaviors asserted (rustls-tls backend, credential-redacted newtypes, 30s timeout) are covered by BC-2.14.005 and code conventions, not BC-2.08.006
+
+### Validator Status After Fix
+
+Re-run: `bash .factory/hooks/verify-ac-pc-trace.sh` → **0 DRIFT across 519 citations / 39 stories**
+
+Validator changes in this burst:
+- Parser made format-agnostic: numbered and bullet invariants both counted; header-style and table-style edge cases both recognized; off-by-one extraction corrected
+- Status flipped to **BLOCKING** (exit 1 on any DRIFT > 0) — human-authorized in-session 2026-08-22 (senior architect)
+- Wired into `.factory/hooks/pre-commit-validators.sh` (blocking count 14→15)
+- Registered as **POL-48** `story_ac_bc_citation_integrity` in `.factory/policies.yaml`
+
+### DEFER-004 Partial Realization
+
+POL-48 realizes the AC→PC canonical-form drift-detection class proposed in DEFER-004. DEFER-004 remains open for the broader scope (additional citation-integrity validator categories per devops discretion).
+
+### Follow-up Story
+
+**S-MAINT-001** (BC Corpus Section Formatting Normalization) registered as out-of-wave EPIC-MAINT story (draft; human-directed 2026-08-22): 93 of 133 BCs use bullet-list invariants, 40 use numbered-list invariants; 80 use header-style edge cases, 53 use table-style edge cases. Format normalization is a housekeeping task; does not block Phase-3 or the P2A-033 adversary pass.
+
+### Superseded Edits
+
+stash@{0} in main worktree holds superseded route-around edits from the pre-validator-fix approach (droppable after confirming P2A-033 dispatches cleanly against new HEAD).
+
+### ACCEPTED/DO-NOT-REFLAG for P2A-033 (add to existing list items 1–27)
+
+(28) verify-ac-pc-trace.sh now BLOCKING with 0/519 DRIFT — do NOT re-flag validator as non-blocking; (29) S-MAINT-001 (out-of-wave, draft) tracks BC corpus formatting inconsistency — do NOT re-flag numbered-vs-bullet or header-vs-table invariant/edge-case format inconsistency as a Phase-3 blocker; (30) S-2.06 AC-006 re-anchored to BC-2.14.005 PC-2 (D-240) — do NOT re-flag as BC-2.08.006 postcondition gap.
+
+### Convergence Counter
+
+**Phase-2 P2A-032 fix-burst COMPLETE (D-240; 2026-08-22).** Streak 0/3. NEXT: fresh `vsdd-factory:adversary` P2A-033 on new HEAD.
