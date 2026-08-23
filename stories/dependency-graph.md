@@ -116,14 +116,6 @@ S-1.20 (HITL Core)
   depends_on: [S-1.16, S-1.17, S-1.10]
   blocks: S-1.23
 
-S-1.21 (File System Tools)
-  depends_on: [S-1.09, S-1.04, S-1.07]
-  blocks: S-1.22
-
-S-1.22 (Bash + Grep Tools)
-  depends_on: [S-1.09, S-1.21, S-1.06]
-  blocks: S-2.10, S-6.01
-
 S-1.23 (PreToolCallHook)
   depends_on: [S-1.20, S-1.17]
   blocks: S-1.24, S-6.01
@@ -135,6 +127,18 @@ S-1.24 (Approval + Compaction Events)
 S-1.25 (Compaction Execution)
   depends_on: [S-1.10, S-1.18, S-1.24]
   blocks: S-6.01
+```
+
+### Wave 1 — pregolya-tools (E-13)
+
+```
+S-1.21 (File System Tools)
+  depends_on: [S-1.09, S-1.04, S-1.07]
+  blocks: S-1.22
+
+S-1.22 (Bash + Grep Tools)
+  depends_on: [S-1.09, S-1.21, S-1.06]
+  blocks: S-2.10, S-6.01
 ```
 
 ### Wave 1 — pregolya-server (E-14)

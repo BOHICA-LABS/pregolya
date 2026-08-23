@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-ac-pc-trace.sh — pregolya factory-artifacts BLOCKING validator
+# verify-ac-pc-trace.sh — pregolya factory-artifacts BLOCKING/ADVISORY validator
 #
 # PURPOSE
 # ───────
@@ -20,12 +20,14 @@
 #     - Edge Cases: ### EC-NNN: headers in ## Edge Cases
 #   reason=nonexistent in DRIFT output.
 #
-# CHECK 2 — Error-code co-location check:
+# CHECK 2 — Error-code co-location check (ADVISORY — non-blocking):
 #   If the AC text asserts an error code (E-XXX-NNN), verify that SAME code
 #   appears in the text of the specifically-cited PC/INV/EC item in the BC.
 #   A code that is absent from the cited item but present elsewhere in the BC
 #   is a strong signal the trace number is wrong.
-#   reason=code-absent in DRIFT output.
+#   reason=code-absent in ADVISORY output (heuristic; error codes may appear
+#   in ACs as examples, table-row contrasts, or inline illustrations without
+#   implying the cited item must contain them).
 #
 # CHECK 3 — Keyword-overlap heuristic (ADVISORY hints only):
 #   When the AC's key nouns/verbs have near-zero overlap with the cited
@@ -37,12 +39,16 @@
 # All .factory/stories/stories/STORY-S-*.md files (39 stories).
 # Self-scope exclusion: this file is in .factory/hooks/ and is never parsed.
 #
-# EXIT CONTRACT (BLOCKING MODE)
-# ──────────────────────────────
-# Exits 1 when DRIFT > 0 (blocks commits). Exits 0 when DRIFT == 0.
-# Emits DRIFT lines for each flagged citation.
-# Ends with: RESULT: FAIL (N drift citations across M stories)
-#         or RESULT: PASS (0 drift citations across M stories)
+# EXIT CONTRACT
+# ─────────────
+# CHECK 1 (existence: reason=nonexistent, reason=bc-file-missing) — BLOCKING.
+#   Exits 1 when any CHECK-1 DRIFT > 0. Emits "DRIFT ..." lines.
+# CHECK 2 (error-code co-location: reason=code-absent) — ADVISORY.
+#   Never blocks. Emits "ADVISORY ..." lines (grep-separable from DRIFT).
+#   Exits 0 even when advisory hints exist, provided CHECK-1 drift is 0.
+# Summary reports:
+#   "CHECK-1 (blocking) drift: N" and "CHECK-2 (advisory) hints: M"
+# RESULT line: PASS when CHECK-1 drift == 0; FAIL when CHECK-1 drift > 0.
 #
 # POL-26: Edit/Write tools only for .factory/ mutations.
 # POL-30: Self-scope exclusion — hooks dir excluded from lint scope.
@@ -147,10 +153,16 @@ def extract_section(content, section_header):
 
 
 def count_numbered_items(section_text):
-    """Count top-level numbered list items (^\d+\.) in section text."""
-    # Only count lines that start a new numbered item at column 0
+    """Count top-level numbered list items (^\d+\.) in section text, fence-aware."""
+    # Skip lines inside fenced code blocks — they must not be treated as item boundaries.
     items = []
+    in_fence = False
     for line in section_text.split('\n'):
+        if line.strip().startswith('```'):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
         m = re.match(r'^(\d+)\.\s', line)
         if m:
             items.append(int(m.group(1)))
@@ -180,12 +192,24 @@ def get_item_text(section_text, section_type, number_or_ec):
     Returns '' if not found.
     """
     if section_type in ('postcondition', 'precondition'):
-        # Numbered item: lines from N. up to next M. or end-of-section
+        # Numbered item: lines from N. up to next top-level M. (fence-aware).
+        # Lines inside a ``` fenced block belong to the enclosing item and must
+        # not be treated as new item boundaries.
         n = number_or_ec
         lines = section_text.split('\n')
         capturing = False
         item_lines = []
+        in_fence = False
         for line in lines:
+            if line.strip().startswith('```'):
+                in_fence = not in_fence
+                if capturing:
+                    item_lines.append(line)
+                continue
+            if in_fence:
+                if capturing:
+                    item_lines.append(line)
+                continue
             m = re.match(r'^(\d+)\.\s', line)
             if m:
                 if int(m.group(1)) == n:
@@ -203,10 +227,20 @@ def get_item_text(section_text, section_type, number_or_ec):
         # Detect list style: numbered (^\d+\.) wins over bullet (^-)
         is_numbered = any(re.match(r'^\d+\.\s', l) for l in lines)
         if is_numbered:
-            # Walk numbered items, match by label (N. text) like postcondition branch
+            # Walk numbered items, match by label (N. text) like postcondition branch (fence-aware).
             capturing = False
             item_lines = []
+            in_fence = False
             for line in lines:
+                if line.strip().startswith('```'):
+                    in_fence = not in_fence
+                    if capturing:
+                        item_lines.append(line)
+                    continue
+                if in_fence:
+                    if capturing:
+                        item_lines.append(line)
+                    continue
                 lm = re.match(r'^(\d+)\.\s', line)
                 if lm:
                     if int(lm.group(1)) == n:
@@ -331,8 +365,23 @@ for filename in story_files:
 
     story_citations = 0
     story_drift = 0
+    story_advisory = 0
 
-    for line in raw.split('\n'):
+    # Pre-extract full AC block body for each citation header line.
+    # CHECK 2 must scan the body text (not just the header) because error codes
+    # asserted by an AC appear in the lines following the ### AC-NNN heading.
+    raw_lines = raw.split('\n')
+    _ac_body_cache = {}
+    for _i, _rl in enumerate(raw_lines):
+        if '### AC-' in _rl and 'traces to BC-' in _rl:
+            _body = [_rl]
+            _j = _i + 1
+            while _j < len(raw_lines) and not re.match(r'^#{1,6} ', raw_lines[_j]):
+                _body.append(raw_lines[_j])
+                _j += 1
+            _ac_body_cache[_rl] = '\n'.join(_body)
+
+    for line in raw_lines:
         if 'traces to BC-' not in line:
             continue
 
@@ -395,8 +444,10 @@ for filename in story_files:
             story_drift += 1
             continue
 
-        # Full line text for AC (for error-code extraction)
-        ac_text_full = line
+        # Full AC block text (header + body) for error-code extraction.
+        # Using only the header line was the root-cause false-negative: error codes
+        # asserted by the AC appear in the body, not in the ### AC-NNN citation line.
+        ac_text_full = _ac_body_cache.get(line, line)
 
         # ── CHECK 1: Existence check ──────────────────────────────────────────
         exists = True
@@ -459,12 +510,12 @@ for filename in story_files:
                     if code not in item_text:
                         # Code is asserted in AC but not present in the specifically cited item
                         # (Could be in a different PC/EC — strong drift signal)
-                        print(f"DRIFT {story_id} {ac_id} cited={cited_label} "
+                        print(f"ADVISORY {story_id} {ac_id} cited={cited_label} "
                               f"reason=code-absent asserted-code={code} bc={bc_id}")
-                        story_drift += 1
-                        break  # one DRIFT line per AC
+                        story_advisory += 1
+                        break  # one ADVISORY line per AC
 
-            # Don't emit a second DRIFT for the same AC if code-absent already fired
+            # Don't emit a second DRIFT/ADVISORY for the same AC if code-absent already fired
 
         # ── CHECK 3: Keyword-overlap heuristic (low-confidence WARN) ─────────
         # Only run if no DRIFT already emitted for this AC
@@ -472,18 +523,19 @@ for filename in story_files:
         if story_drift == 0 or True:  # always run; overlap is non-blocking anyway
             pass  # overlap check suppressed in this release — advisory only at AC level
 
-    per_story_counts[story_id] = (story_citations, story_drift)
+    per_story_counts[story_id] = (story_citations, story_drift, story_advisory)
     if story_drift > 0:
         pass  # tally below
 
 # ── Per-story summary ─────────────────────────────────────────────────────────
-stories_with_drift = sum(1 for s, (c, d) in per_story_counts.items() if d > 0)
+stories_with_drift = sum(1 for s, (c, d, a) in per_story_counts.items() if d > 0)
+total_advisory = sum(a for s, (c, d, a) in per_story_counts.items())
 
-print(f"SUMMARY total_citations={total_citations} stories_checked={len(per_story_counts)} stories_with_drift={stories_with_drift}")
+print(f"SUMMARY total_citations={total_citations} stories_checked={len(per_story_counts)} stories_with_drift={stories_with_drift} total_advisory={total_advisory}")
 for sid in sorted(per_story_counts):
-    c, d = per_story_counts[sid]
+    c, d, a = per_story_counts[sid]
     status = 'PASS' if d == 0 else 'FAIL'
-    print(f"STORY_RESULT {sid} {status} citations={c} drift={d}")
+    print(f"STORY_RESULT {sid} {status} citations={c} drift={d} advisory={a}")
 
 PYEOF
 )"
@@ -494,12 +546,17 @@ TOTAL_CITATIONS=0
 TOTAL_STORIES_CHECKED=0
 STORIES_WITH_DRIFT=0
 DRIFT=0
+ADVISORY_COUNT=0
 
 while IFS= read -r line; do
   case "$line" in
     DRIFT*)
       echo "$line"
       DRIFT=$((DRIFT + 1))
+      ;;
+    ADVISORY*)
+      echo "$line"
+      ADVISORY_COUNT=$((ADVISORY_COUNT + 1))
       ;;
     SUMMARY*)
       TOTAL_CITATIONS=$(echo "$line" | grep -oE 'total_citations=[0-9]+' | cut -d= -f2)
@@ -522,19 +579,23 @@ echo ""
 echo "verify-ac-pc-trace: checked $TOTAL_CITATIONS citations across $TOTAL_STORIES_CHECKED stories"
 echo ""
 echo "Checks implemented:"
-echo "  CHECK 1: Existence — cited PC/INV/EC/PRE number must exist in the referenced BC"
-echo "           reason=nonexistent when cited number exceeds BC content"
-echo "  CHECK 2: Error-code co-location — E-XXX-NNN asserted in AC must appear in cited item"
-echo "           reason=code-absent when code is in AC but absent from the specific cited item"
-echo "  CHECK 3: Keyword-overlap heuristic (suppressed in v1 — advisory only at AC level)"
-echo "           reason=low-overlap (reserved for future use)"
+echo "  CHECK 1 (BLOCKING): Existence — cited PC/INV/EC/PRE number must exist in the referenced BC"
+echo "           reason=nonexistent | reason=bc-file-missing -> DRIFT line -> exits 1"
+echo "  CHECK 2 (ADVISORY): Error-code co-location — E-XXX-NNN asserted in AC must appear in cited item"
+echo "           reason=code-absent -> ADVISORY line -> does not block (heuristic; codes may appear"
+echo "           in ACs as examples/table-rows/contrast without implying the cited item contains them)"
+echo "  CHECK 3: Keyword-overlap heuristic (suppressed in v1 — reserved for future use)"
+echo "           reason=low-overlap (not emitted)"
 echo ""
 echo "Per-story pass/fail above."
 echo ""
+echo "CHECK-1 (blocking) drift: $DRIFT"
+echo "CHECK-2 (advisory) hints: $ADVISORY_COUNT"
+echo ""
 if [ "$DRIFT" -gt 0 ]; then
-  echo "RESULT: FAIL ($DRIFT drift citations across $STORIES_WITH_DRIFT stories)"
+  echo "RESULT: FAIL ($DRIFT blocking drift citations across $STORIES_WITH_DRIFT stories)"
   exit 1
 else
-  echo "RESULT: PASS (0 drift citations across $STORIES_WITH_DRIFT stories)"
+  echo "RESULT: PASS (CHECK-1 drift=0; CHECK-2 advisory hints=$ADVISORY_COUNT)"
   exit 0
 fi

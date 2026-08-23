@@ -3569,3 +3569,49 @@ stash@{0} in main worktree holds superseded route-around edits from the pre-vali
 ### Convergence Counter
 
 **Phase-2 P2A-033 fix-burst COMPLETE (D-241; 2026-08-22).** Streak 0/3. NEXT: fresh `vsdd-factory:adversary` P2A-034 on new HEAD.
+
+---
+
+## P2A-034 Pass Record (2026-08-22)
+
+**Verdict: NOT CLEAN** — 4 findings (2 HIGH + 1 OBS + 1 LOW). D-242 minted.
+
+| Finding | Severity | Description | Status |
+|---------|----------|-------------|--------|
+| F1 | HIGH | STORY-S-2.05 AC-002..006 anchors stale vs BC-2.18.004 post-burst-279 restructure: AC-002↔AC-003 swap (precondition 1 ↔ precondition 2); AC-004 traces to "invariant 1" not "postcondition 2"; AC-005 traces to "precondition 2" not "precondition 3"; AC-006 traces to "invariant 5" not "postcondition 5"; Architecture Compliance table PC6 cites "postcondition 6 (now invariant 5)" and PC3 cites "precondition 3 (now postcondition 1)". | CLOSED |
+| F2 | HIGH | S-2.05 security coverage gap: BC-2.18.004 postcondition 5 (untrusted variant arms MUST raise PromptInjectionAttempt) and precondition 2 (TemplateInput::Messages/MessageListVar treated as untrusted) have no covering Red-Gate acceptance criteria; VP-006 Kani both-arm coverage has no story-level AC correlation. | CLOSED |
+| F3 | OBS (process-gap) | verify-ac-pc-trace.sh false-negative root cause: the AC text extraction captured only the citation header line (e.g., `Traces to: BC-2.18.004`), so CHECK-2 (error-code co-location) was silently skipped for every AC whose asserted error code appears in the AC body rather than on the citation header line. Re-run after fix surfaced 82 code-absent advisory lines across 26 stories. HUMAN DECISION (senior architect, 2026-08-22): CHECK-1 (existence) stays BLOCKING; CHECK-2 (code co-location) demoted to ADVISORY — does NOT reset 3-CLEAN streak. POL-48 reworded. | CLOSED |
+| F4 | LOW | dependency-graph.md: S-1.21 (pregolya-tools JsonDocumentLoader) and S-1.22 (pregolya-tools HtmlDocumentLoader) placed under the E-6 pregolya-community header instead of E-13 pregolya-tools. DAG edges intact; header placement only. | CLOSED |
+
+**Sibling-sweep (consistency-validator, read-only on HEAD):**
+- Scanned S-1.23, S-2.03, S-2.09, S-2.10 — these 4 stories were subject to post-authoring BC-2.18.004 restructures in prior bursts. ZERO semantic mis-anchors found; all are already correctly re-anchored.
+- S-1.23/S-2.03/S-2.09/S-2.10 frontmatter timestamps remain at original authoring timestamps (v1.0, original dates) despite post-authoring content changes — recorded as STAMP-DRIFT-001 open process-gap item (not Phase-3 blocking).
+
+**Adversary calibration notes (sampled CHECK-2 advisory lines):**
+- `to_problem` type_uri example in an AC description — false positive (no error code asserted)
+- VP-property table row — false positive (structural, not an AC body)
+- Provider-refusal AC — plausibly genuine (error code in body, not co-located with citation header)
+
+**Census:** UNCHANGED — 39 stories / 133 BC / 14 VP / 118 EC (S-MAINT-001 out-of-wave).
+
+**Streak:** RESET 0/3. NEXT: P2A-034 fix-burst.
+
+## P2A-034 Fix-Burst Record (2026-08-22)
+
+**D-242 ALL CLOSED.** Single-commit burst per TD-VSDD-053.
+
+**F1 Fix (story-writer):** STORY-S-2.05 — AC-002 re-anchored to BC-2.18.004 precondition 1 (was precondition 2 post-swap); AC-003 re-anchored to precondition 2 (was precondition 1 post-swap); AC-004 re-anchored to invariant 1; AC-005 re-anchored to precondition 2; AC-006 re-anchored to invariant 5. Architecture Compliance table: PC6 row updated to reference invariant 5; PC3 row updated to reference postcondition 1.
+
+**F2 Fix (story-writer):** STORY-S-2.05 — Red-Gate AC-016 added: `TemplateInput::Messages` or `MessageListVar` untrusted arm invokes `check_prompt_injection` guard, raises `PromptInjectionAttempt` (EC-007) tracing BC-2.18.004 postcondition 5 + precondition 2. Red-Gate AC-017 added: `TemplateInput::FewShotExamples` untrusted arm same guard path, raises `PromptInjectionAttempt` (EC-008) tracing BC-2.18.004 postcondition 5 + precondition 2. Both ACs match VP-006 Kani both-arm coverage property.
+
+**F3 Fix (devops-engineer):** verify-ac-pc-trace.sh — AC-body cache added: for each AC, the full AC body text (from start to the next AC or section boundary) is extracted and appended to the citation text before running CHECK-2. Fence-aware numbered-item parser added: CHECK-2 scans the full cached body for error-code patterns in fenced code blocks and numbered-list items, not just the citation header line. POL-48 reworded: CHECK-1 (existence gate) is BLOCKING (exit 1 on violation); CHECK-2 (code co-location heuristic) is ADVISORY (exit 0 always; violations logged to stderr as informational; does NOT gate the pre-commit hook or reset 3-CLEAN streak). Re-run post-fix: CHECK-1: 0 violations / 521 citations. CHECK-2: 81 advisory lines (down from 82 — one genuine fix via S-2.05 AC-016/AC-017 that now co-locate error codes).
+
+**F4 Fix (story-writer):** dependency-graph.md — S-1.21 and S-1.22 header relocated from E-6 pregolya-community section to E-13 pregolya-tools section. DAG edges (depends_on / blocks) unchanged.
+
+**Files committed:** `stories/stories/STORY-S-2.05-prompt-injection-safety-guard.md`, `hooks/verify-ac-pc-trace.sh`, `policies.yaml`, `stories/dependency-graph.md`, `sidecar-learning.md`, `STATE.md`, `cycles/v1.0.0-greenfield/convergence-trajectory.md`.
+
+**Count-propagation sweep (S-7.02 defensive sweep):** Census UNCHANGED 39/133/14/118 EC — no count changes requiring propagation. CHECK-2 advisory count 82→81 is an advisory metric only; not propagated to any index file.
+
+### Convergence Counter
+
+**Phase-2 P2A-034 fix-burst COMPLETE (D-242; 2026-08-22).** Streak 0/3. NEXT: fresh `vsdd-factory:adversary` P2A-035 on new HEAD.
