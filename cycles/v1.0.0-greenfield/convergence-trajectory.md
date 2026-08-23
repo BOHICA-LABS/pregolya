@@ -3627,3 +3627,11 @@ F-036-01 (HIGH): S-1.05 AC-001 invented fallible RunnableParallel::new() (dup-ke
 F-036-02 (MED): S-2.05 BC-2.18.002 coverage synced to STORY-INDEX + SS-18 map + sprint-state (POLICY-8 gap from P2A-035).
 F-036-03 (LOW): S-1.05 AC-003 → PC6/EC-001 (zero-branch).
 Census UNCHANGED 39/133/14/118. CLEAN(strict)=no. Streak 0/3. NEXT P2A-037.
+
+### P2A-037 (NOT CLEAN; D-245) + Fix-Burst COMPLETE (2026-08-22)
+Findings: F-01/F-02/F-03 (2 HIGH) S-1.16 BSP determinism — AC-004 fabricated 'run-id collision→E-GRAPH-006' REMOVED; run-id collision is CONCURRENCY at server layer (BC-2.03.001/003; E-SERVER-012/015 not GRAPH); AC-004 rewritten to real E-GRAPH-006 BspDeterminismViolation (INTERNAL category; run→failed; PC4 coverage closed); 5 ACs re-anchored (AC-002/003→BC-2.03.001 PC5; AC-005→BC-2.03.001 PC1; AC-009→BC-2.03.001 INV-2; AC-010→BC-2.03.003 PC4); category fixes (E-GRAPH-017→POLICY; E-GRAPH-006→INTERNAL); all collision refs purged. F-04 (MED) S-2.05 TrustLevel order {Untrusted,UserInput,Trusted}; #[non_exhaustive]; no derived Ord; severity() returns 2/1/0.
+CLASS-AUDIT (timestamp-independent sibling-sweep found 3rd story S-2.04): 9 mis-anchors vs BC-2.18.001/002 — 5 constructor→precondition re-anchors; 4 genuine gaps → PO authored BC-2.18.001 PC-7 (Runnable) + INV-6 (pure-core/Send+Sync) and BC-2.18.002 PC-7 (Runnable) + INV-5 (PromptValue #[non_exhaustive] enum String/Messages); TV-005/TV-008 added; story AC-005→PC7/AC-006→INV-6/AC-009→PC7/AC-010→INV-5 (+AC-010 body Vec type fix).
+ADR-015 §PromptValue: enum decision aligned to BC-2.18.002 INV-5.
+Artifacts: BC-2.18.001 §INV-6+PC-7; BC-2.18.002 §INV-5+PC-7; BC-INDEX §Changelog; test-vectors §Grand-Total (703 canonical + 11 GTV = 714). BC COUNT UNCHANGED 133; stories 39; VP 14.
+Process-gap: SEMANTIC-ANCHOR-DRIFT recorded in Drift/Deferrals (POL-48 gates AC→BC existence only, not semantic clause-match; restructure-induced mis-anchoring recurred S-2.05/S-1.16/S-2.04; timestamp-based sibling-sweep insufficient; owner: devops/story-writer; target: EPIC-MAINT).
+CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-038.

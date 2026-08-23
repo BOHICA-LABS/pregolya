@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.7"
+version: "3.8"
 status: active
 producer: product-owner
 timestamp: 2026-08-22T22:12:00Z
@@ -14,6 +14,7 @@ input-hash: "1466806"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.8 (P2A-037-gaps/2026-08-22): BC-2.18.001 Runnable/pure-core gaps closed — TV-008 (Runnable invoke wraps as PromptValue::String) added; TV count 7→8. BC-2.18.002 Runnable/PromptValue-enum gaps closed — TV-005 (ChatPromptTemplate Runnable invoke delegation) added; TV count 4→5. Grand total 701→703 canonical + 11 GTV = 714."
   - "3.7 (F-036-01/D-244/2026-08-22): BC-2.01.005 §PC-1 infallible amendment — EC-006 (duplicate-key last-write-wins) + TV-006 added; TV count 5→6. Grand total 700→701 canonical + 11 GTV = 712."
   - "3.6 (P2A-029-fix-burst/D-235/2026-08-22): BC-2.09.001 §PC9 amendment — TV-009 (overflow Err/E-MCP-008) + TV-010 (unknown-server Err/E-MCP-009) added. TV count 8→10. Grand total 698→700 canonical + 11 GTV = 711."
   - "3.5 (P2A-005-fix-burst/D-212/2026-08-20): BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added by product-owner — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total: 697→698 canonical + 11 GTV = 708→709 total."
@@ -159,8 +160,8 @@ changelog:
 | BC-2.16.003 | SS-16 | 5 | — | `TV-NNN` | | Circuit breaker after repeated failure |
 | BC-2.17.001 | SS-17 | 9 | — | `TV-NNN` | | Six P0 + three P1 Kani VP harnesses (VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1)) |
 | BC-2.17.002 | SS-17 | 5 | — | `TV-NNN` | | cargo-fuzz targets |
-| BC-2.18.001 | SS-18 | 7 | — | `TV-NNN` | | PromptTemplate f-string render; partial binding; strict-undefined guard |
-| BC-2.18.002 | SS-18 | 4 | — | `TV-NNN` | | ChatPromptTemplate multi-message render; PromptValue + MessageProvenance |
+| BC-2.18.001 | SS-18 | 8 | — | `TV-NNN` | | PromptTemplate f-string render; partial binding; strict-undefined guard; Runnable invoke wraps as PromptValue::String |
+| BC-2.18.002 | SS-18 | 5 | — | `TV-NNN` | | ChatPromptTemplate multi-message render; PromptValue enum (String/Messages); MessageProvenance; Runnable invoke delegation |
 | BC-2.18.003 | SS-18 | 4 | — | `TV-NNN` | | MessagesPlaceholder expansion; FewShotPromptTemplate composition |
 | BC-2.18.004 | SS-18 | 5 | — | `TV-NNN` | **RG** | injection_guard — TrustRequired slot + Untrusted tag → E-TMPL-001 |
 | BC-2.18.005 | SS-18 | 4 | — | `TV-NNN` | **RG** | SlotTrustPolicy::TrustAll on SystemMessage → E-TMPL-002 at construction |
@@ -187,7 +188,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (133 authored BCs):** 701 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **712 total vectors** across 133 BC files.
+**Total vectors (133 authored BCs):** 703 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **714 total vectors** across 133 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -338,6 +339,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.8 | 2026-08-22 | P2A-037-gaps: BC-2.18.001 TV-008 added (Runnable invoke → PromptValue::String); TV count 7→8. BC-2.18.002 TV-005 added (ChatPromptTemplate Runnable invoke delegation); TV count 4→5. Grand total 701→703 canonical + 11 GTV = 714. | P2A-037-gaps |
 | 3.7 | 2026-08-22 | F-036-01/D-244: BC-2.01.005 §PC-1 infallible amendment — EC-006 (duplicate-key last-write-wins) + TV-006 added; TV count 5→6. Grand total 700→701 canonical + 11 GTV = 712. | F-036-01/D-244 |
 | 3.6 | 2026-08-22 | P2A-029-fix-burst/D-235: BC-2.09.001 §PC9 amendment — TV-009 (overflow Err/E-MCP-008) + TV-010 (unknown-server Err/E-MCP-009) added. TV count 8→10. Grand total 698→700 canonical + 11 GTV = 711. | P2A-029-fix-burst/D-235 |
 | 3.5 | 2026-08-20 | P2A-005-fix-burst/D-212: BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total 697→698 canonical + 11 GTV = 709. | P2A-005-fix-burst/D-212 |

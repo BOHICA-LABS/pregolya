@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-20"
 producer: architect
 timestamp: 2026-08-16T00:00:00Z
-version: "1.13"
+version: "1.14"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-18, SS-11]
 changelog:
+  - "1.14 (P2A-037-remediation/2026-08-22): §PromptValue carries TrustLevel — PromptValue type-shape corrected from struct to #[non_exhaustive] enum per BC-2.18.002 INV-5 (governing type-shape source of truth, later + more specific). Prior struct form `pub struct PromptValue { pub messages: Vec<(Message, MessageProvenance)> }` conflated the unguarded PromptTemplate output surface with the guarded ChatPromptTemplate output surface. Enum variants: String(String) (BC-2.18.001 PC-7, unguarded) and Messages(Vec<(Message, MessageProvenance)>) (BC-2.18.002 PC-7, guarded). Send+Sync held by construction (fields are Send+Sync). Consequences row updated to reflect enum variant. Rationale note added citing BC-2.18.002 INV-5 as type-shape authority."
   - "1.13 (BURST-300/title-subtitle-align/2026-08-16): Title subtitle corrected — 'ProvenanceTag Integration' replaced with 'TrustLevel Classification'. The v1.0 subtitle implied ProvenanceTag was the SS-18 template-trust integration point; §Decision 3 heading and §TrustLevel — template-variable trust classifier section (established in burst-226) set TrustLevel as the SS-18-local trust classifier, explicitly distinct from ProvenanceTag (SS-11 ingress-boundary struct). The §Relationship to ProvenanceTag section in §Decision 3 is a concept-delineation note, not a titled deliverable — it explains how developers translate an ingress ProvenanceTag into a TrustLevel, not how ProvenanceTag integrates into template trust. ADR body content unchanged; title alignment only."
   - "1.12 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Two phantom error-taxonomy §-citations fixed in §F-P131-05 and §F-P131-04 RESOLVED bodies. (1) 'error-taxonomy §E-TMPL-001' → 'error-taxonomy.md §Component: TMPL' (E-TMPL-001 raise-condition update note). (2) 'error-taxonomy §E-TMPL-003' → 'error-taxonomy.md §Component: TMPL' (E-TMPL-003 engine-neutral description note). Rationale: error-taxonomy.md has no §E-TMPL-001 or §E-TMPL-003 heading; individual error codes are table rows within §Component: TMPL (pregolya-prompts). Additionally: escape unescaped `|t|` closure syntax in two table cells (lines 501/502) to fix pre-existing validate-table-cell-count hook failure."
   - "1.11 (fix-burst-279/gap-corrections/2026-07-28): Three gap corrections to v1.10. (1) Gap 1 (BLOCKING): FewShotPromptTemplate adjudication body added to §Decision 3 Amendment — FewShotPromptTemplate Example Trust Check: pre-expansion trust check over Vec<(TemplateVar,TemplateVar)> examples; FewShotExamples arm in TemplateInput injection guard code sketch; security argument (fail-closed, fires before inner example_template.format()); example trust level convention table. (2) Gap 1 (continued): §Decision 3 Amendment — TemplateInput Enum Concretized added before B201 section; TemplateInput enum definition with Scalar/Messages/FewShotExamples arms; #[non_exhaustive]; format_messages signature declared as HashMap<String, TemplateInput>. (3) Gap 1 (continued): §Decision 3 Amendment — B201 Type-Level Enforcement Assessment added: type-level wrapper feasibility assessed (feasible but API friction disproportionate); prohibition-as-invariant retained for v1; v2 trigger condition documented. v1.10 was missing all three bodies."
@@ -223,12 +224,41 @@ composition.
 
 ### PromptValue carries TrustLevel
 
-The rendered output type carries per-message trust inherited from substituted variables:
+The rendered output type discriminates between the unguarded single-message surface
+(`PromptTemplate::invoke`) and the guarded multi-message surface
+(`ChatPromptTemplate::format_messages`).
+
+**Type-shape authority: BC-2.18.002 INV-5.** The prior struct form
+(`pub struct PromptValue { pub messages: Vec<(Message, MessageProvenance)> }`) is
+superseded by this ADR amendment. That struct conflated both output surfaces into a
+single shape, making it impossible to distinguish a guarded `ChatPromptTemplate` output
+from an unguarded `PromptTemplate` output at the type level. The enum form makes this
+distinction structural and explicit. BC-2.18.001 PC-7 governs the `String` arm
+(`PromptTemplate::invoke` → `PromptValue::String`); BC-2.18.002 PC-7 governs the
+`Messages` arm (`ChatPromptTemplate::format_messages` → `PromptValue::Messages`).
 
 ```rust
+/// Rendered output from a prompt template.
+///
+/// - `String`: produced by `PromptTemplate::invoke` (single-message, unguarded surface;
+///   BC-2.18.001 PC-7). The caller is responsible for not placing this in a system-role
+///   position without an explicit re-check — see Decision 3 Amendment:
+///   PromptTemplate::format Explicitly Unguarded.
+/// - `Messages`: produced by `ChatPromptTemplate::format_messages` (multi-message,
+///   injection-guarded surface; BC-2.18.002 PC-7). Each entry pairs the rendered
+///   `Message` with its `MessageProvenance` (slot policy + highest substituted
+///   `TrustLevel`).
+///
+/// Both variants are `Send + Sync` by construction (all fields are `Send + Sync`).
+///
+/// **Type-shape source of truth: BC-2.18.002 INV-5.**
 #[non_exhaustive]
-pub struct PromptValue {
-    pub messages: Vec<(Message, MessageProvenance)>,
+#[derive(Debug, Clone)]
+pub enum PromptValue {
+    /// Unguarded single-message output from `PromptTemplate::invoke`.
+    String(String),
+    /// Guarded multi-message output from `ChatPromptTemplate::format_messages`.
+    Messages(Vec<(Message, MessageProvenance)>),
 }
 
 #[non_exhaustive]
@@ -725,8 +755,12 @@ matters (and prompt injection to system position matters), it must be enforced.
 - `prompts::injection_guard` is a Pure Core module — no async, no I/O, Kani-candidacy
   noted (VP-006: prove that `TrustLevel::Untrusted` in a `TrustRequired` slot always
   produces `Err(E-TMPL-001)` — harness uses `kani::Arbitrary` on `TrustLevel`).
-- `PromptValue` carries `MessageProvenance` — callers that previously assumed raw `Vec<Message>`
-  from a template must unwrap or use the helper `.into_messages()` method.
+- `PromptValue` is a `#[non_exhaustive]` enum (BC-2.18.002 INV-5, type-shape authority):
+  `PromptValue::String(String)` from `PromptTemplate::invoke` (unguarded, BC-2.18.001 PC-7);
+  `PromptValue::Messages(Vec<(Message, MessageProvenance)>)` from
+  `ChatPromptTemplate::format_messages` (guarded, BC-2.18.002 PC-7). Callers that previously
+  assumed raw `Vec<Message>` must match on `PromptValue::Messages` or use the helper
+  `.into_messages()` method.
 - `E-TMPL-001` (SECURITY/InjectionAttempt) and `E-TMPL-002` (VAL/SystemSlotPolicy)
   are new error codes; they belong in the error taxonomy (pregolya-core `core::error`).
 - pregolya-prompts depends on pregolya-core. No new deps on pregolya-graph or

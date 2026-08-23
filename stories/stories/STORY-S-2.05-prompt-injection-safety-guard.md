@@ -99,9 +99,17 @@ It reports the FIRST violation found, not all violations simultaneously.
 Verified by `test_BC_2_18_004_source_order_evaluation_first_violation()`.
 
 ### AC-007 (traces to BC-2.18.002 invariant 2)
-`TrustLevel` is an enum: `Trusted`, `UserInput`, `Untrusted`. It is `#[non_exhaustive]`.
-`TrustLevel` does NOT implement `PartialOrd` or `Ord` (to prevent accidental ordering bugs);
-only `TrustLevel::severity() -> u8` is the ordering surface.
+`TrustLevel` is declared as:
+```rust
+#[non_exhaustive]
+pub enum TrustLevel { Untrusted, UserInput, Trusted }
+```
+`TrustLevel` MUST NOT derive `PartialOrd` or `Ord` (derived `Ord` on this declaration order
+gives `Untrusted < Trusted`, so `Ord::max()` would return `Trusted` on a mixed set — a fail-open
+bypass; see AC-004). The ONLY ordering surface is `TrustLevel::severity() -> u8`:
+- `TrustLevel::Untrusted` → 2
+- `TrustLevel::UserInput` → 1
+- `TrustLevel::Trusted` → 0
 Verified by compile-fail test asserting `Ord` is not implemented: `test_BC_2_18_004_trust_level_no_ord_impl()`.
 
 ### AC-008 (traces to BC-2.18.004 invariant 2)

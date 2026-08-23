@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.4 (burst-300/stale-ProvenanceTag-residue/2026-08-16): Two STALE ProvenanceTag→TrustLevel residues closed. (1) §Architecture Anchors ADR-015 bullet: 'Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)' → 'Decision 3 (PromptValue, MessageProvenance, TrustLevel classification)' — ADR-015 Decision 3 heading was renamed TrustLevel Classification and Injection Prevention in v1.3 (burst-226); ProvenanceTag is the SS-11 ingress-boundary struct, not the SS-18 trust classifier. (2) §Traceability Architecture Authority row: 'ProvenanceTag pass-through and severity ordering' → 'TrustLevel classification and severity ordering' — same concept rename; severity ordering is TrustLevel::severity() domain per ADR-015 Decision 3 Amendment F-P175-B208."
   - "1.5 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.7 (P2A-037-gaps/2026-08-22): Five changes closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-009/AC-010. (1) PC-7 (new): ChatPromptTemplate implements Runnable<Input=HashMap<String,TemplateInput>, Output=PromptValue>; invoke delegates to format_messages(); errors propagate unchanged. (2) INV-5 (new): PromptValue is a #[non_exhaustive] enum with variants String(String) and Messages(Vec<(Message, MessageProvenance)>); PromptValue: Send+Sync; non_exhaustive requires wildcard arm in external match. PC-5 into_messages() updated to cover both variants. (3) PC-2 rephrased: 'PromptValue.messages' struct-field notation replaced with 'PromptValue::Messages variant contains' (PC-2 was inconsistent with INV-5 enum declaration). (4) PC-5 updated to describe String-variant single-HumanMessage path. (5) TV-005 (new): Runnable invoke happy-path; TV count 4→5. H1 updated per bc_h1_is_title_source_of_truth; BC-INDEX updated. NOTE: ADR-015 §PromptValue currently defines a struct; architect must amend ADR-015 to enum shape per INV-5 — BC-2.18.002 INV-5 is the canonical type-shape authority until ADR-015 is updated."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "e8f793e"
+input-hash: "09c85f7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -43,7 +44,7 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.18.002: ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance
+# BC-2.18.002: ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>
 
 ## Description
 
@@ -75,8 +76,8 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 1. `ChatPromptTemplate::format_messages(&self, vars: HashMap<String, TemplateInput>)
    → Result<PromptValue, PregolyaError>` returns `Ok(prompt_value)` on success.
-2. `PromptValue.messages` is a `Vec<(Message, MessageProvenance)>` with one entry per slot,
-   in the order slots were declared at construction.
+2. The `PromptValue::Messages` variant contains a `Vec<(Message, MessageProvenance)>` with
+   one entry per slot, in the order slots were declared at construction.
 3. For each slot: `MessageProvenance.highest_trust_level` is `Some(trust_level)` where `trust_level` is the highest-severity
    `TrustLevel` across all variables substituted into that slot; `None` if no variables were
    substituted (template-literal slots) OR if all substituted variables carried
@@ -84,10 +85,18 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    `None` trust levels yields `highest_trust_level: None`, matching the template-literal case;
    see TV-001 for canonical example: `trust_level: None` variable → `highest_trust_level: None`).
 4. `MessageProvenance.slot_trust_policy` reflects the slot's policy as declared at construction.
-5. `PromptValue.into_messages()` extracts `Vec<Message>` by discarding provenance metadata;
-   the original `PromptValue` is consumed.
+5. `PromptValue::into_messages()` returns `Vec<Message>` consuming self. For the
+   `PromptValue::Messages` variant, provenance metadata is discarded and the message sequence
+   returned; for the `PromptValue::String` variant, a single `HumanMessage` wrapping the
+   string is returned. (See INV-5 for the canonical PromptValue enum shape.)
 6. A `ChatPromptTemplate` with zero message slots constructs and renders successfully, returning
-   a `PromptValue` with an empty `messages` Vec.
+   a `PromptValue::Messages` variant with an empty inner Vec.
+7. `ChatPromptTemplate` implements `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>`.
+   `invoke(&self, input: HashMap<String, TemplateInput>, config: Option<RunnableConfig>)`
+   delegates to `self.format_messages(input)` and returns the result directly
+   (`Result<PromptValue, PregolyaError>`); all errors from `format_messages` propagate unchanged.
+   The `batch` default delegates to sequential `invoke` calls. (CAP-022 Runnable requirement;
+   purity-boundary-map.md — prompts::chat_template (Pure Core).)
 
 ## Invariants
 
@@ -105,6 +114,17 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    `trust_level: None`. These two cases are semantically equivalent for provenance purposes —
    in both, no trust classification was propagated into the slot (ADR-015 §Decision 3).
 4. `ChatPromptTemplate` construction is pure (no I/O, no async); it returns `Result`.
+5. `PromptValue` is a `#[non_exhaustive]` enum with exactly two stable variants:
+   `PromptValue::String(String)` — produced by `PromptTemplate::invoke` (BC-2.18.001 PC-7),
+   wrapping the formatted string output of `PromptTemplate::format`; and
+   `PromptValue::Messages(Vec<(Message, MessageProvenance)>)` — produced by
+   `ChatPromptTemplate::format_messages`, carrying per-slot `MessageProvenance` (PC-3).
+   `PromptValue: Send + Sync` — all variant payload types are `Send + Sync`.
+   The `#[non_exhaustive]` annotation requires external `match` arms to include a `_ => {}`
+   wildcard arm to remain forward-compatible. `into_messages()` (PC-5) converts both variants
+   to `Vec<Message>`. (ADR-015 amendment pending: architect must update §PromptValue from
+   struct to this enum shape; INV-5 is the canonical type-shape authority until that update
+   is committed.)
 
 ## Edge Cases
 
@@ -124,6 +144,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 | TV-002 | Same template, `vars = {"question": TemplateVar { value: "...", trust_level: Some(TrustLevel::UserInput) }}` | HumanMessage slot: `Provenance { highest_trust_level: Some(TrustLevel::UserInput), policy: TrustAll }` | happy-path (provenance threading) |
 | TV-003 | `template.format_messages({})` with all variables pre-bound as partials | `Ok(PromptValue { messages: [...] })` | happy-path (partial binding only) |
 | TV-004 | `into_messages()` on TV-001 result | `Vec<Message>` with `[SystemMessage("You are helpful."), HumanMessage("What is Rust?")]` | happy-path (extraction) |
+| TV-005 | Same template and vars as TV-001 invoked via `Runnable::invoke(vars, None)` rather than `format_messages` directly | `Ok(PromptValue::Messages([...]))` — result is structurally identical to TV-001; invoke delegates to format_messages without modification | happy-path (Runnable delegation; PC-7) |
 
 ## Verification Properties
 

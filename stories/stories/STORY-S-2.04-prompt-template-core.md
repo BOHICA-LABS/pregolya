@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "cb90184"
+input-hash: "cd30cdc"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
@@ -50,23 +50,24 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.18.001 postcondition 1)
+### AC-001 (traces to BC-2.18.001 precondition 1)
 `PromptTemplate::from_template(template: &str) -> Result<Self, PregolyaError>` succeeds for
 well-formed f-string templates (e.g., `"Hello, {name}!"`). The returned template stores
 the variable list extracted from `{...}` placeholders.
 Verified by `test_BC_2_18_001_from_template_wellformed_ok()`.
 
-### AC-002 (traces to BC-2.18.001 postcondition 2)
+### AC-002 (traces to BC-2.18.001 invariant 1)
 `PromptTemplate::from_template` with a malformed template (unmatched `{` or `}`, nested braces
 `{{}}` is NOT malformed — it is an escaped literal brace) returns
 `Err(PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, "E-TMPL-004", ...))`.
 The error fires at construction time, not render time.
 Verified by `test_BC_2_18_001_malformed_template_returns_e_tmpl_004()`.
 
-### AC-003 (traces to BC-2.18.001 postcondition 3)
+### AC-003 (traces to BC-2.18.001 postcondition 1)
 `PromptTemplate::format(&self, values: &HashMap<String, TemplateVar>) -> Result<String, PregolyaError>`
 substitutes all `{var}` placeholders with the corresponding value from `values`.
-`{{` and `}}` escape to literal `{` and `}` respectively (Python f-string escape convention).
+`{{` and `}}` escape to literal `{` and `}` respectively (Python f-string escape convention; also
+governed by BC-2.18.001 postcondition 5 for the brace-escape sub-behavior).
 Verified by `test_BC_2_18_001_format_substitutes_vars_and_escapes()`.
 
 ### AC-004 (traces to BC-2.18.001 postcondition 4)
@@ -76,18 +77,18 @@ Verified by `test_BC_2_18_001_format_substitutes_vars_and_escapes()`.
 The error message contains the variable name (dynamic interpolation for E-TMPL-003).
 Verified by `test_BC_2_18_001_missing_var_returns_e_tmpl_003()`.
 
-### AC-005 (traces to BC-2.18.001 invariant 1)
+### AC-005 (traces to BC-2.18.001 postcondition 7)
 `PromptTemplate` implements `Runnable<Input=HashMap<String, TemplateVar>, Output=PromptValue>`.
 `invoke(input, config)` calls `format` and wraps the result in `PromptValue::String`.
 An empty variable map formats a template with no placeholders successfully.
 Verified by `test_BC_2_18_001_prompt_template_is_runnable()`.
 
-### AC-006 (traces to BC-2.18.001 invariant 2)
+### AC-006 (traces to BC-2.18.001 invariant 6)
 `PromptTemplate` is a pure-core type — no I/O in `format` or `invoke`. No async calls,
 no network calls, no file I/O. `PromptTemplate: Send + Sync`.
 Verified by compile-time bound assertion `test_BC_2_18_001_prompt_template_send_sync()`.
 
-### AC-007 (traces to BC-2.18.002 postcondition 1)
+### AC-007 (traces to BC-2.18.002 precondition 1)
 `ChatPromptTemplate::from_messages(messages: Vec<(MessageRole, &str, SlotTrustPolicy)>) -> Result<Self, PregolyaError>`
 parses each template string, associates it with the role and policy, and returns
 `Ok(ChatPromptTemplate)` when all templates are well-formed and policies are valid.
@@ -101,18 +102,18 @@ renders all message templates, resolves `TemplateInput::Scalar` for simple subst
 Returns `PromptValue::Messages(Vec<BaseMessage>)`.
 Verified by `test_BC_2_18_002_format_messages_all_input_types()`.
 
-### AC-009 (traces to BC-2.18.002 postcondition 3)
+### AC-009 (traces to BC-2.18.002 postcondition 7)
 `ChatPromptTemplate` implements `Runnable<Input=HashMap<String, TemplateInput>, Output=PromptValue>`.
 `invoke(input, config)` delegates to `format_messages`.
 Verified by `test_BC_2_18_002_chat_prompt_template_is_runnable()`.
 
-### AC-010 (traces to BC-2.18.002 postcondition 4)
-`PromptValue` is an enum with at least two variants: `PromptValue::String(String)` and
-`PromptValue::Messages(Vec<BaseMessage>)`. Both are `#[non_exhaustive]`.
+### AC-010 (traces to BC-2.18.002 invariant 5)
+`PromptValue` is a `#[non_exhaustive]` enum with variants `PromptValue::String(String)` and
+`PromptValue::Messages(Vec<(Message, MessageProvenance)>)`.
 `PromptValue: Send + Sync`.
 Verified by `test_BC_2_18_002_prompt_value_variants_and_send_sync()`.
 
-### AC-011 (traces to BC-2.18.002 invariant 1)
+### AC-011 (traces to BC-2.18.002 precondition 1)
 `ChatPromptTemplate::from_messages` validates that ALL template strings are well-formed
 before returning. A mix of one valid and one invalid template string returns `Err(E-TMPL-004)`.
 Construction is atomic — no partial state.

@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.56"
+version: "3.57"
 status: active
 producer: state-manager
 timestamp: 2026-08-22T18:30:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.57 (P2A-037-gaps/2026-08-22): 2 BC version bumps closing STORY-S-2.04 P2A-037 class-audit spec gaps. BC-2.18.001 (v1.9→v2.0): PC-7 Runnable<HashMap<String,TemplateVar>,PromptValue> impl + INV-6 pure-core/Send+Sync classification + TV-008 Runnable invoke vector; H1 updated. BC-2.18.002 (v1.6→v1.7): PC-7 Runnable<HashMap<String,TemplateInput>,PromptValue> impl + INV-5 PromptValue enum shape (#[non_exhaustive] String/Messages variants, Send+Sync) + PC-2 enum-consistent rephrasing + PC-5 updated (String-variant single-HumanMessage path) + PC-6 'empty messages Vec' rephrased + TV-005 Runnable invoke vector; H1 updated. TV grand total 701→703 canonical + 11 GTV = 714. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). Story-writer must anchor STORY-S-2.04 AC-005→BC-2.18.001 PC-7, AC-006→BC-2.18.001 INV-6, AC-009→BC-2.18.002 PC-7, AC-010→BC-2.18.002 INV-5. Architect must amend ADR-015 §PromptValue from struct to enum per INV-5."
   - "3.56 (F-036-01/P2A-036-adjudication/2026-08-22): 1 BC version bump — BC-2.01.005 (v1.3→v1.4): duplicate-step-key edge case gap closed (F-036-01 adjudication). PC-1 postcondition clarified: 'all provided branches' = after IndexMap last-write-wins deduplication; constructor is infallible. Added EC-006 (duplicate key last-write-wins) + TV-006. Story-writer must drop STORY-S-1.05 AC-001 fallible-constructor assertion. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1 unchanged."
   - "3.55 (D-241/2026-08-22): Changelog currency fix — 2026-08-22 BC amendments recorded: BC-2.09.001 (v1.6→v1.7) E-MCP-008/009 overflow/tool-count fail-closed postcondition §PC9 added per P2A-029/D-235; BC-2.22.003 (v1.3→v1.4) E-PROV-012 ProviderConnectionError minted per P2A-030/D-236. Three new error codes registered in error-taxonomy.md: E-MCP-008 (MCP overflow fail-closed, burst-P2A-029), E-MCP-009 (MCP tool-count limit fail-closed, burst-P2A-029), E-PROV-012 (ProviderConnectionError, burst-P2A-030). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2)."
   - "3.54 (burst-315/D-185/2026-08-17): 14 BC version bumps — F-B2 (MED): BC-2.04.006 (v1.7→v1.8): PC2 configurable HashMap access post-ADR-021 (HashMap field access aligned with ADR-021 §RunnableConfig §configurable). F-A1 (LOW): BC-2.06.004 (v1.1→v1.2) + BC-2.06.005 (v1.2→v1.3): ADR-019 compaction residue removed from approval-event behavioral contracts (spurious ADR-019 inputs/traces_to; CAP-034 governs these, not ADR-019). F-A2 (LOW): BC-2.11.001 (v1.2→v1.3), BC-2.11.002 (v1.11→v1.12), BC-2.11.003 (v1.9→v1.10), BC-2.11.004 (v1.9→v1.10), BC-2.11.005 (v1.4→v1.5), BC-2.11.006 (v1.3→v1.4): traces_to corrected to capabilities-p0 §CAP-013. F-A3 (LOW): BC-2.18.001 (v1.7→v1.8), BC-2.18.002 (v1.4→v1.5), BC-2.18.003 (v1.3→v1.4), BC-2.18.004 (v1.9→v1.10), BC-2.18.005 (v1.5→v1.6): frontmatter status draft→active (all five prompt-template behavioral contracts promoted per residual-coverage-audit). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1s unchanged."
@@ -244,8 +245,8 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.16.003 | Circuit Breaker Trips After Repeated Failure; Prevents Infinite Retry | CAP-018 | NE-09 | | P1 | | | ss-16/BC-2.16.003.md |
 | BC-2.17.001 | Six P0 Kani VP Obligations + Three P1 Kani VP Obligations | CAP-019 | | DI-001,DI-005,DI-007,DI-014 | P2 | | | ss-17/BC-2.17.001.md |
 | BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths | CAP-019 | | | P2 | | | ss-17/BC-2.17.002.md |
-| BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | CAP-022 | | DI-008,DI-014 | P1 | | | ss-18/BC-2.18.001.md |
-| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | CAP-022 | | DI-008 | P1 | | | ss-18/BC-2.18.002.md |
+| BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, Strict-Undefined Guard, and Runnable<HashMap<String,TemplateVar>,PromptValue> | CAP-022 | | DI-008,DI-014 | P1 | | | ss-18/BC-2.18.001.md |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | CAP-022 | | DI-008 | P1 | | | ss-18/BC-2.18.002.md |
 | BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | CAP-023 | | DI-008 | P1 | | | ss-18/BC-2.18.003.md |
 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | CAP-022 | | DI-008,DI-014 | P1 | **RG** | **VP-006** | ss-18/BC-2.18.004.md |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | CAP-022 | | DI-008,DI-014 | P1 | **RG** | | ss-18/BC-2.18.005.md |

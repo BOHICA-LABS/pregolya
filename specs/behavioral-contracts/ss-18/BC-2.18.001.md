@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 violations. (1) PC-4: multi-line PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, \"E-TMPL-003\", ...) in prose postcondition → Err(PregolyaError { code: \"E-TMPL-003\", .. }). (2) INV-1: multi-line PregolyaError::new(..., \"E-TMPL-004\", ...) in invariant prose → Err(PregolyaError { code: \"E-TMPL-004\", .. }). (3) EC-007: PregolyaError::new(..., \"E-TMPL-004\", ...) in table cell → Err(PregolyaError { code: \"E-TMPL-004\", .. }). Bare constructor form forbidden in prose/table context per ADR-010 Class 3 rules."
   - "1.8 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "2.0 (P2A-037-gaps/2026-08-22): Four additions closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-005/AC-006. (1) PC-7 (new): PromptTemplate implements Runnable<Input=HashMap<String,TemplateVar>, Output=PromptValue>; invoke delegates to format() and wraps Ok(s) as Ok(PromptValue::String(s)); errors propagate unchanged. (2) INV-6 (new): PromptTemplate is pure-core — no I/O, no OS handles, no mutable shared state; PromptTemplate: Send+Sync. (3) TV-008 (new): Runnable invoke happy-path vector; TV count 7→8. (4) H1 updated to include Runnable impl per bc_h1_is_title_source_of_truth; BC-INDEX title column updated in same burst."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -36,7 +37,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "e8f793e"
+input-hash: "09c85f7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -47,7 +48,7 @@ removed: null
 removal_reason: null
 ---
 
-# BC-2.18.001: PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard
+# BC-2.18.001: PromptTemplate F-String Rendering, Partial Binding, Variable Detection, Strict-Undefined Guard, and Runnable<HashMap<String,TemplateVar>,PromptValue>
 
 ## Description
 
@@ -85,6 +86,12 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
    points and do NOT appear in `input_variables()`.
 6. Nested attribute access (`{x.y}`) is treated as a single flat variable name `x.y` (not
    deep access) in f-string mode — the caller must pre-compute the value.
+7. `PromptTemplate` implements `Runnable<Input = HashMap<String, TemplateVar>, Output = PromptValue>`.
+   `invoke(&self, input: HashMap<String, TemplateVar>, config: Option<RunnableConfig>)`
+   calls `self.format(input)` and on `Ok(rendered)` returns `Ok(PromptValue::String(rendered))`;
+   errors from `format` propagate as `Err(_)` unchanged. The `batch` default delegates to
+   sequential `invoke` calls. (CAP-022 Runnable requirement;
+   purity-boundary-map.md — prompts::template (Pure Core).)
 
 ## Invariants
 
@@ -106,6 +113,12 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
    (ADR-015 Decision 3 Amendment — `PromptTemplate::format` explicitly unguarded; the injection
    guard (E-TMPL-001) fires ONLY in `format_messages`. Placing raw `format()` output in a
    system position is an injection risk with no automatic backstop.)
+6. `PromptTemplate` is a pure-core type: it performs no I/O, no async I/O, no blocking
+   system calls, and holds no OS handles or mutable shared state. `PromptTemplate: Send + Sync`
+   — all fields are `Send + Sync` (owned `String` values and `HashMap<String, TemplateVar>`
+   with `Send + Sync` value type). Template construction and rendering are pure string
+   transformations with no side effects. (ADR-015 Decision 4 — f-string engine in-house
+   implementation; purity-boundary-map.md — prompts::template (Pure Core) Pure Core classification.)
 
 ## Edge Cases
 
@@ -132,6 +145,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 | TV-005 | `template = "Hi {name}"`, partial `name = "Charlie"`, call-time `vars = {"name": "Dave"}` | `Ok("Hi Dave")` — call-time overrides partial | edge-case (partial override) |
 | TV-006 | `PromptTemplate::from_template("Hello, {name}!")` → call `input_variables()` | `["name"]` | happy-path (variable detection) |
 | TV-007 | `PromptTemplate::from_template("Hello, {name")` (unbalanced open brace) | `Err(PregolyaError { code: "E-TMPL-004", message: "MalformedTemplate: ...", .. })` — construction fails at parse time | error-case (malformed template; EC-007) |
+| TV-008 | `PromptTemplate::from_template("Hello, {name}!")` invoked as `Runnable::invoke({"name": TemplateVar { value: "Alice", trust_level: None }}, None)` | `Ok(PromptValue::String("Hello, Alice!"))` — format() result wrapped in String variant | happy-path (Runnable delegation; PC-7) |
 
 ## Verification Properties
 
