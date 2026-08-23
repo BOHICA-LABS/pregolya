@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-07-14T15:30:00Z
+timestamp: 2026-08-22T22:05:00Z
 cycle: v1.0.0-greenfield
 inputs: [adversarial-reviews/]
 input-hash: "61b8147"
@@ -3615,3 +3615,9 @@ stash@{0} in main worktree holds superseded route-around edits from the pre-vali
 ### Convergence Counter
 
 **Phase-2 P2A-034 fix-burst COMPLETE (D-242; 2026-08-22).** Streak 0/3. NEXT: fresh `vsdd-factory:adversary` P2A-035 on new HEAD.
+
+### P2A-035 (reviewed HEAD a7fdb1d) — NOT CLEAN → fix-burst (D-243)
+Findings: F1 (HIGH) — S-2.05 AC-004/AC-005 invented a severity()-threshold injection model with a fabricated SlotTrustPolicy::min_trust_severity(), contradicting BC-2.18.004 (PC5/EC-001/TV-002: UserInput and Trusted → Ok) and ADR-015 Decision 3 (binary is_untrusted fire rule). F2 (MED) — AC-004/AC-007 mis-anchored to BC-2.18.004 invariant 1. OBS-1 (LOW) — EPIC-MAINT missing from epics.md catalog.
+Fix: AC-005 → binary is_untrusted() guard (UserInput/Trusted → Ok); AC-004 → severity() aggregation via max_by_key with no-Ord::max fail-open prohibition, anchored BC-2.18.002 invariant 2; AC-007 → BC-2.18.002 invariant 2; BC-2.18.002 added to behavioral_contracts (POLICY-8); EPIC-MAINT catalog stub added. No spec gap surfaced. Census UNCHANGED 39/133/14/118.
+Note: S-2.05 refined across P2A-032/034/035 — each fresh-context pass surfaced progressively deeper issues (citation numbering → coverage/anchoring → trust-model semantics): a fresh-context-value data point.
+Verdict: CLEAN(strict)=no. Streak 0/3. NEXT: P2A-036.

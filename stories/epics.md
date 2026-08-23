@@ -39,6 +39,7 @@ traces_to: .factory/specs/architecture/ARCH-INDEX.md
 | E-20 | Embeddings Trait and Providers | 2 | S-2.09 | 8 | SS-22 | pregolya-core, pregolya-openai, pregolya-ollama |
 | E-21 | MCP Tool Adapter | 2 | S-2.10, S-2.11 | 13 | SS-09 | pregolya-mcp |
 | E-22 | Formal Verification Pipeline | 6 | S-6.01 | 8 | SS-17 | xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox |
+| EPIC-MAINT | Maintenance and Self-Improvement | out-of-wave | S-MAINT-001 | TBD | N/A | all crates |
 
 ## Epic Summaries
 
@@ -175,3 +176,10 @@ Single story that establishes the Kani harness obligations for all 9 VP Kani pro
 (6 P0 + 3 P1), cargo-fuzz targets for serialization and graph-execution paths, and cargo-mutants
 mutation gate. This story formally executes the verification plans laid out in VP-001 through
 VP-014. Gated until all Wave 1 + Wave 2 implementation stories are merged.
+
+### EPIC-MAINT — Maintenance and Self-Improvement (out-of-wave)
+
+Maintenance and self-improvement stories that do not belong to a product delivery wave.
+S-MAINT-001 is the seed story in this epic. Stories in EPIC-MAINT are dispatched outside
+the wave scheduling gate and may reference any crate or subsystem. This epic does not
+contribute to the 22-epic product story census.

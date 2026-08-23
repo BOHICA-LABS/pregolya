@@ -18,7 +18,7 @@ traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
 blocks: [S-6.01]
-behavioral_contracts: [BC-2.18.004, BC-2.18.005]
+behavioral_contracts: [BC-2.18.002, BC-2.18.004, BC-2.18.005]
 verification_properties: [VP-006]
 priority: P1
 cycle: v1.0.0-greenfield
@@ -43,6 +43,7 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | P1 |
 | BC-2.18.004 | injection_guard in format_messages — TrustLevel Severity Ordering; Fires BEFORE PromptValue Produced; E-TMPL-001 SECURITY/InjectionAttempt (Red Gate) | P1 |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) (Red Gate) | P1 |
 
@@ -68,29 +69,36 @@ When injection is detected, the error is:
 Both `var_name` and `slot_role` are dynamically interpolated into the message.
 Verified by `test_BC_2_18_004_e_tmpl_001_dynamic_message_contains_var_and_role()`.
 
-### AC-004 (traces to BC-2.18.004 invariant 1)
-`TrustLevel::severity()` returns a numeric severity score:
+### AC-004 (traces to BC-2.18.002 invariant 2)
+`TrustLevel::severity()` returns a numeric severity score used for `MessageProvenance.highest_trust_level`
+aggregation — NOT for the injection guard's fire/no-fire decision (see AC-005 for the binary rule):
 - `TrustLevel::Untrusted` → 2
 - `TrustLevel::UserInput` → 1
 - `TrustLevel::Trusted` → 0
 
-The injection check uses `TrustLevel::severity()` — NEVER derived `Ord` comparison. The
-derived `Ord` for an enum ordered `{Untrusted, UserInput, Trusted}` would have Untrusted < Trusted
-(fail-open bug). The `severity()` method explicitly returns the correct ordering.
-Verified by `test_BC_2_18_004_trust_level_severity_ordering()`.
+Aggregate computation of `highest_trust_level` across multiple variables MUST use
+`.max_by_key(|t| t.severity())` — NEVER `Ord::max()` or derived `Ord`. `TrustLevel` MUST NOT
+derive `Ord` or `PartialOrd`: declaration order gives `Untrusted < Trusted` under derived `Ord`,
+so `.max()` on a set containing `Untrusted` would silently return `Trusted` — a fail-open bypass.
+Verified by `test_BC_2_18_002_trust_level_severity_ordering_and_aggregation()`.
 
-### AC-005 (traces to BC-2.18.004 precondition 2)
-The injection guard fires when: `variable.trust_level.severity() > slot.policy.min_trust_severity()`.
-A `TrustLevel::UserInput` variable in a slot with `SlotTrustPolicy::TrustRequired` fires the guard
-only if `TrustRequired.min_trust_severity() == 0` (Trusted-only). A `TrustLevel::Trusted` variable
-never fires the guard. Verified by `test_BC_2_18_004_severity_threshold_matrix()`.
+### AC-005 (traces to BC-2.18.004 postcondition 5)
+The injection guard uses a BINARY test: `format_messages` fires E-TMPL-001 if and only if
+`var.trust_level.is_some_and(|t| t.is_untrusted()) == true` in a `TrustRequired` slot.
+Variables with `TrustLevel::UserInput` or `TrustLevel::Trusted` do NOT trigger E-TMPL-001
+and render successfully, producing `Ok(PromptValue)`. Variables with `trust_level: None` are
+treated as `Trusted` (absent classification — no injection block). There is no
+`SlotTrustPolicy::min_trust_severity()` method — `is_untrusted()` is the sole fire condition.
+Consistent with BC-2.18.004 EC-001 (UserInput in SystemMessage slot succeeds) and TV-002
+(UserInput → `Ok(PromptValue)`).
+Verified by `test_BC_2_18_004_binary_is_untrusted_guard_fires_only_for_untrusted()`.
 
 ### AC-006 (traces to BC-2.18.004 invariant 5)
 `injection_guard` evaluates slots in SOURCE ORDER (the order declared in `from_messages`).
 It reports the FIRST violation found, not all violations simultaneously.
 Verified by `test_BC_2_18_004_source_order_evaluation_first_violation()`.
 
-### AC-007 (traces to BC-2.18.004 invariant 1)
+### AC-007 (traces to BC-2.18.002 invariant 2)
 `TrustLevel` is an enum: `Trusted`, `UserInput`, `Untrusted`. It is `#[non_exhaustive]`.
 `TrustLevel` does NOT implement `PartialOrd` or `Ord` (to prevent accidental ordering bugs);
 only `TrustLevel::severity() -> u8` is the ordering surface.
@@ -202,7 +210,7 @@ Verified by `test_BC_2_18_004_few_shot_examples_arm_untrusted_in_trust_required_
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
 | This story spec | ~4,200 |
-| BC files (2 BCs) | ~7,500 |
+| BC files (3 BCs) | ~11,000 |
 | `module-decomposition.md` (SS-18 section) | ~400 |
 | ADR-015 injection safety | ~3,000 |
 | S-2.04 story spec (predecessor context) | ~2,500 |
@@ -210,9 +218,9 @@ Verified by `test_BC_2_18_004_few_shot_examples_arm_untrusted_in_trust_required_
 | Test files (~120 lines) | ~1,800 |
 | VP-006 Kani harness spec | ~500 |
 | Tool outputs | ~500 |
-| **Total** | **~23,100** |
+| **Total** | **~26,600** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~12%** |
+| **Budget usage** | **~13%** |
 
 ## Tasks (MANDATORY)
 
@@ -253,7 +261,7 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `TrustLevel` must NOT implement `Ord` or `PartialOrd` | BC-2.18.004 invariant 1; ADR-015 Decision 2 | Compile-fail test AC-007 |
+| `TrustLevel` must NOT implement `Ord` or `PartialOrd` | BC-2.18.002 invariant 2; ADR-015 Decision 3 Amendment (B208) | Compile-fail test AC-007 |
 | `injection_guard` fires BEFORE PromptValue is produced | BC-2.18.004 postcondition 2 | Unit test AC-002 |
 | E-TMPL-001 message is DYNAMIC (contains var_name and slot_role) | BC-2.18.004 postcondition 1 | String contains check test |
 | E-TMPL-002 message is STATIC (no interpolation) | BC-2.18.005 postcondition 1; invariant 3 | String equality test |
