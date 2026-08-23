@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.005
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
   - "1.2 (BURST-312/F-P203-02/2026-08-17): Capability Anchor Justification quote-fidelity fix — replaced single ADR-026 §Decision 1 citation that incorrectly claimed 'type representation and concurrent execution' (Decision 1 covers key ordering only; concurrent execution is Decision 2) with two separate single-§ citations per POL-19: §Decision 1 (RunnableParallel: Type Representation and Key Ordering) and §Decision 2 (RunnableParallel: Concurrent Execution and Error Handling). F-P203-02."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (F-036-01/P2A-036-adjudication/2026-08-22): Duplicate-step-key edge case gap closed (adjudication of STORY-S-1.05 AC-001 conflict vs BC infallible contract). PC-1 postcondition clarified: 'all provided branches' means after IndexMap last-write-wins deduplication; duplicate keys do NOT cause Err — this is intentional parity with Python RunnableParallel dict semantics per ADR-026 §Decision 1. Added EC-006 (Duplicate step key — last-write-wins) and TV-006. Story AC-001 fallible-constructor assertion must be removed by story-writer (STORY-S-1.05 AC-001 conflicts with infallible contract)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -61,8 +62,12 @@ pregolya `Runnable`.
 
 ## Postconditions
 
-1. `RunnableParallel::new(steps)` returns a `RunnableParallel` containing all provided
-   branches in the same relative order as the input iterator.
+1. `RunnableParallel::new(steps)` returns a `RunnableParallel` (infallible — never returns
+   `Err`) containing the deduplicated set of provided branches in insertion order.
+   Duplicate keys are resolved by last-write-wins (`IndexMap` insert semantics): if the
+   iterator yields `("a", fn1)` followed by `("a", fn2)`, the resulting map contains a
+   single entry keyed `"a"` bound to `fn2`. This matches Python `RunnableParallel` dict
+   semantics per ADR-026 §Decision 1.
 2. `invoke(input, config)` fans out `N` Tokio tasks concurrently — all tasks launch
    before any result is awaited; each task receives an independent clone of `input` and
    `config`.
@@ -121,6 +126,17 @@ their own inputs).
 **Expected behavior:** Each branch receives a clone of the full array. No truncation.
 Memory usage: O(branches × input_size) per invocation.
 
+### EC-006: Duplicate step key — last-write-wins (infallible)
+
+**Scenario:** `RunnableParallel::new([("a", fn1), ("a", fn2)])` — the key `"a"` appears
+twice in the input iterator.
+**Expected behavior:** Construction succeeds (no `Err`). The resulting `RunnableParallel`
+contains one branch keyed `"a"` bound to `fn2` (the later entry wins). `invoke` runs a
+single-branch parallel and returns `Ok(Object({ "a": fn2_output }))`. `fn1` is never
+executed. This is identical to Python `RunnableParallel({"a": fn2})` — Python's dict
+literal overwrites the earlier value silently, and the Rust port inherits that semantic
+via `IndexMap` per ADR-026 §Decision 1.
+
 ### EC-005: Branches with heterogeneous output types
 
 **Scenario:** Branch "a" returns `Value::String("hello")`, branch "b" returns
@@ -138,6 +154,7 @@ uniform output types.
 | TV-003 | 3-branch parallel where output order should equal insertion order `["a", "b", "c"]` regardless of which branch finishes first | `Object` keys in order `["a", "b", "c"]` | Insertion-order invariant |
 | TV-004 | 2-branch parallel; inspect that both branches receive `Value::Number(1)` (the same input) | Both branches invoked with `Value::Number(1)` | Independent input-clone invariant |
 | TV-005 | `invoke` on a parallel with `N == 1` branch | `Ok(Object({ "only": <output> }))` | Single-branch degenerate case |
+| TV-006 | `RunnableParallel::new([("a", fn1), ("a", fn2)]).invoke(Value::Null, None)` | `Ok(Object({ "a": fn2_output }))` — fn1 never called; construction did not Err | Duplicate-key last-write-wins (EC-006) |
 
 ## Verification Properties
 

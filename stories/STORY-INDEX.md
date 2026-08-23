@@ -121,7 +121,7 @@ input-hash: "pending"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-2.04 | Prompt Template Core — PromptTemplate, ChatPromptTemplate, MessagesPlaceholder, FewShot | BC-2.18.001, BC-2.18.002, BC-2.18.003 | SS-18 | pregolya-prompts | P1 | 8 | [S-1.04, S-1.02] | draft |
-| S-2.05 | Prompt Injection Safety Guard — TrustLevel Enforcement and Fail-Closed at Render Time | BC-2.18.004, BC-2.18.005 | SS-18 | pregolya-prompts | P1 | 8 | [S-2.04] | draft |
+| S-2.05 | Prompt Injection Safety Guard — TrustLevel Enforcement and Fail-Closed at Render Time | BC-2.18.002, BC-2.18.004, BC-2.18.005 | SS-18 | pregolya-prompts | P1 | 8 | [S-2.04] | draft |
 
 ### Wave 2 — Provider crates (SS-08 + SS-22)
 
@@ -382,7 +382,7 @@ input-hash: "pending"
 | BC ID | Title (abbreviated) | Story | Priority |
 |-------|---------------------|-------|---------|
 | BC-2.18.001 | PromptTemplate F-String Rendering | S-2.04 | P1 |
-| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering | S-2.04 | P1 |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering | S-2.04, S-2.05 | P1 |
 | BC-2.18.003 | MessagesPlaceholder and FewShotPromptTemplate | S-2.04 | P1 |
 | BC-2.18.004 | injection_guard — TrustLevel Untrusted Raises E-TMPL-001 (VP-006, RG) | S-2.05 | P1 |
 | BC-2.18.005 | SlotTrustPolicy TrustAll Raises E-TMPL-002 at Construction (RG) | S-2.05 | P1 |

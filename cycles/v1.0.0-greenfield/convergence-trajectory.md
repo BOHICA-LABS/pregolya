@@ -3621,3 +3621,9 @@ Findings: F1 (HIGH) — S-2.05 AC-004/AC-005 invented a severity()-threshold inj
 Fix: AC-005 → binary is_untrusted() guard (UserInput/Trusted → Ok); AC-004 → severity() aggregation via max_by_key with no-Ord::max fail-open prohibition, anchored BC-2.18.002 invariant 2; AC-007 → BC-2.18.002 invariant 2; BC-2.18.002 added to behavioral_contracts (POLICY-8); EPIC-MAINT catalog stub added. No spec gap surfaced. Census UNCHANGED 39/133/14/118.
 Note: S-2.05 refined across P2A-032/034/035 — each fresh-context pass surfaced progressively deeper issues (citation numbering → coverage/anchoring → trust-model semantics): a fresh-context-value data point.
 Verdict: CLEAN(strict)=no. Streak 0/3. NEXT: P2A-036.
+
+### P2A-036 (reviewed HEAD f0f07b1) — NOT CLEAN → fix-burst (D-244)
+F-036-01 (HIGH): S-1.05 AC-001 invented fallible RunnableParallel::new() (dup-key→Err) vs BC-2.01.005 infallible; PO Option A (infallible canonical; Python dict/IndexMap last-write-wins, ADR-026 §Decision 1); BC-2.01.005 §PC-1 amended (infallible; EC-006; TV-006); BC-INDEX §Changelog; AC-001 rewritten.
+F-036-02 (MED): S-2.05 BC-2.18.002 coverage synced to STORY-INDEX + SS-18 map + sprint-state (POLICY-8 gap from P2A-035).
+F-036-03 (LOW): S-1.05 AC-003 → PC6/EC-001 (zero-branch).
+Census UNCHANGED 39/133/14/118. CLEAN(strict)=no. Streak 0/3. NEXT P2A-037.

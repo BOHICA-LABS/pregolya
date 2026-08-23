@@ -443,7 +443,7 @@ stories:
   - story_id: S-2.05
     wave: 2
     status: spec-ready
-    bcs: [BC-2.18.004, BC-2.18.005]
+    bcs: [BC-2.18.002, BC-2.18.004, BC-2.18.005]
     vps: [VP-006]
     points: 8
     tdd_mode: strict

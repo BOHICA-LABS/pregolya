@@ -1,19 +1,20 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.6"
+version: "3.7"
 status: active
 producer: product-owner
-timestamp: 2026-08-22T10:55:00Z
+timestamp: 2026-08-22T22:12:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "ae7f84b"
+input-hash: "1466806"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.7 (F-036-01/D-244/2026-08-22): BC-2.01.005 §PC-1 infallible amendment — EC-006 (duplicate-key last-write-wins) + TV-006 added; TV count 5→6. Grand total 700→701 canonical + 11 GTV = 712."
   - "3.6 (P2A-029-fix-burst/D-235/2026-08-22): BC-2.09.001 §PC9 amendment — TV-009 (overflow Err/E-MCP-008) + TV-010 (unknown-server Err/E-MCP-009) added. TV count 8→10. Grand total 698→700 canonical + 11 GTV = 711."
   - "3.5 (P2A-005-fix-burst/D-212/2026-08-20): BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added by product-owner — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total: 697→698 canonical + 11 GTV = 708→709 total."
   - "3.4 (burst-302b/D-171/2026-08-17): LCEL composition scope expansion (D-170) — Add 4 new BC rows: BC-2.01.005 (5 TV), BC-2.01.006 (5 TV), BC-2.01.007 (5 TV), BC-2.01.008 (6 TV). Grand total: 676→697 canonical + 11 GTV = 687→708 total. BC count 129→133."
@@ -56,7 +57,7 @@ changelog:
 | BC-2.01.002 | SS-01 | 5 | — | `TV-NNN` | | Message type-safety: wrong type rejects |
 | BC-2.01.003 | SS-01 | 5 | — | `TV-NNN` | | Runnable invoke/stream/batch dispatch |
 | BC-2.01.004 | SS-01 | 5 | — | `TV-NNN` | | Pipe A\|B produces AB chain |
-| BC-2.01.005 | SS-01 | 5 | — | `TV-NNN` | | RunnableParallel construction and concurrent invocation (D-170) |
+| BC-2.01.005 | SS-01 | 6 | — | `TV-NNN` | | RunnableParallel construction and concurrent invocation; infallible §PC-1 last-write-wins; EC-006 (D-170, D-244) |
 | BC-2.01.006 | SS-01 | 5 | — | `TV-NNN` | | RunnableParallel branch failure — fail-fast, structured error E-CORE-009 (D-170) |
 | BC-2.01.007 | SS-01 | 5 | — | `TV-NNN` | | RunnablePassthrough identity semantics and inspect contract (D-170) |
 | BC-2.01.008 | SS-01 | 6 | — | `TV-NNN` | | RunnableAssign dict augmentation — mapper-wins, non-dict E-CORE-010 (D-170) |
@@ -186,7 +187,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (133 authored BCs):** 700 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **711 total vectors** across 133 BC files.
+**Total vectors (133 authored BCs):** 701 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **712 total vectors** across 133 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -337,6 +338,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.7 | 2026-08-22 | F-036-01/D-244: BC-2.01.005 §PC-1 infallible amendment — EC-006 (duplicate-key last-write-wins) + TV-006 added; TV count 5→6. Grand total 700→701 canonical + 11 GTV = 712. | F-036-01/D-244 |
 | 3.6 | 2026-08-22 | P2A-029-fix-burst/D-235: BC-2.09.001 §PC9 amendment — TV-009 (overflow Err/E-MCP-008) + TV-010 (unknown-server Err/E-MCP-009) added. TV count 8→10. Grand total 698→700 canonical + 11 GTV = 711. | P2A-029-fix-burst/D-235 |
 | 3.5 | 2026-08-20 | P2A-005-fix-burst/D-212: BC-2.04.008 §Invariant-5 (EC-007 + TV-007) added — FtsEncryptionIncompatible construction-time guard. TV count 6→7. Grand total 697→698 canonical + 11 GTV = 709. | P2A-005-fix-burst/D-212 |
 | 3.4 | 2026-08-17 | burst-302b/D-171: LCEL scope expansion — add 4 BC rows (BC-2.01.005: 5 TV, BC-2.01.006: 5 TV, BC-2.01.007: 5 TV, BC-2.01.008: 6 TV). Grand total 676→697 canonical + 11 GTV = 708. BC count 129→133. | burst-302b/D-171 |

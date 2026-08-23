@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "7ea1a89"
+input-hash: "030651b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04]
@@ -52,13 +52,13 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.01.005 postcondition 1)
-`RunnableParallel::new(steps)` accepts an iterator of `(String, Arc<dyn DynRunnable>)` pairs and stores them in an `IndexMap<String, Arc<dyn DynRunnable>>`. Construction is fallible — duplicate step keys return `Err(PregolyaError { category: VAL, code: "E-CORE-005", .. })`. Verified by `test_BC_2_01_005_construction()`.
+### AC-001 (traces to BC-2.01.005 postcondition 1; EC-006; TV-006)
+`RunnableParallel::new(steps)` is infallible — it never returns `Err`. When the input iterator yields duplicate keys (e.g., `[("a", fn1), ("a", fn2)]`), `IndexMap` last-write-wins semantics apply: the resulting `RunnableParallel` contains one branch keyed `"a"` bound to `fn2`; `fn1` is discarded and never called. Invoking with `Value::Null` returns `Ok(Object({"a": fn2_output}))`. This matches Python `RunnableParallel` dict semantics per ADR-026 §Decision 1. Verified by `test_BC_2_01_005_duplicate_key_last_write_wins`.
 
 ### AC-002 (traces to BC-2.01.005 postcondition 2)
 `rp.invoke(input, config)` spawns all N branches concurrently via Tokio `JoinSet`, collects their outputs, and returns `Ok(Value::Object(map))` with exactly N keys in the original insertion order. Verified by `test_BC_2_01_005_invoke_N_keys_insertion_order()`.
 
-### AC-003 (traces to BC-2.01.005 postcondition 3)
+### AC-003 (traces to BC-2.01.005 postcondition 6; EC-001)
 `RunnableParallel::new([]).invoke(input, config)` returns `Ok(Value::Object(Map::new()))` — an empty object, not an error. Verified by `test_BC_2_01_005_zero_branch_returns_empty_object()`.
 
 ### AC-004 (traces to BC-2.01.005 postcondition 4 — VP-014)
