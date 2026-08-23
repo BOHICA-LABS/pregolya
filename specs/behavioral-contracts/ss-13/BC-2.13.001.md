@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.001
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -24,6 +24,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.1 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.2 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -49,20 +50,20 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 
 ## Preconditions
 
-1. `pregolya-sandbox` is compiled with default Cargo features (i.e., `sandbox-wasm` is active)
-2. No `SandboxBackend` instance has been explicitly constructed by the caller
-3. The caller invokes `SandboxBackend::default()` or `SandboxExecutor::new_default()`
+1. {PRE-001} `pregolya-sandbox` is compiled with default Cargo features (i.e., `sandbox-wasm` is active)
+2. {PRE-002} No `SandboxBackend` instance has been explicitly constructed by the caller
+3. {PRE-003} The caller invokes `SandboxBackend::default()` or `SandboxExecutor::new_default()`
 
 ## Postconditions
 
-1. `SandboxBackend::default()` returns a `WasmBackend` (or `ContainerBackend` if WASM is
+1. {PC-001} `SandboxBackend::default()` returns a `WasmBackend` (or `ContainerBackend` if WASM is
    unavailable and the `sandbox-container` feature is also enabled)
-2. The returned backend's `BackendCapabilities` struct has `filesystem_isolated = true`,
+2. {PC-002} The returned backend's `BackendCapabilities` struct has `filesystem_isolated = true`,
    `network_isolated = true`, and `memory_bounded = true`
-3. No `default()` or `new()` constructor on any `SandboxBackend` variant returns a
+3. {PC-003} No `default()` or `new()` constructor on any `SandboxBackend` variant returns a
    `ProcessBackend` — the process backend is only accessible via
    `Sandbox::unsafe_process_no_isolation()`
-4. If only the `sandbox-process` feature is compiled (no `sandbox-wasm`, no
+4. {PC-004} If only the `sandbox-process` feature is compiled (no `sandbox-wasm`, no
    `sandbox-container`), `SandboxBackend::default()` returns
    `Err(E-SBXD-003: SandboxInitFailed)` with reason `"no enforcing backend compiled in"`
    and the Cargo build emits a compile-time warning: `"WARNING: pregolya-sandbox compiled
@@ -71,14 +72,14 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 
 ## Invariants
 
-1. No public `Default` implementation for any `SandboxBackend` variant may return a
+1. {INV-001} No public `Default` implementation for any `SandboxBackend` variant may return a
    non-enforcing backend; the only legal default is WASM or container
-2. `BackendCapabilities::enforcing()` for the default backend returns `true`; this helper
+2. {INV-002} `BackendCapabilities::enforcing()` for the default backend returns `true`; this helper
    is a conjunction of `filesystem_isolated && network_isolated && memory_bounded`
-3. The name `unsafe_process_no_isolation` must appear verbatim in the process backend
+3. {INV-003} The name `unsafe_process_no_isolation` must appear verbatim in the process backend
    constructor — both "unsafe" and "no_isolation" tokens must be present to surface the
    security posture at call sites
-4. adk-rust reference sparsity: upstream has no enforcing-default design; this invariant is
+4. {INV-004} adk-rust reference sparsity: upstream has no enforcing-default design; this invariant is
    purely pregolya-greenfield, derived from NE-01 (P-61 counter-example) and DI-006
 
 ## Edge Cases

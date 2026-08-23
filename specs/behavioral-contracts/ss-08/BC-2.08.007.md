@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, EC-004, TV-001, TV-003, TV-005 each had category-only PregolyaError constructions with no code field. Added code: E-PROV-002 (ProviderTimeout) to TIMEOUT constructions and code: E-PROV-003 (StreamInterrupted) to TRANSPORT constructions per error-taxonomy.md BC anchors."
   - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-PROV-002 message-prefix correction. PC1: added 'ProviderTimeout:' prefix per universal <ErrorName>: <detail> convention (D18-P78-A adjudication; BC lacked prefix). Message was 'stream chunk timeout after <duration>'; corrected to 'ProviderTimeout: stream chunk timeout after <duration>'. Taxonomy E-PROV-002 corrected simultaneously: dropped '<provider>' parameter and changed '<ms>ms' to '<duration>' (BC wins on content — no provider name in BC message; duration placeholder more precise than ms-specific)."
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): (1) Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon): 8 Class 3 violations corrected — §Description category-union observation (added `, ..`); §Postconditions PC1 Unicode `…` replaced with `..` after message field; §EC-001, §EC-003 bare two-field observations (added `, ..`); §EC-004 three-field observation (added `, ..`); §Canonical Test Vectors TV-001, TV-003, TV-005 bare two- and three-field observations (added `, ..`). All occurrences reconciled: 8 corrected (Class 3), 1 exempt (changelog). (2) D-35/D-80 xtask rename: §Traceability Test Types cell — `deny-client-new` → `check-client-timeout`."
   - "1.8 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): §Postconditions PC2 split-line form: PregolyaError on preceding line, `{ category: TRANSPORT, … }` on continuation — Unicode `…` replaced with `..` (only `category` present; `component`, `code`, `message`, `retry_hint` absent; rest pattern required per Class 3 normative rule; split-line form does not exempt from the rule)."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "2.0 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014
@@ -60,43 +61,43 @@ results.
 
 ## Preconditions
 
-1. A pregolya provider chat model is constructed with streaming enabled and a
+1. {PRE-001} A pregolya provider chat model is constructed with streaming enabled and a
    per-chunk timeout configured (recommended: `Duration::from_secs(30)` for each SSE
    chunk; separate from the total request timeout).
-2. A test fixture can simulate a stalled stream: the fixture delivers the first N SSE
+2. {PRE-002} A test fixture can simulate a stalled stream: the fixture delivers the first N SSE
    chunks normally, then stops sending without closing the connection.
-3. The provider's streaming HTTP client wraps the SSE reader with a per-chunk timeout
+3. {PRE-003} The provider's streaming HTTP client wraps the SSE reader with a per-chunk timeout
    guard (e.g., `tokio::time::timeout` applied around each `next()` call on the stream).
 
 ## Postconditions
 
-1. **Per-chunk stall → `Err(Timeout)`:** When an SSE stream stalls (no bytes received)
+1. {PC-001} **Per-chunk stall → `Err(Timeout)`:** When an SSE stream stalls (no bytes received)
    for longer than the configured per-chunk timeout, the streaming call terminates and
    returns `Err(PregolyaError { category: TIMEOUT, code: E-PROV-002, message: "ProviderTimeout: request timed out
    after <duration>", .. })` (where `<duration>` is the configured per-chunk timeout, e.g., "30s").
    No partial `AiMessage` is returned as `Ok`.
-2. **TCP reset / connection drop → `Err(Transport)`:** When the underlying TCP
+2. {PC-002} **TCP reset / connection drop → `Err(Transport)`:** When the underlying TCP
    connection is reset mid-stream, the streaming call returns `Err(PregolyaError
    { category: TRANSPORT, .. })`. No partial content is surfaced as success.
-3. **Chunks received before interrupt are NOT returned as `Ok`:** There is no API shape
+3. {PC-003} **Chunks received before interrupt are NOT returned as `Ok`:** There is no API shape
    that returns both accumulated partial content AND an error. The caller receives
    either a complete `Ok(AiMessage)` or a typed `Err`.
-4. **Per-chunk timeout is independent of total request timeout:** The per-chunk timeout
+4. {PC-004} **Per-chunk timeout is independent of total request timeout:** The per-chunk timeout
    fires when no new SSE data arrives for the configured duration, even if the total
    elapsed time is below the total request timeout.
-5. **Zero client timeouts are disallowed (DI-009 / NE-04):** Constructing the streaming
+5. {PC-005} **Zero client timeouts are disallowed (DI-009 / NE-04):** Constructing the streaming
    HTTP client without specifying a timeout (zero-argument `Client::new()` or equivalent)
    is disallowed in non-test code. CI lint enforces this.
 
 ## Invariants
 
-- **DI-014 (Error Propagation (No Silent Swallowing)):** A transport error during
+- {INV-001} **DI-014 (Error Propagation (No Silent Swallowing)):** A transport error during
   streaming NEVER produces `Ok(partial_message)`. The `Ok` variant signifies a
   complete, non-truncated response.
-- **DI-009 (Outbound Connection Timeout (Mandatory)):** The streaming client builder
+- {INV-002} **DI-009 (Outbound Connection Timeout (Mandatory)):** The streaming client builder
   MUST set a connection timeout. Zero-argument `Client::new()` is prohibited in
   non-test code.
-- Per-chunk timeout and total request timeout are both set. Per-chunk timeout is the
+- {INV-003} Per-chunk timeout and total request timeout are both set. Per-chunk timeout is the
   primary guard against stalled SSE streams; total request timeout is the backstop
   against unboundedly long complete responses.
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.011
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.0 (2026-07-13): initial authoring — Greenfield batch 13"
   - "1.1 (2026-07-14): Architecture Anchor pregolya-core/src/graph/builder.rs corrected to pregolya-graph/src/graph/state.rs — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -51,30 +52,30 @@ definition; applying it to two nodes in the same graph is a compile-time error.
 
 ## Preconditions
 
-1. The annotated function is a StateGraph node function with signature
+1. {PRE-001} The annotated function is a StateGraph node function with signature
    `async fn node_name(state: S) -> Result<Update<S>, PregolyaError>` (or equivalent
    per the node function contract in CAP-004/BC-2.02.001).
-2. The `StateGraph` builder being constructed is the same graph scope where the annotation
+2. {PRE-002} The `StateGraph` builder being constructed is the same graph scope where the annotation
    applies. The entrypoint annotation is scoped to the graph builder invocation.
-3. `pregolya-macros` is available (re-exported from `pregolya-core`).
+3. {PRE-003} `pregolya-macros` is available (re-exported from `pregolya-core`).
 
 ## Postconditions
 
-1. When the `StateGraph::build()` call compiles the graph, `add_edge(START, "<node_name>")`
+1. {PC-001} When the `StateGraph::build()` call compiles the graph, `add_edge(START, "<node_name>")`
    is automatically inserted — exactly equivalent to the user writing it manually.
-2. No duplicate START edge is inserted: if the user also calls `add_edge(START, ...)` manually,
+2. {PC-002} No duplicate START edge is inserted: if the user also calls `add_edge(START, ...)` manually,
    a compile-time or build-time error (`GraphBuildError::DuplicateStartEdge`) is returned.
-3. The annotated node remains a fully valid node in all other respects — it may still have
+3. {PC-003} The annotated node remains a fully valid node in all other respects — it may still have
    incoming edges from other nodes.
-4. Removing the `#[entrypoint]` attribute and manually adding the START edge produces
+4. {PC-004} Removing the `#[entrypoint]` attribute and manually adding the START edge produces
    semantically identical runtime behavior.
 
 ## Invariants
 
-- The `#[entrypoint]` attribute is purely additive ergonomics — it generates no logic that
+- {INV-001} The `#[entrypoint]` attribute is purely additive ergonomics — it generates no logic that
   could not be written by hand. Any graph built with `#[entrypoint]` is equivalent to a
   graph built without it plus a manual `add_edge(START, node_name)` call.
-- At most one `#[entrypoint]` per `StateGraph` builder scope is valid. This is the
+- {INV-002} At most one `#[entrypoint]` per `StateGraph` builder scope is valid. This is the
   primary invariant; violation is a hard compile error.
 
 ## Edge Cases
@@ -151,6 +152,7 @@ S-1.07
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-08-23 | stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change | M1/ADR-027 |
 | 1.2 | 2026-08-22 | §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change) | story-anchor-backfill |
 | 1.1 | 2026-07-14 | Architecture Anchor `pregolya-core/src/graph/builder.rs` corrected to `pregolya-graph/src/graph/state.rs` — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 13 |

@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.004
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -30,6 +30,7 @@ changelog:
   - "1.4 (burst-288/P1D-177-C-H03/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — §Traceability §Binding Decisions: ADR-024 Decision 1 (two-phase protocol) + §Phase-2 Postconditions PC-4 (Ok-path confinement proof) added; PC-4 is the formal proof that directly implements what EC-004's parent-canonicalize protocol specifies. Postcondition 5 (write/create new file): traces-to note citing ADR-024 Decision 1 Phase 2 + PC-4 added. Architecture Anchors: ADR-024 §Decision 1/§Confinement-Proof/§PC-4 added. inputs: ADR-024 added."
   - "1.5 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix two live-body phantom ADR §-citations. PC-5 trailing reference and Architecture Anchors: `§Confinement-Proof` (hyphen form) → `ADR-024 §Confinement Proof — Phase 2` (real heading is `## Confinement Proof — Phase 2` in ADR-024; hyphen was dropped to space + em-dash)."
   - "1.6 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-02 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-02)."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -62,39 +63,39 @@ formally prove that no file operation can observe content outside the declared w
 
 ## Preconditions
 
-1. A `WorkspaceRoot` has been established with a canonical base path (resolved at construction
+1. {PRE-001} A `WorkspaceRoot` has been established with a canonical base path (resolved at construction
    time via `std::fs::canonicalize()`)
-2. A tool or internal API is requesting a file operation against a `requested_path` (which may
+2. {PRE-002} A tool or internal API is requesting a file operation against a `requested_path` (which may
    be relative, absolute, contain `..`, or contain symlinks)
-3. The file operation is dispatched through the `WorkspaceFs` facade — no direct `std::fs`
+3. {PRE-003} The file operation is dispatched through the `WorkspaceFs` facade — no direct `std::fs`
    calls are permitted outside this facade
 
 ## Postconditions
 
-1. `canonicalize_beneath_root(base, requested)` is called before any OS file operation
-2. The function calls `std::fs::canonicalize()` (or `tokio::fs::canonicalize()` in async
+1. {PC-001} `canonicalize_beneath_root(base, requested)` is called before any OS file operation
+2. {PC-002} The function calls `std::fs::canonicalize()` (or `tokio::fs::canonicalize()` in async
    context) to resolve all symlinks and `..` components
-3. If the canonical resolved path has the canonical workspace root as a prefix,
+3. {PC-003} If the canonical resolved path has the canonical workspace root as a prefix,
    the resolved `PathBuf` is returned and the file operation proceeds
-4. If the canonical resolved path does NOT have the workspace root as a prefix,
+4. {PC-004} If the canonical resolved path does NOT have the workspace root as a prefix,
    `Err(E-SBXD-001: WorkspaceEscape)` is returned and no file operation occurs
-5. For write/create to a new file (path does not yet exist), the parent directory path is
+5. {PC-005} For write/create to a new file (path does not yet exist), the parent directory path is
    canonicalized and verified to be beneath the root; the new filename is then appended
    (ADR-024 Decision 1 Phase 2 two-phase protocol; confinement proof for the `Ok(path)` return
    per ADR-024 §Phase-2 Postconditions PC-4: `canonical_parent.join(filename) ⊆ canonical_base`
    holds unconditionally under the five soundness invariants in ADR-024 §Confinement Proof — Phase 2)
-6. String depth-counting of `..` segments is NOT used as sole or partial validation
+6. {PC-006} String depth-counting of `..` segments is NOT used as sole or partial validation
 
 ## Invariants
 
-1. `canonicalize_beneath_root` is called at access time — not at path construction time or
+1. {INV-001} `canonicalize_beneath_root` is called at access time — not at path construction time or
    as a pre-validation step that is later bypassed
-2. All workspace file operations route through a single `WorkspaceFs` facade; no code path
+2. {INV-002} All workspace file operations route through a single `WorkspaceFs` facade; no code path
    calls `std::fs::read`, `std::fs::write`, `std::fs::File::open`, or equivalents directly
    on a path inside the sandbox without going through this facade
-3. The prefix check uses the CANONICAL workspace root (resolved once at `WorkspaceRoot`
+3. {INV-003} The prefix check uses the CANONICAL workspace root (resolved once at `WorkspaceRoot`
    construction) — not a string comparison of the original input path
-4. adk-rust reference sparsity: upstream `validate_relative_path` (P-65) is the
+4. {INV-004} adk-rust reference sparsity: upstream `validate_relative_path` (P-65) is the
    counter-example; no positive upstream reference for filesystem-level canonicalization
    in the sandbox path — greenfield design derived from NE-02 and DI-007
 

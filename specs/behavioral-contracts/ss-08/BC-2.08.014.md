@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.014
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P81-01): F-P81-01 — TV-007 had fabricated PascalCase variant name `E-CORE-005 ValidationFailed`; no such variant exists in error-taxonomy.md (E-CORE-005 message is plain prose). Fixed to canonical bare-code form matching sibling BC-2.08.002 TV-005: `Err(PregolyaError { category: VAL, code: E-CORE-005 })`."
   - "1.2 (F-P108-01, 2026-07-18): EC-004 and TV-005 expanded to use two separate fields `last_error_code` and `last_provider` instead of single `last_error` field. Root cause: the taxonomy Message Format for E-PROV-010 uses two distinct placeholders `<last_error_code>/<last_provider>` that cannot be rendered from a single combined field; BC-wins rule applies. EC-004: `{ providers_attempted: 3, last_error: \"E-PROV-008/provider-b\" }` → `{ providers_attempted: 3, last_error_code: \"E-PROV-008\", last_provider: \"provider-b\" }`. TV-005: expanded from bare form with inline `providers_attempted: 3` annotation to full struct with all three fields. Sibling sweep (all E-PROV-010 sites in this BC): PC5 uses message-template form with `<last_error_code>/<last_provider>` placeholders (already correctly separated); Description and TV-006 use bare form (no struct fields; not subject to parity check). PASS after fix."
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-006 and §Canonical Test Vectors TV-007: PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-006; category, code at TV-007); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 1 already-valid (Class 3 complete observation at §Postconditions PC5 — all 5 non-source fields present), 1 exempt (changelog)."
   - "1.6 (F-P188-02/burst-297/2026-08-16): Error Code Minted callout and Traceability row omitted E-PROV-011 FallbackChainEmpty. BC-2.08.014 is the sole taxonomy anchor for both E-PROV-010 ProviderChainExhausted (exhaustion-time, POLICY) AND E-PROV-011 FallbackChainEmpty (construction-time VAL, minted in fix-burst-276/F-P173-610). Both codes are used in this BC body (EC-004/TV-005 for E-PROV-010; EC-006/TV-007 for E-PROV-011). Callout updated to 'Error codes minted here (E-PROV-010, E-PROV-011)'; Traceability row extended to list both codes. D-134 Sweep B: this was the sole missing-mint occurrence across all 6 Error-Code-Minted BCs. input-hash updated to current (59d2766)."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
@@ -60,26 +61,26 @@ on the same provider; this governs provider-level failover to a different provid
 
 ## Preconditions
 
-1. `ChatConfig` is constructed with a non-empty `fallback_policy: Some(ProviderFallbackPolicy {
+1. {PRE-001} `ChatConfig` is constructed with a non-empty `fallback_policy: Some(ProviderFallbackPolicy {
    chain: Vec<ProviderCredential>, credential_refresh: Option<CredentialRefreshConfig> })`.
-2. The primary provider is configured and a model call is in flight.
-3. The primary provider returns a response with HTTP status 429, any HTTP 5xx, or an auth
+2. {PRE-002} The primary provider is configured and a model call is in flight.
+3. {PRE-003} The primary provider returns a response with HTTP status 429, any HTTP 5xx, or an auth
    failure (HTTP 401/403 interpreted as `E-PROV-004 ProviderAuthFailed`).
 
 ## Postconditions
 
-1. On receiving a **429 (rate limit)** from the primary provider:
+1. {PC-001} On receiving a **429 (rate limit)** from the primary provider:
    - pregolya skips the credential-refresh step (rate limiting is not a credential problem).
    - pregolya retries the call on the first available fallback provider in `chain`.
    - The graph call (`invoke` / `stream`) receives the fallback provider's response as if
      it were the primary's response. No error is surfaced to the graph for the 429.
 
-2. On receiving a **5xx** from the primary provider:
+2. {PC-002} On receiving a **5xx** from the primary provider:
    - pregolya skips credential refresh.
    - pregolya retries the call on the first available fallback provider.
    - Same transparent-continuation semantics as PC-1.
 
-3. On receiving an **auth failure** (E-PROV-004) from the primary provider:
+3. {PC-003} On receiving an **auth failure** (E-PROV-004) from the primary provider:
    - If `credential_refresh` is configured: pregolya first attempts to refresh the
      primary provider's credentials. If refresh succeeds, the call is retried on the
      **primary** provider with the refreshed credentials.
@@ -87,39 +88,39 @@ on the same provider; this governs provider-level failover to a different provid
      fallback provider in `chain`.
    - The graph call continues transparently (no E-PROV-004 surfaced if a fallback succeeds).
 
-4. **Ordered chain semantics:** fallback providers in `chain` are attempted in declaration
+4. {PC-004} **Ordered chain semantics:** fallback providers in `chain` are attempted in declaration
    order. If provider at index `i` also fails with a trigger condition, pregolya moves to
    provider at index `i+1`.
 
-5. **Chain exhausted:** if all providers in `chain` (and the primary) have been attempted
+5. {PC-005} **Chain exhausted:** if all providers in `chain` (and the primary) have been attempted
    and all returned trigger errors, pregolya returns:
    `Err(PregolyaError { component: PROV, category: POLICY, code: "E-PROV-010",
    message: "ProviderChainExhausted: all <N> providers in fallback chain failed; last error:
    <last_error_code>/<last_provider>", retry_hint: Never })`.
    `N` is the total number of providers attempted (1 primary + `chain.len()` fallbacks).
 
-6. **Non-trigger errors are not followed by failover:** if the primary provider returns a
+6. {PC-006} **Non-trigger errors are not followed by failover:** if the primary provider returns a
    non-trigger error (VAL, TIMEOUT, TRANSPORT DNS failure unrelated to auth), the error is
    surfaced directly to the caller without attempting fallback. Failover is only for 429,
    5xx, and auth failures.
 
-7. Credential values are never logged during failover (DI-010 Credential Opacity).
+7. {PC-007} Credential values are never logged during failover (DI-010 Credential Opacity).
 
 ## Invariants
 
-- **Failover is transparent to the graph:** the `StateGraph` node that issued the model
+- {INV-001} **Failover is transparent to the graph:** the `StateGraph` node that issued the model
   call does not observe the failover; it receives the response as `Ok(AiMessage)` if any
   provider in the chain succeeds.
-- **Each provider is attempted at most once per call** in a single failover sequence: the
+- {INV-002} **Each provider is attempted at most once per call** in a single failover sequence: the
   chain does not cycle (no round-robin retry back to the primary within one failover sequence).
-- **ProviderFallbackPolicy is distinct from RetryPolicy (SS-16):** SS-16 governs per-tool
+- {INV-003} **ProviderFallbackPolicy is distinct from RetryPolicy (SS-16):** SS-16 governs per-tool
   retry with circuit breaking on the same provider. BC-2.08.014 governs provider-level
   failover to a different provider. The two policies compose: a retry policy may trigger
   before failover is considered; once retries are exhausted, failover kicks in.
-- `ProviderFallbackPolicy.chain` must be non-empty at construction time.
+- {INV-004} `ProviderFallbackPolicy.chain` must be non-empty at construction time.
   `ProviderFallbackPolicy { chain: vec![] }` is a VAL error (caught at config validation,
   not at runtime).
-- No credentials from the fallback chain appear in log lines, error messages, or
+- {INV-005} No credentials from the fallback chain appear in log lines, error messages, or
   `PregolyaError.message` fields (DI-010).
 
 ## Edge Cases

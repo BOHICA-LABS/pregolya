@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.002
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 2
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC8 had bare `Err(PregolyaError { code: E-MCP-004 ToolNotFound })` without message; E-MCP-004 has <tool_name> placeholder. Added inline message template; <tool_name> is available from the ToolInvocation at the raise site."
@@ -23,6 +23,7 @@ changelog:
   - "1.5 (FIX-BURST-278-WAVE-C/S4-gate+F-P175-D210/2026-07-28): (1) S4 gate (D-43) — frontmatter changelog §v1.4 entry annotated 'non-object-safe' before 'Arc<dyn pregolya_core::Tool>': hazard-naming historical record; annotation makes the S4-exemption machine-verifiable (the migration documented that form as E0038/non-object-safe by intent). PC-1 body 'direct dyn pregolya_core::Tool is non-object-safe' is already exempt. (2) F-P175-D210 (HIGH) — Description, PC-4, and TV-003 exposed raw McpError::ToolExecution at a public boundary with no taxonomy code, contradicting the all-errors-are-PregolyaError rule. Fix: all three sites updated to PregolyaError{code:E-MCP-007} with McpError::ToolExecution preserved in .source() per BC-2.09.004 PC-1 pattern. E-MCP-007 McpToolExecutionError (TOOL, broken, Maybe) minted in error-taxonomy.md same burst. Authority: error-taxonomy.md §E-MCP-007. Verifiable: grep 'Err(McpError::ToolExecution)' specs/behavioral-contracts/ss-09/BC-2.09.002.md returns zero occurrences in public-surface sites. (3) records-lint L9b de-pin — prior changelog entry contained an error-taxonomy version-pin in the E-MCP-006 minting note; de-pinned to stable section anchor 'error-taxonomy.md §E-MCP-006' per TD-VSDD-091 version-pin ban."
   - "1.6 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — nine violations corrected (line 20 frontmatter EXEMPT): Description (3/5, added `..`); PC4 (3/5, added `..`); PC5 multiline (4/5, added `..`); PC6 multiline (4/5, added `..`); PC8 (2/5, added `..`); EC-004 multiline (4/5, added `..`); TV-003 (3/5, added `..`); TV-004 (3/5, added `..`); TV-005 (3/5, added `..`). All per ADR-010 §Error-Construction Notation Canon Class 3."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -56,24 +57,24 @@ Transport failures and content-conversion errors always propagate regardless of 
 
 ## Preconditions
 
-1. A `Arc<dyn DynTool>` was produced by `convert_mcp_tool` (see BC-2.09.001),
+1. {PRE-001} A `Arc<dyn DynTool>` was produced by `convert_mcp_tool` (see BC-2.09.001),
    carrying a `SessionSource` referencing the target MCP server. (`DynTool` is the
    object-safe dispatch seam per ADR-005 §Adjacent Trait Object-Safety Adjudications;
    direct `dyn pregolya_core::Tool` is non-object-safe and may not be used as a
    trait object.)
-2. A `ToolInvocation` with a valid args payload conforming to `tool.inputSchema` is submitted.
-3. The interceptor chain (possibly empty) is configured on the tool.
+2. {PRE-002} A `ToolInvocation` with a valid args payload conforming to `tool.inputSchema` is submitted.
+3. {PRE-003} The interceptor chain (possibly empty) is configured on the tool.
 
 ## Postconditions
 
-1. The interceptor chain is applied in onion order (first registered = outermost wrapper)
+1. {PC-001} The interceptor chain is applied in onion order (first registered = outermost wrapper)
    around the base `rmcp::call_tool` invocation. Each interceptor receives a
    `McpToolCallRequest { name, args, headers (mutable); server_name, runtime (context) }`.
-2. For `SessionSource::OnDemand(connection)`: a new rmcp client session is created
+2. {PC-002} For `SessionSource::OnDemand(connection)`: a new rmcp client session is created
    (stdio spawn / http connect), `initialize()` called, the tool call performed, and
    the session dropped at scope end (RAII). No session is retained across calls.
-3. For `SessionSource::Live(arc)`: the shared Arc'd session is used for the call.
-4. The `CallToolResult` is converted:
+3. {PC-003} For `SessionSource::Live(arc)`: the shared Arc'd session is used for the call.
+4. {PC-004} The `CallToolResult` is converted:
    - `isError = false`: content blocks converted via the 6-way mapping (BC-2.09.003
      anchors untrusted-ingress guardrail); returns `Ok(ToolMessage{status: Success, content})`.
    - `isError = true`, `handle_tool_errors = true` (default): content blocks converted;
@@ -82,14 +83,14 @@ Transport failures and content-conversion errors always propagate regardless of 
    - `isError = true`, `handle_tool_errors = false`: returns
      `Err(PregolyaError { component: MCP, category: TOOL, code: E-MCP-007, .. })` with
      `McpError::ToolExecution { blocks }` preserved in `.source()`. (Legacy opt-out — agent sees the error.)
-5. Transport failures (e.g., TCP reset, connection refused) ALWAYS return
+5. {PC-005} Transport failures (e.g., TCP reset, connection refused) ALWAYS return
    `Err(PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002,
    message: "McpTransportError: cannot connect to MCP server '<server>': <transport_error>", .. })`
    regardless of flag (where `<server>` = server name from the tool's `SessionSource`;
    `<transport_error>` = transport failure description, e.g., "connection reset by peer").
    The underlying `McpError::Transport` is preserved in `.source()`. See EC-004 for the
    authoritative full-form struct.
-6. Content-conversion errors (unsupported content block types returned by the MCP tool,
+6. {PC-006} Content-conversion errors (unsupported content block types returned by the MCP tool,
    e.g., `AudioContent`) ALWAYS return
    `Err(PregolyaError { component: MCP, category: VAL, code: E-MCP-006,
    message: "McpContentUnsupported: MCP tool '<tool>' returned unsupported content type '<content_type>'", .. })`
@@ -97,20 +98,20 @@ Transport failures and content-conversion errors always propagate regardless of 
    `<content_type>` = content block variant name, e.g., `"AudioContent"`; both available at
    the raise site). The underlying `McpError::ContentConversion` is preserved in `.source()`.
    This is the authoritative full-form site for E-MCP-006 gate #33; TV-005 PASS-ABBREV via this PC6.
-7. `structuredContent` from `CallToolResult` is surfaced as `MCPToolArtifact { structured_content }`
+7. {PC-007} `structuredContent` from `CallToolResult` is surfaced as `MCPToolArtifact { structured_content }`
    alongside the content blocks (content+artifact response format).
-8. Tool not found in routing table: `Err(PregolyaError { code: E-MCP-004 ToolNotFound, message: "ToolNotFound: tool '<tool_name>' is not registered with any MCP server", .. })`
+8. {PC-008} Tool not found in routing table: `Err(PregolyaError { code: E-MCP-004 ToolNotFound, message: "ToolNotFound: tool '<tool_name>' is not registered with any MCP server", .. })`
    (where `<tool_name>` is available from the `ToolInvocation.tool_name` field at the raise site).
 
 ## Invariants
 
-- The `handle_tool_errors` flag applies ONLY to `McpError::ToolExecution` (the `isError=true`
+- {INV-001} The `handle_tool_errors` flag applies ONLY to `McpError::ToolExecution` (the `isError=true`
   path). Transport and content-conversion errors bypass the flag and always propagate.
-- The interceptor chain does not modify the `SessionSource`; it may only mutate
+- {INV-002} The interceptor chain does not modify the `SessionSource`; it may only mutate
   `name`, `args`, and `headers` on `McpToolCallRequest`.
-- Header mutations by interceptors for SSE/HTTP transports create a cloned `Connection`
+- {INV-003} Header mutations by interceptors for SSE/HTTP transports create a cloned `Connection`
   with merged headers; the shared config is never mutated.
-- No connection pooling exists in v1; `OnDemand` sessions are always fresh per call.
+- {INV-004} No connection pooling exists in v1; `OnDemand` sessions are always fresh per call.
 
 ## Edge Cases
 

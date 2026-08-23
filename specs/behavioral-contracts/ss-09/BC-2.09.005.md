@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.005
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,7 +16,7 @@ red_gate: true
 red_gate_source: R11
 vp_id: VP-005
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -32,6 +32,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-46): OBS-P46-1 — align VP-005 phrasing to sibling BC-2.09.004 VP-004 convention. 'compile+pass but network assertion fails' → 'compile+fail — test compiles and runs but the network-I/O assertion inside it fails'. Same semantic; consistent phrasing across both R11 Red Gate BCs."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -67,34 +68,34 @@ cloneable without connection state. Sessions are always created per-call (RAII,
 
 ## Preconditions
 
-1. A `MultiServerMcpClient` is constructed with a `HashMap<String, Connection>` of
+1. {PRE-001} A `MultiServerMcpClient` is constructed with a `HashMap<String, Connection>` of
    connection configs.
 
 ## Postconditions
 
-1. Immediately after construction, no network connections are open. No TCP sockets,
+1. {PC-001} Immediately after construction, no network connections are open. No TCP sockets,
    no spawned stdio processes, and no HTTP sessions are alive.
-2. `MultiServerMcpClient` does NOT implement `Drop` with any network teardown behavior.
-3. `MultiServerMcpClient` does NOT expose any `close()`, `shutdown()`, `disconnect()`,
+2. {PC-002} `MultiServerMcpClient` does NOT implement `Drop` with any network teardown behavior.
+3. {PC-003} `MultiServerMcpClient` does NOT expose any `close()`, `shutdown()`, `disconnect()`,
    or `connect()` method at the public API level.
-4. The struct is `Send + Sync + Clone` — cloning it produces an identical config
+4. {PC-004} The struct is `Send + Sync + Clone` — cloning it produces an identical config
    container with zero network side effects.
-5. When `session("server_name")` is called, it returns an RAII-scoped session handle
+5. {PC-005} When `session("server_name")` is called, it returns an RAII-scoped session handle
    (`McpSessionGuard`) that creates a new connection on entry and drops it on exit.
    The `McpSessionGuard` is NOT stored in `MultiServerMcpClient`.
-6. A `MultiServerMcpClient` instance that is dropped without calling any methods
+6. {PC-006} A `MultiServerMcpClient` instance that is dropped without calling any methods
    causes ZERO network I/O and ZERO async executor interaction.
-7. Attempting to use `MultiServerMcpClient` as a `Drop`-based scoped connection manager
+7. {PC-007} Attempting to use `MultiServerMcpClient` as a `Drop`-based scoped connection manager
    (i.e., storing a live connection in it and relying on `drop()` to close it) is
    structurally impossible: the type system prevents it.
 
 ## Invariants
 
-- DI-014: No silent behavior is hidden in the lifecycle of this struct. Its construction
+- {INV-001} DI-014: No silent behavior is hidden in the lifecycle of this struct. Its construction
   and destruction are pure and side-effect-free.
-- The struct is a value type (config bag), not a resource type (connection handle).
+- {INV-002} The struct is a value type (config bag), not a resource type (connection handle).
   The distinction is load-bearing: callers should not wrap it in `Arc<Mutex<...>>`.
-- Every network interaction goes through `session()` or `get_tools()`, both of which
+- {INV-003} Every network interaction goes through `session()` or `get_tools()`, both of which
   create fresh sessions per call.
 
 ## Edge Cases

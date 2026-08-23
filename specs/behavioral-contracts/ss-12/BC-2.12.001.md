@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -36,6 +36,7 @@ changelog:
   - "1.3 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-SERVER-007 message-prefix correction at two BC sites. (1) PC3 (Create Thread): added 'ThreadAlreadyExists:' prefix and lowercased 'Thread' to 'thread' in message string (was 'Thread'; now 'thread'). (2) EC-001: same corrections applied. Taxonomy already carried the prefix and lowercase; BC was the lagging artifact. Both sites now produce the canonical form 'ThreadAlreadyExists: thread <id> already exists'."
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 ---
 
 # BC-2.12.001: Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History)
@@ -51,58 +52,58 @@ pregolya-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 
 ## Preconditions
 
-1. `pregolya-server` is running with a configured `RunStore` and `CheckpointSaver` backend.
-2. The caller holds a valid authentication credential (or the server is in unauthenticated
+1. {PRE-001} `pregolya-server` is running with a configured `RunStore` and `CheckpointSaver` backend.
+2. {PRE-002} The caller holds a valid authentication credential (or the server is in unauthenticated
    dev mode).
 
 ## Postconditions
 
 ### Create Thread (`POST /threads`)
 
-1. Accepts body `{ thread_id?: Uuid, metadata?: Map<String, Value> }`.
-2. `thread_id` is caller-supplied or server-generated (UUID v4 if absent).
-3. If `thread_id` already exists and `if_exists = "raise"` (default): returns HTTP 409
+1. {PC-001} Accepts body `{ thread_id?: Uuid, metadata?: Map<String, Value> }`.
+2. {PC-002} `thread_id` is caller-supplied or server-generated (UUID v4 if absent).
+3. {PC-003} If `thread_id` already exists and `if_exists = "raise"` (default): returns HTTP 409
    with `{ code: "E-SERVER-007", message: "ThreadAlreadyExists: thread '<id>' already exists" }`.
-4. If `thread_id` already exists and `if_exists = "do_nothing"`: returns the existing
+4. {PC-004} If `thread_id` already exists and `if_exists = "do_nothing"`: returns the existing
    Thread record (HTTP 200), no modification.
-5. Returns HTTP 201 with the created `Thread { thread_id, metadata, created_at, updated_at, status }`.
+5. {PC-005} Returns HTTP 201 with the created `Thread { thread_id, metadata, created_at, updated_at, status }`.
 
 ### Read Thread (`GET /threads/{thread_id}`)
 
-6. Returns HTTP 200 with the Thread record if found.
-7. Returns HTTP 404 with `{ code: "E-SERVER-003", message: "ThreadNotFound: thread '<id>' does not exist" }` if not found.
+6. {PC-006} Returns HTTP 200 with the Thread record if found.
+7. {PC-007} Returns HTTP 404 with `{ code: "E-SERVER-003", message: "ThreadNotFound: thread '<id>' does not exist" }` if not found.
 
 ### List/Search Threads (`GET /threads`)
 
-8. Accepts query params `metadata` (filter), `limit` (default 10, max 100; values > 100 silently clamped to 100), `offset` (default 0).
-9. Returns `{ threads: [Thread], total_count: u64 }`; results ordered `created_at` descending (canonical; F-P31-01, ADV-P1D-PASS-34).
-10. Metadata filter uses exact-match on top-level keys; partial matches are not supported.
+8. {PC-008} Accepts query params `metadata` (filter), `limit` (default 10, max 100; values > 100 silently clamped to 100), `offset` (default 0).
+9. {PC-009} Returns `{ threads: [Thread], total_count: u64 }`; results ordered `created_at` descending (canonical; F-P31-01, ADV-P1D-PASS-34).
+10. {PC-010} Metadata filter uses exact-match on top-level keys; partial matches are not supported.
 
 ### Delete Thread (`DELETE /threads/{thread_id}`)
 
-11. Deletes the Thread record and all associated checkpoint state for that thread.
-12. Returns HTTP 204 on success.
-13. Returns HTTP 404 with `E-SERVER-003` if the thread does not exist.
-14. A delete is idempotent at the HTTP layer: a second DELETE on the same ID returns 404, not 500.
+11. {PC-011} Deletes the Thread record and all associated checkpoint state for that thread.
+12. {PC-012} Returns HTTP 204 on success.
+13. {PC-013} Returns HTTP 404 with `E-SERVER-003` if the thread does not exist.
+14. {PC-014} A delete is idempotent at the HTTP layer: a second DELETE on the same ID returns 404, not 500.
 
 ### Thread State Operations
 
-15. `GET /threads/{thread_id}/state` — returns the latest checkpoint state for the thread:
+15. {PC-015} `GET /threads/{thread_id}/state` — returns the latest checkpoint state for the thread:
     `{ values: GraphState, checkpoint: CheckpointId, next: [NodeId] }`.
-16. `POST /threads/{thread_id}/state` — updates checkpoint state by applying a delta:
+16. {PC-016} `POST /threads/{thread_id}/state` — updates checkpoint state by applying a delta:
     `{ values: Map<String, Value>, as_node?: NodeId }`. Returns `{ checkpoint: CheckpointId }`.
-17. `GET /threads/{thread_id}/history?limit=N` — returns the checkpoint history list
+17. {PC-017} `GET /threads/{thread_id}/history?limit=N` — returns the checkpoint history list
     for the thread, ordered newest-first; `limit` default 10, max 100; values > 100
     clamped to 100; `offset` default 0 (F-P31-01, ADV-P1D-PASS-31).
 
 ## Invariants
 
-- Thread IDs are globally unique within the server instance.
-- Deleting a thread MUST cascade-delete all checkpoint data for that thread (no orphan
+- {INV-001} Thread IDs are globally unique within the server instance.
+- {INV-002} Deleting a thread MUST cascade-delete all checkpoint data for that thread (no orphan
   checkpoint rows).
-- Thread state operations (`/state`) are mediated by the checkpoint subsystem; they do
+- {INV-003} Thread state operations (`/state`) are mediated by the checkpoint subsystem; they do
   not bypass `put_writes` / `get_tuple` (DI-002).
-- All thread CRUD operations are atomic: a create either fully succeeds or fully fails;
+- {INV-004} All thread CRUD operations are atomic: a create either fully succeeds or fully fails;
   no partially created thread is observable.
 
 ## Edge Cases

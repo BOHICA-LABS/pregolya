@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-012
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder: EvidenceJournal and append API remain in pregolya-graph; SQLite backend in pregolya-checkpoint. No Architecture Anchor crate changes (all existing anchors already correct per ADR-009 split)."
   - "1.2 (F-P94-03 sweep, 2026-07-17): Fix two Deny-halt characterizations that omit the three-way on_ceiling dispatch. TV-002 Note: 'Deny recorded before halt' → 'Deny recorded before engine dispatch (on_ceiling=Halt scenario)' — TV-002 tests a specific Halt scenario so the note is now explicit. Related BCs BC-2.10.003 line: 'Deny entries are written before the halt is executed' → 'Deny entries are written before engine dispatch (halt / HITL interrupt / summarize call); see BC-2.10.003 for halt and summarize paths'."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -51,18 +52,18 @@ payment-guardrail pattern where every transaction step is written to an append-o
 
 ## Preconditions
 
-1. A `Run` is executing with a `BudgetPolicy` configured in its `RunnableConfig` (or the implicit
+1. {PRE-001} A `Run` is executing with a `BudgetPolicy` configured in its `RunnableConfig` (or the implicit
    default-allow policy — see BC-2.10.001 EC-001).
-2. An `EvidenceJournal` store is accessible from the execution context (backed by the same
+2. {PRE-002} An `EvidenceJournal` store is accessible from the execution context (backed by the same
    SQLite or in-memory backend used for checkpointing).
-3. `BudgetPolicy::evaluate` has returned a `PolicyDecision`.
+3. {PRE-003} `BudgetPolicy::evaluate` has returned a `PolicyDecision`.
 
 ## Postconditions
 
-1. Immediately after each `BudgetPolicy::evaluate` call, exactly one `JournalEntry` is
+1. {PC-001} Immediately after each `BudgetPolicy::evaluate` call, exactly one `JournalEntry` is
    appended to the `EvidenceJournal`. The append happens before execution continues (Allow)
    or before the halt/interrupt is triggered (Deny/Escalate).
-2. Each `JournalEntry` contains, at minimum:
+2. {PC-002} Each `JournalEntry` contains, at minimum:
    - `run_id` — UUID of the run that triggered the evaluation
    - `sub_agent_id` — sub-agent identifier (if evaluation is for a sub-agent run; else null)
    - `evaluation_point` — the trigger: `AfterLlmCall` | `AfterToolInvocation`
@@ -71,21 +72,21 @@ payment-guardrail pattern where every transaction step is written to an append-o
    - `decision` — `Allow | Escalate | Deny`
    - `reason` — human-readable reason string (empty string for Allow if no threshold message)
    - `timestamp` — wall-clock timestamp of the evaluation
-3. The `EvidenceJournal` is ordered by append sequence. No two entries share the same
+3. {PC-003} The `EvidenceJournal` is ordered by append sequence. No two entries share the same
    monotonic sequence position.
-4. Journal entries for a run are retrievable by `run_id`; entries for a sub-agent are
+4. {PC-004} Journal entries for a run are retrievable by `run_id`; entries for a sub-agent are
    retrievable by `sub_agent_id`.
-5. The journal persists across process restarts (stored in the same durable backend as checkpoints).
+5. {PC-005} The journal persists across process restarts (stored in the same durable backend as checkpoints).
 
 ## Invariants
 
-- Append-only: no existing `JournalEntry` may be deleted, updated, or truncated after it is
+- {INV-001} Append-only: no existing `JournalEntry` may be deleted, updated, or truncated after it is
   written. The journal is a write-once-read-many log.
-- Every evaluation call produces exactly one journal entry — no evaluation is silently skipped,
+- {INV-002} Every evaluation call produces exactly one journal entry — no evaluation is silently skipped,
   even for Allow decisions.
-- Journal writes use the same durability guarantees as checkpoint `put_writes`: under the
+- {INV-003} Journal writes use the same durability guarantees as checkpoint `put_writes`: under the
   sync durability tier (the default), the journal entry is persisted before execution resumes.
-- The journal schema is stable; new fields may be added (backward-compatible) but existing
+- {INV-004} The journal schema is stable; new fields may be added (backward-compatible) but existing
   fields may not be removed or renamed without a version bump.
 
 ## Edge Cases

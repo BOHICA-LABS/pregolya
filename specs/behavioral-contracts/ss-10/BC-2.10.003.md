@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.003
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-012
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: BudgetPolicy::on_ceiling anchor moved from pregolya-graph/src/budget/policy.rs to pregolya-core/src/budget.rs (OnCeiling type is a policy definition, per ADR-009 Option 3). Module field resolved: pregolya-core (BudgetPolicy + OnCeiling types) / pregolya-graph (halt path in pregel loop)."
   - "1.2 (D20 sub-burst 1, 2026-07-15): Add OnCeiling::Summarize variant behavior (PCs 4+8, EC-005, TV-006) and remaining-budget exposure via RunContext.budget_info (PC5, TV-007) per D20 orchestrator adjudication items (2) stop-and-summarize and (2) remaining-budget exposure."
@@ -29,6 +29,7 @@ changelog:
   - "1.12 (F-178-04, burst-289, 2026-08-16): Three phantom `BC-2.03.001 §recursion_limit_canon` anchor citations replaced with `BC-2.03.001 §Description` — the heading `##  Description` exists in BC-2.03.001 and contains the recursion_limit+1 formula; `§recursion_limit_canon` is not a heading anywhere in BC-2.03.001 (grep `^#{1,6}` confirms). Sites corrected: (a) changelog entry 1.11 rationale sentence; (b) PC9 parenthetical `(the final allowed step per …)`; (c) Invariants signed-type explanation. Behavioral content unchanged; anchor is the only correction."
   - "1.13 (burst-311/OBS-P202-A/2026-08-17): §Edge Cases EC block reordered for ascending EC-ID file order (EC-001, EC-002, EC-003, EC-004, EC-005). EC-005 (Summarize Deny recursion) was appearing before EC-004 (Sub-agent ceiling) in the file. Blocks swapped so EC-004 precedes EC-005. EC IDs are NOT renumbered per POL-1 append-only. Behavioral content unchanged."
   - "1.14 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.15 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -66,34 +67,34 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
 
 ## Preconditions
 
-1. A `BudgetConfig` with `on_ceiling = OnCeiling::Halt` is configured in `GraphConfig.budget_config`.
-2. A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Deny` after an LLM call
+1. {PRE-001} A `BudgetConfig` with `on_ceiling = OnCeiling::Halt` is configured in `GraphConfig.budget_config`.
+2. {PRE-002} A `BudgetPolicy::evaluate` call has returned `PolicyDecision::Deny` after an LLM call
    or tool invocation.
-3. The execution engine is currently at an evaluation point (post-LLM-call or
+3. {PRE-003} The execution engine is currently at an evaluation point (post-LLM-call or
    post-tool-invocation) within a super-step.
-4. *(Summarize variant)* `BudgetConfig` with `on_ceiling = OnCeiling::Summarize { summarize_prompt: String }` is configured in `GraphConfig.budget_config`. The `summarize_prompt` is a non-empty string injected as a `HumanMessage` before the final LLM call.
-5. *(Remaining-budget exposure)* A `BudgetConfig` is active (any `on_ceiling` variant). `graph::budget_engine` populates `RunContext.budget_info: BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<i64> }` at each super-step boundary before dispatching tasks.
+4. {PRE-004} *(Summarize variant)* `BudgetConfig` with `on_ceiling = OnCeiling::Summarize { summarize_prompt: String }` is configured in `GraphConfig.budget_config`. The `summarize_prompt` is a non-empty string injected as a `HumanMessage` before the final LLM call.
+5. {PRE-005} *(Remaining-budget exposure)* A `BudgetConfig` is active (any `on_ceiling` variant). `graph::budget_engine` populates `RunContext.budget_info: BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<i64> }` at each super-step boundary before dispatching tasks.
 
 ## Postconditions
 
-1. The execution engine does NOT schedule any further LLM calls or tool invocations for
+1. {PC-001} The execution engine does NOT schedule any further LLM calls or tool invocations for
    this run after the `Deny` decision is received.
-2. In-flight tasks for the current super-step are allowed to complete their current work
+2. {PC-002} In-flight tasks for the current super-step are allowed to complete their current work
    unit (the LLM call or tool call that triggered the evaluation is already done; no new
    calls are started).
-3. `put_writes` is called for every completed task in the current super-step (DI-002 —
+3. {PC-003} `put_writes` is called for every completed task in the current super-step (DI-002 —
    per-task durability applies even in the halt path).
-4. A `JournalEntry` with `decision: Deny` is written to the `EvidenceJournal` before the
+4. {PC-004} A `JournalEntry` with `decision: Deny` is written to the `EvidenceJournal` before the
    run transitions to `failed` (BC-2.10.002).
-5. The run transitions to status `failed` with error:
+5. {PC-005} The run transitions to status `failed` with error:
    `PregolyaError { component: BUDGET, category: POLICY, code: "E-BUDGET-001",
    message: "BudgetCeilingReached: run halted: budget ceiling reached", retry_hint: Never }`.
-6. The caller (`invoke` or `stream`) receives `Err(E-BUDGET-001 BudgetCeilingReached)` with
+6. {PC-006} The caller (`invoke` or `stream`) receives `Err(E-BUDGET-001 BudgetCeilingReached)` with
    the `current_usage: TokenUsage` and `policy_name` fields in the error context.
-7. The checkpoint at the last fully-completed super-step is preserved with `status = failed`.
+7. {PC-007} The checkpoint at the last fully-completed super-step is preserved with `status = failed`.
    It is resumable in principle (same `thread_id`, different `run_id`) if the operator
    supplies a new `RunnableConfig` with `budget_config: Some(BudgetConfig { hard_limit: Some(higher_ceiling), .. })`.
-8. *(Summarize variant — `on_ceiling = OnCeiling::Summarize`)* When `PolicyDecision::Deny`
+8. {PC-008} *(Summarize variant — `on_ceiling = OnCeiling::Summarize`)* When `PolicyDecision::Deny`
    is received: (a) In-flight tasks for the current super-step are allowed to settle (same
    as halt). (b) One final LLM call is issued with `summarize_prompt` appended as a
    `HumanMessage` to the current conversation context. (c) The model's response is returned
@@ -102,7 +103,7 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
    `EvidenceJournal` (BC-2.10.002) before the summarize LLM call is issued. (f) If the
    summarize LLM call itself triggers a new `PolicyDecision::Deny`, the run falls back to
    halt semantics (EC-005): `Err(E-BUDGET-001 BudgetCeilingReached)` with `status = failed`.
-9. *(Remaining-budget exposure)* `RunContext.budget_info` is populated by `graph::budget_engine`
+9. {PC-009} *(Remaining-budget exposure)* `RunContext.budget_info` is populated by `graph::budget_engine`
    at each super-step boundary: `tokens_remaining: Some(ceiling - accumulated_tokens)` (may
    be negative if Deny was just triggered); `steps_remaining: Some(recursion_limit - current_step)`.
    Values are `None` when the corresponding budget dimension is not configured. `steps_remaining`
@@ -114,22 +115,22 @@ each super-step boundary, allowing model nodes to adapt their strategy as budget
 
 ## Invariants
 
-- Graceful, not panic: the halt path must NOT call `.unwrap()`, `.expect()`, or `panic!()`.
+- {INV-001} Graceful, not panic: the halt path must NOT call `.unwrap()`, `.expect()`, or `panic!()`.
   All errors propagate via `Result<_, PregolyaError>` (DI-008).
-- No new LLM calls or tool invocations after a `Deny` decision — no "one more call"
+- {INV-002} No new LLM calls or tool invocations after a `Deny` decision — no "one more call"
   exceptions or continuation-on-error fallbacks.
-- The checkpoint preserved at halt time must be consistent: it reflects exactly the state
+- {INV-003} The checkpoint preserved at halt time must be consistent: it reflects exactly the state
   at the last fully-applied super-step boundary, not a partial mid-step state.
-- The `E-BUDGET-001` error carries a `retry_hint: Never` because retrying the same run
+- {INV-004} The `E-BUDGET-001` error carries a `retry_hint: Never` because retrying the same run
   without changing the budget ceiling would immediately re-hit the ceiling.
-- The Summarize path invokes exactly **1** additional LLM call. If that call also returns
+- {INV-005} The Summarize path invokes exactly **1** additional LLM call. If that call also returns
   a `Deny`, the run falls back to halt semantics (E-BUDGET-001, `status = failed`). No
   recursive summarize attempt is made.
-- `budget_info.tokens_remaining` is of type `Option<i64>` (signed) because it may be
+- {INV-006} `budget_info.tokens_remaining` is of type `Option<i64>` (signed) because it may be
   negative at the moment a Deny is triggered (the ceiling was exceeded on the current call).
   Arithmetic: for a ceiling `C` (in tokens, `C > 0`) and accumulated usage `U` (in tokens,
   `U >= 0`), `tokens_remaining = C - U as i64`. When `U > C`, `tokens_remaining < 0`.
-- `budget_info.steps_remaining` is of type `Option<i64>` (signed) for the same reason:
+- {INV-007} `budget_info.steps_remaining` is of type `Option<i64>` (signed) for the same reason:
   BC-2.03.001 §Description establishes that execution proceeds through step
   `recursion_limit + 1`; at that step, `steps_remaining = recursion_limit - (recursion_limit + 1) = -1`.
   A `u32` would underflow; `i64` matches the design precedent of `tokens_remaining`.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.001
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-012
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: trait/PolicyDecision/TokenUsage/RunContext anchor moved from pregolya-graph/src/budget/policy.rs to pregolya-core/src/budget.rs (definitions, per ADR-009 Option 3). Module field resolved from stale placeholder to pregolya-core (trait + types) / pregolya-graph (engine). BudgetEngine/EvidenceJournal anchors unchanged (pregolya-graph)."
   - "1.2 (F-P91-01, 2026-07-17): Attribute soft_limit/hard_limit configuration fields to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. PC1: reframed from 'RunnableConfig includes a BudgetPolicy' to 'BudgetConfig configured in GraphConfig.budget_config; engine constructs BudgetPolicy from it'. TV-001: 'BudgetPolicy with soft_limit = ...' → 'BudgetConfig with soft_limit = ...'; TV-002/TV-003: 'Same policy' → 'Same BudgetConfig'. soft_limit and hard_limit are BudgetConfig fields per interface-definitions v2.29; BudgetPolicy::evaluate is pure and data-free."
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (F-P95-03, 2026-07-17): Update PC3 Deny cite and Related-BCs cite to reflect BC-2.10.004 v1.6 precondition renumbering. Old cites 'BC-2.10.004 PC1b/PC2b' (stale after v1.6 restructure) replaced with 'BC-2.10.004 PC2 (hard-ceiling path)' at PC3 dispatch block (×1) and Related-BCs line (×1). Semantics unchanged — the hard-ceiling Deny+on_ceiling=Escalate path is now cleanly PC2 in BC-2.10.004."
   - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -57,22 +58,22 @@ confirms adk-rust has no native token/cost ceiling primitive.
 
 ## Preconditions
 
-1. A `BudgetConfig` is configured in `GraphConfig.budget_config` for the run; the engine
+1. {PRE-001} A `BudgetConfig` is configured in `GraphConfig.budget_config` for the run; the engine
    constructs a `BudgetPolicy` implementation from it (may be a composed chain of multiple
    policies). Absence of a `BudgetConfig` means the default Allow-all policy is applied
    silently — see BC-2.10.002 for the journal record in this case.
-2. A `TokenUsage` struct is updated after every LLM call and tool invocation with cumulative
+2. {PRE-002} A `TokenUsage` struct is updated after every LLM call and tool invocation with cumulative
    token counts (prompt, completion, total) and estimated cost.
-3. The execution engine has access to the `RunContext` (thread_id, run_id, sub-agent identity
+3. {PRE-003} The execution engine has access to the `RunContext` (thread_id, run_id, sub-agent identity
    if applicable) for policy evaluation calls.
 
 ## Postconditions
 
-1. After every LLM call, the execution engine calls `policy.evaluate(usage, context)` and
+1. {PC-001} After every LLM call, the execution engine calls `policy.evaluate(usage, context)` and
    receives a `PolicyDecision`.
-2. After every tool invocation, the execution engine calls `policy.evaluate(usage, context)`
+2. {PC-002} After every tool invocation, the execution engine calls `policy.evaluate(usage, context)`
    and receives a `PolicyDecision`.
-3. Each returned `PolicyDecision` is one of the three variants:
+3. {PC-003} Each returned `PolicyDecision` is one of the three variants:
    - `PolicyDecision::Allow` — execution continues uninterrupted.
    - `PolicyDecision::Escalate { reason: String, current_usage: TokenUsage }` — execution
      suspends; the run transitions to `interrupted` via the HITL interrupt mechanism
@@ -81,23 +82,23 @@ confirms adk-rust has no native token/cost ceiling primitive.
      is governed by `BudgetConfig::on_ceiling`: `Halt` → graceful halt (BC-2.10.003);
      `Escalate` → HITL interrupt (BC-2.10.004 PC2 hard-ceiling path); `Summarize` → final summarize
      call then `summary_halt` (BC-2.10.003 PC8).
-4. Every policy evaluation — including `Allow` outcomes — is appended to the `EvidenceJournal`
+4. {PC-004} Every policy evaluation — including `Allow` outcomes — is appended to the `EvidenceJournal`
    (BC-2.10.002). No evaluation is silently discarded.
-5. When multiple policies are composed (policy chain), the most restrictive outcome wins:
+5. {PC-005} When multiple policies are composed (policy chain), the most restrictive outcome wins:
    Deny > Escalate > Allow. The first Deny short-circuits the remaining chain.
-6. Sub-agent runs (subgraph invocations) are evaluated against the sub-agent's own policy
+6. {PC-006} Sub-agent runs (subgraph invocations) are evaluated against the sub-agent's own policy
    (from its `RunnableConfig`) independently of the parent run's policy.
 
 ## Invariants
 
-- `BudgetPolicy::evaluate` is a pure, stateless function (takes snapshot, returns decision);
+- {INV-001} `BudgetPolicy::evaluate` is a pure, stateless function (takes snapshot, returns decision);
   no side effects inside `evaluate`. Side effects (journal write, interrupt trigger) are
   performed by the caller (the execution engine) after receiving the decision.
-- A `BudgetPolicy` cannot mutate the graph state, execution context, or checkpoint store
+- {INV-002} A `BudgetPolicy` cannot mutate the graph state, execution context, or checkpoint store
   directly. Its only output is a `PolicyDecision`.
-- Policy composition must be associative and deterministic: composing policy A then policy B
+- {INV-003} Policy composition must be associative and deterministic: composing policy A then policy B
   with the same inputs produces the same result regardless of call-site ordering.
-- The absence of a `BudgetPolicy` in `RunnableConfig` is equivalent to an always-`Allow` policy.
+- {INV-004} The absence of a `BudgetPolicy` in `RunnableConfig` is equivalent to an always-`Allow` policy.
   This must be explicit in the `RunnableConfig` defaults documentation.
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
   - domain-spec/invariants.md#DI-011
@@ -32,6 +32,7 @@ changelog:
   - "1.3 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server / pregolya-graph per module-decomposition.md v1.10."
   - "1.4 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -58,40 +59,40 @@ graph engine, producing output that could diverge from the unary path.
 
 ## Preconditions
 
-1. A `CompiledGraph` is registered with an `Assistant` (`assistant_id`).
-2. A `Run` is created for that `Assistant` on a given `thread_id` with a given input.
-3. Both the streaming endpoint (`GET /threads/{thread_id}/runs/{run_id}/stream`)
+1. {PRE-001} A `CompiledGraph` is registered with an `Assistant` (`assistant_id`).
+2. {PRE-002} A `Run` is created for that `Assistant` on a given `thread_id` with a given input.
+3. {PRE-003} Both the streaming endpoint (`GET /threads/{thread_id}/runs/{run_id}/stream`)
    and the unary polling endpoint (`GET /threads/{thread_id}/runs/{run_id}`,
    polled after `POST /threads/{thread_id}/runs` creates the Run) are available.
-4. The same input, same `thread_id`, and same `RunnableConfig` are used for both execution
+4. {PRE-004} The same input, same `thread_id`, and same `RunnableConfig` are used for both execution
    paths (tested with two fresh threads of identical initial state, or via a
    deterministic graph with no side effects).
 
 ## Postconditions
 
-1. The unary endpoint returns `{ "output": <final_answer>, "status": "completed" }` in
+1. {PC-001} The unary endpoint returns `{ "output": <final_answer>, "status": "completed" }` in
    a single JSON response after the Run completes.
-2. The streaming endpoint emits a sequence of server-sent events (SSE) including:
+2. {PC-002} The streaming endpoint emits a sequence of server-sent events (SSE) including:
    - One `run_start` event
    - One or more `node_start`, `node_stream`, `node_end` events (per graph node
      executed; `node_stream` appears once per token/chunk for streaming nodes, zero times for synchronous nodes)
    - One `run_end` event with `output: <final_answer>`
-3. The `output` value in the streaming `run_end` event is byte-for-byte identical to
+3. {PC-003} The `output` value in the streaming `run_end` event is byte-for-byte identical to
    the `output` value in the unary endpoint response, given the same graph and same
    inputs.
-4. The streaming endpoint's `run_end` event carries the same `run_id`, `status`,
+4. {PC-004} The streaming endpoint's `run_end` event carries the same `run_id`, `status`,
    and `output` fields as the unary endpoint response.
-5. There is no code path in the streaming handler that produces output without invoking
+5. {PC-005} There is no code path in the streaming handler that produces output without invoking
    the `CompiledGraph` (no stub, no hardcoded response, no mock event sequence).
 
 ## Invariants
 
-- **DI-011 (Streaming / Unary Run Equivalence):** The same `CompiledGraph` instance is
+- {INV-001} **DI-011 (Streaming / Unary Run Equivalence):** The same `CompiledGraph` instance is
   invoked by both handlers; the only difference is the output adapter (stream vs. collect).
-- A `Run` cannot be simultaneously executed via both the streaming and unary endpoints
+- {INV-002} A `Run` cannot be simultaneously executed via both the streaming and unary endpoints
   for the same `run_id`; the first request claims execution and the second receives
   `409 Conflict` with `E-SERVER-015 RunAlreadyExecuting { run_id }`.
-- If the graph raises an error mid-execution, both the streaming endpoint (as an
+- {INV-003} If the graph raises an error mid-execution, both the streaming endpoint (as an
   `error` SSE event) and the unary endpoint (as a non-2xx response body) surface the
   same `PregolyaError` cause.
 

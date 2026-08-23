@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -30,6 +30,7 @@ changelog:
   - "1.5 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-003: replaced `PregolyaError { ... }` with `PregolyaError { .. }` — CLASS3_ASCII_ELLIPSIS_VIOLATION (three-dot ASCII form forbidden in prose/observation context; canonical elision marker is two dots per ADR-010 §Error-Construction Notation Canon)."
   - "1.6 (F-P177-B03, burst-288, 2026-08-15): Add `interrupted → cancelled` arc to PC7 (9th arc); extend PC10 to authorize cancellation of `interrupted` Runs. Resolves deadlock: PC19 directed callers to cancel an interrupted Run before deletion, but the arc was absent from PC7 and unauthorized by PC10, making interrupted Runs permanently undeletable."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,16 +55,16 @@ LangGraph Platform (D13).
 
 ## Preconditions
 
-1. `pregolya-server` is running with configured `RunStore`, `CheckpointSaver`, and
+1. {PRE-001} `pregolya-server` is running with configured `RunStore`, `CheckpointSaver`, and
    an executor connected to the `pregolya-graph` engine.
-2. A Thread identified by `thread_id` exists (see BC-2.12.001).
-3. The caller holds a valid authentication credential (or server is in dev mode).
+2. {PRE-002} A Thread identified by `thread_id` exists (see BC-2.12.001).
+3. {PRE-003} The caller holds a valid authentication credential (or server is in dev mode).
 
 ## Postconditions
 
 ### Create Run (`POST /threads/{thread_id}/runs`)
 
-1. Accepts body:
+1. {PC-001} Accepts body:
    ```
    {
      assistant_id: Uuid,
@@ -73,19 +74,19 @@ LangGraph Platform (D13).
      multitask_strategy?: "reject" | "interrupt" | "rollback" | "enqueue"
    }
    ```
-2. `thread_id` must exist; if not: HTTP 404 with `E-SERVER-003 ThreadNotFound`.
-3. `assistant_id` must reference a registered Assistant; if not: HTTP 422.
-4. `multitask_strategy` governs concurrent run handling on the same thread (default `"reject"`):
+2. {PC-002} `thread_id` must exist; if not: HTTP 404 with `E-SERVER-003 ThreadNotFound`.
+3. {PC-003} `assistant_id` must reference a registered Assistant; if not: HTTP 422.
+4. {PC-004} `multitask_strategy` governs concurrent run handling on the same thread (default `"reject"`):
    - `"reject"`: if another Run is already `queued` or `in_progress` on the thread → HTTP 409.
    - `"interrupt"`: interrupt the current Run before starting the new one.
    - `"rollback"`: rollback the current Run's state before starting the new one.
    - `"enqueue"`: queue the new Run to start after the current Run finishes.
-5. Returns HTTP 202 with `Run { run_id, thread_id, assistant_id, status: "queued", created_at }`.
-6. Execution is dispatched asynchronously to the graph executor.
+5. {PC-005} Returns HTTP 202 with `Run { run_id, thread_id, assistant_id, status: "queued", created_at }`.
+6. {PC-006} Execution is dispatched asynchronously to the graph executor.
 
 ### Run Lifecycle State Machine
 
-7. Lifecycle states and valid transitions:
+7. {PC-007} Lifecycle states and valid transitions:
    ```
    queued      → in_progress   (executor picks up the run)
    in_progress → completed     (graph reaches END)
@@ -97,61 +98,61 @@ LangGraph Platform (D13).
    interrupted → in_progress   (caller posts resume value via POST .../runs/{run_id}/resume)
    interrupted → cancelled     (POST .../cancel called on an interrupted run)
    ```
-8. Terminal states (no further transitions possible): `completed`, `failed`, `cancelled`, and `summary_halt`.
+8. {PC-008} Terminal states (no further transitions possible): `completed`, `failed`, `cancelled`, and `summary_halt`.
    `interrupted` is **not** terminal — it is a pausable/resumable state.
    `summary_halt` is terminal (no further transitions); it is not cancellable (already terminal when the cancel signal would arrive — HTTP 409 per PC12). A `summary_halt` run IS directly deletable (PC19) without needing a prior cancel step.
-9. A Run that is `interrupted` can be resumed via
+9. {PC-009} A Run that is `interrupted` can be resumed via
    `POST /threads/{thread_id}/runs/{run_id}/resume { resume_value }` (see BC-2.05.002
    for HITL contract); this transitions the Run back to `in_progress`.
 
 ### Cancel Run (`POST /threads/{thread_id}/runs/{run_id}/cancel`)
 
-10. Cancels a `queued`, `in_progress`, or `interrupted` Run. Signals the executor to stop and transitions
+10. {PC-010} Cancels a `queued`, `in_progress`, or `interrupted` Run. Signals the executor to stop and transitions
     the Run to `cancelled` status.
-11. Cancellation is best-effort: if the run completes naturally before the cancellation
+11. {PC-011} Cancellation is best-effort: if the run completes naturally before the cancellation
     signal is processed, the status will be `completed` or `failed`, not `cancelled`.
-12. Returns HTTP 202 on successful cancellation signal; HTTP 404 if run not found;
+12. {PC-012} Returns HTTP 202 on successful cancellation signal; HTTP 404 if run not found;
     HTTP 409 if run is already in a terminal state.
 
 ### Read Run (`GET /threads/{thread_id}/runs/{run_id}`)
 
-13. Returns `Run { run_id, thread_id, assistant_id, status, output?, error?, created_at, updated_at, completed_at? }`.
+13. {PC-013} Returns `Run { run_id, thread_id, assistant_id, status, output?, error?, created_at, updated_at, completed_at? }`.
     `updated_at` is set on every state mutation. `completed_at` is set only on terminal
     transition (status → `completed` | `failed` | `cancelled` | `summary_halt`); it is `null` in all
     non-terminal states (`queued`, `in_progress`, `interrupted`). Authority: F-P24-01.
-14. Returns HTTP 404 with `{ code: "E-SERVER-002", message: "RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'" }` if not found.
-15. A completed Run carries `output: GraphOutput` (the final state values).
-16. A failed Run carries `error: { code, message, component, category }` from the
+14. {PC-014} Returns HTTP 404 with `{ code: "E-SERVER-002", message: "RunNotFound: run '<run_id>' does not exist in thread '<thread_id>'" }` if not found.
+15. {PC-015} A completed Run carries `output: GraphOutput` (the final state values).
+16. {PC-016} A failed Run carries `error: { code, message, component, category }` from the
     propagated `PregolyaError`.
 
 ### List Runs (`GET /threads/{thread_id}/runs`)
 
-17. Returns `{ runs: [Run], total_count: u64 }` for all runs on the thread.
-18. Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`, `"summary_halt"`) and canonical pagination params: `limit` (default 10, max 100; values > 100 clamped to 100) and `offset` (default 0); results ordered `created_at` descending (F-P31-01, ADV-P1D-PASS-31).
+17. {PC-017} Returns `{ runs: [Run], total_count: u64 }` for all runs on the thread.
+18. {PC-018} Accepts `status` filter query param (`"queued"`, `"in_progress"`, `"completed"`, `"failed"`, `"interrupted"`, `"cancelled"`, `"summary_halt"`) and canonical pagination params: `limit` (default 10, max 100; values > 100 clamped to 100) and `offset` (default 0); results ordered `created_at` descending (F-P31-01, ADV-P1D-PASS-31).
 
 ### Delete Run (`DELETE /threads/{thread_id}/runs/{run_id}`)
 
-19. Deletes a Run record that is in a terminal state (`completed`, `failed`, `cancelled`, or `summary_halt`).
+19. {PC-019} Deletes a Run record that is in a terminal state (`completed`, `failed`, `cancelled`, or `summary_halt`).
     Cannot delete a `queued`, `in_progress`, or `interrupted` Run — HTTP 409 is returned.
     For `interrupted` Runs: either resume (POST .../resume) to complete/fail/cancel/summary_halt, or
     cancel first (POST .../cancel → `cancelled`), then delete once terminal.
     **Decision basis (F-02):** DELETE = record deletion only. Separation from cancellation
     follows langgraph-sdk semantics (`runs.cancel()` ≠ delete). Prevents accidental data
     loss on active runs.
-20. Returns HTTP 204 on success; HTTP 404 if run not found.
+20. {PC-020} Returns HTTP 204 on success; HTTP 404 if run not found.
 
 ## Invariants
 
-- `run_id` is globally unique within the server instance.
-- The executor MUST NOT start a Run that was created in a `queued` state on a different
+- {INV-001} `run_id` is globally unique within the server instance.
+- {INV-002} The executor MUST NOT start a Run that was created in a `queued` state on a different
   server instance without distributed coordination — in single-node deployment, all
   `queued` Runs on startup are retried.
-- Run output (`output`) is populated when `status ∈ {"completed", "summary_halt"}`. For
+- {INV-003} Run output (`output`) is populated when `status ∈ {"completed", "summary_halt"}`. For
   `summary_halt`, output carries the summarize model response (BC-2.10.003 PC8(c)). It is
   `null` in all other states (`queued`, `in_progress`, `interrupted`, `failed`, `cancelled`).
-- Run error (`error`) is populated ONLY when `status = "failed"`. It is `null` in all other states.
-- A Run cannot be in `in_progress` state if no executor task is active for it (no orphan runs).
-- **Run-Config Merge Precedence (F-P33-02):** When a Create-Run request body supplies `config`,
+- {INV-004} Run error (`error`) is populated ONLY when `status = "failed"`. It is `null` in all other states.
+- {INV-005} A Run cannot be in `in_progress` state if no executor task is active for it (no orphan runs).
+- {INV-006} **Run-Config Merge Precedence (F-P33-02):** When a Create-Run request body supplies `config`,
   `metadata`, or `context`, these values are **deep-merged** over the Assistant's stored values
   at the leaf-key level, with run-supplied keys winning over Assistant-stored keys on any
   collision. Fields absent from the run request body retain the Assistant's stored values

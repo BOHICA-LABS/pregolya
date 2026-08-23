@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.003
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -24,6 +24,7 @@ introduced: v1.0.0-greenfield
 changelog:
   - "1.1 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.2 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -50,34 +51,34 @@ compared against backend capabilities at execute-time, before any tool code runs
 
 ## Preconditions
 
-1. A `SandboxPolicy` with at least one enforcement field set to `true`
+1. {PRE-001} A `SandboxPolicy` with at least one enforcement field set to `true`
    (e.g., `enforce_filesystem: true` or `enforce_network: true`) has been constructed
-2. The selected `SandboxBackend`'s `BackendCapabilities` reports the corresponding
+2. {PRE-002} The selected `SandboxBackend`'s `BackendCapabilities` reports the corresponding
    capability field as `false`
-3. `Sandbox::execute(tool, args, policy)` is called
+3. {PRE-003} `Sandbox::execute(tool, args, policy)` is called
 
 ## Postconditions
 
-1. `Sandbox::execute()` returns
+1. {PC-001} `Sandbox::execute()` returns
    `Err(E-SBXD-002: PolicyNotEnforceable { policy_requirements: [...], backend_capabilities: ... })`
-2. The tool function is NOT called — zero lines of tool code execute
-3. The error payload includes both the requested policy requirements and the actual
+2. {PC-002} The tool function is NOT called — zero lines of tool code execute
+3. {PC-003} The error payload includes both the requested policy requirements and the actual
    `BackendCapabilities` of the selected backend, enabling the caller to log the precise mismatch
-4. No silent fallback to a different backend occurs; `Sandbox::execute()` does not internally
+4. {PC-004} No silent fallback to a different backend occurs; `Sandbox::execute()` does not internally
    retry with a more capable backend
-5. `E-SBXD-002` is classified as severity `broken` per the error taxonomy
+5. {PC-005} `E-SBXD-002` is classified as severity `broken` per the error taxonomy
 
 ## Invariants
 
-1. `Sandbox::execute()` with a strict policy and a non-enforcing backend NEVER returns `Ok(_)` —
+1. {INV-001} `Sandbox::execute()` with a strict policy and a non-enforcing backend NEVER returns `Ok(_)` —
    there is no flag, config option, or `#[cfg(test)]` override that bypasses this gate
-2. The error must carry the specific mismatch: which policy fields required `true` and which
+2. {INV-002} The error must carry the specific mismatch: which policy fields required `true` and which
    backend capability fields returned `false`
-3. There is no `force_anyway()`, `override_policy_check()`, or equivalent method
-4. The capability check occurs at execute-time (not at construction time) — even if the backend
+3. {INV-003} There is no `force_anyway()`, `override_policy_check()`, or equivalent method
+4. {INV-004} The capability check occurs at execute-time (not at construction time) — even if the backend
    is upgraded between construction and execution, the check runs on the capabilities at the
    moment of the call
-5. adk-rust reference sparsity: neither P-62 nor P-83 enforces this gate; it is greenfield
+5. {INV-005} adk-rust reference sparsity: neither P-62 nor P-83 enforces this gate; it is greenfield
    behavior derived from NE-01 pregolya requirement and DI-006
 
 ## Edge Cases

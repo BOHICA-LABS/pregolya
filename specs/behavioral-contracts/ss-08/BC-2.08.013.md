@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.013
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,11 @@ changelog:
   - "1.1 (OBS-P77-B, 2026-07-15): Architecture Anchor corrected — 'built-in enum variants' → 'built-in trait implementations'. ToolCallDialect is an object-safe pluggable trait (per BC body Description and interface-definitions v2.23); NativeOpenAiJson, NativeAnthropic, HermesChatMlXml are concrete struct implementations of that trait, not enum variants."
   - "1.2 (F-P108-03, 2026-07-18): EC-002 expanded from 2-field catch-all `{ dialect, reason }` to 4-field explicit struct `{ dialect, element, offset, parse_error }`. Adjudication: the taxonomy Message Format for E-PROV-009 has 4 distinct placeholders (`<dialect>`, `<element>`, `<n>`, `<parse_error>`); the `<n>` offset is MID-message (not trailing), making a catch-all `reason` structurally unable to render independent `<element>` and `<n>` values. Expanded variant: `{ dialect: \"HermesChatMlXml\", element: \"<tool_call>\", offset: 2, parse_error: \"key must be a string\" }`. Sibling sweep (all E-PROV-009 sites in this BC): PC8 uses PregolyaError message-template form (correctly shows 4 values in message string); PC9, EC-005, TV-006 use bare form (no struct fields; not subject to parity check). No taxonomy change needed — E-PROV-009 message format already shows 4 placeholders."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
@@ -54,61 +55,61 @@ when dialect parsing fails.
 
 ## Preconditions
 
-1. A `ChatConfig` is constructed with `tool_call_dialect: ToolCallDialect` set to one of
+1. {PRE-001} A `ChatConfig` is constructed with `tool_call_dialect: ToolCallDialect` set to one of
    `NativeOpenAiJson`, `NativeAnthropic`, or `HermesChatMlXml` (or a custom implementor).
-2. The chat model is invoked with at least one bound tool; the provider sends the tool
+2. {PRE-002} The chat model is invoked with at least one bound tool; the provider sends the tool
    definitions to the model using the configured dialect's serialization format.
-3. A model response is received and must be parsed back to `AiMessage` content.
+3. {PRE-003} A model response is received and must be parsed back to `AiMessage` content.
 
 ## Postconditions
 
 **NativeOpenAiJson dialect:**
-1. Tool definitions are serialized as the `tools` field of the OpenAI chat-completions
+1. {PC-001} Tool definitions are serialized as the `tools` field of the OpenAI chat-completions
    request body: `[{ "type": "function", "function": { "name": "…", "description": "…",
    "parameters": {…} } }]`.
-2. Model responses containing `tool_calls` JSON objects are parsed to
+2. {PC-002} Model responses containing `tool_calls` JSON objects are parsed to
    `Vec<ContentBlock::ToolCall { id, name, args }>`.
 
 **NativeAnthropic dialect:**
-3. Tool definitions are serialized as the `tools` field of the Anthropic messages request
+3. {PC-003} Tool definitions are serialized as the `tools` field of the Anthropic messages request
    body: `[{ "name": "…", "description": "…", "input_schema": {…} }]`.
-4. Model responses containing `tool_use` content blocks are parsed to
+4. {PC-004} Model responses containing `tool_use` content blocks are parsed to
    `Vec<ContentBlock::ToolCall { id, name, args }>`.
 
 **HermesChatMlXml dialect:**
-5. Tool definitions are emitted into the **system prompt** as an XML block:
+5. {PC-005} Tool definitions are emitted into the **system prompt** as an XML block:
    `<tools>[{"name": "…", "description": "…", "parameters": {…}}]</tools>`. The existing
    system instruction (if any) is prepended before the `<tools>` block.
-6. The model's assistant response is scanned for `<tool_call>{json}</tool_call>` tags. For
+6. {PC-006} The model's assistant response is scanned for `<tool_call>{json}</tool_call>` tags. For
    each such tag, the JSON payload is extracted, parsed, and emitted as
    `ContentBlock::ToolCall { name: parsed.name, args: parsed.arguments }`.
-7. Text content outside `<tool_call>` tags in the same response is preserved as
+7. {PC-007} Text content outside `<tool_call>` tags in the same response is preserved as
    `ContentBlock::Text` in the `AiMessage` content list (partial-text + tool-call
    co-occurrence is valid).
-8. `<tool_call>` tag content that is not valid JSON returns
+8. {PC-008} `<tool_call>` tag content that is not valid JSON returns
    `Err(PregolyaError { component: PROV, category: VAL, code: "E-PROV-009",
    message: "ToolCallDialectParseError: HermesChatMlXml <tool_call> payload is not valid JSON
    at response offset <n>: <parse_error>", retry_hint: Never })`.
 
 **All dialects:**
-9. A `ToolCallDialect` implementation that returns an error from serialization or
+9. {PC-009} A `ToolCallDialect` implementation that returns an error from serialization or
    deserialization surfaces `Err(E-PROV-009 ToolCallDialectParseError)`. The error message
    identifies the dialect and the failure point.
-10. The `ToolCallDialect` trait is object-safe and implementable by operators for custom
+10. {PC-010} The `ToolCallDialect` trait is object-safe and implementable by operators for custom
     model dialects not covered by the three built-in variants.
 
 ## Invariants
 
-- **Dialect is a per-model-construction setting.** It is not swapped mid-invocation and
+- {INV-001} **Dialect is a per-model-construction setting.** It is not swapped mid-invocation and
   not derived from the model's response format at runtime. One `ChatConfig` → one dialect.
-- **Round-trip fidelity:** for all three built-in dialects, a tool definition serialized
+- {INV-002} **Round-trip fidelity:** for all three built-in dialects, a tool definition serialized
   by the dialect and then deserialized from the model's response must yield a `ToolCall`
   with name equal to the original tool name (case-sensitive, Unicode-safe) and args equal
   to the model's argument JSON (DI-014: no silent data loss).
-- **HermesChatMlXml tool definitions in system prompt:** the `<tools>` block is appended to
+- {INV-003} **HermesChatMlXml tool definitions in system prompt:** the `<tools>` block is appended to
   the system prompt (never replaces it). If no system instruction is set, the `<tools>`
   block becomes the entire system content.
-- **No implicit dialect fallback:** if the configured dialect fails to parse the response,
+- {INV-004} **No implicit dialect fallback:** if the configured dialect fails to parse the response,
   the error is E-PROV-009. pregolya does NOT auto-detect an alternative dialect
   from the response format.
 

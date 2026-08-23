@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.006
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-002 had `Err(PregolyaError { category: Validation, ... })` (incorrect full-word capitalization; should be VAL per taxonomy code) and no code field; TV-002 had `Err(PregolyaError { category: VAL })` with no code. Fixed: (a) EC-002 'category: Validation' corrected to 'category: VAL'; (b) code: E-CORE-005 (ValidationFailed) added to EC-002 description and TV-002 — SDK builder constructed without calling .timeout() is a VAL construction-time validation failure."
   - "1.2 (2026-07-17, F-P89-04): Precondition 3 — removed stale live-prose clause '(or SS-TBD is used as a placeholder)'. SS-TBD is corpus-wide resolved as of Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. No behavioral change. Input-hash corrected from legacy 8095694 (computed against prior input state) to 412902d (current). BC changelog timestamp stays at v1.0 authoring date per Rule 5 BC branch."
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-002 message reworded from 'timeout must be set; use .timeout(Duration::from_secs(30))' to 'Validation failed for 'timeout': must be set; use .timeout(Duration::from_secs(30))' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV-002 bare form unchanged — PASS-ABBREV via EC-002."
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): (1) Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon): §EC-002 and §Canonical Test Vectors TV-002 — PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-002; category, code at TV-002); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line). (2) D-35/D-80 xtask rename: §Verification Properties VP-BC208006-02 table cell — `deny-expect-in-lib` → `check-no-panic`."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-008
@@ -54,22 +55,22 @@ allows the SDK crate to be published and used independently of the pregolya grap
 
 ## Preconditions
 
-1. The Cargo workspace defines `pregolya-<provider>-sdk` and `pregolya-<provider>`
+1. {PRE-001} The Cargo workspace defines `pregolya-<provider>-sdk` and `pregolya-<provider>`
    as separate workspace members.
-2. The provider being implemented is one of the three first-party targets: OpenAI,
+2. {PRE-002} The provider being implemented is one of the three first-party targets: OpenAI,
    Anthropic, or Ollama.
-3. The architect has produced the `architecture/ARCH-INDEX.md` with subsystem
+3. {PRE-003} The architect has produced the `architecture/ARCH-INDEX.md` with subsystem
    assignments for these crates.
 
 ## Postconditions
 
-1. **Crate separation enforced by Cargo dependency graph:**
+1. {PC-001} **Crate separation enforced by Cargo dependency graph:**
    - `pregolya-<provider>-sdk/Cargo.toml` does NOT list `pregolya-core` in
      `[dependencies]`. It may only depend on: `reqwest` (or equivalent HTTP client),
      `serde`, `serde_json`, and other pure-transport crates.
    - `pregolya-<provider>/Cargo.toml` lists BOTH `pregolya-<provider>-sdk` and
      `pregolya-core` in `[dependencies]`.
-2. **SDK crate responsibilities:**
+2. {PC-002} **SDK crate responsibilities:**
    - Provides a `<Provider>Client` struct with typed methods for the provider's
      chat completions endpoint (e.g., `create_chat_completion(req: ChatRequest) →
      Result<ChatResponse, SdkError>`).
@@ -78,23 +79,23 @@ allows the SDK crate to be published and used independently of the pregolya grap
    - All SDK constructors return `Result<T, PregolyaError>` — no `.expect()` or
      `.unwrap()` in non-test code (DI-008).
    - The SDK client is constructed with a mandatory `.timeout(Duration)` (DI-009).
-3. **Adapter crate responsibilities:**
+3. {PC-003} **Adapter crate responsibilities:**
    - Implements the `ChatModel` trait (which extends `Runnable`) from `pregolya-core`.
    - Contains all translation functions between `pregolya-core` content-block types
      and the provider's wire format (e.g., `Vec<Message> → ChatRequest`).
    - Exposes `bind_tools`, `with_structured_output` on the adapter type.
-4. A `cargo check -p pregolya-<provider>-sdk` succeeds without `pregolya-core`
+4. {PC-004} A `cargo check -p pregolya-<provider>-sdk` succeeds without `pregolya-core`
    present in the dependency graph of that package alone.
 
 ## Invariants
 
-- **DI-008 (Library Constructor Result Contract):** All SDK and adapter constructors
+- {INV-001} **DI-008 (Library Constructor Result Contract):** All SDK and adapter constructors
   return `Result<T, PregolyaError>` — never panic.
-- The SDK crate's `SdkError` type (if used internally) must convert `Into<PregolyaError>`
+- {INV-002} The SDK crate's `SdkError` type (if used internally) must convert `Into<PregolyaError>`
   so the adapter can propagate typed errors without re-wrapping.
-- The SDK crate is published independently: its `Cargo.toml` must have a valid `[package]`
+- {INV-003} The SDK crate is published independently: its `Cargo.toml` must have a valid `[package]`
   section with `publish = true` (or no publish restriction).
-- No translation logic lives in the SDK crate — translation is the adapter's sole
+- {INV-004} No translation logic lives in the SDK crate — translation is the adapter's sole
   responsibility. The SDK crate may define raw wire types (mirroring provider JSON), but
   not pregolya-core content blocks.
 

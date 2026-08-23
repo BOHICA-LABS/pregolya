@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.004
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,11 +16,12 @@ red_gate: true
 red_gate_source: R11
 vp_id: VP-004
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
   - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — nine violations corrected: Description (3/5 fields), PC1 (4/5), Invariants `{ category: TOOL }` (1/5), EC-001 (3/5), EC-002 (2/5), EC-003 (1/5), TV-001 (2/5), TV-002 CLASS3_ASCII_ELLIPSIS_VIOLATION (`...` → `..`), Architecture Anchors (3/5). All receive `..` per ADR-010 §Error-Construction Notation Canon Class 3."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -68,35 +69,35 @@ identity is retained when re-raised through `_handle_mcp_tool_error`.
 
 ## Preconditions
 
-1. A MCP tool call is in progress via `McpTool::run`.
-2. The tool machinery (rmcp SDK, interceptor chain, or connection lifecycle)
+1. {PRE-001} A MCP tool call is in progress via `McpTool::run`.
+2. {PRE-002} The tool machinery (rmcp SDK, interceptor chain, or connection lifecycle)
    raises a `ToolException` (or its Rust equivalent: `McpError::ToolExecution`
    raised outside the `isError=true` content-conversion path).
-3. The exception is NOT an `isError=true` `CallToolResult` (that path is governed
+3. {PRE-003} The exception is NOT an `isError=true` `CallToolResult` (that path is governed
    by `handle_tool_errors` per BC-2.09.002).
-4. The `handle_tool_errors` flag value is irrelevant to this path.
+4. {PRE-004} The `handle_tool_errors` flag value is irrelevant to this path.
 
 ## Postconditions
 
-1. The `ToolException` type identity is preserved in the propagated error.
+1. {PC-001} The `ToolException` type identity is preserved in the propagated error.
    The caller observes `Err(PregolyaError { component: MCP, category: TOOL,
    code: E-MCP-001, message: "ToolException: MCP server '<server>' raised
    ToolException for tool '<tool>': <message>", .. })`.
-2. The error is NOT wrapped in `McpError::Transport` or `McpError::Internal`.
-3. The `handle_tool_errors` flag does NOT suppress this path; the error always
+2. {PC-002} The error is NOT wrapped in `McpError::Transport` or `McpError::Internal`.
+3. {PC-003} The `handle_tool_errors` flag does NOT suppress this path; the error always
    propagates as `Err(...)`.
-4. The `PregolyaError::source` field retains the original `McpError::ToolExecution`
+4. {PC-004} The `PregolyaError::source` field retains the original `McpError::ToolExecution`
    for downstream introspection.
 
 ## Invariants
 
-- DI-014: Validation failures (including tool errors) propagate as `Err(PregolyaError)`.
+- {INV-001} DI-014: Validation failures (including tool errors) propagate as `Err(PregolyaError)`.
   No public API returns `None` or empty to represent this error.
-- The bare `ToolException` path and the `isError=true` path are mutually exclusive:
+- {INV-002} The bare `ToolException` path and the `isError=true` path are mutually exclusive:
   the `isError=true` path produces either a `ToolMessage{status: Error}` or
   `Err(McpError::ToolExecution)` depending on the flag; the bare path always produces
   `Err(PregolyaError { category: TOOL, .. })`.
-- Error type identity preservation is testable: a test can assert that
+- {INV-003} Error type identity preservation is testable: a test can assert that
   `err.code() == "E-MCP-001"` and `err.category() == Category::Tool`.
 
 ## Edge Cases

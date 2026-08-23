@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.006
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,10 +13,11 @@ capability: CAP-021
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (pass-72 fix, 2026-07-15): OBS-P72 fix — Architecture Anchors: ADR-012 citation replaced with ADR-013. ADR-012 governs self-improvement primitives (SkillStore, write_guard, context_mutation); it has no MCP content. CAP-021 / BC-2.09.006 (MCP server role) is governed by ADR-013 minted by architect in this burst."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -50,49 +51,49 @@ This BC covers the advertisement path only; invocation is specified in BC-2.09.0
 
 ## Preconditions
 
-1. A pregolya `ToolRegistry` is initialized and contains at least one registered `Tool`.
-2. `McpServerConfig` is provided with `transport: McpServerTransport` (either
+1. {PRE-001} A pregolya `ToolRegistry` is initialized and contains at least one registered `Tool`.
+2. {PRE-002} `McpServerConfig` is provided with `transport: McpServerTransport` (either
    `McpServerTransport::Stdio` or `McpServerTransport::Sse { bind_addr: SocketAddr }`) and
    `tool_registry: Arc<ToolRegistry>`.
-3. `McpServer::start(config: McpServerConfig) -> Result<McpServerHandle, PregolyaError>`
+3. {PRE-003} `McpServer::start(config: McpServerConfig) -> Result<McpServerHandle, PregolyaError>`
    is called to start the server.
 
 ## Postconditions
 
-1. `McpServer::start` binds to the configured transport endpoint:
+1. {PC-001} `McpServer::start` binds to the configured transport endpoint:
    - Stdio: begins reading JSON-RPC messages from stdin and writing to stdout.
    - SSE: binds to `bind_addr` and begins accepting HTTP SSE connections.
    If binding fails, `Err(PregolyaError { component: MCP, category: TRANSPORT,
    code: "E-MCP-005", message: "McpServerBindFailed: cannot bind to <transport>: <reason>",
    retry_hint: Never })` is returned. (DI-008.)
-2. On receiving a `tools/list` JSON-RPC request from any connected MCP client:
+2. {PC-002} On receiving a `tools/list` JSON-RPC request from any connected MCP client:
    - The server reads the current set of registered tools from `tool_registry`.
    - Each `Tool` is serialized to an MCP `ToolDefinition` object: `{ "name": tool.name(),
      "description": tool.description(), "inputSchema": tool.input_schema() }`.
    - The server responds with `{ "tools": [<definitions>] }` as the JSON-RPC result.
-3. The tool list reflects the state of `tool_registry` at the time of the `tools/list`
+3. {PC-003} The tool list reflects the state of `tool_registry` at the time of the `tools/list`
    request. Tools registered after `McpServer::start` but before a `tools/list` request
    are included in the response. (The registry is read on each request, not snapshotted
    at startup.)
-4. `McpServerHandle` provides a `shutdown()` method that gracefully closes all open
+4. {PC-004} `McpServerHandle` provides a `shutdown()` method that gracefully closes all open
    connections and stops the server. After `shutdown()`, new connections are refused.
-5. A tool registry with zero registered tools returns `{ "tools": [] }` — an empty tools
+5. {PC-005} A tool registry with zero registered tools returns `{ "tools": [] }` — an empty tools
    list is not an error.
 
 ## Invariants
 
-- **Protocol conformance:** the MCP server conforms to the MCP specification's `tools/list`
+- {INV-001} **Protocol conformance:** the MCP server conforms to the MCP specification's `tools/list`
   method contract. The JSON-RPC method name is `"tools/list"` exactly. Response includes
   the `"tools"` array at the top level of the `result` object.
-- **Read-only advertisement:** the `tools/list` handler does not invoke any tool, modify
+- {INV-002} **Read-only advertisement:** the `tools/list` handler does not invoke any tool, modify
   the registry, or produce side effects. It is a pure read of the registry state.
-- **Concurrent clients:** the server handles multiple simultaneous MCP clients correctly.
+- {INV-003} **Concurrent clients:** the server handles multiple simultaneous MCP clients correctly.
   Each `tools/list` request from any client is answered independently. No cross-client
   state sharing.
-- **Transport independence:** the tool advertisement behavior is identical on stdio and SSE
+- {INV-004} **Transport independence:** the tool advertisement behavior is identical on stdio and SSE
   transports. Transport selection affects only the connection mechanism, not the MCP
   message semantics.
-- The MCP server module is `mcp::server` in `pregolya-mcp` — distinct from the MCP client
+- {INV-005} The MCP server module is `mcp::server` in `pregolya-mcp` — distinct from the MCP client
   (`mcp::client` / `MultiServerMcpClient`). The two modules do not share state.
 
 ## Edge Cases

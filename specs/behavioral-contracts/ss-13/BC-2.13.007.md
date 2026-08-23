@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.007
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-015
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-015
 inputs:
@@ -31,6 +31,7 @@ removed: null
 removal_reason: null
 changelog:
   - "1.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 ---
 
 # BC-2.13.007: Environment Variable Sanitization at Sandbox Execution Boundary
@@ -54,30 +55,30 @@ allowlisted them.
 
 ## Preconditions
 
-1. A sandboxed tool execution is about to begin via any backend (WASM, container, or
+1. {PRE-001} A sandboxed tool execution is about to begin via any backend (WASM, container, or
    process-with-explicit-opt-in per BC-2.13.001/BC-2.13.002).
-2. The current process has an active environment that may contain credential variables
+2. {PRE-002} The current process has an active environment that may contain credential variables
    (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AWS_SECRET_ACCESS_KEY`, `GITHUB_TOKEN`).
-3. `SandboxConfig.env_allowlist` is a `Vec<String>` of zero or more exact variable names
+3. {PRE-003} `SandboxConfig.env_allowlist` is a `Vec<String>` of zero or more exact variable names
    (case-sensitive, no wildcards). The default is an empty vec (strip all).
 
 ## Postconditions
 
-1. **Default (empty allowlist):** `SandboxExecutor::prepare_environment()` passes an empty
+1. {PC-001} **Default (empty allowlist):** `SandboxExecutor::prepare_environment()` passes an empty
    environment map to the sandbox backend. The sandbox execution environment contains zero
    variables inherited from the parent process.
-2. **Non-empty allowlist:** only variables whose exact name appears in `env_allowlist` AND
+2. {PC-002} **Non-empty allowlist:** only variables whose exact name appears in `env_allowlist` AND
    are present in the current process environment are passed through. Variables in the
    allowlist that are absent from the current process environment are silently skipped (no
    error). All other variables are discarded.
-3. The filtering happens inside `SandboxExecutor::prepare_environment()`, before the
+3. {PC-003} The filtering happens inside `SandboxExecutor::prepare_environment()`, before the
    backend receives the execution config. No credential variable reaches the sandbox backend
    unless it is explicitly allowlisted.
-4. A `DEBUG` log is emitted after filtering: `"Sandbox env sanitization: stripped <N>
+4. {PC-004} A `DEBUG` log is emitted after filtering: `"Sandbox env sanitization: stripped <N>
    variables, forwarded <M> allowlisted variables"` where `N` is the count of variables
    discarded and `M` is the count forwarded. `N` and `M` are non-negative integers with
    `N + M` equal to the total number of variables present in the parent environment.
-5. If any entry in `env_allowlist` contains the characters `*` or `?` (glob wildcards),
+5. {PC-005} If any entry in `env_allowlist` contains the characters `*` or `?` (glob wildcards),
    `SandboxConfig::new(…)` returns:
    `Err(PregolyaError { component: SBXD, category: VAL, code: "E-SBXD-006",
    message: "InvalidEnvAllowlistPattern: entry '<pattern>' contains wildcard characters — only
@@ -86,16 +87,16 @@ allowlisted them.
 
 ## Invariants
 
-- **Default is strip-all:** the safe default requires no action from the operator. Passing
+- {INV-001} **Default is strip-all:** the safe default requires no action from the operator. Passing
   credentials to the sandbox requires explicit positive operator action (adding to allowlist).
-- **v1 exact-names only:** glob patterns, prefix matches, and regex are not supported in v1.
+- {INV-002} **v1 exact-names only:** glob patterns, prefix matches, and regex are not supported in v1.
   Supporting only exact names keeps the filtering code simple and auditable.
-- **Defense-in-depth (DI-010):** env stripping is a layer below the sandbox backend isolation.
+- {INV-003} **Defense-in-depth (DI-010):** env stripping is a layer below the sandbox backend isolation.
   Even if the sandbox backend itself leaks environment access, the credentials are not present
   because they were filtered before the backend received the execution config.
-- **Apply to ALL sandbox backends:** filtering is done at the `SandboxExecutor` level, not
+- {INV-004} **Apply to ALL sandbox backends:** filtering is done at the `SandboxExecutor` level, not
   per-backend. WASM, container, and process backends all receive the filtered environment.
-- The allowlist entries are compared by exact string equality (case-sensitive). `"path"` and
+- {INV-005} The allowlist entries are compared by exact string equality (case-sensitive). `"path"` and
   `"PATH"` are different entries.
 
 ## Edge Cases

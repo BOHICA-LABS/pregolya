@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.005
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,10 +13,11 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -52,48 +53,48 @@ supports it.
 
 ## Preconditions
 
-1. A pregolya provider chat model is constructed with valid credentials and
+1. {PRE-001} A pregolya provider chat model is constructed with valid credentials and
    `returns_usage_metadata = true` (default).
-2. The provider capability profile declares `supported_usage_metadata_details` as a
+2. {PRE-002} The provider capability profile declares `supported_usage_metadata_details` as a
    set of sub-detail keys that this provider/model combination populates.
-3. `pregolya-standard-tests` is registered as a dev-dependency.
-4. A record/replay HTTP fixture layer with pre-recorded usage metadata responses is
+3. {PRE-003} `pregolya-standard-tests` is registered as a dev-dependency.
+4. {PRE-004} A record/replay HTTP fixture layer with pre-recorded usage metadata responses is
    available for CI.
 
 ## Postconditions
 
-1. `test_usage_metadata` (gated by `returns_usage_metadata`): the `AiMessage` returned
+1. {PC-001} `test_usage_metadata` (gated by `returns_usage_metadata`): the `AiMessage` returned
    by `invoke` carries a non-None `usage_metadata: UsageMetadata` with:
    - `input_tokens: u64 > 0`
    - `output_tokens: u64 > 0`
    - `total_tokens == input_tokens + output_tokens` (unless the provider computes total
      differently, in which case the provider documents its formula and the test uses the
      provider's reported total)
-2. `test_usage_metadata_streaming` (gated): the final `AiMessageChunk` in a streamed
+2. {PC-002} `test_usage_metadata_streaming` (gated): the final `AiMessageChunk` in a streamed
    response carries cumulative `usage_metadata` equivalent to what the unary response
    would carry, when the provider supports streaming usage (negotiated via
    `stream_options: { include_usage: true }` for OpenAI).
-3. Sub-detail fields declared in `supported_usage_metadata_details` are populated in
+3. {PC-003} Sub-detail fields declared in `supported_usage_metadata_details` are populated in
    the returned `UsageMetadata`:
    - `reasoning_tokens: Option<u64>` — non-None for Anthropic extended-thinking and
      OpenAI reasoning models.
    - `cache_read_input_tokens: Option<u64>` — non-None for Anthropic prompt-cache reads.
    - `cache_creation_input_tokens: Option<u64>` — non-None for Anthropic prompt-cache writes.
    - `audio_tokens: Option<u64>` — non-None for OpenAI audio input/output models.
-4. Sub-detail fields NOT declared in `supported_usage_metadata_details` are `None`
+4. {PC-004} Sub-detail fields NOT declared in `supported_usage_metadata_details` are `None`
    (not zero, not absent with default-zero behavior — callers must distinguish
    "not applicable" from "zero tokens used").
 
 ## Invariants
 
-- `total_tokens` is always present when `input_tokens` and `output_tokens` are present.
+- {INV-001} `total_tokens` is always present when `input_tokens` and `output_tokens` are present.
   No provider adapter may return `input_tokens + output_tokens` without `total_tokens`.
-- Sub-detail fields that the provider does not report are `None`, not `0`. Callers
+- {INV-002} Sub-detail fields that the provider does not report are `None`, not `0`. Callers
   distinguish `None` ("this provider does not track this metric") from `Some(0)`
   ("zero tokens of this type were used this call").
-- Streaming usage: the usage metadata on the final chunk is cumulative across the entire
+- {INV-003} Streaming usage: the usage metadata on the final chunk is cumulative across the entire
   response — it is NOT per-chunk incremental usage.
-- The `returns_usage_metadata` flag is `true` by default; a provider must explicitly set
+- {INV-004} The `returns_usage_metadata` flag is `true` by default; a provider must explicitly set
   it to `false` only if the provider API does not support usage metadata at all.
 
 ## Edge Cases

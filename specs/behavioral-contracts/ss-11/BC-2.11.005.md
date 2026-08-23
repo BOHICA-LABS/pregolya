@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -27,6 +27,7 @@ changelog:
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). PC1 — extended with streaming surface isolation clause: ToolEnd.data carries post-guardrail content; GuardrailDecision carries metadata only; zero rejected bytes in any StreamEvent payload. New INV-5 — streaming surface subject to same content isolation; GuardrailDecision carries metadata only; enforced structurally via ordering."
   - "1.4 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.5 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-005}, {PRE-001..PRE-003} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -55,42 +56,42 @@ single synchronous operation in the current super-step.
 
 ## Preconditions
 
-1. A `GuardrailHook` is registered on the `InvocationContext`
-2. The hook has returned `GuardrailResult::Fail { reason, severity }` for at least one content
+1. {PRE-001} A `GuardrailHook` is registered on the `InvocationContext`
+2. {PRE-002} The hook has returned `GuardrailResult::Fail { reason, severity }` for at least one content
    unit at a tool-result, RAG, or memory ingress boundary
-3. The rejected content unit was tagged with a `ProvenanceTag` identifying an ingress boundary
+3. {PRE-003} The rejected content unit was tagged with a `ProvenanceTag` identifying an ingress boundary
    (per BC-2.11.001)
 
 ## Postconditions
 
-1. The model input buffer (the complete list of messages/content passed to the model on the
+1. {PC-001} The model input buffer (the complete list of messages/content passed to the model on the
    current inference call) contains zero bytes of the rejected content unit's original data.
    The streaming surface enforces the same isolation guarantee: `ToolEnd.data` carries post-guardrail
    content only — raw rejected payloads are never present in any `StreamEvent` payload. This
    includes `StreamEvent::GuardrailDecision` itself, which carries metadata only (reason, severity,
    ingress_id, boundary, tool_call_id) and contains zero bytes of the rejected content (INV-5)
-2. An error block is injected at the position where the rejected content unit would have appeared;
+2. {PC-002} An error block is injected at the position where the rejected content unit would have appeared;
    the error block contains `reason` (the rejection reason from the hook) and the
    `ProvenanceTag.ingress_id` — neither of which contains the original content
-3. The `ProvenanceTag`, `reason`, and `severity` of every rejected item are recorded in the run's
+3. {PC-003} The `ProvenanceTag`, `reason`, and `severity` of every rejected item are recorded in the run's
    audit log atomically with the rejection (before inference proceeds)
-4. If `severity == Critical`: the run transitions to `failed` state; model inference is not
+4. {PC-004} If `severity == Critical`: the run transitions to `failed` state; model inference is not
    called; no further nodes execute
-5. If `severity != Critical`: the run continues with the error block substituted; model inference
+5. {PC-005} If `severity != Critical`: the run continues with the error block substituted; model inference
    is called with the modified (rejected-content-free) input buffer
 
 ## Invariants
 
-1. The rejection is atomic and synchronous: there is no execution window between the
+1. {INV-001} The rejection is atomic and synchronous: there is no execution window between the
    `GuardrailResult::Fail` return and the model input buffer being finalized in which rejected
    content could slip through
-2. The error block may reference the rejection reason by value but must not include any portion
+2. {INV-002} The error block may reference the rejection reason by value but must not include any portion
    of the original rejected content in a form observable by the model
-3. Audit log records the rejection metadata; however, the audit log record itself does not store
+3. {INV-003} Audit log records the rejection metadata; however, the audit log record itself does not store
    the raw rejected content in a location that is ever forwarded to the model as context
-4. Parallel guardrail composition (two hooks run in parallel): if any hook returns `Fail`,
+4. {INV-004} Parallel guardrail composition (two hooks run in parallel): if any hook returns `Fail`,
    the content is treated as rejected — fail-closed parallel composition
-5. The streaming surface is subject to the same content isolation guarantee: `GuardrailDecision`
+5. {INV-005} The streaming surface is subject to the same content isolation guarantee: `GuardrailDecision`
    carries metadata only (reason, severity, ingress_id, boundary, tool_call_id) — zero bytes
    of the rejected content appear in any `StreamEvent` payload. This is enforced structurally
    by the causal ordering: `GuardrailDecision` emits BEFORE `ToolEnd`; `ToolEnd` carries

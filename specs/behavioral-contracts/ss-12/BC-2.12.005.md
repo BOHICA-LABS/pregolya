@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.005
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
   - domain-spec/invariants.md#DI-013
@@ -32,6 +32,7 @@ changelog:
   - "1.4 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.5 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.security_config_cors_wildcard' to EC-003 and Invariants WARN emission per observability census (SAP-1)."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -56,45 +57,45 @@ route. Any request to the debug route without a configured key returns `403 Forb
 
 ## Preconditions
 
-1. `pregolya-server` is started with `SecurityConfig::default()` (no custom config
+1. {PRE-001} `pregolya-server` is started with `SecurityConfig::default()` (no custom config
    provided).
-2. An HTTP client sends a cross-origin request with an `Origin` header.
-3. An HTTP client sends a request to the debug/introspection route (`/_debug`).
+2. {PRE-002} An HTTP client sends a cross-origin request with an `Origin` header.
+3. {PRE-003} An HTTP client sends a request to the debug/introspection route (`/_debug`).
 
 Separately, for the opt-in path:
-4. `SecurityConfig` is constructed with `debug_route_key: Some("non-empty-key")`.
-5. A request is made to `/_debug` with `Authorization: Bearer <key>` matching the
+4. {PRE-004} `SecurityConfig` is constructed with `debug_route_key: Some("non-empty-key")`.
+5. {PRE-005} A request is made to `/_debug` with `Authorization: Bearer <key>` matching the
    configured key.
 
 ## Postconditions
 
 **CORS default:**
-1. No `Access-Control-Allow-Origin: *` header appears in any response from a server
+1. {PC-001} No `Access-Control-Allow-Origin: *` header appears in any response from a server
    using `SecurityConfig::default()`.
-2. Preflight `OPTIONS` requests with an `Origin` header that is not in the
+2. {PC-002} Preflight `OPTIONS` requests with an `Origin` header that is not in the
    `allowed_origins` list receive a response with no `Access-Control-Allow-Origin`
    header (cross-origin request silently denied at the CORS layer).
-3. Same-origin requests (no `Origin` header) are not affected by CORS settings.
+3. {PC-003} Same-origin requests (no `Origin` header) are not affected by CORS settings.
 
 **Debug route default:**
-4. `GET /_debug` with no `Authorization` header returns `403 Forbidden` with body
+4. {PC-004} `GET /_debug` with no `Authorization` header returns `403 Forbidden` with body
    `E-SERVER-004 DebugRouteUnauthorized`.
-5. `GET /_debug` with a `Authorization: Bearer <wrong-key>` also returns `403`.
-6. `GET /_debug` with a `Authorization: Bearer <correct-key>` (matching
+5. {PC-005} `GET /_debug` with a `Authorization: Bearer <wrong-key>` also returns `403`.
+6. {PC-006} `GET /_debug` with a `Authorization: Bearer <correct-key>` (matching
    `debug_route_key` in config) returns `200 OK` with the introspection payload.
-7. `GET /_debug` when `debug_route_key` is `None` (default) returns `403` regardless
+7. {PC-007} `GET /_debug` when `debug_route_key` is `None` (default) returns `403` regardless
    of any supplied `Authorization` header — there is no bypass.
 
 ## Invariants
 
-- **DI-013 (Secure Server Defaults):** `SecurityConfig::default()` sets `allowed_origins`
+- {INV-001} **DI-013 (Secure Server Defaults):** `SecurityConfig::default()` sets `allowed_origins`
   to an empty list (CORS denied); `debug_route_key` is `None` (debug route inaccessible);
   unauthenticated access to the debug route returns `403`, never `200` or `404`.
-- The debug route path is fixed at `/_debug` and cannot be served without the key
+- {INV-002} The debug route path is fixed at `/_debug` and cannot be served without the key
   regardless of middleware ordering. `debug_route_path` is NOT a config option — the
   path is a fixed constant. (F-P26-04: removed configurable-path reference; decision:
   minimal config surface + secure-default simplicity; TVs all use `/_debug` hardcoded.)
-- Constructing `SecurityConfig` with an explicit `allowed_origins: [AllowOrigin::Any]`
+- {INV-003} Constructing `SecurityConfig` with an explicit `allowed_origins: [AllowOrigin::Any]`
   (CORS wildcard) is permitted for local-dev use cases, but the server emits a `WARN`
   log on startup with `event_type = "server.security_config_cors_wildcard"`: `"SecurityConfig: CORS wildcard configured — do not use in production"`.
 

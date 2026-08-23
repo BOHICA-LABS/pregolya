@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -41,6 +41,7 @@ changelog:
   - "1.6 (burst-264/2026-07-25): Architecture Anchors filesystem path corrected src/scheduler/ → src/cron/ per module-decomposition v1.26 adjudication (canonical module server::cron)."
   - "1.7 (fix-burst-283/TD-VSDD-060-sibling/2026-07-30): Architect sibling-site sweep: 'No missed-fire accumulation' invariant referenced RunnableConfig.missed_fire_policy, which does not exist (not added by ADR-021; absent from LangGraph Cron TypedDict and ADK-Rust CreateCronJobRequest in reference corpus). Option A applied: fixed skip policy for missed firings; no per-schedule missed-fire override available in v1. Removed internally-contradictory 'Exactly one Run is created for each elapsed scheduled time' clause."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -57,36 +58,36 @@ interactive runs.
 
 ## Preconditions
 
-1. A valid `Assistant` record exists for the `assistant_id` referenced in the schedule
+1. {PRE-001} A valid `Assistant` record exists for the `assistant_id` referenced in the schedule
    creation request.
-2. The `schedule` field is a syntactically valid cron expression (five or six fields,
+2. {PRE-002} The `schedule` field is a syntactically valid cron expression (five or six fields,
    standard quartz-compatible or POSIX cron syntax).
-3. The pregolya-server scheduler subsystem is running (not shut down).
-4. `RunnableConfig` supplied in the schedule creation request is valid per `Assistant`
+3. {PRE-003} The pregolya-server scheduler subsystem is running (not shut down).
+4. {PRE-004} `RunnableConfig` supplied in the schedule creation request is valid per `Assistant`
    configuration (no unknown fields, no contradicting overrides).
 
 ## Postconditions
 
-1. A `CronSchedule` record is persisted with a unique `cron_id: Uuid`; `enabled: true`
+1. {PC-001} A `CronSchedule` record is persisted with a unique `cron_id: Uuid`; `enabled: true`
    by default.
-2. On each schedule firing the server atomically:
+2. {PC-002} On each schedule firing the server atomically:
    a. Creates a new `Run` with a freshly allocated `run_id` and `thread_id` (no
       checkpoint history — isolated fresh session).
    b. Sets `Run.status = RunStatus::Queued`; the Run progresses through the standard
       `queued → in_progress → completed | failed | cancelled | summary_halt; in_progress ⇄ interrupted (resume via POST .../resume)` lifecycle.
-3. The `cron_id` is returned in the creation response; subsequent `GET /schedules/{cron_id}`
+3. {PC-003} The `cron_id` is returned in the creation response; subsequent `GET /schedules/{cron_id}`
    reflects current `enabled` state and `last_fired_at` timestamp.
-4. Setting `enabled: false` via `PATCH /schedules/{cron_id}` prevents all future firings
+4. {PC-004} Setting `enabled: false` via `PATCH /schedules/{cron_id}` prevents all future firings
    immediately (any in-flight Run from the last firing continues to completion).
-5. `DELETE /schedules/{cron_id}` removes the schedule; no further Runs are created; the
+5. {PC-005} `DELETE /schedules/{cron_id}` removes the schedule; no further Runs are created; the
    operation returns `204 No Content`.
-6. If the referenced `Assistant` no longer exists at firing time, the scheduled Run is
+6. {PC-006} If the referenced `Assistant` no longer exists at firing time, the scheduled Run is
    created with `status = RunStatus::Failed` and error `E-CRON-001
    AssistantNotFoundAtFiring`.
 
 ### Cross-Thread Aggregate Query (`GET /runs?schedule_id={cron_id}`)
 
-7. `GET /runs?schedule_id={cron_id}` returns `{ runs: [Run], total_count: u64 }` listing
+7. {PC-007} `GET /runs?schedule_id={cron_id}` returns `{ runs: [Run], total_count: u64 }` listing
    all Runs fired by the given schedule across all threads. Results are ordered
    `created_at` **descending** (most-recent firing first). This ordering is the
    authoritative canon for this endpoint (F-P31-01, ADV-P1D-PASS-31).
@@ -97,13 +98,13 @@ interactive runs.
 
 ## Invariants
 
-- **Session isolation:** Each cron-fired Run receives a newly allocated `thread_id`;
+- {INV-001} **Session isolation:** Each cron-fired Run receives a newly allocated `thread_id`;
   it does not inherit state from any previous cron Run on the same schedule unless
   `RunnableConfig.thread_id` is explicitly set by the operator.
-- **Idempotent scheduling:** Creating two schedules with identical
+- {INV-002} **Idempotent scheduling:** Creating two schedules with identical
   (`assistant_id`, `schedule`, `config`) is allowed; they are distinct records with
   distinct `cron_id` values — there is no deduplication.
-- **No missed-fire accumulation:** If a schedule fires while the server was down, the
+- {INV-003} **No missed-fire accumulation:** If a schedule fires while the server was down, the
   server does **not** attempt to catch up with the missed firings. The server applies a
   fixed `skip` policy for missed firings; no per-schedule missed-fire override is
   available in v1.

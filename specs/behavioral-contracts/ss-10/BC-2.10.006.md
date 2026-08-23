@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "2.1"
+version: "2.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -31,6 +31,7 @@ changelog:
   - "1.9 (burst-311/F-P202-01/2026-08-17): Architect adjudication applied — fts_search IS the CheckpointSaver trait method; search_history is ONLY the callable Tool wrapper (search_history_tool()). Two trait-method references renamed: (a) §Preconditions item 2: CheckpointSaver::search_history → CheckpointSaver::fts_search; (b) §Postconditions Step 1: CheckpointSaver::search_history → CheckpointSaver::fts_search. search_history Tool name preserved throughout."
   - "2.0 (burst-311/D-181/2026-08-17): Complete fts_search/search_history disambiguation sweep (Wave-2b). Four remaining trait-method-context references renamed search_history → fts_search: (a) TV-004 'search_history API' → 'fts_search (trait method)'; (b) VP-2.10.006-A 'call search_history' → 'call fts_search'; (c) Related BCs BC-2.04.001 dependency 'history readable via search_history' → 'history readable via fts_search (trait method)'; (d) Related BCs BC-2.04.008 dependency 'search_history FTS for ConversationSnapshot assembly' → 'fts_search (CheckpointSaver trait method) for ConversationSnapshot assembly'. No Tool-context search_history references changed — BC-2.04.008 confirmed clean."
   - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.25 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "2.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -68,36 +69,36 @@ fails, the cycle is aborted without mutating the message window.
 
 ## Preconditions
 
-1. `CompactionTrigger` condition evaluated as true after a super-step (BC-2.10.005).
-2. `CheckpointSaver::fts_search` (BC-2.04.008) is accessible from `BudgetEngine`.
-3. `BudgetConfig.compaction_policy` is either `Some(Arc<dyn CompactionPolicy>)` or `None`
+1. {PRE-001} `CompactionTrigger` condition evaluated as true after a super-step (BC-2.10.005).
+2. {PRE-002} `CheckpointSaver::fts_search` (BC-2.04.008) is accessible from `BudgetEngine`.
+3. {PRE-003} `BudgetConfig.compaction_policy` is either `Some(Arc<dyn CompactionPolicy>)` or `None`
    (in which case `DefaultSummarizationPolicy` is used).
-4. The run is between super-steps (not mid-node execution); compaction runs at super-step
+4. {PRE-004} The run is between super-steps (not mid-node execution); compaction runs at super-step
    boundaries only.
 
 ## Postconditions
 
 **Step 1 — Snapshot assembly:**
-The `BudgetEngine` calls `CheckpointSaver::fts_search` to retrieve recent conversation
+{PC-001} The `BudgetEngine` calls `CheckpointSaver::fts_search` to retrieve recent conversation
 turns. The result is a `ConversationSnapshot { turns: Vec<(usize, Message)>, token_estimate: u64 }`
 containing the ordered slice of turns selected for compaction. Turn selection heuristic:
 the engine selects the oldest turns not yet compacted, up to a token budget ceiling
 (implementation-defined; typically the turn range that would be replaced by the summary).
 
 **Step 2 — Policy compact:**
-`compaction_policy.compact(&snapshot, &run_ctx).await` is called. On success: `CompactionSummary
+{PC-002} `compaction_policy.compact(&snapshot, &run_ctx).await` is called. On success: `CompactionSummary
 { summary_text: String, compacted_start: usize, compacted_end: usize }` is returned (flat
 inclusive bounds per ADR-019 Decision 1 / interface-definitions.md §Compaction). On error:
 `Err(PregolyaError)` — cycle aborted, no mutation, error logged, run continues.
 
 **Step 3 — Mid-run window replacement:**
-`messages[compacted_start..=compacted_end]` in the ACTIVE conversation window is replaced by a single
+{PC-003} `messages[compacted_start..=compacted_end]` in the ACTIVE conversation window is replaced by a single
 `SystemMessage(summary_text)`. This is a mid-run state mutation — it takes effect
 immediately in the current run (contrast: BC-2.15.006 frozen-snapshot takes effect on the
 NEXT run start). The total message count decreases by `(compacted_end - compacted_start)`.
 
 **Step 4 — Durable write:**
-The updated message window is written to the checkpoint via `CheckpointSaver::get_next_version`
+{PC-004} The updated message window is written to the checkpoint via `CheckpointSaver::get_next_version`
 (allocates a new `CheckpointId`) followed by `CheckpointSaver::put` (writes the full
 checkpoint state blob under the new `CheckpointId`). `put` is the correct call here —
 not `put_writes` — because `put_writes` persists per-task channel writes within the
@@ -109,7 +110,7 @@ and the cycle is aborted (the run continues with the pre-compaction window). The
 MUST succeed before proceeding to step 5.
 
 **Step 5 — EvidenceJournal entry:**
-`CompactionEvent { compacted_start, compacted_end, summary_token_count: summary_text.token_count(),
+{PC-005} `CompactionEvent { compacted_start, compacted_end, summary_token_count: summary_text.token_count(),
 tokens_remaining_after: RunContext.budget_info.tokens_remaining }` is appended to the
 `EvidenceJournal` (BC-2.10.001 append-only journal). This entry provides an audit trail
 of when and why compaction occurred. The `tokens_remaining_after` field is typed
@@ -118,35 +119,35 @@ of when and why compaction occurred. The `tokens_remaining_after` field is typed
 negative when accumulated > ceiling on the Deny path.
 
 **Step 6 — Streaming event:**
-`StreamEvent::CompactionEvent` (BC-2.06.006) is emitted with the compaction summary payload.
+{PC-006} `StreamEvent::CompactionEvent` (BC-2.06.006) is emitted with the compaction summary payload.
 
 **Step 7 — Continue run:**
-The run proceeds from the next super-step with the compacted context window active.
+{PC-007} The run proceeds from the next super-step with the compacted context window active.
 
 ## Invariants
 
-- **Checkpoint append-only invariant (BC-2.04.001 Inv-5):** Original message records are
+- {INV-001} **Checkpoint append-only invariant (BC-2.04.001 Inv-5):** Original message records are
   NEVER deleted from the checkpoint store. The compaction writes a NEW checkpoint entry with
   the compacted window; the old entries remain in the store and are readable via history APIs.
-- **Mid-run, not next-run:** Compaction takes effect immediately in the current run.
+- {INV-002} **Mid-run, not next-run:** Compaction takes effect immediately in the current run.
   This is structurally different from BC-2.15.006 (frozen-snapshot context mutation),
   which takes effect only at the next run's start. The two mechanisms are NOT interchangeable.
-- **Abort on compact() failure:** If `compact()` returns `Err`, NO checkpoint mutation occurs.
+- {INV-003} **Abort on compact() failure:** If `compact()` returns `Err`, NO checkpoint mutation occurs.
   The run continues with the pre-compaction window. The error is logged but does NOT propagate
   as a run failure — compaction failure is non-fatal.
-- **Abort on checkpoint write failure:** If `put` fails after `compact()` succeeds,
+- {INV-004} **Abort on checkpoint write failure:** If `put` fails after `compact()` succeeds,
   the in-memory window is reverted to the pre-compaction state. The `CompactionEvent`
   journal entry is NOT written. The run continues.
-- **EvidenceJournal append-only:** The compaction journal entry follows BC-2.10.001
+- {INV-005} **EvidenceJournal append-only:** The compaction journal entry follows BC-2.10.001
   append-only invariant. It is written AFTER the checkpoint is durably committed.
-- **DI-014 (No Silent Swallowing):** `put` failures revert the in-memory state
+- {INV-006} **DI-014 (No Silent Swallowing):** `put` failures revert the in-memory state
   and log the error. `compact()` errors are logged. Neither is silently swallowed as a
   no-op success.
-- **Non-determinism:** The `summary_text` produced by `DefaultSummarizationPolicy` is
+- {INV-007} **Non-determinism:** The `summary_text` produced by `DefaultSummarizationPolicy` is
   model-generated and non-deterministic. This is an accepted tradeoff documented in the
   `EvidenceJournal` entry; BSP determinism invariants (BC-2.03.001 / VP-001) are not
   violated because compaction runs BETWEEN super-steps, not within them.
-- **Compaction × Suspend Non-Interaction — general super-step-boundary property (F-P151-06; cross-ref BC-2.05.001 PC5, BC-2.05.007 PC-4, BC-2.05.008 PC-4, BC-2.10.004 PC4):** Compaction fires only at super-step boundaries (PC-4 above). Any run in `interrupted` status — regardless of the suspend source — is NOT at a super-step boundary, so compaction CANNOT fire during any interrupt park window. This property holds across all three suspend classes:
+- {INV-008} **Compaction × Suspend Non-Interaction — general super-step-boundary property (F-P151-06; cross-ref BC-2.05.001 PC5, BC-2.05.007 PC-4, BC-2.05.008 PC-4, BC-2.10.004 PC4):** Compaction fires only at super-step boundaries (PC-4 above). Any run in `interrupted` status — regardless of the suspend source — is NOT at a super-step boundary, so compaction CANNOT fire during any interrupt park window. This property holds across all three suspend classes:
 
   **(a) Generic `interrupt()` parks (BC-2.05.001):** A node calling `interrupt(value)` fires inside the scheduler's `tick()`, mid-super-step. The run transitions to `interrupted` status with the super-step boundary NOT yet advanced (BC-2.05.001 PC5: "the super-step boundary has not advanced"). The run is parked waiting for a `Command(resume=...)`. Compaction CANNOT fire during this park.
 

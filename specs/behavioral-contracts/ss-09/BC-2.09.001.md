@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ changelog:
   - "1.5 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two violations corrected: (1) PC7 `PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002 }` had 3/5 fields; added `, ..`. (2) EC-006 §Expected behavior multiline span (4/5 fields, missing retry_hint); added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
   - "1.6 (P2A029-fix/2026-08-22): Two adjudications from adversary pass P2A-029. (1) P2A029-01 (HIGH) — fail-closed pagination overflow: Invariant 3 amended from ok-truncated (silent drop of discovered tools) to Err fail-closed, applying the CANONICAL PRINCIPLE no-silent-partial-result rule. PC1 clarified to reflect the abort path. EC-007 and TV-009 added for the >1000-page overflow scenario. New code: E-MCP-008 McpPaginationLimitExceeded (POLICY, broken), minted in error-taxonomy.md same burst. (2) P2A029-02 (MED) — unknown-server discovery error: PC9 added (authoritative full-form site for E-MCP-009 gate #33); EC-008 and TV-010 added. New code: E-MCP-009 McpServerNotConfigured (VAL, broken), minted in error-taxonomy.md same burst. Story-writer handoff: re-anchor S-2.10 AC-002 from stale E-MCP-002 to E-MCP-008; re-anchor S-2.10 EC-001 from stale E-MCP-004 to E-MCP-009."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -23,7 +24,7 @@ wave: 2
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -59,36 +60,36 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 
 ## Preconditions
 
-1. A `MultiServerMcpClient` is constructed with at least one `Connection` entry
+1. {PRE-001} A `MultiServerMcpClient` is constructed with at least one `Connection` entry
    (Stdio, SSE, StreamableHttp, or WebSocket).
-2. The named MCP servers are reachable at their configured transports.
-3. `get_tools(server_name: Option<&str>)` is called.
+2. {PRE-002} The named MCP servers are reachable at their configured transports.
+3. {PRE-003} `get_tools(server_name: Option<&str>)` is called.
 
 ## Postconditions
 
-1. For each targeted server, `list_tools()` is called with cursor following until either
+1. {PC-001} For each targeted server, `list_tools()` is called with cursor following until either
    all pages are retrieved (cursor absent) or `MAX_ITERATIONS=1000` is reached; on the
    success path (≤1000 pages), all pages are consumed. If `MAX_ITERATIONS` is reached
    before the server signals completion, the call returns
    `Err(PregolyaError { component: MCP, category: POLICY, code: E-MCP-008, .. })`
    per EC-007; no partial tool list is returned (fail-closed).
-2. Each `rmcp::model::Tool` from the server is converted into
+2. {PC-002} Each `rmcp::model::Tool` from the server is converted into
    `Arc<dyn DynTool>` via `convert_mcp_tool`. (`DynTool` is the object-safe dispatch
    seam per ADR-005 §Adjacent Trait Object-Safety Adjudications; `convert_mcp_tool`
    returns `Arc<dyn DynTool>`.)
-3. The tool's `args_schema` field is the raw `serde_json::Value` from
+3. {PC-003} The tool's `args_schema` field is the raw `serde_json::Value` from
    `tool.inputSchema` — no pydantic/schemars model is synthesized.
-4. When `server_name = Some("srv")`, only that server's tools are returned;
+4. {PC-004} When `server_name = Some("srv")`, only that server's tools are returned;
    tools from other servers are not included.
-5. When `server_name = None`, tools from all registered servers are returned;
+5. {PC-005} When `server_name = None`, tools from all registered servers are returned;
    the fan-out runs concurrently via `JoinSet` / `try_join_all`.
-6. When `tool_name_prefix = true`, each tool name is prefixed `"{server_name}_{tool_name}"`.
+6. {PC-006} When `tool_name_prefix = true`, each tool name is prefixed `"{server_name}_{tool_name}"`.
    When `false`, tool names are used verbatim (name conflicts are caller's responsibility).
-7. Transport failure connecting to any targeted server returns
+7. {PC-007} Transport failure connecting to any targeted server returns
    `Err(PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002, .. })`.
-8. A server that returns an empty tool list (`[]`) is not an error; an empty `Vec`
+8. {PC-008} A server that returns an empty tool list (`[]`) is not an error; an empty `Vec`
    is returned for that server.
-9. When `server_name = Some(name)` and `name` is not in the configured server set,
+9. {PC-009} When `server_name = Some(name)` and `name` is not in the configured server set,
    returns `Err(PregolyaError { component: MCP, category: VAL, code: E-MCP-009,
    message: "McpServerNotConfigured: no MCP server named 'name' is configured", .. })`
    (where `'name'` = the unknown server name from the caller's argument). This is the
@@ -97,11 +98,11 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 
 ## Invariants
 
-- `args_schema` on any converted tool is the verbatim JSON-Schema `Value` from the
+- {INV-001} `args_schema` on any converted tool is the verbatim JSON-Schema `Value` from the
   MCP server; it is never synthesized, transformed, or validated by pregolya-mcp.
-- The session used for `list_tools` is created on-demand (RAII `OnDemand` session
+- {INV-002} The session used for `list_tools` is created on-demand (RAII `OnDemand` session
   source) and torn down after the listing completes; no session is retained.
-- `MAX_ITERATIONS=1000` is the hard pagination bound; if a server returns more than
+- {INV-003} `MAX_ITERATIONS=1000` is the hard pagination bound; if a server returns more than
   1,000 pages, the listing aborts and returns
   `Err(PregolyaError { component: MCP, category: POLICY, code: E-MCP-008,
   message: "McpPaginationLimitExceeded: server '<server>' exceeded MAX_ITERATIONS=1000

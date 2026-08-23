@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.010
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-002
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -33,6 +33,7 @@ changelog:
   - "1.2 (burst-234/F-P134-03/2026-07-22): Fix mis-anchor — replace both BC-2.05.004 references with BC-2.05.007. PC-1 body and Related BCs both cited BC-2.05.004 (Command-resume API) for the PreToolCallHook / ToolCallPreview / pre_tool_dispatch contract; that contract lives in BC-2.05.007 (PreToolCallHook Dispatch). BC-2.05.004 is the Command(resume=value) programmatic-resume API — unrelated to pre_tool_dispatch. Verified: BC-2.05.007 §Preconditions PC-3 explicitly defines ToolCallPreview construction and §Invariants Retry-ordering clause confirms pre_tool_dispatch dispatch. Reciprocal link added to BC-2.05.007 Related BCs. TD-VSDD-060 sibling sweep: one PC-1 site + one Related BCs site — both corrected in this burst."
   - "1.3 (F-P171a-09+F-P171a-03sibling/burst-273/2026-07-25): (1) F-P171a-09: PC-1 action_risk() bullet extended with ADR-008 Decision 2 emitted-path contract: macro expansion emits ::pregolya_core::action_risk::ActionRisk::<Variant> (fully-qualified path); MUST NOT assume ActionRisk in annotated crate scope; omitting action_risk → ToolCallPreview.action_risk = None with no default variant applied by framework. (2) F-P171a-03 sibling: Related BCs BC-2.23.005 annotation corrected — 'BashTool sets action_risk = ActionRisk::Medium as a risk floor' was wrong on two counts: default annotation is ActionRisk::High (not Medium); Medium is the non-lowerable floor. Fixed to 'BashTool declares action_risk = ActionRisk::High and enforces a non-lowerable Medium floor'."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -56,19 +57,19 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
 
 ## Preconditions
 
-1. The annotated function is `async fn` returning `Result<T, PregolyaError>` where `T: serde::Serialize`.
-2. All parameter types implement `schemars::JsonSchema + serde::DeserializeOwned`.
-3. The `#[pregolya::tool(name = "...", description = "...")]` attribute is present with both
+1. {PRE-001} The annotated function is `async fn` returning `Result<T, PregolyaError>` where `T: serde::Serialize`.
+2. {PRE-002} All parameter types implement `schemars::JsonSchema + serde::DeserializeOwned`.
+3. {PRE-003} The `#[pregolya::tool(name = "...", description = "...")]` attribute is present with both
    `name` and `description` specified. An optional `action_risk` attribute key (e.g.,
    `action_risk = ActionRisk::High`) may be included to declare the tool's risk tier; if
    omitted, the generated struct's `action_risk()` returns `None` and `ToolCallPreview.action_risk`
    is `None` when the `pre_tool_dispatch` hook is called.
-4. `pregolya-macros` is available as a direct or transitive dependency (re-exported from
+4. {PRE-004} `pregolya-macros` is available as a direct or transitive dependency (re-exported from
    `pregolya-core`).
 
 ## Postconditions
 
-1. The macro expansion generates a zero-sized struct `<PascalCaseName>Tool` (derived from the
+1. {PC-001} The macro expansion generates a zero-sized struct `<PascalCaseName>Tool` (derived from the
    function name) implementing:
    - `Tool` trait with `name()` returning the supplied `name` literal
    - `description()` returning the supplied `description` literal
@@ -82,26 +83,26 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
      the attribute, `ToolCallPreview.action_risk` is `None`; no default variant is applied by
      the framework on the caller's behalf.
    - `Runnable<ToolInput, ToolOutput>` with `invoke` delegating to the annotated function body
-2. A private `<PascalCaseName>Args` struct is generated with one field per function parameter;
+2. {PC-002} A private `<PascalCaseName>Args` struct is generated with one field per function parameter;
    the struct derives `serde::Deserialize + schemars::JsonSchema`.
-3. The generated `<PascalCaseName>Tool` struct is `Send + Sync` (Rust async tool requirement).
-4. The macro enforces DI-008 at the call site: the annotated function must return
+3. {PC-003} The generated `<PascalCaseName>Tool` struct is `Send + Sync` (Rust async tool requirement).
+4. {PC-004} The macro enforces DI-008 at the call site: the annotated function must return
    `Result<T, PregolyaError>` (see EC-003 for compile-time rejection). No generated code
    uses `.unwrap()` or `.expect()` in non-test contexts.
-5. The expansion compiles without any `#[allow(unused)]` suppressions in non-test code.
+5. {PC-005} The expansion compiles without any `#[allow(unused)]` suppressions in non-test code.
 
 ## Invariants
 
-- DI-008 (Library Constructor Result Contract): The generated `invoke` delegates to the
+- {INV-001} DI-008 (Library Constructor Result Contract): The generated `invoke` delegates to the
   annotated function, which must return `Result<T, PregolyaError>`. Macro expansion does
   not use `.expect()` or `.unwrap()` in generated non-test code. EC-003 enforces this at
   compile time.
-- The macro is additive; it does not modify the annotated function's signature or behavior.
-- **Related invariant — DI-010 (Credential Opacity):** API key types used as tool parameters
+- {INV-002} The macro is additive; it does not modify the annotated function's signature or behavior.
+- {INV-003} **Related invariant — DI-010 (Credential Opacity):** API key types used as tool parameters
   must follow the DI-010 newtype pattern (no `#[derive(Debug)]` or `Serialize` on secret
   types). This constraint is enforced by BC-2.14.005, not by this BC. Callers are responsible
   for using opaque newtypes as parameter types rather than raw `String` for secrets.
-- Schema naming stability: the generated `<PascalCaseName>Args` struct name is stable and
+- {INV-004} Schema naming stability: the generated `<PascalCaseName>Args` struct name is stable and
   constitutes a public API surface per BC-2.08.009 snapshot obligation.
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.012
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.0 (2026-07-13): initial authoring — Greenfield batch 13"
   - "1.1 (2026-07-14): Architecture Anchor pregolya-core/src/graph/builder.rs corrected to pregolya-graph/src/graph/state.rs — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -51,33 +52,33 @@ registered node function with the same name.
 
 ## Preconditions
 
-1. The annotated function is an async fn with the StateGraph node signature:
+1. {PRE-001} The annotated function is an async fn with the StateGraph node signature:
    `async fn task_name(state: S) -> Result<Update<S>, PregolyaError>` (or equivalent).
-2. The function name is a valid Rust identifier and will be used as the node's string
+2. {PRE-002} The function name is a valid Rust identifier and will be used as the node's string
    identifier in the task dispatch table.
-3. `pregolya-macros` is available (re-exported from `pregolya-core`).
+3. {PRE-003} `pregolya-macros` is available (re-exported from `pregolya-core`).
 
 ## Postconditions
 
-1. The macro generates a registration token type `<PascalCaseTaskName>Node` that implements
+1. {PC-001} The macro generates a registration token type `<PascalCaseTaskName>Node` that implements
    a `register_into(graph: &mut StateGraph<S>)` method equivalent to
    `graph.add_node(stringify!(task_name), task_name)`.
-2. The annotated function itself is unchanged — it remains a callable async fn with its
+2. {PC-002} The annotated function itself is unchanged — it remains a callable async fn with its
    original signature.
-3. A `StateGraph` built by calling `<PascalCaseTaskName>Node::register_into(&mut graph)` is
+3. {PC-003} A `StateGraph` built by calling `<PascalCaseTaskName>Node::register_into(&mut graph)` is
    semantically identical to one built by calling `graph.add_node("task_name", task_name)`.
-4. The generated registration token type is `Send + Sync`.
-5. Calling `register_into` on a graph that already has a node with the same name returns
+4. {PC-004} The generated registration token type is `Send + Sync`.
+5. {PC-005} Calling `register_into` on a graph that already has a node with the same name returns
    `Err(GraphBuildError::DuplicateNode("task_name"))`.
 
 ## Invariants
 
-- The macro does not alter the function body, signature, or visibility of the annotated
+- {INV-001} The macro does not alter the function body, signature, or visibility of the annotated
   function. It only generates adjacent boilerplate.
-- The canonical task identifier (node name string) is derived deterministically from the
+- {INV-002} The canonical task identifier (node name string) is derived deterministically from the
   function name; it cannot be overridden via attribute arguments. If a custom name is needed,
   the user must use manual `add_node(...)`.
-- Name derivation: `snake_case_fn_name` → string `"snake_case_fn_name"` (no case conversion).
+- {INV-003} Name derivation: `snake_case_fn_name` → string `"snake_case_fn_name"` (no case conversion).
 
 ## Edge Cases
 
@@ -158,6 +159,7 @@ S-1.07
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-08-23 | stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change | M1/ADR-027 |
 | 1.2 | 2026-08-22 | §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change) | story-anchor-backfill |
 | 1.1 | 2026-07-14 | Architecture Anchor `pregolya-core/src/graph/builder.rs` corrected to `pregolya-graph/src/graph/state.rs` — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |
 | 1.0 | 2026-07-13 | Initial authoring | Greenfield batch 13 |

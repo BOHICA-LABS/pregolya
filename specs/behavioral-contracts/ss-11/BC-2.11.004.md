@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.004
-version: "1.10"
+version: "1.11"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -32,6 +32,7 @@ changelog:
   - "1.8 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.9 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Two sites corrected: EC-004 table-cell and TV panic-row carry `{ category: INTERNAL, code: E-CORE-007 }` spans; added `, ..` to each. Spans lack component, retry_hint, and message."
   - "1.10 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
+  - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-004} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -60,42 +61,42 @@ model context injection.
 
 ## Preconditions
 
-1. A `GuardrailHook` has been registered on the `InvocationContext`
-2. A memory read operation has completed and returned one or more memory items
-3. Each item has been tagged with `ProvenanceTag { boundary_type: BoundaryType::MemoryIngress }`
+1. {PRE-001} A `GuardrailHook` has been registered on the `InvocationContext`
+2. {PRE-002} A memory read operation has completed and returned one or more memory items
+3. {PRE-003} Each item has been tagged with `ProvenanceTag { boundary_type: BoundaryType::MemoryIngress }`
    (per BC-2.11.001)
-4. The memory items have not yet been appended to the model context
+4. {PRE-004} The memory items have not yet been appended to the model context
 
 ## Postconditions
 
-1. `GuardrailHook::evaluate(memory_item, provenance_tag)` is called for every memory item from a
+1. {PC-001} `GuardrailHook::evaluate(memory_item, provenance_tag)` is called for every memory item from a
    memory read before it enters the model context; `memory_item` is typed as
    `IngressContent::MemoryItem(Value)` in the GuardrailHook trait (interface-definitions.md §GuardrailHook §IngressContent)
-2. `GuardrailResult::Pass` → item forwarded unchanged
-3. `GuardrailResult::Fail { reason, severity }` → item not forwarded; error block injected at
+2. {PC-002} `GuardrailResult::Pass` → item forwarded unchanged
+3. {PC-003} `GuardrailResult::Fail { reason, severity }` → item not forwarded; error block injected at
    the item's position; run continues unless `Critical`;
    a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision: Fail, reason: Some(reason),
    severity: Some(severity_wire), ingress_id, tool_call_id: None }` is emitted within the
    enclosing NodeStart/NodeEnd window (BC-2.06.001 PC4) — the event carries metadata only; zero
    bytes of the rejected memory item appear in any `StreamEvent` payload (BC-2.11.005 INV-5)
-4. `GuardrailResult::Transform { new_content }` → transformed content forwarded; original
+4. {PC-004} `GuardrailResult::Transform { new_content }` → transformed content forwarded; original
    memory item discarded; a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision:
    Transform, reason: None, severity: None, ingress_id, tool_call_id: None }` is emitted within
    the enclosing NodeStart/NodeEnd window (reason and severity are absent for Transform outcomes)
-5. The hook fires for content destined for model context injection — not for memory operations
+5. {PC-005} The hook fires for content destined for model context injection — not for memory operations
    that purely read-and-store without touching the current context (e.g., background memory
    consolidation that does not produce context input)
 
 ## Invariants
 
-1. The guardrail fires at retrieval time, not at write time — stored memory items are not
+1. {INV-001} The guardrail fires at retrieval time, not at write time — stored memory items are not
    pre-cleared; they are evaluated fresh on each retrieval into model context
-2. Backend-agnostic: the hook sees the content and the `ProvenanceTag`; it does not receive
+2. {INV-002} Backend-agnostic: the hook sees the content and the `ProvenanceTag`; it does not receive
    metadata about which backend (SQLite, vector store, Markdown file) produced the item
-3. Memory items that are retrieved but NOT injected into the model context (e.g., used only for
+3. {INV-003} Memory items that are retrieved but NOT injected into the model context (e.g., used only for
    internal graph routing decisions without context insertion) do not trigger this contract —
    the ingress boundary is specifically the model-context-injection boundary
-4. Ordering: ProvenanceTag attachment → GuardrailHook evaluation → model context insertion
+4. {INV-004} Ordering: ProvenanceTag attachment → GuardrailHook evaluation → model context insertion
 
 ## Edge Cases
 

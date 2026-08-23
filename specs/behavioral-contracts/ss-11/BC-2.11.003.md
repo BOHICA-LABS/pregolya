@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.003
-version: "1.10"
+version: "1.11"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -32,6 +32,7 @@ changelog:
   - "1.8 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.9 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Two sites corrected: EC-004 table-cell and TV panic-row carry `{ category: INTERNAL, code: E-CORE-007 }` spans with no `..` inside the PregolyaError braces. The TV row has `chunks[0..1]` adjacent prose containing `..` outside the span — the span itself still violates (ADR-010 §Defect 4 / grep-v false-negative class); `, ..` added to both spans."
   - "1.10 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
+  - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-004} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -60,41 +61,41 @@ user-sourced content).
 
 ## Preconditions
 
-1. A `GuardrailHook` has been registered on the `InvocationContext`
-2. A RAG retrieval operation has completed and returned one or more document chunks
-3. Each chunk has been tagged with `ProvenanceTag { boundary_type: BoundaryType::RAGRetrieval }`
+1. {PRE-001} A `GuardrailHook` has been registered on the `InvocationContext`
+2. {PRE-002} A RAG retrieval operation has completed and returned one or more document chunks
+3. {PRE-003} Each chunk has been tagged with `ProvenanceTag { boundary_type: BoundaryType::RAGRetrieval }`
    (per BC-2.11.001)
-4. The chunks have not yet been appended to the model context (e.g., as document blocks or
+4. {PRE-004} The chunks have not yet been appended to the model context (e.g., as document blocks or
    system-prompt injections)
 
 ## Postconditions
 
-1. `GuardrailHook::evaluate(chunk, provenance_tag)` is called for every document chunk from a
+1. {PC-001} `GuardrailHook::evaluate(chunk, provenance_tag)` is called for every document chunk from a
    RAG retrieval before it enters the model context; `chunk` is typed as
    `IngressContent::RagChunk(Value)` in the GuardrailHook trait (interface-definitions.md §GuardrailHook §IngressContent)
-2. `GuardrailResult::Pass` → chunk forwarded unchanged
-3. `GuardrailResult::Fail { reason, severity }` → chunk not forwarded; error block injected at
+2. {PC-002} `GuardrailResult::Pass` → chunk forwarded unchanged
+3. {PC-003} `GuardrailResult::Fail { reason, severity }` → chunk not forwarded; error block injected at
    the chunk's position in the retrieval result list; run continues unless `Critical`;
    a `StreamEvent::GuardrailDecision { boundary: RagChunk, decision: Fail, reason: Some(reason),
    severity: Some(severity_wire), ingress_id, tool_call_id: None }` is emitted within the
    enclosing NodeStart/NodeEnd window (BC-2.06.001 PC4) — the event carries metadata only; zero
    bytes of the rejected chunk appear in any `StreamEvent` payload (BC-2.11.005 INV-5)
-4. `GuardrailResult::Transform { new_content }` → transformed content forwarded; original chunk
+4. {PC-004} `GuardrailResult::Transform { new_content }` → transformed content forwarded; original chunk
    discarded; a `StreamEvent::GuardrailDecision { boundary: RagChunk, decision: Transform,
    reason: None, severity: None, ingress_id, tool_call_id: None }` is emitted within the
    enclosing NodeStart/NodeEnd window (reason and severity are absent for Transform outcomes)
-5. A retrieval that returns N chunks results in exactly N independent `GuardrailHook::evaluate`
+5. {PC-005} A retrieval that returns N chunks results in exactly N independent `GuardrailHook::evaluate`
    calls; failing chunks produce error block substitutions without blocking passing chunks
 
 ## Invariants
 
-1. The hook fires for all retrieval backends (vector store, BM25/keyword, hybrid) — the
+1. {INV-001} The hook fires for all retrieval backends (vector store, BM25/keyword, hybrid) — the
    guardrail is inserted at the retrieval output boundary, not within the backend
-2. Ordering: ProvenanceTag attachment → GuardrailHook evaluation → model context insertion
+2. {INV-002} Ordering: ProvenanceTag attachment → GuardrailHook evaluation → model context insertion
    (identical ordering invariant to BC-2.11.002)
-3. A RAG retrieval that returns N chunks results in exactly N hook evaluations, even when some
+3. {INV-003} A RAG retrieval that returns N chunks results in exactly N hook evaluations, even when some
    chunks are structurally identical (de-duplication may not bypass evaluation)
-4. Independent chunk evaluation: one chunk's `Fail` result does not cause adjacent chunks in the
+4. {INV-004} Independent chunk evaluation: one chunk's `Fail` result does not cause adjacent chunks in the
    same retrieval call to skip evaluation
 
 ## Edge Cases

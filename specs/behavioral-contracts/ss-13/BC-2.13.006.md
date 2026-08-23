@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.006
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -34,6 +34,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-11): F-P11-04 — E-SBXD-004 and E-SBXD-005 error codes added to PC6, EC-002, and EC-005 (error-taxonomy.md expansion; bc-authoring-plan.md E-code×variant gate)."
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.3 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-16 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-16)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -62,38 +63,38 @@ than silently running unsandboxed.
 
 ## Preconditions
 
-1. The target platform is macOS (Darwin)
-2. The `sandbox-macos-seatbelt` feature (or equivalent platform-detection) is active
-3. A Seatbelt profile is being generated for a tool-execution session
-4. The tool policy does not include `allow_network: true` (default is network-denied)
+1. {PRE-001} The target platform is macOS (Darwin)
+2. {PRE-002} The `sandbox-macos-seatbelt` feature (or equivalent platform-detection) is active
+3. {PRE-003} A Seatbelt profile is being generated for a tool-execution session
+4. {PRE-004} The tool policy does not include `allow_network: true` (default is network-denied)
 
 ## Postconditions
 
-1. The generated Seatbelt profile string contains `(deny default)` (or `(deny default
+1. {PC-001} The generated Seatbelt profile string contains `(deny default)` (or `(deny default
    (with no-report))` for production use) as the first policy rule
-2. The profile does NOT contain the literal string `(allow default)` anywhere
-3. Each allowed operation is enumerated explicitly: `(allow file-read* (subpath
+2. {PC-002} The profile does NOT contain the literal string `(allow default)` anywhere
+3. {PC-003} Each allowed operation is enumerated explicitly: `(allow file-read* (subpath
    <workspace_path>))`, `(allow file-read* (subpath "/usr/lib"))` (system library reads), etc.
-4. `file-read*` for paths outside the allowed set is denied by the base `(deny default)` rule
-5. Network access is denied unless `allow_network: true` is set in the tool policy, in which
+4. {PC-004} `file-read*` for paths outside the allowed set is denied by the base `(deny default)` rule
+5. {PC-005} Network access is denied unless `allow_network: true` is set in the tool policy, in which
    case an explicit `(allow network*)` rule is added
-6. If a deny-by-default allow-list is impractical (e.g., the tool requires too many system
+6. {PC-006} If a deny-by-default allow-list is impractical (e.g., the tool requires too many system
    paths to enumerate), `SandboxBackend::new_macos_seatbelt()` returns
    `Err(SandboxError::PlatformNoEnforcement { reason: "macOS Seatbelt allow-list too broad to enumerate" })`
    (`E-SBXD-004`); execution proceeds only if the caller passes `SandboxPolicy::allow_no_sandbox()`
 
 ## Invariants
 
-1. The literal string `(allow default)` must NOT appear in any pregolya-generated Seatbelt
+1. {INV-001} The literal string `(allow default)` must NOT appear in any pregolya-generated Seatbelt
    profile — not as a rule, not as a comment, not as a fallback
-2. `(deny default)` must be present as the base policy before any `(allow ...)` rules
-3. The allow-list is bounded and explicit: each allowed path or operation is named; wildcards
+2. {INV-002} `(deny default)` must be present as the base policy before any `(allow ...)` rules
+3. {INV-003} The allow-list is bounded and explicit: each allowed path or operation is named; wildcards
    are used only for subtree scoping (`(allow file-read* (subpath X))`) not for global scope
-4. The asymmetry between Linux (deny-by-default reads via bubblewrap) and macOS (P-60 
+4. {INV-004} The asymmetry between Linux (deny-by-default reads via bubblewrap) and macOS (P-60 
    allow-all-reads) must not exist silently in any pregolya build; if macOS cannot enforce
    deny-by-default, the backend must report `PlatformNoEnforcement` and refuse to execute
    unless explicitly opted in
-5. adk-rust reference sparsity: P-60 is the counter-example; no positive upstream reference
+5. {INV-005} adk-rust reference sparsity: P-60 is the counter-example; no positive upstream reference
    for deny-by-default Seatbelt in this codebase — greenfield design derived from NE-16
 
 ## Edge Cases

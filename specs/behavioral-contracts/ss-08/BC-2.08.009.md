@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.009
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-009
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P97-01, 2026-07-17): Module field resolved from variant-phrasing placeholder 'pregolya-macros, pregolya-core [architect to confirm crate→subsystem in Phase 1b]' to sibling-canonical 'pregolya-macros (re-exported pregolya-core)' per BC-2.08.010/011/012 and module-decomposition.md v1.10 §pregolya-macros. Phase 1b closed 2026-07-14; placeholder class no longer accepted (F-P96-01)."
   - "1.2 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in PC-2: `ADR-004 §Version pin` → `ADR-004 §Decision` (no heading §Version pin exists in ADR-004; the version pin statement is a bold bullet item inside `## Decision`)."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -55,49 +56,49 @@ required field, type change, `additionalProperties` addition/removal) DO break t
 
 ## Preconditions
 
-1. A public Rust type `T` in a pregolya crate derives `schemars::JsonSchema` and is used
+1. {PRE-001} A public Rust type `T` in a pregolya crate derives `schemars::JsonSchema` and is used
    as the argument schema for a tool definition (directly or via `#[tool]` proc-macro
    expansion per ADR-008).
-2. schemars ≥ 1.x (version-pinned per ADR-004 §Decision: schemars 1.x, verified 1.2.1,
+2. {PRE-002} schemars ≥ 1.x (version-pinned per ADR-004 §Decision: schemars 1.x, verified 1.2.1,
    2026-02) is a direct dependency of pregolya-core. The 1.x `schemars::Schema` type is
    used — NOT the deprecated 0.8-era `schemars::schema::RootSchema`.
-3. An insta snapshot file for `T` exists at the expected path (e.g.,
+3. {PRE-003} An insta snapshot file for `T` exists at the expected path (e.g.,
    `pregolya-macros/tests/snapshots/schema__<type_name>.snap` or equivalent). If no
    snapshot file exists, the snapshot test fails with an "unreviewed snapshot" error on
    first run and is not silently skipped.
-4. The snapshot comparison function serializes `schemars::schema_for!(T)` to a JSON string
+4. {PRE-004} The snapshot comparison function serializes `schemars::schema_for!(T)` to a JSON string
    with all object keys sorted alphabetically (canonical form) before comparison.
 
 ## Postconditions
 
-1. For any pregolya release tagged as patch (`x.y.Z+1`) or minor (`x.Y+1.0`), executing
+1. {PC-001} For any pregolya release tagged as patch (`x.y.Z+1`) or minor (`x.Y+1.0`), executing
    the snapshot test suite produces zero snapshot diffs for all registered public tool
    types. The CI build fails if any snapshot diff is detected.
-2. Any PR that would change a committed snapshot file MUST be accompanied by a semver-major
+2. {PC-002} Any PR that would change a committed snapshot file MUST be accompanied by a semver-major
    version bump (`X+1.0.0`) merged before or together with the schema-changing PR. A PR
    that changes a snapshot without a semver-major bump is rejected by CI.
-3. A public tool type added to any pregolya crate without a corresponding committed
+3. {PC-003} A public tool type added to any pregolya crate without a corresponding committed
    snapshot file causes the snapshot CI step to fail (insta's `--force-update-snapshots`
    is not enabled in CI; snapshots must be reviewed locally and committed).
-4. Rust struct field reorder (declaration order in source) alone does NOT produce a
+4. {PC-004} Rust struct field reorder (declaration order in source) alone does NOT produce a
    snapshot diff, because the canonical serialization sorts `"properties"` keys
    alphabetically. CI passes without requiring a version bump in this case.
-5. Adding a new **optional** field (`Option<T>` or with `#[schemars(default)]`) to an
+5. {PC-005} Adding a new **optional** field (`Option<T>` or with `#[schemars(default)]`) to an
    existing tool type changes the snapshot. The test fails; this change requires a
    semver-major bump even though the change is additive, because downstream JSON-Schema
    validators may reject previously valid instances when the schema is re-fetched.
 
 ## Invariants
 
-- **Snapshot files are immutable artifacts.** Snapshot files are committed to source
+- {INV-001} **Snapshot files are immutable artifacts.** Snapshot files are committed to source
   control. They are never auto-updated in CI. An update requires a local `cargo insta
   review` session followed by an explicit commit.
-- **Canonical form is alphabetically sorted JSON.** The snapshot compares the
+- {INV-002} **Canonical form is alphabetically sorted JSON.** The snapshot compares the
   `serde_json::to_string_pretty` output of the schemars-generated schema after all
   object keys are sorted by Unicode code point. Array elements are NOT reordered.
-- **schemars 1.x path only.** Any snapshot generated with `schemars::schema::RootSchema`
+- {INV-003} **schemars 1.x path only.** Any snapshot generated with `schemars::schema::RootSchema`
   (0.8-era deprecated type) is invalid and must be regenerated with `schemars::Schema`.
-- **Scope: public tool types only.** Internal types not exposed through `ToolDefinition`
+- {INV-004} **Scope: public tool types only.** Internal types not exposed through `ToolDefinition`
   are exempt. The boundary is: if `schemars::schema_for!(T)` is ever passed to a provider
   via a `ToolDefinition`, `T` is in scope.
 

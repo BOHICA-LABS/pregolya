@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
   - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
@@ -23,6 +23,7 @@ changelog:
   - "1.5 (burst-291/D-134/2026-08-16): Three phantom §-anchor citations corrected. (1) §Description 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants' (§Run-Config Merge Precedence Invariant matches no heading; it is a bold bullet inside §Invariants). (2) EC-006 same correction plus 'interface-definitions.md §RunnableConfig configurable field doc' → 'interface-definitions.md §RunnableConfig — Struct Definition' (§RunnableConfig configurable field doc matches no heading; RunnableConfig struct is defined under '#### RunnableConfig — Struct Definition (F-P92-02)'). Sentence restructured with comma separator so BC_CITE_RE stops at §Invariants, not at '.md'. TD-VSDD-060 sweep: both §Run-Config Merge Precedence Invariant occurrences in live body text corrected."
   - "1.6 (BURST-312/F-P203-01/2026-08-17): Capability Anchor Justification quote-fidelity fix — 'Assistant (named agent config with graph reference)' corrected to verbatim CAP-014 text 'Assistant (named agent config)'; the phrase 'with graph reference' does not appear in capabilities-p1-p2.md §CAP-014. F-P203-01."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -55,47 +56,47 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
 
 ## Preconditions
 
-1. `pregolya-server` is running with a configured `RunStore` backend.
-2. The caller holds a valid authentication credential (or the server is in unauthenticated dev mode).
+1. {PRE-001} `pregolya-server` is running with a configured `RunStore` backend.
+2. {PRE-002} The caller holds a valid authentication credential (or the server is in unauthenticated dev mode).
 
 ## Postconditions
 
 ### Create Assistant (`POST /assistants`)
 
-1. Accepts body `{ graph_id: String, config?: RunnableConfig, context?: Value, metadata?: Map<String,Value>, assistant_id?: Uuid, if_exists?: "raise"|"do_nothing", name?: String, description?: String }`.
-2. `assistant_id` is caller-supplied or server-generated (UUID v4 if absent).
-3. The server stores an immutable Version 1 snapshot of `(graph_id, config, context, metadata)`.
-4. Returns HTTP 201 with the `Assistant { assistant_id, graph_id, config, context, metadata, name, description, version: 1, created_at }`.
-5. If `assistant_id` already exists and `if_exists = "raise"` (default): HTTP 409.
-6. If `assistant_id` already exists and `if_exists = "do_nothing"`: returns existing Assistant (HTTP 200).
+1. {PC-001} Accepts body `{ graph_id: String, config?: RunnableConfig, context?: Value, metadata?: Map<String,Value>, assistant_id?: Uuid, if_exists?: "raise"|"do_nothing", name?: String, description?: String }`.
+2. {PC-002} `assistant_id` is caller-supplied or server-generated (UUID v4 if absent).
+3. {PC-003} The server stores an immutable Version 1 snapshot of `(graph_id, config, context, metadata)`.
+4. {PC-004} Returns HTTP 201 with the `Assistant { assistant_id, graph_id, config, context, metadata, name, description, version: 1, created_at }`.
+5. {PC-005} If `assistant_id` already exists and `if_exists = "raise"` (default): HTTP 409.
+6. {PC-006} If `assistant_id` already exists and `if_exists = "do_nothing"`: returns existing Assistant (HTTP 200).
 
 ### Read Assistant (`GET /assistants/{assistant_id}`)
 
-7. Returns the currently active version of the Assistant.
-8. Returns HTTP 404 with `{ code: "E-SERVER-009", message: "AssistantNotFound: assistant '<id>' does not exist" }` if not found.
+7. {PC-007} Returns the currently active version of the Assistant.
+8. {PC-008} Returns HTTP 404 with `{ code: "E-SERVER-009", message: "AssistantNotFound: assistant '<id>' does not exist" }` if not found.
 
 ### Update Assistant (`PATCH /assistants/{assistant_id}`)
 
-9. Accepts a sparse body; only provided fields are updated.
-10. Creates a new immutable version snapshot (version N+1) with the merged fields.
-11. The previous version remains accessible via `GET /assistants/{assistant_id}/versions`.
-12. Returns HTTP 200 with the updated (new-version) Assistant record.
+9. {PC-009} Accepts a sparse body; only provided fields are updated.
+10. {PC-010} Creates a new immutable version snapshot (version N+1) with the merged fields.
+11. {PC-011} The previous version remains accessible via `GET /assistants/{assistant_id}/versions`.
+12. {PC-012} Returns HTTP 200 with the updated (new-version) Assistant record.
 
 ### Delete Assistant (`DELETE /assistants/{assistant_id}`)
 
-13. Accepts optional query param `delete_threads: bool` (default `false`).
-14. If `delete_threads = true`: all Threads associated with this Assistant's Runs are also deleted (cascade).
-15. If `delete_threads = false`: Threads are preserved; the Assistant record is removed.
-16. Returns HTTP 204 on success; HTTP 404 if not found.
+13. {PC-013} Accepts optional query param `delete_threads: bool` (default `false`).
+14. {PC-014} If `delete_threads = true`: all Threads associated with this Assistant's Runs are also deleted (cascade).
+15. {PC-015} If `delete_threads = false`: Threads are preserved; the Assistant record is removed.
+16. {PC-016} Returns HTTP 204 on success; HTTP 404 if not found.
 
 ### Version Operations
 
-17. `GET /assistants/{assistant_id}/versions` — returns list of all immutable version snapshots
+17. {PC-017} `GET /assistants/{assistant_id}/versions` — returns list of all immutable version snapshots
     ordered by version number ascending.
-18. `POST /assistants/{assistant_id}/set_latest { version: N }` — updates the "latest" pointer
+18. {PC-018} `POST /assistants/{assistant_id}/set_latest { version: N }` — updates the "latest" pointer
     to version N. Returns HTTP 200 with the Assistant record at version N.
-19. Setting `version = N` where N does not exist returns HTTP 404.
-20. `GET /assistants/{assistant_id}/versions` supports canonical pagination: `limit` (default 10,
+19. {PC-019} Setting `version = N` where N does not exist returns HTTP 404.
+20. {PC-020} `GET /assistants/{assistant_id}/versions` supports canonical pagination: `limit` (default 10,
     max 100; values > 100 silently clamped to 100), `offset` (default 0). **Ordering exemption:**
     results are ordered `version` **ascending** (lowest version first) — version ASC is
     intentional for historical replay and differs from the canonical `created_at` DESC default
@@ -105,19 +106,19 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
 
 ### List Assistants (`GET /assistants`)
 
-21. Accepts query params `limit` (default 10, max 100; values > 100 silently clamped to 100),
+21. {PC-021} Accepts query params `limit` (default 10, max 100; values > 100 silently clamped to 100),
     `offset` (default 0).
-22. Returns `{ assistants: [Assistant], total_count: u64 }` for all stored Assistants.
-23. Results ordered `created_at` **descending** (canonical; F-P31-01). Out-of-range clamp
+22. {PC-022} Returns `{ assistants: [Assistant], total_count: u64 }` for all stored Assistants.
+23. {PC-023} Results ordered `created_at` **descending** (canonical; F-P31-01). Out-of-range clamp
     canon per BC-2.12.001 PC8 (F-P31-01, ADV-P1D-PASS-31). Interface anchor:
     interface-definitions.md §Assistants `GET /assistants` row (F-P33-01).
 
 ## Invariants
 
-- Each `PATCH` creates a NEW version; existing versions are immutable and never overwritten.
-- The "latest" pointer is mutable; it always resolves to a valid version number.
-- `GET /assistants/{id}` always resolves via the latest pointer, never returns a stale version.
-- `graph_id` is a required field and cannot be updated to empty on `PATCH` (validation error).
+- {INV-001} Each `PATCH` creates a NEW version; existing versions are immutable and never overwritten.
+- {INV-002} The "latest" pointer is mutable; it always resolves to a valid version number.
+- {INV-003} `GET /assistants/{id}` always resolves via the latest pointer, never returns a stale version.
+- {INV-004} `graph_id` is a required field and cannot be updated to empty on `PATCH` (validation error).
 
 ## Edge Cases
 

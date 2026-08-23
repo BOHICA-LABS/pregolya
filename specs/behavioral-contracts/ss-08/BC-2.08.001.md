@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(PregolyaError { category: TRANSPORT, … })` (Unicode-ellipsis form) without specifying a code in this BC. Added code: E-PROV-003 (StreamInterrupted) explicitly to EC-003 per gate #30 rule: ellipsis forms are exempt only if the BC itself specifies the code for that path. Code confirmed from cross-referenced BC-2.08.007 EC-001/TV-001."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 carried `Err(PregolyaError { category: TRANSPORT, code: E-PROV-003, … })` with Unicode-ellipsis abbreviation; cross-BC reference to BC-2.08.007 does not satisfy PASS-ABBREV (same-BC requirement). Expanded `…` to explicit inline message template with `<provider>` and `<tokens>` placeholders; cross-BC reference retained as informational note."
   - "1.4 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-003: PregolyaError value-observation in prose missing required `..` rest pattern (partial fields: category, code, message; missing component, retry_hint); added `, ..` before closing `}`. All occurrences reconciled: 1 corrected (Class 3), 2 exempt (changelog)."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -55,21 +56,21 @@ streamed chunks must produce the same final `AiMessage` as a unary `invoke` call
 
 ## Preconditions
 
-1. A pregolya provider chat model (one of: `ChatOpenAI`, `ChatAnthropic`,
+1. {PRE-001} A pregolya provider chat model (one of: `ChatOpenAI`, `ChatAnthropic`,
    `ChatOllama`, or a conforming third-party adapter) is constructed with valid
    credentials and a model that supports streaming.
-2. `pregolya-standard-tests` is added as a `[dev-dependency]` in the provider crate's
+2. {PRE-002} `pregolya-standard-tests` is added as a `[dev-dependency]` in the provider crate's
    `Cargo.toml`.
-3. The provider crate's integration test wires the standard-tests streaming battery by
+3. {PRE-003} The provider crate's integration test wires the standard-tests streaming battery by
    implementing `StandardChatModelTests` and supplying the model fixture.
-4. A record/replay HTTP fixture layer (e.g., `wiremock` or cassette middleware) is
+4. {PRE-004} A record/replay HTTP fixture layer (e.g., `wiremock` or cassette middleware) is
    available so the suite runs in CI without live provider keys.
 
 ## Postconditions
 
-1. `test_stream` and `test_astream` pass: the stream yields ≥ 1 `AiMessageChunk`;
+1. {PC-001} `test_stream` and `test_astream` pass: the stream yields ≥ 1 `AiMessageChunk`;
    concatenating all chunks via the core merge function produces a non-empty `AiMessage`.
-2. `test_stream_events_v3` and `test_astream_events_v3` pass against the
+2. {PC-002} `test_stream_events_v3` and `test_astream_events_v3` pass against the
    `stream_lifecycle` oracle:
    - The first event is a `message-start` event.
    - The last event is a `message-finish` event.
@@ -78,22 +79,22 @@ streamed chunks must produce the same final `AiMessage` as a unary `invoke` call
    - For every deltaable block type (`text`, `reasoning`, `tool_call_chunk`,
      `server_tool_call_chunk`), the concatenation of all delta events equals the
      `content-block-finish` accumulated payload exactly.
-3. The final `AiMessage` reconstructed from the stream is equal to the response
+3. {PC-003} The final `AiMessage` reconstructed from the stream is equal to the response
    produced by a unary `invoke` call with identical inputs (DI-011 enforcement).
-4. The provider passes `test_stream_time`: the first chunk arrives within 5 seconds for
+4. {PC-004} The provider passes `test_stream_time`: the first chunk arrives within 5 seconds for
    a single-sentence prompt on the fixture layer.
 
 ## Invariants
 
-- **DI-011 (Streaming / Unary Run Equivalence):** The streaming path and the unary
+- {INV-001} **DI-011 (Streaming / Unary Run Equivalence):** The streaming path and the unary
   path invoke the same translation logic; no stub code path emits events without
   actually driving the provider response.
-- Block indices in a v3 stream are a contiguous sequence `[0, 1, 2, …]`; a gap in
+- {INV-002} Block indices in a v3 stream are a contiguous sequence `[0, 1, 2, …]`; a gap in
   indices is a conformance violation.
-- `message-start` and `message-finish` are strictly the first and last events;
+- {INV-003} `message-start` and `message-finish` are strictly the first and last events;
   receiving `message-finish` before `message-start`, or receiving content events outside
   this envelope, is a conformance violation.
-- Deltaable blocks: accumulated deltas MUST equal the `content-block-finish` payload —
+- {INV-004} Deltaable blocks: accumulated deltas MUST equal the `content-block-finish` payload —
   under no circumstances may the finish payload carry extra tokens not present in deltas.
 
 ## Edge Cases

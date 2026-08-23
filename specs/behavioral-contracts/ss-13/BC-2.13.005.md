@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.005
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -35,6 +35,7 @@ changelog:
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.3 (burst-288/P1D-177-C01/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — §Traceability §Binding Decisions: ADR-024 §Phase-2 Postconditions PC-3 added as governing authority for EC-003 dangling-symlink PathNotFound decision (per ADR-024 §Consumers obligation). EC-003 Expected Behavior updated: per ADR-024 §Decision 1 Phase 2 step (d), `symlink_metadata(joined)` detects the dangling symlink directly (is_symlink()=true → Err(SandboxError::PathNotFound)); prior text cited canonicalize's IoError::NotFound which was the pre-§Decision-1-Phase-2 description. Error verdict unchanged: Err(SandboxError::PathNotFound), not WorkspaceEscape. Architecture Anchors: ADR-024 §Decision 1 step (d) + §PC-3 added. inputs: ADR-024 added."
   - "1.4 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-02 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-02)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 priority: P1
 wave: 1
 ---
@@ -54,36 +55,36 @@ This BC directly covers domain edge case DEC-011.
 
 ## Preconditions
 
-1. A workspace root `/workspace` exists with a canonical path
-2. A symlink exists at a path inside the workspace (e.g., `/workspace/escape_link`) whose
+1. {PRE-001} A workspace root `/workspace` exists with a canonical path
+2. {PRE-002} A symlink exists at a path inside the workspace (e.g., `/workspace/escape_link`) whose
    target is outside the workspace root (e.g., `/etc/passwd`, `~/.ssh/id_rsa`,
    `~/.aws/credentials`)
-3. A tool or internal API requests a file operation on the symlink path via the `WorkspaceFs`
+3. {PRE-003} A tool or internal API requests a file operation on the symlink path via the `WorkspaceFs`
    facade
 
 ## Postconditions
 
-1. `canonicalize_beneath_root(workspace_root, "/workspace/escape_link")` calls
+1. {PC-001} `canonicalize_beneath_root(workspace_root, "/workspace/escape_link")` calls
    `std::fs::canonicalize("/workspace/escape_link")`
-2. `canonicalize` returns the resolved target (e.g., `/etc/passwd`)
-3. The resolved path does NOT have `/workspace` as a prefix
-4. `canonicalize_beneath_root` returns
+2. {PC-002} `canonicalize` returns the resolved target (e.g., `/etc/passwd`)
+3. {PC-003} The resolved path does NOT have `/workspace` as a prefix
+4. {PC-004} `canonicalize_beneath_root` returns
    `Err(E-SBXD-001: WorkspaceEscape { requested: "/workspace/escape_link", resolved: "/etc/passwd", root: "/workspace" })`
-5. The file is NOT read, written, or otherwise accessed — zero bytes of the target file are
+5. {PC-005} The file is NOT read, written, or otherwise accessed — zero bytes of the target file are
    observed
 
 ## Invariants
 
-1. Symlink resolution happens via OS-level `canonicalize` — no string analysis of the symlink
+1. {INV-001} Symlink resolution happens via OS-level `canonicalize` — no string analysis of the symlink
    path itself determines the outcome
-2. `WorkspaceEscape` carries three fields: `requested` (the path the caller provided),
+2. {INV-002} `WorkspaceEscape` carries three fields: `requested` (the path the caller provided),
    `resolved` (the canonical target path after symlink resolution), and `root` (the workspace
    root) — enabling precise audit logging
-3. There is no "follow symlinks outside root" opt-in for workspace file operations —
+3. {INV-003} There is no "follow symlinks outside root" opt-in for workspace file operations —
    escape detection is unconditional
-4. Symlinks whose targets remain within the workspace root are allowed (access proceeds with
+4. {INV-004} Symlinks whose targets remain within the workspace root are allowed (access proceeds with
    the canonical resolved path)
-5. adk-rust reference sparsity: P-65 is the explicit counter-example; no positive upstream
+5. {INV-005} adk-rust reference sparsity: P-65 is the explicit counter-example; no positive upstream
    reference — greenfield behavior derived from NE-02 and DI-007
 
 ## Edge Cases

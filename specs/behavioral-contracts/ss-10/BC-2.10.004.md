@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-012
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder. All Architecture Anchor crate references already correct per ADR-009 split (BudgetEscalation/BudgetResume types + journal stay in pregolya-graph as dispatch/escalation artifacts, not policy definitions)."
   - "1.2 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is escalate' → 'BudgetConfig::on_ceiling is OnCeiling::Escalate'. PC1: 'BudgetPolicy with on_ceiling = escalate ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Escalate ... in GraphConfig.budget_config'. TV-001: same BudgetConfig attribution + OnCeiling::Escalate enum form. EC-001: 'on_ceiling = escalate' → 'BudgetConfig::on_ceiling = OnCeiling::Escalate'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.8 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by budget-escalation interrupt (PC4: evaluation point within a super-step → run transitions to `interrupted`) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during a budget-escalation interrupt park window."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
   - domain-spec/capabilities-p0.md#CAP-006
@@ -63,49 +64,49 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 
 ## Preconditions
 
-1. A `BudgetConfig` is configured in `GraphConfig.budget_config`.
-2. *(Trigger — exactly one of two paths holds):*
+1. {PRE-001} A `BudgetConfig` is configured in `GraphConfig.budget_config`.
+2. {PRE-002} *(Trigger — exactly one of two paths holds):*
    - **(Soft-ceiling path)** A `BudgetPolicy::evaluate` call has returned
      `PolicyDecision::Escalate` after an LLM call or tool invocation —
      `BudgetConfig::on_ceiling` is NOT consulted for this path (see
      interface-definitions v2.33 "any — not consulted" row).
    - **(Hard-ceiling path)** A `BudgetPolicy::evaluate` call has returned
      `PolicyDecision::Deny` and `BudgetConfig::on_ceiling` = `OnCeiling::Escalate`.
-3. A `CheckpointSaver` is attached to the graph (an interrupt without a checkpointer is a
+3. {PRE-003} A `CheckpointSaver` is attached to the graph (an interrupt without a checkpointer is a
    precondition violation — same as BC-2.05.001 EC-001).
-4. The execution engine is currently at an evaluation point within a super-step.
+4. {PRE-004} The execution engine is currently at an evaluation point within a super-step.
 
 ## Postconditions
 
-1. The execution engine triggers `interrupt(BudgetEscalation { current_usage, ceiling, policy_name, reason })` via the standard interrupt mechanism.
-2. The interrupt payload is pushed to the per-task scratchpad (FIFO slot) as per DI-003 and BC-2.05.001 postcondition 2.
-3. A checkpoint is written with the INTERRUPT marker and the `BudgetEscalation` payload before
+1. {PC-001} The execution engine triggers `interrupt(BudgetEscalation { current_usage, ceiling, policy_name, reason })` via the standard interrupt mechanism.
+2. {PC-002} The interrupt payload is pushed to the per-task scratchpad (FIFO slot) as per DI-003 and BC-2.05.001 postcondition 2.
+3. {PC-003} A checkpoint is written with the INTERRUPT marker and the `BudgetEscalation` payload before
    the run suspends (sync durability tier, DI-002). The checkpoint write completes before the
    caller receives the interrupt notification.
-4. The run transitions to `interrupted` status; the caller receives:
+4. {PC-004} The run transitions to `interrupted` status; the caller receives:
    `{"__interrupt__": [InterruptPayload { value: BudgetEscalation { ... }, interrupt_id }]}`.
-5. A `JournalEntry` with `decision: Escalate` and the `BudgetEscalation` context is appended
+5. {PC-005} A `JournalEntry` with `decision: Escalate` and the `BudgetEscalation` context is appended
    to the `EvidenceJournal` before the interrupt is raised (BC-2.10.002).
-6. On resume via `Command(resume = BudgetResume::Extend { new_ceiling })`:
+6. {PC-006} On resume via `Command(resume = BudgetResume::Extend { new_ceiling })`:
    - The `new_ceiling` is applied by patching `RunnableConfig::budget_config` with
      `BudgetConfig { hard_limit: Some(new_ceiling), ..original }` for the resumed execution.
    - The interrupted node re-executes from the start of its super-step (DI-003).
    - A `JournalEntry` recording the resume decision and new ceiling is appended.
    - Execution continues under the extended ceiling.
-7. On resume via `Command(resume = BudgetResume::Halt)`:
+7. {PC-007} On resume via `Command(resume = BudgetResume::Halt)`:
    - The run halts gracefully (same behavior as BC-2.10.003 postconditions 3–7).
    - A `JournalEntry` recording the halt decision is appended.
 
 ## Invariants
 
-- **DI-003 (HITL FIFO Resume-Value Delivery):** The budget escalation interrupt participates
+- {INV-001} **DI-003 (HITL FIFO Resume-Value Delivery):** The budget escalation interrupt participates
   in the FIFO resume-value queue alongside any other concurrent interrupts. If multiple
   interrupts are pending, resume values are consumed in strict FIFO order.
-- The `BudgetEscalation` interrupt uses the same `put_writes` / INTERRUPT-marker checkpoint
+- {INV-002} The `BudgetEscalation` interrupt uses the same `put_writes` / INTERRUPT-marker checkpoint
   mechanism as all other interrupts (BC-2.05.001). No special-case checkpoint path exists.
-- A budget escalation without a `CheckpointSaver` is a hard precondition violation, identical
+- {INV-003} A budget escalation without a `CheckpointSaver` is a hard precondition violation, identical
   to BC-2.05.001 EC-001. The error returned is `Err(E-GRAPH-016 InterruptWithoutCheckpointer)`.
-- After resume with `Extend`, the resumed execution is subject to the same budget policy
+- {INV-004} After resume with `Extend`, the resumed execution is subject to the same budget policy
   evaluation — the extended ceiling takes effect immediately for the next evaluation call.
   If the extended ceiling is still lower than current usage, the next evaluation immediately
   escalates again (the run does not get unlimited budget by virtue of resuming).

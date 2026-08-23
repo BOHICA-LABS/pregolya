@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.008
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-011
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-standard-tests per module-decomposition.md v1.10."
   - "1.2 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'eval.judge_infra_error' to PC3 InfraError WARN emission per observability census (SAP-1). PC3 updated with structured event_type field."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-011
 inputs:
@@ -51,43 +52,43 @@ concurrency from making scores order-dependent.
 
 ## Preconditions
 
-1. One or more `EvalCase` objects with expected behavior have been assembled (from
+1. {PRE-001} One or more `EvalCase` objects with expected behavior have been assembled (from
    domain holdout scenarios or the standard-tests battery).
-2. A judge model (an LLM implementing `ChatModel`) is available to evaluate each case.
-3. The eval runner is invoked with a list of `EvalCase` entries and a judge model.
+2. {PRE-002} A judge model (an LLM implementing `ChatModel`) is available to evaluate each case.
+3. {PRE-003} The eval runner is invoked with a list of `EvalCase` entries and a judge model.
 
 ## Postconditions
 
-1. **Arithmetic mean aggregation:** The aggregate eval score over N cases is computed as:
+1. {PC-001} **Arithmetic mean aggregation:** The aggregate eval score over N cases is computed as:
    `score = sum(case_scores) / count(Pass + Fail cases)`.
    `InfraError` cases are excluded from both numerator and denominator.
    The result is a `f64` in `[0.0, 1.0]` where 1.0 = all judged cases passed.
-2. **JudgeResult three-outcome enum:**
+2. {PC-002} **JudgeResult three-outcome enum:**
    - `JudgeResult::Pass` — the judge evaluated the agent's response as correct.
    - `JudgeResult::Fail` — the judge evaluated the agent's response as incorrect.
    - `JudgeResult::InfraError { reason: String }` — the judge infrastructure failed
      (judge LLM returned an error, timed out, or returned an unparseable response).
-3. **InfraError isolation:** `JudgeResult::InfraError` on a case does NOT decrement
+3. {PC-003} **InfraError isolation:** `JudgeResult::InfraError` on a case does NOT decrement
    the aggregate score. It does NOT count as a `Fail`. The infra error is emitted as
    `tracing::warn!(event_type = "eval.judge_infra_error", reason)` with the `reason` field
    from `JudgeResult::InfraError { reason }`, and the eval suite continues.
-4. **Single agent run per eval case:** Each eval case is executed once, in sequence.
+4. {PC-004} **Single agent run per eval case:** Each eval case is executed once, in sequence.
    No parallel fan-out per case. This prevents non-determinism from concurrent
    execution from producing order-dependent score merges (P-64 counter-example).
-5. **Score invariant:** If all N judged cases return `Pass`, the aggregate score is
+5. {PC-005} **Score invariant:** If all N judged cases return `Pass`, the aggregate score is
    exactly `1.0`. If all return `Fail`, the aggregate score is exactly `0.0`.
    If all return `InfraError`, the runner returns `Err(EvalError::AllCasesInfraError)` —
    it does not return `1.0` or `0.0`.
 
 ## Invariants
 
-- The arithmetic mean formula must be applied exactly: `sum / count`, not
+- {INV-001} The arithmetic mean formula must be applied exactly: `sum / count`, not
   `sum / total_cases` (which would penalize infra failures as implicit zeros).
-- `JudgeResult` has exactly three variants. No additional variants may be added
+- {INV-002} `JudgeResult` has exactly three variants. No additional variants may be added
   without a BC revision. Callers exhaustively match on all three variants.
-- Per-case execution is sequential; the judge is called once per case, not once
+- {INV-003} Per-case execution is sequential; the judge is called once per case, not once
   per case per judge replica.
-- Aggregate score is a `f64`; precision is preserved to ≥ 4 significant figures
+- {INV-004} Aggregate score is a `f64`; precision is preserved to ≥ 4 significant figures
   for reporting. Score is never rounded to an integer before reporting.
 
 ## Edge Cases

@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.001
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -26,6 +26,7 @@ changelog:
   - "1.1 (ADV-P1D-PASS-22): F-P22-01 — input anchor corrected from `capabilities-p1-p2.md` to `capabilities-p0.md`; Capability Anchor Justification source path updated to match (16-BC re-anchor sweep)."
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.3 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-003} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -52,34 +53,34 @@ downstream hook evaluation.
 
 ## Preconditions
 
-1. An `InvocationContext` has been constructed for a graph run (whether or not a `GuardrailHook`
+1. {PRE-001} An `InvocationContext` has been constructed for a graph run (whether or not a `GuardrailHook`
    is registered)
-2. Content is arriving from one of the three ingress boundary types: tool-result, RAG document
+2. {PRE-002} Content is arriving from one of the three ingress boundary types: tool-result, RAG document
    retrieval, or memory read
-3. The content unit has not yet been passed to any consumer downstream of the boundary
+3. {PRE-003} The content unit has not yet been passed to any consumer downstream of the boundary
 
 ## Postconditions
 
-1. Every `ContentBlock` from a tool-result boundary carries a
+1. {PC-001} Every `ContentBlock` from a tool-result boundary carries a
    `ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: <uuid>, sequence_position: N }`
-2. Every document chunk from a RAG retrieval boundary carries a
+2. {PC-002} Every document chunk from a RAG retrieval boundary carries a
    `ProvenanceTag { boundary_type: BoundaryType::RAGRetrieval, ingress_id: <uuid>, sequence_position: N }`
-3. Every item from a memory ingress boundary carries a
+3. {PC-003} Every item from a memory ingress boundary carries a
    `ProvenanceTag { boundary_type: BoundaryType::MemoryIngress, ingress_id: <uuid>, sequence_position: N }`
-4. All content units from a single ingress event share the same `ingress_id`; units within the
+4. {PC-004} All content units from a single ingress event share the same `ingress_id`; units within the
    event are distinguished by distinct, zero-indexed `sequence_position` values
-5. Content without a `ProvenanceTag` does not proceed to `GuardrailHook` evaluation or model
+5. {PC-005} Content without a `ProvenanceTag` does not proceed to `GuardrailHook` evaluation or model
    context insertion — the pipeline enforces tagged content as a precondition for forwarding
 
 ## Invariants
 
-1. `ProvenanceTag` attachment is unconditional: no branch in the ingress pipeline bypasses it,
+1. {INV-001} `ProvenanceTag` attachment is unconditional: no branch in the ingress pipeline bypasses it,
    regardless of whether a `GuardrailHook` is registered or the run is in debug mode
-2. The `boundary_type` field of an attached tag is immutable; no downstream code may alter it
+2. {INV-002} The `boundary_type` field of an attached tag is immutable; no downstream code may alter it
    after attachment
-3. An ingress event producing N content units tags all N independently with the same `ingress_id`
+3. {INV-003} An ingress event producing N content units tags all N independently with the same `ingress_id`
    but distinct `sequence_position` values (0 through N-1)
-4. An ingress event producing zero content units creates no `ProvenanceTag` objects; the empty
+4. {INV-004} An ingress event producing zero content units creates no `ProvenanceTag` objects; the empty
    result does not trigger any downstream guardrail evaluation
 
 ## Edge Cases

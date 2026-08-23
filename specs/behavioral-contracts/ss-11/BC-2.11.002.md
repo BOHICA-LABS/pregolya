@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.002
-version: "1.12"
+version: "1.13"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -34,6 +34,7 @@ changelog:
   - "1.10 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.11 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Two sites corrected: EC-001 table-cell and TV panic-row both carry `{ category: INTERNAL, code: E-CORE-007 }` spans; added `, ..` to each. Spans lack component, retry_hint, and message."
   - "1.12 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
+  - "1.13 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-003} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -61,42 +62,42 @@ substitute error block), or Transform (forward replacement content). This contra
 
 ## Preconditions
 
-1. A `GuardrailHook` has been registered on the `InvocationContext`
-2. A `ToolMessage` `ContentBlock` has been produced and tagged with
+1. {PRE-001} A `GuardrailHook` has been registered on the `InvocationContext`
+2. {PRE-002} A `ToolMessage` `ContentBlock` has been produced and tagged with
    `ProvenanceTag { boundary_type: BoundaryType::ToolResult }` (per BC-2.11.001)
-3. The `ContentBlock` has not yet been appended to the model input buffer
+3. {PRE-003} The `ContentBlock` has not yet been appended to the model input buffer
 
 ## Postconditions
 
-1. `GuardrailHook::evaluate(content_block, provenance_tag)` is called for every `ToolMessage`
+1. {PC-001} `GuardrailHook::evaluate(content_block, provenance_tag)` is called for every `ToolMessage`
    `ContentBlock` before it enters the model input buffer; `content_block` is typed as
    `IngressContent::ToolResult(ContentBlock)` in the GuardrailHook trait (interface-definitions.md §GuardrailHook §IngressContent)
-2. `GuardrailResult::Pass` → the `ContentBlock` is forwarded unchanged to the model input buffer
-3. `GuardrailResult::Fail { reason, severity }` → the `ContentBlock` is NOT forwarded; an error
+2. {PC-002} `GuardrailResult::Pass` → the `ContentBlock` is forwarded unchanged to the model input buffer
+3. {PC-003} `GuardrailResult::Fail { reason, severity }` → the `ContentBlock` is NOT forwarded; an error
    block is injected at the same position carrying `reason`; the original content is discarded;
    the run continues unless `severity == Critical`, in which case the run transitions to `failed`;
    a `StreamEvent::GuardrailDecision { boundary: ToolResult, decision: Fail, reason: Some(reason),
    severity: Some(severity_wire), ingress_id, tool_call_id: Some(...) }` is emitted BEFORE the
    enclosing `ToolEnd` event — the event carries metadata only; zero bytes of the rejected
    `ContentBlock` appear in any `StreamEvent` payload (BC-2.11.005 INV-5)
-4. `GuardrailResult::Transform { new_content }` → `new_content` is forwarded to the model input
+4. {PC-004} `GuardrailResult::Transform { new_content }` → `new_content` is forwarded to the model input
    buffer; the original `ContentBlock` is discarded; a `StreamEvent::GuardrailDecision { boundary:
    ToolResult, decision: Transform, reason: None, severity: None, ingress_id, tool_call_id:
    Some(...) }` is emitted BEFORE the enclosing `ToolEnd` event (reason and severity are absent
    for Transform outcomes — no rejection metadata to report)
-5. The hook fires for all parallel fan-out branches independently — each branch's tool-result
+5. {PC-005} The hook fires for all parallel fan-out branches independently — each branch's tool-result
    content is guarded before entering that branch's model context
 
 ## Invariants
 
-1. There is no execution path through the tool-result pipeline that delivers a `ContentBlock` to
+1. {INV-001} There is no execution path through the tool-result pipeline that delivers a `ContentBlock` to
    the model input buffer without a preceding `GuardrailHook::evaluate` call (when a hook is
    registered)
-2. The hook fires AFTER `ProvenanceTag` attachment (BC-2.11.001) and BEFORE model context
+2. {INV-002} The hook fires AFTER `ProvenanceTag` attachment (BC-2.11.001) and BEFORE model context
    insertion — this ordering is non-negotiable
-3. `GuardrailResult::Fail` with `severity == Critical` halts the run; lower severities (High,
+3. {INV-003} `GuardrailResult::Fail` with `severity == Critical` halts the run; lower severities (High,
    Medium, Low) substitute an error block and allow the run to continue
-4. The hook is called with both `content_block` and `provenance_tag` as arguments; hook
+4. {INV-004} The hook is called with both `content_block` and `provenance_tag` as arguments; hook
    implementations may inspect the tag to apply source-specific policy (e.g., stricter rules for
    certain MCP server origins)
 

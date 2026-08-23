@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.002
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
@@ -27,6 +27,7 @@ changelog:
   - "1.2 (burst-235/F-P135-05/2026-07-22): Add DI-015 (Subprocess Execution Timeout) to di_anchors and Traceability — ProcessBackend co-enforces DI-015 at the sandbox layer via .kill_on_drop(true); add PC-6 (kill-on-drop subprocess guarantee) and INV-6 (.kill_on_drop(true) mandate). Architect adjudication F-P135-05."
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.4 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -53,23 +54,23 @@ enforcement).
 
 ## Preconditions
 
-1. The caller explicitly invokes `Sandbox::unsafe_process_no_isolation()` to obtain a
+1. {PRE-001} The caller explicitly invokes `Sandbox::unsafe_process_no_isolation()` to obtain a
    `ProcessBackend` handle
-2. The caller then invokes `execute(tool, args, policy)` on that handle
+2. {PRE-002} The caller then invokes `execute(tool, args, policy)` on that handle
 
 ## Postconditions
 
-1. Before code execution begins, a log message is emitted at `WARN` level with the text:
+1. {PC-001} Before code execution begins, a log message is emitted at `WARN` level with the text:
    `"ProcessBackend: no filesystem isolation, no network isolation, no memory bounds —
    untrusted code runs with OS-level privileges of the pregolya process"`
    The log entry MUST include `event_type = "sandbox.process_no_isolation_execute"` as a structured field alongside the message.
-2. The warning is emitted once per `execute()` invocation, not only at construction time
-3. The process backend executes the tool function and returns its result
-4. `ProcessBackend::capabilities()` returns
+2. {PC-002} The warning is emitted once per `execute()` invocation, not only at construction time
+3. {PC-003} The process backend executes the tool function and returns its result
+4. {PC-004} `ProcessBackend::capabilities()` returns
    `BackendCapabilities { filesystem_isolated: false, network_isolated: false, memory_bounded: false }`
-5. The warning cannot be suppressed by any public API call on `ProcessBackend` or
+5. {PC-005} The warning cannot be suppressed by any public API call on `ProcessBackend` or
    `SandboxExecutor`
-6. Every `tokio::process::Child` spawned by `ProcessBackend::execute()` is configured with
+6. {PC-006} Every `tokio::process::Child` spawned by `ProcessBackend::execute()` is configured with
    `.kill_on_drop(true)`. If the `execute()` Future is dropped mid-execution (e.g., by an
    upstream `tokio::time::timeout` at the BashTool layer), the OS subprocess is killed by
    Tokio's drop machinery. No subprocess spawned by `ProcessBackend` may outlive the
@@ -77,18 +78,18 @@ enforcement).
 
 ## Invariants
 
-1. The process backend constructor name contains the tokens "unsafe" and "no_isolation"
+1. {INV-001} The process backend constructor name contains the tokens "unsafe" and "no_isolation"
    verbatim — the security posture is visible at the call site
-2. The WARN log is emitted before tool code begins executing — a log tail can observe the
+2. {INV-002} The WARN log is emitted before tool code begins executing — a log tail can observe the
    warning before any damage from unsandboxed execution
-3. No method named `suppress_warning`, `quiet`, `allow_unsafe`, or similar exists on
+3. {INV-003} No method named `suppress_warning`, `quiet`, `allow_unsafe`, or similar exists on
    `ProcessBackend`
-4. `BackendCapabilities::enforcing()` returns `false` for `ProcessBackend`; any code that
+4. {INV-004} `BackendCapabilities::enforcing()` returns `false` for `ProcessBackend`; any code that
    gates on `BackendCapabilities::enforcing()` will see the false value
-5. adk-rust reference sparsity: upstream provides no loud-warning mechanism for unsafe
+5. {INV-005} adk-rust reference sparsity: upstream provides no loud-warning mechanism for unsafe
    backends (P-49 ADOPT adds honest capabilities but no warning); this is greenfield behavior
    derived from NE-01
-6. `ProcessBackend` MUST set `.kill_on_drop(true)` on every `tokio::process::Child` it
+6. {INV-006} `ProcessBackend` MUST set `.kill_on_drop(true)` on every `tokio::process::Child` it
    spawns; this is the DI-015 co-enforcement mechanism at the sandbox layer — it guarantees
    subprocess termination on async cancellation without requiring an explicit kill call from
    the BashTool layer.

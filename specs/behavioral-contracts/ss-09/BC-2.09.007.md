@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-021
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.0 (2026-07-15, initial): base BC authored — MCP server tool call dispatch via ToolRegistry."
   - "1.1 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Architecture Anchors — ToolRegistry type corrected: `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>` (architect scope — planned implementation signature; dyn Tool is non-object-safe per ADR-005 §Adjacent Trait Object-Safety Adjudications; ToolRegistry must use DynTool for vtable dispatch)."
   - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): (1) EC-002 §Scenario: CLASS3_UNICODE_ELLIPSIS_VIOLATION — `PregolyaError { … }` corrected to `PregolyaError { .. }` per ADR-010 §Error-Construction Notation Canon Class 3 (discriminator sub-class CLASS3_UNICODE_ELLIPSIS_VIOLATION: U+2026 in brace-whitespace field-elision position). (2) v1.1 frontmatter entry: de-pinned volatile ADR-005 version pin to section anchor `ADR-005 §Adjacent Trait Object-Safety Adjudications` per TD-VSDD-091."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -49,50 +50,50 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
 
 ## Preconditions
 
-1. The MCP server (BC-2.09.006) is started and has at least one tool registered.
-2. An external MCP client has connected and sends a `tools/call` JSON-RPC request with:
+1. {PRE-001} The MCP server (BC-2.09.006) is started and has at least one tool registered.
+2. {PRE-002} An external MCP client has connected and sends a `tools/call` JSON-RPC request with:
    `{ "method": "tools/call", "params": { "name": "<tool_name>", "arguments": {…} } }`.
-3. The `arguments` object is a valid JSON object (may be empty `{}`).
+3. {PRE-003} The `arguments` object is a valid JSON object (may be empty `{}`).
 
 ## Postconditions
 
-1. The server parses the `tools/call` request and looks up `<tool_name>` in the
+1. {PC-001} The server parses the `tools/call` request and looks up `<tool_name>` in the
    `ToolRegistry`. If found, the registered `Tool` is executed with the provided `arguments`
    JSON parsed to the tool's input schema.
-2. On **successful execution:** the server responds with:
+2. {PC-002} On **successful execution:** the server responds with:
    `{ "content": [{ "type": "text", "text": "<result_text>" }], "isError": false }`.
    The `result_text` is the tool's `ToolOutput` serialized as a JSON string or plain text.
-3. On **tool execution error** (the pregolya `Tool::invoke` returns `Err`): the server
+3. {PC-003} On **tool execution error** (the pregolya `Tool::invoke` returns `Err`): the server
    responds with:
    `{ "content": [{ "type": "text", "text": "<error_message>" }], "isError": true }`.
    The `isError: true` flag is the MCP protocol signal for tool-level failures. The response
    is a valid MCP response (not a JSON-RPC protocol error); the JSON-RPC result layer
    carries `isError: true` in the content.
-4. On **tool not found** (`<tool_name>` is not in the registry): the server responds with
+4. {PC-004} On **tool not found** (`<tool_name>` is not in the registry): the server responds with
    a JSON-RPC error: `{ "code": -32602, "message": "Tool not found: <tool_name>" }`.
    (JSON-RPC -32602 = InvalidParams — the tool name is an invalid parameter for this server.)
-5. On **argument schema validation failure** (arguments do not conform to the tool's input
+5. {PC-005} On **argument schema validation failure** (arguments do not conform to the tool's input
    schema): the server responds with:
    `{ "code": -32602, "message": "Invalid arguments for tool '<tool_name>': <schema_error>" }`.
-6. The invocation is executed under the server's `ExecutionContext`, which includes the
+6. {PC-006} The invocation is executed under the server's `ExecutionContext`, which includes the
    `RunnableConfig` and any configured `BudgetPolicy` attached to the server instance.
    If the tool invocation exceeds its budget, the standard `E-BUDGET-001` applies and the
    server responds with `isError: true`.
 
 ## Invariants
 
-- **Synchronous execution in v1:** the server executes `Tool::invoke` synchronously and
+- {INV-001} **Synchronous execution in v1:** the server executes `Tool::invoke` synchronously and
   awaits the result before responding to the MCP client. Streaming intermediate results from
   long-running tools is deferred to v2.
-- **isError semantics:** `isError: true` in the `CallToolResult` means the tool returned
+- {INV-002} **isError semantics:** `isError: true` in the `CallToolResult` means the tool returned
   an error, but the MCP protocol transaction itself succeeded. The JSON-RPC layer returns
   `result` (not `error`) in both the success and tool-error cases. JSON-RPC `error` is only
   used for protocol-level failures (unknown method, invalid params, parse error).
-- **No credential leakage:** if a tool returns an error that includes sensitive information
+- {INV-003} **No credential leakage:** if a tool returns an error that includes sensitive information
   (e.g., a provider credential), the server is responsible for sanitizing the error message
   before including it in the MCP response. (DI-010.) In v1 this is best-effort; implementors
   must not construct error messages that embed credential values from known sources.
-- **One invocation per request:** a single `tools/call` request invokes exactly one tool
+- {INV-004} **One invocation per request:** a single `tools/call` request invokes exactly one tool
   exactly once. No fan-out, no retry within the server handler.
 
 ## Edge Cases

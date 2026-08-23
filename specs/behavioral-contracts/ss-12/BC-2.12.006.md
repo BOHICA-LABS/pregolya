@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.006
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server per module-decomposition.md v1.10."
   - "1.2 (F-P117-01, fix burst 120, 2026-07-19): PC7 — add summary_halt to the enumerated transition set (RunStore must persist all lifecycle transitions including the budget-summarize terminal state per BC-2.10.003 PC8(d) and BC-2.12.003 PC8 post-fix)."
   - "1.3 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.rate_limit_store_in_memory' to EC-005 startup WARN emission per observability census (SAP-1). EC-005 and Invariants updated."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -55,58 +56,58 @@ eviction.
 
 ## Preconditions
 
-1. `pregolya-server` is initialized with an explicit or default store configuration.
-2. For idempotency: an HTTP request includes `Idempotency-Key: <key>` in headers.
-3. For rate limiting: an HTTP request arrives from a caller with a known `caller_id`.
-4. For run state: a `Run` is created and its lifecycle state transitions are stored.
+1. {PRE-001} `pregolya-server` is initialized with an explicit or default store configuration.
+2. {PRE-002} For idempotency: an HTTP request includes `Idempotency-Key: <key>` in headers.
+3. {PRE-003} For rate limiting: an HTTP request arrives from a caller with a known `caller_id`.
+4. {PRE-004} For run state: a `Run` is created and its lifecycle state transitions are stored.
 
 ## Postconditions
 
 **IdempotencyStore:**
-1. A request with `Idempotency-Key: "k1"` that completes successfully caches its
+1. {PC-001} A request with `Idempotency-Key: "k1"` that completes successfully caches its
    response payload; a second identical request with the same key returns the cached
    response without re-executing the Run, within the TTL window.
-2. After the idempotency TTL expires, the key is evicted; the next request with the
+2. {PC-002} After the idempotency TTL expires, the key is evicted; the next request with the
    same key executes a new Run.
-3. In-memory default uses an LRU cache with bounded capacity and TTL (default:
+3. {PC-003} In-memory default uses an LRU cache with bounded capacity and TTL (default:
    capacity 10,000 entries, TTL 24 hours). At capacity, the least-recently-used entry
    is evicted regardless of TTL.
 
 **RateLimitStore:**
-4. Each caller's request count is tracked per time window. Exceeding the configured
+4. {PC-004} Each caller's request count is tracked per time window. Exceeding the configured
    rate limit returns `429 Too Many Requests` with a `Retry-After: <seconds>` header.
-5. In-memory default uses a token-bucket per `caller_id` with LRU eviction when the
+5. {PC-005} In-memory default uses a token-bucket per `caller_id` with LRU eviction when the
    bucket map exceeds capacity (default: 10,000 callers).
-6. A durable `RateLimitStore` backend (e.g., Redis or Postgres) enables rate limiting
+6. {PC-006} A durable `RateLimitStore` backend (e.g., Redis or Postgres) enables rate limiting
    to be enforced consistently across multiple server instances.
 
 **RunStore:**
-7. Every `Run` state transition (queued, in_progress, interrupted, completed,
+7. {PC-007} Every `Run` state transition (queued, in_progress, interrupted, completed,
    failed, cancelled, summary_halt) is written to the `RunStore` before the HTTP response
    is returned to the caller.
-8. `GET /threads/{thread_id}/runs/{run_id}` reads directly from the `RunStore`; no in-memory copy is
+8. {PC-008} `GET /threads/{thread_id}/runs/{run_id}` reads directly from the `RunStore`; no in-memory copy is
    consulted separately.
-9. Swapping the `RunStore` backend from in-memory to SQLite (via config) requires
+9. {PC-009} Swapping the `RunStore` backend from in-memory to SQLite (via config) requires
    no code change to the server's route handlers or business logic.
 
 **Trait seam:**
-10. All three stores are accessed only through their trait interfaces (`IdempotencyStore`,
+10. {PC-010} All three stores are accessed only through their trait interfaces (`IdempotencyStore`,
     `RateLimitStore`, `RunStore`). No route handler references a concrete store type.
     This is verifiable by the absence of any concrete store type in `pregolya-server`
     route handler modules.
 
 ## Invariants
 
-- `IdempotencyStore` entries are immutable after creation: the same `Idempotency-Key`
+- {INV-001} `IdempotencyStore` entries are immutable after creation: the same `Idempotency-Key`
   always returns the same cached response during its TTL window; no in-place updates
   are permitted.
-- `RunStore` writes are synchronous (consistent with DI-002's sync-default durability
+- {INV-002} `RunStore` writes are synchronous (consistent with DI-002's sync-default durability
   tier for task outputs); a `RunStore` write failure propagates as `Err(E-SERVER-014
   RunStoreFailed)`, not a silent state corruption.
-- The in-memory default `RunStore` is explicitly documented as non-durable: a process
+- {INV-003} The in-memory default `RunStore` is explicitly documented as non-durable: a process
   restart loses all Run records. Operators requiring durability must configure a
   persistent backend.
-- The in-memory `RateLimitStore` emits `event_type = "server.rate_limit_store_in_memory"` at server startup as an operator signal to configure a distributed backend for multi-instance deployments.
+- {INV-004} The in-memory `RateLimitStore` emits `event_type = "server.rate_limit_store_in_memory"` at server startup as an operator signal to configure a distributed backend for multi-instance deployments.
 
 ## Edge Cases
 

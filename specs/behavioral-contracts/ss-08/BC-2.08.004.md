@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.004
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, TV-001, TV-003 each had category-only PregolyaError constructions. Added code: E-PROV-004 (ProviderAuthFailed) to AUTH constructions; code: E-PROV-001 (RateLimited) to RATE construction. EC-004, EC-005, TV-004, TV-005 use TRANSPORT for generic 5xx/unknown format; placeholder code: E-PROV-008 — deferred mint pending adversary pass targeting TRANSPORT generic path."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 drain — replaced E-PROV-008 placeholder with E-PROV-008 (ProviderHttpError, TRANSPORT) in EC-004, EC-005, TV-004, TV-005. Both sites (HTTP 5xx and unparseable error body) share TRANSPORT category; one code is correct per task-1 discipline. E-PROV-008 minted in error-taxonomy.md v1.8 this burst."
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. (1) PC3 had bare `Err(PregolyaError { category: RATE, code: E-PROV-001, retry_hint: Later(Duration) })` without message; added inline message template. (2) PC5 had `Err(PregolyaError { category: VAL, code: E-CORE-005, … })` with Unicode-ellipsis; expanded to full message template. (3) EC-002 had `Err(PregolyaError { category: VAL, code: E-PROV-006, … })` with Unicode-ellipsis; expanded to full message template; TV-002 PASS-ABBREV via EC-002. (4) EC-003 had bare `Err(PregolyaError { category: RATE, code: E-PROV-001, retry_hint: RetryHint::Later(…) })` without message; added inline message template; TV-003 PASS-ABBREV via EC-003."
   - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 15 Class 3 violations corrected across §Postconditions (PC1–PC5), §Edge Cases (EC-001–EC-005), and §Canonical Test Vectors (TV-001–TV-005): (a) PC1, PC2, PC4 — Unicode ellipsis `…` replaced with `..` rest pattern (partial-field category-only observations); (b) PC3, PC5, EC-001, EC-002, EC-003, EC-004, EC-005, TV-001, TV-002, TV-003, TV-004, TV-005 — `, ..` added before closing `}` (partial-field observations with category, code, message, or retry_hint present; component absent or retry_hint absent). All occurrences reconciled: 15 corrected (Class 3), 1 exempt (changelog, 1 line)."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -57,49 +58,49 @@ support.
 
 ## Preconditions
 
-1. A pregolya provider chat model is constructed for a model that returns HTTP error
+1. {PRE-001} A pregolya provider chat model is constructed for a model that returns HTTP error
    responses (4xx/5xx) under the conditions tested.
-2. `pregolya-standard-tests` is registered as a dev-dependency and the provider
+2. {PRE-002} `pregolya-standard-tests` is registered as a dev-dependency and the provider
    implements the error-fidelity conformance fixture.
-3. A record/replay HTTP fixture layer can inject pre-recorded error responses (HTTP 400,
+3. {PRE-003} A record/replay HTTP fixture layer can inject pre-recorded error responses (HTTP 400,
    401, 429, 503) for the provider's error JSON envelope format.
-4. `PregolyaError` is defined with at minimum the following `category` variants
+4. {PRE-004} `PregolyaError` is defined with at minimum the following `category` variants
    (using canonical taxonomy codes from error-taxonomy.md):
    AUTH, VAL (including E-PROV-006 ContextLengthExceeded subtype), RATE, TRANSPORT (provider 5xx), TIMEOUT, POLICY (refusal), INTERNAL.
 
 ## Postconditions
 
-1. A provider 401/403 response maps to `Err(PregolyaError { category: AUTH, .. })`.
+1. {PC-001} A provider 401/403 response maps to `Err(PregolyaError { category: AUTH, .. })`.
    The error message does NOT contain the raw API key value (DI-010 / NFR-005).
-2. A provider "context length exceeded" / "too many tokens" 400 response maps to
+2. {PC-002} A provider "context length exceeded" / "too many tokens" 400 response maps to
    `Err(PregolyaError { category: VAL, .. })`. The `code` field must be set to a
    context-overflow-specific error code so callers can distinguish this VAL subtype
    from other validation errors and apply summarization/trim middleware.
-3. A provider 429 (rate limit) response maps to
+3. {PC-003} A provider 429 (rate limit) response maps to
    `Err(PregolyaError { category: RATE, code: E-PROV-001, retry_hint: Later(Duration),
    message: "RateLimited: provider '<provider>' returned 429; retry after <retry_after>s", .. })`
    (where `<provider>` is the provider adapter name; `<retry_after>` is the `Retry-After` header value in seconds when present, or 0 when absent; both available at the error mapping site).
    The `retry_hint` field carries the `Retry-After` header value when present.
-4. A provider 5xx response maps to `Err(PregolyaError { category: TRANSPORT, .. })`.
-5. A provider-side validation error (e.g., invalid model name, unsupported parameter)
+4. {PC-004} A provider 5xx response maps to `Err(PregolyaError { category: TRANSPORT, .. })`.
+5. {PC-005} A provider-side validation error (e.g., invalid model name, unsupported parameter)
    maps to `Err(PregolyaError { category: VAL, code: E-CORE-005,
    message: "Validation failed for 'request': <provider_error>", .. })`
    (where `<provider_error>` is the provider's error message text, available from the HTTP error response body)
    — not silently returning an empty or stub `AiMessage`.
    (Provider-specific subtypes may use more specific VAL codes; E-CORE-005 is the minimum fallback for unrecognized provider validation errors without a dedicated code.)
-6. No error variant causes a panic in non-test code.
+6. {PC-006} No error variant causes a panic in non-test code.
 
 ## Invariants
 
-- **DI-014 (Error Propagation (No Silent Swallowing)):** All provider error responses
+- {INV-001} **DI-014 (Error Propagation (No Silent Swallowing)):** All provider error responses
   propagate as `Err(PregolyaError)`. A provider HTTP 4xx/5xx never produces `Ok(msg)`
   with a truncated or empty content.
-- `PregolyaError::category` is always populated; `TRANSPORT` is the fallback for
+- {INV-002} `PregolyaError::category` is always populated; `TRANSPORT` is the fallback for
   generic provider 5xx responses when no more specific category applies.
-- Context-overflow (too many tokens) errors use `category: VAL` with `code: E-PROV-006`
+- {INV-003} Context-overflow (too many tokens) errors use `category: VAL` with `code: E-PROV-006`
   (ContextLengthExceeded); this distinguishes the subtype from other VAL errors —
   providers must not map other 400 errors to E-PROV-006.
-- `retry_hint: RetryHint::Later(Duration)` is only set when the provider response
+- {INV-004} `retry_hint: RetryHint::Later(Duration)` is only set when the provider response
   actually specifies a retry delay; otherwise `RetryHint::Maybe` or `RetryHint::Never`.
 
 ## Edge Cases

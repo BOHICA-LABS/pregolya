@@ -2,15 +2,15 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.006
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
-  - .factory/specs/prd.md
+  - .factory/specs/domain-spec/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
 input-hash: "a146822"
 traces_to: domain-spec/capabilities-p0.md#CAP-013
@@ -25,6 +25,7 @@ changelog:
   - "1.2 (burst-226/F-P131-02/2026-07-21): Canonical no-hook WARN emission adjudicated — unified event_type 'guardrail.unregistered_passthrough' replaces prose-specified-only WARN. Merged field schema: {boundary_type, ingress_id, item_count, timestamp} base + conditional {server_name, tool_name} when ToolResult from MCP. PC2, INV-2, test vectors updated. ONE log line per boundary crossing (no double-logging with BC-2.09.003)."
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.4 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-003} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -53,32 +54,32 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 
 ## Preconditions
 
-1. No `GuardrailHook` has been registered on the `InvocationContext` (the hook slot is `None`)
-2. Content is arriving at an ingress boundary (tool-result, RAG, or memory)
-3. `ProvenanceTag` is attached to the content (BC-2.11.001 still fires — tagging is independent
+1. {PRE-001} No `GuardrailHook` has been registered on the `InvocationContext` (the hook slot is `None`)
+2. {PRE-002} Content is arriving at an ingress boundary (tool-result, RAG, or memory)
+3. {PRE-003} `ProvenanceTag` is attached to the content (BC-2.11.001 still fires — tagging is independent
    of hook presence)
 
 ## Postconditions
 
-1. Every content unit is forwarded to the model context without modification
-2. A `WARN`-level structured log entry is emitted once per ingress boundary crossing:
+1. {PC-001} Every content unit is forwarded to the model context without modification
+2. {PC-002} A `WARN`-level structured log entry is emitted once per ingress boundary crossing:
    - All boundary types: `event_type = "guardrail.unregistered_passthrough"` with required fields `{ boundary_type: <"ToolResult"|"RAGRetrieval"|"MemoryIngress">, ingress_id: <uuid>, item_count: N, timestamp: <ts> }`
    - For ToolResult boundaries originating from MCP tool calls: additionally includes conditional fields `{ server_name: <server>, tool_name: <tool> }`
    - ONE log line per boundary crossing event; no double-logging (BC-2.09.003 no-hook path and BC-2.11.006 share the same canonical emission)
-3. The WARNING is emitted once per ingress boundary crossing event, not once per content unit
+3. {PC-003} The WARNING is emitted once per ingress boundary crossing event, not once per content unit
    within the event (an ingress event with N items produces 1 WARNING, not N)
-4. The `ProvenanceTag` remains attached to the forwarded content (unchanged from BC-2.11.001
+4. {PC-004} The `ProvenanceTag` remains attached to the forwarded content (unchanged from BC-2.11.001
    behavior)
-5. The graph run continues normally; no `Err` is returned; no state transition occurs
+5. {PC-005} The graph run continues normally; no `Err` is returned; no state transition occurs
 
 ## Invariants
 
-1. The WARNING is emitted at `WARN` level — not `INFO`, not `ERROR`; log aggregators configured
+1. {INV-001} The WARNING is emitted at `WARN` level — not `INFO`, not `ERROR`; log aggregators configured
    at `WARN` will surface it; operators who silence `WARN` accept the responsibility
-2. The WARNING log entry is machine-parseable (canonical `event_type = "guardrail.unregistered_passthrough"` with structured fields: `boundary_type`, `ingress_id`, `item_count`, `timestamp`; conditionally `server_name`, `tool_name` for MCP ToolResult boundaries) to support automated alerting on unguarded ingress
-3. `ProvenanceTag` attachment (BC-2.11.001) fires unconditionally — even in the no-hook case,
+2. {INV-002} The WARNING log entry is machine-parseable (canonical `event_type = "guardrail.unregistered_passthrough"` with structured fields: `boundary_type`, `ingress_id`, `item_count`, `timestamp`; conditionally `server_name`, `tool_name` for MCP ToolResult boundaries) to support automated alerting on unguarded ingress
+3. {INV-003} `ProvenanceTag` attachment (BC-2.11.001) fires unconditionally — even in the no-hook case,
    content carries a `ProvenanceTag`; the WARNING log entry references the `ingress_id` from the tag
-4. If a `GuardrailHook` is registered after run start (hot-registration is implementation-defined;
+4. {INV-004} If a `GuardrailHook` is registered after run start (hot-registration is implementation-defined;
    this invariant applies only to the `None`-at-construction case): boundary crossings that
    occurred before hot-registration are not retroactively re-evaluated
 

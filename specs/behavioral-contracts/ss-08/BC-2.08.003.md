@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.003
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-28): OBS-P28-3 — minted E-PROV-007 (StructuredOutputRefused, POLICY) for the OpenAI structured-output refusal path; added code literal to 4 construction sites (PC5, Invariant, EC-001, TV-004). Every PregolyaError now carries a machine-readable code per BC-2.14.001 posture."
@@ -23,6 +23,7 @@ changelog:
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). Four Class 3 violations corrected: §Postconditions PC5 refusal exit path, §Invariants StructuredOutputRefused observation, §EC-001 refusal postcondition, and §Canonical Test Vectors TV-004 table cell — all PregolyaError value-observations with partial fields (category, code, or category+code+message present; component and retry_hint absent); added `, ..` before closing `}` at each site. All occurrences reconciled: 4 corrected (Class 3), 0 exempt."
   - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): §EC-002 split-line form: PregolyaError on preceding line, `{ category: VAL, code: \"E-PROV-005\", message: \"StructuredOutputParseError: missing required field 'answer'\" }` on continuation — component and retry_hint absent; added `, ..` before closing `}`. Split-line form does not exempt from the Class 3 normative rule (mechanism blindness is not an exemption). All occurrences reconciled: 5 corrected (Class 3), 0 exempt."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -57,31 +58,31 @@ correctly (not forced to present or silently dropped).
 
 ## Preconditions
 
-1. A pregolya provider chat model is constructed for a model that supports structured
+1. {PRE-001} A pregolya provider chat model is constructed for a model that supports structured
    output (e.g., `gpt-4o` with native JSON schema, `claude-3-5-sonnet` via tool forcing,
    `ChatOllama` via the `format` request field).
-2. The provider crate sets `has_structured_output: bool = true` in its capability profile;
+2. {PRE-002} The provider crate sets `has_structured_output: bool = true` in its capability profile;
    `supports_json_mode: bool` is set separately per model.
-3. A JSON Schema or equivalent Rust type (derived via `schemars::JsonSchema` or provided
+3. {PRE-003} A JSON Schema or equivalent Rust type (derived via `schemars::JsonSchema` or provided
    as a `serde_json::Value`) is available to pass to `with_structured_output`.
-4. A record/replay HTTP fixture layer is available for CI.
+4. {PRE-004} A record/replay HTTP fixture layer is available for CI.
 
 ## Postconditions
 
-1. `test_structured_output` and `test_structured_output_async` (gated by
+1. {PC-001} `test_structured_output` and `test_structured_output_async` (gated by
    `has_structured_output`): calling `model.with_structured_output::<T>(schema)` and
    invoking with an appropriate prompt returns a `T` that deserializes successfully from
    the provider response; the output does not panic or return `Err` on the happy path.
-2. `test_structured_output_optional_param` (gated): a schema with `Option<T>` fields
+2. {PC-002} `test_structured_output_optional_param` (gated): a schema with `Option<T>` fields
    is honored — the model may omit the optional field; the output deserializes to
    `None` for that field rather than failing.
-3. `test_structured_few_shot_examples` (gated): few-shot examples embedded in the prompt
+3. {PC-003} `test_structured_few_shot_examples` (gated): few-shot examples embedded in the prompt
    do not confuse the structured output parser; the final structured response is from the
    model's completion, not from an example in the prompt.
-4. `test_json_mode` (gated by `supports_json_mode`): invoking with `method = "json_mode"`
+4. {PC-004} `test_json_mode` (gated by `supports_json_mode`): invoking with `method = "json_mode"`
    produces a `serde_json::Value` that is valid JSON (no leading/trailing text, no markdown
    fences, no explanatory prose outside the JSON object).
-5. Provider-specific method routing:
+5. {PC-005} Provider-specific method routing:
    - OpenAI: `json_schema` method sets `response_format: { type: "json_schema", strict: true }`;
      refusal returns `Err(PregolyaError { category: POLICY, code: "E-PROV-007", .. })`.
    - Anthropic: `function_calling` method forces a single tool binding; `thinking` mode
@@ -90,13 +91,13 @@ correctly (not forced to present or silently dropped).
 
 ## Invariants
 
-- `with_structured_output` never produces `Ok(output)` where `output` contains
+- {INV-001} `with_structured_output` never produces `Ok(output)` where `output` contains
   unparsed JSON string — the output type `T` is always fully deserialized.
-- Optional fields (`Option<T>`) in the schema must not be forced present by the adapter;
+- {INV-002} Optional fields (`Option<T>`) in the schema must not be forced present by the adapter;
   if the model omits them, the value is `None`.
-- The refusal case (OpenAI Responses API with strict JSON schema) propagates as a typed
+- {INV-003} The refusal case (OpenAI Responses API with strict JSON schema) propagates as a typed
   `PregolyaError { category: POLICY, code: "E-PROV-007", .. }` (StructuredOutputRefused) — not a deserialization error.
-- `json_mode` output is a valid JSON object: no markdown code fences (```` ```json ````),
+- {INV-004} `json_mode` output is a valid JSON object: no markdown code fences (```` ```json ````),
   no preamble text, no trailing prose.
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.005
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: true
 vp_id: VP-012
@@ -25,6 +25,7 @@ changelog:
   - "1.2 (F-P151-04/05, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied. (1) F-P151-04: OnWatermark predicate `< (1.0 - fraction)` → `<= (1.0 - fraction)` (non-strict is load-bearing: strict `<` can never fire when fraction=1.0 and tokens_remaining=0, violating EC-002). Applied at Description, PC2 (predicate + rationale), Invariants (predicate + Kani bound `0 < …` → `0 <=`), EC-002 (explicit `0.0 <= 0.0 = true` arithmetic), EC-004 (predicate), TV-001 (annotation), VP-012 (table row). (2) F-P151-05: f32 → f64 throughout OnWatermark context (Description, PC2 comparison arithmetic, Invariants); f64 preserves integer exactness up to 2^53 tokens (no precision loss for any realistic token count). (3) ADD TV-006: OnWatermark { fraction: 1.0 }, ceiling=100_000, remaining=0 → fires (0.0 <= 0.0), EC-002 boundary."
   - "1.3 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors and §Traceability VP Registration: 'VP-INDEX v1.5 as' → 'VP-INDEX as' (plain prose, no §-anchor introduced). verify-no-version-pins.sh PASS."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.25 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -61,20 +62,20 @@ as `OnCeiling::Summarize`.
 
 ## Preconditions
 
-1. `BudgetConfig` is being constructed for a `GraphConfig`. The developer sets
+1. {PRE-001} `BudgetConfig` is being constructed for a `GraphConfig`. The developer sets
    `compaction_trigger` and optionally `compaction_policy`.
-2. For `OnWatermark { fraction }`: `fraction ∈ (0.0, 1.0]`; a value of 0.0 is rejected at
+2. {PRE-002} For `OnWatermark { fraction }`: `fraction ∈ (0.0, 1.0]`; a value of 0.0 is rejected at
    `BudgetConfig` construction with a configuration error (fraction 0.0 would always trigger).
-3. For `OnMessageCount { count }`: `count > 0`; a value of 0 is rejected.
-4. For `OnTokenCount { tokens }`: `tokens > 0`; a value of 0 is rejected.
-5. `compaction_trigger: Disabled` is the default; no explicit configuration needed for
+3. {PRE-003} For `OnMessageCount { count }`: `count > 0`; a value of 0 is rejected.
+4. {PRE-004} For `OnTokenCount { tokens }`: `tokens > 0`; a value of 0 is rejected.
+5. {PRE-005} `compaction_trigger: Disabled` is the default; no explicit configuration needed for
    backward compatibility.
 
 ## Postconditions
 
-1. **Disabled (default):** No proactive compaction occurs during the run. `OnCeiling`
+1. {PC-001} **Disabled (default):** No proactive compaction occurs during the run. `OnCeiling`
    behavior (BC-2.10.003) is unchanged. This variant preserves full backward compatibility.
-2. **OnWatermark { fraction }:** The `BudgetEngine` evaluates after each super-step:
+2. {PC-002} **OnWatermark { fraction }:** The `BudgetEngine` evaluates after each super-step:
    `tokens_remaining / budget_ceiling <= (1.0 - fraction)`.
    - `fraction = 0.8` means "trigger when 80% of budget is consumed" (i.e., 20% remaining).
    - The comparison uses `f64` arithmetic. `tokens_remaining` and `budget_ceiling` are
@@ -85,11 +86,11 @@ as `OnCeiling::Summarize`.
      fires when `tokens_remaining == 0`, implementing the correct "trigger when 100%
      consumed" semantics (EC-002).
    - When the condition is true, the compaction cycle is initiated (BC-2.10.006).
-3. **OnMessageCount { count }:** The `BudgetEngine` evaluates after each super-step:
+3. {PC-003} **OnMessageCount { count }:** The `BudgetEngine` evaluates after each super-step:
    `active_window_message_count >= count`. When true, compaction is initiated.
-4. **OnTokenCount { tokens }:** The `BudgetEngine` evaluates after each super-step:
+4. {PC-004} **OnTokenCount { tokens }:** The `BudgetEngine` evaluates after each super-step:
    `cumulative_window_tokens >= tokens`. When true, compaction is initiated.
-5. **DefaultSummarizationPolicy (compaction_policy: None):** When compaction fires and no
+5. {PC-005} **DefaultSummarizationPolicy (compaction_policy: None):** When compaction fires and no
    explicit `CompactionPolicy` is configured, the `DefaultSummarizationPolicy` is used.
    It assembles the `ConversationSnapshot` from checkpoint FTS (BC-2.04.008), prompts the
    model to produce a concise summary, and returns a `CompactionSummary`. The mechanism is
@@ -97,23 +98,23 @@ as `OnCeiling::Summarize`.
 
 ## Invariants
 
-- **OnWatermark arithmetic (VP-012 Kani seed):** The trigger condition
+- {INV-001} **OnWatermark arithmetic (VP-012 Kani seed):** The trigger condition
   `tokens_remaining / ceiling <= (1.0 - fraction)` is a pure f64 comparison with no side
   effects. VP-012 Kani candidate: for any valid `(tokens_remaining, ceiling, fraction)` tuple
   where `0 <= tokens_remaining <= ceiling` and `fraction ∈ (0.0, 1.0]`, the comparison
   returns the mathematically correct boolean. **Non-strict `<=` is load-bearing:** strict `<`
   cannot fire when `fraction = 1.0` and `tokens_remaining = 0` (EC-002 boundary case requires
   `0.0 <= 0.0 = true`).
-- `CompactionTrigger::Disabled` is the default — graphs without explicit compaction
+- {INV-002} `CompactionTrigger::Disabled` is the default — graphs without explicit compaction
   configuration see NO behavior change (backward compatible).
-- `CompactionTrigger` is `#[non_exhaustive]`: future variants (e.g., `OnIdle`) are addable
+- {INV-003} `CompactionTrigger` is `#[non_exhaustive]`: future variants (e.g., `OnIdle`) are addable
   without breaking existing `BudgetConfig` construction code.
-- Only one trigger variant fires per evaluation cycle. `BudgetEngine` uses the configured
+- {INV-004} Only one trigger variant fires per evaluation cycle. `BudgetEngine` uses the configured
   variant; there is no "first-matching" logic across multiple configured triggers.
-- `BudgetConfig.compaction_trigger` and `BudgetConfig.compaction_policy` reside in
+- {INV-005} `BudgetConfig.compaction_trigger` and `BudgetConfig.compaction_policy` reside in
   `pregolya-core::core::budget` (definitions-only) following ADR-009 Option 3. Execution
   logic is in `pregolya-graph::graph::budget`.
-- **DI-014 (No Silent Swallowing):** Configuration errors (fraction=0.0, count=0, tokens=0)
+- {INV-006} **DI-014 (No Silent Swallowing):** Configuration errors (fraction=0.0, count=0, tokens=0)
   propagate as `Err` at construction time; they are not silently treated as `Disabled`.
 
 ## Edge Cases
