@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.58"
+version: "3.59"
 status: active
 producer: state-manager
 timestamp: 2026-08-22T23:35:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.59 (P2A-040-F-01-F-02/2026-08-22): 2 BC version bumps closing F-01 (HIGH) and F-02 (HIGH, security) from adversary pass P2A-040. BC-2.18.003 (v1.5→v1.6): (a) PC-1: stale 'call-time vars map supplies a Vec<Message>' replaced with 'call-time vars map supplies a TemplateInput::Messages(MessageListVar) binding' (B202 stale precondition, closes F-01); (b) INV-4 (new): canonical MessageListVar struct shape — struct with messages: Vec<Message> + trust_level: Option<TrustLevel> — explicitly NOT a bare newtype; trust_level field makes Messages-arm Red Gate (S-2.05 AC-016) implementable (closes F-02 SECURITY). BC-2.18.002 (v1.8→v1.9): PC-2 cross-reference to BC-2.18.003 INV-4 added for MessageListVar struct shape; no behavioral change. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1s unchanged. Story-writer must amend STORY-S-2.04 AC-012..AC-016 per DELIVERABLE-4 routing in P2A-040 product-owner report (AC-012/013: re-anchor to BC-2.18.002 PC-2; AC-014: re-anchor to BC-2.18.005 PC-1 + BC-2.18.002 PC-4; AC-015: re-anchor to BC-2.18.003 INV-4 and correct MessageListVar shape; AC-016: re-anchor to BC-2.18.004 INV-5 for source-order evaluation)."
   - "3.58 (P2A-039-F-039-04/2026-08-22): BC-2.18.002 §INV-5 — removed stale 'ADR-015 amendment pending' parenthetical (ADR-015 §PromptValue already aligned to the enum shape); records-tier, no behavioral change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2); H1 unchanged."
   - "3.57 (P2A-037-gaps/2026-08-22): 2 BC version bumps closing STORY-S-2.04 P2A-037 class-audit spec gaps. BC-2.18.001 (v1.9→v2.0): PC-7 Runnable<HashMap<String,TemplateVar>,PromptValue> impl + INV-6 pure-core/Send+Sync classification + TV-008 Runnable invoke vector; H1 updated. BC-2.18.002 (v1.6→v1.7): PC-7 Runnable<HashMap<String,TemplateInput>,PromptValue> impl + INV-5 PromptValue enum shape (#[non_exhaustive] String/Messages variants, Send+Sync) + PC-2 enum-consistent rephrasing + PC-5 updated (String-variant single-HumanMessage path) + PC-6 'empty messages Vec' rephrased + TV-005 Runnable invoke vector; H1 updated. TV grand total 701→703 canonical + 11 GTV = 714. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). Story-writer must anchor STORY-S-2.04 AC-005→BC-2.18.001 PC-7, AC-006→BC-2.18.001 INV-6, AC-009→BC-2.18.002 PC-7, AC-010→BC-2.18.002 INV-5. Architect must amend ADR-015 §PromptValue from struct to enum per INV-5."
   - "3.56 (F-036-01/P2A-036-adjudication/2026-08-22): 1 BC version bump — BC-2.01.005 (v1.3→v1.4): duplicate-step-key edge case gap closed (F-036-01 adjudication). PC-1 postcondition clarified: 'all provided branches' = after IndexMap last-write-wins deduplication; constructor is infallible. Added EC-006 (duplicate key last-write-wins) + TV-006. Story-writer must drop STORY-S-1.05 AC-001 fallible-constructor assertion. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1 unchanged."
@@ -291,6 +292,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.59 | 2026-08-22 | P2A-040-F-01-F-02: 2 BC version bumps — BC-2.18.003 (v1.5→v1.6) PC-1 stale Vec<Message> fixed + INV-4 MessageListVar struct shape (closes F-01 HIGH + F-02 HIGH SECURITY). BC-2.18.002 (v1.8→v1.9) PC-2 cross-ref to INV-4. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | P2A-040 F-01 F-02 |
 | 3.58 | 2026-08-22 | P2A-039-F-039-04: BC-2.18.002 §INV-5 — removed stale 'ADR-015 amendment pending' parenthetical (ADR-015 §PromptValue already aligned to the enum shape); records-tier, no behavioral change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2); H1 unchanged. | P2A-039 F-039-04 |
 | 3.56 | 2026-08-22 | F-036-01/P2A-036-adjudication: 1 BC version bump — BC-2.01.005 (v1.3→v1.4): duplicate-step-key edge case gap closed. PC-1 postcondition clarified: infallible; duplicate keys resolved by IndexMap last-write-wins per ADR-026 §Decision 1 (Python dict parity). Added EC-006 + TV-006. Story-writer must drop STORY-S-1.05 AC-001 fallible-constructor assertion. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). | P2A-036 F-036-01 |
 | 3.55 | 2026-08-22 | D-241: Changelog currency fix — BC-2.09.001 (v1.6→v1.7) E-MCP-008/009; BC-2.22.003 (v1.3→v1.4) E-PROV-012. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). | D-241 |

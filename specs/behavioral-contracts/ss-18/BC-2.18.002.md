@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.7 (P2A-037-gaps/2026-08-22): Five changes closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-009/AC-010. (1) PC-7 (new): ChatPromptTemplate implements Runnable<Input=HashMap<String,TemplateInput>, Output=PromptValue>; invoke delegates to format_messages(); errors propagate unchanged. (2) INV-5 (new): PromptValue is a #[non_exhaustive] enum with variants String(String) and Messages(Vec<(Message, MessageProvenance)>); PromptValue: Send+Sync; non_exhaustive requires wildcard arm in external match. PC-5 into_messages() updated to cover both variants. (3) PC-2 rephrased: 'PromptValue.messages' struct-field notation replaced with 'PromptValue::Messages variant contains' (PC-2 was inconsistent with INV-5 enum declaration). (4) PC-5 updated to describe String-variant single-HumanMessage path. (5) TV-005 (new): Runnable invoke happy-path; TV count 4→5. H1 updated per bc_h1_is_title_source_of_truth; BC-INDEX updated."
   - "1.8 (P2A-039-F-039-04/2026-08-22): Remove stale ADR-015 amendment-pending parenthetical from INV-5 — ADR-015 §PromptValue now defines the enum shape and is aligned; no behavioral change."
+  - "1.9 (P2A-040-F-02/2026-08-22): PC-2 cross-reference added to BC-2.18.003 INV-4 for the MessageListVar struct shape — the Messages arm of TemplateInput carries trust_level: Option<TrustLevel> (NOT a bare newtype); BC-2.18.003 INV-4 is the authoritative clause for the struct shape. No behavioral change to ChatPromptTemplate rendering or PromptValue semantics; this is a traceability anchor addition that makes the Messages-arm Red Gate (S-2.05 AC-016) traceable to a canonical BC clause."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -65,6 +66,8 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    is one of:
    - `TemplateInput::Scalar(TemplateVar)` — scalar string binding for human/AI/system slots
    - `TemplateInput::Messages(MessageListVar)` — message-list expansion for MessagesPlaceholder
+     (canonical `MessageListVar` struct shape: BC-2.18.003 INV-4 — carries both
+     `messages: Vec<Message>` and `trust_level: Option<TrustLevel>`; NOT a bare newtype)
    - `TemplateInput::FewShotExamples(Vec<(TemplateVar, TemplateVar)>)` — for FewShot slots
    For each `TemplateInput` that binds to a `TrustRequired` slot, the trust level of the
    input's components is checked before rendering (injection_guard, BC-2.18.004).

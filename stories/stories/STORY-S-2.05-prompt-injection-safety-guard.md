@@ -297,7 +297,7 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 | `pregolya-prompts/src/trust.rs` | CREATE | `TrustLevel` enum + `severity()` — no `Ord` derives |
 | `pregolya-prompts/src/injection_guard.rs` | CREATE | pure `check_slot_trust()` fn (TrustLevel severity ordering; fires before PromptValue produced) — VP-006 Kani proof vehicle |
 | `pregolya-prompts/src/chat_template.rs` | MODIFY | delegates to `injection_guard::check_slot_trust()` in `format_messages` (no inline guard logic); adds SystemMessage `TrustAll` check in `from_messages` |
-| `pregolya-prompts/src/template_input.rs` | MODIFY | Add `trust_level: TrustLevel` to `TemplateVar` with default `TrustLevel::Trusted` |
+| `pregolya-prompts/src/template_input.rs` | MODIFY | Add `trust_level: Option<TrustLevel>` to `TemplateVar`; `None` (absent) treated as `Trusted` by the guard (consistent with AC-008, AC-005, Task 6) |
 | `pregolya-prompts/src/lib.rs` | MODIFY | Add `pub mod trust;` and `pub mod injection_guard;` |
 | `pregolya-prompts/src/proofs/injection_guard.rs` | CREATE | VP-006 Kani harness stub |
 | `pregolya-prompts/tests/external/trust-level-no-ord/main.rs` | CREATE | Compile-fail: TrustLevel no Ord |

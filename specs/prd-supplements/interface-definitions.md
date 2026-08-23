@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.79"
+version: "2.80"
 status: active
 producer: product-owner
-timestamp: 2026-08-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1d
 changelog:
+  - "2.80 (P2A-040-SS18/2026-08-23): §ChatPromptTemplate PromptValue — struct→enum alignment. Before: `#[non_exhaustive] pub struct PromptValue { pub messages: Vec<(Message, MessageProvenance)> }`. After: `#[non_exhaustive] pub enum PromptValue { String(String), Messages(Vec<(Message, MessageProvenance)>) }` (Send+Sync via auto-trait). Type-shape authority: BC-2.18.002 INV-5 + ADR-015 §PromptValue. BC anchor comment updated to cite BC-2.18.002 INV-5 (replacing stale PC2 struct-field citation). No other live-body site references the old struct field — changelog entry 2.45 citing PromptValue.messages is a historical record, grandfathered per TD-VSDD-091."
   - "2.79 (P2A-027/REVERT-D233/2026-08-22): REVERT D-233 signature flips — both unsupported per POL-46: (1) max_marginal_relevance_search lambda_mult f64→f32 (ADR-014 Decision 2 explicit f32; D-233's 'BC-2.21.001 canonical' citation unsupported — BC does not type lambda_mult; f32 consistent with Vec<(Document,f32)> scores); (2) VectorStoreRetriever.lambda_mult f64→f32 (ADR-014 Decision 2 struct field explicit f32); (3) delete ids &[String]→&[&str] (ADR-014 Decision 2 + BC-2.21.001 PC-2 + TV-004 all &[&str]; D-233's 'BC-2.21.001 PC-5 canonical' citation wrong — PC-5 is the as_retriever postcondition, not delete)."
   - "2.78 (P2A026-01/2026-08-22): §VectorStore Trait — P2A-021 add_documents rename propagated to interface-definitions.md (signature authority). Exhaustive surface reconciliation against BC-2.21.001 PC-2 + ADR-014 Decision 2 canonical. Seven changes: (1) add_texts→add_documents: method renamed; parameter list changed from (texts: Vec<String>, metadatas: Option<Vec<serde_json::Map<String, serde_json::Value>>>) to (docs: Vec<Document>); doc comment updated from 'Add texts (with optional per-text metadata) to the store' to 'Add documents to the store'; BC-anchor-comment updated from 'add_texts semantics' to 'add_documents semantics'. (2) max_marginal_relevance_search: lambda_mult type f32→f64 per BC-2.21.001 canonical (P2A-021 addition); VectorStoreRetriever.lambda_mult field corrected f32→f64 for internal consistency. (3) delete: ids param &[&str]→&[String] per BC-2.21.001 PC-5 canonical. (4) similarity_search_with_filter: filter param MetadataFilter→&MetadataFilter (borrowed ref) per BC-2.21.004 canonical; default body unchanged (filter.filters.is_empty() auto-derefs). Methods similarity_search and similarity_search_with_score verified already correct; no change required. as_retriever verified already correct per F-P174-as-retriever-fallible. TD-VSDD-060 sibling sweep: sole live-body add_texts site was the trait method declaration above; corrected; zero live-body add_texts occurrences remaining. Changelog entries 2.42 ('add_texts / from_texts_sync') and 2.59 ('add_texts') are historical records, grandfathered per TD-VSDD-091."
   - "2.77 (BURST-311/F-P202-01/2026-08-17): §CheckpointSaver — add missing `fts_search` trait method and fix snapshot-assembly doc reference (F-P202-01 HIGH, BC-2.04.008 trait-method vs Tool wrapper drift). (1) Added `async fn fts_search(query: &str, config: FtsSearchConfig) -> Result<Vec<FtsSearchResult>, PregolyaError>` to the CheckpointSaver trait after `get_next_version`; doc comment covers PC3 limit guard (E-CHKPT-008/FtsLimitZero at config.limit=0), EC-002 malformed FTS5 (E-CHKPT-008 at fts_search call time), and EC-006 FTS5-unavailable (E-CHKPT-009). (2) BC anchor note: 'BC-2.04.001 through BC-2.04.007' → 'BC-2.04.001 through BC-2.04.008'; per-method precision for `fts_search` appended. (3) Gate #31 type note: heading and body extended with FtsSearchConfig and FtsSearchResult as RESOLVED types per BC-2.04.008 PC1/PC3 (pregolya-checkpoint/src/fts.rs). (4) ConversationSnapshot doc comment (~§Compaction): 'snapshot assembly from search_history' → 'snapshot assembly from `CheckpointSaver::fts_search` call' (`fts_search` is the trait method called by BudgetEngine; `search_history` is the agent-callable Tool wrapper per BC-2.04.008 PC5). TD-VSDD-060 sibling sweep: two live-body search_history-as-method sites corrected (§CheckpointSaver BC anchor note and §Compaction ConversationSnapshot doc comment); changelog entries citing search_history in v2.26/v2.23 are historical records (grandfathered per TD-VSDD-091)."
@@ -2067,12 +2068,18 @@ impl ChatPromptTemplate {
     ) -> Result<PromptValue, PregolyaError> { ... }
 }
 
-/// The rendered output of ChatPromptTemplate::format_messages.
-/// Each message carries its MessageProvenance for downstream trust decisions.
-/// BC anchor: BC-2.18.002 PC2 (PromptValue.messages: Vec<(Message, MessageProvenance)>; one entry per slot in declaration order)
+/// The rendered output of `format_messages` (ChatPromptTemplate path) or `format` (PromptTemplate path).
+/// Canonical shape authority: BC-2.18.002 INV-5.
+/// The type is Send + Sync (inner variants are String and Vec<(Message, MessageProvenance)>; auto-trait applies).
+/// BC anchor: BC-2.18.002 INV-5 (PromptValue enum — String variant for single-string render path,
+/// Messages variant for multi-message render path with per-message provenance)
 #[non_exhaustive]
-pub struct PromptValue {
-    pub messages: Vec<(Message, MessageProvenance)>,
+pub enum PromptValue {
+    /// Rendered as a single string (PromptTemplate / f-string path).
+    String(String),
+    /// Rendered as a message list with provenance (ChatPromptTemplate path).
+    /// One entry per slot in declaration order; each carries MessageProvenance.
+    Messages(Vec<(Message, MessageProvenance)>),
 }
 
 /// Provenance metadata attached to each rendered message.

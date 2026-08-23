@@ -3642,3 +3642,22 @@ F-P2A038-01 (MED): epics.md E-20 Red-Gate relabeled from BC-2.22.001 (dimensiona
 ### P2A-039 (NOT CLEAN; D-247) — Fix-Burst COMPLETE (2026-08-22)
 Findings: F-039-01 (HIGH) S-2.05 AC-008 TrustLevel→Option<TrustLevel> (None=fail-closed/Trusted; AC-008 re-anchored BC-2.18.004 precondition 2; Task 6 aligned); F-039-02 (MED) S-2.04 AC-008 Vec<BaseMessage>→Vec<(Message,MessageProvenance)> (BC-2.18.002 §PC-2/INV-5 + sibling AC-010); F-039-03 (MED) S-2.04 BaseMessage→canonical Message (BC-2.01.002 enum; TD-VSDD-060 sibling-sweep; 0 remain); F-039-04 (LOW) BC-2.18.002 §INV-5 stale ADR-pending note removed; BC-INDEX §Changelog. All SS-18 type-consistency follow-ons. DAG/census/wave/VP+RG verified clean. Census UNCHANGED 39/133/14/118.
 CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-040.
+
+### P2A-040 (NOT CLEAN; D-248) — Fix-Burst COMPLETE (2026-08-23)
+Holistic SS-18 cluster reconciliation. Four findings resolved.
+
+F-01 (HIGH): STORY-S-2.04 AC-012..016 were all mis-anchored to BC-2.18.003 (which governs MessagesPlaceholder expansion and FewShot composition under §CAP-023), not to the behavioral clauses that actually govern each criterion. Correct re-anchoring: AC-012/AC-013 → BC-2.18.002 §PC-2 (format() invocation contract); AC-014 → BC-2.18.005 §PC-1 + BC-2.18.002 §PC-4; AC-015 → BC-2.18.003 §INV-4 (MessageListVar struct shape); AC-016 → BC-2.18.004 §INV-5 (source-order evaluation). Six new ACs (AC-017..AC-022) added to cover BC-2.18.003 real behaviors: MessagesPlaceholder expansion length, FewShot pair count, positional ordering, required-var raises E-TMPL-003, empty-list path, error propagation. BC-table, Architecture-Compliance, Tasks, and frontmatter behavioral_contracts list updated (added BC-2.18.004 and BC-2.18.005 entries; VP-2.18.003-A/B referenced).
+
+F-02 (HIGH, security): MessageListVar canonicalized from a bare newtype to struct { messages: Vec<Message>, trust_level: Option<TrustLevel> }. The trust_level field is load-bearing for the Messages-arm injection Red Gate (BC-2.18.004 §Precondition-2 and §PC-5; STORY-S-2.05 §AC-016). PO authored BC-2.18.003 §INV-4 (new invariant: explicit struct shape, not bare newtype). BC-2.18.002 §PC-2 gained a cross-reference to BC-2.18.003 §INV-4. STORY-S-2.04 §AC-015 body updated to match the struct shape. BC-2.18.003 version advanced (v1.5 to v1.6) and BC-2.18.002 version advanced (v1.8 to v1.9). BC-INDEX §Changelog updated to v3.59.
+
+F-03 (MED): STORY-S-2.05 File Structure section still showed trust_level as a bare TrustLevel field (not Option<TrustLevel>). Updated to Option<TrustLevel> — the final non-Option sibling site after F-039-01 in P2A-039 fixed the AC-008 body.
+
+F-04 (LOW): epics.md §E-18 summary incorrectly stated that S-2.05 "covers three BCs including BC-2.18.002." Corrected: S-2.05 covers BC-2.18.004 (injection guard contract) and BC-2.18.005 (Red Gate on untrusted variants) only; BC-2.18.002 is covered by S-2.04 (format() invocation contract). The Red Gate label belongs to BC-2.18.004 and BC-2.18.005, not BC-2.18.002.
+
+Cross-artifact: interface-definitions.md §PromptValue updated from struct form to enum form (PromptValue::String and PromptValue::Messages variants, #[non_exhaustive]) per BC-2.18.002 §INV-5 as the authoritative behavioral anchor.
+
+Count-propagation sweep (S-7.02 defensive sweep): Census UNCHANGED — 39 stories / 133 BC / 14 VP / 118 EC. No count changes requiring propagation. BC-2.18.002 and BC-2.18.003 version bumps appear only in BC-INDEX §Changelog (v3.59) and those BC files' own frontmatter; no index-file count figures require update.
+
+**Files committed:** `specs/behavioral-contracts/ss-18/BC-2.18.002.md`, `specs/behavioral-contracts/ss-18/BC-2.18.003.md`, `specs/behavioral-contracts/BC-INDEX.md`, `specs/prd-supplements/interface-definitions.md`, `stories/epics.md`, `stories/stories/STORY-S-2.04-prompt-template-core.md`, `stories/stories/STORY-S-2.05-prompt-injection-safety-guard.md`, `sidecar-learning.md`, `STATE.md`, `cycles/v1.0.0-greenfield/convergence-trajectory.md`.
+
+CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-041.

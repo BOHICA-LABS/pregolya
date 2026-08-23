@@ -153,7 +153,7 @@ Vec<f32> cosine similarity, zero-norm vector guard (VP-009 Kani P0, Red Gate), a
 
 `PromptTemplate` f-string rendering, `ChatPromptTemplate` multi-message rendering,
 `MessagesPlaceholder` and `FewShotPromptTemplate`, and injection safety guard with
-`TrustLevel` enforcement (VP-006 Kani P1, Red Gate). Both BCs in S-2.05 are Red Gate.
+`TrustLevel` enforcement (VP-006 Kani P1, Red Gate). S-2.05 covers three BCs: BC-2.18.004 and BC-2.18.005 are Red Gate; BC-2.18.002 is not.
 
 ### E-19 — Provider SDK Conformance (Wave 2, 24 pts)
 

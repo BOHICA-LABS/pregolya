@@ -12,15 +12,17 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.001.md
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.002.md
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.003.md
+  - .factory/specs/behavioral-contracts/ss-18/BC-2.18.004.md
+  - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "e83b02b"
+input-hash: "8a14939"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
 blocks: [S-2.05]
-behavioral_contracts: [BC-2.18.001, BC-2.18.002, BC-2.18.003]
-verification_properties: []
+behavioral_contracts: [BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.004, BC-2.18.005]
+verification_properties: [VP-2.18.003-A, VP-2.18.003-B]
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
@@ -45,8 +47,10 @@ tdd_mode: strict
 | BC | Title | Priority |
 |----|-------|---------|
 | BC-2.18.001 | PromptTemplate — f-String Engine; from_template Fallible Constructor; format() Renders or Returns E-TMPL-003 / E-TMPL-004 | P1 |
-| BC-2.18.002 | ChatPromptTemplate — from_messages Fallible Constructor; format_messages Takes TemplateInput Map; Returns PromptValue | P1 |
-| BC-2.18.003 | TemplateInput Enum — Scalar / Messages / FewShotExamples; Replaces HashMap<String, TemplateVar>; SlotTrustPolicy Introduced | P1 |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | P1 |
+| BC-2.18.003 | MessagesPlaceholder Vec<Message> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | P1 |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 |
 
 ## Acceptance Criteria
 
@@ -119,7 +123,7 @@ before returning. A mix of one valid and one invalid template string returns `Er
 Construction is atomic — no partial state.
 Verified by `test_BC_2_18_002_from_messages_atomic_construction()`.
 
-### AC-012 (traces to BC-2.18.003 postcondition 1)
+### AC-012 (traces to BC-2.18.002 postcondition 2 — TemplateInput enum: 3 arms, #[non_exhaustive])
 `TemplateInput` is an enum with exactly three variants:
 - `TemplateInput::Scalar(TemplateVar)` — a single scalar value for a `{var}` slot
 - `TemplateInput::Messages(MessageListVar)` — a pre-formed list for a `{messages}` slot
@@ -127,28 +131,79 @@ Verified by `test_BC_2_18_002_from_messages_atomic_construction()`.
 `TemplateInput` is `#[non_exhaustive]`.
 Verified by `test_BC_2_18_003_template_input_variants()`.
 
-### AC-013 (traces to BC-2.18.003 postcondition 2)
+### AC-013 (traces to BC-2.18.002 postcondition 2 — HashMap<String,TemplateInput> parameter type)
 The old `HashMap<String, TemplateVar>` parameter is REPLACED by `HashMap<String, TemplateInput>`.
 A caller providing a bare `TemplateVar` at a slot that expects `TemplateInput::Messages`
 receives `Err(E-TMPL-003)` — wrong TemplateInput variant for the slot type.
 Verified by `test_BC_2_18_003_wrong_variant_type_returns_err()`.
 
-### AC-014 (traces to BC-2.18.003 postcondition 3)
+### AC-014 (traces to BC-2.18.005 postcondition 1 — SlotTrustPolicy construction enforcement; BC-2.18.002 PC-4 for provenance recording)
 `SlotTrustPolicy` is an enum with variants `TrustRequired` and `TrustAll`.
 `SlotTrustPolicy` is used in `ChatPromptTemplate::from_messages` to annotate each
 message slot's trust requirement. `SlotTrustPolicy: Copy + PartialEq + Debug`.
+`MessageProvenance.slot_trust_policy` records the slot's declared policy (traces to BC-2.18.002 postcondition 4).
 Verified by `test_BC_2_18_003_slot_trust_policy_enum()`.
 
-### AC-015 (traces to BC-2.18.003 invariant 1)
-`TemplateVar` is a newtype over `String`. `MessageListVar` is a newtype over `Vec<Message>`.
-Both are `#[non_exhaustive]`.
-Verified by `test_BC_2_18_003_templatevar_and_messagelistvar_newtypes()`.
+### AC-015 (traces to BC-2.18.003 invariant 4 — canonical MessageListVar struct shape)
+`TemplateVar` is a newtype over `String`. `MessageListVar` is a struct (NOT a bare newtype):
 
-### AC-016 (traces to BC-2.18.003 invariant 2)
+```rust
+pub struct MessageListVar {
+    pub messages: Vec<Message>,
+    /// Trust classification applied uniformly to all messages in this expansion.
+    /// `None` is treated as `Trusted` (developer-supplied history; no external origin).
+    pub trust_level: Option<TrustLevel>,
+}
+```
+
+The `trust_level` field is load-bearing: `injection_guard` uses it to check
+`msg_var.trust_level.is_some_and(|t| t.is_untrusted())` against `TrustRequired` slots.
+Without this field the Messages-arm Red Gate (S-2.05 AC-016) is structurally unimplementable.
+`MessageListVar` is `#[non_exhaustive]`.
+Verified by `test_BC_2_18_003_templatevar_and_messagelistvar_shapes()`.
+
+### AC-016 (traces to BC-2.18.004 invariant 5 — source-order slot evaluation)
 `format_messages` iterates message slots in SOURCE ORDER — the order in which slots were
 declared in `from_messages`. HashMap input order is irrelevant; slot evaluation order is
 deterministic and declaration-order-based.
 Verified by `test_BC_2_18_003_format_messages_source_order()`.
+
+### AC-017 (traces to BC-2.18.003 postcondition 1 — VP-2.18.003-A)
+`MessagesPlaceholder` expansion length equals the input `Vec<Message>` length: when a
+`TemplateInput::Messages(MessageListVar)` binding supplies N messages, exactly N entries
+appear at the placeholder position in `PromptValue.messages`.
+Verified by `test_BC_2_18_003_messages_placeholder_expansion_length()`.
+
+### AC-018 (traces to BC-2.18.003 postcondition 6 — VP-2.18.003-B)
+`FewShotPromptTemplate` full message count equals prefix count + (2 × example count) + suffix
+count. Each `(input, output)` example pair produces exactly one `HumanMessage` and one
+`AiMessage`. Ordering is: prefix messages → few-shot Human/AI pairs → suffix messages
+(BC-2.18.003 postcondition 6).
+Verified by `test_BC_2_18_003_few_shot_message_count()`.
+
+### AC-019 (traces to BC-2.18.003 invariant 1 — MessagesPlaceholder positional expansion)
+`MessagesPlaceholder` expanded messages appear at exactly the declared placeholder position
+within the final `PromptValue.messages` sequence. Messages before the placeholder position are
+unaffected; messages after the placeholder position follow the expanded messages.
+Verified by `test_BC_2_18_003_messages_placeholder_positional_expansion()`.
+
+### AC-020 (traces to BC-2.18.003 postcondition 3 — EC-005)
+When a `MessagesPlaceholder` required variable is absent from the call-time vars map,
+`format_messages` returns
+`Err(PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, "E-TMPL-003", ...))`.
+No silent zero-expansion occurs when `required = true` (default).
+Verified by `test_BC_2_18_003_messages_placeholder_required_var_absent_err()`.
+
+### AC-021 (traces to BC-2.18.003 postcondition 4 — EC-001)
+A `MessagesPlaceholder` with an empty `Vec<Message>` (zero elements) expands to zero messages
+without error. The final `PromptValue.messages` has no entries at that placeholder position.
+Verified by `test_BC_2_18_003_messages_placeholder_empty_vec_ok()`.
+
+### AC-022 (traces to BC-2.18.003 postcondition 8 — EC-004)
+When a `FewShotPromptTemplate` example template renders with a missing variable, the error
+propagates as `Err(PregolyaError)`. The failing example is NOT silently skipped;
+`format_messages` returns the first render error encountered.
+Verified by `test_BC_2_18_003_few_shot_example_render_error_propagates()`.
 
 ## Architecture Mapping
 
@@ -185,23 +240,23 @@ Verified by `test_BC_2_18_003_format_messages_source_order()`.
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~4,500 |
-| BC files (3 BCs) | ~9,000 |
+| This story spec | ~5,500 |
+| BC files (5 BCs) | ~15,000 |
 | `module-decomposition.md` (SS-18 section) | ~400 |
 | ADR-015 prompt template injection safety | ~2,500 |
 | Module files (~80 lines each × 5 files) | ~3,500 |
 | Test files (~130 lines) | ~1,900 |
 | Tool outputs | ~500 |
-| **Total** | **~22,300** |
+| **Total** | **~29,300** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~11%** |
+| **Budget usage** | **~15%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-016 (test-writer)
+1. [ ] Write failing tests for AC-001 through AC-022 (test-writer)
 2. [ ] Verify Red Gate (this story has no Red Gate BCs — proceed to implementation after test stubs)
 3. [ ] Create `pregolya-prompts/Cargo.toml` — new crate; depends on pregolya-core, serde, serde_json
-4. [ ] Create `pregolya-prompts/src/template_input.rs` — `TemplateInput` enum (`#[non_exhaustive]`), `TemplateVar` newtype, `MessageListVar` newtype, `SlotTrustPolicy` enum
+4. [ ] Create `pregolya-prompts/src/template_input.rs` — `TemplateInput` enum (`#[non_exhaustive]`), `TemplateVar` newtype, `MessageListVar` struct (`messages: Vec<Message>`, `trust_level: Option<TrustLevel>`; `#[non_exhaustive]`), `SlotTrustPolicy` enum
 5. [ ] Create `pregolya-prompts/src/prompt_value.rs` — `PromptValue` enum (`#[non_exhaustive]`: String, Messages variants)
 6. [ ] Create `pregolya-prompts/src/policy.rs` — `SlotTrustPolicy` (if not already in template_input.rs)
 7. [ ] Create `pregolya-prompts/src/prompt_template.rs` — `PromptTemplate` (f-string parser, `from_template`, `format`, `Runnable` impl)
@@ -234,8 +289,8 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 |------|--------|-------------|
 | `PromptTemplate` and `ChatPromptTemplate` are pure-core (no I/O) | BC-2.18.001 invariant 2; ADR-015 purity map | `pregolya-prompts` must NOT have tokio as a direct dep (only needed if Runnable impls use async; use async-trait bridge) |
 | `PromptValue` is `#[non_exhaustive]` | BC-2.18.002 postcondition 4 | Compile-fail test for external exhaustive match |
-| `TemplateInput` is `#[non_exhaustive]` | BC-2.18.003 postcondition 1 | Compile-fail test |
-| Source-order slot evaluation in `format_messages` | BC-2.18.003 invariant 2 | Unit test AC-016 |
+| `TemplateInput` is `#[non_exhaustive]` | BC-2.18.002 postcondition 2 | Compile-fail test |
+| Source-order slot evaluation in `format_messages` | BC-2.18.004 invariant 5 | Unit test AC-016 |
 | `lib.rs` in `pregolya-prompts` is re-export-only — no logic | CLAUDE.md Code Conventions (mod.rs/lib.rs rule) | Code review |
 | E-TMPL-003 message format: dynamic (contains var name) | BC-2.18.001 postcondition 4 | String contains check in test |
 | E-TMPL-004 is construction-time | BC-2.18.001 postcondition 2 | Error arises from `from_template`, not `format` |
