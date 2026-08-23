@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.004
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -27,6 +27,7 @@ changelog:
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 and the corresponding TV row carried bare `Err(PregolyaError { category: VAL, code: E-GRAPH-007 })` without message; E-GRAPH-007 has <node_id> and <key> placeholders. Added inline message template to EC-003; TV row PASS-ABBREV via EC-003."
   - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to two adjudicated targets: (1) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Fork Lineage' for CheckpointMetadata { parent_checkpoint_id } definition; (2) 'architecture/module-decomposition.md §pregolya-checkpoint' for checkpoint::lineage row. No BC body content changed."
   - "1.4 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -53,29 +54,29 @@ branch lineage entirely and requires full state duplication.
 
 ## Preconditions
 
-1. An existing checkpoint `C_parent` exists at `(thread_id, checkpoint_ns, checkpoint_id=P)`
-2. The caller invokes a fork/time-travel operation
+1. {PRE-001} An existing checkpoint `C_parent` exists at `(thread_id, checkpoint_ns, checkpoint_id=P)`
+2. {PRE-002} The caller invokes a fork/time-travel operation
    (e.g., `update_state(config.with_checkpoint_id(P), values)`)
-3. The `CheckpointSaver` supports writing a checkpoint with a non-null `parent_checkpoint_id`
+3. {PRE-003} The `CheckpointSaver` supports writing a checkpoint with a non-null `parent_checkpoint_id`
 
 ## Postconditions
 
-1. A new checkpoint `C_fork` is created with a monotonically greater `checkpoint_id > P`
-2. `C_fork.metadata.parents[checkpoint_ns] == P` (pointer to the source; not a data copy)
-3. `C_fork.metadata.source` is `"update"` or `"fork"` (not `"loop"`)
-4. The original checkpoint `C_parent` is unmodified (no mutation, no side effects)
-5. Walking `parent_checkpoint_id` pointers from `C_fork` eventually reaches `C_parent`
-6. `C_fork.channel_values` contains only the channels explicitly updated by `values`;
+1. {PC-001} A new checkpoint `C_fork` is created with a monotonically greater `checkpoint_id > P`
+2. {PC-002} `C_fork.metadata.parents[checkpoint_ns] == P` (pointer to the source; not a data copy)
+3. {PC-003} `C_fork.metadata.source` is `"update"` or `"fork"` (not `"loop"`)
+4. {PC-004} The original checkpoint `C_parent` is unmodified (no mutation, no side effects)
+5. {PC-005} Walking `parent_checkpoint_id` pointers from `C_fork` eventually reaches `C_parent`
+6. {PC-006} `C_fork.channel_values` contains only the channels explicitly updated by `values`;
    all other channels are inherited by reference via the parent chain, not duplicated
 
 ## Invariants
 
-1. A fork never copies the full channel_values blob; only new/updated channel values
+1. {INV-001} A fork never copies the full channel_values blob; only new/updated channel values
    and metadata are written for the fork checkpoint
-2. The source checkpoint is never mutated by any fork operation
-3. Multiple sibling forks from the same parent checkpoint are all valid and independent;
+2. {INV-002} The source checkpoint is never mutated by any fork operation
+3. {INV-003} Multiple sibling forks from the same parent checkpoint are all valid and independent;
    each has `parent_checkpoint_id == P` and each has a distinct monotonic `checkpoint_id`
-4. The parent chain forms a DAG (directed acyclic graph), not a cycle; no checkpoint
+4. {INV-004} The parent chain forms a DAG (directed acyclic graph), not a cycle; no checkpoint
    may be its own ancestor
 
 ## Edge Cases

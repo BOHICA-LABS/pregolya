@@ -2,13 +2,14 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.003
-version: "1.5"
+version: "1.6"
 changelog:
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-06..008 renumbered to VP-SPLIT-06..08 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — renumber is the production-grade call). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-splitters per module-decomposition.md v1.10."
   - "1.3 (2026-07-22, F-P139-03, burst-239): PC5 tightened to mandate `[]` only for empty-string input. Previous PC5 allowed either `[]` OR `['']', citing 'either acceptable if consistent with Python reference.' This is incorrect and internally contradictory: EC-005 already says 'must not return [\"\"]' and TV-004 shows `[]`. PC5 now explicitly prohibits `[\"\"]` and mandates `[]` as the required behavior. Sibling BC-2.07.001 TV-005 corrected from `[\"\"]` or `[]` to `[]` in the same burst (F-P139-03)."
   - "1.4 (FIX-BURST-276-WAVE-C/F-P173-406/2026-07-27): PC1 and PC2 contradicted PC5 and TV-004 for the empty-string sub-case. Precondition 3 declares two sub-cases: non-empty (len_codepoints >= 1) and empty (len_codepoints = 0). PC1 stated 'exactly one element' and PC2 stated 'length 1' without qualification — both false for the empty-string sub-case where PC5 mandates [] (zero elements). The contradiction is Phase-3-blocking: a TDD test driving TV-004 (empty string yields []) would conflict with the PC1/PC2 assertion of exactly-one-element. Adjudication: [] is correct for empty string, established by F-P139-03 (v1.3), consistent with EC-005, TV-004, and Python reference behavior. PC1 and PC2 now scoped to non-empty input (len_codepoints >= 1). PC5 remains the authoritative rule for len_codepoints = 0. Standing risk R8 (upstream len() code-point vs grapheme counts) does not affect the empty-string case (0 code points = 0 graphemes; GTV-010/011 are grapheme-discriminating vectors for non-ASCII, not empty-string). Lineage: F-P139-03 changed PC5 from 'either [] or [\"\"]' to '[] only', which created the PC1/PC2 contradiction by leaving them unscoped; this version resolves it."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,7 +20,7 @@ capability: CAP-008
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-008
   - domain-spec/edge-cases.md#DEC-002
@@ -49,23 +50,23 @@ no `None`, and no index-out-of-bounds occurs. This is the minimal-document degen
 
 ## Preconditions
 
-1. A splitter is configured with `chunk_size > 0` and `chunk_overlap >= 0` and `chunk_overlap < chunk_size`.
-2. The input document's length in Unicode code points `len_codepoints < chunk_size`.
-3. The document may be non-empty (length ≥ 1) or empty (length = 0). Both sub-cases are covered.
+1. {PRE-001} A splitter is configured with `chunk_size > 0` and `chunk_overlap >= 0` and `chunk_overlap < chunk_size`.
+2. {PRE-002} The input document's length in Unicode code points `len_codepoints < chunk_size`.
+3. {PRE-003} The document may be non-empty (length ≥ 1) or empty (length = 0). Both sub-cases are covered.
 
 ## Postconditions
 
-1. For non-empty input (`len_codepoints ≥ 1`): the returned chunk list contains exactly one element: the original document string, unmodified. For empty input (`len_codepoints = 0`), PC5 governs — the list is `[]`.
-2. **No overlap is applied.** For non-empty input (`len_codepoints ≥ 1`): the returned list has length 1, not 2 or more (there are no preceding chunks to overlap with). For empty input, PC5 governs.
-3. No panic occurs, no array-index-out-of-bounds, no underflow arithmetic.
-4. The chunk's content is byte-identical to the input document (no truncation, no extra whitespace trimming beyond what the separator logic would do).
-5. For an empty string input (`len_codepoints = 0`): the splitter returns `[]` (empty list). Returning `[""]` (an empty-string chunk) is **incorrect** — it is useless noise with no semantic content, is explicitly contradicted by EC-005 and TV-004, and does not match Python reference behavior. `[]` is the sole mandated output. This is verified by VP-SPLIT-08.
+1. {PC-001} For non-empty input (`len_codepoints ≥ 1`): the returned chunk list contains exactly one element: the original document string, unmodified. For empty input (`len_codepoints = 0`), PC5 governs — the list is `[]`.
+2. {PC-002} **No overlap is applied.** For non-empty input (`len_codepoints ≥ 1`): the returned list has length 1, not 2 or more (there are no preceding chunks to overlap with). For empty input, PC5 governs.
+3. {PC-003} No panic occurs, no array-index-out-of-bounds, no underflow arithmetic.
+4. {PC-004} The chunk's content is byte-identical to the input document (no truncation, no extra whitespace trimming beyond what the separator logic would do).
+5. {PC-005} For an empty string input (`len_codepoints = 0`): the splitter returns `[]` (empty list). Returning `[""]` (an empty-string chunk) is **incorrect** — it is useless noise with no semantic content, is explicitly contradicted by EC-005 and TV-004, and does not match Python reference behavior. `[]` is the sole mandated output. This is verified by VP-SPLIT-08.
 
 ## Invariants
 
-- The short-document path must not attempt arithmetic that would underflow (e.g., `(len - overlap) / (chunk_size - overlap)` when `len < overlap`).
-- The overlap value has no effect on a document shorter than `chunk_size`.
-- The overlap value has no effect on the single returned chunk's content.
+- {INV-001} The short-document path must not attempt arithmetic that would underflow (e.g., `(len - overlap) / (chunk_size - overlap)` when `len < overlap`).
+- {INV-002} The overlap value has no effect on a document shorter than `chunk_size`.
+- {INV-003} The overlap value has no effect on the single returned chunk's content.
 
 ## Reference Evidence
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-001
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line span (E-CORE-002, bare wrapper missing `, ..`); EC-002 multiline span continuation line (E-CORE-002, `, ..` added before closing `})`); TV-004 table-cell span (E-CORE-002, `, ..` added). All spans have category/code but lack component and retry_hint."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -51,36 +52,36 @@ typed `Err(PregolyaError)` — it never panics.
 
 ## Preconditions
 
-1. The caller is constructing or deserializing a chat message in pregolya-core.
-2. The pregolya-core crate defines the `Message` serde-tagged enum with the standard
+1. {PRE-001} The caller is constructing or deserializing a chat message in pregolya-core.
+2. {PRE-002} The pregolya-core crate defines the `Message` serde-tagged enum with the standard
    role variants and their typed payloads.
-3. The construction call is in non-test code.
+3. {PRE-003} The construction call is in non-test code.
 
 ## Postconditions
 
-1. `Message::Ai(AiMessage { content, tool_calls, invalid_tool_calls, usage_metadata, id, name, .. })`
+1. {PC-001} `Message::Ai(AiMessage { content, tool_calls, invalid_tool_calls, usage_metadata, id, name, .. })`
    compiles and carries the exact fields supplied.
-2. `Message::Human(HumanMessage { content, id, name, .. })` compiles and carries the supplied fields.
-3. `Message::System(SystemMessage { content, id, name, .. })` compiles and carries the supplied fields.
-4. `Message::Tool(ToolMessage { content, tool_call_id, id, name, .. })` requires `tool_call_id`
+2. {PC-002} `Message::Human(HumanMessage { content, id, name, .. })` compiles and carries the supplied fields.
+3. {PC-003} `Message::System(SystemMessage { content, id, name, .. })` compiles and carries the supplied fields.
+4. {PC-004} `Message::Tool(ToolMessage { content, tool_call_id, id, name, .. })` requires `tool_call_id`
    and fails compilation without it — the field is NOT `Option<String>` but `String`.
-5. Deserialization of `{"type":"ai","content":"hello"}` produces `Message::Ai(...)` with the
+5. {PC-005} Deserialization of `{"type":"ai","content":"hello"}` produces `Message::Ai(...)` with the
    correct variant; deserialization of `{"type":"unknown_role","content":"x"}` returns
    `Err(PregolyaError { category: VAL, code: E-CORE-002, .. })` — not a panic.
-6. `Message` is `Serialize + DeserializeOwned`; round-trip serialization preserves all fields
+6. {PC-006} `Message` is `Serialize + DeserializeOwned`; round-trip serialization preserves all fields
    including `additional_kwargs` (captured via `#[serde(flatten)]` extras map).
-7. Legacy role string `"function"` deserializes as the `Function(FunctionMessage)` legacy variant
+7. {PC-007} Legacy role string `"function"` deserializes as the `Function(FunctionMessage)` legacy variant
    rather than erroring — backward compatibility with serialized data.
 
 ## Invariants
 
-- **DI-008 (Library Constructor Result Contract):** All fallible construction paths return
+- {INV-001} **DI-008 (Library Constructor Result Contract):** All fallible construction paths return
   `Result<Message, PregolyaError>` — `unwrap` and `expect` are absent from non-test code.
-- The `type` field is a discriminant literal per variant: `"ai"`, `"human"`, `"system"`, `"tool"`,
+- {INV-002} The `type` field is a discriminant literal per variant: `"ai"`, `"human"`, `"system"`, `"tool"`,
   `"function"` (legacy), `"chat"` (arbitrary-role), `"remove"` (history control).
-- `ToolMessage.tool_call_id` is a required `String` field — it must be provided at construction;
+- {INV-003} `ToolMessage.tool_call_id` is a required `String` field — it must be provided at construction;
   no default is supplied.
-- `AiMessage.usage_metadata` is `Option<UsageMetadata>` — may be absent for non-model-generated
+- {INV-004} `AiMessage.usage_metadata` is `Option<UsageMetadata>` — may be absent for non-model-generated
   messages (e.g. messages loaded from a checkpoint without token metadata).
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.004
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,11 +15,12 @@ phase: 1a
 red_gate: true
 red_gate_source: R10
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -61,31 +62,31 @@ explicitly excluded from checkpoint serialization (`UntrackedValue` semantics ap
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with a channel of type `EphemeralValue<T>`.
-2. In super-step N, at least one node writes a value `v` to the ephemeral channel.
-3. A node scheduled to run in super-step N+1 reads the same channel.
+1. {PRE-001} A `StateGraph` is compiled with a channel of type `EphemeralValue<T>`.
+2. {PRE-002} In super-step N, at least one node writes a value `v` to the ephemeral channel.
+3. {PRE-003} A node scheduled to run in super-step N+1 reads the same channel.
 
 ## Postconditions
 
-1. In super-step N, the ephemeral channel holds `Some(v)` and is available to nodes
+1. {PC-001} In super-step N, the ephemeral channel holds `Some(v)` and is available to nodes
    triggered in that step; those nodes observe the value `v`.
-2. After super-step N completes (after `apply_writes` and `after_tick`), the ephemeral
+2. {PC-002} After super-step N completes (after `apply_writes` and `after_tick`), the ephemeral
    channel is cleared; its value becomes absent (`None`) for super-step N+1.
-3. In super-step N+1, any node reading the channel observes `None` / the absence of a
+3. {PC-003} In super-step N+1, any node reading the channel observes `None` / the absence of a
    value; it does NOT observe `v` from the previous step.
-4. The ephemeral value is NOT serialized to the checkpoint at the super-step boundary;
+4. {PC-004} The ephemeral value is NOT serialized to the checkpoint at the super-step boundary;
    inspecting the checkpoint metadata for super-step N shows the ephemeral channel absent
    or as a sentinel indicating cleared state.
-5. After a process restart (restore from checkpoint for step N), the ephemeral channel
+5. {PC-005} After a process restart (restore from checkpoint for step N), the ephemeral channel
    is absent; the channel does not retain the value from the pre-restart step.
 
 ## Invariants
 
-- `EphemeralValue` is a one-step channel: its lifetime is exactly the duration of the
+- {INV-001} `EphemeralValue` is a one-step channel: its lifetime is exactly the duration of the
   super-step in which it is written.
-- The cleared state is the default: at the start of each super-step, `EphemeralValue`
+- {INV-002} The cleared state is the default: at the start of each super-step, `EphemeralValue`
   channels begin absent unless written in that step.
-- A write to an `EphemeralValue` in step N does not trigger nodes in step N+1 (the
+- {INV-003} A write to an `EphemeralValue` in step N does not trigger nodes in step N+1 (the
   channel's channel_version does not propagate across the step boundary as a new write).
 
 ## Edge Cases

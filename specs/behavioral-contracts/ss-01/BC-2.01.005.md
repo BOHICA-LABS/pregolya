@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.005
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-039
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableParallel construction and concurrent invocation. LCEL composition scope expansion (D-170); ADR-026 §Decision 1."
@@ -21,6 +21,7 @@ changelog:
   - "1.2 (BURST-312/F-P203-02/2026-08-17): Capability Anchor Justification quote-fidelity fix — replaced single ADR-026 §Decision 1 citation that incorrectly claimed 'type representation and concurrent execution' (Decision 1 covers key ordering only; concurrent execution is Decision 2) with two separate single-§ citations per POL-19: §Decision 1 (RunnableParallel: Type Representation and Key Ordering) and §Decision 2 (RunnableParallel: Concurrent Execution and Error Handling). F-P203-02."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (F-036-01/P2A-036-adjudication/2026-08-22): Duplicate-step-key edge case gap closed (adjudication of STORY-S-1.05 AC-001 conflict vs BC infallible contract). PC-1 postcondition clarified: 'all provided branches' means after IndexMap last-write-wins deduplication; duplicate keys do NOT cause Err — this is intentional parity with Python RunnableParallel dict semantics per ADR-026 §Decision 1. Added EC-006 (Duplicate step key — last-write-wins) and TV-006. Story AC-001 fallible-constructor assertion must be removed by story-writer (STORY-S-1.05 AC-001 conflicts with infallible contract)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -53,48 +54,48 @@ pregolya `Runnable`.
 
 ## Preconditions
 
-1. `RunnableParallel::new(steps)` receives an iterator of `(key, Arc<dyn DynRunnable>)` pairs
+1. {PRE-001} `RunnableParallel::new(steps)` receives an iterator of `(key, Arc<dyn DynRunnable>)` pairs
    where each key is a non-empty `String`.
-2. The resulting `RunnableParallel` holds `N ≥ 0` configured branches in insertion order
+2. {PRE-002} The resulting `RunnableParallel` holds `N ≥ 0` configured branches in insertion order
    (an `IndexMap<String, Arc<dyn DynRunnable>>`).
-3. The caller invokes `invoke(input, config)` on the constructed `RunnableParallel`.
-4. All `N` branches are available (not dropped or deallocated) at invocation time.
+3. {PRE-003} The caller invokes `invoke(input, config)` on the constructed `RunnableParallel`.
+4. {PRE-004} All `N` branches are available (not dropped or deallocated) at invocation time.
 
 ## Postconditions
 
-1. `RunnableParallel::new(steps)` returns a `RunnableParallel` (infallible — never returns
+1. {PC-001} `RunnableParallel::new(steps)` returns a `RunnableParallel` (infallible — never returns
    `Err`) containing the deduplicated set of provided branches in insertion order.
    Duplicate keys are resolved by last-write-wins (`IndexMap` insert semantics): if the
    iterator yields `("a", fn1)` followed by `("a", fn2)`, the resulting map contains a
    single entry keyed `"a"` bound to `fn2`. This matches Python `RunnableParallel` dict
    semantics per ADR-026 §Decision 1.
-2. `invoke(input, config)` fans out `N` Tokio tasks concurrently — all tasks launch
+2. {PC-002} `invoke(input, config)` fans out `N` Tokio tasks concurrently — all tasks launch
    before any result is awaited; each task receives an independent clone of `input` and
    `config`.
-3. On success (all `N` branches return `Ok`): returns
+3. {PC-003} On success (all `N` branches return `Ok`): returns
    `Ok(serde_json::Value::Object(map))` where `map` has **exactly `N` keys**, each key
    equal to its branch's configured name, and key order matches the `steps` insertion order
    regardless of task completion order.
-4. The output object key order equals the `steps` `IndexMap` insertion order —
+4. {PC-004} The output object key order equals the `steps` `IndexMap` insertion order —
    verified by re-inserting results keyed by `self.steps.keys()` after collection.
-5. Every branch receives the **same** `input` value — branches share the same logical input,
+5. {PC-005} Every branch receives the **same** `input` value — branches share the same logical input,
    not different slices of it.
-6. If `N == 0`, returns `Ok(Value::Object(Map::new()))` — an empty object is a valid
+6. {PC-006} If `N == 0`, returns `Ok(Value::Object(Map::new()))` — an empty object is a valid
    successful result.
 
 ## Invariants
 
-- **Insertion-order output:** output key order is always the `steps` insertion order,
+- {INV-001} **Insertion-order output:** output key order is always the `steps` insertion order,
   regardless of which task completed first (collected into an intermediate `Vec` and then
   re-inserted in `steps.keys()` order).
-- **All-or-nothing success:** either all `N` branches contribute a key to the output object,
+- {INV-002} **All-or-nothing success:** either all `N` branches contribute a key to the output object,
   or the invocation returns `Err` (see BC-2.01.006 for the failure case).
-- **Independent input clones:** each branch's task receives `input.clone()` and
+- {INV-003} **Independent input clones:** each branch's task receives `input.clone()` and
   `config.clone()`; no branch can observe mutations made by another branch (each has its
   own owned copy).
-- **DynRunnable implementation:** `RunnableParallel` implements `DynRunnable`
+- {INV-004} **DynRunnable implementation:** `RunnableParallel` implements `DynRunnable`
   (both `invoke` and `stream`), enabling composition via `pipe()` (BC-2.01.004).
-- **`#[non_exhaustive]` struct:** external callers construct via `RunnableParallel::new(...)`;
+- {INV-005} **`#[non_exhaustive]` struct:** external callers construct via `RunnableParallel::new(...)`;
   struct-literal construction is barred (ADR-023 §Required Inventory).
 
 ## Edge Cases

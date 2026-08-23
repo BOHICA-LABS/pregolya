@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-003
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-001 struct expanded to include task_ids and step fields missing from prior struct form. Was: { channel } (EC-001) or { channel, reason } (PC3/EC-002) — both lacking taxonomy placeholders '<task_ids>' and '<n>' (super-step). Now: { channel, task_ids, step } (3 fields, 1:1 with taxonomy '<channel>', '<task_ids>', '<n>'). The 'reason' field was static text (not a taxonomy placeholder); replaced by the two structurally required dynamic fields. PC3, EC-001, EC-002, TV-002 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - domain-spec/invariants.md#DI-001
@@ -54,48 +55,48 @@ completion order.
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with at least one channel of each type under test.
-2. The graph has a `CheckpointSaver` configured or is running in-memory.
-3. A super-step is in progress with one or more `PregelTask`s active.
-4. Multiple tasks may attempt writes to the same channel within the same super-step.
+1. {PRE-001} A `StateGraph` is compiled with at least one channel of each type under test.
+2. {PRE-002} The graph has a `CheckpointSaver` configured or is running in-memory.
+3. {PRE-003} A super-step is in progress with one or more `PregelTask`s active.
+4. {PRE-004} Multiple tasks may attempt writes to the same channel within the same super-step.
 
 ## Postconditions
 
 ### LastValue
-1. A channel of type `LastValue<T>` that receives exactly one write `v` in a super-step
+1. {PC-001} A channel of type `LastValue<T>` that receives exactly one write `v` in a super-step
    stores `v` and makes it available to the next step.
-2. A `LastValue` channel that receives zero writes in a super-step is unchanged
+2. {PC-002} A `LastValue` channel that receives zero writes in a super-step is unchanged
    (`update([])` is a no-op).
-3. A `LastValue` channel that receives two or more writes from different tasks in the same
+3. {PC-003} A `LastValue` channel that receives two or more writes from different tasks in the same
    super-step raises `Err(E-GRAPH-001 InvalidUpdateError { channel: name,
    task_ids: [<id_1>, <id_2>, ...], step: <n> })`; the run transitions to
    `failed`.
 
 ### Append (BinaryOperatorAggregate)
-4. A channel of type `BinaryOperatorAggregate<T, op>` (e.g. `Append<T>` backed by
+4. {PC-004} A channel of type `BinaryOperatorAggregate<T, op>` (e.g. `Append<T>` backed by
    `operator.add`) folds all writes in the super-step using `op` applied in
    task-identity-sorted order: `value = op(op(…op(seed, w_0), w_1), …, w_n)`.
-5. An `Overwrite(v)` written to an Append channel replaces the accumulated value entirely
+5. {PC-005} An `Overwrite(v)` written to an Append channel replaces the accumulated value entirely
    (`value = v`) rather than folding; at most one `Overwrite` per step is allowed; two
    `Overwrite`s in the same step raise `Err(E-GRAPH-001 InvalidUpdateError)`.
-6. The reduction order is the same regardless of which node finished first; concurrent node
+6. {PC-006} The reduction order is the same regardless of which node finished first; concurrent node
    completion order does not affect the final channel value.
 
 ### BarrierValue
-7. A `BarrierValue` channel (unnamed variant) becomes `available()` in a step only after
+7. {PC-007} A `BarrierValue` channel (unnamed variant) becomes `available()` in a step only after
    all registered upstream writers have each submitted exactly one write; it is not
    available for downstream nodes until the full writer set has delivered.
-8. A downstream node subscribed to a `BarrierValue` channel is not triggered until the
+8. {PC-008} A downstream node subscribed to a `BarrierValue` channel is not triggered until the
    channel becomes available; it remains pending until that step's writers all complete.
 
 ## Invariants
 
-- **DI-001 (BSP Reducer Determinism):** Reducer application order within any super-step is
+- {INV-001} **DI-001 (BSP Reducer Determinism):** Reducer application order within any super-step is
   the deterministic task-identity sort (`task_path[:3]`). Identical graph inputs produce
   identical channel states regardless of concurrent task completion order.
-- No channel update is observable to any other task within the same super-step (BSP write
+- {INV-002} No channel update is observable to any other task within the same super-step (BSP write
   isolation); all merging happens in `apply_writes` after all tasks complete.
-- A `LastValue` channel that receives concurrent writes raises `InvalidUpdateError`; this is
+- {INV-003} A `LastValue` channel that receives concurrent writes raises `InvalidUpdateError`; this is
   a hard error, not a last-one-wins race condition.
 
 ## Edge Cases

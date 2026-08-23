@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.004
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,11 +16,12 @@ changelog:
   - "1.4 (OBS-1 adjudication, fix burst 122, 2026-07-19): No normative text change — Invariants §4 (lines 99-101) already correctly delegated all six non-interrupted run_status values (queued, in_progress, completed, failed, cancelled, summary_halt) to BC-2.05.005. OBS-1 adjudication chose production-grade totality: BC-2.05.005 was updated to enumerate all six statuses plus the interrupted-slots-consumed scenario; delegation is now coherent in both directions. TD-VSDD-060 sweep: PC7 status transition description (line 87) — 'interrupted→in_progress→completed/interrupted/failed' describes re-execution path outcomes, not the terminal set; cancelled/summary_halt absent by design; exempt. Invariants non-interrupted guard (lines 99-101) — already exhaustive over all six statuses; unchanged."
   - "1.5 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -55,12 +56,12 @@ mixin). This BC specifies the full `Command` shape and the contract each field s
 
 ## Preconditions
 
-1. A graph run is in the `interrupted` state (INTERRUPT marker persisted per BC-2.05.001)
+1. {PRE-001} A graph run is in the `interrupted` state (INTERRUPT marker persisted per BC-2.05.001)
    for the target `thread_id`.
-2. The caller has a valid `thread_id` matching the interrupted run.
-3. Either `Command(resume=value)` is submitted via `graph.invoke(Command(resume=v),
+2. {PRE-002} The caller has a valid `thread_id` matching the interrupted run.
+3. {PRE-003} Either `Command(resume=value)` is submitted via `graph.invoke(Command(resume=v),
    config)` or `graph.stream(Command(resume=v), config)`.
-4. If `Command(resume={interrupt_id: value})` form is used, the `interrupt_id` must match
+4. {PRE-004} If `Command(resume={interrupt_id: value})` form is used, the `interrupt_id` must match
    the `interrupt_id` field of one of the surfaced `InterruptPayload`s (hash of the checkpoint
    namespace at interrupt time). Authority: BC-2.05.001 TV-001 (`interrupt_id` is the canonical
    field name in `InterruptPayload`); entities-server.md §Interrupt (`interrupt_id: Uuid`). Fixed
@@ -68,39 +69,39 @@ mixin). This BC specifies the full `Command` shape and the contract each field s
 
 ## Postconditions
 
-1. **`resume` field:** The resume value is placed into the per-task scratchpad's next FIFO
+1. {PC-001} **`resume` field:** The resume value is placed into the per-task scratchpad's next FIFO
    slot for the interrupted task. Node re-executes from start (BC-2.05.003). The resume
    value is available via `interrupt()` return at the appropriate FIFO position.
-2. **`resume={interrupt_id: value}` form:** The resume value is routed to the specific
+2. {PC-002} **`resume={interrupt_id: value}` form:** The resume value is routed to the specific
    interrupt matching `interrupt_id`. This allows targeted delivery when a super-step
    surfaces multiple concurrent interrupts from different tasks; each interrupt_id
    addresses a distinct task's scratchpad.
-3. **`update` field (optional):** If present, channel updates are applied to graph state
+3. {PC-003} **`update` field (optional):** If present, channel updates are applied to graph state
    BEFORE the node re-executes. These are treated as a state side-load (equivalent to
    `update_state`). Channels are updated via their configured reducers.
-4. **`goto` field (optional):** If present and non-empty, after the current command is
+4. {PC-004} **`goto` field (optional):** If present and non-empty, after the current command is
    processed, routing is forced to the specified node name(s) or `Send`(s), bypassing
    the normal conditional-edge routing for that step.
-5. **`graph` field (optional):** `None` (default) = route within the current graph.
+5. {PC-005} **`graph` field (optional):** `None` (default) = route within the current graph.
    `Command.PARENT` = escape to the parent graph, surfaced as a `ParentCommand`. Enables
    subgraph-to-parent handoff.
-6. A `Command` returned by a tool function (tool output mixin) is treated identically to
+6. {PC-006} A `Command` returned by a tool function (tool output mixin) is treated identically to
    a `Command` submitted via `graph.invoke`. The graph recognizes it as a routing/resume
    directive.
-7. The run status transitions from `interrupted` → `in_progress` upon `Command` application,
+7. {PC-007} The run status transitions from `interrupted` → `in_progress` upon `Command` application,
    then to `completed` / `interrupted` / `failed` as the re-execution resolves.
 
 ## Invariants
 
-- **DI-003 (HITL FIFO Resume-Value Delivery):** `resume` value is placed into the
+- {INV-001} **DI-003 (HITL FIFO Resume-Value Delivery):** `resume` value is placed into the
   FIFO slot dictated by the scratchpad's `interrupt_counter`; delivery order is the
   invariant even when `{interrupt_id: value}` targeting is used (within a single task's
   scratchpad, FIFO is preserved).
-- A `Command` with no `resume`, no `update`, and no `goto` is valid (a no-op resume signal
+- {INV-002} A `Command` with no `resume`, no `update`, and no `goto` is valid (a no-op resume signal
   that merely unblocks the super-step); it is NOT an error condition.
-- `Command.PARENT` is only valid inside a subgraph execution context; submitting it at the
+- {INV-003} `Command.PARENT` is only valid inside a subgraph execution context; submitting it at the
   root graph level returns `Err(E-GRAPH-015 NoParentGraph)`.
-- A `Command` submitted to a non-interrupted run (status `queued`, `in_progress`, `completed`,
+- {INV-004} A `Command` submitted to a non-interrupted run (status `queued`, `in_progress`, `completed`,
   `failed`, `cancelled`, or `summary_halt`) returns `Err(E-GRAPH-002 NoActiveInterrupt)` (see BC-2.05.005).
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.6 (F-P152-03/burst-253/2026-07-24): GTV-010 and GTV-011 grapheme-cluster discriminators added; 9 to 11 GTVs Python-verified against pinned in-tree langchain-text-splitters==1.1.2; VP-SPLIT-04 range extended to GTV-001..011"
   - "1.7 (FIX-BURST-277-WAVE-C/FC-5-genuine-fix/2026-07-28): False closure FC-5 resolved. Form-B v1.5 row contained a false input-hash claim; git history confirms the claimed hash value was never written to the frontmatter — the burst-249 commit held a different value, and the dispatcher log from 2026-07-24 recorded a computed-vs-stored mismatch at burst time (the commit landed with a value different from what was computed during the burst). Form-B v1.5 false hash claim removed. input-hash updated to current computed value per frontmatter. Form-A changelog added (migrated from Form-B historical record)."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-008
   - domain-spec/edge-cases.md#DEC-001
@@ -63,26 +64,26 @@ first (and fail), then the implementation must make it pass.
 
 ## Preconditions
 
-1. The pregolya-splitters crate is configured with the same `chunk_size`, `chunk_overlap`, and `separators` as the reference Python implementation.
-2. The input document contains non-ASCII Unicode: at least one of:
+1. {PRE-001} The pregolya-splitters crate is configured with the same `chunk_size`, `chunk_overlap`, and `separators` as the reference Python implementation.
+2. {PRE-002} The input document contains non-ASCII Unicode: at least one of:
    - Emoji (e.g., U+1F600 GRINNING FACE, 4 bytes in UTF-8)
    - CJK unified ideographs (e.g., U+4E2D, 3 bytes in UTF-8)
    - Combining characters (e.g., `e` + U+0301 COMBINING ACCENT = 2 code points, 3 bytes)
    - Full-width forms (e.g., U+FF01 FULLWIDTH EXCLAMATION, 3 bytes, 1 code point)
-3. The Python reference output (chunk boundaries as a list of `(start_codepoint_offset, end_codepoint_offset)` pairs or a list of chunk strings) is pre-computed and stored as golden test vectors.
+3. {PRE-003} The Python reference output (chunk boundaries as a list of `(start_codepoint_offset, end_codepoint_offset)` pairs or a list of chunk strings) is pre-computed and stored as golden test vectors.
 
 ## Postconditions
 
-1. The Rust splitter produces the same list of chunk strings as the Python reference for all test vectors in the golden table.
-2. The test comparison is string-equality on the decoded chunk content (not on byte offsets).
-3. For the golden vectors, the Rust chunk list length equals the Python chunk list length.
-4. No extra empty chunks appear in the Rust output that are absent in the Python output.
+1. {PC-001} The Rust splitter produces the same list of chunk strings as the Python reference for all test vectors in the golden table.
+2. {PC-002} The test comparison is string-equality on the decoded chunk content (not on byte offsets).
+3. {PC-003} For the golden vectors, the Rust chunk list length equals the Python chunk list length.
+4. {PC-004} No extra empty chunks appear in the Rust output that are absent in the Python output.
 
 ## Invariants
 
-- The golden test vectors in this BC are the normative specification — they take precedence over any ambiguous interpretation of the text-splitter algorithm.
-- The Python reference is in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` SHA `42f8f79293cfb7589e5bc1d74a8ae4dfd0bf15e3` per `.factory/semport/reference-manifest.md` (the standalone `langchain-text-splitters==0.3.8` package is superseded — text-splitters is in-tree within the pinned langchain monorepo; no separate package version exists in the manifest). If the reference corpus pin changes, the golden vectors must be regenerated.
-- Parity applies to `RecursiveCharacterTextSplitter` and `CharacterTextSplitter` with the `length_function=len` setting (the default, which counts code points in Python).
+- {INV-001} The golden test vectors in this BC are the normative specification — they take precedence over any ambiguous interpretation of the text-splitter algorithm.
+- {INV-002} The Python reference is in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` per `.factory/semport/reference-manifest.md §langchain-version-pin` (the standalone `langchain-text-splitters==0.3.8` package is superseded — text-splitters is in-tree within the pinned langchain monorepo; no separate package version exists in the manifest). If the reference corpus pin changes, the golden vectors must be regenerated.
+- {INV-003} Parity applies to `RecursiveCharacterTextSplitter` and `CharacterTextSplitter` with the `length_function=len` setting (the default, which counts code points in Python).
 
 ## Reference Evidence
 
@@ -230,6 +231,8 @@ S-1.08
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.9 | 2026-08-23 | M1/ADR-027: stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change. | M1/ADR-027 |
+| 1.8 | 2026-08-22 | story-anchor-backfill: §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change). | story-anchor-backfill |
 | 1.7 | 2026-07-28 | FIX-BURST-277-WAVE-C/FC-5: False closure FC-5 resolved. Form-B v1.5 row contained a false input-hash claim; git history (burst-249 commit) confirms the claimed value was never written to the frontmatter — the commit held a different hash value. Dispatcher log from 2026-07-24 corroborates: a computed-vs-stored mismatch was recorded at burst time, but the landed commit wrote yet another different value. False hash claim removed from v1.5 row. input-hash updated to current computed value per frontmatter. Form-A changelog added (migrated from Form-B). | FIX-BURST-277-WAVE-C |
 | 1.6 | 2026-07-24 | F-P152-03/burst-253: ADD GTV-010 and GTV-011 as grapheme-cluster discriminators. GTV-010: input "abcéxyz" (NFD é = e+U+0301, 8 code pts, 7 graphemes), chunk_size=4 → ["abce", "́xyz"]; wrong grapheme output: ["abcé", "xyz"] — grapheme-aware impl keeps é intact, shifting boundary. GTV-011: input "👨‍👩‍👧‍👦 hi" (ZWJ family 7 code pts + " hi", total 10 code pts), chunk_size=4 → ["👨‍👩‍", "👧‍👦", "hi"] (3 chunks); wrong grapheme output: ["👨‍👩‍👧‍👦", "hi"] (2 chunks — ZWJ treated as 1 grapheme ≤ 4). Both Python-verified against pinned corpus (langchain-text-splitters==1.1.2 in-tree at langchain==1.3.13 SHA 42f8f79). VP-SPLIT-04 range GTV-001..009 → GTV-001..011. GTV count 9→11. | F-P152-03 |
 | 1.5 | 2026-07-24 | OBS-P148-04/OBS-P148-05/burst-249: (1) GTV-008 PROVISIONAL resolved — corrected expected value `["abc🎉🎉", "🎉🎉🎉x", "yz"]` → `["abc🎉🎉", "🎉🎉🎉xy", "z"]`; PROVISIONAL marker removed; Python-verified against pinned corpus. (2) GTV-003 separator-logic dependency resolved — corrected expected value `["hello", "😀 world"]` → `["hello 😀", "world"]`; Python-verified. (3) Invariant splitter reference reconciled: `langchain-text-splitters==0.3.8` → in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` SHA per reference-manifest.md §langchain==1.3.13 (no standalone splitters pin exists in the manifest). _(Note: this row originally contained a false input-hash claim; git history confirms the claimed value was never written to the frontmatter — the burst-249 commit held a different hash value. False claim removed; see v1.7 for full FC-5 correction.)_ | OBS-P148-04, OBS-P148-05 |

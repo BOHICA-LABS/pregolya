@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-007
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P91-01, 2026-07-17): EC-005 sweep fix — 'BudgetPolicy with on_ceiling = halt' → 'BudgetConfig with on_ceiling = OnCeiling::Halt'. on_ceiling is a field of BudgetConfig (interface-definitions v2.29 §BudgetConfig); BudgetPolicy::evaluate is pure and data-free. Part of the full SS-10 + corpus sweep for BudgetPolicy::on_ceiling mis-attributions."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-server / pregolya-graph per module-decomposition.md v1.10."
   - "1.3 (F-P99-01, 2026-07-17): Architect GuardrailDecision amendments (ADR-006 rev-3). New invariant added: GuardrailDecision is a stream-observer notification only — not emitted in unary mode; GuardrailHook::evaluate fires on both paths per DI-012; absence from unary output is NOT a DI-011 violation (execution-path vs stream-observer equivalence)."
   - "1.4 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.17 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
   - domain-spec/invariants.md#DI-011
@@ -52,37 +53,37 @@ and checkpoint write that fires on the unary path must also fire on the streamin
 
 ## Preconditions
 
-1. A `StateGraph` is compiled and registered with `pregolya-server`.
-2. Two identically-configured Runs are created: Run A via the streaming endpoint, Run B via
+1. {PRE-001} A `StateGraph` is compiled and registered with `pregolya-server`.
+2. {PRE-002} Two identically-configured Runs are created: Run A via the streaming endpoint, Run B via
    the unary endpoint, both targeting the same `assistant_id`, `thread_id`, and starting checkpoint.
-3. Any node functions in the graph are deterministic given the same random seed (or the same
+3. {PRE-003} Any node functions in the graph are deterministic given the same random seed (or the same
    LLM mock is used in tests).
-4. Neither run has been interrupted or resumed before execution begins.
+4. {PRE-004} Neither run has been interrupted or resumed before execution begins.
 
 ## Postconditions
 
-1. Run A's `final_output` (the `GraphState` at the terminal node) is byte-identical to
+1. {PC-001} Run A's `final_output` (the `GraphState` at the terminal node) is byte-identical to
    Run B's `final_output` when node functions are deterministic.
-2. Run A and Run B execute the same set of nodes in the same topological order, producing
+2. {PC-002} Run A and Run B execute the same set of nodes in the same topological order, producing
    the same `put_writes` records to the checkpoint store.
-3. Every guardrail hook, reducer, and budget policy evaluation that fires in Run B also fires
+3. {PC-003} Every guardrail hook, reducer, and budget policy evaluation that fires in Run B also fires
    in Run A (no code path is bypassed on the streaming path).
-4. Run A's event stream contains a `RunEnd` event whose `final_output` field matches Run B's
+4. {PC-004} Run A's event stream contains a `RunEnd` event whose `final_output` field matches Run B's
    returned output.
-5. If Run A's stream consumer disconnects before `RunEnd`, the run continues to completion in
+5. {PC-005} If Run A's stream consumer disconnects before `RunEnd`, the run continues to completion in
    the background (default behavior); the checkpoint records the same final state as Run B.
 
 ## Invariants
 
-- **DI-011 (Streaming / Unary Run Equivalence):** The streaming and unary endpoints must
+- {INV-001} **DI-011 (Streaming / Unary Run Equivalence):** The streaming and unary endpoints must
   invoke the same underlying `execute_run(graph, config, checkpoint_saver)` function. Any
   code path that takes a streaming-only shortcut (e.g., emitting cached events, bypassing the
   Pregel loop) is a hard violation of DI-011.
-- Both endpoints share the same guardrail invocation points (DI-012: guardrails fire at
+- {INV-002} Both endpoints share the same guardrail invocation points (DI-012: guardrails fire at
   tool-result, RAG, and memory ingress regardless of call path).
-- Both endpoints share the same budget evaluation points (BC-2.10.001: BudgetPolicy
+- {INV-003} Both endpoints share the same budget evaluation points (BC-2.10.001: BudgetPolicy
   evaluates after each LLM call and each tool invocation regardless of call path).
-- **GuardrailDecision is a stream-observer notification only (F-P99-01):** `StreamEvent::GuardrailDecision`
+- {INV-004} **GuardrailDecision is a stream-observer notification only (F-P99-01):** `StreamEvent::GuardrailDecision`
   is not emitted in unary mode. The underlying `GuardrailHook::evaluate` call fires on BOTH
   streaming and unary execution paths per DI-012 — the guardrail decision itself is
   execution-path equivalent. The absence of `GuardrailDecision` events from the unary response

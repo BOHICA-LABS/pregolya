@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -28,6 +28,7 @@ changelog:
   - "1.4 (2026-07-22, F-P139-01a, burst-239): Add Invariant 5 — checkpoint append-only / records-never-deleted general invariant. This invariant was absent from all SS-04 BCs: BC-2.10.006 cited 'BC-2.04.001 immutability' for original-record preservation but BC-2.04.001 contained only four write-timing invariants with no explicit never-deleted property. BC-2.04.004 Inv-2 covers only fork-scoped immutability. Inv-5 here covers the general case (any in-run operation, including compaction). BC-2.10.006 Description, Invariants, and Related BCs updated to cite BC-2.04.001 Inv-5 (F-P139-01b, same burst)."
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-002 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.6 (burst-311/F-P202-01/2026-08-17): Architect adjudication applied — fts_search IS the CheckpointSaver trait method; search_history is ONLY the callable Tool wrapper (search_history_tool()). Inv-5 loose 'search_history API (BC-2.04.008)' clarified to 'fts_search trait method (BC-2.04.008; exposed to agents as the search_history Tool via search_history_tool())'. Preserves surrounding sentence intent."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -53,34 +54,34 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with a `CheckpointSaver` that implements the `put_writes` method
-2. The durability tier is `DurabilityTier::Sync` or `DurabilityTier::Async` (not `Exit`)
-3. At least one PregelTask has completed execution within the current super-step
-4. The task's writes are non-null (even empty lists are valid — the task completed)
+1. {PRE-001} A `StateGraph` is compiled with a `CheckpointSaver` that implements the `put_writes` method
+2. {PRE-002} The durability tier is `DurabilityTier::Sync` or `DurabilityTier::Async` (not `Exit`)
+3. {PRE-003} At least one PregelTask has completed execution within the current super-step
+4. {PRE-004} The task's writes are non-null (even empty lists are valid — the task completed)
 
 ## Postconditions
 
-1. For each completed PregelTask, `put_writes(config, writes, task_id)` has been called
+1. {PC-001} For each completed PregelTask, `put_writes(config, writes, task_id)` has been called
    and submitted to the backend before `apply_writes` is invoked for the super-step
-2. The writes are linked to the current `checkpoint_id` with `task_id` as the sub-key
-3. With `DurabilityTier::Sync`: `put_writes` futures are fully resolved (storage confirmed)
+2. {PC-002} The writes are linked to the current `checkpoint_id` with `task_id` as the sub-key
+3. {PC-003} With `DurabilityTier::Sync`: `put_writes` futures are fully resolved (storage confirmed)
    before the super-step boundary (`apply_writes` + new checkpoint creation)
-4. With `DurabilityTier::Async`: `put_writes` futures are submitted (queued) before the
+4. {PC-004} With `DurabilityTier::Async`: `put_writes` futures are submitted (queued) before the
    next super-step begins; futures are joined before the run exits
-5. Special-channel writes (`ERROR`, `INTERRUPT`, `RESUME`, `SCHEDULED`) use negative write
+5. {PC-005} Special-channel writes (`ERROR`, `INTERRUPT`, `RESUME`, `SCHEDULED`) use negative write
    indices `(-1, -3, -4, -2)` that never collide with regular writes; dedup is last-write-wins
    for special channels
 
 ## Invariants
 
-1. `put_writes` is called as each task finishes — per-task, not batched at super-step end
-2. The write record links `(config.thread_id, config.checkpoint_ns, current_checkpoint_id,
+1. {INV-001} `put_writes` is called as each task finishes — per-task, not batched at super-step end
+2. {INV-002} The write record links `(config.thread_id, config.checkpoint_ns, current_checkpoint_id,
    task_id)` — the full four-field key
-3. A task producing zero writes still results in a `put_writes` call with an empty write list;
+3. {INV-003} A task producing zero writes still results in a `put_writes` call with an empty write list;
    the task is marked committed
-4. The super-step boundary (apply_writes + new checkpoint) does not execute until all
+4. {INV-004} The super-step boundary (apply_writes + new checkpoint) does not execute until all
    `put_writes` submissions are at minimum queued (async) or confirmed (sync)
-5. Checkpoint records are append-only: a persisted checkpoint record (whether written via
+5. {INV-005} Checkpoint records are append-only: a persisted checkpoint record (whether written via
    `put` or recorded via `put_writes`) is never deleted or mutated in place by any in-run
    operation, including compaction. Compaction writes a new checkpoint entry with the
    compacted window; all prior records remain in the store and are readable via the

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.008
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ changelog:
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). PC6 multiline observation confirmed Class 3 VALID (all 5 non-source fields present — no change). EC-002 body: replaced forbidden `...` (three-dot ASCII) with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). EC-006 multiline body: added `..` rest-pattern marker (4 of 5 fields present, missing retry_hint; ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.6 (F-P2A005-06, 2026-08-19): Resolve FTS5-vs-encryption-at-rest design decision (S-1.11 EC-005 'implementation-defined' placeholder). Added Invariant 5: FTS5 and EncryptedSerializer are mutually exclusive — FTS5 stores plaintext payload content in the SQLite file, violating BC-2.04.007 invariant 3 (no plaintext state or event payload may be written to disk). Added EC-007: construction-time Err when both are configured. Minted E-CHKPT-010 FtsEncryptionIncompatible (VAL, broken, Never). Added TV-007. Updated Traceability Error Codes Minted row."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 origin: greenfield
 priority: P1
 subsystem: SS-04
@@ -22,7 +23,7 @@ capability: CAP-005
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-005
 inputs:
@@ -54,11 +55,11 @@ concurrent reads). The search capability is also registered as a callable `Tool`
 
 ## Preconditions
 
-1. The `CheckpointSaver` backend is SQLite with FTS5 enabled (SQLite must have the FTS5
+1. {PRE-001} The `CheckpointSaver` backend is SQLite with FTS5 enabled (SQLite must have the FTS5
    extension compiled in — this is the default for all major distributions).
-2. At least one checkpoint has been written to the store (FTS index populated from
+2. {PRE-002} At least one checkpoint has been written to the store (FTS index populated from
    checkpoint writes).
-3. `query: &str` is the standalone first parameter to `fts_search` — it is NOT a field of
+3. {PRE-003} `query: &str` is the standalone first parameter to `fts_search` — it is NOT a field of
    `FtsSearchConfig`. It may include FTS5 phrase syntax (e.g., `"\"Paris weather\""`).
    `FtsSearchConfig` has exactly two fields: `thread_id: Option<&str>` (scope to a single
    thread or `None` for all threads) and `limit: usize` (maximum number of results,
@@ -66,20 +67,20 @@ concurrent reads). The search capability is also registered as a callable `Tool`
 
 ## Postconditions
 
-1. `fts_search(query, config)` returns `Ok(Vec<FtsSearchResult>)` where each
+1. {PC-001} `fts_search(query, config)` returns `Ok(Vec<FtsSearchResult>)` where each
    `FtsSearchResult` contains: `checkpoint_id: CheckpointId`, `thread_id: String`,
    `checkpoint_ns: String`, `message_role: MessageRole`, `content_snippet: String`
    (a BM25-ranked excerpt of the matching content), and `rank: f64` (BM25 relevance score,
    lower is more relevant in SQLite FTS5 convention).
-2. Results are ordered by `rank` ascending (most relevant first).
-3. If `config.thread_id = Some(tid)`, only checkpoints for that thread are searched.
+2. {PC-002} Results are ordered by `rank` ascending (most relevant first).
+3. {PC-003} If `config.thread_id = Some(tid)`, only checkpoints for that thread are searched.
    If `None`, all threads in the store are searched.
-4. If no matches are found, `Ok(vec![])` is returned — not an error.
-5. The `search_history` `Tool` wraps `fts_search` and is registerable in any pregolya
+4. {PC-004} If no matches are found, `Ok(vec![])` is returned — not an error.
+5. {PC-005} The `search_history` `Tool` wraps `fts_search` and is registerable in any pregolya
    graph via `graph.add_tool(search_history_tool())`. Calling it from a graph node
    invokes `fts_search` on the run's configured `CheckpointSaver` and returns the
    results as a `ToolMessage`.
-6. `FtsSearchConfig.limit` of 0 returns
+6. {PC-006} `FtsSearchConfig.limit` of 0 returns
    `Err(PregolyaError { component: CHKPT, category: VAL, code: "E-CHKPT-008",
    message: "FtsLimitZero: FtsSearchConfig.limit must be > 0; got <limit>", retry_hint: Never })`.
 
@@ -91,18 +92,18 @@ concurrent reads). The search capability is also registered as a callable `Tool`
 
 ## Invariants
 
-- **Read-only search:** `fts_search` is a pure read; it does not write to the checkpoint
+- {INV-001} **Read-only search:** `fts_search` is a pure read; it does not write to the checkpoint
   store and does not create or update checkpoints. It does not affect the FTS5 index.
-- **FTS5 index consistency:** the FTS5 index is updated atomically when a new checkpoint
+- {INV-002} **FTS5 index consistency:** the FTS5 index is updated atomically when a new checkpoint
   is written (same transaction as the checkpoint write). A checkpoint visible via
   `get_tuple` is also searchable via `fts_search`. No separate indexing job is required.
-- **Single-process v1:** the `fts_search` implementation assumes a single SQLite writer
+- {INV-003} **Single-process v1:** the `fts_search` implementation assumes a single SQLite writer
   process. Multi-process WAL write-safety (concurrent checkpoint writers) is deferred and
   explicitly out of scope for this BC. Read-only queries from multiple async tasks within
   the same process are safe (SQLite WAL mode supports concurrent readers).
-- `limit` must be a positive integer > 0. Arithmetic check: for any `limit: usize` where
+- {INV-004} `limit` must be a positive integer > 0. Arithmetic check: for any `limit: usize` where
   `limit > 0`, the result `Vec` length is in the range `[0, limit]` inclusive.
-- **FTS5 and `EncryptedSerializer` are mutually exclusive:** the FTS5 virtual table
+- {INV-005} **FTS5 and `EncryptedSerializer` are mutually exclusive:** the FTS5 virtual table
   (`fts_checkpoint_bodies`) stores plaintext message content, tool call arguments, and
   tool results in the SQLite database file. Enabling FTS5 alongside an `EncryptedSerializer`
   would write plaintext state and event payload content to disk, directly violating

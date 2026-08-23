@@ -3712,3 +3712,4 @@ S-1.17 (streaming event types / run-id parity) AC citations re-anchored to stabl
 Count-propagation sweep (S-7.02): ADR count 26→27 updated in ARCH-INDEX frontmatter, changelog, Document Map, and ADR Registry. BC/VP/story/EC census UNCHANGED (39/133/14/118). No count changes requiring further propagation.
 
 CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: M1 BC-clause labeling (product-owner dispatches).
+- M1/ADR-027 chunk 1: 47 BCs labeled with stable clause anchors (SS-01..07,16,17); additive; validator 0-DRIFT; NEXT M1 chunk 2 + M2.

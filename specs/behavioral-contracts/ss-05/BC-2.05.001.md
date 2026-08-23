@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -31,6 +31,7 @@ changelog:
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by generic interrupt() (PC5: super-step boundary has not advanced) is not at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -55,39 +56,39 @@ violation, and an interrupt whose state write fails propagates a storage error.
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with a `CheckpointSaver` attached (the graph has a
+1. {PRE-001} A `StateGraph` is compiled with a `CheckpointSaver` attached (the graph has a
    durable checkpointer configured).
-2. The graph is executing a super-step (one or more `PregelTask`s are in-flight).
-3. A node function calls `interrupt(value)` where `value` is any serializable type.
-4. No static `interrupt_before` / `interrupt_after` config overrides the node's execution
+2. {PRE-002} The graph is executing a super-step (one or more `PregelTask`s are in-flight).
+3. {PRE-003} A node function calls `interrupt(value)` where `value` is any serializable type.
+4. {PRE-004} No static `interrupt_before` / `interrupt_after` config overrides the node's execution
    (this BC covers dynamic `interrupt()` called from inside node body).
 
 ## Postconditions
 
-1. The executing node raises a `NodeInterrupt` exception internally; the graph loop
+1. {PC-001} The executing node raises a `NodeInterrupt` exception internally; the graph loop
    catches it and sets run status to `interrupted`.
-2. The interrupt value is pushed onto the per-task scratchpad for the interrupted task
+2. {PC-002} The interrupt value is pushed onto the per-task scratchpad for the interrupted task
    (keyed by the `interrupt_counter` position — FIFO slot 0 for the first `interrupt()`).
-3. A checkpoint is written via `put_writes` (carrying the `INTERRUPT` marker and the
+3. {PC-003} A checkpoint is written via `put_writes` (carrying the `INTERRUPT` marker and the
    interrupt value payload) **before** the graph returns control to the caller; the
    write completes synchronously under the `sync` durability tier.
-4. The caller (graph `invoke` / `stream`) receives the interrupt notification as
+4. {PC-004} The caller (graph `invoke` / `stream`) receives the interrupt notification as
    `{"__interrupt__": [InterruptPayload { value, interrupt_id }]}`.
-5. The run status in the checkpoint metadata is `interrupted`; the super-step boundary
+5. {PC-005} The run status in the checkpoint metadata is `interrupted`; the super-step boundary
    **has not advanced** (the checkpoint_id has not incremented past the interrupted step).
-6. The thread can be resumed by a future `Command(resume=...)` call referencing the same
+6. {PC-006} The thread can be resumed by a future `Command(resume=...)` call referencing the same
    `thread_id`.
 
 ## Invariants
 
-- **DI-003 (HITL FIFO Resume-Value Delivery):** The interrupt value is recorded in
+- {INV-001} **DI-003 (HITL FIFO Resume-Value Delivery):** The interrupt value is recorded in
   the per-task scratchpad at a stable positional index; the FIFO order of future
   resume-value consumption is established at the moment `interrupt()` is called.
-- An interrupt without a checkpointer is a hard precondition violation (returns
+- {INV-002} An interrupt without a checkpointer is a hard precondition violation (returns
   `Err(E-GRAPH-016 InterruptWithoutCheckpointer)` before the node runs).
-- The checkpoint written at interrupt time must include the INTERRUPT marker so that
+- {INV-003} The checkpoint written at interrupt time must include the INTERRUPT marker so that
   on process restart the engine recognizes the thread as interrupted (not failed).
-- The interrupt does NOT advance to the next super-step; `versions_seen` and
+- {INV-004} The interrupt does NOT advance to the next super-step; `versions_seen` and
   `channel_versions` for the interrupted task remain at their pre-interrupt values.
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: true
 vp_id: VP-011
@@ -27,6 +27,7 @@ changelog:
   - "1.4 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors and §Traceability VP Registration: 'VP-INDEX v1.5 as' → 'VP-INDEX as' (plain prose, no §-anchor introduced). verify-no-version-pins.sh PASS."
   - "1.5 (fix-burst-P2A-010/F-P2A010-08/2026-08-20): Add PC-7 (Pure Routing Core — VP-011 proof surface): formally define `route_pre_tool_decision`, `shield_hook_result`, and `DispatchOutcome` as required named items in `graph::hitl`. These are the VP-011 Kani proof targets; Kani 0.67.0 cannot target `pre_tool_dispatch` directly (async), so pure extraction is required. Update §Invariants fail-closed Deny text to name `route_pre_tool_decision`. Update §Verification Properties VP-011 row to reference the pure functions and DispatchOutcome by name."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.23 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -62,38 +63,38 @@ under no code path does a `Deny` decision allow the tool to execute.
 
 ## Preconditions
 
-1. The graph scheduler is executing a tool invocation for tool `T` with args `A`.
-2. `GraphConfig.pre_tool_hook` is either:
+1. {PRE-001} The graph scheduler is executing a tool invocation for tool `T` with args `A`.
+2. {PRE-002} `GraphConfig.pre_tool_hook` is either:
    - `None` → `AlwaysApprovePolicy` semantics apply (Approve returned immediately, no I/O).
    - `Some(Arc<dyn PreToolCallHook>)` → `hook.pre_invoke(&preview, &run_ctx).await` is called.
-3. `ToolCallPreview { tool_name: T.name(), tool_args: A, action_risk: T.action_risk() }` is
+3. {PRE-003} `ToolCallPreview { tool_name: T.name(), tool_args: A, action_risk: T.action_risk() }` is
    constructed read-only before the call; `action_risk` is `Some(tier)` if the tool is
    annotated with `#[tool(action_risk = ...)]`, `None` otherwise.
-4. The hook implementation is `Send + Sync`; awaiting it does not block the Tokio thread pool.
+4. {PRE-004} The hook implementation is `Send + Sync`; awaiting it does not block the Tokio thread pool.
 
 ## Postconditions
 
-1. **Approve:** `pre_invoke` returns `PreToolDecision::Approve`. `pre_tool_dispatch` returns
+1. {PC-001} **Approve:** `pre_invoke` returns `PreToolDecision::Approve`. `pre_tool_dispatch` returns
    `Ok(A)` (original args unchanged). The scheduler proceeds to `tool.invoke(A)`.
-2. **Deny:** `pre_invoke` returns `PreToolDecision::Deny { reason }`. `pre_tool_dispatch`
+2. {PC-002} **Deny:** `pre_invoke` returns `PreToolDecision::Deny { reason }`. `pre_tool_dispatch`
    constructs `ToolOutput::Error(reason)` and returns it WITHOUT calling `tool.invoke(A)`.
    The tool is not invoked. The `ToolOutput::Error` is delivered to the model's context as
    the tool result. This path is fail-closed: the tool NEVER executes when Deny is returned.
-3. **Edit:** `pre_invoke` returns `PreToolDecision::Edit { modified_args }`. The scheduler
+3. {PC-003} **Edit:** `pre_invoke` returns `PreToolDecision::Edit { modified_args }`. The scheduler
    validates that `modified_args` is a valid JSON object (non-null); if validation fails,
    falls back to Deny with reason "invalid modified_args". If valid, proceeds to
    `tool.invoke(modified_args)`.
-4. **PendingHumanApproval:** `pre_invoke` returns `PreToolDecision::PendingHumanApproval { prompt }`.
+4. {PC-004} **PendingHumanApproval:** `pre_invoke` returns `PreToolDecision::PendingHumanApproval { prompt }`.
    `pre_tool_dispatch` issues `interrupt(ToolApprovalRequest { preview, prompt })` via
    BC-2.05.001 machinery. The run is suspended. On resume, the delivered
    `Command(resume=PreToolDecision)` is applied via rules PC-1 through PC-3. See
    BC-2.05.008 for the skip-hook-on-resume invariant.
-5. **Hook error (panic or `Err`):** If `hook.pre_invoke(...)` panics or returns an error,
+5. {PC-005} **Hook error (panic or `Err`):** If `hook.pre_invoke(...)` panics or returns an error,
    `pre_tool_dispatch` treats this as `Deny { reason: "hook error: <detail>" }`. The hook
    is fail-closed under all error conditions.
-6. **No hook configured:** `pre_tool_dispatch` returns `Ok(A)` immediately (equivalent to
+6. {PC-006} **No hook configured:** `pre_tool_dispatch` returns `Ok(A)` immediately (equivalent to
    Approve) without calling `pre_invoke`. Existing graphs unaffected.
-7. **Pure Routing Core (VP-011 Proof Surface):** The implementation MUST define the following
+7. {PC-007} **Pure Routing Core (VP-011 Proof Surface):** The implementation MUST define the following
    type and extract the following two named pure-core synchronous functions in `graph::hitl`.
    These are the VP-011 Kani proof targets. Extraction is required because Kani 0.67.0 has no
    native async support and cannot target `pre_tool_dispatch` (async) directly.
@@ -133,20 +134,20 @@ under no code path does a `Deny` decision allow the tool to execute.
 
 ## Invariants
 
-- **Fail-closed Deny (VP-011 Kani seed):** `PreToolDecision::Deny` ALWAYS results in
+- {INV-001} **Fail-closed Deny (VP-011 Kani seed):** `PreToolDecision::Deny` ALWAYS results in
   `ToolOutput::Error(reason)` being returned WITHOUT invoking the tool. Under no control flow
   path does a Deny decision allow tool execution. The property is proved by Kani via the
   pure-core `route_pre_tool_decision` function (PC-7): `Deny { reason }` returns
   `DispatchOutcome::Reject(reason)` and `DispatchOutcome::Proceed` is structurally unreachable
   from the `Deny` arm.
-- `pre_tool_dispatch` is called for EVERY tool invocation — there is no bypass, no
+- {INV-002} `pre_tool_dispatch` is called for EVERY tool invocation — there is no bypass, no
   tool-whitelist that skips the hook.
-- Hook failure (panic or error) is treated as Deny, not Approve. This is the fail-closed
+- {INV-003} Hook failure (panic or error) is treated as Deny, not Approve. This is the fail-closed
   safety property.
-- `AlwaysApprovePolicy` is the default; the behavior change is opt-in via `GraphConfig`.
-- **DI-014 (No Silent Swallowing):** `ToolOutput::Error(reason)` is returned to the model
+- {INV-004} `AlwaysApprovePolicy` is the default; the behavior change is opt-in via `GraphConfig`.
+- {INV-005} **DI-014 (No Silent Swallowing):** `ToolOutput::Error(reason)` is returned to the model
   context on Deny; the Deny reason is never silently discarded.
-- **Retry ordering (ADR-018 Decision 6):** The call sequence per tool invocation is:
+- {INV-006} **Retry ordering (ADR-018 Decision 6):** The call sequence per tool invocation is:
   `circuit_breaker.check(tool_name)` → `pre_tool_dispatch(hook, preview)` →
   `tool.invoke(args)` → `retry_policy.record(result)`. Each retry attempt invokes
   `pre_tool_dispatch` independently.

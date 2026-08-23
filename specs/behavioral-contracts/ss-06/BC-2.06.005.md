@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.005
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -24,6 +24,7 @@ changelog:
   - "1.2 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. H1 title, Description, PC-2, PC-4, TV-001/002/003 updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.3 (BURST-315/F-A1/2026-08-17): Remove spurious ADR-019-rolling-context-compaction.md from traces_to and inputs — copy-paste residue symmetric with BC-2.06.004; ADR-019 governs compaction (SS-07), which is disjoint from the per-tool-call approval hook (CAP-034). ADR-018 is the correct sole architectural input."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -56,13 +57,13 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
 
 ## Preconditions
 
-1. A graph run is in `interrupted` state with a pending `ToolApprovalRequest` interrupt.
-2. `Command(resume=PreToolDecision)` is delivered (via the API or programmatically).
-3. The `PreToolDecision` is one of: `Approve`, `Deny { reason }`, or `Edit { modified_args }`.
+1. {PRE-001} A graph run is in `interrupted` state with a pending `ToolApprovalRequest` interrupt.
+2. {PRE-002} `Command(resume=PreToolDecision)` is delivered (via the API or programmatically).
+3. {PRE-003} The `PreToolDecision` is one of: `Approve`, `Deny { reason }`, or `Edit { modified_args }`.
 
 ## Postconditions
 
-1. **Emission:** The engine emits `StreamEvent::ToolApprovalResolved` with the following
+1. {PC-001} **Emission:** The engine emits `StreamEvent::ToolApprovalResolved` with the following
    payload immediately after consuming the interrupt, before applying the decision:
    ```json
    {
@@ -76,24 +77,24 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
    - `decision`: the variant name of the `PreToolDecision` that was delivered.
    - `reason`: populated for `Deny { reason }`; `null` for Approve and Edit.
    - `modified_args`: populated for `Edit { modified_args }`; `null` for Approve and Deny.
-2. **Pairing with BC-2.06.004:** Every `tool_approval_resolved` event corresponds to a
+2. {PC-002} **Pairing with BC-2.06.004:** Every `tool_approval_resolved` event corresponds to a
    prior `tool_approval_request` event for the same `run_id` and `tool_name`.
-3. **Causal ordering:** `tool_approval_resolved` is emitted before the resolved decision is
+3. {PC-003} **Causal ordering:** `tool_approval_resolved` is emitted before the resolved decision is
    applied (i.e., before `tool.invoke(args)` is called for Approve/Edit, or before
    `ToolOutput::Error` is constructed for Deny). Stream consumers see the resolution event
    before any downstream effects.
-4. **No emission without prior request:** If `Command(resume=…)` arrives for a run that has
+4. {PC-004} **No emission without prior request:** If `Command(resume=…)` arrives for a run that has
    no pending `ToolApprovalRequest` interrupt, it is handled by BC-2.05.004 (standard
    resume mechanics); no `tool_approval_resolved` event is emitted.
 
 ## Invariants
 
-- `tool_approval_resolved` is emitted exactly once per `tool_approval_request` / resume
+- {INV-001} `tool_approval_resolved` is emitted exactly once per `tool_approval_request` / resume
   cycle. It is never emitted without a corresponding prior `tool_approval_request`.
-- The `decision` field reflects the delivered `PreToolDecision` variant faithfully —
+- {INV-002} The `decision` field reflects the delivered `PreToolDecision` variant faithfully —
   it is not the outcome of hook re-evaluation (skip-hook-on-resume invariant, BC-2.05.008).
-- `StreamEvent` variants are typed enum members (BC-2.06.001 invariant).
-- **DI-014:** The event payload must not be silently dropped; fire-and-forget semantics
+- {INV-003} `StreamEvent` variants are typed enum members (BC-2.06.001 invariant).
+- {INV-004} **DI-014:** The event payload must not be silently dropped; fire-and-forget semantics
   apply as for all streaming events.
 
 ## Edge Cases

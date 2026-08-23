@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-002
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
   - "1.2 (ADV-P1D-PASS-56): F-P56-01 — added code: E-CORE-006 to PC5, invariant §layer-disambiguation, EC-004, and TV-004. The Runnable-layer recursion halt was codeless while its graph-engine counterpart (E-GRAPH-017) carried a code. E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken) minted in error-taxonomy.md v1.7."
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (burst-294/F-185-02/2026-08-16): Invariant §recursion_limit-layer-disambiguation — 'at depth N' bare-N placeholder corrected to 'at depth <depth>' (angle-bracket placeholder convention; harmonizes with PC5 and EC-004 canonical template for E-CORE-006). D-134 sibling sweep: sole occurrence of bare-N template placeholder in BC-2.01.003; no other bare-N placeholders present."
   - "1.7 (BURST-303/O-P194-A/2026-08-17): EC-001 generic-arity reconciliation — replaced `DynRunnable<Value, Value>` generic form with canonical non-generic `Arc<dyn DynRunnable>` per architect DynRunnable canon (O-P194-A). DynRunnable is a non-generic trait; Value is the runtime boundary type, not a type parameter."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -55,37 +56,37 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
 
 ## Preconditions
 
-1. A type `T` implements `Runnable` by providing `async fn invoke(...)`.
-2. The type satisfies `Send + Sync` (required for concurrent batch execution).
-3. The `RunnableConfig` carries optional `max_concurrency`, `recursion_limit` (default 25),
+1. {PRE-001} A type `T` implements `Runnable` by providing `async fn invoke(...)`.
+2. {PRE-002} The type satisfies `Send + Sync` (required for concurrent batch execution).
+3. {PRE-003} The `RunnableConfig` carries optional `max_concurrency`, `recursion_limit` (default 25),
    `tags`, `metadata`, `callbacks`, `run_name`, `run_id`, and `configurable` map.
 
 ## Postconditions
 
-1. `runnable.invoke(input, &config).await` returns `Ok(output)` for a valid input, or
+1. {PC-001} `runnable.invoke(input, &config).await` returns `Ok(output)` for a valid input, or
    `Err(PregolyaError { category: VAL, code: E-CORE-003, .. })` on input-type mismatch.
-2. `runnable.stream(input, &config)` returns a `BoxStream` that yields exactly one chunk equal to
+2. {PC-002} `runnable.stream(input, &config)` returns a `BoxStream` that yields exactly one chunk equal to
    the `invoke` result when the implementor does not override `stream` (non-streaming fallback).
    A streaming-native implementor may yield multiple chunks.
-3. `runnable.batch(inputs, &config).await` returns `Vec<Result<Output, PregolyaError>>`
+3. {PC-003} `runnable.batch(inputs, &config).await` returns `Vec<Result<Output, PregolyaError>>`
    in input-insertion order — even though execution is concurrent. Concurrency is bounded by
    `config.max_concurrency` (if `None`, bounded by the tokio thread pool).
-4. `runnable.batch_as_completed(inputs, &config)` yields `(usize, Result<Output, _>)` tuples
+4. {PC-004} `runnable.batch_as_completed(inputs, &config)` yields `(usize, Result<Output, _>)` tuples
    out of insertion order but with the index from the original input slice.
-5. `recursion_limit` in `RunnableConfig` defaults to 25. Exceeding it in nested Runnable calls
+5. {PC-005} `recursion_limit` in `RunnableConfig` defaults to 25. Exceeding it in nested Runnable calls
    returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })`.
-6. A child run inherits `tags` and `metadata` (accumulated) and `callbacks` from the parent
+6. {PC-006} A child run inherits `tags` and `metadata` (accumulated) and `callbacks` from the parent
    `RunnableConfig`; `run_name` and `run_id` are consumed by the immediate run and not inherited.
 
 ## Invariants
 
-- `invoke` is the ONLY required method; all other surface methods have working defaults.
-- `batch` output order matches input order — not completion order (unlike `batch_as_completed`).
-- Config propagation: `tags` and `metadata` accumulate down the run tree; `run_id`/`run_name`
+- {INV-001} `invoke` is the ONLY required method; all other surface methods have working defaults.
+- {INV-002} `batch` output order matches input order — not completion order (unlike `batch_as_completed`).
+- {INV-003} Config propagation: `tags` and `metadata` accumulate down the run tree; `run_id`/`run_name`
   are consumed once and not passed to child runs.
-- `recursion_limit` is honored across all nested `invoke` / `stream` calls via the task-local
+- {INV-004} `recursion_limit` is honored across all nested `invoke` / `stream` calls via the task-local
   config mechanism.
-- **`recursion_limit` layer disambiguation (F-P49-02):** `config.recursion_limit` (default 25)
+- {INV-005} **`recursion_limit` layer disambiguation (F-P49-02):** `config.recursion_limit` (default 25)
   is read by TWO independent enforcement layers that share the same `RunnableConfig` key:
   (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained
   Runnables; exceeding it returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-006,

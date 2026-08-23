@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-007
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P93-04 class-sweep, 2026-07-17): VP ID collision resolved. BC-2.06.001 and BC-2.06.002 both defined VP-STREAM-02 with semantically identical (run_id + parent_ids) descriptions. Resolution per append-only-numbering policy: BC-2.06.001's VP-STREAM-02 (lower ID, canonical) kept; BC-2.06.002's VP-STREAM-02 renumbered → VP-STREAM-04 (next free after VP-STREAM-03 in BC-2.06.003). VP Anchors updated accordingly. Detected by OBS-P93-01 VP uniqueness census."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph / pregolya-server per module-decomposition.md v1.10."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.17 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
 inputs:
@@ -52,38 +53,38 @@ run. The contract follows the astream_events v2 7-key shape (semport/core/behavi
 
 ## Preconditions
 
-1. A `Run` is executing; a `run_id` UUID has been assigned at `RunStart`.
-2. For nested executions (subgraphs, tool-spawned sub-runs), a new `run_id` is assigned to
+1. {PRE-001} A `Run` is executing; a `run_id` UUID has been assigned at `RunStart`.
+2. {PRE-002} For nested executions (subgraphs, tool-spawned sub-runs), a new `run_id` is assigned to
    the nested unit at its creation; the parent run's `run_id` is captured in the execution
    context before the nested unit starts.
-3. The execution context propagates `run_id` and `parent_ids` through all nested call boundaries.
+3. {PRE-003} The execution context propagates `run_id` and `parent_ids` through all nested call boundaries.
 
 ## Postconditions
 
-1. Every `StreamEvent` variant carries the same `run_id` UUID assigned at `RunStart` for
+1. {PC-001} Every `StreamEvent` variant carries the same `run_id` UUID assigned at `RunStart` for
    the run that emitted it. The field is present and non-null on every event variant.
-2. For a top-level run, `parent_ids` is an empty list `[]`.
-3. For a nested sub-run (subgraph invocation or tool-spawned run), `parent_ids` is the
+2. {PC-002} For a top-level run, `parent_ids` is an empty list `[]`.
+3. {PC-003} For a nested sub-run (subgraph invocation or tool-spawned run), `parent_ids` is the
    ordered list of ancestor `run_id`s from outermost to immediate parent:
    - Top-level run A: `run_id = A`, `parent_ids = []`
    - Subgraph run B nested inside A: `run_id = B`, `parent_ids = [A]`
    - Tool sub-run C invoked inside B: `run_id = C`, `parent_ids = [A, B]`
-4. `parent_ids` is the same on every event emitted within a single sub-run (it does not
+4. {PC-004} `parent_ids` is the same on every event emitted within a single sub-run (it does not
    change mid-run unless a deeper nesting is entered, which would create yet another sub-run).
-5. `run_id` values are non-repeating UUIDs (v4 or v7). Two distinct runs, even on the same
+5. {PC-005} `run_id` values are non-repeating UUIDs (v4 or v7). Two distinct runs, even on the same
    `thread_id`, carry distinct `run_id`s.
 
 ## Invariants
 
-- `run_id` is immutable for the lifetime of a run — it is never regenerated at super-step
+- {INV-001} `run_id` is immutable for the lifetime of a run — it is never regenerated at super-step
   boundaries, interrupts, or resumes. A resumed run that creates a new `Run` record issues a
   new `run_id` (not a reuse of the interrupted run's `run_id`).
-- `parent_ids` is assigned once at run creation and is read-only thereafter. It is not
+- {INV-002} `parent_ids` is assigned once at run creation and is read-only thereafter. It is not
   mutated by sub-events within the run.
-- The transitivity rule must hold: if run A is an ancestor of run B, then `run_id(A)` appears
+- {INV-003} The transitivity rule must hold: if run A is an ancestor of run B, then `run_id(A)` appears
   in the `parent_ids` of every event emitted by run B (directly or transitively).
-- No two concurrent runs share a `run_id`, regardless of thread, namespace, or fork.
-- Fan-out PUSH tasks (Send API) within a super-step share the parent run's `run_id` and
+- {INV-004} No two concurrent runs share a `run_id`, regardless of thread, namespace, or fork.
+- {INV-005} Fan-out PUSH tasks (Send API) within a super-step share the parent run's `run_id` and
   `parent_ids` — they are tasks within a run, not independent sub-runs.
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.12"
+version: "1.13"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-007
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
   - domain-spec/invariants.md#DI-011
@@ -39,6 +39,7 @@ changelog:
   - "1.10 (F-P177-B01, burst-288, 2026-08-15): Add StreamEvent::Error as 16th variant (EC-005 mandate). PC2 extended with Error bullet after CompactionEvent; EC-005 updated to reference StreamEvent::Error by name with explicit field inventory; H1 title updated 15 Variants → 16 Variants. ADR-023 lists StreamEvent as exhaustive-by-design; variant count is now 16."
   - "1.11 (burst-290/F-180-03, 2026-08-16): Fix live-body phantom ADR §-citation in PC-2 StreamEvent::Error bullet: `ADR-023 §exhaustive-by-design` → `ADR-023 §Exempt Enums` (no heading §exhaustive-by-design exists in ADR-023; StreamEvent's exhaustive-match exemption is documented under `### Exempt Enums` within `## Decision 3 — Exempt Inventory`)."
   - "1.12 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.17 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.13 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -64,17 +65,17 @@ Wire format is pregolya-native (not LangChain astream_events v2 wire compat) per
 
 ## Preconditions
 
-1. A compiled `StateGraph` is executing (a `Run` is in `in_progress` status).
-2. A consumer has subscribed to the run's event stream (streaming endpoint or callback listener).
-3. Each node in the graph is a `Runnable`.
-4. The execution engine is the same engine used by both streaming and unary runs (DI-011 —
+1. {PRE-001} A compiled `StateGraph` is executing (a `Run` is in `in_progress` status).
+2. {PRE-002} A consumer has subscribed to the run's event stream (streaming endpoint or callback listener).
+3. {PRE-003} Each node in the graph is a `Runnable`.
+4. {PRE-004} The execution engine is the same engine used by both streaming and unary runs (DI-011 —
    no stub streaming path may exist).
 
 ## Postconditions
 
-1. For every phase transition that occurs during the run, exactly one typed `StreamEvent`
+1. {PC-001} For every phase transition that occurs during the run, exactly one typed `StreamEvent`
    variant is emitted in the ordering specified below.
-2. The emitted event set covers all of the following variants when the corresponding phase
+2. {PC-002} The emitted event set covers all of the following variants when the corresponding phase
    occurs during the run:
    - `StreamEvent::RunStart` — once at run beginning; carries `run_id`, `config`
    - `StreamEvent::RunStream` — once per output chunk surfaced at the run boundary
@@ -92,8 +93,8 @@ Wire format is pregolya-native (not LangChain astream_events v2 wire compat) per
    - `StreamEvent::ToolApprovalResolved` — emitted AFTER interrupt consumed, BEFORE decision applied, on `Command(resume=PreToolDecision)` delivery for a suspended approval; carries `run_id`, `tool_name`, `decision` (PreToolDecision variant), `reason` (Option<String>), `modified_args` (Option<ToolArgs>); causal ordering specified in BC-2.06.005
    - `StreamEvent::CompactionEvent` — emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); carries `run_id`, `parent_ids` (Vec<RunId>), `trigger` (CompactionTrigger variant), `compacted_start` (usize), `compacted_end` (usize), `summary_token_count` (u64), `tokens_remaining_after` (Option<i64>); causal ordering specified in BC-2.06.006
    - `StreamEvent::Error` — emitted when a node returns `Err(PregolyaError)` during execution; carries `run_id`, `parent_ids` (Vec<RunId>), `error_code` (String), `error_message` (String); stream closes after this event; `RunEnd` is NOT emitted (EC-005); this is the 16th variant (ADR-023 §Exempt Enums — StreamEvent is exhaustively matched by consumers)
-3. Each event carries `run_id` (UUID) and `parent_ids` (ordered ancestry list) per BC-2.06.002.
-4. Events are emitted in the following causal ordering (updated F-P99-01):
+3. {PC-003} Each event carries `run_id` (UUID) and `parent_ids` (ordered ancestry list) per BC-2.06.002.
+4. {PC-004} Events are emitted in the following causal ordering (updated F-P99-01):
    ```
    RunStart
      → (StepStart
@@ -110,18 +111,18 @@ Wire format is pregolya-native (not LangChain astream_events v2 wire compat) per
    → RunEnd
    ```
    `GuardrailDecision*` = zero or more — one per non-Pass ContentBlock/chunk/item. `ToolEnd` is always the final event in its window.
-5. No event is emitted from a code path that bypasses actual graph execution.
+5. {PC-005} No event is emitted from a code path that bypasses actual graph execution.
 
 ## Invariants
 
-- **DI-011 (Streaming / Unary Run Equivalence):** The streaming event emission path is driven
+- {INV-001} **DI-011 (Streaming / Unary Run Equivalence):** The streaming event emission path is driven
   by the same execution engine as the unary path. A stub that emits synthetic events without
   executing the graph is a hard violation.
-- Start-before-end: every `*Start` event for a phase unit is emitted before the corresponding
+- {INV-002} Start-before-end: every `*Start` event for a phase unit is emitted before the corresponding
   `*End` event for that same unit (sourced from semport/core/behavioral-intent.md §D-2).
-- `StreamEvent` variants are typed enum members, not stringly-typed JSON blobs with a dynamic
+- {INV-003} `StreamEvent` variants are typed enum members, not stringly-typed JSON blobs with a dynamic
   `"event"` string key. The consumer can exhaustively match on variant without string comparison.
-- An event for a phase that does not occur (e.g., `ToolStart` when no tool is called) is
+- {INV-004} An event for a phase that does not occur (e.g., `ToolStart` when no tool is called) is
   NOT emitted — the taxonomy is exhaustive only over phases that actually execute.
 
 ## Edge Cases

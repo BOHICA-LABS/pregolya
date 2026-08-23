@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.005
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-003
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01, 2026-07-18): E-GRAPH-011 ConditionalEdgePanic struct corrected from single-field to two-field form. Was: { source: 'source_node' } (1 field — wrong field name, missing panic message). Now: { source_node: <edge source node name>, message: <captured panic text> } (2 fields, 1:1 with taxonomy placeholders '<source_node>' and '<message>'). Root cause: EC-003 prose 'preserving the panic message as the error source' was ambiguous — 'source' was used as the error source (i.e., a catch-all field), conflating node name and panic text. Fix: PC5 struct updated; EC-003 struct updated and ambiguous 'error source' prose clarified; TV-005 struct updated. Three-site sibling sweep within file (TD-VSDD-060) — all uses updated."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.15 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -51,38 +52,38 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 
 ## Preconditions
 
-1. A `StateGraph` has been compiled with at least one `add_conditional_edges(source, path_fn)`
+1. {PRE-001} A `StateGraph` has been compiled with at least one `add_conditional_edges(source, path_fn)`
    call.
-2. `source` node has completed its execution in a super-step, producing an output (or `None`).
-3. The graph's channel state reflects all writes from `source` via `apply_writes` before
+2. {PRE-002} `source` node has completed its execution in a super-step, producing an output (or `None`).
+3. {PRE-003} The graph's channel state reflects all writes from `source` via `apply_writes` before
    `path_fn` is called (path function receives the merged post-step state).
-4. `path_fn` is a pure function `fn(state: &GraphState) -> RouteResult` where
+4. {PRE-004} `path_fn` is a pure function `fn(state: &GraphState) -> RouteResult` where
    `RouteResult` is one of: `NodeName(String)`, `NodeNames(Vec<String>)`, `End`,
    or `Send(...)` (the last delegated to BC-2.02.006).
 
 ## Postconditions
 
-1. If `path_fn(state)` returns `NodeName("target")`, the graph schedules node `"target"`
+1. {PC-001} If `path_fn(state)` returns `NodeName("target")`, the graph schedules node `"target"`
    in the next super-step by triggering its subscribed channel.
-2. If `path_fn(state)` returns `NodeNames(["a", "b"])`, both nodes `"a"` and `"b"` are
+2. {PC-002} If `path_fn(state)` returns `NodeNames(["a", "b"])`, both nodes `"a"` and `"b"` are
    scheduled in the next super-step.
-3. If `path_fn(state)` returns `End`, no further nodes are scheduled; the graph run
+3. {PC-003} If `path_fn(state)` returns `End`, no further nodes are scheduled; the graph run
    transitions to `completed` after flushing the current step.
-4. If `path_map` is provided, symbolic return values from `path_fn` are translated via the
+4. {PC-004} If `path_map` is provided, symbolic return values from `path_fn` are translated via the
    map before scheduling; the raw string must appear as a key in the map.
-5. If `path_fn` raises a Rust panic or returns an `Err`, the graph transitions to `failed`
+5. {PC-005} If `path_fn` raises a Rust panic or returns an `Err`, the graph transitions to `failed`
    with `Err(E-GRAPH-011 ConditionalEdgePanic { source_node: "source_node", message: "<captured panic text>" })`,
    preserving both the edge source node name and the captured panic text in the error struct.
 
 ## Invariants
 
-- `path_fn` is called exactly once per super-step for each edge where `source_node`
+- {INV-001} `path_fn` is called exactly once per super-step for each edge where `source_node`
   completed; it is not called if `source_node` was not triggered in the current step.
-- `path_fn` must be a pure function; it reads state but must not produce side effects
+- {INV-002} `path_fn` must be a pure function; it reads state but must not produce side effects
   (state writes from inside `path_fn` are not defined behavior).
-- A routing decision that targets an unknown node name (not registered in the compiled
+- {INV-003} A routing decision that targets an unknown node name (not registered in the compiled
   graph) returns `Err(E-GRAPH-003 UnknownRoutingTarget)` and fails the run.
-- Multiple `add_conditional_edges` calls from the same source node are allowed; each
+- {INV-004} Multiple `add_conditional_edges` calls from the same source node are allowed; each
   `path_fn` is evaluated; the union of their return values determines next-step scheduling.
 
 ## Edge Cases

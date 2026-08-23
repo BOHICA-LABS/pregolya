@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-019
 wave: Phase-6
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P80-01, 2026-07-15): EC-002 error code corrected E-GRAPH-007→E-GRAPH-008. E-GRAPH-007 is UnknownChannelKey (runtime unregistered-write-key error); the correct code for a zero-node degenerate topology is E-GRAPH-008 UnreachableGraph (no path from START). Message aligned to taxonomy form: UnreachableGraph: <reason>. 'or similar' hedge removed from code assertion — exact E-GRAPH-008 is now required; message-detail flexibility preserved per fuzz-oracle semantics (oracle tests code discriminant, not message text)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to fuzz/ per module-decomposition.md v1.10."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-002 had `Err(PregolyaError { code: E-GRAPH-008 })` with message only in prose (not in the struct); E-GRAPH-008 has <reason> placeholder. Inlined the example message from the prose into the struct as the authoritative concrete form; fuzz oracle semantics note retained (oracle tests code discriminant, not message text)."
   - "1.4 (notation-sweep-B6/2026-07-29): B6 error-construction notation sweep. EC-002: added `, ..` before closing brace in partial PregolyaError observation `PregolyaError { code: E-GRAPH-008, message: \"...\" }` — Class 3 VIOLATION (component, category, and retry_hint fields omitted with no elision marker; canonical form requires `..` per ADR-010 §Error-Construction Notation Canon)."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-6.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
 inputs:
@@ -55,15 +56,15 @@ for v1 convergence per CAP-019.
 
 ## Preconditions
 
-1. Phase-3 implementation of pregolya-checkpoint and pregolya-graph is complete.
-2. `cargo-fuzz` is available in the CI toolchain (the devops-engineer provisions this in
+1. {PRE-001} Phase-3 implementation of pregolya-checkpoint and pregolya-graph is complete.
+2. {PRE-002} `cargo-fuzz` is available in the CI toolchain (the devops-engineer provisions this in
    Phase-0 toolchain setup).
-3. The msgpack serialization layer for `GraphState` and checkpoint structures is
+3. {PRE-003} The msgpack serialization layer for `GraphState` and checkpoint structures is
    implemented and passing Phase-3 tests.
 
 ## Postconditions
 
-1. **Fuzz Target 1 — Checkpoint Serialization Round-Trip:**
+1. {PC-001} **Fuzz Target 1 — Checkpoint Serialization Round-Trip:**
    - Target name: `fuzz_checkpoint_serde`
    - Input: arbitrary byte sequence from the fuzzer
    - Contract: deserializing an arbitrary byte sequence into a `GraphState` MUST NOT panic;
@@ -74,7 +75,7 @@ for v1 convergence per CAP-019.
      `deser(ser(s)) == s` for all reachable `s`.
    - Target file: `fuzz/fuzz_targets/fuzz_checkpoint_serde.rs`
 
-2. **Fuzz Target 2 — Graph-Execution Paths:**
+2. {PC-002} **Fuzz Target 2 — Graph-Execution Paths:**
    - Target name: `fuzz_graph_execution`
    - Input: arbitrary fuzzer-generated `GraphDefinition` (node count, edge topology, channel
      assignments, concurrent write patterns)
@@ -85,25 +86,25 @@ for v1 convergence per CAP-019.
      injection, and empty-super-step no-op.
    - Target file: `fuzz/fuzz_targets/fuzz_graph_execution.rs`
 
-3. Both targets compile without errors: `cargo +nightly fuzz build` succeeds.
+3. {PC-003} Both targets compile without errors: `cargo +nightly fuzz build` succeeds.
 
-4. Both targets run for a minimum of 10,000 corpus inputs without new crash findings before
+4. {PC-004} Both targets run for a minimum of 10,000 corpus inputs without new crash findings before
    the Phase-6 gate is passed. (The corpus is seeded from Phase-3 test data.)
 
-5. Any crash finding (panic, OOM abort, ASAN/MSAN report) from either target is a blocking
+5. {PC-005} Any crash finding (panic, OOM abort, ASAN/MSAN report) from either target is a blocking
    convergence failure — it must be triaged and fixed before v1.
 
-6. The fuzz corpus is committed to the repository under `fuzz/corpus/` and included in CI
+6. {PC-006} The fuzz corpus is committed to the repository under `fuzz/corpus/` and included in CI
    for regression prevention (subsequent runs replay the saved corpus before new exploration).
 
 ## Invariants
 
-- **No-panic contract:** Fuzzing targets enforce the DI-008 principle (Library Constructor
+- {INV-001} **No-panic contract:** Fuzzing targets enforce the DI-008 principle (Library Constructor
   Result Contract) at the input boundary — arbitrary bytes must never cause a panic in
   library code.
-- **Corpus persistence:** The fuzz corpus is a versioned artifact. Removing or resetting it
+- {INV-002} **Corpus persistence:** The fuzz corpus is a versioned artifact. Removing or resetting it
   requires an ADR entry explaining why corpus diversity was discarded.
-- **Toolchain pin:** cargo-fuzz requires nightly Rust. The exact nightly version used for
+- {INV-003} **Toolchain pin:** cargo-fuzz requires nightly Rust. The exact nightly version used for
   fuzzing is pinned in `rust-toolchain.toml` to prevent silent regression from toolchain
   changes.
 

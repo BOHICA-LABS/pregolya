@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.001
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,7 +15,7 @@ capability: CAP-004
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — port graph super-step ceiling. Added PC5 (super-step ceiling halt via E-GRAPH-017), PC6 (per-invocation-segment semantics for interrupted/resumed runs), EC-006 (ceiling exceeded edge case), TV-006 (cyclic graph test vector). Reference Evidence section updated with upstream LangGraph evidence. This is the primary enforcing BC for E-GRAPH-017."
   - "1.2 (ADV-P1D-PASS-50): F-P50-01 — fix arithmetic in EC-006 Scenario (false claim 6 > 6 corrected to 7 > stop = 6; unified to 1-indexed super-step labels per TV-006 convention, resolving OBS-P50-1 mixed-indexing observation). Correct PC6 resume bound from N × recursion_limit to N × (recursion_limit + 1) — each invocation segment allows recursion_limit + 1 super-steps before halt (TV-006 arithmetic: recursion_limit=3 → 4 steps execute; recursion_limit=5 → 6 steps execute)."
@@ -27,6 +27,7 @@ changelog:
   - "1.8 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Four sites corrected: PC5 single-line (E-GRAPH-017, `, ..` added before closing `})`); EC-005 multiline continuation line (E-GRAPH-006, `, ..` added); EC-006 multiline continuation line (E-GRAPH-017, `, ..` added); TV-006 table-cell (E-GRAPH-017, `, ..` added). All spans have category/code/message but lack component and retry_hint (or lack category in the E-GRAPH-006 span)."
   - "1.9 (burst-291/D-134/2026-08-16): §Description: phantom anchor corrected. 'error-taxonomy.md §GRAPH' → 'error-taxonomy.md §Component: GRAPH' (real heading is '### Component: GRAPH (pregolya-graph)'; §GRAPH alone matches no heading in error-taxonomy.md). TD-VSDD-060 sweep: sole §GRAPH occurrence in this file's live body."
   - "1.10 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.16 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -73,26 +74,26 @@ infinite-loop guard (`GraphRecursionError`, `graph/behavioral-intent.md §1.3`:
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with one or more nodes that write to shared channels.
-2. A `Run` is started with an initial `GraphState` and a deterministic set of inputs.
-3. The same graph and inputs are executed twice (or in two concurrent super-steps).
-4. Node completion order may differ between the two executions (simulated by varying task
+1. {PRE-001} A `StateGraph` is compiled with one or more nodes that write to shared channels.
+2. {PRE-002} A `Run` is started with an initial `GraphState` and a deterministic set of inputs.
+3. {PRE-003} The same graph and inputs are executed twice (or in two concurrent super-steps).
+4. {PRE-004} Node completion order may differ between the two executions (simulated by varying task
    scheduling delays or by the Kani non-determinism model).
 
 ## Postconditions
 
-1. Both executions produce bit-identical `GraphState` after each super-step completes.
-2. Channel reducer application order is determined by a deterministic sort of `(task_id, channel_name)` — not by task completion arrival order.
-3. Identical `(graph_definition, initial_state, inputs)` always produces identical `final_state` regardless of OS scheduler, thread pool, or tokio runtime interleaving.
-4. If any determinism violation is detected at runtime (reducer order constraint broken by a bug), the run transitions to `failed` with `E-GRAPH-006: BspDeterminismViolation`.
-5. **Super-step ceiling:** The BSP loop tracks a super-step counter per invocation segment. Before dispatching the next super-step, the engine checks whether the current step count would exceed `step_at_invoke_start + config.recursion_limit + 1`. If exceeded, the run transitions to `failed` with `Err(PregolyaError { category: POLICY, code: E-GRAPH-017, message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <step>; step count exceeded recursion_limit <limit> — check graph for unintended cycles", .. })`. `config.recursion_limit` defaults to 25 (from `RunnableConfig` — same key as BC-2.01.003; graph-engine interpretation = super-step ceiling). Upstream parity: LangGraph computes `stop = step + recursion_limit + 1` in `PregelLoop.__init__` / `PregelLoop.astart`, sets status `out_of_steps` in `tick()`, and raises `GraphRecursionError` in the outer invoke loop (`graph/behavioral-intent.md §1.3`).
-6. **Resume semantics for interrupted runs:** Upon resume from an interrupt checkpoint, `step_at_invoke_start` is set to the step index of the resume point (the checkpoint's current `step`). Each invocation segment (fresh invoke or resume) independently receives `recursion_limit` additional super-steps from its start point. A run that is interrupted and resumed N times can execute at most N × (`recursion_limit` + 1) total post-resume super-steps without triggering E-GRAPH-017 per segment (each segment executes up to `recursion_limit` + 1 super-steps before the ceiling triggers; TV-006 arithmetic: limit=3 → 4 steps execute before halt at step 5; limit=5 → 6 steps execute before halt at step 7). The count does NOT reset to zero on resume — it continues from the checkpoint step and the ceiling window shifts accordingly. Adjudicated rule: ceiling is per-invocation-segment (upstream parity: LangGraph recomputes `stop` at each `invoke`/`ainvoke` entry point).
+1. {PC-001} Both executions produce bit-identical `GraphState` after each super-step completes.
+2. {PC-002} Channel reducer application order is determined by a deterministic sort of `(task_id, channel_name)` — not by task completion arrival order.
+3. {PC-003} Identical `(graph_definition, initial_state, inputs)` always produces identical `final_state` regardless of OS scheduler, thread pool, or tokio runtime interleaving.
+4. {PC-004} If any determinism violation is detected at runtime (reducer order constraint broken by a bug), the run transitions to `failed` with `E-GRAPH-006: BspDeterminismViolation`.
+5. {PC-005} **Super-step ceiling:** The BSP loop tracks a super-step counter per invocation segment. Before dispatching the next super-step, the engine checks whether the current step count would exceed `step_at_invoke_start + config.recursion_limit + 1`. If exceeded, the run transitions to `failed` with `Err(PregolyaError { category: POLICY, code: E-GRAPH-017, message: "GraphRecursionLimitExceeded: run '<run_id>' halted after super-step <step>; step count exceeded recursion_limit <limit> — check graph for unintended cycles", .. })`. `config.recursion_limit` defaults to 25 (from `RunnableConfig` — same key as BC-2.01.003; graph-engine interpretation = super-step ceiling). Upstream parity: LangGraph computes `stop = step + recursion_limit + 1` in `PregelLoop.__init__` / `PregelLoop.astart`, sets status `out_of_steps` in `tick()`, and raises `GraphRecursionError` in the outer invoke loop (`graph/behavioral-intent.md §1.3`).
+6. {PC-006} **Resume semantics for interrupted runs:** Upon resume from an interrupt checkpoint, `step_at_invoke_start` is set to the step index of the resume point (the checkpoint's current `step`). Each invocation segment (fresh invoke or resume) independently receives `recursion_limit` additional super-steps from its start point. A run that is interrupted and resumed N times can execute at most N × (`recursion_limit` + 1) total post-resume super-steps without triggering E-GRAPH-017 per segment (each segment executes up to `recursion_limit` + 1 super-steps before the ceiling triggers; TV-006 arithmetic: limit=3 → 4 steps execute before halt at step 5; limit=5 → 6 steps execute before halt at step 7). The count does NOT reset to zero on resume — it continues from the checkpoint step and the ceiling window shifts accordingly. Adjudicated rule: ceiling is per-invocation-segment (upstream parity: LangGraph recomputes `stop` at each `invoke`/`ainvoke` entry point).
 
 ## Invariants
 
-- **DI-001 (BSP Reducer Determinism):** Identical inputs always produce identical `GraphState` regardless of node completion order. Concurrent writes to a `LastValue` channel from the same super-step raise `InvalidUpdateError` (not silent race).
-- The sort key for reducer application is `(task_id: &str, channel_name: &str)` — lexicographic ascending. No floating-point, random, or wall-clock component may enter the sort key.
-- The BSP scheduler must NOT use `FuturesUnordered::buffer_unordered` or any unordered stream combinator to collect task outputs — it must collect all task results then sort before applying reducers.
+- {INV-001} **DI-001 (BSP Reducer Determinism):** Identical inputs always produce identical `GraphState` regardless of node completion order. Concurrent writes to a `LastValue` channel from the same super-step raise `InvalidUpdateError` (not silent race).
+- {INV-002} The sort key for reducer application is `(task_id: &str, channel_name: &str)` — lexicographic ascending. No floating-point, random, or wall-clock component may enter the sort key.
+- {INV-003} The BSP scheduler must NOT use `FuturesUnordered::buffer_unordered` or any unordered stream combinator to collect task outputs — it must collect all task results then sort before applying reducers.
 
 ## Reference Evidence
 

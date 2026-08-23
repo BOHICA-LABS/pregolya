@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.004
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.2 (BURST-315/F-A1/2026-08-17): Remove spurious ADR-019-rolling-context-compaction.md from traces_to and inputs — copy-paste residue; ADR-019 governs compaction (SS-07), which is disjoint from the per-tool-call approval hook (CAP-034). ADR-018 is the correct sole architectural input. Symmetric with the BC-2.06.006 burst-285 ADR-019 purge."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -55,15 +56,15 @@ machinery after the event is emitted.
 
 ## Preconditions
 
-1. A graph run is executing and `GraphConfig.pre_tool_hook` is configured with a hook that
+1. {PRE-001} A graph run is executing and `GraphConfig.pre_tool_hook` is configured with a hook that
    returns `PendingHumanApproval`.
-2. The graph scheduler has called `pre_tool_dispatch` and received
+2. {PRE-002} The graph scheduler has called `pre_tool_dispatch` and received
    `PreToolDecision::PendingHumanApproval { prompt }`.
-3. The run is in an executing (not yet interrupted) state at the moment of emission.
+3. {PRE-003} The run is in an executing (not yet interrupted) state at the moment of emission.
 
 ## Postconditions
 
-1. **Emission:** Before issuing `interrupt(ToolApprovalRequest { ... })`, the engine emits
+1. {PC-001} **Emission:** Before issuing `interrupt(ToolApprovalRequest { ... })`, the engine emits
    `StreamEvent::ToolApprovalRequest` with the following payload:
    ```json
    {
@@ -79,27 +80,27 @@ machinery after the event is emitted.
      means no Edit was applied yet).
    - `action_risk`: the string representation of `ActionRisk` tier if annotated; `null` if not.
    - `prompt`: the `Option<String>` from `PendingHumanApproval`; `null` if `None`.
-2. **Causal ordering:** `StreamEvent::ToolApprovalRequest` is emitted BEFORE the run transitions
+2. {PC-002} **Causal ordering:** `StreamEvent::ToolApprovalRequest` is emitted BEFORE the run transitions
    to `interrupted` state. Stream consumers receive the event while the run is still in-flight,
    enabling them to surface the approval dialog before the status poll returns `interrupted`.
-3. **Exactly once per `PendingHumanApproval` return:** One `ToolApprovalRequest` event is
+3. {PC-003} **Exactly once per `PendingHumanApproval` return:** One `ToolApprovalRequest` event is
    emitted per hook decision that returns `PendingHumanApproval`. If the run is interrupted
    and resumed multiple times for the same tool (no retry involved), exactly one event is
    emitted per suspension.
-4. **No emission on Approve, Deny, or Edit:** `StreamEvent::ToolApprovalRequest` is ONLY
+4. {PC-004} **No emission on Approve, Deny, or Edit:** `StreamEvent::ToolApprovalRequest` is ONLY
    emitted when `PendingHumanApproval` is returned. The other three decision variants do not
    produce this event.
 
 ## Invariants
 
-- Emission precedes interrupt: the streaming channel receives `ToolApprovalRequest` before
+- {INV-001} Emission precedes interrupt: the streaming channel receives `ToolApprovalRequest` before
   the checkpoint is written with the `interrupted` state. This is a happens-before guarantee,
   not a wall-clock guarantee.
-- `tool_args` in the event payload matches the args presented to `pre_invoke` (original args
+- {INV-002} `tool_args` in the event payload matches the args presented to `pre_invoke` (original args
   before any potential Edit). This ensures the stream consumer sees exactly what the hook saw.
-- `StreamEvent` variants are typed enum members (BC-2.06.001 Invariant): `ToolApprovalRequest`
+- {INV-003} `StreamEvent` variants are typed enum members (BC-2.06.001 Invariant): `ToolApprovalRequest`
   is a first-class enum variant, not a stringly-typed dynamic event.
-- **DI-014:** The event payload must not be silently dropped. If the stream channel is full
+- {INV-004} **DI-014:** The event payload must not be silently dropped. If the stream channel is full
   or the consumer is disconnected, the emit attempt must complete (fire-and-forget allowed per
   streaming semantics) but must not panic or block the engine.
 

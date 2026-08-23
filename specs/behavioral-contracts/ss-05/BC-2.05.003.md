@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -54,42 +55,42 @@ notification-only interrupt (CONFLICT-3).
 
 ## Preconditions
 
-1. A node was previously halted by `interrupt()` (BC-2.05.001 is satisfied: state is
+1. {PRE-001} A node was previously halted by `interrupt()` (BC-2.05.001 is satisfied: state is
    durably persisted with INTERRUPT marker).
-2. The caller submits `Command(resume=value)` to the graph, referencing the same
+2. {PRE-002} The caller submits `Command(resume=value)` to the graph, referencing the same
    `thread_id` as the interrupted run.
-3. The engine has loaded the interrupted checkpoint from the `CheckpointSaver`.
-4. The resume value has been placed into scratchpad slot N corresponding to the
+3. {PRE-003} The engine has loaded the interrupted checkpoint from the `CheckpointSaver`.
+4. {PRE-004} The resume value has been placed into scratchpad slot N corresponding to the
    interrupted `interrupt()` call's FIFO position (BC-2.05.002).
 
 ## Postconditions
 
-1. The engine identifies the interrupted task from the checkpoint's INTERRUPT marker.
-2. The interrupted task's node function is **invoked from its first line** — not
+1. {PC-001} The engine identifies the interrupted task from the checkpoint's INTERRUPT marker.
+2. {PC-002} The interrupted task's node function is **invoked from its first line** — not
    from the position of the `interrupt()` call.
-3. All code before the `interrupt()` call executes again as part of the re-execution.
-4. Each `interrupt()` call encountered during re-execution checks the per-task scratchpad:
+3. {PC-003} All code before the `interrupt()` call executes again as part of the re-execution.
+4. {PC-004} Each `interrupt()` call encountered during re-execution checks the per-task scratchpad:
    - If a resume value is stored at this FIFO position, `interrupt()` returns that value
      **without raising** (idempotent replay).
    - If no resume value is stored (a new, not-yet-resumed interrupt), `interrupt()` raises
      again and halts the re-execution with a new interrupt.
-5. When all previously-resumed `interrupt()` calls have returned their values and the node
+5. {PC-005} When all previously-resumed `interrupt()` calls have returned their values and the node
    reaches new logic (or completes without further interrupts), the super-step advances
    normally.
-6. The node does NOT resume "from where it left off" — there is no continuation-passing or
+6. {PC-006} The node does NOT resume "from where it left off" — there is no continuation-passing or
    coroutine-resume mechanism; re-execution is total from the function's start.
 
 ## Invariants
 
-- **DI-003 (HITL FIFO Resume-Value Delivery):** The node's re-execution replays prior
+- {INV-001} **DI-003 (HITL FIFO Resume-Value Delivery):** The node's re-execution replays prior
   interrupt positions from the scratchpad in strict FIFO order; no out-of-order replay.
-- The re-execution replay is idempotent with respect to the interrupt() calls: the same
+- {INV-002} The re-execution replay is idempotent with respect to the interrupt() calls: the same
   node function called again with the same scratchpad state produces the same interrupt-
   return values.
-- Side effects that occur before the `interrupt()` point run again on re-execution.
+- {INV-003} Side effects that occur before the `interrupt()` point run again on re-execution.
   The node implementer is responsible for making those side effects idempotent; the
   framework does NOT deduplicate external side effects automatically.
-- This "re-execute from start" contract applies to every level of nested subgraphs —
+- {INV-004} This "re-execute from start" contract applies to every level of nested subgraphs —
   a subgraph node that interrupted also re-executes from its entry point.
 
 ## Edge Cases

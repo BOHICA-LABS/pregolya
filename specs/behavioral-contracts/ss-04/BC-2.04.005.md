@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.005
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -27,6 +27,7 @@ changelog:
   - "1.2 (ADV-P1D-PASS-66): F-P66-02 — EC-006 and TV added: checkpoint read failure during crash recovery (`get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed)`) → recovery halts, error propagated to caller. Confirms E-CHKPT-003 anchor to this BC. (OBS-P28-2 class; gate #33 reverse-verification finding.)"
   - "1.3 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to 'architecture/module-decomposition.md §pregolya-checkpoint' (checkpoint::saver row) per architect adjudication (burst 117). No BC body content changed."
   - "1.4 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). EC-006 Expected Behavior cell: added `..` rest-pattern marker (4 of 5 fields present, missing retry_hint). Test-vector row: replaced forbidden `...` (three-dot ASCII) with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION; ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -54,31 +55,31 @@ them freshly rather than replaying stale control state.
 
 ## Preconditions
 
-1. A graph run is in progress with `sync` or `async` durability and a durable `CheckpointSaver`
-2. During super-step N, K of M total tasks have completed and their writes are persisted via
+1. {PRE-001} A graph run is in progress with `sync` or `async` durability and a durable `CheckpointSaver`
+2. {PRE-002} During super-step N, K of M total tasks have completed and their writes are persisted via
    `put_writes` (K ≥ 0)
-3. The process crashes before `apply_writes` completes the super-step N+1 checkpoint
-4. The same graph is restarted and `invoke`/`stream` is called with the same `thread_id`
+3. {PRE-003} The process crashes before `apply_writes` completes the super-step N+1 checkpoint
+4. {PRE-004} The same graph is restarted and `invoke`/`stream` is called with the same `thread_id`
 
 ## Postconditions
 
-1. The graph loads the most recent committed checkpoint (super-step N-1 or earlier)
-2. `_reapply_writes_to_succeeded_nodes` restores the K committed tasks' write sets from
+1. {PC-001} The graph loads the most recent committed checkpoint (super-step N-1 or earlier)
+2. {PC-002} `_reapply_writes_to_succeeded_nodes` restores the K committed tasks' write sets from
    `pending_writes` storage, WITHOUT re-executing those nodes' bodies
-3. The remaining M-K uncommitted tasks re-execute from their node entry points
-4. The skipped control signals (`ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME`) are
+3. {PC-003} The remaining M-K uncommitted tasks re-execute from their node entry points
+4. {PC-004} The skipped control signals (`ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME`) are
    NOT re-applied from pending_writes; their nodes re-execute and encounter them freshly
-5. The run completes with a final state identical to what would have been produced without
+5. {PC-005} The run completes with a final state identical to what would have been produced without
    the crash (given idempotent node side-effects)
-6. Total node executions = M-K (only uncommitted) + later super-steps; no task executes twice
+6. {PC-006} Total node executions = M-K (only uncommitted) + later super-steps; no task executes twice
 
 ## Invariants
 
-1. A task is "committed" if and only if its `task_id` appears in `pending_writes` for the
+1. {INV-001} A task is "committed" if and only if its `task_id` appears in `pending_writes` for the
    current `checkpoint_id` with non-empty writes (or explicit empty-write record)
-2. Task IDs are deterministic content-addressed hashes — the same graph state and step produce
+2. {INV-002} Task IDs are deterministic content-addressed hashes — the same graph state and step produce
    the same task_id on restart, enabling correct pending-write matching
-3. **Control-signal write routing vs. re-apply skip set (two distinct concepts):**
+3. {INV-003} **Control-signal write routing vs. re-apply skip set (two distinct concepts):**
    - *Write-routing index map* (`WRITES_IDX_MAP`): four channels use negative indices for
      internal routing: `ERROR=-1`, `SCHEDULED=-2`, `INTERRUPT=-3`, `RESUME=-4`. `SCHEDULED`
      carries the -2 index and is routed normally — it is NOT excluded from re-apply.
@@ -88,7 +89,7 @@ them freshly rather than replaying stale control state.
      Note: `ERROR_SOURCE_NODE` does not have a dedicated negative index but IS skipped.
      Note: `SCHEDULED` has index -2 but is NOT skipped (its write is re-applied normally).
    - Source: semport/graph/behavioral-intent.md:176-181 + validation-certification-6
-4. No committed task's node body is called more than once across a crash-and-resume cycle
+4. {INV-004} No committed task's node body is called more than once across a crash-and-resume cycle
 
 ## Edge Cases
 

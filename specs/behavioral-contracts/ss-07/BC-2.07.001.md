@@ -2,13 +2,14 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.001
-version: "1.5"
+version: "1.6"
 changelog:
   - "1.1 (OBS-P95-A, 2026-07-17): VP-SPLIT-01..003 renumbered to VP-SPLIT-01..03 for corpus digit-width uniformity (OBS-P95-A adjudication: blast radius 3 files only — below >5 threshold — so renumber is the production-grade correct call over documenting the convention). No VP-INDEX registration affected (SPLIT VPs are BC-local)."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-splitters per module-decomposition.md v1.10."
   - "1.3 (2026-07-22, F-P139-03, burst-239): TV-005 corrected — empty string expected output changed from '[\"\"]` or `[]`' to `[]` only. Sibling fix to BC-2.07.003 PC5 (F-P139-03 same burst): BC-2.07.003 EC-005 and VP-SPLIT-08 already mandate `[]`; BC-2.07.003 PC5 previously hedged 'either acceptable' but that was the internal contradiction. TV-005 now aligns with the mandated `[]` behavior."
   - "1.4 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — two EC violations corrected: EC-001 and EC-002 `PregolyaError` struct observations had partial fields (code + message, 2/5) with no `..` rest pattern. Added `, ..` per ADR-010 §Error-Construction Notation Canon Class 3."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,7 +20,7 @@ capability: CAP-008
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-008
   - domain-spec/edge-cases.md#DEC-001
@@ -53,26 +54,26 @@ non-ASCII input, which is a correctness regression addressed by R8.
 
 ## Preconditions
 
-1. A splitter is configured with `chunk_size: usize` (a code-point count) and `chunk_overlap: usize` (a code-point count).
-2. The input document is a valid UTF-8 `String` (the Rust representation).
-3. The input may contain multi-byte Unicode code points (e.g., emoji U+1F600 = 4 bytes, CJK U+4E2D = 3 bytes).
-4. `chunk_size > 0` (enforced by BC-2.14.006 — a zero chunk_size returns `Err`).
-5. `chunk_overlap < chunk_size` (enforced by validation; see EC-001).
+1. {PRE-001} A splitter is configured with `chunk_size: usize` (a code-point count) and `chunk_overlap: usize` (a code-point count).
+2. {PRE-002} The input document is a valid UTF-8 `String` (the Rust representation).
+3. {PRE-003} The input may contain multi-byte Unicode code points (e.g., emoji U+1F600 = 4 bytes, CJK U+4E2D = 3 bytes).
+4. {PRE-004} `chunk_size > 0` (enforced by BC-2.14.006 — a zero chunk_size returns `Err`).
+5. {PRE-005} `chunk_overlap < chunk_size` (enforced by validation; see EC-001).
 
 ## Postconditions
 
-1. Every chunk's length, measured in Unicode code points (via `str.chars().count()` in Rust), is ≤ `chunk_size`.
-2. The total number of chunks is `ceil((len_codepoints - overlap) / (chunk_size - overlap))` for a document with no separator splits.
-3. The byte length of a chunk may exceed `chunk_size` bytes when the text contains multi-byte code points — this is expected and correct.
-4. No chunk begins or ends in the middle of a Unicode code point (no invalid UTF-8).
-5. If the document has no separator (single-separator splitter), chunks are sliced at exact code-point boundaries.
-6. The boundary computation uses the Rust iterator `str.char_indices()` or equivalent — never `str[0..n]` where `n` is a byte index derived from `chunk_size` directly.
+1. {PC-001} Every chunk's length, measured in Unicode code points (via `str.chars().count()` in Rust), is ≤ `chunk_size`.
+2. {PC-002} The total number of chunks is `ceil((len_codepoints - overlap) / (chunk_size - overlap))` for a document with no separator splits.
+3. {PC-003} The byte length of a chunk may exceed `chunk_size` bytes when the text contains multi-byte code points — this is expected and correct.
+4. {PC-004} No chunk begins or ends in the middle of a Unicode code point (no invalid UTF-8).
+5. {PC-005} If the document has no separator (single-separator splitter), chunks are sliced at exact code-point boundaries.
+6. {PC-006} The boundary computation uses the Rust iterator `str.char_indices()` or equivalent — never `str[0..n]` where `n` is a byte index derived from `chunk_size` directly.
 
 ## Invariants
 
-- Chunk size measurement is ALWAYS in code points. The string "hello" (5 ASCII chars, 5 bytes, 5 code points) and the string "中文" (2 CJK chars, 6 bytes, 2 code points) must behave consistently: `chunk_size=2` splits "中文" into one chunk `["中文"]` (2 code points ≤ 2), not one chunk per byte.
-- The `chunk_size` and `chunk_overlap` parameters are documented in the public API as "Unicode code point counts" to prevent user confusion.
-- No silent truncation or data loss — all code points in the input appear in exactly one chunk (for non-overlapping splits) or in at least one chunk (for overlapping splits).
+- {INV-001} Chunk size measurement is ALWAYS in code points. The string "hello" (5 ASCII chars, 5 bytes, 5 code points) and the string "中文" (2 CJK chars, 6 bytes, 2 code points) must behave consistently: `chunk_size=2` splits "中文" into one chunk `["中文"]` (2 code points ≤ 2), not one chunk per byte.
+- {INV-002} The `chunk_size` and `chunk_overlap` parameters are documented in the public API as "Unicode code point counts" to prevent user confusion.
+- {INV-003} No silent truncation or data loss — all code points in the input appear in exactly one chunk (for non-overlapping splits) or in at least one chunk (for overlapping splits).
 
 ## Reference Evidence
 

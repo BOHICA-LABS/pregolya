@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.006
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-23T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (F-P151-03, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied. (1) PC1 JSON payload → flat wire shape: `compacted_turns: { start, end }` removed; replaced with `compacted_start: <usize>` + `compacted_end: <usize>` (flat inclusive bounds per interface-definitions.md §Compaction CompactionSummary). (2) `parent_ids: [\"<parent_run_id>\"]` added to PC1 JSON (BC-2.06.002 Inv-2 mandate — every StreamEvent variant carries parent_ids). (3) PC1 field descriptions updated: `compacted_turns`/`CompactionSummary.compacted_range` references replaced with `compacted_start`/`compacted_end` flat-field descriptions (inclusive bounds, slice note). (4) Invariants: add parent_ids mandatory note citing BC-2.06.002 Inv-2. (5) EC-005 + TV-001 + TV-004 updated to flat + parent_ids wire shape."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -56,17 +57,17 @@ host to update context-window visualization without polling.
 
 ## Preconditions
 
-1. `BudgetConfig.compaction_trigger != CompactionTrigger::Disabled`.
-2. The `BudgetEngine` has evaluated the trigger condition after a super-step and determined
+1. {PRE-001} `BudgetConfig.compaction_trigger != CompactionTrigger::Disabled`.
+2. {PRE-002} The `BudgetEngine` has evaluated the trigger condition after a super-step and determined
    that compaction should fire (watermark crossed, message count exceeded, or token count
    exceeded — per BC-2.10.005).
-3. `CompactionPolicy::compact` has returned `Ok(CompactionSummary)`.
-4. The compacted checkpoint state has been durably written (the message window replacement
+3. {PRE-003} `CompactionPolicy::compact` has returned `Ok(CompactionSummary)`.
+4. {PRE-004} The compacted checkpoint state has been durably written (the message window replacement
    committed before this event is emitted).
 
 ## Postconditions
 
-1. **Emission:** After the compacted state is committed, the engine emits
+1. {PC-001} **Emission:** After the compacted state is committed, the engine emits
    `StreamEvent::CompactionEvent` with the following payload:
    ```json
    {
@@ -90,30 +91,30 @@ host to update context-window visualization without polling.
    - `summary_token_count`: the token count of the injected `SystemMessage(summary_text)`.
    - `tokens_remaining_after`: `RunContext.budget_info.tokens_remaining` after the compacted
      context is active.
-2. **Emission timing:** The event is emitted AFTER the compacted checkpoint is written — the
+2. {PC-002} **Emission timing:** The event is emitted AFTER the compacted checkpoint is written — the
    stream consumer sees the event only after the state mutation is durable. This prevents a
    race where the consumer reads the compaction event but the engine reverts the state.
-3. **Exactly once per compaction cycle:** One `compaction_event` per trigger evaluation that
+3. {PC-003} **Exactly once per compaction cycle:** One `compaction_event` per trigger evaluation that
    results in compaction. If the trigger fires but `compact()` returns an error, no event is
    emitted (the engine logs the error and continues without compaction).
-4. **Not emitted when Disabled:** `CompactionTrigger::Disabled` never triggers compaction;
+4. {PC-004} **Not emitted when Disabled:** `CompactionTrigger::Disabled` never triggers compaction;
    no `compaction_event` is ever emitted in this configuration.
 
 ## Invariants
 
-- Emission is post-commit: the stream consumer can trust that when `compaction_event` arrives,
+- {INV-001} Emission is post-commit: the stream consumer can trust that when `compaction_event` arrives,
   the run's active message window has already been replaced by the summary.
-- `tokens_remaining_after` reflects `RunContext.budget_info.tokens_remaining` AFTER the
+- {INV-002} `tokens_remaining_after` reflects `RunContext.budget_info.tokens_remaining` AFTER the
   compaction (not before). Type is `Option<i64>`: `None` when no token ceiling is configured
   (e.g., `OnMessageCount`/`OnTokenCount` triggers with neither `soft_limit` nor `hard_limit` set);
   negative `i64` when `accumulated > ceiling` (Deny path). Wire serializes as `null` when
   `None`. This is the meaningful value for capacity-management consumers.
-- **`parent_ids` is mandatory (BC-2.06.002 Inv-2):** Every `StreamEvent` variant, including
+- {INV-003} **`parent_ids` is mandatory (BC-2.06.002 Inv-2):** Every `StreamEvent` variant, including
   `CompactionEvent`, MUST carry `parent_ids: Vec<RunId>`. For a top-level run `parent_ids`
   is empty (`[]`); for a sub-agent run it contains the parent `RunId` chain. This field
   must not be omitted from the wire payload.
-- `StreamEvent` variants are typed enum members (BC-2.06.001 invariant).
-- **DI-014:** The event payload must not be silently dropped; fire-and-forget semantics apply.
+- {INV-004} `StreamEvent` variants are typed enum members (BC-2.06.001 invariant).
+- {INV-005} **DI-014:** The event payload must not be silently dropped; fire-and-forget semantics apply.
 
 ## Edge Cases
 

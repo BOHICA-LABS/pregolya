@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-004
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.16 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -52,22 +53,22 @@ reducer application order.
 
 ## Preconditions
 
-1. At least one `PregelTask` in the current super-step has produced a channel write.
-2. All tasks in the super-step have completed (the super-step is at the reduce phase).
-3. Multiple writes to `Append` channels (where multi-write is permitted) are present.
+1. {PRE-001} At least one `PregelTask` in the current super-step has produced a channel write.
+2. {PRE-002} All tasks in the super-step have completed (the super-step is at the reduce phase).
+3. {PRE-003} Multiple writes to `Append` channels (where multi-write is permitted) are present.
 
 ## Postconditions
 
-1. Channel reducer functions are applied in ascending lexicographic order of `(task_id, channel_name)` for the collected write set.
-2. An `Append` channel that received writes from tasks `["task_b", "task_a", "task_c"]` (in completion order) applies them in order `["task_a", "task_b", "task_c"]` (sorted order). The resulting list has items in the sorted task order.
-3. The sort is stable: if two writes have the same `task_id` and `channel_name` (a programming error, not a normal case), they maintain their relative order as collected.
-4. The sort key contains no runtime-non-deterministic component: no `Instant::now()`, no `std::thread::current().id()` hash, no `HashMap` iteration.
-5. The deterministic order is identical for the same write set on any OS, CPU, or Rust toolchain version (pure string comparison).
+1. {PC-001} Channel reducer functions are applied in ascending lexicographic order of `(task_id, channel_name)` for the collected write set.
+2. {PC-002} An `Append` channel that received writes from tasks `["task_b", "task_a", "task_c"]` (in completion order) applies them in order `["task_a", "task_b", "task_c"]` (sorted order). The resulting list has items in the sorted task order.
+3. {PC-003} The sort is stable: if two writes have the same `task_id` and `channel_name` (a programming error, not a normal case), they maintain their relative order as collected.
+4. {PC-004} The sort key contains no runtime-non-deterministic component: no `Instant::now()`, no `std::thread::current().id()` hash, no `HashMap` iteration.
+5. {PC-005} The deterministic order is identical for the same write set on any OS, CPU, or Rust toolchain version (pure string comparison).
 
 ## Invariants
 
-- **DI-001 (BSP Reducer Determinism):** Identical inputs always produce identical `GraphState`. The sort-key contract is the mechanism by which this invariant is implemented for `Append` and `BinaryOperatorAggregate` channels.
-- The sort is applied to the entire write set before any reducer call — it is not applied per-channel individually. This means the global ordering of (task_id, channel_name) determines which reducer call happens first when there are multiple channels with writes.
+- {INV-001} **DI-001 (BSP Reducer Determinism):** Identical inputs always produce identical `GraphState`. The sort-key contract is the mechanism by which this invariant is implemented for `Append` and `BinaryOperatorAggregate` channels.
+- {INV-002} The sort is applied to the entire write set before any reducer call — it is not applied per-channel individually. This means the global ordering of (task_id, channel_name) determines which reducer call happens first when there are multiple channels with writes.
 
 ## Reference Evidence
 

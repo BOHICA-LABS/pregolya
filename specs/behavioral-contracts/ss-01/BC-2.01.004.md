@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-002
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line (E-CORE-004, `, ..` added); EC-001 3-line multiline span closure (E-CORE-004, `, ..` added before closing `})`); TV-004 table-cell (E-CORE-004, `, ..` added). All spans have category/code/message but lack component and retry_hint."
   - "1.3 (BURST-303/O-P194-A/2026-08-17): Precondition 2 generic-arity reconciliation — replaced type-erased `DynRunnable<Value, Value>` pipelines with canonical `Arc<dyn DynRunnable>` form per architect DynRunnable canon (O-P194-A). DynRunnable is a non-generic trait; Value is the runtime boundary type, not a type parameter."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -51,37 +52,37 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 
 ## Preconditions
 
-1. Two Runnables `A: Runnable<Input=I, Output=M>` and `B: Runnable<Input=M, Output=O>` are in scope.
-2. The output type of `A` matches the input type of `B` (enforced at compile time for typed
+1. {PRE-001} Two Runnables `A: Runnable<Input=I, Output=M>` and `B: Runnable<Input=M, Output=O>` are in scope.
+2. {PRE-002} The output type of `A` matches the input type of `B` (enforced at compile time for typed
    Runnables; checked at runtime for type-erased `Arc<dyn DynRunnable>` pipelines).
-3. The resulting `RunnableSequence` will be used in non-test code.
+3. {PRE-003} The resulting `RunnableSequence` will be used in non-test code.
 
 ## Postconditions
 
-1. `a.pipe(b)` returns a `RunnableSequence` that implements `Runnable<Input=I, Output=O>`.
-2. `seq.invoke(input, &config).await` runs `a.invoke(input)`, then feeds the result to
+1. {PC-001} `a.pipe(b)` returns a `RunnableSequence` that implements `Runnable<Input=I, Output=O>`.
+2. {PC-002} `seq.invoke(input, &config).await` runs `a.invoke(input)`, then feeds the result to
    `b.invoke(result)`, returning the final output or the first error encountered.
-3. `seq.stream(input, &config)` passes the output chunks of `a` into `b` incrementally when
+3. {PC-003} `seq.stream(input, &config)` passes the output chunks of `a` into `b` incrementally when
    both `a` and `b` are streaming-native (`transform`-capable); otherwise buffers at each
    non-streaming step. Token-by-token throughput is preserved in an all-streaming pipeline.
-4. Sequence flattening: `a.pipe(b).pipe(c)` produces one `RunnableSequence` with
+4. {PC-004} Sequence flattening: `a.pipe(b).pipe(c)` produces one `RunnableSequence` with
    `first=a, middle=[b], last=c` — NOT `RunnableSequence { first: RunnableSequence{a,b}, last: c }`.
-5. A type-boundary mismatch in a type-erased `DynRunnable` pipeline is detected at the sequence's
+5. {PC-005} A type-boundary mismatch in a type-erased `DynRunnable` pipeline is detected at the sequence's
    first `invoke` call and returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-004, .. })`.
-6. The composed sequence inherits config (tags, metadata, callbacks) from the caller's
+6. {PC-006} The composed sequence inherits config (tags, metadata, callbacks) from the caller's
    `RunnableConfig`; each step receives a child config tagged with its sequential position
    (`seq:step:1`, `seq:step:2`, etc.).
 
 ## Invariants
 
-- **Composition is left-associative:** `a.pipe(b).pipe(c)` ≡ `(a.pipe(b)).pipe(c)`.
-- **Type check at call time (DynRunnable path):** A type mismatch between stages in a type-erased
+- {INV-001} **Composition is left-associative:** `a.pipe(b).pipe(c)` ≡ `(a.pipe(b)).pipe(c)`.
+- {INV-002} **Type check at call time (DynRunnable path):** A type mismatch between stages in a type-erased
   pipeline is NOT a compile-time error but produces a well-typed `PregolyaError`, not a panic.
-- **Streaming through sequences:** Token streaming is preserved end-to-end when every step is
+- {INV-003} **Streaming through sequences:** Token streaming is preserved end-to-end when every step is
   `transform`-capable (see rust-translation-strategy.md `RunnableSequence`). A buffering step
   (e.g. `RunnableLambda`) acts as a natural barrier; downstream steps begin only after the
   buffering step has consumed all upstream output.
-- **Sequence flattening is structural** — it does not change observable behavior but avoids
+- {INV-004} **Sequence flattening is structural** — it does not change observable behavior but avoids
   allocating nested wrapper objects.
 
 ## Edge Cases

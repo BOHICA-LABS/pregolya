@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.006
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
-timestamp: 2026-07-14T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 changelog:
   - "1.1 (initial): base BC authored."
@@ -16,6 +16,7 @@ changelog:
   - "1.6 (F-P160-02, 2026-07-25): Fix burst 261 — add reciprocal Related BCs entry for BC-2.15.002; BC-2.15.002 already cites this BC in its Related BCs as the NE-12 tenancy partition principle counterpart in the checkpoint subsystem, but this BC did not reciprocate. Bidirectional advisory links are the default convention per corpus navigability policy; no documented unidirectional-only exception applies to cross-subsystem principle links."
   - "1.7 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and EC-005 Expected Behavior cell (both have 3 of 5 fields; ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.8 (BURST-315/F-B2/2026-08-17): Post-ADR-021 §Decision 2 reconciliation. PC2 dot-notation implied a typed struct for the `configurable` field; ADR-021 Decision 2 defines `configurable: Option<HashMap<String, serde_json::Value>>` (a flat map). Rewrote PC2 to the HashMap key-lookup model: keys \"thread_id\", \"checkpoint_ns\", and optionally \"checkpoint_id\" accessed via `config.configurable.as_ref().and_then(|m| m.get(\"thread_id\"))` etc. EC-003 description updated from \"missing field\" to \"missing key in configurable map\" — the validation error semantics (E-CORE-005 when thread_id key absent) are preserved."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -55,37 +56,37 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 
 ## Preconditions
 
-1. A `CheckpointSaver` trait implementation exists for a storage backend (SQLite, in-memory,
+1. {PRE-001} A `CheckpointSaver` trait implementation exists for a storage backend (SQLite, in-memory,
    PostgreSQL, or custom)
-2. A `RunnableConfig` whose `configurable` map contains the keys `"thread_id"` and
+2. {PRE-002} A `RunnableConfig` whose `configurable` map contains the keys `"thread_id"` and
    `"checkpoint_ns"` (and optionally `"checkpoint_id"`) — accessed via
    `config.configurable.as_ref().and_then(|m| m.get("thread_id"))` etc. — is provided
    to each storage method
-3. The storage backend schema includes all three fields as either a composite primary key
+3. {PRE-003} The storage backend schema includes all three fields as either a composite primary key
    or separately indexed columns
 
 ## Postconditions
 
-1. `get_tuple(config)` executes with a WHERE clause equivalent to
+1. {PC-001} `get_tuple(config)` executes with a WHERE clause equivalent to
    `WHERE thread_id = ? AND checkpoint_ns = ? AND checkpoint_id = ?`
-2. `put(config, checkpoint, ...)` inserts with all three fields populated and non-null
-3. `put_writes(config, writes, task_id)` stores writes under the full triple key
-4. `list(config, ...)` filters by at least `thread_id` and `checkpoint_ns`;
+2. {PC-002} `put(config, checkpoint, ...)` inserts with all three fields populated and non-null
+3. {PC-003} `put_writes(config, writes, task_id)` stores writes under the full triple key
+4. {PC-004} `list(config, ...)` filters by at least `thread_id` and `checkpoint_ns`;
    `checkpoint_id` is optionally further constrained (e.g., `before=`)
-5. No query returns data from a different `(thread_id, checkpoint_ns)` pair than requested
+5. {PC-005} No query returns data from a different `(thread_id, checkpoint_ns)` pair than requested
 
 ## Invariants
 
-1. The triple `(thread_id, checkpoint_ns, checkpoint_id)` is the composite primary key in
+1. {INV-001} The triple `(thread_id, checkpoint_ns, checkpoint_id)` is the composite primary key in
    every backend schema; no backend may use bare `checkpoint_id` as a sole primary key
-2. `checkpoint_ns` defaults to `""` (empty string) for the root graph; subgraphs use
+2. {INV-002} `checkpoint_ns` defaults to `""` (empty string) for the root graph; subgraphs use
    `parent_ns + "|" + node_name`; the empty-string root is a valid, distinct namespace
-3. No API allows bare `thread_id`-only lookups except `list`, which returns a scoped collection
-4. Two sessions on different `thread_id` values but sharing `checkpoint_ns = ""` never
+3. {INV-003} No API allows bare `thread_id`-only lookups except `list`, which returns a scoped collection
+4. {INV-004} Two sessions on different `thread_id` values but sharing `checkpoint_ns = ""` never
    interfere (thread_id is the primary partition)
-5. Two subgraph namespaces on the same `thread_id` never interfere (checkpoint_ns is the
+5. {INV-005} Two subgraph namespaces on the same `thread_id` never interfere (checkpoint_ns is the
    secondary partition)
-6. The full triple flows through the call stack from the public API entry to the SQL/KV
+6. {INV-006} The full triple flows through the call stack from the public API entry to the SQL/KV
    storage layer without any field being dropped
 
 ## Edge Cases

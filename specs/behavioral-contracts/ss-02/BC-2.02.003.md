@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.003
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,12 +15,13 @@ phase: 1a
 red_gate: true
 red_gate_source: R10
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-004 struct expanded to include step field missing from prior struct form. Was: { channel, writer } (2 fields — missing taxonomy placeholder '<n>' for super-step). Now: { channel, writer, step } (3 fields, 1:1 with taxonomy '<channel>', '<writer>', '<n>'). EC-003 and TV-004 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun."
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -61,33 +62,33 @@ not become available.
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with a `NamedBarrierValue` channel that declares a fixed set
+1. {PRE-001} A `StateGraph` is compiled with a `NamedBarrierValue` channel that declares a fixed set
    of named writers, e.g., `writers: ["a", "b", "c"]`.
-2. A super-step executes in which a strict subset of the declared writers delivers a write
+2. {PRE-002} A super-step executes in which a strict subset of the declared writers delivers a write
    (e.g., writers `"a"` and `"b"` deliver, but `"c"` does not).
-3. A downstream node is subscribed to the `NamedBarrierValue` channel.
+3. {PRE-003} A downstream node is subscribed to the `NamedBarrierValue` channel.
 
 ## Postconditions
 
-1. The `NamedBarrierValue` channel's `is_available()` returns `false` at the end of the
+1. {PC-001} The `NamedBarrierValue` channel's `is_available()` returns `false` at the end of the
    super-step because not all declared writers delivered.
-2. The downstream node subscribed to the channel is NOT triggered; no `PregelTask` is
+2. {PC-002} The downstream node subscribed to the channel is NOT triggered; no `PregelTask` is
    created for it in the current step.
-3. No error is raised; the run does not transition to `failed`.
-4. The partial writes that were delivered (`"a"`, `"b"`) are not observable to the
+3. {PC-003} No error is raised; the run does not transition to `failed`.
+4. {PC-004} The partial writes that were delivered (`"a"`, `"b"`) are not observable to the
    downstream node in any step until the barrier is fully satisfied.
-5. If in a subsequent super-step the remaining writers (`"c"`) deliver, and the prior
+5. {PC-005} If in a subsequent super-step the remaining writers (`"c"`) deliver, and the prior
    writers (`"a"`, `"b"`) also deliver in that same subsequent step, then the barrier
    becomes available and the downstream node IS triggered in that later step.
 
 ## Invariants
 
-- `NamedBarrierValue` availability is an all-or-nothing predicate: partial delivery never
+- {INV-001} `NamedBarrierValue` availability is an all-or-nothing predicate: partial delivery never
   makes the channel available.
-- Partial writes do not accumulate across super-steps: each super-step's writer-set is
+- {INV-002} Partial writes do not accumulate across super-steps: each super-step's writer-set is
   evaluated independently. A writer that wrote in step N but not step N+1 is treated as
   absent in step N+1.
-- The channel does not block the event loop; a missing writer causes silent non-triggering,
+- {INV-003} The channel does not block the event loop; a missing writer causes silent non-triggering,
   not a blocking wait.
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.001
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-003
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-007 struct expanded from single-field to two-field form. Was: { key } (1 field — missing node_id). Now: { node_id, key } (2 fields, 1:1 with taxonomy message placeholders '<node_id>' and '<key>'). EC-001 and TV-005 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun (pass-106 sweep wrongly passed this code)."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -50,41 +51,41 @@ inference step that makes those keys typed and reducer-governed.
 
 ## Preconditions
 
-1. The caller constructs `StateGraph(state_schema)` where `state_schema` is a Rust struct
+1. {PRE-001} The caller constructs `StateGraph(state_schema)` where `state_schema` is a Rust struct
    (or equivalent typed map) whose fields declare channel types: bare fields infer
    `LastValue`; fields annotated with a reducer infer `BinaryOperatorAggregate`; fields
    annotated with a `BaseChannel` subtype use that channel directly.
-2. At least one node is registered via `add_node(name, fn)` where `fn` has signature
+2. {PRE-002} At least one node is registered via `add_node(name, fn)` where `fn` has signature
    `(state) -> state_update_dict | Command | None`; or `(state, config) -> ...`.
-3. At least one edge exists connecting `START` → a node and at least one node → `END`
+3. {PRE-003} At least one edge exists connecting `START` → a node and at least one node → `END`
    (directly or via conditional edges); the graph is reachable from `START`.
-4. `compile()` is invoked; an optional `CheckpointSaver` may be attached.
+4. {PRE-004} `compile()` is invoked; an optional `CheckpointSaver` may be attached.
 
 ## Postconditions
 
-1. `compile()` validates the graph topology and returns `Ok(CompiledStateGraph)` (a
+1. {PC-001} `compile()` validates the graph topology and returns `Ok(CompiledStateGraph)` (a
    `Pregel`).
-2. For each key in the state schema a channel is allocated and registered in the compiled
+2. {PC-002} For each key in the state schema a channel is allocated and registered in the compiled
    graph's channel map before any execution begins.
-3. Plain schema fields are wired to `LastValue` channels; `Annotated<T, reducer>` fields
+3. {PC-003} Plain schema fields are wired to `LastValue` channels; `Annotated<T, reducer>` fields
    are wired to `BinaryOperatorAggregate(T, reducer)` channels; explicit `BaseChannel`
    annotations bind to those channel types directly.
-4. The compiled graph's input projection accepts an initial state dict; keys not in the
+4. {PC-004} The compiled graph's input projection accepts an initial state dict; keys not in the
    schema are silently ignored (not an error).
-5. Calling `compiled_graph.invoke(input, config)` with a valid initial state dict starts
+5. {PC-005} Calling `compiled_graph.invoke(input, config)` with a valid initial state dict starts
    a Pregel super-step loop; the call returns `Ok(output_state)` when the graph reaches
    `END` naturally.
-6. Node functions that return `None` (no output) do not mutate any channels for that task
+6. {PC-006} Node functions that return `None` (no output) do not mutate any channels for that task
    in that super-step.
 
 ## Invariants
 
-- Every key in a node's output dictionary must correspond to a registered channel; writing
+- {INV-001} Every key in a node's output dictionary must correspond to a registered channel; writing
   to an unregistered key is an error (not silently ignored).
-- Node names must be unique within a graph; registering a duplicate name at `add_node`
+- {INV-002} Node names must be unique within a graph; registering a duplicate name at `add_node`
   returns `Err(DuplicateNodeName)`.
-- `START` and `END` are reserved sentinels and cannot be used as node names.
-- The graph must have at least one path from `START` to `END`; `compile()` validates
+- {INV-003} `START` and `END` are reserved sentinels and cannot be used as node names.
+- {INV-004} The graph must have at least one path from `START` to `END`; `compile()` validates
   reachability and returns `Err(UnreachableGraph)` if none exists.
 
 ## Edge Cases

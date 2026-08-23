@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.005
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ changelog:
   - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.7 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): Remove phantom §Named-Section anchors. Two `interface-definitions.md §HTTP Status Codes 422 row` references used a row-number qualifier as part of the §-anchor name — but the actual section heading is `§HTTP Status Codes`; row numbers are not headings. Fixed by parenthesizing the qualifier: `§HTTP Status Codes (422 row)`. Two sites corrected (PC3 prose and TV-003 Notes column); no behavioral change."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -22,7 +23,7 @@ capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -59,8 +60,8 @@ This contract directly implements DEC-006.
 
 ## Preconditions
 
-1. A caller submits `Command(resume=value)` or `POST /threads/{thread_id}/runs/{run_id}/resume`.
-2. The run referenced by `thread_id` is in one of these states:
+1. {PRE-001} A caller submits `Command(resume=value)` or `POST /threads/{thread_id}/runs/{run_id}/resume`.
+2. {PRE-002} The run referenced by `thread_id` is in one of these states:
    a. `completed` — the run finished normally.
    b. `failed` — the run ended in error.
    c. `in_progress` — the run is still executing (not yet interrupted).
@@ -76,24 +77,24 @@ This contract directly implements DEC-006.
 
 ## Postconditions
 
-1. `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status })` is returned to the
+1. {PC-001} `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status })` is returned to the
    caller.
-2. The run state in the checkpoint is NOT modified — no new checkpoint is written, no
+2. {PC-002} The run state in the checkpoint is NOT modified — no new checkpoint is written, no
    scratchpad slot is created, no status transition occurs.
-3. The error carries the `thread_id` and the current `run_status` so the caller can
+3. {PC-003} The error carries the `thread_id` and the current `run_status` so the caller can
    distinguish "already completed" from "still running" without a separate status query.
-4. Subsequent valid `Command(resume=...)` calls (if the run later enters `interrupted`
+4. {PC-004} Subsequent valid `Command(resume=...)` calls (if the run later enters `interrupted`
    state via a new interrupt) are unaffected by the failed attempt.
 
 ## Invariants
 
-- **DI-003 (HITL FIFO Resume-Value Delivery):** There is no mechanism to deliver a
+- {INV-001} **DI-003 (HITL FIFO Resume-Value Delivery):** There is no mechanism to deliver a
   resume value out of order or to skip an interrupt. Attempting to deliver to a non-
   existent interrupt slot is a hard error, not a silent no-op.
-- Returning an error is the ONLY valid outcome for a spurious resume — the engine must
+- {INV-002} Returning an error is the ONLY valid outcome for a spurious resume — the engine must
   never silently discard a resume value, silently advance state, or create a phantom
   interrupt slot to consume the value.
-- The error type is `E-GRAPH-002 NoActiveInterrupt` (from the error taxonomy in §5
+- {INV-003} The error type is `E-GRAPH-002 NoActiveInterrupt` (from the error taxonomy in §5
   of the PRD). It must carry enough context for the caller to diagnose without an
   additional status query.
 

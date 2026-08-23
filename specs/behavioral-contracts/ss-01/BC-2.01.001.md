@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-001
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC6 had `Err(PregolyaError { category: VAL, code: E-CORE-001 })` bare wrapper; E-CORE-001 has `<n>` (block position) and `<type>` (type tag) placeholders. Added inline `message:` template to PC6; added EC-006 with concrete placeholder values as the authoritative full-form site."
   - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). PC6 multiline span: added `, ..` before closing `})` on continuation line (fields category/code/message present; component and retry_hint absent — elision marker required). EC-006 multiline span: same correction on its continuation line."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -51,25 +52,25 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
 
 ## Preconditions
 
-1. The caller is constructing a message with one or more content blocks.
-2. The pregolya-core crate defines the `ContentBlock` enum with all standard variants
+1. {PRE-001} The caller is constructing a message with one or more content blocks.
+2. {PRE-002} The pregolya-core crate defines the `ContentBlock` enum with all standard variants
    (Text, Reasoning, ToolCall, ToolCallChunk, InvalidToolCall, Image, Video, Audio,
    PlainText, File, ServerToolCall, ServerToolCallChunk, ServerToolResult, NonStandard).
-3. The construction call is in non-test code.
+3. {PRE-003} The construction call is in non-test code.
 
 ## Postconditions
 
-1. Every message-content parameter in pregolya-core's public API that represents typed
+1. {PC-001} Every message-content parameter in pregolya-core's public API that represents typed
    content accepts `Vec<ContentBlock>` (not `Vec<serde_json::Value>` or `Vec<String>`).
-2. A `ContentBlock::Text(TextContentBlock { text, annotations })` construction compiles and
+2. {PC-002} A `ContentBlock::Text(TextContentBlock { text, annotations })` construction compiles and
    carries the exact text passed.
-3. A raw `String` value is NOT accepted where a `Vec<ContentBlock>` is required — the Rust
+3. {PC-003} A raw `String` value is NOT accepted where a `Vec<ContentBlock>` is required — the Rust
    type system prevents implicit coercion.
-4. The `MessageContent` enum `{ Text(String), Blocks(Vec<ContentBlock>) }` allows either
+4. {PC-004} The `MessageContent` enum `{ Text(String), Blocks(Vec<ContentBlock>) }` allows either
    form, but callers requesting typed access receive `Vec<ContentBlock>` after normalization.
-5. An unknown provider-specific block maps to `ContentBlock::NonStandard { value: serde_json::Value }`
+5. {PC-005} An unknown provider-specific block maps to `ContentBlock::NonStandard { value: serde_json::Value }`
    rather than causing a deserialization error.
-6. Construction succeeds and returns `Ok(message)` when all content block types are valid;
+6. {PC-006} Construction succeeds and returns `Ok(message)` when all content block types are valid;
    construction returns `Err(PregolyaError { category: VAL, code: E-CORE-001,
    message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`
    (where `<n>` is the block's 0-based position index; `<type>` is the unrecognized type tag string;
@@ -78,13 +79,13 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
 
 ## Invariants
 
-- **DI-008 (Library Constructor Result Contract):** All content block construction functions
+- {INV-001} **DI-008 (Library Constructor Result Contract):** All content block construction functions
   that can fail return `Result<T, PregolyaError>` — never panic.
-- The `KNOWN_BLOCK_TYPES` set governs standard-vs-provider dispatch; a variant not in the set
+- {INV-002} The `KNOWN_BLOCK_TYPES` set governs standard-vs-provider dispatch; a variant not in the set
   maps to `NonStandard` rather than being rejected.
-- `ContentBlock` is a closed serde-tagged enum; serde deserialization from `{"type": "text", ...}`
+- {INV-003} `ContentBlock` is a closed serde-tagged enum; serde deserialization from `{"type": "text", ...}`
   produces `ContentBlock::Text(...)`, not a `Map`.
-- `MessageContent::Text(s)` and `MessageContent::Blocks(v)` are semantically equivalent views
+- {INV-004} `MessageContent::Text(s)` and `MessageContent::Blocks(v)` are semantically equivalent views
   of the same information — transitioning from text to blocks via a normalization call must
   not lose content.
 

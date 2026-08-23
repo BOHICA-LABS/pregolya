@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.006
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-003
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.15 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -51,44 +52,44 @@ routing payloads do not pollute the durable checkpoint.
 
 ## Preconditions
 
-1. A `StateGraph` is compiled with at least one `add_conditional_edges(source, path_fn)`
+1. {PRE-001} A `StateGraph` is compiled with at least one `add_conditional_edges(source, path_fn)`
    where `path_fn` may return `Send` objects.
-2. `path_fn(state)` evaluates to a list `[Send("worker", arg_0), Send("worker", arg_1),
+2. {PRE-002} `path_fn(state)` evaluates to a list `[Send("worker", arg_0), Send("worker", arg_1),
    ..., Send("worker", arg_{N-1})]` in the current step.
-3. A node `"worker"` is registered in the graph; its signature accepts an individual
+3. {PRE-003} A node `"worker"` is registered in the graph; its signature accepts an individual
    `arg_i` payload (not the full graph state).
-4. A `CheckpointSaver` is configured (required for crash-safety of multi-task fan-out).
+4. {PRE-004} A `CheckpointSaver` is configured (required for crash-safety of multi-task fan-out).
 
 ## Postconditions
 
-1. Each `Send("worker", arg_i)` pushes one entry onto the `TASKS` topic channel in the
+1. {PC-001} Each `Send("worker", arg_i)` pushes one entry onto the `TASKS` topic channel in the
    current step's write deque; the topic is a `BinaryOperatorAggregate` (list-append) so
    all N entries accumulate.
-2. In the NEXT super-step, `prepare_next_tasks` creates N independent PUSH `PregelTask`s,
+2. {PC-002} In the NEXT super-step, `prepare_next_tasks` creates N independent PUSH `PregelTask`s,
    one per `Send`, each carrying its own `arg_i` as the node input (not the full graph
    state).
-3. All N PUSH tasks execute concurrently in that next super-step.
-4. Each `arg_i` payload is content-addressed to produce a deterministic task ID:
+3. {PC-003} All N PUSH tasks execute concurrently in that next super-step.
+4. {PC-004} Each `arg_i` payload is content-addressed to produce a deterministic task ID:
    `xxh3_128(checkpoint_id ++ checkpoint_ns ++ step ++ "worker" ++ PUSH ++ arg_hash)`.
-5. `Send.arg` values that contain `UntrackedValue` fields are sanitized (those fields
+5. {PC-005} `Send.arg` values that contain `UntrackedValue` fields are sanitized (those fields
    stripped) before the arg is written to the `TASKS` topic; the sanitized arg is what
    is checkpointed and what the worker node receives.
-6. After all N tasks complete in the fan-out step, reducer channels (e.g., `Append`) fold
+6. {PC-006} After all N tasks complete in the fan-out step, reducer channels (e.g., `Append`) fold
    their individual outputs in deterministic task-identity-sorted order back into the
    shared state.
-7. On process restart mid fan-out (K of N tasks completed before crash), the K completed
+7. {PC-007} On process restart mid fan-out (K of N tasks completed before crash), the K completed
    tasks are not re-executed (their `put_writes` persisted the task outputs); the remaining
    N-K tasks are re-run. No task is lost; no task runs more than once.
 
 ## Invariants
 
-- Fan-out width is dynamic: `path_fn` determines N at runtime from state; N may be 0, 1,
+- {INV-001} Fan-out width is dynamic: `path_fn` determines N at runtime from state; N may be 0, 1,
   or any positive integer.
-- PUSH tasks from `Send` are distinct from PULL tasks (triggered by channel writes); they
+- {INV-002} PUSH tasks from `Send` are distinct from PULL tasks (triggered by channel writes); they
   are stored in the `TASKS` topic and materialized into tasks only in the NEXT super-step.
-- Task IDs are deterministic: given the same checkpoint_id and arg content, the same task
+- {INV-003} Task IDs are deterministic: given the same checkpoint_id and arg content, the same task
   ID is produced on re-run (enabling idempotent pending-write matching on resume).
-- UntrackedValue sanitization is unconditional: no `Send.arg` carrying an UntrackedValue
+- {INV-004} UntrackedValue sanitization is unconditional: no `Send.arg` carrying an UntrackedValue
   field may enter the checkpoint in unsanitized form.
 
 ## Edge Cases

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.007
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-039
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnablePassthrough identity pass-through semantics and inspect side-effect contract. LCEL composition scope expansion (D-170); ADR-026 §Decision 3."
   - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` and `stream_dyn` with `stream` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -51,46 +52,46 @@ It is also the construction entry point for `RunnableAssign` (via `RunnablePasst
 
 ## Preconditions
 
-1. `RunnablePassthrough::new()` is called (no inspect function), OR
+1. {PRE-001} `RunnablePassthrough::new()` is called (no inspect function), OR
    `RunnablePassthrough::with_inspect(f)` is called with a `Fn(&Value) + Send + Sync + 'static`
    closure.
-2. The resulting `RunnablePassthrough` is invoked via `invoke(input, config)`.
-3. If an `inspect_fn` is present, it is callable with the input reference without
+2. {PRE-002} The resulting `RunnablePassthrough` is invoked via `invoke(input, config)`.
+3. {PRE-003} If an `inspect_fn` is present, it is callable with the input reference without
    panicking (caller responsibility).
 
 ## Postconditions
 
-1. `invoke(input, config)` returns `Ok(input.clone())` — the returned value is
+1. {PC-001} `invoke(input, config)` returns `Ok(input.clone())` — the returned value is
    structurally and semantically identical to the input. The output is a deep clone, not
    the same owned value.
-2. If `inspect_fn` is `Some(f)`: `f(&input)` is called exactly once with an immutable
+2. {PC-002} If `inspect_fn` is `Some(f)`: `f(&input)` is called exactly once with an immutable
    reference to `input` **before** the `Ok(input.clone())` is returned. The call is
    synchronous; the function must not block the async executor.
-3. If `inspect_fn` is `None`: no side-effect call occurs.
-4. The return value of `inspect_fn` (if any) is discarded. `inspect_fn` cannot alter
+3. {PC-003} If `inspect_fn` is `None`: no side-effect call occurs.
+4. {PC-004} The return value of `inspect_fn` (if any) is discarded. `inspect_fn` cannot alter
    the output of `invoke`.
-5. `stream(input, config)` passes each incoming chunk through unchanged — each chunk
+5. {PC-005} `stream(input, config)` passes each incoming chunk through unchanged — each chunk
    in the stream is `Ok(chunk)` with the chunk value equal to the received chunk.
-6. For `stream` with an `inspect_fn`: the function is called once after the stream
+6. {PC-006} For `stream` with an `inspect_fn`: the function is called once after the stream
    is exhausted with the accumulated input value (the reassembled whole, if addable, or
    the last chunk if not addable). This mirrors the Python `RunnablePassthrough.transform`
    behavior of accumulating then calling `func`.
-7. `RunnablePassthrough` never returns `Err` on its own — it cannot fail. Any `Err`
+7. {PC-007} `RunnablePassthrough` never returns `Err` on its own — it cannot fail. Any `Err`
    in the output stream originates from an upstream producer, not from the passthrough itself.
 
 ## Invariants
 
-- **True identity:** `invoke(v, cfg) == Ok(v.clone())` for all `v`. The return value
+- {INV-001} **True identity:** `invoke(v, cfg) == Ok(v.clone())` for all `v`. The return value
   is a fresh clone of the input — not the same owned `Value`, but structurally identical.
-- **Inspect does not alter output:** `f(&input)` is called, but the return value is
+- {INV-002} **Inspect does not alter output:** `f(&input)` is called, but the return value is
   discarded. `inspect_fn` has no mechanism to mutate `input` or the return value (it
   receives only `&Value`, not `&mut Value`).
-- **Infallibility:** `RunnablePassthrough::invoke` NEVER returns `Err`. If a caller
+- {INV-003} **Infallibility:** `RunnablePassthrough::invoke` NEVER returns `Err`. If a caller
   receives `Err` from a pipeline containing `RunnablePassthrough`, the error originated
   upstream or downstream.
-- **Streaming identity:** each chunk passes through unchanged; no buffering in the
+- {INV-004} **Streaming identity:** each chunk passes through unchanged; no buffering in the
   non-inspect path.
-- **`#[non_exhaustive]` struct:** external callers use `RunnablePassthrough::new()` or
+- {INV-005} **`#[non_exhaustive]` struct:** external callers use `RunnablePassthrough::new()` or
   `::with_inspect(f)`; struct-literal construction is barred (ADR-023 §Required Inventory).
 
 ## Edge Cases

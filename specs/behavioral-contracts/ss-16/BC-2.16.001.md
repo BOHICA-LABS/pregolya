@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.001
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-018
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-34): F-P34-02 EC-003 + TV-004 — replace E-RETRY-003 with E-RETRY-004 (InvalidRetryLimit). E-RETRY-003 is CircuitBreakerOpen (BC-2.16.003, POLICY/Later); zero-limit construction rejection is a misconfiguration → VAL, RetryHint Never. New code E-RETRY-004 minted in error-taxonomy.md 1.5."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (burst-271/F-P169-01/2026-07-25): Fix mis-anchor in Invariants — Retry-Approval Ordering section cited ADR-018 Decision 3 (Dispatch in graph::hitl::pre_tool_dispatch) instead of the correct Decision 6 (Retry / Approval Ordering). Authority pointer corrected; in-body sequence text was already correct and unchanged."
   - "1.7 (F-P177-C-LOW-SS16, burst-288, 2026-08-15): Remove phantom §Named-Section anchor. EC-001 §Reference line had `COMPARATIVE-ASSESSMENT §P-63 REJECT rationale` — P-63 is a table-row identifier in COMPARATIVE-ASSESSMENT.md, not a section heading; `§P-63` is a phantom anchor. Replaced with `COMPARATIVE-ASSESSMENT (P-63 reject rationale)` — preserves the informational reference without implying a named section."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -55,42 +56,42 @@ different arguments must share the same retry counter.
 
 ## Preconditions
 
-1. The caller is constructing a `ToolRetryPolicy` for a named tool `T`.
-2. The pregolya-core crate provides a single shared retry combinator (P-71 ADOPT); no
+1. {PRE-001} The caller is constructing a `ToolRetryPolicy` for a named tool `T`.
+2. {PRE-002} The pregolya-core crate provides a single shared retry combinator (P-71 ADOPT); no
    per-crate retry loop exists outside this combinator.
-3. The tool name is a non-empty ASCII-printable string (e.g., `"web_search"`).
+3. {PRE-003} The tool name is a non-empty ASCII-printable string (e.g., `"web_search"`).
 
 ## Postconditions
 
-1. The retry counter key for tool `T` is `tool_name: &str` only; no args-derived component
+1. {PC-001} The retry counter key for tool `T` is `tool_name: &str` only; no args-derived component
    appears in the key type or the counter lookup.
-2. Two successive invocations of tool `T` with distinct argument values (`args_a` and
+2. {PC-002} Two successive invocations of tool `T` with distinct argument values (`args_a` and
    `args_b`) both increment the **same** per-tool counter — not two independent counters.
-3. Invocations of two distinct tools `T1` and `T2` maintain fully independent retry
+3. {PC-003} Invocations of two distinct tools `T1` and `T2` maintain fully independent retry
    counters even when `T1.name == T2.name` is false; the counter namespace is flat and
    keyed by name string.
-4. The pregolya-core API exposes no constructor that accepts an args-hash as a retry key;
+4. {PC-004} The pregolya-core API exposes no constructor that accepts an args-hash as a retry key;
    such a constructor does not exist in the public surface — the REJECT is structural, not
    just policy.
-5. When the per-tool retry limit for `T` is reached, the combinator returns
+5. {PC-005} When the per-tool retry limit for `T` is reached, the combinator returns
    `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-001,
    retry_hint: Never,
    message: "RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts" })`
    (where `<tool_name>` from `ToolRetryPolicy.tool_name`; `<attempt_limit>` from `ToolRetryPolicy.attempt_limit`)
    without invoking `T` again.
-6. The `ToolRetryPolicy` struct carries the tool name string and the per-tool `attempt_limit`
+6. {PC-006} The `ToolRetryPolicy` struct carries the tool name string and the per-tool `attempt_limit`
    as named fields; both must be present to construct a policy.
 
 ## Invariants
 
-- **No args-hash retry key (P-63 REJECT, NE-09):** The counter key type MUST NOT contain
+- {INV-001} **No args-hash retry key (P-63 REJECT, NE-09):** The counter key type MUST NOT contain
   any derivative of the tool's argument values. A type-checked enforcement (distinct key type
   that cannot be constructed with args) is preferred over a runtime check.
-- The shared retry combinator (P-71 ADOPT) is the **only** retry implementation in
+- {INV-002} The shared retry combinator (P-71 ADOPT) is the **only** retry implementation in
   pregolya. Partner provider crates route through it; they do not implement their own loops.
-- Counter state is per-invocation scope (one graph run) — it does not persist across
+- {INV-003} Counter state is per-invocation scope (one graph run) — it does not persist across
   checkpoint boundaries or runs.
-- **Retry-Approval Ordering (ADR-018 Decision 6):** When a tool has both a `ToolRetryPolicy`
+- {INV-004} **Retry-Approval Ordering (ADR-018 Decision 6):** When a tool has both a `ToolRetryPolicy`
   and a `PreToolCallHook` configured, each dispatch attempt observes this fixed sequence:
   `circuit_breaker.check(tool_name)` → `pre_tool_dispatch(hook, preview)` →
   `tool.invoke(args)` → `retry_policy.record(result)`. The `record(result)` call fires

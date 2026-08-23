@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.008
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-039
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableAssign dict augmentation semantics, merge semantics (mapper-wins-on-collision), and dict-input validation. LCEL composition scope expansion (D-170); ADR-026 §Decision 4."
   - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -52,21 +53,21 @@ fail-fast semantics of `RunnableParallel` (BC-2.01.006).
 
 ## Preconditions
 
-1. `RunnablePassthrough::assign(pairs)` is called with an iterator of
+1. {PRE-001} `RunnablePassthrough::assign(pairs)` is called with an iterator of
    `(key, Arc<dyn DynRunnable>)` pairs, constructing a `RunnableAssign { mapper: RunnableParallel::new(pairs) }`.
-2. `invoke(input, config)` is called on the resulting `RunnableAssign`.
-3. The caller provides a `serde_json::Value` as input; its type determines whether
+2. {PRE-002} `invoke(input, config)` is called on the resulting `RunnableAssign`.
+3. {PRE-003} The caller provides a `serde_json::Value` as input; its type determines whether
    invocation proceeds or returns an immediate `Err`.
 
 ## Postconditions
 
-1. `RunnablePassthrough::assign(pairs)` constructs a `RunnableAssign` whose `mapper`
+1. {PC-001} `RunnablePassthrough::assign(pairs)` constructs a `RunnableAssign` whose `mapper`
    field is a `RunnableParallel::new(pairs)`. No I/O occurs at construction time.
-2. If `input` is NOT a `serde_json::Value::Object(...)`: returns
+2. {PC-002} If `input` is NOT a `serde_json::Value::Object(...)`: returns
    `Err(PregolyaError { category: VAL, code: "E-CORE-010",
    message: "RunnableAssignNonDictInput: input to RunnablePassthrough.assign() must be a JSON object", .. })`
    immediately without invoking the mapper.
-3. If `input` IS a `Value::Object(input_map)`: invokes
+3. {PC-003} If `input` IS a `Value::Object(input_map)`: invokes
    `self.mapper.invoke(input.clone(), config.clone()).await`
    per BC-2.01.005. On success, merges the results:
    - Start with all key-value pairs from `input_map`.
@@ -74,26 +75,26 @@ fail-fast semantics of `RunnableParallel` (BC-2.01.006).
    - **Mapper keys take precedence on collision** — the merged value for a colliding key
      is the mapper's output, not the input's value.
    - Return `Ok(Value::Object(merged_map))`.
-4. If the mapper invocation fails (any branch returns `Err`):
+4. {PC-004} If the mapper invocation fails (any branch returns `Err`):
    `invoke` returns `Err(...)` propagated from the mapper (per BC-2.01.006 fail-fast
    semantics). No partial merged object is returned.
-5. The output `Value::Object` contains all keys from `input_map` PLUS all keys from
+5. {PC-005} The output `Value::Object` contains all keys from `input_map` PLUS all keys from
    the mapper output, with mapper values taking precedence on collision.
 
 ## Invariants
 
-- **Dict-input gate:** any non-Object input is immediately rejected at the start of
+- {INV-001} **Dict-input gate:** any non-Object input is immediately rejected at the start of
   `invoke` before the mapper runs. `Value::Array`, `Value::String`, `Value::Null`,
   `Value::Bool`, `Value::Number` all trigger `Err(E-CORE-010)`.
-- **Mapper-wins-on-collision:** this is the canonical Python `{**value, **mapper.invoke(value)}`
+- {INV-002} **Mapper-wins-on-collision:** this is the canonical Python `{**value, **mapper.invoke(value)}`
   behavior. Callers that need input-wins semantics must wrap the assignment explicitly.
-- **No partial output on mapper failure:** if the mapper (a `RunnableParallel`) fails,
+- {INV-003} **No partial output on mapper failure:** if the mapper (a `RunnableParallel`) fails,
   the error propagates intact per BC-2.01.006; no partial merged map is returned.
-- **Input-clone isolation:** the mapper receives `input.clone()` and `config.clone()` — it
+- {INV-004} **Input-clone isolation:** the mapper receives `input.clone()` and `config.clone()` — it
   cannot observe the merge operation and cannot mutate the original `input_map`.
-- **DynRunnable implementation:** `RunnableAssign` implements `DynRunnable` and composes
+- {INV-005} **DynRunnable implementation:** `RunnableAssign` implements `DynRunnable` and composes
   via `pipe()` — it can be used anywhere a `DynRunnable` is expected.
-- **`#[non_exhaustive]` struct:** callers cannot construct `RunnableAssign` directly;
+- {INV-006} **`#[non_exhaustive]` struct:** callers cannot construct `RunnableAssign` directly;
   they must use `RunnablePassthrough::assign(...)` (ADR-023 §Required Inventory).
 
 ## Edge Cases

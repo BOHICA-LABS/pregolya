@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.006
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-039
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableParallel branch failure: fail-fast semantics, structured error with branch key, no partial results. LCEL composition scope expansion (D-170); ADR-026 §Decision 2."
@@ -22,6 +22,7 @@ changelog:
   - "1.3 (burst-309/F-P201-01/2026-08-17): Add E-CORE-011 code annotation to the Tokio-task-panic (JoinError) path in PC-4, EC-003, TV-003, and Traceability Error Code Minted. E-CORE-011 (INTERNAL/RunnableParallelTaskPanic) is the structured error code for the panic path where no branch key is available at the JoinError catch site. Distinct from E-CORE-009 (EXEC/RunnableParallelBranchFailure) which covers the branch-returned-Err path where the key is available."
   - "1.4 (P1D-208/F-P208-01/2026-08-18): §Category casing canon — E-CORE-011 INTERNAL category rendered as bare PascalCase `Internal` corrected to ALL-CAPS taxonomy code `INTERNAL` at §Postconditions PC-4, §Invariants, §Edge Cases EC-003, §Canonical Test Vectors TV-003 per ADR-010 §Category casing canon (matches sibling E-CORE-009 `EXEC` form); sibling-swept 4 prose category references (§Description, §Invariants label, §Postconditions prose, §Architecture Anchors) Internal→INTERNAL per TD-VSDD-060."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -54,47 +55,47 @@ errors rather than being silently ignored or causing the combinator to hang.
 
 ## Preconditions
 
-1. A `RunnableParallel` with `N ≥ 1` configured branches has been constructed
+1. {PRE-001} A `RunnableParallel` with `N ≥ 1` configured branches has been constructed
    (per BC-2.01.005 postconditions).
-2. `invoke(input, config)` is called; one or more branches will return `Err` at
+2. {PRE-002} `invoke(input, config)` is called; one or more branches will return `Err` at
    runtime.
-3. All branch tasks have been spawned and are in-flight via `JoinSet`.
+3. {PRE-003} All branch tasks have been spawned and are in-flight via `JoinSet`.
 
 ## Postconditions
 
-1. The first branch error detected via `JoinSet::join_next()` triggers `set.abort_all()`
+1. {PC-001} The first branch error detected via `JoinSet::join_next()` triggers `set.abort_all()`
    — all remaining in-flight branch tasks receive a cancellation signal immediately.
-2. `invoke` returns `Err(PregolyaError { category: EXEC, code: "E-CORE-009",
+2. {PC-002} `invoke` returns `Err(PregolyaError { category: EXEC, code: "E-CORE-009",
    message: "RunnableParallelBranchFailure: branch '<key>' failed: <cause>", .. })`
    where `<key>` is the name of the failing branch and `<cause>` is the error message
    from the originating branch error.
-3. **No partial output dictionary is returned on failure.** The caller receives only the
+3. {PC-003} **No partial output dictionary is returned on failure.** The caller receives only the
    `Err`; there is no `Ok(partial_map)` path for partial success.
-4. A Tokio task panic (the `join_next()` returns `Err(JoinError)` due to a panic in the
+4. {PC-004} A Tokio task panic (the `join_next()` returns `Err(JoinError)` due to a panic in the
    branch task) maps to `Err(PregolyaError { category: INTERNAL, code: "E-CORE-011",
    message: "RunnableParallelTaskPanic: task panicked: <detail>", .. })` — the panic is
    treated as an INTERNAL invariant violation, not silently swallowed.
-5. For `stream`: the first `Err` from any branch stream aborts all branch streams and
+5. {PC-005} For `stream`: the first `Err` from any branch stream aborts all branch streams and
    propagates the error to the caller. No partial chunk sequence is emitted after the
    first error.
 
 ## Invariants
 
-- **Fail-fast, abort-all:** the combinator MUST call `JoinSet::abort_all()` after the
+- {INV-001} **Fail-fast, abort-all:** the combinator MUST call `JoinSet::abort_all()` after the
   first error is detected, before returning from `invoke`. There is no
   "collect all errors" mode in v1.
-- **No partial result on failure:** returning `Ok(Value::Object(...))` with fewer than `N`
+- {INV-002} **No partial result on failure:** returning `Ok(Value::Object(...))` with fewer than `N`
   keys is a contract violation. If the result is `Ok`, it MUST have exactly `N` keys
   (DI-016 completeness half, proved by VP-014). If any branch fails, the result MUST be
   `Err`.
-- **Structured error with branch key:** the error message MUST include the failing branch's
+- {INV-003} **Structured error with branch key:** the error message MUST include the failing branch's
   key (`<key>` placeholder); a structureless "execution failed" without identification of
   the failing branch violates this BC.
-- **JoinError maps to INTERNAL:** Tokio task panics (JoinError) are not re-raised as-is;
+- {INV-004} **JoinError maps to INTERNAL:** Tokio task panics (JoinError) are not re-raised as-is;
   they are wrapped in a `PregolyaError { category: INTERNAL, .. }` — consistent with ADR-010
   §Class 1 (programming-error invariant violations). This ensures structured error
   propagation rather than payload leakage through raw panic messages.
-- **DI-014 enforcement:** no branch error may be silently discarded; every branch failure
+- {INV-005} **DI-014 enforcement:** no branch error may be silently discarded; every branch failure
   must surface as an `Err` return from `invoke`.
 
 ## Edge Cases

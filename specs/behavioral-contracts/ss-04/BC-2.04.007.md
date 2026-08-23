@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.007
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -34,6 +34,7 @@ changelog:
   - "1.6 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-003 message reworded from 'EncryptedSerializer: key material must be non-empty' to 'Validation failed for 'key_material': must be non-empty' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV bare form unchanged — PASS-ABBREV via EC-003."
   - "1.7 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to 'architecture/module-decomposition.md §pregolya-checkpoint' — checkpoint::encryption row (at-rest encryption covering state AND event payloads; rotation error propagation). No BC body content changed."
   - "1.8 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 8 PregolyaError observations with elided fields: Description inline (E-CHKPT-004 cite), PC4 inline, PC5 inline, EC-001 table cell, EC-002 table cell, EC-003 table cell, EC-004 table cell, and test-vector empty-key row (ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -59,37 +60,37 @@ swallowed or logged-only. This satisfies NE-11.
 
 ## Preconditions
 
-1. A `CheckpointSaver` is instantiated with an `EncryptedSerializer` configured with at
+1. {PRE-001} A `CheckpointSaver` is instantiated with an `EncryptedSerializer` configured with at
    least one active encryption key
-2. The cipher and key material are validated at construction time (not lazily at first write)
-3. The graph is running under any durability tier that calls `put_writes` mid-run
+2. {PRE-002} The cipher and key material are validated at construction time (not lazily at first write)
+3. {PRE-003} The graph is running under any durability tier that calls `put_writes` mid-run
    (`Sync` or `Async`)
 
 ## Postconditions
 
-1. The serialized bytes stored by `put` (the full checkpoint state blob) are encrypted
+1. {PC-001} The serialized bytes stored by `put` (the full checkpoint state blob) are encrypted
    using the configured cipher and active key
-2. The serialized bytes stored by `put_writes` (per-task write payloads) are also encrypted
+2. {PC-002} The serialized bytes stored by `put_writes` (per-task write payloads) are also encrypted
    using the same cipher and active key — the same encryption path applies to both methods
-3. Decryption on read (`get_tuple`, `list`) produces bytes identical to the original
+3. {PC-003} Decryption on read (`get_tuple`, `list`) produces bytes identical to the original
    unencrypted serialization
-4. If key rotation fails (new key is invalid, or old key is invalidated before rotation
+4. {PC-004} If key rotation fails (new key is invalid, or old key is invalidated before rotation
    completes), `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: <reason>" })`
    (i.e., `PregolyaError { category: INTERNAL, code: "E-CHKPT-004", .. }`) is returned
    from the failing `put` or `put_writes` call; the write is NOT committed
-5. Decrypting with a key that is no longer in the active keyring returns
+5. {PC-005} Decrypting with a key that is no longer in the active keyring returns
    `Err(E-CHKPT-004 EncryptionKeyRotationFailed { message: "EncryptionKeyRotationFailed: key not found: <key_id>" })`
    (i.e., `PregolyaError { category: INTERNAL, code: "E-CHKPT-004", .. }`)
 
 ## Invariants
 
-1. There is no code path where `put` encrypts but `put_writes` does not (symmetric coverage)
-2. There is no code path where `put_writes` encrypts but `put` does not
-3. Plaintext of any state blob or per-task write payload is never written to any storage
+1. {INV-001} There is no code path where `put` encrypts but `put_writes` does not (symmetric coverage)
+2. {INV-002} There is no code path where `put_writes` encrypts but `put` does not
+3. {INV-003} Plaintext of any state blob or per-task write payload is never written to any storage
    medium or flushed to disk, even temporarily
-4. Encryption failures propagate as `Err` and are never silently discarded or downgraded to
+4. {INV-004} Encryption failures propagate as `Err` and are never silently discarded or downgraded to
    a log warning
-5. The `EncryptedSerializer` is a wrapper/decorator over the underlying storage; it does not
+5. {INV-005} The `EncryptedSerializer` is a wrapper/decorator over the underlying storage; it does not
    require changes to the `CheckpointSaver` trait interface
 
 ## Edge Cases

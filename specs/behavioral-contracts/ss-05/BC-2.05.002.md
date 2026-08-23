@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.002
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -55,38 +56,38 @@ multi-step HITL dialogs reliable.
 
 ## Preconditions
 
-1. A node has called `interrupt()` one or more times during its execution.
-2. For each `interrupt()` call, a corresponding `Command(resume=value)` has been submitted
+1. {PRE-001} A node has called `interrupt()` one or more times during its execution.
+2. {PRE-002} For each `interrupt()` call, a corresponding `Command(resume=value)` has been submitted
    by the caller (in any order of submission, but FIFO delivery is independent of submission
    order — delivery order is determined by the positional scratchpad slot).
-3. The graph has a `CheckpointSaver` attached (DI-003 requires durable state; see BC-2.05.001).
-4. Each `Command(resume=value)` references the same `thread_id` as the interrupted run.
+3. {PRE-003} The graph has a `CheckpointSaver` attached (DI-003 requires durable state; see BC-2.05.001).
+4. {PRE-004} Each `Command(resume=value)` references the same `thread_id` as the interrupted run.
 
 ## Postconditions
 
-1. On the first `Command(resume=v1)`: `v1` is assigned to scratchpad slot 0 (the first
+1. {PC-001} On the first `Command(resume=v1)`: `v1` is assigned to scratchpad slot 0 (the first
    `interrupt()` call's position). When the node re-executes, the first `interrupt()` returns
    `v1` instead of raising; the second `interrupt()` call (if any) raises again and halts.
-2. On the second `Command(resume=v2)`: `v2` is assigned to scratchpad slot 1. When the node
+2. {PC-002} On the second `Command(resume=v2)`: `v2` is assigned to scratchpad slot 1. When the node
    re-executes again, both `interrupt()` calls return their respective values; the node
    completes if there are no further `interrupt()` calls.
-3. The scratchpad is scoped per-task (per-node invocation), not shared across nodes. Two
+3. {PC-003} The scratchpad is scoped per-task (per-node invocation), not shared across nodes. Two
    different nodes that each call `interrupt()` have independent FIFO queues.
-4. Resume values are never reordered by the engine regardless of the time gap between
+4. {PC-004} Resume values are never reordered by the engine regardless of the time gap between
    `Command(resume=...)` submissions.
-5. After all interrupt slots are filled and the node completes, the scratchpad is cleared
+5. {PC-005} After all interrupt slots are filled and the node completes, the scratchpad is cleared
    and the super-step advances.
 
 ## Invariants
 
-- **DI-003 (HITL FIFO Resume-Value Delivery):** Resume values are consumed in strict FIFO
+- {INV-001} **DI-003 (HITL FIFO Resume-Value Delivery):** Resume values are consumed in strict FIFO
   order. There is no mechanism to deliver a resume value out of order or to skip an
   interrupt.
-- The interrupt counter is a monotonically increasing integer per-task; the N-th call to
+- {INV-002} The interrupt counter is a monotonically increasing integer per-task; the N-th call to
   `interrupt()` in a given node execution receives the N-th resume value (zero-indexed).
-- Resume values are scoped per-task (not per-thread or per-graph): two nodes cannot share
+- {INV-003} Resume values are scoped per-task (not per-thread or per-graph): two nodes cannot share
   their interrupt queues.
-- A `Command(resume=value)` submitted before the N-th interrupt is reached in the node
+- {INV-004} A `Command(resume=value)` submitted before the N-th interrupt is reached in the node
   is held in the scratchpad until the node re-executes and reaches slot N.
 
 ## Edge Cases

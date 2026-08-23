@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-018
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5 had `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-002, retry_hint: Never })` — bare wrapper missing message field for E-RETRY-002 which has `<global_limit>` placeholder. Added `message:` template inline; `<global_limit>` sourced from `RetryPolicy.global_limit` (type `NonZeroU32`, deterministically available at raise site). Pattern matches BC-2.16.003 PC2 (CircuitBreakerOpen inline message precedent)."
   - "1.3 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.4 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.unlimited_policy_constructed' to the mandated WARN-level construction warning per observability census (SAP-1). PC4 and EC-003 updated with structured event_type field."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
 inputs:
@@ -51,41 +52,41 @@ an explicit `RetryPolicy::unlimited()` method that emits a diagnostic warning.
 
 ## Preconditions
 
-1. A `RetryPolicy` or `ToolRetryPolicy` is being constructed (via `Default`, builder, or
+1. {PRE-001} A `RetryPolicy` or `ToolRetryPolicy` is being constructed (via `Default`, builder, or
    explicit constructor).
-2. The pregolya-core retry combinator crate is in scope.
+2. {PRE-002} The pregolya-core retry combinator crate is in scope.
 
 ## Postconditions
 
-1. `RetryPolicy::default()` produces a policy with `global_limit: Some(NonZeroU32::new(10).unwrap())`
+1. {PC-001} `RetryPolicy::default()` produces a policy with `global_limit: Some(NonZeroU32::new(10).unwrap())`
    (or another specific finite value set by the architect; exact default must be documented
    in the struct's rustdoc and must be `>= 3`).
-2. The `global_limit` field type is `Option<NonZeroU32>` — not `Option<u32>`. The `NonZeroU32`
+2. {PC-002} The `global_limit` field type is `Option<NonZeroU32>` — not `Option<u32>`. The `NonZeroU32`
    wrapper prevents silent construction of a zero-limit policy via the `Some(0)` path.
-3. `RetryPolicy::new(global_limit: NonZeroU32)` accepts only non-zero values by construction;
+3. {PC-003} `RetryPolicy::new(global_limit: NonZeroU32)` accepts only non-zero values by construction;
    the type system enforces this without runtime checks.
-4. `RetryPolicy::unlimited()` is the only constructor that produces `global_limit: None`.
+4. {PC-004} `RetryPolicy::unlimited()` is the only constructor that produces `global_limit: None`.
    It emits a `tracing::warn!(event_type = "retry.unlimited_policy_constructed")` at construction time with the message:
    `"RetryPolicy::unlimited() constructed — no global retry bound; only use in tests or controlled environments"`.
-5. When the global limit across all tool calls in a single run is exhausted,
+5. {PC-005} When the global limit across all tool calls in a single run is exhausted,
    the combinator returns `Err(PregolyaError { component: RETRY, category: POLICY,
    code: E-RETRY-002, retry_hint: Never,
    message: "GlobalLimitExhausted: global retry budget of <global_limit> exhausted across all tools in this run" })`
    (where `<global_limit>` is `RetryPolicy.global_limit: NonZeroU32`, available at raise site)
    and halts further tool invocations for the current run.
-6. The global limit applies cumulatively across all tool types in a run; it is not
+6. {PC-006} The global limit applies cumulatively across all tool types in a run; it is not
    reset per-tool. A run with three tools each having `attempt_limit=5` and
    `global_limit=Some(8)` stops after 8 total failures across all tools.
 
 ## Invariants
 
-- **Finite-by-default (NE-09):** The zero-argument constructor MUST produce a finite limit.
+- {INV-001} **Finite-by-default (NE-09):** The zero-argument constructor MUST produce a finite limit.
   Any future refactoring that changes `default()` to produce `None` must fail a CI contract
   test.
-- **NonZeroU32 gate:** The type-level constraint (NonZeroU32) replaces a runtime check.
+- {INV-002} **NonZeroU32 gate:** The type-level constraint (NonZeroU32) replaces a runtime check.
   No `assert!` or `if limit == 0 { panic!(...) }` is needed or permitted in library code
   (per DI-008).
-- Global limit is scoped to a single graph run. It does not accumulate across
+- {INV-003} Global limit is scoped to a single graph run. It does not accumulate across
   checkpoint restores or resumed runs.
 
 ## Edge Cases

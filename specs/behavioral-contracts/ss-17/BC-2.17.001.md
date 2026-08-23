@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.17.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-019
 wave: Phase-6
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to kani_proofs/ per module-decomposition.md v1.10."
   - "1.2 (burst-241/Wave-2/F-P141-02/2026-07-23): VP-gate expansion — architect-confirmed 6 P0 + 3 P1 Kani obligations. Title updated. Description 'exactly three' → 'six P0 (D17-Q7+D21+D23) + three P1'. OQR-3 note: invariants +DI-014; enforcing BCs +BC-2.21.003/2.19.005/2.05.007; 'harnesses'/'are Phase-6 artifacts'. Preconditions: +BC-2.21.003/2.19.005/2.05.007; 'nine VP obligations (6 P0 + 3 P1)'. Postconditions: +VP-009/010/011 (P0) + VP-006/012/013 (P1); P0 failures block Phase-7; P1 failures block Phase-6 only; 'nine'. Invariants: lock expanded to D17-Q7+D21+D23; six P0 + three P1. EC-002 title/content: 'Fewer than Six P0 VPs Pass'. EC-003: nine (6 P0 + 3 P1). TV-006..009 added. Verification Properties updated. Related BCs +3. Architecture Anchors +3. Traceability DI +DI-014. traces_to +DI-014 +3 BCs."
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (burst-255/F-P154-02/2026-07-24): VP-011 bullet realigned per VP-011.md v1.3 architect adjudication (Option A): Kani harness covers three routable PreToolDecision variants (Approve/Deny/Edit) + hook-error path only; PendingHumanApproval peeled off upstream in async pre_tool_dispatch wrapper before route_pre_tool_decision is called — non-invocation covered by BC-2.05.008 integration tests, not Kani; #[non_exhaustive] wildcard arm returns Reject (fail-closed forward safety). Removed overclaim 'all four variants' from VP-011 bullet. Changelog reordered desc→asc per gate #28 Rule 6 (burst-255 in-scope compliance fix)."
   - "1.5 (burst-309/F-P201-03/2026-08-17): Traceability L2 Domain Invariants DI-014 gloss corrected. Was 'Data Integrity'; corrected to canonical name per invariants.md §DI-014: 'Error Propagation (No Silent Swallowing)'. DI-014 ID and VP targets (VP-009/010/011) unchanged."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-6.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-019
   - domain-spec/invariants.md#DI-001
@@ -64,15 +65,15 @@ artifacts (OQR-3); this Phase-1 BC is the scope specification for that work.
 
 ## Preconditions
 
-1. Phase-1 BCs BC-2.03.001, BC-2.04.006, BC-2.13.004, BC-2.21.003, BC-2.19.005, and BC-2.05.007 are in ACTIVE lifecycle status.
-2. The architect has confirmed the nine VP obligations (6 P0 + 3 P1) as D17-Q7+D21+D23 scope before Phase-2
+1. {PRE-001} Phase-1 BCs BC-2.03.001, BC-2.04.006, BC-2.13.004, BC-2.21.003, BC-2.19.005, and BC-2.05.007 are in ACTIVE lifecycle status.
+2. {PRE-002} The architect has confirmed the nine VP obligations (6 P0 + 3 P1) as D17-Q7+D21+D23 scope before Phase-2
    story decomposition.
-3. Phase 6 (formal hardening) has begun — the implementation that Phase-6 will verify is
+3. {PRE-003} Phase 6 (formal hardening) has begun — the implementation that Phase-6 will verify is
    complete and all Phase-3 unit/integration tests pass.
 
 ## Postconditions
 
-1. The Kani harnesses include nine VP targets: six P0 (D17-Q7+D21+D23) and three P1:
+1. {PC-001} The Kani harnesses include nine VP targets: six P0 (D17-Q7+D21+D23) and three P1:
    - **VP-1 (DI-001 — BSP Reducer Determinism) [P0]:** Harness proves that given identical
      `Vec<PregelTask>` inputs, the BSP reducer produces identical `GraphState` output
      regardless of task arrival order (concurrent simulation). Corresponds to BC-2.03.001
@@ -114,26 +115,26 @@ artifacts (OQR-3); this Phase-1 BC is the scope specification for that work.
    - **VP-013 (DI-014, DI-015 — BashTool Risk Floor) [P1]:** Harness proves the
      non-lowerable `Medium` risk floor on `BashTool` — `ReadOnly` and `Low` `ActionRisk`
      always return `Err(E-TOOLS-007)`. Corresponds to BC-2.23.005 Verification Properties.
-2. Running `cargo kani --harness <vp_harness>` on the Phase-3-complete implementation
+2. {PC-002} Running `cargo kani --harness <vp_harness>` on the Phase-3-complete implementation
    terminates with `VERIFICATION SUCCESSFUL` for each of the nine VPs (P0 failures block
    Phase-7 convergence; P1 failures block Phase-6 completion only).
-3. Any P0 VP failure (VP-001/002/003/009/010/011: VERIFICATION FAILED, timeout, or harness
+3. {PC-003} Any P0 VP failure (VP-001/002/003/009/010/011: VERIFICATION FAILED, timeout, or harness
    compile error) is a blocking Phase-7 convergence-gate failure (NFR-003). Any P1 VP
    failure (VP-006/012/013) blocks Phase-6 completion only and does not gate Phase-7.
-4. The harness scope does NOT include additional VPs beyond these nine without a
+4. {PC-004} The harness scope does NOT include additional VPs beyond these nine without a
    D17-Q7/D21/D23 amendment approved by the architect.
-5. Kani proof success does NOT substitute for Phase-3 unit/integration tests — both are
+5. {PC-005} Kani proof success does NOT substitute for Phase-3 unit/integration tests — both are
    required for v1 convergence.
 
 ## Invariants
 
-- **D17-Q7+D21+D23 lock:** The six P0 VP targets (VP-001/002/003 locked by D17-Q7;
+- {INV-001} **D17-Q7+D21+D23 lock:** The six P0 VP targets (VP-001/002/003 locked by D17-Q7;
   VP-009/010/011 locked by D21+D23) and three P1 VP targets (VP-006/012/013 locked by
   D21+D23) cannot be reduced or renamed without a formal ADR amendment.
-- **Phase separation (OQR-3):** Phase-1 owns the behavioral invariant specification
+- {INV-002} **Phase separation (OQR-3):** Phase-1 owns the behavioral invariant specification
   (BC-2.03.001, BC-2.04.006, BC-2.13.004, BC-2.21.003, BC-2.19.005, BC-2.05.007,
   BC-2.17.001). Phase-6 owns harness execution. The harness files are NOT produced in Phase 1.
-- **Proof completeness:** Each harness must exercise the full state space reachable from
+- {INV-003} **Proof completeness:** Each harness must exercise the full state space reachable from
   the precondition; partial proofs (bounded unwind without justification) require explicit
   annotation and architect sign-off.
 

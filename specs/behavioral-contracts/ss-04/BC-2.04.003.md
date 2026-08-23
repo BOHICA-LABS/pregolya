@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.003
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -37,6 +37,7 @@ changelog:
   - "1.5 (2026-07-19, F-P115-02 fix burst 118): PC1 sharpened to architect-adjudicated wording — full typed signature + provided-method semantics stated explicitly. Old: 'A `CheckpointSaver` implementation provides a `get_next_version(current, channel)` method'. New: full typed signature with MAY-override note. Adoption rationale: the original wording was ambiguous about whether `get_next_version` is a required method or a provided default; this exact ambiguity caused F-P115-02's secondary note; production-grade lens favors precision. No other body content changed."
   - "1.6 (F-P116-01): PC1 signature updated to include `&self` receiver — dyn-compatibility fix per ADR-005 v1.3 §Object-Safety. Old PC1 quoted `get_next_version(current: Option<CheckpointId>, channel: &ChannelName)`; new PC1 quotes `get_next_version(&self, current: Option<CheckpointId>, channel: &ChannelName)`. Rationale: dyn-compatibility (E0038) requires an instance-method receiver on every non-Sized-bounded trait method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method (F-P116-01). Architecture Anchors signature reference updated to include `&self` to match ADR-005 v1.3 corrected signature."
   - "1.7 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -62,29 +63,29 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 
 ## Preconditions
 
-1. The `CheckpointSaver` trait provides `get_next_version(&self, current: Option<CheckpointId>, channel: &ChannelName) -> Result<CheckpointId, PregolyaError>` as a provided method (default impl delegates to `MonotonicClock::get_next_version`); implementations MAY override
-2. A new checkpoint is being created for a `(thread_id, checkpoint_ns)` pair
-3. The checkpoint ID is computed before writing to storage
+1. {PRE-001} The `CheckpointSaver` trait provides `get_next_version(&self, current: Option<CheckpointId>, channel: &ChannelName) -> Result<CheckpointId, PregolyaError>` as a provided method (default impl delegates to `MonotonicClock::get_next_version`); implementations MAY override
+2. {PRE-002} A new checkpoint is being created for a `(thread_id, checkpoint_ns)` pair
+3. {PRE-003} The checkpoint ID is computed before writing to storage
 
 ## Postconditions
 
-1. The new `checkpoint_id` is strictly greater than all prior `checkpoint_id` values for
+1. {PC-001} The new `checkpoint_id` is strictly greater than all prior `checkpoint_id` values for
    the same `(thread_id, checkpoint_ns)` pair
-2. `sort_key(checkpoint_id)` yields chronological order — either numeric comparison or
+2. {PC-002} `sort_key(checkpoint_id)` yields chronological order — either numeric comparison or
    lexicographic comparison on the ID string produces the correct sequence
-3. `Uuid::new_v4()` is never used as a `checkpoint_id` at any call site
-4. `created_at` wall-clock timestamp is stored as metadata only (for observability);
+3. {PC-003} `Uuid::new_v4()` is never used as a `checkpoint_id` at any call site
+4. {PC-004} `created_at` wall-clock timestamp is stored as metadata only (for observability);
    it is never the canonical ordering key
-5. Channel versions within the same super-step share a single `next_version` value;
+5. {PC-005} Channel versions within the same super-step share a single `next_version` value;
    that value is monotonically greater than the previous step's version
 
 ## Invariants
 
-1. For checkpoints C1 and C2 on the same `(thread_id, checkpoint_ns)`: if C1 was created
+1. {INV-001} For checkpoints C1 and C2 on the same `(thread_id, checkpoint_ns)`: if C1 was created
    before C2, then `C1.checkpoint_id < C2.checkpoint_id` under the natural ordering of the ID type
-2. The logical counter never decreases, even if the system wall clock goes backward (NTP jump)
-3. Two checkpoints written within the same millisecond have distinct, ordered IDs
-4. A global uniqueness property holds: the triple
+2. {INV-002} The logical counter never decreases, even if the system wall clock goes backward (NTP jump)
+3. {INV-003} Two checkpoints written within the same millisecond have distinct, ordered IDs
+4. {INV-004} A global uniqueness property holds: the triple
    `(thread_id, checkpoint_ns, checkpoint_id)` is unique across all checkpoints in storage
 
 ## Edge Cases

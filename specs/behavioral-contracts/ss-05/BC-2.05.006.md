@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,6 +14,7 @@ changelog:
   - "1.5 (F-P170-propagation/burst-272/2026-07-25): Architecture Anchors update — ActionRisk enum source path corrected from pregolya-graph/src/hitl/action_risk.rs to pregolya-core/src/action_risk.rs per F-P170-06 architect adjudication (ActionRisk relocates to pregolya-core as core::action_risk; pregolya-graph::hitl re-exports it). PreToolCallHook itself stays in pregolya-graph::hitl per ADR-018 Decision 1."
   - "1.6 (F-P171a-04+F-P171a-13/burst-273/2026-07-25): (1) F-P171a-04: ActionRisk is #[non_exhaustive]; §Preconditions-3, §Invariants 'closed exhaustive' claim, and VP-HITL-13 all incorrectly stated no-wildcard-arm requirement. CLAUDE.md mandates wildcard arm for all cross-crate #[non_exhaustive] matches. Fixed: PC-3 updated to note #[non_exhaustive] + cross-crate wildcard arm requirement; Invariants updated to #[non_exhaustive] framing + wildcard-arm-fails-closed-to-High policy; VP-HITL-13 updated to verify wildcard arm IS present (compile check). (2) F-P171a-13: Module Traceability row missing pregolya-core (ActionRisk source per F-P170-06 adjudication). Added: 'pregolya-core (ActionRisk enum) / pregolya-graph (RiskGatePolicy, policy eval) / pregolya-server (resume endpoint)'."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -21,7 +22,7 @@ capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -61,62 +62,62 @@ SOC analyst forcing function: tiered autonomy with human approval before contain
 
 ## Preconditions
 
-1. A node constructs an `HitlInterruptPayload { action_risk: ActionRisk, action: String,
+1. {PRE-001} A node constructs an `HitlInterruptPayload { action_risk: ActionRisk, action: String,
    context: Option<Value> }` and passes it to `interrupt(payload)`.
-2. The graph run has a `CheckpointSaver` attached (BC-2.05.001 precondition).
-3. The `ActionRisk` value is one of the four defined tiers: `ReadOnly`, `Low`, `Medium`,
+2. {PRE-002} The graph run has a `CheckpointSaver` attached (BC-2.05.001 precondition).
+3. {PRE-003} The `ActionRisk` value is one of the four defined tiers: `ReadOnly`, `Low`, `Medium`,
    `High`. `ActionRisk` is `#[non_exhaustive]` — code in `pregolya-core` (the defining
    crate) may match it exhaustively, but cross-crate code (e.g., `pregolya-graph`) MUST
    include a `_ => {}` wildcard arm; the compiler enforces this at compile time
    (CLAUDE.md non-exhaustive mandate). The wildcard arm should fail-closed to `High`-tier
    authorization when an unknown future variant is encountered.
-4. If a `RiskGatePolicy` is configured on the graph (optional), it specifies per-tier
+4. {PRE-004} If a `RiskGatePolicy` is configured on the graph (optional), it specifies per-tier
    behavior: `AutoApprove`, `RequireApprover(role: ApproverRole)`, or
    `RequireApprover(role: ApproverRole) + timeout(Duration)`.
 
 ## Postconditions
 
-1. **ReadOnly tier:** If `RiskGatePolicy` configures `AutoApprove` for `ReadOnly`,
+1. {PC-001} **ReadOnly tier:** If `RiskGatePolicy` configures `AutoApprove` for `ReadOnly`,
    `interrupt()` returns an implicit `Command(resume=ReadOnlyAutoApproved)` without
    surfacing to a human; the node continues without waiting. If no policy is set, behavior
    defaults to `RequireApprover(Any)` — i.e., a human may approve.
-2. **Low tier:** `RiskGatePolicy` defaults to `RequireApprover(Any)`. The interrupt halts
+2. {PC-002} **Low tier:** `RiskGatePolicy` defaults to `RequireApprover(Any)`. The interrupt halts
    the run and surfaces the payload to any registered approver. Any valid `Command(resume=...)`
    unblocks the run.
-3. **Medium tier:** `RiskGatePolicy` defaults to `RequireApprover(Analyst)` (a named
+3. {PC-003} **Medium tier:** `RiskGatePolicy` defaults to `RequireApprover(Analyst)` (a named
    approver role). The interrupt payload carries `action_risk: Medium`. Only a `Command`
    submitted with a token that satisfies the `Analyst` role constraint is accepted; a
    `Command` from an unauthenticated or lower-privilege caller returns
    `Err(E-GRAPH-013 InsufficientApproverRole)`.
-4. **High tier:** `RiskGatePolicy` defaults to `RequireApprover(SeniorAnalyst)`. Only a
+4. {PC-004} **High tier:** `RiskGatePolicy` defaults to `RequireApprover(SeniorAnalyst)`. Only a
    `Command` satisfying `SeniorAnalyst` role is accepted. The run durably parks until
    such approval is received; there is no timeout-based auto-expiry unless the policy
    explicitly configures one.
-5. The interrupt payload is persisted to the checkpoint exactly as the `interrupt()` call
+5. {PC-005} The interrupt payload is persisted to the checkpoint exactly as the `interrupt()` call
    in BC-2.05.001 specifies; the `action_risk` field is serialized in msgpack alongside
    the `action` and `context` fields.
-6. The surfaced interrupt notification includes the full `HitlInterruptPayload` so the
+6. {PC-006} The surfaced interrupt notification includes the full `HitlInterruptPayload` so the
    caller (or UI) can render the appropriate approval UI for the risk tier.
 
 ## Invariants
 
-- **DI-003 (HITL FIFO Resume-Value Delivery):** Risk-tiered interrupts are FIFO with
+- {INV-001} **DI-003 (HITL FIFO Resume-Value Delivery):** Risk-tiered interrupts are FIFO with
   respect to other interrupts in the same task scratchpad. Tier classification does not
   change delivery order; it only governs who is authorized to deliver the resume value.
-- `ActionRisk` is `#[non_exhaustive]`; at v1 authoring it has four defined variants
+- {INV-002} `ActionRisk` is `#[non_exhaustive]`; at v1 authoring it has four defined variants
   (`ReadOnly`, `Low`, `Medium`, `High`). No runtime tier value outside these four variants is
   possible in the v1 build. Cross-crate matches (e.g., in `pregolya-graph`) MUST carry a
   `_ => {}` wildcard arm (CLAUDE.md non-exhaustive mandate); the wildcard should fail-closed
   to `High`-tier authorization — treating an unknown future variant as requiring the highest
   approval level is the safe default.
-- A `High`-tier interrupt MUST NOT be auto-approved by any `RiskGatePolicy` unless a
+- {INV-003} A `High`-tier interrupt MUST NOT be auto-approved by any `RiskGatePolicy` unless a
   `SeniorAnalyst`-or-higher role supplies the `Command(resume=...)`. Automated approval
   of `High`-tier actions is a hard policy violation (returns
   `Err(E-GRAPH-013 InsufficientApproverRole)` even if the policy mistakenly attempts it).
-- The risk tier classification does not affect the core HITL mechanics (scratchpad, FIFO,
+- {INV-004} The risk tier classification does not affect the core HITL mechanics (scratchpad, FIFO,
   re-execute from start). It adds a role-authorization layer on top of the existing
   interrupt mechanism.
-- **ASM-008 design invariant:** A single boolean interrupt is insufficient for Domain A.
+- {INV-005} **ASM-008 design invariant:** A single boolean interrupt is insufficient for Domain A.
   The four-tier typing exists precisely because SOC workflows require differentiated
   authorization levels — triage enrichment (ReadOnly), alert closure (Low), credential
   suspension (Medium), host isolation or account lockout (High).

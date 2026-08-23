@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-018
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (burst-233/F-P133-02/2026-07-22): D23 Wave-1 promotion — priority P2→P1, wave 2→1, VP phases Post-v1→v1 phase; CAP-018 retroactively confirmed Wave 1 by D23 item 4."
   - "1.3 (burst-258/F-P157-01/2026-07-24): Assign canonical event_type 'retry.circuit_breaker_disabled' to CircuitBreaker::always_closed() WARN emission (PC5 and EC-005) and 'retry.circuit_probe_failed' to half-open probe failure DEBUG emission (EC-003) per observability census (SAP-1)."
   - "1.4 (burst-259/F-P158-01/2026-07-24): Drop tool_name from retry.circuit_breaker_disabled emission in EC-005. CircuitBreaker::always_closed() is a zero-argument constructor; tool_name is unavailable at construction time. EC-005 message template updated to tool-agnostic form consistent with sibling retry.unlimited_policy_constructed. Observability catalog and this BC aligned."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - domain-spec/failure-modes.md#FM-012
@@ -53,41 +54,41 @@ retries in the global limit pool.
 
 ## Preconditions
 
-1. A `ToolRetryPolicy` includes an associated `CircuitBreaker` configuration (or a default
+1. {PRE-001} A `ToolRetryPolicy` includes an associated `CircuitBreaker` configuration (or a default
    one is injected by the combinator).
-2. The tool `T` has been invoked at least once within the current run.
-3. The circuit breaker for `T` is in CLOSED state (initial state) or HALF-OPEN state.
+2. {PRE-002} The tool `T` has been invoked at least once within the current run.
+3. {PRE-003} The circuit breaker for `T` is in CLOSED state (initial state) or HALF-OPEN state.
 
 ## Postconditions
 
-1. After `failure_threshold` consecutive failures for tool `T`, the circuit breaker for
+1. {PC-001} After `failure_threshold` consecutive failures for tool `T`, the circuit breaker for
    `T` transitions from CLOSED to OPEN state.
-2. In OPEN state, any further call to tool `T` returns
+2. {PC-002} In OPEN state, any further call to tool `T` returns
    `Err(PregolyaError { component: RETRY, category: POLICY, code: E-RETRY-003,
    retry_hint: Later(reset_timeout), message: "CircuitBreakerOpen: tool '<tool_name>'
    circuit tripped after <failure_threshold> consecutive failures" })` without
    invoking the tool's underlying implementation.
-3. The circuit breaker resets to CLOSED (or HALF-OPEN) after `reset_timeout` elapses.
+3. {PC-003} The circuit breaker resets to CLOSED (or HALF-OPEN) after `reset_timeout` elapses.
    In HALF-OPEN, one probe call is allowed; if it succeeds, circuit transitions to CLOSED;
    if it fails, circuit returns to OPEN with `reset_timeout` restarted.
-4. `CircuitBreaker::default()` is ON with `failure_threshold: 5` and
+4. {PC-004} `CircuitBreaker::default()` is ON with `failure_threshold: 5` and
    `reset_timeout: Duration::from_secs(30)`. Both values are overridable.
-5. There is no constructor `CircuitBreaker::disabled()` or `CircuitBreaker::off()`. To
+5. {PC-005} There is no constructor `CircuitBreaker::disabled()` or `CircuitBreaker::off()`. To
    exclude circuit breaking for a specific tool, the caller must use
    `CircuitBreaker::always_closed()`, which emits a `tracing::warn!(event_type = "retry.circuit_breaker_disabled")` at construction time.
-6. Circuit state is per-tool-name and scoped to the current run; it does not persist across
+6. {PC-006} Circuit state is per-tool-name and scoped to the current run; it does not persist across
    checkpoint boundaries or cross-run restores.
-7. A successful tool invocation resets the consecutive-failure counter for that tool
+7. {PC-007} A successful tool invocation resets the consecutive-failure counter for that tool
    (but does not immediately close an OPEN circuit — the reset_timeout must still elapse
    before HALF-OPEN probe is permitted).
 
 ## Invariants
 
-- **Circuit breaker on by default (NE-09):** `ToolRetryPolicy::default()` includes a live
+- {INV-001} **Circuit breaker on by default (NE-09):** `ToolRetryPolicy::default()` includes a live
   `CircuitBreaker` with finite `failure_threshold`. No opt-out at construction time.
-- **Fail-closed semantics:** A circuit in OPEN state returns `E-RETRY-003` immediately —
+- {INV-002} **Fail-closed semantics:** A circuit in OPEN state returns `E-RETRY-003` immediately —
   it does not silently drop the call or return `Ok(default_value)`.
-- **Independent of global_limit (BC-2.16.002):** Circuit breaker fires on consecutive failures
+- {INV-003} **Independent of global_limit (BC-2.16.002):** Circuit breaker fires on consecutive failures
   even if global_limit is not yet exhausted. Both limits are independent and either can halt
   a run.
 

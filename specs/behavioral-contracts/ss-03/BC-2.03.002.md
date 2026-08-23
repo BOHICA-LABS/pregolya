@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.03.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-004
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
   - "1.2 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). TV-001 table-cell span (E-GRAPH-001) corrected: has code/category/message but lacks component and retry_hint; added `, ..`. PC3 span (E-GRAPH-001) already carries all five non-source fields (component/category/code/retry_hint/message) — CLASS3_VALID_COMPLETE, no change."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.16 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-004
   - domain-spec/invariants.md#DI-001
@@ -50,27 +51,27 @@ This is the enforcement mechanism for DI-001's concurrent-write prohibition.
 
 ## Preconditions
 
-1. A `StateGraph` has a `LastValue` channel (not `Append`, `BarrierValue`, or other multi-writer channel).
-2. In a single super-step, two or more scheduled `PregelTask`s both produce writes to the same `LastValue` channel.
-3. The writes arrive at the reducer phase (they are not filtered out before reducer application).
+1. {PRE-001} A `StateGraph` has a `LastValue` channel (not `Append`, `BarrierValue`, or other multi-writer channel).
+2. {PRE-002} In a single super-step, two or more scheduled `PregelTask`s both produce writes to the same `LastValue` channel.
+3. {PRE-003} The writes arrive at the reducer phase (they are not filtered out before reducer application).
 
 ## Postconditions
 
-1. The run does NOT commit a final channel value for the contested `LastValue` channel.
-2. The run transitions to `failed` state.
-3. `Err(PregolyaError { component: GRAPH, category: CONCURRENCY, code: E-GRAPH-001, retry_hint: Never, message: "InvalidUpdateError: concurrent writes to LastValue channel '<channel>' from tasks [<task_ids>] in super-step <n>" })` is returned to the run caller.
-4. The error's `message` field includes:
+1. {PC-001} The run does NOT commit a final channel value for the contested `LastValue` channel.
+2. {PC-002} The run transitions to `failed` state.
+3. {PC-003} `Err(PregolyaError { component: GRAPH, category: CONCURRENCY, code: E-GRAPH-001, retry_hint: Never, message: "InvalidUpdateError: concurrent writes to LastValue channel '<channel>' from tasks [<task_ids>] in super-step <n>" })` is returned to the run caller.
+4. {PC-004} The error's `message` field includes:
    - The channel name
    - All task IDs that attempted to write (sorted for determinism)
    - The super-step number
-5. Writes to different channels from the same tasks are unaffected — only the conflicting channel is rejected.
-6. The checkpoint for the failed super-step is NOT written (the state before the super-step is preserved).
+5. {PC-005} Writes to different channels from the same tasks are unaffected — only the conflicting channel is rejected.
+6. {PC-006} The checkpoint for the failed super-step is NOT written (the state before the super-step is preserved).
 
 ## Invariants
 
-- **DI-001 (BSP Reducer Determinism):** Concurrent writes to a `LastValue` channel from the same super-step are an invariant violation — they cannot produce a deterministic result and must be rejected immediately.
-- A `LastValue` channel has exactly-one-writer semantics within a super-step: at most one task may write to it per step.
-- This rejection is not configurable — there is no `allow_concurrent_writes` override for `LastValue` channels. (If multi-writer behavior is needed, the graph designer must use `Append` with a custom reducer.)
+- {INV-001} **DI-001 (BSP Reducer Determinism):** Concurrent writes to a `LastValue` channel from the same super-step are an invariant violation — they cannot produce a deterministic result and must be rejected immediately.
+- {INV-002} A `LastValue` channel has exactly-one-writer semantics within a super-step: at most one task may write to it per step.
+- {INV-003} This rejection is not configurable — there is no `allow_concurrent_writes` override for `LastValue` channels. (If multi-writer behavior is needed, the graph designer must use `Append` with a custom reducer.)
 
 ## Reference Evidence
 

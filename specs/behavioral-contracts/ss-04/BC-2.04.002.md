@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.002
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -27,6 +27,7 @@ changelog:
   - "1.3 (F-P112-02, 2026-07-18): E-CORE-005 message canonicalization. EC-003 message reworded from 'unknown durability tier: \"<value>\"' to 'Validation failed for 'durability': unknown tier \"<value>\"' to conform to canonical E-CORE-005 taxonomy format (Validation failed for '<field>': <reason>). TV bare form unchanged — PASS-ABBREV via EC-003."
   - "1.4 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to 'architecture/decisions/ADR-003-durability-tiers.md' — DurabilityTier enum, CheckpointSaverConfig::default(), Sync-default rationale. No BC body content changed."
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -52,28 +53,28 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 
 ## Preconditions
 
-1. A `CompiledStateGraph` is invoked with a `RunnableConfig`
-2. The `RunnableConfig` either omits the `durability` field or explicitly specifies one of
+1. {PRE-001} A `CompiledStateGraph` is invoked with a `RunnableConfig`
+2. {PRE-002} The `RunnableConfig` either omits the `durability` field or explicitly specifies one of
    `DurabilityTier::Sync`, `DurabilityTier::Async`, or `DurabilityTier::Exit`
 
 ## Postconditions
 
-1. If `durability` is absent from `RunnableConfig`, the effective tier is `DurabilityTier::Sync`
-2. With `Sync`: every `put_writes` call is fully awaited before the next super-step begins;
+1. {PC-001} If `durability` is absent from `RunnableConfig`, the effective tier is `DurabilityTier::Sync`
+2. {PC-002} With `Sync`: every `put_writes` call is fully awaited before the next super-step begins;
    a crash after K task completions loses no writes for those K tasks
-3. With `Async`: `put_writes` is submitted as a background future; the loop proceeds; futures
+3. {PC-003} With `Async`: `put_writes` is submitted as a background future; the loop proceeds; futures
    are joined before the run exits; a crash before join may lose the last in-flight write
-4. With `Exit`: `put_writes` is not called mid-run; only a final `put` on graph exit; a
+4. {PC-004} With `Exit`: `put_writes` is not called mid-run; only a final `put` on graph exit; a
    mid-run crash loses all task-level writes from the current run
 
 ## Invariants
 
-1. `DurabilityTier::Sync` is the default variant; it requires no explicit configuration
-2. The default cannot be overridden by an environment variable alone — it requires explicit
+1. {INV-001} `DurabilityTier::Sync` is the default variant; it requires no explicit configuration
+2. {INV-002} The default cannot be overridden by an environment variable alone — it requires explicit
    code at the call site
-3. No internal pregolya code path changes the effective durability tier without passing
+3. {INV-003} No internal pregolya code path changes the effective durability tier without passing
    it through the `RunnableConfig` channel
-4. The `DurabilityTier` type is not `Default`-derivable to some other variant; the only
+4. {INV-004} The `DurabilityTier` type is not `Default`-derivable to some other variant; the only
    place a default is injected is at `RunnableConfig` resolution
 
 ## Edge Cases
