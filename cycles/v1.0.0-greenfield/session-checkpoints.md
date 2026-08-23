@@ -2783,3 +2783,22 @@ Pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 
 ### DECISION DELTA (v5.51)
 D-237 minted (P2A-031 1H/1M: S-2.08 AC→PC trace drift + 5 covering ACs; S-2.07 AC-001/003 retrace + 2 covering ACs; streak RESET 0/3). D-238 minted (corpus-wide BC §Story Anchor backfill; 109 BCs; zero coverage gaps; unfilled-anchor class CLOSED). P2A-018/019/028 CLEAN(strict); P2A-020..027/029/030/031 (sample) RESET. Human F-02/TDIV-009 waiver in effect (D-220).
+
+---
+
+## Archived Checkpoint v5.62 (replaced by v5.63 on 2026-08-23)
+
+### RESUME IN ONE BREATH
+pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase-2 Story Decomposition adversarial convergence (BC-5.39.001 3-CLEAN), streak 0/3. P2A-041 NOT CLEAN fix-burst COMPLETE (D-249; 2026-08-23): SS-18 PC-2 notation root cause — F-3 (MED) BC-2.18.002 §Changelog notation disambiguation (PC-2→precondition 2/postcondition 2; TemplateInput enum + HashMap<String,TemplateInput> param + MessageListVar cross-ref = precondition 2; PromptValue output shape = postcondition 2); F-1 (HIGH) S-2.04 AC-012/013 re-anchored precondition 2; F-2 (MED) AC-016 re-anchored BC-2.18.002 invariant 1; F-4 (MED) AC-013 reworked (removed type-impossible 'bare TemplateVar at Messages slot → E-TMPL-003'); F-5 (LOW) test-name prefixes aligned. S-2.04 input-hash refreshed. Census UNCHANGED 39/133/14/118. NEXT: P2A-042.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: run `git -C .factory log -1 --format='%h'` for current HEAD. PUSHED to origin.
+
+### RESUME NEXT-ACTION (v5.62)
+1. adversary P2A-042: fresh pass on new HEAD. verify-ac-pc-trace.sh CHECK-1 BLOCKING; CHECK-2 ADVISORY.
+2. state-manager: If CLEAN(strict): update counter (1/3). If NOT CLEAN: dispatch fix burst.
+3. Phase-2→3 autonomous on 3/3 CLEAN.
+
+### DECISION DELTA (v5.62)
+D-249 (exhaustive): P2A-041 NOT CLEAN (1H+3M+1L ALL CLOSED): F-3 root cause BC-2.18.002 §Changelog notation disambig; F-1 AC-012/013 precondition 2; F-2 AC-016 INV-1; F-4 AC-013 rework; F-5 test-prefixes. Census UNCHANGED.

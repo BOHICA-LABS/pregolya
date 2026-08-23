@@ -3671,3 +3671,44 @@ F-4 (MED): AC-013 body reworked — removed type-impossible fabricated scenario 
 F-5 (LOW): S-2.04 test-name prefixes aligned to traced BCs — 3 tests renamed: test_BC_2_18_003_template_input_variants → test_BC_2_18_002_template_input_variants; test_BC_2_18_003_slot_trust_policy_enum → test_BC_2_18_005_slot_trust_policy_enum; test_BC_2_18_003_format_messages_source_order → test_BC_2_18_002_format_messages_source_order.
 S-2.04 input-hash refreshed (BC-2.18.002 §Changelog updated). Census UNCHANGED 39/133/14/118.
 CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-042.
+
+### P2A-042 (CORPUS-WIDE ANCHOR-DRIFT FINDING; D-250 — 2026-08-23)
+
+**Scope:** Corpus-wide semantic anchor audit triggered by recurring AC→BC mis-anchor finding class observed across P2A-037/038/039/040/041 (SS-18 cluster) and P2A-032 (AC→PC drift). 7-fork parallel audit dispatched covering all 39 product stories.
+
+**Finding summary — ~136 mis-anchored AC→BC citations across 22 of 39 stories:**
+- Affected stories (22): S-1.03, S-1.04, S-1.06, S-1.08, S-1.09, S-1.10, S-1.11, S-1.12, S-1.13, S-1.15, S-1.17, S-1.18, S-1.19, S-1.20, S-1.21, S-1.22, S-1.23, S-1.25, S-1.26, S-1.27, S-2.07, S-2.11, S-6.01
+- Verified-clean (already fixed or pre-verified): S-1.01, S-1.02, S-1.05, S-1.07, S-1.14, S-1.24, S-2.01, S-2.02, S-2.03, S-2.06, S-2.08, S-2.09, S-2.10; S-1.16 (fixed P2A-037); S-2.04/S-2.05 (fixed P2A-037..041)
+- Root cause: volatile positional clause ordinals (postcondition N / invariant N) shifted when BCs were restructured during Phase-1 convergence cascade; Phase-2 stories (authored 2026-08-18/19) were never re-synced against the restructured clause positions.
+- Sub-classes also identified: (a) ACs asserting behaviors with no current BC clause (coverage gaps — route to product-owner); (b) ACs asserting wrong error-code names/values (route to product-owner separately).
+- Gate gap confirmed: existence-only gate (POL-48 / verify-ac-pc-trace.sh CHECK-1) cannot detect semantic mis-anchors — confirms TD-VSDD-091 anti-pattern class (validator gates existence, not clause-match).
+
+**Decision — Option C (stable behavioral anchors):**
+Human (senior architect) directed in-session 2026-08-23: MIGRATE AC→BC citations to stable behavioral anchors. Option A (no change) and Option B (ordinal-range validation) both rejected as insufficient.
+
+ADR-027 authored (stable BC clause anchors):
+- Inline `{PC-NNN}` / `{INV-NNN}` / `{PRE-NNN}` tokens embedded in each BC clause heading — generalizes the existing EC-NNN error-code model to all clause types
+- New canonical AC cite form: "traces to BC-S.SS.NNN PC-NNN" (stable tag, not positional ordinal)
+- Validator switches from ordinal-count check to tag-grep: verify-ac-pc-trace.sh CHECK-1 updated in M2 to confirm cited tag exists in target BC file
+
+**Migration plan (M1–M4):**
+- M1: product-owner labels all BC clauses (postconditions, invariants, preconditions) with `{PC-NNN}/{INV-NNN}/{PRE-NNN}` tokens — targets ~134 BCs across all 27 subsystem families
+- M2: devops-engineer builds dual-mode validator (accepts both old ordinal-form and new tag-form during transition period; CHECK-1 extended to verify tag existence)
+- M3: story-writer re-cites all ~136 affected ACs using stable tags (fixes the mis-anchor class comprehensively across all 39 stories); run verify-ac-pc-trace.sh to zero DRIFT
+- M4: validator cutover — tag-grep replaces ordinal-count as the authoritative gate; old ordinal-form deprecated
+
+**Immediate interim action:**
+S-1.17 (streaming event types / run-id parity) AC citations re-anchored to stable ordinal references as an interim fix (not waiting for M1 token labels). M3 will supersede these with stable tags when the migration completes.
+
+**Artifacts authored this burst:**
+- ADR-027 (stable-bc-clause-anchors) — new file
+- ARCH-INDEX (§ADR Registry + §Changelog updated) — ADR-027 row added; ADR count 26→27; Document Map updated to 27 files
+- STORY-S-1.17 — interim AC re-anchoring (P2A-042 ordinal fix)
+- sidecar-learning.md — session-ended entries
+- STATE.md v5.63 — D-250 added; SEMANTIC-ANCHOR-DRIFT strengthened to IN MIGRATION; trajectory-tail →4→4→5→1
+- cycles/v1.0.0-greenfield/convergence-trajectory.md — this entry
+- cycles/v1.0.0-greenfield/session-checkpoints.md — v5.62 archived
+
+Count-propagation sweep (S-7.02): ADR count 26→27 updated in ARCH-INDEX frontmatter, changelog, Document Map, and ADR Registry. BC/VP/story/EC census UNCHANGED (39/133/14/118). No count changes requiring further propagation.
+
+CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: M1 BC-clause labeling (product-owner dispatches).

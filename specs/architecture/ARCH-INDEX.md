@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.35"
+version: "1.36"
 status: active
 producer: architect
-timestamp: 2026-08-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.36 (ADR-027/stable-bc-clause-anchors/2026-08-23): ADR-027 registered — Stable BC Clause Anchors: Restructure-Proof AC→BC Traceability Convention (D-175). Root cause closure for ~136 mis-anchored AC→BC citations. ADR count 26→27. Document Map updated to 27 files (ADR-001 to ADR-027)."
   - "1.35 (INVESTIGATE-RECONCILE/2026-08-21): VP Registry table — VP-004 Module column: `mcp::adapter` → `mcp::exception`. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property targets `mcp::exception`. POL-9 cascade complete."
   - "1.34 (fix-burst-P2A017/2026-08-21): Exhaustive Primary Crate(s) sweep (P2A017 sibling-sweep gap closure). FIX 1 (SS-10 P2A017-01 MED): SS-10 Primary Crate(s) pregolya-graph → pregolya-graph, pregolya-core; pregolya-core homes BC-2.10.005 (check_watermark_trigger watermark arithmetic / VP-012 Kani P1 target in core::budget). SS-10 scope note added. FIX 2 (SS-06 P2A017-02 MED): ADR-006 §Consequences establishes StreamEvent as a public type in pregolya-core (core::events). SS-06 Primary Crate(s) pregolya-graph, pregolya-core confirmed correct (no ARCH-INDEX change needed). SS-08 core::tool scope note added documenting expected Primary Crate(s) exclusion of pregolya-core (SS-08 module tag correct; no BC-2.08.xxx homed in core::tool; module-decomposition.md graph::event_emitter double-definition fixed in same burst). FIX 3 (SS-08/core::tool P2A017-03 LOW): SS-08 tag confirmed correct; pregolya-core not added to SS-08 Primary Crate(s); SS-08 scope note documents expected divergence. Corpus sweep: all 23 SS rows verified — only SS-10 diverged."
   - "1.33 (fix-burst-P2A016/2026-08-21): Two P2A-016 architecture-layer items resolved. (1) Primary Crate(s) convention established in Subsystem Registry preamble: crates that home the subsystem's own BCs. SS-08 already conforms (all 8 crates home BC-2.08.xxx BCs). SS-17 stays at 4 crates; SS-17 scope note added clarifying that S-6.01 additionally targets 5 more crates per VP-to-crate map but those home no BC under SS-17. (2) pregolya facade v1 accounting: ruling (a) — facade assembled incrementally from workspace-init stub; no dedicated story; annotation wording produced for story-writer to add to Crate Implementation Order in wave-schedule."
@@ -73,7 +74,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 26 files (ADR-001 to ADR-026)
+**ADRs:** `.factory/specs/architecture/decisions/` — 27 files (ADR-001 to ADR-027)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -196,6 +197,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | ADR-024 | WriteFileTool Create-Path Confinement Protocol (fix-burst-287 / F-P176-C002) | accepted — architect adjudication F-P176-C002 CRIT; product-owner applies to BC-2.23.002 | — |
 | ADR-025 | Type Signature Canon: Object Safety and Arc Ownership Patterns (D-43, D-45, D-48) (fix-burst-287) | accepted — grounds verify-signature-canon.sh rules S1/S2/S3/S4 in citable ADR headings; hook now enforces ADR rather than defining it | — |
 | ADR-026 | LCEL Composition Primitives: RunnableParallel and RunnablePassthrough (burst-302 scope expansion) | accepted (D-170) | — |
+| ADR-027 | Stable BC Clause Anchors: Restructure-Proof AC→BC Traceability Convention (2026-08-23) | accepted — architect adjudication D-175; ~136 mis-anchor root-cause fix | — |
 
 ## Verification Properties (VP-INDEX)
 
