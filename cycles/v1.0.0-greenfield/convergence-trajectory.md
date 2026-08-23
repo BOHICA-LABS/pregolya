@@ -3635,3 +3635,6 @@ ADR-015 §PromptValue: enum decision aligned to BC-2.18.002 INV-5.
 Artifacts: BC-2.18.001 §INV-6+PC-7; BC-2.18.002 §INV-5+PC-7; BC-INDEX §Changelog; test-vectors §Grand-Total (703 canonical + 11 GTV = 714). BC COUNT UNCHANGED 133; stories 39; VP 14.
 Process-gap: SEMANTIC-ANCHOR-DRIFT recorded in Drift/Deferrals (POL-48 gates AC→BC existence only, not semantic clause-match; restructure-induced mis-anchoring recurred S-2.05/S-1.16/S-2.04; timestamp-based sibling-sweep insufficient; owner: devops/story-writer; target: EPIC-MAINT).
 CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-038.
+
+### P2A-038 (reviewed HEAD 275346a) — NOT CLEAN → fix-burst (D-246)
+F-P2A038-01 (MED): epics.md E-20 Red-Gate relabeled from BC-2.22.001 (dimensionality) to BC-2.22.002 (credential opacity) per BC-INDEX/STORY-INDEX/dependency-graph. DAG/census/taxonomy clean. Census UNCHANGED 39/133/14/118. CLEAN(strict)=no. Streak 0/3. NEXT P2A-039.

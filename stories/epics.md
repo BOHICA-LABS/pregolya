@@ -161,8 +161,8 @@ Standalone SDK crate split architecture (BC-2.08.006), chat model streaming/tool
 
 ### E-20 — Embeddings Trait and Providers (Wave 2, 8 pts)
 
-`Embeddings` trait with dimensionality contract (VP-008 proptest P1, Red Gate),
-`EmbeddingsOpenAI` with credential opacity and batch failure handling, and
+`Embeddings` trait with dimensionality contract (VP-008 proptest P1),
+`EmbeddingsOpenAI` with credential opacity (BC-2.22.002 Red Gate) and batch failure handling, and
 `EmbeddingsOllama` POST /api/embed with legacy endpoint toggle.
 
 ### E-21 — MCP Tool Adapter (Wave 2, 13 pts)

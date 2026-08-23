@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "5.58"
+version: "5.59"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-22T22:50:00Z"
+timestamp: "2026-08-22T23:23:00Z"
 phase: 2
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: pregolya
 mode: greenfield+semport
-current_step: "P2A-037 NOT CLEAN (2 HIGH + 2 MED) + class-audit S-2.04 ALL CLOSED (D-245; 2026-08-22): F-01/02/03 S-1.16 BSP determinism (AC-004 rewritten to real E-GRAPH-006 BspDeterminismViolation; run-id collision → E-SERVER per BC-2.03.001/003); F-04 S-2.05 TrustLevel {Untrusted,UserInput,Trusted}/#[non_exhaustive]; S-2.04 class-audit 9 mis-anchors (BC-2.18.001 PC-7+INV-6; BC-2.18.002 PC-7+INV-5; TV-005/TV-008; 4 ACs re-anchored); ADR-015 §PromptValue struct→enum. BC COUNT UNCHANGED 133; streak 0/3. NEXT: adversary P2A-038. trajectory-tail →3→3→3→6"
+current_step: "P2A-038 NOT CLEAN (1 MED) ALL CLOSED (D-246; 2026-08-22): F-P2A038-01 epics.md E-20 Red-Gate relabeled BC-2.22.001 (dimensionality/VP-008 proptest)→BC-2.22.002 (credential opacity), matching BC-INDEX/STORY-INDEX §SS-22/dependency-graph. DAG/census/taxonomy CLEAN. Census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: adversary P2A-039. trajectory-tail →3→3→6→1"
 current_cycle: v1.0.0-greenfield
-convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..037 COMPLETE D-208..D-245 (sample). P2A-037 NOT CLEAN (D-245; 2H+2M; ALL CLOSED). BC census UNCHANGED 133 (51/79/3). Streak 0/3. NEXT: P2A-038. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
+convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..038 COMPLETE D-208..D-246 (sample). P2A-038 NOT CLEAN (D-246; 1 MED; ALL CLOSED). BC census UNCHANGED 133 (51/79/3). Streak 0/3. NEXT: P2A-039. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: 199 lines (wc-l) | margin from soft-target (200L): +1 lines | margin from actual: +1 lines | v5.58 (2026-08-22): P2A-037 NOT CLEAN (2H+2M) ALL CLOSED (D-245); S-1.16 BSP/S-2.05 TrustLevel/S-2.04 class-audit/ADR-015 enum/BC-2.18.001 PC-7+INV-6/BC-2.18.002 PC-7+INV-5; SEMANTIC-ANCHOR-DRIFT process-gap added. Streak 0/3. NEXT: P2A-038. -->
+<!-- STATE.md SIZE BUDGET: 200 lines (wc-l) | margin from soft-target (200L): 0 lines | margin from actual: 0 lines | v5.59 (2026-08-22): P2A-038 NOT CLEAN (1 MED) ALL CLOSED (D-246); E-20 Red-Gate relabeled BC-2.22.001→BC-2.22.002; census 39/133/14/118 UNCHANGED. Streak 0/3. NEXT: P2A-039. -->
 
 # Pipeline State: pregolya
 
@@ -37,7 +37,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-08-22 — v5.58; P2A-037 NOT CLEAN (D-245; 2H+2M; ALL CLOSED). F-01/02/03 S-1.16 BSP AC-004 rewritten (E-GRAPH-006 BspDeterminismViolation; run-id collision → E-SERVER); 5 ACs re-anchored. F-04 S-2.05 TrustLevel order+#[non_exhaustive]. CLASS-AUDIT S-2.04: BC-2.18.001 PC-7+INV-6; BC-2.18.002 PC-7+INV-5; TV-005/TV-008; ADR-015 §PromptValue enum. Census UNCHANGED 133/14/118. Streak 0/3. NEXT: P2A-038. trajectory-tail →3→3→3→6 |
+| **Last Updated** | 2026-08-22 — v5.59; P2A-038 NOT CLEAN (D-246; 1 MED; ALL CLOSED). F-P2A038-01 E-20 Red-Gate relabeled from BC-2.22.001 (dimensionality/VP-008 proptest) to BC-2.22.002 (credential opacity), matching BC-INDEX/STORY-INDEX §SS-22/dependency-graph. DAG reciprocity, wave ordering, census arithmetic, taxonomy re-anchor handoffs CLEAN. Census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: P2A-039. trajectory-tail →3→3→6→1 |
 
 ## Phase Progress
 
@@ -45,7 +45,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
 | 1: Spec Crystallization | COMPLETE | 2026-07-14 | 2026-08-18 | 3/3 CONVERGED on frozen anchor 79eb2f3 (P1-pass-211/212/213; D-195); input-hash drift resolved (D-196); Phase-1 gate CLOSED (D-197; burst-325). ~215 adversarial passes total. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md | trajectory-tail →1→0→0→0; 3/3 CONVERGED |
-| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..037 fix-bursts COMPLETE D-208..D-245 (sample). P2A-037 NOT CLEAN (D-245; ALL CLOSED). NEXT: P2A-038. | trajectory-tail →3→3→3→6; 0/3. NEXT: P2A-038. |
+| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..038 fix-bursts COMPLETE D-208..D-246 (sample). P2A-038 NOT CLEAN (D-246; ALL CLOSED). NEXT: P2A-039. | trajectory-tail →3→3→6→1; 0/3. NEXT: P2A-039. |
 | 2: P2A-001..031 (compressed; archived burst-log+trajectory 2026-08-22) | COMPLETE | 2026-08-19 | 2026-08-22 | 31 passes + fix-bursts. P2A-001..026 (sample): mixed findings ALL CLOSED (D-208..D-233 (sample)). P2A-027..031 NOT CLEAN (D-234..D-238 (exhaustive)): P2A-027 D-233 type-flip REVERTED (ADR-014 D2 canonical); P2A-028 CLEAN(strict) streak 1/3; P2A-029 E-MCP-008/009 minted + 115→117 EC; P2A-030 single-underscore + E-PROV-012 + 117→118 EC; P2A-031 S-2.08/S-2.07 AC-trace + D-238 109 Story Anchor backfill (unfilled-anchor class CLOSED). Full: cycles/v1.0.0-greenfield/convergence-trajectory.md + burst-log.md. Census 133 BC/14 VP/118 EC throughout. | trajectory-tail →0→2→3→2; streak RESET after P2A-031 |
 | 2: adversary pass-32 (P2A-032) NOT CLEAN → RESOLVED | COMPLETE | 2026-08-22 | 2026-08-22 | CORPUS-WIDE AC→PC drift (1 HIGH class; 59 citations/17 drift-affected stories; 45 false-positives from parser blind-spots; 14 genuine). VALIDATOR-FIRST (D-239→D-240). verify-ac-pc-trace.sh 3 parser blind-spots found + fixed. RESOLVED (D-240). | trajectory-tail →2→3→2→1→RESOLVED; streak RESET 0/3 |
 | 2: adversary pass-33 (P2A-033) NOT CLEAN → ALL CLOSED (D-241) | COMPLETE | 2026-08-22 | 2026-08-22 | F1 (MED): epics.md E-16 rollup 8→5; E-17 rollup 8→10; all 22 epic rollups now sum to 300. F2 (LOW): BC-INDEX §Changelog updated (D-241). DAG reciprocity intact. 519 citations CLEAN (POL-48). BC census UNCHANGED 133 (51/79/3). | trajectory-tail →0→2→0; streak RESET 0/3. NEXT: P2A-034. |
@@ -62,10 +62,10 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| P2A-034 FIX-BURST (2026-08-22) — D-242 ALL CLOSED; S-2.05 AC-002..006 re-anchored + AC-016/AC-017 added; verify-ac-pc-trace.sh CHECK-2 demoted ADVISORY; POL-48 reworded; dep-graph S-1.21/S-1.22 E-13 header. Census UNCHANGED 133/14/118. Streak 0/3. | state-manager | COMPLETE | S-2.05 + hooks + policies.yaml + dep-graph + STATE.md + trajectory + sidecar. Single commit per TD-VSDD-053. |
 | P2A-035 NOT CLEAN (2026-08-22) + FIX-BURST — D-243 ALL CLOSED; F1 AC-004/AC-005 trust-model rewritten (binary is_untrusted; min_trust_severity removed); F2 AC-004/AC-007 re-anchored BC-2.18.002 invariant 2 + POLICY-8 propagation; OBS-1 EPIC-MAINT catalog stub. Census UNCHANGED 133/14/118. Streak 0/3. | story-writer + product-owner + state-manager | COMPLETE | STORY-S-2.05 + epics.md + STATE.md + trajectory + sidecar. Single commit per TD-VSDD-053. |
 | P2A-036 NOT CLEAN (2026-08-22) + FIX-BURST — D-244 ALL CLOSED; F-036-01 S-1.05 AC-001 infallible (BC-2.01.005 §PC-1; EC-006; TV-006; BC-INDEX §Changelog; TV 700→701); F-036-02 S-2.05 BC-2.18.002 coverage synced (STORY-INDEX + SS-18 map + sprint-state; POLICY-8); F-036-03 S-1.05 AC-003 → §PC-6/EC-001. Census UNCHANGED 133/14/118. Streak 0/3. | product-owner + state-manager | COMPLETE | BC-2.01.005 + BC-INDEX + STORY-S-1.05 + STORY-INDEX + sprint-state + test-vectors + STATE.md + trajectory + sidecar. Single commit per TD-VSDD-053. |
 | P2A-037 NOT CLEAN (2026-08-22) + FIX-BURST — D-245 ALL CLOSED; F-01/02/03 S-1.16 BSP (AC-004 rewritten to real E-GRAPH-006 BspDeterminismViolation; 5 ACs re-anchored; collision refs purged); F-04 S-2.05 TrustLevel {Untrusted,UserInput,Trusted}/#[non_exhaustive]/severity() 2/1/0; CLASS-AUDIT S-2.04 9 mis-anchors (BC-2.18.001 PC-7+INV-6; BC-2.18.002 PC-7+INV-5; TV-005/TV-008; 4 ACs re-anchored); ADR-015 §PromptValue struct→enum. BC COUNT UNCHANGED 133; streak 0/3. | product-owner + story-writer + state-manager | COMPLETE | STORY-S-1.16 + STORY-S-2.04 + STORY-S-2.05 + BC-2.18.001 + BC-2.18.002 + BC-INDEX + test-vectors + ADR-015 + sidecar + STATE.md + trajectory. Single commit per TD-VSDD-053. |
+| P2A-038 NOT CLEAN (2026-08-22) + FIX-BURST — D-246 ALL CLOSED; F-P2A038-01 epics.md E-20 Red-Gate corrected: removed from BC-2.22.001 (dimensionality/VP-008 proptest P1), attached to BC-2.22.002 (credential opacity), matching BC-INDEX/STORY-INDEX §SS-22/dependency-graph BC Clause Coverage Matrix. DAG reciprocity, wave ordering, census arithmetic, taxonomy re-anchor handoffs CLEAN. Census UNCHANGED 39/133/14/118. Streak 0/3. | story-writer + state-manager | COMPLETE | epics.md + sidecar-learning.md + STATE.md + trajectory. Single commit per TD-VSDD-053. |
 
 ## Decisions Log
 
@@ -89,6 +89,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-243 | **P2A-035 NOT CLEAN (1 HIGH + 1 MED + 1 LOW) ALL CLOSED. F1 (HIGH): S-2.05 AC-004/AC-005 trust-model rewritten — fabricated severity()-THRESHOLD injection model removed; binary is_untrusted() guard replaces min_trust_severity() (UserInput/Trusted → Ok, no E-TMPL-001 per BC-2.18.004 PC5/EC-001/TV-002 and ADR-015 D3 BINARY fire rule); AC-005 = binary is_untrusted() guard; AC-004 = severity() scoped to highest_trust_level aggregation via max_by_key with explicit no-Ord::max fail-open prohibition; min_trust_severity()/SlotTrustPolicy::min_trust_severity() removed. F2 (MED): AC-004/AC-007 re-anchored from BC-2.18.004 invariant 1 → BC-2.18.002 invariant 2 (the clause that actually specifies severity aggregation + the no-Ord/PartialOrd prohibition); BC-2.18.002 added to behavioral_contracts frontmatter + body BC table + AC traces (POLICY-8 propagation). OBS-1 (LOW): EPIC-MAINT catalog stub added to epics.md (out-of-wave; contains S-MAINT-001). No genuine spec gap surfaced (BC-2.18.002 invariant 2 cleanly covers both concepts). Census UNCHANGED 39 stories / 133 BC / 14 VP / 118 EC. Streak remains 0/3. NEXT: adversary P2A-036.** | P2A-035 ALL CLOSED; trust-model rewrite; BC-2.18.002 inv-2; POLICY-8 propagation | Phase 2 | 2026-08-22 | story-writer/product-owner/state-manager |
 | D-244 | **P2A-036 NOT CLEAN (1 HIGH + 1 MED + 1 LOW) ALL CLOSED. F-036-01 (HIGH): S-1.05 AC-001 invented fallible RunnableParallel::new() (dup-key→Err E-CORE-005) vs BC-2.01.005 infallible; PO Option A (infallible canonical; Python dict/IndexMap last-write-wins parity; ADR-026 §Decision 1; DI-014 scopes to invoke-time branch failures, not construction); BC-2.01.005 §PC-1 amended (explicit infallible last-write-wins; EC-006 duplicate-key; TV-006); BC-INDEX §Changelog updated; AC-001 rewritten to infallible last-write-wins (test_BC_2_01_005_duplicate_key_last_write_wins); no error code minted; test-vectors.md §Grand-Total 700→701 canonical. F-036-02 (MED): S-2.05 BC-2.18.002 coverage (added P2A-035) synced to STORY-INDEX row + SS-18 BC-to-Story map + sprint-state bcs array (POLICY-8 frontmatter→index gap closed). F-036-03 (LOW): S-1.05 AC-003 re-anchored postcondition 3 → postcondition 6 / EC-001 (zero-branch empty-object case). Census UNCHANGED 39 stories / 133 BC / 14 VP / 118 EC. Streak remains 0/3. NEXT: adversary P2A-037.** | P2A-036 ALL CLOSED; BC-2.01.005 §PC-1 infallible; TV 700→701; S-2.05 index sync POLICY-8; S-1.05 AC-003 anchor | Phase 2 | 2026-08-22 | product-owner/state-manager |
 | D-245 | **P2A-037 NOT CLEAN (2 HIGH + 2 MED) + class-audit ALL CLOSED. F-01/F-02/F-03 (HIGH) S-1.16 BSP determinism: AC-004 fabricated 'run-id collision→E-GRAPH-006' REMOVED (run-id collision is server CONCURRENCY E-SERVER-012/015, not GRAPH per BC-2.03.001/003); AC-004 rewritten to real E-GRAPH-006 BspDeterminismViolation (INTERNAL; run→failed; PC4 coverage closed); 5 ACs re-anchored (AC-002/003→PC5; AC-005→PC1; AC-009→BC-2.03.001 INV-2; AC-010→BC-2.03.003 PC4); category fixes (E-GRAPH-017→POLICY; E-GRAPH-006→INTERNAL); all collision refs purged. F-04 (MED) S-2.05 TrustLevel order {Untrusted,UserInput,Trusted}; #[non_exhaustive]; no derived Ord; severity() 2/1/0. CLASS-AUDIT (timestamp-independent sweep) found 3rd story S-2.04 (9 mis-anchors vs BC-2.18.001/002): 5 re-anchored (constructors→preconditions); 4 genuine gaps → PO authored BC-2.18.001 PC-7 (Runnable)+INV-6 (pure-core/Send+Sync) and BC-2.18.002 PC-7 (Runnable)+INV-5 (PromptValue #[non_exhaustive] enum String/Messages); TV-005/TV-008 added; AC-005→PC7/AC-006→INV-6/AC-009→PC7/AC-010→INV-5 (+AC-010 body Vec type fix). ADR-015 §PromptValue struct→enum aligned to BC-2.18.002 INV-5. Artifacts: BC-2.18.001 §INV-6+PC-7; BC-2.18.002 §INV-5+PC-7; BC-INDEX §Changelog; test-vectors §Grand-Total (703 canonical + 11 GTV = 714). BC COUNT UNCHANGED 133; stories 39; VP 14. Process-gap SEMANTIC-ANCHOR-DRIFT recorded. Streak 0/3. NEXT: P2A-038.** | P2A-037 ALL CLOSED; BSP determinism rewrite; TrustLevel order; S-2.04 class-audit + PO gap clauses; ADR-015 enum; SEMANTIC-ANCHOR-DRIFT | Phase 2 | 2026-08-22 | product-owner/story-writer/state-manager |
+| D-246 | **P2A-038 NOT CLEAN (1 MED) ALL CLOSED. F-P2A038-01 (MED): epics.md E-20 §E-20 summary wrongly labeled BC-2.22.001 (dimensionality contract / VP-008 proptest P1) as Red Gate; corrected — Red Gate now attaches to BC-2.22.002 (credential opacity), matching BC-INDEX / STORY-INDEX §SS-22 / dependency-graph BC Clause Coverage Matrix. Red-Gate story census UNCHANGED (8; S-2.09 counted via BC-2.22.002). Adversary verified DAG reciprocity, wave ordering, census arithmetic, and the freshest taxonomy re-anchor handoffs all clean. Census UNCHANGED 39 stories / 133 BC / 14 VP / 118 EC. Streak remains 0/3. NEXT: adversary P2A-039.** | P2A-038 NOT CLEAN; E-20 Red-Gate relabel BC-2.22.001→BC-2.22.002; census UNCHANGED 39/133/14/118; streak 0/3 | Phase 2 | 2026-08-22 | story-writer/state-manager |
 
 ## Risk Register
 
@@ -128,18 +129,18 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 ## Concurrent Cycles
 
-None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..037 COMPLETE. P2A-037 NOT CLEAN (D-245; ALL CLOSED; BC census UNCHANGED 133). Streak 0/3. NEXT: P2A-038.
+None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..038 COMPLETE. P2A-038 NOT CLEAN (D-246; ALL CLOSED; BC census UNCHANGED 133). Streak 0/3. NEXT: P2A-039.
 
 ## Convergence Status
 
-Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS. P2A-028 CLEAN(strict)=YES (streak 1/3). P2A-029/030/031/032/033/034/035/036/037 NOT CLEAN (streak RESET each). P2A-037 NOT CLEAN (D-245; 2H+2M; ALL CLOSED). Streak 0/3. NEXT: P2A-038.
+Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS. P2A-028 CLEAN(strict)=YES (streak 1/3). P2A-029/030/031/032/033/034/035/036/037/038 NOT CLEAN (streak RESET each). P2A-038 NOT CLEAN (D-246; 1 MED; ALL CLOSED). Streak 0/3. NEXT: P2A-039.
 
 ## Session Resume Checkpoint
 
-<!-- v5.58 checkpoint replaces v5.57 — v5.57 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- v5.59 checkpoint replaces v5.58 — v5.58 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase-2 Story Decomposition adversarial convergence (BC-5.39.001 3-CLEAN), streak 0/3. P2A-037 NOT CLEAN fix-burst COMPLETE (D-245; 2026-08-22): F-01/02/03 (HIGH) S-1.16 BSP determinism — AC-004 fabricated 'run-id collision→E-GRAPH-006' REMOVED (run-id collision is server CONCURRENCY per BC-2.03.001/003; real E-GRAPH-006 = BspDeterminismViolation INTERNAL; run→failed; PC4 coverage closed); 5 ACs re-anchored (AC-002/003→PC5; AC-005→PC1; AC-009→BC-2.03.001 INV-2; AC-010→BC-2.03.003 PC4); category fixes E-GRAPH-017→POLICY / E-GRAPH-006→INTERNAL; all collision refs purged. F-04 (MED) S-2.05 TrustLevel order {Untrusted,UserInput,Trusted}; #[non_exhaustive]; no derived Ord; severity() 2/1/0. CLASS-AUDIT (timestamp-independent) S-2.04: 9 mis-anchors (5 re-anchored constructors→preconditions; 4 genuine gaps → PO: BC-2.18.001 PC-7 Runnable+INV-6 Send+Sync; BC-2.18.002 PC-7 Runnable+INV-5 PromptValue enum); TV-005/TV-008 added; AC-005→PC7/AC-006→INV-6/AC-009→PC7/AC-010→INV-5. ADR-015 §PromptValue struct→enum. BC COUNT UNCHANGED 133; stories 39; VP 14. NEXT: dispatch fresh adversary P2A-038 on new HEAD.
+pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase-2 Story Decomposition adversarial convergence (BC-5.39.001 3-CLEAN), streak 0/3. P2A-038 NOT CLEAN fix-burst COMPLETE (D-246; 2026-08-22): F-P2A038-01 (MED) epics.md E-20 §E-20 Red-Gate label corrected — BC-2.22.001 (dimensionality contract / VP-008 proptest P1) does NOT gate Red Gate; BC-2.22.002 (credential opacity, EmbeddingsOpenAI) is the Red-Gate BC, matching BC-INDEX / STORY-INDEX §SS-22 / dependency-graph BC Clause Coverage Matrix. Red-Gate story census UNCHANGED (8; S-2.09 counted via BC-2.22.002). Adversary verified DAG reciprocity, wave ordering, census arithmetic, and taxonomy re-anchor handoffs all clean. Census UNCHANGED 39/133/14/118. Finding-count trend decreasing (1 MED this pass vs 2H+2M previous). NEXT: dispatch fresh adversary P2A-039 on new HEAD.
 
 ### HEADS
 - develop: `644d1ad` — clean, PUSHED, untouched.
@@ -147,18 +148,18 @@ pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 - Worktrees: NONE. Open PRs: NONE.
 
 ### RESUME NEXT-ACTION (exact, ordered)
-1. **adversary P2A-038**: fresh `vsdd-factory:adversary` pass on new HEAD. verify-ac-pc-trace.sh CHECK-1 is BLOCKING; CHECK-2 is ADVISORY (non-blocking; do NOT reset streak for CHECK-2 findings). Instruct output-size discipline + retry protocol.
-2. **state-manager**: If P2A-038 CLEAN(strict): update counter (1/3). If NOT CLEAN: dispatch fix burst per finding severity (BC-5.39.001 3-CLEAN cascade).
+1. **adversary P2A-039**: fresh `vsdd-factory:adversary` pass on new HEAD. verify-ac-pc-trace.sh CHECK-1 is BLOCKING; CHECK-2 is ADVISORY (non-blocking; do NOT reset streak for CHECK-2 findings). Instruct output-size discipline + retry protocol.
+2. **state-manager**: If P2A-039 CLEAN(strict): update counter (1/3). If NOT CLEAN: dispatch fix burst per finding severity (BC-5.39.001 3-CLEAN cascade).
 3. Phase-2→3 is autonomous per DIRECTIVE 1 on 3/3 CLEAN.
 
 ### PENDING USER-APPROVED WORK
-No fix-burst pending. P2A-038 dispatching next (autonomous per DIRECTIVE 1). Phase-2→3 autonomous on 3/3 CLEAN.
+No fix-burst pending. P2A-039 dispatching next (autonomous per DIRECTIVE 1). Phase-2→3 autonomous on 3/3 CLEAN.
 
 ### DECISION DELTA (this session, not yet in prior snapshots)
-D-239..D-245 (exhaustive). D-245: P2A-037 NOT CLEAN (2H+2M ALL CLOSED): F-01/02/03 S-1.16 BSP determinism (AC-004 rewritten; 5 ACs re-anchored; BC-2.03.001/003; category fixes E-GRAPH-017→POLICY/E-GRAPH-006→INTERNAL); F-04 S-2.05 TrustLevel order/#[non_exhaustive]/severity() 2/1/0; CLASS-AUDIT S-2.04 (BC-2.18.001 PC-7+INV-6; BC-2.18.002 PC-7+INV-5; TV-005/TV-008; 4 ACs re-anchored); ADR-015 §PromptValue enum; BC-INDEX §Changelog; test-vectors §Grand-Total (703+11=714). Census UNCHANGED 133/14/118.
+D-239..D-246 (exhaustive). D-246: P2A-038 NOT CLEAN (1 MED ALL CLOSED): F-P2A038-01 epics.md E-20 Red-Gate relabeled BC-2.22.001→BC-2.22.002 (credential opacity); DAG/census/taxonomy clean. Census UNCHANGED 39/133/14/118.
 
 ### STASH NOTE
-stash@{0} in main worktree holds superseded route-around edits (droppable after confirming P2A-038 dispatches cleanly).
+stash@{0} in main worktree holds superseded route-around edits (droppable after confirming P2A-039 dispatches cleanly).
 
 ### OPEN ITEMS FOR PHASE-2 GATE
 - verify-ac-pc-trace.sh CHECK-1 BLOCKING (POL-48, D-240). CHECK-2 ADVISORY (D-242). DEFER-004 open for broader scope.
@@ -168,14 +169,14 @@ stash@{0} in main worktree holds superseded route-around edits (droppable after 
 - Human actions: E013 (default_branch→main), R6/R14 (cargo login + publish-all.sh), B1 (direnv allow).
 - Human verification: D-235 RAISE review at BC-2.09.001 §PC9 (overflow fail-closed; human may override at Phase-2 gate).
 - WORKSPACE INIT incomplete (Cargo.toml/crates/ absent — Phase-3 prerequisite).
-- Full ACCEPTED/DO-NOT-REFLAG for P2A-038: cycles/v1.0.0-greenfield/convergence-trajectory.md §P2A-037 Fix-Burst + §P2A-037 pass record.
+- Full ACCEPTED/DO-NOT-REFLAG for P2A-039: cycles/v1.0.0-greenfield/convergence-trajectory.md §P2A-038 Fix-Burst + §P2A-038 pass record.
 
 ### OPS LEARNINGS (carry forward)
 - sidecar-learning.md re-dirties after every agent stop — streak-transparent `chore:` hygiene commit before each adversary/wave-gate dispatch (fix-burst dispatches are NOT tree-gated).
 - Orchestrator: verify governing ADR BEFORE directing any signature/type/name change; sweep the full authority set in one burst.
 - Adversary dies to API connection error mid-run on long outputs — instruct output-size discipline + retry.
 - verify-ac-pc-trace.sh CHECK-2 (code co-location) is a high-false-positive heuristic — ADVISORY only; does NOT reset 3-CLEAN streak. CHECK-1 (existence) is BLOCKING.
-- Fresh-context value data point: S-2.05/S-1.16/S-2.04 refined across P2A-034..037 — each fresh adversary pass surfaced progressively deeper issues. Timestamp-based sibling-sweep missed semantic mis-anchors (root cause: STAMP-DRIFT-001 + SEMANTIC-ANCHOR-DRIFT pattern; see Drift/Deferrals).
+- Fresh-context value data point: E-20 Red-Gate relabel found in P2A-038 — single-finding MED pass shows the trend is narrowing (prior passes 2H+2M, then 1 MED). Trend decreasing toward convergence.
 
 ### PENDING HUMAN ACTIONS
 1. **E013 (Medium)** — `gh repo edit --default-branch main`.
@@ -188,9 +189,9 @@ stash@{0} in main worktree holds superseded route-around edits (droppable after 
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1–345+; Phase-2 per-story authoring + holdout scenarios; P2A-001..037 fix-bursts + D-226..D-245 (sample) archived 2026-08-22) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
-| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-037; D-228..D-245 (sample) fix-bursts) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
-| Session checkpoints (v4.45..v5.57 archived; v5.57 replaced 2026-08-22) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Burst narratives (bursts 1–345+; Phase-2 per-story authoring + holdout scenarios; P2A-001..038 fix-bursts + D-226..D-246 (sample) archived 2026-08-22) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-038; D-228..D-246 (sample) fix-bursts) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
+| Session checkpoints (v4.45..v5.58 archived; v5.58 replaced 2026-08-22) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (188+ lessons) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Resolved blockers (R1–R5, R7, R9, R12/R13) | `cycles/v1.0.0-greenfield/blocking-issues-resolved.md` |
 | Spec artifacts (133 BC / 14 VP / 26 ADR; PRD; L2 domain spec; architecture) | `.factory/specs/` |
