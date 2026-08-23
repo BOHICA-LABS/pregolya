@@ -2802,3 +2802,29 @@ pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 
 ### DECISION DELTA (v5.62)
 D-249 (exhaustive): P2A-041 NOT CLEAN (1H+3M+1L ALL CLOSED): F-3 root cause BC-2.18.002 §Changelog notation disambig; F-1 AC-012/013 precondition 2; F-2 AC-016 INV-1; F-4 AC-013 rework; F-5 test-prefixes. Census UNCHANGED.
+
+---
+
+### Archived Checkpoint — STATE.md v5.65 (archived 2026-08-23 — replaced by v5.66)
+
+*From STATE.md v5.65 (post-M1 chunk 2 COMPLETE; ADR-027 BC-labeling ~94/134 BCs labeled; SS-08..13). Superseded by v5.66 session-wrap RESUME snapshot.*
+
+### RESUME IN ONE BREATH
+pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users/jmagady/Dev/pregolya. Phase-2 Story Decomposition adversarial convergence (BC-5.39.001 3-CLEAN), streak 0/3. ADR-027 M1 chunk 2 COMPLETE (2026-08-23): 47 BCs labeled with {PC/INV/PRE-NNN} stable clause anchors (SS-08..13); purely additive; EC unchanged; validator 0-DRIFT. ~94/134 BCs labeled. BC census UNCHANGED 133. NEXT: M1 chunk 3 (SS-14,15,18,19,20,21,22,23), then M2 dual-mode validator, M3 story re-citation (~136 mis-anchors in 22 stories), M4 cutover, then P2A-043.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: run `git -C .factory log -1 --format='%h'` for current HEAD. PUSHED to origin. (Per TD-VSDD-053, no literal SHA pin here.)
+- Worktrees: NONE. Open PRs: NONE.
+
+### RESUME NEXT-ACTION (v5.65)
+1. M1 chunk 3: product-owner labels stable {PC/INV/PRE-NNN} tokens in BCs for SS-14, SS-15, SS-18, SS-19, SS-20, SS-21, SS-22, SS-23.
+2. M2 dual-mode validator: devops-engineer updates verify-ac-pc-trace.sh to accept both ordinal-form and new tag-form during transition.
+3. M3 story re-citation: story-writer re-cites all ~136 affected ACs (and all 39 stories comprehensively) using stable tags.
+4. M4 cutover: validator-first gate switches to tag-grep; old ordinal-form deprecated.
+5. P2A-043 adversary pass after M3 completes; BC-5.39.001 3-CLEAN cascade continues.
+
+### DECISION DELTA (v5.65)
+D-250 (compressed): P2A-042 CORPUS-WIDE ANCHOR-DRIFT + ADR-027 stable-anchor migration plan. ~136 mis-anchors / 22 stories. M1-M4. Streak 0/3.
+M1 chunk 1 (no new D-number): 47 BCs labeled (SS-01..07,16,17); purely additive; census UNCHANGED; validator 0-DRIFT.
+M1 chunk 2 (no new D-number; execution of D-250 M1): 47 BCs labeled (SS-08..13); purely additive; ~94/134 BCs labeled; census UNCHANGED; validator 0-DRIFT.
