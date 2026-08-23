@@ -16,12 +16,12 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8a14939"
+input-hash: "a8897d2"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
 blocks: [S-2.05]
-behavioral_contracts: [BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.004, BC-2.18.005]
+behavioral_contracts: [BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.005]
 verification_properties: [VP-2.18.003-A, VP-2.18.003-B]
 priority: P1
 cycle: v1.0.0-greenfield
@@ -49,7 +49,6 @@ tdd_mode: strict
 | BC-2.18.001 | PromptTemplate — f-String Engine; from_template Fallible Constructor; format() Renders or Returns E-TMPL-003 / E-TMPL-004 | P1 |
 | BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | P1 |
 | BC-2.18.003 | MessagesPlaceholder Vec<Message> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | P1 |
-| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 |
 
 ## Acceptance Criteria
@@ -123,26 +122,30 @@ before returning. A mix of one valid and one invalid template string returns `Er
 Construction is atomic — no partial state.
 Verified by `test_BC_2_18_002_from_messages_atomic_construction()`.
 
-### AC-012 (traces to BC-2.18.002 postcondition 2 — TemplateInput enum: 3 arms, #[non_exhaustive])
+### AC-012 (traces to BC-2.18.002 precondition 2 — TemplateInput enum: 3 arms, #[non_exhaustive])
 `TemplateInput` is an enum with exactly three variants:
 - `TemplateInput::Scalar(TemplateVar)` — a single scalar value for a `{var}` slot
 - `TemplateInput::Messages(MessageListVar)` — a pre-formed list for a `{messages}` slot
 - `TemplateInput::FewShotExamples(Vec<(TemplateVar, TemplateVar)>)` — question/answer pairs
 `TemplateInput` is `#[non_exhaustive]`.
-Verified by `test_BC_2_18_003_template_input_variants()`.
+Verified by `test_BC_2_18_002_template_input_variants()`.
 
-### AC-013 (traces to BC-2.18.002 postcondition 2 — HashMap<String,TemplateInput> parameter type)
-The old `HashMap<String, TemplateVar>` parameter is REPLACED by `HashMap<String, TemplateInput>`.
-A caller providing a bare `TemplateVar` at a slot that expects `TemplateInput::Messages`
-receives `Err(E-TMPL-003)` — wrong TemplateInput variant for the slot type.
-Verified by `test_BC_2_18_003_wrong_variant_type_returns_err()`.
+### AC-013 (traces to BC-2.18.002 precondition 2 — HashMap<String,TemplateInput> parameter type)
+`ChatPromptTemplate::format_messages(&self, vars: HashMap<String, TemplateInput>) -> Result<PromptValue, PregolyaError>`
+accepts `TemplateInput` arms per slot: `TemplateInput::Scalar` for scalar text slots,
+`TemplateInput::Messages` for in-place message-list expansion, and
+`TemplateInput::FewShotExamples` for few-shot composition. This replaces the prior
+`HashMap<String, TemplateVar>` parameter (breaking type change per ADR-015 §Decision 3
+Amendment, burst-279). A `ChatPromptTemplate` constructed with a `MessagesPlaceholder`
+slot renders successfully when the binding supplies `TemplateInput::Messages(MessageListVar)`.
+Verified by `test_BC_2_18_002_format_messages_accepts_template_input_arms()`.
 
 ### AC-014 (traces to BC-2.18.005 postcondition 1 — SlotTrustPolicy construction enforcement; BC-2.18.002 PC-4 for provenance recording)
 `SlotTrustPolicy` is an enum with variants `TrustRequired` and `TrustAll`.
 `SlotTrustPolicy` is used in `ChatPromptTemplate::from_messages` to annotate each
 message slot's trust requirement. `SlotTrustPolicy: Copy + PartialEq + Debug`.
 `MessageProvenance.slot_trust_policy` records the slot's declared policy (traces to BC-2.18.002 postcondition 4).
-Verified by `test_BC_2_18_003_slot_trust_policy_enum()`.
+Verified by `test_BC_2_18_005_slot_trust_policy_enum()`.
 
 ### AC-015 (traces to BC-2.18.003 invariant 4 — canonical MessageListVar struct shape)
 `TemplateVar` is a newtype over `String`. `MessageListVar` is a struct (NOT a bare newtype):
@@ -162,11 +165,11 @@ Without this field the Messages-arm Red Gate (S-2.05 AC-016) is structurally uni
 `MessageListVar` is `#[non_exhaustive]`.
 Verified by `test_BC_2_18_003_templatevar_and_messagelistvar_shapes()`.
 
-### AC-016 (traces to BC-2.18.004 invariant 5 — source-order slot evaluation)
+### AC-016 (traces to BC-2.18.002 invariant 1 — source-order slot evaluation)
 `format_messages` iterates message slots in SOURCE ORDER — the order in which slots were
 declared in `from_messages`. HashMap input order is irrelevant; slot evaluation order is
 deterministic and declaration-order-based.
-Verified by `test_BC_2_18_003_format_messages_source_order()`.
+Verified by `test_BC_2_18_002_format_messages_source_order()`.
 
 ### AC-017 (traces to BC-2.18.003 postcondition 1 — VP-2.18.003-A)
 `MessagesPlaceholder` expansion length equals the input `Vec<Message>` length: when a
@@ -290,7 +293,7 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 | `PromptTemplate` and `ChatPromptTemplate` are pure-core (no I/O) | BC-2.18.001 invariant 2; ADR-015 purity map | `pregolya-prompts` must NOT have tokio as a direct dep (only needed if Runnable impls use async; use async-trait bridge) |
 | `PromptValue` is `#[non_exhaustive]` | BC-2.18.002 postcondition 4 | Compile-fail test for external exhaustive match |
 | `TemplateInput` is `#[non_exhaustive]` | BC-2.18.002 postcondition 2 | Compile-fail test |
-| Source-order slot evaluation in `format_messages` | BC-2.18.004 invariant 5 | Unit test AC-016 |
+| Source-order slot evaluation in `format_messages` | BC-2.18.002 invariant 1 | Unit test AC-016 |
 | `lib.rs` in `pregolya-prompts` is re-export-only — no logic | CLAUDE.md Code Conventions (mod.rs/lib.rs rule) | Code review |
 | E-TMPL-003 message format: dynamic (contains var name) | BC-2.18.001 postcondition 4 | String contains check in test |
 | E-TMPL-004 is construction-time | BC-2.18.001 postcondition 2 | Error arises from `from_template`, not `format` |

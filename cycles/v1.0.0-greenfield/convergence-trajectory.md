@@ -3661,3 +3661,13 @@ Count-propagation sweep (S-7.02 defensive sweep): Census UNCHANGED — 39 storie
 **Files committed:** `specs/behavioral-contracts/ss-18/BC-2.18.002.md`, `specs/behavioral-contracts/ss-18/BC-2.18.003.md`, `specs/behavioral-contracts/BC-INDEX.md`, `specs/prd-supplements/interface-definitions.md`, `stories/epics.md`, `stories/stories/STORY-S-2.04-prompt-template-core.md`, `stories/stories/STORY-S-2.05-prompt-injection-safety-guard.md`, `sidecar-learning.md`, `STATE.md`, `cycles/v1.0.0-greenfield/convergence-trajectory.md`.
 
 CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-041.
+
+### P2A-041 (NOT CLEAN; D-249) — Fix-Burst COMPLETE (2026-08-23)
+Root cause: BC-2.18.002 changelog used 'PC-2' notation ambiguously — precondition-2 in v1.2/v1.3/v1.9 entries (TemplateInput parameter contract) and postcondition-2 in v1.7 entry (PromptValue output shape) — driving S-2.04 AC-012/013 to anchor the wrong clause and AC-016 to anchor the wrong BC.
+F-1 (HIGH): STORY-S-2.04 AC-012 (TemplateInput enum declaration) + AC-013 (HashMap<String,TemplateInput> parameter type) re-anchored from postcondition 2 → precondition 2 (precondition 2 = the call-time parameter contract; postcondition 2 = the PromptValue output shape; these are distinct clauses).
+F-2 (MED): AC-016 (source-order slot evaluation) re-anchored from BC-2.18.004 invariant 5 → BC-2.18.002 invariant 1 (invariant 1 governs evaluation order; BC-2.18.004 governs injection guard timing).
+F-3 (MED, root cause): BC-2.18.002 §Changelog entries (four prior burst entries) disambiguated — 'PC-2' replaced with explicit 'precondition 2' (parameter-contract entries) and 'postcondition 2' (output-shape entry); no clause content changed. BC-2.18.002 §Changelog updated; BC-INDEX §Changelog updated.
+F-4 (MED): AC-013 body reworked — removed type-impossible fabricated scenario ('bare TemplateVar at Messages slot → E-TMPL-003'); replaced with verifying format_messages TemplateInput-arm acceptance per precondition 2 canonical. Test renamed from test_BC_2_18_003_wrong_variant_type_returns_err to test_BC_2_18_002_format_messages_accepts_template_input_arms.
+F-5 (LOW): S-2.04 test-name prefixes aligned to traced BCs — 3 tests renamed: test_BC_2_18_003_template_input_variants → test_BC_2_18_002_template_input_variants; test_BC_2_18_003_slot_trust_policy_enum → test_BC_2_18_005_slot_trust_policy_enum; test_BC_2_18_003_format_messages_source_order → test_BC_2_18_002_format_messages_source_order.
+S-2.04 input-hash refreshed (BC-2.18.002 §Changelog updated). Census UNCHANGED 39/133/14/118.
+CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-042.
