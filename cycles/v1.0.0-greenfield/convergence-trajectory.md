@@ -3638,3 +3638,7 @@ CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-038.
 
 ### P2A-038 (reviewed HEAD 275346a) — NOT CLEAN → fix-burst (D-246)
 F-P2A038-01 (MED): epics.md E-20 Red-Gate relabeled from BC-2.22.001 (dimensionality) to BC-2.22.002 (credential opacity) per BC-INDEX/STORY-INDEX/dependency-graph. DAG/census/taxonomy clean. Census UNCHANGED 39/133/14/118. CLEAN(strict)=no. Streak 0/3. NEXT P2A-039.
+
+### P2A-039 (NOT CLEAN; D-247) — Fix-Burst COMPLETE (2026-08-22)
+Findings: F-039-01 (HIGH) S-2.05 AC-008 TrustLevel→Option<TrustLevel> (None=fail-closed/Trusted; AC-008 re-anchored BC-2.18.004 precondition 2; Task 6 aligned); F-039-02 (MED) S-2.04 AC-008 Vec<BaseMessage>→Vec<(Message,MessageProvenance)> (BC-2.18.002 §PC-2/INV-5 + sibling AC-010); F-039-03 (MED) S-2.04 BaseMessage→canonical Message (BC-2.01.002 enum; TD-VSDD-060 sibling-sweep; 0 remain); F-039-04 (LOW) BC-2.18.002 §INV-5 stale ADR-pending note removed; BC-INDEX §Changelog. All SS-18 type-consistency follow-ons. DAG/census/wave/VP+RG verified clean. Census UNCHANGED 39/133/14/118.
+CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: P2A-040.

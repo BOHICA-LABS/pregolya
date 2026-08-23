@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-22T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
@@ -24,7 +24,8 @@ changelog:
   - "1.4 (burst-300/stale-ProvenanceTag-residue/2026-08-16): Two STALE ProvenanceTag→TrustLevel residues closed. (1) §Architecture Anchors ADR-015 bullet: 'Decision 3 (PromptValue, MessageProvenance, ProvenanceTag pass-through)' → 'Decision 3 (PromptValue, MessageProvenance, TrustLevel classification)' — ADR-015 Decision 3 heading was renamed TrustLevel Classification and Injection Prevention in v1.3 (burst-226); ProvenanceTag is the SS-11 ingress-boundary struct, not the SS-18 trust classifier. (2) §Traceability Architecture Authority row: 'ProvenanceTag pass-through and severity ordering' → 'TrustLevel classification and severity ordering' — same concept rename; severity ordering is TrustLevel::severity() domain per ADR-015 Decision 3 Amendment F-P175-B208."
   - "1.5 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
-  - "1.7 (P2A-037-gaps/2026-08-22): Five changes closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-009/AC-010. (1) PC-7 (new): ChatPromptTemplate implements Runnable<Input=HashMap<String,TemplateInput>, Output=PromptValue>; invoke delegates to format_messages(); errors propagate unchanged. (2) INV-5 (new): PromptValue is a #[non_exhaustive] enum with variants String(String) and Messages(Vec<(Message, MessageProvenance)>); PromptValue: Send+Sync; non_exhaustive requires wildcard arm in external match. PC-5 into_messages() updated to cover both variants. (3) PC-2 rephrased: 'PromptValue.messages' struct-field notation replaced with 'PromptValue::Messages variant contains' (PC-2 was inconsistent with INV-5 enum declaration). (4) PC-5 updated to describe String-variant single-HumanMessage path. (5) TV-005 (new): Runnable invoke happy-path; TV count 4→5. H1 updated per bc_h1_is_title_source_of_truth; BC-INDEX updated. NOTE: ADR-015 §PromptValue currently defines a struct; architect must amend ADR-015 to enum shape per INV-5 — BC-2.18.002 INV-5 is the canonical type-shape authority until ADR-015 is updated."
+  - "1.7 (P2A-037-gaps/2026-08-22): Five changes closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-009/AC-010. (1) PC-7 (new): ChatPromptTemplate implements Runnable<Input=HashMap<String,TemplateInput>, Output=PromptValue>; invoke delegates to format_messages(); errors propagate unchanged. (2) INV-5 (new): PromptValue is a #[non_exhaustive] enum with variants String(String) and Messages(Vec<(Message, MessageProvenance)>); PromptValue: Send+Sync; non_exhaustive requires wildcard arm in external match. PC-5 into_messages() updated to cover both variants. (3) PC-2 rephrased: 'PromptValue.messages' struct-field notation replaced with 'PromptValue::Messages variant contains' (PC-2 was inconsistent with INV-5 enum declaration). (4) PC-5 updated to describe String-variant single-HumanMessage path. (5) TV-005 (new): Runnable invoke happy-path; TV count 4→5. H1 updated per bc_h1_is_title_source_of_truth; BC-INDEX updated."
+  - "1.8 (P2A-039-F-039-04/2026-08-22): Remove stale ADR-015 amendment-pending parenthetical from INV-5 — ADR-015 §PromptValue now defines the enum shape and is aligned; no behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -122,9 +123,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    `PromptValue: Send + Sync` — all variant payload types are `Send + Sync`.
    The `#[non_exhaustive]` annotation requires external `match` arms to include a `_ => {}`
    wildcard arm to remain forward-compatible. `into_messages()` (PC-5) converts both variants
-   to `Vec<Message>`. (ADR-015 amendment pending: architect must update §PromptValue from
-   struct to this enum shape; INV-5 is the canonical type-shape authority until that update
-   is committed.)
+   to `Vec<Message>`. (ADR-015 §PromptValue is aligned with this enum shape.)
 
 ## Edge Cases
 

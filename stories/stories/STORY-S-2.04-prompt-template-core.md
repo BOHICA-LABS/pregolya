@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "cd30cdc"
+input-hash: "e83b02b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
@@ -99,7 +99,7 @@ Verified by `test_BC_2_18_002_from_messages_ok()`.
 renders all message templates, resolves `TemplateInput::Scalar` for simple substitutions,
 `TemplateInput::Messages` for inserting a pre-formed message list at a placeholder, and
 `TemplateInput::FewShotExamples` for few-shot example interpolation.
-Returns `PromptValue::Messages(Vec<BaseMessage>)`.
+Returns `PromptValue::Messages(Vec<(Message, MessageProvenance)>)`.
 Verified by `test_BC_2_18_002_format_messages_all_input_types()`.
 
 ### AC-009 (traces to BC-2.18.002 postcondition 7)
@@ -140,7 +140,7 @@ message slot's trust requirement. `SlotTrustPolicy: Copy + PartialEq + Debug`.
 Verified by `test_BC_2_18_003_slot_trust_policy_enum()`.
 
 ### AC-015 (traces to BC-2.18.003 invariant 1)
-`TemplateVar` is a newtype over `String`. `MessageListVar` is a newtype over `Vec<BaseMessage>`.
+`TemplateVar` is a newtype over `String`. `MessageListVar` is a newtype over `Vec<Message>`.
 Both are `#[non_exhaustive]`.
 Verified by `test_BC_2_18_003_templatevar_and_messagelistvar_newtypes()`.
 
@@ -240,7 +240,7 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 | E-TMPL-003 message format: dynamic (contains var name) | BC-2.18.001 postcondition 4 | String contains check in test |
 | E-TMPL-004 is construction-time | BC-2.18.001 postcondition 2 | Error arises from `from_template`, not `format` |
 
-**Forbidden dependencies:** `pregolya-prompts` must NOT depend on `pregolya-vectorstores` or `pregolya-graph`. It may depend on `pregolya-core` for `Runnable`, `PregolyaError`, and `BaseMessage`.
+**Forbidden dependencies:** `pregolya-prompts` must NOT depend on `pregolya-vectorstores` or `pregolya-graph`. It may depend on `pregolya-core` for `Runnable`, `PregolyaError`, and `Message`.
 
 ## Library & Framework Requirements (MANDATORY)
 

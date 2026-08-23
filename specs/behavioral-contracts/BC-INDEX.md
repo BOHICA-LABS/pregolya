@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.57"
+version: "3.58"
 status: active
 producer: state-manager
-timestamp: 2026-08-22T18:30:00Z
+timestamp: 2026-08-22T23:35:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.58 (P2A-039-F-039-04/2026-08-22): BC-2.18.002 §INV-5 — removed stale 'ADR-015 amendment pending' parenthetical (ADR-015 §PromptValue already aligned to the enum shape); records-tier, no behavioral change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2); H1 unchanged."
   - "3.57 (P2A-037-gaps/2026-08-22): 2 BC version bumps closing STORY-S-2.04 P2A-037 class-audit spec gaps. BC-2.18.001 (v1.9→v2.0): PC-7 Runnable<HashMap<String,TemplateVar>,PromptValue> impl + INV-6 pure-core/Send+Sync classification + TV-008 Runnable invoke vector; H1 updated. BC-2.18.002 (v1.6→v1.7): PC-7 Runnable<HashMap<String,TemplateInput>,PromptValue> impl + INV-5 PromptValue enum shape (#[non_exhaustive] String/Messages variants, Send+Sync) + PC-2 enum-consistent rephrasing + PC-5 updated (String-variant single-HumanMessage path) + PC-6 'empty messages Vec' rephrased + TV-005 Runnable invoke vector; H1 updated. TV grand total 701→703 canonical + 11 GTV = 714. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). Story-writer must anchor STORY-S-2.04 AC-005→BC-2.18.001 PC-7, AC-006→BC-2.18.001 INV-6, AC-009→BC-2.18.002 PC-7, AC-010→BC-2.18.002 INV-5. Architect must amend ADR-015 §PromptValue from struct to enum per INV-5."
   - "3.56 (F-036-01/P2A-036-adjudication/2026-08-22): 1 BC version bump — BC-2.01.005 (v1.3→v1.4): duplicate-step-key edge case gap closed (F-036-01 adjudication). PC-1 postcondition clarified: 'all provided branches' = after IndexMap last-write-wins deduplication; constructor is infallible. Added EC-006 (duplicate key last-write-wins) + TV-006. Story-writer must drop STORY-S-1.05 AC-001 fallible-constructor assertion. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1 unchanged."
   - "3.55 (D-241/2026-08-22): Changelog currency fix — 2026-08-22 BC amendments recorded: BC-2.09.001 (v1.6→v1.7) E-MCP-008/009 overflow/tool-count fail-closed postcondition §PC9 added per P2A-029/D-235; BC-2.22.003 (v1.3→v1.4) E-PROV-012 ProviderConnectionError minted per P2A-030/D-236. Three new error codes registered in error-taxonomy.md: E-MCP-008 (MCP overflow fail-closed, burst-P2A-029), E-MCP-009 (MCP tool-count limit fail-closed, burst-P2A-029), E-PROV-012 (ProviderConnectionError, burst-P2A-030). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2)."
@@ -290,6 +291,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.58 | 2026-08-22 | P2A-039-F-039-04: BC-2.18.002 §INV-5 — removed stale 'ADR-015 amendment pending' parenthetical (ADR-015 §PromptValue already aligned to the enum shape); records-tier, no behavioral change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2); H1 unchanged. | P2A-039 F-039-04 |
 | 3.56 | 2026-08-22 | F-036-01/P2A-036-adjudication: 1 BC version bump — BC-2.01.005 (v1.3→v1.4): duplicate-step-key edge case gap closed. PC-1 postcondition clarified: infallible; duplicate keys resolved by IndexMap last-write-wins per ADR-026 §Decision 1 (Python dict parity). Added EC-006 + TV-006. Story-writer must drop STORY-S-1.05 AC-001 fallible-constructor assertion. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). | P2A-036 F-036-01 |
 | 3.55 | 2026-08-22 | D-241: Changelog currency fix — BC-2.09.001 (v1.6→v1.7) E-MCP-008/009; BC-2.22.003 (v1.3→v1.4) E-PROV-012. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). | D-241 |
 | 3.54 | 2026-08-17 | burst-315/D-185: 14 BC version bumps — F-B2 (MED): BC-2.04.006 (v1.7→v1.8) PC2 configurable HashMap access post-ADR-021 (HashMap field access aligned with ADR-021 §RunnableConfig §configurable). F-A1 (LOW): BC-2.06.004 (v1.1→v1.2) + BC-2.06.005 (v1.2→v1.3) ADR-019 residue removed from approval-event behavioral contracts (spurious ADR-019 inputs/traces_to; CAP-034 governs). F-A2 (LOW): BC-2.11.001 (v1.2→v1.3), BC-2.11.002 (v1.11→v1.12), BC-2.11.003 (v1.9→v1.10), BC-2.11.004 (v1.9→v1.10), BC-2.11.005 (v1.4→v1.5), BC-2.11.006 (v1.3→v1.4) traces_to corrected to capabilities-p0 §CAP-013. F-A3 (LOW): BC-2.18.001 (v1.7→v1.8), BC-2.18.002 (v1.4→v1.5), BC-2.18.003 (v1.3→v1.4), BC-2.18.004 (v1.9→v1.10), BC-2.18.005 (v1.5→v1.6) frontmatter status draft→active (prompt-template contracts promoted per residual-coverage-audit). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). | burst-315 D-185 |

@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "e67df71"
+input-hash: "a66b927"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
@@ -112,10 +112,13 @@ bypass; see AC-004). The ONLY ordering surface is `TrustLevel::severity() -> u8`
 - `TrustLevel::Trusted` → 0
 Verified by compile-fail test asserting `Ord` is not implemented: `test_BC_2_18_004_trust_level_no_ord_impl()`.
 
-### AC-008 (traces to BC-2.18.004 invariant 2)
-The injection guard operates on `TemplateVar` values that carry a `trust_level: TrustLevel`
-field. A `TemplateVar` with no explicit trust annotation defaults to `TrustLevel::Trusted`
-(conservative default — system-constructed values are trusted unless explicitly tagged).
+### AC-008 (traces to BC-2.18.004 precondition 2)
+The injection guard operates on `TemplateVar` values that carry a `trust_level: Option<TrustLevel>`
+field. A `TemplateVar` with no explicit trust annotation has `trust_level: None`; `None` is a
+distinct state treated as `Trusted` by the guard (absent classification — system-constructed
+values are trusted unless explicitly tagged). Both `None` and `Some(TrustLevel::Trusted)` pass
+the guard in `TrustRequired` slots because `var.trust_level.is_some_and(|t| t.is_untrusted())`
+returns false for `None` (consistent with AC-005 and AC-016's `Some(TrustLevel::Untrusted)` usage).
 Verified by `test_BC_2_18_004_templatevar_default_trust_is_trusted()`.
 
 ### AC-009 (traces to BC-2.18.004 invariant 3 — VP-006 Kani anchor)
@@ -237,7 +240,7 @@ Verified by `test_BC_2_18_004_few_shot_examples_arm_untrusted_in_trust_required_
 3. [ ] Create `pregolya-prompts/src/trust.rs` — `TrustLevel` enum (`#[non_exhaustive]`, NO `Ord`/`PartialOrd` derives), `severity() -> u8` method
 4. [ ] Create `pregolya-prompts/src/injection_guard.rs` — `check_slot_trust()` pure fn (source-order slot evaluation, severity-based check per `TrustLevel::severity()`, returns `Err(E-TMPL-001)` on violation; covers ALL TemplateInput arms: Scalar, Messages, FewShotExamples per BC-2.18.004 postcondition 5; VP-006 Kani proof vehicle)
 5. [ ] Update `pregolya-prompts/src/chat_template.rs` — delegate `format_messages` guard to `injection_guard::check_slot_trust()` (no inline guard logic); add SystemMessage `TrustAll` rejection in `from_messages`
-6. [ ] Extend `TemplateVar` (from S-2.04) with `trust_level: TrustLevel` field; default to `TrustLevel::Trusted`
+6. [ ] Extend `TemplateVar` (from S-2.04) with `trust_level: Option<TrustLevel>` field; `None` (absent) is treated as `Trusted` by the injection guard (consistent with AC-008)
 7. [ ] Register E-TMPL-001 (`Component::Tmpl, Category::Security, RetryHint::Never`) in error taxonomy
 8. [ ] Verify E-TMPL-002 (`Component::Tmpl, Category::Val, RetryHint::Never`) is registered (from S-2.04)
 9. [ ] Create `pregolya-prompts/src/proofs/injection_guard.rs` — VP-006 Kani harness stub for Phase 6 formal hardening
