@@ -3,19 +3,20 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4039d5b"
+input-hash: "61fd265"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -64,7 +65,7 @@ The default `batch` method on `Runnable` calls `invoke` concurrently for each in
 ### AC-004 (traces to BC-2.01.003 PC-005)
 `RunnableConfig` has a `recursion_limit: u32` field with default value 25. Accessing `config.recursion_limit` from within `invoke` is possible. Verified by `test_BC_2_01_003_runnable_config_recursion_limit()`.
 
-### AC-005 (traces to BC-2.01.003 postcondition 5)
+### AC-005 (traces to BC-2.01.003 INV-006)
 `DynRunnable` is a non-generic trait (not `DynRunnable<Input, Output>`) that uses `serde_json::Value` as both input and output. It has methods `async fn invoke(&self, input: Value, config: Option<RunnableConfig>) -> Result<Value, PregolyaError>` and `fn stream(...)`. `Arc<dyn DynRunnable>` is the type-erased composition handle. Verified by `test_BC_2_01_003_dyn_runnable_non_generic()`.
 
 ### AC-006 (traces to BC-2.01.003 INV-005)
@@ -156,7 +157,7 @@ S-1.01 error codes: `E-CORE-003`, `E-CORE-004`, `E-CORE-006` must be present in 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `runnable/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review |
-| `DynRunnable` is non-generic (not `DynRunnable<I, O>`) | BC-2.01.003 postcondition 5 | Type signature inspection; compile test |
+| `DynRunnable` is non-generic (not `DynRunnable<I, O>`) | BC-2.01.003 INV-006 | Type signature inspection; compile test |
 | `RunnableSequence::first` is never a `RunnableSequence` (no nested sequences) | BC-2.01.004 PC-004 | Unit test + type-level enforcement |
 | `batch` default uses bounded concurrency (max 10 in-flight) | BC-2.01.003 PC-003 | Unit test counting concurrent executions |
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-002
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
   - "1.2 (ADV-P1D-PASS-56): F-P56-01 — added code: E-CORE-006 to PC5, invariant §layer-disambiguation, EC-004, and TV-004. The Runnable-layer recursion halt was codeless while its graph-engine counterpart (E-GRAPH-017) carried a code. E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken) minted in error-taxonomy.md v1.7."
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (BURST-303/O-P194-A/2026-08-17): EC-001 generic-arity reconciliation — replaced `DynRunnable<Value, Value>` generic form with canonical non-generic `Arc<dyn DynRunnable>` per architect DynRunnable canon (O-P194-A). DynRunnable is a non-generic trait; Value is the runtime boundary type, not a type parameter."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.0 (M3b/ADR-027-escalation-3/2026-08-24): Added {INV-006} — DynRunnable non-generic design clause; formalizes architect canon O-P194-A (already in v1.7 changelog and EC-001); S-1.04 AC-005 adjudicated as clause-author (real v1 design requirement)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -86,6 +87,12 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
   are consumed once and not passed to child runs.
 - {INV-004} `recursion_limit` is honored across all nested `invoke` / `stream` calls via the task-local
   config mechanism.
+- {INV-006} **DynRunnable is non-generic (O-P194-A):** `DynRunnable` is a type-erased, non-generic trait
+  with `serde_json::Value` as the runtime input/output boundary type — NOT a generic
+  `DynRunnable<Input, Output>`. Type-erased invocation sites hold `Arc<dyn DynRunnable>`.
+  This design enables heterogeneous Runnables to be composed at runtime without monomorphization.
+  The `Value` boundary applies at the DynRunnable call surface; the concrete `Runnable` impls
+  retain their own typed `Input`/`Output` associated types internally.
 - {INV-005} **`recursion_limit` layer disambiguation (F-P49-02):** `config.recursion_limit` (default 25)
   is read by TWO independent enforcement layers that share the same `RunnableConfig` key:
   (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained

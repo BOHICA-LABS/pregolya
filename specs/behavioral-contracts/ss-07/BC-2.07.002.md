@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.07.002
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.7 (FIX-BURST-277-WAVE-C/FC-5-genuine-fix/2026-07-28): False closure FC-5 resolved. Form-B v1.5 row contained a false input-hash claim; git history confirms the claimed hash value was never written to the frontmatter — the burst-249 commit held a different value, and the dispatcher log from 2026-07-24 recorded a computed-vs-stored mismatch at burst time (the commit landed with a value different from what was computed during the burst). Form-B v1.5 false hash claim removed. input-hash updated to current computed value per frontmatter. Form-A changelog added (migrated from Form-B historical record)."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.0 (M3b/ADR-027/2026-08-24): INV-004 added — explicit ZWJ code-point boundary invariant; R8 CRITICAL parity requirement; closes escalation-4."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-008
   - domain-spec/edge-cases.md#DEC-001
@@ -84,6 +85,7 @@ first (and fail), then the implementation must make it pass.
 - {INV-001} The golden test vectors in this BC are the normative specification — they take precedence over any ambiguous interpretation of the text-splitter algorithm.
 - {INV-002} The Python reference is in-tree `langchain-text-splitters==1.1.2` at `langchain==1.3.13` per `.factory/semport/reference-manifest.md §langchain-version-pin` (the standalone `langchain-text-splitters==0.3.8` package is superseded — text-splitters is in-tree within the pinned langchain monorepo; no separate package version exists in the manifest). If the reference corpus pin changes, the golden vectors must be regenerated.
 - {INV-003} Parity applies to `RecursiveCharacterTextSplitter` and `CharacterTextSplitter` with the `length_function=len` setting (the default, which counts code points in Python).
+- {INV-004} ZWJ sequences (U+200D, zero-width joiner) are never treated as atomic grapheme clusters for chunk-boundary purposes. Length measurement uses code-point count (`len()` in Python, `.chars().count()` in Rust), so a ZWJ family emoji sequence of N code points where N > `chunk_size` MUST be split at code-point boundaries, producing multiple chunks. A grapheme-aware implementation that keeps the entire ZWJ sequence intact would violate parity. This property is tested by GTV-011.
 
 ## Reference Evidence
 
@@ -231,6 +233,7 @@ S-1.08
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 2.0 | 2026-08-24 | M3b/ADR-027: INV-004 added — explicit ZWJ code-point boundary invariant; R8 CRITICAL parity requirement; closes escalation-4. | M3b/ADR-027 |
 | 1.9 | 2026-08-23 | M1/ADR-027: stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change. | M1/ADR-027 |
 | 1.8 | 2026-08-22 | story-anchor-backfill: §Story Anchor backfilled to S-1.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change). | story-anchor-backfill |
 | 1.7 | 2026-07-28 | FIX-BURST-277-WAVE-C/FC-5: False closure FC-5 resolved. Form-B v1.5 row contained a false input-hash claim; git history (burst-249 commit) confirms the claimed value was never written to the frontmatter — the commit held a different hash value. Dispatcher log from 2026-07-24 corroborates: a computed-vs-stored mismatch was recorded at burst time, but the landed commit wrote yet another different value. False hash claim removed from v1.5 row. input-hash updated to current computed value per frontmatter. Form-A changelog added (migrated from Form-B). | FIX-BURST-277-WAVE-C |

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.08
 epic_id: E-03
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "6702208"
+input-hash: "a74b9a0"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.01]
@@ -96,7 +96,7 @@ GTV-008 and GTV-009 (separator boundary cases from the Python reference) pass. T
 ### AC-008 (traces to BC-2.07.002 PC-003 — GTV-010 grapheme discriminator)
 GTV-010: Input is a string containing NFD-normalized `é` (U+0065 U+0301, 2 code points). With `chunk_size: 1`, the splitter produces 2 chunks (one per code point), NOT 1 chunk (as a grapheme-cluster-aware splitter would). This discriminator ensures the implementation counts Unicode code points (scalars), not grapheme clusters. Verified in the Red Gate file as `test_GTV_010_nfd_e_codepoint_not_grapheme()`.
 
-### AC-009 (traces to BC-2.07.002 postcondition 4 — GTV-011 grapheme discriminator)
+### AC-009 (traces to BC-2.07.002 INV-004; tested by GTV-011)
 GTV-011: Input contains a ZWJ family emoji sequence (e.g., `"👨‍👩‍👧"`, which is multiple code points joined by U+200D ZWJ). With a `chunk_size` smaller than the total code-point count of the sequence, the splitter splits within the ZWJ sequence (producing separate emoji fragments), NOT treating the composite as an atomic unit. This discriminator verifies code-point granularity, not grapheme-cluster granularity. Verified in the Red Gate file as `test_GTV_011_zwj_emoji_splits_at_codepoints()`.
 
 ### AC-010 (traces to BC-2.07.003 PC-001 — short doc single chunk)
@@ -214,3 +214,4 @@ Files to MODIFY:
 
 - 1.0 (2026-08-18): initial story authoring.
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-002 postcondition 2→EC-002 (zero chunk_size validation is BC-2.07.001 EC-002; PC-002 is chunk count formula); AC-003 postcondition 3→EC-001 (overlap≥chunk_size is BC-2.07.001 EC-001; PC-003 is "byte length may exceed"); AC-004 postcondition 4→PC-001 (separator cascade achieves PC-001 compliance; old PC-004 is UTF-8 boundary); AC-005 "invariant 1"→INV-001; AC-007 postcondition 2→PC-001 (GTV-008..009 are test vectors under PC-001; old PC-002 is comparison method); AC-008 postcondition 3→PC-003 (chunk list length discriminator). ESCALATION: AC-009 (BC-2.07.002 postcondition 4 / PC-004 mis-anchor — AC asserts ZWJ sequence splits at code-point boundaries (GTV-011 discriminator) but PC-004 is about "no extra empty chunks"; semantically closest clauses are PC-001 and PC-003 but known escalation per task spec). Routes to product-owner.
+- 1.2 (ADR-027 M3c/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations. AC-009 re-cited to BC-2.07.002 INV-004 per product-owner adjudication.

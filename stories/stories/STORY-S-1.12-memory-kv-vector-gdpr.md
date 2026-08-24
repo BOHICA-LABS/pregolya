@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.12
 epic_id: E-06
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-24T12:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.001.md
@@ -93,7 +93,7 @@ If no scope context is available (e.g., anonymous call without scope), returns `
 If the erasure transaction partially fails (e.g., vector backend deletion succeeds but KV deletion fails), the error surfaces as `Err(PregolyaError { code: "E-MEMORY-005", message: "ErasurePartialFailure: ...", .. })`. The transaction is rolled back — no partial erasure persists. Verified by `test_BC_2_15_003_erasure_partial_failure_rollback()` (mock backend that fails mid-transaction).
 
 ### AC-015 (traces to BC-2.15.003 EC-004)
-App-scoped entries without an `author_id` (created by system, not attributable to a user) are NOT erased by `gdpr_erase`. Before returning, `gdpr_erase` emits a tracing DEBUG event with `event_type = "memory.gdpr_unattributed_session_entries"` if any such entries exist for the user's sessions. Verified by `test_BC_2_15_003_unattributed_entries_debug_log()`.
+App-scoped entries without an `author_id` (created by system, not attributable to a user) are NOT erased by `gdpr_erase`. Before returning, `gdpr_erase` emits a tracing WARN event with `event_type = "memory.gdpr_unattributed_session_entries"` if any such entries exist for the user's sessions. WARN is required (not DEBUG) because unattributed session entries represent a GDPR compliance gap that operators must observe (BC-2.15.003 EC-004 canonical). Verified by `test_BC_2_15_003_unattributed_entries_warn_log()`.
 
 ## Architecture Mapping
 
@@ -102,7 +102,7 @@ App-scoped entries without an `author_id` (created by system, not attributable t
 | `MemoryStore` trait, `MemoryScope` enum, `GdprErasureReceipt` | `pregolya_memory` (`lib.rs`) | pregolya-memory | Pure (trait and data type definitions; no I/O) |
 | `MemoryScope` scope-to-SQL-WHERE mapping | `pregolya_memory::scope` | pregolya-memory | Pure (deterministic enum-to-SQL predicate; no I/O) |
 | `SqliteMemoryStore` (`memory_set`, `memory_get`, `memory_delete`, `vector_search`, `hybrid_search`) | `pregolya_memory::store` | pregolya-memory | Effectful Shell (SQLite reads and writes via `rusqlite`; optional vector backend query) |
-| `gdpr_erase` transactional erasure | `pregolya_memory::gdpr` | pregolya-memory | Effectful Shell (`BEGIN IMMEDIATE` / `COMMIT` SQLite transaction via `rusqlite`; tracing DEBUG event emission on unattributed entries) |
+| `gdpr_erase` transactional erasure | `pregolya_memory::gdpr` | pregolya-memory | Effectful Shell (`BEGIN IMMEDIATE` / `COMMIT` SQLite transaction via `rusqlite`; tracing WARN event emission on unattributed entries) |
 | `EphemeralMemoryStore` (in-memory test backend) | `pregolya_memory::ephemeral` | pregolya-memory | Pure (in-memory `HashMap`; `#[cfg(test)]`) |
 
 **Subsystem anchor:** SS-15 owns this story's scope because SS-15 is the Long-Horizon Memory subsystem (`pregolya-memory` crate) per ARCH-INDEX Subsystem Registry. Pure-core / effectful-shell boundary: `MemoryStore` trait, `MemoryScope`, and `GdprErasureReceipt` are pure core (data/trait definitions); `SqliteMemoryStore`, `gdpr_erase`, and the vector backend interaction are effectful shells. `EphemeralMemoryStore` is pure-core for test use.
@@ -115,7 +115,7 @@ App-scoped entries without an `author_id` (created by system, not attributable t
 | `MemoryScope` scope-to-SQL-WHERE mapping | Pure | Deterministic pure function; produces SQL predicate strings from enum variants; no database access |
 | `SqliteMemoryStore::memory_set` / `memory_get` / `memory_delete` | Effectful Shell | SQLite DML (INSERT, SELECT, DELETE) via `rusqlite`; persistent I/O |
 | `SqliteMemoryStore::vector_search` / `hybrid_search` | Effectful Shell | SQLite SELECT + optional `Arc<dyn VectorBackend>` query; persistent I/O |
-| `MemoryStore::gdpr_erase` (`SqliteMemoryStore` impl) | Effectful Shell | `BEGIN IMMEDIATE` SQLite transaction across all three tiers; tracing DEBUG event emission on unattributed entries |
+| `MemoryStore::gdpr_erase` (`SqliteMemoryStore` impl) | Effectful Shell | `BEGIN IMMEDIATE` SQLite transaction across all three tiers; tracing WARN event emission on unattributed entries |
 | `EphemeralMemoryStore` (`#[cfg(test)]`) | Pure | In-memory `HashMap`; no persistent I/O; no side effects outside the object |
 
 ## Token Budget Estimate
@@ -159,7 +159,7 @@ Derived from `architecture/module-decomposition.md §pregolya-memory`:
 4. The GDPR erasure transaction MUST use SQLite `BEGIN IMMEDIATE` / `COMMIT` / `ROLLBACK` — no partial erasure state must be visible.
 5. All memory entries returned by `memory_get` on a storage error MUST return `Err`, not `None`. DI-014 compliance.
 6. `MemoryScope`, `GdprErasureReceipt`, `AdminContext` must all carry `#[non_exhaustive]`.
-7. `event_type` values that must be in the Canonical Structured Event Catalog: `"memory.gdpr_unattributed_session_entries"` (DEBUG, per-erase).
+7. `event_type` values that must be in the Canonical Structured Event Catalog: `"memory.gdpr_unattributed_session_entries"` (WARN, per-erase) — BC-2.15.003 EC-004 canonical log level.
 8. No `unwrap()` / `expect()` in non-test code. No `println!`.
 
 ## Library & Framework Requirements
@@ -172,7 +172,7 @@ Derived from `architecture/dependency-graph.md` external dependency table:
 | `serde` | workspace pin | Serialization of stored values |
 | `serde_json` | workspace pin | JSON encoding of values |
 | `tokio` | workspace pin | Async trait methods |
-| `tracing` | workspace pin | `"memory.gdpr_unattributed_session_entries"` DEBUG event |
+| `tracing` | workspace pin | `"memory.gdpr_unattributed_session_entries"` WARN event (BC-2.15.003 EC-004) |
 | `pregolya-core` | workspace path | `PregolyaError` |
 
 **Optional vector backend:** The vector storage backend (e.g., sqlite-vss or an external vector DB) is optional. When not configured, `vector_search` returns E-MEMORY-001. The concrete backend type is configurable via `MemoryStoreConfig`. Do not hardcode a specific vector library — use a trait object `Arc<dyn VectorBackend>`.
@@ -209,11 +209,12 @@ Files to MODIFY:
 
 | Story | AC | Current Cite | Asserted Behavior | BC Checked | Issue | Proposed Resolution |
 |-------|----|--------------|-------------------|------------|-------|---------------------|
-| S-1.12 | AC-015 | BC-2.15.003 EC-004 | `tracing::DEBUG` event with `event_type = "memory.gdpr_unattributed_session_entries"` | BC-2.15.003 EC-004 | BC-2.15.003 EC-004 specifies `WARN` log level; story asserts `DEBUG` — wrong level mismatch | Product-owner to adjudicate: update story AC-015 body to `WARN` per BC, or amend BC-2.15.003 EC-004 to `DEBUG` |
+| S-1.12 | AC-015 | BC-2.15.003 EC-004 | `tracing::WARN` event with `event_type = "memory.gdpr_unattributed_session_entries"` | BC-2.15.003 EC-004 | RESOLVED M3c: PO adjudicated BC is canonical — story AC-015 corrected to WARN per BC-2.15.003 EC-004 | Resolved — AC-015 updated to WARN; BC not amended |
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-08-24 | ADR-027 M3c: escalation-resolution AC corrections — AC-015 log level DEBUG→WARN per BC-2.15.003 EC-004 (BC canonical) | M3c/ADR-027 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |
 | 1.0 | 2026-08-18 | Initial authoring | story-writer |

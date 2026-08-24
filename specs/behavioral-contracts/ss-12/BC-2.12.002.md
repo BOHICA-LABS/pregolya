@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.8"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
   - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
@@ -24,6 +24,8 @@ changelog:
   - "1.6 (BURST-312/F-P203-01/2026-08-17): Capability Anchor Justification quote-fidelity fix — 'Assistant (named agent config with graph reference)' corrected to verbatim CAP-014 text 'Assistant (named agent config)'; the phrase 'with graph reference' does not appear in capabilities-p1-p2.md §CAP-014. F-P203-01."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (M3b-escalation-9/2026-08-24): PC-005 amended to cite E-SERVER-012 AssistantAlreadyExists — the HTTP 409 / if_exists=raise path lacked a named error code; gap surfaced during M3b story re-citation escalation adjudication."
+  - "1.10 (collision-fix/2026-08-24): PC-005 error code corrected from E-SERVER-012 to E-SERVER-017 — E-SERVER-012 is already allocated to ConcurrentRun (BC-2.12.003); append-only numbering assigns E-SERVER-017 = AssistantAlreadyExists per error-taxonomy."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -67,7 +69,7 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
 2. {PC-002} `assistant_id` is caller-supplied or server-generated (UUID v4 if absent).
 3. {PC-003} The server stores an immutable Version 1 snapshot of `(graph_id, config, context, metadata)`.
 4. {PC-004} Returns HTTP 201 with the `Assistant { assistant_id, graph_id, config, context, metadata, name, description, version: 1, created_at }`.
-5. {PC-005} If `assistant_id` already exists and `if_exists = "raise"` (default): HTTP 409.
+5. {PC-005} If `assistant_id` already exists and `if_exists = "raise"` (default): HTTP 409 `{ code: "E-SERVER-017", message: "AssistantAlreadyExists: assistant '<id>' already exists" }`.
 6. {PC-006} If `assistant_id` already exists and `if_exists = "do_nothing"`: returns existing Assistant (HTTP 200).
 
 ### Read Assistant (`GET /assistants/{assistant_id}`)

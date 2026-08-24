@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.17
 epic_id: E-09
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-24T12:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.001.md
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.2 (ADR-027 M3c/2026-08-24): escalation-resolution AC corrections — AC-008/AC-009 corrected to WITHIN-RUN (same run_id, unchanged parent_ids) per BC-2.06.002 INV-005+EC-002+TV-005; EC-003 swept (TD-VSDD-060)"
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
@@ -77,11 +78,11 @@ Events maintain causal order: `RunStart` precedes all other run events; `StepSta
 ### AC-007 (traces to BC-2.06.002 PC-001 — every event carries run_id)
 Every `StreamEvent` variant carries a `run_id: Uuid` field. No event is emitted without a `run_id`. Verified by `test_BC_2_06_002_every_event_carries_run_id()`.
 
-### AC-008 (traces to BC-2.06.002 postcondition 2 — fan-out PUSH tasks share parent run_id)
-Events emitted by PUSH tasks spawned via the Send API carry the parent run's `run_id` in their `parent_ids` array (not as the event's own `run_id`). Verified by `test_BC_2_06_002_fanout_tasks_share_parent_run_id()`.
+### AC-008 (traces to BC-2.06.002 INV-005 + EC-002 + TV-005 — PUSH tasks are WITHIN-RUN, same run_id)
+Events emitted by PUSH tasks spawned via the Send API carry the SAME `run_id` as the enclosing run (not a new or different `run_id`). `parent_ids` is UNCHANGED — identical to the enclosing run's `parent_ids`; it is NOT set to `[parent_run_id]`. Send-API fan-outs are within-run dispatches, not sub-runs (BC-2.06.002 INV-005; EC-002 and TV-005 are canonical test evidence). Verified by `test_BC_2_06_002_push_task_carries_same_run_id()`.
 
-### AC-009 (traces to BC-2.06.002 postcondition 3 — parent_ids enables causal chain reconstruction)
-For a subtask spawned by `Send("worker", arg)`, its events have `parent_ids: [parent_run_id]`. The full causal chain (grandparent → parent → child) is reconstructable by following `parent_ids`. Verified by `test_BC_2_06_002_parent_ids_enables_causal_chain()`.
+### AC-009 (traces to BC-2.06.002 INV-005 + TV-005 — Send subtask has same run_id, unchanged parent_ids)
+For a subtask spawned by `Send("worker", arg)`, its events have `run_id` equal to the enclosing run's `run_id` (no new sub-run is created) and `parent_ids` is unchanged — NOT set to `[parent_run_id]`. This is consistent with AC-008: PUSH tasks are within-run (BC-2.06.002 INV-005; TV-005 is the canonical test vector). Verified by `test_BC_2_06_002_send_subtask_within_run_id()`.
 
 ### AC-010 (traces to BC-2.06.003 PC-001 — streaming and unary final answers identical)
 For the same graph, same inputs, and same checkpointed state, the final answer returned by unary execution (`run()`) equals the final answer reconstructed from streaming events (`stream()` → collect → extract final message). Verified by `test_BC_2_06_003_streaming_unary_identical_final_answer()`.
@@ -118,7 +119,7 @@ The streaming path uses the same BSP engine and the same node execution logic as
 |----|----------|-------------------|
 | EC-001 | Graph run errors mid-stream | `StreamEvent::Error` emitted; stream yields the error event then closes |
 | EC-002 | `RunEnd` attempted on `failed` run | Not emitted; `RunEnd` reserved for `completed`/`summary_halt` |
-| EC-003 | Two nested Send fan-outs (grandparent → parent → child) | Each level carries its parent's `run_id` in `parent_ids`; chain is reconstructable |
+| EC-003 | Two nested Send fan-outs (grandparent → parent → child) | All levels share the same `run_id` (within-run; BC-2.06.002 INV-005); `parent_ids` is unchanged at each level — not appended. The causal chain topology is flat within a single run. |
 | EC-004 | GuardrailDecision Fail with Critical severity | `StreamEvent::GuardrailDecision { decision: Fail, .. }` emitted; then `StreamEvent::Error`; `RunEnd` not emitted |
 | EC-005 | StepEnd attempted with Stream variant | Not valid; `StepEnd` has no `Stream` variant per BC-2.06.001 postcondition 2 |
 

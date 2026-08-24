@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-001
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line span (E-CORE-002, bare wrapper missing `, ..`); EC-002 multiline span continuation line (E-CORE-002, `, ..` added before closing `})`); TV-004 table-cell span (E-CORE-002, `, ..` added). All spans have category/code but lack component and retry_hint."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (M3b/ADR-027-escalation-2/2026-08-24): Added {INV-005} — Message hierarchy #[non_exhaustive] clause; authoring missing production-grade invariant per CLAUDE.md workspace-wide mandate (S-1.03 AC-012 escalation)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -83,6 +84,10 @@ typed `Err(PregolyaError)` — it never panics.
   no default is supplied.
 - {INV-004} `AiMessage.usage_metadata` is `Option<UsageMetadata>` — may be absent for non-model-generated
   messages (e.g. messages loaded from a checkpoint without token metadata).
+- {INV-005} `Message`, `AiMessage`, `HumanMessage`, `SystemMessage`, and `ToolMessage` are each annotated
+  `#[non_exhaustive]`; external code matching on `Message` variants must include a wildcard arm
+  (`_ => {}`). The attribute applies to all public structs and enums in the message hierarchy per
+  the workspace-wide `#[non_exhaustive]` mandate (CLAUDE.md §Code Conventions).
 
 ## Edge Cases
 

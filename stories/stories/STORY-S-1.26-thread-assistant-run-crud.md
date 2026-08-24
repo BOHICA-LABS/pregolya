@@ -3,12 +3,14 @@ document_type: story
 level: ops
 story_id: S-1.26
 epic_id: E-14
-version: "1.1"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 10 mis-anchors corrected (AC-001 PC1→PC-005, AC-002 PC2→PC-009, AC-003 PC3→PC-011, AC-004 BC2.PC1→INV-001, AC-005 BC2.PC2→EC-006, AC-006 BC3.PC1→PC-005, AC-007 BC3.PC2→PC-007, AC-008 BC3.PC3→PC-008, AC-009 BC3.PC4→INV-006, AC-010 BC3.INV1→PC-010)"
+  - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC corrections"
+  - "1.3 (M3c collision-fix + EC-006 coverage restore/2026-08-24): AC-005 E-SERVER-012→E-SERVER-017 (AssistantAlreadyExists); AC-009 stale AC-005 cross-ref removed, EC-006 configurable-merge stated directly, BC-2.12.002 EC-006 trace added"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.001.md
@@ -16,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "260eb02"
+input-hash: "219055a"
 traces_to:
   - behavioral-contracts/BC-2.12.001
   - behavioral-contracts/BC-2.12.002
@@ -84,9 +86,9 @@ Comfortable within context window. No split required.
 `POST /assistants` creates an assistant at `version = 1`. Each subsequent `PATCH /assistants/:id` creates a new immutable version snapshot. Versions list (`GET /assistants/:id/versions`) is ordered `version ASC` (exemption from canonical `created_at DESC`).
 (traces to BC-2.12.002 INV-001)
 
-### AC-005: Assistant configurable map — key collision: run wins at leaf
-When merging run-provided `configurable` with assistant-stored `configurable`, run values win at leaf level over assistant-stored values (fine-grained per-key merge, not whole-map replacement). Returns `E-SERVER-009` (AssistantNotFound), `E-SERVER-010` (AssistantVersionNotFound), `E-SERVER-011` (AssistantConfigConflict) on error.
-(traces to BC-2.12.002 EC-006)
+### AC-005: Assistant error scenarios — GraphNotFound and AssistantAlreadyExists
+`POST /assistants` with a `graph_id` referencing a non-existent graph returns `E-SERVER-011` (GraphNotFound). `POST /assistants` with `if_exists=raise` when an assistant with that identifier already exists returns `E-SERVER-017` (AssistantAlreadyExists).
+(traces to BC-2.12.002 PC-005, EC-005)
 
 ### AC-006: Run POST — enqueues with queued state
 `POST /threads/:id/runs` creates a run with initial state `queued`. Returns `E-SERVER-002` (RunNotFound) on GET for non-existent run. Returns `E-SERVER-012` (ConcurrentRun) if another run is already active on the same thread.
@@ -101,8 +103,8 @@ The run state machine supports these arcs: `queued → in_progress`, `in_progres
 (traces to BC-2.12.003 PC-008)
 
 ### AC-009: Run-Config Merge Precedence — run wins over assistant at leaf level
-When creating a run, merge precedence for `configurable`: run-provided values win over assistant-stored values at each leaf key. This is the same leaf-level merge rule as AC-005, applied at run creation time.
-(traces to BC-2.12.003 INV-006)
+When creating a run, merge precedence for `configurable`: run-provided values win over assistant-stored values at each leaf key. A run supplying `{ "model": "gpt-4" }` does not erase assistant-stored keys absent from the run config; only keys present in the run config are overridden.
+(traces to BC-2.12.003 INV-006, BC-2.12.002 EC-006)
 
 ### AC-010: interrupted → cancelled arc exists
 A run in `interrupted` state (awaiting HITL approval) can be transitioned to `cancelled` without going through `in_progress`. `DELETE /threads/:id/runs/:run_id` or a cancel API call on an `interrupted` run results in `cancelled` state.

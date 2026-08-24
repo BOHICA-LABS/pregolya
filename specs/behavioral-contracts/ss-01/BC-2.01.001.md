@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-001
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC6 had `Err(PregolyaError { category: VAL, code: E-CORE-001 })` bare wrapper; E-CORE-001 has `<n>` (block position) and `<type>` (type tag) placeholders. Added inline `message:` template to PC6; added EC-006 with concrete placeholder values as the authoritative full-form site."
   - "1.3 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). PC6 multiline span: added `, ..` before closing `})` on continuation line (fields category/code/message present; component and retry_hint absent — elision marker required). EC-006 multiline span: same correction on its continuation line."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (M3b/ADR-027-escalation-1/2026-08-24): Added {INV-005} — ContentBlock #[non_exhaustive] clause; authoring missing production-grade invariant per CLAUDE.md workspace-wide mandate (S-1.03 AC-005 escalation)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -88,6 +89,9 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
 - {INV-004} `MessageContent::Text(s)` and `MessageContent::Blocks(v)` are semantically equivalent views
   of the same information — transitioning from text to blocks via a normalization call must
   not lose content.
+- {INV-005} `ContentBlock` is annotated `#[non_exhaustive]`; external code matching on it must include
+  a wildcard arm (`_ => {}`). The attribute is required per the workspace-wide `#[non_exhaustive]`
+  mandate (CLAUDE.md §Code Conventions) and applies to every public enum in the API surface.
 
 ## Edge Cases
 

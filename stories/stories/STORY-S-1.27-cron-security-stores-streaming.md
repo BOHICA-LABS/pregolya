@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.27
 epic_id: E-14
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 13 mis-anchors corrected (AC-001 PC1→INV-001, AC-002 PC2→INV-003, AC-003 PC3→PC-007, AC-004 PC4→EC-004, AC-005 BC5.PC1→INV-001, AC-006 BC5.PC2→PC-007, AC-007 BC5.PC3→INV-003, AC-008 BC6.PC1→PC-003, AC-009 BC6.PC2→INV-004, AC-010 BC6.PC3→PC-009, AC-011 BC7.PC1→INV-001, AC-012 BC7.PC2→PC-002, AC-013 BC7.PC3→INV-002)"
+  - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC corrections"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
@@ -83,9 +84,9 @@ If the server was down during scheduled firing times, missed firings are not rep
 `GET /runs?schedule_id=<id>` returns all runs across threads that were created by the named schedule. The schedule_id is stored on each run created by the cron scheduler.
 (traces to BC-2.12.004 PC-007)
 
-### AC-004: CronSchedule — queue-full warning event
-When the cron scheduler's internal queue is full and a firing is dropped, the server emits a tracing event with `event_type = "server.cron_schedule_queue_full"`. Returns `E-CRON-001` (CronParseError), `E-CRON-002` (CronScheduleNotFound), `E-CRON-003` (CronScheduleConflict) on appropriate errors.
-(traces to BC-2.12.004 EC-004)
+### AC-004: CronSchedule — error scenarios at firing and configuration
+At firing time, if the assistant referenced by the schedule no longer exists, the firing is dropped and returns `E-CRON-001` (AssistantNotFoundAtFiring). Creating or updating a schedule with an unparseable cron expression returns `E-CRON-002` (InvalidCronExpression). When the cron scheduler's internal queue is full and a firing is dropped, the server emits a tracing event with `event_type = "server.cron_schedule_queue_full"` and returns `E-CRON-003` (ScheduleQueueFull).
+(traces to BC-2.12.004 EC-001, EC-002, EC-004)
 
 ### AC-005: SecurityConfig::default — CORS denied (empty allowed_origins)
 `SecurityConfig::default()` configures CORS with an empty `allowed_origins` list. All cross-origin requests are denied. This is the DI-013 secure-by-default invariant.
@@ -146,7 +147,7 @@ If a second SSE or unary execution request arrives for a `run_id` that is alread
 |----------------|-------------------|--------|
 | `SecurityConfig::default` | Pure | Returns a config struct; no I/O |
 | `SecurityConfig::validate` | Pure | Rejects empty debug key; no I/O |
-| `CronSchedule::parse` | Pure | Parses cron expression; returns E-CRON-001 on parse error |
+| `CronSchedule::parse` | Pure | Parses cron expression; returns E-CRON-002 (InvalidCronExpression) on parse error |
 | `CronScheduler::fire` | Effectful | Creates thread + run; schedules next firing |
 | `SseRoutes::stream_run` | Effectful | Runs CompiledGraph, emits SSE events |
 | `InMemoryRunStore` operations | Effectful | Mutates in-memory map |
@@ -157,7 +158,7 @@ If a second SSE or unary execution request arrives for a `run_id` that is alread
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
 | EC-001 | BC-2.12.004 EC-1 | Server down during 3 scheduled firings | Skip 3; fire once at next check interval |
-| EC-002 | BC-2.12.004 EC-2 | Invalid cron expression | `E-CRON-001` |
+| EC-002 | BC-2.12.004 EC-2 | Invalid cron expression | `E-CRON-002` (InvalidCronExpression) |
 | EC-003 | BC-2.12.004 EC-3 | Cron queue full | Firing dropped; emit `event_type = "server.cron_schedule_queue_full"` |
 | EC-004 | BC-2.12.005 EC-1 | `SecurityConfig::default()` | `allowed_origins: []`, `debug_route_key: None` |
 | EC-005 | BC-2.12.005 EC-2 | CORS wildcard configured | Startup WARN with `event_type = "server.security_config_cors_wildcard"` |

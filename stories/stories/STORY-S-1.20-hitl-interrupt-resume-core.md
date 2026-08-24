@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.20
 epic_id: E-12
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-24T12:00:00Z
 changelog:
+  - "1.2 (ADR-027 M3c/2026-08-24): escalation-resolution AC corrections — AC-004 error code corrected E-GRAPH-016→E-CHKPT-001 per BC-2.05.001 EC-003; Architecture Compliance Rules swept (TD-VSDD-060)"
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
@@ -71,8 +72,8 @@ The INTERRUPT marker is written via synchronous `put_writes` to the checkpoint, 
 ### AC-003 (traces to BC-2.05.001 PC-004 — interrupt_id is unique per call)
 Each `interrupt(value)` call generates a unique `interrupt_id` (UUID v4). Multiple `interrupt()` calls in the same run produce distinct `interrupt_id` values. Verified by `test_BC_2_05_001_interrupt_id_is_unique()`.
 
-### AC-004 (traces to BC-2.05.001 edge case EC-001 — E-GRAPH-016 on INTERRUPT marker write failure)
-If `put_writes` fails during INTERRUPT marker write, the scheduler returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-016, .. })`. The run does not continue with a partial checkpoint. Verified by `test_BC_2_05_001_marker_write_failure_returns_e_graph_016()`.
+### AC-004 (traces to BC-2.05.001 EC-003 — E-CHKPT-001 on INTERRUPT marker write failure)
+If `put_writes` fails during INTERRUPT marker write, the scheduler returns `Err(PregolyaError { category: CHECKPOINT, code: E-CHKPT-001, message: "CheckpointWriteFailed: ...", .. })`. The run does not continue with a partial checkpoint. Note: E-GRAPH-016 = `InterruptWithoutCheckpointer` (the no-checkpointer scenario, BC-2.05.001 EC-001) — a distinct condition from write failure. Verified by `test_BC_2_05_001_marker_write_failure_returns_e_chkpt_001()`.
 
 ### AC-005 (traces to BC-2.05.002 PC-001 — resume value delivered FIFO to interrupted task)
 Resume values are delivered to the interrupted task via a FIFO per-task scratchpad. The first `Command(resume=v)` delivered to a task provides the value that the interrupted node's `interrupt()` call returns. Verified by `test_BC_2_05_002_resume_delivered_fifo()`.
@@ -210,7 +211,7 @@ The deadline for risk-gate HITL responses is evaluated lazily at resume time —
 | Wildcard arm in `RiskGatePolicy` fails-closed to `High` | BC-2.05.006 INV-002 | Unit test `test_BC_2_05_006_wildcard_arm_fails_closed_to_high()` |
 | `interrupt()` uses synchronous `put_writes` — not async batch | BC-2.05.001 PC-003 | Code review: no `.await` between `interrupt(value)` call and checkpoint write |
 | Node re-executes from START — no resumption from interrupt site | BC-2.05.003 PC-002 | Integration test: side-effect counter before `interrupt()` is 1 after resume (node ran from start again) |
-| `E-GRAPH-016` on INTERRUPT marker write failure | BC-2.05.001 EC-003 | Unit test with injected checkpoint write failure |
+| `E-CHKPT-001` (CheckpointWriteFailed) on INTERRUPT marker write failure; `E-GRAPH-016` is the no-checkpointer scenario (EC-001), not write failure | BC-2.05.001 EC-003 | Unit test with injected checkpoint write failure |
 | FIFO ordering of resume values to interrupt calls | BC-2.05.002 PC-001 | Unit test: two sequential `interrupt()` calls; first resume goes to first call |
 
 ## Library & Framework Requirements (MANDATORY)

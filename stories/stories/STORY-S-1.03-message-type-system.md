@@ -3,19 +3,20 @@ document_type: story
 level: ops
 story_id: S-1.03
 epic_id: E-01
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.002.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "d4fea73"
+input-hash: "e21d98d"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]
@@ -62,7 +63,7 @@ tdd_mode: strict
 ### AC-004 (traces to BC-2.01.001 PC-004)
 `MessageContent` is an enum with variants: `Text(String)` (for simple string content) and `Blocks(Vec<ContentBlock>)` (for structured multi-block content). Both variants serialize/deserialize correctly. Verified by `test_BC_2_01_001_message_content()`.
 
-### AC-005 (traces to BC-2.01.001 postcondition 5)
+### AC-005 (traces to BC-2.01.001 INV-005)
 `ContentBlock` has `#[non_exhaustive]` applied. An external-crate match without a wildcard arm fails to compile. `ContentBlock` implements `Debug`, `Clone`. Verified by compile-fail test.
 
 ### AC-006 (traces to BC-2.01.001 edge case EC-006 — E-CORE-001)
@@ -83,7 +84,7 @@ An unrecognized message role `{"type":"robot","content":"beep"}` returns `Err(Pr
 ### AC-011 (traces to BC-2.01.002 INV-003)
 `ToolMessage { tool_call_id: "".to_string(), content: MessageContent::Text("result".to_string()) }` fails with `Err(PregolyaError { code: "E-CORE-005", category: VAL, message: "Validation failed for 'tool_call_id': must not be empty", .. })`. Verified by `test_BC_2_01_002_tool_message_requires_call_id()`.
 
-### AC-012 (traces to BC-2.01.002 invariant)
+### AC-012 (traces to BC-2.01.002 INV-005)
 `Message` has `#[non_exhaustive]`. `AiMessage`, `HumanMessage`, `SystemMessage`, `ToolMessage` all have `#[non_exhaustive]`. Verified by compile-fail tests (external match).
 
 ## Architecture Mapping
