@@ -17,7 +17,8 @@ input-hash: "pending"
 
 # STORY-INDEX: pregolya Phase 2 Story Inventory
 
-> **39 stories total — 27 Wave 1 / 11 Wave 2 / 1 Wave 6**
+> **40 stories total — 27 Wave 1 / 11 Wave 2 / 1 Wave 6 / 1 Maint (S-MAINT-001 housekeeping, out-of-wave)**
+> **Product-story census: 39 (27 Wave 1 / 11 Wave 2 / 1 Wave 6). S-MAINT-001 is maintenance, not a product feature.**
 > **BC coverage: 133 BCs — 51 P0 / 79 P1 / 3 P2 — all covered**
 > **Story files:** Individual STORY-NNN specs live in `.factory/stories/stories/`
 
@@ -25,10 +26,12 @@ input-hash: "pending"
 
 | Metric | Count |
 |--------|-------|
-| Total Stories | 39 |
+| Total Story Files | 40 |
+| Product Stories | 39 |
 | Wave 1 stories | 27 |
 | Wave 2 stories | 11 |
 | Wave 6 stories | 1 |
+| Maintenance Stories | 1 |
 | Total Epics | 22 |
 | BCs covered | 133 / 133 |
 | Stories with VP anchor | 12 |
@@ -99,7 +102,7 @@ input-hash: "pending"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-1.26 | Thread, Assistant and Run CRUD — Durable HTTP Server | BC-2.12.001, BC-2.12.002, BC-2.12.003 | SS-12 | pregolya-server | P1 | 8 | [S-1.16, S-1.10, S-1.04] | draft |
-| S-1.27 | CronSchedule, SecurityConfig and Idempotency Store Seams | BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007 | SS-12 | pregolya-server | P1 | 8 | [S-1.26] | draft |
+| S-1.27 | CronSchedule, SecurityConfig and Idempotency Store Seams | BC-2.06.001, BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007 | SS-12 | pregolya-server | P1 | 8 | [S-1.26] | draft |
 
 ---
 
@@ -248,7 +251,7 @@ input-hash: "pending"
 
 | BC ID | Title (abbreviated) | Story | Priority |
 |-------|---------------------|-------|---------|
-| BC-2.06.001 | Typed Per-Phase Event Taxonomy — 16 Variants | S-1.17 | P0 |
+| BC-2.06.001 | Typed Per-Phase Event Taxonomy — 16 Variants | S-1.17, S-1.27 | P0 |
 | BC-2.06.002 | run_id + parent_ids Correlation | S-1.17 | P0 |
 | BC-2.06.003 | Streaming and Unary Identical Final Answer | S-1.17 | P0 |
 | BC-2.06.004 | tool_approval_request StreamEvent | S-1.24 | P1 |

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.04
 epic_id: E-18
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "336a96d"
+input-hash: "30431cd"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
@@ -122,7 +122,7 @@ before returning. A mix of one valid and one invalid template string returns `Er
 Construction is atomic — no partial state.
 Verified by `test_BC_2_18_002_from_messages_atomic_construction()`.
 
-### AC-012 (traces to BC-2.18.002 PRE-002 — TemplateInput enum: 3 arms, #[non_exhaustive])
+### AC-012 (traces to BC-2.18.002 INV-006 — TemplateInput enum: 3 arms, #[non_exhaustive])
 `TemplateInput` is an enum with exactly three variants:
 - `TemplateInput::Scalar(TemplateVar)` — a single scalar value for a `{var}` slot
 - `TemplateInput::Messages(MessageListVar)` — a pre-formed list for a `{messages}` slot
@@ -292,7 +292,7 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 |------|--------|-------------|
 | `PromptTemplate` and `ChatPromptTemplate` are pure-core (no I/O) | BC-2.18.001 INV-006; ADR-015 purity map | `pregolya-prompts` must NOT have tokio as a direct dep (only needed if Runnable impls use async; use async-trait bridge) |
 | `PromptValue` is `#[non_exhaustive]` | BC-2.18.002 INV-005 | Compile-fail test for external exhaustive match |
-| `TemplateInput` is `#[non_exhaustive]` | BC-2.18.002 PRE-002 | Compile-fail test |
+| `TemplateInput` is `#[non_exhaustive]` | BC-2.18.002 INV-006 | Compile-fail test |
 | Source-order slot evaluation in `format_messages` | BC-2.18.002 INV-001 | Unit test AC-016 |
 | `lib.rs` in `pregolya-prompts` is re-export-only — no logic | CLAUDE.md Code Conventions (mod.rs/lib.rs rule) | Code review |
 | E-TMPL-003 message format: dynamic (contains var name) | BC-2.18.001 PC-004 | String contains check in test |
@@ -324,10 +324,5 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 
 - "1.0 (2026-08-19): initial story authored"
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 compliance-table semantic re-anchors applied (see escalation notes)"
+- "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
 
-## Escalation Notes (route to product-owner)
-
-- **Compliance rule** "PromptTemplate and ChatPromptTemplate are pure-core (no I/O)" originally cited "BC-2.18.001 invariant 2" (which is about `input_variables()` result immutability, not purity). Re-anchored to INV-006 (pure-core definition). PO to confirm.
-- **Compliance rule** "`PromptValue` is `#[non_exhaustive]`" originally cited "BC-2.18.002 postcondition 4" (which is about `MessageProvenance.slot_trust_policy`). Re-anchored to INV-005 (`PromptValue` `#[non_exhaustive]`). PO to confirm.
-- **Compliance rule** "`TemplateInput` is `#[non_exhaustive]`" originally cited "BC-2.18.002 postcondition 2" (which is about `PromptValue::Messages` variant content). Re-anchored to PRE-002 (TemplateInput variant description). No explicit INV clause for TemplateInput `#[non_exhaustive]` found in BC-2.18.002 — PO to confirm whether PRE-002 is the canonical anchor or a new INV clause should be added.
-- **Compliance rule** "E-TMPL-004 is construction-time" originally cited "BC-2.18.001 postcondition 2" (which is about partial bindings merging). Re-anchored to INV-001 (construction-time fallibility for malformed templates). PO to confirm.

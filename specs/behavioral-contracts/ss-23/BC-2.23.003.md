@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.10"
+version: "1.11"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -30,6 +30,7 @@ changelog:
   - "1.8 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — EditFileTool Ok-then-NotFound-at-open behavior. PC-5 extended: when canonicalize_beneath_root returns Ok(path) via Phase 2 (ADR-024 §Phase-2 Postconditions PC-5), path may not yet exist on disk; EditFileTool precondition 3 requires an existing file, so the subsequent OS open returns NotFound, propagated as E-TOOLS-008. This behavior is expected — Phase 2 running does not imply the file exists. traces_to + inputs + Architecture Anchors + §Architecture Authority updated to reference ADR-024 §Phase-2 Postconditions PC-5."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.11 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — self-reference 'precondition 3' in PC-005 prose converted to {PRE-003}."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -95,7 +96,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
 5. {PC-005} **File not found:** Returns `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    **ADR-024 PC-5 note:** `canonicalize_beneath_root` Phase 2 may return `Ok(path)` for a
    path whose parent is within scope even when the target file does not yet exist. `EditFileTool`
-   precondition 3 requires the path to resolve to an *existing* file; Phase 2 running does not
+   {PRE-003} requires the path to resolve to an *existing* file; Phase 2 running does not
    mean the file exists (ADR-024 §Phase-2 Postconditions PC-5: `Ok(path)` from Phase 2 is a
    creation-target path, not a file-existence guarantee). The subsequent OS `open()` call returns
    `NotFound`, which is propagated as `E-TOOLS-008` here. This is expected — `EditFileTool` does

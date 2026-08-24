@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.09
 epic_id: E-20
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -219,7 +219,7 @@ No harness tests mock internals; all assertions exercise production code.
 9. [ ] Register `embeddings.legacy_model_warning` in Canonical Structured Event Catalog (SAP-1)
 10. [ ] Implement `EmbeddingsOllama::embed_documents` — batch `/api/embed` + legacy `/api/embeddings`
 11. [ ] Implement `EmbeddingsOllama::embed_query` — single text via batch path
-12. [ ] Define `pub fn validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` as a NON-test production fn in `pregolya-core/src/embeddings.rs` (per VP-008 §Proof Method + BC-2.22.001 Invariant 6): (1) Err(E-EMBED-001) if `vecs.len() != texts.len()`; (2) Ok(()) if `vecs.is_empty()`; (3) Err(E-EMBED-001) if any inner vec len == 0; (4) Err(E-EMBED-001) if any inner vec len != vecs[0].len(). All Embeddings impls (EmbeddingsOpenAI, EmbeddingsOllama) call it before returning Ok from embed_documents. Error construction per ADR-010 + error-taxonomy (E-EMBED-001).
+12. [ ] Define `pub fn validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` as a NON-test production fn in `pregolya-core/src/embeddings.rs` (per VP-008 §Proof Method + BC-2.22.001 INV-006): (1) Err(E-EMBED-001) if `vecs.len() != texts.len()`; (2) Ok(()) if `vecs.is_empty()`; (3) Err(E-EMBED-001) if any inner vec len == 0; (4) Err(E-EMBED-001) if any inner vec len != vecs[0].len(). All Embeddings impls (EmbeddingsOpenAI, EmbeddingsOllama) call it before returning Ok from embed_documents. Error construction per ADR-010 + error-taxonomy (E-EMBED-001).
 13. [ ] Write VP-008 proptest harness (5 property families A–E) in `pregolya-core/src/embeddings.rs` `#[cfg(test)] mod tests` per VP-008 §Proof Harness Skeleton: (A) `prop_validate_embedding_batch_accepts_valid` — random (dim 1..=4096, n 1..=64) uniform batch → Ok(()); (B) `prop_validate_embedding_batch_accepts_empty` — validate_embedding_batch(&[],&[]) → Ok(()); (C) `ragged_batch_rejected_by_production_validator` — 2 texts, vecs=[768-dim,512-dim] → Err code E-EMBED-001; (D) `count_mismatch_rejected_by_production_validator` — 3 texts, 2 vecs → Err(E-EMBED-001); (E) `zero_length_vector_rejected_by_production_validator` — 2 texts, vecs=[768-dim,0-dim] → Err(E-EMBED-001). Mock `RawMockEmbeddings { dim }` contains NO validation logic — returns raw vectors only; each family calls the PRODUCTION `validate_embedding_batch` directly.
 14. [ ] Run `cargo nextest run -p pregolya-core -p pregolya-openai -p pregolya-ollama` — all ACs green
 15. [ ] Confirm Red Gate AC-006 passes after implementation
@@ -279,4 +279,5 @@ dependency from `pregolya-core` to any provider adapter crate MUST fail the buil
 
 ## Changelog
 
+- **1.2 (P2A-043 F-05 / 2026-08-24):** P2A-043 F-05: prose ordinal cross-refs converted to stable tags.
 - **1.1 (ADR-027 M3 / 2026-08-24):** ADR-027 M3: AC traces re-cited to stable clause anchors. Mis-anchors corrected across all 17 ACs: AC-001 PC-001→PC-002 (one-per-input is in PC-002, not PC-001 which is object safety), AC-002 PC-002→PC-003 (embed_query is PC-003), AC-003 PC-003→INV-002 (consistent inner length is INV-002), AC-004 PC-004→PC-002 (no-partial-batch is in PC-002 last bullet, not PC-004 which is about dimension being model-specific), AC-005 INV-001→PC-001 (object safety is PC-001; INV-001 is one-vector-per-input), AC-006 PC-001→PC-004 (credential opacity is PC-004), AC-007 PC-002→PC-003 (model names/defaults is PC-003), AC-008 PC-003→PC-003 (direct ordinal match confirmed), AC-009 PC-004→PC-003 (ada-002 legacy warning is in PC-003, not PC-004 credential opacity), AC-010 PC-005→PC-005 (direct ordinal match confirmed), AC-011 PC-006→PC-006 (direct ordinal match confirmed), AC-012 PC-001→PC-001 (direct ordinal match confirmed), AC-013 PC-002→PC-002 (direct ordinal match confirmed), AC-014 PC-003→PC-004 (30s timeout is PC-004; PC-003 is no-API-key), AC-015 PC-004→INV-001 (no auto-fallback is INV-001), AC-016 PC-005→INV-003 (batch DI-014 legacy is INV-003; PC-005 is model validation), AC-017 INV-006→INV-006 (direct ordinal match confirmed). Architecture Compliance Rules table updated to match.

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -30,7 +30,9 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 # BC status: both BCs active; BC-2.09.006 mints E-MCP-005; no BC-TBD placeholders; status = draft per Spec-First Gate S-7.01
-changelog: "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -216,7 +218,7 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 **Forbidden dependencies:** `pregolya-mcp` (both `mcp::client` from S-2.10 and `mcp::server`
 from this story) must NOT depend on `pregolya-graph`, `pregolya-server`, `pregolya-vectorstores`,
 or `pregolya-standard-tests`. The `mcp::client` and `mcp::server` modules do NOT share mutable
-state per BC-2.09.006 invariant 5. If `pregolya-mcp` gains a dependency on `pregolya-graph`
+state per BC-2.09.006 INV-005. If `pregolya-mcp` gains a dependency on `pregolya-graph`
 or `pregolya-server`, the build MUST fail.
 
 ## Library & Framework Requirements (MANDATORY)

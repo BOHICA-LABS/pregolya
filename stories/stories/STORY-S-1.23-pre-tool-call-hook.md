@@ -3,11 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.23
 epic_id: E-12
-version: "1.1"
+version: "1.3"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-24T12:00:00Z
 changelog:
+  - "1.3 (P2A-043 F-04-adj/2026-08-24): 6 wrong-ordinal EC-source citations corrected per PO adjudication"
+  - "1.2 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags"
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 3 mis-anchors corrected (AC-001 PRE-001→INV-002, AC-009 PC-002→EC-006, AC-010 INV-001→INV-002)"
 phase: 2
 inputs:
@@ -102,7 +104,7 @@ A resume `Command(resume=PendingHumanApproval)` is invalid. The engine rejects t
 (traces to BC-2.05.008 EC-006)
 
 ### AC-010: ToolApprovalRequest persisted via msgpack for process-restart durability
-The `ToolApprovalRequest` interrupt payload is persisted using the msgpack checkpoint mechanism so that a process restart can reconstruct the pending approval state. FIFO ordering of pending approvals is maintained per the approval queue invariant (see BC-2.05.008 invariant 1).
+The `ToolApprovalRequest` interrupt payload is persisted using the msgpack checkpoint mechanism so that a process restart can reconstruct the pending approval state. FIFO ordering of pending approvals is maintained per the approval queue invariant (see BC-2.05.008 PC-005).
 (traces to BC-2.05.008 INV-002)
 
 ### AC-011: Pure-core router functions — fail-closed routing (VP-011 Kani proof targets)
@@ -143,15 +145,15 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.05.007 EC-1 | Hook returns Approve | `tool.invoke(original_args)` called |
-| EC-002 | BC-2.05.007 EC-2 | Hook returns Deny | `ToolOutput::Error(reason)` — NO tool.invoke |
-| EC-003 | BC-2.05.007 EC-3 | Edit with invalid modified_args | Degrades to Deny; `ToolOutput::Error` |
-| EC-004 | BC-2.05.007 EC-4 | Hook panics | Treated as Deny; tool NOT invoked |
-| EC-005 | BC-2.05.007 EC-5 | No hook configured | Implicit Approve; tool invoked with original args |
-| EC-006 | BC-2.05.008 EC-1 | Resume with Approve | Tool invoked with original args; hook NOT called |
-| EC-007 | BC-2.05.008 EC-2 | Resume with Deny | `ToolOutput::Error`; hook NOT called |
-| EC-008 | BC-2.05.008 EC-3 | Resume with PendingHumanApproval | Error; invalid resume decision |
-| EC-009 | BC-2.05.008 EC-4 | Process restart with pending ToolApprovalRequest | Approval state reconstructed from msgpack checkpoint |
+| EC-001 | BC-2.05.007 PC-001 | Hook returns Approve | `tool.invoke(original_args)` called |
+| EC-002 | BC-2.05.007 EC-001 | Hook returns Deny | `ToolOutput::Error(reason)` — NO tool.invoke |
+| EC-003 | BC-2.05.007 EC-003 | Edit with invalid modified_args | Degrades to Deny; `ToolOutput::Error` |
+| EC-004 | BC-2.05.007 EC-002 | Hook panics | Treated as Deny; tool NOT invoked |
+| EC-005 | BC-2.05.007 EC-004 | No hook configured | Implicit Approve; tool invoked with original args |
+| EC-006 | BC-2.05.008 EC-001 | Resume with Approve | Tool invoked with original args; hook NOT called |
+| EC-007 | BC-2.05.008 EC-002 | Resume with Deny | `ToolOutput::Error`; hook NOT called |
+| EC-008 | BC-2.05.008 EC-006 | Resume with PendingHumanApproval | Error; invalid resume decision |
+| EC-009 | BC-2.05.007 EC-005 | Process restart with pending ToolApprovalRequest | Approval state reconstructed from msgpack checkpoint |
 
 ## Tasks
 

@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.22
 epic_id: E-13
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
@@ -152,16 +153,16 @@ This story is the VP-013 anchor. `check_risk_floor(risk: ActionRisk) -> Result<(
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.23.005 EC-1 | `override_risk(ReadOnly)` on BashTool | `Err` at call time; registry never receives config |
-| EC-002 | BC-2.23.005 EC-2 | `override_risk(Medium)` on BashTool | `Ok`; Medium floor is exactly the floor, not below it |
-| EC-003 | BC-2.23.005 EC-3 | Process exceeds 262,144 bytes combined output | Truncated; `BashOutput::truncated = true`; `Ok` returned |
-| EC-004 | BC-2.23.005 EC-4 | Process exceeds 30s | `Err(E-TOOLS-004)` |
-| EC-005 | BC-2.23.005 EC-5 | Process exits non-zero | `Ok(BashOutput { exit_code: N, .. })` — never `Err` |
-| EC-006 | BC-2.23.006 EC-1 | Invalid regex pattern | `Err(E-TOOLS-009)` before traversal |
-| EC-007 | BC-2.23.006 EC-2 | 101st match | Stop at 100; `capped = true`; `Ok` |
-| EC-008 | BC-2.23.006 EC-3 | Permission denied on subdirectory during traversal | `Err(E-TOOLS-008)` — fail whole search |
-| EC-009 | BC-2.23.006 EC-4 | Search root escapes workspace | `Err(E-TOOLS-001)` |
-| EC-010 | BC-2.23.006 EC-5 | Zero matches found | `Ok(GrepResult { matches: [], capped: false })` |
+| EC-001 | BC-2.23.005 EC-004 | `override_risk(ReadOnly)` on BashTool | `Err` at call time; registry never receives config |
+| EC-002 | BC-2.23.005 EC-005 | `override_risk(Medium)` on BashTool | `Ok`; Medium floor is exactly the floor, not below it |
+| EC-003 | BC-2.23.005 EC-001 | Process exceeds 262,144 bytes combined output | Truncated; `BashOutput::truncated = true`; `Ok` returned |
+| EC-004 | BC-2.23.005 EC-002 | Process exceeds 30s | `Err(E-TOOLS-004)` |
+| EC-005 | BC-2.23.005 EC-003 | Process exits non-zero | `Ok(BashOutput { exit_code: N, .. })` — never `Err` |
+| EC-006 | BC-2.23.006 EC-002 | Invalid regex pattern | `Err(E-TOOLS-009)` before traversal |
+| EC-007 | BC-2.23.006 EC-003 | 101st match | Stop at 100; `capped = true`; `Ok` |
+| EC-008 | BC-2.23.006 EC-008 | Permission denied on subdirectory during traversal | `Err(E-TOOLS-008)` — fail whole search |
+| EC-009 | BC-2.23.006 EC-001 | Search root escapes workspace | `Err(E-TOOLS-001)` |
+| EC-010 | BC-2.23.006 EC-004 | Zero matches found | `Ok(GrepResult { matches: [], capped: false })` |
 
 ## Tasks
 

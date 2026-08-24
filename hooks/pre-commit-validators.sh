@@ -91,6 +91,15 @@
 #       Promotion requires: WARN=0 AND exit contract changed to exit 1 on WARN > 0.
 #       Routing: product-owner + architect joint sweep per P1D-174 findings (FC-1..FC-6).
 #
+#   verify-ordinal-form-residue.sh         — ADR-027 old-form clause ordinal residue (advisory).
+#       Detects "postcondition N" / "invariant N" / "precondition N" word-form ordinals,
+#       "edge case EC-..." prose prefix, and single-digit EC-N references (non-stable form)
+#       in .factory/stories/ and .factory/specs/behavioral-contracts/ live content.
+#       Excludes YAML changelog: list items, ## Changelog sections, and fenced code blocks.
+#       Baseline measurement (ADR-027 / P2A-043 F-05 burst): 72 findings across 12 files.
+#       Promotion to blocking requires: residue = 0 AND exit contract changed to exit 1.
+#       Routing: product-owner (BC files) + story-writer (story files).
+#
 # EXIT CONTRACT
 # ─────────────
 # Exit 0 if all blocking validators pass.
@@ -179,6 +188,7 @@ run_blocking "verify-ac-pc-trace.sh"
 echo ""
 echo "── Advisory validators (non-blocking; see header for promotion paths) ─"
 run_advisory "verify-changelog-claim-applied.sh"
+run_advisory "verify-ordinal-form-residue.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.10
 epic_id: E-05
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -207,7 +207,7 @@ Derived from `architecture/module-decomposition.md §pregolya-checkpoint` and AD
 4. `put_writes` and `put` MUST both be encrypted when `EncryptedSerializer` is in the chain. There must be no code path that bypasses encryption.
 5. Skip-on-reapply set: `{ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME}`. `SCHEDULED` is NOT in this set. This must be enforced as a named const or enum discriminant set in the implementation.
 6. Fork creates a checkpoint with `metadata.parents[checkpoint_ns] = parent_checkpoint_id` and NO state payload copy. The fork storage operation writes only the parent pointer, not all prior state.
-7. All checkpoint records are append-only (Invariant 5 of BC-2.04.001): no `UPDATE` or `DELETE` operations on checkpoint rows.
+7. All checkpoint records are append-only (BC-2.04.001 INV-005): no `UPDATE` or `DELETE` operations on checkpoint rows.
 8. All constructors return `Result` per DI-008 (Library Constructor Result Contract). No panics in constructors.
 9. `event_type` values used in this story that must be registered in the Canonical Structured Event Catalog: none mandatory for this story's core path (checkpoint operations are storage events, not agent-visible events). If tracing is added for observability, those event types must be registered.
 
@@ -264,5 +264,6 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-08-24 | P2A-043 F-05: prose ordinal cross-refs converted to stable tags | P2A-043 F-05 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |
 | 1.0 | 2026-08-18 | Initial authoring | story-writer |

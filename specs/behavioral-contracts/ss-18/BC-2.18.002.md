@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "2.1"
+version: "2.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
@@ -29,6 +29,7 @@ changelog:
   - "1.9 (P2A-040-F-02/2026-08-22): precondition-2 cross-reference added to BC-2.18.003 INV-4 for the MessageListVar struct shape — the Messages arm of TemplateInput carries trust_level: Option<TrustLevel> (NOT a bare newtype); BC-2.18.003 INV-4 is the authoritative clause for the struct shape. No behavioral change to ChatPromptTemplate rendering or PromptValue semantics; this is a traceability anchor addition that makes the Messages-arm Red Gate (S-2.05 AC-016) traceable to a canonical BC clause."
   - "2.0 (P2A-041-F-3/2026-08-23): disambiguated precondition-2 vs postcondition-2 changelog notation; no clause content change."
   - "2.1 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.2 (P2A-043-F-02/2026-08-24): INV-006 added — TemplateInput is #[non_exhaustive] enum with three stable variants (Scalar, Messages, FewShotExamples); Send+Sync; wildcard arm required. Closes SS-18 escalation F-02; AC-012 and compliance-table row in S-2.04 re-anchor from PRE-002 to INV-006."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -129,6 +130,16 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    The `#[non_exhaustive]` annotation requires external `match` arms to include a `_ => {}`
    wildcard arm to remain forward-compatible. `into_messages()` (PC-5) converts both variants
    to `Vec<Message>`. (ADR-015 §PromptValue is aligned with this enum shape.)
+6. {INV-006} `TemplateInput` is a `#[non_exhaustive]` enum with exactly three stable variants:
+   `TemplateInput::Scalar(TemplateVar)` — a scalar string binding for human/AI/system slots;
+   `TemplateInput::Messages(MessageListVar)` — a message-list expansion for MessagesPlaceholder
+   (canonical `MessageListVar` struct shape per BC-2.18.003 INV-4);
+   `TemplateInput::FewShotExamples(Vec<(TemplateVar, TemplateVar)>)` — question/answer pairs
+   for FewShot slots.
+   `TemplateInput: Send + Sync` — all variant payload types are `Send + Sync`.
+   The `#[non_exhaustive]` annotation requires external `match` arms to include a `_ => {}`
+   wildcard arm to remain forward-compatible. (Parallel to INV-005 for `PromptValue`; compile-fail
+   test required — see S-2.04 AC-012.)
 
 ## Edge Cases
 

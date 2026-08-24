@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.18
 epic_id: E-10
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.2 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
@@ -17,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "f3626bf"
+input-hash: "8d53bd8"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.14, S-1.04, S-1.10, S-1.17]
@@ -183,7 +184,7 @@ When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the r
 | `BudgetPolicy::evaluate` is synchronous (not async) | BC-2.10.001 INV-001 | Trait signature: `fn evaluate` not `async fn evaluate` |
 | `EvidenceJournal` uses SQLite checkpoint backend — not a separate DB | BC-2.10.002 architecture anchors | Import path check: `pregolya-checkpoint::saver` (`SqliteCheckpointSaver`) |
 | `E-BUDGET-001` has `retry_hint: Never` | BC-2.10.003 INV-004 | Unit test `test_BC_2_10_003_e_budget_001_retry_hint_never()` |
-| `Escalate` always triggers HITL interrupt — even when `on_ceiling = Halt` | BC-2.10.004 postcondition 1 | Unit test `test_BC_2_10_004_escalate_always_triggers_interrupt()` |
+| `Escalate` always triggers HITL interrupt — even when `on_ceiling = Halt` | BC-2.10.004 PC-001 | Unit test `test_BC_2_10_004_escalate_always_triggers_interrupt()` |
 | `pregolya-core/src/budget.rs` must NOT import from `pregolya-graph` | Dependency direction: graph → core | `cargo deny` + import scan |
 
 ## Library & Framework Requirements (MANDATORY)

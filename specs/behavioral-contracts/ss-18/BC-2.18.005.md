@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,10 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
-red_gate_source: "ADR-015 Decision 2 §Security Invariant 2 — SlotTrustPolicy::TrustAll on SystemMessage must be rejected at construction time"
+red_gate_source: "ADR-015 Decision 2 §Security {INV-002} — SlotTrustPolicy::TrustAll on SystemMessage must be rejected at construction time"
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates; SECURITY-CRITICAL"
   - "1.1 (F-P148-03/burst-249/2026-07-24): red_gate_source and Red Gate body callout updated: 'ADR-015 Security Invariant 2' → 'ADR-015 Decision 2 §Security Invariant 2' per ADR-015 v1.5 labeled anchor. input-hash updated to fa92953 (ADR-015 v1.5 adds labeled anchors)."
@@ -28,6 +28,7 @@ changelog:
   - "1.6 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -50,7 +51,7 @@ removal_reason: null
 
 # BC-2.18.005: SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed)
 
-> **Red Gate test required** — ADR-015 Decision 2 §Security Invariant 2: the construction-time policy
+> **Red Gate test required** — ADR-015 Decision 2 §Security {INV-002}: the construction-time policy
 > rejection test must COMPILE and FAIL before the `from_messages` guard is implemented.
 
 ## Description

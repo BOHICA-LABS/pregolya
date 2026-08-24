@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.10"
+version: "1.11"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008, DI-014]
 vp_seed: true
 vp_id: VP-008
@@ -30,6 +30,7 @@ changelog:
   - "1.8 (P2A-022/2026-08-21): Add Invariant 6 — Shared production validator. Names validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError> in core::embeddings as the single enforcement point for the dimensionality contract; all Embeddings impls must call it before returning Ok from embed_documents. Returns Err(E-EMBED-001) on count mismatch, zero-length inner vector, or inconsistent inner lengths. Structural requirement ensures VP-008 proptest harnesses fail rather than pass vacuously if validate_embedding_batch is removed or regressed. Traceability VP Registration updated with Invariant 6 anchor note. Per architect's ruling, P2A-022 fix-burst."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.11 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -162,7 +163,7 @@ S-2.09
 | L2 Domain Invariants | DI-008 (embed_documents and embed_query return Result; no .unwrap()), DI-014 (batch partial-failure propagates as Err; no silent truncation or Vec::new() fallback) |
 | Architecture Authority | ADR-017 Decisions 1 and 2 (trait placement, async dyn-compat shape, dimensionality contract, batch error semantics) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
-| VP Registration | VP-008 (assigned in VP-INDEX as VP-008 — proptest P1; pregolya-core embeddings; Invariant 6 is the structural BC anchor for the validate_embedding_batch single-enforcement-point obligation) |
+| VP Registration | VP-008 (assigned in VP-INDEX as VP-008 — proptest P1; pregolya-core embeddings; {INV-006} is the structural BC anchor for the validate_embedding_batch single-enforcement-point obligation) |
 | Module | pregolya-core / core::embeddings |
 | Priority | P1 |
 | Wave | 2 |

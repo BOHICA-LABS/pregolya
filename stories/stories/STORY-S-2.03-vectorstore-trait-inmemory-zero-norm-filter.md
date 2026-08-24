@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.03
 epic_id: E-17
-version: "1.1"
+version: "1.3"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-24T12:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.001.md
@@ -70,9 +70,10 @@ Verified by `test_BC_2_21_001_add_documents_returns_ids()`.
 returns at most `k` documents ranked by decreasing similarity. Fewer than `k` docs when store has
 fewer. Verified by `test_BC_2_21_001_similarity_search_at_most_k()`.
 
-### AC-004 (traces to BC-2.21.001 PC-002)
+### AC-004 (traces to BC-2.21.001 PC-002 + INV-002)
 `VectorStore::similarity_search_with_score` returns `Vec<(Document, f32)>` with scores in
-`[-1.0, 1.0]`. Verified by `test_BC_2_21_001_similarity_search_score_range()`.
+`[0.0, 1.0]` (normalized); raw cosine [-1.0, 1.0] is mapped to [0.0, 1.0] per INV-002.
+Verified by `test_BC_2_21_001_similarity_search_score_range()`.
 
 ### AC-005 (traces to BC-2.21.001 PC-003)
 `VectorStoreFactory` is a separate trait with a `Sized` bound for methods that are not
@@ -313,8 +314,5 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 
 - "1.0 (2026-08-19): initial story authored"
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 12 semantic re-anchors applied (see escalation notes)"
-
-## Escalation Notes (route to product-owner)
-
-- **AC-004** (now `BC-2.21.001 PC-002`): AC asserts `similarity_search_with_score` returns scores in `[-1.0, 1.0]` but BC-2.21.001 PC-002 specifies scores ∈ `[0.0, 1.0]`. Score range discrepancy — PO adjudication needed.
-- **Compliance table** "BC-2.21.001 postcondition 5" (nonexistent — BC has only PC-001..PC-004): re-anchored to PC-003 (VectorStoreFactory Sized split) as closest match. PO to confirm.
+- "1.2 (P2A-043/2026-08-24): P2A-043 F-01: AC-004 similarity-score range corrected to normalized [0.0,1.0], re-anchored BC-2.21.001 PC-002+INV-002"
+- "1.3 (P2A-043/2026-08-24): P2A-043 F-03: PC-003 anchor confirmed by PO; escalation note cleared"

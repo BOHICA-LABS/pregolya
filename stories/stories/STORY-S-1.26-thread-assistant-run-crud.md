@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.26
 epic_id: E-14
-version: "1.3"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -11,6 +11,8 @@ changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 10 mis-anchors corrected (AC-001 PC1→PC-005, AC-002 PC2→PC-009, AC-003 PC3→PC-011, AC-004 BC2.PC1→INV-001, AC-005 BC2.PC2→EC-006, AC-006 BC3.PC1→PC-005, AC-007 BC3.PC2→PC-007, AC-008 BC3.PC3→PC-008, AC-009 BC3.PC4→INV-006, AC-010 BC3.INV1→PC-010)"
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC corrections"
   - "1.3 (M3c collision-fix + EC-006 coverage restore/2026-08-24): AC-005 E-SERVER-012→E-SERVER-017 (AssistantAlreadyExists); AC-009 stale AC-005 cross-ref removed, EC-006 configurable-merge stated directly, BC-2.12.002 EC-006 trace added"
+  - "1.4 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags — EC-001 source BC-2.12.001 EC-1→EC-001 (clause text match); EC-007 source BC-2.12.003 EC-1→EC-002 (clause text match: concurrent run / E-SERVER-012); 8 citations escalated (EC-002..006, EC-008..010): descriptions map to PCs not ECs — product-owner resolution required"
+  - "1.5 (P2A-043 F-05/2026-08-24): escalated EC citations redirected/repointed per PO adjudication (incl. new BC-2.12.001 EC-006)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.001.md
@@ -18,7 +20,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "219055a"
+input-hash: "5f17039"
 traces_to:
   - behavioral-contracts/BC-2.12.001
   - behavioral-contracts/BC-2.12.002
@@ -142,16 +144,16 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.12.001 EC-1 | Duplicate thread_id on POST | `E-SERVER-007` |
-| EC-002 | BC-2.12.001 EC-2 | DELETE thread with active run | `E-SERVER-008` |
-| EC-003 | BC-2.12.001 EC-3 | GET /threads?limit=150 | Clamped to 100 |
-| EC-004 | BC-2.12.001 EC-4 | GET /threads (default) | Limit 10, created_at DESC |
-| EC-005 | BC-2.12.002 EC-1 | PATCH non-existent assistant | `E-SERVER-009` |
-| EC-006 | BC-2.12.002 EC-2 | Versions list ordering | `version ASC` (not created_at DESC) |
-| EC-007 | BC-2.12.003 EC-1 | POST run on thread with active run | `E-SERVER-012` |
-| EC-008 | BC-2.12.003 EC-2 | Transition to invalid state | `E-SERVER-...` state conflict |
-| EC-009 | BC-2.12.003 EC-3 | summary_halt run DELETE | Allowed directly (no cancel required) |
-| EC-010 | BC-2.12.003 EC-4 | interrupted → cancelled | Valid arc; run moves to cancelled |
+| EC-001 | BC-2.12.001 EC-001 | Duplicate thread_id on POST | `E-SERVER-007` |
+| EC-002 | BC-2.12.001 EC-006 | DELETE thread with active run | `E-SERVER-008` |
+| EC-003 | BC-2.12.001 PC-008 | GET /threads?limit=150 | Clamped to 100 |
+| EC-004 | BC-2.12.001 PC-008, PC-009 | GET /threads (default) | Limit 10, created_at DESC |
+| EC-005 | BC-2.12.002 PC-008 | PATCH non-existent assistant | `E-SERVER-009` |
+| EC-006 | BC-2.12.002 PC-020 | Versions list ordering | `version ASC` (not created_at DESC) |
+| EC-007 | BC-2.12.003 EC-002 | POST run on thread with active run | `E-SERVER-012` |
+| EC-008 | BC-2.12.003 PC-007, PC-012 | Transition to invalid state | `E-SERVER-...` state conflict |
+| EC-009 | BC-2.12.003 PC-019 | summary_halt run DELETE | Allowed directly (no cancel required) |
+| EC-010 | BC-2.12.003 PC-007, PC-010 | interrupted → cancelled | Valid arc; run moves to cancelled |
 
 ## Tasks
 

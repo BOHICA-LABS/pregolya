@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.004
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
@@ -23,6 +23,7 @@ changelog:
   - "1.3 (burst-294/F-185-01/2026-08-16): EC-005 and Invariant §3 — remove raised-panic mandate (`RemapChainDetected` panic!). Remap-chain detection is expressed as a startup validation unit test (VP-2.19.004-B), NOT a `panic!` in `Reviver::new()`. Pattern mirrors BC-2.19.006 EC-001 / VP-2.19.006-B (disjoint-set check via startup validation unit test). DI-008 Traceability row already correctly states 'revive returns Result; no panic on remap lookup' — no change required. VP-2.19.004-B already framed this as 'startup validation test (runs in CI)' — now EC-005 and Invariant §3 are consistent with it. D-134 corpus sweep: BC-2.19.004 EC-005 was the sole raised-panic mandate in all 129 BCs."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -142,7 +143,7 @@ S-2.01
 | Source L2 Capability | CAP-025 |
 | Capability Anchor Justification | CAP-025 ("Reviver and Type Registry (Inventory-Based; Allowlist Containment; Legacy-Namespace Remap)") per capabilities-p1-p2.md §CAP-025 — this BC specifies the Legacy-Namespace Remap behavior that CAP-025 names explicitly as one of the three defining capabilities of the Reviver subsystem |
 | L2 Domain Invariants | DI-008 (revive returns Result; no panic on remap lookup) |
-| Architecture Authority | ADR-016 Decision 4 (OLD_CORE_NAMESPACES_MAPPING, compile-time-constant remap, remap-then-registry-lookup ordering). Note: remap-chain validation (Invariant 3) is a BC-local design decision not explicitly attributed in ADR-016 Decision 4. |
+| Architecture Authority | ADR-016 Decision 4 (OLD_CORE_NAMESPACES_MAPPING, compile-time-constant remap, remap-then-registry-lookup ordering). Note: remap-chain validation ({INV-003}) is a BC-local design decision not explicitly attributed in ADR-016 Decision 4. |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | pregolya-core / core::serializable::legacy_remap |
 | Priority | P2 |

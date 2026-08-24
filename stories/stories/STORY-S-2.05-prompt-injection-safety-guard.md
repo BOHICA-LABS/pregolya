@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.05
 epic_id: E-18
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "f2a834d"
+input-hash: "8b25bbf"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
@@ -121,7 +121,7 @@ the guard in `TrustRequired` slots because `var.trust_level.is_some_and(|t| t.is
 returns false for `None` (consistent with AC-005 and AC-016's `Some(TrustLevel::Untrusted)` usage).
 Verified by `test_BC_2_18_004_templatevar_default_trust_is_trusted()`.
 
-### AC-009 (traces to BC-2.18.004 INV-001 — VP-006 Kani anchor)
+### AC-009 (traces to BC-2.18.004 INV-006 — VP-006 Kani anchor)
 `injection_guard` is FAIL-CLOSED: if the trust level evaluation encounters an unknown/new
 `TrustLevel` variant, it defaults to treating the variable as untrusted (highest severity).
 VP-006 (Kani P1) provides a formal proof of fail-closed behavior. Unit test:
@@ -277,7 +277,7 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 | E-TMPL-001 message is DYNAMIC (contains var_name and slot_role) | BC-2.18.004 PC-001 | String contains check test |
 | E-TMPL-002 message is STATIC (no interpolation) | BC-2.18.005 PC-001; BC-2.18.005 INV-003 | String equality test |
 | E-TMPL-001 category is `Category::Security`; E-TMPL-002 category is `Category::Val` | BC-2.18.004 INV-003; BC-2.18.005 INV-003 | Error code assertion tests |
-| Fail-closed default: unknown TrustLevel treated as Untrusted | BC-2.18.004 INV-001; VP-006 | Unit test AC-009 |
+| Fail-closed default: unknown TrustLevel treated as Untrusted | BC-2.18.004 INV-006; VP-006 | Unit test AC-009 |
 | `injection_guard` source-order evaluation | BC-2.18.004 INV-005 | Unit test AC-006 |
 | `injection_guard` covers ALL TemplateInput arms (Scalar, Messages, FewShotExamples) | BC-2.18.004 PC-005 and BC-2.18.004 PRE-002 | Unit tests AC-016, AC-017 |
 
@@ -306,9 +306,5 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 
 - "1.0 (2026-08-19): initial story authored"
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 semantic re-anchors applied (see escalation notes)"
+- "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
 
-## Escalation Notes (route to product-owner)
-
-- **AC-001** and **AC-010**: Old citations used "precondition N" but the ACs assert error-return behavior (postcondition behavior). Re-anchored to PC-001 for both (the postcondition that specifies the error return). PO to confirm "precondition 1" was intended as a test-setup description, not a BC precondition anchor.
-- **AC-009**: Old "BC-2.18.004 invariant 3" (which is about being a pure-core function) re-anchored to INV-001 (fires unconditionally = fail-closed default). The fail-closed behavior for unknown TrustLevel variants is an instantiation of INV-001's "fires unconditionally" property. PO to confirm or add a dedicated INV clause.
-- **Compliance rule** "Fail-closed default: unknown TrustLevel treated as Untrusted" cited "BC-2.18.004 invariant 3" (pure-core function). Re-anchored to INV-001. Same issue as AC-009. PO to confirm.

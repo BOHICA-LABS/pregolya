@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.63"
+version: "3.64"
 status: active
 producer: state-manager
-timestamp: 2026-08-24T20:00:00Z
+timestamp: 2026-08-24T23:59:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.64 (P2A-043/2026-08-24): 12 BC version bumps. BC-2.18.002 (v2.1→v2.2): INV-006 added — TemplateInput is #[non_exhaustive] enum; wildcard arm required (F-02). BC-2.18.004 (v1.13→v1.14): INV-006 added — fail-closed wildcard for #[non_exhaustive] TrustLevel; unknown variants treated as Untrusted (F-03). BC-2.12.001 (v1.6→v1.7): EC-006 added — DELETE /threads/{id} while active run exists → E-SERVER-008 409 (BC-local edge case; no new taxonomy code). BC-2.12.007 (v1.6→v1.7): EC-006 added — non-first-node mid-run failure, run_end NOT emitted; authority BC-2.06.001 EC-005 (BC-local edge case; no new taxonomy code). 8 BCs invariant-ordinal→stable-tag conversion (F-05 sweep): BC-2.04.006 (v1.9→v1.10), BC-2.04.008 (v1.8→v1.9), BC-2.10.004 (v1.10→v1.11), BC-2.18.005 (v1.8→v1.9), BC-2.19.004 (v1.5→v1.6), BC-2.21.002 (v1.8→v1.9), BC-2.22.001 (v1.10→v1.11), BC-2.23.003 (v1.10→v1.11). BC-INDEX High-Risk+VP-Seed sections: 3 'invariant N' residues converted to {INV-NNN} stable tags (BC-2.18.004/BC-2.18.005/VP-006 rows). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). EC census UNCHANGED: 119 (EC-006 labels in BC-2.12.001/007 are BC-local edge-case numbering only; both reference existing E-SERVER-008). VP census UNCHANGED: 14."
   - "3.63 (M4/ADR-027/2026-08-24): BC-2.08.006 {INV-005} rustls-tls TLS-backend mandate added (ADR-027 M4)."
   - "3.62 (M3b/M3c/ADR-027/2026-08-24): escalation-resolution — BC-2.01.001 {INV-005}, BC-2.01.002 {INV-005}, BC-2.01.003 {INV-006}, BC-2.07.002 {INV-004}, BC-2.12.002 (PC-005→E-SERVER-017). Error code E-SERVER-017 AssistantAlreadyExists minted (BC-2.12.002; E-SERVER-012 collision avoided). Story ACs corrected: E-CRON-001/002/003 names; E-CHKPT-001 interrupt marker write-failure; E-SERVER-011 GraphNotFound; S-1.26 EC-006 merge coverage restored in AC-009. Semantic: Send-API tasks within-run (same run_id, parent_ids unchanged) per BC-2.06.002 INV-005; similarity scores normalized [0.0,1.0] per BC-2.21.001 INV-002; GDPR unattributed-session log-level WARN. Census EC 118→119; BC 133 / VP 14 / stories 39 UNCHANGED."
   - "3.61 (M1/ADR-027/2026-08-23): M1 chunk 3 — 39 BC version bumps (SS-14 ×6, SS-15 ×6, SS-18 ×5, SS-19 ×6, SS-20 ×3, SS-21 ×4, SS-22 ×3, SS-23 ×6); purely additive clause-anchor labeling per ADR-027; EC content untouched. Incidental input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004. M1 COMPLETE — all 133/133 BCs labeled. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). H1s unchanged."
@@ -115,8 +116,8 @@ changelog:
 | BC-2.07.002 | Non-ASCII Boundary Parity with Python Reference Implementation | R8 (splitter code-point parity) |
 | BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity | R11 (MCP upstream test void) |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections | R11 (MCP upstream test void) |
-| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | ADR-015 Decision 3 §Security Invariant 1 |
-| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | ADR-015 Decision 2 §Security Invariant 2 |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | ADR-015 Decision 3 §Security {INV-001} |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | ADR-015 Decision 2 §Security {INV-002} |
 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed, VP-010 Kani Candidate) | ADR-016 Decision 3 §Security Invariant |
 | BC-2.20.002 | BoundaryType::RAGRetrieval Guardrail Covers All Retriever::get_relevant_documents Returns Entering Graph Context | ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization) |
 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | ADR-014 Decision 2 §Hardening note |
@@ -129,7 +130,7 @@ changelog:
 | VP-001 | BC-2.03.001 | BSP Super-Step Execution Determinism | Kani | NE-17 |
 | VP-002 | BC-2.04.006 | Session Triple-Address Uniqueness | Kani | NE-12 |
 | VP-003 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | Kani | NE-02 |
-| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani | ADR-015 Decision 3 §Security Invariant 1 |
+| VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani | ADR-015 Decision 3 §Security {INV-001} |
 | VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | Proptest | CAP-024 round-trip invariant |
 | VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
 | VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani | ADR-014 Decision 2 §Hardening note |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "1.4 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (P2A-043/F-05 adjudication/2026-08-24): Author EC-006 — non-first-node mid-run failure, run_end NOT emitted. EC-001 was scoped to 'first node'; INV-003 covers error equivalence but did not explicitly state the no-run_end rule for mid-run failure. EC-006 closes that gap; authority is BC-2.06.001 EC-005 (completion-only RunEnd contract)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -133,6 +134,22 @@ Both surfaces carry the same interrupt payload.
 **Expected behavior:** The streaming endpoint emits the output in `node_stream` chunks,
 with no truncation. The unary endpoint returns the full output in a single response.
 Both outputs are identical in content; no data loss occurs in either path.
+
+### EC-006: Graph raises error in non-first node (mid-run) — no run_end emitted
+**Scenario:** A multi-node graph executes nodes 1..N-1 successfully; node N returns
+`Err(PregolyaError)` mid-run (after at least one prior `node_start`/`node_end` pair has
+already been emitted to the stream).
+**Expected behavior:**
+- Streaming: `run_start`, `node_start`/`node_end` pairs for all prior nodes, then
+  `node_start` for the failing node N; then `StreamEvent::Error` with the error payload
+  (`run_id`, `parent_ids`, `error_code`, `error_message`); stream closes. **No `run_end`
+  event is emitted.** The completion-only `RunEnd` contract applies regardless of how many
+  prior nodes executed successfully (authority: BC-2.06.001 EC-005).
+  Run status queryable via `GET /threads/{thread_id}/runs/{run_id}` = `failed`.
+- Unary: `4xx/5xx` response with the same `PregolyaError` as the streaming path (INV-003).
+**Distinction from EC-001:** EC-001 covers first-node failure (only `run_start` +
+`node_start` precede the error); EC-006 covers mid-run failure where partial successful
+output has already been streamed. The no-run_end rule is identical in both cases.
 
 ### EC-005: Concurrent requests for same run_id on both paths
 **Scenario:** Two concurrent HTTP requests both attempt to execute `run_id = "r1"`:

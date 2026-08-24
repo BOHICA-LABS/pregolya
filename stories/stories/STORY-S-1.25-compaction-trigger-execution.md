@@ -3,12 +3,14 @@ document_type: story
 level: ops
 story_id: S-1.25
 epic_id: E-10
-version: "1.1"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 7 mis-anchors corrected (AC-003 PC-003→INV-006, AC-004 INV-001→INV-003, AC-005 PC-002→INV-001, AC-007 PC-002→PC-004, AC-008 PC-003→INV-003, AC-009 INV-001→INV-008, AC-010 INV-002→INV-008)"
+  - "1.2 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags"
+  - "1.3 (P2A-043 F-05/2026-08-24): escalated EC citations redirected to PC/INV per PO adjudication."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
@@ -143,14 +145,14 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.10.005 EC-1 | `OnWatermark { fraction: 1.0 }`, `tokens_remaining = 0`, `ceiling = 100_000` | `check_watermark_trigger(0, 100_000, 1.0)` returns true (`0.0 / 100_000 = 0.0 <= 0.0`) |
-| EC-002 | BC-2.10.005 EC-2 | `OnWatermark { fraction: 0.0 }` | `Err` at construction |
-| EC-003 | BC-2.10.005 EC-3 | `OnMessageCount { count: 0 }` | `Err` at construction |
-| EC-004 | BC-2.10.005 EC-4 | `OnTokenCount { tokens: 0 }` | `Err` at construction |
-| EC-005 | BC-2.10.006 EC-1 | Compaction function returns Err | Abort after step 2; run continues from original state |
-| EC-006 | BC-2.10.006 EC-2 | `CheckpointSaver::put` fails (step 4) | Abort; partial state not visible (mid-run REPLACE not persisted) |
-| EC-007 | BC-2.10.006 EC-3 | Run is interrupted when super-step ends | Compaction trigger check skipped; run stays interrupted |
-| EC-008 | BC-2.10.006 EC-4 | `Disabled` trigger | `check_watermark_trigger` not called; `Disabled` variant short-circuits; cycle never runs |
+| EC-001 | BC-2.10.005 EC-002 | `OnWatermark { fraction: 1.0 }`, `tokens_remaining = 0`, `ceiling = 100_000` | `check_watermark_trigger(0, 100_000, 1.0)` returns true (`0.0 / 100_000 = 0.0 <= 0.0`) |
+| EC-002 | BC-2.10.005 EC-001 | `OnWatermark { fraction: 0.0 }` | `Err` at construction |
+| EC-003 | BC-2.10.005 EC-003 | `OnMessageCount { count: 0 }` | `Err` at construction |
+| EC-004 | BC-2.10.005 INV-006 | `OnTokenCount { tokens: 0 }` | `Err` at construction |
+| EC-005 | BC-2.10.006 EC-001 | Compaction function returns Err | Abort after step 2; run continues from original state |
+| EC-006 | BC-2.10.006 EC-002 | `CheckpointSaver::put` fails (step 4) | Abort; partial state not visible (mid-run REPLACE not persisted) |
+| EC-007 | BC-2.10.006 INV-008 | Run is interrupted when super-step ends | Compaction trigger check skipped; run stays interrupted |
+| EC-008 | BC-2.10.005 EC-006 | `Disabled` trigger | `check_watermark_trigger` not called; `Disabled` variant short-circuits; cycle never runs |
 
 ## Tasks
 

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.17
 epic_id: E-09
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.3 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags"
   - "1.2 (ADR-027 M3c/2026-08-24): escalation-resolution AC corrections — AC-008/AC-009 corrected to WITHIN-RUN (same run_id, unchanged parent_ids) per BC-2.06.002 INV-005+EC-002+TV-005; EC-003 swept (TD-VSDD-060)"
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
@@ -121,7 +122,7 @@ The streaming path uses the same BSP engine and the same node execution logic as
 | EC-002 | `RunEnd` attempted on `failed` run | Not emitted; `RunEnd` reserved for `completed`/`summary_halt` |
 | EC-003 | Two nested Send fan-outs (grandparent → parent → child) | All levels share the same `run_id` (within-run; BC-2.06.002 INV-005); `parent_ids` is unchanged at each level — not appended. The causal chain topology is flat within a single run. |
 | EC-004 | GuardrailDecision Fail with Critical severity | `StreamEvent::GuardrailDecision { decision: Fail, .. }` emitted; then `StreamEvent::Error`; `RunEnd` not emitted |
-| EC-005 | StepEnd attempted with Stream variant | Not valid; `StepEnd` has no `Stream` variant per BC-2.06.001 postcondition 2 |
+| EC-005 | StepEnd attempted with Stream variant | Not valid; `StepEnd` has no `Stream` variant per BC-2.06.001 PC-002 |
 
 ## Token Budget Estimate (MANDATORY)
 

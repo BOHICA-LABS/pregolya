@@ -3,13 +3,15 @@ document_type: story
 level: ops
 story_id: S-1.27
 epic_id: E-14
-version: "1.2"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 13 mis-anchors corrected (AC-001 PC1→INV-001, AC-002 PC2→INV-003, AC-003 PC3→PC-007, AC-004 PC4→EC-004, AC-005 BC5.PC1→INV-001, AC-006 BC5.PC2→PC-007, AC-007 BC5.PC3→INV-003, AC-008 BC6.PC1→PC-003, AC-009 BC6.PC2→INV-004, AC-010 BC6.PC3→PC-009, AC-011 BC7.PC1→INV-001, AC-012 BC7.PC2→PC-002, AC-013 BC7.PC3→INV-002)"
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC corrections"
+  - "1.3 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags — EC-002 BC-2.12.004 EC-2→EC-002; EC-003 BC-2.12.004 EC-3→EC-004; EC-005 BC-2.12.005 EC-2→EC-003; EC-006 BC-2.12.005 EC-3→EC-005; EC-007 BC-2.12.006 EC-1→EC-005; EC-008 BC-2.12.006 EC-2→EC-004; EC-009 BC-2.12.007 EC-1→EC-005; 4 citations escalated (EC-001 INV-003, EC-004 INV-001, EC-010 closest EC-001, EC-011 NE-13/BC-2.06.001) — product-owner resolution required"
+  - "1.4 (P2A-043 F-05/2026-08-24): escalated EC citations redirected/repointed per PO adjudication (incl. new BC-2.12.007 EC-006)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
@@ -18,7 +20,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "35c9361"
+input-hash: "0c4f477"
 traces_to:
   - behavioral-contracts/BC-2.12.004
   - behavioral-contracts/BC-2.12.005
@@ -27,7 +29,7 @@ traces_to:
 points: 8
 depends_on: [S-1.26]
 blocks: []
-behavioral_contracts: [BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007]
+behavioral_contracts: [BC-2.06.001, BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007]
 verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
@@ -65,6 +67,7 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
+| BC-2.06.001 | SSE streaming event taxonomy — canonical event names (node_stream; node_delta retired) | No |
 | BC-2.12.004 | CronSchedule — fresh isolated session per firing, skip missed-fire policy | No |
 | BC-2.12.005 | SecurityConfig::default — CORS denied, debug route gated (DI-013) | No |
 | BC-2.12.006 | Store trait seams — IdempotencyStore, RateLimitStore, RunStore | No |
@@ -118,7 +121,7 @@ The SSE endpoint (`GET /threads/:id/runs/:run_id/stream`) invokes the same `Comp
 
 ### AC-012: SSE event types — run_start, node_start, node_stream, node_end, run_end
 SSE events emitted during a run: `run_start`, `node_start`, `node_stream` (NOT `node_delta` — that name is retired), `node_end`, `run_end`. `run_end` is ONLY emitted on successful completion. Failed or interrupted runs do NOT emit `run_end`.
-(traces to BC-2.12.007 PC-002)
+(traces to BC-2.12.007 PC-002; traces to BC-2.06.001 PC-002)
 
 ### AC-013: Concurrent execution on same run_id returns E-SERVER-015
 If a second SSE or unary execution request arrives for a `run_id` that is already executing, returns `E-SERVER-015` (RunAlreadyExecuting). Only one execution per `run_id` at a time.
@@ -157,17 +160,17 @@ If a second SSE or unary execution request arrives for a `run_id` that is alread
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.12.004 EC-1 | Server down during 3 scheduled firings | Skip 3; fire once at next check interval |
-| EC-002 | BC-2.12.004 EC-2 | Invalid cron expression | `E-CRON-002` (InvalidCronExpression) |
-| EC-003 | BC-2.12.004 EC-3 | Cron queue full | Firing dropped; emit `event_type = "server.cron_schedule_queue_full"` |
-| EC-004 | BC-2.12.005 EC-1 | `SecurityConfig::default()` | `allowed_origins: []`, `debug_route_key: None` |
-| EC-005 | BC-2.12.005 EC-2 | CORS wildcard configured | Startup WARN with `event_type = "server.security_config_cors_wildcard"` |
-| EC-006 | BC-2.12.005 EC-3 | `debug_route_key: Some("")` | Rejected at startup; error |
-| EC-007 | BC-2.12.006 EC-1 | In-memory RateLimitStore used | Startup WARN with `event_type = "server.rate_limit_store_in_memory"` |
-| EC-008 | BC-2.12.006 EC-2 | RunStore fails | `E-SERVER-014` |
-| EC-009 | BC-2.12.007 EC-1 | Second SSE request for same run_id | `E-SERVER-015` (RunAlreadyExecuting) |
-| EC-010 | BC-2.12.007 EC-2 | Run fails mid-stream | `run_end` NOT emitted; SSE stream closes with error event |
-| EC-011 | BC-2.12.007 EC-3 | `node_delta` event name used anywhere | Forbidden — event name is `node_stream` (NE-13 correction) |
+| EC-001 | BC-2.12.004 INV-003 | Server down during 3 scheduled firings | Skip 3; fire once at next check interval |
+| EC-002 | BC-2.12.004 EC-002 | Invalid cron expression | `E-CRON-002` (InvalidCronExpression) |
+| EC-003 | BC-2.12.004 EC-004 | Cron queue full | Firing dropped; emit `event_type = "server.cron_schedule_queue_full"` |
+| EC-004 | BC-2.12.005 INV-001 | `SecurityConfig::default()` | `allowed_origins: []`, `debug_route_key: None` |
+| EC-005 | BC-2.12.005 EC-003 | CORS wildcard configured | Startup WARN with `event_type = "server.security_config_cors_wildcard"` |
+| EC-006 | BC-2.12.005 EC-005 | `debug_route_key: Some("")` | Rejected at startup; error |
+| EC-007 | BC-2.12.006 EC-005 | In-memory RateLimitStore used | Startup WARN with `event_type = "server.rate_limit_store_in_memory"` |
+| EC-008 | BC-2.12.006 EC-004 | RunStore fails | `E-SERVER-014` |
+| EC-009 | BC-2.12.007 EC-005 | Second SSE request for same run_id | `E-SERVER-015` (RunAlreadyExecuting) |
+| EC-010 | BC-2.12.007 EC-006 | Run fails mid-stream | `run_end` NOT emitted; SSE stream closes with error event |
+| EC-011 | BC-2.06.001 PC-002 | `node_delta` event name used anywhere | Forbidden — event name is `node_stream` (NE-13 correction) |
 
 ## Tasks
 

@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.05
 epic_id: E-01
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.2 (P2A-043 F-05/2026-08-24): prose ordinal cross-refs converted to stable tags."
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
@@ -82,7 +83,7 @@ A Tokio task panic (JoinError from a panicking branch task) maps to `Err(Pregoly
 `RunnablePassthrough::with_inspect(f)` accepts `f: Arc<dyn Fn(&Value) + Send + Sync>`. The inspect function is called once per `invoke` call before the input is returned. It receives `&Value` (immutable borrow) — it cannot modify the output. Verified by `test_BC_2_01_007_inspect_fn_called_once()`.
 
 ### AC-010 (traces to BC-2.01.007 PC-007 and EC-002)
-`RunnablePassthrough::invoke` NEVER returns `Err` on its own — the return value is always `Ok(input.clone())` regardless of whether an `inspect_fn` is attached. A panicking `inspect_fn` is a caller contract violation (BC-2.01.007 precondition 3 requires the function to be non-panicking in production use); the panic propagates as a Rust unwind rather than being caught and converted to `Err` by `RunnablePassthrough` (BC-2.01.007 EC-002). Any `Err` observed from a pipeline containing `RunnablePassthrough` originates upstream or downstream, not from the passthrough itself. The test exercises the infallibility invariant over a range of inputs with and without an inspect function. Verified by `test_BC_2_01_007_passthrough_infallible()`.
+`RunnablePassthrough::invoke` NEVER returns `Err` on its own — the return value is always `Ok(input.clone())` regardless of whether an `inspect_fn` is attached. A panicking `inspect_fn` is a caller contract violation (BC-2.01.007 PRE-003 requires the function to be non-panicking in production use); the panic propagates as a Rust unwind rather than being caught and converted to `Err` by `RunnablePassthrough` (BC-2.01.007 EC-002). Any `Err` observed from a pipeline containing `RunnablePassthrough` originates upstream or downstream, not from the passthrough itself. The test exercises the infallibility invariant over a range of inputs with and without an inspect function. Verified by `test_BC_2_01_007_passthrough_infallible()`.
 
 ### AC-011 (traces to BC-2.01.008 PC-001)
 `RunnablePassthrough::assign(pairs)` creates a `RunnableAssign` whose internal mapper is a `RunnableParallel::new(pairs)`. There is no public `RunnableAssign::new()` constructor. Verified by `test_BC_2_01_008_assign_uses_parallel_mapper()`.

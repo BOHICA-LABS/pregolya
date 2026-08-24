@@ -3,12 +3,15 @@ document_type: story
 level: ops
 story_id: S-1.24
 epic_id: E-09
-version: "1.1"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 mis-anchors corrected (AC-004 INV-001→INV-004, AC-008 PC-001→PC-002, AC-009 PC-002→PC-001, AC-010 INV-001→INV-003)"
+  - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
+  - "1.3 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags"
+  - "1.4 (P2A-043 F-05/2026-08-24): escalated EC citations redirected to PC/INV per PO adjudication."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.004.md
@@ -108,7 +111,7 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 (traces to BC-2.06.006 PC-001)
 
 ### AC-010: compaction_event — parent_ids is mandatory (non-null, non-empty array)
-`parent_ids` field on `CompactionEvent` payload must be a non-null, non-empty array. Emitting a `compaction_event` with `parent_ids: null` or `parent_ids: []` violates the CompactionEvent structural invariant (BC-2.06.006 invariant 1) and must not occur.
+`parent_ids` field on `CompactionEvent` payload must be a non-null, non-empty array. Emitting a `compaction_event` with `parent_ids: null` or `parent_ids: []` violates the CompactionEvent structural invariant (BC-2.06.006 INV-003) and must not occur.
 (traces to BC-2.06.006 INV-003)
 
 ## Architecture Mapping
@@ -144,15 +147,15 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.06.004 EC-1 | Hook returns Deny (not PendingHumanApproval) | No `ToolApprovalRequest` event emitted |
-| EC-002 | BC-2.06.004 EC-2 | PendingHumanApproval with `prompt: None` | Event emitted with `"prompt": null` |
-| EC-003 | BC-2.06.004 EC-3 | Stream consumer disconnected | Event dropped; engine does NOT block; interrupt() still issued |
-| EC-004 | BC-2.06.004 EC-4 | Tool has no `action_risk` annotation | `"action_risk": null` in event payload |
-| EC-005 | BC-2.06.005 EC-1 | Resume with Approve | `{ "decision": "Approve", "reason": null, "modified_args": null }` |
-| EC-006 | BC-2.06.005 EC-2 | Resume with Deny | `{ "decision": "Deny", "reason": "<reason>", "modified_args": null }` |
-| EC-007 | BC-2.06.005 EC-3 | Resume with Edit | `{ "decision": "Edit", "reason": null, "modified_args": { ... } }` |
-| EC-008 | BC-2.06.006 EC-1 | `tokens_remaining_after` when no token ceiling | Field is null (`Option<i64>: None`) |
-| EC-009 | BC-2.06.006 EC-2 | Compaction on Deny path | `tokens_remaining_after` negative (ceiling - used, where used > ceiling) |
+| EC-001 | BC-2.06.004 EC-001 | Hook returns Deny (not PendingHumanApproval) | No `ToolApprovalRequest` event emitted |
+| EC-002 | BC-2.06.004 EC-002 | PendingHumanApproval with `prompt: None` | Event emitted with `"prompt": null` |
+| EC-003 | BC-2.06.004 EC-003 | Stream consumer disconnected | Event dropped; engine does NOT block; interrupt() still issued |
+| EC-004 | BC-2.06.004 EC-004 | Tool has no `action_risk` annotation | `"action_risk": null` in event payload |
+| EC-005 | BC-2.06.005 EC-001 | Resume with Approve | `{ "decision": "Approve", "reason": null, "modified_args": null }` |
+| EC-006 | BC-2.06.005 EC-002 | Resume with Deny | `{ "decision": "Deny", "reason": "<reason>", "modified_args": null }` |
+| EC-007 | BC-2.06.005 EC-003 | Resume with Edit | `{ "decision": "Edit", "reason": null, "modified_args": { ... } }` |
+| EC-008 | BC-2.06.006 INV-002 | `tokens_remaining_after` when no token ceiling | Field is null (`Option<i64>: None`) |
+| EC-009 | BC-2.06.006 INV-002 | Compaction on Deny path | `tokens_remaining_after` negative (ceiling - used, where used > ceiling) |
 
 ## Tasks
 

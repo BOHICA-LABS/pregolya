@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.002
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
@@ -26,6 +26,7 @@ changelog:
   - "1.6 (P2A-021/add-documents-canon/2026-08-21): Canonical ingestion method renamed add_texts → add_documents throughout, consistent with BC-2.21.001 §PC-2 (Option i — single Document-centric method on VectorStore trait). All 11 live body sites updated; append-only changelog entries (historical records) left unchanged. Changed sites: (1) Description: 'generated at add_texts time' → 'generated at add_documents time'. (2) PC-4 zero-norm guard precondition: two occurrences. (3) PC-2 section header and first bullet: add_texts(texts, metadatas) → add_documents(&self, docs: Vec<Document>) with page_content extraction note. (4) Invariant 2: two occurrences. (5) EC-002: add_texts → add_documents; 'texts' → 'docs'. (6) EC-004: two occurrences (description + expected-behavior). (7) EC-007: add_texts([...], None) → add_documents(vec![Document{..}, Document{..}]). (8) TV-004: store.add_texts → store.add_documents. (9) TV-006: store.add_texts → store.add_documents. (10) VP-2.21.002-B: add_texts → add_documents; 'second text' → 'second document'. (11) Traceability L2-invariants row and Architecture-authority row: add_texts → add_documents."
   - "1.7 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -89,7 +90,7 @@ unconditionally before any cosine division.
    - Extracts `page_content` from each `Document` and calls `arc_embeddings.embed_documents(texts).await` to pre-compute embeddings.
    - Checks each embedding vector's L2 norm before acquiring the write lock: if any vector
      has norm == 0.0, returns `Err(PregolyaError { code: "E-VS-004", .. })`;
-     no documents from the batch are appended (all-or-nothing per Invariant 2, DI-014).
+     no documents from the batch are appended (all-or-nothing per {INV-002}, DI-014).
    - Acquires a write lock on the `RwLock` and appends new `(Document, Vec<f32>)` pairs.
    - Returns `Ok(Vec<String>)` of assigned document IDs.
 3. {PC-003} `similarity_search(query, k)`:

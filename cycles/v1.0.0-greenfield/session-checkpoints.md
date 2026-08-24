@@ -2883,3 +2883,19 @@ D-251 SESSION WRAP; D-252 M1 COMPLETE. ADR-027 placeholder "D-175" — reconcile
 pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. Mid a large human-approved (Option C, D-250) ADR-027 STABLE-ANCHOR MIGRATION. M1 BC-labeling COMPLETE (D-252). M2 validator dual-mode COMPLETE (D-253; 528 citations / 40 stories 0-DRIFT). M3a COMPLETE (D-254): 39 stories re-cited to stable-anchor form; 136+ mis-anchors fixed in-pass. M3b+M3c COMPLETE (D-256): all 11 M3 escalations resolved; EC 118→119; 15/15 pre-commit PASS. NEXT ACTION: M4. Then adversary P2A-043, streak 0/3. PENDING WORKSTREAM: v1 dev-tooling expansion (D-255).
 
 ### STATE: v5.70, timestamp 2026-08-24T19:38:00Z
+
+---
+
+## Archived Checkpoint v5.71 (2026-08-24; replaced by v5.72)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. ADR-027 STABLE-ANCHOR MIGRATION COMPLETE (D-257). **M1 BC-labeling COMPLETE (D-252). M2 validator dual-mode COMPLETE (D-253). M3a COMPLETE (D-254). M3b+M3c COMPLETE (D-256). M4 COMPLETE (D-257): strict cutover; verify-ac-pc-trace.sh strict (old/mixed-form = BLOCKING); 0 DRIFT / 529 citations / 40 stories; 15/15 PASS; SEMANTIC-ANCHOR-DRIFT CLOSED.** NEXT ACTION: adversary P2A-043, streak 0/3 (need 3 consecutive CLEAN(strict)). Known follow-ups: PROSE-ORDINAL-RESIDUAL (P2A-043 sweep) + BC-TEMPLATE-ABSENT. PENDING WORKSTREAM: v1 dev-tooling expansion (D-255), starts after P2A-043.
+
+### HEADS (v5.71)
+- develop: 644d1ad — clean, PUSHED, untouched this session.
+- factory-artifacts: `git -C .factory log -1 --format='%h %s'` — clean, PUSHED (M4 COMPLETE commit, this burst).
+- worktrees: none. Open PRs: none.
+
+### DECISION DELTA: D-257 ADR-027 M4 COMPLETE (strict cutover; migration done; SEMANTIC-ANCHOR-DRIFT CLOSED). Census 39/133/14/119. Streak 0/3. NEXT: P2A-043.
+
+### STATE: v5.71, timestamp 2026-08-24T20:45:00Z

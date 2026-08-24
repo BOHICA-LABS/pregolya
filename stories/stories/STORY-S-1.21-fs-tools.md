@@ -3,12 +3,14 @@ document_type: story
 level: ops
 story_id: S-1.21
 epic_id: E-13
-version: "1.1"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags."
+  - "1.3 (P2A-043 F-05/2026-08-24): escalated EC citations redirected to PC/INV per PO adjudication."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.001.md
@@ -17,7 +19,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4b72803"
+input-hash: "7903b1c"
 traces_to:
   - behavioral-contracts/BC-2.23.001
   - behavioral-contracts/BC-2.23.002
@@ -161,16 +163,16 @@ The returned `Vec<DirEntry>` is sorted ascending by `name`. An empty directory r
 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
-| EC-001 | BC-2.23.001 EC-1 | Symlink target escapes workspace | `E-TOOLS-001` from `canonicalize_beneath_root` |
-| EC-002 | BC-2.23.001 EC-2 | File larger than 1 MiB | Truncated read; at most 1,048,576 bytes returned |
-| EC-003 | BC-2.23.001 EC-3 | ADR-024 Phase-2: non-existent target path canonicalized OK, then open fails | `E-TOOLS-008` on `open` failure |
-| EC-004 | BC-2.23.002 EC-1 | Write parent directory missing | `E-TOOLS-008` (not `E-TOOLS-001`) |
-| EC-005 | BC-2.23.002 EC-2 | rename() fails (cross-device) | `E-TOOLS-008`; partial temp file cleaned up |
-| EC-006 | BC-2.23.003 EC-1 | `old_str` not found, no fuzzy | `E-TOOLS-003`; retry is caller-safe |
-| EC-007 | BC-2.23.003 EC-2 | `fuzzy_threshold = 0.0` | `Err` at `EditConfig` construction |
-| EC-008 | BC-2.23.004 EC-1 | Empty directory | `Ok(vec![])` |
-| EC-009 | BC-2.23.004 EC-2 | Permission denied reading dir | `E-TOOLS-008` |
-| EC-010 | BC-2.23.001 EC-4 | Path is `..` or filesystem root | `E-TOOLS-001` |
+| EC-001 | BC-2.23.001 EC-002 | Symlink target escapes workspace | `E-TOOLS-001` from `canonicalize_beneath_root` |
+| EC-002 | BC-2.23.001 EC-003 | File larger than 1 MiB | Truncated read; at most 1,048,576 bytes returned |
+| EC-003 | BC-2.23.001 EC-005 | ADR-024 Phase-2: non-existent target path canonicalized OK, then open fails | `E-TOOLS-008` on `open` failure |
+| EC-004 | BC-2.23.002 EC-003 | Write parent directory missing | `E-TOOLS-008` (not `E-TOOLS-001`) |
+| EC-005 | BC-2.23.002 PC-005 | rename() fails (cross-device) | `E-TOOLS-008`; partial temp file cleaned up |
+| EC-006 | BC-2.23.003 EC-001 | `old_str` not found, no fuzzy | `E-TOOLS-003`; retry is caller-safe |
+| EC-007 | BC-2.23.003 EC-007 | `fuzzy_threshold = 0.0` | `Err` at `EditConfig` construction |
+| EC-008 | BC-2.23.004 EC-003 | Empty directory | `Ok(vec![])` |
+| EC-009 | BC-2.23.004 PC-005 | Permission denied reading dir | `E-TOOLS-008` |
+| EC-010 | BC-2.23.001 PC-002 | Path is `..` or filesystem root | `E-TOOLS-001` |
 
 ## Tasks
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.12"
+version: "1.14"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,10 +14,10 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
-red_gate_source: "ADR-015 Decision 3 §Security Invariant 1 — injection_guard must block before implementation; VP-006 Kani candidate"
+red_gate_source: "ADR-015 Decision 3 §Security {INV-001} — injection_guard must block before implementation; VP-006 Kani candidate"
 vp_seed: true
 vp_id: VP-006
 changelog:
@@ -34,6 +34,8 @@ changelog:
   - "1.10 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.11 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.12 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.13 (P2A-043-F-03/2026-08-24): INV-006 added — fail-closed wildcard for #[non_exhaustive] TrustLevel; unknown variants treated as Untrusted (guard fires, no Ok(PromptValue) escapes). Closes SS-18 escalation F-03; AC-009 and compliance-table row 'Fail-closed default' in S-2.05 re-anchor from INV-001 to INV-006."
+  - "1.14 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -56,7 +58,7 @@ removal_reason: null
 
 # BC-2.18.004: injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time)
 
-> **Red Gate test required** — ADR-015 Decision 3 §Security Invariant 1: the injection_guard test must
+> **Red Gate test required** — ADR-015 Decision 3 §Security {INV-001}: the injection_guard test must
 > COMPILE and FAIL before the `injection_guard` pure-core check is implemented. VP-006 Kani
 > candidate: prove that a TrustRequired slot with an Untrusted variable NEVER produces a
 > PromptValue.
@@ -137,6 +139,16 @@ enforcement of that invariant.
    template string, as produced by the f-string template parser's left-to-right variable scan) — NOT in HashMap iteration order.
    This ensures the `<var_name>` in the E-TMPL-001 error message is deterministic and
    reproducible regardless of HashMap seed or insertion order.
+6. {INV-006} **Fail-closed wildcard for `#[non_exhaustive]` `TrustLevel`:** `TrustLevel` is a
+   `#[non_exhaustive]` enum (declared in `pregolya-prompts/src/trust.rs` without `Ord`/`PartialOrd`
+   derives). When `injection_guard` encounters a `TrustLevel` variant not covered by an explicit
+   match arm — i.e., a variant added after this BC was authored — the wildcard `_ =>` arm
+   treats the variant as `TrustLevel::Untrusted`: the guard fires and returns
+   `Err(E-TMPL-001)`. No unknown trust level can escape a `TrustRequired` slot and produce
+   `Ok(PromptValue)`. This is the fail-closed default that preserves the security invariant
+   across future `TrustLevel` evolution. VP-006 Kani proof covers this: `#[non_exhaustive]`
+   exhaustive treatment ensures any new variant hits the wildcard, triggering the fail path.
+   (See S-2.05 AC-009: `test_BC_2_18_004_fail_closed_unknown_trust_level_treated_as_untrusted`.)
 
 ## Edge Cases
 

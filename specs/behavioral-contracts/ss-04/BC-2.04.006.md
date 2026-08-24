@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.006
-version: "1.9"
+version: "1.10"
 status: active
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 1a
 changelog:
   - "1.1 (initial): base BC authored."
@@ -17,6 +17,7 @@ changelog:
   - "1.7 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and EC-005 Expected Behavior cell (both have 3 of 5 fields; ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.8 (BURST-315/F-B2/2026-08-17): Post-ADR-021 §Decision 2 reconciliation. PC2 dot-notation implied a typed struct for the `configurable` field; ADR-021 Decision 2 defines `configurable: Option<HashMap<String, serde_json::Value>>` (a flat map). Rewrote PC2 to the HashMap key-lookup model: keys \"thread_id\", \"checkpoint_ns\", and optionally \"checkpoint_id\" accessed via `config.configurable.as_ref().and_then(|m| m.get(\"thread_id\"))` etc. EC-003 description updated from \"missing field\" to \"missing key in configurable map\" — the validation error semantics (E-CORE-005 when thread_id key absent) are preserved."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.10 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -97,7 +98,7 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 | EC-002 | Root namespace `checkpoint_ns = ""` and subgraph namespace `checkpoint_ns = "sub"` on the same thread | They are independent namespaces; writes to one never appear in the other; both present in `list` scoped to `thread_id` |
 | EC-003 | `get_tuple` called with `RunnableConfig` whose `configurable` map is missing the `"checkpoint_ns"` key | `checkpoint_ns` defaults to `""`; the root namespace is queried; no error if the root namespace exists; `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'thread_id': value is required", .. })` if the `"thread_id"` key is also absent from the `configurable` map |
 | EC-004 | Concurrent writes from the same `thread_id` to different `checkpoint_ns` values | Each namespace is independent; no locking across namespaces required; both writes succeed |
-| EC-005 | A `put(config, checkpoint, ...)` or `put_writes(config, writes, task_id)` call where the composite triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already exists in storage under a session belonging to a different tenant context — i.e., the composite-PK uniqueness constraint (Invariant 1) is violated at the tenancy boundary | `Err(PregolyaError { category: TENANCY, code: "E-CHKPT-005", message: "SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique", .. })` (where `<t>` = `config.thread_id`, `<ns>` = `config.checkpoint_ns`, both available at raise site); write rejected atomically, no partial mutation. This is the raise-condition for E-CHKPT-005: the composite primary key collision surfaces as a tenancy boundary violation when two distinct tenant contexts attempt to own the same session address triple. In v1 this error surfaces embedded in Run.error. (OBS-P28-2, ADV-P1D-PASS-28.) |
+| EC-005 | A `put(config, checkpoint, ...)` or `put_writes(config, writes, task_id)` call where the composite triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already exists in storage under a session belonging to a different tenant context — i.e., the composite-PK uniqueness constraint ({INV-001}) is violated at the tenancy boundary | `Err(PregolyaError { category: TENANCY, code: "E-CHKPT-005", message: "SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique", .. })` (where `<t>` = `config.thread_id`, `<ns>` = `config.checkpoint_ns`, both available at raise site); write rejected atomically, no partial mutation. This is the raise-condition for E-CHKPT-005: the composite primary key collision surfaces as a tenancy boundary violation when two distinct tenant contexts attempt to own the same session address triple. In v1 this error surfaces embedded in Run.error. (OBS-P28-2, ADV-P1D-PASS-28.) |
 
 ## Canonical Test Vectors
 

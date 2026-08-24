@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.07
 epic_id: E-02
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -147,7 +147,7 @@ Well within the 20-30% agent context window threshold (≈30,000 tokens for 100k
 ## Previous Story Intelligence
 
 - S-1.04 (Runnable Trait and Pipe) established the `Tool` trait and `Runnable` abstraction that `#[tool]`-generated structs must implement. The exact trait surface (invoke signature, json_schema) drives macro output.
-- S-1.04 established `pregolya-core` as the crate providing `Tool`, `ActionRisk`, and `PregolyaError`. The fully-qualified path `::pregolya_core::action_risk::ActionRisk::<Variant>` is mandated by BC-2.08.010 postcondition 3 and must be hardcoded in the macro expansion to avoid unqualified name resolution failures in user crates.
+- S-1.04 established `pregolya-core` as the crate providing `Tool`, `ActionRisk`, and `PregolyaError`. The fully-qualified path `::pregolya_core::action_risk::ActionRisk::<Variant>` is mandated by BC-2.08.010 PC-001 and must be hardcoded in the macro expansion to avoid unqualified name resolution failures in user crates.
 
 ## Architecture Compliance Rules
 
@@ -214,3 +214,4 @@ Files to MODIFY:
 - 1.0 (2026-08-18): initial story authoring.
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-003 postcondition 3→PC-001 (action_risk in PC-001 not PC-003); AC-004 postcondition 4→PC-001 (invoke delegation in PC-001); AC-005 postcondition 5→PC-004 (DI-008 Result enforcement); AC-009 postcondition 2→EC-001 (duplicate entrypoint is EC-001); AC-010 postcondition 3→PRE-001 (state type is precondition); AC-011 EC-002→PC-003 (async preservation in PC-003); AC-013 postcondition 2→PC-001 (register_into in PC-001); AC-014 postcondition 3→PC-002 (async fn unchanged); AC-015 EC-001→PRE-001 (non-async violates PRE-001). ESCALATION: AC-006 (BC-2.08.010 EC-001 mismatch — story asserts struct name collision but BC EC-001 is about missing JsonSchema); AC-007 (BC-2.08.010 EC-003 mismatch — story asserts invalid action_risk compile error but BC EC-003 is about non-PregolyaError return; no BC EC covers invalid action_risk values). Routes to product-owner.
 - 1.2 (ADR-027 M4/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag.
+- 1.3 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags.

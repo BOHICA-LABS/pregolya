@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-6.01
 epic_id: E-22
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -30,7 +30,9 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-changelog: "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
 ---
 
 # S-6.01: Formal Verification Pipeline — Kani Proof Execution, cargo-fuzz Smoke Gate, and Phase-7 Convergence Gate
@@ -97,7 +99,7 @@ for each of the six P0 VPs:
 | VP-011 | `deny_excludes_tool_invocation` | `Deny { .. }` routes to `DispatchOutcome::Reject`; `Approve` to `DispatchOutcome::Proceed`; invalid-`Edit` falls back to `DispatchOutcome::Reject`; hook errors shielded to `Deny { .. }` before routing; `#[non_exhaustive]` wildcard arm returns `DispatchOutcome::Reject` |
 
 Any of these six VPs resulting in VERIFICATION FAILED is a blocking Phase-7 convergence-gate
-failure per BC-2.17.001 postcondition 3 and NFR-003.
+failure per BC-2.17.001 PC-003 and NFR-003.
 Verified by `just kani-local` on Linux/macOS; CI job `kani-p0-gate` enforces all six pass.
 
 ### AC-004 (traces to BC-2.17.001 PC-002 + PC-003 — P1 VP proofs pass — Phase-6 gate)
@@ -208,7 +210,7 @@ Verified by `test_BC_2_17_002_corpus_directories_present_and_tracked()` (xtask c
 
 ### AC-016 (traces to BC-2.17.002 INV-002 — corpus persistence / ADR gate)
 Removing or resetting the fuzz corpus requires an ADR entry explaining why corpus
-diversity was discarded (BC-2.17.002 invariant 2). The CI `fuzz-smoke` job enforces corpus
+diversity was discarded (BC-2.17.002 INV-002). The CI `fuzz-smoke` job enforces corpus
 presence via a pre-run check: if `fuzz/corpus/` is empty or absent, the job fails with
 a human-readable error before invoking `cargo +nightly fuzz run`. No CI job silently
 seeds an empty corpus without committing it.
@@ -282,8 +284,8 @@ Verified by `test_BC_2_17_001_proptest_vp_suite_passes_post_wave2()` (nextest wo
 | EC-004 | Post-Phase-6 refactor breaks VP-001 (BSP reducer change) | CI reruns `kani-p0-gate` on the refactored code; VERIFICATION FAILED blocks the PR; harness is a living gate, not a one-time proof (BC-2.17.001 EC-004) |
 | EC-005 | Fuzzer generates malformed msgpack bytes for `fuzz_checkpoint_serde` | Deserialization returns `Err(DeserializationError)` — no panic; fuzz target counts as non-crash handled error (BC-2.17.002 EC-001) |
 | EC-006 | Fuzzer generates cyclic graph topology for `fuzz_graph_execution` | Executor detects cycle and returns `Err(PregolyaError)` — no panic, no live-lock; cycle detection is bounded (BC-2.17.002 EC-003) |
-| EC-007 | `cargo +nightly fuzz build` fails on CI due to nightly toolchain change | Toolchain pin in `rust-toolchain.toml` is bumped to a compatible nightly with rationale; the fuzz-build job is always run after the pin change to confirm compilation still passes (BC-2.17.002 invariant 3) |
-| EC-008 | Platform is Windows; `just kani-local` is invoked | Recipe prints clear platform-constraint message and exits non-zero without attempting Kani execution; Windows CI runs concrete nextest suite instead (BC-2.17.001 postcondition 2 + CLAUDE.md Kani platform note) |
+| EC-007 | `cargo +nightly fuzz build` fails on CI due to nightly toolchain change | Toolchain pin in `rust-toolchain.toml` is bumped to a compatible nightly with rationale; the fuzz-build job is always run after the pin change to confirm compilation still passes (BC-2.17.002 INV-003) |
+| EC-008 | Platform is Windows; `just kani-local` is invoked | Recipe prints clear platform-constraint message and exits non-zero without attempting Kani execution; Windows CI runs concrete nextest suite instead (BC-2.17.001 PC-002 + CLAUDE.md Kani platform note) |
 
 ## Token Budget Estimate (MANDATORY)
 
@@ -315,7 +317,7 @@ Verified by `test_BC_2_17_001_proptest_vp_suite_passes_post_wave2()` (nextest wo
 5. [ ] (formal-verifier) Complete `workspace_confinement_harness` body in `crates/pregolya-sandbox/src/proofs/workspace_confinement.rs` (VP-003): symbolic `base` and `path`; assert `canonicalize_beneath_root` stays within `base` or returns `Err(WorkspaceEscape)`.
 6. [ ] (formal-verifier) Complete `zero_norm_guard_fail_closed` body in `crates/pregolya-vectorstores/src/proofs/zero_norm_guard.rs` (VP-009): symbolic `f32` embedding vector; assert zero-norm guard fires before cosine division.
 7. [ ] (formal-verifier) Complete `allowlist_rejects_unregistered_id` body in `crates/pregolya-core/src/proofs/reviver_allowlist.rs` (VP-010): symbolic type-id string; assert unregistered id raises `E-SRLZ-001` and never dispatches a constructor.
-8. [ ] (formal-verifier) Complete `deny_excludes_tool_invocation` body in `crates/pregolya-graph/src/proofs/pre_tool_hook.rs` (VP-011): symbolic `PreToolDecision` variants (Approve/Deny/Edit) and hook-error path; assert fail-closed routing per BC-2.17.001 postcondition 1 VP-011 specification.
+8. [ ] (formal-verifier) Complete `deny_excludes_tool_invocation` body in `crates/pregolya-graph/src/proofs/pre_tool_hook.rs` (VP-011): symbolic `PreToolDecision` variants (Approve/Deny/Edit) and hook-error path; assert fail-closed routing per BC-2.17.001 PC-001 VP-011 specification.
 9. [ ] (formal-verifier) Complete `injection_guard_fail_closed` body in `crates/pregolya-prompts/src/proofs/injection_guard.rs` (VP-006): symbolic `TrustLevel` and slot; assert fail-closed → `Err(E-TMPL-001)`.
 10. [ ] (formal-verifier) Complete `watermark_arithmetic_harness` body in `crates/pregolya-core/src/proofs/watermark.rs` (VP-012): symbolic `tokens_remaining`, `ceiling`, `fraction`; assert `OnWatermark` fires iff `tokens_remaining / ceiling <= (1.0 - fraction)` (f64; non-strict `<=`).
 11. [ ] (formal-verifier) Complete `risk_floor_rejects_below_medium` body in `crates/pregolya-tools/src/proofs/risk_floor.rs` (VP-013): symbolic `ActionRisk`; assert `ReadOnly` and `Low` always return `Err(E-TOOLS-007)`.
@@ -364,7 +366,7 @@ stories must be merged before S-6.01 is dispatched.
   implementation. Critical constraint from S-1.23: `PendingHumanApproval` is peeled off
   upstream in the async `pre_tool_dispatch` wrapper before `route_pre_tool_decision` is called;
   the Kani harness covers only the three routable variants (Approve/Deny/Edit) + hook-error path
-  per BC-2.17.001 postcondition 1 VP-011 specification.
+  per BC-2.17.001 PC-001 VP-011 specification.
 
 - **S-1.25 (Compaction)** established `OnWatermark` arithmetic in `core::budget` — VP-012
   harness was stubbed in S-1.25. The non-strict `<=` boundary (fraction=1.0,
@@ -442,8 +444,8 @@ test — do NOT run Tokio runtimes inside Kani harnesses.
 | `crates/pregolya-core/src/proofs/watermark.rs` | COMPLETE (stub exists from S-1.25) | VP-012 Kani harness — `watermark_arithmetic_harness` |
 | `crates/pregolya-prompts/src/proofs/injection_guard.rs` | COMPLETE (stub exists from S-2.05) | VP-006 Kani harness — `injection_guard_fail_closed` |
 | `crates/pregolya-tools/src/proofs/risk_floor.rs` | COMPLETE (stub exists from S-1.22) | VP-013 Kani harness — `risk_floor_rejects_below_medium` |
-| `fuzz/fuzz_targets/fuzz_checkpoint_serde.rs` | CREATE | cargo-fuzz target 1 (BC-2.17.002 postcondition 1) |
-| `fuzz/fuzz_targets/fuzz_graph_execution.rs` | CREATE | cargo-fuzz target 2 (BC-2.17.002 postcondition 2) |
+| `fuzz/fuzz_targets/fuzz_checkpoint_serde.rs` | CREATE | cargo-fuzz target 1 (BC-2.17.002 PC-001) |
+| `fuzz/fuzz_targets/fuzz_graph_execution.rs` | CREATE | cargo-fuzz target 2 (BC-2.17.002 PC-002) |
 | `fuzz/Cargo.toml` | CREATE | Fuzz workspace member manifest; declares `[dependencies.pregolya-graph]` and `[dependencies.pregolya-checkpoint]` |
 | `fuzz/corpus/fuzz_checkpoint_serde/` | CREATE (seed from Phase-3 test data) | Seed corpus for serialization fuzzer |
 | `fuzz/corpus/fuzz_graph_execution/` | CREATE (seed from Phase-3 test data) | Seed corpus for graph-execution fuzzer |

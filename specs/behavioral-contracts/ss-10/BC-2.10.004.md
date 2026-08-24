@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-012
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 propagation. Module field resolved from stale placeholder. All Architecture Anchor crate references already correct per ADR-009 split (BudgetEscalation/BudgetResume types + journal stay in pregolya-graph as dispatch/escalation artifacts, not policy definitions)."
   - "1.2 (F-P91-01, 2026-07-17): Attribute on_ceiling to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. Description: 'policy\\'s on_ceiling mode is escalate' → 'BudgetConfig::on_ceiling is OnCeiling::Escalate'. PC1: 'BudgetPolicy with on_ceiling = escalate ... in RunnableConfig' → 'BudgetConfig with on_ceiling = OnCeiling::Escalate ... in GraphConfig.budget_config'. TV-001: same BudgetConfig attribution + OnCeiling::Escalate enum form. EC-001: 'on_ceiling = escalate' → 'BudgetConfig::on_ceiling = OnCeiling::Escalate'. on_ceiling is a data field on BudgetConfig; BudgetPolicy::evaluate is pure and data-free (interface-definitions v2.29 §Engine branching note + ADR-009 Option 3)."
@@ -25,6 +25,7 @@ changelog:
   - "1.8 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by budget-escalation interrupt (PC4: evaluation point within a super-step → run transitions to `interrupted`) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during a budget-escalation interrupt park window."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.11 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — BC-2.05.001 postcondition 2 → BC-2.05.001 {PC-002} in PC-002 prose."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
   - domain-spec/capabilities-p0.md#CAP-006
@@ -79,7 +80,7 @@ the resume value is consumed FIFO and the interrupted node re-executes from its 
 ## Postconditions
 
 1. {PC-001} The execution engine triggers `interrupt(BudgetEscalation { current_usage, ceiling, policy_name, reason })` via the standard interrupt mechanism.
-2. {PC-002} The interrupt payload is pushed to the per-task scratchpad (FIFO slot) as per DI-003 and BC-2.05.001 postcondition 2.
+2. {PC-002} The interrupt payload is pushed to the per-task scratchpad (FIFO slot) as per DI-003 and BC-2.05.001 {PC-002}.
 3. {PC-003} A checkpoint is written with the INTERRUPT marker and the `BudgetEscalation` payload before
    the run suspends (sync durability tier, DI-002). The checkpoint write completes before the
    caller receives the interrupt notification.
