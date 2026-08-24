@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "5.70"
+version: "5.71"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-24T19:38:00Z"
+timestamp: "2026-08-24T20:45:00Z"
 phase: 2
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: pregolya
 mode: greenfield+semport
-current_step: "D-256 ADR-027 M3b+M3c COMPLETE (D-256); 11 escalations resolved; EC 118→119; 15/15 pre-commit PASS. Streak 0/3. NEXT: M4 (devops removes verify-ac-pc-trace.sh dual-mode fallback → strict new-form-required cutover, corpus-wide 0-DRIFT, finalize POL-48 + BC template), then adversary P2A-043 (3-CLEAN). trajectory-tail →4→4→5→1"
+current_step: "D-257 ADR-027 M4 COMPLETE — strict cutover DONE (M1→M4 migration complete); verify-ac-pc-trace.sh strict: 0 DRIFT / 529 citations / 40 stories / 15/15 gate PASS. SEMANTIC-ANCHOR-DRIFT class CLOSED. Census 39/133/14/119 UNCHANGED. Streak 0/3. NEXT: adversary P2A-043. trajectory-tail →4→5→1→0"
 current_cycle: v1.0.0-greenfield
-convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..042 D-208..D-250 (sample). P2A-042 CORPUS-WIDE ANCHOR-DRIFT (D-250; ADR-027 minted; M1-M4 migration). M1 COMPLETE (D-252) — all 133/133 BCs labeled. M2 COMPLETE (D-253) — verify-ac-pc-trace.sh dual-mode; 528 citations / 40 stories 0-DRIFT. M3a COMPLETE (D-254) — 39 stories re-cited to stable anchors, 136+ mis-anchors fixed. M3b+M3c COMPLETE (D-256) — 11 escalations resolved; EC 118→119; BC 133 / VP 14 / stories 39 UNCHANGED. Streak 0/3. NEXT: M4 → P2A-043. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
+convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). P2A-001..042 D-208..D-250 (sample). P2A-042 CORPUS-WIDE ANCHOR-DRIFT (D-250; ADR-027 minted; M1-M4 migration). M1 COMPLETE (D-252) — all 133/133 BCs labeled. M2 COMPLETE (D-253) — verify-ac-pc-trace.sh dual-mode; 528 citations / 40 stories 0-DRIFT. M3a COMPLETE (D-254) — 39 stories re-cited to stable anchors, 136+ mis-anchors fixed. M3b+M3c COMPLETE (D-256) — 11 escalations resolved; EC 118→119. M4 COMPLETE (D-257) — verify-ac-pc-trace.sh strict (mixed-form = BLOCKING); 0 DRIFT / 529 citations / 40 stories; POL-48 finalized; SEMANTIC-ANCHOR-DRIFT CLOSED. Census 39/133/14/119 UNCHANGED. Streak 0/3. NEXT: P2A-043. Full trajectory: cycles/v1.0.0-greenfield/convergence-trajectory.md."
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: 192 lines (wc-l) | margin from soft-target (200L): +8 lines | margin from actual: 0 lines | v5.70 (2026-08-24): M3b+M3c COMPLETE (D-256); 11 escalations resolved; EC 118→119. -->
+<!-- STATE.md SIZE BUDGET: 195 lines (wc-l) | margin from soft-target (200L): +5 lines | margin from actual: 0 lines | v5.71 (2026-08-24): ADR-027 M4 COMPLETE (D-257); migration done; SEMANTIC-ANCHOR-DRIFT CLOSED. -->
 
 # Pipeline State: pregolya
 
@@ -37,7 +37,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-08-24 — v5.70; M3b+M3c COMPLETE (D-256); 11 escalations resolved; EC 118→119. Census 39/133/14/119. Streak 0/3. trajectory-tail →4→4→5→1 |
+| **Last Updated** | 2026-08-24 — v5.71; ADR-027 M4 COMPLETE (D-257); migration done; SEMANTIC-ANCHOR-DRIFT CLOSED. Census 39/133/14/119. Streak 0/3. trajectory-tail →4→5→1→0 |
 
 ## Phase Progress
 
@@ -45,7 +45,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 |-------|--------|---------|-----------|------|---------------------|
 | pre-1: Pre-Pipeline | COMPLETE | 2026-07-12 | 2026-07-14 | market-intelligence PASSED; adk-rust comparative cert 3-CLEAN CLOSED (C21-C23); D16 HUMAN DIRECTION GATE PASSED (D17) | — |
 | 1: Spec Crystallization | COMPLETE | 2026-07-14 | 2026-08-18 | 3/3 CONVERGED on frozen anchor 79eb2f3 (P1-pass-211/212/213; D-195); input-hash drift resolved (D-196); Phase-1 gate CLOSED (D-197; burst-325). ~215 adversarial passes total. Full detail: cycles/v1.0.0-greenfield/convergence-trajectory.md | trajectory-tail →1→0→0→0; 3/3 CONVERGED |
-| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..041 fix-bursts COMPLETE D-208..D-249. P2A-042 CORPUS-WIDE ANCHOR-DRIFT (D-250; ADR-027 minted; M1-M4 plan). M1 COMPLETE (D-252): all 133/133 BCs labeled. M2 COMPLETE (D-253): verify-ac-pc-trace.sh dual-mode; 528 citations / 40 stories 0-DRIFT; POL-48 updated. M3a COMPLETE (D-254): 39 stories re-cited to stable anchors; 136+ mis-anchors fixed; 11 escalations to M3b. **M3b+M3c COMPLETE (D-256): 11 escalations resolved; EC 118→119; BC 133 / VP 14 / stories 39 UNCHANGED.** NEXT: M4. | trajectory-tail →4→4→5→1; 0/3. |
+| 2: Story Decomposition | IN PROGRESS | 2026-08-18 | | Structural decomp COMPLETE (D-198); per-story authoring COMPLETE 39/39 D-199..D-206 (sample); holdout scenarios COMPLETE 14/14 (D-207; SEALED). P2A-001..041 fix-bursts COMPLETE D-208..D-249. P2A-042 CORPUS-WIDE ANCHOR-DRIFT (D-250; ADR-027 minted; M1-M4 plan). M1 COMPLETE (D-252): all 133/133 BCs labeled. M2 COMPLETE (D-253): verify-ac-pc-trace.sh dual-mode; 528 citations / 40 stories 0-DRIFT; POL-48 updated. M3a COMPLETE (D-254): 39 stories re-cited to stable anchors; 136+ mis-anchors fixed; 11 escalations to M3b. M3b+M3c COMPLETE (D-256): 11 escalations resolved; EC 118→119. **M4 COMPLETE (D-257): strict cutover; verify-ac-pc-trace.sh strict (mixed-form = BLOCKING DRIFT); 0 DRIFT / 529 citations / 40 stories; 15/15 PASS; SEMANTIC-ANCHOR-DRIFT CLOSED.** | trajectory-tail →4→5→1→0; 0/3. |
 | 2: P2A-001..031 (compressed; archived burst-log+trajectory 2026-08-22) | COMPLETE | 2026-08-19 | 2026-08-22 | 31 passes + fix-bursts. P2A-001..026 (sample): mixed findings ALL CLOSED (D-208..D-233 (sample)). P2A-027..031 NOT CLEAN (D-234..D-238 (exhaustive)): P2A-027 D-233 type-flip REVERTED (ADR-014 D2 canonical); P2A-028 CLEAN(strict) streak 1/3; P2A-029 E-MCP-008/009 minted + 115→117 EC; P2A-030 single-underscore + E-PROV-012 + 117→118 EC; P2A-031 S-2.08/S-2.07 AC-trace + D-238 109 Story Anchor backfill (unfilled-anchor class CLOSED). Full: cycles/v1.0.0-greenfield/convergence-trajectory.md + burst-log.md. Census 133 BC/14 VP/118 EC throughout. | trajectory-tail →0→2→3→2; streak RESET after P2A-031 |
 | 2: adversary pass-32 (P2A-032) NOT CLEAN → RESOLVED | COMPLETE | 2026-08-22 | 2026-08-22 | CORPUS-WIDE AC→PC drift (1 HIGH class; 59 citations/17 drift-affected stories; 45 false-positives from parser blind-spots; 14 genuine). VALIDATOR-FIRST (D-239→D-240). verify-ac-pc-trace.sh 3 parser blind-spots found + fixed. RESOLVED (D-240). | trajectory-tail →2→3→2→1→RESOLVED; streak RESET 0/3 |
 | 2: adversary pass-33 (P2A-033) NOT CLEAN → ALL CLOSED (D-241) | COMPLETE | 2026-08-22 | 2026-08-22 | F1 (MED): epics.md E-16 rollup 8→5; E-17 rollup 8→10; all 22 epic rollups now sum to 300. F2 (LOW): BC-INDEX §Changelog updated (D-241). DAG reciprocity intact. 519 citations CLEAN (POL-48). BC census UNCHANGED 133 (51/79/3). | trajectory-tail →0→2→0; streak RESET 0/3. NEXT: P2A-034. |
@@ -62,11 +62,11 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| M1 chunk 1 COMPLETE (2026-08-23): 47 BCs labeled with {PC/INV/PRE-NNN} stable clause anchors (SS-01..07, SS-16, SS-17); purely additive; EC unchanged; validator 0-DRIFT (tags do not break ordinal resolution). BC census UNCHANGED 133. NEXT: M1 chunk 2 (SS-08..13), then M1 chunk 3. | product-owner + state-manager | COMPLETE | 47 BC files (SS-01..07, SS-16, SS-17) + sidecar-learning.md. Single commit per TD-VSDD-053. |
 | M1 chunk 2 COMPLETE (2026-08-23): 47 BCs labeled with {PC/INV/PRE-NNN} stable clause anchors (SS-08..13); purely additive; EC unchanged; validator 0-DRIFT. ~94/134 BCs labeled. NEXT: M1 chunk 3 (SS-14,15,18,19,20,21,22,23), then M2 dual-mode validator. | product-owner + state-manager | COMPLETE | 47 BC files (SS-08..13) + sidecar-learning.md + STATE.md + trajectory. Single commit per TD-VSDD-053. |
 | SESSION WRAP (D-251; 2026-08-23): Durable zero-context RESUME snapshot written. v5.65 checkpoint archived. v5.66 STATE.md committed. ADR-027 M1 chunk 3 NEXT. | state-manager | COMPLETE | STATE.md v5.66 + session-checkpoints.md (archived v5.65). Single commit per TD-VSDD-053. |
 | M1 chunk 3 COMPLETE + M1 COMPLETE (2026-08-23; D-252): 39 BCs labeled (SS-14,15,18-23) with stable {PC/INV/PRE-NNN} clause anchors per ADR-027. Incidental in-scope input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004 (production-grade default). BC-INDEX §Changelog updated. All 133/133 BCs now carry stable clause anchors. Census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: M2 (verify-ac-pc-trace.sh dual-mode rework). | product-owner (8 forks) + state-manager | COMPLETE | 39 BC files (SS-14,15,18-23) + BC-INDEX + sidecar-learning.md + STATE.md + trajectory. Single commit per TD-VSDD-053. |
 | M2 COMPLETE (2026-08-24; D-253): verify-ac-pc-trace.sh reworked to ADR-027 Decision-4 dual-mode. NEW_CITE_RE (stable-tag cite form) alongside OLD_CITE_RE; helpers get_stable_tags()/get_item_text_by_tag(); load_bc() carries pc_tags/inv_tags/pre_tags; story loop tries new-form first then old-form fallback. Transitional: old-form citations against tagged BCs NOT flagged DRIFT (strict mixed-form deferred to M4). POL-48 description/adopted/verification_steps updated. Verified: exit=0, 0 blocking DRIFT / 528 citations / 40 stories; 15/15 pre-commit PASS. Census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: M3. | devops-engineer + state-manager | COMPLETE | hooks/verify-ac-pc-trace.sh + policies.yaml + STATE.md + trajectory + sidecar-learning.md. Single commit per TD-VSDD-053. |
+| M4 COMPLETE (2026-08-24; D-257): verify-ac-pc-trace.sh strict cutover — old/mixed-form = BLOCKING DRIFT (mixed-form-anchor); dual-mode fallback removed. POL-48 finalized (stable-tag mandatory). BC-2.08.006 {INV-005} rustls-tls mandate + BC-local VP. Straggler + edge-case ACs fixed (S-1.19 19 ACs; S-2.06 2 ACs; S-1.03/1.04/1.06/1.07 edge-case normalization). Gate 15/15 PASS; 0 DRIFT / 529 citations / 40 stories. SEMANTIC-ANCHOR-DRIFT CLOSED. Census UNCHANGED 39/133/14/119. Streak 0/3. NEXT: P2A-043. | devops-engineer/product-owner/story-writer/state-manager | COMPLETE | verify-ac-pc-trace.sh + policies.yaml + BC-2.08.006 + 6 story files + BC-INDEX + STATE.md + trajectory + sidecar-learning.md. Single commit per TD-VSDD-053. |
 
 ## Decisions Log
 
@@ -101,6 +101,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-254 | **ADR-027 M3a COMPLETE. 39 stories re-cited to stable {PC/INV/PRE-NNN} clause anchors; 136+ mis-anchors corrected in-pass; 15/15 pre-commit PASS. 11 escalations (BC content gaps / error-code name mismatches / semantic conflicts) deferred to M3b. Census UNCHANGED 39/133/14/118. Streak 0/3.** | ADR-027 M3a story re-citation; 11 escalations to M3b | Phase 2 | 2026-08-24 | story-writer/state-manager |
 | D-255 | **HUMAN-APPROVED v1 SCOPE EXPANSION (2026-08-24): add ADK-style developer-tooling surface — ALL FOUR: (1) CLI (adk run-style: run/invoke graph, interactive session, scaffolding); (2) Web Dev UI (adk web-style local browser console: run agents; inspect events/traces/session-state/tool-calls/artifacts; hot-reload); (3) Eval runner (adk eval-style); (4) Trace/session inspector. SEQUENCED AFTER ADR-027 migration lands + P2A-043 reconvergence. Executes as a Phase-1→2 spec delta: architect crate+ADR (semport of .reference/adk-rust adk-cli/adk-eval/adk-server-webui/adk-studio) → business-analyst capabilities → product-owner BCs (stable-anchor form) → story-writer epic+stories+wave → holdout+adversarial. Not started; pending workstream.** | Human directive; v1 dev-tooling scope expansion; post-migration | Phase 2 | 2026-08-24 | human (senior architect)/orchestrator/state-manager |
 | D-256 | **ADR-027 M3b+M3c COMPLETE — all 11 M3 escalations resolved. Additive stable-tagged BC clauses: BC-2.01.001 {INV-005} (ContentBlock #[non_exhaustive]), BC-2.01.002 {INV-005} (Message hierarchy #[non_exhaustive]), BC-2.01.003 {INV-006} (DynRunnable non-generic), BC-2.07.002 {INV-004} (ZWJ code-point split). Error-code: new E-SERVER-017 AssistantAlreadyExists (BC-2.12.002 PC-005; E-SERVER-012 collision avoided); story ACs corrected to canonical (E-CRON-001/002/003 names; E-CHKPT-001 for interrupt marker write-failure; E-SERVER-011 GraphNotFound). Semantic: Send-API tasks within-run (same run_id, parent_ids unchanged) per BC-2.06.002 INV-005; similarity scores normalized [0.0,1.0] per BC-2.21.001 INV-002; GDPR unattributed-session log-level WARN. S-1.26 EC-006 merge coverage restored in AC-009. Census EC 118→119; BC 133 / VP 14 / stories 39 UNCHANGED. Streak 0/3. NEXT: M4 cutover.** | ADR-027 escalation resolution; E-SERVER-017; 11 escalations CLOSED | Phase 2 | 2026-08-24 | product-owner/story-writer/state-manager |
+| D-257 | **ADR-027 M4 COMPLETE — strict-anchor cutover; MIGRATION DONE (M1 label→M2 dual-mode→M3 re-cite→M4 strict). verify-ac-pc-trace.sh strict (old/mixed-form = BLOCKING mixed-form-anchor DRIFT); POL-48 finalized; dual-mode removed. Final residuals fixed pre-cutover: S-1.19 (19 ACs) + S-2.06 (2 ACs → new BC-2.08.006 {INV-005} rustls-tls mandate) + 5 edge-case-prefix normalizations (S-1.03/04/06/07). Gate 15/15; 0 DRIFT / 529 citations / 40 stories. SEMANTIC-ANCHOR-DRIFT class CLOSED. Census 39/133/14/119. Known follow-ups: prose-ordinal residual (P2A-043 sweep), BC-template absent. Streak 0/3. NEXT: adversary P2A-043.** | ADR-027 M4 strict cutover; migration complete; SEMANTIC-ANCHOR-DRIFT CLOSED | Phase 2 | 2026-08-24 | devops-engineer/product-owner/story-writer/state-manager |
 
 ## Risk Register
 
@@ -136,42 +137,44 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | OBS-1 | No validator enforces story-frontmatter `blocks:` ↔ DAG reverse(depends_on) reciprocity. | Phase-2-gate / first self-improvement wave | OPEN — awaiting devops-engineer story OR human-authorized deferral. |
 | PGAP-MSGDRIFT | No mechanical gate diffs AC error-message strings against error-taxonomy.md. | Phase-2-gate / first self-improvement wave | OPEN — awaiting follow-up story OR human-authorized deferral. |
 | STAMP-DRIFT-001 | Stale story frontmatter timestamps — S-1.23/S-2.03/S-2.09/S-2.10 remain at original authoring timestamps despite post-authoring content updates; defeats future timestamp-based sibling-sweep drift detection. | EPIC-MAINT / S-MAINT scope (maintenance wave) | OPEN — not Phase-3 blocking. Owner: story-writer. |
-| SEMANTIC-ANCHOR-DRIFT | POL-48 gates AC→BC existence only, not semantic clause-match; restructure-induced mis-anchoring affected ~136 citations / 22 of 39 stories (D-250 corpus-wide audit). PERMANENTLY ADDRESSED by ADR-027 (stable {PC-NNN}/{INV-NNN}/{PRE-NNN} tokens; validator tag-grep; M1-M4 migration). Root cause of recurrence across P2A-032/037..041 CLOSED by design. | M1-M4 migration (ADR-027) | **M1 COMPLETE (D-252). M2 COMPLETE (D-253). M3a COMPLETE (D-254) — 39 stories re-cited; 11 escalations to M3b. M3b+M3c COMPLETE (D-256) — all 11 escalations resolved; EC 118→119. NEXT: M4 (devops dual-mode cutover).** |
+| SEMANTIC-ANCHOR-DRIFT | POL-48 gates AC→BC existence only, not semantic clause-match; restructure-induced mis-anchoring affected ~136 citations / 22 of 39 stories (D-250 corpus-wide audit). PERMANENTLY ADDRESSED by ADR-027 (stable {PC-NNN}/{INV-NNN}/{PRE-NNN} tokens; validator tag-grep; M1-M4 migration). Root cause of recurrence across P2A-032/037..041 CLOSED by design. | M1-M4 migration (ADR-027) | **RESOLVED/CLOSED — M4 COMPLETE (D-257); verify-ac-pc-trace.sh strict; 0 DRIFT / 529 citations / 40 stories / 15/15 gate PASS; SEMANTIC-ANCHOR-DRIFT permanently addressed by stable anchors; migration complete.** |
 | DEV-TOOLING-D255 | v1 dev-tooling expansion (D-255) — pending, starts after ADR-027 M4 + P2A-043. | Post-M4 + P2A-043 reconvergence | Human-approved D-255; not started. |
+| PROSE-ORDINAL-RESIDUAL | A few old-form clause ordinals remain in narrative/description-column prose (not AC-citation headers, so not validator-gated). | P2A-043 adversary sweep | OPEN — to be enumerated by adversary P2A-043; not blocking. |
+| BC-TEMPLATE-ABSENT | No `.factory/templates/` BC template file exists to carry {PC/INV/PRE-NNN} tags by construction; new BCs authored without template risk missing stable anchors. | Follow-up story (EPIC-MAINT or Phase-2 close) | OPEN — create BC template in a follow-up; not blocking P2A-043. |
 
 ## Concurrent Cycles
 
-None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). ADR-027 M3b+M3c COMPLETE (D-256): all 11 M3 escalations resolved; EC 118→119; BC 133 / VP 14 / stories 39 UNCHANGED. v1 dev-tooling scope expansion approved (D-255) — pending workstream, starts after M4 + P2A-043. Streak 0/3. NEXT: M4 (devops dual-mode cutover).
+None active. Phase 2 IN PROGRESS; per-story authoring COMPLETE 39/39; holdout COMPLETE 14/14 (SEALED). ADR-027 M4 COMPLETE (D-257): migration done; SEMANTIC-ANCHOR-DRIFT CLOSED. v1 dev-tooling scope expansion approved (D-255) — pending workstream, starts after P2A-043. Streak 0/3. NEXT: adversary P2A-043.
 
 ## Convergence Status
 
-Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS. P2A-028 CLEAN(strict)=YES (streak 1/3). P2A-029..P2A-042 NOT CLEAN (streak RESET each). ADR-027 M1 COMPLETE (D-252; all 133/133 BCs labeled). M2 COMPLETE (D-253; verify-ac-pc-trace.sh dual-mode + POL-48; 528 citations / 40 stories 0-DRIFT). M3a COMPLETE (D-254): 39 stories re-cited to stable anchors; 136+ mis-anchors fixed. **M3b+M3c COMPLETE (D-256): all 11 escalations resolved; EC 118→119; BC 133 / VP 14 / stories 39 UNCHANGED.** CLEAN(strict)=no. Streak 0/3. NEXT: M4 → P2A-043.
+Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase 2 IN PROGRESS. P2A-028 CLEAN(strict)=YES (streak 1/3). P2A-029..P2A-042 NOT CLEAN (streak RESET each). ADR-027 M1 COMPLETE (D-252; all 133/133 BCs labeled). M2 COMPLETE (D-253; verify-ac-pc-trace.sh dual-mode + POL-48; 528 citations / 40 stories 0-DRIFT). M3a COMPLETE (D-254): 39 stories re-cited to stable anchors; 136+ mis-anchors fixed. M3b+M3c COMPLETE (D-256): all 11 escalations resolved; EC 118→119. **M4 COMPLETE (D-257): verify-ac-pc-trace.sh strict; 0 DRIFT / 529 citations / 40 stories; SEMANTIC-ANCHOR-DRIFT CLOSED.** CLEAN(strict)=no. Streak 0/3. NEXT: adversary P2A-043 (3-CLEAN; need 3 consecutive).
 
 ## Session Resume Checkpoint
 
-<!-- v5.70 checkpoint replaces v5.69 — v5.69 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- v5.71 checkpoint replaces v5.70 — v5.70 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. Mid a large human-approved (Option C, D-250) ADR-027 STABLE-ANCHOR MIGRATION that permanently fixes a corpus-wide AC→BC anchor-drift class. **M1 BC-labeling COMPLETE (D-252). M2 validator dual-mode COMPLETE (D-253; 528 citations / 40 stories 0-DRIFT). M3a COMPLETE (D-254): 39 stories re-cited to stable-anchor form; 136+ mis-anchors fixed in-pass. M3b+M3c COMPLETE (D-256): all 11 M3 escalations resolved; EC 118→119; 15/15 pre-commit PASS.** NEXT ACTION: M4 — devops removes verify-ac-pc-trace.sh dual-mode fallback, strict new-form-required cutover, corpus-wide 0-DRIFT confirmed, finalize POL-48 + BC template. Then adversary P2A-043, streak 0/3 (need 3 consecutive CLEAN(strict)). PENDING WORKSTREAM: v1 dev-tooling expansion (D-255), starts after M4 + P2A-043.
+pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. ADR-027 STABLE-ANCHOR MIGRATION COMPLETE (D-257). **M1 BC-labeling COMPLETE (D-252). M2 validator dual-mode COMPLETE (D-253). M3a COMPLETE (D-254). M3b+M3c COMPLETE (D-256). M4 COMPLETE (D-257): strict cutover; verify-ac-pc-trace.sh strict (old/mixed-form = BLOCKING); 0 DRIFT / 529 citations / 40 stories; 15/15 PASS; SEMANTIC-ANCHOR-DRIFT CLOSED.** NEXT ACTION: adversary P2A-043, streak 0/3 (need 3 consecutive CLEAN(strict)). Known follow-ups recorded in Drift/Deferrals: PROSE-ORDINAL-RESIDUAL (P2A-043 sweep) + BC-TEMPLATE-ABSENT. PENDING WORKSTREAM: v1 dev-tooling expansion (D-255), starts after P2A-043.
 
 ### HEADS
 - develop: 644d1ad — clean, PUSHED, untouched this session.
-- factory-artifacts: see `git -C .factory log -1 --format='%h %s'` — clean, PUSHED (M3b+M3c COMPLETE commit, this burst).
+- factory-artifacts: see `git -C .factory log -1 --format='%h %s'` — clean, PUSHED (M4 COMPLETE commit, this burst).
 - worktrees: none. Open PRs: none.
 
-### WORKSTREAM — ADR-027 stable-anchor migration (D-250; the sole active workstream)
-Convention (ADR-027): inline {PC-NNN}/{INV-NNN}/{PRE-NNN} tokens on each postcondition/invariant/precondition clause (assigned-once, never renumbered; generalizes EC-NNN); AC cite form "(traces to BC-S.SS.NNN PC-NNN)"; validator dual-mode during migration.
-- M1 (BC clause labeling) COMPLETE (D-252): chunk 1 (SS-01..07,16,17 = 47 BCs) committed 4d13c31; chunk 2 (SS-08..13 = 47 BCs) committed 5bec975; chunk 3 (SS-14,15,18-23 = 39 BCs) committed prior burst. All 133/133 BCs labeled.
-- M2 (validator rework) COMPLETE (D-253): verify-ac-pc-trace.sh ADR-027 Decision-4 dual-mode; 528 citations / 40 stories exit=0 0-DRIFT; POL-48 updated.
-- M3a (AC re-citation) COMPLETE (D-254): story-writer forks re-cited ALL 39 stories to stable-anchor form; 136+ mis-anchors fixed in-pass; 15/15 pre-commit PASS. 11 escalations deferred to M3b (BC content gaps / error-code name mismatches / semantic conflicts).
-- M3b+M3c (escalation resolution) COMPLETE (D-256): product-owner resolved all 11 escalations; story-writer finalized ACs; error-taxonomy minted E-SERVER-017; EC 118→119; 15/15 pre-commit PASS.
-- M4 (cutover) NOT STARTED: devops removes validator dual-mode fallback; corpus-wide 0-DRIFT required; update BC template + POL-48 final.
-- After M4: fresh adversary P2A-043 on new HEAD; streak 0/3 (need 3 consecutive CLEAN(strict)).
-- PENDING WORKSTREAM: v1 dev-tooling expansion (D-255) — starts after M4 + P2A-043.
+### WORKSTREAM — ADR-027 stable-anchor migration (D-250; COMPLETE)
+Convention (ADR-027): inline {PC-NNN}/{INV-NNN}/{PRE-NNN} tokens on each postcondition/invariant/precondition clause (assigned-once, never renumbered; generalizes EC-NNN); AC cite form "(traces to BC-S.SS.NNN PC-NNN)"; validator strict (M4 complete).
+- M1 COMPLETE (D-252): all 133/133 BCs labeled.
+- M2 COMPLETE (D-253): verify-ac-pc-trace.sh dual-mode; 528 citations / 40 stories 0-DRIFT.
+- M3a COMPLETE (D-254): 39 stories re-cited to stable-anchor form; 136+ mis-anchors fixed in-pass.
+- M3b+M3c COMPLETE (D-256): all 11 escalations resolved; EC 118→119.
+- M4 COMPLETE (D-257): strict cutover done; mixed-form = BLOCKING; POL-48 finalized; 529 citations / 40 stories 0-DRIFT; 15/15 PASS.
+- NEXT WORKSTREAM: adversary P2A-043 (fresh context; streak 0/3; need 3 consecutive CLEAN(strict)).
+- PENDING WORKSTREAM: v1 dev-tooling expansion (D-255) — starts after P2A-043.
 
-### VERIFIED-CLEAN STORIES (all 39 re-cited per M3a+M3b+M3c; all escalations resolved per D-256).
+### VERIFIED-CLEAN STORIES (all 39 re-cited per M3a+M3b+M3c+M4; all escalations resolved per D-256/D-257).
 
-### DECISION DELTA (this session, all COMMITTED): D-256 M3b+M3c COMPLETE (11 escalations resolved; EC 118→119). Prior: D-255 v1 dev-tooling approved. D-254 M3a COMPLETE. D-253 M2 COMPLETE. NOTE: ADR-027 frontmatter cites placeholder "D-175" — reconcile to real D-250 in a later burst.
+### DECISION DELTA (this session, all COMMITTED): D-257 ADR-027 M4 COMPLETE (strict cutover; migration done; SEMANTIC-ANCHOR-DRIFT CLOSED). Prior: D-256 M3b+M3c COMPLETE. D-255 v1 dev-tooling approved. NOTE: ADR-027 frontmatter cites placeholder "D-175" — reconcile to real D-250 in a later burst.
 
 ### PENDING HUMAN ACTIONS (carried): E013 (default_branch→main), R6/R14 (cargo login + namespace publish-all.sh), B1 (direnv allow), TDIV-008 (engine path_allow).
 
@@ -181,9 +184,9 @@ Convention (ADR-027): inline {PC-NNN}/{INV-NNN}/{PRE-NNN} tokens on each postcon
 
 | Content | Location |
 |---------|----------|
-| Burst narratives (bursts 1-346+; Phase-2 per-story authoring + holdout scenarios; P2A-001..042 fix-bursts + D-226..D-256 (sample) archived 2026-08-24) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
-| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-042; D-228..D-256 (sample) fix-bursts) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
-| Session checkpoints (v4.45..v5.69 archived; v5.69 replaced 2026-08-24) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Burst narratives (bursts 1-346+; Phase-2 per-story authoring + holdout scenarios; P2A-001..042 fix-bursts + D-226..D-257 (sample) archived 2026-08-24) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
+| Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-042; D-228..D-257 (sample) fix-bursts) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
+| Session checkpoints (v4.45..v5.70 archived; v5.70 replaced 2026-08-24) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (188+ lessons) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Resolved blockers (R1-R5, R7, R9, R12/R13) | `cycles/v1.0.0-greenfield/blocking-issues-resolved.md` |
 | Spec artifacts (133 BC / 14 VP / 27 ADR; PRD; L2 domain spec; architecture) | `.factory/specs/` |

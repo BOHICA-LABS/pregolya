@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.006
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-002 had `Err(PregolyaError { category: Validation, ... })` (incorrect full-word capitalization; should be VAL per taxonomy code) and no code field; TV-002 had `Err(PregolyaError { category: VAL })` with no code. Fixed: (a) EC-002 'category: Validation' corrected to 'category: VAL'; (b) code: E-CORE-005 (ValidationFailed) added to EC-002 description and TV-002 — SDK builder constructed without calling .timeout() is a VAL construction-time validation failure."
   - "1.2 (2026-07-17, F-P89-04): Precondition 3 — removed stale live-prose clause '(or SS-TBD is used as a placeholder)'. SS-TBD is corpus-wide resolved as of Phase 1b (2026-07-14); all 95 BCs carry real SS-NN IDs. No behavioral change. Input-hash corrected from legacy 8095694 (computed against prior input state) to 412902d (current). BC changelog timestamp stays at v1.0 authoring date per Rule 5 BC branch."
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): (1) Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon): §EC-002 and §Canonical Test Vectors TV-002 — PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-002; category, code at TV-002); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line). (2) D-35/D-80 xtask rename: §Verification Properties VP-BC208006-02 table cell — `deny-expect-in-lib` → `check-no-panic`."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.8 (ADR-027 M4 / CLAUDE.md rustls-tls convention / 2026-08-24): INV-005 added — reqwest rustls-tls TLS-backend mandate for all SDK and adapter crates; native-tls and its aliases (default-tls/native-tls-alpn/native-tls-vendored) are forbidden and must be absent from the dependency tree at build and runtime. VP-BC208006-03 added for CI enforcement. Purely additive; no existing clause changed."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-008
@@ -98,6 +99,12 @@ allows the SDK crate to be published and used independently of the pregolya grap
 - {INV-004} No translation logic lives in the SDK crate — translation is the adapter's sole
   responsibility. The SDK crate may define raw wire types (mirroring provider JSON), but
   not pregolya-core content blocks.
+- {INV-005} **CLAUDE.md rustls-tls TLS Backend Mandate (ADR-027 M4):** Every `reqwest`
+  dependency entry in `pregolya-<provider>-sdk/Cargo.toml` and `pregolya-<provider>/Cargo.toml`
+  MUST declare `default-features = false, features = ["rustls-tls"]`. The `native-tls`
+  feature and its aliases (`default-tls`, `native-tls-alpn`, `native-tls-vendored`) are
+  forbidden — they MUST be absent from the dependency tree at both build time and runtime
+  (verified by `cargo tree -p pregolya-<provider>-sdk | grep native-tls` returning empty).
 
 ## Edge Cases
 
@@ -142,6 +149,7 @@ only that dependency compiles. No graph-runtime types leak into the SDK public A
 |-------|-------------|--------|-------|
 | VP-BC208006-01 | pregolya-<provider>-sdk has no pregolya-core transitive dependency | CI check (cargo metadata + dep graph analysis) | Wave 2 |
 | VP-BC208006-02 | All SDK + adapter constructors return Result, no .expect() in non-test code | CI lint (check-no-panic; DI-008) | Wave 2 |
+| VP-BC208006-03 | Every reqwest dep in SDK + adapter crates declares `default-features = false, features = ["rustls-tls"]`; native-tls and aliases absent from cargo tree | CI check (`cargo tree -p pregolya-<provider>-sdk \| grep native-tls` exits empty; Cargo.toml lint) | Wave 2 |
 
 ## Related BCs
 
@@ -164,7 +172,7 @@ S-2.06
 
 ## VP Anchors
 
-- VP-BC208006-01, VP-BC208006-02
+- VP-BC208006-01, VP-BC208006-02, VP-BC208006-03
 
 ## Traceability
 

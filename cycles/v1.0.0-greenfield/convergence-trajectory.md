@@ -3726,3 +3726,5 @@ Verified by devops-engineer: exit=0, 0 blocking DRIFT / 528 citations / 40 stori
 BC census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: M3 (story-writer re-cites all 39 stories to stable-anchor form; fixes ~136 mis-anchors in-pass). Known M3 escalation: S-1.03 AC-005, S-1.04 AC-005, S-1.08 AC-009, S-1.27 AC-004, S-1.12 AC-015, S-1.17 interim (M3 supersedes).
 
 **ADR-027 M3a COMPLETE (D-254; 2026-08-24):** story-writer re-cited all 39 stories to stable {PC/INV/PRE-NNN} clause anchors; 136+ mis-anchors corrected in-pass; 11 escalations (BC content gaps/name-mismatches/semantic conflicts) deferred to M3b (product-owner). verify-ac-pc-trace.sh exit=0; 15/15 pre-commit PASS. Census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: M3b.
+
+**ADR-027 M4 COMPLETE (D-257; 2026-08-24):** strict cutover done; mixed-form = BLOCKING DRIFT; 0 DRIFT / 529 citations / 40 stories; 15/15 PASS; SEMANTIC-ANCHOR-DRIFT CLOSED. Residuals fixed pre-cutover: S-1.19 (19 ACs) + S-2.06 (2 ACs; BC-2.08.006 {INV-005} rustls-tls) + 5 edge-case normalizations (S-1.03/04/06/07). Census 39/133/14/119 UNCHANGED. Streak 0/3. NEXT: adversary P2A-043.

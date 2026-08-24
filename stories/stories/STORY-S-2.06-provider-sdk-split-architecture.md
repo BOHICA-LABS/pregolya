@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.06
 epic_id: E-19
-version: "1.1"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "9d1f57e"
+input-hash: "da27500"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.04]
@@ -56,7 +56,7 @@ The same split applies to `pregolya-anthropic-sdk` / `pregolya-anthropic` and
 Verified by `test_BC_2_08_006_sdk_crate_no_pregolya_core_dep()` — inspects `Cargo.toml`
 of each `-sdk` crate and asserts `pregolya-core` is not in `[dependencies]`.
 
-### AC-002 (traces to BC-2.08.006 postcondition 2)
+### AC-002 (traces to BC-2.08.006 INV-005)
 Every `reqwest` dependency entry in all provider crates (`pregolya-*-sdk`, `pregolya-openai`,
 `pregolya-anthropic`, `pregolya-ollama`) declares `default-features = false, features = ["rustls-tls"]`.
 The `native-tls`, `default-tls`, `native-tls-alpn`, and `native-tls-vendored` feature names are
@@ -101,7 +101,7 @@ impl fmt::Debug for OpenAiApiKey {
 No `Display` impl leaks key material. No `Serialize`/`Deserialize` impl on credential types.
 Verified by `test_BC_2_08_006_api_key_debug_is_redacted()` and `test_BC_2_08_006_api_key_no_display()`.
 
-### AC-007 (traces to BC-2.08.006 invariant 1)
+### AC-007 (traces to BC-2.08.006 INV-005)
 `reqwest::Client` instances produced by SDK builders use `rustls-tls` as the TLS backend.
 A unit test constructs a client and verifies no native-tls calls are made (mock TLS backend
 or feature-flag check). At minimum, `cargo tree -e features -p pregolya-openai-sdk | grep native-tls`
@@ -198,7 +198,7 @@ workspace — set the correct pattern from the start. Future crates inherit this
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `pregolya-*-sdk` crates have NO `pregolya-core` dependency | BC-2.08.006 PC-001; ADR split architecture | `cargo deny` check; CI dependency graph assertion |
-| `reqwest` with `default-features = false, features = ["rustls-tls"]` only | BC-2.08.006 postcondition 2; CLAUDE.md Code Conventions | `cargo deny` feature check; workspace-wide grep |
+| `reqwest` with `default-features = false, features = ["rustls-tls"]` only | BC-2.08.006 INV-005; CLAUDE.md Code Conventions | `cargo deny` feature check; workspace-wide grep |
 | `native-tls`, `default-tls`, `native-tls-alpn`, `native-tls-vendored` absent from all Cargo.toml files | CLAUDE.md Code Conventions | grep check in CI |
 | SDK builder `.build()` without `.timeout()` returns `Err(E-CORE-005)` | BC-2.08.006 EC-002 | Unit test AC-003 |
 | No silent 30s default timeout in builder | BC-2.08.006 EC-002 | Unit test AC-008 |
@@ -239,3 +239,5 @@ workspace — set the correct pattern from the start. Future crates inherit this
 ## Changelog
 
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. AC-001 postcondition 1→PC-001; AC-003 postcondition 3→EC-002 (semantic: timeout missing error); AC-004 postcondition 4→PC-002 (semantic: SDK client mandatory timeout positive case); AC-005 postcondition 1→PC-001; AC-006 BC-2.14.005 postcondition 2→PC-002; AC-008 invariant 2→EC-002 (semantic: no silent default timeout). Architecture Compliance Rules table updated accordingly. ESCALATION: AC-002 (BC-2.08.006 postcondition 2, rustls-tls Cargo config) and AC-007 (BC-2.08.006 invariant 1, TLS backend) have no matching clause in BC-2.08.006; recommend PO add an INV for TLS backend enforcement or a dedicated BC.
+- 1.2 (ADR-027 M3 straggler conversion to stable clause anchors/2026-08-24): M3 straggler audit confirmed — AC-002 and AC-007 retain ordinal citations; no BC-2.08.006 clause covers rustls-tls TLS backend enforcement (confirmed no semantic match across all PC/INV/PRE clauses); escalation to PO for new invariant authorship stands.
+- 1.3 (ADR-027 M4/2026-08-24): ADR-027 M4: rustls-tls ACs re-cited to BC-2.08.006 INV-005. AC-002 postcondition 2→INV-005; AC-007 invariant 1→INV-005; Architecture Compliance Rules table row updated to INV-005. Input-hash refreshed to da27500.

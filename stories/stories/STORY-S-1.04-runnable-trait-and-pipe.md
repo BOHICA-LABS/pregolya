@@ -3,13 +3,14 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
+  - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
@@ -71,7 +72,7 @@ The default `batch` method on `Runnable` calls `invoke` concurrently for each in
 ### AC-006 (traces to BC-2.01.003 INV-005)
 When `recursion_limit` is exceeded (checked by a graph-level depth counter, not the `Runnable` trait itself), the error returned is `Err(PregolyaError { code: "E-CORE-006", message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })`. A unit test simulates this by manually decrementing the counter to zero. Verified by `test_BC_2_01_003_recursion_limit_exceeded_error()`.
 
-### AC-007 (traces to BC-2.01.003 edge case EC-001 — E-CORE-003)
+### AC-007 (traces to BC-2.01.003 EC-001 — E-CORE-003)
 When `DynRunnable::invoke` is called with a `Value` that cannot be deserialized into the expected concrete input type, the error is `Err(PregolyaError { code: "E-CORE-003", message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", .. })`. Verified by `test_BC_2_01_003_input_type_mismatch_error()`.
 
 ### AC-008 (traces to BC-2.01.004 PC-001 and PC-002)

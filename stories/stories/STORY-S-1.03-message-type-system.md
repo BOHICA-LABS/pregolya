@@ -3,13 +3,14 @@ document_type: story
 level: ops
 story_id: S-1.03
 epic_id: E-01
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
+  - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
@@ -66,7 +67,7 @@ tdd_mode: strict
 ### AC-005 (traces to BC-2.01.001 INV-005)
 `ContentBlock` has `#[non_exhaustive]` applied. An external-crate match without a wildcard arm fails to compile. `ContentBlock` implements `Debug`, `Clone`. Verified by compile-fail test.
 
-### AC-006 (traces to BC-2.01.001 edge case EC-006 — E-CORE-001)
+### AC-006 (traces to BC-2.01.001 EC-006 — E-CORE-001)
 When strict content block validation mode is active and a block has an unrecognized type tag with no fallback, the error is `Err(PregolyaError { code: "E-CORE-001", message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`. In the default (non-strict) mode, `NonStandard` is returned instead. Verified by `test_BC_2_01_001_strict_mode_error()`.
 
 ### AC-007 (traces to BC-2.01.002 PC-001 and PC-004)

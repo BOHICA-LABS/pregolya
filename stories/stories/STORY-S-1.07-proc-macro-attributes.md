@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.07
 epic_id: E-02
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -65,10 +65,10 @@ The function body annotated with `#[tool]` is moved into the generated `Tool::in
 ### AC-005 (traces to BC-2.08.010 PC-004)
 The function signature wrapped by `#[tool]` MUST return `Result<T, PregolyaError>`. If the return type is not `Result<_, PregolyaError>`, the macro emits a compile error: `"#[tool] function must return Result<T, PregolyaError>"`. Verified by compile-fail test `test_BC_2_08_010_non_result_return_compile_error` in `tests/compile-fail/`.
 
-### AC-006 (traces to BC-2.08.010 edge case EC-001 — name collision)
+### AC-006 (traces to BC-2.08.010 EC-001 — name collision)
 If the generated `<PascalCaseName>Tool` or `<PascalCaseName>Args` name would collide with an existing identifier in the same module, the macro emits a compile error rather than silently shadowing. Verified by compile-fail test `test_BC_2_08_010_name_collision_compile_error`.
 
-### AC-007 (traces to BC-2.08.010 edge case EC-003 — invalid action_risk value)
+### AC-007 (traces to BC-2.08.010 EC-003 — invalid action_risk value)
 `#[tool(action_risk = ActionRisk::Critical)]` emits a compile error: `"#[tool] action_risk must be one of: ReadOnly, Low, Medium, High"`. Verified by compile-fail test `test_BC_2_08_010_invalid_action_risk_compile_error`.
 
 ### AC-008 (traces to BC-2.08.011 PC-001)
@@ -213,3 +213,4 @@ Files to MODIFY:
 
 - 1.0 (2026-08-18): initial story authoring.
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-003 postcondition 3→PC-001 (action_risk in PC-001 not PC-003); AC-004 postcondition 4→PC-001 (invoke delegation in PC-001); AC-005 postcondition 5→PC-004 (DI-008 Result enforcement); AC-009 postcondition 2→EC-001 (duplicate entrypoint is EC-001); AC-010 postcondition 3→PRE-001 (state type is precondition); AC-011 EC-002→PC-003 (async preservation in PC-003); AC-013 postcondition 2→PC-001 (register_into in PC-001); AC-014 postcondition 3→PC-002 (async fn unchanged); AC-015 EC-001→PRE-001 (non-async violates PRE-001). ESCALATION: AC-006 (BC-2.08.010 EC-001 mismatch — story asserts struct name collision but BC EC-001 is about missing JsonSchema); AC-007 (BC-2.08.010 EC-003 mismatch — story asserts invalid action_risk compile error but BC EC-003 is about non-PregolyaError return; no BC EC covers invalid action_risk values). Routes to product-owner.
+- 1.2 (ADR-027 M4/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag.

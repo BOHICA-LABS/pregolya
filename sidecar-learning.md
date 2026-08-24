@@ -687,3 +687,18 @@ Session-end markers for the VSDD factory. Run /session-review to synthesize.
 - Session ended at 2026-08-24T14:56:57Z (awaiting /session-review)
 - Session ended at 2026-08-24T15:02:43Z (awaiting /session-review)
 - Session ended at 2026-08-24T15:06:02Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:29:54Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:32:07Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:34:28Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:36:32Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:36:59Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:38:45Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:41:43Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:45:06Z (awaiting /session-review)
+- Session ended at 2026-08-24T15:52:26Z (awaiting /session-review)
+
+### M4/ADR-027 COMPLETE (D-257 — 2026-08-24)
+
+ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.sh dual-mode removed; old/mixed-form citations now BLOCKING DRIFT reason=mixed-form-anchor; POL-48 stable-tag mandatory finalized.
+
+**Lesson (L-M4-001): changelog-presence is an insufficient migration-completeness check.** The M3a pass used a "changelog entry present" heuristic to skip already-migrated stories. S-1.19 (19 ACs) and S-2.06 (2 ACs) were partially converted in a prior session and had changelog entries, so they were wrongly skipped. The M4 pre-cutover dry-run (defense-in-depth) caught 21+5 residual live old-form citations. Future migrations: verify completeness by *actual-form scan* (grep for old-form patterns), not changelog-presence. A story with a changelog entry for "migration" may still have unconverted clauses.

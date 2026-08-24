@@ -5,44 +5,35 @@
 # ───────
 # Mechanically checks AC→BC-postcondition trace citations in story files.
 # For every acceptance criterion in .factory/stories/stories/*.md that cites
-# a BC section, verifies that the cited numbered item actually exists in the
-# referenced BC file. Catches the P2A-032 drift class (stories citing
-# non-existent PC/INV/EC numbers).
+# a BC section, verifies that the cited tag exists in the referenced BC file.
+# Catches the P2A-032 drift class (stories citing non-existent PC/INV/EC tags).
 #
-# DUAL-MODE CITATION RESOLUTION (ADR-027 M2)
-# ───────────────────────────────────────────
-# Two citation forms are valid during the M2→M3 migration window:
+# M4 STRICT CITATION ENFORCEMENT (ADR-027 Decision-4)
+# ─────────────────────────────────────────────────────
+# Only stable-tag form is accepted:
 #
-#   OLD ordinal form (all 39 stories at M2 start):
-#     ### AC-NNN (traces to BC-S.SS.NNN postcondition N)
-#     ### AC-NNN (traces to BC-S.SS.NNN invariant [freeform])
-#     ### AC-NNN (traces to BC-S.SS.NNN precondition N)
-#
-#   NEW stable-tag form (ADR-027 Decision 3; stories migrate in M3):
+#   REQUIRED stable-tag form:
 #     ### AC-NNN (traces to BC-S.SS.NNN PC-NNN)
 #     ### AC-NNN (traces to BC-S.SS.NNN INV-NNN)
 #     ### AC-NNN (traces to BC-S.SS.NNN PRE-NNN)
-#     ### AC-NNN (traces to BC-S.SS.NNN EC-NNN)   (unchanged format)
+#     ### AC-NNN (traces to BC-S.SS.NNN EC-NNN)
 #
-# The validator tries the NEW form first.  If matched, it resolves by
-# grepping for {PC-NNN}/{INV-NNN}/{PRE-NNN}/{EC-NNN} tokens in the BC.
-# If not matched, it falls through to OLD ordinal resolution.
+# CHECK 1 resolves by grepping the {PC-NNN}/{INV-NNN}/{PRE-NNN} token in the
+# BC section, or EC-NNN in the ## Edge Cases section.
 #
-# IMPORTANT (M2 constraint): Old-form citations against BCs that now carry
-# stable tags are ACCEPTED — no mixed-form-anchor DRIFT is emitted.  The
-# strict "new-form required / mixing = DRIFT" behaviour is M4's cutover.
+# BLOCKING DRIFT — mixed-form-anchor:
+#   Old ordinal form (postcondition N / invariant N / precondition N) is now
+#   forbidden.  Any AC header matching the old form emits DRIFT with
+#   reason=mixed-form-anchor and exits 1.  Migration window (M2–M3) is closed.
 #
 # CHECKS IMPLEMENTED
 # ──────────────────
 # CHECK 1 — Existence check (highest value):
-#   NEW form: the cited {PC-NNN}/{INV-NNN}/{PRE-NNN} token must be present
-#     in the relevant BC section.
-#   OLD form: the cited numbered item must exist by ordinal count:
-#     - Postconditions: numbered list items (^\d+\.) in ## Postconditions
-#     - Invariants: bullet items (^-) in ## Invariants (ordinal numbering)
-#     - Preconditions: numbered list items (^\d+\.) in ## Preconditions
-#     - Edge Cases: ### EC-NNN: headers in ## Edge Cases
+#   Stable-tag form only (M4): the cited {PC-NNN}/{INV-NNN}/{PRE-NNN} token
+#   must be present in the relevant BC section; EC-NNN must appear in
+#   ## Edge Cases headers or table rows.
 #   reason=nonexistent in DRIFT output.
+#   Old ordinal form detected → reason=mixed-form-anchor in DRIFT output.
 #
 # CHECK 2 — Error-code co-location check (ADVISORY — non-blocking):
 #   If the AC text asserts an error code (E-XXX-NNN), verify that SAME code
@@ -114,9 +105,9 @@ import re
 STORIES_DIR = sys.argv[1]
 BC_BASE_DIR  = sys.argv[2]
 
-# ── Citation regexes (dual-mode, ADR-027 M2) ─────────────────────────────────
-# NEW stable-tag form: ### AC-NNN (traces to BC-S.SS.NNN PC-NNN)
-# Tried first; groups: (1)AC-id (2)BC-id (3)tag-prefix (4)tag-digits (5)trailing
+# ── Citation regexes (M4 strict, ADR-027 Decision-4) ─────────────────────────
+# REQUIRED stable-tag form: ### AC-NNN (traces to BC-S.SS.NNN PC-NNN)
+# groups: (1)AC-id (2)BC-id (3)tag-prefix (4)tag-digits (5)trailing
 NEW_CITE_RE = re.compile(
     r'###\s+(AC-\d+)\s+\(traces\s+to\s+'
     r'(BC-\d+\.\d+\.\d+)\s+'
@@ -125,8 +116,8 @@ NEW_CITE_RE = re.compile(
     re.IGNORECASE
 )
 
-# OLD ordinal form: ### AC-NNN (traces to BC-S.SS.NNN postcondition N)
-# Fallback when NEW_CITE_RE does not match.
+# FORBIDDEN old ordinal form: ### AC-NNN (traces to BC-S.SS.NNN postcondition N)
+# Detected to emit DRIFT reason=mixed-form-anchor (M4 cutover — migration window closed).
 # groups: (1)AC-id (2)BC-id (3)section-word (4)number-or-EC (5)trailing
 OLD_CITE_RE = re.compile(
     r'###\s+(AC-\d+)\s+\(traces\s+to\s+'
@@ -536,144 +527,20 @@ for filename in story_files:
 
             continue  # new-form citation fully processed; do not fall through
 
-        # ── OLD ordinal form fallback ─────────────────────────────────────────
+        # ── M4 STRICT: old ordinal form → BLOCKING DRIFT (mixed-form-anchor) ───
         m = OLD_CITE_RE.search(line)
-        if not m:
-            # Skip complex formats: PC9/EC-008, postconditions 1/2/3 (slash-separated)
-            # These are non-standard and checked by adversary separately
-            if re.search(r'BC-\d+\.\d+\.\d+\s+PC\d+', line):
-                continue   # PC-shorthand table format — skip
-            if re.search(r'postconditions?\s+\d+/\d+', line, re.IGNORECASE):
-                continue   # multi-cite slash format — skip
-            continue
-
-        ac_id    = m.group(1)          # e.g. AC-001
-        bc_id    = m.group(2)          # e.g. BC-2.08.006
-        sec_raw  = m.group(3).lower().replace(' ', '_')  # postcondition/invariant/edge_case/precondition
-        detail   = (m.group(4) or '').strip()   # e.g. "5" or "EC-001" or "" or "1/2/3"
-        trailing = m.group(5).strip()            # e.g. "— Red Gate"
-
-        # Normalise section type
-        if sec_raw.startswith('postcondition'):
-            sec_type = 'postcondition'
-        elif sec_raw == 'invariant':
-            sec_type = 'invariant'
-        elif sec_raw == 'precondition':
-            sec_type = 'precondition'
-        elif sec_raw.startswith('edge_case'):
-            sec_type = 'edge_case'
-        else:
-            continue  # unknown — skip
-
-        # Skip slash-separated multi-cite in detail
-        if '/' in detail:
-            continue
-
-        # Parse cited number or EC-ID
-        cited_num  = None  # int, for postcondition/invariant/precondition
-        cited_ec   = None  # str, e.g. 'EC-001', for edge_case
-
-        if sec_type == 'edge_case':
-            if not detail.startswith('EC-'):
-                continue  # malformed — skip
-            cited_ec = detail
-        elif sec_type == 'invariant' and detail == '':
-            cited_num = None  # bare "invariant" — just existence check
-        elif detail:
-            try:
-                cited_num = int(detail)
-            except ValueError:
-                continue  # can't parse — skip
-
-        total_citations += 1
-        story_citations += 1
-
-        # ── Load BC ───────────────────────────────────────────────────────────
-        bc = load_bc(bc_id)
-        if bc is None:
-            print(f"DRIFT {story_id} {ac_id} cited={sec_type}{('_'+detail) if detail else ''} "
-                  f"reason=bc-file-missing bc={bc_id}")
+        if m:
+            ac_id   = m.group(1)   # e.g. AC-001
+            bc_id   = m.group(2)   # e.g. BC-2.08.006
+            sec_raw = m.group(3).lower().replace(' ', '_')
+            detail  = (m.group(4) or '').strip()
+            cited_form = f"{sec_raw}_{detail}" if detail else sec_raw
+            total_citations += 1
+            story_citations += 1
+            print(f"DRIFT {story_id} {ac_id} cited={cited_form} "
+                  f"reason=mixed-form-anchor bc={bc_id}")
             story_drift += 1
             continue
-
-        # Full AC block text (header + body) for error-code extraction.
-        # Using only the header line was the root-cause false-negative: error codes
-        # asserted by the AC appear in the body, not in the ### AC-NNN citation line.
-        ac_text_full = _ac_body_cache.get(line, line)
-
-        # ── CHECK 1: Existence check (old ordinal form) ───────────────────────
-        exists = True
-        cited_label = ''
-
-        if sec_type == 'postcondition':
-            if cited_num is None:
-                pass  # bare postcondition without number — skip existence check
-            else:
-                cited_label = f'postcondition_{cited_num}'
-                if cited_num not in bc['pc_numbers']:
-                    exists = False
-
-        elif sec_type == 'invariant':
-            if cited_num is None:
-                # Bare "invariant" — just check section exists and has content
-                cited_label = 'invariant'
-                if bc['inv_count'] == 0:
-                    exists = False
-            else:
-                cited_label = f'invariant_{cited_num}'
-                if cited_num > bc['inv_count']:
-                    exists = False
-
-        elif sec_type == 'precondition':
-            if cited_num is None:
-                pass
-            else:
-                cited_label = f'precondition_{cited_num}'
-                if cited_num not in bc['pre_numbers']:
-                    exists = False
-
-        elif sec_type == 'edge_case':
-            cited_label = cited_ec
-            if cited_ec not in bc['ec_ids']:
-                exists = False
-
-        if not exists:
-            print(f"DRIFT {story_id} {ac_id} cited={cited_label} "
-                  f"reason=nonexistent bc={bc_id}")
-            story_drift += 1
-            continue  # no point checking further if item doesn't exist
-
-        # ── CHECK 2: Error-code co-location ───────────────────────────────────
-        ac_codes = ERRCODE_RE.findall(ac_text_full)
-        if ac_codes and cited_label:
-            # Get the specific item text from the BC
-            if sec_type in ('postcondition', 'precondition'):
-                item_text = get_item_text(bc['pc_section' if sec_type == 'postcondition' else 'pre_section'],
-                                          sec_type, cited_num)
-            elif sec_type == 'invariant' and cited_num is not None:
-                item_text = get_item_text(bc['inv_section'], 'invariant', cited_num)
-            elif sec_type == 'edge_case':
-                item_text = get_item_text(bc['ec_section'], 'edge_case', cited_ec)
-            else:
-                item_text = ''
-
-            if item_text:
-                for code in ac_codes:
-                    if code not in item_text:
-                        # Code is asserted in AC but not present in the specifically cited item
-                        # (Could be in a different PC/EC — strong drift signal)
-                        print(f"ADVISORY {story_id} {ac_id} cited={cited_label} "
-                              f"reason=code-absent asserted-code={code} bc={bc_id}")
-                        story_advisory += 1
-                        break  # one ADVISORY line per AC
-
-            # Don't emit a second DRIFT/ADVISORY for the same AC if code-absent already fired
-
-        # ── CHECK 3: Keyword-overlap heuristic (low-confidence WARN) ─────────
-        # Only run if no DRIFT already emitted for this AC
-        # and AC text has ≥4 content words
-        if story_drift == 0 or True:  # always run; overlap is non-blocking anyway
-            pass  # overlap check suppressed in this release — advisory only at AC level
 
     per_story_counts[story_id] = (story_citations, story_drift, story_advisory)
     if story_drift > 0:
@@ -730,20 +597,19 @@ done <<< "$PYTHON_OUTPUT"
 echo ""
 echo "verify-ac-pc-trace: checked $TOTAL_CITATIONS citations across $TOTAL_STORIES_CHECKED stories"
 echo ""
-echo "Dual-mode citation resolution (ADR-027 M2):"
-echo "  NEW stable-tag form: AC cites BC-S.SS.NNN PC-NNN / INV-NNN / PRE-NNN / EC-NNN"
+echo "M4 strict citation enforcement (ADR-027 Decision-4):"
+echo "  REQUIRED stable-tag form: AC cites BC-S.SS.NNN PC-NNN / INV-NNN / PRE-NNN / EC-NNN"
 echo "    CHECK 1 resolves by grepping {TAG} token in the BC section."
-echo "  OLD ordinal form: AC cites BC-S.SS.NNN postcondition N / invariant N / precondition N"
-echo "    CHECK 1 resolves by ordinal count (unchanged from pre-M2 logic)."
-echo "  Both forms accepted during M2-M3 window. Strict new-form enforcement is M4."
+echo "  FORBIDDEN old ordinal form: postcondition N / invariant N / precondition N"
+echo "    Old-form citations → DRIFT reason=mixed-form-anchor (migration window closed)."
 echo ""
 echo "Checks implemented:"
-echo "  CHECK 1 (BLOCKING): Existence — cited PC/INV/EC/PRE tag or ordinal must exist in the referenced BC"
-echo "           reason=nonexistent | reason=bc-file-missing -> DRIFT line -> exits 1"
+echo "  CHECK 1 (BLOCKING): Existence — cited PC/INV/EC/PRE tag must exist in the referenced BC"
+echo "           reason=nonexistent | reason=bc-file-missing | reason=mixed-form-anchor -> DRIFT -> exits 1"
 echo "  CHECK 2 (ADVISORY): Error-code co-location — E-XXX-NNN asserted in AC must appear in cited item"
 echo "           reason=code-absent -> ADVISORY line -> does not block (heuristic; codes may appear"
 echo "           in ACs as examples/table-rows/contrast without implying the cited item contains them)"
-echo "  CHECK 3: Keyword-overlap heuristic (suppressed in v1 — reserved for future use)"
+echo "  CHECK 3: Keyword-overlap heuristic (suppressed — reserved for future use)"
 echo "           reason=low-overlap (not emitted)"
 echo ""
 echo "Per-story pass/fail above."

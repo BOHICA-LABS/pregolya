@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.06
 epic_id: E-01
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-16/BC-2.16.001.md
@@ -85,7 +86,7 @@ After `reset_timeout` (30s default) has elapsed in OPEN state, the circuit trans
 ### AC-011 (traces to BC-2.16.003 PC-005)
 `CircuitBreaker::always_closed()` constructs a circuit breaker that never trips and emits a tracing warn with `event_type = "retry.circuit_breaker_disabled"`. Verified by `test_BC_2_16_003_always_closed_logs_warn()`.
 
-### AC-012 (traces to BC-2.16.003 edge case EC-003 — probe failure tracing)
+### AC-012 (traces to BC-2.16.003 EC-003 — probe failure tracing)
 When a HALF-OPEN probe fails, a debug trace event is emitted with `event_type = "retry.circuit_probe_failed"`. Verified by `test_BC_2_16_003_probe_failure_tracing()`.
 
 ### AC-013 (traces to BC-2.16.001 PC-003)

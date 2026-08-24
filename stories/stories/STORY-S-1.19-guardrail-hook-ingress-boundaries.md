@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (ADR-027 M3 straggler/2026-08-24): straggler conversion to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.001.md
@@ -62,73 +63,73 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.11.001 postcondition 1 — tool-result content tagged with ProvenanceTag)
+### AC-001 (traces to BC-2.11.001 PC-001 — tool-result content tagged with ProvenanceTag)
 Every `ContentBlock` from a tool-result boundary carries `ProvenanceTag { boundary_type: BoundaryType::ToolResult, ingress_id: Uuid, sequence_position: usize }` before any consumer (hook or model context) is called. Verified by `test_BC_2_11_001_tool_result_content_tagged()`.
 
-### AC-002 (traces to BC-2.11.001 postcondition 2 — RAG chunk tagged with ProvenanceTag)
+### AC-002 (traces to BC-2.11.001 PC-002 — RAG chunk tagged with ProvenanceTag)
 Every document chunk from a RAG retrieval boundary carries `ProvenanceTag { boundary_type: BoundaryType::RAGRetrieval, ingress_id: Uuid, sequence_position: usize }`. Verified by `test_BC_2_11_001_rag_chunk_tagged()`.
 
-### AC-003 (traces to BC-2.11.001 postcondition 3 — memory item tagged with ProvenanceTag)
+### AC-003 (traces to BC-2.11.001 PC-003 — memory item tagged with ProvenanceTag)
 Every item from a memory ingress boundary carries `ProvenanceTag { boundary_type: BoundaryType::MemoryIngress, ingress_id: Uuid, sequence_position: usize }`. Verified by `test_BC_2_11_001_memory_item_tagged()`.
 
-### AC-004 (traces to BC-2.11.001 invariant 1 — tagging is unconditional regardless of hook presence)
+### AC-004 (traces to BC-2.11.001 INV-001 — tagging is unconditional regardless of hook presence)
 `ProvenanceTag` attachment occurs whether or not a `GuardrailHook` is registered. A run with no hook still produces tagged content. Verified by `test_BC_2_11_001_tagging_unconditional_no_hook()`.
 
-### AC-005 (traces to BC-2.11.002 postcondition 1 — GuardrailHook::evaluate called for every tool-result ContentBlock)
+### AC-005 (traces to BC-2.11.002 PC-001 — GuardrailHook::evaluate called for every tool-result ContentBlock)
 When a `GuardrailHook` is registered, `evaluate(content: IngressContent::ToolResult(ContentBlock), provenance_tag)` is called for every `ContentBlock` before it enters the model input buffer. Verified by `test_BC_2_11_002_evaluate_called_for_every_tool_content_block()`.
 
-### AC-006 (traces to BC-2.11.002 postcondition 2 — Pass forwards ContentBlock unchanged)
+### AC-006 (traces to BC-2.11.002 PC-002 — Pass forwards ContentBlock unchanged)
 `GuardrailResult::Pass` → the `ContentBlock` is forwarded to the model input buffer unchanged. Verified by `test_BC_2_11_002_pass_forwards_content_unchanged()`.
 
-### AC-007 (traces to BC-2.11.002 postcondition 3 — Fail injects error block and emits GuardrailDecision)
+### AC-007 (traces to BC-2.11.002 PC-003 — Fail injects error block and emits GuardrailDecision)
 `GuardrailResult::Fail { reason, severity }` → original content NOT forwarded; error block injected at same position; `StreamEvent::GuardrailDecision { boundary: ToolResult, decision: Fail, reason: Some(reason), .. }` emitted BEFORE the enclosing `ToolEnd` event; zero bytes of rejected content in the event payload. Non-Critical severity allows run continuation. Verified by `test_BC_2_11_002_fail_injects_error_block()`.
 
-### AC-008 (traces to BC-2.11.002 postcondition 4 — Transform forwards replacement and emits GuardrailDecision)
+### AC-008 (traces to BC-2.11.002 PC-004 — Transform forwards replacement and emits GuardrailDecision)
 `GuardrailResult::Transform { new_content }` → `new_content` forwarded; original discarded; `StreamEvent::GuardrailDecision { decision: Transform, reason: None, severity: None, .. }` emitted BEFORE `ToolEnd`. Verified by `test_BC_2_11_002_transform_forwards_new_content()`.
 
-### AC-009 (traces to BC-2.11.002 invariant 1 — hook fires after ProvenanceTag attachment)
+### AC-009 (traces to BC-2.11.002 INV-002 — hook fires after ProvenanceTag attachment)
 The execution order is: `ProvenanceTag` attached first, then `GuardrailHook::evaluate` called, then model context insertion. This order is non-negotiable. Verified by `test_BC_2_11_002_provenance_tag_attached_before_hook()`.
 
-### AC-010 (traces to BC-2.11.003 postcondition 1 — evaluate called for every RAG chunk)
+### AC-010 (traces to BC-2.11.003 PC-001 — evaluate called for every RAG chunk)
 When a hook is registered and RAG retrieval returns N chunks, `evaluate(IngressContent::RagChunk(Value), provenance_tag)` is called exactly N times — once per chunk. Verified by `test_BC_2_11_003_evaluate_called_n_times_for_n_chunks()`.
 
 ### AC-011 (traces to BC-2.11.003 PC-005 — failed RAG chunk gets error block, passing chunks proceed)
 A non-Critical `Fail` on chunk K does not block chunks 0..K-1 and K+1..N-1 that already passed. Each chunk's decision is independent. Verified by `test_BC_2_11_003_partial_chunk_fail_does_not_block_others()`.
 
-### AC-012 (traces to BC-2.11.003 invariant 4 — independent chunk evaluation)
+### AC-012 (traces to BC-2.11.003 INV-004 — independent chunk evaluation)
 One chunk's `Fail` result does not cause adjacent chunks in the same retrieval call to skip evaluation. All N chunks are evaluated regardless of any `Fail` results (except `Critical` which halts the run). Verified by `test_BC_2_11_003_all_chunks_independently_evaluated()`.
 
 ### AC-013 (traces to BC-2.11.003 PC-003 — GuardrailDecision emitted within NodeStart/NodeEnd window)
 `StreamEvent::GuardrailDecision` for RAG/memory boundaries is emitted within the enclosing `NodeStart`/`NodeEnd` event window (not within `ToolStart`/`ToolEnd`). Verified by `test_BC_2_11_003_guardrail_decision_in_node_window()`.
 
-### AC-014 (traces to BC-2.11.004 postcondition 1 — evaluate called for every memory item)
+### AC-014 (traces to BC-2.11.004 PC-001 — evaluate called for every memory item)
 When a hook is registered and memory read returns M items, `evaluate(IngressContent::MemoryItem(Value), provenance_tag)` is called for every item before it enters model context. Verified by `test_BC_2_11_004_evaluate_called_for_memory_items()`.
 
-### AC-015 (traces to BC-2.11.004 invariant 1 — guardrail fires at retrieval time not storage time)
+### AC-015 (traces to BC-2.11.004 INV-001 — guardrail fires at retrieval time not storage time)
 The guardrail fires when a memory item is retrieved and about to be injected into model context — not when it was originally stored. An item stored without a hook present is still evaluated when retrieved if a hook is now registered. Verified by `test_BC_2_11_004_guardrail_fires_at_retrieval_not_storage()`.
 
 ### AC-016 (traces to BC-2.11.004 INV-003 — memory items not destined for model context skip guardrail)
 Memory items retrieved for internal routing decisions (not injected into model context) do not trigger `GuardrailHook::evaluate`. The ingress boundary is the model-context-injection boundary. Verified by `test_BC_2_11_004_non_context_memory_skips_guardrail()`.
 
-### AC-017 (traces to BC-2.11.005 postcondition 1 — zero bytes of rejected content in model input buffer)
+### AC-017 (traces to BC-2.11.005 PC-001 — zero bytes of rejected content in model input buffer)
 When `GuardrailResult::Fail` is returned, the model input buffer immediately before the next inference call contains zero bytes of the rejected content's original data — including in streaming surface events. Verified by `test_BC_2_11_005_zero_rejected_bytes_in_model_buffer()`.
 
-### AC-018 (traces to BC-2.11.005 invariant 1 — rejection is atomic)
+### AC-018 (traces to BC-2.11.005 INV-001 — rejection is atomic)
 There is no execution window between `GuardrailResult::Fail` return and the model input buffer being finalized in which rejected content could enter. The rejection and buffer finalization are a single synchronous operation. Verified by `test_BC_2_11_005_rejection_is_atomic()`.
 
-### AC-019 (traces to BC-2.11.005 invariant 4 — parallel hook composition fails-closed)
+### AC-019 (traces to BC-2.11.005 INV-004 — parallel hook composition fails-closed)
 When two `GuardrailHook` instances are composed and run in parallel, if ANY hook returns `Fail`, the content is treated as rejected. `Fail` always wins over `Pass` in parallel composition. Verified by `test_BC_2_11_005_parallel_hook_fails_closed()`.
 
-### AC-020 (traces to BC-2.11.005 postcondition 4 — Critical Fail halts run; non-Critical continues)
+### AC-020 (traces to BC-2.11.005 PC-004 — Critical Fail halts run; non-Critical continues)
 `GuardrailResult::Fail { severity: Critical }` → run transitions to `failed`; no further nodes execute; model inference not called. Non-Critical severity (`High`, `Medium`, `Low`) → error block substituted; run continues. Verified by `test_BC_2_11_005_critical_fail_halts_run()`.
 
-### AC-021 (traces to BC-2.11.006 postcondition 1 — content forwarded unchanged when no hook registered)
+### AC-021 (traces to BC-2.11.006 PC-001 — content forwarded unchanged when no hook registered)
 When no `GuardrailHook` is registered, every content unit at every ingress boundary is forwarded to model context without modification. Verified by `test_BC_2_11_006_content_forwarded_no_hook()`.
 
-### AC-022 (traces to BC-2.11.006 postcondition 2 — WARN log emitted once per boundary crossing)
+### AC-022 (traces to BC-2.11.006 PC-002 — WARN log emitted once per boundary crossing)
 When no hook is registered, exactly one `WARN`-level structured log entry with `event_type = "guardrail.unregistered_passthrough"` and required fields `{ boundary_type, ingress_id, item_count, timestamp }` is emitted per ingress boundary crossing event. For MCP `ToolResult` boundaries, optional fields `server_name` and `tool_name` are additionally included. Verified by `test_BC_2_11_006_warn_emitted_once_per_crossing()`.
 
-### AC-023 (traces to BC-2.11.006 invariant 2 — WARN log is machine-parseable)
+### AC-023 (traces to BC-2.11.006 INV-002 — WARN log is machine-parseable)
 The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passthrough"` with structured fields, enabling automated alerting. The log entry is emitted via `tracing::warn!` not `eprintln!`. Verified by `test_BC_2_11_006_warn_log_is_machine_parseable()`.
 
 ## Architecture Mapping
@@ -200,10 +201,10 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `GuardrailHook` trait and all types defined in `pregolya-core` — no execution logic | BC-2.11.001 architecture anchors; ADR-014 Decision 6 | Import path check: `pregolya-graph` imports types from `pregolya-core::guardrail` |
-| `ProvenanceTag` attached BEFORE `evaluate` — ordering is non-negotiable | BC-2.11.002 invariant 2 | Integration test: hook receives non-None provenance_tag |
-| No `ContentBlock` enters model buffer without `evaluate` call (when hook registered) | BC-2.11.002 invariant 1 | Integration test VP-2.11.002-A pattern |
-| Rejected content must be zero bytes in model input buffer — no partial insertion | BC-2.11.005 invariant 1 | Unit test: assert buffer does not contain rejected content |
-| Parallel hook fails-closed: any `Fail` wins | BC-2.11.005 invariant 4 | Unit test: two hooks, one Fail → content rejected |
+| `ProvenanceTag` attached BEFORE `evaluate` — ordering is non-negotiable | BC-2.11.002 INV-002 | Integration test: hook receives non-None provenance_tag |
+| No `ContentBlock` enters model buffer without `evaluate` call (when hook registered) | BC-2.11.002 INV-001 | Integration test VP-2.11.002-A pattern |
+| Rejected content must be zero bytes in model input buffer — no partial insertion | BC-2.11.005 INV-001 | Unit test: assert buffer does not contain rejected content |
+| Parallel hook fails-closed: any `Fail` wins | BC-2.11.005 INV-004 | Unit test: two hooks, one Fail → content rejected |
 | `WARN` log uses `tracing::warn!` not `eprintln!` | CLAUDE.md §No println! in library crates | `cargo clippy`; no `eprintln!` in production code |
 | `GuardrailSeverity` and `IngressContent` carry `#[non_exhaustive]` | CLAUDE.md §`#[non_exhaustive]` | Non-exhaustive gate crate; wildcard arm required |
 | `guardrail.unregistered_passthrough` event_type in Canonical Structured Event Catalog | CLAUDE.md §Structured event catalog discipline (SAP-1) | Adversary SAP-1 probe |

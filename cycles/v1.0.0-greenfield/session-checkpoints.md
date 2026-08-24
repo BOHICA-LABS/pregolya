@@ -2874,3 +2874,12 @@ Known M3 escalation: S-1.03 AC-005, S-1.04 AC-005, S-1.08 AC-009, S-1.27 AC-004,
 Census: 39 stories / 133 BC / 14 VP / 118 EC. Streak 0/3. trajectory-tail →4→4→5→1.
 
 D-251 SESSION WRAP; D-252 M1 COMPLETE. ADR-027 placeholder "D-175" — reconcile to D-250 in later burst.
+
+---
+
+## Archived Checkpoint v5.70 (2026-08-24; replaced by v5.71)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. Mid a large human-approved (Option C, D-250) ADR-027 STABLE-ANCHOR MIGRATION. M1 BC-labeling COMPLETE (D-252). M2 validator dual-mode COMPLETE (D-253; 528 citations / 40 stories 0-DRIFT). M3a COMPLETE (D-254): 39 stories re-cited to stable-anchor form; 136+ mis-anchors fixed in-pass. M3b+M3c COMPLETE (D-256): all 11 M3 escalations resolved; EC 118→119; 15/15 pre-commit PASS. NEXT ACTION: M4. Then adversary P2A-043, streak 0/3. PENDING WORKSTREAM: v1 dev-tooling expansion (D-255).
+
+### STATE: v5.70, timestamp 2026-08-24T19:38:00Z
