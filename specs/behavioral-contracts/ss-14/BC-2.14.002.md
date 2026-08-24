@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,11 +19,12 @@ changelog:
   - "1.7 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): Remove phantom §Named-Section anchors in PC3 Known-overrides block. Nine `interface-definitions.md §HTTP Status Codes NNN row` references used row-number qualifiers as part of the §-anchor name (e.g., `§HTTP Status Codes 404 row`) — but the actual section heading is `§HTTP Status Codes`; row numbers are not headings. Fixed by parenthesizing each row qualifier: `§HTTP Status Codes (404 row)`, `§HTTP Status Codes (409 row)`, `§HTTP Status Codes (422 row)`, `§HTTP Status Codes (503 row)`, `§HTTP Status Codes (404 + 422 rows)`. Nine sites corrected; no behavioral change."
   - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). PC3 categorical table: `Category::Exec → 500` added as 13th entry (library-layer-only; INTERNAL-tier fallback at pregolya-server). VP-BC214002-02 description: '12 categories' → '13 categories (EXEC included; no category returns 200)'. §Notes section added: EXEC library-layer-only disposition; no Known-overrides row per architect D26 decision; parameterized test accepts EXEC→500 via INTERNAL-tier fallback. No behavioral change to RFC-7807 emission."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
 inputs:
@@ -56,21 +57,21 @@ requiring the HTTP layer to reach into the error's internal fields directly.
 
 ## Preconditions
 
-1. `pregolya-core` defines `PregolyaError` (see BC-2.14.001).
-2. `pregolya-server` is handling an HTTP request that results in a `PregolyaError`.
-3. The HTTP response will carry `Content-Type: application/problem+json` and a status code
+1. {PRE-001} `pregolya-core` defines `PregolyaError` (see BC-2.14.001).
+2. {PRE-002} `pregolya-server` is handling an HTTP request that results in a `PregolyaError`.
+3. {PRE-003} The HTTP response will carry `Content-Type: application/problem+json` and a status code
    derived from the error's category.
 
 ## Postconditions
 
-1. `pregolya_err.to_problem()` returns a `ProblemDetail` struct with these fields:
+1. {PC-001} `pregolya_err.to_problem()` returns a `ProblemDetail` struct with these fields:
    - `type_uri: "urn:pregolya:error:<code>"` (e.g. `"urn:pregolya:error:E-GRAPH-001"`)
    - `title: <humanized category name>` (e.g. `"Concurrency"` for `Category::Concurrency`)
    - `detail: <err.message>` — the human-readable message from `PregolyaError`
    - `extensions.retry_hint: "never" | "maybe" | "later:<seconds>"` — derived from `RetryHint`
    - `extensions.component: <lowercase component code>` (e.g. `"graph"`)
-2. The `ProblemDetail` serializes to valid JSON conforming to RFC-7807 §3.
-3. HTTP status code mapping (categorical defaults; see per-endpoint overrides below):
+2. {PC-002} The `ProblemDetail` serializes to valid JSON conforming to RFC-7807 §3.
+3. {PC-003} HTTP status code mapping (categorical defaults; see per-endpoint overrides below):
    - `Category::Val` → 400
    - `Category::Auth` → 401
    - `Category::Policy` → 403
@@ -124,21 +125,21 @@ requiring the HTTP layer to reach into the error's internal fields directly.
      conveys "the run exists and you are authorized, but there is nothing to resume."
      Canon established pass-23; prior 409 entry retired. Source: BC-2.05.005 TV-003;
      interface-definitions.md §HTTP Status Codes (422 row); F-P27-01.
-4. The `Content-Type` header of the response is `application/problem+json` (not
+4. {PC-004} The `Content-Type` header of the response is `application/problem+json` (not
    `application/json`) when a `ProblemDetail` is emitted.
-5. A `PregolyaError` without an HTTP context (e.g. raised in a CLI tool) can still call
+5. {PC-005} A `PregolyaError` without an HTTP context (e.g. raised in a CLI tool) can still call
    `to_problem()` — the method does not require an HTTP runtime to produce the payload.
 
 ## Invariants
 
-- The `type_uri` format `urn:pregolya:error:<code>` is the stable machine-readable identifier;
+- {INV-001} The `type_uri` format `urn:pregolya:error:<code>` is the stable machine-readable identifier;
   monitoring rules and API clients must use `type_uri`, not `title` or `detail`, for error
   classification.
-- `detail` may contain dynamic content (e.g. the invalid field name), but `type_uri` must not
+- {INV-002} `detail` may contain dynamic content (e.g. the invalid field name), but `type_uri` must not
   (it is always the static code like `E-CORE-001`).
-- `retry_hint` in the extensions block uses the canonical string representation
+- {INV-003} `retry_hint` in the extensions block uses the canonical string representation
   (`"never"`, `"maybe"`, `"later:<seconds>"`) for client machine readability.
-- The HTTP status code mapping is defined once in pregolya-server. A per-endpoint status
+- {INV-004} The HTTP status code mapping is defined once in pregolya-server. A per-endpoint status
   specified in a resource BC overrides the categorical default; the categorical map is the
   fallback for errors with no per-endpoint specification. Legitimate per-endpoint divergences
   (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup,

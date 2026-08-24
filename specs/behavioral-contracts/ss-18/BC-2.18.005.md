@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.005
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-015 Decision 2 §Security Invariant 2 — SlotTrustPolicy::TrustAll on SystemMessage must be rejected at construction time"
@@ -27,6 +27,7 @@ changelog:
   - "1.5 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 2 CLASS3_MISSING_DOTDOT violations corrected. (1) Description ¶1 E-TMPL-002 inline cite: add `, ..` field-elision marker. (2) TV-001 expected-output cell: add `, ..` field-elision marker. No security semantics, Red Gate invariants, or VP anchors altered."
   - "1.6 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -36,7 +37,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "e8f793e"
+input-hash: "09c85f7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -65,14 +66,14 @@ so the error is detected as early as possible regardless of whether the template
 
 ## Preconditions
 
-1. A caller invokes `ChatPromptTemplate::from_messages(messages)` where `messages` contains
+1. {PRE-001} A caller invokes `ChatPromptTemplate::from_messages(messages)` where `messages` contains
    at least one tuple `(MessageRole::System, template_str, SlotTrustPolicy::TrustAll)`.
-2. No other preconditions — the check fires unconditionally on construction, before any
+2. {PRE-002} No other preconditions — the check fires unconditionally on construction, before any
    rendering or variable binding.
 
 ## Postconditions
 
-1. `ChatPromptTemplate::from_messages` returns:
+1. {PC-001} `ChatPromptTemplate::from_messages` returns:
    ```
    Err(PregolyaError::new(
        Component::Tmpl,
@@ -83,19 +84,19 @@ so the error is detected as early as possible regardless of whether the template
         TrustAll is disallowed for system-position message slots",
    ))
    ```
-2. No `ChatPromptTemplate` is created — the construction fails atomically.
-3. There is no partial construction state; no slots from the input list are registered before
+2. {PC-002} No `ChatPromptTemplate` is created — the construction fails atomically.
+3. {PC-003} There is no partial construction state; no slots from the input list are registered before
    the error is returned.
-4. Non-SystemMessage slots with `TrustAll` (HumanMessage, AiMessage) do NOT trigger E-TMPL-002.
-5. Non-SystemMessage slots with `TrustRequired` (caller hardening) are accepted without error.
+4. {PC-004} Non-SystemMessage slots with `TrustAll` (HumanMessage, AiMessage) do NOT trigger E-TMPL-002.
+5. {PC-005} Non-SystemMessage slots with `TrustRequired` (caller hardening) are accepted without error.
 
 ## Invariants
 
-1. The `SlotTrustPolicy` of a `SystemMessage` slot is always `TrustRequired` — there is no
+1. {INV-001} The `SlotTrustPolicy` of a `SystemMessage` slot is always `TrustRequired` — there is no
    runtime mutation path that changes it after construction.
-2. The construction-time check iterates over all declared message tuples before creating the
+2. {INV-002} The construction-time check iterates over all declared message tuples before creating the
    template; the first System+TrustAll tuple triggers the error.
-3. `category: Category::Val` (not SECURITY) — this is a programming error caught at
+3. {INV-003} `category: Category::Val` (not SECURITY) — this is a programming error caught at
    construction time, not a runtime injection attempt. The SECURITY-tier error is E-TMPL-001
    (render-time injection attempt). The taxonomy distinction is intentional.
 

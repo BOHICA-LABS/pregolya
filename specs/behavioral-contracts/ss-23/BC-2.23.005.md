@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.11"
+version: "1.12"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014, DI-015]
 vp_seed: true
 vp_id: VP-013
@@ -32,6 +32,7 @@ changelog:
   - "1.9 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-004 BashTimeout: ::new(Component::Tools, Category::Timeout, RetryHint::Never, ...). PC4 E-TOOLS-007 BashRiskTierViolation: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
   - "1.10 (fix-burst-287/TD-VSDD-091+ADR-010-C3/2026-08-01): (1) VP-INDEX version pin removed: §VP Anchors and §Traceability VP Registration 'VP-INDEX v1.5 as' → 'VP-INDEX as' (no §-anchor introduced). (2) ADR-010 Class 3 fix: PC-3 E-TOOLS-004 and PC-4 E-TOOLS-007 prose PregolyaError::new(...) → PregolyaError { code: 'E-TOOLS-004', .. } and { code: 'E-TOOLS-007', .. } (observation form). 2 violations corrected. verify-no-version-pins.sh PASS; verify-error-notation-canon.sh PASS."
   - "1.11 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.22 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.12 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -70,19 +71,19 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 
 ## Preconditions
 
-1. `BashTool` is constructed with a sandbox policy reference (pregolya-sandbox, BC-2.13.001)
+1. {PRE-001} `BashTool` is constructed with a sandbox policy reference (pregolya-sandbox, BC-2.13.001)
    and optional `BashConfig { max_output_bytes: u64 (default 262,144), max_duration: Duration (default 30s) }`.
-2. The caller invokes the tool with JSON args `{ "command": "<shell-command-string>" }`.
-3. `ActionRisk::High` is the default annotated risk tier; application may lower to `Medium`
+2. {PRE-002} The caller invokes the tool with JSON args `{ "command": "<shell-command-string>" }`.
+3. {PRE-003} `ActionRisk::High` is the default annotated risk tier; application may lower to `Medium`
    via `ToolConfig::override_risk(ActionRisk::Medium)`. Setting `ReadOnly` or `Low` is
    rejected at startup with `Err(E-TOOLS-007 BashRiskTierViolation)`.
-4. Retry enrollment: `BashTool` is NOT enrolled for automatic retry by default. Explicit
+4. {PRE-004} Retry enrollment: `BashTool` is NOT enrolled for automatic retry by default. Explicit
    enrollment via `RetryPolicy` keyed on `tool_name: "bash"` (BC-2.16.001) is required;
    each retry independently flows through `PreToolCallHook` (ADR-018 Decision 6).
 
 ## Postconditions
 
-1. **Happy path:** The command executes within `max_duration` and its combined stdout +
+1. {PC-001} **Happy path:** The command executes within `max_duration` and its combined stdout +
    stderr output fits within `max_output_bytes`. The tool returns `ToolOutput::Json(BashOutput)`
    where:
    ```json
@@ -90,38 +91,38 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
    ```
    Non-zero exit codes are NOT errors at the tool layer — the tool returns `Ok(BashOutput)`
    with the non-zero `exit_code`. The caller decides whether a non-zero exit code is a failure.
-2. **Output truncation (non-fatal):** Combined output (stdout + stderr) exceeds `max_output_bytes`.
+2. {PC-002} **Output truncation (non-fatal):** Combined output (stdout + stderr) exceeds `max_output_bytes`.
    The tool returns `ToolOutput::Json(BashOutput)` with `truncated: true` and the first
    `max_output_bytes` bytes of output (priority: stdout first, then stderr). E-TOOLS-005
    (`BashOutput.truncated`) is an informational annotation in the output object, not an `Err`.
    The command is allowed to complete (truncation is output-cap, not process-kill).
-3. **Timeout (DI-015):** The command runs for longer than `max_duration`. `tokio::time::timeout`
+3. {PC-003} **Timeout (DI-015):** The command runs for longer than `max_duration`. `tokio::time::timeout`
    wrapping the sandbox backend `execute()` call fires; the sandbox kills the subprocess
    (ProcessBackend via `.kill_on_drop(true)` async drop; WASM/container backends via runtime-level
    process termination). The tool returns
    `Err(PregolyaError { code: "E-TOOLS-004", .. })`. This raise-condition
    directly enacts DI-015 (Subprocess Execution Timeout): exceed `max_duration` → terminate
    process → structured `E-TOOLS-004` error.
-4. **Risk floor violation at `ToolConfig::override_risk` call time:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
+4. {PC-004} **Risk floor violation at `ToolConfig::override_risk` call time:** `ToolConfig::override_risk(ActionRisk::ReadOnly)` or
    `override_risk(ActionRisk::Low)` called on a `BashTool` instance. At `ToolConfig::override_risk`
    call time the builder-consuming validator returns
    `Err(PregolyaError { code: "E-TOOLS-007", .. })`.
    The registry never receives an invalid ToolConfig; the graph does not start.
-5. **Sandbox policy violation:** The command attempts an operation disallowed by the sandbox
+5. {PC-005} **Sandbox policy violation:** The command attempts an operation disallowed by the sandbox
    policy (pregolya-sandbox BC-2.13.002). The sandbox returns an error before the command
    executes; this propagates as `Err(PregolyaError)` from the sandbox namespace.
 
 ## Invariants
 
-- **Risk floor (VP-013 Kani seed):** `ToolConfig::override_risk(ActionRisk::ReadOnly)` and
+- {INV-001} **Risk floor (VP-013 Kani seed):** `ToolConfig::override_risk(ActionRisk::ReadOnly)` and
   `ToolConfig::override_risk(ActionRisk::Low)` on a `BashTool` instance ALWAYS return `Err(E-TOOLS-007)`. No code path allows these
   tiers on BashTool. This is a framework safety invariant provable by Kani: the risk floor
   check is a pure enum comparison (`risk < ActionRisk::Medium` → error) with no side effects.
-- All sandbox execution is via pregolya-sandbox (BC-2.13.001–003). There is no fallback
+- {INV-002} All sandbox execution is via pregolya-sandbox (BC-2.13.001–003). There is no fallback
   direct OS execution path.
-- `max_output_bytes` truncation is applied BEFORE returning to the caller; the sandbox
+- {INV-003} `max_output_bytes` truncation is applied BEFORE returning to the caller; the sandbox
   buffer is bounded and does not grow unboundedly.
-- **DI-015 (Subprocess Execution Timeout):** `max_duration` (default 30 seconds) is the
+- {INV-004} **DI-015 (Subprocess Execution Timeout):** `max_duration` (default 30 seconds) is the
   governing subprocess wall-clock timeout, enforced via `tokio::time::timeout` wrapping the
   sandbox backend `execute()` call; `tokio::process::Command` is managed by `sandbox::process`
   (ProcessBackend) internally — BashTool does NOT call `tokio::process::Command` directly
@@ -131,10 +132,10 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
   need a different default must set `BashConfig::max_duration` explicitly; zero-duration is
   rejected (configuration error). DI-009 (HTTP connection timeout) does NOT govern subprocess
   execution — DI-015 is the exclusive authority for this BC.
-- **DI-014 (No Silent Swallowing):** Timeout and sandbox errors propagate as `Err`. A
+- {INV-005} **DI-014 (No Silent Swallowing):** Timeout and sandbox errors propagate as `Err`. A
   non-zero exit code is NOT swallowed — it is surfaced in `BashOutput.exit_code`. The
   tool does not transform a non-zero exit code into an empty or `None` result.
-- Retry: each retry attempt flows through `PreToolCallHook` independently (ADR-018 Decision 6
+- {INV-006} Retry: each retry attempt flows through `PreToolCallHook` independently (ADR-018 Decision 6
   and ADR-020 Decision 4). The hook may deny on a retry even if it approved the first attempt.
 
 ## Edge Cases

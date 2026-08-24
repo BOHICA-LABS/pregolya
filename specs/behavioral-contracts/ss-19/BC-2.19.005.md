@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.005
-version: "1.10"
+version: "1.11"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-016 Decision 3 §Security Invariant — Reviver must reject unknown type ids at all times; allowlist test must COMPILE and FAIL before Reviver::revive() is implemented; VP-010 Kani candidate"
@@ -32,6 +32,7 @@ changelog:
   - "1.8 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
   - "1.9 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Invariant 3: §E-SRLZ-001 (row: VAL) is a phantom anchor (no §E-SRLZ-001 heading exists in error-taxonomy.md; individual error codes are not section headings). Corrected to §Component: SRLZ, resolving to heading '### Component: SRLZ (pregolya-core::serializable)'."
   - "1.10 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -74,15 +75,15 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
 
 ## Preconditions
 
-1. `Reviver` has been initialized (BC-2.19.003); the registry is populated and the
+1. {PRE-001} `Reviver` has been initialized (BC-2.19.003); the registry is populated and the
    `OnceLock` is set.
-2. `revive()` receives a `Serialized` value — either `Serialized::Constructor`,
+2. {PRE-002} `revive()` receives a `Serialized` value — either `Serialized::Constructor`,
    `Serialized::Secret`, or `Serialized::NotImplemented`.
-3. The `id` field of the input is NOT present in the registry (after legacy remap lookup).
+3. {PRE-003} The `id` field of the input is NOT present in the registry (after legacy remap lookup).
 
 ## Postconditions
 
-1. `Reviver::revive(serialized)` returns:
+1. {PC-001} `Reviver::revive(serialized)` returns:
    ```
    Err(PregolyaError::new(
        Component::Srlz,
@@ -92,22 +93,22 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
        "unknown-serializable: type id not in registry",
    ))
    ```
-2. No constructor is called; no `kwargs` map is parsed; no heap allocation occurs on the
+2. {PC-002} No constructor is called; no `kwargs` map is parsed; no heap allocation occurs on the
    failure path beyond the error struct itself.
-3. The error propagates via `?` to the caller; it is not swallowed or converted within
+3. {PC-003} The error propagates via `?` to the caller; it is not swallowed or converted within
    `core::serializable` (DI-014).
-4. `Serialized::Secret` and `Serialized::NotImplemented` variants also return `Err(E-SRLZ-001)`
+4. {PC-004} `Serialized::Secret` and `Serialized::NotImplemented` variants also return `Err(E-SRLZ-001)`
    when their `id` is unregistered (they carry no `kwargs` but still require a registry check).
-5. Any `Serialized::Constructor` whose `id` matches a registered entry proceeds to constructor
+5. {PC-005} Any `Serialized::Constructor` whose `id` matches a registered entry proceeds to constructor
    dispatch (covered by BC-2.19.001, BC-2.19.004).
 
 ## Invariants
 
-1. The allowlist check is the **first operation** in `revive()` — it cannot be reordered
+1. {INV-001} The allowlist check is the **first operation** in `revive()` — it cannot be reordered
    below any other check or transformation.
-2. The check uses the same `HashMap` that was populated at startup (BC-2.19.003) —
+2. {INV-002} The check uses the same `HashMap` that was populated at startup (BC-2.19.003) —
    no secondary list, no `allow_all` flag, no runtime override.
-3. `category: Category::Val` — the allowlist check validates the `id` field of the
+3. {INV-003} `category: Category::Val` — the allowlist check validates the `id` field of the
    deserialized input against the registry. An unregistered type id is a validation
    failure: the input does not conform to the allowed inventory. The `SECURITY` category
    is reserved for errors guarding concrete attack-vector boundaries per ADR-010 taxonomy
@@ -115,7 +116,7 @@ because `Reviver::revive()` is pure-core (no I/O, no async) and the registry is 
    E-MEMORY-007 write injection, E-TMPL-001 prompt injection). Deserialization containment
    enforced by registry lookup is input validation, not a boundary-crossing attack-vector
    event. This adjudication is recorded in error-taxonomy.md §Component: SRLZ.
-4. The `E-SRLZ-001` message text is fixed (`"unknown-serializable: type id not in registry"`);
+4. {INV-004} The `E-SRLZ-001` message text is fixed (`"unknown-serializable: type id not in registry"`);
    it does NOT include the received id in the message to avoid leaking attacker-controlled
    data into structured logs (gate #33 STRUCT-PLACEHOLDER PARITY: the message format has
    no `<placeholder>` because the id must not be interpolated).

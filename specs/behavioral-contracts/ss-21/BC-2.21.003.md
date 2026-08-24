@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.11"
+version: "1.12"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "1.9 (FIX-BURST-278-WAVE-C/D-42-S5-gate/2026-07-28): S5 gate closure — two fence-scoped PregolyaError struct literals (Description rust fence + PC-1 postcondition fence, both missing retry_hint, source fields) → PregolyaError::new(Component::Vs, Category::Val, RetryHint::Never, \"E-VS-001\", msg) constructor form per D-42 canonical ctor. RetryHint::Never: VAL category default per error-taxonomy.md §E-VS-001. Verifiable: grep 'PregolyaError {' specs/behavioral-contracts/ss-21/BC-2.21.003.md returns zero fence-scoped literal occurrences after this edit."
   - "1.10 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
   - "1.11 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs, including this zero-norm guard contract)."
+  - "1.12 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change. input-hash corrected 377aba5→869996f (pre-existing drift; inputs unchanged)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -42,7 +43,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "377aba5"
+input-hash: "869996f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -90,16 +91,16 @@ two lines and has negligible performance overhead compared to the cosine computa
 
 ## Preconditions
 
-1. The `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, PregolyaError>` function
+1. {PRE-001} The `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, PregolyaError>` function
    (or equivalent) is called with vectors `a` and `b`.
-2. At least one of `a` or `b` has a degenerate L2 norm: either `norm == 0.0` (all elements
+2. {PRE-002} At least one of `a` or `b` has a degenerate L2 norm: either `norm == 0.0` (all elements
    are `0.0`, or the vector is effectively all-zero due to floating-point underflow to zero)
    OR `!norm.is_finite()` (individually finite elements whose sum-of-squares overflows
    `f32::MAX`, producing `norm = +Inf`).
 
 ## Postconditions
 
-1. When `norm_a == 0.0 || !norm_a.is_finite()` OR `norm_b == 0.0 || !norm_b.is_finite()`
+1. {PC-001} When `norm_a == 0.0 || !norm_a.is_finite()` OR `norm_b == 0.0 || !norm_b.is_finite()`
    (covers both the all-zero path and the sum-of-squares overflow-to-infinity path):
    ```
    Err(PregolyaError::new(
@@ -110,23 +111,23 @@ two lines and has negligible performance overhead compared to the cosine computa
        "degenerate-norm embedding vector: norm is zero or non-finite",
    ))
    ```
-2. The division `dot_product / (norm_a * norm_b)` is NEVER reached when either norm is
+2. {PC-002} The division `dot_product / (norm_a * norm_b)` is NEVER reached when either norm is
    degenerate (zero or infinite). The guard fires before division; `f32::NAN` is never
    produced in cosine output.
-3. The error propagates via `?` to `similarity_search`, `similarity_search_with_score`, and
+3. {PC-003} The error propagates via `?` to `similarity_search`, `similarity_search_with_score`, and
    `max_marginal_relevance_search` — callers receive `Err(E-VS-001)` (DI-014 — no silent
    fallthrough to `0.0` or `Vec::new()`).
-4. When both norms are finite and non-zero, the guard is a no-op and cosine computation proceeds normally.
-5. The output cosine value for finite non-zero vectors is in `[-1.0, 1.0]` — a property
+4. {PC-004} When both norms are finite and non-zero, the guard is a no-op and cosine computation proceeds normally.
+5. {PC-005} The output cosine value for finite non-zero vectors is in `[-1.0, 1.0]` — a property
    verified by BC-local proptest sub-property VP-2.21.003-B.
 
 ## Invariants
 
-1. The guard is **the first operation** in `cosine_similarity` — it cannot be reordered below
+1. {INV-001} The guard is **the first operation** in `cosine_similarity` — it cannot be reordered below
    the dot product computation or any other step.
-2. The guard checks BOTH vectors independently — a zero-norm query vector and a zero-norm
+2. {INV-002} The guard checks BOTH vectors independently — a zero-norm query vector and a zero-norm
    document vector both trigger `Err(E-VS-001)`.
-3. **No `NaN` in any output path.** Guard condition: `norm == 0.0 || !norm.is_finite()` —
+3. {INV-003} **No `NaN` in any output path.** Guard condition: `norm == 0.0 || !norm.is_finite()` —
    covers both the zero-norm path and the overflow-to-infinity path. Overflow mechanism:
    individually finite elements (e.g., elements of magnitude ~1e20f32) can produce
    `Σ xᵢ² = +Inf` during squared-norm computation; `sqrt(+Inf) = +Inf`; `dot(a,b) /
@@ -134,10 +135,10 @@ two lines and has negligible performance overhead compared to the cosine computa
    can square to `+Inf` during the sum-of-squares step. The overflow guard requires
    `!norm.is_finite()` tested after norm computation, not element-wise finiteness before it.
    `f32::NAN` never appears in `Vec<(Document, f32)>` score results returned by any VectorStore method.
-4. The `"degenerate-norm embedding vector: norm is zero or non-finite"` message text is fixed
+4. {INV-004} The `"degenerate-norm embedding vector: norm is zero or non-finite"` message text is fixed
    (no `<placeholder>` interpolation per gate #33 STRUCT-PLACEHOLDER PARITY — the message
    contains no dynamic data; the guard condition is invariant for all degenerate-norm inputs).
-5. `norm == 0.0` is checked with exact IEEE-754 equality (not `norm < f32::EPSILON`) because
+5. {INV-005} `norm == 0.0` is checked with exact IEEE-754 equality (not `norm < f32::EPSILON`) because
    the NaN condition for the all-zero path is specifically `0.0 / 0.0`. A near-zero norm
    (e.g., `1e-40`) does not produce NaN from division (it produces a very large cosine value,
    which is a different problem). The overflow arm `!norm.is_finite()` catches the complementary

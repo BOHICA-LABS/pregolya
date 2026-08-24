@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.002
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-012, DI-014]
 red_gate: true
 red_gate_source: "ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization) — 'documents returned by Retriever::get_relevant_documents enter the graph context as BoundaryType::RAGRetrieval'; guardrail coverage test must COMPILE and FAIL before any graph node wires Arc<dyn Retriever>"
@@ -26,6 +26,7 @@ changelog:
   - "1.4 (F-P149-02/burst-250/2026-07-24): PC2 version pin de-pinned: 'ADR-014 v1.5' → 'ADR-014 Decision 6 §GuardedDocuments' (TD-VSDD-091 stable-anchor enforcement, F-P149-02). input-hash updated to 1b115d2 (drift from burst-226 ADR-014 content changes)."
   - "1.5 (burst-309/F-P201-02/2026-08-17): Fix 4 phantom ADR §-citations. All 4 sites cited `ADR-014 Decision 2 Consequences §DI-012` or `ADR-014 Consequences §DI-012` — ADR-014 has no heading `§DI-012` and no `Consequences` subsection under Decision 2. Corrected to canonical form `ADR-014 §Decision 6 — GuardedDocuments Typed Wrapper (DI-012 Mechanization)` per BC-INDEX Red-Gate table (burst-290/changelog 3.38) and confirmed heading existence in ADR-014 §Decision 6. Sites updated: (1) frontmatter red_gate_source, (2) Red-Gate callout blockquote, (3) Architecture Anchors, (4) Traceability Architecture Authority. Semantic intent preserved: DI-012 mechanization via the GuardedDocuments typed wrapper is the guardrail coverage confirmation anchor."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.7 (M1/ADR-027/2026-08-23): ADR-027 stable clause anchors added (M1). Purely additive — no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -70,39 +71,39 @@ context MUST pass those documents through the guardrail before use. The DI-012 i
 
 ## Preconditions
 
-1. `BoundaryType::RAGRetrieval` exists in `pregolya-core: core::guardrail`
+1. {PRE-001} `BoundaryType::RAGRetrieval` exists in `pregolya-core: core::guardrail`
    (defined in BC-2.11.001).
-2. A graph node holds `Arc<dyn Retriever>` and calls `get_relevant_documents`.
-3. The `Ok(docs)` result is about to be consumed as prompt content, context, or any
+2. {PRE-002} A graph node holds `Arc<dyn Retriever>` and calls `get_relevant_documents`.
+3. {PRE-003} The `Ok(docs)` result is about to be consumed as prompt content, context, or any
    form of LLM input.
 
 ## Postconditions
 
-1. Before any `Doc.page_content` is incorporated into an `HumanMessage`, `SystemMessage`,
+1. {PC-001} Before any `Doc.page_content` is incorporated into an `HumanMessage`, `SystemMessage`,
    chat history window, or any other graph-context structure, the graph node MUST call
    the guardrail with `boundary_type: BoundaryType::RAGRetrieval`.
-2. The guardrail Fail arm is severity-bifurcated (ADR-014 Decision 6 §GuardedDocuments):
+2. {PC-002} The guardrail Fail arm is severity-bifurcated (ADR-014 Decision 6 §GuardedDocuments):
    - `GuardrailSeverity::Critical` Fail → `GuardedDocuments::rag_ingress` returns `Err(E-CORE-008 GuardrailCriticalRejection)`. The graph node propagates the error via `?`; no `GuardedDocuments` is produced; the run transitions to `failed` state.
    - Non-Critical Fail (High/Medium/Low) → error-entry Document substituted at the rejected document's position (with `page_content: "[GUARDRAIL BLOCKED: <reason>]"`, `metadata.pregolya.guardrail_blocked: true`); batch continues; `GuardedDocuments` is eventually produced containing the error-entry substitution.
    DI-014 applies to the Critical path only — non-critical continuation is explicit batch behavior, not silent error swallowing.
-3. The guardrail call occurs BEFORE the document content is used for any purpose in the
+3. {PC-003} The guardrail call occurs BEFORE the document content is used for any purpose in the
    graph context. There is no deferred check or "check at final boundary" alternative
    (DI-012 — guardrail at ingress, not egress).
-4. Documents that fail the guardrail do NOT enter the prompt under any condition, including
+4. {PC-004} Documents that fail the guardrail do NOT enter the prompt under any condition, including
    partial failure (DI-014 — no `Vec::new()` fallback that silently drops failing documents).
 
 ## Invariants
 
-1. This BC does NOT extend or modify `BoundaryType::RAGRetrieval`. The existing variant
-   defined in BC-2.11.001 is used verbatim — no subtype, no new boundary variant.
-2. The coverage obligation applies to ALL Retriever implementations — `VectorStoreRetriever`,
-   custom in-memory retrievers, and community adapters. The obligation is on the graph
-   node caller, not on the Retriever implementation.
-3. The obligation applies regardless of the document's provenance — even an in-process
-   in-memory retriever returns externally ingested content and must be treated as a
-   RAGRetrieval boundary.
-4. This guardrail is synchronous with respect to the graph execution — it is called in the
-   same async task, not deferred to a background check.
+- {INV-001} This BC does NOT extend or modify `BoundaryType::RAGRetrieval`. The existing variant
+  defined in BC-2.11.001 is used verbatim — no subtype, no new boundary variant.
+- {INV-002} The coverage obligation applies to ALL Retriever implementations — `VectorStoreRetriever`,
+  custom in-memory retrievers, and community adapters. The obligation is on the graph
+  node caller, not on the Retriever implementation.
+- {INV-003} The obligation applies regardless of the document's provenance — even an in-process
+  in-memory retriever returns externally ingested content and must be treated as a
+  RAGRetrieval boundary.
+- {INV-004} This guardrail is synchronous with respect to the graph execution — it is called in the
+  same async task, not deferred to a background check.
 
 ## Edge Cases
 

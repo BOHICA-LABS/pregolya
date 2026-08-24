@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.001
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.4 (P2A-021/add-documents-canon/2026-08-21): Canonical ingestion method renamed add_texts → add_documents (Option i — single Document-centric method) per P2A-021 architect-surfaced naming inconsistency ruling. Reference evidence: langchain_core/vectorstores/base.py confirms add_documents is the modern preferred API; add_texts is the legacy parallel-vectors form. Greenfield Rust port has no backward-compat constraint. Changes: (1) PC-2 method entry: add_texts(&self, texts, metadatas) → Result<Vec<String>, PregolyaError> → add_documents(&self, docs: Vec<Document>) → Result<Vec<String>, PregolyaError>; description updated from 'ingests texts' to 'ingests documents'. (2) PC-4: add_texts → add_documents. (3) EC-001: add_texts / texts → add_documents / docs. (4) TV-002: store.add_texts(vec![...], None) → store.add_documents(vec![Document{..}, Document{..}]). Capability anchor justification verbatim quote (CAP-028 name from capabilities-p1-p2.md) left unchanged — capabilities-p1-p2.md §CAP-028 needs add_texts→add_documents alignment (business-analyst scope; flagged to orchestrator)."
   - "1.5 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs). Capability Anchor Justification verbatim quote synced: add_texts → add_documents to match updated CAP-028 title."
   - "1.6 (P2A-027/2026-08-22): PC-2 lambda_mult type made explicit as f32 per ADR-014 Decision 2 canonical (VectorStore trait code block); BC previously left it untyped; D-233 (interface-definitions v2.78) incorrectly cited this BC as authorizing f64 — unsupported (POL-46). No behavioral change; type clarification. delete(&self, ids: &[&str]) and TV-004 were and remain correct."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-028
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -59,17 +60,17 @@ method returns a concrete (non-opaque) fallible result, validating configuration
 
 ## Preconditions
 
-1. `pregolya-vectorstores` has `async-trait` as a dependency.
-2. A concrete type `T` implements `VectorStore` with all required instance methods using
+1. {PRE-001} `pregolya-vectorstores` has `async-trait` as a dependency.
+2. {PRE-002} A concrete type `T` implements `VectorStore` with all required instance methods using
    `&self` receivers and `#[async_trait]`.
-3. Static construction goes through `VectorStoreFactory::from_texts_sync`, NOT through a
+3. {PRE-003} Static construction goes through `VectorStoreFactory::from_texts_sync`, NOT through a
    method on the `VectorStore` vtable.
 
 ## Postconditions
 
-1. `Arc<dyn VectorStore>` compiles without E0038 — confirmed by a compile-time test in
+1. {PC-001} `Arc<dyn VectorStore>` compiles without E0038 — confirmed by a compile-time test in
    `tests/external/vectorstore-dyn-compat/`.
-2. `VectorStore` trait instance methods:
+2. {PC-002} `VectorStore` trait instance methods:
    - `add_documents(&self, docs: Vec<Document>) → Result<Vec<String>, PregolyaError>` — ingests
      documents, returns assigned document IDs.
    - `similarity_search(&self, query, k) → Result<Vec<Document>, PregolyaError>` — returns
@@ -80,23 +81,23 @@ method returns a concrete (non-opaque) fallible result, validating configuration
      — MMR retrieval.
    - `delete(&self, ids: &[&str]) → Result<(), PregolyaError>` — removes documents by ID.
    - `as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` — concrete (non-opaque) fallible return (BC-2.20.003); validates config before constructing; `VectorStoreRetriever` owns `Arc<dyn VectorStore>`, no lifetime parameter.
-3. `VectorStoreFactory` trait (separate, `Sized`-bounded):
+3. {PC-003} `VectorStoreFactory` trait (separate, `Sized`-bounded):
    - `from_texts_sync(texts, embedding: Arc<dyn Embeddings>, config: Self::Config) → impl Future<Output = Result<Self, PregolyaError>> + Send`
    - Can only be called on a concrete type (not through `dyn VectorStore`).
-4. `add_documents` uses `&self` (interior mutability via `RwLock` in concrete impls). External
+4. {PC-004} `add_documents` uses `&self` (interior mutability via `RwLock` in concrete impls). External
    vectorstore backends are stateless from the client's perspective.
 
 ## Invariants
 
-1. NO instance method on `VectorStore` has a generic type parameter — no `where T: Serialize`
+1. {INV-001} NO instance method on `VectorStore` has a generic type parameter — no `where T: Serialize`
    or similar bounds that would break E0038. Type-parameterized functionality goes on
    `VectorStoreFactory`.
-2. `similarity_search_with_score` scores are in `[0.0, 1.0]` — implementors are responsible
+2. {INV-002} `similarity_search_with_score` scores are in `[0.0, 1.0]` — implementors are responsible
    for normalizing backend scores to this range; raw cosine similarity in `[-1.0, 1.0]` must
    be mapped (e.g., `(score + 1.0) / 2.0` or by backend convention).
-3. `VectorStore: Send + Sync` — all impls must be `Send + Sync` for use in multi-threaded
+3. {INV-003} `VectorStore: Send + Sync` — all impls must be `Send + Sync` for use in multi-threaded
    Tokio tasks.
-4. `as_retriever` is a synchronous, non-async method (no `.await`) — it validates config and
+4. {INV-004} `as_retriever` is a synchronous, non-async method (no `.await`) — it validates config and
    constructs `Ok(VectorStoreRetriever)` that owns an `Arc<dyn VectorStore>` clone, or returns
    `Err(E-VS-003)` on invalid config. No I/O.
 

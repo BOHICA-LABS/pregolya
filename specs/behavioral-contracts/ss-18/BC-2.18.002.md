@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "2.0"
+version: "2.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.8 (P2A-039-F-039-04/2026-08-22): Remove stale ADR-015 amendment-pending parenthetical from INV-5 — ADR-015 §PromptValue now defines the enum shape and is aligned; no behavioral change."
   - "1.9 (P2A-040-F-02/2026-08-22): precondition-2 cross-reference added to BC-2.18.003 INV-4 for the MessageListVar struct shape — the Messages arm of TemplateInput carries trust_level: Option<TrustLevel> (NOT a bare newtype); BC-2.18.003 INV-4 is the authoritative clause for the struct shape. No behavioral change to ChatPromptTemplate rendering or PromptValue semantics; this is a traceability anchor addition that makes the Messages-arm Red Gate (S-2.05 AC-016) traceable to a canonical BC clause."
   - "2.0 (P2A-041-F-3/2026-08-23): disambiguated precondition-2 vs postcondition-2 changelog notation; no clause content change."
+  - "2.1 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -61,9 +62,9 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 ## Preconditions
 
-1. A `ChatPromptTemplate` has been constructed via `ChatPromptTemplate::from_messages(messages)`
+1. {PRE-001} A `ChatPromptTemplate` has been constructed via `ChatPromptTemplate::from_messages(messages)`
    returning `Result<Self, PregolyaError>` per DI-008 — construction validates all slot policies.
-2. For rendering, a `HashMap<String, TemplateInput>` is provided. Each `TemplateInput`
+2. {PRE-002} For rendering, a `HashMap<String, TemplateInput>` is provided. Each `TemplateInput`
    is one of:
    - `TemplateInput::Scalar(TemplateVar)` — scalar string binding for human/AI/system slots
    - `TemplateInput::Messages(MessageListVar)` — message-list expansion for MessagesPlaceholder
@@ -74,29 +75,29 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    input's components is checked before rendering (injection_guard, BC-2.18.004).
    (Breaking change from prior `HashMap<String, TemplateVar>` per ADR-015 §Decision 3
    Amendment — TemplateInput Enum Concretized, burst-279.)
-3. All variables referenced in the template are present in the var map (else see BC-2.18.001
+3. {PRE-003} All variables referenced in the template are present in the var map (else see BC-2.18.001
    EC-004 for E-TMPL-003), OR the caller has bound them via partial binding.
 
 ## Postconditions
 
-1. `ChatPromptTemplate::format_messages(&self, vars: HashMap<String, TemplateInput>)
+1. {PC-001} `ChatPromptTemplate::format_messages(&self, vars: HashMap<String, TemplateInput>)
    → Result<PromptValue, PregolyaError>` returns `Ok(prompt_value)` on success.
-2. The `PromptValue::Messages` variant contains a `Vec<(Message, MessageProvenance)>` with
+2. {PC-002} The `PromptValue::Messages` variant contains a `Vec<(Message, MessageProvenance)>` with
    one entry per slot, in the order slots were declared at construction.
-3. For each slot: `MessageProvenance.highest_trust_level` is `Some(trust_level)` where `trust_level` is the highest-severity
+3. {PC-003} For each slot: `MessageProvenance.highest_trust_level` is `Some(trust_level)` where `trust_level` is the highest-severity
    `TrustLevel` across all variables substituted into that slot; `None` if no variables were
    substituted (template-literal slots) OR if all substituted variables carried
    `trust_level: None` (ADR-015 §Decision 3 correct disjunction — a non-literal slot with all
    `None` trust levels yields `highest_trust_level: None`, matching the template-literal case;
    see TV-001 for canonical example: `trust_level: None` variable → `highest_trust_level: None`).
-4. `MessageProvenance.slot_trust_policy` reflects the slot's policy as declared at construction.
-5. `PromptValue::into_messages()` returns `Vec<Message>` consuming self. For the
+4. {PC-004} `MessageProvenance.slot_trust_policy` reflects the slot's policy as declared at construction.
+5. {PC-005} `PromptValue::into_messages()` returns `Vec<Message>` consuming self. For the
    `PromptValue::Messages` variant, provenance metadata is discarded and the message sequence
    returned; for the `PromptValue::String` variant, a single `HumanMessage` wrapping the
    string is returned. (See INV-5 for the canonical PromptValue enum shape.)
-6. A `ChatPromptTemplate` with zero message slots constructs and renders successfully, returning
+6. {PC-006} A `ChatPromptTemplate` with zero message slots constructs and renders successfully, returning
    a `PromptValue::Messages` variant with an empty inner Vec.
-7. `ChatPromptTemplate` implements `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>`.
+7. {PC-007} `ChatPromptTemplate` implements `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>`.
    `invoke(&self, input: HashMap<String, TemplateInput>, config: Option<RunnableConfig>)`
    delegates to `self.format_messages(input)` and returns the result directly
    (`Result<PromptValue, PregolyaError>`); all errors from `format_messages` propagate unchanged.
@@ -105,21 +106,21 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 
 ## Invariants
 
-1. Slot order in the rendered `PromptValue` matches the order slots were declared at
+1. {INV-001} Slot order in the rendered `PromptValue` matches the order slots were declared at
    construction — no reordering occurs.
-2. TrustLevel severity ordering: `Untrusted` (severity=2) > `UserInput` (severity=1) >
+2. {INV-002} TrustLevel severity ordering: `Untrusted` (severity=2) > `UserInput` (severity=1) >
    `Trusted` (severity=0). The highest-severity TrustLevel wins. Aggregate computation MUST
    use `TrustLevel::severity()` comparisons (`.max_by_key(|t| t.severity())`); `Ord::max()`
    or derived `Ord` on `TrustLevel` MUST NOT be used — declaration order is the INVERSE of
    security severity (ADR-015 Decision 3 Amendment, F-P175-B208). A derived `Ord` on
    `TrustLevel { Untrusted, UserInput, Trusted }` makes `Untrusted < Trusted`, so `.max()`
    returns `Trusted` for a set containing `Untrusted` — silent fail-open on the injection guard.
-3. A slot has `MessageProvenance.highest_trust_level = None` when either: (a) no variables
+3. {INV-003} A slot has `MessageProvenance.highest_trust_level = None` when either: (a) no variables
    are substituted (template-literal slot), or (b) all substituted variables carry
    `trust_level: None`. These two cases are semantically equivalent for provenance purposes —
    in both, no trust classification was propagated into the slot (ADR-015 §Decision 3).
-4. `ChatPromptTemplate` construction is pure (no I/O, no async); it returns `Result`.
-5. `PromptValue` is a `#[non_exhaustive]` enum with exactly two stable variants:
+4. {INV-004} `ChatPromptTemplate` construction is pure (no I/O, no async); it returns `Result`.
+5. {INV-005} `PromptValue` is a `#[non_exhaustive]` enum with exactly two stable variants:
    `PromptValue::String(String)` — produced by `PromptTemplate::invoke` (BC-2.18.001 PC-7),
    wrapping the formatted string output of `PromptTemplate::format`; and
    `PromptValue::Messages(Vec<(Message, MessageProvenance)>)` — produced by

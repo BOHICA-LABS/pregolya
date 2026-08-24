@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "2.0"
+version: "2.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
@@ -28,6 +28,7 @@ changelog:
   - "1.8 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "2.0 (P2A-037-gaps/2026-08-22): Four additions closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-005/AC-006. (1) PC-7 (new): PromptTemplate implements Runnable<Input=HashMap<String,TemplateVar>, Output=PromptValue>; invoke delegates to format() and wraps Ok(s) as Ok(PromptValue::String(s)); errors propagate unchanged. (2) INV-6 (new): PromptTemplate is pure-core — no I/O, no OS handles, no mutable shared state; PromptTemplate: Send+Sync. (3) TV-008 (new): Runnable invoke happy-path vector; TV count 7→8. (4) H1 updated to include Runnable impl per bc_h1_is_title_source_of_truth; BC-INDEX title column updated in same burst."
+  - "2.1 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -64,29 +65,29 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 
 ## Preconditions
 
-1. A `PromptTemplate` has been constructed via `PromptTemplate::from_template(template_str)`
+1. {PRE-001} A `PromptTemplate` has been constructed via `PromptTemplate::from_template(template_str)`
    or `PromptTemplate::from_template_with_partials(template_str, partial_vars)` — both return
    `Result<Self, PregolyaError>` per DI-008.
-2. For rendering, a `HashMap<String, TemplateVar>` of call-time variables is available.
-3. The template string uses only `{variable}` and `{{` / `}}` syntax (f-string engine default).
+2. {PRE-002} For rendering, a `HashMap<String, TemplateVar>` of call-time variables is available.
+3. {PRE-003} The template string uses only `{variable}` and `{{` / `}}` syntax (f-string engine default).
    Jinja2 engine requires `feature = "jinja2"` enabled at compile time.
 
 ## Postconditions
 
-1. `PromptTemplate::format(&self, vars: HashMap<String, TemplateVar>) → Result<String, PregolyaError>`
+1. {PC-001} `PromptTemplate::format(&self, vars: HashMap<String, TemplateVar>) → Result<String, PregolyaError>`
    returns `Ok(rendered_string)` when all required variables are supplied.
-2. Partial bindings are merged with call-time vars before rendering; call-time vars win on
+2. {PC-002} Partial bindings are merged with call-time vars before rendering; call-time vars win on
    key collision.
-3. `PromptTemplate::input_variables(&self) → &[String]` returns the complete set of variable
+3. {PC-003} `PromptTemplate::input_variables(&self) → &[String]` returns the complete set of variable
    names required at call time (partial-bound names excluded).
-4. An undefined variable (present in template but absent from merged var map) returns
+4. {PC-004} An undefined variable (present in template but absent from merged var map) returns
    `Err(PregolyaError { code: "E-TMPL-003", .. })`
    — no silent empty substitution under any rendering mode.
-5. `{{` and `}}` render as literal `{` and `}` respectively; they are NOT counted as substitution
+5. {PC-005} `{{` and `}}` render as literal `{` and `}` respectively; they are NOT counted as substitution
    points and do NOT appear in `input_variables()`.
-6. Nested attribute access (`{x.y}`) is treated as a single flat variable name `x.y` (not
+6. {PC-006} Nested attribute access (`{x.y}`) is treated as a single flat variable name `x.y` (not
    deep access) in f-string mode — the caller must pre-compute the value.
-7. `PromptTemplate` implements `Runnable<Input = HashMap<String, TemplateVar>, Output = PromptValue>`.
+7. {PC-007} `PromptTemplate` implements `Runnable<Input = HashMap<String, TemplateVar>, Output = PromptValue>`.
    `invoke(&self, input: HashMap<String, TemplateVar>, config: Option<RunnableConfig>)`
    calls `self.format(input)` and on `Ok(rendered)` returns `Ok(PromptValue::String(rendered))`;
    errors from `format` propagate as `Err(_)` unchanged. The `batch` default delegates to
@@ -95,25 +96,25 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 
 ## Invariants
 
-1. `PromptTemplate` construction is fallible — templates with unbalanced braces, stray close
+1. {INV-001} `PromptTemplate` construction is fallible — templates with unbalanced braces, stray close
    braces, empty variable slots (`{}`), or other parse errors return
    `Err(PregolyaError { code: "E-TMPL-004", .. })` at construction time per DI-008. The same malformed
    template string always fails; the error is deterministic given the input.
-2. `input_variables()` returns identical results on every call regardless of how many times
+2. {INV-002} `input_variables()` returns identical results on every call regardless of how many times
    `format()` has been invoked (pure, idempotent computation).
-3. E-TMPL-003 is unconditional — the f-string engine does NOT substitute an empty string for
+3. {INV-003} E-TMPL-003 is unconditional — the f-string engine does NOT substitute an empty string for
    undefined variables under any call path, including when `strict_undefined` is not explicitly
    configured (default behavior is strict).
-4. Partial bindings are immutable once set at construction; they are not modifiable after the
+4. {INV-004} Partial bindings are immutable once set at construction; they are not modifiable after the
    template is built (builder returns a new `PromptTemplate` value, not mutation in place).
-5. The output of `PromptTemplate::format` is a bare `String` with no `MessageProvenance` and
+5. {INV-005} The output of `PromptTemplate::format` is a bare `String` with no `MessageProvenance` and
    no injection guard. Callers MUST NOT use this output directly as system-role content in any
    LLM call or `ChatPromptTemplate` without routing it through
    `ChatPromptTemplate::format_messages` for a `TrustLevel` check.
    (ADR-015 Decision 3 Amendment — `PromptTemplate::format` explicitly unguarded; the injection
    guard (E-TMPL-001) fires ONLY in `format_messages`. Placing raw `format()` output in a
    system position is an injection risk with no automatic backstop.)
-6. `PromptTemplate` is a pure-core type: it performs no I/O, no async I/O, no blocking
+6. {INV-006} `PromptTemplate` is a pure-core type: it performs no I/O, no async I/O, no blocking
    system calls, and holds no OS handles or mutable shared state. `PromptTemplate: Send + Sync`
    — all fields are `Send + Sync` (owned `String` values and `HashMap<String, TemplateVar>`
    with `Send + Sync` value type). Template construction and rendering are pure string

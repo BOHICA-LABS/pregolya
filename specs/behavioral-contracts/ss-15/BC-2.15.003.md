@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-017
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'memory.gdpr_unattributed_session_entries' to EC-004 WARN emission per observability census (SAP-1). EC-004 updated with structured event_type and fields."
   - "1.3 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.4 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-05/06 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.12 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -55,42 +56,42 @@ policy).
 
 ## Preconditions
 
-1. A valid `user_id` is provided in the erasure request.
-2. The `MemoryStore` has at least the user-scoped and app-scoped tiers enabled.
-3. The caller has operator-level privilege (same `AdminContext` as admin operations
+1. {PRE-001} A valid `user_id` is provided in the erasure request.
+2. {PRE-002} The `MemoryStore` has at least the user-scoped and app-scoped tiers enabled.
+3. {PRE-003} The caller has operator-level privilege (same `AdminContext` as admin operations
    in BC-2.15.002); erasure cannot be initiated from a standard `RunnableConfig` context.
 
 ## Postconditions
 
-1. All entries with `MemoryScope::User(user_id)` are deleted from the store. A
+1. {PC-001} All entries with `MemoryScope::User(user_id)` are deleted from the store. A
    subsequent `memory_get(User(user_id), any_key)` returns `None`.
-2. All session-scoped entries from sessions attributable to `user_id` are deleted.
+2. {PC-002} All session-scoped entries from sessions attributable to `user_id` are deleted.
    The store must maintain a `session_id → user_id` mapping to support this lookup.
-3. All app-scoped entries authored by `user_id` (i.e., written with `author_id =
+3. {PC-003} All app-scoped entries authored by `user_id` (i.e., written with `author_id =
    user_id` in the entry metadata) are deleted. App-scoped entries authored by other
    users are unaffected.
-4. A `GdprErasureReceipt` is returned on success containing:
+4. {PC-004} A `GdprErasureReceipt` is returned on success containing:
    - `user_id: UserId`
    - `erased_at: Timestamp`
    - `user_scoped_count: u64`
    - `app_scoped_authored_count: u64`
    - `session_scoped_count: u64`
-5. If the user has no memory entries in any tier, the operation returns `Ok(receipt)`
+5. {PC-005} If the user has no memory entries in any tier, the operation returns `Ok(receipt)`
    with all counts set to `0`. This is not an error.
-6. The erasure is recorded in the compliance audit log (if configured) with the
+6. {PC-006} The erasure is recorded in the compliance audit log (if configured) with the
    `GdprErasureReceipt`. The compliance audit log itself is NOT deleted by this
    operation; it is subject to a separate retention policy.
 
 ## Invariants
 
-- **Atomicity:** The erasure across all three tiers is wrapped in a single database
+- {INV-001} **Atomicity:** The erasure across all three tiers is wrapped in a single database
   transaction (or equivalent atomic operation). A storage failure that occurs after
   deleting user-scoped entries but before deleting session-scoped entries causes the
   transaction to roll back. No partial erasure state is committed.
-- **Irreversibility:** Deleted entries cannot be restored by any application-level
+- {INV-002} **Irreversibility:** Deleted entries cannot be restored by any application-level
   API call after a successful erasure. (Physical recoverability from backup media is
   a separate operational concern outside this contract's scope.)
-- **Author-id tracking:** App-scoped entries must carry an `author_id` metadata field
+- {INV-003} **Author-id tracking:** App-scoped entries must carry an `author_id` metadata field
   set at write time. Entries written before `author_id` tracking was introduced are
   treated as having `author_id = None` and are NOT deleted by user erasure (they lack
   attributability). This is a documented limitation.

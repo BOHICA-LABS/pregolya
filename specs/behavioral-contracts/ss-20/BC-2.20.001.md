@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.001
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,13 +14,14 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-012, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval"
   - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — EC-002 already cited DI-014 in body ('error propagated, not swallowed; no Vec::new() fallback on partial failure'); frontmatter anchor was missing."
   - "1.2 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_ASCII_ELLIPSIS_VIOLATION violations corrected. PC-2 failure arm, EC-002 expected-output, and TV-003 expected-output: `PregolyaError { ... }` → `PregolyaError { .. }` (replace `...` with `..` field-elision marker). No security semantics or VP anchors altered."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): ADR-027 stable clause anchors added (M1). Purely additive — no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-026
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -57,41 +58,41 @@ Object-safety is achieved via `&self` receiver and `#[async_trait]` desugaring
 
 ## Preconditions
 
-1. `pregolya-core` Cargo.toml includes `async-trait` as a dependency.
-2. A concrete type `T` implements `Retriever` with `#[async_trait]` and `&self` receiver.
-3. The concrete `T` is wrapped in `Arc<T>` and stored as `Arc<dyn Retriever>` at the call site.
-4. The query string is a valid UTF-8 `&str` (including empty string — callers may pass `""` and
+1. {PRE-001} `pregolya-core` Cargo.toml includes `async-trait` as a dependency.
+2. {PRE-002} A concrete type `T` implements `Retriever` with `#[async_trait]` and `&self` receiver.
+3. {PRE-003} The concrete `T` is wrapped in `Arc<T>` and stored as `Arc<dyn Retriever>` at the call site.
+4. {PRE-004} The query string is a valid UTF-8 `&str` (including empty string — callers may pass `""` and
    receive a valid empty `Vec<Document>` or a meaningful result depending on the implementation).
 
 ## Postconditions
 
-1. `Arc<dyn Retriever>` compiles without E0038 ("the trait cannot be made into an object") when
+1. {PC-001} `Arc<dyn Retriever>` compiles without E0038 ("the trait cannot be made into an object") when
    `T` is an `#[async_trait]`-annotated impl with `&self` receivers only (no type parameters,
    no `impl Trait` in function position).
-2. `get_relevant_documents(&self, query: &str) → Result<Vec<Document>, PregolyaError>`:
+2. {PC-002} `get_relevant_documents(&self, query: &str) → Result<Vec<Document>, PregolyaError>`:
    - On success: returns `Ok(docs)` where `docs` is a `Vec<Document>` (possibly empty) ranked
      by relevance to the query. The ordering is implementation-defined; the invariant is that
      the vector is deterministic for a given `(self-state, query)` pair.
    - On failure: returns `Err(PregolyaError { .. })` propagated via `?` (DI-008 — no
      `unwrap()` in non-test code).
-3. `Document { page_content, metadata, id }` carries:
+3. {PC-003} `Document { page_content, metadata, id }` carries:
    - `page_content`: the retrieved text content — MUST be non-empty for content-bearing documents;
      empty `page_content` is permitted only for metadata-only stubs.
    - `metadata`: a `serde_json::Map<String, Value>` — MAY be empty `{}`.
    - `id`: `Option<String>` — `None` when the backend does not assign stable IDs.
-4. `Document` is `#[non_exhaustive]` — match arms on Document fields require a wildcard `..`
+4. {PC-004} `Document` is `#[non_exhaustive]` — match arms on Document fields require a wildcard `..`
    to guard against future field additions.
 
 ## Invariants
 
-1. The `Retriever` trait has exactly ONE required async method (`get_relevant_documents`). No
-   default method implementations may add I/O side effects to the base trait.
-2. `Arc<dyn Retriever + Send + Sync>` compiles and is Send + Sync. All Retriever impls must be
-   `Send + Sync` (enforced by the trait bound `Retriever: Send + Sync`).
-3. `Document` is a pure data carrier — no methods, no I/O, no async. It is `Clone + Debug +
-   Serialize + Deserialize + JsonSchema`.
-4. The `Retriever` trait resides in `pregolya-core: core::retriever`, NOT in
-   `pregolya-vectorstores`. Graph crates depend only on `pregolya-core` for `Arc<dyn Retriever>`.
+- {INV-001} The `Retriever` trait has exactly ONE required async method (`get_relevant_documents`). No
+  default method implementations may add I/O side effects to the base trait.
+- {INV-002} `Arc<dyn Retriever + Send + Sync>` compiles and is Send + Sync. All Retriever impls must be
+  `Send + Sync` (enforced by the trait bound `Retriever: Send + Sync`).
+- {INV-003} `Document` is a pure data carrier — no methods, no I/O, no async. It is `Clone + Debug +
+  Serialize + Deserialize + JsonSchema`.
+- {INV-004} The `Retriever` trait resides in `pregolya-core: core::retriever`, NOT in
+  `pregolya-vectorstores`. Graph crates depend only on `pregolya-core` for `Arc<dyn Retriever>`.
 
 ## Edge Cases
 

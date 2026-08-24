@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.003
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-20 Document Retrieval"
@@ -26,6 +26,7 @@ changelog:
   - "1.6 (FIX-BURST-278-WAVE-C/D-48-ratification/2026-07-28): PO ratification of D-48 receiver sweep (wave-b-po-routing-spec.md Routing Items 6a–6g). Substantive verification: (1) Inv-2 states 'validated against [0.0, 1.0]; rejected with Err(PregolyaError{code:E-VS-003})' — matches error-taxonomy.md §E-VS-003 and PC-5 fallible semantics; COHERENT. (2) TV-004/TV-005 show PregolyaError{code:E-VS-003} in table cells (S5-exempt prose); error semantics correct. (3) PC-5 reads 'as_retriever(self: Arc<Self>)' — dyn-compatible per D-48; CORRECT. (4) No non-dyn-compatible borrowed-Arc receiver residue: file confirmed zero occurrences. (5) No lifetime-parameterized VectorStoreRetriever residue: file confirmed zero occurrences. Ratification: COHERENT."
   - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_MISSING_DOTDOT violations corrected. (1) Invariant 2 inline E-VS-003 reject cite: add `, ..` field-elision marker. (2) TV-004 expected-output cell: add `, ..` field-elision marker. (3) TV-005 expected-output cell: add `, ..` field-elision marker. Zero-space `PregolyaError{code:E-VS-003}` in frontmatter changelog entry 1.6 (historical record, no space before brace) is EXEMPT — not modified per append-only record protocol."
   - "1.8 (P2A-021/story-anchor/2026-08-21): Story Anchor set to S-2.03 — VectorStoreRetriever / as_retriever delivery moved from S-2.02 to S-2.03 per architect P2A-021 build-ordering ruling (VectorStoreRetriever depends on the VectorStore trait, which is delivered in S-2.03)."
+  - "1.9 (M1/ADR-027/2026-08-23): ADR-027 stable clause anchors added (M1). Purely additive — no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-027
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "97d9bcd"
+input-hash: "869996f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -62,27 +63,27 @@ internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, e
 
 ## Preconditions
 
-1. A `&dyn VectorStore` value is available (the store has been initialized).
-2. `VectorStore::as_retriever(self: Arc<Self>)` is called on an `Arc<dyn VectorStore>`,
+1. {PRE-001} A `&dyn VectorStore` value is available (the store has been initialized).
+2. {PRE-002} `VectorStore::as_retriever(self: Arc<Self>)` is called on an `Arc<dyn VectorStore>`,
    returning `Ok(VectorStoreRetriever)` on valid config or `Err(E-VS-003)` on invalid config
    (ADR-014 Decision 2).
-3. The caller configures `search_type`, `k`, `fetch_k`, and `lambda_mult` (defaults apply
+3. {PRE-003} The caller configures `search_type`, `k`, `fetch_k`, and `lambda_mult` (defaults apply
    if not explicitly set: `SearchType::Similarity`, `k=4`, `fetch_k=20`, `lambda_mult=0.5`).
-4. The `VectorStoreRetriever` (no lifetime parameter) is coerced to `Arc<dyn Retriever>` by
+4. {PRE-004} The `VectorStoreRetriever` (no lifetime parameter) is coerced to `Arc<dyn Retriever>` by
    wrapping in `Arc::new`; this coercion succeeds because `VectorStoreRetriever: Retriever + 'static`.
 
 ## Postconditions
 
-1. `SearchType::Similarity` — `get_relevant_documents(query)` dispatches to
+1. {PC-001} `SearchType::Similarity` — `get_relevant_documents(query)` dispatches to
    `store.similarity_search(query, k)`. Returns the top-k documents by cosine similarity.
-2. `SearchType::SimilarityScoreThreshold { score_threshold }` — dispatches to
+2. {PC-002} `SearchType::SimilarityScoreThreshold { score_threshold }` — dispatches to
    `store.similarity_search_with_score(query, k)`, then filters results where `score < threshold`.
    Returns only documents meeting the threshold; may return fewer than `k` documents or zero.
-3. `SearchType::Mmr` — dispatches to `store.max_marginal_relevance_search(query, k, fetch_k, lambda_mult)`.
+3. {PC-003} `SearchType::Mmr` — dispatches to `store.max_marginal_relevance_search(query, k, fetch_k, lambda_mult)`.
    Returns `k` documents from the `fetch_k` candidate pool, selected for both relevance and diversity.
-4. In all three search types, the returned `Vec<Document>` satisfies DI-012 (each document that
+4. {PC-004} In all three search types, the returned `Vec<Document>` satisfies DI-012 (each document that
    enters graph context must pass `BoundaryType::RAGRetrieval` — coverage obligation per BC-2.20.002).
-5. `VectorStore::as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`
+5. {PC-005} `VectorStore::as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`
    is a concrete (non-opaque) fallible return — NOT `async fn`, NOT `impl Retriever`. Returns the
    concrete named type `VectorStoreRetriever` (no lifetime parameter). `VectorStore` trait remains
    object-safe; `as_retriever` takes `self: Arc<Self>` — the dyn-compatible receiver that allows
@@ -91,17 +92,17 @@ internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, e
 
 ## Invariants
 
-1. `SearchType` is `#[non_exhaustive]` — match arms in callers must include `_` wildcard to guard
-   against future variants.
-2. `lambda_mult` is **validated against** `[0.0, 1.0]` at construction time; values outside this range are
-   rejected with `Err(PregolyaError { code: "E-VS-003", message: "Validation failed for 'lambda_mult': must be in [0.0, 1.0]", .. })` at `as_retriever()` call.
-3. `k ≥ 1` is enforced at construction time; `k = 0` is rejected.
-4. `fetch_k ≥ k` is enforced at construction time for `SearchType::Mmr` (the candidate pool must
-   be at least as large as the final result count); `fetch_k < k` is rejected.
-5. `VectorStoreRetriever` owns its store via `Arc<dyn VectorStore>`; it is `'static` (no lifetime
-   parameter). The `Arc` reference count keeps the store alive for the retriever's lifetime — no
-   borrow-checker lifetime constraint applies (ADR-014 Decision 2). `Arc<dyn Retriever>` coercion
-   succeeds without a lifetime-bound error.
+- {INV-001} `SearchType` is `#[non_exhaustive]` — match arms in callers must include `_` wildcard to guard
+  against future variants.
+- {INV-002} `lambda_mult` is **validated against** `[0.0, 1.0]` at construction time; values outside this range are
+  rejected with `Err(PregolyaError { code: "E-VS-003", message: "Validation failed for 'lambda_mult': must be in [0.0, 1.0]", .. })` at `as_retriever()` call.
+- {INV-003} `k ≥ 1` is enforced at construction time; `k = 0` is rejected.
+- {INV-004} `fetch_k ≥ k` is enforced at construction time for `SearchType::Mmr` (the candidate pool must
+  be at least as large as the final result count); `fetch_k < k` is rejected.
+- {INV-005} `VectorStoreRetriever` owns its store via `Arc<dyn VectorStore>`; it is `'static` (no lifetime
+  parameter). The `Arc` reference count keeps the store alive for the retriever's lifetime — no
+  borrow-checker lifetime constraint applies (ADR-014 Decision 2). `Arc<dyn Retriever>` coercion
+  succeeds without a lifetime-bound error.
 
 ## Edge Cases
 

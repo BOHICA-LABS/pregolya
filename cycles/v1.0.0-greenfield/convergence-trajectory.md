@@ -3714,3 +3714,5 @@ Count-propagation sweep (S-7.02): ADR count 26→27 updated in ARCH-INDEX frontm
 CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: M1 BC-clause labeling (product-owner dispatches).
 - M1/ADR-027 chunk 1: 47 BCs labeled with stable clause anchors (SS-01..07,16,17); additive; validator 0-DRIFT; NEXT M1 chunk 2 + M2.
 - M1/ADR-027 chunk 2: SS-08..13 labeled (47 BCs); additive; validator 0-DRIFT; ~94/134; NEXT M1 chunk 3.
+
+- M1/ADR-027 chunk 3 + M1 COMPLETE (D-252): SS-14,15,18-23 labeled (39 BCs); additive; validator 0-DRIFT; all 133/133 BCs labeled. Incidental input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004. BC census UNCHANGED 133. BC-INDEX §Changelog updated. Streak 0/3. NEXT: M2 (verify-ac-pc-trace.sh dual-mode rework + POL-48 wording).

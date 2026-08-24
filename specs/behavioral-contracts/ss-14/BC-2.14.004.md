@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core (HTTP client factory) / xtask (lint gate) per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5, EC-003, and TV-004 all carried `Err(PregolyaError { category: TIMEOUT, code: \"E-PROV-002\" })` bare wrappers; E-PROV-002 has `<duration>` placeholder. Added inline `message:` template at all three sites; `<duration>` sourced from the configured HTTP client timeout value at the raise site."
   - "1.3 (burst-240/F-P140-02/2026-07-22): E-PROV-002 message generalized — PC5, EC-003, and TV-004 previously used 'ProviderTimeout: stream chunk timeout after <duration>' (stream-specific message); updated to 'ProviderTimeout: request timed out after <duration>' to match taxonomy E-PROV-002 v1.34. This BC covers unary HTTP request timeout (no stream, no chunk); the 'stream chunk' message was semantically wrong for this path. The generalized message is accurate: a unary HTTP client timeout IS a request timeout after the configured duration."
   - "1.4 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 5 CLASS3 VIOLATIONS corrected — PC5 multiline span added `, ..` before `}`; EC-003 multiline span added `, ..` before `}`; TV-004 Expected Output added `, ..`; Related BCs `PregolyaError { category: TIMEOUT }` added `, ..`; Traceability `PregolyaError { category: TIMEOUT }` added `, ..`. Xtask rename: 3 occurrences of `cargo xtask lint-no-timeout` → `cargo xtask check-client-timeout` in PC3, VP-DI009-01, Architecture Anchors. No behavioral change."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -53,41 +54,41 @@ Connection Timeout) uniformly.
 
 ## Preconditions
 
-1. A pregolya crate is constructing an outbound HTTP client (via `reqwest`, `hyper`, `async-openai`,
+1. {PRE-001} A pregolya crate is constructing an outbound HTTP client (via `reqwest`, `hyper`, `async-openai`,
    or any other HTTP client crate).
-2. The construction is in non-test code (not `#[cfg(test)]` or `tests/` directory).
-3. The HTTP client will be used to make outbound calls to provider APIs, MCP servers, or
+2. {PRE-002} The construction is in non-test code (not `#[cfg(test)]` or `tests/` directory).
+3. {PRE-003} The HTTP client will be used to make outbound calls to provider APIs, MCP servers, or
    external endpoints.
 
 ## Postconditions
 
-1. Every `reqwest::ClientBuilder` (or equivalent from another HTTP crate) in non-test source
+1. {PC-001} Every `reqwest::ClientBuilder` (or equivalent from another HTTP crate) in non-test source
    must call `.timeout(duration)` with a `duration > Duration::ZERO` before `.build()`.
-2. The recommended default timeout is `Duration::from_secs(30)`. Deviations from 30s must
+2. {PC-002} The recommended default timeout is `Duration::from_secs(30)`. Deviations from 30s must
    be documented with a comment citing the rationale (e.g. `// 5 min timeout for model inference`).
-3. Zero-argument `Client::new()` (which bypasses the builder and applies no timeout) is absent
+3. {PC-003} Zero-argument `Client::new()` (which bypasses the builder and applies no timeout) is absent
    from non-test library source. CI `cargo xtask check-client-timeout` (or equivalent custom clippy
    lint) causes the build to fail on any `Client::new()` call outside test files.
-4. If the timeout duration is configurable at runtime (e.g. via `PregolyaConfig`), the default
+4. {PC-004} If the timeout duration is configurable at runtime (e.g. via `PregolyaConfig`), the default
    value in the config struct is `Duration::from_secs(30)` — not `Duration::ZERO` or `None`.
-5. When the timeout fires, the HTTP client returns an error that the pregolya adapter converts
+5. {PC-005} When the timeout fires, the HTTP client returns an error that the pregolya adapter converts
    to `Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002",
    message: "ProviderTimeout: request timed out after <duration>", .. })`
    (where `<duration>` is the configured HTTP client timeout, e.g., "30s")
    — not a hang, not a panic.
-6. Connection timeout and request timeout are both set (if the HTTP crate distinguishes them);
+6. {PC-006} Connection timeout and request timeout are both set (if the HTTP crate distinguishes them);
    a connection timeout without a request timeout still leaves the system vulnerable to slow
    responses, so both must be set to non-zero values.
 
 ## Invariants
 
-- **DI-009 (Outbound Connection Timeout (Mandatory)):** No outbound call may hang indefinitely. Any code
+- {INV-001} **DI-009 (Outbound Connection Timeout (Mandatory)):** No outbound call may hang indefinitely. Any code
   path that produces an outbound HTTP call must have a timeout enforced at the client level.
-- **NE-04 enforcement:** The specific counter-example (adk-rust 8+ `Client::new()` sites) is
+- {INV-002} **NE-04 enforcement:** The specific counter-example (adk-rust 8+ `Client::new()` sites) is
   the prototype for this CI gate.
-- Zero-argument `Client::new()` in test files is explicitly permitted — tests may use default
+- {INV-003} Zero-argument `Client::new()` in test files is explicitly permitted — tests may use default
   clients against local mock servers.
-- A timeout of `None` (unlimited) is never the default in any pregolya config struct, even
+- {INV-004} A timeout of `None` (unlimited) is never the default in any pregolya config struct, even
   if the HTTP crate supports it.
 
 ## Edge Cases

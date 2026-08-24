@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.006
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-004, TV-001, TV-004, TV-005 each had a specific 'Validation failed for...' message matching E-CORE-005 but no code field. Added code: E-CORE-005 to all five sites."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.3 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 8 violations corrected: Description `PregolyaError { category: VAL, ... }` — replaced `...` with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION); EC-002 `PregolyaError { category: VAL, ... }` — same fix; EC-001, EC-004, TV-001, TV-004, TV-005 — each added `, ..` (CLASS3 VIOLATION, 3/5 fields); TV-002 — added `, ..` (CLASS3 VIOLATION, 2/5 fields). PC1 unchanged — Class 3 VALID (all 5 non-source fields present). No behavioral change."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-014
@@ -51,24 +52,24 @@ coordinator returns `None` on validation failure rather than propagating the err
 
 ## Preconditions
 
-1. A caller invokes a public pregolya function with input that fails a validation check
+1. {PRE-001} A caller invokes a public pregolya function with input that fails a validation check
    (type constraint, range check, format check, required-field-missing, etc.).
-2. The function is in non-test, non-binary code (library surface).
-3. The validation failure is deterministic — the same input will always fail.
+2. {PRE-002} The function is in non-test, non-binary code (library surface).
+3. {PRE-003} The validation failure is deterministic — the same input will always fail.
 
 ## Postconditions
 
-1. The function returns `Err(PregolyaError { component: <C>, category: VAL, retry_hint: Never, code: E-<C>-NNN, message: "<field>: <reason>" })`.
-2. The caller can inspect `.component`, `.category`, `.code`, and `.message` to identify the exact validation constraint that failed.
-3. The return type on the happy path is `Ok(T)` — the `None` / `Option<T>` pattern for validation-failure signaling is absent from the public API surface.
-4. The error message uses the format `"Validation failed for '<field>': <reason>"` (E-CORE-005 or the component-appropriate code).
-5. No intermediate callsite between the validation site and the public API boundary discards or converts the error to `None` / empty.
+1. {PC-001} The function returns `Err(PregolyaError { component: <C>, category: VAL, retry_hint: Never, code: E-<C>-NNN, message: "<field>: <reason>" })`.
+2. {PC-002} The caller can inspect `.component`, `.category`, `.code`, and `.message` to identify the exact validation constraint that failed.
+3. {PC-003} The return type on the happy path is `Ok(T)` — the `None` / `Option<T>` pattern for validation-failure signaling is absent from the public API surface.
+4. {PC-004} The error message uses the format `"Validation failed for '<field>': <reason>"` (E-CORE-005 or the component-appropriate code).
+5. {PC-005} No intermediate callsite between the validation site and the public API boundary discards or converts the error to `None` / empty.
 
 ## Invariants
 
-- **DI-014 (Error Propagation (No Silent Swallowing)):** Validation errors propagate as `Err`; no code path returns `None` or empty to indicate failure.
-- Downstream consumers of a `Result<T, PregolyaError>` must not silently `.ok()` a validation error in library code — only application/binary code may choose to ignore errors after explicit handling.
-- The `VAL` category always implies `retry_hint: Never` (the input must change; retrying the same input will not succeed).
+- {INV-001} **DI-014 (Error Propagation (No Silent Swallowing)):** Validation errors propagate as `Err`; no code path returns `None` or empty to indicate failure.
+- {INV-002} Downstream consumers of a `Result<T, PregolyaError>` must not silently `.ok()` a validation error in library code — only application/binary code may choose to ignore errors after explicit handling.
+- {INV-003} The `VAL` category always implies `retry_hint: Never` (the input must change; retrying the same input will not succeed).
 
 ## Edge Cases
 

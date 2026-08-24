@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-014]
 red_gate: true
 red_gate_source: "ADR-015 Decision 3 §Security Invariant 1 — injection_guard must block before implementation; VP-006 Kani candidate"
@@ -33,6 +33,7 @@ changelog:
   - "1.9 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
   - "1.10 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.11 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.12 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -42,7 +43,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "e8f793e"
+input-hash: "09c85f7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -73,8 +74,8 @@ enforcement of that invariant.
 
 ## Preconditions
 
-1. A `ChatPromptTemplate` has been validly constructed (all policy checks passed per BC-2.18.005).
-2. `format_messages` is called with a `HashMap<String, TemplateInput>` where at least
+1. {PRE-001} A `ChatPromptTemplate` has been validly constructed (all policy checks passed per BC-2.18.005).
+2. {PRE-002} `format_messages` is called with a `HashMap<String, TemplateInput>` where at least
    one input binding — in a `TrustRequired` slot — has a `TrustLevel::Untrusted` component.
    The input may be any arm of `TemplateInput`:
    - `TemplateInput::Scalar(v)` with `v.trust_level == Some(TrustLevel::Untrusted)`
@@ -84,11 +85,11 @@ enforcement of that invariant.
      `ov.trust_level == Some(TrustLevel::Untrusted)`
    (Breaking type change from `HashMap<String, TemplateVar>` per ADR-015 §Decision 3
    Amendment — TemplateInput Enum Concretized, burst-279.)
-3. The `TrustRequired` slot's variable name is present in the vars map (variable is not undefined).
+3. {PRE-003} The `TrustRequired` slot's variable name is present in the vars map (variable is not undefined).
 
 ## Postconditions
 
-1. `format_messages` returns:
+1. {PC-001} `format_messages` returns:
    ```
    Err(PregolyaError::new(
        Component::Tmpl,
@@ -101,12 +102,12 @@ enforcement of that invariant.
    ```
    where `{var_name}` is the name of the variable and `{slot_role}` is the `MessageRole`
    (e.g., `"system"`) of the refusing slot. Both placeholders are rendered dynamically.
-2. No `PromptValue` is produced — the rendering is aborted at the first failing slot.
-3. The error propagates via `?` to the caller; it is not caught or converted by any internal
+2. {PC-002} No `PromptValue` is produced — the rendering is aborted at the first failing slot.
+3. {PC-003} The error propagates via `?` to the caller; it is not caught or converted by any internal
    layer within `pregolya-prompts`.
-4. The check fires **before** the guardrail boundary (DI-012 / BC-2.11.001); the guardrail
+4. {PC-004} The check fires **before** the guardrail boundary (DI-012 / BC-2.11.001); the guardrail
    is a second, independent layer and does not substitute for this check.
-5. `injection_guard` checks BOTH scalar `TemplateVar.trust_level` AND
+5. {PC-005} `injection_guard` checks BOTH scalar `TemplateVar.trust_level` AND
    `MessageListVar.trust_level` against `TrustRequired` slots:
    - If `TemplateInput::Scalar(var)` and `var.trust_level == Some(TrustLevel::Untrusted)` →
      raises `E-TMPL-001` (InjectionAttempt, SECURITY, never-retry).
@@ -121,16 +122,16 @@ enforcement of that invariant.
 
 ## Invariants
 
-1. The injection_guard check fires unconditionally for every `TrustRequired` slot on every
+1. {INV-001} The injection_guard check fires unconditionally for every `TrustRequired` slot on every
    call to `format_messages` — no bypass path exists (not even debug/test modes).
-2. `category: Category::Security` distinguishes this error from validation errors; error
+2. {INV-002} `category: Category::Security` distinguishes this error from validation errors; error
    taxonomy places E-TMPL-001 in the SECURITY severity tier.
-3. The check is a **pure-core synchronous function** — no I/O, no async, no external
+3. {INV-003} The check is a **pure-core synchronous function** — no I/O, no async, no external
    dependencies. Kani VP-006 candidacy is grounded in this property.
-4. `PromptValue` with a TrustRequired/Untrusted combination is a type-invariant: no instance
+4. {INV-004} `PromptValue` with a TrustRequired/Untrusted combination is a type-invariant: no instance
    of `PromptValue` where `MessageProvenance.highest_trust_level == Some(TrustLevel::Untrusted)` and
    `MessageProvenance.slot_trust_policy == TrustRequired` can be constructed.
-5. **Source-order evaluation discipline:** when a single TrustRequired slot references
+5. {INV-005} **Source-order evaluation discipline:** when a single TrustRequired slot references
    multiple template variables (e.g., `System("{a}: {b}")`), the injection_guard iterates
    variables in **template source order** (the order variable references appear in the
    template string, as produced by the f-string template parser's left-to-right variable scan) — NOT in HashMap iteration order.

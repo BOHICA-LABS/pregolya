@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.002
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.5 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 4 violations. (1) PC-1 from_texts_sync postcondition: multi-line PregolyaError::new(..., \"E-VS-004\", ...) → Err(PregolyaError { code: \"E-VS-004\", .. }). (2) PC-2 add_texts postcondition: same conversion. (3) EC-007 table cell: same conversion. (4) TV-006 table cell: same conversion. Bare constructor form forbidden in prose/table context per ADR-010 Class 3 rules."
   - "1.6 (P2A-021/add-documents-canon/2026-08-21): Canonical ingestion method renamed add_texts → add_documents throughout, consistent with BC-2.21.001 §PC-2 (Option i — single Document-centric method on VectorStore trait). All 11 live body sites updated; append-only changelog entries (historical records) left unchanged. Changed sites: (1) Description: 'generated at add_texts time' → 'generated at add_documents time'. (2) PC-4 zero-norm guard precondition: two occurrences. (3) PC-2 section header and first bullet: add_texts(texts, metadatas) → add_documents(&self, docs: Vec<Document>) with page_content extraction note. (4) Invariant 2: two occurrences. (5) EC-002: add_texts → add_documents; 'texts' → 'docs'. (6) EC-004: two occurrences (description + expected-behavior). (7) EC-007: add_texts([...], None) → add_documents(vec![Document{..}, Document{..}]). (8) TV-004: store.add_texts → store.add_documents. (9) TV-006: store.add_texts → store.add_documents. (10) VP-2.21.002-B: add_texts → add_documents; 'second text' → 'second document'. (11) Traceability L2-invariants row and Architecture-authority row: add_texts → add_documents."
   - "1.7 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -60,12 +61,12 @@ unconditionally before any cosine division.
 
 ## Preconditions
 
-1. `InMemoryVectorStore::from_texts_sync(texts, arc_embeddings, config)` is called with a
+1. {PRE-001} `InMemoryVectorStore::from_texts_sync(texts, arc_embeddings, config)` is called with a
    non-null `Arc<dyn Embeddings>` (Arc-DI wiring — no placeholder, no `Arc::new(SomeThing::placeholder())`).
-2. `arc_embeddings.embed_documents(texts)` succeeds and returns `Vec<Vec<f32>>` where each
+2. {PRE-002} `arc_embeddings.embed_documents(texts)` succeeds and returns `Vec<Vec<f32>>` where each
    inner `Vec<f32>` is non-empty and has the same dimensionality as the query embedding.
-3. Concurrent read and write access may occur; `RwLock` serializes writes.
-4. **Zero-norm write-time guard:** before any `(Document, Vec<f32>)` pair is appended to
+3. {PRE-003} Concurrent read and write access may occur; `RwLock` serializes writes.
+4. {PRE-004} **Zero-norm write-time guard:** before any `(Document, Vec<f32>)` pair is appended to
    the internal store (in both `from_texts_sync` and `add_documents`), the L2 norm of each
    embedding vector is checked. If `norm == 0.0` for the vector at batch position `i`,
    `from_texts_sync` / `add_documents` returns `Err(E-VS-004)`
@@ -73,7 +74,7 @@ unconditionally before any cosine division.
 
 ## Postconditions
 
-1. `from_texts_sync(texts, arc_embeddings, config)`:
+1. {PC-001} `from_texts_sync(texts, arc_embeddings, config)`:
    - Calls `arc_embeddings.embed_documents(texts.clone()).await` to pre-compute all document
      embeddings.
    - Checks each embedding vector's L2 norm before persisting: if any vector has norm == 0.0,
@@ -84,36 +85,36 @@ unconditionally before any cosine division.
    - Returns `Ok(InMemoryVectorStore { ... })` — the store is ready for search immediately.
    - On embedding failure: returns `Err(PregolyaError { .. })` propagated from the
      `Embeddings` impl (no partial construction, DI-008).
-2. `add_documents(&self, docs: Vec<Document>)`:
+2. {PC-002} `add_documents(&self, docs: Vec<Document>)`:
    - Extracts `page_content` from each `Document` and calls `arc_embeddings.embed_documents(texts).await` to pre-compute embeddings.
    - Checks each embedding vector's L2 norm before acquiring the write lock: if any vector
      has norm == 0.0, returns `Err(PregolyaError { code: "E-VS-004", .. })`;
      no documents from the batch are appended (all-or-nothing per Invariant 2, DI-014).
    - Acquires a write lock on the `RwLock` and appends new `(Document, Vec<f32>)` pairs.
    - Returns `Ok(Vec<String>)` of assigned document IDs.
-3. `similarity_search(query, k)`:
+3. {PC-003} `similarity_search(query, k)`:
    - Calls `arc_embeddings.embed_query(query).await` to embed the query.
    - Acquires a read lock; computes cosine similarity between the query vector and each
      stored document vector; zero-norm guard fires per BC-2.21.003.
    - Returns top-k documents by descending similarity score (no score, only documents).
-4. `similarity_search_with_score(query, k)`:
+4. {PC-004} `similarity_search_with_score(query, k)`:
    - Same as `similarity_search` but returns `Vec<(Document, f32)>` with normalized scores
      ∈ [0.0, 1.0] (`(cosine + 1.0) / 2.0` normalization).
-5. Cosine similarity is computed as pure `Vec<f32>` inner products: dot product divided by
+5. {PC-005} Cosine similarity is computed as pure `Vec<f32>` inner products: dot product divided by
    the product of L2 norms. No `ndarray`, no BLAS, no SIMD intrinsics (pure safe Rust).
 
 ## Invariants
 
-1. **Arc-DI is mandatory.** `InMemoryVectorStore` MUST be constructed with a real `Arc<dyn Embeddings>`.
+1. {INV-001} **Arc-DI is mandatory.** `InMemoryVectorStore` MUST be constructed with a real `Arc<dyn Embeddings>`.
    Any constructor variant that accepts a placeholder or `None` is a production-grade violation.
-2. **Embeddings are pre-computed at write time.** `add_documents` embeds immediately; search queries
+2. {INV-002} **Embeddings are pre-computed at write time.** `add_documents` embeds immediately; search queries
    do NOT re-embed documents. If `embed_documents` fails during `add_documents`, the entire batch
    fails — no partial-success with some documents embedded and others not (DI-014).
-3. **`RwLock` not `Mutex`.** Multiple concurrent reads are permitted (read-lock is shared);
+3. {INV-003} **`RwLock` not `Mutex`.** Multiple concurrent reads are permitted (read-lock is shared);
    writes are exclusive. This maximizes read throughput for search-heavy workloads.
-4. **Cosine scores are in `[-1.0, 1.0]`** before normalization. `similarity_search_with_score`
+4. {INV-004} **Cosine scores are in `[-1.0, 1.0]`** before normalization. `similarity_search_with_score`
    maps them to `[0.0, 1.0]` via `(raw + 1.0) / 2.0`.
-5. **No `ndarray` dependency.** The cosine implementation uses only `std::iter` methods and
+5. {INV-005} **No `ndarray` dependency.** The cosine implementation uses only `std::iter` methods and
    basic arithmetic on `Vec<f32>`. Adding `ndarray` as a dep of `pregolya-vectorstores` is
    a violation of semport §8 avoidance.
 

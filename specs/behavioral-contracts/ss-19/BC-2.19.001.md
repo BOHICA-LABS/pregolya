@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.001
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008]
 vp_seed: true
 vp_id: VP-007
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (burst-222/2026-07-21): VP-007 proptest seed assigned. BC-2.19.001 is the round-trip contract (serialize→Serialized::Constructor→Reviver::revive→semantically-equivalent value) that VP-007 will verify via property-based testing. Assignment rationale: H1 title contains 'Round-Trip' explicitly and postcondition 3 specifies the semantic equivalence invariant that proptest exercises. Architect to author VP-007 body in Phase 6."
   - "1.2 (burst-297/Sweep-A/2026-08-16): DI-008 Traceability cell tightened — 'LcSerializable and Reviver constructors return Result' implied Reviver::new() is fallible, which contradicts BC-2.19.003 PC2 (Reviver::new() returns a plain Reviver instance, not Result). The fallible operation is revive(); LcSerializable::serialize() returns Serialized directly (also infallible, per PC1). Fixed cell to: 'revive returns Result; Reviver::new() is infallible; LcSerializable::serialize returns Serialized (infallible); no .unwrap() in non-test code'. Corpus-wide Sweep A: this was the only remaining named-constructor ambiguity after BC-2.19.003 fix (same burst). input-hash updated to current (e7b7c2e)."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -57,36 +58,36 @@ serialization is attempted and `Serialized::NotImplemented` is produced instead.
 
 ## Preconditions
 
-1. The type `T` implements `LcSerializable` with `is_lc_serializable() → true`.
-2. `T::lc_id()` returns a non-empty `&'static [&'static str]` namespace path (e.g.,
+1. {PRE-001} The type `T` implements `LcSerializable` with `is_lc_serializable() → true`.
+2. {PRE-002} `T::lc_id()` returns a non-empty `&'static [&'static str]` namespace path (e.g.,
    `["langchain_core", "prompts", "prompt", "PromptTemplate"]`).
-3. `T` is registered in the inventory via `inventory::submit! { LcEntry { lc_id: T::lc_id(), constructor: ... } }`.
-4. The `Reviver`'s internal registry (built at startup from `inventory::iter::<LcEntry>()`)
+3. {PRE-003} `T` is registered in the inventory via `inventory::submit! { LcEntry { lc_id: T::lc_id(), constructor: ... } }`.
+4. {PRE-004} The `Reviver`'s internal registry (built at startup from `inventory::iter::<LcEntry>()`)
    contains an entry whose `lc_id` matches `T::lc_id()`.
 
 ## Postconditions
 
-1. `T::serialize(&self) → Serialized` returns
+1. {PC-001} `T::serialize(&self) → Serialized` returns
    `Serialized::Constructor { lc: 1, id: T::lc_id().to_vec(), kwargs }` where `kwargs` is a
    `serde_json::Map` containing all serde-serializable fields EXCEPT those listed in
    `lc_secrets()`.
-2. `Reviver::revive(serialized: Serialized) → Result<Box<dyn Any + Send + Sync>, PregolyaError>`
+2. {PC-002} `Reviver::revive(serialized: Serialized) → Result<Box<dyn Any + Send + Sync>, PregolyaError>`
    returns `Ok(boxed_value)` when the `id` is registered and kwargs are valid.
-3. The deserialized value `v` satisfies `v ≡ original` under the type's semantic equivalence
+3. {PC-003} The deserialized value `v` satisfies `v ≡ original` under the type's semantic equivalence
    relation (field-by-field equality for types that derive PartialEq; documented equivalence
    for types with custom equality).
-4. `is_lc_serializable() → false` types produce `Serialized::NotImplemented { lc: 1,
+4. {PC-004} `is_lc_serializable() → false` types produce `Serialized::NotImplemented { lc: 1,
    id: T::lc_id().to_vec(), repr: None }` from `serialize()` and return `Err(E-SRLZ-001)`
    from `Reviver::revive()` (opt-out type not in registry).
 
 ## Invariants
 
-1. Round-trip produces a semantically equivalent value — not necessarily the identical memory
+1. {INV-001} Round-trip produces a semantically equivalent value — not necessarily the identical memory
    representation (e.g., `PromptTemplate` with equal fields is semantically equivalent).
-2. `lc: 1` is a protocol version marker; pregolya v1 always produces and accepts `lc: 1`.
-3. The `id` field preserves the namespace path exactly as returned by `T::lc_id()` — no
+2. {INV-002} `lc: 1` is a protocol version marker; pregolya v1 always produces and accepts `lc: 1`.
+3. {INV-003} The `id` field preserves the namespace path exactly as returned by `T::lc_id()` — no
    normalization or case folding.
-4. Round-trip is deterministic: calling serialize→deserialize twice on the same value produces
+4. {INV-004} Round-trip is deterministic: calling serialize→deserialize twice on the same value produces
    the same result (no random state, no timestamp injection into kwargs).
 
 ## Edge Cases

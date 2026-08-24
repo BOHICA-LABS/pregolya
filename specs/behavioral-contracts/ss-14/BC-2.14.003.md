@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.003
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,11 +13,12 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-* (all crates) / xtask (lint gate) per module-decomposition.md v1.10."
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: EC-002 `PregolyaError { ... }` — replaced `...` with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION); TV-002 Expected Output — added `, ..` (CLASS3 VIOLATION, 2/5 fields). Xtask rename (D-35/D-80): 5 occurrences of `cargo xtask lint-no-panic` → `cargo xtask check-no-panic` in PC4, TV-003, TV-004, VP-DI008-01, Architecture Anchors. No behavioral change."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -51,38 +52,38 @@ implements DI-008 (Library Constructor Result Contract) uniformly.
 
 ## Preconditions
 
-1. A pregolya crate defines a public constructor (`new`, `build`, `from_config`, `try_new`, etc.)
+1. {PRE-001} A pregolya crate defines a public constructor (`new`, `build`, `from_config`, `try_new`, etc.)
    for a library type.
-2. The construction process can fail (e.g. invalid config, missing required field, parse error,
+2. {PRE-002} The construction process can fail (e.g. invalid config, missing required field, parse error,
    I/O during init).
-3. The code is in non-test scope (not inside `#[cfg(test)]` or integration test files).
+3. {PRE-003} The code is in non-test scope (not inside `#[cfg(test)]` or integration test files).
 
 ## Postconditions
 
-1. Any fallible public constructor is declared as `pub fn new(...) -> Result<T, PregolyaError>`,
+1. {PC-001} Any fallible public constructor is declared as `pub fn new(...) -> Result<T, PregolyaError>`,
    NOT as `pub fn new(...) -> T`.
-2. Infallible constructors (constructors that provably cannot fail) may return `T` directly;
+2. {PC-002} Infallible constructors (constructors that provably cannot fail) may return `T` directly;
    the CI lint does not flag them.
-3. `impl Default for T` does NOT call a fallible constructor. If `Default` is needed on a type
+3. {PC-003} `impl Default for T` does NOT call a fallible constructor. If `Default` is needed on a type
    whose construction can fail, it is explicitly NOT derived and a comment explains the deviation.
-4. The codebase contains zero occurrences of `.unwrap()` or `.expect(...)` in non-test library
+4. {PC-004} The codebase contains zero occurrences of `.unwrap()` or `.expect(...)` in non-test library
    source files. CI `cargo xtask check-no-panic` (or equivalent custom clippy lint) causes the
    build to fail on any violation.
-5. Bare `assert!` and `assert_eq!` macros are absent from non-test library code. `debug_assert!`
+5. {PC-005} Bare `assert!` and `assert_eq!` macros are absent from non-test library code. `debug_assert!`
    is permitted (it compiles out in release mode).
-6. `panic!` is absent from non-test library code except where the Rust type system guarantees
+6. {PC-006} `panic!` is absent from non-test library code except where the Rust type system guarantees
    the panic path is statically unreachable (e.g. in an `unreachable!()` arm after an exhaustive
    match on an enum with no unknown variants).
 
 ## Invariants
 
-- **DI-008 (Library Constructor Result Contract):** Constructors that can fail return `Result`;
+- {INV-001} **DI-008 (Library Constructor Result Contract):** Constructors that can fail return `Result`;
   panics in library code are a bug, not a recovery mechanism.
-- **NE-07 enforcement:** The specific counter-example (adk-rust WASM engine init `.expect()`)
+- {INV-002} **NE-07 enforcement:** The specific counter-example (adk-rust WASM engine init `.expect()`)
   is the prototype for this CI gate. Any code path reachable from a public API surface that
   contains `.expect` or `.unwrap` is a violation.
-- `debug_assert!` is exempt from the lint (release builds do not execute it).
-- Test files (`#[cfg(test)]` and `tests/` directory) are fully exempt — tests may use
+- {INV-003} `debug_assert!` is exempt from the lint (release builds do not execute it).
+- {INV-004} Test files (`#[cfg(test)]` and `tests/` directory) are fully exempt — tests may use
   `.unwrap()` and `assert!` freely.
 
 ## Edge Cases

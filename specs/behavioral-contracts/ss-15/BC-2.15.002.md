@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.002
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-017
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-03/04 phases Post-v1→v1 phase (OBS-P159-A adjudication: tenant isolation is Wave-1 security-critical behavior; Post-v1 VP deferral contradicts promotion) — F-P159-01 post-promotion body sweep."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.12 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -56,9 +57,9 @@ predicate without collapsing.
 
 ## Preconditions
 
-1. `MemoryStore` is configured with at least the user-scoped and app-scoped tiers.
-2. Memory entries exist in all three tiers for different users/sessions.
-3. A read or search operation is performed with a specific `MemoryScope` identifier.
+1. {PRE-001} `MemoryStore` is configured with at least the user-scoped and app-scoped tiers.
+2. {PRE-002} Memory entries exist in all three tiers for different users/sessions.
+3. {PRE-003} A read or search operation is performed with a specific `MemoryScope` identifier.
 
 **Scope definitions:**
 - `MemoryScope::User(user_id)` — entries visible only to `user_id`
@@ -68,37 +69,37 @@ predicate without collapsing.
 ## Postconditions
 
 **Tier isolation:**
-1. `memory_get(MemoryScope::User("alice"), key)` returns only entries that were written
+1. {PC-001} `memory_get(MemoryScope::User("alice"), key)` returns only entries that were written
    with `MemoryScope::User("alice")`; entries for `User("bob")` are invisible.
-2. `memory_get(MemoryScope::Session("s1"), key)` returns only entries written with
+2. {PC-002} `memory_get(MemoryScope::Session("s1"), key)` returns only entries written with
    `MemoryScope::Session("s1")`; entries for `Session("s2")` are invisible.
-3. `memory_get(MemoryScope::App("app1"), key)` returns entries visible to all callers
+3. {PC-003} `memory_get(MemoryScope::App("app1"), key)` returns entries visible to all callers
    within `"app1"`, regardless of `user_id` or `session_id`.
 
 **Scope hierarchy (read-up semantics):**
-4. `memory_get` with `MemoryScope::Session("s1")` does **not** automatically fall through
+4. {PC-004} `memory_get` with `MemoryScope::Session("s1")` does **not** automatically fall through
    to user-scope or app-scope. If callers want cross-scope reads, they must issue
    separate `memory_get` calls per scope. There is no implicit scope elevation.
-5. App-scoped entries written by user "alice" are readable by user "bob" in the same
+5. {PC-005} App-scoped entries written by user "alice" are readable by user "bob" in the same
    app (app scope is shared by design). No content-level access control is applied
    within app scope in v1.
 
 **Storage-layer enforcement:**
-6. Scope isolation is implemented as a SQL `WHERE scope_key = ?` predicate (or
+6. {PC-006} Scope isolation is implemented as a SQL `WHERE scope_key = ?` predicate (or
    equivalent index predicate) evaluated at the storage layer. No application-layer
    post-filtering is the primary isolation mechanism; the WHERE clause is mandatory.
 
 ## Invariants
 
-- **NE-12 tenancy partition analog:** scope fields (`user_id`, `app_id`, `session_id`)
+- {INV-001} **NE-12 tenancy partition analog:** scope fields (`user_id`, `app_id`, `session_id`)
   flow from the `MemoryScope` enum passed to the trait method, through to the SQL
   WHERE clause, without collapsing or merging. No code path may issue a query without
   a scope predicate unless it is explicitly documented as a privileged admin operation.
-- Writing to `MemoryScope::User("bob")` as caller "alice" (scope mismatch) returns
+- {INV-002} Writing to `MemoryScope::User("bob")` as caller "alice" (scope mismatch) returns
   `Err(E-MEMORY-003 ScopeAccessDenied { requested_scope: User("bob"),
   caller_identity: "alice" })` when identity enforcement is active. (v1 scope: enforcement
   is opt-in at the server layer; the store itself trusts the caller-provided scope.)
-- Session-scoped entries may be explicitly deleted when a session ends; the memory store
+- {INV-003} Session-scoped entries may be explicitly deleted when a session ends; the memory store
   exposes `memory_delete_session(session_id)` for this purpose. Automatic session-scoped
   cleanup is opt-in.
 

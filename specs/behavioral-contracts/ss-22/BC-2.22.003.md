@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.003
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-ollama
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-009, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-22 Embeddings"
@@ -22,6 +22,7 @@ changelog:
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 9 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC2, PC5, EC-001, EC-002, EC-003, EC-004, EC-005, TV-004, TV-005 each had `Err(PregolyaError { ... })` — replaced `...` with `..` in all nine. No behavioral change."
   - "1.3 (P2A030-03/2026-08-22): EC-003 amended — replace bare generic `Err(PregolyaError { .. })` with full-form E-PROV-012 ProviderConnectionError citation. A connection-refused failure has no HTTP status, so E-PROV-008 (ProviderHttpError) cannot render for this path; E-PROV-012 was minted in error-taxonomy.md same burst to cover pre-response provider connection failures. EC-003 is the authoritative full-form gate #33 site for E-PROV-012. Story-writer handoff: re-anchor S-2.09 EC-003 from E-PROV-008 to E-PROV-012."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-033
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -59,52 +60,52 @@ unconditional and applies even for `localhost` targets.
 
 ## Preconditions
 
-1. `EmbeddingsOllama` is constructed with a `model: String` and an Ollama `base_url: String`
+1. {PRE-001} `EmbeddingsOllama` is constructed with a `model: String` and an Ollama `base_url: String`
    (e.g., `"http://localhost:11434"`).
-2. `use_legacy_endpoint: bool` is set at construction (default `false`).
-3. The Ollama process is running and the model has been pulled (`ollama pull <model>`).
+2. {PRE-002} `use_legacy_endpoint: bool` is set at construction (default `false`).
+3. {PRE-003} The Ollama process is running and the model has been pulled (`ollama pull <model>`).
 
 ## Postconditions
 
-1. **Default endpoint (`use_legacy_endpoint: false`):**
+1. {PC-001} **Default endpoint (`use_legacy_endpoint: false`):**
    - `embed_documents(texts)`: sends `POST <base_url>/api/embed` with body
      `{ "model": "<model>", "input": [<texts>] }`.
      Returns `Ok(vecs)` where `vecs.len() == texts.len()`.
    - `embed_query(text)`: sends `POST <base_url>/api/embed` with body
      `{ "model": "<model>", "input": ["<text>"] }` (single-element array).
      Returns `Ok(vec)`.
-2. **Legacy endpoint (`use_legacy_endpoint: true`):**
+2. {PC-002} **Legacy endpoint (`use_legacy_endpoint: true`):**
    - `embed_documents(texts)`: sends one `POST <base_url>/api/embeddings` request per text
      (serial), with body `{ "model": "<model>", "prompt": "<text>" }`. Returns `Ok(vecs)` with
      one vector per text. If any single-text call fails, the whole `embed_documents` call
      returns `Err(PregolyaError { .. })` — no partial result (DI-014).
    - `embed_query(text)`: sends `POST <base_url>/api/embeddings` with
      `{ "model": "<model>", "prompt": "<text>" }`. Returns `Ok(vec)`.
-3. **No API key:** `EmbeddingsOllama` has no `api_key` field. No `Authorization` header is set.
-4. **HTTP client:** `reqwest` dep uses `default-features = false, features = ["rustls-tls"]`.
+3. {PC-003} **No API key:** `EmbeddingsOllama` has no `api_key` field. No `Authorization` header is set.
+4. {PC-004} **HTTP client:** `reqwest` dep uses `default-features = false, features = ["rustls-tls"]`.
    Client is built with `.timeout(Duration::from_secs(30))` (DI-009 — 30s timeout mandatory;
    see BC-2.14.004). This applies for `localhost` targets — the timeout is unconditional and
    not disabled for local connections.
-5. **Model validation:** not enforced at construction — invalid or unpulled model names fail
+5. {PC-005} **Model validation:** not enforced at construction — invalid or unpulled model names fail
    at the first API call with `Err(PregolyaError { .. })` from the HTTP response body.
 
 ## Invariants
 
-1. **Legacy endpoint is opt-in, not auto-detected.** `EmbeddingsOllama` never silently falls
+1. {INV-001} **Legacy endpoint is opt-in, not auto-detected.** `EmbeddingsOllama` never silently falls
    back to `/api/embed` if `/api/embeddings` fails, or vice versa. The endpoint is fixed at
    construction via `use_legacy_endpoint`. Auto-detection by probing both endpoints is
    explicitly forbidden (it creates unpredictable behavior and masks misconfiguration).
-2. **rustls-tls unconditional for localhost.** The 30-second timeout and rustls-tls apply even
+2. {INV-002} **rustls-tls unconditional for localhost.** The 30-second timeout and rustls-tls apply even
    when `base_url` is `localhost` or `127.0.0.1`, per DI-009 / BC-2.14.004 (workspace-wide
    30s HTTP timeout invariant). There is no `if localhost { skip_tls }` branch.
    This is consistent with the workspace convention: reqwest configuration is uniform, not
    environment-conditional.
-3. **Batch DI-014 compliance for legacy endpoint.** When `use_legacy_endpoint: true` and a
+3. {INV-003} **Batch DI-014 compliance for legacy endpoint.** When `use_legacy_endpoint: true` and a
    batch of N texts is submitted, if any of the N serial requests fails, the error propagates
    immediately as `Err(...)` for the whole `embed_documents` call. Already-received embeddings
    are NOT returned as a partial list.
-4. `EmbeddingsOllama` is `Send + Sync` — the `reqwest::Client` is `Clone + Send + Sync`.
-5. `use_legacy_endpoint` is immutable after construction — it cannot be changed at runtime.
+4. {INV-004} `EmbeddingsOllama` is `Send + Sync` — the `reqwest::Client` is `Clone + Send + Sync`.
+5. {INV-005} `use_legacy_endpoint` is immutable after construction — it cannot be changed at runtime.
    Callers needing both endpoints construct two separate `EmbeddingsOllama` instances.
 
 ## Edge Cases

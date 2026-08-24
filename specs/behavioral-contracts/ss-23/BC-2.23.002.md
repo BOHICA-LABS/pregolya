@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.002
-version: "2.1"
+version: "2.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -31,6 +31,7 @@ changelog:
   - "1.9 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions + §Confinement-Proof citation extension — update Architecture Anchors to cite §Phase-2 Postconditions PC-3 (dangling-symlink → PathNotFound → E-TOOLS-008) and PC-4 (Ok-path confinement proof). PC-5 extended: dangling-symlink case (canonicalize_beneath_root Phase 2 step (d) returns Err(SandboxError::PathNotFound)) added as an explicit E-TOOLS-008 route per ADR-024 Decision 3 / PC-3. §Architecture Authority in Traceability updated to reference ADR-024 PC-3 + PC-4."
   - "2.0 (burst-295/F-1-MED/P1D-186/2026-08-16): PC-3 stale brand residue corrected — atomic-write temp-file prefix '.ferroctmp_<random>' → '.pregolyatmp_<random>'. ferroctmp was the ferrochain-era internal token; canonical pregolya atomic-write temp prefix is 'pregolyatmp_'. D-134 ferro-residue sweep: sole live-body occurrence across behavioral-contracts + prd-supplements + domain-spec subtrees."
   - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "2.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -67,15 +68,15 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 
 ## Preconditions
 
-1. `WriteFileTool` is constructed with a `PathGuard` instance.
-2. The caller invokes the tool with JSON args `{ "path": "<path-string>", "content": "<content-string>" }`.
-3. `path` is a non-empty string; `content` may be empty (zero-byte file is valid).
-4. `ActionRisk::High` is the annotated risk tier; `RiskGatePolicy` will interrupt before
+1. {PRE-001} `WriteFileTool` is constructed with a `PathGuard` instance.
+2. {PRE-002} The caller invokes the tool with JSON args `{ "path": "<path-string>", "content": "<content-string>" }`.
+3. {PRE-003} `path` is a non-empty string; `content` may be empty (zero-byte file is valid).
+4. {PRE-004} `ActionRisk::High` is the annotated risk tier; `RiskGatePolicy` will interrupt before
    execution unless a `PreToolCallHook` explicitly approves (BC-2.05.006, ADR-018).
 
 ## Postconditions
 
-1. **Happy path:** `canonicalize_beneath_root(workspace_root, path)` succeeds — either via Phase 1
+1. {PC-001} **Happy path:** `canonicalize_beneath_root(workspace_root, path)` succeeds — either via Phase 1
    (target file already exists; canonical form within scope) or via the Phase 2 two-phase fallback
    (ADR-024 Decision 1: target file does not yet exist but its parent directory exists and is within
    scope) — and the write proceeds. The target file contains exactly the bytes of `content`. For new
@@ -84,7 +85,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
    Parent directories are NOT created automatically; if the parent directory does not exist,
    `canonicalize_beneath_root` Phase 2 propagates a `NotFound` error for the parent →
    `E-TOOLS-008 FileIoError` (PC-5).
-2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns
+2. {PC-002} **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns
    `Err(WorkspaceEscape)` for genuine escape conditions (ADR-024 Decision 3):
    - **(Phase 1)** Target file exists but its resolved canonical form lies outside the workspace root
      (symlink target escapes workspace).
@@ -97,13 +98,13 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
    `E-TOOLS-001` is raised exclusively for genuine scope-escape conditions. OS-level I/O failures
    (`NotFound` from a missing parent directory, `PermissionDenied`) are **not** confinement
    violations; they route to PC-5 as `E-TOOLS-008 FileIoError`.
-3. **Atomic write semantics:** The implementation writes content to `<path>.pregolyatmp_<random>`
+3. {PC-003} **Atomic write semantics:** The implementation writes content to `<path>.pregolyatmp_<random>`
    in the same directory, then performs a rename to `<path>`. If the rename fails, the
    temporary file is removed and the error is propagated. The target file is never left in a
    partial-write state observable by concurrent readers.
-4. **Overwrite existing file:** If `path` already exists, it is replaced atomically. No backup
+4. {PC-004} **Overwrite existing file:** If `path` already exists, it is replaced atomically. No backup
    is created. The caller is responsible for any desired backup semantics.
-5. **I/O error:** OS-level I/O failure (disk full, permission denied) propagates as
+5. {PC-005} **I/O error:** OS-level I/O failure (disk full, permission denied) propagates as
    `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    The temporary file is removed on error.
    **Dangling-symlink case (ADR-024 Decision 3 / PC-3):** if `canonicalize_beneath_root`
@@ -115,14 +116,14 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
 
 ## Invariants
 
-- `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open. No bypass exists.
-- Write is always atomic via temp-file + rename. No direct-write code path exists.
-- `WriteFileTool` has `retry_eligible: false` — the framework does not auto-retry write
+- {INV-001} `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open. No bypass exists.
+- {INV-002} Write is always atomic via temp-file + rename. No direct-write code path exists.
+- {INV-003} `WriteFileTool` has `retry_eligible: false` — the framework does not auto-retry write
   failures. A failed write followed by a retry requires explicit re-approval by the
   `PreToolCallHook`. This prevents double-write on transient errors.
-- **DI-014 (No Silent Swallowing):** I/O errors and path violations propagate as
+- {INV-004} **DI-014 (No Silent Swallowing):** I/O errors and path violations propagate as
   `Err(PregolyaError)`. The tool never returns success for a write that did not complete.
-- `ActionRisk::High` cannot be lowered below `Medium` by application configuration per
+- {INV-005} `ActionRisk::High` cannot be lowered below `Medium` by application configuration per
   ADR-020 Decision 3 (tools that touch the filesystem with write semantics remain High or
   Medium at minimum).
 

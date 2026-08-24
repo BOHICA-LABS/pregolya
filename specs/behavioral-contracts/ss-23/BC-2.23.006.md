@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "2.1"
+version: "2.2"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -31,6 +31,7 @@ changelog:
   - "1.9 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-3 E-TOOLS-001 → { code: 'E-TOOLS-001', .. }. PC-4 E-TOOLS-009 → { code: 'E-TOOLS-009', .. }. PC-6 E-TOOLS-008 traversal I/O → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "2.0 (burst-288/P1D-177-ITEM2/2026-08-15): ADR-024 §Phase-2 Postconditions PC-5 consumer (ROOT PATH ONLY) — GrepTool calls canonicalize_beneath_root for the root path argument; when path does not exist, Phase 2 returns Ok(canonical_parent.join(basename)); subsequent fs::open or fs::read_dir surfaces NotFound → E-TOOLS-008 via the PC-6 fail-the-whole-search path. Recursive sub-paths walk a confirmed-existing directory so Phase 2 does not arise for them. PC-6 text extended with ADR-024 §Phase-2 Postconditions PC-5 note (root path only). ADR-024 §Phase-2 Postconditions PC-5 added to §Traceability §Binding Decisions. ADR-024 added to traces_to + inputs + §Architecture Anchors."
   - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.22 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "2.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -68,18 +69,18 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 ## Preconditions
 
-1. `GrepTool` is constructed with a `PathGuard` instance and optional `GrepConfig {
+1. {PRE-001} `GrepTool` is constructed with a `PathGuard` instance and optional `GrepConfig {
    max_results: usize (default 100) }`.
-2. The caller invokes the tool with JSON args:
+2. {PRE-002} The caller invokes the tool with JSON args:
    `{ "pattern": "<regex>", "path": "<path>", "recursive": true, "case_insensitive": false,
    "max_results": 100 }`.
-3. `pattern` is a valid regex string compilable by the `regex` crate. An invalid pattern
+3. {PRE-003} `pattern` is a valid regex string compilable by the `regex` crate. An invalid pattern
    is rejected at invocation time with `Err(E-TOOLS-009 InvalidRegexPattern)` (Category::Val).
-4. `path` resolves to an existing file or directory within `PathGuard` scope.
+4. {PRE-004} `path` resolves to an existing file or directory within `PathGuard` scope.
 
 ## Postconditions
 
-1. **Happy path (results ≤ max_results):** All matches are returned. The tool returns
+1. {PC-001} **Happy path (results ≤ max_results):** All matches are returned. The tool returns
    `ToolOutput::Json` with a `GrepResult` object:
    ```json
    {
@@ -92,18 +93,18 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    If `path` is a file, only that file is searched. If `path` is a directory and
    `recursive: true`, all files under the directory (within PathGuard scope) are searched.
    If `recursive: false`, only files directly in the directory are searched.
-2. **Results capped (non-fatal):** The match count reaches `max_results` before the full
+2. {PC-002} **Results capped (non-fatal):** The match count reaches `max_results` before the full
    file tree is searched. The tool returns `ToolOutput::Json({ "matches": [<first 100>], "capped": true })`.
    This is NOT an `Err` — partial results are returned with the `capped` flag. The
    informational code E-TOOLS-006 (`GrepResult.capped` payload flag) appears in the structured output
    annotations, not as a thrown error. Callers can detect the cap via `capped: true`.
-3. **Path confinement violation:** Returns
+3. {PC-003} **Path confinement violation:** Returns
    `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
-4. **Invalid regex:** Returns
+4. {PC-004} **Invalid regex:** Returns
    `Err(PregolyaError { code: "E-TOOLS-009", .. })`.
-5. **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
+5. {PC-005} **No matches found:** Returns `ToolOutput::Json({ "matches": [], "capped": false })` —
    not an error.
-6. **OS-level I/O error during traversal (fail-the-whole-search):** If an OS-level I/O
+6. {PC-006} **OS-level I/O error during traversal (fail-the-whole-search):** If an OS-level I/O
    error occurs on any visited path during recursive directory traversal — e.g.,
    `PermissionDenied` when opening a subdirectory, `NotFound` for a file deleted between
    directory listing and open, `NotADirectory` for a path whose type changed mid-traversal,
@@ -125,21 +126,21 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 
 ## Invariants
 
-- `GrepTool` uses the `regex` crate exclusively. It does NOT shell out to grep, ripgrep,
+- {INV-001} `GrepTool` uses the `regex` crate exclusively. It does NOT shell out to grep, ripgrep,
   or any system tool. No subprocess is spawned. This is a hermetic, in-process operation.
-- **Linear-time guarantee:** The `regex` crate uses a finite-automata engine. No regex
+- {INV-002} **Linear-time guarantee:** The `regex` crate uses a finite-automata engine. No regex
   pattern can cause catastrophic backtracking. This is a correctness property for accepting
   untrusted user-supplied patterns.
-- `canonicalize_beneath_root` is called for the root `path` argument. For recursive traversal,
+- {INV-003} `canonicalize_beneath_root` is called for the root `path` argument. For recursive traversal,
   each visited path is also verified against the guard before the file is opened.
-- **DI-014 (No Silent Swallowing):** Path violations, invalid patterns, and OS-level I/O
+- {INV-004} **DI-014 (No Silent Swallowing):** Path violations, invalid patterns, and OS-level I/O
   errors during traversal all propagate as `Err`. Zero matches return `Ok` with an empty
   array — not silently swallowed as an error. Partial traversal results accumulated before
   an I/O error are discarded; the caller receives only the `Err` so that an incomplete
   search is never silently accepted as a complete result (PC-6).
-- `ActionRisk::ReadOnly` — no write to the filesystem occurs. `RiskGatePolicy` auto-approve
+- {INV-005} `ActionRisk::ReadOnly` — no write to the filesystem occurs. `RiskGatePolicy` auto-approve
   semantics apply (BC-2.05.006).
-- Result ordering: matches are returned in file-path-then-line-number order (lexicographic
+- {INV-006} Result ordering: matches are returned in file-path-then-line-number order (lexicographic
   by file path within a directory; line order within a file).
 
 ## Edge Cases

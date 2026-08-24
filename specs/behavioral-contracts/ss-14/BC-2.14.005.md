@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.005
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,10 +13,11 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-010
@@ -49,24 +50,24 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 
 ## Preconditions
 
-1. A pregolya crate defines a type intended to carry an API key or secret credential value.
-2. The type is declared in non-test code (`!#[cfg(test)]` scope).
-3. The implementing engineer is writing or modifying the key type definition.
+1. {PRE-001} A pregolya crate defines a type intended to carry an API key or secret credential value.
+2. {PRE-002} The type is declared in non-test code (`!#[cfg(test)]` scope).
+3. {PRE-003} The implementing engineer is writing or modifying the key type definition.
 
 ## Postconditions
 
-1. The key type is a newtype struct: `pub struct FooApiKey(String)` (or `Arc<str>` variant) — not a type alias.
-2. `impl fmt::Debug for FooApiKey` emits exactly `"<redacted>"` — no substring of the actual key value appears in any format specifier.
-3. The type does NOT `#[derive(Serialize)]` (serde serialization is explicitly absent or gated behind an internal-use-only feature).
-4. The type does NOT `impl Deref<Target = str>` or `impl Deref<Target = String>`.
-5. The type provides an `.as_str()` or `.expose_secret()` method (or similar) for the narrow use-case of passing the value to an HTTP client; calling sites are explicit opt-in.
-6. CI lint gate (`cargo xtask deny-bare-api-key` or equivalent custom lint) causes the build to fail if any public struct carrying "key", "token", "secret", or "credential" in its name derives `Debug` without a manual impl, derives `Serialize`, or impls `Deref<Target=str>`.
+1. {PC-001} The key type is a newtype struct: `pub struct FooApiKey(String)` (or `Arc<str>` variant) — not a type alias.
+2. {PC-002} `impl fmt::Debug for FooApiKey` emits exactly `"<redacted>"` — no substring of the actual key value appears in any format specifier.
+3. {PC-003} The type does NOT `#[derive(Serialize)]` (serde serialization is explicitly absent or gated behind an internal-use-only feature).
+4. {PC-004} The type does NOT `impl Deref<Target = str>` or `impl Deref<Target = String>`.
+5. {PC-005} The type provides an `.as_str()` or `.expose_secret()` method (or similar) for the narrow use-case of passing the value to an HTTP client; calling sites are explicit opt-in.
+6. {PC-006} CI lint gate (`cargo xtask deny-bare-api-key` or equivalent custom lint) causes the build to fail if any public struct carrying "key", "token", "secret", or "credential" in its name derives `Debug` without a manual impl, derives `Serialize`, or impls `Deref<Target=str>`.
 
 ## Invariants
 
-- **DI-010 (Credential Opacity):** Credentials never appear in log output, error messages, serialized artifacts, or formatted strings under any execution path.
-- The redacted string literal must be exactly `"<redacted>"` (matching the pregolya-standard log-scrubber pattern so automated log scanning tools can detect accidental exposures).
-- Inner value is only accessible via an explicit `expose_secret()` / `inner()` call — never via trait auto-deref.
+- {INV-001} **DI-010 (Credential Opacity):** Credentials never appear in log output, error messages, serialized artifacts, or formatted strings under any execution path.
+- {INV-002} The redacted string literal must be exactly `"<redacted>"` (matching the pregolya-standard log-scrubber pattern so automated log scanning tools can detect accidental exposures).
+- {INV-003} Inner value is only accessible via an explicit `expose_secret()` / `inner()` call — never via trait auto-deref.
 
 ## Edge Cases
 

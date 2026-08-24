@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.004
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.1 (F-P130-04/2026-07-21): Add DI-014 to di_anchors — PC8 already cited DI-014 in body ('empty result is valid; it is not silently replaced with unfiltered results'); frontmatter anchor was missing."
   - "1.2 (burst-226/F-P131-07/2026-07-21): INV-3 fail-safe default — default similarity_search_with_filter returns Err(E-VS-005 FilterUnsupported) on non-empty filter; empty filter (vacuously true) still delegates to similarity_search. Removes lossy fallback language. EC-005 updated: non-overriding adapter returns Err(E-VS-005), not lossy result. Per ADR-014 v1.5 Decision 2 F-P131-07 adjudication."
   - "1.3 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change. input-hash corrected 377aba5→869996f (pre-existing drift; inputs unchanged)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-030
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "377aba5"
+input-hash: "869996f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -57,48 +58,48 @@ post-filter on the similarity result set. Both `MetadataFilter` and `FilterClaus
 
 ## Preconditions
 
-1. A `MetadataFilter` is constructed with at least one `FilterClause`.
-2. `similarity_search_with_filter` is called on a `&dyn VectorStore` that implements this
+1. {PRE-001} A `MetadataFilter` is constructed with at least one `FilterClause`.
+2. {PRE-002} `similarity_search_with_filter` is called on a `&dyn VectorStore` that implements this
    optional method.
-3. Each `FilterClause` clause references a `key` that may or may not exist in a `Document`'s
+3. {PRE-003} Each `FilterClause` clause references a `key` that may or may not exist in a `Document`'s
    `metadata` map.
 
 ## Postconditions
 
-1. `FilterClause::Eq { key, value }` — document PASSES the clause iff
+1. {PC-001} `FilterClause::Eq { key, value }` — document PASSES the clause iff
    `doc.metadata.get(key) == Some(&value)`. Document FAILS if the key is absent or the value
    does not match.
-2. `FilterClause::Ne { key, value }` — document PASSES iff
+2. {PC-002} `FilterClause::Ne { key, value }` — document PASSES iff
    `doc.metadata.get(key) != Some(&value)`. Document PASSES if the key is absent (absence ≠ value).
-3. `FilterClause::In { key, values }` — document PASSES iff
+3. {PC-003} `FilterClause::In { key, values }` — document PASSES iff
    `doc.metadata.get(key)` maps to a value contained in `values`. Document FAILS if the key
    is absent or the value is not in `values`.
-4. Multiple `FilterClause` entries in `MetadataFilter.filters` are evaluated as logical AND —
+4. {PC-004} Multiple `FilterClause` entries in `MetadataFilter.filters` are evaluated as logical AND —
    a document must pass ALL clauses to be included in the result.
-5. `similarity_search_with_filter(query, k, filter)` returns `Ok(docs)` where each `doc`
+5. {PC-005} `similarity_search_with_filter(query, k, filter)` returns `Ok(docs)` where each `doc`
    satisfies all filter clauses. The result set contains at most `k` documents.
-6. **InMemoryVectorStore post-filter behavior:** the store first computes similarity search
+6. {PC-006} **InMemoryVectorStore post-filter behavior:** the store first computes similarity search
    over ALL documents (up to some internal fetch limit), then applies the filter, then returns
    the top-k from the filtered set. The base `similarity_search` contract is NOT modified.
-7. **Native-backend pre-filter behavior:** community adapters (Chroma, Qdrant, etc.) that
+7. {PC-007} **Native-backend pre-filter behavior:** community adapters (Chroma, Qdrant, etc.) that
    support server-side filtering pass the `MetadataFilter` to the backend before vector
    similarity computation. Result correctness is the adapter's responsibility; the BC specifies
    the filter semantics, not the query translation.
-8. `similarity_search_with_filter` returning `Ok(vec![])` is NOT an error when no documents
+8. {PC-008} `similarity_search_with_filter` returning `Ok(vec![])` is NOT an error when no documents
    match the filter (DI-014 — empty result is valid; it is not silently replaced with
    unfiltered results).
 
 ## Invariants
 
-1. `MetadataFilter` and `FilterClause` are BOTH `#[non_exhaustive]`. External match arms on
+1. {INV-001} `MetadataFilter` and `FilterClause` are BOTH `#[non_exhaustive]`. External match arms on
    `FilterClause` variants MUST include `_ =>` wildcard. This allows adding `Gte`, `Lt`,
    `Contains` variants in future minor versions without breaking existing implementations.
-2. `similarity_search_with_filter` is an **additional** method on `VectorStore` — it does NOT
+2. {INV-002} `similarity_search_with_filter` is an **additional** method on `VectorStore` — it does NOT
    override or shadow `similarity_search`. Both methods coexist; callers choose which to call.
-3. The default implementation returns `Err(E-VS-005 FilterUnsupported)` when `filter.filters` is non-empty. This is a fail-safe default — silently returning unfiltered results as if filtering occurred would be a cross-tenant-exposure hazard. An empty `MetadataFilter` (`filter.filters.is_empty()`) is vacuously true; the default delegates to `similarity_search(query, k)` in that case (EC-004 semantics preserved). Adapters that support native metadata filtering MUST override this method with a native implementation.
-4. A `MetadataFilter` with `filters: vec![]` (empty filter) is equivalent to no filter — all
+3. {INV-003} The default implementation returns `Err(E-VS-005 FilterUnsupported)` when `filter.filters` is non-empty. This is a fail-safe default — silently returning unfiltered results as if filtering occurred would be a cross-tenant-exposure hazard. An empty `MetadataFilter` (`filter.filters.is_empty()`) is vacuously true; the default delegates to `similarity_search(query, k)` in that case (EC-004 semantics preserved). Adapters that support native metadata filtering MUST override this method with a native implementation.
+4. {INV-004} A `MetadataFilter` with `filters: vec![]` (empty filter) is equivalent to no filter — all
    documents pass a zero-clause AND conjunction (vacuously true).
-5. Filter evaluation is exact match using `serde_json::Value`'s `PartialEq` — no type coercion,
+5. {INV-005} Filter evaluation is exact match using `serde_json::Value`'s `PartialEq` — no type coercion,
    no case folding, no `"42" == 42` equivalence.
 
 ## Edge Cases

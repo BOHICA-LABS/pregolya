@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.9"
+version: "1.10"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -29,6 +29,7 @@ changelog:
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 2 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-003: inline → PregolyaError { code: 'E-TOOLS-003', .. }. PC-5 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "1.8 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — EditFileTool Ok-then-NotFound-at-open behavior. PC-5 extended: when canonicalize_beneath_root returns Ok(path) via Phase 2 (ADR-024 §Phase-2 Postconditions PC-5), path may not yet exist on disk; EditFileTool precondition 3 requires an existing file, so the subsequent OS open returns NotFound, propagated as E-TOOLS-008. This behavior is expected — Phase 2 running does not imply the file exists. traces_to + inputs + Architecture Anchors + §Architecture Authority updated to reference ADR-024 §Phase-2 Postconditions PC-5."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -65,33 +66,33 @@ controls whether all occurrences are replaced (default false — first occurrenc
 
 ## Preconditions
 
-1. `EditFileTool` is constructed with a `PathGuard` instance and an optional `EditConfig`
+1. {PRE-001} `EditFileTool` is constructed with a `PathGuard` instance and an optional `EditConfig`
    (`EditConfig::fuzzy_threshold: Option<f32>` where `f32 ∈ (0.0, 1.0]`; default `None`).
-2. The caller invokes the tool with JSON args:
+2. {PRE-002} The caller invokes the tool with JSON args:
    `{ "path": "<path>", "old_string": "<old>", "new_string": "<new>", "replace_all": false }`.
    `path` and `old_string` are non-empty strings; `new_string` may be empty (deletion).
-3. The path resolves to an existing file within `PathGuard` scope.
+3. {PRE-003} The path resolves to an existing file within `PathGuard` scope.
 
 ## Postconditions
 
-1. **Happy path (exact match found):** The first (or all, if `replace_all: true`) occurrence
+1. {PC-001} **Happy path (exact match found):** The first (or all, if `replace_all: true`) occurrence
    of `old_string` in the file is replaced with `new_string`. The write is performed atomically
    (same temp-file + rename pattern as BC-2.23.002). The tool returns
    `ToolOutput::Text("edited: <path> (1 replacement)")` or
    `ToolOutput::Text("edited: <path> (<n> replacements)")` when `replace_all: true`.
-2. **Exact-match not found (default mode, `fuzzy_threshold: None`):** `old_string` is not
+2. {PC-002} **Exact-match not found (default mode, `fuzzy_threshold: None`):** `old_string` is not
    present in the file verbatim. The tool returns
    `Err(PregolyaError { code: "E-TOOLS-003", .. })`.
    The file is NOT modified.
-3. **Fuzzy fallback (opt-in, `fuzzy_threshold: Some(t)`):** If exact match fails, the tool
+3. {PC-003} **Fuzzy fallback (opt-in, `fuzzy_threshold: Some(t)`):** If exact match fails, the tool
    uses `similar::TextDiff` to compute the `ratio()` between `old_string` and each contiguous
    region of the file of similar length. If the best match has `ratio() >= t`, the match is
    accepted and the replacement proceeds as in PC-1. If no region meets the threshold,
    `Err(E-TOOLS-003)` is returned as in PC-2. Fuzzy match is a fallback; exact match is
    always tried first.
-4. **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
+4. {PC-004} **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
    No I/O performed.
-5. **File not found:** Returns `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
+5. {PC-005} **File not found:** Returns `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    **ADR-024 PC-5 note:** `canonicalize_beneath_root` Phase 2 may return `Ok(path)` for a
    path whose parent is within scope even when the target file does not yet exist. `EditFileTool`
    precondition 3 requires the path to resolve to an *existing* file; Phase 2 running does not
@@ -99,22 +100,22 @@ controls whether all occurrences are replaced (default false — first occurrenc
    creation-target path, not a file-existence guarantee). The subsequent OS `open()` call returns
    `NotFound`, which is propagated as `E-TOOLS-008` here. This is expected — `EditFileTool` does
    not create files.
-6. **Conditional retry safe:** `old_string` not found (E-TOOLS-003) is structurally a no-op
+6. {PC-006} **Conditional retry safe:** `old_string` not found (E-TOOLS-003) is structurally a no-op
    (the file was not modified). Re-retrying after E-TOOLS-003 is safe without re-approval
    because no state was changed. This is the only retry-safe failure mode; write failures
    (OS I/O errors) are NOT retry-safe and require re-approval per BC-2.23.002 semantics.
 
 ## Invariants
 
-- Exact match is always attempted before fuzzy fallback. Fuzzy fallback is NEVER applied
+- {INV-001} Exact match is always attempted before fuzzy fallback. Fuzzy fallback is NEVER applied
   if `fuzzy_threshold` is `None`.
-- `fuzzy_threshold` must be in `(0.0, 1.0]`; a value of 0.0 is rejected at construction
+- {INV-002} `fuzzy_threshold` must be in `(0.0, 1.0]`; a value of 0.0 is rejected at construction
   with a configuration error (a threshold of 0.0 would match anything).
-- Atomicity: when a match is found and replacement proceeds, the write follows the
+- {INV-003} Atomicity: when a match is found and replacement proceeds, the write follows the
   temp-file + rename protocol from BC-2.23.002. No partial writes are observable.
-- **DI-014 (No Silent Swallowing):** E-TOOLS-003 is returned — the file not changing is never
+- {INV-004} **DI-014 (No Silent Swallowing):** E-TOOLS-003 is returned — the file not changing is never
   silently treated as success. Callers can detect and handle the not-found case.
-- `replace_all: false` (default): only the FIRST occurrence is replaced. Subsequent identical
+- {INV-005} `replace_all: false` (default): only the FIRST occurrence is replaced. Subsequent identical
   occurrences are untouched.
 
 ## Edge Cases

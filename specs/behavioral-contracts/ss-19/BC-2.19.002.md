@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.002
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,13 +14,14 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-010]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
   - "1.1 (burst-227/F-P132-08/2026-07-21): Clarify serde field-name convention: lc_secrets() returns serde-serialized names (not Rust field names). Invariant 3 extended. TV-001 note updated: 'api_key field absent' → 'openai_api_key (serde-serialized name) absent from kwargs'."
   - "1.2 (burst-298/F-P189-01/2026-08-16): §Traceability DI-008 cell corrected — prior text attributed Result return to LcSerializable::serialize (infallible; returns Serialized::Constructor directly; no failure path) and to lc_secrets() stripping (infallible HashMap remove operations). Corrected to: LcSerializable::serialize returns Serialized (infallible); lc_secrets() stripping is infallible; Reviver::revive returns Result; no .unwrap() in non-test code. Reconciles with DI-008 definition and siblings BC-2.19.001 §Traceability (corrected burst-297), BC-2.19.003-006 §Traceability (all already correctly attributed to revive op only). input-hash updated to e7b7c2e."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-024
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -55,41 +56,41 @@ no configuration knob overrides it (DI-010).
 
 ## Preconditions
 
-1. The type `T` implements `LcSerializable` with `lc_secrets()` returning one or more field
+1. {PRE-001} The type `T` implements `LcSerializable` with `lc_secrets()` returning one or more field
    name strings (e.g., `&["openai_api_key", "anthropic_api_key"]`).
-2. `T`'s `serialize()` method constructs `kwargs` from serde serialization of `&self`.
-3. `Reviver::revive()` receives a `Serialized::Constructor` whose `kwargs` map may or may not
+2. {PRE-002} `T`'s `serialize()` method constructs `kwargs` from serde serialization of `&self`.
+3. {PRE-003} `Reviver::revive()` receives a `Serialized::Constructor` whose `kwargs` map may or may not
    contain the secret field names.
 
 ## Postconditions
 
-1. `T::serialize(&self) → Serialized::Constructor { kwargs, ... }` — for every field name `s`
+1. {PC-001} `T::serialize(&self) → Serialized::Constructor { kwargs, ... }` — for every field name `s`
    in `T::lc_secrets()`, `kwargs.get(s)` returns `None`. The field is absent from the
    serialized output regardless of its value in `&self`.
-2. `Reviver::revive(serialized)` — before dispatching to the registered constructor function,
+2. {PC-002} `Reviver::revive(serialized)` — before dispatching to the registered constructor function,
    strips every field name listed in `T::lc_secrets()` from `kwargs`. The constructor receives
    a `kwargs` map containing no secret field names.
-3. Types with `lc_secrets()` returning an empty slice are serialized and deserialized with no
+3. {PC-003} Types with `lc_secrets()` returning an empty slice are serialized and deserialized with no
    change — the stripping loop is a no-op.
-4. The constructors for credential-bearing types accept `kwargs` without the credential fields
+4. {PC-004} The constructors for credential-bearing types accept `kwargs` without the credential fields
    and reconstruct those fields from environment variables or explicit injection, NOT from the
    serialized envelope. (The constructor convention is specified in ADR-016 Decision 3.)
-5. `lc_secrets()` returns only field names; it never returns field values. No credential value
+5. {PC-005} `lc_secrets()` returns only field names; it never returns field values. No credential value
    is observable from the `LcSerializable` interface.
 
 ## Invariants
 
-1. The stripping is **unconditional** — it applies even when the serialized form originates
+1. {INV-001} The stripping is **unconditional** — it applies even when the serialized form originates
    from a trusted internal source. There is no `unsafe_with_secrets()` escape hatch (DI-010).
-2. The stripping is **idempotent** — stripping a `kwargs` map that already lacks the secret
+2. {INV-002} The stripping is **idempotent** — stripping a `kwargs` map that already lacks the secret
    keys produces the same result.
-3. `lc_secrets()` is a `&'static [&'static str]` — compile-time constant, no runtime mutation.
+3. {INV-003} `lc_secrets()` is a `&'static [&'static str]` — compile-time constant, no runtime mutation.
    The strings are **serde-serialized field names** (i.e., the name as it appears in the `kwargs`
    JSON map after any `#[serde(rename = ...)]` attribute), not the Rust source field names.
    Example: a Rust field `api_key` with `#[serde(rename = "openai_api_key")]` produces
    `lc_secrets() = &["openai_api_key"]`. The `kwargs` map always uses serde-serialized names;
    `lc_secrets()` stripping operates on those names.
-4. After serialization, a `Debug` print of `Serialized::Constructor` never reveals a credential
+4. {INV-004} After serialization, a `Debug` print of `Serialized::Constructor` never reveals a credential
    value because the field is absent from `kwargs` (DI-010 — credential opacity extends to the
    serialized form).
 

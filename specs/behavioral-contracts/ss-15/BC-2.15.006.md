@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,10 +19,11 @@ changelog:
   - "1.6 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-007 added for EC-006 (empty app_id at run start → E-MEMORY-004 NoScopeContext fail-loud). EC-006 was introduced in v1.4 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-007 exercises the `run_context.app_id` empty path and verifies `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment §Gap 3 correction."
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — EC-006 Expected behavior multi-line PregolyaError::new(Component::Memory, Category::Security, RetryHint::Never, \"E-MEMORY-004\", ...) collapsed to Err(PregolyaError { code: \"E-MEMORY-004\", .. }). Bare constructor form forbidden in prose context per ADR-010 Class 3 rules."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -57,15 +58,15 @@ frozen-tier semantics of Hermes SOUL.md / MEMORY.md.
 
 ## Preconditions
 
-1. `RunnableConfig.context_mutations` is `Some(ContextMutationConfig { sources: Vec<ContextSourceSpec> })`
+1. {PRE-001} `RunnableConfig.context_mutations` is `Some(ContextMutationConfig { sources: Vec<ContextSourceSpec> })`
    where each `ContextSourceSpec` has a non-empty `namespace` and `key`.
-2. The referenced `MemoryStore` is initialized and accessible from `graph::scheduler`.
-3. The run is being initiated via `invoke` or `stream` (not resumed from an existing
+2. {PRE-002} The referenced `MemoryStore` is initialized and accessible from `graph::scheduler`.
+3. {PRE-003} The run is being initiated via `invoke` or `stream` (not resumed from an existing
    interrupted checkpoint — resumption uses the context as of the original run start).
 
 ## Postconditions
 
-1. Before the first super-step executes, `graph::scheduler` loads each `ContextSourceSpec`
+1. {PC-001} Before the first super-step executes, `graph::scheduler` loads each `ContextSourceSpec`
    from `MemoryStore` in declaration order:
    ```
    MemoryStore::memory_get(
@@ -80,36 +81,36 @@ frozen-tier semantics of Hermes SOUL.md / MEMORY.md.
    If `run_context.app_id` is empty, all reads return `Err(E-MEMORY-004 NoScopeContext)`
    — fail-loud; no content is silently skipped (ADR-012 Decision 1 Amendment,
    §Gap 3 correction: empty app_id must fail loud, not silently return Ok(None)).
-2. The loaded content is prepended to the initial system instruction that is passed to the
+2. {PC-002} The loaded content is prepended to the initial system instruction that is passed to the
    first super-step's model context. Sources that return `None` (key absent) are silently
    skipped — their absence is not an error. This silently-skipped path applies only when
    `run_context.app_id` is non-empty and the specific key does not exist in the store.
-3. The assembled context (including all successfully loaded sources) is held as an immutable
+3. {PC-003} The assembled context (including all successfully loaded sources) is held as an immutable
    snapshot for the duration of the run. **No super-step** in the current run sees a
    different assembled context, even if a memory write occurs mid-run via BC-2.15.005.
-4. Memory writes performed during the run take effect in `MemoryStore` immediately (for
+4. {PC-004} Memory writes performed during the run take effect in `MemoryStore` immediately (for
    callers reading the store directly). They become part of the context snapshot for the
    **next** run that calls `graph::scheduler` with the same `ContextMutationConfig`.
-5. When `context_mutations` is `None`, no additional content is prepended; behavior is
+5. {PC-005} When `context_mutations` is `None`, no additional content is prepended; behavior is
    identical to the existing run-without-context-mutations path.
-6. The loaded context content is included in any ADR-011 cache-key hash computation over the
+6. {PC-006} The loaded context content is included in any ADR-011 cache-key hash computation over the
    assembled system instruction. (See Invariants — ADR-011 obligation.)
 
 ## Invariants
 
-- **Cache-coherence invariant (ADR-012 INV-1):** Within a single run, the context assembled
+- {INV-001} **Cache-coherence invariant (ADR-012 INV-1):** Within a single run, the context assembled
   from `ContextMutationConfig` sources is immutable. A memory write performed during the run
   does not affect the context seen by subsequent super-steps in that run. Violation of this
   invariant is a programming error (INTERNAL).
-- **ADR-011 cache-key obligation:** If the provider uses a content-hash cache key over the
+- {INV-002} **ADR-011 cache-key obligation:** If the provider uses a content-hash cache key over the
   assembled system instruction (e.g., Anthropic `cache_control`, OpenAI system message
   caching), the hash input MUST include the bytes of all loaded context-mutation content.
   The cache key must not be computed before context-mutation injection (ADR-012 §Consequences
   / Cache-Key Obligation).
-- **Source declaration order is load order:** Sources are loaded in the order they appear in
+- {INV-003} **Source declaration order is load order:** Sources are loaded in the order they appear in
   `ContextMutationConfig.sources`. If two sources produce conflicting content, the later
   source's content is appended after the earlier source's content (no merge/dedup logic).
-- `ContextMutationConfig` and `ContextSourceSpec` are pure value types defined in
+- {INV-004} `ContextMutationConfig` and `ContextSourceSpec` are pure value types defined in
   `pregolya-core/src/context_mutation.rs` — no async, no I/O in these types themselves.
   The loading behavior is in `graph::scheduler`.
 

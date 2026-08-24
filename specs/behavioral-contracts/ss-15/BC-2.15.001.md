@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,12 +13,13 @@ capability: CAP-017
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-memory per module-decomposition.md v1.10."
   - "1.2 (D23/2026-07-22): Priority P2→P1, wave 2→1 per D23 CAP-017 promotion (rolling compaction and per-tool-call approval hook add first-party memory integration surfaces in Wave 1)."
   - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-01/02 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.12 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -53,49 +54,49 @@ search, and vector similarity search.
 
 ## Preconditions
 
-1. A `MemoryStore` is configured (default: SQLite at a configured path).
-2. At least one memory entry has been written to the store with a `namespace` key
+1. {PRE-001} A `MemoryStore` is configured (default: SQLite at a configured path).
+2. {PRE-002} At least one memory entry has been written to the store with a `namespace` key
    and a `value` (string, bytes, or structured JSON).
-3. For vector search: an embedding backend is configured (e.g., local sentence
+3. {PRE-003} For vector search: an embedding backend is configured (e.g., local sentence
    transformers or an API-based embedding model).
-4. The write and read operations may use different `thread_id` values.
+4. {PRE-004} The write and read operations may use different `thread_id` values.
 
 ## Postconditions
 
 **KV persistence:**
-1. A key-value entry written via `memory_set(namespace, key, value)` in `thread_A`
+1. {PC-001} A key-value entry written via `memory_set(namespace, key, value)` in `thread_A`
    is readable via `memory_get(namespace, key)` in `thread_B`.
-2. The entry is not deleted when:
+2. {PC-002} The entry is not deleted when:
    - The originating thread (`thread_A`) is deleted from the checkpoint store.
    - A checkpoint referencing `thread_A` is rolled back or deleted.
    - The server process restarts (SQLite backend).
-3. `memory_get(namespace, key)` returns `None` only if the key was never written or
+3. {PC-003} `memory_get(namespace, key)` returns `None` only if the key was never written or
    was explicitly deleted via `memory_delete(namespace, key)`.
 
 **Keyword search:**
-4. `memory_search(namespace, query)` returns all entries in `namespace` whose value
+4. {PC-004} `memory_search(namespace, query)` returns all entries in `namespace` whose value
    contains `query` as a substring match (case-insensitive). Results are ordered by
    recency (most recently written first) by default.
 
 **Vector search (when embedding backend configured):**
-5. `vector_search(namespace, query_embedding, top_k)` returns the top-K entries
+5. {PC-005} `vector_search(namespace, query_embedding, top_k)` returns the top-K entries
    ranked by cosine similarity between the stored embedding and `query_embedding`.
-6. Entries written without an embedding are excluded from vector search results.
+6. {PC-006} Entries written without an embedding are excluded from vector search results.
 
 **Hybrid search:**
-7. `hybrid_search(namespace, query, top_k)` combines keyword match and vector
+7. {PC-007} `hybrid_search(namespace, query, top_k)` combines keyword match and vector
    similarity results, de-duplicates by key, and returns up to `top_k` results.
    De-duplication keeps the higher-ranked copy.
 
 ## Invariants
 
-- Memory store state is **orthogonal to checkpoint state**: no code path in the
+- {INV-001} Memory store state is **orthogonal to checkpoint state**: no code path in the
   checkpoint subsystem may delete memory entries. The two stores are logically
   independent and physically separate (different tables or files).
-- The `MemoryStore` trait has at minimum two implementations: an in-memory ephemeral
+- {INV-002} The `MemoryStore` trait has at minimum two implementations: an in-memory ephemeral
   backend (for tests) and a SQLite durable backend (for production). The in-memory
   backend is explicitly documented as non-durable.
-- Concurrent writes to the same `(namespace, key)` from different threads are
+- {INV-003} Concurrent writes to the same `(namespace, key)` from different threads are
   serialized by the store; the last writer wins (LWW semantics). There is no
   conflict-resolution mechanism in v1 beyond LWW.
 

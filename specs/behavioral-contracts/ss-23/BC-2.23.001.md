@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.10"
+version: "1.11"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -30,6 +30,7 @@ changelog:
   - "1.8 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001: inline → PregolyaError { code: 'E-TOOLS-001', .. }. PC-3 E-TOOLS-002: inline → { code: 'E-TOOLS-002', .. }. PC-4 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "1.9 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — ReadFileTool Ok-then-NotFound-at-open behavior. PC-4 extended: when canonicalize_beneath_root returns Ok(path) via Phase 2 (ADR-024 §Phase-2 Postconditions PC-5), path may not yet exist on disk; the subsequent OS open() returns NotFound, propagated as E-TOOLS-008. traces_to + inputs + Architecture Anchors + §Architecture Authority updated to reference ADR-024 §Phase-2 Postconditions PC-5."
   - "1.10 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -66,21 +67,21 @@ limit.
 
 ## Preconditions
 
-1. `ReadFileTool` is constructed with a `PathGuard` instance and an optional `max_bytes`
+1. {PRE-001} `ReadFileTool` is constructed with a `PathGuard` instance and an optional `max_bytes`
    configuration (`ReadFileConfig::max_bytes: u64`, default 1,048,576).
-2. The caller invokes the tool with JSON args `{ "path": "<path-string>" }` where `path` is a
+2. {PRE-002} The caller invokes the tool with JSON args `{ "path": "<path-string>" }` where `path` is a
    non-empty string.
-3. The `PathGuard` encodes at least one allowed root scope (pregolya-sandbox
+3. {PRE-003} The `PathGuard` encodes at least one allowed root scope (pregolya-sandbox
    `BC-2.13.004` workspace-confinement invariant applies).
 
 ## Postconditions
 
-1. **Happy path:** `path` resolves to an existing readable file within `PathGuard` scope and
+1. {PC-001} **Happy path:** `path` resolves to an existing readable file within `PathGuard` scope and
    the file size is ≤ `max_bytes`. The tool returns `ToolOutput::Text(contents)` where
    `contents` is the full UTF-8 file contents. If the file contains non-UTF-8 bytes, the
    implementation returns them lossily decoded (replacement character U+FFFD) rather than
    erroring — consumers that need strict UTF-8 validation must do so on the returned text.
-2. **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` **because
+2. {PC-002} **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns `Err` **because
    the resolved canonical path lies outside the guard scope** (genuine escape: symlink target
    resolves outside the workspace root, or absolute path under a different root). The tool returns
    `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
@@ -90,12 +91,12 @@ limit.
    `E-TOOLS-008 FileIoError`. The confinement-violation path and the I/O-error path are
    mutually exclusive: E-TOOLS-001 is raised only for genuine scope-escape errors, never for
    filesystem I/O errors on a validly-scoped path.
-3. **File size exceeds limit:** `PathGuard` passes but the file's metadata size exceeds
+3. {PC-003} **File size exceeds limit:** `PathGuard` passes but the file's metadata size exceeds
    `max_bytes`. The tool returns
    `Err(PregolyaError { code: "E-TOOLS-002", .. })`.
    The file is NOT read into memory before this check; the implementation uses
    `std::fs::metadata()` to obtain the size before opening the file.
-4. **File not found or permission denied:** The tool propagates the OS I/O error as
+4. {PC-004} **File not found or permission denied:** The tool propagates the OS I/O error as
    `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    This is not a path-confinement violation; it is a runtime filesystem error.
    **ADR-024 PC-5 note:** `canonicalize_beneath_root` Phase 2 may return `Ok(path)` for a
@@ -105,21 +106,21 @@ limit.
    Phase 2 activates for a ReadFileTool invocation, the subsequent OS `open()` call will
    return `NotFound`, which is propagated as `E-TOOLS-008` here. This is the correct and
    expected behavior.
-5. VP-003 (workspace confinement Kani proof) coverage extends to `ReadFileTool` without
+5. {PC-005} VP-003 (workspace confinement Kani proof) coverage extends to `ReadFileTool` without
    modification: `PathGuard` is the same type already proven; no new Kani proof is required.
 
 ## Invariants
 
-- `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open. There is no
+- {INV-001} `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open. There is no
   bypass, no trust-caller shortcut.
-- `max_bytes` is checked against file metadata size BEFORE reading file contents into memory.
+- {INV-002} `max_bytes` is checked against file metadata size BEFORE reading file contents into memory.
   The implementation must not read up to `max_bytes` and then truncate; it must reject first.
-- `ReadFileTool` does not retain any file handle or content reference between tool calls.
+- {INV-003} `ReadFileTool` does not retain any file handle or content reference between tool calls.
   Each invocation is stateless.
-- **DI-014 (No Silent Swallowing):** validation failures (path confinement, size limit, I/O
+- {INV-004} **DI-014 (No Silent Swallowing):** validation failures (path confinement, size limit, I/O
   error) propagate as `Err(PregolyaError)`. The tool never returns an empty `ToolOutput` or
   `None` to represent a failure.
-- `ActionRisk::ReadOnly` is the annotated risk tier; this tier cannot be raised by application
+- {INV-005} `ActionRisk::ReadOnly` is the annotated risk tier; this tier cannot be raised by application
   configuration (only lowered, but ReadOnly is already the floor). `RiskGatePolicy` auto-approve
   semantics for ReadOnly (BC-2.05.006) apply.
 

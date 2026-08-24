@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.60"
+version: "3.61"
 status: active
 producer: state-manager
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-23T22:50:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.61 (M1/ADR-027/2026-08-23): M1 chunk 3 — 39 BC version bumps (SS-14 ×6, SS-15 ×6, SS-18 ×5, SS-19 ×6, SS-20 ×3, SS-21 ×4, SS-22 ×3, SS-23 ×6); purely additive clause-anchor labeling per ADR-027; EC content untouched. Incidental input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004. M1 COMPLETE — all 133/133 BCs labeled. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). H1s unchanged."
   - "3.60 (P2A-041-F-3/2026-08-23): BC-2.18.002 (v1.9→v2.0): disambiguated precondition-2 vs postcondition-2 changelog notation across v1.2/v1.3/v1.7/v1.9 entries; no clause content change. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1 unchanged."
   - "3.59 (P2A-040-F-01-F-02/2026-08-22): 2 BC version bumps closing F-01 (HIGH) and F-02 (HIGH, security) from adversary pass P2A-040. BC-2.18.003 (v1.5→v1.6): (a) PC-1: stale 'call-time vars map supplies a Vec<Message>' replaced with 'call-time vars map supplies a TemplateInput::Messages(MessageListVar) binding' (B202 stale precondition, closes F-01); (b) INV-4 (new): canonical MessageListVar struct shape — struct with messages: Vec<Message> + trust_level: Option<TrustLevel> — explicitly NOT a bare newtype; trust_level field makes Messages-arm Red Gate (S-2.05 AC-016) implementable (closes F-02 SECURITY). BC-2.18.002 (v1.8→v1.9): precondition-2 cross-reference to BC-2.18.003 INV-4 added for MessageListVar struct shape; no behavioral change. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). H1s unchanged. Story-writer must amend STORY-S-2.04 AC-012..AC-016 per DELIVERABLE-4 routing in P2A-040 product-owner report (AC-012/013: re-anchor to BC-2.18.002 precondition 2; AC-014: re-anchor to BC-2.18.005 PC-1 + BC-2.18.002 PC-4; AC-015: re-anchor to BC-2.18.003 INV-4 and correct MessageListVar shape; AC-016: re-anchor to BC-2.18.004 INV-5 for source-order evaluation)."
   - "3.58 (P2A-039-F-039-04/2026-08-22): BC-2.18.002 §INV-5 — removed stale 'ADR-015 amendment pending' parenthetical (ADR-015 §PromptValue already aligned to the enum shape); records-tier, no behavioral change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2); H1 unchanged."
@@ -293,6 +294,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.61 | 2026-08-23 | M1/ADR-027: M1 chunk 3 — 39 BC version bumps (SS-14 ×6, SS-15 ×6, SS-18 ×5, SS-19 ×6, SS-20 ×3, SS-21 ×4, SS-22 ×3, SS-23 ×6); purely additive clause-anchor labeling per ADR-027; EC content untouched. Incidental input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004. M1 COMPLETE — all 133/133 BCs labeled. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | M1/ADR-027/D-252 |
 | 3.60 | 2026-08-23 | P2A-041-F-3: BC-2.18.002 (v1.9→v2.0) — disambiguated precondition-2 vs postcondition-2 changelog notation across v1.2/v1.3/v1.7/v1.9 entries; no clause content change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | P2A-041 F-3 |
 | 3.59 | 2026-08-22 | P2A-040-F-01-F-02: 2 BC version bumps — BC-2.18.003 (v1.5→v1.6) PC-1 stale Vec<Message> fixed + INV-4 MessageListVar struct shape (closes F-01 HIGH + F-02 HIGH SECURITY). BC-2.18.002 (v1.8→v1.9) precondition-2 cross-ref to INV-4. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | P2A-040 F-01 F-02 |
 | 3.58 | 2026-08-22 | P2A-039-F-039-04: BC-2.18.002 §INV-5 — removed stale 'ADR-015 amendment pending' parenthetical (ADR-015 §PromptValue already aligned to the enum shape); records-tier, no behavioral change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2); H1 unchanged. | P2A-039 F-039-04 |

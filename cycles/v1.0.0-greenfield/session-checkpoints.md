@@ -2828,3 +2828,31 @@ pregolya (Rust semantic port of langchain/langgraph), greenfield+semport, /Users
 D-250 (compressed): P2A-042 CORPUS-WIDE ANCHOR-DRIFT + ADR-027 stable-anchor migration plan. ~136 mis-anchors / 22 stories. M1-M4. Streak 0/3.
 M1 chunk 1 (no new D-number): 47 BCs labeled (SS-01..07,16,17); purely additive; census UNCHANGED; validator 0-DRIFT.
 M1 chunk 2 (no new D-number; execution of D-250 M1): 47 BCs labeled (SS-08..13); purely additive; ~94/134 BCs labeled; census UNCHANGED; validator 0-DRIFT.
+
+---
+
+## Archived Checkpoint: STATE.md v5.66 (2026-08-23)
+
+*Archived when v5.67 was written (M1 chunk 3 COMPLETE + M1 COMPLETE, D-252).*
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. Mid ADR-027 STABLE-ANCHOR MIGRATION (D-250; ~136 mis-anchored citations / 22 stories). M1 chunk 1 COMPLETE (SS-01..07,16,17 = 47 BCs). M1 chunk 2 COMPLETE (SS-08..13 = 47 BCs). ~94/133 BCs labeled. NEXT: M1 chunk 3 (SS-14,15,18-23 = 39 BCs), then M2 dual-mode validator, M3 story re-citation, M4 cutover, then P2A-043.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED, untouched.
+- factory-artifacts: run `git -C .factory log -1 --format='%h'` for current HEAD. PUSHED to origin.
+- Worktrees: NONE. Open PRs: NONE.
+
+### RESUME NEXT-ACTION (v5.66)
+1. M1 chunk 3: product-owner labels stable {PC/INV/PRE-NNN} tokens in BCs for SS-14, SS-15, SS-18, SS-19, SS-20, SS-21, SS-22, SS-23 (39 BCs).
+2. M2 dual-mode validator: devops-engineer updates verify-ac-pc-trace.sh (ADR-027 Decision-4 dual-mode + POL-48 wording).
+3. M3 story re-citation: story-writer re-cites all ~136 affected ACs using stable tags.
+4. M4 cutover: validator-first gate switches to tag-grep.
+5. P2A-043 adversary pass; BC-5.39.001 3-CLEAN cascade continues.
+
+### DECISION DELTA (v5.66)
+D-251 (2026-08-23): SESSION WRAP — durable zero-context RESUME snapshot committed. v5.65 archived to session-checkpoints.md. v5.66 STATE.md committed. ADR-027 M1 chunk 3 NEXT.
+M1 chunk 1 (4d13c31): 47 BCs labeled (SS-01..07,16,17); purely additive; census UNCHANGED; validator 0-DRIFT.
+M1 chunk 2 (5bec975): 47 BCs labeled (SS-08..13); purely additive; ~94/133 BCs labeled; census UNCHANGED; validator 0-DRIFT.
+Census: 39 stories / 133 BC / 14 VP / 118 EC. Streak 0/3. trajectory-tail →4→4→5→1.
+

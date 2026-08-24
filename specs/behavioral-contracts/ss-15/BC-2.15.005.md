@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.005
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-020
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -26,6 +26,7 @@ changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in Traceability §Error Code Minted: `ADR-012 §Consequences/Error Codes` → `ADR-012 §Error Codes` (no heading §Consequences/Error Codes exists in ADR-012; the error-codes section is `### Error Codes` under `## Consequences`)."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 extracted_from: null
 modified: []
 deprecated: null
@@ -57,49 +58,49 @@ custom `MemoryWriteGuard` implementations.
 
 ## Preconditions
 
-1. A `MemoryWriteGuard` implementation is registered with the `memory::write_guard` enforcement
+1. {PRE-001} A `MemoryWriteGuard` implementation is registered with the `memory::write_guard` enforcement
    module for the target namespace.
-2. A caller issues a write to a guarded namespace via a `MemoryWriteRequest` of one of three
+2. {PRE-002} A caller issues a write to a guarded namespace via a `MemoryWriteRequest` of one of three
    shapes: `Add { namespace, key, value }`, `Replace { namespace, key, old_value, new_value }`,
    or `Remove { namespace, key }`.
-3. The enforcement module receives the request before it reaches `MemoryStore`.
+3. {PRE-003} The enforcement module receives the request before it reaches `MemoryStore`.
 
 ## Postconditions
 
-1. **Allow path:** `MemoryWriteGuard::validate(req)` returns `WriteGuardDecision::Allow`.
+1. {PC-001} **Allow path:** `MemoryWriteGuard::validate(req)` returns `WriteGuardDecision::Allow`.
    The original write request is forwarded to `MemoryStore` unchanged. The caller receives
    `Ok(())` on success.
-2. **Deny path:** `validate(req)` returns `WriteGuardDecision::Deny { reason }`.
+2. {PC-002} **Deny path:** `validate(req)` returns `WriteGuardDecision::Deny { reason }`.
    The write is NOT forwarded to `MemoryStore`. The caller receives:
    `Err(PregolyaError { component: MEMORY, category: SECURITY, code: "E-MEMORY-007",
    message: "MemoryWriteGuardDenied: write to namespace '<ns>' key '<key>' denied — <reason>",
    retry_hint: Never })`.
    No partial state is written. (DI-008: no panic; error propagates as Err.)
-3. **Transform path:** `validate(req)` returns `WriteGuardDecision::Transform { sanitized }`.
+3. {PC-003} **Transform path:** `validate(req)` returns `WriteGuardDecision::Transform { sanitized }`.
    The `sanitized` value is forwarded to `MemoryStore` in place of the original `value`.
    The caller receives `Ok(())`.
-4. The `validate` call is **synchronous and pure** — it has no async, no I/O, no side effects.
+4. {PC-004} The `validate` call is **synchronous and pure** — it has no async, no I/O, no side effects.
    The enforcement module calls it inline during the write path; it cannot block indefinitely.
-5. For `MemoryWriteRequest::Remove`, the built-in injection scanner always returns
+5. {PC-005} For `MemoryWriteRequest::Remove`, the built-in injection scanner always returns
    `WriteGuardDecision::Allow` (there is no content to scan; the remove operation is not
    a security risk).
 
 ## Invariants
 
-- The guard **fails closed**: if a `MemoryWriteGuard` implementor panics during `validate`,
+- {INV-001} The guard **fails closed**: if a `MemoryWriteGuard` implementor panics during `validate`,
   the enforcement module treats the panic as a `Deny` and returns `E-MEMORY-007` — it does
   NOT propagate the panic to the caller and does NOT forward the write. (Same fail-closed
   pattern as `GuardrailHook` panic → E-CORE-007.)
-- `MemoryWriteGuard::validate` is a **pure synchronous trait method** (no `async`, no `&mut self`).
+- {INV-002} `MemoryWriteGuard::validate` is a **pure synchronous trait method** (no `async`, no `&mut self`).
   Implementors that require async validation must pre-compute their decisions outside the
   write path and consult cached results in `validate`.
-- The guard is scoped to **guarded namespaces**: unguarded namespaces bypass the guard
+- {INV-003} The guard is scoped to **guarded namespaces**: unguarded namespaces bypass the guard
   entirely. The set of guarded namespaces is configured at `MemoryStore` construction time.
-- `MemoryWriteRequest` types and `WriteGuardDecision` types live in
+- {INV-004} `MemoryWriteRequest` types and `WriteGuardDecision` types live in
   `pregolya-core/src/write_guard.rs` (`core::write_guard`) — the enforcement lives in
   `pregolya-memory/src/write_guard.rs` (`memory::write_guard`). This split follows
   ADR-012 Decision 1 / ADR-009 Option 3 precedent.
-- BoundaryType (PASS-58) is UNCHANGED: the write guard is a separate write-path seam and
+- {INV-005} BoundaryType (PASS-58) is UNCHANGED: the write guard is a separate write-path seam and
   does NOT interact with `ProvenanceTag`, `GuardrailHook`, or `BoundaryType`
   (per ADR-012 Decision 2).
 

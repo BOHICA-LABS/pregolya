@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-020
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-15T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P91-04, 2026-07-17): EC-004 adjudication — E-MEMORY-002 StorageFull is a write-capacity code (wrong semantic for a backend read I/O failure). No existing MEMORY code covers read I/O failure. Minted E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY, broken, Maybe) as the correct code. EC-004 updated: removed E-MEMORY-002 and hedge 'or equivalent propagated storage error'; now cites E-MEMORY-008 MemoryStoreReadFailed. Added TV-008 to satisfy gate #33 raise-condition anchor for E-MEMORY-008. error-taxonomy.md v1.18 adds E-MEMORY-008 row (MEMORY namespace); census 85→86 (blanket 26→27: E-MEMORY-* 7→8)."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(PregolyaError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (fix-burst-283/TV-gap-EC-006/2026-07-30): TV-009 added for EC-006 (SkillStore constructed with empty app_id → E-MEMORY-004 NoScopeContext fail-closed). EC-006 was introduced in v1.3 but had no corresponding test vector; a decision with no vector is unenforceable per project discipline. TV-009 exercises `SkillStore::new(store, \"\")` and verifies all three trait methods (`load_skill`, `list_skills`, `skill_exists`) return `Err(E-MEMORY-004)` with `category: SECURITY` — fail-closed per ADR-012 Decision 1 Amendment."
   - "1.6 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — EC-006 Expected behavior multi-line PregolyaError::new(Component::Memory, Category::Security, RetryHint::Never, \"E-MEMORY-004\", ...) collapsed to Err(PregolyaError { code: \"E-MEMORY-004\", .. }). Bare constructor form forbidden in prose context per ADR-010 Class 3 rules."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -53,10 +54,10 @@ the read path only; writes to skill entries are governed by BC-2.15.005 (guarded
 
 ## Preconditions
 
-1. A `SkillStore` implementation is configured and backed by an initialized `MemoryStore`.
-2. Skill documents exist in the backing `MemoryStore` as KV entries in skill-designated
+1. {PRE-001} A `SkillStore` implementation is configured and backed by an initialized `MemoryStore`.
+2. {PRE-002} Skill documents exist in the backing `MemoryStore` as KV entries in skill-designated
    namespaces, each associated with a `SkillDescriptor` (name, namespace, key, tags).
-3. The caller has read access to the relevant `MemoryStore` namespace.
+3. {PRE-003} The caller has read access to the relevant `MemoryStore` namespace.
    SCOPE NOTE: `SkillStore` implementations bind `MemoryScope::App(app_id)` at
    construction time. Callers do not supply scope at call time. The `app_id` is
    supplied to the `SkillStore` constructor and comes from `RunContext.app_id`
@@ -68,34 +69,34 @@ the read path only; writes to skill entries are governed by BC-2.15.005 (guarded
 
 ## Postconditions
 
-1. `load_skill(name: &str) -> Result<Option<String>, PregolyaError>` returns the skill
+1. {PC-001} `load_skill(name: &str) -> Result<Option<String>, PregolyaError>` returns the skill
    document text (`Some(content)`) if a skill with the given name exists in the registry;
    returns `None` if no skill with that name is registered. Never returns an empty string
    to represent "not found."
-2. `list_skills(tags: &[String]) -> Result<Vec<SkillDescriptor>, PregolyaError>` returns
+2. {PC-002} `list_skills(tags: &[String]) -> Result<Vec<SkillDescriptor>, PregolyaError>` returns
    all registered `SkillDescriptor` entries whose tag list contains at least one of the
    requested tags. Passing an empty `tags` slice returns ALL registered descriptors.
-3. `skill_exists(name: &str) -> Result<bool, PregolyaError>` returns `true` if a skill
+3. {PC-003} `skill_exists(name: &str) -> Result<bool, PregolyaError>` returns `true` if a skill
    with the given name is registered, `false` otherwise. This call does NOT load the
    skill document; it is a cheap existence check only.
-4. Each `load_skill` call issues a fresh read to `MemoryStore` — there is no in-process
+4. {PC-004} Each `load_skill` call issues a fresh read to `MemoryStore` — there is no in-process
    cache in `SkillStore`. If the underlying storage was updated (e.g., by BC-2.15.005's
    write path), subsequent `load_skill` calls return the updated content.
-5. All three methods return `Err(PregolyaError)` on storage-layer failures (propagated
+5. {PC-005} All three methods return `Err(PregolyaError)` on storage-layer failures (propagated
    from `MemoryStore`); they do NOT panic or return empty results to mask storage errors
    (DI-014).
 
 ## Invariants
 
-- `SkillStore` is a **read-only routing layer**: it provides no `write_skill` or
+- {INV-001} `SkillStore` is a **read-only routing layer**: it provides no `write_skill` or
   `delete_skill` method. All mutations to skill entries go through `MemoryStore` guarded
   by `MemoryWriteGuard` (BC-2.15.005).
-- `SkillDescriptor` is a pure value type: `{ name: String, namespace: String, key: String,
+- {INV-002} `SkillDescriptor` is a pure value type: `{ name: String, namespace: String, key: String,
   tags: Vec<String> }`. It carries no live references to storage and is `Send + Sync + Clone`.
-- The mapping from skill name to `(namespace, key)` is maintained by the `SkillStore`
+- {INV-003} The mapping from skill name to `(namespace, key)` is maintained by the `SkillStore`
   implementation. Name collisions are not permitted: if two entries share a name, the
   implementation must surface an error at registration time, not silently pick one.
-- `SkillStore` reads are NOT subject to injection scanning (that is a write-path concern).
+- {INV-004} `SkillStore` reads are NOT subject to injection scanning (that is a write-path concern).
 
 ## Edge Cases
 

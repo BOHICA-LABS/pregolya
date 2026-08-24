@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.002
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-openai
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-009, DI-010, DI-014]
 red_gate: true
 red_gate_source: "DI-010 Credential Opacity — OpenAiApiKey must implement redacted Debug that emits '<redacted>' not the key value; test must COMPILE and FAIL (revealing the key via derived Debug) before the redacted impl is written"
@@ -23,6 +23,7 @@ changelog:
   - "1.1 (F-P130-09/2026-07-21): Add DI-009 to di_anchors — PC2/INV-5 specify the mandatory 30s timeout but did not cite DI-009; add BC-2.14.004 cross-reference in PC2 and INV-5 prose."
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 6 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC6, INV-4, EC-003, EC-004, EC-005, TV-004 each had `Err(PregolyaError { ... })` — replaced `...` with `..` in all six. Xtask rename: VP-2.22.002-C `deny-client-new` → `check-client-timeout`. No behavioral change."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-032
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -67,49 +68,49 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 
 ## Preconditions
 
-1. `EmbeddingsOpenAI` is constructed with a valid `OpenAiApiKey` and a model name.
-2. The `reqwest::Client` is built with `rustls-tls` and `.timeout(Duration::from_secs(30))`
+1. {PRE-001} `EmbeddingsOpenAI` is constructed with a valid `OpenAiApiKey` and a model name.
+2. {PRE-002} The `reqwest::Client` is built with `rustls-tls` and `.timeout(Duration::from_secs(30))`
    (DI-009 — 30s HTTP timeout mandatory; see BC-2.14.004 for the workspace-wide invariant).
-3. The OpenAI `/v1/embeddings` endpoint is reachable from the runtime environment.
+3. {PRE-003} The OpenAI `/v1/embeddings` endpoint is reachable from the runtime environment.
 
 ## Postconditions
 
-1. `embed_documents(texts)` sends a single `/v1/embeddings` request with all texts in the
+1. {PC-001} `embed_documents(texts)` sends a single `/v1/embeddings` request with all texts in the
    `input` field (batch semantics). Returns `Ok(vecs)` where `vecs.len() == texts.len()` and
    all vectors have the same length.
-2. `embed_query(text)` sends a `/v1/embeddings` request with the single text in the `input`
+2. {PC-002} `embed_query(text)` sends a `/v1/embeddings` request with the single text in the `input`
    field. Returns `Ok(vec)` with the model's embedding dimension.
-3. **Model names:**
+3. {PC-003} **Model names:**
    - `"text-embedding-3-small"` — default; 1536-dimensional output; recommended.
    - `"text-embedding-3-large"` — 3072-dimensional output; higher quality.
    - `"text-embedding-ada-002"` — 1536-dimensional output; legacy; still supported by OpenAI
      but superseded by the 3-series. Constructing `EmbeddingsOpenAI` with this model name
      emits a `tracing::warn!(event_type = "embeddings.legacy_model_warning")` at construction.
-4. **Credential opacity (DI-010):**
+4. {PC-004} **Credential opacity (DI-010):**
    - `format!("{:?}", api_key)` produces `"<redacted>"` — NOT `OpenAiApiKey("sk-actual-key")`.
    - The `Debug` impl is hand-written: `impl fmt::Debug for OpenAiApiKey { fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("<redacted>") } }`.
    - `Display` is NOT implemented on `OpenAiApiKey` — only `Debug` (redacted form).
    - `OpenAiApiKey` does NOT implement `Serialize` or `Deserialize` — the key never enters
      the lc-JSON serialization surface (`lc_secrets()` per ADR-016 if LcSerializable is added).
-5. **HTTP client discipline:**
+5. {PC-005} **HTTP client discipline:**
    - `reqwest` dep in `pregolya-openai/Cargo.toml`: `default-features = false, features = ["rustls-tls"]`.
    - `reqwest::Client` is built with `.timeout(Duration::from_secs(30))` — never `reqwest::Client::new()`.
    - The `native-tls` / `default-tls` / `native-tls-alpn` / `native-tls-vendored` features are ABSENT.
-6. **Batch partial failure (DI-014):** if the OpenAI API returns a rate-limit error (HTTP 429),
+6. {PC-006} **Batch partial failure (DI-014):** if the OpenAI API returns a rate-limit error (HTTP 429),
    service error (5xx), or malformed response mid-stream, the entire `embed_documents` call
    returns `Err(PregolyaError { .. })`. No partial vector list is returned.
 
 ## Invariants
 
-1. `OpenAiApiKey` is a newtype `struct OpenAiApiKey(String)`. No `pub` field access.
+1. {INV-001} `OpenAiApiKey` is a newtype `struct OpenAiApiKey(String)`. No `pub` field access.
    The inner `String` is accessible only through the `AsRef<str>` impl used by the HTTP
    client — it is never returned or logged elsewhere.
-2. `EmbeddingsOpenAI` is `Send + Sync` — the `reqwest::Client` is `Clone + Send + Sync`.
-3. The legacy `ada-002` warning is emitted once at construction — not on every API call.
-4. Model name validation is NOT enforced at construction (the field is a free `String`) —
+2. {INV-002} `EmbeddingsOpenAI` is `Send + Sync` — the `reqwest::Client` is `Clone + Send + Sync`.
+3. {INV-003} The legacy `ada-002` warning is emitted once at construction — not on every API call.
+4. {INV-004} Model name validation is NOT enforced at construction (the field is a free `String`) —
    an invalid model name fails at the first API call with an `Err(PregolyaError { .. })`
    from the HTTP response.
-5. The 30-second timeout applies to each individual HTTP request (not the total batch session),
+5. {INV-005} The 30-second timeout applies to each individual HTTP request (not the total batch session),
    per DI-009 / BC-2.14.004 (workspace-wide 30s HTTP timeout invariant). A provider that
    responds slowly on a large batch triggers the timeout per-request.
 

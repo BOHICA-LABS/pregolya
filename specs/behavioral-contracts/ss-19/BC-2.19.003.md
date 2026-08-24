@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.003
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
@@ -23,6 +23,7 @@ changelog:
   - "1.3 (FIX-BURST-277-WAVE-C/FC-2-genuine-removal/2026-07-28): Genuine completion of v1.2 false-closure FC-2. v1.2 claimed 'Drop fabricated duplicate detection clause' but the term survived in Invariant 2 ('duplicate registration detection') and EC-003 ('DuplicateRegistration'). Decision on merits: ADR-016 Decision 2 specifies inventory::iter for registry construction with no duplicate-detection semantics; the inventory crate does not natively panic on duplicate submissions; the DuplicateRegistration panic behavior was fabricated without specification backing. Removal: (1) Invariant 2: panic-on-duplicate language replaced with last-write-wins HashMap semantics. (2) EC-003: DuplicateRegistration panic removed; replaced with last-write-wins HashMap behavior and a CI assertion recommendation. (3) DI-008 Traceability: 'except duplicate detection' exception removed. TD-VSDD-060 sibling sweep: no other SS-19 BCs contain duplicate-detection language."
   - "1.4 (F-P188-01/burst-297/2026-08-16): DI-008 Traceability cell corrected — 'Reviver::new() returns Result' was wrong. PC2 explicitly states Reviver::new() returns a plain Reviver instance (infallible); Reviver::new() calls inventory::iter at link-time and cannot fail. The fallible operation is revive(), not the constructor. Fixed cell to: 'revive returns Result; Reviver::new() is infallible; no panic on registry initialization' — matching the pattern of siblings BC-2.19.004/005/006. D-134 Sweep A: this was the only named-constructor mis-attribution among all 42 DI-008 Traceability cells corpus-wide (BC-2.19.001 was also fixed in the same burst). input-hash updated to current (e7b7c2e)."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -57,40 +58,40 @@ registry — it is never a hand-edited list.
 
 ## Preconditions
 
-1. The `inventory` crate (dtolnay) is a dependency of `pregolya-core`.
-2. Each type `T` that must participate in serialization declares its `LcEntry` via
+1. {PRE-001} The `inventory` crate (dtolnay) is a dependency of `pregolya-core`.
+2. {PRE-002} Each type `T` that must participate in serialization declares its `LcEntry` via
    `inventory::submit! { LcEntry { lc_id: &["..."], constructor: |kwargs| { ... } } }`.
-3. For partner crate entries: the `inventory::submit!` is inside a
+3. {PRE-003} For partner crate entries: the `inventory::submit!` is inside a
    `#[cfg(feature = "openai")]` (or equivalent) guard so it is a no-op if the feature is not enabled.
-4. `Reviver::new()` is called once at program startup; subsequent calls return the
+4. {PRE-004} `Reviver::new()` is called once at program startup; subsequent calls return the
    cached `OnceLock` value.
 
 ## Postconditions
 
-1. After link step, `inventory::iter::<LcEntry>()` returns an iterator over all `LcEntry`
+1. {PC-001} After link step, `inventory::iter::<LcEntry>()` returns an iterator over all `LcEntry`
    items for every registered type whose feature is enabled in the current binary.
-2. `Reviver::new()` returns a `Reviver` instance backed by a `HashMap` containing exactly
+2. {PC-002} `Reviver::new()` returns a `Reviver` instance backed by a `HashMap` containing exactly
    the entries produced by `inventory::iter::<LcEntry>()`. No additional entries are added
    at runtime.
-3. The `OnceLock` ensures the registry is initialized at most once per process — concurrent
+3. {PC-003} The `OnceLock` ensures the registry is initialized at most once per process — concurrent
    calls to `Reviver::new()` are safe and return the same registry.
-4. Partner crate entries are NOT present in the registry when their feature is disabled (e.g.,
+4. {PC-004} Partner crate entries are NOT present in the registry when their feature is disabled (e.g.,
    `cargo build --no-default-features` produces a registry with only core types).
-5. `Reviver::registry_size() → usize` returns the count of registered entries (used for
+5. {PC-005} `Reviver::registry_size() → usize` returns the count of registered entries (used for
    smoke-test assertions in CI).
 
 ## Invariants
 
-1. The registry is **append-only at link time** — no runtime API adds or removes entries.
+1. {INV-001} The registry is **append-only at link time** — no runtime API adds or removes entries.
    This property is what makes `OnceLock` initialization safe.
-2. If two `inventory::submit!` calls register the same `lc_id` (a programming error), the
+2. {INV-002} If two `inventory::submit!` calls register the same `lc_id` (a programming error), the
    `inventory` crate does not natively detect duplicates; both entries are collected by
    `inventory::iter::<LcEntry>()` and when the `HashMap` is constructed, the second entry
    overwrites the first for the same key (last-write-wins). This is not a production runtime
    error — it is a programming error that CI should catch via a registry size assertion.
-3. The registry is the sole source of the allowlist — BC-2.19.005's Reviver checks against
+3. {INV-003} The registry is the sole source of the allowlist — BC-2.19.005's Reviver checks against
    this `HashMap`, not against a separate hard-coded list.
-4. Feature-gated entries follow the same `LcEntry` struct as unconditional entries — there
+4. {INV-004} Feature-gated entries follow the same `LcEntry` struct as unconditional entries — there
    is no separate "optional entry" type.
 
 ## Edge Cases

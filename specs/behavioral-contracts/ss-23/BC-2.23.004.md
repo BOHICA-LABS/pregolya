@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.004
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -23,11 +23,12 @@ changelog:
   - "1.1 (burst-233/F-P133-03/2026-07-22): PC-3 / PC-5 / EC-002 / EC-005 / TV-004 — assign E-TOOLS-008 FileIoError to the OS-level I/O error paths (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'ListDirTool', path: <dir_path>, io_kind: <ErrorKind debug name> ('NotADirectory' for PC-3/EC-002; 'NotFound' for PC-5/EC-005). Gate #33 forward+reverse clean."
   - "1.2 (burst-247/F-P146-02/2026-07-24): H1 title — add E-TOOLS-008 to raised-code enumeration per SS-23 title policy (exhaustive RAISED codes only; Ok-path payload flags excluded); reorder trailing section to 'E-TOOLS-001/008; DirEntry Struct' (DirEntry Struct is not an error code and is retained as a structural descriptor after the slash-separated error block). Before: 'E-TOOLS-001; DirEntry Struct'. After: 'E-TOOLS-001/008; DirEntry Struct'. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
   - "1.3 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 3 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-3 + PC-5); Category::SECURITY → Category::Security (PC-2), Category::TOOL → Category::Tool (PC-3 + PC-5)."
-  - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical canonicalize_beneath_root at 3 sites: PC-1 happy-path ('passes' to 'succeeds'), Invariants call-obligation bullet, VP-2.23.004-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
+  - "1.4 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check(path) with canonical canonicalize_beneath_root at 3 sites: PC-1 happy-path ('passes' to 'succeeds'), Invariants call-obligation bullet (root path argument), VP-2.23.004-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
   - "1.5 (fix-burst-280/F-P175-A25/2026-07-28): Convert 3 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-001 PathConfinementViolation: ::new(Component::Tools, Category::Security, RetryHint::Never, ...). PC3 E-TOOLS-008 NotADirectory: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed. PC5 E-TOOLS-008 generic I/O: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); same phantom-field removal. TD-VSDD-060 sibling sweep: EC-002/EC-005/TV-004 JSON-like notation classified (c) message-component descriptions; left as-is."
   - "1.6 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 3 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-001 → { code: 'E-TOOLS-001', .. }. PC-3 E-TOOLS-008 NotADirectory → { code: 'E-TOOLS-008', .. }. PC-5 E-TOOLS-008 generic I/O → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
   - "1.7 (burst-288/P1D-177-ITEM2/2026-08-15): ADR-024 §Phase-2 Postconditions PC-5 consumer — ListDirTool calls canonicalize_beneath_root for the directory path; when path does not exist, Phase 2 returns Ok(canonical_parent.join(dirname)); subsequent fs::read_dir surfaces NotFound → E-TOOLS-008 per EC-005. PC-5 text extended with ADR-024 §Phase-2 Postconditions PC-5 note. ADR-024 §Phase-2 Postconditions PC-5 added to §Traceability §Binding Decisions. ADR-024 added to traces_to + inputs + §Architecture Anchors."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -65,13 +66,13 @@ filter at the application layer.
 
 ## Preconditions
 
-1. `ListDirTool` is constructed with a `PathGuard` instance.
-2. The caller invokes the tool with JSON args `{ "path": "<path-string>" }`.
-3. `path` is a non-empty string resolving to a directory within `PathGuard` scope.
+1. {PRE-001} `ListDirTool` is constructed with a `PathGuard` instance.
+2. {PRE-002} The caller invokes the tool with JSON args `{ "path": "<path-string>" }`.
+3. {PRE-003} `path` is a non-empty string resolving to a directory within `PathGuard` scope.
 
 ## Postconditions
 
-1. **Happy path:** `canonicalize_beneath_root(workspace_root, path)` succeeds and `path` is a readable directory.
+1. {PC-001} **Happy path:** `canonicalize_beneath_root(workspace_root, path)` succeeds and `path` is a readable directory.
    The tool returns `ToolOutput::Json(entries)` where `entries` is a JSON array of
    `DirEntry` objects:
    ```json
@@ -83,12 +84,12 @@ filter at the application layer.
    ```
    Entries are sorted lexicographically by `name`. Hidden files (names starting with `.`)
    are included unless excluded by `PathGuard` policy.
-2. **Path confinement violation:** Returns
+2. {PC-002} **Path confinement violation:** Returns
    `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
-3. **Path is a file, not a directory:** Returns
+3. {PC-003} **Path is a file, not a directory:** Returns
    `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
-4. **Empty directory:** Returns `ToolOutput::Json([])` — zero entries, not an error.
-5. **Permission denied or not found:** Returns
+4. {PC-004} **Empty directory:** Returns `ToolOutput::Json([])` — zero entries, not an error.
+5. {PC-005} **Permission denied or not found:** Returns
    `Err(PregolyaError { code: "E-TOOLS-008", .. })`.
    (ADR-024 §Phase-2 Postconditions PC-5: when `path` does not exist,
    `canonicalize_beneath_root` Phase 2 returns `Ok(canonical_parent.join(dirname))` — a
@@ -97,13 +98,13 @@ filter at the application layer.
 
 ## Invariants
 
-- `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open.
-- Listing is non-recursive (depth 1). The tool returns only the direct children of `path`;
+- {INV-001} `canonicalize_beneath_root` is called for EVERY invocation before any filesystem open.
+- {INV-002} Listing is non-recursive (depth 1). The tool returns only the direct children of `path`;
   it does not descend into subdirectories.
-- `DirEntry::size_bytes` is the file's metadata size (same as `std::fs::metadata().len()`).
+- {INV-003} `DirEntry::size_bytes` is the file's metadata size (same as `std::fs::metadata().len()`).
   It is NOT read into memory; only stat is called.
-- `ActionRisk::ReadOnly` — `RiskGatePolicy` auto-approve semantics apply (BC-2.05.006).
-- **DI-014 (No Silent Swallowing):** Path violations, permission errors, and not-a-directory
+- {INV-004} `ActionRisk::ReadOnly` — `RiskGatePolicy` auto-approve semantics apply (BC-2.05.006).
+- {INV-005} **DI-014 (No Silent Swallowing):** Path violations, permission errors, and not-a-directory
   errors propagate as `Err(PregolyaError)`. Empty directories return `Ok([])` — not an error.
 
 ## Edge Cases

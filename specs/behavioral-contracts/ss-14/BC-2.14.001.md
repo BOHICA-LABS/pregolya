@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (pregolya-prompts, SS-18), SRLZ (pregolya-core::serializable, SS-19), VS (pregolya-vectorstores, SS-21), EMBED (pregolya-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). Three Class 3 violations corrected: EC-001 `PregolyaError { component: CHKPT, category: DURABILITY }` — added `, ..` (CLASS3 VIOLATION, 2/5 fields); Related BCs `PregolyaError { category: VAL }` — added `, ..` (CLASS3 VIOLATION, 1/5 fields); TV-002 Input `...` field-elision marker — replaced with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION). PC1, TV-001, and PC8 unchanged: PC1 and TV-001 are Class 3 VALID (all 5 non-source fields present; Class 4 defining-crate annotations from v1.6 remain accurate); PC8 `pub struct PregolyaError { … }` is EXCLUDED_DECL. No behavioral change."
   - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). Description: EXEC added as 13th category to the enumeration; counter updated from '12 categories, unchanged' to '13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))'. TD-VSDD-060 sibling sweep: EXEC not listed elsewhere in BC-2.14.001 live body (no other Category enumeration site). No behavioral change to PregolyaError struct."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -70,35 +71,35 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
 
 ## Preconditions
 
-1. A pregolya library crate is constructing or propagating an error condition.
-2. The `pregolya-core` crate defines and exports `PregolyaError`, `Component`, `Category`,
+1. {PRE-001} A pregolya library crate is constructing or propagating an error condition.
+2. {PRE-002} The `pregolya-core` crate defines and exports `PregolyaError`, `Component`, `Category`,
    and `RetryHint` as public types.
-3. The error code string follows the convention `E-<COMPONENT>-<NNN>` using the component
+3. {PRE-003} The error code string follows the convention `E-<COMPONENT>-<NNN>` using the component
    abbreviations defined in the error taxonomy.
 
 ## Postconditions
 
-1. `PregolyaError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never,
+1. {PC-001} `PregolyaError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never,
    code: "E-CORE-001".into(), message: "Invalid ContentBlock type...".into() }` constructs without error.
    _(Struct-literal form is **intentional** in this BC: this test runs within `pregolya-core` where
    `#[non_exhaustive]` does not bar struct-literal construction by the defining crate. External callers
    must use `PregolyaError::new(...)` per PC8 and ADR-010 §Decision. Do not convert this notation.)_
-2. The `component` field identifies the originating crate (e.g. `Component::Graph` for graph
+2. {PC-002} The `component` field identifies the originating crate (e.g. `Component::Graph` for graph
    errors, `Component::Chkpt` for checkpoint errors).
-3. The `category` field identifies the error class independently of the component; a
+3. {PC-003} The `category` field identifies the error class independently of the component; a
    `(Component::Prov, Category::Rate)` error is a rate-limit from a provider, while
    `(Component::Server, Category::Policy)` is a policy violation from the server crate.
-4. `retry_hint` carries semantic retry guidance:
+4. {PC-004} `retry_hint` carries semantic retry guidance:
    - `RetryHint::Never` — do not retry; the caller must fix their input or configuration.
    - `RetryHint::Maybe` — retry once; transient condition only.
    - `RetryHint::Later(duration)` — rate-limited; wait `duration` then retry.
-5. Every component × category combination documented in error-taxonomy.md has a corresponding
+5. {PC-005} Every component × category combination documented in error-taxonomy.md has a corresponding
    `E-<COMPONENT>-<NNN>` code; no two codes share the same string.
-6. `PregolyaError` implements `std::error::Error + Send + Sync + 'static` (required for
+6. {PC-006} `PregolyaError` implements `std::error::Error + Send + Sync + 'static` (required for
    `anyhow` / `thiserror` compatibility in application code).
-7. `PregolyaError` does NOT implement `Default` — errors must be constructed explicitly with
+7. {PC-007} `PregolyaError` does NOT implement `Default` — errors must be constructed explicitly with
    all required fields.
-8. `PregolyaError` is `#[non_exhaustive]` — external code cannot construct it via a struct
+8. {PC-008} `PregolyaError` is `#[non_exhaustive]` — external code cannot construct it via a struct
    literal or exhaustively pattern-match its fields without a `..` wildcard arm. This is
    required by CLAUDE.md Code Conventions for all public API surface types. The struct is
    defined as `#[non_exhaustive] #[derive(Debug, Clone)] pub struct PregolyaError { … }`
@@ -106,15 +107,15 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
 
 ## Invariants
 
-- **DI-008 (Library Constructor Result Contract):** `PregolyaError` itself is always fully
+- {INV-001} **DI-008 (Library Constructor Result Contract):** `PregolyaError` itself is always fully
   initialized (never partially constructed); its fields carry their semantic values without
   optional placeholders.
-- **DI-014 (Error Propagation):** All validation and operational failures propagate as
+- {INV-002} **DI-014 (Error Propagation):** All validation and operational failures propagate as
   `Err(PregolyaError)` — no `None`, empty-vec, or silent-discard path is acceptable as a
   substitute for a real error.
-- The `code` string is immutable once assigned; it serves as the machine-parseable stable
+- {INV-003} The `code` string is immutable once assigned; it serves as the machine-parseable stable
   identifier referenced in dashboards and alerting rules.
-- `retry_hint` category assignments are fixed per error category as documented in
+- {INV-004} `retry_hint` category assignments are fixed per error category as documented in
   error-taxonomy.md; implementors must not invent new hint-category pairings.
 
 ## Edge Cases

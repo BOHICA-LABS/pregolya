@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.004
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
@@ -22,6 +22,7 @@ changelog:
   - "1.2 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-003 expected-output cell: `PregolyaError { code: \"E-SRLZ-001\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
   - "1.3 (burst-294/F-185-01/2026-08-16): EC-005 and Invariant §3 — remove raised-panic mandate (`RemapChainDetected` panic!). Remap-chain detection is expressed as a startup validation unit test (VP-2.19.004-B), NOT a `panic!` in `Reviver::new()`. Pattern mirrors BC-2.19.006 EC-001 / VP-2.19.006-B (disjoint-set check via startup validation unit test). DI-008 Traceability row already correctly states 'revive returns Result; no panic on remap lookup' — no change required. VP-2.19.004-B already framed this as 'startup validation test (runs in CI)' — now EC-005 and Invariant §3 are consistent with it. D-134 corpus sweep: BC-2.19.004 EC-005 was the sole raised-panic mandate in all 129 BCs."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -56,37 +57,37 @@ succeeds without requiring the caller to pre-process the id.
 
 ## Preconditions
 
-1. `Reviver` has been initialized (BC-2.19.003) and the canonical type is registered.
-2. The `Serialized::Constructor` received by `revive()` has an `id` field that matches a key
+1. {PRE-001} `Reviver` has been initialized (BC-2.19.003) and the canonical type is registered.
+2. {PRE-002} The `Serialized::Constructor` received by `revive()` has an `id` field that matches a key
    in `OLD_CORE_NAMESPACES_MAPPING` (e.g., `["langchain", "prompts", "prompt", "PromptTemplate"]`).
-3. The canonical type for the alias is present in the registry.
+3. {PRE-003} The canonical type for the alias is present in the registry.
 
 ## Postconditions
 
-1. `Reviver::revive(serialized)` transparently remaps the legacy `id` to the canonical id
+1. {PC-001} `Reviver::revive(serialized)` transparently remaps the legacy `id` to the canonical id
    before registry lookup. The caller does NOT need to call any remap function explicitly.
-2. The deserialized value is identical to what would have been produced by a canonical-id
+2. {PC-002} The deserialized value is identical to what would have been produced by a canonical-id
    `Serialized::Constructor` with the same `kwargs`.
-3. If the canonical type is registered but the legacy alias is NOT in `OLD_CORE_NAMESPACES_MAPPING`,
+3. {PC-003} If the canonical type is registered but the legacy alias is NOT in `OLD_CORE_NAMESPACES_MAPPING`,
    the legacy id is treated as unknown and returns `Err(E-SRLZ-001)`. The remap table is the
    authoritative list of supported aliases.
-4. `OLD_CORE_NAMESPACES_MAPPING` is a compile-time `static` — no entries are added at runtime.
-5. After remapping, the returned deserialized value carries the type's canonical `lc_id()`, not
+4. {PC-004} `OLD_CORE_NAMESPACES_MAPPING` is a compile-time `static` — no entries are added at runtime.
+5. {PC-005} After remapping, the returned deserialized value carries the type's canonical `lc_id()`, not
    the legacy alias id.
 
 ## Invariants
 
-1. The remap is **transparent to the caller** — the caller does not observe the remapping;
+1. {INV-001} The remap is **transparent to the caller** — the caller does not observe the remapping;
    it only observes the deserialized value.
-2. The remap table is a compile-time constant — it cannot be extended without a code change
+2. {INV-002} The remap table is a compile-time constant — it cannot be extended without a code change
    and rebuild. This is intentional: runtime-mutable remap tables would create a
    dynamic-injection vector.
-3. Remap chains are not supported — if a legacy alias maps to another alias (which would then
+3. {INV-003} Remap chains are not supported — if a legacy alias maps to another alias (which would then
    need further remapping), this is a programming error detected by a startup validation unit
    test (runs in CI); the test asserts that no key in `OLD_CORE_NAMESPACES_MAPPING` maps to
    a value that is itself also a key in the table. No `panic!` is raised in `Reviver::new()` —
    the check is expressed as a test assertion, not a runtime guard (VP-2.19.004-B).
-4. Every entry in `OLD_CORE_NAMESPACES_MAPPING` must map to an id that resolves in the registry;
+4. {INV-004} Every entry in `OLD_CORE_NAMESPACES_MAPPING` must map to an id that resolves in the registry;
    if the canonical id is not registered, revive still returns `Err(E-SRLZ-001)`.
 
 ## Edge Cases

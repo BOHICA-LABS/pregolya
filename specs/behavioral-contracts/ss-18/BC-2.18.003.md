@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.003
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-20T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
@@ -24,6 +24,7 @@ changelog:
   - "1.4 (BURST-315/F-A3/2026-08-17): Promote status from `draft` to `active` — incomplete POL-14 promotion; `lifecycle_status: active` was already correct; `status: draft` was residual from pre-merge state."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (P2A-040-F-01-F-02/2026-08-22): TWO changes closing F-01/F-02 (HIGH) from adversary pass P2A-040. (1) PC-1: replace stale 'call-time vars map supplies a Vec<Message>' with 'call-time vars map supplies a TemplateInput::Messages(MessageListVar)' — the bare Vec<Message> phrasing predated the TemplateInput enum concretization (ADR-015 Decision 3 Amendment, burst-279) and caused S-2.04 AC-015 to claim MessageListVar is a bare newtype over Vec<Message>, which is wrong and makes the Messages-arm Red Gate (S-2.05 AC-016) structurally unimplementable. (2) INV-4 (new): canonical MessageListVar struct shape defined with both messages: Vec<Message> and trust_level: Option<TrustLevel> fields — NOT a bare newtype; trust_level is the load-bearing field that enables injection_guard (BC-2.18.004 Pre-2/PC-5) to check msg_var.trust_level.is_some_and(|t| t.is_untrusted()) against TrustRequired slots. BC census UNCHANGED: 133 (51 P0 / 79 P1 / 3 P2). input-hash drift corrected (09c85f7). Story-writer must amend STORY-S-2.04 AC-015 to reference BC-2.18.003 INV-4 (not INV-1) and correct the MessageListVar shape claim."
+  - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-023
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -57,44 +58,44 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
 
 ## Preconditions
 
-1. For `MessagesPlaceholder`: a `ChatPromptTemplate` contains a placeholder slot declared with
+1. {PRE-001} For `MessagesPlaceholder`: a `ChatPromptTemplate` contains a placeholder slot declared with
    a variable name; the call-time `vars` map supplies a `TemplateInput::Messages(MessageListVar)`
    binding for that variable name (see INV-4 for the canonical `MessageListVar` struct shape).
    `MessageListVar` carries both the message list and its trust classification — it is NOT a
    bare newtype over `Vec<Message>`.
-2. For `FewShotPromptTemplate`: a `Vec` of `(example_input: TemplateVar, example_output: TemplateVar)`
+2. {PRE-002} For `FewShotPromptTemplate`: a `Vec` of `(example_input: TemplateVar, example_output: TemplateVar)`
    pairs is provided at construction; a `PromptTemplate` is provided to format each example pair.
    Each `TemplateVar` carries an optional `trust_level: Option<TrustLevel>`.
    This allows the outer `injection_guard` in `ChatPromptTemplate::format_messages` to
    check example component trust levels before calling the inner `example_template.format()`.
    (Prior form `Vec<(String, String)>` had no trust classification — this type change
    closes the FewShot injection path per ADR-015 Decision 3 Amendment.)
-3. Both types are constructed via fallible constructors returning `Result<Self, PregolyaError>`
+3. {PRE-003} Both types are constructed via fallible constructors returning `Result<Self, PregolyaError>`
    per DI-008.
 
 ## Postconditions
 
 ### MessagesPlaceholder
 
-1. When `format_messages` is called, the `Vec<Message>` variable is expanded in-place at
+1. {PC-001} When `format_messages` is called, the `Vec<Message>` variable is expanded in-place at
    the placeholder position — each message in the Vec becomes a separate entry in
    `PromptValue.messages`.
-2. The expanded messages carry `MessageProvenance` derived from the `Vec<Message>` variable's
+2. {PC-002} The expanded messages carry `MessageProvenance` derived from the `Vec<Message>` variable's
    declared `trust_level: Option<TrustLevel>` (per ADR-015 Decision 3 §MessagesPlaceholder trust derivation): a
    `Vec<Message>` conversation-history variable is externally-supplied content; each expanded
    message's `MessageProvenance.highest_trust_level` is set to the variable's declared
    `trust_level` value. If the variable has no declared `trust_level` (i.e., `trust_level:
    None`), every expanded message's `highest_trust_level` is `None` (treated as Trusted by
    injection_guard).
-3. If the `Vec<Message>` variable is absent from the call-time vars map, the behavior follows
+3. {PC-003} If the `Vec<Message>` variable is absent from the call-time vars map, the behavior follows
    the slot's `required: bool` setting: if required (default), returns `Err(E-TMPL-003)`; if
    optional, expands to zero messages.
-4. A `MessagesPlaceholder` with an empty `Vec<Message>` variable expands to zero messages (no
+4. {PC-004} A `MessagesPlaceholder` with an empty `Vec<Message>` variable expands to zero messages (no
    error); the final `PromptValue.messages` simply has no entries at that position.
 
 ### FewShotPromptTemplate
 
-5. Before rendering each pair via `example_template: PromptTemplate`, the outer
+5. {PC-005} Before rendering each pair via `example_template: PromptTemplate`, the outer
    `ChatPromptTemplate::format_messages` injection_guard checks the trust level of BOTH
    the `example_input` and `example_output` `TemplateVar` components against the slot's
    `SlotTrustPolicy`. If either component carries `TrustLevel::Untrusted` in a
@@ -105,21 +106,21 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
    `example_template: PromptTemplate` and produces a
    `(HumanMessage(rendered_input), AiMessage(rendered_output))` pair inserted
    at the few-shot position.
-6. The full `PromptValue.messages` ordering is: prefix messages → few-shot Human/AI pairs →
+6. {PC-006} The full `PromptValue.messages` ordering is: prefix messages → few-shot Human/AI pairs →
    suffix messages (e.g., the final user turn).
-7. If the example list is empty, the template renders with no few-shot pairs (zero messages
+7. {PC-007} If the example list is empty, the template renders with no few-shot pairs (zero messages
    at the few-shot position) — not an error.
-8. Example rendering errors (e.g., missing variable in the example template) propagate as
+8. {PC-008} Example rendering errors (e.g., missing variable in the example template) propagate as
    `Err(PregolyaError)` — they do not silently skip the failing example.
 
 ## Invariants
 
-1. `MessagesPlaceholder` expansion is positional — the expanded messages appear exactly at the
+1. {INV-001} `MessagesPlaceholder` expansion is positional — the expanded messages appear exactly at the
    declared placeholder position within the final `PromptValue.messages` sequence.
-2. `FewShotPromptTemplate` example order matches the input Vec order; examples are not
+2. {INV-002} `FewShotPromptTemplate` example order matches the input Vec order; examples are not
    reordered.
-3. Both types are pure-core (no I/O, no async) — `format_messages` is synchronous.
-4. `MessageListVar` is the concrete input type for `MessagesPlaceholder` slots — the
+3. {INV-003} Both types are pure-core (no I/O, no async) — `format_messages` is synchronous.
+4. {INV-004} `MessageListVar` is the concrete input type for `MessagesPlaceholder` slots — the
    `Messages` arm of `TemplateInput`. Its canonical struct shape is:
 
    ```rust

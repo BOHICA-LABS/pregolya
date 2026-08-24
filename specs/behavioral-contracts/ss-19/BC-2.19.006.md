@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.19.006
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-16T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-19 LC Serialization"
@@ -26,6 +26,7 @@ changelog:
   - "1.6 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 1 CLASS3_MISSING_DOTDOT violation corrected. TV-001 expected-output cell: `PregolyaError { code: \"E-SRLZ-002\", message: \"...\" }` → add `, ..` field-elision marker. No security semantics or VP anchors altered."
   - "1.7 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — PC-5: §E-SRLZ-002 (row: VAL) is a phantom anchor (no §E-SRLZ-002 heading exists in error-taxonomy.md; individual error codes are not section headings). Corrected to §Component: SRLZ, resolving to heading '### Component: SRLZ (pregolya-core::serializable)'."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-025
   - architecture/decisions/ADR-016-lc-json-deserialization-safety.md
@@ -62,15 +63,15 @@ available in pregolya." The error is propagated as `Err`; it is never a silent `
 
 ## Preconditions
 
-1. `Reviver` has been initialized (BC-2.19.003).
-2. The `id` field of the `Serialized::Constructor` matches an entry in `LANGCHAIN_MONOLITH_TYPES`
+1. {PRE-001} `Reviver` has been initialized (BC-2.19.003).
+2. {PRE-002} The `id` field of the `Serialized::Constructor` matches an entry in `LANGCHAIN_MONOLITH_TYPES`
    (after legacy remap; BC-2.19.004).
-3. The `id` does NOT match any registered pregolya type (precondition for E-SRLZ-002
+3. {PRE-003} The `id` does NOT match any registered pregolya type (precondition for E-SRLZ-002
    vs. a successful revive).
 
 ## Postconditions
 
-1. `Reviver::revive(serialized)` returns:
+1. {PC-001} `Reviver::revive(serialized)` returns:
    ```
    Err(PregolyaError::new(
        Component::Srlz,
@@ -80,15 +81,15 @@ available in pregolya." The error is propagated as `Err`; it is never a silent `
        "unsupported-serializable: langchain-monolith type not ported to pregolya",
    ))
    ```
-2. No constructor is called; no kwargs is parsed.
-3. The error propagates via `?` to the caller (DI-014 — no silent None).
-4. The check for `LANGCHAIN_MONOLITH_TYPES` occurs AFTER the general allowlist check
+2. {PC-002} No constructor is called; no kwargs is parsed.
+3. {PC-003} The error propagates via `?` to the caller (DI-014 — no silent None).
+4. {PC-004} The check for `LANGCHAIN_MONOLITH_TYPES` occurs AFTER the general allowlist check
    (BC-2.19.005): the full ordering is:
    a. Registry lookup (BC-2.19.005) — if found, dispatch;
    b. Legacy remap then retry (BC-2.19.004) — if found, dispatch;
    c. `LANGCHAIN_MONOLITH_TYPES` check (this BC) — if found, return E-SRLZ-002;
    d. Default fallthrough: return E-SRLZ-001.
-5. `category: Category::Val` — a monolith type id in a serialized envelope is a validation
+5. {PC-005} `category: Category::Val` — a monolith type id in a serialized envelope is a validation
    failure: the type path is recognized as a known langchain-monolith namespace but is not
    supported in pregolya. ADR-010 adjudicates E-SRLZ-002 as VAL (recorded in
    error-taxonomy.md §Component: SRLZ). `COMPATIBILITY` is not a canonical member of
@@ -96,13 +97,13 @@ available in pregolya." The error is propagated as `Err`; it is never a silent `
 
 ## Invariants
 
-1. `LANGCHAIN_MONOLITH_TYPES` is a compile-time `static` set — no runtime mutation.
-2. The diagnostic error code (`E-SRLZ-002`) is always returned for monolith types —
+1. {INV-001} `LANGCHAIN_MONOLITH_TYPES` is a compile-time `static` set — no runtime mutation.
+2. {INV-002} The diagnostic error code (`E-SRLZ-002`) is always returned for monolith types —
    regardless of kwargs content. The type-not-ported error supersedes any kwargs validation.
-3. The message text is fixed (`"unsupported-serializable: langchain-monolith type not ported to
+3. {INV-003} The message text is fixed (`"unsupported-serializable: langchain-monolith type not ported to
    pregolya"`) — it does NOT interpolate the type id (consistent with gate #33
    STRUCT-PLACEHOLDER PARITY and DI-010 discipline).
-4. If a monolith type is later ported to pregolya (future work), it is added to the registry
+4. {INV-004} If a monolith type is later ported to pregolya (future work), it is added to the registry
    and removed from `LANGCHAIN_MONOLITH_TYPES` simultaneously — the two sets must be disjoint.
 
 ## Edge Cases

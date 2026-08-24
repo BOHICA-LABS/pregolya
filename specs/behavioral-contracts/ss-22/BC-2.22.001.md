@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.9"
+version: "1.10"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-08-23T00:00:00Z
 di_anchors: [DI-008, DI-014]
 vp_seed: true
 vp_id: VP-008
@@ -29,6 +29,7 @@ changelog:
   - "1.7 (fix-burst-287/TD-VSDD-091+ADR-010-C3/2026-08-01): (1) VP-INDEX version pin removed: §VP Anchors 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX'; §Traceability VP Registration 'VP-INDEX v1.2 as' → 'VP-INDEX as' (no §-anchor introduced). (2) ADR-010 Class 3 fix: PC-2 prose PregolyaError::new(Component::Embed, ..., 'E-EMBED-001', ...) → PregolyaError { code: 'E-EMBED-001', .. } (observation form). verify-no-version-pins.sh PASS; verify-error-notation-canon.sh PASS."
   - "1.8 (P2A-022/2026-08-21): Add Invariant 6 — Shared production validator. Names validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError> in core::embeddings as the single enforcement point for the dimensionality contract; all Embeddings impls must call it before returning Ok from embed_documents. Returns Err(E-EMBED-001) on count mismatch, zero-length inner vector, or inconsistent inner lengths. Structural requirement ensures VP-008 proptest harnesses fail rather than pass vacuously if validate_embedding_batch is removed or regressed. Traceability VP Registration updated with Invariant 6 anchor note. Per architect's ruling, P2A-022 fix-burst."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
+  - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -65,14 +66,14 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
 
 ## Preconditions
 
-1. `pregolya-core` has `async-trait` as a dependency.
-2. A concrete type `T` implements `Embeddings` with `#[async_trait]` and `&self` receivers.
-3. `T` is wrapped as `Arc<dyn Embeddings>` and held by consumers (e.g., `InMemoryVectorStore`).
+1. {PRE-001} `pregolya-core` has `async-trait` as a dependency.
+2. {PRE-002} A concrete type `T` implements `Embeddings` with `#[async_trait]` and `&self` receivers.
+3. {PRE-003} `T` is wrapped as `Arc<dyn Embeddings>` and held by consumers (e.g., `InMemoryVectorStore`).
 
 ## Postconditions
 
-1. `Arc<dyn Embeddings>` compiles without E0038 for any impl with `&self` + `#[async_trait]`.
-2. `embed_documents(&self, texts) → Result<Vec<Vec<f32>>, PregolyaError>`:
+1. {PC-001} `Arc<dyn Embeddings>` compiles without E0038 for any impl with `&self` + `#[async_trait]`.
+2. {PC-002} `embed_documents(&self, texts) → Result<Vec<Vec<f32>>, PregolyaError>`:
    - `Ok(vecs)` where `vecs.len() == texts.len()` — one embedding vector per input text.
    - All inner `Vec<f32>` have identical length `d` (the model's embedding dimension).
    - If `texts` is empty: `Ok(vec![])` — zero vectors; no error.
@@ -81,26 +82,26 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
    - If the provider returns a partial batch error (e.g., rate limit, service error):
      `Err(PregolyaError { .. })` for the whole call — NO silent truncation to a partial
      result set, NO `Vec::new()` fallback (DI-014).
-3. `embed_query(&self, text) → Result<Vec<f32>, PregolyaError>`:
+3. {PC-003} `embed_query(&self, text) → Result<Vec<f32>, PregolyaError>`:
    - `Ok(vec)` where `vec.len() == d` — same dimension as `embed_documents` inner vectors.
    - If the returned vector length differs from the model's declared dimension:
      `Err(E-EMBED-001)`.
-4. The dimension `d` is model-specific and implementation-defined; it is NOT part of the
+4. {PC-004} The dimension `d` is model-specific and implementation-defined; it is NOT part of the
    trait signature. Consumers who need dimensionality checking (e.g., VectorStore mismatch)
    check externally — the trait guarantees internal consistency, not a fixed dimension.
 
 ## Invariants
 
-1. **One vector per input** — `embed_documents(texts).ok().map(|v| v.len()) == Some(texts.len())`.
+1. {INV-001} **One vector per input** — `embed_documents(texts).ok().map(|v| v.len()) == Some(texts.len())`.
    This invariant holds for ALL valid `Embeddings` impls; a violation returns `Err(E-EMBED-001)`.
-2. **Consistent inner length** — for any `Ok(vecs)` from `embed_documents`, all `vecs[i].len()`
+2. {INV-002} **Consistent inner length** — for any `Ok(vecs)` from `embed_documents`, all `vecs[i].len()`
    are equal. Mixed-length outputs are an `Err(E-EMBED-001)` condition.
-3. **embed_query length == embed_documents inner length** — for the same model and config,
+3. {INV-003} **embed_query length == embed_documents inner length** — for the same model and config,
    `embed_query(t).ok().map(|v| v.len()) == embed_documents(vec![t]).ok().map(|vs| vs[0].len())`.
-4. **No `ndarray`** — return type is `Vec<f32>` (standard library). No heavy linear algebra
+4. {INV-004} **No `ndarray`** — return type is `Vec<f32>` (standard library). No heavy linear algebra
    dep is pulled into pregolya-core.
-5. `Embeddings: Send + Sync` — all impls must be thread-safe for use in multi-threaded Tokio tasks.
-6. **Shared production validator** — A public function `validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` in `core::embeddings` is the single enforcement point for the dimensionality contract. All `Embeddings` implementations call this function before returning `Ok` from `embed_documents`; the validation gate is NOT duplicated in individual impls or placed only in test mocks. `validate_embedding_batch` returns `Err(E-EMBED-001)` on: count mismatch (`vecs.len() != texts.len()`), any zero-length inner vector, or inconsistent inner lengths across `vecs`. This structure ensures VP-008 proptest harnesses fail — rather than pass vacuously — if `validate_embedding_batch` is removed or regressed.
+5. {INV-005} `Embeddings: Send + Sync` — all impls must be thread-safe for use in multi-threaded Tokio tasks.
+6. {INV-006} **Shared production validator** — A public function `validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` in `core::embeddings` is the single enforcement point for the dimensionality contract. All `Embeddings` implementations call this function before returning `Ok` from `embed_documents`; the validation gate is NOT duplicated in individual impls or placed only in test mocks. `validate_embedding_batch` returns `Err(E-EMBED-001)` on: count mismatch (`vecs.len() != texts.len()`), any zero-length inner vector, or inconsistent inner lengths across `vecs`. This structure ensures VP-008 proptest harnesses fail — rather than pass vacuously — if `validate_embedding_batch` is removed or regressed.
 
 ## Edge Cases
 
