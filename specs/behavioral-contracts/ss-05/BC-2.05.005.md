@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.005
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ changelog:
   - "1.7 (F-P177-C-LOW-SS14, burst-288, 2026-08-15): Remove phantom §Named-Section anchors. Two `interface-definitions.md §HTTP Status Codes 422 row` references used a row-number qualifier as part of the §-anchor name — but the actual section heading is `§HTTP Status Codes`; row numbers are not headings. Fixed by parenthesizing the qualifier: `§HTTP Status Codes (422 row)`. Two sites corrected (PC3 prose and TV-003 Notes column); no behavioral change."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.0 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -23,7 +24,7 @@ capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -68,7 +69,7 @@ This contract directly implements DEC-006.
    d. `interrupted` but all FIFO slots have already been consumed (no un-resolved
       interrupt positions remain in the per-task scratchpad).
    e. `summary_halt` — the run was terminated by an `OnCeiling::Summarize` policy
-      (BC-2.10.003 PC8(d); BC-2.12.003 PC8); the ceiling caused the run to halt
+      (BC-2.10.003 PC-008(d); BC-2.12.003 PC-008); the ceiling caused the run to halt
       with a summary rather than raising an interrupt slot.
    f. `queued` — the run has been scheduled but execution has not yet begun; no
       interrupt slot can exist before the first node executes.
@@ -104,7 +105,7 @@ This contract directly implements DEC-006.
 **Scenario:** `POST /threads/{thread_id}/runs/{run_id}/resume` called but the run completed normally several
 seconds ago. No interrupt was ever pending.
 **Expected behavior:** `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "completed" })`.
-HTTP endpoint returns `422 Unprocessable Entity` (E-GRAPH-002 POLICY→422 per-endpoint override; BC-2.14.002 PC3 9th override; interface-definitions.md §HTTP Status Codes (422 row)). Run state unchanged.
+HTTP endpoint returns `422 Unprocessable Entity` (E-GRAPH-002 POLICY→422 per-endpoint override; BC-2.14.002 PC-003 9th override; interface-definitions.md §HTTP Status Codes (422 row)). Run state unchanged.
 **Reference:** DEC-006.
 
 ### EC-002: Resume after all interrupt slots consumed
@@ -132,7 +133,7 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 |---|-------|-----------------|-------|
 | TV-001 | `graph.invoke(Command(resume="oops"), config_for_completed_thread)` | `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "completed" })` | Happy-path error — DEC-006 |
 | TV-002 | Node called `interrupt()` once; first resume consumed; second `Command(resume="extra")` submitted | `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "completed" })` after node completes | Slot-exhausted guard |
-| TV-003 | `POST /threads/{thread_id}/runs/{run_id}/resume` on thread with no interrupt history | HTTP 422; `E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "completed" }` in body | Server-side endpoint guard (E-GRAPH-002 POLICY→422 per-endpoint override; BC-2.14.002 PC3; interface-definitions.md §HTTP Status Codes (422 row)) |
+| TV-003 | `POST /threads/{thread_id}/runs/{run_id}/resume` on thread with no interrupt history | HTTP 422; `E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "completed" }` in body | Server-side endpoint guard (E-GRAPH-002 POLICY→422 per-endpoint override; BC-2.14.002 PC-003; interface-definitions.md §HTTP Status Codes (422 row)) |
 | TV-004 | `Command(resume="x")` while run is in `in_progress` state (concurrent access) | `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "in_progress" })` | Race-condition guard |
 | TV-005 | `Command(resume="x")` on `failed` run | `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "failed" })` | Failed run guard |
 | TV-006 | `Command(resume="x")` on a run with status `summary_halt` | `Err(E-GRAPH-002 NoActiveInterrupt { thread_id, run_status: "summary_halt" })` | Summary-halt guard — ceiling-terminated run |
@@ -144,7 +145,7 @@ The engine does not buffer the preemptive resume value for a future interrupt.
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-HITL-09 | Spurious Command(resume=) never mutates checkpoint or run state | Unit test (assert checkpoint unchanged after Err) | Phase 1 |
-| VP-HITL-10 | Error carries run_status field for all non-interrupted guard cases | Unit test (parameterized over the six non-interrupted run_status values: completed, failed, in_progress, summary_halt, queued, cancelled; plus the interrupted-slots-consumed scenario (PC2(d)/TV-002) — 7 total parameterized test cases) | Phase 1 |
+| VP-HITL-10 | Error carries run_status field for all non-interrupted guard cases | Unit test (parameterized over the six non-interrupted run_status values: completed, failed, in_progress, summary_halt, queued, cancelled; plus the interrupted-slots-consumed scenario (PC-002(d)/TV-002) — 7 total parameterized test cases) | Phase 1 |
 
 ## Related BCs
 

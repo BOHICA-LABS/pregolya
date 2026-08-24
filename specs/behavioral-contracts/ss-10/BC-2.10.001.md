@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.001
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-012
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-61): F-P61-01 (HIGH) — ADR-009 Option-3 trait-in-core split propagated. Architecture Anchors: trait/PolicyDecision/TokenUsage/RunContext anchor moved from pregolya-graph/src/budget/policy.rs to pregolya-core/src/budget.rs (definitions, per ADR-009 Option 3). Module field resolved from stale placeholder to pregolya-core (trait + types) / pregolya-graph (engine). BudgetEngine/EvidenceJournal anchors unchanged (pregolya-graph)."
   - "1.2 (F-P91-01, 2026-07-17): Attribute soft_limit/hard_limit configuration fields to BudgetConfig struct (not BudgetPolicy trait) per interface-definitions v2.29 §BudgetConfig. PC1: reframed from 'RunnableConfig includes a BudgetPolicy' to 'BudgetConfig configured in GraphConfig.budget_config; engine constructs BudgetPolicy from it'. TV-001: 'BudgetPolicy with soft_limit = ...' → 'BudgetConfig with soft_limit = ...'; TV-002/TV-003: 'Same policy' → 'Same BudgetConfig'. soft_limit and hard_limit are BudgetConfig fields per interface-definitions v2.29; BudgetPolicy::evaluate is pure and data-free."
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
 inputs:
@@ -80,8 +81,8 @@ confirms adk-rust has no native token/cost ceiling primitive.
      (BC-2.10.004).
    - `PolicyDecision::Deny { reason: String, current_usage: TokenUsage }` — engine dispatch
      is governed by `BudgetConfig::on_ceiling`: `Halt` → graceful halt (BC-2.10.003);
-     `Escalate` → HITL interrupt (BC-2.10.004 PC2 hard-ceiling path); `Summarize` → final summarize
-     call then `summary_halt` (BC-2.10.003 PC8).
+     `Escalate` → HITL interrupt (BC-2.10.004 {PC-002} hard-ceiling path); `Summarize` → final summarize
+     call then `summary_halt` (BC-2.10.003 {PC-008}).
 4. {PC-004} Every policy evaluation — including `Allow` outcomes — is appended to the `EvidenceJournal`
    (BC-2.10.002). No evaluation is silently discarded.
 5. {PC-005} When multiple policies are composed (policy chain), the most restrictive outcome wins:
@@ -151,8 +152,8 @@ is evaluated independently and may choose to continue, escalate, or deny the par
 ## Related BCs
 
 - BC-2.10.002 — composes with: every evaluation call produces an EvidenceJournal entry (specified there)
-- BC-2.10.003 — depends on: Deny + on_ceiling=Halt dispatches graceful halt (BC-2.10.003); Deny + on_ceiling=Summarize dispatches final summarize call then summary_halt (BC-2.10.003 PC8)
-- BC-2.10.004 — depends on: PolicyDecision::Escalate (soft-ceiling) always triggers HITL interrupt; PolicyDecision::Deny + on_ceiling=Escalate also routes to HITL interrupt (BC-2.10.004 PC2 hard-ceiling path)
+- BC-2.10.003 — depends on: Deny + on_ceiling=Halt dispatches graceful halt (BC-2.10.003); Deny + on_ceiling=Summarize dispatches final summarize call then summary_halt (BC-2.10.003 {PC-008})
+- BC-2.10.004 — depends on: PolicyDecision::Escalate (soft-ceiling) always triggers HITL interrupt; PolicyDecision::Deny + on_ceiling=Escalate also routes to HITL interrupt (BC-2.10.004 {PC-002} hard-ceiling path)
 - BC-2.05.001 — related to: Escalate reuses the `interrupt()` mechanism defined there
 
 ## Architecture Anchors
@@ -177,7 +178,7 @@ S-1.18
 | Capability Anchor Justification | CAP-012 ("Budget Governance (Allow / Escalate / Deny; Cost Metering)") per capabilities-p0.md §CAP-012 — this BC specifies the `BudgetPolicy` trait's `evaluate` contract (the allow/escalate/deny decision), which is the primary governance primitive named in CAP-012 |
 | L2 Domain Invariants | — |
 | D17 Commitment | D17-Q4 — budget governance allow/escalate/deny policy trait, composable, append-only evidence journal; Domain B dark-factory holdout requires it |
-| D18-P93-B Cost-Ceiling Scope | Cost-based ceilings (`BudgetConfig` with cost thresholds) are **not v1 scope**. CAP-012 "Cost Metering" is satisfied by `JournalEntry.token_usage.estimated_cost` in the `EvidenceJournal` (BC-2.10.002 PC2) — this provides cost observability and auditability. `BudgetConfig` v1 thresholds (`soft_limit`, `hard_limit`) are token counts (`u64`). A cost-based ceiling would require a `Decimal` or `f64` threshold field — not present in v1 spec; deferred to a future CAP-012 extension if required. (D18-P93-B, adjudicated 2026-07-17) |
+| D18-P93-B Cost-Ceiling Scope | Cost-based ceilings (`BudgetConfig` with cost thresholds) are **not v1 scope**. CAP-012 "Cost Metering" is satisfied by `JournalEntry.token_usage.estimated_cost` in the `EvidenceJournal` (BC-2.10.002 {PC-002}) — this provides cost observability and auditability. `BudgetConfig` v1 thresholds (`soft_limit`, `hard_limit`) are token counts (`u64`). A cost-based ceiling would require a `Decimal` or `f64` threshold field — not present in v1 spec; deferred to a future CAP-012 extension if required. (D18-P93-B, adjudicated 2026-07-17) |
 | ADAPT Reference | adk-rust P-73 (adk-payments PaymentPolicyGuardrail: allow/escalate/deny, composable, append-only journal) provides the correct policy SHAPE; P-46 confirms adk-rust has no native token/cost ceiling primitive (gap that pregolya must close) |
 | Priority | P0 |
 | Wave | Wave 1 |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-006
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-006
   - domain-spec/invariants.md#DI-003
@@ -32,6 +32,7 @@ changelog:
   - "1.4 (F-P151-06, burst-252, 2026-07-24): Related BCs — add BC-2.10.006 cross-reference (compaction × suspend non-interaction). A run parked by generic interrupt() (PC5: super-step boundary has not advanced) is not at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 extracted_from: null
 modified: []
 deprecated: null
@@ -146,7 +147,7 @@ is returned. The graph does not proceed and does not leave a partial checkpoint.
 - BC-2.05.005 — composes with: empty-queue guard is the dual of this (what happens when no interrupt exists)
 - BC-2.04.001 — depends on: per-task put_writes durability is the storage primitive this uses
 - BC-2.04.005 — related to: crash-recovery for interrupted runs uses the INTERRUPT marker
-- BC-2.10.006 — related to: a run parked by `interrupt()` (PC5: super-step boundary has not advanced, run in `interrupted` status) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window
+- BC-2.10.006 — related to: a run parked by `interrupt()` (PC-005: super-step boundary has not advanced, run in `interrupted` status) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during any interrupt() park window
 - _(v2-deferred: in-flight cancellation — cancelling a run that is currently mid-super-step and propagating a CancelledError through the active node tasks is deferred to v2; v1 interrupt-and-resume covers only voluntary pause-and-wait, not async abort of executing nodes)_
 
 ## Architecture Anchors

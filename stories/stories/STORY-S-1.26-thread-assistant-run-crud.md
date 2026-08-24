@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.26
 epic_id: E-14
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,6 +13,7 @@ changelog:
   - "1.3 (M3c collision-fix + EC-006 coverage restore/2026-08-24): AC-005 E-SERVER-012→E-SERVER-017 (AssistantAlreadyExists); AC-009 stale AC-005 cross-ref removed, EC-006 configurable-merge stated directly, BC-2.12.002 EC-006 trace added"
   - "1.4 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags — EC-001 source BC-2.12.001 EC-1→EC-001 (clause text match); EC-007 source BC-2.12.003 EC-1→EC-002 (clause text match: concurrent run / E-SERVER-012); 8 citations escalated (EC-002..006, EC-008..010): descriptions map to PCs not ECs — product-owner resolution required"
   - "1.5 (P2A-043 F-05/2026-08-24): escalated EC citations redirected/repointed per PO adjudication (incl. new BC-2.12.001 EC-006)"
+  - "1.6 (P2A-044 F-01 (9th arc queued→cancelled) + F-07 (EC-005→PC-024) + F-08 (EC-008→EC-006/E-SERVER-018)/2026-08-24)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.001.md
@@ -20,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "5f17039"
+input-hash: "7ac2f41"
 traces_to:
   - behavioral-contracts/BC-2.12.001
   - behavioral-contracts/BC-2.12.002
@@ -97,7 +98,7 @@ Comfortable within context window. No split required.
 (traces to BC-2.12.003 PC-005)
 
 ### AC-007: Run state machine — 9-arc transitions
-The run state machine supports these arcs: `queued → in_progress`, `in_progress → completed`, `in_progress → failed`, `in_progress → interrupted`, `in_progress → cancelled`, `in_progress → summary_halt`, `interrupted → in_progress` (resume), `interrupted → cancelled`. No other state transitions are valid.
+The run state machine supports these arcs: `queued → in_progress`, `queued → cancelled`, `in_progress → completed`, `in_progress → failed`, `in_progress → interrupted`, `in_progress → cancelled`, `in_progress → summary_halt`, `interrupted → in_progress` (resume), `interrupted → cancelled`. No other state transitions are valid.
 (traces to BC-2.12.003 PC-007)
 
 ### AC-008: summary_halt is terminal, output populated, directly deletable
@@ -148,10 +149,10 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 | EC-002 | BC-2.12.001 EC-006 | DELETE thread with active run | `E-SERVER-008` |
 | EC-003 | BC-2.12.001 PC-008 | GET /threads?limit=150 | Clamped to 100 |
 | EC-004 | BC-2.12.001 PC-008, PC-009 | GET /threads (default) | Limit 10, created_at DESC |
-| EC-005 | BC-2.12.002 PC-008 | PATCH non-existent assistant | `E-SERVER-009` |
+| EC-005 | BC-2.12.002 PC-024 | PATCH non-existent assistant | `E-SERVER-009` |
 | EC-006 | BC-2.12.002 PC-020 | Versions list ordering | `version ASC` (not created_at DESC) |
 | EC-007 | BC-2.12.003 EC-002 | POST run on thread with active run | `E-SERVER-012` |
-| EC-008 | BC-2.12.003 PC-007, PC-012 | Transition to invalid state | `E-SERVER-...` state conflict |
+| EC-008 | BC-2.12.003 EC-006 | Transition to invalid state | `E-SERVER-018` RunStateConflict (HTTP 409) |
 | EC-009 | BC-2.12.003 PC-019 | summary_halt run DELETE | Allowed directly (no cancel required) |
 | EC-010 | BC-2.12.003 PC-007, PC-010 | interrupted → cancelled | Valid arc; run moves to cancelled |
 
@@ -166,7 +167,7 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 - [ ] Create `crates/pregolya-server/src/store/thread.rs` — `ThreadStore` trait
 - [ ] Create `crates/pregolya-server/src/store/assistant.rs` — `AssistantStore` trait
 - [ ] Write failing tests for AC-001..AC-010 before any implementation
-- [ ] Implement `validate_state_transition` — 9-arc validation (including `interrupted → cancelled`)
+- [ ] Implement `validate_state_transition` — 9-arc validation (including `queued → cancelled` and `interrupted → cancelled`)
 - [ ] Implement `configurable_merge` — leaf-level map merge, run wins
 - [ ] Implement Thread routes: POST, GET, LIST (limit clamp), DELETE (cascade)
 - [ ] Implement Assistant routes: POST, GET, PATCH (new version), versions list (ASC)
@@ -186,7 +187,7 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 ## Architecture Compliance Rules
 
 1. **Route handlers must not depend on concrete store implementations.** Thread/Assistant/Run route handlers use `Arc<dyn ThreadStore>`, `Arc<dyn AssistantStore>`, `Arc<dyn RunStore>` — never concrete types. This is VP-STORE-01 (no concrete store in route handlers).
-2. **`interrupted → cancelled` arc is load-bearing.** The 9-arc state machine includes this arc (BC-2.12.003 §StateTransitions). The transition validator must include it.
+2. **`queued → cancelled` and `interrupted → cancelled` arcs are load-bearing.** The 9-arc state machine includes both (BC-2.12.003 §StateTransitions). The transition validator must include both.
 3. **Versions list is `version ASC` (not `created_at DESC`).** The assistant versions endpoint is the documented exemption from the canonical created_at DESC ordering.
 4. **Leaf-level merge, not whole-map replacement.** `configurable_merge` performs per-key override at leaf level. A run providing `{ "model": "gpt-4" }` must not erase other assistant keys not present in the run config.
 5. **`summary_halt` is terminal and directly deletable.** Do not require a cancel step before deleting a `summary_halt` run.
@@ -229,7 +230,7 @@ crates/pregolya-server/
   tests/
     thread_routes_tests.rs           # CRUD tests, cascade-delete, limit clamp
     assistant_routes_tests.rs        # versions list ASC, configurable merge
-    run_lifecycle_tests.rs           # 9-arc state machine, interrupted→cancelled
+    run_lifecycle_tests.rs           # 9-arc state machine, queued→cancelled, interrupted→cancelled
 ```
 
 **Files to create (new):** all routes/, models/, store/ files.

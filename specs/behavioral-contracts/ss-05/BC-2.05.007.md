@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: true
 vp_id: VP-011
@@ -28,6 +28,7 @@ changelog:
   - "1.5 (fix-burst-P2A-010/F-P2A010-08/2026-08-20): Add PC-7 (Pure Routing Core — VP-011 proof surface): formally define `route_pre_tool_decision`, `shield_hook_result`, and `DispatchOutcome` as required named items in `graph::hitl`. These are the VP-011 Kani proof targets; Kani 0.67.0 cannot target `pre_tool_dispatch` directly (async), so pure extraction is required. Update §Invariants fail-closed Deny text to name `route_pre_tool_decision`. Update §Verification Properties VP-011 row to reference the pure functions and DispatchOutcome by name."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.23 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.8 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -87,7 +88,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 4. {PC-004} **PendingHumanApproval:** `pre_invoke` returns `PreToolDecision::PendingHumanApproval { prompt }`.
    `pre_tool_dispatch` issues `interrupt(ToolApprovalRequest { preview, prompt })` via
    BC-2.05.001 machinery. The run is suspended. On resume, the delivered
-   `Command(resume=PreToolDecision)` is applied via rules PC-1 through PC-3. See
+   `Command(resume=PreToolDecision)` is applied via rules PC-001 through PC-003. See
    BC-2.05.008 for the skip-hook-on-resume invariant.
 5. {PC-005} **Hook error (panic or `Err`):** If `hook.pre_invoke(...)` panics or returns an error,
    `pre_tool_dispatch` treats this as `Deny { reason: "hook error: <detail>" }`. The hook
@@ -137,7 +138,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 - {INV-001} **Fail-closed Deny (VP-011 Kani seed):** `PreToolDecision::Deny` ALWAYS results in
   `ToolOutput::Error(reason)` being returned WITHOUT invoking the tool. Under no control flow
   path does a Deny decision allow tool execution. The property is proved by Kani via the
-  pure-core `route_pre_tool_decision` function (PC-7): `Deny { reason }` returns
+  pure-core `route_pre_tool_decision` function (PC-007): `Deny { reason }` returns
   `DispatchOutcome::Reject(reason)` and `DispatchOutcome::Proceed` is structurally unreachable
   from the `Deny` arm.
 - {INV-002} `pre_tool_dispatch` is called for EVERY tool invocation — there is no bypass, no
@@ -178,7 +179,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
-| VP-011 (Kani P0) | `route_pre_tool_decision(Deny{..})` returns `DispatchOutcome::Reject` only; `DispatchOutcome::Proceed` unreachable from `Deny` arm; `shield_hook_result(Err(_))` → `Deny{..}`; `#[non_exhaustive]` wildcard → `Reject` (fail-closed) — all proved over pure-core sync functions (PC-7) | Kani exhaustive proof targeting `route_pre_tool_decision` and `shield_hook_result` in `graph::hitl`; async `pre_tool_dispatch` excluded from Kani scope (no native async support in Kani 0.67.0) |
+| VP-011 (Kani P0) | `route_pre_tool_decision(Deny{..})` returns `DispatchOutcome::Reject` only; `DispatchOutcome::Proceed` unreachable from `Deny` arm; `shield_hook_result(Err(_))` → `Deny{..}`; `#[non_exhaustive]` wildcard → `Reject` (fail-closed) — all proved over pure-core sync functions (PC-007) | Kani exhaustive proof targeting `route_pre_tool_decision` and `shield_hook_result` in `graph::hitl`; async `pre_tool_dispatch` excluded from Kani scope (no native async support in Kani 0.67.0) |
 | VP-2.05.007-B | Hook panic treated as Deny (fail-closed); tool not invoked | Unit test: hook impl that panics; assert ToolOutput::Error returned |
 | VP-2.05.007-C | Edit path validates modified_args is JSON object; falls back to Deny if not | Unit test: hook returns Edit with invalid args; assert ToolOutput::Error |
 

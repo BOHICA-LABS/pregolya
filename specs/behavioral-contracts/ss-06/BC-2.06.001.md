@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.13"
+version: "1.14"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-007
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
   - domain-spec/invariants.md#DI-011
@@ -40,6 +40,7 @@ changelog:
   - "1.11 (burst-290/F-180-03, 2026-08-16): Fix live-body phantom ADR §-citation in PC-2 StreamEvent::Error bullet: `ADR-023 §exhaustive-by-design` → `ADR-023 §Exempt Enums` (no heading §exhaustive-by-design exists in ADR-023; StreamEvent's exhaustive-match exemption is documented under `### Exempt Enums` within `## Decision 3 — Exempt Inventory`)."
   - "1.12 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.17 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.13 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.14 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 extracted_from: null
 modified: []
 deprecated: null
@@ -150,22 +151,22 @@ consumer; the run's final state is preserved in the checkpoint.
 in `parent_ids`. No subgraph event is swallowed; consumers reconstruct the nested call tree
 by traversing `parent_ids` (see BC-2.06.002).
 
-### EC-005: Node raises error mid-run (failed-run stream termination — adjudicated from PC2)
+### EC-005: Node raises error mid-run (failed-run stream termination — adjudicated from PC-002)
 **Scenario:** A node function returns `Err(PregolyaError)` during execution.
 **Expected behavior:** The execution engine emits `StreamEvent::Error` carrying `run_id`,
 `parent_ids` (Vec<RunId>), `error_code` (String from `PregolyaError::code`), `error_message`
 (String from `PregolyaError::message`); the event stream then closes. `RunEnd` is NOT emitted
-for a failed run — `RunEnd` is reserved for the completion path (PC2: "once at run completion").
+for a failed run — `RunEnd` is reserved for the completion path (PC-002: "once at run completion").
 The run record transitions to `failed` status, queryable via `GET /threads/{thread_id}/runs/{run_id}`.
 No partial or ghost `RunEnd` event with `status: "failed"` is emitted.
-**Adjudication note (F-P46-01, ADV-P1D-PASS-46):** PC2's completion-only `RunEnd` contract
+**Adjudication note (F-P46-01, ADV-P1D-PASS-46):** PC-002's completion-only `RunEnd` contract
 did not previously have an explicit failed-run EC. This EC makes the rule unambiguous and is
 the authority cited by BC-2.12.007 EC-001 (failure path) and BC-2.12.007 EC-003 (interrupt path).
-The minimal coherent rule consistent with PC2: `RunEnd` fires for every terminal state that
+The minimal coherent rule consistent with PC-002: `RunEnd` fires for every terminal state that
 produces a final output — `completed` (graph reaches END) and `summary_halt` (budget
-OnCeiling::Summarize path; BC-2.10.003 PC8 — model response IS the final output). Non-output
+OnCeiling::Summarize path; BC-2.10.003 PC-008 — model response IS the final output). Non-output
 terminal states (`failed`, `cancelled`) and the paused state (`interrupted`) end the stream
-without `RunEnd`. Authority for summary_halt: BC-2.10.003 PC8(c)(d); BC-2.12.003 PC8 v1.4.
+without `RunEnd`. Authority for summary_halt: BC-2.10.003 PC-008(c)(d); BC-2.12.003 PC-008 v1.4.
 
 ### EC-006: Multiple ContentBlocks with partial rejection at ToolResult boundary (F-P99-01)
 **Scenario:** A single tool invocation produces N ContentBlocks. K of them (0 < K ≤ N) are

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.006
-version: "2.2"
+version: "2.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -32,6 +32,7 @@ changelog:
   - "2.0 (burst-311/D-181/2026-08-17): Complete fts_search/search_history disambiguation sweep (Wave-2b). Four remaining trait-method-context references renamed search_history → fts_search: (a) TV-004 'search_history API' → 'fts_search (trait method)'; (b) VP-2.10.006-A 'call search_history' → 'call fts_search'; (c) Related BCs BC-2.04.001 dependency 'history readable via search_history' → 'history readable via fts_search (trait method)'; (d) Related BCs BC-2.04.008 dependency 'search_history FTS for ConversationSnapshot assembly' → 'fts_search (CheckpointSaver trait method) for ConversationSnapshot assembly'. No Tool-context search_history references changed — BC-2.04.008 confirmed clean."
   - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.25 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "2.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.3 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags; (PC-4 above) in INV-008 corrected to ({PRE-004} above) — super-step-boundary requirement is in PRE-004, not PC-004."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -64,7 +65,7 @@ returned `CompactionSummary` by replacing `messages[compacted_start..=compacted_
 next-run frozen-snapshot), (4) write the updated checkpoint durably, (5) append a
 `CompactionEvent` to `EvidenceJournal`, (6) emit `compaction_event` streaming event
 (BC-2.06.006), (7) continue the run. Original checkpoint records are NOT deleted
-(BC-2.04.001 Inv-5 — append-only; records never deleted or mutated in place). If `compact()`
+(BC-2.04.001 INV-005 — append-only; records never deleted or mutated in place). If `compact()`
 fails, the cycle is aborted without mutating the message window.
 
 ## Preconditions
@@ -104,7 +105,7 @@ checkpoint state blob under the new `CheckpointId`). `put` is the correct call h
 not `put_writes` — because `put_writes` persists per-task channel writes within the
 current super-step, whereas compaction produces a complete new checkpoint state that
 spans the between-super-steps boundary; `put` is the full-blob, new-version write path
-(BC-2.04.001 Inv-5 append-only: the pre-compaction checkpoint is NOT deleted; the new
+(BC-2.04.001 INV-005 append-only: the pre-compaction checkpoint is NOT deleted; the new
 checkpoint is appended as a fresh entry). If `put` fails, the in-memory window is reverted
 and the cycle is aborted (the run continues with the pre-compaction window). The write
 MUST succeed before proceeding to step 5.
@@ -126,7 +127,7 @@ negative when accumulated > ceiling on the Deny path.
 
 ## Invariants
 
-- {INV-001} **Checkpoint append-only invariant (BC-2.04.001 Inv-5):** Original message records are
+- {INV-001} **Checkpoint append-only invariant (BC-2.04.001 INV-005):** Original message records are
   NEVER deleted from the checkpoint store. The compaction writes a NEW checkpoint entry with
   the compacted window; the old entries remain in the store and are readable via history APIs.
 - {INV-002} **Mid-run, not next-run:** Compaction takes effect immediately in the current run.
@@ -147,13 +148,13 @@ negative when accumulated > ceiling on the Deny path.
   model-generated and non-deterministic. This is an accepted tradeoff documented in the
   `EvidenceJournal` entry; BSP determinism invariants (BC-2.03.001 / VP-001) are not
   violated because compaction runs BETWEEN super-steps, not within them.
-- {INV-008} **Compaction × Suspend Non-Interaction — general super-step-boundary property (F-P151-06; cross-ref BC-2.05.001 PC5, BC-2.05.007 PC-4, BC-2.05.008 PC-4, BC-2.10.004 PC4):** Compaction fires only at super-step boundaries (PC-4 above). Any run in `interrupted` status — regardless of the suspend source — is NOT at a super-step boundary, so compaction CANNOT fire during any interrupt park window. This property holds across all three suspend classes:
+- {INV-008} **Compaction × Suspend Non-Interaction — general super-step-boundary property (F-P151-06; cross-ref BC-2.05.001 {PC-005}, BC-2.05.007 {PC-004}, BC-2.05.008 {PC-004}, BC-2.10.004 {PC-004}):** Compaction fires only at super-step boundaries ({PRE-004} above). Any run in `interrupted` status — regardless of the suspend source — is NOT at a super-step boundary, so compaction CANNOT fire during any interrupt park window. This property holds across all three suspend classes:
 
-  **(a) Generic `interrupt()` parks (BC-2.05.001):** A node calling `interrupt(value)` fires inside the scheduler's `tick()`, mid-super-step. The run transitions to `interrupted` status with the super-step boundary NOT yet advanced (BC-2.05.001 PC5: "the super-step boundary has not advanced"). The run is parked waiting for a `Command(resume=...)`. Compaction CANNOT fire during this park.
+  **(a) Generic `interrupt()` parks (BC-2.05.001):** A node calling `interrupt(value)` fires inside the scheduler's `tick()`, mid-super-step. The run transitions to `interrupted` status with the super-step boundary NOT yet advanced (BC-2.05.001 {PC-005}: "the super-step boundary has not advanced"). The run is parked waiting for a `Command(resume=...)`. Compaction CANNOT fire during this park.
 
-  **(b) Budget-escalation interrupts (BC-2.10.004 PC4):** A `PolicyDecision::Escalate` (or `Deny + OnCeiling::Escalate`) triggers `interrupt(BudgetEscalation{...})` from within a super-step evaluation (BC-2.10.004 PC4: "evaluation point within a super-step"). After the interrupt is raised, the run parks in `interrupted` status. Compaction CANNOT fire during this park.
+  **(b) Budget-escalation interrupts (BC-2.10.004 {PC-004}):** A `PolicyDecision::Escalate` (or `Deny + OnCeiling::Escalate`) triggers `interrupt(BudgetEscalation{...})` from within a super-step evaluation (BC-2.10.004 {PC-004}: "evaluation point within a super-step"). After the interrupt is raised, the run parks in `interrupted` status. Compaction CANNOT fire during this park.
 
-  **(c) PendingHumanApproval interrupts (BC-2.05.007 PC-4 / BC-2.05.008 PC-4):** A run parked awaiting pre-invoke tool approval is suspended mid-scheduler-step waiting for a `Command(resume=PreToolDecision)`. Compaction CANNOT fire during this park. The `ToolApprovalRequest`'s `ToolCallPreview` payload and message-window references (serialized to checkpoint per BC-2.05.008 PC-3) are stable across any later compaction, because that compaction can only occur after the approval is resolved and the run advances to the next super-step boundary.
+  **(c) PendingHumanApproval interrupts (BC-2.05.007 {PC-004} / BC-2.05.008 {PC-004}):** A run parked awaiting pre-invoke tool approval is suspended mid-scheduler-step waiting for a `Command(resume=PreToolDecision)`. Compaction CANNOT fire during this park. The `ToolApprovalRequest`'s `ToolCallPreview` payload and message-window references (serialized to checkpoint per BC-2.05.008 {PC-003}) are stable across any later compaction, because that compaction can only occur after the approval is resolved and the run advances to the next super-step boundary.
 
   **General corollary:** Any checkpoint state serialized at interrupt time is stable across subsequent compaction cycles, because those cycles are deferred until the park is resolved and the run reaches the next super-step boundary.
 
@@ -186,7 +187,7 @@ negative when accumulated > ceiling on the Deny path.
 
 ## Related BCs
 
-- BC-2.04.001 — depends on: Inv-5 checkpoint append-only invariant (original records never deleted or mutated in place; compaction appends new checkpoint entries; history readable via fts_search (trait method))
+- BC-2.04.001 — depends on: INV-005 checkpoint append-only invariant (original records never deleted or mutated in place; compaction appends new checkpoint entries; history readable via fts_search (trait method))
 - BC-2.04.008 — depends on: fts_search (CheckpointSaver trait method) for ConversationSnapshot assembly
 - BC-2.10.001 — composes with: EvidenceJournal append-only invariant
 - BC-2.10.003 — related to: OnCeiling::Summarize is reactive ceiling path; compaction execution is proactive mid-run path

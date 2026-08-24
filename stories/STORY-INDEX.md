@@ -1,9 +1,11 @@
 ---
 document_type: story-index
-version: "1.0"
+version: "1.1"
 status: active
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (P2A-044/2026-08-24): Revert P2A-043 over-propagation — BC-2.06.001 removed from S-1.27 behavioral_contracts (taxonomy reference not coverage); BC-2.06.001 §Story Anchor updated to S-1.17 only."
 phase: 2
 traces_to: .factory/specs/behavioral-contracts/BC-INDEX.md
 inputs:
@@ -102,7 +104,7 @@ input-hash: "pending"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-1.26 | Thread, Assistant and Run CRUD — Durable HTTP Server | BC-2.12.001, BC-2.12.002, BC-2.12.003 | SS-12 | pregolya-server | P1 | 8 | [S-1.16, S-1.10, S-1.04] | draft |
-| S-1.27 | CronSchedule, SecurityConfig and Idempotency Store Seams | BC-2.06.001, BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007 | SS-12 | pregolya-server | P1 | 8 | [S-1.26] | draft |
+| S-1.27 | CronSchedule, SecurityConfig and Idempotency Store Seams | BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007 | SS-12 | pregolya-server | P1 | 8 | [S-1.26] | draft |
 
 ---
 
@@ -251,7 +253,7 @@ input-hash: "pending"
 
 | BC ID | Title (abbreviated) | Story | Priority |
 |-------|---------------------|-------|---------|
-| BC-2.06.001 | Typed Per-Phase Event Taxonomy — 16 Variants | S-1.17, S-1.27 | P0 |
+| BC-2.06.001 | Typed Per-Phase Event Taxonomy — 16 Variants | S-1.17 | P0 |
 | BC-2.06.002 | run_id + parent_ids Correlation | S-1.17 | P0 |
 | BC-2.06.003 | Streaming and Unary Identical Final Answer | S-1.17 | P0 |
 | BC-2.06.004 | tool_approval_request StreamEvent | S-1.24 | P1 |

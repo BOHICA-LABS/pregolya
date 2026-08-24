@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,11 +20,12 @@ changelog:
   - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). PC3 categorical table: `Category::Exec → 500` added as 13th entry (library-layer-only; INTERNAL-tier fallback at pregolya-server). VP-BC214002-02 description: '12 categories' → '13 categories (EXEC included; no category returns 200)'. §Notes section added: EXEC library-layer-only disposition; no Known-overrides row per architect D26 decision; parameterized test accepts EXEC→500 via INTERNAL-tier fallback. No behavioral change to RFC-7807 emission."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.11 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T01:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
 inputs:
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "25682ca"
+input-hash: "9d456d5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -104,7 +105,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    - `E-SERVER-009 (AssistantNotFound)` — context-dependent dual override:
      - Direct lookup (`GET /assistants/{id}`) → **404** despite `Category::Val` → 400.
      - Run creation body (invalid `assistant_id` in POST body) → **422** despite `Category::Val` → 400.
-     Source: BC-2.12.002, BC-2.12.003 PC3; interface-definitions.md §HTTP Status Codes (404 + 422 rows).
+     Source: BC-2.12.002, BC-2.12.003 {PC-003}; interface-definitions.md §HTTP Status Codes (404 + 422 rows).
    - `E-SERVER-010 (AssistantVersionNotFound)` → **404** despite `Category::Val` → 400.
      Source: BC-2.12.002; interface-definitions.md §HTTP Status Codes (404 row).
    - `E-SERVER-011 (GraphNotFound)` → **422** despite `Category::Val` → 400.
@@ -144,7 +145,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
   fallback for errors with no per-endpoint specification. Legitimate per-endpoint divergences
   (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup,
   E-SERVER-008 POLICY→409 for thread state conflict, E-GRAPH-002 POLICY→422 on resume
-  endpoint) must be documented in PC3 and interface-definitions.md §HTTP Status Codes.
+  endpoint) must be documented in {PC-003} and interface-definitions.md §HTTP Status Codes.
   Note: E-SERVER-004 POLICY→403 is NOT a divergence — POLICY→403 is the categorical
   default and requires no carve-out.
   The categorical map itself must not diverge; per-endpoint overrides must be explicit.
@@ -186,7 +187,7 @@ from the code string. The HTTP status code falls back to 500 for unknown categor
 
 ## Canonical Test Vectors
 
-_TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy codes for component/category, e.g., `CORE`, `VAL`, `Never`) in table cells — this is prose shorthand, not compilable Rust. The actual test code constructs errors via `PregolyaError::new(...)` per BC-2.14.001 PC8. This notation is intentional and should not be converted to `::new()` form._
+_TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy codes for component/category, e.g., `CORE`, `VAL`, `Never`) in table cells — this is prose shorthand, not compilable Rust. The actual test code constructs errors via `PregolyaError::new(...)` per BC-2.14.001 {PC-008}. This notation is intentional and should not be converted to `::new()` form._
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
@@ -205,7 +206,7 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 
 ## Notes
 
-- **EXEC category (D26):** `Category::Exec` is a library-layer-only error category added by D26 per ADR-010 §Category Axis Expansion (D26). At the `pregolya-server` HTTP layer, `EXEC` errors receive the categorical fallback `INTERNAL → 500`; there is no dedicated Known-overrides row for `EXEC` in PC3. The parameterized test (VP-BC214002-02) must map `Category::Exec` to 500 via the INTERNAL-tier fallback — `EXEC` does not return 200 and the VP passes for this variant.
+- **EXEC category (D26):** `Category::Exec` is a library-layer-only error category added by D26 per ADR-010 §Category Axis Expansion (D26). At the `pregolya-server` HTTP layer, `EXEC` errors receive the categorical fallback `INTERNAL → 500`; there is no dedicated Known-overrides row for `EXEC` in {PC-003}. The parameterized test (VP-BC214002-02) must map `Category::Exec` to 500 via the INTERNAL-tier fallback — `EXEC` does not return 200 and the VP passes for this variant.
 
 ## Related BCs
 

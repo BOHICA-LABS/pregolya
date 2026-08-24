@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.8"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T01:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -31,6 +31,8 @@ changelog:
   - "1.6 (F-P177-B03, burst-288, 2026-08-15): Add `interrupted → cancelled` arc to PC7 (9th arc); extend PC10 to authorize cancellation of `interrupted` Runs. Resolves deadlock: PC19 directed callers to cancel an interrupted Run before deletion, but the arc was absent from PC7 and unauthorized by PC10, making interrupted Runs permanently undeletable."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-044 F-08/2026-08-24): Mint E-SERVER-018 RunStateConflict — PC-012 and PC-019 both mandated HTTP 409 for invalid-state-transition but named no error code, leaving the response body unspecified. PC-012 amended to cite E-SERVER-018 for the terminal-state cancel conflict. PC-019 amended to cite E-SERVER-018 for the non-terminal-state delete conflict. EC-006 added covering both scenarios. No arc transitions changed; amendment adds specification precision only."
+  - "1.10 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 extracted_from: null
 modified: []
 deprecated: null
@@ -47,7 +49,7 @@ removal_reason: null
 
 A Run is a single execution of a pregolya graph against a Thread, dispatched by
 pregolya-server. This BC specifies the Run creation endpoint, its lifecycle state
-machine (`queued → in_progress → completed | failed | cancelled | summary_halt`, with `interrupted` as a pausable/resumable state; `summary_halt` is a budget-summarize terminal state per BC-2.10.003 PC8(d)), and the
+machine (`queued → in_progress → completed | failed | cancelled | summary_halt`, with `interrupted` as a pausable/resumable state; `summary_halt` is a budget-summarize terminal state per BC-2.10.003 {PC-008}(d)), and the
 failure modes including the `E-SERVER-002 RunNotFound` error. Runs are created synchronously
 via `POST /threads/{thread_id}/runs`; execution begins asynchronously. Status can be
 polled via `GET /threads/{thread_id}/runs/{run_id}`. No wire-compatibility with
@@ -93,7 +95,7 @@ LangGraph Platform (D13).
    in_progress → failed        (unhandled error in graph or executor)
    in_progress → interrupted   (HITL interrupt raised; graph paused, awaiting resume)
    in_progress → cancelled     (POST .../cancel called while run is active)
-   in_progress → summary_halt  (OnCeiling::Summarize path: budget ceiling hit; one final summarize LLM call completes; model response returned as output — BC-2.10.003 PC8(c)(d))
+   in_progress → summary_halt  (OnCeiling::Summarize path: budget ceiling hit; one final summarize LLM call completes; model response returned as output — BC-2.10.003 {PC-008}(c)(d))
    queued      → cancelled     (POST .../cancel called before executor picks up the run)
    interrupted → in_progress   (caller posts resume value via POST .../runs/{run_id}/resume)
    interrupted → cancelled     (POST .../cancel called on an interrupted run)
@@ -111,8 +113,7 @@ LangGraph Platform (D13).
     the Run to `cancelled` status.
 11. {PC-011} Cancellation is best-effort: if the run completes naturally before the cancellation
     signal is processed, the status will be `completed` or `failed`, not `cancelled`.
-12. {PC-012} Returns HTTP 202 on successful cancellation signal; HTTP 404 if run not found;
-    HTTP 409 if run is already in a terminal state.
+12. {PC-012} Returns HTTP 202 on successful cancellation signal; HTTP 404 `{ code: "E-SERVER-002", message: "RunNotFound: ..." }` if run not found; HTTP 409 `{ code: "E-SERVER-018", message: "RunStateConflict: cannot perform 'cancel' on run '<run_id>' in state '<current_state>'" }` if run is already in a terminal state (EC-006).
 
 ### Read Run (`GET /threads/{thread_id}/runs/{run_id}`)
 
@@ -133,7 +134,7 @@ LangGraph Platform (D13).
 ### Delete Run (`DELETE /threads/{thread_id}/runs/{run_id}`)
 
 19. {PC-019} Deletes a Run record that is in a terminal state (`completed`, `failed`, `cancelled`, or `summary_halt`).
-    Cannot delete a `queued`, `in_progress`, or `interrupted` Run — HTTP 409 is returned.
+    Cannot delete a `queued`, `in_progress`, or `interrupted` Run — HTTP 409 `{ code: "E-SERVER-018", message: "RunStateConflict: cannot perform 'delete' on run '<run_id>' in state '<current_state>'" }` (EC-006).
     For `interrupted` Runs: either resume (POST .../resume) to complete/fail/cancel/summary_halt, or
     cancel first (POST .../cancel → `cancelled`), then delete once terminal.
     **Decision basis (F-02):** DELETE = record deletion only. Separation from cancellation
@@ -148,7 +149,7 @@ LangGraph Platform (D13).
   server instance without distributed coordination — in single-node deployment, all
   `queued` Runs on startup are retried.
 - {INV-003} Run output (`output`) is populated when `status ∈ {"completed", "summary_halt"}`. For
-  `summary_halt`, output carries the summarize model response (BC-2.10.003 PC8(c)). It is
+  `summary_halt`, output carries the summarize model response (BC-2.10.003 {PC-008}(c)). It is
   `null` in all other states (`queued`, `in_progress`, `interrupted`, `failed`, `cancelled`).
 - {INV-004} Run error (`error`) is populated ONLY when `status = "failed"`. It is `null` in all other states.
 - {INV-005} A Run cannot be in `in_progress` state if no executor task is active for it (no orphan runs).
@@ -158,7 +159,7 @@ LangGraph Platform (D13).
   collision. Fields absent from the run request body retain the Assistant's stored values
   unchanged. This applies to each of the three fields independently. Merge is applied at run
   creation time before the run is dispatched to the executor; the merged effective config is
-  what the graph receives. **Upstream-check result:** BC-2.01.003 PC6 specifies that metadata
+  what the graph receives. **Upstream-check result:** BC-2.01.003 {PC-006} specifies that metadata
   "accumulates" down the run tree (consistent with merge; run wins), and semport behavioral-intent
   §2.3 declares no explicit merge rule for run-over-assistant config — no contradiction found.
   Leaf-level deep-merge is adopted as spec canon. Cross-ref: BC-2.12.002 §Description.
@@ -187,8 +188,11 @@ scoped to a different thread — cross-thread run access is not permitted.
 
 ### EC-005: Delete an active (in_progress) run
 **Scenario:** `DELETE /threads/t1/runs/<run_id>` while `status = "in_progress"`.
-**Expected behavior:** HTTP 409. Caller must cancel the run first
-(`POST /threads/t1/runs/<run_id>/cancel`), wait for terminal state, then delete.
+**Expected behavior:** HTTP 409 `{ code: "E-SERVER-018", message: "RunStateConflict: cannot perform 'delete' on run '<run_id>' in state 'in_progress'" }`. Caller must cancel the run first (`POST /threads/t1/runs/<run_id>/cancel`), wait for terminal state, then delete.
+
+### EC-006: Invalid state transition — operation on run in incompatible state (P2A-044 F-08)
+**Scenario:** Any operation that the Run state machine does not permit in the Run's current state: (a) `POST .../cancel` on a Run in a terminal state (`completed`, `failed`, `cancelled`, `summary_halt`); (b) `DELETE .../runs/{run_id}` on a Run in a non-terminal state (`queued`, `in_progress`, `interrupted`). Distinct from EC-002 (ConcurrentRun / E-SERVER-012) which is about a second Run conflicting on the same Thread, not about an invalid transition on an existing Run.
+**Expected behavior:** HTTP 409 `{ code: "E-SERVER-018", message: "RunStateConflict: cannot perform '<operation>' on run '<run_id>' in state '<current_state>'" }`. Three struct fields: `run_id` (String), `current_state` (String), `operation` (String, value `"cancel"` or `"delete"`). The run record is not mutated; no state change occurs. Caller must first bring the run to a compatible state before retrying (e.g., wait for natural completion, or use the correct endpoint). Error code: E-SERVER-018 RunStateConflict (POLICY; RetryHint: Never — the same operation on the same terminal/non-terminal run always fails while the state persists).
 
 ## Canonical Test Vectors
 
@@ -232,7 +236,7 @@ S-1.26
 | Field | Value |
 |-------|-------|
 | Source L2 Capability | CAP-014 |
-| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Run resource lifecycle, which is explicitly listed as the third of the four managed resources: "Run (single execution)". Canonical state machine: queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable (PC7-PC9 are the authoritative source; see PC7 for transition arcs, PC8 for terminal-set definition, PC9 for interrupted→in_progress resume arc) |
+| Capability Anchor Justification | CAP-014 ("Durable-Run HTTP Server (Threads, Assistants, Runs, Crons)") per capabilities-p1-p2.md §CAP-014 — this BC implements the Run resource lifecycle, which is explicitly listed as the third of the four managed resources: "Run (single execution)". Canonical state machine: queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable ({PC-007}-{PC-009} are the authoritative source; see {PC-007} for transition arcs, {PC-008} for terminal-set definition, {PC-009} for interrupted→in_progress resume arc) |
 | L2 Domain Invariants | — |
 | DEC Reference | DEC-006 (Resume Value Injection with Empty Interrupt Queue — applies to the `interrupted` state resume path) |
 | Risk Source | — |

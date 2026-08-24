@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.10"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 1
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-24T01:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-32): F-P32-03 add PC20 — GET /assistants/{id}/versions pagination (limit default 10 max 100 clamped / offset 0 / ordering exemption: version ASC) matching interface-definitions.md §Assistants /versions row."
   - "1.2 (ADV-P1D-PASS-33): F-P33-01 add PC21-PC23 — GET /assistants list-collection postcondition block (response shape { assistants: [Assistant], total_count: u64 }, limit default 10 max 100 clamped / offset 0 / created_at DESC); interface-definitions.md §Canonical Pagination Convention BC anchors updated. F-P33-02 add cross-reference to run-config merge precedence canon in Description."
@@ -26,6 +26,8 @@ changelog:
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (M3b-escalation-9/2026-08-24): PC-005 amended to cite E-SERVER-012 AssistantAlreadyExists — the HTTP 409 / if_exists=raise path lacked a named error code; gap surfaced during M3b story re-citation escalation adjudication."
   - "1.10 (collision-fix/2026-08-24): PC-005 error code corrected from E-SERVER-012 to E-SERVER-017 — E-SERVER-012 is already allocated to ConcurrentRun (BC-2.12.003); append-only numbering assigns E-SERVER-017 = AssistantAlreadyExists per error-taxonomy."
+  - "1.11 (P2A-044 F-07/2026-08-24): Add PC-024 — PATCH not-found clause. S-1.26 EC-005 cited PC-008 (GET not-found) for PATCH not-found; PC-008 is scoped under the Read section header and covers only GET. PC-024 is additive under the Update section; no new error code minted (E-SERVER-009 AssistantNotFound applies to all operations on a non-existent assistant)."
+  - "1.12 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -83,6 +85,7 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
 10. {PC-010} Creates a new immutable version snapshot (version N+1) with the merged fields.
 11. {PC-011} The previous version remains accessible via `GET /assistants/{assistant_id}/versions`.
 12. {PC-012} Returns HTTP 200 with the updated (new-version) Assistant record.
+13. {PC-024} If `assistant_id` does not exist: HTTP 404 `{ code: "E-SERVER-009", message: "AssistantNotFound: assistant '<assistant_id>' does not exist" }`.
 
 ### Delete Assistant (`DELETE /assistants/{assistant_id}`)
 
@@ -102,7 +105,7 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
     max 100; values > 100 silently clamped to 100), `offset` (default 0). **Ordering exemption:**
     results are ordered `version` **ascending** (lowest version first) — version ASC is
     intentional for historical replay and differs from the canonical `created_at` DESC default
-    declared in the §Canonical Pagination Convention. BC-2.12.001 PC8 clamp canon applies;
+    declared in the §Canonical Pagination Convention. BC-2.12.001 {PC-008} clamp canon applies;
     out-of-range canon: clamp (F-P31-01). Exemption documented in interface-definitions.md
     §Assistants /versions row (F-P32-03).
 
@@ -112,7 +115,7 @@ any existing version. No wire-compatibility with LangGraph Platform (D13).
     `offset` (default 0).
 22. {PC-022} Returns `{ assistants: [Assistant], total_count: u64 }` for all stored Assistants.
 23. {PC-023} Results ordered `created_at` **descending** (canonical; F-P31-01). Out-of-range clamp
-    canon per BC-2.12.001 PC8 (F-P31-01, ADV-P1D-PASS-31). Interface anchor:
+    canon per BC-2.12.001 {PC-008} (F-P31-01, ADV-P1D-PASS-31). Interface anchor:
     interface-definitions.md §Assistants `GET /assistants` row (F-P33-01).
 
 ## Invariants

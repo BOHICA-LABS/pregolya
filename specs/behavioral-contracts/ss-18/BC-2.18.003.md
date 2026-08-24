@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.003
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
@@ -25,6 +25,7 @@ changelog:
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (P2A-040-F-01-F-02/2026-08-22): TWO changes closing F-01/F-02 (HIGH) from adversary pass P2A-040. (1) PC-1: replace stale 'call-time vars map supplies a Vec<Message>' with 'call-time vars map supplies a TemplateInput::Messages(MessageListVar)' — the bare Vec<Message> phrasing predated the TemplateInput enum concretization (ADR-015 Decision 3 Amendment, burst-279) and caused S-2.04 AC-015 to claim MessageListVar is a bare newtype over Vec<Message>, which is wrong and makes the Messages-arm Red Gate (S-2.05 AC-016) structurally unimplementable. (2) INV-4 (new): canonical MessageListVar struct shape defined with both messages: Vec<Message> and trust_level: Option<TrustLevel> fields — NOT a bare newtype; trust_level is the load-bearing field that enables injection_guard (BC-2.18.004 Pre-2/PC-5) to check msg_var.trust_level.is_some_and(|t| t.is_untrusted()) against TrustRequired slots. BC census UNCHANGED: 133 (51 P0 / 79 P1 / 3 P2). input-hash drift corrected (09c85f7). Story-writer must amend STORY-S-2.04 AC-015 to reference BC-2.18.003 INV-4 (not INV-1) and correct the MessageListVar shape claim."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.8 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-023
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -60,7 +61,7 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
 
 1. {PRE-001} For `MessagesPlaceholder`: a `ChatPromptTemplate` contains a placeholder slot declared with
    a variable name; the call-time `vars` map supplies a `TemplateInput::Messages(MessageListVar)`
-   binding for that variable name (see INV-4 for the canonical `MessageListVar` struct shape).
+   binding for that variable name (see INV-004 for the canonical `MessageListVar` struct shape).
    `MessageListVar` carries both the message list and its trust classification — it is NOT a
    bare newtype over `Vec<Message>`.
 2. {PRE-002} For `FewShotPromptTemplate`: a `Vec` of `(example_input: TemplateVar, example_output: TemplateVar)`
@@ -134,7 +135,7 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
 
    `MessageListVar` is **NOT a bare newtype over `Vec<Message>`**. The
    `trust_level: Option<TrustLevel>` field is load-bearing: it is the mechanism by which
-   the `injection_guard` (BC-2.18.004 Pre-2/PC-5) can check
+   the `injection_guard` (BC-2.18.004 PRE-002/PC-005) can check
    `msg_var.trust_level.is_some_and(|t| t.is_untrusted())` against `TrustRequired` slots.
    Without this field, the Messages-arm Red Gate (S-2.05 AC-016) is structurally
    unimplementable. `trust_level: None` is treated as `Trusted` by the guard — it does not

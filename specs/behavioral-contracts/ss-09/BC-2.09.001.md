@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ changelog:
   - "1.6 (P2A029-fix/2026-08-22): Two adjudications from adversary pass P2A-029. (1) P2A029-01 (HIGH) — fail-closed pagination overflow: Invariant 3 amended from ok-truncated (silent drop of discovered tools) to Err fail-closed, applying the CANONICAL PRINCIPLE no-silent-partial-result rule. PC1 clarified to reflect the abort path. EC-007 and TV-009 added for the >1000-page overflow scenario. New code: E-MCP-008 McpPaginationLimitExceeded (POLICY, broken), minted in error-taxonomy.md same burst. (2) P2A029-02 (MED) — unknown-server discovery error: PC9 added (authoritative full-form site for E-MCP-009 gate #33); EC-008 and TV-010 added. New code: E-MCP-009 McpServerNotConfigured (VAL, broken), minted in error-taxonomy.md same burst. Story-writer handoff: re-anchor S-2.10 AC-002 from stale E-MCP-002 to E-MCP-008; re-anchor S-2.10 EC-001 from stale E-MCP-004 to E-MCP-009."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -24,7 +25,7 @@ wave: 2
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -94,7 +95,7 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
    message: "McpServerNotConfigured: no MCP server named 'name' is configured", .. })`
    (where `'name'` = the unknown server name from the caller's argument). This is the
    authoritative full-form site for E-MCP-009 gate #33; EC-008 and TV-010 PASS-ABBREV
-   via this PC9.
+   via this PC-009.
 
 ## Invariants
 
@@ -170,8 +171,8 @@ PASS-ABBREV via this EC-007.
 not in the configured server set (no `Connection` entry with that name exists).
 **Expected behavior:** Returns `Err(PregolyaError { component: MCP, category: VAL,
 code: E-MCP-009, message: "McpServerNotConfigured: no MCP server named
-'nonexistent_server' is configured", .. })` per PC9. No MCP network call is made;
-the check is local against the configured server map. TV-010 PASS-ABBREV via PC9.
+'nonexistent_server' is configured", .. })` per PC-009. No MCP network call is made;
+the check is local against the configured server map. TV-010 PASS-ABBREV via PC-009.
 
 ## Canonical Test Vectors
 
@@ -186,7 +187,7 @@ the check is local against the configured server map. TV-010 PASS-ABBREV via PC9
 | TV-007 | Server returns empty `tools: []` | `Ok(vec![])` | Empty server |
 | TV-008 | 1 server; `list_tools` call returns JSON-RPC -32601 MethodNotFound | `Err(E-MCP-003 McpNotImplemented { server: "math", method: "tools/list" })` | EC-006: server does not implement MCP tools protocol |
 | TV-009 | Server returns non-null cursor on 1000th `list_tools` response | `Err(E-MCP-008 McpPaginationLimitExceeded { server: "math" })` | EC-007: pagination overflow — fail-closed (PASS-ABBREV via EC-007) |
-| TV-010 | `get_tools(Some("nonexistent_server"))` | `Err(E-MCP-009 McpServerNotConfigured { server: "nonexistent_server" })` | EC-008: unknown server filter (PASS-ABBREV via PC9) |
+| TV-010 | `get_tools(Some("nonexistent_server"))` | `Err(E-MCP-009 McpServerNotConfigured { server: "nonexistent_server" })` | EC-008: unknown server filter (PASS-ABBREV via PC-009) |
 
 ## Verification Properties
 

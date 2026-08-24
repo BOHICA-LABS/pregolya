@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "2.2"
+version: "2.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -32,6 +32,7 @@ changelog:
   - "2.0 (burst-288/P1D-177-ITEM2/2026-08-15): ADR-024 §Phase-2 Postconditions PC-5 consumer (ROOT PATH ONLY) — GrepTool calls canonicalize_beneath_root for the root path argument; when path does not exist, Phase 2 returns Ok(canonical_parent.join(basename)); subsequent fs::open or fs::read_dir surfaces NotFound → E-TOOLS-008 via the PC-6 fail-the-whole-search path. Recursive sub-paths walk a confirmed-existing directory so Phase 2 does not arise for them. PC-6 text extended with ADR-024 §Phase-2 Postconditions PC-5 note (root path only). ADR-024 §Phase-2 Postconditions PC-5 added to §Traceability §Binding Decisions. ADR-024 added to traces_to + inputs + §Architecture Anchors."
   - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.22 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "2.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.3 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -137,7 +138,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
   errors during traversal all propagate as `Err`. Zero matches return `Ok` with an empty
   array — not silently swallowed as an error. Partial traversal results accumulated before
   an I/O error are discarded; the caller receives only the `Err` so that an incomplete
-  search is never silently accepted as a complete result (PC-6).
+  search is never silently accepted as a complete result (PC-006).
 - {INV-005} `ActionRisk::ReadOnly` — no write to the filesystem occurs. `RiskGatePolicy` auto-approve
   semantics apply (BC-2.05.006).
 - {INV-006} Result ordering: matches are returned in file-path-then-line-number order (lexicographic
@@ -187,7 +188,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
 - `architecture/decisions/ADR-020-first-party-tool-library.md` — Decision 2 (GrepTool, in-process regex, no subprocess, max_results 100), Decision 3 (ReadOnly ActionRisk), Decision 5 (E-TOOLS-001/006; E-TOOLS-008 OS-error paths minted burst-234; E-TOOLS-009 minted burst-233 — appended to ADR-020 Decision 5 §E-TOOLS-* table (burst-238 sweep: satisfied)), Decision 7 (`regex = "1"` pin, linear-time guarantee, MSRV 1.65)
 - `architecture/module-decomposition.md` — SS-23, `tools::search` module in pregolya-tools
 - `architecture/purity-boundary-map.md` — SS-23 Effectful Shell (filesystem traversal)
-- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Phase-2 Postconditions PC-5 (ROOT PATH ONLY: Ok(canonical_parent.join(basename)) from Phase 2 is a creation-target path, not an existence guarantee; GrepTool root-path NotFound enters the fail-the-whole-search path as E-TOOLS-008 per PC-6; recursive sub-paths walk a confirmed-existing directory, Phase 2 does not arise for them)
+- `architecture/decisions/ADR-024-writefile-create-path-confinement.md` — §Phase-2 Postconditions PC-5 (ROOT PATH ONLY: Ok(canonical_parent.join(basename)) from Phase 2 is a creation-target path, not an existence guarantee; GrepTool root-path NotFound enters the fail-the-whole-search path as E-TOOLS-008 per PC-006; recursive sub-paths walk a confirmed-existing directory, Phase 2 does not arise for them)
 
 ## Story Anchor
 
@@ -205,9 +206,9 @@ S-1.22
 |-------|-------|
 | Source L2 Capability | CAP-038 |
 | Capability Anchor Justification | CAP-038 ("First-Party Search Tool (tools::search — GrepTool)") per capabilities-p1-p2.md §CAP-038 — this BC specifies GrepTool's in-process regex semantics, linear-time `regex` crate guarantee, max_results 100 capping, hermetic no-subprocess invariant, PathGuard scope validation, and E-TOOLS-001/008/009 raised error codes (E-TOOLS-006 is a non-raised payload flag: GrepResult.capped) that CAP-038 names as the distinct search surface warranting its own CAP band |
-| L2 Domain Invariants | DI-014 (Error Propagation — path violations, invalid patterns, and OS-level I/O errors during traversal all propagate as Err; zero matches returns Ok([]) not Err; capping is non-fatal; E-TOOLS-008 is the carrier for traversal I/O errors — gate #33 reverse anchor: this BC now cites E-TOOLS-008 in PC-6/EC-008/TV-006 matching taxonomy v1.32 forward anchor) |
+| L2 Domain Invariants | DI-014 (Error Propagation — path violations, invalid patterns, and OS-level I/O errors during traversal all propagate as Err; zero matches returns Ok([]) not Err; capping is non-fatal; E-TOOLS-008 is the carrier for traversal I/O errors — gate #33 reverse anchor: this BC now cites E-TOOLS-008 in PC-006/EC-008/TV-006 matching taxonomy v1.32 forward anchor) |
 | Architecture Authority | ADR-020 Decisions 2, 3, 5, and 7 (GrepTool contract, regex dep pin, ReadOnly ActionRisk, E-TOOLS-001/006) |
-| Binding Decisions | D23 (first-party tool library scope, SS-23 creation); ADR-024 §Phase-2 Postconditions PC-5 (ROOT PATH ONLY: Ok from Phase 2 is a creation-target path, not an existence guarantee; GrepTool root-path NotFound → E-TOOLS-008 via fail-the-whole-search per PC-6; recursive sub-paths walk a confirmed-existing dir, Phase 2 does not arise for them) |
+| Binding Decisions | D23 (first-party tool library scope, SS-23 creation); ADR-024 §Phase-2 Postconditions PC-5 (ROOT PATH ONLY: Ok from Phase 2 is a creation-target path, not an existence guarantee; GrepTool root-path NotFound → E-TOOLS-008 via fail-the-whole-search per PC-006; recursive sub-paths walk a confirmed-existing dir, Phase 2 does not arise for them) |
 | VP Registration | VP-2.23.006-A/B/C (unit/integration tests) |
 | Module | pregolya-tools / tools::search |
 | Priority | P1 |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.002
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ wave: 2
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC8 had bare `Err(PregolyaError { code: E-MCP-004 ToolNotFound })` without message; E-MCP-004 has <tool_name> placeholder. Added inline message template; <tool_name> is available from the ToolInvocation at the raise site."
@@ -24,6 +24,7 @@ changelog:
   - "1.6 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — nine violations corrected (line 20 frontmatter EXEMPT): Description (3/5, added `..`); PC4 (3/5, added `..`); PC5 multiline (4/5, added `..`); PC6 multiline (4/5, added `..`); PC8 (2/5, added `..`); EC-004 multiline (4/5, added `..`); TV-003 (3/5, added `..`); TV-004 (3/5, added `..`); TV-005 (3/5, added `..`). All per ADR-010 §Error-Construction Notation Canon Class 3."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -97,7 +98,7 @@ Transport failures and content-conversion errors always propagate regardless of 
    regardless of flag (where `<tool>` = tool name from `ToolInvocation.tool_name`;
    `<content_type>` = content block variant name, e.g., `"AudioContent"`; both available at
    the raise site). The underlying `McpError::ContentConversion` is preserved in `.source()`.
-   This is the authoritative full-form site for E-MCP-006 gate #33; TV-005 PASS-ABBREV via this PC6.
+   This is the authoritative full-form site for E-MCP-006 gate #33; TV-005 PASS-ABBREV via this PC-006.
 7. {PC-007} `structuredContent` from `CallToolResult` is surfaced as `MCPToolArtifact { structured_content }`
    alongside the content blocks (content+artifact response format).
 8. {PC-008} Tool not found in routing table: `Err(PregolyaError { code: E-MCP-004 ToolNotFound, message: "ToolNotFound: tool '<tool_name>' is not registered with any MCP server", .. })`
@@ -154,7 +155,7 @@ TV-004 PASS-ABBREV via this EC-004 full-form site.
 | TV-002 | isError=true, handle_tool_errors=true (default) | `Ok(ToolMessage{status: Error, content: [err_text]})` | Error → agent self-correction |
 | TV-003 | isError=true, handle_tool_errors=false | `Err(PregolyaError { component: MCP, category: TOOL, code: E-MCP-007, .. })` (`McpError::ToolExecution{...}` in `.source()`) | Legacy opt-out (E-MCP-007) |
 | TV-004 | TCP reset mid-call | `Err(PregolyaError { component: MCP, category: TRANSPORT, code: E-MCP-002, .. })` regardless of handle_tool_errors flag. PASS-ABBREV via EC-004. | Transport always propagates (E-MCP-002) |
-| TV-005 | AudioContent in result | `Err(PregolyaError { component: MCP, category: VAL, code: E-MCP-006, .. })` regardless of flag. PASS-ABBREV via PC6. | Conversion always propagates (E-MCP-006) |
+| TV-005 | AudioContent in result | `Err(PregolyaError { component: MCP, category: VAL, code: E-MCP-006, .. })` regardless of flag. PASS-ABBREV via PC-006. | Conversion always propagates (E-MCP-006) |
 | TV-006 | isError=true, content=[], handle_tool_errors=true | `Ok(ToolMessage{status: Error, content: ["MCP tool ... returned an error with no content"]})` | Fallback minimal block |
 | TV-007 | structuredContent present | ToolMessage carries `MCPToolArtifact { structured_content }` alongside content | Artifact surfaced |
 

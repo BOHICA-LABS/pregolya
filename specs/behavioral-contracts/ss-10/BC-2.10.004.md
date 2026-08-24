@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.004
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.18 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — BC-2.05.001 postcondition 2 → BC-2.05.001 {PC-002} in PC-002 prose."
+  - "1.12 (P2A-044 F-06/2026-08-24): compressed-ordinal citation normalized to stable tag."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-012
   - domain-spec/capabilities-p0.md#CAP-006
@@ -176,7 +177,7 @@ block the parent — it surfaces as an explicit result.
 - BC-2.10.002 — composes with: `JournalEntry` with `decision: Escalate` and resume-decision entries are written
 - BC-2.10.003 — related to: `on_ceiling = halt` is the alternative (specified there); on `BudgetResume::Halt`, this BC delegates to BC-2.10.003 postconditions
 - BC-2.05.001 — depends on: the interrupt and durable-state-persistence mechanism used here is exactly the mechanism defined in BC-2.05.001; BC-2.10.004 is a consumer of that mechanism, not a reimplementation
-- BC-2.10.006 — related to: a run parked by budget-escalation interrupt (PC4: evaluation point within a super-step → run transitions to `interrupted`) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during a budget-escalation interrupt park window
+- BC-2.10.006 — related to: a run parked by budget-escalation interrupt ({PC-004}: evaluation point within a super-step → run transitions to `interrupted`) is NOT at a super-step boundary; BC-2.10.006 Invariants §Compaction × Suspend Non-Interaction guarantees compaction CANNOT fire during a budget-escalation interrupt park window
 
 ## Architecture Anchors
 

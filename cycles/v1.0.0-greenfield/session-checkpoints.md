@@ -2899,3 +2899,25 @@ pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/
 ### DECISION DELTA: D-257 ADR-027 M4 COMPLETE (strict cutover; migration done; SEMANTIC-ANCHOR-DRIFT CLOSED). Census 39/133/14/119. Streak 0/3. NEXT: P2A-043.
 
 ### STATE: v5.71, timestamp 2026-08-24T20:45:00Z
+
+---
+
+## v5.72 checkpoint (archived 2026-08-25; replaced by v5.73)
+
+<!-- Archived from STATE.md §Session Resume Checkpoint v5.72 -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. ADR-027 STABLE-ANCHOR MIGRATION COMPLETE (D-257). **P2A-043 ALL BLOCKING CLOSED (D-258): §F-01 S-2.03 AC-004 similarity range fix; §F-02/§F-03 BC-2.18.002/2.18.004 §{INV-006} authored; §F-04 72 ordinal residues→stable tags (12 stories+9 BCs); §F-05 [process-gap] verify-ordinal-form-residue.sh advisory (0 residue); BC-2.12.001/007 EC-006; S-1.27 +BC-2.06.001; STORY-INDEX corrected 39→40 total (39 product + 1 maint).** NEXT ACTION: adversary P2A-044, streak 0/3 (need 3 consecutive CLEAN(strict); fresh HEAD required). PENDING WORKSTREAM: v1 dev-tooling expansion (D-255), starts after P2A-043 reconvergence.
+
+### HEADS
+- develop: 644d1ad — clean, PUSHED, untouched this session.
+- factory-artifacts: see `git -C .factory log -1 --format='%h %s'`
+- worktrees: none. Open PRs: none.
+
+### WORKSTREAM — P2A-043 fix-cascade (D-258; COMPLETE)
+Files changed: 12 BC files + 17 story files + BC-INDEX §Changelog + STORY-INDEX + STATE.md + sidecar-learning.md + convergence-trajectory.md + session-checkpoints.md. Single commit per TD-VSDD-053.
+Census: story files 40 (39 product + 1 maint) / BC 133 / VP 14 / EC 119.
+
+### DECISION DELTA: D-258 P2A-043 ALL BLOCKING CLOSED (stable-anchor completeness; census reconciled; process-gap ORDINAL-RESIDUE-GATE codified). Prior: D-257 ADR-027 M4 COMPLETE. D-255 v1 dev-tooling approved.
+
+### STATE: v5.72, timestamp 2026-08-25T00:05:00Z

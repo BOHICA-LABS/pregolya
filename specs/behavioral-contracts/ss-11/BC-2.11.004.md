@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.004
-version: "1.11"
+version: "1.12"
 status: active
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -33,6 +33,7 @@ changelog:
   - "1.9 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Two sites corrected: EC-004 table-cell and TV panic-row carry `{ category: INTERNAL, code: E-CORE-007 }` spans; added `, ..` to each. Spans lack component, retry_hint, and message."
   - "1.10 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
   - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-004} added; purely additive, no content change."
+  - "1.12 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 modified: []
 extracted_from: null
 deprecated: null
@@ -77,8 +78,8 @@ model context injection.
    the item's position; run continues unless `Critical`;
    a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision: Fail, reason: Some(reason),
    severity: Some(severity_wire), ingress_id, tool_call_id: None }` is emitted within the
-   enclosing NodeStart/NodeEnd window (BC-2.06.001 PC4) — the event carries metadata only; zero
-   bytes of the rejected memory item appear in any `StreamEvent` payload (BC-2.11.005 INV-5)
+   enclosing NodeStart/NodeEnd window (BC-2.06.001 {PC-004}) — the event carries metadata only; zero
+   bytes of the rejected memory item appear in any `StreamEvent` payload (BC-2.11.005 {INV-005})
 4. {PC-004} `GuardrailResult::Transform { new_content }` → transformed content forwarded; original
    memory item discarded; a `StreamEvent::GuardrailDecision { boundary: MemoryItem, decision:
    Transform, reason: None, severity: None, ingress_id, tool_call_id: None }` is emitted within

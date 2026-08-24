@@ -3,24 +3,20 @@ document_type: story
 level: ops
 story_id: S-MAINT-001
 epic_id: EPIC-MAINT
-version: "1.0"
+version: "1.1"
 status: draft
-# BC status: pending PO/architect canonical-format decision before this story can be dispatched
+# POL-29 gate waived for maintenance stories per D-259+ (product-owner 2026-08-24). behavioral_contracts: [] is intentional and correct. Story may be promoted to ready once state-manager records the canonical-format decision rows in STATE.md (AC-001 gate). Canonical BC formats decided: ## Invariants = bullet list (- {INV-NNN} ...); ## Edge Cases = ### EC-NNN subsection headers.
 producer: story-writer
-timestamp: 2026-08-22T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/BC-INDEX.md
-input-hash: "6edce18"
+input-hash: "d9cb3a2"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: []
 blocks: []
 behavioral_contracts: []
-# No product BC governs corpus formatting. This is a tooling/consistency maintenance story.
-# status cannot be promoted to `ready` until behavioral_contracts is non-empty (S-7.01 gate).
-# Resolution: PO/architect to author a governance BC for spec-corpus formatting invariants,
-# or explicitly waive the gate for maintenance stories — either decision recorded in STATE.md.
 verification_properties: []
 priority: P2
 cycle: v1.0.0-greenfield
@@ -193,3 +189,10 @@ for gate. No version pins required.
 
 **Files NOT to modify:** `BC-INDEX.md`, any story file, `STORY-INDEX.md`,
 `dependency-graph.md`, `epics.md`, `STATE.md`.
+
+## Changelog
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.1 | 2026-08-24 | story-writer | P2A-044 F-10: POL-29 placeholder resolved — canonical-format decision recorded, S-7.01 gate waived for maintenance class |
+| 1.0 | 2026-08-22 | story-writer | Initial story creation |

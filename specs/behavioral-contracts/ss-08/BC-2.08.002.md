@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — wired 'configurable step limit' invariant to explicit contract: config.recursion_limit (default 25, RunnableConfig) + BC-2.03.001 PC5 + E-GRAPH-017 GraphRecursionLimitExceeded. VP-BC208002-01 description updated to cite E-GRAPH-017 and BC-2.03.001 PC5."
   - "1.2 (ADV-P1D-PASS-56-COMPLETION): Gate #30 drain — EC-005 had `Err(PregolyaError { category: VAL, message: ... })` and TV-005 had `Err(PregolyaError { category: VAL })` with no code. Added code: E-CORE-005 (ValidationFailed) to EC-005 description and TV-005 — VAL construction-time validation for `bind_tools` called on a model with `has_tool_calling = false`."
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-005 and §Canonical Test Vectors TV-005: PregolyaError value-observations missing required `..` rest pattern (partial fields: category, code, message at EC-005; category, code at TV-005); added `, ..` before closing `}` at both sites. All occurrences reconciled: 2 corrected (Class 3), 2 exempt (changelog, 1 line)."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -105,7 +106,7 @@ capability flag. Gated tool-call tests require the `has_tool_calling` capability
 - {INV-004} **No truncated loops:** an agent loop consuming tool results must not silently drop
   the `ToolMessage` or loop forever — it terminates when `config.recursion_limit` (default 25,
   from `RunnableConfig`) super-steps are exhausted in the current invocation segment, halting
-  with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC5. The step limit is
+  with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC-005. The step limit is
   the graph-engine super-step ceiling; a tool-calling loop that never routes to END will exhaust
   it and fail with E-GRAPH-017 rather than running forever.
 
@@ -153,7 +154,7 @@ a model that ignores the tools at inference time.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC208002-01 | agent_loop terminates within `recursion_limit + 1` super-steps per invocation segment (`stop = step_at_invoke_start + recursion_limit + 1`; default limit=25 → up to 26 steps execute before halt); if the loop does not route to END within the ceiling, the run fails with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC5 | Integration test (standard-tests battery) | Wave 2 |
+| VP-BC208002-01 | agent_loop terminates within `recursion_limit + 1` super-steps per invocation segment (`stop = step_at_invoke_start + recursion_limit + 1`; default limit=25 → up to 26 steps execute before halt); if the loop does not route to END within the ceiling, the run fails with `Err(E-GRAPH-017 GraphRecursionLimitExceeded)` per BC-2.03.001 PC-005 | Integration test (standard-tests battery) | Wave 2 |
 | VP-BC208002-02 | Tool argument zero-argument case produces `{}` not None | Unit test (argument normalisation) | Wave 2 |
 | VP-BC208002-03 | Unicode arguments survive round-trip without corruption | Integration test (unicode_tool_call) | Wave 2 |
 

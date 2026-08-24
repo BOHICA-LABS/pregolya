@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T01:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (pregolya-prompts, SS-18), SRLZ (pregolya-core::serializable, SS-19), VS (pregolya-vectorstores, SS-21), EMBED (pregolya-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
@@ -25,6 +25,7 @@ changelog:
   - "1.8 (BURST-308/D26-EXEC-propagation/2026-08-17): Category axis expanded 12→13 per ADR-010 §Category Axis Expansion (D26). Description: EXEC added as 13th category to the enumeration; counter updated from '12 categories, unchanged' to '13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))'. TD-VSDD-060 sibling sweep: EXEC not listed elsewhere in BC-2.14.001 live body (no other Category enumeration site). No behavioral change to PregolyaError struct."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.11 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "25682ca"
+input-hash: "9d456d5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -83,7 +84,7 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
    code: "E-CORE-001".into(), message: "Invalid ContentBlock type...".into() }` constructs without error.
    _(Struct-literal form is **intentional** in this BC: this test runs within `pregolya-core` where
    `#[non_exhaustive]` does not bar struct-literal construction by the defining crate. External callers
-   must use `PregolyaError::new(...)` per PC8 and ADR-010 §Decision. Do not convert this notation.)_
+   must use `PregolyaError::new(...)` per {PC-008} and ADR-010 §Decision. Do not convert this notation.)_
 2. {PC-002} The `component` field identifies the originating crate (e.g. `Component::Graph` for graph
    errors, `Component::Chkpt` for checkpoint errors).
 3. {PC-003} The `category` field identifies the error class independently of the component; a
@@ -160,7 +161,7 @@ chain preserves the original `PregolyaError`'s fields when downcast with `anyhow
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | Construct `PregolyaError { component: Component::Core, category: Category::Val, retry_hint: RetryHint::Never, code: "E-CORE-001", message: "..." }` | Struct fields readable as specified; `err.to_string()` contains message | Happy path — in-crate construction (struct literal valid within `pregolya-core`; external API is `PregolyaError::new(...)`; notation intentional — do not convert) |
-| TV-002 | `PregolyaError { component: Component::Prov, category: Category::Rate, retry_hint: RetryHint::Later(Duration::from_secs(30)), .. }` | `retry_hint == RetryHint::Later(30s)` | Rate-limit error with backoff — in-crate field verification (notation intentional; see PC1 note) |
+| TV-002 | `PregolyaError { component: Component::Prov, category: Category::Rate, retry_hint: RetryHint::Later(Duration::from_secs(30)), .. }` | `retry_hint == RetryHint::Later(30s)` | Rate-limit error with backoff — in-crate field verification (notation intentional; see {PC-001} note) |
 | TV-003 | `std::error::Error::source(&err)` when `source` field is `Some(inner)` | Returns `Some(&inner)` | Error chaining works |
 | TV-004 | `anyhow::Context::context(Err::<(), _>(pregolya_err), "ctx")` | `anyhow::Error` wraps `pregolya_err`; `downcast_ref::<PregolyaError>()` succeeds | anyhow compatibility |
 | TV-005 | `PregolyaError::default()` | Compile error — `Default` not implemented | No default construction |

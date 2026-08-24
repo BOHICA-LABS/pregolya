@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.008
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-039
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableAssign dict augmentation semantics, merge semantics (mapper-wins-on-collision), and dict-input validation. LCEL composition scope expansion (D-170); ADR-026 §Decision 4."
   - "1.1 (BURST-303/F-P194-01/2026-08-17): DynRunnable canon alignment — replaced all `invoke_dyn` with `invoke` in DynRunnable context per architect canon (F-P194-01). DynRunnable canonical methods are `invoke` and `stream`; `invoke_dyn`/`stream_dyn` belong to DynTool. Signature uses `config: Option<RunnableConfig>`."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.4 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -138,7 +139,7 @@ No merged object is returned even if some branches succeeded; the merge never st
 
 **Scenario:** `RunnablePassthrough::assign([])` — no mapper pairs; `invoke` called
 with `Value::Object({ "a": 1 })`.
-**Expected behavior:** `mapper` is a zero-branch `RunnableParallel`. Per BC-2.01.005 PC-6,
+**Expected behavior:** `mapper` is a zero-branch `RunnableParallel`. Per BC-2.01.005 PC-006,
 mapper returns `Ok(Value::Object({}))` — empty mapper output. Merge: all input keys
 preserved, mapper adds nothing. Output is `{ "a": 1 }` — identical to input.
 
@@ -187,7 +188,7 @@ S-1.05
 |-------|-------|
 | Source L2 Capability | CAP-039 |
 | Capability Anchor Justification | CAP-039 ("LCEL Map/Passthrough Composition: RunnableParallel and RunnablePassthrough") per capabilities-p1-p2.md §CAP-039 (D-170) — this BC describes `RunnableAssign`, the third named component of CAP-039, which augments dict inputs with computed keys via the `RunnablePassthrough::assign()` factory per ADR-026 §Decision 4. |
-| L2 Domain Invariants | DI-016 (RunnableParallel Key-Completeness and Branch-Failure Propagation — PC-4 enforces mapper errors propagate as Err with no partial merged output); DI-014 (Error Propagation: No Silent Swallowing — PC-2 enforces non-dict input returns Err; PC-4 enforces mapper errors propagate) |
+| L2 Domain Invariants | DI-016 (RunnableParallel Key-Completeness and Branch-Failure Propagation — PC-004 enforces mapper errors propagate as Err with no partial merged output); DI-014 (Error Propagation: No Silent Swallowing — PC-002 enforces non-dict input returns Err; PC-004 enforces mapper errors propagate) |
 | NE References | — |
 | Priority | P1 |
 | Wave | Wave 1 |

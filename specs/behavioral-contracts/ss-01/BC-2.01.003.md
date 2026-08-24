@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.0"
+version: "2.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "2.0 (M3b/ADR-027-escalation-3/2026-08-24): Added {INV-006} — DynRunnable non-generic design clause; formalizes architect canon O-P194-A (already in v1.7 changelog and EC-001); S-1.04 AC-005 adjudicated as clause-author (real v1 design requirement)."
+  - "2.1 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -98,7 +99,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
   (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained
   Runnables; exceeding it returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-006,
   message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })` — no run-level halt, just a Runnable call error.
-  (2) **BC-2.03.001 PC5 (graph-engine-layer):** counts BSP super-steps per invocation segment;
+  (2) **BC-2.03.001 PC-005 (graph-engine-layer):** counts BSP super-steps per invocation segment;
   exceeding it transitions the entire run to `failed` with `Err(E-GRAPH-017
   GraphRecursionLimitExceeded)`. Both layers enforce `recursion_limit = 25` by default; the
   enforcement mechanism and error code differ by layer. Implementers must not conflate the two.

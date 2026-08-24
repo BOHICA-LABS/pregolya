@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.005
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -25,6 +25,7 @@ changelog:
   - "1.3 (BURST-315/F-A1/2026-08-17): Remove spurious ADR-019-rolling-context-compaction.md from traces_to and inputs — copy-paste residue symmetric with BC-2.06.004; ADR-019 governs compaction (SS-07), which is disjoint from the per-tool-call approval hook (CAP-034). ADR-018 is the correct sole architectural input."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -126,7 +127,7 @@ event always pairs with a prior `BC-2.06.004 tool_approval_request` event for th
 
 - BC-2.06.001 — extends: 12-variant event taxonomy (this adds event 14)
 - BC-2.06.004 — pairs with: tool_approval_request (event 13) — every resolved has a prior request
-- BC-2.05.007 — depends on: decision application rules (PC-1 through PC-3) executed after this event
+- BC-2.05.007 — depends on: decision application rules (PC-001 through PC-003) executed after this event
 - BC-2.05.008 — depends on: skip-hook-on-resume invariant applies here (decision applied without re-calling pre_invoke)
 
 ## Architecture Anchors

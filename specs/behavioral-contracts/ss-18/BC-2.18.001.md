@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "2.1"
+version: "2.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-prompts
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-18 Prompt Templates"
@@ -29,6 +29,7 @@ changelog:
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "2.0 (P2A-037-gaps/2026-08-22): Four additions closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-005/AC-006. (1) PC-7 (new): PromptTemplate implements Runnable<Input=HashMap<String,TemplateVar>, Output=PromptValue>; invoke delegates to format() and wraps Ok(s) as Ok(PromptValue::String(s)); errors propagate unchanged. (2) INV-6 (new): PromptTemplate is pure-core — no I/O, no OS handles, no mutable shared state; PromptTemplate: Send+Sync. (3) TV-008 (new): Runnable invoke happy-path vector; TV count 7→8. (4) H1 updated to include Runnable impl per bc_h1_is_title_source_of_truth; BC-INDEX title column updated in same burst."
   - "2.1 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.2 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -146,7 +147,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 | TV-005 | `template = "Hi {name}"`, partial `name = "Charlie"`, call-time `vars = {"name": "Dave"}` | `Ok("Hi Dave")` — call-time overrides partial | edge-case (partial override) |
 | TV-006 | `PromptTemplate::from_template("Hello, {name}!")` → call `input_variables()` | `["name"]` | happy-path (variable detection) |
 | TV-007 | `PromptTemplate::from_template("Hello, {name")` (unbalanced open brace) | `Err(PregolyaError { code: "E-TMPL-004", message: "MalformedTemplate: ...", .. })` — construction fails at parse time | error-case (malformed template; EC-007) |
-| TV-008 | `PromptTemplate::from_template("Hello, {name}!")` invoked as `Runnable::invoke({"name": TemplateVar { value: "Alice", trust_level: None }}, None)` | `Ok(PromptValue::String("Hello, Alice!"))` — format() result wrapped in String variant | happy-path (Runnable delegation; PC-7) |
+| TV-008 | `PromptTemplate::from_template("Hello, {name}!")` invoked as `Runnable::invoke({"name": TemplateVar { value: "Alice", trust_level: None }}, None)` | `Ok(PromptValue::String("Hello, Alice!"))` — format() result wrapped in String variant | happy-path (Runnable delegation; PC-007) |
 
 ## Verification Properties
 
@@ -158,7 +159,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
 ## Related BCs
 
 - BC-2.18.002 — composes with: ChatPromptTemplate builds on the same f-string engine and partial-binding semantics
-- BC-2.18.004 — NOTE: injection_guard does NOT fire during the `PromptTemplate::format` path this BC specifies. The guard fires ONLY in `ChatPromptTemplate::format_messages` (BC-2.18.004). Output of `PromptTemplate::format` is unguarded; see INV-5 for the prohibition on system-position use without re-routing through `format_messages`. (ADR-015 Decision 3 Amendment, B201 CRIT.)
+- BC-2.18.004 — NOTE: injection_guard does NOT fire during the `PromptTemplate::format` path this BC specifies. The guard fires ONLY in `ChatPromptTemplate::format_messages` (BC-2.18.004). Output of `PromptTemplate::format` is unguarded; see INV-005 for the prohibition on system-position use without re-routing through `format_messages`. (ADR-015 Decision 3 Amendment, B201 CRIT.)
 - BC-2.18.005 — depends on: construction-time policy check (E-TMPL-002) is a precondition for BC-2.18.001's construction postconditions
 
 ## Architecture Anchors

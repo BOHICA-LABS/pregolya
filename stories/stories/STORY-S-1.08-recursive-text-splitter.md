@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.08
 epic_id: E-03
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "a74b9a0"
+input-hash: "7fcface"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.01]
@@ -53,7 +53,7 @@ tdd_mode: strict
 > registered in VP-INDEX (which holds only canonical VP-0NN IDs). VP-SPLIT-01..05 drive
 > code-point sizing property tests (BC-2.07.001); VP-SPLIT-06..07 drive proptest/fuzz for
 > the short-document path (BC-2.07.003 PC non-empty sub-case); VP-SPLIT-08 drives the
-> empty-input unit test (BC-2.07.003 PC5). The `verification_properties` frontmatter field
+> empty-input unit test (BC-2.07.003 PC-005). The `verification_properties` frontmatter field
 > holds `[]` for this story because no VP-INDEX-registered VPs anchor here; all formal
 > verification for this story is expressed through BC-local VP-SPLIT IDs, documented here
 > per story convention (see STORY-INDEX §Conventions).
@@ -215,3 +215,4 @@ Files to MODIFY:
 - 1.0 (2026-08-18): initial story authoring.
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-002 postcondition 2→EC-002 (zero chunk_size validation is BC-2.07.001 EC-002; PC-002 is chunk count formula); AC-003 postcondition 3→EC-001 (overlap≥chunk_size is BC-2.07.001 EC-001; PC-003 is "byte length may exceed"); AC-004 postcondition 4→PC-001 (separator cascade achieves PC-001 compliance; old PC-004 is UTF-8 boundary); AC-005 "invariant 1"→INV-001; AC-007 postcondition 2→PC-001 (GTV-008..009 are test vectors under PC-001; old PC-002 is comparison method); AC-008 postcondition 3→PC-003 (chunk list length discriminator). ESCALATION: AC-009 (BC-2.07.002 postcondition 4 / PC-004 mis-anchor — AC asserts ZWJ sequence splits at code-point boundaries (GTV-011 discriminator) but PC-004 is about "no extra empty chunks"; semantically closest clauses are PC-001 and PC-003 but known escalation per task spec). Routes to product-owner.
 - 1.2 (ADR-027 M3c/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations. AC-009 re-cited to BC-2.07.002 INV-004 per product-owner adjudication.
+- 1.3 (P2A-044 F-06/2026-08-24): bare-ordinal citation normalized to stable tag.

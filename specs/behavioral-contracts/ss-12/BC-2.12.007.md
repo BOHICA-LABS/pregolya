@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T01:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
   - domain-spec/invariants.md#DI-011
@@ -34,6 +34,7 @@ changelog:
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (P2A-043/F-05 adjudication/2026-08-24): Author EC-006 — non-first-node mid-run failure, run_end NOT emitted. EC-001 was scoped to 'first node'; INV-003 covers error equivalence but did not explicitly state the no-run_end rule for mid-run failure. EC-006 closes that gap; authority is BC-2.06.001 EC-005 (completion-only RunEnd contract)."
+  - "1.8 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 extracted_from: null
 modified: []
 deprecated: null
@@ -104,7 +105,7 @@ graph engine, producing output that could diverge from the unary path.
 **Expected behavior:**
 - Streaming: `run_start` emitted; `node_start` for the failing node emitted; then an
   `error` SSE event with the error payload; the stream closes with **no `run_end` event**.
-  `RunEnd` is reserved for the completion path only (BC-2.06.001 PC2 + EC-005 authority:
+  `RunEnd` is reserved for the completion path only (BC-2.06.001 {PC-002} + EC-005 authority:
   completion-only `RunEnd` contract). Run status queryable via
   `GET /threads/{thread_id}/runs/{run_id}` = `failed`.
 - Unary: `422 Unprocessable Entity` (or `500`, depending on error category) with the

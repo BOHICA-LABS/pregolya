@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.006
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-039
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-016, DI-014]
 changelog:
   - "1.0 (burst-302b/D-170/2026-08-17): Initial — RunnableParallel branch failure: fail-fast semantics, structured error with branch key, no partial results. LCEL composition scope expansion (D-170); ADR-026 §Decision 2."
@@ -23,6 +23,7 @@ changelog:
   - "1.4 (P1D-208/F-P208-01/2026-08-18): §Category casing canon — E-CORE-011 INTERNAL category rendered as bare PascalCase `Internal` corrected to ALL-CAPS taxonomy code `INTERNAL` at §Postconditions PC-4, §Invariants, §Edge Cases EC-003, §Canonical Test Vectors TV-003 per ADR-010 §Category casing canon (matches sibling E-CORE-009 `EXEC` form); sibling-swept 4 prose category references (§Description, §Invariants label, §Postconditions prose, §Architecture Anchors) Internal→INTERNAL per TD-VSDD-060."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -136,7 +137,7 @@ but those are dropped). Exactly one `Err` is returned.
 ### EC-005: Zero-branch parallel invocation (no failure possible)
 
 **Scenario:** `RunnableParallel::new([]).invoke(...)` — N = 0.
-**Expected behavior:** Per BC-2.01.005 PC-6, returns `Ok(Value::Object(Map::new()))`.
+**Expected behavior:** Per BC-2.01.005 PC-006, returns `Ok(Value::Object(Map::new()))`.
 No tasks spawned; no error possible; this edge case is technically under BC-2.01.005,
 documented here as a contrast point.
 
@@ -181,7 +182,7 @@ S-1.05
 |-------|-------|
 | Source L2 Capability | CAP-039 |
 | Capability Anchor Justification | CAP-039 ("LCEL Map/Passthrough Composition: RunnableParallel and RunnablePassthrough") per capabilities-p1-p2.md §CAP-039 (D-170) — this BC governs the error propagation behavior of `RunnableParallel`, the fail-fast abort-all semantics that prevent partial results, and the structured error that identifies the failing branch — all integral to CAP-039's definition of `RunnableParallel` per ADR-026 §Decision 2. |
-| L2 Domain Invariants | DI-016 (RunnableParallel Key-Completeness and Branch-Failure Propagation; PC-3 enforces the "no partial results" half); DI-014 (Error Propagation: No Silent Swallowing — PC-1 through PC-4 ensure every branch failure surfaces as Err) |
+| L2 Domain Invariants | DI-016 (RunnableParallel Key-Completeness and Branch-Failure Propagation; PC-003 enforces the "no partial results" half); DI-014 (Error Propagation: No Silent Swallowing — PC-001 through PC-004 ensure every branch failure surfaces as Err) |
 | NE References | — |
 | Priority | P1 |
 | Wave | Wave 1 |

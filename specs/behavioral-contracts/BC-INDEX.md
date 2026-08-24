@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.64"
+version: "3.65"
 status: active
 producer: state-manager
-timestamp: 2026-08-24T23:59:00Z
+timestamp: 2026-08-24T00:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.65 (P2A-044/2026-08-24): BC-2.12.002 (v1.10→v1.12): PC-024 PATCH-not-found authored (F-07; S-1.26 EC-005 repointed). BC-2.12.003 (v1.8→v1.10): EC-006 minted + E-SERVER-018 RunStateConflict authored (F-08; S-1.26 EC-008 repointed). BC-2.18.002 {INV-006} + BC-2.18.004 {INV-006} (already completed at P2A-043; noted here as F-07/F-08 context cross-reference). F-06 corpus-wide compressed-ordinal→stable-tag normalization: ~35 files + S-1.08 normalized; 0 live residue. F-09: EPIC-MAINT story-points TBD→5. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). EC census 119→120 (E-SERVER-018 minted; error-taxonomy v1.56 SERVER-namespace arithmetic corrected 16→17 to 14→15)."
   - "3.64 (P2A-043/2026-08-24): 12 BC version bumps. BC-2.18.002 (v2.1→v2.2): INV-006 added — TemplateInput is #[non_exhaustive] enum; wildcard arm required (F-02). BC-2.18.004 (v1.13→v1.14): INV-006 added — fail-closed wildcard for #[non_exhaustive] TrustLevel; unknown variants treated as Untrusted (F-03). BC-2.12.001 (v1.6→v1.7): EC-006 added — DELETE /threads/{id} while active run exists → E-SERVER-008 409 (BC-local edge case; no new taxonomy code). BC-2.12.007 (v1.6→v1.7): EC-006 added — non-first-node mid-run failure, run_end NOT emitted; authority BC-2.06.001 EC-005 (BC-local edge case; no new taxonomy code). 8 BCs invariant-ordinal→stable-tag conversion (F-05 sweep): BC-2.04.006 (v1.9→v1.10), BC-2.04.008 (v1.8→v1.9), BC-2.10.004 (v1.10→v1.11), BC-2.18.005 (v1.8→v1.9), BC-2.19.004 (v1.5→v1.6), BC-2.21.002 (v1.8→v1.9), BC-2.22.001 (v1.10→v1.11), BC-2.23.003 (v1.10→v1.11). BC-INDEX High-Risk+VP-Seed sections: 3 'invariant N' residues converted to {INV-NNN} stable tags (BC-2.18.004/BC-2.18.005/VP-006 rows). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). EC census UNCHANGED: 119 (EC-006 labels in BC-2.12.001/007 are BC-local edge-case numbering only; both reference existing E-SERVER-008). VP census UNCHANGED: 14."
   - "3.63 (M4/ADR-027/2026-08-24): BC-2.08.006 {INV-005} rustls-tls TLS-backend mandate added (ADR-027 M4)."
   - "3.62 (M3b/M3c/ADR-027/2026-08-24): escalation-resolution — BC-2.01.001 {INV-005}, BC-2.01.002 {INV-005}, BC-2.01.003 {INV-006}, BC-2.07.002 {INV-004}, BC-2.12.002 (PC-005→E-SERVER-017). Error code E-SERVER-017 AssistantAlreadyExists minted (BC-2.12.002; E-SERVER-012 collision avoided). Story ACs corrected: E-CRON-001/002/003 names; E-CHKPT-001 interrupt marker write-failure; E-SERVER-011 GraphNotFound; S-1.26 EC-006 merge coverage restored in AC-009. Semantic: Send-API tasks within-run (same run_id, parent_ids unchanged) per BC-2.06.002 INV-005; similarity scores normalized [0.0,1.0] per BC-2.21.001 INV-002; GDPR unattributed-session log-level WARN. Census EC 118→119; BC 133 / VP 14 / stories 39 UNCHANGED."
@@ -297,6 +298,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.65 | 2026-08-24 | P2A-044: BC-2.12.002 (v1.10→v1.12) PC-024 PATCH-not-found authored (F-07); BC-2.12.003 (v1.8→v1.10) EC-006/E-SERVER-018 authored (F-08); corpus-wide compressed-ordinal→stable-tag normalization ~35 files (F-06); EPIC-MAINT points TBD→5 (F-09). EC 119→120. BC census UNCHANGED 133. | P2A-044 |
 | 3.61 | 2026-08-23 | M1/ADR-027: M1 chunk 3 — 39 BC version bumps (SS-14 ×6, SS-15 ×6, SS-18 ×5, SS-19 ×6, SS-20 ×3, SS-21 ×4, SS-22 ×3, SS-23 ×6); purely additive clause-anchor labeling per ADR-027; EC content untouched. Incidental input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004. M1 COMPLETE — all 133/133 BCs labeled. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | M1/ADR-027/D-252 |
 | 3.60 | 2026-08-23 | P2A-041-F-3: BC-2.18.002 (v1.9→v2.0) — disambiguated precondition-2 vs postcondition-2 changelog notation across v1.2/v1.3/v1.7/v1.9 entries; no clause content change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | P2A-041 F-3 |
 | 3.59 | 2026-08-22 | P2A-040-F-01-F-02: 2 BC version bumps — BC-2.18.003 (v1.5→v1.6) PC-1 stale Vec<Message> fixed + INV-4 MessageListVar struct shape (closes F-01 HIGH + F-02 HIGH SECURITY). BC-2.18.002 (v1.8→v1.9) precondition-2 cross-ref to INV-4. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | P2A-040 F-01 F-02 |

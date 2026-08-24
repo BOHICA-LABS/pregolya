@@ -15,13 +15,30 @@
 #   OE-4 — "edge case EC-..."  prose-prefix phrase before any EC citation
 #   OE-5 — "EC-N"             single-digit EC reference (non-stable; stable is EC-NNN)
 #   OE-6 — "BC-S.SS.NNN EC-N" BC citation with single-digit EC suffix
+#   OE-7 — bare/compressed clause ordinals: PC<n>, INV<n>, PRE<n> (no hyphen) and
+#           PC-<n>, INV-<n>, PRE-<n> where <n> is 1–2 digits (NOT the canonical
+#           3-digit zero-padded form PC-NNN / INV-NNN / PRE-NNN).
+#           Also catches mixed/title-case variants: Inv-N, Pre-N, Pc-N, InvN, PreN
+#           (IGNORECASE — all casing variants of PC/INV/PRE prefix).
+#           Context-gated: matched only on lines that carry a BC- citation, a
+#           traces_to field, a table pipe, or a blockquote marker (avoids false
+#           positives on unrelated tokens in prose).
+#   OE-8 — range forms: "PC-N through PC-M", "PC-N–PC-M", "PC-N-PC-M"
+#           (1-2 digit endpoints; all casing variants; no context gate required —
+#           range syntax is clause-specific and does not arise in unrelated prose).
 #
 # EXCLUSIONS:
 #   (a) YAML frontmatter changelog: list items (lines indented under changelog:)
 #   (b) ## Changelog markdown sections (until next ## heading)
 #   (c) Fenced code blocks (between ``` markers)
 #   (d) Stable-tag forms (PC-NNN / INV-NNN / PRE-NNN / EC-NNN three-digit) are
-#       already naturally excluded — word-form patterns do not match them
+#       naturally excluded — OE-7/OE-8 patterns use \d{1,2}(?!\d) so three-digit
+#       ordinals never match
+#   (e) ADR-internal clause labels: any OE-7 or OE-8 match where the text before
+#       the match on the same line contains "ADR-0" + digits is an ADR's OWN
+#       section numbering (e.g. "ADR-024 §Phase-2 Postconditions PC-4",
+#       "ADR-024 Decision 3 / PC-3") — confirmed-legitimate false positives
+#       (3 independent product-owner passes verified); these are excluded.
 #
 # EXIT CONTRACT
 # ─────────────
@@ -62,6 +79,28 @@ WORD_ORDINAL_RE = re.compile(
 EDGE_CASE_EC_RE = re.compile(r'\bedge\s+case\s+EC-', re.IGNORECASE)
 # OE-5/6: single-digit EC reference (not followed by more digits → non-stable)
 OLD_EC_RE = re.compile(r'\bEC-([0-9])(?![0-9])')
+# OE-7: bare/compressed clause ordinals — 1-2 digit forms (NOT canonical 3-digit).
+# IGNORECASE catches: PC-5, pc-5, Pc-5, INV-5, Inv-5, inv-5, PRE-3, Pre-3, pre-3
+#   and hyphen-free forms: PC5, INV5, PRE5, Inv5, Pre5, etc.
+# The negative lookahead (?!\d) after \d{1,2} ensures 3-digit forms never match.
+BARE_ORDINAL_RE = re.compile(r'\b(PC|INV|PRE)-?(\d{1,2})(?!\d)\b', re.IGNORECASE)
+# Context gate: require the line to carry a BC- citation, traces_to, table pipe, or
+# blockquote marker to limit false positives on unrelated tokens.
+BARE_ORDINAL_CTX_RE = re.compile(r'BC-\d|traces_to|traces\s+to|[|]|\s*>')
+
+# OE-8: range forms — "PC-N through PC-M", "PC-N–PC-M", "PC-N—PC-M", "PC-N-PC-M"
+# 1-2 digit endpoints, IGNORECASE. No context gate — range syntax is clause-specific.
+RANGE_ORDINAL_RE = re.compile(
+    r'\b(PC|INV|PRE)-(\d{1,2})\s+through\s+(PC|INV|PRE)-(\d{1,2})(?!\d)\b'
+    r'|\b(PC|INV|PRE)-(\d{1,2})[–—](PC|INV|PRE)-(\d{1,2})(?!\d)\b'
+    r'|\b(PC|INV|PRE)-(\d{1,2})-(PC|INV|PRE)-(\d{1,2})(?!\d)\b',
+    re.IGNORECASE
+)
+
+# ADR-internal exclusion: if text before a match on the same line contains
+# "ADR-0" + digits, the ordinal is an ADR's OWN section label — not a BC clause.
+# Applies to both OE-7 and OE-8 matches.
+ADR_INTERNAL_RE = re.compile(r'ADR-0\d')
 
 # ── Region exclusion helpers ──────────────────────────────────────────────────
 # Fenced code block toggle (```)
@@ -78,7 +117,7 @@ def scan_file(path: Path) -> list:
     """Return list of (lineno, line_text, oe_code, detail) tuples."""
     try:
         raw = path.read_text(encoding='utf-8', errors='replace')
-    except Exception as e:
+    except Exception:
         return []
 
     lines = raw.splitlines()
@@ -153,6 +192,23 @@ def scan_file(path: Path) -> list:
             digit = m.group(1)
             findings.append((lineno, line.rstrip(), 'OE-5/6',
                              f'EC-{digit}'))
+
+        # OE-7: bare/compressed/mixed-case clause ordinals in citation context
+        if BARE_ORDINAL_CTX_RE.search(line):
+            for m in BARE_ORDINAL_RE.finditer(line):
+                token = m.group(0)  # e.g. "PC5", "PC-5", "Inv-5", "Pre-2"
+                # Exclusion (e): skip ADR-internal clause labels
+                if ADR_INTERNAL_RE.search(line[:m.start()]):
+                    continue
+                findings.append((lineno, line.rstrip(), 'OE-7', token))
+
+        # OE-8: range forms (no context gate — range syntax is clause-specific)
+        for m in RANGE_ORDINAL_RE.finditer(line):
+            token = m.group(0)
+            # Exclusion (e): skip ADR-internal clause labels
+            if ADR_INTERNAL_RE.search(line[:m.start()]):
+                continue
+            findings.append((lineno, line.rstrip(), 'OE-8', token))
 
     return findings
 

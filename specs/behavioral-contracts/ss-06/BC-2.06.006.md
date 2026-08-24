@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.006
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -26,6 +26,7 @@ changelog:
   - "1.4 (F-P151-03, burst-252, 2026-07-24): ADR-019 v1.4 adjudicated canon applied. (1) PC1 JSON payload → flat wire shape: `compacted_turns: { start, end }` removed; replaced with `compacted_start: <usize>` + `compacted_end: <usize>` (flat inclusive bounds per interface-definitions.md §Compaction CompactionSummary). (2) `parent_ids: [\"<parent_run_id>\"]` added to PC1 JSON (BC-2.06.002 Inv-2 mandate — every StreamEvent variant carries parent_ids). (3) PC1 field descriptions updated: `compacted_turns`/`CompactionSummary.compacted_range` references replaced with `compacted_start`/`compacted_end` flat-field descriptions (inclusive bounds, slice note). (4) Invariants: add parent_ids mandatory note citing BC-2.06.002 Inv-2. (5) EC-005 + TV-001 + TV-004 updated to flat + parent_ids wire shape."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (P2A-044 F-06/2026-08-24): P2A-044 F-06: final compressed/mixed-case/range ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -80,7 +81,7 @@ host to update context-window visualization without polling.
      "tokens_remaining_after": <i64 | null>
    }
    ```
-   - `parent_ids`: ancestry chain per BC-2.06.002 Inv-2 (MANDATORY on every `StreamEvent`
+   - `parent_ids`: ancestry chain per BC-2.06.002 INV-002 (MANDATORY on every `StreamEvent`
      variant); `[]` for a top-level run; `["<parent_run_id>"]` for a sub-agent run.
    - `trigger`: the `CompactionTrigger` variant that fired (string representation of the enum
      variant name that caused compaction; not the full variant with fields).
@@ -109,7 +110,7 @@ host to update context-window visualization without polling.
   (e.g., `OnMessageCount`/`OnTokenCount` triggers with neither `soft_limit` nor `hard_limit` set);
   negative `i64` when `accumulated > ceiling` (Deny path). Wire serializes as `null` when
   `None`. This is the meaningful value for capacity-management consumers.
-- {INV-003} **`parent_ids` is mandatory (BC-2.06.002 Inv-2):** Every `StreamEvent` variant, including
+- {INV-003} **`parent_ids` is mandatory (BC-2.06.002 INV-002):** Every `StreamEvent` variant, including
   `CompactionEvent`, MUST carry `parent_ids: Vec<RunId>`. For a top-level run `parent_ids`
   is empty (`[]`); for a sub-agent run it contains the parent `RunId` chain. This field
   must not be omitted from the wire payload.

@@ -1,9 +1,9 @@
 ---
 document_type: epics
-version: "1.0"
+version: "1.1"
 status: active
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 ---
@@ -39,7 +39,7 @@ traces_to: .factory/specs/architecture/ARCH-INDEX.md
 | E-20 | Embeddings Trait and Providers | 2 | S-2.09 | 8 | SS-22 | pregolya-core, pregolya-openai, pregolya-ollama |
 | E-21 | MCP Tool Adapter | 2 | S-2.10, S-2.11 | 13 | SS-09 | pregolya-mcp |
 | E-22 | Formal Verification Pipeline | 6 | S-6.01 | 8 | SS-17 | xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox |
-| EPIC-MAINT | Maintenance and Self-Improvement | out-of-wave | S-MAINT-001 | TBD | N/A | all crates |
+| EPIC-MAINT | Maintenance and Self-Improvement | out-of-wave | S-MAINT-001 | 5 | N/A | all crates |
 
 ## Epic Summaries
 
@@ -176,6 +176,10 @@ Single story that establishes the Kani harness obligations for all 9 VP Kani pro
 (6 P0 + 3 P1), cargo-fuzz targets for serialization and graph-execution paths, and cargo-mutants
 mutation gate. This story formally executes the verification plans laid out in VP-001 through
 VP-014. Gated until all Wave 1 + Wave 2 implementation stories are merged.
+
+## Changelog
+
+- 1.1 (P2A-044 F-09/2026-08-24): EPIC-MAINT points TBD→5 to match STORY-INDEX S-MAINT-001.
 
 ### EPIC-MAINT — Maintenance and Self-Improvement (out-of-wave)
 

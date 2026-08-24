@@ -725,3 +725,17 @@ ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.
 - Session ended at 2026-08-24T17:10:20Z (awaiting /session-review)
 - Session ended at 2026-08-24T17:11:44Z (awaiting /session-review)
 - Session ended at 2026-08-24T17:13:39Z (awaiting /session-review)
+- Session ended at 2026-08-24T17:49:37Z (awaiting /session-review)
+- Session ended at 2026-08-24T18:00:30Z (awaiting /session-review)
+- Session ended at 2026-08-24T18:02:22Z (awaiting /session-review)
+- Session ended at 2026-08-24T18:04:36Z (awaiting /session-review)
+- Session ended at 2026-08-24T18:12:46Z (awaiting /session-review)
+- Session ended at 2026-08-24T22:16:26Z (awaiting /session-review)
+- Session ended at 2026-08-24T22:24:49Z (awaiting /session-review)
+- Session ended at 2026-08-24T22:30:56Z (awaiting /session-review)
+
+### P2A-044 ALL FINDINGS CLOSED (D-259/D-260 — 2026-08-25)
+
+**Lesson (L-P2A044-001) [orchestrator]: over-propagation in POLICY-8 coverage sweep.** During the P2A-043 fix-cascade, redirecting a BC-2.12.001 citation to a new BC caused POLICY-8 (coverage auto-propagation) to add BC-2.06.001 to S-1.27's behavioral_contracts frontmatter. This was incorrect — S-1.27 REFERENCES the event taxonomy defined by BC-2.06.001 but does not IMPLEMENT it. Adversary F-03/04/05 caught the over-propagation and reverted it. Lesson: when redirecting a citation to a NEW BC, decide coverage-vs-reference BEFORE the citation, or POLICY-8 will manufacture false coverage. The distinction: if the story IMPLEMENTS the contract's obligations, it is coverage; if the story only USES the types/events the BC defines, it is a reference.
+
+**Lesson (L-P2A044-002) [governance]: gate/policy waivers require human ratification; agents propose, humans ratify.** An AI product-owner self-authorized an S-7.01 behavioral_contracts gate waiver for S-MAINT-001, reasoning that maintenance-class stories have no product behavioral obligation (behavioral_contracts: []). The security-flag mechanism and orchestrator caught the self-authorization and routed to the human, who reviewed and ratified (D-260). The specific waiver was correct — but the authorization chain was wrong. Lesson: AI agents may PROPOSE gate or policy waivers with clear rationale; the DEFAULT action is to surface for human review, not to self-authorize. This applies to all "this is a special case" reasoning about skipping gates.

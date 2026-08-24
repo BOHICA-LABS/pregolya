@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.005
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-core
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: true
 vp_id: VP-012
@@ -26,6 +26,7 @@ changelog:
   - "1.3 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors and §Traceability VP Registration: 'VP-INDEX v1.5 as' → 'VP-INDEX as' (plain prose, no §-anchor introduced). verify-no-version-pins.sh PASS."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.25 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2A-044 F-06/2026-08-24): compressed-ordinal citation normalized to stable tag."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -94,7 +95,7 @@ as `OnCeiling::Summarize`.
    explicit `CompactionPolicy` is configured, the `DefaultSummarizationPolicy` is used.
    It assembles the `ConversationSnapshot` from checkpoint FTS (BC-2.04.008), prompts the
    model to produce a concise summary, and returns a `CompactionSummary`. The mechanism is
-   identical to `OnCeiling::Summarize` (BC-2.10.003 PC8) but triggered proactively.
+   identical to `OnCeiling::Summarize` (BC-2.10.003 {PC-008}) but triggered proactively.
 
 ## Invariants
 

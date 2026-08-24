@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.008
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -24,6 +24,7 @@ changelog:
   - "1.2 (F-P142-03, burst-242, 2026-07-23): Sweep Command::Resume(…) enum-variant form → Command(resume=…) struct kwarg form per BC-2.05.004 authority and F-P120-01 adjudication. H1 title, Description, PC-1/2/3, Invariants, EC-001/004/006, TV-001/002/003, Related BCs, Traceability updated. Zero Command:: enum-variant residue remains in live body text."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.23 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -51,7 +52,7 @@ When `BC-2.05.007`'s `PendingHumanApproval` path is triggered, the engine serial
 `ToolApprovalRequest { preview: ToolCallPreview, prompt: Option<String> }` into the
 checkpoint (BC-2.05.001 interrupt machinery) and suspends the run. On resume, the caller
 delivers `Command(resume=PreToolDecision)`. The engine applies the delivered `PreToolDecision`
-directly via the `BC-2.05.007` PC-1/PC-2/PC-3 routing rules — without re-calling
+directly via the `BC-2.05.007` PC-001/PC-002/PC-003 routing rules — without re-calling
 `hook.pre_invoke`. This "skip-hook-on-resume" invariant is the key behavioral difference
 between `PendingHumanApproval` resumes and normal node re-execution (BC-2.05.003): the hook
 is not re-queried on the resumed dispatch because the human has already delivered the
@@ -74,14 +75,14 @@ decision out-of-band.
    proceeds to `tool.invoke(A)` with the original args from the checkpoint. `hook.pre_invoke`
    is NOT called again.
 2. {PC-002} **Resume with Deny:** `Command(resume=PreToolDecision::Deny { reason })`. The engine
-   applies Deny routing (BC-2.05.007 PC-2): `ToolOutput::Error(reason)` constructed without
+   applies Deny routing (BC-2.05.007 PC-002): `ToolOutput::Error(reason)` constructed without
    invoking the tool. `hook.pre_invoke` is NOT called again.
 3. {PC-003} **Resume with Edit:** `Command(resume=PreToolDecision::Edit { modified_args })`. The engine
    validates `modified_args` (JSON object check) then proceeds to `tool.invoke(modified_args)`.
    `hook.pre_invoke` is NOT called again.
 4. {PC-004} **Process restart before resume:** The `ToolApprovalRequest` is persisted in the checkpoint
    via msgpack (BC-2.04.002). After process restart, loading the checkpoint restores the
-   pending interrupt; the resume path is available as in PC-1/PC-2/PC-3.
+   pending interrupt; the resume path is available as in PC-001/PC-002/PC-003.
 5. {PC-005} **FIFO ordering:** The `ToolApprovalRequest` interrupt follows BC-2.05.002 FIFO semantics
    — if multiple interrupts are pending, this approval interrupt is delivered in the order
    it was created.
@@ -112,7 +113,7 @@ decision out-of-band.
 | EC-003 | Resume with Edit after process restart | modified_args validated; if valid, tool invoked with modified_args; if invalid, Deny fallback |
 | EC-004 | Multiple PendingHumanApproval interrupts queued (N sequential tool calls each needing approval) | FIFO: first ToolApprovalRequest resumed first; N separate Command(resume=…) deliveries required; hook not re-called for any |
 | EC-005 | A second tool invocation during the node's re-execution after the first approval is resumed | The second tool invocation goes through pre_tool_dispatch (BC-2.05.007) normally — pre_invoke is called for the SECOND dispatch (only skipped for the specific dispatch that was in PendingHumanApproval) |
-| EC-006 | `Command(resume=PreToolDecision::PendingHumanApproval { .. })` delivered as the resume payload | `PendingHumanApproval` is a hook RETURN value that triggers interrupt issuance (BC-2.05.007 PC-4); it is not a valid decision payload for `Command(resume=…)`. The engine returns `Err(PregolyaError)` per BC-2.05.004 invalid-payload contract. No tool invocation, no state mutation, run remains in `interrupted` state. |
+| EC-006 | `Command(resume=PreToolDecision::PendingHumanApproval { .. })` delivered as the resume payload | `PendingHumanApproval` is a hook RETURN value that triggers interrupt issuance (BC-2.05.007 PC-004); it is not a valid decision payload for `Command(resume=…)`. The engine returns `Err(PregolyaError)` per BC-2.05.004 invalid-payload contract. No tool invocation, no state mutation, run remains in `interrupted` state. |
 
 ## Canonical Test Vectors
 
@@ -137,7 +138,7 @@ decision out-of-band.
 - BC-2.05.002 — depends on: FIFO delivery of ToolApprovalRequest interrupts
 - BC-2.05.003 — related to: node re-execute is a DIFFERENT mechanism; this BC specifies skip-hook-on-resume which differs from node re-execute semantics
 - BC-2.05.004 — depends on: Command(resume=PreToolDecision) is the programmatic resume API
-- BC-2.05.007 — depends on: pre_tool_dispatch dispatch rules PC-1 through PC-3 applied on resume; PC-4 (PendingHumanApproval) is the hook RETURN value that triggered the interrupt and is NOT a valid resume decision payload
+- BC-2.05.007 — depends on: pre_tool_dispatch dispatch rules PC-001 through PC-003 applied on resume; PC-004 (PendingHumanApproval) is the hook RETURN value that triggered the interrupt and is NOT a valid resume decision payload
 - BC-2.06.004 — related to: tool_approval_request streaming event emitted when PendingHumanApproval issued
 - BC-2.06.005 — related to: tool_approval_resolved streaming event emitted when Command(resume=…) arrives
 

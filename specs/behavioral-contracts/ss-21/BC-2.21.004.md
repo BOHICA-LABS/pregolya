@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.004
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-008, DI-014]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
@@ -22,6 +22,7 @@ changelog:
   - "1.2 (burst-226/F-P131-07/2026-07-21): INV-3 fail-safe default — default similarity_search_with_filter returns Err(E-VS-005 FilterUnsupported) on non-empty filter; empty filter (vacuously true) still delegates to similarity_search. Removes lossy fallback language. EC-005 updated: non-overriding adapter returns Err(E-VS-005), not lossy result. Per ADR-014 v1.5 Decision 2 F-P131-07 adjudication."
   - "1.3 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change. input-hash corrected 377aba5→869996f (pre-existing drift; inputs unchanged)."
+  - "1.5 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-030
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -156,7 +157,7 @@ S-2.03
 |-------|-------|
 | Source L2 Capability | CAP-030 |
 | Capability Anchor Justification | CAP-030 ("MetadataFilter — Eq / Ne / In Clause Filtering on Document Metadata During Search") per capabilities-p1-p2.md §CAP-030 — this BC specifies the MetadataFilter and FilterClause types (Eq/Ne/In), the additive similarity_search_with_filter method, and the pre-filter/post-filter behavioral split that CAP-030 identifies as a distinct capability axis from the base VectorStore contract |
-| L2 Domain Invariants | DI-008 (similarity_search_with_filter returns Result; no .unwrap()), DI-014 (empty filter result `Ok(vec![])` is valid; NOT silently replaced with unfiltered results — per PC8 and EC-006) |
+| L2 Domain Invariants | DI-008 (similarity_search_with_filter returns Result; no .unwrap()), DI-014 (empty filter result `Ok(vec![])` is valid; NOT silently replaced with unfiltered results — per PC-008 and EC-006) |
 | Architecture Authority | ADR-014 Decision 2 §Metadata filter surface (MetadataFilter struct, FilterClause variants, additive method, pre vs post filter, #[non_exhaustive]) |
 | Binding Decisions | D21 (ecosystem-parity scope expansion) |
 | Module | pregolya-vectorstores / vectorstores::filter |

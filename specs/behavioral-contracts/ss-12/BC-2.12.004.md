@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-014
 wave: 1
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T01:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -42,6 +42,7 @@ changelog:
   - "1.7 (fix-burst-283/TD-VSDD-060-sibling/2026-07-30): Architect sibling-site sweep: 'No missed-fire accumulation' invariant referenced RunnableConfig.missed_fire_policy, which does not exist (not added by ADR-021; absent from LangGraph Cron TypedDict and ADK-Rust CreateCronJobRequest in reference corpus). Option A applied: fixed skip policy for missed firings; no per-schedule missed-fire override available in v1. Removed internally-contradictory 'Exactly one Run is created for each elapsed scheduled time' clause."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.10 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -150,7 +151,7 @@ queue_depth }` error.
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `POST /schedules` with valid `assistant_id`, `schedule: "0 9 * * *"`, valid `config` | `201 Created`; response body includes `cron_id: <uuid>`, `enabled: true`; no Run created yet | Happy path — schedule creation |
-| TV-002 | Advance mock clock to fire time; poll `GET /runs?schedule_id=<cron_id>` (canonical defaults: `limit=10&offset=0`) | One Run returned with `status: queued` or `in_progress`; `thread_id` is freshly allocated (not reused); `total_count: 1`; result ordered `created_at` DESC | Firing creates isolated fresh session. Pagination: F-P31-01 canonical convention applies — default `limit=10`, `offset=0`, `created_at` DESC. See PC7 and interface-definitions.md §Cron Schedules |
+| TV-002 | Advance mock clock to fire time; poll `GET /runs?schedule_id=<cron_id>` (canonical defaults: `limit=10&offset=0`) | One Run returned with `status: queued` or `in_progress`; `thread_id` is freshly allocated (not reused); `total_count: 1`; result ordered `created_at` DESC | Firing creates isolated fresh session. Pagination: F-P31-01 canonical convention applies — default `limit=10`, `offset=0`, `created_at` DESC. See {PC-007} and interface-definitions.md §Cron Schedules |
 | TV-003 | Fire schedule twice (two ticks apart); list Runs for schedule | Two distinct Runs with distinct `run_id` and `thread_id` values | Each firing produces independent Run |
 | TV-004 | `PATCH /schedules/{cron_id}` `{ "enabled": false }`; advance clock past next fire time | No new Run created | Disabling prevents future firings |
 | TV-005 | Delete assistant; advance clock to fire time | Run created with `status: failed`, error `E-CRON-001 AssistantNotFoundAtFiring` | Missing-assistant error path |

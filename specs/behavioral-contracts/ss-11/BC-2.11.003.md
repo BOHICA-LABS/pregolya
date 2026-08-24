@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.003
-version: "1.11"
+version: "1.12"
 status: active
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -33,6 +33,7 @@ changelog:
   - "1.9 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Two sites corrected: EC-004 table-cell and TV panic-row carry `{ category: INTERNAL, code: E-CORE-007 }` spans with no `..` inside the PregolyaError braces. The TV row has `chunks[0..1]` adjacent prose containing `..` outside the span — the span itself still violates (ADR-010 §Defect 4 / grep-v false-negative class); `, ..` added to both spans."
   - "1.10 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
   - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-004} added; purely additive, no content change."
+  - "1.12 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 modified: []
 extracted_from: null
 deprecated: null
@@ -78,8 +79,8 @@ user-sourced content).
    the chunk's position in the retrieval result list; run continues unless `Critical`;
    a `StreamEvent::GuardrailDecision { boundary: RagChunk, decision: Fail, reason: Some(reason),
    severity: Some(severity_wire), ingress_id, tool_call_id: None }` is emitted within the
-   enclosing NodeStart/NodeEnd window (BC-2.06.001 PC4) — the event carries metadata only; zero
-   bytes of the rejected chunk appear in any `StreamEvent` payload (BC-2.11.005 INV-5)
+   enclosing NodeStart/NodeEnd window (BC-2.06.001 {PC-004}) — the event carries metadata only; zero
+   bytes of the rejected chunk appear in any `StreamEvent` payload (BC-2.11.005 {INV-005})
 4. {PC-004} `GuardrailResult::Transform { new_content }` → transformed content forwarded; original chunk
    discarded; a `StreamEvent::GuardrailDecision { boundary: RagChunk, decision: Transform,
    reason: None, severity: None, ingress_id, tool_call_id: None }` is emitted within the
@@ -150,7 +151,7 @@ user-sourced content).
 
 - `prd-supplements/interface-definitions.md §GuardrailHook` — `IngressContent::RagChunk(Value)`; payload type `Value` = `serde_json::Value`; retrieval-backend-specific internal structure
 - `architecture/module-decomposition.md §pregolya-graph` — `graph::provenance` row: dispatch at `RAGRetrieval` boundary; N chunks → N independent `evaluate` calls (HIGH, SS-11)
-- `architecture/purity-boundary-map.md §Boundary Modules` — `core::retriever` row: `GuardedDocuments::rag_ingress` per-document async `evaluate` per BC-2.11.003 PC5; compile-time bypass prevention via `GuardedDocuments` newtype (ADR-014 Decision 6 / DI-012)
+- `architecture/purity-boundary-map.md §Boundary Modules` — `core::retriever` row: `GuardedDocuments::rag_ingress` per-document async `evaluate` per BC-2.11.003 {PC-005}; compile-time bypass prevention via `GuardedDocuments` newtype (ADR-014 Decision 6 / DI-012)
 
 ## Story Anchor
 

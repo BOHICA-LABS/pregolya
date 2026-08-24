@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.006
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,10 +20,11 @@ changelog:
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — EC-006 Expected behavior multi-line PregolyaError::new(Component::Memory, Category::Security, RetryHint::Never, \"E-MEMORY-004\", ...) collapsed to Err(PregolyaError { code: \"E-MEMORY-004\", .. }). Bare constructor form forbidden in prose context per ADR-010 Class 3 rules."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.10 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T01:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -157,7 +158,7 @@ context.
 **Expected behavior:** `graph::scheduler` returns `Err(PregolyaError { code: "E-MEMORY-004", .. })` for the ContextMutationConfig load. The run does NOT proceed silently with no memory
 context — it surfaces the missing scope as an error. The execution engine is responsible
 for ensuring `run_context.app_id` is set before the first super-step. Fail-loud: symmetric
-with `SkillStore` construction (BC-2.15.004 PC3), per ADR-012 Decision 1 Amendment §Gap 3
+with `SkillStore` construction (BC-2.15.004 {PC-003}), per ADR-012 Decision 1 Amendment §Gap 3
 correction — NO-SILENT-EMPTY enforced on both B101 and B102 paths.
 
 ## Canonical Test Vectors

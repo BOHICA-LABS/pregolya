@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.27
 epic_id: E-14
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,6 +12,7 @@ changelog:
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC corrections"
   - "1.3 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags — EC-002 BC-2.12.004 EC-2→EC-002; EC-003 BC-2.12.004 EC-3→EC-004; EC-005 BC-2.12.005 EC-2→EC-003; EC-006 BC-2.12.005 EC-3→EC-005; EC-007 BC-2.12.006 EC-1→EC-005; EC-008 BC-2.12.006 EC-2→EC-004; EC-009 BC-2.12.007 EC-1→EC-005; 4 citations escalated (EC-001 INV-003, EC-004 INV-001, EC-010 closest EC-001, EC-011 NE-13/BC-2.06.001) — product-owner resolution required"
   - "1.4 (P2A-043 F-05/2026-08-24): escalated EC citations redirected/repointed per PO adjudication (incl. new BC-2.12.007 EC-006)"
+  - "1.5 (P2A-044/2026-08-24): F-05 (BC-2.06.001 reference-not-coverage revert) + F-02 (AC-004 Failed-Run correction)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
@@ -20,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "0c4f477"
+input-hash: "3051010"
 traces_to:
   - behavioral-contracts/BC-2.12.004
   - behavioral-contracts/BC-2.12.005
@@ -29,7 +30,7 @@ traces_to:
 points: 8
 depends_on: [S-1.26]
 blocks: []
-behavioral_contracts: [BC-2.06.001, BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007]
+behavioral_contracts: [BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007]
 verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
@@ -67,7 +68,6 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
-| BC-2.06.001 | SSE streaming event taxonomy — canonical event names (node_stream; node_delta retired) | No |
 | BC-2.12.004 | CronSchedule — fresh isolated session per firing, skip missed-fire policy | No |
 | BC-2.12.005 | SecurityConfig::default — CORS denied, debug route gated (DI-013) | No |
 | BC-2.12.006 | Store trait seams — IdempotencyStore, RateLimitStore, RunStore | No |
@@ -88,8 +88,8 @@ If the server was down during scheduled firing times, missed firings are not rep
 (traces to BC-2.12.004 PC-007)
 
 ### AC-004: CronSchedule — error scenarios at firing and configuration
-At firing time, if the assistant referenced by the schedule no longer exists, the firing is dropped and returns `E-CRON-001` (AssistantNotFoundAtFiring). Creating or updating a schedule with an unparseable cron expression returns `E-CRON-002` (InvalidCronExpression). When the cron scheduler's internal queue is full and a firing is dropped, the server emits a tracing event with `event_type = "server.cron_schedule_queue_full"` and returns `E-CRON-003` (ScheduleQueueFull).
-(traces to BC-2.12.004 EC-001, EC-002, EC-004)
+At firing time, if the referenced assistant no longer exists, the scheduler CREATES a Run with status=RunStatus::Failed and error E-CRON-001 (AssistantNotFoundAtFiring); the schedule is NOT auto-disabled (future firings repeat this). Creating or updating a schedule with an unparseable cron expression returns `E-CRON-002` (InvalidCronExpression). When the cron scheduler's internal queue is full and a firing is dropped, the server emits a tracing event with `event_type = "server.cron_schedule_queue_full"` and returns `E-CRON-003` (ScheduleQueueFull).
+(traces to BC-2.12.004 PC-006, EC-001, EC-002, EC-004)
 
 ### AC-005: SecurityConfig::default — CORS denied (empty allowed_origins)
 `SecurityConfig::default()` configures CORS with an empty `allowed_origins` list. All cross-origin requests are denied. This is the DI-013 secure-by-default invariant.
@@ -121,7 +121,8 @@ The SSE endpoint (`GET /threads/:id/runs/:run_id/stream`) invokes the same `Comp
 
 ### AC-012: SSE event types — run_start, node_start, node_stream, node_end, run_end
 SSE events emitted during a run: `run_start`, `node_start`, `node_stream` (NOT `node_delta` — that name is retired), `node_end`, `run_end`. `run_end` is ONLY emitted on successful completion. Failed or interrupted runs do NOT emit `run_end`.
-(traces to BC-2.12.007 PC-002; traces to BC-2.06.001 PC-002)
+(traces to BC-2.12.007 PC-002)
+Note: the SSE event-name taxonomy is the canonical authority held in SS-06; S-1.17 is the implementing story for that taxonomy. S-1.27 conforms to the established taxonomy without re-implementing it.
 
 ### AC-013: Concurrent execution on same run_id returns E-SERVER-015
 If a second SSE or unary execution request arrives for a `run_id` that is already executing, returns `E-SERVER-015` (RunAlreadyExecuting). Only one execution per `run_id` at a time.
@@ -170,7 +171,7 @@ If a second SSE or unary execution request arrives for a `run_id` that is alread
 | EC-008 | BC-2.12.006 EC-004 | RunStore fails | `E-SERVER-014` |
 | EC-009 | BC-2.12.007 EC-005 | Second SSE request for same run_id | `E-SERVER-015` (RunAlreadyExecuting) |
 | EC-010 | BC-2.12.007 EC-006 | Run fails mid-stream | `run_end` NOT emitted; SSE stream closes with error event |
-| EC-011 | BC-2.06.001 PC-002 | `node_delta` event name used anywhere | Forbidden — event name is `node_stream` (NE-13 correction) |
+| EC-011 | BC-2.12.007 PC-002 | `node_delta` event name used anywhere (event-name taxonomy authority held in SS-06; S-1.17 is implementing story) | Forbidden — event name is `node_stream` (NE-13 correction) |
 
 ## Tasks
 

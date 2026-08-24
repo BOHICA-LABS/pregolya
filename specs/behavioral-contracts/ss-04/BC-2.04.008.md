@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.008
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ changelog:
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — all 4 occurrences of 'BC-2.04.007 invariant 3' converted to 'BC-2.04.007 {INV-003}' (INV-005 prose, blockquote, EC-007 error message, Traceability row)."
+  - "2.0 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 origin: greenfield
 priority: P1
 subsystem: SS-04
@@ -86,7 +87,7 @@ concurrent reads). The search capability is also registered as a callable `Tool`
    message: "FtsLimitZero: FtsSearchConfig.limit must be > 0; got <limit>", retry_hint: Never })`.
 
 > **Error codes minted here (E-CHKPT-008, E-CHKPT-009, E-CHKPT-010).**
-> - `E-CHKPT-008 FtsLimitZero` — VAL, broken, Never. Covers: (1) `limit = 0` input (PC6/EC-004); (2) malformed FTS5 query syntax (EC-002). Both are VAL caller-input rejections.
+> - `E-CHKPT-008 FtsLimitZero` — VAL, broken, Never. Covers: (1) `limit = 0` input (PC-006/EC-004); (2) malformed FTS5 query syntax (EC-002). Both are VAL caller-input rejections.
 > - `E-CHKPT-009 Fts5Unavailable` — INTERNAL, broken, Never. Covers: FTS5 extension not compiled into SQLite build (EC-006). INTERNAL — deployment/environment error, not a caller input error.
 > - `E-CHKPT-010 FtsEncryptionIncompatible` — VAL, broken, Never. Covers: FTS5 and EncryptedSerializer simultaneously configured (EC-007). VAL — caller configuration error; enabling both would violate BC-2.04.007 {INV-003}. Minted F-P2A005-06.
 > Taxonomy rows registered: sub-burst 2 (E-CHKPT-008, E-CHKPT-009); F-P2A005-06 (E-CHKPT-010).

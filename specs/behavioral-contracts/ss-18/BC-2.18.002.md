@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "2.2"
+version: "2.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "2.0 (P2A-041-F-3/2026-08-23): disambiguated precondition-2 vs postcondition-2 changelog notation; no clause content change."
   - "2.1 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "2.2 (P2A-043-F-02/2026-08-24): INV-006 added — TemplateInput is #[non_exhaustive] enum with three stable variants (Scalar, Messages, FewShotExamples); Send+Sync; wildcard arm required. Closes SS-18 escalation F-02; AC-012 and compliance-table row in S-2.04 re-anchor from PRE-002 to INV-006."
+  - "2.3 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -69,7 +70,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    is one of:
    - `TemplateInput::Scalar(TemplateVar)` — scalar string binding for human/AI/system slots
    - `TemplateInput::Messages(MessageListVar)` — message-list expansion for MessagesPlaceholder
-     (canonical `MessageListVar` struct shape: BC-2.18.003 INV-4 — carries both
+     (canonical `MessageListVar` struct shape: BC-2.18.003 INV-004 — carries both
      `messages: Vec<Message>` and `trust_level: Option<TrustLevel>`; NOT a bare newtype)
    - `TemplateInput::FewShotExamples(Vec<(TemplateVar, TemplateVar)>)` — for FewShot slots
    For each `TemplateInput` that binds to a `TrustRequired` slot, the trust level of the
@@ -95,7 +96,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 5. {PC-005} `PromptValue::into_messages()` returns `Vec<Message>` consuming self. For the
    `PromptValue::Messages` variant, provenance metadata is discarded and the message sequence
    returned; for the `PromptValue::String` variant, a single `HumanMessage` wrapping the
-   string is returned. (See INV-5 for the canonical PromptValue enum shape.)
+   string is returned. (See INV-005 for the canonical PromptValue enum shape.)
 6. {PC-006} A `ChatPromptTemplate` with zero message slots constructs and renders successfully, returning
    a `PromptValue::Messages` variant with an empty inner Vec.
 7. {PC-007} `ChatPromptTemplate` implements `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>`.
@@ -122,18 +123,18 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    in both, no trust classification was propagated into the slot (ADR-015 §Decision 3).
 4. {INV-004} `ChatPromptTemplate` construction is pure (no I/O, no async); it returns `Result`.
 5. {INV-005} `PromptValue` is a `#[non_exhaustive]` enum with exactly two stable variants:
-   `PromptValue::String(String)` — produced by `PromptTemplate::invoke` (BC-2.18.001 PC-7),
+   `PromptValue::String(String)` — produced by `PromptTemplate::invoke` (BC-2.18.001 PC-007),
    wrapping the formatted string output of `PromptTemplate::format`; and
    `PromptValue::Messages(Vec<(Message, MessageProvenance)>)` — produced by
-   `ChatPromptTemplate::format_messages`, carrying per-slot `MessageProvenance` (PC-3).
+   `ChatPromptTemplate::format_messages`, carrying per-slot `MessageProvenance` (PC-003).
    `PromptValue: Send + Sync` — all variant payload types are `Send + Sync`.
    The `#[non_exhaustive]` annotation requires external `match` arms to include a `_ => {}`
-   wildcard arm to remain forward-compatible. `into_messages()` (PC-5) converts both variants
+   wildcard arm to remain forward-compatible. `into_messages()` (PC-005) converts both variants
    to `Vec<Message>`. (ADR-015 §PromptValue is aligned with this enum shape.)
 6. {INV-006} `TemplateInput` is a `#[non_exhaustive]` enum with exactly three stable variants:
    `TemplateInput::Scalar(TemplateVar)` — a scalar string binding for human/AI/system slots;
    `TemplateInput::Messages(MessageListVar)` — a message-list expansion for MessagesPlaceholder
-   (canonical `MessageListVar` struct shape per BC-2.18.003 INV-4);
+   (canonical `MessageListVar` struct shape per BC-2.18.003 INV-004);
    `TemplateInput::FewShotExamples(Vec<(TemplateVar, TemplateVar)>)` — question/answer pairs
    for FewShot slots.
    `TemplateInput: Send + Sync` — all variant payload types are `Send + Sync`.
@@ -159,7 +160,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 | TV-002 | Same template, `vars = {"question": TemplateVar { value: "...", trust_level: Some(TrustLevel::UserInput) }}` | HumanMessage slot: `Provenance { highest_trust_level: Some(TrustLevel::UserInput), policy: TrustAll }` | happy-path (provenance threading) |
 | TV-003 | `template.format_messages({})` with all variables pre-bound as partials | `Ok(PromptValue { messages: [...] })` | happy-path (partial binding only) |
 | TV-004 | `into_messages()` on TV-001 result | `Vec<Message>` with `[SystemMessage("You are helpful."), HumanMessage("What is Rust?")]` | happy-path (extraction) |
-| TV-005 | Same template and vars as TV-001 invoked via `Runnable::invoke(vars, None)` rather than `format_messages` directly | `Ok(PromptValue::Messages([...]))` — result is structurally identical to TV-001; invoke delegates to format_messages without modification | happy-path (Runnable delegation; PC-7) |
+| TV-005 | Same template and vars as TV-001 invoked via `Runnable::invoke(vars, None)` rather than `format_messages` directly | `Ok(PromptValue::Messages([...]))` — result is structurally identical to TV-001; invoke delegates to format_messages without modification | happy-path (Runnable delegation; PC-007) |
 
 ## Verification Properties
 
