@@ -9,11 +9,35 @@
 # referenced BC file. Catches the P2A-032 drift class (stories citing
 # non-existent PC/INV/EC numbers).
 #
+# DUAL-MODE CITATION RESOLUTION (ADR-027 M2)
+# ───────────────────────────────────────────
+# Two citation forms are valid during the M2→M3 migration window:
+#
+#   OLD ordinal form (all 39 stories at M2 start):
+#     ### AC-NNN (traces to BC-S.SS.NNN postcondition N)
+#     ### AC-NNN (traces to BC-S.SS.NNN invariant [freeform])
+#     ### AC-NNN (traces to BC-S.SS.NNN precondition N)
+#
+#   NEW stable-tag form (ADR-027 Decision 3; stories migrate in M3):
+#     ### AC-NNN (traces to BC-S.SS.NNN PC-NNN)
+#     ### AC-NNN (traces to BC-S.SS.NNN INV-NNN)
+#     ### AC-NNN (traces to BC-S.SS.NNN PRE-NNN)
+#     ### AC-NNN (traces to BC-S.SS.NNN EC-NNN)   (unchanged format)
+#
+# The validator tries the NEW form first.  If matched, it resolves by
+# grepping for {PC-NNN}/{INV-NNN}/{PRE-NNN}/{EC-NNN} tokens in the BC.
+# If not matched, it falls through to OLD ordinal resolution.
+#
+# IMPORTANT (M2 constraint): Old-form citations against BCs that now carry
+# stable tags are ACCEPTED — no mixed-form-anchor DRIFT is emitted.  The
+# strict "new-form required / mixing = DRIFT" behaviour is M4's cutover.
+#
 # CHECKS IMPLEMENTED
 # ──────────────────
 # CHECK 1 — Existence check (highest value):
-#   The cited postcondition / invariant / edge-case / precondition NUMBER
-#   must actually exist in the referenced BC. Parsed by counting:
+#   NEW form: the cited {PC-NNN}/{INV-NNN}/{PRE-NNN} token must be present
+#     in the relevant BC section.
+#   OLD form: the cited numbered item must exist by ordinal count:
 #     - Postconditions: numbered list items (^\d+\.) in ## Postconditions
 #     - Invariants: bullet items (^-) in ## Invariants (ordinal numbering)
 #     - Preconditions: numbered list items (^\d+\.) in ## Preconditions
@@ -90,10 +114,21 @@ import re
 STORIES_DIR = sys.argv[1]
 BC_BASE_DIR  = sys.argv[2]
 
-# ── Citation regex ────────────────────────────────────────────────────────────
-# Matches: ### AC-NNN (traces to BC-S.SS.NNN <section-type> <detail>)
-#          with optional trailing note after "--" or after ")"
-CITE_RE = re.compile(
+# ── Citation regexes (dual-mode, ADR-027 M2) ─────────────────────────────────
+# NEW stable-tag form: ### AC-NNN (traces to BC-S.SS.NNN PC-NNN)
+# Tried first; groups: (1)AC-id (2)BC-id (3)tag-prefix (4)tag-digits (5)trailing
+NEW_CITE_RE = re.compile(
+    r'###\s+(AC-\d+)\s+\(traces\s+to\s+'
+    r'(BC-\d+\.\d+\.\d+)\s+'
+    r'(PC|INV|PRE|EC)-(\d+)'
+    r'([^)]*)\)',
+    re.IGNORECASE
+)
+
+# OLD ordinal form: ### AC-NNN (traces to BC-S.SS.NNN postcondition N)
+# Fallback when NEW_CITE_RE does not match.
+# groups: (1)AC-id (2)BC-id (3)section-word (4)number-or-EC (5)trailing
+OLD_CITE_RE = re.compile(
     r'###\s+(AC-\d+)\s+\(traces\s+to\s+'
     r'(BC-\d+\.\d+\.\d+)\s+'
     r'(postconditions?|invariant|precondition|edge\s+case)\s*'
@@ -183,6 +218,60 @@ def get_ec_ids(section_text):
     header_ids = set(re.findall(r'###\s+(EC-\d+)\b', section_text))
     table_ids  = set(re.findall(r'^\|\s*(EC-\d+)\s*\|', section_text, re.MULTILINE))
     return header_ids | table_ids
+
+
+def get_stable_tags(section_text, tag_prefix):
+    """
+    Return the set of stable tag IDs present in section_text for the given prefix.
+    tag_prefix is 'PC', 'INV', or 'PRE'.
+    Matches {PC-NNN} / {INV-NNN} / {PRE-NNN} tokens anywhere in the section.
+    Returns a set of normalised strings like {'PC-001', 'PC-002', ...}.
+    Added for ADR-027 M2 dual-mode.
+    """
+    pattern = re.compile(r'\{' + re.escape(tag_prefix) + r'-(\d+)\}', re.IGNORECASE)
+    return {f"{tag_prefix.upper()}-{m.zfill(3)}" for m in pattern.findall(section_text)}
+
+
+def get_item_text_by_tag(section_text, tag):
+    """
+    Extract the text of a clause identified by its stable tag token, e.g. 'PC-001'.
+    Scans from the line containing {TAG} to the line before the next stable tag at a
+    top-level list-item boundary (^\\d+\\. or ^- at column 0), or end of section.
+    Fence-aware: lines inside ``` fences belong to the enclosing clause.
+    Returns '' when the tag is not found.
+    Added for ADR-027 M2 dual-mode; used for CHECK-2 on new-form citations.
+    """
+    tag_token   = '{' + tag.upper() + '}'
+    next_tag_re = re.compile(r'\{(?:PC|INV|PRE)-\d+\}', re.IGNORECASE)
+
+    lines     = section_text.split('\n')
+    capturing = False
+    item_lines: list = []
+    in_fence  = False
+
+    for line in lines:
+        if line.strip().startswith('```'):
+            in_fence = not in_fence
+            if capturing:
+                item_lines.append(line)
+            continue
+        if in_fence:
+            if capturing:
+                item_lines.append(line)
+            continue
+
+        if not capturing:
+            if tag_token in line:
+                capturing = True
+                item_lines.append(line)
+        else:
+            # Stop when a NEW top-level list marker carries a different stable tag
+            top_marker = re.match(r'^(?:\d+\.\s|-\s)', line)
+            if top_marker and next_tag_re.search(line) and tag_token not in line:
+                break
+            item_lines.append(line)
+
+    return '\n'.join(item_lines)
 
 
 def get_item_text(section_text, section_type, number_or_ec):
@@ -332,6 +421,10 @@ def load_bc(bc_id):
         'pre_numbers':   count_numbered_items(pre_section),
         'pre_max':       max(count_numbered_items(pre_section), default=0),
         'ec_ids':        get_ec_ids(ec_section),
+        # Stable tag sets — populated for BCs that completed M1 labeling (ADR-027)
+        'pc_tags':       get_stable_tags(pc_section, 'PC'),
+        'inv_tags':      get_stable_tags(inv_section, 'INV'),
+        'pre_tags':      get_stable_tags(pre_section, 'PRE'),
     }
     _bc_cache[bc_id] = parsed
     return parsed
@@ -385,7 +478,66 @@ for filename in story_files:
         if 'traces to BC-' not in line:
             continue
 
-        m = CITE_RE.search(line)
+        # ── Try NEW stable-tag form first (ADR-027 M2 dual-mode) ─────────────
+        new_m = NEW_CITE_RE.search(line)
+        if new_m:
+            ac_id      = new_m.group(1)                    # e.g. AC-001
+            bc_id      = new_m.group(2)                    # e.g. BC-2.08.006
+            tag_prefix = new_m.group(3).upper()            # PC | INV | PRE | EC
+            tag_num    = new_m.group(4).zfill(3)           # '001'
+            tag_id     = f"{tag_prefix}-{tag_num}"         # e.g. PC-001
+
+            total_citations += 1
+            story_citations += 1
+
+            bc = load_bc(bc_id)
+            if bc is None:
+                print(f"DRIFT {story_id} {ac_id} cited={tag_id} "
+                      f"reason=bc-file-missing bc={bc_id}")
+                story_drift += 1
+                continue
+
+            ac_text_full = _ac_body_cache.get(line, line)
+
+            # CHECK 1 (new form): stable tag token must exist in BC section
+            if tag_prefix == 'PC':
+                exists = tag_id in bc['pc_tags']
+                section_key = 'pc_section'
+            elif tag_prefix == 'INV':
+                exists = tag_id in bc['inv_tags']
+                section_key = 'inv_section'
+            elif tag_prefix == 'PRE':
+                exists = tag_id in bc['pre_tags']
+                section_key = 'pre_section'
+            else:  # EC — same logic as old form
+                exists = tag_id in bc['ec_ids']
+                section_key = 'ec_section'
+
+            if not exists:
+                print(f"DRIFT {story_id} {ac_id} cited={tag_id} "
+                      f"reason=nonexistent bc={bc_id}")
+                story_drift += 1
+                continue
+
+            # CHECK 2 (new form): error-code co-location (advisory)
+            ac_codes = ERRCODE_RE.findall(ac_text_full)
+            if ac_codes:
+                if tag_prefix in ('PC', 'INV', 'PRE'):
+                    item_text = get_item_text_by_tag(bc[section_key], tag_id)
+                else:
+                    item_text = get_item_text(bc['ec_section'], 'edge_case', tag_id)
+                if item_text:
+                    for code in ac_codes:
+                        if code not in item_text:
+                            print(f"ADVISORY {story_id} {ac_id} cited={tag_id} "
+                                  f"reason=code-absent asserted-code={code} bc={bc_id}")
+                            story_advisory += 1
+                            break  # one ADVISORY per AC
+
+            continue  # new-form citation fully processed; do not fall through
+
+        # ── OLD ordinal form fallback ─────────────────────────────────────────
+        m = OLD_CITE_RE.search(line)
         if not m:
             # Skip complex formats: PC9/EC-008, postconditions 1/2/3 (slash-separated)
             # These are non-standard and checked by adversary separately
@@ -449,7 +601,7 @@ for filename in story_files:
         # asserted by the AC appear in the body, not in the ### AC-NNN citation line.
         ac_text_full = _ac_body_cache.get(line, line)
 
-        # ── CHECK 1: Existence check ──────────────────────────────────────────
+        # ── CHECK 1: Existence check (old ordinal form) ───────────────────────
         exists = True
         cited_label = ''
 
@@ -578,8 +730,15 @@ done <<< "$PYTHON_OUTPUT"
 echo ""
 echo "verify-ac-pc-trace: checked $TOTAL_CITATIONS citations across $TOTAL_STORIES_CHECKED stories"
 echo ""
+echo "Dual-mode citation resolution (ADR-027 M2):"
+echo "  NEW stable-tag form: AC cites BC-S.SS.NNN PC-NNN / INV-NNN / PRE-NNN / EC-NNN"
+echo "    CHECK 1 resolves by grepping {TAG} token in the BC section."
+echo "  OLD ordinal form: AC cites BC-S.SS.NNN postcondition N / invariant N / precondition N"
+echo "    CHECK 1 resolves by ordinal count (unchanged from pre-M2 logic)."
+echo "  Both forms accepted during M2-M3 window. Strict new-form enforcement is M4."
+echo ""
 echo "Checks implemented:"
-echo "  CHECK 1 (BLOCKING): Existence — cited PC/INV/EC/PRE number must exist in the referenced BC"
+echo "  CHECK 1 (BLOCKING): Existence — cited PC/INV/EC/PRE tag or ordinal must exist in the referenced BC"
 echo "           reason=nonexistent | reason=bc-file-missing -> DRIFT line -> exits 1"
 echo "  CHECK 2 (ADVISORY): Error-code co-location — E-XXX-NNN asserted in AC must appear in cited item"
 echo "           reason=code-absent -> ADVISORY line -> does not block (heuristic; codes may appear"

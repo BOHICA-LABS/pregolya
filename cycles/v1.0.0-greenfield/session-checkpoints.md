@@ -2856,3 +2856,21 @@ M1 chunk 1 (4d13c31): 47 BCs labeled (SS-01..07,16,17); purely additive; census 
 M1 chunk 2 (5bec975): 47 BCs labeled (SS-08..13); purely additive; ~94/133 BCs labeled; census UNCHANGED; validator 0-DRIFT.
 Census: 39 stories / 133 BC / 14 VP / 118 EC. Streak 0/3. trajectory-tail →4→4→5→1.
 
+
+---
+
+## v5.67 Checkpoint (archived 2026-08-24; replaced by v5.68)
+
+**Archived from STATE.md v5.67 (2026-08-23T23:05:00Z)**
+
+pregolya Phase-2 Story Decomposition, adversarial 3-CLEAN convergence, streak 0/3. Mid ADR-027 STABLE-ANCHOR MIGRATION. **M1 BC-labeling COMPLETE (D-252; all 133 BCs labeled).** NEXT ACTION: M2 — devops reworks verify-ac-pc-trace.sh to ADR-027 Decision-4 dual-mode + POL-48 wording.
+
+HEADS: develop 644d1ad (clean); factory-artifacts: see git log. Worktrees: none. PRs: none.
+
+M1 chunks: chunk 1 (SS-01..07,16,17) 4d13c31; chunk 2 (SS-08..13) 5bec975; chunk 3 (SS-14,15,18-23) committed M1 burst. All 133/133 BCs labeled.
+
+Known M3 escalation: S-1.03 AC-005, S-1.04 AC-005, S-1.08 AC-009, S-1.27 AC-004, S-1.12 AC-015, S-1.17 interim.
+
+Census: 39 stories / 133 BC / 14 VP / 118 EC. Streak 0/3. trajectory-tail →4→4→5→1.
+
+D-251 SESSION WRAP; D-252 M1 COMPLETE. ADR-027 placeholder "D-175" — reconcile to D-250 in later burst.

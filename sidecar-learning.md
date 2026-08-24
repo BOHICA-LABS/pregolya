@@ -653,3 +653,6 @@ Session-end markers for the VSDD factory. Run /session-review to synthesize.
 - Session ended at 2026-08-24T04:22:02Z (awaiting /session-review)
 - Session ended at 2026-08-24T04:25:03Z (awaiting /session-review)
 - M1/ADR-027 COMPLETE (D-252; 2026-08-23): All 133/133 BCs labeled with stable {PC/INV/PRE-NNN} clause anchors. M1 chunks 1+2+3 COMPLETE. chunk 3 = 39 BCs (SS-14,15,18-23). BC-INDEX §Changelog updated. BC census UNCHANGED 133 (51/79/3). Streak 0/3. NEXT: M2 (verify-ac-pc-trace.sh dual-mode + POL-48 wording).
+- Session ended at 2026-08-24T05:06:53Z (awaiting /session-review)
+- Session ended at 2026-08-24T05:14:43Z (awaiting /session-review)
+- M2/ADR-027 COMPLETE (D-253; 2026-08-24): verify-ac-pc-trace.sh dual-mode rework per ADR-027 Decision-4. NEW_CITE_RE (stable-tag) + OLD_CITE_RE fallback. Helpers get_stable_tags()/get_item_text_by_tag(); load_bc() carries pc_tags/inv_tags/pre_tags. 528 citations / 40 stories 0-DRIFT exit=0; 15/15 pre-commit PASS. POL-48 updated. Census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: M3.

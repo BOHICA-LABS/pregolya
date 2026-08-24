@@ -3716,3 +3716,11 @@ CLEAN(strict)=no. CLEAN(PR-merge)=no. Streak 0/3. NEXT: M1 BC-clause labeling (p
 - M1/ADR-027 chunk 2: SS-08..13 labeled (47 BCs); additive; validator 0-DRIFT; ~94/134; NEXT M1 chunk 3.
 
 - M1/ADR-027 chunk 3 + M1 COMPLETE (D-252): SS-14,15,18-23 labeled (39 BCs); additive; validator 0-DRIFT; all 133/133 BCs labeled. Incidental input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004. BC census UNCHANGED 133. BC-INDEX §Changelog updated. Streak 0/3. NEXT: M2 (verify-ac-pc-trace.sh dual-mode rework + POL-48 wording).
+
+### M2/ADR-027 COMPLETE (D-253 — 2026-08-24)
+
+verify-ac-pc-trace.sh reworked to ADR-027 Decision-4 dual-mode. NEW_CITE_RE (stable-tag cite form `(PC|INV|PRE|EC)-NNN`) added alongside renamed OLD_CITE_RE; helpers get_stable_tags()/get_item_text_by_tag(); load_bc() now carries pc_tags/inv_tags/pre_tags arrays; story loop tries new-form first then old-form fallback. Transitional: old-form citations against tagged BCs NOT flagged as DRIFT (strict mixed-form-anchor behavior deferred to M4). POL-48 description/adopted/verification_steps updated for dual-mode.
+
+Verified by devops-engineer: exit=0, 0 blocking DRIFT / 528 citations / 40 stories; 15/15 pre-commit PASS.
+
+BC census UNCHANGED 39/133/14/118. Streak 0/3. NEXT: M3 (story-writer re-cites all 39 stories to stable-anchor form; fixes ~136 mis-anchors in-pass). Known M3 escalation: S-1.03 AC-005, S-1.04 AC-005, S-1.08 AC-009, S-1.27 AC-004, S-1.12 AC-015, S-1.17 interim (M3 supersedes).
