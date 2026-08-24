@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.08
 epic_id: E-03
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.001.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "78eadd9"
+input-hash: "6702208"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.01]
@@ -72,40 +72,40 @@ The Red Gate test file must compile but all 11 GTV tests must FAIL (return Err o
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.07.001 postcondition 1)
+### AC-001 (traces to BC-2.07.001 PC-001)
 Chunk size is measured in Unicode code points via `str.chars().count()`, NOT byte length (`str.len()`). A test with input containing multi-byte UTF-8 characters (e.g., `"🦀"` = 1 code point, 4 bytes; `"é"` = 1 code point, 2+ bytes depending on normalization) demonstrates that `chunk_size` counts code points. Verified by `test_BC_2_07_001_codepoint_sizing_vs_byte_len()`.
 
-### AC-002 (traces to BC-2.07.001 postcondition 2)
+### AC-002 (traces to BC-2.07.001 EC-002)
 Constructing a `RecursiveCharacterTextSplitter` with `chunk_size: 0` returns `Err(PregolyaError { category: VAL, code: "E-SPLIT-001", message: "ZeroChunkSize: chunk_size must be > 0 code points; got 0", .. })`. Verified by `test_BC_2_07_001_zero_chunk_size_error()`.
 
-### AC-003 (traces to BC-2.07.001 postcondition 3)
+### AC-003 (traces to BC-2.07.001 EC-001)
 Constructing with `overlap >= chunk_size` returns `Err(PregolyaError { category: VAL, code: "E-SPLIT-002", message: "OverlapExceedsChunk: overlap <overlap> must be < chunk_size <chunk_size>", .. })`. The check uses code-point counts for both `chunk_size` and `overlap`. Verified by `test_BC_2_07_001_overlap_ge_chunk_size_error()`.
 
-### AC-004 (traces to BC-2.07.001 postcondition 4)
+### AC-004 (traces to BC-2.07.001 PC-001)
 Each separator in the configured list is tried in order. The first separator that produces chunks within the `chunk_size` limit is used. If no separator splits sufficiently, the splitter falls back to hard-splitting at `chunk_size` code-point boundaries. Verified by `test_BC_2_07_001_separator_cascade_order()`.
 
-### AC-005 (traces to BC-2.07.001 invariant 1 — R8 risk mitigation)
+### AC-005 (traces to BC-2.07.001 INV-001 — R8 risk mitigation)
 No internal size computation uses `str.len()` (byte length) for chunk measurement. The entire chain — separator split, overlap calculation, chunk emission — operates in code points. A test verifying that a purely ASCII-identical string and a multi-byte-identical string with the same code-point count produce the same chunk count closes the R8 code-point/byte confusion risk. Verified by `test_BC_2_07_001_R8_codepoint_byte_invariant()`.
 
-### AC-006 (traces to BC-2.07.002 postcondition 1 — GTV-001..007)
+### AC-006 (traces to BC-2.07.002 PC-001 — GTV-001..007)
 GTV-001 through GTV-007 pass exactly as specified in BC-2.07.002. Each GTV is a separate `#[test]` function in `tests/red_gate/test_BC_2_07_002_python_parity.rs`. The test function names follow the pattern `test_GTV_NNN_<slug>()`. All 7 tests must produce output byte-for-byte identical to the Python reference. Verified by the Red Gate file.
 
-### AC-007 (traces to BC-2.07.002 postcondition 2 — GTV-008..009)
+### AC-007 (traces to BC-2.07.002 PC-001 — GTV-008..009)
 GTV-008 and GTV-009 (separator boundary cases from the Python reference) pass. These vectors test that separator selection does not produce off-by-one splits in the presence of multi-character separators. Verified in the Red Gate file.
 
-### AC-008 (traces to BC-2.07.002 postcondition 3 — GTV-010 grapheme discriminator)
+### AC-008 (traces to BC-2.07.002 PC-003 — GTV-010 grapheme discriminator)
 GTV-010: Input is a string containing NFD-normalized `é` (U+0065 U+0301, 2 code points). With `chunk_size: 1`, the splitter produces 2 chunks (one per code point), NOT 1 chunk (as a grapheme-cluster-aware splitter would). This discriminator ensures the implementation counts Unicode code points (scalars), not grapheme clusters. Verified in the Red Gate file as `test_GTV_010_nfd_e_codepoint_not_grapheme()`.
 
 ### AC-009 (traces to BC-2.07.002 postcondition 4 — GTV-011 grapheme discriminator)
 GTV-011: Input contains a ZWJ family emoji sequence (e.g., `"👨‍👩‍👧"`, which is multiple code points joined by U+200D ZWJ). With a `chunk_size` smaller than the total code-point count of the sequence, the splitter splits within the ZWJ sequence (producing separate emoji fragments), NOT treating the composite as an atomic unit. This discriminator verifies code-point granularity, not grapheme-cluster granularity. Verified in the Red Gate file as `test_GTV_011_zwj_emoji_splits_at_codepoints()`.
 
-### AC-010 (traces to BC-2.07.003 postcondition 1 — short doc single chunk)
+### AC-010 (traces to BC-2.07.003 PC-001 — short doc single chunk)
 A document whose code-point count is ≤ `chunk_size` is returned as a single-element `Vec` containing the entire document. No splitting occurs, no separator search is attempted. Verified by `test_BC_2_07_003_short_doc_single_chunk()`.
 
-### AC-011 (traces to BC-2.07.003 postcondition 5 — empty input returns empty vec)
+### AC-011 (traces to BC-2.07.003 PC-005 — empty input returns empty vec)
 `split_text("")` returns `Ok(vec![])` — an empty `Vec<String>`, NOT `Ok(vec!["".to_string()])`. The empty string is never emitted as a chunk. Verified by `test_BC_2_07_003_empty_input_returns_empty_vec()`.
 
-### AC-012 (traces to BC-2.07.003 postcondition 3 — no panic)
+### AC-012 (traces to BC-2.07.003 PC-003 — no panic)
 `split_text` on any valid `RecursiveCharacterTextSplitter` (correctly constructed) never panics. Verified by `test_BC_2_07_003_no_panic_on_valid_splitter()` using proptest with arbitrary string inputs.
 
 ## Architecture Mapping
@@ -209,3 +209,8 @@ Files to MODIFY:
 | EC-003 | chunk_size exactly equals document code-point count | Returns single-element vec with entire document |
 | EC-004 | GTV-010: NFD é (U+0065 U+0301) with chunk_size=1 | Returns 2 chunks — one per code point, NOT 1 chunk per grapheme |
 | EC-005 | GTV-011: ZWJ family emoji sequence with chunk_size smaller than sequence | Splits within ZWJ sequence — NOT treated as atomic grapheme cluster |
+
+## Changelog
+
+- 1.0 (2026-08-18): initial story authoring.
+- 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-002 postcondition 2→EC-002 (zero chunk_size validation is BC-2.07.001 EC-002; PC-002 is chunk count formula); AC-003 postcondition 3→EC-001 (overlap≥chunk_size is BC-2.07.001 EC-001; PC-003 is "byte length may exceed"); AC-004 postcondition 4→PC-001 (separator cascade achieves PC-001 compliance; old PC-004 is UTF-8 boundary); AC-005 "invariant 1"→INV-001; AC-007 postcondition 2→PC-001 (GTV-008..009 are test vectors under PC-001; old PC-002 is comparison method); AC-008 postcondition 3→PC-003 (chunk list length discriminator). ESCALATION: AC-009 (BC-2.07.002 postcondition 4 / PC-004 mis-anchor — AC asserts ZWJ sequence splits at code-point boundaries (GTV-011 discriminator) but PC-004 is about "no extra empty chunks"; semantically closest clauses are PC-001 and PC-003 but known escalation per task spec). Routes to product-owner.

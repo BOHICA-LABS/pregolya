@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.24
 epic_id: E-09
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 mis-anchors corrected (AC-004 INV-001→INV-004, AC-008 PC-001→PC-002, AC-009 PC-002→PC-001, AC-010 INV-001→INV-003)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.004.md
@@ -14,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8952921"
+input-hash: "97c4320"
 traces_to:
   - behavioral-contracts/BC-2.06.004
   - behavioral-contracts/BC-2.06.005
@@ -68,46 +70,46 @@ Comfortable within context window. No split required.
 
 ### AC-001: tool_approval_request emitted BEFORE interrupt() is issued
 When `pre_tool_dispatch` returns `PendingHumanApproval`, the engine emits `StreamEvent::ToolApprovalRequest` BEFORE calling `interrupt(ToolApprovalRequest)`. Stream consumers receive the event while the run is still in-flight (not yet `interrupted`).
-(traces to BC-2.06.004 postcondition 2)
+(traces to BC-2.06.004 PC-002)
 
 ### AC-002: tool_approval_request payload — complete and correct fields
 The emitted `StreamEvent::ToolApprovalRequest` carries: `run_id` (UUID), `tool_name` (registered name string), `tool_args` (original JSON args before any Edit), `action_risk` (ActionRisk string or null if not annotated), `prompt` (Option<String> from PendingHumanApproval, null if None).
-(traces to BC-2.06.004 postcondition 1)
+(traces to BC-2.06.004 PC-001)
 
 ### AC-003: tool_approval_request emitted exactly once per PendingHumanApproval
 One `ToolApprovalRequest` event is emitted per hook decision that returns `PendingHumanApproval`. Approve, Deny, and Edit decisions produce NO `ToolApprovalRequest` event.
-(traces to BC-2.06.004 postcondition 3)
+(traces to BC-2.06.004 PC-003)
 
 ### AC-004: tool_approval_request — stream channel full does not block engine
 If the streaming channel is full or the consumer is disconnected, the emit attempt uses fire-and-forget semantics (non-blocking send). The engine does NOT panic and does NOT block. `interrupt()` is still issued.
-(traces to BC-2.06.004 invariant 1)
+(traces to BC-2.06.004 INV-004)
 
 ### AC-005: tool_approval_resolved emitted AFTER interrupt consumed, BEFORE decision applied
 When `Command(resume=<decision>)` is delivered for a `ToolApprovalRequest` interrupt, the engine emits `StreamEvent::ToolApprovalResolved` after consuming the interrupt and before applying the decision (before `tool.invoke` is called for Approve/Edit, before `ToolOutput::Error` for Deny).
-(traces to BC-2.06.005 postcondition 3)
+(traces to BC-2.06.005 PC-003)
 
 ### AC-006: tool_approval_resolved payload — correct per decision variant
 - `Approve`: `{ decision: "Approve", reason: null, modified_args: null }`
 - `Deny { reason }`: `{ decision: "Deny", reason: "<reason>", modified_args: null }`
 - `Edit { modified_args }`: `{ decision: "Edit", reason: null, modified_args: { ... } }`
 All payloads include `run_id` and `tool_name`.
-(traces to BC-2.06.005 postcondition 1)
+(traces to BC-2.06.005 PC-001)
 
 ### AC-007: Every tool_approval_resolved pairs with a prior tool_approval_request
 For the same `run_id` + `tool_name`, `tool_approval_resolved` is only emitted after a `tool_approval_request` was emitted. `tool_approval_resolved` is never emitted for a run with no pending `ToolApprovalRequest` interrupt.
-(traces to BC-2.06.005 postcondition 2)
+(traces to BC-2.06.005 PC-002)
 
 ### AC-008: compaction_event emitted AFTER compacted checkpoint durably written
 `StreamEvent::CompactionEvent` is emitted only after `CheckpointSaver::put` has completed and the compacted checkpoint is durably persisted. Not before.
-(traces to BC-2.06.006 postcondition 1)
+(traces to BC-2.06.006 PC-002)
 
 ### AC-009: compaction_event payload — parent_ids is MANDATORY
 The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MANDATORY — must not be null or empty), `trigger` (CompactionTrigger variant string), `compacted_start` (message index), `compacted_end` (message index), `summary_token_count` (u64), `tokens_remaining_after` (Option<i64> — null when no token ceiling; negative on Deny path).
-(traces to BC-2.06.006 postcondition 2)
+(traces to BC-2.06.006 PC-001)
 
 ### AC-010: compaction_event — parent_ids is mandatory (non-null, non-empty array)
 `parent_ids` field on `CompactionEvent` payload must be a non-null, non-empty array. Emitting a `compaction_event` with `parent_ids: null` or `parent_ids: []` violates the CompactionEvent structural invariant (BC-2.06.006 invariant 1) and must not occur.
-(traces to BC-2.06.006 invariant 1)
+(traces to BC-2.06.006 INV-003)
 
 ## Architecture Mapping
 

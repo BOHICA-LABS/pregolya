@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.03
 epic_id: E-17
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-21/BC-2.21.001.md
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "98e8500"
+input-hash: "213c276"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 10
 depends_on: [S-2.02, S-1.04, S-2.09]
@@ -54,135 +54,135 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.21.001 postcondition 1)
+### AC-001 (traces to BC-2.21.001 PC-001)
 `Arc<dyn VectorStore>` compiles without E0038 for all core methods (`add_documents`,
 `similarity_search`, `similarity_search_with_score`, `delete`). These methods use `&self`
 receivers with `#[async_trait]`. Compile-time gate in `tests/external/vectorstore-dyn-compat/`.
 Verified by `test_BC_2_21_001_arc_dyn_vectorstore_no_e0038()`.
 
-### AC-002 (traces to BC-2.21.001 postcondition 2)
+### AC-002 (traces to BC-2.21.001 PC-002)
 `VectorStore::add_documents(&self, docs: Vec<Document>) -> Result<Vec<String>, PregolyaError>`
 inserts documents and returns assigned IDs in input order. An empty batch returns `Ok(vec![])`.
 Verified by `test_BC_2_21_001_add_documents_returns_ids()`.
 
-### AC-003 (traces to BC-2.21.001 postcondition 3)
+### AC-003 (traces to BC-2.21.001 PC-002)
 `VectorStore::similarity_search(&self, query: &str, k: usize) -> Result<Vec<Document>, PregolyaError>`
 returns at most `k` documents ranked by decreasing similarity. Fewer than `k` docs when store has
 fewer. Verified by `test_BC_2_21_001_similarity_search_at_most_k()`.
 
-### AC-004 (traces to BC-2.21.001 postcondition 4)
+### AC-004 (traces to BC-2.21.001 PC-002)
 `VectorStore::similarity_search_with_score` returns `Vec<(Document, f32)>` with scores in
 `[-1.0, 1.0]`. Verified by `test_BC_2_21_001_similarity_search_score_range()`.
 
-### AC-005 (traces to BC-2.21.001 postcondition 3 — VectorStoreFactory Sized-bounded)
+### AC-005 (traces to BC-2.21.001 PC-003)
 `VectorStoreFactory` is a separate trait with a `Sized` bound for methods that are not
 object-safe (e.g., `from_texts`). `VectorStoreFactory: Sized` ensures E0038 is impossible
 on `VectorStore`. The split is compile-time verified.
 Verified by `test_BC_2_21_001_vectorstore_factory_sized_split()`.
 
-### AC-006 (traces to BC-2.21.001 postcondition 2 — instance-methods list: delete/MMR/as_retriever)
+### AC-006 (traces to BC-2.21.001 PC-002)
 `VectorStore::delete(&self, ids: &[&str]) -> Result<(), PregolyaError>` removes documents
 by ID. Deleting non-existent IDs is a no-op (returns `Ok(())`). Verified by
 `test_BC_2_21_001_delete_nonexistent_noop()`.
 
-### AC-007 (traces to BC-2.21.002 postcondition 1)
+### AC-007 (traces to BC-2.21.002 INV-001)
 `InMemoryVectorStore::new(embeddings: Arc<dyn Embeddings>) -> Self` stores the Arc without
 taking ownership. No `Arc<dyn Embeddings>` placeholder construction — requires a real injected
 Arc. Verified by `test_BC_2_21_002_new_arc_embeddings_di()`.
 
-### AC-008 (traces to BC-2.21.002 postcondition 2)
+### AC-008 (traces to BC-2.21.002 INV-003)
 `InMemoryVectorStore` stores documents as `RwLock<Vec<(Document, Vec<f32>)>>`. Multiple
 concurrent readers can access the store simultaneously; a single writer holds exclusive access.
 Verified by `test_BC_2_21_002_rwlock_concurrent_read()`.
 
-### AC-009 (traces to BC-2.21.002 postcondition 3)
+### AC-009 (traces to BC-2.21.002 PC-002)
 `add_documents` embeds each document by calling `embeddings.embed_documents(&texts).await`
 (batch call, NOT one-by-one) and stores `(doc, embedding)` pairs. Verified by
 `test_BC_2_21_002_add_documents_uses_batch_embed()`.
 
-### AC-010 (traces to BC-2.21.002 postcondition 4)
+### AC-010 (traces to BC-2.21.002 PC-005)
 Cosine similarity between two identical non-zero vectors is 1.0. Between two orthogonal
 non-zero vectors the cosine is 0.0. No ndarray dependency — pure Vec<f32> dot product.
 Verified by `test_BC_2_21_002_cosine_similarity_values()`.
 
-### AC-011 (traces to BC-2.21.003 precondition 1 — Red Gate)
+### AC-011 (traces to BC-2.21.003 PC-001)
 **RED GATE**: This test must COMPILE and FAIL before the zero-norm guard is implemented.
 An embedding vector `[0.0_f32, 0.0, 0.0]` (all-zero) would produce `norm == 0.0` and
 would divide-by-zero, yielding NaN. Test asserts `cosine_similarity([0.0, 0.0], ...)` returns
 `Err(E-VS-001)` — fails as Red Gate because the guard is not yet implemented.
 Verified by `test_BC_2_21_003_zero_norm_returns_err_e_vs_001_rg()`.
 
-### AC-012 (traces to BC-2.21.003 postcondition 1)
+### AC-012 (traces to BC-2.21.003 PC-001)
 The zero-norm guard condition is `if norm == 0.0 || !norm.is_finite()`. This covers:
 - All-zero vector (`norm == 0.0`)
 - Overflow-to-infinity (`norm.is_finite()` is false when components are very large)
 Any guard that uses only `norm == 0.0` is INCOMPLETE — it misses the infinity case.
 Verified by `test_BC_2_21_003_guard_covers_infinity_overflow()`.
 
-### AC-013 (traces to BC-2.21.003 postcondition 2)
+### AC-013 (traces to BC-2.21.003 INV-004)
 When the guard fires, the error is:
 `Err(PregolyaError::new(Component::Vs, Category::Val, RetryHint::Never, "E-VS-001",
 "degenerate-norm embedding vector: norm is zero or non-finite"))`.
 The message is STATIC — no variable values interpolated.
 Verified by `test_BC_2_21_003_e_vs_001_static_message()`.
 
-### AC-014 (traces to BC-2.21.003 postcondition 3 — VP-009 Kani anchor)
+### AC-014 (traces to BC-2.21.003 PC-002)
 `cosine_similarity` never returns `f32::NAN` for any finite input combination when the
 zero-norm guard is in place. VP-009 (Kani P0) provides formal proof. Unit test:
 `test_BC_2_21_003_cosine_never_nan_for_finite_inputs()` verifies the property with
 a proptest sweep over randomly generated non-zero vectors.
 This story is the ANCHOR story for VP-009.
 
-### AC-015 (traces to BC-2.21.003 invariant 1)
+### AC-015 (traces to BC-2.21.003 INV-001)
 The zero-norm guard fires at the cosine similarity computation site. It is NOT deferred
 to the caller. An `InMemoryVectorStore::similarity_search` call with a degenerate query
 embedding propagates `Err(E-VS-001)` upward.
 Verified by `test_BC_2_21_003_degenerate_query_propagates_err()`.
 
-### AC-016 (traces to BC-2.21.004 postcondition 1)
+### AC-016 (traces to BC-2.21.004 INV-001)
 `MetadataFilter { filters: Vec<FilterClause> }` is `#[non_exhaustive]`. `FilterClause`
 has variants `Eq`, `Ne`, `In`, each carrying a field key and value(s). Both types are
 `#[non_exhaustive]`. Compile-fail tests confirm external exhaustive matches fail.
 Verified by `test_BC_2_21_004_filter_non_exhaustive_compile_fail()`.
 
-### AC-017 (traces to BC-2.21.004 postcondition 2)
+### AC-017 (traces to BC-2.21.004 INV-003)
 `VectorStore::similarity_search_with_filter` default implementation: if
 `filter.filters.is_empty()` delegates to `similarity_search`; if filter is non-empty returns
 `Err(PregolyaError { code: "E-VS-005", message: "FilterUnsupported: metadata filter is not supported by this VectorStore implementation", .. })`.
 Verified by `test_BC_2_21_004_default_filter_impl_returns_err_e_vs_005()`.
 
-### AC-018 (traces to BC-2.21.004 invariant 1)
+### AC-018 (traces to BC-2.21.004 INV-003)
 The fail-safe default prevents returning incorrect results when a concrete store does NOT
 override `similarity_search_with_filter`. This is NOT a silent empty-return — it must be
 `Err(E-VS-005)`, never `Ok(vec![])`. Verified by
 `test_BC_2_21_004_no_silent_empty_return_on_unsupported_filter()`.
 
-### AC-019 (traces to BC-2.21.001 postcondition 2)
+### AC-019 (traces to BC-2.21.001 PC-002)
 `VectorStore::max_marginal_relevance_search(&self, query: &str, k: usize, fetch_k: usize, lambda_mult: f32) -> Result<Vec<Document>, PregolyaError>` exists on the VectorStore trait and is implemented in `InMemoryVectorStore`. The implementation fetches `fetch_k` candidates by similarity, then selects `k` using Maximal Marginal Relevance scoring.
 Verified by `test_BC_2_21_001_max_marginal_relevance_search_dispatches()`.
 
-### AC-020 (traces to BC-2.21.001 postcondition 2 + BC-2.20.003 postcondition 5)
+### AC-020 (traces to BC-2.21.001 PC-002 + BC-2.20.003 PC-005)
 `VectorStore::as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` is a synchronous (no `.await`) `Arc<Self>`-receiver constructor. Returns a concrete `VectorStoreRetriever` with no lifetime parameter. Valid config: `lambda_mult ∈ [0.0, 1.0]`, `k ≥ 1`, `fetch_k ≥ k` (for Mmr search type). Invalid config returns `Err(PregolyaError { code: "E-VS-003", .. })`.
 Tests: `test_BC_2_21_001_as_retriever_valid_config()` and `test_BC_2_21_001_as_retriever_invalid_config()`.
 
-### AC-021 (traces to BC-2.20.003 postcondition 1)
+### AC-021 (traces to BC-2.20.003 PC-001)
 `SearchType::Similarity` — `VectorStoreRetriever::get_relevant_documents(query)` dispatches to
 `store.similarity_search(query, k)`. Verified by `test_BC_2_20_003_similarity_search_type_dispatches()`.
 
-### AC-022 (traces to BC-2.20.003 postcondition 2)
+### AC-022 (traces to BC-2.20.003 PC-002)
 `SearchType::SimilarityScoreThreshold { score_threshold }` dispatches to
 `similarity_search_with_score` and filters to score ≥ threshold. Returns fewer than `k` docs
 when few pass the threshold. Verified by `test_BC_2_20_003_score_threshold_filters_results()`.
 
-### AC-023 (traces to BC-2.20.003 postcondition 3)
+### AC-023 (traces to BC-2.20.003 PC-003)
 `SearchType::Mmr` dispatches to `store.max_marginal_relevance_search(query, k, fetch_k, lambda_mult)`.
 Verified by `test_BC_2_20_003_mmr_dispatches_to_store()`.
 
-### AC-024 (traces to BC-2.20.003 invariant 1)
+### AC-024 (traces to BC-2.20.003 INV-001)
 `SearchType` is `#[non_exhaustive]`. External match arms without `_` wildcard fail to compile.
 Verified by compile-fail test `pregolya-vectorstores/tests/external/search-type-non-exhaustive/`.
 
-### AC-025 (traces to BC-2.20.003 invariant 5)
+### AC-025 (traces to BC-2.20.003 INV-005)
 `VectorStoreRetriever` has no lifetime parameter; `store: Arc<dyn VectorStore>` internal field
 allows `VectorStoreRetriever: Retriever + 'static`. `Arc<dyn Retriever>` coercion succeeds.
 Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
@@ -270,15 +270,15 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `VectorStore` trait uses `&self` receivers only (dyn-compatible, not `&mut self`) | BC-2.21.001 invariant 1; ADR-014 Decision 3 | Compile-time E0038 check |
-| `VectorStoreFactory` has `Sized` bound — E0038-safe split | BC-2.21.001 postcondition 5 | Compile-fail test |
-| Zero-norm guard condition is `norm == 0.0 \|\| !norm.is_finite()` (both arms required) | BC-2.21.003 postcondition 1 | Code review; VP-009 Kani proof |
-| No ndarray dependency — Vec<f32> cosine only | BC-2.21.002 postcondition 4 | Cargo.toml inspection; deny ndarray |
-| `Arc<dyn Embeddings>` DI at constructor (no placeholder) | BC-2.21.002 postcondition 1; CLAUDE.md Arc-DI rule | Code review; no `Arc::new(Embeddings::placeholder())` |
-| Default `similarity_search_with_filter` returns `Err(E-VS-005)` on non-empty filter — NOT `Ok(vec![])` | BC-2.21.004 invariant 1 | Unit test AC-018 |
-| E-VS-001 message is STATIC — no variable interpolation | BC-2.21.003 postcondition 2 | String equality test |
+| `VectorStore` trait uses `&self` receivers only (dyn-compatible, not `&mut self`) | BC-2.21.001 INV-001; ADR-014 Decision 3 | Compile-time E0038 check |
+| `VectorStoreFactory` has `Sized` bound — E0038-safe split | BC-2.21.001 PC-003 | Compile-fail test |
+| Zero-norm guard condition is `norm == 0.0 \|\| !norm.is_finite()` (both arms required) | BC-2.21.003 PC-001 | Code review; VP-009 Kani proof |
+| No ndarray dependency — Vec<f32> cosine only | BC-2.21.002 INV-005 | Cargo.toml inspection; deny ndarray |
+| `Arc<dyn Embeddings>` DI at constructor (no placeholder) | BC-2.21.002 INV-001; CLAUDE.md Arc-DI rule | Code review; no `Arc::new(Embeddings::placeholder())` |
+| Default `similarity_search_with_filter` returns `Err(E-VS-005)` on non-empty filter — NOT `Ok(vec![])` | BC-2.21.004 INV-003 | Unit test AC-018 |
+| E-VS-001 message is STATIC — no variable interpolation | BC-2.21.003 INV-004 | String equality test |
 | `store/mod.rs` is re-export-only — no trait or type definitions; logic lives in named files (`vector_store.rs`, `in_memory.rs`); `cosine_similarity` lives in top-level `similarity.rs` (not under `store/`) | CLAUDE.md §Forbidden patterns (mod.rs logic rule) | Code review; `mod.rs` contains only `pub mod` and `pub use` declarations |
-| `VectorStoreRetriever` has NO lifetime parameter | BC-2.20.003 invariant 5; ADR-014 Decision 2 | Type signature inspection; compile-time test (AC-025) |
+| `VectorStoreRetriever` has NO lifetime parameter | BC-2.20.003 INV-005; ADR-014 Decision 2 | Type signature inspection; compile-time test (AC-025) |
 | `as_retriever(self: Arc<Self>)` is synchronous (no `.await`) | BC-2.20.003 invariant (ADR-014 Decision 2) | No async annotation on `as_retriever` |
 
 **Forbidden dependencies:** `pregolya-vectorstores/src/similarity.rs` must NOT depend on `ndarray`, `nalgebra`, or any external linear-algebra crate. `pregolya-vectorstores` must NOT depend on `pregolya-graph`.
@@ -308,3 +308,13 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 | `pregolya-vectorstores/tests/external/filter-non-exhaustive/main.rs` | CREATE | MetadataFilter/FilterClause non-exhaustive compile-fail gate |
 | `pregolya-vectorstores/tests/external/search-type-non-exhaustive/main.rs` | CREATE | SearchType non-exhaustive compile-fail gate |
 | `pregolya-vectorstores/tests/external/rag-guardrail-compile-fail/main.rs` | CREATE | Red Gate: Vec<Document> not accepted where GuardedDocuments required |
+
+## Changelog
+
+- "1.0 (2026-08-19): initial story authored"
+- "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 12 semantic re-anchors applied (see escalation notes)"
+
+## Escalation Notes (route to product-owner)
+
+- **AC-004** (now `BC-2.21.001 PC-002`): AC asserts `similarity_search_with_score` returns scores in `[-1.0, 1.0]` but BC-2.21.001 PC-002 specifies scores ∈ `[0.0, 1.0]`. Score range discrepancy — PO adjudication needed.
+- **Compliance table** "BC-2.21.001 postcondition 5" (nonexistent — BC has only PC-001..PC-004): re-anchored to PC-003 (VectorStoreFactory Sized split) as closest match. PO to confirm.

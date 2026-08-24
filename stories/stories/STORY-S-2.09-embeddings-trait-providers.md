@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.09
 epic_id: E-20
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.001.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3605837"
+input-hash: "4494a62"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.06, S-1.02]
@@ -51,35 +51,35 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.22.001 postcondition 1)
+### AC-001 (traces to BC-2.22.001 PC-002)
 `Embeddings::embed_documents(texts: Vec<String>) -> Result<Vec<Vec<f32>>, PregolyaError>`
 returns a `Vec` with exactly `texts.len()` inner vectors — one embedding per input text.
 If the provider returns fewer vectors than inputs, the adapter returns
 `Err(PregolyaError { code: "E-EMBED-001", .. })`. Verified by
 `test_BC_2_22_001_one_vector_per_input()`.
 
-### AC-002 (traces to BC-2.22.001 postcondition 2)
+### AC-002 (traces to BC-2.22.001 PC-003)
 `Embeddings::embed_query(text: String) -> Result<Vec<f32>, PregolyaError>` returns a
 single embedding vector whose length equals the inner vector length of `embed_documents`
 for the same model. Verified by `test_BC_2_22_001_embed_query_dimension_matches_documents()`.
 
-### AC-003 (traces to BC-2.22.001 postcondition 3)
+### AC-003 (traces to BC-2.22.001 INV-002)
 All inner vectors in the `embed_documents` result have the same length. If the provider
 returns vectors of inconsistent length (malformed response), the adapter returns
 `Err(PregolyaError { code: "E-EMBED-001", .. })`. Verified by
 `test_BC_2_22_001_consistent_inner_vector_length()`.
 
-### AC-004 (traces to BC-2.22.001 postcondition 4 — DI-014)
+### AC-004 (traces to BC-2.22.001 PC-002)
 No partial batch fallback: if any text in the batch fails to embed, the entire call returns
 `Err`. No partial `Vec` with some vectors populated and others empty is ever returned.
 Verified by `test_BC_2_22_001_no_partial_batch_fallback()`.
 
-### AC-005 (traces to BC-2.22.001 invariant 1)
+### AC-005 (traces to BC-2.22.001 PC-001)
 `Arc<dyn Embeddings>` compiles without E0038 (object safety error). The `Embeddings`
 trait is object-safe: no generic methods, no `Self` return types in the dyn surface.
 Verified by `test_BC_2_22_001_arc_dyn_embeddings_compiles()` (compile test).
 
-### AC-006 (traces to BC-2.22.002 postcondition 1 — RED GATE)
+### AC-006 (traces to BC-2.22.002 PC-004 — RED GATE)
 **Red Gate:** The test `test_BC_2_22_002_openai_api_key_debug_is_redacted()` asserts that
 `format!("{:?}", OpenAiApiKey("sk-test".to_string())) == "<redacted>"`. This test MUST
 compile and FAIL before the `OpenAiApiKey` Debug implementation is written (the derived
@@ -87,58 +87,58 @@ Debug would emit `OpenAiApiKey("sk-test")`, not `"<redacted>"`). Once the hand-w
 `impl fmt::Debug for OpenAiApiKey` returning `"<redacted>"` is in place, the test passes.
 This is the Red Gate verification for BC-2.22.002.
 
-### AC-007 (traces to BC-2.22.002 postcondition 2)
+### AC-007 (traces to BC-2.22.002 PC-003)
 `EmbeddingsOpenAI::default()` uses `text-embedding-3-small` as the default model, producing
 1536-dimensional vectors. Verified by `test_BC_2_22_002_default_model_is_3_small()`.
 
-### AC-008 (traces to BC-2.22.002 postcondition 3)
+### AC-008 (traces to BC-2.22.002 PC-003)
 `EmbeddingsOpenAI::new_with_model(model: OpenAiEmbeddingModel::TextEmbedding3Large)` produces
 3072-dimensional vectors. Verified by `test_BC_2_22_002_large_model_produces_3072_dims()`.
 
-### AC-009 (traces to BC-2.22.002 postcondition 4)
+### AC-009 (traces to BC-2.22.002 PC-003)
 `EmbeddingsOpenAI::new_with_model(model: OpenAiEmbeddingModel::TextEmbeddingAda002)` emits:
 `tracing::warn!(event_type = "embeddings.legacy_model_warning")` at construction time.
 The `event_type` value `"embeddings.legacy_model_warning"` is registered in the Canonical
 Structured Event Catalog per SAP-1. Verified by `test_BC_2_22_002_ada_002_emits_legacy_warning()`.
 
-### AC-010 (traces to BC-2.22.002 postcondition 5)
+### AC-010 (traces to BC-2.22.002 PC-005)
 `EmbeddingsOpenAI` uses `reqwest` with `default-features = false, features = ["rustls-tls"]`
 and `.timeout(Duration::from_secs(30))`. The `native-tls` feature is absent from
 `pregolya-openai/Cargo.toml`. Verified by `test_BC_2_22_002_reqwest_rustls_tls_and_30s_timeout()`.
 
-### AC-011 (traces to BC-2.22.002 postcondition 6 — DI-014)
+### AC-011 (traces to BC-2.22.002 PC-006)
 If the OpenAI API returns fewer embedding objects than input texts (batch partial failure),
 `EmbeddingsOpenAI::embed_documents` returns `Err(PregolyaError { code: "E-EMBED-001", .. })`.
 No partial result vector is returned. Verified by
 `test_BC_2_22_002_batch_partial_failure_returns_err()`.
 
-### AC-012 (traces to BC-2.22.003 postcondition 1)
+### AC-012 (traces to BC-2.22.003 PC-001)
 `EmbeddingsOllama::embed_documents` uses `POST /api/embed` with the `input` field as an
 array: `{ "model": "...", "input": ["text1", "text2", ...] }`. Verified by
 `test_BC_2_22_003_embed_documents_uses_batch_endpoint()`.
 
-### AC-013 (traces to BC-2.22.003 postcondition 2)
+### AC-013 (traces to BC-2.22.003 PC-002)
 `EmbeddingsOllama::new_with_legacy(use_legacy_endpoint: true)` uses `POST /api/embeddings`
 with serial per-text requests using the `prompt` field: `{ "model": "...", "prompt": "text" }`.
 Verified by `test_BC_2_22_003_legacy_endpoint_per_text_serial()`.
 
-### AC-014 (traces to BC-2.22.003 postcondition 3)
+### AC-014 (traces to BC-2.22.003 PC-004)
 `EmbeddingsOllama` uses a 30-second timeout unconditionally — even for localhost connections.
 No auto-timeout shortcut for local Ollama. Verified by
 `test_BC_2_22_003_30s_timeout_unconditional()`.
 
-### AC-015 (traces to BC-2.22.003 postcondition 4)
+### AC-015 (traces to BC-2.22.003 INV-001)
 `EmbeddingsOllama` does NOT automatically fall back from `/api/embed` to `/api/embeddings`
 or vice versa based on a server response. The endpoint is determined solely by the
 `use_legacy_endpoint` configuration flag. Verified by
 `test_BC_2_22_003_no_auto_fallback_between_endpoints()`.
 
-### AC-016 (traces to BC-2.22.003 postcondition 5 — DI-014)
+### AC-016 (traces to BC-2.22.003 INV-003)
 In legacy serial mode, if any per-text request fails, the entire `embed_documents` call
 returns `Err`. Partial results from earlier texts are discarded. Verified by
 `test_BC_2_22_003_legacy_partial_failure_returns_err()`.
 
-### AC-017 (traces to BC-2.22.001 invariant 6)
+### AC-017 (traces to BC-2.22.001 INV-006)
 `validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>`
 is a public production function in `pregolya-core/src/embeddings.rs` (not test-only). All
 `Embeddings` implementations (`EmbeddingsOpenAI`, `EmbeddingsOllama`) call it before returning
@@ -243,14 +243,14 @@ not `&mut self` — implementations must not require interior mutability for the
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `OpenAiApiKey` Debug impl returns `"<redacted>"` — no derived Debug | BC-2.22.002 postcondition 1 Red Gate | Red Gate test AC-006 |
-| `embed_documents` returns exactly `texts.len()` vectors or Err | BC-2.22.001 postcondition 1 | Unit test AC-001 |
-| No partial batch result on any failure (DI-014) | BC-2.22.001 postcondition 4; BC-2.22.002 postcondition 6 | Tests AC-004, AC-011, AC-016 |
-| `Arc<dyn Embeddings>` is E0038-free | BC-2.22.001 invariant 1 | Compile test AC-005 |
-| `reqwest` with `rustls-tls`; `.timeout(Duration::from_secs(30))` | BC-2.22.002 postcondition 5; CLAUDE.md | Test AC-010; workspace dependency audit |
-| No auto-fallback between Ollama endpoints | BC-2.22.003 postcondition 4 | Test AC-015 |
+| `OpenAiApiKey` Debug impl returns `"<redacted>"` — no derived Debug | BC-2.22.002 PC-004 Red Gate | Red Gate test AC-006 |
+| `embed_documents` returns exactly `texts.len()` vectors or Err | BC-2.22.001 PC-002 | Unit test AC-001 |
+| No partial batch result on any failure (DI-014) | BC-2.22.001 PC-002; BC-2.22.002 PC-006 | Tests AC-004, AC-011, AC-016 |
+| `Arc<dyn Embeddings>` is E0038-free | BC-2.22.001 PC-001 | Compile test AC-005 |
+| `reqwest` with `rustls-tls`; `.timeout(Duration::from_secs(30))` | BC-2.22.002 PC-005; CLAUDE.md | Test AC-010; workspace dependency audit |
+| No auto-fallback between Ollama endpoints | BC-2.22.003 INV-001 | Test AC-015 |
 | `embeddings.legacy_model_warning` registered in Structured Event Catalog | SAP-1 | Pre-PR catalog row check |
-| `validate_embedding_batch` called by all `embed_documents` impls before returning Ok | BC-2.22.001 Invariant 6; VP-008 §Proof Obligations | Unit/proptest — removing `validate_embedding_batch` fails VP-008-A/C/D/E |
+| `validate_embedding_batch` called by all `embed_documents` impls before returning Ok | BC-2.22.001 INV-006; VP-008 §Proof Obligations | Unit/proptest — removing `validate_embedding_batch` fails VP-008-A/C/D/E |
 
 **Forbidden dependencies:** `pregolya-core` embeddings module must NOT depend on `pregolya-openai`,
 `pregolya-ollama`, `pregolya-graph`, `pregolya-mcp`, or any other implementation crate. The
@@ -276,3 +276,7 @@ dependency from `pregolya-core` to any provider adapter crate MUST fail the buil
 | `pregolya-ollama/src/embeddings.rs` | CREATE | `EmbeddingsOllama` batch + legacy endpoints |
 | `pregolya-openai/src/lib.rs` | MODIFY | Re-export `EmbeddingsOpenAI` |
 | `pregolya-ollama/src/lib.rs` | MODIFY | Re-export `EmbeddingsOllama` |
+
+## Changelog
+
+- **1.1 (ADR-027 M3 / 2026-08-24):** ADR-027 M3: AC traces re-cited to stable clause anchors. Mis-anchors corrected across all 17 ACs: AC-001 PC-001→PC-002 (one-per-input is in PC-002, not PC-001 which is object safety), AC-002 PC-002→PC-003 (embed_query is PC-003), AC-003 PC-003→INV-002 (consistent inner length is INV-002), AC-004 PC-004→PC-002 (no-partial-batch is in PC-002 last bullet, not PC-004 which is about dimension being model-specific), AC-005 INV-001→PC-001 (object safety is PC-001; INV-001 is one-vector-per-input), AC-006 PC-001→PC-004 (credential opacity is PC-004), AC-007 PC-002→PC-003 (model names/defaults is PC-003), AC-008 PC-003→PC-003 (direct ordinal match confirmed), AC-009 PC-004→PC-003 (ada-002 legacy warning is in PC-003, not PC-004 credential opacity), AC-010 PC-005→PC-005 (direct ordinal match confirmed), AC-011 PC-006→PC-006 (direct ordinal match confirmed), AC-012 PC-001→PC-001 (direct ordinal match confirmed), AC-013 PC-002→PC-002 (direct ordinal match confirmed), AC-014 PC-003→PC-004 (30s timeout is PC-004; PC-003 is no-API-key), AC-015 PC-004→INV-001 (no auto-fallback is INV-001), AC-016 PC-005→INV-003 (batch DI-014 legacy is INV-003; PC-005 is model validation), AC-017 INV-006→INV-006 (direct ordinal match confirmed). Architecture Compliance Rules table updated to match.

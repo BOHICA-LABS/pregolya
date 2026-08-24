@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.07
 epic_id: E-19
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.001.md
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "db3c1d2"
+input-hash: "f064285"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-2.06, S-1.07, S-1.06]
@@ -57,7 +57,7 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.08.001 postcondition 2)
+### AC-001 (traces to BC-2.08.001 PC-002)
 The `stream_lifecycle` oracle in `pregolya-standard-tests` validates that a streaming
 invocation emits exactly: a `MessageStart` event at position 0, zero or more `ContentBlockDelta`
 events, and a `MessageFinish` event as the final event. No extra lifecycle events appear between
@@ -65,129 +65,129 @@ events, and a `MessageFinish` event as the final event. No extra lifecycle event
 `test_BC_2_08_001_stream_lifecycle_oracle_anthropic()`, and
 `test_BC_2_08_001_stream_lifecycle_oracle_ollama()`.
 
-### AC-002 (traces to BC-2.08.001 postcondition 2)
+### AC-002 (traces to BC-2.08.001 PC-002)
 Content block indices in the stream are sequential starting at 0. Block index N+1 never appears
 before block index N reaches `ContentBlockFinish`. Delta events for block K carry
 `block_index: K` consistently across all deltas for that block. Verified by
 `test_BC_2_08_001_sequential_block_indices()`.
 
-### AC-003 (traces to BC-2.08.001 postcondition 2)
+### AC-003 (traces to BC-2.08.001 PC-002)
 Concatenating all `ContentBlockDelta.text` values for block K equals the `text` field of the
 `ContentBlockFinish` event for block K. Verified by
 `test_BC_2_08_001_delta_accumulation_equals_finish_payload()`.
 
-### AC-004 (traces to BC-2.08.001 invariant 1 — DI-011 streaming/unary equivalence)
+### AC-004 (traces to BC-2.08.001 INV-001)
 For a deterministic prompt (temperature=0, seed=42 where supported), the text assembled from
 streaming deltas equals the text returned by a non-streaming `invoke`. Tested via the
 `streaming_unary_equivalence` shared test fixture in `pregolya-standard-tests`. Verified by
 `test_BC_2_08_001_streaming_unary_equivalence_openai()` etc.
 
-### AC-005 (traces to BC-2.08.001 edge case EC-003)
+### AC-005 (traces to BC-2.08.001 EC-003)
 A stream that is interrupted mid-completion (transport layer closes connection before
 `MessageFinish`) returns `Err(PregolyaError { code: "E-PROV-003", .. })` from the stream
 iterator — no partial `Ok` is returned from a stream that did not reach `MessageFinish`.
 Verified by `test_BC_2_08_001_stream_interrupted_returns_e_prov_003()`.
 
-### AC-006 (traces to BC-2.08.002 postcondition 1)
+### AC-006 (traces to BC-2.08.002 PC-001)
 `test_agent_loop()` in `pregolya-standard-tests` is NOT `#[ignore]` — it runs in CI
 without a live provider. The test uses a mock provider that returns a pre-scripted tool
 call followed by a final assistant message. Verified by inspecting the test attribute and
 confirming `cargo nextest run -p pregolya-standard-tests` passes.
 
-### AC-007 (traces to BC-2.08.002 postcondition 2)
+### AC-007 (traces to BC-2.08.002 EC-005)
 Calling `bind_tools(&tools)` on a chat model whose `has_tool_calling()` returns `false`
 returns `Err(PregolyaError { code: "E-CORE-005", .. })`. Verified by
 `test_BC_2_08_002_bind_tools_without_tool_calling_returns_e_core_005()`.
 
-### AC-008 (traces to BC-2.08.002 postcondition 3)
+### AC-008 (traces to BC-2.08.002 PC-003)
 Tool call `arguments` in the returned `AIMessage` is always a `serde_json::Value::Object`.
 A tool that expects no arguments receives `serde_json::json!({})` — never `null` or a
 JSON string. Verified by `test_BC_2_08_002_tool_arguments_always_json_object()`.
 
-### AC-009 (traces to BC-2.08.002 postcondition 4)
+### AC-009 (traces to BC-2.08.002 INV-004)
 An agent loop configured with `recursion_limit: N` halts at step N+1 with
 `Err(PregolyaError { code: "E-GRAPH-017", .. })`. Verified by
 `test_BC_2_08_002_recursion_limit_exceeded_returns_e_graph_017()`.
 
-### AC-010 (traces to BC-2.08.003 postcondition 1)
+### AC-010 (traces to BC-2.08.003 PC-001)
 `with_structured_output::<T>()` where T implements `schemars::JsonSchema + serde::de::DeserializeOwned`
 invokes the model with the JSON schema injected (via `json_schema` param for OpenAI,
 `tools` extraction trick for Anthropic, `format` field for Ollama) and deserializes
 the response into `T`. Verified by `test_BC_2_08_003_structured_output_roundtrip()`.
 
-### AC-011 (traces to BC-2.08.003 postcondition 2)
+### AC-011 (traces to BC-2.08.003 EC-001)
 When the OpenAI provider returns a structured-output refusal (`finish_reason: "content_filter"`
 with no JSON body), the adapter returns `Err(PregolyaError { code: "E-PROV-007", .. })`.
 Verified by `test_BC_2_08_003_structured_output_refusal_returns_e_prov_007()`.
 
-### AC-012 (traces to BC-2.08.003 postcondition 3)
+### AC-012 (traces to BC-2.08.003 EC-002)
 When the JSON response from any provider cannot be deserialized into the target type T,
 the adapter returns `Err(PregolyaError { code: "E-PROV-005", .. })`. Verified by
 `test_BC_2_08_003_parse_error_returns_e_prov_005()`.
 
-### AC-013 (traces to BC-2.08.003 postcondition 4)
+### AC-013 (traces to BC-2.08.003 EC-004)
 Anthropic `extended_thinking` is disabled automatically when `with_structured_output` is
 active on the Anthropic adapter. Verified by `test_BC_2_08_003_anthropic_thinking_disabled_for_structured_output()`.
 
-### AC-014 (traces to BC-2.08.004 postcondition 1)
+### AC-014 (traces to BC-2.08.004 PC-001)
 A 401 HTTP response from any provider maps to `Err(PregolyaError { code: "E-PROV-004", .. })`.
 No other error code is used for authentication failures. Verified by
 `test_BC_2_08_004_auth_failure_returns_e_prov_004()`.
 
-### AC-015 (traces to BC-2.08.004 postcondition 2)
+### AC-015 (traces to BC-2.08.004 PC-002)
 A context-length validation failure (e.g., 400 with "context length exceeded" in body)
 maps to `Err(PregolyaError { code: "E-PROV-006", .. })`. Verified by
 `test_BC_2_08_004_context_overflow_returns_e_prov_006()`.
 
-### AC-016 (traces to BC-2.08.004 postcondition 3)
+### AC-016 (traces to BC-2.08.004 PC-003)
 A 429 HTTP response maps to `Err(PregolyaError { code: "E-PROV-001", .. })`. When a
 `Retry-After` header is present, `retry_after_secs` is populated in the error metadata.
 Verified by `test_BC_2_08_004_rate_limited_returns_e_prov_001_with_retry_after()`.
 
-### AC-017 (traces to BC-2.08.004 postcondition 4)
+### AC-017 (traces to BC-2.08.004 PC-004)
 A generic HTTP transport error (5xx, connection refused, DNS failure) maps to
 `Err(PregolyaError { code: "E-PROV-008", .. })`. Verified by
 `test_BC_2_08_004_transport_error_returns_e_prov_008()`.
 
-### AC-018 (traces to BC-2.08.004 invariant 1 — DI-014)
+### AC-018 (traces to BC-2.08.004 INV-001)
 The adapters do not swallow errors silently. A `?` propagation chain from reqwest
 through the SDK to the adapter preserves the error classification. No match arm discards
 an error variant and returns a default successful response. Verified by code review and
 `test_BC_2_08_004_no_silent_error_swallowing()` (mock that injects all error types).
 
-### AC-019 (traces to BC-2.08.005 postcondition 1)
+### AC-019 (traces to BC-2.08.005 PC-001)
 `AIMessage` returned from `invoke` carries `usage_metadata: Some(UsageMetadata { input_tokens, output_tokens, total_tokens })`. `total_tokens == input_tokens + output_tokens`. Verified by
 `test_BC_2_08_005_invoke_returns_usage_metadata()`.
 
-### AC-020 (traces to BC-2.08.005 postcondition 2)
+### AC-020 (traces to BC-2.08.005 PC-002)
 The final chunk of a streaming response carries `UsageMetadata` with cumulative token counts
 across the entire completion. Earlier chunks carry `None` for usage. Verified by
 `test_BC_2_08_005_streaming_final_chunk_carries_cumulative_usage()`.
 
-### AC-021 (traces to BC-2.08.005 postcondition 3)
+### AC-021 (traces to BC-2.08.005 PC-003)
 Sub-detail fields (`reasoning_tokens`, `cache_read_tokens`, `cache_creation_tokens`,
 `audio_tokens`) are `Some(N)` when the provider returns them and `None` when absent.
 `Some(0)` is distinct from `None` — a provider returning an explicit zero is preserved.
 Verified by `test_BC_2_08_005_usage_sub_detail_some_zero_distinct_from_none()`.
 
-### AC-022 (traces to BC-2.08.007 postcondition 1)
+### AC-022 (traces to BC-2.08.007 PC-001)
 A per-chunk timeout (stream stalls for longer than the configured per-chunk timeout) returns
 `Err(PregolyaError { code: "E-PROV-002", message: "ProviderTimeout: request timed out after <duration>", .. })`.
 The message includes the actual elapsed duration. Verified by
 `test_BC_2_08_007_per_chunk_stall_returns_e_prov_002()`.
 
-### AC-023 (traces to BC-2.08.007 postcondition 2)
+### AC-023 (traces to BC-2.08.007 PC-002)
 A TCP reset mid-stream (connection closed by peer after partial data) returns
 `Err(PregolyaError { code: "E-PROV-003", .. })`. Verified by
 `test_BC_2_08_007_tcp_reset_returns_e_prov_003()`.
 
-### AC-024 (traces to BC-2.08.007 invariant 1 — DI-009/NE-04)
+### AC-024 (traces to BC-2.08.007 INV-001)
 No stream path returns a partial `Ok` after a transport error has been observed. Once an
 error event occurs, all subsequent poll results are `Err` or `Ready(None)` (stream terminated).
 The `Ok` arm of the stream item type is never returned after the first `Err` item.
 Verified by `test_BC_2_08_007_no_partial_ok_after_transport_error()`.
 
-### AC-025 (traces to BC-2.08.001 postcondition 1)
+### AC-025 (traces to BC-2.08.001 PC-001)
 `test_stream` and `test_astream` for each provider (OpenAI, Anthropic, Ollama) yield at least
 one `AiMessageChunk` — the stream does not terminate immediately with zero chunks. Concatenating
 all chunks via the core merge function produces a non-empty `AiMessage` with at least one
@@ -195,7 +195,7 @@ non-empty `ContentBlock::Text`. Verified by `test_BC_2_08_001_stream_yields_at_l
 `test_BC_2_08_001_stream_yields_at_least_one_chunk_anthropic()`, and
 `test_BC_2_08_001_stream_yields_at_least_one_chunk_ollama()` (cassette-backed).
 
-### AC-026 (traces to BC-2.08.001 postcondition 4)
+### AC-026 (traces to BC-2.08.001 PC-004)
 `test_stream_time` passes for each provider: from stream invocation to the arrival of the first
 `AiMessageChunk`, elapsed time is less than 5 seconds when using the fixture cassette layer (the
 cassette adds no artificial latency). This verifies the streaming implementation does not buffer
@@ -294,7 +294,7 @@ per ADR-005 §Adjacent Trait Object-Safety Adjudications).
 | No `println!`/`eprintln!` in adapter crates | CLAUDE.md Code Conventions | Clippy |
 | All public API surface types carry `#[non_exhaustive]` | CLAUDE.md Code Conventions | compile-fail gate |
 | `reqwest::Client` produced by SDK builder uses `.timeout(Duration::from_secs(30))` | CLAUDE.md Code Conventions | Unit test + code review |
-| Stream path returns `Err` (not partial `Ok`) on transport error | BC-2.08.007 invariant 1 — DI-009/NE-04 | AC-024 |
+| Stream path returns `Err` (not partial `Ok`) on transport error | BC-2.08.007 INV-001 | AC-024 |
 | Error classification functions are pure-core (no network I/O) | module-decomposition SS-08 purity boundary | Code review |
 
 **Forbidden dependencies:** `pregolya-openai`, `pregolya-anthropic`, `pregolya-ollama` must NOT
@@ -329,3 +329,7 @@ fail via `cargo deny`.
 | `pregolya-standard-tests/src/streaming.rs` | CREATE | `stream_lifecycle` oracle, `streaming_unary_equivalence` fixture |
 | `pregolya-standard-tests/src/agent_loop.rs` | CREATE | `test_agent_loop()` — non-ignored, mock-provider agent loop |
 | `pregolya-core/src/message.rs` | MODIFY | Add `UsageMetadata` sub-detail fields |
+
+## Changelog
+
+- 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. BC-2.08.001: AC-001/002/003 postcondition 2→PC-002; AC-004 invariant 1→INV-001; AC-005 "edge case EC-003"→EC-003; AC-025 postcondition 1→PC-001; AC-026 postcondition 4→PC-004. BC-2.08.002: AC-006 postcondition 1→PC-001; AC-007 postcondition 2→EC-005 (semantic: bind_tools negative case); AC-008 postcondition 3→PC-003; AC-009 postcondition 4→INV-004 (semantic: recursion limit). BC-2.08.003: AC-010 postcondition 1→PC-001; AC-011 postcondition 2→EC-001 (semantic: refusal); AC-012 postcondition 3→EC-002 (semantic: deserialize failure); AC-013 postcondition 4→EC-004 (semantic: thinking disabled). BC-2.08.004: AC-014/015/016/017 postconditions 1-4→PC-001/002/003/004; AC-018 invariant 1→INV-001. BC-2.08.005: AC-019/020/021 postconditions 1-3→PC-001/002/003. BC-2.08.007: AC-022 postcondition 1→PC-001; AC-023 postcondition 2→PC-002; AC-024 invariant 1→INV-001 (semantic: no partial Ok; old annotation "DI-009/NE-04" was DI mis-reference). Architecture Compliance Rules table updated. No escalations.

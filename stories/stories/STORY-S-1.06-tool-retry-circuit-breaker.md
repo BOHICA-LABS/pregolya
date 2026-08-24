@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.06
 epic_id: E-01
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-16/BC-2.16.001.md
@@ -14,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-16/BC-2.16.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "84981bc"
+input-hash: "4e55d07"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.04, S-1.02]
@@ -50,46 +52,46 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.16.001 postcondition 1)
+### AC-001 (traces to BC-2.16.001 PC-001 and PC-002)
 `ToolRetryPolicy` stores per-tool limits keyed by `tool_name: &str` (NOT by args hash). Two tool invocations with identical `tool_name` but different arguments share the same retry counter. Verified by `test_BC_2_16_001_keyed_by_tool_name_only()`.
 
-### AC-002 (traces to BC-2.16.001 postcondition 2)
+### AC-002 (traces to BC-2.16.001 PC-005)
 When per-tool retry limit is exhausted, the returned error is `Err(PregolyaError { category: POLICY, code: "E-RETRY-001", message: "RetryExhausted: per-tool retry limit for tool '<tool_name>' exhausted after <attempt_limit> attempts", .. })`. Verified by `test_BC_2_16_001_per_tool_limit_exhausted()`.
 
-### AC-003 (traces to BC-2.16.001 postcondition 3)
+### AC-003 (traces to BC-2.16.001 EC-003)
 Constructing a `ToolRetryPolicy` with `attempt_limit: 0` returns `Err(PregolyaError { category: VAL, code: "E-RETRY-004", message: "InvalidRetryLimit: attempt_limit must be > 0; got 0", .. })`. Verified by `test_BC_2_16_001_zero_limit_construction_error()`.
 
-### AC-004 (traces to BC-2.16.001 postcondition 4 — Retry-Approval Ordering per ADR-018 Decision 6)
+### AC-004 (traces to BC-2.16.001 INV-004)
 The retry dispatch ordering for a tool invocation is: `circuit_breaker.check(tool_name)` → `pre_tool_dispatch` hook → `tool.invoke(args)` → `retry_policy.record(result)`. Circuit breaker check happens BEFORE the tool is invoked; recording happens AFTER. A unit test using mock objects verifies the ordering. Verified by `test_BC_2_16_001_retry_approval_ordering()`.
 
-### AC-005 (traces to BC-2.16.002 postcondition 1)
+### AC-005 (traces to BC-2.16.002 PC-001 and PC-002)
 `RetryPolicy::default()` constructs with `global_limit: Some(NonZeroU32::new(10).unwrap())`. The `global_limit` field type is `Option<NonZeroU32>` — not `Option<u32>`. `NonZeroU32` prevents silent zero construction. Verified by `test_BC_2_16_002_default_global_limit()`.
 
-### AC-006 (traces to BC-2.16.002 postcondition 2)
+### AC-006 (traces to BC-2.16.002 PC-004)
 `RetryPolicy::unlimited()` constructs with `global_limit: None` and emits a tracing warn event with `event_type = "retry.unlimited_policy_constructed"`. Verified by `test_BC_2_16_002_unlimited_policy_logs_warn()`.
 
-### AC-007 (traces to BC-2.16.002 postcondition 3)
+### AC-007 (traces to BC-2.16.002 PC-005 and PC-006)
 When the cumulative retry count across ALL tool invocations in a run exceeds `global_limit`, the error is `Err(PregolyaError { code: "E-RETRY-002", message: "GlobalLimitExhausted: global retry budget of <global_limit> exhausted across all tools in this run", .. })`. The global limit is cumulative — it counts all tool retries, not just one tool's retries. Verified by `test_BC_2_16_002_global_limit_cumulative()`.
 
-### AC-008 (traces to BC-2.16.003 postcondition 1)
+### AC-008 (traces to BC-2.16.003 PC-004)
 `CircuitBreaker::default()` constructs with `failure_threshold: 5`, `reset_timeout: Duration::from_secs(30)`, and state `CLOSED`. Verified by `test_BC_2_16_003_default_values()`.
 
-### AC-009 (traces to BC-2.16.003 postcondition 2)
+### AC-009 (traces to BC-2.16.003 PC-001 and PC-002)
 After 5 consecutive failures recorded via `circuit_breaker.record_failure(tool_name)`, `circuit_breaker.check(tool_name)` returns `Err(PregolyaError { code: "E-RETRY-003", message: "CircuitBreakerOpen: tool '<tool_name>' circuit tripped after 5 consecutive failures", .. })` — without invoking the tool. Verified by `test_BC_2_16_003_closed_to_open_after_threshold()`.
 
-### AC-010 (traces to BC-2.16.003 postcondition 3)
+### AC-010 (traces to BC-2.16.003 PC-003)
 After `reset_timeout` (30s default) has elapsed in OPEN state, the circuit transitions to HALF-OPEN. The next `check` call returns `Ok(())` (probe is allowed). If the probe succeeds (via `record_success`), the circuit returns to CLOSED. If the probe fails, the circuit returns to OPEN and resets the timer. Verified by `test_BC_2_16_003_half_open_probe_success()` and `test_BC_2_16_003_half_open_probe_failure()`.
 
-### AC-011 (traces to BC-2.16.003 postcondition 4)
+### AC-011 (traces to BC-2.16.003 PC-005)
 `CircuitBreaker::always_closed()` constructs a circuit breaker that never trips and emits a tracing warn with `event_type = "retry.circuit_breaker_disabled"`. Verified by `test_BC_2_16_003_always_closed_logs_warn()`.
 
 ### AC-012 (traces to BC-2.16.003 edge case EC-003 — probe failure tracing)
 When a HALF-OPEN probe fails, a debug trace event is emitted with `event_type = "retry.circuit_probe_failed"`. Verified by `test_BC_2_16_003_probe_failure_tracing()`.
 
-### AC-013 (traces to BC-2.16.001 invariant — per-tool counter independence)
+### AC-013 (traces to BC-2.16.001 PC-003)
 Per the NE-09 counter-example documented in BC-2.16.001: per-tool counters are independent. Tool "A" consuming 3 of its 5 retries does NOT affect Tool "B"'s per-tool counter. Only the global `RetryPolicy` counter is shared. Verified by `test_BC_2_16_001_per_tool_counters_independent()`.
 
-### AC-014 (traces to BC-2.16.003 invariant)
+### AC-014 (traces to BC-2.16.003 PC-007)
 A successful invocation resets the consecutive failure counter for that tool to zero in the `CircuitBreaker`. One success after 4 failures brings the counter back to 0 (not OPEN). Verified by `test_BC_2_16_003_success_resets_consecutive_counter()`.
 
 ## Architecture Mapping
@@ -164,8 +166,8 @@ The three new tracing events `retry.circuit_breaker_disabled`, `retry.unlimited_
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `retry/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review |
-| `global_limit: Option<NonZeroU32>` (not `Option<u32>`) | BC-2.16.002 postcondition 1 | Type signature; static assertion |
-| Retry ordering: circuit_breaker.check → pre_tool → invoke → record | BC-2.16.001 postcondition 4, ADR-018 Decision 6 | Mock ordering test |
+| `global_limit: Option<NonZeroU32>` (not `Option<u32>`) | BC-2.16.002 PC-002 | Type signature; static assertion |
+| Retry ordering: circuit_breaker.check → pre_tool → invoke → record | BC-2.16.001 INV-004 | Mock ordering test |
 | All three tracing events registered in catalog before PR merges | SAP-1 standing probe | Adversary grep check |
 | `reset_timeout` uses `std::time::Duration`/`std::time::Instant` (not tokio::time) | Architecture decision | `cargo tree` for retry module must not show tokio under circuit_breaker.rs |
 

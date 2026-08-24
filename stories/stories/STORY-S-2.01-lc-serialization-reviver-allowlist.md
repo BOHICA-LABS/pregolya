@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.01
 epic_id: E-15
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-19/BC-2.19.001.md
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-19/BC-2.19.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3a6439a"
+input-hash: "eeef00f"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.04, S-1.02]
@@ -56,119 +56,119 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.19.001 postcondition 1)
+### AC-001 (traces to BC-2.19.001 PC-001)
 `LcSerializable::serialize(&self) -> Serialized` returns
 `Serialized::Constructor { lc: 1, id: T::lc_id().to_vec(), kwargs }` where `kwargs` is a
 `serde_json::Map` containing all serde-serializable fields EXCEPT those listed in
 `lc_secrets()`. Verified by `test_BC_2_19_001_serialize_produces_constructor_envelope()`.
 
-### AC-002 (traces to BC-2.19.001 postcondition 2)
+### AC-002 (traces to BC-2.19.001 PC-002)
 `Reviver::revive(serialized: Serialized) -> Result<Box<dyn Any + Send + Sync>, PregolyaError>`
 returns `Ok(boxed_value)` when the `id` is registered and kwargs are valid.
 Verified by `test_BC_2_19_001_reviver_revive_registered_type_ok()`.
 
-### AC-003 (traces to BC-2.19.001 postcondition 3)
+### AC-003 (traces to BC-2.19.001 PC-003)
 The deserialized value `v` satisfies `v ≡ original` under field-by-field equality for types
 that derive `PartialEq`. A `PromptTemplate { template: "Hello {name}", input_variables: ["name"] }`
 round-trips to an equivalent value. Verified by `test_BC_2_19_001_round_trip_semantic_equivalence()`.
 
-### AC-004 (traces to BC-2.19.001 postcondition 4)
+### AC-004 (traces to BC-2.19.001 PC-004)
 `is_lc_serializable() -> false` types produce `Serialized::NotImplemented { lc: 1, id: T::lc_id().to_vec(), repr: None }`
 from `serialize()` and return `Err(E-SRLZ-001)` from `Reviver::revive()`.
 Verified by `test_BC_2_19_001_opt_out_type_not_implemented()`.
 
-### AC-005 (traces to BC-2.19.001 invariant 4)
+### AC-005 (traces to BC-2.19.001 INV-004)
 Round-trip is deterministic: calling serialize → revive twice on the same value produces
 the same result. Verified by `test_BC_2_19_001_round_trip_deterministic()`.
 
-### AC-006 (traces to BC-2.19.002 postcondition 1)
+### AC-006 (traces to BC-2.19.002 PC-001)
 For every field name `s` in `T::lc_secrets()`, `kwargs.get(s)` returns `None` in the
 `Serialized::Constructor` output of `T::serialize(&self)`. `OpenAiChatModel { api_key, model }` →
 `kwargs` has `"model"` but NOT `"openai_api_key"`. Verified by `test_BC_2_19_002_secret_stripped_on_serialize()`.
 
-### AC-007 (traces to BC-2.19.002 postcondition 2)
+### AC-007 (traces to BC-2.19.002 PC-002)
 `Reviver::revive(serialized)` strips every field name listed in `T::lc_secrets()` from `kwargs`
 before dispatching to the registered constructor. An attacker-crafted `Serialized::Constructor`
 with an injected `"openai_api_key"` field is stripped before constructor dispatch.
 Verified by `test_BC_2_19_002_secret_stripped_on_revive()`.
 
-### AC-008 (traces to BC-2.19.002 invariant 1)
+### AC-008 (traces to BC-2.19.002 INV-001)
 The stripping is unconditional — it fires even when the serialized form originates from a
 trusted internal source. There is no `unsafe_with_secrets()` or equivalent escape hatch.
 Verified by `test_BC_2_19_002_stripping_unconditional()` by constructing a serialized value
 without injected secrets and asserting the same result.
 
-### AC-009 (traces to BC-2.19.003 postcondition 2)
+### AC-009 (traces to BC-2.19.003 PC-002)
 `Reviver::new()` returns a `Reviver` instance backed by a `HashMap` containing exactly the
 entries produced by `inventory::iter::<LcEntry>()`. No entries are added at runtime.
 Verified by `test_BC_2_19_003_reviver_new_infallible_and_backed_by_inventory()`.
 
-### AC-010 (traces to BC-2.19.003 postcondition 5)
+### AC-010 (traces to BC-2.19.003 PC-005)
 `Reviver::registry_size() -> usize` returns the count of registered entries. In a binary
 with only core features, `reviver.registry_size() == LANGCHAIN_CORE_REGISTRY.len()`.
 Verified by `test_BC_2_19_003_registry_size_equals_core_registry_constant()`.
 
-### AC-011 (traces to BC-2.19.003 postcondition 3)
+### AC-011 (traces to BC-2.19.003 PC-003)
 The `OnceLock` ensures the registry is initialized at most once per process. Calling
 `Reviver::new()` three times in sequence returns the same `registry_size()` each time.
 Verified by `test_BC_2_19_003_reviver_new_idempotent_onceLock()`.
 
-### AC-012 (traces to BC-2.19.003 invariant 1)
+### AC-012 (traces to BC-2.19.003 INV-001)
 The registry is append-only at link time. No runtime API adds or removes entries from
 the `OnceLock<HashMap>` after initialization. Verified by `test_BC_2_19_003_registry_append_only_no_runtime_mutation()`.
 
-### AC-013 (traces to BC-2.19.004 postcondition 1)
+### AC-013 (traces to BC-2.19.004 PC-001)
 `Reviver::revive(serialized)` transparently remaps a legacy id to the canonical id before
 registry lookup. `Serialized::Constructor { id: ["langchain", "prompts", "prompt", "PromptTemplate"], kwargs }` → `Ok(PromptTemplate { ... })` without caller pre-processing.
 Verified by `test_BC_2_19_004_legacy_alias_remapped_transparently()`.
 
-### AC-014 (traces to BC-2.19.004 postcondition 3)
+### AC-014 (traces to BC-2.19.004 PC-003)
 A legacy id NOT in `OLD_CORE_NAMESPACES_MAPPING` is treated as unknown and returns
 `Err(E-SRLZ-001)`. Verified by `test_BC_2_19_004_unknown_legacy_id_returns_e_srlz_001()`.
 
-### AC-015 (traces to BC-2.19.004 invariant 3 — startup validation)
+### AC-015 (traces to BC-2.19.004 INV-003)
 Remap chains are not supported. A startup validation unit test asserts that no key in
 `OLD_CORE_NAMESPACES_MAPPING` maps to a value that is also a key in the table.
 Verified by `test_BC_2_19_004_no_remap_chains_in_mapping()`.
 
-### AC-016 (traces to BC-2.19.005 postcondition 1 — Red Gate)
+### AC-016 (traces to BC-2.19.005 PC-001)
 **RED GATE**: This test must COMPILE and FAIL before `Reviver::revive()` is implemented.
 `Reviver::revive(Serialized::Constructor { id: ["attacker_custom", "Exploit"], kwargs: {"cmd": "rm -rf /"} })` returns
 `Err(PregolyaError { code: "E-SRLZ-001", message: "unknown-serializable: type id not in registry", .. })`.
 Verified by `test_BC_2_19_005_unknown_id_returns_e_srlz_001_rg()`.
 
-### AC-017 (traces to BC-2.19.005 postcondition 2)
+### AC-017 (traces to BC-2.19.005 PC-002)
 No constructor is called; no `kwargs` map is parsed; no heap allocation occurs on the
 failure path beyond the error struct itself. The allowlist check fires BEFORE any dispatch.
 Verified by `test_BC_2_19_005_allowlist_first_no_constructor_dispatch()` using a mock constructor that panics if called.
 
-### AC-018 (traces to BC-2.19.005 postcondition 4 — Red Gate)
+### AC-018 (traces to BC-2.19.005 PC-004)
 **RED GATE**: `Serialized::NotImplemented` and `Serialized::Secret` variants with an
 unregistered id also return `Err(E-SRLZ-001)`. Verified by
 `test_BC_2_19_005_not_implemented_variant_also_gated_rg()`.
 
-### AC-019 (traces to BC-2.19.005 invariant 1)
+### AC-019 (traces to BC-2.19.005 INV-001)
 The allowlist check is the FIRST operation in `revive()` — it cannot be reordered below
 any other check or transformation. Verified by structural code review assertion in
 `test_BC_2_19_005_allowlist_check_first_operation()` using a code-inspection test that
 verifies registry lookup precedes serde calls.
 
-### AC-020 (traces to BC-2.19.005 invariant 4)
+### AC-020 (traces to BC-2.19.005 INV-004)
 The `E-SRLZ-001` message text is fixed (`"unknown-serializable: type id not in registry"`) —
 it does NOT include the received id. Verified by `test_BC_2_19_005_error_message_no_id_interpolation()`.
 
-### AC-021 (traces to BC-2.19.006 postcondition 1)
+### AC-021 (traces to BC-2.19.006 PC-001)
 `Reviver::revive(Serialized::Constructor { id: ["langchain", "chains", "llm", "LLMChain"], kwargs: {} })` returns
 `Err(PregolyaError { code: "E-SRLZ-002", message: "unsupported-serializable: langchain-monolith type not ported to pregolya", .. })`.
 Verified by `test_BC_2_19_006_monolith_type_returns_e_srlz_002()`.
 
-### AC-022 (traces to BC-2.19.006 postcondition 4 — check ordering)
+### AC-022 (traces to BC-2.19.006 PC-004)
 The check ordering within `revive()` is: registry lookup → legacy remap → monolith check →
 E-SRLZ-001 fallthrough. A type registered in both registry and `LANGCHAIN_MONOLITH_TYPES`
 (programming error) returns `Ok(...)` (registry wins). Verified by
 `test_BC_2_19_006_check_ordering_registry_before_monolith()`.
 
-### AC-023 (traces to BC-2.19.006 invariant 4)
+### AC-023 (traces to BC-2.19.006 INV-004)
 `LANGCHAIN_MONOLITH_TYPES` and the registry are disjoint at startup. A startup validation
 unit test asserts no entry in `LANGCHAIN_MONOLITH_TYPES` appears in the registry.
 Verified by `test_BC_2_19_006_monolith_and_registry_disjoint()`.
@@ -251,12 +251,12 @@ The `inventory` crate (dtolnay) is a new dependency for this story. Add to `preg
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `serializable/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review |
-| `Reviver::new()` is infallible (no `Result` return) | BC-2.19.003 postcondition 2; DI-008 corrected | Type signature inspection |
-| `Reviver::revive()` is the ONLY fallible operation in the serialization path | BC-2.19.001 postcondition 2; DI-008 | Type signatures; no `?` in `serialize()` |
-| Allowlist check is the FIRST operation in `revive()` | BC-2.19.005 invariant 1 | Code review; structural test AC-019 |
-| `lc_secrets()` returns serde-serialized field names (not Rust field names) | BC-2.19.002 invariant 3 | Test with `#[serde(rename = ...)]` type |
-| E-SRLZ-001 message does NOT interpolate the received id | BC-2.19.005 invariant 4 (gate #33 STRUCT-PLACEHOLDER PARITY) | Test AC-020 |
-| E-SRLZ-002 message does NOT interpolate the type id | BC-2.19.006 invariant 3 | Unit test |
+| `Reviver::new()` is infallible (no `Result` return) | BC-2.19.003 PC-002; DI-008 corrected | Type signature inspection |
+| `Reviver::revive()` is the ONLY fallible operation in the serialization path | BC-2.19.001 PC-002; DI-008 | Type signatures; no `?` in `serialize()` |
+| Allowlist check is the FIRST operation in `revive()` | BC-2.19.005 INV-001 | Code review; structural test AC-019 |
+| `lc_secrets()` returns serde-serialized field names (not Rust field names) | BC-2.19.002 INV-003 | Test with `#[serde(rename = ...)]` type |
+| E-SRLZ-001 message does NOT interpolate the received id | BC-2.19.005 INV-004 (gate #33 STRUCT-PLACEHOLDER PARITY) | Test AC-020 |
+| E-SRLZ-002 message does NOT interpolate the type id | BC-2.19.006 INV-003 | Unit test |
 | No `ndarray`, no BLAS, no I/O in `core::serializable` | Architecture purity boundary | Dependency audit |
 | Component::Srlz (PascalCase) not Component::SRLZ | ADR-010 PascalCase canon | Code review |
 
@@ -285,3 +285,8 @@ The `inventory` crate (dtolnay) is a new dependency for this story. Add to `preg
 | `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod serializable;` |
 | `pregolya-core/Cargo.toml` | MODIFY | Add `inventory` dependency |
 | `pregolya-core/tests/serializable_integration.rs` | CREATE | Feature-flag integration tests (BC-2.19.003 TV-002 pattern) |
+
+## Changelog
+
+- "1.0 (2026-08-19): initial story authored"
+- "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors"

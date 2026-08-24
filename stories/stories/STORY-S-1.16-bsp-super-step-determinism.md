@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.16
 epic_id: E-08
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.001.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4149f6a"
+input-hash: "d953a3a"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.15, S-1.10, S-1.13, S-1.17, S-1.18]
@@ -30,6 +30,8 @@ estimated_days: 5
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
 > **tdd_mode:** strict — full TDD Iron Law enforced. VP-001 (Kani harness `bsp_determinism_harness` for `reduce_super_step`) is the verification property anchored to this story.
@@ -54,34 +56,34 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.03.001 postcondition 1 — same inputs produce same super-step outputs)
+### AC-001 (traces to BC-2.03.001 PC-001 — same inputs produce same super-step outputs)
 Given the same set of `WriteRecord` entries and the same channel state at the start of a super-step, `reduce_super_step` always produces identical output channel state. No non-deterministic data structure iteration is used in the reduction path. Verified by `test_BC_2_03_001_reduce_super_step_deterministic()`.
 
-### AC-002 (traces to BC-2.03.001 postcondition 5 — super-step ceiling enforced)
+### AC-002 (traces to BC-2.03.001 PC-005 — super-step ceiling enforced)
 When the current step count exceeds `step_at_invoke_start + recursion_limit + 1` (default `recursion_limit = 25`), the engine returns `Err(PregolyaError { category: POLICY, code: E-GRAPH-017, .. })` with fields `{ run_id, step, limit }`. Verified by `test_BC_2_03_001_super_step_ceiling_enforced()`.
 
-### AC-003 (traces to BC-2.03.001 postcondition 5 — custom recursion_limit respected)
+### AC-003 (traces to BC-2.03.001 PC-005 — custom recursion_limit respected)
 When `RunnableConfig::recursion_limit` is set to a value other than 25, the ceiling uses the configured value. Verified by `test_BC_2_03_001_custom_recursion_limit()`.
 
-### AC-004 (traces to BC-2.03.001 postcondition 4 and edge case EC-005 — runtime determinism-violation guard)
+### AC-004 (traces to BC-2.03.001 PC-004 / EC-005 — runtime determinism-violation guard)
 Given a simulated scheduler ordering violation (reducer applied out of `(task_id, channel_name)` sort order due to a bug), the engine returns `Err(PregolyaError { category: INTERNAL, code: E-GRAPH-006, message: "BspDeterminismViolation: reducer order constraint violated — contact maintainers with run_id '<run_id>'", .. })` with the current run_id substituted in the message; run status transitions to `failed`. Verified by `test_BC_2_03_001_determinism_violation_detection()`.
 
-### AC-005 (traces to BC-2.03.001 postcondition 1 — VP-001 Kani harness anchored here)
+### AC-005 (traces to BC-2.03.001 PC-001 — VP-001 Kani harness anchored here)
 A Kani proof harness `bsp_determinism_harness` is defined in `pregolya-graph/src/proofs/bsp_determinism.rs` that calls `reduce_super_step` with symbolic inputs and asserts determinism via `kani::assert`. This harness is the test vehicle for VP-001. Verified by `test_BC_2_03_001_kani_harness_compiles()` (compile check) and `kani::proof` execution in Phase 6.
 
-### AC-006 (traces to BC-2.03.002 postcondition 1 — concurrent LastValue writes produce structured error)
+### AC-006 (traces to BC-2.03.002 PC-003 — concurrent LastValue writes produce structured error)
 When two tasks in the same super-step both write to the same `LastValue<T>` channel, the engine returns `Err(PregolyaError { category: CONCURRENCY, code: E-GRAPH-001, retry_hint: Never, .. })` with structured fields `{ component: GRAPH, category: CONCURRENCY, code: E-GRAPH-001 }`. Verified by `test_BC_2_03_002_concurrent_last_value_write_rejected()`.
 
-### AC-007 (traces to BC-2.03.002 invariant 1 — error is deterministic not data-race UB)
+### AC-007 (traces to BC-2.03.002 INV-001 — error is deterministic not data-race UB)
 The concurrent-write error is produced at the reduction phase, not at write time — both writes are accepted as `WriteRecord` entries and the conflict is detected during sorted reduce. This ensures the error is deterministic regardless of task scheduling order. Verified by `test_BC_2_03_002_concurrent_write_detected_at_reduce_not_write_time()`.
 
-### AC-008 (traces to BC-2.03.003 postcondition 1 — writes sorted by task_id then channel_name)
+### AC-008 (traces to BC-2.03.003 PC-001 — writes sorted by task_id then channel_name)
 All `WriteRecord` entries collected in a super-step are sorted by `(task_id, channel_name)` lexicographic ascending before the reduce function is applied. No `HashMap` or any unordered iteration is used in the reduce path. Verified by `test_BC_2_03_003_writes_sorted_by_task_id_then_channel()`.
 
-### AC-009 (traces to BC-2.03.001 invariant 2 — sort key is (task_id: &str, channel_name: &str))
+### AC-009 (traces to BC-2.03.001 INV-002 — sort key is (task_id: &str, channel_name: &str))
 The sort comparator uses the `task_id` string (not a numeric hash) as the primary key and `channel_name` as the secondary key, both in ascending lexicographic order. Verified by `test_BC_2_03_003_sort_key_is_string_lexicographic()`.
 
-### AC-010 (traces to BC-2.03.003 postcondition 4 — reduce_super_step is a pure function)
+### AC-010 (traces to BC-2.03.003 PC-004 — reduce_super_step is a pure function)
 `reduce_super_step(writes: Vec<WriteRecord>, channels: ChannelState) -> Result<ChannelState, PregolyaError>` has no mutable global state, no spawned tasks, and no I/O calls. It is suitable for extraction as a Kani proof target. Verified by `test_BC_2_03_003_reduce_super_step_is_pure()` (function signature inspection + no side-effect assertions).
 
 ## Architecture Mapping
@@ -154,10 +156,10 @@ The sort comparator uses the `task_id` string (not a numeric hash) as the primar
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `reduce_super_step` must be a pure free function — no global state, no async, no I/O | BC-2.03.001 postcondition 4; VP-001 Kani requirement | Signature: `fn reduce_super_step(writes: Vec<WriteRecord>, channels: ChannelState) -> Result<ChannelState, PregolyaError>` |
-| No `FuturesUnordered::buffer_unordered` in reduce path | BC-2.03.003 invariant 1 | Code review; `cargo grep FuturesUnordered pregolya-graph` must be empty in reduce path |
-| Super-step ceiling formula: `step_at_invoke_start + recursion_limit + 1` | BC-2.03.001 postcondition 2 | Unit test with exact formula check |
-| Default `recursion_limit = 25` | BC-2.03.001 postcondition 2 | Const in `types.rs` or `scheduler.rs` |
+| `reduce_super_step` must be a pure free function — no global state, no async, no I/O | BC-2.03.001 PC-003; VP-001 Kani requirement | Signature: `fn reduce_super_step(writes: Vec<WriteRecord>, channels: ChannelState) -> Result<ChannelState, PregolyaError>` |
+| No `FuturesUnordered::buffer_unordered` in reduce path | BC-2.03.003 INV-001 | Code review; `cargo grep FuturesUnordered pregolya-graph` must be empty in reduce path |
+| Super-step ceiling formula: `step_at_invoke_start + recursion_limit + 1` | BC-2.03.001 PC-005 | Unit test with exact formula check |
+| Default `recursion_limit = 25` | BC-2.03.001 PC-005 | Const in `types.rs` or `scheduler.rs` |
 | Kani proofs in `src/proofs/` subdirectory | CLAUDE.md §Formal Verification | Directory structure check |
 
 ## Library & Framework Requirements (MANDATORY)

@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.17
 epic_id: E-09
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.001.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "5b3f30f"
+input-hash: "fd2c796"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14, S-1.04, S-1.15]
@@ -30,6 +30,8 @@ estimated_days: 2
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
 > **tdd_mode:** strict — full TDD Iron Law enforced.
@@ -54,25 +56,25 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.06.001 postcondition 2 — 16 StreamEvent variants defined in core::events)
+### AC-001 (traces to BC-2.06.001 PC-002 — 16 StreamEvent variants defined in core::events)
 `StreamEvent` is an enum with exactly 16 variants: `RunStart`, `RunStream`, `RunEnd`, `StepStart`, `StepEnd`, `NodeStart`, `NodeStream`, `NodeEnd`, `ToolStart`, `ToolStream`, `ToolEnd`, `GuardrailDecision`, `ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent`, and `Error`. The enum is defined in `pregolya-core/src/events.rs` (`core::events`) and carries `#[non_exhaustive]`. Verified by `test_BC_2_06_001_stream_event_has_16_variants()`.
 
-### AC-002 (traces to BC-2.06.001 postcondition 4 — causal ordering invariants)
+### AC-002 (traces to BC-2.06.001 PC-004 — causal ordering invariants)
 Events maintain causal order: `RunStart` precedes all other run events; `StepStart` precedes `NodeStart` for nodes in that step; `NodeStart` precedes `NodeStream` and `NodeEnd` for the same node; `ToolStart` precedes `ToolStream` and `ToolEnd` for the same tool call. `StepEnd` has no `Stream` variant. Verified by `test_BC_2_06_001_causal_ordering_invariants()`.
 
-### AC-003 (traces to BC-2.06.001 postcondition 4 — ToolEnd is always terminal for tool events)
+### AC-003 (traces to BC-2.06.001 PC-004 — ToolEnd is always terminal for tool events)
 `ToolEnd` is always the last event emitted for a tool call invocation. No tool events are emitted after `ToolEnd` for the same tool call ID. Verified by `test_BC_2_06_001_tool_end_is_terminal()`.
 
-### AC-004 (traces to BC-2.06.001 postcondition 2 — GuardrailDecision carries only Fail or Transform)
+### AC-004 (traces to BC-2.06.001 PC-002 — GuardrailDecision carries only Fail or Transform)
 `StreamEvent::GuardrailDecision.decision` is either `Fail` or `Transform` only — `Pass` decisions do not emit a `GuardrailDecision` event. Verified by `test_BC_2_06_001_guardrail_decision_only_fail_or_transform()`.
 
-### AC-005 (traces to BC-2.06.001 postcondition 2 — StreamEvent::Error as 16th variant)
+### AC-005 (traces to BC-2.06.001 PC-002 — StreamEvent::Error as 16th variant)
 `StreamEvent::Error { run_id, error: PregolyaError, .. }` is the 16th variant. It can be emitted at any point during execution when an unrecoverable error occurs. Verified by `test_BC_2_06_001_error_variant_emittable()`.
 
-### AC-006 (traces to BC-2.06.001 edge case EC-005 — RunEnd only for completed and summary_halt)
+### AC-006 (traces to BC-2.06.001 EC-005 — RunEnd only for completed and summary_halt)
 `RunEnd` is emitted only when the run transitions to `completed` or `summary_halt` final states. Runs that end in `failed`, `cancelled`, or `interrupted` states do NOT emit `RunEnd`. Verified by `test_BC_2_06_001_run_end_only_for_completed_or_summary_halt()`.
 
-### AC-007 (traces to BC-2.06.002 postcondition 1 — every event carries run_id)
+### AC-007 (traces to BC-2.06.002 PC-001 — every event carries run_id)
 Every `StreamEvent` variant carries a `run_id: Uuid` field. No event is emitted without a `run_id`. Verified by `test_BC_2_06_002_every_event_carries_run_id()`.
 
 ### AC-008 (traces to BC-2.06.002 postcondition 2 — fan-out PUSH tasks share parent run_id)
@@ -81,13 +83,13 @@ Events emitted by PUSH tasks spawned via the Send API carry the parent run's `ru
 ### AC-009 (traces to BC-2.06.002 postcondition 3 — parent_ids enables causal chain reconstruction)
 For a subtask spawned by `Send("worker", arg)`, its events have `parent_ids: [parent_run_id]`. The full causal chain (grandparent → parent → child) is reconstructable by following `parent_ids`. Verified by `test_BC_2_06_002_parent_ids_enables_causal_chain()`.
 
-### AC-010 (traces to BC-2.06.003 postcondition 1 — streaming and unary final answers identical)
+### AC-010 (traces to BC-2.06.003 PC-001 — streaming and unary final answers identical)
 For the same graph, same inputs, and same checkpointed state, the final answer returned by unary execution (`run()`) equals the final answer reconstructed from streaming events (`stream()` → collect → extract final message). Verified by `test_BC_2_06_003_streaming_unary_identical_final_answer()`.
 
-### AC-011 (traces to BC-2.06.003 invariant 1 — DI-011 no stub streaming path)
+### AC-011 (traces to BC-2.06.003 INV-001 — DI-011 no stub streaming path)
 The streaming path uses the same BSP engine and the same node execution logic as the unary path. There is no `if streaming { stub_logic } else { real_logic }` conditional. Verified by `test_BC_2_06_003_streaming_uses_same_engine_as_unary()` (code inspection — assert no separate streaming stub path).
 
-### AC-012 (traces to BC-2.06.003 invariant 4 — GuardrailDecision not in unary final answer)
+### AC-012 (traces to BC-2.06.003 INV-004 — GuardrailDecision not in unary final answer)
 `StreamEvent::GuardrailDecision` events are stream-observer notifications only. The unary `run()` path does not return `GuardrailDecision` objects in its final answer. Verified by `test_BC_2_06_003_guardrail_decision_not_in_unary_answer()`.
 
 ## Architecture Mapping
@@ -162,10 +164,10 @@ The streaming path uses the same BSP engine and the same node execution logic as
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `StreamEvent` carries `#[non_exhaustive]` | CLAUDE.md §`#[non_exhaustive]` on public API surface types | Non-exhaustive gate crate; wildcard arm required in all match sites |
-| No separate streaming stub path — DI-011 | BC-2.06.003 invariant 1 (NE-13) | Code review: no `if cfg!(feature = "streaming")` or equivalent |
+| No separate streaming stub path — DI-011 | BC-2.06.003 INV-001 (NE-13) | Code review: no `if cfg!(feature = "streaming")` or equivalent |
 | All `event_type` values in Canonical Structured Event Catalog | CLAUDE.md §Structured event catalog discipline (SAP-1) | Adversary SAP-1 probe on every PR touching this story |
-| `RunEnd` emitted only for `completed`/`summary_halt` | BC-2.06.001 edge case EC-005 | Unit test + run state enum exhaustive match |
-| `GuardrailDecision` carries `Fail`/`Transform` only | BC-2.06.001 postcondition 2 | Match arm compilation with exhaustive variants |
+| `RunEnd` emitted only for `completed`/`summary_halt` | BC-2.06.001 EC-005 | Unit test + run state enum exhaustive match |
+| `GuardrailDecision` carries `Fail`/`Transform` only | BC-2.06.001 PC-002 | Match arm compilation with exhaustive variants |
 
 ## Library & Framework Requirements (MANDATORY)
 

@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.14
 epic_id: E-07
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.001.md
@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "12c6b85"
+input-hash: "419272c"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.01]
@@ -31,6 +31,8 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
 > **tdd_mode:** strict — full TDD Iron Law enforced. Two Red Gate BCs (BC-2.02.003, BC-2.02.004) require tests to be written first and must fail before any implementation exists.
@@ -56,34 +58,34 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.02.001 postcondition 1 — builder accepts valid node and channel registration)
+### AC-001 (traces to BC-2.02.001 PC-001 — builder accepts valid node and channel registration)
 `StateGraph::builder()` followed by `add_node(name, async_fn)` and channel schema registration compiles and does not error for a valid graph. Verified by `test_BC_2_02_001_builder_accepts_valid_graph()`.
 
-### AC-002 (traces to BC-2.02.001 postcondition 2 — compile errors on invalid graph; add_node errors on duplicate name)
+### AC-002 (traces to BC-2.02.001 INV-002 — compile errors on invalid graph; add_node errors on duplicate name)
 `compile()` returns `Err(PregolyaError { category: VAL, code: E-GRAPH-008, .. })` when the graph has no reachable path from `START` (no entry edge or zero nodes). `add_node()` returns `Err(PregolyaError { category: VAL, code: E-GRAPH-009, .. })` when a node name is already registered. Writing to an unregistered channel key returns `Err(PregolyaError { category: VAL, code: E-GRAPH-007, .. })` at runtime from `invoke`/`stream` at the `apply_writes` stage — this is NOT a compile-time error. Verified by `test_BC_2_02_001_compile_rejects_invalid_graphs()`.
 
-### AC-003 (traces to BC-2.02.001 postcondition 3 — channels materialised at compile time)
+### AC-003 (traces to BC-2.02.001 PC-002 — channels materialised at compile time)
 All channels declared in the state schema are materialised before the first super-step begins; no channel is created lazily during execution. Verified by `test_BC_2_02_001_channels_materialised_at_compile()`.
 
-### AC-004 (traces to BC-2.02.002 postcondition 1 — LastValue retains most-recent write)
+### AC-004 (traces to BC-2.02.002 PC-001 — LastValue retains most-recent write)
 A `LastValue<T>` channel retains only the value written in the current super-step. Verified by `test_BC_2_02_002_last_value_retains_most_recent()`.
 
-### AC-005 (traces to BC-2.02.002 invariant 1 — concurrent LastValue writes rejected)
+### AC-005 (traces to BC-2.02.002 PC-003 — concurrent LastValue writes rejected)
 When two tasks in the same super-step both write to the same `LastValue<T>` channel, the engine returns `Err(PregolyaError { category: CONCURRENCY, code: E-GRAPH-001, .. })` with fields `{ channel, task_ids, step }`. Verified by `test_BC_2_02_002_last_value_concurrent_write_rejected()`.
 
-### AC-006 (traces to BC-2.02.002 postcondition 2 — Append channel accumulates in deterministic order)
+### AC-006 (traces to BC-2.02.002 PC-004 — Append channel accumulates in deterministic order)
 An `Append`/`BinaryOperatorAggregate<T,Op>` channel accumulates every write from the current super-step. Values are ordered by `(task_id, channel_name)` lexicographic ascending via sorted `Vec<WriteRecord { task_id, channel_name, value }>` before reduction — not via unordered `HashMap` iteration. Verified by `test_BC_2_02_002_append_channel_deterministic_order()`.
 
-### AC-007 (traces to BC-2.02.002 postcondition 3 — BarrierValue unavailable until all writers complete; no error on missing write)
+### AC-007 (traces to BC-2.02.002 PC-007 — BarrierValue unavailable until all writers complete; no error on missing write)
 A `BarrierValue` channel becomes `available()` only after all registered upstream writers have each delivered exactly one write in the current super-step. If any expected writer fails to deliver in that step, the channel is NOT available; the downstream node is NOT triggered; no error is raised. If no other nodes are triggered, the graph halts naturally (run transitions to `completed`). Verified by `test_BC_2_02_002_barrier_value_blocks_until_all_writers()`.
 
-### AC-008 (traces to BC-2.02.003 postconditions 1/2/3 — NamedBarrierValue missing-writer causes silent non-trigger, no error; RED GATE)
+### AC-008 (traces to BC-2.02.003 PC-001 / PC-002 / PC-003 — NamedBarrierValue missing-writer causes silent non-trigger, no error; RED GATE)
 When a `NamedBarrierValue` channel has a declared writer that does not deliver a write in the current super-step, the channel's `is_available()` returns `false`; the downstream node is NOT triggered; no error is raised; the run does NOT transition to `failed`. This test MUST be written before any implementation and MUST fail on stubs before the feature is implemented (Red Gate discipline, BC-2.02.003 — the default stub behavior is likely to raise an error or fail to implement the no-trigger contract). Verified by `test_BC_2_02_003_named_barrier_missing_writer_no_trigger()`.
 
-### AC-009 (traces to BC-2.02.004 postcondition 1 — EphemeralValue absent from checkpoint; RED GATE)
+### AC-009 (traces to BC-2.02.004 PC-002 — EphemeralValue absent from checkpoint; RED GATE)
 An `EphemeralValue<T>` channel's value is not written to the checkpoint and is absent at the start of the next super-step. This test MUST be written before any implementation and MUST fail on stubs (Red Gate discipline, BC-2.02.004). Verified by `test_BC_2_02_004_ephemeral_value_absent_after_step()`.
 
-### AC-010 (traces to BC-2.02.004 postcondition 2 — EphemeralValue absent from checkpoint snapshot)
+### AC-010 (traces to BC-2.02.004 PC-004 — EphemeralValue absent from checkpoint snapshot)
 A checkpoint snapshot of graph state taken after a super-step that wrote an `EphemeralValue<T>` contains no key for that channel. Verified by `test_BC_2_02_004_ephemeral_value_not_in_checkpoint()`.
 
 ### AC-011 (traces to BC-2.02.003 EC-003 — NamedBarrierValue duplicate writer raises E-GRAPH-004)
@@ -170,12 +172,12 @@ N/A — S-1.14 is the first `pregolya-graph` story that writes channel logic. Th
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `mod.rs` files re-export only — no logic | CLAUDE.md §File size & module splitting | Code review; `mod.rs` must contain only `pub use` declarations |
-| No `HashMap` iteration for reduce ordering — use sorted `Vec<WriteRecord>` | BC-2.02.002 postcondition 2; BSP determinism requirement | Unit test: `test_BC_2_02_002_append_channel_deterministic_order()` verifies sort key |
+| No `HashMap` iteration for reduce ordering — use sorted `Vec<WriteRecord>` | BC-2.02.002 PC-004; BSP determinism requirement | Unit test: `test_BC_2_02_002_append_channel_deterministic_order()` verifies sort key |
 | `#[non_exhaustive]` on all public API surface types | CLAUDE.md §`#[non_exhaustive]` on public API surface types | Non-exhaustive gate crate compile-fail test |
 | No `unwrap()` / `expect()` in non-test code | CLAUDE.md §No unwrap / expect in non-test code | `cargo clippy -D clippy::unwrap_used` |
 | Production file ≤ 500 code-lines soft target; ≤ 750 hard gate | CLAUDE.md §File size & module splitting | `cargo xtask check-file-size` CI gate |
 | `pregolya-graph` must NOT depend on `pregolya-openai`, `pregolya-anthropic`, `pregolya-ollama` | architecture/dependency-graph.md | `cargo deny` configuration |
-| `EphemeralValue` is not serialized to checkpoint | BC-2.02.004 invariant 1 | `bsp_engine.rs finish()` must exclude ephemeral channels from checkpoint snapshot |
+| `EphemeralValue` is not serialized to checkpoint | BC-2.02.004 INV-001 | `bsp_engine.rs finish()` must exclude ephemeral channels from checkpoint snapshot |
 
 ## Library & Framework Requirements (MANDATORY)
 

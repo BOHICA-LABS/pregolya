@@ -3,16 +3,16 @@ document_type: story
 level: ops
 story_id: S-1.11
 epic_id: E-05
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "1c867c1"
+input-hash: "2cd69af"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.10]
@@ -46,28 +46,28 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.04.008 postcondition 1 — fts_search trait method)
+### AC-001 (traces to BC-2.04.008 PRE-003)
 `CheckpointSaver` trait includes method `fts_search(query: &str, config: FtsSearchConfig) -> Result<Vec<FtsSearchResult>, PregolyaError>`. `FtsSearchConfig` has fields `thread_id: Option<&str>` (scope to one thread when `Some`) and `limit: usize`. Verified by `test_BC_2_04_008_fts_search_signature_exists()`.
 
-### AC-002 (traces to BC-2.04.008 postcondition 2 — result fields)
+### AC-002 (traces to BC-2.04.008 PC-001)
 `FtsSearchResult` has fields: `checkpoint_id: CheckpointId`, `thread_id: String`, `checkpoint_ns: String`, `message_role: String`, `content_snippet: String`, `rank: f64`. All fields are present and non-nullable. Verified by `test_BC_2_04_008_result_struct_fields()`.
 
-### AC-003 (traces to BC-2.04.008 postcondition 3 — same transaction FTS index update)
+### AC-003 (traces to BC-2.04.008 INV-002)
 The FTS5 index is updated in the same SQLite transaction as the checkpoint write. After `put_writes` completes successfully, the FTS index contains the new content and is immediately searchable. Verified by `test_BC_2_04_008_fts_index_updated_same_transaction()`.
 
-### AC-004 (traces to BC-2.04.008 postcondition 4 — search_history_tool)
+### AC-004 (traces to BC-2.04.008 PC-005)
 `search_history_tool()` returns a `Tool`-implementing type that wraps `fts_search`. The tool is callable by agents via the standard `Tool::invoke` interface. When the tool is invoked with a query string and optional thread_id, it calls `fts_search` on the underlying `CheckpointSaver` and returns the results serialized as a `ToolOutput`. Verified by `test_BC_2_04_008_search_history_tool_invocable()`.
 
-### AC-005 (traces to BC-2.04.008 edge case EC-001 — FtsLimitZero)
+### AC-005 (traces to BC-2.04.008 EC-004)
 `fts_search` with `FtsSearchConfig { limit: 0, .. }` returns `Err(PregolyaError { code: "E-CHKPT-008", message: "FtsLimitZero: FtsSearchConfig.limit must be > 0; got <limit>", .. })`. Verified by `test_BC_2_04_008_fts_limit_zero_error()`.
 
-### AC-006 (traces to BC-2.04.008 edge case EC-002 — Fts5Unavailable)
+### AC-006 (traces to BC-2.04.008 EC-006)
 If the SQLite build does not include the FTS5 extension (e.g., compiled without `SQLITE_ENABLE_FTS5`) and FTS is requested, `CheckpointSaver::new()` returns `Err(PregolyaError { code: "E-CHKPT-009", message: "Fts5Unavailable: FTS5 extension not available in this SQLite build — recompile SQLite with FTS5 support or use a pre-built distribution that includes it", .. })` at construction time — before any DDL executes. The error fires during construction, not at query time. Verified by `test_BC_2_04_008_fts5_unavailable_error()`.
 
-### AC-007 (traces to BC-2.04.008 invariant 1 — append-only index consistency)
+### AC-007 (traces to BC-2.04.008 INV-002)
 Checkpoint records are append-only by design: writes add rows, never update or delete them. The FTS index mirrors this append-only invariant — FTS entries are never deleted or updated during a run. The FTS index accurately reflects the full append-only checkpoint write history. Verified by `test_BC_2_04_008_fts_index_append_only()`.
 
-### AC-008 (traces to BC-2.04.008 edge case EC-007 — FtsEncryptionIncompatible)
+### AC-008 (traces to BC-2.04.008 EC-007)
 `CheckpointSaver::new()` with FTS5 enabled and `EncryptedSerializer` configured returns `Err(PregolyaError { code: "E-CHKPT-010", message: "FtsEncryptionIncompatible: ...", .. })` at construction time. FTS5 and `EncryptedSerializer` are mutually exclusive — the error fires before any DDL executes and no checkpoint tables are created. Verified by `test_BC_2_04_008_fts_encryption_incompatible()`.
 
 ## Architecture Mapping
@@ -166,3 +166,10 @@ Files to MODIFY:
 | EC-003 | `thread_id: Some("nonexistent")` in FtsSearchConfig | Returns `Ok(vec![])` — no results, no error |
 | EC-004 | Query is an empty string `""` | Implementation-defined: either `Ok(vec![])` or returns all results up to limit. Must not panic |
 | EC-005 | FTS5 enabled simultaneously with `EncryptedSerializer` | Construction-time `Err(E-CHKPT-010 FtsEncryptionIncompatible)` — FTS5 stores plaintext message content, tool call arguments, and tool results in the SQLite database file; this would write plaintext state and event payload to disk, violating the at-rest encryption guarantee (no plaintext payload may reach persistent storage when `EncryptedSerializer` is active). FTS5 and `EncryptedSerializer` are mutually exclusive by design; `CheckpointSaver::new()` returns the error before any DDL executes. See BC-2.04.008 EC-007 and AC-008. |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |
+| 1.0 | 2026-08-18 | Initial authoring | story-writer |

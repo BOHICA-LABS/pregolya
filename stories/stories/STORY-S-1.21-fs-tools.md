@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.21
 epic_id: E-13
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.001.md
@@ -15,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "5419d6a"
+input-hash: "4b72803"
 traces_to:
   - behavioral-contracts/BC-2.23.001
   - behavioral-contracts/BC-2.23.002
@@ -71,59 +73,59 @@ Comfortable within context window. No split required.
 
 ### AC-001: ReadFileTool — PathGuard confinement enforced on every call
 `canonicalize_beneath_root` is called for every `ReadFileTool::invoke` call without exception. A path that resolves outside the workspace root (symlink escape or `..` traversal) returns `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
-(traces to BC-2.23.001 postcondition 1)
+(traces to BC-2.23.001 PC-002)
 
 ### AC-002: ReadFileTool — max_bytes cap is 1,048,576 (1 MiB default)
 Reading a file larger than 1,048,576 bytes returns at most 1,048,576 bytes. The default `ReadConfig::max_bytes` is `1_048_576u64`.
-(traces to BC-2.23.001 postcondition 2)
+(traces to BC-2.23.001 PC-003)
 
 ### AC-003: ReadFileTool — OS I/O errors use E-TOOLS-008, not E-TOOLS-001
 A genuine file-not-found or permission-denied OS error returns `Err(PregolyaError { code: "E-TOOLS-008", .. })`. `E-TOOLS-001` is reserved for genuine scope-escape; OS I/O errors are never mapped to it.
-(traces to BC-2.23.001 postcondition 3)
+(traces to BC-2.23.001 PC-004)
 
 ### AC-004: ReadFileTool — ADR-024 Phase-2 two-phase fallback for non-existent paths
 `canonicalize_beneath_root` is called; `Ok(path)` from Phase-2 does NOT guarantee file exists. A subsequent `open` returning `NotFound` maps to `E-TOOLS-008`, not `E-TOOLS-001`.
-(traces to BC-2.23.001 invariant 1)
+(traces to BC-2.23.001 PC-004)
 
 ### AC-005: WriteFileTool — atomic write via `.pregolyatmp_<random>` + rename
 `WriteFileTool::invoke` writes content to a temp file named `.pregolyatmp_<random>` in the parent directory, then calls `fs::rename` to atomically replace the target. No partial write is visible to concurrent readers.
-(traces to BC-2.23.002 postcondition 1)
+(traces to BC-2.23.002 PC-003)
 
 ### AC-006: WriteFileTool — retry_eligible: false
 `WriteFileTool` implements `DynTool::retry_eligible` returning `false`. A failed write (e.g., parent directory missing) is not automatically retried by the circuit-breaker retry policy.
-(traces to BC-2.23.002 postcondition 2)
+(traces to BC-2.23.002 INV-003)
 
 ### AC-007: WriteFileTool — three genuine E-TOOLS-001 conditions
 `E-TOOLS-001` is raised precisely for: (a) symlink resolution escapes workspace root, (b) parent directory is outside workspace root, (c) path ends `..` or is filesystem root. All other I/O errors use `E-TOOLS-008`.
-(traces to BC-2.23.002 postcondition 3)
+(traces to BC-2.23.002 PC-002)
 
 ### AC-008: WriteFileTool — ActionRisk::High
 `WriteFileTool::action_risk()` returns `ActionRisk::High`. The tool registry records this tier for pre-tool-call hook dispatch.
-(traces to BC-2.23.002 invariant 1)
+(traces to BC-2.23.002 PRE-004)
 
 ### AC-009: EditFileTool — exact-match replacement by default
 `EditFileTool::invoke` with `EditConfig::fuzzy_threshold: None` finds the first exact occurrence of `old_str` in the file and replaces it. If `old_str` appears zero times, returns `Err(PregolyaError { code: "E-TOOLS-003", .. })`.
-(traces to BC-2.23.003 postcondition 1)
+(traces to BC-2.23.003 PC-001)
 
 ### AC-010: EditFileTool — opt-in fuzzy threshold via EditConfig
 `EditFileTool::invoke` with `EditConfig::fuzzy_threshold: Some(t)` where `t ∈ (0.0, 1.0]` enables the `similar` (v3) crate for fuzzy matching. `fuzzy_threshold = 0.0` is rejected at `EditConfig` construction with `Err`. The `similar` crate carries Apache-2.0 license; MSRV 1.85.
-(traces to BC-2.23.003 postcondition 2)
+(traces to BC-2.23.003 PC-003)
 
 ### AC-011: EditFileTool — atomic write on success
 After a successful replacement, the updated content is written atomically via the same `.pregolyatmp_<random>` + rename pattern as `WriteFileTool`. ActionRisk is `ActionRisk::High`.
-(traces to BC-2.23.003 postcondition 3)
+(traces to BC-2.23.003 INV-003)
 
 ### AC-012: ListDirTool — depth-1 listing with DirEntry
 `ListDirTool::invoke` returns `Vec<DirEntry>` where each entry has `name: String`, `kind: EntryKind` (File/Dir/Symlink), and `size_bytes: Option<u64>` (populated for files, `None` for directories and symlinks).
-(traces to BC-2.23.004 postcondition 1)
+(traces to BC-2.23.004 PC-001)
 
 ### AC-013: ListDirTool — entries sorted lexicographically by name
 The returned `Vec<DirEntry>` is sorted ascending by `name`. An empty directory returns `Ok(vec![])`, not `Err`.
-(traces to BC-2.23.004 postcondition 2)
+(traces to BC-2.23.004 PC-001)
 
 ### AC-014: ListDirTool — ActionRisk::ReadOnly
 `ListDirTool::action_risk()` returns `ActionRisk::ReadOnly`. PathGuard confinement enforced; I/O traversal error returns `E-TOOLS-008`.
-(traces to BC-2.23.004 postcondition 3)
+(traces to BC-2.23.004 INV-004)
 
 ## Architecture Mapping
 

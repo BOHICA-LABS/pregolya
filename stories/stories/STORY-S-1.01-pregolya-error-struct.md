@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -49,31 +51,31 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.14.001 postcondition 1)
+### AC-001 (traces to BC-2.14.001 PC-001)
 `PregolyaError` with all five named fields (`component`, `category`, `retry_hint`, `code: String`, `message: String`) plus `source: Option<Arc<dyn std::error::Error + Send + Sync>>` constructs without error from within `pregolya-core` using struct-literal syntax. Verified by `test_BC_2_14_001_struct_construction()` which accesses each field by name.
 
-### AC-002 (traces to BC-2.14.001 postcondition 2)
+### AC-002 (traces to BC-2.14.001 PC-002)
 The `Component` enum has exactly 17 variants: Core, Graph, Chkpt, Server, Prov, Mcp, Split, Sbxd, Retry, Cron, Memory, Budget, Tmpl, Srlz, Vs, Embed, Tools — plus `Custom(String)`. An exhaustive match on all 18 cases (including Custom) compiles without a wildcard arm. Verified by `test_BC_2_14_001_component_axis()`.
 
-### AC-003 (traces to BC-2.14.001 postcondition 3)
+### AC-003 (traces to BC-2.14.001 PC-003)
 The `Category` enum has exactly 13 variants: Val, Auth, Rate, Timeout, Transport, Internal, Durability, Policy, Tool, Concurrency, Security, Tenancy, Exec. An exhaustive match on all 13 cases compiles without a wildcard arm. Verified by `test_BC_2_14_001_category_axis()`.
 
-### AC-004 (traces to BC-2.14.001 postcondition 4)
+### AC-004 (traces to BC-2.14.001 PC-004)
 `RetryHint` has exactly three variants: `Never`, `Maybe`, `Later(std::time::Duration)`. `RetryHint::Later(Duration::from_secs(30))` constructs and the inner duration is accessible. Verified by `test_BC_2_14_001_retry_hint()`.
 
-### AC-005 (traces to BC-2.14.001 postcondition 6)
+### AC-005 (traces to BC-2.14.001 PC-006)
 A `static_assertions::assert_impl_all!(PregolyaError: std::error::Error, Send, Sync)` compile-time assertion passes. `std::error::Error::source(&err)` returns `Some(&inner)` when the `source` field is `Some(arc_inner)`. Verified by `test_BC_2_14_001_error_trait()`.
 
-### AC-006 (traces to BC-2.14.001 postcondition 7)
+### AC-006 (traces to BC-2.14.001 PC-007)
 `PregolyaError::default()` fails to compile — `Default` is not derived. Verified by a `compile-fail` test or `static_assertions::assert_not_impl_any!(PregolyaError: Default)`.
 
-### AC-007 (traces to BC-2.14.001 postcondition 8)
+### AC-007 (traces to BC-2.14.001 PC-008)
 `PregolyaError` carries `#[non_exhaustive] #[derive(Debug, Clone)]`. External-crate code that attempts to match `PregolyaError { code, .. }` without the `..` wildcard fails to compile (validated by compile-fail test referencing external usage pattern). Internal (same-crate) struct-literal construction is permitted. `PregolyaError::new(component, category, retry_hint, code, message)` is the public external constructor. Verified by `test_BC_2_14_001_non_exhaustive()`.
 
-### AC-008 (traces to BC-2.14.001 edge case EC-001)
+### AC-008 (traces to BC-2.14.001 EC-001)
 The `source` field type is `Option<Arc<dyn std::error::Error + Send + Sync>>`. Cloning a `PregolyaError` with a populated source succeeds without requiring the inner error to be `Clone`. `Arc::clone` semantics are load-bearing. Verified by `test_BC_2_14_001_arc_source_clone()`.
 
-### AC-009 (traces to BC-2.14.002 postcondition 1)
+### AC-009 (traces to BC-2.14.002 PC-001)
 `pregolya_err.to_problem()` returns a `ProblemDetail` with:
 - `type_uri: "urn:pregolya:error:E-CORE-001"` (format exactly `urn:pregolya:error:<code>`)
 - `title`: humanized category name (e.g., `"Validation"` for `Category::Val`)
@@ -83,22 +85,22 @@ The `source` field type is `Option<Arc<dyn std::error::Error + Send + Sync>>`. C
 
 Verified by `test_BC_2_14_002_to_problem_val()` (TV-001) and `test_BC_2_14_002_to_problem_rate()` (TV-002).
 
-### AC-010 (traces to BC-2.14.002 postcondition 2)
+### AC-010 (traces to BC-2.14.002 PC-002)
 `serde_json::to_string(&problem_detail)` produces valid JSON conforming to RFC-7807 §3. No null fields for required RFC-7807 fields. Verified by `test_BC_2_14_002_rfc7807_json()` (TV-003).
 
-### AC-011 (traces to BC-2.14.002 postcondition 3)
+### AC-011 (traces to BC-2.14.002 PC-003)
 A parameterized unit test iterates all 13 `Category` variants and asserts their HTTP status codes: Val→400, Auth→401, Policy→403, Rate→429, Timeout→504, Transport→502, Concurrency→409, Security→403, Tenancy→409, Durability→500, Internal→500, Tool→422, Exec→500. No variant returns 200. Verified by `test_BC_2_14_002_status_codes_all_categories()`.
 
-### AC-012 (traces to BC-2.14.002 postcondition 4)
+### AC-012 (traces to BC-2.14.002 PC-004)
 The `Content-Type` header constant for RFC-7807 responses is `"application/problem+json"` (not `"application/json"`). Verified by `test_BC_2_14_002_content_type_constant()` asserting the string literal.
 
-### AC-013 (traces to BC-2.14.002 postcondition 5)
+### AC-013 (traces to BC-2.14.002 PC-005)
 `to_problem()` is a synchronous method — no `async`, no `tokio` dependency. It is callable without a Tokio runtime. Verified by `test_BC_2_14_002_sync_context()` running in a regular (non-async) `#[test]`.
 
-### AC-014 (traces to BC-2.14.002 invariant)
+### AC-014 (traces to BC-2.14.002 INV-001 and INV-003)
 The `type_uri` format `urn:pregolya:error:<code>` is stable. `extensions.retry_hint` uses canonical string form: `"never"`, `"maybe"`, `"later:30"` (not "30s" or `Duration` debug output). Verified by `test_BC_2_14_002_retry_hint_format()`.
 
-### AC-015 (traces to BC-2.14.001 invariant — code immutability)
+### AC-015 (traces to BC-2.14.001 INV-003)
 `PregolyaError.code` is a `String` that is set at construction and has no setter. A `PregolyaError` returned by `to_problem()` includes the original code unchanged. Verified by `test_BC_2_14_001_code_immutable()`.
 
 ## Architecture Mapping
@@ -165,10 +167,10 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 |------|--------|-------------|
 | `#[non_exhaustive]` on `PregolyaError` (public API surface type) | CLAUDE.md Code Conventions | Compile-fail test; `cargo check` from external test crate |
 | `source` field is `Option<Arc<...>>` not `Option<Box<...>>` | BC-2.14.001 EC-001, ADR-010 §Decision | Code review; compile test that clones error with source |
-| `Default` NOT implemented on `PregolyaError` | BC-2.14.001 postcondition 7 | `static_assertions::assert_not_impl_any!(PregolyaError: Default)` |
+| `Default` NOT implemented on `PregolyaError` | BC-2.14.001 PC-007 | `static_assertions::assert_not_impl_any!(PregolyaError: Default)` |
 | No `println!` in `error.rs` | CLAUDE.md Code Conventions | `cargo clippy -D clippy::print_stdout` |
 | No `unwrap()` / `expect()` in `error.rs` (non-test) | CLAUDE.md Code Conventions, BC-2.14.003 | `cargo xtask check-no-panic` (seeded by S-1.02) |
-| `ProblemDetail` must `#[derive(Serialize)]` for RFC-7807 JSON | BC-2.14.002 postcondition 2 | `serde_json::to_string` unit test |
+| `ProblemDetail` must `#[derive(Serialize)]` for RFC-7807 JSON | BC-2.14.002 PC-002 | `serde_json::to_string` unit test |
 | `pregolya-core/src/error.rs` must NOT import `tokio` | Architecture boundary | `cargo tree -p pregolya-core` must not show tokio under error.rs |
 | `Category::Exec` maps to HTTP 500 (INTERNAL fallback) per D26 | BC-2.14.002 Note (D26), ADR-010 §Category Axis Expansion | Parameterized status code test |
 

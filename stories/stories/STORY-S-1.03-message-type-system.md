@@ -3,17 +3,19 @@ document_type: story
 level: ops
 story_id: S-1.03
 epic_id: E-01
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.002.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "431744e"
+input-hash: "d4fea73"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]
@@ -48,16 +50,16 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.01.001 postcondition 1)
+### AC-001 (traces to BC-2.01.001 PC-001)
 `ContentBlock` is an enum with at least the following variants: `Text(String)`, `Reasoning(String)`, `ToolCall { id: String, name: String, arguments: String }`, `ToolCallChunk { id: String, index: u32, delta: String }`, `InvalidToolCall { id: String, error: String }`, `Image { media_type: String, data: String }`, `Video { url: String }`, `Audio { data: String, format: String }`, `PlainText(String)`, `File { name: String, mime_type: String, data: String }`, `ServerToolCall { id: String, name: String, input: serde_json::Value }`, `ServerToolCallChunk { id: String, index: u32, delta: serde_json::Value }`, `ServerToolResult { tool_use_id: String, content: serde_json::Value }`, `NonStandard { value: serde_json::Value }`. Verified by `test_BC_2_01_001_content_block_variants()` which constructs each variant.
 
-### AC-002 (traces to BC-2.01.001 postcondition 2)
+### AC-002 (traces to BC-2.01.001 PC-002)
 `serde_json::from_str::<ContentBlock>(r#"{"type":"text","text":"hello"}"#)` succeeds and returns `ContentBlock::Text("hello".to_string())`. Serde deserialization uses the `type` tag field. Verified by `test_BC_2_01_001_content_block_serde()`.
 
-### AC-003 (traces to BC-2.01.001 postcondition 3)
+### AC-003 (traces to BC-2.01.001 PC-005)
 `serde_json::from_str::<ContentBlock>(r#"{"type":"unknown_future_type","foo":"bar"}"#)` returns `ContentBlock::NonStandard { value: serde_json::Value }` (NOT an error). The unknown block is preserved verbatim as a `Value`. Verified by `test_BC_2_01_001_unknown_block_nonstandard()`.
 
-### AC-004 (traces to BC-2.01.001 postcondition 4)
+### AC-004 (traces to BC-2.01.001 PC-004)
 `MessageContent` is an enum with variants: `Text(String)` (for simple string content) and `Blocks(Vec<ContentBlock>)` (for structured multi-block content). Both variants serialize/deserialize correctly. Verified by `test_BC_2_01_001_message_content()`.
 
 ### AC-005 (traces to BC-2.01.001 postcondition 5)
@@ -66,19 +68,19 @@ tdd_mode: strict
 ### AC-006 (traces to BC-2.01.001 edge case EC-006 — E-CORE-001)
 When strict content block validation mode is active and a block has an unrecognized type tag with no fallback, the error is `Err(PregolyaError { code: "E-CORE-001", message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`. In the default (non-strict) mode, `NonStandard` is returned instead. Verified by `test_BC_2_01_001_strict_mode_error()`.
 
-### AC-007 (traces to BC-2.01.002 postcondition 1)
+### AC-007 (traces to BC-2.01.002 PC-001 and PC-004)
 `Message` is an enum with at minimum: `Ai(AiMessage)`, `Human(HumanMessage)`, `System(SystemMessage)`, `Tool(ToolMessage)`. Each inner type has a `content: MessageContent` field. `Tool(ToolMessage)` has `tool_call_id: String` (not `Option<String>`). Verified by `test_BC_2_01_002_message_variants()`.
 
-### AC-008 (traces to BC-2.01.002 postcondition 2)
+### AC-008 (traces to BC-2.01.002 PC-007)
 Legacy message types exist for Python port compatibility: `Function(FunctionMessage)`, `Remove(RemoveMessage)`, `Chat(ChatMessage)`. They serialize and deserialize correctly. Verified by `test_BC_2_01_002_legacy_variants()`.
 
-### AC-009 (traces to BC-2.01.002 postcondition 3)
+### AC-009 (traces to BC-2.01.002 PC-002)
 `serde_json::from_str::<Message>(r#"{"type":"human","content":"hello"}"#)` succeeds and returns `Message::Human(HumanMessage { content: MessageContent::Text("hello".to_string()), .. })`. Verified by `test_BC_2_01_002_human_message_serde()`.
 
-### AC-010 (traces to BC-2.01.002 postcondition 4)
+### AC-010 (traces to BC-2.01.002 PC-005)
 An unrecognized message role `{"type":"robot","content":"beep"}` returns `Err(PregolyaError { code: "E-CORE-002", message: "Message role 'robot' is not a recognized message type", .. })`. Verified by `test_BC_2_01_002_unknown_role_error()`.
 
-### AC-011 (traces to BC-2.01.002 postcondition 5)
+### AC-011 (traces to BC-2.01.002 INV-003)
 `ToolMessage { tool_call_id: "".to_string(), content: MessageContent::Text("result".to_string()) }` fails with `Err(PregolyaError { code: "E-CORE-005", category: VAL, message: "Validation failed for 'tool_call_id': must not be empty", .. })`. Verified by `test_BC_2_01_002_tool_message_requires_call_id()`.
 
 ### AC-012 (traces to BC-2.01.002 invariant)
@@ -154,7 +156,7 @@ S-1.01 also established: `source: Option<Arc<dyn Error + Send + Sync>>` field. S
 | `message/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review; `mod.rs` must contain only `pub use` statements |
 | `#[non_exhaustive]` on all public message types | CLAUDE.md Code Conventions | Compile-fail tests |
 | No tokio dependency in message module | Architecture boundary | `cargo tree -p pregolya-core` |
-| `tool_call_id: String` (not `Option<String>`) | BC-2.01.002 postcondition 1 | Compile-time struct field access; unit test |
+| `tool_call_id: String` (not `Option<String>`) | BC-2.01.002 PC-004 | Compile-time struct field access; unit test |
 
 **Forbidden dependencies for `pregolya-core/src/message/`:** `tokio`, `reqwest`, `axum`. Only `std`, `serde`, `serde_json`.
 

@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.07
 epic_id: E-02
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.010.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.012.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "a580645"
+input-hash: "0e87d42"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.04]
@@ -50,19 +50,19 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.08.010 postcondition 1)
+### AC-001 (traces to BC-2.08.010 PC-001)
 `#[tool]` applied to an `async fn my_search(args: MySearchArgs) -> Result<T, PregolyaError>` generates a zero-sized struct `MySearchTool` that implements the `Tool` trait from `pregolya-core`. The generated struct name is the PascalCase conversion of the function name with `Tool` suffix appended. Verified by `test_BC_2_08_010_tool_struct_generated()`.
 
-### AC-002 (traces to BC-2.08.010 postcondition 2)
+### AC-002 (traces to BC-2.08.010 PC-002)
 `#[tool]` generates an `Args` struct named `<PascalCaseName>Args` that derives `serde::Deserialize` and `schemars::JsonSchema` (schemars 1.x). The generated `json_schema()` method on the `Tool` impl returns the schema produced by `schemars`. Verified by `test_BC_2_08_010_args_struct_schema()`.
 
-### AC-003 (traces to BC-2.08.010 postcondition 3)
+### AC-003 (traces to BC-2.08.010 PC-001)
 `#[tool(action_risk = ActionRisk::High)]` emits the `action_risk()` method returning `Some(::pregolya_core::action_risk::ActionRisk::High)` using the fully-qualified path (no unqualified variant names). `#[tool]` without the attribute emits `action_risk()` returning `None`. Verified by `test_BC_2_08_010_action_risk_fully_qualified()`.
 
-### AC-004 (traces to BC-2.08.010 postcondition 4)
+### AC-004 (traces to BC-2.08.010 PC-001)
 The function body annotated with `#[tool]` is moved into the generated `Tool::invoke` implementation. The original function is replaced by the macro expansion; no duplicate definition exists. Verified by `test_BC_2_08_010_invoke_body_moved()`.
 
-### AC-005 (traces to BC-2.08.010 postcondition 5)
+### AC-005 (traces to BC-2.08.010 PC-004)
 The function signature wrapped by `#[tool]` MUST return `Result<T, PregolyaError>`. If the return type is not `Result<_, PregolyaError>`, the macro emits a compile error: `"#[tool] function must return Result<T, PregolyaError>"`. Verified by compile-fail test `test_BC_2_08_010_non_result_return_compile_error` in `tests/compile-fail/`.
 
 ### AC-006 (traces to BC-2.08.010 edge case EC-001 — name collision)
@@ -71,28 +71,28 @@ If the generated `<PascalCaseName>Tool` or `<PascalCaseName>Args` name would col
 ### AC-007 (traces to BC-2.08.010 edge case EC-003 — invalid action_risk value)
 `#[tool(action_risk = ActionRisk::Critical)]` emits a compile error: `"#[tool] action_risk must be one of: ReadOnly, Low, Medium, High"`. Verified by compile-fail test `test_BC_2_08_010_invalid_action_risk_compile_error`.
 
-### AC-008 (traces to BC-2.08.011 postcondition 1)
+### AC-008 (traces to BC-2.08.011 PC-001)
 `#[entrypoint]` applied to a function auto-wires the `START` edge to the annotated function's generated node in the `StateGraph`. The generated wiring calls `graph.set_entry_point(node_name)`. Verified by `test_BC_2_08_011_start_edge_wired()`.
 
-### AC-009 (traces to BC-2.08.011 postcondition 2 — at most one per graph)
+### AC-009 (traces to BC-2.08.011 EC-001)
 If two functions in the same `StateGraph` builder are annotated with `#[entrypoint]`, the macro expansion produces a compile error: `"#[entrypoint] may be applied to at most one function per graph"`. Verified by compile-fail test `test_BC_2_08_011_duplicate_entrypoint_compile_error`.
 
-### AC-010 (traces to BC-2.08.011 postcondition 3)
+### AC-010 (traces to BC-2.08.011 PRE-001)
 The entrypoint function must be compatible with the graph's state type. If the function signature does not accept the graph state, the macro emits a type-mismatch compile error. Verified by compile-fail test `test_BC_2_08_011_state_type_mismatch_compile_error`.
 
-### AC-011 (traces to BC-2.08.011 edge case EC-002 — async entrypoint)
+### AC-011 (traces to BC-2.08.011 PC-003)
 `#[entrypoint]` on an `async fn` correctly wraps the invocation in an `async` context within the graph executor. The generated `register_into` call preserves the async signature. Verified by `test_BC_2_08_011_async_entrypoint_register()`.
 
-### AC-012 (traces to BC-2.08.012 postcondition 1)
+### AC-012 (traces to BC-2.08.012 PC-001)
 `#[task]` applied to `async fn my_process_task(...)` generates a struct `MyProcessTaskNode` — the name is derived from the function name with `Node` suffix and NO case conversion (snake_case fn name → PascalCase struct name by standard Rust naming, then `Node` suffix). Verified by `test_BC_2_08_012_node_struct_generated()`.
 
-### AC-013 (traces to BC-2.08.012 postcondition 2)
+### AC-013 (traces to BC-2.08.012 PC-001)
 The generated `MyProcessTaskNode` implements a `register_into(graph: &mut StateGraph<S>)` method that registers the node with the graph under the function's original snake_case name as the node identifier. Verified by `test_BC_2_08_012_register_into_called()`.
 
-### AC-014 (traces to BC-2.08.012 postcondition 3)
+### AC-014 (traces to BC-2.08.012 PC-002)
 `#[task]` preserves `async` semantics: the generated `invoke` method is `async fn invoke(&self, state: S) -> Result<NodeOutput<S>, PregolyaError>` and the macro wraps the annotated function body correctly. Verified by `test_BC_2_08_012_async_invoke_preserved()`.
 
-### AC-015 (traces to BC-2.08.012 edge case EC-001 — non-async task)
+### AC-015 (traces to BC-2.08.012 PRE-001)
 `#[task]` on a synchronous (non-async) function emits a compile error: `"#[task] requires an async function"`. Verified by compile-fail test `test_BC_2_08_012_sync_fn_compile_error`.
 
 ## Architecture Mapping
@@ -208,3 +208,8 @@ Files to MODIFY:
 | EC-003 | `#[tool]` on a function whose return type is not `Result<T, PregolyaError>` | Macro emits compile error: `"#[tool] function must return Result<T, PregolyaError>"` (AC-005) |
 | EC-004 | Two functions in the same `StateGraph` builder annotated with `#[entrypoint]` | Macro expansion emits compile error: `"#[entrypoint] may be applied to at most one function per graph"` (AC-009) |
 | EC-005 | `#[task]` applied to a synchronous (non-async) function | Macro emits compile error: `"#[task] requires an async function"` (AC-015) |
+
+## Changelog
+
+- 1.0 (2026-08-18): initial story authoring.
+- 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-003 postcondition 3→PC-001 (action_risk in PC-001 not PC-003); AC-004 postcondition 4→PC-001 (invoke delegation in PC-001); AC-005 postcondition 5→PC-004 (DI-008 Result enforcement); AC-009 postcondition 2→EC-001 (duplicate entrypoint is EC-001); AC-010 postcondition 3→PRE-001 (state type is precondition); AC-011 EC-002→PC-003 (async preservation in PC-003); AC-013 postcondition 2→PC-001 (register_into in PC-001); AC-014 postcondition 3→PC-002 (async fn unchanged); AC-015 EC-001→PRE-001 (non-async violates PRE-001). ESCALATION: AC-006 (BC-2.08.010 EC-001 mismatch — story asserts struct name collision but BC EC-001 is about missing JsonSchema); AC-007 (BC-2.08.010 EC-003 mismatch — story asserts invalid action_risk compile error but BC EC-003 is about non-PregolyaError return; no BC EC covers invalid action_risk values). Routes to product-owner.

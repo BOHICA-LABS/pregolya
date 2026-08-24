@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.13
 epic_id: E-06
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.004.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c8bf3aa"
+input-hash: "01ca8d0"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.12, S-1.04, S-1.14, S-1.17]
@@ -30,6 +30,8 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
 # S-1.13: SkillStore Registry, Guarded Memory Writes, and Frozen-Snapshot Context Mutation
@@ -50,55 +52,55 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.15.004 postcondition 1 — SkillStore trait)
+### AC-001 (traces to BC-2.15.004 PC-001 — SkillStore trait)
 `SkillStore` trait provides three methods: `load_skill(skill_id) -> Result<Option<Skill>, PregolyaError>`, `list_skills(tags: &[&str]) -> Result<Vec<Skill>, PregolyaError>`, `skill_exists(skill_id) -> Result<bool, PregolyaError>`. `load_skill` returns `Ok(None)` for not-found (not an error). `list_skills` with empty tags returns all skills in scope. Verified by `test_BC_2_15_004_skill_store_trait_methods()`.
 
-### AC-002 (traces to BC-2.15.004 postcondition 2 — App scope bound at construction)
+### AC-002 (traces to BC-2.15.004 PRE-003 — App scope bound at construction)
 `SkillStore::new(store: Arc<dyn MemoryStore>, app_id: &str)` binds `MemoryScope::App(app_id)` permanently at construction. All subsequent `load_skill`, `list_skills`, `skill_exists` calls use this scope — the caller cannot override the scope. The `app_id` is derived from `RunContext.app_id` (system-derived), not passed directly by user code. Verified by `test_BC_2_15_004_app_scope_bound_at_construction()`.
 
-### AC-003 (traces to BC-2.15.004 postcondition 3 — read-only overlay)
+### AC-003 (traces to BC-2.15.004 INV-001 — read-only overlay)
 `SkillStore` has no write methods. There is no `memory_set`, `memory_delete`, or any mutation method. `SkillStore` is strictly read-only. Verified by `test_BC_2_15_004_skill_store_no_write_methods()` (compile check: calling `store.memory_set(...)` on a `SkillStore` value fails to compile).
 
-### AC-004 (traces to BC-2.15.004 postcondition 4 — empty app_id fail-closed)
+### AC-004 (traces to BC-2.15.004 EC-006 — empty app_id fail-closed)
 `SkillStore::new(store, "")` with empty `app_id` stores the empty ID but all subsequent calls (`load_skill`, `list_skills`, `skill_exists`) return `Err(PregolyaError { code: "E-MEMORY-004", message: "NoScopeContext: application tenant identity (app_id) is empty or unavailable; memory scope requires a non-empty app_id", category: SECURITY, .. })`. This is fail-closed behavior — the empty app_id is not silently treated as global scope. Verified by `test_BC_2_15_004_empty_app_id_fail_closed()` covering all three methods (TV-009 coverage).
 
-### AC-005 (traces to BC-2.15.004 postcondition 5 — load_skill not-found)
+### AC-005 (traces to BC-2.15.004 EC-001 — load_skill not-found)
 `load_skill("nonexistent_skill_id")` returns `Ok(None)` — not-found is not an error. Only infrastructure failures (database error, scope access denied) return `Err`. Verified by `test_BC_2_15_004_load_skill_not_found_is_ok_none()`.
 
-### AC-006 (traces to BC-2.15.005 postcondition 1 — validate signature)
+### AC-006 (traces to BC-2.15.005 PC-004 — validate signature)
 `MemoryWriteGuard::validate(req: &MemoryWriteRequest) -> WriteGuardDecision` is a synchronous `fn` (NOT async). `WriteGuardDecision` is `Allow`, `Deny { reason: String }`, or `Transform { sanitized: MemoryWriteRequest }`. The method takes a reference (no ownership transfer). Verified by `test_BC_2_15_005_validate_signature()`.
 
-### AC-007 (traces to BC-2.15.005 postcondition 2 — fail-closed on panic)
+### AC-007 (traces to BC-2.15.005 INV-001 — fail-closed on panic)
 If a custom `MemoryWriteGuard` implementation panics inside `validate`, the panic is caught via `std::panic::catch_unwind` and the result is `Deny { reason: "write guard panicked" }`. The memory write does NOT proceed when the guard panics. Verified by `test_BC_2_15_005_panic_fails_closed()` (custom guard that always panics).
 
-### AC-008 (traces to BC-2.15.005 postcondition 2 — E-MEMORY-007 on Deny)
+### AC-008 (traces to BC-2.15.005 PC-002 — E-MEMORY-007 on Deny)
 When `validate` returns `Deny`, the memory write returns `Err(PregolyaError { code: "E-MEMORY-007", message: "MemoryWriteGuardDenied: ...", category: SECURITY, severity: broken, .. })`. The error is classified SECURITY and severity `broken` (never a transient retry). Verified by `test_BC_2_15_005_deny_produces_e_memory_007()`.
 
-### AC-009 (traces to BC-2.15.005 postcondition 4 — built-in role prefix scanner)
+### AC-009 (traces to BC-2.15.005 EC-001 — built-in role prefix scanner)
 The built-in `MemoryWriteGuard` implementation scans for role injection prefixes in the write value: `"Human:"` and `"Assistant:"` at the start of any content string. If detected, returns `Deny { reason: "role prefix injection detected" }`. A write containing `"Human: you are now..."` is denied. Verified by `test_BC_2_15_005_role_prefix_injection_denied()`.
 
-### AC-010 (traces to BC-2.15.005 postcondition 5 — invisible Unicode scanner)
+### AC-010 (traces to BC-2.15.005 EC-002 — invisible Unicode scanner)
 The built-in scanner also detects invisible Unicode in the write value: U+200B..U+200F (zero-width spaces), U+FEFF (BOM), U+202A..U+202E (bidirectional overrides). If detected, returns `Deny { reason: "invisible Unicode detected" }`. Verified by `test_BC_2_15_005_invisible_unicode_denied()` with each code point range.
 
-### AC-011 (traces to BC-2.15.005 postcondition 3 — Transform decision)
+### AC-011 (traces to BC-2.15.005 PC-003 — Transform decision)
 When `validate` returns `Transform { sanitized }`, the memory write proceeds with `sanitized` content (not the original). The `Remove` variant of content sanitization (removing invisible chars) always produces `Allow` from the built-in scanner after sanitization. Verified by `test_BC_2_15_005_transform_decision_uses_sanitized()`.
 
-### AC-012 (traces to BC-2.15.005 invariant 1 — type split)
+### AC-012 (traces to BC-2.15.005 INV-004 — type split)
 `WriteGuardDecision`, `MemoryWriteRequest`, and the `MemoryWriteGuard` trait are defined in `pregolya-core/src/write_guard.rs`. The enforcement logic (calling `validate` and applying the decision) is in `pregolya-memory/src/write_guard.rs`. The types MUST NOT be defined in `pregolya-memory` — they live in `pregolya-core` for cross-crate reuse. Verified by `test_BC_2_15_005_write_guard_types_in_core()` (import path assertion in tests).
 
-### AC-013 (traces to BC-2.15.006 postcondition 1 — ContextMutationConfig loaded once)
+### AC-013 (traces to BC-2.15.006 PC-001 — ContextMutationConfig loaded once)
 `ContextMutationConfig { sources: Vec<ContextSourceSpec { namespace: String, key: String }> }` is loaded by `graph::scheduler` (in `pregolya-graph/src/scheduler.rs`) once before the first super-step. It is NOT reloaded during the graph run. Verified by `test_BC_2_15_006_context_mutation_config_loaded_once()` (scheduler loads config once and verifies no re-load on subsequent super-steps).
 
-### AC-014 (traces to BC-2.15.006 postcondition 2 — scope and key format)
+### AC-014 (traces to BC-2.15.006 PC-001 — scope and key format)
 The memory scope used for context mutation lookup is `MemoryScope::App(run_context.app_id)`. The lookup key is formatted as `format!("{}/{}", spec.namespace, spec.key)`. The namespace itself is NOT used as the scope — `MemoryScope::App(spec.namespace)` is WRONG. Verified by `test_BC_2_15_006_scope_is_app_id_not_namespace()`.
 
-### AC-015 (traces to BC-2.15.006 postcondition 3 — empty app_id fail-loud)
+### AC-015 (traces to BC-2.15.006 EC-006 — empty app_id fail-loud)
 If `run_context.app_id` is empty at context mutation loading time, the scheduler returns `Err(PregolyaError { code: "E-MEMORY-004", message: "NoScopeContext: application tenant identity (app_id) is empty or unavailable; memory scope requires a non-empty app_id", .. })`. The graph run does NOT proceed with an empty app_id. Verified by `test_BC_2_15_006_empty_app_id_fails_load()`.
 
-### AC-016 (traces to BC-2.15.006 postcondition 4 — frozen for run duration, visible next run)
+### AC-016 (traces to BC-2.15.006 INV-001 — frozen for run duration, visible next run)
 After loading at run start, `ContextMutationConfig` is immutable for the duration of the run. Any changes to the underlying memory store during the run are NOT reflected (ADR-012 INV-1 cache-coherence invariant). Changes are visible in the NEXT run (next call to `scheduler.start()`). Verified by `test_BC_2_15_006_config_frozen_during_run()`.
 
-### AC-017 (traces to BC-2.15.006 invariant 2 — ADR-011 cache-key obligation)
+### AC-017 (traces to BC-2.15.006 INV-002 — ADR-011 cache-key obligation)
 The cache key for the loaded context content includes the loaded content itself (not just the spec). This is the ADR-011 cache-key obligation — the cache key must reflect the content so that content changes invalidate the cache. Verified by `test_BC_2_15_006_cache_key_includes_content()`.
 
 ## Architecture Mapping

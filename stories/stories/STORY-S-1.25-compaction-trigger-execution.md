@@ -3,17 +3,19 @@ document_type: story
 level: ops
 story_id: S-1.25
 epic_id: E-10
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 7 mis-anchors corrected (AC-003 PC-003→INV-006, AC-004 INV-001→INV-003, AC-005 PC-002→INV-001, AC-007 PC-002→PC-004, AC-008 PC-003→INV-003, AC-009 INV-001→INV-008, AC-010 INV-002→INV-008)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "bcb1144"
+input-hash: "8b5fd4d"
 traces_to:
   - behavioral-contracts/BC-2.10.005
   - behavioral-contracts/BC-2.10.006
@@ -66,23 +68,23 @@ Comfortable within context window. No split required.
 
 ### AC-001: CompactionTrigger::Disabled is the default
 `CompactionTrigger::Disabled` is the default variant. When configured, no compaction ever fires.
-(traces to BC-2.10.005 postcondition 1)
+(traces to BC-2.10.005 PC-001)
 
 ### AC-002: check_watermark_trigger arithmetic uses non-strict <= (VP-012 anchor)
 The free function `check_watermark_trigger(tokens_remaining: u64, ceiling: u64, fraction: f64) -> bool` in `pregolya_core::budget` fires when `tokens_remaining as f64 / ceiling as f64 <= (1.0 - fraction)` computed in `f64`. The `<=` operator is NON-STRICT — this is load-bearing: `fraction = 1.0` requires `0.0 <= 0.0 = true`. Using strict `<` is a behavioral defect. This free function is the VP-012 proof vehicle; the Kani harness is `watermark_arithmetic_harness` in `pregolya-core`.
-(traces to BC-2.10.005 postcondition 2)
+(traces to BC-2.10.005 PC-002)
 
 ### AC-003: CompactionTrigger construction rejects degenerate values
 `OnWatermark { fraction: 0.0 }` returns `Err` at construction. `OnMessageCount { count: 0 }` returns `Err`. `OnTokenCount { tokens: 0 }` returns `Err`. Zero thresholds are meaningless and would fire immediately on every super-step.
-(traces to BC-2.10.005 postcondition 3)
+(traces to BC-2.10.005 INV-006)
 
 ### AC-004: CompactionTrigger is #[non_exhaustive]
 `CompactionTrigger` is declared `#[non_exhaustive]`. Future variants can be added without breaking existing match arms that include a wildcard.
-(traces to BC-2.10.005 invariant 1)
+(traces to BC-2.10.005 INV-003)
 
 ### AC-005: VP-012 seed — check_watermark_trigger <= correctness (Kani anchor)
 This story is the VP-012 anchor. The Kani harness `watermark_arithmetic_harness` in `crates/pregolya-core/src/proofs/watermark.rs` must verify: for `fraction = 1.0`, the threshold check `0.0 <= 0.0` returns `true` (fires). For `fraction = 0.0` (rejected at construction), no invocation. The test `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` exercises the boundary: `fraction = 1.0` fires when `tokens_remaining = 0`, `ceiling = 100_000` — `check_watermark_trigger(0, 100_000, 1.0)` computes `0.0 / 100_000 = 0.0 <= 0.0 → true`.
-(traces to BC-2.10.005 postcondition 2)
+(traces to BC-2.10.005 INV-001)
 
 ### AC-006: 7-step compaction cycle — correct step ordering
 The compaction execution cycle follows exactly these 7 steps in order:
@@ -93,23 +95,23 @@ The compaction execution cycle follows exactly these 7 steps in order:
 5. Write `EvidenceJournal` entry for this compaction event
 6. Emit `StreamEvent::CompactionEvent` (step defined in S-1.24)
 7. Continue graph execution from compacted state
-(traces to BC-2.10.006 postcondition 1)
+(traces to BC-2.10.006 PC-001)
 
 ### AC-007: CheckpointSaver::put used for compaction checkpoint write (not put_writes)
 The compaction cycle uses `CheckpointSaver::fts_search` for history lookup and `CheckpointSaver::put` for writing the compacted checkpoint. `put_writes` is NOT called. `search_history` is NOT called — that name refers to the Tool wrapper, not the trait method.
-(traces to BC-2.10.006 postcondition 2)
+(traces to BC-2.10.006 PC-004)
 
 ### AC-008: Abort-on-compact-error — run continues; no state mutation
 If the compaction function (step 2) returns an error, the cycle aborts after step 2. Steps 3-7 do NOT execute. The running graph continues from the ORIGINAL (uncompacted) state. The error is non-fatal and must not crash the run.
-(traces to BC-2.10.006 postcondition 3)
+(traces to BC-2.10.006 INV-003)
 
 ### AC-009: Compaction fires only at super-step boundaries
 Compaction is never triggered during an in-progress node execution or during an interrupt park. The trigger check occurs only at super-step boundaries — after all pending nodes in a step have completed.
-(traces to BC-2.10.006 invariant 1)
+(traces to BC-2.10.006 INV-008)
 
 ### AC-010: Compaction and Suspend non-interaction
 Compaction cannot fire while a run is suspended (interrupted, waiting for HITL approval). The trigger check is gated on run state: if `run.state == interrupted`, skip compaction check.
-(traces to BC-2.10.006 invariant 2)
+(traces to BC-2.10.006 INV-008)
 
 ## Architecture Mapping
 

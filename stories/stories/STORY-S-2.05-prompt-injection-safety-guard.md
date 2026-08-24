@@ -3,17 +3,17 @@ document_type: story
 level: ops
 story_id: S-2.05
 epic_id: E-18
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.004.md
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "a66b927"
+input-hash: "f2a834d"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
@@ -49,27 +49,27 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.18.004 precondition 1 — Red Gate)
+### AC-001 (traces to BC-2.18.004 PC-001 — Red Gate)
 **RED GATE**: This test must COMPILE and FAIL before `injection_guard` is implemented.
 A `ChatPromptTemplate` with a `TrustRequired` SystemMessage slot receives a
 `TemplateInput::Scalar(TemplateVar)` tagged `TrustLevel::Untrusted`. The test asserts
 `format_messages` returns `Err(E-TMPL-001)`. Fails as Red Gate because guard is absent.
 Verified by `test_BC_2_18_004_untrusted_var_in_trust_required_slot_returns_e_tmpl_001_rg()`.
 
-### AC-002 (traces to BC-2.18.004 postcondition 2)
+### AC-002 (traces to BC-2.18.004 PC-002)
 `injection_guard` fires BEFORE the `PromptValue` is produced. If the guard fires for any
 variable, no partial `PromptValue` is constructed — the function returns `Err` immediately.
 Verified by a mock that tracks whether any message was assembled before the guard fires.
 `test_BC_2_18_004_injection_guard_fires_before_prompt_value_produced()`.
 
-### AC-003 (traces to BC-2.18.004 postcondition 1)
+### AC-003 (traces to BC-2.18.004 PC-001)
 When injection is detected, the error is:
 `Err(PregolyaError::new(Component::Tmpl, Category::Security, RetryHint::Never, "E-TMPL-001",
 "InjectionAttempt: variable '<var_name>' carries untrusted provenance but slot '<slot_role>' requires TrustRequired policy"))`.
 Both `var_name` and `slot_role` are dynamically interpolated into the message.
 Verified by `test_BC_2_18_004_e_tmpl_001_dynamic_message_contains_var_and_role()`.
 
-### AC-004 (traces to BC-2.18.002 invariant 2)
+### AC-004 (traces to BC-2.18.002 INV-002)
 `TrustLevel::severity()` returns a numeric severity score used for `MessageProvenance.highest_trust_level`
 aggregation — NOT for the injection guard's fire/no-fire decision (see AC-005 for the binary rule):
 - `TrustLevel::Untrusted` → 2
@@ -82,7 +82,7 @@ derive `Ord` or `PartialOrd`: declaration order gives `Untrusted < Trusted` unde
 so `.max()` on a set containing `Untrusted` would silently return `Trusted` — a fail-open bypass.
 Verified by `test_BC_2_18_002_trust_level_severity_ordering_and_aggregation()`.
 
-### AC-005 (traces to BC-2.18.004 postcondition 5)
+### AC-005 (traces to BC-2.18.004 PC-005)
 The injection guard uses a BINARY test: `format_messages` fires E-TMPL-001 if and only if
 `var.trust_level.is_some_and(|t| t.is_untrusted()) == true` in a `TrustRequired` slot.
 Variables with `TrustLevel::UserInput` or `TrustLevel::Trusted` do NOT trigger E-TMPL-001
@@ -93,12 +93,12 @@ Consistent with BC-2.18.004 EC-001 (UserInput in SystemMessage slot succeeds) an
 (UserInput → `Ok(PromptValue)`).
 Verified by `test_BC_2_18_004_binary_is_untrusted_guard_fires_only_for_untrusted()`.
 
-### AC-006 (traces to BC-2.18.004 invariant 5)
+### AC-006 (traces to BC-2.18.004 INV-005)
 `injection_guard` evaluates slots in SOURCE ORDER (the order declared in `from_messages`).
 It reports the FIRST violation found, not all violations simultaneously.
 Verified by `test_BC_2_18_004_source_order_evaluation_first_violation()`.
 
-### AC-007 (traces to BC-2.18.002 invariant 2)
+### AC-007 (traces to BC-2.18.002 INV-002)
 `TrustLevel` is declared as:
 ```rust
 #[non_exhaustive]
@@ -112,7 +112,7 @@ bypass; see AC-004). The ONLY ordering surface is `TrustLevel::severity() -> u8`
 - `TrustLevel::Trusted` → 0
 Verified by compile-fail test asserting `Ord` is not implemented: `test_BC_2_18_004_trust_level_no_ord_impl()`.
 
-### AC-008 (traces to BC-2.18.004 precondition 2)
+### AC-008 (traces to BC-2.18.004 PRE-002)
 The injection guard operates on `TemplateVar` values that carry a `trust_level: Option<TrustLevel>`
 field. A `TemplateVar` with no explicit trust annotation has `trust_level: None`; `None` is a
 distinct state treated as `Trusted` by the guard (absent classification — system-constructed
@@ -121,20 +121,20 @@ the guard in `TrustRequired` slots because `var.trust_level.is_some_and(|t| t.is
 returns false for `None` (consistent with AC-005 and AC-016's `Some(TrustLevel::Untrusted)` usage).
 Verified by `test_BC_2_18_004_templatevar_default_trust_is_trusted()`.
 
-### AC-009 (traces to BC-2.18.004 invariant 3 — VP-006 Kani anchor)
+### AC-009 (traces to BC-2.18.004 INV-001 — VP-006 Kani anchor)
 `injection_guard` is FAIL-CLOSED: if the trust level evaluation encounters an unknown/new
 `TrustLevel` variant, it defaults to treating the variable as untrusted (highest severity).
 VP-006 (Kani P1) provides a formal proof of fail-closed behavior. Unit test:
 `test_BC_2_18_004_fail_closed_unknown_trust_level_treated_as_untrusted()`.
 This story is the ANCHOR story for VP-006.
 
-### AC-010 (traces to BC-2.18.005 precondition 1 — Red Gate)
+### AC-010 (traces to BC-2.18.005 PC-001 — Red Gate)
 **RED GATE**: This test must COMPILE and FAIL before the `from_messages` SystemMessage policy
 guard is implemented. `ChatPromptTemplate::from_messages(vec![(MessageRole::System, "You are {role}.", SlotTrustPolicy::TrustAll)])` — the test asserts this returns `Err(E-TMPL-002)`.
 Fails as Red Gate because the construction-time guard is not yet in place.
 Verified by `test_BC_2_18_005_system_slot_trust_all_returns_e_tmpl_002_rg()`.
 
-### AC-011 (traces to BC-2.18.005 postcondition 1)
+### AC-011 (traces to BC-2.18.005 PC-001)
 `ChatPromptTemplate::from_messages` with a `(MessageRole::System, _, SlotTrustPolicy::TrustAll)`
 tuple returns:
 `Err(PregolyaError::new(Component::Tmpl, Category::Val, RetryHint::Never, "E-TMPL-002",
@@ -142,30 +142,30 @@ tuple returns:
 The message is STATIC (no variable interpolation).
 Verified by `test_BC_2_18_005_e_tmpl_002_exact_static_message()`.
 
-### AC-012 (traces to BC-2.18.005 postcondition 2)
+### AC-012 (traces to BC-2.18.005 PC-002)
 No `ChatPromptTemplate` is created when E-TMPL-002 fires — construction fails atomically.
 No partial slot list is accessible. `from_messages` with two System slots where the first
 is `TrustRequired` and the second is `TrustAll` also returns `Err(E-TMPL-002)` (not a partial template).
 Verified by `test_BC_2_18_005_atomic_construction_failure()`.
 
-### AC-013 (traces to BC-2.18.005 postcondition 4)
+### AC-013 (traces to BC-2.18.005 PC-004)
 Non-SystemMessage slots with `TrustAll` (HumanMessage, AiMessage) do NOT trigger E-TMPL-002.
 Only `MessageRole::System` with `TrustAll` is rejected.
 Verified by `test_BC_2_18_005_human_ai_trust_all_allowed()`.
 
-### AC-014 (traces to BC-2.18.005 invariant 1)
+### AC-014 (traces to BC-2.18.005 INV-001)
 No SystemMessage slot can have `SlotTrustPolicy::TrustAll` after construction — there is no
 mutation path to change a slot's policy post-construction. `ChatPromptTemplate` fields are
 not exposed for mutation.
 Verified by `test_BC_2_18_005_no_mutation_path_to_change_system_slot_policy()`.
 
-### AC-015 (traces to BC-2.18.005 invariant 3)
+### AC-015 (traces to BC-2.18.005 INV-003)
 E-TMPL-002 is `Category::Val` (not `Category::Security`). This is a programming error caught
 at construction time. The runtime injection error is E-TMPL-001 (`Category::Security`).
 The taxonomy distinction is intentional and must be preserved.
 Verified by `test_BC_2_18_005_e_tmpl_002_category_val_not_security()`.
 
-### AC-016 (traces to BC-2.18.004 postcondition 5 and precondition 2 — Red Gate)
+### AC-016 (traces to BC-2.18.004 PC-005 and BC-2.18.004 PRE-002 — Red Gate)
 **RED GATE**: This test must COMPILE and FAIL before `injection_guard` covers the
 `TemplateInput::Messages` arm. A `ChatPromptTemplate` with a `TrustRequired` SystemMessage
 slot receives a `TemplateInput::Messages(MessageListVar { trust_level: Some(TrustLevel::Untrusted), .. })`.
@@ -174,7 +174,7 @@ category as the scalar arm. VP-006 Kani proof covers this input arm exhaustively
 the scalar arm.
 Verified by `test_BC_2_18_004_messages_arm_untrusted_in_trust_required_raises_e_tmpl_001_rg()`.
 
-### AC-017 (traces to BC-2.18.004 postcondition 5 and precondition 2 — Red Gate)
+### AC-017 (traces to BC-2.18.004 PC-005 and BC-2.18.004 PRE-002 — Red Gate)
 **RED GATE**: This test must COMPILE and FAIL before `injection_guard` covers the
 `TemplateInput::FewShotExamples` arm. A `ChatPromptTemplate` with a `TrustRequired`
 SystemMessage slot receives a `TemplateInput::FewShotExamples(pairs)` where at least one
@@ -213,8 +213,8 @@ Verified by `test_BC_2_18_004_few_shot_examples_arm_untrusted_in_trust_required_
 | EC-004 | Two System slots: first TrustRequired (ok), second TrustAll (bad) | `Err(E-TMPL-002)` — second slot triggers the error; construction fails atomically |
 | EC-005 | `injection_guard` encounters a variable with trust_level that would overflow severity() | Treated as Untrusted (fail-closed per AC-009) |
 | EC-006 | `TrustLevel::Trusted` variable in `TrustRequired` System slot | Guard does NOT fire — Trusted is the correct trust level for TrustRequired |
-| EC-007 | `TemplateInput::Messages(MessageListVar)` with `trust_level: Some(TrustLevel::Untrusted)` in a TrustRequired SystemMessage slot | `Err(E-TMPL-001)` — Messages arm is guarded equally with Scalar arm (BC-2.18.004 postcondition 5) |
-| EC-008 | `TemplateInput::FewShotExamples(pairs)` where any pair has `trust_level: Some(TrustLevel::Untrusted)` in a TrustRequired slot | `Err(E-TMPL-001)` — FewShotExamples arm is guarded equally; first untrusted pair stops evaluation (BC-2.18.004 postcondition 5) |
+| EC-007 | `TemplateInput::Messages(MessageListVar)` with `trust_level: Some(TrustLevel::Untrusted)` in a TrustRequired SystemMessage slot | `Err(E-TMPL-001)` — Messages arm is guarded equally with Scalar arm (BC-2.18.004 PC-005) |
+| EC-008 | `TemplateInput::FewShotExamples(pairs)` where any pair has `trust_level: Some(TrustLevel::Untrusted)` in a TrustRequired slot | `Err(E-TMPL-001)` — FewShotExamples arm is guarded equally; first untrusted pair stops evaluation (BC-2.18.004 PC-005) |
 
 ## Token Budget Estimate (MANDATORY)
 
@@ -238,7 +238,7 @@ Verified by `test_BC_2_18_004_few_shot_examples_arm_untrusted_in_trust_required_
 1. [ ] Write failing tests for AC-001 through AC-017 (test-writer); verify ALL Red Gates (AC-001, AC-010, AC-016, and AC-017 must FAIL before guards are implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
 3. [ ] Create `pregolya-prompts/src/trust.rs` — `TrustLevel` enum (`#[non_exhaustive]`, NO `Ord`/`PartialOrd` derives), `severity() -> u8` method
-4. [ ] Create `pregolya-prompts/src/injection_guard.rs` — `check_slot_trust()` pure fn (source-order slot evaluation, severity-based check per `TrustLevel::severity()`, returns `Err(E-TMPL-001)` on violation; covers ALL TemplateInput arms: Scalar, Messages, FewShotExamples per BC-2.18.004 postcondition 5; VP-006 Kani proof vehicle)
+4. [ ] Create `pregolya-prompts/src/injection_guard.rs` — `check_slot_trust()` pure fn (source-order slot evaluation, severity-based check per `TrustLevel::severity()`, returns `Err(E-TMPL-001)` on violation; covers ALL TemplateInput arms: Scalar, Messages, FewShotExamples per BC-2.18.004 PC-005; VP-006 Kani proof vehicle)
 5. [ ] Update `pregolya-prompts/src/chat_template.rs` — delegate `format_messages` guard to `injection_guard::check_slot_trust()` (no inline guard logic); add SystemMessage `TrustAll` rejection in `from_messages`
 6. [ ] Extend `TemplateVar` (from S-2.04) with `trust_level: Option<TrustLevel>` field; `None` (absent) is treated as `Trusted` by the injection guard (consistent with AC-008)
 7. [ ] Register E-TMPL-001 (`Component::Tmpl, Category::Security, RetryHint::Never`) in error taxonomy
@@ -272,14 +272,14 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `TrustLevel` must NOT implement `Ord` or `PartialOrd` | BC-2.18.002 invariant 2; ADR-015 Decision 3 Amendment (B208) | Compile-fail test AC-007 |
-| `injection_guard` fires BEFORE PromptValue is produced | BC-2.18.004 postcondition 2 | Unit test AC-002 |
-| E-TMPL-001 message is DYNAMIC (contains var_name and slot_role) | BC-2.18.004 postcondition 1 | String contains check test |
-| E-TMPL-002 message is STATIC (no interpolation) | BC-2.18.005 postcondition 1; invariant 3 | String equality test |
-| E-TMPL-001 category is `Category::Security`; E-TMPL-002 category is `Category::Val` | BC-2.18.004 and BC-2.18.005 invariant 3 | Error code assertion tests |
-| Fail-closed default: unknown TrustLevel treated as Untrusted | BC-2.18.004 invariant 3; VP-006 | Unit test AC-009 |
-| `injection_guard` source-order evaluation | BC-2.18.004 invariant 5 | Unit test AC-006 |
-| `injection_guard` covers ALL TemplateInput arms (Scalar, Messages, FewShotExamples) | BC-2.18.004 postcondition 5 and precondition 2 | Unit tests AC-016, AC-017 |
+| `TrustLevel` must NOT implement `Ord` or `PartialOrd` | BC-2.18.002 INV-002; ADR-015 Decision 3 Amendment (B208) | Compile-fail test AC-007 |
+| `injection_guard` fires BEFORE PromptValue is produced | BC-2.18.004 PC-002 | Unit test AC-002 |
+| E-TMPL-001 message is DYNAMIC (contains var_name and slot_role) | BC-2.18.004 PC-001 | String contains check test |
+| E-TMPL-002 message is STATIC (no interpolation) | BC-2.18.005 PC-001; BC-2.18.005 INV-003 | String equality test |
+| E-TMPL-001 category is `Category::Security`; E-TMPL-002 category is `Category::Val` | BC-2.18.004 INV-003; BC-2.18.005 INV-003 | Error code assertion tests |
+| Fail-closed default: unknown TrustLevel treated as Untrusted | BC-2.18.004 INV-001; VP-006 | Unit test AC-009 |
+| `injection_guard` source-order evaluation | BC-2.18.004 INV-005 | Unit test AC-006 |
+| `injection_guard` covers ALL TemplateInput arms (Scalar, Messages, FewShotExamples) | BC-2.18.004 PC-005 and BC-2.18.004 PRE-002 | Unit tests AC-016, AC-017 |
 
 **Forbidden dependencies:** `pregolya-prompts/src/trust.rs` must NOT import from `pregolya-graph` or any crate that would create a cycle. `TrustLevel::severity()` must be a pure function with no external dependencies.
 
@@ -301,3 +301,14 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 | `pregolya-prompts/src/lib.rs` | MODIFY | Add `pub mod trust;` and `pub mod injection_guard;` |
 | `pregolya-prompts/src/proofs/injection_guard.rs` | CREATE | VP-006 Kani harness stub |
 | `pregolya-prompts/tests/external/trust-level-no-ord/main.rs` | CREATE | Compile-fail: TrustLevel no Ord |
+
+## Changelog
+
+- "1.0 (2026-08-19): initial story authored"
+- "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 semantic re-anchors applied (see escalation notes)"
+
+## Escalation Notes (route to product-owner)
+
+- **AC-001** and **AC-010**: Old citations used "precondition N" but the ACs assert error-return behavior (postcondition behavior). Re-anchored to PC-001 for both (the postcondition that specifies the error return). PO to confirm "precondition 1" was intended as a test-setup description, not a BC precondition anchor.
+- **AC-009**: Old "BC-2.18.004 invariant 3" (which is about being a pure-core function) re-anchored to INV-001 (fires unconditionally = fail-closed default). The fail-closed behavior for unknown TrustLevel variants is an instantiation of INV-001's "fires unconditionally" property. PO to confirm or add a dedicated INV clause.
+- **Compliance rule** "Fail-closed default: unknown TrustLevel treated as Untrusted" cited "BC-2.18.004 invariant 3" (pure-core function). Re-anchored to INV-001. Same issue as AC-009. PO to confirm.

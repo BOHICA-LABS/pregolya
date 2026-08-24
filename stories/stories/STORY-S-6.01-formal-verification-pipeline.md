@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-6.01
 epic_id: E-22
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-17/BC-2.17.001.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/verification-architecture.md
-input-hash: "7bc0685"
+input-hash: "78ea975"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09, S-2.05, S-1.22]
@@ -30,6 +30,7 @@ estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
+changelog: "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 ---
 
 # S-6.01: Formal Verification Pipeline — Kani Proof Execution, cargo-fuzz Smoke Gate, and Phase-7 Convergence Gate
@@ -51,7 +52,7 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.17.001 postcondition 1 — six P0 Kani harness functions exist)
+### AC-001 (traces to BC-2.17.001 PC-001 — six P0 Kani harness functions exist)
 Each of the six P0 Kani harness functions exists in its target crate `src/proofs/` module and
 the harness file compiles (stub or full implementation):
 
@@ -67,7 +68,7 @@ the harness file compiles (stub or full implementation):
 `cargo kani` compile check passes for each harness crate on Linux and macOS CI runners.
 Verified by `test_BC_2_17_001_six_p0_harness_files_compile()` (xtask compile-gate).
 
-### AC-002 (traces to BC-2.17.001 postcondition 1 — three P1 Kani harness functions exist)
+### AC-002 (traces to BC-2.17.001 PC-001 — three P1 Kani harness functions exist)
 Each of the three P1 Kani harness functions exists in its target crate `src/proofs/` module
 and compiles:
 
@@ -80,7 +81,7 @@ and compiles:
 `cargo kani` compile check passes for each harness crate on Linux and macOS CI runners.
 Verified by `test_BC_2_17_001_three_p1_harness_files_compile()` (xtask compile-gate).
 
-### AC-003 (traces to BC-2.17.001 postcondition 2 — P0 VP proofs pass — Phase-7 gate)
+### AC-003 (traces to BC-2.17.001 PC-002 — P0 VP proofs pass — Phase-7 gate)
 **RED GATE**: The six P0 harness stubs (`todo!()` bodies) must compile and produce
 VERIFICATION FAILED (or abort) before the harness bodies are implemented. After
 implementation, `cargo kani --harness <fn>` terminates with `VERIFICATION SUCCESSFUL`
@@ -99,7 +100,7 @@ Any of these six VPs resulting in VERIFICATION FAILED is a blocking Phase-7 conv
 failure per BC-2.17.001 postcondition 3 and NFR-003.
 Verified by `just kani-local` on Linux/macOS; CI job `kani-p0-gate` enforces all six pass.
 
-### AC-004 (traces to BC-2.17.001 postcondition 2 — P1 VP proofs pass — Phase-6 gate)
+### AC-004 (traces to BC-2.17.001 PC-002 + PC-003 — P1 VP proofs pass — Phase-6 gate)
 **RED GATE**: The three P1 harness stubs must compile and produce VERIFICATION FAILED (or abort)
 before implementation. After implementation, `cargo kani --harness <fn>` terminates with
 VERIFICATION SUCCESSFUL for each of the three P1 VPs:
@@ -113,7 +114,7 @@ VERIFICATION SUCCESSFUL for each of the three P1 VPs:
 P1 VP failures block Phase-6 completion only; they do NOT gate Phase-7.
 Verified by `just kani-local` on Linux/macOS; CI job `kani-p1-gate` enforces all three pass.
 
-### AC-005 (traces to BC-2.17.001 postcondition 3 — gate classification)
+### AC-005 (traces to BC-2.17.001 PC-003 — gate classification)
 The CI pipeline classifies VP failures by tier:
 - P0 VP failure (VP-001/002/003/009/010/011): `kani-p0-gate` fails → Phase-7 convergence BLOCKED
 - P1 VP failure (VP-006/012/013): `kani-p1-gate` fails → Phase-6 completion BLOCKED (Phase-7 gate is VP-independent of P1)
@@ -121,7 +122,7 @@ The CI pipeline classifies VP failures by tier:
 The xtask `verify` command documents the gate tier in its output for each harness run.
 Verified by `test_BC_2_17_001_gate_tier_classification()` (xtask output assertion).
 
-### AC-006 (traces to BC-2.17.001 postcondition 5 — Kani does not substitute for Phase-3 tests)
+### AC-006 (traces to BC-2.17.001 PC-005 — Kani does not substitute for Phase-3 tests)
 The Phase-6 formal-verification gate requires BOTH: (a) all nine Kani VPs passing AND
 (b) `cargo nextest run --workspace` passing (all Phase-3 unit and integration tests).
 The CI `phase-6-gate` job declares explicit `needs:` dependencies on both
@@ -129,7 +130,7 @@ The CI `phase-6-gate` job declares explicit `needs:` dependencies on both
 nor nextest success alone satisfies the gate.
 Verified by `test_BC_2_17_001_combined_gate_requires_both_kani_and_nextest()` (CI workflow test).
 
-### AC-007 (traces to BC-2.17.001 postcondition 4 + invariant 1 — D17-Q7+D21+D23 lock)
+### AC-007 (traces to BC-2.17.001 PC-004 + INV-001 — D17-Q7+D21+D23 lock)
 The Kani proof suite covers exactly nine VP targets (six P0 + three P1). The xtask
 `verify --count-harnesses` subcommand enumerates registered harnesses and returns a
 non-zero exit code if the count diverges from nine. No harness is added or removed
@@ -137,7 +138,7 @@ without an architect-approved ADR amendment (D17-Q7+D21+D23 lock). The harness
 inventory in `xtask/src/verify.rs` is the single source of truth for the count.
 Verified by `test_BC_2_17_001_harness_count_equals_nine()` (xtask count assertion).
 
-### AC-008 (traces to BC-2.17.001 invariant 3 — proof completeness / unwind annotations)
+### AC-008 (traces to BC-2.17.001 INV-003 — proof completeness / unwind annotations)
 Each bounded harness that uses `#[kani::unwind(N)]` includes a source comment immediately
 above the annotation that (a) states the bound value `N`, (b) justifies why the bound is
 sufficient for completeness over the relevant state space, and (c) records the architect
@@ -146,7 +147,7 @@ sign-off finding reference. A harness timeout without an unwind annotation (CI w
 Verified by `test_BC_2_17_001_bounded_harnesses_have_justification_comments()` (source
 scan in xtask verify).
 
-### AC-009 (traces to BC-2.17.001 precondition 3 — Wave-1+2 prerequisite gate)
+### AC-009 (traces to BC-2.17.001 PRE-003 — Wave-1+2 prerequisite gate)
 S-6.01 is dispatched only after all Wave-1 and Wave-2 story PRs are merged to `develop`
 and `cargo nextest run --workspace` passes on `develop` HEAD. CI job `wave-gate-6`
 declares `needs: [wave-2-complete]` and checks `develop` branch test-pass status before
@@ -154,7 +155,7 @@ the Phase-6 formal-verification jobs begin. Attempting to run `just kani-local` 
 the crates compiled returns a meaningful error (not a silent crash).
 Verified by `test_BC_2_17_001_wave_gate_blocks_kani_before_wave2_complete()` (xtask gate check).
 
-### AC-010 (traces to BC-2.17.002 postcondition 1 — fuzz_checkpoint_serde target)
+### AC-010 (traces to BC-2.17.002 PC-001 — fuzz_checkpoint_serde target)
 `fuzz/fuzz_targets/fuzz_checkpoint_serde.rs` exists. The fuzz target enforces:
 - Arbitrary byte sequence input to `GraphState` deserialization returns `Ok(state)` or
   `Err(DeserializationError)` — no panic on any input.
@@ -164,7 +165,7 @@ Verified by `test_BC_2_17_001_wave_gate_blocks_kani_before_wave2_complete()` (xt
 The fuzz oracle asserts discriminant-level correctness (not message text) on error paths.
 Verified by `test_BC_2_17_002_fuzz_checkpoint_serde_target_exists_and_compiles()` (xtask check).
 
-### AC-011 (traces to BC-2.17.002 postcondition 2 — fuzz_graph_execution target)
+### AC-011 (traces to BC-2.17.002 PC-002 + EC-002 — fuzz_graph_execution target)
 `fuzz/fuzz_targets/fuzz_graph_execution.rs` exists. The fuzz target enforces:
 - Arbitrary fuzzer-generated `GraphDefinition` execution either completes or returns
   `Err(PregolyaError)` — no panic, no undefined behavior, no silent data corruption.
@@ -176,21 +177,21 @@ Verified by `test_BC_2_17_002_fuzz_checkpoint_serde_target_exists_and_compiles()
 
 Verified by `test_BC_2_17_002_fuzz_graph_execution_target_exists_and_compiles()` (xtask check).
 
-### AC-012 (traces to BC-2.17.002 postcondition 3 — nightly fuzz build)
+### AC-012 (traces to BC-2.17.002 PC-003 — nightly fuzz build)
 **RED GATE**: `cargo +nightly fuzz build` failing due to missing harness bodies is the Red
 Gate state. After implementation, `cargo +nightly fuzz build` succeeds for both targets using
 the nightly toolchain pinned in `rust-toolchain.toml`. Any compile error in either target is
 a blocking Phase-6 failure.
 Verified by `test_BC_2_17_002_nightly_fuzz_build_succeeds()` (CI compile gate `fuzz-build`).
 
-### AC-013 (traces to BC-2.17.002 postcondition 4 — minimum corpus coverage)
+### AC-013 (traces to BC-2.17.002 PC-004 — minimum corpus coverage)
 Both fuzz targets run for a minimum of 10,000 corpus inputs seeded from Phase-3 test data
 in `fuzz/corpus/` without new crash findings. The CI `fuzz-smoke` job enforces this minimum
 corpus replay using `cargo +nightly fuzz run <target> -- -runs=10000`. The smoke run uses the
 committed seed corpus (not extended fuzzing) to keep CI wall-clock bounded.
 Verified by `test_BC_2_17_002_corpus_replay_10k_without_crash()` (CI fuzz-smoke gate).
 
-### AC-014 (traces to BC-2.17.002 postcondition 5 — crash = blocking failure)
+### AC-014 (traces to BC-2.17.002 PC-005 — crash = blocking failure)
 Any crash finding (panic, OOM abort, ASAN/MSAN report) from either fuzz target is a blocking
 Phase-6 convergence failure. The crash input is saved to `fuzz/artifacts/<target>/` automatically
 by libFuzzer. The Phase-6 gate remains BLOCKED until: (a) the crash is reproduced and fixed,
@@ -198,14 +199,14 @@ by libFuzzer. The Phase-6 gate remains BLOCKED until: (a) the crash is reproduce
 input, and (c) the fuzz target reruns clean for 10,000 corpus inputs without the crash.
 Verified by `test_BC_2_17_002_crash_finding_blocks_gate()` (CI gate dependency assertion).
 
-### AC-015 (traces to BC-2.17.002 postcondition 6 — corpus committed)
+### AC-015 (traces to BC-2.17.002 PC-006 — corpus committed)
 The fuzz seed corpus is committed under `fuzz/corpus/fuzz_checkpoint_serde/` and
 `fuzz/corpus/fuzz_graph_execution/` respectively. The CI `fuzz-smoke` job replays the
 committed corpus on every PR that modifies files under `crates/pregolya-checkpoint/` or
 `crates/pregolya-graph/`. The corpus directory is included in the repository (not gitignored).
 Verified by `test_BC_2_17_002_corpus_directories_present_and_tracked()` (xtask check).
 
-### AC-016 (traces to BC-2.17.002 invariant 2 — corpus persistence / ADR gate)
+### AC-016 (traces to BC-2.17.002 INV-002 — corpus persistence / ADR gate)
 Removing or resetting the fuzz corpus requires an ADR entry explaining why corpus
 diversity was discarded (BC-2.17.002 invariant 2). The CI `fuzz-smoke` job enforces corpus
 presence via a pre-run check: if `fuzz/corpus/` is empty or absent, the job fails with
@@ -213,7 +214,7 @@ a human-readable error before invoking `cargo +nightly fuzz run`. No CI job sile
 seeds an empty corpus without committing it.
 Verified by `test_BC_2_17_002_corpus_presence_gate_fails_on_empty()` (xtask check).
 
-### AC-017 (traces to BC-2.17.002 invariant 3 — nightly toolchain pin)
+### AC-017 (traces to BC-2.17.002 INV-003 — nightly toolchain pin)
 The nightly Rust toolchain used for cargo-fuzz is pinned in `rust-toolchain.toml`.
 The `cargo +nightly fuzz build` and `cargo +nightly fuzz run` invocations in CI
 and in `Justfile` recipes explicitly use `+nightly` to select the pinned toolchain.
@@ -223,7 +224,7 @@ security fix, or feature requirement). Silently bumping the nightly pin without 
 rationale comment is an adversarial review finding.
 Verified by `test_BC_2_17_002_nightly_pin_change_requires_rationale()` (source scan in xtask verify).
 
-### AC-018 (traces to BC-2.17.001 postcondition 2 — Kani Linux/macOS only, Windows concrete tests)
+### AC-018 (traces to BC-2.17.001 PC-002 — Kani Linux/macOS only, Windows concrete tests)
 Kani proofs run on Linux and macOS CI runners only. The `kani-p0-gate` and `kani-p1-gate`
 CI jobs declare `runs-on: [ubuntu-latest, macos-latest]` (not Windows). Windows CI runs
 `cargo nextest run --workspace` (concrete unit and integration tests) as the Windows
@@ -233,7 +234,7 @@ and prints a clear message on Windows (e.g., "Kani proofs require Linux or macOS
 unit tests with `just iter <crate>` on Windows").
 Verified by `test_BC_2_17_001_kani_ci_jobs_platform_linux_macos_only()` (CI workflow lint in xtask).
 
-### AC-019 (traces to BC-2.17.001 postcondition 2 — proptest VPs confirmed via aggregate nextest run)
+### AC-019 (traces to BC-2.17.001 PC-005 — proptest VPs confirmed via aggregate nextest run)
 VP-007 (`LcSerializable` round-trip proptest in `core::serializable`), VP-008 (embeddings
 dimensionality proptest in `core::embeddings`), and VP-014 (`RunnableParallel` key-completeness
 proptest in `core::runnable::parallel`) are Phase-3 proptest suites authored in their anchor
@@ -397,16 +398,16 @@ resolution vehicle for GAP-002 — not a deferral but an execution-ordering nece
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| Kani harnesses run on Linux and macOS only — not Windows | CLAUDE.md §Formal Verification; BC-2.17.001 postcondition 2 | CI job matrix `platform: [ubuntu-latest, macos-latest]`; Justfile platform check (AC-018) |
-| Harness count must equal exactly nine | BC-2.17.001 postcondition 4 + invariant 1 (D17-Q7+D21+D23 lock) | `cargo xtask verify --count-harnesses` gate (AC-007) |
-| P0 VP failure blocks Phase-7; P1 failure blocks Phase-6 only | BC-2.17.001 postcondition 3 | CI job dependency chain: `kani-p0-gate` → Phase-7 gate; `kani-p1-gate` → Phase-6 gate (AC-005) |
-| `PendingHumanApproval` excluded from VP-011 harness | BC-2.17.001 postcondition 1 (VP-011 bullet) | Harness body; code comment stating `PendingHumanApproval` coverage lives in the S-1.23 HITL interrupt/resume integration tests, not the Kani harness |
-| Non-strict `<=` in VP-012 `OnWatermark` arithmetic | BC-2.17.001 postcondition 1 (VP-012 bullet) | Harness assertion uses `<=`; adversarial review checks for off-by-one |
-| No-panic contract on all fuzz targets | BC-2.17.002 invariant 1; DI-008 | libFuzzer ASAN/MSAN instrumentation; `cargo +nightly fuzz run` exit-code assertion |
-| Fuzz corpus committed and non-empty | BC-2.17.002 invariant 2 + postcondition 6 | CI corpus-presence pre-run check (AC-016) |
-| Nightly toolchain pin in `rust-toolchain.toml` — explicit for fuzz commands | BC-2.17.002 invariant 3 | `+nightly` flag on all fuzz invocations; pin-change rationale requirement (AC-017) |
+| Kani harnesses run on Linux and macOS only — not Windows | CLAUDE.md §Formal Verification; BC-2.17.001 PC-002 | CI job matrix `platform: [ubuntu-latest, macos-latest]`; Justfile platform check (AC-018) |
+| Harness count must equal exactly nine | BC-2.17.001 PC-004 + INV-001 (D17-Q7+D21+D23 lock) | `cargo xtask verify --count-harnesses` gate (AC-007) |
+| P0 VP failure blocks Phase-7; P1 failure blocks Phase-6 only | BC-2.17.001 PC-003 | CI job dependency chain: `kani-p0-gate` → Phase-7 gate; `kani-p1-gate` → Phase-6 gate (AC-005) |
+| `PendingHumanApproval` excluded from VP-011 harness | BC-2.17.001 PC-001 (VP-011 bullet) | Harness body; code comment stating `PendingHumanApproval` coverage lives in the S-1.23 HITL interrupt/resume integration tests, not the Kani harness |
+| Non-strict `<=` in VP-012 `OnWatermark` arithmetic | BC-2.17.001 PC-001 (VP-012 bullet) | Harness assertion uses `<=`; adversarial review checks for off-by-one |
+| No-panic contract on all fuzz targets | BC-2.17.002 INV-001; DI-008 | libFuzzer ASAN/MSAN instrumentation; `cargo +nightly fuzz run` exit-code assertion |
+| Fuzz corpus committed and non-empty | BC-2.17.002 INV-002 + PC-006 | CI corpus-presence pre-run check (AC-016) |
+| Nightly toolchain pin in `rust-toolchain.toml` — explicit for fuzz commands | BC-2.17.002 INV-003 | `+nightly` flag on all fuzz invocations; pin-change rationale requirement (AC-017) |
 | Kani proofs are a living gate — re-run on every post-Phase-6 PR touching verified modules | BC-2.17.001 EC-004 | CI path-trigger on `crates/{pregolya-graph,pregolya-checkpoint,pregolya-sandbox,pregolya-core,pregolya-vectorstores,pregolya-prompts,pregolya-tools}/` → `kani-p0-gate` |
-| Kani success does NOT substitute for Phase-3 nextest | BC-2.17.001 postcondition 5 | CI `phase-6-gate` requires both `kani-p0-gate` and `test-workspace-pass` (AC-006) |
+| Kani success does NOT substitute for Phase-3 nextest | BC-2.17.001 PC-005 | CI `phase-6-gate` requires both `kani-p0-gate` and `test-workspace-pass` (AC-006) |
 
 **Forbidden dependencies:** `crates/*/src/proofs/*.rs` harness modules must NOT depend on
 `tokio`, network clients, file I/O, or any effectful crate. Kani proofs operate on symbolic

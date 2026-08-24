@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -15,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "13bd5c7"
+input-hash: "8df58c2"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]
@@ -52,46 +54,46 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.14.003 postcondition 1)
+### AC-001 (traces to BC-2.14.003 PC-001)
 Every fallible public constructor in `pregolya-core` returns `Result<T, PregolyaError>` rather than panicking. A compile-fail test verifies that calling an example fallible constructor that previously panicked now returns `Err`. Verified by `test_BC_2_14_003_constructor_returns_result()`.
 
-### AC-002 (traces to BC-2.14.003 postcondition 2)
+### AC-002 (traces to BC-2.14.003 PC-004)
 `cargo xtask check-no-panic` exits 0 on the initial `pregolya-core/src/` tree (no `unwrap()` or `expect()` in non-test code paths). The xtask itself is created as part of this story. Verified by the xtask executing successfully in CI.
 
-### AC-003 (traces to BC-2.14.003 postcondition 3)
+### AC-003 (traces to BC-2.14.003 INV-003 and INV-004)
 `debug_assert!()`, `unreachable!()` in exhaustive match arms, and test files are exempt from the no-panic xtask scan. The xtask grep pattern excludes `#[cfg(test)]` blocks and the three documented exemptions. Verified by `test_BC_2_14_003_exemptions_respected()` which places a `debug_assert!` in a non-test context and confirms the xtask still exits 0.
 
-### AC-004 (traces to BC-2.14.004 postcondition 1)
+### AC-004 (traces to BC-2.14.004 PC-001 and PC-003)
 A `reqwest::ClientBuilder`-based helper in `pregolya-core` (utility for provider crates) calls `.timeout(Duration::from_secs(30))` by default. `reqwest::Client::new()` is NOT used in any production path in `pregolya-core`. Verified by `test_BC_2_14_004_default_timeout_applied()`.
 
-### AC-005 (traces to BC-2.14.004 postcondition 2)
+### AC-005 (traces to BC-2.14.004 PC-003)
 `cargo xtask check-client-timeout` scans `crates/` for `reqwest::Client::new()` and `ClientBuilder` patterns missing `.timeout(...)`, and exits non-zero if any are found. The xtask is created as part of this story. Verified by the xtask executing successfully in CI.
 
-### AC-006 (traces to BC-2.14.004 postcondition 3)
+### AC-006 (traces to BC-2.14.004 PC-005)
 A `reqwest` client timeout fires and the error is returned as `Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002", message: "ProviderTimeout: request timed out after 30s", .. })`. Verified by `test_BC_2_14_004_timeout_error_shape()` using a mock server that never responds within the configured timeout.
 
-### AC-007 (traces to BC-2.14.005 postcondition 1)
+### AC-007 (traces to BC-2.14.005 PC-001 and PC-004)
 `OpenAiApiKey`, `AnthropicApiKey`, and any other API key types in `pregolya-core` are newtypes (`pub struct FooApiKey(String)`), NOT type aliases. `static_assertions::assert_not_impl_any!(OpenAiApiKey: Clone)` — or if Clone is needed for config snapshots, `derive(Clone)` is allowed but `Deref<Target=str>` is NOT allowed. Verified by `test_BC_2_14_005_newtype_not_alias()`.
 
-### AC-008 (traces to BC-2.14.005 postcondition 2)
+### AC-008 (traces to BC-2.14.005 PC-002)
 `format!("{:?}", OpenAiApiKey("sk-real".to_string()))` returns exactly `"<redacted>"` — no substring of the key value. `format!("{:?}", AnthropicApiKey("sk-ant-real".to_string()))` returns exactly `"<redacted>"`. Verified by `test_BC_2_14_005_debug_redacted()`.
 
-### AC-009 (traces to BC-2.14.005 postcondition 3)
+### AC-009 (traces to BC-2.14.005 PC-003 and PC-004)
 No `#[derive(Serialize)]` on API key newtypes (they must not appear in API responses). No `impl Deref<Target=str>` or `impl AsRef<str>` that exposes the inner value (the `.as_str()` or `.expose_secret()` method is the only intentional exposure path). Verified by compile-fail test or `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)`.
 
-### AC-010 (traces to BC-2.14.005 postcondition 4)
+### AC-010 (traces to BC-2.14.005 PC-006)
 `cargo xtask deny-bare-api-key` scans `crates/` for string literals matching `sk-`, `sk-ant-`, and similar provider key prefixes in non-test source, and exits non-zero if found. Verified by the xtask executing successfully in CI.
 
-### AC-011 (traces to BC-2.14.006 postcondition 1)
+### AC-011 (traces to BC-2.14.006 PC-001)
 A validation failure on a public constructor — e.g., `Message::human("")` with an empty content body — returns `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005", message: "Validation failed for 'content': must not be empty", .. })`. Verified by `test_BC_2_14_006_validation_failure_returns_err()`.
 
-### AC-012 (traces to BC-2.14.006 postcondition 2)
+### AC-012 (traces to BC-2.14.006 PC-003)
 Validation failures NEVER return `None`, empty `Vec::new()`, or zero-value defaults to signal an error. A property test over known invalid inputs asserts all return `Err(...)`. Verified by `test_BC_2_14_006_no_silent_default()`.
 
-### AC-013 (traces to BC-2.14.006 postcondition 3)
+### AC-013 (traces to BC-2.14.006 EC-005)
 `TryFrom<T>` is used for fallible conversions (not `From<T>`). A compile-fail test confirms that implementing `From<EmptyContent>` for `HumanMessage` would produce a type error (because such a conversion must be fallible). Verified by `test_BC_2_14_006_try_from_required()`.
 
-### AC-014 (traces to BC-2.14.006 invariant)
+### AC-014 (traces to BC-2.14.006 PC-004)
 Validation error code is always `E-CORE-005` and message format is always `"Validation failed for '<field>': <reason>"`. A table-driven test exercises five different invalid inputs across three message types and asserts code and message format. Verified by `test_BC_2_14_006_error_code_and_format()`.
 
 ## Architecture Mapping
@@ -162,9 +164,9 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `credentials.rs` must NOT implement `Deref<Target=str>` on any key newtype | BC-2.14.005 postcondition 3 | `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)` |
-| `debug_assert!` exempt from no-panic scan | BC-2.14.003 postcondition 3 | Xtask grep pattern; test by placing `debug_assert!(true)` in prod code |
-| No `reqwest::Client::new()` in `http.rs` production path | BC-2.14.004 postcondition 1 | `cargo xtask check-client-timeout` |
+| `credentials.rs` must NOT implement `Deref<Target=str>` on any key newtype | BC-2.14.005 PC-004 | `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)` |
+| `debug_assert!` exempt from no-panic scan | BC-2.14.003 INV-003 | Xtask grep pattern; test by placing `debug_assert!(true)` in prod code |
+| No `reqwest::Client::new()` in `http.rs` production path | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` |
 | Xtask crate must NOT be in `workspace.members` as a publishable crate | Architecture convention | `Cargo.toml` `xtask` entry has `publish = false` |
 
 **Forbidden dependencies for `pregolya-core/src/credentials.rs`:** `tokio`, `reqwest`, `serde` (no derive Serialize on key types). Only `std`.

@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.10
 epic_id: E-21
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.001.md
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "7a8a52e"
+input-hash: "3bdcec2"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -33,6 +33,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 # BC status: all 5 BCs active; BC-2.09.004 (VP-004, R11) and BC-2.09.005 (VP-005, R11) are Red Gate BCs; status = draft per Spec-First Gate S-7.01
+changelog: "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 ---
 
 # S-2.10: MCP Client — Tool Discovery, Invocation Routing, and Untrusted Ingress
@@ -55,12 +56,12 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.09.001 postcondition 1)
+### AC-001 (traces to BC-2.09.001 PC-001)
 `MultiServerMcpClient::get_tools(server_name: Option<&str>) -> Result<Vec<Arc<dyn DynTool>>, PregolyaError>`
 returns all tools from the named server. Each tool is an `Arc<dyn DynTool>` constructed
 via `convert_mcp_tool`. Verified by `test_BC_2_09_001_get_tools_single_server()`.
 
-### AC-002 (traces to BC-2.09.001 postcondition 1 + Invariant 3 + EC-007)
+### AC-002 (traces to BC-2.09.001 PC-001 + INV-003 + EC-007)
 `list_tools()` cursor pagination respects a `MAX_ITERATIONS = 1000` guard. A server that
 requires more than 1000 paginated calls is aborted fail-closed with
 `Err(PregolyaError { code: "E-MCP-008", .. })` (McpPaginationLimitExceeded; POLICY category)
@@ -68,94 +69,94 @@ to prevent infinite loops. Silent truncation is not permitted. The error message
 `McpPaginationLimitExceeded: server '<server>' exceeded MAX_ITERATIONS=1000 pagination calls`.
 Verified by `test_BC_2_09_001_pagination_max_iterations_guard()`.
 
-### AC-003 (traces to BC-2.09.001 postcondition 5)
+### AC-003 (traces to BC-2.09.001 PC-005)
 `get_tools(None)` (all servers) uses `tokio::task::JoinSet` to fan out discovery concurrently
 across all configured servers. Results from all servers are merged into a single flat list.
 Verified by `test_BC_2_09_001_get_tools_all_servers_joinset_fanout()`.
 
-### AC-004 (traces to BC-2.09.001 postcondition 6)
+### AC-004 (traces to BC-2.09.001 PC-006)
 When `tool_name_prefix: true` is configured, each discovered tool's name is prefixed with
 the server name: `"<server_name>_<original_name>"`. Verified by
 `test_BC_2_09_001_tool_name_prefix_flag()`.
 
-### AC-005 (traces to BC-2.09.001 postcondition 7 + EC-006)
+### AC-005 (traces to BC-2.09.001 PC-007 + EC-006)
 A transport-level failure during discovery returns `Err(PregolyaError { code: "E-MCP-002", .. })`.
 A JSON-RPC -32601 response (method not found, e.g., server doesn't support `tools/list`)
 returns `Err(PregolyaError { code: "E-MCP-003", .. })`. Verified by
 `test_BC_2_09_001_transport_error_returns_e_mcp_002()` and
 `test_BC_2_09_001_method_not_found_returns_e_mcp_003()`.
 
-### AC-006 (traces to BC-2.09.002 postcondition 1)
+### AC-006 (traces to BC-2.09.002 PC-001)
 The interceptor chain processes in correct onion order: the outermost interceptor sees the
 request first and the response last. A test with three interceptors records invocation order
 and verifies: interceptor 1 pre → interceptor 2 pre → interceptor 3 pre → handler → interceptor 3 post → interceptor 2 post → interceptor 1 post. Verified by
 `test_BC_2_09_002_interceptor_chain_onion_order()`.
 
-### AC-007 (traces to BC-2.09.002 postcondition 2)
+### AC-007 (traces to BC-2.09.002 PC-002)
 Each tool invocation creates a new `McpSessionGuard` (RAII) via the `OnDemand` lifecycle.
 The session is dropped after the invocation completes. No session is stored in the client.
 Verified by `test_BC_2_09_002_on_demand_session_created_and_dropped_per_call()`.
 
-### AC-008 (traces to BC-2.09.002 postcondition 3)
+### AC-008 (traces to BC-2.09.002 PC-004)
 With `handle_tool_errors: true` (the default), when the MCP server returns `isError: true`
 in the `CallToolResult`, the client returns
 `Ok(ToolMessage { status: ToolMessageStatus::Error, .. })`. No `Err` is returned.
 Verified by `test_BC_2_09_002_handle_tool_errors_true_returns_ok_tool_message_error()`.
 
-### AC-009 (traces to BC-2.09.002 postcondition 4)
+### AC-009 (traces to BC-2.09.002 PC-004)
 With `handle_tool_errors: false`, when the MCP server returns `isError: true`, the client
 returns `Err(PregolyaError { code: "E-MCP-007", .. })`. Verified by
 `test_BC_2_09_002_handle_tool_errors_false_returns_e_mcp_007()`.
 
-### AC-010 (traces to BC-2.09.002 postcondition 5)
+### AC-010 (traces to BC-2.09.002 PC-005)
 A transport-level error (connection refused, timeout, serialization failure) ALWAYS
 propagates as `Err(PregolyaError { code: "E-MCP-002", .. })` regardless of the
 `handle_tool_errors` flag. The flag does not suppress transport errors. Verified by
 `test_BC_2_09_002_transport_error_always_propagates()`.
 
-### AC-011 (traces to BC-2.09.002 postcondition 6)
+### AC-011 (traces to BC-2.09.002 PC-006)
 A content-conversion error (unsupported content type in the MCP response) ALWAYS propagates
 as `Err(PregolyaError { code: "E-MCP-006", .. })` regardless of `handle_tool_errors`.
 Verified by `test_BC_2_09_002_content_conversion_error_always_propagates()`.
 
-### AC-012 (traces to BC-2.09.002 postcondition 7)
+### AC-012 (traces to BC-2.09.002 PC-007)
 `structuredContent` in the `CallToolResult` is converted to `MCPToolArtifact` and included
 in the `ToolMessage`. Verified by `test_BC_2_09_002_structured_content_to_mcp_tool_artifact()`.
 
-### AC-013 (traces to BC-2.09.002 postcondition 8)
+### AC-013 (traces to BC-2.09.002 PC-004 + EC-001)
 When the MCP server returns `isError: true` with an empty content array, the client
 synthesizes a minimal text block: `ContentBlock::Text { text: "(tool returned empty error content)" }`.
 Verified by `test_BC_2_09_002_empty_error_content_fallback_text_block()`.
 
-### AC-014 (traces to BC-2.09.003 postcondition 1)
+### AC-014 (traces to BC-2.09.003 PC-001)
 A registered `GuardrailHook` is called on every non-error tool result before the result is
 returned to the caller. The guardrail fires AFTER the tool executes and BEFORE the result
 is returned. Verified by `test_BC_2_09_003_guardrail_fires_on_non_error_result()`.
 
-### AC-015 (traces to BC-2.09.003 postcondition 2)
+### AC-015 (traces to BC-2.09.003 PC-001)
 The tool result passed to the guardrail carries a `ProvenanceTag` with
 `boundary_type: BoundaryType::ToolResult`, a unique `ingress_id` (UUID), and
 `sequence_position: 0`. Verified by `test_BC_2_09_003_provenance_tag_fields()`.
 
-### AC-016 (traces to BC-2.09.003 postcondition 3)
+### AC-016 (traces to BC-2.09.003 PC-003)
 When the guardrail rejects a result, the caller receives
 `Ok(ToolMessage { status: ToolMessageStatus::Error, content: [rejection_block] })`.
 The rejection reason from the guardrail is included in the rejection block text. Verified by
 `test_BC_2_09_003_guardrail_reject_returns_tool_message_error()`.
 
-### AC-017 (traces to BC-2.09.003 postcondition 4)
+### AC-017 (traces to BC-2.09.003 PC-004)
 When no `GuardrailHook` is registered and `handle_tool_errors: true`:
 - The tool result is returned as-is (default-permit).
 - `tracing::warn!(event_type = "guardrail.unregistered_passthrough", boundary_type = "ToolResult", ingress_id = %ingress_id, item_count = %count, timestamp = %ts, server_name = %server, tool_name = %tool)` is emitted.
 - The event type `"guardrail.unregistered_passthrough"` is registered in the Canonical Structured Event Catalog (SAP-1).
 Verified by `test_BC_2_09_003_no_guardrail_emits_unregistered_passthrough_warning()`.
 
-### AC-018 (traces to BC-2.09.003 invariant 1 — DI-012)
+### AC-018 (traces to BC-2.09.003 PRE-001 + EC-004)
 The `GuardrailHook` is NOT called when the tool result has `isError: true`. The guardrail
 only fires on successful results. Verified by
 `test_BC_2_09_003_guardrail_not_called_on_is_error_true()`.
 
-### AC-019 (traces to BC-2.09.004 postcondition 1 — RED GATE VP-004)
+### AC-019 (traces to BC-2.09.004 PC-001 — RED GATE VP-004)
 **Red Gate (VP-004):** The test `test_BC_2_09_004_bare_tool_exception_reraise` asserts that
 a bare `ToolException` raised by the Python tool (propagated as `isError=false` with exception
 metadata in content) is re-raised by the client as `Err(PregolyaError { code: "E-MCP-001", .. })`.
@@ -173,18 +174,18 @@ A non-ignored in-process mock substitute MUST also exist:
 `test_BC_2_09_004_bare_tool_exception_reraise_unit_mock()` — uses an in-process MCP stub
 that returns a bare ToolException payload, exercises the same code path without a live server.
 
-### AC-020 (traces to BC-2.09.004 postcondition 2)
+### AC-020 (traces to BC-2.09.004 PC-003)
 A bare `ToolException` (Python-side exception propagated via MCP) produces
 `Err(PregolyaError { code: "E-MCP-001", .. })` regardless of the `handle_tool_errors`
 flag. The flag controls `isError: true` results; bare ToolException is a distinct path.
 Verified by `test_BC_2_09_004_bare_tool_exception_ignores_handle_tool_errors_flag()`.
 
-### AC-021 (traces to BC-2.09.004 postcondition 3)
+### AC-021 (traces to BC-2.09.004 PC-004)
 The `PregolyaError` source chain for E-MCP-001 preserves the `ToolException` type identity.
 The original exception type name is present in `PregolyaError::source()` or the error message.
 Verified by `test_BC_2_09_004_error_source_chain_preserves_type_identity()`.
 
-### AC-022 (traces to BC-2.09.005 postcondition 1 — RED GATE VP-005)
+### AC-022 (traces to BC-2.09.005 PC-006 — RED GATE VP-005)
 **Red Gate (VP-005):** The test `test_BC_2_09_005_drop_client_zero_network_io` asserts that
 dropping a `MultiServerMcpClient` produces zero network I/O. This test MUST compile and FAIL
 before the no-live-connections invariant is enforced (a naive implementation might create
@@ -203,29 +204,29 @@ A non-ignored in-process unit test MUST also exist:
 a mock server config, verifies no connection was attempted (using a mock transport that fails
 if `connect()` is called), and drops the client.
 
-### AC-023 (traces to BC-2.09.005 postcondition 2)
+### AC-023 (traces to BC-2.09.005 PC-001)
 `MultiServerMcpClient::new(config: MultiServerMcpConfig)` creates a config-only container.
 No TCP connections, no TLS handshakes, no authentication exchanges occur at construction time.
 Verified by `test_BC_2_09_005_construction_is_config_only()`.
 
-### AC-024 (traces to BC-2.09.005 postcondition 3)
+### AC-024 (traces to BC-2.09.005 PC-003)
 `MultiServerMcpClient` has NO `close()` or `connect()` public methods. Calling
 `client.close()` is a compile-time error (`method not found`). This is BC-2.09.005 TV-005.
 Verified by compile-fail test `test_BC_2_09_005_no_close_method_compile_fail()`.
 
-### AC-025 (traces to BC-2.09.005 invariant 1)
+### AC-025 (traces to BC-2.09.005 PC-004)
 `MultiServerMcpClient` implements `Send + Sync + Clone`. It can be stored in an `Arc`,
 shared across tasks, and cloned without duplicating network resources (there are none).
 Verified by `test_BC_2_09_005_client_is_send_sync_clone()`.
 
-### AC-026 (traces to BC-2.09.001 postcondition 3 + invariant 1)
+### AC-026 (traces to BC-2.09.001 PC-003 + INV-001)
 The `args_schema` field of every `Arc<dyn DynTool>` produced by `convert_mcp_tool` is
 the raw `serde_json::Value` from `tool.inputSchema` verbatim — no pydantic model, schemars
 schema, or any other schema synthesis is performed by `pregolya-mcp`. If the server provides
 no `inputSchema`, `args_schema` is `Value::Null`. Verified by
 `test_BC_2_09_001_args_schema_raw_no_synthesis()`.
 
-### AC-027 (traces to BC-2.09.001 postcondition 8)
+### AC-027 (traces to BC-2.09.001 PC-008)
 A server that returns an empty tool list (`tools: []`) for any valid transport is not an
 error. `get_tools` returns `Ok(vec![])` for that server. Verified by
 `test_BC_2_09_001_empty_tool_list_ok()`.
@@ -255,7 +256,7 @@ error. `get_tools` returns `Ok(vec![])` for that server. Verified by
 
 | ID | Scenario | Expected Behavior |
 |----|----------|-------------------|
-| EC-001 | `get_tools(Some("nonexistent_server"))` (traces to BC-2.09.001 PC9/EC-008) | `Err(PregolyaError { code: "E-MCP-009", .. })` (McpServerNotConfigured; VAL) — message: `McpServerNotConfigured: no MCP server named '<server>' is configured` |
+| EC-001 | `get_tools(Some("nonexistent_server"))` (traces to BC-2.09.001 PC-009 + EC-008) | `Err(PregolyaError { code: "E-MCP-009", .. })` (McpServerNotConfigured; VAL) — message: `McpServerNotConfigured: no MCP server named '<server>' is configured` |
 | EC-002 | Tool invocation with `McpSessionGuard` that fails to connect | `Err(E-MCP-002)` from session creation; no tool code executed |
 | EC-003 | Guardrail returns `Reject` with empty reason string | `ToolMessage{status:Error, content: [text: "(rejected by guardrail)"]}` — fallback text |
 | EC-004 | `tool_name_prefix: true` with server name containing `__` | Prefix uses `"<server_name>_<tool>"` verbatim — no escaping of the separator |
@@ -315,11 +316,11 @@ becomes `McpSessionGuard::new()` must not panic; connection failures return `Err
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `MultiServerMcpClient` holds NO network resources (no sessions, connections, sockets) | BC-2.09.005 postcondition 2 | Red Gate test AC-022; compile test AC-024 |
+| `MultiServerMcpClient` holds NO network resources (no sessions, connections, sockets) | BC-2.09.005 INV-002 | Red Gate test AC-022; compile test AC-024 |
 | `DynTool` not `Tool` for vtable dispatch (object-safe) | ADR-005 §Adjacent Trait Object-Safety Adjudications | Compile test |
-| Bare ToolException → E-MCP-001 regardless of `handle_tool_errors` flag | BC-2.09.004 postcondition 2 | Test AC-020 |
-| Transport errors ALWAYS propagate (never suppressed by `handle_tool_errors`) | BC-2.09.002 postcondition 5 | Test AC-010 |
-| Guardrail NOT called on `isError: true` results | BC-2.09.003 invariant 1 — DI-012 | Test AC-018 |
+| Bare ToolException → E-MCP-001 regardless of `handle_tool_errors` flag | BC-2.09.004 PC-003 | Test AC-020 |
+| Transport errors ALWAYS propagate (never suppressed by `handle_tool_errors`) | BC-2.09.002 PC-005 | Test AC-010 |
+| Guardrail NOT called on `isError: true` results | BC-2.09.003 INV-001 + EC-004 | Test AC-018 |
 | `guardrail.unregistered_passthrough` registered in Structured Event Catalog | SAP-1 | Pre-PR catalog row |
 | `client.close()` is a compile-time error | BC-2.09.005 TV-005 | Compile-fail test AC-024 |
 | SID-1: `#[ignore]` live tests have companion non-ignored mock unit tests | SID-1; GAP-003 | ACs AC-019, AC-022 |

@@ -3,17 +3,19 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "a56628d"
+input-hash: "4039d5b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -48,42 +50,42 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.01.003 postcondition 1)
+### AC-001 (traces to BC-2.01.003 PC-001)
 The `Runnable` trait is defined with associated types `Input` and `Output`, and the method:
 `async fn invoke(&self, input: Self::Input, config: &RunnableConfig) -> Result<Self::Output, PregolyaError>`.
 A custom `DoubleString` struct that implements `Runnable<Input=String, Output=String>` constructs and calls `invoke` returning `Ok(format!("{}{}", s, s))`. Verified by `test_BC_2_01_003_custom_runnable_invoke()`.
 
-### AC-002 (traces to BC-2.01.003 postcondition 2)
+### AC-002 (traces to BC-2.01.003 PC-002)
 The default `stream` method on `Runnable` yields a single item: the result of `invoke`. A `DoubleString` stream over input "hello" yields exactly one item: `Ok("hellohello".to_string())` then terminates. Verified by `test_BC_2_01_003_default_stream_single_item()`.
 
-### AC-003 (traces to BC-2.01.003 postcondition 3)
+### AC-003 (traces to BC-2.01.003 PC-003)
 The default `batch` method on `Runnable` calls `invoke` concurrently for each input with bounded concurrency (default max 10 in-flight). A batch of 5 inputs returns 5 outputs in order. Verified by `test_BC_2_01_003_default_batch_order_preserved()`.
 
-### AC-004 (traces to BC-2.01.003 postcondition 4)
+### AC-004 (traces to BC-2.01.003 PC-005)
 `RunnableConfig` has a `recursion_limit: u32` field with default value 25. Accessing `config.recursion_limit` from within `invoke` is possible. Verified by `test_BC_2_01_003_runnable_config_recursion_limit()`.
 
 ### AC-005 (traces to BC-2.01.003 postcondition 5)
 `DynRunnable` is a non-generic trait (not `DynRunnable<Input, Output>`) that uses `serde_json::Value` as both input and output. It has methods `async fn invoke(&self, input: Value, config: Option<RunnableConfig>) -> Result<Value, PregolyaError>` and `fn stream(...)`. `Arc<dyn DynRunnable>` is the type-erased composition handle. Verified by `test_BC_2_01_003_dyn_runnable_non_generic()`.
 
-### AC-006 (traces to BC-2.01.003 postcondition 6)
+### AC-006 (traces to BC-2.01.003 INV-005)
 When `recursion_limit` is exceeded (checked by a graph-level depth counter, not the `Runnable` trait itself), the error returned is `Err(PregolyaError { code: "E-CORE-006", message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })`. A unit test simulates this by manually decrementing the counter to zero. Verified by `test_BC_2_01_003_recursion_limit_exceeded_error()`.
 
 ### AC-007 (traces to BC-2.01.003 edge case EC-001 — E-CORE-003)
 When `DynRunnable::invoke` is called with a `Value` that cannot be deserialized into the expected concrete input type, the error is `Err(PregolyaError { code: "E-CORE-003", message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", .. })`. Verified by `test_BC_2_01_003_input_type_mismatch_error()`.
 
-### AC-008 (traces to BC-2.01.004 postcondition 1)
+### AC-008 (traces to BC-2.01.004 PC-001 and PC-002)
 `a.pipe(b)` where `a: Runnable<Input=I, Output=M>` and `b: Runnable<Input=M, Output=O>` returns `RunnableSequence<I, M, O>` with `first: a`, `middle: []`, `last: b`. Invoking the sequence calls `a.invoke(input)` then feeds output to `b.invoke(m)`. Verified by `test_BC_2_01_004_pipe_two_stages()`.
 
-### AC-009 (traces to BC-2.01.004 postcondition 2)
+### AC-009 (traces to BC-2.01.004 PC-004)
 `a.pipe(b).pipe(c)` flattens into `RunnableSequence { first: a, middle: [b], last: c }` — NOT nested `RunnableSequence<RunnableSequence<...>, c>`. The `first` field is always the first runnable in the chain. Verified by `test_BC_2_01_004_pipe_flattens_sequence()`.
 
-### AC-010 (traces to BC-2.01.004 postcondition 3)
+### AC-010 (traces to BC-2.01.004 PC-005)
 For `DynRunnable` pipeline composition where a type boundary mismatch is detected at construction time, the error is `Err(PregolyaError { code: "E-CORE-004", message: "Pipe composition failed: type boundary mismatch between stage <n> output and stage <n+1> input", .. })`. Verified by `test_BC_2_01_004_pipe_type_mismatch_error()`.
 
-### AC-011 (traces to BC-2.01.004 postcondition 4)
+### AC-011 (traces to BC-2.01.004 PC-003)
 Streaming through a `RunnableSequence` propagates chunks: each step must buffer non-streaming steps and stream out chunks from streaming steps. A two-stage sequence where step A is streaming and step B is non-streaming: stream collects all A's chunks, calls B.invoke, emits B's single output as one chunk. Verified by `test_BC_2_01_004_streaming_through_sequence()`.
 
-### AC-012 (traces to BC-2.01.004 invariant)
+### AC-012 (traces to BC-2.01.004 INV-004)
 `RunnableSequence::first` is never a `RunnableSequence` (flattening invariant). This prevents unbounded nesting. Verified by `test_BC_2_01_004_sequence_not_nested()` asserting the type of `first` in a multi-stage chain.
 
 ## Architecture Mapping
@@ -155,8 +157,8 @@ S-1.01 error codes: `E-CORE-003`, `E-CORE-004`, `E-CORE-006` must be present in 
 |------|--------|-------------|
 | `runnable/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review |
 | `DynRunnable` is non-generic (not `DynRunnable<I, O>`) | BC-2.01.003 postcondition 5 | Type signature inspection; compile test |
-| `RunnableSequence::first` is never a `RunnableSequence` (no nested sequences) | BC-2.01.004 postcondition 2 | Unit test + type-level enforcement |
-| `batch` default uses bounded concurrency (max 10 in-flight) | BC-2.01.003 postcondition 3 | Unit test counting concurrent executions |
+| `RunnableSequence::first` is never a `RunnableSequence` (no nested sequences) | BC-2.01.004 PC-004 | Unit test + type-level enforcement |
+| `batch` default uses bounded concurrency (max 10 in-flight) | BC-2.01.003 PC-003 | Unit test counting concurrent executions |
 
 **Forbidden dependencies for `pregolya-core/src/runnable/trait.rs`, `config.rs`, `dyn_runnable.rs`:** No direct tokio import at trait-definition level. Tokio is used in the impl (sequence.rs) not the trait.
 

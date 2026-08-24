@@ -3,17 +3,17 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4c620be"
+input-hash: "14c8781"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-2.10]
@@ -30,6 +30,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 # BC status: both BCs active; BC-2.09.006 mints E-MCP-005; no BC-TBD placeholders; status = draft per Spec-First Gate S-7.01
+changelog: "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -49,75 +50,75 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.09.006 precondition 1)
+### AC-001 (traces to BC-2.09.006 PC-001)
 `McpServer::start(config: McpServerConfig)` returns `Ok(McpServerHandle)` when the transport
 binds successfully. The config carries `transport: McpServerTransport` and
 `tool_registry: Arc<ToolRegistry>`. Verified by `test_BC_2_09_006_start_returns_handle_on_success()`.
 
-### AC-002 (traces to BC-2.09.006 postcondition 1)
+### AC-002 (traces to BC-2.09.006 PC-001)
 Binding failure (e.g., SSE port already in use, stdio not available) returns
 `Err(PregolyaError { code: "E-MCP-005", message: "McpServerBindFailed: cannot bind to <transport>: <reason>", .. })`.
 `E-MCP-005` category is `TRANSPORT`, severity `broken`, retry_hint `Never`. This error code
 is minted by BC-2.09.006 — register it in the error taxonomy if not already present.
 Verified by `test_BC_2_09_006_bind_failure_returns_e_mcp_005()`.
 
-### AC-003 (traces to BC-2.09.006 postcondition 2)
+### AC-003 (traces to BC-2.09.006 PC-002)
 On `tools/list` JSON-RPC request, the server serializes each registered `DynTool` to MCP
 `ToolDefinition` format: `{ "name": tool.name(), "description": tool.description(), "inputSchema": tool.input_schema() }`.
 Response is `{ "tools": [<definitions>] }`. Verified by
 `test_BC_2_09_006_tools_list_returns_all_registered_tools()`.
 
-### AC-004 (traces to BC-2.09.006 postcondition 3)
+### AC-004 (traces to BC-2.09.006 PC-003)
 The `ToolRegistry` is read on each `tools/list` request — not snapshotted at server startup.
 A tool registered after `McpServer::start` is included in a subsequent `tools/list` response.
 Verified by `test_BC_2_09_006_dynamic_registry_read_on_each_request()`.
 
-### AC-005 (traces to BC-2.09.006 postcondition 4)
+### AC-005 (traces to BC-2.09.006 PC-004)
 `McpServerHandle::shutdown()` gracefully closes all active connections and stops accepting
 new ones. After `shutdown()`, new `tools/list` requests are not served. Verified by
 `test_BC_2_09_006_shutdown_closes_connections()`.
 
-### AC-006 (traces to BC-2.09.006 postcondition 5)
+### AC-006 (traces to BC-2.09.006 PC-005)
 A `ToolRegistry` with zero registered tools returns `{ "tools": [] }` on `tools/list` — this
 is a valid MCP response, not an error. Verified by
 `test_BC_2_09_006_empty_registry_returns_empty_tools_array()`.
 
-### AC-007 (traces to BC-2.09.006 edge case EC-004)
+### AC-007 (traces to BC-2.09.006 EC-004)
 When a connected MCP client sends an unimplemented JSON-RPC method (e.g., `resources/list`),
 the server responds with the JSON-RPC error `{ "code": -32601, "message": "Method not found" }`.
 No `E-MCP-005` is raised; this is a protocol-level not-implemented response. Verified by
 `test_BC_2_09_006_unimplemented_method_returns_32601()`.
 
-### AC-008 (traces to BC-2.09.007 postcondition 1)
+### AC-008 (traces to BC-2.09.007 PC-001 + PC-002)
 `tools/call` with a valid tool name and conforming arguments dispatches to the registered
 `DynTool::invoke`. On success, responds with
 `{ "content": [{ "type": "text", "text": "<result>" }], "isError": false }`.
 Verified by `test_BC_2_09_007_tools_call_success_response()`.
 
-### AC-009 (traces to BC-2.09.007 postcondition 3)
+### AC-009 (traces to BC-2.09.007 PC-003)
 When the registered `DynTool::invoke` returns `Err(PregolyaError { .. })`, the server
 responds with `{ "content": [{ "type": "text", "text": "<error_message>" }], "isError": true }`.
 The JSON-RPC result layer carries `result` (not `error`) — the MCP protocol transaction
 succeeded; only the tool invocation failed. Verified by
 `test_BC_2_09_007_tool_error_returns_is_error_true()`.
 
-### AC-010 (traces to BC-2.09.007 postcondition 4)
+### AC-010 (traces to BC-2.09.007 PC-004)
 When `<tool_name>` is not in the `ToolRegistry`, the server responds with the JSON-RPC error
 `{ "code": -32602, "message": "Tool not found: <tool_name>" }`. No tool execution is attempted.
 Verified by `test_BC_2_09_007_tool_not_found_returns_32602()`.
 
-### AC-011 (traces to BC-2.09.007 postcondition 5)
+### AC-011 (traces to BC-2.09.007 PC-005)
 When the `arguments` object does not conform to the tool's input schema, the server responds
 with `{ "code": -32602, "message": "Invalid arguments for tool '<tool_name>': <schema_error>" }`.
 Tool is not invoked. Verified by `test_BC_2_09_007_invalid_arguments_returns_32602()`.
 
-### AC-012 (traces to BC-2.09.007 invariant 1)
+### AC-012 (traces to BC-2.09.007 INV-002)
 `isError: true` in the `CallToolResult` means the tool returned an error but the MCP
 protocol transaction succeeded. JSON-RPC `error` (not `result`) is only returned for
 protocol-level failures (tool not found, invalid params, parse error). Verified by
 `test_BC_2_09_007_is_error_semantics_vs_jsonrpc_error()`.
 
-### AC-013 (traces to BC-2.09.007 invariant 3 — DI-010)
+### AC-013 (traces to BC-2.09.007 INV-003)
 Error messages returned in `isError: true` responses do not embed credential values.
 The server does not construct error messages by formatting `PregolyaError` fields that
 contain known credential types (`OpenAiApiKey`, `AnthropicApiKey`). Verified by
@@ -206,11 +207,11 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 |------|--------|-------------|
 | `ToolRegistry::get` returns `Option<Arc<dyn DynTool>>` (not `dyn Tool`) | ADR-005 §Adjacent Trait Object-Safety Adjudications; BC-2.09.007 Architecture Anchors | Compile check |
 | `McpServer` in `mcp::server` module — distinct from `mcp::client` | ADR-013 §Consequences; BC-2.09.006 Architecture Anchors | Module structure |
-| `isError: true` is in the JSON-RPC `result` layer — not `error` | BC-2.09.007 invariant 1 | Test AC-012 |
+| `isError: true` is in the JSON-RPC `result` layer — not `error` | BC-2.09.007 INV-002 | Test AC-012 |
 | `E-MCP-005` category: TRANSPORT, severity: broken, retry_hint: Never | BC-2.09.006 §Error code minted | Error taxonomy registration |
-| Error messages do not embed credential values | BC-2.09.007 invariant 3 — DI-010 | Test AC-013 |
+| Error messages do not embed credential values | BC-2.09.007 INV-003 | Test AC-013 |
 | No `unwrap()`/`expect()` in server handlers | CLAUDE.md Code Conventions | Clippy |
-| Registry read on each `tools/list` request (no startup snapshot) | BC-2.09.006 postcondition 3 | Test AC-004 |
+| Registry read on each `tools/list` request (no startup snapshot) | BC-2.09.006 PC-003 | Test AC-004 |
 
 **Forbidden dependencies:** `pregolya-mcp` (both `mcp::client` from S-2.10 and `mcp::server`
 from this story) must NOT depend on `pregolya-graph`, `pregolya-server`, `pregolya-vectorstores`,

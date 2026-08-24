@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.09
 epic_id: E-04
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-13/BC-2.13.001.md
@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-13/BC-2.13.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c67bb99"
+input-hash: "146c9b7"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.01, S-1.02]
@@ -66,67 +66,67 @@ This story builds the `sandbox::path_guard` module containing `canonicalize_bene
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.13.001 postcondition 1 — enforcing default)
+### AC-001 (traces to BC-2.13.001 PC-001)
 `Sandbox::new(config)` constructs using the enforcing backend (WASM or Container) when the `sandbox-wasm` feature is enabled (default Cargo feature). The `BackendCapabilities` returned by `Sandbox::capabilities()` satisfies `filesystem_isolated && network_isolated && memory_bounded`. Verified by `test_BC_2_13_001_enforcing_default_capabilities()`.
 
-### AC-002 (traces to BC-2.13.001 postcondition 2 — unsafe_process escape hatch)
+### AC-002 (traces to BC-2.13.001 PC-003)
 `ProcessBackend` (non-isolating) is only constructable via `Sandbox::unsafe_process_no_isolation()`. There is no public `Sandbox::new_process()` or any other constructor path that creates a `ProcessBackend` without the `unsafe_` naming. Verified by `test_BC_2_13_001_process_backend_requires_unsafe_constructor()`.
 
-### AC-003 (traces to BC-2.13.001 postcondition 3 — no enforcing backend compile error)
+### AC-003 (traces to BC-2.13.001 PC-004)
 When no enforcing backend feature is enabled (all of `sandbox-wasm`, `sandbox-container` disabled), `Sandbox::new(config)` returns `Err(PregolyaError { code: "E-SBXD-003", message: "SandboxInitFailed: cannot initialize WASM/container sandbox backend: <reason>", .. })`. Verified by `test_BC_2_13_001_no_enforcing_backend_error()` (feature-gated test).
 
-### AC-004 (traces to BC-2.13.002 postcondition 1 — WARN log per execute)
+### AC-004 (traces to BC-2.13.002 PC-001)
 Every call to `ProcessBackend::execute(command)` emits a tracing WARN event with `event_type = "sandbox.process_no_isolation_execute"` BEFORE the subprocess is spawned. The log is emitted once per call, not per construction. Verified by `test_BC_2_13_002_warn_log_per_execute()` using a tracing subscriber capture.
 
-### AC-005 (traces to BC-2.13.002 postcondition 3 — kill_on_drop)
+### AC-005 (traces to BC-2.13.002 PC-006)
 All `tokio::process::Child` handles spawned by `ProcessBackend::execute` are configured with `.kill_on_drop(true)`. If the `ProcessBackend` is dropped before execution completes, the child process is killed. Verified by `test_BC_2_13_002_kill_on_drop_set()` (inspects command builder configuration).
 
-### AC-006 (traces to BC-2.13.003 postcondition 1 — policy not enforceable)
+### AC-006 (traces to BC-2.13.003 PC-001)
 When `SandboxPolicy { strict: true }` is passed to a `ProcessBackend` (which has `filesystem_isolated: false`), `execute()` returns `Err(PregolyaError { code: "E-SBXD-002", message: "PolicyNotEnforceable: ...", .. })` containing `policy_requirements` and `backend_capabilities` fields. The tool is NOT called. Verified by `test_BC_2_13_003_strict_policy_non_enforcing_backend_error()`.
 
-### AC-007 (traces to BC-2.13.003 postcondition 2 — no silent fallback)
+### AC-007 (traces to BC-2.13.003 PC-004)
 `E-SBXD-002` has severity classification `broken` in the error taxonomy. There is no code path where a strict policy+non-enforcing backend combination silently falls back to executing without enforcement. Verified by `test_BC_2_13_003_no_silent_fallback()`.
 
-### AC-008 (traces to BC-2.13.004 postcondition 1 — VP-003 seed function exists)
+### AC-008 (traces to BC-2.13.004 PC-001)
 `pregolya-sandbox/src/path_guard.rs` exports `pub fn canonicalize_beneath_root(base: &Path, requested: &Path) -> Result<PathBuf, PregolyaError>` (OS-calling version) and `pub fn canonicalize_beneath_root_pure(base: &Path, path: &Path) -> Result<PathBuf, PregolyaError>` (pure model version for Kani). Both functions exist and are accessible to external crates. Verified by `test_BC_2_13_004_path_guard_functions_exist()`.
 
-### AC-009 (traces to BC-2.13.004 postcondition 2 — WorkspaceFs mandatory)
+### AC-009 (traces to BC-2.13.004 INV-002)
 All workspace file operations in `pregolya-sandbox` route through the `WorkspaceFs` facade — no direct `std::fs` calls appear in non-`path_guard.rs` code. The `WorkspaceFs` facade calls `canonicalize_beneath_root` at access time, not at path construction time. Verified by `test_BC_2_13_004_workspace_fs_facade_routes_through_guard()` and a code review grep check (no `std::fs::` in workspace operation paths).
 
-### AC-010 (traces to BC-2.13.004 postcondition 3 — path within root returns Ok)
+### AC-010 (traces to BC-2.13.004 PC-003)
 `canonicalize_beneath_root(base, valid_sub_path)` returns `Ok(canonical_path)` where `canonical_path.starts_with(base)` is true. Verified by `test_BC_2_13_004_valid_path_returns_ok()`.
 
-### AC-011 (traces to BC-2.13.004 postcondition 4 — escape returns Err E-SBXD-001)
+### AC-011 (traces to BC-2.13.004 PC-004)
 `canonicalize_beneath_root(base, escape_path)` where `escape_path` resolves to a path outside `base` returns `Err(PregolyaError { code: "E-SBXD-001", .. })`. The error observation includes `requested`, `resolved`, and `root` fields (ADR-010 Class 3 `..` rest-pattern for elided fields). Verified by `test_BC_2_13_004_path_escape_returns_err()`.
 
-### AC-012 (traces to BC-2.13.004 edge case EC-001 — ADR-024 two-phase protocol)
+### AC-012 (traces to BC-2.13.004 PC-005)
 For paths that do not yet exist on the filesystem, `canonicalize_beneath_root` applies the ADR-024 two-phase protocol: (1) canonicalize the parent directory (which must exist), (2) append the filename component. This avoids `std::fs::canonicalize` failure on non-existent paths while still enforcing workspace confinement. Verified by `test_BC_2_13_004_nonexistent_path_two_phase_protocol()`.
 
-### AC-013 (traces to BC-2.13.005 postcondition 1 — external symlink escape)
+### AC-013 (traces to BC-2.13.005 PC-004)
 A symlink inside the workspace that resolves (via OS canonicalization) to a path outside the workspace root returns `Err(PregolyaError { code: "E-SBXD-001", .. })` with `WorkspaceEscape { requested, resolved, root }`. Chained symlinks are followed by OS canonicalize before the prefix check. Verified by `test_BC_2_13_005_external_symlink_escape_error()` (creates a real symlink via `std::os::unix::fs::symlink` in a tempdir).
 
-### AC-014 (traces to BC-2.13.005 edge case EC-002 — dangling symlink)
+### AC-014 (traces to BC-2.13.005 EC-003)
 A dangling symlink (target does not exist) returns `Err(SandboxError::PathNotFound)` — NOT `Err(E-SBXD-001 WorkspaceEscape)`. Internal symlinks (target is within workspace) return `Ok(canonical_path)`. Verified by `test_BC_2_13_005_dangling_symlink_path_not_found()`.
 
-### AC-015 (traces to BC-2.13.006 postcondition 1 — deny default present)
+### AC-015 (traces to BC-2.13.006 PC-001)
 On macOS, `SandboxBackend::new_macos_seatbelt(workspace_root, policy)` generates a Seatbelt profile string that contains `(deny default)` as the base policy rule. Verified by `test_BC_2_13_006_deny_default_present()` (macOS-only, `#[cfg(target_os = "macos")]`).
 
-### AC-016 (traces to BC-2.13.006 postcondition 2 — no allow default)
+### AC-016 (traces to BC-2.13.006 PC-002)
 The generated Seatbelt profile string does NOT contain the literal substring `(allow default)` anywhere. Verified by `test_BC_2_13_006_no_allow_default()` (macOS-only).
 
-### AC-017 (traces to BC-2.13.006 postcondition 6 — PlatformNoEnforcement)
+### AC-017 (traces to BC-2.13.006 PC-006)
 When the allow-list required for a tool is impractical to enumerate, `new_macos_seatbelt()` returns `Err(SandboxError::PlatformNoEnforcement { .. })` (`E-SBXD-004`); execution requires `SandboxPolicy::allow_no_sandbox()` explicit opt-in. On non-macOS platforms, `E-SBXD-004` is returned without attempting Seatbelt profile generation. Verified by `test_BC_2_13_006_platform_no_enforcement_error()`.
 
-### AC-018 (traces to BC-2.13.006 edge case EC-002 — Seatbelt unavailable)
+### AC-018 (traces to BC-2.13.006 EC-002)
 When the macOS kernel does not support the required Seatbelt operations, `new_macos_seatbelt()` returns `Err(SandboxError::BackendUnavailable { .. })` (`E-SBXD-005`) — it does NOT silently run unsandboxed. Verified by `test_BC_2_13_006_backend_unavailable_error()` (mocked kernel version check).
 
-### AC-019 (traces to BC-2.13.007 postcondition 1 — strip all by default)
+### AC-019 (traces to BC-2.13.007 PC-001)
 `SandboxConfig` with an empty `env_allowlist: vec![]` causes all environment variables to be stripped from the child process environment. The child process inherits zero env vars from the parent. Verified by `test_BC_2_13_007_strip_all_env_default()`.
 
-### AC-020 (traces to BC-2.13.007 postcondition 2 — allowlist forwarded)
+### AC-020 (traces to BC-2.13.007 PC-002)
 `SandboxConfig { env_allowlist: vec!["PATH".to_string(), "HOME".to_string()], .. }` causes only `PATH` and `HOME` to be forwarded to the child process. All other env vars are stripped. Verified by `test_BC_2_13_007_allowlisted_vars_forwarded()`.
 
-### AC-021 (traces to BC-2.13.007 postcondition 3 — no wildcards, DEBUG log)
+### AC-021 (traces to BC-2.13.007 PC-005)
 `env_allowlist` does not support wildcards. An entry containing `*` returns `Err(PregolyaError { code: "E-SBXD-006", message: "InvalidEnvAllowlistPattern: entry '<pattern>' contains wildcard characters — only exact variable names are supported in v1", .. })`. Before each execution, a DEBUG trace event is emitted with `event_type = "sandbox.env_sanitized"` containing the count of stripped and forwarded variables. Verified by `test_BC_2_13_007_wildcard_rejected()` and `test_BC_2_13_007_sanitization_debug_log()`.
 
 ## Architecture Mapping
@@ -254,3 +254,8 @@ Files to MODIFY:
 | EC-003 | Internal symlink: workspace/link→workspace/real_dir | OS canonicalize resolves to within root; returns Ok(canonical_path) |
 | EC-004 | `env_allowlist` contains a var that doesn't exist in parent env | Silently forwarded as absent (child process sees it absent); no error |
 | EC-005 | Seatbelt profile with `allow_network: true` | `(allow network*)` added; `(deny default)` base preserved; no `(allow default)` |
+
+## Changelog
+
+- 1.0 (2026-08-18): initial story authoring.
+- 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-002 PC-002→PC-003 (unsafe constructor naming; old PC-002 was BackendCapabilities); AC-003 PC-003→PC-004 (no enforcing backend error; old PC-003 was unsafe constructor); AC-005 PC-003→PC-006 (kill_on_drop; old PC-003 was execute-and-return); AC-007 PC-002→PC-004 (no silent fallback; old PC-002 was tool-not-called); AC-009 PC-002→INV-002 (WorkspaceFs facade; old PC-002 was calls-canonicalize); AC-012 EC-001→PC-005 (two-phase non-existent path; old BC-2.13.004 EC-001 is benign traversal); AC-013 PC-001→PC-004 (WorkspaceEscape result; old PC-001 was calls-canonicalize); AC-014 EC-002→EC-003 (dangling symlink PathNotFound; old EC-002 is chained symlinks); AC-021 PC-003→PC-005 (wildcard rejection; old PC-003 was filtering-timing). No escalations.

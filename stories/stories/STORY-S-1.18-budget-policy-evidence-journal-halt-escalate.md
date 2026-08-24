@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.18
 epic_id: E-10
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.001.md
@@ -15,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c2bf9cb"
+input-hash: "f3626bf"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.14, S-1.04, S-1.10, S-1.17]
@@ -56,52 +58,52 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.10.001 postcondition 1 — BudgetPolicy trait has pure evaluate method)
+### AC-001 (traces to BC-2.10.001 INV-001 — BudgetPolicy trait has pure evaluate method)
 `BudgetPolicy` trait in `pregolya-core/src/budget.rs` defines `fn evaluate(&self, usage: &TokenUsage) -> PolicyDecision` as a synchronous pure method returning `PolicyDecision::Allow`, `PolicyDecision::Escalate`, or `PolicyDecision::Deny`. Verified by `test_BC_2_10_001_budget_policy_trait_signature()`.
 
-### AC-002 (traces to BC-2.10.001 postcondition 2 — chain composition: Deny > Escalate > Allow)
+### AC-002 (traces to BC-2.10.001 PC-005 — chain composition: Deny > Escalate > Allow)
 When multiple `BudgetPolicy` instances are composed in a chain, `Deny` takes precedence over `Escalate`, which takes precedence over `Allow`. A chain of N policies returns `Deny` if any policy returns `Deny`, else `Escalate` if any returns `Escalate`, else `Allow`. Verified by `test_BC_2_10_001_chain_deny_over_escalate_over_allow()`.
 
-### AC-003 (traces to BC-2.10.001 postcondition 3 — per-evaluation journal entry written)
+### AC-003 (traces to BC-2.10.001 PC-004 — per-evaluation journal entry written)
 Each call to `evaluate` produces a `JournalEntry` written to the `EvidenceJournal`. The entry includes the policy name, decision, and current usage snapshot. Verified by `test_BC_2_10_001_per_evaluation_journal_entry()`.
 
-### AC-004 (traces to BC-2.10.001 postcondition 4 — sub-agents evaluated independently)
+### AC-004 (traces to BC-2.10.001 PC-006 — sub-agents evaluated independently)
 Each sub-agent spawned via the Send API receives an independent `BudgetPolicy` evaluation; they do not share a single global ceiling. Verified by `test_BC_2_10_001_subagent_independent_evaluation()`.
 
-### AC-005 (traces to BC-2.10.002 postcondition 1 — EvidenceJournal is append-only)
+### AC-005 (traces to BC-2.10.002 INV-001 — EvidenceJournal is append-only)
 `EvidenceJournal` only supports `append(entry: JournalEntry) -> Result<(), PregolyaError>`. There are no delete, update, or truncate methods. Verified by `test_BC_2_10_002_journal_is_append_only()`.
 
-### AC-006 (traces to BC-2.10.002 postcondition 2 — JournalEntry fields)
+### AC-006 (traces to BC-2.10.002 PC-002 — JournalEntry fields)
 `JournalEntry` contains: `run_id: Uuid`, `sub_agent_id: Option<Uuid>`, `evaluation_point: String`, `token_usage: TokenUsage`, `policy_name: String`, `decision: PolicyDecision`, `reason: Option<String>`, `timestamp: DateTime<Utc>`. Verified by `test_BC_2_10_002_journal_entry_fields()`.
 
-### AC-007 (traces to BC-2.10.002 postcondition 3 — journal backed by SQLite checkpoint)
+### AC-007 (traces to BC-2.10.002 PC-005 — journal backed by SQLite checkpoint)
 `EvidenceJournal` persists entries to the SQLite checkpoint backend via `SqliteCheckpointSaver` in `pregolya-checkpoint/src/saver.rs`. Verified by `test_BC_2_10_002_journal_backed_by_sqlite()`.
 
-### AC-008 (traces to BC-2.10.002 edge case EC-001 — E-BUDGET-002 on journal write failure)
+### AC-008 (traces to BC-2.10.002 EC-001 — E-BUDGET-002 on journal write failure)
 If the journal fails to write an entry (I/O error, constraint violation), the budget evaluation returns `Err(PregolyaError { category: BUDGET, code: E-BUDGET-002, .. })`. The graph run does not proceed as if the journal write succeeded. Verified by `test_BC_2_10_002_journal_write_failure_returns_error()`.
 
-### AC-009 (traces to BC-2.10.003 postcondition 5 — OnCeiling::Halt produces E-BUDGET-001)
+### AC-009 (traces to BC-2.10.003 PC-005 — OnCeiling::Halt produces E-BUDGET-001)
 When `PolicyDecision::Deny` is returned and `BudgetConfig.on_ceiling = OnCeiling::Halt`, the scheduler halts the run and returns `Err(PregolyaError { category: BUDGET, code: E-BUDGET-001, retry_hint: Never, .. })`. No further nodes execute. Verified by `test_BC_2_10_003_halt_on_ceiling_returns_e_budget_001()`.
 
-### AC-010 (traces to BC-2.10.003 postcondition 2 — OnCeiling::Summarize calls one final LLM)
+### AC-010 (traces to BC-2.10.003 PC-008 — OnCeiling::Summarize calls one final LLM)
 When `PolicyDecision::Deny` and `on_ceiling = OnCeiling::Summarize`, the scheduler makes exactly one final LLM call to produce a summary, then transitions the run to `summary_halt` state. Verified by `test_BC_2_10_003_summarize_on_ceiling_calls_one_llm()`.
 
-### AC-011 (traces to BC-2.10.003 postcondition 3 — BudgetInfo available in node context)
+### AC-011 (traces to BC-2.10.003 PC-009 — BudgetInfo available in node context)
 Node functions can read `BudgetInfo { tokens_remaining: Option<i64>, steps_remaining: Option<i64> }` from the run context. Verified by `test_BC_2_10_003_budget_info_available_in_node_context()`.
 
-### AC-012 (traces to BC-2.10.003 invariant 1 — Halt never retried)
+### AC-012 (traces to BC-2.10.003 INV-004 — Halt never retried)
 `E-BUDGET-001` carries `retry_hint: Never`. The error is not transient; no automatic retry logic should be applied. Verified by `test_BC_2_10_003_e_budget_001_retry_hint_never()`.
 
-### AC-013 (traces to BC-2.10.004 postcondition 1 — Escalate always triggers HITL interrupt)
+### AC-013 (traces to BC-2.10.004 PC-001 — Escalate always triggers HITL interrupt)
 When `PolicyDecision::Escalate` is returned (regardless of `on_ceiling` setting), the scheduler calls `interrupt()` with a `BudgetEscalation { current_usage, ceiling, policy_name, reason }` payload. Verified by `test_BC_2_10_004_escalate_always_triggers_interrupt()`.
 
-### AC-014 (traces to BC-2.10.004 postcondition 2 — BudgetResume::Extend applies new ceiling)
+### AC-014 (traces to BC-2.10.004 PC-006 — BudgetResume::Extend applies new ceiling)
 When the HITL operator resumes with `BudgetResume::Extend { new_ceiling }`, the scheduler patches `RunnableConfig::budget_config` with the new ceiling and continues execution. The journal records the extension. Verified by `test_BC_2_10_004_budget_resume_extend_applies_new_ceiling()`.
 
-### AC-015 (traces to BC-2.10.004 postcondition 3 — BudgetResume::Halt stops the run)
+### AC-015 (traces to BC-2.10.004 PC-007 — BudgetResume::Halt stops the run)
 When the HITL operator resumes with `BudgetResume::Halt`, the scheduler halts the run with `E-BUDGET-001`. Verified by `test_BC_2_10_004_budget_resume_halt_stops_run()`.
 
-### AC-016 (traces to BC-2.10.004 invariant 1 — Deny + on_ceiling=Escalate triggers HITL even on hard ceiling)
+### AC-016 (traces to BC-2.10.004 PC-001 — Deny + on_ceiling=Escalate triggers HITL even on hard ceiling)
 When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the run is also interrupted via HITL before halting — the soft path applies first. Verified by `test_BC_2_10_004_deny_escalate_ceiling_triggers_hitl()`.
 
 ## Architecture Mapping
@@ -178,9 +180,9 @@ When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the r
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `BudgetPolicy::evaluate` is synchronous (not async) | BC-2.10.001 postcondition 1 | Trait signature: `fn evaluate` not `async fn evaluate` |
+| `BudgetPolicy::evaluate` is synchronous (not async) | BC-2.10.001 INV-001 | Trait signature: `fn evaluate` not `async fn evaluate` |
 | `EvidenceJournal` uses SQLite checkpoint backend — not a separate DB | BC-2.10.002 architecture anchors | Import path check: `pregolya-checkpoint::saver` (`SqliteCheckpointSaver`) |
-| `E-BUDGET-001` has `retry_hint: Never` | BC-2.10.003 invariant 1 | Unit test `test_BC_2_10_003_e_budget_001_retry_hint_never()` |
+| `E-BUDGET-001` has `retry_hint: Never` | BC-2.10.003 INV-004 | Unit test `test_BC_2_10_003_e_budget_001_retry_hint_never()` |
 | `Escalate` always triggers HITL interrupt — even when `on_ceiling = Halt` | BC-2.10.004 postcondition 1 | Unit test `test_BC_2_10_004_escalate_always_triggers_interrupt()` |
 | `pregolya-core/src/budget.rs` must NOT import from `pregolya-graph` | Dependency direction: graph → core | `cargo deny` + import scan |
 

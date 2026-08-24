@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.27
 epic_id: E-14
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 13 mis-anchors corrected (AC-001 PC1→INV-001, AC-002 PC2→INV-003, AC-003 PC3→PC-007, AC-004 PC4→EC-004, AC-005 BC5.PC1→INV-001, AC-006 BC5.PC2→PC-007, AC-007 BC5.PC3→INV-003, AC-008 BC6.PC1→PC-003, AC-009 BC6.PC2→INV-004, AC-010 BC6.PC3→PC-009, AC-011 BC7.PC1→INV-001, AC-012 BC7.PC2→PC-002, AC-013 BC7.PC3→INV-002)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
@@ -15,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "1970115"
+input-hash: "35c9361"
 traces_to:
   - behavioral-contracts/BC-2.12.004
   - behavioral-contracts/BC-2.12.005
@@ -71,55 +73,55 @@ Comfortable within context window. No split required.
 
 ### AC-001: CronSchedule — each firing creates a fresh isolated thread
 Each cron schedule firing creates a new `thread_id` for the session. Sessions from different firings are independent — they do not share thread state, checkpoints, or message history.
-(traces to BC-2.12.004 postcondition 1)
+(traces to BC-2.12.004 INV-001)
 
 ### AC-002: CronSchedule — missed firings are skipped (no accumulation)
 If the server was down during scheduled firing times, missed firings are not replayed or accumulated. The skip policy fires at most once on the next check interval regardless of how many firings were missed.
-(traces to BC-2.12.004 postcondition 2)
+(traces to BC-2.12.004 INV-003)
 
 ### AC-003: CronSchedule — cross-thread aggregate query by schedule_id
 `GET /runs?schedule_id=<id>` returns all runs across threads that were created by the named schedule. The schedule_id is stored on each run created by the cron scheduler.
-(traces to BC-2.12.004 postcondition 3)
+(traces to BC-2.12.004 PC-007)
 
 ### AC-004: CronSchedule — queue-full warning event
 When the cron scheduler's internal queue is full and a firing is dropped, the server emits a tracing event with `event_type = "server.cron_schedule_queue_full"`. Returns `E-CRON-001` (CronParseError), `E-CRON-002` (CronScheduleNotFound), `E-CRON-003` (CronScheduleConflict) on appropriate errors.
-(traces to BC-2.12.004 postcondition 4)
+(traces to BC-2.12.004 EC-004)
 
 ### AC-005: SecurityConfig::default — CORS denied (empty allowed_origins)
 `SecurityConfig::default()` configures CORS with an empty `allowed_origins` list. All cross-origin requests are denied. This is the DI-013 secure-by-default invariant.
-(traces to BC-2.12.005 postcondition 1)
+(traces to BC-2.12.005 INV-001)
 
 ### AC-006: SecurityConfig::default — debug route gated by key
 The `/_debug` route is disabled unless `debug_route_key: Some("non-empty-string")` is provided. An empty string `debug_route_key: Some("")` is rejected at startup with an error. Returns `E-SERVER-004` (DebugRouteUnauthorized) when key is missing; `E-SERVER-013` (InvalidDebugRouteKey) when key format is invalid.
-(traces to BC-2.12.005 postcondition 2)
+(traces to BC-2.12.005 PC-007)
 
 ### AC-007: CORS wildcard allowed but emits startup WARN
 `SecurityConfig` with CORS wildcard (`allowed_origins: ["*"]`) is a valid configuration but emits a startup tracing warning with `event_type = "server.security_config_cors_wildcard"`. The WARN is emitted once at server startup, not per-request.
-(traces to BC-2.12.005 postcondition 3)
+(traces to BC-2.12.005 INV-003)
 
 ### AC-008: IdempotencyStore — LRU + TTL cache; in-memory default
 `IdempotencyStore` trait is implemented by an in-memory LRU + TTL cache as the default. The trait seam allows injection of a persistent backend for production deployments (SID-1 compliance: unit tests use the in-memory implementation directly).
-(traces to BC-2.12.006 postcondition 1)
+(traces to BC-2.12.006 PC-003)
 
 ### AC-009: RateLimitStore — token-bucket algorithm; in-memory default emits startup WARN
 `RateLimitStore` trait uses a token-bucket algorithm. The default in-memory implementation emits a startup tracing warning with `event_type = "server.rate_limit_store_in_memory"` indicating it is not durable across restarts. Returns `E-SERVER-014` (RunStoreFailed) on store failure.
-(traces to BC-2.12.006 postcondition 2)
+(traces to BC-2.12.006 INV-004)
 
 ### AC-010: RunStore — SQLite durable default + in-memory option
 `RunStore` trait has two implementations: in-memory (non-durable, test use) and SQLite (durable across restarts). The SQLite implementation satisfies VP-STORE-02 (run state survives process restart). Route handlers use `Arc<dyn RunStore>` — never the concrete type.
-(traces to BC-2.12.006 postcondition 3)
+(traces to BC-2.12.006 PC-009)
 
 ### AC-011: SSE streaming uses same CompiledGraph engine as unary execution (DI-011)
 The SSE endpoint (`GET /threads/:id/runs/:run_id/stream`) invokes the same `CompiledGraph::run` execution path as the unary `POST /threads/:id/runs/:run_id/execute`. There is no separate streaming engine. This corrects NE-13.
-(traces to BC-2.12.007 postcondition 1)
+(traces to BC-2.12.007 INV-001)
 
 ### AC-012: SSE event types — run_start, node_start, node_stream, node_end, run_end
 SSE events emitted during a run: `run_start`, `node_start`, `node_stream` (NOT `node_delta` — that name is retired), `node_end`, `run_end`. `run_end` is ONLY emitted on successful completion. Failed or interrupted runs do NOT emit `run_end`.
-(traces to BC-2.12.007 postcondition 2)
+(traces to BC-2.12.007 PC-002)
 
 ### AC-013: Concurrent execution on same run_id returns E-SERVER-015
 If a second SSE or unary execution request arrives for a `run_id` that is already executing, returns `E-SERVER-015` (RunAlreadyExecuting). Only one execution per `run_id` at a time.
-(traces to BC-2.12.007 postcondition 3)
+(traces to BC-2.12.007 INV-002)
 
 ## Architecture Mapping
 

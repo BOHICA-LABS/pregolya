@@ -3,17 +3,19 @@ document_type: story
 level: ops
 story_id: S-1.23
 epic_id: E-12
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 3 mis-anchors corrected (AC-001 PRE-001→INV-002, AC-009 PC-002→EC-006, AC-010 INV-001→INV-002)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.007.md
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "a0cbc81"
+input-hash: "97ac1cd"
 traces_to:
   - behavioral-contracts/BC-2.05.007
   - behavioral-contracts/BC-2.05.008
@@ -65,47 +67,47 @@ Comfortable within context window. No split required.
 
 ### AC-001: pre_tool_dispatch called for every tool invocation, no bypass
 `pre_tool_dispatch` is called before every `DynTool::invoke` call. There is no code path that invokes a tool without passing through `pre_tool_dispatch`. The retry ordering is: `circuit_breaker → pre_tool_dispatch → invoke → retry_policy.record`.
-(traces to BC-2.05.007 precondition 1)
+(traces to BC-2.05.007 INV-002)
 
 ### AC-002: Approve branch — tool invoked with original args
 When `pre_tool_dispatch` returns `PreToolDecision::Approve`, the engine calls `tool.invoke(original_args)` and returns the result. No modification to args.
-(traces to BC-2.05.007 postcondition 1)
+(traces to BC-2.05.007 PC-001)
 
 ### AC-003: Deny branch — tool is NOT invoked; ToolOutput::Error returned
 When `pre_tool_dispatch` returns `PreToolDecision::Deny { reason }`, the engine returns `ToolOutput::Error(reason)` WITHOUT calling `tool.invoke`. This is the VP-011 (Kani P0) property: the Deny branch has zero calls to `tool.invoke`.
-(traces to BC-2.05.007 postcondition 2)
+(traces to BC-2.05.007 PC-002)
 
 ### AC-004: Edit branch — modified args validated, then tool invoked
 When `pre_tool_dispatch` returns `PreToolDecision::Edit { modified_args }`, the engine validates `modified_args` and then calls `tool.invoke(modified_args)`. If `modified_args` are invalid (fail tool schema validation), the edit degrades to Deny and `ToolOutput::Error` is returned without invoking the tool.
-(traces to BC-2.05.007 postcondition 3)
+(traces to BC-2.05.007 PC-003)
 
 ### AC-005: PendingHumanApproval branch — run interrupted with ToolApprovalRequest
 When `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval { prompt }`, the engine calls `interrupt(ToolApprovalRequest { tool_name, tool_args, action_risk, prompt })` and suspends execution. The tool is NOT invoked at this point.
-(traces to BC-2.05.007 postcondition 4)
+(traces to BC-2.05.007 PC-004)
 
 ### AC-006: Fallback — hook panic degrades to Deny
 If the configured `PreToolCallHook` panics (or returns an unrecoverable error), the engine treats the outcome as `Deny` and returns `ToolOutput::Error`. The tool is NOT invoked on hook panic.
-(traces to BC-2.05.007 postcondition 5)
+(traces to BC-2.05.007 PC-005)
 
 ### AC-007: VP-011 Kani P0 seed — Deny branch has NO call to tool.invoke
 This story is the VP-011 anchor. The Kani harness for VP-011 must verify: for all possible `PreToolDecision::Deny` paths in `pre_tool_dispatch`, no execution path contains a call to `tool.invoke`. The test `test_AC_007_deny_branch_no_invoke_kani_seed` provides the unit test vector: mock hook returning Deny, assert tool stub was never called.
-(traces to BC-2.05.007 invariant 1)
+(traces to BC-2.05.007 INV-001)
 
 ### AC-008: Skip-hook-on-resume — hook NOT re-called after PendingHumanApproval
-After a run is suspended with `PendingHumanApproval` and then resumed via `Command(resume=<decision>)`, `pre_tool_dispatch` is NOT called again. The delivered decision (`Approve`, `Deny`, or `Edit`) is applied directly per BC-2.05.007 postconditions 1-3 (branch PC-1, PC-2, or PC-3).
-(traces to BC-2.05.008 postcondition 1)
+After a run is suspended with `PendingHumanApproval` and then resumed via `Command(resume=<decision>)`, `pre_tool_dispatch` is NOT called again. The delivered decision (`Approve`, `Deny`, or `Edit`) is applied directly per BC-2.05.007 PC-001 through PC-003 (branch PC-001, PC-002, or PC-003).
+(traces to BC-2.05.008 PC-001)
 
 ### AC-009: PC-4 (PendingHumanApproval) is not valid on resume
 A resume `Command(resume=PendingHumanApproval)` is invalid. The engine rejects this and returns an error. `PendingHumanApproval` is only a valid hook decision, not a valid resume decision.
-(traces to BC-2.05.008 postcondition 2)
+(traces to BC-2.05.008 EC-006)
 
 ### AC-010: ToolApprovalRequest persisted via msgpack for process-restart durability
 The `ToolApprovalRequest` interrupt payload is persisted using the msgpack checkpoint mechanism so that a process restart can reconstruct the pending approval state. FIFO ordering of pending approvals is maintained per the approval queue invariant (see BC-2.05.008 invariant 1).
-(traces to BC-2.05.008 invariant 1)
+(traces to BC-2.05.008 INV-002)
 
 ### AC-011: Pure-core router functions — fail-closed routing (VP-011 Kani proof targets)
 `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` and `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` are implemented as named pure sync functions in `pregolya_graph::hitl`. `DispatchOutcome` has variants `Proceed(Option<serde_json::Value>)` and `Reject(String)`. Routing semantics: `Deny{reason}` → `Reject(reason)`; `Approve` → `Proceed(None)`; `Edit{modified_args}` where `modified_args` is a JSON object → `Proceed(Some(modified_args))`; `Edit{modified_args}` where `modified_args` is NOT a JSON object → `Reject("invalid modified_args")`; `#[non_exhaustive]` wildcard arm → `Reject("unexpected_variant")`; `shield_hook_result(Err(_))` → `Deny{reason: "hook error: <detail>"}`. The VP-011 Kani harness stub (`deny_excludes_tool_invocation` in `src/proofs/pre_tool_hook.rs`) calls `route_pre_tool_decision` and `shield_hook_result` directly and MUST compile against this implementation.
-(traces to BC-2.05.007 postcondition 7)
+(traces to BC-2.05.007 PC-007)
 
 ## Architecture Mapping
 
@@ -114,8 +116,8 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 | `PreToolCallHook` trait | `pregolya_graph::hitl` | pregolya-graph | Pure (trait definition) |
 | `PreToolDecision` enum | `pregolya_graph::hitl` | pregolya-graph | Pure (enum) |
 | `DispatchOutcome` enum | `pregolya_graph::hitl` | pregolya-graph | Pure (enum — `Proceed(Option<serde_json::Value>)` / `Reject(String)`) |
-| `route_pre_tool_decision` | `pregolya_graph::hitl` | pregolya-graph | Pure (sync, no I/O — VP-011 Kani proof target per BC-2.05.007 PC-7) |
-| `shield_hook_result` | `pregolya_graph::hitl` | pregolya-graph | Pure (sync, no I/O — VP-011 Kani proof target per BC-2.05.007 PC-7) |
+| `route_pre_tool_decision` | `pregolya_graph::hitl` | pregolya-graph | Pure (sync, no I/O — VP-011 Kani proof target per BC-2.05.007 PC-007) |
+| `shield_hook_result` | `pregolya_graph::hitl` | pregolya-graph | Pure (sync, no I/O — VP-011 Kani proof target per BC-2.05.007 PC-007) |
 | `pre_tool_dispatch` | `pregolya_graph::hitl` | pregolya-graph | Effectful (async wrapper; calls hook, peels `PendingHumanApproval`, may interrupt run) |
 | `ToolApprovalRequest` | `pregolya_graph::hitl` | pregolya-graph | Pure (data type) |
 
@@ -132,8 +134,8 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 | `PreToolDecision` | Pure | Enum with no side effects |
 | `DispatchOutcome` | Pure | Enum with no side effects (`Proceed` / `Reject`) |
 | `PreToolCallHook::pre_invoke` | Pure (trait contract) | Returns decision; no I/O by contract |
-| `route_pre_tool_decision` | Pure (sync) | Pure match over `PreToolDecision` → `DispatchOutcome`; no I/O, no await — VP-011 Kani proof target per BC-2.05.007 PC-7 |
-| `shield_hook_result` | Pure (sync) | Pure conversion `Result<PreToolDecision, HookError>` → `PreToolDecision`; `Err(_)` → `Deny{reason: "hook error: <detail>"}`, `Ok(d)` → `d`; no I/O — VP-011 Kani proof target per BC-2.05.007 PC-7 |
+| `route_pre_tool_decision` | Pure (sync) | Pure match over `PreToolDecision` → `DispatchOutcome`; no I/O, no await — VP-011 Kani proof target per BC-2.05.007 PC-007 |
+| `shield_hook_result` | Pure (sync) | Pure conversion `Result<PreToolDecision, HookError>` → `PreToolDecision`; `Err(_)` → `Deny{reason: "hook error: <detail>"}`, `Ok(d)` → `d`; no I/O — VP-011 Kani proof target per BC-2.05.007 PC-007 |
 | `pre_tool_dispatch` | Effectful | Async wrapper; calls hook, shields result, peels `PendingHumanApproval` interrupt, calls `route_pre_tool_decision` for routable variants |
 | `ToolApprovalRequest` | Pure | Data type; serialization is separate |
 
@@ -155,9 +157,9 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 
 - [ ] Create `crates/pregolya-graph/src/hitl.rs` — single module for all PreTool/HITL surface items
 - [ ] Register module: add `pub mod hitl;` in `crates/pregolya-graph/src/lib.rs`
-- [ ] Implement `DispatchOutcome` enum: `Proceed(Option<serde_json::Value>)` / `Reject(String)` in `hitl.rs` (BC-2.05.007 PC-7)
-- [ ] Implement `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` — pure sync; `Deny{reason}` → `Reject(reason)`; `Approve` → `Proceed(None)`; `Edit{obj}` where obj is JSON object → `Proceed(Some(obj))`; `Edit{non-obj}` → `Reject("invalid modified_args")`; `#[non_exhaustive]` wildcard → `Reject("unexpected_variant")` (BC-2.05.007 PC-7; VP-011 Kani target)
-- [ ] Implement `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` — pure sync; `Err(_)` → `Deny{reason: "hook error: <detail>"}`, `Ok(d)` → `d` (BC-2.05.007 PC-7; VP-011 Kani target)
+- [ ] Implement `DispatchOutcome` enum: `Proceed(Option<serde_json::Value>)` / `Reject(String)` in `hitl.rs` (BC-2.05.007 PC-007)
+- [ ] Implement `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` — pure sync; `Deny{reason}` → `Reject(reason)`; `Approve` → `Proceed(None)`; `Edit{obj}` where obj is JSON object → `Proceed(Some(obj))`; `Edit{non-obj}` → `Reject("invalid modified_args")`; `#[non_exhaustive]` wildcard → `Reject("unexpected_variant")` (BC-2.05.007 PC-007; VP-011 Kani target)
+- [ ] Implement `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` — pure sync; `Err(_)` → `Deny{reason: "hook error: <detail>"}`, `Ok(d)` → `d` (BC-2.05.007 PC-007; VP-011 Kani target)
 - [ ] Implement `PreToolDecision` enum — `#[non_exhaustive]`; variants: `Approve` / `Deny { reason: String }` / `Edit { modified_args: serde_json::Value }` / `PendingHumanApproval { prompt: String }`
 - [ ] Implement `PreToolCallHook` trait in `hitl.rs`
 - [ ] Implement `pre_tool_dispatch` — async wrapper: calls hook, shields result via `shield_hook_result`, peels `PendingHumanApproval` (calls `interrupt(ToolApprovalRequest{..})`), calls `route_pre_tool_decision` for remaining variants

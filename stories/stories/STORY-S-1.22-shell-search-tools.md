@@ -3,17 +3,19 @@ document_type: story
 level: ops
 story_id: S-1.22
 epic_id: E-13
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b54cfce"
+input-hash: "970624c"
 traces_to:
   - behavioral-contracts/BC-2.23.005
   - behavioral-contracts/BC-2.23.006
@@ -66,55 +68,55 @@ Comfortable within context window. No split required.
 
 ### AC-001: BashTool — default ActionRisk is High
 `BashTool::action_risk()` returns `ActionRisk::High` by default. This is the baseline tier applied when no `ToolConfig::override_risk` is specified.
-(traces to BC-2.23.005 postcondition 1)
+(traces to BC-2.23.005 PRE-003)
 
 ### AC-002: BashTool — risk floor is Medium; cannot be lowered below Medium
 `ToolConfig::override_risk(ActionRisk::ReadOnly)` returns `Err` at call time. `ToolConfig::override_risk(ActionRisk::Medium)` returns `Ok`. The builder-consuming validator ensures the registry never receives a `BashTool` configured below `ActionRisk::Medium`. This property is the seed for VP-013 (Kani P1).
-(traces to BC-2.23.005 postcondition 2)
+(traces to BC-2.23.005 INV-001)
 
 ### AC-003: BashTool — 256 KiB output cap (exactly 262,144 bytes)
 Combined stdout + stderr output is capped at 262,144 bytes. If the process emits more, the output is truncated and `BashOutput::truncated` is set to `true`. The error code `E-TOOLS-005` is a non-raised payload flag (set on `BashOutput`), not returned as `Err`.
-(traces to BC-2.23.005 postcondition 3)
+(traces to BC-2.23.005 PC-002)
 
 ### AC-004: BashTool — 30-second timeout via tokio::time::timeout
 `tokio::time::timeout(Duration::from_secs(30), sandbox.execute(cmd))` wraps every command execution. On timeout, returns `Err(PregolyaError { code: "E-TOOLS-004", .. })`.
-(traces to BC-2.23.005 postcondition 4)
+(traces to BC-2.23.005 PC-003)
 
 ### AC-005: BashTool — non-zero exit code is NOT Err
 `BashOutput { stdout, stderr, exit_code: 1, truncated: false }` is returned as `Ok(BashOutput { .. })`, not as `Err`. Non-zero exit code is part of the normal output payload. Only timeout and confinement violations produce `Err`.
-(traces to BC-2.23.005 postcondition 5)
+(traces to BC-2.23.005 PC-001)
 
 ### AC-006: BashTool — risk tier violation error E-TOOLS-007
 If the runtime risk tier passed at invoke time is lower than `ActionRisk::Medium` (should not occur after call-time validation, but as a defense-in-depth check), returns `Err(PregolyaError { code: "E-TOOLS-007", .. })`.
-(traces to BC-2.23.005 postcondition 6)
+(traces to BC-2.23.005 PC-004)
 
 ### AC-007: GrepTool — in-process regex search using `regex` crate (linear-time DFA)
 `GrepTool::invoke` performs regex matching entirely in-process using `regex = "1"` (linear-time DFA). No subprocess is spawned. Behavior is hermetic (no filesystem side effects other than reads).
-(traces to BC-2.23.006 postcondition 1)
+(traces to BC-2.23.006 INV-001)
 
 ### AC-008: GrepTool — PathGuard confinement on directory traversal
 `canonicalize_beneath_root` is applied to the search root before any traversal. An attempt to search outside the workspace returns `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
-(traces to BC-2.23.006 postcondition 2)
+(traces to BC-2.23.006 PC-003)
 
 ### AC-009: GrepTool — max_results cap of 100; capped flag
 When the number of matches reaches 100, `GrepTool` stops collecting matches and sets `GrepResult::capped = true`. `E-TOOLS-006` is NOT raised as `Err`; it is a non-raised payload flag reflected in `GrepResult::capped`.
-(traces to BC-2.23.006 postcondition 3)
+(traces to BC-2.23.006 PC-002)
 
 ### AC-010: GrepTool — traversal I/O error fails entire search
 If a filesystem I/O error occurs during directory traversal (e.g., permission denied on a subdirectory), `GrepTool` returns `Err(PregolyaError { code: "E-TOOLS-008", .. })`. Partial results are NOT returned. The entire search fails.
-(traces to BC-2.23.006 postcondition 4)
+(traces to BC-2.23.006 PC-006)
 
 ### AC-011: GrepTool — invalid regex returns E-TOOLS-009
 Providing a regex pattern that fails to compile returns `Err(PregolyaError { code: "E-TOOLS-009", .. })` before any filesystem traversal.
-(traces to BC-2.23.006 postcondition 5)
+(traces to BC-2.23.006 PC-004)
 
 ### AC-012: GrepTool — GrepResult payload: matches with file, line, text
 `GrepResult::matches` is `Vec<GrepMatch>` where each `GrepMatch` has `file: PathBuf`, `line: u64`, and `text: String`. ActionRisk is `ActionRisk::ReadOnly`.
-(traces to BC-2.23.006 invariant 1)
+(traces to BC-2.23.006 PC-001)
 
 ### AC-013: VP-013 seed — ToolConfig::override_risk call-time validation (Kani anchor)
 This story is the VP-013 anchor. `check_risk_floor(risk: ActionRisk) -> Result<(), PregolyaError>` is defined as a pure-core synchronous function in `pregolya_tools::shell::bash` (`bash.rs`); `ToolConfig::override_risk` delegates to it for floor enforcement. The Kani harness `risk_floor_rejects_below_medium` (VP-013) verifies: for all `ActionRisk` variants `r`, `check_risk_floor(r)` returns `Ok(())` iff `r >= ActionRisk::Medium`, else `Err(PregolyaError { code: "E-TOOLS-007", .. })`. The test vector `test_AC_013_bash_risk_floor_kani_seed` exercises both the rejection of `ReadOnly` and the acceptance of `Medium`.
-(traces to BC-2.23.005 invariant 1)
+(traces to BC-2.23.005 INV-001)
 
 ## Architecture Mapping
 

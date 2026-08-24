@@ -3,17 +3,17 @@ document_type: story
 level: ops
 story_id: S-1.15
 epic_id: E-07
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.005.md
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "da28b11"
+input-hash: "67fe9a9"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -29,6 +29,8 @@ estimated_days: 2
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
 > **tdd_mode:** strict — full TDD Iron Law enforced.
@@ -52,37 +54,37 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.02.005 postcondition 1 — add_conditional_edges registers routing function)
+### AC-001 (traces to BC-2.02.005 PC-001 — add_conditional_edges registers routing function)
 `add_conditional_edges(source, path_fn)` registers a routing function that is called after `source` node completes; its return value selects the next node(s). Verified by `test_BC_2_02_005_conditional_edge_routes_correctly()`.
 
-### AC-002 (traces to BC-2.02.005 postcondition 2 — path_fn panic caught and routed to error)
+### AC-002 (traces to BC-2.02.005 PC-005 — path_fn panic caught and routed to error)
 If `path_fn` panics, the panic is caught via `std::panic::catch_unwind`; the super-step returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-011, .. })` with `{ source_node, message }`. The graph does not propagate the panic. Verified by `test_BC_2_02_005_path_fn_panic_caught()`.
 
-### AC-003 (traces to BC-2.02.005 postcondition 3 — path_map validates routing targets at compile time)
+### AC-003 (traces to BC-2.02.005 PC-004 — path_map validates routing targets at compile time)
 When `path_map` is provided, `compile()` validates that every value in `path_map` is a registered node name. If not, `compile()` returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-012, .. })`. Verified by `test_BC_2_02_005_path_map_validated_at_compile()`.
 
-### AC-004 (traces to BC-2.02.005 invariant 1 — unknown route returns error not panic)
+### AC-004 (traces to BC-2.02.005 INV-003 — unknown route returns error not panic)
 If `path_fn` returns a node name not in the graph or not in `path_map`, the engine returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-003, .. })` rather than panicking. Verified by `test_BC_2_02_005_unknown_route_returns_error()`.
 
-### AC-005 (traces to BC-2.02.005 postcondition 4 — multiple conditional edges on same source allowed)
+### AC-005 (traces to BC-2.02.005 INV-004 — multiple conditional edges on same source allowed)
 Multiple `add_conditional_edges` calls with the same `source` node are cumulative — all routing functions run. Verified by `test_BC_2_02_005_multiple_conditional_edges_on_source()`.
 
-### AC-006 (traces to BC-2.02.006 postcondition 1 — Send API produces PUSH tasks on TASKS topic)
+### AC-006 (traces to BC-2.02.006 PC-001 — Send API produces PUSH tasks on TASKS topic)
 `Send("worker", arg_i)` from within a node function produces a PUSH task entry on the TASKS topic. The PUSH task is not executed in the current super-step; it is queued for the next scheduling cycle. Verified by `test_BC_2_02_006_send_api_produces_push_tasks()`.
 
-### AC-007 (traces to BC-2.02.006 postcondition 2 — task ID is deterministic xxh3_128 hash)
+### AC-007 (traces to BC-2.02.006 PC-004 — task ID is deterministic xxh3_128 hash)
 Each PUSH task's `task_id` is `xxh3_128(checkpoint_id ++ ns ++ step ++ node ++ "PUSH" ++ arg_hash)` encoded as a lowercase hex string. The same inputs always produce the same task_id. Verified by `test_BC_2_02_006_task_id_is_deterministic()`.
 
-### AC-008 (traces to BC-2.02.006 postcondition 3 — fan-out tasks dispatched independently)
+### AC-008 (traces to BC-2.02.006 PC-003 — fan-out tasks dispatched independently)
 Multiple `Send(...)` calls in the same super-step produce multiple independent PUSH tasks, each with its own task_id. Tasks are dispatched independently — no implicit ordering between fan-out branches. Verified by `test_BC_2_02_006_fanout_tasks_independent()`.
 
-### AC-009 (traces to BC-2.02.006 invariant 1 — UntrackedValue sanitized before task argument serialization)
+### AC-009 (traces to BC-2.02.006 INV-004 — UntrackedValue sanitized before task argument serialization)
 Any `UntrackedValue` in the `Send` argument is replaced with `None` (sanitized) before the argument is serialised into the PUSH task record. No `UntrackedValue` data crosses the task boundary. Verified by `test_BC_2_02_006_untracked_value_sanitized()`.
 
-### AC-010 (traces to BC-2.02.006 invariant 2 — crash recovery idempotent via task_id)
+### AC-010 (traces to BC-2.02.006 INV-003 — crash recovery idempotent via task_id)
 If a PUSH task crashes before completing, resubmitting the same `Send(...)` with the same inputs produces the same `task_id`, enabling at-least-once idempotent recovery via task deduplication. Verified by `test_BC_2_02_006_crash_recovery_idempotent()`.
 
-### AC-011 (traces to BC-2.02.006 postcondition 4 — Send API available from within node async fn)
+### AC-011 (traces to BC-2.02.006 PC-001 — Send API available from within node async fn)
 Node functions receive a context object with a `send` method; calling `ctx.send("target", value)` queues the PUSH task without blocking the current node. Verified by `test_BC_2_02_006_send_available_in_node_context()`.
 
 ## Architecture Mapping
@@ -152,8 +154,8 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `std::panic::catch_unwind` only for path_fn dispatch — not elsewhere | BC-2.02.005; CLAUDE.md forbids panics in production paths | Code review |
-| Task ID computation is pure and deterministic — same inputs = same hash | BC-2.02.006 postcondition 2; BSP determinism requirement | Unit test: `test_BC_2_02_006_task_id_is_deterministic()` |
-| `UntrackedValue` must be sanitized before task arg serialization | BC-2.02.006 invariant 1 | Unit test: `test_BC_2_02_006_untracked_value_sanitized()` |
+| Task ID computation is pure and deterministic — same inputs = same hash | BC-2.02.006 PC-004; BSP determinism requirement | Unit test: `test_BC_2_02_006_task_id_is_deterministic()` |
+| `UntrackedValue` must be sanitized before task arg serialization | BC-2.02.006 INV-004 | Unit test: `test_BC_2_02_006_untracked_value_sanitized()` |
 | No `unwrap()` / `expect()` in non-test code | CLAUDE.md §No unwrap / expect | `cargo clippy -D clippy::unwrap_used` |
 | `#[non_exhaustive]` on all public enums/structs | CLAUDE.md §`#[non_exhaustive]` | Non-exhaustive gate crate |
 

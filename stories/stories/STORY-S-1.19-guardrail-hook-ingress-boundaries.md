@@ -3,10 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
+changelog:
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.001.md
@@ -17,7 +19,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4133293"
+input-hash: "0588258"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.04]
@@ -90,13 +92,13 @@ The execution order is: `ProvenanceTag` attached first, then `GuardrailHook::eva
 ### AC-010 (traces to BC-2.11.003 postcondition 1 — evaluate called for every RAG chunk)
 When a hook is registered and RAG retrieval returns N chunks, `evaluate(IngressContent::RagChunk(Value), provenance_tag)` is called exactly N times — once per chunk. Verified by `test_BC_2_11_003_evaluate_called_n_times_for_n_chunks()`.
 
-### AC-011 (traces to BC-2.11.003 postcondition 3 — failed RAG chunk gets error block, passing chunks proceed)
+### AC-011 (traces to BC-2.11.003 PC-005 — failed RAG chunk gets error block, passing chunks proceed)
 A non-Critical `Fail` on chunk K does not block chunks 0..K-1 and K+1..N-1 that already passed. Each chunk's decision is independent. Verified by `test_BC_2_11_003_partial_chunk_fail_does_not_block_others()`.
 
 ### AC-012 (traces to BC-2.11.003 invariant 4 — independent chunk evaluation)
 One chunk's `Fail` result does not cause adjacent chunks in the same retrieval call to skip evaluation. All N chunks are evaluated regardless of any `Fail` results (except `Critical` which halts the run). Verified by `test_BC_2_11_003_all_chunks_independently_evaluated()`.
 
-### AC-013 (traces to BC-2.11.003 postcondition 5 — GuardrailDecision emitted within NodeStart/NodeEnd window)
+### AC-013 (traces to BC-2.11.003 PC-003 — GuardrailDecision emitted within NodeStart/NodeEnd window)
 `StreamEvent::GuardrailDecision` for RAG/memory boundaries is emitted within the enclosing `NodeStart`/`NodeEnd` event window (not within `ToolStart`/`ToolEnd`). Verified by `test_BC_2_11_003_guardrail_decision_in_node_window()`.
 
 ### AC-014 (traces to BC-2.11.004 postcondition 1 — evaluate called for every memory item)
@@ -105,7 +107,7 @@ When a hook is registered and memory read returns M items, `evaluate(IngressCont
 ### AC-015 (traces to BC-2.11.004 invariant 1 — guardrail fires at retrieval time not storage time)
 The guardrail fires when a memory item is retrieved and about to be injected into model context — not when it was originally stored. An item stored without a hook present is still evaluated when retrieved if a hook is now registered. Verified by `test_BC_2_11_004_guardrail_fires_at_retrieval_not_storage()`.
 
-### AC-016 (traces to BC-2.11.004 postcondition 5 — memory items not destined for model context skip guardrail)
+### AC-016 (traces to BC-2.11.004 INV-003 — memory items not destined for model context skip guardrail)
 Memory items retrieved for internal routing decisions (not injected into model context) do not trigger `GuardrailHook::evaluate`. The ingress boundary is the model-context-injection boundary. Verified by `test_BC_2_11_004_non_context_memory_skips_guardrail()`.
 
 ### AC-017 (traces to BC-2.11.005 postcondition 1 — zero bytes of rejected content in model input buffer)

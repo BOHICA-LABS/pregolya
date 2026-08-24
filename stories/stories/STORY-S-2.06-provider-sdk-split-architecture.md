@@ -3,16 +3,16 @@ document_type: story
 level: ops
 story_id: S-2.06
 epic_id: E-19
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3c2f849"
+input-hash: "9d1f57e"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.04]
@@ -47,7 +47,7 @@ tdd_mode: strict
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-2.08.006 postcondition 1)
+### AC-001 (traces to BC-2.08.006 PC-001)
 Each provider has a two-crate structure:
 - `pregolya-openai-sdk` — wire HTTP client for the OpenAI API; no `pregolya-core` dependency
 - `pregolya-openai` — adapter crate; imports both `pregolya-core` and `pregolya-openai-sdk`
@@ -63,7 +63,7 @@ The `native-tls`, `default-tls`, `native-tls-alpn`, and `native-tls-vendored` fe
 absent from all Cargo.toml files in the workspace.
 Verified by `test_BC_2_08_006_reqwest_rustls_tls_only()` — grep workspace for forbidden feature names.
 
-### AC-003 (traces to BC-2.08.006 postcondition 3)
+### AC-003 (traces to BC-2.08.006 EC-002)
 Each SDK builder (e.g., `OpenAiSdkBuilder`) requires `.timeout(Duration)` to be called before
 `.build()`. If `.timeout()` is never called, `build()` returns:
 `Err(PregolyaError::new(Component::Core, Category::Val, RetryHint::Never, "E-CORE-005",
@@ -73,14 +73,14 @@ field is a construction-time validation failure; `Category::Config` is not a def
 The message must follow the canonical E-CORE-005 format: `"Validation failed for '<field>': <reason>"`.
 Verified by `test_BC_2_08_006_sdk_builder_missing_timeout_returns_e_core_005()`.
 
-### AC-004 (traces to BC-2.08.006 postcondition 4)
+### AC-004 (traces to BC-2.08.006 PC-002)
 `OpenAiSdkBuilder::timeout(Duration)` with a valid duration (e.g., `Duration::from_secs(30)`)
 followed by `.build()` returns `Ok(OpenAiSdk)` with the client configured to use the specified
 timeout. The reqwest client is constructed with `ClientBuilder::new()` + `.timeout(duration)`
 + `.build()`.
 Verified by `test_BC_2_08_006_sdk_builder_with_timeout_ok()`.
 
-### AC-005 (traces to BC-2.08.006 postcondition 1 — crate-separation topology)
+### AC-005 (traces to BC-2.08.006 PC-001 — crate-separation topology)
 SDK crates (`pregolya-openai-sdk` etc.) have NO dependency on any `pregolya-*` adapter crate.
 The dependency graph is:
 ```
@@ -90,7 +90,7 @@ pregolya-openai       → depends on pregolya-core + pregolya-openai-sdk
 Any SDK crate that gains a `pregolya-core` dependency fails a CI cargo-deny check.
 Verified by `test_BC_2_08_006_sdk_dep_graph_acyclic_no_core()`.
 
-### AC-006 (traces to BC-2.14.005 postcondition 2 — credential newtype REDACTED Debug)
+### AC-006 (traces to BC-2.14.005 PC-002 — credential newtype REDACTED Debug)
 API key types in SDK crates (`OpenAiApiKey`, `AnthropicApiKey`, `OllamaBaseUrl`) are
 newtypes with REDACTED `Debug` implementations:
 ```
@@ -108,7 +108,7 @@ or feature-flag check). At minimum, `cargo tree -e features -p pregolya-openai-s
 returns empty in CI.
 Verified by `test_BC_2_08_006_tls_backend_is_rustls()`.
 
-### AC-008 (traces to BC-2.08.006 invariant 2)
+### AC-008 (traces to BC-2.08.006 EC-002)
 The 30-second default timeout convention: SDK builders that do NOT receive an explicit
 `.timeout()` call produce `Err(E-CORE-005)`. There is NO silent default of 30 seconds
 in the builder — the caller must be explicit. The 30-second CLAUDE.md convention is a
@@ -197,12 +197,12 @@ workspace — set the correct pattern from the start. Future crates inherit this
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| `pregolya-*-sdk` crates have NO `pregolya-core` dependency | BC-2.08.006 postcondition 1; ADR split architecture | `cargo deny` check; CI dependency graph assertion |
+| `pregolya-*-sdk` crates have NO `pregolya-core` dependency | BC-2.08.006 PC-001; ADR split architecture | `cargo deny` check; CI dependency graph assertion |
 | `reqwest` with `default-features = false, features = ["rustls-tls"]` only | BC-2.08.006 postcondition 2; CLAUDE.md Code Conventions | `cargo deny` feature check; workspace-wide grep |
 | `native-tls`, `default-tls`, `native-tls-alpn`, `native-tls-vendored` absent from all Cargo.toml files | CLAUDE.md Code Conventions | grep check in CI |
-| SDK builder `.build()` without `.timeout()` returns `Err(E-CORE-005)` | BC-2.08.006 postcondition 3 | Unit test AC-003 |
-| No silent 30s default timeout in builder | BC-2.08.006 invariant 2 | Unit test AC-008 |
-| Credential newtypes have REDACTED `Debug` — no `Display` | CLAUDE.md Code Conventions; BC-2.14.005 postcondition 2 | Unit tests AC-006 |
+| SDK builder `.build()` without `.timeout()` returns `Err(E-CORE-005)` | BC-2.08.006 EC-002 | Unit test AC-003 |
+| No silent 30s default timeout in builder | BC-2.08.006 EC-002 | Unit test AC-008 |
+| Credential newtypes have REDACTED `Debug` — no `Display` | CLAUDE.md Code Conventions; BC-2.14.005 PC-002 | Unit tests AC-006 |
 | `lib.rs` and `mod.rs` are re-export-only | CLAUDE.md Code Conventions | Code review |
 
 **Forbidden dependencies:** `pregolya-openai-sdk`, `pregolya-anthropic-sdk`, `pregolya-ollama-sdk` must NOT depend on `pregolya-core`, `pregolya-graph`, `pregolya-prompts`, `pregolya-vectorstores`, or any other `pregolya-*` crate. SDK crates must be independently publishable to crates.io with zero internal dependencies.
@@ -235,3 +235,7 @@ workspace — set the correct pattern from the start. Future crates inherit this
 | `pregolya-ollama/Cargo.toml` | CREATE | Adapter; depends on pregolya-core + pregolya-ollama-sdk |
 | `pregolya-ollama/src/lib.rs` | CREATE | Re-export-only stub |
 | `Cargo.toml` (workspace root) | MODIFY | Add all 6 crates to `members` list |
+
+## Changelog
+
+- 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. AC-001 postcondition 1→PC-001; AC-003 postcondition 3→EC-002 (semantic: timeout missing error); AC-004 postcondition 4→PC-002 (semantic: SDK client mandatory timeout positive case); AC-005 postcondition 1→PC-001; AC-006 BC-2.14.005 postcondition 2→PC-002; AC-008 invariant 2→EC-002 (semantic: no silent default timeout). Architecture Compliance Rules table updated accordingly. ESCALATION: AC-002 (BC-2.08.006 postcondition 2, rustls-tls Cargo config) and AC-007 (BC-2.08.006 invariant 1, TLS backend) have no matching clause in BC-2.08.006; recommend PO add an INV for TLS backend enforcement or a dedicated BC.
