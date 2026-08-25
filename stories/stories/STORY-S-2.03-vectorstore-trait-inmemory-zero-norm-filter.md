@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.03
 epic_id: E-17
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "213c276"
+input-hash: "c4911f5"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 10
 depends_on: [S-2.02, S-1.04, S-2.09]
@@ -27,7 +27,7 @@ priority: P0
 cycle: v1.0.0-greenfield
 wave: 2
 target_module: pregolya-vectorstores
-subsystems: [SS-21]
+subsystems: [SS-21, SS-20]
 estimated_days: 3
 assumption_validations: []
 risk_mitigations: []
@@ -316,3 +316,4 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 12 semantic re-anchors applied (see escalation notes)"
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-01: AC-004 similarity-score range corrected to normalized [0.0,1.0], re-anchored BC-2.21.001 PC-002+INV-002"
 - "1.3 (P2A-043/2026-08-24): P2A-043 F-03: PC-003 anchor confirmed by PO; escalation note cleared"
+- "1.4 (P2A-047/2026-08-24): F-047-02: SS-20 added to subsystems — BC-2.20.003 is owned by SS-20 (Document Retrieval) per ARCH-INDEX Subsystem Registry; subsystems must be a superset of covered-BC owners; STORY-INDEX S-2.03 Subsystem column updated to SS-21, SS-20."

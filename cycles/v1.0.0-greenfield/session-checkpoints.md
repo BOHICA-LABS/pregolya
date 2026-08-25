@@ -2921,3 +2921,21 @@ Census: story files 40 (39 product + 1 maint) / BC 133 / VP 14 / EC 119.
 ### DECISION DELTA: D-258 P2A-043 ALL BLOCKING CLOSED (stable-anchor completeness; census reconciled; process-gap ORDINAL-RESIDUE-GATE codified). Prior: D-257 ADR-027 M4 COMPLETE. D-255 v1 dev-tooling approved.
 
 ### STATE: v5.72, timestamp 2026-08-25T00:05:00Z
+
+---
+
+## v5.75 checkpoint (archived 2026-08-24; replaced by v5.76)
+
+<!-- Archived from STATE.md §Session Resume Checkpoint v5.75 -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 story-decomposition, adversarial 3-CLEAN reconvergence, streak 0/3. ADR-027 stable-anchor migration M1→M4 COMPLETE (SEMANTIC-ANCHOR-DRIFT closed). NEXT ACTION: re-pass adversary P2A-047 on this HEAD (need 3 consecutive CLEAN-strict). HEADS: develop 644d1ad (clean, untouched); factory-artifacts = this commit. worktrees none; PRs none. Census 39/133/14/120. PENDING USER-APPROVED: dev-tooling v1 expansion D-255 (4 surfaces: CLI/Web-Dev-UI/eval-runner/trace-inspector) AFTER Phase-2 convergence; ORDINAL-RESIDUE-GATE promote verify-ordinal-form-residue.sh (OE-1..OE-9) advisory→blocking once 0-stable. GOVERNANCE: D-260 (S-7.01 maintenance waiver + canonical BC formats), ADR-027 §Scope Boundary (derived-prose ordinals OUT-of-scope, adversary-governed — future passes must NOT flag them). RECURRING PROCESS-GAP: background session-review agent leaves sidecar-learning.md dirty → trips wave-gate SHA-currency (hit 3x); quiesce it. PENDING HUMAN: E013 default_branch→main, R6 namespace publish, B1 direnv, TDIV-008 engine path_allow. DECISION DELTA this session: D-252..D-262 (exhaustive).
+
+### HEADS
+- develop: 644d1ad — clean, PUSHED, untouched this session.
+- factory-artifacts: see `git -C .factory log -1 --format='%h %s'`
+- worktrees: none. Open PRs: none.
+
+### DECISION DELTA: D-252..D-262 (exhaustive). P2A-046 ALL CLOSED (D-262): 2 HIGH/1 MED/2 LOW; BC-2.18.002 {INV-007}; OE-9 checker; Census 39/133/14/120.
+
+### STATE: v5.75, timestamp 2026-08-24T20:09:00Z

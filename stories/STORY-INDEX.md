@@ -1,11 +1,12 @@
 ---
 document_type: story-index
-version: "1.1"
+version: "1.2"
 status: active
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (P2A-044/2026-08-24): Revert P2A-043 over-propagation — BC-2.06.001 removed from S-1.27 behavioral_contracts (taxonomy reference not coverage); BC-2.06.001 §Story Anchor updated to S-1.17 only."
+  - "1.2 (P2A-047/2026-08-24): F-047-02: S-2.03 Subsystem column updated SS-21 → SS-21, SS-20 (BC-2.20.003 owned by SS-20 Document Retrieval per ARCH-INDEX Subsystem Registry; subsystems field is a superset of covered-BC-owning + implementation-touched subsystems, per S-1.13 SS-15,SS-03 precedent). Story versions: S-2.03 v1.3→v1.4; S-2.04 v1.3→v1.4 (verification_properties frontmatter cleared to []; VP-2.18.003-A/B are BC-local not VP-INDEX-registered)."
 phase: 2
 traces_to: .factory/specs/behavioral-contracts/BC-INDEX.md
 inputs:
@@ -119,7 +120,7 @@ input-hash: "f6e9b48"
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
-| S-2.03 | VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard and MetadataFilter | BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003 | SS-21 | pregolya-vectorstores | P0 | 10 | [S-2.02, S-1.04, S-2.09] | draft |
+| S-2.03 | VectorStore Trait, InMemoryVectorStore, Zero-Norm Guard and MetadataFilter | BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.20.003 | SS-21, SS-20 | pregolya-vectorstores | P0 | 10 | [S-2.02, S-1.04, S-2.09] | draft |
 
 ### Wave 2 — pregolya-prompts (Prompt Templates and Injection Safety)
 

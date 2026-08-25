@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.04
 epic_id: E-18
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -20,7 +20,7 @@ points: 8
 depends_on: [S-1.04, S-1.02]
 blocks: [S-2.05]
 behavioral_contracts: [BC-2.18.001, BC-2.18.002, BC-2.18.003]
-verification_properties: [VP-2.18.003-A, VP-2.18.003-B]
+verification_properties: []
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
@@ -323,4 +323,5 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 compliance-table semantic re-anchors applied (see escalation notes)"
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
 - "1.3 (P2A-046/2026-08-24): F-1 remove SS-18 BC 5 (SlotTrustPolicy fail-closed enforcement; reference-not-coverage in this story; full coverage anchored to S-2.05); F-2 inputs+Token-Budget corrected to 3 BCs; AC-014 re-anchored from removed BC PC-001 → BC-2.18.002 INV-007 (SlotTrustPolicy enum shape)."
+- "1.4 (P2A-047/2026-08-24): F-047-01: verification_properties frontmatter cleared to [] — VP-2.18.003-A and VP-2.18.003-B are BC-local (BC-2.18.003) and are not registered in VP-INDEX; they remain documented in AC-017 and AC-018 body traces per STORY-INDEX §Conventions."
 
