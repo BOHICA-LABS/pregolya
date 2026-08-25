@@ -104,7 +104,7 @@ input-hash: "f6e9b48"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-1.26 | Thread, Assistant and Run CRUD — Durable HTTP Server | BC-2.12.001, BC-2.12.002, BC-2.12.003 | SS-12 | pregolya-server | P1 | 8 | [S-1.16, S-1.10, S-1.04] | draft |
-| S-1.27 | CronSchedule, SecurityConfig and Idempotency Store Seams | BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007 | SS-12 | pregolya-server | P1 | 8 | [S-1.26] | draft |
+| S-1.27 | CronSchedule, SecurityConfig, Store Seams, and SSE Streaming | BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007 | SS-12 | pregolya-server | P1 | 8 | [S-1.26] | draft |
 
 ---
 

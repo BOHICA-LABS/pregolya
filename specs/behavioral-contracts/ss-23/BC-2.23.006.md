@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.006
-version: "2.3"
+version: "2.4"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.22 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "2.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "2.3 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "2.4 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-038
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -121,7 +122,7 @@ argument is validated against `PathGuard` (E-TOOLS-001 on violation).
    does not exist, `canonicalize_beneath_root` Phase 2 returns
    `Ok(canonical_parent.join(basename))` — a creation-target path, not an existence
    guarantee. The subsequent `fs::open` or `fs::read_dir` call surfaces `NotFound`, which
-   enters this fail-the-whole-search path as `E-TOOLS-008`. This PC-5 note applies to the
+   enters this fail-the-whole-search path as `E-TOOLS-008`. This ADR-024 PC-5 note applies to the
    root `path` argument only; recursive sub-paths walk a confirmed-existing directory, so
    Phase 2 does not arise for them.)
 

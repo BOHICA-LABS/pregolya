@@ -26,19 +26,48 @@
 #   OE-8 — range forms: "PC-N through PC-M", "PC-N–PC-M", "PC-N-PC-M"
 #           (1-2 digit endpoints; all casing variants; no context gate required —
 #           range syntax is clause-specific and does not arise in unrelated prose).
+#   OE-9 — bare/compressed clause ordinals that are SAME-BC self-references in
+#           BC body / story prose, NOT already caught by OE-7's BC-id context gate.
+#           Triggered on lines containing any of these clause-verb/paren/heading cues:
+#             (a) preposition/linker before ordinal:
+#                 "per PC12", "via PC1", "see PC3", "to PC-4", "as PC-1", "as in PC-2",
+#                 "under PC-2", "from PC-1", "by PC-3", "through PC-2"
+#             (b) ordinal + immediate clause verb:
+#                 "PC5 governs", "INV-2 applies", "PRE-3 requires", "PC-4 shall"
+#             (c) ordinal right after open-paren:
+#                 "(PC19)", "(INV-5)", "(PC4)", "(PC-5)"
+#             (d) markdown AC-heading with ordinal:
+#                 "### AC-009: PC-4 (PendingHumanApproval) is not valid on resume"
+#             (e) "This/The <ordinal>" possessive/referential form:
+#                 "This PC-5 note applies"
+#           Context-gated lines already matched by OE-7 (BC-id/traces_to/pipe/blockquote)
+#           are NOT re-reported as OE-9 (deduplicated by gate priority).
+#           Applies ONLY to in-scope document classes per ADR-027 v1.1 §Scope Boundary:
+#           .factory/stories/stories/ and .factory/specs/behavioral-contracts/.
+#
+# FALSE POSITIVES EVALUATED AND EXCLUDED:
+#   "to" preposition: "route to PC-N" in BC/story files is always a clause reference;
+#     no non-citation "to PC" forms observed in the scanned corpus.
+#   "as" preposition: "as PC-N" / "as in PC-N" in BC/story files is always a clause
+#     reference; no alternative meaning of PC/INV/PRE observed adjacent to "as".
+#   "This/The PC-N" pattern: only fires in BC body prose; no false positives in corpus.
 #
 # EXCLUSIONS:
 #   (a) YAML frontmatter changelog: list items (lines indented under changelog:)
 #   (b) ## Changelog markdown sections (until next ## heading)
 #   (c) Fenced code blocks (between ``` markers)
 #   (d) Stable-tag forms (PC-NNN / INV-NNN / PRE-NNN / EC-NNN three-digit) are
-#       naturally excluded — OE-7/OE-8 patterns use \d{1,2}(?!\d) so three-digit
+#       naturally excluded — OE-7/OE-8/OE-9 patterns use \d{1,2}(?!\d) so three-digit
 #       ordinals never match
-#   (e) ADR-internal clause labels: any OE-7 or OE-8 match where the text before
+#   (e) ADR-internal clause labels: any OE-7/OE-8/OE-9 match where the text before
 #       the match on the same line contains "ADR-0" + digits is an ADR's OWN
 #       section numbering (e.g. "ADR-024 §Phase-2 Postconditions PC-4",
 #       "ADR-024 Decision 3 / PC-3") — confirmed-legitimate false positives
 #       (3 independent product-owner passes verified); these are excluded.
+#   (f) DERIVED-PROSE / OUT-of-scope doc classes per ADR-027 v1.1 §Scope Boundary:
+#       domain-spec, ADR files, interface-definitions, error-taxonomy/test-vectors/
+#       observability, non-ADR architecture files, and VP prose are NOT scanned.
+#       Only .factory/stories/stories/ and .factory/specs/behavioral-contracts/.
 #
 # EXIT CONTRACT
 # ─────────────
@@ -97,9 +126,49 @@ RANGE_ORDINAL_RE = re.compile(
     re.IGNORECASE
 )
 
+# OE-9: same-BC self-referential compressed ordinals in BC/story prose, NOT already
+# caught by OE-7's BC-id context gate.  Five sub-gates (any one fires OE-9):
+#
+# (a) Preposition/linker before ordinal — extended list covers all observed forms:
+#     per PC12, via PC1, see PC3, to PC-4, as PC-1, as in PC-2,
+#     under PC-2, from PC-1, by PC-3, through PC-2
+OE9_PREP_BEFORE_RE = re.compile(
+    r'\b(?:per|via|see|under|through|from|by|to|as)\s+(?:in\s+)?(?:PC|INV|PRE)-?\d{1,2}(?!\d)',
+    re.IGNORECASE
+)
+# (b) Ordinal + immediate clause verb — PC5 governs, INV-2 applies, PC-4 shall
+OE9_VERB_AFTER_RE = re.compile(
+    r'\b(?:PC|INV|PRE)-?\d{1,2}(?!\d)\b\s+(?:governs?|applies?|enforces?|requires?|allows?|shall)\b',
+    re.IGNORECASE
+)
+# (c) Ordinal right after open-paren: (PC19), (INV-5), (PC4), (PC-5)
+OE9_PAREN_RE = re.compile(
+    r'\((?:PC|INV|PRE)-?\d{1,2}(?!\d)',
+    re.IGNORECASE
+)
+# (d) Markdown AC-heading containing ordinal: "### AC-009: PC-4 ..."
+OE9_AC_HEADING_RE = re.compile(
+    r'^#+\s.*\bAC-\d+.*(?:PC|INV|PRE)-?\d{1,2}(?!\d)',
+    re.IGNORECASE
+)
+# (e) "This/The <ordinal>" possessive/referential form: "This PC-5 note applies"
+OE9_THIS_RE = re.compile(
+    r'\b(?:This|The)\s+(?:PC|INV|PRE)-?\d{1,2}(?!\d)\b',
+    re.IGNORECASE
+)
+
+def has_oe9_context(line: str) -> bool:
+    return bool(
+        OE9_PREP_BEFORE_RE.search(line) or
+        OE9_VERB_AFTER_RE.search(line) or
+        OE9_PAREN_RE.search(line) or
+        OE9_AC_HEADING_RE.search(line) or
+        OE9_THIS_RE.search(line)
+    )
+
 # ADR-internal exclusion: if text before a match on the same line contains
 # "ADR-0" + digits, the ordinal is an ADR's OWN section label — not a BC clause.
-# Applies to both OE-7 and OE-8 matches.
+# Applies to OE-7, OE-8, and OE-9 matches.
 ADR_INTERNAL_RE = re.compile(r'ADR-0\d')
 
 # ── Region exclusion helpers ──────────────────────────────────────────────────
@@ -209,6 +278,16 @@ def scan_file(path: Path) -> list:
             if ADR_INTERNAL_RE.search(line[:m.start()]):
                 continue
             findings.append((lineno, line.rstrip(), 'OE-8', token))
+
+        # OE-9: same-BC self-referential compressed ordinals in prose, NOT already
+        # caught by OE-7 (skip lines that already match BARE_ORDINAL_CTX_RE).
+        if not BARE_ORDINAL_CTX_RE.search(line) and has_oe9_context(line):
+            for m in BARE_ORDINAL_RE.finditer(line):
+                token = m.group(0)
+                # Exclusion (e): skip ADR-internal clause labels
+                if ADR_INTERNAL_RE.search(line[:m.start()]):
+                    continue
+                findings.append((lineno, line.rstrip(), 'OE-9', token))
 
     return findings
 

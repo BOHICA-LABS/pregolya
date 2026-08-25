@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.23
 epic_id: E-12
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T12:00:00Z
+timestamp: 2026-08-24T14:00:00Z
 changelog:
+  - "1.4 (P2A-046 OBS-1/2026-08-24): AC-009 heading compressed ordinal normalized to stable tag"
   - "1.3 (P2A-043 F-04-adj/2026-08-24): 6 wrong-ordinal EC-source citations corrected per PO adjudication"
   - "1.2 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags"
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 3 mis-anchors corrected (AC-001 PRE-001→INV-002, AC-009 PC-002→EC-006, AC-010 INV-001→INV-002)"
@@ -17,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "97ac1cd"
+input-hash: "5ac9ddd"
 traces_to:
   - behavioral-contracts/BC-2.05.007
   - behavioral-contracts/BC-2.05.008
@@ -99,7 +100,7 @@ This story is the VP-011 anchor. The Kani harness for VP-011 must verify: for al
 After a run is suspended with `PendingHumanApproval` and then resumed via `Command(resume=<decision>)`, `pre_tool_dispatch` is NOT called again. The delivered decision (`Approve`, `Deny`, or `Edit`) is applied directly per BC-2.05.007 PC-001 through PC-003 (branch PC-001, PC-002, or PC-003).
 (traces to BC-2.05.008 PC-001)
 
-### AC-009: PC-4 (PendingHumanApproval) is not valid on resume
+### AC-009: BC-2.05.007 PC-004 (PendingHumanApproval) is not valid as a resume decision
 A resume `Command(resume=PendingHumanApproval)` is invalid. The engine rejects this and returns an error. `PendingHumanApproval` is only a valid hook decision, not a valid resume decision.
 (traces to BC-2.05.008 EC-006)
 

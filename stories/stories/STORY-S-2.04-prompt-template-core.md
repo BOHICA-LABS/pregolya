@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.04
 epic_id: E-18
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,16 +12,14 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.001.md
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.002.md
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.003.md
-  - .factory/specs/behavioral-contracts/ss-18/BC-2.18.004.md
-  - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "30431cd"
+input-hash: "308f247"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
 blocks: [S-2.05]
-behavioral_contracts: [BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.005]
+behavioral_contracts: [BC-2.18.001, BC-2.18.002, BC-2.18.003]
 verification_properties: [VP-2.18.003-A, VP-2.18.003-B]
 priority: P1
 cycle: v1.0.0-greenfield
@@ -49,7 +47,6 @@ tdd_mode: strict
 | BC-2.18.001 | PromptTemplate — f-String Engine; from_template Fallible Constructor; format() Renders or Returns E-TMPL-003 / E-TMPL-004 | P1 |
 | BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | P1 |
 | BC-2.18.003 | MessagesPlaceholder Vec<Message> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | P1 |
-| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 |
 
 ## Acceptance Criteria
 
@@ -140,12 +137,12 @@ Amendment, burst-279). A `ChatPromptTemplate` constructed with a `MessagesPlaceh
 slot renders successfully when the binding supplies `TemplateInput::Messages(MessageListVar)`.
 Verified by `test_BC_2_18_002_format_messages_accepts_template_input_arms()`.
 
-### AC-014 (traces to BC-2.18.005 PC-001 — SlotTrustPolicy construction enforcement; BC-2.18.002 PC-004 for provenance recording)
+### AC-014 (traces to BC-2.18.002 INV-007 — SlotTrustPolicy enum shape: variants TrustRequired/TrustAll, derives Copy+PartialEq+Debug; BC-2.18.002 PC-004 for provenance recording)
 `SlotTrustPolicy` is an enum with variants `TrustRequired` and `TrustAll`.
 `SlotTrustPolicy` is used in `ChatPromptTemplate::from_messages` to annotate each
 message slot's trust requirement. `SlotTrustPolicy: Copy + PartialEq + Debug`.
 `MessageProvenance.slot_trust_policy` records the slot's declared policy (traces to BC-2.18.002 PC-004).
-Verified by `test_BC_2_18_005_slot_trust_policy_enum()`.
+Verified by `test_BC_2_18_002_slot_trust_policy_shape()`.
 
 ### AC-015 (traces to BC-2.18.003 INV-004 — canonical MessageListVar struct shape)
 `TemplateVar` is a newtype over `String`. `MessageListVar` is a struct (NOT a bare newtype):
@@ -244,15 +241,15 @@ Verified by `test_BC_2_18_003_few_shot_example_render_error_propagates()`.
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
 | This story spec | ~5,500 |
-| BC files (5 BCs) | ~15,000 |
+| BC files (3 BCs) | ~9,000 |
 | `module-decomposition.md` (SS-18 section) | ~400 |
 | ADR-015 prompt template injection safety | ~2,500 |
 | Module files (~80 lines each × 5 files) | ~3,500 |
 | Test files (~130 lines) | ~1,900 |
 | Tool outputs | ~500 |
-| **Total** | **~29,300** |
+| **Total** | **~23,300** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~15%** |
+| **Budget usage** | **~12%** |
 
 ## Tasks (MANDATORY)
 
@@ -325,4 +322,5 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 - "1.0 (2026-08-19): initial story authored"
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 compliance-table semantic re-anchors applied (see escalation notes)"
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
+- "1.3 (P2A-046/2026-08-24): F-1 remove SS-18 BC 5 (SlotTrustPolicy fail-closed enforcement; reference-not-coverage in this story; full coverage anchored to S-2.05); F-2 inputs+Token-Budget corrected to 3 BCs; AC-014 re-anchored from removed BC PC-001 → BC-2.18.002 INV-007 (SlotTrustPolicy enum shape)."
 

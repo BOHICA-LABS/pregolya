@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.014
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P81-01): F-P81-01 — TV-007 had fabricated PascalCase variant name `E-CORE-005 ValidationFailed`; no such variant exists in error-taxonomy.md (E-CORE-005 message is plain prose). Fixed to canonical bare-code form matching sibling BC-2.08.002 TV-005: `Err(PregolyaError { category: VAL, code: E-CORE-005 })`."
   - "1.2 (F-P108-01, 2026-07-18): EC-004 and TV-005 expanded to use two separate fields `last_error_code` and `last_provider` instead of single `last_error` field. Root cause: the taxonomy Message Format for E-PROV-010 uses two distinct placeholders `<last_error_code>/<last_provider>` that cannot be rendered from a single combined field; BC-wins rule applies. EC-004: `{ providers_attempted: 3, last_error: \"E-PROV-008/provider-b\" }` → `{ providers_attempted: 3, last_error_code: \"E-PROV-008\", last_provider: \"provider-b\" }`. TV-005: expanded from bare form with inline `providers_attempted: 3` annotation to full struct with all three fields. Sibling sweep (all E-PROV-010 sites in this BC): PC5 uses message-template form with `<last_error_code>/<last_provider>` placeholders (already correctly separated); Description and TV-006 use bare form (no struct fields; not subject to parity check). PASS after fix."
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (F-P188-02/burst-297/2026-08-16): Error Code Minted callout and Traceability row omitted E-PROV-011 FallbackChainEmpty. BC-2.08.014 is the sole taxonomy anchor for both E-PROV-010 ProviderChainExhausted (exhaustion-time, POLICY) AND E-PROV-011 FallbackChainEmpty (construction-time VAL, minted in fix-burst-276/F-P173-610). Both codes are used in this BC body (EC-004/TV-005 for E-PROV-010; EC-006/TV-007 for E-PROV-011). Callout updated to 'Error codes minted here (E-PROV-010, E-PROV-011)'; Traceability row extended to list both codes. D-134 Sweep B: this was the sole missing-mint occurrence across all 6 Error-Code-Minted BCs. input-hash updated to current (59d2766)."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
@@ -78,7 +79,7 @@ on the same provider; this governs provider-level failover to a different provid
 2. {PC-002} On receiving a **5xx** from the primary provider:
    - pregolya skips credential refresh.
    - pregolya retries the call on the first available fallback provider.
-   - Same transparent-continuation semantics as PC-1.
+   - Same transparent-continuation semantics as {PC-001}.
 
 3. {PC-003} On receiving an **auth failure** (E-PROV-004) from the primary provider:
    - If `credential_refresh` is configured: pregolya first attempts to refresh the

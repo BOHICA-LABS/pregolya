@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.002
-version: "2.2"
+version: "2.3"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -32,6 +32,7 @@ changelog:
   - "2.0 (burst-295/F-1-MED/P1D-186/2026-08-16): PC-3 stale brand residue corrected — atomic-write temp-file prefix '.ferroctmp_<random>' → '.pregolyatmp_<random>'. ferroctmp was the ferrochain-era internal token; canonical pregolya atomic-write temp prefix is 'pregolyatmp_'. D-134 ferro-residue sweep: sole live-body occurrence across behavioral-contracts + prd-supplements + domain-spec subtrees."
   - "2.1 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "2.2 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.3 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -84,7 +85,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
    file at that confined path. The tool returns `ToolOutput::Text("written: <path>")`.
    Parent directories are NOT created automatically; if the parent directory does not exist,
    `canonicalize_beneath_root` Phase 2 propagates a `NotFound` error for the parent →
-   `E-TOOLS-008 FileIoError` (PC-5).
+   `E-TOOLS-008 FileIoError` (PC-005).
 2. {PC-002} **Path confinement violation:** `canonicalize_beneath_root(workspace_root, path)` returns
    `Err(WorkspaceEscape)` for genuine escape conditions (ADR-024 Decision 3):
    - **(Phase 1)** Target file exists but its resolved canonical form lies outside the workspace root
@@ -97,7 +98,7 @@ explicit human re-approval via `PreToolCallHook` (ADR-018).
    No I/O is performed; no temporary file is created. **Discrimination rule (ADR-024 Decision 3):**
    `E-TOOLS-001` is raised exclusively for genuine scope-escape conditions. OS-level I/O failures
    (`NotFound` from a missing parent directory, `PermissionDenied`) are **not** confinement
-   violations; they route to PC-5 as `E-TOOLS-008 FileIoError`.
+   violations; they route to PC-005 as `E-TOOLS-008 FileIoError`.
 3. {PC-003} **Atomic write semantics:** The implementation writes content to `<path>.pregolyatmp_<random>`
    in the same directory, then performs a rename to `<path>`. If the rename fails, the
    temporary file is removed and the error is propagated. The target file is never left in a

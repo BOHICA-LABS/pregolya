@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.007
-version: "2.0"
+version: "2.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-003, EC-004, TV-001, TV-003, TV-005 each had category-only PregolyaError constructions with no code field. Added code: E-PROV-002 (ProviderTimeout) to TIMEOUT constructions and code: E-PROV-003 (StreamInterrupted) to TRANSPORT constructions per error-taxonomy.md BC anchors."
   - "1.2 (2026-07-15, F-P78-SWEEP/D18-P78-A): E-PROV-002 message-prefix correction. PC1: added 'ProviderTimeout:' prefix per universal <ErrorName>: <detail> convention (D18-P78-A adjudication; BC lacked prefix). Message was 'stream chunk timeout after <duration>'; corrected to 'ProviderTimeout: stream chunk timeout after <duration>'. Taxonomy E-PROV-002 corrected simultaneously: dropped '<provider>' parameter and changed '<ms>ms' to '<duration>' (BC wins on content — no provider name in BC message; duration placeholder more precise than ms-specific)."
@@ -25,6 +25,7 @@ changelog:
   - "1.8 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/D-80/2026-07-29): §Postconditions PC2 split-line form: PregolyaError on preceding line, `{ category: TRANSPORT, … }` on continuation — Unicode `…` replaced with `..` (only `category` present; `component`, `code`, `message`, `retry_hint` absent; rest pattern required per Class 3 normative rule; split-line form does not exempt from the rule)."
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "2.0 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "2.1 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/invariants.md#DI-014
@@ -107,7 +108,7 @@ results.
 **Scenario:** The fixture delivers `message-start` + one `text` delta, then goes silent
 for 31 seconds.
 **Expected behavior:** `Err(PregolyaError { category: TIMEOUT, code: E-PROV-002, .. })`. The partial text
-delta is discarded. The error message includes the configured timeout duration (PASS-ABBREV via PC1).
+delta is discarded. The error message includes the configured timeout duration (PASS-ABBREV via {PC-001}).
 
 ### EC-002: Stream completes normally with slow final chunk
 **Scenario:** The provider takes 28 seconds to deliver the final `message-finish` event.

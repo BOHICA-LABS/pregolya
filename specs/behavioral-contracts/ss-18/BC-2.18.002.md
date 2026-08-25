@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "2.3"
+version: "2.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -31,6 +31,7 @@ changelog:
   - "2.1 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "2.2 (P2A-043-F-02/2026-08-24): INV-006 added — TemplateInput is #[non_exhaustive] enum with three stable variants (Scalar, Messages, FewShotExamples); Send+Sync; wildcard arm required. Closes SS-18 escalation F-02; AC-012 and compliance-table row in S-2.04 re-anchor from PRE-002 to INV-006."
   - "2.3 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "2.4 (P2A-046-F1/2026-08-24): INV-007 added — SlotTrustPolicy enum shape (variants TrustRequired/TrustAll, derives Copy+PartialEq+Debug, from_messages parameter role, slot_trust_policy field anchor). Authored so AC-014 in S-2.04 can re-anchor from BC-2.18.005 PC-001 (semantic mis-anchor — PC-001 specifies the E-TMPL-002 construction guard, not the enum shape) to BC-2.18.002 INV-007. Additive; no existing clauses altered."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -141,6 +142,16 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    The `#[non_exhaustive]` annotation requires external `match` arms to include a `_ => {}`
    wildcard arm to remain forward-compatible. (Parallel to INV-005 for `PromptValue`; compile-fail
    test required — see S-2.04 AC-012.)
+7. {INV-007} `SlotTrustPolicy` is an enum with exactly two variants:
+   `SlotTrustPolicy::TrustRequired` (the slot rejects variables carrying `TrustLevel::Untrusted`
+   at render time — enforced by BC-2.18.004 `injection_guard`) and
+   `SlotTrustPolicy::TrustAll` (the slot accepts variables of any trust level, including
+   `TrustLevel::Untrusted`). `SlotTrustPolicy: Copy + PartialEq + Debug`. The policy value is
+   the third element of each `(MessageRole, &str, SlotTrustPolicy)` tuple supplied to
+   `from_messages` (PRE-001) and is stored in `MessageProvenance.slot_trust_policy` (PC-004).
+   SystemMessage slots may only declare `TrustRequired` — declaring `TrustAll` on a SystemMessage
+   slot is rejected at construction time with E-TMPL-002 (BC-2.18.005). This shape contract is
+   the semantic authority for `test_BC_2_18_002_slot_trust_policy_shape` (S-2.04 AC-014).
 
 ## Edge Cases
 

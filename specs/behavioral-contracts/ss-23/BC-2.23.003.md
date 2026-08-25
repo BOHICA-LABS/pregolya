@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.11"
+version: "1.12"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -31,6 +31,7 @@ changelog:
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — self-reference 'precondition 3' in PC-005 prose converted to {PRE-003}."
+  - "1.12 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -88,8 +89,8 @@ controls whether all occurrences are replaced (default false — first occurrenc
 3. {PC-003} **Fuzzy fallback (opt-in, `fuzzy_threshold: Some(t)`):** If exact match fails, the tool
    uses `similar::TextDiff` to compute the `ratio()` between `old_string` and each contiguous
    region of the file of similar length. If the best match has `ratio() >= t`, the match is
-   accepted and the replacement proceeds as in PC-1. If no region meets the threshold,
-   `Err(E-TOOLS-003)` is returned as in PC-2. Fuzzy match is a fallback; exact match is
+   accepted and the replacement proceeds as in PC-001. If no region meets the threshold,
+   `Err(E-TOOLS-003)` is returned as in PC-002. Fuzzy match is a fallback; exact match is
    always tried first.
 4. {PC-004} **Path confinement violation:** Returns `Err(E-TOOLS-001 PathConfinementViolation)`.
    No I/O performed.

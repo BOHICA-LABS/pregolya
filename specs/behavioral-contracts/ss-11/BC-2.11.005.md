@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -28,6 +28,7 @@ changelog:
   - "1.4 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.5 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-005}, {PRE-001..PRE-003} added; purely additive, no content change."
+  - "1.7 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 modified: []
 extracted_from: null
 deprecated: null
@@ -69,7 +70,7 @@ single synchronous operation in the current super-step.
    The streaming surface enforces the same isolation guarantee: `ToolEnd.data` carries post-guardrail
    content only — raw rejected payloads are never present in any `StreamEvent` payload. This
    includes `StreamEvent::GuardrailDecision` itself, which carries metadata only (reason, severity,
-   ingress_id, boundary, tool_call_id) and contains zero bytes of the rejected content (INV-5)
+   ingress_id, boundary, tool_call_id) and contains zero bytes of the rejected content ({INV-005})
 2. {PC-002} An error block is injected at the position where the rejected content unit would have appeared;
    the error block contains `reason` (the rejection reason from the hook) and the
    `ProvenanceTag.ingress_id` — neither of which contains the original content
@@ -146,7 +147,7 @@ single synchronous operation in the current super-step.
 
 ## Architecture Anchors
 
-- `prd-supplements/interface-definitions.md §GuardrailHook` — `GuardrailResult::Fail{reason,severity}`; `GuardrailSeverity::Critical` triggers run-halt (PC4); non-Critical severity triggers error-block substitution and run continuation (PC5)
+- `prd-supplements/interface-definitions.md §GuardrailHook` — `GuardrailResult::Fail{reason,severity}`; `GuardrailSeverity::Critical` triggers run-halt ({PC-004}); non-Critical severity triggers error-block substitution and run continuation ({PC-005})
 - `architecture/module-decomposition.md §pregolya-graph` — `graph::provenance` row: atomic rejection enforcement (HIGH, SS-11); `graph::scheduler` row: `CompiledGraph::run()` pre-inference buffer finalization (CRITICAL, SS-03)
 - `architecture/purity-boundary-map.md §Boundary Modules` — `graph::provenance` row: pure route decision / effectful `GuardrailHook` dispatch; rejection atomicity enforced via causal ordering before inference
 

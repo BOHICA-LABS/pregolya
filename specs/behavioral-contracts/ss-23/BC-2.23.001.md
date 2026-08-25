@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.001
-version: "1.11"
+version: "1.12"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-tools
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-24T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -31,6 +31,7 @@ changelog:
   - "1.9 (burst-288/P1D-177-C-H02/2026-08-15): ADR-024 §Phase-2 Postconditions traceability propagation — ReadFileTool Ok-then-NotFound-at-open behavior. PC-4 extended: when canonicalize_beneath_root returns Ok(path) via Phase 2 (ADR-024 §Phase-2 Postconditions PC-5), path may not yet exist on disk; the subsequent OS open() returns NotFound, propagated as E-TOOLS-008. traces_to + inputs + Architecture Anchors + §Architecture Authority updated to reference ADR-024 §Phase-2 Postconditions PC-5."
   - "1.10 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.21 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.12 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -87,7 +88,7 @@ limit.
    `Err(PregolyaError { code: "E-TOOLS-001", .. })`.
    No I/O is performed; no side effect occurs. **Discrimination rule:** if `canonicalize_beneath_root`
    returns `Err` due to an OS-level I/O failure (e.g., `NotFound` — the file does not exist;
-   `PermissionDenied`), that is **not** a confinement violation; such cases route to PC-4 as
+   `PermissionDenied`), that is **not** a confinement violation; such cases route to PC-004 as
    `E-TOOLS-008 FileIoError`. The confinement-violation path and the I/O-error path are
    mutually exclusive: E-TOOLS-001 is raised only for genuine scope-escape errors, never for
    filesystem I/O errors on a validly-scoped path.

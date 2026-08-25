@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (P2A-044 F-08/2026-08-24): Mint E-SERVER-018 RunStateConflict — PC-012 and PC-019 both mandated HTTP 409 for invalid-state-transition but named no error code, leaving the response body unspecified. PC-012 amended to cite E-SERVER-018 for the terminal-state cancel conflict. PC-019 amended to cite E-SERVER-018 for the non-terminal-state delete conflict. EC-006 added covering both scenarios. No arc transitions changed; amendment adds specification precision only."
   - "1.10 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.11 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
 extracted_from: null
 modified: []
 deprecated: null
@@ -102,7 +103,7 @@ LangGraph Platform (D13).
    ```
 8. {PC-008} Terminal states (no further transitions possible): `completed`, `failed`, `cancelled`, and `summary_halt`.
    `interrupted` is **not** terminal — it is a pausable/resumable state.
-   `summary_halt` is terminal (no further transitions); it is not cancellable (already terminal when the cancel signal would arrive — HTTP 409 per PC12). A `summary_halt` run IS directly deletable (PC19) without needing a prior cancel step.
+   `summary_halt` is terminal (no further transitions); it is not cancellable (already terminal when the cancel signal would arrive — HTTP 409 per {PC-012}). A `summary_halt` run IS directly deletable ({PC-019}) without needing a prior cancel step.
 9. {PC-009} A Run that is `interrupted` can be resumed via
    `POST /threads/{thread_id}/runs/{run_id}/resume { resume_value }` (see BC-2.05.002
    for HITL contract); this transitions the Run back to `in_progress`.

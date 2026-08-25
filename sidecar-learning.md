@@ -755,5 +755,21 @@ ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.
 **Lesson (L-P2A045-001) [architect/devops]: ADR-027 §Scope Boundary clarifies adversary coverage expectations.** The P2A-045 pass (F-045-02, LOW/process-gap) identified that ADR-027 was silent on whether the ~422 derived-prose clause-ordinal cites (domain-spec, interface-def, VP, ADR body text) required stable-tag migration. Architect decision (b): IN-scope = BC files + story AC citations (CI-gated by verify-ac-pc-trace.sh); OUT-of-scope = derived prose (adversary-governed, not CI-gated). ADR-027 §Scope Boundary codifies this. Lesson: scope boundaries for migration artifacts must be explicit in the ADR; ambiguity causes adversary false-positives and repeat findings.
 
 **Lesson (L-P2A045-002) [devops/validator]: verify-ac-pc-trace.sh multi-clause AC traces required an explicit resolver.** F-045-04 (OBS/process-gap): the prior validator parsed the FIRST clause of a multi-clause AC trace (e.g., "BC-2.12.002 §{PC-001} and §{PC-002}") but dropped subsequent clauses, causing under-coverage. The fix adds a multi-clause resolver that expands "A and B" and "A; B" patterns into independent clause lookups. Post-fix: 0 DRIFT / 529 cites / 15/15 gate PASS. Lesson: AC trace validators must handle conjunction/semicolon-separated clause lists; single-first-match is not sufficient for multi-clause anchors.
+
+### P2A-046 ALL CLOSED (D-262 — 2026-08-24)
+
+**Lesson (L-P2A046-001) [product-owner/story-writer/devops]: S-2.04 reference-not-coverage drift (same pattern as BC-2.06.001 in S-1.27 P2A-044 F-03); verify-ordinal-form-residue.sh OE-9 extended to detect same-BC self-ref compressed ordinals; BC-2.12.003 P2A-044 changelog paper-fix (claimed-but-unapplied ordinal normalization) caught and completed in P2A-046 F-3.**
+
 - Session ended at 2026-08-25T00:25:19Z (awaiting /session-review)
 - Session ended at 2026-08-25T00:36:54Z (awaiting /session-review)
+- Session ended at 2026-08-25T00:38:39Z (awaiting /session-review)
+- Session ended at 2026-08-25T00:47:52Z (awaiting /session-review)
+- Session ended at 2026-08-25T00:50:34Z (awaiting /session-review)
+- Session ended at 2026-08-25T00:57:41Z (awaiting /session-review)
+- Session ended at 2026-08-25T00:59:19Z (awaiting /session-review)
+- Session ended at 2026-08-25T01:01:41Z (awaiting /session-review)
+- Session ended at 2026-08-25T01:02:27Z (awaiting /session-review)
+- Session ended at 2026-08-25T01:03:49Z (awaiting /session-review)
+- Session ended at 2026-08-25T01:40:33Z (awaiting /session-review)
+- Session ended at 2026-08-25T01:42:09Z (awaiting /session-review)
+- Session ended at 2026-08-25T02:05:42Z (awaiting /session-review)
