@@ -547,3 +547,19 @@ stories:
     crate: [xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools, fuzz]
     pr_url: ~
     merged_sha: ~
+
+  # -----------------------------------------------------------------------
+  # Maintenance — EPIC-MAINT (out-of-wave)
+  # -----------------------------------------------------------------------
+
+  - story_id: S-MAINT-001
+    wave: maint
+    status: spec-ready
+    bcs: []
+    vps: []
+    points: 5
+    tdd_mode: facade
+    priority: P2
+    crate: ~
+    pr_url: ~
+    merged_sha: ~

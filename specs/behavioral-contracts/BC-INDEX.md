@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.68"
+version: "3.69"
 status: active
 producer: state-manager
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-25T21:10:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.69 (P2A-055 gate-audit OBS-1/OBS-2/2026-08-25): VP-Seed-BCs label disambiguated (12 unique VPs / 13 BC rows / VP-014 dual-anchors BC-2.01.005+BC-2.01.006); SS-range notation canonicalized (SS-2.NN→SS-NN). No BC content/census change (133 UNCHANGED)."
   - "3.68 (P2A-048/2026-08-24): BC-2.20.003 (v1.9→v1.10): PRE-001 stale borrowed `&dyn VectorStore` → owned `Arc<dyn VectorStore>` (D-48 v1.5 sweep straggler; PRE-001 omitted from the enumerated-clause sweep; F-048-02). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). EC census UNCHANGED: 120."
   - "3.67 (P2A-046/2026-08-24): BC-2.18.002 (v2.3→v2.4): INV-007 added — SlotTrustPolicy enum shape (F-1; S-2.04 AC-014 anchor). F-3 same-BC self-ref ordinal normalization: BC-2.07.003 (v1.6→v1.7), BC-2.08.007 (v2.0→v2.1), BC-2.08.014 (v1.8→v1.9), BC-2.11.005 (v1.6→v1.7), BC-2.12.003 (v1.10→v1.11), BC-2.23.001 (v1.11→v1.12), BC-2.23.002 (v2.2→v2.3), BC-2.23.003 (v1.11→v1.12), BC-2.23.006 (v2.3→v2.4). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). EC census UNCHANGED: 120."
   - "3.66 (P2A-045/2026-08-24): BC-2.12.002 §Postconditions decorative-ordinal renumber (F-045-03); ADR-027 §Scope Boundary (F-045-02)."
@@ -108,8 +109,8 @@ changelog:
 | Priority P1 | 79 |
 | Priority P2 | 3 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 12 |
-| Subsection groups | 23 (SS-2.01 – SS-2.23) |
+| VP Seed BCs | 12 unique VPs (13 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006) |
+| Subsection groups | 23 (SS-01 – SS-23) |
 
 ## Red Gate BCs
 
