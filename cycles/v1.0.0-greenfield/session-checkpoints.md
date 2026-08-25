@@ -2939,3 +2939,12 @@ pregolya Phase-2 story-decomposition, adversarial 3-CLEAN reconvergence, streak 
 ### DECISION DELTA: D-252..D-262 (exhaustive). P2A-046 ALL CLOSED (D-262): 2 HIGH/1 MED/2 LOW; BC-2.18.002 {INV-007}; OE-9 checker; Census 39/133/14/120.
 
 ### STATE: v5.75, timestamp 2026-08-24T20:09:00Z
+
+---
+
+## v5.78 checkpoint (archived 2026-08-25; replaced by v5.79)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 story-decomposition, adversarial 3-CLEAN reconvergence, streak 0/3. ADR-027 stable-anchor migration M1→M4 COMPLETE (SEMANTIC-ANCHOR-DRIFT closed). NEXT ACTION: adversary P2A-050 on new HEAD (need 3 consecutive CLEAN-strict). HEADS: develop 644d1ad (clean, untouched); factory-artifacts = this commit. worktrees none; PRs none. Census 39/133/14/120. PENDING USER-APPROVED: dev-tooling v1 expansion D-255 (4 surfaces: CLI/Web-Dev-UI/eval-runner/trace-inspector) AFTER Phase-2 convergence; ORDINAL-RESIDUE-GATE promote verify-ordinal-form-residue.sh (OE-1..OE-9) advisory→blocking once 0-stable. GOVERNANCE: D-260 (S-7.01 maintenance waiver + canonical BC formats), ADR-027 §Scope Boundary (derived-prose ordinals OUT-of-scope, adversary-governed — future passes must NOT flag them). RECURRING PROCESS-GAP: background session-review agent leaves sidecar-learning.md dirty → trips wave-gate SHA-currency (hit 3x); quiesce it. ENGINE ADVISORY: VALIDATE-COUNT-PROP-FP — validate-count-propagation.sh mislabels "39 BCs labeled" M1 narrative as BC total; authoritative total 133 (both STATE.md + STORY-INDEX); do NOT re-flag; FP recurs on any STORY-INDEX/STATE.md edit (non-blocking; engine-owned). PENDING HUMAN: E013 default_branch→main, R6 namespace publish, B1 direnv, TDIV-008 engine path_allow. P2A-049 REMEDIATED — BC-table title drift CLOSED (D-265); no BC file modified. DECISION DELTA this session: D-252..D-265 (exhaustive).
+
+### STATE: v5.78, timestamp 2026-08-25T16:13:00Z

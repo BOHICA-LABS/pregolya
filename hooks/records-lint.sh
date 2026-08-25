@@ -14,22 +14,32 @@
 #        a strictly lower version number is a violation.
 #        Routing: spec owner (reorder changelog entries so newest appears first).
 #
-#   L9 — Line-Cite and Version-Pin Ban (D-50 extended, 2026-07-24):
-#        L9a (original): newly-authored lines must not contain file:NNN line-number
-#        citations of the form `word.ext:digits`.
+#   L9 — Line-Cite and Version-Pin Ban (D-50 + P2A-050 extended, 2026-08-25):
+#        L9a (extended, P2A-050 2026-08-25): newly-authored lines must not contain
+#        any of three volatile line-citation forms. All three decay on the next diff
+#        and rot the trace (TD-VSDD-091 / POL-12); all use addition-only git diff
+#        HEAD scoping (hooks excluded; no separate date-boundary required):
+#          (i)  file:NNN — line-number citations of the form `word.ext:digits`
+#               (the original L9a form; e.g. `lib.rs:42`, `CLAUDE.md:156`)
+#         (ii)  bare line references — `line ~N` or `line N` in normative prose
+#               (e.g. `§Changelog line ~44`; caught by BARE_LINE_CITE_PATTERN)
+#        (iii)  ID-anchored line pins — `DOCID:NNN` citations
+#               (e.g. `BC-2.10.001:141`, `ADR-020:224`; caught by ID_LINE_PIN_PATTERN)
 #        L9b (D-50): newly-authored lines must not contain `<doc> vN.N` version pins
 #        (e.g. `ADR-014 v1.2`, `BC-2.01.001 v1.0`, `error-taxonomy.md v1.31`).
-#        Both sub-checks use `git diff HEAD` restricted to `+` addition lines (not
+#        L9a sub-checks use `git diff HEAD` restricted to `+` addition lines (not
 #        deletions, not context). L9b uses a Python3 scanner (Bug 1 fix; avoids
 #        VERSION_PIN_PATTERN alternation-precedence issues in embedded grep ERE).
 #        .factory/hooks/** excluded from diff: hook scripts are code, not records.
 #        Changelog entries and YAML frontmatter are IN SCOPE — D-50 targets version
-#        pins wherever they live. The sole grandfathering mechanism is the entry-
-#        date boundary: a + line whose YYYY-MM-DD date is before 2026-07-24 is
+#        pins wherever they live. The sole grandfathering mechanism for L9b is the
+#        entry-date boundary: a + line whose YYYY-MM-DD date is before 2026-07-24 is
 #        exempt (pre-D-50 text); no parseable date → in scope. This deliberately
 #        disagrees with verify-no-version-pins.sh (full-corpus; changelog exempt).
-#        Routing: finding author (replace file:NNN with symbol/anchor cite; replace
-#                 doc vN.N with doc §Section-Anchor).
+#        L9a (all three forms) grandfathers pre-existing committed content via the
+#        addition-only `git diff HEAD` scoping — no date-boundary needed.
+#        Routing: finding author (replace file:NNN / bare line~N / DOCID:NNN with
+#                 symbol/anchor cite; replace doc vN.N with doc §Section-Anchor).
 #
 #   L10 — Hash-Digest Ban (ADVISORY): newly-authored changelog prose must not contain
 #        standalone 7-hex-literal git SHA fragments (e.g. `5fc3abe → baaf36d`). These
@@ -138,12 +148,29 @@ RECORDS_PATTERNS=(
   # TODO: planning/*.md — planning artifacts; add if/when registered in registry
 )
 
-# L9 line-citation pattern.
-# Matches: word.ext:NNN where ext is a known code/doc extension and NNN is digits.
-# Catches: src/lib.rs:42  path/to/CLAUDE.md:156  Cargo.toml:8  api-surface.md:23
-# Does NOT catch: version strings (v1.2.3), URLs without line-number suffix,
-#   or colon-delimited identifiers without a leading file extension.
+# L9a line-citation patterns — three forms, all addition-only (git diff HEAD scoping).
+# P2A-050 (2026-08-25) extended L9a to cover forms (ii) and (iii) in addition to
+# the original form (i). All three are equally volatile per TD-VSDD-091 / POL-12.
+#
+# Form (i): file:NNN — word.ext:digits where ext is a known code/doc extension.
+# Catches: lib.rs:42  CLAUDE.md:156  Cargo.toml:8  api-surface.md:23
+# Does NOT catch: version strings (v1.2.3), URLs, colon-delimited identifiers
+#   without a leading file extension.
 LINE_CITE_PATTERN='\b[a-zA-Z0-9_.-]+\.(rs|md|toml|yaml|yml|ts|js|py|json|sh|txt):[0-9]{1,6}\b'
+
+# Form (ii): bare line reference — `line ~N` or `line N` in normative prose.
+# Catches: "line ~44", "line 224", "line ~36" (the P2A-050 live-violation shape:
+#   "§Changelog line ~44" passed the old L9a gate; this closes the gap).
+# Does NOT catch: "pipeline", "baseline", "online" (no word boundary before "line"),
+#   or "line item 3" / "line number X" (space + non-digit breaks the match).
+BARE_LINE_CITE_PATTERN='\bline[[:space:]]+~?[0-9]{1,6}\b'
+
+# Form (iii): ID-anchored line pin — DOCID:NNN (doc identifier followed by colon+digits).
+# Catches: "BC-2.10.001:141", "ADR-020:224", "VP-003:36", "CAP-001:12"
+# These are doc-ID:line-number citations — equally volatile as file:NNN citations.
+# Does NOT catch: "BC-2.10.001:" without trailing digits (YAML key syntax), or
+#   bare doc IDs without a colon+digits suffix.
+ID_LINE_PIN_PATTERN='\b(BC-2\.[0-9]{2}\.[0-9]{3}|ADR-[0-9]+|VP-[0-9]{3}|CAP-[0-9]{3}):[0-9]{1,6}\b'
 
 # L9 version-pin class pattern (D-50, ratified 2026-07-24).
 #
@@ -388,6 +415,41 @@ EOF
   fi
   probe_must_fail "L9-file-cite" "addition line containing src/lib.rs:42"
 
+  # ── L9c self-probe: bare-line-reference pattern (P2A-050) ─────────────────
+  # Synthetic violation: a new line containing a bare "line ~N" reference.
+  # POL-31: must fire on this form so the gate is not false-green.
+  # POL-30: hook file excluded from live scan via ':!hooks/**' diff pathspec.
+  PROBE_L9C_DIFF="+The constraint was addressed; see §Changelog line ~44 for the original note."
+  PROBE_EXIT=0
+  if echo "$PROBE_L9C_DIFF" | grep -qE "^\+[^+].*${BARE_LINE_CITE_PATTERN}"; then
+    PROBE_EXIT=1
+  fi
+  probe_must_fail "L9c-bare-line" "addition line containing 'line ~44'"
+
+  # ── L9d self-probe: ID-anchored line pin pattern (P2A-050) ────────────────
+  # Synthetic violation: a new line containing a doc-ID:NNN line-number pin.
+  # POL-31: must fire on this form so the gate is not false-green.
+  PROBE_L9D_DIFF="+The invariant is defined in BC-2.10.001:141 of the contract."
+  PROBE_EXIT=0
+  if echo "$PROBE_L9D_DIFF" | grep -qE "^\+[^+].*${ID_LINE_PIN_PATTERN}"; then
+    PROBE_EXIT=1
+  fi
+  probe_must_fail "L9d-id-pin" "addition line containing 'BC-2.10.001:141'"
+
+  # ── L9c/L9d clean-pass probe (POL-31 negative case) ──────────────────────
+  # Verify neither L9c nor L9d fires on a legitimate non-cite line.
+  # Uses "command line tool" (has "line" but not followed by a digit) to verify
+  # BARE_LINE_CITE_PATTERN does not over-match, and no doc-ID:NNN present.
+  PROBE_L9CD_PASS="+The command line tool accepts a path argument and outputs the result."
+  PROBE_EXIT=0
+  if echo "$PROBE_L9CD_PASS" | grep -qE "^\+[^+].*${BARE_LINE_CITE_PATTERN}"; then
+    PROBE_EXIT=1
+  fi
+  if [ "${PROBE_EXIT}" -eq 0 ] && echo "$PROBE_L9CD_PASS" | grep -qE "^\+[^+].*${ID_LINE_PIN_PATTERN}"; then
+    PROBE_EXIT=1
+  fi
+  probe_must_not_fail "L9c-L9d-clean-pass" "legitimate non-cite addition line passes without false-positive"
+
   # ── L9b four-outcome proof (FIX-BURST-278 bug fixes) ──────────────────────
   # All four fixtures are frontmatter changelog entry format (YAML list items),
   # mirroring the real violation shape from api-surface.md/interface-definitions.md.
@@ -630,7 +692,12 @@ check_l7() {
 
 # ── Check L9 — Line-Cite and Version-Pin Ban ─────────────────────────────────
 # Newly-authored additions since HEAD must not contain:
-#   L9a: file:NNN line-number citations (word.ext:digits)
+#   L9a (extended, P2A-050 2026-08-25): any of three volatile line-citation forms:
+#     (i)   file:NNN — word.ext:digits line-number citations
+#     (ii)  bare line references — `line ~N` or `line N` in normative prose
+#     (iii) ID-anchored line pins — DOCID:NNN citations (e.g. BC-2.10.001:141)
+#   All L9a forms use addition-only git diff HEAD scoping (hooks excluded).
+#   Pre-existing committed content is grandfathered by the addition-only scoping.
 #   L9b: <doc> vN.N version pins (D-50, ratified 2026-07-24)
 #
 # The diff excludes .factory/hooks/** — hook scripts are code, not records;
@@ -640,10 +707,11 @@ check_l7() {
 # issues in embedded grep ERE — Bug 1 fix, FIX-BURST-278). Changelog entries
 # and YAML frontmatter are deliberately IN SCOPE: D-50 targets version pins
 # wherever they live, including in changelog entries. The sole grandfathering
-# mechanism is the entry-date boundary — a + line whose embedded YYYY-MM-DD
-# date is before 2026-07-24 is exempt; date >= 2026-07-24 or no parseable date
-# → flag. This differs from verify-no-version-pins.sh, which exempts changelog
-# regions on its full-corpus scan. The two rules deliberately disagree.
+# mechanism for L9b is the entry-date boundary — a + line whose embedded
+# YYYY-MM-DD date is before 2026-07-24 is exempt; date >= 2026-07-24 or no
+# parseable date → flag. This differs from verify-no-version-pins.sh, which
+# exempts changelog regions on its full-corpus scan. The two rules deliberately
+# disagree.
 
 check_l9() {
   # hooks/** excluded: hook scripts are code, not records.
@@ -654,10 +722,26 @@ check_l9() {
     return
   fi
 
-  # Sub-check L9a — file:NNN line-cite ban (original, pre-D-50)
+  # Sub-check L9a — file:NNN line-cite ban (original form, pre-D-50)
   L9A_VIOLATIONS="$(echo "$DIFF_OUTPUT" \
     | grep -E '^\+[^+]' \
     | grep -oE "${LINE_CITE_PATTERN}" \
+    || true)"
+
+  # Sub-check L9c — bare "line ~N" / "line N" reference ban (P2A-050, 2026-08-25)
+  # Uses addition-only scoping (same as L9a); pre-existing committed content
+  # is grandfathered by git diff HEAD (no date-boundary needed).
+  L9C_VIOLATIONS="$(echo "$DIFF_OUTPUT" \
+    | grep -E '^\+[^+]' \
+    | grep -oE "${BARE_LINE_CITE_PATTERN}" \
+    || true)"
+
+  # Sub-check L9d — doc-ID:NNN line-number pin ban (P2A-050, 2026-08-25)
+  # Uses addition-only scoping (same as L9a); pre-existing committed content
+  # is grandfathered by git diff HEAD (no date-boundary needed).
+  L9D_VIOLATIONS="$(echo "$DIFF_OUTPUT" \
+    | grep -E '^\+[^+]' \
+    | grep -oE "${ID_LINE_PIN_PATTERN}" \
     || true)"
 
   # Sub-check L9b — version-pin class ban (D-50, ratified 2026-07-24).
@@ -702,7 +786,7 @@ for v in violations:
 PYEOF
 )"
 
-  if [ -n "$L9A_VIOLATIONS" ] || [ -n "$L9B_VIOLATIONS" ]; then
+  if [ -n "$L9A_VIOLATIONS" ] || [ -n "$L9B_VIOLATIONS" ] || [ -n "$L9C_VIOLATIONS" ] || [ -n "$L9D_VIOLATIONS" ]; then
     if [ -n "$L9A_VIOLATIONS" ]; then
       emit FAIL "L9a: line-cite ban — newly-added text contains file:NNN citations (retire with symbol/anchor cites):"
       while IFS= read -r cite; do
@@ -712,6 +796,30 @@ PYEOF
       echo "  Affected lines (L9a — file:NNN violations):"
       echo "$DIFF_OUTPUT" | grep -n -E "^\+[^+].*${LINE_CITE_PATTERN}" \
         | sed 's/^/       /' || true
+    fi
+    if [ -n "$L9C_VIOLATIONS" ]; then
+      emit FAIL "L9a (P2A-050 extended): bare-line-ref ban — newly-added text contains 'line ~N' or 'line N' line-number references (retire with symbol/anchor cites):"
+      while IFS= read -r cite; do
+        echo "       $cite"
+      done <<< "$L9C_VIOLATIONS"
+      echo ""
+      echo "  Affected lines (L9c — bare line reference violations):"
+      echo "$DIFF_OUTPUT" | grep -n -E "^\+[^+].*${BARE_LINE_CITE_PATTERN}" \
+        | sed 's/^/       /' || true
+      echo "  P2A-050 grounding: TD-VSDD-091 / POL-12 — bare line-number refs decay on next diff."
+      echo "  Replace 'line ~44' with the symbol/section anchor (e.g. '§Changelog entry for burst-NNN')."
+    fi
+    if [ -n "$L9D_VIOLATIONS" ]; then
+      emit FAIL "L9a (P2A-050 extended): ID-line-pin ban — newly-added text contains DOCID:NNN line-number pins (retire with symbol/anchor cites):"
+      while IFS= read -r cite; do
+        echo "       $cite"
+      done <<< "$L9D_VIOLATIONS"
+      echo ""
+      echo "  Affected lines (L9d — ID-anchored line pin violations):"
+      echo "$DIFF_OUTPUT" | grep -n -E "^\+[^+].*${ID_LINE_PIN_PATTERN}" \
+        | sed 's/^/       /' || true
+      echo "  P2A-050 grounding: TD-VSDD-091 / POL-12 — DOCID:NNN pins decay on next diff."
+      echo "  Replace 'BC-2.10.001:141' with the behavioral anchor (e.g. 'BC-2.10.001 §AC-3')."
     fi
     if [ -n "$L9B_VIOLATIONS" ]; then
       L9B_COUNT=0
@@ -728,7 +836,7 @@ PYEOF
       echo "  Replace 'ADR-014 v1.2' with 'ADR-014 §Decision N' or equivalent section anchor."
     fi
   else
-    emit PASS "L9 (D-50 extended): line-cite and version-pin ban — no file:NNN or <doc> vN.N pins in newly-authored additions"
+    emit PASS "L9 (D-50 + P2A-050 extended): line-cite and version-pin ban — no file:NNN, bare line~N, DOCID:NNN, or <doc> vN.N pins in newly-authored additions"
   fi
 }
 
@@ -988,7 +1096,7 @@ if [ "$FAIL" -gt 0 ]; then
   echo "Routing guide:"
   echo "  L1 violations → state-manager (frontmatter) or spec owner (changelog body)"
   echo "  L7 violations → spec owner (reorder changelog entries, newest first)"
-  echo "  L9a violations → finding author (replace file:NNN with symbol/anchor cite)"
+  echo "  L9a violations → finding author (replace file:NNN / bare line~N / DOCID:NNN with symbol/anchor cite) [P2A-050]"
   echo "  L9b violations → finding author (replace doc vN.N with doc §Section-Anchor) [D-50]"
   echo "  L10 violations → finding author (replace 7-hex SHA with artifact+section anchor cite) [ADVISORY]"
   echo "  L11 violations → finding author (replace 8+ char hex digest with artifact+section anchor cite)"
