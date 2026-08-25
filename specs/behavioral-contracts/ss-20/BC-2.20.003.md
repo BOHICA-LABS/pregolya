@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.003
-version: "1.9"
+version: "1.10"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.7 (wave-b-b7-notation-sweep/2026-07-29): ADR-010 §Class 3 notation sweep — 3 CLASS3_MISSING_DOTDOT violations corrected. (1) Invariant 2 inline E-VS-003 reject cite: add `, ..` field-elision marker. (2) TV-004 expected-output cell: add `, ..` field-elision marker. (3) TV-005 expected-output cell: add `, ..` field-elision marker. Zero-space `PregolyaError{code:E-VS-003}` in frontmatter changelog entry 1.6 (historical record, no space before brace) is EXEMPT — not modified per append-only record protocol."
   - "1.8 (P2A-021/story-anchor/2026-08-21): Story Anchor set to S-2.03 — VectorStoreRetriever / as_retriever delivery moved from S-2.02 to S-2.03 per architect P2A-021 build-ordering ruling (VectorStoreRetriever depends on the VectorStore trait, which is delivered in S-2.03)."
   - "1.9 (M1/ADR-027/2026-08-23): ADR-027 stable clause anchors added (M1). Purely additive — no content change."
+  - "1.10 (P2A-048/F-048-02/2026-08-24): PRE-001 borrowed `&dyn VectorStore` → owned `Arc<dyn VectorStore>` (D-48 sweep straggler; PRE-001 omitted from the v1.5 enumerated-clause sweep per wave-b-po-routing-spec.md Routing Items 6/6g)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-027
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -63,7 +64,7 @@ internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, e
 
 ## Preconditions
 
-1. {PRE-001} A `&dyn VectorStore` value is available (the store has been initialized).
+1. {PRE-001} An `Arc<dyn VectorStore>` value is available (the store has been initialized and is Arc-owned).
 2. {PRE-002} `VectorStore::as_retriever(self: Arc<Self>)` is called on an `Arc<dyn VectorStore>`,
    returning `Ok(VectorStoreRetriever)` on valid config or `Err(E-VS-003)` on invalid config
    (ADR-014 Decision 2).

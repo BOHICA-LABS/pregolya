@@ -121,10 +121,15 @@
 #   quotation accepted as equivalent evidence to executed-command output when
 #   adversary tool profile denies Bash; intent preserved — findings must be
 #   evidenced, not asserted; description and verification_steps[0] updated.
+# 1.4 (P2A-048/2026-08-24): POL-14 amended (F-048-01): index files (BC-INDEX,
+#   VP-INDEX, ARCH-INDEX, STORY-INDEX) added explicitly to DESCENDING group in
+#   description, matching verify-form-a-changelog-direction.sh's classification
+#   table (indexes: DESCENDING, version == FIRST entry). Prevents recurrence of
+#   STORY-INDEX ascending-outlier finding. metadata.version bumped 1.3→1.4.
 
 metadata:
-  version: "1.3"
-  last_updated: "2026-08-15"
+  version: "1.4"
+  last_updated: "2026-08-24"
 
 policies:
 
@@ -319,7 +324,7 @@ policies:
 
   - id: 14
     name: class_dependent_changelog_direction
-    description: "Changelog entry ordering is class-dependent. BC files: ASCENDING order (newest last; frontmatter version: equals last entry). ADRs, prd.md, domain-spec shards, prd-supplements: DESCENDING order (newest first). Enforced by verify-form-a-changelog-direction.sh. (STATE.md D-85)"
+    description: "Changelog entry ordering is class-dependent. BC files: ASCENDING order (newest last; frontmatter version: equals last entry). ADRs, prd.md, domain-spec shards, prd-supplements: DESCENDING order (newest first). Index files (BC-INDEX, VP-INDEX, ARCH-INDEX, STORY-INDEX) also follow DESCENDING order (newest first; frontmatter version == first entry), matching verify-form-a-changelog-direction.sh's index classification. Enforced by verify-form-a-changelog-direction.sh. (STATE.md D-85)"
     adopted: "STATE.md D-85"
     severity: HIGH
     enforced_by: [hooks/verify-form-a-changelog-direction.sh, adversary-prompt]

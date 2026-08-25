@@ -1,12 +1,13 @@
 ---
 document_type: story-index
-version: "1.2"
+version: "1.3"
 status: active
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
-  - "1.1 (P2A-044/2026-08-24): Revert P2A-043 over-propagation — BC-2.06.001 removed from S-1.27 behavioral_contracts (taxonomy reference not coverage); BC-2.06.001 §Story Anchor updated to S-1.17 only."
+  - "1.3 (P2A-048/2026-08-24): F-048-01: changelog reordered to DESCENDING (newest-first) to match the index-class convention (verify-form-a-changelog-direction.sh: indexes = DESCENDING, version == FIRST entry) and sibling indexes BC-INDEX/VP-INDEX/ARCH-INDEX. STORY-INDEX was the sole ascending outlier."
   - "1.2 (P2A-047/2026-08-24): F-047-02: S-2.03 Subsystem column updated SS-21 → SS-21, SS-20 (BC-2.20.003 owned by SS-20 Document Retrieval per ARCH-INDEX Subsystem Registry; subsystems field is a superset of covered-BC-owning + implementation-touched subsystems, per S-1.13 SS-15,SS-03 precedent). Story versions: S-2.03 v1.3→v1.4; S-2.04 v1.3→v1.4 (verification_properties frontmatter cleared to []; VP-2.18.003-A/B are BC-local not VP-INDEX-registered)."
+  - "1.1 (P2A-044/2026-08-24): Revert P2A-043 over-propagation — BC-2.06.001 removed from S-1.27 behavioral_contracts (taxonomy reference not coverage); BC-2.06.001 §Story Anchor updated to S-1.17 only."
 phase: 2
 traces_to: .factory/specs/behavioral-contracts/BC-INDEX.md
 inputs:
