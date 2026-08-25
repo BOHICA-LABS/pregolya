@@ -11,11 +11,12 @@ date: "2026-08-23"
 subsystems_affected: []
 supersedes: []
 superseded_by: null
-version: "1.0"
+version: "1.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D-175]
 changelog:
+  - "1.1 (2026-08-24): Add §Scope Boundary section — documents which doc classes are IN vs OUT of the stable-anchor mandate. Prompted by adversary finding P2A-045 F-045-02. Decision: derived-prose doc classes (ADRs, domain-spec, interface-definitions, prd-supplements, VP prose, architecture section files) are OUT of scope with rationale. ~422 live-body positional citations exist across those classes; adversarial consistency sweeps are the appropriate governance mechanism, not CI-gate extension."
   - "1.0 (2026-08-23): Initial decision — human-directed stable-anchor migration (D-175). Root cause: corpus-wide audit found ~136 mis-anchored AC→BC citations across 22 of 39 stories from Phase-1 BC restructuring that shifted postcondition ordinals. Generalizes the existing EC-NNN model to all clause types."
 ---
 
@@ -322,6 +323,75 @@ product-owner is the enforcer; the validator provides the gate.
 
 ---
 
+## Scope Boundary
+
+This section documents which document classes are **IN** vs **OUT** of the stable-anchor
+mandate. It was added in v1.1 in response to adversary finding P2A-045 F-045-02, which
+observed that ~422 positional BC-clause citations exist in derived-prose document classes
+not covered by M1–M4.
+
+### IN scope (machine-validated CI gate)
+
+| Doc class | Count | Mechanism |
+|-----------|-------|-----------|
+| BC files | ~133 files, ~1,060 clause tags | M1: tag insertion; validator CHECK-1 gate |
+| Story files | ~39 files, ~500 AC lines | M3: re-citation; `verify-ac-pc-trace.sh` CI gate |
+
+The CI gate (`verify-ac-pc-trace.sh`, POL-48) runs against these classes only. The gate
+format is structured (`### AC-NNN (traces to BC-S.SS.NNN PC-NNN)`); extending it to
+unstructured prose in other doc classes would require class-specific parsers and
+ADR-immutability exceptions.
+
+### OUT of scope (adversary-pass governance)
+
+| Doc class | Approx live-body citations | Rationale for OUT |
+|-----------|---------------------------|-------------------|
+| ADR decision files | ~88 | ADRs are **immutable-when-ratified**. They capture historical grounding at the moment of ratification. When a BC evolves, the correct response is ADR supersession, not in-place re-citation. Migrating ADR prose to stable anchors would invert the supersession model. |
+| interface-definitions.md | ~240 | Informational cross-references, not traceability anchors. Co-evolved with BCs in the same bursts. Stale citations are caught by adversary passes and consistency-validator sweeps. |
+| domain-spec live body | ~30 | Informational authority footnotes (e.g., "Source: BC-2.12.001 PC5"). Drift is caught by adversary passes; the citation serves the human reader, not the CI gate. |
+| Architecture section files (non-ADR) | ~24 | Informational rationale links. Same governance model as domain-spec. |
+| PRD supplements (error-taxonomy, test-vectors, observability) | ~33 | These co-evolve with BCs in the same bursts and are covered by the adversary consistency-sweep standing discipline. |
+| VP prose | ~7 | Small volume. See editorial note below. |
+
+**Total OUT-of-scope citations: ~422** (comparable to the M1–M3 combined workload; a
+formal M5 sweep without CI-gate extension would be aspirational editorial policy without
+machine enforcement — weaker guarantees at higher maintenance cost than adversary governance).
+
+### Governing rationale
+
+The fundamental distinction is **citation role**:
+
+- **Story AC citations** are formal machine-validated traceability links. Their correctness
+  is a CI gate condition. Stale ordinals silently pass the current validator — the exact
+  failure ADR-027 exists to prevent. Stable anchors + CI gate is the correct fix.
+
+- **Derived-prose citations** are informational cross-references. A stale `PC9` reference
+  in an ADR rationale or in interface-definitions prose does NOT silently pass a CI gate;
+  it is flagged by adversary passes (the standing discipline already covers this).
+  The appropriate mitigation is adversary-pass governance, not CI-gate extension.
+
+### VP editorial note (soft guidance, no CI gate)
+
+VP prose has ~7 positional citations. VP authors SHOULD use stable-anchor form
+(`BC-2.NNN.NNN PC-NNN`) when citing specific postconditions in new VP files, as a good
+practice that reduces adversary-pass churn. This is editorial guidance; no CI enforcement
+is planned given the small volume and Phase 6 timeline.
+
+### Drift-risk mitigation for OUT-of-scope classes
+
+When a BC is restructured (clause insertion, deletion, reorder):
+
+1. **Product-owner** updates the BC stable tags (M1 discipline).
+2. **Adversary passes** on the same burst check `BC-S.SS.NNN PC<n>` citations in derived
+   prose against the updated BC. A stale citation is a consistency finding.
+3. **BC version event** (version bump in BC frontmatter) signals downstream doc owners to
+   review cross-references. State-manager records the version bump; spec-steward governs
+   traceability audit on request.
+
+This is the standing governance model. No new process is required for OUT-of-scope classes.
+
+---
+
 ## Source / Origin
 
 - Human senior architect ruling, 2026-08-23 (D-175): migrate AC→BC citations to stable
@@ -330,6 +400,9 @@ product-owner is the enforcer; the validator provides the gate.
   restructuring; ordinal citations violated TD-VSDD-091's anti-volatile-pin principle.
 - ADR-022 (§Named-Section Citation Convention) is the sibling ADR governing
   `§Section-Name` citation stability.
+- Scope boundary (v1.1): assessed ~422 derived-prose citations and decided (b)
+  Document Boundary; adversary finding P2A-045 F-045-02 resolved as a documented
+  defensible decision rather than a scope extension.
 
 ---
 

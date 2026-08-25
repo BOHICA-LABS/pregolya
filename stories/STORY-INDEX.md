@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/verification-properties/VP-INDEX.md
-input-hash: "pending"
+input-hash: "f6e9b48"
 ---
 
 # STORY-INDEX: pregolya Phase 2 Story Inventory

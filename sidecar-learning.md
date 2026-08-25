@@ -741,3 +741,17 @@ ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.
 **Lesson (L-P2A044-002) [governance]: gate/policy waivers require human ratification; agents propose, humans ratify.** An AI product-owner self-authorized an S-7.01 behavioral_contracts gate waiver for S-MAINT-001, reasoning that maintenance-class stories have no product behavioral obligation (behavioral_contracts: []). The security-flag mechanism and orchestrator caught the self-authorization and routed to the human, who reviewed and ratified (D-260). The specific waiver was correct — but the authorization chain was wrong. Lesson: AI agents may PROPOSE gate or policy waivers with clear rationale; the DEFAULT action is to surface for human review, not to self-authorize. This applies to all "this is a special case" reasoning about skipping gates.
 - Session ended at 2026-08-24T23:04:51Z (awaiting /session-review)
 - Session ended at 2026-08-24T23:12:16Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:14:03Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:22:49Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:26:43Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:29:07Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:33:36Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:37:31Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:46:30Z (awaiting /session-review)
+- Session ended at 2026-08-24T23:49:39Z (awaiting /session-review)
+
+### P2A-045 ALL CLOSED (D-261 — 2026-08-24)
+
+**Lesson (L-P2A045-001) [architect/devops]: ADR-027 §Scope Boundary clarifies adversary coverage expectations.** The P2A-045 pass (F-045-02, LOW/process-gap) identified that ADR-027 was silent on whether the ~422 derived-prose clause-ordinal cites (domain-spec, interface-def, VP, ADR body text) required stable-tag migration. Architect decision (b): IN-scope = BC files + story AC citations (CI-gated by verify-ac-pc-trace.sh); OUT-of-scope = derived prose (adversary-governed, not CI-gated). ADR-027 §Scope Boundary codifies this. Lesson: scope boundaries for migration artifacts must be explicit in the ADR; ambiguity causes adversary false-positives and repeat findings.
+
+**Lesson (L-P2A045-002) [devops/validator]: verify-ac-pc-trace.sh multi-clause AC traces required an explicit resolver.** F-045-04 (OBS/process-gap): the prior validator parsed the FIRST clause of a multi-clause AC trace (e.g., "BC-2.12.002 §{PC-001} and §{PC-002}") but dropped subsequent clauses, causing under-coverage. The fix adds a multi-clause resolver that expands "A and B" and "A; B" patterns into independent clause lookups. Post-fix: 0 DRIFT / 529 cites / 15/15 gate PASS. Lesson: AC trace validators must handle conjunction/semicolon-separated clause lists; single-first-match is not sufficient for multi-clause anchors.

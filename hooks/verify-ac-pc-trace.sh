@@ -131,6 +131,50 @@ OLD_CITE_RE = re.compile(
 # Error code pattern anywhere in AC text
 ERRCODE_RE = re.compile(r'\bE-[A-Z]+-\d+\b')
 
+# ── Multi-clause trace extractor and parser ───────────────────────────────────
+# Extracts the full content of a "(traces to ...)" parenthetical from an AC line.
+_TRACE_CONTENT_RE = re.compile(r'\(traces\s+to\s+([^)]+)\)', re.IGNORECASE)
+
+# Tokeniser for the content inside a trace parenthetical.
+# Group 1: BC-id qualifier  (e.g. BC-2.12.003)
+# Group 2: tag prefix       (e.g. PC)
+# Group 3: tag number       (e.g. 006)
+# Negative lookbehind/lookahead prevent matching {PC-NNN} stable-tag tokens
+# that appear INSIDE BC source files (only story-file citation tokens wanted).
+_TRACE_TOKEN_RE = re.compile(
+    r'(BC-\d+\.\d+\.\d+)'
+    r'|'
+    r'(?<!\{)\b(PC|INV|PRE|EC)-(\d+)\b(?!\})',
+    re.IGNORECASE
+)
+
+
+def parse_all_trace_clauses(trace_text):
+    """
+    Parse all (bc_id, tag_id) pairs from a trace-to clause string.
+
+    Implements BC inheritance: a bare tag token that is not preceded by a
+    BC qualifier on the same trace inherits the most recently seen BC-id.
+    This handles shorthands like:
+      "BC-2.12.004 PC-006, EC-001, EC-002, EC-004"  (3 bare tags inherit BC-2.12.004)
+      "BC-2.12.003 INV-006, BC-2.12.002 EC-006"     (explicit re-qualification)
+      "BC-2.18.004 PC-005 and BC-2.18.004 PRE-002"  (same BC repeated)
+
+    Returns list of (bc_id, tag_id) tuples in appearance order.
+    Tags that appear before any BC qualifier are silently skipped (malformed).
+    """
+    current_bc: str | None = None
+    pairs: list = []
+    for m in _TRACE_TOKEN_RE.finditer(trace_text):
+        if m.group(1):
+            # BC qualifier: update context
+            current_bc = m.group(1)
+        elif m.group(2) is not None and current_bc is not None:
+            prefix = m.group(2).upper()
+            num    = m.group(3).zfill(3)
+            pairs.append((current_bc, f"{prefix}-{num}"))
+    return pairs
+
 # Stop-words for keyword overlap check (short or common words not useful)
 STOPWORDS = {
     'the','a','an','is','are','was','were','be','been','being',
@@ -472,58 +516,89 @@ for filename in story_files:
         # ── Try NEW stable-tag form first (ADR-027 M2 dual-mode) ─────────────
         new_m = NEW_CITE_RE.search(line)
         if new_m:
-            ac_id      = new_m.group(1)                    # e.g. AC-001
-            bc_id      = new_m.group(2)                    # e.g. BC-2.08.006
-            tag_prefix = new_m.group(3).upper()            # PC | INV | PRE | EC
-            tag_num    = new_m.group(4).zfill(3)           # '001'
-            tag_id     = f"{tag_prefix}-{tag_num}"         # e.g. PC-001
+            ac_id = new_m.group(1)                         # e.g. AC-001
+
+            # Extract the full "(traces to ...)" content and resolve ALL clause
+            # tokens.  Handles multi-clause shorthands:
+            #   "BC-x TAG-a, TAG-b, TAG-c"   (BC inheritance)
+            #   "BC-x TAG-a, BC-y TAG-b"     (explicit re-qualification)
+            # Every (bc_id, tag_id) pair must resolve; trailing clauses that do
+            # not resolve emit DRIFT with the same blocking semantics as the
+            # first clause.  Preserves single-clause behavior unchanged.
+            trace_m = _TRACE_CONTENT_RE.search(line)
+            if trace_m:
+                all_clauses = parse_all_trace_clauses(trace_m.group(1))
+            else:
+                all_clauses = []
+
+            # Fallback: malformed or unparseable trace — reconstruct from regex
+            if not all_clauses:
+                tag_prefix0 = new_m.group(3).upper()
+                tag_num0    = new_m.group(4).zfill(3)
+                all_clauses = [(new_m.group(2), f"{tag_prefix0}-{tag_num0}")]
 
             total_citations += 1
             story_citations += 1
 
-            bc = load_bc(bc_id)
-            if bc is None:
-                print(f"DRIFT {story_id} {ac_id} cited={tag_id} "
-                      f"reason=bc-file-missing bc={bc_id}")
-                story_drift += 1
-                continue
-
             ac_text_full = _ac_body_cache.get(line, line)
 
-            # CHECK 1 (new form): stable tag token must exist in BC section
-            if tag_prefix == 'PC':
-                exists = tag_id in bc['pc_tags']
-                section_key = 'pc_section'
-            elif tag_prefix == 'INV':
-                exists = tag_id in bc['inv_tags']
-                section_key = 'inv_section'
-            elif tag_prefix == 'PRE':
-                exists = tag_id in bc['pre_tags']
-                section_key = 'pre_section'
-            else:  # EC — same logic as old form
-                exists = tag_id in bc['ec_ids']
-                section_key = 'ec_section'
+            # ── CHECK 1: resolve every (bc_id, tag_id) pair ──────────────────
+            first_ok_bc  = None  # bc_id of first clause when CHECK 1 passes
+            first_ok_tag = None  # tag_id of first clause when CHECK 1 passes
+            first_ok_key = None  # section_key for CHECK 2
 
-            if not exists:
-                print(f"DRIFT {story_id} {ac_id} cited={tag_id} "
-                      f"reason=nonexistent bc={bc_id}")
-                story_drift += 1
-                continue
+            for idx, (clause_bc_id, tag_id) in enumerate(all_clauses):
+                tag_prefix = tag_id.split('-')[0]          # PC | INV | PRE | EC
 
-            # CHECK 2 (new form): error-code co-location (advisory)
-            ac_codes = ERRCODE_RE.findall(ac_text_full)
-            if ac_codes:
-                if tag_prefix in ('PC', 'INV', 'PRE'):
-                    item_text = get_item_text_by_tag(bc[section_key], tag_id)
-                else:
-                    item_text = get_item_text(bc['ec_section'], 'edge_case', tag_id)
-                if item_text:
-                    for code in ac_codes:
-                        if code not in item_text:
-                            print(f"ADVISORY {story_id} {ac_id} cited={tag_id} "
-                                  f"reason=code-absent asserted-code={code} bc={bc_id}")
-                            story_advisory += 1
-                            break  # one ADVISORY per AC
+                bc = load_bc(clause_bc_id)
+                if bc is None:
+                    print(f"DRIFT {story_id} {ac_id} cited={tag_id} "
+                          f"reason=bc-file-missing bc={clause_bc_id}")
+                    story_drift += 1
+                    continue
+
+                if tag_prefix == 'PC':
+                    exists = tag_id in bc['pc_tags']
+                    section_key = 'pc_section'
+                elif tag_prefix == 'INV':
+                    exists = tag_id in bc['inv_tags']
+                    section_key = 'inv_section'
+                elif tag_prefix == 'PRE':
+                    exists = tag_id in bc['pre_tags']
+                    section_key = 'pre_section'
+                else:  # EC
+                    exists = tag_id in bc['ec_ids']
+                    section_key = 'ec_section'
+
+                if not exists:
+                    print(f"DRIFT {story_id} {ac_id} cited={tag_id} "
+                          f"reason=nonexistent bc={clause_bc_id}")
+                    story_drift += 1
+                    continue
+
+                if idx == 0:
+                    first_ok_bc  = clause_bc_id
+                    first_ok_tag = tag_id
+                    first_ok_key = section_key
+
+            # ── CHECK 2: error-code co-location on first clause (advisory) ───
+            if first_ok_bc is not None:
+                ac_codes = ERRCODE_RE.findall(ac_text_full)
+                if ac_codes:
+                    bc = load_bc(first_ok_bc)
+                    if bc is not None:
+                        first_ok_prefix = first_ok_tag.split('-')[0]
+                        if first_ok_prefix in ('PC', 'INV', 'PRE'):
+                            item_text = get_item_text_by_tag(bc[first_ok_key], first_ok_tag)
+                        else:
+                            item_text = get_item_text(bc['ec_section'], 'edge_case', first_ok_tag)
+                        if item_text:
+                            for code in ac_codes:
+                                if code not in item_text:
+                                    print(f"ADVISORY {story_id} {ac_id} cited={first_ok_tag} "
+                                          f"reason=code-absent asserted-code={code} bc={first_ok_bc}")
+                                    story_advisory += 1
+                                    break  # one ADVISORY per AC
 
             continue  # new-form citation fully processed; do not fall through
 
