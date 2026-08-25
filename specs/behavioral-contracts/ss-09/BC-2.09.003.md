@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.3 (burst-227/F-P132-06/2026-07-21): Architecture Anchors: correct ProvenanceTag type-kind label from 'enum' to 'struct' (ProvenanceTag is a struct in pregolya-core/src/guardrail.rs)."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "6b3355d"
+input-hash: "d80ffc8"
 extracted_from: null
 modified: []
 deprecated: null
@@ -147,7 +148,7 @@ S-2.10
 
 ## VP Anchors
 
-S-2.10
+None
 
 ## Traceability
 

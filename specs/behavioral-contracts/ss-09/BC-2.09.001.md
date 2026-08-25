@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ changelog:
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.10 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -34,7 +35,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "988ae50"
+input-hash: "9dc5f7f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -211,7 +212,7 @@ S-2.10
 
 ## VP Anchors
 
-S-2.10
+None
 
 ## Traceability
 

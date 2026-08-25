@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.13"
+version: "1.14"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,13 +29,14 @@ changelog:
   - "1.11 (P2A-044 F-07/2026-08-24): Add PC-024 — PATCH not-found clause. S-1.26 EC-005 cited PC-008 (GET not-found) for PATCH not-found; PC-008 is scoped under the Read section header and covers only GET. PC-024 is additive under the Update section; no new error code minted (E-SERVER-009 AssistantNotFound applies to all operations on a non-existent assistant)."
   - "1.12 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.13 (P2A-045 F-045-03/2026-08-24): §Postconditions decorative ordinals renumbered sequentially."
+  - "1.14 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "37b5b45"
+input-hash: "68ed851"
 extracted_from: null
 modified: []
 deprecated: null
@@ -190,7 +191,7 @@ S-1.26
 
 ## VP Anchors
 
-S-1.26
+None
 
 ## Traceability
 

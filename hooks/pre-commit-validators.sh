@@ -67,6 +67,10 @@
 #       sections against §Grand-Total declared canonical total in test-vectors.md.
 #       Ground truth: 676 canonical TVs in 129 BC bodies == 676 declared in registry.
 #       Catches Mechanism-3 drift (registry internal arithmetic drifting from BC bodies).
+#   verify-vp-anchors-grammar.sh           — (CLEAN) BC ## VP Anchors section grammar. Every non-blank
+#       content line must be a VP identifier (contains VP-) or a None variant. Catches bare story IDs
+#       (S-N.NN) that are template-fill artifacts surviving without a real VP assignment. Added P2A-052
+#       (2026-08-25). Baseline: 133 BCs checked, PASS=1 FAIL=0.
 #   verify-ac-pc-trace.sh                  — (CLEAN) AC→BC postcondition/invariant/precondition/edge-case
 #       citation existence. Exits 1 when any cited item is absent from the referenced BC
 #       (reason=nonexistent) or an asserted error code is absent from the specifically-cited
@@ -116,7 +120,7 @@ PASSED_VALIDATORS=()
 PASS_COUNT=0
 # Single source of truth for the expected blocking validator roster size.
 # Update this constant when adding or removing a blocking validator.
-EXPECTED_BLOCKING_COUNT=15
+EXPECTED_BLOCKING_COUNT=16
 
 # run_blocking runs a validator and records failure in FAILED_VALIDATORS
 run_blocking() {
@@ -183,6 +187,7 @@ run_blocking "verify-bc-frontmatter-schema.sh"
 run_blocking "verify-tv-registry-count.sh"
 run_blocking "verify-adr-anchor-citations.sh"
 run_blocking "verify-ac-pc-trace.sh"
+run_blocking "verify-vp-anchors-grammar.sh"
 
 # ── Advisory validators (run but do not block; see header for promotion paths) ─
 echo ""

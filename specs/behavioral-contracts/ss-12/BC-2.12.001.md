@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.001
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "37b5b45"
+input-hash: "68ed851"
 extracted_from: null
 modified: []
 deprecated: null
@@ -38,6 +38,7 @@ changelog:
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.26 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (M3b-escalation-EC006/2026-08-24): EC-006 added — DELETE /threads/{id} while an active (queued or in_progress) run exists returns HTTP 409 E-SERVER-008; PC-011 is unconditional and did not cover this restriction; gap surfaced during S-1.26 EC adjudication P2A-043 F-05."
+  - "1.8 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
 ---
 
 # BC-2.12.001: Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History)
@@ -175,7 +176,7 @@ S-1.26
 
 ## VP Anchors
 
-S-1.26
+None
 
 ## Traceability
 

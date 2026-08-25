@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "37b5b45"
+input-hash: "68ed851"
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC18 list-runs endpoint — add limit (default 10, max 100; values > 100 clamped) and offset pagination params + declare created_at DESC ordering (pagination coherence canon)."
   - "1.2 (ADV-P1D-PASS-33): F-P33-02 add Run-Config Merge Precedence invariant — run-supplied config/metadata/context deep-merge over Assistant's stored values, run wins at leaf key. Upstream-check result: no contradicting semantics in BC-2.01.003 or semport behavioral-intent §2.3; leaf-level deep-merge adopted as spec canon."
@@ -34,6 +34,7 @@ changelog:
   - "1.9 (P2A-044 F-08/2026-08-24): Mint E-SERVER-018 RunStateConflict — PC-012 and PC-019 both mandated HTTP 409 for invalid-state-transition but named no error code, leaving the response body unspecified. PC-012 amended to cite E-SERVER-018 for the terminal-state cancel conflict. PC-019 amended to cite E-SERVER-018 for the non-terminal-state delete conflict. EC-006 added covering both scenarios. No arc transitions changed; amendment adds specification precision only."
   - "1.10 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.11 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
+  - "1.12 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -230,7 +231,7 @@ S-1.26
 
 ## VP Anchors
 
-S-1.26
+None
 
 ## Traceability
 
