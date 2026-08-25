@@ -1,16 +1,16 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.67"
+version: "2.68"
 status: active
 producer: product-owner
 total_standing_gates: 37
-timestamp: 2026-08-17T00:00:00Z
+timestamp: 2026-08-25T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
-input-hash: "c65f7c8"
+input-hash: "117c7a3"
 traces_to: prd.md
 total_bcs: 133
 total_batches: 20
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 79
 p2_count: 3
 changelog:
+  - "2.68 (P2A-049/F-049-01-sibling-sweep/2026-08-25): BC-2.18.002 and BC-2.18.004 title cells in Batch 16 table synced to canonical H1s (POL-7 downstream drift; FIX-BURST-256 H1 form superseded). BC-2.18.002: 'ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance' → 'ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>'. BC-2.18.004: 'injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed)' → 'injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time)' (missing 'at Render Time' suffix). BC-2.18.005 title cell verified correct — no change."
   - "2.67 (burst-307/P1D-199/F-P199-01/2026-08-17): DI-016 enforcer mis-anchoring corrected — 006↔007 swap introduced by v2.66. DI coverage table DI-016 row: BC-2.01.005, BC-2.01.007, BC-2.01.008 → BC-2.01.005, BC-2.01.006, BC-2.01.008. Batch-1 table BC-2.01.006 row: DI-014 → DI-014, DI-016. Batch-1 table BC-2.01.007 row: DI-014, DI-016 → DI-014. v2.66 changelog DI-016 enforcer text corrected in-place (same-cycle factual correction). DI-014 enforcer list verified: all four (BC-2.01.005/006/007/008) retained — DI-014 anchored by all four per di_anchors frontmatter. DI-016 enforcer set now {BC-2.01.005, BC-2.01.006, BC-2.01.008} consistent with invariants.md and BC frontmatter source of truth (POL-46). input-hash updated to 87d8d75."
   - "2.66 (burst-306/F-P198-02/2026-08-17): LCEL composition scope expansion propagated — burst-302b index-layer sync miss. Frontmatter: total_bcs 129→133, p1_count 75→79. Summary table: Total BCs 129→133, P1 75→79, Subsystems covered CAP-001–CAP-038 → CAP-001–CAP-039. SS.01 subsystem map: CAP-001, CAP-002 → CAP-001, CAP-002, CAP-039; priority P0 → P0/P1. Batch 1 count 8→12; four rows added: BC-2.01.005 (RunnableParallel Construction and Concurrent Invocation, CAP-039, DI-014/DI-016, Wave 1), BC-2.01.006 (RunnableParallel Branch Failure — Fail-Fast, CAP-039, DI-014/DI-016, Wave 1), BC-2.01.007 (RunnablePassthrough Identity Pass-Through, CAP-039, DI-014, Wave 1), BC-2.01.008 (RunnableAssign Dict Augmentation, CAP-039, DI-014/DI-016, Wave 1). DI coverage: DI-014 enforcer list extended with BC-2.01.005/006/007/008; DI-016 row added (enforcers: BC-2.01.005, BC-2.01.006, BC-2.01.008); coverage 15/15→16/16. Note: DI-008 enforcer list correctly omits BC-2.01.005–008 (they anchor DI-016/DI-014, not DI-008, per di_anchors frontmatter). input-hash updated to e4da046. [v2.66 DI text corrected in-place by v2.67]"
   - "2.65 (burst-291/D-134-cont/2026-08-16): Two phantom §-anchor citations corrected in live body text. (1) Line ~758 gate #31 text: 'ADV-P1D-PASS-24.md §WIRE-OBJECT class' → 'ADV-P1D-PASS-24.md §NEW CLASS: Wire-Object Field-Set Coherence' (real heading at line 126 of ADV-P1D-PASS-24.md; §WIRE-OBJECT matches no heading). Gate regex parses §NEW CLASS (stops at colon) → prefix-matches '## NEW CLASS: Wire-Object Field-Set Coherence' uniquely — PASS. (2) Line ~2591 batch-20 text: 'interface-definitions.md §IngressContent' → 'interface-definitions.md §GuardrailHook' (IngressContent enum is defined inline within §GuardrailHook; §IngressContent matches no heading in interface-definitions.md). TD-VSDD-060 sweep: sole §WIRE-OBJECT and sole §IngressContent occurrences in live body text."
@@ -393,9 +394,9 @@ Split into three batches to respect the planning cap of 8 BCs per batch.
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
 | BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, Strict-Undefined Guard | P1 | CAP-022 | DI-008, DI-014 | Wave 2 |
-| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | P1 | CAP-022 | DI-008 | Wave 2 |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | P1 | CAP-022 | DI-008 | Wave 2 |
 | BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Composition | P1 | CAP-023 | DI-008 | Wave 2 |
-| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed) | P1 | CAP-022 | DI-008, DI-014 | Wave 2 |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 | CAP-022 | DI-008, DI-014 | Wave 2 |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 | CAP-022 | DI-008, DI-014 | Wave 2 |
 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | P1 | CAP-024 | DI-008 | Wave 2 |
 | BC-2.19.002 | lc_secrets() Credential Fields Stripped from kwargs Before Serialization and Constructor Dispatch | P1 | CAP-024 | DI-008, DI-010 | Wave 2 |

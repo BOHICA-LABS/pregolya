@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.26"
+version: "1.27"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "c5253aa"
+input-hash: "806aa8d"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.27 (P2A-049/F-049-01-sibling-sweep/2026-08-25): BC-2.18.002 title cell synced to canonical H1 (POL-7 downstream drift; older FIX-BURST-256 H1 form superseded). §2.18 table: 'ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance' → 'ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>'. BC-2.18.004 and BC-2.18.005 title cells verified correct — no change."
   - "v1.26 (burst-325/D-196/2026-08-18): input-hash refreshed (metadata hygiene; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Hash was stale since v1.23 authoring; inputs capabilities-p1-p2.md and invariants.md changed at burst-306 but hash was not propagated at v1.24/v1.25. No normative content changed in this entry. Phase-1 gate-closure burst."
   - "v1.25 (burst-310/F-P202-01/2026-08-17): §5 CORE examples row: E-CORE-011 RunnableParallelTaskPanic (INTERNAL) added to the set of CORE examples alongside E-CORE-009/010 (burst-309 mint miss — §5 was the only live-body SET enumeration that lacked E-CORE-011; all other sites enumerate E-CORE-009 and E-CORE-010 in specific per-BC contexts, not as the CORE-code set). error-taxonomy.md §CORE table (E-CORE-011 row minted burst-309) and BC-2.01.006 (E-CORE-011 in PC-4/EC-003/TV-003 since burst-309) are unchanged. No BC body or supplement needed updating — L-185/L-186 carrier discipline satisfied. POL-12 compliant (no line-cites)."
   - "v1.24 (burst-307/P1D-199/F-P199-01/2026-08-17): DI-016 enforcer mis-anchoring corrected — 006↔007 swap introduced by burst-306. §2.01 table: BC-2.01.006 DI column DI-014 → DI-014, DI-016 (RunnableParallel branch-failure DOES anchor DI-016 per di_anchors frontmatter [DI-016, DI-014]); BC-2.01.007 DI column DI-014, DI-016 → DI-014 (RunnablePassthrough identity does NOT anchor DI-016 per di_anchors frontmatter [DI-014]). DI-016 enforcer set now {BC-2.01.005, BC-2.01.006, BC-2.01.008} consistent with invariants.md and BC frontmatter source of truth (POL-46). BC-2.01.005 and BC-2.01.008 rows confirmed correct (DI-014, DI-016 — no change). §7 RTM carries no DI column — no RTM change needed."
@@ -399,7 +400,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
 | BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, and Strict-Undefined Guard | P1 | DI-008, DI-014 | ss-18/BC-2.18.001.md |
-| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | P1 | DI-008 | ss-18/BC-2.18.002.md |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | P1 | DI-008 | ss-18/BC-2.18.002.md |
 | BC-2.18.003 | MessagesPlaceholder Vec\<Message\> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | P1 | DI-008 | ss-18/BC-2.18.003.md |
 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 | DI-008, DI-014 | ss-18/BC-2.18.004.md |
 | BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 | DI-008, DI-014 | ss-18/BC-2.18.005.md |

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.05
 epic_id: E-18
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "8b25bbf"
+input-hash: "a6270ea"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
@@ -43,9 +43,9 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance | P1 |
-| BC-2.18.004 | injection_guard in format_messages — TrustLevel Severity Ordering; Fires BEFORE PromptValue Produced; E-TMPL-001 SECURITY/InjectionAttempt (Red Gate) | P1 |
-| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) (Red Gate) | P1 |
+| BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | P1 |
+| BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time) | P1 |
+| BC-2.18.005 | SlotTrustPolicy::TrustAll on SystemMessage Slot Raises E-TMPL-002 at Construction Time (Fail-Closed) | P1 |
 
 ## Acceptance Criteria
 
@@ -307,4 +307,5 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 - "1.0 (2026-08-19): initial story authored"
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 semantic re-anchors applied (see escalation notes)"
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
+- "1.3 (P2A-049 F-049-01/2026-08-25): body BC-table title cells synced verbatim to canonical BC H1 — BC-2.18.002, BC-2.18.004, BC-2.18.005; removed stale 'TrustLevel Severity Ordering' paraphrase (superseded by binary is_untrusted model per D-243/P2A-035) and non-H1 '(Red Gate)' enrichments; sibling S-2.04 pattern matched; input-hash updated to a6270ea (pre-existing drift resolved)"
 
