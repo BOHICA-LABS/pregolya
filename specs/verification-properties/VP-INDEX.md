@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.20"
+version: "1.21"
 status: active
 producer: architect
-timestamp: 2026-08-26T16:00:00Z
+timestamp: 2026-08-26T18:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.21 (round-6/P2A-063-065/D-281/2026-08-26): VP-016 body file bumped v1.2→v1.3 (F-064-02 HIGH triple-confirmed — harness relocated from non-compilable integration-test path to in-crate #[cfg(test)] mod tests inside pregolya-mcp/src/graph_tool.rs; three non-realizability defects fixed: from_runner seam, pub(crate) GraphRunner access E0603, Fn(&serde_json::Value)→Fn(&TestGraphState)->serde_json::Value; §Proof Obligations: §Test Seam Obligation added; O-063-02 OBS: invoke→invoke_dyn normalized in §Property Statement, formal property, §Source Contract, §Proof Method table, §Proof Obligations). VP-INDEX catalog row unchanged (BC-2.09.008 {INV-001} / proptest / P1 / draft unchanged). VP census unchanged: total 17."
   - "1.20 (P2A-060/061/062-round-5/2026-08-26): VP-016 body file bumped v1.1→v1.2 (F-P2A-061-01 HIGH harness fix: prior harness was tautological — rewritten to invoke production GraphAgentTool::invoke_dyn via MockGraphRunner + extract_output closure; Phase-6 POL-31 obligation recorded). VP-INDEX catalog row unchanged (BC-2.09.008 {INV-001} / proptest / P1 unchanged). VP census unchanged: total 17."
   - "1.19 (P2A-058-F058-04/2026-08-26): VP-006-B harness_fn confirmed as `injection_guard_multipair_fewshot_fail_closed` per F-058-04 convergence check (VP-INDEX §VP Catalog is source of truth; file was authored with canonical name; no rename required). VP-006-B bumped to v1.1. No catalog row delta. VP census unchanged: total 17."
   - "1.18 (B-SS18-SEC/SEC-003/ADR-029-v1.2/2026-08-26): VP-006-B added — injection_guard Multi-Pair FewShotExamples Fail-Closed; proptest P1; phase 3; module prompts::injection_guard; crate pregolya-prompts; bc_anchor BC-2.18.004 {PC-005}; di_anchor DI-014; status draft; harness_fn injection_guard_multipair_fewshot_fail_closed; file vp-006-b-injection-guard-multipair-fewshot.md. Belt-and-suspenders for VP-006 Kani {PC-005} arm — covers arbitrary Vec length and any-pair-index-untrusted patterns (TV-007 Red Gate: 4-pair middle-pair-only-untrusted). Arithmetic: total 16→17 (P0 6 unchanged, P1 10→11); proptest 4→5. Status:draft 16→17."

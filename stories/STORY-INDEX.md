@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.10"
+version: "1.11"
 status: active
 producer: story-writer
-timestamp: 2026-08-26T16:00:00Z
+timestamp: 2026-08-26T18:00:00Z
 changelog:
+  - "1.11 (round-6/P2A-063-065/D-281/2026-08-26): STORY-S-2.11 v1.8→v1.9 (F-064-03/BLOCKER-2 MED): RootSchema→schemars::Schema rename applied at four AC-trace/task occurrences within S-2.11 (schemars crate dropped RootSchema as a public type; canonical form is schemars::Schema throughout). No other story file changed this round. Story census UNCHANGED: 40 total (39 product + 1 maint). AC counts UNCHANGED."
   - "1.10 (P2A-060/061/062-round-5/2026-08-26): SS-09 BC coverage header corrected (7 BCs) → (8 BCs) (body already listed BC-2.09.001–008; header lagged by 1). S-2.11 depends_on updated [S-2.10] → [S-2.10, S-1.14] (ADR-029 BC-2.09.008 PC-001 — GraphAgentTool wraps Arc<CompiledGraph<S>>; S-1.14 is StateGraph Node Definition, Wave-1 upstream; DAG-acyclicity confirmed: S-1.14 Wave-1 upstream of S-2.11 Wave-2, no cycle). S-2.11 v1.8 (on-disk per CHANGED FILES: P2A-060/061/062 schema()/input_schema() rename + E-MCP-011 Error-Codes row). Story census UNCHANGED: 40 total (39 product + 1 maint). AC counts UNCHANGED."
   - "1.9 (P2A-058-F058-01..06-SEC009/2026-08-26): S-2.11 v1.7 — F-058-02 MED E-MCP-010 recovery message corrected across AC-021 (BoundaryApprovalHook::Deny interrupt-parking scoping) and AC-026 (ForceApproveHooks cannot resolve E-MCP-010; correct resolution: restructure graph to avoid interrupt() in synchronous tools/call). AC count UNCHANGED 34. S-2.05 v1.6 — F-058-04 MED VP-006-B harness_fn injection_guard_multipair_fewshot_fail_closed confirmation recorded. AC count UNCHANGED 18. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.8 (P2A-057-round-2/2026-08-26): S-2.11 v1.6 — F-057-01 CRIT fail-closed fix (AC-030: None/undeclared → Deny+E-MCP-011; TV-012 None variant); F-057-02 HIGH Deny-path corrected (AC-021: BoundaryApprovalHook::Deny path scoped to interrupt-parking, graph owns terminal); F-057-04/05 ACs updated (AC-024 binary-interrupt scoped; §Story Anchor populated). AC count UNCHANGED 34. Story census UNCHANGED: 40 total (39 product + 1 maint)."

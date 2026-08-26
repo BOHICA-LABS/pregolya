@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.24"
+version: "2.25"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "7200b8d"
+input-hash: "5c9f11a"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -81,7 +81,7 @@ Seventeen VPs committed before v1.0 release — VP-001..005 (original five) plus
 | VP-004 | BC-2.09.004 | DI-014 | `mcp::exception` | integration | 3 | P1 |
 | VP-005 | BC-2.09.005 | DI-014 | `mcp::client` | integration | 3 | P1 |
 | VP-006 | BC-2.18.004 | DI-014 | `prompts::injection_guard` | Kani | 6 | P1 |
-| VP-006-B | BC-2.18.004 | DI-014 | `prompts::injection_guard` | proptest | 3 | P1 |
+| VP-006-B | BC-2.18.004 {PC-005} | DI-014 | `prompts::injection_guard` | proptest | 3 | P1 |
 | VP-007 | BC-2.19.001 | DI-008 | `core::serializable` | proptest | 3 | P1 |
 | VP-008 | BC-2.22.001 | DI-014 | `core::embeddings` | proptest | 3 | P1 |
 | VP-009 | BC-2.21.003 | DI-014 | `vectorstores::similarity` | Kani | 6 | P0 |
@@ -507,7 +507,7 @@ Harness bounds: ≤ 4 slots / ≤ 4 examples. Estimated proof time per harness: 
 
 ---
 
-**VP-006-B — injection_guard_fewshot Multi-Pair Fail-Closed** (`prompts::injection_guard`) `proptest P1 Phase 3`
+**VP-006-B — injection_guard Multi-Pair FewShotExamples** (`prompts::injection_guard`) `proptest P1 Phase 3`
 
 Property: For ANY arbitrary-length list of `FewShotExample` pairs (pair-count 2..=8) where at
 least one pair at ANY position (first, middle, or last) carries `TrustLevel::Untrusted`,
@@ -837,6 +837,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.25 | 2026-08-26 | architect | round-6/F-P2A-065-07 | VP-006-B BC anchor corrected: `BC-2.18.004` → `BC-2.18.004 {PC-005}` in Committed VP Obligations table (VP-INDEX canonical anchor per VP-INDEX §VP Catalog row BC column). VP-006-B §Should Prove heading normalized: `injection_guard_fewshot Multi-Pair Fail-Closed` → `injection_guard Multi-Pair FewShotExamples` (matches VP-INDEX/VP-006-B.md canonical title form; F-P2A-065-07 OBS). input-hash updated. |
 | 2.24 | 2026-08-26 | architect | SEC-review-adjudication | SEC-003: VP-006 Arm 2 multi-pair mandate — existing `n>=1&&n<=4` Kani harness provides symbolic proof covering multi-pair/middle/last-Untrusted scenarios; explicit mandate and VP-006-B proptest P1 added (arbitrary pair-count 2..=8 + arbitrary untrusted index; belt-and-suspenders). SEC-004: VP-006 future-variant proof obligation noted — adding a TrustLevel variant requires re-running cargo kani; VP-006 proves only currently-defined variants; runtime wildcard enforces fail-closed for any variant. Committed VP Obligations table: add VP-006-B row; totals 16→17, P1 10→11, proptest 4→5. §Section Content narrative updated. |
 | 2.23 | 2026-08-26 | architect | E-code-correction | VP-016 BC anchor: {INV-001} corrected from stale {INV-STATE-ISOLATION} (stable BC-2.09.008 numeric anchor per product-owner). §Section Content narrative, Committed VP Obligations table, and VP-016 body all updated. v2.22 changelog row also corrected (same invariant tag). |
 | 2.22 | 2026-08-26 | architect | GAP-01/ADR-029 | (1) D-273 VP-015 tool-type fix: `integration` → `unit` in Committed VP Obligations table and body (VP-015.md frontmatter is authoritative per CLAUDE.md rule 4). (2) VP-016 added: proptest P1, Phase 3, `mcp::graph_tool`, pregolya-mcp, BC-2.09.008 {INV-001}, DI-010 (ADR-029 GAP-01 resolution). Committed VP Obligations table: add VP-016 row; update total 15→16 VPs, P1 9→10, proptest 3→4, integration 3→2, unit 0→1. Section Content narrative updated (fifteen→sixteen VPs; VP-016 desc added). VP body sections: add VP-015 body and VP-016 body to §Should Prove. input-hash updated to df54145 (hook-computed after v2.21 edits; BC-2.09.008 added to inputs list). |

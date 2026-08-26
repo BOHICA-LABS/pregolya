@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.82"
+version: "2.83"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
 phase: 1d
 changelog:
+  - "2.83 (round-6/F-064-01/2026-08-26): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment rewritten to hardened semantics (F-064-01 HIGH). Replaced pre-hardening fail-open text ('overrides ALL PreToolDecision values ... the tool proceeds unconditionally') with: (a) SEC-007 — overrides ONLY PendingHumanApproval to Approve; Deny and ALL other PreToolDecision values pass through UNCHANGED; (b) SEC-006/F-057-01 — runtime BoundaryApprovalHook ActionRisk gate: action_risk None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011 ForceApproveWriteBlocked + CRITICAL log; only Some(r < Medium) → Approve; (c) node-level interrupt() still causes Err(E-MCP-010); (d) use-restriction framed as architectural enforcement (runtime gate), not caller-responsibility only. BC anchors in doc-comment: BC-2.09.008 {PC-006} (ForceApproveHooks override semantics), {INV-004} (safety restriction), ADR-029 §Decision 4."
   - "2.82 (round-5/F-LOW-schemars+D2/2026-08-26): §GraphAgentTool: input_schema field type corrected from schemars::schema::RootSchema (removed in schemars 1.0) to schemars::Schema (canonical; LOW schemars finding). Blanket omission blockquote: E-MCP-011 ForceApproveWriteBlocked confirmed library-layer only; disposition census 136→137 (62 blanket; E-MCP-* 10→11); D2 [records]."
   - "2.81 (GAP-01/ADR-029/BC-2.09.008/2026-08-26): §GraphAgentTool added (pregolya-mcp: mcp::graph_tool; new module per ADR-029 §Decision 1). Section covers: `GraphAgentTool` struct (BC-2.09.008 authoritative signature carrier per ADR-029 §behavioral-authority note); `from_graph` constructor (inputSchema derivation from S: schemars::JsonSchema; extract_output closure shape; STATE-ISOLATION invariant anchor {INV-001}); `with_approval_policy` builder; `GraphToolApprovalPolicy` enum (`DenyInterrupts` default fail-closed; `ForceApproveHooks` explicit opt-in with read-only restriction); `GraphRunner` pub(crate) type-erased async trait. Blanket omission note update: E-MCP-010 GraphAgentInterruptDenied (EXEC/Never; library-layer Err return from mcp::graph_tool; never direct HTTP terminal in v1) confirmed library-layer only; E-MCP-* namespace 9→10 codes. Census note appended to blanket omission blockquote. BC anchors: BC-2.09.008 (primary), BC-2.09.006, BC-2.09.007, ADR-029 §Decision 1–5."
   - "2.80 (P2A-040-SS18/2026-08-23): §ChatPromptTemplate PromptValue — struct→enum alignment. Before: `#[non_exhaustive] pub struct PromptValue { pub messages: Vec<(Message, MessageProvenance)> }`. After: `#[non_exhaustive] pub enum PromptValue { String(String), Messages(Vec<(Message, MessageProvenance)>) }` (Send+Sync via auto-trait). Type-shape authority: BC-2.18.002 INV-5 + ADR-015 §PromptValue. BC anchor comment updated to cite BC-2.18.002 INV-5 (replacing stale PC2 struct-field citation). No other live-body site references the old struct field — changelog entry 2.45 citing PromptValue.messages is a historical record, grandfathered per TD-VSDD-091."
@@ -2301,19 +2302,28 @@ pub enum GraphToolApprovalPolicy {
     /// BC-2.09.008 {INV-002}: no `Ok` result returned when graph was interrupted.
     DenyInterrupts,
 
-    /// **Explicit opt-in — overrides `PreToolCallHook` decisions only.**
-    /// `BoundaryApprovalHook` overrides ALL `PreToolDecision` values (including
-    /// `PendingHumanApproval`) to `Approve`. No human approval dialog is presented
-    /// for hook-gated tool calls; the tool proceeds unconditionally.
+    /// **Explicit opt-in — HITL-dialog suppressor only (SEC-007).**
+    ///
+    /// `BoundaryApprovalHook` overrides ONLY `PreToolDecision::PendingHumanApproval`
+    /// → `Approve`. `Deny` and ALL other `PreToolDecision` values pass through
+    /// UNCHANGED — `ForceApproveHooks` is NOT a blanket security bypass.
+    ///
+    /// **SEC-006 — Runtime `ActionRisk` gate (BC-2.09.008 {PC-006}, {INV-004}):**
+    /// Before overriding `PendingHumanApproval`, `BoundaryApprovalHook` checks
+    /// `preview.action_risk: Option<ActionRisk>` (BC-2.05.007 {PRE-003}):
+    /// - `Some(r)` where `r < ActionRisk::Medium` → `Approve` (read-only tool).
+    /// - `None` (undeclared risk; fail-closed per BC-2.05.006 EC-004/{INV-002})
+    ///   OR `Some(r)` where `r >= ActionRisk::Medium` → `Deny` +
+    ///   `E-MCP-011 ForceApproveWriteBlocked` (CRITICAL-level structured log).
+    ///   The tool is NOT invoked; the graph continues to its terminal state.
     ///
     /// **Node-level `interrupt()` is NOT overridden:** graph parks →
-    /// `Err(E-MCP-010)`. {INV-002} holds under `ForceApproveHooks`.
+    /// `Err(E-MCP-010 GraphAgentInterruptDenied)`. {INV-002} holds.
     ///
-    /// **Use restriction (BC-2.09.008 {INV-004}):** ONLY appropriate for graphs
-    /// composed exclusively of read-only tools (`ActionRisk::ReadOnly` or
-    /// `ActionRisk::Low`). Caller is responsible for auditing tool composition.
-    /// Using `ForceApproveHooks` with write-class tools (`ActionRisk::Medium`
-    /// or higher) violates ADR-018 §Decision 2 per-graph security contract.
+    /// **Suitable only for:** graphs composed exclusively of read-only tools with
+    /// declared `ActionRisk < Medium` for every tool. The runtime `ActionRisk`
+    /// gate is the enforcement backstop; audit tool composition at registration.
+    /// ADR-029 §Decision 4.
     ForceApproveHooks,
 }
 

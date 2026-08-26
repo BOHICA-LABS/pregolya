@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.8"
+version: "1.9"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -191,7 +191,7 @@ nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_
 `GraphAgentTool::from_graph(name, description, graph, extract_output)` constructs a
 `GraphAgentTool` where `graph: Arc<CompiledGraph<S>>` and
 `S: GraphState + for<'de> Deserialize<'de> + JsonSchema + Send + Sync + 'static`.
-At construction time, `schemars::schema_for!(S)` is called to derive the `RootSchema` for `S`.
+At construction time, `schemars::schema_for!(S)` is called to derive the `schemars::Schema` for `S`.
 This schema is stored internally and returned by `DynTool::schema()` for advertisement in
 `tools/list` responses per BC-2.09.006 {PC-002}. Construction returns a value (not `Err`);
 all precondition bounds are enforced by the type system at the call site. Verified by
@@ -201,7 +201,7 @@ all precondition bounds are enforced by the type system at the call site. Verifi
 The constructed `GraphAgentTool` implements `DynTool` (object-safe dispatch seam per
 ADR-005 §Adjacent Trait Object-Safety Adjudications) and may be registered in a `ToolRegistry`
 via the standard registration API. After registration, the MCP server advertises the tool in
-`tools/list` responses — name, description, and inputSchema (the `RootSchema` derived at
+`tools/list` responses — name, description, and inputSchema (the `schemars::Schema` derived at
 `from_graph` time via `schemars::schema_for!(S)`) are exposed verbatim per BC-2.09.006
 {PC-002}. Verified by
 `test_BC_2_09_008_graph_agent_tool_registered_appears_in_tools_list()`.
@@ -505,8 +505,8 @@ produces a response where `content[0].text` equals `"key=sk-abc123XYZabc123XYZab
 15. [ ] Implement `ToolOutput::Structured → serde_json::to_string` / `ToolOutput::Text → verbatim` result_text selection in tools/call handler (AC-016 / BC-2.09.007 {PC-002})
 16. [ ] Run `cargo nextest run -p pregolya-mcp` — AC-001–AC-016 green (server + registry baseline)
 17. [ ] Create `pregolya-mcp/src/graph_tool.rs` — `GraphAgentTool<S>` struct, `GraphToolApprovalPolicy` enum, `BoundaryApprovalHook` internal struct, `GraphRunner` type-erased trait
-18. [ ] Implement `GraphAgentTool::from_graph` — accept `name`, `description`, `Arc<CompiledGraph<S>>`, `extract_output` closure; call `schemars::schema_for!(S)` at construction time; store `RootSchema` for `DynTool::schema()` (AC-017 / BC-2.09.008 PC-001)
-19. [ ] Implement `DynTool` for `GraphAgentTool` — `name()`, `description()`, `schema()` returning stored `RootSchema`, `invoke_dyn()` dispatching graph execution (AC-018 / BC-2.09.008 PC-002)
+18. [ ] Implement `GraphAgentTool::from_graph` — accept `name`, `description`, `Arc<CompiledGraph<S>>`, `extract_output` closure; call `schemars::schema_for!(S)` at construction time; store `schemars::Schema` for `DynTool::schema()` (AC-017 / BC-2.09.008 PC-001)
+19. [ ] Implement `DynTool` for `GraphAgentTool` — `name()`, `description()`, `schema()` returning stored `schemars::Schema`, `invoke_dyn()` dispatching graph execution (AC-018 / BC-2.09.008 PC-002)
 20. [ ] **Red Gate check (AC-023):** confirm `test_BC_2_09_008_state_isolation_only_extract_output_in_result()` FAILS before STATE-ISOLATION enforcement is implemented (extra fields leak to `ToolOutput` without explicit exclusion)
 21. [ ] **Red Gate check (AC-026):** confirm `test_BC_2_09_008_ec004_node_interrupt_deny_policy_e_mcp_010()` FAILS before E-MCP-010 interrupt-denied path is implemented
 22. [ ] Implement `BoundaryApprovalHook` — DenyInterrupts path: override `PendingHumanApproval` → `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`; ForceApproveHooks path: override ONLY `PendingHumanApproval` to `Approve` (subject to ActionRisk check — tasks 31/33); `Deny` passes through unchanged (AC-021, AC-022, AC-029 / BC-2.09.008 PC-005/PC-006)
@@ -606,3 +606,4 @@ build MUST fail.
 - **1.6 (F-057-01 / F-057-02 / OBS / 2026-08-26):** Round-2 BC-2.09.008 security corrections propagated. (1) AC-030 (F-057-01): ActionRisk gate is now fail-closed on `None` — `preview.action_risk` is `None` (un-annotated tool, fail-closed per {INV-004}) OR `Some(r >= Medium)` → `Deny` + `E-MCP-011 ForceApproveWriteBlocked` + CRITICAL log; `None` fails closed identically to `Some(>=Medium)`; TV-012 cited for `None` path (TV-008 for `Some(High)` path); second test function `test_BC_2_09_008_force_approve_hooks_action_risk_none_fails_closed_emits_e_mcp_011()` added. (2) AC-021 (F-057-02): `BoundaryApprovalHook::Deny` path corrected — graph CONTINUES executing after Deny; valid terminal → `Ok(ToolOutput::Structured)` per {PC-004}; error terminal → graph's OWN `Err(PregolyaError)` (NOT `E-MCP-010`); `E-MCP-010` raised ONLY on node-level `interrupt()` parking (`RunStatus::Interrupted`); test renamed to `test_BC_2_09_008_pending_approval_under_deny_continues_to_terminal()`. (3) AC-024 (F-057-02): Binary-interrupt invariant scoped to node-level `interrupt()` PARKING only; `BoundaryApprovalHook::Deny` path explicitly excluded (graph continues to own terminal, NOT `E-MCP-010`); test clarified. (4) OBS: all BC-2.09.008 and BC-2.09.007 AC heading traces normalized from `§{CLAUSE}` to plain `CLAUSE` form consistent with sibling BC-2.09.006 trace format throughout; Task 33 updated for `None` case; EC-011 updated to cover both TV-012 (`None`) and TV-008 (`Some(High)`) cases; Arch Compliance Rules binary-interrupt and ActionRisk rows updated.
 - **1.7 (F-058-02 / 2026-08-26):** AC-021 and AC-026: E-MCP-010 remedy text corrected per orchestrator mandate — dropped ForceApproveHooks-recovery clause; message updated to `"restructure the graph so it does not call interrupt() during a synchronous tools/call invocation"`. AC traces (BC-2.09.008 PC-005 and EC-004) unchanged.
 - **1.8 (F3 / round-5 / 2026-08-26):** AC-003 corrected: `tool.input_schema()` → `tool.schema()`. `schema()` is the canonical method name on the `DynTool` trait; `input_schema` is a struct field name, not a callable method. Swept entire file — no other `input_schema()` method calls found. `depends_on` updated to `[S-2.10, S-1.14]`; S-1.14 (StateGraph Nodes + Channels) delivers `CompiledGraph<S>` required by `GraphAgentTool::from_graph` per BC-2.09.008 PRE-001 `Arc<CompiledGraph<S>>` precondition.
+- **1.9 (BLOCKER-2 / F-064-03 / round-6 / 2026-08-26):** Four remaining `RootSchema` live-body sites replaced with `schemars::Schema` (schemars 1.0 canonical per ADR-004 §Version pin; matches BC-2.09.008 {PC-001}): (1) AC-017 body — "derive the `schemars::Schema` for `S`"; (2) AC-018 body — "the `schemars::Schema` derived at `from_graph` time"; (3) Task 18 — "store `schemars::Schema` for `DynTool::schema()`"; (4) Task 19 — "`schema()` returning stored `schemars::Schema`". Changelog-history mentions of `RootSchema` are intentionally preserved as historical record. Zero live `RootSchema` references remain outside the changelog.

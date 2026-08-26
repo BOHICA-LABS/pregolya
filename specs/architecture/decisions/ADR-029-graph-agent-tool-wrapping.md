@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "1.7 (round-6/O-063-02/2026-08-26): §Decision 4 fail-closed guarantee paragraph: `GraphAgentTool::invoke` → `GraphAgentTool::invoke_dyn` (O-063-02 OBS — canonical DynTool dispatch method is invoke_dyn; one bare occurrence corrected)."
   - "1.6 (P2A-062/2026-08-26): F-062-01 HIGH — §Decision 4 fail-closed guarantee: VP-016 attribution corrected — binary interrupt invariant ({INV-002}) is enforced by Red-Gate test set (BC-2.09.008 TV-002/TV-005, S-2.11 AC-024), not VP-016; VP-016 proves STATE-ISOLATION ({INV-001}, §Decision 3). F2 MED — §Decision 2 pipeline + §Decision 5 Error Routing Table: post-schema serde_json::from_value failure corrected — runs inside invoke_dyn, surfaces as isError: true (BC-2.09.008 {PC-003}/EC-002), not JSON-RPC -32602; prose clarified to keep two paths distinct. F3 MED — §Decision 2: Tool::input_schema() corrected to Tool::schema() (canonical method per interface-definitions.md). F-P2A-061-02 MED — §Consequences Error Code (PO Obligation): E-MCP-011 ForceApproveWriteBlocked obligation added, cross-referencing §Decision 4. LOW schemars — schemars::schema::RootSchema corrected to schemars::Schema; RootSchema prose corrected to Schema."
   - "1.5 (P2A-059-records/2026-08-26): F-P2A-059-01 LOW (records-tier) — §Decision 5 E-MCP-010 message-template cell: trailing period dropped so the ADR cell matches error-taxonomy.md verbatim ('...synchronous tools/call invocation' — no trailing period). 1-character literal alignment to authoritative taxonomy source. No semantic or rationale changes. RECORDS-ONLY micro-burst per TD-RECORDS-MICRO-BURST-001."
   - "1.4 (P2A-058/2026-08-26): F-058-02 MED — E-MCP-010 message template remedy corrected in §Decision 5: dropped 'or register with GraphToolApprovalPolicy::ForceApproveHooks if read-only' clause (ForceApproveHooks cannot resolve E-MCP-010; node-level interrupt() causes RunStatus::Interrupted regardless of approval policy; the hook path and the node interrupt path are independent); corrected remedy: 'restructure the graph so it does not call interrupt() during a synchronous tools/call invocation.' RetryHint rationale in §Decision 5 updated to remove ForceApproveHooks reference. F-058-05 LOW — E-MCP-011 message-template wording: two illustrative variant forms exist (table vs code sketch); illustrative-forms note added in §Decision 4 after E-MCP-011 table; error-taxonomy.md is the authoritative message source and supersedes any wording shown in this ADR."
@@ -288,7 +289,7 @@ When `approval_policy = DenyInterrupts` (the default):
   approval not supported for synchronous tools/call", .. })`. The interrupted run is NOT
   persisted to durable checkpoint — the run is abandoned at the graph level.
 
-**Fail-closed guarantee:** NO code path in `GraphAgentTool::invoke` returns `Ok(ToolOutput)`
+**Fail-closed guarantee:** NO code path in `GraphAgentTool::invoke_dyn` returns `Ok(ToolOutput)`
 if the graph was interrupted (parked). The binary invariant: completed terminal → Ok, any
 interrupt → Err(E-MCP-010). This binary interrupt invariant ({INV-002}) is enforced by the
 Red-Gate test set (BC-2.09.008 TV-002/TV-005, S-2.11 AC-024) — it is NOT the VP-016 proof
@@ -585,6 +586,7 @@ PO must mint the following two error codes in `error-taxonomy.md`:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.7 | 2026-08-26 | architect | round-6/O-063-02 | §Decision 4 fail-closed guarantee: `GraphAgentTool::invoke` → `GraphAgentTool::invoke_dyn` (O-063-02 OBS — canonical DynTool dispatch method is invoke_dyn; one bare occurrence in §Decision 4 §DenyInterrupts fail-closed guarantee paragraph). |
 | 1.6 | 2026-08-26 | architect | P2A-062 | F-062-01 HIGH: §Decision 4 fail-closed guarantee — VP-016 attribution corrected; binary interrupt invariant ({INV-002}) → Red-Gate test set (BC-2.09.008 TV-002/TV-005, S-2.11 AC-024); VP-016 proves STATE-ISOLATION ({INV-001}). F2 MED: §Decision 2 + §Decision 5 Error Routing Table — post-schema deserialize failure corrected to isError: true (BC-2.09.008 {PC-003}/EC-002), not -32602 protocol error. F3 MED: Tool::input_schema() → Tool::schema() (canonical method). F-P2A-061-02 MED: §Consequences Error Code Obligation — E-MCP-011 ForceApproveWriteBlocked added, cross-referencing §Decision 4. LOW schemars: schemars::schema::RootSchema → schemars::Schema. |
 | 1.5 | 2026-08-26 | state-manager | P2A-059-records | F-P2A-059-01 LOW (records-tier): §Decision 5 E-MCP-010 message-template cell — trailing period dropped so ADR cell matches error-taxonomy.md verbatim. 1-character literal alignment. No semantic changes. RECORDS-ONLY micro-burst per TD-RECORDS-MICRO-BURST-001. |
 | 1.4 | 2026-08-26 | architect | P2A-058 | F-058-02 MED: E-MCP-010 message template remedy corrected in §Decision 5 — dropped "or register with GraphToolApprovalPolicy::ForceApproveHooks if read-only" clause (ForceApproveHooks cannot resolve E-MCP-010; node-level interrupt() causes RunStatus::Interrupted regardless of approval policy); corrected remedy text: "restructure the graph so it does not call interrupt() during a synchronous tools/call invocation." RetryHint rationale updated to remove ForceApproveHooks reference. F-058-05 LOW: E-MCP-011 message-template wording — two illustrative variant forms exist (table vs code sketch); illustrative-forms note added in §Decision 4 after E-MCP-011 table; error-taxonomy.md is the authoritative message source. |

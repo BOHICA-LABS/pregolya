@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.15"
+version: "3.16"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "e7804b0"
+input-hash: "b798d51"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.16 (round-6/F-P2A-065-07/2026-08-26): VP-006-B VP-to-Module table: title corrected from 'injection_guard Multi-Pair Fewshot Fail-Closed' to 'injection_guard Multi-Pair FewShotExamples' (canonical form per VP-INDEX §VP Catalog; F-P2A-065-07 OBS). BC anchor corrected from 'BC-2.18.004' to 'BC-2.18.004 {PC-005}' (VP-INDEX BC column is authoritative). No VP count, module count, tier count, or arithmetic changes. input-hash updated."
   - "3.15 (SEC-review-adjudication/2026-08-26): SEC-003 — VP-006-B added: proptest P1 Phase 3, prompts::injection_guard, pregolya-prompts, BC-2.18.004, DI-014 (multi-pair few-shot injection mandate belt-and-suspenders). VP-to-Module table: add VP-006-B row. Totals: 16→17 VPs, proptest 4→5, P1 10→11. Per-Module Coverage Status: prompts::injection_guard row updated to note VP-006-B proptest P1. Coverage by Criticality Tier HIGH: proptest 7 of 28 → 8 of 28 (prompts::injection_guard now has proptest). Header physical row count 87→88. Tiered grouping unchanged (37 MEDIUM; HIGH/CRITICAL/LOW unchanged)."
   - "3.14 (E-code-correction/2026-08-26): VP-016 BC anchor: {INV-001} corrected from stale {INV-STATE-ISOLATION} (stable BC-2.09.008 numeric anchor per product-owner). VP-to-Module table VP-016 row, Per-Module Coverage Status header note, and mcp::graph_tool row Notes all updated. v3.13 frontmatter changelog entry also corrected. No VP count, module count, or arithmetic changes."
   - "3.13 (GAP-01/ADR-029/2026-08-26): (1) VP-015 tool corrected integration→unit (D-273 fix; VP-015 frontmatter always said tool:unit; VP-to-Module table and mcp::sanitize Notes now consistent). (2) VP-016 added: proptest P1, Phase 3, mcp::graph_tool, pregolya-mcp, BC-2.09.008 {INV-001}, DI-010 (ADR-029 GAP-01 resolution). VP-to-Module table: add VP-016 row. Totals: 15→16 VPs, proptest 3→4, integration 3→2 (D-273), unit 0→1 (D-273). Per-Module Coverage Status: add mcp::graph_tool MEDIUM row (pregolya-mcp; proptest VP-016; STATE-ISOLATION invariant). Module header: 86→87 physical rows. Tiered groupings: MEDIUM 36→37; tiered total 78→79. Coverage by Criticality Tier: MEDIUM 36→37. Arithmetic invariant: VP total (16) = P0 (6) + P1 (10) = Kani (9) + proptest (4) + integration (2) + unit (1)."
@@ -69,7 +70,7 @@ changelog:
 | VP-004 | MCP ToolException Type-Identity Preservation | mcp::exception | pregolya-mcp | integration | BC-2.09.004 | 3 | draft |
 | VP-005 | MultiServerMcpClient Holds No Live Connections | mcp::client | pregolya-mcp | integration | BC-2.09.005 | 3 | draft |
 | VP-006 | injection_guard Fail-Closed | prompts::injection_guard | pregolya-prompts | Kani | BC-2.18.004 | 6 | draft |
-| VP-006-B | injection_guard Multi-Pair Fewshot Fail-Closed | prompts::injection_guard | pregolya-prompts | proptest | BC-2.18.004 | 3 | draft |
+| VP-006-B | injection_guard Multi-Pair FewShotExamples | prompts::injection_guard | pregolya-prompts | proptest | BC-2.18.004 {PC-005} | 3 | draft |
 | VP-007 | LcSerializable Round-Trip | core::serializable | pregolya-core | proptest | BC-2.19.001 | 3 | draft |
 | VP-008 | Embeddings Dimensionality Contract | core::embeddings | pregolya-core | proptest | BC-2.22.001 | 3 | draft |
 | VP-009 | Zero-Norm Cosine Guard | vectorstores::similarity | pregolya-vectorstores | Kani | BC-2.21.003 | 6 | draft |

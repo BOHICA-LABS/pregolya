@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
@@ -35,7 +35,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "b0141af"
+input-hash: "2fcd7a4"
 traces_to: .factory/specs/prd.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -57,6 +57,7 @@ coverage_areas:
   - tenancy
 coverage_gap_pending: []
 changelog:
+  - "1.2 (F-P2A-065-06/2026-08-26): Terminology correction only — scenario semantics unchanged. Coverage-gap resolution note (line referencing E-MCP-010): corrected 'EXEC severity' to 'EXEC category, severity: broken' — EXEC is a category label, not a severity value; the severity value for E-MCP-010 is 'broken'. No scenario steps, checks, preconditions, or expected behaviors altered."
   - "1.1 (GAP-01 resolved, 2026-08-26): BC-2.09.008 (GraphAgentTool; mcp::graph_tool) human-approved v1 scope addition (ADR-029). GAP-01 marked RESOLVED — STATE-ISOLATION {INV-001} VP-016 proptest P1 proof target, fail-closed interrupt {INV-002} E-MCP-010 minted. Check 5 promoted to first-class must-pass (must_pass: yes, 0.10 weight retained). BC linkage table extended with four BC-2.09.008 rows. Sealed note, Check 5 heading, Verification step 8, Evaluation Rubric, and Failure Guidance un-contingented."
   - "1.0 (initial, 2026-08-26): HS-C-001 authored for Flowloom embedding use case. Seven-primitive traceability verified. Coverage gap HS-C-001-GAP-01 (StateGraph→Tool wrapping absent) surfaced."
 ---
@@ -250,7 +251,7 @@ human-approved as a v1 scope addition on 2026-08-26 (ADR-029). It specifies:
 - Binary interrupt invariant {INV-002} (fail-closed default) — any internal graph
   interrupt converts to `Err(E-MCP-010)` (GraphAgentInterruptDenied); no hang, no
   silent leak; `isError: true` with sanitized message
-- E-MCP-010 error code (EXEC severity, retry_hint: Never) minted by BC-2.09.008 per
+- E-MCP-010 (EXEC category, severity: broken, retry_hint: Never) minted by BC-2.09.008 per
   ADR-029 §Decision 5
 
 Check 5 is now a first-class must-pass check backed by BC-2.09.008/VP-016/E-MCP-010.
