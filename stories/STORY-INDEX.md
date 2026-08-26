@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.5"
+version: "1.6"
 status: active
 producer: story-writer
 timestamp: 2026-08-26T00:00:00Z
 changelog:
+  - "1.6 (GAP-01/ADR-029/2026-08-26): S-2.11 extended — BC-2.09.008 added (GraphAgentTool wrapping; mcp::graph_tool; Wave 2; v1.4; 5→8 pts); VP-016 proptest P1 seeded (BC-2.09.008 {INV-001}); VP-015/VP-016 rows added to VP-to-Story Anchor Map. BC coverage 133→134; VP Seed BCs 13→14. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.5 (BC-completeness-propagation/2026-08-26): 23 story files updated with BC-completeness propagation (SS-01 through SS-23 cluster fan-out; AC/task/ACs updated to reflect ADR-014 §D7 MMR, §D8 delete-idempotent, ADR-028 multitask, plus 15 new EC codes); §Census Stories with VP anchor 12→13 (S-2.11 now anchors VP-015 via BC-2.09.007 {INV-003}). Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.4 (P2A-054 F-054-01/2026-08-25): §Census epic axis made symmetric with story axis — Product Epics 22 / Maintenance Epics 1 / Total Epics 23 (EPIC-MAINT accounted; product census unchanged at 22)."
   - "1.3 (P2A-048/2026-08-24): F-048-01: changelog reordered to DESCENDING (newest-first) to match the index-class convention (verify-form-a-changelog-direction.sh: indexes = DESCENDING, version == FIRST entry) and sibling indexes BC-INDEX/VP-INDEX/ARCH-INDEX. STORY-INDEX was the sole ascending outlier."
@@ -25,7 +26,7 @@ input-hash: "f6e9b48"
 
 > **40 stories total — 27 Wave 1 / 11 Wave 2 / 1 Wave 6 / 1 Maint (S-MAINT-001 housekeeping, out-of-wave)**
 > **Product-story census: 39 (27 Wave 1 / 11 Wave 2 / 1 Wave 6). S-MAINT-001 is maintenance, not a product feature.**
-> **BC coverage: 133 BCs — 51 P0 / 79 P1 / 3 P2 — all covered**
+> **BC coverage: 134 BCs — 51 P0 / 80 P1 / 3 P2 — all covered**
 > **Story files:** Individual STORY-NNN specs live in `.factory/stories/stories/`
 
 ## Census
@@ -41,7 +42,7 @@ input-hash: "f6e9b48"
 | Product Epics | 22 |
 | Maintenance Epics | 1 |
 | Total Epics | 23 |
-| BCs covered | 133 / 133 |
+| BCs covered | 134 / 134 |
 | Stories with VP anchor | 13 |
 | Stories with Red Gate BCs | 8 |
 
@@ -148,7 +149,7 @@ input-hash: "f6e9b48"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-2.10 | MCP Client — Tool Discovery, Invocation Routing and Untrusted Ingress | BC-2.09.001, BC-2.09.002, BC-2.09.003, BC-2.09.004, BC-2.09.005 | SS-09 | pregolya-mcp | P1 | 8 | [S-1.19, S-1.04, S-1.22] | draft |
-| S-2.11 | MCP Server — Tool Advertisement and External Client Invocation | BC-2.09.006, BC-2.09.007 | SS-09 | pregolya-mcp | P1 | 5 | [S-2.10] | draft |
+| S-2.11 | MCP Server — Tool Advertisement and External Client Invocation | BC-2.09.006, BC-2.09.007, BC-2.09.008 | SS-09 | pregolya-mcp | P1 | 8 | [S-2.10] | draft |
 
 ---
 
@@ -193,7 +194,7 @@ input-hash: "f6e9b48"
 
 ## BC to Story Coverage Map
 
-> **All 133 BCs covered. Zero silent gaps.**
+> **All 134 BCs covered. Zero silent gaps.**
 > P2 BCs (BC-2.17.001, BC-2.17.002, BC-2.19.004) are explicitly assigned to stories — they are
 > in v1 scope at lower priority, not post-v1 deferrals.
 
@@ -304,6 +305,7 @@ input-hash: "f6e9b48"
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (RG) | S-2.10 | P1 |
 | BC-2.09.006 | MCP Server Tool Advertisement (tools/list) | S-2.11 | P1 |
 | BC-2.09.007 | MCP Server Tool Invocation (tools/call) | S-2.11 | P1 |
+| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | S-2.11 | P1 |
 
 ### SS-10 Budget Governance (6 BCs)
 
@@ -465,3 +467,5 @@ input-hash: "f6e9b48"
 | VP-012 | BC-2.10.005 | S-1.25 | P1 | pregolya-core (watermark_arithmetic_harness) |
 | VP-013 | BC-2.23.005 | S-1.22 | P1 | pregolya-tools |
 | VP-014 | BC-2.01.005 + BC-2.01.006 | S-1.05 | P1 | pregolya-core |
+| VP-015 | BC-2.09.007 {INV-003} | S-2.11 | P1 | pregolya-mcp |
+| VP-016 | BC-2.09.008 {INV-001} | S-2.11 | P1 | pregolya-mcp |

@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.27"
+version: "1.28"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.28 (GAP-01/D-275/2026-08-26): BC census propagation — BC-2.09.008 (GraphAgentTool; mcp::graph_tool) added by ADR-029. §5b BC file count 133→134; §7 RTM Totals 133→134 (51 P0 / 79→80 P1 / 3 P2). test-vectors.md callout updated to 134 BC files."
   - "v1.27 (P2A-049/F-049-01-sibling-sweep/2026-08-25): BC-2.18.002 title cell synced to canonical H1 (POL-7 downstream drift; older FIX-BURST-256 H1 form superseded). §2.18 table: 'ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance' → 'ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>'. BC-2.18.004 and BC-2.18.005 title cells verified correct — no change."
   - "v1.26 (burst-325/D-196/2026-08-18): input-hash refreshed (metadata hygiene; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Hash was stale since v1.23 authoring; inputs capabilities-p1-p2.md and invariants.md changed at burst-306 but hash was not propagated at v1.24/v1.25. No normative content changed in this entry. Phase-1 gate-closure burst."
   - "v1.25 (burst-310/F-P202-01/2026-08-17): §5 CORE examples row: E-CORE-011 RunnableParallelTaskPanic (INTERNAL) added to the set of CORE examples alongside E-CORE-009/010 (burst-309 mint miss — §5 was the only live-body SET enumeration that lacked E-CORE-011; all other sites enumerate E-CORE-009 and E-CORE-010 in specific per-BC contexts, not as the CORE-code set). error-taxonomy.md §CORE table (E-CORE-011 row minted burst-309) and BC-2.01.006 (E-CORE-011 in PC-4/EC-003/TV-003 since burst-309) are unchanged. No BC body or supplement needed updating — L-185/L-186 carrier discipline satisfied. POL-12 compliant (no line-cites)."
@@ -296,6 +297,7 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 | DI-014 | ss-09/BC-2.09.005.md |
 | BC-2.09.006 | MCP server tool advertisement (tools/list; mcp::server) | P1 | DI-008, DI-014 | ss-09/BC-2.09.006.md |
 | BC-2.09.007 | MCP server tool invocation (tools/call; external client executes registered tool) | P1 | DI-008, DI-010, DI-014 | ss-09/BC-2.09.007.md |
+| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) — {INV-001} STATE-ISOLATION [VP-016], {INV-002} interrupt fail-closed → E-MCP-010, {INV-003} redaction | P1 | DI-008, DI-010, DI-014 | ss-09/BC-2.09.008.md |
 
 ### 2.10 Budget Governance (CAP-012) — P0
 
@@ -572,7 +574,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 ## 5b. Test Vectors
 
 > **Supplement:** `prd-supplements/test-vectors.md` — consolidated test-vector catalog
-> indexing the canonical test vectors embedded in all 133 BC files.
+> indexing the canonical test vectors embedded in all 134 BC files.
 > Primary consumers: test-writer, holdout-evaluator.
 
 ---
@@ -731,6 +733,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.08.014 | CAP-009, DI-008, DI-009, DI-010, DI-014 | pregolya-core (types), pregolya-\<provider\> (dispatch) | P1 | U, I |
 | BC-2.09.006 | CAP-021, DI-008, DI-014 | pregolya-mcp | P1 | I |
 | BC-2.09.007 | CAP-021, DI-008, DI-010, DI-014 | pregolya-mcp | P1 | I |
+| BC-2.09.008 | CAP-021, DI-008, DI-010, DI-014 | pregolya-mcp | P1 | U |
 | BC-2.13.007 | CAP-015, DI-006, DI-008, DI-010 | pregolya-sandbox | P1 | U, I |
 | BC-2.15.004 | CAP-020, DI-008, DI-014 | pregolya-memory (memory::skills) | P1 | U, I |
 | BC-2.15.005 | CAP-020, DI-008, DI-012, DI-014 | pregolya-core (core::write\_guard), pregolya-memory | P1 | U, I |
@@ -770,7 +773,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.23.005 | CAP-037, DI-014, DI-015 | pregolya-tools | P1 | U, K |
 | BC-2.23.006 | CAP-038, DI-014 | pregolya-tools | P1 | U |
 
-**Totals:** 133 BCs — 51 P0 / 79 P1 / 3 P2
+**Totals:** 134 BCs — 51 P0 / 80 P1 / 3 P2
 
 ---
 

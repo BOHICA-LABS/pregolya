@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.37"
+version: "1.39"
 status: active
 producer: architect
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,8 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.39 (E-code-correction/2026-08-26): ADR-029 row: E-MCP-006 → E-MCP-010 (GraphAgentInterruptDenied) — E-MCP-006 was already taken by McpContentUnsupported (minted 2026-07-22). VP-016 BC anchor: {INV-STATE-ISOLATION} → {INV-001} (stable BC-2.09.008 numeric anchor per product-owner). v1.38 changelog narrative corrected to E-MCP-010."
+  - "1.38 (GAP-01/ADR-029/2026-08-26): ADR-029 registered — Agent-as-MCP-Tool (GraphAgentTool) Wrapping (GAP-01 resolution; human-approved v1 scope addition 2026-08-26). SS-09 BC range 001–007 → 001–008 (BC-2.09.008 reservation). VP-016 added proptest P1 (mcp::graph_tool; BC-2.09.008 state-isolation; DI-010). ADR count 28→29. Document Map updated to 29 ADR files (ADR-001 to ADR-029). VP total 14→16 (VP-016 proptest P1 + correct VP counts per VP-INDEX authority). New error code E-MCP-010 GraphAgentInterruptDenied (PO must mint)."
   - "1.37 (P2A-BC-scan/2026-08-25): ADR-028 registered — Server Run Lifecycle Semantics: multitask_strategy (interrupt/rollback/enqueue), delete_threads cascade atomicity, and idempotency-key TTL basis. Closes 5 behavioral-completeness gaps in SS-12 BCs. ADR count 27→28. Document Map updated to 28 files (ADR-001 to ADR-028). ADR-014 §Decision 7 (canonical MMR formula + VP-2.21.003-C well-definition) and §Decision 8 (VectorStore::delete idempotency mandate) added. New error code E-SERVER-019 RunQueueFull (PO must mint)."
   - "1.36 (ADR-027/stable-bc-clause-anchors/2026-08-23): ADR-027 registered — Stable BC Clause Anchors: Restructure-Proof AC→BC Traceability Convention (D-175). Root cause closure for ~136 mis-anchored AC→BC citations. ADR count 26→27. Document Map updated to 27 files (ADR-001 to ADR-027)."
   - "1.35 (INVESTIGATE-RECONCILE/2026-08-21): VP Registry table — VP-004 Module column: `mcp::adapter` → `mcp::exception`. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property targets `mcp::exception`. POL-9 cascade complete."
@@ -75,7 +77,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 28 files (ADR-001 to ADR-028)
+**ADRs:** `.factory/specs/architecture/decisions/` — 29 files (ADR-001 to ADR-029)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -107,7 +109,7 @@ changelog:
 | SS-06 | Streaming Event Taxonomy | 2.06 | pregolya-graph, pregolya-core | BC-2.06.001–006 | 1 |
 | SS-07 | Text Splitting | 2.07 | pregolya-splitters | BC-2.07.001–003 | 1 |
 | SS-08 | Provider Conformance + Standard Tests | 2.08 | pregolya-openai, pregolya-anthropic, pregolya-ollama, pregolya-standard-tests, pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk, pregolya-macros | BC-2.08.001–014 | 2 |
-| SS-09 | MCP Tool Adapter | 2.09 | pregolya-mcp | BC-2.09.001–007 | 2 |
+| SS-09 | MCP Tool Adapter | 2.09 | pregolya-mcp | BC-2.09.001–008 | 2 |
 | SS-10 | Budget Governance | 2.10 | pregolya-graph, pregolya-core | BC-2.10.001–006 | 1 |
 | SS-11 | Content Provenance / Guardrail | 2.11 | pregolya-graph | BC-2.11.001–006 | 1 |
 | SS-12 | Durable-Run HTTP Server | 2.12 | pregolya-server | BC-2.12.001–007 | 1 |
@@ -200,10 +202,11 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | ADR-026 | LCEL Composition Primitives: RunnableParallel and RunnablePassthrough (burst-302 scope expansion) | accepted (D-170) | — |
 | ADR-027 | Stable BC Clause Anchors: Restructure-Proof AC→BC Traceability Convention (2026-08-23) | accepted — architect adjudication D-175; ~136 mis-anchor root-cause fix | — |
 | ADR-028 | Server Run Lifecycle Semantics: multitask_strategy interrupt/rollback/enqueue, delete_threads cascade atomicity, idempotency-key TTL basis (P2A-BC-scan/2026-08-25) | accepted — architect adjudication of 5 Phase 2 BC completeness gaps in SS-12 | SS-12 |
+| ADR-029 | Agent-as-MCP-Tool (GraphAgentTool) Wrapping — StateGraph Registration in ToolRegistry for MCP Exposure (GAP-01/2026-08-26) | accepted — human-approved v1 scope addition; new BC-2.09.008 + VP-016 + E-MCP-010 | SS-09 |
 
 ## Verification Properties (VP-INDEX)
 
-14 VPs total (6 Kani P0 + 3 Kani P1 + 3 proptest P1 + 2 integration P1 — see VP-INDEX):
+16 VPs total (6 Kani P0 + 3 Kani P1 + 4 proptest P1 + 2 integration P1 + 1 unit P1 — see VP-INDEX):
 
 | VP | BC Anchor | Module | Tool | Priority | Status |
 |----|-----------|--------|------|----------|--------|
@@ -221,5 +224,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-012 | BC-2.10.005 (OnWatermark arithmetic) | `core::budget` | Kani | P1 | draft |
 | VP-013 | BC-2.23.005 (BashTool risk floor) | `tools::shell` | Kani | P1 | draft |
 | VP-014 | BC-2.01.005 + BC-2.01.006 (RunnableParallel key-completeness) | `core::runnable` | proptest | P1 | draft |
+| VP-015 | BC-2.09.007 {INV-003} (MCP credential redaction; CWE-532) | `mcp::sanitize` | unit | P1 | draft |
+| VP-016 | BC-2.09.008 {INV-001} (GraphAgentTool state-isolation) | `mcp::graph_tool` | proptest | P1 | draft |
 
 > **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 §Postconditions (PC-4) category amended to VAL in burst-232 (error-taxonomy.md §Component: TOOLS; consistent with VP-013 harness).

@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario-index
 level: ops
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
@@ -13,9 +13,10 @@ inputs:
 input-hash: "3102b0a"
 traces_to: .factory/specs/prd.md
 changelog:
-  - "1.0 (initial, 2026-08-18): base index authored."
-  - "1.1 (F-P2A003-06, P2A-003-fix-burst, 2026-08-19): Phase-4 gate wording updated to reference both sealed domains (A+B) with explanatory note re five design-forcing analysis domains; HS-B-006 title corrected in index table."
+  - "1.3 (GAP-01-RESOLVED/2026-08-26): HS-C-001-GAP-01 RESOLVED — BC-2.09.008 (GraphAgentTool; mcp::graph_tool; ADR-029) human-approved v1 scope addition (2026-08-26). Check 5 promoted to first-class must-pass; contingency note removed. HS-C-001 now covers all 7 primitives including StateGraph→Tool wrapping. Domain C coverage gap closed."
   - "1.2 (HS-C-001/flowloom-embedding/2026-08-26): Domain C (Flowloom Embedding Host) added with one must-pass scenario HS-C-001. Aggregate counts updated. Capability coverage map updated. Phase-4 gate extended to include Domain C. Coverage gap HS-C-001-GAP-01 noted (StateGraph→Tool wrapping unspecified)."
+  - "1.1 (F-P2A003-06, P2A-003-fix-burst, 2026-08-19): Phase-4 gate wording updated to reference both sealed domains (A+B) with explanatory note re five design-forcing analysis domains; HS-B-006 title corrected in index table."
+  - "1.0 (initial, 2026-08-18): base index authored."
 ---
 
 # Holdout Scenario Index
@@ -74,10 +75,8 @@ changelog:
 |-------|-------|----------|----------|----------------|--------|
 | HS-C-001 | Flowloom Embedding Host — Full-Stack Agent Integration (MCP In/Out, HITL, Checkpoint, Streaming, Isolation) | integration-boundaries | must-pass | mcp, tools, hitl, checkpoint_resume, streaming, graph_execution, server, tenancy | active |
 
-> **Coverage gap:** HS-C-001 check 5 (agent exposed as MCP tool) is CONTINGENT on resolution
-> of HS-C-001-GAP-01: no BC specifies the StateGraph→Tool wrapping contract. See
-> HS-C-001 Behavioral Contract Linkage section. Surfaced to orchestrator for product-owner
-> adjudication.
+> **HS-C-001-GAP-01 RESOLVED 2026-08-26 — BC-2.09.008 (GraphAgentTool; mcp::graph_tool; ADR-029) authored;
+> Check 5 first-class must-pass; VP-016 proptest P1 proof target / E-MCP-010 fail-closed interrupt boundary.**
 
 **Domain C totals:** 1 scenario, 1 must-pass, 0 should-pass.
 

@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.31"
+version: "1.32"
 status: active
 producer: architect
-timestamp: 2026-08-21T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -14,6 +14,7 @@ input-hash: "6470d58"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.32 (GAP-01/ADR-029/2026-08-26): Iron Law — add `mcp::graph_tool` Effectful Shell row (pregolya-mcp; async graph execution via `CompiledGraph<S>` run; I/O-bound; non-deterministic across invocations; not Kani-provable; STATE-ISOLATION invariant enforced structurally by `extract_output` closure pattern, not formal verification; BC-2.09.008 / SS-09 / ADR-029 / VP-016 proptest P1). Required by ADR-029 mcp::graph_tool module addition. Effectful Shell 37→38; total 85→86. Module-decomposition universe updated in intro: 77→78 (72 tiered + 6 definitions-only/exempt). Input-hash refresh pending (state-manager task)."
   - "1.31 (architect-reconcile-burst/2026-08-26): Iron Law — add `mcp::sanitize` Pure Core row (pregolya-mcp; `redact_credentials(text: &str) -> Cow<str>` pure credential-redaction function; BC-2.09.007 / INV-003 / SS-09 / DI-010; VP-015 integration P1; no I/O, no async, no global state; CWE-532 prevention at pure layer). Required by module-decomposition.md mcp::sanitize addition. Pure Core 35→36; total 84→85. Module-decomposition universe updated in intro: 76→77 (71 tiered + 6 definitions-only/exempt). Input-hash refreshed (6470d58)."
   - "1.30 (INVESTIGATE-RECONCILE/2026-08-21): Structural reclassification — `mcp::adapter (invoke)` removed from Effectful Shell; `mcp::exception` added to Pure Core. Story S-2.10 builds no `adapter.rs`; VP-004 property (bare ToolException type-identity via McpError downcast) lives in `mcp::exception`, a pure synchronous error-inspection module with no I/O. VP-004 integration test is required for mock MCP server setup, not because the module itself is effectful. Iron Law update: removed Effectful Shell row 'Tool call over transport' (which was `mcp::client`'s concern anyway); added Pure Core row with downcast description. Counts: Pure Core 34→35, Effectful Shell 38→37, total 84 unchanged."
   - "1.29 (P2A-021/2026-08-21): VectorStore method alignment — replace add_texts with add_documents in two live Effectful Shell / Boundary Modules table rows (vectorstores::memory + vectorstores::store). No changelog entries affected."
@@ -60,9 +61,9 @@ changelog:
 Every pregolya module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 77 module-decomposition modules (71 tiered + 6 definitions-only/exempt) plus
+effectful dependency). All 78 module-decomposition modules (72 tiered + 6 definitions-only/exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(85 total rows after architect-reconcile-burst: 36 Pure Core + 37 Effectful Shell + 12 Boundary).
+(86 total rows after GAP-01/ADR-029: 36 Pure Core + 38 Effectful Shell + 12 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -147,6 +148,7 @@ Kani is not applicable here.
 | `memory::search` | pregolya-memory | Search execution (may invoke embedding/vector backend) | Integration |
 | `mcp::discovery` | pregolya-mcp | MCP transport I/O: enumerates tool set from external MCP server at runtime (BC-2.09.001) | Integration |
 | `mcp::server` | pregolya-mcp | binds stdio/SSE transport; accepts inbound MCP connections; dispatches tool calls and serializes responses (ADR-013 / BC-2.09.006/007) | Integration |
+| `mcp::graph_tool` | pregolya-mcp | async `CompiledGraph<S>` execution via `GraphRunner::run`; I/O-bound (awaits full graph traversal); non-deterministic across invocations; STATE-ISOLATION invariant enforced structurally via `extract_output` closure — not extractable as a pure Kani target because `extract_output` is an arbitrary closure over open-recursive `serde_json::Value`; VP-016 proptest P1 (BC-2.09.008 / ADR-029 / SS-09) | Integration |
 | `memory::skills` | pregolya-memory | async `SkillStore` I/O: reads skill KV entries via `MemoryStore` backend; `load_skill`, `list_skills`, `skill_exists` I/O-bound (ADR-012 / BC-2.15.004) | Integration |
 | `pregolya-standard-tests` | pregolya-standard-tests | shared conformance suite; invokes provider HTTP stacks via DTU doubles (BC-2.08.001–005, BC-2.08.008) | Integration (DTU) |
 | `xtask` | xtask | filesystem reads (file-size gate) + subprocess spawning (lint CI gates); CI enforcement binary (SS-17) | CI/Unit |

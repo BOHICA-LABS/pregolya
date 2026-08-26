@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -11,15 +11,16 @@ phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.007.md
+  - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "ecd2c89"
+input-hash: "b842cc4"
 traces_to: .factory/stories/STORY-INDEX.md
-points: 5
+points: 8
 depends_on: [S-2.10]
 blocks: []
-behavioral_contracts: [BC-2.09.006, BC-2.09.007]
-verification_properties: [VP-015]
+behavioral_contracts: [BC-2.09.006, BC-2.09.007, BC-2.09.008]
+verification_properties: [VP-015, VP-016]
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
@@ -29,8 +30,9 @@ estimated_days: 2
 assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
-# BC status: both BCs active; BC-2.09.006 mints E-MCP-005; no BC-TBD placeholders; status = draft per Spec-First Gate S-7.01
+# BC status: all 3 BCs active; BC-2.09.006 mints E-MCP-005; BC-2.09.008 mints E-MCP-010; no BC-TBD placeholders; status = draft per Spec-First Gate S-7.01
 changelog:
+  - "1.4 (BC-2.09.008/ADR-029/GAP-01/2026-08-26): Add BC-2.09.008 StateGraph-as-MCP-Tool coverage; GraphAgentTool; mcp::graph_tool; AC-017–AC-028 (PC-001–PC-006, INV-001–INV-003 Red Gates, EC-001/EC-004/EC-007 Red Gates); VP-016 added; points 5→8; pregolya-graph dep now allowed in pregolya-mcp; E-MCP-010 cited throughout (not E-MCP-006)."
   - "1.3 (BC-2.09.006 + BC-2.09.007 / 2026-08-26): BC-2.09.006 (burst-B-SS09-11 EC-006/-32700, EC-007/-32600 wire-protocol responses). BC-2.09.007 (burst-B-SS09-11: INV-003 redact_credentials mandatory+3-pattern sub+source restriction; PC-002 result_text JSON-vs-plaintext selection rule; VP-MCPCALL-03 renamed VP-015). Story changes: AC-013 updated to Red Gate — mandatory redact_credentials applied to PregolyaError::message only (source restriction); 3 substitution patterns (sk-*, sk-ant-*, 64-char token); validates VP-015. AC-014 added: BC-2.09.006 EC-006 + BC-2.09.007 EC-007 — malformed JSON → -32700 Parse error (wire-protocol only, no PregolyaError). AC-015 added: BC-2.09.006 EC-007 + BC-2.09.007 EC-008 — invalid JSON-RPC → -32600 Invalid Request (wire-protocol only). AC-016 added: BC-2.09.007 PC-002 — result_text selection (ToolOutput::Structured→compact JSON, ToolOutput::Text→verbatim). verification_properties updated to [VP-015]. BC table version column added. Tasks updated to AC-001–AC-016."
   - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
@@ -50,6 +52,7 @@ changelog:
 |----|-------|---------|
 | BC-2.09.006 | MCP Server Tool Advertisement (tools/list; mcp::server) | P1 |
 | BC-2.09.007 | MCP Server Tool Invocation (tools/call; External Client Executes Registered Tool) | P1 |
+| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | P1 |
 
 ## Acceptance Criteria
 
@@ -180,6 +183,143 @@ nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_
 `test_BC_2_09_007_result_text_null_value_is_string_null()` (ToolOutput::Structured with
 `Value::Null`; assert `result_text == "null"`).
 
+### AC-017 (traces to BC-2.09.008 §{PC-001})
+`GraphAgentTool::from_graph(name, description, graph, extract_output)` constructs a
+`GraphAgentTool` where `graph: Arc<CompiledGraph<S>>` and
+`S: GraphState + for<'de> Deserialize<'de> + JsonSchema + Send + Sync + 'static`.
+At construction time, `schemars::schema_for!(S)` is called to derive the `RootSchema` for `S`.
+This schema is stored internally and returned by `DynTool::schema()` for advertisement in
+`tools/list` responses per BC-2.09.006 {PC-002}. Construction returns a value (not `Err`);
+all precondition bounds are enforced by the type system at the call site. Verified by
+`test_BC_2_09_008_from_graph_derives_schema_at_construction_time()`.
+
+### AC-018 (traces to BC-2.09.008 §{PC-002})
+The constructed `GraphAgentTool` implements `DynTool` (object-safe dispatch seam per
+ADR-005 §Adjacent Trait Object-Safety Adjudications) and may be registered in a `ToolRegistry`
+via the standard registration API. After registration, the MCP server advertises the tool in
+`tools/list` responses — name, description, and inputSchema (the `RootSchema` derived at
+`from_graph` time via `schemars::schema_for!(S)`) are exposed verbatim per BC-2.09.006
+{PC-002}. Verified by
+`test_BC_2_09_008_graph_agent_tool_registered_appears_in_tools_list()`.
+
+### AC-019 (traces to BC-2.09.008 §{PC-003})
+On `tools/call` invocation for a `GraphAgentTool`:
+- If call arguments do not conform to `DynTool::schema()`, the server returns JSON-RPC
+  `{ "code": -32602, "message": "Invalid arguments for tool '<name>': <schema_error>" }` BEFORE
+  `invoke_dyn` is called; the graph is NOT invoked.
+- If schema validation passes but `serde_json::from_value::<S>(arguments)` fails (custom
+  `Deserialize` logic rejects a structurally-valid JSON object), `GraphAgentTool::invoke_dyn`
+  returns `Err(PregolyaError { .. })`; the server surfaces this as `isError: true` per
+  BC-2.09.007 {PC-003}; credential redaction applies per {INV-003}.
+Verified by `test_BC_2_09_008_schema_validation_fail_returns_32602()` and
+`test_BC_2_09_008_deserialize_fail_returns_is_error_true_with_redaction()`.
+
+### AC-020 (traces to BC-2.09.008 §{PC-004})
+On successful graph execution: `GraphRunner::run` runs the graph to a terminal state, calls
+`extract_output(&final_state)`, and `GraphAgentTool::invoke_dyn` returns
+`Ok(ToolOutput::Structured { value: extract_output_result })`. The server serializes this per
+BC-2.09.007 {PC-002} (`result_text = serde_json::to_string(&extract_output_result)`).
+If `extract_output` returns `Value::Null`, `result_text = "null"` — no error raised; {PC-004}
+holds. Verified by `test_BC_2_09_008_successful_graph_run_returns_structured_output()` and
+`test_BC_2_09_008_extract_output_null_result_is_valid()`.
+
+### AC-021 (traces to BC-2.09.008 §{PC-005})
+Under `GraphToolApprovalPolicy::DenyInterrupts` (default), when a graph node calls `interrupt()`
+during execution, `GraphRunner::run` detects `RunStatus::Interrupted` and
+`GraphAgentTool::invoke_dyn` returns
+`Err(PregolyaError { code: "E-MCP-010", category: EXEC, message: "graph agent tool invocation
+interrupted at MCP boundary: HITL approval not supported for synchronous tools/call; configure
+the graph to not interrupt, or register with GraphToolApprovalPolicy::ForceApproveHooks if
+read-only", retry_hint: Never })`. The interrupted run is NOT persisted to durable checkpoint.
+When `PreToolCallHook::PendingHumanApproval` is received under DenyInterrupts,
+`BoundaryApprovalHook` converts it to `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`;
+the node receives `ToolOutput::Error`; the graph continues toward an error terminal state and
+`invoke_dyn` returns `Err(E-MCP-010)`. Verified by
+`test_BC_2_09_008_node_interrupt_under_deny_returns_e_mcp_010()` and
+`test_BC_2_09_008_pending_approval_under_deny_hook_denied()`.
+
+### AC-022 (traces to BC-2.09.008 §{PC-006})
+Under `GraphToolApprovalPolicy::ForceApproveHooks`, `BoundaryApprovalHook` overrides ALL
+`PreToolDecision` values (including `PendingHumanApproval`) to `Approve`; no human approval
+dialog is presented and the tool proceeds unconditionally. Node-level `interrupt()` calls STILL
+produce `Err(E-MCP-010)` — `ForceApproveHooks` does NOT override node-level interrupt
+semantics; {INV-002} holds under `ForceApproveHooks`. Verified by
+`test_BC_2_09_008_force_approve_hooks_overrides_pending_approval()` and
+`test_BC_2_09_008_force_approve_hooks_does_not_suppress_node_interrupt()`.
+
+### AC-023 (traces to BC-2.09.008 §{INV-001} — Red Gate, validates VP-016)
+**Red Gate / Mandatory (STATE-ISOLATION):** `GraphAgentTool::invoke_dyn` on successful graph
+completion returns ONLY the `serde_json::Value` produced by `extract_output(&final_state)`.
+The following are NEVER included in the `ToolOutput` unless `extract_output` explicitly
+constructs a `Value` containing them: checkpoint IDs, run IDs, internal execution identifiers,
+intermediate node outputs, accumulated message history, tool call history, graph metadata, and
+execution statistics. The `extract_output` closure is the sole data-exit path at the
+`GraphRunner` boundary. DI-010 Credential Opacity is a structural corollary: credentials in
+input fields, intermediate fields, or model reasoning cannot appear in the output if
+`extract_output` is correctly scoped to output fields only. This is a Red Gate: without
+STATE-ISOLATION enforcement, internal graph state including credential-bearing fields could leak
+to external MCP clients. VP-016 proptest harness `graph_agent_tool_state_isolation` generates
+arbitrary `S` instances with extra fields and verifies that ONLY selected fields appear in the
+`invoke_dyn` result. Verified by
+`test_BC_2_09_008_state_isolation_only_extract_output_in_result()` ({INV-001} / VP-016 anchor).
+
+### AC-024 (traces to BC-2.09.008 §{INV-002} — Red Gate)
+**Red Gate / Binary interrupt invariant (fail-closed):** Exactly one of two outcomes is
+possible for any `GraphAgentTool::invoke_dyn` call under
+`GraphToolApprovalPolicy::DenyInterrupts`:
+- Terminal state reached → `Ok(ToolOutput::Structured { value: extract_output_result })`
+- Any graph interrupt (node-level `interrupt()` OR `PendingHumanApproval` reaching terminal
+  error via `BoundaryApprovalHook::Deny`) → `Err(E-MCP-010)`
+There is NO `Ok` code path that returns a result when the graph was interrupted and did not
+reach a clean terminal state. Under `ForceApproveHooks`, the `PreToolCallHook` path is
+overridden to `Approve`, but the node-level interrupt invariant holds in both policies;
+{INV-002} is satisfied under `ForceApproveHooks` as well. Verified by
+`test_BC_2_09_008_binary_interrupt_invariant_no_ok_on_interrupt()` (EC-004 and EC-006 combined).
+
+### AC-025 (traces to BC-2.09.008 §{INV-003} — Red Gate)
+**Red Gate / Mandatory credential redaction on all `GraphAgentTool` isError paths:** All
+`isError: true` paths from `GraphAgentTool` invocations — including `E-MCP-010`
+interrupt-denied errors and any `Err(PregolyaError)` propagated from graph execution — pass
+through `pregolya_mcp::sanitize::redact_credentials` before the MCP server populates
+`content[0].text`. Only `PregolyaError::message` is used as the text source; the `.source()`
+chain, `Debug` output, and `Display` output of the error are NEVER included in the MCP
+response text. This obligation is unconditional per BC-2.09.007 {INV-003} extended to all
+`GraphAgentTool` error paths. Verified by
+`test_BC_2_09_008_graph_agent_error_paths_credential_redaction()` (mock graph returning
+`Err(PregolyaError { message: "failed: sk-ant-abc123XYZabc123XYZ1234567890123456", .. })`;
+assert `content[0].text` contains `<redacted>`, not the key material).
+
+### AC-026 (traces to BC-2.09.008 §{EC-004} — Red Gate)
+**Red Gate / Node interrupt under DenyInterrupts → E-MCP-010:** When a graph node calls
+`interrupt()` during execution with `approval_policy = DenyInterrupts` (default, constructed
+via `from_graph` without `.with_approval_policy`), `GraphRunner::run` detects
+`RunStatus::Interrupted` and the server returns
+`{ "content": [{ "type": "text", "text": "graph agent tool invocation interrupted at MCP boundary: HITL approval not supported for synchronous tools/call; configure the graph to not interrupt, or register with GraphToolApprovalPolicy::ForceApproveHooks if read-only" }], "isError": true }`.
+The error code is `E-MCP-010` (GraphAgentInterruptDenied — NOT E-MCP-006, which is
+McpContentUnsupported, a distinct error minted in burst-240). The interrupted run is NOT
+persisted to durable checkpoint. Credential redaction applies per {INV-003}. {INV-002} holds.
+Verified by `test_BC_2_09_008_ec004_node_interrupt_deny_policy_e_mcp_010()`.
+
+### AC-027 (traces to BC-2.09.008 §{EC-007} — Red Gate, validates VP-016)
+**Red Gate / STATE-ISOLATION — extra fields excluded from output:** When `GraphState S` has
+fields `answer: String`, `internal_checkpoint_id: String`, and
+`accumulated_messages: Vec<serde_json::Value>`, and
+`extract_output = |s: &S| json!({ "answer": s.answer })`, a successful graph run produces
+`ToolOutput::Structured { value: json!({"answer": "<final>"}) }`. The fields
+`internal_checkpoint_id` and `accumulated_messages` do NOT appear anywhere in the MCP
+response. {INV-001} STATE-ISOLATION holds. VP-016 proptest verifies this property over
+arbitrary `S` instances with additional fields. Verified by
+`test_BC_2_09_008_ec007_state_isolation_extra_fields_excluded()`.
+
+### AC-028 (traces to BC-2.09.008 §{EC-001} — Red Gate)
+**Red Gate / Invalid input schema rejected before graph invocation:** When `tools/call`
+arguments do not conform to the derived inputSchema for `S` (e.g., a required field is absent,
+or a field has the wrong JSON type), the `mcp::server` validates call arguments against
+`DynTool::schema()` per BC-2.09.007 {PC-005} BEFORE calling `invoke_dyn`. The server returns
+JSON-RPC `{ "code": -32602, "message": "Invalid arguments for tool '<name>': <schema_error>" }`.
+`GraphAgentTool::invoke_dyn` is never called; the graph is not invoked. Verified by
+`test_BC_2_09_008_ec001_invalid_input_schema_rejected_before_graph_invoke()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -190,6 +330,10 @@ nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_
 | `ToolRegistry` | `pregolya-mcp/src/registry.rs` | pure-core (Arc-wrapped HashMap; thread-safe reads) |
 | `tools/list` handler | `pregolya-mcp/src/server.rs` | pure-core (reads registry, serializes; no I/O beyond response) |
 | `tools/call` handler | `pregolya-mcp/src/server.rs` | effectful (invokes registered `DynTool`) |
+| `GraphAgentTool<S>` | `pregolya-mcp/src/graph_tool.rs` | effectful (invokes `GraphRunner::run`; LLM + tool I/O) |
+| `GraphToolApprovalPolicy` | `pregolya-mcp/src/graph_tool.rs` | pure-core (enum; DenyInterrupts / ForceApproveHooks) |
+| `BoundaryApprovalHook` | `pregolya-mcp/src/graph_tool.rs` | pure-core (intercepts PreToolCallHook; no I/O; returns Approve or Deny) |
+| `sanitize::redact_credentials` | `pregolya-mcp/src/sanitize.rs` | pure-core (regex substitution; shared with server.rs error paths) |
 
 ## Purity Classification
 
@@ -200,6 +344,9 @@ nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_
 | `tools/list` handler | pure-core | Reads registry (in-memory), serializes to JSON; no outbound I/O |
 | `McpServer::start` | effectful | Binds TCP/stdio; effectful from the first syscall |
 | `tools/call` handler | effectful | Invokes `DynTool::invoke` which may perform I/O |
+| `GraphAgentTool<S>` | effectful | Calls `GraphRunner::run` which performs LLM API I/O and tool invocations |
+| `GraphToolApprovalPolicy` | pure-core | Enum discriminating interrupt handling policy; no I/O |
+| `BoundaryApprovalHook` | pure-core | Intercepts `PreToolCallHook`; returns `Approve` or `Deny { reason }`; no I/O |
 
 ## Edge Cases
 
@@ -211,25 +358,31 @@ nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_
 | EC-004 | `McpServerHandle::shutdown()` during active `tools/call` in-flight | In-flight call completes; response is sent; no new requests accepted |
 | EC-005 | Tool invocation exceeds `BudgetPolicy` limit | `isError: true` with message "run halted: budget ceiling reached" — BC-2.09.007 EC-004 |
 | EC-006 | Two concurrent `tools/call` for different tools | Both complete independently; no cross-call state |
+| EC-007 | `GraphAgentTool`: node `interrupt()` under DenyInterrupts | `isError: true`, E-MCP-010, interrupted run NOT persisted — BC-2.09.008 EC-004, {INV-002} |
+| EC-008 | `GraphAgentTool`: `extract_output` selects subset of fields | Only selected fields in response; extra fields excluded — BC-2.09.008 EC-007, {INV-001} |
+| EC-009 | `GraphAgentTool`: `ForceApproveHooks` + node `interrupt()` | PreToolCallHook overridden to Approve; node interrupt still → E-MCP-010 — BC-2.09.008 EC-006, {INV-002} |
+| EC-010 | `GraphAgentTool`: `extract_output` returns `Value::Null` | `result_text = "null"`, `isError: false` — BC-2.09.008 EC-008 |
 
 ## Token Budget Estimate (MANDATORY)
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~2,800 |
-| BC files (2 BCs; BC-2.09.006, BC-2.09.007) | ~5,800 |
+| This story spec | ~4,200 |
+| BC files (3 BCs; BC-2.09.006, BC-2.09.007, BC-2.09.008) | ~9,200 |
 | `module-decomposition.md` SS-09 section | ~400 |
 | `pregolya-mcp/src/server.rs` (new) | ~1,200 |
 | `pregolya-mcp/src/registry.rs` (new) | ~500 |
-| Test files (~80 lines) | ~1,200 |
-| Tool outputs | ~400 |
-| **Total** | **~11,500** |
+| `pregolya-mcp/src/graph_tool.rs` (new) | ~1,800 |
+| `pregolya-mcp/src/sanitize.rs` (new) | ~400 |
+| Test files (~150 lines) | ~2,200 |
+| Tool outputs | ~600 |
+| **Total** | **~20,500** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~6%** |
+| **Budget usage** | **~10%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-016, including Red Gate AC-013 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-028, including Red Gates: AC-013 (credential redaction VP-015), AC-023 (STATE-ISOLATION VP-016), AC-024 (binary interrupt invariant), AC-025 (GraphAgentTool error paths redaction), AC-026 (node interrupt → E-MCP-010), AC-027 (extra fields excluded VP-016), AC-028 (invalid input → -32602) (test-writer step)
 2. [ ] **Red Gate check (AC-013):** confirm `test_BC_2_09_007_error_message_credential_redaction_applies_3_patterns()` FAILS before `pregolya_mcp::sanitize::redact_credentials` is implemented (raw key material reaches response text)
 3. [ ] Register `E-MCP-005 McpServerBindFailed` in error taxonomy (TRANSPORT, broken, Never)
 4. [ ] Create `pregolya-mcp/src/registry.rs` — `ToolRegistry` with `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>`
@@ -240,11 +393,24 @@ nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_
 9. [ ] Implement JSON-RPC error responses for tool-not-found (-32602) and invalid-params (-32602)
 10. [ ] Implement `McpServerHandle::shutdown()` — graceful connection teardown
 11. [ ] Verify `DynTool` object safety in server context (same seam as S-2.10)
-12. [ ] Implement `pregolya_mcp::sanitize::redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (sk-*, sk-ant-*, 64-char token → `<redacted>`); source-restrict to `PregolyaError::message` in `tools/call` error handler (AC-013 / BC-2.09.007 INV-003)
+12. [ ] Implement `pregolya_mcp::sanitize::redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (sk-*, sk-ant-*, 64-char token → `<redacted>`); source-restrict to `PregolyaError::message` in `tools/call` error handler (AC-013 / BC-2.09.007 {INV-003})
 13. [ ] Implement JSON-RPC -32700 parse-error response for non-JSON bytes on both tools/list and tools/call paths (AC-014 / BC-2.09.006 EC-006 + BC-2.09.007 EC-007)
 14. [ ] Implement JSON-RPC -32600 invalid-request response for malformed-but-valid-JSON requests (AC-015 / BC-2.09.006 EC-007 + BC-2.09.007 EC-008)
-15. [ ] Implement `ToolOutput::Structured → serde_json::to_string` / `ToolOutput::Text → verbatim` result_text selection in tools/call handler (AC-016 / BC-2.09.007 PC-002)
-16. [ ] Run `cargo nextest run -p pregolya-mcp` — all 16 ACs green (combined with S-2.10 ACs)
+15. [ ] Implement `ToolOutput::Structured → serde_json::to_string` / `ToolOutput::Text → verbatim` result_text selection in tools/call handler (AC-016 / BC-2.09.007 {PC-002})
+16. [ ] Run `cargo nextest run -p pregolya-mcp` — AC-001–AC-016 green (server + registry baseline)
+17. [ ] Create `pregolya-mcp/src/graph_tool.rs` — `GraphAgentTool<S>` struct, `GraphToolApprovalPolicy` enum, `BoundaryApprovalHook` internal struct, `GraphRunner` type-erased trait
+18. [ ] Implement `GraphAgentTool::from_graph` — accept `name`, `description`, `Arc<CompiledGraph<S>>`, `extract_output` closure; call `schemars::schema_for!(S)` at construction time; store `RootSchema` for `DynTool::schema()` (AC-017 / BC-2.09.008 §{PC-001})
+19. [ ] Implement `DynTool` for `GraphAgentTool` — `name()`, `description()`, `schema()` returning stored `RootSchema`, `invoke_dyn()` dispatching graph execution (AC-018 / BC-2.09.008 §{PC-002})
+20. [ ] **Red Gate check (AC-023):** confirm `test_BC_2_09_008_state_isolation_only_extract_output_in_result()` FAILS before STATE-ISOLATION enforcement is implemented (extra fields leak to `ToolOutput` without explicit exclusion)
+21. [ ] **Red Gate check (AC-026):** confirm `test_BC_2_09_008_ec004_node_interrupt_deny_policy_e_mcp_010()` FAILS before E-MCP-010 interrupt-denied path is implemented
+22. [ ] Implement `BoundaryApprovalHook` — DenyInterrupts path: override `PendingHumanApproval` → `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`; ForceApproveHooks path: override all decisions to `Approve` (AC-021, AC-022 / BC-2.09.008 §{PC-005}/§{PC-006})
+23. [ ] Implement STATE-ISOLATION enforcement — `invoke_dyn` returns ONLY `extract_output(&final_state)` result; no checkpoint IDs, run IDs, intermediate outputs, or graph metadata in output (AC-023, AC-027 / BC-2.09.008 §{INV-001}; VP-016 proptest `graph_agent_tool_state_isolation` harness)
+24. [ ] Register `E-MCP-010 GraphAgentInterruptDenied` in error taxonomy (EXEC, broken, Never) — note: NOT E-MCP-006 (that code is McpContentUnsupported, minted burst-240; PO-authoritative mint is E-MCP-010 per ADR-029 §Decision 5)
+25. [ ] Extend `pregolya_mcp::sanitize::redact_credentials` usage to cover all `GraphAgentTool` isError paths — E-MCP-010 interrupt error and `Err(PregolyaError)` from graph execution (AC-025 / BC-2.09.008 §{INV-003})
+26. [ ] Add `schemars` dependency to `pregolya-mcp/Cargo.toml` (workspace pin)
+27. [ ] Add `pregolya-graph` dependency to `pregolya-mcp/Cargo.toml` (workspace pin; BC-2.09.008/ADR-029 dep edge — pregolya-mcp now depends on pregolya-graph for GraphAgentTool)
+28. [ ] Update `pregolya-mcp/src/lib.rs` — re-export `GraphAgentTool`, `GraphToolApprovalPolicy`; expose `graph_tool` module
+29. [ ] Run `cargo nextest run -p pregolya-mcp` — all 28 ACs green (AC-001–AC-028)
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -267,20 +433,29 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 |------|--------|-------------|
 | `ToolRegistry::get` returns `Option<Arc<dyn DynTool>>` (not `dyn Tool`) | ADR-005 §Adjacent Trait Object-Safety Adjudications; BC-2.09.007 Architecture Anchors | Compile check |
 | `McpServer` in `mcp::server` module — distinct from `mcp::client` | ADR-013 §Consequences; BC-2.09.006 Architecture Anchors | Module structure |
-| `isError: true` is in the JSON-RPC `result` layer — not `error` | BC-2.09.007 INV-002 | Test AC-012 |
+| `isError: true` is in the JSON-RPC `result` layer — not `error` | BC-2.09.007 {INV-002} | Test AC-012 |
 | `E-MCP-005` category: TRANSPORT, severity: broken, retry_hint: Never | BC-2.09.006 §Error code minted | Error taxonomy registration |
-| `pregolya_mcp::sanitize::redact_credentials` applied to `PregolyaError::message` before MCP response; source-restriction: never `.source()`/`Debug`/`Display` | BC-2.09.007 INV-003 (mandatory, no hedge) | Test AC-013 Red Gate |
+| `pregolya_mcp::sanitize::redact_credentials` applied to `PregolyaError::message` before MCP response; source-restriction: never `.source()`/`Debug`/`Display` | BC-2.09.007 {INV-003} (mandatory, no hedge) | Test AC-013 Red Gate |
 | Malformed JSON bytes → JSON-RPC `-32700 Parse error` (wire-protocol only, no PregolyaError) | BC-2.09.006 EC-006, BC-2.09.007 EC-007 | Tests AC-014 |
 | Invalid JSON-RPC structure → JSON-RPC `-32600 Invalid Request` (wire-protocol only) | BC-2.09.006 EC-007, BC-2.09.007 EC-008 | Tests AC-015 |
-| `ToolOutput::Structured` → `serde_json::to_string` (compact); `ToolOutput::Text` → verbatim | BC-2.09.007 PC-002 | Tests AC-016 |
+| `ToolOutput::Structured` → `serde_json::to_string` (compact); `ToolOutput::Text` → verbatim | BC-2.09.007 {PC-002} | Tests AC-016 |
 | No `unwrap()`/`expect()` in server handlers | CLAUDE.md Code Conventions | Clippy |
-| Registry read on each `tools/list` request (no startup snapshot) | BC-2.09.006 PC-003 | Test AC-004 |
+| Registry read on each `tools/list` request (no startup snapshot) | BC-2.09.006 {PC-003} | Test AC-004 |
+| `GraphAgentTool::from_graph` calls `schemars::schema_for!(S)` at construction time; schema stored for `DynTool::schema()` | BC-2.09.008 §{PC-001} | Test AC-017 |
+| `GraphAgentTool::invoke_dyn` on success returns ONLY `extract_output(&final_state)` result (STATE-ISOLATION) | BC-2.09.008 §{INV-001}; VP-016 | Test AC-023 Red Gate |
+| Any graph interrupt under DenyInterrupts → `Err(E-MCP-010)`; NO `Ok` result when graph interrupted | BC-2.09.008 §{INV-002} binary interrupt invariant | Test AC-024 Red Gate |
+| `E-MCP-010` (not E-MCP-006) is the error code for `GraphAgentInterruptDenied` | BC-2.09.008 §Error Codes; ADR-029 §Decision 5 | Error taxonomy; test AC-026 |
+| All `GraphAgentTool` isError paths apply `redact_credentials` on `PregolyaError::message` | BC-2.09.008 §{INV-003} | Test AC-025 Red Gate |
+| `ForceApproveHooks` overrides PreToolCallHook decisions only; node-level `interrupt()` still → E-MCP-010 | BC-2.09.008 §{PC-006}, §{INV-002} | Test AC-022 |
 
-**Forbidden dependencies:** `pregolya-mcp` (both `mcp::client` from S-2.10 and `mcp::server`
-from this story) must NOT depend on `pregolya-graph`, `pregolya-server`, `pregolya-vectorstores`,
-or `pregolya-standard-tests`. The `mcp::client` and `mcp::server` modules do NOT share mutable
-state per BC-2.09.006 INV-005. If `pregolya-mcp` gains a dependency on `pregolya-graph`
-or `pregolya-server`, the build MUST fail.
+**Forbidden dependencies:** `pregolya-mcp` (including `mcp::client` from S-2.10, `mcp::server`,
+and `mcp::graph_tool` from this story) must NOT depend on `pregolya-server`,
+`pregolya-vectorstores`, or `pregolya-standard-tests`. Note: `pregolya-mcp` DOES depend on
+`pregolya-graph` — this dependency is intentionally introduced by BC-2.09.008
+`GraphAgentTool` wrapping (ADR-029 dep edge; task 27). The `mcp::client` and `mcp::server`
+modules do NOT share mutable state per BC-2.09.006 {INV-005}. If `pregolya-mcp` gains a
+dependency on `pregolya-server`, `pregolya-vectorstores`, or `pregolya-standard-tests`, the
+build MUST fail.
 
 ## Library & Framework Requirements (MANDATORY)
 
@@ -290,6 +465,7 @@ or `pregolya-server`, the build MUST fail.
 | `tokio` | workspace pin | Async server task; `RwLock` for registry |
 | `serde_json` | workspace pin | `ToolDefinition` serialization; `CallToolResult` formatting |
 | `tracing` | workspace pin | Structured logging for server lifecycle events (SAP-1) |
+| `schemars` | workspace pin | `schema_for!(S)` inputSchema derivation in `GraphAgentTool::from_graph` (BC-2.09.008 §{PC-001}) |
 
 ## File Structure Requirements (MANDATORY)
 
@@ -297,9 +473,11 @@ or `pregolya-server`, the build MUST fail.
 |------|--------|---------|
 | `pregolya-mcp/src/server.rs` | CREATE | `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` |
 | `pregolya-mcp/src/registry.rs` | CREATE or MODIFY | `ToolRegistry` — shared with client side (extract if needed) |
-| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 INV-003) |
-| `pregolya-mcp/src/lib.rs` | MODIFY | Re-export `McpServer`, `McpServerConfig`, `McpServerHandle`; expose `sanitize` module |
+| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 {INV-003}) |
+| `pregolya-mcp/src/graph_tool.rs` | CREATE | `GraphAgentTool<S>`, `GraphToolApprovalPolicy`, `BoundaryApprovalHook`, `GraphRunner` — STATE-ISOLATION enforcement; E-MCP-010 interrupt-denied path (BC-2.09.008; ADR-029) |
+| `pregolya-mcp/src/lib.rs` | MODIFY | Re-export `McpServer`, `McpServerConfig`, `McpServerHandle`; expose `sanitize` module; re-export `GraphAgentTool`, `GraphToolApprovalPolicy`; expose `graph_tool` module |
 
 ## Changelog
 
 - **1.3 (BC-2.09.006 + BC-2.09.007 / 2026-08-26):** BC-2.09.006 (EC-006 malformed JSON → -32700 Parse error; EC-007 invalid JSON-RPC → -32600 Invalid Request; wire-protocol responses, no E-MCP-* raised). BC-2.09.007 (INV-003 mandatory `redact_credentials` with source restriction + 3-pattern substitution; PC-002 result_text JSON-vs-plaintext selection rule; VP-MCPCALL-03 renamed VP-015). Story changes: (1) AC-013 updated to Red Gate — mandatory `pregolya_mcp::sanitize::redact_credentials` applied to `PregolyaError::message` only (source restriction); 3 patterns (sk-*, sk-ant-*, 64-char token); validates VP-015. (2) AC-014 added: BC-2.09.006 EC-006 + BC-2.09.007 EC-007 — -32700 Parse error wire-protocol response, no PregolyaError. (3) AC-015 added: BC-2.09.006 EC-007 + BC-2.09.007 EC-008 — -32600 Invalid Request wire-protocol response, no PregolyaError. (4) AC-016 added: BC-2.09.007 PC-002 — result_text selection rule (Structured→compact JSON, Text→verbatim). (5) `verification_properties` updated to `[VP-015]`. (6) `sanitize.rs` added to File Structure; Arch Compliance Rules table extended with 3 new rows. (7) Tasks updated to AC-016 and tasks 12–16 added. (8) BC table version column added.
+- **1.4 (BC-2.09.008 / ADR-029 / GAP-01 / 2026-08-26):** Add BC-2.09.008 StateGraph-as-MCP-Tool coverage (GraphAgentTool; mcp::graph_tool). Story changes: (1) BC-2.09.008 added to `behavioral_contracts`; VP-016 added to `verification_properties`; `points` bumped 5→8. (2) AC-017–AC-022: BC-2.09.008 §{PC-001}–§{PC-006} (from_graph + schemars schema derivation; DynTool + ToolRegistry + tools/list advertisement; schema-validate → -32602 / deserialize-fail → isError + redaction; terminal → Ok(ToolOutput::Structured); DenyInterrupts node interrupt → E-MCP-010; ForceApproveHooks hook-override + node-interrupt-still-E-MCP-010). (3) AC-023–AC-025: Red Gate INV ACs (§{INV-001} STATE-ISOLATION VP-016 proptest anchor; §{INV-002} binary interrupt invariant; §{INV-003} mandatory credential redaction on all isError paths). (4) AC-026–AC-028: Red Gate EC ACs (§{EC-004} node interrupt → E-MCP-010; §{EC-007} STATE-ISOLATION extra fields excluded VP-016; §{EC-001} invalid input → -32602 before invoke). (5) E-MCP-010 (GraphAgentInterruptDenied) cited throughout — NOT E-MCP-006 (McpContentUnsupported). (6) Architecture Mapping + Purity Classification + Edge Cases + Token Budget + Tasks + Arch Compliance Rules + Library Requirements + File Structure updated for graph_tool module. (7) Forbidden dependencies updated: pregolya-graph now ALLOWED in pregolya-mcp (BC-2.09.008/ADR-029 dep edge). (8) schemars added to Library Requirements. (9) graph_tool.rs added to File Structure.

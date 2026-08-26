@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.80"
+version: "2.81"
 status: active
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1d
 changelog:
+  - "2.81 (GAP-01/ADR-029/BC-2.09.008/2026-08-26): §GraphAgentTool added (pregolya-mcp: mcp::graph_tool; new module per ADR-029 §Decision 1). Section covers: `GraphAgentTool` struct (BC-2.09.008 authoritative signature carrier per ADR-029 §behavioral-authority note); `from_graph` constructor (inputSchema derivation from S: schemars::JsonSchema; extract_output closure shape; STATE-ISOLATION invariant anchor {INV-001}); `with_approval_policy` builder; `GraphToolApprovalPolicy` enum (`DenyInterrupts` default fail-closed; `ForceApproveHooks` explicit opt-in with read-only restriction); `GraphRunner` pub(crate) type-erased async trait. Blanket omission note update: E-MCP-010 GraphAgentInterruptDenied (EXEC/Never; library-layer Err return from mcp::graph_tool; never direct HTTP terminal in v1) confirmed library-layer only; E-MCP-* namespace 9→10 codes. Census note appended to blanket omission blockquote. BC anchors: BC-2.09.008 (primary), BC-2.09.006, BC-2.09.007, ADR-029 §Decision 1–5."
   - "2.80 (P2A-040-SS18/2026-08-23): §ChatPromptTemplate PromptValue — struct→enum alignment. Before: `#[non_exhaustive] pub struct PromptValue { pub messages: Vec<(Message, MessageProvenance)> }`. After: `#[non_exhaustive] pub enum PromptValue { String(String), Messages(Vec<(Message, MessageProvenance)>) }` (Send+Sync via auto-trait). Type-shape authority: BC-2.18.002 INV-5 + ADR-015 §PromptValue. BC anchor comment updated to cite BC-2.18.002 INV-5 (replacing stale PC2 struct-field citation). No other live-body site references the old struct field — changelog entry 2.45 citing PromptValue.messages is a historical record, grandfathered per TD-VSDD-091."
   - "2.79 (P2A-027/REVERT-D233/2026-08-22): REVERT D-233 signature flips — both unsupported per POL-46: (1) max_marginal_relevance_search lambda_mult f64→f32 (ADR-014 Decision 2 explicit f32; D-233's 'BC-2.21.001 canonical' citation unsupported — BC does not type lambda_mult; f32 consistent with Vec<(Document,f32)> scores); (2) VectorStoreRetriever.lambda_mult f64→f32 (ADR-014 Decision 2 struct field explicit f32); (3) delete ids &[String]→&[&str] (ADR-014 Decision 2 + BC-2.21.001 PC-2 + TV-004 all &[&str]; D-233's 'BC-2.21.001 PC-5 canonical' citation wrong — PC-5 is the as_retriever postcondition, not delete)."
   - "2.78 (P2A026-01/2026-08-22): §VectorStore Trait — P2A-021 add_documents rename propagated to interface-definitions.md (signature authority). Exhaustive surface reconciliation against BC-2.21.001 PC-2 + ADR-014 Decision 2 canonical. Seven changes: (1) add_texts→add_documents: method renamed; parameter list changed from (texts: Vec<String>, metadatas: Option<Vec<serde_json::Map<String, serde_json::Value>>>) to (docs: Vec<Document>); doc comment updated from 'Add texts (with optional per-text metadata) to the store' to 'Add documents to the store'; BC-anchor-comment updated from 'add_texts semantics' to 'add_documents semantics'. (2) max_marginal_relevance_search: lambda_mult type f32→f64 per BC-2.21.001 canonical (P2A-021 addition); VectorStoreRetriever.lambda_mult field corrected f32→f64 for internal consistency. (3) delete: ids param &[&str]→&[String] per BC-2.21.001 PC-5 canonical. (4) similarity_search_with_filter: filter param MetadataFilter→&MetadataFilter (borrowed ref) per BC-2.21.004 canonical; default body unchanged (filter.filters.is_empty() auto-derefs). Methods similarity_search and similarity_search_with_score verified already correct; no change required. as_retriever verified already correct per F-P174-as-retriever-fallible. TD-VSDD-060 sibling sweep: sole live-body add_texts site was the trait method declaration above; corrected; zero live-body add_texts occurrences remaining. Changelog entries 2.42 ('add_texts / from_texts_sync') and 2.59 ('add_texts') are historical records, grandfathered per TD-VSDD-091."
@@ -96,7 +97,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "92bad80"
+input-hash: "2c7993a"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -2211,6 +2212,126 @@ BC-2.19.005 (Reviver allowlist containment — unregistered id → E-SRLZ-001, f
 BC-2.19.006 (langchain-monolith type ids → E-SRLZ-002, structured error — not silent None or E-SRLZ-001).
 ADR-016 Decision 1 (crate placement — pregolya-core module, no new crate), Decision 2 (LcSerializable trait, Serialized enum, LcEntry; inventory-backed OnceLock type registry), Decision 3 (lc_secrets exclusion, JSON-safe output, Reviver allowlist containment and E-SRLZ-002 — §Security Invariant Properties 1–5), Decision 4 (OLD_CORE_NAMESPACES_MAPPING legacy namespace remapping).
 
+### GraphAgentTool (mcp::graph_tool; pregolya-mcp)
+
+**Source:** ADR-029 (GraphAgentTool wrapping; `mcp::graph_tool` module; fail-closed interrupt policy;
+E-MCP-010 `GraphAgentInterruptDenied`). **Module:** `pregolya-mcp: mcp::graph_tool`
+(`pregolya-mcp/src/graph_tool.rs`). Depends on: `pregolya-mcp → pregolya-graph` dependency
+edge (new per ADR-029 §Decision 1; `CompiledGraph<S>` is defined in `pregolya-graph`).
+
+**BC-2.09.008** is the authoritative signature carrier per ADR-029 §Decision 1.
+Interface definitions here and in BC-2.09.008 take precedence over ADR sketches for conflicts.
+
+BC anchor: BC-2.09.008 (GraphAgentTool construction, inputSchema derivation, STATE-ISOLATION
+invariant {INV-001}, interrupt policy, E-MCP-010), BC-2.09.006 (tools/list advertisement path —
+GraphAgentTool registers in ToolRegistry; inputSchema advertised per BC-2.09.006 {PC-002}),
+BC-2.09.007 (tools/call invocation path — invoke_dyn called by mcp::server dispatch loop;
+schema validation {PC-005}, isError semantics {PC-002}/{PC-003}, credential redaction {INV-003}
+all apply). ADR-029 §Decision 1 (module placement + new dep edge), ADR-029 §Decision 2 (inputSchema
+derivation + validation pipeline), ADR-029 §Decision 3 (output STATE-ISOLATION), ADR-029 §Decision 4 (interrupt
+policy), ADR-029 §Decision 5 (E-MCP-010 error code).
+
+```rust
+// pregolya-mcp/src/graph_tool.rs — mcp::graph_tool
+
+/// Wraps a compiled `StateGraph<S>` as a `DynTool`, enabling registration in a
+/// `ToolRegistry` and advertisement/invocation via BC-2.09.006 tools/list and
+/// BC-2.09.007 tools/call. Enforces STATE-ISOLATION (only `extract_output(&final_state)`
+/// result is returned to the external MCP client — BC-2.09.008 {INV-001}), fail-closed
+/// interrupt policy (BC-2.09.008 {INV-002}), and mandatory credential redaction on all
+/// error paths (BC-2.09.007 {INV-003}).
+///
+/// BC anchor: BC-2.09.008 {PC-001} (construction + inputSchema derivation).
+pub struct GraphAgentTool {
+    name: String,
+    description: String,
+    input_schema: schemars::schema::RootSchema,
+    runner: Arc<dyn GraphRunner>,
+    approval_policy: GraphToolApprovalPolicy,
+}
+
+impl GraphAgentTool {
+    /// Constructs a `GraphAgentTool` wrapping the given compiled graph.
+    /// Derives `inputSchema` from `S: schemars::JsonSchema` via `schemars::schema_for!(S)`
+    /// at construction time. The schema is stored for advertisement in `tools/list` responses
+    /// (BC-2.09.006 {PC-002}) and for server-side argument validation (BC-2.09.007 {PC-005}).
+    ///
+    /// `extract_output` is the STATE-ISOLATION boundary (BC-2.09.008 {INV-001}): only
+    /// the fields it selects from `&S` appear in the `ToolOutput`. Fields not selected are
+    /// structurally excluded — checkpoint IDs, run IDs, message history, and metadata
+    /// are unreachable unless `extract_output` explicitly constructs a `Value` containing them.
+    ///
+    /// Default approval policy: `GraphToolApprovalPolicy::DenyInterrupts` (fail-closed).
+    ///
+    /// BC anchor: BC-2.09.008 {PC-001} (construction), {PC-002} (ToolRegistry registration),
+    /// {INV-001} (STATE-ISOLATION), {INV-002} (binary interrupt invariant).
+    pub fn from_graph<S>(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        graph: Arc<CompiledGraph<S>>,
+        extract_output: impl Fn(&S) -> serde_json::Value + Send + Sync + 'static,
+    ) -> Self
+    where
+        S: GraphState
+            + for<'de> serde::Deserialize<'de>
+            + schemars::JsonSchema
+            + Send + Sync + 'static;
+
+    /// Overrides the default `DenyInterrupts` approval policy.
+    /// Use `ForceApproveHooks` ONLY for graphs composed exclusively of read-only tools
+    /// (`ActionRisk::ReadOnly` or `ActionRisk::Low`). See `GraphToolApprovalPolicy` doc.
+    pub fn with_approval_policy(self, policy: GraphToolApprovalPolicy) -> Self;
+}
+
+/// Interrupt-handling policy for `GraphAgentTool` invocations via `tools/call`.
+///
+/// BC anchor: BC-2.09.008 {PC-005} (DenyInterrupts interrupt path),
+/// {PC-006} (ForceApproveHooks override), {INV-002} (binary interrupt invariant),
+/// {INV-004} (ForceApproveHooks safety restriction).
+#[non_exhaustive]
+pub enum GraphToolApprovalPolicy {
+    /// **Default — fail-closed.** Any internal graph interrupt is converted to
+    /// `Err(E-MCP-010 GraphAgentInterruptDenied)`:
+    /// - Node-level `interrupt()` → `RunStatus::Interrupted` → `Err(E-MCP-010)`.
+    /// - `PreToolCallHook::PendingHumanApproval` → `BoundaryApprovalHook` converts to
+    ///   `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }` → tool receives
+    ///   `ToolOutput::Error`; graph continues to error terminal state.
+    /// No interrupted run is persisted to durable checkpoint.
+    /// BC-2.09.008 {INV-002}: no `Ok` result returned when graph was interrupted.
+    DenyInterrupts,
+
+    /// **Explicit opt-in — overrides `PreToolCallHook` decisions only.**
+    /// `BoundaryApprovalHook` overrides ALL `PreToolDecision` values (including
+    /// `PendingHumanApproval`) to `Approve`. No human approval dialog is presented
+    /// for hook-gated tool calls; the tool proceeds unconditionally.
+    ///
+    /// **Node-level `interrupt()` is NOT overridden:** graph parks →
+    /// `Err(E-MCP-010)`. {INV-002} holds under `ForceApproveHooks`.
+    ///
+    /// **Use restriction (BC-2.09.008 {INV-004}):** ONLY appropriate for graphs
+    /// composed exclusively of read-only tools (`ActionRisk::ReadOnly` or
+    /// `ActionRisk::Low`). Caller is responsible for auditing tool composition.
+    /// Using `ForceApproveHooks` with write-class tools (`ActionRisk::Medium`
+    /// or higher) violates ADR-018 §Decision 2 per-graph security contract.
+    ForceApproveHooks,
+}
+
+/// Type-erased runner — hides `CompiledGraph<S>` generic parameter for object-safe storage.
+/// Called by `GraphAgentTool::invoke_dyn`; enforces STATE-ISOLATION by calling
+/// `extract_output(&final_state)` as the sole data-exit path.
+///
+/// BC anchor: BC-2.09.008 {INV-001} (STATE-ISOLATION — only `extract_output` result returned),
+/// {PC-004} (successful terminal path), {PC-005} (interrupt path → E-MCP-010).
+#[async_trait]
+pub(crate) trait GraphRunner: Send + Sync {
+    async fn run(
+        &self,
+        input: serde_json::Value,
+        approval_policy: &GraphToolApprovalPolicy,
+    ) -> Result<serde_json::Value, PregolyaError>;
+}
+```
+
 ---
 
 ## pregolya-server HTTP API
@@ -2350,7 +2471,7 @@ is explicitly set by the operator (BC-2.12.004). Paths are flat (not thread-nest
 
 > **E-PROV-010 library-layer omission (D20 sub-burst 2):** E-PROV-010 (ProviderChainExhausted, POLICY — BC-2.08.014 PC5/EC-004) is raised when all providers in the `ProviderFallbackPolicy` chain have been tried and all failed. POLICY→403 is the categorical mapping. In v1 this error surfaces as a direct `Err(PregolyaError)` return from the provider dispatch layer in library code; it propagates as Run.error on the server side (same treatment as E-PROV-007 StructuredOutputRefused). Never a direct HTTP terminal response. Intentionally omitted from the HTTP status table.
 
-> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20; D23/2026-07-22):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL), E-TOOLS-* (BC-2.23.x, SECURITY/VAL/TIMEOUT) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400, TIMEOUT→503) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, pregolya-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, pregolya-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, pregolya-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, pregolya-core::embeddings); all library-layer Err returns. **D23 additions confirmed library-layer only:** E-TOOLS-001 (BC-2.23.001–006 — PathGuard confinement SECURITY), E-TOOLS-002/003/007 (VAL construction/call-time), E-TOOLS-004 (BashTool timeout TIMEOUT/Never), E-TOOLS-005/006 (informational payload fields — not raised Err; included for census completeness); all pregolya-tools library-layer. **burst-233 additions confirmed library-layer only:** E-TOOLS-008 (BC-2.23.001–004/006 — OS-level I/O error TOOL/Maybe, wraps std::io::ErrorKind), E-TOOLS-009 (BC-2.23.006 — invalid regex pattern VAL/Never); both pregolya-tools library-layer. **burst-240 addition confirmed library-layer only:** E-MCP-006 (BC-2.09.002 — McpContentUnsupported VAL/Never; raised by _convert_mcp_content_to_block for unsupported content block types such as AudioContent; pregolya-mcp library-layer Err return; never direct HTTP terminal in v1). **Disposition census (burst-240/2026-07-22): 43 HTTP + 17 individual + 48 blanket = 108.** (+1 blanket: E-MCP-* 5→6 codes.) Blanket group breakdown: E-MCP-* 6 + E-SBXD-* 6 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 8 + E-SPLIT-* 2 + E-TMPL-* 3 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 9 = 48.
+> **Library/execution-layer codes — blanket omission (OBS-P29-1, ADV-P1D-PASS-29; F-P30-01, ADV-P1D-PASS-30; D21/2026-07-20; D23/2026-07-22):** All remaining library and execution-layer error codes — E-MCP-* (BC-2.09.x, TOOL/TRANSPORT/VAL), E-SBXD-* (BC-2.13.x, SECURITY/POLICY/INTERNAL), E-RETRY-* (BC-2.16.x, POLICY/VAL), E-BUDGET-* (BC-2.10.x, POLICY/DURABILITY), E-MEMORY-* (BC-2.15.x, VAL/POLICY/DURABILITY/SECURITY), E-SPLIT-* (BC-2.07.x, VAL), E-TMPL-* (BC-2.18.x, SECURITY/VAL), E-SRLZ-* (BC-2.19.x, VAL), E-VS-* (BC-2.20.x/BC-2.21.x, VAL), E-EMBED-* (BC-2.22.x, VAL), E-TOOLS-* (BC-2.23.x, SECURITY/VAL/TIMEOUT) — surface embedded in Run.error or as library `Err` return values. None has a direct HTTP row in this table. Categorical fallbacks apply if ever surfaced directly (TOOL→422, TRANSPORT→502, SECURITY→403, POLICY→403, DURABILITY→500, INTERNAL→500, VAL→400, TIMEOUT→503) but in v1 these codes are not emitted as terminal HTTP responses by any endpoint. Spot-checked: E-MCP-001 (BC-2.09.004 — embedded in run as tool failure), E-SBXD-001 (BC-2.13.005 — sandbox security violation embedded in run), E-MEMORY-001 (BC-2.15.001 — memory store validation error embedded in run); all confirmed library-layer only. **D21 additions confirmed library-layer only:** E-TMPL-001 (BC-2.18.004 — prompt injection guard, pregolya-prompts), E-SRLZ-001 (BC-2.19.005 — Reviver allowlist fail-closed, pregolya-core::serializable), E-VS-001 (BC-2.21.003 — zero-norm cosine guard, pregolya-vectorstores), E-EMBED-001 (BC-2.22.001 — dimensionality contract, pregolya-core::embeddings); all library-layer Err returns. **D23 additions confirmed library-layer only:** E-TOOLS-001 (BC-2.23.001–006 — PathGuard confinement SECURITY), E-TOOLS-002/003/007 (VAL construction/call-time), E-TOOLS-004 (BashTool timeout TIMEOUT/Never), E-TOOLS-005/006 (informational payload fields — not raised Err; included for census completeness); all pregolya-tools library-layer. **burst-233 additions confirmed library-layer only:** E-TOOLS-008 (BC-2.23.001–004/006 — OS-level I/O error TOOL/Maybe, wraps std::io::ErrorKind), E-TOOLS-009 (BC-2.23.006 — invalid regex pattern VAL/Never); both pregolya-tools library-layer. **burst-240 addition confirmed library-layer only:** E-MCP-006 (BC-2.09.002 — McpContentUnsupported VAL/Never; raised by _convert_mcp_content_to_block for unsupported content block types such as AudioContent; pregolya-mcp library-layer Err return; never direct HTTP terminal in v1). **GAP-01/BC-2.09.008 addition confirmed library-layer only:** E-MCP-010 (BC-2.09.008 — GraphAgentInterruptDenied EXEC/Never; raised by `GraphAgentTool` in `mcp::graph_tool` when graph invocation is interrupted at the MCP boundary under `DenyInterrupts` policy; pregolya-mcp library-layer Err return; never direct HTTP terminal in v1). **Disposition census (GAP-01/2026-08-26): 50 HTTP + 25 individual + 61 blanket = 136.** (+1 blanket: E-MCP-* 9→10 codes.) Blanket group breakdown: E-MCP-* 10 + E-SBXD-* 10 + E-RETRY-* 4 + E-BUDGET-* 2 + E-MEMORY-* 10 + E-SPLIT-* 2 + E-TMPL-* 4 + E-SRLZ-* 2 + E-VS-* 5 + E-EMBED-* 1 + E-TOOLS-* 11 = 61. (Historical snapshot burst-240/2026-07-22: 43 HTTP + 17 individual + 48 blanket = 108.)
 
 ## Exit Code Semantics
 

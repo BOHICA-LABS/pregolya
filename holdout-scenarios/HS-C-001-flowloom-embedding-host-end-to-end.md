@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
@@ -31,6 +31,7 @@ behavioral_contracts:
   - BC-2.12.003
   - BC-2.12.006
   - BC-2.03.001
+  - BC-2.09.008
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
@@ -54,9 +55,9 @@ coverage_areas:
   - graph_execution
   - server
   - tenancy
-coverage_gap_pending:
-  - "HS-C-001-GAP-01: No BC specifies that a StateGraph/agent can be wrapped as a Tool and registered in the ToolRegistry so that it appears as an MCP-advertised tool. BC-2.09.006 and BC-2.09.007 cover the MCP protocol layer for REGISTERED TOOLS but do not specify the StateGraph→Tool wrapping contract. Check 5 of this scenario is CONTINGENT on resolution of this gap. Surfaced to orchestrator for product-owner adjudication."
+coverage_gap_pending: []
 changelog:
+  - "1.1 (GAP-01 resolved, 2026-08-26): BC-2.09.008 (GraphAgentTool; mcp::graph_tool) human-approved v1 scope addition (ADR-029). GAP-01 marked RESOLVED — STATE-ISOLATION {INV-001} VP-016 proptest P1 proof target, fail-closed interrupt {INV-002} E-MCP-010 minted. Check 5 promoted to first-class must-pass (must_pass: yes, 0.10 weight retained). BC linkage table extended with four BC-2.09.008 rows. Sealed note, Check 5 heading, Verification step 8, Evaluation Rubric, and Failure Guidance un-contingented."
   - "1.0 (initial, 2026-08-26): HS-C-001 authored for Flowloom embedding use case. Seven-primitive traceability verified. Coverage gap HS-C-001-GAP-01 (StateGraph→Tool wrapping absent) surfaced."
 ---
 
@@ -64,12 +65,6 @@ changelog:
 
 > **SEALED — Phase 4 use only.**
 > Do NOT share with implementer, test-writer, or architect agents.
->
-> **NOTE:** Check 5 of this scenario (agent exposed as MCP tool) is marked **CONTINGENT**
-> pending resolution of a surfaced coverage gap. See the Behavioral Contract Linkage table
-> and the product-owner deliverable note at the end of this file. The evaluator must still
-> attempt check 5 and record the result; a failure on check 5 alone does not block the
-> overall must-pass threshold if the gap is acknowledged as unresolved.
 
 ---
 
@@ -171,7 +166,6 @@ configured to `approve_all`):
 ---
 
 **Check 5 — Agent exposed as MCP tool; external caller receives well-formed response**
-**(CONTINGENT — see coverage gap note)**
 
 **Given** the agent graph used in Check 2 / Check 3 is additionally exposed through the
 runtime's outbound server interface as an invocable MCP tool named `run_agent`.
@@ -231,27 +225,41 @@ same external MCP server:
 | BC-2.03.001 {PC-001} + VP-001 Kani `bsp_determinism_harness` | BSP scheduler produces identical GraphState for identical inputs regardless of node completion order | Check 6 — concurrent runs deterministic |
 | BC-2.09.006 {PC-002} | MCP server tools/list returns all registered tools with name/description/inputSchema | Check 5 — run_agent appears in tools/list |
 | BC-2.09.007 {PC-001}{PC-002}{INV-003} + VP-015 | tools/call routes to registered Tool, executes, serializes result; mandatory credential redaction before response | Check 5 — run_agent invocable via tools/call; internal state not leaked |
+| BC-2.09.008 {PC-002} | GraphAgentTool registered in ToolRegistry; MCP server advertises run_agent in tools/list with name, description, and schemars-derived inputSchema | Check 5 — run_agent appears in tools/list with inputSchema |
+| BC-2.09.008 {PC-003}/{PC-004} | tools/call invocation: schema validation, serde deserialization, graph execution, extract_output → ToolOutput::Structured; isError false on success | Check 5 — tools/call returns well-formed result |
+| BC-2.09.008 {INV-001} + VP-016 | STATE-ISOLATION: ToolOutput contains only extract_output-selected fields; no checkpoint IDs, run IDs, message history, or internal graph metadata in response | Check 5 — no internal state in response (VP-016 proptest P1 proof target) |
+| BC-2.09.008 {INV-002} + E-MCP-010 | Binary interrupt invariant (fail-closed): any internal graph interrupt → Err(E-MCP-010) GraphAgentInterruptDenied; no hang, no silent leak; isError true with sanitized message | Check 5 — interrupt-at-boundary fail-closed |
 
-### Coverage Gap — HS-C-001-GAP-01
+### Coverage Gap — HS-C-001-GAP-01 (RESOLVED)
 
-**Affected check:** Check 5 (agent exposed as MCP tool).
+**Status:** RESOLVED — 2026-08-26.
 
-**Gap:** BC-2.09.006 and BC-2.09.007 specify the MCP server protocol layer: they cover
-advertising and invoking TOOLS already registered in the ToolRegistry. Neither BC specifies
-the **StateGraph-to-Tool wrapping contract** — the mechanism by which a Pregolya agent
-(StateGraph) is wrapped as a `Tool` implementation and registered in the ToolRegistry so
-that it appears to external MCP clients as a first-class invocable tool.
+**Original gap:** BC-2.09.006 and BC-2.09.007 specified the MCP server protocol layer but
+neither specified the StateGraph-to-Tool wrapping contract — the mechanism by which a
+Pregolya agent (StateGraph) is wrapped as a `Tool` implementation and registered in the
+ToolRegistry so that it appears to external MCP clients as a first-class invocable tool.
 
-**Implication for this scenario:** Check 5 tests the observable end-to-end behavior, but
-there is no existing BC whose postconditions formally guarantee the wrapping step. If the
-evaluator observes a failure on Check 5, it cannot be conclusively attributed to a
-violation of an existing contract; the behavior may simply be unspecified.
+**Resolution:** BC-2.09.008 (GraphAgentTool; `mcp::graph_tool`) was authored and
+human-approved as a v1 scope addition on 2026-08-26 (ADR-029). It specifies:
 
-**Routing:** Surfaced to orchestrator. Product-owner should either (a) author a new BC
-(e.g., BC-2.09.008 or in a new subsystem) specifying `GraphAgentTool::from(StateGraph)`
-wrapping behavior, or (b) confirm that the embedding host is expected to perform this
-wrapping externally (in which case Check 5 is out of scope for Pregolya's own contracts
-and should be removed from future revisions of this scenario).
+- `GraphAgentTool::from_graph` construction — inputSchema derivation via schemars
+  ({PC-001}/{PC-002}); tool advertised in tools/list per BC-2.09.006 {PC-002}
+- STATE-ISOLATION invariant {INV-001} (VP-016 proptest P1 proof target) — caller sees
+  only `extract_output`-selected fields; no checkpoint IDs, run IDs, message history,
+  intermediate node outputs, or internal graph metadata in output
+- Binary interrupt invariant {INV-002} (fail-closed default) — any internal graph
+  interrupt converts to `Err(E-MCP-010)` (GraphAgentInterruptDenied); no hang, no
+  silent leak; `isError: true` with sanitized message
+- E-MCP-010 error code (EXEC severity, retry_hint: Never) minted by BC-2.09.008 per
+  ADR-029 §Decision 5
+
+Check 5 is now a first-class must-pass check backed by BC-2.09.008/VP-016/E-MCP-010.
+The conditional weight redistribution (+0.05 to checks 2/6 if Check 5 removed) is no
+longer applicable; Check 5 retains its 0.10 weight.
+
+*Historical note: this gap was surfaced at scenario authoring time (2026-08-26) and
+routed to the orchestrator for product-owner adjudication. It was resolved in the same
+session via BC-2.09.008 authorship and human approval (GAP-01/HS-C-001).*
 
 ---
 
@@ -276,11 +284,16 @@ and should be removed from future revisions of this scenario).
    every event carries the same stable run-level identifier. Verify nested events carry
    ancestry identifiers. Verify post-resume events use a new run-level identifier but the
    same ancestry context.
-8. (Check 5 — CONTINGENT) If the runtime supports outbound MCP tool advertisement of
-   the agent: connect an external MCP client; send `tools/list`; assert `run_agent` is
-   present. Send `tools/call { "name": "run_agent", … }`; assert a well-formed tool
-   result is returned. Assert the response contains no internal state (no checkpoint IDs,
-   no intermediate node outputs beyond the final result).
+8. (Check 5) Connect an external MCP client to the runtime's outbound MCP server; send
+   `tools/list`; assert `run_agent` is present with a name, description, and inputSchema
+   (BC-2.09.008 {PC-002}). Send `tools/call { "name": "run_agent", … }`; assert a
+   well-formed tool result is returned with `isError: false` on success and at least one
+   text content entry containing the agent's output (BC-2.09.008 {PC-003}/{PC-004}).
+   Assert the response contains no internal state (no checkpoint IDs, no run IDs, no
+   intermediate node outputs, no message history — BC-2.09.008 {INV-001}/VP-016 proof
+   target). Assert that if the graph encounters an interrupt, the MCP response returns
+   `isError: true` with a sanitized error message and does not hang (BC-2.09.008
+   {INV-002}/E-MCP-010).
 9. Start two runs concurrently: `EMBED-RUN-ALPHA` (TENANT-ALPHA) and `EMBED-RUN-BETA`
    (TENANT-BETA). Inject different `lookup_record` return values for each tenant.
    Assert each run's `update_record` (if approved) uses the value from its own tenant's
@@ -298,15 +311,12 @@ and should be removed from future revisions of this scenario).
 | Check 2: Write blocked fail-closed; pending-approval state durable | 0.25 | yes | update_record not invoked; approval request survives restart; lookup not re-run |
 | Check 3: Approval → single execution; idempotent re-deliver | 0.20 | yes | update_record executes exactly once; second APPROVE has no side effect |
 | Check 4: Typed streaming events with stable correlation ids | 0.10 | yes | all events carry stable run_id; resumed run has correct ancestry context |
-| Check 5: Agent exposed as MCP tool (CONTINGENT on gap) | 0.10 | no (contingent) | tools/list shows agent; tools/call returns result; no internal state leaked |
+| Check 5: Agent exposed as MCP tool (BC-2.09.008) | 0.10 | yes | tools/list shows run_agent with inputSchema; tools/call returns well-formed result; no internal state in response (VP-016); interrupt surfaces as E-MCP-010, no hang |
 | Check 6: Cross-tenant state isolation | 0.15 | yes | each tenant's run state and lookup result are independent |
 
-**Must-pass threshold (excluding check 5):** weighted average of checks 1–4 and 6 ≥ 0.72.
-**Full threshold (all checks):** weighted average ≥ 0.80.
-
-Check 5 is scored but does not individually gate the must-pass verdict if HS-C-001-GAP-01
-has not been resolved. If GAP-01 is resolved before Phase 4 evaluation, check 5 becomes
-must-pass and its weight is redistributed (suggested: +0.05 to check 2, +0.05 to check 6).
+**Must-pass threshold (all six checks):** weighted average ≥ 0.80. All six checks are
+must-pass. GAP-01 resolved 2026-08-26 — Check 5 is a first-class must-pass check backed
+by BC-2.09.008/VP-016/E-MCP-010; it carries its own 0.10 weight unchanged.
 
 ---
 
@@ -356,8 +366,10 @@ satisfy one or more core invariants. Likely failure modes:
   (single-execution violation), or the idempotent re-deliver caused a second invocation.
 - Check 4 fail: streaming events had inconsistent or missing run-level correlation
   identifiers, or the post-resume ancestry context was incorrect.
-- Check 5 fail (CONTINGENT): run_agent not advertised in tools/list, tools/call failed,
-  or internal state leaked in the tool response. Flag for gap adjudication.
+- Check 5 fail: run_agent not advertised in tools/list (BC-2.09.008 {PC-002} violation),
+  tools/call failed or returned malformed content (BC-2.09.008 {PC-003}/{PC-004}
+  violation), internal state in the tool response ({INV-001}/VP-016 violation), or an
+  interrupt did not surface as E-MCP-010 and/or caused a hang ({INV-002} violation).
 - Check 6 fail: TENANT-ALPHA's state was visible to TENANT-BETA's run, or lookup result
   from one tenant appeared in the other's decision."
 

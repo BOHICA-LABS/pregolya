@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.13"
+version: "2.14"
 status: active
 producer: architect
-timestamp: 2026-08-21T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "82ff930"
+input-hash: "462a8bf"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.14 (GAP-01/ADR-029/2026-08-26): Iron Law — add `mcp::graph_tool` MEDIUM row (pregolya-mcp; SS-09; wraps CompiledGraph<S> as DynTool; STATE-ISOLATION invariant; BC-2.09.008; VP-016 proptest P1; no Kani VP — STATE-ISOLATION property not tractable by Kani over open recursive serde_json::Value; MEDIUM consistent with mcp::server/mcp::client/mcp::sanitize sibling pattern). Required by ADR-029 mcp::graph_tool module addition. Classification Summary: MEDIUM 36→37; Total 84→85. Tiered rows breakdown: 35 MEDIUM module-level → 36 MEDIUM module-level; 78 tiered → 79 tiered. Input-hash refresh pending (state-manager task)."
   - "2.13 (architect-reconcile-burst/2026-08-26): Iron Law — add `mcp::sanitize` MEDIUM row (pregolya-mcp; SS-09; `redact_credentials` pure credential-redaction; BC-2.09.007 / INV-003 / DI-010; VP-015 integration P1; no Kani VP — not a Kani P0/P1 host; MEDIUM consistent with mcp::exception/mcp::client/mcp::discovery sibling pattern). Required by module-decomposition.md mcp::sanitize addition. Classification Summary: MEDIUM 35→36; Total 83→84. Tiered rows breakdown: 34 MEDIUM module-level → 35 MEDIUM module-level; 77 tiered → 78 tiered. Input-hash refreshed (82ff930)."
   - "2.12 (INVESTIGATE-RECONCILE/2026-08-21): Module Classification table — rename `mcp::adapter` → `mcp::exception` (MEDIUM tier, pregolya-mcp, SS-09). Story S-2.10 creates no `adapter.rs`; VP-004 property (bare ToolException type-identity) lives in `mcp::exception`. Criticality MEDIUM unchanged. Input-hash refreshed (module-decomposition.md drift)."
   - "2.11 (F-P210-01/2026-08-18): Census reconciliation — Resolution B confirmed. module-criticality.md and verification-coverage-matrix.md enumerate the same 83 distinct modules; module-criticality's prior Total=84 was a row count that double-counted core::serializable (one module with aspects in both CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable). Counting each distinct module once in its highest tier: core::serializable belongs to CRITICAL. Corrections: HIGH 29→28 (remove core::serializable LcSerializable row from HIGH distinct-module count), Total 84→83, tiered-rows comment 78→77. Classification Summary now reflects distinct-module counts."
@@ -86,6 +87,7 @@ changelog:
 | `splitters::recursive` | — | pregolya-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::client` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::exception` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| `mcp::graph_tool` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::sanitize` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::server` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::wasm` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
@@ -187,12 +189,12 @@ changelog:
 |------|-------------|
 | CRITICAL | 12 |
 | HIGH | 28 |
-| MEDIUM | 36 |
+| MEDIUM | 37 |
 | LOW | 2 |
 | — (definitions-only/exempt) | 6 |
-| **Total** | **84** |
+| **Total** | **85** |
 
-> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 35 MEDIUM module-level + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 78 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier).
+> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 36 MEDIUM module-level (incl. mcp::graph_tool added GAP-01/ADR-029) + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 79 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier).
 
 ## CRITICAL Module — Security Profile
 

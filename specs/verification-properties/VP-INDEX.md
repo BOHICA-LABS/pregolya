@@ -1,7 +1,7 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.15"
+version: "1.17"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -9,6 +9,8 @@ phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.17 (GAP-01-reconcile/2026-08-26): VP-016 BC Anchor clause tag corrected {INV-STATE-ISOLATION} → {INV-001} (stable-tag form per ADR-027; {INV-001} is the canonical STATE-ISOLATION invariant tag in BC-2.09.008). Arithmetic invariant note updated total(15)→total(16), P1(9)→P1(10), proptest(3)→proptest(4) to match Summary table. No VP catalog row additions."
+  - "1.16 (GAP-01/ADR-029/2026-08-26): VP-016 added — GraphAgentTool state-isolation proptest P1 (BC-2.09.008 {INV-STATE-ISOLATION}, mcp::graph_tool, pregolya-mcp, DI-010, harness graph_agent_tool_state_isolation). Arithmetic: total 15→16 (P0 6→6 unchanged, P1 9→10); proptest 3→4. architecture-doc VP-015 tool-type discrepancy (D-273) also fixed in same burst: verification-architecture.md + verification-coverage-matrix.md corrected from 'integration' to 'unit' for VP-015 (VP-015.md authoritative; CLAUDE.md rule 4)."
   - "1.15 (BC-completeness-propagation/2026-08-26): VP-015 added — MCP Response Credential Redaction unit P1 (BC-2.09.007 {INV-003}, mcp::sanitize, pregolya-mcp, DI-010, harness credential_redaction_unit). VP-006 harness_fn updated: added `injection_guard_fewshot_fail_closed` (VP-006.md both-arm coverage of FewShotExamples arm). Arithmetic: total 14→15 (P0 6→6 unchanged, P1 8→9); unit 0→1 (new tool category); Kani/proptest/integration unchanged. NOTE: verification-architecture.md + verification-coverage-matrix.md list VP-015 tool as 'integration' — on-disk VP-015.md frontmatter is authoritative (tool: unit per CLAUDE.md rule 4 VP-file-supersedes); architecture docs carry a records-tier tool-type discrepancy (flagged D-273)."
   - "1.14 (INVESTIGATE-RECONCILE/2026-08-21): Fix VP-004 Module column: `mcp::adapter` → `mcp::exception`. Story S-2.10 creates no `adapter.rs`; VP-004 property (bare ToolException type-identity, R11) is implemented in `mcp::exception`. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2. POL-9 cascade propagated same-burst to verification-architecture, verification-coverage-matrix, module-decomposition, purity-boundary-map, and VP-004.md."
   - "1.13 (burst-325/D-196/2026-08-18): input-hash: \"[live-index]\" sentinel added (metadata hygiene; Q2 alignment with BC-INDEX and ARCH-INDEX index convention; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). VP-INDEX is an index document with no declared inputs field; sentinel marks it as live-index class per index convention. No VP catalog rows or arithmetic invariant changed."
@@ -34,7 +36,7 @@ changelog:
 > (Provable Properties Catalog + P0 list) and `verification-coverage-matrix.md`
 > (VP-to-Module table + Totals row) in the same burst.
 >
-> Arithmetic invariant: total (15) = P0 (6) + P1 (9) = Kani (9) + proptest (3) + integration (2) + unit (1).
+> Arithmetic invariant: total (16) = P0 (6) + P1 (10) = Kani (9) + proptest (4) + integration (2) + unit (1).
 >
 > **VP Priority vs BC Priority (OBS-P156-B):** The `Priority` column here is the
 > **verification-priority axis** — it reflects proof criticality (how urgently this property
@@ -54,15 +56,15 @@ changelog:
 
 | Metric | Count |
 |--------|-------|
-| Total VPs | 15 |
+| Total VPs | 16 |
 | Priority P0 (verification-priority) | 6 |
-| Priority P1 (verification-priority) | 9 |
+| Priority P1 (verification-priority) | 10 |
 | Kani | 9 |
-| proptest | 3 |
+| proptest | 4 |
 | fuzz | 0 |
 | integration | 2 |
 | unit | 1 |
-| Status: draft | 15 |
+| Status: draft | 16 |
 | Status: active | 0 |
 | Status: passed | 0 |
 
@@ -85,3 +87,4 @@ changelog:
 | VP-013 | BC-2.23.005 | tools::shell | Kani | 6 | P1 | draft | DI-014 | pregolya-tools | `risk_floor_rejects_below_medium` | VP-013.md |
 | VP-014 | BC-2.01.005 + BC-2.01.006 | core::runnable | proptest | 3 | P1 | draft | DI-016 | pregolya-core | n/a (proptest) | VP-014.md |
 | VP-015 | BC-2.09.007 {INV-003} | mcp::sanitize | unit | 3 | P1 | draft | DI-010 | pregolya-mcp | `credential_redaction_unit` | VP-015.md |
+| VP-016 | BC-2.09.008 {INV-001} | mcp::graph_tool | proptest | 3 | P1 | draft | DI-010 | pregolya-mcp | `graph_agent_tool_state_isolation` | vp-016-graph-agent-tool-state-isolation.md |

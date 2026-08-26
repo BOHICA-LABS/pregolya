@@ -523,9 +523,9 @@ stories:
   - story_id: S-2.11
     wave: 2
     status: spec-ready
-    bcs: [BC-2.09.006, BC-2.09.007]
-    vps: [VP-015]
-    points: 5
+    bcs: [BC-2.09.006, BC-2.09.007, BC-2.09.008]
+    vps: [VP-015, VP-016]
+    points: 8
     tdd_mode: strict
     priority: P1
     crate: pregolya-mcp

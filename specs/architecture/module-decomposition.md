@@ -2,19 +2,20 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.48"
+version: "1.49"
 status: active
 producer: architect
-timestamp: 2026-08-21T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "540a6b2"
+input-hash: "acae3b8"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.49 (GAP-01/ADR-029/2026-08-26): Add `mcp::graph_tool` MEDIUM module row to pregolya-mcp section (BC-2.09.008 {INV-STATE-ISOLATION}; wraps CompiledGraph<S> as DynTool; VP-016 proptest P1 target; ADR-029). Section heading updated: `MEDIUM (client, discovery, exception, sanitize, server)` → `MEDIUM (client, discovery, exception, graph_tool, sanitize, server)`. BC anchors line updated: 001–007 → 001–008. VP anchors line updated: add VP-016 (proptest P1, Phase 3). Module universe: 72→73 (73rd module; MEDIUM tier +1). input-hash refresh pending (state-manager task)."
   - "1.48 (architect-reconcile-burst/2026-08-26): Add `mcp::sanitize` MEDIUM module row to pregolya-mcp section (BC-2.09.007 {INV-003}; pure-core credential redaction; VP-015 integration P1 target). Section heading updated: `MEDIUM (client, discovery, exception, server)` → `MEDIUM (client, discovery, exception, sanitize, server)`. Module universe: 71→72 (72nd module; MEDIUM tier +1). input-hash refreshed (540a6b2)."
   - "1.47 (INVESTIGATE-RECONCILE/2026-08-21): MCP section — rename `mcp::adapter` → `mcp::exception` (module row description, section header criticality list, VP anchors line). Story S-2.10 creates no `adapter.rs`; the ToolException bare re-raise behavior (R11 / VP-004) lives in `mcp::exception` (`src/exception.rs`). Description updated: '`ToolInvocation` routing; ToolException re-raise with type identity' → 'Bare ToolException re-raise detection; type-identity preservation via McpError downcast'. POL-9 cascade propagated to VP-INDEX, VP-004.md, verification-architecture, verification-coverage-matrix, and purity-boundary-map in same burst."
   - "1.46 (P2A-021/2026-08-21): VectorStore method alignment — vectorstores::store row: add_texts → add_documents (method now takes Vec<Document>; grounded in LangChain reference, P2A-021 fix-burst). Sibling sweep (TD-VSDD-060): no other add_texts occurrences in this file."
@@ -235,22 +236,23 @@ The SDK crates have no pregolya-core dep and are publishable standalone. Enforce
 > coverage — it therefore satisfies Iron Law criteria requiring a module-level row. The
 > pre-existing `pregolya-standard-tests` crate-level row in module-criticality.md remains
 > as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law.
-> Current module universe: 71 total (69 tiered / 2 exempt: `core::documents`, `memory::skills`) by this file's own table rows. The module-criticality.md registry total is 83 (77 tiered + 6 definitions-only/exempt rows added in FIX-BURST-277) — the difference is the 6 definitions-only/exempt module rows and the 6 crate-level roll-up rows that appear in the registry but are not in this file's tiered table. `eval::judge` was the 57th module when added in v1.32 by the module-decomp's own running count from gate-25 baseline; the canonical registry subsequently recorded additional modules (tracked in matrix v2.5/v2.6) bringing the total to 71. `mcp::sanitize` is the 72nd module (added v1.48).
+> Current module universe: 73 total (71 tiered / 2 exempt: `core::documents`, `memory::skills`) by this file's own table rows. The module-criticality.md registry total is 85 (79 tiered + 6 definitions-only/exempt rows added in FIX-BURST-277) — the difference is the 6 definitions-only/exempt module rows and the 6 crate-level roll-up rows that appear in the registry but are not in this file's tiered table. `eval::judge` was the 57th module when added in v1.32 by the module-decomp's own running count from gate-25 baseline; the canonical registry subsequently recorded additional modules (tracked in matrix v2.5/v2.6) bringing the total to 71. `mcp::sanitize` is the 72nd module (added v1.48). `mcp::graph_tool` is the 73rd module (added v1.49).
 
-## pregolya-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, exception, sanitize, server)
+## pregolya-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, exception, graph_tool, sanitize, server)
 
 | Module | Responsibility | Criticality |
 |--------|---------------|-------------|
 | `mcp::client` | `MultiServerMcpClient`; no live connections until invoke (R11) | MEDIUM |
 | `mcp::discovery` | Tool discovery and registration from MCP server at runtime | MEDIUM |
 | `mcp::exception` | Bare ToolException re-raise detection; type-identity preservation via McpError downcast (R11) | MEDIUM |
+| `mcp::graph_tool` | Wraps `CompiledGraph<S>` as a `DynTool` (`GraphAgentTool`); input mapping via `schemars` JSON Schema derivation + `jsonschema` validation + `serde_json` deserialization; output mapping via caller-supplied `extract_output: Fn(&S) -> serde_json::Value` closure; STATE-ISOLATION invariant {INV-STATE-ISOLATION}: `ToolOutput` contains ONLY the result of `extract_output(&final_state)`, no internal graph metadata; interrupt policy: `DenyInterrupts` default (fail-closed via `BoundaryApprovalHook`); `ForceApproveHooks` opt-in for read-only graphs (ADR-029; BC-2.09.008; VP-016 proptest P1) | MEDIUM |
 | `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam; external untrusted-input entry point for tool invocations arriving from MCP clients (BC-2.09.003) | HIGH |
-| `mcp::sanitize` | Pure-core credential redaction utility; `redact_credentials(text: &str) -> Cow<str>` applies pattern-based substitution of provider API key patterns (OpenAI `sk-*`, Anthropic `sk-ant-*`, generic 64+ char token) before any error message is transmitted to external MCP clients; sole consumer is `mcp::server` (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention; VP-015 integration P1 target) | MEDIUM |
+| `mcp::sanitize` | Pure-core credential redaction utility; `redact_credentials(text: &str) -> Cow<str>` applies pattern-based substitution of provider API key patterns (OpenAI `sk-*`, Anthropic `sk-ant-*`, generic 64+ char token) before any error message is transmitted to external MCP clients; sole consumer is `mcp::server` (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention; VP-015 unit P1 target) | MEDIUM |
 | `mcp::server` | MCP server endpoint: exposes registered tools to external MCP clients; accepts inbound tool-call requests, dispatches to registered tools, and returns serialized responses (CAP-021/D20/ADR-013) | MEDIUM |
 
-**BC anchors:** BC-2.09.001–007 (CAP-021: BCs 006–007 cover server-side tool exposure and response serialization contracts).
+**BC anchors:** BC-2.09.001–008 (CAP-021: BCs 006–007 cover server-side tool exposure and response serialization contracts; BC-2.09.008 covers StateGraph-as-MCP-Tool wrapping via mcp::graph_tool).
 
-**VP anchors:** `mcp::exception` is VP-004 target; `mcp::client` is VP-005 target (both integration-tier, Phase 3).
+**VP anchors:** `mcp::exception` is VP-004 target; `mcp::client` is VP-005 target (both integration-tier, Phase 3); `mcp::sanitize` is VP-015 target (unit P1, Phase 3); `mcp::graph_tool` is VP-016 target (proptest P1, Phase 3; STATE-ISOLATION invariant via ADR-029 §Decision 3).
 
 ## pregolya-memory (SS-15) — HIGH (write_guard) / MEDIUM (store, sqlite, in_memory, search, skills)
 

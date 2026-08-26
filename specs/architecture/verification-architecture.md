@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.21"
+version: "2.23"
 status: active
 producer: architect
-timestamp: 2026-08-21T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -26,7 +26,8 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
-input-hash: "57a7c93"
+  - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
+input-hash: "df54145"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -38,7 +39,7 @@ decisions: [D17, D21, D23]
 
 ## [Section Content]
 
-This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the fifteen committed VP obligations (VP-001–VP-015), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit test (one integration P1; BC-2.09.007 {INV-003}).
+This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the sixteen committed VP obligations (VP-001–VP-016), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -70,7 +71,7 @@ on a `Future` will fail at verification time. Consequences:
 
 ## Committed VP Obligations (D17-Q7 + R11 + D21 + D23)
 
-Fifteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction):
+Sixteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction) plus VP-016 (GAP-01/ADR-029 GraphAgentTool state-isolation):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -88,9 +89,12 @@ Fifteen VPs committed before v1.0 release — VP-001..005 (original five) plus V
 | VP-012 | BC-2.10.005 | DI-014 | `core::budget` | Kani | 6 | P1 |
 | VP-013 | BC-2.23.005 | DI-014 | `tools::shell` | Kani | 6 | P1 |
 | VP-014 | BC-2.01.005 + BC-2.01.006 | DI-016 | `core::runnable` | proptest | 3 | P1 |
-| VP-015 | BC-2.09.007 {INV-003} | DI-010 | `mcp::sanitize` | integration | 3 | P1 |
+| VP-015 | BC-2.09.007 {INV-003} | DI-010 | `mcp::sanitize` | unit | 3 | P1 |
+| VP-016 | BC-2.09.008 {INV-001} | DI-010 | `mcp::graph_tool` | proptest | 3 | P1 |
 
-**Total: 15 VPs — 6 P0 / 9 P1 | Tool breakdown: Kani ×9, proptest ×3, integration ×3**
+**Total: 16 VPs — 6 P0 / 10 P1 | Tool breakdown: Kani ×9, proptest ×4, integration ×2, unit ×1**
+
+> **D-273 VP-015 tool-type fix (GAP-01/2026-08-26):** VP-015 tool corrected from 'integration' to 'unit' — VP-015.md frontmatter is authoritative per CLAUDE.md rule 4 (VP file supersedes architecture doc).
 
 ## Provable Properties Catalog
 
@@ -670,6 +674,53 @@ Feasibility: HIGH. `ActionRisk` is a 4-variant enum; `check_risk_floor` is a pur
 State-space is trivially finite for Kani. Estimated proof time: < 1 min. See `VP-013.md`
 §Feasibility Assessment for the complete feasibility analysis.
 
+---
+
+**VP-015 — MCP Credential Redaction** (`mcp::sanitize`) `unit P1 Phase 3`
+
+Property: For all `text: &str` containing provider API key patterns (OpenAI `sk-*`, Anthropic
+`sk-ant-*`, generic 64+ char token), `redact_credentials(text)` returns a `Cow<str>` in which
+NONE of the original key values appear verbatim. Correct redaction marks are substituted in their
+place (BC-2.09.007 {INV-003} / DI-010).
+
+**Why unit test (not Kani):** `redact_credentials` operates on arbitrary `&str` input using regex
+pattern matching over a potentially unbounded alphabet. Kani symbolic execution over arbitrary
+strings is not tractable. The property is verified by parameterized unit tests with representative
+API key patterns drawn from the provider credential format specs, which provide deterministic
+coverage of all key format families.
+
+**Unit harness:** See `VP-015.md` §Proof Harness Skeleton for the complete harness.
+Tests cover OpenAI `sk-proj-*` and classic `sk-*` patterns, Anthropic `sk-ant-*`, and
+generic 64-char alpha-numeric token patterns.
+
+Feasibility: HIGH. Patterns are well-defined regular expressions; no I/O; no async;
+parameterized unit tests complete in < 1s. See `VP-015.md` §Feasibility Assessment.
+
+---
+
+**VP-016 — GraphAgentTool State-Isolation** (`mcp::graph_tool`) `proptest P1 Phase 3`
+
+Property: For any `GraphAgentTool` construction with an `extract_output` closure that selects a
+proper subset of fields from `GraphState S`, the `ToolOutput` returned by a successful invocation
+contains ONLY the JSON fields returned by `extract_output(&final_state)` — no checkpoint IDs,
+run IDs, intermediate node outputs, or internal graph metadata (ADR-029 §Decision 3
+{INV-001} / DI-010).
+
+**Why proptest (not Kani):** The STATE-ISOLATION property ranges over `serde_json::Value`, which is
+a recursive open data type. Kani cannot reason symbolically over unbounded JSON trees.
+`extract_output` is an arbitrary caller-supplied closure; Kani cannot reason symbolically over
+closure bodies in general. Proptest generates arbitrary `GraphState` instances with extra internal
+fields and verifies the structural containment property over a large sample (10k cases × < 1s each).
+
+**Proptest harness:** See `VP-016.md` §Proof Harness Skeleton for the complete harness.
+Harness function: `graph_agent_tool_state_isolation`. Strategy: `proptest_derive::Arbitrary` on
+`TestGraphState` with `output`, `internal_checkpoint_id`, `intermediate_message`, and
+`_internal_blob` fields. Assertion: `ToolOutput` contains exactly the fields selected by
+`extract_output`.
+
+Feasibility: HIGH. Structural containment check on JSON objects; no async; no I/O in harness.
+See `VP-016.md` §Feasibility Assessment for complete analysis.
+
 ## Test-Sufficient (No Kani)
 
 Modules where behavioral testing is the primary verification method:
@@ -710,6 +761,8 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.23 | 2026-08-26 | architect | E-code-correction | VP-016 BC anchor: {INV-001} corrected from stale {INV-STATE-ISOLATION} (stable BC-2.09.008 numeric anchor per product-owner). §Section Content narrative, Committed VP Obligations table, and VP-016 body all updated. v2.22 changelog row also corrected (same invariant tag). |
+| 2.22 | 2026-08-26 | architect | GAP-01/ADR-029 | (1) D-273 VP-015 tool-type fix: `integration` → `unit` in Committed VP Obligations table and body (VP-015.md frontmatter is authoritative per CLAUDE.md rule 4). (2) VP-016 added: proptest P1, Phase 3, `mcp::graph_tool`, pregolya-mcp, BC-2.09.008 {INV-001}, DI-010 (ADR-029 GAP-01 resolution). Committed VP Obligations table: add VP-016 row; update total 15→16 VPs, P1 9→10, proptest 3→4, integration 3→2, unit 0→1. Section Content narrative updated (fifteen→sixteen VPs; VP-016 desc added). VP body sections: add VP-015 body and VP-016 body to §Should Prove. input-hash updated to df54145 (hook-computed after v2.21 edits; BC-2.09.008 added to inputs list). |
 | 2.21 | 2026-08-26 | architect | architect-reconcile-burst | (1) VP-006 3-arm scope extension (v1.9): §VP-006 updated to document all 3 injection arms; added Arm 2 formal statement (few-shot) and `injection_guard_fewshot_fail_closed` Kani harness sketch; TV-006 Red Gate noted. (2) VP-015 added to Committed VP Obligations table: `mcp::sanitize`, integration P1, Phase 3, BC-2.09.007 {INV-003}, DI-010. Section Content narrative updated (fourteen→fifteen VPs). Total: 15 VPs — 6 P0 / 9 P1, Kani 9 + proptest 3 + integration 3. input-hash refreshed (57a7c93 from hook-computed value; BC inputs added by Burst B propagation). |
 | 2.20 | 2026-08-21 | architect | INVESTIGATE-RECONCILE | VP-004 Module column: `mcp::adapter` → `mcp::exception` in Provable Properties Catalog table. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property targets `mcp::exception`. Arithmetic invariant unchanged: 14 VPs, 6 P0 / 8 P1, Kani 9 + proptest 3 + integration 2. |
 | 2.19 | 2026-08-17 | architect | BURST-313 / F-P204-02 | VP-014 formal statement corrected: stale `new()` argument type `IndexMap<String, Arc<dyn DynRunnable>>` replaced with canonical `Vec<(String, Arc<dyn DynRunnable>)>` (iterator-of-pairs). IndexMap is the INTERNAL container built by `new()`, not the argument type (ADR-026 §Decision 1 / BC-2.01.005 PC1). Formal invariant rewritten: quantifier uses Vec-of-pairs, extracts `key_set` from pairs via iterator map-collect, derives `N = key_set.len()`. Adds clarifying comment that IndexMap is internal. Key-completeness property preserved. Source of truth: VP-014.md §Changelog (burst-311/OBS-P202-B). No §Decision 1/2 split required — arch block does not attribute JoinSet/concurrent execution to §Decision 1. Corpus sweep: only this site was a stale new()-arg; interface-definitions.md §RunnableParallel struct definition, BC-2.01.005 §Construction Preconditions, ADR-026 §Decision 1 are struct-field/internal-container usages (correct). |
