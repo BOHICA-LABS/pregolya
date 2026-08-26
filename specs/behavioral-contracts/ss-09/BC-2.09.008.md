@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "1.2"
+version: "1.3"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -17,13 +17,14 @@ timestamp: 2026-08-26T00:00:00Z
 changelog:
   - "1.0 (GAP-01/ADR-029/2026-08-26): Initial — StateGraph-as-MCP-Tool wrapping contract; GraphAgentTool; mcp::graph_tool module in pregolya-mcp; inputSchema derivation via schemars; STATE-ISOLATION invariant {INV-001} (VP-016 proptest P1 proof target); fail-closed DenyInterrupts default; ForceApproveHooks explicit opt-in; E-MCP-010 GraphAgentInterruptDenied (ADR-029 §Decision 5; note: ADR-029 body incorrectly referenced E-MCP-006 — that code is taken by McpContentUnsupported; PO-authoritative mint is E-MCP-010). Human-approved v1 scope addition 2026-08-26 (GAP-01/HS-C-001)."
   - "1.1 (ADR-029-sec-hardening/SEC-006/007/008/005/001/2026-08-26): Security hardening per ADR-029 §Decision 3/4/5. SEC-007: {PC-006} rewritten — ForceApproveHooks overrides ONLY PreToolDecision::PendingHumanApproval (subject to {INV-004} ActionRisk check); PreToolDecision::Deny and other decision variants pass through unchanged; ForceApproveHooks does not override security-based Deny decisions. SEC-006: {INV-004} body replaced — BoundaryApprovalHook enforces read-only restriction at runtime via ActionRisk check; PendingHumanApproval overridden to Approve only when action_risk < ActionRisk::Medium; otherwise Deny + CRITICAL log at mcp.graph_tool.force_approve_write_blocked + E-MCP-011 ForceApproveWriteBlocked; EC-009 and TV-008 added. SEC-005: {INV-001} extended — STATE-ISOLATION guarantee covers error paths; two unconditional sanitization passes applied to isError:true responses (redact_credentials + sanitize_internal_ids UUID v4 removal); node implementations must exclude internal IDs at authoring site; TV-009 added. SEC-001: {INV-005} added — extract_output closure must not select credential-bearing fields; framework does not sanitize success-path extract_output result; caller obligation per DI-010; TV-010 added. SEC-008: EC-010 added — extract_output panic caught via UnwindSafe boundary; static 'internal error' response; server continues serving; TV-011 added."
-  - "1.2 (ADR-029-v1.3/F-057-01/F-057-02/F-057-05/2026-08-26): Round-2 security fixes per ADR-029 §Decision-1/§Decision-4 architect adjudication. F-057-01 ({INV-004}): ActionRisk gate is now fail-closed on None — preview.action_risk (Option<ActionRisk> per BC-2.05.007 {PRE-003}) is None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011; Some(r < Medium) → Approve. EC-009 heading updated to cover both None and Some(High) cases; TV-012 added for the None/undeclared path; note that both None and Some(High) must be tested. F-057-01 ({PC-006}): None case appended — None (undeclared) fails closed to Deny identically to Some(>= Medium), consistent with BC-2.05.006 EC-004/{INV-002}. F-057-02 ({PC-005}): BoundaryApprovalHook::Deny sub-bullet corrected — graph CONTINUES executing after Deny; if valid terminal reached, {PC-004} applies (Ok); if error terminal reached, Err carries graph's OWN error (NOT E-MCP-010); closing sentence 'In both cases invoke_dyn returns Err(E-MCP-010)' removed. F-057-02 ({INV-002}): binary interrupt invariant scoped to node-level interrupt() parking (RunStatus::Interrupted) only; BoundaryApprovalHook::Deny path explicitly excluded (graph continues to own terminal). EC-005 is the authority for the Deny-path behavior and was already correct — {PC-005} and {INV-002} reconciled to match EC-005. F-057-05: §Story Anchor set to S-2.11 (sibling BCs BC-2.09.006/007 both anchor S-2.11; S-2.11 covers BC-2.09.008)."
+  - "1.2 (ADR-029-v1.3/F-057-01/F-057-02/F-057-05/2026-08-26): Round-2 security fixes per ADR-029 §Decision 1, §Decision 4 architect adjudication. F-057-01 ({INV-004}): ActionRisk gate is now fail-closed on None — preview.action_risk (Option<ActionRisk> per BC-2.05.007 {PRE-003}) is None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011; Some(r < Medium) → Approve. EC-009 heading updated to cover both None and Some(High) cases; TV-012 added for the None/undeclared path; note that both None and Some(High) must be tested. F-057-01 ({PC-006}): None case appended — None (undeclared) fails closed to Deny identically to Some(>= Medium), consistent with BC-2.05.006 EC-004/{INV-002}. F-057-02 ({PC-005}): BoundaryApprovalHook::Deny sub-bullet corrected — graph CONTINUES executing after Deny; if valid terminal reached, {PC-004} applies (Ok); if error terminal reached, Err carries graph's OWN error (NOT E-MCP-010); closing sentence 'In both cases invoke_dyn returns Err(E-MCP-010)' removed. F-057-02 ({INV-002}): binary interrupt invariant scoped to node-level interrupt() parking (RunStatus::Interrupted) only; BoundaryApprovalHook::Deny path explicitly excluded (graph continues to own terminal). EC-005 is the authority for the Deny-path behavior and was already correct — {PC-005} and {INV-002} reconciled to match EC-005. F-057-05: §Story Anchor set to S-2.11 (sibling BCs BC-2.09.006/007 both anchor S-2.11; S-2.11 covers BC-2.09.008)."
+  - "1.3 (P2A-058/F-058-02/F-058-06/2026-08-26): F-058-02: E-MCP-010 ForceApproveHooks recovery clause dropped from {PC-005} and EC-004 message strings — node-level interrupt() fires E-MCP-010 under ForceApproveHooks identically to DenyInterrupts; ForceApproveHooks cannot resolve E-MCP-010 (interrupt() parking is orthogonal to tool approval policy); corrected remedy: restructure the graph so it does not call interrupt() during a synchronous tools/call invocation. F-058-06 (records): changelog v1.2 citation corrected from §Decision-1/§Decision-4 to §Decision 1, §Decision 4 per ADR-022 §Decision 5 citation conventions."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "552a3c7"
+input-hash: "1b83a93"
 extracted_from: null
 modified: []
 deprecated: null
@@ -97,8 +98,8 @@ overrides `PreToolCallHook` approval decisions only.
    - **Node-level `interrupt()`:** `GraphRunner::run` detects `RunStatus::Interrupted` and
      returns `Err(PregolyaError { code: "E-MCP-010", category: EXEC, message: "graph agent
      tool invocation interrupted at MCP boundary: HITL approval not supported for synchronous
-     tools/call; configure the graph to not interrupt, or register with
-     GraphToolApprovalPolicy::ForceApproveHooks if read-only", retry_hint: Never, .. })`.
+     tools/call; restructure the graph so it does not call interrupt() during a synchronous
+     tools/call invocation", retry_hint: Never, .. })`.
      The interrupted run is NOT persisted to durable checkpoint.
    - **`PreToolCallHook::PendingHumanApproval`:** `BoundaryApprovalHook` converts
      `PendingHumanApproval` → `Deny`; the tool is not invoked; the graph CONTINUES executing.
@@ -211,8 +212,8 @@ DenyInterrupts` (default, constructed via `GraphAgentTool::from_graph` without `
 **Expected behavior:** `GraphRunner::run` detects `RunStatus::Interrupted`;
 returns `Err(PregolyaError { code: "E-MCP-010", category: EXEC, message: "graph agent tool
 invocation interrupted at MCP boundary: HITL approval not supported for synchronous
-tools/call; configure the graph to not interrupt, or register with
-GraphToolApprovalPolicy::ForceApproveHooks if read-only", retry_hint: Never, .. })`.
+tools/call; restructure the graph so it does not call interrupt() during a synchronous
+tools/call invocation", retry_hint: Never, .. })`.
 The interrupted run is NOT persisted to durable checkpoint. `mcp::server` surfaces as
 `isError: true`. Credential redaction applies per {INV-003}. {INV-002} holds.
 

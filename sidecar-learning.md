@@ -887,3 +887,10 @@ ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.
 **BC-INDEX Form A body-changelog gap lesson:** The body changelog table (in `## Changelog` section) can diverge from the frontmatter Form A `changelog:` YAML list. Both must be updated in the same burst. In the D-276 burst, the frontmatter entry for v3.72 was added but the body changelog row for v3.72 was not (caught by P2A-057 consistency LOW). Protocol: when adding a Form A frontmatter changelog entry, immediately add the corresponding body changelog row in the same edit pass.
 
 **SEC-attribution correction lesson:** When a security-reviewer pass closes multiple findings across multiple BCs, the state-manager must verify the frontmatter attribution correctly maps each SEC finding to the specific BC that was changed, not just the BC cluster. The D-276 burst had BC-2.09.007 and BC-2.09.008 credits swapped in the BC-INDEX 3.72 frontmatter entry (caught by P2A-057 consistency LOW). Protocol: cross-check each `- vX.Y (date): ... SEC-NNN (clause)` attribution against the actual BC file's v history before committing.
+- Session ended at 2026-08-26T19:35:06Z (awaiting /session-review)
+- Session ended at 2026-08-26T19:39:47Z (awaiting /session-review)
+- Session ended at 2026-08-26T19:41:32Z (awaiting /session-review)
+- Session ended at 2026-08-26T19:45:27Z (awaiting /session-review)
+- Session ended at 2026-08-26T19:53:31Z (awaiting /session-review)
+- Session ended at 2026-08-26T19:53:57Z (awaiting /session-review)
+- Session ended at 2026-08-26T19:56:31Z (awaiting /session-review)

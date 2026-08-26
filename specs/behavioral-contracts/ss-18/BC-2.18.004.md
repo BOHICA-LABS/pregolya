@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.16"
+version: "1.17"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -38,6 +38,7 @@ changelog:
   - "1.14 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
   - "1.15 (B-SS15-18-hardening/2026-08-26): HIGH SECURITY gap from Phase-2 bc-completeness-scan (D-270, burst B). {PC-005} extended to explicitly cover TemplateInput::FewShotExamples as the 3rd untrusted arm: if any (iv, ov) pair in a FewShotExamples list has an Untrusted component in a TrustRequired slot, E-TMPL-001 is raised fail-closed (same code/category as Scalar and Messages arms). TV-006 (Red Gate) added for FewShotExamples injection arm. VP-006 formal invariant already covers all 3 arms (burst-279 v1.7 added FewShotExamples to the formal invariant and harness); VP-006.md updated to reference PC-005 extended FewShotExamples coverage and TV-006 in §Source Contract."
   - "1.16 (B-SS18-sec-adjudication/ADR-029-SEC-003-SEC-004/2026-08-26): (1) SEC-003 — TV-007 (Red Gate) added: 4-pair FewShotExamples where middle pair (index 1 iv) is Untrusted and pairs 0/2/3 are Trusted; guard fires fail-closed on middle pair; must compile-and-fail before check_fewshot_trust is implemented (Red Gate parity with TV-006); references VP-006-B (proptest multi-pair coverage). (2) SEC-004 — {INV-006} wording replaced: scoped to check_fewshot_trust wildcard arm; states VP-006 formally covers the three current TrustLevel variants and that adding a new variant requires re-running cargo kani (Kani proof does not auto-extend to future variants)."
+  - "1.17 (P2A-058/F-058-03/2026-08-26): VP-006-B registered in §Verification Properties table and §VP Anchors — proptest; multi-pair FewShot fail-closed; harness_fn injection_guard_multipair_fewshot_fail_closed; anchored to {PC-005} (FewShotExamples 3rd arm). VP-INDEX registers VP-006-B → BC-2.18.004 {PC-005}."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -185,6 +186,7 @@ enforcement of that invariant.
 |-------|----------|-------------|
 | VP-2.18.004-A (VP-006 candidate) | For all `ChatPromptTemplate` instances and all var maps, if any TrustRequired slot receives a variable with `is_untrusted() == true`, `format_messages` returns `Err(E-TMPL-001)` — no code path produces `Ok(PromptValue)` in this case | unit test (pure-core) + Kani VP-006 formal proof: prove the negation is unreachable |
 | VP-2.18.004-B | The injection_guard check fires **before** any message is added to the partial render buffer — no partial `PromptValue` is observable | unit test — verify no PromptValue is produced on injection attempt |
+| VP-006-B | For all `FewShotExamples` lists with multiple `(iv, ov)` pairs, if any pair at any index has an `Untrusted` component in a `TrustRequired` slot (including middle and last positions), `format_messages` returns `Err(E-TMPL-001)` fail-closed — no `Ok(PromptValue)` escapes | proptest (`injection_guard_multipair_fewshot_fail_closed`) — generate arbitrary multi-pair `FewShotExamples` lists with `Untrusted` at varying Vec indexes; verify `Err(E-TMPL-001)` for all non-zero positions; anchored to {PC-005} 3rd arm (FewShotExamples) |
 
 ## Related BCs
 
@@ -211,6 +213,7 @@ S-2.05
 
 - VP-2.18.004-A (VP-006 assigned in VP-INDEX; VP-006.md exists)
 - VP-2.18.004-B
+- VP-006-B ({PC-005} multi-pair FewShotExamples fail-closed; proptest harness `injection_guard_multipair_fewshot_fail_closed`; registered in VP-INDEX)
 
 ## Traceability
 

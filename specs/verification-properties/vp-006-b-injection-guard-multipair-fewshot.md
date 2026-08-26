@@ -9,7 +9,7 @@ timestamp: 2026-08-26T00:00:00Z
 phase: 3
 inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.004.md
-input-hash: "a8c363d"
+input-hash: "f925d45"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.18.004
 bc_anchor: BC-2.18.004
@@ -38,8 +38,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.0"
+version: "1.1"
 changelog:
+  - "1.1 (P2A-058-F058-04/2026-08-26): F-058-04 MED — harness_fn confirmed as `injection_guard_multipair_fewshot_fail_closed` throughout (VP-INDEX §VP Catalog is source of truth per F-058-04 convergence check; file was authored with the canonical name; no rename required). No proof sketch changes; version bump records convergence confirmation."
   - "1.0 (B-SS18-sec-adjudication/ADR-029-SEC-003/2026-08-26): VP-006-B created — multi-pair FewShotExamples proptest complement to VP-006 Kani harness; covers any-pair-index-untrusted patterns including middle-pair-only scenarios (TV-007 Red Gate); anchors BC-2.18.004 {PC-005} 3rd arm; DI-014; harness_fn injection_guard_multipair_fewshot_fail_closed."
 ---
 

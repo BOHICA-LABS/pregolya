@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.8"
+version: "1.9"
 status: active
 producer: story-writer
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-26T12:00:00Z
 changelog:
+  - "1.9 (P2A-058-F058-01..06-SEC009/2026-08-26): S-2.11 v1.7 — F-058-02 MED E-MCP-010 recovery message corrected across AC-021 (BoundaryApprovalHook::Deny interrupt-parking scoping) and AC-026 (ForceApproveHooks cannot resolve E-MCP-010; correct resolution: restructure graph to avoid interrupt() in synchronous tools/call). AC count UNCHANGED 34. S-2.05 v1.6 — F-058-04 MED VP-006-B harness_fn injection_guard_multipair_fewshot_fail_closed confirmation recorded. AC count UNCHANGED 18. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.8 (P2A-057-round-2/2026-08-26): S-2.11 v1.6 — F-057-01 CRIT fail-closed fix (AC-030: None/undeclared → Deny+E-MCP-011; TV-012 None variant); F-057-02 HIGH Deny-path corrected (AC-021: BoundaryApprovalHook::Deny path scoped to interrupt-parking, graph owns terminal); F-057-04/05 ACs updated (AC-024 binary-interrupt scoped; §Story Anchor populated). AC count UNCHANGED 34. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.7 (B-SS18-SEC/B-SS09-SEC/ADR-029-v1.2/2026-08-26): S-2.11 v1.5 (+6 ACs; 28→34 ACs total; SEC-006/SEC-007 coverage: {INV-004} BoundaryApprovalHook+ForceApproveHooks, {PC-006} ForceApproveWriteBlocked+E-MCP-011). S-2.05 v1.5 (+1 AC; 17→18 ACs total; SEC-003 coverage: VP-006-B proptest P1 Red-Gate TV-007 4-pair FewShot; verification_properties: [VP-006, VP-006-B]). VP-006-B row added to VP-to-Story Anchor Map. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.6 (GAP-01/ADR-029/2026-08-26): S-2.11 extended — BC-2.09.008 added (GraphAgentTool wrapping; mcp::graph_tool; Wave 2; v1.4; 5→8 pts); VP-016 proptest P1 seeded (BC-2.09.008 {INV-001}); VP-015/VP-016 rows added to VP-to-Story Anchor Map. BC coverage 133→134; VP Seed BCs 13→14. Story census UNCHANGED: 40 total (39 product + 1 maint)."

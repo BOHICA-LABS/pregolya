@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.006
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,6 +15,7 @@ changelog:
   - "1.6 (F-P171a-04+F-P171a-13/burst-273/2026-07-25): (1) F-P171a-04: ActionRisk is #[non_exhaustive]; §Preconditions-3, §Invariants 'closed exhaustive' claim, and VP-HITL-13 all incorrectly stated no-wildcard-arm requirement. CLAUDE.md mandates wildcard arm for all cross-crate #[non_exhaustive] matches. Fixed: PC-3 updated to note #[non_exhaustive] + cross-crate wildcard arm requirement; Invariants updated to #[non_exhaustive] framing + wildcard-arm-fails-closed-to-High policy; VP-HITL-13 updated to verify wildcard arm IS present (compile check). (2) F-P171a-13: Module Traceability row missing pregolya-core (ActionRisk source per F-P170-06 adjudication). Added: 'pregolya-core (ActionRisk enum) / pregolya-graph (RiskGatePolicy, policy eval) / pregolya-server (resume endpoint)'."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (P2A-058/SEC-009/2026-08-26): Architecture Anchor for `pregolya-core/src/action_risk.rs` extended with PartialOrd/Ord ordering note (SEC-009 LOW): ActionRisk MUST derive PartialOrd and Ord with variants declared in ascending risk order (ReadOnly < Low < Medium < High) so that inequality comparisons such as `r >= ActionRisk::Medium` used in downstream policy gates are well-defined."
 origin: greenfield
 priority: P0
 subsystem: SS-05
@@ -35,7 +36,7 @@ inputs:
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "0f9a245"
+input-hash: "377a351"
 extracted_from: null
 modified: []
 deprecated: null
@@ -202,7 +203,7 @@ distributed clock source or accept ±process-clock-drift tolerances in the timeo
 
 ## Architecture Anchors
 
-- `pregolya-core/src/action_risk.rs` — `ActionRisk` enum (F-P170-06 adjudication: relocated from pregolya-graph::hitl to pregolya-core as core::action_risk; pregolya-graph::hitl re-exports it. File formerly known as `pregolya-graph/src/hitl/action_risk.rs` — renamed F-P27-06 from `risk_tier.rs`; now in pregolya-core.)
+- `pregolya-core/src/action_risk.rs` — `ActionRisk` enum (F-P170-06 adjudication: relocated from pregolya-graph::hitl to pregolya-core as core::action_risk; pregolya-graph::hitl re-exports it. File formerly known as `pregolya-graph/src/hitl/action_risk.rs` — renamed F-P27-06 from `risk_tier.rs`; now in pregolya-core.) `ActionRisk` MUST derive `PartialOrd` and `Ord` with variants declared in ascending risk order (`ReadOnly < Low < Medium < High`) so that inequality comparisons such as `r >= ActionRisk::Medium` used in downstream policy gates (e.g., BC-2.09.008 {INV-004} BoundaryApprovalHook ActionRisk check) are well-defined.
 - `pregolya-graph/src/hitl/policy.rs` — `ApproverRole`, `RiskGatePolicy`, `HitlInterruptPayload`, role-check logic, auto-approve evaluation
 - `pregolya-server/src/routes/runs.rs` — `POST /threads/{thread_id}/runs/{run_id}/resume` with role-credential validation
 

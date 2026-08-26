@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.05
 epic_id: E-18
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "2cf3cce"
+input-hash: "f146d86"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
@@ -262,7 +262,7 @@ Verified by `test_BC_2_18_004_multipair_fewshot_middle_pair_untrusted_raises_e_t
 7. [ ] Register E-TMPL-001 (`Component::Tmpl, Category::Security, RetryHint::Never`) in error taxonomy
 8. [ ] Verify E-TMPL-002 (`Component::Tmpl, Category::Val, RetryHint::Never`) is registered (from S-2.04)
 9. [ ] Create `pregolya-prompts/src/proofs/injection_guard.rs` — VP-006 Kani harness stub for Phase 6 formal hardening
-10. [ ] Create `pregolya-prompts/tests/injection_guard_multipair.rs` — VP-006-B proptest harness stub; AC-018 Red Gate (`injection_guard_multipair_middle_untrusted`) must FAIL before `check_fewshot_trust` is implemented
+10. [ ] Create `pregolya-prompts/tests/injection_guard_multipair.rs` — VP-006-B proptest harness stub; AC-018 Red Gate (`injection_guard_multipair_fewshot_fail_closed`) must FAIL before `check_fewshot_trust` is implemented
 11. [ ] Create compile-fail test `tests/external/trust-level-no-ord/` asserting `TrustLevel` does NOT implement `Ord`
 12. [ ] Run `cargo nextest run -p pregolya-prompts` — all tests pass
 
@@ -330,4 +330,5 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 - "1.3 (P2A-049 F-049-01/2026-08-25): body BC-table title cells synced verbatim to canonical BC H1 — BC-2.18.002, BC-2.18.004, BC-2.18.005; removed stale 'TrustLevel Severity Ordering' paraphrase (superseded by binary is_untrusted model per D-243/P2A-035) and non-H1 '(Red Gate)' enrichments; sibling S-2.04 pattern matched; input-hash updated to a6270ea (pre-existing drift resolved)"
 - "1.4 (SW-4/BC-completeness/2026-08-26): BC-2.18.004 propagation — AC-017 trace updated to PC-005+TV-006; test name normalized to test_BC_2_18_004_fewshot_examples_untrusted_in_trust_required_slot_raises_e_tmpl_001; VP-006 note updated to name all 3 arms explicitly; Architecture Compliance Rules source updated to PC-005+TV-006; input-hash updated fcf4822."
 - "1.5 (B-SS18-sec-adjudication/ADR-029-SEC-003-SEC-004/2026-08-26): SEC-003 — AC-018 added (Red Gate TV-007: 4-pair FewShotExamples, middle pair index 1 iv Untrusted, pairs 0/2/3 Trusted; compile-and-fail before check_fewshot_trust; VP-006-B proptest injection_guard_multipair_fewshot_fail_closed referenced; tasks renumbered 10-12; File Structure row added for injection_guard_multipair.rs; AC-counts updated in Tasks and Architecture Compliance Rules). SEC-004 — AC-009 trace updated to stable {INV-006} tag; body scoped to check_fewshot_trust wildcard arm per BC-2.18.004 {INV-006} wording (wording update; trace live). VP-006-B added to verification_properties frontmatter; input-hash updated 2cf3cce (BC-2.18.004 drift resolved)."
+- "1.6 (F-058-04/2026-08-26): Task 10: VP-006-B proptest harness fn corrected — renamed `injection_guard_multipair_middle_untrusted` to canonical `injection_guard_multipair_fewshot_fail_closed` per VP-INDEX source of truth. AC-018 body already cited the canonical name; only Task 10 text was incorrect. AC traces unchanged."
 

@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "1.4 (P2A-058/2026-08-26): F-058-02 MED — E-MCP-010 message template remedy corrected in §Decision 5: dropped 'or register with GraphToolApprovalPolicy::ForceApproveHooks if read-only' clause (ForceApproveHooks cannot resolve E-MCP-010; node-level interrupt() causes RunStatus::Interrupted regardless of approval policy; the hook path and the node interrupt path are independent); corrected remedy: 'restructure the graph so it does not call interrupt() during a synchronous tools/call invocation.' RetryHint rationale in §Decision 5 updated to remove ForceApproveHooks reference. F-058-05 LOW — E-MCP-011 message-template wording: two illustrative variant forms exist (table vs code sketch); illustrative-forms note added in §Decision 4 after E-MCP-011 table; error-taxonomy.md is the authoritative message source and supersedes any wording shown in this ADR."
   - "1.3 (P2A-057-adjudication/2026-08-26): F-057-01 CRITICAL — fail-open None fixed: preview.action_risk is Option<ActionRisk> (BC-2.05.007 {PRE-003}); the if/else check on action_risk was replaced with a match on Option<ActionRisk>; None (undeclared risk) now fails closed to Deny per BC-2.05.006 EC-004/{INV-002} — None no longer falls through to Approve. F-057-04 MED — type-name corrected in ForceApproveHooks code sketch: ToolPreview→ToolCallPreview (canonical type per BC-2.05.007 {PRE-003}). F-057-02 HIGH — E-MCP-010/E-MCP-011 path reconciliation: removed incorrect claim that 'E-MCP-011 fires before the outer E-MCP-010'; clarified in rationale, enum docs, and Error Routing Table that the two codes are distinct independently-surfacing paths: E-MCP-010 fires only when node-level interrupt() causes RunStatus::Interrupted (graph parks); E-MCP-011 is a diagnostic emitted by BoundaryApprovalHook on the ActionRisk block path (graph does NOT park; terminal propagated normally). Added BoundaryApprovalHook Deny row to Error Routing Table. Enum doc comments updated for both DenyInterrupts and ForceApproveHooks. E-MCP-011 message template updated to reflect None-or->=Medium condition."
   - "1.2 (SEC-review-adjudication/2026-08-26): SEC-007 — ForceApproveHooks BoundaryApprovalHook corrected to override ONLY PendingHumanApproval→Approve; Deny and all other decisions pass through UNCHANGED. SEC-006 — runtime ActionRisk enforcement added to ForceApproveHooks: BoundaryApprovalHook checks preview.action_risk before overriding; if >= ActionRisk::Medium returns Deny (CRITICAL log) instead of Approve; E-MCP-011 ForceApproveWriteBlocked specified for PO to mint. SEC-005 — error-path STATE-ISOLATION convention added to §Decision 3: node error messages must exclude checkpoint/run/thread IDs; sanitization pass applied before content[0].text. SEC-001 — explicit Decision 3 invariant: Tool implementations MUST NOT embed credential material in ToolOutput; framework does not sanitize success-path result_text (DI-010 binds callers, not framework). SEC-008 — panic contract firmed up in §Decision 5 Error Routing Table: extract_output panic caught by server-handler UnwindSafe boundary; static isError 'internal error' message; server continues serving."
   - "1.1 (E-code-correction/2026-08-26): Error code corrected to E-MCP-010 (GraphAgentInterruptDenied) — prior code was already taken by McpContentUnsupported (minted 2026-07-22); {INV-STATE-ISOLATION} tag corrected to {INV-001} (stable BC-2.09.008 numeric anchor). See §Changelog for full history."
@@ -363,6 +364,11 @@ impl PreToolCallHook for BoundaryApprovalHook {
 | Message template | `"ForceApproveHooks policy violation: tool '{tool_name}' has ActionRisk {action_risk} (None or >= Medium); ForceApproveHooks is only valid for graphs with declared ActionRisk < Medium for every tool. Reconfigure with DenyInterrupts or audit the tool set."` |
 | Minted by | ADR-029 §Decision 4 (architect recommendation); PO authoritative mint |
 
+> **Illustrative wording note (F-058-05):** The message template in the table above and the
+> `format!` string in the code sketch below are illustrative forms. `error-taxonomy.md` is
+> the authoritative message source for `E-MCP-011`; the taxonomy row supersedes any variant
+> wording shown in this ADR.
+
 **Rationale for `E-MCP-011`:** `E-MCP-011` is a structured diagnostic emitted (as a
 CRITICAL-level log entry and `Deny` reason) by `BoundaryApprovalHook` when the ActionRisk gate
 fires (`None` or `>= Medium`). The hook returns `Deny`; the tool is NOT invoked; the graph
@@ -414,7 +420,7 @@ immediately. No resume path exists for MCP-boundary-denied interrupts.
 | Category | `EXEC` |
 | Severity | `broken` |
 | RetryHint | `Never` |
-| Message template | `"graph agent tool invocation interrupted at MCP boundary: HITL approval not supported for synchronous tools/call; configure the graph to not interrupt, or register with GraphToolApprovalPolicy::ForceApproveHooks if read-only"` |
+| Message template | `"graph agent tool invocation interrupted at MCP boundary: HITL approval not supported for synchronous tools/call; restructure the graph so it does not call interrupt() during a synchronous tools/call invocation."` |
 | Minted by | ADR-029 (architect recommendation); PO authoritative mint |
 
 **Rationale for EXEC category:** D26 extended the category axis to 13 categories; EXEC is
@@ -423,8 +429,8 @@ This is an execution-lifecycle error, not a transport (TRANSPORT), credentials (
 validation (VAL) error.
 
 **Rationale for Never RetryHint:** A retry with identical arguments will produce the same
-interrupt. The caller must restructure the graph (remove interrupts or switch to
-`ForceApproveHooks`) — retrying the same invocation cannot succeed.
+interrupt. The caller must restructure the graph so it does not call interrupt() during a
+synchronous tools/call invocation — retrying the same invocation cannot succeed.
 
 ### Error Routing Table
 
@@ -566,6 +572,7 @@ PO must mint `E-MCP-010 GraphAgentInterruptDenied` in `error-taxonomy.md`. Full 
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.4 | 2026-08-26 | architect | P2A-058 | F-058-02 MED: E-MCP-010 message template remedy corrected in §Decision 5 — dropped "or register with GraphToolApprovalPolicy::ForceApproveHooks if read-only" clause (ForceApproveHooks cannot resolve E-MCP-010; node-level interrupt() causes RunStatus::Interrupted regardless of approval policy); corrected remedy text: "restructure the graph so it does not call interrupt() during a synchronous tools/call invocation." RetryHint rationale updated to remove ForceApproveHooks reference. F-058-05 LOW: E-MCP-011 message-template wording — two illustrative variant forms exist (table vs code sketch); illustrative-forms note added in §Decision 4 after E-MCP-011 table; error-taxonomy.md is the authoritative message source. |
 | 1.3 | 2026-08-26 | architect | P2A-057-adjudication | F-057-01 CRITICAL: fail-open None fixed — preview.action_risk is Option<ActionRisk>; replaced if/else with match on Option; None (undeclared) now fails closed to Deny per BC-2.05.006 EC-004/{INV-002}. F-057-04 MED: ToolPreview→ToolCallPreview in ForceApproveHooks code sketch (canonical type per BC-2.05.007 {PRE-003}). F-057-02 HIGH: removed incorrect claim that E-MCP-011 fires before E-MCP-010; clarified in rationale, enum docs, and Error Routing Table that the codes are distinct independently-surfacing paths: E-MCP-010 fires only when node-level interrupt() causes RunStatus::Interrupted (graph parks); E-MCP-011 is a diagnostic from BoundaryApprovalHook ActionRisk gate path (graph continues to terminal — NOT E-MCP-010). New BoundaryApprovalHook Deny row added to Error Routing Table. E-MCP-011 message template updated to reflect None-or->=Medium condition. |
 | 1.2 | 2026-08-26 | architect | SEC-review-adjudication | SEC-007: ForceApproveHooks BoundaryApprovalHook corrected to pass Deny and all non-PendingHumanApproval decisions through UNCHANGED; only PendingHumanApproval is overridden to Approve. SEC-006: runtime ActionRisk enforcement added — BoundaryApprovalHook checks preview.action_risk; ActionRisk >= Medium returns Deny (CRITICAL log) instead of Approve; E-MCP-011 ForceApproveWriteBlocked specified for PO. SEC-005: error-path STATE-ISOLATION convention added — node error messages must exclude checkpoint/run/thread IDs; sanitization pass applied before content[0].text. SEC-001: explicit invariant that Tool implementations MUST NOT embed credential material in ToolOutput; framework does not sanitize success-path result_text. SEC-008: extract_output panic contract firmed — caught by server-handler UnwindSafe boundary; static isError 'internal error' message; server continues serving. |
 | 1.1 | 2026-08-26 | architect | E-code-correction | Error code corrected throughout: E-MCP-010 (GraphAgentInterruptDenied) — prior code was already taken by McpContentUnsupported (minted 2026-07-22); all body, routing-table, enum-comment, and §Error Code occurrences updated. {INV-STATE-ISOLATION} invariant tag → {INV-001} (stable BC-2.09.008 numeric anchor per product-owner). |

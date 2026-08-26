@@ -1,7 +1,7 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.18"
+version: "1.19"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -9,6 +9,7 @@ phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.19 (P2A-058-F058-04/2026-08-26): VP-006-B harness_fn confirmed as `injection_guard_multipair_fewshot_fail_closed` per F-058-04 convergence check (VP-INDEX §VP Catalog is source of truth; file was authored with canonical name; no rename required). VP-006-B bumped to v1.1. No catalog row delta. VP census unchanged: total 17."
   - "1.18 (B-SS18-SEC/SEC-003/ADR-029-v1.2/2026-08-26): VP-006-B added — injection_guard Multi-Pair FewShotExamples Fail-Closed; proptest P1; phase 3; module prompts::injection_guard; crate pregolya-prompts; bc_anchor BC-2.18.004 {PC-005}; di_anchor DI-014; status draft; harness_fn injection_guard_multipair_fewshot_fail_closed; file vp-006-b-injection-guard-multipair-fewshot.md. Belt-and-suspenders for VP-006 Kani {PC-005} arm — covers arbitrary Vec length and any-pair-index-untrusted patterns (TV-007 Red Gate: 4-pair middle-pair-only-untrusted). Arithmetic: total 16→17 (P0 6 unchanged, P1 10→11); proptest 4→5. Status:draft 16→17."
   - "1.17 (GAP-01-reconcile/2026-08-26): VP-016 BC Anchor clause tag corrected {INV-STATE-ISOLATION} → {INV-001} (stable-tag form per ADR-027; {INV-001} is the canonical STATE-ISOLATION invariant tag in BC-2.09.008). Arithmetic invariant note updated total(15)→total(16), P1(9)→P1(10), proptest(3)→proptest(4) to match Summary table. No VP catalog row additions."
   - "1.16 (GAP-01/ADR-029/2026-08-26): VP-016 added — GraphAgentTool state-isolation proptest P1 (BC-2.09.008 {INV-STATE-ISOLATION}, mcp::graph_tool, pregolya-mcp, DI-010, harness graph_agent_tool_state_isolation). Arithmetic: total 15→16 (P0 6→6 unchanged, P1 9→10); proptest 3→4. architecture-doc VP-015 tool-type discrepancy (D-273) also fixed in same burst: verification-architecture.md + verification-coverage-matrix.md corrected from 'integration' to 'unit' for VP-015 (VP-015.md authoritative; CLAUDE.md rule 4)."
