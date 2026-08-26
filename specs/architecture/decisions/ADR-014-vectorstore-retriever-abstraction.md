@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.15"
+version: "1.17"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,8 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.17 (P2A-BC-scan/2026-08-25): Decision 7 — Canonical MMR formula, iteration protocol, empty-set convention, tie-break rule, and pool-exhaustion behavior added; makes VP-2.21.003-C monotone non-increasing property formally well-defined. Decision 8 — VectorStore::delete idempotency for nonexistent IDs mandated as Ok(()) across all trait implementations; removes 'implementation-defined' ambiguity from BC-2.21.001 EC-003. PO obligations added for both decisions."
+  - "1.16 (P2A-BC-scan/2026-08-25): (internal — placeholder for 1.17 burst; reserved)"
   - "1.15 (P2A-021/2026-08-21): VectorStore ingestion method rename — add_texts → add_documents throughout live body (code block, prose, Decision 5 guard text, Consequences, PO Obligations). Changelog entries grandfathered per records-lint policy. Sibling sweep (TD-VSDD-060): 7 live-body occurrences updated; 1 historical changelog entry grandfathered unchanged."
   - "1.14 (burst-293/F-P184-F02/2026-08-16): Fix two 'document_index carried as structured context field' occurrences that contradict Decision 5. (1) §Consequences E-VS-004 bullet: 'document_index carried as structured context field' → 'document_index interpolated into the message string via key=value per ADR-010 §Error-Construction Notation Canon'. (2) §PO Obligations E-VS-004 paragraph: same replacement, removing the stale 'gate #33 Form 3 convention' parenthetical. No other 'context field' residue found in live body (changelog entries grandfathered). D-134 sibling sweep: test-vectors.md 2.1 row has 'document_index context field' in a changelog entry — grandfathered. BC-2.21.002 and BC-INDEX changelog entries reference removed phantom field — grandfathered."
   - "1.13 (burst-290/F-180-phantom-citations/2026-08-16): Three phantom ADR §-citation fixes (live body only; changelog entries grandfathered). (1) §Decision 1 object-safety note (~line 124): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait` (real heading per ADR-005). (2) §Decision 5 zero-norm message form (~line 397): `ADR-010 §impl PregolyaError adjudication` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading). (3) §Source / Origin (~line 656): `ADR-005 §Object-Safety` → `ADR-005 §Object-Safety of the 5-Method CheckpointSaver Trait`."
@@ -596,6 +598,130 @@ error — `Vec<Document>` does not coerce to `GuardedDocuments`.
   modules are the norm per the `memory::write_guard` + `graph::provenance` pattern; the
   pure validation logic and effectful GuardrailHook dispatch are cleanly separated.)
 
+## Decision 7 — Canonical MMR Formula, Iteration Protocol, and Tie-Break
+
+This decision makes BC-2.21.003 VP-2.21.003-C's "monotonically non-increasing marginal
+relevance" property formally well-defined and implementable.
+
+### Canonical formula
+
+Standard Carbonell–Goldstein MMR selection. At iteration i+1 (S is the already-selected set):
+
+```
+next = argmax_{d ∈ C \ S} [ λ · cos(d.emb, q.emb) − (1−λ) · max_{d' ∈ S} cos(d.emb, d'.emb) ]
+```
+
+- `C` = candidate pool (the `fetch_k` documents returned by the initial similarity search)
+- `S` = selected set (grows from ∅ to size k across iterations)
+- `q.emb` = the query embedding
+- `cos(·,·)` = `vectorstores::similarity::cosine_similarity` (the same shared primitive used
+  by similarity search and by the zero-norm guard VP-009 — NOT recomputed separately in mmr)
+- `λ` = `lambda_mult` (caller-supplied, validated ∈ [0.0, 1.0] by `as_retriever`)
+
+**Empty-set convention:** `max_{d' ∈ ∅} cos(d, d') = 0.0`. At iteration 1 (S = ∅), this
+reduces to `argmax λ · cos(d.emb, q.emb)` — pure relevance ranking. This is the standard
+convention and is required for the monotone property proof.
+
+**Iteration:** repeat until `|S| = k` OR `C \ S = ∅` (candidate pool exhausted).
+
+### Tie-break rule
+
+When two or more candidates in `C \ S` achieve the same MMR score (f32 equality), select
+the candidate with the **lowest index in C** — i.e., the one that ranked highest in the
+initial fetch_k similarity sort. This is deterministic and biases toward relevance on ties.
+
+### Pool-exhaustion behavior
+
+If `|C| < k` (the VectorStore contains fewer than fetch_k distinct documents after
+initial retrieval), `max_marginal_relevance_search` returns the `|C|` documents selected
+so far — a partial result of length `|C|`. This is NOT an error: the store simply has fewer
+documents than the caller requested. The docstring MUST document this behavior.
+
+`fetch_k < k` at configuration time is rejected by `as_retriever` via `E-VS-003` (BC-2.20.003
+INV-2) — that validation is separate and occurs before any search runs.
+
+### Monotone non-increasing marginal relevance (VP-2.21.003-C)
+
+**Property definition:** Let score_i = the MMR score of the document selected at iteration i
+(the argmax value). Then: score_1 ≥ score_2 ≥ … ≥ score_k (weak non-increasing).
+
+**Proof sketch (by induction on i):**
+
+At iteration i+1, for any d ∈ C \ S_i:
+- `S_i = S_{i-1} ∪ {d_i}`, so `|S_i| = |S_{i-1}| + 1`
+- `max_{d' ∈ S_i} cos(d,d') ≥ max_{d' ∈ S_{i-1}} cos(d,d')` (adding one more term to a max never decreases it)
+- Therefore: `mmr_score(d, S_i) ≤ mmr_score(d, S_{i-1})` for all d ∈ C \ S_i
+
+Since every candidate's MMR score can only decrease (or stay the same) as S grows,
+the maximum achievable score at round i+1 is ≤ the maximum achieved at round i:
+
+```
+score_{i+1} = max_{d ∈ C \ S_i} mmr_score(d, S_i)
+            ≤ max_{d ∈ C \ S_{i-1}} mmr_score(d, S_{i-1})   [superset domain, non-increasing fn]
+            = score_i
+```
+
+This proof closes: the empty-set convention (Decision 7) plus the cosine-only similarity
+metric (no approximation) are necessary preconditions — floating-point noise that makes
+cosine values non-monotone across embeddings is the only residual. The proptest harness for
+VP-2.21.003-C must use `f32::to_bits`-exact equality for the score comparison (not epsilon-
+approximate) to probe the boundary.
+
+### Module
+
+Implementation lives in `vectorstores::mmr` (Pure Core). The cosine primitive is called
+from `vectorstores::similarity::cosine_similarity` — NOT inlined into `vectorstores::mmr`.
+The zero-norm guard (Decision 2 §Hardening note, VP-009) fires in `cosine_similarity` before
+any MMR score is computed; a zero-norm document in the candidate pool will cause
+`cosine_similarity` to return `Err(E-VS-001)`, which propagates as `Err` from
+`max_marginal_relevance_search` immediately. This is defense-in-depth: Decision 5 already
+prevents zero-norm documents from entering the store at write time.
+
+---
+
+## Decision 8 — `VectorStore::delete` Idempotency: Nonexistent IDs Return `Ok(())`
+
+### Problem
+
+`async fn delete(&self, ids: &[&str]) -> Result<(), PregolyaError>` is currently
+"implementation-defined" for nonexistent IDs (BC-2.21.001 EC-003). Polymorphic callers
+using `Arc<dyn VectorStore>` get no stable contract. A caller that retries a batch delete
+after a partial failure (e.g., crash between delete and acknowledgment) needs a predictable
+outcome without first checking ID existence.
+
+### Decision
+
+**Trait-level mandate:** `delete` is **idempotent** for nonexistent IDs. Deleting an ID
+that does not exist in the store MUST return `Ok(())`. This applies to:
+- The in-memory `MemVectorStore` (pregolya-vectorstores)
+- All community adapter implementations (pregolya-community)
+- Any future `VectorStore` implementation
+
+Rationale:
+1. **LangChain parity:** Python `VectorStore.delete` is idempotent by convention — the
+   reference corpus raises no error on absent IDs.
+2. **Retry safety:** callers that delete a set of IDs, then crash, then retry on restart
+   should not receive spurious errors for IDs already cleaned up.
+3. **Trait contract completeness:** `Arc<dyn VectorStore>` callers cannot rely on
+   implementation-specific behavior; the trait must specify the complete contract.
+
+**Rejected alternative:** `Err(E-VS-NNN NotFound)` on absent ID — creates unnecessary
+retry-suppression logic in every caller; violates the "delete is about achieving absent
+state, not about finding-and-removing" principle.
+
+### Enforcement
+
+- The in-memory backend must use `HashMap::remove`, which is already idempotent (returns
+  `None` on absent key; no error path).
+- Community adapters MUST document their compliance in the `impl` block doc comment.
+- The trait doc comment for `delete` MUST include: "Idempotent: deleting a nonexistent ID
+  returns `Ok(())`. Implementations MUST honor this contract."
+- VP covering this property: the test-writer adds a unit test `delete_nonexistent_is_ok`
+  to the in-memory backend test suite and marks it as the trait compliance gate. This is
+  not a Kani VP — it is a deterministic unit test.
+
+---
+
 ## Rationale
 
 `Retriever` in pregolya-core follows the same gravity principle as `Runnable` and
@@ -792,4 +918,30 @@ BC-2.21.004 v1.2 updated INV-3:
 - Empty filter (vacuously true, `filter.filters.is_empty()`) still delegates to
   `similarity_search` — this preserves EC-004 empty-filter semantics.
 - Remove the "lossy" description. The new behavior is fail-safe, not lossy.
+
+### BC-2.21.003 VP-2.21.003-C (Decision 7)
+
+BC-2.21.003 §Verification Properties entry for VP-2.21.003-C currently reads:
+"proptest — assert MMR results are ordered by marginal relevance at each step"
+
+Product-owner must update VP-2.21.003-C to cite the canonical definition from Decision 7
+§Monotone non-increasing marginal relevance. The precise definition to reference:
+
+> "score_i = the MMR score of the document selected at iteration i (the argmax value
+> under the canonical formula in ADR-014 Decision 7). Property: score_1 ≥ score_2 ≥ … ≥ score_k.
+> Proptest strategy: generate random non-zero embedding vectors; run `max_marginal_relevance_search`;
+> assert the sequence of per-round argmax MMR scores is weakly non-increasing."
+
+No new error code is required for Decision 7. VP-2.21.003-C remains a proptest P1 property.
+
+### BC-2.21.001 EC-003 (Decision 8)
+
+BC-2.21.001 EC-003 currently reads:
+"delete of a nonexistent ID: behavior is implementation-defined (Ok(()) or Err(...))"
+
+Product-owner must amend BC-2.21.001 EC-003 to:
+"delete of a nonexistent ID: returns `Ok(())`. Idempotent per ADR-014 Decision 8.
+All VectorStore implementations MUST honor this contract."
+
+No new error code is minted for Decision 8 — the correct outcome is `Ok(())`, not an error.
 

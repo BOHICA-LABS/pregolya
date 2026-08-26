@@ -2957,3 +2957,21 @@ pregolya Phase-2 story-decomposition, adversarial 3-CLEAN reconvergence, streak 
 pregolya Phase-2 story-decomposition, adversarial 3-CLEAN reconvergence, streak 1/3. ADR-027 stable-anchor migration M1→M4 COMPLETE (SEMANTIC-ANCHOR-DRIFT closed). NEXT ACTION: adversary P2A-053 on HEAD 917175c (need 2 more CLEAN-strict). HEADS: develop 644d1ad (clean, untouched); factory-artifacts = this commit. worktrees none; PRs none. Census 39/133/14/120. P2A-051 CLEAN(strict)=YES (streak 1/3). P2A-052 RECORDS-ONLY ALL CLOSED (D-267): VP-Anchors grammar gate added (verify-vp-anchors-grammar.sh; 16 blocking validators); streak PRESERVED 1/3. PENDING USER-APPROVED: dev-tooling v1 expansion D-255 AFTER Phase-2 convergence. GOVERNANCE: D-260 (S-7.01 maintenance waiver + canonical BC formats), ADR-027 §Scope Boundary (derived-prose ordinals OUT-of-scope). ENGINE ADVISORY: VALIDATE-COUNT-PROP-FP non-blocking. PENDING HUMAN: E013, R6, B1, TDIV-008. DECISION DELTA this session: D-252..D-267 (exhaustive).
 
 ### STATE: v5.80, timestamp 2026-08-25T18:13:00Z
+
+---
+
+## v5.81 checkpoint (archived 2026-08-25; replaced by v5.82 — content not captured by prior burst)
+
+### RESUME IN ONE BREATH
+(v5.81 content was not captured in session-checkpoints.md by the burst that wrote v5.82. See v5.82 below for context continuity.)
+
+### STATE: v5.81, timestamp 2026-08-25 (exact time not recorded)
+
+---
+
+## v5.82 checkpoint (archived 2026-08-25; replaced by v5.83)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 story-decomposition adversarial cascade CONVERGED 3/3 (D-269; 2026-08-25). 3-CLEAN streak: P2A-051 (ad23837) + P2A-053 (917175c) + P2A-055 (1b52855). Records-only micro-bursts P2A-052/054 streak-preserving. Fresh-context consistency audit GATE-READY (HEAD 1b52855): 133/133 BC + 14/14 VP + 16/16 DI; DAG acyclic+reciprocal; cross-index census triangulated (9 docs); DTU scope bounded; input-hash clean. Gate-audit records fixes applied this burst: sprint-state.yaml S-MAINT-001 added, BC-INDEX VP-Seed-BCs label disambiguated, BC-INDEX SS-range canonicalized. **STATUS: Phase-2 CONVERGED — AWAITING HUMAN APPROVAL GATE** (not yet PASSED). NEXT ACTION: human Phase-2 approval gate → on approval, Phase-3 TDD (wave priority pregolya-core → pregolya-graph → partners per D7). HEADS: develop 644d1ad (clean, untouched); factory-artifacts = this commit. worktrees none; PRs none. Census 39/133/14/120. GOVERNANCE: D-260 (S-7.01 maintenance waiver + canonical BC formats), ADR-027 §Scope Boundary (derived-prose ordinals OUT-of-scope, adversary-governed — future passes must NOT flag them). PENDING USER-APPROVED: dev-tooling v1 expansion D-255 (4 surfaces: CLI/Web-Dev-UI/eval-runner/trace-inspector) AFTER Phase-2 approval; ORDINAL-RESIDUE-GATE promote advisory→blocking once 0-stable. RECURRING PROCESS-GAP: background session-review agent leaves sidecar-learning.md dirty → trips wave-gate SHA-currency (hit 3x); quiesce it. ENGINE ADVISORY: VALIDATE-COUNT-PROP-FP — validate-count-propagation.sh mislabels "39 BCs labeled" M1 narrative as BC total; authoritative total 133 (both STATE.md + STORY-INDEX); do NOT re-flag; FP recurs on any STORY-INDEX/STATE.md edit (non-blocking; engine-owned). PENDING HUMAN: E013 default_branch→main, R6 namespace publish, B1 direnv, TDIV-008 engine path_allow. DECISION DELTA this session: D-252..D-269 (exhaustive).
+
+### STATE: v5.82, timestamp 2026-08-25T22:00:00Z (approximate)
