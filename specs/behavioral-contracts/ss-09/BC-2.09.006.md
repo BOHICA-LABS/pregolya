@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.006
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): LOW gap — malformed/unparseable JSON-RPC request handling: EC-006 (-32700 parse error) and EC-007 (-32600 invalid request) added with wire-protocol JSON-RPC response specification; TV-007 and TV-008 added. No E-code minted — JSON-RPC protocol error codes cited directly per Burst A reuse decision (error-taxonomy v1.58 coordination pass). ADR-027 stable clause anchors {EC-006}, {EC-007}."
   - "1.5 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
+  - "1.6 (round-5/F3/2026-08-26): F3 [MED] — {PC-002}: tool.input_schema() corrected to tool.schema() per DynTool::schema() canonical (interface-definitions.md DynTool trait and Tool trait; no behavioral change to MCP protocol semantics)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -71,7 +72,7 @@ This BC covers the advertisement path only; invocation is specified in BC-2.09.0
 2. {PC-002} On receiving a `tools/list` JSON-RPC request from any connected MCP client:
    - The server reads the current set of registered tools from `tool_registry`.
    - Each `Tool` is serialized to an MCP `ToolDefinition` object: `{ "name": tool.name(),
-     "description": tool.description(), "inputSchema": tool.input_schema() }`.
+     "description": tool.description(), "inputSchema": tool.schema() }`.
    - The server responds with `{ "tools": [<definitions>] }` as the JSON-RPC result.
 3. {PC-003} The tool list reflects the state of `tool_registry` at the time of the `tools/list`
    request. Tools registered after `McpServer::start` but before a `tools/list` request

@@ -1,6 +1,6 @@
 ---
 document_type: dependency-graph
-version: "1.0"
+version: "1.1"
 status: active
 producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
@@ -90,7 +90,7 @@ S-1.13 (SkillStore/WriteGuard)
 ```
 S-1.14 (StateGraph Nodes + Channels)
   depends_on: [S-1.04, S-1.01]
-  blocks: S-1.13, S-1.15, S-1.16, S-1.17, S-1.18, S-1.19
+  blocks: S-1.13, S-1.15, S-1.16, S-1.17, S-1.18, S-1.19, S-2.11
 
 S-1.15 (Conditional Edges + Send)
   depends_on: [S-1.14]
@@ -213,9 +213,23 @@ S-2.10 (MCP Client)
   blocks: S-2.11
 
 S-2.11 (MCP Server)
-  depends_on: [S-2.10]
+  depends_on: [S-2.10, S-1.14]
   blocks: [none in v1 stories]
 ```
+
+### Crate-Level Dependency Edges
+
+> Runtime crate dependencies introduced by story decisions that add cross-crate build edges.
+> Source-of-truth is the workspace `Cargo.toml` members list; this section tracks edge rationale.
+
+| From Crate | To Crate | Rationale | ADR / BC Source |
+|-----------|----------|-----------|----------------|
+| `pregolya-mcp` | `pregolya-graph` | `GraphAgentTool<S>` wraps `Arc<CompiledGraph<S>>` — introduced by BC-2.09.008 and formalized in ADR-029 §Consequences. The `mcp::graph_tool` module depends on `CompiledGraph<S>` and `GraphRunner` types from `pregolya-graph`. | ADR-029, BC-2.09.008 PC-001 |
+
+> **DAG-acyclicity confirmation:** Adding `pregolya-mcp → pregolya-graph` does not create a
+> cycle. `pregolya-graph` has no dependency on `pregolya-mcp` (one-directional). At the story
+> level, S-1.14 (Wave 1 batch 1d) is upstream of S-2.11 (Wave 2 batch 2d) — no cycle.
+> Topological sort assertion continues to hold: Graph is a DAG.
 
 ### Wave 6 — Formal Verification (E-22)
 
@@ -254,7 +268,7 @@ S-6.01 (Kani + cargo-fuzz)
 | 2a | S-2.01, S-2.04, S-2.06 | S-2.01 dep S-1.04+S-1.02; S-2.04 dep S-1.04+S-1.02; S-2.06 dep S-1.04 |
 | 2b | S-2.02, S-2.05, S-2.07, S-2.09 | S-2.02 dep S-1.19+S-1.04; S-2.05 dep S-2.04; S-2.07 dep S-2.06+S-1.07+S-1.06; S-2.09 dep S-2.06+S-1.02 |
 | 2c | S-2.03, S-2.08, S-2.10 | S-2.03 dep S-2.02+S-1.04+S-2.09; S-2.08 dep S-2.07; S-2.10 dep S-1.19+S-1.04+S-1.22 |
-| 2d | S-2.11 | Dep S-2.10 |
+| 2d | S-2.11 | Dep S-2.10 (binding, 2c) + S-1.14 (Wave-1 dep; satisfied before Wave 2 begins) |
 
 ### Wave 6
 
@@ -268,7 +282,7 @@ S-6.01 (Kani + cargo-fuzz)
 
 ### BC to Stories Matrix (abbreviated — full map in STORY-INDEX.md)
 
-> Full coverage: 133 BCs, 39 stories, 0 gaps.
+> Full coverage: 134 BCs, 39 stories, 0 gaps.
 
 | Subsystem | BC Range | Stories | Coverage |
 |-----------|----------|---------|---------|
@@ -280,7 +294,7 @@ S-6.01 (Kani + cargo-fuzz)
 | SS-06 Streaming | BC-2.06.001–006 | S-1.17, S-1.24 | Full |
 | SS-07 Splitters | BC-2.07.001–003 | S-1.08 | Full |
 | SS-08 Providers | BC-2.08.001–014 | S-1.07, S-2.06, S-2.07, S-2.08 | Full |
-| SS-09 MCP | BC-2.09.001–007 | S-2.10, S-2.11 | Full |
+| SS-09 MCP | BC-2.09.001–008 | S-2.10, S-2.11 | Full |
 | SS-10 Budget | BC-2.10.001–006 | S-1.18, S-1.25 | Full |
 | SS-11 Guardrail | BC-2.11.001–006 | S-1.19 | Full |
 | SS-12 Server | BC-2.12.001–007 | S-1.26, S-1.27 | Full |
@@ -314,6 +328,9 @@ S-6.01 (Kani + cargo-fuzz)
 | VP-012 | BC-2.10.005 | Kani | 6 | P1 | S-1.25 | S-6.01 |
 | VP-013 | BC-2.23.005 | Kani | 6 | P1 | S-1.22 | S-6.01 |
 | VP-014 | BC-2.01.005 + BC-2.01.006 | proptest | 3 | P1 | S-1.05 | S-6.01 |
+| VP-015 | BC-2.09.007 | unit | 3 | P1 | S-2.11 | — |
+| VP-016 | BC-2.09.008 | proptest | 3 | P1 | S-2.11 | — |
+| VP-006-B | BC-2.18.004 | proptest | 3 | P1 | S-2.05 | S-6.01 |
 
 ### NFR to Stories Matrix
 
@@ -392,3 +409,9 @@ S-6.01 (Kani + cargo-fuzz)
 | GAP-001 | L1 | BC-2.19.004 | P2 legacy namespace remap for OLD_CORE_NAMESPACES_MAPPING | Implemented in S-2.01 at P2 priority — lower urgency than P0/P1 BCs but v1 in-scope; resolution is implementation ordering, not deferral | S-2.01 Wave 2 |
 | GAP-002 | L3 | VP-001 through VP-013 (Kani) | Kani harness execution | Harnesses authored in story specs but compiled and verified in S-6.01 (Phase 6); formal verification requires all Wave 1+2 crates compiled first | S-6.01 Wave 6 |
 | GAP-003 | L3 | VP-004, VP-005 (integration) | MCP integration test against live server | Integration tests require MCP server running; exercised via in-process DTU-style mock server in S-2.10/2.11 unit tests; live-server tests tagged #[ignore] pending provisioned test environment per SID-1 | S-2.10, S-2.11 |
+
+---
+
+## Changelog
+
+- **1.1 (F1/round-5/2026-08-26):** (a) BC count updated 133 → 134 to reflect BC-2.09.008 addition. (b) SS-09 BC range updated BC-2.09.001–007 → BC-2.09.001–008. (c) VP-to-Stories Matrix extended: VP-015 (BC-2.09.007 / unit / S-2.11), VP-016 (BC-2.09.008 / proptest / S-2.11), VP-006-B (BC-2.18.004 / Kani / S-2.05) added. (d) Crate-Level Dependency Edges section added: `pregolya-mcp → pregolya-graph` (ADR-029 / BC-2.09.008 PC-001; GraphAgentTool wraps Arc<CompiledGraph<S>>). S-1.14 added as upstream of S-2.11 (S-2.11 depends_on updated to [S-2.10, S-1.14]; S-1.14 blocks updated to include S-2.11). Topological sort batch 2d rationale updated; DAG-acyclicity confirmed (S-1.14 Wave-1 upstream of S-2.11 Wave-2 — no cycle).

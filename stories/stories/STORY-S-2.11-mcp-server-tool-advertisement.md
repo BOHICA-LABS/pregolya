@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.7"
+version: "1.8"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,10 +14,10 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "d545dd4"
+input-hash: "96e5d78"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
-depends_on: [S-2.10]
+depends_on: [S-2.10, S-1.14]
 blocks: []
 behavioral_contracts: [BC-2.09.006, BC-2.09.007, BC-2.09.008]
 verification_properties: [VP-015, VP-016]
@@ -39,6 +39,7 @@ changelog:
   - "1.5 (BC-2.09.008-v1.1/BC-2.09.007-v1.9/ADR-029-v1.2/SEC-001/005/006/007/008/2026-08-26): Security hardening propagation. AC-022 corrected: ForceApproveHooks overrides ONLY PendingHumanApproval (not ALL decisions); Deny passthrough per BC-2.09.008 {PC-006}. AC-029: {PC-006} Deny passthrough (SEC-007). AC-030: {INV-004}/EC-009 ActionRisk block — action_risk>=Medium emits E-MCP-011 ForceApproveWriteBlocked+CRITICAL log (SEC-006). AC-031: {INV-001}/TV-009 error-path UUID sanitization — sanitize_internal_ids chained after redact_credentials on isError paths (SEC-005). AC-032: {INV-005}/TV-010 extract_output credential opacity — success path not framework-sanitized; DI-010 caller obligation (SEC-001). AC-033: EC-010/TV-011 extract_output panic — UnwindSafe catch yields static 'internal error'; server continues (SEC-008). AC-034: BC-2.09.007 {PC-002}/TV-009 success-path credential boundary — error paths only sanitized by framework (SEC-001). Frontmatter changelog reordered ascending. sanitize.rs extended with sanitize_internal_ids. sanitize.rs File Structure entry updated."
   - "1.6 (F-057-01/F-057-02/OBS/2026-08-26): Round-2 BC-2.09.008 security corrections. AC-030: ActionRisk gate extended — None (un-annotated, fail-closed per {INV-004}) added alongside Some(>=Medium); TV-012 (None path) and TV-008 (Some(High) path) cited; second test test_BC_2_09_008_force_approve_hooks_action_risk_none_fails_closed_emits_e_mcp_011() added. AC-021: BoundaryApprovalHook::Deny path corrected — graph CONTINUES to own terminal; valid terminal → Ok({PC-004}); error terminal → graph own Err (NOT E-MCP-010); E-MCP-010 scoped to node-level interrupt() parking only; test renamed to test_BC_2_09_008_pending_approval_under_deny_continues_to_terminal(). AC-024: Binary-interrupt invariant scoped to node-level interrupt() parking (RunStatus::Interrupted) only; Deny path explicitly excluded (graph continues to own terminal). OBS: all BC-2.09.008 and BC-2.09.007 AC heading traces normalized from §{CLAUSE} to plain CLAUSE form consistent with sibling BC-2.09.006 trace format; Task 33, EC-011, Arch Compliance Rules ActionRisk and binary-interrupt rows updated."
   - "1.7 (F-058-02/2026-08-26): AC-021 and AC-026: E-MCP-010 remedy text corrected — dropped ForceApproveHooks-recovery clause; message updated to 'restructure the graph so it does not call interrupt() during a synchronous tools/call invocation' per orchestrator mandate. AC traces unchanged."
+  - "1.8 (F3/round-5/2026-08-26): AC-003: `tool.input_schema()` corrected to `tool.schema()` — `schema()` is the canonical method name on `DynTool`; `input_schema()` is a field name, not a callable method. `depends_on` updated to [S-2.10, S-1.14] — S-1.14 (StateGraph Nodes + Channels) delivers `CompiledGraph<S>` required by `GraphAgentTool::from_graph`; BC-2.09.008 PRE-001 Arc<CompiledGraph<S>> precondition."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -73,7 +74,7 @@ Verified by `test_BC_2_09_006_bind_failure_returns_e_mcp_005()`.
 
 ### AC-003 (traces to BC-2.09.006 PC-002)
 On `tools/list` JSON-RPC request, the server serializes each registered `DynTool` to MCP
-`ToolDefinition` format: `{ "name": tool.name(), "description": tool.description(), "inputSchema": tool.input_schema() }`.
+`ToolDefinition` format: `{ "name": tool.name(), "description": tool.description(), "inputSchema": tool.schema() }`.
 Response is `{ "tools": [<definitions>] }`. Verified by
 `test_BC_2_09_006_tools_list_returns_all_registered_tools()`.
 
@@ -604,3 +605,4 @@ build MUST fail.
 - **1.5 (BC-2.09.008-v1.1 / BC-2.09.007-v1.9 / ADR-029-v1.2 / 2026-08-26):** Security hardening propagation (SEC-001/005/006/007/008). (1) AC-022 corrected: ForceApproveHooks overrides ONLY PendingHumanApproval (not ALL decisions); Deny passthrough per BC-2.09.008 {PC-006}. (2) AC-029 added: {PC-006} Deny-passthrough — PreToolDecision::Deny passes through unchanged under ForceApproveHooks (SEC-007). (3) AC-030 added: {INV-004}/EC-009 ActionRisk block — action_risk>=Medium emits E-MCP-011 ForceApproveWriteBlocked + CRITICAL log at mcp.graph_tool.force_approve_write_blocked (SEC-006). (4) AC-031 added: {INV-001}/TV-009 error-path UUID sanitization — sanitize_internal_ids chained after redact_credentials on isError paths (SEC-005). (5) AC-032 added: {INV-005}/TV-010 extract_output credential opacity — success path not framework-sanitized; DI-010 caller obligation (SEC-001). (6) AC-033 added: EC-010/TV-011 extract_output panic — UnwindSafe catch → static 'internal error'; server continues (SEC-008). (7) AC-034 added: BC-2.09.007 {PC-002}/TV-009 success-path credential boundary — framework sanitizes error paths only (SEC-001). (8) Edge Cases EC-011 (ActionRisk block) and EC-012 (extract_output panic) added. (9) Tasks 30–40 added (security hardening implementation sequence; Red Gate checks). (10) Arch Compliance Rules: existing ForceApproveHooks row corrected; 5 new rows added. (11) sanitize.rs File Structure entry extended with sanitize_internal_ids. (12) Token Budget updated. (13) Frontmatter changelog reordered to ascending order.
 - **1.6 (F-057-01 / F-057-02 / OBS / 2026-08-26):** Round-2 BC-2.09.008 security corrections propagated. (1) AC-030 (F-057-01): ActionRisk gate is now fail-closed on `None` — `preview.action_risk` is `None` (un-annotated tool, fail-closed per {INV-004}) OR `Some(r >= Medium)` → `Deny` + `E-MCP-011 ForceApproveWriteBlocked` + CRITICAL log; `None` fails closed identically to `Some(>=Medium)`; TV-012 cited for `None` path (TV-008 for `Some(High)` path); second test function `test_BC_2_09_008_force_approve_hooks_action_risk_none_fails_closed_emits_e_mcp_011()` added. (2) AC-021 (F-057-02): `BoundaryApprovalHook::Deny` path corrected — graph CONTINUES executing after Deny; valid terminal → `Ok(ToolOutput::Structured)` per {PC-004}; error terminal → graph's OWN `Err(PregolyaError)` (NOT `E-MCP-010`); `E-MCP-010` raised ONLY on node-level `interrupt()` parking (`RunStatus::Interrupted`); test renamed to `test_BC_2_09_008_pending_approval_under_deny_continues_to_terminal()`. (3) AC-024 (F-057-02): Binary-interrupt invariant scoped to node-level `interrupt()` PARKING only; `BoundaryApprovalHook::Deny` path explicitly excluded (graph continues to own terminal, NOT `E-MCP-010`); test clarified. (4) OBS: all BC-2.09.008 and BC-2.09.007 AC heading traces normalized from `§{CLAUSE}` to plain `CLAUSE` form consistent with sibling BC-2.09.006 trace format throughout; Task 33 updated for `None` case; EC-011 updated to cover both TV-012 (`None`) and TV-008 (`Some(High)`) cases; Arch Compliance Rules binary-interrupt and ActionRisk rows updated.
 - **1.7 (F-058-02 / 2026-08-26):** AC-021 and AC-026: E-MCP-010 remedy text corrected per orchestrator mandate — dropped ForceApproveHooks-recovery clause; message updated to `"restructure the graph so it does not call interrupt() during a synchronous tools/call invocation"`. AC traces (BC-2.09.008 PC-005 and EC-004) unchanged.
+- **1.8 (F3 / round-5 / 2026-08-26):** AC-003 corrected: `tool.input_schema()` → `tool.schema()`. `schema()` is the canonical method name on the `DynTool` trait; `input_schema` is a struct field name, not a callable method. Swept entire file — no other `input_schema()` method calls found. `depends_on` updated to `[S-2.10, S-1.14]`; S-1.14 (StateGraph Nodes + Channels) delivers `CompiledGraph<S>` required by `GraphAgentTool::from_graph` per BC-2.09.008 PRE-001 `Arc<CompiledGraph<S>>` precondition.

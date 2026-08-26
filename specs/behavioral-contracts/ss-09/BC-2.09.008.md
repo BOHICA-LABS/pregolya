@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "1.3"
+version: "1.4"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -19,12 +19,13 @@ changelog:
   - "1.1 (ADR-029-sec-hardening/SEC-006/007/008/005/001/2026-08-26): Security hardening per ADR-029 §Decision 3/4/5. SEC-007: {PC-006} rewritten — ForceApproveHooks overrides ONLY PreToolDecision::PendingHumanApproval (subject to {INV-004} ActionRisk check); PreToolDecision::Deny and other decision variants pass through unchanged; ForceApproveHooks does not override security-based Deny decisions. SEC-006: {INV-004} body replaced — BoundaryApprovalHook enforces read-only restriction at runtime via ActionRisk check; PendingHumanApproval overridden to Approve only when action_risk < ActionRisk::Medium; otherwise Deny + CRITICAL log at mcp.graph_tool.force_approve_write_blocked + E-MCP-011 ForceApproveWriteBlocked; EC-009 and TV-008 added. SEC-005: {INV-001} extended — STATE-ISOLATION guarantee covers error paths; two unconditional sanitization passes applied to isError:true responses (redact_credentials + sanitize_internal_ids UUID v4 removal); node implementations must exclude internal IDs at authoring site; TV-009 added. SEC-001: {INV-005} added — extract_output closure must not select credential-bearing fields; framework does not sanitize success-path extract_output result; caller obligation per DI-010; TV-010 added. SEC-008: EC-010 added — extract_output panic caught via UnwindSafe boundary; static 'internal error' response; server continues serving; TV-011 added."
   - "1.2 (ADR-029-v1.3/F-057-01/F-057-02/F-057-05/2026-08-26): Round-2 security fixes per ADR-029 §Decision 1, §Decision 4 architect adjudication. F-057-01 ({INV-004}): ActionRisk gate is now fail-closed on None — preview.action_risk (Option<ActionRisk> per BC-2.05.007 {PRE-003}) is None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011; Some(r < Medium) → Approve. EC-009 heading updated to cover both None and Some(High) cases; TV-012 added for the None/undeclared path; note that both None and Some(High) must be tested. F-057-01 ({PC-006}): None case appended — None (undeclared) fails closed to Deny identically to Some(>= Medium), consistent with BC-2.05.006 EC-004/{INV-002}. F-057-02 ({PC-005}): BoundaryApprovalHook::Deny sub-bullet corrected — graph CONTINUES executing after Deny; if valid terminal reached, {PC-004} applies (Ok); if error terminal reached, Err carries graph's OWN error (NOT E-MCP-010); closing sentence 'In both cases invoke_dyn returns Err(E-MCP-010)' removed. F-057-02 ({INV-002}): binary interrupt invariant scoped to node-level interrupt() parking (RunStatus::Interrupted) only; BoundaryApprovalHook::Deny path explicitly excluded (graph continues to own terminal). EC-005 is the authority for the Deny-path behavior and was already correct — {PC-005} and {INV-002} reconciled to match EC-005. F-057-05: §Story Anchor set to S-2.11 (sibling BCs BC-2.09.006/007 both anchor S-2.11; S-2.11 covers BC-2.09.008)."
   - "1.3 (P2A-058/F-058-02/F-058-06/2026-08-26): F-058-02: E-MCP-010 ForceApproveHooks recovery clause dropped from {PC-005} and EC-004 message strings — node-level interrupt() fires E-MCP-010 under ForceApproveHooks identically to DenyInterrupts; ForceApproveHooks cannot resolve E-MCP-010 (interrupt() parking is orthogonal to tool approval policy); corrected remedy: restructure the graph so it does not call interrupt() during a synchronous tools/call invocation. F-058-06 (records): changelog v1.2 citation corrected from §Decision-1/§Decision-4 to §Decision 1, §Decision 4 per ADR-022 §Decision 5 citation conventions."
+  - "1.4 (round-5/F-P2A-061-02+LOW-schemars+LOW-citation/2026-08-26): F-P2A-061-02 [MED]: E-MCP-011 ForceApproveWriteBlocked added to Traceability Error Codes row ({INV-004}/EC-009 anchor). LOW (schemars): {PC-001} 'RootSchema' → 'schemars::Schema' (schemars 1.0 canonical; architect fixes ADR-029 separately). LOW (citation): {INV-004}, {PC-006}, EC-009 citations of 'BC-2.05.006 EC-004/{INV-002}' reworded corroborative — None→Deny behavior is fully specified by {INV-004}; BC-2.05.006 cited for fail-closed principle consistency only."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "1b83a93"
+input-hash: "e2d9009"
 extracted_from: null
 modified: []
 deprecated: null
@@ -72,7 +73,7 @@ overrides `PreToolCallHook` approval decisions only.
 
 1. {PC-001} `GraphAgentTool::from_graph(name, description, graph, extract_output)` constructs
    a `GraphAgentTool`. At construction time, `schemars::schema_for!(S)` is called to derive
-   the `RootSchema` for `S`. This schema is stored internally and returned by `DynTool::schema()`
+   the `schemars::Schema` for `S`. This schema is stored internally and returned by `DynTool::schema()`
    for advertisement in `tools/list` responses per BC-2.09.006 {PC-002}.
 2. {PC-002} The constructed `GraphAgentTool` implements `DynTool` (object-safe dispatch
    seam per ADR-005 §Adjacent Trait Object-Safety Adjudications) and may be registered in
@@ -115,7 +116,9 @@ overrides `PreToolCallHook` approval decisions only.
    `ForceApproveHooks` policy does NOT override node-level interrupt semantics. {INV-002}
    holds under `ForceApproveHooks`. `preview.action_risk` is `Option<ActionRisk>`; `None`
    (undeclared) fails closed to `Deny` identically to `Some(>= Medium)` — undeclared risk
-   requires the highest gate, consistent with BC-2.05.006 EC-004/{INV-002}.
+   requires the highest gate (consistent with the fail-closed principle in BC-2.05.006
+   EC-004/{INV-002}: absence/unknown risk is never treated as ReadOnly/Low; the None→Deny
+   behavior is fully specified by {INV-004}).
 
 ## Invariants
 
@@ -166,7 +169,9 @@ overrides `PreToolCallHook` approval decisions only.
   `ForceApproveHooks` policy's `BoundaryApprovalHook` enforces the read-only restriction
   at runtime. Before overriding `PendingHumanApproval` → `Approve`, the hook checks
   `preview.action_risk` (`Option<ActionRisk>` per BC-2.05.007 {PRE-003}). If
-  `preview.action_risk` is `None` (undeclared — fail-closed per BC-2.05.006 EC-004/{INV-002})
+  `preview.action_risk` is `None` (undeclared; consistent with the fail-closed principle in
+  BC-2.05.006 EC-004/{INV-002}: absence/unknown risk is never treated as ReadOnly/Low —
+  None→Deny behavior is fully specified by {INV-004})
   OR `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with a
   CRITICAL-level structured log at key `mcp.graph_tool.force_approve_write_blocked`) and
   emits `E-MCP-011 ForceApproveWriteBlocked`; the tool is NOT invoked. If
@@ -333,4 +338,4 @@ S-2.11
 | Wave | Wave 2 |
 | Test Types | I (integration), P (property-based: VP-016 proptest) |
 | Module | pregolya-mcp (`mcp::graph_tool`) |
-| Error Codes | E-MCP-010 GraphAgentInterruptDenied (EXEC, broken, Never) — minted by this BC per ADR-029 §Decision 5; note: ADR-029 body incorrectly referenced code number E-MCP-006 (already taken by McpContentUnsupported, minted burst-240); PO-authoritative mint is E-MCP-010 as the next available MCP namespace code |
+| Error Codes | E-MCP-010 GraphAgentInterruptDenied (EXEC, broken, Never) — minted by this BC per ADR-029 §Decision 5; note: ADR-029 body incorrectly referenced code number E-MCP-006 (already taken by McpContentUnsupported, minted burst-240); PO-authoritative mint is E-MCP-010 as the next available MCP namespace code. E-MCP-011 ForceApproveWriteBlocked (EXEC, broken, Never) — minted by this BC ({INV-004}/EC-009; anchor F-P2A-061-02): emitted by BoundaryApprovalHook under ForceApproveHooks policy when action_risk is None or >= ActionRisk::Medium; library-layer Err return, never direct HTTP terminal in v1 |

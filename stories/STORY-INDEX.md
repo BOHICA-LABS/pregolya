@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.9"
+version: "1.10"
 status: active
 producer: story-writer
-timestamp: 2026-08-26T12:00:00Z
+timestamp: 2026-08-26T16:00:00Z
 changelog:
+  - "1.10 (P2A-060/061/062-round-5/2026-08-26): SS-09 BC coverage header corrected (7 BCs) → (8 BCs) (body already listed BC-2.09.001–008; header lagged by 1). S-2.11 depends_on updated [S-2.10] → [S-2.10, S-1.14] (ADR-029 BC-2.09.008 PC-001 — GraphAgentTool wraps Arc<CompiledGraph<S>>; S-1.14 is StateGraph Node Definition, Wave-1 upstream; DAG-acyclicity confirmed: S-1.14 Wave-1 upstream of S-2.11 Wave-2, no cycle). S-2.11 v1.8 (on-disk per CHANGED FILES: P2A-060/061/062 schema()/input_schema() rename + E-MCP-011 Error-Codes row). Story census UNCHANGED: 40 total (39 product + 1 maint). AC counts UNCHANGED."
   - "1.9 (P2A-058-F058-01..06-SEC009/2026-08-26): S-2.11 v1.7 — F-058-02 MED E-MCP-010 recovery message corrected across AC-021 (BoundaryApprovalHook::Deny interrupt-parking scoping) and AC-026 (ForceApproveHooks cannot resolve E-MCP-010; correct resolution: restructure graph to avoid interrupt() in synchronous tools/call). AC count UNCHANGED 34. S-2.05 v1.6 — F-058-04 MED VP-006-B harness_fn injection_guard_multipair_fewshot_fail_closed confirmation recorded. AC count UNCHANGED 18. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.8 (P2A-057-round-2/2026-08-26): S-2.11 v1.6 — F-057-01 CRIT fail-closed fix (AC-030: None/undeclared → Deny+E-MCP-011; TV-012 None variant); F-057-02 HIGH Deny-path corrected (AC-021: BoundaryApprovalHook::Deny path scoped to interrupt-parking, graph owns terminal); F-057-04/05 ACs updated (AC-024 binary-interrupt scoped; §Story Anchor populated). AC count UNCHANGED 34. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.7 (B-SS18-SEC/B-SS09-SEC/ADR-029-v1.2/2026-08-26): S-2.11 v1.5 (+6 ACs; 28→34 ACs total; SEC-006/SEC-007 coverage: {INV-004} BoundaryApprovalHook+ForceApproveHooks, {PC-006} ForceApproveWriteBlocked+E-MCP-011). S-2.05 v1.5 (+1 AC; 17→18 ACs total; SEC-003 coverage: VP-006-B proptest P1 Red-Gate TV-007 4-pair FewShot; verification_properties: [VP-006, VP-006-B]). VP-006-B row added to VP-to-Story Anchor Map. Story census UNCHANGED: 40 total (39 product + 1 maint)."
@@ -152,7 +153,7 @@ input-hash: "69ed6f6"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-2.10 | MCP Client — Tool Discovery, Invocation Routing and Untrusted Ingress | BC-2.09.001, BC-2.09.002, BC-2.09.003, BC-2.09.004, BC-2.09.005 | SS-09 | pregolya-mcp | P1 | 8 | [S-1.19, S-1.04, S-1.22] | draft |
-| S-2.11 | MCP Server — Tool Advertisement and External Client Invocation | BC-2.09.006, BC-2.09.007, BC-2.09.008 | SS-09 | pregolya-mcp | P1 | 8 | [S-2.10] | draft |
+| S-2.11 | MCP Server — Tool Advertisement and External Client Invocation | BC-2.09.006, BC-2.09.007, BC-2.09.008 | SS-09 | pregolya-mcp | P1 | 8 | [S-2.10, S-1.14] | draft |
 
 ---
 
@@ -297,7 +298,7 @@ input-hash: "69ed6f6"
 | BC-2.08.013 | Pluggable Tool-Call Dialect Seam | S-2.08 | P1 |
 | BC-2.08.014 | Provider Failover Chain | S-2.08 | P1 |
 
-### SS-09 MCP Tool Adapter (7 BCs)
+### SS-09 MCP Tool Adapter (8 BCs)
 
 | BC ID | Title (abbreviated) | Story | Priority |
 |-------|---------------------|-------|---------|

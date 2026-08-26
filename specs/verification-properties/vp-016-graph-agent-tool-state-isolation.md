@@ -9,7 +9,7 @@ timestamp: 2026-08-26T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "c8731ff"
+input-hash: "90e3c45"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (P2A-062/2026-08-26): F-P2A-061-01 HIGH — §Proof Harness Skeleton rewritten to invoke the real production path (GraphAgentTool::invoke_dyn via MockGraphRunner test double) rather than a tautological local closure. Harness constructs GraphAgentTool over MockGraphRunner whose terminal state carries checkpoint_id/run_id/accumulated_messages beyond what extract_output selects; asserts returned ToolOutput contains ONLY extract_output-selected fields; any field leak FAILS the proptest. Follows VP-006-B pattern. §Proof Obligations: POL-31 live-violation obligation added (formal-verifier must confirm harness fails under injected-leak fixture at Phase 6). §Feasibility: Async concern row updated (harness calls invoke_dyn via tokio current-thread runtime). Input-hash refreshed to 90e3c45."
   - "1.1 (GAP-01/BC-2.09.008-authored/2026-08-26): BC-2.09.008 authored by PO. Named anchor {INV-STATE-ISOLATION} replaced with numeric ADR-027-compliant stable tag {INV-001} throughout (three occurrences: §Source Contract, §BC Traceability, and §Proof Obligations). BC-2.09.008 {INV-001} is the STATE-ISOLATION invariant. Input-hash refreshed."
   - "1.0 (GAP-01/ADR-029/2026-08-26): VP-016 created — STATE-ISOLATION invariant for GraphAgentTool; proptest P1 Phase 3; anchors BC-2.09.008 (PO to author); harness_fn `graph_agent_tool_state_isolation`; DI-010 Credential Opacity. Minted by architect per ADR-029 §Consequences."
 ---
@@ -116,104 +117,140 @@ fixed-signature function. Kani cannot reason symbolically over closure bodies in
 
 ## Proof Harness Skeleton
 
-Target file: `pregolya-mcp/src/graph_tool.rs` (or `pregolya-mcp/tests/state_isolation.rs`)
+Target file: `pregolya-mcp/tests/state_isolation.rs`
 
 Harness function: `graph_agent_tool_state_isolation`
+
+**FALSE-GREEN GUARD:** This harness calls `GraphAgentTool::invoke_dyn` (the real production
+path), NOT a locally-defined closure. `MockGraphRunner` returns a terminal `GraphState`
+carrying EXTRA fields (`checkpoint_id`, `run_id`, `accumulated_messages`) that `extract_output`
+does NOT select. If `invoke_dyn` leaks any of those fields into `ToolOutput`, the
+`prop_assert!` calls below will FAIL. A tautological harness that only tests a local closure
+would pass even if production code leaks state — this harness does not. Contrast: VP-006-B
+calls production `check_fewshot_trust` — this harness follows the same pattern for the
+STATE-ISOLATION boundary.
 
 ```rust
 // pregolya-mcp/tests/state_isolation.rs
 // VP-016 — graph_agent_tool_state_isolation harness
+//
+// Invariant: ToolOutput contains ONLY the fields returned by extract_output.
+// POL-31 OBLIGATION (Phase 6): formal-verifier must confirm this harness FAILS under
+// an injected-leak fixture — see §Proof Obligations.
 
-use pregolya_mcp::graph_tool::{GraphAgentTool, GraphToolApprovalPolicy};
+use pregolya_mcp::graph_tool::{GraphAgentTool, GraphRunner, GraphToolApprovalPolicy};
+use pregolya_core::tool::DynTool;
 use proptest::prelude::*;
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use std::sync::Arc;
 
-/// Minimal GraphState with an "output" field and several extra fields that
-/// must NOT appear in the extract_output result.
+/// GraphState carrying an externally-visible `output` field PLUS three internal fields
+/// that extract_output must NOT select. Any of the three leaking into ToolOutput is a
+/// STATE-ISOLATION violation ({INV-001}).
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, proptest_derive::Arbitrary)]
 struct TestGraphState {
-    /// The externally-visible output field.
+    /// The only field exposed to the MCP client.
     output: String,
-    /// Internal fields that must NOT appear in ToolOutput.
+    /// Internal fields that MUST NOT appear in ToolOutput.
     #[proptest(strategy = "any::<String>()")]
-    internal_checkpoint_id: String,
+    checkpoint_id: String,
     #[proptest(strategy = "any::<String>()")]
-    intermediate_message: String,
-    #[proptest(strategy = "proptest::collection::vec(any::<u8>(), 0..64)")]
-    _internal_blob: Vec<u8>,
+    run_id: String,
+    #[proptest(strategy = "proptest::collection::vec(any::<String>(), 0..4)")]
+    accumulated_messages: Vec<String>,
+}
+
+/// Test double — returns the full serialized TestGraphState as the runner output,
+/// including ALL internal fields. The extra fields simulate internal graph state that
+/// must be filtered by extract_output before reaching ToolOutput. If invoke_dyn bypasses
+/// extract_output, the extra fields leak and the harness FAILS.
+struct MockGraphRunner {
+    /// Pre-serialized terminal state; includes ALL TestGraphState fields.
+    terminal_state: serde_json::Value,
+}
+
+#[async_trait::async_trait]
+impl GraphRunner for MockGraphRunner {
+    async fn run(
+        &self,
+        _input: serde_json::Value,
+        _policy: &GraphToolApprovalPolicy,
+    ) -> Result<serde_json::Value, pregolya_core::error::PregolyaError> {
+        // Returns ALL fields — extract_output in invoke_dyn is the isolation gate.
+        Ok(self.terminal_state.clone())
+    }
 }
 
 proptest! {
-    /// VP-016 — extract_output selects only `output`; extra fields must not appear
-    /// in the ToolOutput JSON value.
+    /// VP-016 — STATE-ISOLATION ({INV-001}, BC-2.09.008): GraphAgentTool::invoke_dyn
+    /// returns ONLY extract_output-selected fields; extra fields in the runner terminal
+    /// state must not leak into ToolOutput.
     #[test]
     fn graph_agent_tool_state_isolation(state in any::<TestGraphState>()) {
-        // The extract_output closure selects ONLY the `output` field.
-        let extract_output = |s: &TestGraphState| -> serde_json::Value {
-            serde_json::json!({ "output": s.output })
-        };
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
 
-        // Simulate the extract_output call (in production this is called after graph run).
-        let result = extract_output(&state);
+        rt.block_on(async {
+            let full_state_value = serde_json::to_value(&state)
+                .expect("TestGraphState must serialize");
 
-        // The output must contain `output`.
-        prop_assert!(
-            result.get("output").is_some(),
-            "extract_output must include the `output` field"
-        );
-
-        // The output must NOT contain any of the internal fields.
-        prop_assert!(
-            result.get("internal_checkpoint_id").is_none(),
-            "internal_checkpoint_id must not appear in ToolOutput"
-        );
-        prop_assert!(
-            result.get("intermediate_message").is_none(),
-            "intermediate_message must not appear in ToolOutput"
-        );
-        prop_assert!(
-            result.get("_internal_blob").is_none(),
-            "_internal_blob must not appear in ToolOutput"
-        );
-
-        // The result must be a JSON object with EXACTLY the keys selected.
-        if let Some(obj) = result.as_object() {
-            let keys: Vec<&str> = obj.keys().map(|k| k.as_str()).collect();
-            prop_assert_eq!(
-                keys,
-                vec!["output"],
-                "ToolOutput must contain exactly the extract_output-selected keys"
+            // Build GraphAgentTool over MockGraphRunner. extract_output selects
+            // ONLY the `output` field; all other fields are state-isolated.
+            let tool = GraphAgentTool::from_runner(
+                "test-agent".to_string(),
+                "VP-016 state-isolation test agent".to_string(),
+                Arc::new(MockGraphRunner { terminal_state: full_state_value }),
+                |v: &serde_json::Value| -> serde_json::Value {
+                    serde_json::json!({ "output": v.get("output") })
+                },
             );
-        }
-    }
 
-    /// VP-016 — full-state serialization must not equal extract_output result
-    /// when S has extra fields (guards against extract_output accidentally
-    /// serializing the full struct).
-    #[test]
-    fn full_state_differs_from_extract_output(state in any::<TestGraphState>()) {
-        prop_assume!(!state.internal_checkpoint_id.is_empty());
+            // Invoke the REAL production path (invoke_dyn) — not a local closure.
+            let input = serde_json::json!({ "output": state.output });
+            let result = tool.invoke_dyn(input).await;
 
-        let extract_output = |s: &TestGraphState| -> serde_json::Value {
-            serde_json::json!({ "output": s.output })
-        };
-        let full_state_value = serde_json::to_value(&state).expect("serialize");
-        let extracted = extract_output(&state);
+            match result {
+                Ok(tool_output) => {
+                    let value = tool_output.as_value();
+                    let obj = value.as_object()
+                        .expect("ToolOutput must be a JSON object for TestGraphState");
 
-        prop_assert_ne!(
-            full_state_value,
-            extracted,
-            "extract_output must not accidentally return the full state"
-        );
+                    // Selected field must be present.
+                    prop_assert!(obj.contains_key("output"),
+                        "extract_output must include the `output` field");
+
+                    // Extra internal fields must NOT appear — any leak FAILS VP-016.
+                    prop_assert!(!obj.contains_key("checkpoint_id"),
+                        "checkpoint_id must not appear in ToolOutput \
+                         (STATE-ISOLATION {INV-001} violation)");
+                    prop_assert!(!obj.contains_key("run_id"),
+                        "run_id must not appear in ToolOutput \
+                         (STATE-ISOLATION {INV-001} violation)");
+                    prop_assert!(!obj.contains_key("accumulated_messages"),
+                        "accumulated_messages must not appear in ToolOutput \
+                         (STATE-ISOLATION {INV-001} violation)");
+
+                    // Exact key-set check: output must contain EXACTLY the selected keys.
+                    let keys: Vec<&str> = obj.keys().map(|k| k.as_str()).collect();
+                    prop_assert_eq!(
+                        keys, vec!["output"],
+                        "ToolOutput must contain exactly the extract_output-selected keys; \
+                         any extra key is a STATE-ISOLATION leak ({INV-001})"
+                    );
+                }
+                Err(_) => {
+                    // Err path satisfies VP-016 vacuously — no ToolOutput produced.
+                    // Binary interrupt invariant ({INV-002}) is covered by the Red-Gate
+                    // test set (BC-2.09.008 TV-002/TV-005, S-2.11 AC-024).
+                }
+            }
+        });
     }
 }
 ```
-
-**Note on production wiring:** In production, `GraphRunner::run` calls `extract_output` on
-the final `CompiledGraph<S>` terminal state. The harness tests the `extract_output` closure
-isolation property directly. Integration tests in the `mcp::graph_tool` test module verify
-the full `GraphAgentTool::invoke` path returns only the extracted value.
 
 ## Feasibility Assessment
 
@@ -224,7 +261,7 @@ the full `GraphAgentTool::invoke` path returns only the extracted value.
 | Input space | Open (arbitrary GraphState) | proptest covers via `Arbitrary` derive |
 | Proof complexity | Low | Structural containment check on JSON objects; no async, no I/O in the harness |
 | Tool support | Supported | `proptest` + `proptest-derive`; no blocking dependencies |
-| Async concern | None | Harness tests the `extract_output` closure directly; async graph execution is tested in integration tests |
+| Async concern | Low | Harness calls `invoke_dyn` which is async; `tokio::runtime::Builder::new_current_thread()` wraps each proptest case; no actual I/O occurs (MockGraphRunner resolves synchronously in practice) |
 | Estimated proof time | < 1s per proptest case | 10k cases × negligible per case |
 
 No blocking risks. The `extract_output` closure must be extractable and callable outside the
@@ -238,6 +275,12 @@ async context of `GraphRunner::run` for the harness to work — this is guarante
 - [ ] `full_state_differs_from_extract_output` proptest confirms extract_output does not accidentally serialize the full struct
 - [ ] BC-2.09.008 {INV-001} verified: `GraphAgentTool::invoke` code path calls ONLY `extract_output(&final_state)` as the output source (code review; single call site in `GraphRunner::run`)
 - [ ] Integration test: register a graph with an `answer`-only `extract_output`; invoke via mock `mcp::server` `tools/call`; assert `CallToolResult.content[0].text` parses as JSON with only the `answer` key
+- [ ] **POL-31 live-violation (Phase 6 gate — formal-verifier obligation):** The formal-verifier
+  MUST confirm the harness FAILS when a leak-injected `MockGraphRunner` is used that returns
+  the full serialized `TestGraphState` (including `checkpoint_id`, `run_id`,
+  `accumulated_messages`) AND `invoke_dyn` is patched to bypass `extract_output` (returning
+  raw runner output directly). A harness that passes on this injected-leak fixture is
+  non-falsifiable and MUST be rejected as tautological before VP-016 can gate Phase 6.
 
 ## Lifecycle
 
