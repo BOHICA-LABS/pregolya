@@ -8,7 +8,7 @@ status: accepted
 date: "2026-07-21"
 producer: architect
 timestamp: 2026-07-21T00:00:00Z
-version: "1.17"
+version: "1.18"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D21]
@@ -16,6 +16,7 @@ supersedes: null
 superseded_by: null
 subsystems_affected: [SS-20, SS-21]
 changelog:
+  - "1.18 (architect-reconcile-burst/2026-08-26): Decision 9 — Memory::search Hybrid Fusion: RRF k=60 confirmed canonical (Cormack & Clarke 2009 default); rationale records why k=60 over alternatives. No change to VectorStore or Retriever contracts; this decision governs the MemoryStore hybrid_search (SS-15) path only, adjacent to Decision 3 SS-15 boundary. BC anchor: BC-2.15.001 {PC-007} (already specifies the formula and constant; this decision provides the architectural rationale)."
   - "1.17 (P2A-BC-scan/2026-08-25): Decision 7 — Canonical MMR formula, iteration protocol, empty-set convention, tie-break rule, and pool-exhaustion behavior added; makes VP-2.21.003-C monotone non-increasing property formally well-defined. Decision 8 — VectorStore::delete idempotency for nonexistent IDs mandated as Ok(()) across all trait implementations; removes 'implementation-defined' ambiguity from BC-2.21.001 EC-003. PO obligations added for both decisions."
   - "1.16 (P2A-BC-scan/2026-08-25): (internal — placeholder for 1.17 burst; reserved)"
   - "1.15 (P2A-021/2026-08-21): VectorStore ingestion method rename — add_texts → add_documents throughout live body (code block, prose, Decision 5 guard text, Consequences, PO Obligations). Changelog entries grandfathered per records-lint policy. Sibling sweep (TD-VSDD-060): 7 live-body occurrences updated; 1 historical changelog entry grandfathered unchanged."
@@ -719,6 +720,82 @@ state, not about finding-and-removing" principle.
 - VP covering this property: the test-writer adds a unit test `delete_nonexistent_is_ok`
   to the in-memory backend test suite and marks it as the trait compliance gate. This is
   not a Kani VP — it is a deterministic unit test.
+
+---
+
+## Decision 9 — Memory::search Hybrid Fusion: RRF k=60
+
+This decision is adjacent to Decision 3 (SS-15 boundary): the MemoryStore `hybrid_search`
+operation (BC-2.15.001 {PC-007}) uses Reciprocal Rank Fusion (RRF) with k=60 as the
+canonical fusion algorithm and constant.
+
+### Scope
+
+This decision governs `memory::search` (pregolya-memory, SS-15) only — NOT
+`vectorstores::similarity` or `vectorstores::mmr` (SS-21). The VectorStore
+`max_marginal_relevance_search` is governed by Decision 7 (canonical MMR formula).
+Both fusion paths ultimately call `vectorstores::similarity::cosine_similarity` for the
+vector component, but the orchestrating algorithm differs.
+
+### Decision
+
+**Chosen:** Reciprocal Rank Fusion with k=60 (Cormack & Clarke 2009 default).
+
+Fusion inputs:
+- **Keyword component:** entries ranked by recency (most recently written = rank 0).
+- **Vector component:** entries ranked by cosine similarity descending (highest cosine = rank 0).
+
+Combined RRF score for entry i:
+
+```
+rrf_score(i) = 1 / (60 + r_keyword(i)) + 1 / (60 + r_vector(i))
+```
+
+Where `r_keyword(i)` and `r_vector(i)` are 0-based rank positions. An entry present in
+only one component list contributes only that component's term (the other term is 0).
+After scoring: de-duplicate by `(namespace, key)`; sort by `rrf_score` descending;
+break ties by recency (most recently written first); return up to `top_k` entries.
+
+### Rationale for k=60
+
+1. **Empirical default (Cormack & Clarke 2009):** k=60 is the universally adopted default
+   from the original RRF paper. The gentle rank-weighting curve at k=60 avoids
+   over-penalizing lower-ranked items — important when both the keyword and vector
+   lists are short (memory stores typically hold tens to hundreds of entries, not millions).
+
+2. **Robustness to score magnitudes:** RRF discards raw scores entirely, using only rank
+   positions. This makes the fusion insensitive to differences between keyword relevance
+   scores and cosine similarity scores — no normalization step required. A weighted
+   linear combination would require calibrating two heterogeneous score spaces.
+
+3. **Production alignment:** k=60 is the default in Elasticsearch, OpenSearch, and Vespa
+   hybrid search. Using the same value simplifies future benchmarking against those systems
+   and gives operators an intuitive starting point.
+
+4. **Parity rationale:** The two components (keyword-recency and vector-cosine) have equal
+   weight in the fusion formula; no λ parameter is exposed. This differs from MMR (which
+   exposes λ via `lambda_mult`) because MemoryStore hybrid_search is an opinionated
+   high-level API, not a tunable retrieval primitive. Users who need custom weighting should
+   construct explicit `vector_search` + `memory_search` calls and fuse manually.
+
+### Rejected alternatives
+
+- **Weighted linear combination (e.g., α · cosine_score + (1−α) · recency_score):**
+  Requires normalization of heterogeneous score spaces; sensitive to the absolute magnitude
+  of cosine scores (which varies by embedding model). REJECT.
+- **Borda count:** Equivalent to RRF with k → ∞; over-penalizes lower-ranked items in short lists.
+  REJECT.
+- **k=0:** Collapses to a strict rank-majority vote; items not at the top of both lists
+  score near zero. REJECT.
+- **k=100:** More conservative curve; acceptable but the k=60 default is better calibrated
+  for typical memory store sizes. REJECT.
+
+### Changeability
+
+k=60 is the canonical constant embedded in the `hybrid_search` implementation. There is
+no runtime parameter to change k. If a future BC requires configurable fusion constants,
+a new BC and ADR decision amendment are required. The current production-grade default
+is k=60 for all v1 deployments.
 
 ---
 

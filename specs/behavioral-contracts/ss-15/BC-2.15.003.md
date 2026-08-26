@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.003
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-05/06 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.12 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (B-SS15-18-hardening/2026-08-26): TWO gaps from Phase-2 bc-completeness-scan (D-270, burst B). (1) {PC-004} GdprErasureReceipt: add missing `unattributed_session_count: u64` field — EC-004 cited this field in the receipt but PC-004 omitted it (internal inconsistency; field added). (2) {EC-006} added: audit-log write failure AFTER tier-deletion transaction has committed — erasure data is already deleted (irreversible); Ok(receipt) is returned; log write failure is non-fatal, emitted as WARN with event_type='memory.gdpr_audit_log_write_failed'."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "0188f70"
+input-hash: "f0812aa"
 extracted_from: null
 modified: []
 deprecated: null
@@ -76,6 +77,9 @@ policy).
    - `user_scoped_count: u64`
    - `app_scoped_authored_count: u64`
    - `session_scoped_count: u64`
+   - `unattributed_session_count: u64` — count of session-scoped entries that could not be
+     attributed to `user_id` due to missing `session_id → user_id` mapping (see EC-004);
+     these entries are NOT deleted; value is 0 when all session entries have attribution.
 5. {PC-005} If the user has no memory entries in any tier, the operation returns `Ok(receipt)`
    with all counts set to `0`. This is not an error.
 6. {PC-006} The erasure is recorded in the compliance audit log (if configured) with the
@@ -126,6 +130,21 @@ the new entry.
 tracking. Session-scoped entries exist but cannot be attributed.
 **Expected behavior:** Erasure proceeds for all tiers that have attribution data.
 A `WARN` log is emitted with `event_type = "memory.gdpr_unattributed_session_entries"` and structured fields `{ user_id: <id>, unattributed_session_count: N }`: `"GDPR erasure: N session entries could not be attributed to user_id=<id> due to missing session-user mapping; these entries are NOT deleted."` The receipt includes `unattributed_session_count: N`. This is a documented limitation.
+
+### EC-006: Compliance audit-log write fails after successful tier-deletion commit
+**Scenario:** The three-tier erasure transaction commits successfully (all user/app/session
+entries for `user_id` are deleted). Immediately after, the compliance audit-log write
+(PC-006) fails due to an I/O error or storage failure.
+**Expected behavior:** The erasure is final and irreversible (INV-002 — the committed
+transaction cannot be rolled back). The call returns `Ok(GdprErasureReceipt {...})` with
+correct counts for the completed erasure. The audit-log write failure is non-fatal; it is
+emitted as a `WARN` log with structured fields:
+`event_type = "memory.gdpr_audit_log_write_failed"`, `{ user_id: <id>, erased_at: <ts>,
+audit_error: "<reason>" }`. The receipt's `unattributed_session_count` field is set correctly
+before the audit-log write is attempted. (Stable anchor: {EC-006}. Design rationale: the
+primary GDPR obligation — data deletion — has been fulfilled; audit-log write is a secondary
+compliance artifact; losing the log entry is less harmful than hiding a successful erasure
+or rolling back committed deletes.)
 
 ### EC-005: Caller without admin privilege attempts erasure
 **Scenario:** A standard `RunnableConfig` context (graph node) calls the erasure API.

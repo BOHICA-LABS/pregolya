@@ -6918,3 +6918,26 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 | 2: fix burst (post-pass-26 P2A-026) | COMPLETE | 2026-08-22 | 2026-08-22 | P2A-026: all 2 findings closed (D-233). P2A026-01 CLOSED: interface-definitions.md VectorStore 7-method surface reconciled to add_documents canonical form (lambda_mult f64; delete &[String]; filter &MetadataFilter; VectorStoreRetriever.lambda_mult f64); v2.77→2.78. P2A026-02 CLOSED: api-surface.md StreamEvent relocated to §pregolya-core (ADR-006 §Consequences); graph-section sweep clean; v1.25→1.26. Census 39 stories/133 BC/14 VP; DAG UNCHANGED. Streak 0/3. NEXT P2A-027. | trajectory-tail →1→2→2→2; 0/3 → NEXT P2A-027 |
 
 *(Archived during STATE.md compaction 2026-08-22; v5.48→v5.49 burst.)*
+
+---
+
+## Burst: BC-completeness-propagation COMPLETE + VP-015 registered (2026-08-26; D-272+D-273)
+
+**Phase:** 2 — BC-completeness hardening  
+**Agents:** product-owner / story-writer / state-manager  
+**Decisions:** D-272 (BC-completeness propagation COMPLETE) + D-273 (VP-015 tool-type OBS)  
+**STATE.md version:** v5.83 → v5.84
+
+**Summary:** Closed the BC-completeness hardening gap catalogued in D-270 (47 completeness gaps across 133 BCs; ADR-014 §D7+§D8 + ADR-028 architect decisions). 45 BC files updated across 7 clusters (SS-01,02,04,05,06,08,09,10,11,12,13,15,16,18,20,21,22,23). VP-015 authored and registered (MCP Response Credential Redaction; BC-2.09.007 {INV-003}; DI-010; tool: unit; P1; `credential_redaction_unit` harness; 4 sub-tests: openai/anthropic/generic/passthrough). VP-006 updated (v1.8→v1.9) to add `injection_guard_fewshot_fail_closed` harness (FewShotExamples both-arm coverage). Error-taxonomy 120→135 ECs (15 new codes: E-SERVER-019/020/021, E-CRON-004, E-SBXD-007/008/009, E-MEMORY-009/010, E-TOOLS-010/011, E-GRAPH-018, E-PROV-013, E-SERVER-022, E-SBXD-010). ADR-014 §D7 MMR + §D8 delete-idempotent + ADR-028 multitask propagated to all affected BCs + story ACs.
+
+**Index files updated:**
+- BC-INDEX.md: v3.69→v3.70; VP Seed BCs 12→13; BC-2.09.007 VP column → **VP**; 15 new EC codes documented
+- VP-INDEX.md: v1.14→v1.15; VP-015 row added (unit tool); VP-006 harness_fn updated; total 14→15; new "unit | 1" category
+- STORY-INDEX.md: v1.4→v1.5; §Census "Stories with VP anchor" 12→13
+- sprint-state.yaml: S-2.11 vps: []→[VP-015]; S-6.01 vps array += VP-015
+
+**D-273 OBS:** VP-015.md `tool: unit` is authoritative (CLAUDE.md rule 4: VP files supersede arch prose). verification-architecture.md + verification-coverage-matrix.md list VP-015 as "integration" — stale; architect follow-up required. Non-blocking.
+
+**Census:** 39/133/15/135 (VP 14→15; EC 120→135). BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). 3-CLEAN streak RESET 0/3 (propagation changes require re-convergence).
+
+**NEXT:** adversarial re-3-CLEAN → consistency audit → Phase-2 human gate.

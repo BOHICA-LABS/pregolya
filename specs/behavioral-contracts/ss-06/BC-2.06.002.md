@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.17 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2-BC-SS04-06-hardening/2026-08-26): EC-001 concrete rule added — resume-run parent_ids is no longer 'impl-choice, must document in ADR'. Decision: the resumed run's `parent_ids` is copied from the interrupted run's `parent_ids` at interrupt time; the interrupted run's `run_id` is NOT added to the resume run's `parent_ids`. Rationale: a resume run is a continuation of the interrupted run at the same nesting level, not a child of it; {INV-001} (new run_id) + {INV-002} (parent_ids assigned once at creation) anchor the decision; correlation between interrupted and resumed runs is provided by `parent_checkpoint_id` in checkpoint metadata (BC-2.04.004), not by run_id inheritance. Stale 'server implementation choice, must be documented in ADR' language removed. BC-completeness-scan Phase-2 BURST-B gap BC-2.06.002."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-007
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "afc5ca7"
+input-hash: "a26235e"
 extracted_from: null
 modified: []
 deprecated: null
@@ -92,12 +93,26 @@ run. The contract follows the astream_events v2 7-key shape (semport/core/behavi
 ### EC-001: Interrupted run resumed as a new Run record
 **Scenario:** A run is interrupted (via `interrupt()`), checkpointed, then resumed. The server
 creates a new `Run` record for the resumed execution.
-**Expected behavior:** The resumed run receives a new `run_id`; it does NOT reuse the
-interrupted run's `run_id`. Correlation between interrupted run and resume run is available
-via `parent_checkpoint_id` in the checkpoint metadata (DI-004), not via `run_id` reuse.
-If the resume run is created with the interrupted run as a logical parent, the interrupted
-run's `run_id` may appear in the new run's `parent_ids` (server implementation choice,
-must be documented in ADR).
+**Expected behavior:** The resumed run receives a new `run_id` per {INV-001}; it does NOT
+reuse the interrupted run's `run_id`. The resumed run's `parent_ids` is **copied verbatim
+from the interrupted run's `parent_ids` at interrupt time**; the interrupted run's `run_id`
+is NOT added to the resume run's `parent_ids`.
+
+**Rationale (resume-run parent_ids rule):** A resume run is a continuation of the
+interrupted run at the same nesting level — not a child of it. Per {INV-002}, `parent_ids`
+is assigned once at run creation and is read-only thereafter; it represents the static
+nesting context, not a dynamic event chain. Adding the interrupted run's `run_id` to the
+resume run's `parent_ids` would incorrectly imply a deeper nesting level and break the
+transitivity rule of {INV-003} for any outer observers. This rule is analogous to {INV-005}
+(Send API fan-out tasks share the parent run's `run_id` and `parent_ids` unchanged because
+they are within-run operations, not sub-runs): a resume operation is a within-thread
+continuation, not a sub-run invocation.
+
+Correlation between an interrupted run and its resume run is provided by
+`parent_checkpoint_id` in the checkpoint metadata (BC-2.04.004), which links the two
+`Run` records through the checkpoint lineage — not through `parent_ids`. Streaming
+consumers that need to correlate interrupted-and-resumed runs MUST use `parent_checkpoint_id`
+from the checkpoint metadata, not `run_id`/`parent_ids`.
 
 ### EC-002: Fan-out via Send API
 **Scenario:** A Send API fan-out in a super-step creates N parallel PUSH tasks. Each PUSH

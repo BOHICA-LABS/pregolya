@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.001
-version: "1.8"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -39,6 +39,8 @@ changelog:
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (M3b-escalation-EC006/2026-08-24): EC-006 added — DELETE /threads/{id} while an active (queued or in_progress) run exists returns HTTP 409 E-SERVER-008; PC-011 is unconditional and did not cover this restriction; gap surfaced during S-1.26 EC adjudication P2A-043 F-05."
   - "1.8 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
+  - "1.9 (P2A-BC-scan-B/2026-08-26): POST /state failure paths added — EC-007 (thread-not-found → E-SERVER-003), EC-008 (invalid as_node → NEEDS-NEW-CODE flagged in manifest), EC-009 (malformed delta → NEEDS-NEW-CODE flagged in manifest). PC-016 amended to reference failure paths. TV-008 and TV-009 added."
+  - "1.10 (burst-A2-error-coord/P2A-BC-scan-hardening-addendum/2026-08-26): EC-008, EC-009, PC-016(b)/(c), and TV-009 repointed from NEEDS-NEW-CODE → E-SERVER-022 StateUpdateInvalid (see error-taxonomy.md §Component: SERVER (pregolya-server)); single reason-discriminated code for both invalid-as_node and malformed-delta POST /state failures. NEEDS-NEW-CODE annotations removed."
 ---
 
 # BC-2.12.001: Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History)
@@ -93,7 +95,11 @@ pregolya-checkpoint subsystem. Thread-not-found returns `E-SERVER-003`.
 15. {PC-015} `GET /threads/{thread_id}/state` — returns the latest checkpoint state for the thread:
     `{ values: GraphState, checkpoint: CheckpointId, next: [NodeId] }`.
 16. {PC-016} `POST /threads/{thread_id}/state` — updates checkpoint state by applying a delta:
-    `{ values: Map<String, Value>, as_node?: NodeId }`. Returns `{ checkpoint: CheckpointId }`.
+    `{ values: Map<String, Value>, as_node?: NodeId }`. Returns `{ checkpoint: CheckpointId }` on success.
+    Failure paths: (a) if the thread does not exist → HTTP 404 `E-SERVER-003 ThreadNotFound` (EC-007);
+    (b) if `as_node` is provided and does not refer to a valid node in the associated graph definition → HTTP 422 `E-SERVER-022 StateUpdateInvalid` (EC-008);
+    (c) if the `values` delta contains fields with types incompatible with the graph's state schema → HTTP 422 `E-SERVER-022 StateUpdateInvalid` (EC-009).
+    Active-run guard: if a Run is currently `in_progress` or `queued` on the thread, HTTP 409 `E-SERVER-008` (EC-005).
 17. {PC-017} `GET /threads/{thread_id}/history?limit=N` — returns the checkpoint history list
     for the thread, ordered newest-first; `limit` default 10, max 100; values > 100
     clamped to 100; `offset` default 0 (F-P31-01, ADV-P1D-PASS-31).
@@ -143,6 +149,18 @@ The thread and its runs are NOT deleted. Caller must first cancel the active run
 **Rationale:** PC-011 is unconditional; this EC makes the active-run guard explicit. Re-uses the E-SERVER-008
 ThreadStateConflict code established by EC-005 (state writes during active run), extending the guard to deletion.
 
+### EC-007: POST /state on non-existent thread {EC-007}
+**Scenario:** `POST /threads/ghost/state { values: { "x": 1 } }` where thread "ghost" does not exist.
+**Expected behavior:** HTTP 404 `{ code: "E-SERVER-003", message: "ThreadNotFound: thread 'ghost' does not exist" }`. No state mutation occurs.
+
+### EC-008: POST /state with invalid as_node {EC-008}
+**Scenario:** `POST /threads/t1/state { values: { "x": 1 }, as_node: "nonexistent_node" }` where `"nonexistent_node"` is not a valid node ID in the thread's associated graph definition.
+**Expected behavior:** HTTP 422 `{ code: "E-SERVER-022", message: "StateUpdateInvalid: state update for thread '<thread_id>' rejected: as_node 'nonexistent_node' is not registered in the graph" }`. (`<thread_id>` = the thread ID; `<reason>` = the specific rejection cause, here the unrecognised `as_node` node name.) E-SERVER-022 StateUpdateInvalid (VAL, broken, HTTP 422, Never; see error-taxonomy.md §Component: SERVER (pregolya-server)).
+
+### EC-009: POST /state with malformed delta {EC-009}
+**Scenario:** `POST /threads/t1/state { values: { "messages": 42 } }` where the thread's graph state schema expects `messages` to be an array; the integer value is type-incompatible.
+**Expected behavior:** HTTP 422 `{ code: "E-SERVER-022", message: "StateUpdateInvalid: state update for thread '<thread_id>' rejected: field 'messages' type incompatible: expected array, got integer" }`. (`<reason>` = the schema validation failure detail.) E-SERVER-022 StateUpdateInvalid is the single reason-discriminated code for both EC-008 and EC-009 — the `<reason>` field distinguishes invalid-as_node from malformed-delta failures (VAL, broken, HTTP 422, Never; see error-taxonomy.md §Component: SERVER (pregolya-server)).
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -154,6 +172,8 @@ ThreadStateConflict code established by EC-005 (state writes during active run),
 | TV-005 | `DELETE /threads/t1`, then `DELETE /threads/t1` | First: 204; Second: 404 E-SERVER-003 | Idempotent delete |
 | TV-006 | `GET /threads?metadata={"env":"prod"}&limit=5` | Filtered list, max 5 results | List with filter |
 | TV-007 | `GET /threads/t1/state` (no runs) | HTTP 200 `{ values: {}, checkpoint: null, next: [] }` | Empty state |
+| TV-008 | `POST /threads/ghost/state { values: { "x": 1 } }` (thread does not exist) | HTTP 404 E-SERVER-003 | POST /state thread-not-found |
+| TV-009 | `POST /threads/t1/state { values: { "x": 1 }, as_node: "fake_node" }` (node not in graph) | HTTP 422 `{ code: "E-SERVER-022", message: "StateUpdateInvalid: state update for thread 't1' rejected: as_node 'fake_node' is not registered in the graph" }` | POST /state invalid as_node (EC-008) |
 
 ## Verification Properties
 

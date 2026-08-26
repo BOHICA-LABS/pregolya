@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.003
-version: "1.12"
+version: "1.13"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,7 +23,7 @@ changelog:
   - "1.1 (Burst-232/2026-07-22): Fix Category::VALIDATION → Category::VAL in PC-2 (E-TOOLS-003 EditOldStringNotFound). VALIDATION is not in the canonical 12-member Category enum; E-TOOLS-003 is VAL per error-taxonomy v1.31. D23 straggler sweep."
   - "1.2 (burst-233/F-P133-03/2026-07-22): PC-5 — assign E-TOOLS-008 FileIoError to the OS-level I/O error path for file-not-found (was 'TOOLS, I/O category' with no code). Structured fields: tool_type: 'EditFileTool', path: <file_path>, io_kind: <ErrorKind debug name>. Gate #33 forward+reverse clean."
   - "1.3 (burst-247/F-P146-02/2026-07-24): H1 title — append exhaustive raised-code enumeration 'E-TOOLS-001/003/008' per SS-23 title policy. Inline contextual reference 'E-TOOLS-003 on No-Match' is retained (describes trigger condition); trailing exhaustive enumeration is now also present for machine extractability. TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
-  - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::VAL → Category::Val (PC-2), Category::TOOL → Category::Tool (PC-5)."
+  - "1.4 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-2 + PC-5); Category::VAL → Category::Val (PC-2), Category::TOOL → Category::Tool (PC-5)."
   - "1.5 (F-P173-601/2026-07-27): PathGuard::check phantom-method sweep. Replace invented method name PathGuard::check with canonical canonicalize_beneath_root at 1 site: VP-2.23.003-A property description. No error-layer-split issues — E-TOOLS-001 correctly used throughout."
   - "1.6 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC2 E-TOOLS-003 EditOldStringNotFound: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). PC5 E-TOOLS-008 file-not-found: ::new(Component::Tools, Category::Tool, RetryHint::Maybe, ...); phantom tool_type/path/io_kind fields removed (message-embedded placeholders). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
   - "1.7 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — 2 prose occurrences of PregolyaError::new(...) replaced with observation form. PC-2 E-TOOLS-003: inline → PregolyaError { code: 'E-TOOLS-003', .. }. PC-5 E-TOOLS-008: inline → { code: 'E-TOOLS-008', .. }. verify-error-notation-canon.sh PASS."
@@ -32,6 +32,7 @@ changelog:
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — self-reference 'precondition 3' in PC-005 prose converted to {PRE-003}."
   - "1.12 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
+  - "1.13 (B-SS19-23/E-TOOLS-011-fuzzy/2026-08-26): MED process-gap closure — EC-007 (fuzzy_threshold out of range) updated to cite E-TOOLS-011 ToolConfigInvalid; expanded to cover all out-of-range values ∉ (0.0, 1.0] (not just 0.0). TV-006 added: E-TOOLS-011 config-validation test vector for fuzzy_threshold=0.0. Note: error-taxonomy.md designates 'BC-2.23.003 EC-004' as the raise site; since EC-004 already exists (replace_all=false operational behavior), the raise site is EC-007 (the existing fuzzy_threshold config-validation EC). Reuses E-TOOLS-011 — minted in error-taxonomy.md same burst."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-036
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -130,7 +131,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
 | EC-004 | `old_string` appears 3 times, `replace_all: false` | Only first occurrence replaced; 2 remaining unchanged |
 | EC-005 | `old_string` appears 3 times, `replace_all: true` | All 3 replaced; `ToolOutput::Text("edited: <path> (3 replacements)")` |
 | EC-006 | Path outside PathGuard | `Err(E-TOOLS-001 PathConfinementViolation)` — no I/O |
-| EC-007 | `fuzzy_threshold: Some(0.0)` (zero threshold at construction) | Configuration error at `EditFileTool::new()` — `fuzzy_threshold` must be in `(0.0, 1.0]` |
+| EC-007 | `fuzzy_threshold` out of valid range at construction: `Some(0.0)`, `Some(-0.1)`, or `Some(1.5)` — any value ∉ (0.0, 1.0] | `Err(PregolyaError { code: "E-TOOLS-011", .. })` — `Validation failed for 'fuzzy_threshold': fuzzy_threshold must be in (0.0, 1.0]`; `EditFileTool::new()` returns Err; this is the authoritative raise site for E-TOOLS-011 on `fuzzy_threshold` |
 
 ## Canonical Test Vectors
 
@@ -141,6 +142,7 @@ controls whether all occurrences are replaced (default false — first occurrenc
 | TV-003 | Same as TV-002 but `fuzzy_threshold: Some(0.9)` — "fn missing()" ≈ "fn missing ()"; ratio ≥ 0.9 | `ToolOutput::Text("edited: /workspace/src.rs (1 replacement)")` | fuzzy fallback |
 | TV-004 | `{ "path": "/etc/hosts", ... }` — outside PathGuard | `Err(E-TOOLS-001 PathConfinementViolation)` | security (confinement) |
 | TV-005 | `{ ..., "new_string": "", "replace_all": false }` — deletion of first occurrence | File shorter by `old_string.len()` bytes; `ToolOutput::Text("edited: <path> (1 replacement)")` | edge-case (deletion) |
+| TV-006 | `EditFileTool::new(guard, Some(EditConfig { fuzzy_threshold: Some(0.0), .. }))` | `Err(PregolyaError { code: "E-TOOLS-011", .. })` — `Validation failed for 'fuzzy_threshold': fuzzy_threshold must be in (0.0, 1.0]` | error-case (E-TOOLS-011 config-validation) |
 
 ## Verification Properties
 

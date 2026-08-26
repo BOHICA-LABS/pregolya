@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.001
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "2e431f6"
+input-hash: "4cc0b0a"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -25,6 +25,7 @@ changelog:
   - "1.1 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.2 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.4 (P2A-BC-scan-B/2026-08-26): PC-005 added — runtime resource-limit breach when `memory_bounded=true` → E-SBXD-009 MemoryLimitExceeded; closes gap where PC-002 declared `memory_bounded: true` as a capability but no postcondition specified the outcome when the bound is actually hit during execution."
 modified: []
 extracted_from: null
 deprecated: null
@@ -69,6 +70,12 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
    and the Cargo build emits a compile-time warning: `"WARNING: pregolya-sandbox compiled
    without an enforcing backend feature; all executions will fail at runtime unless an explicit
    process backend is constructed via unsafe_process_no_isolation()"`
+5. {PC-005} When an enforcing backend with `memory_bounded = true` is executing tool code
+   and the guest exceeds the configured memory limit, execution terminates and returns
+   `Err(E-SBXD-009: MemoryLimitExceeded { backend, memory_limit_bytes, attempted_bytes? })`.
+   The backend MUST NOT silently proceed past the memory bound or return `Ok` with partial
+   output. The error is classified as TOOL/broken; callers should not retry the same invocation
+   without reducing the memory footprint or increasing the configured limit.
 
 ## Invariants
 
@@ -90,6 +97,7 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 | EC-002 | Both `sandbox-wasm` and `sandbox-container` features are absent from the compiled binary | Compile-time warning; `SandboxBackend::default()` returns `Err(E-SBXD-003: SandboxInitFailed { reason: "no enforcing backend compiled in" })` |
 | EC-003 | `sandbox-wasm` feature present but WASM engine init fails at runtime (e.g., OOM at engine construction) | Constructor returns `Err(E-SBXD-003: SandboxInitFailed { ... })`; must NOT panic (per DI-008; also must-not-inherit P-66: `WasmBackend::new()` uses `.expect()`) |
 | EC-004 | `sandbox-wasm` unavailable on the target triple (e.g., WASM-on-WASM) and `sandbox-container` is also disabled | `SandboxBackend::default()` returns `Err(E-SBXD-003)` and logs the reason; caller must explicitly opt into `unsafe_process_no_isolation()` |
+| EC-005 | {EC-005} WASM backend (`memory_bounded=true`) executing tool code that allocates past the configured limit (e.g., limit 64 MiB, tool allocates 128 MiB) | `Err(E-SBXD-009: MemoryLimitExceeded)` returned; execution terminated; no partial result; no panic from the host side — the WASM runtime enforces the limit at the guest level per {PC-005} |
 
 ## Canonical Test Vectors
 

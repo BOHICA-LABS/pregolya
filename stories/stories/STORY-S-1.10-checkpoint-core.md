@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.10
 epic_id: E-05
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b745253"
+input-hash: "36f42b3"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.04, S-1.02]
@@ -48,11 +48,11 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | AC-001..AC-004 |
+| BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | AC-001..AC-004, AC-023 |
 | BC-2.04.002 | DurabilityTier — Sync Default, Async Opt-in, Exit Opt-in | AC-005..AC-007 |
 | BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | AC-008..AC-010 |
 | BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | AC-011..AC-012 |
-| BC-2.04.005 | Crash Recovery — Committed Tasks Not Re-executed on Resume | AC-013..AC-015 |
+| BC-2.04.005 | Crash Recovery — Committed Tasks Not Re-executed on Resume | AC-013..AC-015, AC-024 |
 | BC-2.04.006 | Session Triple-Address Uniqueness — VP-002 Kani Seed | AC-016..AC-019 |
 | BC-2.04.007 | Encryption at Rest — Symmetric Coverage (put AND put_writes) | AC-020..AC-022 |
 
@@ -132,6 +132,12 @@ Constructing `EncryptedSerializer` with empty key material returns `Err(Pregolya
 ### AC-022 (traces to BC-2.04.007 EC-002)
 Attempting to rotate an encryption key returns `Err(PregolyaError { code: "E-CHKPT-004", message: "EncryptionKeyRotationFailed: ...", .. })` classified as INTERNAL severity. Reading data written with a different key (cipher header mismatch) returns `Err(PregolyaError { code: "E-CHKPT-007", message: "CipherHeaderMissing: ...", .. })`. Verified by `test_BC_2_04_007_key_rotation_error()` and `test_BC_2_04_007_cipher_header_missing_error()`.
 
+### AC-023 (traces to BC-2.04.001 EC-005 — async put_writes join-failure at run exit)
+With `DurabilityTier::Async`, when all super-steps complete but the run-exit `join_all(put_writes_futures)` returns `Err` for one or more tasks, the run transitions to `failed` with `Err(PregolyaError { category: DURABILITY, code: "E-CHKPT-001", message: "CheckpointWriteFailed: put_writes for task '<task_id>' failed — backend error: <backend_error>", .. })`. The graph in-memory output is NOT returned to the caller; the run record status is `failed`. This is distinct from AC-004 ({EC-002}) which covers synchronous mid-run `put_writes` failures; EC-005 covers the deferred join-failure that surfaces only at run exit. Verified by `test_BC_2_04_001_async_put_writes_join_failure_at_run_exit()`.
+
+### AC-024 (traces to BC-2.04.005 EC-007 — pending_writes reapply read/deserialize failure)
+During `_reapply_writes_to_succeeded_nodes` crash recovery, if the storage query for `pending_writes` entries returns an I/O error (sub-case a) OR a retrieved entry's write value cannot be deserialized to the channel type (sub-case b — data corruption or schema-evolution incompatibility), recovery halts immediately with `Err(PregolyaError { component: CHKPT, category: DURABILITY, code: "E-CHKPT-003", message: "CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>", .. })`. No task writes are re-applied; no node bodies execute. This reuses the E-CHKPT-003 code from AC-015 ({EC-006}) on a distinct code path. Verified by `test_BC_2_04_005_pending_writes_reapply_read_failure()` and `test_BC_2_04_005_pending_writes_reapply_deserialize_failure()`.
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
@@ -186,7 +192,7 @@ Exceeds the single-load threshold. Implementer strategy: load BCs in groups (BC-
 - [ ] Create `pregolya-checkpoint/src/fork.rs` — `fork` method producing parent-pointer checkpoint with no state copy
 - [ ] Create `pregolya-checkpoint/src/recovery.rs` — crash recovery logic: read pending_writes, skip-on-reapply set enforcement
 - [ ] Create `pregolya-checkpoint/src/encryption.rs` — `EncryptedSerializer` wrapping `CheckpointSaver`; symmetric coverage; E-CHKPT-004/007
-- [ ] Write unit tests for all 22 ACs
+- [ ] Write unit tests for all 24 ACs (`test_BC_2_04_001_async_put_writes_join_failure_at_run_exit`, `test_BC_2_04_005_pending_writes_reapply_read_failure`, `test_BC_2_04_005_pending_writes_reapply_deserialize_failure` for new ACs)
 - [ ] Create `crates/pregolya-checkpoint/src/proofs/session_tenancy.rs` — `#[cfg(kani)]` `session_tenancy_harness` stub (body `todo!()` for Phase 6 formal hardening; VP-002)
 - [ ] Add `pregolya-checkpoint` to workspace `Cargo.toml` members
 - [ ] Run `just iter pregolya-checkpoint` — all tests green
@@ -259,11 +265,14 @@ Files to MODIFY:
 | EC-003 | Fork then resume from fork checkpoint | Fork checkpoint's parent pointer enables traversal back to parent state; no data duplication |
 | EC-004 | Encrypted saver + wrong key on read | `Err(E-CHKPT-007 CipherHeaderMissing)` — classified INTERNAL; caller cannot decrypt without the original key |
 | EC-005 | `SCHEDULED` channel task on crash-resume | `SCHEDULED` is NOT in skip-on-reapply set; it is re-enqueued and executed on resume |
+| EC-006 | `DurabilityTier::Async`; all tasks complete; run exits; `join_all(put_writes_futures)` returns `Err` for one task | Run transitions to `failed`; `Err(E-CHKPT-001 CheckpointWriteFailed)`; graph output NOT returned to caller (AC-023) |
+| EC-007 | Crash recovery: `get_tuple` succeeds; `pending_writes` query returns I/O error OR a pending_writes entry fails to deserialize | `Err(E-CHKPT-003 CheckpointReadFailed)`; recovery halts; no task writes re-applied; no node bodies execute (AC-024) |
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-08-26 | SW-2/bc-completeness-hardening: BC-2.04.001 → AC-023 (EC-005 async join-failure at run exit → run failed, E-CHKPT-001; graph output NOT returned); BC-2.04.005 → AC-024 (EC-007 pending_writes reapply read/deserialize failure → E-CHKPT-003). EC-006/EC-007 added. | SW-2 |
 | 1.2 | 2026-08-24 | P2A-043 F-05: prose ordinal cross-refs converted to stable tags | P2A-043 F-05 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |
 | 1.0 | 2026-08-18 | Initial authoring | story-writer |

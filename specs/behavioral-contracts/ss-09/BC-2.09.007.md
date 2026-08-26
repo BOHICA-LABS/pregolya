@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "1.5"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-021
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 changelog:
   - "1.0 (2026-07-15, initial): base BC authored — MCP server tool call dispatch via ToolRegistry."
   - "1.1 (FIX-BURST-277-WAVE-B-errata/2026-07-28): Architecture Anchors — ToolRegistry type corrected: `Option<Arc<dyn Tool>>` → `Option<Arc<dyn DynTool>>` (architect scope — planned implementation signature; dyn Tool is non-object-safe per ADR-005 §Adjacent Trait Object-Safety Adjudications; ToolRegistry must use DynTool for vtable dispatch)."
@@ -21,6 +21,9 @@ changelog:
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.5 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.6 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): (1) MED+SECURITY gap — INV-003 credential-message sanitization: removed 'best-effort v1' hedge; specified mandatory `pregolya_mcp::sanitize::redact_credentials` step with pattern rules and source-restriction (PregolyaError::message only, not .source() chain or Debug). PC-003 updated to reference {INV-003} redaction. VP-MCPCALL-03 added. TV-007 added (fake key pattern → `<redacted>`). (2) LOW gap — PC-002 result_text JSON-vs-plaintext selection rule specified (`ToolOutput::Structured` → compact JSON via `serde_json::to_string`; `ToolOutput::Text` → verbatim). (3) LOW gap — EC-007 (-32700 parse error) and EC-008 (-32600 invalid request) added with wire-protocol JSON-RPC response specification. TV-008 added. ADR-027 stable clause anchors {EC-007}, {EC-008}."
+  - "1.7 (B-SS09-11-arch-adjudication/2026-08-26): VP-MCPCALL-03 renamed to VP-015 everywhere in BC body — architect registered this property as formal VP-015 in Phase-2 BC-completeness reconciliation. TD-VSDD-060 sibling-sweep applied: all VP-MCPCALL-03 occurrences replaced (§Verification Properties table and §VP Anchors). No behavioral or semantic change."
+  - "1.8 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -63,13 +66,26 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
    JSON parsed to the tool's input schema.
 2. {PC-002} On **successful execution:** the server responds with:
    `{ "content": [{ "type": "text", "text": "<result_text>" }], "isError": false }`.
-   The `result_text` is the tool's `ToolOutput` serialized as a JSON string or plain text.
+   **result_text selection rule:** `result_text` is determined by the `ToolOutput` variant
+   returned by `Tool::invoke`:
+   - `ToolOutput::Structured { value: serde_json::Value }` → `result_text =
+     serde_json::to_string(&value)` (compact JSON; no pretty-printing). A JSON `null` value
+     serializes to the string `"null"`.
+   - `ToolOutput::Text { text: String }` → `result_text = text` verbatim. No JSON-encoding
+     or additional escaping is applied.
+   The `Tool` implementation determines the variant; the server applies the corresponding
+   serialization rule. If `ToolOutput` carries empty content (empty text string or JSON
+   `null`), `result_text` is `""` or `"null"` respectively.
 3. {PC-003} On **tool execution error** (the pregolya `Tool::invoke` returns `Err`): the server
    responds with:
    `{ "content": [{ "type": "text", "text": "<error_message>" }], "isError": true }`.
    The `isError: true` flag is the MCP protocol signal for tool-level failures. The response
    is a valid MCP response (not a JSON-RPC protocol error); the JSON-RPC result layer
    carries `isError: true` in the content.
+   **Mandatory sanitization:** before populating `<error_message>`, the server applies the
+   credential redaction step specified in {INV-003}: only `PregolyaError::message` is used
+   as the source string (never `.source()`, `Debug`, or `Display`), and that string is passed
+   through `pregolya_mcp::sanitize::redact_credentials` before inclusion in the response.
 4. {PC-004} On **tool not found** (`<tool_name>` is not in the registry): the server responds with
    a JSON-RPC error: `{ "code": -32602, "message": "Tool not found: <tool_name>" }`.
    (JSON-RPC -32602 = InvalidParams — the tool name is an invalid parameter for this server.)
@@ -90,10 +106,22 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
   an error, but the MCP protocol transaction itself succeeded. The JSON-RPC layer returns
   `result` (not `error`) in both the success and tool-error cases. JSON-RPC `error` is only
   used for protocol-level failures (unknown method, invalid params, parse error).
-- {INV-003} **No credential leakage:** if a tool returns an error that includes sensitive information
-  (e.g., a provider credential), the server is responsible for sanitizing the error message
-  before including it in the MCP response. (DI-010.) In v1 this is best-effort; implementors
-  must not construct error messages that embed credential values from known sources.
+- {INV-003} **Mandatory credential redaction (DI-010):** Tool execution error messages included
+  in MCP `CallToolResult` responses MUST be sanitized before transmission. This invariant is
+  mandatory — there is no "best-effort" variant. The concrete redaction step:
+  (a) **Source restriction:** only `PregolyaError::message` is used as the text source. The
+      `.source()` chain, `Debug` output, and `Display` output of the error are NEVER included
+      in the MCP response text.
+  (b) **Redaction function:** `pregolya_mcp::sanitize::redact_credentials(text: &str) ->
+      Cow<str>` applies the following substitution rules in order:
+      1. OpenAI key pattern `sk-[A-Za-z0-9_\-]{20,}` → `"<redacted>"`
+      2. Anthropic key pattern `sk-ant-[A-Za-z0-9_\-]{32,}` → `"<redacted>"`
+      3. Generic long alphanumeric token `[A-Za-z0-9]{64,}` → `"<redacted>"`
+  (c) The sanitized string (post-substitution) is placed in `content[0].text`.
+  Rationale: untrusted tool output (e.g., from MCP-dispatched tools) may propagate error
+  messages that embed provider API key material from the tool's own configuration. The server
+  MUST apply redaction before transmitting any error detail to an external MCP client.
+  (invariants.md §DI-010: Credential Opacity)
 - {INV-004} **One invocation per request:** a single `tools/call` request invokes exactly one tool
   exactly once. No fan-out, no retry within the server handler.
 
@@ -135,6 +163,26 @@ independently to each client.
 **Expected behavior:** Invocation succeeds — the registry is read on each request (same
 semantics as BC-2.09.006 PC-003 for `tools/list`).
 
+### EC-007: Malformed JSON — parse error on server receive
+**Scenario:** A connected MCP client sends bytes that are not valid JSON (e.g., a
+truncated message, binary data, or `"not json{{"`).
+**Expected behavior:** The server responds with a JSON-RPC protocol error:
+`{ "jsonrpc": "2.0", "id": null, "error": { "code": -32700, "message": "Parse error" } }`.
+JSON-RPC -32700 is the standard parse-error code; this is a wire-protocol response, not a
+`PregolyaError` — no `E-MCP-*` code is raised. The connection remains open; subsequent
+well-formed requests are processed normally. (Per Burst A error-taxonomy v1.58 reuse
+decision: JSON-RPC -32700/-32600 on server-receive are wire-protocol responses cited
+directly.)
+
+### EC-008: Invalid JSON-RPC request structure
+**Scenario:** A connected MCP client sends valid JSON that is not a well-formed JSON-RPC
+request (e.g., missing `"jsonrpc"` version field, missing `"method"` field, or `"id"` is
+not a string/number/null).
+**Expected behavior:** The server responds with a JSON-RPC protocol error:
+`{ "jsonrpc": "2.0", "id": null, "error": { "code": -32600, "message": "Invalid Request" } }`.
+JSON-RPC -32600 is the standard invalid-request code; wire-protocol response only, no
+`PregolyaError` raised. The connection remains open.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -145,6 +193,8 @@ semantics as BC-2.09.006 PC-003 for `tools/list`).
 | TV-004 | `tools/call { name: "get_weather", arguments: { "city": "Paris" } }` (wrong schema) | JSON-RPC error `{ "code": -32602, "message": "Invalid arguments…" }` | Schema validation |
 | TV-005 | Two simultaneous `tools/call` requests for different tools | Both return correct results independently | Concurrent invocations |
 | TV-006 | Tool registered after server start; client invokes it | `isError: false` response with tool result | Dynamic registry |
+| TV-007 | `tools/call { name: "api_tool" }`; tool returns `Err(PregolyaError { message: "request failed: key=sk-abc123XYZabc123XYZabc", .. })` | MCP response `{ "content": [{ "type": "text", "text": "request failed: key=<redacted>" }], "isError": true }` — OpenAI-pattern key replaced by `<redacted>` | Credential redaction (INV-003) |
+| TV-008 | Client sends non-JSON bytes (e.g., `"not json{{"`) via `tools/call` path | JSON-RPC response `{ "error": { "code": -32700, "message": "Parse error" } }` | Malformed JSON — parse error (EC-007) |
 
 ## Verification Properties
 
@@ -152,6 +202,7 @@ semantics as BC-2.09.006 PC-003 for `tools/list`).
 |-------|-------------|--------|-------|
 | VP-MCPCALL-01 | External MCP client can successfully invoke a registered pregolya tool via tools/call and receive the correct result | Integration test: start server; connect MCP client library; invoke tool; assert result content | Wave 2 |
 | VP-MCPCALL-02 | Tool execution error surfaces as `isError: true` in MCP response (not as a JSON-RPC protocol error) | Unit test: mock tool returning Err; assert response has isError: true and result-layer success | Wave 2 |
+| VP-015 | Credential redaction: MCP response `content[0].text` has API key patterns replaced with `<redacted>` before transmission | Unit test: mock tool returning `Err` with fake OpenAI/Anthropic key pattern in `PregolyaError::message`; assert response text contains `<redacted>` and not the key material | Wave 2 |
 
 ## Related BCs
 
@@ -170,7 +221,7 @@ S-2.11
 
 ## VP Anchors
 
-- VP-MCPCALL-01, VP-MCPCALL-02
+- VP-MCPCALL-01, VP-MCPCALL-02, VP-015
 
 ## Traceability
 

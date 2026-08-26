@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.24
 epic_id: E-09
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.5 (P2-bc-completeness-burst-B/2026-08-26): BC-2.06.006 {INV-006}/{EC-006}: AC-011 Halt-over-compaction-failure precedence rule. BC table version bumped."
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 mis-anchors corrected (AC-004 INV-001→INV-004, AC-008 PC-001→PC-002, AC-009 PC-002→PC-001, AC-010 INV-001→INV-003)"
   - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
   - "1.3 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags"
@@ -19,7 +20,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "97c4320"
+input-hash: "e47dba9"
 traces_to:
   - behavioral-contracts/BC-2.06.004
   - behavioral-contracts/BC-2.06.005
@@ -114,6 +115,10 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 `parent_ids` field on `CompactionEvent` payload must be a non-null, non-empty array. Emitting a `compaction_event` with `parent_ids: null` or `parent_ids: []` violates the CompactionEvent structural invariant (BC-2.06.006 INV-003) and must not occur.
 (traces to BC-2.06.006 INV-003)
 
+### AC-011: Halt-over-compaction-failure — OnCeiling::Halt takes unconditional precedence
+When `compact()` returns `Err(...)` AND `OnCeiling::Halt` is configured AND the token ceiling is crossed in the same turn: (a) no `compaction_event` is emitted per {PC-003}; (b) the compaction error is logged as a diagnostic trace event only — it is NOT propagated as the terminal error; (c) `OnCeiling::Halt` fires unconditionally as the final step in the turn cycle (ceiling evaluation after compaction-attempt-or-skip); (d) the run terminates with `Err(E-BUDGET-001 BudgetCeilingReached)`. The caller receives the Halt error, not the compaction error. Verified by `test_BC_2_06_006_halt_takes_precedence_over_compaction_failure()`.
+(traces to BC-2.06.006 §{INV-006} and §{EC-006})
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
@@ -168,6 +173,7 @@ The `compaction_event` payload includes: `run_id`, `parent_ids` (Vec<Uuid>, MAND
 - [ ] Add `tokens_remaining_after: Option<i64>` field to `CompactionEvent`
 - [ ] Integration test: collect stream, assert event 13 precedes interrupted status
 - [ ] Integration test: collect stream, assert event 14 precedes tool invocation
+- [ ] Write failing test `test_BC_2_06_006_halt_takes_precedence_over_compaction_failure()` for AC-011 (test-writer)
 - [ ] Run `just iter pregolya-graph` — all tests green
 
 ## Previous Story Intelligence

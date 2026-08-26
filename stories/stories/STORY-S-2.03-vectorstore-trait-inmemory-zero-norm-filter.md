@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.03
 epic_id: E-17
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c4911f5"
+input-hash: "c3c9bee"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 10
 depends_on: [S-2.02, S-1.04, S-2.09]
@@ -81,10 +81,13 @@ object-safe (e.g., `from_texts`). `VectorStoreFactory: Sized` ensures E0038 is i
 on `VectorStore`. The split is compile-time verified.
 Verified by `test_BC_2_21_001_vectorstore_factory_sized_split()`.
 
-### AC-006 (traces to BC-2.21.001 PC-002)
+### AC-006 (traces to BC-2.21.001 §{EC-003})
 `VectorStore::delete(&self, ids: &[&str]) -> Result<(), PregolyaError>` removes documents
-by ID. Deleting non-existent IDs is a no-op (returns `Ok(())`). Verified by
-`test_BC_2_21_001_delete_nonexistent_noop()`.
+by ID. Deleting non-existent IDs returns `Ok(())` — idempotent per ADR-014 Decision 8. The
+trait mandates this behavior for ALL `VectorStore` implementations; strict-delete semantics
+are not permitted. The trait doc comment for `delete` MUST include: "Idempotent: deleting a
+nonexistent ID returns Ok(())."
+Verified by `test_BC_2_21_001_delete_nonexistent_noop()`.
 
 ### AC-007 (traces to BC-2.21.002 INV-001)
 `InMemoryVectorStore::new(embeddings: Arc<dyn Embeddings>) -> Self` stores the Arc without
@@ -188,6 +191,56 @@ Verified by compile-fail test `pregolya-vectorstores/tests/external/search-type-
 allows `VectorStoreRetriever: Retriever + 'static`. `Arc<dyn Retriever>` coercion succeeds.
 Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 
+### AC-026 (traces to BC-2.20.003 §{PC-003} and BC-2.21.001 §{PC-002})
+`InMemoryVectorStore::max_marginal_relevance_search` implements the Carbonell–Goldstein MMR
+argmax formula (ADR-014 Decision 7). At each iteration with S the already-selected set and C
+the `fetch_k` candidate pool:
+`next = argmax_{d ∈ C \ S} [ λ · cos(d.emb, q.emb) − (1−λ) · max_{d' ∈ S} cos(d.emb, d'.emb) ]`
+Three behavioral sub-properties are verified:
+(a) **Empty-set convention:** when S = ∅ (first iteration), `max_{d' ∈ S}(...)` = 0.0 — reduces
+    to pure relevance ranking `λ · cos(d, q)`.
+(b) **Lowest-index tie-break:** when two or more candidates achieve the same MMR score (f32
+    equality), the candidate with the lowest index in pool C is selected.
+(c) **Pool exhaustion:** when `|C \ S| = 0` before k documents are selected (e.g., fetch_k pool
+    smaller than k after zero-norm rejections), the available documents are returned — partial
+    return is not an error; no `Err` is raised.
+Verified by `test_BC_2_20_003_mmr_carbonell_goldstein_formula()`.
+
+### AC-027 (traces to BC-2.21.003 §{VP-2.21.003-C})
+The per-round argmax MMR score sequence is **weakly non-increasing**: for any run of the
+Carbonell–Goldstein selection loop, `score_1 ≥ score_2 ≥ … ≥ score_k` where `score_i` is
+the argmax MMR value chosen at iteration i. Proof sketch: adding the selected document d* to S
+at each step can only increase `max_{d' ∈ S}(...)`, which increases the subtracted diversity
+term for all remaining candidates, so the argmax at each subsequent iteration is ≤ the prior
+step's argmax. The empty-set start (S = ∅, score_1 = λ · max cosine) is the upper bound.
+VP-2.21.003-C is verified by proptest — generate random non-NaN finite non-zero embeddings,
+run the canonical Carbonell–Goldstein selection loop, record the per-round argmax MMR score,
+and assert the score sequence `[score_1, score_2, …]` is weakly non-increasing.
+Verified by `test_BC_2_21_003_mmr_per_round_argmax_score_sequence_weakly_non_increasing()`.
+
+### AC-028 (traces to BC-2.21.004 §{PC-006})
+`InMemoryVectorStore::similarity_search_with_filter` uses the **scan-all** strategy — it
+computes cosine similarity against ALL documents in the in-memory index before applying filter
+predicates. No internal-fetch-limit multiplier is used. The full ranked list is produced first,
+filter predicates are applied to the complete ranked result, and then the top-k passing
+documents are returned. This ensures no filtered match is missed and eliminates an undefined
+tunable multiplier that would require separate documentation and configuration. The base
+`similarity_search` contract is not modified.
+Verified by `test_BC_2_21_004_inmemory_post_filter_scan_all()`.
+
+### AC-029 (traces to BC-2.21.002 §{INV-006})
+After the `Embeddings` implementation produces the full embedding batch, `validate_embedding_batch(texts, &embeddings)` (VP-008 production function in `core::embeddings`) is called before
+any write lock is acquired. On any of the following conditions, `add_documents` returns
+`Err(E-EMBED-001)` and NO document from the batch is persisted (all-or-nothing):
+(a) Count mismatch: `embeddings.len() != texts.len()`
+(b) Zero-length embedding: `embeddings[i].is_empty()` for any `i`
+(c) Inconsistent lengths: `embeddings[i].len() != embeddings[0].len()` for any `i`
+The per-vector zero-norm E-VS-004 check (ADR-014 Decision 5) fires first in the embedding
+loop; `validate_embedding_batch` is the batch-level structural guard applied after all
+embeddings are produced and before the write lock is acquired (TV-007 covers the count-mismatch
+case).
+Verified by `test_BC_2_21_002_validate_embedding_batch_count_mismatch_returns_e_embed_001()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -229,7 +282,7 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~5,800 |
+| This story spec | ~7,200 |
 | BC files (5 BCs) | ~15,000 |
 | `module-decomposition.md` (SS-21 section) | ~400 |
 | ADR for vectorstore abstraction | ~2,000 |
@@ -243,15 +296,15 @@ Verified by `test_BC_2_20_003_arc_dyn_retriever_coercion_succeeds()`.
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-025 (test-writer); verify Red Gate (AC-011 must FAIL before zero-norm guard implemented)
+1. [ ] Write failing tests for AC-001 through AC-029 (test-writer); verify Red Gate (AC-011 must FAIL before zero-norm guard implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
 3. [ ] Create `pregolya-vectorstores/Cargo.toml` — new crate; depends on pregolya-core, async-trait, tokio, serde_json; `default-features = false, features = ["rustls-tls"]` for reqwest if needed
 4. [ ] Create `pregolya-vectorstores/src/store/vector_store.rs` — `VectorStore` async trait (`&self` receivers, `#[async_trait]`) including `add_documents`, `similarity_search`, `similarity_search_with_score`, `delete`, `max_marginal_relevance_search`, and `as_retriever` methods; `VectorStoreFactory` with `Sized` bound; default `similarity_search_with_filter` impl returning `Err(E-VS-005)` on non-empty filter; create `pregolya-vectorstores/src/store/mod.rs` as re-export-only (`pub mod vector_store; pub mod in_memory; pub use vector_store::{VectorStore, VectorStoreFactory};` — no `pub mod cosine`, cosine_similarity is in top-level `similarity.rs`)
 5. [ ] Create `pregolya-vectorstores/src/similarity.rs` — `cosine_similarity(a: &[f32], b: &[f32]) -> Result<f32, PregolyaError>` with zero-norm guard `if norm == 0.0 || !norm.is_finite()` (VP-009 Kani proof vehicle; standalone shared primitive per F-P129-11)
-6. [ ] Create `pregolya-vectorstores/src/store/in_memory.rs` — `InMemoryVectorStore`, `Arc<dyn Embeddings>` DI constructor, `RwLock<Vec<(Document, Vec<f32>)>>` storage, batch embed on `add_documents`, MMR algorithm for `max_marginal_relevance_search`; imports `cosine_similarity` from `crate::similarity` (not `store::cosine`)
+6. [ ] Create `pregolya-vectorstores/src/store/in_memory.rs` — `InMemoryVectorStore`, `Arc<dyn Embeddings>` DI constructor, `RwLock<Vec<(Document, Vec<f32>)>>` storage, batch embed on `add_documents`, MMR algorithm for `max_marginal_relevance_search` implementing Carbonell–Goldstein formula (empty-set=0.0, lowest-index tie-break, pool-exhaustion→partial-return; AC-026), call `validate_embedding_batch(texts, &embeddings)` (VP-008) before write lock in `add_documents` returning `Err(E-EMBED-001)` on mismatch/empty/inconsistent batch (AC-029), `similarity_search_with_filter` uses scan-all strategy (AC-028); imports `cosine_similarity` from `crate::similarity` (not `store::cosine`)
 7. [ ] Create `pregolya-vectorstores/src/filter.rs` — `MetadataFilter` and `FilterClause` (both `#[non_exhaustive]`)
 8. [ ] Create `pregolya-vectorstores/src/retriever.rs` — `VectorStoreRetriever` (no lifetime param, `store: Arc<dyn VectorStore>`), `SearchType` enum (`#[non_exhaustive]` with `Similarity`, `SimilarityScoreThreshold { score_threshold }`, `Mmr` variants), dispatch logic in `get_relevant_documents` (Similarity→similarity_search, SimilarityScoreThreshold→similarity_search_with_score+filter, Mmr→max_marginal_relevance_search), lambda_mult/k/fetch_k validation at `as_retriever()` time returning `Err(E-VS-003)` on invalid config
-9. [ ] Register `E-VS-001` (`Component::Vs, Category::Val, RetryHint::Never`) and `E-VS-003`, `E-VS-005` in error taxonomy
+9. [ ] Register `E-VS-001` (`Component::Vs, Category::Val, RetryHint::Never`) and `E-VS-003`, `E-VS-005` in error taxonomy; verify `E-EMBED-001` (`Component::Embed, Category::Val, RetryHint::Never`) is registered (owned by VP-008 / pregolya-core embeddings subsystem — do not duplicate; confirm existence before adding)
 10. [ ] Create `pregolya-vectorstores/src/lib.rs` — `pub mod store; pub mod filter; pub mod retriever; pub mod similarity;`
 11. [ ] Create compile-fail tests: VectorStore dyn-compat, VectorStoreFactory Sized split, MetadataFilter/FilterClause non-exhaustive, SearchType non-exhaustive, RAG guardrail bypass
 12. [ ] Create `crates/pregolya-vectorstores/src/proofs/zero_norm_guard.rs` — `#[cfg(kani)]` `zero_norm_guard_fail_closed` stub (body `todo!()` for Phase 6 formal hardening; VP-009)
@@ -317,3 +370,4 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-01: AC-004 similarity-score range corrected to normalized [0.0,1.0], re-anchored BC-2.21.001 PC-002+INV-002"
 - "1.3 (P2A-043/2026-08-24): P2A-043 F-03: PC-003 anchor confirmed by PO; escalation note cleared"
 - "1.4 (P2A-047/2026-08-24): F-047-02: SS-20 added to subsystems — BC-2.20.003 is owned by SS-20 (Document Retrieval) per ARCH-INDEX Subsystem Registry; subsystems must be a superset of covered-BC owners; STORY-INDEX S-2.03 Subsystem column updated to SS-21, SS-20."
+- "1.5 (SW-4b/BC-completeness/2026-08-26): B-SS19-23 propagation — AC-006 retrace BC-2.21.001 PC-002 → §{EC-003} (delete idempotent mandate per ADR-014 Decision 8); AC-026 added (BC-2.20.003 §{PC-003} + BC-2.21.001 §{PC-002}: Carbonell–Goldstein MMR formula, empty-set=0.0, lowest-index tie-break, pool-exhaustion→partial-return); AC-027 added (BC-2.21.003 §{VP-2.21.003-C}: per-round argmax score sequence weakly non-increasing); AC-028 added (BC-2.21.004 §{PC-006}: InMemory post-filter scan-all strategy); AC-029 added (BC-2.21.002 §{INV-006}: validate_embedding_batch → E-EMBED-001 before any write); BC-table version column removed (D-50 anti-version-pin); task 1 range updated AC-025→AC-029; task 6 expanded with scan-all and validate_embedding_batch notes; task 9 updated with E-EMBED-001 check; input-hash updated 6c33900."

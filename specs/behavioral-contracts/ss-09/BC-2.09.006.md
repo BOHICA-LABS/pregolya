@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.006
-version: "1.3"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,8 @@ changelog:
   - "1.1 (pass-72 fix, 2026-07-15): OBS-P72 fix — Architecture Anchors: ADR-012 citation replaced with ADR-013. ADR-012 governs self-improvement primitives (SkillStore, write_guard, context_mutation); it has no MCP content. CAP-021 / BC-2.09.006 (MCP server role) is governed by ADR-013 minted by architect in this burst."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.11 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.4 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): LOW gap — malformed/unparseable JSON-RPC request handling: EC-006 (-32700 parse error) and EC-007 (-32600 invalid request) added with wire-protocol JSON-RPC response specification; TV-007 and TV-008 added. No E-code minted — JSON-RPC protocol error codes cited directly per Burst A reuse decision (error-taxonomy v1.58 coordination pass). ADR-027 stable clause anchors {EC-006}, {EC-007}."
+  - "1.5 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -128,6 +130,26 @@ SSE connection.
 Pending `tools/list` requests that arrived before shutdown return their responses if
 in-flight; no new requests are accepted after shutdown begins.
 
+### EC-006: Malformed JSON — parse error on server receive
+**Scenario:** A connected MCP client sends a byte stream that is not valid JSON (e.g.,
+a truncated message, binary garbage, or a bare `{` with no closing brace).
+**Expected behavior:** The server responds with a JSON-RPC protocol error:
+`{ "jsonrpc": "2.0", "id": null, "error": { "code": -32700, "message": "Parse error" } }`.
+JSON-RPC -32700 is the standard parse-error code; it is a wire-protocol response, not a
+`PregolyaError` — no `E-MCP-*` code is raised for this path. The connection remains open;
+subsequent well-formed requests are processed normally. (Per Burst A error-taxonomy v1.58
+reuse decision: JSON-RPC -32700/-32600 on server-receive are wire-protocol responses cited
+directly.)
+
+### EC-007: Invalid JSON-RPC request structure
+**Scenario:** A connected MCP client sends valid JSON but it is not a well-formed JSON-RPC
+request object (e.g., missing `"jsonrpc"` field, missing `"method"` field, or `"id"` is not
+a string/number/null).
+**Expected behavior:** The server responds with a JSON-RPC protocol error:
+`{ "jsonrpc": "2.0", "id": null, "error": { "code": -32600, "message": "Invalid Request" } }`.
+JSON-RPC -32600 is the standard invalid-request code; wire-protocol response only, no
+`PregolyaError` raised. The connection remains open.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -138,6 +160,8 @@ in-flight; no new requests are accepted after shutdown begins.
 | TV-004 | SSE bind with port already in use | `Err(E-MCP-005 McpServerBindFailed)` | Bind failure |
 | TV-005 | tools/list on empty registry | `{ "tools": [] }` | Empty registry valid |
 | TV-006 | Client sends `resources/list` (unimplemented) | JSON-RPC error `{ "code": -32601 }` | Unimplemented method |
+| TV-007 | Client sends non-JSON bytes (e.g., `"not json{{"`) | JSON-RPC response `{ "error": { "code": -32700, "message": "Parse error" } }` | Malformed JSON — parse error (EC-006) |
+| TV-008 | Client sends valid JSON but missing `"method"` field: `{ "jsonrpc": "2.0", "id": 1, "params": {} }` | JSON-RPC response `{ "error": { "code": -32600, "message": "Invalid Request" } }` | Invalid JSON-RPC structure (EC-007) |
 
 ## Verification Properties
 

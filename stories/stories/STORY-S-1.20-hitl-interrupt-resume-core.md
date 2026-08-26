@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.20
 epic_id: E-12
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
 changelog:
-  - "1.2 (ADR-027 M3c/2026-08-24): escalation-resolution AC corrections — AC-004 error code corrected E-GRAPH-016→E-CHKPT-001 per BC-2.05.001 EC-003; Architecture Compliance Rules swept (TD-VSDD-060)"
+  - "1.3 (SW-2/bc-completeness-hardening/2026-08-26): BC-2.05.004 -> AC-024 (EC-006 Command.update unknown channel -> E-GRAPH-007 REUSE), AC-025 (EC-007 Command.goto nonexistent -> E-GRAPH-003 REUSE), AC-026 (EC-008 Command.resume unmatched interrupt_id -> E-GRAPH-018; run REMAINS interrupted). EC-006 updated to cite E-GRAPH-018; EC-007/EC-008 added. BC table: version column added."
+  - "1.2 (ADR-027 M3c/2026-08-24): escalation-resolution AC corrections — AC-004 error code corrected E-GRAPH-016->E-CHKPT-001 per BC-2.05.001 EC-003; Architecture Compliance Rules swept (TD-VSDD-060)"
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
 inputs:
@@ -20,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "05b494e"
+input-hash: "2fee760"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.16, S-1.17, S-1.10]
@@ -57,7 +58,7 @@ tdd_mode: strict
 | BC-2.05.001 | interrupt() Suspends Run with INTERRUPT Marker Checkpoint | AC-001..AC-004 |
 | BC-2.05.002 | FIFO Resume-Value Delivery via Per-Task Scratchpad | AC-005..AC-007 |
 | BC-2.05.003 | Interrupted Node Re-Executes from START on Resume | AC-008..AC-010 |
-| BC-2.05.004 | Command Struct Variants and Validation | AC-011..AC-014 |
+| BC-2.05.004 | Command Struct Variants and Validation | AC-011..AC-014, AC-024..AC-026 |
 | BC-2.05.005 | Empty Queue and Invalid-State Guards | AC-015..AC-018 |
 | BC-2.05.006 | Risk-Tiered ActionRisk Interrupts | AC-019..AC-023 |
 
@@ -132,6 +133,15 @@ When the HITL operator rejects a risk-gated action, the scheduler returns `Err(P
 ### AC-023 (traces to BC-2.05.006 EC-005 — lazy deadline evaluation for risk gate)
 The deadline for risk-gate HITL responses is evaluated lazily at resume time — not at interrupt time. This prevents pre-computing a fixed timeout that could expire before the HITL UI is even shown. Verified by `test_BC_2_05_006_risk_gate_deadline_lazy_evaluation()`.
 
+### AC-024 (traces to BC-2.05.004 EC-006 — Command.update unknown channel key)
+`Command(update={"nonexistent_channel": value})` submitted to a graph whose state schema does not contain `"nonexistent_channel"` returns `Err(PregolyaError { category: VAL, code: "E-GRAPH-007", message: "UnknownChannelKey: node '(Command.update)' returned write for key 'nonexistent_channel' which is not registered in the state schema", .. })`. No state side-load is applied; the run does NOT advance. The `node_id` placeholder in the E-GRAPH-007 message is `"(Command.update)"` to distinguish the Command context from a node-body write. Verified by `test_BC_2_05_004_command_update_unknown_channel_e_graph_007()` (TV-007 coverage).
+
+### AC-025 (traces to BC-2.05.004 EC-007 — Command.goto nonexistent node name)
+`Command(goto="ghost_node")` submitted when `"ghost_node"` is not registered in the compiled graph returns `Err(PregolyaError { category: VAL, code: "E-GRAPH-003", message: "UnknownRoutingTarget: node 'ghost_node' is not registered in the compiled graph", .. })`. No routing is performed; the run does NOT advance. Verified by `test_BC_2_05_004_command_goto_nonexistent_node_e_graph_003()` (TV-008 coverage).
+
+### AC-026 (traces to BC-2.05.004 EC-008 — Command.resume unmatched interrupt_id)
+When the run IS in interrupted state and `Command(resume={interrupt_id: value})` is submitted with an `interrupt_id` that does not match any pending `InterruptPayload` on the thread (the interrupt_id refers to a non-existent or already-consumed payload), the scheduler returns `Err(PregolyaError { category: POLICY, code: "E-GRAPH-018", message: "InterruptIdNotFound: run '<run_id>' is interrupted but no pending interrupt matches id '<interrupt_id>'", retry_hint: Never })`. The run REMAINS in interrupted state; no resume value is delivered; no scratchpad slot is populated; no node re-executes. This is distinct from AC-013/{EC-004} where the run is NOT in interrupted state at all. Verified by `test_BC_2_05_004_unmatched_interrupt_id_e_graph_018()` (TV-009 coverage).
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -161,7 +171,9 @@ The deadline for risk-gate HITL responses is evaluated lazily at resume time —
 | EC-003 | `Command.PARENT` on top-level run (no parent) | `E-GRAPH-015 { .. }` |
 | EC-004 | `ActionRisk` value from future binary version (unknown variant) | Wildcard arm fails-closed to `High`; interrupt triggered |
 | EC-005 | HITL deadline expires (lazy evaluation) | At resume time, deadline check fires; `E-GRAPH-014` if expired |
-| EC-006 | `Command(resume=v)` with wrong `interrupt_id` | Error returned; scratchpad not consumed |
+| EC-006 | `Command(resume=v)` with wrong `interrupt_id` on an interrupted run | `Err(E-GRAPH-018 InterruptIdNotFound { run_id, interrupt_id })`; run REMAINS in interrupted state; scratchpad not consumed (AC-026) |
+| EC-007 | `Command(update={"nonexistent_channel": value})` on an interrupted run | `Err(E-GRAPH-007 UnknownChannelKey { node_id: "(Command.update)", key: "nonexistent_channel" })`; no state side-load; run does not advance (AC-024) |
+| EC-008 | `Command(goto="ghost_node")` where `"ghost_node"` is not registered in the compiled graph | `Err(E-GRAPH-003 UnknownRoutingTarget { target: "ghost_node" })`; no routing performed; run does not advance (AC-025) |
 
 ## Token Budget Estimate (MANDATORY)
 
@@ -184,7 +196,7 @@ The deadline for risk-gate HITL responses is evaluated lazily at resume time —
 
 1. [ ] Write failing tests for AC-001..AC-004 (interrupt() + INTERRUPT marker) first — crash-safe invariant
 2. [ ] Write failing tests for AC-019..AC-023 (ActionRisk risk gate) — security-critical path second
-3. [ ] Write remaining failing tests for AC-005..AC-018
+3. [ ] Write remaining failing tests for AC-005..AC-018, AC-024..AC-026 (`test_BC_2_05_004_command_update_unknown_channel_e_graph_007`, `test_BC_2_05_004_command_goto_nonexistent_node_e_graph_003`, `test_BC_2_05_004_unmatched_interrupt_id_e_graph_018`)
 4. [ ] Create `pregolya-core/src/action_risk.rs` — `ActionRisk` enum (`#[non_exhaustive]`), `RiskGatePolicy` trait
 5. [ ] Add `InterruptPayload`, `HitlInterruptPayload`, `Command`, per-task scratchpad to `pregolya-graph/src/types.rs`
 6. [ ] Implement `interrupt(value)` in node execution context in `pregolya-graph/src/scheduler.rs` — sync `put_writes` to checkpoint

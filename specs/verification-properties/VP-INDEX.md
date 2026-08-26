@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.14"
+version: "1.15"
 status: active
 producer: architect
-timestamp: 2026-08-21T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.15 (BC-completeness-propagation/2026-08-26): VP-015 added — MCP Response Credential Redaction unit P1 (BC-2.09.007 {INV-003}, mcp::sanitize, pregolya-mcp, DI-010, harness credential_redaction_unit). VP-006 harness_fn updated: added `injection_guard_fewshot_fail_closed` (VP-006.md both-arm coverage of FewShotExamples arm). Arithmetic: total 14→15 (P0 6→6 unchanged, P1 8→9); unit 0→1 (new tool category); Kani/proptest/integration unchanged. NOTE: verification-architecture.md + verification-coverage-matrix.md list VP-015 tool as 'integration' — on-disk VP-015.md frontmatter is authoritative (tool: unit per CLAUDE.md rule 4 VP-file-supersedes); architecture docs carry a records-tier tool-type discrepancy (flagged D-273)."
   - "1.14 (INVESTIGATE-RECONCILE/2026-08-21): Fix VP-004 Module column: `mcp::adapter` → `mcp::exception`. Story S-2.10 creates no `adapter.rs`; VP-004 property (bare ToolException type-identity, R11) is implemented in `mcp::exception`. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2. POL-9 cascade propagated same-burst to verification-architecture, verification-coverage-matrix, module-decomposition, purity-boundary-map, and VP-004.md."
   - "1.13 (burst-325/D-196/2026-08-18): input-hash: \"[live-index]\" sentinel added (metadata hygiene; Q2 alignment with BC-INDEX and ARCH-INDEX index convention; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). VP-INDEX is an index document with no declared inputs field; sentinel marks it as live-index class per index convention. No VP catalog rows or arithmetic invariant changed."
   - "1.12 (burst-313/F-P204-01/2026-08-17): VP-014 (v1.2→v1.3) — §Source Contract ADR anchor corrected: split single ADR-026 §Decision 1 citation that mis-attributed JoinSet fan-out, completion-order collection, and re-insertion (§Decision 2 machinery) to §Decision 1 (type representation and key ordering only) into two single-§ citations per POL-19: §Decision 1 (type representation and key ordering) and §Decision 2 (concurrent execution and error handling). Mirrors burst-312 fix applied to sibling BC-2.01.005. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
@@ -33,7 +34,7 @@ changelog:
 > (Provable Properties Catalog + P0 list) and `verification-coverage-matrix.md`
 > (VP-to-Module table + Totals row) in the same burst.
 >
-> Arithmetic invariant: total (14) = P0 (6) + P1 (8) = Kani (9) + proptest (3) + integration (2).
+> Arithmetic invariant: total (15) = P0 (6) + P1 (9) = Kani (9) + proptest (3) + integration (2) + unit (1).
 >
 > **VP Priority vs BC Priority (OBS-P156-B):** The `Priority` column here is the
 > **verification-priority axis** — it reflects proof criticality (how urgently this property
@@ -53,14 +54,15 @@ changelog:
 
 | Metric | Count |
 |--------|-------|
-| Total VPs | 14 |
+| Total VPs | 15 |
 | Priority P0 (verification-priority) | 6 |
-| Priority P1 (verification-priority) | 8 |
+| Priority P1 (verification-priority) | 9 |
 | Kani | 9 |
 | proptest | 3 |
 | fuzz | 0 |
 | integration | 2 |
-| Status: draft | 14 |
+| unit | 1 |
+| Status: draft | 15 |
 | Status: active | 0 |
 | Status: passed | 0 |
 
@@ -73,7 +75,7 @@ changelog:
 | VP-003 | BC-2.13.004 | sandbox::path_guard | Kani | 6 | P0 | draft | DI-007 | pregolya-sandbox | `workspace_confinement_harness` | VP-003.md |
 | VP-004 | BC-2.09.004 | mcp::exception | integration | 3 | P1 | draft | DI-014 | pregolya-mcp | n/a (integration test) | VP-004.md |
 | VP-005 | BC-2.09.005 | mcp::client | integration | 3 | P1 | draft | DI-014 | pregolya-mcp | n/a (integration test) | VP-005.md |
-| VP-006 | BC-2.18.004 | prompts::injection_guard | Kani | 6 | P1 | draft | DI-014 | pregolya-prompts | `injection_guard_fail_closed` | VP-006.md |
+| VP-006 | BC-2.18.004 | prompts::injection_guard | Kani | 6 | P1 | draft | DI-014 | pregolya-prompts | `injection_guard_fail_closed`, `injection_guard_fewshot_fail_closed` | VP-006.md |
 | VP-007 | BC-2.19.001 | core::serializable | proptest | 3 | P1 | draft | DI-008 | pregolya-core | n/a (proptest) | VP-007.md |
 | VP-008 | BC-2.22.001 | core::embeddings | proptest | 3 | P1 | draft | DI-014 | pregolya-core | n/a (proptest) | VP-008.md |
 | VP-009 | BC-2.21.003 | vectorstores::similarity | Kani | 6 | P0 | draft | DI-014 | pregolya-vectorstores | `zero_norm_guard_fail_closed` | VP-009.md |
@@ -82,3 +84,4 @@ changelog:
 | VP-012 | BC-2.10.005 | core::budget | Kani | 6 | P1 | draft | DI-014 | pregolya-core | `watermark_arithmetic_harness` | VP-012.md |
 | VP-013 | BC-2.23.005 | tools::shell | Kani | 6 | P1 | draft | DI-014 | pregolya-tools | `risk_floor_rejects_below_medium` | VP-013.md |
 | VP-014 | BC-2.01.005 + BC-2.01.006 | core::runnable | proptest | 3 | P1 | draft | DI-016 | pregolya-core | n/a (proptest) | VP-014.md |
+| VP-015 | BC-2.09.007 {INV-003} | mcp::sanitize | unit | 3 | P1 | draft | DI-010 | pregolya-mcp | `credential_redaction_unit` | VP-015.md |

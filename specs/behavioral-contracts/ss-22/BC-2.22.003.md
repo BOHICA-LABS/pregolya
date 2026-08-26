@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.003
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.3 (P2A030-03/2026-08-22): EC-003 amended — replace bare generic `Err(PregolyaError { .. })` with full-form E-PROV-012 ProviderConnectionError citation. A connection-refused failure has no HTTP status, so E-PROV-008 (ProviderHttpError) cannot render for this path; E-PROV-012 was minted in error-taxonomy.md same burst to cover pre-response provider connection failures. EC-003 is the authoritative full-form gate #33 site for E-PROV-012. Story-writer handoff: re-anchor S-2.09 EC-003 from E-PROV-008 to E-PROV-012."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (B-SS19-23/HIGH-provider-error-codes/2026-08-26): HIGH gap closure — Ollama provider HTTP-status error codes added. EC-001 (404 /api/embed), EC-002 (500 serial), EC-004 (404 model-not-found): bare Err→E-PROV-008. EC-005 (timeout): bare Err→E-PROV-012. EC-003 (connection-refused) already carries E-PROV-012 from v1.3 — no change. TV-004 (404 no-fallback): E-PROV-008 cited. Reuses existing E-PROV-008/012 codes — no new E-code minted."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-033
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -112,11 +113,11 @@ unconditional and applies even for `localhost` targets.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-001 | `use_legacy_endpoint: false`, Ollama binary predates `/api/embed` (returns 404) | `Err(PregolyaError { .. })` — 404 propagates; no silent fallback to `/api/embeddings` |
-| EC-002 | `use_legacy_endpoint: true`, batch of 5 texts; 3rd request returns 500 | `Err(PregolyaError { .. })` — first 2 embeddings discarded; Err for whole call |
+| EC-001 | `use_legacy_endpoint: false`, Ollama binary predates `/api/embed` (returns 404) | `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP 404`; no silent fallback to `/api/embeddings` |
+| EC-002 | `use_legacy_endpoint: true`, batch of 5 texts; 3rd request returns 500 | `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP 500`; first 2 embeddings discarded; Err for whole call |
 | EC-003 | Ollama process not running (connection refused) | `Err(PregolyaError { component: PROV, category: TRANSPORT, code: E-PROV-012, message: "ProviderConnectionError: cannot connect to provider 'http://localhost:11434': connection refused", .. })` — no retry; reqwest OS-level error is in `.source()`. This is the authoritative full-form gate #33 site for E-PROV-012; any future TV for this failure path PASS-ABBREVs via this EC-003. |
-| EC-004 | Model not pulled locally (Ollama returns 404 with body `"model not found"`) | `Err(PregolyaError { .. })` — error message includes model name if safe to include |
-| EC-005 | Request takes > 30 seconds (slow local model) | `Err(PregolyaError { .. })` wrapping the reqwest timeout; 30s applies even for localhost |
+| EC-004 | Model not pulled locally (Ollama returns 404 with body `"model not found"`) | `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP 404`; body/model context in `.source()` chain if safe to surface |
+| EC-005 | Request takes > 30 seconds (slow local model, reqwest `.timeout(30s)` fires) | `Err(PregolyaError { code: "E-PROV-012", .. })` — `ProviderConnectionError: cannot connect to provider '<base_url>': connection timed out`; 30s applies even for localhost |
 | EC-006 | `embed_documents(vec![])` with legacy endpoint | `Ok(vec![])` — zero requests sent; not an error |
 
 ## Canonical Test Vectors
@@ -126,7 +127,7 @@ unconditional and applies even for `localhost` targets.
 | TV-001 | `embed_documents(vec!["hello"])` with `use_legacy_endpoint: false`, mock `/api/embed` returning 768-dim vector | `Ok(vec![[f32; 768]])` | happy-path (default endpoint) |
 | TV-002 | `embed_query("hello")` with `use_legacy_endpoint: false` | `Ok([f32; 768])` | happy-path (default endpoint, single query) |
 | TV-003 | `embed_documents(vec!["hello"])` with `use_legacy_endpoint: true`, mock `/api/embeddings` | `Ok(vec![[f32; 768]])` | happy-path (legacy endpoint) |
-| TV-004 | `use_legacy_endpoint: false`; Ollama returns 404 for `/api/embed` | `Err(PregolyaError { .. })` — no fallback to `/api/embeddings` | error-case (no auto-fallback) |
+| TV-004 | `use_legacy_endpoint: false`; Ollama returns 404 for `/api/embed` | `Err(PregolyaError { code: "E-PROV-008", .. })` — no fallback to `/api/embeddings` | error-case (no auto-fallback, E-PROV-008) |
 | TV-005 | `use_legacy_endpoint: true`; 2-text batch; second request returns 500 | `Err(PregolyaError { .. })` — first embedding discarded | error-case (DI-014 partial-failure) |
 
 ## Verification Properties

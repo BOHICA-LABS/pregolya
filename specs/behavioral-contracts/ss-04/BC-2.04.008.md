@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.008
-version: "2.0"
+version: "2.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — all 4 occurrences of 'BC-2.04.007 invariant 3' converted to 'BC-2.04.007 {INV-003}' (INV-005 prose, blockquote, EC-007 error message, Traceability row)."
   - "2.0 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "2.1 (P2-BC-SS04-06-hardening/2026-08-26): EC-008 added — `search_history` tool error surface: `ToolOutput::Error` (not run-halt). The existing EC-005 specified only the happy path (tool called mid-run, FTS results returned as ToolMessage). EC-008 specifies the error path: when `fts_search` returns `Err(PregolyaError)`, the `search_history` tool wrapper converts the Err to `ToolOutput::Error` and returns a `ToolMessage` with `status = 'error'` — the run does NOT halt. PC-005 extended with a cross-reference to EC-008 for the error path. TV-008 added for EC-008. BC-completeness-scan Phase-2 BURST-B gap BC-2.04.008."
 origin: greenfield
 priority: P1
 subsystem: SS-04
@@ -81,7 +82,9 @@ concurrent reads). The search capability is also registered as a callable `Tool`
 5. {PC-005} The `search_history` `Tool` wraps `fts_search` and is registerable in any pregolya
    graph via `graph.add_tool(search_history_tool())`. Calling it from a graph node
    invokes `fts_search` on the run's configured `CheckpointSaver` and returns the
-   results as a `ToolMessage`.
+   results as a `ToolMessage`. If `fts_search` returns `Err(PregolyaError)`, the tool
+   returns a `ToolOutput::Error` as the `ToolMessage` content — the run does NOT halt
+   (see EC-008).
 6. {PC-006} `FtsSearchConfig.limit` of 0 returns
    `Err(PregolyaError { component: CHKPT, category: VAL, code: "E-CHKPT-008",
    message: "FtsLimitZero: FtsSearchConfig.limit must be > 0; got <limit>", retry_hint: Never })`.
@@ -154,6 +157,26 @@ message: "Fts5Unavailable: FTS5 extension not available in this SQLite build —
 
 > **Resolution (D20 sub-burst 2):** The ambiguity between `limit = 0` (VAL) and FTS5-unavailable (INTERNAL) is resolved by splitting into two codes: `E-CHKPT-008` (VAL) for caller-input errors (limit=0, malformed FTS5 query syntax) and `E-CHKPT-009` (INTERNAL) for deployment/environment errors (FTS5 not compiled in). Different categories → different codes per taxonomy governance. EC-006 uses `E-CHKPT-009` exclusively.
 
+### EC-008: search_history tool error surface — ToolOutput::Error, not run-halt
+
+**Scenario:** A graph node calls the `search_history` tool; internally `fts_search` returns
+`Err(PregolyaError)` — for example: E-CHKPT-008 FtsLimitZero (limit = 0 passed via tool
+arguments), E-CHKPT-008 FtsQuerySyntaxError (malformed FTS5 query string), E-CHKPT-009
+Fts5Unavailable (FTS5 not compiled in the deployed SQLite build), or a backend I/O error
+during the SQLite query.
+
+**Expected behavior:** The `search_history` tool wrapper converts the `Err(PregolyaError)`
+to `ToolOutput::Error` and returns a `ToolMessage` with `status = "error"` and `content` =
+the `PregolyaError::message()` string as the content block. The graph run does **NOT** halt;
+execution continues normally and subsequent nodes may inspect the `ToolMessage` error status
+via standard tool-result routing (e.g., a conditional edge checking whether the last tool
+output was an error). This follows the pregolya Tool error-surface contract: tool-level errors
+become `ToolMessage` content, not run-level panics or `Err` propagation through the scheduler.
+
+Note: An unrecoverable infrastructure panic (e.g., the `CheckpointSaver` `Arc` was dropped
+while the tool was executing) is out of scope for this EC; such a condition surfaces as an
+`INTERNAL` run error, not as `ToolOutput::Error`.
+
 ### EC-007: FTS5 enabled simultaneously with EncryptedSerializer
 **Scenario:** `CheckpointSaver` is constructed with both FTS5 indexing enabled and an
 `EncryptedSerializer` configured as the serializer backend.
@@ -174,6 +197,7 @@ No checkpoint tables are created; the error surfaces before any DDL is executed.
 | TV-005 | Write 10 checkpoints with "error"; `fts_search("error", config { limit: 3 })` | `Ok(vec![…])` with `len() <= 3` | Limit enforcement |
 | TV-006 | Graph node calls `search_history` tool mid-run | `ToolMessage` with FTS results returned | Tool integration |
 | TV-007 | `CheckpointSaver::new()` with FTS5 enabled and `EncryptedSerializer` configured | `Err(PregolyaError { code: "E-CHKPT-010", .. })` at construction time; no tables created | EC-007 |
+| TV-008 | Graph node calls `search_history` tool with `FtsSearchConfig { limit: 0, … }` (triggers E-CHKPT-008 inside `fts_search`) | `ToolMessage` returned with `status = "error"` and content = "FtsLimitZero: FtsSearchConfig.limit must be > 0; got 0"; graph run does NOT halt; subsequent node can inspect ToolMessage error status | EC-008 |
 
 ## Verification Properties
 

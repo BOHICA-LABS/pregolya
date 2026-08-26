@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.005
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.15 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Two gaps closed. (1) Gap MED — side-effecting path_fn declared 'not defined behavior' without a concrete outcome. Decision (production-grade default): side effects ARE executed (graph provides no sandbox); they are NOT covered by checkpoint/rollback boundaries. Rewrote {INV-002} to specify this explicitly. (2) Gap LOW — multi-edge union with conflicting End + NodeName was ambiguous (INV-004 said 'union determines scheduling' but PC-003 said 'End → no further nodes'; tension unresolved). Decision: End is added to the scheduling union as a terminus marker, but does NOT preempt live-node scheduling from other concurrent edges; live nodes run to completion before the terminus takes effect. Added {INV-005} and {EC-006} to specify this."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "57f5d88"
+input-hash: "df1bbf6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -79,12 +80,26 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 
 - {INV-001} `path_fn` is called exactly once per super-step for each edge where `source_node`
   completed; it is not called if `source_node` was not triggered in the current step.
-- {INV-002} `path_fn` must be a pure function; it reads state but must not produce side effects
-  (state writes from inside `path_fn` are not defined behavior).
+- {INV-002} `path_fn` is required to be a pure function that reads state without side effects.
+  **Side-effect execution semantics (production-grade decision):** The graph does NOT sandbox
+  `path_fn`. If `path_fn` performs I/O or mutates external state, those operations ARE executed —
+  they are not dropped, blocked, or deferred. However, they are NOT covered by the graph's
+  checkpoint/rollback boundary: if a run is retried from a checkpoint, any external writes
+  from `path_fn` are not rolled back. Callers who require transactional side effects must place
+  them inside node functions (where checkpoint coverage applies), not in routing functions.
 - {INV-003} A routing decision that targets an unknown node name (not registered in the compiled
   graph) returns `Err(E-GRAPH-003 UnknownRoutingTarget)` and fails the run.
 - {INV-004} Multiple `add_conditional_edges` calls from the same source node are allowed; each
   `path_fn` is evaluated; the union of their return values determines next-step scheduling.
+  See INV-005 for how `End` from one path_fn interacts with live node targets from another.
+- {INV-005} **Multi-edge End-vs-NodeName resolution:** When multiple conditional edges fire from
+  the same source and their results form a union that includes both `End` and one or more live
+  node names (e.g., path_fn-A returns `End`, path_fn-B returns `NodeName("next")`):
+  `End` is added to the scheduling set as a terminus marker but does NOT preempt the live-node
+  targets. The live nodes (`"next"` in the example) are scheduled and execute in the next
+  super-step. The graph terminates naturally once all paths in the scheduling set have been
+  exhausted — which includes reaching `END` via the terminus marker. `End`-only returns
+  (no concurrent live targets) halt immediately per PC-003.
 
 ## Edge Cases
 
@@ -121,6 +136,17 @@ equivalent to routing to END only for this edge's contribution.
 provided, but `"continue"` is not in the map.
 **Expected behavior:** `Err(E-GRAPH-012 UnmappedRouteKey { key: "continue" })` is returned
 from the run; the graph fails. Missing path_map entries are not silently ignored.
+
+### EC-006: Multi-edge union — one path_fn returns End, another returns NodeName
+**Scenario:** Two `add_conditional_edges` calls are registered for the same source node
+`"router"`. In a given super-step, path_fn-A returns `End` and path_fn-B returns
+`NodeName("cleanup")`.
+**Expected behavior:** The scheduling union is `{ End, "cleanup" }`. `"cleanup"` is scheduled
+and executes in the next super-step. `End` is a terminus marker in the union but does NOT
+prevent `"cleanup"` from running. After `"cleanup"` completes (and assuming no further
+outgoing edges lead elsewhere), the graph terminates with status `completed`.
+The caller does NOT see an immediate halt after the `"router"` step.
+**Reference:** INV-005 for the resolution rule.
 
 ## Canonical Test Vectors
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.8"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-020
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 changelog:
   - "1.1 (F-P91-04, 2026-07-17): EC-004 adjudication — E-MEMORY-002 StorageFull is a write-capacity code (wrong semantic for a backend read I/O failure). No existing MEMORY code covers read I/O failure. Minted E-MEMORY-008 (MemoryStoreReadFailed, DURABILITY, broken, Maybe) as the correct code. EC-004 updated: removed E-MEMORY-002 and hedge 'or equivalent propagated storage error'; now cites E-MEMORY-008 MemoryStoreReadFailed. Added TV-008 to satisfy gate #33 raise-condition anchor for E-MEMORY-008. error-taxonomy.md v1.18 adds E-MEMORY-008 row (MEMORY namespace); census 85→86 (blanket 26→27: E-MEMORY-* 7→8)."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-004 carried bare `Err(PregolyaError { category: DURABILITY, code: E-MEMORY-008 MemoryStoreReadFailed })` without message; E-MEMORY-008 taxonomy has <backend_error> placeholder (SQLite I/O error detail, available at raise site). Added inline message template to EC-004."
@@ -23,6 +23,8 @@ changelog:
   - "1.6 (fix-burst-287/ADR-010-C3/2026-08-01): ADR-010 Class 3 notation fix — EC-006 Expected behavior multi-line PregolyaError::new(Component::Memory, Category::Security, RetryHint::Never, \"E-MEMORY-004\", ...) collapsed to Err(PregolyaError { code: \"E-MEMORY-004\", .. }). Bare constructor form forbidden in prose context per ADR-010 Class 3 rules."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (B-SS15-18-hardening/2026-08-26): Phase-2 bc-completeness-scan (D-270, burst B). {INV-003} 'registration time' defined — skill registration is the MemoryWriteRequest::Add operation on a skill-namespace key via BC-2.15.005 write path; the SkillStore write coordinator calls skill_exists(name) before forwarding; if the name is already registered, E-MEMORY-009 SkillStoreNameCollision (VAL/Never, burst-A-error-coord) is returned before the write proceeds. {EC-007} added for the observable collision behavior. TV-010 added. Error-taxonomy.md references this raise site as BC-2.15.004 EC-003; EC-003 covers tag-filtered listing — the name-collision case is at EC-007 (EC-001..EC-006 were already occupied at minting time)."
+  - "1.10 (B-SS15-18-hardening-arch-adjudication/2026-08-26): {INV-003} write-coordinator module named per architect adjudication — `pregolya-memory::memory::skills` added as the write-coordinator module, explicit encapsulation note (graph node callers do NOT perform `skill_exists`; they delegate to the `SkillStore` API), and ADR-012 Decision 4 consistency anchor. Stable anchor {INV-003-REG-POINT} preserved."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -94,8 +96,18 @@ the read path only; writes to skill entries are governed by BC-2.15.005 (guarded
 - {INV-002} `SkillDescriptor` is a pure value type: `{ name: String, namespace: String, key: String,
   tags: Vec<String> }`. It carries no live references to storage and is `Send + Sync + Clone`.
 - {INV-003} The mapping from skill name to `(namespace, key)` is maintained by the `SkillStore`
-  implementation. Name collisions are not permitted: if two entries share a name, the
-  implementation must surface an error at registration time, not silently pick one.
+  implementation. Name collisions are not permitted: if two entries share a name,
+  `E-MEMORY-009 SkillStoreNameCollision` is returned and the write is NOT forwarded.
+  **Registration time defined (ADR-027 anchor: {INV-003-REG-POINT}):** Skill registration
+  is the `MemoryWriteRequest::Add` operation on a skill-namespace key via BC-2.15.005
+  write path; the SkillStore write coordinator (`pregolya-memory::memory::skills`) calls
+  `skill_exists(name)` before forwarding; if the name is already registered,
+  `E-MEMORY-009 SkillStoreNameCollision` (VAL/Never) is returned before the write proceeds.
+  The collision guard is encapsulated in `memory::skills` — graph node callers do NOT
+  perform the `skill_exists` check; they delegate to the `SkillStore` API. This is
+  consistent with `memory::write_guard`'s enforcement model (ADR-012 Decision 4).
+  The name-uniqueness check is the only collision enforcement point — it is not re-checked
+  at read time.
 - {INV-004} `SkillStore` reads are NOT subject to injection scanning (that is a write-path concern).
 
 ## Edge Cases
@@ -131,6 +143,16 @@ Does NOT return `Ok(None)` to mask the error (DI-014).
 produce `Ok(None)` — this is correct and not a contract violation (no TOCTOU
 guarantee is required).
 
+### EC-007: Skill registration with duplicate name — E-MEMORY-009 fail-closed
+**Scenario:** A caller invokes the SkillStore write coordinator to register a new skill with
+`name = "py_helpers"`. A skill with that name is already registered in the backing store
+(`skill_exists("py_helpers")` returns `Ok(true)`).
+**Expected behavior:** The coordinator returns
+`Err(E-MEMORY-009 SkillStoreNameCollision { skill_name: "py_helpers" })` (category: VAL,
+RetryHint: Never). The `MemoryWriteRequest::Add` is NOT forwarded to `MemoryStore`; the
+existing skill entry is unchanged. (Stable anchor: {EC-007}. INV-003-REG-POINT authority:
+name collision check fires before write.)
+
 ### EC-006: SkillStore constructed without a valid app_id — fail-loud at call time
 **Scenario:** A `SkillStore` implementation was constructed with an empty `app_id`
 (e.g., `SkillStore::new(store, "")` where the construction-time app_id was empty).
@@ -153,6 +175,7 @@ at service boundary; B102 CRIT correction).
 | TV-007 | Overwrite skill "py_helpers" via guarded write; `load_skill("py_helpers")` | Returns updated content | Load-on-demand; no stale cache |
 | TV-008 | Backend `MemoryStore` returns an I/O error during `load_skill("py_helpers")` (e.g., SQLite file read failure) | `Err(E-MEMORY-008 MemoryStoreReadFailed)`; does not panic; does not return `Ok(None)` | EC-004 — read I/O failure propagates as structured error (DI-014) |
 | TV-009 | `SkillStore::new(store, "")` constructed with empty `app_id`; caller invokes `load_skill("py_helpers")` | `Err(PregolyaError { category: SECURITY, code: "E-MEMORY-004", message: "NoScopeContext: SkillStore requires a valid app_id at construction; app_id is empty — cannot derive tenant scope", .. })`; does NOT return `Ok(None)` or panic; same error is returned by all three methods (`load_skill`, `list_skills`, `skill_exists`) | EC-006 — SkillStore empty-app_id fail-closed; ADR-012 Decision 1 Amendment |
+| TV-010 | Register skill `"py_helpers"` (write succeeds); attempt second registration of `"py_helpers"` via SkillStore write coordinator | Second call returns `Err(E-MEMORY-009 SkillStoreNameCollision { skill_name: "py_helpers", .. })`; original skill entry unchanged; `load_skill("py_helpers")` still returns original content | EC-007 — name-collision fail-closed at registration (INV-003-REG-POINT) |
 
 ## Verification Properties
 

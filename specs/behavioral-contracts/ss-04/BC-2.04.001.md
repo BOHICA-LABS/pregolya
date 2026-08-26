@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -29,6 +29,7 @@ changelog:
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-002 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.6 (burst-311/F-P202-01/2026-08-17): Architect adjudication applied — fts_search IS the CheckpointSaver trait method; search_history is ONLY the callable Tool wrapper (search_history_tool()). Inv-5 loose 'search_history API (BC-2.04.008)' clarified to 'fts_search trait method (BC-2.04.008; exposed to agents as the search_history Tool via search_history_tool())'. Preserves surrounding sentence intent."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.8 (P2-BC-SS04-06-hardening/2026-08-26): EC-005 added — async join-failure path. EC-002 covered only the sync (per-task, immediate) failure surface; the async tier defers confirmation to run-exit join. EC-005 specifies observable behavior when `join_all(put_writes_futures)` at run exit returns Err: run transitions to `failed`, E-CHKPT-001 surfaced to caller (REUSE — same write failure code, different detection point). TV row added for EC-005. BC-completeness-scan Phase-2 BURST-B gap BC-2.04.001."
 modified: []
 extracted_from: null
 deprecated: null
@@ -95,6 +96,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 | EC-002 | `put_writes` storage backend returns an error | Error surfaces as `Err(PregolyaError { category: DURABILITY, code: E-CHKPT-001, message: "CheckpointWriteFailed: put_writes for task '<task_id>' failed — backend error: <backend_error>", .. })` (where `<task_id>` is the current task ID; `<backend_error>` is the storage I/O error detail; both available at the raise site); super-step does NOT advance; the run transitions to `failed` |
 | EC-003 | Durability tier is `Exit` | `put_writes` is NOT called mid-run; writes accumulate in memory; only the full checkpoint is written on graph exit |
 | EC-004 | Task writes to ERROR special channel | Written with negative index (-1); does not collide with regular writes; recorded separately for error-handler re-routing on crash-resume |
+| EC-005 | `DurabilityTier::Async`; all super-steps complete successfully; at run-exit boundary `join_all(put_writes_futures)` returns `Err` for one or more tasks | Run transitions to `failed` with `Err(PregolyaError { category: DURABILITY, code: E-CHKPT-001, message: "CheckpointWriteFailed: put_writes for task '<task_id>' failed — backend error: <backend_error>", .. })` (REUSE of E-CHKPT-001 — same write failure, detection point is run-exit join rather than per-task submit; {INV-004} requires all writes confirmed before the run is declared complete); graph in-memory output is NOT returned to the caller; run record status = `failed`; the caller cannot assume the run's write history is durably stored |
 
 ## Canonical Test Vectors
 
@@ -104,6 +106,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 | 3-task super-step; task 2 produces an empty write list | `put_writes(config, [], task2_id)` called successfully; no error; super-step boundary proceeds; task 2 is committed | edge-case |
 | `put_writes` storage call fails with I/O error on task 1 completion | `Err(PregolyaError { category: DURABILITY, code: E-CHKPT-001, .. })` returned to caller; `apply_writes` not executed; graph halts without advancing to super-step N+1 (PASS-ABBREV via EC-002) | error |
 | 3-task super-step with `exit` durability | Zero `put_writes` calls mid-run; only one full `put` call on graph exit; crash mid-run loses all task writes from the current run | edge-case |
+| `DurabilityTier::Async`; 3-task super-step; all tasks complete; run exits; joined future for task 2 returns I/O error | `Err(PregolyaError { category: DURABILITY, code: E-CHKPT-001, .. })` returned at run exit; run status = `failed`; graph output not returned to caller (PASS-ABBREV via EC-005) | error |
 
 ## Verification Properties
 

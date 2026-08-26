@@ -3776,3 +3776,15 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 ## Phase-2 Adversarial Convergence Declaration
 
 **CONVERGED** — BC-5.39.001 3-CLEAN protocol satisfied. Three consecutive CLEAN(strict) passes achieved on frozen HEAD anchor 1b52855 (D-269; 2026-08-25): P2A-051 (ad23837→1b52855 gate-hardening), P2A-053 (917175c), P2A-055 (1b52855). Records-only micro-bursts P2A-052 and P2A-054 were streak-preserving per TD-RECORDS-MICRO-BURST-001. Consistency-audit GATE-READY. Census final: 39 stories / 133 BCs / 14 VPs / 120 ECs. STATUS: AWAITING HUMAN APPROVAL GATE before Phase-3 TDD begins.
+
+---
+
+## BC-Completeness Hardening Re-Convergence Phase (D-270; 2026-08-25 — BC-completeness propagation D-272; 2026-08-26)
+
+**Context:** Phase-2 adversarial 3-CLEAN (D-269) SUPERSEDED by D-270 BC-completeness scan (47 gaps across 133 BCs; ADR-014 §D7+§D8 + ADR-028). Fresh adversarial 3-CLEAN required after propagation. Streak RESET 0/3.
+
+**BC-completeness propagation burst (D-272; 2026-08-26):** 45 BC files updated (SS-01,02,04,05,06,08,09,10,11,12,13,15,16,18,20,21,22,23). VP-015 authored + registered (MCP Response Credential Redaction; BC-2.09.007 {INV-003}; DI-010; tool: unit; P1; `credential_redaction_unit` harness). Error-taxonomy 120→135 ECs (15 new: E-SERVER-019/020/021, E-CRON-004, E-SBXD-007/008/009, E-MEMORY-009/010, E-TOOLS-010/011, E-GRAPH-018, E-PROV-013, E-SERVER-022, E-SBXD-010). ADR-014 §D7 MMR + §D8 delete-idempotent + ADR-028 multitask all propagated.
+
+**D-273 OBS (records-tier):** VP-015.md `tool: unit` is authoritative (CLAUDE.md rule 4: VP files supersede arch prose). verification-architecture.md + verification-coverage-matrix.md list VP-015 as "integration" — stale; architect follow-up required. VP-INDEX.md authoritative. Non-blocking.
+
+**Census after propagation:** 39 stories / 133 BCs / 15 VPs / 135 ECs. 3-CLEAN streak RESET 0/3. Finding trajectory across hardening phase: →47 (D-270 scan) →0 (propagation burst; no adversary pass yet). NEXT: adversarial re-3-CLEAN + consistency audit → Phase-2 gate.

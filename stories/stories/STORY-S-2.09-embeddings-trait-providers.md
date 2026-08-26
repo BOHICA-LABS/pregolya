@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.09
 epic_id: E-20
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4494a62"
+input-hash: "229b592"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.06, S-1.02]
@@ -106,10 +106,13 @@ Structured Event Catalog per SAP-1. Verified by `test_BC_2_22_002_ada_002_emits_
 and `.timeout(Duration::from_secs(30))`. The `native-tls` feature is absent from
 `pregolya-openai/Cargo.toml`. Verified by `test_BC_2_22_002_reqwest_rustls_tls_and_30s_timeout()`.
 
-### AC-011 (traces to BC-2.22.002 PC-006)
-If the OpenAI API returns fewer embedding objects than input texts (batch partial failure),
-`EmbeddingsOpenAI::embed_documents` returns `Err(PregolyaError { code: "E-EMBED-001", .. })`.
-No partial result vector is returned. Verified by
+### AC-011 (traces to BC-2.22.001 PC-002)
+If the OpenAI `/v1/embeddings` response returns fewer embedding objects than input texts
+(e.g., the API returns 1 embedding object for a 3-text batch), `EmbeddingsOpenAI::embed_documents`
+returns `Err(PregolyaError { code: "E-EMBED-001", .. })`. No partial result vector is
+returned. This is the `EmbeddingsOpenAI`-specific implementation of the BC-2.22.001 PC-002
+one-per-input invariant — BC-2.22.002 PC-006 covers HTTP-level errors (429/5xx/401/connection),
+not the response-count mismatch case. Verified by
 `test_BC_2_22_002_batch_partial_failure_returns_err()`.
 
 ### AC-012 (traces to BC-2.22.003 PC-001)
@@ -147,6 +150,83 @@ is a public production function in `pregolya-core/src/embeddings.rs` (not test-o
 lengths across `vecs`. Empty input (`texts.is_empty()`) returns `Ok(())`. Verified by the
 VP-008 proptest harness (5 families A–E) in `pregolya-core/src/embeddings.rs`
 `#[cfg(test)] mod tests`.
+
+### AC-018 (traces to BC-2.22.002 EC-003)
+When the OpenAI `/v1/embeddings` endpoint returns HTTP 429 (rate limit), `EmbeddingsOpenAI::embed_documents`
+returns `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP 429`.
+The entire call fails; no partial result vector is returned (DI-014). Verified by
+`test_BC_2_22_002_http_429_returns_e_prov_008()` (mock HTTP server returning 429).
+
+### AC-019 (traces to BC-2.22.002 EC-004)
+When the OpenAI `/v1/embeddings` endpoint returns HTTP 5xx (service error), `EmbeddingsOpenAI::embed_documents`
+returns `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP <status>`.
+The entire call fails; no partial result vector is returned (DI-014). Verified by
+`test_BC_2_22_002_http_5xx_returns_e_prov_008()` (mock HTTP server returning 500).
+
+### AC-020 (traces to BC-2.22.002 EC-005)
+When the `reqwest::Client` `.timeout(Duration::from_secs(30))` fires before the OpenAI
+`/v1/embeddings` response is received, `EmbeddingsOpenAI::embed_documents` returns
+`Err(PregolyaError { code: "E-PROV-012", .. })` — `ProviderConnectionError: cannot connect
+to provider 'https://api.openai.com': connection timed out`. Verified by
+`test_BC_2_22_002_timeout_returns_e_prov_012()` (reqwest timeout error injected via mock).
+
+### AC-021 (traces to BC-2.22.002 EC-007)
+When the OpenAI `/v1/embeddings` endpoint returns HTTP 401 (invalid or revoked API key),
+`EmbeddingsOpenAI::embed_documents` returns `Err(PregolyaError { code: "E-PROV-004", .. })` —
+`ProviderAuthFailed: authentication failed`. The API key value MUST NOT appear in the error
+message (credential opacity per DI-010). Verified by
+`test_BC_2_22_002_http_401_returns_e_prov_004_key_absent_from_message()` (mock HTTP server
+returning 401; assert error code is E-PROV-004 and `error.message` does not contain the key
+value used in the request).
+
+### AC-022 (traces to BC-2.22.002 EC-008)
+When the OpenAI endpoint is unreachable (connection refused, DNS failure, or TLS handshake
+failure), `EmbeddingsOpenAI::embed_documents` returns
+`Err(PregolyaError { component: PROV, category: TRANSPORT, code: "E-PROV-012",
+message: "ProviderConnectionError: cannot connect to provider 'https://api.openai.com': <transport_error>",
+.. })`. Verified by `test_BC_2_22_002_connection_refused_returns_e_prov_012()` (no server
+listening at the endpoint; reqwest returns a connection-refused OS error).
+
+### AC-023 (traces to BC-2.22.003 EC-001)
+When `EmbeddingsOllama` (`use_legacy_endpoint: false`) sends `POST /api/embed` and receives
+HTTP 404 (Ollama binary predates `/api/embed`), the adapter returns
+`Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP 404`.
+**No silent fallback** to `/api/embeddings` is attempted (INV-001). Verified by
+`test_BC_2_22_003_api_embed_404_returns_e_prov_008_no_fallback()` (mock returning 404 for
+`/api/embed`; assert E-PROV-008 and no request made to `/api/embeddings`).
+
+### AC-024 (traces to BC-2.22.003 EC-002)
+When `EmbeddingsOllama` (`use_legacy_endpoint: true`) processes a batch of N texts serially
+and one serial request returns HTTP 500, the adapter returns
+`Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP 500`.
+Embeddings already received for earlier texts in the batch are discarded; the entire
+`embed_documents` call fails (DI-014). Verified by
+`test_BC_2_22_003_legacy_serial_500_returns_e_prov_008()` (mock returning 500 on 3rd of 5
+serial requests; assert E-PROV-008 and no partial result).
+
+### AC-025 (traces to BC-2.22.003 EC-003)
+When the Ollama process is not running (connection refused) during an `embed_documents` call,
+`EmbeddingsOllama` returns
+`Err(PregolyaError { component: PROV, category: TRANSPORT, code: "E-PROV-012",
+message: "ProviderConnectionError: cannot connect to provider '<base_url>': connection refused",
+.. })`. No retry is performed; the reqwest OS-level error is in the `.source()` chain.
+Verified by `test_BC_2_22_003_connection_refused_returns_e_prov_012()` (no server at the
+Ollama `base_url`).
+
+### AC-026 (traces to BC-2.22.003 EC-004)
+When the Ollama server responds with HTTP 404 and a body indicating the model is not
+locally pulled (e.g., `{"error": "model 'nomic-embed-text' not found"}`), `EmbeddingsOllama`
+returns `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned
+HTTP 404`. The body/model context may appear in `.source()` chain if safe to surface, but
+the error code is E-PROV-008. Verified by `test_BC_2_22_003_model_not_found_returns_e_prov_008()`.
+
+### AC-027 (traces to BC-2.22.003 EC-005)
+When an Ollama request takes longer than 30 seconds and the `reqwest::Client` `.timeout(30s)`
+fires, `EmbeddingsOllama` returns
+`Err(PregolyaError { code: "E-PROV-012", .. })` — `ProviderConnectionError: cannot connect to
+provider '<base_url>': connection timed out`. This applies unconditionally — including when
+`base_url = "http://localhost:11434"` (per INV-002: no localhost timeout bypass). Verified by
+`test_BC_2_22_003_timeout_returns_e_prov_012()` (reqwest timeout error injected via mock).
 
 ## VP-008 Anchor
 
@@ -189,13 +269,19 @@ No harness tests mock internals; all assertions exercise production code.
 | EC-003 | Ollama legacy mode, 3 texts, 2nd fails network (connection refused before response) | `Err(PregolyaError { code: "E-PROV-012", message: "ProviderConnectionError: cannot connect to provider '<provider>': <transport_error>", .. })` — no partial result (traces to BC-2.22.003 EC-003) |
 | EC-004 | Provider returns vectors of length 0 | `Err(E-EMBED-001)` — zero-dimension embeddings are invalid |
 | EC-005 | `text-embedding-ada-002` model used via `EmbeddingsOpenAI` | Emits `embeddings.legacy_model_warning`; proceeds with the request |
+| EC-006 | OpenAI `/v1/embeddings` returns HTTP 429 (rate limit) | `Err(PregolyaError { code: "E-PROV-008", .. })` — whole call fails, no partial result (traces to BC-2.22.002 EC-003) |
+| EC-007 | OpenAI `/v1/embeddings` returns HTTP 401 (invalid/revoked key) | `Err(PregolyaError { code: "E-PROV-004", .. })` — `ProviderAuthFailed`; key value absent from error message (DI-010) (traces to BC-2.22.002 EC-007) |
+| EC-008 | OpenAI endpoint unreachable (connection refused / DNS / TLS failure) | `Err(PregolyaError { code: "E-PROV-012", .. })` — `ProviderConnectionError` (traces to BC-2.22.002 EC-008) |
+| EC-009 | Ollama `/api/embed` returns 404 (endpoint absent) | `Err(E-PROV-008)` — no fallback to `/api/embeddings` (traces to BC-2.22.003 EC-001) |
+| EC-010 | Ollama model not pulled locally (404 with "model not found" body) | `Err(E-PROV-008)` — `ProviderHttpError: provider returned HTTP 404` (traces to BC-2.22.003 EC-004) |
+| EC-011 | Ollama request exceeds 30s timeout (including localhost) | `Err(E-PROV-012)` — `ProviderConnectionError: ... connection timed out`; unconditional (traces to BC-2.22.003 EC-005) |
 
 ## Token Budget Estimate (MANDATORY)
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
 | This story spec | ~3,600 |
-| BC files (3 BCs) | ~6,500 |
+| BC files (3 BCs; BC-2.22.002, BC-2.22.003) | ~7,200 |
 | `module-decomposition.md` SS-22 section | ~400 |
 | `pregolya-core/src/embeddings.rs` (new) | ~500 |
 | Provider embeddings files (2 files) | ~1,500 |
@@ -208,7 +294,7 @@ No harness tests mock internals; all assertions exercise production code.
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-017, including Red Gate AC-006 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-027, including Red Gate AC-006 (test-writer step)
 2. [ ] **Red Gate check:** confirm `test_BC_2_22_002_openai_api_key_debug_is_redacted()` FAILS before implementation (stub uses derived Debug)
 3. [ ] Define `Embeddings` trait in `pregolya-core/src/embeddings.rs` with `async_trait`
 4. [ ] Write hand-coded `impl fmt::Debug for OpenAiApiKey` returning `"<redacted>"` (resolves Red Gate AC-006)
@@ -221,8 +307,10 @@ No harness tests mock internals; all assertions exercise production code.
 11. [ ] Implement `EmbeddingsOllama::embed_query` — single text via batch path
 12. [ ] Define `pub fn validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` as a NON-test production fn in `pregolya-core/src/embeddings.rs` (per VP-008 §Proof Method + BC-2.22.001 INV-006): (1) Err(E-EMBED-001) if `vecs.len() != texts.len()`; (2) Ok(()) if `vecs.is_empty()`; (3) Err(E-EMBED-001) if any inner vec len == 0; (4) Err(E-EMBED-001) if any inner vec len != vecs[0].len(). All Embeddings impls (EmbeddingsOpenAI, EmbeddingsOllama) call it before returning Ok from embed_documents. Error construction per ADR-010 + error-taxonomy (E-EMBED-001).
 13. [ ] Write VP-008 proptest harness (5 property families A–E) in `pregolya-core/src/embeddings.rs` `#[cfg(test)] mod tests` per VP-008 §Proof Harness Skeleton: (A) `prop_validate_embedding_batch_accepts_valid` — random (dim 1..=4096, n 1..=64) uniform batch → Ok(()); (B) `prop_validate_embedding_batch_accepts_empty` — validate_embedding_batch(&[],&[]) → Ok(()); (C) `ragged_batch_rejected_by_production_validator` — 2 texts, vecs=[768-dim,512-dim] → Err code E-EMBED-001; (D) `count_mismatch_rejected_by_production_validator` — 3 texts, 2 vecs → Err(E-EMBED-001); (E) `zero_length_vector_rejected_by_production_validator` — 2 texts, vecs=[768-dim,0-dim] → Err(E-EMBED-001). Mock `RawMockEmbeddings { dim }` contains NO validation logic — returns raw vectors only; each family calls the PRODUCTION `validate_embedding_batch` directly.
-14. [ ] Run `cargo nextest run -p pregolya-core -p pregolya-openai -p pregolya-ollama` — all ACs green
-15. [ ] Confirm Red Gate AC-006 passes after implementation
+14. [ ] Implement HTTP error classification for `EmbeddingsOpenAI`: 429/5xx→E-PROV-008, 401→E-PROV-004, timeout→E-PROV-012, connection-failure→E-PROV-012 (AC-018 through AC-022; BC-2.22.002 EC-003/004/005/007/008)
+15. [ ] Implement HTTP error classification for `EmbeddingsOllama`: 404-no-fallback→E-PROV-008, 500-serial→E-PROV-008, connection-refused→E-PROV-012, model-not-found-404→E-PROV-008, timeout→E-PROV-012 (AC-023 through AC-027; BC-2.22.003 EC-001/002/003/004/005)
+16. [ ] Run `cargo nextest run -p pregolya-core -p pregolya-openai -p pregolya-ollama` — all 27 ACs green
+17. [ ] Confirm Red Gate AC-006 passes after implementation
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -279,5 +367,6 @@ dependency from `pregolya-core` to any provider adapter crate MUST fail the buil
 
 ## Changelog
 
+- **1.3 (BC-2.22.002 + BC-2.22.003 / 2026-08-26):** BC-2.22.002 updated to v1.5 (B-SS19-23 HIGH provider-error-code gap closure — EC-007 HTTP 401→E-PROV-004, EC-008 connection-refused→E-PROV-012 added; PC-006/EC-003/004/005 specific E-PROV codes added). BC-2.22.003 updated to v1.6 (EC-001/002/004/005: bare Err→E-PROV-008/012 specific codes). Story changes: (1) AC-011 trace corrected from BC-2.22.002 PC-006 → BC-2.22.001 PC-002 (PC-006 v1.5 now covers HTTP errors; count-mismatch behavior belongs to BC-2.22.001 PC-002). (2) AC-018–AC-022 added for BC-2.22.002 EC-003/004/005/007/008 (OpenAI: 429→E-PROV-008, 5xx→E-PROV-008, timeout→E-PROV-012, 401→E-PROV-004, conn-refused→E-PROV-012). (3) AC-023–AC-027 added for BC-2.22.003 EC-001/002/003/004/005 (Ollama: 404-no-fallback→E-PROV-008, 500-serial→E-PROV-008, conn-refused→E-PROV-012, model-not-found→E-PROV-008, timeout→E-PROV-012). (4) Edge Cases table extended with EC-006 through EC-011. (5) Tasks 14–17 updated to implement and verify all 27 ACs. BC table version column added.
 - **1.2 (P2A-043 F-05 / 2026-08-24):** P2A-043 F-05: prose ordinal cross-refs converted to stable tags.
 - **1.1 (ADR-027 M3 / 2026-08-24):** ADR-027 M3: AC traces re-cited to stable clause anchors. Mis-anchors corrected across all 17 ACs: AC-001 PC-001→PC-002 (one-per-input is in PC-002, not PC-001 which is object safety), AC-002 PC-002→PC-003 (embed_query is PC-003), AC-003 PC-003→INV-002 (consistent inner length is INV-002), AC-004 PC-004→PC-002 (no-partial-batch is in PC-002 last bullet, not PC-004 which is about dimension being model-specific), AC-005 INV-001→PC-001 (object safety is PC-001; INV-001 is one-vector-per-input), AC-006 PC-001→PC-004 (credential opacity is PC-004), AC-007 PC-002→PC-003 (model names/defaults is PC-003), AC-008 PC-003→PC-003 (direct ordinal match confirmed), AC-009 PC-004→PC-003 (ada-002 legacy warning is in PC-003, not PC-004 credential opacity), AC-010 PC-005→PC-005 (direct ordinal match confirmed), AC-011 PC-006→PC-006 (direct ordinal match confirmed), AC-012 PC-001→PC-001 (direct ordinal match confirmed), AC-013 PC-002→PC-002 (direct ordinal match confirmed), AC-014 PC-003→PC-004 (30s timeout is PC-004; PC-003 is no-API-key), AC-015 PC-004→INV-001 (no auto-fallback is INV-001), AC-016 PC-005→INV-003 (batch DI-014 legacy is INV-003; PC-005 is model validation), AC-017 INV-006→INV-006 (direct ordinal match confirmed). Architecture Compliance Rules table updated to match.

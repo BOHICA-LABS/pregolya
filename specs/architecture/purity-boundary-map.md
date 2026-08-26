@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.30"
+version: "1.31"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -10,10 +10,11 @@ phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd.md
-input-hash: "5e895bd"
+input-hash: "6470d58"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.31 (architect-reconcile-burst/2026-08-26): Iron Law — add `mcp::sanitize` Pure Core row (pregolya-mcp; `redact_credentials(text: &str) -> Cow<str>` pure credential-redaction function; BC-2.09.007 / INV-003 / SS-09 / DI-010; VP-015 integration P1; no I/O, no async, no global state; CWE-532 prevention at pure layer). Required by module-decomposition.md mcp::sanitize addition. Pure Core 35→36; total 84→85. Module-decomposition universe updated in intro: 76→77 (71 tiered + 6 definitions-only/exempt). Input-hash refreshed (6470d58)."
   - "1.30 (INVESTIGATE-RECONCILE/2026-08-21): Structural reclassification — `mcp::adapter (invoke)` removed from Effectful Shell; `mcp::exception` added to Pure Core. Story S-2.10 builds no `adapter.rs`; VP-004 property (bare ToolException type-identity via McpError downcast) lives in `mcp::exception`, a pure synchronous error-inspection module with no I/O. VP-004 integration test is required for mock MCP server setup, not because the module itself is effectful. Iron Law update: removed Effectful Shell row 'Tool call over transport' (which was `mcp::client`'s concern anyway); added Pure Core row with downcast description. Counts: Pure Core 34→35, Effectful Shell 38→37, total 84 unchanged."
   - "1.29 (P2A-021/2026-08-21): VectorStore method alignment — replace add_texts with add_documents in two live Effectful Shell / Boundary Modules table rows (vectorstores::memory + vectorstores::store). No changelog entries affected."
   - "1.28 (burst-288/F-P177-A03/2026-08-15): Fix `graph::hitl` Boundary row Pure part label: incorrectly named `pre_tool_dispatch` as the Pure part. `pre_tool_dispatch` is the Boundary function — it calls async `pre_invoke` first, then routes; it is NOT directly Kani-verifiable. The Kani targets are the extracted pure sync functions `route_pre_tool_decision` + `shield_hook_result` that must be extracted from `pre_tool_dispatch` before Phase 6 (per Purity Enforcement Rule 3 and VP-011). 'Pure part: `pre_tool_dispatch` routing function' corrected to 'Pure extraction target (Kani): `route_pre_tool_decision` + `shield_hook_result` (extraction required before Phase 6)'."
@@ -59,9 +60,9 @@ changelog:
 Every pregolya module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 76 module-decomposition modules (70 tiered + 6 definitions-only/exempt) plus
+effectful dependency). All 77 module-decomposition modules (71 tiered + 6 definitions-only/exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(84 total rows after INVESTIGATE-RECONCILE: 35 Pure Core + 37 Effectful Shell + 12 Boundary).
+(85 total rows after architect-reconcile-burst: 36 Pure Core + 37 Effectful Shell + 12 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -108,6 +109,7 @@ side effects. Kani proofs operate here.
 | `vectorstores::similarity` | pregolya-vectorstores | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, PregolyaError>`; IEEE-754 zero-norm L2-guard (checks `a.iter().map(\|x\| x*x).sum::<f32>().sqrt() == 0.0 \|\| b…`); returns `Err(E-VS-001)` on zero-norm; pure `Vec<f32>` inner product; no `ndarray`, no I/O; called by vectorstores::memory, vectorstores::mmr, and any future VectorStore backend (ADR-014 / SS-21; F-P129-11 burst-224) | VP-009 |
 | `tools::config` | pregolya-tools | `ToolConfig` — shared per-tool framework configuration; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>` builder-consuming validator: compares `risk` against the tool's floor (for BashTool, `risk < ActionRisk::Medium` → `Err(E-TOOLS-007)`); `#[non_exhaustive]`; zero I/O, no async, no state — pure enum comparison at construction time per VP-013 §Source Contract (ADR-020 Decision 3 / BC-2.23.005 / SS-23) | — |
 | `mcp::exception` | pregolya-mcp | Bare ToolException re-raise detection; type-identity preservation via McpError downcast; pure synchronous error source chain pattern match: `err.source().downcast_ref::<McpError>()` + `matches!(e, McpError::ToolExecution { .. })`; no I/O, no async, no global state (R11 / BC-2.09.004 / SS-09) | VP-004 (integration-tested; integration harness required for mock MCP server setup; module logic is pure) |
+| `mcp::sanitize` | pregolya-mcp | `redact_credentials(text: &str) -> Cow<str>` pure credential-redaction function: pattern-based substitution of provider API key patterns (OpenAI `sk-*`, Anthropic `sk-ant-*`, generic 64+ char token) before any error message is transmitted to external MCP clients; deterministic string transformation; CWE-532 prevention at pure layer; no I/O, no async, no global state (BC-2.09.007 / INV-003 / SS-09 / DI-010) | VP-015 (integration P1; module logic is pure) |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`

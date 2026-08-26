@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.1"
+version: "2.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "2.0 (M3b/ADR-027-escalation-3/2026-08-24): Added {INV-006} — DynRunnable non-generic design clause; formalizes architect canon O-P194-A (already in v1.7 changelog and EC-001); S-1.04 AC-005 adjudicated as clause-author (real v1 design requirement)."
   - "2.1 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "2.2 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.003 LOW — default-stream item type and invoke-Err streaming behavior were unspecified. Updated PC-002 to name the stream item type as `Result<Self::Output, PregolyaError>` and specify that an invoke Err is yielded as a single `Err(e)` stream item (stream does not propagate as an outer error). Added {EC-006} as a canonical test vector for the error-in-stream path."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "22e7fbd"
+input-hash: "e21c7f4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -67,9 +68,15 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
 
 1. {PC-001} `runnable.invoke(input, &config).await` returns `Ok(output)` for a valid input, or
    `Err(PregolyaError { category: VAL, code: E-CORE-003, .. })` on input-type mismatch.
-2. {PC-002} `runnable.stream(input, &config)` returns a `BoxStream` that yields exactly one chunk equal to
-   the `invoke` result when the implementor does not override `stream` (non-streaming fallback).
-   A streaming-native implementor may yield multiple chunks.
+2. {PC-002} `runnable.stream(input, &config)` returns a `BoxStream<'static, Result<Self::Output, PregolyaError>>`.
+   Each item in the stream is a `Result<Self::Output, PregolyaError>`.
+   When the implementor does not override `stream` (non-streaming fallback): the stream calls `invoke`
+   internally, then yields exactly one chunk equal to the `invoke` result:
+   - If `invoke` returns `Ok(output)`, the stream yields `Ok(output)` as its single item and then terminates.
+   - If `invoke` returns `Err(e)`, the stream yields `Err(e)` as its single item and then terminates.
+     The error is surfaced as a stream item — `stream()` itself never returns an outer `Result`;
+     callers must check each stream item for errors.
+   A streaming-native implementor may override `stream` to yield multiple chunks; each chunk is still a `Result`.
 3. {PC-003} `runnable.batch(inputs, &config).await` returns `Vec<Result<Output, PregolyaError>>`
    in input-insertion order — even though execution is concurrent. Concurrency is bounded by
    `config.max_concurrency` (if `None`, bounded by the tokio thread pool).
@@ -133,13 +140,21 @@ code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at 
 **Scenario:** `runnable.batch(vec![], &config).await`
 **Expected behavior:** Returns `Ok(vec![])` immediately. No error, no panic.
 
+### EC-006: stream on a Runnable whose invoke returns Err
+**Scenario:** A `RunnableLambda` that always returns
+`Err(PregolyaError { category: VAL, code: E-CORE-003, .. })` is called via `stream()`.
+**Expected behavior:** `stream()` returns a `BoxStream`. Polling the stream yields exactly one item:
+`Err(PregolyaError { category: VAL, code: E-CORE-003, .. })`. The stream then terminates.
+The caller does NOT receive an outer `Result` wrapping the stream — the error is a stream item.
+`stream()` itself does not panic.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `lambda.invoke("hello", &RunnableConfig::default()).await` where lambda returns `input.to_uppercase()` | `Ok("HELLO")` | Happy path — synchronous invoke |
 | TV-002 | `lambda.batch(vec!["a","b","c"], &config).await` | `[Ok("A"), Ok("B"), Ok("C")]` — insertion order preserved | Batch ordering invariant |
-| TV-003 | `lambda.stream("hello", &config)` (non-streaming) | yields one chunk `"HELLO"`, then terminates | Default stream yields single chunk |
+| TV-003 | `lambda.stream("hello", &config)` (non-streaming) | yields one item `Ok("HELLO")`, then terminates | Default stream: item type is `Result<Output, PregolyaError>`; single Ok chunk |
 | TV-004 | `lambda.invoke(input, &config)` where config has `recursion_limit: 25` and call depth = 26 | `Err(PregolyaError { category: INTERNAL, code: E-CORE-006, .. })` | Recursion guard |
 | TV-005 | `lambda.batch(vec![], &config).await` | `Ok(vec![])` | Empty batch returns empty vec |
 

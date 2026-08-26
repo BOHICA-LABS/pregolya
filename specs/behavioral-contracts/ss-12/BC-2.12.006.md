@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.006
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (burst-226/F-P131-03/2026-07-21): Assign canonical event_type 'server.rate_limit_store_in_memory' to EC-005 startup WARN emission per observability census (SAP-1). EC-005 and Invariants updated."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2A-BC-scan-B/2026-08-26): (1) EC-001 fixed — ADR-028 Decision 5 TTL-from-submission propagation: replaced ambiguous 'TTL-on-completion OR TTL-from-submission, implementation must document which' with authoritative TTL-from-submission (24h clock starts at submission time, not completion time). Operator responsibility note added (TTL MUST exceed expected max Run duration; concurrent-run risk from TTL expiry during long run documented). ADR-028 D5 cited. (2) EC-006 added — API rate-limit 429 → E-SERVER-021 ApiRateLimitExceeded (RATE/429/Later). Closes gap: PC-004 declared 429 but no error code was specified. Note: error-taxonomy minted E-SERVER-021 with anchor BC-2.12.006 EC-002; EC-002 is occupied (idempotency race); authoritative raise site is EC-006 per ADR-027 append-only numbering."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "32e487b"
+input-hash: "85e4c28"
 extracted_from: null
 modified: []
 deprecated: null
@@ -111,15 +112,17 @@ eviction.
 
 ## Edge Cases
 
-### EC-001: Idempotency TTL expires during a long-running operation
-**Scenario:** `Idempotency-Key: "k1"` is submitted; the Run takes 30 minutes;
-the idempotency TTL is 24 hours; no expiry issue. But the operator reduces TTL to
-5 minutes: the Run completes at minute 6; the response is cached but immediately
-discarded (TTL expired during execution).
-**Expected behavior:** A re-submission of `"k1"` at minute 7 starts a new Run (no
-cached response available). This is the correct behavior — TTL-on-completion semantics
-are acceptable; TTL-from-submission is also acceptable; the implementation must
-document which is used.
+### EC-001: Idempotency TTL and long-running operations (ADR-028 Decision 5: TTL-from-submission) {EC-001}
+**TTL basis:** The idempotency TTL clock starts **at submission time** — when the first request carrying `Idempotency-Key: <key>` arrives and the key is registered in the `IdempotencyStore`. It does NOT start at Run completion time (ADR-028 Decision 5).
+
+**Externally-observable behavior:**
+- Re-submission within the 24h window → returns the cached response (same `run_id`, same output). No new Run is created. The cached response may be returned even while the original Run is still `in_progress`.
+- Re-submission after the 24h window → key expired; request treated as new; a new Run is created with a new `run_id`.
+
+**Operator responsibility:** The idempotency TTL MUST be configured to exceed the expected maximum Run duration. If a Run takes longer than the TTL (e.g., TTL = 5 minutes, Run takes 30 minutes), the key expires during execution. A re-submission at minute 6 starts a NEW Run concurrently with the still-running original Run — this is an operator misconfiguration. Pregolya does NOT guard against this at the framework layer in v1. This constraint MUST be documented in the `IdempotencyStore` configuration reference.
+
+**Scenario (original):** Operator reduces TTL to 5 minutes; Run completes at minute 6; re-submission of `"k1"` at minute 7.
+**Expected behavior:** Starts a new Run (key expired during execution). The behavior is deterministic and correctly predicted by TTL-from-submission semantics — the caller knows they submitted at T=0 and the window closes at T=5m.
 
 ### EC-002: Concurrent duplicate requests with the same idempotency key (race)
 **Scenario:** Two identical requests with `Idempotency-Key: "k2"` arrive simultaneously
@@ -154,6 +157,10 @@ the error is surfaced.
 **Expected behavior:** Each instance enforces the rate limit independently. The
 in-memory default is documented as not suitable for multi-instance rate limiting.
 A `WARN` log is emitted at startup if no distributed `RateLimitStore` is configured, with `event_type = "server.rate_limit_store_in_memory"` and structured field `{ backend: "in_memory" }`: `"RateLimitStore: in-memory backend — rate limits are not coordinated across instances"`.
+
+### EC-006: API rate limit exceeded → E-SERVER-021 (LOW gap closure) {EC-006}
+**Scenario:** A caller exceeds the server's configured API throughput rate limit (global or per-tenant request-per-second cap) — distinct from the per-thread run queue bound (E-SERVER-019).
+**Expected behavior:** HTTP 429 `{ code: "E-SERVER-021", message: "ApiRateLimitExceeded: request rate limit exceeded; retry after <retry_after_ms>ms" }` with `Retry-After: <seconds>` header. The `RateLimitStore` tracks per-caller request counts; the `retry_after_ms` field communicates the back-off horizon until the rate window resets. Error code: E-SERVER-021 ApiRateLimitExceeded (RATE, broken, RetryHint Later — RATE category default; HTTP 429). **Note:** error-taxonomy minted E-SERVER-021 with anchor BC-2.12.006 EC-002; EC-002 is occupied (idempotency concurrent-request race); authoritative raise site is EC-006 per ADR-027 append-only numbering.
 
 ## Canonical Test Vectors
 

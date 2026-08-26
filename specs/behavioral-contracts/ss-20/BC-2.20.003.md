@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.20.003
-version: "1.10"
+version: "1.11"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.8 (P2A-021/story-anchor/2026-08-21): Story Anchor set to S-2.03 — VectorStoreRetriever / as_retriever delivery moved from S-2.02 to S-2.03 per architect P2A-021 build-ordering ruling (VectorStoreRetriever depends on the VectorStore trait, which is delivered in S-2.03)."
   - "1.9 (M1/ADR-027/2026-08-23): ADR-027 stable clause anchors added (M1). Purely additive — no content change."
   - "1.10 (P2A-048/F-048-02/2026-08-24): PRE-001 borrowed `&dyn VectorStore` → owned `Arc<dyn VectorStore>` (D-48 sweep straggler; PRE-001 omitted from the v1.5 enumerated-clause sweep per wave-b-po-routing-spec.md Routing Items 6/6g)."
+  - "1.11 (B-SS19-23/ADR-014-D7-MMR/2026-08-26): PC-003 MMR clause hardened to Carbonell–Goldstein argmax formula per ADR-014 Decision 7 — empty-set convention (S=∅ → penalty=0.0), lowest-index tie-break, pool-exhaustion→partial-return. Propagation from bc-completeness-scan Phase-2 Burst B cluster SS-19..23 D1. input-hash updated 869996f→8ffc31b (domain-spec inputs refreshed)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-027
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -36,7 +37,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "869996f"
+input-hash: "8ffc31b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -81,7 +82,16 @@ internal field allows `VectorStoreRetriever` to satisfy `Retriever + 'static`, e
    `store.similarity_search_with_score(query, k)`, then filters results where `score < threshold`.
    Returns only documents meeting the threshold; may return fewer than `k` documents or zero.
 3. {PC-003} `SearchType::Mmr` — dispatches to `store.max_marginal_relevance_search(query, k, fetch_k, lambda_mult)`.
-   Returns `k` documents from the `fetch_k` candidate pool, selected for both relevance and diversity.
+   Returns up to `k` documents from the `fetch_k` candidate pool using the Carbonell–Goldstein MMR
+   formula (ADR-014 Decision 7). At each iteration i+1, with S the already-selected set and C the
+   `fetch_k` candidate pool:
+   `next = argmax_{d ∈ C \ S} [ λ · cos(d.emb, q.emb) − (1−λ) · max_{d' ∈ S} cos(d.emb, d'.emb) ]`
+   Empty-set convention: when S = ∅ (i = 0), `max_{d' ∈ S}(...)` = 0.0, reducing to pure relevance
+   ranking (λ · cos(d, q)). Tie-break: when two or more candidates achieve the same MMR score (f32
+   equality), the candidate with the lowest index in pool C is selected. Pool exhaustion: if
+   `|C \ S| = 0` before k documents are selected (fetch_k pool has fewer usable docs than k,
+   e.g., after zero-norm rejection), the available documents are returned — partial return is not
+   an error.
 4. {PC-004} In all three search types, the returned `Vec<Document>` satisfies DI-012 (each document that
    enters graph context must pass `BoundaryType::RAGRetrieval` — coverage obligation per BC-2.20.002).
 5. {PC-005} `VectorStore::as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>`

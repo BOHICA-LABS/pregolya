@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.001
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (F-P107-01 census, 2026-07-18): E-GRAPH-007 struct expanded from single-field to two-field form. Was: { key } (1 field — missing node_id). Now: { node_id, key } (2 fields, 1:1 with taxonomy message placeholders '<node_id>' and '<key>'). EC-001 and TV-005 updated. Same-class defect as E-GRAPH-011 discovered during message↔struct census rerun (pass-106 sweep wrongly passed this code)."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.02.001 MED — successful Command return (valid goto + embedded update) was unspecified; only the failing EC-004 (unknown goto) was present. Added {PC-007} specifying the full success semantics: state update applied first, then routing to the goto target overrides any conditional edges, returning Ok(output_state) when END is reached. Covers Command{goto:None} and Command{update:None} variants for completeness."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "57f5d88"
+input-hash: "df1bbf6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -77,6 +78,24 @@ inference step that makes those keys typed and reducer-governed.
    `END` naturally.
 6. {PC-006} Node functions that return `None` (no output) do not mutate any channels for that task
    in that super-step.
+7. {PC-007} When a node function returns a `Command` value with a valid `goto` target and/or an
+   embedded `update` dict, the Pregel executor processes it as follows:
+   (a) **State update (if `update` is `Some(dict)`):** The `update` dict is applied to the graph
+       state channels exactly as if the node had returned that dict directly — subject to channel
+       reducer semantics (LastValue / BinaryOperatorAggregate) and the unregistered-key guard
+       from INV-001. If any key in `update` is unregistered, the run transitions to `failed`
+       with `Err(E-GRAPH-007 UnknownChannelKey { .. })`.
+   (b) **Routing override (if `goto` is `Some("target_node")`):** The executor schedules
+       `"target_node"` in the next super-step, bypassing any conditional or static edges
+       declared for this source node in the compiled graph. The override is applied for this
+       invocation only; the compiled edge graph is not mutated.
+   (c) **Null-field variants:** `Command { goto: None, update: Some(dict) }` applies the update
+       without rerouting (static/conditional edges take effect normally). `Command { goto:
+       Some("target"), update: None }` reroutes without applying any state update for this step.
+       `Command { goto: None, update: None }` is semantically equivalent to returning `None`.
+   (d) **Eventual completion:** `invoke`/`stream` return `Ok(output_state)` when the routed
+       execution eventually reaches `END` via the normal termination path.
+   When `goto` names an unregistered node, see EC-004 for the error path.
 
 ## Invariants
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.002
-version: "1.9"
+version: "1.10"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-vectorstores
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 di_anchors: [DI-008]
 changelog:
   - "1.0 (D21/2026-07-20): initial BC authored — D21 ecosystem-parity expansion SS-21 VectorStore Abstraction"
@@ -27,6 +27,7 @@ changelog:
   - "1.7 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
+  - "1.10 (B-SS15-18-hardening-arch-adjudication/2026-08-26): {INV-006} defensive batch-dimensionality guard added per architect adjudication — `validate_embedding_batch(texts, &embeddings)` (VP-008 production fn in `core::embeddings`) called after `Embeddings` produces the full batch; catches count mismatch, zero-length vectors, and inconsistent lengths, returning `Err(E-EMBED-001)` before any write proceeds. Note: per-vector zero-norm E-VS-004 check (ADR-014 Decision 5) fires first; `validate_embedding_batch` is the batch-level structural guard. TV-007 added for count-mismatch case."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "869996f"
+input-hash: "c51ab95"
 extracted_from: null
 modified: []
 deprecated: null
@@ -118,6 +119,16 @@ unconditionally before any cosine division.
 5. {INV-005} **No `ndarray` dependency.** The cosine implementation uses only `std::iter` methods and
    basic arithmetic on `Vec<f32>`. Adding `ndarray` as a dep of `pregolya-vectorstores` is
    a violation of semport §8 avoidance.
+6. {INV-006} **Defensive batch-dimensionality guard (ADR-027 anchor: {INV-006}):** After the
+   `Embeddings` implementation produces the full batch, `validate_embedding_batch(texts, &embeddings)`
+   (VP-008 production function in `core::embeddings`) is called before any write proceeds.
+   On (a) count mismatch (`embeddings.len() != texts.len()`), (b) any zero-length embedding
+   vector (`embeddings[i].is_empty()`), or (c) inconsistent embedding lengths across the batch
+   (`embeddings[i].len() != embeddings[0].len()` for any `i`), the function returns
+   `Err(E-EMBED-001)` and no document from the batch is persisted. Note: the per-vector
+   zero-norm E-VS-004 check (ADR-014 Decision 5) fires first in the embedding loop;
+   `validate_embedding_batch` is the batch-level structural guard applied after all
+   embeddings are produced and before the write lock is acquired.
 
 ## Edge Cases
 
@@ -141,6 +152,7 @@ unconditionally before any cosine division.
 | TV-004 | `store.add_documents(vec![Document { page_content: "doc C", .. }])` → `store.similarity_search("C", 1)` | `Ok(vec![Document { page_content: "doc C" }])` — newly added doc searchable | happy-path (add then search) |
 | TV-005 | `from_texts_sync(...)` when `embed_documents` returns `Err` | `Err(PregolyaError { .. })` — construction fails | error-case (embedding failure) |
 | TV-006 | `store.add_documents(vec![doc_a, doc_b])` where mock embeddings return `[vec![1.0f32; 3], vec![0.0f32; 3]]` (doc_b has zero L2 norm; position 1 in batch) | `Err(PregolyaError { code: "E-VS-004", .. })` — neither doc persisted | error-case (write-time zero-norm, ADR-014 Decision 5) |
+| TV-007 | `add_documents(vec![doc_a, doc_b, doc_c])` where mock embeddings return only 2 vectors (count mismatch: 3 texts, 2 embeddings) | `Err(PregolyaError { code: "E-EMBED-001", .. })` — no documents persisted; batch rejected by `validate_embedding_batch` before write lock acquired | error-case (batch count mismatch, {INV-006}) |
 
 ## Verification Properties
 

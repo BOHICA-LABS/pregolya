@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.08
 epic_id: E-19
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.014.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "657aef3"
+input-hash: "c81e09c"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.07]
@@ -191,6 +191,24 @@ or `PregolyaError.message` field. The `PregolyaError` emitted on chain exhaustio
 Verified by `test_BC_2_08_014_credentials_absent_from_logs_and_errors_during_failover()`
 (tracing subscriber capture + error message assertion).
 
+### AC-025 (traces to BC-2.08.013 INV-005 + EC-006)
+When a `HermesChatMlXml` response contains multiple `<tool_call>` tags — or a
+`NativeOpenAiJson` response contains a `tool_calls` array of length ≥ 2 — and at least
+one entry fails to parse (malformed JSON, missing required field, or dialect
+deserialization error), the entire tool-call extraction returns
+`Err(PregolyaError { component: PROV, category: VAL, code: "E-PROV-009",
+message: "ToolCallDialectParseError: <dialect> <element> failed at response offset <n>:
+<parse_error>", retry_hint: Never })`. **Zero** `ContentBlock::ToolCall` objects are
+returned — entries that parsed successfully before the first failure are NOT included in
+the result (DI-014: no partial ToolCall list). Parsing stops at the first invalid entry
+and the error is propagated immediately (fail-fast). The TV-007 cassette covers a
+`HermesChatMlXml` response where the first `<tool_call>` is valid
+`{"name":"get_weather","arguments":{"location":"Paris"}}` and the second is malformed
+`{name: bad}`: the result is `Err(E-PROV-009 { dialect: "HermesChatMlXml",
+element: "<tool_call>", offset: 2, parse_error: "key must be a string" })` with zero
+`ToolCall` objects returned. Verified by
+`test_BC_2_08_013_multi_tool_call_mixed_validity_fail_fast()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -225,7 +243,7 @@ Verified by `test_BC_2_08_014_credentials_absent_from_logs_and_errors_during_fai
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
 | This story spec | ~3,800 |
-| BC files (4 BCs) | ~8,000 |
+| BC files (4 BCs; BC-2.08.013) | ~8,200 |
 | `module-decomposition.md` SS-08 section | ~600 |
 | Source files (eval.rs, tool_dialect.rs, failover.rs, schema_snapshots.rs) | ~2,500 |
 | Test files (~120 lines) | ~1,800 |
@@ -236,7 +254,7 @@ Verified by `test_BC_2_08_014_credentials_absent_from_logs_and_errors_during_fai
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-024 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-025 (test-writer step)
 2. [ ] No Red Gate BCs — proceed to implementation after test stubs
 3. [ ] Create `pregolya-standard-tests/src/eval.rs` — `EvalHarness`, `EvalOutcome`, `eval_score()`
 4. [ ] Implement score aggregation: exclude InfraError, arithmetic mean, AllInfraError → Err
@@ -250,7 +268,8 @@ Verified by `test_BC_2_08_014_credentials_absent_from_logs_and_errors_during_fai
 12. [ ] Implement empty-chain guard at `ProviderFallbackPolicy::new` → Err(E-PROV-011)
 13. [ ] Create `pregolya-standard-tests/src/schema_snapshots.rs` — snapshot test helpers
 14. [ ] Write schema snapshot tests for all public tool input types; generate initial snapshots
-15. [ ] Run `cargo nextest run -p pregolya-standard-tests -p pregolya-core` — all 24 ACs green
+15. [ ] Implement fail-fast multi-tool-call mixed-validity path (AC-025): when any entry in a multi-tool-call response fails dialect parsing, return `Err(E-PROV-009)` immediately with zero `ToolCall` objects; no partial result (BC-2.08.013 INV-005 + EC-006 + TV-007)
+16. [ ] Run `cargo nextest run -p pregolya-standard-tests -p pregolya-core` — all 25 ACs green
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -305,4 +324,5 @@ list, the build MUST fail via `cargo deny`.
 
 ## Changelog
 
+- **1.2 (BC-2.08.013 / 2026-08-26):** BC-2.08.013 updated to v1.5 (burst-B-SS07-08 INV-005+EC-006+TV-007 fail-fast hardening): AC-025 added — multi-tool-call mixed-validity response (HermesChatMlXml or NativeOpenAiJson with ≥2 tool call entries where any entry fails to parse) returns `Err(E-PROV-009 ToolCallDialectParseError)` with zero `ContentBlock::ToolCall` objects; no partial list returned (DI-014 fail-fast, INV-005). Test: `test_BC_2_08_013_multi_tool_call_mixed_validity_fail_fast()` (TV-007 cassette). Task 1 updated to "AC-001 through AC-025"; Task 15 (new impl task) and Task 16 (count 25) added. BC table version column added.
 - **1.1 (ADR-027 M3 / 2026-08-24):** ADR-027 M3: AC traces re-cited to stable clause anchors. Mis-anchors corrected: AC-006 PC-002→INV-002 (canonicalized JSON is an invariant, not a postcondition), AC-007 PC-003→PC-004 (field reorder non-breaking is PC-004), AC-008 PC-004→EC-001 (field rename breaking is EC-001 edge case), AC-018 INV-004 citation confirmed (INV-004 = empty-chain construction guard), AC-024 INV-005 citation corrected (DI-010 annotation removed; PC-007+INV-005 is the correct dual-clause trace). Architecture Compliance Rules table updated to match.

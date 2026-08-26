@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.12"
+version: "1.13"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -35,6 +35,7 @@ changelog:
   - "1.10 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.11 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
   - "1.12 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
+  - "1.13 (P2A-BC-scan-B/2026-08-26): ADR-028 D1-D3 multitask propagation — PC-004 expanded with full lifecycle semantics for multitask_strategy interrupt, rollback, and enqueue: pre-empted run terminal state (cancelled, not interrupted per ADR-028 D1); rollback target (latest_completed_checkpoint_id, delete rows with checkpoint_id > anchor per ADR-028 D2); enqueue FIFO order, max_queued_runs=10 configurable cap, queue-full → E-SERVER-019 RunQueueFull HTTP 429 per ADR-028 D3. EC-007 added for enqueue-queue-full path. TV-008/009/010 added for interrupt/rollback/enqueue strategies. ADR-028 anchor cited throughout new clauses."
 extracted_from: null
 modified: []
 deprecated: null
@@ -80,11 +81,15 @@ LangGraph Platform (D13).
    ```
 2. {PC-002} `thread_id` must exist; if not: HTTP 404 with `E-SERVER-003 ThreadNotFound`.
 3. {PC-003} `assistant_id` must reference a registered Assistant; if not: HTTP 422.
-4. {PC-004} `multitask_strategy` governs concurrent run handling on the same thread (default `"reject"`):
-   - `"reject"`: if another Run is already `queued` or `in_progress` on the thread → HTTP 409.
-   - `"interrupt"`: interrupt the current Run before starting the new one.
-   - `"rollback"`: rollback the current Run's state before starting the new one.
-   - `"enqueue"`: queue the new Run to start after the current Run finishes.
+4. {PC-004} `multitask_strategy` governs concurrent run handling on the same thread (default `"reject"`). Per ADR-028 Decisions 1–3:
+
+   - `"reject"`: if another Run is already `queued` or `in_progress` on the thread → HTTP 409 `{ code: "E-SERVER-012", message: "ConcurrentRun: ..." }`.
+
+   - `"interrupt"` (ADR-028 Decision 1): The pre-empted Run transitions to **`cancelled`** (NOT `interrupted`; `interrupted` is reserved for HITL-pause per BC-2.05.002 {PC-002}; sibling-preempted runs have no resume path). The new Run enters `queued` immediately; HTTP 202 is returned synchronously. The executor MUST NOT start the new Run concurrently with the pre-empted Run's shutdown — the new Run transitions to `in_progress` only AFTER the pre-empted Run's `cancelled` state is durably written to the RunStore. If the pre-empted Run is in `queued` state (not yet started), it transitions `queued → cancelled` without ever reaching `in_progress`. Error path: if the cancellation signal delivery fails (RunStore write error) → `Err(E-SERVER-014 RunStoreFailed)`; the new Run is NOT queued until the pre-empted Run's cancellation is durable.
+
+   - `"rollback"` (ADR-028 Decision 2): The pre-empted Run transitions to `cancelled`. The thread's checkpoint state is reset to the **`latest_completed_checkpoint_id`** captured at the moment `POST .../runs` is processed (the last checkpoint written by the previous completed/failed/cancelled Run). Execution sequence: (1) look up `latest_completed_checkpoint_id`; (2) signal pre-empted Run to cancel; (3) await `cancelled` state (durable RunStore write); (4) delete all checkpoint rows with `checkpoint_id > latest_completed_checkpoint_id` for this thread (bounded delete using the logical-clock monotone property per ADR-005 §Decision); (5) advance thread's `current_checkpoint` pointer back to `latest_completed_checkpoint_id`; (6) start new Run against rolled-back state. If the thread has no prior checkpoint, the rollback target is the empty thread state. Error path: checkpoint discard failure → `Err(E-CHKPT-001 CheckpointWriteFailed)`; new Run NOT started until rollback is complete; partial rollback is not permitted.
+
+   - `"enqueue"` (ADR-028 Decision 3): The new Run is added to the thread's FIFO run queue. Queue bound: `max_queued_runs` (default **10**; configurable per server-instance at startup; applies to the count of Runs in `queued` state on a single thread, excluding the currently `in_progress` Run). If the thread's queued Run count is already at capacity → HTTP 429 `{ code: "E-SERVER-019", message: "RunQueueFull: thread '<thread_id>' already has <queue_depth> queued run(s); max_queued_runs=<max_queued_runs>" }` (EC-007). Ordering: FIFO (`created_at` ascending); when the `in_progress` Run terminates (any terminal state), the executor selects the oldest `queued` Run on the thread and transitions it to `in_progress`.
 5. {PC-005} Returns HTTP 202 with `Run { run_id, thread_id, assistant_id, status: "queued", created_at }`.
 6. {PC-006} Execution is dispatched asynchronously to the graph executor.
 
@@ -196,6 +201,10 @@ scoped to a different thread — cross-thread run access is not permitted.
 **Scenario:** Any operation that the Run state machine does not permit in the Run's current state: (a) `POST .../cancel` on a Run in a terminal state (`completed`, `failed`, `cancelled`, `summary_halt`); (b) `DELETE .../runs/{run_id}` on a Run in a non-terminal state (`queued`, `in_progress`, `interrupted`). Distinct from EC-002 (ConcurrentRun / E-SERVER-012) which is about a second Run conflicting on the same Thread, not about an invalid transition on an existing Run.
 **Expected behavior:** HTTP 409 `{ code: "E-SERVER-018", message: "RunStateConflict: cannot perform '<operation>' on run '<run_id>' in state '<current_state>'" }`. Three struct fields: `run_id` (String), `current_state` (String), `operation` (String, value `"cancel"` or `"delete"`). The run record is not mutated; no state change occurs. Caller must first bring the run to a compatible state before retrying (e.g., wait for natural completion, or use the correct endpoint). Error code: E-SERVER-018 RunStateConflict (POLICY; RetryHint: Never — the same operation on the same terminal/non-terminal run always fails while the state persists).
 
+### EC-007: Enqueue queue full — max_queued_runs reached (ADR-028 Decision 3) {EC-007}
+**Scenario:** Thread `"t1"` has one `in_progress` Run and 10 `queued` Runs (default `max_queued_runs=10`). A new `POST /threads/t1/runs { multitask_strategy: "enqueue" }` arrives.
+**Expected behavior:** HTTP 429 `{ code: "E-SERVER-019", message: "RunQueueFull: thread 't1' already has 10 queued run(s); max_queued_runs=10" }`. No new Run is created. The caller should wait for the `in_progress` Run to reach a terminal state (freeing a queue slot) and then retry. RetryHint: Later (queue slot opens when the in_progress run completes — ADR-028 Decision 3).
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -207,6 +216,9 @@ scoped to a different thread — cross-thread run access is not permitted.
 | TV-005 | Graph node returns error → run status | `status: "failed"`, `error: { code: "E-GRAPH-...", ... }` | Error surfacing |
 | TV-006 | Second run on same thread, default strategy | HTTP 409 E-SERVER-012 | Concurrent rejection |
 | TV-007 | `GET /threads/t1/runs?status=completed` | Filtered list of completed runs | Status filter |
+| TV-008 | Thread `t1` has active `in_progress` Run `r1`; `POST /threads/t1/runs { multitask_strategy: "interrupt" }` | HTTP 202, new Run `r2` in `queued`; `r1` transitions to `cancelled`; after `r1` cancelled durably, `r2` transitions to `in_progress` | multitask_strategy=interrupt |
+| TV-009 | Thread `t1` has active Run `r1` (3 checkpoints written); `POST /threads/t1/runs { multitask_strategy: "rollback" }` | HTTP 202, new Run `r2`; `r1` transitions to `cancelled`; checkpoint rows from `r1` deleted (only rows up to `latest_completed_checkpoint_id` retained); `r2` starts against rolled-back state | multitask_strategy=rollback |
+| TV-010 | Thread `t1` has active `in_progress` Run `r1` and 10 `queued` Runs (queue at capacity); `POST /threads/t1/runs { multitask_strategy: "enqueue" }` | HTTP 429 `E-SERVER-019 RunQueueFull` | multitask_strategy=enqueue queue-full |
 
 ## Verification Properties
 

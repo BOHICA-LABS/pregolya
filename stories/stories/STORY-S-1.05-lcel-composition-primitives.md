@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.05
 epic_id: E-01
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.3 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.008 {PC-006}/{TV-007}: AC-015 safetee streaming happy path (passthrough chunk then merged chunk). AC-016 safetee stream non-dict yields single Err(E-CORE-010). BC table version bumped."
   - "1.2 (P2A-043 F-05/2026-08-24): prose ordinal cross-refs converted to stable tags."
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
 phase: 2
@@ -18,7 +19,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "f83a7d4"
+input-hash: "9e1f109"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04]
@@ -51,7 +52,7 @@ tdd_mode: strict
 | BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | AC-001..AC-004 |
 | BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | AC-005..AC-007 |
 | BC-2.01.007 | RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract | AC-008..AC-010 |
-| BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | AC-011..AC-014 |
+| BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | AC-011..AC-014, AC-015..AC-016 |
 
 ## Acceptance Criteria
 
@@ -96,6 +97,12 @@ A Tokio task panic (JoinError from a panicking branch task) maps to `Err(Pregoly
 
 ### AC-014 (traces to BC-2.01.008 INV-002)
 Merge is always `{**input, **mapper_output}`: input keys not in mapper remain unchanged; mapper keys override matching input keys; no mapper keys are silently dropped. A three-key merge test verifies all three conditions. Verified by `test_BC_2_01_008_merge_semantics_complete()`.
+
+### AC-015 (traces to BC-2.01.008 §{PC-006} and TV-007 — RunnableAssign safetee streaming happy path)
+`assign([("k", const_fn("v"))]).stream(Value::Object({"a": 1}), config)` yields exactly two items then terminates: (1) `Ok(Value::Object({"a": 1}))` — the passthrough chunk (original input dict returned immediately, before mapper completes); (2) `Ok(Value::Object({"a": 1, "k": "v"}))` — the final merged result after the mapper completes. Merge semantics are identical to `invoke` (mapper-wins on collision per INV-002). Verified by `test_BC_2_01_008_assign_stream_safetee_happy_path()`.
+
+### AC-016 (traces to BC-2.01.008 §{PC-006} — RunnableAssign stream non-dict input yields single Err)
+`assign([...]).stream(Value::Null, config)` (non-dict input) yields exactly one stream item: `Err(PregolyaError { category: VAL, code: "E-CORE-010", message: "RunnableAssignNonDictInput: input to RunnablePassthrough.assign() must be a JSON object", .. })`, then terminates. The mapper is never invoked on the non-dict path (INV-001 gate applies on the streaming path as well). Verified by `test_BC_2_01_008_assign_stream_non_dict_single_err()`.
 
 ## Architecture Mapping
 
@@ -156,7 +163,9 @@ Merge is always `{**input, **mapper_output}`: input keys not in mapper remain un
 11. [ ] Implement mapper-wins-on-collision merge semantics (BC-2.01.008)
 12. [ ] Add `pub mod runnable;` to `pregolya-core/src/lib.rs`
 13. [ ] Add proptest dep to `pregolya-core/Cargo.toml` dev-dependencies
-14. [ ] Run `cargo nextest run -p pregolya-core` — all tests including proptest pass
+14. [ ] Write failing test `test_BC_2_01_008_assign_stream_safetee_happy_path()` for AC-015 (test-writer)
+15. [ ] Write failing test `test_BC_2_01_008_assign_stream_non_dict_single_err()` for AC-016 (test-writer)
+16. [ ] Run `cargo nextest run -p pregolya-core` — all tests including proptest pass
 
 ## Previous Story Intelligence (MANDATORY)
 

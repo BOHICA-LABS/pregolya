@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.15
 epic_id: E-07
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "67fe9a9"
+input-hash: "ed2ea5b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -30,6 +30,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.2 (P2-bc-completeness-burst-B/2026-08-26): BC-2.02.005 {INV-002}: AC-012 side-effecting path_fn executes (not sandboxed). {INV-005}/{EC-006}: AC-013 multi-edge End+NodeName live-node runs before terminus. BC table version bumped."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
@@ -49,7 +50,7 @@ changelog:
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.02.005 | Conditional Edges — path_fn Routing with Panic Safety | AC-001..AC-005 |
+| BC-2.02.005 | Conditional Edges — path_fn Routing with Panic Safety | AC-001..AC-005, AC-012..AC-013 |
 | BC-2.02.006 | Send API — Dynamic Fan-Out, PUSH Tasks, Task ID Determinism | AC-006..AC-011 |
 
 ## Acceptance Criteria
@@ -86,6 +87,12 @@ If a PUSH task crashes before completing, resubmitting the same `Send(...)` with
 
 ### AC-011 (traces to BC-2.02.006 PC-001 — Send API available from within node async fn)
 Node functions receive a context object with a `send` method; calling `ctx.send("target", value)` queues the PUSH task without blocking the current node. Verified by `test_BC_2_02_006_send_available_in_node_context()`.
+
+### AC-012 (traces to BC-2.02.005 §{INV-002} — side-effecting path_fn executes; not sandboxed)
+If `path_fn` performs I/O or mutates external state (e.g., increments an `Arc<AtomicU32>` counter), those operations ARE executed — the graph does NOT sandbox `path_fn`. The mutation is observable after the routing step completes. However, the mutation is NOT covered by the graph's checkpoint/rollback boundary: if the run is retried from a checkpoint, the external side effect is not rolled back. Callers who require transactional side effects must place them inside node functions, not routing functions. Verified by `test_BC_2_02_005_side_effecting_path_fn_executes()`.
+
+### AC-013 (traces to BC-2.02.005 §{INV-005} and §{EC-006} — multi-edge End+NodeName: live node runs before terminus)
+When two `add_conditional_edges` calls are registered for the same source node `"router"`, and in a given super-step path_fn-A returns `End` and path_fn-B returns `NodeName("cleanup")`: the scheduling union is `{End, "cleanup"}`. `"cleanup"` is scheduled and executes in the next super-step. `End` is added as a terminus marker but does NOT preempt `"cleanup"` from running. After `"cleanup"` completes with no further outgoing edges, the graph terminates with status `completed`. The caller does NOT observe an immediate halt after the `"router"` step. Verified by `test_BC_2_02_005_multi_edge_end_plus_nodename_cleanup_runs()`.
 
 ## Architecture Mapping
 
@@ -141,7 +148,9 @@ Node functions receive a context object with a `send` method; calling `ctx.send(
 6. [ ] Add `task_id` hash function to `pregolya-graph/src/types.rs` — xxh3_128 with canonical key components
 7. [ ] Add `UntrackedValue` sanitization in `types.rs`
 8. [ ] Add `ctx.send(target, value)` to node execution context
-9. [ ] Run `cargo nextest run -p pregolya-graph --no-fail-fast` — all tests green
+9. [ ] Write failing test `test_BC_2_02_005_side_effecting_path_fn_executes()` for AC-012 (test-writer)
+10. [ ] Write failing test `test_BC_2_02_005_multi_edge_end_plus_nodename_cleanup_runs()` for AC-013 (test-writer)
+11. [ ] Run `cargo nextest run -p pregolya-graph --no-fail-fast` — all tests green
 
 ## Previous Story Intelligence (MANDATORY)
 

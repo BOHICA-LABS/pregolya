@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.20"
+version: "2.21"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
-input-hash: "b832d00"
+input-hash: "57a7c93"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -38,7 +38,7 @@ decisions: [D17, D21, D23]
 
 ## [Section Content]
 
-This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the fourteen committed VP obligations (VP-001–VP-014), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170).
+This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the fifteen committed VP obligations (VP-001–VP-015), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit test (one integration P1; BC-2.09.007 {INV-003}).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -70,7 +70,7 @@ on a `Future` will fail at verification time. Consequences:
 
 ## Committed VP Obligations (D17-Q7 + R11 + D21 + D23)
 
-Fourteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion):
+Fifteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -88,8 +88,9 @@ Fourteen VPs committed before v1.0 release — VP-001..005 (original five) plus 
 | VP-012 | BC-2.10.005 | DI-014 | `core::budget` | Kani | 6 | P1 |
 | VP-013 | BC-2.23.005 | DI-014 | `tools::shell` | Kani | 6 | P1 |
 | VP-014 | BC-2.01.005 + BC-2.01.006 | DI-016 | `core::runnable` | proptest | 3 | P1 |
+| VP-015 | BC-2.09.007 {INV-003} | DI-010 | `mcp::sanitize` | integration | 3 | P1 |
 
-**Total: 14 VPs — 6 P0 / 8 P1 | Tool breakdown: Kani ×9, proptest ×3, integration ×2**
+**Total: 15 VPs — 6 P0 / 9 P1 | Tool breakdown: Kani ×9, proptest ×3, integration ×3**
 
 ## Provable Properties Catalog
 
@@ -393,17 +394,24 @@ See VP-011.md §Feasibility Assessment for full factor table.
 
 **VP-006 — injection_guard Fail-Closed** (`prompts::injection_guard`) `Kani P1 Phase 6` `red_gate: true`
 
-Property: For any slot variable with `TrustLevel::Untrusted` where the slot policy is
-`TrustRequired`, `check_slot_trust` returns `Err(E-TMPL-001)` and never returns
-`Ok(PromptValue)`. The safe passage (`TrustAll`) path is only reachable when the policy
-explicitly permits it.
+**Scope (v1.9 extension, architect-reconcile-burst):** VP-006 covers all 3 injection arms:
+(1) slot-variable trust check (`check_slot_trust` — original scope); (2) few-shot example
+injection (`check_fewshot_trust` — added in v1.9 per BC-2.18.004 {PC-005}); (3) TV-006 Red Gate
+(compile-and-fail before Phase 3 story delivery for SS-18). Two Kani harnesses:
+`injection_guard_fail_closed` (Arm 1) and `injection_guard_fewshot_fail_closed` (Arm 2).
+Authoritative harness bodies: VP-006.md §Proof Harness Skeleton.
+
+Property: For any injection-guard input with `TrustLevel::Untrusted` where the guard policy
+is `TrustRequired`, the corresponding check function returns `Err(E-TMPL-001)` and never
+returns `Ok(PromptValue)`. Holds for both `check_slot_trust` (Arm 1) and `check_fewshot_trust`
+(Arm 2). The safe passage (`TrustAll`) path is only reachable when the policy explicitly permits it.
 
 Note (burst-226 / F-P131-05): `TrustLevel` is the SS-18-local trust classifier in
 `pregolya-prompts: prompts::template`. It is distinct from `core::guardrail::ProvenanceTag`
 (SS-11 ingress-boundary struct). Harness uses `kani::Arbitrary` on `TrustLevel` (3-variant
 enum: `Untrusted | UserInput | Trusted`). Error code is `E-TMPL-001` (SECURITY/InjectionAttempt).
 
-Formal statement:
+Formal statement (Arm 1 — slot variables):
 ```
 ∀ slots: Vec<SlotVar>, |slots| ≤ 4:
   ∃ slot ∈ slots: slot.policy == SlotTrustPolicy::TrustRequired
@@ -411,7 +419,14 @@ Formal statement:
     check_slot_trust(slots) == Err(PregolyaError { code: "E-TMPL-001", category: SECURITY, .. })
 ```
 
-Kani harness sketch:
+Formal statement (Arm 2 — few-shot examples):
+```
+∀ examples: Vec<FewShotExample>, |examples| ≤ 4:
+  ∃ ex ∈ examples: ex.trust_level.is_some_and(|t| t.is_untrusted()) →
+    check_fewshot_trust(examples) == Err(PregolyaError { code: "E-TMPL-001", category: SECURITY, .. })
+```
+
+Kani harness sketch (Arm 1 — canonical, unchanged from prior versions):
 ```rust
 #[kani::proof]
 fn injection_guard_fail_closed() {
@@ -437,9 +452,32 @@ fn injection_guard_fail_closed() {
 }
 ```
 
-Feasibility: HIGH. `check_slot_trust` is a pure sync function over bounded Vec. Enum variants are
-finite (TrustLevel: 3 variants; SlotTrustPolicy: 2 variants). Harness bounds: ≤ 4 slots.
-Estimated proof time: 1–3 min.
+Kani harness sketch (Arm 2 — few-shot, added v1.9):
+```rust
+#[kani::proof]
+fn injection_guard_fewshot_fail_closed() {
+    let n: usize = kani::any();
+    kani::assume(n >= 1 && n <= 4);
+    let examples: Vec<FewShotExample> = (0..n)
+        .map(|_| FewShotExample {
+            trust_level: kani::any::<Option<TrustLevel>>(),
+        })
+        .collect();
+    let result = check_fewshot_trust(&examples);
+    let has_untrusted = examples.iter().any(|ex|
+        ex.trust_level.is_some_and(|t| t.is_untrusted())
+    );
+    if has_untrusted {
+        kani::assert(matches!(result, Err(PregolyaError { code: "E-TMPL-001", .. })), "fewshot fail-closed: must return E-TMPL-001");
+    } else {
+        kani::assert(result.is_ok(), "no untrusted fewshot: must pass");
+    }
+}
+```
+
+Feasibility: HIGH. Both `check_slot_trust` and `check_fewshot_trust` are pure sync functions over
+bounded Vec. Enum variants finite (TrustLevel: 3 variants; SlotTrustPolicy: 2 variants).
+Harness bounds: ≤ 4 slots / ≤ 4 examples. Estimated proof time per harness: 1–3 min.
 
 ---
 
@@ -672,6 +710,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.21 | 2026-08-26 | architect | architect-reconcile-burst | (1) VP-006 3-arm scope extension (v1.9): §VP-006 updated to document all 3 injection arms; added Arm 2 formal statement (few-shot) and `injection_guard_fewshot_fail_closed` Kani harness sketch; TV-006 Red Gate noted. (2) VP-015 added to Committed VP Obligations table: `mcp::sanitize`, integration P1, Phase 3, BC-2.09.007 {INV-003}, DI-010. Section Content narrative updated (fourteen→fifteen VPs). Total: 15 VPs — 6 P0 / 9 P1, Kani 9 + proptest 3 + integration 3. input-hash refreshed (57a7c93 from hook-computed value; BC inputs added by Burst B propagation). |
 | 2.20 | 2026-08-21 | architect | INVESTIGATE-RECONCILE | VP-004 Module column: `mcp::adapter` → `mcp::exception` in Provable Properties Catalog table. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property targets `mcp::exception`. Arithmetic invariant unchanged: 14 VPs, 6 P0 / 8 P1, Kani 9 + proptest 3 + integration 2. |
 | 2.19 | 2026-08-17 | architect | BURST-313 / F-P204-02 | VP-014 formal statement corrected: stale `new()` argument type `IndexMap<String, Arc<dyn DynRunnable>>` replaced with canonical `Vec<(String, Arc<dyn DynRunnable>)>` (iterator-of-pairs). IndexMap is the INTERNAL container built by `new()`, not the argument type (ADR-026 §Decision 1 / BC-2.01.005 PC1). Formal invariant rewritten: quantifier uses Vec-of-pairs, extracts `key_set` from pairs via iterator map-collect, derives `N = key_set.len()`. Adds clarifying comment that IndexMap is internal. Key-completeness property preserved. Source of truth: VP-014.md §Changelog (burst-311/OBS-P202-B). No §Decision 1/2 split required — arch block does not attribute JoinSet/concurrent execution to §Decision 1. Corpus sweep: only this site was a stale new()-arg; interface-definitions.md §RunnableParallel struct definition, BC-2.01.005 §Construction Preconditions, ADR-026 §Decision 1 are struct-field/internal-container usages (correct). |
 | 2.18 | 2026-08-17 | architect | burst-308 / F-P200-02 | Category-axis reference correction in §VP-013 RESOLVED block. "(not present in the 12-category axis per ADR-010)" → "(not present in the 13-category axis per ADR-010)". Rationale: ADR-010 §Category Axis Expansion (D26) expanded the category axis from 12 to 13 (EXEC added) in this burst; CONFIGURATION has never been a valid category, pre- or post-D26 expansion. |

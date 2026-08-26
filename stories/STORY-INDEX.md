@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.4"
+version: "1.5"
 status: active
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 changelog:
+  - "1.5 (BC-completeness-propagation/2026-08-26): 23 story files updated with BC-completeness propagation (SS-01 through SS-23 cluster fan-out; AC/task/ACs updated to reflect ADR-014 §D7 MMR, §D8 delete-idempotent, ADR-028 multitask, plus 15 new EC codes); §Census Stories with VP anchor 12→13 (S-2.11 now anchors VP-015 via BC-2.09.007 {INV-003}). Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.4 (P2A-054 F-054-01/2026-08-25): §Census epic axis made symmetric with story axis — Product Epics 22 / Maintenance Epics 1 / Total Epics 23 (EPIC-MAINT accounted; product census unchanged at 22)."
   - "1.3 (P2A-048/2026-08-24): F-048-01: changelog reordered to DESCENDING (newest-first) to match the index-class convention (verify-form-a-changelog-direction.sh: indexes = DESCENDING, version == FIRST entry) and sibling indexes BC-INDEX/VP-INDEX/ARCH-INDEX. STORY-INDEX was the sole ascending outlier."
   - "1.2 (P2A-047/2026-08-24): F-047-02: S-2.03 Subsystem column updated SS-21 → SS-21, SS-20 (BC-2.20.003 owned by SS-20 Document Retrieval per ARCH-INDEX Subsystem Registry; subsystems field is a superset of covered-BC-owning + implementation-touched subsystems, per S-1.13 SS-15,SS-03 precedent). Story versions: S-2.03 v1.3→v1.4; S-2.04 v1.3→v1.4 (verification_properties frontmatter cleared to []; VP-2.18.003-A/B are BC-local not VP-INDEX-registered)."
@@ -41,7 +42,7 @@ input-hash: "f6e9b48"
 | Maintenance Epics | 1 |
 | Total Epics | 23 |
 | BCs covered | 133 / 133 |
-| Stories with VP anchor | 12 |
+| Stories with VP anchor | 13 |
 | Stories with Red Gate BCs | 8 |
 
 ## Story Inventory

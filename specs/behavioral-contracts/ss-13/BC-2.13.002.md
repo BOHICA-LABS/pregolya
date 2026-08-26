@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.002
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "2e431f6"
+input-hash: "4cc0b0a"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -28,6 +28,7 @@ changelog:
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.4 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2A-BC-scan-B/2026-08-26): Process backend execute failure paths added. PC-007 added: OS subprocess spawn failure → E-SBXD-007 ProcessSpawnFailed (TOOL/broken/Maybe; 2 placeholders: command, os_error). PC-008 added: process non-zero exit → E-SBXD-008 ProcessNonZeroExit (TOOL/broken; exit_code, stderr). EC-005/EC-006 added for spawn-failure and non-zero-exit test scenarios. Note: error-taxonomy minted E-SBXD-007 with anchor 'BC-2.13.002 PC-003' and E-SBXD-008 with anchor 'BC-2.13.002 PC-004'; PC-003/PC-004 are occupied by existing postconditions; authoritative stable tags are PC-007/PC-008 per ADR-027 append-only numbering."
 modified: []
 extracted_from: null
 deprecated: null
@@ -75,6 +76,19 @@ enforcement).
    upstream `tokio::time::timeout` at the BashTool layer), the OS subprocess is killed by
    Tokio's drop machinery. No subprocess spawned by `ProcessBackend` may outlive the
    `execute()` Future.
+7. {PC-007} If `tokio::process::Command::spawn()` returns an OS error (e.g., executable not found,
+   resource exhaustion, permission denied), `execute()` returns
+   `Err(E-SBXD-007: ProcessSpawnFailed { command: <command_string>, os_error: <os_error_message> })`.
+   The WARN log from {PC-001} is NOT emitted for a spawn failure — the warning fires before code
+   execution begins ({INV-002}), but spawn failure prevents execution from beginning at all; the
+   error itself is the observable signal. RetryHint: Maybe (spawn failure may be transient resource
+   exhaustion; a subsequent attempt after system resources free may succeed).
+8. {PC-008} If the spawned process exits with a non-zero exit code, `execute()` returns
+   `Err(E-SBXD-008: ProcessNonZeroExit { command: <command_string>, exit_code: <code>, stderr: <captured_stderr> })`.
+   The tool function's return value is discarded; the non-zero exit is treated as a tool execution
+   failure. Callers MUST NOT treat non-zero exit as success. `stderr` is captured for diagnostic
+   purposes; it MUST NOT be included in model context without sanitization (DI-009 credential
+   safety). RetryHint: Never (same command on same input will produce the same non-zero exit).
 
 ## Invariants
 
@@ -102,6 +116,8 @@ enforcement).
 | EC-002 | `ProcessBackend` is constructed but `execute()` is never called | No warning emitted — warning fires at execute-time, not at construct-time |
 | EC-003 | `execute()` is called 5 times in a loop | Warning emitted 5 times (once per execute call); no deduplication |
 | EC-004 | Calling code attempts to intercept the warning by setting a custom log subscriber | Warning is emitted into the standard `tracing` subscriber; custom subscriber receives it; pregolya does not suppress it |
+| EC-005 | {EC-005} `unsafe_process_no_isolation()` + `execute()` with a command that does not exist on the PATH (e.g., `"nonexistent_binary_xyz"`) | `Err(E-SBXD-007: ProcessSpawnFailed { command: "nonexistent_binary_xyz", os_error: "No such file or directory (os error 2)" })`; no WARN log from PC-001 (spawn did not begin execution); {PC-007} |
+| EC-006 | {EC-006} `unsafe_process_no_isolation()` + `execute()` with a valid command that exits with code 1 (e.g., shell script returning `exit 1`) | `Err(E-SBXD-008: ProcessNonZeroExit { command: "...", exit_code: 1, stderr: "..." })`; tool result is not `Ok`; {PC-008} |
 
 ## Canonical Test Vectors
 

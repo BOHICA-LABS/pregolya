@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.002
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "1.12 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.13 (P2A-045 F-045-03/2026-08-24): §Postconditions decorative ordinals renumbered sequentially."
   - "1.14 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
+  - "1.15 (P2A-BC-scan-B/2026-08-26): (1) EC-003 fixed — ADR-028 Decision 4 cascade atomicity propagation: delete_threads=true with any constituent thread having an active (queued or in_progress) Run now returns HTTP 409 E-SERVER-008 ThreadStateConflict; no partial deletion; caller must cancel all active runs before retrying. TV-009 added for blocking-run cascade scenario. (2) EC-007 added — PATCH /assistants with empty graph_id → E-SERVER-020 AssistantFieldInvalid (VAL/400); INV-004 enforcement gap closed. ADR-028 D4 cited in EC-003; E-SERVER-020 cited in EC-007."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-014
 inputs:
@@ -139,10 +140,12 @@ changes.
 **Scenario:** `POST /assistants/a1/set_latest { version: 99 }` when only versions 1–3 exist.
 **Expected behavior:** HTTP 404 `{ code: "E-SERVER-010", message: "AssistantVersionNotFound: assistant 'a1' has no version 99" }`.
 
-### EC-003: delete with delete_threads=true
-**Scenario:** Assistant "a1" has 3 associated threads (via its runs). `DELETE /assistants/a1?delete_threads=true`.
-**Expected behavior:** HTTP 204. All 3 threads and their checkpoint state deleted. The
-thread deletion is subject to BC-2.12.001 cascade semantics.
+### EC-003: delete with delete_threads=true — atomic-abort if any thread has an active run (ADR-028 Decision 4) {EC-003}
+**Scenario A (no active runs):** Assistant "a1" has 3 associated threads; all runs on all threads are in terminal states. `DELETE /assistants/a1?delete_threads=true`.
+**Expected behavior:** HTTP 204. All 3 threads and their checkpoint state deleted atomically. The entire cascade (assistant record + all thread records) succeeds or fails as one unit.
+
+**Scenario B (active run blocks cascade):** Assistant "a1" has 3 associated threads; one thread has a Run currently in `queued` or `in_progress` state.
+**Expected behavior:** HTTP 409 `{ code: "E-SERVER-008", message: "ThreadStateConflict: thread '<thread_id>' has an active run '<run_id>'; cascade delete aborted — assistant '<assistant_id>' and no thread records were modified" }`. No partial deletion occurs: neither the assistant record nor any thread record is modified. The caller MUST cancel all active runs on ALL constituent threads before retrying `DELETE /assistants/{id}?delete_threads=true` (per ADR-028 Decision 4 caller contract). TV-009 covers Scenario B.
 
 ### EC-004: Read assistant at specific version
 **Scenario:** Assistant has 3 versions; caller wants version 2 specifically.
@@ -158,6 +161,10 @@ callers must use the versions list.
 **Scenario:** Assistant "a1" is stored with `config.configurable = { "model": "gpt-4o", "temperature": 0.7 }`. A `POST /threads/t1/runs { assistant_id: "a1", config: { configurable: { "model": "claude-opus-4-5" } } }` arrives with a run-level `configurable` that carries only `"model"`.
 **Expected behavior:** The effective `configurable` used by the executor is `{ "model": "claude-opus-4-5", "temperature": 0.7 }`. Run-level key `"model"` wins over the assistant-stored value; key `"temperature"` is absent from the run-level map so the assistant-stored value is retained. Merge is at the top-level key of the `configurable` map (not a recursive deep-merge of values). Authority: BC-2.12.003 §Invariants, interface-definitions.md §RunnableConfig — Struct Definition.
 
+### EC-007: PATCH /assistants with empty graph_id (INV-004 enforcement) {EC-007}
+**Scenario:** `PATCH /assistants/a1 { "graph_id": "" }` — caller attempts to update `graph_id` to an empty string.
+**Expected behavior:** HTTP 400 `{ code: "E-SERVER-020", message: "Validation failed for 'graph_id': must not be empty" }`. No new version is created; assistant record is not modified. `graph_id` is a required non-empty field (INV-004); empty-string updates are rejected at request validation time before any store operation.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -170,6 +177,7 @@ callers must use the versions list.
 | TV-006 | `GET /assistants/<id>/versions` after 2 patches | `[version1, version2, version3]` | Version history |
 | TV-007 | `POST /assistants/<id>/set_latest { version: 1 }` | HTTP 200, assistant resolves to version 1 config | Rollback via set_latest |
 | TV-008 | Assistant stored with `config.configurable = {"model":"gpt-4o","temperature":0.7}`; run created with `config: { configurable: {"model":"claude-opus-4-5"} }` | Executor receives effective `configurable = {"model":"claude-opus-4-5","temperature":0.7}` | configurable key collision — run key wins, absent keys retained from assistant |
+| TV-009 | `DELETE /assistants/<id>?delete_threads=true`; one of the assistant's 3 threads has an `in_progress` Run | HTTP 409 E-SERVER-008, message cites the blocking thread_id and run_id; neither assistant nor any thread record deleted | cascade delete blocked by active run (EC-003 Scenario B) |
 
 ## Verification Properties
 

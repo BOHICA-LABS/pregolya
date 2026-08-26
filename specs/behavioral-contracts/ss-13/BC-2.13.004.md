@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.004
-version: "1.7"
+version: "1.9"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -15,7 +15,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "df3ab85"
+input-hash: "1d0cc49"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -31,6 +31,8 @@ changelog:
   - "1.5 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix two live-body phantom ADR §-citations. PC-5 trailing reference and Architecture Anchors: `§Confinement-Proof` (hyphen form) → `ADR-024 §Confinement Proof — Phase 2` (real heading is `## Confinement Proof — Phase 2` in ADR-024; hyphen was dropped to space + em-dash)."
   - "1.6 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-02 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-02)."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.8 (P2A-BC-scan-B/2026-08-26): EC-006 added — non-escape canonicalize I/O error catch-all (EACCES, ELOOP, EIO, etc.) → NEEDS-NEW-CODE flagged in manifest; no existing E-SBXD code semantically covers 'canonicalize() OS failure that is not a WorkspaceEscape'; proposed E-SBXD-010 CanonicalizationFailed in manifest."
+  - "1.9 (burst-A2-error-coord/P2A-BC-scan-hardening-addendum/2026-08-26): EC-006 repointed from proposed E-SBXD-010 → minted E-SBXD-010 CanonicalizationFailed (SYS/broken/Maybe; 2 placeholders: requested_path, os_error; see error-taxonomy.md §E-SBXD-010); NEEDS-NEW-CODE annotation removed."
 modified: []
 extracted_from: null
 deprecated: null
@@ -108,6 +110,7 @@ formally prove that no file operation can observe content outside the declared w
 | EC-003 | Absolute path outside root: `/etc/passwd` | Canonical path `/etc/passwd`; not beneath root; `Err(E-SBXD-001: WorkspaceEscape)` |
 | EC-004 | Write to a new file that does not yet exist | Parent directory is canonicalized; parent must be beneath root; if parent OK, append filename and proceed; if parent escapes, `Err(WorkspaceEscape)` |
 | EC-005 | Path refers to a directory, not a file (e.g., list operation) | `canonicalize_beneath_root` applied to directory path; same prefix check; returns `Ok(canonical_dir)` or `Err(WorkspaceEscape)` |
+| EC-006 | {EC-006} `std::fs::canonicalize()` returns an OS error that is NOT a WorkspaceEscape — e.g., `EACCES` (permission denied traversing a symlink target), `ELOOP` (too many levels of symbolic links — OS limit on symlink depth), or `EIO` (hardware I/O error during filesystem traversal). The path may be inside the workspace root (not an escape attempt). | `canonicalize_beneath_root` returns `Err(PregolyaError { component: SBXD, category: SYS, code: "E-SBXD-010", message: "CanonicalizationFailed: cannot resolve path '<requested_path>': <os_error>", retry_hint: Maybe, .. })`. (`<requested_path>` = the path passed to `canonicalize_beneath_root`; `<os_error>` = the `std::io::Error` message from the OS, e.g., `"EACCES: permission denied"` or `"ELOOP: too many levels of symbolic links"`.) E-SBXD-010 CanonicalizationFailed (SYS/broken; see error-taxonomy.md §Component: SBXD (pregolya-sandbox)). The behavior contract: the error MUST be surfaced as `Err`; the operation MUST NOT proceed past a canonicalize failure regardless of whether the cause is escape-related. |
 
 ## Canonical Test Vectors
 

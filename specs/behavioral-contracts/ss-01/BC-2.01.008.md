@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.008
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "1.5 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.008 MED — BC declared ST (streaming) test-type and cited ADR-026 §D4 safetee anchor but had no streaming PC. Added {PC-006} specifying RunnableAssign::stream() behavior via the safetee pattern: yields the passthrough input dict as first chunk, then yields the final merged result when mapper completes; non-dict input yields Err(E-CORE-010) as the sole chunk. Added TV-007 as the canonical streaming test vector."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "4ccce82"
+input-hash: "40f3916"
 extracted_from: null
 modified: []
 deprecated: null
@@ -81,6 +82,23 @@ fail-fast semantics of `RunnableParallel` (BC-2.01.006).
    semantics). No partial merged object is returned.
 5. {PC-005} The output `Value::Object` contains all keys from `input_map` PLUS all keys from
    the mapper output, with mapper values taking precedence on collision.
+6. {PC-006} `RunnableAssign::stream(input, config)` implements the safetee streaming pattern
+   (ADR-026 §Decision 4 — RunnableAssign: Dict Augmentation):
+   - If `input` is NOT a `Value::Object`: the stream yields exactly one item
+     `Err(PregolyaError { category: VAL, code: "E-CORE-010", message: "RunnableAssignNonDictInput: ...", .. })`
+     and terminates. The mapper is never invoked.
+   - If `input` IS a `Value::Object(input_map)`: the stream applies the safetee pattern:
+     (a) First, yields the original `input` dict as a passthrough chunk —
+         `Ok(Value::Object(input_map.clone()))` — making the unmodified input immediately
+         available to downstream stream consumers.
+     (b) Then, invokes the mapper on `input.clone()` asynchronously (via the mapper's own
+         `invoke` path, per the wrapped `RunnableParallel`). When the mapper completes
+         successfully, yields the final merged result `Ok(Value::Object(merged_map))` as a
+         second chunk and terminates. Merge semantics are identical to `invoke` PC-003
+         (mapper-wins on collision).
+     (c) If the mapper fails, the stream yields `Err(...)` (propagated from the mapper)
+         as the second chunk after the passthrough chunk, then terminates. No partial merged
+         map is yielded; INV-003 applies on the streaming path as well.
 
 ## Invariants
 
@@ -153,6 +171,7 @@ preserved, mapper adds nothing. Output is `{ "a": 1 }` — identical to input.
 | TV-004 | `assign([...]).invoke(Value::Array([1,2,3]), None)` | `Err(PregolyaError { category: VAL, code: "E-CORE-010", .. })` | Non-dict input: Array |
 | TV-005 | `assign([("k", failing_fn)]).invoke(Object({"a": 1}), None)` | `Err(PregolyaError { category: EXEC, code: "E-CORE-009", .. })` — no partial merge | Mapper failure propagates; no partial output |
 | TV-006 | `assign([]).invoke(Object({"x": 99}), None)` | `Ok(Object({"x": 99}))` | Empty mapper: output = input |
+| TV-007 | `assign([("k", const_fn("v"))]).stream(Object({"a": 1}), None)` | Stream yields `Ok(Object({"a": 1}))` then `Ok(Object({"a": 1, "k": "v"}))` then terminates | Safetee streaming: passthrough chunk first, merged-output chunk second |
 
 ## Verification Properties
 

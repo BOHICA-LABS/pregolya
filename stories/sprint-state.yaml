@@ -524,7 +524,7 @@ stories:
     wave: 2
     status: spec-ready
     bcs: [BC-2.09.006, BC-2.09.007]
-    vps: []
+    vps: [VP-015]
     points: 5
     tdd_mode: strict
     priority: P1
@@ -540,7 +540,7 @@ stories:
     wave: 6
     status: spec-ready
     bcs: [BC-2.17.001, BC-2.17.002]
-    vps: [VP-001, VP-002, VP-003, VP-006, VP-007, VP-008, VP-009, VP-010, VP-011, VP-012, VP-013, VP-014]
+    vps: [VP-001, VP-002, VP-003, VP-006, VP-007, VP-008, VP-009, VP-010, VP-011, VP-012, VP-013, VP-014, VP-015]
     points: 8
     tdd_mode: strict
     priority: P2

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.5 (M3b/ADR-027-escalation-2/2026-08-24): Added {INV-005} — Message hierarchy #[non_exhaustive] clause; authoring missing production-grade invariant per CLAUDE.md workspace-wide mandate (S-1.03 AC-012 escalation)."
+  - "1.6 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.002 MED — INV-002 listed 'chat' discriminant with no specification of ChatMessage variant fields or behavior. Decision: keep 'chat' in accepted set (LangChain ChatMessage is a legitimate API surface for arbitrary-role messages). Added {PC-008} specifying ChatMessage fields (role: String required, content: MessageContent) and round-trip behavior; added {EC-006} showing ChatMessage with an arbitrary role value. Added INV-002 annotation clarifying the 'chat' discriminant requires a non-empty role field."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "22e7fbd"
+input-hash: "e21c7f4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -73,13 +74,23 @@ typed `Err(PregolyaError)` — it never panics.
    including `additional_kwargs` (captured via `#[serde(flatten)]` extras map).
 7. {PC-007} Legacy role string `"function"` deserializes as the `Function(FunctionMessage)` legacy variant
    rather than erroring — backward compatibility with serialized data.
+8. {PC-008} The `"chat"` discriminant deserializes as `Message::Chat(ChatMessage { role, content, .. })`
+   where `role` is the arbitrary role string carried in the JSON `"role"` field (required, non-empty)
+   and `content` is the message body. Construction via
+   `Message::Chat(ChatMessage { role: "custom_role".into(), content: MessageContent::Text("...".into()), .. })`
+   compiles and carries the supplied role string. Round-trip serialization preserves the `role` field
+   verbatim. `ChatMessage` is distinct from the four primary variants — it does NOT restrict the role
+   to `"ai"`, `"human"`, `"system"`, or `"tool"`; it accepts any non-empty string. Deserialization
+   of `{"type":"chat"}` without a `"role"` field returns `Err(PregolyaError { category: VAL,
+   code: E-CORE-002, .. })` because the `role` field is required.
 
 ## Invariants
 
 - {INV-001} **DI-008 (Library Constructor Result Contract):** All fallible construction paths return
   `Result<Message, PregolyaError>` — `unwrap` and `expect` are absent from non-test code.
 - {INV-002} The `type` field is a discriminant literal per variant: `"ai"`, `"human"`, `"system"`, `"tool"`,
-  `"function"` (legacy), `"chat"` (arbitrary-role), `"remove"` (history control).
+  `"function"` (legacy), `"chat"` (arbitrary-role — carries a required non-empty `"role"` field as the
+  actual role string; see PC-008), `"remove"` (history control).
 - {INV-003} `ToolMessage.tool_call_id` is a required `String` field — it must be provided at construction;
   no default is supplied.
 - {INV-004} `AiMessage.usage_metadata` is `Option<UsageMetadata>` — may be absent for non-model-generated
@@ -119,6 +130,16 @@ capture field via `#[serde(flatten)]`. Round-trip serialization includes these f
 an entry from conversation history.
 **Expected behavior:** The variant is accepted as a valid `Message`. Downstream history-management
 code interprets it as a control signal, not as a content-bearing message.
+
+### EC-006: ChatMessage with arbitrary role
+**Scenario:** A caller constructs a message with role `"assistant_v2"` (not one of the standard
+four variants) by deserializing `{"type":"chat","role":"assistant_v2","content":"hello"}`.
+**Expected behavior:** Deserialization produces
+`Message::Chat(ChatMessage { role: "assistant_v2", content: MessageContent::Text("hello"), .. })`.
+Round-trip serialization preserves `"type":"chat"` and `"role":"assistant_v2"`. The message is
+a valid `Message` and can be stored in a checkpoint or passed downstream.
+Attempting to deserialize `{"type":"chat","content":"hello"}` (missing `role` field) returns
+`Err(PregolyaError { category: VAL, code: E-CORE-002, .. })`.
 
 ## Canonical Test Vectors
 

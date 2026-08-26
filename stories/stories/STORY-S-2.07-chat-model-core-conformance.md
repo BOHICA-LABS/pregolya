@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.07
 epic_id: E-19
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "f064285"
+input-hash: "da42f73"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-2.06, S-1.07, S-1.06]
@@ -204,6 +204,16 @@ the entire response before emitting the first chunk. Verified by
 `test_BC_2_08_001_stream_first_chunk_latency_anthropic()`, and
 `test_BC_2_08_001_stream_first_chunk_latency_ollama()`.
 
+### AC-027 (traces to BC-2.08.001 EC-005 + INV-005)
+When the Anthropic adapter receives a v3 SSE payload where a `content-block-start` event
+carries a non-integer `index` field (or any other malformed v3 SSE structure that cannot be
+parsed into the expected event shape), the stream returns `Err(PregolyaError { code: "E-PROV-013",
+.. })` — `E-PROV-013 StreamProtocolViolation`. This error is DISTINCT from `E-PROV-003`
+(transport/connection-level failure). No panic occurs (INV-005 no-panic guarantee for malformed
+v3 stream content); the stream terminates cleanly with the typed error. The test uses a
+cassette-backed mock that injects a `content-block-start` event with `"index": "not-a-number"`.
+Verified by `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -254,7 +264,7 @@ the entire response before emitting the first chunk. Verified by
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-026 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-027 (test-writer step)
 2. [ ] Confirm no Red Gate BCs in this story — proceed to implementation after test stubs
 3. [ ] Add `UsageMetadata` sub-detail fields to `pregolya-core/src/message.rs`
 4. [ ] Implement `OpenAiChatModel::stream` — stream lifecycle, block index tracking, delta accumulation
@@ -268,7 +278,8 @@ the entire response before emitting the first chunk. Verified by
 12. [ ] Add `test_agent_loop()` (non-ignored) to `pregolya-standard-tests`
 13. [ ] Implement `bind_tools` guard: check `has_tool_calling()` before registering tools
 14. [ ] Implement recursion limit guard in agent loop dispatch
-15. [ ] Run `cargo nextest run -p pregolya-openai -p pregolya-anthropic -p pregolya-ollama -p pregolya-standard-tests` — all 26 ACs green
+15. [ ] Implement Anthropic v3 SSE parse-error path: malformed `content-block-start` or any unparseable v3 event → typed `Err(E-PROV-013 StreamProtocolViolation)` with no panic (AC-027; distinct from E-PROV-003 transport error; register E-PROV-013 in error taxonomy)
+16. [ ] Run `cargo nextest run -p pregolya-openai -p pregolya-anthropic -p pregolya-ollama -p pregolya-standard-tests` — all 27 ACs green
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -332,4 +343,5 @@ fail via `cargo deny`.
 
 ## Changelog
 
+- **1.2 (BC-2.08.001 / 2026-08-26):** BC-2.08.001 updated to v1.8 (burst-A2-error-coord EC-005+INV-005 hardening): AC-027 added — malformed v3 SSE payload (`content-block-start` with non-integer `index` field, or any unparseable v3 event structure) returns `Err(PregolyaError { code: "E-PROV-013", .. })` (`E-PROV-013 StreamProtocolViolation`); no panic guaranteed (INV-005); error is DISTINCT from `E-PROV-003` (transport-level connection reset, EC-003). Test: `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()` (cassette with `content-block-start` `"index": "not-a-number"`). Task 15 updated to reference AC-027 and E-PROV-013; Task 16 updated to "all 27 ACs green". BC table version column added.
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. BC-2.08.001: AC-001/002/003 postcondition 2→PC-002; AC-004 invariant 1→INV-001; AC-005 "edge case EC-003"→EC-003; AC-025 postcondition 1→PC-001; AC-026 postcondition 4→PC-004. BC-2.08.002: AC-006 postcondition 1→PC-001; AC-007 postcondition 2→EC-005 (semantic: bind_tools negative case); AC-008 postcondition 3→PC-003; AC-009 postcondition 4→INV-004 (semantic: recursion limit). BC-2.08.003: AC-010 postcondition 1→PC-001; AC-011 postcondition 2→EC-001 (semantic: refusal); AC-012 postcondition 3→EC-002 (semantic: deserialize failure); AC-013 postcondition 4→EC-004 (semantic: thinking disabled). BC-2.08.004: AC-014/015/016/017 postconditions 1-4→PC-001/002/003/004; AC-018 invariant 1→INV-001. BC-2.08.005: AC-019/020/021 postconditions 1-3→PC-001/002/003. BC-2.08.007: AC-022 postcondition 1→PC-001; AC-023 postcondition 2→PC-002; AC-024 invariant 1→INV-001 (semantic: no partial Ok; old annotation "DI-009/NE-04" was DI mis-reference). Architecture Compliance Rules table updated. No escalations.

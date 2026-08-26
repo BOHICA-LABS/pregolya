@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.004
-version: "1.7"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -11,12 +11,14 @@ priority: P0
 subsystem: SS-05
 changelog:
   - "1.1 (ADV-P1D-PASS-25): F-P25-05 PC4 'id field'→'interrupt_id field' with authority citations."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-graph per module-decomposition.md."
   - "1.3 (F-P118-02, fix burst 121, 2026-07-19): Invariant non-interrupted status list gains summary_halt: '(status queued, in_progress, completed, failed, cancelled, or summary_halt) returns Err(E-GRAPH-002 NoActiveInterrupt)'. TD-VSDD-060 file-wide sweep: line 87 'completed / interrupted / failed' describes specific re-execution outcomes (not a terminal-set enumeration; cancelled/summary_halt absent by design as it covers the resumed-execution state machine); exempt. Only line 99-100 enumerates the full non-interrupted guard set."
   - "1.4 (OBS-1 adjudication, fix burst 122, 2026-07-19): No normative text change — Invariants §4 (lines 99-101) already correctly delegated all six non-interrupted run_status values (queued, in_progress, completed, failed, cancelled, summary_halt) to BC-2.05.005. OBS-1 adjudication chose production-grade totality: BC-2.05.005 was updated to enumerate all six statuses plus the interrupted-slots-consumed scenario; delegation is now coherent in both directions. TD-VSDD-060 sweep: PC7 status transition description (line 87) — 'interrupted→in_progress→completed/interrupted/failed' describes re-execution path outcomes, not the terminal set; cancelled/summary_halt absent by design; exempt. Invariants non-interrupted guard (lines 99-101) — already exhaustive over all six statuses; unchanged."
   - "1.5 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.20 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.8 (P2-BC-SS04-06-hardening/2026-08-26): EC-006/007/008 added — three Command failure paths unspecified by prior ECs: EC-006 `update` with unknown channel key (E-GRAPH-007 REUSE — 'UnknownChannelKey' with node_id context '(Command.update)'); EC-007 `goto` with nonexistent node name (E-GRAPH-003 REUSE — 'UnknownRoutingTarget'); EC-008 `resume={interrupt_id: value}` with an interrupt_id that does not match any pending interrupt on an interrupted run (NEEDS-NEW-CODE flagged for E-GRAPH-018 InterruptIdNotFound; provisional E-GRAPH-002 reference with message noting the interrupt_id mismatch context). TV-007/008/009 added for each. BC-completeness-scan Phase-2 BURST-B gap BC-2.05.004."
+  - "1.9 (burst-A2-error-coord/P2A-BC-scan-hardening-addendum/2026-08-26): EC-008 and TV-009 repointed from provisional E-GRAPH-002 category reference → E-GRAPH-018 InterruptIdNotFound (minted in error-taxonomy.md); NEEDS-NEW-CODE and provisional-reference annotations removed. No behavioral change — the POLICY/broken/Never category and the two-placeholder message format were already correct; E-GRAPH-018 is the dedicated code that was proposed by the NEEDS-NEW-CODE note."
 capability: CAP-006
 wave: 1
 phase: 1a
@@ -31,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/graph/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "3eee80f"
+input-hash: "0db705f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -134,6 +136,45 @@ modified (see BC-2.05.005).
 **Scenario:** No subgraph context; `Command(graph=Command.PARENT, resume="x")` submitted.
 **Expected behavior:** `Err(E-GRAPH-015 NoParentGraph)` — there is no parent to escape to.
 
+### EC-006: Command.update with an unknown channel key
+
+**Scenario:** `Command(update={"nonexistent_channel": value})` submitted to a graph whose
+compiled state schema does not contain a channel named `"nonexistent_channel"`.
+
+**Expected behavior:** The scheduler returns `Err(PregolyaError { category: VAL, code: E-GRAPH-007,
+message: "UnknownChannelKey: node '(Command.update)' returned write for key '<key>' which is
+not registered in the state schema", .. })` where `<key>` = the unrecognised channel name.
+REUSE of E-GRAPH-007 (UnknownChannelKey) — the update semantics are equivalent to a node
+submitting a write for an unknown channel key; the `node_id` placeholder is "(Command.update)"
+to distinguish the Command context from a node-body write. No state side-load is applied;
+the run does NOT advance.
+
+### EC-007: Command.goto with a nonexistent node name
+
+**Scenario:** `Command(goto="ghost_node")` submitted; `"ghost_node"` is not registered in
+the compiled graph.
+
+**Expected behavior:** The scheduler returns `Err(PregolyaError { category: VAL, code: E-GRAPH-003,
+message: "UnknownRoutingTarget: node 'ghost_node' is not registered in the compiled graph", .. })`.
+REUSE of E-GRAPH-003 (UnknownRoutingTarget) — the goto field is a runtime routing directive
+and is subject to the same "must be a registered node" constraint as compile-time edge targets.
+No routing is performed; the run does NOT advance.
+
+### EC-008: Command.resume with an unmatched interrupt_id
+
+**Scenario:** The run IS interrupted (at least one interrupt is pending); caller submits
+`Command(resume={some_interrupt_id: value})` but `some_interrupt_id` does not match the
+`interrupt_id` of ANY pending `InterruptPayload` on the thread (e.g., typo, stale ID from
+a previous resume cycle, or ID from a different thread).
+
+**Expected behavior:** The scheduler returns `Err(PregolyaError { category: POLICY, code: E-GRAPH-018,
+message: "InterruptIdNotFound: run '<run_id>' is interrupted but no pending interrupt matches id '<interrupt_id>'",
+retry_hint: Never, .. })`.
+(`<run_id>` = the thread's run identifier; `<interrupt_id>` = the unmatched interrupt_id submitted by the caller.)
+The run REMAINS in interrupted state; no resume value is delivered; no node re-executes. This
+is distinct from EC-004/{INV-004} (which fires when the run is not in interrupted state at
+all) — here the run IS interrupted but the specific interrupt_id is wrong.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -144,6 +185,9 @@ modified (see BC-2.05.005).
 | TV-004 | `Command(resume={interrupt_id_A: "approve_a"})` when two tasks are interrupted | Only task A's scratchpad updated; task B still halted | Targeted FIFO delivery by interrupt_id |
 | TV-005 | Tool function returns `Command(resume="delegate_to_human")` | Graph treats it as routing directive; equivalent to caller submitting the same Command | Tool-output-mixin behavior |
 | TV-006 | `Command(resume="x")` submitted to non-interrupted run | `Err(E-GRAPH-002 NoActiveInterrupt)` | Guard against stale resume |
+| TV-007 | Interrupted run; `Command(update={"no_such_channel": true})` submitted; `"no_such_channel"` absent from state schema | `Err(PregolyaError { category: VAL, code: E-GRAPH-007, message: "UnknownChannelKey: node '(Command.update)' returned write for key 'no_such_channel' which is not registered in the state schema", .. })`; run remains interrupted; no state mutated | Unknown channel guard (EC-006) |
+| TV-008 | Interrupted run; `Command(goto="vanished_node")` submitted; `"vanished_node"` not in compiled graph | `Err(PregolyaError { category: VAL, code: E-GRAPH-003, message: "UnknownRoutingTarget: node 'vanished_node' is not registered in the compiled graph", .. })`; run remains interrupted | Unknown goto guard (EC-007) |
+| TV-009 | Interrupted run with one pending interrupt (interrupt_id = "aaa"); caller submits `Command(resume={"bbb": "value"})` where "bbb" does not match "aaa" | `Err(PregolyaError { category: POLICY, code: E-GRAPH-018, message: "InterruptIdNotFound: run '<run_id>' is interrupted but no pending interrupt matches id 'bbb'", retry_hint: Never, .. })`; run remains interrupted; no scratchpad slot populated; no node re-executes | Unmatched interrupt_id guard (EC-008) |
 
 ## Verification Properties
 

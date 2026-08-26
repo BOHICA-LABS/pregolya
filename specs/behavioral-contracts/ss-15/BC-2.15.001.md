@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P159-01, 2026-07-25): Body Traceability Priority P2→P1, Wave 2→Wave 1; VP-MEM-01/02 phases Post-v1→v1 phase — residue from incomplete D23 body sweep (F-P159-01)."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.12 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (B-SS15-18-hardening/2026-08-26): TWO gaps from Phase-2 bc-completeness-scan (D-270, burst B). (1) {PC-007} hybrid_search RRF fusion rule specified: Reciprocal Rank Fusion k=60 combining keyword (recency-ranked) and vector (cosine-ranked) results; tie-break by recency; TV-008 added. (2) {EC-006} added: vector-search query/stored embedding-dimension mismatch → E-MEMORY-010 MemoryVectorDimensionMismatch (VAL/Never; minted in error-taxonomy.md burst-A-error-coord); EC-001..EC-005 were already occupied — error-taxonomy.md references this raise site as BC-2.15.001; the edge case is EC-006."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-017
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/entities-server.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "0188f70"
+input-hash: "f0812aa"
 extracted_from: null
 modified: []
 deprecated: null
@@ -84,9 +85,18 @@ search, and vector similarity search.
 6. {PC-006} Entries written without an embedding are excluded from vector search results.
 
 **Hybrid search:**
-7. {PC-007} `hybrid_search(namespace, query, top_k)` combines keyword match and vector
-   similarity results, de-duplicates by key, and returns up to `top_k` results.
-   De-duplication keeps the higher-ranked copy.
+7. {PC-007} `hybrid_search(namespace, query, top_k)` combines keyword search (recency-ranked)
+   and vector similarity (cosine-ranked) results via **Reciprocal Rank Fusion (RRF, k=60)**:
+   - The keyword component ranks entries by recency (most recently written first = rank 0).
+   - The vector component ranks entries by cosine similarity descending (highest cosine = rank 0).
+   - Each entry's combined RRF score is: `rrf_score = 1/(60 + r_keyword) + 1/(60 + r_vector)`,
+     where `r_keyword` and `r_vector` are the 0-based rank positions in their respective lists.
+     An entry present in only one component list contributes only that component's term;
+     the missing term contributes 0.
+   - After scoring, entries are de-duplicated by `(namespace, key)`; the final list is sorted
+     by `rrf_score` descending; ties are broken by recency (most recently written first).
+     Up to `top_k` entries are returned; if fewer than `top_k` unique entries exist across
+     both component lists, all available entries are returned.
 
 ## Invariants
 
@@ -129,6 +139,16 @@ later writer's value). The store does not corrupt the entry or return a partial 
 is returned. The existing store state is not corrupted; previously written entries
 remain readable.
 
+### EC-006: Vector-search query dimension mismatches stored embedding dimension
+**Scenario:** `vector_search(namespace, query_embedding, top_k)` is called with a
+`query_embedding` of dimension 768, but all stored embeddings in `namespace` were indexed
+at dimension 1536 (different embedding backend or model change since write time).
+**Expected behavior:** `Err(E-MEMORY-010 MemoryVectorDimensionMismatch { query_dim: 768,
+stored_dim: 1536 })` is returned. No partial result set is returned. The store state is
+not corrupted. The caller must either fix the query dimension or re-index the stored entries
+under the matching backend. (Stable anchor: {EC-006}. E-MEMORY-010 minted in error-taxonomy.md
+burst-A-error-coord; this BC is the authoritative raise site.)
+
 ### EC-005: Hybrid search with no vector backend; keyword matches exist
 **Scenario:** `hybrid_search()` called with no embedding backend configured; some
 keyword matches exist.
@@ -147,6 +167,7 @@ configured"`. This is NOT an error; hybrid search degrades gracefully to keyword
 | TV-005 | No embedding backend; `vector_search(...)` called | `Err(E-MEMORY-001 EmbeddingBackendNotConfigured)` | Embedding backend required for vector search |
 | TV-006 | Restart server (SQLite backend); `memory_get("ns", "key1")` | `Some("dark mode")` (persists across restart) | Durable persistence |
 | TV-007 | Restart server (in-memory backend); `memory_get("ns", "key1")` | `None` (in-memory is non-durable) | In-memory backend documented as ephemeral |
+| TV-008 | Write entries A (recency rank 0, cosine rank 1), B (recency rank 1, cosine rank 0), C (keyword only, recency rank 2); `hybrid_search("ns", query, top_k=3)` | A: rrf=1/60+1/61≈0.0330; B: rrf=1/62+1/60≈0.0328; C: rrf=1/62≈0.0161. Order: A, B, C | RRF fusion ranking (PC-007) |
 
 ## Verification Properties
 

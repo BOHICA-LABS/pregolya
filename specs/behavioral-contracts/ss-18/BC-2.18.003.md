@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.003
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.6 (P2A-040-F-01-F-02/2026-08-22): TWO changes closing F-01/F-02 (HIGH) from adversary pass P2A-040. (1) PC-1: replace stale 'call-time vars map supplies a Vec<Message>' with 'call-time vars map supplies a TemplateInput::Messages(MessageListVar)' — the bare Vec<Message> phrasing predated the TemplateInput enum concretization (ADR-015 Decision 3 Amendment, burst-279) and caused S-2.04 AC-015 to claim MessageListVar is a bare newtype over Vec<Message>, which is wrong and makes the Messages-arm Red Gate (S-2.05 AC-016) structurally unimplementable. (2) INV-4 (new): canonical MessageListVar struct shape defined with both messages: Vec<Message> and trust_level: Option<TrustLevel> fields — NOT a bare newtype; trust_level is the load-bearing field that enables injection_guard (BC-2.18.004 Pre-2/PC-5) to check msg_var.trust_level.is_some_and(|t| t.is_untrusted()) against TrustRequired slots. BC census UNCHANGED: 133 (51 P0 / 79 P1 / 3 P2). input-hash drift corrected (09c85f7). Story-writer must amend STORY-S-2.04 AC-015 to reference BC-2.18.003 INV-4 (not INV-1) and correct the MessageListVar shape claim."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.8 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "1.9 (B-SS15-18-hardening/2026-08-26): Phase-2 bc-completeness-scan (D-270, burst B). {PC-009} added: FewShotPromptTemplate output provenance — when the trust check in PC-005 passes, the generated HumanMessage and AiMessage carry MessageProvenance.highest_trust_level derived from the respective TemplateVar's trust_level; None treated as Trusted by downstream injection_guard (BC-2.18.004)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-023
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -113,6 +114,19 @@ their outputs composable with the injection_guard (BC-2.18.004) and guardrail pi
    at the few-shot position) — not an error.
 8. {PC-008} Example rendering errors (e.g., missing variable in the example template) propagate as
    `Err(PregolyaError)` — they do not silently skip the failing example.
+9. {PC-009} **FewShot output provenance:** When the trust check in {PC-005} passes (no Untrusted
+   component triggers E-TMPL-001), the messages produced from each rendered pair carry
+   `MessageProvenance` as follows:
+   - The `HumanMessage(rendered_input)` carries
+     `MessageProvenance.highest_trust_level = example_input.trust_level`.
+   - The `AiMessage(rendered_output)` carries
+     `MessageProvenance.highest_trust_level = example_output.trust_level`.
+   If either `TemplateVar` has `trust_level: None`, the corresponding message's
+   `highest_trust_level` is `None` — treated as Trusted by the downstream
+   `injection_guard` (BC-2.18.004 {PRE-002} / {PC-005}). This mirrors the provenance
+   derivation for `MessagesPlaceholder` variables in {PC-002}.
+   (Stable anchor: {PC-009}. ADR-015 Decision 3 §MessagesPlaceholder trust derivation,
+   extended to FewShot pair messages.)
 
 ## Invariants
 

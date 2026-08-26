@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,13 +13,13 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "14c8781"
+input-hash: "ecd2c89"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-2.10]
 blocks: []
 behavioral_contracts: [BC-2.09.006, BC-2.09.007]
-verification_properties: []
+verification_properties: [VP-015]
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
@@ -31,8 +31,9 @@ risk_mitigations: []
 tdd_mode: strict
 # BC status: both BCs active; BC-2.09.006 mints E-MCP-005; no BC-TBD placeholders; status = draft per Spec-First Gate S-7.01
 changelog:
-  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.3 (BC-2.09.006 + BC-2.09.007 / 2026-08-26): BC-2.09.006 (burst-B-SS09-11 EC-006/-32700, EC-007/-32600 wire-protocol responses). BC-2.09.007 (burst-B-SS09-11: INV-003 redact_credentials mandatory+3-pattern sub+source restriction; PC-002 result_text JSON-vs-plaintext selection rule; VP-MCPCALL-03 renamed VP-015). Story changes: AC-013 updated to Red Gate — mandatory redact_credentials applied to PregolyaError::message only (source restriction); 3 substitution patterns (sk-*, sk-ant-*, 64-char token); validates VP-015. AC-014 added: BC-2.09.006 EC-006 + BC-2.09.007 EC-007 — malformed JSON → -32700 Parse error (wire-protocol only, no PregolyaError). AC-015 added: BC-2.09.006 EC-007 + BC-2.09.007 EC-008 — invalid JSON-RPC → -32600 Invalid Request (wire-protocol only). AC-016 added: BC-2.09.007 PC-002 — result_text selection (ToolOutput::Structured→compact JSON, ToolOutput::Text→verbatim). verification_properties updated to [VP-015]. BC table version column added. Tasks updated to AC-001–AC-016."
   - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -120,11 +121,64 @@ protocol transaction succeeded. JSON-RPC `error` (not `result`) is only returned
 protocol-level failures (tool not found, invalid params, parse error). Verified by
 `test_BC_2_09_007_is_error_semantics_vs_jsonrpc_error()`.
 
-### AC-013 (traces to BC-2.09.007 INV-003)
-Error messages returned in `isError: true` responses do not embed credential values.
-The server does not construct error messages by formatting `PregolyaError` fields that
-contain known credential types (`OpenAiApiKey`, `AnthropicApiKey`). Verified by
-`test_BC_2_09_007_error_messages_no_credential_leakage()`.
+### AC-013 (traces to BC-2.09.007 INV-003 — Red Gate, validates VP-015)
+**Red Gate / Mandatory:** When a registered tool returns
+`Err(PregolyaError { message: "request failed: key=sk-abc123XYZabc123XYZabc", .. })`,
+the MCP response `content[0].text` MUST be `"request failed: key=<redacted>"` — NOT the raw
+message with the key value exposed. This is a **mandatory** sanitization (no "best-effort"
+variant). The server applies `pregolya_mcp::sanitize::redact_credentials(text: &str) -> Cow<str>`
+to `PregolyaError::message` before placing it in the response. The redaction function applies
+the following three substitution rules in order:
+1. OpenAI key pattern `sk-[A-Za-z0-9_\-]{20,}` → `"<redacted>"`
+2. Anthropic key pattern `sk-ant-[A-Za-z0-9_\-]{32,}` → `"<redacted>"`
+3. Generic long alphanumeric token `[A-Za-z0-9]{64,}` → `"<redacted>"`
+**Source restriction:** only `PregolyaError::message` is used as the text source. The
+`.source()` chain, `Debug` output, and `Display` output of the error are NEVER included in
+the MCP response text. This test is a Red Gate: without `redact_credentials`, the raw message
+containing key material would reach the external MCP client. Verified by
+`test_BC_2_09_007_error_message_credential_redaction_applies_3_patterns()` (mock tool returning
+`Err(PregolyaError { message: "key=sk-abc123XYZabc123XYZabc", .. })`; assert response
+`content[0].text` equals `"key=<redacted>"`).
+
+### AC-014 (traces to BC-2.09.006 EC-006 + BC-2.09.007 EC-007)
+When the MCP server receives bytes on a connection that cannot be parsed as valid JSON (e.g.,
+a truncated message, binary garbage, or `"not json{{"`), the server responds with the
+standard JSON-RPC wire-protocol error:
+`{ "jsonrpc": "2.0", "id": null, "error": { "code": -32700, "message": "Parse error" } }`.
+This is a **wire-protocol response only** — no `PregolyaError` is constructed and no
+`E-MCP-*` error code is raised internally for this path. The connection remains open;
+subsequent well-formed requests are processed normally. This behavior applies on both the
+`tools/list` request path (BC-2.09.006 EC-006) and the `tools/call` request path
+(BC-2.09.007 EC-007). Verified by `test_BC_2_09_006_malformed_json_returns_32700_parse_error()`
+and `test_BC_2_09_007_malformed_json_returns_32700_parse_error()`.
+
+### AC-015 (traces to BC-2.09.006 EC-007 + BC-2.09.007 EC-008)
+When the MCP server receives valid JSON that is not a well-formed JSON-RPC request object
+(e.g., missing `"jsonrpc"` version field, missing `"method"` field, or `"id"` is not a
+string/number/null), the server responds with:
+`{ "jsonrpc": "2.0", "id": null, "error": { "code": -32600, "message": "Invalid Request" } }`.
+This is a **wire-protocol response only** — no `PregolyaError` or `E-MCP-*` code is raised
+internally. The connection remains open; subsequent well-formed requests are processed
+normally. Applies on both `tools/list` (BC-2.09.006 EC-007) and `tools/call`
+(BC-2.09.007 EC-008) paths. Verified by
+`test_BC_2_09_006_invalid_jsonrpc_returns_32600_invalid_request()` and
+`test_BC_2_09_007_invalid_jsonrpc_returns_32600_invalid_request()`.
+
+### AC-016 (traces to BC-2.09.007 PC-002)
+The `result_text` field in a successful `tools/call` response (`isError: false`) is
+determined by the `ToolOutput` variant returned by `Tool::invoke`:
+- `ToolOutput::Structured { value: serde_json::Value }` → `result_text = serde_json::to_string(&value)`
+  (compact JSON, no pretty-printing). A `serde_json::Value::Null` serializes to the string `"null"`.
+- `ToolOutput::Text { text: String }` → `result_text = text` verbatim (no JSON-encoding or
+  additional escaping applied to the string contents).
+An `ToolOutput::Text { text: "".to_string() }` produces `result_text = ""`. The `Tool`
+implementation controls which variant is returned; the server applies the corresponding
+serialization rule without re-interpreting or re-encoding the value. Verified by
+`test_BC_2_09_007_result_text_structured_uses_compact_json()` (ToolOutput::Structured with
+nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_text_verbatim()`
+(ToolOutput::Text with plain string; assert no escaping), and
+`test_BC_2_09_007_result_text_null_value_is_string_null()` (ToolOutput::Structured with
+`Value::Null`; assert `result_text == "null"`).
 
 ## Architecture Mapping
 
@@ -163,7 +217,7 @@ contain known credential types (`OpenAiApiKey`, `AnthropicApiKey`). Verified by
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
 | This story spec | ~2,800 |
-| BC files (2 BCs) | ~5,000 |
+| BC files (2 BCs; BC-2.09.006, BC-2.09.007) | ~5,800 |
 | `module-decomposition.md` SS-09 section | ~400 |
 | `pregolya-mcp/src/server.rs` (new) | ~1,200 |
 | `pregolya-mcp/src/registry.rs` (new) | ~500 |
@@ -175,8 +229,8 @@ contain known credential types (`OpenAiApiKey`, `AnthropicApiKey`). Verified by
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-013 (test-writer step)
-2. [ ] No Red Gate BCs in this story — proceed to implementation after test stubs
+1. [ ] Write failing tests for AC-001 through AC-016, including Red Gate AC-013 (test-writer step)
+2. [ ] **Red Gate check (AC-013):** confirm `test_BC_2_09_007_error_message_credential_redaction_applies_3_patterns()` FAILS before `pregolya_mcp::sanitize::redact_credentials` is implemented (raw key material reaches response text)
 3. [ ] Register `E-MCP-005 McpServerBindFailed` in error taxonomy (TRANSPORT, broken, Never)
 4. [ ] Create `pregolya-mcp/src/registry.rs` — `ToolRegistry` with `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>`
 5. [ ] Create `pregolya-mcp/src/server.rs` — `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` enum
@@ -186,7 +240,11 @@ contain known credential types (`OpenAiApiKey`, `AnthropicApiKey`). Verified by
 9. [ ] Implement JSON-RPC error responses for tool-not-found (-32602) and invalid-params (-32602)
 10. [ ] Implement `McpServerHandle::shutdown()` — graceful connection teardown
 11. [ ] Verify `DynTool` object safety in server context (same seam as S-2.10)
-12. [ ] Run `cargo nextest run -p pregolya-mcp` — all 13 ACs green (combined with S-2.10 ACs)
+12. [ ] Implement `pregolya_mcp::sanitize::redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (sk-*, sk-ant-*, 64-char token → `<redacted>`); source-restrict to `PregolyaError::message` in `tools/call` error handler (AC-013 / BC-2.09.007 INV-003)
+13. [ ] Implement JSON-RPC -32700 parse-error response for non-JSON bytes on both tools/list and tools/call paths (AC-014 / BC-2.09.006 EC-006 + BC-2.09.007 EC-007)
+14. [ ] Implement JSON-RPC -32600 invalid-request response for malformed-but-valid-JSON requests (AC-015 / BC-2.09.006 EC-007 + BC-2.09.007 EC-008)
+15. [ ] Implement `ToolOutput::Structured → serde_json::to_string` / `ToolOutput::Text → verbatim` result_text selection in tools/call handler (AC-016 / BC-2.09.007 PC-002)
+16. [ ] Run `cargo nextest run -p pregolya-mcp` — all 16 ACs green (combined with S-2.10 ACs)
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -211,7 +269,10 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 | `McpServer` in `mcp::server` module — distinct from `mcp::client` | ADR-013 §Consequences; BC-2.09.006 Architecture Anchors | Module structure |
 | `isError: true` is in the JSON-RPC `result` layer — not `error` | BC-2.09.007 INV-002 | Test AC-012 |
 | `E-MCP-005` category: TRANSPORT, severity: broken, retry_hint: Never | BC-2.09.006 §Error code minted | Error taxonomy registration |
-| Error messages do not embed credential values | BC-2.09.007 INV-003 | Test AC-013 |
+| `pregolya_mcp::sanitize::redact_credentials` applied to `PregolyaError::message` before MCP response; source-restriction: never `.source()`/`Debug`/`Display` | BC-2.09.007 INV-003 (mandatory, no hedge) | Test AC-013 Red Gate |
+| Malformed JSON bytes → JSON-RPC `-32700 Parse error` (wire-protocol only, no PregolyaError) | BC-2.09.006 EC-006, BC-2.09.007 EC-007 | Tests AC-014 |
+| Invalid JSON-RPC structure → JSON-RPC `-32600 Invalid Request` (wire-protocol only) | BC-2.09.006 EC-007, BC-2.09.007 EC-008 | Tests AC-015 |
+| `ToolOutput::Structured` → `serde_json::to_string` (compact); `ToolOutput::Text` → verbatim | BC-2.09.007 PC-002 | Tests AC-016 |
 | No `unwrap()`/`expect()` in server handlers | CLAUDE.md Code Conventions | Clippy |
 | Registry read on each `tools/list` request (no startup snapshot) | BC-2.09.006 PC-003 | Test AC-004 |
 
@@ -236,4 +297,9 @@ or `pregolya-server`, the build MUST fail.
 |------|--------|---------|
 | `pregolya-mcp/src/server.rs` | CREATE | `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` |
 | `pregolya-mcp/src/registry.rs` | CREATE or MODIFY | `ToolRegistry` — shared with client side (extract if needed) |
-| `pregolya-mcp/src/lib.rs` | MODIFY | Re-export `McpServer`, `McpServerConfig`, `McpServerHandle` |
+| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 INV-003) |
+| `pregolya-mcp/src/lib.rs` | MODIFY | Re-export `McpServer`, `McpServerConfig`, `McpServerHandle`; expose `sanitize` module |
+
+## Changelog
+
+- **1.3 (BC-2.09.006 + BC-2.09.007 / 2026-08-26):** BC-2.09.006 (EC-006 malformed JSON → -32700 Parse error; EC-007 invalid JSON-RPC → -32600 Invalid Request; wire-protocol responses, no E-MCP-* raised). BC-2.09.007 (INV-003 mandatory `redact_credentials` with source restriction + 3-pattern substitution; PC-002 result_text JSON-vs-plaintext selection rule; VP-MCPCALL-03 renamed VP-015). Story changes: (1) AC-013 updated to Red Gate — mandatory `pregolya_mcp::sanitize::redact_credentials` applied to `PregolyaError::message` only (source restriction); 3 patterns (sk-*, sk-ant-*, 64-char token); validates VP-015. (2) AC-014 added: BC-2.09.006 EC-006 + BC-2.09.007 EC-007 — -32700 Parse error wire-protocol response, no PregolyaError. (3) AC-015 added: BC-2.09.006 EC-007 + BC-2.09.007 EC-008 — -32600 Invalid Request wire-protocol response, no PregolyaError. (4) AC-016 added: BC-2.09.007 PC-002 — result_text selection rule (Structured→compact JSON, Text→verbatim). (5) `verification_properties` updated to `[VP-015]`. (6) `sanitize.rs` added to File Structure; Arch Compliance Rules table extended with 3 new rows. (7) Tasks updated to AC-016 and tasks 12–16 added. (8) BC table version column added.

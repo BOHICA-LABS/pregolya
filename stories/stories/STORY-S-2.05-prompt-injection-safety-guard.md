@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.05
 epic_id: E-18
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "a6270ea"
+input-hash: "fcf4822"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
@@ -174,15 +174,15 @@ category as the scalar arm. VP-006 Kani proof covers this input arm exhaustively
 the scalar arm.
 Verified by `test_BC_2_18_004_messages_arm_untrusted_in_trust_required_raises_e_tmpl_001_rg()`.
 
-### AC-017 (traces to BC-2.18.004 PC-005 and BC-2.18.004 PRE-002 — Red Gate)
+### AC-017 (traces to BC-2.18.004 PC-005 + TV-006 — Red Gate)
 **RED GATE**: This test must COMPILE and FAIL before `injection_guard` covers the
 `TemplateInput::FewShotExamples` arm. A `ChatPromptTemplate` with a `TrustRequired`
 SystemMessage slot receives a `TemplateInput::FewShotExamples(pairs)` where at least one
 pair carries `iv.trust_level == Some(TrustLevel::Untrusted)` or
 `ov.trust_level == Some(TrustLevel::Untrusted)`.
-The test asserts `format_messages` returns `Err(E-TMPL-001)`.
-VP-006 Kani proof covers this input arm exhaustively alongside scalar and Messages arms.
-Verified by `test_BC_2_18_004_few_shot_examples_arm_untrusted_in_trust_required_raises_e_tmpl_001_rg()`.
+The test asserts `format_messages` returns `Err(E-TMPL-001)` fail-closed.
+VP-006 Kani proof covers all 3 arms (Scalar, Messages, FewShotExamples) exhaustively.
+Verified by `test_BC_2_18_004_fewshot_examples_untrusted_in_trust_required_slot_raises_e_tmpl_001()`.
 
 ## Architecture Mapping
 
@@ -279,7 +279,7 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 | E-TMPL-001 category is `Category::Security`; E-TMPL-002 category is `Category::Val` | BC-2.18.004 INV-003; BC-2.18.005 INV-003 | Error code assertion tests |
 | Fail-closed default: unknown TrustLevel treated as Untrusted | BC-2.18.004 INV-006; VP-006 | Unit test AC-009 |
 | `injection_guard` source-order evaluation | BC-2.18.004 INV-005 | Unit test AC-006 |
-| `injection_guard` covers ALL TemplateInput arms (Scalar, Messages, FewShotExamples) | BC-2.18.004 PC-005 and BC-2.18.004 PRE-002 | Unit tests AC-016, AC-017 |
+| `injection_guard` covers ALL TemplateInput arms (Scalar, Messages, FewShotExamples) | BC-2.18.004 PC-005 + TV-006 | Unit tests AC-016, AC-017 |
 
 **Forbidden dependencies:** `pregolya-prompts/src/trust.rs` must NOT import from `pregolya-graph` or any crate that would create a cycle. `TrustLevel::severity()` must be a pure function with no external dependencies.
 
@@ -308,4 +308,5 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 semantic re-anchors applied (see escalation notes)"
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
 - "1.3 (P2A-049 F-049-01/2026-08-25): body BC-table title cells synced verbatim to canonical BC H1 — BC-2.18.002, BC-2.18.004, BC-2.18.005; removed stale 'TrustLevel Severity Ordering' paraphrase (superseded by binary is_untrusted model per D-243/P2A-035) and non-H1 '(Red Gate)' enrichments; sibling S-2.04 pattern matched; input-hash updated to a6270ea (pre-existing drift resolved)"
+- "1.4 (SW-4/BC-completeness/2026-08-26): BC-2.18.004 propagation — AC-017 trace updated to PC-005+TV-006; test name normalized to test_BC_2_18_004_fewshot_examples_untrusted_in_trust_required_slot_raises_e_tmpl_001; VP-006 note updated to name all 3 arms explicitly; Architecture Compliance Rules source updated to PC-005+TV-006; input-hash updated fcf4822."
 

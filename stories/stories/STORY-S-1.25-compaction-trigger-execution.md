@@ -3,21 +3,22 @@ document_type: story
 level: ops
 story_id: S-1.25
 epic_id: E-10
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
-  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 7 mis-anchors corrected (AC-003 PC-003→INV-006, AC-004 INV-001→INV-003, AC-005 PC-002→INV-001, AC-007 PC-002→PC-004, AC-008 PC-003→INV-003, AC-009 INV-001→INV-008, AC-010 INV-002→INV-008)"
-  - "1.2 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags"
+  - "1.4 (SW-2/bc-completeness-hardening/2026-08-26): BC-2.10.005 -> AC-011 (EC-007/EC-008 OnWatermark fraction domain: fraction > 1.0, negative, NaN -> Err(E-CORE-005) at construction; PRE-002/INV-006). EC-009..EC-011 added to edge cases. BC table: version + Covered ACs columns added."
   - "1.3 (P2A-043 F-05/2026-08-24): escalated EC citations redirected to PC/INV per PO adjudication."
+  - "1.2 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags"
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 7 mis-anchors corrected (AC-003 PC-003->INV-006, AC-004 INV-001->INV-003, AC-005 PC-002->INV-001, AC-007 PC-002->PC-004, AC-008 PC-003->INV-003, AC-009 INV-001->INV-008, AC-010 INV-002->INV-008)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.005.md
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8b5fd4d"
+input-hash: "8dccaa5"
 traces_to:
   - behavioral-contracts/BC-2.10.005
   - behavioral-contracts/BC-2.10.006
@@ -61,10 +62,10 @@ Comfortable within context window. No split required.
 
 ## Behavioral Contracts
 
-| BC ID | Title | Red Gate? |
-|-------|-------|-----------|
-| BC-2.10.005 | CompactionTrigger — 4-variant configuration enum with watermark arithmetic | No |
-| BC-2.10.006 | Compaction execution cycle — 7-step atomic execution with abort-on-error | No |
+| BC ID | Title | Covered ACs | Red Gate? |
+|-------|-------|-------------|-----------|
+| BC-2.10.005 | CompactionTrigger — 4-variant configuration enum with watermark arithmetic | AC-001..AC-005, AC-011 | No |
+| BC-2.10.006 | Compaction execution cycle — 7-step atomic execution with abort-on-error | AC-006..AC-010 | No |
 
 ## Acceptance Criteria
 
@@ -115,6 +116,15 @@ Compaction is never triggered during an in-progress node execution or during an 
 Compaction cannot fire while a run is suspended (interrupted, waiting for HITL approval). The trigger check is gated on run state: if `run.state == interrupted`, skip compaction check.
 (traces to BC-2.10.006 INV-008)
 
+### AC-011: OnWatermark fraction domain validation at construction
+`OnWatermark { fraction }` construction rejects any `fraction` value outside the valid domain `(0.0, 1.0]`:
+- `fraction > 1.0` returns `Err(E-CORE-005)` — `1.0 - fraction` would be negative, causing the trigger to fire before any budget is consumed (EC-009)
+- `fraction < 0.0` (negative) returns `Err(E-CORE-005)` — below the valid domain floor (EC-010)
+- `fraction = f64::NAN` or any non-finite f64 returns `Err(E-CORE-005)` — IEEE 754 NaN comparisons (`NaN <= x`) are always `false`, which would silently disable the watermark trigger at runtime (EC-011)
+No silent coercion, clamping, or defaulting is applied. All out-of-domain values are hard construction-time `Err`. The error message includes the rejected value in the `got <value>` field.
+(traces to BC-2.10.005 EC-007/EC-008 via PRE-002/INV-006)
+Verified by `test_BC_2_10_005_fraction_domain_gt_one_e_core_005()`, `test_BC_2_10_005_fraction_domain_negative_e_core_005()`, `test_BC_2_10_005_fraction_domain_nan_e_core_005()` (TV-007/TV-008/TV-009 coverage).
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
@@ -153,6 +163,9 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 | EC-006 | BC-2.10.006 EC-002 | `CheckpointSaver::put` fails (step 4) | Abort; partial state not visible (mid-run REPLACE not persisted) |
 | EC-007 | BC-2.10.006 INV-008 | Run is interrupted when super-step ends | Compaction trigger check skipped; run stays interrupted |
 | EC-008 | BC-2.10.005 EC-006 | `Disabled` trigger | `check_watermark_trigger` not called; `Disabled` variant short-circuits; cycle never runs |
+| EC-009 | BC-2.10.005 EC-007 | `OnWatermark { fraction: 1.5 }` (fraction > 1.0) at construction | `Err(E-CORE-005)`: "Validation failed for 'fraction': must be in (0.0, 1.0]; got 1.5" (AC-011) |
+| EC-010 | BC-2.10.005 EC-008 | `OnWatermark { fraction: -0.5 }` (negative) at construction | `Err(E-CORE-005)`: "Validation failed for 'fraction': must be in (0.0, 1.0]; got -0.5" (AC-011) |
+| EC-011 | BC-2.10.005 EC-008 | `OnWatermark { fraction: f64::NAN }` at construction | `Err(E-CORE-005)`: NaN would silently disable trigger via IEEE 754 false-comparison; construction rejects it (AC-011) |
 
 ## Tasks
 
@@ -160,7 +173,7 @@ Compaction cannot fire while a run is suspended (interrupted, waiting for HITL a
 - [ ] Create `crates/pregolya-core/src/proofs/watermark.rs` — `#[cfg(kani)]` `watermark_arithmetic_harness` stub (body `todo!()` for Phase 6 formal hardening; VP-012)
 - [ ] Create `crates/pregolya-graph/src/budget/mod.rs` (re-exports only)
 - [ ] Create `crates/pregolya-graph/src/budget/executor.rs` — `run_compaction` implementing 7-step cycle; calls `check_watermark_trigger` from pregolya-core; writes to `EvidenceJournal` (S-1.18 module `pregolya_graph::budget::journal`) at step 5
-- [ ] Write failing tests for AC-001..AC-010 before any implementation
+- [ ] Write failing tests for AC-001..AC-011 before any implementation (`test_BC_2_10_005_fraction_domain_gt_one_e_core_005`, `test_BC_2_10_005_fraction_domain_negative_e_core_005`, `test_BC_2_10_005_fraction_domain_nan_e_core_005` for AC-011)
 - [ ] Write `test_AC_005_check_watermark_trigger_non_strict_le_kani_seed` — VP-012 boundary test (uses `check_watermark_trigger(0, 100_000, 1.0)` → true; `0.0 / 100_000 = 0.0 <= 0.0`)
 - [ ] Implement `check_watermark_trigger` in pregolya-core with `<=` (NOT `<`)
 - [ ] Implement 7-step cycle in pregolya-graph: verify step ordering in test

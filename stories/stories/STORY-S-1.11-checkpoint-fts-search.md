@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.11
 epic_id: E-05
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "2cd69af"
+input-hash: "d9fa19b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.10]
@@ -42,7 +42,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.04.008 | Full-Text Search Over Checkpoint History via SQLite FTS5 | AC-001..AC-008 |
+| BC-2.04.008 | Full-Text Search Over Checkpoint History via SQLite FTS5 | AC-001..AC-009 |
 
 ## Acceptance Criteria
 
@@ -69,6 +69,9 @@ Checkpoint records are append-only by design: writes add rows, never update or d
 
 ### AC-008 (traces to BC-2.04.008 EC-007)
 `CheckpointSaver::new()` with FTS5 enabled and `EncryptedSerializer` configured returns `Err(PregolyaError { code: "E-CHKPT-010", message: "FtsEncryptionIncompatible: ...", .. })` at construction time. FTS5 and `EncryptedSerializer` are mutually exclusive — the error fires before any DDL executes and no checkpoint tables are created. Verified by `test_BC_2_04_008_fts_encryption_incompatible()`.
+
+### AC-009 (traces to BC-2.04.008 EC-008 — search_history tool error surface)
+When a graph node calls the `search_history` tool and the underlying `fts_search` returns `Err(PregolyaError)` for any reason (E-CHKPT-008 FtsLimitZero, E-CHKPT-009 Fts5Unavailable, E-CHKPT-010 FtsEncryptionIncompatible, or a backend I/O error), the `search_history` tool wrapper converts the error to `ToolOutput::Error` and returns a `ToolMessage` with `status = "error"` and `content` set to the `PregolyaError::message()` string. The graph run does NOT halt; subsequent nodes can inspect the `ToolMessage.status` via standard tool-result routing. No `Err(PregolyaError)` propagates out of `Tool::invoke` — it is always converted to `ToolOutput::Error` at the tool boundary. Verified by `test_BC_2_04_008_search_history_tool_error_is_tool_output()` (TV-008 coverage).
 
 ## Architecture Mapping
 
@@ -113,7 +116,7 @@ Well within the 20-30% agent context window threshold.
 - [ ] Implement `fts_search` query execution against FTS5 table
 - [ ] Implement `search_history_tool()` factory function returning a `Tool` wrapping `fts_search`
 - [ ] Return `Err(E-CHKPT-010 FtsEncryptionIncompatible)` at construction time when both FTS5 and `EncryptedSerializer` are configured (BC-2.04.008 EC-007 / AC-008)
-- [ ] Write unit tests for all 8 ACs (AC-001..AC-008), including `test_BC_2_04_008_fts_encryption_incompatible()`
+- [ ] Write unit tests for all 9 ACs (AC-001..AC-009), including `test_BC_2_04_008_fts_encryption_incompatible()`, `test_BC_2_04_008_search_history_tool_error_is_tool_output()`
 - [ ] Run `just iter pregolya-checkpoint` — all tests green (including S-1.10 tests)
 
 ## Previous Story Intelligence
@@ -166,10 +169,12 @@ Files to MODIFY:
 | EC-003 | `thread_id: Some("nonexistent")` in FtsSearchConfig | Returns `Ok(vec![])` — no results, no error |
 | EC-004 | Query is an empty string `""` | Implementation-defined: either `Ok(vec![])` or returns all results up to limit. Must not panic |
 | EC-005 | FTS5 enabled simultaneously with `EncryptedSerializer` | Construction-time `Err(E-CHKPT-010 FtsEncryptionIncompatible)` — FTS5 stores plaintext message content, tool call arguments, and tool results in the SQLite database file; this would write plaintext state and event payload to disk, violating the at-rest encryption guarantee (no plaintext payload may reach persistent storage when `EncryptedSerializer` is active). FTS5 and `EncryptedSerializer` are mutually exclusive by design; `CheckpointSaver::new()` returns the error before any DDL executes. See BC-2.04.008 EC-007 and AC-008. |
+| EC-006 | `search_history` tool called mid-run; `fts_search` returns `Err(E-CHKPT-008 FtsLimitZero)` (limit = 0 passed as argument by agent) | Tool wrapper converts error to `ToolOutput::Error`; `ToolMessage` with `status = "error"`, `content = "FtsLimitZero: FtsSearchConfig.limit must be > 0; got 0"`; run does NOT halt; subsequent node can inspect `ToolMessage.status` (AC-009) |
 
 ## Changelog
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-08-26 | SW-2/bc-completeness-hardening: BC-2.04.008 → AC-009 (EC-008 search_history tool error → ToolOutput::Error; run does NOT halt). EC-006 added to edge cases. | SW-2 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |
 | 1.0 | 2026-08-18 | Initial authoring | story-writer |

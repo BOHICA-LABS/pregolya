@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.004
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.3 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change. input-hash corrected 377aba5→869996f (pre-existing drift; inputs unchanged)."
   - "1.5 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "1.6 (B-SS19-23/InMemory-scan-all/2026-08-26): PC-006 InMemoryVectorStore post-filter fetch strategy defined — scan-all (no multiplier heuristic). Removes 'up to some internal fetch limit' ambiguity. Rationale: InMemoryVectorStore holds all documents in RAM; scan-all ensures no filtered match is missed and eliminates an undefined tunable multiplier. input-hash updated 869996f→8ffc31b."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-030
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "869996f"
+input-hash: "8ffc31b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -79,9 +80,13 @@ post-filter on the similarity result set. Both `MetadataFilter` and `FilterClaus
    a document must pass ALL clauses to be included in the result.
 5. {PC-005} `similarity_search_with_filter(query, k, filter)` returns `Ok(docs)` where each `doc`
    satisfies all filter clauses. The result set contains at most `k` documents.
-6. {PC-006} **InMemoryVectorStore post-filter behavior:** the store first computes similarity search
-   over ALL documents (up to some internal fetch limit), then applies the filter, then returns
-   the top-k from the filtered set. The base `similarity_search` contract is NOT modified.
+6. {PC-006} **InMemoryVectorStore post-filter behavior:** the store computes cosine similarity against
+   ALL documents in the in-memory index (scan-all strategy — no internal-fetch-limit multiplier
+   is used). The full ranked list is produced first, the filter predicates are applied to the
+   complete result, and then the top-k passing documents are returned. Rationale: InMemoryVectorStore
+   holds all documents in RAM; scan-all ensures no filtered match is missed and eliminates an
+   undefined tunable multiplier that would require separate documentation and configuration.
+   The base `similarity_search` contract is NOT modified.
 7. {PC-007} **Native-backend pre-filter behavior:** community adapters (Chroma, Qdrant, etc.) that
    support server-side filtering pass the `MetadataFilter` to the backend before vector
    similarity computation. Result correctness is the adapter's responsibility; the BC specifies

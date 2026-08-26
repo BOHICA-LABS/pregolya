@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.11"
+version: "3.12"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "aaf969c"
+input-hash: "246bf8d"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.12 (architect-reconcile-burst/2026-08-26): (1) VP-015 added: `mcp::sanitize`, integration P1, Phase 3, BC-2.09.007 {INV-003}, DI-010. VP-to-Module table: add VP-015 row. Totals: 14→15 VPs, integration 2→3. Per-Module Coverage Status: add `mcp::sanitize` MEDIUM row (pregolya-mcp; VP-015 integration P1; CWE-532 prevention). Module header: 85→86 physical rows, 83→84 distinct modules. Tiered groupings: MEDIUM 35→36; tiered total 77→78. Coverage by Criticality Tier: MEDIUM 35→36. Input-hash refreshed (VP-INDEX.md and module-decomposition.md as new input sources; hook-computed 246bf8d). NOTE: VP-015 row intentionally ahead of VP-INDEX update — state-manager adds VP-INDEX row in the same commit burst per validate-vp-consistency protocol. (2) VP-006 Notes: no row change required; harness_fn update is state-manager VP-INDEX row handoff only."
   - "3.11 (INVESTIGATE-RECONCILE/2026-08-21): VP-004 module rename: `mcp::adapter` → `mcp::exception` in VP-to-Module table and Per-Module Coverage Status table. Story S-2.10 creates no `adapter.rs`; VP-004 ToolException type-identity property lives in `mcp::exception`. Arithmetic invariant unchanged: total 14 VPs, Kani 9 + proptest 3 + integration 2 = 14. Input-hash refreshed (VP-INDEX.md and module-decomposition.md drift)."
   - "3.10 (burst-325/D-196/2026-08-18): input-hash confirmed current (metadata hygiene sweep; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Binary compute-input-hash verified MATCH — inputs VP-INDEX.md, module-decomposition.md, and module-criticality.md unchanged since hash was last recomputed at v3.8. No normative content changed. Phase-1 gate-closure burst."
   - "3.9 (F-P210-01/2026-08-18): Census reconciliation — Resolution B. Both documents enumerate the same 83 distinct modules; coverage-matrix's prior HIGH=29/tiered=78 double-counted core::serializable (one module with CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable aspects). Preamble updated to acknowledge both collapse-pairs and clarify 83 distinct modules. HIGH 29→28 (core::serializable counted once in CRITICAL, its highest tier). Tiered 78→77. Coverage by Criticality Tier HIGH row: 29→28 modules, proptest denominator 7 of 29→7 of 28. Coverage gap note denominators updated. tooling-selection.md §Test Strategy Summary sibling updated in same burst."
@@ -73,14 +74,15 @@ changelog:
 | VP-012 | OnWatermark Arithmetic | core::budget | pregolya-core | Kani | BC-2.10.005 | 6 | draft |
 | VP-013 | BashTool Risk Floor | tools::shell | pregolya-tools | Kani | BC-2.23.005 | 6 | draft |
 | VP-014 | RunnableParallel Key-Completeness | core::runnable | pregolya-core | proptest | BC-2.01.005 + BC-2.01.006 | 3 | draft |
+| VP-015 | MCP Credential Redaction | mcp::sanitize | pregolya-mcp | integration | BC-2.09.007 {INV-003} | 3 | draft |
 
-**Totals: 14 VPs | Kani: 9 | proptest: 3 | fuzz: 0 | integration: 2**
+**Totals: 15 VPs | Kani: 9 | proptest: 3 | fuzz: 0 | integration: 3**
 
 ## Per-Module Coverage Status
 
-> This table covers 85 physical rows (84 from prior bursts + burst-302b core::runnable/VP-014 addition: D-170/SS-01 RunnableParallel key-completeness; absorbed into existing HIGH-tier core::runnable module).
-> Two collapse-pairs reduce 85 physical rows to 83 distinct modules: (1) `core::runnable`: 2 rows for 1 HIGH module (pipe-associativity + VP-014 key-completeness); (2) `core::serializable`: 2 rows for 1 module spanning CRITICAL (VP-010 Reviver) and HIGH (VP-007 LcSerializable round-trip), counted once in CRITICAL as its highest tier per F-P210-01.
-> Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 35 / LOW 2 = 77 tiered (77 distinct tiered modules). Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
+> This table covers 86 physical rows (85 from prior bursts + architect-reconcile-burst mcp::sanitize/VP-015 addition: BC-2.09.007 {INV-003} credential redaction unit).
+> Two collapse-pairs reduce 86 physical rows to 84 distinct modules: (1) `core::runnable`: 2 rows for 1 HIGH module (pipe-associativity + VP-014 key-completeness); (2) `core::serializable`: 2 rows for 1 module spanning CRITICAL (VP-010 Reviver) and HIGH (VP-007 LcSerializable round-trip), counted once in CRITICAL as its highest tier per F-P210-01.
+> Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 36 / LOW 2 = 78 tiered (78 distinct tiered modules). Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -113,6 +115,7 @@ changelog:
 | mcp::client | pregolya-mcp | — | — | — | yes | integration red_gate (BC-2.09.005); no-live-connections |
 | mcp::exception | pregolya-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
 | mcp::server | pregolya-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
+| mcp::sanitize | pregolya-mcp | — | — | — | yes | MEDIUM; pure-core credential redaction utility; `redact_credentials` pattern substitution; VP-015 integration P1 (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention) |
 | pregolya-macros | pregolya-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness (no canonical crate::module name for this roll-up — macros::tool/entrypoint/task are the canonical rows) |
 | macros::tool | pregolya-macros | — | — | — | yes | HIGH; `#[tool]` proc-macro ToolDefinition generation; compile-time TokenStream expansion; integration-tested via expansion correctness; BC-2.08.010 |
 | macros::entrypoint | pregolya-macros | — | — | — | yes | HIGH; `#[entrypoint]` proc-macro START-edge wiring; compile-time TokenStream expansion; integration-tested; BC-2.08.011 |
@@ -176,7 +179,7 @@ changelog:
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | 3 of 12: graph::bsp_engine, checkpoint::session_index, checkpoint::clock | subset | ≥ 95% |
 | HIGH | 28 | 3 (VP-006, VP-012, VP-013) | 7 of 28: core::runnable (pipe assoc. + VP-014), core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget | subset | ≥ 90% |
-| MEDIUM | 35 | 0 | some | — | ≥ 80% |
+| MEDIUM | 36 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | n/a (xtask and pregolya-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
 
 > **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 7 of 28 HIGH (derivation: counted unique modules with proptest column = yes/VP-NNN from per-module table above, grouped by tier; `core::runnable` counted once despite two per-module rows; `core::serializable`/VP-007 counted in HIGH tier coverage fractions as it targets the HIGH-tier LcSerializable aspect). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 28 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 10-module coverage (3 CRITICAL + 7 HIGH) with the obligation stated explicitly.

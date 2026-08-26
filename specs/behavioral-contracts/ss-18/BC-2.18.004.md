@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -36,6 +36,7 @@ changelog:
   - "1.12 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.13 (P2A-043-F-03/2026-08-24): INV-006 added — fail-closed wildcard for #[non_exhaustive] TrustLevel; unknown variants treated as Untrusted (guard fires, no Ok(PromptValue) escapes). Closes SS-18 escalation F-03; AC-009 and compliance-table row 'Fail-closed default' in S-2.05 re-anchor from INV-001 to INV-006."
   - "1.14 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
+  - "1.15 (B-SS15-18-hardening/2026-08-26): HIGH SECURITY gap from Phase-2 bc-completeness-scan (D-270, burst B). {PC-005} extended to explicitly cover TemplateInput::FewShotExamples as the 3rd untrusted arm: if any (iv, ov) pair in a FewShotExamples list has an Untrusted component in a TrustRequired slot, E-TMPL-001 is raised fail-closed (same code/category as Scalar and Messages arms). TV-006 (Red Gate) added for FewShotExamples injection arm. VP-006 formal invariant already covers all 3 arms (burst-279 v1.7 added FewShotExamples to the formal invariant and harness); VP-006.md updated to reference PC-005 extended FewShotExamples coverage and TV-006 in §Source Contract."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -109,17 +110,24 @@ enforcement of that invariant.
    layer within `pregolya-prompts`.
 4. {PC-004} The check fires **before** the guardrail boundary (DI-012 / BC-2.11.001); the guardrail
    is a second, independent layer and does not substitute for this check.
-5. {PC-005} `injection_guard` checks BOTH scalar `TemplateVar.trust_level` AND
-   `MessageListVar.trust_level` against `TrustRequired` slots:
+5. {PC-005} `injection_guard` checks scalar `TemplateVar.trust_level`, `MessageListVar.trust_level`,
+   **and** each `FewShotExamples` pair component's `trust_level` against `TrustRequired` slots:
    - If `TemplateInput::Scalar(var)` and `var.trust_level == Some(TrustLevel::Untrusted)` →
      raises `E-TMPL-001` (InjectionAttempt, SECURITY, never-retry).
    - If `TemplateInput::Messages(msg_var)` and
      `msg_var.trust_level == Some(TrustLevel::Untrusted)` →
      raises `E-TMPL-001` (same error code and category).
-   Both input types are guarded equally. There is no path through `format_messages` that
-   delivers an `Ok(PromptValue)` when either a scalar or message-list variable carries
-   `TrustLevel::Untrusted` in a `TrustRequired` slot. (VP-006 Kani proof covers this
-   invariant exhaustively for both input arms.)
+   - If `TemplateInput::FewShotExamples(pairs)` and any `(iv, ov)` pair in `pairs` has
+     `iv.trust_level == Some(TrustLevel::Untrusted)` or
+     `ov.trust_level == Some(TrustLevel::Untrusted)` →
+     raises `E-TMPL-001` (same error code and category). The guard fires on the first
+     untrusted component encountered: example-input component (`iv`) is evaluated before
+     example-output component (`ov`) within each pair; pairs are evaluated in Vec index order.
+   All three input arms are guarded equally. There is no path through `format_messages` that
+   delivers an `Ok(PromptValue)` when any `TemplateInput` arm bound to a `TrustRequired` slot
+   carries `TrustLevel::Untrusted`. (VP-006 Kani proof covers this invariant exhaustively
+   for all three input arms: `injection_guard_fail_closed` for Scalar/Messages arms, and
+   `injection_guard_fewshot_fail_closed` for the FewShotExamples arm.)
    Variables with `TrustLevel::UserInput` or `TrustLevel::Trusted` do NOT trigger E-TMPL-001.
 
 ## Invariants
@@ -171,6 +179,7 @@ enforcement of that invariant.
 | TV-003 | `template = [System("Constant."), Human("{q}")]`, `vars = {"q": TemplateVar { value: "...", trust_level: Some(TrustLevel::Untrusted) }}` | `Ok(PromptValue { ... })` — Untrusted only in HumanMessage slot (TrustAll) | happy-path (untrusted in TrustAll slot) |
 | TV-004 | `template = [System("{s}"), Human("{h}")]`, both vars `trust_level: Some(TrustLevel::Untrusted)` | `Err(E-TMPL-001)` with `var_name = "s"` (first TrustRequired slot fails first) | error-case (fail-first semantics) |
 | TV-005 | `template = [System("{a}: {b}")]`, `vars = {"a": TemplateVar { value: "inject", trust_level: Some(TrustLevel::Untrusted) }, "b": TemplateVar { value: "also inject", trust_level: Some(TrustLevel::Untrusted) }}` | `Err(PregolyaError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'a' carries untrusted provenance but slot 'system' requires TrustRequired policy", .. })` — `a` appears first in template source order | error-case (intra-slot multi-var determinism) |
+| TV-006 (Red Gate) | `template = [System("{examples}"), Human("{q}")]`, `vars = {"examples": TemplateInput::FewShotExamples(vec![(TemplateVar { value: "safe_in", trust_level: None }, TemplateVar { value: "DROP TABLE users;--", trust_level: Some(TrustLevel::Untrusted) })]), "q": TemplateInput::Scalar(TemplateVar { value: "hi", trust_level: None })}` | `Err(PregolyaError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'examples' carries untrusted provenance but slot 'system' requires TrustRequired policy", .. })` — untrusted example_output component fires before example_template.format() | error-case (FewShotExamples injection arm — {PC-005} 3rd arm; VP-006 `injection_guard_fewshot_fail_closed` harness) |
 
 ## Verification Properties
 

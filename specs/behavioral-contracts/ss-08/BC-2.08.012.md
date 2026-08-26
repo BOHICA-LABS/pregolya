@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.012
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (2026-07-14): Architecture Anchor pregolya-core/src/graph/builder.rs corrected to pregolya-graph/src/graph/state.rs — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.4 (burst-B-SS07-08/bc-completeness-scan-P2/2026-08-26): Resolve Phase-2 BC-completeness-scan gap SS-07..08: EC-004 reserved-name behavior decided as HARD compile-time error (decision: accepting a reserved name silently produces unreachable nodes or routing-symbol shadowing at runtime; a warn-only outcome is insufficient because graph execution would misroute without surfacing the error at the call site; failing closed at compile time is the production-grade default). TV-006 added: function named `start` → compile-time error."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "7175152"
+input-hash: "dc5058f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -98,10 +99,16 @@ not prevent direct use. The token type is simply unused.
 functions; use add_node directly for generic task registration`.
 
 ### EC-004: Task name conflicts with a built-in graph node identifier
-**Scenario:** Function named `start` or `end` (reserved identifiers in LangGraph semantics).
-**Expected behavior:** Compile-time warning or error identifying the name collision with the
-reserved `START`/`END` identifiers. The node names `"start"` and `"end"` are not valid
-user-defined node names (they collide with the graph's internal routing symbols).
+**Scenario:** Function named `start` or `end` (reserved identifiers in StateGraph routing semantics).
+**Expected behavior:** **Compile-time error** (hard; not a warning). The `#[pregolya::task]`
+macro rejects any function whose derived task identifier collides with the reserved identifiers
+`START` (`"start"`) or `END` (`"end"`). Decision rationale: a warn-only outcome is insufficient
+because a task registered under a reserved name would silently produce unreachable nodes or shadow
+the routing symbols at graph-execution time; the graph would misroute without surfacing the error
+at the call site. Failing closed at compile time (hard error) is the production-grade default
+(CANONICAL PRINCIPLE: production-grade correctness; silent runtime misrouting is a P1 defect).
+Operators who require a task with a `start`-like canonical string MUST use `graph.add_node(...)`
+directly with an explicitly chosen non-reserved name string.
 
 ## Canonical Test Vectors
 
@@ -112,6 +119,7 @@ user-defined node names (they collide with the graph's internal routing symbols)
 | TV-003 | Graph with `#[task]` registration vs manual `add_node("summarize", summarize)` | Both graphs execute identically for same input | Semantic equivalence |
 | TV-004 | Generic `#[task]` function | Compile-time error from macro | Generics unsupported |
 | TV-005 | Function annotated but `register_into` never called | Compiles; function remains a valid standalone async fn | Additive only |
+| TV-006 | `#[pregolya::task] async fn start(state: S) -> Result<Update<S>, PregolyaError>` | Compile-time error: "reserved name 'start' conflicts with START routing symbol; use add_node(...) directly" | Reserved-name hard error (EC-004) |
 
 ## Verification Properties
 
@@ -159,6 +167,7 @@ S-1.07
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.4 | 2026-08-26 | EC-004 reserved-name behavior decided as HARD compile-time error (warn-only produces silent runtime misrouting); TV-006 added for reserved-name path | burst-B-SS07-08/bc-completeness-scan-P2 |
 | 1.3 | 2026-08-23 | stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change | M1/ADR-027 |
 | 1.2 | 2026-08-22 | §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change) | story-anchor-backfill |
 | 1.1 | 2026-07-14 | Architecture Anchor `pregolya-core/src/graph/builder.rs` corrected to `pregolya-graph/src/graph/state.rs` — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.005
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -28,6 +28,7 @@ changelog:
   - "1.3 (2026-07-19, F-P114-01 fix burst 117): Anchor correction — Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to 'architecture/module-decomposition.md §pregolya-checkpoint' (checkpoint::saver row) per architect adjudication (burst 117). No BC body content changed."
   - "1.4 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). EC-006 Expected Behavior cell: added `..` rest-pattern marker (4 of 5 fields present, missing retry_hint). Test-vector row: replaced forbidden `...` (three-dot ASCII) with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION; ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (P2-BC-SS04-06-hardening/2026-08-26): EC-007 added — pending_writes reapply read/deserialize failure. EC-006 covered `get_tuple()` failure during checkpoint load but did not specify the failure surface for the subsequent `_reapply_writes_to_succeeded_nodes` storage query and entry deserialization step. EC-007 specifies both sub-cases (storage I/O error and deserialization failure) with E-CHKPT-003 REUSE (DURABILITY, broken — 'cannot restore state' semantic covers both sub-cases; `<reason>` field discriminates between I/O error and deserialization failure). TV row added for EC-007. BC-completeness-scan Phase-2 BURST-B gap BC-2.04.005."
 modified: []
 extracted_from: null
 deprecated: null
@@ -101,6 +102,7 @@ them freshly rather than replaying stale control state.
 | EC-004 | Send API fan-out: 5 tasks; 3 completed before crash; 2 incomplete (Domain B) (DEC-009) | On resume: 3 completed tasks not re-executed; 2 incomplete tasks re-run; result identical to no-crash run |
 | EC-005 | A failed task has `ERROR` + `ERROR_SOURCE_NODE` markers | Both markers skipped; node re-executes; if it fails again, the error handler is invoked freshly |
 | EC-006 | `get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed)` during crash-recovery checkpoint load | Recovery halts immediately with `Err(PregolyaError { component: CHKPT, category: DURABILITY, code: E-CHKPT-003, message: "CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>", .. })`; no task writes from `pending_writes` are re-applied; no node bodies execute; caller decides whether to retry or abandon the thread |
+| EC-007 | During `_reapply_writes_to_succeeded_nodes`: (a) the storage query for `pending_writes` entries returns an I/O error, OR (b) a retrieved `pending_writes` entry's write value cannot be deserialized to the channel type (data corruption or schema-evolution incompatibility after a checkpoint format change) | Recovery halts immediately with `Err(PregolyaError { component: CHKPT, category: DURABILITY, code: E-CHKPT-003, message: "CheckpointReadFailed: cannot restore state for thread '<thread_id>' checkpoint '<checkpoint_id>': <reason>", .. })` — REUSE of E-CHKPT-003 ("cannot restore state" covers both sub-cases; sub-case (a) `<reason>` = "pending_writes read failed — backend error: <backend_error>"; sub-case (b) `<reason>` = "pending_writes entry for task '<task_id>' deserialization failed — <cause>"); no task writes are re-applied; no node bodies execute; {INV-001} ensures the partially-applied state is never committed; caller decides whether to retry or abandon the thread |
 
 ## Canonical Test Vectors
 
@@ -111,6 +113,7 @@ them freshly rather than replaying stale control state.
 | Task with `ERROR` marker persisted; crash before `apply_writes`; restart | `ERROR` not re-applied; node re-executes; error handler invoked; final error state recorded correctly | error |
 | Send fan-out: 10 tasks; 7 completed; crash; restart | 7 not re-executed; 3 re-run; all 10 results present in final state | edge-case |
 | `get_tuple()` returns `Err(E-CHKPT-003 CheckpointReadFailed { thread_id: "t1", checkpoint_id: "c1", reason: "storage unavailable" })` during crash-recovery checkpoint load | `invoke`/`stream` returns `Err(PregolyaError { code: E-CHKPT-003, .. })`; recovery halts immediately; no task writes are re-applied; no node bodies execute | error |
+| Crash recovery: `get_tuple()` succeeds; storage query for `pending_writes` entries fails with I/O error during `_reapply_writes_to_succeeded_nodes` | `invoke`/`stream` returns `Err(PregolyaError { code: E-CHKPT-003, .. })`; recovery halts; no task writes re-applied; no node bodies execute (PASS-ABBREV via EC-007) | error |
 
 ## Verification Properties
 

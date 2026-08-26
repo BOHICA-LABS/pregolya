@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.23.005
-version: "1.12"
+version: "1.13"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,13 +26,14 @@ changelog:
   - "1.3 (burst-235/F-P135-05/2026-07-22): Fix four occurrences of wrong implementation phrasing 'tokio::time::timeout over/wrapping tokio::process::Command' (Description, PC-3, Invariants DI-015 bullet, Traceability) — implied BashTool calls tokio::process::Command directly, contradicting the sandbox-mandatory Invariant. Correct: tokio::time::timeout wraps the sandbox backend execute() call; tokio::process::Command is managed by sandbox::process internally. Architect adjudication F-P135-05."
   - "1.4 (burst-238/F-P138-03/2026-07-23): VP Anchors and Traceability VP Registration updated: stale 'ARCH-INDEX D23 candidate — architect to assign VP-INDEX entry' prose replaced with 'assigned in VP-INDEX as VP-013' (VP-INDEX v1.5 burst-232 seeded VP-013 Kani P1; pregolya-tools risk_floor_rejects_below_medium). Both sites updated (VP Anchors section + Traceability VP Registration row). Gate #28 close F-P138-03."
   - "1.5 (burst-247/F-P146-02+OBS-naming/2026-07-24): (1) H1 title — remove payload flag E-TOOLS-005 from title error-code enumeration per SS-23 title policy (Ok-path payload flags excluded from raised-code enumeration). Before: 'E-TOOLS-004/005/007'. After: 'E-TOOLS-004/007'. E-TOOLS-005 is retained in the body as a payload annotation (BashOutput.truncated) — it is not removed from the contract, only from the raised-code title list. (2) PC-2 body — align truncation flag name from informal 'BashOutputTruncated'-style to canonical field-path notation 'BashOutput.truncated' per OBS naming-anchor (error-taxonomy v1.37 adds explicit canonical-field-path marker for E-TOOLS-005). TD-VSDD-060: BC-INDEX row and bc-authoring-plan Batch 20 title cell updated same burst (state-manager handles BC-INDEX). input-hash updated 0bc5c5d→64d7571 (inputs unchanged; hash drift from prior burst)."
-  - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 v1.9 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4); Category::TIMEOUT → Category::Timeout (PC-3), Category::VAL → Category::Val (PC-4)."
+  - "1.6 (FIX-BURST-270/ADR-010-v1.9/2026-07-25): Apply PascalCase casing canon (ADR-010 Direction B) at 2 sites: component: \"TOOLS\" string literal → component: Component::Tools (PC-3 + PC-4); Category::TIMEOUT → Category::Timeout (PC-3), Category::VAL → Category::Val (PC-4)."
   - "1.7 (F-P170-16/burst-272/2026-07-25): Adjudication — canonical method name is ToolConfig::override_risk (ADR-020 Decision 3 introduction form; majority usage in PC3/ECs/TVs; VP-013 capabilities-p1-p2.md). Fix three set_risk sites: (1) §Invariants 'Risk floor' paragraph — two occurrences BashTool::set_risk(ReadOnly) and BashTool::set_risk(Low) → ToolConfig::override_risk(ActionRisk::ReadOnly) and ToolConfig::override_risk(ActionRisk::Low). (2) §Verification Properties VP-013 row — same fix. set_risk appeared only in prose/invariant/anchor sentences; ToolConfig::override_risk is the architectural name per ADR-020 Decision 3."
   - "1.8 (F-P171a-02b/burst-273/2026-07-25): Lifecycle adjudication — ToolConfig::override_risk is a builder-consuming validator (signature: override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>); it returns Err immediately at call time; the registry never receives an invalid ToolConfig. Deliberate spec amendment per CLAUDE.md precedence rule 1 (BC supersedes for contract semantics). (1) PC-4 header: 'Risk floor violation at startup' → 'Risk floor violation at ToolConfig::override_risk call time'. (2) PC-4 body: 'At ToolRegistry::register time' → 'At ToolConfig::override_risk call time'. (3) EC-004 Description: 'at registry time' → 'at ToolConfig::override_risk call time'. TD-VSDD-060 sibling sweep: VP-013.md §BC Traceability EC-004/EC-005 and §Proof Harness cite 'registry time' and 'registration logic' — routed to architect for VP-013 body update (architect scope)."
   - "1.9 (fix-burst-280/F-P175-A25/2026-07-28): Convert 2 struct-literal construction examples to PregolyaError::new() form. PC3 E-TOOLS-004 BashTimeout: ::new(Component::Tools, Category::Timeout, RetryHint::Never, ...). PC4 E-TOOLS-007 BashRiskTierViolation: ::new(Component::Tools, Category::Val, RetryHint::Never, ...). TD-VSDD-060 sibling sweep: no other struct-literal construction examples found in this BC."
   - "1.10 (fix-burst-287/TD-VSDD-091+ADR-010-C3/2026-08-01): (1) VP-INDEX version pin removed: §VP Anchors and §Traceability VP Registration 'VP-INDEX v1.5 as' → 'VP-INDEX as' (no §-anchor introduced). (2) ADR-010 Class 3 fix: PC-3 E-TOOLS-004 and PC-4 E-TOOLS-007 prose PregolyaError::new(...) → PregolyaError { code: 'E-TOOLS-004', .. } and { code: 'E-TOOLS-007', .. } (observation form). 2 violations corrected. verify-no-version-pins.sh PASS; verify-error-notation-canon.sh PASS."
   - "1.11 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.22 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.12 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.13 (B-SS19-23/E-TOOLS-011-bash-config/2026-08-26): MED process-gap closure — E-TOOLS-011 ToolConfigInvalid cited for zero-value BashConfig fields. INV-003 updated: max_output_bytes=0 rejected at construction with E-TOOLS-011. INV-004 updated: zero-duration rejection cites E-TOOLS-011 with message format. NEW EC-008: max_duration=Duration::ZERO→E-TOOLS-011. NEW EC-009: max_output_bytes=0→E-TOOLS-011. NEW TV-007, TV-008: config-validation test vectors. Note: error-taxonomy.md designates 'BC-2.23.005 EC-003' as the raise site; EC-003 already exists (non-zero exit code), so new ECs are EC-008 and EC-009. Reuses E-TOOLS-011 — minted in error-taxonomy.md same burst."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-037
   - architecture/decisions/ADR-020-first-party-tool-library.md
@@ -121,7 +122,10 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 - {INV-002} All sandbox execution is via pregolya-sandbox (BC-2.13.001–003). There is no fallback
   direct OS execution path.
 - {INV-003} `max_output_bytes` truncation is applied BEFORE returning to the caller; the sandbox
-  buffer is bounded and does not grow unboundedly.
+  buffer is bounded and does not grow unboundedly. A `max_output_bytes` value of 0 is rejected
+  at construction with `Err(PregolyaError { code: "E-TOOLS-011", .. })` —
+  `Validation failed for 'max_output_bytes': max_output_bytes must be > 0`; a zero cap would
+  silently discard all command output.
 - {INV-004} **DI-015 (Subprocess Execution Timeout):** `max_duration` (default 30 seconds) is the
   governing subprocess wall-clock timeout, enforced via `tokio::time::timeout` wrapping the
   sandbox backend `execute()` call; `tokio::process::Command` is managed by `sandbox::process`
@@ -129,9 +133,10 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
   (doing so would violate the Invariant above: "All sandbox execution is via pregolya-sandbox").
   When a command exceeds `max_duration` the sandbox terminates
   the process and the tool returns `Err(E-TOOLS-004 BashTimeout)`. Production graphs that
-  need a different default must set `BashConfig::max_duration` explicitly; zero-duration is
-  rejected (configuration error). DI-009 (HTTP connection timeout) does NOT govern subprocess
-  execution — DI-015 is the exclusive authority for this BC.
+  need a different default must set `BashConfig::max_duration` explicitly; `Duration::ZERO` is
+  rejected at construction with `Err(PregolyaError { code: "E-TOOLS-011", .. })` —
+  `Validation failed for 'max_duration': max_duration must be > 0`. DI-009 (HTTP connection
+  timeout) does NOT govern subprocess execution — DI-015 is the exclusive authority for this BC.
 - {INV-005} **DI-014 (No Silent Swallowing):** Timeout and sandbox errors propagate as `Err`. A
   non-zero exit code is NOT swallowed — it is surfaced in `BashOutput.exit_code`. The
   tool does not transform a non-zero exit code into an empty or `None` result.
@@ -149,6 +154,8 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 | EC-005 | `ToolConfig::override_risk(ActionRisk::Medium)` on BashTool | Accepted — Medium is the floor; graph starts normally |
 | EC-006 | Command output is exactly 262,144 bytes | `ToolOutput::Json({ ..., "truncated": false })` — at limit, not over; no truncation |
 | EC-007 | Sandbox policy blocks the command before execution | `Err(PregolyaError)` — sandbox namespace error, NOT E-TOOLS-004 or E-TOOLS-005 |
+| EC-008 | `BashConfig { max_duration: Duration::ZERO, .. }` at construction | `Err(PregolyaError { code: "E-TOOLS-011", .. })` — `Validation failed for 'max_duration': max_duration must be > 0`; authoritative raise site for E-TOOLS-011 on `max_duration` |
+| EC-009 | `BashConfig { max_output_bytes: 0, .. }` at construction | `Err(PregolyaError { code: "E-TOOLS-011", .. })` — `Validation failed for 'max_output_bytes': max_output_bytes must be > 0`; zero cap would silently discard all command output |
 
 ## Canonical Test Vectors
 
@@ -160,6 +167,8 @@ error at startup (E-TOOLS-007; VP-013 Kani P1 seed).
 | TV-004 | `{ "command": "sleep 60" }` — exceeds 30s timeout | `Err(E-TOOLS-004)` — `BashTimeout: command exceeded max_duration of 30s` | timeout |
 | TV-005 | `override_risk(ActionRisk::Low)` at registry | `Err(E-TOOLS-007)` — `BashRiskTierViolation: BashTool risk tier cannot be lowered below Medium; attempted: 'Low'` | risk floor violation |
 | TV-006 | `override_risk(ActionRisk::Medium)` at registry | Accepted — graph starts normally | risk floor (boundary) |
+| TV-007 | `BashTool::new(sandbox_ref, BashConfig { max_duration: Duration::ZERO, max_output_bytes: 262144 })` | `Err(PregolyaError { code: "E-TOOLS-011", .. })` — `Validation failed for 'max_duration': max_duration must be > 0` | error-case (E-TOOLS-011 config-validation, zero duration) |
+| TV-008 | `BashTool::new(sandbox_ref, BashConfig { max_duration: Duration::from_secs(30), max_output_bytes: 0 })` | `Err(PregolyaError { code: "E-TOOLS-011", .. })` — `Validation failed for 'max_output_bytes': max_output_bytes must be > 0` | error-case (E-TOOLS-011 config-validation, zero output cap) |
 
 ## Verification Properties
 

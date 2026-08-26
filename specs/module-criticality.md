@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.12"
+version: "2.13"
 status: active
 producer: architect
 timestamp: 2026-08-21T00:00:00Z
@@ -10,11 +10,12 @@ inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "7eb42a4"
+input-hash: "82ff930"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.13 (architect-reconcile-burst/2026-08-26): Iron Law — add `mcp::sanitize` MEDIUM row (pregolya-mcp; SS-09; `redact_credentials` pure credential-redaction; BC-2.09.007 / INV-003 / DI-010; VP-015 integration P1; no Kani VP — not a Kani P0/P1 host; MEDIUM consistent with mcp::exception/mcp::client/mcp::discovery sibling pattern). Required by module-decomposition.md mcp::sanitize addition. Classification Summary: MEDIUM 35→36; Total 83→84. Tiered rows breakdown: 34 MEDIUM module-level → 35 MEDIUM module-level; 77 tiered → 78 tiered. Input-hash refreshed (82ff930)."
   - "2.12 (INVESTIGATE-RECONCILE/2026-08-21): Module Classification table — rename `mcp::adapter` → `mcp::exception` (MEDIUM tier, pregolya-mcp, SS-09). Story S-2.10 creates no `adapter.rs`; VP-004 property (bare ToolException type-identity) lives in `mcp::exception`. Criticality MEDIUM unchanged. Input-hash refreshed (module-decomposition.md drift)."
   - "2.11 (F-P210-01/2026-08-18): Census reconciliation — Resolution B confirmed. module-criticality.md and verification-coverage-matrix.md enumerate the same 83 distinct modules; module-criticality's prior Total=84 was a row count that double-counted core::serializable (one module with aspects in both CRITICAL/VP-010/Reviver and HIGH/VP-007/LcSerializable). Counting each distinct module once in its highest tier: core::serializable belongs to CRITICAL. Corrections: HIGH 29→28 (remove core::serializable LcSerializable row from HIGH distinct-module count), Total 84→83, tiered-rows comment 78→77. Classification Summary now reflects distinct-module counts."
   - "2.10 (fix-burst-287/F-P176-A009/2026-08-01): Census re-verification after multi-burst accumulation. Ground truth: crate::module-form path rows in module-decomposition.md total 76; 70 carry a CRITICAL/HIGH/MEDIUM/LOW tier; 6 carry a dash (definitions-only/exempt: memory::skills, core::documents, core::guardrail, core::action_risk, core::context_mutation, core::write_guard). No content changes to Classification Summary (Total=84 already correct: 78 tiered + 6 definitions-only). Updated Census quintuple: decomposition_total_rows=76, decomposition_tiered_rows=70, exempt_count=6, registry_rows=84, matched_rows=70. Identity 1: 76=70+6 ✓. Identity 2: 70 tiered decomp = 70 module-level tiered registry rows ✓ (78 registry tiered − 8 crate-level = 70). State of prior Census sextuple (v2.5, 2026-07-27): (71, 69, 2, 77, ?, 69) — stale by +5 decomp rows (+1 tiered core::tool, +4 definitions-only from FIX-BURST-277). Gate check recommendation: the gate verifying purity-boundary-map intro row count must compare against the crate::module-form path row count in module-decomposition.md directly; a gate that only checks purity-boundary-map internal arithmetic passes while stale."
@@ -85,6 +86,7 @@ changelog:
 | `splitters::recursive` | — | pregolya-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::client` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::exception` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| `mcp::sanitize` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::server` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::wasm` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::policy` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
@@ -185,12 +187,12 @@ changelog:
 |------|-------------|
 | CRITICAL | 12 |
 | HIGH | 28 |
-| MEDIUM | 35 |
+| MEDIUM | 36 |
 | LOW | 2 |
 | — (definitions-only/exempt) | 6 |
-| **Total** | **83** |
+| **Total** | **84** |
 
-> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 34 MEDIUM module-level + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 77 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier).
+> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 35 MEDIUM module-level + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 78 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier).
 
 ## CRITICAL Module — Security Profile
 

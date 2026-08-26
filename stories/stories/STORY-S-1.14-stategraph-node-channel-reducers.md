@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.14
 epic_id: E-07
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "419272c"
+input-hash: "4230a5b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.01]
@@ -32,6 +32,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.2 (P2-bc-completeness-burst-B/2026-08-26): BC-2.02.001 {PC-007}: AC-012 Command goto+update full semantics; AC-013 Command null-field variants. BC table version bumped."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
 
@@ -51,7 +52,7 @@ changelog:
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.02.001 | StateGraph Builder API — Node and Channel Registration | AC-001..AC-003 |
+| BC-2.02.001 | StateGraph Builder API — Node and Channel Registration | AC-001..AC-003, AC-012..AC-013 |
 | BC-2.02.002 | Channel Semantics — LastValue, Append, BarrierValue | AC-004..AC-007 |
 | BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate) | AC-008, AC-011 |
 | BC-2.02.004 | EphemeralValue Cleared After Each Super-Step (Red Gate) | AC-009..AC-010 |
@@ -90,6 +91,12 @@ A checkpoint snapshot of graph state taken after a super-step that wrote an `Eph
 
 ### AC-011 (traces to BC-2.02.003 EC-003 — NamedBarrierValue duplicate writer raises E-GRAPH-004)
 When a declared writer of a `NamedBarrierValue` channel writes twice in the same super-step (e.g., two `Send` tasks bearing the same writer name both deliver to the channel in that step), the engine returns `Err(PregolyaError { category: VAL, code: E-GRAPH-004, .. })` with fields `{ channel, writer, step }`. Verified by `test_BC_2_02_003_named_barrier_duplicate_writer_error()`.
+
+### AC-012 (traces to BC-2.02.001 §{PC-007} — Command with goto + update: update applied then routing override)
+When a node function returns `Command { goto: Some("target"), update: Some(update_dict) }`, the Pregel executor: (a) applies `update_dict` to the graph state channels subject to channel reducer semantics (LastValue / BinaryOperatorAggregate) and the unregistered-key guard (INV-001 — any unregistered key returns `Err(E-GRAPH-007)`); (b) schedules `"target"` in the next super-step, bypassing any static or conditional edges declared for this source node. When `"target"` eventually reaches `END`, `invoke` returns `Ok(output_state)`. Verified by `test_BC_2_02_001_command_goto_and_update_applied()`.
+
+### AC-013 (traces to BC-2.02.001 §{PC-007} — Command null-field variants preserve correct routing)
+`Command { goto: None, update: Some(dict) }`: state update is applied; static/conditional edges for the current node take effect normally (no routing override). `Command { goto: Some("target"), update: None }`: schedules `"target"` without applying any state update for this step. `Command { goto: None, update: None }`: semantically equivalent to returning `None` — no state mutation, normal edge routing. All three variants eventually return `Ok(output_state)` when the run reaches `END`. Verified by `test_BC_2_02_001_command_null_field_variants()`.
 
 ## Architecture Mapping
 
@@ -157,6 +164,8 @@ When a declared writer of a `NamedBarrierValue` channel writes twice in the same
 13. [ ] Verify `#[non_exhaustive]` on all public enums and structs in channels and types
 14. [ ] Run `cargo nextest run -p pregolya-graph --no-fail-fast` — all tests green
 15. [ ] Write test for `test_BC_2_02_003_named_barrier_duplicate_writer_error()` — covers AC-011 (E-GRAPH-004 DuplicateBarrierWrite; BC-2.02.003 EC-003); add to `pregolya-graph/tests/channel_semantics.rs`
+16. [ ] Write failing test `test_BC_2_02_001_command_goto_and_update_applied()` for AC-012 (test-writer)
+17. [ ] Write failing test `test_BC_2_02_001_command_null_field_variants()` for AC-013 (test-writer)
 
 ## Previous Story Intelligence (MANDATORY)
 

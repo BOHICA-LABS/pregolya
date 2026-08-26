@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.21.003
-version: "1.12"
+version: "1.13"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -34,6 +34,7 @@ changelog:
   - "1.10 (fix-burst-287/TD-VSDD-091/2026-08-01): VP-INDEX version pin removed. §VP Anchors: 'assigned VP-INDEX v1.2' → 'assigned in VP-INDEX' (grammar corrected; no §-anchor introduced). §Traceability VP Registration: 'VP-INDEX v1.2 as' → 'VP-INDEX as'. verify-no-version-pins.sh PASS."
   - "1.11 (P2A-021/round-2/story-anchor-fill/2026-08-21): Story Anchor filled → S-2.03 (S-2.03 behavioral_contracts frontmatter includes all SS-21 VectorStore BCs, including this zero-norm guard contract)."
   - "1.12 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change. input-hash corrected 377aba5→869996f (pre-existing drift; inputs unchanged)."
+  - "1.13 (B-SS19-23/ADR-014-D7-VP-C/2026-08-26): VP-2.21.003-C updated to cite canonical Carbonell–Goldstein argmax formula from ADR-014 Decision 7 — score_i definition, weakly-non-increasing property, proof sketch (adding d* to S increases max_{d'∈S} term → decreases future argmax values), proptest method updated to assert per-round score sequence. Makes monotone-non-increasing claim formally well-defined per ADR-014 §D7 PO obligation. input-hash updated 869996f→8ffc31b."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-029
   - architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
@@ -43,7 +44,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-014-vectorstore-retriever-abstraction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "869996f"
+input-hash: "8ffc31b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -176,7 +177,7 @@ two lines and has negligible performance overhead compared to the cosine computa
 |-------|----------|-------------|
 | VP-2.21.003-A (VP-009 candidate) | For ALL possible `Vec<f32>` pairs with finite elements, if either has `norm == 0.0 \|\| !norm.is_finite()` (zero-norm or overflow-to-infinity), `cosine_similarity` returns `Err(E-VS-001)` and NEVER returns `Ok(f32::NAN)` | proptest (random inputs including zero and overflow vectors) + Kani VP-009 formal proof: enumerate all reachable code paths; prove `Ok(f32::NAN)` is unreachable |
 | VP-2.21.003-B | For ALL finite non-zero Vec<f32> pairs, `cosine_similarity` result is in [-1.0, 1.0] | proptest — random finite non-zero pairs; assert -1.0 ≤ result ≤ 1.0 |
-| VP-2.21.003-C | MMR output scores in `max_marginal_relevance_search` are monotonically non-increasing (diversity selection preserves relevance ordering) | proptest — assert MMR results are ordered by marginal relevance at each step |
+| VP-2.21.003-C | Let `score_i` = the MMR argmax value at iteration i under the Carbonell–Goldstein formula (ADR-014 Decision 7): `λ · cos(d.emb, q.emb) − (1−λ) · max_{d' ∈ S} cos(d.emb, d'.emb)`. Property: `score_1 ≥ score_2 ≥ … ≥ score_k` (weakly non-increasing). Proof sketch: adding d* to S at each step can only increase `max_{d' ∈ S}(...)`, which increases the subtracted term for all remaining candidates, so the argmax at each subsequent step is ≤ the prior step's argmax. Empty-set start (S = ∅, score_1 = λ · max cosine) is the upper bound. | proptest — generate random non-NaN embeddings (finite, non-zero), run the canonical Carbonell–Goldstein selection loop, record the per-round argmax MMR score, assert the score sequence `[score_1, score_2, …]` is weakly non-increasing |
 
 ## Related BCs
 

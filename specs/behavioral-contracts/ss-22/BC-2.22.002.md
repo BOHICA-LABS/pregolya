@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.002
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 6 CLASS3_ASCII_ELLIPSIS_VIOLATION corrected — PC6, INV-4, EC-003, EC-004, EC-005, TV-004 each had `Err(PregolyaError { ... })` — replaced `...` with `..` in all six. Xtask rename: VP-2.22.002-C `deny-client-new` → `check-client-timeout`. No behavioral change."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (B-SS19-23/HIGH-provider-error-codes/2026-08-26): HIGH gap closure — provider HTTP-status error codes added. PC-006: 429/5xx→E-PROV-008, 401→E-PROV-004, connection-failure→E-PROV-012 cited. EC-003 (HTTP 429) and EC-004 (5xx): bare Err→E-PROV-008 full cite. EC-005 (timeout): bare Err→E-PROV-012. NEW EC-007: HTTP 401→E-PROV-004 ProviderAuthFailed (credential opacity per DI-010). NEW EC-008: connection refused/DNS/TLS failure→E-PROV-012. TV-004: E-PROV-008 cited. NEW TV-006: auth-failure TV (E-PROV-004). NEW TV-007: connection-refused TV (E-PROV-012). Reuses existing E-PROV-004/008/012 codes — no new E-code minted."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-032
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -96,9 +97,11 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
    - `reqwest` dep in `pregolya-openai/Cargo.toml`: `default-features = false, features = ["rustls-tls"]`.
    - `reqwest::Client` is built with `.timeout(Duration::from_secs(30))` — never `reqwest::Client::new()`.
    - The `native-tls` / `default-tls` / `native-tls-alpn` / `native-tls-vendored` features are ABSENT.
-6. {PC-006} **Batch partial failure (DI-014):** if the OpenAI API returns a rate-limit error (HTTP 429),
-   service error (5xx), or malformed response mid-stream, the entire `embed_documents` call
-   returns `Err(PregolyaError { .. })`. No partial vector list is returned.
+6. {PC-006} **Batch partial failure (DI-014):** if the OpenAI API returns a rate-limit error
+   (HTTP 429 → E-PROV-008), service error (5xx → E-PROV-008), authentication failure
+   (HTTP 401 → E-PROV-004), or connection failure (connection refused / DNS / TLS failure →
+   E-PROV-012), the entire `embed_documents` call returns `Err(PregolyaError { .. })`.
+   No partial vector list is returned.
 
 ## Invariants
 
@@ -120,10 +123,12 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 |----|-------------|-------------------|
 | EC-001 | `OpenAiApiKey` printed via `{:?}` format | Output is exactly `"<redacted>"` — key value never appears |
 | EC-002 | `EmbeddingsOpenAI` constructed with `"text-embedding-ada-002"` | `Ok(impl)` constructed; `tracing::warn!(event_type = "embeddings.legacy_model_warning")` emitted at construction |
-| EC-003 | OpenAI API returns HTTP 429 (rate limit) | `Err(PregolyaError { .. })` — whole call fails; no partial result |
-| EC-004 | OpenAI API returns 5xx on second text in a batch of 10 | `Err(PregolyaError { .. })` — the already-received vectors are discarded; Err for whole call |
-| EC-005 | `embed_documents` request times out (> 30 seconds) | `Err(PregolyaError { .. })` wrapping the reqwest timeout error |
+| EC-003 | OpenAI API returns HTTP 429 (rate limit) | `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP 429`; whole call fails; no partial result |
+| EC-004 | OpenAI API returns HTTP 5xx on second text in a batch of 10 | `Err(PregolyaError { code: "E-PROV-008", .. })` — `ProviderHttpError: provider returned HTTP <status>`; already-received vectors discarded; Err for whole call |
+| EC-005 | `embed_documents` request times out (reqwest `.timeout(30s)` fires before HTTP response received) | `Err(PregolyaError { code: "E-PROV-012", .. })` — `ProviderConnectionError: cannot connect to provider 'https://api.openai.com': connection timed out`; no HTTP response received |
 | EC-006 | `EmbeddingsOpenAI` used from multiple Tokio tasks concurrently | Safe — `reqwest::Client` is `Clone + Send + Sync`; `EmbeddingsOpenAI` is `Send + Sync` |
+| EC-007 | OpenAI API returns HTTP 401 (invalid or revoked API key) | `Err(PregolyaError { code: "E-PROV-004", .. })` — `ProviderAuthFailed: authentication failed`; key value never appears in the error (credential opacity per DI-010) |
+| EC-008 | OpenAI API endpoint unreachable (connection refused, DNS failure, TLS handshake failure) | `Err(PregolyaError { code: "E-PROV-012", .. })` — `ProviderConnectionError: cannot connect to provider 'https://api.openai.com': <transport_error>` |
 
 ## Canonical Test Vectors
 
@@ -132,8 +137,10 @@ returns `Err` for the whole call, never a truncated vector (DI-014).
 | TV-001 (Red Gate) | `format!("{:?}", OpenAiApiKey("sk-test-123".to_string()))` | `"<redacted>"` — NOT `OpenAiApiKey("sk-test-123")` | security (credential opacity Red Gate) |
 | TV-002 | `embed_documents(vec!["hello", "world"])` with `text-embedding-3-small` mock | `Ok(vec![[f32; 1536], [f32; 1536]])` — 1536-dim vectors | happy-path |
 | TV-003 | `embed_query("hello")` with `text-embedding-3-small` mock | `Ok([f32; 1536])` | happy-path (single query) |
-| TV-004 | `embed_documents(vec!["a"; 3])` when mock returns HTTP 429 | `Err(PregolyaError { .. })` | error-case (rate limit) |
+| TV-004 | `embed_documents(vec!["a"; 3])` when mock returns HTTP 429 | `Err(PregolyaError { code: "E-PROV-008", .. })` | error-case (rate limit, E-PROV-008) |
 | TV-005 | Cargo.toml: `reqwest` has `default-features = false, features = ["rustls-tls"]` | Compiles; no `native-tls` dep in dependency tree | compile-time / cargo check |
+| TV-006 | `embed_documents(vec!["a"])` when mock returns HTTP 401 | `Err(PregolyaError { code: "E-PROV-004", .. })` — `ProviderAuthFailed: authentication failed`; key not in error message | error-case (auth failure, E-PROV-004) |
+| TV-007 | `embed_documents(vec!["a"])` when no server is listening at the endpoint (connection refused) | `Err(PregolyaError { code: "E-PROV-012", .. })` — `ProviderConnectionError: cannot connect to provider '...': connection refused` | error-case (connection failure, E-PROV-012) |
 
 ## Verification Properties
 

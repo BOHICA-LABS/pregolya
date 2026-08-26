@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.69"
+version: "3.70"
 status: active
 producer: state-manager
-timestamp: 2026-08-25T21:10:00Z
+timestamp: 2026-08-26T00:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.70 (BC-completeness-propagation/2026-08-26): 45 BC files updated across 7 clusters (SS-01,02,04,05,06,08,09,10,11,12,13,15,16,18,20,21,22,23); VP-015 registered and added to VP Seed BCs (BC-2.09.007 {INV-003}); error-taxonomy 120→135 ECs (15 new codes: E-SERVER-019/020/021, E-CRON-004, E-SBXD-007/008/009, E-MEMORY-009/010, E-TOOLS-010/011, E-GRAPH-018, E-PROV-013, E-SERVER-022, E-SBXD-010); ADR-014 §D7 (MMR Carbonell–Goldstein argmax) + §D8 (delete-idempotent Ok(())) + ADR-028 (multitask interrupt/enqueue/delete_threads atomic-abort/idempotency TTL) propagated. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2)."
   - "3.69 (P2A-055 gate-audit OBS-1/OBS-2/2026-08-25): VP-Seed-BCs label disambiguated (12 unique VPs / 13 BC rows / VP-014 dual-anchors BC-2.01.005+BC-2.01.006); SS-range notation canonicalized (SS-2.NN→SS-NN). No BC content/census change (133 UNCHANGED)."
   - "3.68 (P2A-048/2026-08-24): BC-2.20.003 (v1.9→v1.10): PRE-001 stale borrowed `&dyn VectorStore` → owned `Arc<dyn VectorStore>` (D-48 v1.5 sweep straggler; PRE-001 omitted from the enumerated-clause sweep; F-048-02). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). EC census UNCHANGED: 120."
   - "3.67 (P2A-046/2026-08-24): BC-2.18.002 (v2.3→v2.4): INV-007 added — SlotTrustPolicy enum shape (F-1; S-2.04 AC-014 anchor). F-3 same-BC self-ref ordinal normalization: BC-2.07.003 (v1.6→v1.7), BC-2.08.007 (v2.0→v2.1), BC-2.08.014 (v1.8→v1.9), BC-2.11.005 (v1.6→v1.7), BC-2.12.003 (v1.10→v1.11), BC-2.23.001 (v1.11→v1.12), BC-2.23.002 (v2.2→v2.3), BC-2.23.003 (v1.11→v1.12), BC-2.23.006 (v2.3→v2.4). BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2). EC census UNCHANGED: 120."
@@ -89,16 +90,17 @@ changelog:
 
 # BC-INDEX: pregolya Behavioral Contracts
 
-> **133 BCs total — 51 P0 / 79 P1 / 3 P2 | 11 Red Gate | 12 VP Seed | 14 VPs registered**
+> **133 BCs total — 51 P0 / 79 P1 / 3 P2 | 11 Red Gate | 13 VP Seed | 15 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
 > SS-23 (First-Party Tools) added D23 first-class approval hook + compaction expansion (2026-07-22).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
-> VP-INDEX: 14 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
+> VP-INDEX: 15 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
 > VP-006–VP-010 assigned in VP-INDEX (burst-223, 2026-07-21) and authored — VP-006.md–VP-010.md all complete;
 > VP-011–VP-013 seeds assigned D23 burst-232 and authored — VP-011.md–VP-013.md all complete;
-> VP-014 proptest P1 seeded burst-302b and authored — VP-014.md complete).
+> VP-014 proptest P1 seeded burst-302b and authored — VP-014.md complete;
+> VP-015 unit P1 seeded BC-completeness-propagation burst and authored — VP-015.md complete).
 
 ## Summary
 
@@ -109,7 +111,7 @@ changelog:
 | Priority P1 | 79 |
 | Priority P2 | 3 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 12 unique VPs (13 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006) |
+| VP Seed BCs | 13 unique VPs (14 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006) |
 | Subsection groups | 23 (SS-01 – SS-23) |
 
 ## Red Gate BCs
@@ -144,8 +146,9 @@ changelog:
 | VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani | ADR-019 Decision 3 |
 | VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani | ADR-020 Decision 3 |
 | VP-014 | BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | Proptest | DI-016 key-completeness (ADR-026 §Decision 1) |
+| VP-015 | BC-2.09.007 | MCP Server Tool Invocation — Credential Redaction Before Transmission | Unit | DI-010 credential opacity (CWE-532; BC-2.09.007 {INV-003}) |
 
-_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17). All 14 VP body files (VP-001 through VP-014) exist as of burst-302b._
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26). All 15 VP body files (VP-001 through VP-015) exist as of BC-completeness-propagation burst._
 
 ## Full BC Catalog
 
@@ -213,7 +216,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | CAP-010 | | DI-014 | P1 | **RG** | | ss-09/BC-2.09.004.md |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | CAP-010 | | DI-014 | P1 | **RG** | | ss-09/BC-2.09.005.md |
 | BC-2.09.006 | MCP Server Tool Advertisement (tools/list; mcp::server) | CAP-021 | | DI-008,DI-014 | P1 | | | ss-09/BC-2.09.006.md |
-| BC-2.09.007 | MCP Server Tool Invocation (tools/call; External Client Executes Registered Tool) | CAP-021 | | DI-008,DI-010,DI-014 | P1 | | | ss-09/BC-2.09.007.md |
+| BC-2.09.007 | MCP Server Tool Invocation (tools/call; External Client Executes Registered Tool) | CAP-021 | | DI-008,DI-010,DI-014 | P1 | | **VP** | ss-09/BC-2.09.007.md |
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent | CAP-012 | | | P0 | | | ss-10/BC-2.10.001.md |
 | BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | CAP-012 | | | P0 | | | ss-10/BC-2.10.002.md |
 | BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt \| summarize); Remaining-Budget Exposure | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
@@ -302,6 +305,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.70 | 2026-08-26 | BC-completeness-propagation: 45 BC files updated (7 clusters SS-01 through SS-23); VP-015 registered (BC-2.09.007 {INV-003}; VP Seed BCs 12→13; VP count 14→15); BC-2.09.007 Full-Catalog VP column → **VP**; preamble note updated 14→15 VPs; error-taxonomy 120→135 ECs (15 new codes per ADR-028 + cluster propagation); ADR-014 §D7 MMR + §D8 delete-idempotent + ADR-028 multitask propagated. BC census UNCHANGED: 133 (51 P0 / 79 P1 / 3 P2). | BC-completeness-propagation D-272 |
 | 3.65 | 2026-08-24 | P2A-044: BC-2.12.002 (v1.10→v1.12) PC-024 PATCH-not-found authored (F-07); BC-2.12.003 (v1.8→v1.10) EC-006/E-SERVER-018 authored (F-08); corpus-wide compressed-ordinal→stable-tag normalization ~35 files (F-06); EPIC-MAINT points TBD→5 (F-09). EC 119→120. BC census UNCHANGED 133. | P2A-044 |
 | 3.61 | 2026-08-23 | M1/ADR-027: M1 chunk 3 — 39 BC version bumps (SS-14 ×6, SS-15 ×6, SS-18 ×5, SS-19 ×6, SS-20 ×3, SS-21 ×4, SS-22 ×3, SS-23 ×6); purely additive clause-anchor labeling per ADR-027; EC content untouched. Incidental input-hash corrections on BC-2.18.004, BC-2.18.005, BC-2.20.003, BC-2.21.003, BC-2.21.004. M1 COMPLETE — all 133/133 BCs labeled. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | M1/ADR-027/D-252 |
 | 3.60 | 2026-08-23 | P2A-041-F-3: BC-2.18.002 (v1.9→v2.0) — disambiguated precondition-2 vs postcondition-2 changelog notation across v1.2/v1.3/v1.7/v1.9 entries; no clause content change. BC census UNCHANGED 133 (51 P0 / 79 P1 / 3 P2). | P2A-041 F-3 |

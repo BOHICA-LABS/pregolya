@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.006
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -14,7 +14,7 @@ crate: pregolya-graph
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 di_anchors: [DI-014]
 vp_seed: false
 red_gate: false
@@ -27,6 +27,7 @@ changelog:
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.24 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (P2A-044 F-06/2026-08-24): P2A-044 F-06: final compressed/mixed-case/range ordinal citations normalized to stable tags."
+  - "1.8 (B-SS15-18-hardening-arch-adjudication/2026-08-26): {INV-006} added (OnCeiling::Halt takes unconditional precedence over compaction failure — architect adjudicated ordering); EC-006 (compaction failure coincident with OnCeiling::Halt) and TV-005 added."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -116,6 +117,14 @@ host to update context-window visualization without polling.
   must not be omitted from the wire payload.
 - {INV-004} `StreamEvent` variants are typed enum members (BC-2.06.001 invariant).
 - {INV-005} **DI-014:** The event payload must not be silently dropped; fire-and-forget semantics apply.
+- {INV-006} **OnCeiling::Halt takes unconditional precedence over compaction failure (ADR-027 anchor: {INV-006}):**
+  When `compact()` returns `Err` and the run continues without compaction (per {PC-003}),
+  the `BudgetEngine` STILL evaluates the `OnCeiling` condition for the current turn.
+  If `OnCeiling::Halt` is configured and the ceiling is crossed in the same turn as the
+  compaction failure, the Halt fires and the run terminates with
+  `Err(E-BUDGET-001 BudgetCeilingReached)`. The compaction error is logged as a diagnostic
+  trace event, NOT propagated as the terminal error. Ceiling evaluation is always the
+  final step in the turn cycle, after compaction-attempt-or-skip.
 
 ## Edge Cases
 
@@ -126,6 +135,7 @@ host to update context-window visualization without polling.
 | EC-003 | Compaction fires twice in one run (trigger crosses watermark again after first compaction) | Two `compaction_event` events emitted in sequence; each reflects its respective compacted range |
 | EC-004 | Stream consumer disconnected before event | Event dropped; engine does not block; run continues normally |
 | EC-005 | `compacted_start..=compacted_end` spans the full conversation history | Event emitted with `compacted_start: 0, compacted_end: <last_turn>` |
+| {EC-006} | `compact()` returns `Err` (compaction fails); in the same turn, the token ceiling is crossed and `OnCeiling::Halt` is configured | No `compaction_event` emitted (per {PC-003}); compaction error logged as trace diagnostic only (not the terminal error); Halt fires unconditionally; caller receives `Err(E-BUDGET-001 BudgetCeilingReached)`, NOT a compaction error |
 
 ## Canonical Test Vectors
 
@@ -135,6 +145,7 @@ host to update context-window visualization without polling.
 | TV-002 | `CompactionTrigger::Disabled` | No `compaction_event` in stream across full run | no-emission (disabled) |
 | TV-003 | compact() returns Err | No `compaction_event`; run continues; error observable via EvidenceJournal only | error — no event |
 | TV-004 | OnMessageCount trigger fires; 5 turns compacted | `CompactionEvent { run_id: "<uuid>", parent_ids: [], trigger: "OnMessageCount", compacted_start: 0, compacted_end: 4, ... }` | message-count trigger |
+| TV-005 | `OnCeiling::Halt` configured; compaction trigger fires but `compact()` returns `Err`; ceiling crossed in same turn | No `compaction_event` emitted; run terminates with `Err(E-BUDGET-001 BudgetCeilingReached)` — compaction error is trace-logged only, NOT the terminal error | {EC-006} — Halt precedence over compaction failure |
 
 ## Verification Properties
 

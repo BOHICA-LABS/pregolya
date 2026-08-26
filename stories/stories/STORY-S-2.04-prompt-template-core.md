@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.04
 epic_id: E-18
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "308f247"
+input-hash: "c23ad27"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
@@ -205,6 +205,16 @@ propagates as `Err(PregolyaError)`. The failing example is NOT silently skipped;
 `format_messages` returns the first render error encountered.
 Verified by `test_BC_2_18_003_few_shot_example_render_error_propagates()`.
 
+### AC-023 (traces to BC-2.18.003 PC-009)
+`FewShotPromptTemplate` output provenance: each `HumanMessage` produced from a few-shot
+example pair carries `MessageProvenance.trust_level = example_input.trust_level`, and
+each `AiMessage` produced carries `MessageProvenance.trust_level = example_output.trust_level`.
+When `example_input.trust_level` or `example_output.trust_level` is `None`, that message
+is treated as `Trusted` by downstream consumers (absent classification; developer-supplied
+content). This ensures that the trust provenance of few-shot examples flows through to the
+assembled `PromptValue.Messages` — critical for injection-guard compatibility in S-2.05.
+Verified by `test_BC_2_18_003_fewshot_output_provenance_trust_level()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -240,20 +250,20 @@ Verified by `test_BC_2_18_003_few_shot_example_render_error_propagates()`.
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~5,500 |
+| This story spec | ~5,800 |
 | BC files (3 BCs) | ~9,000 |
 | `module-decomposition.md` (SS-18 section) | ~400 |
 | ADR-015 prompt template injection safety | ~2,500 |
 | Module files (~80 lines each × 5 files) | ~3,500 |
 | Test files (~130 lines) | ~1,900 |
 | Tool outputs | ~500 |
-| **Total** | **~23,300** |
+| **Total** | **~23,600** |
 | Agent context window | 200K (Sonnet) |
 | **Budget usage** | **~12%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-022 (test-writer)
+1. [ ] Write failing tests for AC-001 through AC-023 (test-writer)
 2. [ ] Verify Red Gate (this story has no Red Gate BCs — proceed to implementation after test stubs)
 3. [ ] Create `pregolya-prompts/Cargo.toml` — new crate; depends on pregolya-core, serde, serde_json
 4. [ ] Create `pregolya-prompts/src/template_input.rs` — `TemplateInput` enum (`#[non_exhaustive]`), `TemplateVar` newtype, `MessageListVar` struct (`messages: Vec<Message>`, `trust_level: Option<TrustLevel>`; `#[non_exhaustive]`), `SlotTrustPolicy` enum
@@ -324,4 +334,5 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
 - "1.3 (P2A-046/2026-08-24): F-1 remove SS-18 BC 5 (SlotTrustPolicy fail-closed enforcement; reference-not-coverage in this story; full coverage anchored to S-2.05); F-2 inputs+Token-Budget corrected to 3 BCs; AC-014 re-anchored from removed BC PC-001 → BC-2.18.002 INV-007 (SlotTrustPolicy enum shape)."
 - "1.4 (P2A-047/2026-08-24): F-047-01: verification_properties frontmatter cleared to [] — VP-2.18.003-A and VP-2.18.003-B are BC-local (BC-2.18.003) and are not registered in VP-INDEX; they remain documented in AC-017 and AC-018 body traces per STORY-INDEX §Conventions."
+- "1.5 (SW-4/BC-completeness/2026-08-26): BC-2.18.003 propagation — AC-023 added for PC-009 FewShot output provenance (HumanMessage.trust_level = example_input.trust_level; AiMessage.trust_level = example_output.trust_level; None treated as Trusted downstream); input-hash updated c23ad27."
 

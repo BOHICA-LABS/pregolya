@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.013
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -15,10 +15,11 @@ changelog:
   - "1.2 (F-P108-03, 2026-07-18): EC-002 expanded from 2-field catch-all `{ dialect, reason }` to 4-field explicit struct `{ dialect, element, offset, parse_error }`. Adjudication: the taxonomy Message Format for E-PROV-009 has 4 distinct placeholders (`<dialect>`, `<element>`, `<n>`, `<parse_error>`); the `<n>` offset is MID-message (not trailing), making a catch-all `reason` structurally unable to render independent `<element>` and `<n>` values. Expanded variant: `{ dialect: \"HermesChatMlXml\", element: \"<tool_call>\", offset: 2, parse_error: \"key must be a string\" }`. Sibling sweep (all E-PROV-009 sites in this BC): PC8 uses PregolyaError message-template form (correctly shows 4 values in message string); PC9, EC-005, TV-006 use bare form (no struct fields; not subject to parity check). No taxonomy change needed — E-PROV-009 message format already shows 4 placeholders."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.08 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (burst-B-SS07-08/bc-completeness-scan-P2/2026-08-26): Resolve Phase-2 BC-completeness-scan gap SS-07..08: INV-005 added — fail-fast on any parse failure in a multi-tool-call response; no partial ToolCall list returned (DI-014 enforcement). EC-006 added — multi-tool-call mixed-validity → fail-fast Err(E-PROV-009), zero ToolCall objects returned for the entire response even when some entries parsed successfully. TV-007 added for fail-fast mixed-validity path."
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
 inputs:
@@ -112,6 +113,13 @@ when dialect parsing fails.
 - {INV-004} **No implicit dialect fallback:** if the configured dialect fails to parse the response,
   the error is E-PROV-009. pregolya does NOT auto-detect an alternative dialect
   from the response format.
+- {INV-005} **Fail-fast on any parse failure in a multi-tool-call response:** When a provider
+  response contains multiple tool call entries (e.g., a `tool_calls` JSON array of length ≥ 2,
+  or multiple `<tool_call>` Hermes XML tags) and any one entry fails dialect parsing, the entire
+  tool-call extraction returns `Err(E-PROV-009 ToolCallDialectParseError)`. No partial
+  `Vec<ContentBlock::ToolCall>` is ever returned for the successfully-parsed entries alongside the
+  error (DI-014: no silent data loss). Parsing stops at the first invalid entry and the error is
+  propagated immediately. The definitive specification is in EC-006.
 
 ## Edge Cases
 
@@ -142,6 +150,19 @@ blocks. This is a valid model decision not to call a tool; not an error.
 **Expected behavior:** `Err(E-PROV-009 ToolCallDialectParseError)` propagated to the caller
 with the implementor's error message embedded. (DI-014: error not swallowed.)
 
+### EC-006: Multi-tool-call response with mixed-validity entries (fail-fast)
+**Scenario:** A provider response contains multiple tool call entries — e.g., an OpenAI
+`tool_calls` array of length ≥ 2, or multiple `<tool_call>` Hermes XML tags — and at least one
+entry fails to parse (malformed JSON, missing required field, or dialect deserialization error)
+while the remaining entries would parse successfully.
+**Expected behavior:** **Fail-fast.** The entire response is returned as
+`Err(PregolyaError { component: PROV, category: VAL, code: "E-PROV-009",
+message: "ToolCallDialectParseError: <dialect> <element> failed at response offset <n>:
+<parse_error>", retry_hint: Never })`. No partial `Vec<ContentBlock::ToolCall>` is returned
+for the successfully-parsed entries. Parsing stops at the first invalid entry; the error is
+propagated immediately. The caller must handle the `Err` for the entire invocation — no partial
+tool-call list is ever returned alongside a parse error (INV-005).
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -152,6 +173,7 @@ with the implementor's error message embedded. (DI-014: error not swallowed.)
 | TV-004 | `HermesChatMlXml`; model response `<tool_call>{"name":"get_weather","arguments":{"location":"Paris"}}</tool_call>` | `ToolCall { name: "get_weather", args: {"location": "Paris"} }` | Hermes XML parse |
 | TV-005 | `HermesChatMlXml`; response with text + tool_call tag | `[Text("…"), ToolCall{…}]` in content | Mixed text + tool call |
 | TV-006 | `HermesChatMlXml`; malformed JSON in `<tool_call>` tag | `Err(E-PROV-009 ToolCallDialectParseError)` | Malformed payload |
+| TV-007 | `HermesChatMlXml` response: first `<tool_call>` valid JSON `{"name":"get_weather","arguments":{"location":"Paris"}}`, second `<tool_call>` malformed `{name: bad}` | `Err(E-PROV-009 ToolCallDialectParseError { dialect: "HermesChatMlXml", element: "<tool_call>", offset: 2, parse_error: "key must be a string" })` — zero `ToolCall` objects returned; first valid entry NOT included in result (INV-005) | Fail-fast mixed-validity (EC-006) |
 
 ## Verification Properties
 

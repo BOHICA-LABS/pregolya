@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.26
 epic_id: E-14
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,6 +14,7 @@ changelog:
   - "1.4 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags — EC-001 source BC-2.12.001 EC-1→EC-001 (clause text match); EC-007 source BC-2.12.003 EC-1→EC-002 (clause text match: concurrent run / E-SERVER-012); 8 citations escalated (EC-002..006, EC-008..010): descriptions map to PCs not ECs — product-owner resolution required"
   - "1.5 (P2A-043 F-05/2026-08-24): escalated EC citations redirected/repointed per PO adjudication (incl. new BC-2.12.001 EC-006)"
   - "1.6 (P2A-044 F-01 (9th arc queued→cancelled) + F-07 (EC-005→PC-024) + F-08 (EC-008→EC-006/E-SERVER-018)/2026-08-24)"
+  - "1.7 (SW-3/P2A-BC-scan-hardening/2026-08-26): BC-completeness hardening — 7 new ACs (AC-011..AC-017) and 8 new ECs (EC-011..EC-018). BC-2.12.001: AC-011 (EC-007 POST /state thread-not-found → 404 E-SERVER-003), AC-012 (EC-008/EC-009 POST /state invalid as_node or malformed delta → 422 E-SERVER-022 reason-discriminated). BC-2.12.003: AC-013 (EC-007 enqueue queue-full → 429 E-SERVER-019), AC-014 (PC-004 ADR-028 D1 multitask=interrupt pre-empted run → cancelled), AC-015 (PC-004 ADR-028 D2 multitask=rollback → latest_completed_checkpoint_id). BC-2.12.002: AC-016 (EC-003 delete_threads=true active constituent run → 409 E-SERVER-008 atomic-abort), AC-017 (EC-007 PATCH empty graph_id → 400 E-SERVER-020). BC-table version column removed (D-50 anti-version-pin). Token-budget revised (~52,500)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.001.md
@@ -21,7 +22,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "7ac2f41"
+input-hash: "c9149ea"
 traces_to:
   - behavioral-contracts/BC-2.12.001
   - behavioral-contracts/BC-2.12.002
@@ -53,13 +54,13 @@ As an API consumer, I want Thread, Assistant, and Run CRUD endpoints so that I c
 
 | Context Component | Estimated Tokens |
 |-------------------|-----------------|
-| This story spec | ~5,000 |
-| BC files (3 BCs: BC-2.12.001–003) | ~11,000 |
+| This story spec | ~7,500 |
+| BC files (3 BCs: BC-2.12.001–003) | ~13,000 |
 | Architecture module-decomposition.md | ~3,000 |
 | Target source files (pregolya-server/src/routes/) | ~12,000 |
-| Test files | ~12,000 |
+| Test files | ~15,000 |
 | S-1.16 (BSP super-step determinism) route scaffolding | ~2,000 |
-| **Total estimate** | **~45,000** |
+| **Total estimate** | **~52,500** |
 
 Comfortable within context window. No split required.
 
@@ -113,6 +114,34 @@ When creating a run, merge precedence for `configurable`: run-provided values wi
 A run in `interrupted` state (awaiting HITL approval) can be transitioned to `cancelled` without going through `in_progress`. `DELETE /threads/:id/runs/:run_id` or a cancel API call on an `interrupted` run results in `cancelled` state.
 (traces to BC-2.12.003 PC-010)
 
+### AC-011: POST /state on non-existent thread → 404 E-SERVER-003
+`POST /threads/:id/state { values: { ... } }` where thread `:id` does not exist returns HTTP 404 `{ code: "E-SERVER-003", message: "ThreadNotFound: thread '<id>' does not exist" }`. No state mutation occurs.
+(traces to BC-2.12.001 EC-007)
+
+### AC-012: POST /state invalid as_node or malformed delta → 422 E-SERVER-022 (reason-discriminated)
+`POST /threads/:id/state` returns HTTP 422 `E-SERVER-022 StateUpdateInvalid` in two scenarios distinguished by the `<reason>` field: (a) `as_node` is provided but does not refer to a valid node in the associated graph definition — message: `"StateUpdateInvalid: state update for thread '<thread_id>' rejected: as_node '<node>' is not registered in the graph"`; (b) the `values` delta contains a field whose type is incompatible with the graph's state schema — message: `"StateUpdateInvalid: state update for thread '<thread_id>' rejected: field '<field>' type incompatible: expected <type>, got <actual>"`. Both scenarios use the single code E-SERVER-022; the `<reason>` clause discriminates them.
+(traces to BC-2.12.001 EC-008, BC-2.12.001 EC-009)
+
+### AC-013: Run enqueue queue-full → 429 E-SERVER-019
+`POST /threads/:id/runs { multitask_strategy: "enqueue" }` when the thread's `queued` Run count has already reached `max_queued_runs` (default 10, configurable per server-instance at startup) returns HTTP 429 `{ code: "E-SERVER-019", message: "RunQueueFull: thread '<thread_id>' already has <queue_depth> queued run(s); max_queued_runs=<max_queued_runs>" }`. No new Run is created. The caller should wait for the `in_progress` Run to reach a terminal state (freeing a slot) before retrying (ADR-028 Decision 3).
+(traces to BC-2.12.003 PC-004, BC-2.12.003 EC-007)
+
+### AC-014: multitask_strategy=interrupt — pre-empted run transitions to cancelled (ADR-028 D1)
+`POST /threads/:id/runs { multitask_strategy: "interrupt" }` when a Run is already `queued` or `in_progress` on the thread: the pre-empted Run transitions to `cancelled` (NOT `interrupted` — `interrupted` is reserved for HITL-pause). The new Run enters `queued` immediately and the server returns HTTP 202. The executor MUST NOT start the new Run until the pre-empted Run's `cancelled` state is durably written to the RunStore. If the pre-empted Run is `queued` (not yet started), it transitions `queued → cancelled` without ever reaching `in_progress`.
+(traces to BC-2.12.003 PC-004)
+
+### AC-015: multitask_strategy=rollback — thread checkpoint reset to latest_completed_checkpoint_id (ADR-028 D2)
+`POST /threads/:id/runs { multitask_strategy: "rollback" }` when a Run is active: (1) the pre-empted Run transitions to `cancelled`; (2) all checkpoint rows with `checkpoint_id > latest_completed_checkpoint_id` (captured at the moment `POST .../runs` is processed) are deleted for this thread; (3) the thread's `current_checkpoint` pointer is reset to `latest_completed_checkpoint_id`; (4) the new Run starts against the rolled-back state. If the thread has no prior completed checkpoint, the rollback target is the empty thread state. Partial rollback is not permitted — if checkpoint discard fails, returns `E-CHKPT-001 CheckpointWriteFailed` and the new Run is NOT started.
+(traces to BC-2.12.003 PC-004)
+
+### AC-016: DELETE assistant delete_threads=true with active constituent run → 409 E-SERVER-008
+`DELETE /assistants/:id?delete_threads=true` when any constituent thread has a Run currently in `queued` or `in_progress` state returns HTTP 409 `{ code: "E-SERVER-008", message: "ThreadStateConflict: thread '<thread_id>' has an active run '<run_id>'; cascade delete aborted — assistant '<assistant_id>' and no thread records were modified" }`. Neither the assistant record nor any thread record is modified (atomic-abort, no partial deletion per ADR-028 Decision 4). The caller must cancel all active runs on all constituent threads before retrying.
+(traces to BC-2.12.002 EC-003)
+
+### AC-017: PATCH assistant with empty graph_id → 400 E-SERVER-020
+`PATCH /assistants/:id { "graph_id": "" }` returns HTTP 400 `{ code: "E-SERVER-020", message: "Validation failed for 'graph_id': must not be empty" }`. No new version is created; the assistant record is not modified. `graph_id` is a required non-empty field (BC-2.12.002 INV-004); the empty-string update is rejected at request validation time before any store operation.
+(traces to BC-2.12.002 EC-007, BC-2.12.002 INV-004)
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
@@ -155,6 +184,14 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 | EC-008 | BC-2.12.003 EC-006 | Transition to invalid state | `E-SERVER-018` RunStateConflict (HTTP 409) |
 | EC-009 | BC-2.12.003 PC-019 | summary_halt run DELETE | Allowed directly (no cancel required) |
 | EC-010 | BC-2.12.003 PC-007, PC-010 | interrupted → cancelled | Valid arc; run moves to cancelled |
+| EC-011 | BC-2.12.001 EC-007 | POST /state on non-existent thread | HTTP 404 E-SERVER-003 ThreadNotFound |
+| EC-012 | BC-2.12.001 EC-008 | POST /state with invalid as_node (node not in graph) | HTTP 422 E-SERVER-022 StateUpdateInvalid |
+| EC-013 | BC-2.12.001 EC-009 | POST /state with malformed delta (type-incompatible field) | HTTP 422 E-SERVER-022 StateUpdateInvalid (reason-discriminated) |
+| EC-014 | BC-2.12.003 EC-007 | multitask=enqueue — max_queued_runs reached | HTTP 429 E-SERVER-019 RunQueueFull |
+| EC-015 | BC-2.12.003 PC-004 | multitask=interrupt — pre-empted run sibling-preempted | Transitions to `cancelled` (not `interrupted`); new run enters `queued` |
+| EC-016 | BC-2.12.003 PC-004 | multitask=rollback — pre-empted run + checkpoint state | Pre-empted → `cancelled`; checkpoint rows above `latest_completed_checkpoint_id` deleted; pointer reset |
+| EC-017 | BC-2.12.002 EC-003 | DELETE assistant delete_threads=true with active constituent run | HTTP 409 E-SERVER-008; no partial deletion (ADR-028 D4) |
+| EC-018 | BC-2.12.002 EC-007 | PATCH assistant with empty graph_id | HTTP 400 E-SERVER-020 AssistantFieldInvalid |
 
 ## Tasks
 
@@ -166,12 +203,17 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 - [ ] Create `crates/pregolya-server/src/models/assistant.rs` — `Assistant`, `AssistantVersion` structs
 - [ ] Create `crates/pregolya-server/src/store/thread.rs` — `ThreadStore` trait
 - [ ] Create `crates/pregolya-server/src/store/assistant.rs` — `AssistantStore` trait
-- [ ] Write failing tests for AC-001..AC-010 before any implementation
+- [ ] Write failing tests for AC-001..AC-017 before any implementation
 - [ ] Implement `validate_state_transition` — 9-arc validation (including `queued → cancelled` and `interrupted → cancelled`)
 - [ ] Implement `configurable_merge` — leaf-level map merge, run wins
 - [ ] Implement Thread routes: POST, GET, LIST (limit clamp), DELETE (cascade)
-- [ ] Implement Assistant routes: POST, GET, PATCH (new version), versions list (ASC)
+- [ ] Implement POST /threads/:id/state — three error paths: thread-not-found (404 E-SERVER-003, AC-011), invalid as_node (422 E-SERVER-022, AC-012), malformed delta type-check (422 E-SERVER-022 reason-discriminated, AC-012)
+- [ ] Implement Assistant routes: POST, GET, PATCH (new version; validate graph_id non-empty → 400 E-SERVER-020, AC-017), versions list (ASC)
+- [ ] Implement DELETE /assistants?delete_threads=true active-run guard (409 E-SERVER-008, AC-016)
 - [ ] Implement Run routes: POST (queued), GET, state transition, DELETE
+- [ ] Implement multitask_strategy dispatch: interrupt (pre-empted → cancelled, new → queued, ADR-028 D1, AC-014)
+- [ ] Implement multitask_strategy dispatch: rollback (pre-empted → cancelled, delete checkpoint rows above latest_completed_checkpoint_id, reset pointer, ADR-028 D2, AC-015)
+- [ ] Implement multitask_strategy dispatch: enqueue (FIFO queue, max_queued_runs=10 configurable, 429 E-SERVER-019 on full, ADR-028 D3, AC-013)
 - [ ] Run `just iter pregolya-server` — all tests green
 
 ## Previous Story Intelligence

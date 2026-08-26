@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.22.001
-version: "1.11"
+version: "1.12"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -31,6 +31,7 @@ changelog:
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.09 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
+  - "1.12 (B-SS19-23/embed-query-dimension/2026-08-26): PC-003 embed_query dimension guarantee narrowed — removed ambiguous 'declared dimension' language (dimension not exposed by trait). New guarantee: Ok(vec) has vec.len() >= 1 (non-empty) and equals embed_documents inner length (INV-003); zero-length vector → Err(E-EMBED-001). Note added: dimension observable only by calling embed_query/embed_documents and inspecting output length; consumers cache observed length or use validate_embedding_batch (INV-006). No new error code needed — E-EMBED-001 already covers zero-length vector. LOW gap from bc-completeness-scan Phase-2 Burst B."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-031
   - architecture/decisions/ADR-017-embeddings-trait-provider-integration.md
@@ -84,9 +85,15 @@ without E0038. VP-008: proptest dimensionality invariant for any valid `Embeddin
      `Err(PregolyaError { .. })` for the whole call — NO silent truncation to a partial
      result set, NO `Vec::new()` fallback (DI-014).
 3. {PC-003} `embed_query(&self, text) → Result<Vec<f32>, PregolyaError>`:
-   - `Ok(vec)` where `vec.len() == d` — same dimension as `embed_documents` inner vectors.
-   - If the returned vector length differs from the model's declared dimension:
-     `Err(E-EMBED-001)`.
+   - `Ok(vec)` where `vec.len() >= 1` (non-empty) and `vec.len()` equals the inner vector
+     length of `embed_documents` output for the same model and config (INV-003 cross-method
+     consistency guarantee).
+   - A zero-length vector (`vec.len() == 0`) is a dimensionality violation → `Err(E-EMBED-001)`.
+   - Note: the `Embeddings` trait does not expose a dedicated dimension-accessor method; the
+     embedding dimension is observable only by calling `embed_query` (or `embed_documents`)
+     and inspecting the `Ok` output length. Consumers needing a concrete dimension value should
+     call `embed_query` once on a representative text and cache the observed length, or use
+     `validate_embedding_batch` (INV-006) as the enforcement point for batch consistency.
 4. {PC-004} The dimension `d` is model-specific and implementation-defined; it is NOT part of the
    trait signature. Consumers who need dimensionality checking (e.g., VectorStore mismatch)
    check externally — the trait guarantees internal consistency, not a fixed dimension.

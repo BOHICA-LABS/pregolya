@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.001
-version: "1.6"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,14 +13,16 @@ capability: CAP-009
 wave: 2
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56-COMPLETION): Gate #30 second-pass census — EC-003 had `Err(PregolyaError { category: TRANSPORT, … })` (Unicode-ellipsis form) without specifying a code in this BC. Added code: E-PROV-003 (StreamInterrupted) explicitly to EC-003 per gate #30 rule: ellipsis forms are exempt only if the BC itself specifies the code for that path. Code confirmed from cross-referenced BC-2.08.007 EC-001/TV-001."
-  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md v1.10."
+  - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-<provider> / pregolya-standard-tests per module-decomposition.md."
   - "1.3 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. EC-003 carried `Err(PregolyaError { category: TRANSPORT, code: E-PROV-003, … })` with Unicode-ellipsis abbreviation; cross-BC reference to BC-2.08.007 does not satisfy PASS-ABBREV (same-BC requirement). Expanded `…` to explicit inline message template with `<provider>` and `<tokens>` placeholders; cross-BC reference retained as informational note."
   - "1.4 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). §EC-003: PregolyaError value-observation in prose missing required `..` rest pattern (partial fields: category, code, message; missing component, retry_hint); added `, ..` before closing `}`. All occurrences reconciled: 1 corrected (Class 3), 2 exempt (changelog)."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (burst-B-SS07-08/bc-completeness-scan-P2/2026-08-26): Resolve Phase-2 BC-completeness-scan gap SS-07..08: EC-005 added — malformed v3 stream protocol content at runtime (structurally invalid SSE event payload, distinct from EC-003 TCP transport reset); typed Err uses E-PROV-009 as NEAREST-FIT (no dedicated stream-protocol-violation code exists; NEEDS-NEW-CODE flag in manifest). INV-005 added — no-panic guarantee for malformed v3 stream content; all codec format violations return Err per DI-008. TV-005 added — malformed content-block-start index field → Err(E-PROV-009), no panic. Traceability updated: DI-008 added to L2 Domain Invariants (enforced by INV-005)."
+  - "1.8 (burst-A2-error-coord/P2A-BC-scan-hardening-addendum/2026-08-26): EC-005 and TV-005 repointed from NEAREST-FIT E-PROV-009 → E-PROV-013 StreamProtocolViolation (minted in error-taxonomy.md); NEAREST-FIT NOTE and NEEDS-NEW-CODE annotation removed. INV-005 updated: 'nearest-fit code' reference replaced with 'E-PROV-013'. No behavioral change — E-PROV-013 is the dedicated code that was proposed by the NEAREST-FIT note."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -31,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "86e470d"
+input-hash: "b434f06"
 extracted_from: null
 modified: []
 deprecated: null
@@ -96,6 +98,14 @@ streamed chunks must produce the same final `AiMessage` as a unary `invoke` call
   this envelope, is a conformance violation.
 - {INV-004} Deltaable blocks: accumulated deltas MUST equal the `content-block-finish` payload —
   under no circumstances may the finish payload carry extra tokens not present in deltas.
+- {INV-005} **No-panic guarantee for malformed v3 stream content:** The stream decoder MUST NOT
+  panic when it encounters structurally invalid SSE event payloads (see EC-005). All format
+  violations — invalid JSON, missing `type` discriminant, unrecognised event type, non-integer
+  block index, out-of-order protocol sequence — must be caught and returned as `Err` per EC-005.
+  This is an instance of DI-008 (library functions return `Result`, never panic on
+  provider-supplied or caller-supplied input). The no-panic obligation applies to BOTH the
+  transport-error path (EC-003: TCP reset → E-PROV-003) and the protocol-format path
+  (EC-005: malformed payload → E-PROV-013); neither path may exhibit undefined behavior.
 
 ## Edge Cases
 
@@ -127,6 +137,23 @@ layer replays a pre-recorded cassette.
 The cassette must faithfully encode SSE framing (chunk-by-chunk) — not a buffered
 single-response cassette that bypasses streaming logic.
 
+### EC-005: Malformed v3 stream protocol content (structurally invalid SSE event payload)
+**Scenario:** The SSE connection remains open and the provider is actively sending data, but
+an individual v3 stream event has a structurally invalid payload — e.g., a `content-block-start`
+event with `"index": "not-a-number"` (non-integer string), a missing `type` discriminant field,
+a `content-block-finish` with no corresponding `content-block-start`, or an unrecognised
+top-level event type that the v3 decoder cannot process. This scenario is **distinct from
+EC-003** (TCP transport reset, E-PROV-003): the TCP stream is intact; the malformation is in
+the payload content, not the transport layer.
+**Expected behavior:** The stream terminates with
+`Err(PregolyaError { component: PROV, category: VAL, code: "E-PROV-013",
+message: "StreamProtocolViolation: v3 SSE event type '<event_type>' has malformed payload: <parse_error>",
+retry_hint: Never, .. })`.
+(`<event_type>` = the event type string from the malformed event, e.g., `"content-block-start"`;
+`<parse_error>` = a description of the parse failure, e.g., `"invalid index — expected unsigned integer, got string"`.)
+No partial `AiMessage` is returned as a success value. The implementation MUST NOT panic on
+any form of malformed v3 content — all codec format violations return `Err` per INV-005.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -135,6 +162,7 @@ single-response cassette that bypasses streaming logic.
 | TV-002 | v3 stream oracle applied to TV-001 stream | Oracle reports: PASS (message-start present, message-finish present, indices sequential, deltas consistent) | v3 protocol compliance |
 | TV-003 | `stream("Say hello")` concat vs `invoke("Say hello")` unary | Texts are equal (DI-011) | Streaming/unary equivalence |
 | TV-004 | Stream with 2 text blocks interleaved | Block 0 and block 1 indices non-overlapping; both accumulate independently | Multi-block streaming |
+| TV-005 | v3 stream event: `content-block-start` with `"index": "not-a-number"` (non-integer string) via fixture | `Err(PregolyaError { component: PROV, category: VAL, code: "E-PROV-013", message: "StreamProtocolViolation: v3 SSE event type 'content-block-start' has malformed payload: invalid index — expected unsigned integer, got string", retry_hint: Never, .. })`; no partial `AiMessage` returned; no panic (INV-005) | Malformed protocol content (EC-005) |
 
 ## Verification Properties
 
@@ -171,7 +199,7 @@ S-2.07
 |-------|-------|
 | Source L2 Capability | CAP-009, CAP-011 |
 | Capability Anchor Justification | CAP-009 ("Provider-Conformant Chat Model Interface") per capabilities-p1-p2.md §CAP-009 — this BC specifies the streaming conformance gate every provider interface implementation must pass; CAP-011 ("Provider Conformance Suite (Standard Tests)") per capabilities-p1-p2.md §CAP-011 — this BC is the direct behavioral expression of the streaming subset of pregolya-standard-tests |
-| L2 Domain Invariants | DI-011 (Streaming / Unary Run Equivalence) |
+| L2 Domain Invariants | DI-011 (Streaming / Unary Run Equivalence), DI-008 (Library Constructor Result Contract — stream decoder must return `Err`, not panic, for malformed v3 event content; INV-005 enforcement) |
 | NE References | — |
 | Priority | P1 |
 | Wave | Wave 2 |

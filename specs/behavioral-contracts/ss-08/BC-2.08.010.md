@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.010
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-002
 wave: 1
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
   - architecture/decisions/ADR-004-serde-schemars-schema-generation.md
@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-004-serde-schemars-schema-generation.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
-input-hash: "c7d1605"
+input-hash: "a76765b"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (D23/2026-07-22): Add optional `action_risk` attribute parameter (`action_risk = ActionRisk::High`) per ADR-018 Decision 6. PC3 updated to document optional attribute; PC1 extended with `action_risk()` method on generated struct; `ToolCallPreview.action_risk` carries the value when `pre_tool_dispatch` hook is called. New EC-005: omitting `action_risk` defaults to `None` (no risk tier constraint). Related BCs: BC-2.05.004 and BC-2.23.005 forward refs added."
@@ -34,6 +34,7 @@ changelog:
   - "1.3 (F-P171a-09+F-P171a-03sibling/burst-273/2026-07-25): (1) F-P171a-09: PC-1 action_risk() bullet extended with ADR-008 Decision 2 emitted-path contract: macro expansion emits ::pregolya_core::action_risk::ActionRisk::<Variant> (fully-qualified path); MUST NOT assume ActionRisk in annotated crate scope; omitting action_risk → ToolCallPreview.action_risk = None with no default variant applied by framework. (2) F-P171a-03 sibling: Related BCs BC-2.23.005 annotation corrected — 'BashTool sets action_risk = ActionRisk::Medium as a risk floor' was wrong on two counts: default annotation is ActionRisk::High (not Medium); Medium is the non-lowerable floor. Fixed to 'BashTool declares action_risk = ActionRisk::High and enforces a non-lowerable Medium floor'."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (burst-B-SS07-08/bc-completeness-scan-P2/2026-08-26): Resolve Phase-2 BC-completeness-scan gap SS-07..08: PC-006 added — tool-collection assembly DuplicateName → E-TOOLS-010 DuplicateToolName (VAL, broken, Never); EC-002 updated to cite E-TOOLS-010 explicitly with message template and first-registered-retained semantics; TV-006 added for duplicate-name assembly path. ANCHOR NOTE: error-taxonomy.md anchors E-TOOLS-010 to 'BC-2.08.010 PC-003' (the Send+Sync postcondition); actual owning clause is PC-006 (added this burst); anchor will need correction in a subsequent coordinator sweep."
 extracted_from: null
 modified: []
 deprecated: null
@@ -90,6 +91,16 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
    `Result<T, PregolyaError>` (see EC-003 for compile-time rejection). No generated code
    uses `.unwrap()` or `.expect()` in non-test contexts.
 5. {PC-005} The expansion compiles without any `#[allow(unused)]` suppressions in non-test code.
+6. {PC-006} At tool-collection assembly time, if a second `Tool` implementor is registered under a
+   name already occupied in the collection (i.e., two tools share the same `tool.name()` return
+   value), the registration call returns
+   `Err(PregolyaError { component: TOOLS, category: VAL, code: "E-TOOLS-010",
+   message: "DuplicateToolName: tool name '<name>' is already registered", retry_hint: Never })`.
+   The first-registered tool is retained; no partial or silent collection mutation occurs. Detection
+   is at collection-assembly time, not at compile time (compile-time conflict produces different
+   struct names; see EC-002). This postcondition applies to any tool-collection type that enforces
+   name uniqueness (e.g., `ToolRegistry`, `MultiServerMcpClient` tool assembly). This is the
+   **owning postcondition clause** for E-TOOLS-010 DuplicateToolName per error-taxonomy.md §Component: TOOLS (pregolya-tools).
 
 ## Invariants
 
@@ -113,12 +124,17 @@ type MUST have a committed snapshot test per BC-2.08.009 (schema naming stabilit
 **Expected behavior:** Compile-time error from schemars bounds check. Error message cites
 the missing `JsonSchema` impl on `MyCustomType`. No runtime failure.
 
-### EC-002: Duplicate tool name in the same crate
-**Scenario:** Two `#[pregolya::tool(name = "search_web")]` annotations in the same module.
-**Expected behavior:** The generated struct names differ (based on function names), but the
-runtime `name()` string is duplicated. Duplicate tool names in a single `MultiServerMcpClient`
-config produce an `Err(ToolRegistrationError::DuplicateName)` at registration time, not at
-compile time.
+### EC-002: Duplicate tool name at tool-collection assembly
+**Scenario:** Two `#[pregolya::tool(name = "search_web")]` annotations (or any two `Tool`
+implementors) produce the same `name()` return value. The generated struct names differ (based
+on function names), so there is no compile-time conflict; the duplicate is detected only when
+the tools are assembled into a collection.
+**Expected behavior:** The tool-collection assembly call returns
+`Err(PregolyaError { component: TOOLS, category: VAL, code: "E-TOOLS-010",
+message: "DuplicateToolName: tool name 'search_web' is already registered",
+retry_hint: Never })`. The first-registered tool is retained; the second registration attempt
+returns the error and does not mutate the collection (definitive specification in PC-006).
+Detection occurs at collection-assembly time, not at compile time.
 
 ### EC-003: Function returns non-PregolyaError error type
 **Scenario:** `#[pregolya::tool] async fn op() -> Result<String, std::io::Error>`
@@ -146,6 +162,7 @@ on the caller's behalf.
 | TV-003 | Annotated function body invoked via `tool.invoke(args)` | Async result from original function body returned unchanged | Runnable delegation |
 | TV-004 | Missing `schemars::JsonSchema` on parameter type | Compile error with descriptive message | Bound check |
 | TV-005 | `#[pregolya::tool]` with no `name` attribute | Compile error: "name is required" | Explicit contract |
+| TV-006 | Assemble a tool collection registering two tools both with `name()` == `"search_web"` | `Err(E-TOOLS-010 DuplicateToolName { name: "search_web" })`; first-registered tool retained in collection | Duplicate-name fail (EC-002 / PC-006) |
 
 ## Verification Properties
 

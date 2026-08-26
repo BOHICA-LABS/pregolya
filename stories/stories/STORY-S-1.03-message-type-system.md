@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.03
 epic_id: E-01
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.001 {PRE-004}: AC-013 strict-vs-lenient entry point (from_value_strict vs serde::Deserialize). BC-2.01.002 {PC-008}/{EC-006}: AC-014 ChatMessage arbitrary-role + missing-role E-CORE-002. BC table versions bumped."
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
   - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
@@ -17,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.002.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "e21d98d"
+input-hash: "37984fc"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]
@@ -47,8 +48,8 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.01.001 | Typed ContentBlock Sequence Construction (No Raw Content Where Typed Expected) | AC-001..AC-006 |
-| BC-2.01.002 | Message Type-Safety (AiMessage / HumanMessage / SystemMessage / ToolMessage) | AC-007..AC-012 |
+| BC-2.01.001 | Typed ContentBlock Sequence Construction (No Raw Content Where Typed Expected) | AC-001..AC-006, AC-013 |
+| BC-2.01.002 | Message Type-Safety (AiMessage / HumanMessage / SystemMessage / ToolMessage) | AC-007..AC-012, AC-014 |
 
 ## Acceptance Criteria
 
@@ -87,6 +88,12 @@ An unrecognized message role `{"type":"robot","content":"beep"}` returns `Err(Pr
 
 ### AC-012 (traces to BC-2.01.002 INV-005)
 `Message` has `#[non_exhaustive]`. `AiMessage`, `HumanMessage`, `SystemMessage`, `ToolMessage` all have `#[non_exhaustive]`. Verified by compile-fail tests (external match).
+
+### AC-013 (traces to BC-2.01.001 §{PRE-004} — strict-vs-lenient deserialization entry point)
+`ContentBlock::from_value_strict(value)` is the strict entry point per {PRE-004}: when the `"type"` tag of the supplied value is not in `KNOWN_BLOCK_TYPES`, it returns `Err(PregolyaError { category: VAL, code: "E-CORE-001", message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`. The same input value processed via the lenient path `serde_json::from_value::<ContentBlock>(v)` returns `Ok(ContentBlock::NonStandard { value: {...} })` — no error. The two paths are distinct static entry points; there is no runtime boolean flag controlling the mode. Verified by `test_BC_2_01_001_strict_vs_lenient_entry_point_distinction()`.
+
+### AC-014 (traces to BC-2.01.002 §{PC-008} and §{EC-006} — ChatMessage arbitrary-role and missing-role error)
+`Message::Chat(ChatMessage { role: "assistant_v2".into(), content: MessageContent::Text("hello".into()), .. })` constructs without error and round-trips via serde with the `role` field preserved verbatim. Deserialization of `{"type":"chat","role":"assistant_v2","content":"hello"}` produces `Message::Chat(ChatMessage { role: "assistant_v2", content: MessageContent::Text("hello"), .. })`. Deserialization of `{"type":"chat","content":"hello"}` (missing required `"role"` field) returns `Err(PregolyaError { category: VAL, code: "E-CORE-002", .. })`. `ChatMessage` does NOT restrict the role to the four primary variants. Verified by `test_BC_2_01_002_chat_message_arbitrary_role_and_missing_role()`.
 
 ## Architecture Mapping
 
@@ -143,7 +150,10 @@ An unrecognized message role `{"type":"robot","content":"beep"}` returns `Err(Pr
 9. [ ] Implement `E-CORE-001` strict mode validation path
 10. [ ] Implement `E-CORE-002` for unrecognized role during `Message` deserialization
 11. [ ] Add `#[non_exhaustive]` and compile-fail tests for all public API types
-12. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
+12. [ ] Implement `ContentBlock::from_value_strict(value)` as the strict entry point per {PRE-004}
+13. [ ] Write failing test `test_BC_2_01_001_strict_vs_lenient_entry_point_distinction()` for AC-013 (test-writer)
+14. [ ] Write failing test `test_BC_2_01_002_chat_message_arbitrary_role_and_missing_role()` for AC-014 (test-writer)
+15. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
 

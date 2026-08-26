@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.004
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,7 +23,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "92a884e"
+input-hash: "1c078bf"
 extracted_from: null
 modified: []
 deprecated: null
@@ -43,6 +43,7 @@ changelog:
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.27 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.10 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.11 (P2A-BC-scan-B/2026-08-26): EC-006 added — invalid RunnableConfig at schedule creation → E-CRON-004 InvalidRunnableConfig (VAL/400/Never). PRE-004 violation failure path now specified; closes gap where the precondition was declared but no failure postcondition existed. Note: error-taxonomy.md minted E-CRON-004 with anchor BC-2.12.004 EC-005; EC-005 is occupied by ScheduleNotFound; authoritative raise site is EC-006 per ADR-027 append-only numbering — taxonomy anchor update deferred to error-taxonomy owners."
 ---
 
 # BC-2.12.004: CronSchedule Creation and Proactive Run Execution
@@ -145,6 +146,11 @@ queue_depth }` error.
 **Scenario:** `DELETE /schedules/unknown-id` where `unknown-id` is not a valid cron_id.
 **Expected behavior:** `404 Not Found` with `E-SERVER-006 ScheduleNotFound { cron_id:
 "unknown-id" }`.
+
+### EC-006: Invalid RunnableConfig at schedule creation (PRE-004 violation) {EC-006}
+**Scenario:** `POST /schedules { assistant_id: "a1", schedule: "0 9 * * *", config: { unknown_field: "x" } }` where `config` contains a field not accepted by the Assistant's `RunnableConfig` schema, or contains a value that violates a constraint (e.g., `recursion_limit: -1`).
+**Expected behavior:** HTTP 400 `{ code: "E-CRON-004", message: "Validation failed for '<field>': <reason>" }`. No `CronSchedule` record is created. The validation is performed at request time before any persistence; PRE-004 is pre-validated as part of the POST /schedules handler. This closes the PRE-004 failure path gap: the precondition was declared but the postcondition for its violation was unspecified.
+**Note:** E-CRON-004 InvalidRunnableConfig (VAL, broken, Never, HTTP 400); two placeholders: `<field>` (failing field name) and `<reason>` (constraint violation description). Error-taxonomy.md minted E-CRON-004 with anchor label EC-005; per ADR-027 append-only numbering EC-005 is occupied by ScheduleNotFound; this BC's authoritative raise site is EC-006.
 
 ## Canonical Test Vectors
 

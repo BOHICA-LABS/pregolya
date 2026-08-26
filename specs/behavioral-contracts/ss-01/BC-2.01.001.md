@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.001
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.03 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (M3b/ADR-027-escalation-1/2026-08-24): Added {INV-005} — ContentBlock #[non_exhaustive] clause; authoring missing production-grade invariant per CLAUDE.md workspace-wide mandate (S-1.03 AC-005 escalation)."
+  - "1.7 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.001 MED — named the strict-vs-lenient deserialization entry mechanism: added {PRE-004} identifying `ContentBlock::from_value_strict()` as the strict-mode entry point vs the `serde::Deserialize` impl as the lenient path; updated PC-006 and EC-006 to reference the selecting API by name (reusing existing E-CORE-001)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-001
   - domain-spec/invariants.md#DI-008
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "22e7fbd"
+input-hash: "e21c7f4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -58,6 +59,10 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
    (Text, Reasoning, ToolCall, ToolCallChunk, InvalidToolCall, Image, Video, Audio,
    PlainText, File, ServerToolCall, ServerToolCallChunk, ServerToolResult, NonStandard).
 3. {PRE-003} The construction call is in non-test code.
+4. {PRE-004} The caller selects the deserialization mode by choosing the entry point:
+   - **Strict mode** — the caller invokes `ContentBlock::from_value_strict(value: serde_json::Value) -> Result<ContentBlock, PregolyaError>`. Unknown type tags return `Err(E-CORE-001)` immediately; no `NonStandard` passthrough.
+   - **Lenient mode (default)** — the caller uses the `serde::Deserialize` implementation (e.g., via `serde_json::from_value::<ContentBlock>(v)` or `#[derive(Deserialize)]` field inference). Unknown type tags map to `ContentBlock::NonStandard` per INV-002.
+   The two modes are distinct static entry points — there is no runtime boolean flag; the choice is enforced at the call site.
 
 ## Postconditions
 
@@ -71,12 +76,14 @@ content from satisfying a typed-content parameter. This contract encodes the Lan
    form, but callers requesting typed access receive `Vec<ContentBlock>` after normalization.
 5. {PC-005} An unknown provider-specific block maps to `ContentBlock::NonStandard { value: serde_json::Value }`
    rather than causing a deserialization error.
-6. {PC-006} Construction succeeds and returns `Ok(message)` when all content block types are valid;
-   construction returns `Err(PregolyaError { category: VAL, code: E-CORE-001,
-   message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`
-   (where `<n>` is the block's 0-based position index; `<type>` is the unrecognized type tag string;
-   both are available at the deserialization call site)
-   when an unrecognized block type is encountered and the API contract requires strict validation.
+6. {PC-006} When the caller uses `ContentBlock::from_value_strict(value)` (strict entry point per PRE-004):
+   - Returns `Ok(ContentBlock)` when the type tag is in `KNOWN_BLOCK_TYPES`.
+   - Returns `Err(PregolyaError { category: VAL, code: E-CORE-001,
+     message: "StrictContentBlockValidation: block at position <n> has unrecognized type tag '<type>'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`
+     (where `<n>` is the block's 0-based position index; `<type>` is the unrecognized type tag string;
+     both are available at the deserialization call site)
+     when an unrecognized block type is encountered.
+   The lenient path (default `serde::Deserialize` impl, PRE-004) never returns E-CORE-001 — it maps unknowns to `ContentBlock::NonStandard` per PC-005 and INV-002.
 
 ## Invariants
 
@@ -120,11 +127,13 @@ insertion order. Each block is independently accessible by variant match.
 
 ### EC-006: Strict-mode deserialization with unrecognized block type
 **Scenario:** A provider response contains a block with `"type": "provider_v2_block"` at position 2
-(0-based) in a message, and the caller requests strict validation (non-lenient mode; `NonStandard`
-passthrough disabled).
+(0-based) in a message. The caller uses `ContentBlock::from_value_strict(value)` (strict entry point
+per PRE-004; `NonStandard` passthrough disabled).
 **Expected behavior:** `Err(PregolyaError { category: VAL, code: E-CORE-001,
 message: "StrictContentBlockValidation: block at position 2 has unrecognized type tag 'provider_v2_block'; not in KNOWN_BLOCK_TYPES — use lenient deserialization for NonStandard passthrough", .. })`.
 Deserialization does not fall through to a `NonStandard` block; the error propagates to the caller.
+The same value processed via `serde_json::from_value::<ContentBlock>(v)` (lenient path) would instead
+produce `Ok(ContentBlock::NonStandard { value: {...} })`.
 
 ### EC-005: Serde round-trip with extras field
 **Scenario:** A `TextContentBlock` with an `extras` field containing provider metadata is

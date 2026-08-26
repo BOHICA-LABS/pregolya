@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.006
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -26,6 +26,7 @@ changelog:
   - "1.3 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.4 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-003} added; purely additive, no content change."
+  - "1.6 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): LOW gap — EC-002 cascading-log-failure observable: replaced vague 'tracked separately (cascading log failure)' with unobservable-by-design declaration citing tracing fire-and-forget semantics and operator resilience requirement. ADR-027 stable clause {EC-002} (existing anchor, content updated)."
 modified: []
 extracted_from: null
 deprecated: null
@@ -88,7 +89,7 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
 | EC-001 | Operator explicitly sets hook to `None` (opt-in default-permit) | Behavior identical to absent-hook; `WARN` still emitted; no special-case handling for explicit `None` |
-| EC-002 | Logging backend is unavailable (log sink full or panicked) | Content still passes through; WARNING emission failure does not cause ingress to fail; the failure to emit the WARNING is tracked separately (cascading log failure) |
+| EC-002 | Logging backend is unavailable (log sink full or panicked) | Content still passes through; WARNING emission failure does not cause ingress to fail. **Unobservable-by-design:** `tracing::warn!` is fire-and-forget in the Tokio tracing-subscriber model — if the subscriber is unavailable, has panicked, or has a full internal buffer, the WARN event is silently dropped with no error propagated to the caller. There is no secondary counter or metric tracking this failure mode; pregolya provides no additional observability layer for log-sink failures on this path. Operators who rely on the `"guardrail.unregistered_passthrough"` WARNING for security decision-making MUST configure a resilient log backend (e.g., a non-blocking ring-buffer subscriber with overflow detection). |
 | EC-003 | High-volume run: 10,000 tool-result ingress events with no hook registered | `WARN` emitted once per boundary crossing (10,000 WARNINGs); no artificial rate-limiting or deduplication suppresses them; operator signal is intentionally high-volume |
 | EC-004 | Zero-item ingress (RAG returns 0 chunks, memory returns 0 items) | No content forwarded; no `WARN` emitted (no boundary crossing with content occurred); behavior mirrors EC-001 of BC-2.11.003 |
 

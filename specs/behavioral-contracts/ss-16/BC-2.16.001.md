@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.16.001
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (F-P177-C-LOW-SS16, burst-288, 2026-08-15): Remove phantom §Named-Section anchor. EC-001 §Reference line had `COMPARATIVE-ASSESSMENT §P-63 REJECT rationale` — P-63 is a table-row identifier in COMPARATIVE-ASSESSMENT.md, not a section heading; `§P-63` is a phantom anchor. Replaced with `COMPARATIVE-ASSESSMENT (P-63 reject rationale)` — preserves the informational reference without implying a named section."
   - "1.8 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.06 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.10 (B-SS15-18-hardening/2026-08-26): Phase-2 bc-completeness-scan (D-270, burst B). {INV-003} amended: counter resets to 0 on successful ToolOutput return within a run (hedge 'or is irrelevant' removed from EC-004); TV-006 added to verify the reset."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-018
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
-input-hash: "2d32b1d"
+input-hash: "f244341"
 extracted_from: null
 modified: []
 deprecated: null
@@ -90,7 +91,10 @@ different arguments must share the same retry counter.
 - {INV-002} The shared retry combinator (P-71 ADOPT) is the **only** retry implementation in
   pregolya. Partner provider crates route through it; they do not implement their own loops.
 - {INV-003} Counter state is per-invocation scope (one graph run) — it does not persist across
-  checkpoint boundaries or runs.
+  checkpoint boundaries or runs. On a successful `ToolOutput` return from tool `T`, the
+  per-tool counter for `T` resets to zero within that run; a subsequent failure of `T` in
+  the same run starts counting from 0, not from the prior failure count. (ADR-027 anchor:
+  {INV-003-RESET}.)
 - {INV-004} **Retry-Approval Ordering (ADR-018 Decision 6):** When a tool has both a `ToolRetryPolicy`
   and a `PreToolCallHook` configured, each dispatch attempt observes this fixed sequence:
   `circuit_breaker.check(tool_name)` → `pre_tool_dispatch(hook, preview)` →
@@ -128,10 +132,10 @@ the tool is never called; this is a misconfiguration, not a valid policy.
 
 ### EC-004: Tool Succeeds on Second Attempt
 **Scenario:** Tool `T` fails on attempt 1, then succeeds on attempt 2.
-**Expected behavior:** Counter resets (or is irrelevant) after success. The successful
-`ToolOutput` is returned. No error is emitted. The per-tool counter is scoped to
-consecutive-failure runs and does not carry over to subsequent invocations in the same run
-after a success.
+**Expected behavior:** Counter resets to 0 on the successful `ToolOutput` return. The
+successful `ToolOutput` is returned. No error is emitted. The per-tool counter for `T` is
+explicitly zeroed; a subsequent failure of `T` in the same run starts from 0 and is counted
+independently of the two prior failures. (INV-003-RESET authority.)
 
 ## Canonical Test Vectors
 
@@ -142,6 +146,7 @@ after a success.
 | TV-003 | Tool `T` fails 2x, then succeeds | Returns `Ok(ToolOutput)` on third attempt | Happy path — eventual success |
 | TV-004 | Construct `ToolRetryPolicy { attempt_limit: 0 }` | `Err(E-RETRY-004)` | Zero-limit reject (F-P34-02) |
 | TV-005 | Tool `T` fails; args change on each call (P-63 pattern) | Counter increments each call regardless of args | Args-hash isolation |
+| TV-006 | Tool `T` fails 2x, then succeeds; then fails 1 more time; `attempt_limit=3` | After the success: counter resets to 0. Post-success failure count = 1 (not 3); `T` is not blocked until 2 more post-success failures | Counter resets to 0 on success (INV-003-RESET) |
 
 ## Verification Properties
 

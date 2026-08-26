@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "1466806"
+input-hash: "9300c6e"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
@@ -61,7 +61,7 @@ changelog:
 | BC-2.01.005 | SS-01 | 6 | — | `TV-NNN` | | RunnableParallel construction and concurrent invocation; infallible §PC-1 last-write-wins; EC-006 (D-170, D-244) |
 | BC-2.01.006 | SS-01 | 5 | — | `TV-NNN` | | RunnableParallel branch failure — fail-fast, structured error E-CORE-009 (D-170) |
 | BC-2.01.007 | SS-01 | 5 | — | `TV-NNN` | | RunnablePassthrough identity semantics and inspect contract (D-170) |
-| BC-2.01.008 | SS-01 | 6 | — | `TV-NNN` | | RunnableAssign dict augmentation — mapper-wins, non-dict E-CORE-010 (D-170) |
+| BC-2.01.008 | SS-01 | 7 | — | `TV-NNN` | | RunnableAssign dict augmentation — mapper-wins, non-dict E-CORE-010, safetee streaming TV-007 (D-170) |
 | BC-2.02.001 | SS-02 | 5 | — | `TV-NNN` | | StateGraph node + channel happy path |
 | BC-2.02.002 | SS-02 | 6 | — | `TV-NNN` | | Reducer semantics: LastValue/Append/Barrier |
 | BC-2.02.003 | SS-02 | 5 | — | `TV-NNN` | **RG** | NamedBarrierValue missing-writer → default |
@@ -105,9 +105,9 @@ changelog:
 | BC-2.08.007 | SS-08 | 5 | — | `TV-NNN` | | Transport error → Err(Timeout) |
 | BC-2.08.008 | SS-08 | 5 | — | `TV-NNN` | | Eval arithmetic mean + InfraError |
 | BC-2.08.009 | SS-08 | 5 | — | `TV-NNN` | | Schema naming stability snapshot |
-| BC-2.08.010 | SS-08 | 5 | — | `TV-NNN` | | `#[tool]` proc-macro |
+| BC-2.08.010 | SS-08 | 6 | — | `TV-NNN` | | `#[tool]` proc-macro; duplicate-name E-TOOLS-010 TV-006 (burst-B) |
 | BC-2.08.011 | SS-08 | 5 | — | `TV-NNN` | | `#[entrypoint]` proc-macro |
-| BC-2.08.012 | SS-08 | 5 | — | `TV-NNN` | | `#[task]` proc-macro |
+| BC-2.08.012 | SS-08 | 6 | — | `TV-NNN` | | `#[task]` proc-macro; reserved-name hard error TV-006 (burst-B) |
 | BC-2.08.013 | SS-08 | 6 | — | `TV-NNN` | | Pluggable tool-call dialect (ToolCallDialect; Hermes ChatML XML) |
 | BC-2.08.014 | SS-08 | 7 | — | `TV-NNN` | | Provider failover chain (ProviderFallbackPolicy; 429/5xx/auth) |
 | BC-2.09.001 | SS-09 | 10 | — | `TV-NNN` | | MCP tool discovery |
@@ -188,7 +188,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (133 authored BCs):** 703 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **714 total vectors** across 133 BC files.
+**Total vectors (133 authored BCs):** 739 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **750 total vectors** across 133 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 

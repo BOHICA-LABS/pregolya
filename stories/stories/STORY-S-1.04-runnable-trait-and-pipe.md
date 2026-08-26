@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.003 PC-002: AC-002 updated with BoxStream return type and Ok(chunk) wrapping. {EC-006}: AC-013 added — invoke-Err yielded as single Err stream item. BC table version bumped."
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
   - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
@@ -17,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "61fd265"
+input-hash: "b2b6422"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -47,7 +48,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.01.003 | Runnable Trait Invocation — invoke, stream, batch | AC-001..AC-007 |
+| BC-2.01.003 | Runnable Trait Invocation — invoke, stream, batch | AC-001..AC-007, AC-013 |
 | BC-2.01.004 | Runnable Pipe Composition (A.pipe(B) = AB Chain) | AC-008..AC-012 |
 
 ## Acceptance Criteria
@@ -58,7 +59,7 @@ The `Runnable` trait is defined with associated types `Input` and `Output`, and 
 A custom `DoubleString` struct that implements `Runnable<Input=String, Output=String>` constructs and calls `invoke` returning `Ok(format!("{}{}", s, s))`. Verified by `test_BC_2_01_003_custom_runnable_invoke()`.
 
 ### AC-002 (traces to BC-2.01.003 PC-002)
-The default `stream` method on `Runnable` yields a single item: the result of `invoke`. A `DoubleString` stream over input "hello" yields exactly one item: `Ok("hellohello".to_string())` then terminates. Verified by `test_BC_2_01_003_default_stream_single_item()`.
+The default `stream` method on `Runnable` returns a `BoxStream<'static, Result<Self::Output, PregolyaError>>`. Each stream item is a `Result<Self::Output, PregolyaError>`. The non-streaming fallback calls `invoke` internally: if `invoke` returns `Ok(output)`, the stream yields `Ok(output)` as its single item and terminates (per TV-003). A `DoubleString` stream over input "hello" yields exactly one item: `Ok("hellohello".to_string())` then terminates. Verified by `test_BC_2_01_003_default_stream_single_item()`.
 
 ### AC-003 (traces to BC-2.01.003 PC-003)
 The default `batch` method on `Runnable` calls `invoke` concurrently for each input with bounded concurrency (default max 10 in-flight). A batch of 5 inputs returns 5 outputs in order. Verified by `test_BC_2_01_003_default_batch_order_preserved()`.
@@ -89,6 +90,9 @@ Streaming through a `RunnableSequence` propagates chunks: each step must buffer 
 
 ### AC-012 (traces to BC-2.01.004 INV-004)
 `RunnableSequence::first` is never a `RunnableSequence` (flattening invariant). This prevents unbounded nesting. Verified by `test_BC_2_01_004_sequence_not_nested()` asserting the type of `first` in a multi-stage chain.
+
+### AC-013 (traces to BC-2.01.003 §{EC-006} — invoke-Err yielded as single stream item)
+When a `Runnable::invoke` returns `Err(e)`, calling `stream()` on the same runnable yields exactly one stream item: `Err(e)`. The stream then terminates. `stream()` itself does NOT return an outer `Result` wrapping the stream — the error is surfaced as a stream item, not as a stream-creation failure. The stream does not panic. Verified by `test_BC_2_01_003_stream_invoke_err_yielded_as_single_item()`.
 
 ## Architecture Mapping
 
@@ -145,7 +149,8 @@ Streaming through a `RunnableSequence` propagates chunks: each step must buffer 
 8. [ ] Add `pub mod runnable;` to `pregolya-core/src/lib.rs`
 9. [ ] Implement E-CORE-003, E-CORE-004, E-CORE-006 error constructions
 10. [ ] Wire streaming through sequence (buffer non-streaming, propagate streaming)
-11. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
+11. [ ] Write failing test `test_BC_2_01_003_stream_invoke_err_yielded_as_single_item()` for AC-013 (test-writer)
+12. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
 

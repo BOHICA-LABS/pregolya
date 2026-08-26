@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.09
 epic_id: E-04
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-13/BC-2.13.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "146c9b7"
+input-hash: "c80cc25"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.01, S-1.02]
@@ -48,10 +48,10 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | AC-001..AC-003 |
-| BC-2.13.002 | ProcessBackend Emits WARN Log Before Every Execute (NE-02) | AC-004..AC-005 |
+| BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | AC-001..AC-003, AC-022 |
+| BC-2.13.002 | ProcessBackend Emits WARN Log Before Every Execute (NE-02) | AC-004..AC-005, AC-023..AC-024 |
 | BC-2.13.003 | Strict Policy + Non-Enforcing Backend = Err(E-SBXD-002) | AC-006..AC-007 |
-| BC-2.13.004 | canonicalize_beneath_root at Access Time — VP-003 Kani Seed | AC-008..AC-012 |
+| BC-2.13.004 | canonicalize_beneath_root at Access Time — VP-003 Kani Seed | AC-008..AC-012, AC-025 |
 | BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | AC-013..AC-014 |
 | BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | AC-015..AC-018 |
 | BC-2.13.007 | Environment Variable Sanitization — Strip All, Allowlist Explicit | AC-019..AC-021 |
@@ -129,6 +129,18 @@ When the macOS kernel does not support the required Seatbelt operations, `new_ma
 ### AC-021 (traces to BC-2.13.007 PC-005)
 `env_allowlist` does not support wildcards. An entry containing `*` returns `Err(PregolyaError { code: "E-SBXD-006", message: "InvalidEnvAllowlistPattern: entry '<pattern>' contains wildcard characters — only exact variable names are supported in v1", .. })`. Before each execution, a DEBUG trace event is emitted with `event_type = "sandbox.env_sanitized"` containing the count of stripped and forwarded variables. Verified by `test_BC_2_13_007_wildcard_rejected()` and `test_BC_2_13_007_sanitization_debug_log()`.
 
+### AC-022 (traces to BC-2.13.001 PC-005 — WASM memory-limit breach)
+When the WASM enforcing backend (`memory_bounded = true`) is executing tool code and the guest module exceeds the configured memory limit, execution terminates immediately and returns `Err(PregolyaError { component: SBXD, category: TOOL, code: "E-SBXD-009", message: "MemoryLimitExceeded: WASM guest exceeded configured memory limit of <limit_bytes> bytes", retry_hint: Never })`. The backend MUST NOT return `Ok` with partial output; no partial invocation result is produced or surfaced to the caller. Verified by `test_BC_2_13_001_wasm_memory_limit_exceeded_e_sbxd_009()`.
+
+### AC-023 (traces to BC-2.13.002 PC-007 — OS subprocess spawn failure)
+When `ProcessBackend::execute()` attempts to spawn the subprocess and `tokio::process::Command::spawn()` returns an OS error (executable not on PATH, permission denied, resource exhaustion, or any other OS-level spawn error), `execute()` returns `Err(PregolyaError { component: SBXD, category: TOOL, code: "E-SBXD-007", message: "ProcessSpawnFailed: command '<command_string>' failed to spawn — os error: <os_error_message>", retry_hint: Maybe })`. The WARN log from {PC-001} (`event_type = "sandbox.process_no_isolation_execute"`) is NOT emitted for a spawn failure — the log fires only when execution is about to begin, not when the spawn itself fails before execution starts. Verified by `test_BC_2_13_002_spawn_failure_e_sbxd_007()`.
+
+### AC-024 (traces to BC-2.13.002 PC-008 — non-zero process exit)
+When the spawned subprocess exits with a non-zero exit code, `execute()` returns `Err(PregolyaError { component: SBXD, category: TOOL, code: "E-SBXD-008", message: "ProcessNonZeroExit: command '<command_string>' exited with code <code>", retry_hint: Never })` with the captured `stderr` included in the error struct for diagnostic purposes. The `stderr` value captured in the error MUST NOT be passed to model context without sanitization (DI-009 credential safety requirement — stderr can contain API keys, tokens, or other sensitive material). The tool function's return value is discarded. Verified by `test_BC_2_13_002_non_zero_exit_e_sbxd_008()`.
+
+### AC-025 (traces to BC-2.13.004 EC-006 — canonicalize OS error that is not WorkspaceEscape)
+When `std::fs::canonicalize()` inside `canonicalize_beneath_root` returns an OS error that is NOT a workspace escape detection (e.g., `EACCES` permission denied, `ELOOP` too many symbolic links, `EIO` I/O error), the function returns `Err(PregolyaError { component: SBXD, category: SYS, code: "E-SBXD-010", message: "CanonicalizationFailed: cannot resolve path '<requested_path>': <os_error>", retry_hint: Maybe })`. The workspace file operation MUST NOT proceed past a canonicalize failure — the path is neither allowed nor denied based on prefix; it is rejected as unresolvable. Verified by `test_BC_2_13_004_canonicalize_os_error_e_sbxd_010()`.
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
@@ -183,7 +195,7 @@ Near but within the 20-30% context window threshold. Implementer should load onl
 - [ ] Create `pregolya-sandbox/src/backend/wasm.rs` — WASM enforcing backend stub (todo!() bodies for Phase 3)
 - [ ] Create `pregolya-sandbox/src/seatbelt.rs` — macOS Seatbelt profile generator (deny-by-default)
 - [ ] Create `pregolya-sandbox/src/env_sanitizer.rs` — env allowlist enforcement, wildcard rejection, DEBUG log
-- [ ] Write unit tests for all 21 ACs
+- [ ] Write unit tests for all 25 ACs (`test_BC_2_13_001_wasm_memory_limit_exceeded_e_sbxd_009`, `test_BC_2_13_002_spawn_failure_e_sbxd_007`, `test_BC_2_13_002_non_zero_exit_e_sbxd_008`, `test_BC_2_13_004_canonicalize_os_error_e_sbxd_010` for new ACs)
 - [ ] Write integration test for real symlink escape (AC-013, AC-014) using tempdir
 - [ ] Create `crates/pregolya-sandbox/src/proofs/workspace_confinement.rs` — `#[cfg(kani)]` `workspace_confinement_harness` stub (body `todo!()` for Phase 6 formal hardening; VP-003)
 - [ ] Add `pregolya-sandbox` to workspace `Cargo.toml` members
@@ -254,8 +266,13 @@ Files to MODIFY:
 | EC-003 | Internal symlink: workspace/link→workspace/real_dir | OS canonicalize resolves to within root; returns Ok(canonical_path) |
 | EC-004 | `env_allowlist` contains a var that doesn't exist in parent env | Silently forwarded as absent (child process sees it absent); no error |
 | EC-005 | Seatbelt profile with `allow_network: true` | `(allow network*)` added; `(deny default)` base preserved; no `(allow default)` |
+| EC-006 | WASM backend executing tool code that allocates past the configured memory limit (e.g., limit 64 MiB, tool allocates 128 MiB) | `Err(E-SBXD-009: MemoryLimitExceeded)`; execution terminated; no partial result returned (AC-022) |
+| EC-007 | `unsafe_process_no_isolation()` + `execute()` with a command not on PATH (e.g., `"nonexistent_binary_xyz"`) | `Err(E-SBXD-007: ProcessSpawnFailed)`; WARN log from PC-001 NOT emitted (spawn never began) (AC-023) |
+| EC-008 | `unsafe_process_no_isolation()` + `execute()` with a command that exits with code 1 and writes credentials to stderr | `Err(E-SBXD-008: ProcessNonZeroExit { exit_code: 1, stderr: "..." })`; stderr NOT forwarded to model context without sanitization (DI-009) (AC-024) |
+| EC-009 | `canonicalize_beneath_root` called on a path where `std::fs::canonicalize()` returns `ELOOP` (too many symlinks) | `Err(E-SBXD-010: CanonicalizationFailed)`; operation does not proceed; not treated as WorkspaceEscape (AC-025) |
 
 ## Changelog
 
 - 1.0 (2026-08-18): initial story authoring.
-- 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. Corrections: AC-002 PC-002→PC-003 (unsafe constructor naming; old PC-002 was BackendCapabilities); AC-003 PC-003→PC-004 (no enforcing backend error; old PC-003 was unsafe constructor); AC-005 PC-003→PC-006 (kill_on_drop; old PC-003 was execute-and-return); AC-007 PC-002→PC-004 (no silent fallback; old PC-002 was tool-not-called); AC-009 PC-002→INV-002 (WorkspaceFs facade; old PC-002 was calls-canonicalize); AC-012 EC-001→PC-005 (two-phase non-existent path; old BC-2.13.004 EC-001 is benign traversal); AC-013 PC-001→PC-004 (WorkspaceEscape result; old PC-001 was calls-canonicalize); AC-014 EC-002→EC-003 (dangling symlink PathNotFound; old EC-002 is chained symlinks); AC-021 PC-003→PC-005 (wildcard rejection; old PC-003 was filtering-timing). No escalations.
+- 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors.
+- 1.2 (SW-2/bc-completeness-hardening/2026-08-26): BC-2.13.001 → AC-022 (PC-005 WASM memory-limit breach → E-SBXD-009; no Ok-with-partial); BC-2.13.002 → AC-023 (PC-007 spawn failure → E-SBXD-007; no WARN log emitted), AC-024 (PC-008 non-zero exit → E-SBXD-008; stderr MUST NOT reach model context without sanitization per DI-009); BC-2.13.004 → AC-025 (EC-006 non-escape canonicalize OS error → E-SBXD-010). EC-006..EC-009 added to edge cases. Tasks updated for new test functions. Corrections: AC-002 PC-002→PC-003 (unsafe constructor naming; old PC-002 was BackendCapabilities); AC-003 PC-003→PC-004 (no enforcing backend error; old PC-003 was unsafe constructor); AC-005 PC-003→PC-006 (kill_on_drop; old PC-003 was execute-and-return); AC-007 PC-002→PC-004 (no silent fallback; old PC-002 was tool-not-called); AC-009 PC-002→INV-002 (WorkspaceFs facade; old PC-002 was calls-canonicalize); AC-012 EC-001→PC-005 (two-phase non-existent path; old BC-2.13.004 EC-001 is benign traversal); AC-013 PC-001→PC-004 (WorkspaceEscape result; old PC-001 was calls-canonicalize); AC-014 EC-002→EC-003 (dangling symlink PathNotFound; old EC-002 is chained symlinks); AC-021 PC-003→PC-005 (wildcard rejection; old PC-003 was filtering-timing). No escalations.
