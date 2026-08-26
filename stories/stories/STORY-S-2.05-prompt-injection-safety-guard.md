@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.05
 epic_id: E-18
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,13 +13,13 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
-input-hash: "fcf4822"
+input-hash: "2cf3cce"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.04]
 blocks: [S-6.01]
 behavioral_contracts: [BC-2.18.002, BC-2.18.004, BC-2.18.005]
-verification_properties: [VP-006]
+verification_properties: [VP-006, VP-006-B]
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
@@ -121,11 +121,13 @@ the guard in `TrustRequired` slots because `var.trust_level.is_some_and(|t| t.is
 returns false for `None` (consistent with AC-005 and AC-016's `Some(TrustLevel::Untrusted)` usage).
 Verified by `test_BC_2_18_004_templatevar_default_trust_is_trusted()`.
 
-### AC-009 (traces to BC-2.18.004 INV-006 — VP-006 Kani anchor)
-`injection_guard` is FAIL-CLOSED: if the trust level evaluation encounters an unknown/new
-`TrustLevel` variant, it defaults to treating the variable as untrusted (highest severity).
-VP-006 (Kani P1) provides a formal proof of fail-closed behavior. Unit test:
-`test_BC_2_18_004_fail_closed_unknown_trust_level_treated_as_untrusted()`.
+### AC-009 (traces to BC-2.18.004 {INV-006} — VP-006 Kani anchor)
+`check_fewshot_trust` is FAIL-CLOSED via a `#[non_exhaustive]` wildcard arm: any `TrustLevel`
+variant not enumerated is treated as `Untrusted` (guard fires; no `Ok(PromptValue)` escapes).
+VP-006 (Kani P1) formally proves fail-closed behavior for the three currently-defined variants
+(`Untrusted` | `UserInput` | `Trusted`). Adding a new `TrustLevel` variant requires
+re-running `cargo kani`; the Kani proof does not automatically extend to future variants.
+Unit test: `test_BC_2_18_004_fail_closed_unknown_trust_level_treated_as_untrusted()`.
 This story is the ANCHOR story for VP-006.
 
 ### AC-010 (traces to BC-2.18.005 PC-001 — Red Gate)
@@ -174,7 +176,7 @@ category as the scalar arm. VP-006 Kani proof covers this input arm exhaustively
 the scalar arm.
 Verified by `test_BC_2_18_004_messages_arm_untrusted_in_trust_required_raises_e_tmpl_001_rg()`.
 
-### AC-017 (traces to BC-2.18.004 PC-005 + TV-006 — Red Gate)
+### AC-017 (traces to BC-2.18.004 {PC-005} + TV-006 — Red Gate)
 **RED GATE**: This test must COMPILE and FAIL before `injection_guard` covers the
 `TemplateInput::FewShotExamples` arm. A `ChatPromptTemplate` with a `TrustRequired`
 SystemMessage slot receives a `TemplateInput::FewShotExamples(pairs)` where at least one
@@ -183,6 +185,22 @@ pair carries `iv.trust_level == Some(TrustLevel::Untrusted)` or
 The test asserts `format_messages` returns `Err(E-TMPL-001)` fail-closed.
 VP-006 Kani proof covers all 3 arms (Scalar, Messages, FewShotExamples) exhaustively.
 Verified by `test_BC_2_18_004_fewshot_examples_untrusted_in_trust_required_slot_raises_e_tmpl_001()`.
+
+### AC-018 (traces to BC-2.18.004 {PC-005} + TV-007 — Red Gate)
+**RED GATE**: This test must COMPILE and FAIL before `check_fewshot_trust` handles the
+multi-pair `TemplateInput::FewShotExamples` case. A `ChatPromptTemplate` with a `TrustRequired`
+SystemMessage slot receives `TemplateInput::FewShotExamples(pairs)` with exactly 4 pairs:
+- pair 0: `iv.trust_level = Some(TrustLevel::Trusted)`, `ov.trust_level = Some(TrustLevel::Trusted)`
+- pair 1: `iv.trust_level = Some(TrustLevel::Untrusted)`, `ov.trust_level = Some(TrustLevel::Trusted)`
+- pair 2: `iv.trust_level = Some(TrustLevel::Trusted)`, `ov.trust_level = Some(TrustLevel::Trusted)`
+- pair 3: `iv.trust_level = Some(TrustLevel::Trusted)`, `ov.trust_level = Some(TrustLevel::Trusted)`
+The test asserts `format_messages` returns
+`Err(PregolyaError { code: "E-TMPL-001", category: Category::Security, .. })` — guard fires
+fail-closed on the middle pair (index 1 `iv`); pairs 0, 2, and 3 are all `Trusted` and would
+pass individually. Red Gate parity with AC-017 (TV-006 single-pair case). VP-006-B proptest
+(`injection_guard_multipair_fewshot_fail_closed`) covers the any-pair-index-untrusted dimension
+empirically across arbitrary Vec lengths (1..=8 pairs).
+Verified by `test_BC_2_18_004_multipair_fewshot_middle_pair_untrusted_raises_e_tmpl_001_rg()`.
 
 ## Architecture Mapping
 
@@ -220,22 +238,22 @@ Verified by `test_BC_2_18_004_fewshot_examples_untrusted_in_trust_required_slot_
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~4,200 |
+| This story spec | ~4,700 |
 | BC files (3 BCs) | ~11,000 |
 | `module-decomposition.md` (SS-18 section) | ~400 |
 | ADR-015 injection safety | ~3,000 |
 | S-2.04 story spec (predecessor context) | ~2,500 |
 | Module files (~80 lines each × 3 files) | ~2,700 |
-| Test files (~120 lines) | ~1,800 |
-| VP-006 Kani harness spec | ~500 |
+| Test files (~130 lines) | ~1,900 |
+| VP-006 Kani harness spec + VP-006-B proptest spec | ~1,200 |
 | Tool outputs | ~500 |
-| **Total** | **~26,600** |
+| **Total** | **~27,900** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~13%** |
+| **Budget usage** | **~14%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-017 (test-writer); verify ALL Red Gates (AC-001, AC-010, AC-016, and AC-017 must FAIL before guards are implemented)
+1. [ ] Write failing tests for AC-001 through AC-018 (test-writer); verify ALL Red Gates (AC-001, AC-010, AC-016, AC-017, and AC-018 must FAIL before guards are implemented)
 2. [ ] Verify Red Gate density ≥ 0.5
 3. [ ] Create `pregolya-prompts/src/trust.rs` — `TrustLevel` enum (`#[non_exhaustive]`, NO `Ord`/`PartialOrd` derives), `severity() -> u8` method
 4. [ ] Create `pregolya-prompts/src/injection_guard.rs` — `check_slot_trust()` pure fn (source-order slot evaluation, severity-based check per `TrustLevel::severity()`, returns `Err(E-TMPL-001)` on violation; covers ALL TemplateInput arms: Scalar, Messages, FewShotExamples per BC-2.18.004 PC-005; VP-006 Kani proof vehicle)
@@ -244,8 +262,9 @@ Verified by `test_BC_2_18_004_fewshot_examples_untrusted_in_trust_required_slot_
 7. [ ] Register E-TMPL-001 (`Component::Tmpl, Category::Security, RetryHint::Never`) in error taxonomy
 8. [ ] Verify E-TMPL-002 (`Component::Tmpl, Category::Val, RetryHint::Never`) is registered (from S-2.04)
 9. [ ] Create `pregolya-prompts/src/proofs/injection_guard.rs` — VP-006 Kani harness stub for Phase 6 formal hardening
-10. [ ] Create compile-fail test `tests/external/trust-level-no-ord/` asserting `TrustLevel` does NOT implement `Ord`
-11. [ ] Run `cargo nextest run -p pregolya-prompts` — all tests pass
+10. [ ] Create `pregolya-prompts/tests/injection_guard_multipair.rs` — VP-006-B proptest harness stub; AC-018 Red Gate (`injection_guard_multipair_middle_untrusted`) must FAIL before `check_fewshot_trust` is implemented
+11. [ ] Create compile-fail test `tests/external/trust-level-no-ord/` asserting `TrustLevel` does NOT implement `Ord`
+12. [ ] Run `cargo nextest run -p pregolya-prompts` — all tests pass
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -277,9 +296,9 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 | E-TMPL-001 message is DYNAMIC (contains var_name and slot_role) | BC-2.18.004 PC-001 | String contains check test |
 | E-TMPL-002 message is STATIC (no interpolation) | BC-2.18.005 PC-001; BC-2.18.005 INV-003 | String equality test |
 | E-TMPL-001 category is `Category::Security`; E-TMPL-002 category is `Category::Val` | BC-2.18.004 INV-003; BC-2.18.005 INV-003 | Error code assertion tests |
-| Fail-closed default: unknown TrustLevel treated as Untrusted | BC-2.18.004 INV-006; VP-006 | Unit test AC-009 |
-| `injection_guard` source-order evaluation | BC-2.18.004 INV-005 | Unit test AC-006 |
-| `injection_guard` covers ALL TemplateInput arms (Scalar, Messages, FewShotExamples) | BC-2.18.004 PC-005 + TV-006 | Unit tests AC-016, AC-017 |
+| Fail-closed default: `check_fewshot_trust` wildcard arm treats unknown TrustLevel as Untrusted | BC-2.18.004 {INV-006}; VP-006 | Unit test AC-009 |
+| `injection_guard` source-order evaluation | BC-2.18.004 {INV-005} | Unit test AC-006 |
+| `injection_guard` covers ALL TemplateInput arms (Scalar, Messages, FewShotExamples) | BC-2.18.004 {PC-005} + TV-006 + TV-007 | Unit tests AC-016, AC-017, AC-018 |
 
 **Forbidden dependencies:** `pregolya-prompts/src/trust.rs` must NOT import from `pregolya-graph` or any crate that would create a cycle. `TrustLevel::severity()` must be a pure function with no external dependencies.
 
@@ -300,6 +319,7 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 | `pregolya-prompts/src/template_input.rs` | MODIFY | Add `trust_level: Option<TrustLevel>` to `TemplateVar`; `None` (absent) treated as `Trusted` by the guard (consistent with AC-008, AC-005, Task 6) |
 | `pregolya-prompts/src/lib.rs` | MODIFY | Add `pub mod trust;` and `pub mod injection_guard;` |
 | `pregolya-prompts/src/proofs/injection_guard.rs` | CREATE | VP-006 Kani harness stub |
+| `pregolya-prompts/tests/injection_guard_multipair.rs` | CREATE | VP-006-B proptest harness stub (AC-018 Red Gate; multi-pair any-pair-index-untrusted fail-closed) |
 | `pregolya-prompts/tests/external/trust-level-no-ord/main.rs` | CREATE | Compile-fail: TrustLevel no Ord |
 
 ## Changelog
@@ -309,4 +329,5 @@ fail-closed proof). The Kani harness is created as a stub here; the full proof r
 - "1.2 (P2A-043/2026-08-24): P2A-043 F-02/F-03: SS-18 anchors resolved per PO; escalation notes cleared"
 - "1.3 (P2A-049 F-049-01/2026-08-25): body BC-table title cells synced verbatim to canonical BC H1 — BC-2.18.002, BC-2.18.004, BC-2.18.005; removed stale 'TrustLevel Severity Ordering' paraphrase (superseded by binary is_untrusted model per D-243/P2A-035) and non-H1 '(Red Gate)' enrichments; sibling S-2.04 pattern matched; input-hash updated to a6270ea (pre-existing drift resolved)"
 - "1.4 (SW-4/BC-completeness/2026-08-26): BC-2.18.004 propagation — AC-017 trace updated to PC-005+TV-006; test name normalized to test_BC_2_18_004_fewshot_examples_untrusted_in_trust_required_slot_raises_e_tmpl_001; VP-006 note updated to name all 3 arms explicitly; Architecture Compliance Rules source updated to PC-005+TV-006; input-hash updated fcf4822."
+- "1.5 (B-SS18-sec-adjudication/ADR-029-SEC-003-SEC-004/2026-08-26): SEC-003 — AC-018 added (Red Gate TV-007: 4-pair FewShotExamples, middle pair index 1 iv Untrusted, pairs 0/2/3 Trusted; compile-and-fail before check_fewshot_trust; VP-006-B proptest injection_guard_multipair_fewshot_fail_closed referenced; tasks renumbered 10-12; File Structure row added for injection_guard_multipair.rs; AC-counts updated in Tasks and Architecture Compliance Rules). SEC-004 — AC-009 trace updated to stable {INV-006} tag; body scoped to check_fewshot_trust wildcard arm per BC-2.18.004 {INV-006} wording (wording update; trace live). VP-006-B added to verification_properties frontmatter; input-hash updated 2cf3cce (BC-2.18.004 drift resolved)."
 

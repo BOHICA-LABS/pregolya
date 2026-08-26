@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.71"
+version: "3.72"
 status: active
 producer: state-manager
 timestamp: 2026-08-26T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.72 (B-SS18-SEC/B-SS09-SEC/ADR-029-sec-hardening/2026-08-26): 3 BC version bumps (security + consistency fix-burst). BC-2.09.007 (updated): SEC-001 ({INV-005} success-path credential-opacity boundary, BC-2.09.007 {PC-002}), SEC-005 ({INV-001} error-path UUID sanitization — error messages must not contain credential fragments). BC-2.09.008 (updated): SEC-006 ({INV-004} runtime BoundaryApprovalHook ActionRisk>=Medium → Deny+E-MCP-011 ForceApproveWriteBlocked), SEC-007 ({PC-006} ForceApproveHooks overrides ONLY PendingHumanApproval, Deny always respected). BC-2.18.004 (updated): SEC-003 (VP-006-B mandatory multi-pair FewShot proptest TV-007 Red-Gate added to §TV-007; {PC-005} clarified iterates pairs Vec index order iv before ov). NEW VP-006-B proptest P1 row added to VP Seed BCs (BC-2.18.004 {PC-005} companion to VP-006). NEW error code E-MCP-011 ForceApproveWriteBlocked (EXEC, broken, Never; raise-site BC-2.09.008 {INV-004}; MCP namespace 10→11; EC 136→137). ADR-029 (§Decision 3/4/5; BoundaryApprovalHook hook-type + E-MCP-011 registered). Dismissed-safe: ReDoS (linear-time DFA enforced by BC-2.23.006 {INV-001} + GrepTool design) + 3 others advisory with no BC change. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP Seed BCs 14→15 unique VPs. VPs registered 16→17."
   - "3.71 (GAP-01/ADR-029/2026-08-26): BC-2.09.008 StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) added — P1, SS-09, Wave 2, status draft. NEW invariants: {INV-001} STATE-ISOLATION (VP-016 proptest P1 proof target), {INV-002} binary interrupt fail-closed → E-MCP-010, {INV-003} redaction (DI-010). Postconditions PC-001..006; Edge Cases EC-001..008 (E-MCP-010 GraphAgentInterruptDenied minted). VP-016 row added to VP Seed BCs (proptest P1). BC census 133→134 (51 P0 / 80 P1 / 3 P2). VP Seed BCs 13→14. VPs registered 15→16."
   - "3.70 (BC-completeness-propagation/2026-08-26): 45 BC files updated across 7 clusters (SS-01,02,04,05,06,08,09,10,11,12,13,15,16,18,20,21,22,23); VP-015 registered and added to VP Seed BCs (BC-2.09.007 {INV-003}); error-taxonomy 120→135 ECs (15 new codes: E-SERVER-019/020/021, E-CRON-004, E-SBXD-007/008/009, E-MEMORY-009/010, E-TOOLS-010/011, E-GRAPH-018, E-PROV-013, E-SERVER-022, E-SBXD-010); ADR-014 §D7 (MMR Carbonell–Goldstein argmax) + §D8 (delete-idempotent Ok(())) + ADR-028 (multitask interrupt/enqueue/delete_threads atomic-abort/idempotency TTL) propagated. BC census UNCHANGED: 133 total (51 P0 / 79 P1 / 3 P2)."
   - "3.69 (P2A-055 gate-audit OBS-1/OBS-2/2026-08-25): VP-Seed-BCs label disambiguated (12 unique VPs / 13 BC rows / VP-014 dual-anchors BC-2.01.005+BC-2.01.006); SS-range notation canonicalized (SS-2.NN→SS-NN). No BC content/census change (133 UNCHANGED)."
@@ -91,14 +92,15 @@ changelog:
 
 # BC-INDEX: pregolya Behavioral Contracts
 
-> **134 BCs total — 51 P0 / 80 P1 / 3 P2 | 11 Red Gate | 14 VP Seed | 16 VPs registered**
+> **134 BCs total — 51 P0 / 80 P1 / 3 P2 | 11 Red Gate | 15 VP Seed | 17 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
 > SS-23 (First-Party Tools) added D23 first-class approval hook + compaction expansion (2026-07-22).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
-> VP-INDEX: 16 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
+> VP-INDEX: 17 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
 > VP-006–VP-010 assigned in VP-INDEX (burst-223, 2026-07-21) and authored — VP-006.md–VP-010.md all complete;
+> VP-006-B proptest P1 seeded SEC-review-adjudication burst and authored — vp-006-b-injection-guard-multipair-fewshot.md complete;
 > VP-011–VP-013 seeds assigned D23 burst-232 and authored — VP-011.md–VP-013.md all complete;
 > VP-014 proptest P1 seeded burst-302b and authored — VP-014.md complete;
 > VP-015 unit P1 seeded BC-completeness-propagation burst and authored — VP-015.md complete;
@@ -113,7 +115,7 @@ changelog:
 | Priority P1 | 80 |
 | Priority P2 | 3 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 14 unique VPs (15 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006) |
+| VP Seed BCs | 15 unique VPs (16 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006; VP-006-B companion to VP-006 on BC-2.18.004 {PC-005}) |
 | Subsection groups | 23 (SS-01 – SS-23) |
 
 ## Red Gate BCs
@@ -140,6 +142,7 @@ changelog:
 | VP-002 | BC-2.04.006 | Session Triple-Address Uniqueness | Kani | NE-12 |
 | VP-003 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | Kani | NE-02 |
 | VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani | ADR-015 Decision 3 §Security {INV-001} |
+| VP-006-B | BC-2.18.004 {PC-005} | injection_guard Multi-Pair FewShotExamples Fail-Closed — Any-Pair-Index-Untrusted Raises E-TMPL-001 | Proptest | BC-2.18.004 {PC-005} multi-pair dimension; TV-007 Red Gate (SEC-003) |
 | VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | Proptest | CAP-024 round-trip invariant |
 | VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
 | VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani | ADR-014 Decision 2 §Hardening note |
@@ -151,7 +154,7 @@ changelog:
 | VP-015 | BC-2.09.007 | MCP Server Tool Invocation — Credential Redaction Before Transmission | Unit | DI-010 credential opacity (CWE-532; BC-2.09.007 {INV-003}) |
 | VP-016 | BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | Proptest | DI-010 state-isolation {INV-001}; binary interrupt invariant {INV-002} → E-MCP-010 |
 
-_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26); VP-016 seeded GAP-01/ADR-029 burst (2026-08-26). All 16 VP body files (VP-001 through VP-016) exist as of GAP-01 burst._
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-006-B seeded SEC-review-adjudication burst (2026-08-26); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26); VP-016 seeded GAP-01/ADR-029 burst (2026-08-26). All 17 VP body files (VP-001 through VP-016 + VP-006-B) exist as of SEC-review-adjudication burst._
 
 ## Full BC Catalog
 

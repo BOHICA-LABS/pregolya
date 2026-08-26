@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.6"
+version: "1.7"
 status: active
 producer: story-writer
 timestamp: 2026-08-26T00:00:00Z
 changelog:
+  - "1.7 (B-SS18-SEC/B-SS09-SEC/ADR-029-v1.2/2026-08-26): S-2.11 v1.5 (+6 ACs; 28→34 ACs total; SEC-006/SEC-007 coverage: {INV-004} BoundaryApprovalHook+ForceApproveHooks, {PC-006} ForceApproveWriteBlocked+E-MCP-011). S-2.05 v1.5 (+1 AC; 17→18 ACs total; SEC-003 coverage: VP-006-B proptest P1 Red-Gate TV-007 4-pair FewShot; verification_properties: [VP-006, VP-006-B]). VP-006-B row added to VP-to-Story Anchor Map. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.6 (GAP-01/ADR-029/2026-08-26): S-2.11 extended — BC-2.09.008 added (GraphAgentTool wrapping; mcp::graph_tool; Wave 2; v1.4; 5→8 pts); VP-016 proptest P1 seeded (BC-2.09.008 {INV-001}); VP-015/VP-016 rows added to VP-to-Story Anchor Map. BC coverage 133→134; VP Seed BCs 13→14. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.5 (BC-completeness-propagation/2026-08-26): 23 story files updated with BC-completeness propagation (SS-01 through SS-23 cluster fan-out; AC/task/ACs updated to reflect ADR-014 §D7 MMR, §D8 delete-idempotent, ADR-028 multitask, plus 15 new EC codes); §Census Stories with VP anchor 12→13 (S-2.11 now anchors VP-015 via BC-2.09.007 {INV-003}). Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.4 (P2A-054 F-054-01/2026-08-25): §Census epic axis made symmetric with story axis — Product Epics 22 / Maintenance Epics 1 / Total Epics 23 (EPIC-MAINT accounted; product census unchanged at 22)."
@@ -459,6 +460,7 @@ input-hash: "f6e9b48"
 | VP-004 | BC-2.09.004 | S-2.10 | P1 | pregolya-mcp |
 | VP-005 | BC-2.09.005 | S-2.10 | P1 | pregolya-mcp |
 | VP-006 | BC-2.18.004 | S-2.05 | P1 | pregolya-prompts |
+| VP-006-B | BC-2.18.004 {PC-005} | S-2.05 | P1 | pregolya-prompts |
 | VP-007 | BC-2.19.001 | S-2.01 | P1 | pregolya-core |
 | VP-008 | BC-2.22.001 | S-2.09 | P1 | pregolya-core |
 | VP-009 | BC-2.21.003 | S-2.03 | P0 | pregolya-vectorstores |

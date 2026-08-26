@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.6 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): (1) MED+SECURITY gap — INV-003 credential-message sanitization: removed 'best-effort v1' hedge; specified mandatory `pregolya_mcp::sanitize::redact_credentials` step with pattern rules and source-restriction (PregolyaError::message only, not .source() chain or Debug). PC-003 updated to reference {INV-003} redaction. VP-MCPCALL-03 added. TV-007 added (fake key pattern → `<redacted>`). (2) LOW gap — PC-002 result_text JSON-vs-plaintext selection rule specified (`ToolOutput::Structured` → compact JSON via `serde_json::to_string`; `ToolOutput::Text` → verbatim). (3) LOW gap — EC-007 (-32700 parse error) and EC-008 (-32600 invalid request) added with wire-protocol JSON-RPC response specification. TV-008 added. ADR-027 stable clause anchors {EC-007}, {EC-008}."
   - "1.7 (B-SS09-11-arch-adjudication/2026-08-26): VP-MCPCALL-03 renamed to VP-015 everywhere in BC body — architect registered this property as formal VP-015 in Phase-2 BC-completeness reconciliation. TD-VSDD-060 sibling-sweep applied: all VP-MCPCALL-03 occurrences replaced (§Verification Properties table and §VP Anchors). No behavioral or semantic change."
   - "1.8 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
+  - "1.9 (B-SS09-sec-adjudication/ADR-029-SEC-001-SEC-002/2026-08-26): (1) SEC-001 — {PC-002} extended with success-path credential boundary obligation: Tool implementations MUST NOT embed credentials in ToolOutput success variants; framework sanitizes error paths only; DI-010 obligation binds every DynTool. TV-009 added (MockTool success-path asserts framework does NOT strip success-path content — boundary belongs to the Tool, not the server). (2) SEC-002 — {INV-003} extended with pluggable pattern registry note: three patterns cover first-party providers; partner crates SHOULD register additional patterns for new key formats; mandatory error-path behavior unchanged."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -76,6 +77,12 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
    The `Tool` implementation determines the variant; the server applies the corresponding
    serialization rule. If `ToolOutput` carries empty content (empty text string or JSON
    `null`), `result_text` is `""` or `"null"` respectively.
+   **Success-path credential boundary (DI-010):** Tool implementations MUST NOT embed
+   credential material (API keys, access tokens, secrets) in `ToolOutput::Structured { value }`
+   or `ToolOutput::Text { text }`. The framework applies `redact_credentials` to **error
+   paths only** (see {INV-003}); success-path `result_text` is **NOT** framework-sanitized.
+   This obligation derives from DI-010 (Credential Opacity) and binds every `DynTool`
+   implementation.
 3. {PC-003} On **tool execution error** (the pregolya `Tool::invoke` returns `Err`): the server
    responds with:
    `{ "content": [{ "type": "text", "text": "<error_message>" }], "isError": true }`.
@@ -122,6 +129,12 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
   messages that embed provider API key material from the tool's own configuration. The server
   MUST apply redaction before transmitting any error detail to an external MCP client.
   (invariants.md §DI-010: Credential Opacity)
+  **Pluggable pattern registry:** the three patterns above cover the first-party providers
+  (OpenAI `sk-`, Anthropic `sk-ant-`, generic 64+ alphanumeric token). Partner crates that
+  introduce new API key formats (e.g., a provider with a distinct key prefix or length) SHOULD
+  register additional patterns in `redact_credentials` via the pluggable pattern registry.
+  Extending the registry does not alter the mandatory error-path redaction behavior —
+  additional patterns add coverage without weakening the invariant.
 - {INV-004} **One invocation per request:** a single `tools/call` request invokes exactly one tool
   exactly once. No fan-out, no retry within the server handler.
 
@@ -195,6 +208,7 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 | TV-006 | Tool registered after server start; client invokes it | `isError: false` response with tool result | Dynamic registry |
 | TV-007 | `tools/call { name: "api_tool" }`; tool returns `Err(PregolyaError { message: "request failed: key=sk-abc123XYZabc123XYZabc", .. })` | MCP response `{ "content": [{ "type": "text", "text": "request failed: key=<redacted>" }], "isError": true }` — OpenAI-pattern key replaced by `<redacted>` | Credential redaction (INV-003) |
 | TV-008 | Client sends non-JSON bytes (e.g., `"not json{{"`) via `tools/call` path | JSON-RPC response `{ "error": { "code": -32700, "message": "Parse error" } }` | Malformed JSON — parse error (EC-007) |
+| TV-009 | `tools/call { name: "mock_tool" }`; MockTool returns `ToolOutput::Text{ text: "key=sk-abc123XYZabc123XYZabc" }` (success path) | MCP response `{ "content": [{ "type": "text", "text": "key=sk-abc123XYZabc123XYZabc" }], "isError": false }` — key material is preserved verbatim; success-path content is NOT framework-sanitized | Success-path credential boundary: framework does NOT strip; Tool implementation bears sole obligation ({PC-002} DI-010) |
 
 ## Verification Properties
 

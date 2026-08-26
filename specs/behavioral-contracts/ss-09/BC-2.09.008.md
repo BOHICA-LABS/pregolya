@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "1.0"
+version: "1.1"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -16,12 +16,13 @@ producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
 changelog:
   - "1.0 (GAP-01/ADR-029/2026-08-26): Initial — StateGraph-as-MCP-Tool wrapping contract; GraphAgentTool; mcp::graph_tool module in pregolya-mcp; inputSchema derivation via schemars; STATE-ISOLATION invariant {INV-001} (VP-016 proptest P1 proof target); fail-closed DenyInterrupts default; ForceApproveHooks explicit opt-in; E-MCP-010 GraphAgentInterruptDenied (ADR-029 §Decision 5; note: ADR-029 body incorrectly referenced E-MCP-006 — that code is taken by McpContentUnsupported; PO-authoritative mint is E-MCP-010). Human-approved v1 scope addition 2026-08-26 (GAP-01/HS-C-001)."
+  - "1.1 (ADR-029-sec-hardening/SEC-006/007/008/005/001/2026-08-26): Security hardening per ADR-029 §Decision 3/4/5. SEC-007: {PC-006} rewritten — ForceApproveHooks overrides ONLY PreToolDecision::PendingHumanApproval (subject to {INV-004} ActionRisk check); PreToolDecision::Deny and other decision variants pass through unchanged; ForceApproveHooks does not override security-based Deny decisions. SEC-006: {INV-004} body replaced — BoundaryApprovalHook enforces read-only restriction at runtime via ActionRisk check; PendingHumanApproval overridden to Approve only when action_risk < ActionRisk::Medium; otherwise Deny + CRITICAL log at mcp.graph_tool.force_approve_write_blocked + E-MCP-011 ForceApproveWriteBlocked; EC-009 and TV-008 added. SEC-005: {INV-001} extended — STATE-ISOLATION guarantee covers error paths; two unconditional sanitization passes applied to isError:true responses (redact_credentials + sanitize_internal_ids UUID v4 removal); node implementations must exclude internal IDs at authoring site; TV-009 added. SEC-001: {INV-005} added — extract_output closure must not select credential-bearing fields; framework does not sanitize success-path extract_output result; caller obligation per DI-010; TV-010 added. SEC-008: EC-010 added — extract_output panic caught via UnwindSafe boundary; static 'internal error' response; server continues serving; TV-011 added."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "e020acf"
+input-hash: "8700668"
 extracted_from: null
 modified: []
 deprecated: null
@@ -105,9 +106,10 @@ overrides `PreToolCallHook` approval decisions only.
    In both cases, `GraphAgentTool::invoke_dyn` returns `Err(E-MCP-010)`. The binary
    interrupt invariant {INV-002} holds: no `Ok` result is returned when the graph was interrupted.
 6. {PC-006} Under `GraphToolApprovalPolicy::ForceApproveHooks`: `BoundaryApprovalHook`
-   overrides ALL `PreToolDecision` values (including `PendingHumanApproval`) to `Approve`.
-   No human approval dialog is presented for hook-gated tool calls; the tool proceeds
-   unconditionally. Node-level `interrupt()` calls STILL produce `Err(E-MCP-010)` — the
+   overrides ONLY `PreToolDecision::PendingHumanApproval` to `Approve` (subject to the
+   `ActionRisk` check in {INV-004}). `PreToolDecision::Deny` and all other decision variants
+   pass through to the graph UNCHANGED. `ForceApproveHooks` does not override security-based
+   `Deny` decisions. Node-level `interrupt()` calls STILL produce `Err(E-MCP-010)` — the
    `ForceApproveHooks` policy does NOT override node-level interrupt semantics. {INV-002}
    holds under `ForceApproveHooks`.
 
@@ -126,6 +128,13 @@ overrides `PreToolCallHook` approval decisions only.
   DI-010 Credential Opacity is a structural corollary: credentials in input fields,
   intermediate fields, or model reasoning cannot appear in the output if `extract_output`
   is correctly scoped to output fields only.
+  The STATE-ISOLATION guarantee extends to all output paths including error paths. On any
+  `isError:true` MCP response from a `GraphAgentTool` invocation, `content[0].text` must
+  not contain checkpoint IDs, run IDs, or thread IDs (UUID v4 format). The framework
+  applies two unconditional sanitization passes: (1) `redact_credentials`, (2)
+  `sanitize_internal_ids` (UUID v4 removal). Node implementations must not rely on
+  framework sanitization for errors they author — error messages must exclude internal IDs
+  at the authoring site.
 
 - {INV-002} **Binary interrupt invariant (fail-closed default):** Exactly one of two
   outcomes is possible for any `GraphAgentTool::invoke_dyn` call under
@@ -145,13 +154,23 @@ overrides `PreToolCallHook` approval decisions only.
   `PregolyaError::message` is used as the text source (never `.source()`, `Debug`, or
   `Display` output).
 
-- {INV-004} **`ForceApproveHooks` is not a safety override for node interrupts:**
+- {INV-004} **`ForceApproveHooks` ActionRisk runtime gate:**
   `ForceApproveHooks` is appropriate ONLY for read-only tool graphs (graphs composed
-  exclusively of tools with `ActionRisk::ReadOnly` or `ActionRisk::Low`). Callers who opt
-  into `ForceApproveHooks` for graphs containing write-class tools
-  (`ActionRisk::Medium` or higher) violate the ADR-018 §Decision 2 per-graph security
-  contract. This invariant is a caller-responsibility obligation; pregolya does not
-  enforce it at construction time.
+  exclusively of tools with `ActionRisk::ReadOnly` or `ActionRisk::Low`). The
+  `ForceApproveHooks` policy's `BoundaryApprovalHook` enforces the read-only restriction
+  at runtime. Before overriding `PendingHumanApproval` → `Approve`, the hook checks
+  `preview.action_risk`. If `preview.action_risk >= ActionRisk::Medium`, the hook returns
+  `Deny` (with a CRITICAL-level structured log at key
+  `mcp.graph_tool.force_approve_write_blocked`) and emits `E-MCP-011 ForceApproveWriteBlocked`;
+  the tool is NOT invoked. If `preview.action_risk < ActionRisk::Medium`, the override
+  proceeds to `Approve`.
+
+- {INV-005} **`extract_output` closure credential opacity (caller obligation):**
+  The `extract_output` closure provided to `GraphAgentTool::from_graph` MUST NOT select
+  credential-bearing fields of `GraphState S` for inclusion in the output
+  `serde_json::Value`. The framework does not apply credential sanitization to the
+  success-path result of `extract_output`. Caller obligation, auditable at registration
+  (DI-010).
 
 ## Edge Cases
 
@@ -226,6 +245,27 @@ per BC-2.09.007 {PC-002} result_text selection rule. Server responds with
 `{ "content": [{ "type": "text", "text": "null" }], "isError": false }`. No error raised.
 {PC-004} holds. {INV-001} holds (Null output is a valid extract_output result).
 
+### EC-009: ForceApproveHooks + ActionRisk>=Medium tool — E-MCP-011 emitted, tool not invoked
+**Scenario:** `approval_policy = ForceApproveHooks`; a `PreToolCallHook` returns
+`PendingHumanApproval` for a tool whose `preview.action_risk >= ActionRisk::Medium`
+(e.g., a write-class tool with `ActionRisk::High`).
+**Expected behavior:** `BoundaryApprovalHook` checks `preview.action_risk` before
+overriding. Because `action_risk >= ActionRisk::Medium`, the hook returns `Deny` and
+emits `E-MCP-011 ForceApproveWriteBlocked` with a CRITICAL-level structured log at key
+`mcp.graph_tool.force_approve_write_blocked`. The tool is NOT invoked. {INV-004} enforces
+this gate at runtime; the graph continues executing with the `Deny` result but the
+write-class tool never executes.
+
+### EC-010: extract_output closure panics (caller contract violation)
+**Scenario:** The `extract_output` closure provided to `GraphAgentTool::from_graph`
+panics during execution after graph completion (programming error in the caller-supplied
+closure).
+**Expected behavior:** The `mcp::server` handler catches the panic via `UnwindSafe`
+boundary; response is `isError:true`, `content[0].text == "internal error"` (static; no
+panic message, backtrace, or internal state forwarded); server continues serving subsequent
+`tools/call` requests. A subsequent valid `tools/call` to a different (non-panicking)
+tool still succeeds.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -237,6 +277,10 @@ per BC-2.09.007 {PC-002} result_text selection rule. Server responds with
 | TV-005 | `ForceApproveHooks` policy; PreToolCallHook returns `PendingHumanApproval`; later node calls `interrupt()` | `isError: true`, E-MCP-010 message — interrupt not suppressed by ForceApproveHooks | EC-006, {INV-002} |
 | TV-006 | `extract_output = `\|`_`\|` Value::Null`; graph succeeds | `{ "content": [{ "type": "text", "text": "null" }], "isError": false }` | Null output valid (EC-008) |
 | TV-007 | Graph returns `Err(PregolyaError { message: "failed: sk-ant-abc123XYZXYZXYZ12345678901234567", .. })` | `isError: true`, message contains `<redacted>` not the key material | Credential redaction ({INV-003}) |
+| TV-008 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = ActionRisk::High` | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; CRITICAL log emitted at `mcp.graph_tool.force_approve_write_blocked` | ActionRisk runtime gate (EC-009, {INV-004}) |
+| TV-009 | Graph node returns `Err(PregolyaError { message: "operation failed for run <example-run-id>", .. })` | `isError: true`; `content[0].text` does NOT contain `<example-run-id>` (UUID removed by `sanitize_internal_ids`) | Error-path UUID sanitization ({INV-001}) |
+| TV-010 | `extract_output = `\|`s: &S`\|` json!({ "api_key": s.api_key })`; graph succeeds with `api_key = "sk-abc123"` in state | `isError: false`; `content[0].text` contains `"api_key":"sk-abc123"` (framework does NOT sanitize success-path `extract_output` result) | `extract_output` credential opacity boundary test ({INV-005}) — no post-hoc stripping |
+| TV-011 | `extract_output = `\|`_`\|` panic!("boom")`; graph succeeds to terminal state; server receives `tools/call` | `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }`; a subsequent `tools/call` to a different (non-panicking) tool returns `isError: false` | extract_output panic recovery (EC-010) |
 
 ## Verification Properties
 

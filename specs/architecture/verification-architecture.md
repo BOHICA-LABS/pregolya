@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.23"
+version: "2.24"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "df54145"
+input-hash: "7200b8d"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -39,7 +39,7 @@ decisions: [D17, D21, D23]
 
 ## [Section Content]
 
-This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the sixteen committed VP obligations (VP-001–VP-016), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}).
+This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the seventeen committed VP obligations (VP-001–VP-016 + VP-006-B), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-006-B is the SEC-003 multi-pair few-shot injection mandate (proptest P1 belt-and-suspenders for the VP-006 Arm 2 Kani harness). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -71,7 +71,7 @@ on a `Future` will fail at verification time. Consequences:
 
 ## Committed VP Obligations (D17-Q7 + R11 + D21 + D23)
 
-Sixteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction) plus VP-016 (GAP-01/ADR-029 GraphAgentTool state-isolation):
+Seventeen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-006-B (SEC-003 multi-pair few-shot mandate) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction) plus VP-016 (GAP-01/ADR-029 GraphAgentTool state-isolation):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -81,6 +81,7 @@ Sixteen VPs committed before v1.0 release — VP-001..005 (original five) plus V
 | VP-004 | BC-2.09.004 | DI-014 | `mcp::exception` | integration | 3 | P1 |
 | VP-005 | BC-2.09.005 | DI-014 | `mcp::client` | integration | 3 | P1 |
 | VP-006 | BC-2.18.004 | DI-014 | `prompts::injection_guard` | Kani | 6 | P1 |
+| VP-006-B | BC-2.18.004 | DI-014 | `prompts::injection_guard` | proptest | 3 | P1 |
 | VP-007 | BC-2.19.001 | DI-008 | `core::serializable` | proptest | 3 | P1 |
 | VP-008 | BC-2.22.001 | DI-014 | `core::embeddings` | proptest | 3 | P1 |
 | VP-009 | BC-2.21.003 | DI-014 | `vectorstores::similarity` | Kani | 6 | P0 |
@@ -92,9 +93,10 @@ Sixteen VPs committed before v1.0 release — VP-001..005 (original five) plus V
 | VP-015 | BC-2.09.007 {INV-003} | DI-010 | `mcp::sanitize` | unit | 3 | P1 |
 | VP-016 | BC-2.09.008 {INV-001} | DI-010 | `mcp::graph_tool` | proptest | 3 | P1 |
 
-**Total: 16 VPs — 6 P0 / 10 P1 | Tool breakdown: Kani ×9, proptest ×4, integration ×2, unit ×1**
+**Total: 17 VPs — 6 P0 / 11 P1 | Tool breakdown: Kani ×9, proptest ×5, integration ×2, unit ×1**
 
 > **D-273 VP-015 tool-type fix (GAP-01/2026-08-26):** VP-015 tool corrected from 'integration' to 'unit' — VP-015.md frontmatter is authoritative per CLAUDE.md rule 4 (VP file supersedes architecture doc).
+> **SEC-003 VP-006-B (SEC-review-adjudication/2026-08-26):** VP-006-B proptest P1 added for multi-pair few-shot injection mandate. Total 16→17 VPs; P1 10→11; proptest 4→5.
 
 ## Provable Properties Catalog
 
@@ -479,9 +481,83 @@ fn injection_guard_fewshot_fail_closed() {
 }
 ```
 
+**Multi-pair mandate (SEC-003):** The bound `n >= 1 && n <= 4` in the Arm 2 harness provides
+symbolic proof over ALL combinations of pair-count (1..=4) and trust-level assignment per pair.
+This includes scenarios where only middle or last pairs are Untrusted (e.g., `[Trusted, Untrusted,
+Trusted]`): Kani's symbolic enumeration over `kani::any::<Option<TrustLevel>>()` per element
+exhaustively covers these combinations within the bound. This coverage is MANDATORY — it is NOT
+a "should". VP-006.md MUST include `multi_pair_coverage: mandatory` in its proof obligations.
+
+**SEC-004 — Future TrustLevel Variant Obligation:**
+VP-006 proves the Arm 2 property for the THREE currently-defined `TrustLevel` variants
+(`Untrusted | UserInput | Trusted`). `TrustLevel` is `#[non_exhaustive]`; the runtime wildcard
+arm enforces fail-closed for any future variant that reaches `check_fewshot_trust` without a
+matching trust check. However, formal proof coverage does NOT automatically extend to future
+variants. **Proof obligation:** Adding a new `TrustLevel` variant requires re-running
+`cargo kani` to re-verify the Arm 2 harness. This obligation MUST be documented in VP-006.md
+§Proof Obligations and the VP-006.md frontmatter must include a `rerun_on_variant_addition:
+TrustLevel` field. VP-006.md is the authoritative source per Source-of-Truth Precedence rule 4.
+
+**VP-006-B (proptest P1, Phase 3) — belt-and-suspenders multi-pair coverage:**
+See §VP-006-B below.
+
 Feasibility: HIGH. Both `check_slot_trust` and `check_fewshot_trust` are pure sync functions over
 bounded Vec. Enum variants finite (TrustLevel: 3 variants; SlotTrustPolicy: 2 variants).
 Harness bounds: ≤ 4 slots / ≤ 4 examples. Estimated proof time per harness: 1–3 min.
+
+---
+
+**VP-006-B — injection_guard_fewshot Multi-Pair Fail-Closed** (`prompts::injection_guard`) `proptest P1 Phase 3`
+
+Property: For ANY arbitrary-length list of `FewShotExample` pairs (pair-count 2..=8) where at
+least one pair at ANY position (first, middle, or last) carries `TrustLevel::Untrusted`,
+`check_fewshot_trust` returns `Err(E-TMPL-001)` and never returns `Ok`. This is the
+belt-and-suspenders complement to VP-006 Arm 2 Kani harness: proptest generates arbitrary
+pair-count + arbitrary untrusted index to provide high-confidence coverage at Phase 3 before
+the Kani proof runs at Phase 6.
+
+Formal statement:
+```
+∀ examples: Vec<FewShotExample>, 2 ≤ |examples| ≤ 8:
+  ∃ i ∈ [0, |examples|): examples[i].trust_level == Some(TrustLevel::Untrusted) →
+    check_fewshot_trust(examples) == Err(PregolyaError { code: "E-TMPL-001", category: SECURITY, .. })
+```
+
+Proptest harness sketch:
+```rust
+proptest! {
+    #[test]
+    fn prop_fewshot_multi_pair_fail_closed(
+        pair_count in 2usize..=8usize,
+        untrusted_idx in any::<usize>(),
+    ) {
+        let untrusted_idx = untrusted_idx % pair_count;
+        let examples: Vec<FewShotExample> = (0..pair_count)
+            .map(|i| FewShotExample {
+                trust_level: if i == untrusted_idx {
+                    Some(TrustLevel::Untrusted)
+                } else {
+                    Some(TrustLevel::Trusted)
+                },
+            })
+            .collect();
+        let result = check_fewshot_trust(&examples);
+        prop_assert!(
+            matches!(result, Err(ref e) if e.code == "E-TMPL-001"),
+            "multi-pair fewshot with one Untrusted at index {} must fail-closed",
+            untrusted_idx
+        );
+    }
+}
+```
+
+Why proptest in addition to Kani Arm 2: (1) proptest provides fast Phase-3 feedback before the
+Phase-6 Kani proof; (2) belt-and-suspenders for the specific middle/last-element scenario that
+the security reviewer flagged as not provably covered.
+
+Feasibility: HIGH. `check_fewshot_trust` is a pure sync function. No async, no I/O. 256 proptest
+cases at pair_count ≤ 8 completes in < 1s. Red Gate: same TV as VP-006 (BC-2.18.004 {PC-005})
+with a multi-pair specific TV (to be authored by PO per handoff below).
 
 ---
 
@@ -761,6 +837,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.24 | 2026-08-26 | architect | SEC-review-adjudication | SEC-003: VP-006 Arm 2 multi-pair mandate — existing `n>=1&&n<=4` Kani harness provides symbolic proof covering multi-pair/middle/last-Untrusted scenarios; explicit mandate and VP-006-B proptest P1 added (arbitrary pair-count 2..=8 + arbitrary untrusted index; belt-and-suspenders). SEC-004: VP-006 future-variant proof obligation noted — adding a TrustLevel variant requires re-running cargo kani; VP-006 proves only currently-defined variants; runtime wildcard enforces fail-closed for any variant. Committed VP Obligations table: add VP-006-B row; totals 16→17, P1 10→11, proptest 4→5. §Section Content narrative updated. |
 | 2.23 | 2026-08-26 | architect | E-code-correction | VP-016 BC anchor: {INV-001} corrected from stale {INV-STATE-ISOLATION} (stable BC-2.09.008 numeric anchor per product-owner). §Section Content narrative, Committed VP Obligations table, and VP-016 body all updated. v2.22 changelog row also corrected (same invariant tag). |
 | 2.22 | 2026-08-26 | architect | GAP-01/ADR-029 | (1) D-273 VP-015 tool-type fix: `integration` → `unit` in Committed VP Obligations table and body (VP-015.md frontmatter is authoritative per CLAUDE.md rule 4). (2) VP-016 added: proptest P1, Phase 3, `mcp::graph_tool`, pregolya-mcp, BC-2.09.008 {INV-001}, DI-010 (ADR-029 GAP-01 resolution). Committed VP Obligations table: add VP-016 row; update total 15→16 VPs, P1 9→10, proptest 3→4, integration 3→2, unit 0→1. Section Content narrative updated (fifteen→sixteen VPs; VP-016 desc added). VP body sections: add VP-015 body and VP-016 body to §Should Prove. input-hash updated to df54145 (hook-computed after v2.21 edits; BC-2.09.008 added to inputs list). |
 | 2.21 | 2026-08-26 | architect | architect-reconcile-burst | (1) VP-006 3-arm scope extension (v1.9): §VP-006 updated to document all 3 injection arms; added Arm 2 formal statement (few-shot) and `injection_guard_fewshot_fail_closed` Kani harness sketch; TV-006 Red Gate noted. (2) VP-015 added to Committed VP Obligations table: `mcp::sanitize`, integration P1, Phase 3, BC-2.09.007 {INV-003}, DI-010. Section Content narrative updated (fourteen→fifteen VPs). Total: 15 VPs — 6 P0 / 9 P1, Kani 9 + proptest 3 + integration 3. input-hash refreshed (57a7c93 from hook-computed value; BC inputs added by Burst B propagation). |

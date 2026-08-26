@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.004
-version: "1.15"
+version: "1.16"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -37,6 +37,7 @@ changelog:
   - "1.13 (P2A-043-F-03/2026-08-24): INV-006 added — fail-closed wildcard for #[non_exhaustive] TrustLevel; unknown variants treated as Untrusted (guard fires, no Ok(PromptValue) escapes). Closes SS-18 escalation F-03; AC-009 and compliance-table row 'Fail-closed default' in S-2.05 re-anchor from INV-001 to INV-006."
   - "1.14 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
   - "1.15 (B-SS15-18-hardening/2026-08-26): HIGH SECURITY gap from Phase-2 bc-completeness-scan (D-270, burst B). {PC-005} extended to explicitly cover TemplateInput::FewShotExamples as the 3rd untrusted arm: if any (iv, ov) pair in a FewShotExamples list has an Untrusted component in a TrustRequired slot, E-TMPL-001 is raised fail-closed (same code/category as Scalar and Messages arms). TV-006 (Red Gate) added for FewShotExamples injection arm. VP-006 formal invariant already covers all 3 arms (burst-279 v1.7 added FewShotExamples to the formal invariant and harness); VP-006.md updated to reference PC-005 extended FewShotExamples coverage and TV-006 in §Source Contract."
+  - "1.16 (B-SS18-sec-adjudication/ADR-029-SEC-003-SEC-004/2026-08-26): (1) SEC-003 — TV-007 (Red Gate) added: 4-pair FewShotExamples where middle pair (index 1 iv) is Untrusted and pairs 0/2/3 are Trusted; guard fires fail-closed on middle pair; must compile-and-fail before check_fewshot_trust is implemented (Red Gate parity with TV-006); references VP-006-B (proptest multi-pair coverage). (2) SEC-004 — {INV-006} wording replaced: scoped to check_fewshot_trust wildcard arm; states VP-006 formally covers the three current TrustLevel variants and that adding a new variant requires re-running cargo kani (Kani proof does not auto-extend to future variants)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -147,16 +148,12 @@ enforcement of that invariant.
    template string, as produced by the f-string template parser's left-to-right variable scan) — NOT in HashMap iteration order.
    This ensures the `<var_name>` in the E-TMPL-001 error message is deterministic and
    reproducible regardless of HashMap seed or insertion order.
-6. {INV-006} **Fail-closed wildcard for `#[non_exhaustive]` `TrustLevel`:** `TrustLevel` is a
-   `#[non_exhaustive]` enum (declared in `pregolya-prompts/src/trust.rs` without `Ord`/`PartialOrd`
-   derives). When `injection_guard` encounters a `TrustLevel` variant not covered by an explicit
-   match arm — i.e., a variant added after this BC was authored — the wildcard `_ =>` arm
-   treats the variant as `TrustLevel::Untrusted`: the guard fires and returns
-   `Err(E-TMPL-001)`. No unknown trust level can escape a `TrustRequired` slot and produce
-   `Ok(PromptValue)`. This is the fail-closed default that preserves the security invariant
-   across future `TrustLevel` evolution. VP-006 Kani proof covers this: `#[non_exhaustive]`
-   exhaustive treatment ensures any new variant hits the wildcard, triggering the fail path.
-   (See S-2.05 AC-009: `test_BC_2_18_004_fail_closed_unknown_trust_level_treated_as_untrusted`.)
+6. {INV-006} **Fail-closed wildcard for `#[non_exhaustive]` `TrustLevel`:** The runtime
+   `#[non_exhaustive]` wildcard arm in `check_fewshot_trust` enforces fail-closed for any
+   `TrustLevel` variant not enumerated. VP-006 formally proves this for the three
+   currently-defined variants (`Untrusted` | `UserInput` | `Trusted`). Adding a new
+   `TrustLevel` variant requires re-running `cargo kani` to verify VP-006 still holds; the
+   Kani proof does not automatically extend to future variants.
 
 ## Edge Cases
 
@@ -180,6 +177,7 @@ enforcement of that invariant.
 | TV-004 | `template = [System("{s}"), Human("{h}")]`, both vars `trust_level: Some(TrustLevel::Untrusted)` | `Err(E-TMPL-001)` with `var_name = "s"` (first TrustRequired slot fails first) | error-case (fail-first semantics) |
 | TV-005 | `template = [System("{a}: {b}")]`, `vars = {"a": TemplateVar { value: "inject", trust_level: Some(TrustLevel::Untrusted) }, "b": TemplateVar { value: "also inject", trust_level: Some(TrustLevel::Untrusted) }}` | `Err(PregolyaError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'a' carries untrusted provenance but slot 'system' requires TrustRequired policy", .. })` — `a` appears first in template source order | error-case (intra-slot multi-var determinism) |
 | TV-006 (Red Gate) | `template = [System("{examples}"), Human("{q}")]`, `vars = {"examples": TemplateInput::FewShotExamples(vec![(TemplateVar { value: "safe_in", trust_level: None }, TemplateVar { value: "DROP TABLE users;--", trust_level: Some(TrustLevel::Untrusted) })]), "q": TemplateInput::Scalar(TemplateVar { value: "hi", trust_level: None })}` | `Err(PregolyaError { code: "E-TMPL-001", message: "InjectionAttempt: variable 'examples' carries untrusted provenance but slot 'system' requires TrustRequired policy", .. })` — untrusted example_output component fires before example_template.format() | error-case (FewShotExamples injection arm — {PC-005} 3rd arm; VP-006 `injection_guard_fewshot_fail_closed` harness) |
+| TV-007 (Red Gate) | `template = [System("{examples}"), Human("{q}")]`, `vars = {"examples": TemplateInput::FewShotExamples(vec![ (TemplateVar { value: "safe_in_0", trust_level: Some(TrustLevel::Trusted) }, TemplateVar { value: "safe_out_0", trust_level: Some(TrustLevel::Trusted) }), (TemplateVar { value: "inject_in_1", trust_level: Some(TrustLevel::Untrusted) }, TemplateVar { value: "safe_out_1", trust_level: Some(TrustLevel::Trusted) }), (TemplateVar { value: "safe_in_2", trust_level: Some(TrustLevel::Trusted) }, TemplateVar { value: "safe_out_2", trust_level: Some(TrustLevel::Trusted) }), (TemplateVar { value: "safe_in_3", trust_level: Some(TrustLevel::Trusted) }, TemplateVar { value: "safe_out_3", trust_level: Some(TrustLevel::Trusted) }) ]), "q": TemplateInput::Scalar(TemplateVar { value: "hi", trust_level: None })}` | `Err(PregolyaError { code: "E-TMPL-001", category: Category::Security, .. })` — 4 example pairs; pair index 1 iv is Untrusted while pairs 0/2/3 are Trusted; guard fires fail-closed on middle pair; must compile-and-fail before `check_fewshot_trust` is implemented (Red Gate parity with TV-006); VP-006-B proptest covers multi-pair middle-untrusted patterns | error-case (multi-pair FewShotExamples; middle pair Untrusted; {PC-005} 3rd arm; VP-006-B proptest) |
 
 ## Verification Properties
 
