@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "1.1"
+version: "1.2"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -17,12 +17,13 @@ timestamp: 2026-08-26T00:00:00Z
 changelog:
   - "1.0 (GAP-01/ADR-029/2026-08-26): Initial — StateGraph-as-MCP-Tool wrapping contract; GraphAgentTool; mcp::graph_tool module in pregolya-mcp; inputSchema derivation via schemars; STATE-ISOLATION invariant {INV-001} (VP-016 proptest P1 proof target); fail-closed DenyInterrupts default; ForceApproveHooks explicit opt-in; E-MCP-010 GraphAgentInterruptDenied (ADR-029 §Decision 5; note: ADR-029 body incorrectly referenced E-MCP-006 — that code is taken by McpContentUnsupported; PO-authoritative mint is E-MCP-010). Human-approved v1 scope addition 2026-08-26 (GAP-01/HS-C-001)."
   - "1.1 (ADR-029-sec-hardening/SEC-006/007/008/005/001/2026-08-26): Security hardening per ADR-029 §Decision 3/4/5. SEC-007: {PC-006} rewritten — ForceApproveHooks overrides ONLY PreToolDecision::PendingHumanApproval (subject to {INV-004} ActionRisk check); PreToolDecision::Deny and other decision variants pass through unchanged; ForceApproveHooks does not override security-based Deny decisions. SEC-006: {INV-004} body replaced — BoundaryApprovalHook enforces read-only restriction at runtime via ActionRisk check; PendingHumanApproval overridden to Approve only when action_risk < ActionRisk::Medium; otherwise Deny + CRITICAL log at mcp.graph_tool.force_approve_write_blocked + E-MCP-011 ForceApproveWriteBlocked; EC-009 and TV-008 added. SEC-005: {INV-001} extended — STATE-ISOLATION guarantee covers error paths; two unconditional sanitization passes applied to isError:true responses (redact_credentials + sanitize_internal_ids UUID v4 removal); node implementations must exclude internal IDs at authoring site; TV-009 added. SEC-001: {INV-005} added — extract_output closure must not select credential-bearing fields; framework does not sanitize success-path extract_output result; caller obligation per DI-010; TV-010 added. SEC-008: EC-010 added — extract_output panic caught via UnwindSafe boundary; static 'internal error' response; server continues serving; TV-011 added."
+  - "1.2 (ADR-029-v1.3/F-057-01/F-057-02/F-057-05/2026-08-26): Round-2 security fixes per ADR-029 §Decision-1/§Decision-4 architect adjudication. F-057-01 ({INV-004}): ActionRisk gate is now fail-closed on None — preview.action_risk (Option<ActionRisk> per BC-2.05.007 {PRE-003}) is None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011; Some(r < Medium) → Approve. EC-009 heading updated to cover both None and Some(High) cases; TV-012 added for the None/undeclared path; note that both None and Some(High) must be tested. F-057-01 ({PC-006}): None case appended — None (undeclared) fails closed to Deny identically to Some(>= Medium), consistent with BC-2.05.006 EC-004/{INV-002}. F-057-02 ({PC-005}): BoundaryApprovalHook::Deny sub-bullet corrected — graph CONTINUES executing after Deny; if valid terminal reached, {PC-004} applies (Ok); if error terminal reached, Err carries graph's OWN error (NOT E-MCP-010); closing sentence 'In both cases invoke_dyn returns Err(E-MCP-010)' removed. F-057-02 ({INV-002}): binary interrupt invariant scoped to node-level interrupt() parking (RunStatus::Interrupted) only; BoundaryApprovalHook::Deny path explicitly excluded (graph continues to own terminal). EC-005 is the authority for the Deny-path behavior and was already correct — {PC-005} and {INV-002} reconciled to match EC-005. F-057-05: §Story Anchor set to S-2.11 (sibling BCs BC-2.09.006/007 both anchor S-2.11; S-2.11 covers BC-2.09.008)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "8700668"
+input-hash: "552a3c7"
 extracted_from: null
 modified: []
 deprecated: null
@@ -99,19 +100,21 @@ overrides `PreToolCallHook` approval decisions only.
      tools/call; configure the graph to not interrupt, or register with
      GraphToolApprovalPolicy::ForceApproveHooks if read-only", retry_hint: Never, .. })`.
      The interrupted run is NOT persisted to durable checkpoint.
-   - **`PreToolCallHook::PendingHumanApproval`:** `BoundaryApprovalHook` (internal) intercepts
-     `PendingHumanApproval` and converts it to `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`.
-     The denied tool receives `ToolOutput::Error`; the graph continues running toward an error
-     terminal state; the terminal result surfaces via the normal execution path.
-   In both cases, `GraphAgentTool::invoke_dyn` returns `Err(E-MCP-010)`. The binary
-   interrupt invariant {INV-002} holds: no `Ok` result is returned when the graph was interrupted.
+   - **`PreToolCallHook::PendingHumanApproval`:** `BoundaryApprovalHook` converts
+     `PendingHumanApproval` → `Deny`; the tool is not invoked; the graph CONTINUES executing.
+     If the graph reaches a valid terminal state, {PC-004} applies
+     (`Ok(ToolOutput::Structured)`). If the graph reaches an error terminal,
+     `GraphRunner::run` returns `Err(PregolyaError)` with the graph's OWN error (NOT
+     `E-MCP-010`). `E-MCP-010` is NOT raised on the `BoundaryApprovalHook::Deny` path.
 6. {PC-006} Under `GraphToolApprovalPolicy::ForceApproveHooks`: `BoundaryApprovalHook`
    overrides ONLY `PreToolDecision::PendingHumanApproval` to `Approve` (subject to the
    `ActionRisk` check in {INV-004}). `PreToolDecision::Deny` and all other decision variants
    pass through to the graph UNCHANGED. `ForceApproveHooks` does not override security-based
    `Deny` decisions. Node-level `interrupt()` calls STILL produce `Err(E-MCP-010)` — the
    `ForceApproveHooks` policy does NOT override node-level interrupt semantics. {INV-002}
-   holds under `ForceApproveHooks`.
+   holds under `ForceApproveHooks`. `preview.action_risk` is `Option<ActionRisk>`; `None`
+   (undeclared) fails closed to `Deny` identically to `Some(>= Medium)` — undeclared risk
+   requires the highest gate, consistent with BC-2.05.006 EC-004/{INV-002}.
 
 ## Invariants
 
@@ -140,10 +143,12 @@ overrides `PreToolCallHook` approval decisions only.
   outcomes is possible for any `GraphAgentTool::invoke_dyn` call under
   `GraphToolApprovalPolicy::DenyInterrupts`:
   - Terminal state reached → `Ok(ToolOutput::Structured { value: extract_output_result })`
-  - Any graph interrupt (node-level `interrupt()` OR `PreToolCallHook::PendingHumanApproval`
-    reaching a terminal error state via `BoundaryApprovalHook::Deny`) → `Err(E-MCP-010)`
-  There is NO `Ok` code path that returns a result when the graph was interrupted and
-  did not reach a clean terminal state. `ForceApproveHooks` overrides only the
+  - Node-level `interrupt()` parking (`RunStatus::Interrupted`) → `Err(E-MCP-010)`
+  The `BoundaryApprovalHook::Deny` path does NOT raise `E-MCP-010`; the graph continues
+  to its own terminal (`Ok` per `{PC-004}` or the graph's own `Err`). The binary interrupt
+  invariant (`interrupt()` → `Err(E-MCP-010)`) applies to node-level `interrupt()` PARKING
+  (`RunStatus::Interrupted`) only. There is NO `Ok` code path that returns a result when
+  the graph reached `RunStatus::Interrupted`. `ForceApproveHooks` overrides only the
   `PreToolCallHook` path; the node-level interrupt invariant holds under both policies.
 
 - {INV-003} **Mandatory credential redaction (DI-010):** All `isError: true` paths from
@@ -159,11 +164,13 @@ overrides `PreToolCallHook` approval decisions only.
   exclusively of tools with `ActionRisk::ReadOnly` or `ActionRisk::Low`). The
   `ForceApproveHooks` policy's `BoundaryApprovalHook` enforces the read-only restriction
   at runtime. Before overriding `PendingHumanApproval` → `Approve`, the hook checks
-  `preview.action_risk`. If `preview.action_risk >= ActionRisk::Medium`, the hook returns
-  `Deny` (with a CRITICAL-level structured log at key
-  `mcp.graph_tool.force_approve_write_blocked`) and emits `E-MCP-011 ForceApproveWriteBlocked`;
-  the tool is NOT invoked. If `preview.action_risk < ActionRisk::Medium`, the override
-  proceeds to `Approve`.
+  `preview.action_risk` (`Option<ActionRisk>` per BC-2.05.007 {PRE-003}). If
+  `preview.action_risk` is `None` (undeclared — fail-closed per BC-2.05.006 EC-004/{INV-002})
+  OR `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with a
+  CRITICAL-level structured log at key `mcp.graph_tool.force_approve_write_blocked`) and
+  emits `E-MCP-011 ForceApproveWriteBlocked`; the tool is NOT invoked. If
+  `preview.action_risk` is `Some(r)` where `r < ActionRisk::Medium`, the override proceeds
+  to `Approve`.
 
 - {INV-005} **`extract_output` closure credential opacity (caller obligation):**
   The `extract_output` closure provided to `GraphAgentTool::from_graph` MUST NOT select
@@ -245,16 +252,19 @@ per BC-2.09.007 {PC-002} result_text selection rule. Server responds with
 `{ "content": [{ "type": "text", "text": "null" }], "isError": false }`. No error raised.
 {PC-004} holds. {INV-001} holds (Null output is a valid extract_output result).
 
-### EC-009: ForceApproveHooks + ActionRisk>=Medium tool — E-MCP-011 emitted, tool not invoked
+### EC-009: ForceApproveHooks + ActionRisk>=Medium or None — E-MCP-011 emitted, tool not invoked
 **Scenario:** `approval_policy = ForceApproveHooks`; a `PreToolCallHook` returns
-`PendingHumanApproval` for a tool whose `preview.action_risk >= ActionRisk::Medium`
+`PendingHumanApproval` for a tool whose `preview.action_risk` is either `None`
+(un-annotated tool, fail-closed) OR `Some(r)` where `r >= ActionRisk::Medium`
 (e.g., a write-class tool with `ActionRisk::High`).
 **Expected behavior:** `BoundaryApprovalHook` checks `preview.action_risk` before
-overriding. Because `action_risk >= ActionRisk::Medium`, the hook returns `Deny` and
-emits `E-MCP-011 ForceApproveWriteBlocked` with a CRITICAL-level structured log at key
+overriding. Because `action_risk` is `None` (undeclared, fails closed) or
+`>= ActionRisk::Medium`, the hook returns `Deny` and emits `E-MCP-011
+ForceApproveWriteBlocked` with a CRITICAL-level structured log at key
 `mcp.graph_tool.force_approve_write_blocked`. The tool is NOT invoked. {INV-004} enforces
-this gate at runtime; the graph continues executing with the `Deny` result but the
-write-class tool never executes.
+this gate at runtime; the graph continues executing with the `Deny` result but the tool
+never executes. Both the `None` case (un-annotated tool → `Deny` + `E-MCP-011`) and the
+`Some(High)` case must be tested.
 
 ### EC-010: extract_output closure panics (caller contract violation)
 **Scenario:** The `extract_output` closure provided to `GraphAgentTool::from_graph`
@@ -277,7 +287,8 @@ tool still succeeds.
 | TV-005 | `ForceApproveHooks` policy; PreToolCallHook returns `PendingHumanApproval`; later node calls `interrupt()` | `isError: true`, E-MCP-010 message — interrupt not suppressed by ForceApproveHooks | EC-006, {INV-002} |
 | TV-006 | `extract_output = `\|`_`\|` Value::Null`; graph succeeds | `{ "content": [{ "type": "text", "text": "null" }], "isError": false }` | Null output valid (EC-008) |
 | TV-007 | Graph returns `Err(PregolyaError { message: "failed: sk-ant-abc123XYZXYZXYZ12345678901234567", .. })` | `isError: true`, message contains `<redacted>` not the key material | Credential redaction ({INV-003}) |
-| TV-008 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = ActionRisk::High` | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; CRITICAL log emitted at `mcp.graph_tool.force_approve_write_blocked` | ActionRisk runtime gate (EC-009, {INV-004}) |
+| TV-008 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = ActionRisk::High` | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; CRITICAL log emitted at `mcp.graph_tool.force_approve_write_blocked` | ActionRisk runtime gate — Some(High) path (EC-009, {INV-004}) |
+| TV-012 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = None` (un-annotated tool) | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; CRITICAL log emitted at `mcp.graph_tool.force_approve_write_blocked` (None fails closed identically to Some(>= Medium)) | ActionRisk runtime gate — None/undeclared path (EC-009, {INV-004}) |
 | TV-009 | Graph node returns `Err(PregolyaError { message: "operation failed for run <example-run-id>", .. })` | `isError: true`; `content[0].text` does NOT contain `<example-run-id>` (UUID removed by `sanitize_internal_ids`) | Error-path UUID sanitization ({INV-001}) |
 | TV-010 | `extract_output = `\|`s: &S`\|` json!({ "api_key": s.api_key })`; graph succeeds with `api_key = "sk-abc123"` in state | `isError: false`; `content[0].text` contains `"api_key":"sk-abc123"` (framework does NOT sanitize success-path `extract_output` result) | `extract_output` credential opacity boundary test ({INV-005}) — no post-hoc stripping |
 | TV-011 | `extract_output = `\|`_`\|` panic!("boom")`; graph succeeds to terminal state; server receives `tools/call` | `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }`; a subsequent `tools/call` to a different (non-panicking) tool returns `isError: false` | extract_output panic recovery (EC-010) |
@@ -303,7 +314,7 @@ tool still succeeds.
 
 ## Story Anchor
 
-(Populated by story-writer after story decomposition)
+S-2.11
 
 ## VP Anchors
 

@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.7"
+version: "1.8"
 status: active
 producer: story-writer
 timestamp: 2026-08-26T00:00:00Z
 changelog:
+  - "1.8 (P2A-057-round-2/2026-08-26): S-2.11 v1.6 — F-057-01 CRIT fail-closed fix (AC-030: None/undeclared → Deny+E-MCP-011; TV-012 None variant); F-057-02 HIGH Deny-path corrected (AC-021: BoundaryApprovalHook::Deny path scoped to interrupt-parking, graph owns terminal); F-057-04/05 ACs updated (AC-024 binary-interrupt scoped; §Story Anchor populated). AC count UNCHANGED 34. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.7 (B-SS18-SEC/B-SS09-SEC/ADR-029-v1.2/2026-08-26): S-2.11 v1.5 (+6 ACs; 28→34 ACs total; SEC-006/SEC-007 coverage: {INV-004} BoundaryApprovalHook+ForceApproveHooks, {PC-006} ForceApproveWriteBlocked+E-MCP-011). S-2.05 v1.5 (+1 AC; 17→18 ACs total; SEC-003 coverage: VP-006-B proptest P1 Red-Gate TV-007 4-pair FewShot; verification_properties: [VP-006, VP-006-B]). VP-006-B row added to VP-to-Story Anchor Map. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.6 (GAP-01/ADR-029/2026-08-26): S-2.11 extended — BC-2.09.008 added (GraphAgentTool wrapping; mcp::graph_tool; Wave 2; v1.4; 5→8 pts); VP-016 proptest P1 seeded (BC-2.09.008 {INV-001}); VP-015/VP-016 rows added to VP-to-Story Anchor Map. BC coverage 133→134; VP Seed BCs 13→14. Story census UNCHANGED: 40 total (39 product + 1 maint)."
   - "1.5 (BC-completeness-propagation/2026-08-26): 23 story files updated with BC-completeness propagation (SS-01 through SS-23 cluster fan-out; AC/task/ACs updated to reflect ADR-014 §D7 MMR, §D8 delete-idempotent, ADR-028 multitask, plus 15 new EC codes); §Census Stories with VP anchor 12→13 (S-2.11 now anchors VP-015 via BC-2.09.007 {INV-003}). Story census UNCHANGED: 40 total (39 product + 1 maint)."
@@ -20,7 +21,7 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/verification-properties/VP-INDEX.md
-input-hash: "f6e9b48"
+input-hash: "69ed6f6"
 ---
 
 # STORY-INDEX: pregolya Phase 2 Story Inventory

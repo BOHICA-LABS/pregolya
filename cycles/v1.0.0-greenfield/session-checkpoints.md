@@ -2993,3 +2993,18 @@ pregolya Phase-2 BC-completeness hardening in progress (D-270; 2026-08-25). Prio
 pregolya Phase-2 BC-completeness hardening in progress (D-270; 2026-08-25). BC-completeness propagation COMPLETE (D-272; 2026-08-26): 45 BC files updated, VP-015 registered (MCP credential redaction; BC-2.09.007 {INV-003}; tool: unit), error-taxonomy 120→135 ECs, VP Seed BCs 12→13. D-273: VP-015 tool-type OBS (records-tier; VP-INDEX authoritative). D-274: HS-C-001 holdout authored (2026-08-26; sealed, single-use, flowloom-embedding; 15th scenario; 6/7 primitives covered). **GAP-01 AWAITS HUMAN DECISION: no BC specifies StateGraph→Tool wrapping for inbound MCP tool exposure (BC-2.09.006/007 cover already-registered tools only); HS-C-001 Check 5 CONTINGENT pending scope decision (add new BC vs. host-responsibility). Phase-2 adversarial 3-CLEAN cascade HELD pending GAP-01 resolution.** Holdout census 14→15. Prior 3-CLEAN (D-269) SUPERSEDED; streak RESET 0/3. Census 39/133/15/135. HEADS: develop 644d1ad clean; factory-artifacts = this burst commit. worktrees none; PRs none. GOVERNANCE: D-260 (S-7.01 maintenance waiver + canonical BC formats), ADR-027 §Scope Boundary (derived-prose ordinals OUT-of-scope, adversary-governed). ENGINE ADVISORY: VALIDATE-COUNT-PROP-FP non-blocking FP recurs on any STATE.md/STORY-INDEX edit (authoritative BC total 133). PENDING HUMAN: GAP-01 (StateGraph→Tool wrapping BC; HS-C-001 Check 5 CONTINGENT), E013 default_branch→main, R6 namespace publish, B1 direnv, TDIV-008 engine path_allow. DECISION DELTA this burst: D-274. FULL DELTA D-252..D-274 (exhaustive).
 
 ### STATE: v5.85, timestamp 2026-08-26T01:00:00Z
+
+---
+
+(v5.86 content was not captured in session-checkpoints.md by the burst that wrote v5.87. See v5.87 below for context continuity.)
+
+### STATE: v5.86, timestamp 2026-08-26 (exact time not recorded)
+
+---
+
+## v5.87 checkpoint (archived 2026-08-26; replaced by v5.88)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence in progress. **D-276 CLOSED (2026-08-26): Phase-2 re-convergence round-1 fix-burst.** CV-001 FIXED (module-decomposition.md mcp::graph_tool {INV-STATE-ISOLATION}→{INV-001}). SEC-001..008 CLOSED: 2 HIGH auth-bypass (SEC-007 BC-2.09.008 {PC-006} ForceApproveHooks overrides ONLY PendingHumanApproval; SEC-006 BC-2.09.008 {INV-004} BoundaryApprovalHook ActionRisk>=Medium→Deny+E-MCP-011); 3 MED; 3 LOW; dismissed-safe ReDoS+3. NEW E-MCP-011 ForceApproveWriteBlocked (EC 136→137). NEW VP-006-B proptest P1 (BC-2.18.004 {PC-005}; DI-014; harness injection_guard_multipair_fewshot_fail_closed). ADR-029 updated (§Decision 3/4/5; E-MCP-011+BoundaryApprovalHook). BC-2.09.007+BC-2.09.008+BC-2.18.004 updated. S-2.11 (28→34 ACs). S-2.05 (17→18 ACs; +VP-006-B). BC-INDEX+VP-INDEX+STORY-INDEX updated. Census 39/134/17/137. Phase-2 adversarial 3-CLEAN UN-HELD; streak 0/3. HEADS: develop 644d1ad clean; factory-artifacts bf80351 (D-276 round-1 fix-burst). worktrees none; PRs none. GOVERNANCE: D-260 (S-7.01 maintenance waiver + canonical BC formats), ADR-027 §Scope Boundary (derived-prose ordinals OUT-of-scope). ENGINE ADVISORY: VALIDATE-COUNT-PROP-FP non-blocking FP recurs on any STATE.md/STORY-INDEX edit (authoritative BC total 134). PENDING HUMAN: E013 default_branch→main, R6 namespace publish, B1 direnv, TDIV-008 engine path_allow. NEXT: fresh adversary+consistency-validator+security-reviewer on NEW HEAD → Phase-2 gate. DECISION DELTA this burst: D-276. FULL DELTA D-252..D-276 (exhaustive).
+
+### STATE: v5.87, timestamp 2026-08-26T04:00:00Z

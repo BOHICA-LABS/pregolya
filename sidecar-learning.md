@@ -870,3 +870,20 @@ ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.
 - Session ended at 2026-08-26T16:37:17Z (awaiting /session-review)
 - Session ended at 2026-08-26T16:43:12Z (awaiting /session-review)
 - Session ended at 2026-08-26T16:51:01Z (awaiting /session-review)
+- Session ended at 2026-08-26T17:57:34Z (awaiting /session-review)
+- Session ended at 2026-08-26T18:02:28Z (awaiting /session-review)
+- Session ended at 2026-08-26T18:04:53Z (awaiting /session-review)
+- Session ended at 2026-08-26T18:13:03Z (awaiting /session-review)
+- Session ended at 2026-08-26T18:24:20Z (awaiting /session-review)
+- Session ended at 2026-08-26T18:33:26Z (awaiting /session-review)
+- Session ended at 2026-08-26T18:53:24Z (awaiting /session-review)
+
+## D-277 round-2 fix-burst (2026-08-26) — consistency Finding 3 sweep
+
+**Burst scope:** P2A-057 F-057-01..05 + consistency LOW + security re-verify close (BC-2.09.008; ADR-029; error-taxonomy; BC-INDEX §3.73; S-2.11; STORY-INDEX §1.8).
+
+**Consistency F-3 sweep lesson:** The v5.87 STATE.md session resume checkpoint cited `factory-artifacts = this burst commit` without naming the SHA (bf80351). When archiving the v5.87 checkpoint to session-checkpoints.md, the known committed SHA (bf80351) was backfilled — `HEADS: develop 644d1ad clean; factory-artifacts bf80351 (D-276 round-1 fix-burst)`. Going forward: when STATE.md is authored at burst-close time (before the git commit), write `factory-artifacts = this burst commit` as a forward reference. When the checkpoint is later ARCHIVED to session-checkpoints.md, replace `= this burst commit` with the actual SHA from `git -C .factory log -1 --format=%h`.
+
+**BC-INDEX Form A body-changelog gap lesson:** The body changelog table (in `## Changelog` section) can diverge from the frontmatter Form A `changelog:` YAML list. Both must be updated in the same burst. In the D-276 burst, the frontmatter entry for v3.72 was added but the body changelog row for v3.72 was not (caught by P2A-057 consistency LOW). Protocol: when adding a Form A frontmatter changelog entry, immediately add the corresponding body changelog row in the same edit pass.
+
+**SEC-attribution correction lesson:** When a security-reviewer pass closes multiple findings across multiple BCs, the state-manager must verify the frontmatter attribution correctly maps each SEC finding to the specific BC that was changed, not just the BC cluster. The D-276 burst had BC-2.09.007 and BC-2.09.008 credits swapped in the BC-INDEX 3.72 frontmatter entry (caught by P2A-057 consistency LOW). Protocol: cross-check each `- vX.Y (date): ... SEC-NNN (clause)` attribution against the actual BC file's v history before committing.

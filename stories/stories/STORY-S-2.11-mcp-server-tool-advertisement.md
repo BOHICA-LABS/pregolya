@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "052b1a1"
+input-hash: "3b41502"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.10]
@@ -37,6 +37,7 @@ changelog:
   - "1.3 (BC-2.09.006 + BC-2.09.007 / 2026-08-26): BC-2.09.006 (burst-B-SS09-11 EC-006/-32700, EC-007/-32600 wire-protocol responses). BC-2.09.007 (burst-B-SS09-11: INV-003 redact_credentials mandatory+3-pattern sub+source restriction; PC-002 result_text JSON-vs-plaintext selection rule; VP-MCPCALL-03 renamed VP-015). Story changes: AC-013 updated to Red Gate — mandatory redact_credentials applied to PregolyaError::message only (source restriction); 3 substitution patterns (sk-*, sk-ant-*, 64-char token); validates VP-015. AC-014 added: BC-2.09.006 EC-006 + BC-2.09.007 EC-007 — malformed JSON → -32700 Parse error (wire-protocol only, no PregolyaError). AC-015 added: BC-2.09.006 EC-007 + BC-2.09.007 EC-008 — invalid JSON-RPC → -32600 Invalid Request (wire-protocol only). AC-016 added: BC-2.09.007 PC-002 — result_text selection (ToolOutput::Structured→compact JSON, ToolOutput::Text→verbatim). verification_properties updated to [VP-015]. BC table version column added. Tasks updated to AC-001–AC-016."
   - "1.4 (BC-2.09.008/ADR-029/GAP-01/2026-08-26): Add BC-2.09.008 StateGraph-as-MCP-Tool coverage; GraphAgentTool; mcp::graph_tool; AC-017–AC-028 (PC-001–PC-006, INV-001–INV-003 Red Gates, EC-001/EC-004/EC-007 Red Gates); VP-016 added; points 5→8; pregolya-graph dep now allowed in pregolya-mcp; E-MCP-010 cited throughout (not E-MCP-006)."
   - "1.5 (BC-2.09.008-v1.1/BC-2.09.007-v1.9/ADR-029-v1.2/SEC-001/005/006/007/008/2026-08-26): Security hardening propagation. AC-022 corrected: ForceApproveHooks overrides ONLY PendingHumanApproval (not ALL decisions); Deny passthrough per BC-2.09.008 {PC-006}. AC-029: {PC-006} Deny passthrough (SEC-007). AC-030: {INV-004}/EC-009 ActionRisk block — action_risk>=Medium emits E-MCP-011 ForceApproveWriteBlocked+CRITICAL log (SEC-006). AC-031: {INV-001}/TV-009 error-path UUID sanitization — sanitize_internal_ids chained after redact_credentials on isError paths (SEC-005). AC-032: {INV-005}/TV-010 extract_output credential opacity — success path not framework-sanitized; DI-010 caller obligation (SEC-001). AC-033: EC-010/TV-011 extract_output panic — UnwindSafe catch yields static 'internal error'; server continues (SEC-008). AC-034: BC-2.09.007 {PC-002}/TV-009 success-path credential boundary — error paths only sanitized by framework (SEC-001). Frontmatter changelog reordered ascending. sanitize.rs extended with sanitize_internal_ids. sanitize.rs File Structure entry updated."
+  - "1.6 (F-057-01/F-057-02/OBS/2026-08-26): Round-2 BC-2.09.008 security corrections. AC-030: ActionRisk gate extended — None (un-annotated, fail-closed per {INV-004}) added alongside Some(>=Medium); TV-012 (None path) and TV-008 (Some(High) path) cited; second test test_BC_2_09_008_force_approve_hooks_action_risk_none_fails_closed_emits_e_mcp_011() added. AC-021: BoundaryApprovalHook::Deny path corrected — graph CONTINUES to own terminal; valid terminal → Ok({PC-004}); error terminal → graph own Err (NOT E-MCP-010); E-MCP-010 scoped to node-level interrupt() parking only; test renamed to test_BC_2_09_008_pending_approval_under_deny_continues_to_terminal(). AC-024: Binary-interrupt invariant scoped to node-level interrupt() parking (RunStatus::Interrupted) only; Deny path explicitly excluded (graph continues to own terminal). OBS: all BC-2.09.008 and BC-2.09.007 AC heading traces normalized from §{CLAUSE} to plain CLAUSE form consistent with sibling BC-2.09.006 trace format; Task 33, EC-011, Arch Compliance Rules ActionRisk and binary-interrupt rows updated."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -184,7 +185,7 @@ nested object; assert compact JSON, no newlines), `test_BC_2_09_007_result_text_
 `test_BC_2_09_007_result_text_null_value_is_string_null()` (ToolOutput::Structured with
 `Value::Null`; assert `result_text == "null"`).
 
-### AC-017 (traces to BC-2.09.008 §{PC-001})
+### AC-017 (traces to BC-2.09.008 PC-001)
 `GraphAgentTool::from_graph(name, description, graph, extract_output)` constructs a
 `GraphAgentTool` where `graph: Arc<CompiledGraph<S>>` and
 `S: GraphState + for<'de> Deserialize<'de> + JsonSchema + Send + Sync + 'static`.
@@ -194,7 +195,7 @@ This schema is stored internally and returned by `DynTool::schema()` for adverti
 all precondition bounds are enforced by the type system at the call site. Verified by
 `test_BC_2_09_008_from_graph_derives_schema_at_construction_time()`.
 
-### AC-018 (traces to BC-2.09.008 §{PC-002})
+### AC-018 (traces to BC-2.09.008 PC-002)
 The constructed `GraphAgentTool` implements `DynTool` (object-safe dispatch seam per
 ADR-005 §Adjacent Trait Object-Safety Adjudications) and may be registered in a `ToolRegistry`
 via the standard registration API. After registration, the MCP server advertises the tool in
@@ -203,7 +204,7 @@ via the standard registration API. After registration, the MCP server advertises
 {PC-002}. Verified by
 `test_BC_2_09_008_graph_agent_tool_registered_appears_in_tools_list()`.
 
-### AC-019 (traces to BC-2.09.008 §{PC-003})
+### AC-019 (traces to BC-2.09.008 PC-003)
 On `tools/call` invocation for a `GraphAgentTool`:
 - If call arguments do not conform to `DynTool::schema()`, the server returns JSON-RPC
   `{ "code": -32602, "message": "Invalid arguments for tool '<name>': <schema_error>" }` BEFORE
@@ -215,7 +216,7 @@ On `tools/call` invocation for a `GraphAgentTool`:
 Verified by `test_BC_2_09_008_schema_validation_fail_returns_32602()` and
 `test_BC_2_09_008_deserialize_fail_returns_is_error_true_with_redaction()`.
 
-### AC-020 (traces to BC-2.09.008 §{PC-004})
+### AC-020 (traces to BC-2.09.008 PC-004)
 On successful graph execution: `GraphRunner::run` runs the graph to a terminal state, calls
 `extract_output(&final_state)`, and `GraphAgentTool::invoke_dyn` returns
 `Ok(ToolOutput::Structured { value: extract_output_result })`. The server serializes this per
@@ -224,22 +225,28 @@ If `extract_output` returns `Value::Null`, `result_text = "null"` — no error r
 holds. Verified by `test_BC_2_09_008_successful_graph_run_returns_structured_output()` and
 `test_BC_2_09_008_extract_output_null_result_is_valid()`.
 
-### AC-021 (traces to BC-2.09.008 §{PC-005})
-Under `GraphToolApprovalPolicy::DenyInterrupts` (default), when a graph node calls `interrupt()`
-during execution, `GraphRunner::run` detects `RunStatus::Interrupted` and
-`GraphAgentTool::invoke_dyn` returns
-`Err(PregolyaError { code: "E-MCP-010", category: EXEC, message: "graph agent tool invocation
-interrupted at MCP boundary: HITL approval not supported for synchronous tools/call; configure
-the graph to not interrupt, or register with GraphToolApprovalPolicy::ForceApproveHooks if
-read-only", retry_hint: Never })`. The interrupted run is NOT persisted to durable checkpoint.
-When `PreToolCallHook::PendingHumanApproval` is received under DenyInterrupts,
-`BoundaryApprovalHook` converts it to `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`;
-the node receives `ToolOutput::Error`; the graph continues toward an error terminal state and
-`invoke_dyn` returns `Err(E-MCP-010)`. Verified by
-`test_BC_2_09_008_node_interrupt_under_deny_returns_e_mcp_010()` and
-`test_BC_2_09_008_pending_approval_under_deny_hook_denied()`.
+### AC-021 (traces to BC-2.09.008 PC-005)
+Under `GraphToolApprovalPolicy::DenyInterrupts` (default):
+- **Node-level `interrupt()`:** When a graph node calls `interrupt()` during execution,
+  `GraphRunner::run` detects `RunStatus::Interrupted` and `GraphAgentTool::invoke_dyn` returns
+  `Err(PregolyaError { code: "E-MCP-010", category: EXEC, message: "graph agent tool invocation
+  interrupted at MCP boundary: HITL approval not supported for synchronous tools/call; configure
+  the graph to not interrupt, or register with GraphToolApprovalPolicy::ForceApproveHooks if
+  read-only", retry_hint: Never })`. The interrupted run is NOT persisted to durable checkpoint.
+- **`PreToolCallHook::PendingHumanApproval`:** When received, `BoundaryApprovalHook` converts
+  `PendingHumanApproval` → `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`; the tool
+  is NOT invoked; the node receives `ToolOutput::Error`; the graph CONTINUES executing. If the
+  graph reaches a valid terminal state, {PC-004} applies and `invoke_dyn` returns
+  `Ok(ToolOutput::Structured)`. If the graph reaches an error terminal, `invoke_dyn` returns
+  `Err(PregolyaError)` with the graph's OWN error — `E-MCP-010` is NOT raised on the
+  `BoundaryApprovalHook::Deny` path.
+Verified by `test_BC_2_09_008_node_interrupt_under_deny_returns_e_mcp_010()` (node-level
+interrupt → E-MCP-010; Red Gate) and
+`test_BC_2_09_008_pending_approval_under_deny_continues_to_terminal()` (Deny → graph
+continues → valid terminal → `Ok(ToolOutput::Structured)` per {PC-004}; or error terminal →
+graph's own `Err`, NOT `E-MCP-010`).
 
-### AC-022 (traces to BC-2.09.008 §{PC-006})
+### AC-022 (traces to BC-2.09.008 PC-006)
 Under `GraphToolApprovalPolicy::ForceApproveHooks`, `BoundaryApprovalHook` overrides ONLY
 `PreToolDecision::PendingHumanApproval` to `Approve` (subject to the `ActionRisk` check in
 {INV-004}); `PreToolDecision::Deny` and all other decision variants pass through to the graph
@@ -249,7 +256,7 @@ node-level interrupt semantics; {INV-002} holds under `ForceApproveHooks`. Verif
 `test_BC_2_09_008_force_approve_hooks_overrides_pending_approval()` and
 `test_BC_2_09_008_force_approve_hooks_does_not_suppress_node_interrupt()`.
 
-### AC-023 (traces to BC-2.09.008 §{INV-001} — Red Gate, validates VP-016)
+### AC-023 (traces to BC-2.09.008 INV-001 — Red Gate, validates VP-016)
 **Red Gate / Mandatory (STATE-ISOLATION):** `GraphAgentTool::invoke_dyn` on successful graph
 completion returns ONLY the `serde_json::Value` produced by `extract_output(&final_state)`.
 The following are NEVER included in the `ToolOutput` unless `extract_output` explicitly
@@ -265,20 +272,22 @@ arbitrary `S` instances with extra fields and verifies that ONLY selected fields
 `invoke_dyn` result. Verified by
 `test_BC_2_09_008_state_isolation_only_extract_output_in_result()` ({INV-001} / VP-016 anchor).
 
-### AC-024 (traces to BC-2.09.008 §{INV-002} — Red Gate)
-**Red Gate / Binary interrupt invariant (fail-closed):** Exactly one of two outcomes is
-possible for any `GraphAgentTool::invoke_dyn` call under
-`GraphToolApprovalPolicy::DenyInterrupts`:
+### AC-024 (traces to BC-2.09.008 INV-002 — Red Gate)
+**Red Gate / Binary interrupt invariant (fail-closed, node-level interrupt() only):** The
+binary interrupt invariant applies to node-level `interrupt()` PARKING (`RunStatus::Interrupted`)
+only. Under `GraphToolApprovalPolicy::DenyInterrupts`, exactly one of two outcomes is possible
+for the node-level interrupt path:
 - Terminal state reached → `Ok(ToolOutput::Structured { value: extract_output_result })`
-- Any graph interrupt (node-level `interrupt()` OR `PendingHumanApproval` reaching terminal
-  error via `BoundaryApprovalHook::Deny`) → `Err(E-MCP-010)`
-There is NO `Ok` code path that returns a result when the graph was interrupted and did not
-reach a clean terminal state. Under `ForceApproveHooks`, the `PreToolCallHook` path is
-overridden to `Approve`, but the node-level interrupt invariant holds in both policies;
-{INV-002} is satisfied under `ForceApproveHooks` as well. Verified by
-`test_BC_2_09_008_binary_interrupt_invariant_no_ok_on_interrupt()` (EC-004 and EC-006 combined).
+- Node-level `interrupt()` parking (`RunStatus::Interrupted`) → `Err(E-MCP-010)`
+The `BoundaryApprovalHook::Deny` path does NOT raise `E-MCP-010`; the graph continues to its
+own terminal (`Ok` per {PC-004} or the graph's own `Err`). There is NO `Ok` code path that
+returns a result when the graph reached `RunStatus::Interrupted`. Under `ForceApproveHooks`,
+the `PreToolCallHook` path is overridden to `Approve`, but the node-level interrupt invariant
+holds in both policies; {INV-002} is satisfied under `ForceApproveHooks` as well. Verified by
+`test_BC_2_09_008_binary_interrupt_invariant_no_ok_on_interrupt()` (EC-004 and EC-006 combined;
+node-level interrupt() only; Deny-path continues to own terminal, not E-MCP-010).
 
-### AC-025 (traces to BC-2.09.008 §{INV-003} — Red Gate)
+### AC-025 (traces to BC-2.09.008 INV-003 — Red Gate)
 **Red Gate / Mandatory credential redaction on all `GraphAgentTool` isError paths:** All
 `isError: true` paths from `GraphAgentTool` invocations — including `E-MCP-010`
 interrupt-denied errors and any `Err(PregolyaError)` propagated from graph execution — pass
@@ -291,7 +300,7 @@ response text. This obligation is unconditional per BC-2.09.007 {INV-003} extend
 `Err(PregolyaError { message: "failed: sk-ant-abc123XYZabc123XYZ1234567890123456", .. })`;
 assert `content[0].text` contains `<redacted>`, not the key material).
 
-### AC-026 (traces to BC-2.09.008 §{EC-004} — Red Gate)
+### AC-026 (traces to BC-2.09.008 EC-004 — Red Gate)
 **Red Gate / Node interrupt under DenyInterrupts → E-MCP-010:** When a graph node calls
 `interrupt()` during execution with `approval_policy = DenyInterrupts` (default, constructed
 via `from_graph` without `.with_approval_policy`), `GraphRunner::run` detects
@@ -302,7 +311,7 @@ McpContentUnsupported, a distinct error minted in burst-240). The interrupted ru
 persisted to durable checkpoint. Credential redaction applies per {INV-003}. {INV-002} holds.
 Verified by `test_BC_2_09_008_ec004_node_interrupt_deny_policy_e_mcp_010()`.
 
-### AC-027 (traces to BC-2.09.008 §{EC-007} — Red Gate, validates VP-016)
+### AC-027 (traces to BC-2.09.008 EC-007 — Red Gate, validates VP-016)
 **Red Gate / STATE-ISOLATION — extra fields excluded from output:** When `GraphState S` has
 fields `answer: String`, `internal_checkpoint_id: String`, and
 `accumulated_messages: Vec<serde_json::Value>`, and
@@ -313,7 +322,7 @@ response. {INV-001} STATE-ISOLATION holds. VP-016 proptest verifies this propert
 arbitrary `S` instances with additional fields. Verified by
 `test_BC_2_09_008_ec007_state_isolation_extra_fields_excluded()`.
 
-### AC-028 (traces to BC-2.09.008 §{EC-001} — Red Gate)
+### AC-028 (traces to BC-2.09.008 EC-001 — Red Gate)
 **Red Gate / Invalid input schema rejected before graph invocation:** When `tools/call`
 arguments do not conform to the derived inputSchema for `S` (e.g., a required field is absent,
 or a field has the wrong JSON type), the `mcp::server` validates call arguments against
@@ -322,7 +331,7 @@ JSON-RPC `{ "code": -32602, "message": "Invalid arguments for tool '<name>': <sc
 `GraphAgentTool::invoke_dyn` is never called; the graph is not invoked. Verified by
 `test_BC_2_09_008_ec001_invalid_input_schema_rejected_before_graph_invoke()`.
 
-### AC-029 (traces to BC-2.09.008 §{PC-006} — Deny-passthrough, Red Gate)
+### AC-029 (traces to BC-2.09.008 PC-006 — Deny-passthrough, Red Gate)
 **Red Gate / Deny-passthrough under ForceApproveHooks:** Under
 `GraphToolApprovalPolicy::ForceApproveHooks`, when a `PreToolCallHook` returns
 `PreToolDecision::Deny` (a security-based or policy-based denial), `BoundaryApprovalHook`
@@ -333,21 +342,30 @@ hook that denies an unsafe tool invocation could be silently overridden to `Appr
 `ForceApproveHooks`, bypassing the hook's security intent. Verified by
 `test_BC_2_09_008_force_approve_hooks_deny_passes_through_unchanged()`.
 
-### AC-030 (traces to BC-2.09.008 §{INV-004} + §{EC-009} — ActionRisk block, Red Gate)
-**Red Gate / Mandatory ActionRisk runtime gate under ForceApproveHooks:** Under
-`GraphToolApprovalPolicy::ForceApproveHooks`, when a `PreToolCallHook` returns
-`PendingHumanApproval` for a tool whose `preview.action_risk >= ActionRisk::Medium` (e.g.,
-`ActionRisk::High`), `BoundaryApprovalHook` MUST return `Deny` (not `Approve`) and:
+### AC-030 (traces to BC-2.09.008 INV-004 + EC-009 — ActionRisk block, Red Gate)
+**Red Gate / Mandatory ActionRisk runtime gate under ForceApproveHooks (fail-closed on None):**
+Under `GraphToolApprovalPolicy::ForceApproveHooks`, when a `PreToolCallHook` returns
+`PendingHumanApproval`, `BoundaryApprovalHook` checks `preview.action_risk`
+(`Option<ActionRisk>`) BEFORE overriding. If `preview.action_risk` is `None` (un-annotated
+tool — fail-closed, per the fail-closed default in {INV-004}) OR `Some(r)` where
+`r >= ActionRisk::Medium` (e.g., `ActionRisk::High`), the hook MUST return `Deny` (not
+`Approve`) and:
 - emit `E-MCP-011 ForceApproveWriteBlocked` (NOT `E-MCP-010`, which is `GraphAgentInterruptDenied`);
 - log at CRITICAL level with structured key `mcp.graph_tool.force_approve_write_blocked`;
 - NOT invoke the tool.
-If `preview.action_risk < ActionRisk::Medium`, the override proceeds to `Approve`. BC-2.09.008
-TV-008 verifies the `ActionRisk::High` scenario. This is a Red Gate: without the `ActionRisk`
-check, `ForceApproveHooks` would permit write-class tools to execute at an MCP boundary without
-any human approval gate. Verified by
-`test_BC_2_09_008_force_approve_hooks_action_risk_medium_emits_e_mcp_011_not_invoked()`.
+`None` (undeclared risk) fails closed identically to `Some(>= Medium)` — undeclared tools
+require the highest gate per {INV-004}. If `preview.action_risk` is `Some(r)` where
+`r < ActionRisk::Medium`, the override proceeds to `Approve`. Both the `None` case (TV-012:
+un-annotated tool → `Deny` + `E-MCP-011`) and the `Some(High)` case (TV-008:
+`ActionRisk::High` → `Deny` + `E-MCP-011`) must be tested. This is a Red Gate: without the
+`ActionRisk` check, `ForceApproveHooks` would permit write-class tools and un-annotated tools
+to execute at an MCP boundary without any human approval gate. Verified by
+`test_BC_2_09_008_force_approve_hooks_action_risk_medium_emits_e_mcp_011_not_invoked()`
+(TV-008, `Some(High)` path) and
+`test_BC_2_09_008_force_approve_hooks_action_risk_none_fails_closed_emits_e_mcp_011()`
+(TV-012, `None`/undeclared path).
 
-### AC-031 (traces to BC-2.09.008 §{INV-001} — error-path UUID sanitization, Red Gate)
+### AC-031 (traces to BC-2.09.008 INV-001 — error-path UUID sanitization, Red Gate)
 **Red Gate / Mandatory UUID sanitization on all isError paths (STATE-ISOLATION — error-path
 extension):** On any `isError: true` MCP response from a `GraphAgentTool` invocation,
 `content[0].text` must NOT contain UUID v4 values (format:
@@ -364,7 +382,7 @@ Gate: without `sanitize_internal_ids`, internal graph execution identifiers woul
 external MCP clients via error messages. Verified by
 `test_BC_2_09_008_error_path_uuid_sanitization_strips_internal_ids()`.
 
-### AC-032 (traces to BC-2.09.008 §{INV-005} — extract_output credential opacity)
+### AC-032 (traces to BC-2.09.008 INV-005 — extract_output credential opacity)
 **extract_output success-path is NOT framework-sanitized (caller/DI-010 obligation):** The
 `extract_output` closure is the sole data-exit path on the success path ({INV-001}). The
 framework does NOT apply `redact_credentials` or `sanitize_internal_ids` to the success-path
@@ -377,7 +395,7 @@ credential-bearing fields. BC-2.09.008 TV-010 verifies this boundary: the succes
 the leaking output IS preserved (framework does not sanitize it). Verified by
 `test_BC_2_09_008_extract_output_success_path_framework_does_not_sanitize()`.
 
-### AC-033 (traces to BC-2.09.008 §{EC-010} — extract_output panic recovery, Red Gate)
+### AC-033 (traces to BC-2.09.008 EC-010 — extract_output panic recovery, Red Gate)
 **Red Gate / extract_output panic caught via UnwindSafe boundary — static response:** When the
 `extract_output` closure provided to `GraphAgentTool::from_graph` panics during execution after
 successful graph completion (a programming error in the caller-supplied closure), the MCP
@@ -391,7 +409,7 @@ a panicking `extract_output` closure would crash the server process, causing a d
 at the MCP boundary. Verified by
 `test_BC_2_09_008_ec010_extract_output_panic_caught_unwindsafe_static_response()`.
 
-### AC-034 (traces to BC-2.09.007 §{PC-002} — success-path credential boundary)
+### AC-034 (traces to BC-2.09.007 PC-002 — success-path credential boundary)
 **BC-2.09.007 success-path: framework does NOT sanitize ToolOutput success variants (DI-010
 caller obligation):** The framework applies `redact_credentials` to **error paths only** (see
 BC-2.09.007 {INV-003} and AC-013). Success-path `result_text` — whether from
@@ -446,7 +464,7 @@ produces a response where `content[0].text` equals `"key=sk-abc123XYZabc123XYZab
 | EC-008 | `GraphAgentTool`: `extract_output` selects subset of fields | Only selected fields in response; extra fields excluded — BC-2.09.008 EC-007, {INV-001} |
 | EC-009 | `GraphAgentTool`: `ForceApproveHooks` + node `interrupt()` | PreToolCallHook overridden to Approve; node interrupt still → E-MCP-010 — BC-2.09.008 EC-006, {INV-002} |
 | EC-010 | `GraphAgentTool`: `extract_output` returns `Value::Null` | `result_text = "null"`, `isError: false` — BC-2.09.008 EC-008 |
-| EC-011 | `GraphAgentTool`: `ForceApproveHooks` + tool with `ActionRisk::High` (PendingHumanApproval received) | `Deny` + `E-MCP-011` + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked`; tool NOT invoked — BC-2.09.008 EC-009, {INV-004} |
+| EC-011 | `GraphAgentTool`: `ForceApproveHooks` + tool with `ActionRisk::High` (TV-008) or un-annotated `action_risk = None` (TV-012) — PendingHumanApproval received | `Deny` + `E-MCP-011` + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked`; tool NOT invoked; `None` fails closed identically to `Some(>=Medium)` — BC-2.09.008 EC-009, {INV-004} |
 | EC-012 | `GraphAgentTool`: `extract_output` closure panics after successful graph completion | `isError: true`, `content[0].text == "internal error"` (static); server continues serving subsequent requests — BC-2.09.008 EC-010 |
 
 ## Token Budget Estimate (MANDATORY)
@@ -485,28 +503,28 @@ produces a response where `content[0].text` equals `"key=sk-abc123XYZabc123XYZab
 15. [ ] Implement `ToolOutput::Structured → serde_json::to_string` / `ToolOutput::Text → verbatim` result_text selection in tools/call handler (AC-016 / BC-2.09.007 {PC-002})
 16. [ ] Run `cargo nextest run -p pregolya-mcp` — AC-001–AC-016 green (server + registry baseline)
 17. [ ] Create `pregolya-mcp/src/graph_tool.rs` — `GraphAgentTool<S>` struct, `GraphToolApprovalPolicy` enum, `BoundaryApprovalHook` internal struct, `GraphRunner` type-erased trait
-18. [ ] Implement `GraphAgentTool::from_graph` — accept `name`, `description`, `Arc<CompiledGraph<S>>`, `extract_output` closure; call `schemars::schema_for!(S)` at construction time; store `RootSchema` for `DynTool::schema()` (AC-017 / BC-2.09.008 §{PC-001})
-19. [ ] Implement `DynTool` for `GraphAgentTool` — `name()`, `description()`, `schema()` returning stored `RootSchema`, `invoke_dyn()` dispatching graph execution (AC-018 / BC-2.09.008 §{PC-002})
+18. [ ] Implement `GraphAgentTool::from_graph` — accept `name`, `description`, `Arc<CompiledGraph<S>>`, `extract_output` closure; call `schemars::schema_for!(S)` at construction time; store `RootSchema` for `DynTool::schema()` (AC-017 / BC-2.09.008 PC-001)
+19. [ ] Implement `DynTool` for `GraphAgentTool` — `name()`, `description()`, `schema()` returning stored `RootSchema`, `invoke_dyn()` dispatching graph execution (AC-018 / BC-2.09.008 PC-002)
 20. [ ] **Red Gate check (AC-023):** confirm `test_BC_2_09_008_state_isolation_only_extract_output_in_result()` FAILS before STATE-ISOLATION enforcement is implemented (extra fields leak to `ToolOutput` without explicit exclusion)
 21. [ ] **Red Gate check (AC-026):** confirm `test_BC_2_09_008_ec004_node_interrupt_deny_policy_e_mcp_010()` FAILS before E-MCP-010 interrupt-denied path is implemented
-22. [ ] Implement `BoundaryApprovalHook` — DenyInterrupts path: override `PendingHumanApproval` → `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`; ForceApproveHooks path: override ONLY `PendingHumanApproval` to `Approve` (subject to ActionRisk check — tasks 31/33); `Deny` passes through unchanged (AC-021, AC-022, AC-029 / BC-2.09.008 §{PC-005}/§{PC-006})
-23. [ ] Implement STATE-ISOLATION enforcement — `invoke_dyn` returns ONLY `extract_output(&final_state)` result; no checkpoint IDs, run IDs, intermediate outputs, or graph metadata in output (AC-023, AC-027 / BC-2.09.008 §{INV-001}; VP-016 proptest `graph_agent_tool_state_isolation` harness)
+22. [ ] Implement `BoundaryApprovalHook` — DenyInterrupts path: override `PendingHumanApproval` → `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`; ForceApproveHooks path: override ONLY `PendingHumanApproval` to `Approve` (subject to ActionRisk check — tasks 31/33); `Deny` passes through unchanged (AC-021, AC-022, AC-029 / BC-2.09.008 PC-005/PC-006)
+23. [ ] Implement STATE-ISOLATION enforcement — `invoke_dyn` returns ONLY `extract_output(&final_state)` result; no checkpoint IDs, run IDs, intermediate outputs, or graph metadata in output (AC-023, AC-027 / BC-2.09.008 INV-001; VP-016 proptest `graph_agent_tool_state_isolation` harness)
 24. [ ] Register `E-MCP-010 GraphAgentInterruptDenied` in error taxonomy (EXEC, broken, Never) — note: NOT E-MCP-006 (that code is McpContentUnsupported, minted burst-240; PO-authoritative mint is E-MCP-010 per ADR-029 §Decision 5)
-25. [ ] Extend `pregolya_mcp::sanitize::redact_credentials` usage to cover all `GraphAgentTool` isError paths — E-MCP-010 interrupt error and `Err(PregolyaError)` from graph execution (AC-025 / BC-2.09.008 §{INV-003})
+25. [ ] Extend `pregolya_mcp::sanitize::redact_credentials` usage to cover all `GraphAgentTool` isError paths — E-MCP-010 interrupt error and `Err(PregolyaError)` from graph execution (AC-025 / BC-2.09.008 INV-003)
 26. [ ] Add `schemars` dependency to `pregolya-mcp/Cargo.toml` (workspace pin)
 27. [ ] Add `pregolya-graph` dependency to `pregolya-mcp/Cargo.toml` (workspace pin; BC-2.09.008/ADR-029 dep edge — pregolya-mcp now depends on pregolya-graph for GraphAgentTool)
 28. [ ] Update `pregolya-mcp/src/lib.rs` — re-export `GraphAgentTool`, `GraphToolApprovalPolicy`; expose `graph_tool` module
 29. [ ] Run `cargo nextest run -p pregolya-mcp` — AC-001–AC-028 green (pre-security-hardening baseline; run again after tasks 30–39)
 30. [ ] **Red Gate check (AC-029):** confirm `test_BC_2_09_008_force_approve_hooks_deny_passes_through_unchanged()` FAILS before Deny-passthrough enforcement is implemented (Deny would be incorrectly converted to Approve)
-31. [ ] Implement Deny-passthrough in `BoundaryApprovalHook` under `ForceApproveHooks` — verify `PreToolDecision::Deny` is not converted to `Approve`; only `PendingHumanApproval` is eligible for override (AC-029 / BC-2.09.008 §{PC-006})
+31. [ ] Implement Deny-passthrough in `BoundaryApprovalHook` under `ForceApproveHooks` — verify `PreToolDecision::Deny` is not converted to `Approve`; only `PendingHumanApproval` is eligible for override (AC-029 / BC-2.09.008 PC-006)
 32. [ ] **Red Gate check (AC-030):** confirm `test_BC_2_09_008_force_approve_hooks_action_risk_medium_emits_e_mcp_011_not_invoked()` FAILS before `ActionRisk` gate is implemented (write-class tool would be invoked without the check)
-33. [ ] Implement `ActionRisk` runtime gate in `BoundaryApprovalHook` — check `preview.action_risk` before overriding `PendingHumanApproval`; if `>= ActionRisk::Medium` return `Deny` + emit `E-MCP-011 ForceApproveWriteBlocked` + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked`; register `E-MCP-011` in error taxonomy (AC-030 / BC-2.09.008 §{INV-004}, EC-009)
+33. [ ] Implement `ActionRisk` runtime gate in `BoundaryApprovalHook` — check `preview.action_risk` before overriding `PendingHumanApproval`; if `None` (un-annotated tool, fail-closed) OR `>= ActionRisk::Medium` return `Deny` + emit `E-MCP-011 ForceApproveWriteBlocked` + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked`; `None` fails closed identically to `Some(>= Medium)` per {INV-004}; register `E-MCP-011` in error taxonomy; implement two test paths: TV-008 (`Some(High)`) and TV-012 (`None`/undeclared) (AC-030 / BC-2.09.008 INV-004, EC-009)
 34. [ ] **Red Gate check (AC-031):** confirm `test_BC_2_09_008_error_path_uuid_sanitization_strips_internal_ids()` FAILS before `sanitize_internal_ids` is implemented (UUID v4 leaks to response text on isError paths)
-35. [ ] Implement `sanitize_internal_ids(text: &str) -> Cow<str>` in `pregolya_mcp::sanitize` — UUID v4 pattern removal (`[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}`, case-insensitive); chain after `redact_credentials` on all `GraphAgentTool` `isError: true` paths (AC-031 / BC-2.09.008 §{INV-001})
+35. [ ] Implement `sanitize_internal_ids(text: &str) -> Cow<str>` in `pregolya_mcp::sanitize` — UUID v4 pattern removal (`[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}`, case-insensitive); chain after `redact_credentials` on all `GraphAgentTool` `isError: true` paths (AC-031 / BC-2.09.008 INV-001)
 36. [ ] **Red Gate check (AC-033):** confirm `test_BC_2_09_008_ec010_extract_output_panic_caught_unwindsafe_static_response()` FAILS before `UnwindSafe` is implemented (unhandled panic crashes the handler, no `isError` response)
-37. [ ] Implement `UnwindSafe` boundary for `extract_output` invocation — catch panic → `isError: true`, `content[0].text == "internal error"` (static; no panic message or backtrace forwarded); ensure server continues serving subsequent requests (AC-033 / BC-2.09.008 §{EC-010})
-38. [ ] Write boundary test confirming success-path `ToolOutput` is NOT framework-sanitized: `MockTool` returning `ToolOutput::Text { text: "key=sk-abc123XYZabc123XYZabc" }` → assert `content[0].text` equals the raw string verbatim (AC-034 / BC-2.09.007 §{PC-002})
-39. [ ] Write boundary test confirming `extract_output` success-path result is NOT framework-sanitized: closure selecting `api_key` field → assert success response preserves value verbatim (AC-032 / BC-2.09.008 §{INV-005})
+37. [ ] Implement `UnwindSafe` boundary for `extract_output` invocation — catch panic → `isError: true`, `content[0].text == "internal error"` (static; no panic message or backtrace forwarded); ensure server continues serving subsequent requests (AC-033 / BC-2.09.008 EC-010)
+38. [ ] Write boundary test confirming success-path `ToolOutput` is NOT framework-sanitized: `MockTool` returning `ToolOutput::Text { text: "key=sk-abc123XYZabc123XYZabc" }` → assert `content[0].text` equals the raw string verbatim (AC-034 / BC-2.09.007 PC-002)
+39. [ ] Write boundary test confirming `extract_output` success-path result is NOT framework-sanitized: closure selecting `api_key` field → assert success response preserves value verbatim (AC-032 / BC-2.09.008 INV-005)
 40. [ ] Run `cargo nextest run -p pregolya-mcp` — all 34 ACs green (AC-001–AC-034)
 
 ## Previous Story Intelligence (MANDATORY)
@@ -538,16 +556,16 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 | `ToolOutput::Structured` → `serde_json::to_string` (compact); `ToolOutput::Text` → verbatim | BC-2.09.007 {PC-002} | Tests AC-016 |
 | No `unwrap()`/`expect()` in server handlers | CLAUDE.md Code Conventions | Clippy |
 | Registry read on each `tools/list` request (no startup snapshot) | BC-2.09.006 {PC-003} | Test AC-004 |
-| `GraphAgentTool::from_graph` calls `schemars::schema_for!(S)` at construction time; schema stored for `DynTool::schema()` | BC-2.09.008 §{PC-001} | Test AC-017 |
-| `GraphAgentTool::invoke_dyn` on success returns ONLY `extract_output(&final_state)` result (STATE-ISOLATION) | BC-2.09.008 §{INV-001}; VP-016 | Test AC-023 Red Gate |
-| Any graph interrupt under DenyInterrupts → `Err(E-MCP-010)`; NO `Ok` result when graph interrupted | BC-2.09.008 §{INV-002} binary interrupt invariant | Test AC-024 Red Gate |
+| `GraphAgentTool::from_graph` calls `schemars::schema_for!(S)` at construction time; schema stored for `DynTool::schema()` | BC-2.09.008 PC-001 | Test AC-017 |
+| `GraphAgentTool::invoke_dyn` on success returns ONLY `extract_output(&final_state)` result (STATE-ISOLATION) | BC-2.09.008 INV-001; VP-016 | Test AC-023 Red Gate |
+| Node-level `interrupt()` parking under DenyInterrupts → `Err(E-MCP-010)`; `BoundaryApprovalHook::Deny` continues to own terminal (NOT E-MCP-010); NO `Ok` when `RunStatus::Interrupted` | BC-2.09.008 INV-002 binary interrupt invariant | Test AC-024 Red Gate |
 | `E-MCP-010` (not E-MCP-006) is the error code for `GraphAgentInterruptDenied` | BC-2.09.008 §Error Codes; ADR-029 §Decision 5 | Error taxonomy; test AC-026 |
-| All `GraphAgentTool` isError paths apply `redact_credentials` on `PregolyaError::message` | BC-2.09.008 §{INV-003} | Test AC-025 Red Gate |
-| `ForceApproveHooks` overrides ONLY `PreToolDecision::PendingHumanApproval` (subject to `ActionRisk` check); `Deny` passes through UNCHANGED; node-level `interrupt()` still → E-MCP-010 | BC-2.09.008 §{PC-006}, §{INV-002}, §{INV-004} | Tests AC-022, AC-029, AC-030 |
-| `preview.action_risk >= ActionRisk::Medium` under `ForceApproveHooks` → `Deny` + `E-MCP-011 ForceApproveWriteBlocked` (NOT `E-MCP-010`) + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked` | BC-2.09.008 §{INV-004}, §{EC-009} | Test AC-030 Red Gate |
-| `isError: true` error paths apply two unconditional sanitization passes: (1) `redact_credentials`, (2) `sanitize_internal_ids` (UUID v4 removal), in that order | BC-2.09.008 §{INV-001} | Test AC-031 Red Gate |
-| `extract_output` success-path result is NOT framework-sanitized; DI-010 credential opacity is caller/registration obligation | BC-2.09.008 §{INV-005}; BC-2.09.007 §{PC-002} | Tests AC-032, AC-034 |
-| `extract_output` panic caught via `UnwindSafe`; response is static `"internal error"` (`isError: true`); server continues serving | BC-2.09.008 §{EC-010} | Test AC-033 Red Gate |
+| All `GraphAgentTool` isError paths apply `redact_credentials` on `PregolyaError::message` | BC-2.09.008 INV-003 | Test AC-025 Red Gate |
+| `ForceApproveHooks` overrides ONLY `PreToolDecision::PendingHumanApproval` (subject to `ActionRisk` check); `Deny` passes through UNCHANGED; node-level `interrupt()` still → E-MCP-010 | BC-2.09.008 PC-006, INV-002, INV-004 | Tests AC-022, AC-029, AC-030 |
+| `preview.action_risk` is `None` (un-annotated, fail-closed per {INV-004}) or `>= ActionRisk::Medium` under `ForceApproveHooks` → `Deny` + `E-MCP-011 ForceApproveWriteBlocked` (NOT `E-MCP-010`) + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked`; `None` fails closed identically to `Some(>= Medium)` | BC-2.09.008 INV-004, EC-009 | Tests AC-030 Red Gate (TV-008 Some(High); TV-012 None) |
+| `isError: true` error paths apply two unconditional sanitization passes: (1) `redact_credentials`, (2) `sanitize_internal_ids` (UUID v4 removal), in that order | BC-2.09.008 INV-001 | Test AC-031 Red Gate |
+| `extract_output` success-path result is NOT framework-sanitized; DI-010 credential opacity is caller/registration obligation | BC-2.09.008 INV-005; BC-2.09.007 PC-002 | Tests AC-032, AC-034 |
+| `extract_output` panic caught via `UnwindSafe`; response is static `"internal error"` (`isError: true`); server continues serving | BC-2.09.008 EC-010 | Test AC-033 Red Gate |
 
 **Forbidden dependencies:** `pregolya-mcp` (including `mcp::client` from S-2.10, `mcp::server`,
 and `mcp::graph_tool` from this story) must NOT depend on `pregolya-server`,
@@ -566,7 +584,7 @@ build MUST fail.
 | `tokio` | workspace pin | Async server task; `RwLock` for registry |
 | `serde_json` | workspace pin | `ToolDefinition` serialization; `CallToolResult` formatting |
 | `tracing` | workspace pin | Structured logging for server lifecycle events (SAP-1) |
-| `schemars` | workspace pin | `schema_for!(S)` inputSchema derivation in `GraphAgentTool::from_graph` (BC-2.09.008 §{PC-001}) |
+| `schemars` | workspace pin | `schema_for!(S)` inputSchema derivation in `GraphAgentTool::from_graph` (BC-2.09.008 PC-001) |
 
 ## File Structure Requirements (MANDATORY)
 
@@ -574,12 +592,13 @@ build MUST fail.
 |------|--------|---------|
 | `pregolya-mcp/src/server.rs` | CREATE | `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` |
 | `pregolya-mcp/src/registry.rs` | CREATE or MODIFY | `ToolRegistry` — shared with client side (extract if needed) |
-| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 {INV-003}); `pub fn sanitize_internal_ids(text: &str) -> Cow<str>` — UUID v4 removal chained after `redact_credentials` on `isError: true` paths (AC-031; BC-2.09.008 §{INV-001}) |
+| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 {INV-003}); `pub fn sanitize_internal_ids(text: &str) -> Cow<str>` — UUID v4 removal chained after `redact_credentials` on `isError: true` paths (AC-031; BC-2.09.008 INV-001) |
 | `pregolya-mcp/src/graph_tool.rs` | CREATE | `GraphAgentTool<S>`, `GraphToolApprovalPolicy`, `BoundaryApprovalHook`, `GraphRunner` — STATE-ISOLATION enforcement; E-MCP-010 interrupt-denied path (BC-2.09.008; ADR-029) |
 | `pregolya-mcp/src/lib.rs` | MODIFY | Re-export `McpServer`, `McpServerConfig`, `McpServerHandle`; expose `sanitize` module; re-export `GraphAgentTool`, `GraphToolApprovalPolicy`; expose `graph_tool` module |
 
 ## Changelog
 
 - **1.3 (BC-2.09.006 + BC-2.09.007 / 2026-08-26):** BC-2.09.006 (EC-006 malformed JSON → -32700 Parse error; EC-007 invalid JSON-RPC → -32600 Invalid Request; wire-protocol responses, no E-MCP-* raised). BC-2.09.007 (INV-003 mandatory `redact_credentials` with source restriction + 3-pattern substitution; PC-002 result_text JSON-vs-plaintext selection rule; VP-MCPCALL-03 renamed VP-015). Story changes: (1) AC-013 updated to Red Gate — mandatory `pregolya_mcp::sanitize::redact_credentials` applied to `PregolyaError::message` only (source restriction); 3 patterns (sk-*, sk-ant-*, 64-char token); validates VP-015. (2) AC-014 added: BC-2.09.006 EC-006 + BC-2.09.007 EC-007 — -32700 Parse error wire-protocol response, no PregolyaError. (3) AC-015 added: BC-2.09.006 EC-007 + BC-2.09.007 EC-008 — -32600 Invalid Request wire-protocol response, no PregolyaError. (4) AC-016 added: BC-2.09.007 PC-002 — result_text selection rule (Structured→compact JSON, Text→verbatim). (5) `verification_properties` updated to `[VP-015]`. (6) `sanitize.rs` added to File Structure; Arch Compliance Rules table extended with 3 new rows. (7) Tasks updated to AC-016 and tasks 12–16 added. (8) BC table version column added.
-- **1.4 (BC-2.09.008 / ADR-029 / GAP-01 / 2026-08-26):** Add BC-2.09.008 StateGraph-as-MCP-Tool coverage (GraphAgentTool; mcp::graph_tool). Story changes: (1) BC-2.09.008 added to `behavioral_contracts`; VP-016 added to `verification_properties`; `points` bumped 5→8. (2) AC-017–AC-022: BC-2.09.008 §{PC-001}–§{PC-006} (from_graph + schemars schema derivation; DynTool + ToolRegistry + tools/list advertisement; schema-validate → -32602 / deserialize-fail → isError + redaction; terminal → Ok(ToolOutput::Structured); DenyInterrupts node interrupt → E-MCP-010; ForceApproveHooks hook-override + node-interrupt-still-E-MCP-010). (3) AC-023–AC-025: Red Gate INV ACs (§{INV-001} STATE-ISOLATION VP-016 proptest anchor; §{INV-002} binary interrupt invariant; §{INV-003} mandatory credential redaction on all isError paths). (4) AC-026–AC-028: Red Gate EC ACs (§{EC-004} node interrupt → E-MCP-010; §{EC-007} STATE-ISOLATION extra fields excluded VP-016; §{EC-001} invalid input → -32602 before invoke). (5) E-MCP-010 (GraphAgentInterruptDenied) cited throughout — NOT E-MCP-006 (McpContentUnsupported). (6) Architecture Mapping + Purity Classification + Edge Cases + Token Budget + Tasks + Arch Compliance Rules + Library Requirements + File Structure updated for graph_tool module. (7) Forbidden dependencies updated: pregolya-graph now ALLOWED in pregolya-mcp (BC-2.09.008/ADR-029 dep edge). (8) schemars added to Library Requirements. (9) graph_tool.rs added to File Structure.
+- **1.4 (BC-2.09.008 / ADR-029 / GAP-01 / 2026-08-26):** Add BC-2.09.008 StateGraph-as-MCP-Tool coverage (GraphAgentTool; mcp::graph_tool). Story changes: (1) BC-2.09.008 added to `behavioral_contracts`; VP-016 added to `verification_properties`; `points` bumped 5→8. (2) AC-017–AC-022: BC-2.09.008 PC-001–PC-006 (from_graph + schemars schema derivation; DynTool + ToolRegistry + tools/list advertisement; schema-validate → -32602 / deserialize-fail → isError + redaction; terminal → Ok(ToolOutput::Structured); DenyInterrupts node interrupt → E-MCP-010; ForceApproveHooks hook-override + node-interrupt-still-E-MCP-010). (3) AC-023–AC-025: Red Gate INV ACs (INV-001 STATE-ISOLATION VP-016 proptest anchor; INV-002 binary interrupt invariant; INV-003 mandatory credential redaction on all isError paths). (4) AC-026–AC-028: Red Gate EC ACs (EC-004 node interrupt → E-MCP-010; EC-007 STATE-ISOLATION extra fields excluded VP-016; EC-001 invalid input → -32602 before invoke). (5) E-MCP-010 (GraphAgentInterruptDenied) cited throughout — NOT E-MCP-006 (McpContentUnsupported). (6) Architecture Mapping + Purity Classification + Edge Cases + Token Budget + Tasks + Arch Compliance Rules + Library Requirements + File Structure updated for graph_tool module. (7) Forbidden dependencies updated: pregolya-graph now ALLOWED in pregolya-mcp (BC-2.09.008/ADR-029 dep edge). (8) schemars added to Library Requirements. (9) graph_tool.rs added to File Structure.
 - **1.5 (BC-2.09.008-v1.1 / BC-2.09.007-v1.9 / ADR-029-v1.2 / 2026-08-26):** Security hardening propagation (SEC-001/005/006/007/008). (1) AC-022 corrected: ForceApproveHooks overrides ONLY PendingHumanApproval (not ALL decisions); Deny passthrough per BC-2.09.008 {PC-006}. (2) AC-029 added: {PC-006} Deny-passthrough — PreToolDecision::Deny passes through unchanged under ForceApproveHooks (SEC-007). (3) AC-030 added: {INV-004}/EC-009 ActionRisk block — action_risk>=Medium emits E-MCP-011 ForceApproveWriteBlocked + CRITICAL log at mcp.graph_tool.force_approve_write_blocked (SEC-006). (4) AC-031 added: {INV-001}/TV-009 error-path UUID sanitization — sanitize_internal_ids chained after redact_credentials on isError paths (SEC-005). (5) AC-032 added: {INV-005}/TV-010 extract_output credential opacity — success path not framework-sanitized; DI-010 caller obligation (SEC-001). (6) AC-033 added: EC-010/TV-011 extract_output panic — UnwindSafe catch → static 'internal error'; server continues (SEC-008). (7) AC-034 added: BC-2.09.007 {PC-002}/TV-009 success-path credential boundary — framework sanitizes error paths only (SEC-001). (8) Edge Cases EC-011 (ActionRisk block) and EC-012 (extract_output panic) added. (9) Tasks 30–40 added (security hardening implementation sequence; Red Gate checks). (10) Arch Compliance Rules: existing ForceApproveHooks row corrected; 5 new rows added. (11) sanitize.rs File Structure entry extended with sanitize_internal_ids. (12) Token Budget updated. (13) Frontmatter changelog reordered to ascending order.
+- **1.6 (F-057-01 / F-057-02 / OBS / 2026-08-26):** Round-2 BC-2.09.008 security corrections propagated. (1) AC-030 (F-057-01): ActionRisk gate is now fail-closed on `None` — `preview.action_risk` is `None` (un-annotated tool, fail-closed per {INV-004}) OR `Some(r >= Medium)` → `Deny` + `E-MCP-011 ForceApproveWriteBlocked` + CRITICAL log; `None` fails closed identically to `Some(>=Medium)`; TV-012 cited for `None` path (TV-008 for `Some(High)` path); second test function `test_BC_2_09_008_force_approve_hooks_action_risk_none_fails_closed_emits_e_mcp_011()` added. (2) AC-021 (F-057-02): `BoundaryApprovalHook::Deny` path corrected — graph CONTINUES executing after Deny; valid terminal → `Ok(ToolOutput::Structured)` per {PC-004}; error terminal → graph's OWN `Err(PregolyaError)` (NOT `E-MCP-010`); `E-MCP-010` raised ONLY on node-level `interrupt()` parking (`RunStatus::Interrupted`); test renamed to `test_BC_2_09_008_pending_approval_under_deny_continues_to_terminal()`. (3) AC-024 (F-057-02): Binary-interrupt invariant scoped to node-level `interrupt()` PARKING only; `BoundaryApprovalHook::Deny` path explicitly excluded (graph continues to own terminal, NOT `E-MCP-010`); test clarified. (4) OBS: all BC-2.09.008 and BC-2.09.007 AC heading traces normalized from `§{CLAUSE}` to plain `CLAUSE` form consistent with sibling BC-2.09.006 trace format throughout; Task 33 updated for `None` case; EC-011 updated to cover both TV-012 (`None`) and TV-008 (`Some(High)`) cases; Arch Compliance Rules binary-interrupt and ActionRisk rows updated.
