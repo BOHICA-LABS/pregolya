@@ -1,7 +1,7 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.26"
+version: "1.27"
 status: active
 producer: architect
 timestamp: 2026-08-27T00:00:00Z
@@ -9,6 +9,7 @@ phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.27 (round-18/F-P2A084-01+F-P2A084-02/D-288/2026-08-27): VP-016 body file bumped v1.9→v2.0 (exhaustive title/H1/frontmatter/table-cell/code-sketch sweep: frontmatter title and H1 'ToolOutput Contains Only extract_output-Selected Fields' → 'the Returned serde_json::Value Contains Only extract_output-Selected Fields' (F-P2A084-01); §Proof Method table Bounded? cell 'Unbounded over GraphState values' → 'Unbounded over serde_json::Value graph states'; Coverage cell 'For any generated S instance' → 'For any generated TestGraphState instance (as serde_json::Value)' (F-P2A084-02); TestGraphState struct doc, FALSE-GREEN GUARD prose, harness proptest macro doc, code-sketch inline comments and prop_assert! messages fully re-grounded on serde_json::Value). input-hash updated 2e9c2d7 → e57e95f. VP-INDEX catalog row UNCHANGED. VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.26 (round-14/semantic-reconciliation/F-P2A078..080/D-286/2026-08-27): VP-016 body file bumped v1.8→v1.9 (round-14 semantic re-read: F-P2A078-02 HIGH — §Property-Statement/§Corollary/§Proof-Method/§Feasibility 'GraphState S'/'ToolOutput returned by invoke_dyn' prose replaced with non-generic serde_json::Value; §BC-Traceability EC-TV-1 → TV-001 / EC-007 per F-P2A078-04 MED; verification-architecture.md harness struct fields re-grounded to output/checkpoint_id/run_id/accumulated_messages; dangling bare-form VP-016.md filename corrected to slug-form vp-016-graph-agent-tool-state-isolation.md per F-P2A078-03 MED). VP-INDEX catalog row UNCHANGED. VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.25 (round-12/GAP-01-straggler/D-285/2026-08-27): VP-016 body file bumped v1.7→v1.8 (round-12 straggler fixes: §Proof Obligations Stub Graph Obligation ROUTING FLAG→SATISFIED — S-1.14 AC-014 / Task 18 (round-10); §Realizability Trace Step 1 deserialization-framing removed — CompiledStateGraph::invoke takes serde_json::Value directly per BC-2.02.001 {PC-005}; Step 2 ConcreteGraphRunner(non-generic) + final_state[\"output\"] index form; §Feasibility async-concern row CompiledGraph::stub_terminal→CompiledStateGraph::stub_terminal; bare §AC-014 citations corrected to AC-014 in body). VP-INDEX catalog row unchanged. VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.24 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/D-284/2026-08-27): VP-016 body file bumped v1.5→v1.7 (round-10 type-grounding reconciliation: F-P2A072-02 eliminated ToolOutput::Structured phantom — invoke_dyn returns Result<serde_json::Value, PregolyaError> not ToolOutput; F-P2A072-01 eliminated as_value() phantom — resolved by F-P2A072-02 grounding; F-P2A072-03 eliminated CompiledGraph<S>/GraphState phantom — canon is non-generic CompiledStateGraph per BC-2.02.001 {PC-001}; §Realizability Trace updated; sibling-sweep §Feasibility Fn(&S)→Fn(&serde_json::Value) bound). VP-INDEX catalog row unchanged (BC-2.09.008 {INV-001} / proptest / P1 / draft unchanged). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."

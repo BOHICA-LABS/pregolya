@@ -2,14 +2,14 @@
 document_type: verification-property
 level: L4
 vp_id: VP-016
-title: "GraphAgentTool State-Isolation — ToolOutput Contains Only extract_output-Selected Fields (No Internal Graph State Leak)"
+title: "GraphAgentTool State-Isolation — the Returned serde_json::Value Contains Only extract_output-Selected Fields (No Internal Graph State Leak)"
 status: draft
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "2e9c2d7"
+input-hash: "e57e95f"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.9"
+version: "2.0"
 changelog:
+  - "2.0 (round-18/F-P2A084-01+F-P2A084-02/2026-08-27): Exhaustive title/H1/frontmatter/table-cell/code-sketch sweep. Frontmatter `title:` and H1: 'ToolOutput Contains Only extract_output-Selected Fields' → 'the Returned `serde_json::Value` Contains Only extract_output-Selected Fields' (F-P2A084-01). §Proof Method table Bounded? cell: 'Unbounded over GraphState values' → 'Unbounded over `serde_json::Value` graph states'; Coverage cell: 'For any generated `S` instance' → 'For any generated `TestGraphState` instance (as `serde_json::Value`)' (F-P2A084-02). TestGraphState struct doc: 'GraphState carrying' → 'Test graph-state value carrying'; 'leaking into ToolOutput' → 'leaking into the `serde_json::Value` returned by `invoke_dyn`'; 'MUST NOT appear in ToolOutput' → 'MUST NOT appear in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A084-01). Prose FALSE-GREEN GUARD (1): 'extra fields appear in `ToolOutput`' → 'extra fields appear in the `serde_json::Value` returned by `invoke_dyn`'. Harness proptest macro doc: 'into ToolOutput FAILS' → 'into the `serde_json::Value` returned by `invoke_dyn` FAILS'. Code-sketch: inline comment 'ToolOutput must contain EXACTLY' → 'the returned `serde_json::Value` must contain EXACTLY'; three prop_assert! messages 'must not appear in ToolOutput' → 'must not appear in the `serde_json::Value` returned by `invoke_dyn`'; prop_assert_eq! message 'ToolOutput must contain exactly' → 'the returned `serde_json::Value` must contain exactly'. input-hash updated 2e9c2d7 → e57e95f (BC-2.09.008 drift)."
   - "1.9 (round-14/F-P2A078-02+F-P2A078-04/2026-08-27): §Property Statement: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by `GraphAgentTool::invoke_dyn`' → 'the `serde_json::Value` returned by `GraphAgentTool::invoke_dyn`' (F-P2A078-02). §Corollary: 'in the `ToolOutput` unless' → 'in the `serde_json::Value` returned by `invoke_dyn` unless'. §BC Traceability table: '`ToolOutput` is structurally bounded by `extract_output`' → '`serde_json::Value` return is structurally bounded by `extract_output`'; EC-TV-1 → TV-001 / EC-007 (canonical BC-2.09.008 anchor forms; F-P2A078-04 MED). §Proof Method: 'concrete `S` instances' → 'concrete `TestGraphState` instances (serialized as `serde_json::Value`)'. §Feasibility: 'Open (arbitrary GraphState)' → 'Open (arbitrary `TestGraphState` as `serde_json::Value`)'."
   - "1.8 (round-12/GAP-01-straggler/2026-08-27): §Proof Obligations Stub Graph Obligation: ROUTING FLAG → SATISFIED (S-1.14 §AC-014 / Task 18, round-10); removed 'does NOT yet exist / requires routing / BEFORE Phase-3' language; ADR-029 §Symbol Grounding cross-ref updated. §Realizability Trace Step 1: 'Deserialization SUCCEEDS' → 'Input validation SUCCEEDS'; removed from_value::<TestGraphState> / ConcreteGraphRunner<S> deserialization framing (CompiledStateGraph::invoke takes serde_json::Value directly per BC-2.02.001 {PC-005}; no from_value step per F-P2A072-03). Step 2: ConcreteGraphRunner<TestGraphState> → ConcreteGraphRunner (non-generic); final_state.output → final_state[\"output\"] (serde_json::Value index form; matches harness closure). §Feasibility async-concern row: CompiledGraph::stub_terminal → CompiledStateGraph::stub_terminal."
   - "1.7 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler — §Feasibility: `Fn(&S) -> serde_json::Value + Send + Sync + 'static` bound → `Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static` bound (aligns with ADR-029 §Symbol Grounding canonical `extract_output` type; completes the type-grounding applied to property harness, prop harness imports, and module-decomposition in round-10 burst). input-hash updated to 1a605ae."
@@ -51,7 +52,7 @@ changelog:
   - "1.0 (GAP-01/ADR-029/2026-08-26): VP-016 created — STATE-ISOLATION invariant for GraphAgentTool; proptest P1 Phase 3; anchors BC-2.09.008 (PO to author); harness_fn `graph_agent_tool_state_isolation`; DI-010 Credential Opacity. Minted by architect per ADR-029 §Consequences."
 ---
 
-# VP-016: GraphAgentTool State-Isolation — ToolOutput Contains Only extract_output-Selected Fields
+# VP-016: GraphAgentTool State-Isolation — the Returned `serde_json::Value` Contains Only extract_output-Selected Fields
 
 ## Property Statement
 
@@ -112,7 +113,7 @@ internal fields absent from response).
 
 | Method | Tool | Bounded? | Coverage |
 |--------|------|----------|----------|
-| Property-based test | proptest | Unbounded over GraphState values | For any generated `S` instance with arbitrary extra fields, verify the `invoke_dyn` output contains only the fields selected by a fixed `extract_output` closure |
+| Property-based test | proptest | Unbounded over `serde_json::Value` graph states | For any generated `TestGraphState` instance (as `serde_json::Value`) with arbitrary extra fields, verify the `invoke_dyn` output contains only the fields selected by a fixed `extract_output` closure |
 
 **Why proptest (not Kani):** The STATE-ISOLATION property ranges over `serde_json::Value`,
 which is a recursive open data type. Kani's symbolic reasoning over unbounded JSON trees is
@@ -137,8 +138,8 @@ Harness function: `graph_agent_tool_state_isolation`
 including `checkpoint_id`, `run_id`, and `accumulated_messages`. `extract_output` runs INSIDE
 `ConcreteGraphRunner::run` — NOT in `invoke_dyn` (ADR-029 §Decision 3 canonical seam
 statement). If `ConcreteGraphRunner::run` returns raw terminal state instead of calling
-`extract_output` (a leak-injected scenario), the extra fields appear in `ToolOutput` and the
-`prop_assert!` checks FAIL.
+`extract_output` (a leak-injected scenario), the extra fields appear in the `serde_json::Value`
+returned by `invoke_dyn` and the `prop_assert!` checks FAIL.
 
 **(2) vacuous-Err guard (§Realizability-Trace):** The harness input is produced via
 `serde_json::to_value(&state).unwrap()` — a complete round-trip serialization of the
@@ -190,14 +191,14 @@ mod tests {
     use schemars::JsonSchema;
     use std::sync::Arc;
 
-    /// GraphState carrying an externally-visible `output` field PLUS three internal fields
-    /// that extract_output must NOT select. Any of the three leaking into ToolOutput is a
-    /// STATE-ISOLATION violation ({INV-001}).
+    /// Test graph-state value carrying an externally-visible `output` field PLUS three internal fields
+    /// that extract_output must NOT select. Any of the three leaking into the `serde_json::Value`
+    /// returned by `invoke_dyn` is a STATE-ISOLATION violation ({INV-001}).
     #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Arbitrary)]
     struct TestGraphState {
         /// The only field exposed to the MCP client.
         output: String,
-        /// Internal fields that MUST NOT appear in ToolOutput.
+        /// Internal fields that MUST NOT appear in the `serde_json::Value` returned by `invoke_dyn`.
         #[proptest(strategy = "any::<String>()")]
         checkpoint_id: String,
         #[proptest(strategy = "any::<String>()")]
@@ -212,7 +213,7 @@ mod tests {
         /// invoke_dyn wraps the runner's already-filtered result without re-filtering.
         /// The stub graph emits the full TestGraphState with extra internal fields;
         /// ConcreteGraphRunner::run applies extract_output (selecting ONLY `output`);
-        /// any leak of extra fields into ToolOutput FAILS the prop_assert! checks.
+        /// any leak of extra fields into the `serde_json::Value` returned by `invoke_dyn` FAILS the prop_assert! checks.
         #[test]
         fn graph_agent_tool_state_isolation(state in any::<TestGraphState>()) {
             let rt = tokio::runtime::Builder::new_current_thread()
@@ -290,21 +291,21 @@ mod tests {
 
                         // Extra internal fields must NOT appear — any leak FAILS VP-016.
                         prop_assert!(!obj.contains_key("checkpoint_id"),
-                            "checkpoint_id must not appear in ToolOutput \
+                            "checkpoint_id must not appear in the `serde_json::Value` returned by `invoke_dyn` \
                              (STATE-ISOLATION {INV-001} violation)");
                         prop_assert!(!obj.contains_key("run_id"),
-                            "run_id must not appear in ToolOutput \
+                            "run_id must not appear in the `serde_json::Value` returned by `invoke_dyn` \
                              (STATE-ISOLATION {INV-001} violation)");
                         prop_assert!(!obj.contains_key("accumulated_messages"),
-                            "accumulated_messages must not appear in ToolOutput \
+                            "accumulated_messages must not appear in the `serde_json::Value` returned by `invoke_dyn` \
                              (STATE-ISOLATION {INV-001} violation)");
 
-                        // Exact key-set check: ToolOutput must contain EXACTLY the
+                        // Exact key-set check: the returned `serde_json::Value` must contain EXACTLY the
                         // extract_output-selected keys.
                         let keys: Vec<&str> = obj.keys().map(|k| k.as_str()).collect();
                         prop_assert_eq!(
                             keys, vec!["output"],
-                            "ToolOutput must contain exactly the extract_output-selected keys; \
+                            "the returned `serde_json::Value` must contain exactly the extract_output-selected keys; \
                              any extra key is a STATE-ISOLATION leak ({INV-001})"
                         );
                     }

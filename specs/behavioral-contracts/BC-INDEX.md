@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.81"
+version: "3.82"
 status: active
 producer: state-manager
 timestamp: 2026-08-27T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.82 (round-18/F-P2A086-01/2026-08-27): VP Seed BCs Summary and header corrected — v3.79 bump (15→17 VP Seed) was incorrect: it conflated 'VP Seed BCs' (formal verification seeds) with 'VPs registered' (17 total including VP-004/VP-005 integration VPs). VP-004 and VP-005 are integration VPs registered in VP-INDEX but NOT formal verification seeds per the VP Seed BCs table's established semantic and its exclusion footnote. REVERTED: header '17 VP Seed' → '15 VP Seed' (leave '17 VPs registered'); §Summary '17 unique VPs (18 BC rows)' → '15 unique VPs (16 BC rows)'. VP-014 second BC-row (BC-2.01.006 — RunnableParallel Branch Failure) restored in VP Seed BCs table — VP-014 dual-anchors BC-2.01.005+BC-2.01.006; the 16 BC rows reflects 15 unique VP seeds plus the one extra for the VP-014 dual-anchor. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.81 (round-14/semantic-reconciliation/F-P2A078..080/D-286/2026-08-27): 2 BC version bumps (round-14 semantic per-document re-read — prose/enum/struct/filename/hybrid-anchor residue). BC-2.09.007 (v2.0→v2.1): F-P2A079-02 (LOW) §Architecture-Anchors + {PC-003}/{INV-001}/EC-002 — `Tool::invoke`/`ToolOutput` prose replaced with `DynTool::invoke_dyn`/`serde_json::Value`; input-hash refreshed to a403241. BC-2.09.008 (v1.8→v1.9): §Description and Traceability CAJ — 'compiled StateGraph'/'StateGraph' prose → `CompiledStateGraph` (concrete non-generic Rust type per {PRE-001}); input-hash refreshed to 51a07ba. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.80 (round-12/GAP-01-type-grounding-remaining/D-285/2026-08-27): 2 BC version bumps (remaining round-12 type-grounding propagation). BC-2.09.008 (v1.7→v1.8): EC-007 scenario prose — extract_output closure re-grounded from typed `|s: &S| json!({ \"answer\": s.answer })` to `|s: &serde_json::Value| json!({ \"answer\": s[\"answer\"] })`; TV-001 closure updated; TV-010 closure updated; {INV-005} 'credential-bearing fields of GraphState S' → 'credential-bearing keys of the returned serde_json::Value'; Traceability CAJ: StateGraph<S> → StateGraph (non-generic); zero residual |s: &S|/struct-field-access/StateGraph<S> in live body. BC-2.08.012 (v1.4→v1.5): {PC-001} register_into signature de-genericized — StateGraph<S> → StateGraph (non-generic; architect-confirmed BC-2.02.001 {PC-001}; StateGraph builder is non-generic per S-1.14). BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.79 (round-12/GAP-01-type-grounding/2026-08-27): VP Seed BCs Summary banner and table reconciled — VP-015 and VP-016 rows already present in VP Seed table; Summary metadata was stale at 15 unique VPs / 16 BC rows; updated to 17 unique VPs / 18 BC rows. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
@@ -101,7 +102,7 @@ changelog:
 
 # BC-INDEX: pregolya Behavioral Contracts
 
-> **134 BCs total — 51 P0 / 80 P1 / 3 P2 | 11 Red Gate | 17 VP Seed | 17 VPs registered**
+> **134 BCs total — 51 P0 / 80 P1 / 3 P2 | 11 Red Gate | 15 VP Seed | 17 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
@@ -124,7 +125,7 @@ changelog:
 | Priority P1 | 80 |
 | Priority P2 | 3 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 17 unique VPs (18 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006; VP-006-B companion to VP-006 on BC-2.18.004 {PC-005}) |
+| VP Seed BCs | 15 unique VPs (16 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006; VP-006-B companion to VP-006 on BC-2.18.004 {PC-005}) |
 | Subsection groups | 23 (SS-01 – SS-23) |
 
 ## Red Gate BCs
@@ -160,6 +161,7 @@ changelog:
 | VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani | ADR-019 Decision 3 |
 | VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani | ADR-020 Decision 3 |
 | VP-014 | BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | Proptest | DI-016 key-completeness (ADR-026 §Decision 1) |
+| VP-014 | BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | Proptest | DI-016 key-completeness (ADR-026 §Decision 2) |
 | VP-015 | BC-2.09.007 | MCP Server Tool Invocation — Credential Redaction Before Transmission | Unit | DI-010 credential opacity (CWE-532; BC-2.09.007 {INV-003}) |
 | VP-016 | BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | Proptest | DI-010 state-isolation {INV-001} (STATE-ISOLATION proof target; {INV-002} is Red-Gate-tested, not a VP-016 proof anchor) |
 
@@ -321,6 +323,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.82 | 2026-08-27 | round-18/F-P2A086-01+F-P2A085-01: VP Seed BCs count adjudication — reverted v3.79 incorrect bump (15→17 VP Seed): VP-004/VP-005 are integration VPs (not formal seeds per footnote); header '17 VP Seed' → '15 VP Seed'; §Summary '17 unique VPs (18 BC rows)' → '15 unique VPs (16 BC rows)'; VP-014/BC-2.01.006 row restored (VP-014 dual-anchors BC-2.01.005+BC-2.01.006; §Decision 2). Observability.md F-P2A085-01 (MED): mcp.graph_tool.force_approve_write_blocked — `%action_risk` → `?action_risk` (Debug sigil); message positional `{}` → `{:?}`; catalog table field schema `&str (Display)` → `Option<ActionRisk> (Debug)` (v1.8→v1.9). BC census UNCHANGED 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED 17. EC UNCHANGED 137. | round-18 D-288 |
 | 3.81 | 2026-08-27 | round-14/semantic-reconciliation: 2 BC version bumps. BC-2.09.007 (v2.0→v2.1): F-P2A079-02 (LOW) §Architecture-Anchors + {PC-003}/{INV-001}/EC-002 — `Tool::invoke`/`ToolOutput` prose → `DynTool::invoke_dyn`/`serde_json::Value`; input-hash refreshed to a403241. BC-2.09.008 (v1.8→v1.9): §Description and Traceability CAJ — 'compiled StateGraph' prose → `CompiledStateGraph` (concrete non-generic type per {PRE-001}); input-hash refreshed to 51a07ba. BC census UNCHANGED 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED 17. EC UNCHANGED 137. | round-14 D-286 |
 | 3.80 | 2026-08-27 | round-12/GAP-01-type-grounding-remaining: 2 BC version bumps. BC-2.09.008 (v1.7→v1.8): EC-007/TV-001/TV-010 extract_output closures `\|s: &S\|`→`\|s: &serde_json::Value\|` + JSON index access; {INV-005} 'GraphState S fields'→'serde_json::Value keys'; Traceability CAJ `StateGraph<S>`→`StateGraph`. BC-2.08.012 (v1.4→v1.5): {PC-001} `register_into(graph: &mut StateGraph<S>)`→`register_into(graph: &mut StateGraph)` (non-generic; BC-2.02.001 {PC-001}). BC census UNCHANGED 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED 17. EC UNCHANGED 137. | round-12 D-285 |
 | 3.79 | 2026-08-27 | round-12/GAP-01-type-grounding: VP Seed BCs Summary banner and table reconciled — VP-015 and VP-016 rows already present in VP Seed table; Summary metadata updated 15 unique VPs / 16 BC rows → 17 unique VPs / 18 BC rows. BC census UNCHANGED 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED 17. EC UNCHANGED 137. | round-12 D-TBD |
