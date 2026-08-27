@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.07
 epic_id: E-02
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.012.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c0e9272"
+input-hash: "3b716e5"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.04]
@@ -87,7 +87,7 @@ The entrypoint function must be compatible with the graph's state type. If the f
 `#[task]` applied to `async fn my_process_task(...)` generates a struct `MyProcessTaskNode` — the name is derived from the function name with `Node` suffix and NO case conversion (snake_case fn name → PascalCase struct name by standard Rust naming, then `Node` suffix). Verified by `test_BC_2_08_012_node_struct_generated()`.
 
 ### AC-013 (traces to BC-2.08.012 PC-001)
-The generated `MyProcessTaskNode` implements a `register_into(graph: &mut StateGraph<S>)` method that registers the node with the graph under the function's original snake_case name as the node identifier. Verified by `test_BC_2_08_012_register_into_called()`.
+The generated `MyProcessTaskNode` implements a `register_into(graph: &mut StateGraph)` method that registers the node with the graph under the function's original snake_case name as the node identifier. Verified by `test_BC_2_08_012_register_into_called()`.
 
 ### AC-014 (traces to BC-2.08.012 PC-002)
 `#[task]` preserves `async` semantics: the generated `invoke` method is `async fn invoke(&self, state: S) -> Result<NodeOutput<S>, PregolyaError>` and the macro wraps the annotated function body correctly. Verified by `test_BC_2_08_012_async_invoke_preserved()`.
@@ -224,3 +224,4 @@ Files to MODIFY:
 - 1.2 (ADR-027 M4/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag.
 - 1.3 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags.
 - 1.4 (SW-2/bc-completeness-hardening/2026-08-26): BC-2.08.010 → AC-016 (PC-006 duplicate tool name at collection assembly → E-TOOLS-010; first-registered retained); BC-2.08.012 → AC-017 (EC-004 reserved-name HARD compile-time error). EC-006/EC-007 added to edge cases. Tasks updated for new test functions.
+- 1.5 (GAP-01-type-grounding/round-12/2026-08-27): AC-013 `register_into` signature de-genericized: `StateGraph<S>` → `StateGraph` — `StateGraph` is non-generic per S-1.14 (architect-confirmed round-12). User node-state type `S` in node-fn signatures (e.g. `async fn task(state: S) -> Result<Update<S>>`) is unaffected; only the `StateGraph<S>` type parameter is removed. input-hash updated (state-manager recomputes).

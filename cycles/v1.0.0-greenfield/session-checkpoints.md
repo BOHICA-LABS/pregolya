@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "418159b"
+input-hash: "70f6eb7"
 traces_to: STATE.md
 ---
 
@@ -3044,3 +3044,12 @@ pregolya Phase-2 spec re-convergence IN PROGRESS. D-282 CLOSED (2026-08-26): rou
 pregolya Phase-2 spec re-convergence IN PROGRESS. D-283 CLOSED (2026-08-27): round-8 fix-burst — P2A-069/070/071; 1 HIGH + 5 MED + 2 LOW records + process-gap ALL CLOSED (VP-016 §Realizability-Trace holistic harness rewrite: serde_json::to_value input + prop_assert!(false) vacuous-Err guard + §Realizability Trace; ADR-029 §Decision 2 deserialize-attribution corrected to ConcreteGraphRunner::run; observability.md mcp.graph_tool.force_approve_write_blocked catalog row added; interface-definitions.md DenyInterrupts doc-comment corrected to BC semantics; BC-2.09.008 story-schema frontmatter removed; BC-INDEX title byte-matched H1; epics E-22 records). Lessons codified: L-196 (VP-016 realizability three-pass paper-fix recurrence; DOC-COMMENT-BC-DRIFT self-improvement recorded per S-7.02). Adversarial 3-CLEAN streak 0/3 NOT CLEAN (P2A-069/070/071 NOT CLEAN — all closed this round). NEXT ACTION: run three parallel deep adversary passes P2A-072/073/074 on NEW HEAD with realizability lens (VP-016 harness must be falsifiable: proptest should find a case that violates the invariant); if all three CLEAN(strict) → streak advances toward 3/3 CONVERGED → Phase-2 gate. OPEN OBS for the human gate: BC-2.09.008 {INV-005} success-path credential opacity is caller-discipline-only (SEC-001; no runtime backstop) — human risk-acceptance item. Census 39/134/17/137/29 ADR/15 HS. HEADS: develop 644d1ad; factory-artifacts 445bb48 — PUSHED. DIRECTIVE 1: keep going to convergence, do not ask to continue.
 
 ### STATE: v5.94, timestamp 2026-08-27T00:00:00Z
+
+---
+
+## v5.95 — Archived 2026-08-27 (replaced by v5.96)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 spec re-convergence IN PROGRESS. D-284 CLOSED (2026-08-27): round-10 fix-burst — P2A-072 3 HIGH + P2A-073 1 LOW ALL CLOSED. GAP-01 ROOT-CAUSE FOUND AND FIXED: contract was authored against 3 phantom Rust surfaces (ToolOutput::Structured, CompiledGraph<S>/S: GraphState, .as_value()); all eliminated across 14 files (TD-VSDD-060 sibling-sweep); re-grounded on real CompiledStateGraph (non-generic, BC-2.02.001 {PC-001}/{PC-005}) + serde_json::Value (invoke_dyn return). ADR-029 §Symbol Grounding architect audit table added. stub_terminal #[cfg(test)] helper routed to S-1.14 AC-014/Task 18 in-scope (REQUIRES-ROUTING closed). L-197 codified (symbol-resolution axis: VP-harness/design-realizability review MUST resolve every named Rust type/method/trait/variant against interface-definitions §Tool/§DynTool + owner-story deliverables). Adversarial 3-CLEAN streak 0/3 NOT CLEAN (P2A-072/073 NOT CLEAN — all closed this round). NEXT ACTION: run three parallel deep adversary passes P2A-075/076/077 on NEW HEAD with symbol-existence re-run + realizability lens; if all three CLEAN(strict) → streak advances toward 3/3 CONVERGED → Phase-2 gate. OPEN OBS for the human gate: BC-2.09.008 {INV-005} success-path credential opacity is caller-discipline-only (SEC-001; no runtime backstop) — human risk-acceptance item. Census 39/134/17/137/29 ADR/15 HS. HEADS: develop 644d1ad; factory-artifacts — PUSHED (active wrap). DIRECTIVE 1: keep going to convergence, do not ask to continue.
+
+### STATE: v5.95, timestamp 2026-08-27T06:00:00Z

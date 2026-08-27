@@ -1,7 +1,7 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.24"
+version: "1.25"
 status: active
 producer: architect
 timestamp: 2026-08-27T00:00:00Z
@@ -9,6 +9,7 @@ phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.25 (round-12/GAP-01-straggler/D-285/2026-08-27): VP-016 body file bumped v1.7→v1.8 (round-12 straggler fixes: §Proof Obligations Stub Graph Obligation ROUTING FLAG→SATISFIED — S-1.14 AC-014 / Task 18 (round-10); §Realizability Trace Step 1 deserialization-framing removed — CompiledStateGraph::invoke takes serde_json::Value directly per BC-2.02.001 {PC-005}; Step 2 ConcreteGraphRunner(non-generic) + final_state[\"output\"] index form; §Feasibility async-concern row CompiledGraph::stub_terminal→CompiledStateGraph::stub_terminal; bare §AC-014 citations corrected to AC-014 in body). VP-INDEX catalog row unchanged. VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.24 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/D-284/2026-08-27): VP-016 body file bumped v1.5→v1.7 (round-10 type-grounding reconciliation: F-P2A072-02 eliminated ToolOutput::Structured phantom — invoke_dyn returns Result<serde_json::Value, PregolyaError> not ToolOutput; F-P2A072-01 eliminated as_value() phantom — resolved by F-P2A072-02 grounding; F-P2A072-03 eliminated CompiledGraph<S>/GraphState phantom — canon is non-generic CompiledStateGraph per BC-2.02.001 {PC-001}; §Realizability Trace updated; sibling-sweep §Feasibility Fn(&S)→Fn(&serde_json::Value) bound). VP-INDEX catalog row unchanged (BC-2.09.008 {INV-001} / proptest / P1 / draft unchanged). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.23 (round-8/F-P2A069-01/D-283/2026-08-27): VP-016 body file bumped v1.4→v1.5 (F-P2A069-01 HIGH — prior harness was vacuous false-green: partial TestGraphState input → serde_json::from_value Err → prop_assert!() branches unreachable; architect rewrote holistically: input uses serde_json::to_value(&state) to guarantee round-trip success; hard prop_assert!(false) vacuous-Err guard added; §Realizability Trace section added). VP-INDEX catalog row unchanged (BC-2.09.008 {INV-001} / proptest / P1 / draft unchanged). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.22 (round-7/F-P2A066-01/D-282/2026-08-26): VP-016 §Option-A-seam — Option-A realizable harness adopted (extract_output seam: isolation solely in GraphRunner::run; invoke_dyn passes state/output through without re-filtering; ADR-029 §Decision 3 canonical seam statement updated). CompiledGraph::stub_terminal seam added; POL-31 bypass recipe deleted; BC-2.09.008 {PC-004}/{INV-001} seam wording aligned. Census UNCHANGED: 17 total (6 P0 / 11 P1)."

@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.2"
+version: "1.3"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
@@ -35,7 +35,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "2fcd7a4"
+input-hash: "e14b17b"
 traces_to: .factory/specs/prd.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -58,6 +58,7 @@ coverage_areas:
 coverage_gap_pending: []
 changelog:
   - "1.2 (F-P2A-065-06/2026-08-26): Terminology correction only — scenario semantics unchanged. Coverage-gap resolution note (line referencing E-MCP-010): corrected 'EXEC severity' to 'EXEC category, severity: broken' — EXEC is a category label, not a severity value; the severity value for E-MCP-010 is 'broken'. No scenario steps, checks, preconditions, or expected behaviors altered."
+  - "1.3 (round-12/GAP-01-type-grounding/2026-08-27): BC-Coverage table type-grounding — traceability metadata only, scenario narrative unchanged. {PC-003}/{PC-004} row: 'extract_output → ToolOutput::Structured' → 'extract_output → serde_json::Value' (DynTool::invoke_dyn returns Result<serde_json::Value, PregolyaError>; ToolOutput::Structured is a phantom variant per ADR-029 §Symbol Grounding). {INV-001}+VP-016 row: 'ToolOutput contains only extract_output-selected fields' → 'the serde_json::Value returned by invoke_dyn contains only extract_output-selected fields'."
   - "1.1 (GAP-01 resolved, 2026-08-26): BC-2.09.008 (GraphAgentTool; mcp::graph_tool) human-approved v1 scope addition (ADR-029). GAP-01 marked RESOLVED — STATE-ISOLATION {INV-001} VP-016 proptest P1 proof target, fail-closed interrupt {INV-002} E-MCP-010 minted. Check 5 promoted to first-class must-pass (must_pass: yes, 0.10 weight retained). BC linkage table extended with four BC-2.09.008 rows. Sealed note, Check 5 heading, Verification step 8, Evaluation Rubric, and Failure Guidance un-contingented."
   - "1.0 (initial, 2026-08-26): HS-C-001 authored for Flowloom embedding use case. Seven-primitive traceability verified. Coverage gap HS-C-001-GAP-01 (StateGraph→Tool wrapping absent) surfaced."
 ---
@@ -227,8 +228,8 @@ same external MCP server:
 | BC-2.09.006 {PC-002} | MCP server tools/list returns all registered tools with name/description/inputSchema | Check 5 — run_agent appears in tools/list |
 | BC-2.09.007 {PC-001}{PC-002}{INV-003} + VP-015 | tools/call routes to registered Tool, executes, serializes result; mandatory credential redaction before response | Check 5 — run_agent invocable via tools/call; internal state not leaked |
 | BC-2.09.008 {PC-002} | GraphAgentTool registered in ToolRegistry; MCP server advertises run_agent in tools/list with name, description, and schemars-derived inputSchema | Check 5 — run_agent appears in tools/list with inputSchema |
-| BC-2.09.008 {PC-003}/{PC-004} | tools/call invocation: schema validation, serde deserialization, graph execution, extract_output → ToolOutput::Structured; isError false on success | Check 5 — tools/call returns well-formed result |
-| BC-2.09.008 {INV-001} + VP-016 | STATE-ISOLATION: ToolOutput contains only extract_output-selected fields; no checkpoint IDs, run IDs, message history, or internal graph metadata in response | Check 5 — no internal state in response (VP-016 proptest P1 proof target) |
+| BC-2.09.008 {PC-003}/{PC-004} | tools/call invocation: schema validation, graph execution, extract_output → serde_json::Value; isError false on success | Check 5 — tools/call returns well-formed result |
+| BC-2.09.008 {INV-001} + VP-016 | STATE-ISOLATION: the serde_json::Value returned by invoke_dyn contains only extract_output-selected fields; no checkpoint IDs, run IDs, message history, or internal graph metadata in response | Check 5 — no internal state in response (VP-016 proptest P1 proof target) |
 | BC-2.09.008 {INV-002} + E-MCP-010 | Binary interrupt invariant (fail-closed): any internal graph interrupt → Err(E-MCP-010) GraphAgentInterruptDenied; no hang, no silent leak; isError true with sanitized message | Check 5 — interrupt-at-boundary fail-closed |
 
 ### Coverage Gap — HS-C-001-GAP-01 (RESOLVED)

@@ -104,6 +104,20 @@
 #       Promotion to blocking requires: residue = 0 AND exit contract changed to exit 1.
 #       Routing: product-owner (BC files) + story-writer (story files).
 #
+#   verify-no-phantom-types.sh             — GAP-01 phantom-type corpus grep gate (advisory).
+#       Codifies P2A-077 process-gap: sibling-sweeps must be CORPUS GREP, not enumerated file
+#       lists. Detects retired/phantom Rust type symbols (ToolOutput::Structured, CompiledGraph<,
+#       ConcreteGraphRunner<, S: GraphState, trait GraphState, Fn(&S), schema_for!(S)) across
+#       the FULL .factory/specs/ + .factory/stories/ + .factory/holdout-scenarios/ corpus.
+#       from_value::<S> / from_value::<TestGraphState> are GAP-01 scoped (only flagged in
+#       files referencing GraphAgentTool/mcp::graph_tool/ConcreteGraphRunner; avoids false
+#       positives on legitimate serde uses in non-GAP-01 BCs).
+#       Excludes: YAML changelog: blocks, ## Changelog sections, ## Symbol Grounding sections
+#       (PHANTOM-audit rows), and descriptive-negation prose.
+#       Baseline measurement (P2A-077 burst, 2026-08-27): 1 finding (HS-C-001 line 230).
+#       Promotion to blocking requires: residue = 0 AND exit contract changed to exit 1.
+#       Routing: architect + product-owner + story-writer per GAP-01-straggler fix-burst.
+#
 # EXIT CONTRACT
 # ─────────────
 # Exit 0 if all blocking validators pass.
@@ -194,6 +208,7 @@ echo ""
 echo "── Advisory validators (non-blocking; see header for promotion paths) ─"
 run_advisory "verify-changelog-claim-applied.sh"
 run_advisory "verify-ordinal-form-residue.sh"
+run_advisory "verify-no-phantom-types.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

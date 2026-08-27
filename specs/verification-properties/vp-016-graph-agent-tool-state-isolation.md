@@ -9,7 +9,7 @@ timestamp: 2026-08-26T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "488e209"
+input-hash: "5200237"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.7"
+version: "1.8"
 changelog:
+  - "1.8 (round-12/GAP-01-straggler/2026-08-27): §Proof Obligations Stub Graph Obligation: ROUTING FLAG → SATISFIED (S-1.14 §AC-014 / Task 18, round-10); removed 'does NOT yet exist / requires routing / BEFORE Phase-3' language; ADR-029 §Symbol Grounding cross-ref updated. §Realizability Trace Step 1: 'Deserialization SUCCEEDS' → 'Input validation SUCCEEDS'; removed from_value::<TestGraphState> / ConcreteGraphRunner<S> deserialization framing (CompiledStateGraph::invoke takes serde_json::Value directly per BC-2.02.001 {PC-005}; no from_value step per F-P2A072-03). Step 2: ConcreteGraphRunner<TestGraphState> → ConcreteGraphRunner (non-generic); final_state.output → final_state[\"output\"] (serde_json::Value index form; matches harness closure). §Feasibility async-concern row: CompiledGraph::stub_terminal → CompiledStateGraph::stub_terminal."
   - "1.7 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler — §Feasibility: `Fn(&S) -> serde_json::Value + Send + Sync + 'static` bound → `Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static` bound (aligns with ADR-029 §Symbol Grounding canonical `extract_output` type; completes the type-grounding applied to property harness, prop harness imports, and module-decomposition in round-10 burst). input-hash updated to 1a605ae."
   - "1.6 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): TYPE-GROUNDING reconciliation against canonical pregolya-core/pregolya-graph surfaces. F-P2A072-01 HIGH (as_value() E0599): `tool_output.as_value()` removed — `DynTool::invoke_dyn` returns `Result<serde_json::Value, PregolyaError>` directly (interface-definitions.md §Tool); `tool_output` IS a `serde_json::Value`; replaced `tool_output.as_value()` with direct `tool_output.as_object()` in Ok arm. Realizability Trace step 4 updated to reflect actual return type. F-P2A072-02 HIGH (ToolOutput::Structured phantom): `ToolOutput` has exactly `Text(String)`, `Json(serde_json::Value)`, `Error(String)` — NO `Structured` variant (interface-definitions.md §Tool). Formal property `Ok(ToolOutput::Structured { value })` rewritten to `Ok(value: serde_json::Value)`; `Ok(ToolOutput::Text { text })` arm removed. Realizability Trace step 3 rewritten to remove ToolOutput::Structured wrapping. F-P2A072-03 HIGH (CompiledGraph<S> + trait GraphState phantom): canonical type is `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}, pregolya-graph/src/types.rs); `GraphState` is not a trait (entities-graph.md §GraphState: 'GraphState is not a user-defined struct; it is the composed value of all Channels'). `CompiledGraph::stub_terminal(state: S)` phantom replaced by `CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value)`; `from_graph<S>` replaced by non-generic `from_graph` with explicit `input_schema: schemars::Schema` and `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; harness `extract_output` closure updated from `|s: &TestGraphState|` to `|s: &serde_json::Value|`; Stub Graph Obligation type signature updated. All three phantoms closed. FOLLOW-UP (same burst, symbol-existence audit): `CompiledStateGraph::stub_terminal` confirmed NOT present in BC-2.02.001 or S-1.14 — this is a new symbol requiring graph-subsystem routing. §Stub Graph Obligation updated with ROUTING FLAG: orchestrator must dispatch story-writer or PO to add `stub_terminal` as `#[cfg(test)]` spec addition to S-1.14 or companion story before Phase 3 S-2.11 begins. ADR-029 §Symbol Grounding updated with REQUIRES-ROUTING row for this symbol."
   - "1.5 (round-8/F-P2A069-01+F-P2A069-02/2026-08-26): HOLISTIC realizability rewrite (GAP-01 cluster, 4-round cycle-breaker). F-P2A069-01 HIGH (vacuous false-green closed): input corrected from partial json!({output:…}) to serde_json::to_value(&state).unwrap() — complete serialized TestGraphState ensures ConcreteGraphRunner<S>::run deserialization succeeds and Ok-arm is reached for every generated case; all STATE-ISOLATION prop_assert!s execute. Err(_) arm converted to hard FALSE-GREEN GUARD (prop_assert!(false, …)) — stub_terminal always succeeds, so any Err is infra failure, never vacuous-pass. FALSE-GREEN GUARD prose updated to cover both invoke_dyn-bypass and vacuous-Err cases. POL-31 now reachable: complete input reaches extract_output; bypassing extract_output returns raw state with extra fields, failing prop_assert!s. §Realizability Trace added: 5-step end-to-end proof including leak-injection variant making an assertion FAIL, and explicit statement that no vacuous-Err path is reachable. F-P2A069-02 MED (deserialize location): parallel fix in ADR-029 §Decision 2 (from_value::<S> runs inside ConcreteGraphRunner<S>::run, not invoke_dyn; routing isError:true unchanged)."
@@ -340,7 +341,7 @@ mod tests {
 | Input space | Open (arbitrary GraphState) | proptest covers via `Arbitrary` derive |
 | Proof complexity | Low | Structural containment check on JSON objects; no async, no I/O in the harness |
 | Tool support | Supported | `proptest` + `proptest-derive`; no blocking dependencies |
-| Async concern | Low | Harness calls `invoke_dyn` which is async; `tokio::runtime::Builder::new_current_thread()` wraps each proptest case; no actual I/O occurs (`CompiledGraph::stub_terminal` resolves synchronously — no network, no checkpoint I/O) |
+| Async concern | Low | Harness calls `invoke_dyn` which is async; `tokio::runtime::Builder::new_current_thread()` wraps each proptest case; no actual I/O occurs (`CompiledStateGraph::stub_terminal` resolves synchronously — no network, no checkpoint I/O) |
 | Estimated proof time | < 1s per proptest case | 10k cases × negligible per case |
 
 No blocking risks. The `extract_output` closure must be extractable and callable outside the
@@ -349,23 +350,17 @@ async context of `GraphRunner::run` for the harness to work — this is guarante
 
 ## Proof Obligations
 
-- [ ] **Stub Graph Obligation — ROUTING FLAG (graph-subsystem spec addition required):**
-  `CompiledStateGraph::stub_terminal` does NOT yet exist in BC-2.02.001 or S-1.14. This
-  obligation requires the orchestrator to route a spec addition to the graph subsystem (story-writer
-  or PO must add `stub_terminal` to S-1.14 tasks section or mint a companion test-helper story) BEFORE
-  Phase 3 implementation of S-2.11 begins. VP-016 harness compilation depends on this helper.
-  The required spec: a `#[cfg(test)]` constructor
-  `CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>`
-  implemented in `pregolya-graph` (exact module location at test-writer discretion, likely
-  `pregolya-graph/src/types.rs` or a `#[cfg(test)]` mod in the same file).
+- [x] **Stub Graph Obligation — SATISFIED (S-1.14 AC-014 / Task 18; round-10):**
+  `CompiledStateGraph::stub_terminal` is specced in S-1.14 AC-014 and Task 18 (added
+  round-10); implemented in `pregolya-graph/src/types.rs` as a `#[cfg(test)]` helper.
   `CompiledStateGraph` is the canonical non-generic compiled graph type (BC-2.02.001 {PC-001},
   `pregolya-graph/src/types.rs`). This constructor creates a minimal `CompiledStateGraph`
   whose single execution step returns `terminal_state` (a `serde_json::Value`) as the terminal
   channel-composed output — no real graph logic, no LLM calls, no checkpointing. NOT public
-  API; `#[cfg(test)]` only. Enables `from_graph` to create a real `ConcreteGraphRunner` (non-generic)
-  that exercises the production `(self.extract_output)(&final_state_value)` call path inside
-  `ConcreteGraphRunner::run`. The phantom `CompiledGraph::<S>::stub_terminal(state: S)` is retired
-  (F-P2A072-03 closure). ADR-029 §Symbol Grounding carries the REQUIRES-ROUTING row for this symbol.
+  API; `#[cfg(test)]` only. Enables `from_graph` to create a real `ConcreteGraphRunner`
+  (non-generic) that exercises the production `(self.extract_output)(&final_state_value)` call
+  path inside `ConcreteGraphRunner::run`. Consumed by VP-016 harness (BC-2.09.008 {INV-001})
+  in S-2.11. ADR-029 §Symbol Grounding row is now ROUTED / SPECCED (round-12).
 - [ ] `TestGraphState` derives `proptest_derive::Arbitrary` and `schemars::JsonSchema`
 - [ ] `graph_agent_tool_state_isolation` proptest runs without shrinking failures for 10k cases
 - [ ] `full_state_differs_from_extract_output` proptest confirms extract_output does not accidentally serialize the full struct
@@ -392,17 +387,17 @@ It follows the 5-step mandate from the round-8 cycle-breaker.
 
 **Representative generated case:** `state = TestGraphState { output: "ok", checkpoint_id: "chk-1", run_id: "run-1", accumulated_messages: ["m1"] }`.
 
-**Step 1 — Deserialization SUCCEEDS.**
+**Step 1 — Input validation SUCCEEDS.**
 `input = serde_json::to_value(&state).unwrap()` produces a JSON object with all four fields
 present and correctly typed. JSON Schema validation passes (all required fields present).
-`from_value::<TestGraphState>(input)` inside `ConcreteGraphRunner<S>::run` deserializes
-without error; `initial_state: TestGraphState` is produced. No `Err` is returned at this
-step.
+`CompiledStateGraph::invoke` takes `serde_json::Value` directly (BC-2.02.001 {PC-005}) —
+no `from_value::<TestGraphState>` deserialization step exists (F-P2A072-03 closure; ADR-029
+§Decision 2). No `Err` is returned at this step.
 
 **Step 2 — extract_output is called and returns only the selected fields.**
-`ConcreteGraphRunner<TestGraphState>::run` executes `stub_graph` (via `stub_terminal`), which
-returns `state.clone()` as the terminal `TestGraphState`. `run` then calls
-`(self.extract_output)(&final_state)` = `serde_json::json!({ "output": final_state.output })`.
+`ConcreteGraphRunner::run` executes `stub_graph` (via `stub_terminal`), which
+returns `state_value.clone()` as the terminal `serde_json::Value`. `run` then calls
+`(self.extract_output)(&final_state)` = `serde_json::json!({ "output": final_state["output"] })`.
 The return value is `Ok(serde_json::Value::Object { "output": "ok" })`. Only `"output"` is
 present; `checkpoint_id`, `run_id`, and `accumulated_messages` are absent.
 
