@@ -65,11 +65,23 @@
 # SELF-PROBE (POL-31)
 # ───────────────────
 # Synthetic fixtures exercised before live scan:
-#   probe_1_live_body_flagged:       ToolOutput::Structured in body → WARN fired
-#   probe_2_changelog_exempt:        same token inside ## Changelog → NOT flagged
-#   probe_3_negation_exempt:         no `ToolOutput::Structured` negation → NOT flagged
-#   probe_4_gap01_scope_nonmatch:    from_value::<S> in non-GAP-01 file → NOT flagged
-#   probe_5_gap01_scope_match:       from_value::<S> in GAP-01-scoped file → WARN fired
+#   probe_1_live_body_flagged:                    ToolOutput::Structured in body → WARN fired
+#   probe_2_changelog_exempt:                     same token inside ## Changelog → NOT flagged
+#   probe_3_negation_exempt:                      no `ToolOutput::Structured` negation → NOT flagged
+#   probe_4_gap01_scope_nonmatch:                 from_value::<S> in non-GAP-01 file → NOT flagged
+#   probe_5_gap01_scope_match:                    from_value::<S> in GAP-01-scoped file → WARN fired
+#   probe_6a_tooloutput_text_struct_flagged:      ToolOutput::Text { in GAP-01 file → WARN fired
+#   probe_6b_tooloutput_text_struct_nongap01:     ToolOutput::Text { in non-GAP-01 file → NOT flagged
+#   probe_7a_invoke_dyn_tooloutput_flagged:       invoke_dyn+ToolOutput in GAP-01 file → WARN fired
+#   probe_7b_invoke_dyn_tooloutput_not_exempt:    invoke_dyn+ToolOutput with NOT negation → NOT flagged
+#   probe_8a_graphstate_s_prose_flagged:          GraphState S in GAP-01 file → WARN fired
+#   probe_8b_graphstate_s_changelog_exempt:       GraphState S in ## Changelog → NOT flagged
+#   probe_9a_actionrisk_none_variant_flagged:     ActionRisk...None in GAP-01 file → WARN fired
+#   probe_9b_actionrisk_none_not_negation_exempt: ActionRisk...None with NOT negation → NOT flagged
+#   probe_10a_vp_bare_filename_flagged:           VP-016.md bare filename → WARN fired
+#   probe_10b_vp_canonical_filename_exempt:       vp-016-slug.md canonical form → NOT flagged
+#   probe_11a_ec_tv_hybrid_flagged:               EC-TV-3 hybrid anchor in GAP-01 file → WARN fired
+#   probe_11b_ec_tv_hybrid_phantom_negation:      EC-TV-N with PHANTOM negation → NOT flagged
 # POL-30: probe fixtures live in $TMPDIR, never under .factory/specs/ or .factory/stories/.
 #
 # EXIT CONTRACT
@@ -190,11 +202,73 @@ PHANTOM_PATTERNS = [
     ("schema_for!(S) (construction-time phantom)",
      re.compile(r'schema_for!\s*\(\s*S\s*\)'),
      "always"),
+
+    # ── Round-14 extensions (GAP-01-context-scoped residue forms) ────────────────
+
+    # ── R14-01 ── ToolOutput::Text { struct-literal form
+    # Canonical: Text(String) tuple variant — struct-literal { field: val } form does not exist.
+    # invoke_dyn returns serde_json::Value; wrapping as Text requires the tuple constructor.
+    # GAP-01 SCOPED: only flagged in files referencing the GraphAgentTool/DynTool surface.
+    ("ToolOutput::Text { (struct-literal phantom — canonical is Text(String) tuple form)",
+     re.compile(r'ToolOutput::Text\s*\{'),
+     "gap01_scope"),
+
+    # ── R14-02 ── invoke_dyn line co-occurring with ToolOutput
+    # DynTool::invoke_dyn dispatch path returns serde_json::Value, never a ToolOutput.
+    # Heuristic: a line where invoke_dyn appears before ToolOutput — suggests phantom return-type
+    # annotation or dispatch description.  One-directional to reduce false positives on comparative
+    # prose where ToolOutput is mentioned first ("ToolOutput is what Tool::invoke returns, while
+    # invoke_dyn returns serde_json::Value").
+    # The NOT negation marker handles "does NOT return ToolOutput" style corrections.
+    # GAP-01 SCOPED.
+    ("invoke_dyn before ToolOutput on same line (invoke_dyn path returns serde_json::Value, not ToolOutput)",
+     re.compile(r'\binvoke_dyn\b.*\bToolOutput\b'),
+     "gap01_scope"),
+
+    # ── R14-03 ── Prose "GraphState S" — retired generic state type
+    # Canonical state is the channel-composed serde_json::Value map; "GraphState S" as a
+    # prose type-annotation form (e.g., "takes a GraphState S parameter") is the retired pattern.
+    # Distinct from the existing "S: GraphState" trait-bound and "trait GraphState" patterns:
+    # catches the name-then-param word order used in informal prose and some spec tables.
+    # GAP-01 SCOPED.
+    ("GraphState S (prose — retired generic state type; canonical is serde_json::Value)",
+     re.compile(r'\bGraphState\s+S\b'),
+     "gap01_scope"),
+
+    # ── R14-04 ── ActionRisk variant enumeration containing None
+    # Canonical ActionRisk variants: ReadOnly | Low | Medium | High.
+    # 'None' is Option::None in Rust — NOT an ActionRisk variant.
+    # Heuristic: line with 'ActionRisk' and 'None' on the same line, suggesting an enum
+    # definition or variant-list prose that incorrectly includes None.
+    # The NOT negation marker handles "does NOT include ActionRisk::None" corrections.
+    # GAP-01 SCOPED.
+    ("ActionRisk...None (phantom variant — None is Option::None, not an ActionRisk variant)",
+     re.compile(r'\bActionRisk\b.*\bNone\b'),
+     "gap01_scope"),
+
+    # ── R14-05 ── VP-NNN.md bare filename reference
+    # Canonical VP filenames always include a kebab-case slug: vp-NNN-slug-description.md
+    # (lowercase 'vp', hyphen-separated NNN, then the topic slug).
+    # A reference using only the bare 'VP-NNN.md' form (uppercase VP, no slug) is always a
+    # broken filename — the file on disk will never have that exact name.
+    # NOT GAP-01 scoped: broken VP references can appear in any spec file.
+    ("VP-NNN.md (bare filename — canonical form is vp-NNN-slug.md with lowercase vp and slug)",
+     re.compile(r'\bVP-\d{3}\.md\b'),
+     "always"),
+
+    # ── R14-06 ── EC-TV-N hybrid anchor form
+    # Canonical anchors: EC-NNN (error case) OR TV-NNN (test vector) — separate namespaces.
+    # 'EC-TV-N' is a malformed hybrid that combines both prefixes and corresponds to no
+    # canonical anchor in any spec index.
+    # GAP-01 SCOPED: hybrid anchors observed only in GAP-01-related story and BC files.
+    ("EC-TV-N (hybrid anchor — canonical is EC-NNN or TV-NNN separately, never combined)",
+     re.compile(r'\bEC-TV-\d+\b'),
+     "gap01_scope"),
 ]
 
 # Anchor patterns for GAP-01 scope detection (live-body content only)
 GAP01_ANCHOR_RE = re.compile(
-    r'GraphAgentTool|mcp::graph_tool|mcp_graph_tool|ConcreteGraphRunner'
+    r'GraphAgentTool|mcp::graph_tool|mcp_graph_tool|ConcreteGraphRunner|VP-016|BC-2\.09\.008'
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -543,6 +617,339 @@ SPECEOF
   echo "[SELF-PROBE PASS] probe_5_gap01_scope_match: from_value::<S> in GAP-01-scoped file is flagged."
 }
 
+# ── Self-probe 6a: ToolOutput::Text { in GAP-01 scoped file MUST be flagged ─────
+probe_6a_tooloutput_text_struct_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The GraphAgentTool dispatch returns Ok(ToolOutput::Text { value: result_string }).
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_6a_tooloutput_text_struct_flagged: ToolOutput::Text { in GAP-01 scoped file was NOT flagged."
+    echo "  Expected a HIT for 'ToolOutput::Text { (struct-literal phantom)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'ToolOutput::Text {'; then
+    echo "[SELF-PROBE FAIL] probe_6a_tooloutput_text_struct_flagged: HIT found but not for ToolOutput::Text { pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_6a_tooloutput_text_struct_flagged: ToolOutput::Text { in GAP-01 scoped file is flagged."
+}
+
+# ── Self-probe 6b: ToolOutput::Text { in non-GAP-01 file MUST NOT be flagged ────
+probe_6b_tooloutput_text_struct_nongap01_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The tool dispatch path returns Ok(ToolOutput::Text { value: result_string }) to the caller.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_6b_tooloutput_text_struct_nongap01_exempt: ToolOutput::Text { in non-GAP-01 file was incorrectly flagged."
+    echo "  This file has no GraphAgentTool/mcp::graph_tool/ConcreteGraphRunner/VP-016/BC-2.09.008 anchor."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_6b_tooloutput_text_struct_nongap01_exempt: ToolOutput::Text { in non-GAP-01 file is not flagged."
+}
+
+# ── Self-probe 7a: invoke_dyn before ToolOutput in GAP-01 scoped file MUST be flagged ─
+probe_7a_invoke_dyn_tooloutput_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The GraphAgentTool calls invoke_dyn on the inner tool and returns ToolOutput::Text(result).
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_7a_invoke_dyn_tooloutput_flagged: invoke_dyn+ToolOutput in GAP-01 scoped file was NOT flagged."
+    echo "  Expected a HIT for 'invoke_dyn before ToolOutput on same line'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'invoke_dyn'; then
+    echo "[SELF-PROBE FAIL] probe_7a_invoke_dyn_tooloutput_flagged: HIT found but not for invoke_dyn pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_7a_invoke_dyn_tooloutput_flagged: invoke_dyn+ToolOutput in GAP-01 scoped file is flagged."
+}
+
+# ── Self-probe 7b: invoke_dyn + ToolOutput in NOT-negation line MUST NOT be flagged ─
+probe_7b_invoke_dyn_tooloutput_not_negation_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The GraphAgentTool dispatch calls invoke_dyn which does NOT return ToolOutput — it returns serde_json::Value.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_7b_invoke_dyn_tooloutput_not_negation_exempt: NOT-negated line with invoke_dyn+ToolOutput was incorrectly flagged."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_7b_invoke_dyn_tooloutput_not_negation_exempt: invoke_dyn+ToolOutput in NOT-negation line is exempt."
+}
+
+# ── Self-probe 8a: GraphState S prose in GAP-01 scoped file MUST be flagged ─────
+probe_8a_graphstate_s_prose_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The GraphAgentTool runner accepts a GraphState S parameter representing the channel-composed state.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_8a_graphstate_s_prose_flagged: GraphState S in GAP-01 scoped file was NOT flagged."
+    echo "  Expected a HIT for 'GraphState S (prose — retired generic state type)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'GraphState S'; then
+    echo "[SELF-PROBE FAIL] probe_8a_graphstate_s_prose_flagged: HIT found but not for GraphState S pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_8a_graphstate_s_prose_flagged: GraphState S in GAP-01 scoped file is flagged."
+}
+
+# ── Self-probe 8b: GraphState S in ## Changelog MUST NOT be flagged ──────────────
+probe_8b_graphstate_s_changelog_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The GraphAgentTool runner accepts a serde_json::Value state map.
+
+## Changelog
+
+- 1.1: removed GraphState S generic type parameter; canonical is serde_json::Value.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_8b_graphstate_s_changelog_exempt: GraphState S in ## Changelog was incorrectly flagged."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_8b_graphstate_s_changelog_exempt: GraphState S in ## Changelog section is exempt."
+}
+
+# ── Self-probe 9a: ActionRisk + None in GAP-01 scoped file MUST be flagged ───────
+probe_9a_actionrisk_none_variant_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The GraphAgentTool risk level is one of ActionRisk variants: None, ReadOnly, Low, Medium, High.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_9a_actionrisk_none_variant_flagged: ActionRisk...None in GAP-01 scoped file was NOT flagged."
+    echo "  Expected a HIT for 'ActionRisk...None (phantom variant)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'ActionRisk'; then
+    echo "[SELF-PROBE FAIL] probe_9a_actionrisk_none_variant_flagged: HIT found but not for ActionRisk pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_9a_actionrisk_none_variant_flagged: ActionRisk...None in GAP-01 scoped file is flagged."
+}
+
+# ── Self-probe 9b: ActionRisk + None in NOT-negation line MUST NOT be flagged ────
+probe_9b_actionrisk_none_not_negation_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The GraphAgentTool risk classification does NOT include ActionRisk::None as a valid variant.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_9b_actionrisk_none_not_negation_exempt: NOT-negated ActionRisk+None line was incorrectly flagged."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_9b_actionrisk_none_not_negation_exempt: ActionRisk+None in NOT-negation line is exempt."
+}
+
+# ── Self-probe 10a: VP-NNN.md bare filename MUST be flagged ──────────────────────
+probe_10a_vp_bare_filename_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## References
+
+State isolation proofs are documented in VP-016.md for the graph agent tool boundary.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_10a_vp_bare_filename_flagged: VP-016.md bare filename was NOT flagged."
+    echo "  Expected a HIT for 'VP-NNN.md (bare filename)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'VP-016.md'; then
+    echo "[SELF-PROBE FAIL] probe_10a_vp_bare_filename_flagged: HIT found but not for VP-016.md in snippet."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_10a_vp_bare_filename_flagged: VP-016.md bare filename is flagged."
+}
+
+# ── Self-probe 10b: canonical VP slug filename MUST NOT be flagged ───────────────
+# Pattern r'\bVP-\d{3}\.md\b' is uppercase VP + no slug.
+# The canonical form starts with lowercase 'vp' and includes the topic slug — no match.
+probe_10b_vp_canonical_filename_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## References
+
+State isolation proofs are documented in vp-016-graph-agent-tool-state-isolation.md.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_10b_vp_canonical_filename_exempt: canonical VP filename was incorrectly flagged."
+    echo "  'vp-016-graph-agent-tool-state-isolation.md' starts with lowercase 'vp' and has a slug — must not match VP-NNN.md pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_10b_vp_canonical_filename_exempt: canonical vp-NNN-slug.md reference is not flagged."
+}
+
+# ── Self-probe 11a: EC-TV-N hybrid anchor in GAP-01 scoped file MUST be flagged ──
+probe_11a_ec_tv_hybrid_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Edge Cases
+
+The GraphAgentTool handles EC-TV-3: state isolation validation failure on concurrent access.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_11a_ec_tv_hybrid_flagged: EC-TV-3 hybrid anchor in GAP-01 scoped file was NOT flagged."
+    echo "  Expected a HIT for 'EC-TV-N (hybrid anchor)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'EC-TV'; then
+    echo "[SELF-PROBE FAIL] probe_11a_ec_tv_hybrid_flagged: HIT found but not for EC-TV pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_11a_ec_tv_hybrid_flagged: EC-TV-N hybrid anchor in GAP-01 scoped file is flagged."
+}
+
+# ── Self-probe 11b: EC-TV-N with PHANTOM negation in live body MUST NOT be flagged ─
+# File is GAP-01 scoped (GraphAgentTool present) so the gap01_scope check cannot
+# explain the non-firing — the PHANTOM negation marker is what exempts the line.
+probe_11b_ec_tv_hybrid_phantom_negation_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The PHANTOM anchor EC-TV-3 in GraphAgentTool spec was split into EC-013 (error case) and TV-003 (test vector).
+
+## Postconditions
+
+The GraphAgentTool uses canonical EC-013 for graph-boundary error handling.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_11b_ec_tv_hybrid_phantom_negation_exempt: EC-TV-3 with PHANTOM negation marker was incorrectly flagged."
+    echo "  The PHANTOM negation on the same line as EC-TV-3 should exempt it from scanning."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_11b_ec_tv_hybrid_phantom_negation_exempt: EC-TV-N with PHANTOM negation marker in live body is exempt."
+}
+
 # ── Main live check ───────────────────────────────────────────────────────────
 check_phantom_types() {
   local raw_output
@@ -581,6 +988,12 @@ check_phantom_types() {
     echo "    S: GraphState            → GraphState is NOT a trait; use serde_json::Value"
     echo "    Fn(&S)                   → Fn(&serde_json::Value) -> serde_json::Value"
     echo "    schema_for!(S)           → caller-supplied input_schema: schemars::Schema"
+    echo "    ToolOutput::Text {       → Text(String) tuple form: ToolOutput::Text(value.to_string())"
+    echo "    invoke_dyn+ToolOutput    → invoke_dyn returns serde_json::Value; wrap at call site if needed"
+    echo "    GraphState S (prose)     → serde_json::Value; GraphState is not a user-defined type"
+    echo "    ActionRisk...None        → ActionRisk: ReadOnly|Low|Medium|High; None = Option::None"
+    echo "    VP-NNN.md (bare)         → canonical: vp-NNN-slug-description.md (lowercase vp, with slug)"
+    echo "    EC-TV-N (hybrid)         → canonical: EC-NNN (error case) or TV-NNN (test vector) separately"
     echo "    Reference: ADR-029 §Symbol Grounding"
   fi
 }
@@ -602,7 +1015,19 @@ probe_2_changelog_exempt
 probe_3_negation_exempt
 probe_4_gap01_scope_nonmatch
 probe_5_gap01_scope_match
-echo "[SELF-PROBE] All 5 self-probes passed — check is not false-green."
+probe_6a_tooloutput_text_struct_flagged
+probe_6b_tooloutput_text_struct_nongap01_exempt
+probe_7a_invoke_dyn_tooloutput_flagged
+probe_7b_invoke_dyn_tooloutput_not_negation_exempt
+probe_8a_graphstate_s_prose_flagged
+probe_8b_graphstate_s_changelog_exempt
+probe_9a_actionrisk_none_variant_flagged
+probe_9b_actionrisk_none_not_negation_exempt
+probe_10a_vp_bare_filename_flagged
+probe_10b_vp_canonical_filename_exempt
+probe_11a_ec_tv_hybrid_flagged
+probe_11b_ec_tv_hybrid_phantom_negation_exempt
+echo "[SELF-PROBE] All 17 self-probes passed — check is not false-green."
 echo ""
 
 echo "════════════════════════════════════════════"

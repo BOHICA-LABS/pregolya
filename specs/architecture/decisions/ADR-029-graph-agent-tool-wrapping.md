@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.1"
+version: "2.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.2 (round-14/F-P2A078-01/2026-08-27): §Decision 4 fail-closed guarantee: `Ok(ToolOutput)` → `Ok(serde_json::Value)` (invoke_dyn return type is Result<serde_json::Value, PregolyaError> per canonical DynTool contract; ToolOutput is never the invoke_dyn return type); VP-016 attribution clause: '`ToolOutput` contains only the fields returned by extract_output' → 'the `serde_json::Value` returned by `invoke_dyn` contains only the fields returned by extract_output'. §Symbol Grounding ActionRisk row: `None`/`Low`/`Medium`/`High` variants → `ReadOnly`/`Low`/`Medium`/`High` variants; clarified that `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an ActionRisk variant (F-P2A078-01 HIGH)."
   - "2.1 (round-12/GAP-01-straggler/2026-08-27): §Context: 'compiled StateGraph<S>' → 'CompiledStateGraph' (COMPILED form is CompiledStateGraph, non-generic per BC-2.02.001 {PC-001}). §Symbol Grounding CompiledStateGraph::stub_terminal row: status REQUIRES-ROUTING → ROUTED/SPECCED — S-1.14 §AC-014 + Task 18 (round-10); cross-ref §Stub Graph Obligation → §Proof Obligations (real VP-016 heading per ADR-022 real-heading rule)."
   - "2.0 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): TYPE-GROUNDING reconciliation against canonical pregolya-core/pregolya-graph type surfaces (P2A-072 realizability lens). F-P2A072-02 HIGH (ToolOutput::Structured phantom — 16× across cluster): `ToolOutput` has exactly `Text(String)`, `Json(serde_json::Value)`, `Error(String)` — NO `Structured` variant (interface-definitions.md §Tool). `DynTool::invoke_dyn` returns `Result<serde_json::Value, PregolyaError>` not `Result<ToolOutput, PregolyaError>`. All `Ok(ToolOutput::Structured { value })` occurrences replaced with `Ok(serde_json::Value from extract_output_result)` in §Decision 3, §Decision 4, §Decision 5 Error Routing Table, §Consequences VP Addition. §Decision 3 SEC-001 updated to reference `serde_json::Value` directly. §Decision 3 Null output paragraph updated. F-P2A072-01 HIGH (as_value() phantom — parallel VP-016 fix): VP-016 §Proof Harness `tool_output.as_value()` removed (no such method on serde_json::Value); resolved by F-P2A072-02 grounding. F-P2A072-03 HIGH (CompiledGraph<S> + trait GraphState phantom): canonical type is `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}, pregolya-graph/src/types.rs); `GraphState` is NOT a trait (entities-graph.md §GraphState). §Decision 1 Module Interface Sketch: `from_graph<S>` → non-generic `from_graph` with explicit `input_schema: schemars::Schema` + `Arc<CompiledStateGraph>` + `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; removed `S: GraphState + Deserialize + JsonSchema` bound; `GraphRunner` doc comment updated. §Decision 1 dep-edge narrative: `CompiledGraph<S>` → `CompiledStateGraph`. §Decision 2 inputSchema derivation: 'caller derives schema via schemars::schema_for!(StateType) and passes as input_schema parameter' (CompiledStateGraph has no schema introspection method per BC-2.02.001). §Decision 2 pipeline: `serde_json::from_value::<S>` step eliminated; CompiledStateGraph::invoke takes serde_json::Value directly. §Consequences dep edge + module description updated. §Symbol Grounding subsection added (symbol-existence audit table). PO handoff: BC-2.09.008 ×5 ToolOutput::Structured→Value + {PRE-001}→CompiledStateGraph + {PC-003} deserialization-path update; BC-2.09.007 ×3 ToolOutput::Structured→Value. Story-writer handoff: S-2.11 Task 23/File-Structure/Arch-rule update."
   - "1.9 (round-8/F-P2A069-02+F-P2A069-01/2026-08-26): F-P2A069-02 MED — §Decision 2 pseudocode, §Decision 2 prose paragraph, §Decision 5 Error Routing Table: three occurrences of 'runs inside invoke_dyn' corrected to 'runs inside ConcreteGraphRunner<S>::run; failure surfaced through invoke_dyn.' GraphAgentTool is non-generic (runner: Arc<dyn GraphRunner>; S is erased); invoke_dyn cannot name or monomorphize S; from_value::<S> must live in ConcreteGraphRunner<S>::run where S is statically known — consistent with §Decision 3 canonical seam. Routing decision (isError: true, NOT JSON-RPC -32602) UNCHANGED. F-P2A069-01 HIGH: parallel harness realizability rewrite in VP-016 §Realizability-Trace (complete input, vacuous-Err guard) in same burst."
@@ -136,7 +137,7 @@ pub enum GraphToolApprovalPolicy {
     DenyInterrupts,
     /// Override PreToolCallHook PendingHumanApproval decisions to Approve for tools
     /// with declared ActionRisk < Medium. Deny and all other hook decisions pass through UNCHANGED.
-    /// Tools with undeclared ActionRisk (None) or ActionRisk >= Medium are DENIED (fail-closed)
+    /// Tools with undeclared ActionRisk (preview.action_risk is Option::None) or ActionRisk >= Medium are DENIED (fail-closed)
     /// — runtime enforcement prevents write-class tools from being unconditionally approved.
     /// Node-level interrupt() calls still cause the graph to park → Err(E-MCP-010); they are
     /// not overridden by this policy.
@@ -314,12 +315,12 @@ When `approval_policy = DenyInterrupts` (the default):
   approval not supported for synchronous tools/call", .. })`. The interrupted run is NOT
   persisted to durable checkpoint — the run is abandoned at the graph level.
 
-**Fail-closed guarantee:** NO code path in `GraphAgentTool::invoke_dyn` returns `Ok(ToolOutput)`
+**Fail-closed guarantee:** NO code path in `GraphAgentTool::invoke_dyn` returns `Ok(serde_json::Value)`
 if the graph was interrupted (parked). The binary invariant: completed terminal → Ok, any
 interrupt → Err(E-MCP-010). This binary interrupt invariant ({INV-002}) is enforced by the
 Red-Gate test set (BC-2.09.008 TV-002/TV-005, S-2.11 AC-024) — it is NOT the VP-016 proof
 target. VP-016 (proptest P1) proves the STATE-ISOLATION invariant ({INV-001}, §Decision 3):
-that `ToolOutput` contains only the fields returned by `extract_output`.
+that the `serde_json::Value` returned by `invoke_dyn` contains only the fields returned by `extract_output`.
 
 ### GraphToolApprovalPolicy::ForceApproveHooks (Explicit Opt-In)
 
@@ -637,7 +638,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 | `BoundaryApprovalHook` | `pregolya-mcp/src/graph_tool.rs` | ADR-029 §Decision 4 | PLANNED — `pub(crate)`; implements `PreToolCallHook` |
 | `PreToolCallHook` | `pregolya-core/src/core/tool.rs` or `pregolya-mcp` | BC-2.05.007, ADR-018 | EXISTS — hook trait for pre-invocation decisions |
 | `ToolCallPreview` | `pregolya-core` | BC-2.05.007 {PRE-003} | EXISTS — canonical type (corrected from `ToolPreview` per F-P2A057-04) |
-| `ActionRisk` | `pregolya-core` | BC-2.05.006/BC-2.05.007 | EXISTS — enum with `None`/`Low`/`Medium`/`High` variants |
+| `ActionRisk` | `pregolya-core` | BC-2.05.006/BC-2.05.007 | EXISTS — enum with `ReadOnly`/`Low`/`Medium`/`High` variants; `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an `ActionRisk` variant |
 | `PreToolDecision` | `pregolya-core` | ADR-018, BC-2.05.007 | EXISTS — `PendingHumanApproval`, `Approve`, `Deny` variants |
 | `E-MCP-010 GraphAgentInterruptDenied` | `error-taxonomy.md` | ADR-029 §Decision 5 (PO obligation) | PLANNED — PO must mint in error-taxonomy.md |
 | `E-MCP-011 ForceApproveWriteBlocked` | `error-taxonomy.md` | ADR-029 §Decision 4 (PO obligation) | PLANNED — PO must mint in error-taxonomy.md |
@@ -652,6 +653,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.2 | 2026-08-27 | architect | round-14/F-P2A078-01 | §Decision 4 fail-closed guarantee: `Ok(ToolOutput)` → `Ok(serde_json::Value)` (invoke_dyn returns Result<serde_json::Value, PregolyaError>; ToolOutput is never the invoke_dyn return type); VP-016 attribution: '`ToolOutput` contains only the fields returned by extract_output' → 'the `serde_json::Value` returned by `invoke_dyn` contains only the fields returned by extract_output'. §Symbol Grounding ActionRisk row: `None`/`Low`/`Medium`/`High` variants → `ReadOnly`/`Low`/`Medium`/`High` variants; clarified that `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an ActionRisk variant (F-P2A078-01 HIGH). |
 | 2.1 | 2026-08-27 | architect | round-12/GAP-01-straggler | §Context: 'compiled StateGraph<S>' → 'CompiledStateGraph' (COMPILED form is CompiledStateGraph, non-generic per BC-2.02.001 {PC-001}). §Symbol Grounding CompiledStateGraph::stub_terminal row: status REQUIRES-ROUTING → ROUTED/SPECCED — S-1.14 §AC-014 + Task 18 (round-10); cross-ref §Stub Graph Obligation → §Proof Obligations (real VP-016 heading per ADR-022 real-heading rule). |
 | 2.0 | 2026-08-27 | architect | round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03 | TYPE-GROUNDING: `ToolOutput::Structured` phantom removed (no such variant; `invoke_dyn` returns `Result<serde_json::Value, PregolyaError>`); `CompiledGraph<S>` + `trait GraphState` phantoms removed (`CompiledStateGraph` non-generic per BC-2.02.001; `GraphState` not a trait per entities-graph.md); `from_graph<S>` redesigned as non-generic with explicit `input_schema: schemars::Schema` and `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; Decision 2 pipeline updated (no `from_value::<S>` step); §Symbol Grounding subsection added. PO/story-writer handoffs provided. |
 | 1.9 | 2026-08-26 | architect | round-8/F-P2A069-02+F-P2A069-01 | F-P2A069-02 MED: §Decision 2 pseudocode, §Decision 2 prose paragraph, §Decision 5 Error Routing Table — three occurrences of "runs inside invoke_dyn" corrected to "runs inside ConcreteGraphRunner<S>::run; failure surfaced through invoke_dyn." GraphAgentTool is non-generic (runner: Arc<dyn GraphRunner>; S is erased); invoke_dyn cannot name or monomorphize S; from_value::<S> must live in ConcreteGraphRunner<S>::run where S is statically known — consistent with §Decision 3 canonical seam. Routing decision (isError: true, NOT JSON-RPC -32602) UNCHANGED. F-P2A069-01 HIGH: parallel VP-016 §Realizability-Trace harness rewrite (complete input, vacuous-Err guard) in same burst. |

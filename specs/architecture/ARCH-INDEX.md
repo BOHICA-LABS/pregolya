@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.43"
+version: "1.44"
 status: active
 producer: architect
 timestamp: 2026-08-27T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.44 (round-14/semantic-reconciliation/F-P2A078..080/D-286/2026-08-27): ADR-029 §Symbol-Grounding updated (round-14 semantic re-read: F-P2A078-01 HIGH — §Symbol-Grounding ActionRisk row phantom None variant replaced with ReadOnly/Low/Medium/High enumeration + undeclared→Deny note; §Decision-4 additional residue Ok(ToolOutput)→Ok(serde_json::Value) corrected). verification-architecture.md §VP-016-harness updated (hash 18fa8b4): F-P2A078-02 HIGH — 'GraphState S'/'ToolOutput returned by invoke_dyn' prose replaced with non-generic serde_json::Value; VP-016 harness struct fields re-grounded (output/checkpoint_id/run_id/accumulated_messages); dangling bare-form VP-016.md filename → slug-form vp-016-graph-agent-tool-state-isolation.md per F-P2A078-03 MED. verify-no-phantom-types.sh advisory hook extended with 6 prose/enum/struct/filename/hybrid-anchor patterns (17 self-probes all pass). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.43 (round-12/GAP-01-straggler/D-285/2026-08-27): ADR-029 bumped v2.0→v2.1 (round-12 straggler: §Context 'compiled StateGraph<S)'→'CompiledStateGraph' non-generic; §Symbol Grounding CompiledStateGraph::stub_terminal row status REQUIRES-ROUTING→ROUTED/SPECCED — S-1.14 AC-014 + Task 18 round-10). VP-016 bumped v1.7→v1.8 (§Proof Obligations Stub Graph Obligation SATISFIED; §Realizability Trace Steps 1-2 deserialization-framing removed; §Feasibility CompiledGraph::stub_terminal→CompiledStateGraph::stub_terminal). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.42 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/D-284/2026-08-27): GAP-01 type-grounding — ADR-029 §Symbol Grounding (non-generic re-ground: CompiledGraph<S>→CompiledStateGraph; ToolOutput::Structured phantom eliminated; from_value::<S> path eliminated; §Symbol Grounding subsection added with symbol-existence audit table; from_graph non-generic with caller-supplied input_schema). module-decomposition.md sibling-sweep: mcp::graph_tool row grounded (CompiledGraph<S>→CompiledStateGraph; Fn(&S)→Fn(&serde_json::Value)). purity-boundary-map.md sibling-sweep: mcp::graph_tool Effectful Shell row grounded. verification-coverage-matrix.md sibling-sweep: mcp::graph_tool Notes grounded. VP-016 sibling-sweep: §Feasibility bound grounded. 14-file sibling-sweep complete (TD-VSDD-060). stub_terminal helper routed to S-1.14 (AC-014/Task 18). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.41 (round-7/F-P2A068-02/2026-08-26): F-P2A068-02 HIGH — §Verification Properties VP mirror stale. Fixed: (1) count 16→17; (2) proptest breakdown 4→5; (3) VP-006-B row added (BC-2.18.004 {PC-005} / prompts::injection_guard / proptest / P1 / draft) matching VP-INDEX.md verbatim; (4) preamble sync note added referencing POL-9. VP-INDEX source of truth confirms: 17 total, 6 Kani P0, 3 Kani P1, 5 proptest P1, 2 integration P1, 1 unit P1."

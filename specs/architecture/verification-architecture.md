@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.25"
+version: "2.26"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "5c9f11a"
+input-hash: "18fa8b4"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -777,10 +777,10 @@ parameterized unit tests complete in < 1s. See `VP-015.md` §Feasibility Assessm
 **VP-016 — GraphAgentTool State-Isolation** (`mcp::graph_tool`) `proptest P1 Phase 3`
 
 Property: For any `GraphAgentTool` construction with an `extract_output` closure that selects a
-proper subset of fields from `GraphState S`, the `ToolOutput` returned by a successful invocation
-contains ONLY the JSON fields returned by `extract_output(&final_state)` — no checkpoint IDs,
-run IDs, intermediate node outputs, or internal graph metadata (ADR-029 §Decision 3
-{INV-001} / DI-010).
+proper subset of fields from the non-generic `serde_json::Value` graph state, the
+`serde_json::Value` returned by `invoke_dyn` on successful invocation contains ONLY the JSON
+fields returned by `extract_output(&final_state)` — no checkpoint IDs, run IDs, intermediate
+node outputs, or internal graph metadata (ADR-029 §Decision 3 {INV-001} / DI-010).
 
 **Why proptest (not Kani):** The STATE-ISOLATION property ranges over `serde_json::Value`, which is
 a recursive open data type. Kani cannot reason symbolically over unbounded JSON trees.
@@ -788,14 +788,14 @@ a recursive open data type. Kani cannot reason symbolically over unbounded JSON 
 closure bodies in general. Proptest generates arbitrary `GraphState` instances with extra internal
 fields and verifies the structural containment property over a large sample (10k cases × < 1s each).
 
-**Proptest harness:** See `VP-016.md` §Proof Harness Skeleton for the complete harness.
+**Proptest harness:** See `vp-016-graph-agent-tool-state-isolation.md` §Proof Harness Skeleton for the complete harness.
 Harness function: `graph_agent_tool_state_isolation`. Strategy: `proptest_derive::Arbitrary` on
-`TestGraphState` with `output`, `internal_checkpoint_id`, `intermediate_message`, and
-`_internal_blob` fields. Assertion: `ToolOutput` contains exactly the fields selected by
+`TestGraphState` with `output`, `checkpoint_id`, `run_id`, and `accumulated_messages` fields.
+Assertion: the `serde_json::Value` returned by `invoke_dyn` contains exactly the fields selected by
 `extract_output`.
 
 Feasibility: HIGH. Structural containment check on JSON objects; no async; no I/O in harness.
-See `VP-016.md` §Feasibility Assessment for complete analysis.
+See `vp-016-graph-agent-tool-state-isolation.md` §Feasibility Assessment for complete analysis.
 
 ## Test-Sufficient (No Kani)
 
@@ -837,6 +837,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.26 | 2026-08-27 | architect | round-14/F-P2A078-02+F-P2A078-03 | VP-016 §Property entry: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by a successful invocation' → 'the `serde_json::Value` returned by `invoke_dyn` on successful invocation' (F-P2A078-02 HIGH). VP-016 harness description: `VP-016.md` filename → `vp-016-graph-agent-tool-state-isolation.md` (canonical filename; F-P2A078-03 MED); TestGraphState fields `internal_checkpoint_id`/`intermediate_message`/`_internal_blob` → `checkpoint_id`/`run_id`/`accumulated_messages` (authoritative VP-016 harness; F-P2A078-03); 'Assertion: `ToolOutput` contains exactly' → 'Assertion: the `serde_json::Value` returned by `invoke_dyn` contains exactly'. input-hash updated to 18fa8b4. |
 | 2.25 | 2026-08-26 | architect | round-6/F-P2A-065-07 | VP-006-B BC anchor corrected: `BC-2.18.004` → `BC-2.18.004 {PC-005}` in Committed VP Obligations table (VP-INDEX canonical anchor per VP-INDEX §VP Catalog row BC column). VP-006-B §Should Prove heading normalized: `injection_guard_fewshot Multi-Pair Fail-Closed` → `injection_guard Multi-Pair FewShotExamples` (matches VP-INDEX/VP-006-B.md canonical title form; F-P2A-065-07 OBS). input-hash updated. |
 | 2.24 | 2026-08-26 | architect | SEC-review-adjudication | SEC-003: VP-006 Arm 2 multi-pair mandate — existing `n>=1&&n<=4` Kani harness provides symbolic proof covering multi-pair/middle/last-Untrusted scenarios; explicit mandate and VP-006-B proptest P1 added (arbitrary pair-count 2..=8 + arbitrary untrusted index; belt-and-suspenders). SEC-004: VP-006 future-variant proof obligation noted — adding a TrustLevel variant requires re-running cargo kani; VP-006 proves only currently-defined variants; runtime wildcard enforces fail-closed for any variant. Committed VP Obligations table: add VP-006-B row; totals 16→17, P1 10→11, proptest 4→5. §Section Content narrative updated. |
 | 2.23 | 2026-08-26 | architect | E-code-correction | VP-016 BC anchor: {INV-001} corrected from stale {INV-STATE-ISOLATION} (stable BC-2.09.008 numeric anchor per product-owner). §Section Content narrative, Committed VP Obligations table, and VP-016 body all updated. v2.22 changelog row also corrected (same invariant tag). |

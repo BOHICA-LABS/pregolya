@@ -9,7 +9,7 @@ timestamp: 2026-08-26T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "5200237"
+input-hash: "2e9c2d7"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.8"
+version: "1.9"
 changelog:
+  - "1.9 (round-14/F-P2A078-02+F-P2A078-04/2026-08-27): §Property Statement: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by `GraphAgentTool::invoke_dyn`' → 'the `serde_json::Value` returned by `GraphAgentTool::invoke_dyn`' (F-P2A078-02). §Corollary: 'in the `ToolOutput` unless' → 'in the `serde_json::Value` returned by `invoke_dyn` unless'. §BC Traceability table: '`ToolOutput` is structurally bounded by `extract_output`' → '`serde_json::Value` return is structurally bounded by `extract_output`'; EC-TV-1 → TV-001 / EC-007 (canonical BC-2.09.008 anchor forms; F-P2A078-04 MED). §Proof Method: 'concrete `S` instances' → 'concrete `TestGraphState` instances (serialized as `serde_json::Value`)'. §Feasibility: 'Open (arbitrary GraphState)' → 'Open (arbitrary `TestGraphState` as `serde_json::Value`)'."
   - "1.8 (round-12/GAP-01-straggler/2026-08-27): §Proof Obligations Stub Graph Obligation: ROUTING FLAG → SATISFIED (S-1.14 §AC-014 / Task 18, round-10); removed 'does NOT yet exist / requires routing / BEFORE Phase-3' language; ADR-029 §Symbol Grounding cross-ref updated. §Realizability Trace Step 1: 'Deserialization SUCCEEDS' → 'Input validation SUCCEEDS'; removed from_value::<TestGraphState> / ConcreteGraphRunner<S> deserialization framing (CompiledStateGraph::invoke takes serde_json::Value directly per BC-2.02.001 {PC-005}; no from_value step per F-P2A072-03). Step 2: ConcreteGraphRunner<TestGraphState> → ConcreteGraphRunner (non-generic); final_state.output → final_state[\"output\"] (serde_json::Value index form; matches harness closure). §Feasibility async-concern row: CompiledGraph::stub_terminal → CompiledStateGraph::stub_terminal."
   - "1.7 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler — §Feasibility: `Fn(&S) -> serde_json::Value + Send + Sync + 'static` bound → `Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static` bound (aligns with ADR-029 §Symbol Grounding canonical `extract_output` type; completes the type-grounding applied to property harness, prop harness imports, and module-decomposition in round-10 burst). input-hash updated to 1a605ae."
   - "1.6 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): TYPE-GROUNDING reconciliation against canonical pregolya-core/pregolya-graph surfaces. F-P2A072-01 HIGH (as_value() E0599): `tool_output.as_value()` removed — `DynTool::invoke_dyn` returns `Result<serde_json::Value, PregolyaError>` directly (interface-definitions.md §Tool); `tool_output` IS a `serde_json::Value`; replaced `tool_output.as_value()` with direct `tool_output.as_object()` in Ok arm. Realizability Trace step 4 updated to reflect actual return type. F-P2A072-02 HIGH (ToolOutput::Structured phantom): `ToolOutput` has exactly `Text(String)`, `Json(serde_json::Value)`, `Error(String)` — NO `Structured` variant (interface-definitions.md §Tool). Formal property `Ok(ToolOutput::Structured { value })` rewritten to `Ok(value: serde_json::Value)`; `Ok(ToolOutput::Text { text })` arm removed. Realizability Trace step 3 rewritten to remove ToolOutput::Structured wrapping. F-P2A072-03 HIGH (CompiledGraph<S> + trait GraphState phantom): canonical type is `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}, pregolya-graph/src/types.rs); `GraphState` is not a trait (entities-graph.md §GraphState: 'GraphState is not a user-defined struct; it is the composed value of all Channels'). `CompiledGraph::stub_terminal(state: S)` phantom replaced by `CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value)`; `from_graph<S>` replaced by non-generic `from_graph` with explicit `input_schema: schemars::Schema` and `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; harness `extract_output` closure updated from `|s: &TestGraphState|` to `|s: &serde_json::Value|`; Stub Graph Obligation type signature updated. All three phantoms closed. FOLLOW-UP (same burst, symbol-existence audit): `CompiledStateGraph::stub_terminal` confirmed NOT present in BC-2.02.001 or S-1.14 — this is a new symbol requiring graph-subsystem routing. §Stub Graph Obligation updated with ROUTING FLAG: orchestrator must dispatch story-writer or PO to add `stub_terminal` as `#[cfg(test)]` spec addition to S-1.14 or companion story before Phase 3 S-2.11 begins. ADR-029 §Symbol Grounding updated with REQUIRES-ROUTING row for this symbol."
@@ -55,10 +56,10 @@ changelog:
 ## Property Statement
 
 For any `GraphAgentTool` construction with an `extract_output` closure that selects a
-proper subset of fields from `GraphState S`, the `ToolOutput` returned by
-`GraphAgentTool::invoke_dyn` on successful graph completion MUST contain only the JSON fields
-returned by `extract_output(&final_state)` — and NO fields from `final_state` that were
-not selected by `extract_output`.
+proper subset of fields from the non-generic `serde_json::Value` graph state, the
+`serde_json::Value` returned by `GraphAgentTool::invoke_dyn` on successful graph completion
+MUST contain only the JSON fields returned by `extract_output(&final_state)` — and NO fields
+from `final_state` that were not selected by `extract_output`.
 
 **Formal property (DI-010, ADR-029 §Decision 3 STATE-ISOLATION invariant):**
 
@@ -81,8 +82,8 @@ not selected by `extract_output`.
 ```
 
 **Corollary:** No checkpoint ID, run ID, intermediate node output, accumulated message
-history, or internal graph metadata field can appear in the `ToolOutput` unless
-`extract_output` explicitly constructs a `Value` containing it.
+history, or internal graph metadata field can appear in the `serde_json::Value` returned by
+`invoke_dyn` unless `extract_output` explicitly constructs a `Value` containing it.
 
 ## Source Contract
 
@@ -100,11 +101,12 @@ history, or internal graph metadata field can appear in the `ToolOutput` unless
 
 | BC | Title | Contribution |
 |----|-------|-------------|
-| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping | Primary VP obligation; {INV-001} state-isolation invariant — `ToolOutput` is structurally bounded by `extract_output` |
+| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping | Primary VP obligation; {INV-001} state-isolation invariant — `serde_json::Value` return is structurally bounded by `extract_output` |
 
 Specific anchors: BC-2.09.008 {INV-001} (only `extract_output(&final_state)` result
-returned), {PC-004} (output extraction postcondition), EC-TV-1 (happy-path state isolation
-test vector: graph with `answer` field only; other fields absent from response).
+returned), {PC-004} (output extraction postcondition), TV-001 / EC-007 (happy-path
+state-isolation test vectors: successful graph run returning `answer` field only; other
+internal fields absent from response).
 
 ## Proof Method
 
@@ -114,8 +116,8 @@ test vector: graph with `answer` field only; other fields absent from response).
 
 **Why proptest (not Kani):** The STATE-ISOLATION property ranges over `serde_json::Value`,
 which is a recursive open data type. Kani's symbolic reasoning over unbounded JSON trees is
-not tractable. Proptest generates concrete `S` instances with arbitrary field values and
-verifies the containment property empirically across a large sample. The property is
+not tractable. Proptest generates concrete `TestGraphState` instances (serialized as `serde_json::Value`)
+with arbitrary field values and verifies the containment property empirically across a large sample. The property is
 structural ("output is a subset of extract_output result") — not an arithmetic invariant —
 making proptest the appropriate tool.
 
@@ -338,7 +340,7 @@ mod tests {
 
 | Factor | Assessment | Notes |
 |--------|-----------|-------|
-| Input space | Open (arbitrary GraphState) | proptest covers via `Arbitrary` derive |
+| Input space | Open (arbitrary `TestGraphState` as `serde_json::Value`) | proptest covers via `Arbitrary` derive |
 | Proof complexity | Low | Structural containment check on JSON objects; no async, no I/O in the harness |
 | Tool support | Supported | `proptest` + `proptest-derive`; no blocking dependencies |
 | Async concern | Low | Harness calls `invoke_dyn` which is async; `tokio::runtime::Builder::new_current_thread()` wraps each proptest case; no actual I/O occurs (`CompiledStateGraph::stub_terminal` resolves synchronously — no network, no checkpoint I/O) |

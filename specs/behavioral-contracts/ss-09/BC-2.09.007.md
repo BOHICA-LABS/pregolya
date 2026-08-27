@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "2.0"
+version: "2.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.8 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
   - "1.9 (B-SS09-sec-adjudication/ADR-029-SEC-001-SEC-002/2026-08-26): (1) SEC-001 — {PC-002} extended with success-path credential boundary obligation: Tool implementations MUST NOT embed credentials in ToolOutput success variants; framework sanitizes error paths only; DI-010 obligation binds every DynTool. TV-009 added (MockTool success-path asserts framework does NOT strip success-path content — boundary belongs to the Tool, not the server). (2) SEC-002 — {INV-003} extended with pluggable pattern registry note: three patterns cover first-party providers; partner crates SHOULD register additional patterns for new key formats; mandatory error-path behavior unchanged."
   - "2.0 (round-10/GAP-01-type-grounding/2026-08-27): Type-grounding reconciliation — `DynTool::invoke_dyn` return type corrected per ADR-029 §Symbol Grounding (architect symbol-existence audit): returns `Result<serde_json::Value, PregolyaError>` (NOT `ToolOutput`). {PC-002} result_text selection rule rewritten: rule now operates on the `serde_json::Value` returned by `invoke_dyn` directly — `Value::Null` → `\"null\"`, `Value::String(s)` → `s` verbatim, other `Value` types (Object/Array/Bool/Number) → `serde_json::to_string(&value)` (compact JSON). Success-path credential boundary note updated: credential material must not be embedded in the `serde_json::Value` returned by `invoke_dyn`. TV-009 updated: `ToolOutput::Text{ text }` → `Ok(Value::String(text))`. Zero residual `ToolOutput::Structured` in live body text post-edit."
+  - "2.1 (round-14/F-P2A079-02/2026-08-27): F-P2A079-02 [LOW] — §Architecture Anchors server.rs bullet rewritten: `Tool::invoke` → `DynTool::invoke_dyn`; `ToolOutput` → `serde_json::Value`; ToolRegistry annotation added `(Arc<dyn DynTool>)`. {PC-003} and {INV-001} prose corrected: `Tool::invoke` → `DynTool::invoke_dyn` (MCP server dispatches via the object-safe seam, not the generic trait). EC-002 §Scenario corrected: `Tool::invoke` → `DynTool::invoke_dyn`. All four live-body `Tool::invoke` occurrences eliminated."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -83,7 +84,7 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
    paths only** (see {INV-003}); success-path `result_text` is **NOT** framework-sanitized.
    This obligation derives from DI-010 (Credential Opacity) and binds every `DynTool`
    implementation.
-3. {PC-003} On **tool execution error** (the pregolya `Tool::invoke` returns `Err`): the server
+3. {PC-003} On **tool execution error** (`DynTool::invoke_dyn` returns `Err`): the server
    responds with:
    `{ "content": [{ "type": "text", "text": "<error_message>" }], "isError": true }`.
    The `isError: true` flag is the MCP protocol signal for tool-level failures. The response
@@ -106,7 +107,7 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
 
 ## Invariants
 
-- {INV-001} **Synchronous execution in v1:** the server executes `Tool::invoke` synchronously and
+- {INV-001} **Synchronous execution in v1:** the server executes `DynTool::invoke_dyn` synchronously and
   awaits the result before responding to the MCP client. Streaming intermediate results from
   long-running tools is deferred to v2.
 - {INV-002} **isError semantics:** `isError: true` in the `CallToolResult` means the tool returned
@@ -146,7 +147,7 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
 found: nonexistent_tool" }`. No tool execution attempted.
 
 ### EC-002: Tool returns an error (Err result)
-**Scenario:** The pregolya `Tool::invoke` returns `Err(PregolyaError { .. })` (e.g., the
+**Scenario:** `DynTool::invoke_dyn` returns `Err(PregolyaError { .. })` (e.g., the
 tool made a failing HTTP request).
 **Expected behavior:** MCP response: `{ "content": [{ "type": "text", "text":
 "<PregolyaError message>" }], "isError": true }`. JSON-RPC result is a success (the MCP
@@ -226,7 +227,7 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 
 ## Architecture Anchors
 
-- `pregolya-mcp/src/server.rs` (`mcp::server`) — `tools/call` request handler: parse arguments, look up tool in `ToolRegistry`, call `Tool::invoke`, serialize `ToolOutput` to `CallToolResult`, format JSON-RPC responses for success / tool-error / protocol-error cases
+- `pregolya-mcp/src/server.rs` (`mcp::server`) — `tools/call` request handler: parse arguments, look up tool in `ToolRegistry` (`Arc<dyn DynTool>`), call `DynTool::invoke_dyn`, serialize the returned `serde_json::Value` to `CallToolResult`, format JSON-RPC responses for success / tool-error / protocol-error cases
 - `pregolya-mcp/src/registry.rs` — `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>` used by the invocation handler (DynTool is the object-safe dispatch seam; ADR-005 §Adjacent Trait Object-Safety Adjudications)
 
 ## Story Anchor
