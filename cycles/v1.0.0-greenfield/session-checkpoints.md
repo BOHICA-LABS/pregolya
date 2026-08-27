@@ -3026,3 +3026,12 @@ pregolya Phase-2 re-convergence in progress. **D-280 CLOSED (2026-08-26): Phase-
 pregolya Phase-2 spec re-convergence IN PROGRESS. GAP-01 contract cluster (BC-2.09.008 GraphAgentTool / VP-016 / ADR-029) hardened over adversary rounds P2A-057..065; round-6 fix-burst committed at THIS HEAD; adversarial 3-CLEAN streak 0/3 (P2A-063/064/065 NOT CLEAN — all realizability/propagation of the GAP-01 fixes, now closed; the security core is confirmed clean). NEXT ACTION: run three parallel deep adversary passes P2A-066/067/068 + a consistency GATE-READY audit on this HEAD (load .factory/policies.yaml into each adversary); if all three CLEAN(strict) + GATE-READY → 3/3 CONVERGED → run /vsdd-factory:check-input-drift → present the Phase-2 human approval gate. Findings have been confined to the newest contract (GAP-01); the pre-existing 133-BC corpus + BC-completeness hardening are stable. OPEN OBS for the human gate: BC-2.09.008 {INV-005} success-path credential opacity is caller-discipline-only (SEC-001; no runtime backstop) — human risk-acceptance item. Census 39/134/17/137/29 ADR/15 HS. HEADS: develop 644d1ad; factory-artifacts = this wrap commit. DIRECTIVE 1: keep going to convergence, do not ask to continue.
 
 ### STATE: v5.92, timestamp 2026-08-26T18:00:00Z
+
+---
+
+## v5.93 — Archived 2026-08-27 (replaced by v5.94)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 spec re-convergence IN PROGRESS. D-282 CLOSED (2026-08-26): round-7 fix-burst — P2A-066/067/068 + GATE-READY audit; 4 HIGH + 1 MED + process-gaps ALL CLOSED (VP-016 Option-A seam: extract_output isolation solely in GraphRunner::run, invoke_dyn passes state/output through; ADR-029 E-MCP-004 phantom removed; ARCH-INDEX VP mirror 16→17 + VP-006-B row; E-21 rollup 13→16 / product-epic points 300→303; error-name drift fixed + advisory hooks verify-error-code-name-binding.sh + verify-epic-rollup-points.sh added). Adversarial 3-CLEAN streak 0/3 NOT CLEAN (P2A-066/067/068 NOT CLEAN — all closed this round). NEXT ACTION: run three parallel deep adversary passes P2A-069/070/071 on NEW HEAD; if all three CLEAN(strict) → streak advances toward 3/3 CONVERGED → Phase-2 gate. OPEN OBS for the human gate: BC-2.09.008 {INV-005} success-path credential opacity is caller-discipline-only (SEC-001; no runtime backstop) — human risk-acceptance item. Census 39/134/17/137/29 ADR/15 HS. HEADS: develop 644d1ad; factory-artifacts = this wrap commit. DIRECTIVE 1: keep going to convergence, do not ask to continue.
+
+### STATE: v5.93, timestamp 2026-08-26T19:00:00Z

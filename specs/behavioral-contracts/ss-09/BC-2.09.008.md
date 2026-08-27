@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -21,12 +21,13 @@ changelog:
   - "1.3 (P2A-058/F-058-02/F-058-06/2026-08-26): F-058-02: E-MCP-010 ForceApproveHooks recovery clause dropped from {PC-005} and EC-004 message strings — node-level interrupt() fires E-MCP-010 under ForceApproveHooks identically to DenyInterrupts; ForceApproveHooks cannot resolve E-MCP-010 (interrupt() parking is orthogonal to tool approval policy); corrected remedy: restructure the graph so it does not call interrupt() during a synchronous tools/call invocation. F-058-06 (records): changelog v1.2 citation corrected from §Decision-1/§Decision-4 to §Decision 1, §Decision 4 per ADR-022 §Decision 5 citation conventions."
   - "1.4 (round-5/F-P2A-061-02+LOW-schemars+LOW-citation/2026-08-26): F-P2A-061-02 [MED]: E-MCP-011 ForceApproveWriteBlocked added to Traceability Error Codes row ({INV-004}/EC-009 anchor). LOW (schemars): {PC-001} 'RootSchema' → 'schemars::Schema' (schemars 1.0 canonical; architect fixes ADR-029 separately). LOW (citation): {INV-004}, {PC-006}, EC-009 citations of 'BC-2.05.006 EC-004/{INV-002}' reworded corroborative — None→Deny behavior is fully specified by {INV-004}; BC-2.05.006 cited for fail-closed principle consistency only."
   - "1.5 (round-7/F-P2A066-01/2026-08-26): Canonical seam wording appended per ADR-029 §Decision 3. {PC-004}: note appended — GraphRunner::run is the sole site where extract_output(&final_state) is called before the filtered serde_json::Value is returned; GraphAgentTool::invoke_dyn wraps the already-filtered result without re-filtering. {INV-001}: note appended — extract_output closure is called solely within GraphRunner::run, not within invoke_dyn; invoke_dyn wraps the result from run() without additional processing."
+  - "1.6 (round-8/F-P2A069-02+F-P2A070-02/2026-08-26): F-P2A069-02 ({PC-003}): deserialization-location corrected per ADR-029 §Decision 2 — `serde_json::from_value::<S>(arguments)` runs inside `ConcreteGraphRunner<S>::run` (where `S` is statically known), not inside `invoke_dyn` (which erases `S` behind `Arc<dyn GraphRunner>`); `GraphRunner::run` returns the `Err`; `invoke_dyn` propagates it; routing unchanged (`isError: true`, NOT JSON-RPC -32602). F-P2A070-02 (POL-20): removed story-schema frontmatter fields `behavioral_contracts:` and `verification_properties:` — these are STORY-schema keys that no other of the 134 BCs carries; VP-016 traceability is preserved via §VP Anchors and VP-016.md `source_bc: BC-2.09.008`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "04ea46a"
+input-hash: "fcc7503"
 extracted_from: null
 modified: []
 deprecated: null
@@ -35,12 +36,6 @@ replacement: null
 retired: null
 removed: null
 removal_reason: null
-behavioral_contracts:
-  - BC-2.09.006
-  - BC-2.09.007
-  - BC-2.09.008
-verification_properties:
-  - VP-016
 ---
 
 # BC-2.09.008: StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool)
@@ -86,9 +81,13 @@ overrides `PreToolCallHook` approval decisions only.
    returns JSON-RPC `-32602` ("Invalid arguments for tool '...': <schema_error>") before
    `invoke_dyn` is called. If schema validation passes but `serde_json::from_value::<S>(arguments)`
    fails (e.g., custom serde validation logic rejects a structurally-valid JSON object),
-   `GraphAgentTool::invoke_dyn` returns `Err(PregolyaError { .. })`; the server surfaces
-   this as `isError: true` per BC-2.09.007 {PC-003}; credential redaction applies
-   per {INV-003}.
+   the failure occurs inside `ConcreteGraphRunner<S>::run` — the concrete impl of
+   `GraphRunner::run` where `S` is statically known; `GraphAgentTool` is a non-generic
+   struct that erases `S` behind `Arc<dyn GraphRunner>`, so `invoke_dyn` cannot
+   monomorphize `S` (ADR-029 §Decision 2). `GraphRunner::run` returns
+   `Err(PregolyaError { .. })`; `GraphAgentTool::invoke_dyn` propagates the `Err`; the
+   server surfaces this as `isError: true` per BC-2.09.007 {PC-003}; credential
+   redaction applies per {INV-003}.
 4. {PC-004} On successful graph execution: `GraphRunner::run` runs the graph to a terminal
    state, then calls `extract_output(&final_state)` and returns ONLY the resulting
    `serde_json::Value`. `GraphAgentTool::invoke_dyn` returns

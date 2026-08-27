@@ -1,6 +1,6 @@
 ---
 document_type: epics
-version: "1.3"
+version: "1.4"
 status: active
 producer: story-writer
 timestamp: 2026-08-26T00:00:00Z
@@ -174,13 +174,16 @@ MCP client: tool discovery, invocation routing, untrusted-ingress guardrail cove
 
 Single story that establishes the Kani harness obligations for all 9 VP Kani proofs
 (6 P0 + 3 P1), cargo-fuzz targets for serialization and graph-execution paths, and cargo-mutants
-mutation gate. This story formally executes the verification plans laid out in VP-001 through
-VP-014. Gated until all Wave 1 + Wave 2 implementation stories are merged.
+mutation gate. This story formally executes the 9 Kani harness proofs only; proptest, integration,
+and unit VPs (including VP-006-B, VP-015, VP-016) are validated in their Phase-3 anchor stories,
+not in S-6.01's pipeline. Gated until all Wave 1 + Wave 2 implementation stories are merged.
 
 ## Changelog
 
+- 1.4 (round-8/O-P2A071-A+B/2026-08-26): E-22 VP description reworded — stale closed range "VP-001 through VP-014" replaced with accurate Kani-only scope statement; proptest/integration/unit VPs noted as Phase-3 anchor-story responsibility. Changelog backfilled with 1.0 initial row; 1.2 content unrecoverable from static analysis (git log is authoritative for 1.2 changes).
 - 1.3 (round-7/F-P2A068-01/2026-08-26): E-21 rollup 13→16 reconciled to constituent story points S-2.10(8)+S-2.11(8)=16; product-epic point total 300→303 (S-2.11 5→8 GAP-01 growth, D-275); F-P2A068-01 round-7.
 - 1.1 (P2A-044 F-09/2026-08-24): EPIC-MAINT points TBD→5 to match STORY-INDEX S-MAINT-001.
+- 1.0 (Phase-2 decomposition/2026-08-24 approx): initial epic catalog — 22 product epics + EPIC-MAINT, Wave 1 (27 stories) + Wave 2 (11 stories) + Wave 6 (1 story), 303-point total.
 
 ### EPIC-MAINT — Maintenance and Self-Improvement (out-of-wave)
 

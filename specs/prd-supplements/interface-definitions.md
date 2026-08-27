@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.84"
+version: "2.85"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
 phase: 1d
 changelog:
+  - "2.85 (round-8/F-P2A070-01/2026-08-26): §GraphAgentTool GraphToolApprovalPolicy::DenyInterrupts doc-comment corrected (F-P2A070-01 MED). Two defects fixed: (a) umbrella claim 'Any internal graph interrupt is converted to Err(E-MCP-010)' removed — the PendingHumanApproval→Deny path does NOT raise E-MCP-010; (b) 'graph continues to error terminal state' replaced with 'graph CONTINUES to its own terminal — valid terminal yields Ok; error terminal yields Err with graph's own error (NOT E-MCP-010)'. E-MCP-010 is now correctly scoped to node-level interrupt() parking (RunStatus::Interrupted) only, consistent with BC-2.09.008 {PC-005}/{INV-002}. The 'No interrupted run is persisted to durable checkpoint' statement moved inside the node-level interrupt() bullet where it belongs. TD-VSDD-060 sibling sweep: ForceApproveHooks comment (already correct per round-6 v2.83) and GraphRunner trait comment verified CLEAN — both scope E-MCP-010 to interrupt() only."
   - "2.84 (round-7/F-P2A067-02/2026-08-26): §First-Party Tools error-layer-split doc-comment: E-SBXD-001 name corrected from PathEscapeViolation (never canonical) to WorkspaceEscape (taxonomy canonical; BC-2.13.005, SECURITY). Reconciliation: E-SBXD-001 is the correct code (sandbox-layer escape); only the name label was stale. E-TOOLS-001 PathConfinementViolation on the adjacent line was already correct and is unchanged."
   - "2.83 (round-6/F-064-01/2026-08-26): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment rewritten to hardened semantics (F-064-01 HIGH). Replaced pre-hardening fail-open text ('overrides ALL PreToolDecision values ... the tool proceeds unconditionally') with: (a) SEC-007 — overrides ONLY PendingHumanApproval to Approve; Deny and ALL other PreToolDecision values pass through UNCHANGED; (b) SEC-006/F-057-01 — runtime BoundaryApprovalHook ActionRisk gate: action_risk None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011 ForceApproveWriteBlocked + CRITICAL log; only Some(r < Medium) → Approve; (c) node-level interrupt() still causes Err(E-MCP-010); (d) use-restriction framed as architectural enforcement (runtime gate), not caller-responsibility only. BC anchors in doc-comment: BC-2.09.008 {PC-006} (ForceApproveHooks override semantics), {INV-004} (safety restriction), ADR-029 §Decision 4."
   - "2.82 (round-5/F-LOW-schemars+D2/2026-08-26): §GraphAgentTool: input_schema field type corrected from schemars::schema::RootSchema (removed in schemars 1.0) to schemars::Schema (canonical; LOW schemars finding). Blanket omission blockquote: E-MCP-011 ForceApproveWriteBlocked confirmed library-layer only; disposition census 136→137 (62 blanket; E-MCP-* 10→11); D2 [records]."
@@ -2293,14 +2294,19 @@ impl GraphAgentTool {
 /// {INV-004} (ForceApproveHooks safety restriction).
 #[non_exhaustive]
 pub enum GraphToolApprovalPolicy {
-    /// **Default — fail-closed.** Any internal graph interrupt is converted to
-    /// `Err(E-MCP-010 GraphAgentInterruptDenied)`:
-    /// - Node-level `interrupt()` → `RunStatus::Interrupted` → `Err(E-MCP-010)`.
-    /// - `PreToolCallHook::PendingHumanApproval` → `BoundaryApprovalHook` converts to
-    ///   `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }` → tool receives
-    ///   `ToolOutput::Error`; graph continues to error terminal state.
-    /// No interrupted run is persisted to durable checkpoint.
-    /// BC-2.09.008 {INV-002}: no `Ok` result returned when graph was interrupted.
+    /// **Default — fail-closed.**
+    ///
+    /// **Node-level `interrupt()` → `Err(E-MCP-010 GraphAgentInterruptDenied)`:**
+    /// `GraphRunner::run` detects `RunStatus::Interrupted` and returns `Err(E-MCP-010)`.
+    /// The interrupted run is NOT persisted to durable checkpoint.
+    /// BC-2.09.008 {INV-002}: no `Ok` result is returned when `RunStatus::Interrupted`.
+    ///
+    /// **`PreToolCallHook::PendingHumanApproval` → `BoundaryApprovalHook` converts to
+    /// `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }` → tool NOT invoked; graph
+    /// CONTINUES executing.** `E-MCP-010` is NOT raised on the `BoundaryApprovalHook::Deny`
+    /// path. If the graph reaches a valid terminal state, BC-2.09.008 {PC-004} applies
+    /// (`Ok(ToolOutput::Structured)`). If it reaches an error terminal, `GraphRunner::run`
+    /// returns `Err` with the graph's OWN error — NOT `E-MCP-010`.
     DenyInterrupts,
 
     /// **Explicit opt-in — HITL-dialog suppressor only (SEC-007).**

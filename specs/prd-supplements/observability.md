@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-observability
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
-timestamp: 2026-07-27T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 1d
 changelog:
+  - "1.8 (round-8/F-P2A069-03+SAP-1/2026-08-26): Add missing catalog row for `mcp.graph_tool.force_approve_write_blocked` (F-P2A069-03 SAP-1 P1). This emission is BC-mandated by BC-2.09.008 {INV-004}/EC-009/TV-008/TV-012 (BoundaryApprovalHook under ForceApproveHooks policy when action_risk is None or >= Medium → Deny + E-MCP-011 + CRITICAL log). Field schema: `event_type`, `tool_name`, `action_risk`. Emitting crate/module: `pregolya-mcp` / `mcp::graph_tool` (`BoundaryApprovalHook`). Log level: ERROR (CRITICAL in semantic role — highest tracing level). Active event_type count 11→12. BC-2.09.008 added to inputs list."
   - "1.7 (FIX-BURST-276-WAVE-C1/F-P173-401/2026-07-27): Revert burst-275 F-P172b-12 self-inflicted regression: the F-P172b-12 fix downgraded the eval.judge_infra_error Emitting Crate/Module cell from `pregolya-standard-tests` / `eval::judge` to crate-only, citing an Iron Law gap in module-decomposition.md §Standard Test Modules — while the sibling fix in the same burst (module-decomposition.md §Standard Test Modules, v1.32 Iron Law addition) added exactly the `eval::judge` module row, making the deferral immediately false on delivery. Restored cell to `pregolya-standard-tests` / `eval::judge`. Deleted parenthetical '(crate-only — no module rows for `pregolya-standard-tests` in `module-decomposition.md`; Iron Law adjudication pending architect Wave B)'. Two CLAUDE.md Canonical Principle violations are closed by this deletion: (1) Rule 6 — 'pending architect review' is forbidden when the question is answerable in current scope; BC-2.08.008 §Architecture Anchors already named `pregolya-standard-tests/src/eval/judge.rs` as the emitter before the downgrade was authored; no architect adjudication was required. (2) Rule 3 — a deferral target must be a real story ID, never 'Wave X' or 'later'; 'Wave B' is not a story ID. Emitting BC anchor BC-2.08.008 PC3 and inputs entry `ss-08/BC-2.08.008.md` verified correct and unchanged — these are the corroborating evidence that the correct anchor was always known. Concurrent architect scope (not touched here): four architecture documents (module-decomposition.md, module-criticality.md, and two others per F-P173-301/402) are correcting eval::judge BC anchor from BC-2.08.013/BC-2.08.014 to BC-2.08.008 in Wave B; this fix restores the observability.md cell only. Post-fix: 11/11 active catalog rows resolve Emitting Module to a named row in module-decomposition.md."
   - "1.6 (F-P172b-12/burst-275/2026-07-26): Re-anchor 7 broken Emitting-Module cells — all were citing sub-module paths or file-stem labels that do not appear as rows in module-decomposition.md. Corrected to canonical crate::module form per module-decomposition.md authority. (1) guardrail.unregistered_passthrough: `pregolya-mcp / tools.rs` → `pregolya-mcp / mcp::ingress` (v1.4 fixed graph half; MCP half left unchanged — now corrected; mcp::ingress is the canonical module per module-decomposition.md). (2) server.rate_limit_store_in_memory: `pregolya-server / server init` → `pregolya-server / server::stores` (server init is not a module; stores is the canonical rate-limit-backend module). (3) server.security_config_cors_wildcard: `pregolya-server / server init` → `pregolya-server / server::security` (security config lives in server::security per module-decomposition.md). (4) memory.gdpr_unattributed_session_entries: `pregolya-memory / gdpr.rs` → `pregolya-memory / memory::store` (gdpr.rs is a file stem, not a module anchor; GDPR operations execute in memory::store per module-decomposition.md). (5) retry.unlimited_policy_constructed: `pregolya-core / retry::policy` → `pregolya-core / core::retry` (retry::policy was pre-D21 inverted path; canonical module is core::retry per module-decomposition.md SS-16). (6) retry.circuit_breaker_disabled: `pregolya-core / retry::circuit_breaker` → `pregolya-core / core::retry` (same: retry::circuit_breaker is not a module row; core::retry is canonical). (7) retry.circuit_probe_failed: `pregolya-core / retry::circuit_breaker` → `pregolya-core / core::retry` (same). (8) eval.judge_infra_error: `pregolya-standard-tests / eval::judge` → `pregolya-standard-tests` crate-only; eval::judge does not resolve in module-decomposition.md because pregolya-standard-tests has no module rows (Iron Law gap); module-level anchor pending architect adjudication routed to Wave B. TD-VSDD-060 sibling sweep: two rows already correct (openai::embeddings, server::cron). Five existing non-resolving module strings had propagated from v1.1/v1.2 original row authoring before canonical module-decomposition.md form was established."
   - "1.5 (burst-264/2026-07-25): server.cron_schedule_queue_full Emitting Crate/Module corrected from 'pregolya-server / scheduler' to 'pregolya-server / server::cron' per module-decomposition v1.26 adjudication (canonical module server::cron)."
@@ -27,7 +28,8 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-16/BC-2.16.003.md
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
-input-hash: "06b8086"
+  - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
+input-hash: "e06dcc3"
 ---
 
 # Canonical Structured Event Catalog
@@ -59,7 +61,7 @@ grep -r "event_type" .factory/specs/behavioral-contracts/ .factory/specs/archite
 
 **v1.2 (burst-258 full sweep):** Full prose-emission sweep re-run across all 129 BCs. 5 new emission sites found across 4 BCs; all 4 BCs updated with canonical `event_type` literals. 6 sweep matches were adjudicated as non-catalog entries — see Scope/Exemptions section below for rationale.
 
-**Current active event_type count: 11** (1 retired entry below; 5 added in v1.2)
+**Current active event_type count: 12** (1 retired entry below; 5 added in v1.2; 1 added in v1.8)
 
 ---
 
@@ -79,6 +81,7 @@ grep -r "event_type" .factory/specs/behavioral-contracts/ .factory/specs/archite
 | `retry.circuit_probe_failed` | active | `DEBUG` | `pregolya-core` / `core::retry` | BC-2.16.003 EC-003 | HALF-OPEN probe call for a tool fails; circuit returns to OPEN | `event_type: &str`, `tool_name: &str` | Diagnostic signal: the circuit breaker attempted to recover from OPEN state via a probe call, but the probe failed. Circuit re-enters OPEN with `reset_timeout` restarted. Supports tracing circuit state machine transitions during incident investigation and integration testing. | Per failed HALF-OPEN probe attempt — distinct from CLOSED→OPEN transitions (no event_type emitted on initial trip). |
 | `server.cron_schedule_queue_full` | active | `WARN` | `pregolya-server` / `server::cron` | BC-2.12.004 EC-004 | Schedule fires when run queue depth meets or exceeds `max_queue_depth` | `event_type: &str`, `cron_id: Uuid`, `queue_depth: usize` | Operator signal that a scheduled run firing was skipped due to run queue saturation. Enables back-pressure monitoring and alerting on schedule overload. Repeated firing indicates the schedule interval is too short relative to run completion time; operator should increase interval or max_queue_depth. | Per schedule firing skip when `queue_depth >= max_queue_depth`. |
 | `eval.judge_infra_error` | active | `WARN` | `pregolya-standard-tests` / `eval::judge` | BC-2.08.008 PC3 | `JudgeResult::InfraError` returned for an eval case (judge LLM unavailable, timeout, or unparseable response) | `event_type: &str`, `reason: &str` | Signals judge infrastructure failure for a specific eval case, distinguishing it from a quality failure. Prevents false quality alarms when the judge LLM is degraded. `InfraError` cases are excluded from aggregate eval score per BC-2.08.008 PC3. | Per eval case where `JudgeResult::InfraError` is returned. |
+| `mcp.graph_tool.force_approve_write_blocked` | active | `ERROR` | `pregolya-mcp` / `mcp::graph_tool` (`BoundaryApprovalHook`) | BC-2.09.008 {INV-004}, EC-009, TV-008, TV-012 | `approval_policy = ForceApproveHooks` AND `BoundaryApprovalHook` pre-invoke check finds `preview.action_risk` is `None` (undeclared, fail-closed) OR `Some(r)` where `r >= ActionRisk::Medium` | `event_type: &str`, `tool_name: &str`, `action_risk: &str` | Security gate — write-class or undeclared-risk tool blocked at MCP boundary under `ForceApproveHooks` policy; `E-MCP-011 ForceApproveWriteBlocked` is also emitted. Prevents accidental invocation of write-class tools in graphs incorrectly configured as read-only. CRITICAL-level security signal; operators should alert on every occurrence. | Per occurrence — once per `PendingHumanApproval` decision that fails the `ActionRisk` gate (`None` or `>= Medium`). |
 
 ---
 
@@ -256,6 +259,24 @@ tracing::warn!(
 |-------|------|-------------|
 | `event_type` | `&'static str` | Always `"eval.judge_infra_error"` |
 | `reason` | `&str` (Display) | The `reason` field from `JudgeResult::InfraError { reason }` — describes the specific infrastructure failure (e.g., "judge LLM returned non-parseable response: ...", "timeout after 30s") |
+
+### `mcp.graph_tool.force_approve_write_blocked`
+
+```rust
+tracing::error!(
+    event_type = "mcp.graph_tool.force_approve_write_blocked",
+    tool_name = %tool_name,
+    action_risk = %action_risk,  // Display of Option<ActionRisk>: "None" or "Some(High)" etc.
+    "ForceApproveHooks: blocked write-class or undeclared tool '{}' (action_risk={}); E-MCP-011 ForceApproveWriteBlocked emitted",
+    tool_name, action_risk
+);
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `event_type` | `&'static str` | Always `"mcp.graph_tool.force_approve_write_blocked"` |
+| `tool_name` | `&str` (Display) | The MCP tool name whose `PendingHumanApproval` decision was denied by the `ActionRisk` gate |
+| `action_risk` | `&str` (Display) | Display of the `preview.action_risk` value — `"None"` for undeclared tools, or `"Some(Medium)"` / `"Some(High)"` etc. for declared write-class tools |
 
 ---
 
