@@ -1,9 +1,9 @@
 ---
 document_type: epics
-version: "1.1"
+version: "1.3"
 status: active
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 phase: 2
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 ---
@@ -37,7 +37,7 @@ traces_to: .factory/specs/architecture/ARCH-INDEX.md
 | E-18 | Prompt Templates and Injection Safety | 2 | S-2.04, S-2.05 | 16 | SS-18 | pregolya-prompts |
 | E-19 | Provider SDK Conformance | 2 | S-2.06, S-2.07, S-2.08 | 24 | SS-08 | pregolya-openai, pregolya-anthropic, pregolya-ollama |
 | E-20 | Embeddings Trait and Providers | 2 | S-2.09 | 8 | SS-22 | pregolya-core, pregolya-openai, pregolya-ollama |
-| E-21 | MCP Tool Adapter | 2 | S-2.10, S-2.11 | 13 | SS-09 | pregolya-mcp |
+| E-21 | MCP Tool Adapter | 2 | S-2.10, S-2.11 | 16 | SS-09 | pregolya-mcp |
 | E-22 | Formal Verification Pipeline | 6 | S-6.01 | 8 | SS-17 | xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox |
 | EPIC-MAINT | Maintenance and Self-Improvement | out-of-wave | S-MAINT-001 | 5 | N/A | all crates |
 
@@ -165,7 +165,7 @@ Standalone SDK crate split architecture (BC-2.08.006), chat model streaming/tool
 `EmbeddingsOpenAI` with credential opacity (BC-2.22.002 Red Gate) and batch failure handling, and
 `EmbeddingsOllama` POST /api/embed with legacy endpoint toggle.
 
-### E-21 — MCP Tool Adapter (Wave 2, 13 pts)
+### E-21 — MCP Tool Adapter (Wave 2, 16 pts)
 
 MCP client: tool discovery, invocation routing, untrusted-ingress guardrail coverage, bare
 `ToolException` re-raise (Red Gate, VP-004 integration P1), and `MultiServerMcpClient` holds-no-live-connections invariant (VP-005 integration P1). MCP server: tool advertisement (tools/list) and invocation (tools/call).
@@ -179,6 +179,7 @@ VP-014. Gated until all Wave 1 + Wave 2 implementation stories are merged.
 
 ## Changelog
 
+- 1.3 (round-7/F-P2A068-01/2026-08-26): E-21 rollup 13→16 reconciled to constituent story points S-2.10(8)+S-2.11(8)=16; product-epic point total 300→303 (S-2.11 5→8 GAP-01 growth, D-275); F-P2A068-01 round-7.
 - 1.1 (P2A-044 F-09/2026-08-24): EPIC-MAINT points TBD→5 to match STORY-INDEX S-MAINT-001.
 
 ### EPIC-MAINT — Maintenance and Self-Improvement (out-of-wave)

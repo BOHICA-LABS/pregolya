@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.28"
+version: "1.29"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.29 (round-7/F-P2A067-02/2026-08-26): §5 error-code name sibling sweep (TD-VSDD-060). Four stale names corrected to error-taxonomy.md canonical names: (1) E-CORE-001 InvalidContentBlock → StrictContentBlockValidation (taxonomy message prefix, per taxonomy §CORE row); (2) E-PROV-002 Timeout → ProviderTimeout (taxonomy message prefix, per taxonomy §PROV row); (3) E-MCP-002 TransportError → McpTransportError (taxonomy message prefix, per taxonomy §MCP row); (4) E-VS-001 ZeroNormVector → DegenerateNormEmbedding (taxonomy changelog v1.45 rename — ZeroNormVector was never canonical; pre-rename name was ZeroNormEmbedding, post-rename is DegenerateNormEmbedding). Taxonomy not modified — all four defects are PRD-side labels. Full sibling sweep performed: all other 34 code-name pairs in the table verified against taxonomy body rows — no additional stale names found."
   - "v1.28 (GAP-01/D-275/2026-08-26): BC census propagation — BC-2.09.008 (GraphAgentTool; mcp::graph_tool) added by ADR-029. §5b BC file count 133→134; §7 RTM Totals 133→134 (51 P0 / 79→80 P1 / 3 P2). test-vectors.md callout updated to 134 BC files."
   - "v1.27 (P2A-049/F-049-01-sibling-sweep/2026-08-25): BC-2.18.002 title cell synced to canonical H1 (POL-7 downstream drift; older FIX-BURST-256 H1 form superseded). §2.18 table: 'ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance' → 'ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>'. BC-2.18.004 and BC-2.18.005 title cells verified correct — no change."
   - "v1.26 (burst-325/D-196/2026-08-18): input-hash refreshed (metadata hygiene; D-196 ruling: input-hash refresh is bookkeeping metadata, not normative spec content). Hash was stale since v1.23 authoring; inputs capabilities-p1-p2.md and invariants.md changed at burst-306 but hash was not propagated at v1.24/v1.25. No normative content changed in this entry. Phase-1 gate-closure burst."
@@ -549,12 +550,12 @@ Summary:
 
 | Range | Component | Level | Examples |
 |-------|-----------|-------|---------|
-| E-CORE-001–099 | pregolya-core | crate | E-CORE-001 InvalidContentBlock, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection, E-CORE-009 RunnableParallelBranchFailure, E-CORE-010 RunnableAssignNonDictInput, E-CORE-011 RunnableParallelTaskPanic |
+| E-CORE-001–099 | pregolya-core | crate | E-CORE-001 StrictContentBlockValidation, E-CORE-002 MessageRoleUnrecognized, E-CORE-004 PipeCompositionFailed, E-CORE-008 GuardrailCriticalRejection, E-CORE-009 RunnableParallelBranchFailure, E-CORE-010 RunnableAssignNonDictInput, E-CORE-011 RunnableParallelTaskPanic |
 | E-GRAPH-001–099 | pregolya-graph | crate | E-GRAPH-001 InvalidUpdateError, E-GRAPH-002 NoActiveInterrupt |
 | E-CHKPT-001–099 | pregolya-checkpoint | crate | E-CHKPT-001 CheckpointWriteFailed, E-CHKPT-002 MonotonicClockRegression |
 | E-SERVER-001–099 | pregolya-server | crate | ~~E-SERVER-001 PolicyNotEnforceable~~ (retired — duplicate of E-SBXD-002; see error-taxonomy.md tombstone), E-SERVER-002 RunNotFound |
-| E-PROV-001–099 | pregolya-\<provider\> | crate | E-PROV-001 RateLimited, E-PROV-002 Timeout |
-| E-MCP-001–099 | pregolya-mcp | crate | E-MCP-001 ToolException, E-MCP-002 TransportError |
+| E-PROV-001–099 | pregolya-\<provider\> | crate | E-PROV-001 RateLimited, E-PROV-002 ProviderTimeout |
+| E-MCP-001–099 | pregolya-mcp | crate | E-MCP-001 ToolException, E-MCP-002 McpTransportError |
 | E-SPLIT-001–099 | pregolya-splitters | crate | E-SPLIT-001 ZeroChunkSize |
 | E-SBXD-001–099 | pregolya-sandbox | crate | E-SBXD-001 WorkspaceEscape, E-SBXD-002 PolicyNotEnforceable |
 | E-MEMORY-001–099 | pregolya-memory | crate | E-MEMORY-001 EmbeddingBackendNotConfigured, E-MEMORY-003 ScopeAccessDenied |
@@ -563,7 +564,7 @@ Summary:
 | E-BUDGET-001–099 | pregolya-graph budget subsystem | intra-crate | E-BUDGET-001 BudgetCeilingReached, E-BUDGET-002 JournalWriteFailed |
 | E-TMPL-001–099 | pregolya-prompts | crate | E-TMPL-001 InjectionAttempt (SECURITY), E-TMPL-002 SystemSlotTrustAllRejected, E-TMPL-003 UndefinedVariable |
 | E-SRLZ-001–099 | pregolya-core (lc-serializable) | intra-crate | E-SRLZ-001 UnknownSerializableType (STATIC — type id not echoed), E-SRLZ-002 UnsupportedMonolithType |
-| E-VS-001–099 | pregolya-vectorstores | crate | E-VS-001 ZeroNormVector (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC), E-VS-005 FilterUnsupported |
+| E-VS-001–099 | pregolya-vectorstores | crate | E-VS-001 DegenerateNormEmbedding (STATIC), E-VS-002 DimensionMismatch (STATIC), E-VS-003 RetrieverConfigInvalid, E-VS-004 ZeroNormWriteTime (STATIC), E-VS-005 FilterUnsupported |
 | E-EMBED-001–099 | pregolya-core (embeddings) | intra-crate | E-EMBED-001 EmbeddingDimensionMismatch (STATIC) |
 | E-TOOLS-001–099 | pregolya-tools | crate | E-TOOLS-001 PathConfinementViolation (SECURITY), E-TOOLS-002 FileReadExceedsLimit, E-TOOLS-003 EditOldStringNotFound, E-TOOLS-004 BashTimeout, E-TOOLS-005 BashOutputTruncated, E-TOOLS-006 GrepResultsCapped, E-TOOLS-007 BashRiskTierViolation, E-TOOLS-008 FileIoError (TOOL/Maybe), E-TOOLS-009 InvalidRegexPattern (VAL/Never) |
 

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.83"
+version: "2.84"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
 phase: 1d
 changelog:
+  - "2.84 (round-7/F-P2A067-02/2026-08-26): §First-Party Tools error-layer-split doc-comment: E-SBXD-001 name corrected from PathEscapeViolation (never canonical) to WorkspaceEscape (taxonomy canonical; BC-2.13.005, SECURITY). Reconciliation: E-SBXD-001 is the correct code (sandbox-layer escape); only the name label was stale. E-TOOLS-001 PathConfinementViolation on the adjacent line was already correct and is unchanged."
   - "2.83 (round-6/F-064-01/2026-08-26): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment rewritten to hardened semantics (F-064-01 HIGH). Replaced pre-hardening fail-open text ('overrides ALL PreToolDecision values ... the tool proceeds unconditionally') with: (a) SEC-007 — overrides ONLY PendingHumanApproval to Approve; Deny and ALL other PreToolDecision values pass through UNCHANGED; (b) SEC-006/F-057-01 — runtime BoundaryApprovalHook ActionRisk gate: action_risk None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011 ForceApproveWriteBlocked + CRITICAL log; only Some(r < Medium) → Approve; (c) node-level interrupt() still causes Err(E-MCP-010); (d) use-restriction framed as architectural enforcement (runtime gate), not caller-responsibility only. BC anchors in doc-comment: BC-2.09.008 {PC-006} (ForceApproveHooks override semantics), {INV-004} (safety restriction), ADR-029 §Decision 4."
   - "2.82 (round-5/F-LOW-schemars+D2/2026-08-26): §GraphAgentTool: input_schema field type corrected from schemars::schema::RootSchema (removed in schemars 1.0) to schemars::Schema (canonical; LOW schemars finding). Blanket omission blockquote: E-MCP-011 ForceApproveWriteBlocked confirmed library-layer only; disposition census 136→137 (62 blanket; E-MCP-* 10→11); D2 [records]."
   - "2.81 (GAP-01/ADR-029/BC-2.09.008/2026-08-26): §GraphAgentTool added (pregolya-mcp: mcp::graph_tool; new module per ADR-029 §Decision 1). Section covers: `GraphAgentTool` struct (BC-2.09.008 authoritative signature carrier per ADR-029 §behavioral-authority note); `from_graph` constructor (inputSchema derivation from S: schemars::JsonSchema; extract_output closure shape; STATE-ISOLATION invariant anchor {INV-001}); `with_approval_policy` builder; `GraphToolApprovalPolicy` enum (`DenyInterrupts` default fail-closed; `ForceApproveHooks` explicit opt-in with read-only restriction); `GraphRunner` pub(crate) type-erased async trait. Blanket omission note update: E-MCP-010 GraphAgentInterruptDenied (EXEC/Never; library-layer Err return from mcp::graph_tool; never direct HTTP terminal in v1) confirmed library-layer only; E-MCP-* namespace 9→10 codes. Census note appended to blanket omission blockquote. BC anchors: BC-2.09.008 (primary), BC-2.09.006, BC-2.09.007, ADR-029 §Decision 1–5."
@@ -99,7 +100,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "2c7993a"
+input-hash: "6261c25"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -1558,7 +1559,7 @@ BC anchor: BC-2.23.001 (ReadFileTool — consumes BC-2.13.004 PathGuard), BC-2.2
 //       -> Result<PathBuf, PregolyaError>;
 //
 // Error layer split:
-//   - Escape detected inside pregolya-sandbox → Err(E-SBXD-001 PathEscapeViolation)
+//   - Escape detected inside pregolya-sandbox → Err(E-SBXD-001 WorkspaceEscape)
 //   - pregolya-tools wraps/surfaces escape as Err(E-TOOLS-001 PathConfinementViolation)
 //
 // BC anchor (owner): BC-2.13.004 (PathGuard invariant, VP-003 Kani P0, SS-13)

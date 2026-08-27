@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.3"
+version: "1.4"
 changelog:
+  - "1.4 (round-7/F-P2A066-01/2026-08-26): F-P2A066-01 HIGH (seam contradiction closed). Option A adopted per authoritative carriers (BC-2.09.008 {PC-004}, ADR-029 §Decision 3): STATE-ISOLATION is enforced solely by GraphRunner::run via extract_output, NOT by invoke_dyn. §Proof Harness Skeleton rewritten: from_runner/MockGraphRunner approach replaced by from_graph/stub-graph approach; from_graph creates a real ConcreteGraphRunner<TestGraphState> that calls extract_output inside run(); stub_graph (CompiledGraph::stub_terminal) emits the full TestGraphState with extra fields; invoke_dyn wraps the runner's already-filtered result. FALSE-GREEN GUARD updated for Option A. Test Seam Obligation replaced with Stub Graph Obligation (CompiledGraph::stub_terminal). BC-2.09.008 {INV-001} code-review obligation updated to ConcreteGraphRunner::run call site. POL-31 rewritten: removed architecturally-impossible 'patch invoke_dyn to bypass extract_output'; new POL-31 requires formal-verifier to confirm harness FAILS when ConcreteGraphRunner::run bypasses extract_output call. Canonical Seam Statement obligation added. ADR-029 §Decision 3 receives parallel canonical seam statement (same burst)."
   - "1.3 (round-6/F-064-02+O-063-02/2026-08-26): F-064-02 HIGH (triple-confirmed) — §Proof Harness Skeleton: harness relocated from non-compilable integration test path (pregolya-mcp/tests/state_isolation.rs) to IN-CRATE #[cfg(test)] mod tests inside pregolya-mcp/src/graph_tool.rs. Three non-realizability defects fixed: (1) from_runner call now references the #[cfg(test)]-gated constructor seam on GraphAgentTool defined in the same file — not a phantom public API; (2) pub(crate) GraphRunner is reachable inside the crate's own cfg(test) block — E0603 eliminated; (3) extract_output closure corrected from Fn(&serde_json::Value) to Fn(&TestGraphState) -> serde_json::Value per the Fn(&S) -> serde_json::Value contract. 'Target file' line updated to pregolya-mcp/src/graph_tool.rs. §Proof Obligations: explicit §Test Seam Obligation added (impl GraphAgentTool::from_runner<S> must exist under #[cfg(test)] in graph_tool.rs; seam is NOT public). Harness remains load-bearing: MockGraphRunner returns full TestGraphState with EXTRA internal fields; ToolOutput key-set must equal exactly {'output'}; any field leak FAILS. O-063-02 OBS — normalize invoke→invoke_dyn in §Property Statement, formal property, §Source Contract {INV-001} paragraph, §Proof Method table, §Proof Obligations code-review obligation (three occurrences). Input-hash unchanged (source BC unchanged)."
   - "1.2 (P2A-062/2026-08-26): F-P2A-061-01 HIGH — §Proof Harness Skeleton rewritten to invoke the real production path (GraphAgentTool::invoke_dyn via MockGraphRunner test double) rather than a tautological local closure. Harness constructs GraphAgentTool over MockGraphRunner whose terminal state carries checkpoint_id/run_id/accumulated_messages beyond what extract_output selects; asserts returned ToolOutput contains ONLY extract_output-selected fields; any field leak FAILS the proptest. Follows VP-006-B pattern. §Proof Obligations: POL-31 live-violation obligation added (formal-verifier must confirm harness fails under injected-leak fixture at Phase 6). §Feasibility: Async concern row updated (harness calls invoke_dyn via tokio current-thread runtime). Input-hash refreshed to 90e3c45."
   - "1.1 (GAP-01/BC-2.09.008-authored/2026-08-26): BC-2.09.008 authored by PO. Named anchor {INV-STATE-ISOLATION} replaced with numeric ADR-027-compliant stable tag {INV-001} throughout (three occurrences: §Source Contract, §BC Traceability, and §Proof Obligations). BC-2.09.008 {INV-001} is the STATE-ISOLATION invariant. Input-hash refreshed."
@@ -122,35 +123,40 @@ Target file: `pregolya-mcp/src/graph_tool.rs` (inside `#[cfg(test)] mod tests` b
 
 Harness function: `graph_agent_tool_state_isolation`
 
-**FALSE-GREEN GUARD:** This harness calls `GraphAgentTool::invoke_dyn` (the real production
-path), NOT a locally-defined closure. `MockGraphRunner` returns a terminal `GraphState`
-carrying EXTRA fields (`checkpoint_id`, `run_id`, `accumulated_messages`) that `extract_output`
-does NOT select. If `invoke_dyn` leaks any of those fields into `ToolOutput`, the
-`prop_assert!` calls below will FAIL. A tautological harness that only tests a local closure
-would pass even if production code leaks state — this harness does not. Contrast: VP-006-B
-calls production `check_fewshot_trust` — this harness follows the same pattern for the
-STATE-ISOLATION boundary.
+**FALSE-GREEN GUARD:** This harness exercises the REAL production path via `from_graph`.
+The `stub_graph` (see Stub Graph Obligation in §Proof Obligations) produces a terminal
+`TestGraphState` carrying ALL four fields including `checkpoint_id`, `run_id`, and
+`accumulated_messages`. `extract_output` runs INSIDE `ConcreteGraphRunner::run` — NOT in
+`invoke_dyn` (ADR-029 §Decision 3 canonical seam statement). If `ConcreteGraphRunner::run`
+returns raw terminal state instead of calling `extract_output` (a leak-injected scenario),
+the extra fields appear in `ToolOutput` and the `prop_assert!` checks FAIL. A harness that
+tests only a locally-defined closure (bypassing the production runner) would be tautological.
+This harness is non-tautological because `from_graph` binds the production
+`ConcreteGraphRunner::run` execution path. Follows the same non-tautology pattern as VP-006-B.
 
 **Harness resides in `#[cfg(test)] mod tests` inside `pregolya-mcp/src/graph_tool.rs`** so that:
-- `pub(crate) GraphRunner` is visible (crate-internal visibility; E0603 is avoided),
-- The `#[cfg(test)]`-gated `GraphAgentTool::from_runner::<S>` constructor seam is
-  accessible (defined via `#[cfg(test)] impl GraphAgentTool` in the same file — see
-  §Proof Obligations "Test Seam Obligation"), and
-- The `extract_output` closure uses the correct `Fn(&TestGraphState) -> serde_json::Value`
-  type per the `Fn(&S) -> serde_json::Value` contract, not `Fn(&serde_json::Value)`.
+- `pub(crate) GraphRunner` and `ConcreteGraphRunner<S>` are visible (crate-internal visibility),
+- `from_graph` can construct the production `ConcreteGraphRunner<TestGraphState>` (no
+  test-only seam required for the tool construction itself — `from_graph` is the public API), and
+- `CompiledGraph::stub_terminal` (from `pregolya-graph`, `#[cfg(test)]` only) is accessible
+  as a dev-dependency (see §Proof Obligations "Stub Graph Obligation").
 
 ```rust
 // pregolya-mcp/src/graph_tool.rs — #[cfg(test)] mod tests
 // VP-016 — graph_agent_tool_state_isolation harness
 //
-// Invariant: ToolOutput contains ONLY the fields returned by extract_output.
+// Canonical seam: STATE-ISOLATION is enforced solely by GraphRunner::run via
+// extract_output(&final_state). GraphAgentTool::invoke_dyn performs no re-filtering.
+// (ADR-029 §Decision 3 canonical seam statement — F-P2A066-01 closure.)
+//
 // POL-31 OBLIGATION (Phase 6): formal-verifier must confirm this harness FAILS under
-// an injected-leak fixture — see §Proof Obligations.
+// an injected-leak modification to ConcreteGraphRunner::run — see §Proof Obligations.
 
 #[cfg(test)]
 mod tests {
-    use super::*;  // Sees pub(crate) GraphRunner, GraphAgentTool, GraphToolApprovalPolicy
+    use super::*;  // Sees pub(crate) GraphRunner, ConcreteGraphRunner, GraphAgentTool
     use pregolya_core::tool::DynTool;
+    use pregolya_graph::CompiledGraph;  // stub_terminal is #[cfg(test)] on CompiledGraph
     use proptest::prelude::*;
     use proptest_derive::Arbitrary;
     use serde::{Deserialize, Serialize};
@@ -173,33 +179,13 @@ mod tests {
         accumulated_messages: Vec<String>,
     }
 
-    /// Test double — returns the full serialized TestGraphState as the runner output,
-    /// including ALL internal fields. The extra fields simulate internal graph state that
-    /// must be filtered by extract_output before reaching ToolOutput. If invoke_dyn bypasses
-    /// extract_output, the extra fields leak and the harness FAILS.
-    struct MockGraphRunner {
-        /// Pre-serialized terminal state; includes ALL TestGraphState fields.
-        terminal_state: serde_json::Value,
-    }
-
-    #[async_trait::async_trait]
-    impl GraphRunner for MockGraphRunner {
-        // GraphRunner is pub(crate) — visible here because this mod is inside
-        // pregolya-mcp/src/graph_tool.rs (crate-internal, not an integration test).
-        async fn run(
-            &self,
-            _input: serde_json::Value,
-            _policy: &GraphToolApprovalPolicy,
-        ) -> Result<serde_json::Value, pregolya_core::error::PregolyaError> {
-            // Returns ALL fields — extract_output in invoke_dyn is the isolation gate.
-            Ok(self.terminal_state.clone())
-        }
-    }
-
     proptest! {
-        /// VP-016 — STATE-ISOLATION ({INV-001}, BC-2.09.008): GraphAgentTool::invoke_dyn
-        /// returns ONLY extract_output-selected fields; extra fields in the runner terminal
-        /// state must not leak into ToolOutput.
+        /// VP-016 — STATE-ISOLATION ({INV-001}, BC-2.09.008): the production
+        /// ConcreteGraphRunner::run calls extract_output(&final_state) before returning;
+        /// invoke_dyn wraps the runner's already-filtered result without re-filtering.
+        /// The stub graph emits the full TestGraphState with extra internal fields;
+        /// ConcreteGraphRunner::run applies extract_output (selecting ONLY `output`);
+        /// any leak of extra fields into ToolOutput FAILS the prop_assert! checks.
         #[test]
         fn graph_agent_tool_state_isolation(state in any::<TestGraphState>()) {
             let rt = tokio::runtime::Builder::new_current_thread()
@@ -208,24 +194,37 @@ mod tests {
                 .unwrap();
 
             rt.block_on(async {
-                let full_state_value = serde_json::to_value(&state)
-                    .expect("TestGraphState must serialize");
+                // Build a stub CompiledGraph that emits `state` as terminal output.
+                // (Stub Graph Obligation — see §Proof Obligations; test-writer implements
+                // CompiledGraph::stub_terminal as #[cfg(test)] on CompiledGraph in
+                // pregolya-graph.)
+                // The stub produces the full TestGraphState — checkpoint_id, run_id,
+                // and accumulated_messages are ALL present and MUST NOT appear in
+                // ToolOutput after ConcreteGraphRunner::run applies extract_output.
+                let stub_graph: Arc<CompiledGraph<TestGraphState>> =
+                    CompiledGraph::stub_terminal(state.clone());
 
-                // Build GraphAgentTool via the #[cfg(test)]-gated from_runner seam
-                // (defined in `#[cfg(test)] impl GraphAgentTool` in this file — see
-                // §Proof Obligations "Test Seam Obligation").
-                // extract_output: Fn(&TestGraphState) -> serde_json::Value — correct type.
-                // Selects ONLY the `output` field; all other fields are state-isolated.
-                let tool = GraphAgentTool::from_runner::<TestGraphState>(
+                // from_graph creates a ConcreteGraphRunner<TestGraphState> that stores
+                // BOTH stub_graph AND the extract_output closure internally.
+                // When ConcreteGraphRunner::run is called (via invoke_dyn), it:
+                //   1. Executes stub_graph → receives terminal TestGraphState
+                //   2. Calls (self.extract_output)(&final_state) → returns ONLY
+                //      serde_json::json!({ "output": s.output })
+                // invoke_dyn receives the already-filtered serde_json::Value and wraps
+                // it in ToolOutput::Structured without further modification.
+                // This is the PRODUCTION isolation path per ADR-029 §Decision 3.
+                let tool = GraphAgentTool::from_graph(
                     "test-agent".to_string(),
                     "VP-016 state-isolation test agent".to_string(),
-                    Arc::new(MockGraphRunner { terminal_state: full_state_value }),
-                    |state: &TestGraphState| -> serde_json::Value {
-                        serde_json::json!({ "output": state.output })
+                    stub_graph,
+                    |s: &TestGraphState| -> serde_json::Value {
+                        serde_json::json!({ "output": s.output })
                     },
                 );
 
-                // Invoke the REAL production path (invoke_dyn) — not a local closure.
+                // Invoke via the REAL production path:
+                // invoke_dyn → ConcreteGraphRunner::run → stub_graph terminal →
+                //   extract_output(&final_state) → filtered serde_json::Value.
                 let input = serde_json::json!({ "output": state.output });
                 let result = tool.invoke_dyn(input).await;
 
@@ -250,7 +249,8 @@ mod tests {
                             "accumulated_messages must not appear in ToolOutput \
                              (STATE-ISOLATION {INV-001} violation)");
 
-                        // Exact key-set check: output must contain EXACTLY the selected keys.
+                        // Exact key-set check: ToolOutput must contain EXACTLY the
+                        // extract_output-selected keys.
                         let keys: Vec<&str> = obj.keys().map(|k| k.as_str()).collect();
                         prop_assert_eq!(
                             keys, vec!["output"],
@@ -279,7 +279,7 @@ mod tests {
 | Input space | Open (arbitrary GraphState) | proptest covers via `Arbitrary` derive |
 | Proof complexity | Low | Structural containment check on JSON objects; no async, no I/O in the harness |
 | Tool support | Supported | `proptest` + `proptest-derive`; no blocking dependencies |
-| Async concern | Low | Harness calls `invoke_dyn` which is async; `tokio::runtime::Builder::new_current_thread()` wraps each proptest case; no actual I/O occurs (MockGraphRunner resolves synchronously in practice) |
+| Async concern | Low | Harness calls `invoke_dyn` which is async; `tokio::runtime::Builder::new_current_thread()` wraps each proptest case; no actual I/O occurs (`CompiledGraph::stub_terminal` resolves synchronously — no network, no checkpoint I/O) |
 | Estimated proof time | < 1s per proptest case | 10k cases × negligible per case |
 
 No blocking risks. The `extract_output` closure must be extractable and callable outside the
@@ -288,26 +288,32 @@ async context of `GraphRunner::run` for the harness to work — this is guarante
 
 ## Proof Obligations
 
-- [ ] **Test Seam Obligation:** `pregolya-mcp/src/graph_tool.rs` MUST contain a
-  `#[cfg(test)] impl GraphAgentTool` block that defines
-  `from_runner::<S>(name: String, description: String, runner: Arc<dyn GraphRunner>, extract_output: impl Fn(&S) -> serde_json::Value + Send + Sync + 'static) -> Self`
-  where `S: for<'de> serde::Deserialize<'de> + schemars::JsonSchema + Send + Sync + 'static`.
-  This seam is NOT public API (no `pub`; `#[cfg(test)]` only). The seam reuses the
-  `GraphRunner` trait directly (bypassing the `CompiledGraph<S>` wrapper used by
-  `from_graph`) to enable MockGraphRunner injection. Comparable to VP-006-B's obligation
-  that `check_fewshot_trust` is an extracted pure function; this seam is the equivalent
-  test entry point for the STATE-ISOLATION path.
+- [ ] **Stub Graph Obligation:** A `#[cfg(test)]` constructor
+  `CompiledGraph::<S>::stub_terminal(state: S) -> Arc<CompiledGraph<S>>` MUST be implemented
+  in `pregolya-graph` (exact module location at test-writer discretion). This constructor
+  creates a minimal `CompiledGraph<S>` whose single execution step returns `state` as the
+  terminal output — no real graph logic, no LLM calls, no checkpointing. NOT public API;
+  `#[cfg(test)]` only. Enables `from_graph` to create a real `ConcreteGraphRunner<S>` that
+  exercises the production `(self.extract_output)(&final_state)` call path inside
+  `ConcreteGraphRunner::run`. This replaces the retired `from_runner` seam (v1.3 and earlier)
+  which exercised the wrong architecture (Option B, isolation in `invoke_dyn`).
 - [ ] `TestGraphState` derives `proptest_derive::Arbitrary` and `schemars::JsonSchema`
 - [ ] `graph_agent_tool_state_isolation` proptest runs without shrinking failures for 10k cases
 - [ ] `full_state_differs_from_extract_output` proptest confirms extract_output does not accidentally serialize the full struct
-- [ ] BC-2.09.008 {INV-001} verified: `GraphAgentTool::invoke_dyn` code path calls ONLY `extract_output(&final_state)` as the output source (code review; single call site in `GraphRunner::run`)
+- [ ] BC-2.09.008 {INV-001} verified: `ConcreteGraphRunner::run` in `pregolya-mcp/src/graph_tool.rs` calls ONLY `(self.extract_output)(&final_state)` as the output source before returning `serde_json::Value` to `invoke_dyn` (code review; single call site in `ConcreteGraphRunner::run`; `invoke_dyn` performs no re-filtering per ADR-029 §Decision 3 canonical seam statement)
+- [ ] **Canonical Seam Statement at call site:** `ConcreteGraphRunner::run` MUST contain an
+  inline comment at the `extract_output` call site: "STATE-ISOLATION: extract_output is the
+  sole data-exit path (BC-2.09.008 {INV-001}); invoke_dyn performs no re-filtering."
+  Enables grep-based seam verification across review cycles.
 - [ ] Integration test: register a graph with an `answer`-only `extract_output`; invoke via mock `mcp::server` `tools/call`; assert `CallToolResult.content[0].text` parses as JSON with only the `answer` key
 - [ ] **POL-31 live-violation (Phase 6 gate — formal-verifier obligation):** The formal-verifier
-  MUST confirm the harness FAILS when a leak-injected `MockGraphRunner` is used that returns
-  the full serialized `TestGraphState` (including `checkpoint_id`, `run_id`,
-  `accumulated_messages`) AND `invoke_dyn` is patched to bypass `extract_output` (returning
-  raw runner output directly). A harness that passes on this injected-leak fixture is
-  non-falsifiable and MUST be rejected as tautological before VP-016 can gate Phase 6.
+  MUST confirm the harness FAILS when `ConcreteGraphRunner::run` is modified in an isolated
+  injected-leak fixture to bypass the `extract_output` call — returning
+  `serde_json::to_value(&final_state).unwrap()` directly instead of
+  `(self.extract_output)(&final_state)`. Under this modification, the raw terminal state
+  (including `checkpoint_id`, `run_id`, `accumulated_messages`) appears in `ToolOutput` and
+  the `prop_assert!` checks fail. A harness that passes under this leak-injection fixture is
+  non-falsifiable and MUST be rejected before VP-016 can gate Phase 6.
 
 ## Lifecycle
 

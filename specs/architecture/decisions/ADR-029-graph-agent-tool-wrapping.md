@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "1.7"
+version: "1.8"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "1.8 (round-7/F-P2A066-01+F-P2A067-01/2026-08-26): F-P2A067-01 HIGH — §Decision 2 pseudocode + prose + §Decision 5 Error Routing Table: removed all three occurrences of phantom `E-MCP-004 McpInvalidArguments` (E-MCP-004 is already assigned to ToolNotFound per BC-2.09.002 {PC-008}; there is no McpInvalidArguments code; the schema-validation-failure path is a wire-protocol JSON-RPC -32602 response with no PregolyaError raised per BC-2.09.007 {PC-005}/BC-2.09.008 EC-001). Replaced with wire-protocol-only description identical to the -32700/-32600 paths already in the table. F-P2A066-01 HIGH (partial) — §Decision 3: canonical seam statement added: 'STATE-ISOLATION is enforced solely by `GraphRunner::run` via `extract_output(&final_state)`; `GraphAgentTool::invoke_dyn` performs no re-filtering.' Prevents seam re-drift. VP-016 receives parallel harness rewrite (same round)."
   - "1.7 (round-6/O-063-02/2026-08-26): §Decision 4 fail-closed guarantee paragraph: `GraphAgentTool::invoke` → `GraphAgentTool::invoke_dyn` (O-063-02 OBS — canonical DynTool dispatch method is invoke_dyn; one bare occurrence corrected)."
   - "1.6 (P2A-062/2026-08-26): F-062-01 HIGH — §Decision 4 fail-closed guarantee: VP-016 attribution corrected — binary interrupt invariant ({INV-002}) is enforced by Red-Gate test set (BC-2.09.008 TV-002/TV-005, S-2.11 AC-024), not VP-016; VP-016 proves STATE-ISOLATION ({INV-001}, §Decision 3). F2 MED — §Decision 2 pipeline + §Decision 5 Error Routing Table: post-schema serde_json::from_value failure corrected — runs inside invoke_dyn, surfaces as isError: true (BC-2.09.008 {PC-003}/EC-002), not JSON-RPC -32602; prose clarified to keep two paths distinct. F3 MED — §Decision 2: Tool::input_schema() corrected to Tool::schema() (canonical method per interface-definitions.md). F-P2A-061-02 MED — §Consequences Error Code (PO Obligation): E-MCP-011 ForceApproveWriteBlocked obligation added, cross-referencing §Decision 4. LOW schemars — schemars::schema::RootSchema corrected to schemars::Schema; RootSchema prose corrected to Schema."
   - "1.5 (P2A-059-records/2026-08-26): F-P2A-059-01 LOW (records-tier) — §Decision 5 E-MCP-010 message-template cell: trailing period dropped so the ADR cell matches error-taxonomy.md verbatim ('...synchronous tools/call invocation' — no trailing period). 1-character literal alignment to authoritative taxonomy source. No semantic or rationale changes. RECORDS-ONLY micro-burst per TD-RECORDS-MICRO-BURST-001."
@@ -165,7 +166,7 @@ This schema is advertised in the MCP `tools/list` response per BC-2.09.006 {PC-0
 ```
 tools/call arguments (serde_json::Value)
   → JSON Schema validation against input_schema (jsonschema crate)
-  → if INVALID: Err(E-MCP-004 McpInvalidArguments) → BC-2.09.007 PC-005 (-32602)
+  → if INVALID: wire-protocol JSON-RPC -32602 response (BC-2.09.007 {PC-005}); no PregolyaError, no E-MCP-* code raised on this path
   → if VALID: serde_json::from_value::<S>(arguments) [runs inside invoke_dyn]
   → if DESERIALIZE FAILS: isError: true, redacted message — BC-2.09.008 {PC-003}/EC-002
                            (tool-error result layer; NOT JSON-RPC -32602)
@@ -174,10 +175,11 @@ tools/call arguments (serde_json::Value)
 
 The two-step approach (schema validate, then deserialize) surfaces schema errors with
 structured messages before attempting deserialization. The two paths are distinct:
-schema-validation failure (pre-deserialize) uses `E-MCP-004 McpInvalidArguments` and maps
-to JSON-RPC -32602 (BC-2.09.007 {PC-005}); post-schema deserialize failure runs inside
-`invoke_dyn` and surfaces as `isError: true` per BC-2.09.008 {PC-003}/EC-002 — it is a
-tool-error result, not a protocol error.
+schema-validation failure (pre-deserialize) results in a wire-protocol JSON-RPC `-32602`
+response (BC-2.09.007 {PC-005}); no `PregolyaError` or `E-MCP-*` code is raised on this
+path — identical treatment to the `-32700`/`-32600` wire-protocol paths in the error routing
+table; post-schema deserialize failure runs inside `invoke_dyn` and surfaces as `isError: true`
+per BC-2.09.008 {PC-003}/EC-002 — it is a tool-error result, not a protocol error.
 
 **Empty arguments:** An empty JSON object `{}` is valid if `S` has no required fields per
 the derived JSON Schema. Schema validation catches missing required fields.
@@ -195,6 +197,11 @@ only the fields the caller selects for external exposure.
 1. Runs the graph to terminal state (or to an interrupt — see Decision 4).
 2. On successful terminal: calls `extract_output(&final_state)`.
 3. Returns ONLY the `serde_json::Value` from step 2.
+
+**Canonical seam statement (F-P2A066-01):** STATE-ISOLATION is enforced solely by
+`GraphRunner::run` via `extract_output(&final_state)`; `GraphAgentTool::invoke_dyn` performs
+no re-filtering. This is the authoritative seam definition — VP-016 proof harness, BC-2.09.008
+{PC-004}/{INV-001}, and S-2.11 Task 23 Arch-Compliance rule must all conform to this seam.
 
 The `GraphRunner` NEVER:
 - Serializes `final_state` directly (the full struct).
@@ -446,7 +453,7 @@ synchronous tools/call invocation — retrying the same invocation cannot succee
 
 | Condition | Error | MCP Layer Response |
 |-----------|-------|--------------------|
-| Input fails JSON Schema validation | `E-MCP-004 McpInvalidArguments` | JSON-RPC -32602 (BC-2.09.007 {PC-005}) |
+| Input fails JSON Schema validation | wire-protocol only — no PregolyaError, no E-MCP-* code raised (BC-2.09.007 {PC-005} / BC-2.09.008 EC-001) | JSON-RPC -32602 ("Invalid arguments for tool '...': &lt;schema_error&gt;") |
 | Input passes schema but `serde_json::from_value` fails (inside `invoke_dyn`) | tool-error result per BC-2.09.008 {PC-003}/EC-002 | `isError: true`, redacted message (tool-error result layer; NOT JSON-RPC -32602) |
 | Graph execution returns `Err(PregolyaError)` | original PregolyaError | `isError: true`, redacted message (BC-2.09.007 {PC-003}, {INV-003}) |
 | Graph parks (node-level `interrupt()` → `RunStatus::Interrupted`) | `E-MCP-010 GraphAgentInterruptDenied` | `isError: true`, message (after redact_credentials pass) |
@@ -586,6 +593,7 @@ PO must mint the following two error codes in `error-taxonomy.md`:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 1.8 | 2026-08-26 | architect | round-7/F-P2A066-01+F-P2A067-01 | F-P2A067-01 HIGH: §Decision 2 pseudocode, §Decision 2 prose, §Decision 5 Error Routing Table — three occurrences of phantom `E-MCP-004 McpInvalidArguments` removed (E-MCP-004 is ToolNotFound per BC-2.09.002 {PC-008}; schema-validation failure is a wire-protocol JSON-RPC -32602 response per BC-2.09.007 {PC-005}/BC-2.09.008 EC-001; no PregolyaError or E-MCP-* code raised). F-P2A066-01 HIGH (partial): §Decision 3 canonical seam statement added. |
 | 1.7 | 2026-08-26 | architect | round-6/O-063-02 | §Decision 4 fail-closed guarantee: `GraphAgentTool::invoke` → `GraphAgentTool::invoke_dyn` (O-063-02 OBS — canonical DynTool dispatch method is invoke_dyn; one bare occurrence in §Decision 4 §DenyInterrupts fail-closed guarantee paragraph). |
 | 1.6 | 2026-08-26 | architect | P2A-062 | F-062-01 HIGH: §Decision 4 fail-closed guarantee — VP-016 attribution corrected; binary interrupt invariant ({INV-002}) → Red-Gate test set (BC-2.09.008 TV-002/TV-005, S-2.11 AC-024); VP-016 proves STATE-ISOLATION ({INV-001}). F2 MED: §Decision 2 + §Decision 5 Error Routing Table — post-schema deserialize failure corrected to isError: true (BC-2.09.008 {PC-003}/EC-002), not -32602 protocol error. F3 MED: Tool::input_schema() → Tool::schema() (canonical method). F-P2A-061-02 MED: §Consequences Error Code Obligation — E-MCP-011 ForceApproveWriteBlocked added, cross-referencing §Decision 4. LOW schemars: schemars::schema::RootSchema → schemars::Schema. |
 | 1.5 | 2026-08-26 | state-manager | P2A-059-records | F-P2A-059-01 LOW (records-tier): §Decision 5 E-MCP-010 message-template cell — trailing period dropped so ADR cell matches error-taxonomy.md verbatim. 1-character literal alignment. No semantic changes. RECORDS-ONLY micro-burst per TD-RECORDS-MICRO-BURST-001. |

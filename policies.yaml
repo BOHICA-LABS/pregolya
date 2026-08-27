@@ -121,6 +121,17 @@
 #   quotation accepted as equivalent evidence to executed-command output when
 #   adversary tool profile denies Bash; intent preserved — findings must be
 #   evidenced, not asserted; description and verification_steps[0] updated.
+# 1.5 (round-7/F-P2A068-02/2026-08-26): POL-9 scope amended (F-P2A068-02).
+#   ARCH-INDEX.md §Verification Properties VP mirror table added explicitly to
+#   POL-9 propagation scope. Root cause: §Verification Properties was absent from
+#   POL-9 verification_steps, causing it to be skipped when VP-INDEX changed;
+#   ARCH-INDEX §VP count and rows drifted as a result. New verification step 6
+#   added with the ARCH-INDEX §VP mirror check procedure. enforced_by updated to
+#   note hooks/verify-epic-rollup-points.sh as an additional advisory validator
+#   for the related F-P2A068-01 arithmetic class. Two new advisory hooks minted
+#   this burst: verify-error-code-name-binding.sh (F-P2A067-01 class) and
+#   verify-epic-rollup-points.sh (F-P2A068-01 class). No policies renumbered.
+#   metadata.version bumped 1.4→1.5.
 # 1.4 (P2A-048/2026-08-24): POL-14 amended (F-048-01): index files (BC-INDEX,
 #   VP-INDEX, ARCH-INDEX, STORY-INDEX) added explicitly to DESCENDING group in
 #   description, matching verify-form-a-changelog-direction.sh's classification
@@ -128,8 +139,8 @@
 #   STORY-INDEX ascending-outlier finding. metadata.version bumped 1.3→1.4.
 
 metadata:
-  version: "1.4"
-  last_updated: "2026-08-24"
+  version: "1.5"
+  last_updated: "2026-08-26"
 
 policies:
 
@@ -249,10 +260,10 @@ policies:
 
   - id: 9
     name: vp_index_is_vp_catalog_source_of_truth
-    description: "VP-INDEX.md is authoritative. Changes must propagate same-burst to verification-architecture.md and verification-coverage-matrix.md."
+    description: "VP-INDEX.md is authoritative. Changes must propagate same-burst to verification-architecture.md, verification-coverage-matrix.md, AND ARCH-INDEX.md §Verification Properties VP mirror table. The ARCH-INDEX §Verification Properties section is explicitly in scope: its row count and per-VP rows must stay in sync with VP-INDEX every burst. (F-P2A068-02: ARCH-INDEX drifted to 16 rows while VP-INDEX held 16 — root cause was VP propagation scope did not name ARCH-INDEX, causing it to be skipped in same-burst POL-9 cascades.)"
     adopted: baseline
     severity: HIGH
-    enforced_by: [adversary-prompt, lint-hook, consistency-validator]
+    enforced_by: [adversary-prompt, lint-hook, consistency-validator, hooks/verify-epic-rollup-points.sh]
     scope: [vp, architecture]
     lint_hook: hooks/validate-vp-consistency.sh
     verification_steps:
@@ -261,6 +272,7 @@ policies:
       - "For each VP in VP-INDEX, verify it appears in verification-coverage-matrix.md VP-to-Module table"
       - "Sum coverage matrix per-tool columns — must equal VP-INDEX per-tool totals"
       - "Reverse check: every VP in arch docs must exist in VP-INDEX"
+      - "ARCH-INDEX §Verification Properties mirror check (F-P2A068-02 scope addition): open ARCH-INDEX.md §Verification Properties; verify (a) the VP count stated in the section header matches VP-INDEX total; (b) each VP in VP-INDEX has a corresponding row in the ARCH-INDEX VP table with matching VP-ID, BC anchor, Module, type, priority, and status columns; (c) no VP rows in ARCH-INDEX are absent from VP-INDEX (reverse check). Any gap between VP-INDEX and ARCH-INDEX §Verification Properties is a POL-9 violation requiring same-burst correction."
 
   - id: 10
     name: demo_evidence_story_scoped

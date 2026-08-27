@@ -1,6 +1,6 @@
 ---
 document_type: dependency-graph
-version: "1.1"
+version: "1.2"
 status: active
 producer: story-writer
 timestamp: 2026-08-18T00:00:00Z
@@ -224,7 +224,7 @@ S-2.11 (MCP Server)
 
 | From Crate | To Crate | Rationale | ADR / BC Source |
 |-----------|----------|-----------|----------------|
-| `pregolya-mcp` | `pregolya-graph` | `GraphAgentTool<S>` wraps `Arc<CompiledGraph<S>>` — introduced by BC-2.09.008 and formalized in ADR-029 §Consequences. The `mcp::graph_tool` module depends on `CompiledGraph<S>` and `GraphRunner` types from `pregolya-graph`. | ADR-029, BC-2.09.008 PC-001 |
+| `pregolya-mcp` | `pregolya-graph` | `GraphAgentTool` wraps `Arc<CompiledGraph<S>>` (the struct is non-generic; the `from_graph<S>` constructor and `Arc<CompiledGraph<S>>` are generic) — introduced by BC-2.09.008 and formalized in ADR-029 §Consequences. The `mcp::graph_tool` module depends on `CompiledGraph<S>` and `GraphRunner` types from `pregolya-graph`. | ADR-029, BC-2.09.008 PC-001 |
 
 > **DAG-acyclicity confirmation:** Adding `pregolya-mcp → pregolya-graph` does not create a
 > cycle. `pregolya-graph` has no dependency on `pregolya-mcp` (one-directional). At the story
@@ -415,3 +415,4 @@ S-6.01 (Kani + cargo-fuzz)
 ## Changelog
 
 - **1.1 (F1/round-5/2026-08-26):** (a) BC count updated 133 → 134 to reflect BC-2.09.008 addition. (b) SS-09 BC range updated BC-2.09.001–007 → BC-2.09.001–008. (c) VP-to-Stories Matrix extended: VP-015 (BC-2.09.007 / unit / S-2.11), VP-016 (BC-2.09.008 / proptest / S-2.11), VP-006-B (BC-2.18.004 / Kani / S-2.05) added. (d) Crate-Level Dependency Edges section added: `pregolya-mcp → pregolya-graph` (ADR-029 / BC-2.09.008 PC-001; GraphAgentTool wraps Arc<CompiledGraph<S>>). S-1.14 added as upstream of S-2.11 (S-2.11 depends_on updated to [S-2.10, S-1.14]; S-1.14 blocks updated to include S-2.11). Topological sort batch 2d rationale updated; DAG-acyclicity confirmed (S-1.14 Wave-1 upstream of S-2.11 Wave-2 — no cycle).
+- **1.2 (F-P2A066-02/round-7/2026-08-26):** Crate-Level Dependency Edges: `GraphAgentTool<S>` → `GraphAgentTool` (struct is non-generic; `from_graph<S>` constructor and `Arc<CompiledGraph<S>>` remain generic per ADR-029 §Decision); clarification note added.

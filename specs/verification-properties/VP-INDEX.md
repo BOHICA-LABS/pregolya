@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.21"
+version: "1.22"
 status: active
 producer: architect
-timestamp: 2026-08-26T18:00:00Z
+timestamp: 2026-08-26T19:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.22 (round-7/F-P2A066-01/D-282/2026-08-26): VP-016 v1.4 — Option-A realizable harness adopted (extract_output seam: isolation solely in GraphRunner::run; invoke_dyn passes state/output through without re-filtering; ADR-029 §Decision 3 canonical seam statement updated). CompiledGraph::stub_terminal seam added; POL-31 bypass recipe deleted; BC-2.09.008 {PC-004}/{INV-001} seam wording aligned. Census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.21 (round-6/P2A-063-065/D-281/2026-08-26): VP-016 body file bumped v1.2→v1.3 (F-064-02 HIGH triple-confirmed — harness relocated from non-compilable integration-test path to in-crate #[cfg(test)] mod tests inside pregolya-mcp/src/graph_tool.rs; three non-realizability defects fixed: from_runner seam, pub(crate) GraphRunner access E0603, Fn(&serde_json::Value)→Fn(&TestGraphState)->serde_json::Value; §Proof Obligations: §Test Seam Obligation added; O-063-02 OBS: invoke→invoke_dyn normalized in §Property Statement, formal property, §Source Contract, §Proof Method table, §Proof Obligations). VP-INDEX catalog row unchanged (BC-2.09.008 {INV-001} / proptest / P1 / draft unchanged). VP census unchanged: total 17."
   - "1.20 (P2A-060/061/062-round-5/2026-08-26): VP-016 body file bumped v1.1→v1.2 (F-P2A-061-01 HIGH harness fix: prior harness was tautological — rewritten to invoke production GraphAgentTool::invoke_dyn via MockGraphRunner + extract_output closure; Phase-6 POL-31 obligation recorded). VP-INDEX catalog row unchanged (BC-2.09.008 {INV-001} / proptest / P1 unchanged). VP census unchanged: total 17."
   - "1.19 (P2A-058-F058-04/2026-08-26): VP-006-B harness_fn confirmed as `injection_guard_multipair_fewshot_fail_closed` per F-058-04 convergence check (VP-INDEX §VP Catalog is source of truth; file was authored with canonical name; no rename required). VP-006-B bumped to v1.1. No catalog row delta. VP census unchanged: total 17."

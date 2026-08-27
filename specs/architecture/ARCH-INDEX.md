@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.40"
+version: "1.41"
 status: active
 producer: architect
 timestamp: 2026-08-26T18:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.41 (round-7/F-P2A068-02/2026-08-26): F-P2A068-02 HIGH — §Verification Properties VP mirror stale. Fixed: (1) count line 16→17; (2) proptest breakdown 4→5; (3) VP-006-B row added (BC-2.18.004 {PC-005} / prompts::injection_guard / proptest / P1 / draft) matching VP-INDEX.md verbatim; (4) preamble sync note added referencing POL-9. VP-INDEX source of truth confirms: 17 total, 6 Kani P0, 3 Kani P1, 5 proptest P1, 2 integration P1, 1 unit P1."
   - "1.40 (round-6/P2A-063-065/D-281/2026-08-26): ADR-029 (O-063-02 OBS): §Decision 4 fail-closed guarantee paragraph — invoke→invoke_dyn normalization (canonical DynTool dispatch method is invoke_dyn; one bare occurrence corrected). dependency-graph.md (BLOCKER-3 false-closure): VP-006-B proptest row ADDED to architecture dependency-graph §VP-matrix (this file had never received the VP-006-B fix applied to stories/dependency-graph.md in round-5; two distinct files corrected at different times). verification-architecture.md + verification-coverage-matrix.md: VP-016 rows — invoke→invoke_dyn normalization (records-tier, TD-VSDD-091 compliance). No BC row changes; no VP row changes; no ADR registration changes. ADR count remains 29."
   - "1.39 (E-code-correction/2026-08-26): ADR-029 row: E-MCP-006 → E-MCP-010 (GraphAgentInterruptDenied) — E-MCP-006 was already taken by McpContentUnsupported (minted 2026-07-22). VP-016 BC anchor: {INV-STATE-ISOLATION} → {INV-001} (stable BC-2.09.008 numeric anchor per product-owner). v1.38 changelog narrative corrected to E-MCP-010."
   - "1.38 (GAP-01/ADR-029/2026-08-26): ADR-029 registered — Agent-as-MCP-Tool (GraphAgentTool) Wrapping (GAP-01 resolution; human-approved v1 scope addition 2026-08-26). SS-09 BC range 001–007 → 001–008 (BC-2.09.008 reservation). VP-016 added proptest P1 (mcp::graph_tool; BC-2.09.008 state-isolation; DI-010). ADR count 28→29. Document Map updated to 29 ADR files (ADR-001 to ADR-029). VP total 14→16 (VP-016 proptest P1 + correct VP counts per VP-INDEX authority). New error code E-MCP-010 GraphAgentInterruptDenied (PO must mint)."
@@ -207,7 +208,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 
 ## Verification Properties (VP-INDEX)
 
-16 VPs total (6 Kani P0 + 3 Kani P1 + 4 proptest P1 + 2 integration P1 + 1 unit P1 — see VP-INDEX):
+17 VPs total (6 Kani P0 + 3 Kani P1 + 5 proptest P1 + 2 integration P1 + 1 unit P1 — see VP-INDEX; mirror of VP-INDEX, kept in sync via POL-9):
 
 | VP | BC Anchor | Module | Tool | Priority | Status |
 |----|-----------|--------|------|----------|--------|
@@ -217,6 +218,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-004 | BC-2.09.004 (MCP ToolException) | `mcp::exception` | integration | P1 | draft |
 | VP-005 | BC-2.09.005 (MCP no live connections) | `mcp::client` | integration | P1 | draft |
 | VP-006 | BC-2.18.004 (injection_guard fail-closed) | `prompts::injection_guard` | Kani | P1 | draft |
+| VP-006-B | BC-2.18.004 {PC-005} (injection_guard multi-pair fewshot fail-closed) | `prompts::injection_guard` | proptest | P1 | draft |
 | VP-007 | BC-2.19.001 (serializable round-trip) | `core::serializable` | proptest | P1 | draft |
 | VP-008 | BC-2.22.001 (embeddings dimension parity) | `core::embeddings` | proptest | P1 | draft |
 | VP-009 | BC-2.21.003 (zero-norm guard fail-closed) | `vectorstores::similarity` | Kani | P0 | draft |
