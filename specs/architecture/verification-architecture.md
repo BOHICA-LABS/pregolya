@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.26"
+version: "2.27"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "18fa8b4"
+input-hash: "c3a2086"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -785,7 +785,7 @@ node outputs, or internal graph metadata (ADR-029 §Decision 3 {INV-001} / DI-01
 **Why proptest (not Kani):** The STATE-ISOLATION property ranges over `serde_json::Value`, which is
 a recursive open data type. Kani cannot reason symbolically over unbounded JSON trees.
 `extract_output` is an arbitrary caller-supplied closure; Kani cannot reason symbolically over
-closure bodies in general. Proptest generates arbitrary `GraphState` instances with extra internal
+closure bodies in general. Proptest generates arbitrary `TestGraphState` instances (serialized as `serde_json::Value`) with extra internal
 fields and verifies the structural containment property over a large sample (10k cases × < 1s each).
 
 **Proptest harness:** See `vp-016-graph-agent-tool-state-isolation.md` §Proof Harness Skeleton for the complete harness.
@@ -837,6 +837,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.27 | 2026-08-27 | architect | round-16/F-P2A081-01 | VP-016 §Why proptest (not Kani): 'arbitrary `GraphState` instances with extra internal fields' → 'arbitrary `TestGraphState` instances (serialized as `serde_json::Value`) with extra internal fields' (F-P2A081-01 MED — `GraphState` is not a type/trait per ADR-029 §Symbol Grounding PHANTOM row; canonical harness struct is `TestGraphState`). input-hash updated to c3a2086. |
 | 2.26 | 2026-08-27 | architect | round-14/F-P2A078-02+F-P2A078-03 | VP-016 §Property entry: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by a successful invocation' → 'the `serde_json::Value` returned by `invoke_dyn` on successful invocation' (F-P2A078-02 HIGH). VP-016 harness description: `VP-016.md` filename → `vp-016-graph-agent-tool-state-isolation.md` (canonical filename; F-P2A078-03 MED); TestGraphState fields `internal_checkpoint_id`/`intermediate_message`/`_internal_blob` → `checkpoint_id`/`run_id`/`accumulated_messages` (authoritative VP-016 harness; F-P2A078-03); 'Assertion: `ToolOutput` contains exactly' → 'Assertion: the `serde_json::Value` returned by `invoke_dyn` contains exactly'. input-hash updated to 18fa8b4. |
 | 2.25 | 2026-08-26 | architect | round-6/F-P2A-065-07 | VP-006-B BC anchor corrected: `BC-2.18.004` → `BC-2.18.004 {PC-005}` in Committed VP Obligations table (VP-INDEX canonical anchor per VP-INDEX §VP Catalog row BC column). VP-006-B §Should Prove heading normalized: `injection_guard_fewshot Multi-Pair Fail-Closed` → `injection_guard Multi-Pair FewShotExamples` (matches VP-INDEX/VP-006-B.md canonical title form; F-P2A-065-07 OBS). input-hash updated. |
 | 2.24 | 2026-08-26 | architect | SEC-review-adjudication | SEC-003: VP-006 Arm 2 multi-pair mandate — existing `n>=1&&n<=4` Kani harness provides symbolic proof covering multi-pair/middle/last-Untrusted scenarios; explicit mandate and VP-006-B proptest P1 added (arbitrary pair-count 2..=8 + arbitrary untrusted index; belt-and-suspenders). SEC-004: VP-006 future-variant proof obligation noted — adding a TrustLevel variant requires re-running cargo kani; VP-006 proves only currently-defined variants; runtime wildcard enforces fail-closed for any variant. Committed VP Obligations table: add VP-006-B row; totals 16→17, P1 10→11, proptest 4→5. §Section Content narrative updated. |

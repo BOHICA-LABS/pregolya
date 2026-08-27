@@ -1,7 +1,7 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.1"
+version: "1.2"
 status: archive
 producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
@@ -3062,3 +3062,12 @@ pregolya Phase-2 spec re-convergence IN PROGRESS. D-284 CLOSED (2026-08-27): rou
 pregolya Phase-2 spec re-convergence IN PROGRESS. D-285 CLOSED (2026-08-27): round-12 fix-burst — P2A-075/076/077 3 HIGH + 2 MED ALL CLOSED. GAP-01 corpus-wide phantom-type sweep COMPLETE: extract_output closures re-typed |s: &S|→|s: &serde_json::Value| (BC-2.09.008 EC-007/TV-001/TV-010; S-2.11 AC-032/AC-035/Task-41); StateGraph builder confirmed non-generic per BC-2.02.001/S-1.14 (BC-2.08.012 + S-1.07 de-genericized); BC-INDEX VP-Seed 15→17 unique VPs / 18 rows; verify-no-phantom-types.sh corpus-grep advisory gate registered. VP-016 §Realizability-Trace Steps 1-2 re-grounded + §Feasibility retired-design prose updated (ADR-029 §Symbol-Grounding; VP-016 §Realizability-Trace updated); stub_terminal REQUIRES-ROUTING→ROUTED/SPECCED (S-1.14 AC-014/Task 18). HS-C-001 §BC-Coverage ToolOutput::Structured→serde_json::Value. Lessons L-198/L-199 codified. Adversarial 3-CLEAN streak 0/3 NOT CLEAN (P2A-075/076/077 NOT CLEAN — all closed this round). NEXT ACTION: run three parallel deep adversary passes P2A-078/079/080 on NEW HEAD (symbol-existence re-run; StateGraph non-generic re-scan; type-grounding completeness); plus GATE-READY consistency audit; if all three CLEAN(strict) → streak advances toward 3/3 CONVERGED → Phase-2 gate. OPEN OBS for the human gate: BC-2.09.008 {INV-005} success-path credential opacity is caller-discipline-only (SEC-001; no runtime backstop) — human risk-acceptance item. Census 39/134/17/137/29 ADR/15 HS. Points 303. HEADS: develop 644d1ad; factory-artifacts — PUSHED (active wrap). DIRECTIVE 1: keep going to convergence, do not ask to continue.
 
 ### STATE: v5.96, timestamp 2026-08-27T07:00:00Z
+
+---
+
+<!-- v5.97 archived from STATE.md 2026-08-27 -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 spec re-convergence IN PROGRESS. D-286 CLOSED (2026-08-27): round-14 fix-burst — P2A-078/079 2 HIGH + 3 MED + 1 LOW ALL CLOSED. Semantic per-document reconciliation (GAP-01 final pass): ADR-029 §Symbol-Grounding (ActionRisk symbol-grounding: None phantom→ReadOnly/Low/Medium/High enum variants declared Deny; §Decision-4 Ok(ToolOutput) residue closed); VP-016 §Property-Statement (§Property-Statement/§Corollary/§Proof-Method/§Feasibility prose+enum-enumeration+struct-field+filename grounded on serde_json::Value; §BC-Traceability EC-TV-1→TV-001/EC-007); verification-architecture.md §VP-016-harness (VP-016 harness struct fields re-grounded: output/checkpoint_id/run_id/accumulated_messages; dangling VP-016.md ref→vp-016-graph-agent-tool-state-isolation.md slug); BC-2.09.007 §Architecture-Anchors (§Architecture-Anchors invoke_dyn/serde_json::Value); BC-2.09.008 §Description (§Description CAJ CompiledStateGraph); S-2.11 §Task-38 (Task-38 ToolOutput::Text{text}→Ok(Value::String(...)); Policy-8 cite corrected). verify-no-phantom-types.sh extended 6 patterns (R14-01..R14-06; 17 self-probes advisory). L-200 codified (semantic per-document reconciliation mandate). BC-INDEX §Changelog; VP-INDEX §Changelog; ARCH-INDEX §Changelog; STORY-INDEX §Changelog. Drift/Deferrals: VP-FILENAME-CONVENTION + PHANTOM-GATE-FP-NARROWING recorded (S-7.02). Census UNCHANGED 39/134/17/137. Points 303. streak 0/3 NOT CLEAN. NEXT ACTION: run three parallel deep adversary passes P2A-081/082/083 on NEW HEAD (symbol-existence re-run + semantic-reconciliation completeness verification + GAP-01 closed-class confirmation); plus GATE-READY consistency audit; if all three CLEAN(strict) → streak advances toward 3/3 CONVERGED → Phase-2 gate. OPEN OBS for human gate: BC-2.09.008 {INV-005} success-path credential opacity caller-discipline-only (SEC-001; no runtime backstop) — human risk-acceptance item. Census 39/134/17/137/29 ADR/15 HS. Points 303. HEADS: develop 644d1ad; factory-artifacts — PUSHED (active wrap). DIRECTIVE 1: keep going to convergence, do not ask to continue.
+
+### STATE: v5.97, timestamp 2026-08-27T09:00:00Z

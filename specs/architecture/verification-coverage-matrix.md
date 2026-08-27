@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.17"
+version: "3.18"
 status: active
 producer: architect
 timestamp: 2026-08-27T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "cbb4bf4"
+input-hash: "e9944b8"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.18 (round-16/hash-reconciliation/D-287/2026-08-27): POL-21 claim-not-applied fix — v3.17 §Changelog claimed 'input-hash updated to 96ec220' but frontmatter input-hash field was never updated from cbb4bf4. Hook-computed true value = e9944b8. Frontmatter input-hash set to e9944b8. No normative content changes; metadata only."
   - "3.17 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — `mcp::graph_tool` row Notes: `CompiledGraph<S>` → `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}; aligns with ADR-029 §Symbol Grounding). No VP count, module count, or arithmetic changes. input-hash updated to 96ec220."
   - "3.16 (round-6/F-P2A-065-07/2026-08-26): VP-006-B VP-to-Module table: title corrected from 'injection_guard Multi-Pair Fewshot Fail-Closed' to 'injection_guard Multi-Pair FewShotExamples' (canonical form per VP-INDEX §VP Catalog; F-P2A-065-07 OBS). BC anchor corrected from 'BC-2.18.004' to 'BC-2.18.004 {PC-005}' (VP-INDEX BC column is authoritative). No VP count, module count, or arithmetic changes. input-hash updated."
   - "3.15 (SEC-review-adjudication/2026-08-26): SEC-003 — VP-006-B added: proptest P1 Phase 3, prompts::injection_guard, pregolya-prompts, BC-2.18.004, DI-014 (multi-pair few-shot injection mandate belt-and-suspenders). VP-to-Module table: add VP-006-B row. Totals: 16→17 VPs, proptest 4→5, P1 10→11. Per-Module Coverage Status: prompts::injection_guard row updated to note VP-006-B proptest P1. Coverage by Criticality Tier HIGH: proptest 7 of 28 → 8 of 28 (prompts::injection_guard now has proptest). Header physical row count 87→88. Tiered grouping unchanged (37 MEDIUM; HIGH/CRITICAL/LOW unchanged)."
