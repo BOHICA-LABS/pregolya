@@ -2,19 +2,20 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.16"
+version: "3.17"
 status: active
 producer: architect
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "b798d51"
+input-hash: "cbb4bf4"
 traces_to: ARCH-INDEX.md
 changelog:
-  - "3.16 (round-6/F-P2A-065-07/2026-08-26): VP-006-B VP-to-Module table: title corrected from 'injection_guard Multi-Pair Fewshot Fail-Closed' to 'injection_guard Multi-Pair FewShotExamples' (canonical form per VP-INDEX §VP Catalog; F-P2A-065-07 OBS). BC anchor corrected from 'BC-2.18.004' to 'BC-2.18.004 {PC-005}' (VP-INDEX BC column is authoritative). No VP count, module count, tier count, or arithmetic changes. input-hash updated."
+  - "3.17 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — `mcp::graph_tool` row Notes: `CompiledGraph<S>` → `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}; aligns with ADR-029 §Symbol Grounding). No VP count, module count, or arithmetic changes. input-hash updated to 96ec220."
+  - "3.16 (round-6/F-P2A-065-07/2026-08-26): VP-006-B VP-to-Module table: title corrected from 'injection_guard Multi-Pair Fewshot Fail-Closed' to 'injection_guard Multi-Pair FewShotExamples' (canonical form per VP-INDEX §VP Catalog; F-P2A-065-07 OBS). BC anchor corrected from 'BC-2.18.004' to 'BC-2.18.004 {PC-005}' (VP-INDEX BC column is authoritative). No VP count, module count, or arithmetic changes. input-hash updated."
   - "3.15 (SEC-review-adjudication/2026-08-26): SEC-003 — VP-006-B added: proptest P1 Phase 3, prompts::injection_guard, pregolya-prompts, BC-2.18.004, DI-014 (multi-pair few-shot injection mandate belt-and-suspenders). VP-to-Module table: add VP-006-B row. Totals: 16→17 VPs, proptest 4→5, P1 10→11. Per-Module Coverage Status: prompts::injection_guard row updated to note VP-006-B proptest P1. Coverage by Criticality Tier HIGH: proptest 7 of 28 → 8 of 28 (prompts::injection_guard now has proptest). Header physical row count 87→88. Tiered grouping unchanged (37 MEDIUM; HIGH/CRITICAL/LOW unchanged)."
   - "3.14 (E-code-correction/2026-08-26): VP-016 BC anchor: {INV-001} corrected from stale {INV-STATE-ISOLATION} (stable BC-2.09.008 numeric anchor per product-owner). VP-to-Module table VP-016 row, Per-Module Coverage Status header note, and mcp::graph_tool row Notes all updated. v3.13 frontmatter changelog entry also corrected. No VP count, module count, or arithmetic changes."
   - "3.13 (GAP-01/ADR-029/2026-08-26): (1) VP-015 tool corrected integration→unit (D-273 fix; VP-015 frontmatter always said tool:unit; VP-to-Module table and mcp::sanitize Notes now consistent). (2) VP-016 added: proptest P1, Phase 3, mcp::graph_tool, pregolya-mcp, BC-2.09.008 {INV-001}, DI-010 (ADR-029 GAP-01 resolution). VP-to-Module table: add VP-016 row. Totals: 15→16 VPs, proptest 3→4, integration 3→2 (D-273), unit 0→1 (D-273). Per-Module Coverage Status: add mcp::graph_tool MEDIUM row (pregolya-mcp; proptest VP-016; STATE-ISOLATION invariant). Module header: 86→87 physical rows. Tiered groupings: MEDIUM 36→37; tiered total 78→79. Coverage by Criticality Tier: MEDIUM 36→37. Arithmetic invariant: VP total (16) = P0 (6) + P1 (10) = Kani (9) + proptest (4) + integration (2) + unit (1)."
@@ -122,7 +123,7 @@ changelog:
 | mcp::exception | pregolya-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
 | mcp::server | pregolya-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
 | mcp::sanitize | pregolya-mcp | — | — | — | yes | MEDIUM; pure-core credential redaction utility; `redact_credentials` pattern substitution; VP-015 unit P1 (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention) |
-| mcp::graph_tool | pregolya-mcp | — | VP-016/yes | — | yes | MEDIUM; SS-09; wraps CompiledGraph<S> as DynTool; STATE-ISOLATION invariant; VP-016 proptest P1 (BC-2.09.008 {INV-001}/DI-010; ADR-029) |
+| mcp::graph_tool | pregolya-mcp | — | VP-016/yes | — | yes | MEDIUM; SS-09; wraps `CompiledStateGraph` as DynTool; STATE-ISOLATION invariant; VP-016 proptest P1 (BC-2.09.008 {INV-001}/DI-010; ADR-029) |
 | pregolya-macros | pregolya-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness (no canonical crate::module name for this roll-up — macros::tool/entrypoint/task are the canonical rows) |
 | macros::tool | pregolya-macros | — | — | — | yes | HIGH; `#[tool]` proc-macro ToolDefinition generation; compile-time TokenStream expansion; integration-tested via expansion correctness; BC-2.08.010 |
 | macros::entrypoint | pregolya-macros | — | — | — | yes | HIGH; `#[entrypoint]` proc-macro START-edge wiring; compile-time TokenStream expansion; integration-tested; BC-2.08.011 |

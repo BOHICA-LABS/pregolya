@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.7 (B-SS09-11-arch-adjudication/2026-08-26): VP-MCPCALL-03 renamed to VP-015 everywhere in BC body — architect registered this property as formal VP-015 in Phase-2 BC-completeness reconciliation. TD-VSDD-060 sibling-sweep applied: all VP-MCPCALL-03 occurrences replaced (§Verification Properties table and §VP Anchors). No behavioral or semantic change."
   - "1.8 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
   - "1.9 (B-SS09-sec-adjudication/ADR-029-SEC-001-SEC-002/2026-08-26): (1) SEC-001 — {PC-002} extended with success-path credential boundary obligation: Tool implementations MUST NOT embed credentials in ToolOutput success variants; framework sanitizes error paths only; DI-010 obligation binds every DynTool. TV-009 added (MockTool success-path asserts framework does NOT strip success-path content — boundary belongs to the Tool, not the server). (2) SEC-002 — {INV-003} extended with pluggable pattern registry note: three patterns cover first-party providers; partner crates SHOULD register additional patterns for new key formats; mandatory error-path behavior unchanged."
+  - "2.0 (round-10/GAP-01-type-grounding/2026-08-27): Type-grounding reconciliation — `DynTool::invoke_dyn` return type corrected per ADR-029 §Symbol Grounding (architect symbol-existence audit): returns `Result<serde_json::Value, PregolyaError>` (NOT `ToolOutput`). {PC-002} result_text selection rule rewritten: rule now operates on the `serde_json::Value` returned by `invoke_dyn` directly — `Value::Null` → `\"null\"`, `Value::String(s)` → `s` verbatim, other `Value` types (Object/Array/Bool/Number) → `serde_json::to_string(&value)` (compact JSON). Success-path credential boundary note updated: credential material must not be embedded in the `serde_json::Value` returned by `invoke_dyn`. TV-009 updated: `ToolOutput::Text{ text }` → `Ok(Value::String(text))`. Zero residual `ToolOutput::Structured` in live body text post-edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -67,19 +68,18 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
    JSON parsed to the tool's input schema.
 2. {PC-002} On **successful execution:** the server responds with:
    `{ "content": [{ "type": "text", "text": "<result_text>" }], "isError": false }`.
-   **result_text selection rule:** `result_text` is determined by the `ToolOutput` variant
-   returned by `Tool::invoke`:
-   - `ToolOutput::Structured { value: serde_json::Value }` → `result_text =
-     serde_json::to_string(&value)` (compact JSON; no pretty-printing). A JSON `null` value
-     serializes to the string `"null"`.
-   - `ToolOutput::Text { text: String }` → `result_text = text` verbatim. No JSON-encoding
-     or additional escaping is applied.
-   The `Tool` implementation determines the variant; the server applies the corresponding
-   serialization rule. If `ToolOutput` carries empty content (empty text string or JSON
-   `null`), `result_text` is `""` or `"null"` respectively.
-   **Success-path credential boundary (DI-010):** Tool implementations MUST NOT embed
-   credential material (API keys, access tokens, secrets) in `ToolOutput::Structured { value }`
-   or `ToolOutput::Text { text }`. The framework applies `redact_credentials` to **error
+   **result_text selection rule:** `result_text` is determined by the `serde_json::Value`
+   returned by `DynTool::invoke_dyn`:
+   - `Value::Null` → `result_text = "null"`.
+   - `Value::String(s)` → `result_text = s` verbatim. No JSON-encoding or additional
+     escaping is applied.
+   - All other `Value` types (Object, Array, Bool, Number) → `result_text =
+     serde_json::to_string(&value)` (compact JSON; no pretty-printing).
+   The `DynTool` implementation determines the `Value` shape; the server applies the
+   corresponding serialization rule.
+   **Success-path credential boundary (DI-010):** `DynTool` implementations MUST NOT embed
+   credential material (API keys, access tokens, secrets) in the `serde_json::Value`
+   returned by `invoke_dyn`. The framework applies `redact_credentials` to **error
    paths only** (see {INV-003}); success-path `result_text` is **NOT** framework-sanitized.
    This obligation derives from DI-010 (Credential Opacity) and binds every `DynTool`
    implementation.
@@ -208,7 +208,7 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 | TV-006 | Tool registered after server start; client invokes it | `isError: false` response with tool result | Dynamic registry |
 | TV-007 | `tools/call { name: "api_tool" }`; tool returns `Err(PregolyaError { message: "request failed: key=sk-abc123XYZabc123XYZabc", .. })` | MCP response `{ "content": [{ "type": "text", "text": "request failed: key=<redacted>" }], "isError": true }` — OpenAI-pattern key replaced by `<redacted>` | Credential redaction (INV-003) |
 | TV-008 | Client sends non-JSON bytes (e.g., `"not json{{"`) via `tools/call` path | JSON-RPC response `{ "error": { "code": -32700, "message": "Parse error" } }` | Malformed JSON — parse error (EC-007) |
-| TV-009 | `tools/call { name: "mock_tool" }`; MockTool returns `ToolOutput::Text{ text: "key=sk-abc123XYZabc123XYZabc" }` (success path) | MCP response `{ "content": [{ "type": "text", "text": "key=sk-abc123XYZabc123XYZabc" }], "isError": false }` — key material is preserved verbatim; success-path content is NOT framework-sanitized | Success-path credential boundary: framework does NOT strip; Tool implementation bears sole obligation ({PC-002} DI-010) |
+| TV-009 | `tools/call { name: "mock_tool" }`; MockTool returns `Ok(Value::String("key=sk-abc123XYZabc123XYZabc".to_string()))` (success path) | MCP response `{ "content": [{ "type": "text", "text": "key=sk-abc123XYZabc123XYZabc" }], "isError": false }` — key material is preserved verbatim (Value::String → verbatim rule); success-path content is NOT framework-sanitized | Success-path credential boundary: framework does NOT strip; Tool implementation bears sole obligation ({PC-002} DI-010) |
 
 ## Verification Properties
 

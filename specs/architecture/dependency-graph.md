@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.9"
+version: "1.10"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -11,10 +11,11 @@ inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/prd.md
   - .factory/specs/module-criticality.md
-input-hash: "584dde0"
+input-hash: "69778ab"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D21, D23]
 changelog:
+  - "1.10 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — three `CompiledGraph<S>` live-body sites replaced with `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}): (1) Crate DAG pregolya-mcp annotation; (2) Edge Table pregolya-mcp→pregolya-graph rationale; (3) Build Order Wave 2 position-19 annotation. Sibling sweep: no additional CompiledGraph<S> or Fn(&S) sites in this file (v1.8 changelog entry retains old symbol as historical record; grandfathered per TD-VSDD-091). input-hash updated to 69778ab."
   - "1.9 (round-6/BLOCKER-3/2026-08-26): §Cross-Cutting Dependencies proptest row: add `pregolya-prompts [VP-006-B]` (injection_guard Multi-Pair FewShotExamples fail-closed; proptest P1; multi-pair injection-guard mandate SEC-003 per VP-INDEX). Proptest crate now covers 7 crates: pregolya-graph, pregolya-checkpoint, pregolya-splitters, pregolya-core, pregolya-memory, pregolya-mcp, pregolya-prompts."
   - "1.8 (GAP-01/ADR-029/2026-08-26): Add new runtime edge `pregolya-mcp → pregolya-graph` (mcp::graph_tool module wraps CompiledGraph<S> as DynTool; ADR-029 Decision 1). (1) Crate DAG: update pregolya-mcp leaf annotation to include `CompiledGraph<S>` from pregolya-graph. (2) Edge Table: add pregolya-mcp → pregolya-graph runtime row. (3) Build Order: update pregolya-mcp annotation (position 19, Wave 2 — topological order valid since pregolya-graph is position 8, Wave 1). (4) Cross-Cutting Dependencies proptest row: add pregolya-mcp [VP-016 STATE-ISOLATION]. Input-hash refresh pending (state-manager task)."
   - "1.7 (BURST-311/F-P202-01/2026-08-17): Rename CheckpointSaver::search_history → CheckpointSaver::fts_search at two live-body sites (F-P202-01 HIGH drift; fts_search is the canonical CheckpointSaver trait method per BC-2.04.008 §Description; search_history is the agent-callable Tool wrapper per BC-2.04.008 PC5). (1) Crate DAG annotation: 'graph::budget uses CheckpointSaver::search_history (BC-2.04.008)' → 'graph::budget uses CheckpointSaver::fts_search (BC-2.04.008)'. (2) Edge Table pregolya-graph→pregolya-checkpoint rationale: 'uses CheckpointSaver::search_history to build' → 'uses CheckpointSaver::fts_search to build'. TD-VSDD-060 sibling sweep: the two corrected sites are the only live-body search_history-as-method occurrences in this file; changelog entry 1.6 retains the old name as historical record (grandfathered per TD-VSDD-091)."
@@ -70,7 +71,7 @@ pregolya-core
   │
   ├── pregolya-standard-tests (dev-deps on each adapter crate + core)
   │
-  └── pregolya-mcp            (uses core: Tool, Runnable; uses graph: CompiledGraph<S> for mcp::graph_tool GraphAgentTool; optional dep on providers)
+  └── pregolya-mcp            (uses core: Tool, Runnable; uses graph: `CompiledStateGraph` for mcp::graph_tool GraphAgentTool; optional dep on providers)
 
 pregolya (facade)             (re-exports public API from all impl crates; terminal node)
   [depends on: pregolya-core, pregolya-graph, pregolya-checkpoint, pregolya-server,
@@ -110,7 +111,7 @@ pregolya (facade)             (re-exports public API from all impl crates; termi
 | pregolya-standard-tests | pregolya-ollama | dev | Conformance test harness |
 | pregolya-standard-tests | pregolya-core | dev | Test trait surface |
 | pregolya-mcp | pregolya-core | runtime | Tool, Runnable, PregolyaError |
-| pregolya-mcp | pregolya-graph | runtime | `mcp::graph_tool` wraps `CompiledGraph<S>` as a `DynTool`; `GraphRunner::run` dispatches to the compiled graph at invocation time; new dep introduced by ADR-029 mcp::graph_tool module (BC-2.09.008 / SS-09) |
+| pregolya-mcp | pregolya-graph | runtime | `mcp::graph_tool` wraps `CompiledStateGraph` as a `DynTool`; `GraphRunner::run` dispatches to the compiled graph at invocation time; new dep introduced by ADR-029 mcp::graph_tool module (BC-2.09.008 / SS-09) |
 | pregolya-splitters | pregolya-core | runtime | PregolyaError for Result |
 | pregolya-macros | (none) | — | Proc-macro crate; no pregolya-core dep at compile time |
 | `pregolya` (facade) | pregolya-core | runtime | Public API re-export: re-exports core trait surface, message types, error types |
@@ -165,7 +166,7 @@ Wave 2:
   16. pregolya-anthropic       (depends on core + anthropic-sdk)
   17. pregolya-ollama          (depends on core + ollama-sdk)
   18. pregolya-standard-tests  (depends on core + all adapter crates)
-  19. pregolya-mcp             (depends on core + graph [mcp::graph_tool/CompiledGraph<S>] + optional providers; graph at position 8 satisfies topological order)
+  19. pregolya-mcp             (depends on core + graph [mcp::graph_tool/`CompiledStateGraph`] + optional providers; graph at position 8 satisfies topological order)
   20. pregolya (facade)        (re-exports all impl crates; terminal node; depends on all above)
 ```
 

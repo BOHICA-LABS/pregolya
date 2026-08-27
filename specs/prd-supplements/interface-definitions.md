@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.85"
+version: "2.86"
 status: active
 producer: product-owner
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 phase: 1d
 changelog:
+  - "2.86 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): §GraphAgentTool TYPE-GROUNDING reconciliation. F-P2A072-03 HIGH: `from_graph<S>` redesigned as non-generic: signature changed from `from_graph<S>(name, description, Arc<CompiledGraph<S>>, Fn(&S)->Value) where S: GraphState+Deserialize+JsonSchema` to `from_graph(name, description, Arc<CompiledStateGraph>, schemars::Schema, Fn(&serde_json::Value)->serde_json::Value)`. `CompiledGraph<S>` phantom replaced with `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}); `GraphState` phantom removed (NOT a trait — entities-graph.md §GraphState); schema derivation is caller responsibility (`schemars::schema_for!(StateType)` passed as `input_schema`). `extract_output` closure receives `&serde_json::Value` (channel-composed state from `CompiledStateGraph::invoke`) instead of `&S`. Dep-edge source note updated. F-P2A072-02 HIGH: `DenyInterrupts` variant doc-comment `Ok(ToolOutput::Structured)` phantom replaced with `Ok(serde_json::Value from extract_output_result)`. F-P2A072-01 HIGH: `GraphRunner` trait doc-comment `hides CompiledGraph<S>` phantom replaced with `holds Arc<CompiledStateGraph> internally`. TD-VSDD-060 sibling sweep: all three live-body phantom-surface sites in this section corrected in same burst."
   - "2.85 (round-8/F-P2A070-01/2026-08-26): §GraphAgentTool GraphToolApprovalPolicy::DenyInterrupts doc-comment corrected (F-P2A070-01 MED). Two defects fixed: (a) umbrella claim 'Any internal graph interrupt is converted to Err(E-MCP-010)' removed — the PendingHumanApproval→Deny path does NOT raise E-MCP-010; (b) 'graph continues to error terminal state' replaced with 'graph CONTINUES to its own terminal — valid terminal yields Ok; error terminal yields Err with graph's own error (NOT E-MCP-010)'. E-MCP-010 is now correctly scoped to node-level interrupt() parking (RunStatus::Interrupted) only, consistent with BC-2.09.008 {PC-005}/{INV-002}. The 'No interrupted run is persisted to durable checkpoint' statement moved inside the node-level interrupt() bullet where it belongs. TD-VSDD-060 sibling sweep: ForceApproveHooks comment (already correct per round-6 v2.83) and GraphRunner trait comment verified CLEAN — both scope E-MCP-010 to interrupt() only."
   - "2.84 (round-7/F-P2A067-02/2026-08-26): §First-Party Tools error-layer-split doc-comment: E-SBXD-001 name corrected from PathEscapeViolation (never canonical) to WorkspaceEscape (taxonomy canonical; BC-2.13.005, SECURITY). Reconciliation: E-SBXD-001 is the correct code (sandbox-layer escape); only the name label was stale. E-TOOLS-001 PathConfinementViolation on the adjacent line was already correct and is unchanged."
   - "2.83 (round-6/F-064-01/2026-08-26): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment rewritten to hardened semantics (F-064-01 HIGH). Replaced pre-hardening fail-open text ('overrides ALL PreToolDecision values ... the tool proceeds unconditionally') with: (a) SEC-007 — overrides ONLY PendingHumanApproval to Approve; Deny and ALL other PreToolDecision values pass through UNCHANGED; (b) SEC-006/F-057-01 — runtime BoundaryApprovalHook ActionRisk gate: action_risk None (undeclared, fail-closed per BC-2.05.006 EC-004/{INV-002}) OR Some(r >= Medium) → Deny + E-MCP-011 ForceApproveWriteBlocked + CRITICAL log; only Some(r < Medium) → Approve; (c) node-level interrupt() still causes Err(E-MCP-010); (d) use-restriction framed as architectural enforcement (runtime gate), not caller-responsibility only. BC anchors in doc-comment: BC-2.09.008 {PC-006} (ForceApproveHooks override semantics), {INV-004} (safety restriction), ADR-029 §Decision 4."
@@ -2221,7 +2222,7 @@ ADR-016 Decision 1 (crate placement — pregolya-core module, no new crate), Dec
 **Source:** ADR-029 (GraphAgentTool wrapping; `mcp::graph_tool` module; fail-closed interrupt policy;
 E-MCP-010 `GraphAgentInterruptDenied`). **Module:** `pregolya-mcp: mcp::graph_tool`
 (`pregolya-mcp/src/graph_tool.rs`). Depends on: `pregolya-mcp → pregolya-graph` dependency
-edge (new per ADR-029 §Decision 1; `CompiledGraph<S>` is defined in `pregolya-graph`).
+edge (new per ADR-029 §Decision 1; `CompiledStateGraph` is defined in `pregolya-graph/src/types.rs` per BC-2.02.001 {PC-001}).
 
 **BC-2.09.008** is the authoritative signature carrier per ADR-029 §Decision 1.
 Interface definitions here and in BC-2.09.008 take precedence over ADR sketches for conflicts.
@@ -2238,9 +2239,9 @@ policy), ADR-029 §Decision 5 (E-MCP-010 error code).
 ```rust
 // pregolya-mcp/src/graph_tool.rs — mcp::graph_tool
 
-/// Wraps a compiled `StateGraph<S>` as a `DynTool`, enabling registration in a
+/// Wraps a `CompiledStateGraph` as a `DynTool`, enabling registration in a
 /// `ToolRegistry` and advertisement/invocation via BC-2.09.006 tools/list and
-/// BC-2.09.007 tools/call. Enforces STATE-ISOLATION (only `extract_output(&final_state)`
+/// BC-2.09.007 tools/call. Enforces STATE-ISOLATION (only `extract_output(&final_state_value)`
 /// result is returned to the external MCP client — BC-2.09.008 {INV-001}), fail-closed
 /// interrupt policy (BC-2.09.008 {INV-002}), and mandatory credential redaction on all
 /// error paths (BC-2.09.007 {INV-003}).
@@ -2256,30 +2257,32 @@ pub struct GraphAgentTool {
 
 impl GraphAgentTool {
     /// Constructs a `GraphAgentTool` wrapping the given compiled graph.
-    /// Derives `inputSchema` from `S: schemars::JsonSchema` via `schemars::schema_for!(S)`
-    /// at construction time. The schema is stored for advertisement in `tools/list` responses
+    /// `input_schema` is the caller's responsibility — derived via
+    /// `schemars::schema_for!(StateType)` before calling `from_graph`.
+    /// `CompiledStateGraph` is non-generic (BC-2.02.001 {PC-001}) and has no schema
+    /// introspection method; schema derivation must be done by the caller.
+    /// The schema is stored for advertisement in `tools/list` responses
     /// (BC-2.09.006 {PC-002}) and for server-side argument validation (BC-2.09.007 {PC-005}).
     ///
-    /// `extract_output` is the STATE-ISOLATION boundary (BC-2.09.008 {INV-001}): only
-    /// the fields it selects from `&S` appear in the `ToolOutput`. Fields not selected are
-    /// structurally excluded — checkpoint IDs, run IDs, message history, and metadata
-    /// are unreachable unless `extract_output` explicitly constructs a `Value` containing them.
+    /// `extract_output` is the STATE-ISOLATION boundary (BC-2.09.008 {INV-001}): receives
+    /// the final channel-composed state as `&serde_json::Value` (returned by
+    /// `CompiledStateGraph::invoke`) and selects which fields are returned to the external
+    /// MCP client. Fields not selected are structurally excluded — checkpoint IDs, run IDs,
+    /// message history, and metadata are unreachable unless `extract_output` constructs
+    /// a `Value` containing them.
     ///
     /// Default approval policy: `GraphToolApprovalPolicy::DenyInterrupts` (fail-closed).
     ///
-    /// BC anchor: BC-2.09.008 {PC-001} (construction), {PC-002} (ToolRegistry registration),
-    /// {INV-001} (STATE-ISOLATION), {INV-002} (binary interrupt invariant).
-    pub fn from_graph<S>(
+    /// BC anchor: BC-2.09.008 {PC-001} (construction), {PRE-001} (Arc<CompiledStateGraph>),
+    /// {PC-002} (ToolRegistry registration), {INV-001} (STATE-ISOLATION),
+    /// {INV-002} (binary interrupt invariant).
+    pub fn from_graph(
         name: impl Into<String>,
         description: impl Into<String>,
-        graph: Arc<CompiledGraph<S>>,
-        extract_output: impl Fn(&S) -> serde_json::Value + Send + Sync + 'static,
-    ) -> Self
-    where
-        S: GraphState
-            + for<'de> serde::Deserialize<'de>
-            + schemars::JsonSchema
-            + Send + Sync + 'static;
+        graph: Arc<CompiledStateGraph>,
+        input_schema: schemars::Schema,
+        extract_output: impl Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static,
+    ) -> Self;
 
     /// Overrides the default `DenyInterrupts` approval policy.
     /// Use `ForceApproveHooks` ONLY for graphs composed exclusively of read-only tools
@@ -2305,8 +2308,8 @@ pub enum GraphToolApprovalPolicy {
     /// `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }` → tool NOT invoked; graph
     /// CONTINUES executing.** `E-MCP-010` is NOT raised on the `BoundaryApprovalHook::Deny`
     /// path. If the graph reaches a valid terminal state, BC-2.09.008 {PC-004} applies
-    /// (`Ok(ToolOutput::Structured)`). If it reaches an error terminal, `GraphRunner::run`
-    /// returns `Err` with the graph's OWN error — NOT `E-MCP-010`.
+    /// (`Ok(serde_json::Value from extract_output_result)`). If it reaches an error terminal,
+    /// `GraphRunner::run` returns `Err` with the graph's OWN error — NOT `E-MCP-010`.
     DenyInterrupts,
 
     /// **Explicit opt-in — HITL-dialog suppressor only (SEC-007).**
@@ -2334,9 +2337,11 @@ pub enum GraphToolApprovalPolicy {
     ForceApproveHooks,
 }
 
-/// Type-erased runner — hides `CompiledGraph<S>` generic parameter for object-safe storage.
-/// Called by `GraphAgentTool::invoke_dyn`; enforces STATE-ISOLATION by calling
-/// `extract_output(&final_state)` as the sole data-exit path.
+/// Type-erased runner — holds `Arc<CompiledStateGraph>` internally (non-generic, BC-2.02.001
+/// {PC-001}); no generic parameter. Called by `GraphAgentTool::invoke_dyn`; enforces
+/// STATE-ISOLATION by calling `extract_output(&final_state_value)` as the sole data-exit path,
+/// where `final_state_value: serde_json::Value` is the channel-composed state returned by
+/// `CompiledStateGraph::invoke`.
 ///
 /// BC anchor: BC-2.09.008 {INV-001} (STATE-ISOLATION — only `extract_output` result returned),
 /// {PC-004} (successful terminal path), {PC-005} (interrupt path → E-MCP-010).

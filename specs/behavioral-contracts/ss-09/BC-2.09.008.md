@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "1.6"
+version: "1.7"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -22,12 +22,13 @@ changelog:
   - "1.4 (round-5/F-P2A-061-02+LOW-schemars+LOW-citation/2026-08-26): F-P2A-061-02 [MED]: E-MCP-011 ForceApproveWriteBlocked added to Traceability Error Codes row ({INV-004}/EC-009 anchor). LOW (schemars): {PC-001} 'RootSchema' → 'schemars::Schema' (schemars 1.0 canonical; architect fixes ADR-029 separately). LOW (citation): {INV-004}, {PC-006}, EC-009 citations of 'BC-2.05.006 EC-004/{INV-002}' reworded corroborative — None→Deny behavior is fully specified by {INV-004}; BC-2.05.006 cited for fail-closed principle consistency only."
   - "1.5 (round-7/F-P2A066-01/2026-08-26): Canonical seam wording appended per ADR-029 §Decision 3. {PC-004}: note appended — GraphRunner::run is the sole site where extract_output(&final_state) is called before the filtered serde_json::Value is returned; GraphAgentTool::invoke_dyn wraps the already-filtered result without re-filtering. {INV-001}: note appended — extract_output closure is called solely within GraphRunner::run, not within invoke_dyn; invoke_dyn wraps the result from run() without additional processing."
   - "1.6 (round-8/F-P2A069-02+F-P2A070-02/2026-08-26): F-P2A069-02 ({PC-003}): deserialization-location corrected per ADR-029 §Decision 2 — `serde_json::from_value::<S>(arguments)` runs inside `ConcreteGraphRunner<S>::run` (where `S` is statically known), not inside `invoke_dyn` (which erases `S` behind `Arc<dyn GraphRunner>`); `GraphRunner::run` returns the `Err`; `invoke_dyn` propagates it; routing unchanged (`isError: true`, NOT JSON-RPC -32602). F-P2A070-02 (POL-20): removed story-schema frontmatter fields `behavioral_contracts:` and `verification_properties:` — these are STORY-schema keys that no other of the 134 BCs carries; VP-016 traceability is preserved via §VP Anchors and VP-016.md `source_bc: BC-2.09.008`."
+  - "1.7 (round-10/GAP-01-type-grounding/2026-08-27): Type-grounding reconciliation per ADR-029 §Symbol Grounding / BC-2.02.001 {PC-001}/{PC-005} (architect symbol-existence audit). {PRE-001}: `Arc<CompiledGraph<S>>` (generic) → `Arc<CompiledStateGraph>` (non-generic; `pregolya-graph/src/types.rs`; BC-2.02.001 {PC-001}); caller-supplied `input_schema: schemars::Schema` parameter added (derived via `schemars::schema_for!(StateType)` at call site). {PRE-002}: extract_output closure type `Fn(&S) -> serde_json::Value` → `Fn(&serde_json::Value) -> serde_json::Value` (S erased). {PC-001}: constructor signature updated to `from_graph(name, description, graph, input_schema, extract_output)`; schema derivation moved from `schemars::schema_for!(S)` at construction to caller-provided `input_schema`. {PC-003}: `serde_json::from_value::<S>` deserialization path eliminated — `CompiledStateGraph::invoke` takes `serde_json::Value` directly (BC-2.02.001 {PC-005}); error path is now: `CompiledStateGraph::invoke` returns `Err(PregolyaError)` → `isError: true`. {PC-004}: return type corrected `Ok(ToolOutput::Structured { value: extract_output_result })` → `Ok(extract_output_result)` where `extract_output_result: serde_json::Value`. {PC-005} BoundaryApprovalHook Deny sub-bullet: `Ok(ToolOutput::Structured)` → `invoke_dyn returns Ok(serde_json::Value from extract_output_result)`. {INV-002} terminal bullet: `Ok(ToolOutput::Structured { value: extract_output_result })` → `invoke_dyn returns Ok(serde_json::Value)`. EC-002: retitled and rewritten — `serde_json::from_value::<S>` path no longer exists; graph-level value errors surface via EC-003. EC-007: `ToolOutput::Structured { value: json!(...) }` → `invoke_dyn returns Ok(json!(...))`. EC-008: `ToolOutput::Structured { value: Value::Null }` → `invoke_dyn returns Ok(Value::Null)`. §Description: inputSchema derivation note updated. §VP-016 table: `ToolOutput` and `S instances` wording updated. §Architecture Anchors: `CompiledGraph<S>` → `CompiledStateGraph`. Zero residual `ToolOutput::Structured`, `CompiledGraph<`, `from_value::<S>`, `S: GraphState` in file post-edit."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "fcc7503"
+input-hash: "607337f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -42,11 +43,12 @@ removal_reason: null
 
 ## Description
 
-`GraphAgentTool` (in `mcp::graph_tool`, `pregolya-mcp`) wraps a compiled `StateGraph<S>`
+`GraphAgentTool` (in `mcp::graph_tool`, `pregolya-mcp`) wraps a compiled `StateGraph`
 as a `DynTool` so that it can be registered in the `ToolRegistry` and exposed to external
 MCP clients via the existing `tools/list` advertisement (BC-2.09.006) and `tools/call`
 execution (BC-2.09.007) paths. The contract specifies three surfaces: (1) construction —
-`from_graph` derives the MCP `inputSchema` from `S: schemars::JsonSchema`; (2) output
+the caller passes an explicit `input_schema: schemars::Schema` (derived via
+`schemars::schema_for!(StateType)` at the call site) to `from_graph`; (2) output
 isolation — the caller-supplied `extract_output` closure is the ONLY path through which
 data exits the graph run (STATE-ISOLATION invariant {INV-001}); (3) interrupt policy —
 `GraphToolApprovalPolicy::DenyInterrupts` (default, fail-closed) converts any internal
@@ -55,22 +57,24 @@ overrides `PreToolCallHook` approval decisions only.
 
 ## Preconditions
 
-1. {PRE-001} A compiled `StateGraph<S>` is available as `Arc<CompiledGraph<S>>` where
-   `S: GraphState + for<'de> serde::Deserialize<'de> + schemars::JsonSchema + Send + Sync + 'static`.
-2. {PRE-002} The caller provides an `extract_output: Fn(&S) -> serde_json::Value + Send + Sync + 'static`
-   closure that selects the fields of `S` to expose to external MCP clients. The closure
-   is the STATE-ISOLATION boundary; fields NOT selected by the closure are structurally
-   excluded from the output.
+1. {PRE-001} A compiled graph is available as `Arc<CompiledStateGraph>` (non-generic;
+   `pregolya-graph/src/types.rs`; BC-2.02.001 {PC-001}). The caller also provides an explicit
+   `input_schema: schemars::Schema` parameter derived via `schemars::schema_for!(StateType)`
+   at the call site.
+2. {PRE-002} The caller provides an `extract_output: Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static`
+   closure that selects the fields of the final graph state (as a `serde_json::Value`) to
+   expose to external MCP clients. The closure is the STATE-ISOLATION boundary; fields NOT
+   selected by the closure are structurally excluded from the output.
 3. {PRE-003} The caller provides a stable `name: impl Into<String>` and a `description: impl Into<String>`
    for the tool advertisement; `name` is the public MCP tool name and must be unique within
    the `ToolRegistry` it is registered in (BC-2.08.010 `DuplicateToolName` constraint).
 
 ## Postconditions
 
-1. {PC-001} `GraphAgentTool::from_graph(name, description, graph, extract_output)` constructs
-   a `GraphAgentTool`. At construction time, `schemars::schema_for!(S)` is called to derive
-   the `schemars::Schema` for `S`. This schema is stored internally and returned by `DynTool::schema()`
-   for advertisement in `tools/list` responses per BC-2.09.006 {PC-002}.
+1. {PC-001} `GraphAgentTool::from_graph(name, description, graph, input_schema, extract_output)` constructs
+   a `GraphAgentTool`. The `input_schema: schemars::Schema` passed by the caller (derived via
+   `schemars::schema_for!(StateType)` at the call site) is stored internally and returned by
+   `DynTool::schema()` for advertisement in `tools/list` responses per BC-2.09.006 {PC-002}.
 2. {PC-002} The constructed `GraphAgentTool` implements `DynTool` (object-safe dispatch
    seam per ADR-005 §Adjacent Trait Object-Safety Adjudications) and may be registered in
    a `ToolRegistry` via the standard registration API. After registration, the MCP server
@@ -79,19 +83,16 @@ overrides `PreToolCallHook` approval decisions only.
 3. {PC-003} On `tools/call` invocation: the `mcp::server` validates the call arguments
    against `DynTool::schema()` per BC-2.09.007 {PC-005}; if validation fails, the server
    returns JSON-RPC `-32602` ("Invalid arguments for tool '...': <schema_error>") before
-   `invoke_dyn` is called. If schema validation passes but `serde_json::from_value::<S>(arguments)`
-   fails (e.g., custom serde validation logic rejects a structurally-valid JSON object),
-   the failure occurs inside `ConcreteGraphRunner<S>::run` — the concrete impl of
-   `GraphRunner::run` where `S` is statically known; `GraphAgentTool` is a non-generic
-   struct that erases `S` behind `Arc<dyn GraphRunner>`, so `invoke_dyn` cannot
-   monomorphize `S` (ADR-029 §Decision 2). `GraphRunner::run` returns
-   `Err(PregolyaError { .. })`; `GraphAgentTool::invoke_dyn` propagates the `Err`; the
-   server surfaces this as `isError: true` per BC-2.09.007 {PC-003}; credential
-   redaction applies per {INV-003}.
-4. {PC-004} On successful graph execution: `GraphRunner::run` runs the graph to a terminal
-   state, then calls `extract_output(&final_state)` and returns ONLY the resulting
-   `serde_json::Value`. `GraphAgentTool::invoke_dyn` returns
-   `Ok(ToolOutput::Structured { value: extract_output_result })`.
+   `invoke_dyn` is called. If schema validation passes, `GraphAgentTool::invoke_dyn` calls
+   `CompiledStateGraph::invoke(arguments, config)` — which takes `serde_json::Value` directly
+   (BC-2.02.001 {PC-005}); there is no separate type-parameterized deserialization step.
+   If `CompiledStateGraph::invoke` returns `Err(PregolyaError { .. })`,
+   `GraphAgentTool::invoke_dyn` propagates the `Err`; the server surfaces this as `isError: true`
+   per BC-2.09.007 {PC-003}; credential redaction applies per {INV-003}.
+4. {PC-004} On successful graph execution: `CompiledStateGraph::invoke` runs the graph to a
+   terminal state via `GraphRunner::run`, which calls `extract_output(&final_state)` and
+   returns ONLY the resulting `serde_json::Value`. `GraphAgentTool::invoke_dyn` returns
+   `Ok(extract_output_result)` where `extract_output_result: serde_json::Value`.
    The server serializes this per BC-2.09.007 {PC-002} (`result_text =
    serde_json::to_string(&extract_output_result)`). If `extract_output` returns
    `Value::Null`, `result_text = "null"` per BC-2.09.007 {PC-002}; no error raised.
@@ -107,8 +108,8 @@ overrides `PreToolCallHook` approval decisions only.
      The interrupted run is NOT persisted to durable checkpoint.
    - **`PreToolCallHook::PendingHumanApproval`:** `BoundaryApprovalHook` converts
      `PendingHumanApproval` → `Deny`; the tool is not invoked; the graph CONTINUES executing.
-     If the graph reaches a valid terminal state, {PC-004} applies
-     (`Ok(ToolOutput::Structured)`). If the graph reaches an error terminal,
+     If the graph reaches a valid terminal state, {PC-004} applies (`invoke_dyn` returns
+     `Ok(serde_json::Value)` from `extract_output_result`). If the graph reaches an error terminal,
      `GraphRunner::run` returns `Err(PregolyaError)` with the graph's OWN error (NOT
      `E-MCP-010`). `E-MCP-010` is NOT raised on the `BoundaryApprovalHook::Deny` path.
 6. {PC-006} Under `GraphToolApprovalPolicy::ForceApproveHooks`: `BoundaryApprovalHook`
@@ -152,7 +153,7 @@ overrides `PreToolCallHook` approval decisions only.
 - {INV-002} **Binary interrupt invariant (fail-closed default):** Exactly one of two
   outcomes is possible for any `GraphAgentTool::invoke_dyn` call under
   `GraphToolApprovalPolicy::DenyInterrupts`:
-  - Terminal state reached → `Ok(ToolOutput::Structured { value: extract_output_result })`
+  - Terminal state reached → `invoke_dyn` returns `Ok(serde_json::Value)` (the result of `extract_output_result`)
   - Node-level `interrupt()` parking (`RunStatus::Interrupted`) → `Err(E-MCP-010)`
   The `BoundaryApprovalHook::Deny` path does NOT raise `E-MCP-010`; the graph continues
   to its own terminal (`Ok` per `{PC-004}` or the graph's own `Err`). The binary interrupt
@@ -201,13 +202,17 @@ per BC-2.09.007 {PC-005} BEFORE calling `invoke_dyn`. Server returns JSON-RPC
 `{ "code": -32602, "message": "Invalid arguments for tool '<name>': <schema_error>" }`.
 `GraphAgentTool::invoke_dyn` is never called; the graph is not invoked.
 
-### EC-002: Deserialization failure after schema validation passes
-**Scenario:** Arguments pass JSON Schema validation but `serde_json::from_value::<S>(args)`
-fails due to custom `serde::Deserialize` logic (e.g., an out-of-range numeric field not
-captured by the JSON Schema).
+### EC-002: Graph-level execution error after schema validation passes (formerly: deserialization failure)
+**Scenario:** Arguments pass JSON Schema validation but `CompiledStateGraph::invoke` returns
+`Err(PregolyaError { .. })` during graph execution (e.g., a graph node rejects a value that
+passes structural schema validation, or the graph logic fails for application-specific reasons).
+**Note (type-grounding v1.7):** With `CompiledStateGraph::invoke(input: serde_json::Value, config)`
+accepting the call arguments as a `serde_json::Value` directly (BC-2.02.001 {PC-005}), there is
+no separate type-parameterized deserialization step. Application-level validation failures that
+previously appeared at deserialization now surface as graph execution errors.
 **Expected behavior:** `GraphAgentTool::invoke_dyn` returns `Err(PregolyaError { .. })`.
 `mcp::server` surfaces this as `isError: true` per BC-2.09.007 {PC-003}. Credential
-redaction applies per {INV-003}.
+redaction applies per {INV-003}. See also EC-003 for the general graph execution error path.
 
 ### EC-003: Graph execution error — node returns Err(PregolyaError)
 **Scenario:** Graph node logic returns `Err(PregolyaError)` (e.g., an LLM provider call
@@ -252,14 +257,14 @@ the binary invariant {INV-002} holds even under `ForceApproveHooks`.
 **Scenario:** `GraphState S` has fields `answer: String`, `internal_checkpoint_id: String`,
 `accumulated_messages: Vec<serde_json::Value>`. `extract_output = |s: &S| json!({ "answer": s.answer })`.
 Graph runs successfully to terminal state.
-**Expected behavior:** `ToolOutput::Structured { value: json!({"answer": "<final>"}) }`.
+**Expected behavior:** `invoke_dyn` returns `Ok(json!({ "answer": "<final>" }))`.
 The fields `internal_checkpoint_id` and `accumulated_messages` do NOT appear in the output.
 {INV-001} STATE-ISOLATION holds. VP-016 proptest verifies this property over arbitrary
-`S` instances.
+graph states.
 
 ### EC-008: extract_output returns Value::Null
 **Scenario:** `extract_output = |_| Value::Null`. Graph runs successfully.
-**Expected behavior:** `ToolOutput::Structured { value: Value::Null }` → `result_text = "null"`
+**Expected behavior:** `invoke_dyn` returns `Ok(Value::Null)` → `result_text = "null"`
 per BC-2.09.007 {PC-002} result_text selection rule. Server responds with
 `{ "content": [{ "type": "text", "text": "null" }], "isError": false }`. No error raised.
 {PC-004} holds. {INV-001} holds (Null output is a valid extract_output result).
@@ -309,7 +314,7 @@ tool still succeeds.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-016 | STATE-ISOLATION: `ToolOutput` contains only `extract_output`-selected fields; no internal graph state, checkpoint IDs, message history, or metadata in output | proptest P1 — generate arbitrary `S` instances with extra fields; verify ONLY selected fields appear in invoke result | Phase 3 |
+| VP-016 | STATE-ISOLATION: `invoke_dyn` returns only `extract_output`-selected fields; no internal graph state, checkpoint IDs, message history, or metadata in output | proptest P1 — generate arbitrary graph states; verify ONLY selected fields appear in `invoke_dyn` result | Phase 3 |
 
 ## Related BCs
 

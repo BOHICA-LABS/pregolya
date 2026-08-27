@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.14
 epic_id: E-07
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,11 +15,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4230a5b"
+input-hash: "cc23c5a"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.01]
-blocks: [S-1.13, S-1.15, S-1.16, S-1.17, S-1.18, S-1.19]
+blocks: [S-1.13, S-1.15, S-1.16, S-1.17, S-1.18, S-1.19, S-2.11]
 behavioral_contracts: [BC-2.02.001, BC-2.02.002, BC-2.02.003, BC-2.02.004]
 verification_properties: []
 priority: P0
@@ -32,6 +32,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.3 (round-10/stub_terminal/2026-08-27): AC-014 + Task 18 added — CompiledStateGraph::stub_terminal #[cfg(test)] helper (BC-2.02.001 PC-001); consumed by VP-016 (BC-2.09.008 {INV-001}) in S-2.11. blocks updated to include S-2.11. BC-2.02.001 covered-ACs updated AC-001..AC-013 → AC-001..AC-014. serde_json added to Library Requirements. File Structure extended with #[cfg(test)] impl row."
   - "1.2 (P2-bc-completeness-burst-B/2026-08-26): BC-2.02.001 {PC-007}: AC-012 Command goto+update full semantics; AC-013 Command null-field variants. BC table version bumped."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
@@ -52,7 +53,7 @@ changelog:
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.02.001 | StateGraph Builder API — Node and Channel Registration | AC-001..AC-003, AC-012..AC-013 |
+| BC-2.02.001 | StateGraph Builder API — Node and Channel Registration | AC-001..AC-003, AC-012..AC-014 |
 | BC-2.02.002 | Channel Semantics — LastValue, Append, BarrierValue | AC-004..AC-007 |
 | BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate) | AC-008, AC-011 |
 | BC-2.02.004 | EphemeralValue Cleared After Each Super-Step (Red Gate) | AC-009..AC-010 |
@@ -97,6 +98,20 @@ When a node function returns `Command { goto: Some("target"), update: Some(updat
 
 ### AC-013 (traces to BC-2.02.001 §{PC-007} — Command null-field variants preserve correct routing)
 `Command { goto: None, update: Some(dict) }`: state update is applied; static/conditional edges for the current node take effect normally (no routing override). `Command { goto: Some("target"), update: None }`: schedules `"target"` without applying any state update for this step. `Command { goto: None, update: None }`: semantically equivalent to returning `None` — no state mutation, normal edge routing. All three variants eventually return `Ok(output_state)` when the run reaches `END`. Verified by `test_BC_2_02_001_command_null_field_variants()`.
+
+### AC-014 (traces to BC-2.02.001 PC-001 — stub_terminal test helper; consumed by VP-016 in S-2.11)
+`CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>`
+is a `#[cfg(test)]` helper method on `CompiledStateGraph` (implemented in
+`pregolya-graph/src/types.rs`). It constructs a minimal single-node terminal graph whose
+`invoke` returns `terminal_state` verbatim as its output — NO LLM calls, NO checkpointing,
+NO channel reduction. This helper enables the VP-016 proptest harness
+`graph_agent_tool_state_isolation` (STATE-ISOLATION invariant, anchored in S-2.11) to exercise
+`GraphAgentTool::invoke_dyn` against a realistic `CompiledStateGraph` without a live graph
+executor. The helper is gated `#[cfg(test)]` and MUST NOT be part of the public API surface.
+Points impact: none — a single `#[cfg(test)]` helper does not re-point this story (8 pts
+unchanged). Verified by `test_BC_2_02_001_stub_terminal_constructs_minimal_graph()`: call
+`stub_terminal(json!({"answer": "ok"}))`, invoke with `json!({})`, assert result equals
+`json!({"answer": "ok"})` verbatim.
 
 ## Architecture Mapping
 
@@ -166,6 +181,7 @@ When a node function returns `Command { goto: Some("target"), update: Some(updat
 15. [ ] Write test for `test_BC_2_02_003_named_barrier_duplicate_writer_error()` — covers AC-011 (E-GRAPH-004 DuplicateBarrierWrite; BC-2.02.003 EC-003); add to `pregolya-graph/tests/channel_semantics.rs`
 16. [ ] Write failing test `test_BC_2_02_001_command_goto_and_update_applied()` for AC-012 (test-writer)
 17. [ ] Write failing test `test_BC_2_02_001_command_null_field_variants()` for AC-013 (test-writer)
+18. [ ] Implement `CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` as a `#[cfg(test)]` method in `pregolya-graph/src/types.rs` — single-node terminal graph that returns `terminal_state` verbatim from `invoke`; no LLM calls, no checkpointing; write test `test_BC_2_02_001_stub_terminal_constructs_minimal_graph()` confirming `invoke(json!({}), config)` returns the terminal state verbatim (AC-014 / BC-2.02.001 PC-001; consumed by VP-016 harness in S-2.11)
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -196,6 +212,7 @@ N/A — S-1.14 is the first `pregolya-graph` story that writes channel logic. Th
 | `serde` | workspace-pinned | Channel state serialization for checkpoint (all channel types except EphemeralValue) |
 | `uuid` | workspace-pinned | `ingress_id` and `task_id` UUIDs for `WriteRecord` |
 | `tracing` | workspace-pinned | Structured event emission — `graph.channel.reduced` |
+| `serde_json` | workspace-pinned | `serde_json::Value` in `CompiledStateGraph::invoke` (BC-2.02.001 PC-005) and `#[cfg(test)] stub_terminal` helper (AC-014) |
 
 Exact versions are pinned in the workspace root `Cargo.toml`. Consult `.factory/stories/dependency-graph.md` external dependency table for confirmed pins. Do not introduce new dependencies without architect approval.
 
@@ -212,6 +229,6 @@ Exact versions are pinned in the workspace root `Cargo.toml`. Consult `.factory/
 | `pregolya-graph/src/channels/named_barrier.rs` | create | `NamedBarrierValue` with declared-writers list |
 | `pregolya-graph/src/channels/ephemeral.rs` | create | `EphemeralValue<T>` — cleared in `bsp_engine.finish()`, not in checkpoint |
 | `pregolya-graph/src/definition.rs` | create | `StateGraph`, `StateGraphBuilder`, `compile()` returning `CompiledStateGraph` (flat layout; no `graph/` subdir) |
-| `pregolya-graph/src/types.rs` | create | `WriteRecord`, `CompiledStateGraph`, `ChannelKind` |
+| `pregolya-graph/src/types.rs` | create | `WriteRecord`, `CompiledStateGraph`, `ChannelKind`; `#[cfg(test)] impl CompiledStateGraph { pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph> }` — single-node terminal helper for VP-016 harness in S-2.11 |
 | `pregolya-graph/src/bsp_engine.rs` | create (partial) | `reduce_super_step`, `finish` — shared with S-1.16 |
 | `pregolya-graph/tests/channel_semantics.rs` | create | AC-001..AC-011 + Red Gate tests |

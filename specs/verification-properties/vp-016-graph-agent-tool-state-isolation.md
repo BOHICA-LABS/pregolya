@@ -9,7 +9,7 @@ timestamp: 2026-08-26T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "3c2f089"
+input-hash: "488e209"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,10 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.5"
+version: "1.7"
 changelog:
+  - "1.7 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler — §Feasibility: `Fn(&S) -> serde_json::Value + Send + Sync + 'static` bound → `Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static` bound (aligns with ADR-029 §Symbol Grounding canonical `extract_output` type; completes the type-grounding applied to property harness, prop harness imports, and module-decomposition in round-10 burst). input-hash updated to 1a605ae."
+  - "1.6 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): TYPE-GROUNDING reconciliation against canonical pregolya-core/pregolya-graph surfaces. F-P2A072-01 HIGH (as_value() E0599): `tool_output.as_value()` removed — `DynTool::invoke_dyn` returns `Result<serde_json::Value, PregolyaError>` directly (interface-definitions.md §Tool); `tool_output` IS a `serde_json::Value`; replaced `tool_output.as_value()` with direct `tool_output.as_object()` in Ok arm. Realizability Trace step 4 updated to reflect actual return type. F-P2A072-02 HIGH (ToolOutput::Structured phantom): `ToolOutput` has exactly `Text(String)`, `Json(serde_json::Value)`, `Error(String)` — NO `Structured` variant (interface-definitions.md §Tool). Formal property `Ok(ToolOutput::Structured { value })` rewritten to `Ok(value: serde_json::Value)`; `Ok(ToolOutput::Text { text })` arm removed. Realizability Trace step 3 rewritten to remove ToolOutput::Structured wrapping. F-P2A072-03 HIGH (CompiledGraph<S> + trait GraphState phantom): canonical type is `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}, pregolya-graph/src/types.rs); `GraphState` is not a trait (entities-graph.md §GraphState: 'GraphState is not a user-defined struct; it is the composed value of all Channels'). `CompiledGraph::stub_terminal(state: S)` phantom replaced by `CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value)`; `from_graph<S>` replaced by non-generic `from_graph` with explicit `input_schema: schemars::Schema` and `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; harness `extract_output` closure updated from `|s: &TestGraphState|` to `|s: &serde_json::Value|`; Stub Graph Obligation type signature updated. All three phantoms closed. FOLLOW-UP (same burst, symbol-existence audit): `CompiledStateGraph::stub_terminal` confirmed NOT present in BC-2.02.001 or S-1.14 — this is a new symbol requiring graph-subsystem routing. §Stub Graph Obligation updated with ROUTING FLAG: orchestrator must dispatch story-writer or PO to add `stub_terminal` as `#[cfg(test)]` spec addition to S-1.14 or companion story before Phase 3 S-2.11 begins. ADR-029 §Symbol Grounding updated with REQUIRES-ROUTING row for this symbol."
   - "1.5 (round-8/F-P2A069-01+F-P2A069-02/2026-08-26): HOLISTIC realizability rewrite (GAP-01 cluster, 4-round cycle-breaker). F-P2A069-01 HIGH (vacuous false-green closed): input corrected from partial json!({output:…}) to serde_json::to_value(&state).unwrap() — complete serialized TestGraphState ensures ConcreteGraphRunner<S>::run deserialization succeeds and Ok-arm is reached for every generated case; all STATE-ISOLATION prop_assert!s execute. Err(_) arm converted to hard FALSE-GREEN GUARD (prop_assert!(false, …)) — stub_terminal always succeeds, so any Err is infra failure, never vacuous-pass. FALSE-GREEN GUARD prose updated to cover both invoke_dyn-bypass and vacuous-Err cases. POL-31 now reachable: complete input reaches extract_output; bypassing extract_output returns raw state with extra fields, failing prop_assert!s. §Realizability Trace added: 5-step end-to-end proof including leak-injection variant making an assertion FAIL, and explicit statement that no vacuous-Err path is reachable. F-P2A069-02 MED (deserialize location): parallel fix in ADR-029 §Decision 2 (from_value::<S> runs inside ConcreteGraphRunner<S>::run, not invoke_dyn; routing isError:true unchanged)."
   - "1.4 (round-7/F-P2A066-01/2026-08-26): F-P2A066-01 HIGH (seam contradiction closed). Option A adopted per authoritative carriers (BC-2.09.008 {PC-004}, ADR-029 §Decision 3): STATE-ISOLATION is enforced solely by GraphRunner::run via extract_output, NOT by invoke_dyn. §Proof Harness Skeleton rewritten: from_runner/MockGraphRunner approach replaced by from_graph/stub-graph approach; from_graph creates a real ConcreteGraphRunner<TestGraphState> that calls extract_output inside run(); stub_graph (CompiledGraph::stub_terminal) emits the full TestGraphState with extra fields; invoke_dyn wraps the runner's already-filtered result. FALSE-GREEN GUARD updated for Option A. Test Seam Obligation replaced with Stub Graph Obligation (CompiledGraph::stub_terminal). BC-2.09.008 {INV-001} code-review obligation updated to ConcreteGraphRunner::run call site. POL-31 rewritten: removed architecturally-impossible 'patch invoke_dyn to bypass extract_output'; new POL-31 requires formal-verifier to confirm harness FAILS when ConcreteGraphRunner::run bypasses extract_output call. Canonical Seam Statement obligation added. ADR-029 §Decision 3 receives parallel canonical seam statement (same burst)."
   - "1.3 (round-6/F-064-02+O-063-02/2026-08-26): F-064-02 HIGH (triple-confirmed) — §Proof Harness Skeleton: harness relocated from non-compilable integration test path (pregolya-mcp/tests/state_isolation.rs) to IN-CRATE #[cfg(test)] mod tests inside pregolya-mcp/src/graph_tool.rs. Three non-realizability defects fixed: (1) from_runner call now references the #[cfg(test)]-gated constructor seam on GraphAgentTool defined in the same file — not a phantom public API; (2) pub(crate) GraphRunner is reachable inside the crate's own cfg(test) block — E0603 eliminated; (3) extract_output closure corrected from Fn(&serde_json::Value) to Fn(&TestGraphState) -> serde_json::Value per the Fn(&S) -> serde_json::Value contract. 'Target file' line updated to pregolya-mcp/src/graph_tool.rs. §Proof Obligations: explicit §Test Seam Obligation added (impl GraphAgentTool::from_runner<S> must exist under #[cfg(test)] in graph_tool.rs; seam is NOT public). Harness remains load-bearing: MockGraphRunner returns full TestGraphState with EXTRA internal fields; ToolOutput key-set must equal exactly {'output'}; any field leak FAILS. O-063-02 OBS — normalize invoke→invoke_dyn in §Property Statement, formal property, §Source Contract {INV-001} paragraph, §Proof Method table, §Proof Obligations code-review obligation (three occurrences). Input-hash unchanged (source BC unchanged)."
@@ -60,18 +62,19 @@ not selected by `extract_output`.
 **Formal property (DI-010, ADR-029 §Decision 3 STATE-ISOLATION invariant):**
 
 ```
-∀ S: GraphState,
-∀ initial_input: serde_json::Value valid against input_schema(S),
-∀ extract_output: Fn(&S) -> serde_json::Value,
-∀ extra_field ∉ extract_output(&final_state).as_object().keys():
+∀ initial_input: serde_json::Value valid against input_schema (caller-provided schemars::Schema),
+∀ extract_output: Fn(&serde_json::Value) -> serde_json::Value,
+∀ extra_field ∉ extract_output(&final_state_value).as_object().keys():
 
-  let result = GraphAgentTool::invoke_dyn(initial_input);
+  // invoke_dyn return type: Result<serde_json::Value, PregolyaError>
+  // (canonical DynTool contract per interface-definitions.md §Tool)
+  let result: Result<serde_json::Value, PregolyaError> =
+      GraphAgentTool::invoke_dyn(initial_input).await;
   match result {
-    Ok(ToolOutput::Structured { value }) =>
+    Ok(value) =>
+        // value IS the serde_json::Value — no ToolOutput wrapper;
+        // DynTool::invoke_dyn maps ToolOutput::Json/Text → Ok(serde_json::Value)
         value.as_object() does NOT contain extra_field
-    Ok(ToolOutput::Text { text }) =>
-        // text is already a string — not a JSON object;
-        // this arm is structurally bounded by extract_output returning Value::String
     Err(_) => property vacuously satisfied (no output produced)
   }
 ```
@@ -136,28 +139,30 @@ statement). If `ConcreteGraphRunner::run` returns raw terminal state instead of 
 
 **(2) vacuous-Err guard (§Realizability-Trace):** The harness input is produced via
 `serde_json::to_value(&state).unwrap()` — a complete round-trip serialization of the
-generated `TestGraphState` with ALL four required fields present. This guarantees
-`from_value::<TestGraphState>` inside `ConcreteGraphRunner<S>::run` SUCCEEDS for every
-generated case; the Ok-arm is always reached; the STATE-ISOLATION `prop_assert!`s always
-execute. The `Err(_)` arm is a hard `prop_assert!(false, …)` guard — `stub_terminal` always
-produces a clean terminal, so any Err is a harness infrastructure failure, not a vacuous pass.
+generated `TestGraphState` with ALL four required fields present. `CompiledStateGraph::invoke`
+takes `serde_json::Value` directly (no `from_value::<S>` step — F-P2A072-03 closure; ADR-029
+§Decision 2). A complete serialized input guarantees `stub_terminal`'s internal invoke path
+succeeds for every generated case; the Ok-arm is always reached; the STATE-ISOLATION
+`prop_assert!`s always execute. The `Err(_)` arm is a hard `prop_assert!(false, …)` guard —
+`stub_terminal` always produces a clean terminal, so any Err is a harness infrastructure
+failure, not a vacuous pass.
 
-A harness using `json!({ "output": state.output })` (partial input, three required fields
-missing) would cause `from_value::<TestGraphState>` inside `ConcreteGraphRunner<S>::run` to
-fail on "missing field `checkpoint_id`"; `invoke_dyn` would return `Err`; the `Err(_)` arm
-would be reached; all STATE-ISOLATION `prop_assert!`s would be unreachable; the harness would
-pass vacuously while proving nothing. This was the F-P2A069-01 defect (rounds 5–8); the §Realizability-Trace
-rewrite closes it.
+A harness using `json!({ "output": state.output })` (partial input, three fields missing)
+would produce a partial channel-value JSON; `CompiledStateGraph::invoke` (or the stub's
+internal logic) may return an Err or an incomplete value causing the FALSE-GREEN GUARD to
+fire; all STATE-ISOLATION `prop_assert!`s would be unreachable; the harness would pass
+vacuously. This was the F-P2A069-01 defect (rounds 5–8); the complete-input approach closes it.
 
 A harness that tests only a locally-defined closure (bypassing the production runner) would
 be tautological. This harness is non-tautological because `from_graph` binds the production
 `ConcreteGraphRunner::run` execution path. Follows the same non-tautology pattern as VP-006-B.
 
 **Harness resides in `#[cfg(test)] mod tests` inside `pregolya-mcp/src/graph_tool.rs`** so that:
-- `pub(crate) GraphRunner` and `ConcreteGraphRunner<S>` are visible (crate-internal visibility),
-- `from_graph` can construct the production `ConcreteGraphRunner<TestGraphState>` (no
-  test-only seam required for the tool construction itself — `from_graph` is the public API), and
-- `CompiledGraph::stub_terminal` (from `pregolya-graph`, `#[cfg(test)]` only) is accessible
+- `pub(crate) GraphRunner` and `ConcreteGraphRunner` (non-generic) are visible (crate-internal
+  visibility; F-P2A072-03: no generic `<S>` on the runner),
+- `from_graph` can construct the production `ConcreteGraphRunner` (no test-only seam required —
+  `from_graph` is the public API), and
+- `CompiledStateGraph::stub_terminal` (from `pregolya-graph`, `#[cfg(test)]` only) is accessible
   as a dev-dependency (see §Proof Obligations "Stub Graph Obligation").
 
 ```rust
@@ -175,7 +180,7 @@ be tautological. This harness is non-tautological because `from_graph` binds the
 mod tests {
     use super::*;  // Sees pub(crate) GraphRunner, ConcreteGraphRunner, GraphAgentTool
     use pregolya_core::tool::DynTool;
-    use pregolya_graph::CompiledGraph;  // stub_terminal is #[cfg(test)] on CompiledGraph
+    use pregolya_graph::CompiledStateGraph;  // stub_terminal is #[cfg(test)] on CompiledStateGraph
     use proptest::prelude::*;
     use proptest_derive::Arbitrary;
     use serde::{Deserialize, Serialize};
@@ -213,31 +218,46 @@ mod tests {
                 .unwrap();
 
             rt.block_on(async {
-                // Build a stub CompiledGraph that emits `state` as terminal output.
-                // (Stub Graph Obligation — see §Proof Obligations; test-writer implements
-                // CompiledGraph::stub_terminal as #[cfg(test)] on CompiledGraph in
-                // pregolya-graph.)
-                // The stub produces the full TestGraphState — checkpoint_id, run_id,
-                // and accumulated_messages are ALL present and MUST NOT appear in
-                // ToolOutput after ConcreteGraphRunner::run applies extract_output.
-                let stub_graph: Arc<CompiledGraph<TestGraphState>> =
-                    CompiledGraph::stub_terminal(state.clone());
+                // Convert TestGraphState → serde_json::Value so it can feed the
+                // non-generic CompiledStateGraph stub (ADR-029 §Decision 1 grounding:
+                // CompiledStateGraph is non-generic; GraphState is not a trait).
+                // All four fields (output, checkpoint_id, run_id, accumulated_messages)
+                // are present in state_value — full serialization for F-P2A069-01 closure.
+                let state_value = serde_json::to_value(&state).unwrap();
 
-                // from_graph creates a ConcreteGraphRunner<TestGraphState> that stores
-                // BOTH stub_graph AND the extract_output closure internally.
+                // Build a stub CompiledStateGraph that emits `state_value` as terminal output.
+                // (Stub Graph Obligation — see §Proof Obligations; test-writer implements
+                // CompiledStateGraph::stub_terminal as #[cfg(test)] on CompiledStateGraph in
+                // pregolya-graph — canonical type per BC-2.02.001 {PC-001}.)
+                // The stub produces the full channel-value JSON — checkpoint_id, run_id,
+                // and accumulated_messages are ALL present and MUST NOT appear in
+                // the serde_json::Value returned by invoke_dyn after ConcreteGraphRunner::run
+                // applies extract_output.
+                let stub_graph: Arc<CompiledStateGraph> =
+                    CompiledStateGraph::stub_terminal(state_value.clone());
+
+                // Derive inputSchema from TestGraphState (caller's responsibility per
+                // ADR-029 §Decision 2 grounding: CompiledStateGraph has no schema-introspection
+                // method; schema is passed explicitly to from_graph).
+                let input_schema: schemars::Schema = schemars::schema_for!(TestGraphState);
+
+                // from_graph creates a ConcreteGraphRunner (non-generic) that stores
+                // BOTH stub_graph (Arc<CompiledStateGraph>) AND the extract_output closure.
                 // When ConcreteGraphRunner::run is called (via invoke_dyn), it:
-                //   1. Executes stub_graph → receives terminal TestGraphState
-                //   2. Calls (self.extract_output)(&final_state) → returns ONLY
-                //      serde_json::json!({ "output": s.output })
-                // invoke_dyn receives the already-filtered serde_json::Value and wraps
-                // it in ToolOutput::Structured without further modification.
+                //   1. Calls CompiledStateGraph::invoke(input_value) → receives terminal
+                //      serde_json::Value (channel-keyed map with all four fields)
+                //   2. Calls (self.extract_output)(&final_state_value) → returns ONLY
+                //      serde_json::json!({ "output": s["output"] })
+                // invoke_dyn receives the already-filtered serde_json::Value and returns
+                // Ok(filtered_value) directly — no ToolOutput::Structured wrapping.
                 // This is the PRODUCTION isolation path per ADR-029 §Decision 3.
                 let tool = GraphAgentTool::from_graph(
                     "test-agent".to_string(),
                     "VP-016 state-isolation test agent".to_string(),
                     stub_graph,
-                    |s: &TestGraphState| -> serde_json::Value {
-                        serde_json::json!({ "output": s.output })
+                    input_schema,
+                    |s: &serde_json::Value| -> serde_json::Value {
+                        serde_json::json!({ "output": s["output"] })
                     },
                 );
 
@@ -245,21 +265,21 @@ mod tests {
                 // invoke_dyn → ConcreteGraphRunner::run → stub_graph terminal →
                 //   extract_output(&final_state) → filtered serde_json::Value.
                 //
-                // COMPLETE INPUT (F-P2A069-01 closure): serialize the full TestGraphState so
-                // that from_value::<TestGraphState> inside ConcreteGraphRunner<S>::run
-                // SUCCEEDS for every generated case. All four required fields
-                // (output, checkpoint_id, run_id, accumulated_messages) are present.
-                // A partial json!({output:…}) input would cause deserialization failure →
-                // Err from ConcreteGraphRunner::run → Err arm → vacuous-pass; that is the
-                // F-P2A069-01 defect closed by this fix.
-                let input = serde_json::to_value(&state).unwrap();
+                // COMPLETE INPUT (F-P2A069-01 closure): state_value contains all four required
+                // fields. CompiledStateGraph::invoke receives a complete channel-value JSON.
+                // Since there is no serde_json::from_value::<S> step (CompiledStateGraph takes
+                // serde_json::Value directly — ADR-029 §Decision 2 grounding), every generated
+                // case succeeds deserialization; the Ok-arm is always reached.
+                let input = state_value.clone();
                 let result = tool.invoke_dyn(input).await;
 
                 match result {
                     Ok(tool_output) => {
-                        let value = tool_output.as_value();
-                        let obj = value.as_object()
-                            .expect("ToolOutput must be a JSON object for TestGraphState");
+                        // tool_output IS a serde_json::Value — invoke_dyn return type is
+                        // Result<serde_json::Value, PregolyaError> per interface-definitions.md §Tool.
+                        // No .as_value() call needed (F-P2A072-01 closure).
+                        let obj = tool_output.as_object()
+                            .expect("invoke_dyn result must be a JSON object for TestGraphState");
 
                         // Selected field must be present.
                         prop_assert!(obj.contains_key("output"),
@@ -286,9 +306,10 @@ mod tests {
                         );
                     }
                     Err(e) => {
-                        // FALSE-GREEN GUARD (vacuous-Err, F-P2A069-01 closure):
-                        // stub_terminal always produces a clean terminal state; the complete
-                        // serialized input always deserializes successfully into TestGraphState.
+                        // FALSE-GREEN GUARD (vacuous-Err, F-P2A069-01 + F-P2A072-03 closure):
+                        // stub_terminal always produces a clean terminal; CompiledStateGraph::invoke
+                        // takes serde_json::Value directly (no from_value::<S> step — F-P2A072-03).
+                        // A complete input guarantees no invoke-level deserialization failure.
                         // Reaching this arm means a harness infrastructure failure —
                         // the STATE-ISOLATION prop_assert!s above did NOT execute; the
                         // prior vacuous-pass behaviour would have falsely confirmed VP-016.
@@ -296,10 +317,10 @@ mod tests {
                         // (See §Realizability Trace for the end-to-end path proof.)
                         prop_assert!(false,
                             "VP-016 FALSE-GREEN GUARD (vacuous-Err): invoke_dyn returned \
-                             Err on a complete valid serialized TestGraphState input. \
-                             The Ok-arm was not reached; STATE-ISOLATION prop_assert!s \
-                             did not execute. Error: {:?}. Investigate stub_terminal and \
-                             ConcreteGraphRunner::run deserialization path.",
+                             Err on a complete valid input. The Ok-arm was not reached; \
+                             STATE-ISOLATION prop_assert!s did not execute. \
+                             Error: {:?}. Investigate CompiledStateGraph::stub_terminal and \
+                             ConcreteGraphRunner::run execution path.",
                             e
                         );
                     }
@@ -324,19 +345,27 @@ mod tests {
 
 No blocking risks. The `extract_output` closure must be extractable and callable outside the
 async context of `GraphRunner::run` for the harness to work — this is guaranteed by the
-`Fn(&S) -> serde_json::Value + Send + Sync + 'static` bound.
+`Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static` bound.
 
 ## Proof Obligations
 
-- [ ] **Stub Graph Obligation:** A `#[cfg(test)]` constructor
-  `CompiledGraph::<S>::stub_terminal(state: S) -> Arc<CompiledGraph<S>>` MUST be implemented
-  in `pregolya-graph` (exact module location at test-writer discretion). This constructor
-  creates a minimal `CompiledGraph<S>` whose single execution step returns `state` as the
-  terminal output — no real graph logic, no LLM calls, no checkpointing. NOT public API;
-  `#[cfg(test)]` only. Enables `from_graph` to create a real `ConcreteGraphRunner<S>` that
-  exercises the production `(self.extract_output)(&final_state)` call path inside
-  `ConcreteGraphRunner::run`. This replaces the retired `from_runner` seam (v1.3 and earlier)
-  which exercised the wrong architecture (Option B, isolation in `invoke_dyn`).
+- [ ] **Stub Graph Obligation — ROUTING FLAG (graph-subsystem spec addition required):**
+  `CompiledStateGraph::stub_terminal` does NOT yet exist in BC-2.02.001 or S-1.14. This
+  obligation requires the orchestrator to route a spec addition to the graph subsystem (story-writer
+  or PO must add `stub_terminal` to S-1.14 tasks section or mint a companion test-helper story) BEFORE
+  Phase 3 implementation of S-2.11 begins. VP-016 harness compilation depends on this helper.
+  The required spec: a `#[cfg(test)]` constructor
+  `CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>`
+  implemented in `pregolya-graph` (exact module location at test-writer discretion, likely
+  `pregolya-graph/src/types.rs` or a `#[cfg(test)]` mod in the same file).
+  `CompiledStateGraph` is the canonical non-generic compiled graph type (BC-2.02.001 {PC-001},
+  `pregolya-graph/src/types.rs`). This constructor creates a minimal `CompiledStateGraph`
+  whose single execution step returns `terminal_state` (a `serde_json::Value`) as the terminal
+  channel-composed output — no real graph logic, no LLM calls, no checkpointing. NOT public
+  API; `#[cfg(test)]` only. Enables `from_graph` to create a real `ConcreteGraphRunner` (non-generic)
+  that exercises the production `(self.extract_output)(&final_state_value)` call path inside
+  `ConcreteGraphRunner::run`. The phantom `CompiledGraph::<S>::stub_terminal(state: S)` is retired
+  (F-P2A072-03 closure). ADR-029 §Symbol Grounding carries the REQUIRES-ROUTING row for this symbol.
 - [ ] `TestGraphState` derives `proptest_derive::Arbitrary` and `schemars::JsonSchema`
 - [ ] `graph_agent_tool_state_isolation` proptest runs without shrinking failures for 10k cases
 - [ ] `full_state_differs_from_extract_output` proptest confirms extract_output does not accidentally serialize the full struct
@@ -349,11 +378,12 @@ async context of `GraphRunner::run` for the harness to work — this is guarante
 - [ ] **POL-31 live-violation (Phase 6 gate — formal-verifier obligation):** The formal-verifier
   MUST confirm the harness FAILS when `ConcreteGraphRunner::run` is modified in an isolated
   injected-leak fixture to bypass the `extract_output` call — returning
-  `serde_json::to_value(&final_state).unwrap()` directly instead of
-  `(self.extract_output)(&final_state)`. Under this modification, the raw terminal state
-  (including `checkpoint_id`, `run_id`, `accumulated_messages`) appears in `ToolOutput` and
-  the `prop_assert!` checks fail. A harness that passes under this leak-injection fixture is
-  non-falsifiable and MUST be rejected before VP-016 can gate Phase 6.
+  `final_state_value.clone()` directly instead of
+  `(self.extract_output)(&final_state_value)`. Under this modification, the raw terminal
+  channel-value JSON (including `checkpoint_id`, `run_id`, `accumulated_messages`) appears in
+  the `serde_json::Value` returned by `invoke_dyn`, and the `prop_assert!` checks fail. A
+  harness that passes under this leak-injection fixture is non-falsifiable and MUST be rejected
+  before VP-016 can gate Phase 6.
 
 ## Realizability Trace
 
@@ -376,16 +406,19 @@ returns `state.clone()` as the terminal `TestGraphState`. `run` then calls
 The return value is `Ok(serde_json::Value::Object { "output": "ok" })`. Only `"output"` is
 present; `checkpoint_id`, `run_id`, and `accumulated_messages` are absent.
 
-**Step 3 — invoke_dyn wraps without re-filtering.**
+**Step 3 — invoke_dyn returns without re-filtering.**
 `GraphAgentTool::invoke_dyn` receives `Ok(json!({ "output": "ok" }))` from
-`ConcreteGraphRunner::run`. It wraps this into `ToolOutput::Structured { value: … }` without
-any further field selection, addition, or removal. The ADR-029 §Decision 3 canonical seam
-statement holds: STATE-ISOLATION is enforced solely in `ConcreteGraphRunner::run`; `invoke_dyn`
-is a pass-through wrapper.
+`ConcreteGraphRunner::run`. It returns this `serde_json::Value` directly as
+`Ok(json!({ "output": "ok" }))` without any further field selection, addition, or removal.
+There is no `ToolOutput::Structured { value }` wrapping — `DynTool::invoke_dyn` return type is
+`Result<serde_json::Value, PregolyaError>` (canonical per interface-definitions.md §Tool;
+F-P2A072-02 closure). The ADR-029 §Decision 3 canonical seam statement holds: STATE-ISOLATION
+is enforced solely in `ConcreteGraphRunner::run`; `invoke_dyn` is a pass-through wrapper.
 
 **Step 4 — Ok-arm is reached; prop_assert!s execute.**
-The harness enters the `Ok(tool_output)` arm. `tool_output.as_value()` returns
-`json!({ "output": "ok" })`. `value.as_object()` returns a single-key map. All STATE-ISOLATION
+The harness enters the `Ok(tool_output)` arm. `tool_output` IS `json!({ "output": "ok" })` —
+a `serde_json::Value` returned directly from `invoke_dyn` (no `.as_value()` call needed;
+F-P2A072-01 closure). `tool_output.as_object()` returns a single-key map. All STATE-ISOLATION
 assertions execute:
 - `obj.contains_key("output")` → `true` — PASSES.
 - `!obj.contains_key("checkpoint_id")` → `true` — PASSES.
@@ -398,17 +431,18 @@ normal operation; the `prop_assert!(false, …)` guard there is a dead-code safe
 
 **Step 5 — Leak-injection variant makes an assertion FAIL.**
 Modify `ConcreteGraphRunner::run` in an isolated fixture to bypass the `extract_output` call,
-returning `serde_json::to_value(&final_state).unwrap()` directly. The Ok-arm is still reached.
-`value.as_object()` now contains all four keys. `prop_assert!(!obj.contains_key("checkpoint_id"), …)`
-evaluates to `prop_assert!(false, …)` — FAILS. The test failure is reported. The harness is
-falsifiable; the POL-31 obligation is satisfiable.
+returning `final_state_value.clone()` directly instead of `(self.extract_output)(&final_state_value)`.
+The Ok-arm is still reached. `tool_output.as_object()` now contains all four keys.
+`prop_assert!(!obj.contains_key("checkpoint_id"), …)` evaluates to `prop_assert!(false, …)` — FAILS.
+The test failure is reported. The harness is falsifiable; the POL-31 obligation is satisfiable.
 
 **Conclusion — No reachable vacuous-Err path.**
-With `input = serde_json::to_value(&state).unwrap()`, deserialization always succeeds;
-`stub_terminal` always returns a clean terminal state; `invoke_dyn` always returns `Ok`.
-The `Err` arm is structurally unreachable under correct harness operation. If it IS reached,
-the hard `prop_assert!(false, …)` guard fails the test explicitly — the prior vacuous-pass
-behaviour is eliminated.
+With `input = state_value.clone()` (complete channel-value JSON), `CompiledStateGraph::invoke`
+always succeeds; `stub_terminal` always returns a clean terminal state; `invoke_dyn` always
+returns `Ok(serde_json::Value)`. There is no `from_value::<S>` deserialization step in the
+non-generic design (F-P2A072-03). The `Err` arm is structurally unreachable under correct
+harness operation. If it IS reached, the hard `prop_assert!(false, …)` guard fails the test
+explicitly — the prior vacuous-pass behaviour is eliminated.
 
 ---
 

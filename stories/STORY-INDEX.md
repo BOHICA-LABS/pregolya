@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.12"
+version: "1.13"
 status: active
 producer: story-writer
-timestamp: 2026-08-26T18:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 changelog:
+  - "1.13 (round-10/GAP-01-nongeneric/F-P2A073-01/2026-08-27): S-2.11 v1.11: non-generic re-ground (from_graph non-generic; Arc<CompiledStateGraph>; input_schema caller-derived; ToolOutput::Structured eliminated; from_value::<S> eliminated; extract_output takes &serde_json::Value; AC-016/017/018/019/020/021/023/024/027/034/035 updated; Tasks 15/17/18/23 updated; Arch Compliance updated with no from_value::<S> rule). S-1.14 v1.3: AC-014 + Task 18 (CompiledStateGraph::stub_terminal #[cfg(test)] helper; consumed by VP-016 harness in S-2.11); blocks extended to include S-2.11; serde_json added to lib requirements. F-P2A073-01: S-2.11 BC status annotation corrected (BC-2.09.008 draft; auto-promotes at PR merge per POL-27). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.12 (round-7/D-282/2026-08-26): Phase-2 re-convergence round-7 fix-burst CLOSED. S-2.11 v1.10: seam alignment (GraphAgentTool<S>→GraphAgentTool non-generic ×4; Task 23 + Arch-Compliance seam wording; ADR-029 {INV-001} canonical seam statement; AC-035 {INV-005} caller-obligation credential-key test added; AC count 34→35). dependency-graph v1.2: GraphAgentTool<S>→GraphAgentTool non-generic in story DAG. Epics E-21 rollup 13→16 (S-2.10(8)+S-2.11(8)=16 pts; product-epic point total 300→303; GAP-01 growth D-275). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC."
   - "1.11 (round-6/P2A-063-065/D-281/2026-08-26): STORY-S-2.11 v1.8→v1.9 (F-064-03/BLOCKER-2 MED): RootSchema→schemars::Schema rename applied at four AC-trace/task occurrences within S-2.11 (schemars crate dropped RootSchema as a public type; canonical form is schemars::Schema throughout). No other story file changed this round. Story census UNCHANGED: 40 total (39 product + 1 maint). AC counts UNCHANGED."
   - "1.10 (P2A-060/061/062-round-5/2026-08-26): SS-09 BC coverage header corrected (7 BCs) → (8 BCs) (body already listed BC-2.09.001–008; header lagged by 1). S-2.11 depends_on updated [S-2.10] → [S-2.10, S-1.14] (ADR-029 BC-2.09.008 PC-001 — GraphAgentTool wraps Arc<CompiledGraph<S>>; S-1.14 is StateGraph Node Definition, Wave-1 upstream; DAG-acyclicity confirmed: S-1.14 Wave-1 upstream of S-2.11 Wave-2, no cycle). S-2.11 v1.8 (on-disk per CHANGED FILES: P2A-060/061/062 schema()/input_schema() rename + E-MCP-011 Error-Codes row). Story census UNCHANGED: 40 total (39 product + 1 maint). AC counts UNCHANGED."

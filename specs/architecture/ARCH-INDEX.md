@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.41"
+version: "1.42"
 status: active
 producer: architect
-timestamp: 2026-08-26T18:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.42 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/D-284/2026-08-27): GAP-01 type-grounding — ADR-029 §Symbol Grounding (non-generic re-ground: CompiledGraph<S>→CompiledStateGraph; ToolOutput::Structured phantom eliminated; from_value::<S> path eliminated; §Symbol Grounding subsection added with symbol-existence audit table; from_graph non-generic with caller-supplied input_schema). module-decomposition.md sibling-sweep: mcp::graph_tool row grounded (CompiledGraph<S>→CompiledStateGraph; Fn(&S)→Fn(&serde_json::Value)). purity-boundary-map.md sibling-sweep: mcp::graph_tool Effectful Shell row grounded. verification-coverage-matrix.md sibling-sweep: mcp::graph_tool Notes grounded. VP-016 sibling-sweep: §Feasibility bound grounded. 14-file sibling-sweep complete (TD-VSDD-060). stub_terminal helper routed to S-1.14 (AC-014/Task 18). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.41 (round-7/F-P2A068-02/2026-08-26): F-P2A068-02 HIGH — §Verification Properties VP mirror stale. Fixed: (1) count 16→17; (2) proptest breakdown 4→5; (3) VP-006-B row added (BC-2.18.004 {PC-005} / prompts::injection_guard / proptest / P1 / draft) matching VP-INDEX.md verbatim; (4) preamble sync note added referencing POL-9. VP-INDEX source of truth confirms: 17 total, 6 Kani P0, 3 Kani P1, 5 proptest P1, 2 integration P1, 1 unit P1."
   - "1.40 (round-6/P2A-063-065/D-281/2026-08-26): ADR-029 (O-063-02 OBS): §Decision 4 fail-closed guarantee paragraph — invoke→invoke_dyn normalization (canonical DynTool dispatch method is invoke_dyn; one bare occurrence corrected). dependency-graph.md (BLOCKER-3 false-closure): VP-006-B proptest row ADDED to architecture dependency-graph §VP-matrix (this file had never received the VP-006-B fix applied to stories/dependency-graph.md in round-5; two distinct files corrected at different times). verification-architecture.md + verification-coverage-matrix.md: VP-016 rows — invoke→invoke_dyn normalization (records-tier, TD-VSDD-091 compliance). No BC row changes; no VP row changes; no ADR registration changes. ADR count remains 29."
   - "1.39 (E-code-correction/2026-08-26): ADR-029 row: E-MCP-006 → E-MCP-010 (GraphAgentInterruptDenied) — E-MCP-006 was already taken by McpContentUnsupported (minted 2026-07-22). VP-016 BC anchor: {INV-STATE-ISOLATION} → {INV-001} (stable BC-2.09.008 numeric anchor per product-owner). v1.38 changelog narrative corrected to E-MCP-010."

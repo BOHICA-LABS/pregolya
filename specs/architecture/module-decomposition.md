@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.50"
+version: "1.51"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -11,10 +11,11 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "0a87661"
+input-hash: "95526b8"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.51 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — `mcp::graph_tool` row: (1) `CompiledGraph<S>` → `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}); (2) `extract_output: Fn(&S) -> serde_json::Value` → `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; (3) STATE-ISOLATION {INV-001} claim reworded: `ToolOutput` contains → the `serde_json::Value` returned by `invoke_dyn` contains (aligns with ADR-029 §Symbol Grounding canonical surface). Sibling sweep: no other CompiledGraph<S> or Fn(&S) live-body sites in this file (v1.50 changelog entry retains old symbols as historical record; grandfathered per TD-VSDD-091). input-hash updated to 95526b8 (computed after round-10 ADR-029/interface-definitions/VP-016 edits)."
   - "1.50 (SEC-review-adjudication/2026-08-26): CV-001 — mcp::graph_tool row: {INV-STATE-ISOLATION} stale named tag corrected to {INV-001} (stable BC-2.09.008 numeric anchor). All other architecture docs already used {INV-001}; module-decomposition was the sole remaining site."
   - "1.49 (GAP-01/ADR-029/2026-08-26): Add `mcp::graph_tool` MEDIUM module row to pregolya-mcp section (BC-2.09.008 {INV-STATE-ISOLATION}; wraps CompiledGraph<S> as DynTool; VP-016 proptest P1 target; ADR-029). Section heading updated: `MEDIUM (client, discovery, exception, sanitize, server)` → `MEDIUM (client, discovery, exception, graph_tool, sanitize, server)`. BC anchors line updated: 001–007 → 001–008. VP anchors line updated: add VP-016 (proptest P1, Phase 3). Module universe: 72→73 (73rd module; MEDIUM tier +1). input-hash refresh pending (state-manager task)."
   - "1.48 (architect-reconcile-burst/2026-08-26): Add `mcp::sanitize` MEDIUM module row to pregolya-mcp section (BC-2.09.007 {INV-003}; pure-core credential redaction; VP-015 integration P1 target). Section heading updated: `MEDIUM (client, discovery, exception, server)` → `MEDIUM (client, discovery, exception, sanitize, server)`. Module universe: 71→72 (72nd module; MEDIUM tier +1). input-hash refreshed (540a6b2)."
@@ -246,7 +247,7 @@ The SDK crates have no pregolya-core dep and are publishable standalone. Enforce
 | `mcp::client` | `MultiServerMcpClient`; no live connections until invoke (R11) | MEDIUM |
 | `mcp::discovery` | Tool discovery and registration from MCP server at runtime | MEDIUM |
 | `mcp::exception` | Bare ToolException re-raise detection; type-identity preservation via McpError downcast (R11) | MEDIUM |
-| `mcp::graph_tool` | Wraps `CompiledGraph<S>` as a `DynTool` (`GraphAgentTool`); input mapping via `schemars` JSON Schema derivation + `jsonschema` validation + `serde_json` deserialization; output mapping via caller-supplied `extract_output: Fn(&S) -> serde_json::Value` closure; STATE-ISOLATION invariant {INV-001}: `ToolOutput` contains ONLY the result of `extract_output(&final_state)`, no internal graph metadata; interrupt policy: `DenyInterrupts` default (fail-closed via `BoundaryApprovalHook`); `ForceApproveHooks` opt-in for read-only graphs (ADR-029; BC-2.09.008; VP-016 proptest P1) | MEDIUM |
+| `mcp::graph_tool` | Wraps `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}) as a `DynTool` (`GraphAgentTool`); input mapping via `schemars` JSON Schema derivation + `jsonschema` validation + `serde_json` deserialization; output mapping via caller-supplied `extract_output: Fn(&serde_json::Value) -> serde_json::Value` closure; STATE-ISOLATION invariant {INV-001}: the `serde_json::Value` returned by `invoke_dyn` contains ONLY the result of `extract_output(&final_state)`, no internal graph metadata; interrupt policy: `DenyInterrupts` default (fail-closed via `BoundaryApprovalHook`); `ForceApproveHooks` opt-in for read-only graphs (ADR-029; BC-2.09.008; VP-016 proptest P1) | MEDIUM |
 | `mcp::ingress` | Untrusted-ingress routing; DI-012 guardrail seam; external untrusted-input entry point for tool invocations arriving from MCP clients (BC-2.09.003) | HIGH |
 | `mcp::sanitize` | Pure-core credential redaction utility; `redact_credentials(text: &str) -> Cow<str>` applies pattern-based substitution of provider API key patterns (OpenAI `sk-*`, Anthropic `sk-ant-*`, generic 64+ char token) before any error message is transmitted to external MCP clients; sole consumer is `mcp::server` (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention; VP-015 unit P1 target) | MEDIUM |
 | `mcp::server` | MCP server endpoint: exposes registered tools to external MCP clients; accepts inbound tool-call requests, dispatches to registered tools, and returns serialized responses (CAP-021/D20/ADR-013) | MEDIUM |

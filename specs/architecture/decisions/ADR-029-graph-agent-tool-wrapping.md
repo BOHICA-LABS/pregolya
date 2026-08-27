@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "1.9"
+version: "2.0"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.0 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): TYPE-GROUNDING reconciliation against canonical pregolya-core/pregolya-graph type surfaces (P2A-072 realizability lens). F-P2A072-02 HIGH (ToolOutput::Structured phantom — 16× across cluster): `ToolOutput` has exactly `Text(String)`, `Json(serde_json::Value)`, `Error(String)` — NO `Structured` variant (interface-definitions.md §Tool). `DynTool::invoke_dyn` returns `Result<serde_json::Value, PregolyaError>` not `Result<ToolOutput, PregolyaError>`. All `Ok(ToolOutput::Structured { value })` occurrences replaced with `Ok(serde_json::Value from extract_output_result)` in §Decision 3, §Decision 4, §Decision 5 Error Routing Table, §Consequences VP Addition. §Decision 3 SEC-001 updated to reference `serde_json::Value` directly. §Decision 3 Null output paragraph updated. F-P2A072-01 HIGH (as_value() phantom — parallel VP-016 fix): VP-016 §Proof Harness `tool_output.as_value()` removed (no such method on serde_json::Value); resolved by F-P2A072-02 grounding. F-P2A072-03 HIGH (CompiledGraph<S> + trait GraphState phantom): canonical type is `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}, pregolya-graph/src/types.rs); `GraphState` is NOT a trait (entities-graph.md §GraphState). §Decision 1 Module Interface Sketch: `from_graph<S>` → non-generic `from_graph` with explicit `input_schema: schemars::Schema` + `Arc<CompiledStateGraph>` + `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; removed `S: GraphState + Deserialize + JsonSchema` bound; `GraphRunner` doc comment updated. §Decision 1 dep-edge narrative: `CompiledGraph<S>` → `CompiledStateGraph`. §Decision 2 inputSchema derivation: 'caller derives schema via schemars::schema_for!(StateType) and passes as input_schema parameter' (CompiledStateGraph has no schema introspection method per BC-2.02.001). §Decision 2 pipeline: `serde_json::from_value::<S>` step eliminated; CompiledStateGraph::invoke takes serde_json::Value directly. §Consequences dep edge + module description updated. §Symbol Grounding subsection added (symbol-existence audit table). PO handoff: BC-2.09.008 ×5 ToolOutput::Structured→Value + {PRE-001}→CompiledStateGraph + {PC-003} deserialization-path update; BC-2.09.007 ×3 ToolOutput::Structured→Value. Story-writer handoff: S-2.11 Task 23/File-Structure/Arch-rule update."
   - "1.9 (round-8/F-P2A069-02+F-P2A069-01/2026-08-26): F-P2A069-02 MED — §Decision 2 pseudocode, §Decision 2 prose paragraph, §Decision 5 Error Routing Table: three occurrences of 'runs inside invoke_dyn' corrected to 'runs inside ConcreteGraphRunner<S>::run; failure surfaced through invoke_dyn.' GraphAgentTool is non-generic (runner: Arc<dyn GraphRunner>; S is erased); invoke_dyn cannot name or monomorphize S; from_value::<S> must live in ConcreteGraphRunner<S>::run where S is statically known — consistent with §Decision 3 canonical seam. Routing decision (isError: true, NOT JSON-RPC -32602) UNCHANGED. F-P2A069-01 HIGH: parallel harness realizability rewrite in VP-016 §Realizability-Trace (complete input, vacuous-Err guard) in same burst."
   - "1.8 (round-7/F-P2A066-01+F-P2A067-01/2026-08-26): F-P2A067-01 HIGH — §Decision 2 pseudocode + prose + §Decision 5 Error Routing Table: removed all three occurrences of phantom `E-MCP-004 McpInvalidArguments` (E-MCP-004 is already assigned to ToolNotFound per BC-2.09.002 {PC-008}; there is no McpInvalidArguments code; the schema-validation-failure path is a wire-protocol JSON-RPC -32602 response with no PregolyaError raised per BC-2.09.007 {PC-005}/BC-2.09.008 EC-001). Replaced with wire-protocol-only description identical to the -32700/-32600 paths already in the table. F-P2A066-01 HIGH (partial) — §Decision 3: canonical seam statement added: 'STATE-ISOLATION is enforced solely by `GraphRunner::run` via `extract_output(&final_state)`; `GraphAgentTool::invoke_dyn` performs no re-filtering.' Prevents seam re-drift. VP-016 receives parallel harness rewrite (same round)."
   - "1.7 (round-6/O-063-02/2026-08-26): §Decision 4 fail-closed guarantee paragraph: `GraphAgentTool::invoke` → `GraphAgentTool::invoke_dyn` (O-063-02 OBS — canonical DynTool dispatch method is invoke_dyn; one bare occurrence corrected)."
@@ -69,7 +70,7 @@ correctness, not a security boundary in the class of `path-guard` or `session-in
 Kani VP host at v1. Consistent with `mcp::server` (MEDIUM) and `mcp::client` (MEDIUM).
 
 **New dependency edge:** `pregolya-mcp` → `pregolya-graph` (runtime; `GraphAgentTool`
-wraps `CompiledGraph<S>` which is defined in `pregolya-graph`). This edge did not previously
+wraps `CompiledStateGraph` which is defined in `pregolya-graph` per BC-2.02.001 {PC-001}). This edge did not previously
 exist. `pregolya-mcp` already depends on `pregolya-core`; adding `pregolya-graph` is
 consistent with the topological order (`pregolya-graph` is Wave 1; `pregolya-mcp` is Wave 2).
 No dependency cycle is introduced.
@@ -105,18 +106,19 @@ pub struct GraphAgentTool {
 }
 
 impl GraphAgentTool {
-    /// Convenience constructor: derives inputSchema from S via schemars::JsonSchema.
-    /// `extract_output` selects which fields of the final GraphState are returned
+    /// Convenience constructor. The caller derives `input_schema` from their channel-state
+    /// struct via `schemars::schema_for!(StateType)` and passes it explicitly — no schema
+    /// derivation occurs inside `from_graph` (`CompiledStateGraph` is non-generic and has no
+    /// schema introspection method per BC-2.02.001). `extract_output` receives the final
+    /// channel-composed state as `&serde_json::Value` and selects which fields are returned
     /// to the external MCP client. All other fields are STATE-ISOLATION discarded.
-    pub fn from_graph<S>(
+    pub fn from_graph(
         name: impl Into<String>,
         description: impl Into<String>,
-        graph: Arc<CompiledGraph<S>>,
-        extract_output: impl Fn(&S) -> serde_json::Value + Send + Sync + 'static,
-    ) -> Self
-    where
-        S: GraphState + for<'de> serde::Deserialize<'de> + schemars::JsonSchema
-            + Send + Sync + 'static;
+        graph: Arc<CompiledStateGraph>,
+        input_schema: schemars::Schema,
+        extract_output: impl Fn(&serde_json::Value) -> serde_json::Value + Send + Sync + 'static,
+    ) -> Self;
 
     /// Override the default DenyInterrupts approval policy.
     pub fn with_approval_policy(self, policy: GraphToolApprovalPolicy) -> Self;
@@ -142,7 +144,10 @@ pub enum GraphToolApprovalPolicy {
     ForceApproveHooks,
 }
 
-/// Type-erased runner — hides CompiledGraph<S> generic parameter.
+/// Type-erased runner — holds `Arc<CompiledStateGraph>` internally; `GraphAgentTool` stores
+/// this behind `Arc<dyn GraphRunner>`. No generic parameter. Enforces STATE-ISOLATION by
+/// calling `extract_output(&final_state_value)` as the sole data-exit path before returning
+/// `serde_json::Value` to `invoke_dyn`.
 #[async_trait]
 pub(crate) trait GraphRunner: Send + Sync {
     async fn run(
@@ -157,9 +162,11 @@ pub(crate) trait GraphRunner: Send + Sync {
 
 ## Decision 2 — Input Mapping: schemars Schema + JSON Schema Validation + serde_json Deserialization
 
-**inputSchema derivation:** At `GraphAgentTool::from_graph` construction time, the input
-schema is derived from `S: schemars::JsonSchema` using `schemars::schema_for!(S)`. The
-resulting `Schema` is stored in the `GraphAgentTool` and returned by `Tool::schema()`.
+**inputSchema derivation:** The caller derives `inputSchema` from their channel-state struct
+via `schemars::schema_for!(StateType)` before calling `from_graph`, and passes it as
+`input_schema: schemars::Schema`. `CompiledStateGraph` is non-generic (BC-2.02.001 {PC-001})
+and has no schema introspection method — schema derivation is the caller's responsibility.
+The value is stored in `GraphAgentTool` and returned by `DynTool::schema()`.
 This schema is advertised in the MCP `tools/list` response per BC-2.09.006 {PC-002}.
 
 **Validation + deserialization at invoke time:**
@@ -168,25 +175,25 @@ This schema is advertised in the MCP `tools/list` response per BC-2.09.006 {PC-0
 tools/call arguments (serde_json::Value)
   → JSON Schema validation against input_schema (jsonschema crate)
   → if INVALID: wire-protocol JSON-RPC -32602 response (BC-2.09.007 {PC-005}); no PregolyaError, no E-MCP-* code raised on this path
-  → if VALID: serde_json::from_value::<S>(arguments) [runs inside ConcreteGraphRunner<S>::run;
-              failure surfaced through invoke_dyn — GraphAgentTool is non-generic, invoke_dyn
-              cannot name S; deserialization lives in ConcreteGraphRunner<S>::run where S is
-              statically known (§Decision 3 canonical seam)]
-  → if DESERIALIZE FAILS: isError: true, redacted message — BC-2.09.008 {PC-003}/EC-002
-                           (tool-error result layer; NOT JSON-RPC -32602)
-  → initial_state: S — proceeds to graph run (Decision 3)
+  → if VALID: serde_json::Value passed directly to CompiledStateGraph::invoke(input, config)
+              [runs inside ConcreteGraphRunner::run — ConcreteGraphRunner is non-generic (no S);
+               CompiledStateGraph takes serde_json::Value directly (BC-2.02.001 {PC-005});
+               no type-level from_value::<S> deserialization step (F-P2A072-03 closure)]
+  → if invoke FAILS: Err(PregolyaError) propagated through invoke_dyn as isError: true
+                     (standard graph execution error path; BC-2.09.008 {PC-003} updated by PO)
+  → on success: extract_output(&final_state_value) called inside ConcreteGraphRunner::run;
+                final_state_value is the serde_json::Value (channel-keyed map) from invoke
+                → proceeds to state-isolation return (Decision 3)
 ```
 
-The two-step approach (schema validate, then deserialize) surfaces schema errors with
-structured messages before attempting deserialization. The two paths are distinct:
-schema-validation failure (pre-deserialize) results in a wire-protocol JSON-RPC `-32602`
-response (BC-2.09.007 {PC-005}); no `PregolyaError` or `E-MCP-*` code is raised on this
-path — identical treatment to the `-32700`/`-32600` wire-protocol paths in the error routing
-table; post-schema deserialize failure runs inside `ConcreteGraphRunner<S>::run` and is
-surfaced through `invoke_dyn` as `isError: true` per BC-2.09.008 {PC-003}/EC-002 — it is a
-tool-error result, not a protocol error. (`GraphAgentTool` is non-generic; `invoke_dyn`
-cannot name or monomorphize `S`; `from_value::<S>` must live in `ConcreteGraphRunner<S>::run`
-where `S` is statically known — consistent with §Decision 3 canonical seam statement.)
+The two-step approach (schema validate, then invoke) surfaces schema errors with structured
+messages before running the graph. The two paths are distinct: schema-validation failure
+results in a wire-protocol JSON-RPC `-32602` response (BC-2.09.007 {PC-005}); no
+`PregolyaError` or `E-MCP-*` code is raised on this path — identical treatment to the
+`-32700`/`-32600` wire-protocol paths in the error routing table. Graph execution failure
+runs inside `ConcreteGraphRunner::run` (non-generic; no `from_value::<S>` step — F-P2A072-03
+closure) and is surfaced through `invoke_dyn` as `isError: true` per BC-2.09.008 {PC-003}
+(updated by PO for the non-generic path) — it is a tool-error result, not a protocol error.
 
 **Empty arguments:** An empty JSON object `{}` is valid if `S` has no required fields per
 the derived JSON Schema. Schema validation catches missing required fields.
@@ -196,18 +203,21 @@ the derived JSON Schema. Schema validation catches missing required fields.
 ## Decision 3 — Output Mapping + STATE-ISOLATION Invariant
 
 **`extract_output` closure:** Provided by the caller at construction. Receives a reference
-to the final terminal `GraphState` value (`&S`) and returns `serde_json::Value` containing
-only the fields the caller selects for external exposure.
+to the final channel-composed state as `&serde_json::Value` (the value returned by
+`CompiledStateGraph::invoke`) and returns `serde_json::Value` containing only the fields
+the caller selects for external exposure.
 
 **STATE-ISOLATION invariant:** The `GraphRunner::run` method:
 
 1. Runs the graph to terminal state (or to an interrupt — see Decision 4).
-2. On successful terminal: calls `extract_output(&final_state)`.
+2. On successful terminal: calls `extract_output(&final_state_value)` where
+   `final_state_value: serde_json::Value` is the channel-composed state returned by
+   `CompiledStateGraph::invoke`.
 3. Returns ONLY the `serde_json::Value` from step 2.
 
 **Canonical seam statement (F-P2A066-01):** STATE-ISOLATION is enforced solely by
-`GraphRunner::run` via `extract_output(&final_state)`; `GraphAgentTool::invoke_dyn` performs
-no re-filtering. This is the authoritative seam definition — VP-016 proof harness, BC-2.09.008
+`GraphRunner::run` via `extract_output(&final_state_value)`; `GraphAgentTool::invoke_dyn`
+performs no re-filtering. This is the authoritative seam definition — VP-016 proof harness, BC-2.09.008
 {PC-004}/{INV-001}, and S-2.11 Task 23 Arch-Compliance rule must all conform to this seam.
 
 The `GraphRunner` NEVER:
@@ -222,8 +232,8 @@ durable store, bypassing access controls. Intermediate message history may conta
 credential-bearing model reasoning. The `extract_output` closure is the ONLY path through
 which data exits the graph run boundary.
 
-**Null output:** `extract_output` returning `Value::Null` is valid. BC-2.09.007 {PC-002}
-result_text selection rule applies: `ToolOutput::Structured { value: Value::Null }` →
+**Null output:** `extract_output` returning `Value::Null` is valid. `invoke_dyn` returns
+`Ok(Value::Null)` — BC-2.09.007 {PC-002} result_text selection rule maps this to
 `result_text = "null"`. No error raised.
 
 **DI-010 interaction:** The STATE-ISOLATION invariant is a superset of DI-010 (Credential
@@ -234,9 +244,9 @@ scoping; the framework guarantees no additional field leaks beyond what `extract
 
 **SEC-001 Decision — Credential Opacity on Success Path:**
 `mcp::sanitize::redact_credentials` is NOT applied to the success-path `result_text`
-generated by `extract_output`. Rationale: `ToolOutput::Structured { value }` carries
-arbitrary `serde_json::Value`; applying regex-based credential scrubbing to structured JSON
-would corrupt legitimate 64+ character alphanumeric data (base64 blobs, hashes, public keys).
+generated by `extract_output`. Rationale: `invoke_dyn` returns `serde_json::Value` directly;
+applying regex-based credential scrubbing to structured JSON would corrupt legitimate 64+
+character alphanumeric data (base64 blobs, hashes, public keys).
 The correct enforcement point is the Tool implementation invariant: **Tool implementations
 MUST NOT embed credential material in `ToolOutput`** — this obligation derives directly from
 DI-010 (Credential Opacity) and binds every caller of `GraphAgentTool::from_graph` at the
@@ -397,9 +407,9 @@ impl PreToolCallHook for BoundaryApprovalHook {
 CRITICAL-level log entry and `Deny` reason) by `BoundaryApprovalHook` when the ActionRisk gate
 fires (`None` or `>= Medium`). The hook returns `Deny`; the tool is NOT invoked; the graph
 continues executing toward its terminal state. The terminal result surfaces via the normal
-execution path — `Ok(ToolOutput::Structured)` if the graph reaches a clean terminal ({PC-004}),
-or `Err(PregolyaError)` carrying the graph's own error if it reaches an error terminal.
-`E-MCP-010` (GraphAgentInterruptDenied) is NOT raised on this path.
+execution path — `Ok(serde_json::Value from extract_output_result)` if the graph reaches a
+clean terminal ({PC-004}), or `Err(PregolyaError)` carrying the graph's own error if it
+reaches an error terminal. `E-MCP-010` (GraphAgentInterruptDenied) is NOT raised on this path.
 
 `E-MCP-010` and `E-MCP-011` are distinct, independently-surfacing codes with orthogonal
 triggers and separate graph fates:
@@ -461,10 +471,9 @@ synchronous tools/call invocation — retrying the same invocation cannot succee
 | Condition | Error | MCP Layer Response |
 |-----------|-------|--------------------|
 | Input fails JSON Schema validation | wire-protocol only — no PregolyaError, no E-MCP-* code raised (BC-2.09.007 {PC-005} / BC-2.09.008 EC-001) | JSON-RPC -32602 ("Invalid arguments for tool '...': &lt;schema_error&gt;") |
-| Input passes schema but `serde_json::from_value::<S>` fails (inside `ConcreteGraphRunner<S>::run`; failure surfaced through `invoke_dyn`) | tool-error result per BC-2.09.008 {PC-003}/EC-002 | `isError: true`, redacted message (tool-error result layer; NOT JSON-RPC -32602) |
-| Graph execution returns `Err(PregolyaError)` | original PregolyaError | `isError: true`, redacted message (BC-2.09.007 {PC-003}, {INV-003}) |
+| Graph execution returns `Err(PregolyaError)` (from `CompiledStateGraph::invoke` inside `ConcreteGraphRunner::run`; no `from_value::<S>` step — F-P2A072-03 closure) | original PregolyaError | `isError: true`, redacted message (BC-2.09.007 {PC-003}, {INV-003}; BC-2.09.008 {PC-003} updated by PO) |
 | Graph parks (node-level `interrupt()` → `RunStatus::Interrupted`) | `E-MCP-010 GraphAgentInterruptDenied` | `isError: true`, message (after redact_credentials pass) |
-| `BoundaryApprovalHook` returns `Deny` (either policy — graph CONTINUES to terminal) | terminal result propagated normally: `Ok(ToolOutput::Structured)` ({PC-004}) if graph reaches clean terminal; original `Err(PregolyaError)` (graph's own error) if graph reaches error terminal. `E-MCP-010` is NOT raised. `E-MCP-011` is emitted as a structured log entry (ActionRisk gate path only) — it is a diagnostic, not a terminal error code. | `isError: false` (clean terminal) or `isError: true` with graph's own redacted error (error terminal) |
+| `BoundaryApprovalHook` returns `Deny` (either policy — graph CONTINUES to terminal) | terminal result propagated normally: `Ok(serde_json::Value from extract_output_result)` ({PC-004}) if graph reaches clean terminal; original `Err(PregolyaError)` (graph's own error) if graph reaches error terminal. `E-MCP-010` is NOT raised. `E-MCP-011` is emitted as a structured log entry (ActionRisk gate path only) — it is a diagnostic, not a terminal error code. | `isError: false` (clean terminal) or `isError: true` with graph's own redacted error (error terminal) |
 | `extract_output` panics (contract violation by caller) | Rust panic caught by `mcp::server` `UnwindSafe` boundary (`std::panic::catch_unwind` around the `DynTool::invoke` dispatch call); no panic propagates past the MCP handler. Server loop continues serving subsequent requests. | `isError: true`, static message `"internal error"` (no internal state, no panic message, no backtrace leaked to MCP client; SEC-008 contract: panic text may contain internal state so it is NEVER forwarded); error is logged internally at ERROR level with backtrace before the static message is returned |
 
 **Sanitization applies to all `isError: true` paths** — including `E-MCP-010` messages.
@@ -531,10 +540,11 @@ structural containment property over open data.
 
 `pregolya-mcp` gains one new module row in module-decomposition.md:
 - `mcp::graph_tool` (MEDIUM, SS-09): StateGraph-as-MCP-Tool wrapping adapter;
-  `GraphAgentTool` struct implementing `DynTool`; type-erased `GraphRunner` trait hiding
-  `CompiledGraph<S>` generics; `BoundaryApprovalHook` for fail-closed interrupt policy;
-  `GraphToolApprovalPolicy` enum; input schema derivation, JSON Schema validation,
-  deserialization, `extract_output` state-isolation enforcement (BC-2.09.008 / ADR-029).
+  `GraphAgentTool` struct implementing `DynTool`; type-erased `GraphRunner` trait holding
+  `Arc<CompiledStateGraph>` (non-generic, BC-2.02.001 {PC-001}); `BoundaryApprovalHook`
+  for fail-closed interrupt policy; `GraphToolApprovalPolicy` enum; caller-provided
+  `input_schema: schemars::Schema`, JSON Schema validation, `extract_output`
+  state-isolation enforcement (BC-2.09.008 / ADR-029).
 
 ### Module Universe
 
@@ -550,13 +560,14 @@ effectful.
 ### New Dependency Edge
 
 dependency-graph.md gains one new edge:
-- `pregolya-mcp` → `pregolya-graph` (runtime; `GraphAgentTool` wraps `CompiledGraph<S>`)
+- `pregolya-mcp` → `pregolya-graph` (runtime; `GraphAgentTool` wraps `CompiledStateGraph` per BC-2.02.001 {PC-001})
 
 ### VP Addition
 
 VP-016 (proptest P1, `mcp::graph_tool`, BC-2.09.008) proves the STATE-ISOLATION invariant:
-for any `GraphState` S with fields beyond the `extract_output` selection, the `ToolOutput`
-returned by `GraphAgentTool::invoke` contains ONLY the selected fields.
+for any channel-composed state `serde_json::Value` with fields beyond the `extract_output`
+selection, the `serde_json::Value` returned by `GraphAgentTool::invoke_dyn` contains ONLY
+the selected fields.
 Harness fn: `graph_agent_tool_state_isolation`.
 
 ### BC Anchors
@@ -596,10 +607,51 @@ PO must mint the following two error codes in `error-taxonomy.md`:
   BC-2.09.007 (tools/call — invocation + credential redaction path).
 - **Authoring context:** Phase 1b architecture design session (2026-08-26).
 
+---
+
+## Symbol Grounding
+
+Symbol-existence audit against canonical pregolya-core / pregolya-graph type surfaces.
+All symbols named in this ADR, VP-016, and `interface-definitions.md §GraphAgentTool`
+must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closure).
+
+| Symbol | Canonical Location | Source of Truth | Status |
+|--------|--------------------|-----------------|--------|
+| `CompiledStateGraph` | `pregolya-graph/src/types.rs` | BC-2.02.001 {PC-001} | EXISTS — non-generic; `invoke(input, config)` takes/returns `serde_json::Value` |
+| `CompiledStateGraph::invoke` | `pregolya-graph/src/types.rs` | BC-2.02.001 {PC-005} | EXISTS — `invoke(input: serde_json::Value, config) -> Result<serde_json::Value, PregolyaError>` |
+| `CompiledStateGraph::stub_terminal` | `pregolya-graph/src/types.rs` (`#[cfg(test)]`) | VP-016 §Stub Graph Obligation (spec requirement — see below) | REQUIRES-ROUTING — NOT yet specced in BC-2.02.001 or S-1.14; VP-016 harness depends on it; must be added to graph-subsystem surface as an explicit `#[cfg(test)]` helper. Routing: story-writer or PO must add to S-1.14 task list or mint a new graph-crate test-helper story. Signature: `pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` — builds a minimal single-node graph that returns `terminal_state` when invoked. See §Stub Graph Obligation in VP-016. |
+| `CompiledGraph<S>` | (none) | (none) | PHANTOM — eliminated. Generic form does not exist. All references replaced with `CompiledStateGraph`. |
+| `GraphState` (as trait) | (none) | entities-graph.md §GraphState | PHANTOM — `GraphState` is NOT a trait. It is the composed value of all Channels (Map<ChannelName, ChannelValue>). No user-defined trait. All `S: GraphState` bounds eliminated. |
+| `DynTool` | `pregolya-core/src/core/tool.rs` | interface-definitions.md §Tool | EXISTS — `invoke_dyn(&self, input: serde_json::Value) -> Result<serde_json::Value, PregolyaError>` |
+| `ToolOutput` variants (`Text`, `Json`, `Error`) | `pregolya-core/src/core/tool.rs` | interface-definitions.md §Tool | EXISTS — exactly three variants: `Text(String)`, `Json(serde_json::Value)`, `Error(String)` |
+| `ToolOutput::Structured` | (none) | (none) | PHANTOM — eliminated. No such variant. `invoke_dyn` returns `Result<serde_json::Value, PregolyaError>` directly. Blanket `DynTool` impl maps `Text`/`Json` → `Ok(serde_json::Value)`; `Error` → `Err(PregolyaError)`. |
+| `serde_json::Value::as_value()` | (none) | (none) | PHANTOM — eliminated (VP-016 F-P2A072-01). `serde_json::Value` has no `.as_value()` method. Harness now calls `.as_object()` directly on the returned `serde_json::Value`. |
+| `schemars::Schema` | `schemars` crate | interface-definitions.md §Tool, ADR-029 §Decision 1 | EXISTS — canonical schema type (corrected from `schemars::schema::RootSchema` in ADR-029 §Decision 1). |
+| `schemars::schema_for!` | `schemars` crate | schemars docs | EXISTS — derive-based schema macro; caller's responsibility to invoke before `from_graph`. |
+| `GraphAgentTool` | `pregolya-mcp/src/graph_tool.rs` | BC-2.09.008, ADR-029 §Decision 1 | PLANNED — SS-09, S-2.11 implementation story. Non-generic struct. |
+| `GraphAgentTool::from_graph` | `pregolya-mcp/src/graph_tool.rs` | BC-2.09.008 {PRE-001}, ADR-029 §Decision 1 | PLANNED — non-generic signature: `(name, description, Arc<CompiledStateGraph>, schemars::Schema, Fn(&serde_json::Value) -> serde_json::Value) -> Self` |
+| `ConcreteGraphRunner` | `pregolya-mcp/src/graph_tool.rs` | ADR-029 §Decision 3 | PLANNED — non-generic (no `<S>`); holds `Arc<CompiledStateGraph>` + `Box<dyn Fn(&serde_json::Value) -> serde_json::Value + Send + Sync>` |
+| `GraphRunner` (trait) | `pregolya-mcp/src/graph_tool.rs` | ADR-029 §Decision 1 | PLANNED — `run(input, policy) -> Result<serde_json::Value, PregolyaError>` |
+| `GraphToolApprovalPolicy` | `pregolya-mcp/src/graph_tool.rs` | ADR-029 §Decision 4 | PLANNED — `DenyInterrupts` (default), `ForceApproveHooks` (explicit opt-in) |
+| `BoundaryApprovalHook` | `pregolya-mcp/src/graph_tool.rs` | ADR-029 §Decision 4 | PLANNED — `pub(crate)`; implements `PreToolCallHook` |
+| `PreToolCallHook` | `pregolya-core/src/core/tool.rs` or `pregolya-mcp` | BC-2.05.007, ADR-018 | EXISTS — hook trait for pre-invocation decisions |
+| `ToolCallPreview` | `pregolya-core` | BC-2.05.007 {PRE-003} | EXISTS — canonical type (corrected from `ToolPreview` per F-P2A057-04) |
+| `ActionRisk` | `pregolya-core` | BC-2.05.006/BC-2.05.007 | EXISTS — enum with `None`/`Low`/`Medium`/`High` variants |
+| `PreToolDecision` | `pregolya-core` | ADR-018, BC-2.05.007 | EXISTS — `PendingHumanApproval`, `Approve`, `Deny` variants |
+| `E-MCP-010 GraphAgentInterruptDenied` | `error-taxonomy.md` | ADR-029 §Decision 5 (PO obligation) | PLANNED — PO must mint in error-taxonomy.md |
+| `E-MCP-011 ForceApproveWriteBlocked` | `error-taxonomy.md` | ADR-029 §Decision 4 (PO obligation) | PLANNED — PO must mint in error-taxonomy.md |
+
+**Eliminated phantom surfaces (F-P2A072-01+02+03):**
+- `ToolOutput::Structured { value }` — 16 occurrences across cluster; no such variant exists
+- `.as_value()` on `serde_json::Value` — E0599; no such method; VP-016 harness fixed
+- `CompiledGraph<S>` — generic phantom; replaced with non-generic `CompiledStateGraph`
+- `trait GraphState` / `S: GraphState` bounds — `GraphState` is composed state value, not a trait
+
 ## Changelog
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.0 | 2026-08-27 | architect | round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03 | TYPE-GROUNDING: `ToolOutput::Structured` phantom removed (no such variant; `invoke_dyn` returns `Result<serde_json::Value, PregolyaError>`); `CompiledGraph<S>` + `trait GraphState` phantoms removed (`CompiledStateGraph` non-generic per BC-2.02.001; `GraphState` not a trait per entities-graph.md); `from_graph<S>` redesigned as non-generic with explicit `input_schema: schemars::Schema` and `extract_output: Fn(&serde_json::Value) -> serde_json::Value`; Decision 2 pipeline updated (no `from_value::<S>` step); §Symbol Grounding subsection added. PO/story-writer handoffs provided. |
 | 1.9 | 2026-08-26 | architect | round-8/F-P2A069-02+F-P2A069-01 | F-P2A069-02 MED: §Decision 2 pseudocode, §Decision 2 prose paragraph, §Decision 5 Error Routing Table — three occurrences of "runs inside invoke_dyn" corrected to "runs inside ConcreteGraphRunner<S>::run; failure surfaced through invoke_dyn." GraphAgentTool is non-generic (runner: Arc<dyn GraphRunner>; S is erased); invoke_dyn cannot name or monomorphize S; from_value::<S> must live in ConcreteGraphRunner<S>::run where S is statically known — consistent with §Decision 3 canonical seam. Routing decision (isError: true, NOT JSON-RPC -32602) UNCHANGED. F-P2A069-01 HIGH: parallel VP-016 §Realizability-Trace harness rewrite (complete input, vacuous-Err guard) in same burst. |
 | 1.8 | 2026-08-26 | architect | round-7/F-P2A066-01+F-P2A067-01 | F-P2A067-01 HIGH: §Decision 2 pseudocode, §Decision 2 prose, §Decision 5 Error Routing Table — three occurrences of phantom `E-MCP-004 McpInvalidArguments` removed (E-MCP-004 is ToolNotFound per BC-2.09.002 {PC-008}; schema-validation failure is a wire-protocol JSON-RPC -32602 response per BC-2.09.007 {PC-005}/BC-2.09.008 EC-001; no PregolyaError or E-MCP-* code raised). F-P2A066-01 HIGH (partial): §Decision 3 canonical seam statement added. |
 | 1.7 | 2026-08-26 | architect | round-6/O-063-02 | §Decision 4 fail-closed guarantee: `GraphAgentTool::invoke` → `GraphAgentTool::invoke_dyn` (O-063-02 OBS — canonical DynTool dispatch method is invoke_dyn; one bare occurrence in §Decision 4 §DenyInterrupts fail-closed guarantee paragraph). |

@@ -1,9 +1,9 @@
 ---
 document_type: dependency-graph
-version: "1.2"
+version: "1.3"
 status: active
 producer: story-writer
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 phase: 2
 traces_to: .factory/stories/STORY-INDEX.md
 ---
@@ -224,7 +224,7 @@ S-2.11 (MCP Server)
 
 | From Crate | To Crate | Rationale | ADR / BC Source |
 |-----------|----------|-----------|----------------|
-| `pregolya-mcp` | `pregolya-graph` | `GraphAgentTool` wraps `Arc<CompiledGraph<S>>` (the struct is non-generic; the `from_graph<S>` constructor and `Arc<CompiledGraph<S>>` are generic) — introduced by BC-2.09.008 and formalized in ADR-029 §Consequences. The `mcp::graph_tool` module depends on `CompiledGraph<S>` and `GraphRunner` types from `pregolya-graph`. | ADR-029, BC-2.09.008 PC-001 |
+| `pregolya-mcp` | `pregolya-graph` | `GraphAgentTool` wraps `Arc<CompiledStateGraph>` (non-generic; `from_graph` is a non-generic constructor) — introduced by BC-2.09.008 and formalized in ADR-029 §Consequences. The `mcp::graph_tool` module depends on `CompiledStateGraph` and `GraphRunner` types from `pregolya-graph`. | ADR-029 §Consequences, BC-2.02.001 {PC-001}, BC-2.09.008 {PC-001} |
 
 > **DAG-acyclicity confirmation:** Adding `pregolya-mcp → pregolya-graph` does not create a
 > cycle. `pregolya-graph` has no dependency on `pregolya-mcp` (one-directional). At the story
@@ -416,3 +416,4 @@ S-6.01 (Kani + cargo-fuzz)
 
 - **1.1 (F1/round-5/2026-08-26):** (a) BC count updated 133 → 134 to reflect BC-2.09.008 addition. (b) SS-09 BC range updated BC-2.09.001–007 → BC-2.09.001–008. (c) VP-to-Stories Matrix extended: VP-015 (BC-2.09.007 / unit / S-2.11), VP-016 (BC-2.09.008 / proptest / S-2.11), VP-006-B (BC-2.18.004 / Kani / S-2.05) added. (d) Crate-Level Dependency Edges section added: `pregolya-mcp → pregolya-graph` (ADR-029 / BC-2.09.008 PC-001; GraphAgentTool wraps Arc<CompiledGraph<S>>). S-1.14 added as upstream of S-2.11 (S-2.11 depends_on updated to [S-2.10, S-1.14]; S-1.14 blocks updated to include S-2.11). Topological sort batch 2d rationale updated; DAG-acyclicity confirmed (S-1.14 Wave-1 upstream of S-2.11 Wave-2 — no cycle).
 - **1.2 (F-P2A066-02/round-7/2026-08-26):** Crate-Level Dependency Edges: `GraphAgentTool<S>` → `GraphAgentTool` (struct is non-generic; `from_graph<S>` constructor and `Arc<CompiledGraph<S>>` remain generic per ADR-029 §Decision); clarification note added.
+- **1.3 (GAP-01-nongeneric/round-10/2026-08-27):** Crate-Level Dependency Edges live row updated to round-10 non-generic design: `Arc<CompiledGraph<S>>` → `Arc<CompiledStateGraph>`; `from_graph<S>` generic constructor clause removed (`from_graph` is now a non-generic constructor per ADR-029 §Symbol Grounding / BC-2.02.001 {PC-001}); `CompiledGraph<S>` type reference → `CompiledStateGraph`; ADR source updated to ADR-029 §Consequences, BC-2.02.001 {PC-001}, BC-2.09.008 {PC-001}. Historical §Changelog rows preserved as records.
