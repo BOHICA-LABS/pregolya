@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.003
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -38,6 +38,7 @@ changelog:
   - "1.6 (F-P116-01): PC1 signature updated to include `&self` receiver — dyn-compatibility fix per ADR-005 v1.3 §Object-Safety. Old PC1 quoted `get_next_version(current: Option<CheckpointId>, channel: &ChannelName)`; new PC1 quotes `get_next_version(&self, current: Option<CheckpointId>, channel: &ChannelName)`. Rationale: dyn-compatibility (E0038) requires an instance-method receiver on every non-Sized-bounded trait method; virtual dispatch of backend overrides through Arc<dyn CheckpointSaver> requires &self; langgraph BaseCheckpointSaver.get_next_version is an instance method (F-P116-01). Architecture Anchors signature reference updated to include `&self` to match ADR-005 v1.3 corrected signature."
   - "1.7 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -123,8 +124,8 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 | Source Analysis | semport/graph/behavioral-intent.md §1.2 (determinism; monotonic next_version), §2.2 (Checkpoint shape; uuid6 IDs); CONFLICT-4 (logical clock vs wall-clock — adk-rust Uuid::new_v4 + created_at DESC is the counter-example) |
 | Binding Decisions | D11.2 (Rust-native msgpack format — leaves clock choice open), D11.3 (all three durability tiers — per-task writes compound ordering risk if wall-clock used) |
 | Negative evidence | CONFLICT-4: adk-rust `Uuid::new_v4()` + `ORDER BY created_at DESC` fails under NTP adjustment, same-millisecond writes, and distributed clock skew |
-| Architecture Module | pregolya-checkpoint (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-checkpoint |
+| Stories | S-1.10 |
 
 ## Related BCs
 
@@ -137,7 +138,7 @@ NTP adjustment, or under clock skew in distributed deployments must have unambig
 
 ## Story Anchor
 
-S-N.MM — Monotonic checkpoint ID (filled by story-writer)
+S-1.10 — Monotonic checkpoint ID
 
 ## VP Anchors
 

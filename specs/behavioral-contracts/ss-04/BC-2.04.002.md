@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.002
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -28,6 +28,7 @@ changelog:
   - "1.4 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to 'architecture/decisions/ADR-003-durability-tiers.md' — DurabilityTier enum, CheckpointSaverConfig::default(), Sync-default rationale. No BC body content changed."
   - "1.5 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -111,8 +112,8 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 | L2 Domain Invariants | DI-002 (Per-Task Durability (Sync Default)) |
 | Source Analysis | semport/graph/behavioral-intent.md §5.1 (three durability modes); CONFLICT-2 recommendation (sync as crash-safe default) |
 | Binding Decisions | D11.3 (all three durability tiers; pregolya defaults to sync), D17-Q3 (Phase-1 BC commitment) |
-| Architecture Module | pregolya-checkpoint (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-checkpoint |
+| Stories | S-1.10 |
 
 ## Related BCs
 
@@ -125,7 +126,7 @@ developer ceremony — the unsafe faster modes require a deliberate choice.
 
 ## Story Anchor
 
-S-N.MM — Durability tier default and opt-in (filled by story-writer)
+S-1.10 — Durability tier default and opt-in
 
 ## VP Anchors
 

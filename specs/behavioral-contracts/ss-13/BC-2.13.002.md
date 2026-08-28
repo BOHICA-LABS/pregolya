@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.002
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "4cc0b0a"
+input-hash: "27d5e02"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -29,6 +29,7 @@ changelog:
   - "1.4 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (P2A-BC-scan-B/2026-08-26): Process backend execute failure paths added. PC-007 added: OS subprocess spawn failure → E-SBXD-007 ProcessSpawnFailed (TOOL/broken/Maybe; 2 placeholders: command, os_error). PC-008 added: process non-zero exit → E-SBXD-008 ProcessNonZeroExit (TOOL/broken; exit_code, stderr). EC-005/EC-006 added for spawn-failure and non-zero-exit test scenarios. Note: error-taxonomy minted E-SBXD-007 with anchor 'BC-2.13.002 PC-003' and E-SBXD-008 with anchor 'BC-2.13.002 PC-004'; PC-003/PC-004 are occupied by existing postconditions; authoritative stable tags are PC-007/PC-008 per ADR-027 append-only numbering."
+  - "1.7 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.09; §Architecture Module confirmed as pregolya-sandbox — from STORY-INDEX forward map (SS-13 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-sandbox). No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -148,8 +149,8 @@ enforcement).
 | Reference Evidence | No upstream LangChain or adk-rust equivalent for loud-warning on process backend — greenfield behavior. adk-rust P-49 ADOPT provides the honest-capabilities shape but no warning mechanism; pregolya adds the warning layer on top. |
 | Binding Decisions | NE-01, DI-006 |
 | Forcing Functions | Domain C OpenClaw §4 (host-first execution default is §4 design lesson contra pregolya; pregolya inverts); product-brief.md §Security Defaults — PRD Carry-Forward (NE-01) |
-| Architecture Module | pregolya-sandbox (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-sandbox |
+| Stories | S-1.09 |
 
 ## Related BCs
 
@@ -163,7 +164,7 @@ enforcement).
 
 ## Story Anchor
 
-S-N.MM — Process backend opt-in warning (filled by story-writer)
+S-1.09 — Process backend opt-in warning
 
 ## VP Anchors
 

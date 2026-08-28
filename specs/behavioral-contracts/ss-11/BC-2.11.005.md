@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-08-24T00:00:00Z
@@ -29,6 +29,7 @@ changelog:
   - "1.5 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-005}, {PRE-001..PRE-003} added; purely additive, no content change."
   - "1.7 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
+  - "1.8 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.19; §Architecture Module corrected to pregolya-graph (model input buffer construction) — §Architecture Anchors names only module-decomposition.md §pregolya-graph; 'pregolya-core /' prefix removed as pregolya-core does not appear in this BC's §Architecture Anchors. No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -134,8 +135,8 @@ single synchronous operation in the current super-step.
 | Reference Evidence | Greenfield. DI-012 contains the verbatim requirement text "does not enter the model context under any code path" — this BC specifies the enforcement mechanism. No upstream reference implementation. The atomicity guarantee (no race between rejection and forwarding) is pregolya-original design. |
 | Binding Decisions | D17-Q8 (content provenance/guardrail-on-ingress is Phase-1 BC); DI-012 invariant text |
 | Forcing Functions | Domain A SOC analyst §4 "LLM-specific security risks — prompt injection via malicious log/alert content (adversary-controlled text entering the reasoning loop through tool output)"; Domain A §6 "Adversarial tool-content resistance" scenario |
-| Architecture Module | pregolya-core / pregolya-graph (model input buffer construction; filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-graph (model input buffer construction) |
+| Stories | S-1.19 |
 
 ## Related BCs
 
@@ -153,7 +154,7 @@ single synchronous operation in the current super-step.
 
 ## Story Anchor
 
-S-N.MM — Atomic rejection guarantee — rejected content absent from model context (filled by story-writer)
+S-1.19 — Atomic rejection guarantee — rejected content absent from model context
 
 ## VP Anchors
 

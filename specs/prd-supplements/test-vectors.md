@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.12"
+version: "3.13"
 status: active
 producer: product-owner
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "1d64308"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.13 (round-28/GATE-READY-finding/2026-08-28): Ground-truth reconciliation — column sum was 724 vs declared 754; body ground-truth measured at 757 canonical (33-unit delta from column sum). Corrected 21 stale BC rows: BC-2.04.001 (4→5), BC-2.04.005 (5→6), BC-2.04.008 (7→8), BC-2.05.004 (6→9), BC-2.06.006 (4→5), BC-2.08.001 (4→5), BC-2.08.013 (6→7), BC-2.09.006 (6→8), BC-2.09.008 (13→16), BC-2.10.005 (6→9), BC-2.12.001 (7→9), BC-2.12.002 (8→9), BC-2.12.003 (7→10), BC-2.15.001 (7→8), BC-2.15.004 (9→10), BC-2.15.005 (7→8), BC-2.16.001 (5→6), BC-2.21.002 (6→7), BC-2.22.002 (5→7), BC-2.23.003 (5→6), BC-2.23.005 (6→8). Authoritative canonical total: 757 canonical + 11 GTV = 768 grand total. Note: v3.10 contained a +9-claimed/+6-recorded arithmetic error (746→752 instead of correct 755), now superseded by this ground-truth count; if corrected, declared total progression after v3.10 would have been 755→756→757 matching ground truth. Unlabelled-format BCs (SS-04 001–007, SS-11, SS-13 001–006) body count measured as table data rows excluding header row."
   - "3.12 (round-19/F-P2A088-01/2026-08-27): BC-2.09.008 TV count 12→13 (+1 TV: TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids framework pass; authoring-site convention sole guarantee per {INV-001} / ADR-029 §Decision 3 SEC-005 canonical text). Grand total 753→754 canonical + 11 GTV = 764→765."
   - "3.11 (P2A-057-round-2/D-277/2026-08-26): BC-2.09.008 TV count 11→12 (+1 TV: TV-012 None/undeclared action_risk path, F-057-01 {INV-004} coverage). Grand total 752→753 canonical + 11 GTV = 764."
   - "3.10 (SEC-review-adjudication/D-276/2026-08-26): BC-2.09.007 TV count 6→9 (+3 TVs: credential-opacity enforcement paths, SEC-001 coverage). BC-2.09.008 TV count 7→11 (+4 TVs: ForceApproveHooks override scope {PC-006}, BoundaryApprovalHook ActionRisk>=Medium Deny {INV-004} E-MCP-011, additional state-isolation paths). BC-2.18.004 TV count 5→7 (+2 TVs: TV-006 FewShotExamples Red Gate {PC-005} + TV-007 multi-pair middle-untrusted Red Gate {PC-005} VP-006-B proptest). Grand total 746→752 canonical + 11 GTV = 757→763."
@@ -75,18 +76,18 @@ changelog:
 | BC-2.03.001 | SS-03 | 6 | — | `TV-NNN` | | BSP determinism; VP seed |
 | BC-2.03.002 | SS-03 | 5 | — | `TV-NNN` | | Concurrent LastValue → InvalidUpdateError |
 | BC-2.03.003 | SS-03 | 5 | — | `TV-NNN` | | Task-identity sort order |
-| BC-2.04.001 | SS-04 | 4 | — | table (unlabelled) | | put_writes before next super-step |
+| BC-2.04.001 | SS-04 | 5 | — | table (unlabelled) | | put_writes before next super-step |
 | BC-2.04.002 | SS-04 | 4 | — | table (unlabelled) | | Sync tier is default |
 | BC-2.04.003 | SS-04 | 4 | — | table (unlabelled) | | Monotonic clock rejects wall-clock |
 | BC-2.04.004 | SS-04 | 4 | — | table (unlabelled) | | Fork via parent_checkpoint_id |
-| BC-2.04.005 | SS-04 | 5 | — | table (unlabelled) | | Crash recovery; completed not re-run |
+| BC-2.04.005 | SS-04 | 6 | — | table (unlabelled) | | Crash recovery; completed not re-run |
 | BC-2.04.006 | SS-04 | 4 | — | table (unlabelled) | | Triple-address uniqueness; VP seed |
 | BC-2.04.007 | SS-04 | 4 | — | table (unlabelled) | | Encryption covers state AND events |
-| BC-2.04.008 | SS-04 | 7 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process); §Invariant-5 EC-007+TV-007 FtsEncryptionIncompatible |
+| BC-2.04.008 | SS-04 | 8 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process); §Invariant-5 EC-007+TV-007 FtsEncryptionIncompatible |
 | BC-2.05.001 | SS-05 | 5 | — | `TV-NNN` | | Interrupt + durable suspend |
 | BC-2.05.002 | SS-05 | 5 | — | `TV-NNN` | | FIFO resume order |
 | BC-2.05.003 | SS-05 | 5 | — | `TV-NNN` | | Node re-executes from start on resume |
-| BC-2.05.004 | SS-05 | 6 | — | `TV-NNN` | | Command(resume=value) API |
+| BC-2.05.004 | SS-05 | 9 | — | `TV-NNN` | | Command(resume=value) API |
 | BC-2.05.005 | SS-05 | 8 | — | `TV-NNN` | | Empty queue → Err(NoActiveInterrupt) (v1.5 adds TV-006/007/008) |
 | BC-2.05.006 | SS-05 | 6 | — | `TV-NNN` | | Risk-tiered classification for Domain A |
 | BC-2.05.007 | SS-05 | 6 | — | `TV-NNN` | | PreToolCallHook dispatch — Approve/Deny/Edit/PendingHumanApproval; fail-closed Deny (VP-011 Kani seed) |
@@ -96,11 +97,11 @@ changelog:
 | BC-2.06.003 | SS-06 | 5 | — | `TV-NNN` | | Streaming/unary identical final answer |
 | BC-2.06.004 | SS-06 | 4 | — | `TV-NNN` | | `tool_approval_request` StreamEvent (event 13); payload; emission before interrupt |
 | BC-2.06.005 | SS-06 | 3 | — | `TV-NNN` | | `tool_approval_resolved` StreamEvent (event 14); payload on Command(resume=…) |
-| BC-2.06.006 | SS-06 | 4 | — | `TV-NNN` | | `compaction_event` StreamEvent (event 15); payload; emission after compaction completes |
+| BC-2.06.006 | SS-06 | 5 | — | `TV-NNN` | | `compaction_event` StreamEvent (event 15); payload; emission after compaction completes |
 | BC-2.07.001 | SS-07 | 7 | — | `TV-NNN` | | Code-point chunk size (not bytes) |
 | BC-2.07.002 | SS-07 | 3 | 11 | `TV-NNN` + GTV | **RG** | Non-ASCII parity (see §Golden Test Vectors — BC-2.07.002); (v1.6 adds GTV-010/011 grapheme-cluster discriminators) |
 | BC-2.07.003 | SS-07 | 7 | — | `TV-NNN` | | Short doc < chunk_size → single chunk |
-| BC-2.08.001 | SS-08 | 4 | — | `TV-NNN` | | Streaming conformance |
+| BC-2.08.001 | SS-08 | 5 | — | `TV-NNN` | | Streaming conformance |
 | BC-2.08.002 | SS-08 | 5 | — | `TV-NNN` | | Tool-call round-trip conformance |
 | BC-2.08.003 | SS-08 | 5 | — | `TV-NNN` | | Structured output conformance |
 | BC-2.08.004 | SS-08 | 5 | — | `TV-NNN` | | Error-type fidelity conformance |
@@ -112,21 +113,21 @@ changelog:
 | BC-2.08.010 | SS-08 | 6 | — | `TV-NNN` | | `#[tool]` proc-macro; duplicate-name E-TOOLS-010 TV-006 (burst-B) |
 | BC-2.08.011 | SS-08 | 5 | — | `TV-NNN` | | `#[entrypoint]` proc-macro |
 | BC-2.08.012 | SS-08 | 6 | — | `TV-NNN` | | `#[task]` proc-macro; reserved-name hard error TV-006 (burst-B) |
-| BC-2.08.013 | SS-08 | 6 | — | `TV-NNN` | | Pluggable tool-call dialect (ToolCallDialect; Hermes ChatML XML) |
+| BC-2.08.013 | SS-08 | 7 | — | `TV-NNN` | | Pluggable tool-call dialect (ToolCallDialect; Hermes ChatML XML) |
 | BC-2.08.014 | SS-08 | 7 | — | `TV-NNN` | | Provider failover chain (ProviderFallbackPolicy; 429/5xx/auth) |
 | BC-2.09.001 | SS-09 | 10 | — | `TV-NNN` | | MCP tool discovery |
 | BC-2.09.002 | SS-09 | 7 | — | `TV-NNN` | | ToolInvocation routing |
 | BC-2.09.003 | SS-09 | 5 | — | `TV-NNN` | | Tool-result as untrusted ingress |
 | BC-2.09.004 | SS-09 | 5 | — | `TV-NNN` | **RG** | Bare ToolException re-raise |
 | BC-2.09.005 | SS-09 | 5 | — | `TV-NNN` | **RG** | MultiServerMcpClient no live connections |
-| BC-2.09.006 | SS-09 | 6 | — | `TV-NNN` | | MCP server tool advertisement (tools/list; mcp::server) |
+| BC-2.09.006 | SS-09 | 8 | — | `TV-NNN` | | MCP server tool advertisement (tools/list; mcp::server) |
 | BC-2.09.007 | SS-09 | 9 | — | `TV-NNN` | | MCP server tool invocation (tools/call; external client) |
-| BC-2.09.008 | SS-09 | 13 | — | `TV-NNN` | | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); VP-016 proptest P1 seed ({INV-001} STATE-ISOLATION); TV-012 None/undeclared action_risk path ({INV-004}); TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids (authoring-site convention sole guarantee; {INV-001}) |
+| BC-2.09.008 | SS-09 | 16 | — | `TV-NNN` | | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); VP-016 proptest P1 seed ({INV-001} STATE-ISOLATION); TV-012 None/undeclared action_risk path ({INV-004}); TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids (authoring-site convention sole guarantee; {INV-001}); TV-014/015/016 simple-UUID and SHA-256 sanitize_internal_ids coverage (F-P2A121-01) |
 | BC-2.10.001 | SS-10 | 5 | — | `TV-NNN` | | Budget allow/escalate/deny evaluation |
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
 | BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
 | BC-2.10.004 | SS-10 | 6 | — | `TV-NNN` | | Budget escalation → HITL (v1.5 adds TV-006) |
-| BC-2.10.005 | SS-10 | 6 | — | `TV-NNN` | | CompactionTrigger config — Disabled/OnWatermark/OnMessageCount/OnTokenCount (VP-012 Kani seed); (v1.2 adds TV-006) |
+| BC-2.10.005 | SS-10 | 9 | — | `TV-NNN` | | CompactionTrigger config — Disabled/OnWatermark/OnMessageCount/OnTokenCount (VP-012 Kani seed); (v1.2 adds TV-006); TV-007/008/009 fraction domain guards |
 | BC-2.10.006 | SS-10 | 4 | — | `TV-NNN` | | Compaction execution — ConversationSnapshot, mid-run REPLACEMENT, EvidenceJournal, checkpoint immutability |
 | BC-2.11.001 | SS-11 | 4 | — | table (unlabelled) | | ProvenanceTag at all ingress boundaries |
 | BC-2.11.002 | SS-11 | 5 | — | table (unlabelled) | | GuardrailHook at tool-result ingress |
@@ -134,9 +135,9 @@ changelog:
 | BC-2.11.004 | SS-11 | 4 | — | table (unlabelled) | | GuardrailHook at memory ingress |
 | BC-2.11.005 | SS-11 | 4 | — | table (unlabelled) | | Rejected content never in model context |
 | BC-2.11.006 | SS-11 | 4 | — | table (unlabelled) | | No-hook default: WARNING LOG |
-| BC-2.12.001 | SS-12 | 7 | — | `TV-NNN` | | Thread CRUD |
-| BC-2.12.002 | SS-12 | 8 | — | `TV-NNN` | | Assistant CRUD |
-| BC-2.12.003 | SS-12 | 7 | — | `TV-NNN` | | Run lifecycle |
+| BC-2.12.001 | SS-12 | 9 | — | `TV-NNN` | | Thread CRUD |
+| BC-2.12.002 | SS-12 | 9 | — | `TV-NNN` | | Assistant CRUD |
+| BC-2.12.003 | SS-12 | 10 | — | `TV-NNN` | | Run lifecycle |
 | BC-2.12.004 | SS-12 | 7 | — | `TV-NNN` | | CronSchedule + proactive run |
 | BC-2.12.005 | SS-12 | 7 | — | `TV-NNN` | | SecurityConfig::default() deny-CORS |
 | BC-2.12.006 | SS-12 | 6 | — | `TV-NNN` | | Trait seams (IdempotencyStore etc.) |
@@ -154,13 +155,13 @@ changelog:
 | BC-2.14.004 | SS-14 | 5 | — | `TV-NNN` | | HTTP timeout 30s enforced |
 | BC-2.14.005 | SS-14 | 5 | — | `TV-NNN` | | API key newtype redacted Debug |
 | BC-2.14.006 | SS-14 | 5 | — | `TV-NNN` | | No silent None for validation failure |
-| BC-2.15.001 | SS-15 | 7 | — | `TV-NNN` | | KV/vector memory across threads |
+| BC-2.15.001 | SS-15 | 8 | — | `TV-NNN` | | KV/vector memory across threads |
 | BC-2.15.002 | SS-15 | 7 | — | `TV-NNN` | | User/app/session tier isolation |
 | BC-2.15.003 | SS-15 | 7 | — | `TV-NNN` | | GDPR erasure all tiers |
-| BC-2.15.004 | SS-15 | 9 | — | `TV-NNN` | | SkillStore registry — load-on-demand skill documents |
-| BC-2.15.005 | SS-15 | 7 | — | `TV-NNN` | | Guarded memory and skill writes (MemoryWriteGuard) |
+| BC-2.15.004 | SS-15 | 10 | — | `TV-NNN` | | SkillStore registry — load-on-demand skill documents |
+| BC-2.15.005 | SS-15 | 8 | — | `TV-NNN` | | Guarded memory and skill writes (MemoryWriteGuard) |
 | BC-2.15.006 | SS-15 | 7 | — | `TV-NNN` | | Frozen-snapshot context mutation (memory-sourced sys prompt) |
-| BC-2.16.001 | SS-16 | 5 | — | `TV-NNN` | | Retry keyed by tool_name not args |
+| BC-2.16.001 | SS-16 | 6 | — | `TV-NNN` | | Retry keyed by tool_name not args |
 | BC-2.16.002 | SS-16 | 5 | — | `TV-NNN` | | Finite global_limit non-None |
 | BC-2.16.003 | SS-16 | 5 | — | `TV-NNN` | | Circuit breaker after repeated failure |
 | BC-2.17.001 | SS-17 | 9 | — | `TV-NNN` | | Six P0 + three P1 Kani VP harnesses (VP-001/002/003/009/010/011 (P0) + VP-006/012/013 (P1)) |
@@ -180,20 +181,20 @@ changelog:
 | BC-2.20.002 | SS-20 | 3 | — | `TV-NNN` | **RG** | BoundaryType::RAGRetrieval guardrail covers all Retriever returns (DI-012) |
 | BC-2.20.003 | SS-20 | 5 | — | `TV-NNN` | | VectorStoreRetriever; SearchType; k/fetch_k/lambda_mult config; as_retriever() |
 | BC-2.21.001 | SS-21 | 5 | — | `TV-NNN` | | VectorStore trait; VectorStoreFactory; Arc<dyn VectorStore> dyn-safety |
-| BC-2.21.002 | SS-21 | 6 | — | `TV-NNN` | (v1.1 adds TV-006) | InMemoryVectorStore; Arc<dyn Embeddings> DI; cosine similarity; write-time zero-norm guard E-VS-004 |
+| BC-2.21.002 | SS-21 | 7 | — | `TV-NNN` | (v1.1 adds TV-006) | InMemoryVectorStore; Arc<dyn Embeddings> DI; cosine similarity; write-time zero-norm guard E-VS-004 |
 | BC-2.21.003 | SS-21 | 6 | — | `TV-NNN` | **RG** | Zero-norm guard — cosine denominator → E-VS-001 before division (VP-009); (v1.7 adds TV-006 overflow-norm guard) |
 | BC-2.21.004 | SS-21 | 5 | — | `TV-NNN` | | MetadataFilter Eq/Ne/In; similarity_search_with_filter; #[non_exhaustive] |
 | BC-2.22.001 | SS-22 | 5 | — | `TV-NNN` | | Embeddings trait; embed_documents batch; dimensionality contract → E-EMBED-001 (VP-008) |
-| BC-2.22.002 | SS-22 | 5 | — | `TV-NNN` | **RG** | EmbeddingsOpenAI; OpenAiApiKey redacted-Debug credential opacity (DI-010) |
+| BC-2.22.002 | SS-22 | 7 | — | `TV-NNN` | **RG** | EmbeddingsOpenAI; OpenAiApiKey redacted-Debug credential opacity (DI-010) |
 | BC-2.22.003 | SS-22 | 5 | — | `TV-NNN` | | EmbeddingsOllama; no API key; POST /api/embed; use_legacy_endpoint toggle |
 | BC-2.23.001 | SS-23 | 5 | — | `TV-NNN` | | ReadFileTool — PathGuard-confined file read; 1 MiB max_bytes; E-TOOLS-001/002 |
 | BC-2.23.002 | SS-23 | 5 | — | `TV-NNN` | | WriteFileTool — PathGuard-confined atomic write; High ActionRisk; E-TOOLS-001 |
-| BC-2.23.003 | SS-23 | 5 | — | `TV-NNN` | | EditFileTool — exact-match string replace; E-TOOLS-003 on no-match; opt-in fuzzy fallback |
+| BC-2.23.003 | SS-23 | 6 | — | `TV-NNN` | | EditFileTool — exact-match string replace; E-TOOLS-003 on no-match; opt-in fuzzy fallback |
 | BC-2.23.004 | SS-23 | 4 | — | `TV-NNN` | | ListDirTool — PathGuard-confined directory listing; ReadOnly; DirEntry struct; E-TOOLS-001 |
-| BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
+| BC-2.23.005 | SS-23 | 8 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (134 authored BCs):** 754 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **765 total vectors** across 134 BC files.
+**Total vectors (134 authored BCs):** 757 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **768 total vectors** across 134 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -344,6 +345,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.13 | 2026-08-28 | round-28/GATE-READY-finding: Ground-truth reconciliation — column sum was 724 vs declared 754; body ground-truth 757 canonical. Corrected 21 stale BC rows (see frontmatter changelog for full list). Grand total 754→757 canonical + 11 GTV = 768. Note: v3.10 arithmetic error (+9 claimed / +6 recorded) now superseded. | round-28 GATE-READY |
 | 3.12 | 2026-08-27 | round-19/F-P2A088-01: BC-2.09.008 TV count 12→13 (+TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids framework pass; authoring-site convention sole guarantee per {INV-001}). Grand total 753→754 canonical + 11 GTV = 765. | round-19 F-P2A088-01 |
 | 3.11 | 2026-08-26 | P2A-057-round-2/D-277: BC-2.09.008 TV count 11→12 (+TV-012 None/undeclared action_risk path, F-057-01 {INV-004} coverage). Grand total 752→753 canonical + 11 GTV = 764. | P2A-057 D-277 |
 | 3.10 | 2026-08-26 | SEC-review-adjudication/D-276: BC-2.09.007 TV count 6→9; BC-2.09.008 TV count 7→11; BC-2.18.004 TV count 5→7 (TV-006 FewShotExamples Red Gate + TV-007 multi-pair VP-006-B proptest). Grand total 746→752 canonical + 11 GTV = 763. | SEC-review-adjudication D-276 |

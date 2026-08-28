@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.006
-version: "1.10"
+version: "1.11"
 status: active
 producer: product-owner
 timestamp: 2026-08-24T00:00:00Z
@@ -18,6 +18,7 @@ changelog:
   - "1.8 (BURST-315/F-B2/2026-08-17): Post-ADR-021 §Decision 2 reconciliation. PC2 dot-notation implied a typed struct for the `configurable` field; ADR-021 Decision 2 defines `configurable: Option<HashMap<String, serde_json::Value>>` (a flat map). Rewrote PC2 to the HashMap key-lookup model: keys \"thread_id\", \"checkpoint_ns\", and optionally \"checkpoint_id\" accessed via `config.configurable.as_ref().and_then(|m| m.get(\"thread_id\"))` etc. EC-003 description updated from \"missing field\" to \"missing key in configurable map\" — the validation error semantics (E-CORE-005 when thread_id key absent) are preserved."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.10 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
+  - "1.11 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -127,8 +128,8 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 | Source Analysis | semport/graph/behavioral-intent.md §2.5 (thread / checkpoint namespacing: thread_id, checkpoint_ns, checkpoint_id) |
 | NE anchor | NE-12: adk-rust identity-triple collapse — bare thread_id used in some lookup paths — is the explicit counter-example |
 | Binding Decisions | D17-Q7 (Kani VP seed obligation for session tenancy partition) |
-| Architecture Module | pregolya-checkpoint (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-checkpoint |
+| Stories | S-1.10 |
 
 ## Related BCs
 
@@ -143,7 +144,7 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 
 ## Story Anchor
 
-S-N.MM — Session triple-address and Kani VP (filled by story-writer)
+S-1.10 — Session triple-address and Kani VP
 
 ## VP Anchors
 

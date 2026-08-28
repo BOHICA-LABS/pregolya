@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.006
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "2e431f6"
+input-hash: "27d5e02"
 extracted_from: null
 modified: []
 deprecated: null
@@ -35,6 +35,7 @@ changelog:
   - "1.2 (FIX-BURST-257/F-P156-01, 2026-07-24): anchor-class sweep — nonexistent architecture file citations replaced with adjudicated real targets (F-P114-01 pattern)."
   - "1.3 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-16 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-16)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.09; §Architecture Module confirmed as pregolya-sandbox / macOS Seatbelt backend — from STORY-INDEX forward map (SS-13 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-sandbox, sandbox::seatbelt row). No behavioral change."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -136,8 +137,8 @@ than silently running unsandboxed.
 | Reference Evidence | adk-rust P-60: macOS Seatbelt profile uses `(allow default)` as base — sandboxed code can read SSH keys, AWS credentials, browser cookies. pregolya INVERTS this. P-48 (Linux bubblewrap deny-by-default via `--unshare-*`) is the positive model that macOS must match. No upstream positive Seatbelt reference — greenfield. |
 | Binding Decisions | NE-16, DI-006 |
 | Forcing Functions | product-brief.md §Security Defaults — PRD Carry-Forward (NE-16) (implied by NE-01 enforcing-default posture applied to macOS platform); assessment-parts/part-3 §NE-16 ("asymmetry must not exist silently") |
-| Architecture Module | pregolya-sandbox / macOS Seatbelt backend (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-sandbox / macOS Seatbelt backend |
+| Stories | S-1.09 |
 
 ## Related BCs
 
@@ -151,7 +152,7 @@ than silently running unsandboxed.
 
 ## Story Anchor
 
-S-N.MM — macOS Seatbelt deny-by-default profile generation (filled by story-writer)
+S-1.09 — macOS Seatbelt deny-by-default profile generation
 
 ## VP Anchors
 

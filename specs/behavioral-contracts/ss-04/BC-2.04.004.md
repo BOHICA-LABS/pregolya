@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.004
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -28,6 +28,7 @@ changelog:
   - "1.3 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to two adjudicated targets: (1) 'architecture/decisions/ADR-005-logical-clock-checkpoint-ordering.md §Fork Lineage' for CheckpointMetadata { parent_checkpoint_id } definition; (2) 'architecture/module-decomposition.md §pregolya-checkpoint' for checkpoint::lineage row. No BC body content changed."
   - "1.4 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 2 PregolyaError observations with elided fields: EC-003 Expected Behavior cell and the corresponding test-vector table row (ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -115,8 +116,8 @@ branch lineage entirely and requires full state duplication.
 | Source Analysis | semport/graph/behavioral-intent.md §2.6 (time-travel and forking; fork via parent pointer); CONFLICT-4 (fork-by-copy in adk-rust is the counter-example: loses branch lineage entirely) |
 | Binding Decisions | D11.3 (all three durability tiers confirmed; per-task writes compound the ordering problem if fork copies state) |
 | Negative evidence | CONFLICT-4: adk-rust creates a new UUID + full state copy on fork; no parent pointer; branch lineage irrecoverably lost |
-| Architecture Module | pregolya-checkpoint (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-checkpoint |
+| Stories | S-1.10 |
 
 ## Related BCs
 
@@ -130,7 +131,7 @@ branch lineage entirely and requires full state duplication.
 
 ## Story Anchor
 
-S-N.MM — Fork lineage and time-travel (filled by story-writer)
+S-1.10 — Fork lineage and time-travel
 
 ## VP Anchors
 

@@ -3,15 +3,16 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
-  - "1.4 (round-26/F-P2A113-03/2026-08-28): AC-024 added: SEC-008 panic-profile build obligation mirroring S-2.11 AC-037 — `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` in `pregolya-graph/src/provenance.rs` is voided if release profile sets `panic = \"abort\"`; implementer obligation is `// SEC-008` comment annotation at dispatch site; devops-engineer asserts workspace `Cargo.toml` profile at Phase-3 init. Traces to BC-2.11.002 PC-001 (unconditional hook dispatch). BC-2.11.002 Covered ACs updated to include AC-024. Task 11 added: SEC-008 annotation obligation. Token Budget updated (~5,000 → ~5,500 story spec; total ~25,500). Input-hash updated."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (ADR-027 M3 straggler/2026-08-24): straggler conversion to stable clause anchors."
   - "1.3 (round-25/F-P2A109-01/2026-08-28): Async panic mechanism corrected — synchronous `std::panic::catch_unwind` is inadequate for async `GuardrailHook::evaluate` (cannot catch panics fired during `.await` polling; CWE-248/703; mirrors ADR-029 §Decision 5 / BC-2.09.008 EC-010). Task §5, EC-001, and §Previous Story Intelligence S-1.04 Gotchas row updated to `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` at dispatch site. SEC-008-style `panic=unwind` build-profile note added. `futures` crate added to §Library & Framework Requirements."
+  - "1.4 (round-26/F-P2A113-03/2026-08-28): AC-024 added: SEC-008 panic-profile build obligation mirroring S-2.11 AC-037 — `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` in `pregolya-graph/src/provenance.rs` is voided if release profile sets `panic = \"abort\"`; implementer obligation is `// SEC-008` comment annotation at dispatch site; devops-engineer asserts workspace `Cargo.toml` profile at Phase-3 init. Traces to BC-2.11.002 PC-001 (unconditional hook dispatch). BC-2.11.002 Covered ACs updated to include AC-024. Task 11 added: SEC-008 annotation obligation. Token Budget updated (~5,000 → ~5,500 story spec; total ~25,500). Input-hash updated."
+  - "1.5 (R28/F-P2A123-03/2026-08-28): AC-024 re-anchored from BC-2.11.002 {PC-001} to BC-2.11.002 {INV-005} — SEC-008 async panic-recovery obligation now lives in {INV-005} (added R27/v1.15); {PC-001} covers unconditional hook dispatch only, not panic recovery. Task 11 BC trace annotation updated from PC-001 to INV-005. Input-hash refreshed."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.001.md
@@ -22,7 +23,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "1d7edfe"
+input-hash: "5a19f09"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.04]
@@ -134,7 +135,7 @@ When no hook is registered, exactly one `WARN`-level structured log entry with `
 ### AC-023 (traces to BC-2.11.006 INV-002 — WARN log is machine-parseable)
 The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passthrough"` with structured fields, enabling automated alerting. The log entry is emitted via `tracing::warn!` not `eprintln!`. Verified by `test_BC_2_11_006_warn_log_is_machine_parseable()`.
 
-### AC-024 (traces to BC-2.11.002 PC-001 — SEC-008 panic-profile build obligation)
+### AC-024 (traces to BC-2.11.002 INV-005 — SEC-008 panic-profile build obligation)
 **Build-profile prerequisite (SEC-008) — `panic = "unwind"` required in release profile:**
 The workspace `Cargo.toml` release profile MUST pin `panic = "unwind"`. If the release profile
 sets `panic = "abort"`, `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` in `pregolya-graph/src/provenance.rs` is voided — the process aborts on panic instead of unwinding, bypassing the fail-closed catch and exposing a remote denial-of-service (CWE-248/703). This is a Phase-3 devops-engineer obligation (workspace `Cargo.toml` authoring). The pregolya-graph story-level obligation: the implementing engineer MUST add a
@@ -196,7 +197,7 @@ comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, 
 8. [ ] Register `guardrail.unregistered_passthrough` in Canonical Structured Event Catalog (SAP-1)
 9. [ ] Export from `pregolya-core/src/lib.rs` and `pregolya-graph/src/lib.rs`
 10. [ ] Run `cargo nextest run -p pregolya-graph -p pregolya-core --no-fail-fast` — all tests green
-11. [ ] Add SEC-008 comment annotation at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` dispatch site in `pregolya-graph/src/provenance.rs`: `// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace Cargo.toml profile at Phase-3 init` (AC-024 / BC-2.11.002 PC-001)
+11. [ ] Add SEC-008 comment annotation at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` dispatch site in `pregolya-graph/src/provenance.rs`: `// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace Cargo.toml profile at Phase-3 init` (AC-024 / BC-2.11.002 INV-005)
 
 ## Previous Story Intelligence (MANDATORY)
 

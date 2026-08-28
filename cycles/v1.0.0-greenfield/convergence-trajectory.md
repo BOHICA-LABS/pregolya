@@ -3950,3 +3950,39 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 
 **Census UNCHANGED 39/134/17/137/303. TV 754. VP 17. streak 0/3 (new HEAD push resets per frozen-HEAD rule). GATE-READY=NO. HRQ-1/2/4/5/6 carry-forward to Phase-2 human gate. NEXT: round-28 P2A-120/121/122/123 + GATE-READY re-run on new HEAD.**
 
+## Round-28 (D-298) — 2026-08-28
+
+**Frozen HEAD: 351b957bfe0bfa2ea0e31f519b72480d8d7f1184 (post-round-27 D-297 push)**
+
+**Adversary passes on frozen HEAD 351b957:**
+
+| Pass | Findings | Delta | Severity | Status |
+|------|----------|-------|----------|--------|
+| P2A-120 (realizability) | 0 | — | — | CLEAN(strict)=YES |
+| P2A-121 (security) | 3 | — | 1 MED (CWE-670/209), 2 LOW (records) | NOT CLEAN |
+| P2A-122 (consistency/census/records) | 0 | — | — | CLEAN(strict)=YES |
+| P2A-123 (SS-11/GATE-READY broadened) | 3 + GATE-READY TV | — | 1 HIGH, 2 MED + GATE-READY finding (TV census 754 vs ground-truth 757) | NOT CLEAN |
+
+**Finding Progression trajectory-tail: →0→3→0→3**
+
+**All findings CLOSED in D-298 fix-burst (all per DIRECTIVE 2 fix-in-scope):**
+
+| Finding | Severity | Closure |
+|---------|----------|---------|
+| F-P2A123-01 | HIGH | 19 BC §Story-Anchor placeholder fields backfilled: SS-04 BC-2.04.001..007 (7), SS-11 BC-2.11.001..006 (6), SS-13 BC-2.13.001..006 (6). Root-cause: D-238 (2026-08-22) corpus-wide backfill silently skipped these 3 subsystems. product-owner. |
+| GATE-READY TV | HIGH (gate) | TV census corrected 754→757: v3.10 changelog claimed +9 additions but only +6 written (-3 arithmetic error), propagated through v3.11/v3.12; column had separately drifted to 724; 21 rows corrected; test-vectors v3.12→v3.13; GTV 11 unchanged; grand total 768. product-owner. |
+| F-P2A121-01 | MED, CWE-670/209 | BC-2.09.008 {INV-001} sanitizer pattern updated: `.simple()` produces 32-hex form without hyphens — two-pattern union `[0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` added; 3 new TVs (TV-011a/011b/015); S-2.11 AC-031 updated. product-owner + story-writer. |
+| F-P2A123-02 | MED | module-decomposition ToolRegistry type cell: surplus '>' character removed. architect. |
+| F-P2A123-03 | MED | S-1.19 AC-024 (FutureExt::catch_unwind obligation) re-anchored from BC-2.09.008 PC-001 to BC-2.11.002 {INV-005} (correct governing BC for the async panic-recovery mechanism). story-writer. |
+| O-P2A121-02 / O-P2A121-03 | LOW (records) | S-2.11 §Story-Anchor field: past-tense wording and ordering (records-tier). story-writer. |
+
+**CONFIRMED VERIFIED NON-DEFECTS:** 2 PRE-EXISTING latent defects exposed by broadened SS-11+GATE-READY perimeter (F-P2A123-01 and GATE-READY TV) — not new defects introduced by round-27 fixes; root-causes traced to D-238 (2026-08-22) backfill gap and v3.10 changelog arithmetic.
+
+**Root-cause meta-pattern (L-218/L-219/L-220 codified):** Two independent pre-existing latent defects exposed by broadened adversary perimeter: (1) D-238 §Story-Anchor corpus-wide backfill silently skipped 3 subsystems (SS-04/SS-11/SS-13) without a completeness verifier; (2) TV census v3.10 arithmetic error (-3) propagated unchecked through v3.11/v3.12 with no mechanical gate on changelog delta vs actual count; (3) BC-2.09.008 {INV-001} sanitizer pattern incomplete for UUID `.simple()` 32-hex form — missed in prior security passes. See lessons.md L-218/L-219/L-220.
+
+**Process-gap follow-up candidates (first self-improvement wave):**
+- TV-GROUND-TRUTH-GATE: no mechanical gate verifies TV census arithmetic (changelog delta vs actual count change); candidate verify-tv-census-arithmetic.sh; owner: devops-engineer.
+- STORY-ANCHOR-PLACEHOLDER-GATE: no completeness verifier confirms all subsystems have §Story-Anchor filled after corpus-wide backfill; candidate post-backfill validator; owner: devops-engineer.
+
+**Census UNCHANGED 39/134/17/137/303. TV 754→757 (ground-truth correction; GTV 11; grand total 768). VP 17. streak 0/3 (new HEAD push resets per frozen-HEAD rule). GATE-READY=NO (HRQ-1/2/4/5/6 carry-forward; TV registry FIXED). NEXT: round-29 P2A-124/125/126/127 + GATE-READY re-run on new HEAD.**
+

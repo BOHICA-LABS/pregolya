@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.004
-version: "1.9"
+version: "1.10"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -15,7 +15,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
   - .factory/specs/architecture/decisions/ADR-024-writefile-create-path-confinement.md
-input-hash: "1d0cc49"
+input-hash: "ecd4d2b"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -33,6 +33,7 @@ changelog:
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.8 (P2A-BC-scan-B/2026-08-26): EC-006 added — non-escape canonicalize I/O error catch-all (EACCES, ELOOP, EIO, etc.) → NEEDS-NEW-CODE flagged in manifest; no existing E-SBXD code semantically covers 'canonicalize() OS failure that is not a WorkspaceEscape'; proposed E-SBXD-010 CanonicalizationFailed in manifest."
   - "1.9 (burst-A2-error-coord/P2A-BC-scan-hardening-addendum/2026-08-26): EC-006 repointed from proposed E-SBXD-010 → minted E-SBXD-010 CanonicalizationFailed (SYS/broken/Maybe; 2 placeholders: requested_path, os_error; see error-taxonomy.md §E-SBXD-010); NEEDS-NEW-CODE annotation removed."
+  - "1.10 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.09; §Architecture Module confirmed as pregolya-sandbox / WorkspaceFs facade — from STORY-INDEX forward map (SS-13 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-sandbox, sandbox::path_guard row). No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -141,8 +142,8 @@ formally prove that no file operation can observe content outside the declared w
 | Reference Evidence | adk-rust `validate_relative_path` (P-65) counts `..` segments without filesystem contact — pregolya INVERTS this. No upstream LangChain equivalent for canonicalize-based path confinement. greenfield design. |
 | Binding Decisions | NE-02, DI-007; ADR-024 Decision 1 (two-phase `canonicalize_beneath_root` protocol for non-existent paths — Phase 2 directly implements the parent-canonicalize protocol specified in EC-004); ADR-024 §Phase-2 Postconditions PC-4 (confinement proof for `Ok(path)` returns from Phase 2: `canonical_parent.join(filename) ⊆ canonical_base` under five soundness invariants) |
 | Forcing Functions | product-brief.md §Security Defaults — PRD Carry-Forward (NE-02) ("All workspace file operations must call canonicalize_beneath_root(base, path) at access time"); DEC-011 (Domain edge case: Workspace Symlink Escape) |
-| Architecture Module | pregolya-sandbox / WorkspaceFs facade (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-sandbox / WorkspaceFs facade |
+| Stories | S-1.09 |
 
 ## Related BCs
 
@@ -158,7 +159,7 @@ formally prove that no file operation can observe content outside the declared w
 
 ## Story Anchor
 
-S-N.MM — WorkspaceFs facade with canonicalize_beneath_root (filled by story-writer)
+S-1.09 — WorkspaceFs facade with canonicalize_beneath_root
 
 ## VP Anchors
 

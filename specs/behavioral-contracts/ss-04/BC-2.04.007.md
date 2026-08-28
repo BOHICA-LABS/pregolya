@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.007
-version: "1.9"
+version: "1.10"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -35,6 +35,7 @@ changelog:
   - "1.7 (2026-07-19, F-P114-01 anchor-class sweep, burst 117): Architecture Anchors updated from nonexistent 'architecture/pregolya-checkpoint.md' to 'architecture/module-decomposition.md §pregolya-checkpoint' — checkpoint::encryption row (at-rest encryption covering state AND event payloads; rotation error propagation). No BC body content changed."
   - "1.8 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 8 PregolyaError observations with elided fields: Description inline (E-CHKPT-004 cite), PC4 inline, PC5 inline, EC-001 table cell, EC-002 table cell, EC-003 table cell, EC-004 table cell, and test-vector empty-key row (ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.10 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -128,8 +129,8 @@ swallowed or logged-only. This satisfies NE-11.
 | L2 Domain Invariants | (none — NE-11 is an operational safety requirement, not a named domain invariant) |
 | Source Analysis | semport/graph/behavioral-intent.md §2.3 (EncryptedSerializer wraps with a cipher; LANGGRAPH_STRICT_MSGPACK security gate); §2.4 (put_writes per-task — encryption must cover both put paths) |
 | NE anchor | NE-11: encryption at rest must cover both state AND event payloads; rotation errors must propagate |
-| Architecture Module | pregolya-checkpoint (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-checkpoint |
+| Stories | S-1.10 |
 
 ## Related BCs
 
@@ -142,7 +143,7 @@ swallowed or logged-only. This satisfies NE-11.
 
 ## Story Anchor
 
-S-N.MM — Encryption at rest (filled by story-writer)
+S-1.10 — Encryption at rest
 
 ## VP Anchors
 

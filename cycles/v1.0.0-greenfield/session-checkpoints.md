@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "a3b8708"
+input-hash: "82d373f"
 traces_to: STATE.md
 ---
 
@@ -3303,3 +3303,34 @@ D-296 = round-26 fix-burst close. Key closes: F-P2A115-01 [HIGH] S-2.10 fail-clo
 Rounds 19-26: 8 consecutive NOT CLEAN. Dominant class: INCOMPLETE-SWEEP SIBLING-MIRROR. Round-26: first PO run STALLED (watchdog), fresh PO completed BC-2.09.007/008. Pass counts: P2A-112=0, P2A-113=5, P2A-114=2, P2A-115=7. GATE-READY FAILED. Round-27 is first pass on this new HEAD.
 
 ### STATE: v6.06, timestamp 2026-08-28T09:00:00Z
+
+---
+
+## ARCHIVED CHECKPOINT D-297 (2026-08-28) — Superseded by D-298
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence; round-27 fix-burst CLOSED; 9 consecutive rounds (19-27) NOT CLEAN, streak 0/3. P2A-116=1(MED), P2A-117=2(MED+OBS), P2A-118=5(HIGH+3MED+OBS), P2A-119=5(3MED+2OBS) NOT CLEAN; GATE-READY=NO (HRQ-1/2/4/5/6 carry-forward; FINDING-CV-001 CLOSED this burst). NEXT = round-28 (P2A-120/121/122/123 + GATE-READY re-run) on THIS new HEAD. trajectory-tail →1→2→5→5. Meta: round-26 tertiary-sibling residue (CRITICAL→ERROR 5th-sibling; mcp::registry 3-of-4 prose; VP-015 unit straggler; mcp::sanitize x3; S-1.19 AC-024 routing gap).
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
+- factory-artifacts: run `git -C .factory log -1 --format='%h %s'` for current HEAD.
+- No .worktrees/. No open PRs expected.
+
+### PER-WORKSTREAM
+- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-27 closed at THIS HEAD. RESUME NEXT-ACTION: dispatch round-28 adversary passes P2A-120/121/122/123 + GATE-READY re-run on THIS HEAD. Streak 0/3 on THIS HEAD (frozen-HEAD rule: any push resets to 0/3).
+- Convergence-tail guidance: rounds 19-27 predominantly INCOMPLETE-SWEEP SIBLING-MIRROR root cause. Round-27 meta-pattern: round-26 fixes left tertiary-sibling residue in preamble PROSE and across 4-registry scope (L-215). PROCESS-GAP CANDIDATES: PGAP-NO-CRITICAL-LEVEL, PGAP-SEC-SIBLING-MIRROR, PGAP-HS-TEMPLATE-HEADING, O-P2A118-04 validator, REGISTRY-COUNTING-CONVENTION, STORY-AC-BC-ANCHOR-ROUTING. GATE-READY FAILED: HRQ-1 process-gate + FINDING-CV-001[LOW] (closed).
+
+### STANDING HUMAN-GATE OBS (5 HRQs — carry-forward from rounds 20-22, HRQ-3 adjudicated)
+(a) HRQ-1: full 3/3 CLEAN required before Phase-2 gate. (b) HRQ-2: CompiledStateGraph non-generic redesign acknowledgment needed. (c) HRQ-4: CHECK-2 ADVISORY→BLOCKING human decision. (d) HRQ-5: interface-definitions↔BC-prose consistency gate. (e) HRQ-6: ss-TBD empty dir OBS. NOTE: SEC-008 deferral Phase-3 Cargo.toml.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion — starts AFTER Phase-2 approval gate.
+- DTU clones: pending (openai/anthropic/ollama) — Phase-4 prerequisite.
+
+### DECISION DELTA
+D-297 = round-27 fix-burst close. Key closes: F-P2A118-01[HIGH] purity-boundary-map intro summary counts; F-P2A116-01/118-02[MED] vcm 91vs90 self-contradiction; F-P2A118-03[MED] module-decomp §pregolya-mcp preamble stale total→stable pointer (TD-VSDD-091); F-P2A117-01[MED] ForceApproveHooks 5th-sibling CRITICAL→ERROR; F-P2A119-01[MED] VP-015 integration→unit straggler; F-P2A119-02[MED] mcp::sanitize desc+consumer across 3 registries; F-P2A119-03[MED,CWE-248/703] BC-2.11.002 EC-001 FutureExt::catch_unwind+SEC-008+{INV-005}+panic TV; O-P2A119-04[LOW] ADR-029 CRITICAL prefix; O-P2A117-OBS observability; FINDING-CV-001[LOW] ARCH-INDEX mcp::registry Iron Law. Census UNCHANGED 39/134/17/137/303. TV 754. VP 17. trajectory-tail →1→2→5→5.
+
+### OPERATIONAL NOTE
+Rounds 19-27: 9 consecutive NOT CLEAN. Round-27 pass counts: P2A-116=1, P2A-117=2, P2A-118=5, P2A-119=5. GATE-READY=NO (HRQ-1/2/4/5/6 carry-forward). Round-28 is first pass on this new HEAD.
+
+### STATE: v6.08, timestamp 2026-08-28T18:00:00Z

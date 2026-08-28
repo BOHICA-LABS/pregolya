@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.005
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -29,6 +29,7 @@ changelog:
   - "1.4 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). EC-006 Expected Behavior cell: added `..` rest-pattern marker (4 of 5 fields present, missing retry_hint). Test-vector row: replaced forbidden `...` (three-dot ASCII) with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION; ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (P2-BC-SS04-06-hardening/2026-08-26): EC-007 added — pending_writes reapply read/deserialize failure. EC-006 covered `get_tuple()` failure during checkpoint load but did not specify the failure surface for the subsequent `_reapply_writes_to_succeeded_nodes` storage query and entry deserialization step. EC-007 specifies both sub-cases (storage I/O error and deserialization failure) with E-CHKPT-003 REUSE (DURABILITY, broken — 'cannot restore state' semantic covers both sub-cases; `<reason>` field discriminates between I/O error and deserialization failure). TV row added for EC-007. BC-completeness-scan Phase-2 BURST-B gap BC-2.04.005."
+  - "1.7 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -133,8 +134,8 @@ them freshly rather than replaying stale control state.
 | Source Analysis | semport/graph/behavioral-intent.md §2.4 (pending-writes semantics; _reapply_writes_to_succeeded_nodes skips 4 signals: ERROR, ERROR_SOURCE_NODE, INTERRUPT, RESUME), §5.2 (what survives a crash mid-super-step) |
 | Binding Decisions | D11.3 (all three durability tiers; sync default), D17-Q3 (per-task put_writes Phase-1 BC) |
 | Domain forcing | Domain B (dark-factory): multi-day graph runs surviving process restarts require this contract |
-| Architecture Module | pregolya-checkpoint (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-checkpoint |
+| Stories | S-1.10 |
 
 ## Related BCs
 
@@ -147,7 +148,7 @@ them freshly rather than replaying stale control state.
 
 ## Story Anchor
 
-S-N.MM — Crash recovery and committed-task skip (filled by story-writer)
+S-1.10 — Crash recovery and committed-task skip
 
 ## VP Anchors
 

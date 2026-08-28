@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "2.5"
+version: "2.6"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -31,12 +31,13 @@ changelog:
   - "2.3 (round-23/O-P2A102-03/2026-08-28): O-P2A102-03 [LOW/records]: v2.2 changelog double-§ citation corrected — 'per ADR-029 §Decision 3 §Decision 4 source-of-truth' reworded to 'per ADR-029 §Decision 3 and §Decision 4 source-of-truth' per ADR-022 §Decision 5 no-chained-§ rule."
   - "2.4 (round-25/O-P2A111-08+O-P2A111-07/2026-08-28): O-P2A111-08 [OBS] — {INV-004} and EC-009: 'CRITICAL-level structured log' corrected to 'ERROR-level (highest severity) structured log (tracing::error!)'; Rust tracing crate has no CRITICAL level (levels are error/warn/info/debug/trace); ERROR is the highest severity; observability.md concretizes the intended level as tracing::error!. TV-008 and TV-012 'CRITICAL log' aligned to same terminology for consistency. O-P2A111-07 [OBS] — §Canonical Test Vectors: TV-012 moved to ascending-numeric position after TV-011 (was out-of-sequence between TV-008 and TV-009); append-only IDs preserved, ordering only."
   - "2.5 (round-26/P2A-113-OBS+POL-24-sibling-consistency/2026-08-28): P2A-113 [OBS] — {INV-001} `sanitize_internal_ids` UUID regex note updated: pattern is applied case-insensitively (consistent with S-2.11 Task-35 which mandates the case-insensitive flag). POL-24 — §Architecture Anchors registry.rs bullet annotated with `(mcp::registry standalone module, SS-09)` for sibling consistency with BC-2.09.006 §Architecture-Anchors (architect OPTION A: mcp::registry is a standalone module registered in module-decomposition and module-criticality)."
+  - "2.6 (round-28/F-P2A121-01+O-P2A121-02/2026-08-28): F-P2A121-01 [MED, CWE-670/CWE-209]: {INV-001} §Framework sanitization pass scope extended to two-pattern union — added pattern (2) simple no-hyphen form `\\b[0-9a-f]{32}\\b` to cover `Uuid::simple()` rendering (32 contiguous hex digits); pattern (1) canonical hyphenated form retained; the `\\b` word-boundary prevents over-matching 64-char SHA-256 digests and hex sequences flanked by underscores; together the two patterns cover all standard uuid-crate rendering forms. Three new test vectors appended (append-only per POL-1): TV-014 (POSITIVE — simple-form run_id stripped), TV-015 (NEGATIVE — 64-char hex digest passes through unchanged), TV-016 (NEGATIVE — simple UUID flanked by underscores passes through unchanged). O-P2A121-02 [LOW/records]: Traceability §Error Codes row E-MCP-010 note reworded to past-tense draft-history framing — present-tense 'ADR-029 body incorrectly referenced' replaced with 'the initial ADR-029 draft cited ... corrected to E-MCP-010 in ADR-029 §Changelog'."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "e2fd72b"
+input-hash: "e1ff8cf"
 extracted_from: null
 modified: []
 deprecated: null
@@ -164,12 +165,9 @@ overrides `PreToolCallHook` approval decisions only.
   identifier type.
 
   **Framework sanitization pass scope (`run_id` and server-layer `thread_id` — both
-  `Uuid`):** The `sanitize_internal_ids` pass covers `run_id` (a `Uuid`) and server-layer
+  `Uuid`):** The `sanitize_internal_ids` pass applies two patterns (union, case-insensitive): (1) the canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple (no-hyphen) form `\b[0-9a-f]{32}\b`. Together these cover all standard uuid-crate rendering forms including Display (hyphenated) and simple() (contiguous hex). URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. Both patterns are applied case-insensitively (consistent with S-2.11 Task-35 which mandates the case-insensitive flag so that mixed-case UUID representations are also redacted). The `sanitize_internal_ids` pass covers `run_id` (a `Uuid`) and server-layer
   `thread_id` (also a `Uuid` per entities-server.md §Thread, §Run and
-  interface-definitions.md §RunnableConfig (`thread_id: Option<Uuid>`)) identically. The regex is version-agnostic:
-  `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` (applied
-  case-insensitively; consistent with S-2.11 Task-35 which mandates the
-  case-insensitive flag so that mixed-case UUID representations are also redacted).
+  interface-definitions.md §RunnableConfig (`thread_id: Option<Uuid>`)) identically.
   Note: `FtsSearchConfig.thread_id: Option<&str>` is an FTS query-filter parameter (not a
   graph execution identifier) and never reaches a `GraphAgentTool` error-message path; it
   is outside the scope of this invariant.
@@ -343,6 +341,9 @@ devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
 | TV-011 | `extract_output = `\|`_`\|` panic!("boom")`; graph succeeds to terminal state; server receives `tools/call` | `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }`; a subsequent `tools/call` to a different (non-panicking) tool returns `isError: false` | extract_output panic recovery (EC-010); `FutureExt::catch_unwind(AssertUnwindSafe(...))` inside `invoke_dyn` catches panic during async future polling; SEC-008: requires `panic = "unwind"` |
 | TV-012 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = None` (un-annotated tool) | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; ERROR-level (highest severity) log (tracing::error!) emitted at `mcp.graph_tool.force_approve_write_blocked` (None fails closed identically to Some(>= Medium)) | ActionRisk runtime gate — None/undeclared path (EC-009, {INV-004}) |
 | TV-013 | Graph node returns `Err(PregolyaError { message: "failed to load checkpoint 42", .. })` (`u64` checkpoint ID embedded in message; not UUID-shaped) | `isError: true`; `content[0].text` contains `"42"` — the bare `u64` integer is NOT matched by the `sanitize_internal_ids` regex `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` and passes through unsanitized by the framework pass; authoring-site convention ({INV-001}) is the SOLE framework guarantee for `u64` `CheckpointId` values — node implementations MUST NOT embed them in error messages | Framework `sanitize_internal_ids` scope — UUID-shaped identifiers only; `u64` `CheckpointId` (ADR-005 / BC-2.04.003) NOT covered by framework pass; authoring-site convention is sole protection boundary ({INV-001} primary defense); CWE-670/CWE-209 coverage |
+| TV-014 | Graph node returns `Err(PregolyaError { message: "operation failed for run {SIMPLE-UUID}", .. })` where `{SIMPLE-UUID}` is a 32-char lowercase hex UUID with no hyphens (`Uuid::simple()` rendering, e.g. pattern `[0-9a-f]{32}`), space-delimited in message | `isError: true`; `content[0].text` does NOT contain the simple-form UUID value — the 32-hex no-hyphen value is stripped by `sanitize_internal_ids` pattern (2) `\b[0-9a-f]{32}\b` (case-insensitive; `\b` fires at space→hex boundary). POSITIVE / Red Gate: this input MUST fail (value present in output) before the two-pattern extension is implemented and PASS (value absent) after. | `Uuid::simple()` rendering coverage — simple-form run_id sanitization (F-P2A121-01; {INV-001} two-pattern union) |
+| TV-015 | Graph node returns `Err(PregolyaError { message: "digest: {SHA256-DIGEST}", .. })` where `{SHA256-DIGEST}` is a 64-char lowercase hex SHA-256 digest (no hyphens, no word boundary at position 32), space-delimited in message | `isError: true`; `content[0].text` contains the full 64-char hex digest UNCHANGED — pattern (1) does not match (no hyphens); pattern (2) `\b[0-9a-f]{32}\b` requires a word boundary after exactly 32 hex chars, but the 33rd character of the 64-char sequence is still a hex digit (word char), so no word boundary exists at position 32; the pattern does not match. NEGATIVE control: guards against over-stripping SHA-256 digests. | 64-char SHA-256 passthrough — `\b` end-boundary guard prevents matching within a longer hex sequence (F-P2A121-01; {INV-001} two-pattern union) |
+| TV-016 | Graph node returns `Err(PregolyaError { message: "key_{SIMPLE-UUID}_suffix", .. })` where `{SIMPLE-UUID}` is a 32-char lowercase hex UUID flanked by underscore characters on both sides (forming `key_{SIMPLE-UUID}_suffix`) | `isError: true`; `content[0].text` contains `"key_{SIMPLE-UUID}_suffix"` UNCHANGED — `\b` does not fire between an underscore (`_`) and a hex digit because underscore is a word character (`[A-Za-z0-9_]`); the 32-hex sequence is embedded within a continuous word-character run and is NOT matched by pattern (2). NEGATIVE control: documents an acceptable residual; authoring-site convention is the defense for underscore-flanked internal keys. | Underscore-flanked simple UUID passthrough — `\b` boundary semantics; underscore is a word char so no boundary fires (F-P2A121-01; {INV-001} two-pattern union; documented acceptable residual) |
 
 ## Verification Properties
 
@@ -383,4 +384,4 @@ S-2.11
 | Wave | Wave 2 |
 | Test Types | I (integration), P (property-based: VP-016 proptest) |
 | Module | pregolya-mcp (`mcp::graph_tool`) |
-| Error Codes | E-MCP-010 GraphAgentInterruptDenied (EXEC, broken, Never) — minted by this BC per ADR-029 §Decision 5; note: ADR-029 body incorrectly referenced code number E-MCP-006 (already taken by McpContentUnsupported, minted burst-240); PO-authoritative mint is E-MCP-010 as the next available MCP namespace code. E-MCP-011 ForceApproveWriteBlocked (EXEC, broken, Never) — minted by this BC ({INV-004}/EC-009; anchor F-P2A-061-02): emitted by BoundaryApprovalHook under ForceApproveHooks policy when action_risk is None or >= ActionRisk::Medium; library-layer Err return, never direct HTTP terminal in v1 |
+| Error Codes | E-MCP-010 GraphAgentInterruptDenied (EXEC, broken, Never) — minted by this BC per ADR-029 §Decision 5; note: the initial ADR-029 draft cited E-MCP-006, which was already taken by McpContentUnsupported (minted burst-240); corrected to E-MCP-010 in ADR-029 §Changelog. E-MCP-011 ForceApproveWriteBlocked (EXEC, broken, Never) — minted by this BC ({INV-004}/EC-009; anchor F-P2A-061-02): emitted by BoundaryApprovalHook under ForceApproveHooks policy when action_risk is None or >= ActionRisk::Medium; library-layer Err return, never direct HTTP terminal in v1 |

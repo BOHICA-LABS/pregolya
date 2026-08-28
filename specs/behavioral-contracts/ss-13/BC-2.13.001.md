@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.13.001
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/comparative/assessment-parts/part-2-dispositions-p51-p97.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
   - .factory/planning/holdout-domains/domain-c-openclaw.md
-input-hash: "4cc0b0a"
+input-hash: "27d5e02"
 traces_to: domain-spec/L2-INDEX.md
 origin: greenfield
 subsystem: SS-13
@@ -26,6 +26,7 @@ changelog:
   - "1.2 (burst-291/D-134/2026-08-16): §-anchor phantom sweep — Forcing Functions: §NE catalog NE-01 is a phantom anchor (no '## NE catalog' heading in product-brief.md; NE items are table rows within '### Security Defaults — PRD Carry-Forward'). Corrected to §Security Defaults — PRD Carry-Forward (NE-01)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (P2A-BC-scan-B/2026-08-26): PC-005 added — runtime resource-limit breach when `memory_bounded=true` → E-SBXD-009 MemoryLimitExceeded; closes gap where PC-002 declared `memory_bounded: true` as a capability but no postcondition specified the outcome when the bound is actually hit during execution."
+  - "1.5 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.09; §Architecture Module confirmed as pregolya-sandbox — from STORY-INDEX forward map (SS-13 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-sandbox). No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -127,8 +128,8 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 | Reference Evidence | Upstream adk-rust: ProcessBackend is default feature (P-61); pregolya INVERTS this. No LangChain equivalent — greenfield design derived from NE-01 counter-example. P-48 ADOPT (bubblewrap deny-by-default) confirms enforcing-backend posture is correct for Linux; WASM analog for cross-platform. |
 | Binding Decisions | NE-01, DI-006 |
 | Forcing Functions | Domain C OpenClaw §4 (tool-execution sandboxing: "recommend default-on isolation"); product-brief.md §Security Defaults — PRD Carry-Forward (NE-01) |
-| Architecture Module | pregolya-sandbox (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-sandbox |
+| Stories | S-1.09 |
 
 ## Related BCs
 
@@ -143,7 +144,7 @@ Cargo feature, and any runtime path that cannot produce an enforcing backend mus
 
 ## Story Anchor
 
-S-N.MM — Enforcing sandbox backend default (filled by story-writer)
+S-1.09 — Enforcing sandbox backend default
 
 ## VP Anchors
 

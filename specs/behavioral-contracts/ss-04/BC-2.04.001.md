@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.001
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -30,6 +30,7 @@ changelog:
   - "1.6 (burst-311/F-P202-01/2026-08-17): Architect adjudication applied — fts_search IS the CheckpointSaver trait method; search_history is ONLY the callable Tool wrapper (search_history_tool()). Inv-5 loose 'search_history API (BC-2.04.008)' clarified to 'fts_search trait method (BC-2.04.008; exposed to agents as the search_history Tool via search_history_tool())'. Preserves surrounding sentence intent."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.8 (P2-BC-SS04-06-hardening/2026-08-26): EC-005 added — async join-failure path. EC-002 covered only the sync (per-task, immediate) failure surface; the async tier defers confirmation to run-exit join. EC-005 specifies observable behavior when `join_all(put_writes_futures)` at run exit returns Err: run transitions to `failed`, E-CHKPT-001 surfaced to caller (REUSE — same write failure code, different detection point). TV row added for EC-005. BC-completeness-scan Phase-2 BURST-B gap BC-2.04.001."
+  - "1.9 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -124,8 +125,8 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 | L2 Domain Invariants | DI-002 (Per-Task Durability (Sync Default)) |
 | Source Analysis | semport/graph/behavioral-intent.md §2.4 (pending-writes semantics); CONFLICT-2 (per-task pending writes vs step-boundary whole-state) |
 | Binding Decisions | D11.3 (all three durability tiers; sync default), D17-Q3 (per-task put_writes is Phase-1 BC) |
-| Architecture Module | pregolya-checkpoint (filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-checkpoint |
+| Stories | S-1.10 |
 
 ## Related BCs
 
@@ -140,7 +141,7 @@ crash-safety at sub-step granularity. This is the foundational contract that mak
 
 ## Story Anchor
 
-S-N.MM — Checkpoint per-task write contract (filled by story-writer)
+S-1.10 — Checkpoint per-task write contract
 
 ## VP Anchors
 

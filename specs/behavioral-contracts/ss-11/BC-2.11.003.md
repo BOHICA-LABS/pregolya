@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.003
-version: "1.12"
+version: "1.13"
 status: active
 producer: product-owner
 timestamp: 2026-08-24T00:00:00Z
@@ -34,6 +34,7 @@ changelog:
   - "1.10 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
   - "1.11 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-004} added; purely additive, no content change."
   - "1.12 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.13 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.19; §Architecture Module corrected to pregolya-core / pregolya-graph (RAG ingress hook call site) — §Architecture Anchors names module-decomposition.md §pregolya-graph (dispatch) and purity-boundary-map.md §Boundary Modules core::retriever (in pregolya-core); 'retrieval layer' placeholder corrected to crate-canonical form. No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -136,8 +137,8 @@ user-sourced content).
 | Reference Evidence | No upstream positive reference for RAG-ingress guardrailing. P-59 is the negative counter-example (REJECT). Greenfield design required. Domain C OpenClaw §4 SEC identifies memory-poisoning as the retrieval-specific concern. adk-rust is upstream-silent — no reference here. |
 | Binding Decisions | D17-Q8 (RAG ingress guardrail is Phase-1 BC); DI-012 source: NE-06 |
 | Forcing Functions | Domain A SOC analyst §5 (untrusted-tool-output isolation NEW); Domain C OpenClaw §4 SEC ("Documented stance on indirect prompt injection + memory-poisoning") |
-| Architecture Module | pregolya-core / retrieval layer (RAG ingress hook call site; filled by architect) |
-| Stories | S-N.MM (filled by story-writer) |
+| Architecture Module | pregolya-core / pregolya-graph (RAG ingress hook call site) |
+| Stories | S-1.19 |
 
 ## Related BCs
 
@@ -155,7 +156,7 @@ user-sourced content).
 
 ## Story Anchor
 
-S-N.MM — GuardrailHook RAG ingress enforcement (filled by story-writer)
+S-1.19 — GuardrailHook RAG ingress enforcement
 
 ## VP Anchors
 
