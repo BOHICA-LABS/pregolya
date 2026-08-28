@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.18"
+version: "1.19"
 status: active
 producer: story-writer
 timestamp: 2026-08-27T00:00:00Z
 changelog:
+  - "1.19 (round-21/D-291/2026-08-28): S-1.14 (stub_terminal test-util feature-gate: AC-014 prerequisite condition updated, Task-18 implementation notes, File-Structure pregolya-graph Cargo.toml [features] test-util=[] — F-P2A093-01). S-2.11 (Task-27 dev-dep+feature wiring: pregolya-mcp [dev-dependencies] pregolya-graph features=[\"test-util\"] — F-P2A093-01). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.18 (round-20/F-P2A092-04/D-290/2026-08-27): STORY-S-MAINT-001 v1.2 (round-20 F-P2A092-04: census 133→134 propagation; Background recount 94-of-134 bullet-invariants / 81-of-134 EC-subsections). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.17 (round-19/D-289/2026-08-27): STORY-S-2.11 v1.16 (round-19 symbol-canon: DynTool::invoke→invoke_dyn at AC-008/AC-009/Purity-table/Prev-Story ×4 sites per F-P2A087-01; PreToolCallHook::PendingHumanApproval→PreToolDecision::PendingHumanApproval at AC-021 per F-P2A087-02). STORY-S-1.23 v1.5 (DynTool::invoke→invoke_dyn ×3 sites; PreToolDecision::PendingHumanApproval per F-P2A087-01/02). dependency-graph.md §Changelog ASCENDING→DESCENDING (F-P2A089-02 MED — matches epics.md/STORY-INDEX convention). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.16 (round-18/F-P2A084-01/D-288/2026-08-27): S-2.11 bumped v1.14→v1.15 (F-P2A084-01 MED — AC-023 and Task-20 ToolOutput→serde_json::Value prose alignment: AC-023 acceptance criterion and Task-20 task description fully re-grounded on serde_json::Value returned by invoke_dyn; eliminates the final story-prose occurrences of 'ToolOutput' as the invoke_dyn return type). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."

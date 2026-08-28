@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "2.0"
+version: "2.1"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -26,12 +26,13 @@ changelog:
   - "1.8 (round-12/GAP-01-type-grounding/2026-08-27): Remaining type-grounding propagation. EC-007: scenario prose re-grounded — typed-struct `GraphState S` fields replaced by channel-composed `serde_json::Value` key description; `extract_output` closure updated from `|s: &S| json!({ \"answer\": s.answer })` to `|s: &serde_json::Value| json!({ \"answer\": s[\"answer\"] })`. TV-001: closure updated from `|s| json!({\"result\": s.result})` to `|s: &serde_json::Value| json!({\"result\": s[\"result\"]})`. TV-010: closure updated from `|s: &S| json!({ \"api_key\": s.api_key })` to `|s: &serde_json::Value| json!({ \"api_key\": s[\"api_key\"] })`. {INV-005}: 'credential-bearing fields of `GraphState S`' → 'credential-bearing keys of the returned `serde_json::Value`'. Traceability CAJ: `StateGraph<S>` → `StateGraph` (non-generic). Zero residual `|s: &S|`, `s.answer`, `s.result`, `s.api_key`, `StateGraph<S>` in live body."
   - "1.9 (round-14/type-grounding-propagation/2026-08-27): §Description and Traceability CAJ: 'compiled `StateGraph`' / '`StateGraph`' → `CompiledStateGraph` (concrete non-generic Rust type per {PRE-001}; description and CAJ now use the same concrete type as the preconditions)."
   - "2.0 (round-19/F-P2A087-02+F-P2A088-01/2026-08-27): F-P2A087-02 [HIGH]: {PC-005} and EC-005 phantom-path corrected — `PreToolCallHook::PendingHumanApproval` → `PreToolDecision::PendingHumanApproval` at both live-body sites ({PC-005} sub-bullet heading, EC-005 scenario); `PendingHumanApproval` is a variant of `PreToolDecision` per BC-2.05.007 canonical H1 (Approve/Deny/Edit/PendingHumanApproval); `PreToolCallHook` has no `PendingHumanApproval` item — its only method is `pre_invoke`. F-P2A088-01 [MED/CWE-209/CWE-670]: {INV-001} error-path sanitizer-scope corrected per ADR-029 §Decision-3 / SEC-005 canonical text (verbatim mirror); incoherent '(UUID v4 format)' over-claim over checkpoint IDs removed — `CheckpointId` is a `u64` newtype (ADR-005 / BC-2.04.003), not UUID-shaped; `sanitize_internal_ids` regex covers UUID-shaped identifiers only; `u64` CheckpointId and arbitrary-string `thread_id` are NOT covered by the framework pass; authoring-site convention is their SOLE framework guarantee. TV-013 added: `u64` checkpoint ID in error message is NOT stripped by `sanitize_internal_ids` (not UUID-shaped); authoring-site convention ({INV-001}) is the sole protection boundary for `u64` IDs (CWE-670/CWE-209 test coverage)."
+  - "2.1 (round-21/F-P2A094-01/F-P2A094-02/2026-08-28): F-P2A094-01 [MED]: {INV-001} server-layer thread_id characterization corrected per ADR-029 §Decision-3/SEC-005 v2.5 canonical mirror. REMOVED: 'arbitrary-string server-layer thread_id values (user-supplied strings; not guaranteed UUID-shaped) are NOT covered by the framework sanitize_internal_ids pass' — server-layer thread_id IS a Uuid (entities-server.md §Thread, §Run; §RunnableConfig thread_id: Option<Uuid>); sanitize_internal_ids UUID regex covers run_id (Uuid) AND server-layer thread_id (Uuid) identically. Authoring-site convention SOLE-guarantee now scoped exclusively to u64 CheckpointId (ADR-005 / BC-2.04.003 — not UUID-shaped; UUID regex cannot match it). Note added: FtsSearchConfig.thread_id: Option<&str> is an FTS query-filter parameter and never reaches a GraphAgentTool error-message path; it is outside this invariant's scope. TV-013 (u64-checkpoint exclusion test vector) remains valid and UNCHANGED. F-P2A094-02 [MED]: EC-010 description and TV-011 notes updated — panic-recovery mechanism is futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy))) inside GraphAgentTool::invoke_dyn (async future catch during .await polling; a synchronous std::panic::catch_unwind around future-construction cannot catch it). SEC-008 build-profile invariant added: panic = 'abort' release profile voids the catch and causes process termination (remote DoS, CWE-248); pregolya-mcp release profile MUST pin panic = 'unwind' — devops asserts at Phase-3 workspace Cargo.toml authoring."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "8d4d442"
+input-hash: "177b37a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -150,19 +151,22 @@ overrides `PreToolCallHook` approval decisions only.
   (per {INV-003}). Scope of the `sanitize_internal_ids` pass and authoring-site
   obligations:
 
-  **Authoring-site convention (primary defense — all identifier types):** `u64` checkpoint
+  **Authoring-site convention (primary defense — `u64` CheckpointId):** `u64` checkpoint
   IDs (`CheckpointId` is a `u64` newtype per ADR-005 / BC-2.04.003 — not UUID-shaped; a
-  UUID regex cannot match it) and arbitrary-string server-layer `thread_id` values
-  (user-supplied strings; not guaranteed UUID-shaped) are NOT covered by the framework
-  `sanitize_internal_ids` pass. The authoring-site convention — enforced via BC-2.09.008
-  {INV-001} — is their SOLE framework guarantee. Node implementations MUST author error
-  messages using only functional/behavioral descriptions and MUST NOT embed internal
-  execution context of any identifier type.
+  UUID regex cannot match it) are NOT covered by the framework `sanitize_internal_ids`
+  pass. The authoring-site convention — enforced via BC-2.09.008 {INV-001} — is their
+  SOLE framework guarantee. Node implementations MUST author error messages using only
+  functional/behavioral descriptions and MUST NOT embed internal execution context of any
+  identifier type.
 
-  **Framework sanitization pass scope (UUID-shaped identifiers only):** The
-  `sanitize_internal_ids` pass covers `run_id` (a `Uuid`, any version) and server-layer
-  `thread_id` when UUID-shaped. The regex is version-agnostic:
+  **Framework sanitization pass scope (`run_id` and server-layer `thread_id` — both
+  `Uuid`):** The `sanitize_internal_ids` pass covers `run_id` (a `Uuid`) and server-layer
+  `thread_id` (also a `Uuid` per entities-server.md §Thread, §Run; §RunnableConfig
+  `thread_id: Option<Uuid>`) identically. The regex is version-agnostic:
   `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`.
+  Note: `FtsSearchConfig.thread_id: Option<&str>` is an FTS query-filter parameter (not a
+  graph execution identifier) and never reaches a `GraphAgentTool` error-message path; it
+  is outside the scope of this invariant.
 
 - {INV-002} **Binary interrupt invariant (fail-closed default):** Exactly one of two
   outcomes is possible for any `GraphAgentTool::invoke_dyn` call under
@@ -302,11 +306,19 @@ never executes. Both the `None` case (un-annotated tool → `Deny` + `E-MCP-011`
 **Scenario:** The `extract_output` closure provided to `GraphAgentTool::from_graph`
 panics during execution after graph completion (programming error in the caller-supplied
 closure).
-**Expected behavior:** The `mcp::server` handler catches the panic via `UnwindSafe`
-boundary; response is `isError:true`, `content[0].text == "internal error"` (static; no
-panic message, backtrace, or internal state forwarded); server continues serving subsequent
-`tools/call` requests. A subsequent valid `tools/call` to a different (non-panicking)
-tool still succeeds.
+**Expected behavior:** `GraphAgentTool::invoke_dyn` applies
+`futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))` —
+the `catch_unwind` wraps the async future so that a panic occurring during `.await` polling
+is caught as `Err(panic_value)`; a synchronous `std::panic::catch_unwind` around
+future-construction cannot catch it because `extract_output` fires during the polled
+future. The response is `isError:true`, `content[0].text == "internal error"` (static; no
+panic message, backtrace, or internal state forwarded); the server continues serving
+subsequent `tools/call` requests. A subsequent valid `tools/call` to a different
+(non-panicking) tool still succeeds.
+**SEC-008 build-profile invariant:** This recovery depends on `panic = "unwind"`. A
+`panic = "abort"` release profile voids the catch and causes process termination on panic
+(remote DoS, CWE-248). The pregolya-mcp release profile MUST pin `panic = "unwind"` —
+devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
 
 ## Canonical Test Vectors
 
@@ -323,7 +335,7 @@ tool still succeeds.
 | TV-012 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = None` (un-annotated tool) | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; CRITICAL log emitted at `mcp.graph_tool.force_approve_write_blocked` (None fails closed identically to Some(>= Medium)) | ActionRisk runtime gate — None/undeclared path (EC-009, {INV-004}) |
 | TV-009 | Graph node returns `Err(PregolyaError { message: "operation failed for run <example-run-id>", .. })` | `isError: true`; `content[0].text` does NOT contain `<example-run-id>` (UUID removed by `sanitize_internal_ids`) | Error-path UUID sanitization ({INV-001}) |
 | TV-010 | `extract_output = `\|`s: &serde_json::Value`\|` json!({ "api_key": s["api_key"] })`; graph succeeds with `api_key = "sk-abc123"` in state | `isError: false`; `content[0].text` contains `"api_key":"sk-abc123"` (framework does NOT sanitize success-path `extract_output` result) | `extract_output` credential opacity boundary test ({INV-005}) — no post-hoc stripping |
-| TV-011 | `extract_output = `\|`_`\|` panic!("boom")`; graph succeeds to terminal state; server receives `tools/call` | `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }`; a subsequent `tools/call` to a different (non-panicking) tool returns `isError: false` | extract_output panic recovery (EC-010) |
+| TV-011 | `extract_output = `\|`_`\|` panic!("boom")`; graph succeeds to terminal state; server receives `tools/call` | `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }`; a subsequent `tools/call` to a different (non-panicking) tool returns `isError: false` | extract_output panic recovery (EC-010); `FutureExt::catch_unwind(AssertUnwindSafe(...))` inside `invoke_dyn` catches panic during async future polling; SEC-008: requires `panic = "unwind"` |
 | TV-013 | Graph node returns `Err(PregolyaError { message: "failed to load checkpoint 42", .. })` (`u64` checkpoint ID embedded in message; not UUID-shaped) | `isError: true`; `content[0].text` contains `"42"` — the bare `u64` integer is NOT matched by the `sanitize_internal_ids` regex `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` and passes through unsanitized by the framework pass; authoring-site convention ({INV-001}) is the SOLE framework guarantee for `u64` `CheckpointId` values — node implementations MUST NOT embed them in error messages | Framework `sanitize_internal_ids` scope — UUID-shaped identifiers only; `u64` `CheckpointId` (ADR-005 / BC-2.04.003) NOT covered by framework pass; authoring-site convention is sole protection boundary ({INV-001} primary defense); CWE-670/CWE-209 coverage |
 
 ## Verification Properties

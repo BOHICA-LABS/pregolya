@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.15"
+version: "2.16"
 status: active
 producer: architect
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "6e9a5fa"
+input-hash: "2925bb0"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.16 (round-21/F-P2A095-01+F-P2A095-02/2026-08-28): COMPLETE VP-column backfill — exhaustive cross-check of all VP-INDEX §VP-Catalog rows against Module Classification VP column. Corrections: `graph::hitl` VP `—` → `VP-011` (Kani P0; BC-2.05.007; graph::hitl is CRITICAL per Kani P0 criterion — VP column was `—` despite VP-011 being listed in VP-INDEX); `core::runnable` VP `—` → `VP-014` (proptest P1; BC-2.01.005 + BC-2.01.006); `mcp::exception` VP `—` → `VP-004` (integration P1; BC-2.09.004); `mcp::client` VP `—` → `VP-005` (integration P1; BC-2.09.005). Multi-VP host: `prompts::injection_guard` VP `VP-006` → `VP-006, VP-006-B` (VP-006 Kani P1 + VP-006-B proptest P1, both anchoring BC-2.18.004; multi-VP-host notation). CRITICAL Security Profile table: `graph::hitl` VP `—` → `VP-011`. VP column is tool-agnostic (integration P1 VPs included per P2A-095 adjudication). After edit: zero `—` entries for VP-hosting modules. F-P2A095-02: no 'out of scope' deferral carried; v2.15 'Pre-existing OBS gap' deferral fully discharged by this edit. Tier assignments and Classification Summary totals UNCHANGED."
   - "2.15 (round-20/F-P2A092-03/2026-08-27): VP column backfill for GAP-01 additions — mcp::graph_tool VP column `—` → `VP-016` (proptest P1; BC-2.09.008; ADR-029 §Decision-2); mcp::sanitize VP column `—` → `VP-015` (unit P1; BC-2.09.007; companion GAP-01 sibling per §mcp::sanitize addition changelog entry). Both rows existed before this fix; VP columns were `—` despite the mcp::sanitize and mcp::graph_tool addition changelog entries explicitly citing the VP numbers — inconsistent with the established pattern for other proptest P1 VP hosts (VP-007/VP-008 both show their VP IDs in this column). Tier assignments UNCHANGED (MEDIUM for both; proptest P1 does not satisfy HIGH tier criterion of Kani P1 VP host). Classification Summary totals UNCHANGED. Pre-existing OBS gap: mcp::exception/mcp::client VP-004/VP-005 integration P1 columns also show `—`; out of round-20 scope. Input-hash refreshed (inputs changed since mcp::graph_tool addition changelog entry was authored)."
   - "2.14 (GAP-01/ADR-029/2026-08-26): Iron Law — add `mcp::graph_tool` MEDIUM row (pregolya-mcp; SS-09; wraps CompiledGraph<S> as DynTool; STATE-ISOLATION invariant; BC-2.09.008; VP-016 proptest P1; no Kani VP — STATE-ISOLATION property not tractable by Kani over open recursive serde_json::Value; MEDIUM consistent with mcp::server/mcp::client/mcp::sanitize sibling pattern). Required by ADR-029 mcp::graph_tool module addition. Classification Summary: MEDIUM 36→37; Total 84→85. Tiered rows breakdown: 35 MEDIUM module-level → 36 MEDIUM module-level; 78 tiered → 79 tiered. Input-hash refresh pending (state-manager task)."
   - "2.13 (architect-reconcile-burst/2026-08-26): Iron Law — add `mcp::sanitize` MEDIUM row (pregolya-mcp; SS-09; `redact_credentials` pure credential-redaction; BC-2.09.007 / INV-003 / DI-010; VP-015 integration P1; no Kani VP — not a Kani P0/P1 host; MEDIUM consistent with mcp::exception/mcp::client/mcp::discovery sibling pattern). Required by module-decomposition.md mcp::sanitize addition. Classification Summary: MEDIUM 35→36; Total 83→84. Tiered rows breakdown: 34 MEDIUM module-level → 35 MEDIUM module-level; 77 tiered → 78 tiered. Input-hash refreshed (82ff930)."
@@ -61,7 +62,7 @@ changelog:
 |--------|-----------|-------|-----|------|-----|-----------|-----------|
 | `graph::bsp_engine` | reducer stage | pregolya-graph | SS-03 | CRITICAL | VP-001 | ≥ 95% | P3 per-story + P5 |
 | `graph::scheduler` | — | pregolya-graph | SS-03 | CRITICAL | — | ≥ 95% | P3 per-story + P5 |
-| `graph::hitl` | — | pregolya-graph | SS-05 | CRITICAL | — | ≥ 95% | P3 per-story + P5 |
+| `graph::hitl` | — | pregolya-graph | SS-05 | CRITICAL | VP-011 | ≥ 95% | P3 per-story + P5 |
 | `checkpoint::session_index` | — | pregolya-checkpoint | SS-04 | CRITICAL | VP-002 | ≥ 95% | P3 per-story + P5 |
 | `checkpoint::clock` | — | pregolya-checkpoint | SS-04 | CRITICAL | — | ≥ 95% | P3 per-story + P5 |
 | `checkpoint::encryption` | — | pregolya-checkpoint | SS-04 | CRITICAL | — | ≥ 95% | P3 per-story + P5 |
@@ -71,7 +72,7 @@ changelog:
 | `graph::channels` | — | pregolya-graph | SS-02 | HIGH | — | ≥ 90% | P5 |
 | `graph::budget` | — | pregolya-graph | SS-10 | HIGH | — | ≥ 90% | P5 |
 | `graph::provenance` | — | pregolya-graph | SS-11 | HIGH | — | ≥ 90% | P5 |
-| `core::runnable` | — | pregolya-core | SS-01 | HIGH | — | ≥ 90% | P5 |
+| `core::runnable` | — | pregolya-core | SS-01 | HIGH | VP-014 | ≥ 90% | P5 |
 | `core::message` | — | pregolya-core | SS-01 | HIGH | — | ≥ 90% | P5 |
 | `server::handlers` | — | pregolya-server | SS-12 | HIGH | — | ≥ 90% | P5 |
 | `server::security` | — | pregolya-server | SS-12 | HIGH | — | ≥ 90% | P5 |
@@ -86,8 +87,8 @@ changelog:
 | `memory::write_guard` | — | pregolya-memory | SS-15 | HIGH | — | ≥ 90% | P5 |
 | `checkpoint::sqlite` | — | pregolya-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
 | `splitters::recursive` | — | pregolya-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
-| `mcp::client` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
-| `mcp::exception` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| `mcp::client` | — | pregolya-mcp | SS-09 | MEDIUM | VP-005 | ≥ 80% | P5 |
+| `mcp::exception` | — | pregolya-mcp | SS-09 | MEDIUM | VP-004 | ≥ 80% | P5 |
 | `mcp::graph_tool` | — | pregolya-mcp | SS-09 | MEDIUM | VP-016 | ≥ 80% | P5 |
 | `mcp::sanitize` | — | pregolya-mcp | SS-09 | MEDIUM | VP-015 | ≥ 80% | P5 |
 | `mcp::server` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
@@ -101,7 +102,7 @@ changelog:
 | `pregolya-community` | crate-level | pregolya-community | — | LOW | — | n/a (excluded from cargo-mutants) | advisory |
 | `core::serializable` | Reviver — allowlist containment | pregolya-core | SS-19 | CRITICAL | VP-010 | ≥ 95% | P3 per-story + P5 |
 | `vectorstores::similarity` | — | pregolya-vectorstores | SS-21 | CRITICAL | VP-009 | ≥ 95% | P3 per-story + P5 |
-| `prompts::injection_guard` | — | pregolya-prompts | SS-18 | HIGH | VP-006 | ≥ 90% | P3 per-story + P5 |
+| `prompts::injection_guard` | — | pregolya-prompts | SS-18 | HIGH | VP-006, VP-006-B | ≥ 90% | P3 per-story + P5 |
 | `core::serializable` | LcSerializable round-trip | pregolya-core | SS-19 | HIGH | VP-007 | ≥ 90% | P5 |
 | `core::embeddings` | — | pregolya-core | SS-22 | HIGH | VP-008 | ≥ 90% | P5 |
 | `core::budget` | — | pregolya-core | SS-10 | HIGH | VP-012 | ≥ 90% | P3 per-story + P5 |
@@ -203,7 +204,7 @@ changelog:
 |--------|-------------|---------------------|----|
 | `graph::bsp_engine` | all graph runs | low (correctness) | VP-001 |
 | `graph::scheduler` | all graph runs | low (correctness) | — |
-| `graph::hitl` | all HITL scenarios | medium (auth gates in Domain A) | — |
+| `graph::hitl` | all HITL scenarios | medium (auth gates in Domain A) | VP-011 |
 | `checkpoint::session_index` | multi-tenant isolation | HIGH (cross-tenant data leak) | VP-002 |
 | `checkpoint::clock` | all durable runs | medium (ordering) | — |
 | `checkpoint::encryption` | all checkpoint state | HIGH (data at rest) | — |

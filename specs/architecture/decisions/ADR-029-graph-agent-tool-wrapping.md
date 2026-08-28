@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.4"
+version: "2.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.5 (round-21/F-P2A094-01+F-P2A094-02+F-P2A093-01/2026-08-28): F-P2A094-01 MED/CWE-209/670 — §Decision 3 SEC-005 + §Decision 5 sanitization bullet: server/run/config `thread_id` is a `Uuid` on all paths (entities-server.md §Thread/§Run, interface-definitions.md §RunnableConfig `thread_id: Option<Uuid>`); removed 'arbitrary-string / not-guaranteed-UUID-shaped / authoring-convention SOLE guarantee' claim for `thread_id`; the version-agnostic UUID regex covers server-layer `thread_id` identically to `run_id`; authoring-site convention SOLE-guarantee scope narrowed to `u64` CheckpointId only; `FtsSearchConfig.thread_id: Option<&str>` (FTS query param — never reaches a GraphAgentTool error-message path) noted out-of-SEC-005-scope. PO handoff: mirror corrected SOLE-guarantee scope into BC-2.09.008 {INV-001} — authoring-site convention clause applies exclusively to `u64` CheckpointId. F-P2A094-02 MED/CWE-248/703 — §Decision 5 Error Routing Table `extract_output panics` row: `std::panic::catch_unwind` (synchronous) replaced with `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` — `extract_output` fires during `.await` polling of the `ConcreteGraphRunner::run` future; a synchronous catch_unwind cannot span the async boundary; only `FutureExt::catch_unwind` applied at the awaited call site catches it. SEC-008 build-profile invariant (OBS-P2A094-1) added: pregolya-mcp release profile MUST pin `panic = \"unwind\"`; `panic = \"abort\"` voids recovery enabling remote DoS (CWE-248); devops-engineer enforces at Phase 3. PO handoff: mirror corrected panic-recovery mechanism into BC-2.09.008 EC-010 + TV-011. F-P2A093-01 HIGH — §Symbol Grounding `CompiledStateGraph::stub_terminal` row: corrected mechanism from bare `#[cfg(test)]` to feature-gate `#[cfg(any(test, feature = \"test-util\"))]`; bare `#[cfg(test)]` items in pregolya-graph are invisible to dev-dependency builds of pregolya-mcp (E0599); pregolya-graph adds `[features] test-util = []`; pregolya-mcp dev-dependency entry adds `features = [\"test-util\"]`. Story-writer handoff: S-1.14 AC-014/Task-18 must spec the feature-gate mechanism; S-2.11 Task-27 must add the dev-dependency feature wiring. VP-016 updated in same burst."
   - "2.4 (round-19/F-P2A087-01+F-P2A088-01/2026-08-27): F-P2A087-01 HIGH — §Decision 5 Error Routing Table `extract_output panics` row: `DynTool::invoke` → `DynTool::invoke_dyn` (canonical object-safe DynTool dispatch method per interface-definitions.md §Tool; `DynTool` exposes `invoke_dyn`, not `invoke`; corrects phantom first flagged in v1.7 changelog establishing `invoke_dyn` as canon). F-P2A088-01 MED/CWE-209/CWE-670 — §Decision 3 SEC-005 + §Decision 5 sanitization bullet: (1) UUID regex corrected from v4-specific `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}` to version-agnostic `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` — prevents silent leakage of non-v4 UUIDs on `run_id`/`thread_id` paths; (2) `sanitize_internal_ids` scope clarified to UUID-shaped identifiers only (`run_id` and UUID-shaped `thread_id`); incoherent claim that `CheckpointId` is covered by the regex removed (`CheckpointId` is a `u64` newtype per ADR-005/BC-2.04.003, not UUID-shaped); (3) authoring-site convention explicitly stated as the SOLE framework guarantee for `u64` checkpoint IDs and non-UUID `thread_id` strings (BC-2.09.008 {INV-001}). F-P2A088-01 PO handoff: product-owner must mirror the authoring-site-convention-primacy clause into BC-2.09.008 {INV-001} and add a u64-checkpoint exclusion test vector."
   - "2.3 (round-16/F-P2A081-01+F-P2A082-01/2026-08-27): Full explanatory-prose sweep. §Decision 3 SEC-001: 'MUST NOT embed credential material in `ToolOutput`' → 'MUST NOT embed credential material in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A082-01 MED — invoke_dyn returns serde_json::Value, not ToolOutput). §Rationale 'Why extract_output': 'graph\\'s `GraphState` is an accumulator type' → 'graph\\'s channel-composed state is an accumulator type' (GraphState is not a type/trait per §Symbol Grounding PHANTOM row). §Rationale 'Why proptest for VP-016': 'arbitrary `GraphState` instances (via `Arbitrary` derive)' → 'arbitrary `TestGraphState` instances (via `Arbitrary` derive)' (F-P2A081-01 MED). Decision 4 §DenyInterrupts `ToolOutput::Error(...)` node-receives reference is LEGITIMATE and unchanged."
   - "2.2 (round-14/F-P2A078-01/2026-08-27): §Decision 4 fail-closed guarantee: `Ok(ToolOutput)` → `Ok(serde_json::Value)` (invoke_dyn return type is Result<serde_json::Value, PregolyaError> per canonical DynTool contract; ToolOutput is never the invoke_dyn return type); VP-016 attribution clause: '`ToolOutput` contains only the fields returned by extract_output' → 'the `serde_json::Value` returned by `invoke_dyn` contains only the fields returned by extract_output'. §Symbol Grounding ActionRisk row: `None`/`Low`/`Medium`/`High` variants → `ReadOnly`/`Low`/`Medium`/`High` variants; clarified that `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an ActionRisk variant (F-P2A078-01 HIGH)."
@@ -264,30 +265,35 @@ The STATE-ISOLATION invariant ({INV-001}) applies to ALL output paths, including
 Node error messages that propagate through `GraphRunner::run` MUST NOT include internal
 execution context. Convention:
 
-- **Authoring-site convention (primary defense — all identifier types):** Graph node
+- **Authoring-site convention (primary defense — `u64` identifier types only):** Graph node
   implementations MUST author error messages using only functional/behavioral descriptions
   (e.g., "tool invocation failed: timeout") — not internal execution context. This
   obligation is the load-bearing guarantee for `u64` checkpoint IDs (`CheckpointId` is a
-  `u64` newtype per ADR-005 / BC-2.04.003 — not UUID-shaped; a UUID regex cannot match it)
-  and arbitrary-string server-layer `thread_id` values (user-supplied strings; not
-  guaranteed UUID-shaped). The framework `sanitize_internal_ids` pass CANNOT match these
-  types. The authoring-site convention — enforced via BC-2.09.008 {INV-001} — is their
-  SOLE framework guarantee.
+  `u64` newtype per ADR-005 / BC-2.04.003 — not UUID-shaped; a UUID regex cannot match it).
+  The framework `sanitize_internal_ids` pass CANNOT match `u64` checkpoint IDs.
+  The authoring-site convention — enforced via BC-2.09.008 {INV-001} — is the
+  SOLE framework guarantee for `u64` CheckpointId values.
 
-- **Framework sanitization pass (secondary backstop — UUID-shaped identifiers only):**
+- **Framework sanitization pass (secondary backstop — UUID-shaped identifiers):**
   The `BoundaryApprovalHook` and `GraphRunner::run` apply a `sanitize_internal_ids` pass
   before populating `content[0].text` on any `isError: true` path. The regex is
   version-agnostic (covers all UUID versions, not restricted to v4):
   `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`.
-  This covers `run_id` (a `Uuid`, any version) and server-layer `thread_id` when
-  UUID-shaped. It does NOT cover `u64` checkpoint IDs or non-UUID `thread_id` strings —
-  those are covered exclusively by the authoring-site convention above. The pass is
-  chained with the existing `redact_credentials` pass:
+  This covers `run_id` (a `Uuid`, any version) and server-layer `thread_id` in the
+  server/run/config path. Ground truth: `thread_id` is `Uuid` in `entities-server.md`
+  §Thread, §Run, and `interface-definitions.md` §RunnableConfig (`thread_id: Option<Uuid>`);
+  the UUID regex covers server-layer `thread_id` identically to `run_id`. The only
+  non-UUID `thread_id` form, `FtsSearchConfig.thread_id: Option<&str>`, is an FTS query
+  parameter that never reaches a `GraphAgentTool` error-message path and is outside
+  SEC-005 scope. The pass is chained with the existing `redact_credentials` pass:
   `sanitize_internal_ids(redact_credentials(message))`.
 
 - The BC-2.09.008 {INV-001} scope extension (error paths included, authoring-site
-  convention primacy for non-UUID identifier types) must be specified by PO as a clause
-  addition to the BC invariant body and a corresponding TV (F-P2A088-01 handoff).
+  convention primacy for `u64` CheckpointId) must be specified by PO as a clause
+  addition to the BC invariant body and a corresponding TV (F-P2A088-01 handoff updated
+  by F-P2A094-01: `thread_id` is a `Uuid` on all server/run/config paths and is covered
+  by the framework regex; authoring-site SOLE-guarantee applies exclusively to
+  `u64` CheckpointId).
 
 ---
 
@@ -493,7 +499,7 @@ synchronous tools/call invocation — retrying the same invocation cannot succee
 | Graph execution returns `Err(PregolyaError)` (from `CompiledStateGraph::invoke` inside `ConcreteGraphRunner::run`; no `from_value::<S>` step — F-P2A072-03 closure) | original PregolyaError | `isError: true`, redacted message (BC-2.09.007 {PC-003}, {INV-003}; BC-2.09.008 {PC-003} updated by PO) |
 | Graph parks (node-level `interrupt()` → `RunStatus::Interrupted`) | `E-MCP-010 GraphAgentInterruptDenied` | `isError: true`, message (after redact_credentials pass) |
 | `BoundaryApprovalHook` returns `Deny` (either policy — graph CONTINUES to terminal) | terminal result propagated normally: `Ok(serde_json::Value from extract_output_result)` ({PC-004}) if graph reaches clean terminal; original `Err(PregolyaError)` (graph's own error) if graph reaches error terminal. `E-MCP-010` is NOT raised. `E-MCP-011` is emitted as a structured log entry (ActionRisk gate path only) — it is a diagnostic, not a terminal error code. | `isError: false` (clean terminal) or `isError: true` with graph's own redacted error (error terminal) |
-| `extract_output` panics (contract violation by caller) | Rust panic caught by `mcp::server` `UnwindSafe` boundary (`std::panic::catch_unwind` around the `DynTool::invoke_dyn` dispatch call); no panic propagates past the MCP handler. Server loop continues serving subsequent requests. | `isError: true`, static message `"internal error"` (no internal state, no panic message, no backtrace leaked to MCP client; SEC-008 contract: panic text may contain internal state so it is NEVER forwarded); error is logged internally at ERROR level with backtrace before the static message is returned |
+| `extract_output` panics (contract violation by caller) | Rust panic caught at the async call site spanning the `ConcreteGraphRunner::run` future: `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))` applied inside `GraphAgentTool::invoke_dyn`; `Err` from `catch_unwind` mapped to a static `"internal error"` `isError: true` result; no panic propagates past the MCP handler; server loop continues serving subsequent requests. **`std::panic::catch_unwind` (synchronous) is INADEQUATE** — `extract_output` fires during `.await` polling of the `ConcreteGraphRunner::run` future; a synchronous `catch_unwind` wrapping only the construction of the future cannot catch a panic that fires when the future is polled; only `FutureExt::catch_unwind` applied to the entire async expression spans the async boundary correctly. **SEC-008 build-profile invariant (OBS-P2A094-1):** this panic-recovery mechanism depends on `panic = "unwind"` in the pregolya-mcp release profile. A `panic = "abort"` profile voids the recovery — an `extract_output` panic aborts the process, enabling remote DoS (CWE-248). The devops-engineer MUST assert/pin `panic = "unwind"` in the workspace Cargo.toml release profile for pregolya-mcp when authoring it at Phase 3. | `isError: true`, static message `"internal error"` (no internal state, no panic message, no backtrace leaked to MCP client; SEC-008 contract: panic text may contain internal state so it is NEVER forwarded); error is logged internally at ERROR level with backtrace before the static message is returned |
 
 **Sanitization applies to all `isError: true` paths** — including `E-MCP-010` messages.
 Two passes are chained before populating `content[0].text`:
@@ -501,10 +507,14 @@ Two passes are chained before populating `content[0].text`:
 2. `sanitize_internal_ids` — removes UUID-shaped internal identifiers using a
    version-agnostic UUID regex (`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
    per SEC-005 / §Decision 3 error-path STATE-ISOLATION convention. Covers `run_id` (a
-   `Uuid`, any version) and UUID-shaped server-layer `thread_id` values. Does NOT cover
-   `u64` checkpoint IDs (`CheckpointId` newtype per ADR-005 / BC-2.04.003 — not
-   UUID-shaped) or non-UUID `thread_id` strings. Those identifier types require
-   authoring-site discipline per BC-2.09.008 {INV-001} (F-P2A088-01 handoff to PO).
+   `Uuid`, any version) and server-layer `thread_id` (`thread_id: Uuid` on all
+   server/run/config paths per entities-server.md §Thread / §Run and
+   interface-definitions.md §RunnableConfig). The `FtsSearchConfig.thread_id: Option<&str>`
+   FTS-query-parameter form never reaches a `GraphAgentTool` error-message path and is
+   outside SEC-005 scope. `u64` checkpoint IDs (`CheckpointId` newtype per ADR-005 /
+   BC-2.04.003 — not UUID-shaped) are NOT covered by the regex and require
+   authoring-site discipline per BC-2.09.008 {INV-001} (F-P2A088-01 + F-P2A094-01
+   handoff to PO).
 
 Both passes are unconditional on all `isError: true` paths. Success paths are NOT subject
 to framework-level sanitization (see §Decision 3 SEC-001 invariant — Tool implementations
@@ -643,7 +653,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 |--------|--------------------|-----------------|--------|
 | `CompiledStateGraph` | `pregolya-graph/src/types.rs` | BC-2.02.001 {PC-001} | EXISTS — non-generic; `invoke(input, config)` takes/returns `serde_json::Value` |
 | `CompiledStateGraph::invoke` | `pregolya-graph/src/types.rs` | BC-2.02.001 {PC-005} | EXISTS — `invoke(input: serde_json::Value, config) -> Result<serde_json::Value, PregolyaError>` |
-| `CompiledStateGraph::stub_terminal` | `pregolya-graph/src/types.rs` (`#[cfg(test)]`) | VP-016 §Proof Obligations; S-1.14 §AC-014 / Task 18 | ROUTED / SPECCED — S-1.14 §AC-014 + Task 18 (round-10); `#[cfg(test)]` helper; consumed by VP-016 (BC-2.09.008 {INV-001}) in S-2.11. Signature: `pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` — builds a minimal single-node graph that returns `terminal_state` when invoked. |
+| `CompiledStateGraph::stub_terminal` | `pregolya-graph/src/types.rs` | VP-016 §Proof Obligations; S-1.14 §AC-014 / Task 18; S-2.11 Task-27 | ROUTED / SPECCED — S-1.14 §AC-014 + Task 18 (round-10); mechanism corrected F-P2A093-01 (round-21): feature-gated via `#[cfg(any(test, feature = "test-util"))]` in pregolya-graph — NOT bare `#[cfg(test)]` only. Bare `#[cfg(test)]` items exist only when the DEFINING crate is under test; they are invisible in dev-dependency builds of dependent crates (E0599). The correct cross-crate test-util pattern: (1) `#[cfg(any(test, feature = "test-util"))] pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` in pregolya-graph/src/types.rs; (2) pregolya-graph/Cargo.toml adds `[features]\ntest-util = []`; (3) pregolya-mcp/Cargo.toml dev-dependencies entry: `pregolya-graph = { path = "...", features = ["test-util"] }`. Consumed by VP-016 harness (BC-2.09.008 {INV-001}) in S-2.11. Signature: `pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` — builds a minimal single-node graph that returns `terminal_state` when invoked. |
 | `CompiledGraph<S>` | (none) | (none) | PHANTOM — eliminated. Generic form does not exist. All references replaced with `CompiledStateGraph`. |
 | `GraphState` (as trait) | (none) | entities-graph.md §GraphState | PHANTOM — `GraphState` is NOT a trait. It is the composed value of all Channels (Map<ChannelName, ChannelValue>). No user-defined trait. All `S: GraphState` bounds eliminated. |
 | `DynTool` | `pregolya-core/src/core/tool.rs` | interface-definitions.md §Tool | EXISTS — `invoke_dyn(&self, input: serde_json::Value) -> Result<serde_json::Value, PregolyaError>` |
@@ -675,6 +685,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.5 | 2026-08-28 | architect | round-21/F-P2A094-01+F-P2A094-02+F-P2A093-01 | F-P2A094-01 MED/CWE-209/670: §Decision 3 SEC-005 + §Decision 5 sanitization bullet — server/run/config `thread_id` is a `Uuid` on all paths; removed 'arbitrary-string / authoring-convention SOLE guarantee' claim for `thread_id`; UUID regex covers `thread_id` identically to `run_id`; authoring-site convention SOLE-guarantee scope narrowed to `u64` CheckpointId only; `FtsSearchConfig.thread_id` (FTS query param) noted out-of-SEC-005-scope. F-P2A094-02 MED/CWE-248/703: §Decision 5 Error Routing Table `extract_output panics` row — `std::panic::catch_unwind` (synchronous, cannot span async boundary) replaced with `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` applied at the awaited call site; SEC-008 build-profile invariant (OBS-P2A094-1) added: pregolya-mcp release profile MUST pin `panic = "unwind"`; `panic = "abort"` voids recovery enabling remote DoS (CWE-248). F-P2A093-01 HIGH: §Symbol Grounding `CompiledStateGraph::stub_terminal` row — bare `#[cfg(test)]` corrected to feature-gate `#[cfg(any(test, feature = "test-util"))]`; pregolya-graph adds `[features] test-util = []`; pregolya-mcp dev-dependency adds `features = ["test-util"]`. |
 | 2.4 | 2026-08-27 | architect | round-19/F-P2A087-01+F-P2A088-01 | F-P2A087-01 HIGH: §Decision 5 Error Routing Table `extract_output panics` row — `DynTool::invoke` → `DynTool::invoke_dyn` (canonical object-safe DynTool dispatch method per interface-definitions.md §Tool). F-P2A088-01 MED/CWE-209/CWE-670: §Decision 3 SEC-005 + §Decision 5 sanitization bullet — (1) UUID regex corrected from v4-specific (`4[0-9a-f]{3}-[89ab][0-9a-f]{3}`) to version-agnostic (`[0-9a-f]{4}-[0-9a-f]{4}`); (2) framework `sanitize_internal_ids` scope clarified to UUID-shaped identifiers only (`run_id`, UUID-shaped `thread_id`); (3) incoherent claim that `u64` `CheckpointId` is covered by the UUID regex removed; authoring-site convention (BC-2.09.008 {INV-001}) stated as SOLE guarantee for `u64` checkpoint IDs and non-UUID `thread_id` strings. PO handoff: mirror authoring-site-convention-primacy clause into BC-2.09.008 {INV-001} and add u64-checkpoint exclusion test vector. |
 | 2.3 | 2026-08-27 | architect | round-16/F-P2A081-01+F-P2A082-01 | Full explanatory-prose sweep. §Decision 3 SEC-001: 'MUST NOT embed credential material in `ToolOutput`' → 'MUST NOT embed credential material in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A082-01 MED). §Rationale 'Why extract_output': 'graph's `GraphState` is an accumulator type' → 'graph's channel-composed state is an accumulator type' (GraphState is not a type/trait per §Symbol Grounding PHANTOM row). §Rationale 'Why proptest for VP-016': 'arbitrary `GraphState` instances (via `Arbitrary` derive)' → 'arbitrary `TestGraphState` instances (via `Arbitrary` derive)' (F-P2A081-01 MED). Decision 4 §DenyInterrupts `ToolOutput::Error(...)` node-receives reference is LEGITIMATE and unchanged. |
 | 2.2 | 2026-08-27 | architect | round-14/F-P2A078-01 | §Decision 4 fail-closed guarantee: `Ok(ToolOutput)` → `Ok(serde_json::Value)` (invoke_dyn returns Result<serde_json::Value, PregolyaError>; ToolOutput is never the invoke_dyn return type); VP-016 attribution: '`ToolOutput` contains only the fields returned by extract_output' → 'the `serde_json::Value` returned by `invoke_dyn` contains only the fields returned by extract_output'. §Symbol Grounding ActionRisk row: `None`/`Low`/`Medium`/`High` variants → `ReadOnly`/`Low`/`Medium`/`High` variants; clarified that `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an ActionRisk variant (F-P2A078-01 HIGH). |

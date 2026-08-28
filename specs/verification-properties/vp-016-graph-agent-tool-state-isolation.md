@@ -9,7 +9,7 @@ timestamp: 2026-08-26T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "e57e95f"
+input-hash: "985c8e9"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "2.0"
+version: "2.1"
 changelog:
+  - "2.1 (round-21/F-P2A093-01/2026-08-28): §Proof Harness Skeleton: corrected false 'accessible as a dev-dependency' claim for `CompiledStateGraph::stub_terminal` — bare `#[cfg(test)]` items in the defining crate (pregolya-graph) are NOT visible in dev-dependency builds of pregolya-mcp (E0599); the correct mechanism is the `test-util` feature gate: pregolya-graph exposes `#[cfg(any(test, feature = \"test-util\"))] pub fn stub_terminal(...)`, pregolya-graph/Cargo.toml adds `[features] test-util = []`, pregolya-mcp/Cargo.toml dev-dependencies adds `features = [\"test-util\"]`. Updated harness crate-import comment and §Proof Obligations Stub Graph Obligation description to reflect feature-gate mechanism. ADR-029 §Symbol Grounding `CompiledStateGraph::stub_terminal` row updated in same burst."
   - "2.0 (round-18/F-P2A084-01+F-P2A084-02/2026-08-27): Exhaustive title/H1/frontmatter/table-cell/code-sketch sweep. Frontmatter `title:` and H1: 'ToolOutput Contains Only extract_output-Selected Fields' → 'the Returned `serde_json::Value` Contains Only extract_output-Selected Fields' (F-P2A084-01). §Proof Method table Bounded? cell: 'Unbounded over GraphState values' → 'Unbounded over `serde_json::Value` graph states'; Coverage cell: 'For any generated `S` instance' → 'For any generated `TestGraphState` instance (as `serde_json::Value`)' (F-P2A084-02). TestGraphState struct doc: 'GraphState carrying' → 'Test graph-state value carrying'; 'leaking into ToolOutput' → 'leaking into the `serde_json::Value` returned by `invoke_dyn`'; 'MUST NOT appear in ToolOutput' → 'MUST NOT appear in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A084-01). Prose FALSE-GREEN GUARD (1): 'extra fields appear in `ToolOutput`' → 'extra fields appear in the `serde_json::Value` returned by `invoke_dyn`'. Harness proptest macro doc: 'into ToolOutput FAILS' → 'into the `serde_json::Value` returned by `invoke_dyn` FAILS'. Code-sketch: inline comment 'ToolOutput must contain EXACTLY' → 'the returned `serde_json::Value` must contain EXACTLY'; three prop_assert! messages 'must not appear in ToolOutput' → 'must not appear in the `serde_json::Value` returned by `invoke_dyn`'; prop_assert_eq! message 'ToolOutput must contain exactly' → 'the returned `serde_json::Value` must contain exactly'. input-hash updated 2e9c2d7 → e57e95f (BC-2.09.008 drift)."
   - "1.9 (round-14/F-P2A078-02+F-P2A078-04/2026-08-27): §Property Statement: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by `GraphAgentTool::invoke_dyn`' → 'the `serde_json::Value` returned by `GraphAgentTool::invoke_dyn`' (F-P2A078-02). §Corollary: 'in the `ToolOutput` unless' → 'in the `serde_json::Value` returned by `invoke_dyn` unless'. §BC Traceability table: '`ToolOutput` is structurally bounded by `extract_output`' → '`serde_json::Value` return is structurally bounded by `extract_output`'; EC-TV-1 → TV-001 / EC-007 (canonical BC-2.09.008 anchor forms; F-P2A078-04 MED). §Proof Method: 'concrete `S` instances' → 'concrete `TestGraphState` instances (serialized as `serde_json::Value`)'. §Feasibility: 'Open (arbitrary GraphState)' → 'Open (arbitrary `TestGraphState` as `serde_json::Value`)'."
   - "1.8 (round-12/GAP-01-straggler/2026-08-27): §Proof Obligations Stub Graph Obligation: ROUTING FLAG → SATISFIED (S-1.14 §AC-014 / Task 18, round-10); removed 'does NOT yet exist / requires routing / BEFORE Phase-3' language; ADR-029 §Symbol Grounding cross-ref updated. §Realizability Trace Step 1: 'Deserialization SUCCEEDS' → 'Input validation SUCCEEDS'; removed from_value::<TestGraphState> / ConcreteGraphRunner<S> deserialization framing (CompiledStateGraph::invoke takes serde_json::Value directly per BC-2.02.001 {PC-005}; no from_value step per F-P2A072-03). Step 2: ConcreteGraphRunner<TestGraphState> → ConcreteGraphRunner (non-generic); final_state.output → final_state[\"output\"] (serde_json::Value index form; matches harness closure). §Feasibility async-concern row: CompiledGraph::stub_terminal → CompiledStateGraph::stub_terminal."
@@ -166,8 +167,12 @@ be tautological. This harness is non-tautological because `from_graph` binds the
   visibility; F-P2A072-03: no generic `<S>` on the runner),
 - `from_graph` can construct the production `ConcreteGraphRunner` (no test-only seam required —
   `from_graph` is the public API), and
-- `CompiledStateGraph::stub_terminal` (from `pregolya-graph`, `#[cfg(test)]` only) is accessible
-  as a dev-dependency (see §Proof Obligations "Stub Graph Obligation").
+- `CompiledStateGraph::stub_terminal` (from `pregolya-graph`, feature-gated via
+  `#[cfg(any(test, feature = "test-util"))]`) is accessible via the `test-util` feature:
+  pregolya-mcp/Cargo.toml dev-dependencies must declare
+  `pregolya-graph = { path = "...", features = ["test-util"] }` (F-P2A093-01 correction —
+  bare `#[cfg(test)]` items in pregolya-graph are NOT visible in dev-dependency builds of
+  pregolya-mcp; see §Proof Obligations "Stub Graph Obligation").
 
 ```rust
 // pregolya-mcp/src/graph_tool.rs — #[cfg(test)] mod tests
@@ -184,7 +189,7 @@ be tautological. This harness is non-tautological because `from_graph` binds the
 mod tests {
     use super::*;  // Sees pub(crate) GraphRunner, ConcreteGraphRunner, GraphAgentTool
     use pregolya_core::tool::DynTool;
-    use pregolya_graph::CompiledStateGraph;  // stub_terminal is #[cfg(test)] on CompiledStateGraph
+    use pregolya_graph::CompiledStateGraph;  // stub_terminal gated via feature "test-util" on CompiledStateGraph (F-P2A093-01)
     use proptest::prelude::*;
     use proptest_derive::Arbitrary;
     use serde::{Deserialize, Serialize};
@@ -353,17 +358,25 @@ async context of `GraphRunner::run` for the harness to work — this is guarante
 
 ## Proof Obligations
 
-- [x] **Stub Graph Obligation — SATISFIED (S-1.14 AC-014 / Task 18; round-10):**
+- [x] **Stub Graph Obligation — SATISFIED with corrected mechanism (S-1.14 AC-014 / Task 18; round-10; F-P2A093-01 mechanism-correction round-21):**
   `CompiledStateGraph::stub_terminal` is specced in S-1.14 AC-014 and Task 18 (added
-  round-10); implemented in `pregolya-graph/src/types.rs` as a `#[cfg(test)]` helper.
-  `CompiledStateGraph` is the canonical non-generic compiled graph type (BC-2.02.001 {PC-001},
-  `pregolya-graph/src/types.rs`). This constructor creates a minimal `CompiledStateGraph`
-  whose single execution step returns `terminal_state` (a `serde_json::Value`) as the terminal
-  channel-composed output — no real graph logic, no LLM calls, no checkpointing. NOT public
-  API; `#[cfg(test)]` only. Enables `from_graph` to create a real `ConcreteGraphRunner`
-  (non-generic) that exercises the production `(self.extract_output)(&final_state_value)` call
-  path inside `ConcreteGraphRunner::run`. Consumed by VP-016 harness (BC-2.09.008 {INV-001})
-  in S-2.11. ADR-029 §Symbol Grounding row is now ROUTED / SPECCED (round-12).
+  round-10). **Corrected mechanism (F-P2A093-01):** the function MUST be gated via
+  `#[cfg(any(test, feature = "test-util"))]` in `pregolya-graph/src/types.rs` — NOT bare
+  `#[cfg(test)]`. Bare `#[cfg(test)]` items in pregolya-graph are invisible to dev-dependency
+  builds of pregolya-mcp (the harness's host crate); the Rust compiler would emit E0599.
+  The correct mechanism: (1) `#[cfg(any(test, feature = "test-util"))] pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` in pregolya-graph;
+  (2) pregolya-graph/Cargo.toml: `[features]\ntest-util = []`; (3) pregolya-mcp/Cargo.toml
+  dev-dependencies: `pregolya-graph = { path = "...", features = ["test-util"] }`.
+  S-1.14 AC-014/Task-18 must spec the feature-gate mechanism (story-writer handoff);
+  S-2.11 Task-27 must add the dev-dependency feature wiring (story-writer handoff).
+  `CompiledStateGraph` is the canonical non-generic compiled graph type (BC-2.02.001 {PC-001}).
+  This constructor creates a minimal `CompiledStateGraph` whose single execution step
+  returns `terminal_state` (a `serde_json::Value`) as the terminal channel-composed output —
+  no real graph logic, no LLM calls, no checkpointing. Enables `from_graph` to create a
+  real `ConcreteGraphRunner` (non-generic) that exercises the production
+  `(self.extract_output)(&final_state_value)` call path inside `ConcreteGraphRunner::run`.
+  Consumed by VP-016 harness (BC-2.09.008 {INV-001}) in S-2.11.
+  ADR-029 §Symbol Grounding row is ROUTED / SPECCED with corrected mechanism (round-21).
 - [ ] `TestGraphState` derives `proptest_derive::Arbitrary` and `schemars::JsonSchema`
 - [ ] `graph_agent_tool_state_isolation` proptest runs without shrinking failures for 10k cases
 - [ ] `full_state_differs_from_extract_output` proptest confirms extract_output does not accidentally serialize the full struct

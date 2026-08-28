@@ -3144,3 +3144,18 @@ D-289 = round-19 fix-burst close (this commit). Self-improvement artifacts: veri
 Round-19 found DynTool::invoke (without _dyn suffix) and PreToolCallHook::PendingHumanApproval (not PreToolDecision::PendingHumanApproval) were phantom symbol references in 8 and 4 sites respectively. verify-no-phantom-types.sh now gates these. Run it after any GraphAgentTool-related changes to confirm no new phantom references.
 
 ### STATE: v6.00, timestamp 2026-08-27T12:00:00Z
+
+---
+
+## Archived Checkpoint: v6.01 (D-290, 2026-08-27)
+
+<!-- Archived from STATE.md v6.01 on 2026-08-28 when D-291 checkpoint replaced it. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 GAP-01 re-convergence, round-20 fix-burst CLOSED. Round-20 (P2A-090 CRASHED; P2A-091 STALLED; P2A-092 COMPLETED FULL): 5 findings ALL CLOSED — same meta-class (GAP-01/D-275 secondary-doc propagation): VP-015 §Property-Statement invoke_dyn; bc-authoring-plan census 133→134; ARCH-INDEX blockquote annotation; module-criticality.md VP-column backfill; S-MAINT-001 census 133→134. VALIDATE-COUNT-PROP-FP corrected. TV 754. GATE-READY=YES (5 HRQs). 3-CLEAN streak 0/3 (reset by this push). LESSON: POL-24 secondary-doc sweep required for all corpus-wide changes. NEXT ACTION: run round-21 = three parallel deep adversary passes P2A-093/094/095 + consistency-validator GATE-READY audit on the new HEAD. If all three CLEAN(strict) + GATE-READY yes → streak advances to 1/3.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED.
+- factory-artifacts: HEAD of round-20 D-290 commit. (Prior round-20 freeze HEAD: `44dcac9`.)
+
+### STATE: v6.01, timestamp 2026-08-27T12:00:00Z

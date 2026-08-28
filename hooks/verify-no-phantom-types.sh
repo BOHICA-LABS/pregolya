@@ -80,8 +80,8 @@
 #   probe_8b_graphstate_s_changelog_exempt:       GraphState S in ## Changelog → NOT flagged
 #   probe_9a_actionrisk_none_variant_flagged:     ActionRisk...None in GAP-01 file → WARN fired
 #   probe_9b_actionrisk_none_not_negation_exempt: ActionRisk...None with NOT negation → NOT flagged
-#   probe_10a_vp_bare_filename_flagged:           VP-016.md bare filename → WARN fired
-#   probe_10b_vp_canonical_filename_exempt:       vp-016-slug.md canonical form → NOT flagged
+#   probe_10a_vp_not_in_inventory_flagged:        VP-016.md absent from VP-INDEX inventory → WARN fired
+#   probe_10b_vp_in_inventory_not_flagged:        VP-015.md in-inventory filename → NOT flagged
 #   probe_11a_ec_tv_hybrid_flagged:               EC-TV-3 hybrid anchor in GAP-01 file → WARN fired
 #   probe_11b_ec_tv_hybrid_phantom_negation:      EC-TV-N with PHANTOM negation → NOT flagged
 #   probe_12a_dyntool_invoke_flagged:             DynTool::invoke (phantom) in body → WARN fired
@@ -136,12 +136,57 @@ emit() {
 #   SCAN_FILES <n>
 #   TOTAL <n>
 run_phantom_scanner() {
+  local factory_dir="$1"
+  shift
   local scan_dirs=("$@")
-  python3 - "${scan_dirs[@]}" <<'PYEOF'
+  python3 - "$factory_dir" "${scan_dirs[@]}" <<'PYEOF'
 import sys, re
 from pathlib import Path
 
-scan_dirs = [Path(d) for d in sys.argv[1:]]
+factory_dir = Path(sys.argv[1])
+scan_dirs = [Path(d) for d in sys.argv[2:]]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VP FILENAME INVENTORY
+# ─────────────────────────────────────────────────────────────────────────────
+# Loads the authoritative set of VP filenames from VP-INDEX.md §VP Catalog
+# File column.  R14-05 flags a VP filename reference ONLY when the filename
+# is NOT present in this inventory (i.e., a genuine reference to a non-existent
+# VP file).  References to in-inventory filenames (VP-001.md…VP-015.md,
+# vp-006-b-injection-guard-multipair-fewshot.md,
+# vp-016-graph-agent-tool-state-isolation.md, …) are NOT flagged.
+
+def load_vp_inventory(fdir):
+    """Parse VP-INDEX.md §VP Catalog File column → frozenset of valid VP filenames."""
+    vp_index = fdir / 'specs' / 'verification-properties' / 'VP-INDEX.md'
+    if not vp_index.exists():
+        return frozenset()
+    try:
+        content = vp_index.read_text(encoding='utf-8', errors='replace')
+    except Exception:
+        return frozenset()
+    vp_file_cell_re = re.compile(r'^(?:VP-\d{3}|vp-\d{3}[a-zA-Z0-9._-]*)\.md$')
+    inventory = set()
+    in_catalog = False
+    for line in content.splitlines():
+        stripped = line.strip()
+        if re.match(r'^##\s+VP\s+Catalog\b', stripped, re.IGNORECASE):
+            in_catalog = True
+            continue
+        if in_catalog and re.match(r'^##\s+', stripped):
+            in_catalog = False
+            continue
+        if not in_catalog:
+            continue
+        if not (stripped.startswith('|') and stripped.endswith('|')):
+            continue
+        cells = [c.strip() for c in stripped.split('|')]
+        for cell in cells:
+            if vp_file_cell_re.match(cell):
+                inventory.add(cell)
+    return frozenset(inventory)
+
+VP_INVENTORY = load_vp_inventory(factory_dir)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PHANTOM PATTERNS
@@ -252,15 +297,17 @@ PHANTOM_PATTERNS = [
      re.compile(r'\bActionRisk\b.*\bNone\b'),
      "gap01_scope"),
 
-    # ── R14-05 ── VP-NNN.md bare filename reference
-    # Canonical VP filenames always include a kebab-case slug: vp-NNN-slug-description.md
-    # (lowercase 'vp', hyphen-separated NNN, then the topic slug).
-    # A reference using only the bare 'VP-NNN.md' form (uppercase VP, no slug) is always a
-    # broken filename — the file on disk will never have that exact name.
+    # ── R14-05 ── VP filename reference not present in VP-INDEX §VP-Catalog inventory
+    # Source of truth: VP-INDEX.md §VP Catalog File column (VP_INVENTORY set, loaded above).
+    # Canonical filenames currently: VP-001.md…VP-015.md (uppercase, no slug) and
+    # vp-006-b-injection-guard-multipair-fewshot.md + vp-016-graph-agent-tool-state-isolation.md
+    # (lowercase, with slug).  Any reference that matches the VP filename shape but is absent
+    # from the inventory is a broken reference to a non-existent file.
+    # check_type "vp_inventory": scan_file Pass 3 extracts group(1) and checks VP_INVENTORY.
     # NOT GAP-01 scoped: broken VP references can appear in any spec file.
-    ("VP-NNN.md (bare filename — canonical form is vp-NNN-slug.md with lowercase vp and slug)",
-     re.compile(r'\bVP-\d{3}\.md\b'),
-     "always"),
+    ("VP filename absent from VP-INDEX §VP-Catalog inventory (phantom reference to non-existent VP file)",
+     re.compile(r'\b((?:VP|vp)-\d{3}[a-zA-Z0-9._-]*\.md)\b'),
+     "vp_inventory"),
 
     # ── R14-06 ── EC-TV-N hybrid anchor form
     # Canonical anchors: EC-NNN (error case) OR TV-NNN (test vector) — separate namespaces.
@@ -423,7 +470,14 @@ def scan_file(path: Path) -> list:
         for (name, pattern, check_type) in PHANTOM_PATTERNS:
             if check_type == "gap01_scope" and not is_gap01_scoped:
                 continue
-            if pattern.search(line):
+            if check_type == "vp_inventory":
+                # R14-05 inventory check: match filename, flag only if absent from inventory
+                m = pattern.search(line)
+                if m:
+                    filename = m.group(1)
+                    if filename not in VP_INVENTORY:
+                        findings.append((lineno, name, line.rstrip()))
+            elif pattern.search(line):
                 findings.append((lineno, name, line.rstrip()))
 
     return findings
@@ -480,9 +534,11 @@ clean_probe_tmp() {
 }
 
 # Helper: run the scanner against a probe scan dir; return HIT lines only.
+# Passes FACTORY_DIR so the VP inventory is loaded from the real VP-INDEX.md,
+# enabling probe_10b to verify that in-inventory filenames (VP-015.md) are exempt.
 run_probe_scan() {
   local probe_scan_dir="$1"
-  run_phantom_scanner "$probe_scan_dir" | grep '^HIT' || true
+  run_phantom_scanner "$FACTORY_DIR" "$probe_scan_dir" | grep '^HIT' || true
 }
 
 # ── Self-probe 1: live body MUST be flagged ───────────────────────────────────
@@ -864,8 +920,11 @@ SPECEOF
   echo "[SELF-PROBE PASS] probe_9b_actionrisk_none_not_negation_exempt: ActionRisk+None in NOT-negation line is exempt."
 }
 
-# ── Self-probe 10a: VP-NNN.md bare filename MUST be flagged ──────────────────────
-probe_10a_vp_bare_filename_flagged() {
+# ── Self-probe 10a: VP filename absent from inventory MUST be flagged ─────────────
+# VP-016.md is NOT in the VP-INDEX §VP-Catalog File column inventory —
+# the real file is vp-016-graph-agent-tool-state-isolation.md.
+# A reference to VP-016.md is a phantom reference to a non-existent VP file.
+probe_10a_vp_not_in_inventory_flagged() {
   init_probe_tmp
   mkdir -p "$PROBE_TMP/spec"
   cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
@@ -880,23 +939,24 @@ SPECEOF
   local hits
   hits="$(run_probe_scan "$PROBE_TMP/spec")"
   if [ -z "$hits" ]; then
-    echo "[SELF-PROBE FAIL] probe_10a_vp_bare_filename_flagged: VP-016.md bare filename was NOT flagged."
-    echo "  Expected a HIT for 'VP-NNN.md (bare filename)'."
+    echo "[SELF-PROBE FAIL] probe_10a_vp_not_in_inventory_flagged: VP-016.md (absent from VP-INDEX inventory) was NOT flagged."
+    echo "  Expected a HIT — VP-016.md is not in VP-INDEX §VP-Catalog File column inventory."
     clean_probe_tmp; exit 2
   fi
   if ! echo "$hits" | grep -qF 'VP-016.md'; then
-    echo "[SELF-PROBE FAIL] probe_10a_vp_bare_filename_flagged: HIT found but not for VP-016.md in snippet."
+    echo "[SELF-PROBE FAIL] probe_10a_vp_not_in_inventory_flagged: HIT found but not for VP-016.md in snippet."
     echo "  Output: $hits"
     clean_probe_tmp; exit 2
   fi
   clean_probe_tmp
-  echo "[SELF-PROBE PASS] probe_10a_vp_bare_filename_flagged: VP-016.md bare filename is flagged."
+  echo "[SELF-PROBE PASS] probe_10a_vp_not_in_inventory_flagged: VP-016.md absent-from-inventory reference is flagged."
 }
 
-# ── Self-probe 10b: canonical VP slug filename MUST NOT be flagged ───────────────
-# Pattern r'\bVP-\d{3}\.md\b' is uppercase VP + no slug.
-# The canonical form starts with lowercase 'vp' and includes the topic slug — no match.
-probe_10b_vp_canonical_filename_exempt() {
+# ── Self-probe 10b: VP filename present in inventory MUST NOT be flagged ──────────
+# VP-015.md IS in the VP-INDEX §VP-Catalog File column inventory (mcp::sanitize unit P1).
+# The inventory check exempts in-inventory filenames regardless of case/slug form.
+# This probe verifies R14-05 does NOT false-positive on real VP filenames.
+probe_10b_vp_in_inventory_not_flagged() {
   init_probe_tmp
   mkdir -p "$PROBE_TMP/spec"
   cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
@@ -906,18 +966,18 @@ version: "1.0"
 
 ## References
 
-State isolation proofs are documented in vp-016-graph-agent-tool-state-isolation.md.
+Credential redaction proofs are documented in VP-015.md for the MCP sanitize unit test.
 SPECEOF
   local hits
   hits="$(run_probe_scan "$PROBE_TMP/spec")"
   if [ -n "$hits" ]; then
-    echo "[SELF-PROBE FAIL] probe_10b_vp_canonical_filename_exempt: canonical VP filename was incorrectly flagged."
-    echo "  'vp-016-graph-agent-tool-state-isolation.md' starts with lowercase 'vp' and has a slug — must not match VP-NNN.md pattern."
+    echo "[SELF-PROBE FAIL] probe_10b_vp_in_inventory_not_flagged: in-inventory VP-015.md reference was incorrectly flagged."
+    echo "  VP-015.md is in VP-INDEX §VP-Catalog File column — R14-05 must not flag in-inventory filenames."
     echo "  Output: $hits"
     clean_probe_tmp; exit 2
   fi
   clean_probe_tmp
-  echo "[SELF-PROBE PASS] probe_10b_vp_canonical_filename_exempt: canonical vp-NNN-slug.md reference is not flagged."
+  echo "[SELF-PROBE PASS] probe_10b_vp_in_inventory_not_flagged: in-inventory VP-015.md reference is not flagged."
 }
 
 # ── Self-probe 11a: EC-TV-N hybrid anchor in GAP-01 scoped file MUST be flagged ──
@@ -1103,7 +1163,7 @@ SPECEOF
 # ── Main live check ───────────────────────────────────────────────────────────
 check_phantom_types() {
   local raw_output
-  raw_output="$(run_phantom_scanner "$SPECS_DIR" "$STORIES_DIR" "$HOLDOUT_DIR")"
+  raw_output="$(run_phantom_scanner "$FACTORY_DIR" "$SPECS_DIR" "$STORIES_DIR" "$HOLDOUT_DIR")"
 
   local scan_files=0
   local total=0
@@ -1142,7 +1202,7 @@ check_phantom_types() {
     echo "    invoke_dyn+ToolOutput    → invoke_dyn returns serde_json::Value; wrap at call site if needed"
     echo "    GraphState S (prose)     → serde_json::Value; GraphState is not a user-defined type"
     echo "    ActionRisk...None        → ActionRisk: ReadOnly|Low|Medium|High; None = Option::None"
-    echo "    VP-NNN.md (bare)         → canonical: vp-NNN-slug-description.md (lowercase vp, with slug)"
+    echo "    VP phantom filename      → check VP-INDEX §VP-Catalog File column for the exact in-inventory filename"
     echo "    EC-TV-N (hybrid)         → canonical: EC-NNN (error case) or TV-NNN (test vector) separately"
     echo "    DynTool::invoke          → DynTool::invoke_dyn (object-safe dispatch; ADR-029 v1.7)"
     echo "    PreToolCallHook::PendingHumanApproval → PreToolDecision::PendingHumanApproval (BC-2.05.007)"
@@ -1175,8 +1235,8 @@ probe_8a_graphstate_s_prose_flagged
 probe_8b_graphstate_s_changelog_exempt
 probe_9a_actionrisk_none_variant_flagged
 probe_9b_actionrisk_none_not_negation_exempt
-probe_10a_vp_bare_filename_flagged
-probe_10b_vp_canonical_filename_exempt
+probe_10a_vp_not_in_inventory_flagged
+probe_10b_vp_in_inventory_not_flagged
 probe_11a_ec_tv_hybrid_flagged
 probe_11b_ec_tv_hybrid_phantom_negation_exempt
 probe_12a_dyntool_invoke_flagged

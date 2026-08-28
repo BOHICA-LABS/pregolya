@@ -112,11 +112,23 @@
 #       from_value::<S> / from_value::<TestGraphState> are GAP-01 scoped (only flagged in
 #       files referencing GraphAgentTool/mcp::graph_tool/ConcreteGraphRunner; avoids false
 #       positives on legitimate serde uses in non-GAP-01 BCs).
+#       R14-05 (VP filename): inventory-based check against VP-INDEX §VP-Catalog File column
+#       (F-P2A093-02 fix, round-21): flags VP filename references absent from inventory;
+#       references to in-inventory filenames (VP-001.md..VP-015.md + slug forms) are NOT flagged.
 #       Excludes: YAML changelog: blocks, ## Changelog sections, ## Symbol Grounding sections
 #       (PHANTOM-audit rows), and descriptive-negation prose.
 #       Baseline measurement (P2A-077 burst, 2026-08-27): 1 finding (HS-C-001 line 230).
 #       Promotion to blocking requires: residue = 0 AND exit contract changed to exit 1.
 #       Routing: architect + product-owner + story-writer per GAP-01-straggler fix-burst.
+#
+#   verify-module-criticality-vp-column.sh — VP-INDEX ↔ module-criticality VP-column reverse check (advisory).
+#       Closes drift path exposed by F-P2A095-01 (graph::hitl VP-011 sat at '—' across multiple
+#       rounds): for each (VP-ID, module) row in VP-INDEX §VP-Catalog, asserts that
+#       module-criticality.md §Module Classification VP column shows the VP-ID (not '—').
+#       Multi-VP hosts (prompts::injection_guard VP-006 + VP-006-B) must show all VP-IDs.
+#       Baseline (round-21 post-architect-fix): PASS=17 WARN=0 (zero '—' entries for VP hosts).
+#       Promotion to blocking requires: WARN=0 sustained AND exit contract changed to exit 1.
+#       Routing: architect (module-criticality.md VP column updates).
 #
 # EXIT CONTRACT
 # ─────────────
@@ -209,6 +221,7 @@ echo "── Advisory validators (non-blocking; see header for promotion paths) 
 run_advisory "verify-changelog-claim-applied.sh"
 run_advisory "verify-ordinal-form-residue.sh"
 run_advisory "verify-no-phantom-types.sh"
+run_advisory "verify-module-criticality-vp-column.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

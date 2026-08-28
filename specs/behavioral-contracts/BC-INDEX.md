@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.84"
+version: "3.85"
 status: active
 producer: state-manager
 timestamp: 2026-08-27T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.85 (round-21/D-291/2026-08-28): BC-2.09.008 {INV-001} thread_id scope correction — authoring-site convention SOLE-guarantee = u64 CheckpointId ONLY; framework UUID regex covers run_id AND server thread_id per entities-server §Thread/§Run (F-P2A094-01; CWE-209/670). BC-2.09.008 EC-010/TV-011 async panic mechanism corrected — synchronous std::panic::catch_unwind cannot catch .await panics; corrected to futures::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...))) inside invoke_dyn (F-P2A094-02; CWE-248/703). interface-definitions §FtsSearchConfig thread_id rationale note added — Option<&str> adjudicated LEGITIMATELY CORRECT (FTS string-space query filter, not a graph identifier — OBS-P2A094-2). BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.84 (round-20/currency-note/D-290/2026-08-27): bc-authoring-plan.md §Summary census sync (133→134 / P1 79→80 + BC-2.09.008 batch row + DI-008/010/014 coverage lists). bc-authoring-plan is a prd-supplement, not BC-INDEX-indexed; BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.83 (round-19/F-P2A089-01/D-289/2026-08-27): BC-INDEX Full BC Catalog VP column normalized — 10 bare **VP** entries resolved to numbered **VP-NNN** form (BC-2.01.005→**VP-014**; BC-2.01.006→**VP-014**; BC-2.03.001→**VP-001**; BC-2.04.006→**VP-002**; BC-2.05.007→**VP-011**; BC-2.09.007→**VP-015**; BC-2.09.008→**VP-016**; BC-2.10.005→**VP-012**; BC-2.13.004→**VP-003**; BC-2.23.005→**VP-013**; all per VP-INDEX). VP-seed count UNCHANGED: 15 unique / 16 BC rows. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137. TV registry 753→754 (test-vectors.md §TV-013; product-owner burst)."
   - "3.82 (round-18/F-P2A086-01/2026-08-27): VP Seed BCs Summary and header corrected — v3.79 bump (15→17 VP Seed) was incorrect: it conflated 'VP Seed BCs' (formal verification seeds) with 'VPs registered' (17 total including VP-004/VP-005 integration VPs). VP-004 and VP-005 are integration VPs registered in VP-INDEX but NOT formal verification seeds per the VP Seed BCs table's established semantic and its exclusion footnote. REVERTED: header '17 VP Seed' → '15 VP Seed' (leave '17 VPs registered'); §Summary '17 unique VPs (18 BC rows)' → '15 unique VPs (16 BC rows)'. VP-014 second BC-row (BC-2.01.006 — RunnableParallel Branch Failure) restored in VP Seed BCs table — VP-014 dual-anchors BC-2.01.005+BC-2.01.006; the 16 BC rows reflects 15 unique VP seeds plus the one extra for the VP-014 dual-anchor. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
