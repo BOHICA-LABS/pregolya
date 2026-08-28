@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-MAINT-001
 epic_id: EPIC-MAINT
-version: "1.1"
+version: "1.2"
 status: draft
 # POL-29 gate waived for maintenance stories per D-259+ (product-owner 2026-08-24). behavioral_contracts: [] is intentional and correct. Story may be promoted to ready once state-manager records the canonical-format decision rows in STATE.md (AC-001 gate). Canonical BC formats decided: ## Invariants = bullet list (- {INV-NNN} ...); ## Edge Cases = ### EC-NNN subsection headers.
 producer: story-writer
@@ -11,7 +11,7 @@ timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/BC-INDEX.md
-input-hash: "d9cb3a2"
+input-hash: "9d09df5"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: []
@@ -44,17 +44,17 @@ tdd_mode: facade
 - **As a** spec tooling author and future maintainer
 - **I want to** normalize BC corpus section formatting to a single canonical style per section type
 - **So that** automated validators, grep patterns, and human reviewers can rely on
-  consistent structure across all 133 BCs without format-conditional logic or
+  consistent structure across all 134 BCs without format-conditional logic or
   ambiguous dual-format parsing
 
 ## Background (P2A-032 Finding)
 
 During Phase 2 Adversarial pass P2A-032, a corpus-wide formatting split was identified:
 
-- **`## Invariants` section:** 93 of 133 BCs use bullet lists; 40 use numbered lists.
+- **`## Invariants` section:** 94 of 134 BCs use bullet lists; 40 use numbered lists.
   Affected BC families: BC-2.04.*, BC-2.11.*, BC-2.13.*, BC-2.18.*, BC-2.19.*,
   BC-2.20.*, BC-2.21.*, BC-2.22.*.
-- **`## Edge Cases` section:** 80 of 133 BCs use `### EC-NNN` subsection headers;
+- **`## Edge Cases` section:** 81 of 134 BCs use `### EC-NNN` subsection headers;
   53 use Markdown table rows.
 
 The `verify-ac-pc-trace.sh` validator was updated to be format-agnostic, so this split
@@ -76,7 +76,7 @@ choice for each section type in STATE.md as a D-NNN decision row:
 
 This AC gates all subsequent ACs. No file edits proceed without the D-NNN row.
 
-### AC-002: All 133 `## Invariants` sections use the chosen canonical format
+### AC-002: All 134 `## Invariants` sections use the chosen canonical format
 After normalization, `grep -rn` across `.factory/specs/behavioral-contracts/`
 finds zero BC files with the non-canonical invariant list format. The 40 previously
 numbered-list BCs (BC-2.04.*, BC-2.11.*, BC-2.13.*, BC-2.18.*, BC-2.19.*,
@@ -84,7 +84,7 @@ BC-2.20.*, BC-2.21.*, BC-2.22.*) are converted to match the canonical form.
 Conversion is purely syntactic — no invariant text, numbering of clauses, or
 semantic content is altered.
 
-### AC-003: All 133 `## Edge Cases` sections use the chosen canonical format
+### AC-003: All 134 `## Edge Cases` sections use the chosen canonical format
 After normalization, `grep -rn` across `.factory/specs/behavioral-contracts/`
 finds zero BC files with the non-canonical edge-case format. The 53 previously
 table-row BCs are converted to match the canonical form. EC IDs, descriptions,
@@ -93,10 +93,10 @@ and expected behaviors are preserved verbatim — only the structural wrapper ch
 ### AC-004: `verify-ac-pc-trace.sh` exits 0 with zero drift after normalization
 Running `.factory/hooks/verify-ac-pc-trace.sh` (or equivalent validator) against
 the full BC corpus after normalization produces exit code 0, zero findings, and
-a total-BC count of 133. No AC-to-BC trace is broken by the formatting change.
+a total-BC count of 134. No AC-to-BC trace is broken by the formatting change.
 
 ### AC-005: BC-INDEX.md content and row count unchanged
-`BC-INDEX.md` `Total BCs: 133` count is unchanged. No BC ID, title, priority,
+`BC-INDEX.md` `Total BCs: 134` count is unchanged. No BC ID, title, priority,
 subsystem, or story-coverage field is modified. The only permitted changes to any
 BC file are whitespace and list-marker characters in the `## Invariants` and
 `## Edge Cases` sections.
@@ -147,7 +147,7 @@ _No Rust source files are modified by this story._
 | Item | Estimated Tokens |
 |------|-----------------|
 | This story spec | ~2,000 |
-| BC corpus (133 files, ~300 tokens avg) | ~40,000 |
+| BC corpus (134 files, ~300 tokens avg) | ~40,200 |
 | Validator script review | ~500 |
 | BC-INDEX.md | ~3,000 |
 | **Total** | **~45,500** |
@@ -162,7 +162,7 @@ targeted `grep` + batch `Edit` calls. No burst splitting required.
 - [ ] Run `grep -rn "^1\. " .factory/specs/behavioral-contracts/` to enumerate affected invariant BCs
 - [ ] Run `grep -rn "^| EC-" .factory/specs/behavioral-contracts/` to enumerate affected edge-case BCs
 - [ ] For each affected BC, apply format conversion using Edit tool (no shell bypass per TD-FACTORY-HOOK-BYPASS-001)
-- [ ] Run `verify-ac-pc-trace.sh` and confirm exit 0 with count=133
+- [ ] Run `verify-ac-pc-trace.sh` and confirm exit 0 with count=134
 - [ ] Confirm BC-INDEX.md total and all rows unchanged
 - [ ] State-manager single-commit per TD-VSDD-053
 
@@ -194,5 +194,6 @@ for gate. No version pins required.
 
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
+| 1.2 | 2026-08-27 | story-writer | Round-20/F-P2A092-04: BC census updated 133 → 134 (GAP-01/D-275 added BC-2.09.008; 51 P0/80 P1/3 P2). All live "133 BCs" references updated to 134. Background empirical numerators recomputed: BC-2.09.008 uses bullet-list invariants (canonical format) and ### EC-NNN subsection headers (canonical format) → invariant numerator 93 → 94; edge-case numerator 80 → 81. Denominators in AC-002, AC-003, AC-004, AC-005, Token Budget, and Tasks updated accordingly. |
 | 1.1 | 2026-08-24 | story-writer | P2A-044 F-10: POL-29 placeholder resolved — canonical-format decision recorded, S-7.01 gate waived for maintenance class |
 | 1.0 | 2026-08-22 | story-writer | Initial story creation |

@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.14"
+version: "2.15"
 status: active
 producer: architect
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "462a8bf"
+input-hash: "6e9a5fa"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.15 (round-20/F-P2A092-03/2026-08-27): VP column backfill for GAP-01 additions — mcp::graph_tool VP column `—` → `VP-016` (proptest P1; BC-2.09.008; ADR-029 §Decision-2); mcp::sanitize VP column `—` → `VP-015` (unit P1; BC-2.09.007; companion GAP-01 sibling per §mcp::sanitize addition changelog entry). Both rows existed before this fix; VP columns were `—` despite the mcp::sanitize and mcp::graph_tool addition changelog entries explicitly citing the VP numbers — inconsistent with the established pattern for other proptest P1 VP hosts (VP-007/VP-008 both show their VP IDs in this column). Tier assignments UNCHANGED (MEDIUM for both; proptest P1 does not satisfy HIGH tier criterion of Kani P1 VP host). Classification Summary totals UNCHANGED. Pre-existing OBS gap: mcp::exception/mcp::client VP-004/VP-005 integration P1 columns also show `—`; out of round-20 scope. Input-hash refreshed (inputs changed since mcp::graph_tool addition changelog entry was authored)."
   - "2.14 (GAP-01/ADR-029/2026-08-26): Iron Law — add `mcp::graph_tool` MEDIUM row (pregolya-mcp; SS-09; wraps CompiledGraph<S> as DynTool; STATE-ISOLATION invariant; BC-2.09.008; VP-016 proptest P1; no Kani VP — STATE-ISOLATION property not tractable by Kani over open recursive serde_json::Value; MEDIUM consistent with mcp::server/mcp::client/mcp::sanitize sibling pattern). Required by ADR-029 mcp::graph_tool module addition. Classification Summary: MEDIUM 36→37; Total 84→85. Tiered rows breakdown: 35 MEDIUM module-level → 36 MEDIUM module-level; 78 tiered → 79 tiered. Input-hash refresh pending (state-manager task)."
   - "2.13 (architect-reconcile-burst/2026-08-26): Iron Law — add `mcp::sanitize` MEDIUM row (pregolya-mcp; SS-09; `redact_credentials` pure credential-redaction; BC-2.09.007 / INV-003 / DI-010; VP-015 integration P1; no Kani VP — not a Kani P0/P1 host; MEDIUM consistent with mcp::exception/mcp::client/mcp::discovery sibling pattern). Required by module-decomposition.md mcp::sanitize addition. Classification Summary: MEDIUM 35→36; Total 83→84. Tiered rows breakdown: 34 MEDIUM module-level → 35 MEDIUM module-level; 77 tiered → 78 tiered. Input-hash refreshed (82ff930)."
   - "2.12 (INVESTIGATE-RECONCILE/2026-08-21): Module Classification table — rename `mcp::adapter` → `mcp::exception` (MEDIUM tier, pregolya-mcp, SS-09). Story S-2.10 creates no `adapter.rs`; VP-004 property (bare ToolException type-identity) lives in `mcp::exception`. Criticality MEDIUM unchanged. Input-hash refreshed (module-decomposition.md drift)."
@@ -87,8 +88,8 @@ changelog:
 | `splitters::recursive` | — | pregolya-splitters | SS-07 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::client` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::exception` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
-| `mcp::graph_tool` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
-| `mcp::sanitize` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| `mcp::graph_tool` | — | pregolya-mcp | SS-09 | MEDIUM | VP-016 | ≥ 80% | P5 |
+| `mcp::sanitize` | — | pregolya-mcp | SS-09 | MEDIUM | VP-015 | ≥ 80% | P5 |
 | `mcp::server` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::wasm` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::policy` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |

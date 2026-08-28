@@ -1,23 +1,24 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.69"
+version: "2.70"
 status: active
 producer: product-owner
 total_standing_gates: 37
-timestamp: 2026-08-25T00:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/L2-INDEX.md
 input-hash: "117c7a3"
 traces_to: prd.md
-total_bcs: 133
+total_bcs: 134
 total_batches: 20
 p0_count: 51
-p1_count: 79
+p1_count: 80
 p2_count: 3
 changelog:
+  - "2.70 (round-20/F-P2A092-01/2026-08-27): GAP-01/D-275 sync miss corrected. Frontmatter: total_bcs 133→134, p1_count 79→80. Summary table: Total BCs 133→134, P1 (should-have) 79→80. Batch 14 header count 8→9 BCs; BC-2.09.008 row added after BC-2.09.007 (Title: StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); P1; CAP-021; DI-008, DI-010, DI-014; Wave 2). DI coverage table: BC-2.09.008 appended to DI-008, DI-010, and DI-014 enforcer lists per BC-2.09.008 Traceability §L2 Domain Invariants. Canonical census is 134 = 51 P0 / 80 P1 / 3 P2 (matches BC-INDEX/STORY-INDEX/prd.md/STATE.md)."
   - "2.69 (P2A-052 F-052-01/2026-08-25): Convention note added to §Authoring Guidelines for Sub-Burst Agents — §VP Anchors section must contain VP identifiers only (VP-NNN or BC-local VP-<suffix>) or the literal 'None'; must never contain a story ID (story coverage belongs in §Story Anchor). Six BCs corrected: BC-2.09.001, BC-2.09.002, BC-2.09.003 (S-2.10 → None) and BC-2.12.001, BC-2.12.002, BC-2.12.003 (S-1.26 → None). Each BC bumped to next version."
   - "2.68 (P2A-049/F-049-01-sibling-sweep/2026-08-25): BC-2.18.002 and BC-2.18.004 title cells in Batch 16 table synced to canonical H1s (POL-7 downstream drift; FIX-BURST-256 H1 form superseded). BC-2.18.002: 'ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance' → 'ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>'. BC-2.18.004: 'injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed)' → 'injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time)' (missing 'at Render Time' suffix). BC-2.18.005 title cell verified correct — no change."
   - "2.67 (burst-307/P1D-199/F-P199-01/2026-08-17): DI-016 enforcer mis-anchoring corrected — 006↔007 swap introduced by v2.66. DI coverage table DI-016 row: BC-2.01.005, BC-2.01.007, BC-2.01.008 → BC-2.01.005, BC-2.01.006, BC-2.01.008. Batch-1 table BC-2.01.006 row: DI-014 → DI-014, DI-016. Batch-1 table BC-2.01.007 row: DI-014, DI-016 → DI-014. v2.66 changelog DI-016 enforcer text corrected in-place (same-cycle factual correction). DI-014 enforcer list verified: all four (BC-2.01.005/006/007/008) retained — DI-014 anchored by all four per di_anchors frontmatter. DI-016 enforcer set now {BC-2.01.005, BC-2.01.006, BC-2.01.008} consistent with invariants.md and BC frontmatter source of truth (POL-46). input-hash updated to 87d8d75."
@@ -61,9 +62,9 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 
 | Metric | Value |
 |--------|-------|
-| Total BCs | 133 |
+| Total BCs | 134 |
 | P0 (must-have) | 51 |
-| P1 (should-have) | 79 |
+| P1 (should-have) | 80 |
 | P2 (nice-to-have) | 3 |
 | Batches | 20 |
 | BCs per batch (max) | 9 (Batch 9 only — Step-E exception; planning cap remains 8) |
@@ -149,13 +150,13 @@ subsystem_note: "BCs were authored with subsystem: SS-TBD; ARCH-INDEX SS-NN IDs 
 | DI-005 | BC-2.04.006, BC-2.17.001 |
 | DI-006 | BC-2.13.001, BC-2.13.002, BC-2.13.003, BC-2.13.006, BC-2.13.007 |
 | DI-007 | BC-2.13.004, BC-2.13.005, BC-2.17.001 |
-| DI-008 | BC-2.01.001, BC-2.01.002, BC-2.04.008, BC-2.08.006, BC-2.08.010, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.13.007, BC-2.14.001, BC-2.14.003, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.004, BC-2.18.005, BC-2.19.001, BC-2.19.002, BC-2.19.003, BC-2.19.004, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.003, BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003 |
+| DI-008 | BC-2.01.001, BC-2.01.002, BC-2.04.008, BC-2.08.006, BC-2.08.010, BC-2.08.013, BC-2.08.014, BC-2.09.006, BC-2.09.007, BC-2.09.008, BC-2.13.007, BC-2.14.001, BC-2.14.003, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.002, BC-2.18.003, BC-2.18.004, BC-2.18.005, BC-2.19.001, BC-2.19.002, BC-2.19.003, BC-2.19.004, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.003, BC-2.21.001, BC-2.21.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003 |
 | DI-009 | BC-2.08.007, BC-2.08.014, BC-2.14.004, BC-2.22.002, BC-2.22.003 |
-| DI-010 | BC-2.08.014, BC-2.09.007, BC-2.13.007, BC-2.14.005, BC-2.19.002, BC-2.22.002 |
+| DI-010 | BC-2.08.014, BC-2.09.007, BC-2.09.008, BC-2.13.007, BC-2.14.005, BC-2.19.002, BC-2.22.002 |
 | DI-011 | BC-2.06.001, BC-2.06.003, BC-2.08.001, BC-2.12.007 |
 | DI-012 | BC-2.09.003, BC-2.11.001, BC-2.11.002, BC-2.11.003, BC-2.11.004, BC-2.11.005, BC-2.11.006, BC-2.15.005, BC-2.20.001, BC-2.20.002 |
 | DI-013 | BC-2.12.005 |
-| DI-014 | BC-2.01.005, BC-2.01.006, BC-2.01.007, BC-2.01.008, BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003, BC-2.05.007, BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.06.006, BC-2.10.005, BC-2.10.006, BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004, BC-2.23.005, BC-2.23.006 |
+| DI-014 | BC-2.01.005, BC-2.01.006, BC-2.01.007, BC-2.01.008, BC-2.04.008, BC-2.08.004, BC-2.08.007, BC-2.08.013, BC-2.08.014, BC-2.09.004, BC-2.09.005, BC-2.09.006, BC-2.09.007, BC-2.09.008, BC-2.14.001, BC-2.14.006, BC-2.15.004, BC-2.15.005, BC-2.15.006, BC-2.18.001, BC-2.18.004, BC-2.18.005, BC-2.19.005, BC-2.19.006, BC-2.20.001, BC-2.20.002, BC-2.21.003, BC-2.21.004, BC-2.22.001, BC-2.22.002, BC-2.22.003, BC-2.05.007, BC-2.05.008, BC-2.06.004, BC-2.06.005, BC-2.06.006, BC-2.10.005, BC-2.10.006, BC-2.23.001, BC-2.23.002, BC-2.23.003, BC-2.23.004, BC-2.23.005, BC-2.23.006 |
 | DI-015 | BC-2.23.005, BC-2.13.002 |
 | DI-016 | BC-2.01.005, BC-2.01.006, BC-2.01.008 |
 
@@ -361,7 +362,7 @@ to respect the planning cap of 8 BCs per batch (cap exception would require Step
 split by wave avoids exception).
 
 ### Batch 14 — D20 Integration: Provider Dialect + Failover + MCP Server + Self-Improvement Primitives (P1, Phase-1b, D20)
-*8 BCs — SS.04/SS.08/SS.09/SS.15 extensions (Wave 2)*
+*9 BCs — SS.04/SS.08/SS.09/SS.15 extensions (Wave 2); +1 GAP-01/D-275 addition (BC-2.09.008)*
 
 | BC ID | Title | Priority | CAP | DI | Wave |
 |-------|-------|----------|-----|----|------|
@@ -370,6 +371,7 @@ split by wave avoids exception).
 | BC-2.08.014 | Provider failover chain (ProviderFallbackPolicy; ordered fallback on 429/5xx/Auth) | P1 | CAP-009 | DI-008, DI-009, DI-010, DI-014 | Wave 2 |
 | BC-2.09.006 | MCP server tool advertisement (tools/list; mcp::server) | P1 | CAP-021 | DI-008, DI-014 | Wave 2 |
 | BC-2.09.007 | MCP server tool invocation (tools/call; external client executes registered tool) | P1 | CAP-021 | DI-008, DI-010, DI-014 | Wave 2 |
+| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | P1 | CAP-021 | DI-008, DI-010, DI-014 | Wave 2 |
 | BC-2.15.004 | SkillStore registry — load-on-demand skill documents | P1 | CAP-020 | DI-008, DI-014 | Wave 2 |
 | BC-2.15.005 | Guarded memory and skill writes (MemoryWriteGuard; E-MEMORY-007) | P1 | CAP-020 | DI-008, DI-012, DI-014 | Wave 2 |
 | BC-2.15.006 | Frozen-snapshot context mutation — memory-sourced system-prompt content | P1 | CAP-020 | DI-002, DI-008, DI-014 | Wave 2 |

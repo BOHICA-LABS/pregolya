@@ -3111,3 +3111,36 @@ D-282..D-287 (exhaustive) rounds 7-16 re-convergence fix-bursts were committed d
 Several agents this session stalled/crashed mid-work (stream-watchdog / API connection-lost) but their edits usually landed — the next session should VERIFY on-disk state after each agent completes/fails rather than trusting the (possibly truncated) final report.
 
 ### STATE: v5.99, timestamp 2026-08-27T11:00:00Z
+
+---
+
+## Checkpoint D-289 (archived from STATE.md at D-290 commit, 2026-08-27)
+
+<!-- D-289 checkpoint replaced by D-290 in STATE.md on 2026-08-27. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 GAP-01 re-convergence, round-19 fix-burst CLOSED. The GAP-01 core contract (design + security + census 39/134/17/137/303 + DAG + coverage) has been CONVERGED and GATE-READY-passing for multiple rounds. Round-19 found 2 HIGH + 1 MED + 1 MED + 1 LOW (ALL CLOSED) + GATE-READY MAJOR: DynTool::invoke→invoke_dyn (8 sites), PreToolCallHook::PendingHumanApproval→PreToolDecision::PendingHumanApproval (4 sites), CWE-209/CWE-670 sanitizer-scope reconciliation + TV-013, dep-graph changelog order, BC-INDEX VP-column normalized. phantom-types gate +2 patterns → 21 probes. TV 753→754. Census UNCHANGED 39/134/17/137. GATE-READY=YES. 3-CLEAN streak 0/3 (reset by this push). NEXT ACTION: run round-20 = three parallel deep adversary passes P2A-090 (realizability/symbol-existence), P2A-091 (security), P2A-092 (consistency/census/records) — each loads .factory/policies.yaml (48 policies) — plus a consistency-validator GATE-READY audit, ALL on the NEW HEAD of this commit. If all three CLEAN(strict) + GATE-READY yes → streak advances toward 3/3 CONVERGED → Phase-2 gate.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
+- factory-artifacts: HEAD of this round-19 commit — PUSHED (active). (Prior wrap HEAD 6c27d1f.)
+- No .worktrees/. No open PRs expected.
+
+### PER-WORKSTREAM
+- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-19 closed on this HEAD. RESUME NEXT-ACTION: dispatch round-20 P2A-090/091/092 + GATE-READY on THIS HEAD (verbatim above). Streak 0/3 counted on THIS HEAD (frozen-HEAD rule: any new push resets to 0/3).
+- Convergence-tail guidance: rounds 17-19 found DynTool/PreToolDecision symbol normalization and records-tier VP-column/dep-graph housekeeping. Round-19 also added TV-013 (sanitizer-scope test vector) and extended verify-no-phantom-types.sh to 21 probes. If round-20 surfaces further symbol-class stragglers, check verify-no-phantom-types.sh pattern coverage.
+
+### STANDING HUMAN-GATE OBS
+(a) BC-2.09.008 {INV-005}: success-path credential opacity is caller-discipline-only (DI-010; no framework runtime backstop) — human risk-acceptance item. (b) GraphAgentTool CompiledStateGraph NON-generic redesign (invoke_dyn→serde_json::Value; from_graph non-generic + caller-supplied input_schema) is a material change to the human-approved GAP-01 (D-275) feature — needs explicit acknowledgment before Phase-3. (c) Recorded follow-ups: VP-FILENAME-CONVENTION (VP-001..015 bare vs VP-006-B/VP-016 slug; all refs resolve; cosmetic; spec-steward) + PHANTOM-GATE-FP-NARROWING (verify-no-phantom-types.sh R14-02/04/05 FPs; devops). (d) interface-definitions↔BC-prose has no machine gate (candidate Phase-3 follow-up). (e) O-P2A089-B DEFER-003-class: adversary cannot run hooks; orchestrator must run them at gate boundaries.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion (CLI/web-UI/eval/trace-inspector) — starts AFTER the Phase-2 approval gate.
+- DTU clones: dtu_clones_built: pending (openai/anthropic/ollama) — Phase-4 prerequisite.
+
+### DECISION DELTA
+D-289 = round-19 fix-burst close (this commit). Self-improvement artifacts: verify-no-phantom-types.sh +2 patterns (DynTool::invoke + PreToolCallHook::PendingHumanApproval) → 21 total probes.
+
+### OPERATIONAL NOTE
+Round-19 found DynTool::invoke (without _dyn suffix) and PreToolCallHook::PendingHumanApproval (not PreToolDecision::PendingHumanApproval) were phantom symbol references in 8 and 4 sites respectively. verify-no-phantom-types.sh now gates these. Run it after any GraphAgentTool-related changes to confirm no new phantom references.
+
+### STATE: v6.00, timestamp 2026-08-27T12:00:00Z
