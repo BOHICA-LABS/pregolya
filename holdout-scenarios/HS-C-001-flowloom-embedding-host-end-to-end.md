@@ -1,10 +1,10 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 2
 domain: C
 domain_name: Flowloom Embedding Host
@@ -57,6 +57,7 @@ coverage_areas:
   - tenancy
 coverage_gap_pending: []
 changelog:
+  - "1.5 (round-24/F-P2A105-01+F-P2A105-02+GAP-R24-01+GAP-R24-02/2026-08-28): EXHAUSTIVE asymmetry scrub (round-23 was incomplete). (a) §Failure Guidance Check 5 fail bullet: removed all internal identifiers (BC-2.09.008 {PC-002}, {PC-003}/{PC-004}, {INV-001}, VP-016, E-MCP-010, {INV-002}); rewritten as observable-behavior language only. (b) §Evaluation Rubric must-pass threshold paragraph: removed 'backed by BC-2.09.008/VP-016/E-MCP-010' and 'GAP-01 resolved 2026-08-26' provenance text; states only that all six checks are must-pass and Check 5 carries its own 0.10 weight. (c) Sweept §Scenario, §Verification Approach (all steps), §Evaluation Rubric (table + threshold), §Failure Guidance, and §Edge Conditions — zero remaining BC/VP/E-code/module-path identifiers. (d) §Edge Conditions EC-006: removed stale '(Contingent on gap resolution.)' marker (GAP-01 resolved 2026-08-26). (e) §Information Asymmetry Confirmation: rewritten as CLOSED-SET declaration enumerating evaluator-facing sections confirmed FREE and exempted non-evaluator metadata sections. Traceability retained in §Behavioral Contract Linkage table and §Coverage Gap note (non-evaluator metadata)."
   - "1.4 (round-23/F-1/2026-08-28): F-1 [BLOCKER]: Asymmetry scrub — §Verification Approach step 8 and §Evaluation Rubric Check 5 purged of internal identifiers (BC/VP/error codes). Each internal ID replaced with an observable behavioral description at the wire and JSON-RPC response level. No scenario semantics changed; Check 5 must-pass requirement and 0.10 weight unchanged."
   - "1.2 (F-P2A-065-06/2026-08-26): Terminology correction only — scenario semantics unchanged. Coverage-gap resolution note (line referencing E-MCP-010): corrected 'EXEC severity' to 'EXEC category, severity: broken' — EXEC is a category label, not a severity value; the severity value for E-MCP-010 is 'broken'. No scenario steps, checks, preconditions, or expected behaviors altered."
   - "1.3 (round-12/GAP-01-type-grounding/2026-08-27): BC-Coverage table type-grounding — traceability metadata only, scenario narrative unchanged. {PC-003}/{PC-004} row: 'extract_output → ToolOutput::Structured' → 'extract_output → serde_json::Value' (DynTool::invoke_dyn returns Result<serde_json::Value, PregolyaError>; ToolOutput::Structured is a phantom variant per ADR-029 §Symbol Grounding). {INV-001}+VP-016 row: 'ToolOutput contains only extract_output-selected fields' → 'the serde_json::Value returned by invoke_dyn contains only extract_output-selected fields'."
@@ -318,8 +319,7 @@ session via BC-2.09.008 authorship and human approval (GAP-01/HS-C-001).*
 | Check 6: Cross-tenant state isolation | 0.15 | yes | each tenant's run state and lookup result are independent |
 
 **Must-pass threshold (all six checks):** weighted average ≥ 0.80. All six checks are
-must-pass. GAP-01 resolved 2026-08-26 — Check 5 is a first-class must-pass check backed
-by BC-2.09.008/VP-016/E-MCP-010; it carries its own 0.10 weight unchanged.
+must-pass. Check 5 carries its own 0.10 weight unchanged.
 
 ---
 
@@ -351,7 +351,7 @@ run. TENANT-ALPHA completes independently.
 
 ### EC-006: tools/call for run_agent returns a tool-level error (agent run fails)
 **Expected behavior:** MCP response `isError: true`; sanitized error message; no API key
-material or internal state in the response text. (Contingent on gap resolution.)
+material or internal state in the response text.
 
 ---
 
@@ -369,10 +369,12 @@ satisfy one or more core invariants. Likely failure modes:
   (single-execution violation), or the idempotent re-deliver caused a second invocation.
 - Check 4 fail: streaming events had inconsistent or missing run-level correlation
   identifiers, or the post-resume ancestry context was incorrect.
-- Check 5 fail: run_agent not advertised in tools/list (BC-2.09.008 {PC-002} violation),
-  tools/call failed or returned malformed content (BC-2.09.008 {PC-003}/{PC-004}
-  violation), internal state in the tool response ({INV-001}/VP-016 violation), or an
-  interrupt did not surface as E-MCP-010 and/or caused a hang ({INV-002} violation).
+- Check 5 fail: run_agent not advertised in the tools/list response; tools/call returned
+  a malformed or empty result rather than a well-formed MCP tool result; the tool response
+  exposed internal graph state, checkpoint or run identifiers, intermediate node outputs, or
+  message history rather than only the caller-selected output fields; or an in-graph
+  human-approval interrupt did not surface as a structured JSON-RPC tool error (isError:true)
+  and/or caused the call to hang.
 - Check 6 fail: TENANT-ALPHA's state was visible to TENANT-BETA's run, or lookup result
   from one tenant appeared in the other's decision."
 
@@ -386,8 +388,23 @@ This scenario is evaluated at the wire and observable-behavior level only. The e
 - Does NOT have access to source code, module internals, checkpoint database contents
   (beyond what the public API surfaces), BC/VP identifiers, error code identifiers, or
   internal scheduler state.
-- The BC linkage table and coverage gap note above are traceability metadata for
-  product-owner and orchestrator use. They are NOT part of the evaluator's test narrative.
+
+**Evaluator-facing sections confirmed FREE of BC IDs (BC-S.SS.NNN), VP IDs (VP-NNN),
+error code identifiers (E-XXX-NNN), and internal module-path identifiers:**
+- §Scenario (all six check descriptions)
+- §Verification Approach (all nine steps)
+- §Evaluation Rubric (table rows and must-pass threshold note)
+- §Failure Guidance (all six check fail bullets)
+- §Edge Conditions (EC-001 through EC-006)
+
+**Exempted non-evaluator metadata sections (legitimately retain traceability IDs — NOT
+part of the evaluator's test narrative):**
+- §Behavioral Contract Linkage (BC-ID / clause / scenario-check traceability table)
+- §Coverage Gap — HS-C-001-GAP-01 (RESOLVED) (gap provenance, BC authorship, and
+  resolution notes)
+
+These exempted sections are traceability metadata for product-owner and orchestrator
+use only and must not be surfaced to the evaluator.
 
 ---
 

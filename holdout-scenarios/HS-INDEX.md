@@ -1,10 +1,10 @@
 ---
 document_type: holdout-scenario-index
 level: ops
-version: "1.4"
+version: "1.5"
 status: active
 producer: product-owner
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/prd.md
@@ -13,6 +13,7 @@ inputs:
 input-hash: "3102b0a"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "1.5 (round-24/F-P2A105-01+F-P2A105-02+GAP-R24-01+GAP-R24-02/2026-08-28): EXHAUSTIVE asymmetry scrub of HS-C-001 (round-23 scrub was incomplete). §Failure Guidance Check 5 fail bullet and §Evaluation Rubric must-pass threshold paragraph purged of residual internal identifiers. §Edge Conditions EC-006 stale '(Contingent on gap resolution.)' marker removed. §Information Asymmetry Confirmation in HS-C-001 rewritten as CLOSED-SET declaration enumerating confirmed-FREE evaluator-facing sections (Scenario, Verification Approach, Evaluation Rubric, Failure Guidance, Edge Conditions) and exempted non-evaluator metadata sections (BC Linkage table, Coverage Gap note). HS-INDEX §Asymmetry Confirmation updated to reflect expanded confirmed-free section list."
   - "1.4 (round-23/F-1/2026-08-28): F-1 [BLOCKER]: HS-C-001 §Acceptance-Criteria asymmetry scrub applied — §Verification Approach step 8 and §Evaluation Rubric Check 5 purged of BC/VP/error-code identifiers; replaced with observable behavioral descriptions. §Asymmetry Confirmation claim (Scenario, Verification Approach, Evaluation Rubric sections free of BC IDs, VP IDs, error code identifiers, and implementation structure references) is now confirmed accurate for all three sealed domains."
   - "1.3 (GAP-01-RESOLVED/2026-08-26): HS-C-001-GAP-01 RESOLVED — BC-2.09.008 (GraphAgentTool; mcp::graph_tool; ADR-029) human-approved v1 scope addition (2026-08-26). Check 5 promoted to first-class must-pass; contingency note removed. HS-C-001 now covers all 7 primitives including StateGraph→Tool wrapping. Domain C coverage gap closed."
   - "1.2 (HS-C-001/flowloom-embedding/2026-08-26): Domain C (Flowloom Embedding Host) added with one must-pass scenario HS-C-001. Aggregate counts updated. Capability coverage map updated. Phase-4 gate extended to include Domain C. Coverage gap HS-C-001-GAP-01 noted (StateGraph→Tool wrapping unspecified)."
@@ -129,11 +130,19 @@ None authored at Phase 2. Wave holdout scenarios are cycle-scoped artifacts auth
 
 ## Asymmetry Confirmation
 
-All scenario narratives (Scenario, Verification Approach, Evaluation Rubric sections) are free of:
+All evaluator-facing sections of every scenario narrative (Scenario, Verification Approach,
+Evaluation Rubric, Failure Guidance, Edge Conditions) are confirmed FREE of:
 - BC IDs (BC-S.SS.NNN)
 - VP IDs (VP-NNN)
 - Internal module names (e.g., pregolya_graph::StateGraph)
-- Error code identifiers (e.g., E-CORE-NNN)
+- Error code identifiers (e.g., E-CORE-NNN, E-XXX-NNN)
 - Implementation structure references
 
-BC linkage tables and frontmatter `behavioral_contracts:` fields are traceability metadata for product-owner/pipeline use — they are NOT part of the evaluator's scenario narrative.
+The following sections legitimately retain traceability IDs and are NOT part of the
+evaluator's scenario narrative:
+- §Behavioral Contract Linkage tables (BC-ID / clause / check cross-reference)
+- Frontmatter `behavioral_contracts:` arrays
+- Coverage gap notes (gap provenance, BC authorship, resolution references)
+
+This confirmed-free claim was verified exhaustively in round-24 for all three sealed domains
+(Domain A, B, C). HS-C-001 was the subject of the round-24 exhaustive scrub.

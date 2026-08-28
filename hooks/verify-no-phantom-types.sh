@@ -88,6 +88,9 @@
 #   probe_12b_dyntool_invoke_dyn_exempt:          DynTool::invoke_dyn canonical form → NOT flagged
 #   probe_13a_pretoolcallhook_pa_flagged:         PreToolCallHook::PendingHumanApproval in body → WARN fired
 #   probe_13b_pretoolcalldecision_pa_exempt:      PreToolDecision::PendingHumanApproval canonical → NOT flagged
+#   probe_14a_args_schema_dyntool_flagged:        args_schema in DynTool-scoped file → WARN fired
+#   probe_14b_dyntool_schema_method_exempt:       canonical DynTool::schema() in DynTool file → NOT flagged
+#   probe_14c_args_schema_non_dyntool_exempt:     args_schema in non-DynTool file → NOT flagged (dyntool_scope)
 # POL-30: probe fixtures live in $TMPDIR, never under .factory/specs/ or .factory/stories/.
 #
 # EXIT CONTRACT
@@ -341,12 +344,30 @@ PHANTOM_PATTERNS = [
     ("PreToolCallHook::PendingHumanApproval (phantom path — canonical is PreToolDecision::PendingHumanApproval; BC-2.05.007)",
      re.compile(r'PreToolCallHook::PendingHumanApproval'),
      "always"),
+
+    # ── F-P2A104-01 ── args_schema phantom DynTool accessor
+    # The Python LangChain attribute name `args_schema` does NOT exist on DynTool.
+    # DynTool (object-safe trait) exposes: name(), description(), schema(), action_risk(),
+    # invoke_dyn() — and has no fields (it is a trait object, Arc<dyn DynTool>).
+    # Any reference to `args_schema` as a DynTool field or method is a phantom carried
+    # over from the Python langchain_core.tools BaseTool.args_schema attribute.
+    # Canonical schema accessor: DynTool::schema() → schemars::Schema.
+    # DYNTOOL SCOPED: checked only when the file's live body references DynTool.
+    # This scoping prevents false positives on unrelated `args_schema` usages in files
+    # that have nothing to do with the DynTool trait surface.
+    ("args_schema (phantom DynTool field/method — canonical is DynTool::schema() → schemars::Schema; F-P2A104-01)",
+     re.compile(r'\bargs_schema\b'),
+     "dyntool_scope"),
 ]
 
 # Anchor patterns for GAP-01 scope detection (live-body content only)
 GAP01_ANCHOR_RE = re.compile(
     r'GraphAgentTool|mcp::graph_tool|mcp_graph_tool|ConcreteGraphRunner|VP-016|BC-2\.09\.008'
 )
+
+# Anchor pattern for DynTool scope detection (live-body content only)
+# F-P2A104-01: args_schema is a phantom only in DynTool-surface files.
+DYNTOOL_ANCHOR_RE = re.compile(r'\bDynTool\b')
 
 # ─────────────────────────────────────────────────────────────────────────────
 # NEGATION / DESCRIPTIVE-EXCLUSION MARKERS
@@ -462,6 +483,13 @@ def scan_file(path: Path) -> list:
         for _, line in live_lines
     )
 
+    # ── Pass 2b: Determine DynTool scope from live content ────────────────────
+    # F-P2A104-01: args_schema phantom pattern fires only in DynTool-surface files.
+    is_dyntool_scoped = any(
+        DYNTOOL_ANCHOR_RE.search(line)
+        for _, line in live_lines
+    )
+
     # ── Pass 3: Check live lines against phantom patterns ────────────────────
     findings = []
     for lineno, line in live_lines:
@@ -469,6 +497,8 @@ def scan_file(path: Path) -> list:
             continue
         for (name, pattern, check_type) in PHANTOM_PATTERNS:
             if check_type == "gap01_scope" and not is_gap01_scoped:
+                continue
+            if check_type == "dyntool_scope" and not is_dyntool_scoped:
                 continue
             if check_type == "vp_inventory":
                 # R14-05 inventory check: match filename, flag only if absent from inventory
@@ -1160,6 +1190,109 @@ SPECEOF
   echo "[SELF-PROBE PASS] probe_13b_pretoolcalldecision_pa_exempt: PreToolDecision::PendingHumanApproval canonical form is not flagged."
 }
 
+# ── Self-probe 14a: args_schema in DynTool-scoped file MUST be flagged ──────
+# DynTool exposes no `args_schema` field — this is a Python LangChain carry-over.
+# Canonical: DynTool::schema() → schemars::Schema.
+# File references DynTool, so it is dyntool_scoped and the pattern fires.
+probe_14a_args_schema_dyntool_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The converter produces an `Arc<dyn DynTool>` whose `args_schema` carries the raw
+JSON-Schema Value from the MCP server.
+
+## Postconditions
+
+The `args_schema` field of every `Arc<dyn DynTool>` produced by `convert_mcp_tool`
+is the verbatim `serde_json::Value` from the MCP inputSchema.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_14a_args_schema_dyntool_flagged: args_schema in DynTool-scoped file was NOT flagged."
+    echo "  Expected at least one HIT for 'args_schema (phantom DynTool field/method)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'args_schema'; then
+    echo "[SELF-PROBE FAIL] probe_14a_args_schema_dyntool_flagged: HIT found but not for args_schema pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_14a_args_schema_dyntool_flagged: args_schema in DynTool-scoped file is detected."
+}
+
+# ── Self-probe 14b: canonical DynTool::schema() in DynTool-scoped file MUST NOT be flagged ──
+# The canonical accessor is .schema() (method, not field); pattern must not flag it.
+probe_14b_dyntool_schema_method_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The converter produces an `Arc<dyn DynTool>` whose `schema()` method returns a
+`schemars::Schema` derived from the MCP inputSchema.
+
+## Postconditions
+
+The `schema()` accessor on every `Arc<dyn DynTool>` returns the verbatim schema.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_14b_dyntool_schema_method_exempt: canonical DynTool::schema() was incorrectly flagged."
+    echo "  'schema()' is the canonical DynTool method accessor — must not match 'args_schema' pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_14b_dyntool_schema_method_exempt: canonical DynTool::schema() in DynTool-scoped file is not flagged."
+}
+
+# ── Self-probe 14c: args_schema in non-DynTool file MUST NOT be flagged ──────
+# The dyntool_scope check prevents false positives on unrelated args_schema usages
+# in files that have nothing to do with the DynTool trait surface.
+probe_14c_args_schema_non_dyntool_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  # NOTE: this fixture deliberately contains NO reference to "DynTool" — the
+  # dyntool_scope gate must suppress the args_schema pattern for such files.
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The request body includes an `args_schema` field that describes the JSON-Schema for
+the call arguments.
+
+## Postconditions
+
+The `args_schema` in the request is validated against the declared schema.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_14c_args_schema_non_dyntool_exempt: args_schema in non-DynTool file was incorrectly flagged."
+    echo "  DynTool scoping must prevent false positives on unrelated args_schema usages."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_14c_args_schema_non_dyntool_exempt: args_schema in non-DynTool file is not flagged."
+}
+
 # ── Main live check ───────────────────────────────────────────────────────────
 check_phantom_types() {
   local raw_output
@@ -1206,6 +1339,7 @@ check_phantom_types() {
     echo "    EC-TV-N (hybrid)         → canonical: EC-NNN (error case) or TV-NNN (test vector) separately"
     echo "    DynTool::invoke          → DynTool::invoke_dyn (object-safe dispatch; ADR-029 v1.7)"
     echo "    PreToolCallHook::PendingHumanApproval → PreToolDecision::PendingHumanApproval (BC-2.05.007)"
+    echo "    args_schema              → DynTool::schema() (schemars::Schema; F-P2A104-01)"
     echo "    Reference: ADR-029 §Symbol Grounding"
   fi
 }
@@ -1243,7 +1377,10 @@ probe_12a_dyntool_invoke_flagged
 probe_12b_dyntool_invoke_dyn_exempt
 probe_13a_pretoolcallhook_pa_flagged
 probe_13b_pretoolcalldecision_pa_exempt
-echo "[SELF-PROBE] All 21 self-probes passed — check is not false-green."
+probe_14a_args_schema_dyntool_flagged
+probe_14b_dyntool_schema_method_exempt
+probe_14c_args_schema_non_dyntool_exempt
+echo "[SELF-PROBE] All 24 self-probes passed — check is not false-green."
 echo ""
 
 echo "════════════════════════════════════════════"

@@ -187,6 +187,23 @@
 #       Promotion to blocking: after story-writer normalizes all changelogs to descending.
 #       Routing: story-writer (story file normalization).
 #
+#   verify-holdout-asymmetry.sh — HS-*.md evaluator-facing section internal-identifier gate (advisory).
+#       Closes F-P2A105-03 / GAP-R24 process-gap (round-24): verify-ac-pc-trace.sh checks
+#       AC citation ID existence only — no prior gate verified that EVALUATOR-FACING holdout
+#       sections (§Scenario, §Verification Approach, §Evaluation Rubric, §Failure Guidance,
+#       §Edge Conditions) are free of internal implementation identifiers (BC IDs, BC clause
+#       tags, VP IDs, error codes, internal module paths).  Exempt sections: §Behavioral
+#       Contract Linkage, §Coverage Gap, §Changelog, §Information Asymmetry Confirmation,
+#       §Category, YAML frontmatter.  POL-31 self-probes included.
+#       Baseline (round-24 gate creation, 2026-08-28):
+#         HS-C-001 §Failure Guidance: BC-2.09.008 {PC-002}, BC-2.09.008 {PC-003}/{PC-004},
+#           {INV-001}, VP-016, E-MCP-010, {INV-002} (concurrently scrubbed by product-owner).
+#         HS-C-001 §Evaluation Rubric threshold note: BC-2.09.008, VP-016, E-MCP-010.
+#         Other HS-*.md files: any pre-existing leaks enumerated in live-run output.
+#       Promotion to blocking: after product-owner sweeps all evaluator-facing sections
+#         to zero internal-ID findings across the full HS-*.md corpus.
+#       Routing: product-owner (HS-*.md evaluator-facing section scrub).
+#
 # EXIT CONTRACT
 # ─────────────
 # Exit 0 if all blocking validators pass.
@@ -283,6 +300,7 @@ run_advisory "verify-security-literal-propagation.sh"
 run_advisory "verify-decision-section-canonical-form.sh"
 run_advisory "verify-error-message-template-consistency.sh"
 run_advisory "verify-story-changelog-direction.sh"
+run_advisory "verify-holdout-asymmetry.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

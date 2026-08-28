@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.10
 epic_id: E-21
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.001.md
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3bdcec2"
+input-hash: "3a0a905"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -33,7 +33,9 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 # BC status: all 5 BCs active; BC-2.09.004 (VP-004, R11) and BC-2.09.005 (VP-005, R11) are Red Gate BCs; status = draft per Spec-First Gate S-7.01
-changelog: "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
+changelog:
+  - "1.2 (round-24/F-P2A104-01/2026-08-28): AC-026 mirrored from BC-2.09.001 §Description/{PC-003}/{INV-001} (F-P2A104-01) — phantom field on `Arc<dyn DynTool>` replaced by `schema()` accessor; schema surface type corrected from `serde_json::Value` to `schemars::Schema`; test renamed `test_BC_2_09_001_schema_verbatim_passthrough`; `schemars` added to §Library & Framework Requirements. Input-hash updated per BC-2.09.001 §Description/{PC-003}/{INV-001} authoritative input."
+  - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 ---
 
 # S-2.10: MCP Client — Tool Discovery, Invocation Routing, and Untrusted Ingress
@@ -220,11 +222,11 @@ shared across tasks, and cloned without duplicating network resources (there are
 Verified by `test_BC_2_09_005_client_is_send_sync_clone()`.
 
 ### AC-026 (traces to BC-2.09.001 PC-003 + INV-001)
-The `args_schema` field of every `Arc<dyn DynTool>` produced by `convert_mcp_tool` is
-the raw `serde_json::Value` from `tool.inputSchema` verbatim — no pydantic model, schemars
-schema, or any other schema synthesis is performed by `pregolya-mcp`. If the server provides
-no `inputSchema`, `args_schema` is `Value::Null`. Verified by
-`test_BC_2_09_001_args_schema_raw_no_synthesis()`.
+`convert_mcp_tool` produces an `Arc<dyn DynTool>` whose `schema()` method returns the
+server's `tool.inputSchema` wrapped verbatim as a `schemars::Schema` — no synthesis and
+no `schema_for!` re-derivation are performed by `pregolya-mcp`. If the server provides no
+`inputSchema`, `schema()` returns an empty/`Value::Null`-backed `Schema`. Verified by
+`test_BC_2_09_001_schema_verbatim_passthrough()`.
 
 ### AC-027 (traces to BC-2.09.001 PC-008)
 A server that returns an empty tool list (`tools: []`) for any valid transport is not an
@@ -340,6 +342,7 @@ becomes `McpSessionGuard::new()` must not panic; connection failures return `Err
 | `uuid` | workspace pin | `ingress_id` UUID generation for `ProvenanceTag` |
 | `tracing` | workspace pin | `tracing::warn!` for unregistered passthrough (SAP-1) |
 | `async-trait` | workspace pin | `GuardrailHook` async method dispatch |
+| `schemars` | workspace pin | `schemars::Schema` type for `DynTool::schema()` verbatim-passthrough return value |
 
 ## File Structure Requirements (MANDATORY)
 

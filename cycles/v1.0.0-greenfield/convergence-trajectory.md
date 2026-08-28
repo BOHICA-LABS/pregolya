@@ -3820,3 +3820,43 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 
 **Additional changes in D-293 burst (working-tree fixer edits):** ADR-029 §Decision 4 E-MCP-010/011 message corrections + §Symbol-Grounding path; S-1.24 (story-writer); verify-error-message-template-consistency.sh BLOCKING gate (16→17; closes PGAP-MSGDRIFT); verify-story-changelog-direction.sh ADVISORY; changelog normalization (S-2.11/S-1.23/S-1.03/S-1.04 direction; BC-2.09.008 §Changelog; BC-INDEX VP Seed casing). **Census UNCHANGED 39/134/17/137/303. TV 754. streak 0/3 (new HEAD — frozen-HEAD rule applies). GATE-READY=YES. Lessons L-205/L-206/L-207. NEXT: round-24 adversary passes (P2A-100+).**
 
+---
+
+## Phase-2 Re-Convergence: Round 24 (D-294; 2026-08-28)
+
+### Round-24 Fix-Burst (D-294; 2026-08-28) — INCOMPLETE-SWEEP SIBLING-MIRROR class
+
+**Dominant theme:** Two independent sibling-mirror fix omissions, each repaired this round.
+
+**Finding trajectory:** P2A-104 [realizability — 1 HIGH], P2A-105 [security — 1 HIGH + 1 MED + 1 LOW], P2A-106 [consistency — CRASHED/API-lost mid-pass], P2A-107 [GAP-01 deep-audit — STALLED/watchdog], plus consistency-validator GATE-READY (NO — corroborated HS-C-001 leaks as GAP-R24-01/02 CRIT).
+
+**trajectory-tail:** →2→?(CRASHED)→?(STALLED) — 2 of 4 lenses died; round-25 re-runs ALL fresh.
+
+| Pass | Findings | Delta | Severity | Status |
+|------|----------|-------|----------|--------|
+| P2A-104 | 1 | — | 1 HIGH | NOT CLEAN (F-P2A104-01 args_schema phantom) |
+| P2A-105 | 3+2 CRIT | — | 1 HIGH + 1 MED + 1 LOW + 2 CRIT (GAP) | NOT CLEAN (HS-C-001 evaluator-facing leaks) |
+| P2A-106 | CRASHED | — | API connection-lost mid-pass | STALLED — round-25 recheck |
+| P2A-107 | STALLED | — | watchdog timeout | STALLED — round-25 recheck |
+| CV GATE-READY | N/A | — | CRIT (GAP-R24-01/02 corroborated) | GATE-READY NO |
+
+**All findings CLOSED in D-294 fix-burst:**
+
+| Finding | Severity | Closure |
+|---------|----------|---------|
+| F-P2A104-01 | HIGH | BC-2.09.001 §Description/{PC-003}/{INV-001} args_schema→schema()/schemars::Schema; S-2.10 AC-026 + test_BC_2_09_001_schema_verbatim_passthrough |
+| F-P2A105-01 | HIGH | HS-C-001 §Failure Guidance exhaustive scrub — evaluator-facing identifiers purged |
+| F-P2A105-02 | MED | HS-C-001 §Evaluation Rubric threshold purged of internal identifiers |
+| GAP-R24-01 | CRIT | HS-C-001 §Information Asymmetry Confirmation rewritten as CLOSED-SET enumeration |
+| GAP-R24-02 | CRIT | HS-INDEX §Asymmetry Confirmation updated; EC-006 stale contingency deleted |
+| F-P2A105-03 | LOW | interface-definitions.md §schema() doc-comment generalized (folded with O-P2A104-01) |
+| O-P2A104-01 | LOW | interface-definitions.md §schema() doc-comment generalized to cover all 3 DynTool producers |
+
+**Process-gaps codified [D-294]:**
+- verify-no-phantom-types.sh: `args_schema` phantom pattern added (dyntool-scoped; 24 self-probes)
+- NEW verify-holdout-asymmetry.sh: evaluator-facing HS sections free of BC/VP/E-code/module IDs; 3 self-probes; 0 live WARN across 16 HS files (advisory-wired)
+
+**ROOT CAUSE (dominant theme):** INCOMPLETE-SWEEP SIBLING-MIRROR — two independent classes: (1) DynTool schema-accessor fix applied to server-side (S-2.11) but not client-side mirror (BC-2.09.001/S-2.10). (2) Round-23 holdout scrub hit §Verification-Approach+§Evaluation-Rubric but missed §Failure-Guidance + §Evaluation-Rubric threshold note.
+
+**Census UNCHANGED 39/134/17/137/303. TV 754. streak 0/3 (push resets). GATE-READY=NO (HS-C-001 leaks now scrubbed + gated). NEXT: round-25 = P2A-108/109/110/111 (broadened SS-09 MCP client+server deep-audit) + GATE-READY on new HEAD. Expected YES round-25.**
+

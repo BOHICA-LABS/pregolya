@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.10 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
+  - "1.11 (round-24/F-P2A104-01/2026-08-28): F-P2A104-01 [HIGH] — phantom `args_schema` accessor purged. §Description, {PC-003}, and {INV-001} referenced `args_schema` as if it were a field/method on `Arc<dyn DynTool>`, but `Arc<dyn DynTool>` (a trait object) has no fields and DynTool exposes no `args_schema`; the canonical schema accessor is `schema()`. Separately, the type was stated as `serde_json::Value` but `DynTool::schema()` returns `schemars::Schema`. Fix: all three sites rewritten to use `schema()` accessor and `schemars::Schema` return type; verbatim-passthrough intent preserved (schemars 1.0 `Schema` losslessly wraps the server-supplied `serde_json::Value`). Client-side mirror of server-side fix applied to S-2.11 §AC-026 (input_schema()→schema()). Story-writer propagation: S-2.10 AC-026 and test renamed `test_BC_2_09_001_schema_verbatim_passthrough`; `schemars` added to §Library."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -26,7 +27,7 @@ wave: 2
 phase: 1a
 red_gate: false
 producer: product-owner
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -35,7 +36,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "9dc5f7f"
+input-hash: "cdbeeb3"
 extracted_from: null
 modified: []
 deprecated: null
@@ -52,13 +53,15 @@ removal_reason: null
 
 `MultiServerMcpClient` discovers the tool manifest from one or more MCP servers at
 runtime by calling `list_tools()` on each server's session, following pagination cursors
-until all tools are retrieved. Each discovered MCP `Tool` is converted into a
-`Arc<dyn DynTool>` whose `args_schema` carries the raw JSON-Schema `Value` from
-`tool.inputSchema` verbatim — no schema synthesis. (`DynTool` is the object-safe dispatch
-seam for tool collections; direct `dyn Tool` is non-object-safe per ADR-005 §Adjacent
-Trait Object-Safety Adjudications.) If multiple servers
-are queried simultaneously (no `server_name` filter), the fan-out runs concurrently
-via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
+until all tools are retrieved. Each discovered MCP `Tool` is converted into an
+`Arc<dyn DynTool>` via `convert_mcp_tool`; the resulting tool's `schema()` returns the
+server's `tool.inputSchema` wrapped verbatim as a `schemars::Schema` — no synthesis,
+no `schema_for!` re-derivation; an absent `inputSchema` yields an empty/`Value::Null`-backed
+`Schema`. (`DynTool` is the object-safe dispatch seam for tool collections; direct
+`dyn Tool` is non-object-safe per ADR-005 §Adjacent Trait Object-Safety Adjudications.)
+If multiple servers are queried simultaneously (no `server_name` filter), the fan-out
+runs concurrently via a `JoinSet` over per-server tasks, mirroring `asyncio.gather`
+semantics.
 
 ## Preconditions
 
@@ -79,8 +82,10 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
    `Arc<dyn DynTool>` via `convert_mcp_tool`. (`DynTool` is the object-safe dispatch
    seam per ADR-005 §Adjacent Trait Object-Safety Adjudications; `convert_mcp_tool`
    returns `Arc<dyn DynTool>`.)
-3. {PC-003} The tool's `args_schema` field is the raw `serde_json::Value` from
-   `tool.inputSchema` — no pydantic/schemars model is synthesized.
+3. {PC-003} `convert_mcp_tool` produces an `Arc<dyn DynTool>` whose `schema()` returns
+   the server's `tool.inputSchema` wrapped verbatim as a `schemars::Schema` — no
+   synthesis / no `schema_for!` re-derivation; absent `inputSchema` → an
+   empty/`Value::Null`-backed `Schema`.
 4. {PC-004} When `server_name = Some("srv")`, only that server's tools are returned;
    tools from other servers are not included.
 5. {PC-005} When `server_name = None`, tools from all registered servers are returned;
@@ -100,8 +105,9 @@ via a `JoinSet` over per-server tasks, mirroring `asyncio.gather` semantics.
 
 ## Invariants
 
-- {INV-001} `args_schema` on any converted tool is the verbatim JSON-Schema `Value` from the
-  MCP server; it is never synthesized, transformed, or validated by pregolya-mcp.
+- {INV-001} The `schema()` of any converted tool returns a `schemars::Schema` wrapping the
+  verbatim JSON-Schema from the MCP server's `tool.inputSchema`; it is never synthesized,
+  transformed, or validated by pregolya-mcp.
 - {INV-002} The session used for `list_tools` is created on-demand (RAII `OnDemand` session
   source) and torn down after the listing completes; no session is retained.
 - {INV-003} `MAX_ITERATIONS=1000` is the hard pagination bound; if a server returns more than

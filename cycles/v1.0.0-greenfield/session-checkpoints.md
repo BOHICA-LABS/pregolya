@@ -3215,3 +3215,16 @@ pregolya Phase-2 GAP-01 re-convergence, round-22 fix-burst CLOSED. D-292: 4 para
 D-292 = round-22 fix-burst close. 8 substantive findings ALL CLOSED: AC-031 version-agnostic sanitizer regex; AC-033 FutureExt::catch_unwind async panic-recovery; AC-036 u64 CheckpointId passthrough; AC-037 SEC-008 panic=unwind obligation; S-1.23 PreToolDecision prompt Option<String>; ADR-029 §Symbol Grounding HITL crate correction; BC-2.09.008 §RunnableConfig doc-attribution; VP-016 input-hash reconciled. HRQ-6 new: ss-TBD empty dir OBS.
 
 ### STATE: v6.03, timestamp 2026-08-28T00:00:00Z
+
+---
+
+## Archived: D-293 Session Resume Checkpoint (archived 2026-08-28; replaced by D-294)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 GAP-01 re-convergence, round-23 fix-burst CLOSED. D-293: BLOCKER cleared — holdout asymmetry scrub (HS-C-001+HS-INDEX §Acceptance-Criteria; evaluator-facing §AC sections must not contain scenario internal IDs); StreamEvent prompt Option<String> (interface-definitions.md §StreamEvent; ADR-029 §Decision 4 canonical form); ADR-029 §Decision 4 E-MCP-010/011 message corrections + §Symbol-Grounding path (src/core/tool.rs → src/tool.rs) + PreToolDecision Edit variant; BC-2.09.008 double-§ citation corrected; S-1.24. NEW GATES: verify-error-message-template-consistency.sh (BLOCKING; 16→17 validators; closes PGAP-MSGDRIFT); verify-story-changelog-direction.sh (ADVISORY; internally-monotonic). CHANGELOG NORMALIZATION: S-2.11/S-1.23/S-1.03/S-1.04 direction fixed; BC-2.09.008 Form-A v2.2/v2.3 ascending; BC-INDEX VP Seed BCs Proptest→proptest×6, Unit→unit×1. GATE-READY=YES. Census UNCHANGED 39/134/17/137/303. TV 754. 3-CLEAN streak 0/3 (new HEAD push reset). Lessons L-a/L-b/L-c. NEXT ACTION: dispatch round-24 adversary passes on the NEW HEAD of this D-293 commit.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED.
+- factory-artifacts: D-293 HEAD (see git -C .factory log -1 --format=%H).
+
+### STATE: v6.04, timestamp 2026-08-28T06:00:00Z

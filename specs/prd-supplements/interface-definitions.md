@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.89"
+version: "2.90"
 status: active
 producer: product-owner
 timestamp: 2026-08-28T00:00:00Z
 phase: 1d
 changelog:
+  - "2.90 (round-24/O-P2A104-01/2026-08-28): O-P2A104-01 [LOW]: §Tool::schema() and §DynTool::schema() doc-comments generalized. Both previously read 'JSON Schema of the tool's argument struct, derived by schemars::schema_for!' — accurate for the #[pregolya::tool] macro case but inaccurate for two verbatim/passthrough producers: convert_mcp_tool (schema sourced verbatim from the MCP server inputSchema, not re-derived) and GraphAgentTool::from_graph (schema supplied by the caller). Updated both doc-comments to note the schema MAY be schemars-derived (macro case) OR supplied verbatim/by the caller (MCP-adapted and GraphAgentTool cases). BC anchors unchanged; no behavioral change to any trait method."
   - "2.89 (round-23/O-P2A102-04/2026-08-28): O-P2A102-04 [LOW]: StreamEvent::ToolApprovalRequest.prompt type corrected String→Option<String>, aligned to PreToolDecision::PendingHumanApproval { prompt: Option<String> } canonical type and entities-graph.md ToolApprovalRequest entity definition. A None prompt is valid — the approver UI falls back to a default message; the hook is not obligated to supply one. Doc comment updated accordingly. Story-writer propagation required for S-1.24 event-13 acceptance criterion (prompt field type reference)."
   - "2.88 (round-21/OBS-P2A094-2/2026-08-28): §CheckpointSaver fts_search arg comment: added rationale note that FtsSearchConfig.thread_id: Option<&str> is legitimately a string-form FTS scope filter (not Option<Uuid>) — the FTS5 virtual table stores thread_ids as serialized strings; FtsSearchResult.thread_id: String confirms FTS operates in string space; callers with a server-layer Uuid pass .to_string() (OBS-P2A094-2 adjudication). Gate #31 type note: same rationale added inline after FtsSearchConfig definition. This closes OBS-P2A094-2 as LEGITIMATE-&str with documented rationale, preventing re-surface as drift finding."
   - "2.87 (round-19/F-P2A087-02/2026-08-27): §GraphAgentTool GraphToolApprovalPolicy::DenyInterrupts doc-comment: `PreToolCallHook::PendingHumanApproval` → `PreToolDecision::PendingHumanApproval` (F-P2A087-02 HIGH — `PendingHumanApproval` is a variant of enum `PreToolDecision` per BC-2.05.007, NOT an associated item of hook trait `PreToolCallHook` whose only method is `pre_invoke`; sibling `ForceApproveHooks` doc-comment already correctly cited `PreToolDecision::PendingHumanApproval` and is unchanged). TD-VSDD-060 sibling sweep: one live-body `PreToolCallHook::PendingHumanApproval` site in `DenyInterrupts` doc-comment corrected; zero remaining occurrences of `PreToolCallHook::PendingHumanApproval` in live body."
@@ -1466,7 +1467,13 @@ pub trait Tool: Runnable<ToolInput, ToolOutput> + Send + Sync {
     /// Human-readable description surfaced to the model in tool listings.
     fn description(&self) -> &str;
 
-    /// JSON Schema of the tool's argument struct, derived by `schemars::schema_for!`.
+    /// JSON Schema for the tool's argument struct.
+    /// Source depends on how the tool was constructed: (a) `#[pregolya::tool]` macro-generated
+    /// tools derive the schema via `schemars::schema_for!` at macro expansion time;
+    /// (b) MCP-adapted tools (via `convert_mcp_tool`) carry the verbatim `schemars::Schema`
+    /// wrapping the server-supplied `inputSchema` — no re-derivation; (c) `GraphAgentTool`
+    /// instances carry the caller-supplied `input_schema: schemars::Schema` passed to
+    /// `GraphAgentTool::from_graph`.
     /// BC anchor: BC-2.08.010 PC1 + BC-2.08.009 (schema naming stability snapshot obligation).
     fn schema(&self) -> schemars::Schema;
 
@@ -1522,7 +1529,12 @@ pub trait DynTool: Send + Sync {
     /// Human-readable description surfaced to the model in tool listings.
     fn description(&self) -> &str;
 
-    /// JSON Schema of the tool's argument struct, derived by `schemars::schema_for!`.
+    /// JSON Schema for the tool's argument struct.
+    /// Source depends on how the underlying `Tool` was constructed: (a) `#[pregolya::tool]`
+    /// macro-generated tools derive the schema via `schemars::schema_for!`; (b) MCP-adapted
+    /// tools (via `convert_mcp_tool`) carry the verbatim `schemars::Schema` wrapping the
+    /// server-supplied `inputSchema` — no re-derivation; (c) `GraphAgentTool` instances carry
+    /// the caller-supplied `input_schema: schemars::Schema` passed to `from_graph`.
     /// BC anchor: BC-2.08.010 PC1 + BC-2.08.009 (schema naming stability snapshot obligation).
     fn schema(&self) -> schemars::Schema;
 
