@@ -161,7 +161,7 @@ pregolya Phase-2 re-convergence; round-26 fix-burst CLOSED; 8 consecutive rounds
 
 ### HEADS
 - develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
-- factory-artifacts: HEAD of this round-26 D-296 commit — use `git -C .factory log -1 --format=%H` for exact SHA.
+- factory-artifacts: `7f8219d` — PUSHED (round-26 D-296 burst).
 - No .worktrees/. No open PRs expected.
 
 ### PER-WORKSTREAM
