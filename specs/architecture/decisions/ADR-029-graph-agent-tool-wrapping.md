@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.10"
+version: "2.11"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.11 (round-29/F-P2A125-01/2026-08-28): F-P2A125-01 HIGH/CWE-670/CWE-209 — §Decision 3 SEC-005 + §Decision 5 sanitization bullet: single-pattern UUID regex replaced with the canonical two-pattern union at both normative sites. The `sanitize_internal_ids` pass now applies two patterns (union, case-insensitive): (1) the canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple (no-hyphen) form `\\b[0-9a-f]{32}\\b`. Pattern (2) closes the leak where `Uuid::simple()` (32-contiguous-hex) `run_id`/`thread_id` values escape into `isError` MCP responses. URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. BC-2.09.008 {INV-001} v2.0 changelog already declared the two-pattern union; this edit restores ADR-029 as the verbatim-mirror source-of-truth for both normative sites."
   - "2.10 (round-27/O-P2A119-04/2026-08-28): §Decision 4 BoundaryApprovalHook code-sketch: message literal in the `_ =>` Deny branch had 'CRITICAL: ForceApproveHooks policy violation — tool has undeclared ...' — 'CRITICAL: ' prefix removed (Rust tracing crate has no CRITICAL level; the emit call is tracing::error!; observability.md and BC-2.09.008 §INV-004 are authoritative). No other occurrences of 'CRITICAL:' prefix in live body code sketches."
   - "2.9 (round-26/F-P2A113-01+F-P2A113-02/2026-08-28): F-P2A113-01 MED — §Symbol Grounding: E-MCP-010 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 136)'; E-MCP-011 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 137)'. Both codes are live rows in error-taxonomy.md per BC-2.09.008 assertions; the PLANNED future-tense obligation is stale. F-P2A113-02 MED — §Decision 4 two prose occurrences of 'CRITICAL-level' corrected to 'ERROR-level (tracing::error!)': (1) body sentence describing BoundaryApprovalHook Deny return 'with a CRITICAL-level structured log'; (2) §Rationale sentence describing E-MCP-011 as 'emitted (as a CRITICAL-level log entry and Deny reason)'. The Rust tracing crate has no CRITICAL level (levels are error/warn/info/debug/trace); observability.md and BC-2.09.008 §INV-004 both specify tracing::error! as the emit call. Historical changelog entries exempt per TD-VSDD-091."
   - "2.8 (round-23/F-P2A101-04/2026-08-28): F-P2A101-04 MED — §Decision 4 E-MCP-011 message template aligned verbatim to error-taxonomy.md canonical string: placeholder format corrected from curly-brace ({tool_name}/{action_risk}) to angle-bracket (<tool_name>/<action_risk>); middle clause corrected from 'graphs with declared ActionRisk < Medium for every tool' to 'graphs composed exclusively of read-only tools (ActionRisk < Medium)'. Sibling-check E-MCP-010: §Decision 5 table message confirmed matching error-taxonomy.md verbatim — no additional drift. §Decision 4 illustrative-note updated to reflect table is now verbatim-aligned."
@@ -281,9 +282,14 @@ execution context. Convention:
 
 - **Framework sanitization pass (secondary backstop — UUID-shaped identifiers):**
   The `BoundaryApprovalHook` and `GraphRunner::run` apply a `sanitize_internal_ids` pass
-  before populating `content[0].text` on any `isError: true` path. The regex is
-  version-agnostic (covers all UUID versions, not restricted to v4):
-  `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`.
+  before populating `content[0].text` on any `isError: true` path. The pass applies two
+  patterns (union, case-insensitive): (1) the canonical hyphenated form
+  `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple
+  (no-hyphen) form `\b[0-9a-f]{32}\b`. Together these cover all standard uuid-crate
+  rendering forms including `Display` (hyphenated) and `simple()` (contiguous hex).
+  URN and braced forms contain the hyphenated substring and are covered by pattern (1).
+  The `\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents
+  stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token.
   This covers `run_id` (a `Uuid`, any version) and server-layer `thread_id` in the
   server/run/config path. Ground truth: `thread_id` is `Uuid` in `entities-server.md`
   §Thread, §Run, and `interface-definitions.md` §RunnableConfig (`thread_id: Option<Uuid>`);
@@ -510,8 +516,15 @@ synchronous tools/call invocation — retrying the same invocation cannot succee
 Two passes are chained before populating `content[0].text`:
 1. `mcp::sanitize::redact_credentials` — per BC-2.09.007 {INV-003} (DI-010 credential opacity)
 2. `sanitize_internal_ids` — removes UUID-shaped internal identifiers using a
-   version-agnostic UUID regex (`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
-   per SEC-005 / §Decision 3 error-path STATE-ISOLATION convention. Covers `run_id` (a
+   two-pattern union (case-insensitive) per SEC-005 / §Decision 3 error-path STATE-ISOLATION
+   convention: (1) the canonical hyphenated form
+   `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple
+   (no-hyphen) form `\b[0-9a-f]{32}\b`. Together these cover all standard uuid-crate
+   rendering forms including `Display` (hyphenated) and `simple()` (contiguous hex).
+   URN and braced forms contain the hyphenated substring and are covered by pattern (1).
+   The `\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents
+   stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token.
+   Covers `run_id` (a
    `Uuid`, any version) and server-layer `thread_id` (`thread_id: Uuid` on all
    server/run/config paths per entities-server.md §Thread / §Run and
    interface-definitions.md §RunnableConfig). The `FtsSearchConfig.thread_id: Option<&str>`
@@ -690,6 +703,8 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.11 | 2026-08-28 | architect | round-29/F-P2A125-01 | F-P2A125-01 HIGH/CWE-670/CWE-209: §Decision 3 SEC-005 + §Decision 5 sanitization bullet — single-pattern UUID regex replaced with the canonical two-pattern union at both normative sites. `sanitize_internal_ids` now applies two patterns (union, case-insensitive): (1) canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) simple (no-hyphen) form `\b[0-9a-f]{32}\b`. Pattern (2) closes the `Uuid::simple()` (32-contiguous-hex) leak into `isError` MCP responses. URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. BC-2.09.008 {INV-001} v2.0 changelog already declares the two-pattern union; this edit restores ADR-029 as the verbatim-mirror source-of-truth for both normative sites. |
+| 2.10 | 2026-08-28 | architect | round-27/O-P2A119-04 | O-P2A119-04 OBS: §Decision 4 BoundaryApprovalHook code-sketch — `"CRITICAL: ForceApproveHooks policy violation ..."` prefix removed (`CRITICAL:` prefix); Rust tracing crate has no CRITICAL level; the emit call is `tracing::error!`; observability.md and BC-2.09.008 §INV-004 are authoritative. No other occurrences of `CRITICAL:` prefix in live body code sketches. |
 | 2.9 | 2026-08-28 | architect | round-26/F-P2A113-01+F-P2A113-02 | F-P2A113-01 MED: §Symbol Grounding E-MCP-010 status "PLANNED — PO must mint in error-taxonomy.md" → "EXISTS — minted in error-taxonomy.md (catalog entry 136)"; E-MCP-011 status "PLANNED — PO must mint in error-taxonomy.md" → "EXISTS — minted in error-taxonomy.md (catalog entry 137)". Both codes are live rows per BC-2.09.008 assertions; stale future-tense obligations removed. F-P2A113-02 MED: §Decision 4 two prose "CRITICAL-level" occurrences corrected to "ERROR-level (tracing::error!)": body sentence "with a CRITICAL-level structured log" and Rationale sentence "emitted (as a CRITICAL-level log entry and Deny reason)". The Rust tracing crate has no CRITICAL level; observability.md and BC-2.09.008 §INV-004 specify tracing::error!. Historical changelog entries exempt. |
 | 2.8 | 2026-08-28 | architect | round-23/F-P2A101-04 | F-P2A101-04 MED: §Decision 4 E-MCP-011 message template aligned verbatim to error-taxonomy.md canonical string — placeholder format corrected from curly-brace ({tool_name}/{action_risk}) to angle-bracket (<tool_name>/<action_risk>); middle clause corrected from 'graphs with declared ActionRisk < Medium for every tool' to 'graphs composed exclusively of read-only tools (ActionRisk < Medium)'. Sibling-check E-MCP-010: §Decision 5 table message confirmed matching error-taxonomy.md verbatim — no additional drift. §Decision 4 illustrative-note updated to reflect table is now verbatim-aligned. |
 | 2.7 | 2026-08-28 | architect | round-23/F-P2A101-01+F-P2A103-01+F-P2A103-03 | F-P2A101-01 MED: §Decision 4 node-level interrupt path inline message extended to canonical full form — added remedy clause '; restructure the graph so it does not call interrupt() during a synchronous tools/call invocation' (byte-identical to error-taxonomy.md E-MCP-010 message template). F-P2A103-01 MED: §Symbol Grounding DynTool and ToolOutput rows — Canonical-Location corrected from pregolya-core/src/core/tool.rs to pregolya-core/src/tool.rs (no core/ path segment); matches BC-2.08.009 and BC-2.08.010 §Architecture Anchors; full §Symbol Grounding sibling sweep found no other src/core/ mis-anchors. F-P2A103-03 LOW: §Symbol Grounding PreToolDecision row — added Edit variant (canonical four: Approve/Deny/Edit/PendingHumanApproval per BC-2.05.007 H1 and ADR-018 §Decision 1). |

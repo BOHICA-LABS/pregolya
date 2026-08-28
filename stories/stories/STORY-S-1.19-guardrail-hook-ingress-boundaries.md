@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,6 +13,7 @@ changelog:
   - "1.3 (round-25/F-P2A109-01/2026-08-28): Async panic mechanism corrected — synchronous `std::panic::catch_unwind` is inadequate for async `GuardrailHook::evaluate` (cannot catch panics fired during `.await` polling; CWE-248/703; mirrors ADR-029 §Decision 5 / BC-2.09.008 EC-010). Task §5, EC-001, and §Previous Story Intelligence S-1.04 Gotchas row updated to `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` at dispatch site. SEC-008-style `panic=unwind` build-profile note added. `futures` crate added to §Library & Framework Requirements."
   - "1.4 (round-26/F-P2A113-03/2026-08-28): AC-024 added: SEC-008 panic-profile build obligation mirroring S-2.11 AC-037 — `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` in `pregolya-graph/src/provenance.rs` is voided if release profile sets `panic = \"abort\"`; implementer obligation is `// SEC-008` comment annotation at dispatch site; devops-engineer asserts workspace `Cargo.toml` profile at Phase-3 init. Traces to BC-2.11.002 PC-001 (unconditional hook dispatch). BC-2.11.002 Covered ACs updated to include AC-024. Task 11 added: SEC-008 annotation obligation. Token Budget updated (~5,000 → ~5,500 story spec; total ~25,500). Input-hash updated."
   - "1.5 (R28/F-P2A123-03/2026-08-28): AC-024 re-anchored from BC-2.11.002 {PC-001} to BC-2.11.002 {INV-005} — SEC-008 async panic-recovery obligation now lives in {INV-005} (added R27/v1.15); {PC-001} covers unconditional hook dispatch only, not panic recovery. Task 11 BC trace annotation updated from PC-001 to INV-005. Input-hash refreshed."
+  - "1.6 (R29/F-P2A127-02+O-P2A125-02/2026-08-28): (1) AC-025 added: SEC-008 async-catch MECHANISM Red Gate — `GuardrailHook::evaluate` panic during `.await` polling caught via `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` in `provenance.rs`; content treated as Fail (fail-closed); `Err(PregolyaError { code: \"E-CORE-007\", .. })` propagated; Red Gate test `test_BC_2_11_002_hook_panic_caught_fail_closed_e_core_007()` MUST drive panic through `.await` (synchronous `std::panic::catch_unwind` substitute must NOT satisfy it); traces to BC-2.11.002 {INV-005}/EC-001 (F-P2A127-02). (2) §Library & Framework Requirements `futures` row: secondary anchor updated from `ADR-029 §Decision 5` to `BC-2.11.002 {INV-005}` (cross-subsystem anchor correction; EC-001 retained) (O-P2A125-02). (3) BC-2.11.002 covered-ACs updated to include AC-025. Token Budget updated (~5,500 → ~5,700 spec; total ~25,500 → ~25,700). input-hash unchanged — no BC input file changes in round-29."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.001.md
@@ -58,7 +59,7 @@ tdd_mode: strict
 | BC | Title | Covered ACs |
 |----|-------|------------|
 | BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary | AC-001..AC-004 |
-| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | AC-005..AC-009, AC-024 |
+| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | AC-005..AC-009, AC-024, AC-025 |
 | BC-2.11.003 | GuardrailHook Fires at RAG Ingress | AC-010..AC-013 |
 | BC-2.11.004 | GuardrailHook Fires at Memory Ingress | AC-014..AC-016 |
 | BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | AC-017..AC-020 |
@@ -142,6 +143,21 @@ sets `panic = "abort"`, `futures::future::FutureExt::catch_unwind(AssertUnwindSa
 `// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace profile at Phase-3 init`
 comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` dispatch site in `pregolya-graph/src/provenance.rs` to document the `panic = "unwind"` dependency of the ingress fail-closed catch. The devops-engineer asserts the workspace release profile at Phase-3 workspace init. Verified by devops-engineer at Phase-3; implementer obligation is the comment annotation. (See EC-001 for the `catch_unwind` mechanism; see S-2.11 AC-037 for the analogous SEC-008 obligation on the `GraphAgentTool` path.)
 
+### AC-025 (traces to BC-2.11.002 INV-005 + EC-001 — Red Gate, SEC-008 async-catch mechanism)
+**Red Gate / SEC-008 async-catch mechanism:** When `GuardrailHook::evaluate` panics DURING
+`.await` polling, the panic MUST be caught via
+`futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await`
+at the dispatch site in `pregolya-graph/src/provenance.rs`. A caught panic causes content to
+be treated as `Fail` (fail-closed) and `Err(PregolyaError { code: "E-CORE-007", .. })` is
+propagated. The Red Gate test `test_BC_2_11_002_hook_panic_caught_fail_closed_e_core_007()` MUST
+drive the panic through `.await` polling — a synchronous `std::panic::catch_unwind` substitute
+MUST NOT satisfy this criterion (it cannot intercept panics that fire during `.await` execution;
+CWE-248/703). Verified by `test_BC_2_11_002_hook_panic_caught_fail_closed_e_core_007()` (mock
+`GuardrailHook` implementation whose `evaluate` future panics mid-poll via
+`std::future::poll_fn`; assert `Err(PregolyaError { code: "E-CORE-007", .. })` is returned and
+zero bytes of the original content appear in any downstream buffer). (Mirrors S-2.11 AC-033 for
+the analogous `GraphAgentTool::invoke_dyn` path.)
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -173,7 +189,7 @@ comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, 
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~5,500 |
+| This story spec | ~5,700 |
 | BC files (6 BCs) | ~9,000 |
 | S-1.14 context (BSP engine, model context) | ~1,500 |
 | S-1.17 context (StreamEvent for GuardrailDecision) | ~1,000 |
@@ -181,9 +197,9 @@ comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, 
 | `pregolya-graph/src/provenance.rs` | ~2,000 |
 | Test files | ~4,500 |
 | Interface-definitions.md (GuardrailHook trait section) | ~800 |
-| **Total** | **~25,500** |
+| **Total** | **~25,700** |
 | Agent context window | ~200K (Sonnet) |
-| **Budget usage** | **~12.75%** |
+| **Budget usage** | **~12.85%** |
 
 ## Tasks (MANDATORY)
 
@@ -228,7 +244,7 @@ comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, 
 | `serde_json` | workspace-pinned | `IngressContent::RagChunk(Value)` and `MemoryItem(Value)` payloads |
 | `tokio` | workspace-pinned | Async `GuardrailHook::evaluate` dispatch |
 | `tracing` | workspace-pinned | `WARN` log + structured event emission |
-| `futures` | workspace-pinned | `FutureExt::catch_unwind(AssertUnwindSafe(...))` for async-safe panic recovery in `provenance.rs` dispatch (EC-001; ADR-029 §Decision 5) |
+| `futures` | workspace-pinned | `FutureExt::catch_unwind(AssertUnwindSafe(...))` for async-safe panic recovery in `provenance.rs` dispatch (EC-001; BC-2.11.002 {INV-005}) |
 
 **Forbidden Dependencies:** `pregolya-core/src/guardrail.rs` must NOT import from `pregolya-graph`. Dependency direction: `pregolya-graph` → `pregolya-core`.
 

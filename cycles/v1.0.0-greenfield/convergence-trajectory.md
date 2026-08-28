@@ -3986,3 +3986,39 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 
 **Census UNCHANGED 39/134/17/137/303. TV 754→757 (ground-truth correction; GTV 11; grand total 768). VP 17. streak 0/3 (new HEAD push resets per frozen-HEAD rule). GATE-READY=NO (HRQ-1/2/4/5/6 carry-forward; TV registry FIXED). NEXT: round-29 P2A-124/125/126/127 + GATE-READY re-run on new HEAD.**
 
+## Round-29 (D-299) — 2026-08-28
+
+**Frozen HEAD: c78baa04a3d097e1dcc8fd1fa5a3216b47254411 (post-round-28 D-298 push)**
+
+**Adversary passes on frozen HEAD c78baa04:**
+
+| Pass | Findings | Delta | Severity | Status |
+|------|----------|-------|----------|--------|
+| P2A-124 (realizability) | 1 | — | 1 OBS (S-2.11 mint comment omitted E-MCP-011) | CLEAN(PR-merge)=YES, CLEAN(strict)=NO |
+| P2A-125 (security) | 2 | — | 1 HIGH (CWE-670/209), 1 LOW | NOT CLEAN |
+| P2A-126 (consistency/census/records) | 0 | — | — | CLEAN(strict)=YES |
+| P2A-127 (SS-09+SS-11 deep-audit) | 2 | — | 2 MED | NOT CLEAN |
+| CV GATE-READY audit | N/A | — | GATE-READY=NO (sole blocker HRQ-1 3/3-CLEAN streak; spec-quality CLEAN: all counts verified, TV=757 confirmed by awk, all 134 §Story-Anchors filled, no phantom types/placeholders/orphans). HRQ-3 CLOSED. | NOT GATE-READY (HRQ-1 only) |
+
+**Finding Progression trajectory-tail: →1→2→0→2**
+
+**All findings CLOSED in D-299 fix-burst (all per DIRECTIVE 2 fix-in-scope):**
+
+| Finding | Severity | Closure |
+|---------|----------|---------|
+| F-P2A125-01 | HIGH, CWE-670/209 | ADR-029 §Decision 3 SEC-005 and §Decision 5 still carried single-pattern sanitizer regex — R28 two-pattern union was applied to BC-2.09.008 {INV-001} but NOT propagated to ADR-029. S-2.11 §Arch-Compliance and §File-Structure summary rows also stale. Fixed: ADR-029 §Decision 3 SEC-005 + §Decision 5 → two-pattern union `[0-9a-f]{32}|[0-9a-f]{8}-...-[0-9a-f]{12}`; S-2.11 §Arch-Compliance + §File-Structure summary rows → two-pattern. architect v2.10→v2.11; story-writer v1.20→v1.21. Exhaustive corpus grep confirmed ADR-029 was the ONLY stale spec occurrence. |
+| F-P2A127-01 | MED | S-2.11 §File-Structure ToolRegistry type cell had surplus '>' (5 brackets). R28 module-decomposition fix cleared the module-decomp occurrence but this 6th occurrence (in S-2.11 §File-Structure) was missed. Fixed to 4 brackets. story-writer v1.21. grep confirms zero remaining 5-bracket corpus-wide. |
+| F-P2A127-02 | MED | S-1.19 had only the SEC-008 build-profile AC (AC-024); no async-catch MECHANISM test AC. Sibling S-2.11 has AC-033. Added S-1.19 AC-025 Red Gate (panic driven through `.await` → FutureExt::catch_unwind fail-closed → E-CORE-007), tracing BC-2.11.002 {INV-005}/EC-001; BC-coverage table + token budget updated. story-writer v1.5→v1.6. |
+| O-P2A125-02 | LOW | S-1.19 `futures` crate dependency row anchor cited ADR-029 §Decision 5 (SS-09) for an SS-11 mechanism; re-anchored to BC-2.11.002 {INV-005} (EC-001 retained). story-writer. |
+| O-P2A124-01 | OBS | S-2.11 frontmatter mint comment now includes E-MCP-011. story-writer. |
+
+**CONFIRMED VERIFIED NON-DEFECTS (P2A-126 + GATE-READY spec-quality CLEAN):** P2A-126 independently re-counted all 4 registries + VP arithmetic + DAG + SS-09 cluster: all reconcile. GATE-READY awk-verified TV column = 757, all 134 §Story-Anchors filled, zero phantom types/placeholders/orphans. Census/consistency lens fully converged.
+
+**Root-cause meta-pattern (L-220/L-221 codified):** Round-29 findings were ENTIRELY round-28 fix-residue. R28 applied: (1) two-pattern sanitizer union to BC-2.09.008 {INV-001} but NOT swept to ADR-029 §Decision 3/5 or S-2.11 summary tables; (2) ToolRegistry type fix to module-decomposition but NOT swept to S-2.11 §File-Structure (6th occurrence). Both instances of the same EXHAUSTIVE-SWEEP SIBLING-MIRROR class — the fixer fixed the finding-cited location only, without corpus-wide sweep for all normative siblings carrying the same canonical form. OPERATIONAL NOTE: 1 mid-burst agent stall this round (story-writer given 4 findings across S-1.19 + S-2.11) — pre-split discipline for >~4 findings or >~3 files recommended (L-221). See lessons.md L-220/L-221.
+
+**Process-gap follow-up candidates (first self-improvement wave):**
+- EXHAUSTIVE-SWEEP-ENFORCE: candidate fix-burst-closing sweep script that greps for old canonical form corpus-wide before burst commit; owner: devops-engineer.
+- BURST-PRE-SPLIT-DISCIPLINE: orchestrator pre-split for >~4 findings or >~3 files into smaller agent tasks; 2 mid-burst stalls this session (R26 PO, R29 story-writer); owner: orchestrator.
+
+**Census UNCHANGED 39/134/17/137/303. TV 757. VP 17. streak 0/3 (new HEAD push resets per frozen-HEAD rule). GATE-READY=NO (HRQ-1 sole-blocker; spec-quality CLEAN; HRQ-3 CLOSED). NEXT: round-30 P2A-128/129/130/131 + GATE-READY re-run on new HEAD.**
+
