@@ -8,8 +8,8 @@ status: draft
 producer: story-writer
 timestamp: 2026-08-24T14:00:00Z
 changelog:
-  - "1.5 (F-P2A087-01/round-19/2026-08-27): Symbol-canon propagation: DynTool::invoke → DynTool::invoke_dyn at 3 sites — AC-001 §Description, §Subsystem anchor, Architecture Compliance Rule 1. DynTool::invoke is not a method on the object-safe DynTool trait; the executor-dispatch seam is invoke_dyn. input-hash updated to 1b3760d."
   - "1.6 (round-22/F-P2A096-04/2026-08-28): PreToolDecision type drift corrected — PendingHumanApproval { prompt: String } changed to PendingHumanApproval { prompt: Option<String> } per canonical interface-definitions.md §PreToolDecision, entities-graph.md §PreToolDecision, ADR-018 §Decision 1, and ToolApprovalRequest.prompt. Sibling-swept: one other prompt occurrence (AC-005 destructure { prompt }) is type-agnostic and requires no change."
+  - "1.5 (F-P2A087-01/round-19/2026-08-27): Symbol-canon propagation: DynTool::invoke → DynTool::invoke_dyn at 3 sites — AC-001 §Description, §Subsystem anchor, Architecture Compliance Rule 1. DynTool::invoke is not a method on the object-safe DynTool trait; the executor-dispatch seam is invoke_dyn. input-hash updated to 1b3760d."
   - "1.4 (P2A-046 OBS-1/2026-08-24): AC-009 heading compressed ordinal normalized to stable tag"
   - "1.3 (P2A-043 F-04-adj/2026-08-24): 6 wrong-ordinal EC-source citations corrected per PO adjudication"
   - "1.2 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags"

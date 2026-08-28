@@ -3,16 +3,17 @@ document_type: story
 level: ops
 story_id: S-1.24
 epic_id: E-09
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.6 (R23-fix-burst/2026-08-28): O-P2A102-04 propagation — AC-002 ToolApprovalRequest `prompt` field confirmed `Option<String>` per interface-definitions.md canonical; no body type-shape change required (AC-002 already correct). Changelog direction flipped to descending (newest-first)."
   - "1.5 (P2-bc-completeness-burst-B/2026-08-26): BC-2.06.006 {INV-006}/{EC-006}: AC-011 Halt-over-compaction-failure precedence rule. BC table version bumped."
-  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 mis-anchors corrected (AC-004 INV-001→INV-004, AC-008 PC-001→PC-002, AC-009 PC-002→PC-001, AC-010 INV-001→INV-003)"
-  - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
-  - "1.3 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags"
   - "1.4 (P2A-043 F-05/2026-08-24): escalated EC citations redirected to PC/INV per PO adjudication."
+  - "1.3 (P2A-043 F-05/2026-08-24): compliance-table EC citations converted to stable tags"
+  - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
+  - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors; 4 mis-anchors corrected (AC-004 INV-001→INV-004, AC-008 PC-001→PC-002, AC-009 PC-002→PC-001, AC-010 INV-001→INV-003)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.004.md
@@ -20,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "e47dba9"
+input-hash: "9cc4c11"
 traces_to:
   - behavioral-contracts/BC-2.06.004
   - behavioral-contracts/BC-2.06.005
@@ -223,3 +224,14 @@ crates/pregolya-graph/
 - `pregolya-graph/src/event_emitter.rs` — add emit functions for `ToolApprovalRequest`, `ToolApprovalResolved`, `CompactionEvent` (variants already defined in S-1.17; no new variant additions)
 - `pregolya-graph/src/executor/tool_dispatch.rs` — add emit call in PendingHumanApproval branch and resume path
 - `pregolya-graph/src/compaction/executor.rs` — add emit call after checkpoint put (step 6 of compaction cycle)
+
+## Changelog
+
+| Version | Round / Date | Summary |
+|---------|-------------|---------|
+| 1.6 | R23-fix-burst / 2026-08-28 | O-P2A102-04 propagation — AC-002 ToolApprovalRequest `prompt` field confirmed `Option<String>` per interface-definitions.md canonical; no body type-shape change required (AC-002 already correct). Changelog direction flipped to descending (newest-first). |
+| 1.5 | P2-bc-completeness-burst-B / 2026-08-26 | BC-2.06.006 {INV-006}/{EC-006}: AC-011 Halt-over-compaction-failure precedence rule. BC table version bumped. |
+| 1.4 | P2A-043 F-05 / 2026-08-24 | Escalated EC citations redirected to PC/INV per PO adjudication. |
+| 1.3 | P2A-043 F-05 / 2026-08-24 | Compliance-table EC citations converted to stable tags. |
+| 1.2 | P2A-043 F-04 / 2026-08-24 | Old-form ordinal cross-refs converted to stable tags. |
+| 1.1 | M3/ADR-027 / 2026-08-24 | AC traces re-cited to stable clause anchors; 4 mis-anchors corrected (AC-004 INV-001→INV-004, AC-008 PC-001→PC-002, AC-009 PC-002→PC-001, AC-010 INV-001→INV-003). |

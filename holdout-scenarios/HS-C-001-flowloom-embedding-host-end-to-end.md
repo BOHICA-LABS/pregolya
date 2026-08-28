@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
@@ -57,6 +57,7 @@ coverage_areas:
   - tenancy
 coverage_gap_pending: []
 changelog:
+  - "1.4 (round-23/F-1/2026-08-28): F-1 [BLOCKER]: Asymmetry scrub — §Verification Approach step 8 and §Evaluation Rubric Check 5 purged of internal identifiers (BC/VP/error codes). Each internal ID replaced with an observable behavioral description at the wire and JSON-RPC response level. No scenario semantics changed; Check 5 must-pass requirement and 0.10 weight unchanged."
   - "1.2 (F-P2A-065-06/2026-08-26): Terminology correction only — scenario semantics unchanged. Coverage-gap resolution note (line referencing E-MCP-010): corrected 'EXEC severity' to 'EXEC category, severity: broken' — EXEC is a category label, not a severity value; the severity value for E-MCP-010 is 'broken'. No scenario steps, checks, preconditions, or expected behaviors altered."
   - "1.3 (round-12/GAP-01-type-grounding/2026-08-27): BC-Coverage table type-grounding — traceability metadata only, scenario narrative unchanged. {PC-003}/{PC-004} row: 'extract_output → ToolOutput::Structured' → 'extract_output → serde_json::Value' (DynTool::invoke_dyn returns Result<serde_json::Value, PregolyaError>; ToolOutput::Structured is a phantom variant per ADR-029 §Symbol Grounding). {INV-001}+VP-016 row: 'ToolOutput contains only extract_output-selected fields' → 'the serde_json::Value returned by invoke_dyn contains only extract_output-selected fields'."
   - "1.1 (GAP-01 resolved, 2026-08-26): BC-2.09.008 (GraphAgentTool; mcp::graph_tool) human-approved v1 scope addition (ADR-029). GAP-01 marked RESOLVED — STATE-ISOLATION {INV-001} VP-016 proptest P1 proof target, fail-closed interrupt {INV-002} E-MCP-010 minted. Check 5 promoted to first-class must-pass (must_pass: yes, 0.10 weight retained). BC linkage table extended with four BC-2.09.008 rows. Sealed note, Check 5 heading, Verification step 8, Evaluation Rubric, and Failure Guidance un-contingented."
@@ -287,15 +288,15 @@ session via BC-2.09.008 authorship and human approval (GAP-01/HS-C-001).*
    ancestry identifiers. Verify post-resume events use a new run-level identifier but the
    same ancestry context.
 8. (Check 5) Connect an external MCP client to the runtime's outbound MCP server; send
-   `tools/list`; assert `run_agent` is present with a name, description, and inputSchema
-   (BC-2.09.008 {PC-002}). Send `tools/call { "name": "run_agent", … }`; assert a
-   well-formed tool result is returned with `isError: false` on success and at least one
-   text content entry containing the agent's output (BC-2.09.008 {PC-003}/{PC-004}).
-   Assert the response contains no internal state (no checkpoint IDs, no run IDs, no
-   intermediate node outputs, no message history — BC-2.09.008 {INV-001}/VP-016 proof
-   target). Assert that if the graph encounters an interrupt, the MCP response returns
-   `isError: true` with a sanitized error message and does not hang (BC-2.09.008
-   {INV-002}/E-MCP-010).
+   `tools/list`; assert `run_agent` is present with a name, description, and inputSchema.
+   Send `tools/call { "name": "run_agent", … }`; assert a well-formed tool result is
+   returned with `isError: false` on success and at least one text content entry containing
+   the agent's output. Assert the MCP tool response contains ONLY the caller-selected output
+   fields — no internal graph state, checkpoint or run identifiers, intermediate node
+   outputs, or message history. Assert that if the agent run encounters an in-graph
+   human-approval interrupt, the MCP response surfaces a structured JSON-RPC tool error
+   (`isError: true`) with a sanitized error message, and the call returns promptly rather
+   than hanging.
 9. Start two runs concurrently: `EMBED-RUN-ALPHA` (TENANT-ALPHA) and `EMBED-RUN-BETA`
    (TENANT-BETA). Inject different `lookup_record` return values for each tenant.
    Assert each run's `update_record` (if approved) uses the value from its own tenant's
@@ -313,7 +314,7 @@ session via BC-2.09.008 authorship and human approval (GAP-01/HS-C-001).*
 | Check 2: Write blocked fail-closed; pending-approval state durable | 0.25 | yes | update_record not invoked; approval request survives restart; lookup not re-run |
 | Check 3: Approval → single execution; idempotent re-deliver | 0.20 | yes | update_record executes exactly once; second APPROVE has no side effect |
 | Check 4: Typed streaming events with stable correlation ids | 0.10 | yes | all events carry stable run_id; resumed run has correct ancestry context |
-| Check 5: Agent exposed as MCP tool (BC-2.09.008) | 0.10 | yes | tools/list shows run_agent with inputSchema; tools/call returns well-formed result; no internal state in response (VP-016); interrupt surfaces as E-MCP-010, no hang |
+| Check 5: Agent exposed as MCP tool | 0.10 | yes | tools/list shows run_agent with inputSchema; tools/call returns well-formed result; the MCP tool response contains ONLY the caller-selected output fields — no internal graph state, checkpoint or run identifiers, or intermediate node data; an in-graph human-approval interrupt surfaces as a structured JSON-RPC tool error (isError:true) and the call returns promptly rather than hanging |
 | Check 6: Cross-tenant state isolation | 0.15 | yes | each tenant's run state and lookup result are independent |
 
 **Must-pass threshold (all six checks):** weighted average ≥ 0.80. All six checks are

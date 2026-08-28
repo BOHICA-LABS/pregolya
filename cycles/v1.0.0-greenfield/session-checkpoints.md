@@ -3192,3 +3192,26 @@ D-291 = round-21 fix-burst close (this commit). 6 findings ALL CLOSED: VP-016 cr
 Round-21 found a GENUINE new finding class (cross-crate cfg(test) visibility — compiler-invisible to dependent crates' test builds). All 3 passes completed cleanly. verify-no-phantom-types.sh (21 probes) unchanged; verify-module-criticality-vp-column.sh created (advisory, wired pre-commit). SEC-008 deferral: pregolya-mcp release profile must declare panic="unwind" or the async catch_unwind is void — deferred to Phase-3 workspace Cargo.toml where all release profiles are set together.
 
 ### STATE: v6.02, timestamp 2026-08-28T00:00:00Z
+
+---
+
+## ARCHIVED CHECKPOINT: v6.03 / D-292 (round-22 close; archived 2026-08-28 when D-293 replaced it)
+
+<!-- D-292 checkpoint replaced by D-293 in STATE.md v6.04. Archived here per content-routing rules. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 GAP-01 re-convergence, round-22 fix-burst CLOSED. D-292: 4 parallel adversary passes (P2A-096/097/098/099) ALL COMPLETED + GATE-READY YES (6 HRQs). NOT CLEAN. 8 substantive findings (6 HIGH + 2 MED) ALL CLOSED + 2 LOW/records + 1 OBS. ROOT CAUSE: incomplete propagation of security-sweep corrections from prior rounds — sanitizer version-agnostic regex, async panic-recovery correctness, §Symbol-Grounding HITL crate column, PreToolDecision prompt type. KEY CLOSES: AC-031 version-agnostic UUID sanitizer regex (run_id + server thread_id, u64 CheckpointId excluded); AC-033 FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...))) INSIDE invoke_dyn; AC-036 u64 CheckpointId passthrough correctness boundary (TV-013); AC-037 SEC-008 panic=unwind build-profile (Phase-3 devops obligation); S-1.23 PreToolDecision::PendingHumanApproval { prompt: Option<String> } (was String); ADR-029 §Symbol Grounding HITL types pregolya-core→graph::hitl; BC-2.09.008 §RunnableConfig doc-attribution; VP-016 input-hash reconciled. SEC-008 panic=unwind deferral from round-21 carries forward (Phase-3 Cargo.toml). GATE-READY=YES (6 HRQs carry-forward). 3-CLEAN streak 0/3 (reset by this push). TV 754. NEXT ACTION: dispatch round-23 adversary passes on the NEW HEAD of this D-292 commit. If CLEAN(strict) → streak advances to 1/3.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
+- factory-artifacts: HEAD of this round-22 D-292 commit — PUSH this HEAD.
+- No .worktrees/. No open PRs expected.
+
+### PER-WORKSTREAM
+- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-22 closed on this HEAD. RESUME NEXT-ACTION: dispatch round-23 adversary passes on THIS HEAD. Streak 0/3 on THIS HEAD (frozen-HEAD rule: any new push resets to 0/3).
+- Convergence-tail guidance: rounds 20-22 found distinct new finding classes each round. Round-22 class: sanitizer version-agnostic correctness + §Symbol-Grounding HITL crate column + prompt type drift.
+
+### DECISION DELTA
+D-292 = round-22 fix-burst close. 8 substantive findings ALL CLOSED: AC-031 version-agnostic sanitizer regex; AC-033 FutureExt::catch_unwind async panic-recovery; AC-036 u64 CheckpointId passthrough; AC-037 SEC-008 panic=unwind obligation; S-1.23 PreToolDecision prompt Option<String>; ADR-029 §Symbol Grounding HITL crate correction; BC-2.09.008 §RunnableConfig doc-attribution; VP-016 input-hash reconciled. HRQ-6 new: ss-TBD empty dir OBS.
+
+### STATE: v6.03, timestamp 2026-08-28T00:00:00Z

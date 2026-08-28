@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.88"
+version: "2.89"
 status: active
 producer: product-owner
 timestamp: 2026-08-28T00:00:00Z
 phase: 1d
 changelog:
+  - "2.89 (round-23/O-P2A102-04/2026-08-28): O-P2A102-04 [LOW]: StreamEvent::ToolApprovalRequest.prompt type corrected String→Option<String>, aligned to PreToolDecision::PendingHumanApproval { prompt: Option<String> } canonical type and entities-graph.md ToolApprovalRequest entity definition. A None prompt is valid — the approver UI falls back to a default message; the hook is not obligated to supply one. Doc comment updated accordingly. Story-writer propagation required for S-1.24 event-13 acceptance criterion (prompt field type reference)."
   - "2.88 (round-21/OBS-P2A094-2/2026-08-28): §CheckpointSaver fts_search arg comment: added rationale note that FtsSearchConfig.thread_id: Option<&str> is legitimately a string-form FTS scope filter (not Option<Uuid>) — the FTS5 virtual table stores thread_ids as serialized strings; FtsSearchResult.thread_id: String confirms FTS operates in string space; callers with a server-layer Uuid pass .to_string() (OBS-P2A094-2 adjudication). Gate #31 type note: same rationale added inline after FtsSearchConfig definition. This closes OBS-P2A094-2 as LEGITIMATE-&str with documented rationale, preventing re-surface as drift finding."
   - "2.87 (round-19/F-P2A087-02/2026-08-27): §GraphAgentTool GraphToolApprovalPolicy::DenyInterrupts doc-comment: `PreToolCallHook::PendingHumanApproval` → `PreToolDecision::PendingHumanApproval` (F-P2A087-02 HIGH — `PendingHumanApproval` is a variant of enum `PreToolDecision` per BC-2.05.007, NOT an associated item of hook trait `PreToolCallHook` whose only method is `pre_invoke`; sibling `ForceApproveHooks` doc-comment already correctly cited `PreToolDecision::PendingHumanApproval` and is unchanged). TD-VSDD-060 sibling sweep: one live-body `PreToolCallHook::PendingHumanApproval` site in `DenyInterrupts` doc-comment corrected; zero remaining occurrences of `PreToolCallHook::PendingHumanApproval` in live body."
   - "2.86 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): §GraphAgentTool TYPE-GROUNDING reconciliation. F-P2A072-03 HIGH: `from_graph<S>` redesigned as non-generic: signature changed from `from_graph<S>(name, description, Arc<CompiledGraph<S>>, Fn(&S)->Value) where S: GraphState+Deserialize+JsonSchema` to `from_graph(name, description, Arc<CompiledStateGraph>, schemars::Schema, Fn(&serde_json::Value)->serde_json::Value)`. `CompiledGraph<S>` phantom replaced with `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}); `GraphState` phantom removed (NOT a trait — entities-graph.md §GraphState); schema derivation is caller responsibility (`schemars::schema_for!(StateType)` passed as `input_schema`). `extract_output` closure receives `&serde_json::Value` (channel-composed state from `CompiledStateGraph::invoke`) instead of `&S`. Dep-edge source note updated. F-P2A072-02 HIGH: `DenyInterrupts` variant doc-comment `Ok(ToolOutput::Structured)` phantom replaced with `Ok(serde_json::Value from extract_output_result)`. F-P2A072-01 HIGH: `GraphRunner` trait doc-comment `hides CompiledGraph<S>` phantom replaced with `holds Arc<CompiledStateGraph> internally`. TD-VSDD-060 sibling sweep: all three live-body phantom-surface sites in this section corrected in same burst."
@@ -1189,8 +1190,9 @@ pub enum StreamEvent {
         tool_args:   serde_json::Value,
         /// Risk tier declared via `action_risk` attribute on the tool; None if omitted.
         action_risk: Option<ActionRisk>,
-        /// Human-readable approval request prompt for the approver.
-        prompt:      String,
+        /// Human-readable approval request prompt for the approver; None when the hook
+        /// does not supply a prompt (downstream consumer displays a default message).
+        prompt:      Option<String>,
     },
     // Per-tool-call approval resolved — wire: tool_approval_resolved  (D23/2026-07-22, ADR-018)
     // Emitted AFTER interrupt is consumed by Command(resume=PreToolDecision),

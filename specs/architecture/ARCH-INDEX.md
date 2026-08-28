@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.49"
+version: "1.50"
 status: active
 producer: architect
 timestamp: 2026-08-28T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.50 (round-23/D-293/2026-08-28): ADR-029 §Decision 4 E-MCP-010/E-MCP-011 message-text corrections; §Symbol-Grounding table — DynTool/ToolOutput path corrected (src/core/tool.rs → src/tool.rs); PreToolDecision Edit variant added. Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.49 (round-22/D-292/2026-08-28): ADR-029 §Symbol Grounding — three HITL type rows corrected (F-P2A099-01 HIGH): PreToolCallHook, PreToolDecision, ToolCallPreview Canonical-Location updated from pregolya-core to pregolya-graph/src/hitl.rs (graph::hitl); matches BC-2.05.007 §Architecture Anchors + ADR-018 §Decision 1; ActionRisk row (pregolya-core) correct and unchanged. Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.48 (round-21/D-291/2026-08-28): ADR-029 §Decision-3/SEC-005 (thread_id-is-Uuid sanitizer correction: authoring-site convention SOLE-guarantee = u64 CheckpointId ONLY; framework UUID regex covers run_id AND server thread_id — F-P2A094-01); ADR-029 §Decision-5 (async FutureExt::catch_unwind panic-recovery SEC-008 — synchronous std::panic::catch_unwind cannot catch .await panics; corrected to futures::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...))) inside invoke_dyn; SEC-008 build-profile invariant deferred per OBS-P2A094-1 — F-P2A094-02); ADR-029 §Symbol-Grounding (stub_terminal test-util feature-gate: pregolya-graph #[cfg(any(test, feature = \"test-util\"))] pub fn stub_terminal + [features] test-util=[]; pregolya-mcp [dev-dependencies] features=[\"test-util\"] — F-P2A093-01). vp-016 §Proof-Harness feature-gate accessibility note corrected (cross-crate cfg(test) visibility fix — F-P2A093-01). module-criticality §Module-Classification VP-column exhaustive backfill: graph::hitl→VP-011 (both §Module-Classification and §CRITICAL-Security-Profile tables), core::runnable→VP-014, mcp::exception→VP-004, mcp::client→VP-005, prompts::injection_guard→VP-006+VP-006-B; zero em-dash cells remaining for VP-hosting modules (F-P2A095-01). verify-module-criticality-vp-column.sh created and wired advisory (F-P2A095-01 process-gap). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.47 (round-20/F-P2A092-02+F-P2A092-03/D-290/2026-08-27): module-criticality.md §Module-Classification (round-20 F-P2A092-03: mcp::graph_tool VP col → VP-016, mcp::sanitize VP col → VP-015). Subsystem Registry historical BC-count blockquote annotated: appended '; 134 as of GAP-01/D-275' (F-P2A092-02). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."

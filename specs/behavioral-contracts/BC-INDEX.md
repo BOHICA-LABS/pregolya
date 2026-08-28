@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.86"
+version: "3.87"
 status: active
 producer: state-manager
 timestamp: 2026-08-28T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.87 (round-23/D-293/2026-08-28): BC-2.09.008 §Changelog O-P2A102-03 [LOW/records]: changelog monotonicity fixed — v2.2 and v2.3 entries reordered to ascending (v2.2 first) per Form-A direction rule. VP Seed BCs table: Proof Method casing normalized — Proptest→proptest (VP-006-B, VP-007, VP-008, VP-014 ×2, VP-016), Unit→unit (VP-015). BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.86 (round-22/D-292/2026-08-28): BC-2.09.008 (v2.1→v2.2): F-P2A098-01 [MED] §INV-001 §RunnableConfig doc-attribution corrected — source of truth updated to interface-definitions.md §RunnableConfig (not entities-server.md); no sanitizer-scope semantic change. F-P2A098-02 [LOW/records]: changelog v2.0 and v2.1 §Decision 3 hyphen-form citations corrected to space form per ADR-022 §Decision 5. BC-2.09.007 (v2.1→v2.2): F-P2A099-04 [OBS]: §Verification Properties table — VP-015 Phase cell corrected Wave 2 → Phase 3 (VP-015.md authoritative per source-of-truth rule 4); VP-MCPCALL-01 and VP-MCPCALL-02 annotated as '(informal / non-registered)'. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.85 (round-21/D-291/2026-08-28): BC-2.09.008 {INV-001} thread_id scope correction — authoring-site convention SOLE-guarantee = u64 CheckpointId ONLY; framework UUID regex covers run_id AND server thread_id per entities-server §Thread/§Run (F-P2A094-01; CWE-209/670). BC-2.09.008 EC-010/TV-011 async panic mechanism corrected — synchronous std::panic::catch_unwind cannot catch .await panics; corrected to futures::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...))) inside invoke_dyn (F-P2A094-02; CWE-248/703). interface-definitions §FtsSearchConfig thread_id rationale note added — Option<&str> adjudicated LEGITIMATELY CORRECT (FTS string-space query filter, not a graph identifier — OBS-P2A094-2). BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.84 (round-20/currency-note/D-290/2026-08-27): bc-authoring-plan.md §Summary census sync (133→134 / P1 79→80 + BC-2.09.008 batch row + DI-008/010/014 coverage lists). bc-authoring-plan is a prd-supplement, not BC-INDEX-indexed; BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
@@ -156,18 +157,18 @@ changelog:
 | VP-002 | BC-2.04.006 | Session Triple-Address Uniqueness | Kani | NE-12 |
 | VP-003 | BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root | Kani | NE-02 |
 | VP-006 | BC-2.18.004 | injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 | Kani | ADR-015 Decision 3 §Security {INV-001} |
-| VP-006-B | BC-2.18.004 {PC-005} | injection_guard Multi-Pair FewShotExamples Fail-Closed — Any-Pair-Index-Untrusted Raises E-TMPL-001 | Proptest | BC-2.18.004 {PC-005} multi-pair dimension; TV-007 Red Gate (SEC-003) |
-| VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | Proptest | CAP-024 round-trip invariant |
-| VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | Proptest | CAP-031 dimensionality invariant |
+| VP-006-B | BC-2.18.004 {PC-005} | injection_guard Multi-Pair FewShotExamples Fail-Closed — Any-Pair-Index-Untrusted Raises E-TMPL-001 | proptest | BC-2.18.004 {PC-005} multi-pair dimension; TV-007 Red Gate (SEC-003) |
+| VP-007 | BC-2.19.001 | LcSerializable Round-Trip — Serialize to Serialized::Constructor, Deserialize to Semantically Equivalent Value | proptest | CAP-024 round-trip invariant |
+| VP-008 | BC-2.22.001 | Embeddings Trait — Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err | proptest | CAP-031 dimensionality invariant |
 | VP-009 | BC-2.21.003 | Zero-Norm Vector Guard — Vec\<f32\> Cosine Denominator Check Returns E-VS-001 Before Division | Kani | ADR-014 Decision 2 §Hardening note |
 | VP-010 | BC-2.19.005 | Reviver Allowlist Containment — Unregistered Type Id Raises E-SRLZ-001 (Fail-Closed) | Kani | ADR-016 Decision 3 §Security Invariant |
 | VP-011 | BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny | Kani | ADR-018 Decision 3 |
 | VP-012 | BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; Watermark Arithmetic | Kani | ADR-019 Decision 3 |
 | VP-013 | BC-2.23.005 | BashTool — Non-Lowerable Medium Risk Floor; Sandboxed Shell Execution | Kani | ADR-020 Decision 3 |
-| VP-014 | BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | Proptest | DI-016 key-completeness (ADR-026 §Decision 1) |
-| VP-014 | BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | Proptest | DI-016 key-completeness (ADR-026 §Decision 2) |
-| VP-015 | BC-2.09.007 | MCP Server Tool Invocation — Credential Redaction Before Transmission | Unit | DI-010 credential opacity (CWE-532; BC-2.09.007 {INV-003}) |
-| VP-016 | BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | Proptest | DI-010 state-isolation {INV-001} (STATE-ISOLATION proof target; {INV-002} is Red-Gate-tested, not a VP-016 proof anchor) |
+| VP-014 | BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | proptest | DI-016 key-completeness (ADR-026 §Decision 1) |
+| VP-014 | BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | proptest | DI-016 key-completeness (ADR-026 §Decision 2) |
+| VP-015 | BC-2.09.007 | MCP Server Tool Invocation — Credential Redaction Before Transmission | unit | DI-010 credential opacity (CWE-532; BC-2.09.007 {INV-003}) |
+| VP-016 | BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | proptest | DI-010 state-isolation {INV-001} (STATE-ISOLATION proof target; {INV-002} is Red-Gate-tested, not a VP-016 proof anchor) |
 
 _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-006-B seeded SEC-review-adjudication burst (2026-08-26); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26); VP-016 seeded GAP-01/ADR-029 burst (2026-08-26). All 17 VP body files (VP-001 through VP-016 + VP-006-B) exist as of SEC-review-adjudication burst._
 

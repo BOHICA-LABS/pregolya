@@ -157,6 +157,36 @@
 #       gate to be added).
 #       Routing: finding author (replace §Decision-N with §Decision N in new additions).
 #
+#   verify-error-message-template-consistency.sh — E-code message template drift between ADR
+#       §Decision tables and error-taxonomy.md (advisory). Closes F-P2A101-PG (round-23):
+#       no prior gate enforced that ADR §Decision error-code specification tables (| Code |
+#       and | Message template | pipe-table rows) match the authoritative canonical template
+#       in error-taxonomy.md. Treats error-taxonomy.md as the authoritative source; scans
+#       .factory/specs/**/*.md + .factory/stories/**/*.md for Message template table cells;
+#       normalizes placeholder syntax ({x}→<x>), strips outer backtick/quote wrapping, and
+#       allows explicitly-abbreviated trailing ellipsis forms. POL-31 self-probes included.
+#       Baseline (round-23 gate creation): expected findings include ADR-029 §Decision 4
+#       E-MCP-011 message template drift (wording diverged from taxonomy canonical).
+#       Promotion to blocking: after all current WARN findings are fixed.
+#       Routing: architect (ADR §Decision message template cells).
+#
+#   verify-story-changelog-direction.sh — story changelog direction + version-integrity (advisory).
+#       Closes O-P2A102-05 (round-23): story files carry `changelog:` frontmatter lists that
+#       were outside the scope of verify-form-a-changelog-direction.sh (which covers
+#       .factory/specs/ and BC files only). Canonical story convention = DESCENDING
+#       (newest-first; frontmatter `version:` == first/top changelog entry), matching
+#       STORY-INDEX.md and the spec-file direction. Checks:
+#         (a) frontmatter changelog: array monotonic DESCENDING
+#         (b) frontmatter version: == first (top) changelog entry
+#         (c) body ## Changelog section direction consistent (DESCENDING)
+#       POL-31 self-probes included. Baseline (round-23 gate creation):
+#       12 story files have ascending/non-monotonic changelogs (expected WARNs until
+#       story-writer/state-manager normalization sweep):
+#         S-1.03, S-1.04, S-1.06, S-1.19, S-1.21, S-1.22, S-1.23, S-1.24,
+#         S-1.26, S-1.27, S-2.11, S-6.01.
+#       Promotion to blocking: after story-writer normalizes all changelogs to descending.
+#       Routing: story-writer (story file normalization).
+#
 # EXIT CONTRACT
 # ─────────────
 # Exit 0 if all blocking validators pass.
@@ -251,6 +281,8 @@ run_advisory "verify-no-phantom-types.sh"
 run_advisory "verify-module-criticality-vp-column.sh"
 run_advisory "verify-security-literal-propagation.sh"
 run_advisory "verify-decision-section-canonical-form.sh"
+run_advisory "verify-error-message-template-consistency.sh"
+run_advisory "verify-story-changelog-direction.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

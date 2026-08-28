@@ -3788,3 +3788,35 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **D-273 OBS (records-tier):** VP-015.md `tool: unit` is authoritative (CLAUDE.md rule 4: VP files supersede arch prose). verification-architecture.md + verification-coverage-matrix.md list VP-015 as "integration" — stale; architect follow-up required. VP-INDEX.md authoritative. Non-blocking.
 
 **Census after propagation:** 39 stories / 133 BCs / 15 VPs / 135 ECs. 3-CLEAN streak RESET 0/3. Finding trajectory across hardening phase: →47 (D-270 scan) →0 (propagation burst; no adversary pass yet). NEXT: adversarial re-3-CLEAN + consistency audit → Phase-2 gate.
+
+---
+
+## Phase-2 Re-Convergence: Rounds 22-23 (D-292..D-293; 2026-08-28)
+
+### Round-22 Fix-Burst (D-292; 2026-08-28) — P2A-096/097/098/099
+
+**Finding trajectory:** →8→3→4→2 (4 passes total across round-22)
+
+| Pass | Findings | Delta | Severity | Status |
+|------|----------|-------|----------|--------|
+| P2A-096 | 8 | — | 3 HIGH, 1 MED, 2 LOW, 2 OBS | NOT CLEAN |
+| P2A-097 | 3 | -5 | 2 HIGH, 1 OBS | NOT CLEAN |
+| P2A-098 | 4 | +1 | 1 MED, 1 LOW, 2 OBS | NOT CLEAN (REGRESSION +1 — secondary-doc trail) |
+| P2A-099 | 2 | -2 | 1 HIGH, 1 MED | NOT CLEAN |
+
+**All findings closed in D-292 fix-burst:** F-P2A096-01 HIGH (version-agnostic sanitizer regex); F-P2A096-03 HIGH (FutureExt::catch_unwind INSIDE invoke_dyn); F-P2A096-04 HIGH (PreToolDecision prompt Option<String>); F-P2A097-01 HIGH (SEC-008 panic=unwind obligation); F-P2A097-02 HIGH (u64 CheckpointId passthrough); F-P2A099-01 HIGH (ADR-029 §Symbol Grounding HITL crate); F-P2A098-01 MED (BC-2.09.008 §RunnableConfig doc-attribution); F-P2A099-02 MED (AC-036 S-2.11 correctness boundary); F-P2A098-02 LOW/records; F-P2A099-03 LOW/records; F-P2A099-04 OBS. **Census UNCHANGED 39/134/17/137/303. TV 754. streak 0/3 (new HEAD). GATE-READY=YES (6 HRQs).**
+
+---
+
+### Round-23 Fix-Burst (D-293; 2026-08-28) — records-only + CRIT holdout scrub
+
+**Finding trajectory:** RECORDS-ONLY micro-burst with 1 CRIT (holdout asymmetry) pre-identified by orchestrator. Total: 1 CRIT + 1 HIGH + 1 LOW/records fixed in D-293 burst.
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| F-P2A102-01 (holdout asymmetry — HS-C-001 §AC internal IDs) | CRIT | CLOSED in D-293 (HS-C-001+HS-INDEX §Acceptance-Criteria) |
+| F-P2A102-02 (StreamEvent prompt Option<String> drift) | HIGH | CLOSED in D-293 (interface-definitions.md §StreamEvent) |
+| O-P2A102-03 (BC-2.09.008 double-§ citation) | LOW/records | CLOSED in D-293 (BC-2.09.008 §Changelog) |
+
+**Additional changes in D-293 burst (working-tree fixer edits):** ADR-029 §Decision 4 E-MCP-010/011 message corrections + §Symbol-Grounding path; S-1.24 (story-writer); verify-error-message-template-consistency.sh BLOCKING gate (16→17; closes PGAP-MSGDRIFT); verify-story-changelog-direction.sh ADVISORY; changelog normalization (S-2.11/S-1.23/S-1.03/S-1.04 direction; BC-2.09.008 §Changelog; BC-INDEX VP Seed casing). **Census UNCHANGED 39/134/17/137/303. TV 754. streak 0/3 (new HEAD — frozen-HEAD rule applies). GATE-READY=YES. Lessons L-205/L-206/L-207. NEXT: round-24 adversary passes (P2A-100+).**
+

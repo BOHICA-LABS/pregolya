@@ -8,10 +8,10 @@ status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
-  - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.003 PC-002: AC-002 updated with BoxStream return type and Ok(chunk) wrapping. {EC-006}: AC-013 added — invoke-Err yielded as single Err stream item. BC table version bumped."
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
   - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
+  - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.003 PC-002: AC-002 updated with BoxStream return type and Ok(chunk) wrapping. {EC-006}: AC-013 added — invoke-Err yielded as single Err stream item. BC table version bumped."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md

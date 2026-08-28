@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.20"
+version: "1.21"
 status: active
 producer: story-writer
 timestamp: 2026-08-28T00:00:00Z
 changelog:
+  - "1.21 (round-23/D-293/2026-08-28): Changelog direction normalization — S-2.11 (v1.18) frontmatter ascending order restored (1.17/1.18 entries moved to tail); input-hash recomputed; body §Changelog 1.12/1.11 inversion corrected; 1.18 entry hash literal removed per TD-VSDD-091. S-1.23 (v1.6) frontmatter descending order restored (1.6 first). S-1.03 (v1.4) and S-1.04 (v1.4) descending order restored (1.1–1.3 reordered after 1.4). S-1.24 (v1.6) story-writer burst changelog normalization. Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.20 (round-22/D-292/2026-08-28): S-2.11 v1.17→v1.18 (F-P2A096-01/F-P2A097-01/F-P2A099-02/F-P2A096-03/F-P2A097-02): exhaustive security sweep — AC-031 sanitizer regex corrected to version-agnostic pattern; AC-036 added (u64 CheckpointId passthrough correctness boundary); AC-033 panic recovery corrected to FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input,policy))) inside invoke_dyn; AC-037 added (SEC-008 panic=unwind build-profile obligation); tasks 34/35/36/37 updated + tasks 42/43/44 added. S-1.23 v1.5→v1.6 (F-P2A096-04): PreToolDecision PendingHumanApproval { prompt: Option<String> } corrected (was String; interface-definitions.md §PreToolDecision + ADR-018 §Decision 1 authoritative). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.19 (round-21/D-291/2026-08-28): S-1.14 (stub_terminal test-util feature-gate: AC-014 prerequisite condition updated, Task-18 implementation notes, File-Structure pregolya-graph Cargo.toml [features] test-util=[] — F-P2A093-01). S-2.11 (Task-27 dev-dep+feature wiring: pregolya-mcp [dev-dependencies] pregolya-graph features=[\"test-util\"] — F-P2A093-01). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.18 (round-20/F-P2A092-04/D-290/2026-08-27): STORY-S-MAINT-001 v1.2 (round-20 F-P2A092-04: census 133→134 propagation; Background recount 94-of-134 bullet-invariants / 81-of-134 EC-subsections). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
