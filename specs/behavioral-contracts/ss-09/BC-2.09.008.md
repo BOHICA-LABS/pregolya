@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "2.3"
+version: "2.4"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -29,12 +29,13 @@ changelog:
   - "2.1 (round-21/F-P2A094-01/F-P2A094-02/2026-08-28): F-P2A094-01 [MED]: {INV-001} server-layer thread_id characterization corrected per ADR-029 §Decision 3/SEC-005 v2.5 canonical mirror. REMOVED: 'arbitrary-string server-layer thread_id values (user-supplied strings; not guaranteed UUID-shaped) are NOT covered by the framework sanitize_internal_ids pass' — server-layer thread_id IS a Uuid (entities-server.md §Thread, §Run; §RunnableConfig thread_id: Option<Uuid>); sanitize_internal_ids UUID regex covers run_id (Uuid) AND server-layer thread_id (Uuid) identically. Authoring-site convention SOLE-guarantee now scoped exclusively to u64 CheckpointId (ADR-005 / BC-2.04.003 — not UUID-shaped; UUID regex cannot match it). Note added: FtsSearchConfig.thread_id: Option<&str> is an FTS query-filter parameter and never reaches a GraphAgentTool error-message path; it is outside this invariant's scope. TV-013 (u64-checkpoint exclusion test vector) remains valid and UNCHANGED. F-P2A094-02 [MED]: EC-010 description and TV-011 notes updated — panic-recovery mechanism is futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy))) inside GraphAgentTool::invoke_dyn (async future catch during .await polling; a synchronous std::panic::catch_unwind around future-construction cannot catch it). SEC-008 build-profile invariant added: panic = 'abort' release profile voids the catch and causes process termination (remote DoS, CWE-248); pregolya-mcp release profile MUST pin panic = 'unwind' — devops asserts at Phase-3 workspace Cargo.toml authoring."
   - "2.2 (round-22/F-P2A098-01+F-P2A098-02/2026-08-28): F-P2A098-01 [MED]: {INV-001} §Framework sanitization pass scope — §RunnableConfig doc attribution corrected; §RunnableConfig is defined in interface-definitions.md §RunnableConfig (not entities-server.md); prior semicolon grouping '...§Thread, §Run; §RunnableConfig' replaced with explicit '...§Thread, §Run and interface-definitions.md §RunnableConfig (`thread_id: Option<Uuid>`)' attribution per ADR-029 §Decision 3 and §Decision 4 source-of-truth; no sanitizer-scope semantic change. F-P2A098-02 [LOW/records]: changelog v2.0 and v2.1 §Decision 3 hyphen-form citations corrected to space form per ADR-022 §Decision 5 citation convention."
   - "2.3 (round-23/O-P2A102-03/2026-08-28): O-P2A102-03 [LOW/records]: v2.2 changelog double-§ citation corrected — 'per ADR-029 §Decision 3 §Decision 4 source-of-truth' reworded to 'per ADR-029 §Decision 3 and §Decision 4 source-of-truth' per ADR-022 §Decision 5 no-chained-§ rule."
+  - "2.4 (round-25/O-P2A111-08+O-P2A111-07/2026-08-28): O-P2A111-08 [OBS] — {INV-004} and EC-009: 'CRITICAL-level structured log' corrected to 'ERROR-level (highest severity) structured log (tracing::error!)'; Rust tracing crate has no CRITICAL level (levels are error/warn/info/debug/trace); ERROR is the highest severity; observability.md concretizes the intended level as tracing::error!. TV-008 and TV-012 'CRITICAL log' aligned to same terminology for consistency. O-P2A111-07 [OBS] — §Canonical Test Vectors: TV-012 moved to ascending-numeric position after TV-011 (was out-of-sequence between TV-008 and TV-009); append-only IDs preserved, ordering only."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "258b505"
+input-hash: "2409690"
 extracted_from: null
 modified: []
 deprecated: null
@@ -199,8 +200,8 @@ overrides `PreToolCallHook` approval decisions only.
   `preview.action_risk` is `None` (undeclared; consistent with the fail-closed principle in
   BC-2.05.006 EC-004/{INV-002}: absence/unknown risk is never treated as ReadOnly/Low —
   None→Deny behavior is fully specified by {INV-004})
-  OR `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with a
-  CRITICAL-level structured log at key `mcp.graph_tool.force_approve_write_blocked`) and
+  OR `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with an
+  ERROR-level (highest severity) structured log (tracing::error!) at key `mcp.graph_tool.force_approve_write_blocked`) and
   emits `E-MCP-011 ForceApproveWriteBlocked`; the tool is NOT invoked. If
   `preview.action_risk` is `Some(r)` where `r < ActionRisk::Medium`, the override proceeds
   to `Approve`.
@@ -298,7 +299,7 @@ per BC-2.09.007 {PC-002} result_text selection rule. Server responds with
 **Expected behavior:** `BoundaryApprovalHook` checks `preview.action_risk` before
 overriding. Because `action_risk` is `None` (undeclared, fails closed) or
 `>= ActionRisk::Medium`, the hook returns `Deny` and emits `E-MCP-011
-ForceApproveWriteBlocked` with a CRITICAL-level structured log at key
+ForceApproveWriteBlocked` with an ERROR-level (highest severity) structured log (tracing::error!) at key
 `mcp.graph_tool.force_approve_write_blocked`. The tool is NOT invoked. {INV-004} enforces
 this gate at runtime; the graph continues executing with the `Deny` result but the tool
 never executes. Both the `None` case (un-annotated tool → `Deny` + `E-MCP-011`) and the
@@ -333,11 +334,11 @@ devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
 | TV-005 | `ForceApproveHooks` policy; PreToolCallHook returns `PendingHumanApproval`; later node calls `interrupt()` | `isError: true`, E-MCP-010 message — interrupt not suppressed by ForceApproveHooks | EC-006, {INV-002} |
 | TV-006 | `extract_output = `\|`_`\|` Value::Null`; graph succeeds | `{ "content": [{ "type": "text", "text": "null" }], "isError": false }` | Null output valid (EC-008) |
 | TV-007 | Graph returns `Err(PregolyaError { message: "failed: sk-ant-abc123XYZXYZXYZ12345678901234567", .. })` | `isError: true`, message contains `<redacted>` not the key material | Credential redaction ({INV-003}) |
-| TV-008 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = ActionRisk::High` | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; CRITICAL log emitted at `mcp.graph_tool.force_approve_write_blocked` | ActionRisk runtime gate — Some(High) path (EC-009, {INV-004}) |
-| TV-012 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = None` (un-annotated tool) | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; CRITICAL log emitted at `mcp.graph_tool.force_approve_write_blocked` (None fails closed identically to Some(>= Medium)) | ActionRisk runtime gate — None/undeclared path (EC-009, {INV-004}) |
+| TV-008 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = ActionRisk::High` | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; ERROR-level (highest severity) log (tracing::error!) emitted at `mcp.graph_tool.force_approve_write_blocked` | ActionRisk runtime gate — Some(High) path (EC-009, {INV-004}) |
 | TV-009 | Graph node returns `Err(PregolyaError { message: "operation failed for run <example-run-id>", .. })` | `isError: true`; `content[0].text` does NOT contain `<example-run-id>` (UUID removed by `sanitize_internal_ids`) | Error-path UUID sanitization ({INV-001}) |
 | TV-010 | `extract_output = `\|`s: &serde_json::Value`\|` json!({ "api_key": s["api_key"] })`; graph succeeds with `api_key = "sk-abc123"` in state | `isError: false`; `content[0].text` contains `"api_key":"sk-abc123"` (framework does NOT sanitize success-path `extract_output` result) | `extract_output` credential opacity boundary test ({INV-005}) — no post-hoc stripping |
 | TV-011 | `extract_output = `\|`_`\|` panic!("boom")`; graph succeeds to terminal state; server receives `tools/call` | `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }`; a subsequent `tools/call` to a different (non-panicking) tool returns `isError: false` | extract_output panic recovery (EC-010); `FutureExt::catch_unwind(AssertUnwindSafe(...))` inside `invoke_dyn` catches panic during async future polling; SEC-008: requires `panic = "unwind"` |
+| TV-012 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = None` (un-annotated tool) | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; ERROR-level (highest severity) log (tracing::error!) emitted at `mcp.graph_tool.force_approve_write_blocked` (None fails closed identically to Some(>= Medium)) | ActionRisk runtime gate — None/undeclared path (EC-009, {INV-004}) |
 | TV-013 | Graph node returns `Err(PregolyaError { message: "failed to load checkpoint 42", .. })` (`u64` checkpoint ID embedded in message; not UUID-shaped) | `isError: true`; `content[0].text` contains `"42"` — the bare `u64` integer is NOT matched by the `sanitize_internal_ids` regex `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` and passes through unsanitized by the framework pass; authoring-site convention ({INV-001}) is the SOLE framework guarantee for `u64` `CheckpointId` values — node implementations MUST NOT embed them in error messages | Framework `sanitize_internal_ids` scope — UUID-shaped identifiers only; `u64` `CheckpointId` (ADR-005 / BC-2.04.003) NOT covered by framework pass; authoring-site convention is sole protection boundary ({INV-001} primary defense); CWE-670/CWE-209 coverage |
 
 ## Verification Properties

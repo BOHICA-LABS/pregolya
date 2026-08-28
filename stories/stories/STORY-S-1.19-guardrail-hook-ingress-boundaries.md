@@ -3,13 +3,14 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (ADR-027 M3 straggler/2026-08-24): straggler conversion to stable clause anchors."
+  - "1.3 (round-25/F-P2A109-01/2026-08-28): Async panic mechanism corrected — synchronous `std::panic::catch_unwind` is inadequate for async `GuardrailHook::evaluate` (cannot catch panics fired during `.await` polling; CWE-248/703; mirrors ADR-029 §Decision 5 / BC-2.09.008 EC-010). Task §5, EC-001, and §Previous Story Intelligence S-1.04 Gotchas row updated to `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` at dispatch site. SEC-008-style `panic=unwind` build-profile note added. `futures` crate added to §Library & Framework Requirements."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.001.md
@@ -20,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "0588258"
+input-hash: "3094476"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.04]
@@ -153,7 +154,7 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 
 | ID | Scenario | Expected Behavior |
 |----|----------|-------------------|
-| EC-001 | `GuardrailHook::evaluate` panics | Caught; content treated as `Fail` (fail-closed); `E-CORE-007` propagated |
+| EC-001 | `GuardrailHook::evaluate` panics during async dispatch | Caught via `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` at dispatch site in `provenance.rs` — synchronous `std::panic::catch_unwind` is INADEQUATE (cannot catch panics fired during `.await` polling; ADR-029 §Decision 5 / CWE-248/703). Content treated as `Fail` (fail-closed); `Err(PregolyaError { code: "E-CORE-007", .. })` propagated. Recovery requires `panic = "unwind"` build profile. |
 | EC-002 | Multiple `ContentBlock`s in one `ToolMessage` | Each evaluated independently; single `Fail` does not block others unless `Critical` |
 | EC-003 | Zero-item RAG result | No `evaluate` calls; no `WARN` emitted; empty result forwarded |
 | EC-004 | Two parallel hooks: one `Pass`, one `Fail` | `Fail` wins (fail-closed); content rejected |
@@ -181,7 +182,7 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 2. [ ] Write remaining failing tests for AC-001..AC-016, AC-021..AC-023
 3. [ ] Create `pregolya-core/src/guardrail.rs` — `GuardrailHook` trait, `GuardrailResult`, `IngressContent`, `GuardrailSeverity`, `ProvenanceTag`, `BoundaryType`
 4. [ ] Create `pregolya-graph/src/provenance.rs` — `ProvenanceTag` attachment at all 3 boundaries; `GuardrailHook` dispatch; atomic rejection; parallel hook composition
-5. [ ] Implement fail-closed panic catch: `std::panic::catch_unwind` around `GuardrailHook::evaluate`
+5. [ ] Implement fail-closed panic catch in `provenance.rs` dispatch: `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` — synchronous `std::panic::catch_unwind` is INADEQUATE for async callees (cannot catch panics fired during `.await` polling; ADR-029 §Decision 5 / CWE-248/703). Map caught panic → `GuardrailResult::Fail { .. }` + `Err(PregolyaError { code: "E-CORE-007", .. })`. NOTE: recovery requires `panic = "unwind"` build profile — devops must assert this for `pregolya-graph` at Phase-3 CI setup.
 6. [ ] Implement no-hook WARN log: `tracing::warn!(event_type = "guardrail.unregistered_passthrough", ...)`
 7. [ ] Wire `GuardrailDecision` stream event emission in `provenance.rs` (before `ToolEnd` / within `NodeStart-NodeEnd` window)
 8. [ ] Register `guardrail.unregistered_passthrough` in Canonical Structured Event Catalog (SAP-1)
@@ -194,7 +195,7 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 |-------|--------------|---------------------|-------------------|
 | S-1.14 | BSP engine orchestrates node execution | Model input buffer is assembled in `bsp_engine.rs` | ProvenanceTag must be attached BEFORE any code passes content to `bsp_engine.rs` for model context assembly |
 | S-1.17 | `StreamEvent::GuardrailDecision` variant defined | `GuardrailDecision` for `ToolResult` is emitted BEFORE `ToolEnd`; for RAG/Memory within `NodeStart/NodeEnd` | Streaming event window distinction: ToolResult uses ToolStart/ToolEnd window; RAG/Memory use NodeStart/NodeEnd |
-| S-1.04 | `PregolyaError` with `E-CORE-007` (GuardrailHookPanic) | Fail-closed panic handling uses `catch_unwind` + `E-CORE-007` | `E-CORE-007` context-sourced fields: `boundary` from `provenance_tag.boundary_type`; `content_type` = bare variant name from `IngressContent` discriminant |
+| S-1.04 | `PregolyaError` with `E-CORE-007` (GuardrailHookPanic) | Fail-closed panic handling uses `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` — NOT synchronous `std::panic::catch_unwind` (async callees require the async-capable form; ADR-029 §Decision 5 / CWE-248/703); `E-CORE-007` propagated on catch | `E-CORE-007` context-sourced fields: `boundary` from `provenance_tag.boundary_type`; `content_type` = bare variant name from `IngressContent` discriminant |
 
 ## Architecture Compliance Rules (MANDATORY)
 
@@ -217,6 +218,7 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 | `serde_json` | workspace-pinned | `IngressContent::RagChunk(Value)` and `MemoryItem(Value)` payloads |
 | `tokio` | workspace-pinned | Async `GuardrailHook::evaluate` dispatch |
 | `tracing` | workspace-pinned | `WARN` log + structured event emission |
+| `futures` | workspace-pinned | `FutureExt::catch_unwind(AssertUnwindSafe(...))` for async-safe panic recovery in `provenance.rs` dispatch (EC-001; ADR-029 §Decision 5) |
 
 **Forbidden Dependencies:** `pregolya-core/src/guardrail.rs` must NOT import from `pregolya-graph`. Dependency direction: `pregolya-graph` → `pregolya-core`.
 

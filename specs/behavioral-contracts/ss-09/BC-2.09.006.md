@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.006
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,12 +21,13 @@ changelog:
   - "1.4 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): LOW gap — malformed/unparseable JSON-RPC request handling: EC-006 (-32700 parse error) and EC-007 (-32600 invalid request) added with wire-protocol JSON-RPC response specification; TV-007 and TV-008 added. No E-code minted — JSON-RPC protocol error codes cited directly per Burst A reuse decision (error-taxonomy v1.58 coordination pass). ADR-027 stable clause anchors {EC-006}, {EC-007}."
   - "1.5 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
   - "1.6 (round-5/F3/2026-08-26): F3 [MED] — {PC-002}: tool.input_schema() corrected to tool.schema() per DynTool::schema() canonical (interface-definitions.md DynTool trait and Tool trait; no behavioral change to MCP protocol semantics)."
+  - "1.7 (round-25/F-P2A111-05/2026-08-28): F-P2A111-05 [MED] — §Verification Properties and §VP Anchors: VP-MCPSRV-01 and VP-MCPSRV-02 annotated as '(informal / non-registered)' — they are NOT in VP-INDEX (source of truth). Mirror of treatment applied to sibling BC-2.09.007 VP-MCPCALL-01/02 in round-22 F-P2A099-04. IDs and history preserved (append-only per append_only_numbering)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "a403241"
+input-hash: "bcccd77"
 extracted_from: null
 modified: []
 deprecated: null
@@ -168,8 +169,8 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MCPSRV-01 | MCP client can discover all registered pregolya tools via tools/list | Integration test: start server; connect real MCP client; assert tool count and names | Wave 2 |
-| VP-MCPSRV-02 | tools/list response is valid MCP protocol JSON (tools array, each with name/description/inputSchema) | Schema validation test against MCP spec | Wave 2 |
+| VP-MCPSRV-01 | (informal / non-registered) MCP client can discover all registered pregolya tools via tools/list | Integration test: start server; connect real MCP client; assert tool count and names | Wave 2 |
+| VP-MCPSRV-02 | (informal / non-registered) tools/list response is valid MCP protocol JSON (tools array, each with name/description/inputSchema) | Schema validation test against MCP spec | Wave 2 |
 
 ## Related BCs
 

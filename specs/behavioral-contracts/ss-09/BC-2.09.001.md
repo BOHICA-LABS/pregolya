@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.001
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,7 +18,8 @@ changelog:
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.10 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
-  - "1.11 (round-24/F-P2A104-01/2026-08-28): F-P2A104-01 [HIGH] — phantom `args_schema` accessor purged. §Description, {PC-003}, and {INV-001} referenced `args_schema` as if it were a field/method on `Arc<dyn DynTool>`, but `Arc<dyn DynTool>` (a trait object) has no fields and DynTool exposes no `args_schema`; the canonical schema accessor is `schema()`. Separately, the type was stated as `serde_json::Value` but `DynTool::schema()` returns `schemars::Schema`. Fix: all three sites rewritten to use `schema()` accessor and `schemars::Schema` return type; verbatim-passthrough intent preserved (schemars 1.0 `Schema` losslessly wraps the server-supplied `serde_json::Value`). Client-side mirror of server-side fix applied to S-2.11 §AC-026 (input_schema()→schema()). Story-writer propagation: S-2.10 AC-026 and test renamed `test_BC_2_09_001_schema_verbatim_passthrough`; `schemars` added to §Library."
+  - "1.11 (round-24/F-P2A104-01/2026-08-28): F-P2A104-01 [HIGH] — phantom `args_schema` accessor purged. §Description, {PC-003}, and {INV-001} referenced `args_schema` as if it were a field/method on `Arc<dyn DynTool>`, but `Arc<dyn DynTool>` (a trait object) has no fields and DynTool exposes no `args_schema`; the canonical schema accessor is `schema()`. Separately, the type was stated as `serde_json::Value` but `DynTool::schema()` returns `schemars::Schema`. Fix: all three sites rewritten to use `schema()` accessor and `schemars::Schema` return type; verbatim-passthrough intent preserved (schemars 1.0 `Schema` losslessly wraps the server-supplied `serde_json::Value`). Client-side mirror of server-side fix applied to S-2.11 §AC-003 (input_schema()→schema()). Story-writer propagation: S-2.10 AC-026 and test renamed `test_BC_2_09_001_schema_verbatim_passthrough`; `schemars` added to §Library."
+  - "1.12 (round-25/F-P2A111-01+F-P2A108-01+F-P2A110-01/2026-08-28): F-P2A111-01 [HIGH] — §Architecture Anchors updated to canonical SS-09 module→file mapping per architect module-decomposition.md: `discovery.rs` replaces `tools.rs` (convert_mcp_tool, _list_all_tools reside in mcp::discovery); `session.rs` replaces `sessions.rs` (McpSessionGuard and session lifecycle reside in mcp::session). F-P2A110-01 [LOW/records] — v1.11 changelog stale AC citation corrected: 'S-2.11 §AC-026' → 'S-2.11 §AC-003' (server-side input_schema()→schema() change is at S-2.11 §AC-003 per S-2.11 changelog v1.8; §AC-026 was out-of-range for that story)."
 origin: greenfield
 priority: P1
 subsystem: SS-09
@@ -36,7 +37,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "cdbeeb3"
+input-hash: "ad989f0"
 extracted_from: null
 modified: []
 deprecated: null
@@ -209,8 +210,8 @@ _No Kani VP seed required for this BC. Unit tests and integration tests are suff
 ## Architecture Anchors
 
 - `pregolya-mcp/src/client.rs` — `MultiServerMcpClient::get_tools`
-- `pregolya-mcp/src/tools.rs` — `convert_mcp_tool`, `_list_all_tools`
-- `pregolya-mcp/src/sessions.rs` — `create_session`, `Connection` enum
+- `pregolya-mcp/src/discovery.rs` — `convert_mcp_tool`, `_list_all_tools`
+- `pregolya-mcp/src/session.rs` — `create_session`, `Connection` enum
 
 ## Story Anchor
 

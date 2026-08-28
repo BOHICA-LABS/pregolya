@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.26"
+version: "1.27"
 status: active
 producer: architect
 timestamp: 2026-08-22T00:00:00Z
 changelog:
+  - "1.27 (round-25/F-P2A111-01+F-P2A111-02/2026-08-28): §Crates with No Public Traits — `pregolya-mcp` description updated to reflect the nine-module canonical structure established by the round-25 module→file mapping decision. Listed by role: invocation stack (mcp::client/session/interceptor), tool adaptation (mcp::discovery with canonical `pregolya-mcp/src/discovery.rs`), security seam (mcp::ingress DI-012 HIGH with `ingress.rs`), error handling (mcp::exception), server-side (mcp::sanitize/graph_tool/server). Consumer types updated: `DynTool` and `GuardrailHook` from pregolya-core (not `Tool` — Tool is non-object-safe E0038; DynTool is the wire type; GuardrailHook is the ingress seam). input-hash refreshed."
   - "1.26 (fix-burst-P2A026/P2A026-02/2026-08-22): Move StreamEvent row from §pregolya-graph Public Types to §pregolya-core Public Types. Canonical home is pregolya-core (`core::events`) per ADR-006 §Consequences ('StreamEvent is a public type in pregolya-core') and module-decomposition.md §F-P2A017-02 fix (v1.45 corrected the erroneous graph-defines-StreamEvent claim). Presenting it under §pregolya-graph Public Types mis-stated crate ownership. Inclusion criterion note extended to document StreamEvent's criterion (b) rationale. Sweep: all four §pregolya-graph Public Types rows verified — StateGraph (SS-02/graph::definition), GraphConfig (SS-03/graph::scheduler), Command (SS-05/graph::hitl) are correctly attributed; only StreamEvent was misattributed. No other cross-section misattributions found."
   - "1.25 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Fix phantom §-citation in RunnableConfig table row. 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants (Run-Config Merge Precedence)'. Rationale: BC-2.12.003 has no §Run-Config Merge Precedence Invariant subheading; the rule is a list item within §Invariants. Also sibling-fixed in ADR-021 Decision 2 body. input-hash refreshed (inputs changed since last hash computation; pre-existing drift resolved)."
   - "1.24 (burst-290/F-180-01+02+08/2026-08-16): Three phantom/malformed ADR §-citation fixes. (1) F-180-08 — §Public Rust Traits blockquote line 77: `ADR-005 §Adjacent Adjudications corrected list` → `ADR-005 §Adjacent Trait Object-Safety Adjudications` (real heading per ADR-005). (2) F-180-01 — §Public Traits (pregolya-vectorstores) blockquote line 175: chained double-§ `ADR-014 §Decision 2 §Object-safety` split into `ADR-014 §Decision 2` and `ADR-005 §Adjacent Trait Object-Safety Adjudications` per ADR-022 §Decision 5 prescribed fix. (3) F-180-02 — §Error Type line 282: `ADR-010 §impl PregolyaError — sole sanctioned paths` → `ADR-010 §Error-Construction Notation Canon` (ADR-022 §Form B — impl block identifier is not a heading; real governing section is Error-Construction Notation Canon)."
@@ -38,7 +39,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "530bb25"
+input-hash: "f128684"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -191,7 +192,7 @@ omissions falsifiable rather than silent.
 | Crate | Reason |
 |-------|--------|
 | `pregolya-prompts` | Concrete types only (`PromptTemplate`, `ChatPromptTemplate`, `FewShotPromptTemplate`, `MessagesPlaceholder`, `SlotTrustPolicy` enum, `TrustLevel` enum); no trait definitions |
-| `pregolya-mcp` | Struct-and-impl surface only (`MultiServerMcpClient`, tool discovery, `ToolInvocation` routing); no public trait definitions; consumes `Tool` from pregolya-core |
+| `pregolya-mcp` | Nine implementation modules — invocation stack: `mcp::client` (`pregolya-mcp/src/client.rs`) + `mcp::session` (`session.rs`) + `mcp::interceptor` (`interceptor.rs`); tool adaptation: `mcp::discovery` (`discovery.rs`, `convert_mcp_tool`); security seam: `mcp::ingress` (DI-012 HIGH; `ingress.rs`, `GuardrailHook` invocation + provenance tagging); error handling: `mcp::exception` (`exception.rs`); server-side: `mcp::sanitize` + `mcp::graph_tool` + `mcp::server`; no public trait definitions; consumes `DynTool` and `GuardrailHook` from pregolya-core |
 | `pregolya-sandbox` | `SandboxPolicy` and `ProcessBackend` are structs/enums, not public trait definitions; `WorkspaceFs` facade is a struct; `sandbox::path_guard` exposes free functions (`canonicalize_beneath_root`, `canonicalize_beneath_root_pure`) |
 | `pregolya-splitters` | Free-function splitter implementations; no public trait definitions |
 | `pregolya-macros` | Proc-macro crate (`#[tool]`, `#[entrypoint]`, `#[task]`); proc-macros are attribute macros, not Rust trait definitions |

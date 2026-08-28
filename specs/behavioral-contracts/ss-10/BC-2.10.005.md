@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.10.005
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (P2A-044 F-06/2026-08-24): compressed-ordinal citation normalized to stable tag."
   - "1.7 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): MED gap — OnWatermark fraction domain: PRE-002 extended to cover fraction > 1.0, negative, and NaN as construction-time Err. INV-006 updated to list all invalid domain values and note E-CORE-005 reuse. EC-007 (fraction > 1.0) and EC-008 (negative / NaN) added. TV-007, TV-008, TV-009 added. VP-2.10.005-B extended to cover full invalid domain. Error code reuse: E-CORE-005 ('Validation failed for fraction: must be in (0.0, 1.0]; got <value>') — no new E-code minted. ADR-027 stable clause anchors {EC-007}, {EC-008}."
+  - "1.8 (round-25/F-P2A108-02/2026-08-28): F-P2A108-02 [MED] blast-radius — three doubled non-resolving path notations corrected to parenthetical form: §Description `pregolya-core::core::budget` → `pregolya-core (core::budget)`; {INV-005} `pregolya-core::core::budget` → `pregolya-core (core::budget)` and `pregolya-graph::graph::budget` → `pregolya-graph (graph::budget)`. Double-colon crate::module notation is non-resolving in prose; parenthetical form matches module-decomposition.md §Architecture Anchors convention."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-035
   - architecture/decisions/ADR-019-rolling-context-compaction.md
@@ -36,7 +37,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-019-rolling-context-compaction.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "835857f"
+input-hash: "2fed6ae"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,7 +52,7 @@ removal_reason: null
 
 ## Description
 
-`CompactionTrigger` is a `#[non_exhaustive]` enum added to `pregolya-core::core::budget`
+`CompactionTrigger` is a `#[non_exhaustive]` enum added to `pregolya-core (core::budget)`
 (definitions-only module, ADR-009 Option 3). It extends `BudgetConfig` with two new fields:
 `compaction_trigger: CompactionTrigger` (default `Disabled`) and
 `compaction_policy: Option<Arc<dyn CompactionPolicy>>` (default `None` → `DefaultSummarizationPolicy`).
@@ -121,8 +122,8 @@ as `OnCeiling::Summarize`.
 - {INV-004} Only one trigger variant fires per evaluation cycle. `BudgetEngine` uses the configured
   variant; there is no "first-matching" logic across multiple configured triggers.
 - {INV-005} `BudgetConfig.compaction_trigger` and `BudgetConfig.compaction_policy` reside in
-  `pregolya-core::core::budget` (definitions-only) following ADR-009 Option 3. Execution
-  logic is in `pregolya-graph::graph::budget`.
+  `pregolya-core (core::budget)` (definitions-only) following ADR-009 Option 3. Execution
+  logic is in `pregolya-graph (graph::budget)`.
 - {INV-006} **DI-014 (No Silent Swallowing):** Configuration errors propagate as `Err` at
   `BudgetConfig` construction time and are never silently treated as `Disabled`. Full invalid
   domain for each variant: `OnWatermark` — `fraction ≤ 0.0`, `fraction > 1.0`, `fraction` is

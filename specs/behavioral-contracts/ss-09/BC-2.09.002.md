@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.002
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.10 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
+  - "1.11 (round-25/F-P2A111-02/2026-08-28): F-P2A111-02 [HIGH] — §Architecture Anchors updated to canonical SS-09 module→file mapping per architect module-decomposition.md: `discovery.rs` replaces `tools.rs` (McpTool::run and content conversion reside in mcp::discovery); `interceptor.rs` replaces `interceptors.rs` (ToolCallInterceptor chain resides in mcp::interceptor); `session.rs` replaces `sessions.rs` (SessionSource::OnDemand RAII lifecycle resides in mcp::session)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -34,7 +35,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "9dc5f7f"
+input-hash: "ad989f0"
 extracted_from: null
 modified: []
 deprecated: null
@@ -172,9 +173,9 @@ _No Kani VP seed required for this BC. Unit and integration tests are sufficient
 
 ## Architecture Anchors
 
-- `pregolya-mcp/src/tools.rs` — `McpTool::run`, `_convert_mcp_content_to_block`, `_handle_mcp_tool_error`
-- `pregolya-mcp/src/interceptors.rs` — `ToolCallInterceptor`, `_build_interceptor_chain`
-- `pregolya-mcp/src/sessions.rs` — `SessionSource::OnDemand` RAII lifecycle
+- `pregolya-mcp/src/discovery.rs` — `McpTool::run`, `_convert_mcp_content_to_block`, `_handle_mcp_tool_error`
+- `pregolya-mcp/src/interceptor.rs` — `ToolCallInterceptor`, `_build_interceptor_chain`
+- `pregolya-mcp/src/session.rs` — `SessionSource::OnDemand` RAII lifecycle
 
 ## Story Anchor
 

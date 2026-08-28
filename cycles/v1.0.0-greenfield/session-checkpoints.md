@@ -3228,3 +3228,16 @@ pregolya Phase-2 GAP-01 re-convergence, round-23 fix-burst CLOSED. D-293: BLOCKE
 - factory-artifacts: D-293 HEAD (see git -C .factory log -1 --format=%H).
 
 ### STATE: v6.04, timestamp 2026-08-28T06:00:00Z
+
+---
+
+## Archived Checkpoint: D-294 (round-24 SESSION-WRAP; archived 2026-08-28 by D-295 round-25 wrap)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 GAP-01 re-convergence, round-24 fix-burst CLOSED. D-294: 7 findings closed — BC-2.09.001 §Description/{PC-003}/{INV-001} args_schema phantom purged; schema accessor corrected to schema() returning schemars::Schema (F-P2A104-01 [HIGH]); S-2.10 v1.2 AC-026 mirrored + test renamed; HS-C-001 v1.5 exhaustive evaluator-facing asymmetry scrub §Failure-Guidance+§Evaluation-Rubric+§InformationAsymmetryConfirmation (F-P2A105-01 [HIGH]+F-P2A105-02 [MED]+GAP-R24-01/02 [CRIT]); interface-definitions.md §schema() doc-comment generalized (O-P2A104-01 [LOW]); verify-no-phantom-types.sh args_schema probe added (24 probes total); NEW verify-holdout-asymmetry.sh advisory gate (0 WARN/16 HS files). ROOT-CAUSE: INCOMPLETE-SWEEP SIBLING-MIRROR (2 classes). P2A-106 CRASHED (API-lost), P2A-107 STALLED (watchdog). GATE-READY=NO this round (HS-C-001 leaks now scrubbed+gated; expected GATE-READY=YES round-25). Census UNCHANGED 39/134/17/137/303. TV 754. trajectory-tail →4→2→1→5. 3-CLEAN streak 0/3 (new HEAD push reset). Lessons L-208/L-209/L-210. NEXT ACTION: dispatch round-25 adversary passes P2A-108/109/110/111 (broadened SS-09 MCP client+server deep-audit) on the NEW HEAD of this D-294 commit.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
+- factory-artifacts: HEAD of round-24 D-294 commit — use `git -C .factory log -1 --format=%H` for exact SHA.
+
+### STATE: v6.05, timestamp 2026-08-28T07:00:00Z

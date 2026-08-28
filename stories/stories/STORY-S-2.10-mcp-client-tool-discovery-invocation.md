@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.10
 epic_id: E-21
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-28T00:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3a0a905"
+input-hash: "6a12735"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -34,6 +34,7 @@ risk_mitigations: []
 tdd_mode: strict
 # BC status: all 5 BCs active; BC-2.09.004 (VP-004, R11) and BC-2.09.005 (VP-005, R11) are Red Gate BCs; status = draft per Spec-First Gate S-7.01
 changelog:
+  - "1.3 (round-25/F-P2A108-01+F-P2A111-03+F-P2A111-06/2026-08-28): §Behavioral Contracts table: 4 titles synced to BC-INDEX canonical — BC-2.09.001 '...at Runtime', BC-2.09.002 '...Transport', BC-2.09.004 '...Preserving Type Identity (Red Gate — R11)', BC-2.09.005 '...Holds No Live Connections (Red Gate — R11)'. §Architecture Mapping + §File Structure Requirements + §Tasks: `tool.rs` → `discovery.rs`; `guardrail.rs` → `ingress.rs` (DI-012 seam; canonical module names per module-decomposition.md §pregolya-mcp). Input-hash updated."
   - "1.2 (round-24/F-P2A104-01/2026-08-28): AC-026 mirrored from BC-2.09.001 §Description/{PC-003}/{INV-001} (F-P2A104-01) — phantom field on `Arc<dyn DynTool>` replaced by `schema()` accessor; schema surface type corrected from `serde_json::Value` to `schemars::Schema`; test renamed `test_BC_2_09_001_schema_verbatim_passthrough`; `schemars` added to §Library & Framework Requirements. Input-hash updated per BC-2.09.001 §Description/{PC-003}/{INV-001} authoritative input."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
 ---
@@ -50,11 +51,11 @@ changelog:
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.09.001 | MCP Server Tool Discovery and Registration | P1 |
-| BC-2.09.002 | ToolInvocation Routing to Correct MCP Server | P1 |
+| BC-2.09.001 | MCP Server Tool Discovery and Registration at Runtime | P1 |
+| BC-2.09.002 | ToolInvocation Routing to Correct MCP Server Transport | P1 |
 | BC-2.09.003 | Tool-Result Content Treated as Untrusted Ingress | P1 |
-| BC-2.09.004 | MCP Bare ToolException Re-Raise (Red Gate — VP-004) | P1 |
-| BC-2.09.005 | MultiServerMcpClient No Live Connections (Red Gate — VP-005) | P1 |
+| BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | P1 |
+| BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 |
 
 ## Acceptance Criteria
 
@@ -239,9 +240,9 @@ error. `get_tools` returns `Ok(vec![])` for that server. Verified by
 |-----------|--------|----------------|
 | `MultiServerMcpClient` config container | `pregolya-mcp/src/client.rs` | pure-core (config-only) |
 | `McpSessionGuard` RAII session | `pregolya-mcp/src/session.rs` | effectful (connects on creation, drops on drop) |
-| `convert_mcp_tool` adapter | `pregolya-mcp/src/tool.rs` | pure-core (converts MCP schema → DynTool) |
+| `convert_mcp_tool` adapter | `pregolya-mcp/src/discovery.rs` | pure-core (converts MCP schema → DynTool) |
 | Interceptor chain executor | `pregolya-mcp/src/interceptor.rs` | effectful (runs interceptors around tool call) |
-| `GuardrailHook` dispatcher | `pregolya-mcp/src/guardrail.rs` | effectful (calls guardrail hook) |
+| `GuardrailHook` dispatcher | `pregolya-mcp/src/ingress.rs` | effectful (calls guardrail hook; DI-012 seam) |
 | Bare ToolException detector | `pregolya-mcp/src/exception.rs` | pure-core (inspects content for exception metadata) |
 
 ## Purity Classification
@@ -289,7 +290,7 @@ error. `get_tools` returns `Ok(vec![])` for that server. Verified by
 6. [ ] Implement `get_tools` with cursor pagination (MAX_ITERATIONS=1000) and JoinSet fan-out
 7. [ ] Implement `convert_mcp_tool` — MCP ToolDefinition → `Arc<dyn DynTool>`
 8. [ ] Create `pregolya-mcp/src/interceptor.rs` — interceptor chain with onion execution order
-9. [ ] Create `pregolya-mcp/src/guardrail.rs` — `GuardrailHook` dispatcher, provenance tagging
+9. [ ] Create `pregolya-mcp/src/ingress.rs` — `GuardrailHook` dispatcher, provenance tagging (canonical module per module-decomposition.md §pregolya-mcp; DI-012 seam)
 10. [ ] Implement bare ToolException detection and E-MCP-001 re-raise
 11. [ ] Add `tracing::warn!(event_type = "guardrail.unregistered_passthrough", ...)` and register in Catalog (SAP-1)
 12. [ ] Write compile-fail test for AC-024 (`client.close()` must not compile)
@@ -350,9 +351,9 @@ becomes `McpSessionGuard::new()` must not panic; connection failures return `Err
 |------|--------|---------|
 | `pregolya-mcp/src/client.rs` | CREATE | `MultiServerMcpClient`, `MultiServerMcpConfig` |
 | `pregolya-mcp/src/session.rs` | CREATE | `McpSessionGuard` RAII |
-| `pregolya-mcp/src/tool.rs` | CREATE | `convert_mcp_tool`, `McpDynTool` wrapper |
+| `pregolya-mcp/src/discovery.rs` | CREATE | `convert_mcp_tool`, `McpDynTool` wrapper |
 | `pregolya-mcp/src/interceptor.rs` | CREATE | Interceptor chain, onion order executor |
-| `pregolya-mcp/src/guardrail.rs` | CREATE | Guardrail dispatch, provenance tagging |
+| `pregolya-mcp/src/ingress.rs` | CREATE | Guardrail dispatch, provenance tagging (DI-012 seam; `ingress.rs` is the canonical module name per module-decomposition.md §pregolya-mcp) |
 | `pregolya-mcp/src/exception.rs` | CREATE | Bare ToolException detection logic |
 | `pregolya-mcp/src/lib.rs` | CREATE | Re-export-only root |
 | `pregolya-mcp/Cargo.toml` | CREATE | Dependencies: pregolya-core, rmcp, tokio, uuid, tracing |

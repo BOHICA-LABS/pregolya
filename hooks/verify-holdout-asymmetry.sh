@@ -58,6 +58,8 @@
 #   probe_hsa1_failure_guidance_flagged:    BC-2.09.008 {INV-001} in §Failure Guidance → WARN
 #   probe_hsa2_behavioral_language_exempt:  behavioral description in §Failure Guidance → no WARN
 #   probe_hsa3_bc_linkage_table_exempt:     BC-2.09.008 {INV-001} in §Behavioral Contract Linkage → no WARN
+#   probe_hsa4_pipeline_runid_exempt:       PIPELINE-RUN-42 in §Failure Guidance → no E-CODE WARN
+#     (OBS-3 / F-P2A110-04: E-RUN-42 suffix inside compound run-ID must not false-positive)
 # POL-30: probe fixtures live in $TMPDIR, never under .factory/holdout-scenarios/.
 #
 # EXIT CONTRACT
@@ -144,8 +146,11 @@ INTERNAL_ID_PATTERNS = [
     ("VP-ID",
      re.compile(r'\bVP-\d{3,}\b|\bVP-[A-Z]+-\d+\b|\bVP-\d+-[A-Z]\b')),
     # E-MCP-010, E-GRAPH-018, E-TOOL-001, etc.
+    # Negative lookbehind (?<![A-Z-]) prevents matching E-RUN-42 inside compound
+    # run-ID tokens like PIPELINE-RUN-42 (HS-B-003 fixture; OBS-3 / F-P2A110-04).
+    # In PIPELINE-RUN-42 the E is preceded by N (uppercase) so it never fires.
     ("E-CODE",
-     re.compile(r'\bE-[A-Z]+-\d+\b')),
+     re.compile(r'(?<![A-Z-])E-[A-Z]+-\d+\b')),
     # pregolya::foo, pregolya_core::bar_baz, etc.
     ("MOD-PATH",
      re.compile(r'\bpregolya[_a-z]*::[a-z_]+\b')),
@@ -396,6 +401,43 @@ SPECEOF
   echo "[SELF-PROBE PASS] probe_hsa3_bc_linkage_table_exempt: BC IDs in §Behavioral Contract Linkage are not flagged."
 }
 
+# ── Self-probe hsa4: compound run-ID token (PIPELINE-RUN-42) MUST NOT be flagged ──
+# A §Failure Guidance section containing `PIPELINE-RUN-42` must produce zero E-CODE
+# WARNs — the `E-RUN-42` suffix inside the compound token must not match the E-CODE
+# pattern (OBS-3 / F-P2A110-04: false-positive on HS-B-003 test-fixture run ID).
+probe_hsa4_pipeline_runid_exempt() {
+  init_probe_tmp
+  cat > "$PROBE_TMP/HS-PROBE.md" <<'SPECEOF'
+---
+document_type: holdout-scenario
+version: "1.0"
+---
+
+## Scenario
+
+A two-phase pipeline with a human approval interrupt is configured. Run ID: `PIPELINE-RUN-42`.
+
+## Failure Guidance
+
+"HOLDOUT LOW: HS-PROBE (satisfaction: X.XX) — pipeline did not correctly resume after
+human approval. Check that the checkpoint for PIPELINE-RUN-42 is retrievable in a fresh
+process and that the pipeline advances past the phase boundary on APPROVE."
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP")"
+  # Only check for false-positive E-CODE hits (the suffix E-RUN-42 inside PIPELINE-RUN-42)
+  local ecode_hits
+  ecode_hits="$(echo "$hits" | grep '\[E-CODE\]' || true)"
+  if [ -n "$ecode_hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_hsa4_pipeline_runid_exempt: PIPELINE-RUN-42 produced E-CODE HIT(s)."
+    echo "  The E-RUN-42 suffix inside compound run-ID token must not match the E-CODE pattern."
+    echo "  Output: $ecode_hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_hsa4_pipeline_runid_exempt: PIPELINE-RUN-42 in §Failure Guidance produces no E-CODE WARN."
+}
+
 # ── Main live check ───────────────────────────────────────────────────────────
 check_holdout_asymmetry() {
   if [ ! -d "$HOLDOUT_DIR" ]; then
@@ -460,7 +502,8 @@ echo "[SELF-PROBE] Verifying check catches internal IDs and respects all exclusi
 probe_hsa1_failure_guidance_flagged
 probe_hsa2_behavioral_language_exempt
 probe_hsa3_bc_linkage_table_exempt
-echo "[SELF-PROBE] All 3 self-probes passed — check is not false-green."
+probe_hsa4_pipeline_runid_exempt
+echo "[SELF-PROBE] All 4 self-probes passed — check is not false-green."
 echo ""
 
 echo "════════════════════════════════════════════"

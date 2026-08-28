@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.005
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,13 +26,14 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "dad5395"
+input-hash: "db201a4"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): OBS-P46-1 — align VP-005 phrasing to sibling BC-2.09.004 VP-004 convention. 'compile+pass but network assertion fails' → 'compile+fail — test compiles and runs but the network-I/O assertion inside it fails'. Same semantic; consistent phrasing across both R11 Red Gate BCs."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-mcp per module-decomposition.md v1.10."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (round-25/F-P2A111-01/2026-08-28): F-P2A111-01 [HIGH] — §Architecture Anchors second bullet: `session.rs` replaces `sessions.rs` (McpSessionGuard RAII type resides in mcp::session per architect canonical SS-09 module→file mapping)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -153,7 +154,7 @@ Note: callers are better served by cloning (which is cheap) than by Arc-wrapping
 ## Architecture Anchors
 
 - `pregolya-mcp/src/client.rs` — `MultiServerMcpClient` struct definition (no `Drop` impl)
-- `pregolya-mcp/src/sessions.rs` — `McpSessionGuard` RAII type (the scoped resource, NOT the client)
+- `pregolya-mcp/src/session.rs` — `McpSessionGuard` RAII type (the scoped resource, NOT the client)
 
 ## Story Anchor
 

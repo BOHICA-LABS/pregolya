@@ -20,25 +20,32 @@
 # Rules are data-driven (see Python block).  Adding a new security propagation
 # check requires only a new dict entry in RULES — no structural changes.
 #
-# Current rule set:
-#   R01 — UUID v4-specific regex fragment (`-4[0-9a-f]{3}-[89ab]`) forbidden in S-2.11 body
+# Current rule set (all rules now CORPUS-WIDE: anchor_glob = stories/stories/*.md):
+#   R01 — UUID v4-specific regex fragment (`-4[0-9a-f]{3}-[89ab]`) forbidden in any story body
 #         Authority: BC-2.09.008 {INV-001} + ADR-029 §Decision 5 corrected in round-19
-#         Stale form: `-4[0-9a-f]{3}-[89ab][0-9a-f]{3}` (v4-specific; leaked in Task-35)
+#         Stale form: `-4[0-9a-f]{3}-[89ab][0-9a-f]{3}` (v4-specific)
 #         Canonical:  `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` (version-agnostic)
+#         Scope: stale_re naturally confines hits to sanitizer-context stories
 #
-#   R02 — "UUID v4" wording in sanitizer context forbidden in S-2.11 body
+#   R02 — "UUID v4" wording in sanitizer context forbidden in any story body
 #         Authority: BC-2.09.008 {INV-001} + ADR-029 §Decision 3 SEC-005
-#         Stale form: "UUID v4 removal/pattern/values" (AC-031 body; file-structure table)
+#         Stale form: "UUID v4 removal/pattern/values"
 #         Canonical:  "version-agnostic UUID removal/pattern"
+#         Scope: context_re (sanitiz|remov|pattern|...) confines hits to sanitizer stories
 #
-#   R03 — FutureExt::catch_unwind required when story names panic-recovery mechanism
+#   R03 — async-callee catch_unwind must use FutureExt::catch_unwind (CORPUS-WIDE)
 #         Authority: BC-2.09.008 EC-010 + ADR-029 §Decision 5 SEC-008 (round-21 correction)
-#         Stale form: "UnwindSafe boundary" as THE sole mechanism name (without FutureExt)
-#         Canonical:  `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))`
+#         F-P2A109-01: synchronous std::panic::catch_unwind around an async fn (e.g.
+#           GuardrailHook::evaluate, GraphRunner::run, DynTool::invoke_dyn) CANNOT catch
+#           panics that occur during .await polling — only FutureExt::catch_unwind can.
+#         Trigger: story contains `catch_unwind` AND an async callee
+#           (GuardrailHook::evaluate, runner.run, invoke_dyn, etc.)
+#         Required: story must ALSO name `FutureExt`
+#         Canonical: `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))`
 #
-#   R04 — SEC-008 panic = "unwind" obligation should appear in story (advisory-within-advisory)
+#   R04 — SEC-008 panic = "unwind" obligation should appear in any story referencing SEC-008
 #         Authority: BC-2.09.008 §SEC-008 build-profile invariant / ADR-029 §Decision 5
-#         Check: story references SEC-008 → story should also cite `panic = "unwind"` obligation
+#         Scope: related_re (\bSEC-008\b) confines hits to stories that reference SEC-008
 #
 # EXCLUSIONS
 # ──────────
@@ -56,8 +63,9 @@
 #   R01-neg: synthetic story body with version-agnostic regex → no WARN
 #   R02-pos: synthetic story body with "UUID v4 removal" → WARN reported
 #   R02-neg: synthetic story body with "version-agnostic UUID removal" → no WARN
-#   R03-pos: synthetic story body with "UnwindSafe boundary" and no "FutureExt" → WARN
-#   R03-neg: synthetic story body with "FutureExt::catch_unwind" → no WARN
+#   R03-pos: synthetic story body with std::panic::catch_unwind + async callee (runner.run)
+#            and no FutureExt → WARN (F-P2A109-01 async-panic defect class)
+#   R03-neg: synthetic story body with FutureExt::catch_unwind + async callee → no WARN
 #
 # EXIT CONTRACT
 # ─────────────
@@ -156,7 +164,7 @@ RULES = [
         "check_type": "presence_forbidden",
         "description": "UUID v4-specific regex fragment in story body",
         "authority": "BC-2.09.008 {INV-001} / ADR-029 §Decision 5 (round-19 correction)",
-        "anchor_glob": "stories/stories/STORY-S-2.11-*.md",
+        "anchor_glob": "stories/stories/*.md",
         # The stale form is the v4-specific UUID regex PATTERN written as text in
         # the document, e.g.:
         #   `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}`
@@ -181,7 +189,7 @@ RULES = [
         "check_type": "presence_forbidden",
         "description": "'UUID v4' wording in sanitizer context in story body",
         "authority": "BC-2.09.008 {INV-001} / ADR-029 §Decision 3 SEC-005 (round-19 correction)",
-        "anchor_glob": "stories/stories/STORY-S-2.11-*.md",
+        "anchor_glob": "stories/stories/*.md",
         "stale_re": re.compile(r"\bUUID v4\b", re.IGNORECASE),
         "context_re": re.compile(
             r"sanitiz|remov|pattern|strip|prevent|block|regex|uuid.*format",
@@ -201,22 +209,38 @@ RULES = [
     {
         "id": "R03",
         "check_type": "requires_coexistence",
-        "description": "story panic-recovery mechanism must specify FutureExt::catch_unwind",
+        "description": (
+            "story uses catch_unwind around async callee without FutureExt::catch_unwind "
+            "(F-P2A109-01: sync catch_unwind cannot span async .await boundary)"
+        ),
         "authority": (
             "BC-2.09.008 EC-010 / ADR-029 §Decision 5 SEC-008 (round-21 correction): "
-            "synchronous std::panic::catch_unwind cannot span async boundary; "
+            "synchronous std::panic::catch_unwind cannot catch panics during .await polling; "
             "FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...))) is the sole correct form"
         ),
-        "anchor_glob": "stories/stories/STORY-S-2.11-*.md",
-        "trigger_re": re.compile(r"\bUnwindSafe\b(?!.*test_BC)", re.IGNORECASE),
-        "required_re": re.compile(r"FutureExt", re.IGNORECASE),
+        "anchor_glob": "stories/stories/*.md",
+        # Trigger: any mention of catch_unwind (both std::panic and FutureExt forms contain it)
+        "trigger_re": re.compile(r"\bcatch_unwind\b"),
+        # Context gate: rule only applies when the story also mentions an async callee whose
+        # interface-definitions/BC signature is `async fn` — e.g. GuardrailHook::evaluate,
+        # GraphRunner::run, DynTool::invoke_dyn. Without an async callee in scope, sync
+        # catch_unwind is harmless.
+        "trigger_context_re": re.compile(
+            r"GuardrailHook::evaluate"
+            r"|GraphRunner::run"
+            r"|DynTool::invoke_dyn"
+            r"|\brunner\.run\b"
+            r"|\binvoke_dyn\b",
+        ),
+        "required_re": re.compile(r"FutureExt"),
         "negation_re": re.compile(
             r"INADEQUATE|inadequate|corrected|STALE|REMOVED|cannot|round-21",
             re.IGNORECASE
         ),
         "canonical_hint": (
-            "add `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))` "
-            "as the explicit mechanism inside `GraphAgentTool::invoke_dyn`"
+            "use `FutureExt::catch_unwind(AssertUnwindSafe(async_callee(...)))` "
+            "instead of synchronous `std::panic::catch_unwind`; "
+            "the async form wraps the Future so panics during .await are caught"
         ),
         "sec_ref": "SEC-008 / CWE-248 / CWE-703",
     },
@@ -229,7 +253,7 @@ RULES = [
             "pregolya-mcp release profile MUST pin `panic = \"unwind\"`; "
             "`panic = \"abort\"` voids FutureExt::catch_unwind recovery (CWE-248)"
         ),
-        "anchor_glob": "stories/stories/STORY-S-2.11-*.md",
+        "anchor_glob": "stories/stories/*.md",
         "related_re": re.compile(r"\bSEC-008\b"),
         "required_re": re.compile(r'panic\s*=\s*["\']unwind["\']|panic.*=.*unwind|panic-profile'),
         "canonical_hint": (
@@ -331,9 +355,10 @@ def run_rule(rule, factory_dir, probe_override):
                 ))
 
         elif check_type == "requires_coexistence":
-            trigger_re  = rule["trigger_re"]
-            required_re = rule["required_re"]
-            negation_re = rule.get("negation_re")
+            trigger_re         = rule["trigger_re"]
+            required_re        = rule["required_re"]
+            negation_re        = rule.get("negation_re")
+            trigger_context_re = rule.get("trigger_context_re")
 
             # Collect trigger lines (excluding negation)
             trigger_lines = []
@@ -347,8 +372,15 @@ def run_rule(rule, factory_dir, probe_override):
                 # No trigger → rule is satisfied (no obligation to have required_re)
                 continue
 
-            # Check if required_re appears ANYWHERE in normative body
+            # Context gate: if trigger_context_re is specified, the rule only applies
+            # when the full normative body ALSO matches the context pattern.
+            # This scopes the rule to its intended context (e.g. async callee present).
             all_text = "\n".join(l for _, l in normative_lines)
+            if trigger_context_re and not trigger_context_re.search(all_text):
+                # Trigger fired but context not present → rule does not apply to this file
+                continue
+
+            # Check if required_re appears ANYWHERE in normative body
             if not required_re.search(all_text):
                 # Trigger present, required absent → WARN
                 first_lineno, first_line = trigger_lines[0]
@@ -482,7 +514,8 @@ PROBE_R02_NEG_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R02_NEG" 2>/dev/null 
 PROBE_R02_NEG_WARNS="$(echo "$PROBE_R02_NEG_OUT" | grep -c '^\[WARN\] R02' || true)"
 probe_expect_pass "R02-neg" "'version-agnostic UUID removal' passes without warning" "$PROBE_R02_NEG_WARNS"
 
-# R03-pos: story body with "UnwindSafe boundary" mechanism and no FutureExt → WARN expected
+# R03-pos: story body with std::panic::catch_unwind + async callee (runner.run) and no FutureExt
+# Represents the F-P2A109-01 defect class: sync catch_unwind around an async callee
 PROBE_R03_POS="$PROBE_TMP/probe-r03-pos.md"
 cat > "$PROBE_R03_POS" <<'STALE_EOF'
 ---
@@ -493,13 +526,16 @@ version: "1.0"
 # S-9.99 Synthetic Probe
 
 ## Task-37
-Implement `UnwindSafe` boundary for `extract_output` invocation — catch panic, return static
-`isError: true` response with `content[0].text == "internal error"`.
+Implement panic protection for `GraphAgentTool::invoke_dyn`: use
+`std::panic::catch_unwind(|| runner.run(input, policy))` to catch panics
+during execution and return static `isError: true` response with
+`content[0].text == "internal error"`. The `UnwindSafe` boundary ensures
+the captured variables satisfy the `UnwindSafe` marker trait.
 STALE_EOF
 
 PROBE_R03_POS_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R03_POS" 2>/dev/null || true)"
 PROBE_R03_POS_WARNS="$(echo "$PROBE_R03_POS_OUT" | grep -c '^\[WARN\] R03' || true)"
-probe_expect_warn "R03-pos" "'UnwindSafe boundary' mechanism without FutureExt" "$PROBE_R03_POS_WARNS"
+probe_expect_warn "R03-pos" "sync catch_unwind + async callee (runner.run) without FutureExt" "$PROBE_R03_POS_WARNS"
 
 # R03-neg: story body with "FutureExt::catch_unwind" → no WARN expected
 PROBE_R03_NEG="$PROBE_TMP/probe-r03-neg.md"

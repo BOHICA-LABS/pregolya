@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.33"
+version: "1.34"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "12ac4b8"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.34 (round-25/F-P2A111-03/2026-08-28): Iron Law — add `mcp::session` Effectful Shell row (pregolya-mcp; McpSessionGuard RAII; creates network connection on construction, drops/disconnects on drop; Connection enum dispatches Stdio/HTTP-SSE/StreamableHttp/WebSocket transports; SessionSource::OnDemand lifecycle; I/O-bound; BC-2.09.005 {INV-002} / SS-09). Iron Law — add `mcp::interceptor` Effectful Shell row (pregolya-mcp; ToolCallInterceptor trait + _build_interceptor_chain factory; wraps effectful MCP tool call invocations in onion-order chain; interceptors may perform I/O; BC-2.09.002 {PC-001} / SS-09). Required by module-decomposition.md §pregolya-mcp (SS-09) mcp::session/mcp::interceptor row additions. Effectful Shell 38→40; total 86→88. Module-decomposition universe updated in intro: 78→80 (72→74 tiered + 6 definitions-only/exempt)."
   - "1.33 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — `mcp::graph_tool` Effectful Shell row: `CompiledGraph<S>` → `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}; aligns with ADR-029 §Symbol Grounding). Sibling sweep: no other CompiledGraph<S> live-body sites in this file (v1.32 changelog entry retains old symbol as historical record; grandfathered per TD-VSDD-091). input-hash updated to 12ac4b8."
   - "1.32 (GAP-01/ADR-029/2026-08-26): Iron Law — add `mcp::graph_tool` Effectful Shell row (pregolya-mcp; async graph execution via `CompiledGraph<S>` run; I/O-bound; non-deterministic across invocations; not Kani-provable; STATE-ISOLATION invariant enforced structurally by `extract_output` closure pattern, not formal verification; BC-2.09.008 / SS-09 / ADR-029 / VP-016 proptest P1). Required by ADR-029 mcp::graph_tool module addition. Effectful Shell 37→38; total 85→86. Module-decomposition universe updated in intro: 77→78 (72 tiered + 6 definitions-only/exempt). Input-hash refresh pending (state-manager task)."
   - "1.31 (architect-reconcile-burst/2026-08-26): Iron Law — add `mcp::sanitize` Pure Core row (pregolya-mcp; `redact_credentials(text: &str) -> Cow<str>` pure credential-redaction function; BC-2.09.007 / INV-003 / SS-09 / DI-010; VP-015 integration P1; no I/O, no async, no global state; CWE-532 prevention at pure layer). Required by module-decomposition.md mcp::sanitize addition. Pure Core 35→36; total 84→85. Module-decomposition universe updated in intro: 76→77 (71 tiered + 6 definitions-only/exempt). Input-hash refreshed (6470d58)."
@@ -62,9 +63,9 @@ changelog:
 Every pregolya module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 78 module-decomposition modules (72 tiered + 6 definitions-only/exempt) plus
+effectful dependency). All 80 module-decomposition modules (74 tiered + 6 definitions-only/exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(86 total rows after GAP-01/ADR-029: 36 Pure Core + 38 Effectful Shell + 12 Boundary).
+(88 total rows after round-25: 36 Pure Core + 40 Effectful Shell + 12 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -150,6 +151,8 @@ Kani is not applicable here.
 | `mcp::discovery` | pregolya-mcp | MCP transport I/O: enumerates tool set from external MCP server at runtime (BC-2.09.001) | Integration |
 | `mcp::server` | pregolya-mcp | binds stdio/SSE transport; accepts inbound MCP connections; dispatches tool calls and serializes responses (ADR-013 / BC-2.09.006/007) | Integration |
 | `mcp::graph_tool` | pregolya-mcp | async `CompiledStateGraph` execution via `GraphRunner::run`; I/O-bound (awaits full graph traversal); non-deterministic across invocations; STATE-ISOLATION invariant enforced structurally via `extract_output` closure — not extractable as a pure Kani target because `extract_output` is an arbitrary closure over open-recursive `serde_json::Value`; VP-016 proptest P1 (BC-2.09.008 / ADR-029 / SS-09) | Integration |
+| `mcp::session` | pregolya-mcp | `McpSessionGuard` RAII type: creates network connection to MCP server on construction, terminates transport on drop; `Connection` enum dispatches over Stdio / HTTP SSE / StreamableHttp / WebSocket transports; I/O-bound lifecycle; `SessionSource::OnDemand` (no retained connections per R11 no-live-connections; BC-2.09.005 {INV-002} / SS-09) | Integration |
+| `mcp::interceptor` | pregolya-mcp | `ToolCallInterceptor` trait + `_build_interceptor_chain` factory; wraps effectful MCP tool call invocations in an onion-order chain (outermost interceptor sees request first, response last); interceptors may perform I/O (logging, tracing, metrics); chain execution is I/O-bound via the wrapped tool call (BC-2.09.002 {PC-001} / SS-09) | Integration |
 | `memory::skills` | pregolya-memory | async `SkillStore` I/O: reads skill KV entries via `MemoryStore` backend; `load_skill`, `list_skills`, `skill_exists` I/O-bound (ADR-012 / BC-2.15.004) | Integration |
 | `pregolya-standard-tests` | pregolya-standard-tests | shared conformance suite; invokes provider HTTP stacks via DTU doubles (BC-2.08.001–005, BC-2.08.008) | Integration (DTU) |
 | `xtask` | xtask | filesystem reads (file-size gate) + subprocess spawning (lint CI gates); CI enforcement binary (SS-17) | CI/Unit |

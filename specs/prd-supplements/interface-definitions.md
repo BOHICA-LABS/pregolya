@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.90"
+version: "2.91"
 status: active
 producer: product-owner
 timestamp: 2026-08-28T00:00:00Z
 phase: 1d
 changelog:
+  - "2.91 (round-25/F-P2A108-02/2026-08-28): Normalize three spec doc-comment lines from doubled path form to parenthetical form per TD-VSDD-091 notation consistency. §PreToolCallHook code-block comment: `pregolya-core::core::action_risk` → `pregolya-core (core::action_risk)`. §Budget code-block comment: `pregolya-core::core::budget` → `pregolya-core (core::budget)`. Same §Budget code-block execution-engine comment: `pregolya-graph::graph::budget` → `pregolya-graph (graph::budget)`. No semantic changes; parenthetical form is the canonical spec-document convention consistent with module-decomposition.md and ADR-023 §Required Inventory."
   - "2.90 (round-24/O-P2A104-01/2026-08-28): O-P2A104-01 [LOW]: §Tool::schema() and §DynTool::schema() doc-comments generalized. Both previously read 'JSON Schema of the tool's argument struct, derived by schemars::schema_for!' — accurate for the #[pregolya::tool] macro case but inaccurate for two verbatim/passthrough producers: convert_mcp_tool (schema sourced verbatim from the MCP server inputSchema, not re-derived) and GraphAgentTool::from_graph (schema supplied by the caller). Updated both doc-comments to note the schema MAY be schemars-derived (macro case) OR supplied verbatim/by the caller (MCP-adapted and GraphAgentTool cases). BC anchors unchanged; no behavioral change to any trait method."
   - "2.89 (round-23/O-P2A102-04/2026-08-28): O-P2A102-04 [LOW]: StreamEvent::ToolApprovalRequest.prompt type corrected String→Option<String>, aligned to PreToolDecision::PendingHumanApproval { prompt: Option<String> } canonical type and entities-graph.md ToolApprovalRequest entity definition. A None prompt is valid — the approver UI falls back to a default message; the hook is not obligated to supply one. Doc comment updated accordingly. Story-writer propagation required for S-1.24 event-13 acceptance criterion (prompt field type reference)."
   - "2.88 (round-21/OBS-P2A094-2/2026-08-28): §CheckpointSaver fts_search arg comment: added rationale note that FtsSearchConfig.thread_id: Option<&str> is legitimately a string-form FTS scope filter (not Option<Uuid>) — the FTS5 virtual table stores thread_ids as serialized strings; FtsSearchResult.thread_id: String confirms FTS operates in string space; callers with a server-layer Uuid pass .to_string() (OBS-P2A094-2 adjudication). Gate #31 type note: same rationale added inline after FtsSearchConfig definition. This closes OBS-P2A094-2 as LEGITIMATE-&str with documented rationale, preventing re-surface as drift finding."
@@ -1326,7 +1327,7 @@ pub enum ActionRisk { ReadOnly, Low, Medium, High }
 
 ```rust
 // pregolya-graph: graph::hitl
-// (ActionRisk is defined in pregolya-core::core::action_risk and re-exported here)
+// (ActionRisk is defined in pregolya-core (core::action_risk) and re-exported here)
 
 /// The tool call preview presented to the hook before invocation.
 /// BC anchor: BC-2.05.007 PC3 (ToolCallPreview constructed read-only before pre_invoke call; action_risk populated from #[tool(action_risk = ...)] annotation).
@@ -1390,8 +1391,8 @@ BC anchor: BC-2.10.005 (CompactionTrigger evaluation — VP-012 Kani candidate f
 ```rust
 // pregolya-core: core::budget
 // NOTE: CompactionTrigger, ConversationSnapshot, CompactionSummary, CompactionPolicy are
-// definitions-only types in pregolya-core::core::budget (ADR-019 Decision 1 / ADR-009 Option 3).
-// The execution engine (BudgetEngine, EvidenceJournal dispatch) lives in pregolya-graph::graph::budget.
+// definitions-only types in pregolya-core (core::budget) (ADR-019 Decision 1 / ADR-009 Option 3).
+// The execution engine (BudgetEngine, EvidenceJournal dispatch) lives in pregolya-graph (graph::budget).
 // If BudgetConfig gains fields of these types (it does — Decision 2), core→graph dep is avoided because
 // the type definitions live in core::budget, not in graph::budget.
 

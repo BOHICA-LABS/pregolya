@@ -8,7 +8,7 @@ status: accepted
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
 date: "2026-08-17"
-version: "1.8"
+version: "1.9"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
@@ -16,6 +16,7 @@ subsystems_affected: ["all"]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.9 (round-25/F-P2A108-02/2026-08-28): Normalize seven §Required Inventory table cells from doubled path form to parenthetical form per TD-VSDD-091 notation consistency. The doubled form `pregolya-core::core::action_risk` was inconsistent with the parenthetical form `pregolya-core (core::action_risk)` already used for burst-288 additions in the same table. Cells normalized: ActionRisk → pregolya-core (core::action_risk); PreToolDecision → pregolya-graph (graph::hitl); ToolOutput → pregolya-core (core::tool); CompactionTrigger → pregolya-core (core::budget); TrustLevel → pregolya-prompts (injection_guard); Document → pregolya-core (core::documents); ToolCallPreview → pregolya-graph (graph::hitl). No semantic changes; parenthetical form is the canonical spec-document convention."
   - "1.8 (burst-315/L9b-depin/2026-08-17): De-pin doc-version citations introduced in v1.7 — TD-VSDD-091 L9b forbids doc-name followed by vN.N version pins in authored prose. Four occurrences of the violating form replaced with burst-reference + section-anchor form `interface-definitions.md §ToolCallPreview (burst-288)`. Sites: v1.7 changelog description (two occurrences), Required Inventory D-02 cross-owner note (one occurrence), §Consequences D-02 closure line (one occurrence). Semantic meaning preserved — D-02 CLOSED, attribute applied at §ToolCallPreview in burst-288."
   - "1.7 (burst-315/F-B3/2026-08-17): Close D-02 action item — annotate ToolCallPreview closure. Confirmed `#[non_exhaustive]` is present on `pub struct ToolCallPreview` in interface-definitions.md §ToolCallPreview (burst-288). Two annotation sites updated (append-only; historical text preserved): (1) Required Inventory struct table D-02 cross-owner note: appended 'Applied in interface-definitions.md §ToolCallPreview (burst-288); D-02 CLOSED.' (2) Consequences section: 'Product-owner action required' updated to 'Product-owner action completed' with closure reference."
   - "1.6 (burst-314/P1D-205-F-P205-02/2026-08-17): Add RunnableParallel, RunnablePassthrough, RunnableAssign to Required Inventory struct table (structs 19→22, total 37→40). ADR-026 §Decision 1/3/4 declares all three as public API surface structs carrying #[non_exhaustive]; gate-update-protocol requires same-change inventory addition. Adjudication: Option A (Required) — all three structs are explicitly re-exported public API (pregolya_core::runnables + prelude), ADR-026 author already applied the attribute and cited ADR-023 §Required Inventory as authority, and Criterion B's MAY carve-out requires explicit Exempt Inventory entry which was never recorded. CLAUDE.md §Code Conventions convention (#[non_exhaustive] on ALL public API surface types) corroborates. BC anchors: BC-2.01.005/006 (RunnableParallel), BC-2.01.007 (RunnablePassthrough), BC-2.01.008 (RunnableAssign). Updated: §Decision 4 struct header (19→22), gate scope note (37→40, 19 structs→22 structs), §Consequences count (37→40, 19 structs→22 structs)."
@@ -118,11 +119,11 @@ The types listed below constitute the **Required Inventory** — types that MUST
 | `Category` | pregolya-core | D17 (ADR-010) | BC-2.14.001 |
 | `RetryHint` | pregolya-core | D17 (ADR-010) | BC-2.14.001 |
 | `ContentBlock` | pregolya-core | D17 | BC-2.01.002 |
-| `ActionRisk` | pregolya-core::core::action_risk | D23 (ADR-020) | BC-2.05.006, BC-2.23.005 |
-| `PreToolDecision` | pregolya-graph::graph::hitl | D23 (ADR-018) | BC-2.05.007 |
-| `ToolOutput` | pregolya-core::core::tool | D23 (ADR-020) | BC-2.23.001–006 |
-| `CompactionTrigger` | pregolya-core::core::budget | D23 (ADR-019) | BC-2.10.005 |
-| `TrustLevel` | pregolya-prompts::injection_guard | D21 (ADR-015) | BC-2.18.004 |
+| `ActionRisk` | pregolya-core (core::action_risk) | D23 (ADR-020) | BC-2.05.006, BC-2.23.005 |
+| `PreToolDecision` | pregolya-graph (graph::hitl) | D23 (ADR-018) | BC-2.05.007 |
+| `ToolOutput` | pregolya-core (core::tool) | D23 (ADR-020) | BC-2.23.001–006 |
+| `CompactionTrigger` | pregolya-core (core::budget) | D23 (ADR-019) | BC-2.10.005 |
+| `TrustLevel` | pregolya-prompts (injection_guard) | D21 (ADR-015) | BC-2.18.004 |
 | `SearchType` | pregolya-vectorstores | D21 (ADR-014) | BC-2.20.003 |
 | `FilterClause` | pregolya-vectorstores | D21 (ADR-014) | BC-2.21.004 |
 | `GuardrailResult` | pregolya-core (core::guardrail) | burst-288 (D-03) | — (Phase 2 BC) |
@@ -140,12 +141,12 @@ The types listed below constitute the **Required Inventory** — types that MUST
 |------|---------------|-----------------|
 | `PregolyaError` | pregolya-core | D17 (ADR-010, F-P173-619) |
 | `ProviderFallbackPolicy` | pregolya-core | D20 (ADR-012 / BC-2.08.014) |
-| `Document` | pregolya-core::core::documents | D21 (ADR-014) |
+| `Document` | pregolya-core (core::documents) | D21 (ADR-014) |
 | `MetadataFilter` | pregolya-vectorstores | D21 (ADR-014) |
 | `PromptValue` | pregolya-prompts | D21 (ADR-015) |
 | `MessageProvenance` | pregolya-prompts | D21 (ADR-015) |
 | `ToolConfig` | pregolya-tools | D23 (ADR-020) |
-| `ToolCallPreview` | pregolya-graph::graph::hitl | D23 (ADR-018) |
+| `ToolCallPreview` | pregolya-graph (graph::hitl) | D23 (ADR-018) |
 | `RunnableConfig` | pregolya-core | burst-288 (D-03) |
 | `BudgetConfig` | pregolya-core (core::budget) | burst-288 (D-03) |
 | `SkillDescriptor` | pregolya-memory | burst-288 (D-03) |

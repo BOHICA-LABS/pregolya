@@ -170,22 +170,27 @@
 #       Promotion to blocking: after all current WARN findings are fixed.
 #       Routing: architect (ADR §Decision message template cells).
 #
-#   verify-story-changelog-direction.sh — story changelog direction + version-integrity (advisory).
-#       Closes O-P2A102-05 (round-23): story files carry `changelog:` frontmatter lists that
-#       were outside the scope of verify-form-a-changelog-direction.sh (which covers
-#       .factory/specs/ and BC files only). Canonical story convention = DESCENDING
-#       (newest-first; frontmatter `version:` == first/top changelog entry), matching
-#       STORY-INDEX.md and the spec-file direction. Checks:
-#         (a) frontmatter changelog: array monotonic DESCENDING
-#         (b) frontmatter version: == first (top) changelog entry
-#         (c) body ## Changelog section direction consistent (DESCENDING)
-#       POL-31 self-probes included. Baseline (round-23 gate creation):
-#       12 story files have ascending/non-monotonic changelogs (expected WARNs until
-#       story-writer/state-manager normalization sweep):
+#   verify-story-changelog-direction.sh — story changelog internal-monotonicity + version-integrity (advisory).
+#       Closes O-P2A102-05 (round-23): story files carry `changelog:` frontmatter lists outside
+#       the scope of verify-form-a-changelog-direction.sh. Gate LOGIC relaxed (round-23) from
+#       "must be descending" to "internally-monotonic in EITHER direction + frontmatter version:
+#       == newest-extreme". Direction (ascending vs descending) is NOT globally mandated — a
+#       story may use either convention as long as its own changelog is self-consistent.
+#       Canonical rule set:
+#         (a) frontmatter changelog: array strictly monotonic in its own direction
+#             (ascending or descending — either is valid; no local inversions)
+#         (b) frontmatter version: == newest-extreme
+#             (first entry if descending; last entry if ascending)
+#         (c) body ## Changelog section internally monotonic and consistent with frontmatter
+#             direction when both are present
+#       POL-31 self-probes included: P1 non-monotonic fixture → WARN; P2 version-mismatch
+#       fixture → WARN; N1 clean ascending → PASS; N2 clean descending → PASS. Gate is
+#       NOT inert — P1/P2 probes assert WARN > 0 on synthetic violations.
+#       Baseline (round-23 gate creation):
 #         S-1.03, S-1.04, S-1.06, S-1.19, S-1.21, S-1.22, S-1.23, S-1.24,
-#         S-1.26, S-1.27, S-2.11, S-6.01.
-#       Promotion to blocking: after story-writer normalizes all changelogs to descending.
-#       Routing: story-writer (story file normalization).
+#         S-1.26, S-1.27, S-2.11, S-6.01 had ascending/non-monotonic changelogs.
+#       Promotion to blocking: after WARN=0 on live tree and exit contract changed to exit 1.
+#       Routing: story-writer (story file normalization where WARNs remain).
 #
 #   verify-holdout-asymmetry.sh — HS-*.md evaluator-facing section internal-identifier gate (advisory).
 #       Closes F-P2A105-03 / GAP-R24 process-gap (round-24): verify-ac-pc-trace.sh checks

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.004
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.2 (WAVE-B-NOTATION-SWEEP/2026-07-29): Class 3 notation sweep — nine violations corrected: Description (3/5 fields), PC1 (4/5), Invariants `{ category: TOOL }` (1/5), EC-001 (3/5), EC-002 (2/5), EC-003 (1/5), TV-001 (2/5), TV-002 CLASS3_ASCII_ELLIPSIS_VIOLATION (`...` → `..`), Architecture Anchors (3/5). All receive `..` per ADR-010 §Error-Construction Notation Canon Class 3."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.10 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (round-25/F-P2A108-01/2026-08-28): F-P2A108-01 [HIGH] — §Architecture Anchors first bullet: `exception.rs` replaces `tools.rs` for `_handle_mcp_tool_error` (bare ToolException arm); R11 bare ToolException error path resides in mcp::exception per architect canonical SS-09 module→file mapping."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -32,7 +33,7 @@ inputs:
   - .factory/semport/mcp/behavioral-intent.md
   - .factory/semport/mcp/test-inventory.md
   - .factory/semport/mcp/rust-translation-strategy.md
-input-hash: "be56a05"
+input-hash: "9c0427d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -150,7 +151,7 @@ the isError path.
 
 ## Architecture Anchors
 
-- `pregolya-mcp/src/tools.rs` — `_handle_mcp_tool_error` (bare ToolException arm)
+- `pregolya-mcp/src/exception.rs` — `_handle_mcp_tool_error` (bare ToolException arm)
 - `pregolya-core/src/error.rs` — `PregolyaError { component: MCP, category: TOOL, code: E-MCP-001, .. }`
 
 ## Story Anchor

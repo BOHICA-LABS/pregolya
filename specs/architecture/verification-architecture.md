@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.27"
+version: "2.28"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "c3a2086"
+input-hash: "940e3bc"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -680,7 +680,7 @@ fn watermark_arithmetic_harness() {
 ```
 
 Feasibility: MEDIUM-HIGH. `check_watermark_trigger` is a pure sync arithmetic function in
-`pregolya-core::core::budget`. The bounded domain (`ceiling ≤ 2^24`) makes the f64
+`pregolya-core (core::budget)`. The bounded domain (`ceiling ≤ 2^24`) makes the f64
 arithmetic tractable for Kani's IEEE-754 model. Estimated proof time: 5–15 min.
 Note: `fraction > 0.0` assumption excludes the degenerate `fraction = 0.0` case (always-fire)
 which is rejected at BudgetConfig construction (EC-001 in BC-2.10.005).
@@ -837,6 +837,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.28 | 2026-08-28 | architect | round-25/F-P2A108-02 | Normalize doubled-path notation in §VP-012 feasibility prose. One occurrence of `` `pregolya-core::core::budget` `` replaced with `` `pregolya-core (core::budget)` `` (matches ADR-023 §Required-Inventory parenthetical form). No VP catalog, coverage-matrix, or harness content changed. |
 | 2.27 | 2026-08-27 | architect | round-16/F-P2A081-01 | VP-016 §Why proptest (not Kani): 'arbitrary `GraphState` instances with extra internal fields' → 'arbitrary `TestGraphState` instances (serialized as `serde_json::Value`) with extra internal fields' (F-P2A081-01 MED — `GraphState` is not a type/trait per ADR-029 §Symbol Grounding PHANTOM row; canonical harness struct is `TestGraphState`). input-hash updated to c3a2086. |
 | 2.26 | 2026-08-27 | architect | round-14/F-P2A078-02+F-P2A078-03 | VP-016 §Property entry: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by a successful invocation' → 'the `serde_json::Value` returned by `invoke_dyn` on successful invocation' (F-P2A078-02 HIGH). VP-016 harness description: `VP-016.md` filename → `vp-016-graph-agent-tool-state-isolation.md` (canonical filename; F-P2A078-03 MED); TestGraphState fields `internal_checkpoint_id`/`intermediate_message`/`_internal_blob` → `checkpoint_id`/`run_id`/`accumulated_messages` (authoritative VP-016 harness; F-P2A078-03); 'Assertion: `ToolOutput` contains exactly' → 'Assertion: the `serde_json::Value` returned by `invoke_dyn` contains exactly'. input-hash updated to 18fa8b4. |
 | 2.25 | 2026-08-26 | architect | round-6/F-P2A-065-07 | VP-006-B BC anchor corrected: `BC-2.18.004` → `BC-2.18.004 {PC-005}` in Committed VP Obligations table (VP-INDEX canonical anchor per VP-INDEX §VP Catalog row BC column). VP-006-B §Should Prove heading normalized: `injection_guard_fewshot Multi-Pair Fail-Closed` → `injection_guard Multi-Pair FewShotExamples` (matches VP-INDEX/VP-006-B.md canonical title form; F-P2A-065-07 OBS). input-hash updated. |
