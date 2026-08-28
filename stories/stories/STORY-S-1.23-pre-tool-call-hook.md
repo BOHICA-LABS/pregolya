@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.23
 epic_id: E-12
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T14:00:00Z
 changelog:
   - "1.5 (F-P2A087-01/round-19/2026-08-27): Symbol-canon propagation: DynTool::invoke → DynTool::invoke_dyn at 3 sites — AC-001 §Description, §Subsystem anchor, Architecture Compliance Rule 1. DynTool::invoke is not a method on the object-safe DynTool trait; the executor-dispatch seam is invoke_dyn. input-hash updated to 1b3760d."
+  - "1.6 (round-22/F-P2A096-04/2026-08-28): PreToolDecision type drift corrected — PendingHumanApproval { prompt: String } changed to PendingHumanApproval { prompt: Option<String> } per canonical interface-definitions.md §PreToolDecision, entities-graph.md §PreToolDecision, ADR-018 §Decision 1, and ToolApprovalRequest.prompt. Sibling-swept: one other prompt occurrence (AC-005 destructure { prompt }) is type-agnostic and requires no change."
   - "1.4 (P2A-046 OBS-1/2026-08-24): AC-009 heading compressed ordinal normalized to stable tag"
   - "1.3 (P2A-043 F-04-adj/2026-08-24): 6 wrong-ordinal EC-source citations corrected per PO adjudication"
   - "1.2 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags"
@@ -164,7 +165,7 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 - [ ] Implement `DispatchOutcome` enum: `Proceed(Option<serde_json::Value>)` / `Reject(String)` in `hitl.rs` (BC-2.05.007 PC-007)
 - [ ] Implement `route_pre_tool_decision(decision: PreToolDecision) -> DispatchOutcome` — pure sync; `Deny{reason}` → `Reject(reason)`; `Approve` → `Proceed(None)`; `Edit{obj}` where obj is JSON object → `Proceed(Some(obj))`; `Edit{non-obj}` → `Reject("invalid modified_args")`; `#[non_exhaustive]` wildcard → `Reject("unexpected_variant")` (BC-2.05.007 PC-007; VP-011 Kani target)
 - [ ] Implement `shield_hook_result(result: Result<PreToolDecision, HookError>) -> PreToolDecision` — pure sync; `Err(_)` → `Deny{reason: "hook error: <detail>"}`, `Ok(d)` → `d` (BC-2.05.007 PC-007; VP-011 Kani target)
-- [ ] Implement `PreToolDecision` enum — `#[non_exhaustive]`; variants: `Approve` / `Deny { reason: String }` / `Edit { modified_args: serde_json::Value }` / `PendingHumanApproval { prompt: String }`
+- [ ] Implement `PreToolDecision` enum — `#[non_exhaustive]`; variants: `Approve` / `Deny { reason: String }` / `Edit { modified_args: serde_json::Value }` / `PendingHumanApproval { prompt: Option<String> }`
 - [ ] Implement `PreToolCallHook` trait in `hitl.rs`
 - [ ] Implement `pre_tool_dispatch` — async wrapper: calls hook, shields result via `shield_hook_result`, peels `PendingHumanApproval` (calls `interrupt(ToolApprovalRequest{..})`), calls `route_pre_tool_decision` for remaining variants
 - [ ] Implement `ToolApprovalRequest` struct (msgpack-serializable) in `hitl.rs`

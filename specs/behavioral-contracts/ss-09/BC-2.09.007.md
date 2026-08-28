@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "2.1"
+version: "2.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,12 +27,13 @@ changelog:
   - "1.9 (B-SS09-sec-adjudication/ADR-029-SEC-001-SEC-002/2026-08-26): (1) SEC-001 — {PC-002} extended with success-path credential boundary obligation: Tool implementations MUST NOT embed credentials in ToolOutput success variants; framework sanitizes error paths only; DI-010 obligation binds every DynTool. TV-009 added (MockTool success-path asserts framework does NOT strip success-path content — boundary belongs to the Tool, not the server). (2) SEC-002 — {INV-003} extended with pluggable pattern registry note: three patterns cover first-party providers; partner crates SHOULD register additional patterns for new key formats; mandatory error-path behavior unchanged."
   - "2.0 (round-10/GAP-01-type-grounding/2026-08-27): Type-grounding reconciliation — `DynTool::invoke_dyn` return type corrected per ADR-029 §Symbol Grounding (architect symbol-existence audit): returns `Result<serde_json::Value, PregolyaError>` (NOT `ToolOutput`). {PC-002} result_text selection rule rewritten: rule now operates on the `serde_json::Value` returned by `invoke_dyn` directly — `Value::Null` → `\"null\"`, `Value::String(s)` → `s` verbatim, other `Value` types (Object/Array/Bool/Number) → `serde_json::to_string(&value)` (compact JSON). Success-path credential boundary note updated: credential material must not be embedded in the `serde_json::Value` returned by `invoke_dyn`. TV-009 updated: `ToolOutput::Text{ text }` → `Ok(Value::String(text))`. Zero residual `ToolOutput::Structured` in live body text post-edit."
   - "2.1 (round-14/F-P2A079-02/2026-08-27): F-P2A079-02 [LOW] — §Architecture Anchors server.rs bullet rewritten: `Tool::invoke` → `DynTool::invoke_dyn`; `ToolOutput` → `serde_json::Value`; ToolRegistry annotation added `(Arc<dyn DynTool>)`. {PC-003} and {INV-001} prose corrected: `Tool::invoke` → `DynTool::invoke_dyn` (MCP server dispatches via the object-safe seam, not the generic trait). EC-002 §Scenario corrected: `Tool::invoke` → `DynTool::invoke_dyn`. All four live-body `Tool::invoke` occurrences eliminated."
+  - "2.2 (round-22/F-P2A099-04/2026-08-28): F-P2A099-04 [OBS]: §Verification Properties table — VP-015 Phase cell corrected from 'Wave 2' to 'Phase 3' (VP-015.md `proof_phase: 3` is authoritative per source-of-truth precedence rule 4; BC conflated wave axis with phase axis). VP-MCPCALL-01 and VP-MCPCALL-02 annotated as '(informal / non-registered)' — only VP-MCPCALL-03 was elevated to formal VP-015 per B-SS09-11-arch-adjudication v1.7; VP-MCPCALL-01/02 remain historical; annotation prevents reader confusion with promoted VP-015."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "a403241"
+input-hash: "ad45ee0"
 extracted_from: null
 modified: []
 deprecated: null
@@ -215,9 +216,9 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-MCPCALL-01 | External MCP client can successfully invoke a registered pregolya tool via tools/call and receive the correct result | Integration test: start server; connect MCP client library; invoke tool; assert result content | Wave 2 |
-| VP-MCPCALL-02 | Tool execution error surfaces as `isError: true` in MCP response (not as a JSON-RPC protocol error) | Unit test: mock tool returning Err; assert response has isError: true and result-layer success | Wave 2 |
-| VP-015 | Credential redaction: MCP response `content[0].text` has API key patterns replaced with `<redacted>` before transmission | Unit test: mock tool returning `Err` with fake OpenAI/Anthropic key pattern in `PregolyaError::message`; assert response text contains `<redacted>` and not the key material | Wave 2 |
+| VP-MCPCALL-01 | (informal / non-registered) External MCP client can successfully invoke a registered pregolya tool via tools/call and receive the correct result | Integration test: start server; connect MCP client library; invoke tool; assert result content | Wave 2 |
+| VP-MCPCALL-02 | (informal / non-registered) Tool execution error surfaces as `isError: true` in MCP response (not as a JSON-RPC protocol error) | Unit test: mock tool returning Err; assert response has isError: true and result-layer success | Wave 2 |
+| VP-015 | Credential redaction: MCP response `content[0].text` has API key patterns replaced with `<redacted>` before transmission | Unit test: mock tool returning `Err` with fake OpenAI/Anthropic key pattern in `PregolyaError::message`; assert response text contains `<redacted>` and not the key material | Phase 3 |
 
 ## Related BCs
 

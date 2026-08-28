@@ -130,6 +130,33 @@
 #       Promotion to blocking requires: WARN=0 sustained AND exit contract changed to exit 1.
 #       Routing: architect (module-criticality.md VP column updates).
 #
+#   verify-security-literal-propagation.sh — security-critical BC/ADR ↔ anchor-story propagation (advisory).
+#       Closes process-gap F-P2A097-PG / F-P2A096-PG (round-22): verify-ac-pc-trace.sh checks
+#       AC citation ID existence only — it does NOT check that AC/Task body literals mirror the
+#       current canonical forms of the cited BC/ADR items. When BC-2.09.008/ADR-029 received
+#       security corrections (UUID regex → version-agnostic; panic mechanism → FutureExt::catch_unwind),
+#       story S-2.11 AC/Task bodies were not swept by any existing gate.
+#       Rule set (data-driven; 4 rules):
+#         R01: UUID v4-specific regex fragment (`-4[0-9a-f]{3}-[89ab]`) forbidden in S-2.11 body
+#         R02: "UUID v4" wording in sanitizer context forbidden in S-2.11 body
+#         R03: story body with UnwindSafe mechanism must also name FutureExt::catch_unwind
+#         R04: story with SEC-008 reference should cite `panic = "unwind"` obligation
+#       Baseline (round-22 gate creation): wires advisory; story-writer concurrently sweeping S-2.11.
+#       Promotion to blocking: after story-writer sweep clears all R01-R04 findings on live tree.
+#       Routing: story-writer (anchor story body-literal sweep).
+#
+#   verify-decision-section-canonical-form.sh — §Decision-N hyphenated form in new changelog additions (advisory).
+#       Closes process-gap F-P2A098-02 (round-22): verify-adr-decision-refs.sh excludes changelog
+#       regions (POL-19 measured-scope carve-out), leaving `§Decision-N` (hyphen) unchecked in
+#       newly-authored changelog prose. ADR-022 §Decision 5 establishes `§Decision N` (space) as
+#       canonical; the hyphenated form was observed in BC-2.09.008 v2.0/v2.1 and ARCH-INDEX entries.
+#       Uses git diff HEAD addition-only scoping — existing committed content grandfathered.
+#       Baseline (round-22 gate creation): wires advisory.
+#       Promotion to blocking: after corpus-wide cleanup of hyphenated form in committed content
+#       (requires verify-adr-decision-refs.sh CITE_RE to expand scope or a separate full-corpus
+#       gate to be added).
+#       Routing: finding author (replace §Decision-N with §Decision N in new additions).
+#
 # EXIT CONTRACT
 # ─────────────
 # Exit 0 if all blocking validators pass.
@@ -222,6 +249,8 @@ run_advisory "verify-changelog-claim-applied.sh"
 run_advisory "verify-ordinal-form-residue.sh"
 run_advisory "verify-no-phantom-types.sh"
 run_advisory "verify-module-criticality-vp-column.sh"
+run_advisory "verify-security-literal-propagation.sh"
+run_advisory "verify-decision-section-canonical-form.sh"
 
 # ── Final gate ────────────────────────────────────────────────────────────────
 echo ""

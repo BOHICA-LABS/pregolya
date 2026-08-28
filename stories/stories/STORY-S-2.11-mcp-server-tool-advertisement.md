@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.17"
+version: "1.18"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8aa740d"
+input-hash: "dfe032b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.10, S-1.14]
@@ -33,6 +33,7 @@ tdd_mode: strict
 # BC status: BC-2.09.006 + BC-2.09.007 active; BC-2.09.008 draft (auto-promotes draft→active at S-2.11 PR merge per POL-27); BC-2.09.006 mints E-MCP-005; BC-2.09.008 mints E-MCP-010; no BC-TBD placeholders; status = draft per Spec-First Gate S-7.01
 changelog:
   - "1.17 (round-21/F-P2A093-01/2026-08-28): Task-27 updated — pregolya-graph now wired in two Cargo.toml sections: `[dependencies]` (workspace pin, for GraphAgentTool production code) AND `[dev-dependencies]` with `features = [\"test-util\"]` (so VP-016 proptest harness can call CompiledStateGraph::stub_terminal cross-crate). Body Changelog entry added."
+  - "1.18 (round-22/F-P2A096-01/F-P2A097-01/F-P2A099-02/F-P2A096-03/F-P2A097-02/2026-08-28): Exhaustive security sweep. (1) AC-031: sanitizer scope corrected — retired v4-specific regex replaced with version-agnostic `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; 'checkpoint IDs' removed from scope (framework covers run_id + server-layer thread_id only; u64 CheckpointId is NOT UUID-shaped); fixture now requires a non-v4 UUID to prevent false-green regression. (2) AC-036 added: BC-2.09.008 {INV-001}/TV-013 — u64 CheckpointId passthrough unchanged through sanitize_internal_ids. (3) AC-033: panic recovery corrected to FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy))) INSIDE invoke_dyn; synchronous std::panic::catch_unwind marked INADEQUATE; Red Gate test must drive panic through .await polling. (4) AC-037 added: SEC-008 panic=unwind release-profile obligation (devops-engineer Phase-3). (5) Tasks 34/35/36/37 updated. (6) Tasks 42-44 added. (7) Arch Compliance rows updated. (8) File Structure and Token Budget updated. input-hash updated to dfe032b (BC-2.09.008 input file updated through rounds 19–22 security corrections)."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
   - "1.3 (BC-2.09.006 + BC-2.09.007 / 2026-08-26): BC-2.09.006 (burst-B-SS09-11 EC-006/-32700, EC-007/-32600 wire-protocol responses). BC-2.09.007 (burst-B-SS09-11: INV-003 redact_credentials mandatory+3-pattern sub+source restriction; PC-002 result_text JSON-vs-plaintext selection rule; VP-MCPCALL-03 renamed VP-015). Story changes: AC-013 updated to Red Gate — mandatory redact_credentials applied to PregolyaError::message only (source restriction); 3 substitution patterns (sk-*, sk-ant-*, 64-char token); validates VP-015. AC-014 added: BC-2.09.006 EC-006 + BC-2.09.007 EC-007 — malformed JSON → -32700 Parse error (wire-protocol only, no PregolyaError). AC-015 added: BC-2.09.006 EC-007 + BC-2.09.007 EC-008 — invalid JSON-RPC → -32600 Invalid Request (wire-protocol only). AC-016 added: BC-2.09.007 PC-002 — result_text selection (ToolOutput::Structured→compact JSON, ToolOutput::Text→verbatim). verification_properties updated to [VP-015]. BC table version column added. Tasks updated to AC-001–AC-016."
@@ -382,18 +383,24 @@ to execute at an MCP boundary without any human approval gate. Verified by
 ### AC-031 (traces to BC-2.09.008 INV-001 — error-path UUID sanitization, Red Gate)
 **Red Gate / Mandatory UUID sanitization on all isError paths (STATE-ISOLATION — error-path
 extension):** On any `isError: true` MCP response from a `GraphAgentTool` invocation,
-`content[0].text` must NOT contain UUID v4 values (format:
-`xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`) which may represent checkpoint IDs, run IDs, or thread
-IDs that leak internal graph execution context. The STATE-ISOLATION guarantee ({INV-001})
-extends to error paths. The framework applies two unconditional sanitization passes to
-`isError: true` responses: (1) `redact_credentials` (existing, AC-025); (2)
-`sanitize_internal_ids` — UUID v4 pattern removal chained after `redact_credentials`. Node
-implementations must not rely on framework sanitization — error messages must exclude internal
-IDs at the authoring site. BC-2.09.008 TV-009 verifies: a graph node returning
-`Err(PregolyaError { message: "operation failed for run <example-run-id>",
-.. })` produces a response where `content[0].text` does NOT contain the UUID. This is a Red
-Gate: without `sanitize_internal_ids`, internal graph execution identifiers would leak to
-external MCP clients via error messages. Verified by
+`content[0].text` must NOT contain UUID-shaped values (any version; pattern:
+`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`) which may represent
+run IDs or server-layer thread IDs (both `Uuid` types) leaking internal graph execution
+context. The `sanitize_internal_ids` pass covers UUID-shaped IDs ONLY: `run_id` (`Uuid`) and
+server-layer `thread_id` (`Uuid`). It does NOT cover `u64` `CheckpointId` values (per
+BC-2.09.008 {INV-001}/TV-013 — `u64` passes through unsanitized; authoring-site convention
+is the sole guarantee for `CheckpointId` safety; see AC-036). The STATE-ISOLATION guarantee
+({INV-001}) extends to error paths. The framework applies two unconditional sanitization passes
+to `isError: true` responses: (1) `redact_credentials` (existing, AC-025); (2)
+`sanitize_internal_ids` — UUID (any version) pattern removal chained after `redact_credentials`.
+Node implementations must not rely on framework sanitization — error messages must exclude
+internal IDs at the authoring site. BC-2.09.008 TV-009 verifies: a graph node returning
+`Err(PregolyaError { message: "operation failed for run <example-run-id>", .. })`
+produces a response where `content[0].text` does NOT contain the UUID. The Red Gate test
+fixture MUST include at least one non-v4 UUID (e.g., a UUID with version nibble ≠ 4,
+such as a v7-format UUID) to ensure the test FAILS against a v4-only regex and
+prevents false-green regression. This is a Red Gate: without `sanitize_internal_ids`, internal
+graph execution identifiers would leak to external MCP clients via error messages. Verified by
 `test_BC_2_09_008_error_path_uuid_sanitization_strips_internal_ids()`.
 
 ### AC-032 (traces to BC-2.09.008 INV-005 — extract_output credential opacity)
@@ -410,18 +417,27 @@ the leaking output IS preserved (framework does not sanitize it). Verified by
 `test_BC_2_09_008_extract_output_success_path_framework_does_not_sanitize()`.
 
 ### AC-033 (traces to BC-2.09.008 EC-010 — extract_output panic recovery, Red Gate)
-**Red Gate / extract_output panic caught via UnwindSafe boundary — static response:** When the
-`extract_output` closure provided to `GraphAgentTool::from_graph` panics during execution after
-successful graph completion (a programming error in the caller-supplied closure), the MCP
-server's `UnwindSafe` boundary catches the panic. The response MUST be:
+**Red Gate / extract_output panic caught via `FutureExt::catch_unwind` inside `invoke_dyn` —
+static response:** When the `extract_output` closure provided to `GraphAgentTool::from_graph`
+panics during execution after successful graph completion (a programming error in the
+caller-supplied closure), the panic occurs during `.await` polling of
+`runner.run(input, policy)` inside `GraphAgentTool::invoke_dyn`. The recovery mechanism MUST
+be `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))`
+applied INSIDE `GraphAgentTool::invoke_dyn` at the awaited call site. Synchronous
+`std::panic::catch_unwind` is INADEQUATE for this path — because `extract_output` fires during
+`.await` polling, a synchronous catch placed outside the async call chain does not intercept
+the panic. The response MUST be:
 `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }`.
 The response text is the static string `"internal error"` — no panic message, backtrace, or
 internal state is forwarded to the external MCP client. Server availability is preserved: a
 subsequent valid `tools/call` to a different (non-panicking) tool still returns `isError: false`.
-BC-2.09.008 TV-011 verifies this scenario. This is a Red Gate: without `UnwindSafe` handling,
-a panicking `extract_output` closure would crash the server process, causing a denial-of-service
-at the MCP boundary. Verified by
-`test_BC_2_09_008_ec010_extract_output_panic_caught_unwindsafe_static_response()`.
+BC-2.09.008 TV-011 verifies this scenario. The Red Gate test MUST drive the panic through
+`.await` polling (the panic is injected inside the async future body such that a
+synchronous-only `std::panic::catch_unwind` placed outside the future would fail to catch it).
+This is a Red Gate: without `FutureExt::catch_unwind` wrapping, a panicking `extract_output`
+closure propagates through the async runtime, crashing the server process (remote DoS,
+CWE-248). See also AC-037 for the SEC-008 `panic = "unwind"` build-profile prerequisite.
+Verified by `test_BC_2_09_008_ec010_extract_output_panic_caught_unwindsafe_static_response()`.
 
 ### AC-034 (traces to BC-2.09.007 PC-002 — success-path credential boundary)
 **BC-2.09.007 success-path: framework does NOT sanitize `DynTool::invoke_dyn` success results (DI-010
@@ -450,6 +466,35 @@ credential material does not reach the MCP client. The framework provides no run
 the closure author bears the full DI-010 obligation. This makes the standing {INV-005}
 risk-acceptance item a testable Phase-3 obligation. Verified by
 `test_BC_2_09_008_inv005_credential_opacity_correct_closure_excludes_credentials()`.
+
+### AC-036 (traces to BC-2.09.008 INV-001 + TV-013 — u64 CheckpointId passthrough, correctness boundary)
+**Correctness boundary — `u64` `CheckpointId` values are NOT UUID-shaped and MUST NOT be
+stripped by `sanitize_internal_ids`:** When a graph-node returns
+`Err(PregolyaError { message: "failed to load checkpoint 42", .. })` on an error path, the
+`sanitize_internal_ids` pass leaves the message UNCHANGED — `content[0].text` MUST equal
+`"failed to load checkpoint 42"` verbatim after sanitization. The decimal integer `42` is
+not UUID-shaped and does not match the version-agnostic pattern
+`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`. The
+`sanitize_internal_ids` pass covers UUID-shaped IDs ONLY (`run_id` and server-layer
+`thread_id`, both `Uuid` types); the `u64` `CheckpointId` passes through unsanitized.
+Authoring-site convention — not embedding checkpoint IDs in error messages — is the SOLE
+guarantee for `CheckpointId` safety; the framework provides no backstop (per
+BC-2.09.008 {INV-001}/TV-013). BC-2.09.008 TV-013 verifies this boundary. Verified by
+`test_BC_2_09_008_tv013_u64_checkpoint_id_passes_through_sanitize_unchanged()`.
+
+### AC-037 (traces to BC-2.09.008 EC-010 — SEC-008 panic-profile build obligation)
+**Build-profile prerequisite (SEC-008) — `panic = "unwind"` required in release profile:**
+The workspace `Cargo.toml` release profile MUST pin `panic = "unwind"`. If the release
+profile sets `panic = "abort"`,
+`futures::future::FutureExt::catch_unwind(AssertUnwindSafe(...))` is voided — the process
+aborts on panic instead of unwinding, bypassing the catch and exposing a remote
+denial-of-service (CWE-248). This is a Phase-3 devops-engineer obligation (workspace
+`Cargo.toml` authoring). The pregolya-mcp story-level obligation: the implementing engineer
+MUST add a `// SEC-008: panic = "unwind" required — FutureExt::catch_unwind voids under abort`
+comment in `pregolya-mcp/Cargo.toml` or at the `invoke_dyn` call site to document the
+dependency. The devops-engineer asserts the workspace profile at Phase-3 workspace init.
+Verified by devops-engineer at Phase-3; implementer obligation is the comment annotation.
+(See AC-033 for the `catch_unwind` mechanism; see BC-2.09.008 EC-010/TV-011.)
 
 ## Architecture Mapping
 
@@ -500,22 +545,22 @@ risk-acceptance item a testable Phase-3 obligation. Verified by
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~5,800 |
+| This story spec | ~6,200 |
 | BC files (3 BCs; BC-2.09.006, BC-2.09.007, BC-2.09.008) | ~10,400 |
 | `module-decomposition.md` SS-09 section | ~400 |
 | `pregolya-mcp/src/server.rs` (new) | ~1,200 |
 | `pregolya-mcp/src/registry.rs` (new) | ~500 |
 | `pregolya-mcp/src/graph_tool.rs` (new) | ~1,800 |
 | `pregolya-mcp/src/sanitize.rs` (new; includes `sanitize_internal_ids`) | ~550 |
-| Test files (~200 lines; AC-001–AC-035 + 11 Red Gates) | ~3,000 |
+| Test files (~220 lines; AC-001–AC-037 + 12 Red Gates) | ~3,200 |
 | Tool outputs | ~600 |
-| **Total** | **~24,250** |
+| **Total** | **~24,850** |
 | Agent context window | 200K (Sonnet) |
 | **Budget usage** | **~12%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-035, including Red Gates: AC-013 (credential redaction VP-015), AC-023 (STATE-ISOLATION VP-016), AC-024 (binary interrupt invariant), AC-025 (GraphAgentTool error paths redaction), AC-026 (node interrupt → E-MCP-010), AC-027 (extra fields excluded VP-016), AC-028 (invalid input → -32602), AC-029 (Deny passthrough under ForceApproveHooks), AC-030 (ActionRisk block → E-MCP-011), AC-031 (error-path UUID sanitization), AC-033 (extract_output panic → static 'internal error'); AC-035 is a passing test (not a Red Gate — tests that correct closure excludes credentials) (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-037, including Red Gates: AC-013 (credential redaction VP-015), AC-023 (STATE-ISOLATION VP-016), AC-024 (binary interrupt invariant), AC-025 (GraphAgentTool error paths redaction), AC-026 (node interrupt → E-MCP-010), AC-027 (extra fields excluded VP-016), AC-028 (invalid input → -32602), AC-029 (Deny passthrough under ForceApproveHooks), AC-030 (ActionRisk block → E-MCP-011), AC-031 (error-path UUID sanitization — fixture MUST include a non-v4 UUID), AC-033 (extract_output panic via `.await` polling → static 'internal error'); AC-035 is a passing test (not a Red Gate — tests that correct closure excludes credentials); AC-036 is a correctness-boundary test (u64 passthrough); AC-037 is a build-profile annotation obligation (devops-engineer Phase-3) (test-writer step)
 2. [ ] **Red Gate check (AC-013):** confirm `test_BC_2_09_007_error_message_credential_redaction_applies_3_patterns()` FAILS before `pregolya_mcp::sanitize::redact_credentials` is implemented (raw key material reaches response text)
 3. [ ] Register `E-MCP-005 McpServerBindFailed` in error taxonomy (TRANSPORT, broken, Never)
 4. [ ] Create `pregolya-mcp/src/registry.rs` — `ToolRegistry` with `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>`
@@ -548,14 +593,17 @@ risk-acceptance item a testable Phase-3 obligation. Verified by
 31. [ ] Implement Deny-passthrough in `BoundaryApprovalHook` under `ForceApproveHooks` — verify `PreToolDecision::Deny` is not converted to `Approve`; only `PendingHumanApproval` is eligible for override (AC-029 / BC-2.09.008 PC-006)
 32. [ ] **Red Gate check (AC-030):** confirm `test_BC_2_09_008_force_approve_hooks_action_risk_medium_emits_e_mcp_011_not_invoked()` FAILS before `ActionRisk` gate is implemented (write-class tool would be invoked without the check)
 33. [ ] Implement `ActionRisk` runtime gate in `BoundaryApprovalHook` — check `preview.action_risk` before overriding `PendingHumanApproval`; if `None` (un-annotated tool, fail-closed) OR `>= ActionRisk::Medium` return `Deny` + emit `E-MCP-011 ForceApproveWriteBlocked` + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked`; `None` fails closed identically to `Some(>= Medium)` per {INV-004}; register `E-MCP-011` in error taxonomy; implement two test paths: TV-008 (`Some(High)`) and TV-012 (`None`/undeclared) (AC-030 / BC-2.09.008 INV-004, EC-009)
-34. [ ] **Red Gate check (AC-031):** confirm `test_BC_2_09_008_error_path_uuid_sanitization_strips_internal_ids()` FAILS before `sanitize_internal_ids` is implemented (UUID v4 leaks to response text on isError paths)
-35. [ ] Implement `sanitize_internal_ids(text: &str) -> Cow<str>` in `pregolya_mcp::sanitize` — UUID v4 pattern removal (`[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}`, case-insensitive); chain after `redact_credentials` on all `GraphAgentTool` `isError: true` paths (AC-031 / BC-2.09.008 INV-001)
-36. [ ] **Red Gate check (AC-033):** confirm `test_BC_2_09_008_ec010_extract_output_panic_caught_unwindsafe_static_response()` FAILS before `UnwindSafe` is implemented (unhandled panic crashes the handler, no `isError` response)
-37. [ ] Implement `UnwindSafe` boundary for `extract_output` invocation — catch panic → `isError: true`, `content[0].text == "internal error"` (static; no panic message or backtrace forwarded); ensure server continues serving subsequent requests (AC-033 / BC-2.09.008 EC-010)
+34. [ ] **Red Gate check (AC-031):** confirm the AC-031 Red Gate test FAILS before `sanitize_internal_ids` is implemented (UUID — any version — leaks to response text on isError paths; the fixture MUST include a non-v4 UUID (version nibble ≠ 4) so the test also fails against a v4-only regex, preventing false-green regression)
+35. [ ] Implement `sanitize_internal_ids(text: &str) -> Cow<str>` in `pregolya_mcp::sanitize` — version-agnostic UUID pattern removal (`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`, case-insensitive); covers `run_id` and server-layer `thread_id` (both `Uuid` types); does NOT strip `u64` decimal integers (AC-036 correctness boundary); chain after `redact_credentials` on all `GraphAgentTool` `isError: true` paths (AC-031, AC-036 / BC-2.09.008 INV-001/TV-013)
+36. [ ] **Red Gate check (AC-033):** confirm `test_BC_2_09_008_ec010_extract_output_panic_caught_unwindsafe_static_response()` FAILS when only synchronous `std::panic::catch_unwind` is used (unhandled panic crashes the handler because `extract_output` panics during `.await` polling — synchronous catch is INADEQUATE for this async path; no `isError` response is produced)
+37. [ ] Implement panic recovery for `extract_output` invocation inside `GraphAgentTool::invoke_dyn`: use `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))` at the `.await` call site (NOT `std::panic::catch_unwind` — that is synchronous and inadequate for this async path); catch yields `isError: true`, `content[0].text == "internal error"` (static; no panic message or backtrace forwarded); ensure server continues serving subsequent requests; add `futures` to `pregolya-mcp/Cargo.toml` `[dependencies]` with workspace pin if not already present; `AssertUnwindSafe` is `std::panic::AssertUnwindSafe` (AC-033, AC-037 / BC-2.09.008 EC-010/SEC-008)
 38. [ ] Write boundary test confirming success-path `serde_json::Value` result is NOT framework-sanitized: `MockTool` returning `Ok(Value::String("key=sk-abc123XYZabc123XYZabc".to_string()))` → assert `content[0].text` equals `"key=sk-abc123XYZabc123XYZabc"` verbatim (AC-034 / BC-2.09.007 PC-002)
 39. [ ] Write boundary test confirming `extract_output` success-path result is NOT framework-sanitized: closure selecting `api_key` field → assert success response preserves value verbatim (AC-032 / BC-2.09.008 INV-005)
-40. [ ] Run `cargo nextest run -p pregolya-mcp` — all 35 ACs green (AC-001–AC-035)
+40. [ ] Run `cargo nextest run -p pregolya-mcp` — all 37 ACs green (AC-001–AC-037)
 41. [ ] Write passing test for AC-035 — `test_BC_2_09_008_inv005_credential_opacity_correct_closure_excludes_credentials()`: construct state value `json!({ "answer": "hello", "api_key": "sk-abc123XYZabc123XYZabc" })`; provide closure `|s: &serde_json::Value| json!({ "answer": s["answer"] })`; assert MCP response `content[0].text == "{\"answer\":\"hello\"}"` — no `api_key` field in output (AC-035 / BC-2.09.008 INV-005, DI-010)
+42. [ ] Write boundary test for AC-036 — `test_BC_2_09_008_tv013_u64_checkpoint_id_passes_through_sanitize_unchanged()`: construct graph returning `Err(PregolyaError { message: "failed to load checkpoint 42", .. })`; assert `content[0].text == "failed to load checkpoint 42"` verbatim after `sanitize_internal_ids` (u64 decimal integer is not UUID-shaped; no stripping applied; BC-2.09.008 TV-013)
+43. [ ] Verify `sanitize_internal_ids` does NOT over-strip `u64` CheckpointId values — run `test_BC_2_09_008_tv013_u64_checkpoint_id_passes_through_sanitize_unchanged()` both before and after implementing `sanitize_internal_ids`; both runs must pass (AC-036 correctness boundary; if this test fails after implementation, the regex is over-aggressive and strips non-UUID decimal content — fix the pattern)
+44. [ ] Add SEC-008 comment annotation in `pregolya-mcp/Cargo.toml` or at the `FutureExt::catch_unwind` call site in `invoke_dyn`: `// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace profile at Phase-3 init` (AC-037 / BC-2.09.008 EC-010)
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -594,9 +642,9 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 | All `GraphAgentTool` isError paths apply `redact_credentials` on `PregolyaError::message` | BC-2.09.008 INV-003 | Test AC-025 Red Gate |
 | `ForceApproveHooks` overrides ONLY `PreToolDecision::PendingHumanApproval` (subject to `ActionRisk` check); `Deny` passes through UNCHANGED; node-level `interrupt()` still → E-MCP-010 | BC-2.09.008 PC-006, INV-002, INV-004 | Tests AC-022, AC-029, AC-030 |
 | `preview.action_risk` is `None` (un-annotated, fail-closed per {INV-004}) or `>= ActionRisk::Medium` under `ForceApproveHooks` → `Deny` + `E-MCP-011 ForceApproveWriteBlocked` (NOT `E-MCP-010`) + CRITICAL log at `mcp.graph_tool.force_approve_write_blocked`; `None` fails closed identically to `Some(>= Medium)` | BC-2.09.008 INV-004, EC-009 | Tests AC-030 Red Gate (TV-008 Some(High); TV-012 None) |
-| `isError: true` error paths apply two unconditional sanitization passes: (1) `redact_credentials`, (2) `sanitize_internal_ids` (UUID v4 removal), in that order | BC-2.09.008 INV-001 | Test AC-031 Red Gate |
+| `isError: true` error paths apply two unconditional sanitization passes: (1) `redact_credentials`, (2) `sanitize_internal_ids` (UUID — any version — removal; version-agnostic pattern `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; covers `run_id` and server-layer `thread_id` only; `u64` `CheckpointId` is NOT UUID-shaped and passes through unchanged), in that order | BC-2.09.008 INV-001 | Tests AC-031 Red Gate, AC-036 correctness boundary |
 | `extract_output` success-path result is NOT framework-sanitized; DI-010 credential opacity is caller/registration obligation | BC-2.09.008 INV-005; BC-2.09.007 PC-002 | Tests AC-032, AC-034 |
-| `extract_output` panic caught via `UnwindSafe`; response is static `"internal error"` (`isError: true`); server continues serving | BC-2.09.008 EC-010 | Test AC-033 Red Gate |
+| `extract_output` panic caught via `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))` INSIDE `GraphAgentTool::invoke_dyn` at the `.await` call site; synchronous `std::panic::catch_unwind` is INADEQUATE (panic occurs during `.await` polling); response is static `"internal error"` (`isError: true`); server continues serving; SEC-008: workspace release profile MUST pin `panic = "unwind"` | BC-2.09.008 EC-010; SEC-008 | Tests AC-033 Red Gate, AC-037 build obligation |
 
 **Forbidden dependencies:** `pregolya-mcp` (including `mcp::client` from S-2.10, `mcp::server`,
 and `mcp::graph_tool` from this story) must NOT depend on `pregolya-server`,
@@ -623,7 +671,7 @@ build MUST fail.
 |------|--------|---------|
 | `pregolya-mcp/src/server.rs` | CREATE | `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` |
 | `pregolya-mcp/src/registry.rs` | CREATE or MODIFY | `ToolRegistry` — shared with client side (extract if needed) |
-| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 {INV-003}); `pub fn sanitize_internal_ids(text: &str) -> Cow<str>` — UUID v4 removal chained after `redact_credentials` on `isError: true` paths (AC-031; BC-2.09.008 INV-001) |
+| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 {INV-003}); `pub fn sanitize_internal_ids(text: &str) -> Cow<str>` — UUID (any version) removal (`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; covers `run_id` and server-layer `thread_id` only; `u64` `CheckpointId` passes through unsanitized) chained after `redact_credentials` on `isError: true` paths (AC-031, AC-036; BC-2.09.008 INV-001/TV-013) |
 | `pregolya-mcp/src/graph_tool.rs` | CREATE | `GraphAgentTool` (non-generic struct; non-generic `from_graph` constructor; caller passes `Arc<CompiledStateGraph>` + `schemars::Schema` + `extract_output: impl Fn(&serde_json::Value) -> serde_json::Value`), `GraphToolApprovalPolicy`, `BoundaryApprovalHook`, `GraphRunner` — STATE-ISOLATION enforcement via `ConcreteGraphRunner::run` (ADR-029 §Decision 3 canonical seam); E-MCP-010 interrupt-denied path (BC-2.09.008; ADR-029) |
 | `pregolya-mcp/src/lib.rs` | MODIFY | Re-export `McpServer`, `McpServerConfig`, `McpServerHandle`; expose `sanitize` module; re-export `GraphAgentTool`, `GraphToolApprovalPolicy`; expose `graph_tool` module |
 
@@ -644,3 +692,4 @@ build MUST fail.
 - **1.15 (F-P2A084-01 / round-18 / 2026-08-27):** AC-023: "NEVER included in the `ToolOutput` unless `extract_output`" corrected to "NEVER included in the `serde_json::Value` returned by `invoke_dyn` unless `extract_output`" — `ToolOutput` was eliminated in the 1.11 non-generic re-ground; `DynTool::invoke_dyn` returns `serde_json::Value`. Task 20: "extra fields leak to `ToolOutput` without explicit exclusion" corrected to "extra fields leak into the `serde_json::Value` returned by `invoke_dyn` without explicit exclusion". These were the last two live-body `ToolOutput` residues naming the invoke_dyn success output. Frontmatter `changelog:` array backfilled with 1.14 entry (round-14 was missing from frontmatter array) and 1.15 entry added. Zero remaining live-body stale `ToolOutput`, `CompiledGraph<`, `StateGraph<S>`, `|s: &S|`, `schema_for!(S)` (non-call-site), or `from_value::<S>` (non-prohibition) references in STORY-S-2.11, STORY-S-1.14, or dependency-graph.md.
 - **1.16 (F-P2A087-01 / F-P2A087-02 / round-19 / 2026-08-27):** Symbol-canon propagation from BC-2.09.008 {PC-005}/EC-005 PreToolDecision rename and `DynTool` object-safe interface. (1) AC-008: `DynTool::invoke` → `DynTool::invoke_dyn` (object-safe dispatch seam method; `DynTool::invoke` does not exist). (2) AC-009: `DynTool::invoke` → `DynTool::invoke_dyn`. (3) §Purity Classification `tools/call` handler row: `DynTool::invoke` → `DynTool::invoke_dyn`. (4) §Previous Story Intelligence: `DynTool::invoke(args)` → `DynTool::invoke_dyn(args)`. (5) AC-021: `PreToolCallHook::PendingHumanApproval` → `PreToolDecision::PendingHumanApproval` (BC-2.09.008 {PC-005}/EC-005 enum rename per product-owner; matches AC-022/AC-029 canonical form already in place). input-hash updated to 3b82473.
 - **1.17 (round-21 / F-P2A093-01 / 2026-08-28):** Task-27 updated to wire `pregolya-graph` in two Cargo.toml sections: (1) `[dependencies]` with workspace pin — for `GraphAgentTool` non-test production code (`Arc<CompiledStateGraph>` argument; BC-2.09.008/ADR-029 dep edge); (2) `[dev-dependencies]` with `features = ["test-util"]` — so the VP-016 proptest harness `graph_agent_tool_state_isolation` can call `CompiledStateGraph::stub_terminal` cross-crate (stub_terminal is gated `#[cfg(any(test, feature = "test-util"))]` in pregolya-graph and is invisible to the linker without that feature). Both entries are required: the `[dependencies]` entry does not activate `test-util`; the `[dev-dependencies]` entry alone does not cover non-test production code. Mirrors F-P2A093-01 mechanism from S-1.14 v1.4.
+- **1.18 (round-22 / F-P2A096-01 / F-P2A097-01 / F-P2A099-02 / F-P2A096-03 / F-P2A097-02 / 2026-08-28):** Exhaustive sweep against BC-2.09.008 {INV-001}/EC-010/TV-011/TV-013 and ADR-029 §Decision 3/§Decision 5 canonical forms. (1) AC-031: sanitizer regex corrected to version-agnostic `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` (retired v4-specific `4[0-9a-f]{3}-[89ab][0-9a-f]{3}` pattern removed); scope corrected — "checkpoint IDs" removed; framework covers `run_id` and server-layer `thread_id` (both `Uuid` types) only; `u64` `CheckpointId` is NOT UUID-shaped and passes through unsanitized; fixture must include a non-v4 UUID (v7 example provided) to prevent false-green regression. (2) AC-036 added: BC-2.09.008 {INV-001}/TV-013 correctness boundary — `u64` `CheckpointId` in error message "failed to load checkpoint 42" passes through `sanitize_internal_ids` UNCHANGED; authoring-site convention is the sole guarantee. (3) AC-033: panic recovery mechanism corrected — `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))` INSIDE `GraphAgentTool::invoke_dyn` at the `.await` call site; synchronous `std::panic::catch_unwind` explicitly marked INADEQUATE (panic occurs during `.await` polling); Red Gate test must drive panic through `.await` so synchronous-only catch fails to catch it. (4) AC-037 added: SEC-008 build-profile obligation — workspace release profile MUST pin `panic = "unwind"`; `panic = "abort"` voids `FutureExt::catch_unwind` (remote DoS CWE-248); Phase-3 devops-engineer obligation; implementer obligation is comment annotation. (5) Tasks 34/35 updated to version-agnostic regex. (6) Tasks 36/37 updated to `FutureExt::catch_unwind` async mechanism. (7) Task 40 count updated 35 → 37. (8) Tasks 42–44 added (AC-036 test, AC-036 correctness verify, AC-037 annotation). (9) Arch Compliance rows updated for `sanitize_internal_ids` scope and `extract_output` panic mechanism. (10) File Structure `sanitize.rs` row updated. (11) Token Budget updated. (12) input-hash updated to `c35491e` (BC-2.09.008 input file was updated in round-19/21 security rounds).

@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.30"
+version: "1.31"
 status: active
 producer: architect
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.31 (round-22/D-292/2026-08-28): VP-016 body file bumped v2.1→v2.2 (F-P2A099-03 [LOW/records]): input-hash reconciled — hash was silently out of sync with BC-2.09.008 §INV-001 content revisions through rounds 19–22 (F-P2A087-02, F-P2A088-01, F-P2A094-01, F-P2A094-02, F-P2A098-01, F-P2A098-02); no VP property-statement or harness changes. VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.30 (round-21/D-291/2026-08-28): VP-016 body file bumped (round-21 F-P2A093-01: §Proof-Harness accessibility note corrected — stub_terminal exposed via test-util feature-gate, not bare #[cfg(test)]; cross-crate cfg(test) visibility is blocked by the Rust compiler; pregolya-mcp dev-dependency must declare features=[\"test-util\"] to access the stub). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.29 (round-20/F-P2A090-01/D-290/2026-08-27): VP-015 body file bumped v1.0→v1.1 (round-20 F-P2A090-01 MED: §Property-Statement Tool::invoke → DynTool::invoke_dyn sibling-sweep; MCP object-safe seam). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.28 (round-19/D-289/2026-08-27): VP census UNCHANGED: 17 total (6 P0 / 11 P1). No VP catalog row additions this round. Currency note: BC-2.09.008 §{PC-005}/EC-005 (round-19 {PC-005}/EC-005 PreToolDecision rename per F-P2A087-02; {INV-001} sanitizer-scope reconciliation per ADR-029 §Decision-3/ADR-005/DI-004 per F-P2A088-01; TV-013 added) — VP-016 catalog row UNCHANGED ({INV-001} STATE-ISOLATION proptest P1 draft). BC-INDEX VP-column notation normalized (F-P2A089-01 LOW; all 10 bare **VP** resolved to numbered **VP-NNN** form in Full BC Catalog)."

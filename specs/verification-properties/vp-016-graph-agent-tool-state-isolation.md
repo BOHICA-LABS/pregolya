@@ -5,11 +5,11 @@ vp_id: VP-016
 title: "GraphAgentTool State-Isolation — the Returned serde_json::Value Contains Only extract_output-Selected Fields (No Internal Graph State Leak)"
 status: draft
 producer: architect
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "985c8e9"
+input-hash: "23b4827"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "2.1"
+version: "2.2"
 changelog:
+  - "2.2 (round-22/F-P2A099-03/2026-08-28): F-P2A099-03 [LOW/records]: input-hash reconciled — updated from 985c8e9 to 23b4827 to reflect BC-2.09.008 revisions through rounds 19–22 (F-P2A087-02, F-P2A088-01, F-P2A094-01, F-P2A094-02, F-P2A098-01, F-P2A098-02); the hash was silently out of sync with BC-2.09.008 §INV-001 content. No VP property-statement or harness changes."
   - "2.1 (round-21/F-P2A093-01/2026-08-28): §Proof Harness Skeleton: corrected false 'accessible as a dev-dependency' claim for `CompiledStateGraph::stub_terminal` — bare `#[cfg(test)]` items in the defining crate (pregolya-graph) are NOT visible in dev-dependency builds of pregolya-mcp (E0599); the correct mechanism is the `test-util` feature gate: pregolya-graph exposes `#[cfg(any(test, feature = \"test-util\"))] pub fn stub_terminal(...)`, pregolya-graph/Cargo.toml adds `[features] test-util = []`, pregolya-mcp/Cargo.toml dev-dependencies adds `features = [\"test-util\"]`. Updated harness crate-import comment and §Proof Obligations Stub Graph Obligation description to reflect feature-gate mechanism. ADR-029 §Symbol Grounding `CompiledStateGraph::stub_terminal` row updated in same burst."
   - "2.0 (round-18/F-P2A084-01+F-P2A084-02/2026-08-27): Exhaustive title/H1/frontmatter/table-cell/code-sketch sweep. Frontmatter `title:` and H1: 'ToolOutput Contains Only extract_output-Selected Fields' → 'the Returned `serde_json::Value` Contains Only extract_output-Selected Fields' (F-P2A084-01). §Proof Method table Bounded? cell: 'Unbounded over GraphState values' → 'Unbounded over `serde_json::Value` graph states'; Coverage cell: 'For any generated `S` instance' → 'For any generated `TestGraphState` instance (as `serde_json::Value`)' (F-P2A084-02). TestGraphState struct doc: 'GraphState carrying' → 'Test graph-state value carrying'; 'leaking into ToolOutput' → 'leaking into the `serde_json::Value` returned by `invoke_dyn`'; 'MUST NOT appear in ToolOutput' → 'MUST NOT appear in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A084-01). Prose FALSE-GREEN GUARD (1): 'extra fields appear in `ToolOutput`' → 'extra fields appear in the `serde_json::Value` returned by `invoke_dyn`'. Harness proptest macro doc: 'into ToolOutput FAILS' → 'into the `serde_json::Value` returned by `invoke_dyn` FAILS'. Code-sketch: inline comment 'ToolOutput must contain EXACTLY' → 'the returned `serde_json::Value` must contain EXACTLY'; three prop_assert! messages 'must not appear in ToolOutput' → 'must not appear in the `serde_json::Value` returned by `invoke_dyn`'; prop_assert_eq! message 'ToolOutput must contain exactly' → 'the returned `serde_json::Value` must contain exactly'. input-hash updated 2e9c2d7 → e57e95f (BC-2.09.008 drift)."
   - "1.9 (round-14/F-P2A078-02+F-P2A078-04/2026-08-27): §Property Statement: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by `GraphAgentTool::invoke_dyn`' → 'the `serde_json::Value` returned by `GraphAgentTool::invoke_dyn`' (F-P2A078-02). §Corollary: 'in the `ToolOutput` unless' → 'in the `serde_json::Value` returned by `invoke_dyn` unless'. §BC Traceability table: '`ToolOutput` is structurally bounded by `extract_output`' → '`serde_json::Value` return is structurally bounded by `extract_output`'; EC-TV-1 → TV-001 / EC-007 (canonical BC-2.09.008 anchor forms; F-P2A078-04 MED). §Proof Method: 'concrete `S` instances' → 'concrete `TestGraphState` instances (serialized as `serde_json::Value`)'. §Feasibility: 'Open (arbitrary GraphState)' → 'Open (arbitrary `TestGraphState` as `serde_json::Value`)'."

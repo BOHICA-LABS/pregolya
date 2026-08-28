@@ -3159,3 +3159,36 @@ pregolya Phase-2 GAP-01 re-convergence, round-20 fix-burst CLOSED. Round-20 (P2A
 - factory-artifacts: HEAD of round-20 D-290 commit. (Prior round-20 freeze HEAD: `44dcac9`.)
 
 ### STATE: v6.01, timestamp 2026-08-27T12:00:00Z
+
+---
+
+## Archived Checkpoint: v6.02 (D-291, 2026-08-28)
+
+<!-- Archived from STATE.md v6.02 on 2026-08-28 when D-292 checkpoint replaced it. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 GAP-01 re-convergence, round-21 fix-burst CLOSED. The GAP-01 core contract (design + security + census 39/134/17/137/303 + DAG + coverage) has been CONVERGED and GATE-READY-passing for multiple rounds. Round-21 (P2A-093/094/095 ALL COMPLETED): 6 findings ALL CLOSED — new finding classes distinct from prior meta-class: VP-016 harness cross-crate cfg(test) visibility (test-util feature-gate); R14-05 false-positive converted to inventory-check; thread_id-is-Uuid sanitizer scope (ADR-029 §Decision-3/SEC-005); async FutureExt::catch_unwind panic-recovery (ADR-029 §Decision-5); module-criticality VP-column exhaustive backfill (5 modules filled); POL-29 self-authorized deferral discharged. DEFERRAL OBS-P2A094-1 SEC-008 (pregolya-mcp release panic=unwind) authorized → Phase-3. TV 754. GATE-READY=YES (5 HRQs: HRQ-1 full-3/3-CLEAN; HRQ-2 CompiledStateGraph non-generic change ack; HRQ-3 VP-filename convention; HRQ-4 CHECK-2 ADVISORY→BLOCKING; HRQ-5 interface-definitions↔BC-prose gate). 3-CLEAN streak 0/3 (reset by this push — frozen-HEAD rule). LESSONS L-a/L-b/L-c codified. NEXT ACTION: run round-22 = three parallel deep adversary passes P2A-096 (realizability), P2A-097 (security), P2A-098 (consistency/census/records) — each loads .factory/policies.yaml — plus a consistency-validator GATE-READY audit, ALL on the NEW HEAD of this D-291 commit. If all three CLEAN(strict) + GATE-READY yes → streak advances to 1/3.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
+- factory-artifacts: HEAD of this round-21 D-291 commit — PUSH this HEAD. (Prior round-21 freeze HEAD: `5498590`.)
+- No .worktrees/. No open PRs expected.
+
+### PER-WORKSTREAM
+- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-21 closed on this HEAD. RESUME NEXT-ACTION: dispatch round-22 P2A-096/097/098 + GATE-READY on THIS HEAD (verbatim above). Streak 0/3 counted on THIS HEAD (frozen-HEAD rule: any new push resets to 0/3).
+- Convergence-tail guidance: rounds 19-21 found distinct new finding classes (type-canon phantom, rename, sanitizer-scope correction, panic-recovery async fixup, column backfill). Round-21 confirmed cross-crate cfg(test) visibility as a new class (test-util feature-gate). If round-22 surfaces further secondary-doc stragglers, sweep module-criticality/VP bodies/maintenance-story bodies; if realizability findings recur, check ADR-029 §Symbol-Grounding for any remaining unresolved items.
+
+### STANDING HUMAN-GATE OBS (5 HRQs from GATE-READY audit — carry-forward from rounds 20-21)
+(a) HRQ-1: full 3/3 CLEAN human confirmation required before Phase-2 gate (human must acknowledge full streak). (b) HRQ-2: GraphAgentTool CompiledStateGraph NON-generic redesign (invoke_dyn→serde_json::Value; from_graph non-generic + caller-supplied input_schema) is a material change to human-approved GAP-01 (D-275) — needs explicit acknowledgment before Phase-3. (c) HRQ-3: VP-FILENAME-CONVENTION adjudicated keep-as-is; human confirm. (d) HRQ-4: verify-ac-pc-trace CHECK-2 ADVISORY→BLOCKING promotion human decision. (e) HRQ-5: interface-definitions↔BC-prose consistency gate (DOC-COMMENT-BC-DRIFT tracks). (f) DEFER-003-class: adversary cannot run hooks; orchestrator must run them at gate boundaries. NOTE: OBS-P2A094-1 SEC-008 (pregolya-mcp release panic=unwind) is a human-authorized deferral to Phase-3 workspace Cargo.toml authoring.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion (CLI/web-UI/eval/trace-inspector) — starts AFTER the Phase-2 approval gate.
+- DTU clones: dtu_clones_built: pending (openai/anthropic/ollama) — Phase-4 prerequisite.
+
+### DECISION DELTA
+D-291 = round-21 fix-burst close (this commit). 6 findings ALL CLOSED: VP-016 cross-crate cfg(test) → test-util feature-gate (GENUINE new class); R14-05 inventory-check; thread_id-is-Uuid sanitizer (ADR-029 §Decision-3/SEC-005); async FutureExt::catch_unwind (ADR-029 §Decision-5); module-criticality VP-column exhaustive 5 modules; POL-29 deferral discharged. DEFERRAL OBS-P2A094-1 SEC-008 → Phase-3. LESSONS: L-a (cross-crate cfg(test) test-util pattern); L-b (mirror-image type-correction risk — re-verify sibling identifiers); L-c (partial table backfills → follow-on findings, corpus-full verification mandate).
+
+### OPERATIONAL NOTE
+Round-21 found a GENUINE new finding class (cross-crate cfg(test) visibility — compiler-invisible to dependent crates' test builds). All 3 passes completed cleanly. verify-no-phantom-types.sh (21 probes) unchanged; verify-module-criticality-vp-column.sh created (advisory, wired pre-commit). SEC-008 deferral: pregolya-mcp release profile must declare panic="unwind" or the async catch_unwind is void — deferred to Phase-3 workspace Cargo.toml where all release profiles are set together.
+
+### STATE: v6.02, timestamp 2026-08-28T00:00:00Z

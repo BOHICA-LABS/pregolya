@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.19"
+version: "1.20"
 status: active
 producer: story-writer
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 changelog:
+  - "1.20 (round-22/D-292/2026-08-28): S-2.11 v1.17→v1.18 (F-P2A096-01/F-P2A097-01/F-P2A099-02/F-P2A096-03/F-P2A097-02): exhaustive security sweep — AC-031 sanitizer regex corrected to version-agnostic pattern; AC-036 added (u64 CheckpointId passthrough correctness boundary); AC-033 panic recovery corrected to FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input,policy))) inside invoke_dyn; AC-037 added (SEC-008 panic=unwind build-profile obligation); tasks 34/35/36/37 updated + tasks 42/43/44 added. S-1.23 v1.5→v1.6 (F-P2A096-04): PreToolDecision PendingHumanApproval { prompt: Option<String> } corrected (was String; interface-definitions.md §PreToolDecision + ADR-018 §Decision 1 authoritative). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.19 (round-21/D-291/2026-08-28): S-1.14 (stub_terminal test-util feature-gate: AC-014 prerequisite condition updated, Task-18 implementation notes, File-Structure pregolya-graph Cargo.toml [features] test-util=[] — F-P2A093-01). S-2.11 (Task-27 dev-dep+feature wiring: pregolya-mcp [dev-dependencies] pregolya-graph features=[\"test-util\"] — F-P2A093-01). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.18 (round-20/F-P2A092-04/D-290/2026-08-27): STORY-S-MAINT-001 v1.2 (round-20 F-P2A092-04: census 133→134 propagation; Background recount 94-of-134 bullet-invariants / 81-of-134 EC-subsections). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.17 (round-19/D-289/2026-08-27): STORY-S-2.11 v1.16 (round-19 symbol-canon: DynTool::invoke→invoke_dyn at AC-008/AC-009/Purity-table/Prev-Story ×4 sites per F-P2A087-01; PreToolCallHook::PendingHumanApproval→PreToolDecision::PendingHumanApproval at AC-021 per F-P2A087-02). STORY-S-1.23 v1.5 (DynTool::invoke→invoke_dyn ×3 sites; PreToolDecision::PendingHumanApproval per F-P2A087-01/02). dependency-graph.md §Changelog ASCENDING→DESCENDING (F-P2A089-02 MED — matches epics.md/STORY-INDEX convention). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
