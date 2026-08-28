@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.45"
+version: "1.46"
 status: active
 producer: architect
 timestamp: 2026-08-27T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.46 (round-19/D-289/2026-08-27): ADR-029 §Decision-5 (DynTool::invoke_dyn canon propagation; §Decision-3/SEC-005 sanitizer-scope reconciled with ADR-005/DI-004 — u64 CheckpointId+arbitrary thread_id = authoring-site-convention-only; framework regex version-agnostic, UUID-shaped IDs only). interface-definitions.md §GraphToolApprovalPolicy (doc-comment PreToolDecision::PendingHumanApproval — F-P2A087-02). capabilities-p1-p2.md §CAP-021 (body updated to reference BC-2.09.008/GraphAgentTool — GATE-READY MAJOR fixed; L2↔L3 bidirectional link restored). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.45 (round-16/full-doc-reconciliation/D-287/2026-08-27): ADR-029 full-document prose reconciliation — F-P2A081-01 MED: §Rationale (Why-proptest) 'arbitrary GraphState instances' → 'arbitrary TestGraphState instances (serialized as serde_json::Value)'; §Rationale 'graph's GraphState is an accumulator type' → 'channel-composed state' (3rd site caught by full-doc pass). F-P2A082-01 MED: §Decision-3 SEC-001 'MUST NOT embed credential material in ToolOutput' → 'in the serde_json::Value returned by invoke_dyn' (matches BC-2.09.007 {PC-002}). verification-architecture.md §Why-proptest updated (input-hash c3a2086; explanatory-prose mirror of ADR-029 §Rationale reconciled). verification-coverage-matrix.md input-hash reconciled: POL-21 claim-not-applied fixed (cbb4bf4 frontmatter→e9944b8 hook-computed). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.44 (round-14/semantic-reconciliation/F-P2A078..080/D-286/2026-08-27): ADR-029 §Symbol-Grounding updated (round-14 semantic re-read: F-P2A078-01 HIGH — §Symbol-Grounding ActionRisk row phantom None variant replaced with ReadOnly/Low/Medium/High enumeration + undeclared→Deny note; §Decision-4 additional residue Ok(ToolOutput)→Ok(serde_json::Value) corrected). verification-architecture.md §VP-016-harness updated (hash 18fa8b4): F-P2A078-02 HIGH — 'GraphState S'/'ToolOutput returned by invoke_dyn' prose replaced with non-generic serde_json::Value; VP-016 harness struct fields re-grounded (output/checkpoint_id/run_id/accumulated_messages); dangling bare-form VP-016.md filename → slug-form vp-016-graph-agent-tool-state-isolation.md per F-P2A078-03 MED. verify-no-phantom-types.sh advisory hook extended with 6 prose/enum/struct/filename/hybrid-anchor patterns (17 self-probes all pass). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.43 (round-12/GAP-01-straggler/D-285/2026-08-27): ADR-029 bumped v2.0→v2.1 (round-12 straggler: §Context 'compiled StateGraph<S)'→'CompiledStateGraph' non-generic; §Symbol Grounding CompiledStateGraph::stub_terminal row status REQUIRES-ROUTING→ROUTED/SPECCED — S-1.14 AC-014 + Task 18 round-10). VP-016 bumped v1.7→v1.8 (§Proof Obligations Stub Graph Obligation SATISFIED; §Realizability Trace Steps 1-2 deserialization-framing removed; §Feasibility CompiledGraph::stub_terminal→CompiledStateGraph::stub_terminal). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."

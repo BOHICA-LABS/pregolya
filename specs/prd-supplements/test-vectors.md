@@ -1,19 +1,20 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.11"
+version: "3.12"
 status: active
 producer: product-owner
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-27T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "710bf07"
+input-hash: "1d64308"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.12 (round-19/F-P2A088-01/2026-08-27): BC-2.09.008 TV count 12→13 (+1 TV: TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids framework pass; authoring-site convention sole guarantee per {INV-001} / ADR-029 §Decision 3 SEC-005 canonical text). Grand total 753→754 canonical + 11 GTV = 764→765."
   - "3.11 (P2A-057-round-2/D-277/2026-08-26): BC-2.09.008 TV count 11→12 (+1 TV: TV-012 None/undeclared action_risk path, F-057-01 {INV-004} coverage). Grand total 752→753 canonical + 11 GTV = 764."
   - "3.10 (SEC-review-adjudication/D-276/2026-08-26): BC-2.09.007 TV count 6→9 (+3 TVs: credential-opacity enforcement paths, SEC-001 coverage). BC-2.09.008 TV count 7→11 (+4 TVs: ForceApproveHooks override scope {PC-006}, BoundaryApprovalHook ActionRisk>=Medium Deny {INV-004} E-MCP-011, additional state-isolation paths). BC-2.18.004 TV count 5→7 (+2 TVs: TV-006 FewShotExamples Red Gate {PC-005} + TV-007 multi-pair middle-untrusted Red Gate {PC-005} VP-006-B proptest). Grand total 746→752 canonical + 11 GTV = 757→763."
   - "3.9 (GAP-01/D-275/2026-08-26): BC-2.09.008 (StateGraph-as-MCP-Tool Wrapping; GraphAgentTool; mcp::graph_tool) registered — 7 TVs (TV-001..TV-007): STATE-ISOLATION invariant {INV-001} (VP-016 proptest P1), interrupt fail-closed E-MCP-010 (TV-002), isolation positive/negative paths (TV-001/TV-003), credential redaction {INV-003} (TV-007), error propagation (TV-004/TV-005/TV-006). Grand total 739→746 canonical + 11 GTV = 750→757. BC count 133→134."
@@ -120,7 +121,7 @@ changelog:
 | BC-2.09.005 | SS-09 | 5 | — | `TV-NNN` | **RG** | MultiServerMcpClient no live connections |
 | BC-2.09.006 | SS-09 | 6 | — | `TV-NNN` | | MCP server tool advertisement (tools/list; mcp::server) |
 | BC-2.09.007 | SS-09 | 9 | — | `TV-NNN` | | MCP server tool invocation (tools/call; external client) |
-| BC-2.09.008 | SS-09 | 12 | — | `TV-NNN` | | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); VP-016 proptest P1 seed ({INV-001} STATE-ISOLATION); TV-012 None/undeclared action_risk path ({INV-004}) |
+| BC-2.09.008 | SS-09 | 13 | — | `TV-NNN` | | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); VP-016 proptest P1 seed ({INV-001} STATE-ISOLATION); TV-012 None/undeclared action_risk path ({INV-004}); TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids (authoring-site convention sole guarantee; {INV-001}) |
 | BC-2.10.001 | SS-10 | 5 | — | `TV-NNN` | | Budget allow/escalate/deny evaluation |
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
 | BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
@@ -192,7 +193,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 6 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (134 authored BCs):** 753 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **764 total vectors** across 134 BC files.
+**Total vectors (134 authored BCs):** 754 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **765 total vectors** across 134 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -343,6 +344,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.12 | 2026-08-27 | round-19/F-P2A088-01: BC-2.09.008 TV count 12→13 (+TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids framework pass; authoring-site convention sole guarantee per {INV-001}). Grand total 753→754 canonical + 11 GTV = 765. | round-19 F-P2A088-01 |
 | 3.11 | 2026-08-26 | P2A-057-round-2/D-277: BC-2.09.008 TV count 11→12 (+TV-012 None/undeclared action_risk path, F-057-01 {INV-004} coverage). Grand total 752→753 canonical + 11 GTV = 764. | P2A-057 D-277 |
 | 3.10 | 2026-08-26 | SEC-review-adjudication/D-276: BC-2.09.007 TV count 6→9; BC-2.09.008 TV count 7→11; BC-2.18.004 TV count 5→7 (TV-006 FewShotExamples Red Gate + TV-007 multi-pair VP-006-B proptest). Grand total 746→752 canonical + 11 GTV = 763. | SEC-review-adjudication D-276 |
 | 3.9 | 2026-08-26 | GAP-01/D-275: BC-2.09.008 registered (7 TVs: state-isolation, interrupt fail-closed E-MCP-010, credential redaction, error propagation). Grand total 739→746 canonical + 11 GTV = 757. BC count 133→134. | GAP-01 D-275 |

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.15"
+version: "1.16"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "06c6d6a"
+input-hash: "122db2b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.10, S-1.14]
@@ -47,6 +47,7 @@ changelog:
   - "1.13 (GAP-01-type-grounding/round-12/2026-08-27): AC-032 closure re-grounded: |s: &S| json!({api_key: s.api_key}) replaced with |s: &serde_json::Value| using s[api_key] JSON index access. Task-41 re-grounded: TestGraphState struct construction replaced with json!({}) value; s.answer struct field access replaced with s[answer] JSON index. Zero live-body |s: &S| or struct-field-access phantoms remain. input-hash updated to 0f081e1."
   - "1.14 (F-P2A079-01/round-14/2026-08-27): Task 38 stale ToolOutput::Text syntax corrected to Ok(Value::String(...)) canonical invoke_dyn return form. Arch Compliance from_value::<S> prohibition Source column corrected to BC-2.09.008 {PC-003}. Changelog 1.11 item (3) bare BC-ID rephrased to non-generic seam design. input-hash updated (state-manager recomputes)."
   - "1.15 (F-P2A084-01/round-18/2026-08-27): AC-023 and Task 20: last two live-body ToolOutput residues corrected — serde_json::Value returned by invoke_dyn replaces ToolOutput as the output type name. Zero remaining live-body stale ToolOutput, CompiledGraph<, StateGraph<S>, |s: &S|, schema_for!(S) (non-call-site), or from_value::<S> (non-prohibition) references."
+  - "1.16 (F-P2A087-01/F-P2A087-02/round-19/2026-08-27): Symbol-canon propagation from BC-2.09.008 {PC-005}/EC-005 PreToolDecision rename and DynTool object-safe interface. (1) AC-008: DynTool::invoke → DynTool::invoke_dyn (object-safe dispatch seam method; no DynTool::invoke exists). (2) AC-009: DynTool::invoke → DynTool::invoke_dyn. (3) Purity Classification tools/call handler row: DynTool::invoke → DynTool::invoke_dyn. (4) Previous Story Intelligence: DynTool::invoke(args) → DynTool::invoke_dyn(args). (5) AC-021: PreToolCallHook::PendingHumanApproval → PreToolDecision::PendingHumanApproval (BC-2.09.008 {PC-005}/EC-005 enum rename; matches AC-022/AC-029 canonical form already in place). input-hash updated to 3b82473."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -108,12 +109,12 @@ No `E-MCP-005` is raised; this is a protocol-level not-implemented response. Ver
 
 ### AC-008 (traces to BC-2.09.007 PC-001 + PC-002)
 `tools/call` with a valid tool name and conforming arguments dispatches to the registered
-`DynTool::invoke`. On success, responds with
+`DynTool::invoke_dyn`. On success, responds with
 `{ "content": [{ "type": "text", "text": "<result>" }], "isError": false }`.
 Verified by `test_BC_2_09_007_tools_call_success_response()`.
 
 ### AC-009 (traces to BC-2.09.007 PC-003)
-When the registered `DynTool::invoke` returns `Err(PregolyaError { .. })`, the server
+When the registered `DynTool::invoke_dyn` returns `Err(PregolyaError { .. })`, the server
 responds with `{ "content": [{ "type": "text", "text": "<error_message>" }], "isError": true }`.
 The JSON-RPC result layer carries `result` (not `error`) — the MCP protocol transaction
 succeeded; only the tool invocation failed. Verified by
@@ -245,7 +246,7 @@ Under `GraphToolApprovalPolicy::DenyInterrupts` (default):
   interrupted at MCP boundary: HITL approval not supported for synchronous tools/call; restructure
   the graph so it does not call interrupt() during a synchronous tools/call invocation",
   retry_hint: Never })`. The interrupted run is NOT persisted to durable checkpoint.
-- **`PreToolCallHook::PendingHumanApproval`:** When received, `BoundaryApprovalHook` converts
+- **`PreToolDecision::PendingHumanApproval`:** When received, `BoundaryApprovalHook` converts
   `PendingHumanApproval` → `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }`; the tool
   is NOT invoked; the node receives `ToolOutput::Error`; the graph CONTINUES executing. If the
   graph reaches a valid terminal state, {PC-004} applies and `invoke_dyn` returns
@@ -472,7 +473,7 @@ risk-acceptance item a testable Phase-3 obligation. Verified by
 | `ToolRegistry` | pure-core | Thread-safe in-memory map behind `Arc<RwLock<...>>`; read-only in list handler |
 | `tools/list` handler | pure-core | Reads registry (in-memory), serializes to JSON; no outbound I/O |
 | `McpServer::start` | effectful | Binds TCP/stdio; effectful from the first syscall |
-| `tools/call` handler | effectful | Invokes `DynTool::invoke` which may perform I/O |
+| `tools/call` handler | effectful | Invokes `DynTool::invoke_dyn` which may perform I/O |
 | `GraphAgentTool` | effectful | Calls `GraphRunner::run` which performs LLM API I/O and tool invocations |
 | `GraphToolApprovalPolicy` | pure-core | Enum discriminating interrupt handling policy; no I/O |
 | `BoundaryApprovalHook` | pure-core | Intercepts `PreToolCallHook`; returns `Approve` or `Deny { reason }`; no I/O |
@@ -566,7 +567,7 @@ with `ToolRegistry` serving both the server's `tools/list` handler and (via shar
 the client-side tool resolution.
 
 S-1.06 established `DynTool` as the object-safe dispatch seam. The `tools/call` handler
-calls `DynTool::invoke(args)`. Use `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>`
+calls `DynTool::invoke_dyn(args)`. Use `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>`
 as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`, NOT
 `Option<Arc<dyn Tool>>` (which is non-object-safe per ADR-005 §Adjacent Trait Object-Safety Adjudications).
 
@@ -640,3 +641,4 @@ build MUST fail.
 - **1.13 (GAP-01-type-grounding / round-12 / 2026-08-27):** Two live-body closure-body phantoms eliminated. (1) AC-032: `|s: &S| json!({ "api_key": s.api_key })` → `|s: &serde_json::Value| json!({ "api_key": s["api_key"] })` — `extract_output` closure receives `&serde_json::Value`, not generic `&S`; struct field access replaced with JSON index operator. (2) Task-41: `TestGraphState { answer: "hello", api_key: "..." }` typed struct construction replaced with `json!({ "answer": "hello", "api_key": "..." })` JSON value; closure `|s| json!({ "answer": s.answer })` → `|s: &serde_json::Value| json!({ "answer": s["answer"] })`. Zero live-body `|s: &S|` or `s.fieldname` struct-access phantoms remain. input-hash updated (state-manager recomputes).
 - **1.14 (F-P2A079-01 / round-14 / 2026-08-27):** Task 38 corrected: `ToolOutput::Text { text: "..." }` (struct-form tuple-variant syntax, stale ToolOutput type) replaced with `Ok(Value::String("key=sk-abc123XYZabc123XYZabc".to_string()))` — canonical `DynTool::invoke_dyn` return form (`Result<serde_json::Value, PregolyaError>`), matching AC-034 body and BC-2.09.007 TV-009. Task description updated from "success-path ToolOutput" to "success-path `serde_json::Value` result". Arch Compliance table: `from_value::<S>` prohibition Source column de-cited from a cross-reference BC-ID that was not in frontmatter to `BC-2.09.008 {PC-003}` (which is in `behavioral_contracts`; the former citation was a rationale cross-reference, not a story obligation). Changelog entry 1.11 item (3): stale BC cross-reference rephrased to "non-generic seam design" (historical sense preserved; bare BC-ID citation removed to satisfy Policy 8 hook). input-hash updated (state-manager recomputes).
 - **1.15 (F-P2A084-01 / round-18 / 2026-08-27):** AC-023: "NEVER included in the `ToolOutput` unless `extract_output`" corrected to "NEVER included in the `serde_json::Value` returned by `invoke_dyn` unless `extract_output`" — `ToolOutput` was eliminated in the 1.11 non-generic re-ground; `DynTool::invoke_dyn` returns `serde_json::Value`. Task 20: "extra fields leak to `ToolOutput` without explicit exclusion" corrected to "extra fields leak into the `serde_json::Value` returned by `invoke_dyn` without explicit exclusion". These were the last two live-body `ToolOutput` residues naming the invoke_dyn success output. Frontmatter `changelog:` array backfilled with 1.14 entry (round-14 was missing from frontmatter array) and 1.15 entry added. Zero remaining live-body stale `ToolOutput`, `CompiledGraph<`, `StateGraph<S>`, `|s: &S|`, `schema_for!(S)` (non-call-site), or `from_value::<S>` (non-prohibition) references in STORY-S-2.11, STORY-S-1.14, or dependency-graph.md.
+- **1.16 (F-P2A087-01 / F-P2A087-02 / round-19 / 2026-08-27):** Symbol-canon propagation from BC-2.09.008 {PC-005}/EC-005 PreToolDecision rename and `DynTool` object-safe interface. (1) AC-008: `DynTool::invoke` → `DynTool::invoke_dyn` (object-safe dispatch seam method; `DynTool::invoke` does not exist). (2) AC-009: `DynTool::invoke` → `DynTool::invoke_dyn`. (3) §Purity Classification `tools/call` handler row: `DynTool::invoke` → `DynTool::invoke_dyn`. (4) §Previous Story Intelligence: `DynTool::invoke(args)` → `DynTool::invoke_dyn(args)`. (5) AC-021: `PreToolCallHook::PendingHumanApproval` → `PreToolDecision::PendingHumanApproval` (BC-2.09.008 {PC-005}/EC-005 enum rename per product-owner; matches AC-022/AC-029 canonical form already in place). input-hash updated to 3b82473.

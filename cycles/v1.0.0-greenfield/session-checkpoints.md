@@ -3080,3 +3080,34 @@ pregolya Phase-2 spec re-convergence IN PROGRESS. D-286 CLOSED (2026-08-27): rou
 pregolya Phase-2 spec re-convergence IN PROGRESS. D-287 CLOSED (2026-08-27): round-16 fix-burst — ADR-029 full-document prose reconciliation; explanatory-prose-mirror class TERMINATED. F-P2A081-01 (MED): ADR-029 §Rationale Why-proptest 'arbitrary GraphState instances'→'arbitrary TestGraphState instances (serialized as serde_json::Value)'; 'graph's GraphState is an accumulator type'→'channel-composed state' (3rd site caught by full-document enumerate-classify-fix pass). F-P2A082-01 (MED): ADR-029 §Decision-3 SEC-001 'MUST NOT embed credential material in ToolOutput'→'in the serde_json::Value returned by invoke_dyn' (matches BC-2.09.007 {PC-002}); §Decision-4 ToolOutput::Error node-receives path LEGITIMATE, unchanged. verification-architecture.md §Why-proptest reconciled (input-hash c3a2086; sibling-mirror of ADR-029 §Rationale reconciled). verification-coverage-matrix.md input-hash POL-21 claim-not-applied fixed (frontmatter cbb4bf4→hook-computed e9944b8). ARCH-INDEX §Changelog. L-201 codified (full-document enumerate-classify-fix pass discipline after type-grounding migrations: after a migration, do ONE full-document semantic pass covering ALL sections including §Rationale and §Why explanatory prose; classify ToolOutput::Error legitimate vs stale invoke_dyn-return ToolOutput before fixing; targeted token-grep cannot find semantically-natural explanatory-prose mirrors). Drift/Deferrals: VP-FILENAME-CONVENTION + PHANTOM-GATE-FP-NARROWING recorded (S-7.02, D-286). Census UNCHANGED 39/134/17/137. Points 303. streak 0/3 NOT CLEAN. NEXT ACTION: run three parallel deep adversary passes P2A-084/085/086 on NEW HEAD (full-document reconciliation completeness verification + explanatory-prose class closed confirmation + orthogonal fresh-context pass); plus GATE-READY consistency audit; if all three CLEAN(strict) → streak advances toward 3/3 CONVERGED → Phase-2 gate. OPEN OBS for human gate: BC-2.09.008 {INV-005} success-path credential opacity caller-discipline-only (SEC-001; no runtime backstop) — human risk-acceptance item. Census 39/134/17/137/29 ADR/15 HS. Points 303. HEADS: develop 644d1ad; factory-artifacts — PUSHED (active wrap). DIRECTIVE 1: keep going to convergence, do not ask to continue.
 
 ### STATE: v5.98, timestamp 2026-08-27T10:00:00Z
+
+---
+
+<!-- v5.99 archived from STATE.md 2026-08-27 -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 GAP-01 re-convergence, round-18 fix-burst CLOSED at wrap. The GAP-01 core contract (design + security + census 39/134/17/137/303 + DAG + coverage) has been CONVERGED and GATE-READY-passing for many rounds; the remaining findings are a shrinking tail of cosmetic-realizability/records MED stragglers from the twice-re-grounded GAP-01 GraphAgentTool migration (round-18 fixed VP-016 title/table, observability Display sigil, BC-INDEX VP-Seed miscount, S-2.11 prose). 3-CLEAN streak 0/3. NEXT ACTION: run round-19 = three parallel deep adversary passes P2A-087 (realizability/symbol-existence, ALL sections incl. title/H1/frontmatter/table-cells/code-sketches), P2A-088 (security), P2A-089 (consistency/census/records) — each loads .factory/policies.yaml (48 policies) — plus a consistency-validator GATE-READY audit, ALL on the frozen wrap-commit HEAD. If all three CLEAN(strict) + GATE-READY yes → 3/3 CONVERGED → run /vsdd-factory:check-input-drift → present the Phase-2 human approval gate.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work this session; Phase-2 is spec-only).
+- factory-artifacts: this wrap commit — PUSHED (active wrap). (Prior committed HEAD 4c8534d.)
+- No .worktrees/. No open PRs expected.
+
+### PER-WORKSTREAM
+- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-18 closed on the wrap HEAD. RESUME NEXT-ACTION: dispatch round-19 P2A-087/088/089 + GATE-READY on the wrap HEAD (verbatim above). Streak 0/3 counted on the wrap HEAD (frozen-HEAD rule: any new push resets to 0/3).
+- Convergence-tail guidance for next session: findings rounds 13-18 have been migration-residue in forms token-greps miss (titles/H1/table-cells/code-sketch-comments/metadata) across ~15 GAP-01 files. Round-18 did exhaustive per-file end-to-end reconciliation. If round-19 STILL surfaces a NEW cosmetic straggler, consider surfacing to the human a scoped choice: accept remaining records-tier residue as tracked tech-debt to open the Phase-2 gate now, vs. continue. (DIRECTIVE 1 says keep driving to convergence without asking — but flag the diminishing-returns status.)
+
+### STANDING HUMAN-GATE OBS
+(a) BC-2.09.008 {INV-005}: success-path credential opacity is caller-discipline-only (DI-010; no framework runtime backstop) — human risk-acceptance item. (b) GraphAgentTool CompiledStateGraph NON-generic redesign (invoke_dyn→serde_json::Value; from_graph non-generic + caller-supplied input_schema) is a material change to the human-approved GAP-01 (D-275) feature — needs explicit acknowledgment before Phase-3. (c) Recorded follow-ups: VP-FILENAME-CONVENTION (VP-001..015 bare vs VP-006-B/VP-016 slug; all refs resolve; cosmetic; spec-steward) + PHANTOM-GATE-FP-NARROWING (verify-no-phantom-types.sh R14-02/04/05 FPs; devops). (d) interface-definitions↔BC-prose has no machine gate (candidate Phase-3 follow-up).
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion (CLI/web-UI/eval/trace-inspector) — starts AFTER the Phase-2 approval gate.
+- DTU clones: dtu_clones_built: pending (openai/anthropic/ollama) — Phase-4 prerequisite.
+
+### DECISION DELTA
+D-282..D-287 (exhaustive) rounds 7-16 re-convergence fix-bursts were committed during this session. D-288 = round-18 close (this wrap). Self-improvement artifacts: verify-no-phantom-types.sh (round-12 created, round-14 extended); lessons L-197..L-201 (exhaustive) codified.
+
+### OPERATIONAL NOTE
+Several agents this session stalled/crashed mid-work (stream-watchdog / API connection-lost) but their edits usually landed — the next session should VERIFY on-disk state after each agent completes/fails rather than trusting the (possibly truncated) final report.
+
+### STATE: v5.99, timestamp 2026-08-27T11:00:00Z

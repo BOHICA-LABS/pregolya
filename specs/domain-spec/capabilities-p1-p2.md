@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.27"
+version: "1.28"
 status: active
 producer: business-analyst
 timestamp: 2026-08-21T00:00:00Z
@@ -15,8 +15,9 @@ inputs:
   - .factory/planning/holdout-domains/domain-e-agentic-coding-assistant.md
 input-hash: "faffcd7"
 traces_to: L2-INDEX.md
-decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170]
+decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170, D275]
 changelog:
+  - "1.28 (Round-19/GAP-01-bidirectional-link/2026-08-27): CAP-021 body extended to describe GraphAgentTool wrapping behavior and cite BC-2.09.008 — closes the missing CAP→BC direction for the D-275/GAP-01 scope addition (2026-08-26). Added GraphAgentTool paragraph (CompiledStateGraph as DynTool, STATE-ISOLATION {INV-001}, DenyInterrupts fail-closed policy, E-MCP-010) and 'Authored BCs: BC-2.09.008' entry per D23/D-170 citation convention. No behavioral scope expansion beyond BC-2.09.008 + D-275 human approval. D275 added to decisions list. TD-VSDD-091: all citations by symbol/section name only."
   - "1.27 (P2A-021/2026-08-21): CAP-028 ingestion-method name reconciled: add_texts→add_documents (add_texts is legacy; add_documents(docs: Vec<Document>) is the canonical modern primary per LangChain reference). Four live-body sites updated in capabilities-p1-p2.md: (1) CAP-028 heading token; (2) CAP-028 method signature form; (3) CAP-028 &self-receiver rationale sentence; (4) CAP-029 'generated at ... time' clause. TD-VSDD-060 sweep: entities-graph.md §VectorStore also contains a live add_texts reference — outside business-analyst capability-doc scope; reported for routing to entities-doc owner."
   - "1.26 (burst-316/F-P206-01/2026-08-18): F-P206-01 (MED) CAP-038 E-TOOLS-006 name: retired informal name 'SearchResultsCapped' replaced with canonical payload field path per error-taxonomy §E-TOOLS-006 and BC-2.23.006. Before: 'E-TOOLS-006 `SearchResultsCapped` on ceiling (informational — partial results returned)'. After: 'E-TOOLS-006 (`GrepResult.capped` — informational payload field, not a raised Err; partial results returned on ceiling)'. Authority: error-taxonomy §E-TOOLS-006 canonical payload field path GrepResult.capped (established burst-247/F-P146-02); BC-2.23.006 PC-2. Corpus sweep: sole SearchResultsCapped live-body occurrence in domain-spec; zero others found. ADR-020 §First-Party Tool Error Codes mnemonic-label table correctly excluded (intentional label column). TD-VSDD-060 sweep: sole E-TOOLS-006/SearchResultsCapped occurrence in this file."
   - "1.25 (burst-304/F-P195-01/2026-08-17): F-P195-01 (HIGH) invoke_dyn residual in CAP-039 RunnablePassthrough description: 'invoke_dyn(input, config)' → 'invoke(input, config)'. Canon: DynRunnable method is invoke (not invoke_dyn — that is DynTool's method). TD-VSDD-060 sweep: zero other invoke_dyn occurrences in DynRunnable/RunnableParallel/RunnablePassthrough/RunnableAssign context in live body; zero E-CORE-NNN/MMM, core::runnable::parallel/::passthrough, or DynRunnable< residuals in live body."
@@ -169,6 +170,18 @@ applications can connect as MCP clients and invoke pregolya tools via the MCP pr
 `tools/call` dispatch to the underlying pregolya `Tool` implementation and return of the
 result via MCP response format. This is the **server** role complementing the existing MCP
 **client** role (CAP-010 / SS-09 / BC-2.09.001–005).
+
+`GraphAgentTool` (`mcp::graph_tool`) wraps a registered `CompiledStateGraph` as a `DynTool`,
+enabling pregolya agent graphs to be registered in the `ToolRegistry` and exposed to external
+MCP clients via the same `tools/list` advertisement and `tools/call` dispatch paths. The
+STATE-ISOLATION invariant ({INV-001}) restricts the output to only the fields selected by the
+caller-supplied `extract_output` closure — no internal checkpoint IDs, run IDs, message
+history, or intermediate node state are included unless explicitly selected.
+`GraphToolApprovalPolicy::DenyInterrupts` (default, fail-closed) converts any in-graph
+`interrupt()` call to `Err(E-MCP-010 GraphAgentInterruptDenied)`.
+**Authored BCs:** BC-2.09.008 (GAP-01/D-275 — `GraphAgentTool` wrapping of `CompiledStateGraph`
+as `DynTool`; STATE-ISOLATION {INV-001}; fail-closed interrupt policy
+`GraphToolApprovalPolicy::DenyInterrupts`; E-MCP-010 `GraphAgentInterruptDenied`; VP-016 proptest P1).
 
 **Grounding:** D19 forcing function — domain-d-hermes-agent.md req 11 ([NEW framework-scope]):
 "pregolya exposes its own tools and resources via the MCP protocol so that other LLM

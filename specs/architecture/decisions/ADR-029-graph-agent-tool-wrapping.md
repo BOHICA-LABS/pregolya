@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.3"
+version: "2.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.4 (round-19/F-P2A087-01+F-P2A088-01/2026-08-27): F-P2A087-01 HIGH — §Decision 5 Error Routing Table `extract_output panics` row: `DynTool::invoke` → `DynTool::invoke_dyn` (canonical object-safe DynTool dispatch method per interface-definitions.md §Tool; `DynTool` exposes `invoke_dyn`, not `invoke`; corrects phantom first flagged in v1.7 changelog establishing `invoke_dyn` as canon). F-P2A088-01 MED/CWE-209/CWE-670 — §Decision 3 SEC-005 + §Decision 5 sanitization bullet: (1) UUID regex corrected from v4-specific `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}` to version-agnostic `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` — prevents silent leakage of non-v4 UUIDs on `run_id`/`thread_id` paths; (2) `sanitize_internal_ids` scope clarified to UUID-shaped identifiers only (`run_id` and UUID-shaped `thread_id`); incoherent claim that `CheckpointId` is covered by the regex removed (`CheckpointId` is a `u64` newtype per ADR-005/BC-2.04.003, not UUID-shaped); (3) authoring-site convention explicitly stated as the SOLE framework guarantee for `u64` checkpoint IDs and non-UUID `thread_id` strings (BC-2.09.008 {INV-001}). F-P2A088-01 PO handoff: product-owner must mirror the authoring-site-convention-primacy clause into BC-2.09.008 {INV-001} and add a u64-checkpoint exclusion test vector."
   - "2.3 (round-16/F-P2A081-01+F-P2A082-01/2026-08-27): Full explanatory-prose sweep. §Decision 3 SEC-001: 'MUST NOT embed credential material in `ToolOutput`' → 'MUST NOT embed credential material in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A082-01 MED — invoke_dyn returns serde_json::Value, not ToolOutput). §Rationale 'Why extract_output': 'graph\\'s `GraphState` is an accumulator type' → 'graph\\'s channel-composed state is an accumulator type' (GraphState is not a type/trait per §Symbol Grounding PHANTOM row). §Rationale 'Why proptest for VP-016': 'arbitrary `GraphState` instances (via `Arbitrary` derive)' → 'arbitrary `TestGraphState` instances (via `Arbitrary` derive)' (F-P2A081-01 MED). Decision 4 §DenyInterrupts `ToolOutput::Error(...)` node-receives reference is LEGITIMATE and unchanged."
   - "2.2 (round-14/F-P2A078-01/2026-08-27): §Decision 4 fail-closed guarantee: `Ok(ToolOutput)` → `Ok(serde_json::Value)` (invoke_dyn return type is Result<serde_json::Value, PregolyaError> per canonical DynTool contract; ToolOutput is never the invoke_dyn return type); VP-016 attribution clause: '`ToolOutput` contains only the fields returned by extract_output' → 'the `serde_json::Value` returned by `invoke_dyn` contains only the fields returned by extract_output'. §Symbol Grounding ActionRisk row: `None`/`Low`/`Medium`/`High` variants → `ReadOnly`/`Low`/`Medium`/`High` variants; clarified that `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an ActionRisk variant (F-P2A078-01 HIGH)."
   - "2.1 (round-12/GAP-01-straggler/2026-08-27): §Context: 'compiled StateGraph<S>' → 'CompiledStateGraph' (COMPILED form is CompiledStateGraph, non-generic per BC-2.02.001 {PC-001}). §Symbol Grounding CompiledStateGraph::stub_terminal row: status REQUIRES-ROUTING → ROUTED/SPECCED — S-1.14 §AC-014 + Task 18 (round-10); cross-ref §Stub Graph Obligation → §Proof Obligations (real VP-016 heading per ADR-022 real-heading rule)."
@@ -260,18 +261,33 @@ reviewers must verify every `extract_output` closure does not select credential-
 
 **SEC-005 Decision — Error-Path STATE-ISOLATION Convention:**
 The STATE-ISOLATION invariant ({INV-001}) applies to ALL output paths, including error paths.
-Node error messages that propagate through `GraphRunner::run` MUST NOT include checkpoint IDs,
-run IDs, or thread IDs. Convention:
-- Graph node implementations MUST author error messages using only functional/behavioral
-  descriptions (e.g., "tool invocation failed: timeout") — not internal execution context
-  (checkpoint IDs, run UUIDs, thread identifiers).
-- The `BoundaryApprovalHook` and `GraphRunner::run` apply a sanitization pass for
-  internal-ID patterns (UUID v4 format: `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}`) before
-  populating `content[0].text` on any `isError: true` path, in addition to the existing
-  `redact_credentials` pass. The two passes are chained:
+Node error messages that propagate through `GraphRunner::run` MUST NOT include internal
+execution context. Convention:
+
+- **Authoring-site convention (primary defense — all identifier types):** Graph node
+  implementations MUST author error messages using only functional/behavioral descriptions
+  (e.g., "tool invocation failed: timeout") — not internal execution context. This
+  obligation is the load-bearing guarantee for `u64` checkpoint IDs (`CheckpointId` is a
+  `u64` newtype per ADR-005 / BC-2.04.003 — not UUID-shaped; a UUID regex cannot match it)
+  and arbitrary-string server-layer `thread_id` values (user-supplied strings; not
+  guaranteed UUID-shaped). The framework `sanitize_internal_ids` pass CANNOT match these
+  types. The authoring-site convention — enforced via BC-2.09.008 {INV-001} — is their
+  SOLE framework guarantee.
+
+- **Framework sanitization pass (secondary backstop — UUID-shaped identifiers only):**
+  The `BoundaryApprovalHook` and `GraphRunner::run` apply a `sanitize_internal_ids` pass
+  before populating `content[0].text` on any `isError: true` path. The regex is
+  version-agnostic (covers all UUID versions, not restricted to v4):
+  `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`.
+  This covers `run_id` (a `Uuid`, any version) and server-layer `thread_id` when
+  UUID-shaped. It does NOT cover `u64` checkpoint IDs or non-UUID `thread_id` strings —
+  those are covered exclusively by the authoring-site convention above. The pass is
+  chained with the existing `redact_credentials` pass:
   `sanitize_internal_ids(redact_credentials(message))`.
-- The BC-2.09.008 {INV-001} scope extension (error paths included) must be specified by PO
-  as a clause addition to the BC invariant body and a corresponding TV.
+
+- The BC-2.09.008 {INV-001} scope extension (error paths included, authoring-site
+  convention primacy for non-UUID identifier types) must be specified by PO as a clause
+  addition to the BC invariant body and a corresponding TV (F-P2A088-01 handoff).
 
 ---
 
@@ -477,13 +493,18 @@ synchronous tools/call invocation — retrying the same invocation cannot succee
 | Graph execution returns `Err(PregolyaError)` (from `CompiledStateGraph::invoke` inside `ConcreteGraphRunner::run`; no `from_value::<S>` step — F-P2A072-03 closure) | original PregolyaError | `isError: true`, redacted message (BC-2.09.007 {PC-003}, {INV-003}; BC-2.09.008 {PC-003} updated by PO) |
 | Graph parks (node-level `interrupt()` → `RunStatus::Interrupted`) | `E-MCP-010 GraphAgentInterruptDenied` | `isError: true`, message (after redact_credentials pass) |
 | `BoundaryApprovalHook` returns `Deny` (either policy — graph CONTINUES to terminal) | terminal result propagated normally: `Ok(serde_json::Value from extract_output_result)` ({PC-004}) if graph reaches clean terminal; original `Err(PregolyaError)` (graph's own error) if graph reaches error terminal. `E-MCP-010` is NOT raised. `E-MCP-011` is emitted as a structured log entry (ActionRisk gate path only) — it is a diagnostic, not a terminal error code. | `isError: false` (clean terminal) or `isError: true` with graph's own redacted error (error terminal) |
-| `extract_output` panics (contract violation by caller) | Rust panic caught by `mcp::server` `UnwindSafe` boundary (`std::panic::catch_unwind` around the `DynTool::invoke` dispatch call); no panic propagates past the MCP handler. Server loop continues serving subsequent requests. | `isError: true`, static message `"internal error"` (no internal state, no panic message, no backtrace leaked to MCP client; SEC-008 contract: panic text may contain internal state so it is NEVER forwarded); error is logged internally at ERROR level with backtrace before the static message is returned |
+| `extract_output` panics (contract violation by caller) | Rust panic caught by `mcp::server` `UnwindSafe` boundary (`std::panic::catch_unwind` around the `DynTool::invoke_dyn` dispatch call); no panic propagates past the MCP handler. Server loop continues serving subsequent requests. | `isError: true`, static message `"internal error"` (no internal state, no panic message, no backtrace leaked to MCP client; SEC-008 contract: panic text may contain internal state so it is NEVER forwarded); error is logged internally at ERROR level with backtrace before the static message is returned |
 
 **Sanitization applies to all `isError: true` paths** — including `E-MCP-010` messages.
 Two passes are chained before populating `content[0].text`:
 1. `mcp::sanitize::redact_credentials` — per BC-2.09.007 {INV-003} (DI-010 credential opacity)
-2. `sanitize_internal_ids` — removes UUID v4 patterns (checkpoint IDs, run IDs, thread IDs)
-   per SEC-005 / §Decision 3 error-path STATE-ISOLATION convention
+2. `sanitize_internal_ids` — removes UUID-shaped internal identifiers using a
+   version-agnostic UUID regex (`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
+   per SEC-005 / §Decision 3 error-path STATE-ISOLATION convention. Covers `run_id` (a
+   `Uuid`, any version) and UUID-shaped server-layer `thread_id` values. Does NOT cover
+   `u64` checkpoint IDs (`CheckpointId` newtype per ADR-005 / BC-2.04.003 — not
+   UUID-shaped) or non-UUID `thread_id` strings. Those identifier types require
+   authoring-site discipline per BC-2.09.008 {INV-001} (F-P2A088-01 handoff to PO).
 
 Both passes are unconditional on all `isError: true` paths. Success paths are NOT subject
 to framework-level sanitization (see §Decision 3 SEC-001 invariant — Tool implementations
@@ -654,6 +675,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.4 | 2026-08-27 | architect | round-19/F-P2A087-01+F-P2A088-01 | F-P2A087-01 HIGH: §Decision 5 Error Routing Table `extract_output panics` row — `DynTool::invoke` → `DynTool::invoke_dyn` (canonical object-safe DynTool dispatch method per interface-definitions.md §Tool). F-P2A088-01 MED/CWE-209/CWE-670: §Decision 3 SEC-005 + §Decision 5 sanitization bullet — (1) UUID regex corrected from v4-specific (`4[0-9a-f]{3}-[89ab][0-9a-f]{3}`) to version-agnostic (`[0-9a-f]{4}-[0-9a-f]{4}`); (2) framework `sanitize_internal_ids` scope clarified to UUID-shaped identifiers only (`run_id`, UUID-shaped `thread_id`); (3) incoherent claim that `u64` `CheckpointId` is covered by the UUID regex removed; authoring-site convention (BC-2.09.008 {INV-001}) stated as SOLE guarantee for `u64` checkpoint IDs and non-UUID `thread_id` strings. PO handoff: mirror authoring-site-convention-primacy clause into BC-2.09.008 {INV-001} and add u64-checkpoint exclusion test vector. |
 | 2.3 | 2026-08-27 | architect | round-16/F-P2A081-01+F-P2A082-01 | Full explanatory-prose sweep. §Decision 3 SEC-001: 'MUST NOT embed credential material in `ToolOutput`' → 'MUST NOT embed credential material in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A082-01 MED). §Rationale 'Why extract_output': 'graph's `GraphState` is an accumulator type' → 'graph's channel-composed state is an accumulator type' (GraphState is not a type/trait per §Symbol Grounding PHANTOM row). §Rationale 'Why proptest for VP-016': 'arbitrary `GraphState` instances (via `Arbitrary` derive)' → 'arbitrary `TestGraphState` instances (via `Arbitrary` derive)' (F-P2A081-01 MED). Decision 4 §DenyInterrupts `ToolOutput::Error(...)` node-receives reference is LEGITIMATE and unchanged. |
 | 2.2 | 2026-08-27 | architect | round-14/F-P2A078-01 | §Decision 4 fail-closed guarantee: `Ok(ToolOutput)` → `Ok(serde_json::Value)` (invoke_dyn returns Result<serde_json::Value, PregolyaError>; ToolOutput is never the invoke_dyn return type); VP-016 attribution: '`ToolOutput` contains only the fields returned by extract_output' → 'the `serde_json::Value` returned by `invoke_dyn` contains only the fields returned by extract_output'. §Symbol Grounding ActionRisk row: `None`/`Low`/`Medium`/`High` variants → `ReadOnly`/`Low`/`Medium`/`High` variants; clarified that `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an ActionRisk variant (F-P2A078-01 HIGH). |
 | 2.1 | 2026-08-27 | architect | round-12/GAP-01-straggler | §Context: 'compiled StateGraph<S>' → 'CompiledStateGraph' (COMPILED form is CompiledStateGraph, non-generic per BC-2.02.001 {PC-001}). §Symbol Grounding CompiledStateGraph::stub_terminal row: status REQUIRES-ROUTING → ROUTED/SPECCED — S-1.14 §AC-014 + Task 18 (round-10); cross-ref §Stub Graph Obligation → §Proof Obligations (real VP-016 heading per ADR-022 real-heading rule). |

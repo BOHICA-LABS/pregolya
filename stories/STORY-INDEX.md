@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.16"
+version: "1.17"
 status: active
 producer: story-writer
 timestamp: 2026-08-27T00:00:00Z
 changelog:
+  - "1.17 (round-19/D-289/2026-08-27): STORY-S-2.11 v1.16 (round-19 symbol-canon: DynTool::invoke→invoke_dyn at AC-008/AC-009/Purity-table/Prev-Story ×4 sites per F-P2A087-01; PreToolCallHook::PendingHumanApproval→PreToolDecision::PendingHumanApproval at AC-021 per F-P2A087-02). STORY-S-1.23 v1.5 (DynTool::invoke→invoke_dyn ×3 sites; PreToolDecision::PendingHumanApproval per F-P2A087-01/02). dependency-graph.md §Changelog ASCENDING→DESCENDING (F-P2A089-02 MED — matches epics.md/STORY-INDEX convention). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.16 (round-18/F-P2A084-01/D-288/2026-08-27): S-2.11 bumped v1.14→v1.15 (F-P2A084-01 MED — AC-023 and Task-20 ToolOutput→serde_json::Value prose alignment: AC-023 acceptance criterion and Task-20 task description fully re-grounded on serde_json::Value returned by invoke_dyn; eliminates the final story-prose occurrences of 'ToolOutput' as the invoke_dyn return type). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.15 (round-14/semantic-reconciliation/F-P2A079-01/D-286/2026-08-27): S-2.11 bumped v1.13→v1.14 (F-P2A079-01 MED — Task 38 `ToolOutput::Text { text }` → `Ok(Value::String(...))` per AC-034/TV-009; latent Policy-8 citation resolved: Arch-Compliance Source column BC-2.02.001 cross-ref → BC-2.09.008 {PC-003} covered; input-hash refreshed to 06c6d6a). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."
   - "1.14 (round-12/GAP-01-type-grounding-straggler/D-285/2026-08-27): S-2.11 v1.12→v1.13 (round-12: AC-032 closure re-grounded — `|s: &S| json!({api_key: s.api_key})` → `|s: &serde_json::Value|` + JSON index access; Task-41 TestGraphState struct construction → json!({}) + `s[answer]` index form; zero live-body `|s: &S|` or struct-field-access phantoms; input-hash updated). S-2.11 v1.11→v1.12 also in-flight (schema_for!(S) sweep, round-10 straggler — Arch Compliance + Library Requirements `schema_for!(S)` claims removed; caller-supplied input_schema parameter). S-1.07 v1.4→v1.5 (round-12: AC-013 register_into signature de-genericized StateGraph<S>→StateGraph per BC-2.02.001 {PC-001}; input-hash updated). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 137 EC; points UNCHANGED 303."

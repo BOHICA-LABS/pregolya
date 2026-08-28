@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.82"
+version: "3.83"
 status: active
 producer: state-manager
 timestamp: 2026-08-27T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.83 (round-19/F-P2A089-01/D-289/2026-08-27): BC-INDEX Full BC Catalog VP column normalized — 10 bare **VP** entries resolved to numbered **VP-NNN** form (BC-2.01.005→**VP-014**; BC-2.01.006→**VP-014**; BC-2.03.001→**VP-001**; BC-2.04.006→**VP-002**; BC-2.05.007→**VP-011**; BC-2.09.007→**VP-015**; BC-2.09.008→**VP-016**; BC-2.10.005→**VP-012**; BC-2.13.004→**VP-003**; BC-2.23.005→**VP-013**; all per VP-INDEX). VP-seed count UNCHANGED: 15 unique / 16 BC rows. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137. TV registry 753→754 (test-vectors.md §TV-013; product-owner burst)."
   - "3.82 (round-18/F-P2A086-01/2026-08-27): VP Seed BCs Summary and header corrected — v3.79 bump (15→17 VP Seed) was incorrect: it conflated 'VP Seed BCs' (formal verification seeds) with 'VPs registered' (17 total including VP-004/VP-005 integration VPs). VP-004 and VP-005 are integration VPs registered in VP-INDEX but NOT formal verification seeds per the VP Seed BCs table's established semantic and its exclusion footnote. REVERTED: header '17 VP Seed' → '15 VP Seed' (leave '17 VPs registered'); §Summary '17 unique VPs (18 BC rows)' → '15 unique VPs (16 BC rows)'. VP-014 second BC-row (BC-2.01.006 — RunnableParallel Branch Failure) restored in VP Seed BCs table — VP-014 dual-anchors BC-2.01.005+BC-2.01.006; the 16 BC rows reflects 15 unique VP seeds plus the one extra for the VP-014 dual-anchor. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.81 (round-14/semantic-reconciliation/F-P2A078..080/D-286/2026-08-27): 2 BC version bumps (round-14 semantic per-document re-read — prose/enum/struct/filename/hybrid-anchor residue). BC-2.09.007 (v2.0→v2.1): F-P2A079-02 (LOW) §Architecture-Anchors + {PC-003}/{INV-001}/EC-002 — `Tool::invoke`/`ToolOutput` prose replaced with `DynTool::invoke_dyn`/`serde_json::Value`; input-hash refreshed to a403241. BC-2.09.008 (v1.8→v1.9): §Description and Traceability CAJ — 'compiled StateGraph'/'StateGraph' prose → `CompiledStateGraph` (concrete non-generic Rust type per {PRE-001}); input-hash refreshed to 51a07ba. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
   - "3.80 (round-12/GAP-01-type-grounding-remaining/D-285/2026-08-27): 2 BC version bumps (remaining round-12 type-grounding propagation). BC-2.09.008 (v1.7→v1.8): EC-007 scenario prose — extract_output closure re-grounded from typed `|s: &S| json!({ \"answer\": s.answer })` to `|s: &serde_json::Value| json!({ \"answer\": s[\"answer\"] })`; TV-001 closure updated; TV-010 closure updated; {INV-005} 'credential-bearing fields of GraphState S' → 'credential-bearing keys of the returned serde_json::Value'; Traceability CAJ: StateGraph<S> → StateGraph (non-generic); zero residual |s: &S|/struct-field-access/StateGraph<S> in live body. BC-2.08.012 (v1.4→v1.5): {PC-001} register_into signature de-genericized — StateGraph<S> → StateGraph (non-generic; architect-confirmed BC-2.02.001 {PC-001}; StateGraph builder is non-generic per S-1.14). BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."
@@ -175,8 +176,8 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.01.002 | Message Type-Safety (AiMessage / HumanMessage / SystemMessage / ToolMessage) | CAP-001 | | DI-008 | P0 | | | ss-01/BC-2.01.002.md |
 | BC-2.01.003 | Runnable Trait Invocation — invoke, stream, batch | CAP-002 | | | P0 | | | ss-01/BC-2.01.003.md |
 | BC-2.01.004 | Runnable Pipe Composition (A.pipe(B) = AB Chain) | CAP-002 | | | P0 | | | ss-01/BC-2.01.004.md |
-| BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | CAP-039 | | DI-016, DI-014 | P1 | | **VP** | ss-01/BC-2.01.005.md |
-| BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | CAP-039 | | DI-016, DI-014 | P1 | | **VP** | ss-01/BC-2.01.006.md |
+| BC-2.01.005 | RunnableParallel Construction and Concurrent Invocation | CAP-039 | | DI-016, DI-014 | P1 | | **VP-014** | ss-01/BC-2.01.005.md |
+| BC-2.01.006 | RunnableParallel Branch Failure — Fail-Fast, Structured Error, No Partial Results | CAP-039 | | DI-016, DI-014 | P1 | | **VP-014** | ss-01/BC-2.01.006.md |
 | BC-2.01.007 | RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract | CAP-039 | | DI-014 | P1 | | | ss-01/BC-2.01.007.md |
 | BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | CAP-039 | | DI-016, DI-014 | P1 | | | ss-01/BC-2.01.008.md |
 | BC-2.02.001 | StateGraph Node Definition with Typed Channel Assignment | CAP-003 | | | P0 | | | ss-02/BC-2.02.001.md |
@@ -185,7 +186,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.02.004 | EphemeralValue Cleared-After-Super-Step Semantics (Red Gate — R10) | CAP-003 | | | P0 | **RG** | | ss-02/BC-2.02.004.md |
 | BC-2.02.005 | Conditional Edge Routing Function | CAP-003 | | | P0 | | | ss-02/BC-2.02.005.md |
 | BC-2.02.006 | Send API Dynamic Fan-Out | CAP-003 | | | P0 | | | ss-02/BC-2.02.006.md |
-| BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | CAP-004 | NE-17 | DI-001 | P0 | | **VP** | ss-03/BC-2.03.001.md |
+| BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | CAP-004 | NE-17 | DI-001 | P0 | | **VP-001** | ss-03/BC-2.03.001.md |
 | BC-2.03.002 | Concurrent LastValue Write Rejection Raises InvalidUpdateError | CAP-004 | | DI-001 | P0 | | | ss-03/BC-2.03.002.md |
 | BC-2.03.003 | Deterministic Reducer Application Order (Task-Identity Sort) | CAP-004 | NE-17 | DI-001 | P0 | | | ss-03/BC-2.03.003.md |
 | BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | CAP-005 | | DI-002 | P0 | | | ss-04/BC-2.04.001.md |
@@ -193,7 +194,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | CAP-005 | | DI-004 | P0 | | | ss-04/BC-2.04.003.md |
 | BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | CAP-005 | | DI-004 | P0 | | | ss-04/BC-2.04.004.md |
 | BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | CAP-005 | | DI-002 | P0 | | | ss-04/BC-2.04.005.md |
-| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | NE-12 | DI-005 | P0 | | **VP** | ss-04/BC-2.04.006.md |
+| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | CAP-005 | NE-12 | DI-005 | P0 | | **VP-002** | ss-04/BC-2.04.006.md |
 | BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | CAP-005 | NE-11 | | P0 | | | ss-04/BC-2.04.007.md |
 | BC-2.04.008 | FTS Conversation Search Over Checkpoint History (Single-Process; SQLite FTS5) | CAP-005 | | DI-002,DI-008,DI-014 | P1 | | | ss-04/BC-2.04.008.md |
 | BC-2.05.001 | Interrupt Suspension with Durable State Persistence | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.001.md |
@@ -202,7 +203,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.05.004 | Command(resume=value) API Contract for Programmatic Resume | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.004.md |
 | BC-2.05.005 | Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.005.md |
 | BC-2.05.006 | Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC) | CAP-006 | | DI-003 | P0 | | | ss-05/BC-2.05.006.md |
-| BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny (VP-011 Kani Seed) | CAP-034 | | DI-014 | P1 | | **VP** | ss-05/BC-2.05.007.md |
+| BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny (VP-011 Kani Seed) | CAP-034 | | DI-014 | P1 | | **VP-011** | ss-05/BC-2.05.007.md |
 | BC-2.05.008 | Skip-Hook-on-Resume Invariant — ToolApprovalRequest Checkpoint Persistence; Command(resume=PreToolDecision); No Re-Invocation of pre_invoke | CAP-034 | | DI-014 | P1 | | | ss-05/BC-2.05.008.md |
 | BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision; tool_approval_request/resolved; compaction_event; error) — 16 Variants | CAP-007 | | DI-011 | P0 | | | ss-06/BC-2.06.001.md |
 | BC-2.06.002 | run_id + parent_ids Correlation Across All Streaming Events | CAP-007 | | | P0 | | | ss-06/BC-2.06.002.md |
@@ -233,13 +234,13 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | CAP-010 | | DI-014 | P1 | **RG** | | ss-09/BC-2.09.004.md |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | CAP-010 | | DI-014 | P1 | **RG** | | ss-09/BC-2.09.005.md |
 | BC-2.09.006 | MCP Server Tool Advertisement (tools/list; mcp::server) | CAP-021 | | DI-008,DI-014 | P1 | | | ss-09/BC-2.09.006.md |
-| BC-2.09.007 | MCP Server Tool Invocation (tools/call; External Client Executes Registered Tool) | CAP-021 | | DI-008,DI-010,DI-014 | P1 | | **VP** | ss-09/BC-2.09.007.md |
-| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | CAP-021 | | DI-008,DI-010,DI-014 | P1 | | **VP** | ss-09/BC-2.09.008.md |
+| BC-2.09.007 | MCP Server Tool Invocation (tools/call; External Client Executes Registered Tool) | CAP-021 | | DI-008,DI-010,DI-014 | P1 | | **VP-015** | ss-09/BC-2.09.007.md |
+| BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | CAP-021 | | DI-008,DI-010,DI-014 | P1 | | **VP-016** | ss-09/BC-2.09.008.md |
 | BC-2.10.001 | BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent | CAP-012 | | | P0 | | | ss-10/BC-2.10.001.md |
 | BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | CAP-012 | | | P0 | | | ss-10/BC-2.10.002.md |
 | BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt \| summarize); Remaining-Budget Exposure | CAP-012 | | | P0 | | | ss-10/BC-2.10.003.md |
 | BC-2.10.004 | Budget Escalation to HITL Interrupt (Soft-Limit Escalate Path and Hard-Ceiling on_ceiling=Escalate Path) | CAP-012 | | DI-003 | P0 | | | ss-10/BC-2.10.004.md |
-| BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; BudgetConfig Extension; Watermark Arithmetic (VP-012 Kani Seed) | CAP-035 | | DI-014 | P1 | | **VP** | ss-10/BC-2.10.005.md |
+| BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; BudgetConfig Extension; Watermark Arithmetic (VP-012 Kani Seed) | CAP-035 | | DI-014 | P1 | | **VP-012** | ss-10/BC-2.10.005.md |
 | BC-2.10.006 | Compaction Execution — ConversationSnapshot from FTS; Mid-Run Window REPLACEMENT; CompactionEvent → EvidenceJournal; Checkpoint Immutability; DefaultSummarizationPolicy | CAP-035 | | DI-014 | P1 | | | ss-10/BC-2.10.006.md |
 | BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | CAP-013 | | DI-012 | P0 | | | ss-11/BC-2.11.001.md |
 | BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | CAP-013 | NE-06 | DI-012 | P0 | | | ss-11/BC-2.11.002.md |
@@ -257,7 +258,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | CAP-015 | NE-01 | DI-006 | P1 | | | ss-13/BC-2.13.001.md |
 | BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | CAP-015 | | DI-006,DI-015 | P1 | | | ss-13/BC-2.13.002.md |
 | BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | CAP-015 | | DI-006 | P1 | | | ss-13/BC-2.13.003.md |
-| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | DI-007 | P1 | | **VP** | ss-13/BC-2.13.004.md |
+| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | CAP-015 | NE-02 | DI-007 | P1 | | **VP-003** | ss-13/BC-2.13.004.md |
 | BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | NE-02 | DI-007 | P1 | | | ss-13/BC-2.13.005.md |
 | BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | CAP-015 | NE-16 | DI-006 | P1 | | | ss-13/BC-2.13.006.md |
 | BC-2.13.007 | Environment Variable Sanitization at Sandbox Execution Boundary | CAP-015 | | DI-006,DI-008,DI-010 | P1 | | | ss-13/BC-2.13.007.md |
@@ -303,7 +304,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001/008 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.002.md |
 | BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback (EditConfig::fuzzy_threshold); Conditional Retry Safe; E-TOOLS-001/003/008 | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.003.md |
 | BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001/008; DirEntry Struct | CAP-036 | | DI-014 | P1 | | | ss-23/BC-2.23.004.md |
-| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/007 (VP-013 Kani Seed) | CAP-037 | | DI-014,DI-015 | P1 | | **VP** | ss-23/BC-2.23.005.md |
+| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/007 (VP-013 Kani Seed) | CAP-037 | | DI-014,DI-015 | P1 | | **VP-013** | ss-23/BC-2.23.005.md |
 | BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/008/009 | CAP-038 | | DI-014 | P1 | | | ss-23/BC-2.23.006.md |
 
 ## Carry-Forward Notes (RESOLVED at Phase 1 Step D, 2026-07-14)
@@ -323,6 +324,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.83 | 2026-08-27 | round-19/F-P2A089-01: BC-INDEX Full BC Catalog VP column normalized — 10 bare **VP** entries resolved to numbered **VP-NNN** form (BC-2.01.005→**VP-014**; BC-2.01.006→**VP-014**; BC-2.03.001→**VP-001**; BC-2.04.006→**VP-002**; BC-2.05.007→**VP-011**; BC-2.09.007→**VP-015**; BC-2.09.008→**VP-016**; BC-2.10.005→**VP-012**; BC-2.13.004→**VP-003**; BC-2.23.005→**VP-013**; all per VP-INDEX). VP-seed count UNCHANGED: 15 unique / 16 BC rows. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137. TV registry 753→754 (test-vectors.md §TV-013). | round-19 F-P2A089-01 D-289 |
 | 3.82 | 2026-08-27 | round-18/F-P2A086-01+F-P2A085-01: VP Seed BCs count adjudication — reverted v3.79 incorrect bump (15→17 VP Seed): VP-004/VP-005 are integration VPs (not formal seeds per footnote); header '17 VP Seed' → '15 VP Seed'; §Summary '17 unique VPs (18 BC rows)' → '15 unique VPs (16 BC rows)'; VP-014/BC-2.01.006 row restored (VP-014 dual-anchors BC-2.01.005+BC-2.01.006; §Decision 2). Observability.md F-P2A085-01 (MED): mcp.graph_tool.force_approve_write_blocked — `%action_risk` → `?action_risk` (Debug sigil); message positional `{}` → `{:?}`; catalog table field schema `&str (Display)` → `Option<ActionRisk> (Debug)` (v1.8→v1.9). BC census UNCHANGED 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED 17. EC UNCHANGED 137. | round-18 D-288 |
 | 3.81 | 2026-08-27 | round-14/semantic-reconciliation: 2 BC version bumps. BC-2.09.007 (v2.0→v2.1): F-P2A079-02 (LOW) §Architecture-Anchors + {PC-003}/{INV-001}/EC-002 — `Tool::invoke`/`ToolOutput` prose → `DynTool::invoke_dyn`/`serde_json::Value`; input-hash refreshed to a403241. BC-2.09.008 (v1.8→v1.9): §Description and Traceability CAJ — 'compiled StateGraph' prose → `CompiledStateGraph` (concrete non-generic type per {PRE-001}); input-hash refreshed to 51a07ba. BC census UNCHANGED 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED 17. EC UNCHANGED 137. | round-14 D-286 |
 | 3.80 | 2026-08-27 | round-12/GAP-01-type-grounding-remaining: 2 BC version bumps. BC-2.09.008 (v1.7→v1.8): EC-007/TV-001/TV-010 extract_output closures `\|s: &S\|`→`\|s: &serde_json::Value\|` + JSON index access; {INV-005} 'GraphState S fields'→'serde_json::Value keys'; Traceability CAJ `StateGraph<S>`→`StateGraph`. BC-2.08.012 (v1.4→v1.5): {PC-001} `register_into(graph: &mut StateGraph<S>)`→`register_into(graph: &mut StateGraph)` (non-generic; BC-2.02.001 {PC-001}). BC census UNCHANGED 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED 17. EC UNCHANGED 137. | round-12 D-285 |

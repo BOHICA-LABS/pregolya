@@ -22,6 +22,8 @@
 #   Fn(&S)                           — retired extract_output type; canonical is Fn(&serde_json::Value)
 #   |s: &S| closure parameter        — retired closure form
 #   schema_for!(S)                   — construction-time schema derivation; caller must supply
+#   DynTool::invoke (word-boundary)  — no such method; canonical is DynTool::invoke_dyn (ADR-029 v1.7)
+#   PreToolCallHook::PendingHumanApproval — no such path; canonical is PreToolDecision::PendingHumanApproval (BC-2.05.007)
 #
 # GAP-01 SCOPING NOTE
 # ───────────────────
@@ -82,6 +84,10 @@
 #   probe_10b_vp_canonical_filename_exempt:       vp-016-slug.md canonical form → NOT flagged
 #   probe_11a_ec_tv_hybrid_flagged:               EC-TV-3 hybrid anchor in GAP-01 file → WARN fired
 #   probe_11b_ec_tv_hybrid_phantom_negation:      EC-TV-N with PHANTOM negation → NOT flagged
+#   probe_12a_dyntool_invoke_flagged:             DynTool::invoke (phantom) in body → WARN fired
+#   probe_12b_dyntool_invoke_dyn_exempt:          DynTool::invoke_dyn canonical form → NOT flagged
+#   probe_13a_pretoolcallhook_pa_flagged:         PreToolCallHook::PendingHumanApproval in body → WARN fired
+#   probe_13b_pretoolcalldecision_pa_exempt:      PreToolDecision::PendingHumanApproval canonical → NOT flagged
 # POL-30: probe fixtures live in $TMPDIR, never under .factory/specs/ or .factory/stories/.
 #
 # EXIT CONTRACT
@@ -264,6 +270,30 @@ PHANTOM_PATTERNS = [
     ("EC-TV-N (hybrid anchor — canonical is EC-NNN or TV-NNN separately, never combined)",
      re.compile(r'\bEC-TV-\d+\b'),
      "gap01_scope"),
+
+    # ── F-P2A087-PG-01 ── DynTool::invoke (phantom method path)
+    # The object-safe DynTool trait exposes: name, description, schema, action_risk, invoke_dyn.
+    # There is NO 'invoke' method — the phantom form 'DynTool::invoke' never resolves.
+    # Canonical: DynTool::invoke_dyn (ADR-029 changelog v1.7).
+    # Regex uses \b word-boundary: 'invoke' followed by '_' (word char) has no word boundary,
+    # so DynTool::invoke_dyn (and any other DynTool::invoke_xxx suffix) does NOT match.
+    # Only the bare DynTool::invoke form at a word boundary is flagged.
+    # ALWAYS scoped: DynTool is used across the entire tool-invocation surface, not GAP-01 only.
+    ("DynTool::invoke (phantom — canonical is DynTool::invoke_dyn; ADR-029 v1.7)",
+     re.compile(r'\bDynTool::invoke\b'),
+     "always"),
+
+    # ── F-P2A087-PG-02 ── PreToolCallHook::PendingHumanApproval (phantom enum path)
+    # PreToolCallHook is the hook trait (single method: pre_invoke) — it is NOT an enum and
+    # has no variants.  PendingHumanApproval is a PreToolDecision enum variant (BC-2.05.007).
+    # The :: path form 'PreToolCallHook::PendingHumanApproval' therefore never resolves.
+    # Canonical: PreToolDecision::PendingHumanApproval.
+    # Bare prose without '::' (e.g., "a PreToolCallHook returns PendingHumanApproval") does
+    # NOT match this regex — only the literal '::' path form is flagged.
+    # ALWAYS scoped: the pre-tool-call hook / HITL surface spans all hook-bearing specs.
+    ("PreToolCallHook::PendingHumanApproval (phantom path — canonical is PreToolDecision::PendingHumanApproval; BC-2.05.007)",
+     re.compile(r'PreToolCallHook::PendingHumanApproval'),
+     "always"),
 ]
 
 # Anchor patterns for GAP-01 scope detection (live-body content only)
@@ -950,6 +980,126 @@ SPECEOF
   echo "[SELF-PROBE PASS] probe_11b_ec_tv_hybrid_phantom_negation_exempt: EC-TV-N with PHANTOM negation marker in live body is exempt."
 }
 
+# ── Self-probe 12a: DynTool::invoke in live body MUST be flagged ─────────────
+# DynTool::invoke is a phantom method — the canonical form is DynTool::invoke_dyn.
+# This 'always'-scoped pattern fires without any GAP-01 anchor.
+probe_12a_dyntool_invoke_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The dispatcher calls DynTool::invoke on each registered tool and collects the results.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_12a_dyntool_invoke_flagged: DynTool::invoke in live body was NOT flagged."
+    echo "  Expected a HIT for 'DynTool::invoke (phantom — canonical is DynTool::invoke_dyn)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'DynTool::invoke'; then
+    echo "[SELF-PROBE FAIL] probe_12a_dyntool_invoke_flagged: HIT found but not for DynTool::invoke pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_12a_dyntool_invoke_flagged: DynTool::invoke phantom is detected."
+}
+
+# ── Self-probe 12b: DynTool::invoke_dyn canonical form MUST NOT be flagged ────
+# The \b word-boundary on the pattern means 'invoke_dyn' (underscore is a word char,
+# so no boundary after 'invoke') does NOT trigger the DynTool::invoke pattern.
+probe_12b_dyntool_invoke_dyn_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The dispatcher calls DynTool::invoke_dyn on each registered tool, returning serde_json::Value.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_12b_dyntool_invoke_dyn_exempt: DynTool::invoke_dyn was incorrectly flagged."
+    echo "  'invoke_dyn' has no word boundary after 'invoke' (underscore is a word char) — must not match."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_12b_dyntool_invoke_dyn_exempt: DynTool::invoke_dyn canonical form is not flagged."
+}
+
+# ── Self-probe 13a: PreToolCallHook::PendingHumanApproval MUST be flagged ─────
+# PreToolCallHook is a trait (not an enum) — PendingHumanApproval is a
+# PreToolDecision variant.  The :: path form is always a phantom.
+probe_13a_pretoolcallhook_pa_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+When the policy requires human sign-off, pre_invoke returns PreToolCallHook::PendingHumanApproval
+to pause execution until the operator confirms.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_13a_pretoolcallhook_pa_flagged: PreToolCallHook::PendingHumanApproval was NOT flagged."
+    echo "  Expected a HIT for 'PreToolCallHook::PendingHumanApproval (phantom path)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'PreToolCallHook::PendingHumanApproval'; then
+    echo "[SELF-PROBE FAIL] probe_13a_pretoolcallhook_pa_flagged: HIT found but not for PreToolCallHook::PendingHumanApproval pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_13a_pretoolcallhook_pa_flagged: PreToolCallHook::PendingHumanApproval phantom is detected."
+}
+
+# ── Self-probe 13b: PreToolDecision::PendingHumanApproval MUST NOT be flagged ─
+# The canonical enum path uses PreToolDecision, not PreToolCallHook — no :: match.
+# Bare prose "a PreToolCallHook returns PendingHumanApproval" also must NOT match
+# because the pattern requires the '::' separator.
+probe_13b_pretoolcalldecision_pa_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+When the policy requires human sign-off, pre_invoke returns PreToolDecision::PendingHumanApproval
+to pause execution until the operator confirms. The PreToolCallHook implementation yields
+PendingHumanApproval via the PreToolDecision enum, not directly as a hook variant.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_13b_pretoolcalldecision_pa_exempt: canonical PreToolDecision::PendingHumanApproval was incorrectly flagged."
+    echo "  Pattern must only match 'PreToolCallHook::PendingHumanApproval', not 'PreToolDecision::' or bare prose."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_13b_pretoolcalldecision_pa_exempt: PreToolDecision::PendingHumanApproval canonical form is not flagged."
+}
+
 # ── Main live check ───────────────────────────────────────────────────────────
 check_phantom_types() {
   local raw_output
@@ -994,6 +1144,8 @@ check_phantom_types() {
     echo "    ActionRisk...None        → ActionRisk: ReadOnly|Low|Medium|High; None = Option::None"
     echo "    VP-NNN.md (bare)         → canonical: vp-NNN-slug-description.md (lowercase vp, with slug)"
     echo "    EC-TV-N (hybrid)         → canonical: EC-NNN (error case) or TV-NNN (test vector) separately"
+    echo "    DynTool::invoke          → DynTool::invoke_dyn (object-safe dispatch; ADR-029 v1.7)"
+    echo "    PreToolCallHook::PendingHumanApproval → PreToolDecision::PendingHumanApproval (BC-2.05.007)"
     echo "    Reference: ADR-029 §Symbol Grounding"
   fi
 }
@@ -1027,7 +1179,11 @@ probe_10a_vp_bare_filename_flagged
 probe_10b_vp_canonical_filename_exempt
 probe_11a_ec_tv_hybrid_flagged
 probe_11b_ec_tv_hybrid_phantom_negation_exempt
-echo "[SELF-PROBE] All 17 self-probes passed — check is not false-green."
+probe_12a_dyntool_invoke_flagged
+probe_12b_dyntool_invoke_dyn_exempt
+probe_13a_pretoolcallhook_pa_flagged
+probe_13b_pretoolcalldecision_pa_exempt
+echo "[SELF-PROBE] All 21 self-probes passed — check is not false-green."
 echo ""
 
 echo "════════════════════════════════════════════"

@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.23
 epic_id: E-12
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T14:00:00Z
 changelog:
+  - "1.5 (F-P2A087-01/round-19/2026-08-27): Symbol-canon propagation: DynTool::invoke → DynTool::invoke_dyn at 3 sites — AC-001 §Description, §Subsystem anchor, Architecture Compliance Rule 1. DynTool::invoke is not a method on the object-safe DynTool trait; the executor-dispatch seam is invoke_dyn. input-hash updated to 1b3760d."
   - "1.4 (P2A-046 OBS-1/2026-08-24): AC-009 heading compressed ordinal normalized to stable tag"
   - "1.3 (P2A-043 F-04-adj/2026-08-24): 6 wrong-ordinal EC-source citations corrected per PO adjudication"
   - "1.2 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags"
@@ -18,7 +19,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "5ac9ddd"
+input-hash: "1b3760d"
 traces_to:
   - behavioral-contracts/BC-2.05.007
   - behavioral-contracts/BC-2.05.008
@@ -69,7 +70,7 @@ Comfortable within context window. No split required.
 ## Acceptance Criteria
 
 ### AC-001: pre_tool_dispatch called for every tool invocation, no bypass
-`pre_tool_dispatch` is called before every `DynTool::invoke` call. There is no code path that invokes a tool without passing through `pre_tool_dispatch`. The retry ordering is: `circuit_breaker → pre_tool_dispatch → invoke → retry_policy.record`.
+`pre_tool_dispatch` is called before every `DynTool::invoke_dyn` call. There is no code path that invokes a tool without passing through `pre_tool_dispatch`. The retry ordering is: `circuit_breaker → pre_tool_dispatch → invoke → retry_policy.record`.
 (traces to BC-2.05.007 INV-002)
 
 ### AC-002: Approve branch — tool invoked with original args
@@ -124,7 +125,7 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 | `pre_tool_dispatch` | `pregolya_graph::hitl` | pregolya-graph | Effectful (async wrapper; calls hook, peels `PendingHumanApproval`, may interrupt run) |
 | `ToolApprovalRequest` | `pregolya_graph::hitl` | pregolya-graph | Pure (data type) |
 
-**Subsystem anchor:** SS-05 owns this story's scope because SS-05 is the HITL Interrupt / Resume subsystem per ARCH-INDEX Subsystem Registry. `pre_tool_dispatch` is a gate within the graph's tool-call dispatch cycle that executes before `DynTool::invoke`. The hook trait, decision enum, and pure-routing functions are core HITL contracts.
+**Subsystem anchor:** SS-05 owns this story's scope because SS-05 is the HITL Interrupt / Resume subsystem per ARCH-INDEX Subsystem Registry. `pre_tool_dispatch` is a gate within the graph's tool-call dispatch cycle that executes before `DynTool::invoke_dyn`. The hook trait, decision enum, and pure-routing functions are core HITL contracts.
 
 **Dependency anchors:**
 - Depends on S-1.20: HITL interrupt/resume core machinery (`interrupt()`, `Command(resume=...)`) is built in S-1.20. Pre-tool-call hook uses `interrupt(ToolApprovalRequest)` to suspend the run.
@@ -191,7 +192,7 @@ The `ToolApprovalRequest` interrupt payload is persisted using the msgpack check
 
 ## Architecture Compliance Rules
 
-1. **No bypass of pre_tool_dispatch.** Every code path from the executor to `DynTool::invoke` must pass through `pre_tool_dispatch`. The executor must have no "fast path" that skips the hook.
+1. **No bypass of pre_tool_dispatch.** Every code path from the executor to `DynTool::invoke_dyn` must pass through `pre_tool_dispatch`. The executor must have no "fast path" that skips the hook.
 2. **Deny branch has zero calls to tool.invoke.** This is a structural requirement (VP-011), not just a test. The Deny arm of `pre_tool_dispatch` must contain no call to `tool.invoke` in its source — not even a conditional one.
 3. **Hook panic → Deny (fail-closed).** The pre_tool_dispatch implementation must wrap hook execution in a catch-unwind or equivalent. A panicking hook must not propagate to crash the executor.
 4. **PendingHumanApproval on resume → immediate error.** No special handling; return early with error before any hook or tool invocation.

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.86"
+version: "2.87"
 status: active
 producer: product-owner
 timestamp: 2026-08-27T00:00:00Z
 phase: 1d
 changelog:
+  - "2.87 (round-19/F-P2A087-02/2026-08-27): §GraphAgentTool GraphToolApprovalPolicy::DenyInterrupts doc-comment: `PreToolCallHook::PendingHumanApproval` → `PreToolDecision::PendingHumanApproval` (F-P2A087-02 HIGH — `PendingHumanApproval` is a variant of enum `PreToolDecision` per BC-2.05.007, NOT an associated item of hook trait `PreToolCallHook` whose only method is `pre_invoke`; sibling `ForceApproveHooks` doc-comment already correctly cited `PreToolDecision::PendingHumanApproval` and is unchanged). TD-VSDD-060 sibling sweep: one live-body `PreToolCallHook::PendingHumanApproval` site in `DenyInterrupts` doc-comment corrected; zero remaining occurrences of `PreToolCallHook::PendingHumanApproval` in live body."
   - "2.86 (round-10/F-P2A072-01+F-P2A072-02+F-P2A072-03/2026-08-27): §GraphAgentTool TYPE-GROUNDING reconciliation. F-P2A072-03 HIGH: `from_graph<S>` redesigned as non-generic: signature changed from `from_graph<S>(name, description, Arc<CompiledGraph<S>>, Fn(&S)->Value) where S: GraphState+Deserialize+JsonSchema` to `from_graph(name, description, Arc<CompiledStateGraph>, schemars::Schema, Fn(&serde_json::Value)->serde_json::Value)`. `CompiledGraph<S>` phantom replaced with `CompiledStateGraph` (non-generic, BC-2.02.001 {PC-001}); `GraphState` phantom removed (NOT a trait — entities-graph.md §GraphState); schema derivation is caller responsibility (`schemars::schema_for!(StateType)` passed as `input_schema`). `extract_output` closure receives `&serde_json::Value` (channel-composed state from `CompiledStateGraph::invoke`) instead of `&S`. Dep-edge source note updated. F-P2A072-02 HIGH: `DenyInterrupts` variant doc-comment `Ok(ToolOutput::Structured)` phantom replaced with `Ok(serde_json::Value from extract_output_result)`. F-P2A072-01 HIGH: `GraphRunner` trait doc-comment `hides CompiledGraph<S>` phantom replaced with `holds Arc<CompiledStateGraph> internally`. TD-VSDD-060 sibling sweep: all three live-body phantom-surface sites in this section corrected in same burst."
   - "2.85 (round-8/F-P2A070-01/2026-08-26): §GraphAgentTool GraphToolApprovalPolicy::DenyInterrupts doc-comment corrected (F-P2A070-01 MED). Two defects fixed: (a) umbrella claim 'Any internal graph interrupt is converted to Err(E-MCP-010)' removed — the PendingHumanApproval→Deny path does NOT raise E-MCP-010; (b) 'graph continues to error terminal state' replaced with 'graph CONTINUES to its own terminal — valid terminal yields Ok; error terminal yields Err with graph's own error (NOT E-MCP-010)'. E-MCP-010 is now correctly scoped to node-level interrupt() parking (RunStatus::Interrupted) only, consistent with BC-2.09.008 {PC-005}/{INV-002}. The 'No interrupted run is persisted to durable checkpoint' statement moved inside the node-level interrupt() bullet where it belongs. TD-VSDD-060 sibling sweep: ForceApproveHooks comment (already correct per round-6 v2.83) and GraphRunner trait comment verified CLEAN — both scope E-MCP-010 to interrupt() only."
   - "2.84 (round-7/F-P2A067-02/2026-08-26): §First-Party Tools error-layer-split doc-comment: E-SBXD-001 name corrected from PathEscapeViolation (never canonical) to WorkspaceEscape (taxonomy canonical; BC-2.13.005, SECURITY). Reconciliation: E-SBXD-001 is the correct code (sandbox-layer escape); only the name label was stale. E-TOOLS-001 PathConfinementViolation on the adjacent line was already correct and is unchanged."
@@ -102,7 +103,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "6261c25"
+input-hash: "b2acd22"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -2304,7 +2305,7 @@ pub enum GraphToolApprovalPolicy {
     /// The interrupted run is NOT persisted to durable checkpoint.
     /// BC-2.09.008 {INV-002}: no `Ok` result is returned when `RunStatus::Interrupted`.
     ///
-    /// **`PreToolCallHook::PendingHumanApproval` → `BoundaryApprovalHook` converts to
+    /// **`PreToolDecision::PendingHumanApproval` → `BoundaryApprovalHook` converts to
     /// `Deny { reason: "HITL_NOT_SUPPORTED_AT_MCP_BOUNDARY" }` → tool NOT invoked; graph
     /// CONTINUES executing.** `E-MCP-010` is NOT raised on the `BoundaryApprovalHook::Deny`
     /// path. If the graph reaches a valid terminal state, BC-2.09.008 {PC-004} applies
