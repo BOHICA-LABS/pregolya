@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.10
 epic_id: E-21
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-28T00:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "6a12735"
+input-hash: "1c0a7f9"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -34,6 +34,7 @@ risk_mitigations: []
 tdd_mode: strict
 # BC status: all 5 BCs active; BC-2.09.004 (VP-004, R11) and BC-2.09.005 (VP-005, R11) are Red Gate BCs; status = draft per Spec-First Gate S-7.01
 changelog:
+  - "1.4 (round-26/F-P2A115-01+F-P2A115-02+O-P2A115-05+O-P2A115-06/2026-08-28): EC-005 corrected to fail-closed: first server timeout/failure aborts whole call as Err(E-MCP-002); no partial tool list returned (BC-2.09.001 EC-004/{PC-005}). AC-013 fallback text aligned to BC-2.09.002 EC-001/TV-006 canonical: ToolMessage{status:Error, content:[\"MCP tool '<name>' returned an error with no content\"]}. EC-003 guardrail-reject fallback aligned to BC-2.09.003 EC-003 canonical: \"Tool result from '<server>/<tool>' was blocked by guardrail policy.\". AC-019 mechanism description corrected: bare ToolException is raised OUTSIDE the isError content-conversion path (not isError=false with metadata in content) per BC-2.09.004 {PRE-002}/{PRE-003}; E-MCP-001 outcome unchanged. Input-hash updated."
   - "1.3 (round-25/F-P2A108-01+F-P2A111-03+F-P2A111-06/2026-08-28): §Behavioral Contracts table: 4 titles synced to BC-INDEX canonical — BC-2.09.001 '...at Runtime', BC-2.09.002 '...Transport', BC-2.09.004 '...Preserving Type Identity (Red Gate — R11)', BC-2.09.005 '...Holds No Live Connections (Red Gate — R11)'. §Architecture Mapping + §File Structure Requirements + §Tasks: `tool.rs` → `discovery.rs`; `guardrail.rs` → `ingress.rs` (DI-012 seam; canonical module names per module-decomposition.md §pregolya-mcp). Input-hash updated."
   - "1.2 (round-24/F-P2A104-01/2026-08-28): AC-026 mirrored from BC-2.09.001 §Description/{PC-003}/{INV-001} (F-P2A104-01) — phantom field on `Arc<dyn DynTool>` replaced by `schema()` accessor; schema surface type corrected from `serde_json::Value` to `schemars::Schema`; test renamed `test_BC_2_09_001_schema_verbatim_passthrough`; `schemars` added to §Library & Framework Requirements. Input-hash updated per BC-2.09.001 §Description/{PC-003}/{INV-001} authoritative input."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
@@ -128,7 +129,7 @@ in the `ToolMessage`. Verified by `test_BC_2_09_002_structured_content_to_mcp_to
 
 ### AC-013 (traces to BC-2.09.002 PC-004 + EC-001)
 When the MCP server returns `isError: true` with an empty content array, the client
-synthesizes a minimal text block: `ContentBlock::Text { text: "(tool returned empty error content)" }`.
+synthesizes `ToolMessage { status: ToolMessageStatus::Error, content: [ContentBlock::Text { text: "MCP tool '<name>' returned an error with no content" }] }` — BC-2.09.002 EC-001/TV-006 canonical form where `<name>` is the actual tool name from the invocation.
 Verified by `test_BC_2_09_002_empty_error_content_fallback_text_block()`.
 
 ### AC-014 (traces to BC-2.09.003 PC-001)
@@ -161,8 +162,10 @@ only fires on successful results. Verified by
 
 ### AC-019 (traces to BC-2.09.004 PC-001 — RED GATE VP-004)
 **Red Gate (VP-004):** The test `test_BC_2_09_004_bare_tool_exception_reraise` asserts that
-a bare `ToolException` raised by the Python tool (propagated as `isError=false` with exception
-metadata in content) is re-raised by the client as `Err(PregolyaError { code: "E-MCP-001", .. })`.
+a bare `ToolException` raised OUTSIDE the `isError` content-conversion path (it is NOT an
+`isError=false` `CallToolResult` carrying metadata; per BC-2.09.004 {PRE-002}/{PRE-003}, the
+`ToolException` is a distinct signal from the `CallToolResult` structure) is re-raised by
+the client as `Err(PregolyaError { code: "E-MCP-001", .. })`.
 This test MUST compile and FAIL before the bare-ToolException detection logic is implemented.
 
 **SID-1 compliance (GAP-003):** The live-server integration test for VP-004 is:
@@ -261,9 +264,9 @@ error. `get_tools` returns `Ok(vec![])` for that server. Verified by
 |----|----------|-------------------|
 | EC-001 | `get_tools(Some("nonexistent_server"))` (traces to BC-2.09.001 PC-009 + EC-008) | `Err(PregolyaError { code: "E-MCP-009", .. })` (McpServerNotConfigured; VAL) — message: `McpServerNotConfigured: no MCP server named '<server>' is configured` |
 | EC-002 | Tool invocation with `McpSessionGuard` that fails to connect | `Err(E-MCP-002)` from session creation; no tool code executed |
-| EC-003 | Guardrail returns `Reject` with empty reason string | `ToolMessage{status:Error, content: [text: "(rejected by guardrail)"]}` — fallback text |
+| EC-003 | Guardrail returns `Reject` with empty reason string | `ToolMessage{status:Error, content: [text: "Tool result from '<server>/<tool>' was blocked by guardrail policy."]}` — BC-2.09.003 EC-003 canonical fallback |
 | EC-004 | `tool_name_prefix: true` with server name containing `__` | Prefix uses `"<server_name>_<tool>"` verbatim — no escaping of the separator |
-| EC-005 | JoinSet fan-out where one server times out | Timeout error for that server is included as `Err` in merged results; other servers' tools still returned as `Ok` entries |
+| EC-005 | JoinSet fan-out where one server times out | The first server transport failure or timeout aborts the whole call with `Err(PregolyaError { code: "E-MCP-002", .. })`; no partial tool list is returned — BC-2.09.001 EC-004/{PC-005} fail-closed; matches S-2.10 AC-005 and AC-003 |
 
 ## Token Budget Estimate (MANDATORY)
 

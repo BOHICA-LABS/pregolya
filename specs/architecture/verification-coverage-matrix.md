@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.19"
+version: "3.20"
 status: active
 producer: architect
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "ebf1e8d"
+input-hash: "2890c63"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.20 (round-26/F-P2A115-04-sibling-sweep/2026-08-28): Iron Law sibling-sweep — add `mcp::registry` MEDIUM row (pregolya-mcp; runtime ToolRegistry store; Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>> concurrent access; register/get/list operations; shared by mcp::server and mcp::discovery; BC-2.09.006/007/008 §Architecture-Anchors; SS-09; integration tests). Required by module-decomposition.md mcp::registry row addition (round-26). Physical rows: 90→91. MEDIUM: 39→40. Tiered total: 81→82. Coverage by Criticality Tier MEDIUM: 39→40. input-hash refreshed."
   - "3.19 (round-25/F-P2A111-03/2026-08-28): Iron Law — add `mcp::session` MEDIUM row (pregolya-mcp; McpSessionGuard RAII; BC-2.09.005 {INV-002} / BC-2.09.002 session lifecycle; SS-09; integration tests). Iron Law — add `mcp::interceptor` MEDIUM row (pregolya-mcp; ToolCallInterceptor trait; onion-order chain BC-2.09.002 {PC-001}; SS-09; integration tests). Required by module-decomposition.md §pregolya-mcp (SS-09) mcp::session/mcp::interceptor row additions. Physical rows: 88→90. Collapse-pair denominator: 87→89. MEDIUM: 37→39. Tiered total: 79→81. Coverage by Criticality Tier MEDIUM: 37→39. input-hash refreshed."
   - "3.18 (round-16/hash-reconciliation/D-287/2026-08-27): POL-21 claim-not-applied fix — v3.17 §Changelog claimed 'input-hash updated to 96ec220' but frontmatter input-hash field was never updated from cbb4bf4. Hook-computed true value = e9944b8. Frontmatter input-hash set to e9944b8. No normative content changes; metadata only."
   - "3.17 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — `mcp::graph_tool` row Notes: `CompiledGraph<S>` → `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}; aligns with ADR-029 §Symbol Grounding). No VP count, module count, or arithmetic changes. input-hash updated to 96ec220."
@@ -89,9 +90,9 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers 90 physical rows (88 from prior bursts + round-25: mcp::session and mcp::interceptor MEDIUM rows).
-> Two collapse-pairs reduce 89 physical rows to 87 distinct modules: (1) `core::runnable`: 2 rows for 1 HIGH module (pipe-associativity + VP-014 key-completeness); (2) `core::serializable`: 2 rows for 1 module spanning CRITICAL (VP-010 Reviver) and HIGH (VP-007 LcSerializable round-trip), counted once in CRITICAL as its highest tier per F-P210-01.
-> Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 39 / LOW 2 = 81 tiered (81 distinct tiered modules). Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
+> This table covers 91 physical rows (88 from prior bursts + round-25: mcp::session and mcp::interceptor MEDIUM rows + round-26: mcp::registry MEDIUM row).
+> Two collapse-pairs reduce 90 physical rows to 88 distinct modules: (1) `core::runnable`: 2 rows for 1 HIGH module (pipe-associativity + VP-014 key-completeness); (2) `core::serializable`: 2 rows for 1 module spanning CRITICAL (VP-010 Reviver) and HIGH (VP-007 LcSerializable round-trip), counted once in CRITICAL as its highest tier per F-P210-01.
+> Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 40 / LOW 2 = 82 tiered (82 distinct tiered modules). Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
 
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
@@ -167,6 +168,7 @@ changelog:
 | mcp::ingress | pregolya-mcp | — | — | — | yes | HIGH tier (F-P172b-15 elevation); untrusted-ingress routing; DI-012 guardrail seam; external-input boundary (BC-2.09.003); parity with graph::provenance HIGH; unit + integration tests |
 | mcp::session | pregolya-mcp | — | — | — | yes | MEDIUM; SS-09; McpSessionGuard RAII no-retained-session invariant; BC-2.09.005 {INV-002} / BC-2.09.002 (session lifecycle); integration tests |
 | mcp::interceptor | pregolya-mcp | — | — | — | yes | MEDIUM; SS-09; ToolCallInterceptor trait; onion-order chain enforcement (BC-2.09.002 {PC-001}); integration tests |
+| mcp::registry | pregolya-mcp | — | — | — | yes | MEDIUM; SS-09; runtime ToolRegistry store; Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>> concurrent access; register/get/list operations; shared by mcp::server (inbound dispatch) and mcp::discovery (population at session startup); BC-2.09.006/007/008 §Architecture-Anchors; integration tests |
 | memory::sqlite | pregolya-memory | — | — | — | yes | SQLite durable backend for long-horizon memory; integration tests |
 | memory::in_memory | pregolya-memory | — | — | — | yes | Ephemeral in-memory backend for test/dev; unit tests |
 | memory::search | pregolya-memory | — | — | — | yes | Keyword, vector, and hybrid search; integration tests |
@@ -191,7 +193,7 @@ changelog:
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | 3 of 12: graph::bsp_engine, checkpoint::session_index, checkpoint::clock | subset | ≥ 95% |
 | HIGH | 28 | 3 (VP-006, VP-012, VP-013) | 8 of 28: core::runnable (pipe assoc. + VP-014), core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels, graph::budget, prompts::injection_guard/VP-006-B | subset | ≥ 90% |
-| MEDIUM | 39 | 0 | some | — | ≥ 80% |
+| MEDIUM | 40 | 0 | some | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | n/a (xtask and pregolya-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
 
 > **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 8 of 28 HIGH (derivation: counted unique modules with proptest column = yes/VP-NNN from per-module table above, grouped by tier; `core::runnable` counted once despite two per-module rows; `core::serializable`/VP-007 counted in HIGH tier; `prompts::injection_guard`/VP-006-B added in v3.15). Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 28 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 11-module coverage (3 CRITICAL + 8 HIGH) with the obligation stated explicitly.

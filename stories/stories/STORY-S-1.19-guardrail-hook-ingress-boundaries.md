@@ -3,11 +3,12 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
+  - "1.4 (round-26/F-P2A113-03/2026-08-28): AC-024 added: SEC-008 panic-profile build obligation mirroring S-2.11 AC-037 — `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` in `pregolya-graph/src/provenance.rs` is voided if release profile sets `panic = \"abort\"`; implementer obligation is `// SEC-008` comment annotation at dispatch site; devops-engineer asserts workspace `Cargo.toml` profile at Phase-3 init. Traces to BC-2.11.002 PC-001 (unconditional hook dispatch). BC-2.11.002 Covered ACs updated to include AC-024. Task 11 added: SEC-008 annotation obligation. Token Budget updated (~5,000 → ~5,500 story spec; total ~25,500). Input-hash updated."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (ADR-027 M3 straggler/2026-08-24): straggler conversion to stable clause anchors."
   - "1.3 (round-25/F-P2A109-01/2026-08-28): Async panic mechanism corrected — synchronous `std::panic::catch_unwind` is inadequate for async `GuardrailHook::evaluate` (cannot catch panics fired during `.await` polling; CWE-248/703; mirrors ADR-029 §Decision 5 / BC-2.09.008 EC-010). Task §5, EC-001, and §Previous Story Intelligence S-1.04 Gotchas row updated to `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(...)))` at dispatch site. SEC-008-style `panic=unwind` build-profile note added. `futures` crate added to §Library & Framework Requirements."
@@ -21,7 +22,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "3094476"
+input-hash: "1d7edfe"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.04]
@@ -56,7 +57,7 @@ tdd_mode: strict
 | BC | Title | Covered ACs |
 |----|-------|------------|
 | BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary | AC-001..AC-004 |
-| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | AC-005..AC-009 |
+| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | AC-005..AC-009, AC-024 |
 | BC-2.11.003 | GuardrailHook Fires at RAG Ingress | AC-010..AC-013 |
 | BC-2.11.004 | GuardrailHook Fires at Memory Ingress | AC-014..AC-016 |
 | BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | AC-017..AC-020 |
@@ -133,6 +134,13 @@ When no hook is registered, exactly one `WARN`-level structured log entry with `
 ### AC-023 (traces to BC-2.11.006 INV-002 — WARN log is machine-parseable)
 The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passthrough"` with structured fields, enabling automated alerting. The log entry is emitted via `tracing::warn!` not `eprintln!`. Verified by `test_BC_2_11_006_warn_log_is_machine_parseable()`.
 
+### AC-024 (traces to BC-2.11.002 PC-001 — SEC-008 panic-profile build obligation)
+**Build-profile prerequisite (SEC-008) — `panic = "unwind"` required in release profile:**
+The workspace `Cargo.toml` release profile MUST pin `panic = "unwind"`. If the release profile
+sets `panic = "abort"`, `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` in `pregolya-graph/src/provenance.rs` is voided — the process aborts on panic instead of unwinding, bypassing the fail-closed catch and exposing a remote denial-of-service (CWE-248/703). This is a Phase-3 devops-engineer obligation (workspace `Cargo.toml` authoring). The pregolya-graph story-level obligation: the implementing engineer MUST add a
+`// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace profile at Phase-3 init`
+comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` dispatch site in `pregolya-graph/src/provenance.rs` to document the `panic = "unwind"` dependency of the ingress fail-closed catch. The devops-engineer asserts the workspace release profile at Phase-3 workspace init. Verified by devops-engineer at Phase-3; implementer obligation is the comment annotation. (See EC-001 for the `catch_unwind` mechanism; see S-2.11 AC-037 for the analogous SEC-008 obligation on the `GraphAgentTool` path.)
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -164,7 +172,7 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~5,000 |
+| This story spec | ~5,500 |
 | BC files (6 BCs) | ~9,000 |
 | S-1.14 context (BSP engine, model context) | ~1,500 |
 | S-1.17 context (StreamEvent for GuardrailDecision) | ~1,000 |
@@ -172,9 +180,9 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 | `pregolya-graph/src/provenance.rs` | ~2,000 |
 | Test files | ~4,500 |
 | Interface-definitions.md (GuardrailHook trait section) | ~800 |
-| **Total** | **~25,000** |
+| **Total** | **~25,500** |
 | Agent context window | ~200K (Sonnet) |
-| **Budget usage** | **~12.5%** |
+| **Budget usage** | **~12.75%** |
 
 ## Tasks (MANDATORY)
 
@@ -188,6 +196,7 @@ The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passth
 8. [ ] Register `guardrail.unregistered_passthrough` in Canonical Structured Event Catalog (SAP-1)
 9. [ ] Export from `pregolya-core/src/lib.rs` and `pregolya-graph/src/lib.rs`
 10. [ ] Run `cargo nextest run -p pregolya-graph -p pregolya-core --no-fail-fast` — all tests green
+11. [ ] Add SEC-008 comment annotation at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` dispatch site in `pregolya-graph/src/provenance.rs`: `// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace Cargo.toml profile at Phase-3 init` (AC-024 / BC-2.11.002 PC-001)
 
 ## Previous Story Intelligence (MANDATORY)
 

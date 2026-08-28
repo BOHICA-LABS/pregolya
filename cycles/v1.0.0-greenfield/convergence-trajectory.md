@@ -3860,3 +3860,51 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 
 **Census UNCHANGED 39/134/17/137/303. TV 754. streak 0/3 (push resets). GATE-READY=NO (HS-C-001 leaks now scrubbed + gated). NEXT: round-25 = P2A-108/109/110/111 (broadened SS-09 MCP client+server deep-audit) + GATE-READY on new HEAD. Expected YES round-25.**
 
+---
+
+## Phase-2 Re-Convergence: Round 26 (D-296; 2026-08-28)
+
+### Round-26 Fix-Burst (D-296; 2026-08-28) — INCOMPLETE-SWEEP SIBLING-MIRROR (CRITICAL→ERROR propagation + SEC-008 sibling-story gap)
+
+**Dominant theme:** Round-26 is the EIGHTH consecutive round with INCOMPLETE-SWEEP SIBLING-MIRROR root cause. Two independent instances: (1) BC-2.09.008 §INV-004 CRITICAL→ERROR fix (D-295) not propagated to error-taxonomy/ADR-029/S-2.11 prose. (2) S-2.11 SEC-008 panic=unwind formalization not mirrored to sibling S-1.19.
+
+**Adversary passes on frozen HEAD a3be9fda179a27f4c3e073d68af9c0ec28d77229:**
+
+| Pass | Findings | Delta | Severity | Status |
+|------|----------|-------|----------|--------|
+| P2A-112 (realizability) | 0 | — | ZERO findings | CLEAN(strict)=YES, CLEAN(PR-merge)=YES |
+| P2A-113 (security) | 5 | — | 3 MED, 2 OBS | NOT CLEAN |
+| P2A-114 (consistency/census/records) | 2 | — | 1 MED, 1 LOW/process-gap | NOT CLEAN |
+| P2A-115 (SS-09 MCP deep-audit) | 7 | — | 1 HIGH, 3 MED, 3 LOW/OBS | NOT CLEAN |
+| CV GATE-READY audit | N/A | — | FAILED (API connection-lost mid-response) | MUST rerun round-27 |
+
+**All findings CLOSED in D-296 fix-burst (all per DIRECTIVE 2 fix-in-scope):**
+
+| Finding | Severity | Closure |
+|---------|----------|---------|
+| F-P2A115-01 | HIGH | S-2.10 EC-005 partial-merge → fail-closed whole-call Err(E-MCP-002) per BC-2.09.001 EC-004/{PC-005} (was type-incoherent Result<Vec<..>> + violated no-silent-partial-failure rule). story-writer. |
+| F-P2A113-01 | MED | ADR-029 §Symbol-Grounding E-MCP-010/011 status PLANNED→EXISTS (minted catalog 136/137). architect. |
+| F-P2A113-02 / F-P2A115-03 | MED | INCOMPLETE-SWEEP: CRITICAL-level→ERROR-level (tracing has no CRITICAL) propagated to error-taxonomy E-MCP-011 + ADR-029 §Decision-4 two prose sites + S-2.11 AC-030/EC-011/Task-33/Arch-Compliance 4 sites. PO+architect+story-writer. |
+| F-P2A113-03 | MED, CWE-248/703 | SEC-008 panic=unwind formalized in S-2.11 but NOT mirrored in sibling S-1.19; S-1.19 AC-024+Task-11 added (pregolya-graph/src/provenance.rs catch-site comment), traced to BC-2.09.008 PC-001. story-writer. |
+| F-P2A114-01 | MED | HS-C-001 frontmatter changelog 1.2/1.3 transposed; reordered 1.5,1.4,1.3,1.2,1.1,1.0 (POL-14/POL-15). PO. |
+| F-P2A115-02 | MED | S-2.10 AC-013 empty-error fallback string → BC-2.09.002 EC-001/TV-006 canonical. story-writer. |
+| F-P2A115-04 | MED | Orphan module mcp::registry resolved: OPTION A standalone module (pregolya-mcp/src/registry.rs, SS-09, MED tier) registered in module-decomposition (universe 75→76) + module-criticality (87→88, MED 39→40, tiered 81→82); BC-2.09.006 anchor de-hedged; BC-2.09.007/008 registry anchors annotated; S-2.11 §File-Structure de-hedged. architect+PO+story-writer. |
+| F-P2A114-02 | LOW, process-gap | `## Category: real-world-corpus` heading contradiction in 13/15 HS files; renamed to `## Real-World Corpus Requirement` across all 15 HS files. PO. |
+| O-P2A115-05 | LOW | S-2.10 EC-003 guardrail-reject fallback string → BC-2.09.003 EC-003 canonical. story-writer. |
+| O-P2A115-06 | LOW | S-2.10 AC-019 bare-ToolException mechanism → BC-2.09.004 {PRE-002}/{PRE-003} canonical outcome (E-MCP-001 unchanged). story-writer. |
+| O-P2A113 | OBS | BC-2.09.008 {INV-001} UUID case-insensitivity note added (aligns S-2.11 Task-35). PO. |
+| O-P2A115-07 | OBS, process-gap | mcp::ingress HIGH-criticality had no VP + vague marker; resolved to concrete Phase-6 Kani P1 commitment (DI-012 guardrail-dispatch correctness invariant, seed at Phase-2 transition, anchored BC-2.09.003). module-criticality block note + BC-2.09.003 §VP. VP census UNCHANGED 17 (seed only; no new VP file). architect+PO. |
+
+**ADJUDICATED NON-FINDING:** P2A-113 AC-013 redaction-rule-ordering OBS — not a defect; no action.
+
+**OPERATIONAL NOTE:** First PO fix run STALLED (stream watchdog, no recovery) after completing most scope; fresh PO run completed BC-2.09.007/008 registry anchors.
+
+**Process-gap candidates codified [D-296] (first self-improvement wave — NOT silent deferrals):**
+- PGAP-NO-CRITICAL-LEVEL: class-wide no-CRITICAL-log-level gate (tracing has no CRITICAL severity)
+- PGAP-SEC-SIBLING-MIRROR: cross-story SEC-obligation sibling-mirror check (grep BC ID → verify all sibling stories carry the obligation)
+- PGAP-HS-TEMPLATE-HEADING: holdout-scenario `## Category:` literal gate (prevent `## Category:` heading from recurrence)
+
+**ROOT CAUSE:** INCOMPLETE-SWEEP SIBLING-MIRROR — round-25 BC-2.09.008 CRITICAL→ERROR fix and S-2.11 SEC-008 formalization not swept to sibling artifacts. See L-214.
+
+**Census UNCHANGED 39/134/17/137/303. TV 754. VP census UNCHANGED 17 (O-P2A115-07 = Phase-6 Kani P1 seed, no new VP file). Module universe 75→76 (+mcp::registry); module-criticality 87→88 (MED 39→40, tiered 81→82). streak 0/3 (push resets per frozen-HEAD rule). GATE-READY FAILED (must rerun round-27 on new HEAD). LESSONS L-214. NEXT: round-27 P2A-116/117/118/119 + GATE-READY re-run on new post-fix HEAD.**
+

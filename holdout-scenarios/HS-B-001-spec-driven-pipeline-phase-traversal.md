@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -21,7 +21,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "5e990da"
+input-hash: "e14b17b"
 traces_to: .factory/planning/holdout-domains/domain-b-dark-factory.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -36,6 +36,8 @@ coverage_areas:
   - composition
   - structured_output
   - providers
+changelog:
+  - "1.1 (F-P2A114-02/round-26/2026-08-28): §Real-World Corpus Requirement: section heading renamed from '## Category: real-world-corpus' to '## Real-World Corpus Requirement' — category-neutral heading per F-P2A114-02; input-hash refreshed to reflect current input state."
 ---
 
 # Holdout Scenario HS-B-001: Spec-Driven Pipeline Phase Traversal with Quality Gate
@@ -114,6 +116,6 @@ Input specification: `{ spec_id: "SPEC-001", description: "A function that compu
 
 ---
 
-## Category: real-world-corpus
+## Real-World Corpus Requirement
 
 Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.

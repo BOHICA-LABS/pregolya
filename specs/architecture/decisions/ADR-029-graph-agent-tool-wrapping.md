@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.8"
+version: "2.9"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.9 (round-26/F-P2A113-01+F-P2A113-02/2026-08-28): F-P2A113-01 MED — §Symbol Grounding: E-MCP-010 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 136)'; E-MCP-011 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 137)'. Both codes are live rows in error-taxonomy.md per BC-2.09.008 assertions; the PLANNED future-tense obligation is stale. F-P2A113-02 MED — §Decision 4 two prose occurrences of 'CRITICAL-level' corrected to 'ERROR-level (tracing::error!)': (1) body sentence describing BoundaryApprovalHook Deny return 'with a CRITICAL-level structured log'; (2) §Rationale sentence describing E-MCP-011 as 'emitted (as a CRITICAL-level log entry and Deny reason)'. The Rust tracing crate has no CRITICAL level (levels are error/warn/info/debug/trace); observability.md and BC-2.09.008 §INV-004 both specify tracing::error! as the emit call. Historical changelog entries exempt per TD-VSDD-091."
   - "2.8 (round-23/F-P2A101-04/2026-08-28): F-P2A101-04 MED — §Decision 4 E-MCP-011 message template aligned verbatim to error-taxonomy.md canonical string: placeholder format corrected from curly-brace ({tool_name}/{action_risk}) to angle-bracket (<tool_name>/<action_risk>); middle clause corrected from 'graphs with declared ActionRisk < Medium for every tool' to 'graphs composed exclusively of read-only tools (ActionRisk < Medium)'. Sibling-check E-MCP-010: §Decision 5 table message confirmed matching error-taxonomy.md verbatim — no additional drift. §Decision 4 illustrative-note updated to reflect table is now verbatim-aligned."
   - "2.7 (round-23/F-P2A101-01+F-P2A103-01+F-P2A103-03/2026-08-28): F-P2A101-01 MED — §Decision 4 node-level interrupt path inline message extended to canonical full form matching error-taxonomy.md E-MCP-010 message template: added remedy clause '; restructure the graph so it does not call interrupt() during a synchronous tools/call invocation'. F-P2A103-01 MED — §Symbol Grounding DynTool and ToolOutput rows: Canonical-Location corrected from pregolya-core/src/core/tool.rs to pregolya-core/src/tool.rs (no core/ path segment); matches BC-2.08.009 and BC-2.08.010 §Architecture Anchors and api-surface.md; sibling sweep of all §Symbol Grounding Canonical-Location cells found no other src/core/ mis-anchors. F-P2A103-03 LOW — §Symbol Grounding PreToolDecision row: added Edit variant to enumeration (canonical four variants: Approve/Deny/Edit/PendingHumanApproval per BC-2.05.007 H1 and ADR-018 §Decision 1)."
   - "2.6 (round-22/F-P2A099-01/2026-08-28): F-P2A099-01 HIGH — §Symbol Grounding three HITL type rows: corrected `Canonical-Location` cells for `PreToolCallHook`, `PreToolDecision`, and `ToolCallPreview` from `pregolya-core` / `pregolya-core/src/core/tool.rs or pregolya-mcp` to `pregolya-graph/src/hitl.rs` (graph::hitl); matches BC-2.05.007 §Architecture Anchors + ADR-018 §Decision 1 which are the cited Source of Truth for each row. Removed `or pregolya-mcp` hedge from `PreToolCallHook` row. `ActionRisk` row (`pregolya-core`) is correct and unchanged."
@@ -363,7 +364,7 @@ Before overriding `PendingHumanApproval` → `Approve`, the `BoundaryApprovalHoo
 check `preview.action_risk` (type: `Option<ActionRisk>` per BC-2.05.007 {PRE-003} —
 `Some(tier)` if the tool is annotated with `#[tool(action_risk = ...)]`, `None` otherwise).
 If `preview.action_risk` is `None` (undeclared — fail-closed per BC-2.05.006 EC-004/{INV-002})
-or `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with a CRITICAL-level
+or `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with an ERROR-level (tracing::error!)
 structured log) instead of `Approve`:
 
 ```rust
@@ -431,8 +432,8 @@ impl PreToolCallHook for BoundaryApprovalHook {
 > authoritative. `error-taxonomy.md` is the authoritative message source for `E-MCP-011`;
 > the taxonomy row supersedes any wording shown in this ADR.
 
-**Rationale for `E-MCP-011`:** `E-MCP-011` is a structured diagnostic emitted (as a
-CRITICAL-level log entry and `Deny` reason) by `BoundaryApprovalHook` when the ActionRisk gate
+**Rationale for `E-MCP-011`:** `E-MCP-011` is a structured diagnostic emitted (as an
+ERROR-level (tracing::error!) log entry and `Deny` reason) by `BoundaryApprovalHook` when the ActionRisk gate
 fires (`None` or `>= Medium`). The hook returns `Deny`; the tool is NOT invoked; the graph
 continues executing toward its terminal state. The terminal result surfaces via the normal
 execution path — `Ok(serde_json::Value from extract_output_result)` if the graph reaches a
@@ -675,8 +676,8 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 | `ToolCallPreview` | `pregolya-graph/src/hitl.rs` | BC-2.05.007 {PRE-003} | EXISTS — canonical type (corrected from `ToolPreview` per F-P2A057-04); lives in `graph::hitl` per BC-2.05.007 §Architecture Anchors |
 | `ActionRisk` | `pregolya-core` | BC-2.05.006/BC-2.05.007 | EXISTS — enum with `ReadOnly`/`Low`/`Medium`/`High` variants; `None` is `Option::None` on `preview.action_risk` (undeclared risk → Deny), NOT an `ActionRisk` variant |
 | `PreToolDecision` | `pregolya-graph/src/hitl.rs` | ADR-018, BC-2.05.007 | EXISTS — four variants: `Approve`, `Deny`, `Edit`, `PendingHumanApproval`; lives in `graph::hitl` per ADR-018 §Decision 1 (BC-2.05.007 H1) |
-| `E-MCP-010 GraphAgentInterruptDenied` | `error-taxonomy.md` | ADR-029 §Decision 5 (PO obligation) | PLANNED — PO must mint in error-taxonomy.md |
-| `E-MCP-011 ForceApproveWriteBlocked` | `error-taxonomy.md` | ADR-029 §Decision 4 (PO obligation) | PLANNED — PO must mint in error-taxonomy.md |
+| `E-MCP-010 GraphAgentInterruptDenied` | `error-taxonomy.md` | ADR-029 §Decision 5 (PO obligation) | EXISTS — minted in error-taxonomy.md (catalog entry 136) |
+| `E-MCP-011 ForceApproveWriteBlocked` | `error-taxonomy.md` | ADR-029 §Decision 4 (PO obligation) | EXISTS — minted in error-taxonomy.md (catalog entry 137) |
 
 **Eliminated phantom surfaces (F-P2A072-01+02+03):**
 - `ToolOutput::Structured { value }` — 16 occurrences across cluster; no such variant exists
@@ -688,6 +689,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.9 | 2026-08-28 | architect | round-26/F-P2A113-01+F-P2A113-02 | F-P2A113-01 MED: §Symbol Grounding E-MCP-010 status "PLANNED — PO must mint in error-taxonomy.md" → "EXISTS — minted in error-taxonomy.md (catalog entry 136)"; E-MCP-011 status "PLANNED — PO must mint in error-taxonomy.md" → "EXISTS — minted in error-taxonomy.md (catalog entry 137)". Both codes are live rows per BC-2.09.008 assertions; stale future-tense obligations removed. F-P2A113-02 MED: §Decision 4 two prose "CRITICAL-level" occurrences corrected to "ERROR-level (tracing::error!)": body sentence "with a CRITICAL-level structured log" and Rationale sentence "emitted (as a CRITICAL-level log entry and Deny reason)". The Rust tracing crate has no CRITICAL level; observability.md and BC-2.09.008 §INV-004 specify tracing::error!. Historical changelog entries exempt. |
 | 2.8 | 2026-08-28 | architect | round-23/F-P2A101-04 | F-P2A101-04 MED: §Decision 4 E-MCP-011 message template aligned verbatim to error-taxonomy.md canonical string — placeholder format corrected from curly-brace ({tool_name}/{action_risk}) to angle-bracket (<tool_name>/<action_risk>); middle clause corrected from 'graphs with declared ActionRisk < Medium for every tool' to 'graphs composed exclusively of read-only tools (ActionRisk < Medium)'. Sibling-check E-MCP-010: §Decision 5 table message confirmed matching error-taxonomy.md verbatim — no additional drift. §Decision 4 illustrative-note updated to reflect table is now verbatim-aligned. |
 | 2.7 | 2026-08-28 | architect | round-23/F-P2A101-01+F-P2A103-01+F-P2A103-03 | F-P2A101-01 MED: §Decision 4 node-level interrupt path inline message extended to canonical full form — added remedy clause '; restructure the graph so it does not call interrupt() during a synchronous tools/call invocation' (byte-identical to error-taxonomy.md E-MCP-010 message template). F-P2A103-01 MED: §Symbol Grounding DynTool and ToolOutput rows — Canonical-Location corrected from pregolya-core/src/core/tool.rs to pregolya-core/src/tool.rs (no core/ path segment); matches BC-2.08.009 and BC-2.08.010 §Architecture Anchors; full §Symbol Grounding sibling sweep found no other src/core/ mis-anchors. F-P2A103-03 LOW: §Symbol Grounding PreToolDecision row — added Edit variant (canonical four: Approve/Deny/Edit/PendingHumanApproval per BC-2.05.007 H1 and ADR-018 §Decision 1). |
 | 2.6 | 2026-08-28 | architect | round-22/F-P2A099-01 | F-P2A099-01 HIGH: §Symbol Grounding — corrected `Canonical-Location` cells for `PreToolCallHook`, `PreToolDecision`, and `ToolCallPreview` from `pregolya-core` to `pregolya-graph/src/hitl.rs` (graph::hitl), matching BC-2.05.007 §Architecture Anchors + ADR-018 §Decision 1. Removed `or pregolya-mcp` hedge from `PreToolCallHook` row. `ActionRisk` row (`pregolya-core`) is correct and unchanged. |

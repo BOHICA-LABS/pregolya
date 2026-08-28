@@ -1,7 +1,7 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.17"
+version: "2.18"
 status: active
 producer: architect
 timestamp: 2026-08-28T00:00:00Z
@@ -10,11 +10,12 @@ inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "a60bca4"
+input-hash: "7ec5915"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.18 (round-26/F-P2A115-04+O-P2A115-07/2026-08-28): F-P2A115-04 MED — Iron Law: add `mcp::registry` MEDIUM row (pregolya-mcp; SS-09; `ToolRegistry` Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>; `register`/`get`/`list` operations; shared by mcp::server dispatch and mcp::discovery population; BC-2.09.006/007/008 §Architecture Anchors; no Kani VP; MEDIUM consistent with mcp::interceptor/mcp::session sibling pattern; canonical file `pregolya-mcp/src/registry.rs`). Classification Summary: MEDIUM 39→40; Total 87→88; tiered 81→82. Breakdown note: 38→39 MEDIUM module-level. O-P2A115-07 OBS — `mcp::ingress` HIGH VP obligation note added: concrete Phase-6 Kani P1 commitment for DI-012 guardrail-dispatch correctness invariant (BC-2.09.003); replaces prior open 'will be authored by the architect' deferral. VP census UNCHANGED at 17 (no new VP seeded; Phase-2 seed scheduled). input-hash refreshed (7ec5915)."
   - "2.17 (round-25/F-P2A111-03/2026-08-28): Iron Law — add `mcp::session` MEDIUM row (pregolya-mcp; SS-09; `McpSessionGuard` RAII; `SessionSource::OnDemand`; `Connection` enum; BC-2.09.002/005 anchors; no Kani VP — R11 RAII invariant testable by integration; MEDIUM consistent with mcp::client/mcp::discovery sibling pattern; canonical file `pregolya-mcp/src/session.rs`). Iron Law — add `mcp::interceptor` MEDIUM row (pregolya-mcp; SS-09; `ToolCallInterceptor` trait; `_build_interceptor_chain`; BC-2.09.002 anchor; no Kani VP; MEDIUM consistent with mcp sibling pattern; canonical file `pregolya-mcp/src/interceptor.rs`). Required by module-decomposition.md §pregolya-mcp (SS-09) mcp::session/mcp::interceptor row additions. Classification Summary: MEDIUM 37→39 (36→38 module-level); Total 85→87; tiered 79→81. Breakdown note updated."
   - "2.16 (round-21/F-P2A095-01+F-P2A095-02/2026-08-28): COMPLETE VP-column backfill — exhaustive cross-check of all VP-INDEX §VP-Catalog rows against Module Classification VP column. Corrections: `graph::hitl` VP `—` → `VP-011` (Kani P0; BC-2.05.007; graph::hitl is CRITICAL per Kani P0 criterion — VP column was `—` despite VP-011 being listed in VP-INDEX); `core::runnable` VP `—` → `VP-014` (proptest P1; BC-2.01.005 + BC-2.01.006); `mcp::exception` VP `—` → `VP-004` (integration P1; BC-2.09.004); `mcp::client` VP `—` → `VP-005` (integration P1; BC-2.09.005). Multi-VP host: `prompts::injection_guard` VP `VP-006` → `VP-006, VP-006-B` (VP-006 Kani P1 + VP-006-B proptest P1, both anchoring BC-2.18.004; multi-VP-host notation). CRITICAL Security Profile table: `graph::hitl` VP `—` → `VP-011`. VP column is tool-agnostic (integration P1 VPs included per P2A-095 adjudication). After edit: zero `—` entries for VP-hosting modules. F-P2A095-02: no 'out of scope' deferral carried; v2.15 'Pre-existing OBS gap' deferral fully discharged by this edit. Tier assignments and Classification Summary totals UNCHANGED."
   - "2.15 (round-20/F-P2A092-03/2026-08-27): VP column backfill for GAP-01 additions — mcp::graph_tool VP column `—` → `VP-016` (proptest P1; BC-2.09.008; ADR-029 §Decision-2); mcp::sanitize VP column `—` → `VP-015` (unit P1; BC-2.09.007; companion GAP-01 sibling per §mcp::sanitize addition changelog entry). Both rows existed before this fix; VP columns were `—` despite the mcp::sanitize and mcp::graph_tool addition changelog entries explicitly citing the VP numbers — inconsistent with the established pattern for other proptest P1 VP hosts (VP-007/VP-008 both show their VP IDs in this column). Tier assignments UNCHANGED (MEDIUM for both; proptest P1 does not satisfy HIGH tier criterion of Kani P1 VP host). Classification Summary totals UNCHANGED. Pre-existing OBS gap: mcp::exception/mcp::client VP-004/VP-005 integration P1 columns also show `—`; out of round-20 scope. Input-hash refreshed (inputs changed since mcp::graph_tool addition changelog entry was authored)."
@@ -131,6 +132,7 @@ changelog:
 | `mcp::discovery` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::ingress` | — | pregolya-mcp | SS-09 | HIGH | — | ≥ 90% | P5 |
 | `mcp::interceptor` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
+| `mcp::registry` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `mcp::session` | — | pregolya-mcp | SS-09 | MEDIUM | — | ≥ 80% | P5 |
 | `memory::sqlite` | — | pregolya-memory | SS-15 | MEDIUM | — | ≥ 80% | P5 |
 | `memory::in_memory` | — | pregolya-memory | SS-15 | MEDIUM | — | ≥ 80% | P5 |
@@ -194,12 +196,12 @@ changelog:
 |------|-------------|
 | CRITICAL | 12 |
 | HIGH | 28 |
-| MEDIUM | 39 |
+| MEDIUM | 40 |
 | LOW | 2 |
 | — (definitions-only/exempt) | 6 |
-| **Total** | **87** |
+| **Total** | **88** |
 
-> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 38 MEDIUM module-level (incl. mcp::graph_tool added GAP-01/ADR-029; mcp::session and mcp::interceptor added round-25) + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 81 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier).
+> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 39 MEDIUM module-level (incl. mcp::graph_tool added GAP-01/ADR-029; mcp::session and mcp::interceptor added round-25; mcp::registry added round-26) + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 82 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier).
 
 ## CRITICAL Module — Security Profile
 
@@ -241,3 +243,15 @@ All 17 NE patterns from COMPARATIVE-ASSESSMENT are anchored. Architecture-specif
 > **F-P172b-15 elevation (v2.1):** `mcp::ingress` raised MEDIUM → HIGH. Rationale: `mcp::ingress` and `graph::provenance` are both DI-012 guardrail-dispatch Boundary modules implementing the same pattern (pure untrusted-ingress routing + effectful `GuardrailHook` dispatch). `graph::provenance` was classified HIGH at v2.0. `mcp::ingress` handles the EXTERNAL untrusted-input side (BC-2.09.003) — the entry point for tool invocations arriving from MCP clients. Under the Production-Grade Default, the external-ingress side must not have a lower kill-rate target than the internal guardrail consumer at the same protocol seam. No justification exists for the asymmetry.
 >
 > **Iron Law gap — eval::judge (v2.1):** `pregolya-standard-tests::eval::judge` added as MEDIUM module row. The `eval.judge_infra_error` structured event in observability.md identifies this module as the emitter (linkage restored in observability.md §Catalog via FIX-BURST-276-WAVE-C1, a concurrent PO fix; the emitter linkage was not yet present in observability.md when this Iron Law entry was added in v2.1 — see v2.1 changelog correction in v2.3). BC-2.08.008 scopes the judge score aggregation behavior (Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome, NE-15). The module executes LLM judge calls (async I/O, Effectful Shell), has a behavioral contract, and emits structured events — all three criteria that require an Iron Law entry in module-decomposition.md (see also purity-boundary-map.md Effectful Shell row added in same burst). The pre-existing `pregolya-standard-tests` crate-level row remains as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law for the specific module with observable behavior.
+
+> **mcp::ingress HIGH VP Obligation (O-P2A115-07/round-26):** `mcp::ingress` (HIGH, SS-09)
+> is the only HIGH-criticality SS-09 module — the external-untrusted-input entry point for
+> DI-012 guardrail dispatch (BC-2.09.003). Its ≥90% kill-rate target requires a formal
+> verification property. Concrete commitment: a **Kani P1** harness scoped to the
+> guardrail-dispatch correctness invariant (DI-012 — every inbound MCP tool call routes
+> through `GuardrailHook::evaluate` before content enters model context) will be authored at
+> **Phase-6 formal hardening**, anchored to BC-2.09.003. VP seed is scheduled at Phase-2
+> transition; the VP column shows `—` as provisional until the seed is minted; this note is
+> the load-bearing Phase-6 commitment replacing the prior open deferral. PO handoff: BC-2.09.003
+> §Verification Properties "will be authored by the architect" language must be updated to
+> cite this Phase-6 Kani P1 commitment explicitly.

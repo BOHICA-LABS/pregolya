@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "70f6eb7"
+input-hash: "fe92613"
 traces_to: STATE.md
 ---
 
@@ -3241,3 +3241,34 @@ pregolya Phase-2 GAP-01 re-convergence, round-24 fix-burst CLOSED. D-294: 7 find
 - factory-artifacts: HEAD of round-24 D-294 commit — use `git -C .factory log -1 --format=%H` for exact SHA.
 
 ### STATE: v6.05, timestamp 2026-08-28T07:00:00Z
+
+---
+
+## Archived Checkpoint: D-295 (round-25 SESSION-WRAP; archived 2026-08-28 by D-296 round-26 wrap)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence; round-25 fix-burst CLOSED at this wrap HEAD; 7 consecutive rounds (19-25) each NOT CLEAN, streak 0/3, findings now narrow last-corner incomplete-sweep/records items with every class mechanically gated; NEXT = run round-26 (P2A-112/113/114 + P2A-115 broadened SS-09 MCP client+server deep-audit + GATE-READY) on the wrap HEAD → if all CLEAN(strict)+GATE-READY yes, streak advances 1/3.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
+- factory-artifacts: HEAD of this round-25 D-295 wrap commit — use `git -C .factory log -1 --format=%H` for exact SHA.
+- No .worktrees/. No open PRs expected.
+
+### PER-WORKSTREAM
+- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-25 closed at this wrap HEAD. RESUME NEXT-ACTION: dispatch round-26 adversary passes P2A-112/113/114 + P2A-115 (broadened SS-09 MCP client+server deep-audit) on THIS HEAD. Streak 0/3 on THIS HEAD (frozen-HEAD rule: any new push resets to 0/3).
+- Convergence-tail guidance: rounds 19-25 found new INCOMPLETE-SWEEP/records classes each round. Round-25 root-cause: INCOMPLETE-SWEEP SIBLING-MIRROR — async-panic fix applied to S-2.11 (round-21) never propagated to sibling S-1.19. Root-cause pattern: fix applied to direct-story-in-scope, sibling-mirror story not swept. CLASS-LEVEL GATE: verify-module-name-consistency.sh (SS-09 registry↔BC↔story file-name cross-check) now wired. If round-26 surfaces further residue: sweep ALL SS-09-related BC/story pairs (BC-2.09.001..008 + S-1.16/S-2.10/S-2.11) for any remaining client-server mirror gaps.
+
+### STANDING HUMAN-GATE OBS (6 HRQs — carry-forward from rounds 20-22)
+(a) HRQ-1: full 3/3 CLEAN human confirmation required before Phase-2 gate. (b) HRQ-2: GraphAgentTool CompiledStateGraph non-generic redesign (material change to human-approved GAP-01 D-275) — needs explicit acknowledgment before Phase-3. (c) HRQ-3: VP-FILENAME-CONVENTION adjudicated keep-as-is; human confirm. (d) HRQ-4: verify-ac-pc-trace CHECK-2 ADVISORY→BLOCKING promotion human decision. (e) HRQ-5: interface-definitions↔BC-prose consistency gate. (f) HRQ-6: .factory/specs/behavioral-contracts/ss-TBD/ empty directory — OBS, non-blocking; carry-forward to Phase-2 gate. NOTE: OBS-P2A094-1 SEC-008 (pregolya-mcp release panic=unwind) is a human-authorized deferral to Phase-3 workspace Cargo.toml authoring.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion (CLI/web-UI/eval/trace-inspector) — starts AFTER the Phase-2 approval gate.
+- DTU clones: dtu_clones_built: pending (openai/anthropic/ollama) — Phase-4 prerequisite.
+
+### DECISION DELTA
+D-295 = round-25 fix-burst + SESSION-WRAP close. Findings closed: F-P2A109-01 [HIGH] S-1.19 async-panic FutureExt::catch_unwind guardrail + SEC-008 note (INCOMPLETE-SWEEP SIBLING-MIRROR of round-21 S-2.11 §AC-033); F-P2A111-01 [HIGH] mcp::ingress phantom reconciled→ingress.rs (DI-012 HIGH seam; registry+BC-2.09.003+S-2.10 reconciled); F-P2A108-01/111-02/03/04/05/06 [MED] SS-09 module→file reconciliation 8 BCs + S-2.10 §File-Structure/§Architecture-Mapping; F-P2A110-02 [MED] BC-INDEX §VP-Seed-BCs 17/18→15/16 superseding annotation; F-P2A110-03 [MED] D-293 wording monotonic+version-aligned; F-P2A108-02 [LOW/records] ::core::→parenthetical; F-P2A110-01 [LOW/records] BC-2.09.001 stale §AC-026→§AC-003; O-P2A111-07/08 [OBS] TV-012 reorder+CRITICAL→ERROR. PROCESS-GAPS: verify-security-literal-propagation.sh corpus-wide; verify-holdout-asymmetry.sh E-code negative-lookbehind; verify-story-changelog-direction.sh header; NEW verify-module-name-consistency.sh. LESSONS L-a/L-b/L-c codified. GATE-READY=YES (spec-perimeter). Census UNCHANGED 39/134/17/137/303. TV 754.
+
+### OPERATIONAL NOTE
+Rounds 19-25: 7 consecutive NOT CLEAN passes. Dominant root cause class: INCOMPLETE-SWEEP SIBLING-MIRROR — a fix applied to one story/BC is not propagated to its sibling. Class mechanically gated by verify-module-name-consistency.sh (SS-09 canonical module→file mapping). Round-25 added mcp::session and mcp::interceptor rows to module-decomposition + module-criticality (Iron Law count 73→75; criticality registry 85→87). Rounds-25 pass counts: P2A-108=2, P2A-109=1, P2A-110=3, P2A-111=8. Round-26 is the first pass on this wrap HEAD.
+
+### STATE: v6.06, timestamp 2026-08-28T09:00:00Z

@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.34"
+version: "1.35"
 status: active
 producer: architect
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-28T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -14,6 +14,7 @@ input-hash: "12ac4b8"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.35 (round-26/F-P2A115-04-sibling-sweep/2026-08-28): Iron Law sibling-sweep — add `mcp::registry` Boundary row (pregolya-mcp; `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>` concurrent access; register/get/list pure dispatch logic; shared by mcp::server and mcp::discovery; BC-2.09.006/007/008 §Architecture-Anchors; SS-09). Required by module-decomposition.md mcp::registry row addition (round-26). Boundary 12→13; total 88→89."
   - "1.34 (round-25/F-P2A111-03/2026-08-28): Iron Law — add `mcp::session` Effectful Shell row (pregolya-mcp; McpSessionGuard RAII; creates network connection on construction, drops/disconnects on drop; Connection enum dispatches Stdio/HTTP-SSE/StreamableHttp/WebSocket transports; SessionSource::OnDemand lifecycle; I/O-bound; BC-2.09.005 {INV-002} / SS-09). Iron Law — add `mcp::interceptor` Effectful Shell row (pregolya-mcp; ToolCallInterceptor trait + _build_interceptor_chain factory; wraps effectful MCP tool call invocations in onion-order chain; interceptors may perform I/O; BC-2.09.002 {PC-001} / SS-09). Required by module-decomposition.md §pregolya-mcp (SS-09) mcp::session/mcp::interceptor row additions. Effectful Shell 38→40; total 86→88. Module-decomposition universe updated in intro: 78→80 (72→74 tiered + 6 definitions-only/exempt)."
   - "1.33 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — `mcp::graph_tool` Effectful Shell row: `CompiledGraph<S>` → `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}; aligns with ADR-029 §Symbol Grounding). Sibling sweep: no other CompiledGraph<S> live-body sites in this file (v1.32 changelog entry retains old symbol as historical record; grandfathered per TD-VSDD-091). input-hash updated to 12ac4b8."
   - "1.32 (GAP-01/ADR-029/2026-08-26): Iron Law — add `mcp::graph_tool` Effectful Shell row (pregolya-mcp; async graph execution via `CompiledGraph<S>` run; I/O-bound; non-deterministic across invocations; not Kani-provable; STATE-ISOLATION invariant enforced structurally by `extract_output` closure pattern, not formal verification; BC-2.09.008 / SS-09 / ADR-029 / VP-016 proptest P1). Required by ADR-029 mcp::graph_tool module addition. Effectful Shell 37→38; total 85→86. Module-decomposition universe updated in intro: 77→78 (72 tiered + 6 definitions-only/exempt). Input-hash refresh pending (state-manager task)."
@@ -179,6 +180,7 @@ dispatch is integration-tested.
 | `core::retry` | pregolya-core | Policy evaluation: `ToolRetryPolicy`, `CircuitBreaker` state transitions (allow/deny/open/half-open), `global_limit` counter | Retry execution (actual re-invoke) is effectful; the pure policy layer returns `BreakerDecision` to the caller |
 | `checkpoint::saver` (trait impl) | pregolya-checkpoint | put_writes validation | Backend I/O (sqlite/postgres/memory) |
 | `mcp::ingress` | pregolya-mcp | Untrusted-ingress routing decision | GuardrailHook dispatch |
+| `mcp::registry` | pregolya-mcp | `register(name, tool)` / `get(name)` / `list()` dispatch logic; pure HashMap key validation and collection traversal | `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>` concurrent access; blocking write-lock guards; shared by `mcp::server` (inbound dispatch) and `mcp::discovery` (population at session startup); BC-2.09.006/007/008 §Architecture-Anchors; SS-09 |
 | `server::stores` | pregolya-server | `IdempotencyStore`/`RateLimitStore`/`RunStore` trait interface definitions (pure seams per NE-08) | Backend I/O when trait impl is dispatched (store reads/writes) |
 | `sandbox::policy` | pregolya-sandbox | `SandboxPolicy` evaluation: pure compatibility check of policy requirements against backend capabilities; `Err(PolicyNotEnforceable)` on mismatch (NE-01 / SS-13) | Effectful backend enforcement when policy is applied (calls sandbox backend) |
 | `memory::write_guard` | pregolya-memory | pure `MemoryWriteGuard::validate()` call (synchronous, no I/O per ADR-012 Decision 1); returns `WriteGuardDecision` (Allow/Deny/Transform) | effectful `MemoryStore` write commit/abort; injection-scanner guard enforcement (ADR-012 / BC-2.15.005) |

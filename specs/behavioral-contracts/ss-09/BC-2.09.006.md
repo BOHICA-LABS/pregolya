@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.006
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (D-260-header-norm/2026-08-26): EC subsection headers normalized to D-260 canonical ### EC-NNN form (braces removed); verify-ac-pc-trace resolution fix; no semantic change."
   - "1.6 (round-5/F3/2026-08-26): F3 [MED] — {PC-002}: tool.input_schema() corrected to tool.schema() per DynTool::schema() canonical (interface-definitions.md DynTool trait and Tool trait; no behavioral change to MCP protocol semantics)."
   - "1.7 (round-25/F-P2A111-05/2026-08-28): F-P2A111-05 [MED] — §Verification Properties and §VP Anchors: VP-MCPSRV-01 and VP-MCPSRV-02 annotated as '(informal / non-registered)' — they are NOT in VP-INDEX (source of truth). Mirror of treatment applied to sibling BC-2.09.007 VP-MCPCALL-01/02 in round-22 F-P2A099-04. IDs and history preserved (append-only per append_only_numbering)."
+  - "1.8 (round-26/F-P2A115-04/2026-08-28): F-P2A115-04 [MED] — §Architecture Anchors: de-hedged ToolRegistry file anchor; '(or shared with client)' replaced with '(mcp::registry standalone module, SS-09)' per architect OPTION A decision. Standalone module placement is now authoritative."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -181,7 +182,7 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 ## Architecture Anchors
 
 - `pregolya-mcp/src/server.rs` (`mcp::server`) — `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` definitions; `tools/list` handler; transport binding (per ADR-013 §Consequences — MCP server role placement in pregolya-mcp, mcp::server module; ADR-012 has no MCP content and is not the governing ADR for CAP-021)
-- `pregolya-mcp/src/registry.rs` (or shared with client) — `ToolRegistry` read by `tools/list` handler
+- `pregolya-mcp/src/registry.rs` (mcp::registry standalone module, SS-09) — `ToolRegistry` read by `tools/list` handler
 
 ## Story Anchor
 

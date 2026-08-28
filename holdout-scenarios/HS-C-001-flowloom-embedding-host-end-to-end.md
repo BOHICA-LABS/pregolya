@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-08-28T00:00:00Z
@@ -57,10 +57,11 @@ coverage_areas:
   - tenancy
 coverage_gap_pending: []
 changelog:
+  - "1.6 (F-P2A114-01+F-P2A114-02/round-26/2026-08-28): F-P2A114-01: changelog entries v1.2 and v1.3 reordered to correct descending sequence (v1.3 dated 2026-08-27 before v1.2 dated 2026-08-26 per POL-14/POL-15 date-monotonicity; entry text unchanged). F-P2A114-02: section heading renamed from '## Category: real-world-corpus' to '## Real-World Corpus Requirement' — category-neutral heading; body reconciliation prose unchanged."
   - "1.5 (round-24/F-P2A105-01+F-P2A105-02+GAP-R24-01+GAP-R24-02/2026-08-28): EXHAUSTIVE asymmetry scrub (round-23 was incomplete). (a) §Failure Guidance Check 5 fail bullet: removed all internal identifiers (BC-2.09.008 {PC-002}, {PC-003}/{PC-004}, {INV-001}, VP-016, E-MCP-010, {INV-002}); rewritten as observable-behavior language only. (b) §Evaluation Rubric must-pass threshold paragraph: removed 'backed by BC-2.09.008/VP-016/E-MCP-010' and 'GAP-01 resolved 2026-08-26' provenance text; states only that all six checks are must-pass and Check 5 carries its own 0.10 weight. (c) Sweept §Scenario, §Verification Approach (all steps), §Evaluation Rubric (table + threshold), §Failure Guidance, and §Edge Conditions — zero remaining BC/VP/E-code/module-path identifiers. (d) §Edge Conditions EC-006: removed stale '(Contingent on gap resolution.)' marker (GAP-01 resolved 2026-08-26). (e) §Information Asymmetry Confirmation: rewritten as CLOSED-SET declaration enumerating evaluator-facing sections confirmed FREE and exempted non-evaluator metadata sections. Traceability retained in §Behavioral Contract Linkage table and §Coverage Gap note (non-evaluator metadata)."
   - "1.4 (round-23/F-1/2026-08-28): F-1 [BLOCKER]: Asymmetry scrub — §Verification Approach step 8 and §Evaluation Rubric Check 5 purged of internal identifiers (BC/VP/error codes). Each internal ID replaced with an observable behavioral description at the wire and JSON-RPC response level. No scenario semantics changed; Check 5 must-pass requirement and 0.10 weight unchanged."
-  - "1.2 (F-P2A-065-06/2026-08-26): Terminology correction only — scenario semantics unchanged. Coverage-gap resolution note (line referencing E-MCP-010): corrected 'EXEC severity' to 'EXEC category, severity: broken' — EXEC is a category label, not a severity value; the severity value for E-MCP-010 is 'broken'. No scenario steps, checks, preconditions, or expected behaviors altered."
   - "1.3 (round-12/GAP-01-type-grounding/2026-08-27): BC-Coverage table type-grounding — traceability metadata only, scenario narrative unchanged. {PC-003}/{PC-004} row: 'extract_output → ToolOutput::Structured' → 'extract_output → serde_json::Value' (DynTool::invoke_dyn returns Result<serde_json::Value, PregolyaError>; ToolOutput::Structured is a phantom variant per ADR-029 §Symbol Grounding). {INV-001}+VP-016 row: 'ToolOutput contains only extract_output-selected fields' → 'the serde_json::Value returned by invoke_dyn contains only extract_output-selected fields'."
+  - "1.2 (F-P2A-065-06/2026-08-26): Terminology correction only — scenario semantics unchanged. Coverage-gap resolution note (line referencing E-MCP-010): corrected 'EXEC severity' to 'EXEC category, severity: broken' — EXEC is a category label, not a severity value; the severity value for E-MCP-010 is 'broken'. No scenario steps, checks, preconditions, or expected behaviors altered."
   - "1.1 (GAP-01 resolved, 2026-08-26): BC-2.09.008 (GraphAgentTool; mcp::graph_tool) human-approved v1 scope addition (ADR-029). GAP-01 marked RESOLVED — STATE-ISOLATION {INV-001} VP-016 proptest P1 proof target, fail-closed interrupt {INV-002} E-MCP-010 minted. Check 5 promoted to first-class must-pass (must_pass: yes, 0.10 weight retained). BC linkage table extended with four BC-2.09.008 rows. Sealed note, Check 5 heading, Verification step 8, Evaluation Rubric, and Failure Guidance un-contingented."
   - "1.0 (initial, 2026-08-26): HS-C-001 authored for Flowloom embedding use case. Seven-primitive traceability verified. Coverage gap HS-C-001-GAP-01 (StateGraph→Tool wrapping absent) surfaced."
 ---
@@ -408,7 +409,7 @@ use only and must not be surfaced to the evaluator.
 
 ---
 
-## Category: real-world-corpus
+## Real-World Corpus Requirement
 
 Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter
 `category:` field). No real-world corpus is required for this `integration-boundaries` test.

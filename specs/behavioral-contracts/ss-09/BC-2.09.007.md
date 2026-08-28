@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "2.2"
+version: "2.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,12 +28,13 @@ changelog:
   - "2.0 (round-10/GAP-01-type-grounding/2026-08-27): Type-grounding reconciliation — `DynTool::invoke_dyn` return type corrected per ADR-029 §Symbol Grounding (architect symbol-existence audit): returns `Result<serde_json::Value, PregolyaError>` (NOT `ToolOutput`). {PC-002} result_text selection rule rewritten: rule now operates on the `serde_json::Value` returned by `invoke_dyn` directly — `Value::Null` → `\"null\"`, `Value::String(s)` → `s` verbatim, other `Value` types (Object/Array/Bool/Number) → `serde_json::to_string(&value)` (compact JSON). Success-path credential boundary note updated: credential material must not be embedded in the `serde_json::Value` returned by `invoke_dyn`. TV-009 updated: `ToolOutput::Text{ text }` → `Ok(Value::String(text))`. Zero residual `ToolOutput::Structured` in live body text post-edit."
   - "2.1 (round-14/F-P2A079-02/2026-08-27): F-P2A079-02 [LOW] — §Architecture Anchors server.rs bullet rewritten: `Tool::invoke` → `DynTool::invoke_dyn`; `ToolOutput` → `serde_json::Value`; ToolRegistry annotation added `(Arc<dyn DynTool>)`. {PC-003} and {INV-001} prose corrected: `Tool::invoke` → `DynTool::invoke_dyn` (MCP server dispatches via the object-safe seam, not the generic trait). EC-002 §Scenario corrected: `Tool::invoke` → `DynTool::invoke_dyn`. All four live-body `Tool::invoke` occurrences eliminated."
   - "2.2 (round-22/F-P2A099-04/2026-08-28): F-P2A099-04 [OBS]: §Verification Properties table — VP-015 Phase cell corrected from 'Wave 2' to 'Phase 3' (VP-015.md `proof_phase: 3` is authoritative per source-of-truth precedence rule 4; BC conflated wave axis with phase axis). VP-MCPCALL-01 and VP-MCPCALL-02 annotated as '(informal / non-registered)' — only VP-MCPCALL-03 was elevated to formal VP-015 per B-SS09-11-arch-adjudication v1.7; VP-MCPCALL-01/02 remain historical; annotation prevents reader confusion with promoted VP-015."
+  - "2.3 (round-26/POL-24-sibling-consistency/2026-08-28): §Architecture Anchors registry.rs bullet annotated with `(mcp::registry standalone module, SS-09)` for sibling consistency with BC-2.09.006 §Architecture-Anchors (architect OPTION A: mcp::registry is a standalone module registered in module-decomposition and module-criticality)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "ad45ee0"
+input-hash: "bcccd77"
 extracted_from: null
 modified: []
 deprecated: null
@@ -229,7 +230,7 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 ## Architecture Anchors
 
 - `pregolya-mcp/src/server.rs` (`mcp::server`) — `tools/call` request handler: parse arguments, look up tool in `ToolRegistry` (`Arc<dyn DynTool>`), call `DynTool::invoke_dyn`, serialize the returned `serde_json::Value` to `CallToolResult`, format JSON-RPC responses for success / tool-error / protocol-error cases
-- `pregolya-mcp/src/registry.rs` — `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>` used by the invocation handler (DynTool is the object-safe dispatch seam; ADR-005 §Adjacent Trait Object-Safety Adjudications)
+- `pregolya-mcp/src/registry.rs` (mcp::registry standalone module, SS-09) — `ToolRegistry::get(name: &str) -> Option<Arc<dyn DynTool>>` used by the invocation handler (DynTool is the object-safe dispatch seam; ADR-005 §Adjacent Trait Object-Safety Adjudications)
 
 ## Story Anchor
 

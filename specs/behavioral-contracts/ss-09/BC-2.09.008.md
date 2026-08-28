@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "2.4"
+version: "2.5"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -30,12 +30,13 @@ changelog:
   - "2.2 (round-22/F-P2A098-01+F-P2A098-02/2026-08-28): F-P2A098-01 [MED]: {INV-001} §Framework sanitization pass scope — §RunnableConfig doc attribution corrected; §RunnableConfig is defined in interface-definitions.md §RunnableConfig (not entities-server.md); prior semicolon grouping '...§Thread, §Run; §RunnableConfig' replaced with explicit '...§Thread, §Run and interface-definitions.md §RunnableConfig (`thread_id: Option<Uuid>`)' attribution per ADR-029 §Decision 3 and §Decision 4 source-of-truth; no sanitizer-scope semantic change. F-P2A098-02 [LOW/records]: changelog v2.0 and v2.1 §Decision 3 hyphen-form citations corrected to space form per ADR-022 §Decision 5 citation convention."
   - "2.3 (round-23/O-P2A102-03/2026-08-28): O-P2A102-03 [LOW/records]: v2.2 changelog double-§ citation corrected — 'per ADR-029 §Decision 3 §Decision 4 source-of-truth' reworded to 'per ADR-029 §Decision 3 and §Decision 4 source-of-truth' per ADR-022 §Decision 5 no-chained-§ rule."
   - "2.4 (round-25/O-P2A111-08+O-P2A111-07/2026-08-28): O-P2A111-08 [OBS] — {INV-004} and EC-009: 'CRITICAL-level structured log' corrected to 'ERROR-level (highest severity) structured log (tracing::error!)'; Rust tracing crate has no CRITICAL level (levels are error/warn/info/debug/trace); ERROR is the highest severity; observability.md concretizes the intended level as tracing::error!. TV-008 and TV-012 'CRITICAL log' aligned to same terminology for consistency. O-P2A111-07 [OBS] — §Canonical Test Vectors: TV-012 moved to ascending-numeric position after TV-011 (was out-of-sequence between TV-008 and TV-009); append-only IDs preserved, ordering only."
+  - "2.5 (round-26/P2A-113-OBS+POL-24-sibling-consistency/2026-08-28): P2A-113 [OBS] — {INV-001} `sanitize_internal_ids` UUID regex note updated: pattern is applied case-insensitively (consistent with S-2.11 Task-35 which mandates the case-insensitive flag). POL-24 — §Architecture Anchors registry.rs bullet annotated with `(mcp::registry standalone module, SS-09)` for sibling consistency with BC-2.09.006 §Architecture-Anchors (architect OPTION A: mcp::registry is a standalone module registered in module-decomposition and module-criticality)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "2409690"
+input-hash: "e2fd72b"
 extracted_from: null
 modified: []
 deprecated: null
@@ -166,7 +167,9 @@ overrides `PreToolCallHook` approval decisions only.
   `Uuid`):** The `sanitize_internal_ids` pass covers `run_id` (a `Uuid`) and server-layer
   `thread_id` (also a `Uuid` per entities-server.md §Thread, §Run and
   interface-definitions.md §RunnableConfig (`thread_id: Option<Uuid>`)) identically. The regex is version-agnostic:
-  `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`.
+  `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` (applied
+  case-insensitively; consistent with S-2.11 Task-35 which mandates the
+  case-insensitive flag so that mixed-case UUID representations are also redacted).
   Note: `FtsSearchConfig.thread_id: Option<&str>` is an FTS query-filter parameter (not a
   graph execution identifier) and never reaches a `GraphAgentTool` error-message path; it
   is outside the scope of this invariant.
@@ -358,7 +361,7 @@ devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
 
 - `pregolya-mcp/src/graph_tool.rs` (`mcp::graph_tool`) — `GraphAgentTool` struct implementing `DynTool`; `GraphToolApprovalPolicy` enum; `GraphRunner` type-erased trait; `BoundaryApprovalHook` internal struct; `from_graph` constructor; inputSchema derivation; `extract_output` state-isolation enforcement; E-MCP-010 interrupt-denied error path (ADR-029 §Decision 1, ADR-029 §Decision 2, ADR-029 §Decision 3, ADR-029 §Decision 4, ADR-029 §Decision 5)
 - `pregolya-mcp/src/sanitize.rs` (`mcp::sanitize`) — `redact_credentials` function shared with `mcp::server` per BC-2.09.007 {INV-003}
-- `pregolya-mcp/src/registry.rs` — `ToolRegistry` into which `GraphAgentTool` is registered
+- `pregolya-mcp/src/registry.rs` (mcp::registry standalone module, SS-09) — `ToolRegistry` into which `GraphAgentTool` is registered
 
 ## Story Anchor
 

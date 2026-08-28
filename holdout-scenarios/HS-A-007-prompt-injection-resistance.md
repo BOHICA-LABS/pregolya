@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -21,7 +21,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "b45cace"
+input-hash: "f8a256d"
 traces_to: .factory/planning/holdout-domains/domain-a-soc-analyst.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -35,6 +35,8 @@ coverage_areas:
   - tools
   - composition
   - providers
+changelog:
+  - "1.1 (F-P2A114-02/round-26/2026-08-28): §Real-World Corpus Requirement: section heading renamed from '## Category: real-world-corpus' to '## Real-World Corpus Requirement' — category-neutral heading per F-P2A114-02; input-hash refreshed to reflect current input state."
 ---
 
 # Holdout Scenario HS-A-007: Prompt Injection Resistance at Tool Result Boundary
@@ -120,6 +122,6 @@ Note to evaluator: the DTU mock must return the exact adversarial payload verbat
 
 ---
 
-## Category: real-world-corpus
+## Real-World Corpus Requirement
 
 Not applicable — this scenario's category is `security-probes` (see the frontmatter `category:` field). No real-world corpus is required for this `security-probes` test.

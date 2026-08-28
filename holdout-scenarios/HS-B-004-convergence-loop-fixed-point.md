@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.3"
+version: "1.4"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -21,7 +21,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "5e990da"
+input-hash: "e14b17b"
 traces_to: .factory/planning/holdout-domains/domain-b-dark-factory.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -35,10 +35,11 @@ coverage_areas:
   - graph_execution
   - checkpoint_resume
 changelog:
+  - "1.4 (F-P2A114-02/round-26/2026-08-28): §Real-World Corpus Requirement: section heading renamed from '## Category: real-world-corpus' to '## Real-World Corpus Requirement' — category-neutral heading per F-P2A114-02; input-hash refreshed; changelog entries reordered to strict DESCENDING per POL-14 (prior entries 1.0 and 1.1 were out-of-order at positions 3 and 4)."
   - "1.3 (F-P2A011-04, P2A-011-fix-burst, 2026-08-20): Raw error-code identifier removed from §Behavioral Contract Linkage table — BC-2.03.001 Clause Tested cell rewrote from 'halts loop with E-GRAPH-017 when max-iterations reached before convergence' to 'halts the loop with a structured ceiling-exceeded error when max-iterations is reached before convergence'. BC-2.03.001 anchor and behavioral meaning preserved unchanged. Change resolves asymmetry-confirmation outlier per HS-INDEX policy."
   - "1.2 (F-P2A007-02, P2A-007-fix-burst, 2026-08-20): BC-2.04.004 mis-anchor corrected — BC-2.04.004 (Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork) replaced with BC-2.03.001 (BSP Super-Step Execution Determinism — Kani VP Seed (NE-17)) in frontmatter behavioral_contracts and §Behavioral Contract Linkage table. HS-B-004 performs no fork; BC-2.04.004 governs fork lineage and was never exercised by this scenario. BC-2.03.001 governs the super-step ceiling halt (E-GRAPH-017) directly exercised by the Edge Condition: max-iterations guard fires before convergence. Clause updated to match BC-2.03.001 scope. Note: 1.1 claim 'verified against BC-INDEX' was incorrect for the BC-2.04.004 anchor."
-  - "1.0 (initial, 2026-08-18): base scenario authored."
   - "1.1 (F-P2A003-02, P2A-003-fix-burst, 2026-08-19): BC-linkage re-anchoring sweep — 2 BCs re-anchored in frontmatter behavioral_contracts and BC-linkage table to semantically-correct IDs verified against BC-INDEX."
+  - "1.0 (initial, 2026-08-18): base scenario authored."
 ---
 
 # Holdout Scenario HS-B-004: Convergence Loop Terminates at Fixed Point — Streak Resets on New Finding
@@ -120,6 +121,6 @@ A review-fix cycle is modeled as a cyclic subgraph. The cycle terminates when th
 
 ---
 
-## Category: real-world-corpus
+## Real-World Corpus Requirement
 
 Not applicable — this scenario's category is `edge-case-combinations` (see the frontmatter `category:` field). No real-world corpus is required for this `edge-case-combinations` test.

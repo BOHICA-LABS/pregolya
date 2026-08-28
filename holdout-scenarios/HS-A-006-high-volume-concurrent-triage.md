@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -20,7 +20,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "b45cace"
+input-hash: "f8a256d"
 traces_to: .factory/planning/holdout-domains/domain-a-soc-analyst.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -34,6 +34,8 @@ coverage_areas:
   - graph_execution
   - providers
   - streaming
+changelog:
+  - "1.1 (F-P2A114-02/round-26/2026-08-28): §Real-World Corpus Requirement: section heading renamed from '## Category: real-world-corpus' to '## Real-World Corpus Requirement' — category-neutral heading per F-P2A114-02; input-hash refreshed to reflect current input state."
 ---
 
 # Holdout Scenario HS-A-006: High-Volume Concurrent Alert Triage — Scheduler Fairness Under Load
@@ -108,6 +110,6 @@ Twenty alerts arrive simultaneously and must be triaged in parallel. No alert sh
 
 ---
 
-## Category: real-world-corpus
+## Real-World Corpus Requirement
 
 Not applicable — this scenario's category is `edge-case-combinations` (see the frontmatter `category:` field). No real-world corpus is required for this `edge-case-combinations` test.

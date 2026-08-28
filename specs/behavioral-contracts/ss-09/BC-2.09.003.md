@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.003
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
   - "1.7 (round-25/F-P2A111-03+F-P2A111-04/2026-08-28): F-P2A111-03 [HIGH] — §Architecture Anchors first bullet: `ingress.rs` replaces `tools.rs` for the guardrail hook invocation site; DI-012 security seam is mcp::ingress per architect canonical SS-09 module→file mapping (HIGH criticality). F-P2A111-04 [MED] — §Architecture Anchors first bullet: symbol corrected from stale `_convert_mcp_content_to_lc_block` (langchain infix) to canonical `_convert_mcp_content_to_block`; matches BC-2.09.002 §Architecture Anchors and error-taxonomy.md E-MCP-006 row."
+  - "1.8 (round-26/O-P2A115-07/2026-08-28): O-P2A115-07 [OBS] — §Verification Properties: replaced vague 'will be authored by the architect' with concrete Phase-6 Kani P1 commitment for DI-012 guardrail-dispatch correctness invariant, seeded at Phase-2 transition, anchored to BC-2.09.003. VP census unchanged at 17 — no VP-INDEX row added."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-010
 inputs:
@@ -129,8 +130,7 @@ as accepted context. The guardrail fires only on success results.
 
 ## Verification Properties
 
-_No Kani VP seed required. This BC's obligation is covered by DI-012's VP obligation
-(Kani harness for Domain A SOC analyst path) which will be authored by the architect._
+_No Kani VP seed required. This BC's obligation is covered by DI-012's VP obligation: a Phase-6 Kani P1 harness asserting the guardrail-dispatch correctness invariant — that every inbound MCP tool call routes through the registered `GuardrailHook` evaluation before any content block enters model context. Seeded at Phase-2 transition and anchored to BC-2.09.003. VP census: 17 registered VPs; this obligation is carried under DI-012's existing VP scope — no new VP-INDEX row._
 
 ## Related BCs
 

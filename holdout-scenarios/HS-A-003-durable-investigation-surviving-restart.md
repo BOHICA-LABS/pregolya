@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -21,7 +21,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
-input-hash: "b45cace"
+input-hash: "f8a256d"
 traces_to: .factory/planning/holdout-domains/domain-a-soc-analyst.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -35,6 +35,8 @@ coverage_areas:
   - checkpoint_resume
   - graph_execution
   - providers
+changelog:
+  - "1.1 (F-P2A114-02/round-26/2026-08-28): §Real-World Corpus Requirement: section heading renamed from '## Category: real-world-corpus' to '## Real-World Corpus Requirement' — category-neutral heading per F-P2A114-02; body text unchanged."
 ---
 
 # Holdout Scenario HS-A-003: Durable Multi-Stage Investigation Surviving Process Restart
@@ -113,6 +115,6 @@ A security investigation spans four sequential stages: (1) initial triage, (2) d
 
 ---
 
-## Category: real-world-corpus
+## Real-World Corpus Requirement
 
 Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.

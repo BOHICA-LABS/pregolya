@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "1.1"
+version: "1.2"
 status: active
 producer: product-owner
 timestamp: 2026-08-19T00:00:00Z
@@ -22,7 +22,7 @@ behavioral_contracts:
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "5e990da"
+input-hash: "e14b17b"
 traces_to: .factory/planning/holdout-domains/domain-b-dark-factory.md
 lifecycle_status: active
 introduced: v1.0.0-phase-2
@@ -38,8 +38,9 @@ coverage_areas:
   - graph_execution
   - server
 changelog:
-  - "1.0 (initial, 2026-08-18): base scenario authored."
+  - "1.2 (F-P2A114-02/round-26/2026-08-28): §Real-World Corpus Requirement: section heading renamed from '## Category: real-world-corpus' to '## Real-World Corpus Requirement' — category-neutral heading per F-P2A114-02; input-hash refreshed; changelog reordered to DESCENDING per POL-14."
   - "1.1 (F-P2A003-02, P2A-003-fix-burst, 2026-08-19): BC-linkage re-anchoring sweep — 1 BC re-anchored in frontmatter behavioral_contracts and BC-linkage table to semantically-correct IDs verified against BC-INDEX."
+  - "1.0 (initial, 2026-08-18): base scenario authored."
 ---
 
 # Holdout Scenario HS-B-003: Human Approval Interrupt at Phase Boundary — Cross-Process Resume
@@ -123,6 +124,6 @@ A multi-phase pipeline pauses at a "phase gate" awaiting human sign-off before a
 
 ---
 
-## Category: real-world-corpus
+## Real-World Corpus Requirement
 
 Not applicable — this scenario's category is `integration-boundaries` (see the frontmatter `category:` field). No real-world corpus is required for this `integration-boundaries` test.
