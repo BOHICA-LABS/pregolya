@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.91"
+version: "2.92"
 status: active
 producer: product-owner
 timestamp: 2026-08-28T00:00:00Z
 phase: 1d
 changelog:
+  - "2.92 (round-27/F-P2A117-01/2026-08-28): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment SEC-006 bullet: 'CRITICAL-level structured log' → 'ERROR-level (`tracing::error!`) structured log'. The Rust tracing crate has no CRITICAL level; ERROR is the highest level. Aligns with observability.md log-level column (ERROR) and ADR-029 §Decision-4 prose (corrected in round-26). TD-VSDD-060 sibling sweep: only one occurrence of 'CRITICAL-level structured log' in live body — this line."
   - "2.91 (round-25/F-P2A108-02/2026-08-28): Normalize three spec doc-comment lines from doubled path form to parenthetical form per TD-VSDD-091 notation consistency. §PreToolCallHook code-block comment: `pregolya-core::core::action_risk` → `pregolya-core (core::action_risk)`. §Budget code-block comment: `pregolya-core::core::budget` → `pregolya-core (core::budget)`. Same §Budget code-block execution-engine comment: `pregolya-graph::graph::budget` → `pregolya-graph (graph::budget)`. No semantic changes; parenthetical form is the canonical spec-document convention consistent with module-decomposition.md and ADR-023 §Required Inventory."
   - "2.90 (round-24/O-P2A104-01/2026-08-28): O-P2A104-01 [LOW]: §Tool::schema() and §DynTool::schema() doc-comments generalized. Both previously read 'JSON Schema of the tool's argument struct, derived by schemars::schema_for!' — accurate for the #[pregolya::tool] macro case but inaccurate for two verbatim/passthrough producers: convert_mcp_tool (schema sourced verbatim from the MCP server inputSchema, not re-derived) and GraphAgentTool::from_graph (schema supplied by the caller). Updated both doc-comments to note the schema MAY be schemars-derived (macro case) OR supplied verbatim/by the caller (MCP-adapted and GraphAgentTool cases). BC anchors unchanged; no behavioral change to any trait method."
   - "2.89 (round-23/O-P2A102-04/2026-08-28): O-P2A102-04 [LOW]: StreamEvent::ToolApprovalRequest.prompt type corrected String→Option<String>, aligned to PreToolDecision::PendingHumanApproval { prompt: Option<String> } canonical type and entities-graph.md ToolApprovalRequest entity definition. A None prompt is valid — the approver UI falls back to a default message; the hook is not obligated to supply one. Doc comment updated accordingly. Story-writer propagation required for S-1.24 event-13 acceptance criterion (prompt field type reference)."
@@ -107,7 +108,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "b2acd22"
+input-hash: "1711b89"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -2346,7 +2347,7 @@ pub enum GraphToolApprovalPolicy {
     /// - `Some(r)` where `r < ActionRisk::Medium` → `Approve` (read-only tool).
     /// - `None` (undeclared risk; fail-closed per BC-2.05.006 EC-004/{INV-002})
     ///   OR `Some(r)` where `r >= ActionRisk::Medium` → `Deny` +
-    ///   `E-MCP-011 ForceApproveWriteBlocked` (CRITICAL-level structured log).
+    ///   `E-MCP-011 ForceApproveWriteBlocked` (ERROR-level (`tracing::error!`) structured log).
     ///   The tool is NOT invoked; the graph continues to its terminal state.
     ///
     /// **Node-level `interrupt()` is NOT overridden:** graph parks →

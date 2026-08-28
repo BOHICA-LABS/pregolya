@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.35"
+version: "1.36"
 status: active
 producer: architect
 timestamp: 2026-08-28T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "12ac4b8"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.36 (round-27/F-P2A116-01+F-P2A119-01+F-P2A119-02/2026-08-28): (1) F-P2A116-01 PRIMARY TASK — Intro paragraph stale counts corrected: '80 module-decomposition modules (74 tiered + 6 definitions-only/exempt)' → '81 module-decomposition modules (75 tiered + 6 definitions-only/exempt)'; '88 total rows after round-25: 36 Pure Core + 40 Effectful Shell + 12 Boundary' → '89 total rows after round-26: 36 Pure Core + 40 Effectful Shell + 13 Boundary'. v1.34 added round-25 Effectful Shell rows (+2) but did not update the Boundary count; v1.35 added mcp::registry Boundary row (+1, Boundary 12→13) but did not update the intro paragraph. (2) F-P2A119-01 — mcp::sanitize Pure Core row VP annotation: 'VP-015 (integration P1; module logic is pure)' → 'VP-015 (unit P1; module logic is pure)'. D-273/v3.13 correction in verification-coverage-matrix.md had already corrected integration→unit in the VP-to-Module table; this file lagged. (3) F-P2A119-02 — mcp::sanitize Pure Core row description: `sanitize_internal_ids` function added alongside `redact_credentials`; consumer set corrected from implicit mcp::server-only to explicit {mcp::server, mcp::graph_tool}."
   - "1.35 (round-26/F-P2A115-04-sibling-sweep/2026-08-28): Iron Law sibling-sweep — add `mcp::registry` Boundary row (pregolya-mcp; `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>` concurrent access; register/get/list pure dispatch logic; shared by mcp::server and mcp::discovery; BC-2.09.006/007/008 §Architecture-Anchors; SS-09). Required by module-decomposition.md mcp::registry row addition (round-26). Boundary 12→13; total 88→89."
   - "1.34 (round-25/F-P2A111-03/2026-08-28): Iron Law — add `mcp::session` Effectful Shell row (pregolya-mcp; McpSessionGuard RAII; creates network connection on construction, drops/disconnects on drop; Connection enum dispatches Stdio/HTTP-SSE/StreamableHttp/WebSocket transports; SessionSource::OnDemand lifecycle; I/O-bound; BC-2.09.005 {INV-002} / SS-09). Iron Law — add `mcp::interceptor` Effectful Shell row (pregolya-mcp; ToolCallInterceptor trait + _build_interceptor_chain factory; wraps effectful MCP tool call invocations in onion-order chain; interceptors may perform I/O; BC-2.09.002 {PC-001} / SS-09). Required by module-decomposition.md §pregolya-mcp (SS-09) mcp::session/mcp::interceptor row additions. Effectful Shell 38→40; total 86→88. Module-decomposition universe updated in intro: 78→80 (72→74 tiered + 6 definitions-only/exempt)."
   - "1.33 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — `mcp::graph_tool` Effectful Shell row: `CompiledGraph<S>` → `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}; aligns with ADR-029 §Symbol Grounding). Sibling sweep: no other CompiledGraph<S> live-body sites in this file (v1.32 changelog entry retains old symbol as historical record; grandfathered per TD-VSDD-091). input-hash updated to 12ac4b8."
@@ -64,9 +65,9 @@ changelog:
 Every pregolya module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 80 module-decomposition modules (74 tiered + 6 definitions-only/exempt) plus
+effectful dependency). All 81 module-decomposition modules (75 tiered + 6 definitions-only/exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(88 total rows after round-25: 36 Pure Core + 40 Effectful Shell + 12 Boundary).
+(89 total rows after round-26: 36 Pure Core + 40 Effectful Shell + 13 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -113,7 +114,7 @@ side effects. Kani proofs operate here.
 | `vectorstores::similarity` | pregolya-vectorstores | Shared cosine similarity primitive: `cosine_similarity(a: &[f32], b: &[f32]) → Result<f32, PregolyaError>`; IEEE-754 zero-norm L2-guard (checks `a.iter().map(\|x\| x*x).sum::<f32>().sqrt() == 0.0 \|\| b…`); returns `Err(E-VS-001)` on zero-norm; pure `Vec<f32>` inner product; no `ndarray`, no I/O; called by vectorstores::memory, vectorstores::mmr, and any future VectorStore backend (ADR-014 / SS-21; F-P129-11 burst-224) | VP-009 |
 | `tools::config` | pregolya-tools | `ToolConfig` — shared per-tool framework configuration; `override_risk(self, risk: ActionRisk) -> Result<ToolConfig, PregolyaError>` builder-consuming validator: compares `risk` against the tool's floor (for BashTool, `risk < ActionRisk::Medium` → `Err(E-TOOLS-007)`); `#[non_exhaustive]`; zero I/O, no async, no state — pure enum comparison at construction time per VP-013 §Source Contract (ADR-020 Decision 3 / BC-2.23.005 / SS-23) | — |
 | `mcp::exception` | pregolya-mcp | Bare ToolException re-raise detection; type-identity preservation via McpError downcast; pure synchronous error source chain pattern match: `err.source().downcast_ref::<McpError>()` + `matches!(e, McpError::ToolExecution { .. })`; no I/O, no async, no global state (R11 / BC-2.09.004 / SS-09) | VP-004 (integration-tested; integration harness required for mock MCP server setup; module logic is pure) |
-| `mcp::sanitize` | pregolya-mcp | `redact_credentials(text: &str) -> Cow<str>` pure credential-redaction function: pattern-based substitution of provider API key patterns (OpenAI `sk-*`, Anthropic `sk-ant-*`, generic 64+ char token) before any error message is transmitted to external MCP clients; deterministic string transformation; CWE-532 prevention at pure layer; no I/O, no async, no global state (BC-2.09.007 / INV-003 / SS-09 / DI-010) | VP-015 (integration P1; module logic is pure) |
+| `mcp::sanitize` | pregolya-mcp | `redact_credentials(text: &str) -> Cow<str>` and `sanitize_internal_ids(text: &str) -> Cow<str>` pure credential/ID-redaction functions: pattern-based substitution of provider API key patterns (OpenAI `sk-*`, Anthropic `sk-ant-*`, generic 64+ char token) and internal UUID-shaped IDs before any error message is transmitted to external MCP clients; deterministic string transformation; CWE-532 prevention at pure layer; no I/O, no async, no global state; consumers: `mcp::server`, `mcp::graph_tool` (BC-2.09.007 / INV-003 / SS-09 / DI-010) | VP-015 (unit P1; module logic is pure) |
 
 **Kani constraint:** Kani model checking operates on finite, bounded loops. `graph::channels`
 reducer loop must be bounded by the number of tasks per super-step. `sandbox::path_guard`

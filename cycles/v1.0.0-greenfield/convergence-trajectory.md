@@ -3908,3 +3908,45 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 
 **Census UNCHANGED 39/134/17/137/303. TV 754. VP census UNCHANGED 17 (O-P2A115-07 = Phase-6 Kani P1 seed, no new VP file). Module universe 75→76 (+mcp::registry); module-criticality 87→88 (MED 39→40, tiered 81→82). streak 0/3 (push resets per frozen-HEAD rule). GATE-READY FAILED (must rerun round-27 on new HEAD). LESSONS L-214. NEXT: round-27 P2A-116/117/118/119 + GATE-READY re-run on new post-fix HEAD.**
 
+---
+
+## Round-27 (D-297) — 2026-08-28
+
+**Frozen HEAD: ce2c5fe3eea75425fee862fce681f8c07329a393 (post-round-26 D-296 push)**
+
+**Adversary passes on frozen HEAD ce2c5fe3:**
+
+| Pass | Findings | Delta | Severity | Status |
+|------|----------|-------|----------|--------|
+| P2A-116 (realizability) | 1 | — | 1 MED (2 OBS confirmed non-defects) | NOT CLEAN |
+| P2A-117 (security) | 2 | — | 1 MED, 1 OBS | NOT CLEAN |
+| P2A-118 (consistency/census/records) | 5 | — | 1 HIGH, 3 MED, 1 pattern-obs | NOT CLEAN |
+| P2A-119 (SS-09 deep-audit) | 5 | — | 3 MED, 2 OBS | NOT CLEAN |
+| CV GATE-READY audit | N/A | — | GATE-READY=NO (HRQ-1 3/3 streak process-gate + FINDING-CV-001 records; FINDING-CV-001 CLOSED this burst) | NOT GATE-READY |
+
+**All findings CLOSED in D-297 fix-burst (all per DIRECTIVE 2 fix-in-scope):**
+
+| Finding | Severity | Closure |
+|---------|----------|---------|
+| F-P2A118-01 | HIGH | purity-boundary-map intro summary counts corrected: 81 modules/75 tiered/89 rows/13 Boundary (POL-21). architect. |
+| F-P2A116-01 / F-P2A118-02 | MED | vcm "physical rows" self-contradiction (91 vs 90) — body reconciled to 90 physical/88 distinct (module-criticality 88 distinct corroborates); historical §Changelog entries preserved per TD-VSDD-091. architect. |
+| F-P2A118-03 | MED | module-decomp §pregolya-mcp preamble stale running-count replaced with stable pointer to module-criticality §Classification Summary (TD-VSDD-091). architect. |
+| F-P2A117-01 | MED | interface-definitions.md ForceApproveHooks doc-comment "CRITICAL-level" → "ERROR-level (tracing::error!)" — 5th sibling missed by round-26 CRITICAL→ERROR sweep. architect. |
+| F-P2A119-01 | MED | purity-boundary-map VP-015 "integration" → "unit" — D-273 straggler. architect. |
+| F-P2A119-02 | MED | mcp::sanitize description updated: added sanitize_internal_ids + consumer set {mcp::server, mcp::graph_tool} across module-decomp/purity-boundary-map/vcm. architect. |
+| F-P2A119-03 | MED, CWE-248/703 | BC-2.11.002 EC-001 gained async FutureExt::catch_unwind mechanism + SEC-008 panic="unwind" invariant + new {INV-005} + panic TV, mirroring BC-2.09.008 EC-010. Crate attribution corrected pregolya-core→pregolya-graph (SS-11=pregolya-graph; catch site is graph::provenance). S-1.19 AC-024 anchor now resolves. product-owner. |
+| O-P2A119-04 | LOW | ADR-029 §Decision 4 code-sketch message literal "CRITICAL:" prefix removed to match observability.md canonical catalog message. architect. |
+| O-P2A117-OBS | OBS | observability.md catalog description "CRITICAL-level security signal" → "highest-severity security signal". architect. |
+| FINDING-CV-001 | LOW, records | ARCH-INDEX §Changelog (mcp::registry Iron Law entry added, this burst). architect. |
+
+**CONFIRMED VERIFIED NON-DEFECTS (P2A-116 OBS):** VP arithmetic 17, POL-9 4-way propagation, DAG reciprocity, symbol grounding, census all confirmed CLEAN.
+
+**Root-cause meta-pattern (L-215 codified):** Round-26's own fixes left tertiary-sibling residue: (1) CRITICAL→ERROR sweep missed the 5th sibling (interface-definitions doc-comment) + ADR-029 code-sketch message literal + observability description; (2) mcp::registry propagation updated tables+changelogs but left summary-count PROSE stale in 3-of-4 registries; (3) D-273 VP-015 unit-fix reached 5 docs but not purity-boundary-map; (4) mcp::sanitize security additions reached BC+story+ADR but not 3 registry descriptions; (5) S-1.19 AC-024 added tracing to BC-2.09.008 without patching BC-2.11.002 (routing gap). See lessons.md L-215/L-216/L-217.
+
+**Process-gap follow-up candidates (first self-improvement wave):**
+- O-P2A118-04: no validator checks a module-registry's summary/preamble counts against its actual table row count; candidate verify-module-registry-count-consistency.sh; owner: devops-engineer.
+- REGISTRY-COUNTING-CONVENTION: 4 registries legitimately carry 4 different totals (module-decomposition 81/module-criticality 88/purity-boundary-map 89/vcm 90 physical/88 distinct); canonical counting-model note or O-P2A118-04 validator should document conventions; owner: architect/devops-engineer.
+- STORY-AC-BC-ANCHOR-ROUTING: when a story AC adds tracing to a BC clause, the BC must be patched same burst; owner: orchestrator routing discipline.
+
+**Census UNCHANGED 39/134/17/137/303. TV 754. VP 17. streak 0/3 (new HEAD push resets per frozen-HEAD rule). GATE-READY=NO. HRQ-1/2/4/5/6 carry-forward to Phase-2 human gate. NEXT: round-28 P2A-120/121/122/123 + GATE-READY re-run on new HEAD.**
+

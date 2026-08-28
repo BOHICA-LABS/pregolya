@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.9"
+version: "2.10"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.10 (round-27/O-P2A119-04/2026-08-28): §Decision 4 BoundaryApprovalHook code-sketch: message literal in the `_ =>` Deny branch had 'CRITICAL: ForceApproveHooks policy violation — tool has undeclared ...' — 'CRITICAL: ' prefix removed (Rust tracing crate has no CRITICAL level; the emit call is tracing::error!; observability.md and BC-2.09.008 §INV-004 are authoritative). No other occurrences of 'CRITICAL:' prefix in live body code sketches."
   - "2.9 (round-26/F-P2A113-01+F-P2A113-02/2026-08-28): F-P2A113-01 MED — §Symbol Grounding: E-MCP-010 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 136)'; E-MCP-011 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 137)'. Both codes are live rows in error-taxonomy.md per BC-2.09.008 assertions; the PLANNED future-tense obligation is stale. F-P2A113-02 MED — §Decision 4 two prose occurrences of 'CRITICAL-level' corrected to 'ERROR-level (tracing::error!)': (1) body sentence describing BoundaryApprovalHook Deny return 'with a CRITICAL-level structured log'; (2) §Rationale sentence describing E-MCP-011 as 'emitted (as a CRITICAL-level log entry and Deny reason)'. The Rust tracing crate has no CRITICAL level (levels are error/warn/info/debug/trace); observability.md and BC-2.09.008 §INV-004 both specify tracing::error! as the emit call. Historical changelog entries exempt per TD-VSDD-091."
   - "2.8 (round-23/F-P2A101-04/2026-08-28): F-P2A101-04 MED — §Decision 4 E-MCP-011 message template aligned verbatim to error-taxonomy.md canonical string: placeholder format corrected from curly-brace ({tool_name}/{action_risk}) to angle-bracket (<tool_name>/<action_risk>); middle clause corrected from 'graphs with declared ActionRisk < Medium for every tool' to 'graphs composed exclusively of read-only tools (ActionRisk < Medium)'. Sibling-check E-MCP-010: §Decision 5 table message confirmed matching error-taxonomy.md verbatim — no additional drift. §Decision 4 illustrative-note updated to reflect table is now verbatim-aligned."
   - "2.7 (round-23/F-P2A101-01+F-P2A103-01+F-P2A103-03/2026-08-28): F-P2A101-01 MED — §Decision 4 node-level interrupt path inline message extended to canonical full form matching error-taxonomy.md E-MCP-010 message template: added remedy clause '; restructure the graph so it does not call interrupt() during a synchronous tools/call invocation'. F-P2A103-01 MED — §Symbol Grounding DynTool and ToolOutput rows: Canonical-Location corrected from pregolya-core/src/core/tool.rs to pregolya-core/src/tool.rs (no core/ path segment); matches BC-2.08.009 and BC-2.08.010 §Architecture Anchors and api-surface.md; sibling sweep of all §Symbol Grounding Canonical-Location cells found no other src/core/ mis-anchors. F-P2A103-03 LOW — §Symbol Grounding PreToolDecision row: added Edit variant to enumeration (canonical four variants: Approve/Deny/Edit/PendingHumanApproval per BC-2.05.007 H1 and ADR-018 §Decision 1)."
@@ -391,7 +392,7 @@ impl PreToolCallHook for BoundaryApprovalHook {
                             event_type = "mcp.graph_tool.force_approve_write_blocked",
                             tool_name = %preview.tool_name,
                             action_risk = ?preview.action_risk,
-                            "CRITICAL: ForceApproveHooks policy violation — tool has undeclared \
+                            "ForceApproveHooks policy violation — tool has undeclared \
                              or >= Medium ActionRisk; denying tool invocation. Use DenyInterrupts \
                              or restrict graph to tools with declared ActionRisk < Medium."
                         );

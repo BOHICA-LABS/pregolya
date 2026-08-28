@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.20"
+version: "3.21"
 status: active
 producer: architect
 timestamp: 2026-08-28T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "2890c63"
+input-hash: "27204d0"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.21 (round-27/F-P2A116-01+F-P2A118-02+F-P2A119-02/2026-08-28): (1) F-P2A116-01/F-P2A118-02 PRIMARY TASK — Per-Module Coverage Status preamble: first sentence '91 physical rows' corrected to '90 physical rows' (measured: 90 data rows between table header and §Coverage by Criticality Tier; the second sentence '90 physical rows to 88 distinct modules' was already correct). Arithmetic removed from first sentence to avoid re-drift; additions sourced from round labels only. (2) F-P2A119-02 — mcp::sanitize Notes: `sanitize_internal_ids` added alongside `redact_credentials`; consumer set extended from implicit mcp::server-only to explicit {mcp::server, mcp::graph_tool}."
   - "3.20 (round-26/F-P2A115-04-sibling-sweep/2026-08-28): Iron Law sibling-sweep — add `mcp::registry` MEDIUM row (pregolya-mcp; runtime ToolRegistry store; Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>> concurrent access; register/get/list operations; shared by mcp::server and mcp::discovery; BC-2.09.006/007/008 §Architecture-Anchors; SS-09; integration tests). Required by module-decomposition.md mcp::registry row addition (round-26). Physical rows: 90→91. MEDIUM: 39→40. Tiered total: 81→82. Coverage by Criticality Tier MEDIUM: 39→40. input-hash refreshed."
   - "3.19 (round-25/F-P2A111-03/2026-08-28): Iron Law — add `mcp::session` MEDIUM row (pregolya-mcp; McpSessionGuard RAII; BC-2.09.005 {INV-002} / BC-2.09.002 session lifecycle; SS-09; integration tests). Iron Law — add `mcp::interceptor` MEDIUM row (pregolya-mcp; ToolCallInterceptor trait; onion-order chain BC-2.09.002 {PC-001}; SS-09; integration tests). Required by module-decomposition.md §pregolya-mcp (SS-09) mcp::session/mcp::interceptor row additions. Physical rows: 88→90. Collapse-pair denominator: 87→89. MEDIUM: 37→39. Tiered total: 79→81. Coverage by Criticality Tier MEDIUM: 37→39. input-hash refreshed."
   - "3.18 (round-16/hash-reconciliation/D-287/2026-08-27): POL-21 claim-not-applied fix — v3.17 §Changelog claimed 'input-hash updated to 96ec220' but frontmatter input-hash field was never updated from cbb4bf4. Hook-computed true value = e9944b8. Frontmatter input-hash set to e9944b8. No normative content changes; metadata only."
@@ -90,7 +91,7 @@ changelog:
 
 ## Per-Module Coverage Status
 
-> This table covers 91 physical rows (88 from prior bursts + round-25: mcp::session and mcp::interceptor MEDIUM rows + round-26: mcp::registry MEDIUM row).
+> This table covers 90 physical rows (additions: round-25 mcp::session and mcp::interceptor MEDIUM rows; round-26 mcp::registry MEDIUM row).
 > Two collapse-pairs reduce 90 physical rows to 88 distinct modules: (1) `core::runnable`: 2 rows for 1 HIGH module (pipe-associativity + VP-014 key-completeness); (2) `core::serializable`: 2 rows for 1 module spanning CRITICAL (VP-010 Reviver) and HIGH (VP-007 LcSerializable round-trip), counted once in CRITICAL as its highest tier per F-P210-01.
 > Tiered groupings: CRITICAL 12 / HIGH 28 / MEDIUM 40 / LOW 2 = 82 tiered (82 distinct tiered modules). Definitions-only/exempt: 6 (Tier=—; no kill rate obligation).
 
@@ -125,7 +126,7 @@ changelog:
 | mcp::client | pregolya-mcp | — | — | — | yes | integration red_gate (BC-2.09.005); no-live-connections |
 | mcp::exception | pregolya-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
 | mcp::server | pregolya-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
-| mcp::sanitize | pregolya-mcp | — | — | — | yes | MEDIUM; pure-core credential redaction utility; `redact_credentials` pattern substitution; VP-015 unit P1 (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention) |
+| mcp::sanitize | pregolya-mcp | — | — | — | yes | MEDIUM; pure-core credential redaction utility; `redact_credentials` and `sanitize_internal_ids` pattern substitution; VP-015 unit P1 (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention); consumers: mcp::server, mcp::graph_tool |
 | mcp::graph_tool | pregolya-mcp | — | VP-016/yes | — | yes | MEDIUM; SS-09; wraps `CompiledStateGraph` as DynTool; STATE-ISOLATION invariant; VP-016 proptest P1 (BC-2.09.008 {INV-001}/DI-010; ADR-029) |
 | pregolya-macros | pregolya-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness (no canonical crate::module name for this roll-up — macros::tool/entrypoint/task are the canonical rows) |
 | macros::tool | pregolya-macros | — | — | — | yes | HIGH; `#[tool]` proc-macro ToolDefinition generation; compile-time TokenStream expansion; integration-tested via expansion correctness; BC-2.08.010 |
