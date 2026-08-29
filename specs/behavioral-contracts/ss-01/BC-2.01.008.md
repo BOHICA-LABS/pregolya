@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.008
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
   - "1.5 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.008 MED — BC declared ST (streaming) test-type and cited ADR-026 §D4 safetee anchor but had no streaming PC. Added {PC-006} specifying RunnableAssign::stream() behavior via the safetee pattern: yields the passthrough input dict as first chunk, then yields the final merged result when mapper completes; non-dict input yields Err(E-CORE-010) as the sole chunk. Added TV-007 as the canonical streaming test vector."
+  - "1.6 (round-34/F-P2A144-02/2026-08-29): F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/passthrough.rs` → `src/runnable/passthrough.rs` per module-decomposition.md §core::runnable canonical singular form."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "40f3916"
+input-hash: "8872dd6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -190,7 +191,7 @@ covered by unit tests and the VP-014 proptest on the underlying RunnableParallel
 
 ## Architecture Anchors
 
-- `pregolya-core/src/runnables/passthrough.rs` — `RunnableAssign` struct, `RunnablePassthrough::assign()` static factory method, `DynRunnable` impl for `RunnableAssign` (to be created)
+- `pregolya-core/src/runnable/passthrough.rs` — `RunnableAssign` struct, `RunnablePassthrough::assign()` static factory method, `DynRunnable` impl for `RunnableAssign` (to be created)
 - ADR-026 §Decision 4 — dict-input validation, merge semantics (mapper-wins-on-collision), streaming RunnableAssign via safetee pattern
 
 ## Story Anchor

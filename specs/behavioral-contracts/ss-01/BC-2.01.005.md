@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.005
-version: "1.5"
+version: "1.6"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (F-036-01/P2A-036-adjudication/2026-08-22): Duplicate-step-key edge case gap closed (adjudication of STORY-S-1.05 AC-001 conflict vs BC infallible contract). PC-1 postcondition clarified: 'all provided branches' means after IndexMap last-write-wins deduplication; duplicate keys do NOT cause Err — this is intentional parity with Python RunnableParallel dict semantics per ADR-026 §Decision 1. Added EC-006 (Duplicate step key — last-write-wins) and TV-006. Story AC-001 fallible-constructor assertion must be removed by story-writer (STORY-S-1.05 AC-001 conflicts with infallible contract)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (round-34/F-P2A144-02/2026-08-29): F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/parallel.rs` → `src/runnable/parallel.rs`; `src/runnables/mod.rs` → `src/runnable/mod.rs` per module-decomposition.md §core::runnable canonical singular form."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "4ccce82"
+input-hash: "8872dd6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -172,8 +173,8 @@ uniform output types.
 
 ## Architecture Anchors
 
-- `pregolya-core/src/runnables/parallel.rs` — `RunnableParallel` struct and `DynRunnable` impl (to be created)
-- `pregolya-core/src/runnables/mod.rs` — re-export of `RunnableParallel` from `core::runnable`
+- `pregolya-core/src/runnable/parallel.rs` — `RunnableParallel` struct and `DynRunnable` impl (to be created)
+- `pregolya-core/src/runnable/mod.rs` — re-export of `RunnableParallel` from `core::runnable`
 - ADR-026 §Decision 1 — IndexMap type representation and key ordering
 - ADR-026 §Decision 2 — JoinSet fan-out, completion-order collection, re-insertion in steps order
 

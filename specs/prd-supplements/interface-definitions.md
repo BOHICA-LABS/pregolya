@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.93"
+version: "2.94"
 status: active
 producer: product-owner
 timestamp: 2026-08-29T00:00:00Z
 phase: 1d
 changelog:
+  - "2.94 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] Runnable native-async-to-async_trait-façade blanket-bridge non-realizability on stable Rust (E0277 Send-future). Exhaustive Send-RPITIT sweep mandate applied. §Runnable<Input,Output> async methods changed from bare `async fn` (no +Send bound on RPITIT future) to explicit RPITIT form `fn ... -> impl Future<Output = ...> + Send` — the only stable-Rust mechanism to impose Send on an RPITIT future without nightly Return-Type-Notation. `invoke` and `batch` carry `+ Send` on the outer future. `stream` carries `+ Send` on both the outer future and the inner `impl Stream` (required for `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`). `invoke` doc-comment updated: replaced misleading 'synchronously (blocks async task)' with 'completes when the full result is available (non-streaming)'; added §Send-Bounded RPITIT rationale. DynRunnable doc-comment updated: added §Blanket impl realizability prerequisite paragraph explaining that `Runnable`'s RPITIT `+Send` is the prerequisite for the blanket DynRunnable and DynTool impls to compile on stable Rust. ADR-005 §Adjacent Trait Object-Safety Adjudications updated: added §Send-Bounded RPITIT subsection with canon rule and exhaustive native-async-bridge inventory table (Tool: inherits Runnable fix — no own async methods; BaseChatModel: not behind dyn, stream_chat future need not be Send; SkillStore: not behind dyn — confirmed zero dyn SkillStore sites in corpus). BC signature rows referencing Runnable/Tool async signatures — PO routing flagged for Phase B propagation; architect does NOT edit BCs: BC-2.01.003 (invoke/stream/batch postconditions), BC-2.08.010 (Tool invoke inherited from Runnable), and any BC that cites async fn invoke/stream/batch method shapes. F-P2A144-02 [MED] module-path drift runnables/ (plural) → runnable/ (singular): changed four doc-comment module-path strings in §RunnableSequence, §RunnableParallel, §RunnablePassthrough, §RunnableAssign from pregolya-core/src/runnables/ to pregolya-core/src/runnable/ per module-decomposition.md §core::runnable canonical form. Wider-corpus sweep: BC-2.01.003/004/005/006/007/008 have live-body src/runnables/ occurrences — DO NOT edit (product-owner propagates in Phase B); VP-014 src/runnables/ occurrence is in a historical changelog entry (grandfathered)."
   - "2.93 (round-33/F-P2A140-01+comprehensive-object-safety-audit/2026-08-29): F-P2A140-01 [HIGH] DynRunnable missing #[async_trait] — E0038 non-realizable. Added #[async_trait] above pub trait DynRunnable: Send + Sync. Corrected doc-comment: object-safety comes from #[async_trait] boxed-future desugaring (Pin<Box<dyn Future>>) NOT from explicit receiver — rewrote to match sibling async trait description pattern; preserved ADR-005 §Adjacent Trait Object-Safety Adjudications citation. Comprehensive object-safety audit (break-the-per-round-cycle mandate): three additional async traits used behind dyn lacked #[async_trait] — each defect closes a potential E0038 at Phase 3 compile time: (1) CheckpointSaver — used behind Arc<dyn CheckpointSaver> per ADR-005 §Object-Safety-of-the-5-Method-CheckpointSaver-Trait and bounded-contexts.md; async fn put_writes/get_tuple/list/put/fts_search all needed boxed-future desugaring; (2) GuardrailHook — used as &dyn GuardrailHook in GuardedDocuments::rag_ingress (ADR-014 Decision 6; purity-boundary-map.md core::retriever row); async fn evaluate needed boxed-future desugaring; (3) MemoryStore — used as Arc<dyn MemoryStore> in SkillStore::new (ADR-012 Decision 1); async fn memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search all needed boxed-future desugaring. SkillStore confirmed NOT behind dyn (no Arc<dyn SkillStore> in corpus) — no fix needed. TD-VSDD-060 sibling sweep: no other trait declarations in this file were missed; see companion VP-014 §Proof Harness Skeleton (F-P2A140-02) for impl-side fix."
   - "2.92 (round-27/F-P2A117-01/2026-08-28): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment SEC-006 bullet: 'CRITICAL-level structured log' → 'ERROR-level (`tracing::error!`) structured log'. The Rust tracing crate has no CRITICAL level; ERROR is the highest level. Aligns with observability.md log-level column (ERROR) and ADR-029 §Decision-4 prose (corrected in round-26). TD-VSDD-060 sibling sweep: only one occurrence of 'CRITICAL-level structured log' in live body — this line."
   - "2.91 (round-25/F-P2A108-02/2026-08-28): Normalize three spec doc-comment lines from doubled path form to parenthetical form per TD-VSDD-091 notation consistency. §PreToolCallHook code-block comment: `pregolya-core::core::action_risk` → `pregolya-core (core::action_risk)`. §Budget code-block comment: `pregolya-core::core::budget` → `pregolya-core (core::budget)`. Same §Budget code-block execution-engine comment: `pregolya-graph::graph::budget` → `pregolya-graph (graph::budget)`. No semantic changes; parenthetical form is the canonical spec-document convention consistent with module-decomposition.md and ADR-023 §Required Inventory."
@@ -132,17 +133,26 @@ pregolya is a Rust library framework — there is no standalone CLI tool. The in
 
 ```rust
 pub trait Runnable<Input, Output>: Send + Sync {
-    /// Invoke the runnable synchronously (blocks async task).
-    async fn invoke(&self, input: Input, config: Option<RunnableConfig>)
-        -> Result<Output, PregolyaError>;
+    /// Invoke the runnable; completes when the full result is available (non-streaming).
+    ///
+    /// Declared as explicit RPITIT `+ Send` (not bare `async fn`) so the blanket
+    /// `DynRunnable` and `DynTool` impls compile on stable Rust. Bare `async fn`
+    /// carries no `Send` bound on its RPITIT future, making the `#[async_trait]`
+    /// blanket-impl's `Pin<Box<dyn Future + Send>>` box cast fail with E0277.
+    /// Authority: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT.
+    fn invoke(&self, input: Input, config: Option<RunnableConfig>)
+        -> impl std::future::Future<Output = Result<Output, PregolyaError>> + Send;
 
     /// Invoke and stream output chunks.
-    async fn stream(&self, input: Input, config: Option<RunnableConfig>)
-        -> Result<impl Stream<Item = Result<Output, PregolyaError>>, PregolyaError>;
+    ///
+    /// Both the outer future and the yielded `impl Stream` carry `+ Send`, enabling
+    /// `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`.
+    fn stream(&self, input: Input, config: Option<RunnableConfig>)
+        -> impl std::future::Future<Output = Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>> + Send;
 
     /// Invoke in batch; returns results in input order.
-    async fn batch(&self, inputs: Vec<Input>, config: Option<RunnableConfig>)
-        -> Result<Vec<Result<Output, PregolyaError>>, PregolyaError>;
+    fn batch(&self, inputs: Vec<Input>, config: Option<RunnableConfig>)
+        -> impl std::future::Future<Output = Result<Vec<Result<Output, PregolyaError>>, PregolyaError>> + Send;
 
     /// Pipe this runnable into another: self | other.
     ///
@@ -187,6 +197,15 @@ Type-erased composition path and the concrete sequence type returned by `pipe`.
 /// ADR-005 §Adjacent Trait Object-Safety Adjudications — BC-2.01.003 EC-001,
 /// BC-2.01.004 EC-001.
 ///
+/// **Blanket impl realizability prerequisite:** the blanket
+/// `impl<T: Runnable<Value, Value> + Send + Sync + 'static> DynRunnable for T`
+/// must box `T::invoke(..)`'s future into `Pin<Box<dyn Future + Send>>`. This
+/// requires the future from `Runnable::invoke` to be `Send`. `Runnable`'s async
+/// methods are therefore declared with explicit RPITIT `+ Send` (not bare `async fn`),
+/// which is the stable-Rust mechanism to impose a `Send` bound on an RPITIT future
+/// without Return-Type-Notation (nightly-only). See ADR-005 §Adjacent Trait
+/// Object-Safety Adjudications §Send-Bounded RPITIT.
+///
 /// # Errors
 /// `Err(PregolyaError { code: "E-CORE-004", .. })` when a
 /// type boundary mismatch between adjacent stages is detected at the first `invoke`
@@ -220,7 +239,7 @@ pub trait DynRunnable: Send + Sync {
 ///            middle=[b], last=c`, NOT nested sequences),
 ///            BC-2.01.004 TV-002 (structure must be inspectable: `RunnableSequence
 ///            { first, middle, last }`).
-/// Module: `pregolya-core/src/runnables/sequence.rs`.
+/// Module: `pregolya-core/src/runnable/sequence.rs`.
 pub struct RunnableSequence<I, O> {
     /// The first stage in the pipeline.
     pub first: Box<dyn DynRunnable>,
@@ -246,7 +265,7 @@ BC-2.01.004 PC1/PC4/TV-002 (`RunnableSequence` concrete type, flattening invaria
 /// in `steps` insertion order regardless of task-completion order.
 /// Construction: `RunnableParallel::new(steps)` where `steps` is an iterator of
 ///   `(impl Into<String>, Arc<dyn DynRunnable>)` pairs.
-/// Module: `pregolya-core/src/runnables/parallel.rs`.
+/// Module: `pregolya-core/src/runnable/parallel.rs`.
 #[non_exhaustive]
 pub struct RunnableParallel {
     steps: IndexMap<String, Arc<dyn DynRunnable>>,
@@ -265,7 +284,7 @@ impl RunnableParallel {
 /// Optional `inspect_fn` is called once with `&input` before the Ok return; its return value
 /// is discarded. `inspect_fn` is never called on the error path (RunnablePassthrough never fails).
 /// Factory for `RunnableAssign`: `RunnablePassthrough::assign(pairs)`.
-/// Module: `pregolya-core/src/runnables/passthrough.rs`.
+/// Module: `pregolya-core/src/runnable/passthrough.rs`.
 #[non_exhaustive]
 pub struct RunnablePassthrough {
     inspect_fn: Option<Arc<dyn Fn(&serde_json::Value) + Send + Sync>>,
@@ -286,7 +305,7 @@ impl RunnablePassthrough {
 /// `invoke(input, config)` validates that `input` is `Value::Object`; on non-Object input returns
 /// `Err(PregolyaError { category: VAL, code: "E-CORE-010", .. })`.
 /// On success merges mapper output over input: mapper keys overwrite input keys on collision.
-/// Module: `pregolya-core/src/runnables/passthrough.rs` (same file as `RunnablePassthrough`).
+/// Module: `pregolya-core/src/runnable/passthrough.rs` (same file as `RunnablePassthrough`).
 #[non_exhaustive]
 pub struct RunnableAssign {
     mapper: RunnableParallel,

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.007
-version: "1.4"
+version: "1.5"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "1.5 (round-34/F-P2A144-02/2026-08-29): F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/passthrough.rs` → `src/runnable/passthrough.rs` per module-decomposition.md §core::runnable canonical singular form."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "4ccce82"
+input-hash: "8872dd6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -163,7 +164,7 @@ proptest and unit tests are sufficient to verify the clone-identity invariant._
 
 ## Architecture Anchors
 
-- `pregolya-core/src/runnables/passthrough.rs` — `RunnablePassthrough` struct and `DynRunnable` impl (to be created)
+- `pregolya-core/src/runnable/passthrough.rs` — `RunnablePassthrough` struct and `DynRunnable` impl (to be created)
 - ADR-026 §Decision 3 — zero-cost identity semantics, inspect_fn side-effect contract, streaming accumulation-then-inspect pattern
 
 ## Story Anchor

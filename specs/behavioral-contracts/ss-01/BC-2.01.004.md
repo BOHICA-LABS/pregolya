@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (BURST-303/O-P194-A/2026-08-17): Precondition 2 generic-arity reconciliation — replaced type-erased `DynRunnable<Value, Value>` pipelines with canonical `Arc<dyn DynRunnable>` form per architect DynRunnable canon (O-P194-A). DynRunnable is a non-generic trait; Value is the runtime boundary type, not a type parameter."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (round-34/F-P2A144-02/2026-08-29): F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/sequence.rs` → `src/runnable/sequence.rs`; `src/runnables/base.rs` → `src/runnable/base.rs` per module-decomposition.md §core::runnable canonical singular form."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "22e7fbd"
+input-hash: "56f0a6f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -145,8 +146,8 @@ No error unless the output type of `a` does not match the input type of `a`.
 
 ## Architecture Anchors
 
-- `pregolya-core/src/runnables/sequence.rs` — `RunnableSequence` struct with `first`, `middle`, `last` and `pipe()` method (to be created)
-- `pregolya-core/src/runnables/base.rs` — `Runnable::pipe()` default method implementation (to be created)
+- `pregolya-core/src/runnable/sequence.rs` — `RunnableSequence` struct with `first`, `middle`, `last` and `pipe()` method (to be created)
+- `pregolya-core/src/runnable/base.rs` — `Runnable::pipe()` default method implementation (to be created)
 
 ## Story Anchor
 

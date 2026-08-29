@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.2"
+version: "2.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "2.0 (M3b/ADR-027-escalation-3/2026-08-24): Added {INV-006} — DynRunnable non-generic design clause; formalizes architect canon O-P194-A (already in v1.7 changelog and EC-001); S-1.04 AC-005 adjudicated as clause-author (real v1 design requirement)."
   - "2.1 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
   - "2.2 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.003 LOW — default-stream item type and invoke-Err streaming behavior were unspecified. Updated PC-002 to name the stream item type as `Result<Self::Output, PregolyaError>` and specify that an invoke Err is yielded as a single `Err(e)` stream item (stream does not propagate as an outer error). Added {EC-006} as a canonical test vector for the error-in-stream path."
+  - "2.3 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] — signature citations updated from bare `async fn` to explicit RPITIT + Send form per interface-definitions.md §Runnable<Input,Output> canon (ADR-005 §Send-Bounded RPITIT). Description: `async fn invoke(...)` → `fn invoke(...) -> impl std::future::Future<Output = ...> + Send`. PRE-001: `async fn invoke(...)` → `fn invoke(...) -> impl Future<Output = ...> + Send` with Send-bounded RPITIT rationale added. F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/base.rs` → `src/runnable/base.rs`; `src/runnables/config.rs` → `src/runnable/config.rs` per module-decomposition.md §core::runnable canonical singular form."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -35,7 +36,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "e21c7f4"
+input-hash: "56f0a6f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,7 +52,8 @@ removal_reason: null
 ## Description
 
 The `Runnable` trait is pregolya-core's universal unit of work. Every implementor must provide
-`async fn invoke(&self, input: Self::Input, config: &RunnableConfig) -> Result<Self::Output, PregolyaError>`.
+`fn invoke(&self, input: Self::Input, config: &RunnableConfig) -> impl std::future::Future<Output = Result<Self::Output, PregolyaError>> + Send`
+(RPITIT + Send form per ADR-005 §Send-Bounded RPITIT).
 The trait provides default implementations of `stream` (yields a single chunk equal to `invoke` output)
 and `batch` (maps `invoke` across inputs with bounded concurrency) so that a type implementing only
 `invoke` automatically satisfies the full `Runnable` surface. This contract encodes the LangChain v1
@@ -59,7 +61,7 @@ and `batch` (maps `invoke` across inputs with bounded concurrency) so that a typ
 
 ## Preconditions
 
-1. {PRE-001} A type `T` implements `Runnable` by providing `async fn invoke(...)`.
+1. {PRE-001} A type `T` implements `Runnable` by providing `fn invoke(...) -> impl Future<Output = Result<...>> + Send` (RPITIT + Send form; bare `async fn` is not permitted as it lacks a `Send` bound on the returned future — required for the `DynRunnable` blanket impl to compile on stable Rust per ADR-005 §Send-Bounded RPITIT).
 2. {PRE-002} The type satisfies `Send + Sync` (required for concurrent batch execution).
 3. {PRE-003} The `RunnableConfig` carries optional `max_concurrency`, `recursion_limit` (default 25),
    `tags`, `metadata`, `callbacks`, `run_name`, `run_id`, and `configurable` map.
@@ -174,8 +176,8 @@ The caller does NOT receive an outer `Result` wrapping the stream — the error 
 
 ## Architecture Anchors
 
-- `pregolya-core/src/runnables/base.rs` — `Runnable` trait definition with default `batch`/`stream` (to be created)
-- `pregolya-core/src/runnables/config.rs` — `RunnableConfig` struct and `merge_configs` (to be created)
+- `pregolya-core/src/runnable/base.rs` — `Runnable` trait definition with default `batch`/`stream` (to be created)
+- `pregolya-core/src/runnable/config.rs` — `RunnableConfig` struct and `merge_configs` (to be created)
 
 ## Story Anchor
 

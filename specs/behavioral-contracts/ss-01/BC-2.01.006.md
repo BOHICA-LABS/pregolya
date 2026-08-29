@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.006
-version: "1.7"
+version: "1.8"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.05 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "1.8 (round-34/F-P2A144-02/2026-08-29): F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/parallel.rs` → `src/runnable/parallel.rs` per module-decomposition.md §core::runnable canonical singular form."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-039
 inputs:
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-026-lcel-composition-primitives-parallel-passthrough.md
-input-hash: "4ccce82"
+input-hash: "8872dd6"
 extracted_from: null
 modified: []
 deprecated: null
@@ -165,7 +166,7 @@ documented here as a contrast point.
 
 ## Architecture Anchors
 
-- `pregolya-core/src/runnables/parallel.rs` — `RunnableParallel::invoke` failure path: `join_next()` Err branch, `abort_all()` call, error construction with branch key
+- `pregolya-core/src/runnable/parallel.rs` — `RunnableParallel::invoke` failure path: `join_next()` Err branch, `abort_all()` call, error construction with branch key
 - ADR-026 §Decision 2 — fail-fast with abort semantics, structured error with branch key, JoinError → INTERNAL mapping
 
 ## Story Anchor
