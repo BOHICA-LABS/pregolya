@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,13 +12,14 @@ changelog:
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
   - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
   - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.003 PC-002: AC-002 updated with BoxStream return type and Ok(chunk) wrapping. {EC-006}: AC-013 added — invoke-Err yielded as single Err stream item. BC table version bumped."
+  - "1.5 (R36/F-P2A152-01-propagation/2026-08-29): BC-2.01.003 reconciled to canonical form in R36. AC-001: associated-type form (Self::Input/Self::Output/&RunnableConfig/async fn) replaced with generic-parameter form (Input/Output/Option<RunnableConfig>/fn...->impl Future+Send). AC-002: BoxStream replaced with async outer-Ok stream return. input-hash refreshed (BC-2.01.003 updated in R36)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b2b6422"
+input-hash: "e166d33"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -54,12 +55,15 @@ tdd_mode: strict
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.01.003 PC-001)
-The `Runnable` trait is defined with associated types `Input` and `Output`, and the method:
-`async fn invoke(&self, input: Self::Input, config: &RunnableConfig) -> Result<Self::Output, PregolyaError>`.
-A custom `DoubleString` struct that implements `Runnable<Input=String, Output=String>` constructs and calls `invoke` returning `Ok(format!("{}{}", s, s))`. Verified by `test_BC_2_01_003_custom_runnable_invoke()`.
+The `Runnable` trait uses **generic parameters** `Input` and `Output` (not associated types), and every
+implementor provides:
+`fn invoke(&self, input: Input, config: Option<RunnableConfig>) -> impl std::future::Future<Output = Result<Output, PregolyaError>> + Send`
+(RPITIT + Send form; bare `async fn` is not permitted as it lacks a `Send` bound on the returned future — required for the `DynRunnable` blanket impl per ADR-005 §Send-Bounded RPITIT).
+A custom `DoubleString` struct that implements `Runnable<String, String>` constructs and calls `invoke`
+returning `Ok(format!("{}{}", s, s))`. Verified by `test_BC_2_01_003_custom_runnable_invoke()`.
 
 ### AC-002 (traces to BC-2.01.003 PC-002)
-The default `stream` method on `Runnable` returns a `BoxStream<'static, Result<Self::Output, PregolyaError>>`. Each stream item is a `Result<Self::Output, PregolyaError>`. The non-streaming fallback calls `invoke` internally: if `invoke` returns `Ok(output)`, the stream yields `Ok(output)` as its single item and terminates (per TV-003). A `DoubleString` stream over input "hello" yields exactly one item: `Ok("hellohello".to_string())` then terminates. Verified by `test_BC_2_01_003_default_stream_single_item()`.
+The default `stream` method on `Runnable` is async and returns `Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>` — an outer `Ok(stream)` wrapping a stream of `Result<Output, PregolyaError>` items. The non-streaming fallback calls `invoke` internally: if `invoke` returns `Ok(output)`, the outer future resolves to `Ok(stream)` where the stream yields `Ok(output)` as its single item and then terminates; if `invoke` returns `Err(e)`, the stream yields `Err(e)` as its single item (per EC-006). A `DoubleString` stream over input "hello" yields exactly one item: `Ok("hellohello".to_string())` then terminates. Verified by `test_BC_2_01_003_default_stream_single_item()`.
 
 ### AC-003 (traces to BC-2.01.003 PC-003)
 The default `batch` method on `Runnable` calls `invoke` concurrently for each input with bounded concurrency (default max 10 in-flight). A batch of 5 inputs returns 5 outputs in order. Verified by `test_BC_2_01_003_default_batch_order_preserved()`.

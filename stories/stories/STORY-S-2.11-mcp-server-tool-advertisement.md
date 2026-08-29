@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.24"
+version: "1.25"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "06e2be9"
+input-hash: "b923faf"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.10, S-1.14]
@@ -56,6 +56,7 @@ changelog:
   - "1.22 (R30/F-P2A129-02+F-P2A131-01+F-P2A129-01-propagation/2026-08-28): Round-30 three-finding sweep. (1) F-P2A129-02 [MED]: AC-031 normative statement rewritten to TWO-PATTERN UNION verbatim-mirroring BC-2.09.008 {INV-001} — opening description changed from single-pattern (hyphenated only) to explicit pattern (1) canonical hyphenated `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` + pattern (2) simple no-hyphen `\\b[0-9a-f]{32}\\b`; sanitize_internal_ids description in the framework-passes sentence changed from 'UUID (any version) pattern removal' to explicit two-pattern union; 'pattern (2)' reference in the fixture description now has proper antecedent; resolves same-document contradiction with §Architecture Compliance Rules row and BC-2.09.008 {INV-001}. (2) F-P2A131-01 [MED]: §Previous Story Intelligence and §File Structure registry.rs row aligned to architect canonical consumer/registrar set from module-decomposition.md §mcp::registry row: mcp::server reads (for tools/list + tools/call dispatch); mcp::client populates at session startup via mcp::discovery conversion; previously both sites said 'shared between ... and ...' without the reads/writes role distinction. (3) F-P2A129-01 propagation [POL-8]: Task-35 TV-015 reference corrected — 'prevents matching within 64-char SHA-256 digests per TV-015' replaced with 'prevents over-matching within 64-char SHA-256 digests at the isolation layer per TV-017 (sanitize_internal_ids alone does not strip a 64-char hex sequence; TV-015 verifies the full pipeline: redact_credentials catches it first)'; TV-015/TV-017 added to Task-35 end citation. input-hash updated (BC-2.09.008 §Changelog round-30 update)."
   - "1.23 (R31/F-P2A135-01/2026-08-28): mcp::registry registrar attribution corrected in §Previous Story Intelligence and §File Structure registry.rs row. R30 phantom 'mcp::client (populates at session startup via mcp::discovery conversion)' replaced at both live-body sites with canonical attribution corroborated against BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002} + S-2.10 wiring: read by mcp::server (tools/list + tools/call dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard ToolRegistry registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); typical flow: caller calls client.get_tools() then caller registers returned tools via registry.register(name, tool); mcp::client does NOT write the registry. BC-2.09.008 clause verified: standard-registration-API text lives at {PC-002}; arch-doc citation ({PC-001}) is a mismatch — escalated for architect correction (story-writer scope does not include arch docs). input-hash updated (module-decomposition.md R31 edit)."
   - "1.24 (R33/F-P2A143-02/2026-08-29): v1.23 {PC-001}/{PC-002} anchor mismatch escalation RESOLVED — architect corrected module-decomposition.md in R31 (v1.57 cites {PC-002}); story-writer {PC-002} usage confirmed correct (F-P2A135-01 closed). Records-tier resolution note only; no live-body content changed."
+  - "1.25 (R36/F-P2A155-01/2026-08-29): AC-019 seam-collapse corrected per BC-2.09.008 {PC-003} — OLD: invoke_dyn called CompiledStateGraph::invoke directly (collapsed 3-layer seam). NEW: invoke_dyn delegates to runner.run(arguments, policy) via Arc<dyn GraphRunner>; GraphRunner::run (ConcreteGraphRunner<S>::run) calls CompiledStateGraph::invoke internally. Exhaustive call-direction sweep: AC-020 (GraphRunner::run wraps CompiledStateGraph::invoke; invoke_dyn wraps run), Task-23, Arch-Compliance STATE-ISOLATION row — all correct; AC-019 was the sole seam-collapse in S-2.11. input-hash refreshed (BC-2.09.008 updated in R36)."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -227,12 +228,15 @@ On `tools/call` invocation for a `GraphAgentTool`:
 - If call arguments do not conform to `DynTool::schema()`, the server returns JSON-RPC
   `{ "code": -32602, "message": "Invalid arguments for tool '<name>': <schema_error>" }` BEFORE
   `invoke_dyn` is called; the graph is NOT invoked.
-- If schema validation passes, `GraphAgentTool::invoke_dyn` calls
-  `CompiledStateGraph::invoke(arguments: serde_json::Value, config)` directly (no
-  `from_value` deserialization step). If `CompiledStateGraph::invoke` returns
-  `Err(PregolyaError { .. })`, `invoke_dyn` returns `Err(PregolyaError { .. })`; the server
-  surfaces this as `isError: true` per BC-2.09.007 {PC-003}; credential redaction applies
-  per {INV-003}.
+- If schema validation passes, `GraphAgentTool::invoke_dyn` delegates to
+  `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run`
+  (`ConcreteGraphRunner<S>::run` at the concrete layer, where `S` is statically known)
+  calls `CompiledStateGraph::invoke(arguments, config)` internally — which takes
+  `serde_json::Value` directly; there is no separate type-parameterized deserialization
+  step. If `CompiledStateGraph::invoke` returns
+  `Err(PregolyaError { .. })`, the error propagates through `GraphRunner::run`;
+  `invoke_dyn` surfaces it; the server surfaces this as `isError: true` per
+  BC-2.09.007 {PC-003}; credential redaction applies per {INV-003}.
 Verified by `test_BC_2_09_008_schema_validation_fail_returns_32602()` and
 `test_BC_2_09_008_deserialize_fail_returns_is_error_true_with_redaction()`.
 
@@ -720,3 +724,4 @@ build MUST fail.
 - **1.22 (R30 / F-P2A129-02 + F-P2A131-01 + F-P2A129-01-propagation / 2026-08-28):** Three-finding round-30 sweep. (1) F-P2A129-02 [MED] — AC-031 normative statement rewritten to two-pattern union: opening description changed from single-pattern (hyphenated only; `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`) to explicit pattern (1) canonical hyphenated + pattern (2) simple no-hyphen `\b[0-9a-f]{32}\b`; `sanitize_internal_ids` description in the framework-passes sentence changed from "UUID (any version) pattern removal" to two-pattern union form; the "pattern (2)" fixture reference now has a proper "pattern (1)" antecedent; resolves same-document contradiction with §Architecture Compliance Rules row and BC-2.09.008 {INV-001}. (2) F-P2A131-01 [MED] — §Previous Story Intelligence and §File Structure registry.rs row aligned to architect canonical consumer/registrar set from module-decomposition.md: `mcp::server` (reads for tools/list + tools/call dispatch) and `mcp::client` (populates at session startup via `mcp::discovery` conversion); previously both sites stated "shared between ... and ..." without the reads/writes role distinction. (3) F-P2A129-01 propagation [POL-8] — Task-35: "prevents matching within 64-char SHA-256 digests per TV-015" corrected to "prevents over-matching … at the isolation layer per TV-017 (TV-015 verifies the full pipeline: `redact_credentials` catches it first → `"digest: <redacted>"`)" ; TV-015 and TV-017 added to Task-35 end citation. input-hash updated (BC-2.09.008 §Changelog round-30 update).
 - **1.23 (R31 / F-P2A135-01 / 2026-08-28):** mcp::registry registrar attribution corrected at two live-body sites — §Previous Story Intelligence and §File Structure registry.rs row. R30 phantom `mcp::client (populates at session startup via mcp::discovery conversion)` removed; corrected to canonical attribution per BC-2.09.006 {PRE-001}, BC-2.09.006 {PC-002}, and BC-2.09.008 {PC-002}: registry is read by `mcp::server` (tools/list + tools/call dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard `ToolRegistry` registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); typical flow: caller calls `client.get_tools()` → caller registers returned tools via `registry.register(name, tool)`; `mcp::client` does NOT write the registry. BC clause anchor verification: BC-2.09.008 `{PC-002}` is the clause containing "standard registration API" text; arch-doc v1.57 cites `{PC-001}` at the same call — mismatch escalated for architect correction; story uses the verified `{PC-002}`. input-hash updated (module-decomposition.md R31 edit propagated to input set).
 - **1.24 (R33 / F-P2A143-02 / 2026-08-29):** v1.23 `{PC-001}`/`{PC-002}` anchor mismatch escalation RESOLVED — architect corrected `module-decomposition.md` in R31 (v1.57 cites `{PC-002}`); story-writer `{PC-002}` usage confirmed correct (F-P2A135-01 closed). Records-tier resolution note; no live-body content changed.
+- **1.25 (R36 / F-P2A155-01 / 2026-08-29):** AC-019 call-direction corrected per BC-2.09.008 {PC-003}. OLD: `invoke_dyn` called `CompiledStateGraph::invoke` directly (seam-collapse — structurally impossible; `GraphAgentTool` holds `runner: Arc<dyn GraphRunner>`, not a graph handle). NEW: `invoke_dyn` delegates to `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run` (`ConcreteGraphRunner<S>::run` at the concrete layer) calls `CompiledStateGraph::invoke` internally; error propagates through `GraphRunner::run` and `invoke_dyn` surfaces it as `isError: true`. Exhaustive call-direction sweep of all S-2.11 AC/Task invoke_dyn/GraphRunner/CompiledStateGraph direction statements: AC-020 (`GraphRunner::run` wraps `CompiledStateGraph::invoke`; `invoke_dyn` wraps `run()`), AC-021 (`GraphRunner::run` detects `RunStatus::Interrupted`), Task-23 (`extract_output` inside `run()`; `invoke_dyn` wraps without re-filtering), Arch Compliance STATE-ISOLATION row — all CORRECT. AC-019 was the sole seam-collapse in S-2.11. input-hash refreshed (BC-2.09.008 updated in R36).

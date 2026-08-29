@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-002
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (FIX-BURST-B5-WAVE-B/2026-07-29): Error-construction notation sweep (ADR-010 §Class 3). Three sites corrected: PC5 single-line (E-CORE-004, `, ..` added); EC-001 3-line multiline span closure (E-CORE-004, `, ..` added before closing `})`); TV-004 table-cell (E-CORE-004, `, ..` added). All spans have category/code/message but lack component and retry_hint."
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.04 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (round-34/F-P2A144-02/2026-08-29): F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/sequence.rs` → `src/runnable/sequence.rs`; `src/runnables/base.rs` → `src/runnable/base.rs` per module-decomposition.md §core::runnable canonical singular form."
+  - "1.7 (round-36/F-P2A152-02-sibling/2026-08-29): L-227 comprehensive-class-audit — same phantom-RunnableConfig-field class as F-P2A152-02. {PC-006}: phantom fields `tags`, `metadata`, `callbacks` removed from RunnableConfig inheritance claim; `seq:step:N` tag-label concept removed (no `tags` field on RunnableConfig); replaced with canonical `Option<RunnableConfig>` pass-through statement. {PC-002}: borrowed `&config` → `config: Option<RunnableConfig>` (owned). {PC-003}: borrowed `&config` → `config: Option<RunnableConfig>` (owned); stream noted as async (returns outer Result per BC-2.01.003 {PC-002} authority). TV-001/TV-005: `&cfg` → `None`. TV-005: batch return wrapped in outer `Ok`. §Related BCs: `seq:step:N` parenthetical removed. Corpus sweep confirms phantom fields `tags`/`metadata`/`callbacks` appear in no other live-body spec or story file (only BC-2.01.003 and BC-2.01.004 were affected; BC-2.01.003 fixed in round-36 burst)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -61,18 +62,19 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 ## Postconditions
 
 1. {PC-001} `a.pipe(b)` returns a `RunnableSequence` that implements `Runnable<Input=I, Output=O>`.
-2. {PC-002} `seq.invoke(input, &config).await` runs `a.invoke(input)`, then feeds the result to
-   `b.invoke(result)`, returning the final output or the first error encountered.
-3. {PC-003} `seq.stream(input, &config)` passes the output chunks of `a` into `b` incrementally when
+2. {PC-002} `seq.invoke(input, config).await` (where `config: Option<RunnableConfig>`) runs `a.invoke(input, config)`, then feeds the result to
+   `b.invoke(result, config)`, returning the final output or the first error encountered.
+3. {PC-003} `seq.stream(input, config).await` (where `config: Option<RunnableConfig>`; async, returns `Result<impl Stream, PregolyaError>` per BC-2.01.003 {PC-002}) passes the output chunks of `a` into `b` incrementally when
    both `a` and `b` are streaming-native (`transform`-capable); otherwise buffers at each
    non-streaming step. Token-by-token throughput is preserved in an all-streaming pipeline.
 4. {PC-004} Sequence flattening: `a.pipe(b).pipe(c)` produces one `RunnableSequence` with
    `first=a, middle=[b], last=c` — NOT `RunnableSequence { first: RunnableSequence{a,b}, last: c }`.
 5. {PC-005} A type-boundary mismatch in a type-erased `DynRunnable` pipeline is detected at the sequence's
    first `invoke` call and returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-004, .. })`.
-6. {PC-006} The composed sequence inherits config (tags, metadata, callbacks) from the caller's
-   `RunnableConfig`; each step receives a child config tagged with its sequential position
-   (`seq:step:1`, `seq:step:2`, etc.).
+6. {PC-006} The `Option<RunnableConfig>` supplied by the caller is forwarded unchanged to each stage's
+   `invoke`/`stream`/`batch` call. `RunnableSequence` does not add, accumulate, or strip config fields;
+   there is no sequential-position tagging (no `tags` field on `RunnableConfig`). The only field
+   semantically consumed at each stage is `recursion_limit` (per BC-2.01.003 {PC-005}/{INV-005}).
 
 ## Invariants
 
@@ -125,11 +127,11 @@ No error unless the output type of `a` does not match the input type of `a`.
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `to_upper.pipe(add_exclamation).invoke("hello", &cfg)` | `Ok("HELLO!")` | Happy path — two-stage typed pipeline |
+| TV-001 | `to_upper.pipe(add_exclamation).invoke("hello", None).await` | `Ok("HELLO!")` | Happy path — two-stage typed pipeline |
 | TV-002 | `a.pipe(b).pipe(c)` — check structure | `RunnableSequence { first: a, middle: [b], last: c }` — flattened | Sequence flattening |
 | TV-003 | Streaming chain: `a.pipe(b).stream("input")` where both are streaming-native | Emits chunks incrementally, not one final chunk | Token streaming through sequence |
 | TV-004 | Type-erased `a.pipe(b)` with type mismatch, `invoke` | `Err(PregolyaError { category: INTERNAL, code: E-CORE-004, .. })` | DynRunnable type mismatch |
-| TV-005 | `seq.batch(vec!["x","y","z"], &cfg)` on a two-stage pipeline | `[Ok("X!"), Ok("Y!"), Ok("Z!")]` in input order | Batch through sequence respects order |
+| TV-005 | `seq.batch(vec!["x","y","z"], None).await` on a two-stage pipeline | `Ok(vec![Ok("X!"), Ok("Y!"), Ok("Z!")])` in input order | Batch through sequence respects order |
 
 ## Verification Properties
 
@@ -141,7 +143,7 @@ No error unless the output type of `a` does not match the input type of `a`.
 ## Related BCs
 
 - BC-2.01.003 — Runnable trait invocation (depends on: the composed sequence delegates to invoke/stream via the Runnable trait)
-- BC-2.06.001 — Streaming event taxonomy (composes with: each stage in a sequence emits run/step events tagged seq:step:N)
+- BC-2.06.001 — Streaming event taxonomy (composes with: each stage in a sequence emits run/step events)
 - BC-2.14.001 — PregolyaError 2D struct (depends on: type-mismatch errors propagate via PregolyaError)
 
 ## Architecture Anchors

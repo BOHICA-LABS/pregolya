@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.3"
+version: "2.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-002
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-49): F-P49-02 — added `recursion_limit` layer disambiguation invariant. Same config key serves two distinct enforcement layers: this BC (nested Runnable call depth, INTERNAL error) vs BC-2.03.001 (BSP super-step ceiling, E-GRAPH-017 POLICY). Cross-reference added to prevent implementer confusion about which halt applies at each layer."
   - "1.2 (ADV-P1D-PASS-56): F-P56-01 — added code: E-CORE-006 to PC5, invariant §layer-disambiguation, EC-004, and TV-004. The Runnable-layer recursion halt was codeless while its graph-engine counterpart (E-GRAPH-017) carried a code. E-CORE-006 (RecursionLimitExceeded, INTERNAL, broken) minted in error-taxonomy.md v1.7."
@@ -28,6 +28,7 @@ changelog:
   - "2.1 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
   - "2.2 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.003 LOW — default-stream item type and invoke-Err streaming behavior were unspecified. Updated PC-002 to name the stream item type as `Result<Self::Output, PregolyaError>` and specify that an invoke Err is yielded as a single `Err(e)` stream item (stream does not propagate as an outer error). Added {EC-006} as a canonical test vector for the error-in-stream path."
   - "2.3 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] — signature citations updated from bare `async fn` to explicit RPITIT + Send form per interface-definitions.md §Runnable<Input,Output> canon (ADR-005 §Send-Bounded RPITIT). Description: `async fn invoke(...)` → `fn invoke(...) -> impl std::future::Future<Output = ...> + Send`. PRE-001: `async fn invoke(...)` → `fn invoke(...) -> impl Future<Output = ...> + Send` with Send-bounded RPITIT rationale added. F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/base.rs` → `src/runnable/base.rs`; `src/runnables/config.rs` → `src/runnable/config.rs` per module-decomposition.md §core::runnable canonical singular form."
+  - "2.4 (round-36/F-P2A152-01+F-P2A152-02/2026-08-29): F-P2A152-01 [HIGH] — three structural contradictions reconciled to interface-definitions.md §Runnable<Input,Output> authority. (a) Associated-type form (`Self::Input`/`Self::Output`) replaced throughout with generic-parameter form (`Input`/`Output`) — associated types are non-realizable with multiple blanket impls (E0107). Description, all PCs, TVs updated. (b) Borrowed `config: &RunnableConfig` replaced with owned `config: Option<RunnableConfig>` at all call sites (Description, {PC-001}, {PC-002}, {PC-003}, EC-006, TVs). (c) `stream()` reconciled to async form: the outer future returns `Result<impl Stream<...>, PregolyaError>` (not a synchronous `BoxStream`); {PC-002} and EC-006 updated to describe `Ok(stream)` outer result with error surfaced as stream item in the default non-streaming fallback. F-P2A152-02 [MED] — phantom RunnableConfig surface purged. {PRE-003}: phantom fields `max_concurrency`, `tags`, `metadata`, `callbacks`, `run_name`, `run_id` removed; canonical 5 fields enumerated (`recursion_limit`, `thread_id`, `budget_config`, `context_mutations`, `configurable`). {PC-003}: `config.max_concurrency` phantom reference removed; Tokio-runtime bounded concurrency documented. {PC-004}: phantom `batch_as_completed` method replaced with `pipe` postcondition (canonical four-method surface stated). {PC-006}: phantom tag/metadata/callback/run_name/run_id inheritance replaced with correct Option<RunnableConfig> pass-through statement. {INV-002}: `batch_as_completed` reference removed. {INV-003}: phantom field propagation replaced with correct config-forwarding statement. EC-002: `max_concurrency=Some(1)` scenario replaced with `config=None` batch scenario. Corpus grep confirms `max_concurrency`/`batch_as_completed`/`run_name` appear ONLY in BC-2.01.003 (no sibling sweep required). `callbacks` also appears in BC-2.01.004 {PC-006} — flagged for product-owner to address in a follow-on burst (outside this mandate). TVs updated to `Option<RunnableConfig>` call form and outer-Ok for batch."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -51,50 +52,66 @@ removal_reason: null
 
 ## Description
 
-The `Runnable` trait is pregolya-core's universal unit of work. Every implementor must provide
-`fn invoke(&self, input: Self::Input, config: &RunnableConfig) -> impl std::future::Future<Output = Result<Self::Output, PregolyaError>> + Send`
-(RPITIT + Send form per ADR-005 §Send-Bounded RPITIT).
-The trait provides default implementations of `stream` (yields a single chunk equal to `invoke` output)
-and `batch` (maps `invoke` across inputs with bounded concurrency) so that a type implementing only
-`invoke` automatically satisfies the full `Runnable` surface. This contract encodes the LangChain v1
-`Runnable` ABC `invoke` abstract-method pattern (semport/core/behavioral-intent.md §1 "Runnables (LCEL)").
+The `Runnable` trait is pregolya-core's universal unit of work. `Runnable<Input, Output>` uses
+**generic parameters** (not associated types); `BaseChatModel: Runnable<Vec<Message>, AiMessage>` and
+`Tool: Runnable<ToolInput, ToolOutput>` are distinct instantiations without trait conflicts (E0107). Every
+implementor must provide
+`fn invoke(&self, input: Input, config: Option<RunnableConfig>) -> impl std::future::Future<Output = Result<Output, PregolyaError>> + Send`
+(generic-parameter form; RPITIT + Send form per ADR-005 §Send-Bounded RPITIT).
+The trait provides a default implementation of `stream` (async; outer future resolves to `Ok(stream)` that
+yields a single chunk equal to the `invoke` result as a stream item) and `batch` (maps `invoke` across
+inputs concurrently via the Tokio runtime) so that a type implementing only `invoke` automatically satisfies
+the full `Runnable` surface. This contract encodes the LangChain v1 `Runnable` ABC `invoke` abstract-method
+pattern (semport/core/behavioral-intent.md §1 "Runnables (LCEL)").
 
 ## Preconditions
 
 1. {PRE-001} A type `T` implements `Runnable` by providing `fn invoke(...) -> impl Future<Output = Result<...>> + Send` (RPITIT + Send form; bare `async fn` is not permitted as it lacks a `Send` bound on the returned future — required for the `DynRunnable` blanket impl to compile on stable Rust per ADR-005 §Send-Bounded RPITIT).
 2. {PRE-002} The type satisfies `Send + Sync` (required for concurrent batch execution).
-3. {PRE-003} The `RunnableConfig` carries optional `max_concurrency`, `recursion_limit` (default 25),
-   `tags`, `metadata`, `callbacks`, `run_name`, `run_id`, and `configurable` map.
+3. {PRE-003} The `RunnableConfig` carries exactly five fields: `recursion_limit: usize` (default 25),
+   `thread_id: Option<Uuid>`, `budget_config: Option<BudgetConfig>`,
+   `context_mutations: Option<ContextMutationConfig>`, and `configurable: Option<HashMap<String, Value>>`.
+   External callers construct via `RunnableConfig::default()` (all Option fields `None`,
+   `recursion_limit = 25`). There is no `max_concurrency`, `tags`, `metadata`, `callbacks`,
+   `run_name`, or `run_id` field on `RunnableConfig`.
 
 ## Postconditions
 
-1. {PC-001} `runnable.invoke(input, &config).await` returns `Ok(output)` for a valid input, or
-   `Err(PregolyaError { category: VAL, code: E-CORE-003, .. })` on input-type mismatch.
-2. {PC-002} `runnable.stream(input, &config)` returns a `BoxStream<'static, Result<Self::Output, PregolyaError>>`.
-   Each item in the stream is a `Result<Self::Output, PregolyaError>`.
-   When the implementor does not override `stream` (non-streaming fallback): the stream calls `invoke`
-   internally, then yields exactly one chunk equal to the `invoke` result:
+1. {PC-001} `runnable.invoke(input, config).await` (where `config: Option<RunnableConfig>`) returns
+   `Ok(output)` for a valid input, or `Err(PregolyaError { category: VAL, code: E-CORE-003, .. })`
+   on input-type mismatch.
+2. {PC-002} `runnable.stream(input, config).await` (where `config: Option<RunnableConfig>`) returns
+   `Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>`.
+   The outer `Result` covers pre-stream initialization failures; each item yielded by the inner stream
+   is a `Result<Output, PregolyaError>`.
+   When the implementor does not override `stream` (non-streaming fallback): the outer future resolves to
+   `Ok(stream)`, then the stream yields exactly one chunk equal to the `invoke` result:
    - If `invoke` returns `Ok(output)`, the stream yields `Ok(output)` as its single item and then terminates.
    - If `invoke` returns `Err(e)`, the stream yields `Err(e)` as its single item and then terminates.
-     The error is surfaced as a stream item — `stream()` itself never returns an outer `Result`;
-     callers must check each stream item for errors.
+     The error is surfaced as a stream item inside an `Ok(stream)` outer result — callers must poll
+     stream items to discover the error; the outer `Result` is `Ok` in the default fallback.
    A streaming-native implementor may override `stream` to yield multiple chunks; each chunk is still a `Result`.
-3. {PC-003} `runnable.batch(inputs, &config).await` returns `Vec<Result<Output, PregolyaError>>`
-   in input-insertion order — even though execution is concurrent. Concurrency is bounded by
-   `config.max_concurrency` (if `None`, bounded by the tokio thread pool).
-4. {PC-004} `runnable.batch_as_completed(inputs, &config)` yields `(usize, Result<Output, _>)` tuples
-   out of insertion order but with the index from the original input slice.
+3. {PC-003} `runnable.batch(inputs, config).await` (where `config: Option<RunnableConfig>`) returns
+   `Result<Vec<Result<Output, PregolyaError>>, PregolyaError>` with inner results in input-insertion
+   order — even though execution is concurrent. Concurrency is bounded by the Tokio thread-pool;
+   there is no per-invocation concurrency cap in `RunnableConfig` (no `max_concurrency` field).
+4. {PC-004} `runnable.pipe(next)` returns a concrete `RunnableSequence<Input, NextOutput>`
+   (BC-2.01.004 PC1). The canonical `Runnable<Input, Output>` surface has exactly four methods:
+   `invoke`, `stream`, `batch`, `pipe`. There is no `batch_as_completed` method on the `Runnable` trait.
 5. {PC-005} `recursion_limit` in `RunnableConfig` defaults to 25. Exceeding it in nested Runnable calls
    returns `Err(PregolyaError { category: INTERNAL, code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })`.
-6. {PC-006} A child run inherits `tags` and `metadata` (accumulated) and `callbacks` from the parent
-   `RunnableConfig`; `run_name` and `run_id` are consumed by the immediate run and not inherited.
+6. {PC-006} The `Option<RunnableConfig>` passed to `invoke`/`stream`/`batch` is forwarded as-is to
+   each nested `Runnable` invocation. The `Runnable` trait imposes no automatic field accumulation,
+   stripping, or inheritance — callers compose `RunnableConfig` explicitly for each level. The only
+   field semantically consumed (depth-counted) during forwarding is `recursion_limit` per {PC-005}/{INV-005}.
 
 ## Invariants
 
 - {INV-001} `invoke` is the ONLY required method; all other surface methods have working defaults.
-- {INV-002} `batch` output order matches input order — not completion order (unlike `batch_as_completed`).
-- {INV-003} Config propagation: `tags` and `metadata` accumulate down the run tree; `run_id`/`run_name`
-  are consumed once and not passed to child runs.
+- {INV-002} `batch` output order matches input order — not completion order (execution is concurrent but results are reordered to match input position).
+- {INV-003} Config forwarding: `Option<RunnableConfig>` is passed unchanged to each child `invoke`/`stream`/`batch` call.
+  The `Runnable` trait imposes no field accumulation or stripping. Only `recursion_limit` is semantically
+  consumed (depth-counted) by the recursion guard per {INV-005}.
 - {INV-004} `recursion_limit` is honored across all nested `invoke` / `stream` calls via the task-local
   config mechanism.
 - {INV-006} **DynRunnable is non-generic (O-P194-A):** `DynRunnable` is a type-erased, non-generic trait
@@ -122,10 +139,13 @@ expected schema at runtime.
 message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", .. })`.
 **Reference:** error-taxonomy.md E-CORE-003.
 
-### EC-002: batch with max_concurrency=1 (sequential fallback)
-**Scenario:** Caller sets `config.max_concurrency = Some(1)` for a batch of 3 inputs.
-**Expected behavior:** Inputs are processed one at a time (sequential). Output order still
-matches input order. No timeout or panic occurs.
+### EC-002: batch with config=None (default config)
+**Scenario:** Caller invokes `runnable.batch(vec!["a","b","c"], None).await`.
+**Expected behavior:** Each input is processed concurrently using Tokio-runtime concurrency with
+`RunnableConfig::default()` semantics for recursion limit and other fields. Results are returned
+in input-insertion order regardless of completion order. `RunnableConfig` has no `max_concurrency`
+field — concurrency is bounded by the Tokio runtime, not by a per-invocation cap.
+Returns `Ok(vec![Ok("A"), Ok("B"), Ok("C")])`. No timeout or panic occurs.
 
 ### EC-003: stream on a non-streaming implementor
 **Scenario:** A `RunnableLambda` that returns a full output (not a stream) is called via `stream()`.
@@ -145,20 +165,22 @@ code: E-CORE-006, message: "RecursionLimitExceeded: recursion limit exceeded at 
 ### EC-006: stream on a Runnable whose invoke returns Err
 **Scenario:** A `RunnableLambda` that always returns
 `Err(PregolyaError { category: VAL, code: E-CORE-003, .. })` is called via `stream()`.
-**Expected behavior:** `stream()` returns a `BoxStream`. Polling the stream yields exactly one item:
+**Expected behavior:** Awaiting `stream(input, None)` resolves to `Ok(stream)` — the outer `Result`
+is `Ok`. Polling the stream yields exactly one item:
 `Err(PregolyaError { category: VAL, code: E-CORE-003, .. })`. The stream then terminates.
-The caller does NOT receive an outer `Result` wrapping the stream — the error is a stream item.
+The error is surfaced as a stream item inside the `Ok(stream)` outer result; the outer future from
+`stream()` resolves to `Ok`, not `Err`. Callers must poll stream items to discover the error.
 `stream()` itself does not panic.
 
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `lambda.invoke("hello", &RunnableConfig::default()).await` where lambda returns `input.to_uppercase()` | `Ok("HELLO")` | Happy path — synchronous invoke |
-| TV-002 | `lambda.batch(vec!["a","b","c"], &config).await` | `[Ok("A"), Ok("B"), Ok("C")]` — insertion order preserved | Batch ordering invariant |
-| TV-003 | `lambda.stream("hello", &config)` (non-streaming) | yields one item `Ok("HELLO")`, then terminates | Default stream: item type is `Result<Output, PregolyaError>`; single Ok chunk |
-| TV-004 | `lambda.invoke(input, &config)` where config has `recursion_limit: 25` and call depth = 26 | `Err(PregolyaError { category: INTERNAL, code: E-CORE-006, .. })` | Recursion guard |
-| TV-005 | `lambda.batch(vec![], &config).await` | `Ok(vec![])` | Empty batch returns empty vec |
+| TV-001 | `lambda.invoke("hello", None).await` where lambda returns `input.to_uppercase()` | `Ok("HELLO")` | Happy path — invoke with default config |
+| TV-002 | `lambda.batch(vec!["a","b","c"], None).await` | `Ok(vec![Ok("A"), Ok("B"), Ok("C")])` — insertion order preserved | Batch ordering invariant; outer Ok wraps the Vec |
+| TV-003 | `lambda.stream("hello", None).await` (non-streaming) | `Ok(stream)` — polling stream yields one item `Ok("HELLO")`, then terminates | Async stream form; outer future resolves to Ok; single Ok chunk per default non-streaming impl |
+| TV-004 | `lambda.invoke(input, Some(config))` where `config.recursion_limit = 25` and call depth = 26 | `Err(PregolyaError { category: INTERNAL, code: E-CORE-006, .. })` | Recursion guard |
+| TV-005 | `lambda.batch(vec![], None).await` | `Ok(vec![])` | Empty batch returns outer Ok with empty Vec |
 
 ## Verification Properties
 

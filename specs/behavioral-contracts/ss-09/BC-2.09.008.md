@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "2.8"
+version: "2.9"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-021
 wave: 2
 phase: 1b
 producer: product-owner
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 changelog:
   - "1.0 (GAP-01/ADR-029/2026-08-26): Initial — StateGraph-as-MCP-Tool wrapping contract; GraphAgentTool; mcp::graph_tool module in pregolya-mcp; inputSchema derivation via schemars; STATE-ISOLATION invariant {INV-001} (VP-016 proptest P1 proof target); fail-closed DenyInterrupts default; ForceApproveHooks explicit opt-in; E-MCP-010 GraphAgentInterruptDenied (ADR-029 §Decision 5; note: ADR-029 body incorrectly referenced E-MCP-006 — that code is taken by McpContentUnsupported; PO-authoritative mint is E-MCP-010). Human-approved v1 scope addition 2026-08-26 (GAP-01/HS-C-001)."
   - "1.1 (ADR-029-sec-hardening/SEC-006/007/008/005/001/2026-08-26): Security hardening per ADR-029 §Decision 3/4/5. SEC-007: {PC-006} rewritten — ForceApproveHooks overrides ONLY PreToolDecision::PendingHumanApproval (subject to {INV-004} ActionRisk check); PreToolDecision::Deny and other decision variants pass through unchanged; ForceApproveHooks does not override security-based Deny decisions. SEC-006: {INV-004} body replaced — BoundaryApprovalHook enforces read-only restriction at runtime via ActionRisk check; PendingHumanApproval overridden to Approve only when action_risk < ActionRisk::Medium; otherwise Deny + CRITICAL log at mcp.graph_tool.force_approve_write_blocked + E-MCP-011 ForceApproveWriteBlocked; EC-009 and TV-008 added. SEC-005: {INV-001} extended — STATE-ISOLATION guarantee covers error paths; two unconditional sanitization passes applied to isError:true responses (redact_credentials + sanitize_internal_ids UUID v4 removal); node implementations must exclude internal IDs at authoring site; TV-009 added. SEC-001: {INV-005} added — extract_output closure must not select credential-bearing fields; framework does not sanitize success-path extract_output result; caller obligation per DI-010; TV-010 added. SEC-008: EC-010 added — extract_output panic caught via UnwindSafe boundary; static 'internal error' response; server continues serving; TV-011 added."
@@ -34,6 +34,7 @@ changelog:
   - "2.6 (round-28/F-P2A121-01+O-P2A121-02/2026-08-28): F-P2A121-01 [MED, CWE-670/CWE-209]: {INV-001} §Framework sanitization pass scope extended to two-pattern union — added pattern (2) simple no-hyphen form `\\b[0-9a-f]{32}\\b` to cover `Uuid::simple()` rendering (32 contiguous hex digits); pattern (1) canonical hyphenated form retained; the `\\b` word-boundary prevents over-matching 64-char SHA-256 digests and hex sequences flanked by underscores; together the two patterns cover all standard uuid-crate rendering forms. Three new test vectors appended (append-only per POL-1): TV-014 (POSITIVE — simple-form run_id stripped), TV-015 (NEGATIVE — 64-char hex digest passes through unchanged), TV-016 (NEGATIVE — simple UUID flanked by underscores passes through unchanged). O-P2A121-02 [LOW/records]: Traceability §Error Codes row E-MCP-010 note reworded to past-tense draft-history framing — present-tense 'ADR-029 body incorrectly referenced' replaced with 'the initial ADR-029 draft cited ... corrected to E-MCP-010 in ADR-029 §Changelog'."
   - "2.7 (round-30/F-P2A129-01/2026-08-28): F-P2A129-01 [MED, CWE-209/spec-contradiction]: TV-015 full-pipeline expected output corrected. The mandatory pipeline (`sanitize_internal_ids(redact_credentials(message))` per ADR-029 §Decision 3 and Decision 5) applies `redact_credentials` FIRST; its rule `[A-Za-z0-9]{64,}` matches a 64-char lowercase hex SHA-256 digest token → `<redacted>`; `sanitize_internal_ids` then sees no UUID pattern in the already-redacted message. TV-015 corrected from 'content[0].text contains 64-char hex UNCHANGED' to `\"digest: <redacted>\"` (full-pipeline output). TV-017 added (append-only per POL-1): `sanitize_internal_ids` unit-isolation test — documents that pattern (2) `\\b[0-9a-f]{32}\\b` does NOT independently match a 64-char hex sequence (the `\\b` end-boundary guard; tests the non-over-match property at the correct isolation layer, not the full pipeline). {INV-001} §Framework sanitization pass scope: pipeline-interaction note added after the `\\b` non-over-match sentence — clarifies that in the full pipeline `redact_credentials` catches a 64-char lowercase hex token before `sanitize_internal_ids` runs (see TV-017 for unit-isolation test). OPTION CHOSEN: (b) — correct TV-015 as full-pipeline vector AND add TV-017 as isolation vector; provides complete coverage at both layers; story-writer to propagate TV-015/TV-017 reference updates to S-2.11 Task-35 body under bc_array_changes_propagate_to_body_and_acs. Architect note: ADR-029 §Decision 3 and Decision 5 already specify the chain; no ADR change required."
   - "2.8 (round-35/F-P2A151-01/2026-08-29): F-P2A151-01 [MED]: {PC-004} opening clause call-direction inversion corrected per ADR-029 §Decision 2 and §Decision 5 canonical seam. OLD opening: 'CompiledStateGraph::invoke runs the graph to a terminal state via GraphRunner::run, which calls extract_output(&final_state)' — inverted containment (made CompiledStateGraph::invoke the outer caller of GraphRunner::run). NEW opening: 'GraphRunner::run runs the graph to a terminal state via CompiledStateGraph::invoke, then calls extract_output(&final_state) on the returned serde_json::Value' — correct containment: invoke_dyn wraps GraphRunner::run which wraps CompiledStateGraph::invoke; extract_output is called inside GraphRunner::run on the value returned by CompiledStateGraph::invoke. Trailing note and all return-type semantics preserved unchanged. POL-24 sibling sweep: BC-2.09.006 and BC-2.09.007 contain no GraphRunner/CompiledStateGraph::invoke direction statements (BC-2.09.006 covers tools/list only; BC-2.09.007 covers invoke_dyn→DynTool seam only; neither references the internal graph execution containment); no sibling fixes required."
+  - "2.9 (round-36/F-P2A155-01/2026-08-29): F-P2A155-01 [MED]: {PC-003} call-direction seam-collapse corrected. OLD text stated `GraphAgentTool::invoke_dyn` calls `CompiledStateGraph::invoke(arguments, config)` directly — collapsing the 3-layer seam. NEW text: `invoke_dyn` delegates to `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run` calls `CompiledStateGraph::invoke(arguments, config)` internally (statically in `ConcreteGraphRunner<S>::run`); error propagates through `run()` and `invoke_dyn` surfaces it as `isError: true`. Exhaustive call-direction sweep of all PC/INV/EC/TV clauses: {PC-003} was the ONLY seam-collapse; {PC-004}/{INV-001} correctly state GraphRunner::run wraps CompiledStateGraph::invoke and invoke_dyn wraps run(); {PC-005} correctly states GraphRunner::run detects RunStatus::Interrupted; all EC/TV clauses state correct layering. No sibling sweep required (BC-2.09.006 and BC-2.09.007 confirmed clean in round-35 sweep)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -94,11 +95,13 @@ overrides `PreToolCallHook` approval decisions only.
 3. {PC-003} On `tools/call` invocation: the `mcp::server` validates the call arguments
    against `DynTool::schema()` per BC-2.09.007 {PC-005}; if validation fails, the server
    returns JSON-RPC `-32602` ("Invalid arguments for tool '...': <schema_error>") before
-   `invoke_dyn` is called. If schema validation passes, `GraphAgentTool::invoke_dyn` calls
-   `CompiledStateGraph::invoke(arguments, config)` — which takes `serde_json::Value` directly
-   (BC-2.02.001 {PC-005}); there is no separate type-parameterized deserialization step.
-   If `CompiledStateGraph::invoke` returns `Err(PregolyaError { .. })`,
-   `GraphAgentTool::invoke_dyn` propagates the `Err`; the server surfaces this as `isError: true`
+   `invoke_dyn` is called. If schema validation passes, `GraphAgentTool::invoke_dyn` delegates
+   to `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run`
+   (`ConcreteGraphRunner<S>::run` at the concrete layer, where `S` is statically known) calls
+   `CompiledStateGraph::invoke(arguments, config)` internally — which takes `serde_json::Value`
+   directly (BC-2.02.001 {PC-005}); there is no separate type-parameterized deserialization step.
+   If `CompiledStateGraph::invoke` returns `Err(PregolyaError { .. })`, the error propagates
+   through `GraphRunner::run`; `invoke_dyn` surfaces it; the server surfaces this as `isError: true`
    per BC-2.09.007 {PC-003}; credential redaction applies per {INV-003}.
 4. {PC-004} On successful graph execution: `GraphRunner::run` runs the graph to a terminal
    state via `CompiledStateGraph::invoke`, then calls `extract_output(&final_state)` on the
