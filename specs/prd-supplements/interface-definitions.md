@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.95"
+version: "2.96"
 status: active
 producer: product-owner
 timestamp: 2026-08-29T00:00:00Z
 phase: 1d
 changelog:
+  - "2.96 (round-39/F-P2A164-01+F-P2A164-02+F-P2A165-01-blast-radius/2026-08-29): F-P2A164-01 [CRIT] DynRunnable erasure seam E0207 — R38 serde-bounded blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O>...` is non-realizable: `I` and `O` appear only in the where-clause, not in Self type `T` (RFC 447 → E0207). Replaced with adapter-wrapper model: `pub struct DynRunnableAdapter<I, O, R> { inner: R, _phantom: PhantomData<fn(I)->O> }` with `#[async_trait] impl<I, O, R> DynRunnable for DynRunnableAdapter<I, O, R> where R: Runnable<I,O>+Send+Sync+'static, I: DeserializeOwned+Send+'static, O: Serialize+Send+'static`. Self-validation: (a) all three params on Self → E0207 cleared; (b) each (I,O,R) triple is a distinct Self type → no E0119; (c) Runnable::invoke +Send RPITIT → Pin<Box<dyn Future+Send>> box cast compiles on stable. Added `IntoDynRunnable<I,O>` ergonomic extension trait providing `.into_dyn()`. Updated: §DynRunnable blanket impl domain paragraph → adapter model; §DynRunnable # Errors E-CORE-003 'blanket boundary' → 'adapter boundary'; DynRunnableAdapter struct + impl + IntoDynRunnable added after DynRunnable trait body. ADR-005 §Send-Bounded RPITIT updated. F-P2A164-02 [MED] Runnable::pipe serde bounds: `next: impl Runnable<Output, NextOutput> + Send + Sync + 'static`; where: `Self: Sized + Send + Sync + 'static, Input: serde::de::DeserializeOwned + Send + 'static, Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static, NextOutput: serde::Serialize + Send + 'static`; pipe erases self/next via `.into_dyn()`. F-P2A165-01-blast-radius: §GraphAgentTool ForceApproveHooks doc-comment updated — ActionRisk gate now runs BEFORE inner hook (covers AlwaysApprovePolicy / no-hook Approve path, not just PendingHumanApproval; CWE-862 closure). PO must mirror: BC-2.09.008 {INV-004} ActionRisk pre-check canon; BC-2.01.004 {PC-001} pipe serde bounds; +1 TV (write-class + AlwaysApprovePolicy + ForceApproveHooks → Deny + E-MCP-011, TV census 758→759). Story-writer: S-1.04 AC-007/AC-008/{INV-006}/compile-test — adapter model + pipe serde bounds."
   - "2.95 (round-38/F-P2A160-01+OBS-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] DynRunnable blanket-impl domain non-realizable (Runnable<Value,Value> bound prevents typed-stage coercion; E-CORE-003 dead code). Replaced blanket `impl<T: Runnable<Value, Value> + Send + Sync + 'static> DynRunnable for T` with serde-bounded bridging blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static, I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static` — blanket now performs concrete serde round-trip internally (deserialize Value→I, Runnable::invoke, serialize O→Value). Makes E-CORE-003 reachable (deserialization failure at the blanket boundary), typed stages coercible to Box<dyn DynRunnable> without E0277, and RunnableSequence<I,O> auto-derives DynRunnable; Value,Value case round-trips trivially with no E0119 coherence overlap. DynRunnable doc-comment updated: 'callers are responsible for JSON round-tripping at the boundary' → blanket performs round-trip internally; §Blanket impl domain paragraph updated to reflect serde-bounded blanket; # Errors updated with E-CORE-003 entry. ADR-005 §Send-Bounded RPITIT updated to reflect serde-bounded blanket domain (R38). OBS-P2A160-01 sibling: §SkillStore scope-encapsulation note 'SkillStore::new(...)' names a constructor on a TRAIT — reworded to 'the SkillStore implementor's new(store, app_id) constructor'; v2.93 changelog narrative updated accordingly. PO must mirror into BC-2.01.003 {INV-006}/{PC-001} and BC-2.01.004 {PC-001}: serde-bounded blanket is the authoritative model for typed-stage coercion and E-CORE-003 reachability. Story-writer must mirror into S-1.04 AC-007/008: typed-stage coercion guarantee."
   - "2.94 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] Runnable native-async-to-async_trait-façade blanket-bridge non-realizability on stable Rust (E0277 Send-future). Exhaustive Send-RPITIT sweep mandate applied. §Runnable<Input,Output> async methods changed from bare `async fn` (no +Send bound on RPITIT future) to explicit RPITIT form `fn ... -> impl Future<Output = ...> + Send` — the only stable-Rust mechanism to impose Send on an RPITIT future without nightly Return-Type-Notation. `invoke` and `batch` carry `+ Send` on the outer future. `stream` carries `+ Send` on both the outer future and the inner `impl Stream` (required for `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`). `invoke` doc-comment updated: replaced misleading 'synchronously (blocks async task)' with 'completes when the full result is available (non-streaming)'; added §Send-Bounded RPITIT rationale. DynRunnable doc-comment updated: added §Blanket impl realizability prerequisite paragraph explaining that `Runnable`'s RPITIT `+Send` is the prerequisite for the blanket DynRunnable and DynTool impls to compile on stable Rust. ADR-005 §Adjacent Trait Object-Safety Adjudications updated: added §Send-Bounded RPITIT subsection with canon rule and exhaustive native-async-bridge inventory table (Tool: inherits Runnable fix — no own async methods; BaseChatModel: not behind dyn, stream_chat future need not be Send; SkillStore: not behind dyn — confirmed zero dyn SkillStore sites in corpus). BC signature rows referencing Runnable/Tool async signatures — PO routing flagged for Phase B propagation; architect does NOT edit BCs: BC-2.01.003 (invoke/stream/batch postconditions), BC-2.08.010 (Tool invoke inherited from Runnable), and any BC that cites async fn invoke/stream/batch method shapes. F-P2A144-02 [MED] module-path drift runnables/ (plural) → runnable/ (singular): changed four doc-comment module-path strings in §RunnableSequence, §RunnableParallel, §RunnablePassthrough, §RunnableAssign from pregolya-core/src/runnables/ to pregolya-core/src/runnable/ per module-decomposition.md §core::runnable canonical form. Wider-corpus sweep: BC-2.01.003/004/005/006/007/008 have live-body src/runnables/ occurrences — DO NOT edit (product-owner propagates in Phase B); VP-014 src/runnables/ occurrence is in a historical changelog entry (grandfathered)."
   - "2.93 (round-33/F-P2A140-01+comprehensive-object-safety-audit/2026-08-29): F-P2A140-01 [HIGH] DynRunnable missing #[async_trait] — E0038 non-realizable. Added #[async_trait] above pub trait DynRunnable: Send + Sync. Corrected doc-comment: object-safety comes from #[async_trait] boxed-future desugaring (Pin<Box<dyn Future>>) NOT from explicit receiver — rewrote to match sibling async trait description pattern; preserved ADR-005 §Adjacent Trait Object-Safety Adjudications citation. Comprehensive object-safety audit (break-the-per-round-cycle mandate): three additional async traits used behind dyn lacked #[async_trait] — each defect closes a potential E0038 at Phase 3 compile time: (1) CheckpointSaver — used behind Arc<dyn CheckpointSaver> per ADR-005 §Object-Safety-of-the-5-Method-CheckpointSaver-Trait and bounded-contexts.md; async fn put_writes/get_tuple/list/put/fts_search all needed boxed-future desugaring; (2) GuardrailHook — used as &dyn GuardrailHook in GuardedDocuments::rag_ingress (ADR-014 Decision 6; purity-boundary-map.md core::retriever row); async fn evaluate needed boxed-future desugaring; (3) MemoryStore — used as Arc<dyn MemoryStore> in the SkillStore implementor's new constructor (ADR-012 Decision 1); async fn memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search all needed boxed-future desugaring. SkillStore confirmed NOT behind dyn (no Arc<dyn SkillStore> in corpus) — no fix needed. TD-VSDD-060 sibling sweep: no other trait declarations in this file were missed; see companion VP-014 §Proof Harness Skeleton (F-P2A140-02) for impl-side fix."
@@ -160,10 +161,18 @@ pub trait Runnable<Input, Output>: Send + Sync {
     /// Returns a concrete `RunnableSequence<Input, NextOutput>` (BC-2.01.004 PC1).
     /// Flattening: `a.pipe(b).pipe(c)` produces one flat `RunnableSequence` with
     /// `first=a, middle=[b], last=c` — NOT nested sequences (BC-2.01.004 PC4, TV-002).
-    fn pipe<NextOutput>(self, next: impl Runnable<Output, NextOutput>)
+    ///
+    /// Serde bounds are required because `pipe` erases `self` and `next` via
+    /// `.into_dyn()` into `Box<dyn DynRunnable>` fields of `RunnableSequence`. `Output`
+    /// needs both `Serialize` (as the output of `self`) and `DeserializeOwned` (as the
+    /// input of `next`) for the adapter round-trip. Authority: ADR-005 §Send-Bounded RPITIT.
+    fn pipe<NextOutput>(self, next: impl Runnable<Output, NextOutput> + Send + Sync + 'static)
         -> RunnableSequence<Input, NextOutput>
     where
-        Self: Sized;
+        Self: Sized + Send + Sync + 'static,
+        Input: serde::de::DeserializeOwned + Send + 'static,
+        Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static,
+        NextOutput: serde::Serialize + Send + 'static;
 }
 ```
 
@@ -199,23 +208,26 @@ Type-erased composition path and the concrete sequence type returned by `pipe`.
 /// ADR-005 §Adjacent Trait Object-Safety Adjudications — BC-2.01.003 EC-001,
 /// BC-2.01.004 EC-001.
 ///
-/// **Blanket impl domain (R38/F-P2A160-01):** the bridging blanket carries serde bounds:
-/// `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static,`
+/// **Adapter model (R39/F-P2A164-01; supersedes R38 serde-bounded blanket):** the direct
+/// blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + ...` is E0207 on
+/// stable Rust — `I` and `O` appear only in the where-clause, not in the Self type `T`
+/// (RFC 447). The adapter-wrapper resolves E0207: `DynRunnableAdapter<I, O, R>` places
+/// all three type params on Self (`R` directly; `I` and `O` via `PhantomData<fn(I) -> O>`).
+/// The impl `impl<I, O, R> DynRunnable for DynRunnableAdapter<I, O, R>` carries the serde
+/// bounds: `R: Runnable<I, O> + Send + Sync + 'static,`
 /// `I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static`.
-/// The body deserializes `Value → I` (raising `E-CORE-003` on failure), calls
-/// `Runnable<I, O>::invoke`, and serializes `O → Value`; `stream` is analogous, boxing
-/// the `+Send` stream. This makes `E-CORE-003` reachable (deserialization failure at the
-/// blanket boundary), makes typed stages (e.g. `Runnable<String, String>`) coercible to
-/// `Box<dyn DynRunnable>` without E0277, and auto-derives `DynRunnable` for
-/// `RunnableSequence<I, O>`. The `Value, Value` case round-trips trivially; no separate
-/// blanket is needed and no E0119 coherence overlap is introduced. `Runnable`'s async
-/// methods carry explicit RPITIT `+ Send` — required for the `Pin<Box<dyn Future + Send>>`
-/// box cast to compile on stable Rust. Authority: ADR-005 §Adjacent Trait Object-Safety
-/// Adjudications §Send-Bounded RPITIT.
+/// The body deserializes `Value → I` (raising `E-CORE-003` on failure), calls `R::invoke`,
+/// and serializes `O → Value`; `stream` is analogous, boxing the `+Send` stream. Each
+/// (I, O, R) triple yields a distinct Self type — no E0119 coherence overlap. The ergonomic
+/// `IntoDynRunnable<I, O>` extension trait (defined below) provides `.into_dyn()` on any
+/// `Runnable<I, O> + Sized`; `pipe()` uses `.into_dyn()` internally to erase its stages.
+/// `Runnable`'s async methods carry explicit RPITIT `+ Send` — required for the
+/// `Pin<Box<dyn Future + Send>>` box cast to compile on stable Rust. Authority: ADR-005
+/// §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT.
 ///
 /// # Errors
 /// - `Err(PregolyaError { code: "E-CORE-003", .. })` — `Value → I` deserialization
-///   failure at the blanket boundary (BC-2.01.003 {PC-001}).
+///   failure at the adapter boundary (BC-2.01.003 {PC-001}).
 /// - `Err(PregolyaError { code: "E-CORE-004", .. })` — type boundary mismatch
 ///   between adjacent stages detected at the first `invoke` call
 ///   (BC-2.01.004 PC5/EC-001/TV-004).
@@ -235,6 +247,67 @@ pub trait DynRunnable: Send + Sync {
         input: serde_json::Value,
         config: Option<RunnableConfig>,
     ) -> Pin<Box<dyn Stream<Item = Result<serde_json::Value, PregolyaError>> + Send>>;
+}
+
+/// Adapter wrapper that implements `DynRunnable` for any `R: Runnable<I, O>`.
+///
+/// Resolves E0207: all three type params are on Self — `R` directly, `I` and `O`
+/// via `PhantomData<fn(I) -> O>` which appears in the struct fields and therefore
+/// constrains the impl block's Self type (RFC 447). The impl body deserializes
+/// `Value → I` (raising `E-CORE-003` on failure), calls `R::invoke`, and serializes
+/// `O → Value`. Authority: ADR-005 §Send-Bounded RPITIT.
+/// Module: `pregolya-core/src/runnable/adapter.rs`.
+pub struct DynRunnableAdapter<I, O, R> {
+    pub(crate) inner: R,
+    pub _phantom: std::marker::PhantomData<fn(I) -> O>,
+}
+
+#[async_trait]
+impl<I, O, R> DynRunnable for DynRunnableAdapter<I, O, R>
+where
+    R: Runnable<I, O> + Send + Sync + 'static,
+    I: serde::de::DeserializeOwned + Send + 'static,
+    O: serde::Serialize + Send + 'static,
+{
+    // invoke: from_value::<I>(input) → E-CORE-003 on failure → inner.invoke(typed, config) →
+    //         to_value(out) → Ok(json_value). See BC-2.01.003 {PC-001}.
+    async fn invoke(
+        &self,
+        input: serde_json::Value,
+        config: Option<RunnableConfig>,
+    ) -> Result<serde_json::Value, PregolyaError>;
+
+    // stream: analogous with boxed +Send stream items. See BC-2.01.003 {PC-002}.
+    async fn stream(
+        &self,
+        input: serde_json::Value,
+        config: Option<RunnableConfig>,
+    ) -> Pin<Box<dyn Stream<Item = Result<serde_json::Value, PregolyaError>> + Send>>;
+}
+
+/// Ergonomic extension trait: `.into_dyn()` on any `Runnable<I, O> + Sized`.
+///
+/// The blanket `impl<I, O, T: Runnable<I, O> + Sized> IntoDynRunnable<I, O> for T`
+/// is realizable: `I` and `O` constrain the TRAIT's type parameters, not only the
+/// where-clause (RFC 447). Used by `Runnable::pipe` to erase each stage.
+/// Module: `pregolya-core/src/runnable/adapter.rs`.
+pub trait IntoDynRunnable<I, O>: Runnable<I, O> + Sized {
+    fn into_dyn(self) -> DynRunnableAdapter<I, O, Self>
+    where
+        Self: Send + Sync + 'static,
+        I: serde::de::DeserializeOwned + Send + 'static,
+        O: serde::Serialize + Send + 'static;
+}
+
+impl<I, O, T: Runnable<I, O> + Sized> IntoDynRunnable<I, O> for T {
+    fn into_dyn(self) -> DynRunnableAdapter<I, O, Self>
+    where
+        Self: Send + Sync + 'static,
+        I: serde::de::DeserializeOwned + Send + 'static,
+        O: serde::Serialize + Send + 'static,
+    {
+        DynRunnableAdapter { inner: self, _phantom: std::marker::PhantomData }
+    }
 }
 
 /// Concrete return type of `Runnable::pipe`.
@@ -2377,25 +2450,30 @@ pub enum GraphToolApprovalPolicy {
 
     /// **Explicit opt-in — HITL-dialog suppressor only (SEC-007).**
     ///
-    /// `BoundaryApprovalHook` overrides ONLY `PreToolDecision::PendingHumanApproval`
-    /// → `Approve`. `Deny` and ALL other `PreToolDecision` values pass through
-    /// UNCHANGED — `ForceApproveHooks` is NOT a blanket security bypass.
-    ///
-    /// **SEC-006 — Runtime `ActionRisk` gate (BC-2.09.008 {PC-006}, {INV-004}):**
-    /// Before overriding `PendingHumanApproval`, `BoundaryApprovalHook` checks
-    /// `preview.action_risk: Option<ActionRisk>` (BC-2.05.007 {PRE-003}):
-    /// - `Some(r)` where `r < ActionRisk::Medium` → `Approve` (read-only tool).
+    /// **SEC-006 — Runtime `ActionRisk` gate (FIXED/F-P2A165-01/CWE-862;
+    /// BC-2.09.008 {PC-006}, {INV-004}):**
+    /// `BoundaryApprovalHook` checks `preview.action_risk: Option<ActionRisk>`
+    /// (BC-2.05.007 {PRE-003}) BEFORE invoking the inner hook — not only in the
+    /// `PendingHumanApproval` arm. This ensures write-class tools are blocked
+    /// regardless of whether the inner hook returns `Approve` (e.g., `AlwaysApprovePolicy`
+    /// or no-hook default per BC-2.05.007 {PC-006}) or `PendingHumanApproval`:
+    /// - `Some(r)` where `r < ActionRisk::Medium` → proceed to inner hook.
     /// - `None` (undeclared risk; fail-closed per BC-2.05.006 EC-004/{INV-002})
     ///   OR `Some(r)` where `r >= ActionRisk::Medium` → `Deny` +
-    ///   `E-MCP-011 ForceApproveWriteBlocked` (ERROR-level (`tracing::error!`) structured log).
-    ///   The tool is NOT invoked; the graph continues to its terminal state.
+    ///   `E-MCP-011 ForceApproveWriteBlocked` (ERROR-level (`tracing::error!`) structured log)
+    ///   WITHOUT calling the inner hook. The tool is NOT invoked.
+    ///
+    /// **After the gate passes** (risk < Medium): inner hook is invoked.
+    /// `PendingHumanApproval` → `Approve`. `Deny` and ALL other `PreToolDecision`
+    /// values pass through UNCHANGED (SEC-007) — `ForceApproveHooks` is NOT a
+    /// blanket security bypass.
     ///
     /// **Node-level `interrupt()` is NOT overridden:** graph parks →
     /// `Err(E-MCP-010 GraphAgentInterruptDenied)`. {INV-002} holds.
     ///
     /// **Suitable only for:** graphs composed exclusively of read-only tools with
-    /// declared `ActionRisk < Medium` for every tool. The runtime `ActionRisk`
-    /// gate is the enforcement backstop; audit tool composition at registration.
+    /// declared `ActionRisk < Medium` for every tool. The `ActionRisk` gate is
+    /// unconditional (pre-hook), not a backstop; audit tool composition at registration.
     /// ADR-029 §Decision 4.
     ForceApproveHooks,
 }

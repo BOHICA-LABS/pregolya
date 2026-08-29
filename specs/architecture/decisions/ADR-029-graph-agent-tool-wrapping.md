@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-29"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.13"
+version: "2.14"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.14 (R39/F-P2A165-01/2026-08-29): F-P2A165-01 MED/CWE-862 — §Decision 4 ForceApproveHooks SEC-006 gate moved BEFORE inner hook call. R33 form gated ActionRisk only in the PendingHumanApproval match arm; a write-class tool approved by AlwaysApprovePolicy (inner hook returning Approve directly) or by a no-hook default bypassed the gate entirely (CWE-862 Missing Authorization). Fixed: ActionRisk match runs BEFORE `self.inner.pre_invoke()`. Gate now fires on both Approve and PendingHumanApproval paths; inner hook is only called for risk < Medium. SEC-007 pass-through (Deny and others unchanged) preserved inside inner-hook result match. §SEC-006 intro updated: 'before overriding PendingHumanApproval' → 'before invoking the inner hook'; 'When to use' and 'NOT suitable for' passages updated to reflect unconditional (pre-hook) gate. PO propagation required: BC-2.09.008 {INV-004} ActionRisk pre-check canon; +1 TV (write-class + AlwaysApprovePolicy + ForceApproveHooks → Deny + E-MCP-011; TV census 758→759)."
   - "2.13 (R33/F-P2A140-01/2026-08-29): F-P2A140-01 HIGH — §Decision 4 two illustrative `impl PreToolCallHook for BoundaryApprovalHook` blocks (DenyInterrupts code sketch and ForceApproveHooks SEC-006+SEC-007 form): added `#[async_trait]` above each impl block. An impl of an `#[async_trait]` trait must carry `#[async_trait]` or the macro-desugared signature does not match (compile error). The `GraphRunner` trait declaration in §Decision 1 already carries `#[async_trait]`; this brings both impl blocks into alignment. All-ADR sweep confirmed no other architecture document has a missing `#[async_trait]` on an async-trait impl block."
   - "2.12 (R31/F-P2A133-01/2026-08-28): F-P2A133-01 OBS — §Decision 4 tracing code sketch: added observability note that the code sketch message string and field-value expressions are illustrative; observability.md §mcp.graph_tool.force_approve_write_blocked is the authoritative source (canonical message includes the 'E-MCP-011 ForceApproveWriteBlocked emitted' audit-correlation clause absent from this sketch). Note mirrors the existing E-MCP-011 error-template alignment note in §Decision 4."
   - "2.11 (round-29/F-P2A125-01/2026-08-28): F-P2A125-01 HIGH/CWE-670/CWE-209 — §Decision 3 SEC-005 + §Decision 5 sanitization bullet: single-pattern UUID regex replaced with the canonical two-pattern union at both normative sites. The `sanitize_internal_ids` pass now applies two patterns (union, case-insensitive): (1) the canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple (no-hyphen) form `\\b[0-9a-f]{32}\\b`. Pattern (2) closes the leak where `Uuid::simple()` (32-contiguous-hex) `run_id`/`thread_id` values escape into `isError` MCP responses. URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. BC-2.09.008 {INV-001} v2.0 changelog already declared the two-pattern union; this edit restores ADR-029 as the verbatim-mirror source-of-truth for both normative sites."
@@ -146,14 +147,14 @@ pub enum GraphToolApprovalPolicy {
     /// toward its terminal state (Ok per {PC-004} or graph's own Err — NOT a synthetic
     /// E-MCP-010). No checkpoint state is persisted for a node-level interrupted run.
     DenyInterrupts,
-    /// Override PreToolCallHook PendingHumanApproval decisions to Approve for tools
-    /// with declared ActionRisk < Medium. Deny and all other hook decisions pass through UNCHANGED.
-    /// Tools with undeclared ActionRisk (preview.action_risk is Option::None) or ActionRisk >= Medium are DENIED (fail-closed)
-    /// — runtime enforcement prevents write-class tools from being unconditionally approved.
-    /// Node-level interrupt() calls still cause the graph to park → Err(E-MCP-010); they are
-    /// not overridden by this policy.
-    /// MUST be explicitly opted into. Suitable only for read-only tool graphs with declared
-    /// ActionRisk < Medium for every tool.
+    /// Explicit opt-in — HITL-dialog suppressor (SEC-007). ActionRisk gate runs BEFORE the
+    /// inner hook (FIXED/F-P2A165-01/CWE-862): tools with undeclared ActionRisk
+    /// (preview.action_risk is Option::None) or ActionRisk >= Medium are DENIED without
+    /// calling the inner hook — covers AlwaysApprovePolicy / no-hook Approve paths as well
+    /// as PendingHumanApproval. Only for risk < Medium: inner hook is invoked; if it returns
+    /// PendingHumanApproval → Approve. Deny and all other hook decisions pass UNCHANGED (SEC-007).
+    /// Node-level interrupt() calls still park the graph → Err(E-MCP-010); NOT overridden.
+    /// Suitable ONLY for graphs composed exclusively of read-only tools (ActionRisk < Medium).
     ForceApproveHooks,
 }
 
@@ -369,55 +370,61 @@ When `approval_policy = ForceApproveHooks`:
 - Node-level `interrupt()` calls STILL use DenyInterrupts semantics — the graph parks
   → `Err(E-MCP-010)`. Only the PreToolCallHook `PendingHumanApproval` path is overridden.
 
-**SEC-006 — Runtime ActionRisk Enforcement (CWE-862 prevention):**
-Before overriding `PendingHumanApproval` → `Approve`, the `BoundaryApprovalHook` MUST
-check `preview.action_risk` (type: `Option<ActionRisk>` per BC-2.05.007 {PRE-003} —
-`Some(tier)` if the tool is annotated with `#[tool(action_risk = ...)]`, `None` otherwise).
+**SEC-006 — Runtime ActionRisk Enforcement (FIXED/F-P2A165-01/CWE-862 prevention):**
+The `BoundaryApprovalHook` MUST check `preview.action_risk` (type: `Option<ActionRisk>` per
+BC-2.05.007 {PRE-003} — `Some(tier)` if the tool is annotated with `#[tool(action_risk = ...)]`,
+`None` otherwise) BEFORE invoking the inner hook — not only in the `PendingHumanApproval` arm.
+This ensures write-class tools are blocked regardless of whether the inner hook returns `Approve`
+(e.g., `AlwaysApprovePolicy` or no-hook default per BC-2.05.007 {PC-006}) or `PendingHumanApproval`.
 If `preview.action_risk` is `None` (undeclared — fail-closed per BC-2.05.006 EC-004/{INV-002})
 or `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with an ERROR-level (tracing::error!)
-structured log) instead of `Approve`:
+structured log) WITHOUT calling the inner hook:
 
 ```rust
-// BoundaryApprovalHook for ForceApproveHooks (SEC-006 + SEC-007 corrected form)
+// BoundaryApprovalHook for ForceApproveHooks (SEC-006 FIXED/F-P2A165-01 + SEC-007)
 // F-057-04: canonical type is ToolCallPreview (BC-2.05.007 {PRE-003}), not ToolPreview.
 // F-057-01: preview.action_risk is Option<ActionRisk>; match on Option to avoid fail-open
 //           on None (undeclared risk). None fails closed to Deny per BC-2.05.006 EC-004/{INV-002}.
+// F-P2A165-01: ActionRisk gate runs BEFORE self.inner.pre_invoke() — ensures write-class
+//              tools are blocked even when inner hook returns Approve (AlwaysApprovePolicy
+//              or no-hook default per BC-2.05.007 {PC-006}).
 #[async_trait]
 impl PreToolCallHook for BoundaryApprovalHook {
     async fn pre_invoke(&self, preview: &ToolCallPreview, run_ctx: &RunContext) -> PreToolDecision {
+        // SEC-006 (FIXED/F-P2A165-01/CWE-862): ActionRisk gate BEFORE inner hook.
+        // preview.action_risk: Option<ActionRisk> — Some(tier) if annotated, None otherwise.
+        // None (undeclared) fails closed to Deny per BC-2.05.006 EC-004/{INV-002}.
+        match preview.action_risk {
+            Some(r) if r < ActionRisk::Medium => {
+                // Declared ReadOnly or Low risk: proceed to inner hook.
+            }
+            _ => {
+                // None (undeclared) and Some(>= Medium) both Deny — fail-closed.
+                // Inner hook is NOT called on this path.
+                tracing::error!(
+                    event_type = "mcp.graph_tool.force_approve_write_blocked",
+                    tool_name = %preview.tool_name,
+                    action_risk = ?preview.action_risk,
+                    "ForceApproveHooks policy violation — tool has undeclared \
+                     or >= Medium ActionRisk; denying tool invocation. Use DenyInterrupts \
+                     or restrict graph to tools with declared ActionRisk < Medium."
+                );
+                return PreToolDecision::Deny {
+                    reason: format!(
+                        "ForceApproveHooks policy violation: tool '{}' has ActionRisk {:?} \
+                         (None or >= Medium); ForceApproveHooks is valid only for \
+                         read-only tool graphs with declared ActionRisk < Medium",
+                        preview.tool_name, preview.action_risk
+                    )
+                };
+            }
+        }
+        // Only reach here for ActionRisk < Medium.
         let decision = self.inner.pre_invoke(preview, run_ctx).await;
         match decision {
-            PreToolDecision::PendingHumanApproval { .. } => {
-                // SEC-006: fail-closed ActionRisk gate (CWE-862 prevention).
-                // preview.action_risk: Option<ActionRisk> — Some(tier) if annotated, None otherwise.
-                // None (undeclared) fails closed to Deny per BC-2.05.006 EC-004/{INV-002}.
-                match preview.action_risk {
-                    Some(r) if r < ActionRisk::Medium => {
-                        // Declared ReadOnly or Low risk: safe to auto-approve HITL
-                        PreToolDecision::Approve
-                    }
-                    _ => {
-                        // None (undeclared) and Some(>= Medium) both Deny — fail-closed
-                        tracing::error!(
-                            event_type = "mcp.graph_tool.force_approve_write_blocked",
-                            tool_name = %preview.tool_name,
-                            action_risk = ?preview.action_risk,
-                            "ForceApproveHooks policy violation — tool has undeclared \
-                             or >= Medium ActionRisk; denying tool invocation. Use DenyInterrupts \
-                             or restrict graph to tools with declared ActionRisk < Medium."
-                        );
-                        PreToolDecision::Deny {
-                            reason: format!(
-                                "ForceApproveHooks policy violation: tool '{}' has ActionRisk {:?} \
-                                 (None or >= Medium); ForceApproveHooks is valid only for \
-                                 read-only tool graphs with declared ActionRisk < Medium",
-                                preview.tool_name, preview.action_risk
-                            )
-                        }
-                    }
-                }
-            }
-            // SEC-007: Deny and all other decisions pass through UNCHANGED
+            // SEC-007 (HITL-dialog suppressor only): override PendingHumanApproval → Approve.
+            PreToolDecision::PendingHumanApproval { .. } => PreToolDecision::Approve,
+            // SEC-007: Deny and all other decisions pass through UNCHANGED.
             other => other,
         }
     }
@@ -470,13 +477,16 @@ Neither code is a prerequisite for the other; they never co-surface from the sam
 
 **When to use `ForceApproveHooks`:** Graphs composed exclusively of read-only tools
 (e.g., `ReadFileTool`, `GrepTool`) where approval of each tool call adds no security value
-AND every tool has `action_risk < ActionRisk::Medium`. The runtime enforcement above ensures
-that even if a write-class tool is inadvertently included, it is blocked at invocation time.
+AND every tool has `action_risk < ActionRisk::Medium`. The `ActionRisk` gate is unconditional
+(runs before the inner hook, covers `AlwaysApprovePolicy` / no-hook Approve paths as well
+as `PendingHumanApproval`); write-class tools are blocked regardless of inner hook policy.
+Audit tool composition at registration time.
 
 **NOT suitable for `ForceApproveHooks`:** Any graph that may invoke `BashTool`,
 `WriteFileTool`, `EditFileTool`, or other write-class tools with `action_risk >= ActionRisk::Medium`.
-The runtime `ActionRisk` enforcement provides a fail-closed backstop, but callers should
-audit tool composition at registration time rather than relying solely on runtime enforcement.
+The `ActionRisk` gate is an unconditional pre-check (not merely a backstop); write-class tools
+will be denied before the inner hook is consulted. `DenyInterrupts` is the correct policy for
+graphs that include write-class tools.
 
 ### On-Resume Non-Applicability
 

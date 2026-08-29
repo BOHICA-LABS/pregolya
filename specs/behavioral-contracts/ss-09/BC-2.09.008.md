@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "3.0"
+version: "3.1"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -36,12 +36,13 @@ changelog:
   - "2.8 (round-35/F-P2A151-01/2026-08-29): F-P2A151-01 [MED]: {PC-004} opening clause call-direction inversion corrected per ADR-029 §Decision 2 and §Decision 5 canonical seam. OLD opening: 'CompiledStateGraph::invoke runs the graph to a terminal state via GraphRunner::run, which calls extract_output(&final_state)' — inverted containment (made CompiledStateGraph::invoke the outer caller of GraphRunner::run). NEW opening: 'GraphRunner::run runs the graph to a terminal state via CompiledStateGraph::invoke, then calls extract_output(&final_state) on the returned serde_json::Value' — correct containment: invoke_dyn wraps GraphRunner::run which wraps CompiledStateGraph::invoke; extract_output is called inside GraphRunner::run on the value returned by CompiledStateGraph::invoke. Trailing note and all return-type semantics preserved unchanged. POL-24 sibling sweep: BC-2.09.006 and BC-2.09.007 contain no GraphRunner/CompiledStateGraph::invoke direction statements (BC-2.09.006 covers tools/list only; BC-2.09.007 covers invoke_dyn→DynTool seam only; neither references the internal graph execution containment); no sibling fixes required."
   - "2.9 (round-36/F-P2A155-01/2026-08-29): F-P2A155-01 [MED]: {PC-003} call-direction seam-collapse corrected. OLD text stated `GraphAgentTool::invoke_dyn` calls `CompiledStateGraph::invoke(arguments, config)` directly — collapsing the 3-layer seam. NEW text: `invoke_dyn` delegates to `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run` calls `CompiledStateGraph::invoke(arguments, config)` internally (statically in `ConcreteGraphRunner<S>::run`); error propagates through `run()` and `invoke_dyn` surfaces it as `isError: true`. Exhaustive call-direction sweep of all PC/INV/EC/TV clauses: {PC-003} was the ONLY seam-collapse; {PC-004}/{INV-001} correctly state GraphRunner::run wraps CompiledStateGraph::invoke and invoke_dyn wraps run(); {PC-005} correctly states GraphRunner::run detects RunStatus::Interrupted; all EC/TV clauses state correct layering. No sibling sweep required (BC-2.09.006 and BC-2.09.007 confirmed clean in round-35 sweep)."
   - "3.0 (round-37/O-P2A157-01/2026-08-29): O-P2A157-01 [OBS] — {INV-003}: invariant-strength phrasing brought to symmetric MUST-language consistent with sibling invariants {INV-001}/{INV-002}/{INV-004}. Descriptive 'pass through ... before' replaced with imperative 'MUST pass through'; 'Only ... is used' replaced with 'Only ... MUST be used / MUST NOT be used'; trailing 'This obligation is unconditional per ...' qualifier condensed into parenthetical per symmetric pattern. No semantic change — existing behavior mandate is preserved exactly."
+  - "3.1 (round-39/F-P2A165-01/2026-08-29): F-P2A165-01 [MED, CWE-862] — Unconditional pre-hook gate for ForceApproveHooks. {INV-004}: 'Before overriding PendingHumanApproval → Approve, the hook checks' replaced with 'runs the ActionRisk gate BEFORE invoking the inner PreToolCallHook'; gate fires for ALL tool invocations regardless of inner hook policy; added 'This covers AlwaysApprovePolicy / no-hook default Approve paths (not only PendingHumanApproval)'; conclusion 'the override proceeds to Approve' replaced with 'the inner PreToolCallHook is invoked normally'. {PC-006}: 'overrides ONLY PreToolDecision::PendingHumanApproval to Approve (subject to ActionRisk check)' rewritten to unconditional gate form: ActionRisk gate fires before inner hook; None/Some(>=Medium) denied WITHOUT calling inner hook; Some(<Medium) proceeds to inner hook invocation; PendingHumanApproval from inner hook overridden to Approve. EC-009: scenario updated from 'PreToolCallHook returns PendingHumanApproval' to 'BoundaryApprovalHook runs ActionRisk gate'; 'before overriding' → 'BEFORE invoking the inner hook'; AlwaysApprovePolicy coverage note added. TV-018 minted: ForceApproveHooks + AlwaysApprovePolicy inner hook + Some(ActionRisk::High) → Deny WITHOUT calling inner hook + E-MCP-011 emitted. TV count 17→18 in this BC (global 758→759). interface-definitions.md §ForceApproveHooks + ADR-005 §Send-Bounded RPITIT + ADR-029 §Decision 5 are the authoritative canon (R39)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "a175f88"
+input-hash: "fabcc25"
 extracted_from: null
 modified: []
 deprecated: null
@@ -129,16 +130,21 @@ overrides `PreToolCallHook` approval decisions only.
      `GraphRunner::run` returns `Err(PregolyaError)` with the graph's OWN error (NOT
      `E-MCP-010`). `E-MCP-010` is NOT raised on the `BoundaryApprovalHook::Deny` path.
 6. {PC-006} Under `GraphToolApprovalPolicy::ForceApproveHooks`: `BoundaryApprovalHook`
-   overrides ONLY `PreToolDecision::PendingHumanApproval` to `Approve` (subject to the
-   `ActionRisk` check in {INV-004}). `PreToolDecision::Deny` and all other decision variants
-   pass through to the graph UNCHANGED. `ForceApproveHooks` does not override security-based
-   `Deny` decisions. Node-level `interrupt()` calls STILL produce `Err(E-MCP-010)` — the
-   `ForceApproveHooks` policy does NOT override node-level interrupt semantics. {INV-002}
-   holds under `ForceApproveHooks`. `preview.action_risk` is `Option<ActionRisk>`; `None`
-   (undeclared) fails closed to `Deny` identically to `Some(>= Medium)` — undeclared risk
-   requires the highest gate (consistent with the fail-closed principle in BC-2.05.006
-   EC-004/{INV-002}: absence/unknown risk is never treated as ReadOnly/Low; the None→Deny
-   behavior is fully specified by {INV-004}).
+   runs the `ActionRisk` gate BEFORE invoking the inner `PreToolCallHook` (per {INV-004}).
+   Tools with `preview.action_risk` of `None` (undeclared) OR `Some(r)` where
+   `r >= ActionRisk::Medium` are denied WITHOUT calling the inner hook — this covers
+   `AlwaysApprovePolicy` / no-hook default `Approve` paths (not only `PendingHumanApproval`).
+   When the gate approves (`preview.action_risk` is `Some(r)` where `r < ActionRisk::Medium`):
+   the inner hook is invoked; if the inner hook returns `PreToolDecision::PendingHumanApproval`,
+   the hook overrides it to `Approve`; `PreToolDecision::Deny` and all other decision variants
+   from the inner hook pass through to the graph UNCHANGED. `ForceApproveHooks` does not
+   override security-based `Deny` decisions. Node-level `interrupt()` calls STILL produce
+   `Err(E-MCP-010)` — the `ForceApproveHooks` policy does NOT override node-level interrupt
+   semantics. {INV-002} holds under `ForceApproveHooks`. `preview.action_risk` is
+   `Option<ActionRisk>`; `None` (undeclared) fails closed to `Deny` identically to
+   `Some(>= Medium)` — undeclared risk requires the highest gate (consistent with the
+   fail-closed principle in BC-2.05.006 EC-004/{INV-002}: absence/unknown risk is never
+   treated as ReadOnly/Low; the None→Deny behavior is fully specified by {INV-004}).
 
 ## Invariants
 
@@ -202,17 +208,18 @@ overrides `PreToolCallHook` approval decisions only.
 - {INV-004} **`ForceApproveHooks` ActionRisk runtime gate:**
   `ForceApproveHooks` is appropriate ONLY for read-only tool graphs (graphs composed
   exclusively of tools with `ActionRisk::ReadOnly` or `ActionRisk::Low`). The
-  `ForceApproveHooks` policy's `BoundaryApprovalHook` enforces the read-only restriction
-  at runtime. Before overriding `PendingHumanApproval` → `Approve`, the hook checks
-  `preview.action_risk` (`Option<ActionRisk>` per BC-2.05.007 {PRE-003}). If
-  `preview.action_risk` is `None` (undeclared; consistent with the fail-closed principle in
-  BC-2.05.006 EC-004/{INV-002}: absence/unknown risk is never treated as ReadOnly/Low —
-  None→Deny behavior is fully specified by {INV-004})
-  OR `Some(r)` where `r >= ActionRisk::Medium`, the hook returns `Deny` (with an
+  `ForceApproveHooks` policy's `BoundaryApprovalHook` runs the `ActionRisk` gate BEFORE
+  invoking the inner `PreToolCallHook`. Tools with `preview.action_risk`
+  (`Option<ActionRisk>` per BC-2.05.007 {PRE-003}) of `None` (undeclared; consistent with
+  the fail-closed principle in BC-2.05.006 EC-004/{INV-002}: absence/unknown risk is never
+  treated as ReadOnly/Low — None→Deny behavior is fully specified by {INV-004})
+  OR `Some(r)` where `r >= ActionRisk::Medium` are denied WITHOUT calling the inner hook —
+  this covers `AlwaysApprovePolicy` / no-hook default `Approve` paths (not only
+  `PendingHumanApproval`). The hook returns `Deny` (with an
   ERROR-level (highest severity) structured log (tracing::error!) at key `mcp.graph_tool.force_approve_write_blocked`) and
   emits `E-MCP-011 ForceApproveWriteBlocked`; the tool is NOT invoked. If
-  `preview.action_risk` is `Some(r)` where `r < ActionRisk::Medium`, the override proceeds
-  to `Approve`.
+  `preview.action_risk` is `Some(r)` where `r < ActionRisk::Medium`, the inner
+  `PreToolCallHook` is invoked normally.
 
 - {INV-005} **`extract_output` closure credential opacity (caller obligation):**
   The `extract_output` closure provided to `GraphAgentTool::from_graph` MUST NOT select
@@ -300,17 +307,19 @@ per BC-2.09.007 {PC-002} result_text selection rule. Server responds with
 {PC-004} holds. {INV-001} holds (Null output is a valid extract_output result).
 
 ### EC-009: ForceApproveHooks + ActionRisk>=Medium or None — E-MCP-011 emitted, tool not invoked
-**Scenario:** `approval_policy = ForceApproveHooks`; a `PreToolCallHook` returns
-`PendingHumanApproval` for a tool whose `preview.action_risk` is either `None`
+**Scenario:** `approval_policy = ForceApproveHooks`; the `BoundaryApprovalHook` runs the
+`ActionRisk` gate for a tool whose `preview.action_risk` is either `None`
 (un-annotated tool, fail-closed) OR `Some(r)` where `r >= ActionRisk::Medium`
 (e.g., a write-class tool with `ActionRisk::High`).
-**Expected behavior:** `BoundaryApprovalHook` checks `preview.action_risk` before
-overriding. Because `action_risk` is `None` (undeclared, fails closed) or
-`>= ActionRisk::Medium`, the hook returns `Deny` and emits `E-MCP-011
-ForceApproveWriteBlocked` with an ERROR-level (highest severity) structured log (tracing::error!) at key
-`mcp.graph_tool.force_approve_write_blocked`. The tool is NOT invoked. {INV-004} enforces
-this gate at runtime; the graph continues executing with the `Deny` result but the tool
-never executes. Both the `None` case (un-annotated tool → `Deny` + `E-MCP-011`) and the
+**Expected behavior:** `BoundaryApprovalHook` checks `preview.action_risk` BEFORE
+invoking the inner hook. Because `action_risk` is `None` (undeclared, fails closed) or
+`>= ActionRisk::Medium`, the hook returns `Deny` WITHOUT calling the inner hook, and emits
+`E-MCP-011 ForceApproveWriteBlocked` with an ERROR-level (highest severity) structured log
+(tracing::error!) at key `mcp.graph_tool.force_approve_write_blocked`. The tool is NOT
+invoked. {INV-004} enforces this gate at runtime; the graph continues executing with the
+`Deny` result but the tool never executes. This covers `AlwaysApprovePolicy` / no-hook
+default `Approve` paths — the gate fires regardless of what the inner hook would have
+returned. Both the `None` case (un-annotated tool → `Deny` + `E-MCP-011`) and the
 `Some(High)` case must be tested.
 
 ### EC-010: extract_output closure panics (caller contract violation)
@@ -352,6 +361,7 @@ devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
 | TV-015 | Graph node returns `Err(PregolyaError { message: "digest: {SHA256-DIGEST}", .. })` where `{SHA256-DIGEST}` is a 64-char lowercase hex SHA-256 digest (no hyphens, no word boundary at position 32), space-delimited in message | `isError: true`; `content[0].text` = `"digest: <redacted>"` — the mandatory pipeline is `sanitize_internal_ids(redact_credentials(message))` (ADR-029 §Decision 3 and Decision 5); `redact_credentials` runs FIRST and its rule `[A-Za-z0-9]{64,}` matches the 64-char lowercase hex token → `"<redacted>"`; `sanitize_internal_ids` then sees no UUID pattern in the already-redacted string. FULL-PIPELINE behavior: the SHA-256 digest IS redacted. The `sanitize_internal_ids` non-over-match property (pattern (2) does not independently strip a 64-char hex sequence) is documented at the unit-isolation layer in TV-017. | Full-pipeline composition — `redact_credentials` rule `[A-Za-z0-9]{64,}` catches 64-char lowercase hex token before `sanitize_internal_ids` runs; TV-017 is the isolation test for the `\b` non-over-match property (F-P2A129-01 correction; F-P2A121-01; {INV-001}/{INV-003}; ADR-029 §Decision 3 and Decision 5 chain) |
 | TV-016 | Graph node returns `Err(PregolyaError { message: "key_{SIMPLE-UUID}_suffix", .. })` where `{SIMPLE-UUID}` is a 32-char lowercase hex UUID flanked by underscore characters on both sides (forming `key_{SIMPLE-UUID}_suffix`) | `isError: true`; `content[0].text` contains `"key_{SIMPLE-UUID}_suffix"` UNCHANGED — `\b` does not fire between an underscore (`_`) and a hex digit because underscore is a word character (`[A-Za-z0-9_]`); the 32-hex sequence is embedded within a continuous word-character run and is NOT matched by pattern (2). NEGATIVE control: documents an acceptable residual; authoring-site convention is the defense for underscore-flanked internal keys. | Underscore-flanked simple UUID passthrough — `\b` boundary semantics; underscore is a word char so no boundary fires (F-P2A121-01; {INV-001} two-pattern union; documented acceptable residual) |
 | TV-017 | `sanitize_internal_ids` function called directly in isolation (unit-level; `redact_credentials` NOT applied) on input string `"digest: {SHA256-DIGEST}"` where `{SHA256-DIGEST}` is a 64-char lowercase hex SHA-256 digest | Output string is `"digest: {SHA256-DIGEST}"` UNCHANGED — pattern (1) requires hyphens (none present in a 64-char contiguous hex sequence); pattern (2) `\b[0-9a-f]{32}\b` checks for a word boundary after position 32 of the hex sequence, but position 33 is still a hex digit (word character), so no word boundary fires at position 32; neither pattern matches. NEGATIVE control for `sanitize_internal_ids` in isolation: the `\b` end-boundary guard prevents over-stripping SHA-256 digests at the sanitizer layer. Note: the FULL pipeline (`redact_credentials` applied first) DOES redact this input via the `[A-Za-z0-9]{64,}` rule — see TV-015 for the full-pipeline behavior. | `sanitize_internal_ids` unit-isolation — `\b` end-boundary non-over-match property at the correct isolation layer; TV-015 is the full-pipeline complement showing `redact_credentials` redacts the token first (F-P2A129-01; F-P2A121-01 complement; {INV-001} two-pattern union) |
+| TV-018 | `approval_policy = ForceApproveHooks`; inner hook policy is `AlwaysApprovePolicy` (would return `Approve` unconditionally for any tool); tool has `preview.action_risk = Some(ActionRisk::High)` (write-class tool) | `BoundaryApprovalHook::pre_invoke` returns `Deny { reason: "ForceApproveHooks policy violation: tool action_risk None or >= Medium" }`; `E-MCP-011 ForceApproveWriteBlocked` emitted; inner `AlwaysApprovePolicy` hook's `Approve` return NEVER reached; tool NOT invoked | Unconditional pre-hook gate: `ActionRisk` check fires BEFORE inner hook regardless of inner hook policy; covers `AlwaysApprovePolicy` / no-hook default `Approve` paths (not only `PendingHumanApproval`); {INV-004} (F-P2A165-01) |
 
 ## Verification Properties
 

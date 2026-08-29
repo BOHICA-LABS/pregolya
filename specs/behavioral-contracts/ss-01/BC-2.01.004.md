@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (round-36/F-P2A152-02-sibling/2026-08-29): L-227 comprehensive-class-audit — same phantom-RunnableConfig-field class as F-P2A152-02. {PC-006}: phantom fields `tags`, `metadata`, `callbacks` removed from RunnableConfig inheritance claim; `seq:step:N` tag-label concept removed (no `tags` field on RunnableConfig); replaced with canonical `Option<RunnableConfig>` pass-through statement. {PC-002}: borrowed `&config` → `config: Option<RunnableConfig>` (owned). {PC-003}: borrowed `&config` → `config: Option<RunnableConfig>` (owned); stream noted as async (returns outer Result per BC-2.01.003 {PC-002} authority). TV-001/TV-005: `&cfg` → `None`. TV-005: batch return wrapped in outer `Ok`. §Related BCs: `seq:step:N` parenthetical removed. Corpus sweep confirms phantom fields `tags`/`metadata`/`callbacks` appear in no other live-body spec or story file (only BC-2.01.003 and BC-2.01.004 were affected; BC-2.01.003 fixed in round-36 burst)."
   - "1.8 (round-37/F-P2A156-02/2026-08-29): F-P2A156-02 [HIGH] — {PRE-001} and {PC-001}: E0229 associated-type-binding form `Runnable<Input=I, Output=M>` / `Runnable<Input=M, Output=O>` / `Runnable<Input=I, Output=O>` replaced with positional generic-parameter form `Runnable<I, M>` / `Runnable<M, O>` / `Runnable<I, O>` per ADR-025 / interface-definitions.md canon (binding-form is E0229-invalid in Rust; positional form is the canonical and compilable form)."
   - "1.9 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] — {PC-001}: added DynRunnable auto-satisfaction note. Typed stages `Runnable<I, O>` where `I: serde::de::DeserializeOwned + Send + 'static` and `O: serde::Serialize + Send + 'static` auto-satisfy `DynRunnable` via the serde-bounded blanket — there is no requirement that a stage be `Runnable<Value, Value>` to be stored as `Box<dyn DynRunnable>`. `RunnableSequence<I, O>` therefore also auto-derives `DynRunnable` and can be stored as `Box<dyn DynRunnable>` directly. interface-definitions.md §DynRunnable is the authoritative canon (R38)."
+  - "2.0 (round-39/F-P2A164-01/2026-08-29): F-P2A164-01 [CRIT] — DynRunnable adapter model: {PC-001} serde-bounded blanket auto-satisfaction language replaced with adapter model + pipe serde bounds. Removes: 'By the serde-bounded DynRunnable blanket impl, any Runnable<I,O>... auto-satisfies DynRunnable... auto-derives DynRunnable and can be stored as Box<dyn DynRunnable> directly.' Adds: 'Runnable::pipe requires Self: Sized + Send + Sync + 'static, Input: serde::de::DeserializeOwned + Send + 'static, Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static, NextOutput: serde::Serialize + Send + 'static — because pipe erases self and next via .into_dyn() constructing DynRunnableAdapter<I, O, R>.' interface-definitions.md §DynRunnable + ADR-005 §Send-Bounded RPITIT are the authoritative canon (R39)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -64,10 +65,11 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 ## Postconditions
 
 1. {PC-001} `a.pipe(b)` returns a `RunnableSequence` that implements `Runnable<I, O>`.
-   By the serde-bounded `DynRunnable` blanket impl, any `Runnable<I, O>` where
-   `I: serde::de::DeserializeOwned + Send + 'static` and `O: serde::Serialize + Send + 'static`
-   auto-satisfies `DynRunnable` — without requiring `Runnable<Value, Value>`. `RunnableSequence<I, O>`
-   therefore also auto-derives `DynRunnable` and can be stored as `Box<dyn DynRunnable>` directly.
+   `Runnable::pipe` requires `Self: Sized + Send + Sync + 'static`,
+   `Input: serde::de::DeserializeOwned + Send + 'static`,
+   `Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static`,
+   `NextOutput: serde::Serialize + Send + 'static` — because `pipe` erases `self` and `next`
+   via `.into_dyn()` constructing `DynRunnableAdapter<I, O, R>`.
 2. {PC-002} `seq.invoke(input, config).await` (where `config: Option<RunnableConfig>`) runs `a.invoke(input, config)`, then feeds the result to
    `b.invoke(result, config)`, returning the final output or the first error encountered.
 3. {PC-003} `seq.stream(input, config).await` (where `config: Option<RunnableConfig>`; async, returns `Result<impl Stream, PregolyaError>` per BC-2.01.003 {PC-002}) passes the output chunks of `a` into `b` incrementally when

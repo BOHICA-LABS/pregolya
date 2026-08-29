@@ -4110,3 +4110,44 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **NOTE: round-38 caught round-37's OWN incomplete sweeps (F-P2A162-01 false TV sweep claim; F-P2A163-01 SS-02/SS-08 phantoms missed by r37 SS-01 sweep) — fresh-context adversarial value confirmed.**
 
 **NEXT: round-39 (P2A-164/165/166/167 + GATE-READY) on new frozen HEAD post-D-311 push. Streak resets to 0/3 on push.**
+
+---
+
+## Round-39 (P2A-164/165/166/167 + GATE-READY) — D-312
+
+**Frozen HEAD: post-D-311-push (round-39 new frozen HEAD)**
+
+**Adversary passes on frozen HEAD:**
+
+| Pass | Lens | Findings | Severity | Status |
+|------|------|----------|----------|--------|
+| P2A-164 | realizability | 2 | 1 CRIT (F-P2A164-01 DynRunnable ADAPTER — round-38's own non-realizable fix E0207) + 1 MED (F-P2A164-02 Runnable::pipe serde bounds E0277) | NOT CLEAN |
+| P2A-165 | security | 1 | 1 MED (F-P2A165-01 ForceApproveHooks ActionRisk gate fired only on PendingHumanApproval; CWE-862 fail-open for AlwaysApprovePolicy/no-hook) | NOT CLEAN |
+| P2A-166 | consistency/census/records | 1 | 1 MED (F-P2A166-01 BC-INDEX §Red Gate table 5 residual drifted title cells — round-38 F-P2A163-02 fixed only 2 of 7; sibling-sweep incomplete) | NOT CLEAN |
+| P2A-167 | SS-09/SS-11 deep-audit | 2 | 1 MED (F-P2A167-01 S-2.11 tools/list+tools/call attribution collapsed at 2 live-body sites) + 1 LOW (F-P2A167-02 S-2.11 phantom anchors tool.rs/guardrail.rs) | NOT CLEAN |
+| GATE-READY audit | — | N/A | GATE-READY=YES (31/32 gates PASS; lone sidecar-churn FAIL self-heals; HRQ-1 sole standing blocker; census 39/134/17/137/303 reconciled) | GATE-READY |
+
+**Finding Progression trajectory-tail: →2→1→1→2**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony — 1 CRIT + 3 MED present.**
+
+**CLEAN(strict): NO | CLEAN(PR-merge): NO (CRIT + MED findings present)**
+
+**Streak: 0/3 (frozen-HEAD reset on D-312 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A164-01 | CRIT | CLOSED: DynRunnable ADAPTER model — DynRunnableAdapter<I,O,R> replaces non-realizable impl<I,O,T> blanket; E0207+E0119 cleared; RPITIT+Send; E-CORE-003 at ADAPTER boundary. interface-definitions §Changelog + ADR-005 §Changelog [architect]; BC-2.01.003 §Changelog + BC-2.01.004 §Changelog [product-owner]; S-1.04 §Changelog [story-writer]. |
+| F-P2A164-02 | MED | CLOSED: Runnable::pipe serde bounds (Self+Input+Output+NextOutput Serialize/DeserializeOwned+Send+'static required); interface-definitions §Runnable + BC-2.01.004 {PC-001} + S-1.04 AC-008 [product-owner/story-writer]. |
+| F-P2A165-01 | MED, CWE-862 | CLOSED: ForceApproveHooks ActionRisk gate moved AHEAD of inner PreToolCallHook (option b): None/Some(>=Medium)→Deny+E-MCP-011 WITHOUT calling inner hook; covers AlwaysApprovePolicy+no-hook-default-Approve. ADR-029 §Decision-5 [architect]; BC-2.09.008 §INV-004/{PC-006}/EC-009; TV-018 MINTED; TV registry 758→759 [product-owner]; S-2.11 §Changelog AC-022/030/EC-011 [story-writer]. |
+| F-P2A166-01 | MED, POL-7 | CLOSED: BC-INDEX §Red Gate table 5 residual cells restored to verbatim-H1 form; exhaustive 11-cell corpus sweep confirms ALL MATCH; BC-INDEX §Red-Gate-BCs (3.99→4.00) [state-manager]. |
+| F-P2A167-01 | MED, POL-4 | CLOSED: S-2.11 tools/list+tools/call attribution split at 2 live-body sites — tools/list: BC-2.09.006 {PC-002}; tools/call: BC-2.09.007 {PC-001}; S-2.11 v1.27; corpus story sweep clean [story-writer]. |
+| F-P2A167-02 | LOW, POL-4 | CLOSED: S-2.11 phantom anchors tool.rs→discovery.rs, guardrail.rs→ingress.rs; corpus story sweep clean (S-1.07 macros::tool + S-1.19 core::guardrail are unrelated real files) [story-writer]. |
+
+**Census UNCHANGED 39/134/17/137/303. TV 758→759 (TV-018 minted). VP 17 UNCHANGED. streak 0/3. GATE-READY=YES.**
+
+**SIGNIFICANCE: round-39 caught round-38's OWN non-realizable fix (F-P2A164-01) + THREE incomplete-sweeps of prior rounds (F-P2A166-01=r38 Red-Gate 2/7; F-P2A167-01=r37 tools/call; F-P2A167-02=r25 rename). 3-CLEAN protocol working as designed. L-232 codified.**
+
+**NEXT: round-40 on new frozen HEAD post-D-312 push. Streak resets to 0/3 on push.**
