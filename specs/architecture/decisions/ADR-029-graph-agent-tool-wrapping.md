@@ -5,10 +5,10 @@ adr_id: "029"
 slug: graph-agent-tool-wrapping
 title: "Agent-as-MCP-Tool (GraphAgentTool) Wrapping — StateGraph Registration in ToolRegistry for MCP Exposure"
 status: accepted
-date: "2026-08-26"
+date: "2026-08-29"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.12"
+version: "2.13"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.13 (R33/F-P2A140-01/2026-08-29): F-P2A140-01 HIGH — §Decision 4 two illustrative `impl PreToolCallHook for BoundaryApprovalHook` blocks (DenyInterrupts code sketch and ForceApproveHooks SEC-006+SEC-007 form): added `#[async_trait]` above each impl block. An impl of an `#[async_trait]` trait must carry `#[async_trait]` or the macro-desugared signature does not match (compile error). The `GraphRunner` trait declaration in §Decision 1 already carries `#[async_trait]`; this brings both impl blocks into alignment. All-ADR sweep confirmed no other architecture document has a missing `#[async_trait]` on an async-trait impl block."
   - "2.12 (R31/F-P2A133-01/2026-08-28): F-P2A133-01 OBS — §Decision 4 tracing code sketch: added observability note that the code sketch message string and field-value expressions are illustrative; observability.md §mcp.graph_tool.force_approve_write_blocked is the authoritative source (canonical message includes the 'E-MCP-011 ForceApproveWriteBlocked emitted' audit-correlation clause absent from this sketch). Note mirrors the existing E-MCP-011 error-template alignment note in §Decision 4."
   - "2.11 (round-29/F-P2A125-01/2026-08-28): F-P2A125-01 HIGH/CWE-670/CWE-209 — §Decision 3 SEC-005 + §Decision 5 sanitization bullet: single-pattern UUID regex replaced with the canonical two-pattern union at both normative sites. The `sanitize_internal_ids` pass now applies two patterns (union, case-insensitive): (1) the canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple (no-hyphen) form `\\b[0-9a-f]{32}\\b`. Pattern (2) closes the leak where `Uuid::simple()` (32-contiguous-hex) `run_id`/`thread_id` values escape into `isError` MCP responses. URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. BC-2.09.008 {INV-001} v2.0 changelog already declared the two-pattern union; this edit restores ADR-029 as the verbatim-mirror source-of-truth for both normative sites."
   - "2.10 (round-27/O-P2A119-04/2026-08-28): §Decision 4 BoundaryApprovalHook code-sketch: message literal in the `_ =>` Deny branch had 'CRITICAL: ForceApproveHooks policy violation — tool has undeclared ...' — 'CRITICAL: ' prefix removed (Rust tracing crate has no CRITICAL level; the emit call is tracing::error!; observability.md and BC-2.09.008 §INV-004 are authoritative). No other occurrences of 'CRITICAL:' prefix in live body code sketches."
@@ -327,6 +328,7 @@ When `approval_policy = DenyInterrupts` (the default):
   with a `BoundaryApprovalHook` that intercepts `PendingHumanApproval` decisions:
   ```rust
   // BoundaryApprovalHook (internal, not public API)
+  #[async_trait]
   impl PreToolCallHook for BoundaryApprovalHook {
       async fn pre_invoke(&self, preview, run_ctx) -> PreToolDecision {
           let decision = self.inner.pre_invoke(preview, run_ctx).await;
@@ -380,6 +382,7 @@ structured log) instead of `Approve`:
 // F-057-04: canonical type is ToolCallPreview (BC-2.05.007 {PRE-003}), not ToolPreview.
 // F-057-01: preview.action_risk is Option<ActionRisk>; match on Option to avoid fail-open
 //           on None (undeclared risk). None fails closed to Deny per BC-2.05.006 EC-004/{INV-002}.
+#[async_trait]
 impl PreToolCallHook for BoundaryApprovalHook {
     async fn pre_invoke(&self, preview: &ToolCallPreview, run_ctx: &RunContext) -> PreToolDecision {
         let decision = self.inner.pre_invoke(preview, run_ctx).await;
@@ -711,6 +714,8 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.13 | 2026-08-29 | architect | R33/F-P2A140-01 | F-P2A140-01 HIGH: §Decision 4 two illustrative `impl PreToolCallHook for BoundaryApprovalHook` blocks (DenyInterrupts code sketch and ForceApproveHooks SEC-006+SEC-007 form) — added `#[async_trait]` above each impl block. An impl of an `#[async_trait]` trait must carry `#[async_trait]` or the macro-desugared signature does not match (compile error). `GraphRunner` trait declaration in §Decision 1 already carries `#[async_trait]`; brings both impl blocks into alignment. All-ADR sweep confirms no other architecture doc has a missing `#[async_trait]` on an async-trait impl block. |
+| 2.12 | 2026-08-28 | architect | R31/F-P2A133-01 | F-P2A133-01 OBS: §Decision 4 tracing code sketch — added observability note that the code sketch message string and field-value expressions are illustrative; `observability.md` §`mcp.graph_tool.force_approve_write_blocked` is the authoritative source (canonical message includes the `E-MCP-011 ForceApproveWriteBlocked emitted` audit-correlation clause absent from this sketch). Note mirrors the existing E-MCP-011 error-template alignment note in §Decision 4. |
 | 2.11 | 2026-08-28 | architect | round-29/F-P2A125-01 | F-P2A125-01 HIGH/CWE-670/CWE-209: §Decision 3 SEC-005 + §Decision 5 sanitization bullet — single-pattern UUID regex replaced with the canonical two-pattern union at both normative sites. `sanitize_internal_ids` now applies two patterns (union, case-insensitive): (1) canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) simple (no-hyphen) form `\b[0-9a-f]{32}\b`. Pattern (2) closes the `Uuid::simple()` (32-contiguous-hex) leak into `isError` MCP responses. URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. BC-2.09.008 {INV-001} v2.0 changelog already declares the two-pattern union; this edit restores ADR-029 as the verbatim-mirror source-of-truth for both normative sites. |
 | 2.10 | 2026-08-28 | architect | round-27/O-P2A119-04 | O-P2A119-04 OBS: §Decision 4 BoundaryApprovalHook code-sketch — `"CRITICAL: ForceApproveHooks policy violation ..."` prefix removed (`CRITICAL:` prefix); Rust tracing crate has no CRITICAL level; the emit call is `tracing::error!`; observability.md and BC-2.09.008 §INV-004 are authoritative. No other occurrences of `CRITICAL:` prefix in live body code sketches. |
 | 2.9 | 2026-08-28 | architect | round-26/F-P2A113-01+F-P2A113-02 | F-P2A113-01 MED: §Symbol Grounding E-MCP-010 status "PLANNED — PO must mint in error-taxonomy.md" → "EXISTS — minted in error-taxonomy.md (catalog entry 136)"; E-MCP-011 status "PLANNED — PO must mint in error-taxonomy.md" → "EXISTS — minted in error-taxonomy.md (catalog entry 137)". Both codes are live rows per BC-2.09.008 assertions; stale future-tense obligations removed. F-P2A113-02 MED: §Decision 4 two prose "CRITICAL-level" occurrences corrected to "ERROR-level (tracing::error!)": body sentence "with a CRITICAL-level structured log" and Rationale sentence "emitted (as a CRITICAL-level log entry and Deny reason)". The Rust tracing crate has no CRITICAL level; observability.md and BC-2.09.008 §INV-004 specify tracing::error!. Historical changelog entries exempt. |

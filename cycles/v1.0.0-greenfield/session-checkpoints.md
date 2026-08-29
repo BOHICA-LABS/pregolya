@@ -1,13 +1,13 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.3"
+version: "1.4"
 status: archive
 producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "f23b6a0"
+input-hash: "e977d4c"
 traces_to: STATE.md
 ---
 
@@ -3476,3 +3476,28 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-303 round-31 CLOSED. F-P2A132-01[HIGH] VP-016 proptest false-green; F-P2A135-01[HIGH] mcp::registry phantom caller re-attribution; F-P2A133-01[OBS] ADR-029 §Decision-4 obs-note. L-224+L-225. Census stable 39/134/17/137/303 UNCHANGED; TV 758 (769 grand) UNCHANGED; VP 17.
 
 ### STATE: v6.14, timestamp 2026-08-29T00:30:00Z
+
+---
+
+### Archived Checkpoint — STATE.md v6.15 (archived 2026-08-29 — replaced by v6.16/D-305)
+
+*From STATE.md v6.15 (post-D-304 round-32 fix-burst). Superseded by v6.16 upon D-305 round-33 fix-burst CLOSED.*
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence; round-32 fix-burst CLOSED (D-304). 3 findings closed (2 HIGH + 1 MED). GATE-READY=NO (sidecar-learning.md dirty sole blocker; all 16 machine gates PASS; spec-quality CLEAN). Census 39/134/17/137/303 UNCHANGED. TV 758 (769 grand) UNCHANGED. VP 17. streak 0/3. 3 of 4 adversary lenses CLEAN — closest convergence yet. NEXT = round-33 (P2A-140/141/142/143 + GATE-READY) on the NEW HEAD — frozen-HEAD reset; round-33 counts fresh.
+
+#### HEADS (at time of archival)
+- develop: `644d1ad` — clean, PUSHED.
+- factory-artifacts: D-304 round-32 burst — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+#### PER-WORKSTREAM (at time of archival)
+Phase-2 GAP-01/MCP re-convergence ONLY active workstream. NEXT-ACTION: round-33 P2A-140/141/142/143 + GATE-READY on new HEAD. Inject policies.yaml Phase-1-active rubric (POL-1..31, POL-46, POL-47) + POL-46 evidence discipline. L-225 extended (harness-idiom class sweep discipline). L-226 ADR-CANON-SELF-CONSISTENCY in effect.
+
+#### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+#### DECISION DELTA (this session)
+D-304 round-32 CLOSED. F-P2A136-01[HIGH] ADR-025 §Decision item 3 non-compilable+infallible dyn VectorStoreRetriever (E0782; fixed concrete/fallible; ADR-025 §Decision-3). F-P2A136-02[HIGH] VP-014 proptest false-green (prop_assert! inside block_on discarded; R31 sibling-MISS; fixed; VP-014 §Feasibility). F-P2A136-03[MED] VP-014 DynRunnable::stream omitted (E0046; fixed; co-landed). L-225 extended (HARNESS-IDIOM-CLASS-SWEEP). L-226 ADR-CANON-SELF-CONSISTENCY codified. Census stable 39/134/17/137/303 UNCHANGED; TV 758 (769 grand) UNCHANGED; VP 17.
+
+### STATE: v6.15, timestamp 2026-08-29T02:00:00Z

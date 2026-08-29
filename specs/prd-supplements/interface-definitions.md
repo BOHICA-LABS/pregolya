@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.92"
+version: "2.93"
 status: active
 producer: product-owner
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 phase: 1d
 changelog:
+  - "2.93 (round-33/F-P2A140-01+comprehensive-object-safety-audit/2026-08-29): F-P2A140-01 [HIGH] DynRunnable missing #[async_trait] — E0038 non-realizable. Added #[async_trait] above pub trait DynRunnable: Send + Sync. Corrected doc-comment: object-safety comes from #[async_trait] boxed-future desugaring (Pin<Box<dyn Future>>) NOT from explicit receiver — rewrote to match sibling async trait description pattern; preserved ADR-005 §Adjacent Trait Object-Safety Adjudications citation. Comprehensive object-safety audit (break-the-per-round-cycle mandate): three additional async traits used behind dyn lacked #[async_trait] — each defect closes a potential E0038 at Phase 3 compile time: (1) CheckpointSaver — used behind Arc<dyn CheckpointSaver> per ADR-005 §Object-Safety-of-the-5-Method-CheckpointSaver-Trait and bounded-contexts.md; async fn put_writes/get_tuple/list/put/fts_search all needed boxed-future desugaring; (2) GuardrailHook — used as &dyn GuardrailHook in GuardedDocuments::rag_ingress (ADR-014 Decision 6; purity-boundary-map.md core::retriever row); async fn evaluate needed boxed-future desugaring; (3) MemoryStore — used as Arc<dyn MemoryStore> in SkillStore::new (ADR-012 Decision 1); async fn memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search all needed boxed-future desugaring. SkillStore confirmed NOT behind dyn (no Arc<dyn SkillStore> in corpus) — no fix needed. TD-VSDD-060 sibling sweep: no other trait declarations in this file were missed; see companion VP-014 §Proof Harness Skeleton (F-P2A140-02) for impl-side fix."
   - "2.92 (round-27/F-P2A117-01/2026-08-28): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment SEC-006 bullet: 'CRITICAL-level structured log' → 'ERROR-level (`tracing::error!`) structured log'. The Rust tracing crate has no CRITICAL level; ERROR is the highest level. Aligns with observability.md log-level column (ERROR) and ADR-029 §Decision-4 prose (corrected in round-26). TD-VSDD-060 sibling sweep: only one occurrence of 'CRITICAL-level structured log' in live body — this line."
   - "2.91 (round-25/F-P2A108-02/2026-08-28): Normalize three spec doc-comment lines from doubled path form to parenthetical form per TD-VSDD-091 notation consistency. §PreToolCallHook code-block comment: `pregolya-core::core::action_risk` → `pregolya-core (core::action_risk)`. §Budget code-block comment: `pregolya-core::core::budget` → `pregolya-core (core::budget)`. Same §Budget code-block execution-engine comment: `pregolya-graph::graph::budget` → `pregolya-graph (graph::budget)`. No semantic changes; parenthetical form is the canonical spec-document convention consistent with module-decomposition.md and ADR-023 §Required Inventory."
   - "2.90 (round-24/O-P2A104-01/2026-08-28): O-P2A104-01 [LOW]: §Tool::schema() and §DynTool::schema() doc-comments generalized. Both previously read 'JSON Schema of the tool's argument struct, derived by schemars::schema_for!' — accurate for the #[pregolya::tool] macro case but inaccurate for two verbatim/passthrough producers: convert_mcp_tool (schema sourced verbatim from the MCP server inputSchema, not re-derived) and GraphAgentTool::from_graph (schema supplied by the caller). Updated both doc-comments to note the schema MAY be schemars-derived (macro case) OR supplied verbatim/by the caller (MCP-adapted and GraphAgentTool cases). BC anchors unchanged; no behavioral change to any trait method."
@@ -175,14 +176,22 @@ Type-erased composition path and the concrete sequence type returned by `pipe`.
 /// and tool nodes in a single `Vec`). `DynRunnable` erases both `Input` and `Output`
 /// to `serde_json::Value`; callers are responsible for JSON round-tripping at the boundary.
 ///
-/// **Dyn-compatibility:** every method takes an explicit receiver so the type is
-/// object-safe and can be placed behind `Arc<dyn DynRunnable>` (ADR-005 §Adjacent
-/// Trait Object-Safety Adjudications — BC-2.01.003 EC-001, BC-2.01.004 EC-001).
+/// **Dyn-compatibility:** the `#[async_trait]` macro desugars each `async fn` into a
+/// regular method returning `Pin<Box<dyn Future<Output = ...> + Send>>`, erasing the
+/// opaque return type that would otherwise make the trait non-dyn-compatible (E0038).
+/// This is the same boxed-future desugaring used by every other async object-safe trait
+/// in the codebase (CheckpointSaver, GuardrailHook, Retriever, VectorStore, Embeddings,
+/// PreToolCallHook, CompactionPolicy, DynTool — all carry `#[async_trait]` for the
+/// same reason). `Arc<dyn DynRunnable>` and `Box<dyn DynRunnable>` compile without
+/// E0038 because every method is desugared to a concrete boxed-future signature.
+/// ADR-005 §Adjacent Trait Object-Safety Adjudications — BC-2.01.003 EC-001,
+/// BC-2.01.004 EC-001.
 ///
 /// # Errors
 /// `Err(PregolyaError { code: "E-CORE-004", .. })` when a
 /// type boundary mismatch between adjacent stages is detected at the first `invoke`
 /// call (BC-2.01.004 PC5/EC-001/TV-004).
+#[async_trait]
 pub trait DynRunnable: Send + Sync {
     /// Invoke with JSON input; return JSON output.
     async fn invoke(
@@ -514,6 +523,7 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
 ### CheckpointSaver
 
 ```rust
+#[async_trait]
 pub trait CheckpointSaver: Send + Sync {
     /// Persist task outputs before the next super-step.
     async fn put_writes(
@@ -607,6 +617,7 @@ pub trait CheckpointSaver: Send + Sync {
 ### GuardrailHook
 
 ```rust
+#[async_trait]
 pub trait GuardrailHook: Send + Sync {
     /// Evaluate a single content unit arriving at a tool-result, RAG retrieval, or
     /// memory ingress boundary before it enters the model context (BC-2.11.001 PC5).
@@ -990,6 +1001,7 @@ the storage layer, not the application layer (BC-2.15.002 PC6).
 ///            BC-2.15.002 (MemoryScope tier isolation; scope parameter on every method),
 ///            BC-2.15.003 (GDPR erasure — admin-only standalone fn; NOT a trait method).
 /// Module: pregolya-memory (memory::store).
+#[async_trait]
 pub trait MemoryStore: Send + Sync {
     /// Write a key-value entry to the store under `scope` and `key`.
     ///
