@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "3.92"
+version: "3.93"
 status: active
 producer: state-manager
-timestamp: 2026-08-28T09:00:00Z
+timestamp: 2026-08-29T10:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "3.93 (round-35/F-P2A151-01/2026-08-29): 1 BC version bump — F-P2A151-01 [MED]: BC-2.09.008 (v2.7→v2.8) {PC-004} call-direction inversion corrected. Opening clause rewritten: prior wording made CompiledStateGraph::invoke the caller running the graph via GraphRunner::run (inverted seam). Corrected to canonical direction per ADR-029 §Decision 2/3/5 + interface-definitions.md §GraphRunner + S-2.11 AC-020: GraphRunner::run wraps CompiledStateGraph::invoke; GraphRunner::run is the public entry-point called by mcp::graph_tool; CompiledStateGraph::invoke is the callee wrapped by GraphRunner::run. {PC-004} postcondition now reads: GraphRunner::run runs the graph via CompiledStateGraph::invoke, then calls extract_output on the returned serde_json::Value and returns ONLY that extracted value. v2.0 trailing correctness note preserved unchanged. Sibling call-direction sweep: only {PC-004} opening clause was inverted; all other postconditions and BC siblings checked clean. H1 unchanged. BC census UNCHANGED: 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED: 17. EC UNCHANGED: 137."
   - "3.92 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): 7 BC version bumps — F-P2A144-01 [HIGH]: BC-2.01.003 (v2.2→v2.3) §Description + §PRE-001 signature citations updated from bare `async fn` to explicit RPITIT + Send form per interface-definitions.md §Runnable<Input,Output> canon. F-P2A144-02 [MED]: BC-2.01.003 (v2.2→v2.3), BC-2.01.004 (v1.5→v1.6), BC-2.01.005 (v1.5→v1.6), BC-2.01.006 (v1.7→v1.8), BC-2.01.007 (v1.4→v1.5), BC-2.01.008 (v1.5→v1.6) — §Architecture Anchors module-path drift `src/runnables/` → `src/runnable/` (singular) per module-decomposition.md §core::runnable canonical form. H1s unchanged. BC census UNCHANGED: 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED: 17. EC UNCHANGED: 137."
   - "3.91 (round-33/O-P2A142-01/2026-08-29): v3.79 frontmatter entry annotated with reconciling note — '17 unique VPs / 18 BC rows' was an erroneous update already reverted in v3.82 and annotated in v3.89; no live census change. VP-Seed UNCHANGED: 15 unique / 16 BC rows. BC census UNCHANGED: 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED: 17. EC UNCHANGED: 137."
   - "3.90 (round-30/F-P2A129-01+F-P2A130-03/2026-08-28): F-P2A129-01 [MED]: BC-2.09.008 (v2.6→v2.7) TV count 16→17 — TV-017 added (sanitize_internal_ids unit-isolation test for `\\b` non-over-match; TV-015 corrected to full-pipeline behavior: `redact_credentials` catches 64-char hex before sanitize_internal_ids runs). F-P2A130-03 [LOW/records]: BC-2.04.005 (v1.7→v1.8) semport Source field de-pinned in {INV-003}: stale line-range citation replaced with `semport/graph/behavioral-intent.md §2.4` section anchor (TD-VSDD-091 anti-volatile-pin; only semport line-range pin found in all BC bodies). TV registry 757→758 canonical + 11 GTV = 769. BC census UNCHANGED: 134 total (51 P0 / 80 P1 / 3 P2). VP census UNCHANGED: 17. EC census UNCHANGED: 137."

@@ -3524,3 +3524,13 @@ D-305 round-33 CLOSED. F-P2A140-01[HIGH] DynRunnable #[async_trait] (E0038; inte
 ---
 
 ### STATE: v6.15, timestamp 2026-08-29T02:00:00Z
+
+---
+
+## D-306 Checkpoint (archived from STATE.md v6.17 → v6.18 on 2026-08-29)
+
+D-306 round-34 CLOSED. F-P2A144-01[HIGH] blanket DynTool/DynRunnable non-realizable on stable Rust (E0277; RPITIT future not Send) — Runnable::invoke/stream/batch get explicit `+ Send` RPITIT; ADR-005 §Send-Bounded-RPITIT; interface-definitions.md §Runnable-interface; BC-2.01.003 §PC-001; BC-2.08.010 prose-only. F-P2A144-02[MED] src/runnables/ path drift → src/runnable/ (singular): 5 interface-definitions.md occurrences + 6 BCs (BC-2.01.003..008 §module-path); BC-INDEX §Changelog bumped. F-P2A146-01[LOW/records] S-1.19 changelog reorder 1.5→1.6→1.7 (monotonic). OBJECT-SAFETY-AUDIT-GATE extended (layer-2 RPITIT+Send). L-228 ASYNC-TRAIT-REALIZABILITY-STACK. Census stable 39/134/17/137/303 UNCHANGED; TV 758 UNCHANGED; VP 17. GATE-READY=YES (sidecar swept; 16 machine gates PASS; HRQ-1 sole blocker). streak 0/3.
+
+---
+
+### STATE: v6.17, timestamp 2026-08-29T10:00:00Z

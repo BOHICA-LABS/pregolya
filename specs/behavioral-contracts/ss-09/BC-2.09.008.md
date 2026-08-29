@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "2.7"
+version: "2.8"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -33,12 +33,13 @@ changelog:
   - "2.5 (round-26/P2A-113-OBS+POL-24-sibling-consistency/2026-08-28): P2A-113 [OBS] — {INV-001} `sanitize_internal_ids` UUID regex note updated: pattern is applied case-insensitively (consistent with S-2.11 Task-35 which mandates the case-insensitive flag). POL-24 — §Architecture Anchors registry.rs bullet annotated with `(mcp::registry standalone module, SS-09)` for sibling consistency with BC-2.09.006 §Architecture-Anchors (architect OPTION A: mcp::registry is a standalone module registered in module-decomposition and module-criticality)."
   - "2.6 (round-28/F-P2A121-01+O-P2A121-02/2026-08-28): F-P2A121-01 [MED, CWE-670/CWE-209]: {INV-001} §Framework sanitization pass scope extended to two-pattern union — added pattern (2) simple no-hyphen form `\\b[0-9a-f]{32}\\b` to cover `Uuid::simple()` rendering (32 contiguous hex digits); pattern (1) canonical hyphenated form retained; the `\\b` word-boundary prevents over-matching 64-char SHA-256 digests and hex sequences flanked by underscores; together the two patterns cover all standard uuid-crate rendering forms. Three new test vectors appended (append-only per POL-1): TV-014 (POSITIVE — simple-form run_id stripped), TV-015 (NEGATIVE — 64-char hex digest passes through unchanged), TV-016 (NEGATIVE — simple UUID flanked by underscores passes through unchanged). O-P2A121-02 [LOW/records]: Traceability §Error Codes row E-MCP-010 note reworded to past-tense draft-history framing — present-tense 'ADR-029 body incorrectly referenced' replaced with 'the initial ADR-029 draft cited ... corrected to E-MCP-010 in ADR-029 §Changelog'."
   - "2.7 (round-30/F-P2A129-01/2026-08-28): F-P2A129-01 [MED, CWE-209/spec-contradiction]: TV-015 full-pipeline expected output corrected. The mandatory pipeline (`sanitize_internal_ids(redact_credentials(message))` per ADR-029 §Decision 3 and Decision 5) applies `redact_credentials` FIRST; its rule `[A-Za-z0-9]{64,}` matches a 64-char lowercase hex SHA-256 digest token → `<redacted>`; `sanitize_internal_ids` then sees no UUID pattern in the already-redacted message. TV-015 corrected from 'content[0].text contains 64-char hex UNCHANGED' to `\"digest: <redacted>\"` (full-pipeline output). TV-017 added (append-only per POL-1): `sanitize_internal_ids` unit-isolation test — documents that pattern (2) `\\b[0-9a-f]{32}\\b` does NOT independently match a 64-char hex sequence (the `\\b` end-boundary guard; tests the non-over-match property at the correct isolation layer, not the full pipeline). {INV-001} §Framework sanitization pass scope: pipeline-interaction note added after the `\\b` non-over-match sentence — clarifies that in the full pipeline `redact_credentials` catches a 64-char lowercase hex token before `sanitize_internal_ids` runs (see TV-017 for unit-isolation test). OPTION CHOSEN: (b) — correct TV-015 as full-pipeline vector AND add TV-017 as isolation vector; provides complete coverage at both layers; story-writer to propagate TV-015/TV-017 reference updates to S-2.11 Task-35 body under bc_array_changes_propagate_to_body_and_acs. Architect note: ADR-029 §Decision 3 and Decision 5 already specify the chain; no ADR change required."
+  - "2.8 (round-35/F-P2A151-01/2026-08-29): F-P2A151-01 [MED]: {PC-004} opening clause call-direction inversion corrected per ADR-029 §Decision 2 and §Decision 5 canonical seam. OLD opening: 'CompiledStateGraph::invoke runs the graph to a terminal state via GraphRunner::run, which calls extract_output(&final_state)' — inverted containment (made CompiledStateGraph::invoke the outer caller of GraphRunner::run). NEW opening: 'GraphRunner::run runs the graph to a terminal state via CompiledStateGraph::invoke, then calls extract_output(&final_state) on the returned serde_json::Value' — correct containment: invoke_dyn wraps GraphRunner::run which wraps CompiledStateGraph::invoke; extract_output is called inside GraphRunner::run on the value returned by CompiledStateGraph::invoke. Trailing note and all return-type semantics preserved unchanged. POL-24 sibling sweep: BC-2.09.006 and BC-2.09.007 contain no GraphRunner/CompiledStateGraph::invoke direction statements (BC-2.09.006 covers tools/list only; BC-2.09.007 covers invoke_dyn→DynTool seam only; neither references the internal graph execution containment); no sibling fixes required."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "0e587c1"
+input-hash: "a175f88"
 extracted_from: null
 modified: []
 deprecated: null
@@ -99,9 +100,10 @@ overrides `PreToolCallHook` approval decisions only.
    If `CompiledStateGraph::invoke` returns `Err(PregolyaError { .. })`,
    `GraphAgentTool::invoke_dyn` propagates the `Err`; the server surfaces this as `isError: true`
    per BC-2.09.007 {PC-003}; credential redaction applies per {INV-003}.
-4. {PC-004} On successful graph execution: `CompiledStateGraph::invoke` runs the graph to a
-   terminal state via `GraphRunner::run`, which calls `extract_output(&final_state)` and
-   returns ONLY the resulting `serde_json::Value`. `GraphAgentTool::invoke_dyn` returns
+4. {PC-004} On successful graph execution: `GraphRunner::run` runs the graph to a terminal
+   state via `CompiledStateGraph::invoke`, then calls `extract_output(&final_state)` on the
+   returned `serde_json::Value` and returns ONLY that extracted `serde_json::Value`.
+   `GraphAgentTool::invoke_dyn` returns
    `Ok(extract_output_result)` where `extract_output_result: serde_json::Value`.
    The server serializes this per BC-2.09.007 {PC-002} (`result_text =
    serde_json::to_string(&extract_output_result)`). If `extract_output` returns

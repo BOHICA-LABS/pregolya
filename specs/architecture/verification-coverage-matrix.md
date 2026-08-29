@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.23"
+version: "3.24"
 status: active
 producer: architect
 timestamp: 2026-08-28T00:00:00Z
@@ -14,6 +14,7 @@ inputs:
 input-hash: "030142c"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.24 (round-35/F-P2A151-02-records/2026-08-29): Changelog reconciliation for R30 phantom registry-attribution. The live body mcp::registry Notes column was corrected at v3.23 (R31/F-P2A135-01) and further confirmed at R33 (F-P2A143): the canonical attribution is registry read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. However the v3.22 terminal R30 changelog entry still records the superseded phantom attribution ('Canonical set: mcp::server (reader) and mcp::client (writer/populator)') with no subsequent entry documenting the reversal — an untracked body edit (POL-21) and a regression-vector for future readers. This entry closes the record gap: the v3.22 R30 'mcp::client (writer/populator)' attribution was superseded by the R31 F-P2A135-01 correction (v3.23) and independently confirmed by R33 F-P2A143. No live body changes; nomenclature and census UNCHANGED."
   - "3.23 (R31/F-P2A135-01/2026-08-28): F-P2A135-01 HIGH — mcp::registry Notes column corrected against BCs. R30's 'mcp::client (populates at session startup via mcp::discovery conversion)' is a phantom per BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}. Corrected: registry read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. input-hash refreshed (module-decomposition.md R31/F-P2A135-01 mcp::registry body-row edit)."
   - "3.22 (R30/F-P2A131-01/2026-08-28): F-P2A131-01 MED — mcp::registry consumer-set reconciliation. mcp::registry Notes column corrected: 'mcp::discovery (population at session startup)' replaced with 'mcp::client (populates at session startup via mcp::discovery conversion)'. Canonical set: mcp::server (reader) and mcp::client (writer/populator). input-hash updated: 99fb6a7 (module-decomposition.md input drift from R28/R30 edits corrected)."
   - "3.21 (round-27/F-P2A116-01+F-P2A118-02+F-P2A119-02/2026-08-28): (1) F-P2A116-01/F-P2A118-02 PRIMARY TASK — Per-Module Coverage Status preamble: first sentence '91 physical rows' corrected to '90 physical rows' (measured: 90 data rows between table header and §Coverage by Criticality Tier; the second sentence '90 physical rows to 88 distinct modules' was already correct). Arithmetic removed from first sentence to avoid re-drift; additions sourced from round labels only. (2) F-P2A119-02 — mcp::sanitize Notes: `sanitize_internal_ids` added alongside `redact_credentials`; consumer set extended from implicit mcp::server-only to explicit {mcp::server, mcp::graph_tool}."
