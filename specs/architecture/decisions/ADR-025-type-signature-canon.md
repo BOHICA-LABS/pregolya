@@ -11,11 +11,12 @@ date: "2026-08-01"
 subsystems_affected: ["all"]
 supersedes: []
 superseded_by: null
-version: "1.3"
+version: "1.4"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D43, D45, D48]
 changelog:
+  - "1.4 (R32/F-P2A136-01/2026-08-28): Three non-compilable dyn-phantom occurrences corrected. (1) §Decision item 3 (D-48): canonical return type `Arc<dyn VectorStoreRetriever + Send + Sync>` → `Result<VectorStoreRetriever, PregolyaError>` — the former is E0782/E0038 non-compilable (`VectorStoreRetriever` is a concrete struct, not a trait) and infallible, contradicting §as_retriever Receiver canonical form and interface-definitions.md authority. (2) §Alternatives Considered D-45 row: replaced `dyn VectorStoreRetriever trait objects` framing with `'static` ownership framing that names the actual compile-time failure (lifetime incompatibility → non-`'static` → `Arc<dyn Retriever + 'static>` coercion fails). (3) §Alternatives Considered D-48 row: replaced `Arc<dyn VectorStoreRetriever>` with concrete rationale citing the `Arc<dyn VectorStore>` construction requirement and the fallible `Result<VectorStoreRetriever, PregolyaError>` return. Corpus sweep: zero remaining `dyn VectorStoreRetriever` or `Arc<dyn VectorStoreRetriever>` occurrences in `.factory/specs/` live body."
   - "1.3 (burst-292/P1D-183-F2/2026-08-16): Fix internal rule-count contradiction. §Context and §Decision intro stated 'rules S2, S3, S4' / 'three canonical ... forms'; corrected to 'rules S1, S2, S3, S4' / 'four canonical ... forms'. S1 (as_retriever Arc<Self> receiver) is grounded by ADR-025 per §as_retriever Receiver §Rule origin (verify-signature-canon.sh S1), §Consequences (rules S1/S2/S3/S4), and §Source/Origin (CANON TABLE rules S1/S2/S3/S4). Three sites corrected: §Context inline-rule-comment reference, §Context canonical-form body reference, §Decision intro. No other 'S2, S3, S4' or 'three canonical' sites found in the live body (existing §Consequences and §Source/Origin were already correct)."
   - "1.2 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Alternatives Considered section per ADR template (LOW finding: date boundary conditions)."
   - "1.1 (fix-burst-287/illustration-markers/2026-08-01): Add discriminator:illustration-start/end markers around all prohibited-form examples, problem descriptions, and validator prose in each decision section. The ADR documents the prohibition by naming the prohibited forms; the markers exempt these illustrative regions from verify-signature-canon.sh scan so the scanner enforces normative signatures only. Content unchanged; no new decisions."
@@ -68,7 +69,7 @@ Ratify four canonical type-signature forms as ADR headings, grounding `verify-si
 1. **D-43 — DynTool dispatch:** `Arc<dyn DynTool + Send + Sync>` is the canonical form; `Arc<dyn Tool>` is E0038 (not object-safe) and prohibited.
 <!-- discriminator:illustration-start -->
 2. **D-45 — VectorStoreRetriever:** The canonical trait has no lifetime parameter; `VectorStoreRetriever<'_>` in any signature is prohibited.
-3. **D-48 — `as_retriever` receiver and `&Arc<Self>` standing prohibition:** `fn as_retriever(self: Arc<Self>) -> Arc<dyn VectorStoreRetriever + Send + Sync>` is canonical; `&self` and `&Arc<Self>` receivers are prohibited for `as_retriever` and for any future `Arc<Self>` dispatch method.
+3. **D-48 — `as_retriever` receiver and `&Arc<Self>` standing prohibition:** `fn as_retriever(self: Arc<Self>) -> Result<VectorStoreRetriever, PregolyaError>` is canonical; `&self` and `&Arc<Self>` receivers are prohibited for `as_retriever` and for any future `Arc<Self>` dispatch method.
 <!-- discriminator:illustration-end -->
 
 ---
@@ -308,6 +309,6 @@ A dedicated ADR (rather than adding to ADR-010 error taxonomy) is appropriate be
 |-------------|-----------------|
 | Continue encoding canonical forms as shell-script CANON TABLE comments only | Creates a governance inversion: the hook becomes the source of canon rather than an enforcer. Architectural decisions require citable ADR headings that BCs and spec citations can reference. REJECT. |
 | D-43: `Box<dyn Tool + Send + Sync>` instead of `Arc<dyn DynTool + Send + Sync>` | `Box` precludes shared ownership across async tasks; `Arc` is required for multi-owner dispatch in Tokio multi-threaded runtime (ADR-001 Alt-B). `DynTool` is needed because `Tool` is not object-safe (generic `run` return type). REJECT. |
-| D-45: Keep lifetime parameter on `VectorStoreRetriever<'a>` | Lifetime parameters prevent `dyn VectorStoreRetriever` trait objects from being stored in `Arc` (requires `+ 'static`). Static dispatch coercion requires `'static` lifetime on the trait. REJECT. |
-| D-48: `&self` receiver for `as_retriever` | `&self` cannot yield an `Arc<dyn VectorStoreRetriever>` without a `Weak` back-reference or external `Arc` injection — both are non-trivial and error-prone. `self: Arc<Self>` provides the owned `Arc` directly. REJECT. |
+| D-45: Keep lifetime parameter on `VectorStoreRetriever<'a>` | A lifetime parameter makes `VectorStoreRetriever` non-`'static`, preventing `Arc<dyn Retriever + 'static>` coercion and Tokio `spawn` use (ownership boundary incompatibility). Own the store via `Arc<dyn VectorStore>` instead. REJECT. |
+| D-48: `&self` receiver for `as_retriever` | `&self` cannot provide the owned `Arc<Self>` required to construct a `VectorStoreRetriever` (which needs `Arc<dyn VectorStore>`) — a `Weak` back-reference or external `Arc` injection would be required, both non-trivial and error-prone. `self: Arc<Self>` provides the owned `Arc` directly and enables the fallible `Result<VectorStoreRetriever, PregolyaError>` return. REJECT. |
 <!-- discriminator:illustration-end -->
