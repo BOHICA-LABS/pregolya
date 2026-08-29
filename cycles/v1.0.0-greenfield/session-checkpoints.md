@@ -3367,3 +3367,34 @@ Rounds 19-28: 10 consecutive NOT CLEAN. Round-28 pass counts: P2A-120=0, P2A-121
 ### STATE: v6.09, timestamp 2026-08-28T22:30:00Z
 
 ### STATE: v6.08, timestamp 2026-08-28T18:00:00Z
+
+---
+
+## ARCHIVED CHECKPOINT D-299 (2026-08-28) — Superseded by D-301
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence; round-29 fix-burst CLOSED; 11 consecutive rounds (19-29) NOT CLEAN, streak 0/3. P2A-124=1(OBS), P2A-125=2(1HIGH+1LOW), P2A-126=0(CLEAN strict), P2A-127=2(2MED) NOT CLEAN(strict); GATE-READY=NO (HRQ-1 sole-blocker). NEXT = round-30 (P2A-128/129/130/131 + GATE-READY re-run) on THIS new HEAD. trajectory-tail →1→2→0→2. Root: round-28 fix-residue (two-pattern sanitizer + ToolRegistry-typo not swept to ADR-029 §Decision 3/5 + S-2.11 tables).
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
+- factory-artifacts: run `git -C .factory log -1 --format='%h %s'` for current HEAD.
+- No .worktrees/. No open PRs expected.
+
+### PER-WORKSTREAM
+- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-29 closed at THIS HEAD. RESUME NEXT-ACTION: dispatch round-30 adversary passes P2A-128/129/130/131 + GATE-READY re-run on THIS HEAD. Streak 0/3 (frozen-HEAD rule: any push resets to 0/3).
+- Convergence-tail guidance: rounds 19-29 pattern — INCOMPLETE-SWEEP SIBLING-MIRROR / round-N fix-residue not swept to ADR/SS normative description siblings. Round-29 root: round-28 two-pattern sanitizer union added to BC/story/TV but ADR-029 §Decision 3/5 + S-2.11 summary rows NOT updated; ToolRegistry '>→>' fix applied to prose but NOT to §Module-Decomp type-column table cell. PROCESS-GAP candidates: EXHAUSTIVE-SWEEP-ENFORCE, BURST-PRE-SPLIT-DISCIPLINE (Drift/Deferrals).
+
+### STANDING HUMAN-GATE OBS (5 active HRQs; HRQ-3 CLOSED — carry-forward from rounds 20-22)
+(a) HRQ-1: full 3/3 CLEAN required before Phase-2 gate. (b) HRQ-2: CompiledStateGraph non-generic redesign acknowledgment needed. (c) HRQ-3: CLOSED — VP-FILENAME-CONVENTION adjudicated keep-as-is (D-291). (d) HRQ-4: CHECK-2 ADVISORY→BLOCKING human decision. (e) HRQ-5: interface-definitions↔BC-prose consistency gate. (f) HRQ-6: ss-TBD empty dir OBS. NOTE: SEC-008 deferral Phase-3 Cargo.toml.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion — starts AFTER Phase-2 approval gate.
+- DTU clones: pending (openai/anthropic/ollama) — Phase-4 prerequisite.
+
+### DECISION DELTA
+D-299 = round-29 fix-burst close. Key closes: F-P2A125-01[HIGH,CWE-670/209] ADR-029 §Decision 3/5 + S-2.11 two-pattern sanitizer; F-P2A127-01[MED] ToolRegistry 4-bracket; F-P2A127-02[MED] S-1.19 AC-025 mechanism gate; O-P2A125-02[LOW] re-anchor wording; O-P2A124-01[OBS] .simple() mint comment. CENSUS UNCHANGED 39/134/17/137/303. TV 757. VP 17. trajectory-tail →1→2→0→2.
+
+### OPERATIONAL NOTE
+Rounds 19-29: 11 consecutive NOT CLEAN. Round-29 pass counts: P2A-124=1(OBS), P2A-125=2(1HIGH+1LOW), P2A-126=0(CLEAN strict), P2A-127=2(2MED). GATE-READY=NO (HRQ-1 streak-gate sole-blocker). Round-30 is first pass on this new HEAD.
+
+### STATE: v6.11, timestamp 2026-08-28T23:00:00Z

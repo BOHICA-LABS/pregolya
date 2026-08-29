@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "6.11"
+version: "6.12"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-28T23:00:00Z"
+timestamp: "2026-08-28T23:30:00Z"
 phase: 2
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: pregolya
 mode: greenfield+semport
-current_step: "D-299 (2026-08-28) — trajectory-tail →1→2→0→2. Phase-2 re-convergence round-29 fix-burst CLOSED. P2A-124=1(OBS); P2A-125=2(1HIGH+1LOW); P2A-126=0(CLEAN); P2A-127=2(2MED). CENSUS: 39/134/17/137/303 UNCHANGED. TV 757. VP 17. streak 0/3. NOT CLEAN. 5 findings CLOSED: F-P2A125-01[HIGH,CWE-670/209] ADR-029 §Decision 3/5 + S-2.11 two-pattern sanitizer; F-P2A127-01[MED] ToolRegistry 4-bracket; F-P2A127-02[MED] S-1.19 AC-025 mechanism gate; O-P2A125-02[LOW] re-anchor; O-P2A124-01[OBS] mint comment. Root: round-28 fix-residue. Census/consistency converged (P2A-126+GATE-READY spec-clean). NEXT: round-30 P2A-128/129/130/131 + GATE-READY on new HEAD."
+current_step: "D-301 (2026-08-28) — trajectory-tail →1→2→0→2 (round-29; unchanged at wrap). Session wrap. RESUME SNAPSHOT D-301 written. sidecar-learning.md committed (dirty-tracked-file cleared). Phase-2 re-convergence rounds 26-29 CLOSED + STATE.md compacted (D-300). Corpus SPEC-CLEAN — P2A-126 (consistency/census) and GATE-READY audit both zero spec defects; SOLE gate blocker HRQ-1 (BC-5.39.001 3-CLEAN streak, currently 0/3). Census 39/134/17/137/303. TV 757. VP 17. NEXT: round-30 P2A-128/129/130/131 + GATE-READY on wrap HEAD."
 current_cycle: v1.0.0-greenfield
-convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase-2 IN PROGRESS — D-299: round-29 fix-burst CLOSED (ADR-029 §Decision 3/5 two-pattern sanitizer; ToolRegistry 4-bracket; S-1.19 AC-025; trajectory_tail →1→2→0→2; GATE-READY=NO HRQ-1 sole-blocker; spec-quality CLEAN; census UNCHANGED 39/134/17/137/303; TV 757; VP 17; streak 0/3). NOT CLEAN(strict). NEXT: round-30 P2A-128/129/130/131 + GATE-READY on new HEAD."
+convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase-2 IN PROGRESS — D-301: session wrap; rounds 26-29 CLOSED + D-300 compaction; trajectory_tail →1→2→0→2 (round-29); GATE-READY=NO (HRQ-1 sole-blocker; spec-quality CLEAN); census UNCHANGED 39/134/17/137/303; TV 757; VP 17; streak 0/3. NEXT: round-30 P2A-128/129/130/131 + GATE-READY on wrap HEAD."
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
@@ -22,7 +22,7 @@ dtu_services: [openai, anthropic, ollama]
 user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
 ---
 
-<!-- STATE.md SIZE BUDGET: 194 lines (wc-l) | margin from soft-target (200L→500L): +306 lines | margin from actual (hard-cap 500L): 500 - 194 = 306 (dual-margin form) | compaction burst (2026-08-28): v6.10→v6.11; extracted D-290..D-296 (exhaustive) historical decision rows to cycles/v1.0.0-greenfield/burst-log.md; compressed Phase-2 P2A-001..035 phase-progress to 2 rows; removed RESOLVED drift rows (SEMANTIC-ANCHOR-DRIFT + PROSE-ORDINAL-RESIDUAL). 207→194 lines. -->
+<!-- STATE.md SIZE BUDGET: 192 lines (wc-l) | margin from soft-target (200L→500L): +308 lines | margin from actual (hard-cap 500L): 500 - 192 = 308 (dual-margin form) | session-wrap burst (2026-08-28): v6.11→v6.12; D-301 row added to decisions log; D-299 checkpoint archived to session-checkpoints.md; D-301 RESUME SNAPSHOT written. 194→192 lines. -->
 
 # Pipeline State: pregolya
 
@@ -86,6 +86,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-297 | **Phase-2 re-convergence round-27 fix-burst CLOSED (2026-08-28): 4 adversary passes + GATE-READY audit on frozen HEAD ce2c5fe3. P2A-116 (realizability) NOT CLEAN — 1 MED (2 OBS non-defects). P2A-117 (security) NOT CLEAN — 1 MED + 1 OBS. P2A-118 (consistency/census/records) NOT CLEAN — 1 HIGH + 3 MED + 1 pattern-obs. P2A-119 (SS-09 deep-audit) NOT CLEAN — 3 MED + 2 OBS. GATE-READY audit: GATE-READY=NO (2 blocking: HRQ-1 3/3 streak process-gate + FINDING-CV-001 records; FINDING-CV-001 CLOSED this burst; HRQ-1/2/4/5/6 carry-forwards to Phase-2 human gate). trajectory-tail →1→2→5→5. Census re-confirmed UNCHANGED 39/134/17/137/303. TV 754. VP 17. All 10 findings CLOSED per DIRECTIVE 2 fix-in-scope: F-P2A118-01[HIGH] purity-boundary-map counts (POL-21); F-P2A116-01/118-02[MED] vcm self-contradiction 91vs90 (body reconciled 90 physical/88 distinct); F-P2A118-03[MED] module-decomp §pregolya-mcp preamble stale total + volatile count → stable pointer (TD-VSDD-091); F-P2A117-01[MED] interface-definitions ForceApproveHooks 5th-sibling CRITICAL→ERROR; F-P2A119-01[MED] purity-boundary-map VP-015 integration→unit; F-P2A119-02[MED] mcp::sanitize desc + consumer set across 3 registries; F-P2A119-03[MED,CWE-248/703] BC-2.11.002 EC-001 async FutureExt::catch_unwind + SEC-008 + {INV-005} + panic TV; crate pregolya-core→pregolya-graph; O-P2A119-04[LOW] ADR-029 code-sketch CRITICAL prefix removed; O-P2A117-OBS observability CRITICAL→highest-severity; FINDING-CV-001[LOW] ARCH-INDEX §Changelog mcp::registry Iron Law entry. Meta-pattern: round-26 tertiary-sibling residue (CRITICAL→ERROR fix missed 5th sibling; mcp::registry propagation missed 3-of-4 registry prose; D-273 VP-015 unit-fix missed purity-boundary-map; mcp::sanitize additions missed 3 registry descriptions; routing gap: S-1.19 AC-024 added tracing without BC-2.11.002 anchor). PROCESS-GAP follow-up candidates (Drift/Deferrals table): O-P2A118-04 validator; registry counting-convention; story-AC-needs-BC-anchor routing. NOT CLEAN. Streak 0/3.** | Phase-2 round-27 close — 4-registry count reconciliation; CRITICAL→ERROR 5th-sibling; mcp::sanitize desc x3; BC-2.11.002 async-panic FutureExt anchor; ARCH-INDEX §Changelog; GATE-READY=NO | Phase 2 | 2026-08-28 | state-manager |
 | D-298 | **Phase-2 re-convergence round-28 fix-burst CLOSED (2026-08-28): 4 adversary passes on frozen HEAD 351b957. P2A-120 (realizability) CLEAN(strict)=YES. P2A-121 (security) NOT CLEAN — 1 MED + 2 LOW. P2A-122 (consistency/census/records) CLEAN(strict)=YES. P2A-123 (SS-11/GATE-READY broadened) NOT CLEAN — 1 HIGH + 2 MED + GATE-READY TV finding. ALL 7 FINDINGS CLOSED: F-P2A123-01[HIGH] 19-BC §Story-Anchor placeholders (SS-04 BC-2.04.001..007 / SS-11 BC-2.11.001..006 / SS-13 BC-2.13.001..006 — D-238 2026-08-22 backfill skipped these 3 subsystems). GATE-READY TV registry 754→757: v3.10 changelog claimed +9 but only +6 written (-3 error), propagated through v3.11/v3.12; column had separately drifted to 724; 21 rows corrected; test-vectors v3.12→v3.13. F-P2A121-01[MED,CWE-670/209] sanitizer simple-UUID: BC-2.09.008 {INV-001} two-pattern union `[0-9a-f]{32}\|[0-9a-f]{8}-...-[0-9a-f]{12}` + 3 TVs (TV-011a/011b/015) + S-2.11 AC-031. F-P2A123-02[MED] module-decomp ToolRegistry type cell surplus '>'. F-P2A123-03[MED] S-1.19 AC-024 re-anchored BC-2.09.008 PC-001→BC-2.11.002 {INV-005}. O-P2A121-02/03[LOW] records tense+order. CENSUS UNCHANGED 39/134/17/137/303. TV 754→757 (ground-truth; GTV 11; grand total 768). VP 17. trajectory-tail →0→3→0→3. streak 0/3. NOT CLEAN. 2 PRE-EXISTING latent defects exposed by broadened SS-11+GATE-READY perimeter. GATE-READY=NO (HRQ-1/2/4/5/6 carry-forward; TV registry FIXED).** | Phase-2 round-28 close — 19-BC §Story-Anchor backfill (D-238 gap; SS-04/SS-11/SS-13); TV ground-truth 754→757; sanitizer simple-UUID two-pattern; ToolRegistry type '>'; S-1.19 AC-024→BC-2.11.002 {INV-005}; LOW/OBS records | Phase 2 | 2026-08-28 | state-manager |
 | D-299 | **Phase-2 re-convergence round-29 fix-burst CLOSED (2026-08-28): 4 adversary passes on frozen HEAD c78baa04. P2A-124 (realizability) NOT CLEAN — 1 OBS. P2A-125 (security) NOT CLEAN — 1 HIGH + 1 LOW. P2A-126 (consistency/census/records) CLEAN(strict)=YES/CLEAN(PR-merge)=YES. P2A-127 (SS-09+SS-11 deep-audit) NOT CLEAN — 2 MED. ALL 5 FINDINGS CLOSED: F-P2A125-01[HIGH,CWE-670/209] ADR-029 §Decision 3/5 two-pattern sanitizer union (32-hex OR hyphenated) not in ADR-029 §Decision 3 (sanitizer design) or §Decision 5 (panic-recovery, which cites sanitizer) or S-2.11 summary rows; root: round-28 fix-residue (INCOMPLETE-SWEEP SIBLING-MIRROR class). F-P2A127-01[MED] module-decomp ToolRegistry type cell 4-bracket surplus from round-28 ToolRegistry-type fix (applied to §Module-Decomposition prose but not to type-column table cell). F-P2A127-02[MED] S-1.19 AC-025 mechanism gate missing — test spec did not include mechanism gate binding to BC-2.11.002 {INV-005} or FutureExt::catch_unwind; added same-burst. O-P2A125-02[LOW] BC-2.09.008 {INV-001} first-paragraph anchor wording re-anchored to match updated §Decision-3 text. O-P2A124-01[OBS] BC-2.09.008 §Decision 3 .simple() mint comment clarified. ROOT-CAUSE: round-28 fix-residue — two-pattern sanitizer union added to BC/story/TV but NOT swept to ADR-029 §Decision 3/5 normative description; ToolRegistry-typo fix not swept to §Module-Decomp table type column. LESSONS L-220 (EXHAUSTIVE-SWEEP 4th occurrence) + L-221 (BURST-PRE-SPLIT discipline) codified. CENSUS UNCHANGED 39/134/17/137/303. TV 757. VP 17. trajectory-tail →1→2→0→2. streak 0/3. NOT CLEAN(strict). P2A-126 CLEAN(strict). GATE-READY=NO (HRQ-1 sole blocker). NEXT: round-30 P2A-128/129/130/131 + GATE-READY on new HEAD.** | Phase-2 round-29 close — ADR-029 §Decision 3/5 + S-2.11 summary rows two-pattern sanitizer; ToolRegistry 4-bracket; S-1.19 AC-025 mechanism gate; root: round-28 fix-residue | Phase 2 | 2026-08-28 | state-manager |
+| D-301 | **Session wrap (2026-08-28): RESUME SNAPSHOT D-301 written. sidecar-learning.md committed (dirty-tracked-file cleared — was tripping verify-sha-currency FAIL at session start; blocked validate-wave-gate-prerequisite hook). STATE.md v6.11→v6.12. D-299 checkpoint archived to session-checkpoints.md. Rounds 26-29 CLOSED (D-296..D-299 (exhaustive)); D-300 compaction. Corpus SPEC-CLEAN; SOLE gate blocker HRQ-1. Census 39/134/17/137/303. TV 757. VP 17. streak 0/3.** | Session wrap before context clear | Phase 2 | 2026-08-28 | state-manager |
 
 ## Risk Register
 
@@ -152,32 +153,29 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 
 ## Session Resume Checkpoint
 
-<!-- D-299 checkpoint replaces D-298 — D-298 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- D-301 checkpoint replaces D-299 — D-299 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-pregolya Phase-2 re-convergence; round-29 fix-burst CLOSED; 11 consecutive rounds (19-29) NOT CLEAN, streak 0/3. P2A-124=1(OBS), P2A-125=2(1HIGH+1LOW), P2A-126=0(CLEAN strict), P2A-127=2(2MED) NOT CLEAN(strict); GATE-READY=NO (HRQ-1 sole-blocker). NEXT = round-30 (P2A-128/129/130/131 + GATE-READY re-run) on THIS new HEAD. trajectory-tail →1→2→0→2. Root: round-28 fix-residue (two-pattern sanitizer + ToolRegistry-typo not swept to ADR-029 §Decision 3/5 + S-2.11 tables).
+pregolya Phase-2 re-convergence; this session drove rounds 26-29 fix-bursts CLOSED + STATE.md compacted (D-300). Corpus is SPEC-CLEAN — P2A-126 (consistency/census) and the GATE-READY audit both report zero spec defects; the SOLE Phase-2 gate blocker is HRQ-1 (the BC-5.39.001 3-CLEAN streak, currently 0/3). Census 39/134/17/137/303, TV 757, VP 17. NEXT = run round-30 (P2A-128/129/130/131 + GATE-READY) on the wrap HEAD — if all CLEAN(strict)+GATE-READY=YES, streak advances 1/3.
 
 ### HEADS
-- develop: `644d1ad` — clean, PUSHED (no code work; Phase-2 is spec-only).
-- factory-artifacts: NEW burst HEAD after push — run `git -C .factory log -1 --format='%h %s'`.
-- No .worktrees/. No open PRs expected.
+- develop: `644d1ad` — clean, PUSHED (Phase-2 is spec-only; no code work this session).
+- factory-artifacts: D-301 wrap commit — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+- Untracked STATE.md.bak/bak2/bak3 (7-byte "deleted" sentinels) — harmless; remove when a human authorizes.
 
 ### PER-WORKSTREAM
-- Phase-2 GAP-01 re-convergence (the ONLY active workstream). Frozen state: round-29 closed at THIS HEAD. RESUME NEXT-ACTION: dispatch round-30 adversary passes P2A-128/129/130/131 + GATE-READY re-run on THIS HEAD. Streak 0/3 (frozen-HEAD rule: any push resets to 0/3).
-- Convergence-tail guidance: rounds 19-29 pattern — INCOMPLETE-SWEEP SIBLING-MIRROR / round-N fix-residue not swept to ADR/SS normative description siblings. Round-29 root: round-28 two-pattern sanitizer union added to BC/story/TV but ADR-029 §Decision 3/5 + S-2.11 summary rows NOT updated; ToolRegistry '>→>' fix applied to prose but NOT to §Module-Decomp type-column table cell. PROCESS-GAP candidates: EXHAUSTIVE-SWEEP-ENFORCE, BURST-PRE-SPLIT-DISCIPLINE (Drift/Deferrals).
+Phase-2 GAP-01/MCP re-convergence is the ONLY active workstream. Frozen at the wrap HEAD; 3-CLEAN streak 0/3 (frozen-HEAD rule: any push resets to 0/3, so round-30 counts fresh on the wrap HEAD). RESUME NEXT-ACTION: dispatch 4 fresh-context adversary passes — P2A-128 (realizability), P2A-129 (security), P2A-130 (consistency/census/records), P2A-131 (SS-09 MCP + SS-11 guardrail sibling deep-audit) — plus a consistency-validator GATE-READY audit, ALL anchored on the wrap HEAD. Before each adversary dispatch, inject the .factory/policies.yaml Phase-1-active rubric (POL-1..31, POL-46, POL-47) + the POL-46 evidence discipline (verbatim-quote Form-B evidence; verify citations/filenames before writing; treat historical/changelog rows as historical, not live defects). If all 4 report CLEAN(strict) AND GATE-READY=YES — streak 1/3; else run a coordinated fix-burst (route by owner: architect / product-owner / story-writer; state-manager commits LAST, single commit). MANDATE on every fix that changes a canonical form (regex/type/identifier/count): exhaustive corpus-wide grep of ALL occurrences in the same burst (lesson L-220 — rounds 27/28/29 each spent a full cascade cleaning the prior round's un-swept siblings).
 
-### STANDING HUMAN-GATE OBS (5 active HRQs; HRQ-3 CLOSED — carry-forward from rounds 20-22)
-(a) HRQ-1: full 3/3 CLEAN required before Phase-2 gate. (b) HRQ-2: CompiledStateGraph non-generic redesign acknowledgment needed. (c) HRQ-3: CLOSED — VP-FILENAME-CONVENTION adjudicated keep-as-is (D-291). (d) HRQ-4: CHECK-2 ADVISORY→BLOCKING human decision. (e) HRQ-5: interface-definitions↔BC-prose consistency gate. (f) HRQ-6: ss-TBD empty dir OBS. NOTE: SEC-008 deferral Phase-3 Cargo.toml.
+### STANDING HUMAN-GATE OBS (carry to the Phase-2 human gate)
+HRQ-1 (3/3 CLEAN streak — sole current gate blocker); HRQ-2 (CompiledStateGraph non-generic redesign — human ack before Phase-3); HRQ-4 (verify-ac-pc-trace CHECK-2 ADVISORY→BLOCKING decision); HRQ-5 (interface-definitions↔BC-prose gate decision); HRQ-6 (ss-TBD empty dir cleanup). HRQ-3 CLOSED (VP-filename keep-as-is). First-self-improvement-wave process-gap candidates already in Drift/Deferrals: TV-ground-truth gate, §Story-Anchor-placeholder gate, module-registry-count validator, story-changelog-monotonicity lint, EXHAUSTIVE-SWEEP-ENFORCE, BURST-PRE-SPLIT-DISCIPLINE.
 
 ### PENDING USER-APPROVED-BUT-UNSTARTED
-- DEV-TOOLING-D255: v1 dev-tooling expansion — starts AFTER Phase-2 approval gate.
-- DTU clones: pending (openai/anthropic/ollama) — Phase-4 prerequisite.
+- DEV-TOOLING-D255: v1 dev-tooling expansion — starts AFTER the Phase-2 approval gate.
+- DTU clones (openai/anthropic/ollama): Phase-4 prerequisite; dtu_clones_built: pending.
 
-### DECISION DELTA
-D-299 = round-29 fix-burst close. Key closes: F-P2A125-01[HIGH,CWE-670/209] ADR-029 §Decision 3/5 + S-2.11 two-pattern sanitizer; F-P2A127-01[MED] ToolRegistry 4-bracket; F-P2A127-02[MED] S-1.19 AC-025 mechanism gate; O-P2A125-02[LOW] re-anchor wording; O-P2A124-01[OBS] .simple() mint comment. CENSUS UNCHANGED 39/134/17/137/303. TV 757. VP 17. trajectory-tail →1→2→0→2.
-
-### OPERATIONAL NOTE
-Rounds 19-29: 11 consecutive NOT CLEAN. Round-29 pass counts: P2A-124=1(OBS), P2A-125=2(1HIGH+1LOW), P2A-126=0(CLEAN strict), P2A-127=2(2MED). GATE-READY=NO (HRQ-1 streak-gate sole-blocker). Round-30 is first pass on this new HEAD.
+### DECISION DELTA (this session)
+D-296 round-26 CLOSED; D-297 round-27 CLOSED; D-298 round-28 CLOSED (TV ground-truth 754→757; 19-BC §Story-Anchor backfill SS-04/11/13; sanitizer simple-UUID two-pattern); D-299 round-29 CLOSED (sanitizer two-pattern→ADR-029 §Decision 3/5 + S-2.11 tables; ToolRegistry 4-bracket in S-2.11; S-1.19 AC-025 mechanism Red Gate); D-300 STATE.md compaction (207→194 lines; D-290..296 archived to burst-log); D-301 session wrap. Census stable 39/134/17/137/303 throughout; TV 754→757 at D-298; VP 17. Two mid-burst agent stalls (round-26 PO, round-29 story-writer) recovered via working-tree inspection + scoped continuation.
 
 ## Historical Content
 
@@ -185,7 +183,7 @@ Rounds 19-29: 11 consecutive NOT CLEAN. Round-29 pass counts: P2A-124=1(OBS), P2
 |---------|----------|
 | Burst narratives (bursts 1-347+; Phase-2 per-story authoring + holdout scenarios; P2A-001..062 fix-bursts + D-226..D-280 (exhaustive) archived 2026-08-26; D-290..D-296 (exhaustive) decision rows archived 2026-08-28) | `cycles/v0.0.0-pre-pipeline/burst-log.md` + `cycles/v1.0.0-greenfield/burst-log.md` |
 | Adversary pass details (~215 Phase-1 passes; Phase-2 P2A-001..P2A-062; D-228..D-280 (sample) architect decisions) | `cycles/v1.0.0-greenfield/convergence-trajectory.md` |
-| Session checkpoints (v4.45..v6.04 archived; D-293/D-294/D-295/D-296/D-297/D-298 archived 2026-08-28; D-299 active) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
+| Session checkpoints (v4.45..v6.04 archived; D-293/D-294/D-295/D-296/D-297/D-298/D-299 archived 2026-08-28; D-301 active) | `cycles/v0.0.0-pre-pipeline/session-checkpoints.md` + `cycles/v1.0.0-greenfield/session-checkpoints.md` |
 | Lessons learned (188+ lessons) | `cycles/v0.0.0-pre-pipeline/lessons.md` + `cycles/v1.0.0-greenfield/lessons.md` |
 | Resolved blockers (R1-R5, R7, R9, R12/R13) | `cycles/v1.0.0-greenfield/blocking-issues-resolved.md` |
 | Spec artifacts (134 BC / 17 VP / 29 ADR; PRD; L2 domain spec; architecture) | `.factory/specs/` |
