@@ -4065,3 +4065,48 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 
 **Census UNCHANGED 39/134/17/137/303. TV 758 UNCHANGED. VP 17. streak 0/3 (push resets frozen-HEAD rule). GATE-READY=YES (16 machine gates PASS; HRQ-1 sole blocker). NEXT: round-38 (P2A-160/161/162/163 + GATE-READY) on new frozen HEAD post-D-310-push.**
 
+
+---
+
+## Round-38 Adversary Pass (P2A-160/161/162/163) + D-311 Fix-Burst Closure
+
+**Frozen HEAD: post-D-310-push (round-38 new frozen HEAD)**
+
+**Adversary passes on frozen HEAD:**
+
+| Pass | Lens | Findings | Severity | Status |
+|------|------|----------|----------|--------|
+| P2A-160 | realizability | 2 | 1 HIGH (F-P2A160-01 DynRunnable blanket non-realizable) + 1 OBS (OBS-P2A160-01 SkillStore constructor prose) | NOT CLEAN |
+| P2A-161 | security | 1 | 1 LOW (F-P2A161-01 sanitize_internal_ids VP-coverage) | NOT CLEAN(strict) CLEAN(PR-merge)=YES |
+| P2A-162 | consistency/census/records | 5 | 1 HIGH (F-P2A162-01 BC-2.18.002 TV false-sweep) + 1 MED (F-P2A162-02 STORY-INDEX false RETRACT) + 1 LOW (F-P2A162-03 story changelog direction) + 2 OBS (F-P2A162-04 records-lint L7 process-gap, F-P2A162-05 S-2.04 Form-B) | NOT CLEAN — 3 findings adjudicated non-defects (spec-steward ruling D-311) |
+| P2A-163 | SS-09/SS-11 deep-audit | 2 | 1 MED (F-P2A163-01 phantom graph/state.rs anchor) + 1 LOW (F-P2A163-02 BC-INDEX §Red Gate title suffix) | NOT CLEAN |
+| GATE-READY audit | — | N/A | GATE-READY=YES (16 machine gates PASS; HRQ-1 sole blocker; census 39/134/17/137/303 reconciled) | GATE-READY |
+
+**Finding Progression trajectory-tail: →2→1→5→2**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony — 2 HIGH + 2 MED present.**
+
+**CLEAN(strict): NO | CLEAN(PR-merge): NO (HIGH findings present)**
+
+**Streak: 0/3 (frozen-HEAD reset on D-311 push)**
+
+**All substantive findings CLOSED; 3 findings adjudicated non-defects:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A160-01 | HIGH | CLOSED: serde-bounded blanket impl<I,O,T> DynRunnable for T where I: DeserializeOwned, O: Serialize. interface-definitions §Runnable-interface + ADR-005 §Send-Bounded-RPITIT (architect); BC-2.01.003 §Changelog + BC-2.01.004 §Changelog (product-owner); S-1.04 §Changelog (story-writer). |
+| F-P2A162-01 | HIGH | CLOSED: BC-2.18.002 §Changelog TV-003 struct-literal → Ok(PromptValue::Messages([...])); prior false sweep-completeness claim retracted; exhaustive re-sweep 0 residual (product-owner). |
+| F-P2A163-01 | MED | CLOSED: phantom graph/state.rs → pregolya-graph/src/definition.rs. BC-2.02.001 §Changelog + BC-2.02.005 §Changelog (SS-02); BC-2.08.011 §Changelog + BC-2.08.012 §Changelog (SS-08); 0 live-body graph/state.rs remaining (product-owner). |
+| F-P2A162-02 | MED | CLOSED: STORY-INDEX §Changelog RETRACT false round-23 claim (unapplied; not required) per spec-steward ruling (story-writer). |
+| F-P2A161-01 | LOW | CLOSED: architect adjudicated Option B (annotate; NOT VP-elevate); deterministic pattern-replace covered by BC-2.09.008 TV-014..017; vcm §Changelog annotated; VP census UNCHANGED 17. |
+| OBS-P2A160-01 | OBS | CLOSED: SkillStore::new trait-constructor prose → 'implementor's new(...) constructor'; interface-definitions §SkillStore (architect); BC-2.15.004 §Changelog (product-owner). |
+| F-P2A163-02 | LOW, POL-7 | CLOSED: BC-INDEX §Red Gate table BC-2.09.004/005 title suffix '(Red Gate — R11)' restored; BC-INDEX §Changelog (state-manager). |
+| F-P2A162-03 | LOW | ADJUDICATED NON-DEFECT (spec-steward): mixed story changelog direction is VALID (per-file monotonicity only; verify-story-changelog-direction.sh §CANONICAL RULE SET + D-295; POL-14 scope excludes stories). |
+| F-P2A162-04 | OBS (process-gap) | ADJUDICATED INVALID (spec-steward): records-lint L7 'gap' is a false gap — story changelog direction IS covered by the dedicated verify-story-changelog-direction.sh (Rules 1/3/4); no L7 extension warranted. No follow-up story required (L-231). |
+| F-P2A162-05 | OBS | ADJUDICATED NON-DEFECT (spec-steward): S-2.04 Form-B body changelog is VALID (Rule 4 per verify-story-changelog-direction.sh); no conversion required. |
+
+**Census UNCHANGED 39/134/17/137/303. TV 758 UNCHANGED. VP 17 UNCHANGED. streak 0/3. GATE-READY=YES.**
+
+**NOTE: round-38 caught round-37's OWN incomplete sweeps (F-P2A162-01 false TV sweep claim; F-P2A163-01 SS-02/SS-08 phantoms missed by r37 SS-01 sweep) — fresh-context adversarial value confirmed.**
+
+**NEXT: round-39 (P2A-164/165/166/167 + GATE-READY) on new frozen HEAD post-D-311 push. Streak resets to 0/3 on push.**

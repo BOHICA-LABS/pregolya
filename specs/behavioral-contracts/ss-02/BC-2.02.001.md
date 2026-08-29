@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.001
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.5 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.02.001 MED — successful Command return (valid goto + embedded update) was unspecified; only the failing EC-004 (unknown goto) was present. Added {PC-007} specifying the full success semantics: state update applied first, then routing to the goto target overrides any conditional edges, returning Ok(output_state) when END is reached. Covers Command{goto:None} and Command{update:None} variants for completeness."
+  - "1.6 (round-38/F-P2A163-01/2026-08-29): F-P2A163-01 [MED] — §Architecture Anchors: phantom `pregolya-graph/src/graph/state.rs` replaced with architect-confirmed canonical `pregolya-graph/src/definition.rs` (`graph::definition`). There is no `graph/` subdir in pregolya-graph; the StateGraph builder lives in `definition.rs`. SS-02 sibling sweep: BC-2.02.005 also had this phantom anchor (fixed in the same burst)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "df1bbf6"
+input-hash: "4119aa3"
 extracted_from: null
 modified: []
 deprecated: null
@@ -159,7 +160,7 @@ transitions to `failed`.
 
 ## Architecture Anchors
 
-- `pregolya-graph/src/graph/state.rs` — `StateGraph` builder (add_node, add_edge, compile)
+- `pregolya-graph/src/definition.rs` (`graph::definition`) — `StateGraph` builder (add_node, add_edge, compile)
 - `pregolya-graph/src/types.rs` — `CompiledStateGraph`, `Command`, `PregelTask`
 - `pregolya-graph/src/channels/` — `LastValue`, `BinaryOperatorAggregate`, `BaseChannel` trait
 

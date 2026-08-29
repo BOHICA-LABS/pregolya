@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.25"
+version: "3.26"
 status: active
 producer: architect
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
@@ -14,6 +14,7 @@ inputs:
 input-hash: "d2dcc9d"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.26 (R38/F-P2A161-01-Option-B/2026-08-29): F-P2A161-01 [LOW, pending-intent] adjudicated Option B (annotate; do not mint VP). mcp::sanitize Notes extended: `sanitize_internal_ids` CWE-209 coverage documented as BC-2.09.008 TV-014/015/016/017 unit tests, intentionally not VP-elevated — deterministic pattern-replace; directed concrete unit tests provide adequate assurance; proptest or Kani would add no material assurance beyond the TV-014..017 harness cases. VP census UNCHANGED: 17 total (6 P0 / 11 P1); arithmetic invariant total (17) = P0 (6) + P1 (11) = Kani (9) + proptest (5) + integration (2) + unit (1) unchanged."
   - "3.25 (R37/F-P2A159-01/2026-08-29): F-P2A159-01 LOW (POL-4 semantic_anchoring_integrity) — mcp::registry Notes column: 'inbound dispatch; BC-2.09.006 {PC-002}' corrected to split attribution: tools/list dispatch → BC-2.09.006 {PC-002}; tools/call dispatch → BC-2.09.007 {PC-001}. Sibling sweep: same correction applied to module-decomposition.md and purity-boundary-map.md in the same burst. input-hash refreshed (d2dcc9d; module-decomposition.md input drift from this burst's body and changelog edits)."
   - "3.24 (round-35/F-P2A151-02-records/2026-08-29): Changelog reconciliation for R30 phantom registry-attribution. The live body mcp::registry Notes column was corrected at v3.23 (R31/F-P2A135-01) and further confirmed at R33 (F-P2A143): the canonical attribution is registry read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. However the v3.22 terminal R30 changelog entry still records the superseded phantom attribution ('Canonical set: mcp::server (reader) and mcp::client (writer/populator)') with no subsequent entry documenting the reversal — an untracked body edit (POL-21) and a regression-vector for future readers. This entry closes the record gap: the v3.22 R30 'mcp::client (writer/populator)' attribution was superseded by the R31 F-P2A135-01 correction (v3.23) and independently confirmed by R33 F-P2A143. No live body changes; nomenclature and census UNCHANGED."
   - "3.23 (R31/F-P2A135-01/2026-08-28): F-P2A135-01 HIGH — mcp::registry Notes column corrected against BCs. R30's 'mcp::client (populates at session startup via mcp::discovery conversion)' is a phantom per BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}. Corrected: registry read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. input-hash refreshed (module-decomposition.md R31/F-P2A135-01 mcp::registry body-row edit)."
@@ -130,7 +131,7 @@ changelog:
 | mcp::client | pregolya-mcp | — | — | — | yes | integration red_gate (BC-2.09.005); no-live-connections |
 | mcp::exception | pregolya-mcp | — | — | — | yes | ToolException type-identity; integration red_gate (BC-2.09.004) |
 | mcp::server | pregolya-mcp | — | — | — | yes | Server-side tool exposure + inbound dispatch (CAP-021) |
-| mcp::sanitize | pregolya-mcp | — | — | — | yes | MEDIUM; pure-core credential redaction utility; `redact_credentials` and `sanitize_internal_ids` pattern substitution; VP-015 unit P1 (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention); consumers: mcp::server, mcp::graph_tool |
+| mcp::sanitize | pregolya-mcp | — | — | — | yes | MEDIUM; pure-core credential redaction utility; `redact_credentials` and `sanitize_internal_ids` pattern substitution; VP-015 unit P1 (BC-2.09.007 {INV-003}/DI-010; CWE-532 prevention); `sanitize_internal_ids` CWE-209 coverage: BC-2.09.008 TV-014/015/016/017 unit tests, intentionally not VP-elevated (R38/F-P2A161-01-Option-B; deterministic pattern-replace adequately covered by directed concrete tests); consumers: mcp::server, mcp::graph_tool |
 | mcp::graph_tool | pregolya-mcp | — | VP-016/yes | — | yes | MEDIUM; SS-09; wraps `CompiledStateGraph` as DynTool; STATE-ISOLATION invariant; VP-016 proptest P1 (BC-2.09.008 {INV-001}/DI-010; ADR-029) |
 | pregolya-macros | pregolya-macros | — | — | — | yes | crate-level roll-up; `#[tool]`/`#[entrypoint]`/`#[task]` expansion correctness (no canonical crate::module name for this roll-up — macros::tool/entrypoint/task are the canonical rows) |
 | macros::tool | pregolya-macros | — | — | — | yes | HIGH; `#[tool]` proc-macro ToolDefinition generation; compile-time TokenStream expansion; integration-tested via expansion correctness; BC-2.08.010 |

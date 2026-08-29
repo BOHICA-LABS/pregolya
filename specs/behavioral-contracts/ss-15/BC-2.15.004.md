@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.004
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (B-SS15-18-hardening/2026-08-26): Phase-2 bc-completeness-scan (D-270, burst B). {INV-003} 'registration time' defined — skill registration is the MemoryWriteRequest::Add operation on a skill-namespace key via BC-2.15.005 write path; the SkillStore write coordinator calls skill_exists(name) before forwarding; if the name is already registered, E-MEMORY-009 SkillStoreNameCollision (VAL/Never, burst-A-error-coord) is returned before the write proceeds. {EC-007} added for the observable collision behavior. TV-010 added. Error-taxonomy.md references this raise site as BC-2.15.004 EC-003; EC-003 covers tag-filtered listing — the name-collision case is at EC-007 (EC-001..EC-006 were already occupied at minting time)."
   - "1.10 (B-SS15-18-hardening-arch-adjudication/2026-08-26): {INV-003} write-coordinator module named per architect adjudication — `pregolya-memory::memory::skills` added as the write-coordinator module, explicit encapsulation note (graph node callers do NOT perform `skill_exists`; they delegate to the `SkillStore` API), and ADR-012 Decision 4 consistency anchor. Stable anchor {INV-003-REG-POINT} preserved."
+  - "1.11 (round-38/OBS-P2A160-01/2026-08-29): OBS-P2A160-01 [OBS] — three occurrences of `SkillStore::new(...)` or 'SkillStore constructor' prose corrected: `SkillStore` is a TRAIT; it has no constructor. (1) {PRE-003} SCOPE NOTE: 'SkillStore constructor' → 'the SkillStore implementor's `new(store, app_id)` constructor'. (2) EC-006 scenario: `SkillStore::new(store, \"\")` → 'the SkillStore implementor's `new(store, \"\")`'. (3) TV-009 input: `SkillStore::new(store, \"\")` → 'SkillStore implementor constructed with `new(store, \"\")` (empty `app_id`)'. Mirrors interface-definitions.md §SkillStore fix of the same pattern (OBS-P2A160-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-020
   - architecture/decisions/ADR-012-self-improvement-primitives.md
@@ -32,7 +33,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "bda5443"
+input-hash: "5816506"
 extracted_from: null
 modified: []
 deprecated: null
@@ -62,7 +63,7 @@ the read path only; writes to skill entries are governed by BC-2.15.005 (guarded
 3. {PRE-003} The caller has read access to the relevant `MemoryStore` namespace.
    SCOPE NOTE: `SkillStore` implementations bind `MemoryScope::App(app_id)` at
    construction time. Callers do not supply scope at call time. The `app_id` is
-   supplied to the `SkillStore` constructor and comes from `RunContext.app_id`
+   supplied to the SkillStore implementor's `new(store, app_id)` constructor and comes from `RunContext.app_id`
    (system-derived, same as used by `ContextMutationConfig` loading in BC-2.15.006).
    If the `SkillStore` was constructed without a valid `app_id`, all `load_skill`,
    `list_skills`, and `skill_exists` calls return `Err(E-MEMORY-004 NoScopeContext)`
@@ -155,7 +156,7 @@ name collision check fires before write.)
 
 ### EC-006: SkillStore constructed without a valid app_id — fail-loud at call time
 **Scenario:** A `SkillStore` implementation was constructed with an empty `app_id`
-(e.g., `SkillStore::new(store, "")` where the construction-time app_id was empty).
+(e.g., the SkillStore implementor's `new(store, "")` where the construction-time app_id was empty).
 A caller then invokes `load_skill("py_helpers")`.
 **Expected behavior:** Returns `Err(PregolyaError { code: "E-MEMORY-004", .. })`. All three methods (`load_skill`, `list_skills`, `skill_exists`) return the same
 error when the bound `app_id` is empty. The operation fails closed — no data is
@@ -174,7 +175,7 @@ at service boundary; B102 CRIT correction).
 | TV-006 | `skill_exists("nope")` with no such skill | `Ok(false)` | Existence check absent |
 | TV-007 | Overwrite skill "py_helpers" via guarded write; `load_skill("py_helpers")` | Returns updated content | Load-on-demand; no stale cache |
 | TV-008 | Backend `MemoryStore` returns an I/O error during `load_skill("py_helpers")` (e.g., SQLite file read failure) | `Err(E-MEMORY-008 MemoryStoreReadFailed)`; does not panic; does not return `Ok(None)` | EC-004 — read I/O failure propagates as structured error (DI-014) |
-| TV-009 | `SkillStore::new(store, "")` constructed with empty `app_id`; caller invokes `load_skill("py_helpers")` | `Err(PregolyaError { category: SECURITY, code: "E-MEMORY-004", message: "NoScopeContext: SkillStore requires a valid app_id at construction; app_id is empty — cannot derive tenant scope", .. })`; does NOT return `Ok(None)` or panic; same error is returned by all three methods (`load_skill`, `list_skills`, `skill_exists`) | EC-006 — SkillStore empty-app_id fail-closed; ADR-012 Decision 1 Amendment |
+| TV-009 | SkillStore implementor constructed with `new(store, "")` (empty `app_id`); caller invokes `load_skill("py_helpers")` | `Err(PregolyaError { category: SECURITY, code: "E-MEMORY-004", message: "NoScopeContext: SkillStore requires a valid app_id at construction; app_id is empty — cannot derive tenant scope", .. })`; does NOT return `Ok(None)` or panic; same error is returned by all three methods (`load_skill`, `list_skills`, `skill_exists`) | EC-006 — SkillStore empty-app_id fail-closed; ADR-012 Decision 1 Amendment |
 | TV-010 | Register skill `"py_helpers"` (write succeeds); attempt second registration of `"py_helpers"` via SkillStore write coordinator | Second call returns `Err(E-MEMORY-009 SkillStoreNameCollision { skill_name: "py_helpers", .. })`; original skill entry unchanged; `load_skill("py_helpers")` still returns original content | EC-007 — name-collision fail-closed at registration (INV-003-REG-POINT) |
 
 ## Verification Properties

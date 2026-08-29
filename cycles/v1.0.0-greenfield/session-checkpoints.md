@@ -3606,3 +3606,30 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-309 SESSION WRAP (2026-08-29): round-37 pass COMPLETE (trajectory-tail →4→2→3→1). SIDECAR skip-worktree attempt REVERSED; COMMIT-PER-DISPATCH mitigation human-directed. STATE.md v6.19→v6.20.
 
 ### STATE: v6.20, timestamp 2026-08-29T20:00:00Z
+
+---
+
+## Checkpoint D-310 (archived 2026-08-29 by D-311 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence, streak 0/3. Round-37 fix-burst is CLOSED (D-310). NEXT = run round-38 (P2A-160/161/162/163 + GATE-READY) on new frozen HEAD after push. Census 39 CAP / 134 BC / 17 VP / 137 EC / 303 pts / 758 TV / 769 grand / 29 ADR — UNCHANGED. GATE-READY=YES (16 machine gates PASS; HRQ-1 sole blocker — 3/3 CLEAN streak).
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED. (Phase-2 is spec-only; NO code work this session.)
+- factory-artifacts: D-310 round-37 fix-burst — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+### PER-WORKSTREAM — Phase-2 GAP-01/Runnable-canon re-convergence
+Rounds 30-37 CLOSED (D-296..D-310 (exhaustive)). Round-37 resolved: 5-site E0229 Runnable binding, RunnableConfig anchor→src/config.rs, PromptValue enum-variant, tools/call anchor in arch docs, {INV-003} MUST symmetry. L-227+L-230 applied: 0 residual drift. BC-INDEX §Changelog. NEXT-ACTION: round-38 (P2A-160/161/162/163 + GATE-READY) on new frozen HEAD (post-D-310 push).
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate.
+- DTU clones (openai/anthropic/ollama): Phase-4 prerequisite; dtu_clones_built: pending.
+
+#### DECISION DELTA (this session)
+D-310 round-37 fix-burst (2026-08-29): ALL 7 substantive + 1 OBS CLOSED. trajectory-tail →4→2→3→1. Census UNCHANGED 39/134/17/137/303. TV 758. VP 17. streak 0/3. STATE.md v6.20→v6.21.
+
+### STATE: v6.21, timestamp 2026-08-29T21:30:00Z

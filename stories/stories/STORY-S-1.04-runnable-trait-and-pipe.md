@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-29T00:00:00Z
@@ -13,14 +13,15 @@ changelog:
   - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
   - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.003 PC-002: AC-002 updated with BoxStream return type and Ok(chunk) wrapping. {EC-006}: AC-013 added — invoke-Err yielded as single Err stream item. BC table version bumped."
   - "1.5 (R36/F-P2A152-01-propagation/2026-08-29): BC-2.01.003 reconciled to canonical form in R36. AC-001: associated-type form (Self::Input/Self::Output/&RunnableConfig/async fn) replaced with generic-parameter form (Input/Output/Option<RunnableConfig>/fn...->impl Future+Send). AC-002: BoxStream replaced with async outer-Ok stream return. input-hash refreshed (BC-2.01.003 updated in R36)."
-  - "1.6 (R37/F-P2A156-01+F-P2A156-02+F-P2A156-03+F-P2A156-04+F-P2A158-01+F-P2A158-02+F-P2A158-03/2026-08-29): F-P2A156-01/F-P2A158-02 [HIGH/MED]: AC-013 outer-Result contradiction resolved — stream() returns Ok(stream) outer Result; Err is yielded as single stream item (callers poll to discover error); removed erroneous 'stream() does NOT return an outer Result' clause per BC-2.01.003 {PC-002}/{EC-006}. F-P2A156-03/F-P2A158-03 [HIGH/MED]: AC-004 + Task 5 recursion_limit type corrected u32 → usize per BC-2.01.003 {PRE-003}. F-P2A156-04 [HIGH]: AC-008 RunnableSequence 3-param → 2-param (RunnableSequence<I, O>); pipe sig updated to canonical form. F-P2A156-02 [HIGH, POL-18]: AC-008 Runnable associated-type binding (Input=I/Output=M) replaced with positional (I, M) per ADR-010/ADR-025 canon (E0229-invalid binding form). F-P2A158-01 [HIGH, POL-4]: Architecture Mapping + Purity Classification + Task 5 + File Structure RunnableConfig anchor corrected src/runnable/config.rs → src/config.rs (core::config, re-exported at crate root) per BC-2.01.003 §Architecture Anchors v2.5."
+  - "1.6 (R37/F-P2A156-01+F-P2A156-02+F-P2A156-03+F-P2A156-04+F-P2A158-01+F-P2A158-02+F-P2A158-03/2026-08-29): F-P2A156-01/F-P2A158-02 [HIGH/MED]: AC-013 outer-Result contradiction resolved — stream() returns Ok(stream) outer Result; Err is yielded as single stream item (callers poll to discover error); removed erroneous 'stream() does NOT return an outer Result' clause per BC-2.01.003 {PC-002}/{EC-006}. F-P2A156-03/F-P2A158-03 [HIGH/MED]: AC-004 + Task 5 recursion_limit type corrected u32 → usize per BC-2.01.003 {PRE-003}. F-P2A156-04 [HIGH]: AC-008 RunnableSequence 3-param → 2-param (RunnableSequence<I, O>); pipe sig updated to canonical form. F-P2A156-02 [HIGH, POL-18]: AC-008 Runnable associated-type binding (Input=I/Output=M) replaced with positional (I, M) per ADR-010/ADR-025 canon (E0229-invalid binding form). F-P2A158-01 [HIGH, POL-4]: Architecture Mapping + Purity Classification + Task 5 + File Structure RunnableConfig anchor corrected src/runnable/config.rs → src/config.rs (core::config, re-exported at crate root) per BC-2.01.003 §Architecture Anchors."
+  - "1.7 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH]: AC-007 updated to reflect BC-2.01.003 {PC-001} — E-CORE-003 is raised at the serde-bounded blanket boundary when `serde_json::from_value::<I>` fails, before typed `Runnable<I,O>::invoke` is called; callers are NOT responsible for pre-deserializing Value input; trace updated to EC-001/{PC-001}. AC-008 updated to reflect BC-2.01.004 {PC-001} — typed stages (e.g. `impl Runnable<String,String>`) auto-satisfy `DynRunnable` via the serde-bounded blanket without any `Runnable<Value,Value>` requirement; `RunnableSequence<I,O>` also auto-derives `DynRunnable` and can be stored as `Box<dyn DynRunnable>` directly. Sweep of story body confirmed: no residual 'callers do JSON round-tripping' or `Runnable<Value,Value>` requirement language present. input-hash refreshed (BC-2.01.003 and BC-2.01.004 updated round-38)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "bfa4626"
+input-hash: "8860df1"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -78,16 +79,31 @@ The default `batch` method on `Runnable` calls `invoke` concurrently for each in
 ### AC-006 (traces to BC-2.01.003 INV-005)
 When `recursion_limit` is exceeded (checked by a graph-level depth counter, not the `Runnable` trait itself), the error returned is `Err(PregolyaError { code: "E-CORE-006", message: "RecursionLimitExceeded: recursion limit exceeded at depth <depth>", .. })`. A unit test simulates this by manually decrementing the counter to zero. Verified by `test_BC_2_01_003_recursion_limit_exceeded_error()`.
 
-### AC-007 (traces to BC-2.01.003 EC-001 — E-CORE-003)
-When `DynRunnable::invoke` is called with a `Value` that cannot be deserialized into the expected concrete input type, the error is `Err(PregolyaError { code: "E-CORE-003", message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", .. })`. Verified by `test_BC_2_01_003_input_type_mismatch_error()`.
+### AC-007 (traces to BC-2.01.003 EC-001 / {PC-001} — E-CORE-003 at DynRunnable blanket boundary)
+When an `Arc<dyn DynRunnable>` receives a `Value` that cannot be deserialized into the expected
+concrete input type `I`, `E-CORE-003` is raised at the serde-bounded blanket boundary — specifically
+when `serde_json::from_value::<I>(input)` fails at that boundary — before the typed
+`Runnable<I, O>::invoke` is ever called on the concrete impl. Callers are NOT responsible for
+pre-deserializing the `Value` input; the blanket handles the `Value → I` round-trip internally.
+The error returned is:
+`Err(PregolyaError { category: VAL, code: E-CORE-003, message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", .. })`.
+Verified by `test_BC_2_01_003_input_type_mismatch_error()`.
 
-### AC-008 (traces to BC-2.01.004 PC-001 and PC-002)
+### AC-008 (traces to BC-2.01.004 {PC-001})
 `a.pipe(b)` where `a: Runnable<I, M>` and `b: Runnable<M, O>` (positional type params; the
 binding form `Runnable<Input=I, Output=M>` is E0229-invalid and MUST NOT be used) returns
 `RunnableSequence<I, O>` (2-param; canonical `pipe` sig:
 `fn pipe<NextOutput>(self, next: impl Runnable<Output, NextOutput>) -> RunnableSequence<Input, NextOutput>`)
 with `first: a`, `middle: []`, `last: b`. Invoking the sequence calls `a.invoke(input)` then
-feeds output to `b.invoke(m)`. Verified by `test_BC_2_01_004_pipe_two_stages()`.
+feeds output to `b.invoke(m)`.
+By the serde-bounded `DynRunnable` blanket impl, any `Runnable<I, O>` where
+`I: serde::de::DeserializeOwned + Send + 'static` and `O: serde::Serialize + Send + 'static`
+auto-satisfies `DynRunnable` — a typed stage such as `impl Runnable<String, String>` is
+therefore directly coercible to `Box<dyn DynRunnable>` WITHOUT requiring a `Runnable<Value, Value>`
+adapter. `RunnableSequence<I, O>` also auto-derives `DynRunnable` and can be stored as
+`Box<dyn DynRunnable>` directly. TV-001's typed stages compose via `pipe()` and are usable as
+`Box<dyn DynRunnable>` elements without any `Value`-typed wrapper.
+Verified by `test_BC_2_01_004_pipe_two_stages()`.
 
 ### AC-009 (traces to BC-2.01.004 PC-004)
 `a.pipe(b).pipe(c)` flattens into `RunnableSequence { first: a, middle: [b], last: c }` — NOT nested `RunnableSequence<RunnableSequence<...>, c>`. The `first` field is always the first runnable in the chain. Verified by `test_BC_2_01_004_pipe_flattens_sequence()`.

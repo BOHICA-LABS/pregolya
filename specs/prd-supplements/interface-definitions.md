@@ -1,14 +1,15 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.94"
+version: "2.95"
 status: active
 producer: product-owner
 timestamp: 2026-08-29T00:00:00Z
 phase: 1d
 changelog:
+  - "2.95 (round-38/F-P2A160-01+OBS-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] DynRunnable blanket-impl domain non-realizable (Runnable<Value,Value> bound prevents typed-stage coercion; E-CORE-003 dead code). Replaced blanket `impl<T: Runnable<Value, Value> + Send + Sync + 'static> DynRunnable for T` with serde-bounded bridging blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static, I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static` — blanket now performs concrete serde round-trip internally (deserialize Value→I, Runnable::invoke, serialize O→Value). Makes E-CORE-003 reachable (deserialization failure at the blanket boundary), typed stages coercible to Box<dyn DynRunnable> without E0277, and RunnableSequence<I,O> auto-derives DynRunnable; Value,Value case round-trips trivially with no E0119 coherence overlap. DynRunnable doc-comment updated: 'callers are responsible for JSON round-tripping at the boundary' → blanket performs round-trip internally; §Blanket impl domain paragraph updated to reflect serde-bounded blanket; # Errors updated with E-CORE-003 entry. ADR-005 §Send-Bounded RPITIT updated to reflect serde-bounded blanket domain (R38). OBS-P2A160-01 sibling: §SkillStore scope-encapsulation note 'SkillStore::new(...)' names a constructor on a TRAIT — reworded to 'the SkillStore implementor's new(store, app_id) constructor'; v2.93 changelog narrative updated accordingly. PO must mirror into BC-2.01.003 {INV-006}/{PC-001} and BC-2.01.004 {PC-001}: serde-bounded blanket is the authoritative model for typed-stage coercion and E-CORE-003 reachability. Story-writer must mirror into S-1.04 AC-007/008: typed-stage coercion guarantee."
   - "2.94 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] Runnable native-async-to-async_trait-façade blanket-bridge non-realizability on stable Rust (E0277 Send-future). Exhaustive Send-RPITIT sweep mandate applied. §Runnable<Input,Output> async methods changed from bare `async fn` (no +Send bound on RPITIT future) to explicit RPITIT form `fn ... -> impl Future<Output = ...> + Send` — the only stable-Rust mechanism to impose Send on an RPITIT future without nightly Return-Type-Notation. `invoke` and `batch` carry `+ Send` on the outer future. `stream` carries `+ Send` on both the outer future and the inner `impl Stream` (required for `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`). `invoke` doc-comment updated: replaced misleading 'synchronously (blocks async task)' with 'completes when the full result is available (non-streaming)'; added §Send-Bounded RPITIT rationale. DynRunnable doc-comment updated: added §Blanket impl realizability prerequisite paragraph explaining that `Runnable`'s RPITIT `+Send` is the prerequisite for the blanket DynRunnable and DynTool impls to compile on stable Rust. ADR-005 §Adjacent Trait Object-Safety Adjudications updated: added §Send-Bounded RPITIT subsection with canon rule and exhaustive native-async-bridge inventory table (Tool: inherits Runnable fix — no own async methods; BaseChatModel: not behind dyn, stream_chat future need not be Send; SkillStore: not behind dyn — confirmed zero dyn SkillStore sites in corpus). BC signature rows referencing Runnable/Tool async signatures — PO routing flagged for Phase B propagation; architect does NOT edit BCs: BC-2.01.003 (invoke/stream/batch postconditions), BC-2.08.010 (Tool invoke inherited from Runnable), and any BC that cites async fn invoke/stream/batch method shapes. F-P2A144-02 [MED] module-path drift runnables/ (plural) → runnable/ (singular): changed four doc-comment module-path strings in §RunnableSequence, §RunnableParallel, §RunnablePassthrough, §RunnableAssign from pregolya-core/src/runnables/ to pregolya-core/src/runnable/ per module-decomposition.md §core::runnable canonical form. Wider-corpus sweep: BC-2.01.003/004/005/006/007/008 have live-body src/runnables/ occurrences — DO NOT edit (product-owner propagates in Phase B); VP-014 src/runnables/ occurrence is in a historical changelog entry (grandfathered)."
-  - "2.93 (round-33/F-P2A140-01+comprehensive-object-safety-audit/2026-08-29): F-P2A140-01 [HIGH] DynRunnable missing #[async_trait] — E0038 non-realizable. Added #[async_trait] above pub trait DynRunnable: Send + Sync. Corrected doc-comment: object-safety comes from #[async_trait] boxed-future desugaring (Pin<Box<dyn Future>>) NOT from explicit receiver — rewrote to match sibling async trait description pattern; preserved ADR-005 §Adjacent Trait Object-Safety Adjudications citation. Comprehensive object-safety audit (break-the-per-round-cycle mandate): three additional async traits used behind dyn lacked #[async_trait] — each defect closes a potential E0038 at Phase 3 compile time: (1) CheckpointSaver — used behind Arc<dyn CheckpointSaver> per ADR-005 §Object-Safety-of-the-5-Method-CheckpointSaver-Trait and bounded-contexts.md; async fn put_writes/get_tuple/list/put/fts_search all needed boxed-future desugaring; (2) GuardrailHook — used as &dyn GuardrailHook in GuardedDocuments::rag_ingress (ADR-014 Decision 6; purity-boundary-map.md core::retriever row); async fn evaluate needed boxed-future desugaring; (3) MemoryStore — used as Arc<dyn MemoryStore> in SkillStore::new (ADR-012 Decision 1); async fn memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search all needed boxed-future desugaring. SkillStore confirmed NOT behind dyn (no Arc<dyn SkillStore> in corpus) — no fix needed. TD-VSDD-060 sibling sweep: no other trait declarations in this file were missed; see companion VP-014 §Proof Harness Skeleton (F-P2A140-02) for impl-side fix."
+  - "2.93 (round-33/F-P2A140-01+comprehensive-object-safety-audit/2026-08-29): F-P2A140-01 [HIGH] DynRunnable missing #[async_trait] — E0038 non-realizable. Added #[async_trait] above pub trait DynRunnable: Send + Sync. Corrected doc-comment: object-safety comes from #[async_trait] boxed-future desugaring (Pin<Box<dyn Future>>) NOT from explicit receiver — rewrote to match sibling async trait description pattern; preserved ADR-005 §Adjacent Trait Object-Safety Adjudications citation. Comprehensive object-safety audit (break-the-per-round-cycle mandate): three additional async traits used behind dyn lacked #[async_trait] — each defect closes a potential E0038 at Phase 3 compile time: (1) CheckpointSaver — used behind Arc<dyn CheckpointSaver> per ADR-005 §Object-Safety-of-the-5-Method-CheckpointSaver-Trait and bounded-contexts.md; async fn put_writes/get_tuple/list/put/fts_search all needed boxed-future desugaring; (2) GuardrailHook — used as &dyn GuardrailHook in GuardedDocuments::rag_ingress (ADR-014 Decision 6; purity-boundary-map.md core::retriever row); async fn evaluate needed boxed-future desugaring; (3) MemoryStore — used as Arc<dyn MemoryStore> in the SkillStore implementor's new constructor (ADR-012 Decision 1); async fn memory_set/memory_get/memory_delete/memory_search/vector_search/hybrid_search all needed boxed-future desugaring. SkillStore confirmed NOT behind dyn (no Arc<dyn SkillStore> in corpus) — no fix needed. TD-VSDD-060 sibling sweep: no other trait declarations in this file were missed; see companion VP-014 §Proof Harness Skeleton (F-P2A140-02) for impl-side fix."
   - "2.92 (round-27/F-P2A117-01/2026-08-28): §GraphAgentTool GraphToolApprovalPolicy::ForceApproveHooks doc-comment SEC-006 bullet: 'CRITICAL-level structured log' → 'ERROR-level (`tracing::error!`) structured log'. The Rust tracing crate has no CRITICAL level; ERROR is the highest level. Aligns with observability.md log-level column (ERROR) and ADR-029 §Decision-4 prose (corrected in round-26). TD-VSDD-060 sibling sweep: only one occurrence of 'CRITICAL-level structured log' in live body — this line."
   - "2.91 (round-25/F-P2A108-02/2026-08-28): Normalize three spec doc-comment lines from doubled path form to parenthetical form per TD-VSDD-091 notation consistency. §PreToolCallHook code-block comment: `pregolya-core::core::action_risk` → `pregolya-core (core::action_risk)`. §Budget code-block comment: `pregolya-core::core::budget` → `pregolya-core (core::budget)`. Same §Budget code-block execution-engine comment: `pregolya-graph::graph::budget` → `pregolya-graph (graph::budget)`. No semantic changes; parenthetical form is the canonical spec-document convention consistent with module-decomposition.md and ADR-023 §Required Inventory."
   - "2.90 (round-24/O-P2A104-01/2026-08-28): O-P2A104-01 [LOW]: §Tool::schema() and §DynTool::schema() doc-comments generalized. Both previously read 'JSON Schema of the tool's argument struct, derived by schemars::schema_for!' — accurate for the #[pregolya::tool] macro case but inaccurate for two verbatim/passthrough producers: convert_mcp_tool (schema sourced verbatim from the MCP server inputSchema, not re-derived) and GraphAgentTool::from_graph (schema supplied by the caller). Updated both doc-comments to note the schema MAY be schemars-derived (macro case) OR supplied verbatim/by the caller (MCP-adapted and GraphAgentTool cases). BC anchors unchanged; no behavioral change to any trait method."
@@ -184,7 +185,8 @@ Type-erased composition path and the concrete sequence type returned by `pipe`.
 ///
 /// Used when the concrete `Runnable<I, O>` types differ (e.g. mixing model, retriever,
 /// and tool nodes in a single `Vec`). `DynRunnable` erases both `Input` and `Output`
-/// to `serde_json::Value`; callers are responsible for JSON round-tripping at the boundary.
+/// to `serde_json::Value`; the blanket impl performs the concrete `serde_json`
+/// round-trip internally (deserialize `Value → I` on input, serialize `O → Value` on output).
 ///
 /// **Dyn-compatibility:** the `#[async_trait]` macro desugars each `async fn` into a
 /// regular method returning `Pin<Box<dyn Future<Output = ...> + Send>>`, erasing the
@@ -197,19 +199,26 @@ Type-erased composition path and the concrete sequence type returned by `pipe`.
 /// ADR-005 §Adjacent Trait Object-Safety Adjudications — BC-2.01.003 EC-001,
 /// BC-2.01.004 EC-001.
 ///
-/// **Blanket impl realizability prerequisite:** the blanket
-/// `impl<T: Runnable<Value, Value> + Send + Sync + 'static> DynRunnable for T`
-/// must box `T::invoke(..)`'s future into `Pin<Box<dyn Future + Send>>`. This
-/// requires the future from `Runnable::invoke` to be `Send`. `Runnable`'s async
-/// methods are therefore declared with explicit RPITIT `+ Send` (not bare `async fn`),
-/// which is the stable-Rust mechanism to impose a `Send` bound on an RPITIT future
-/// without Return-Type-Notation (nightly-only). See ADR-005 §Adjacent Trait
-/// Object-Safety Adjudications §Send-Bounded RPITIT.
+/// **Blanket impl domain (R38/F-P2A160-01):** the bridging blanket carries serde bounds:
+/// `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static,`
+/// `I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static`.
+/// The body deserializes `Value → I` (raising `E-CORE-003` on failure), calls
+/// `Runnable<I, O>::invoke`, and serializes `O → Value`; `stream` is analogous, boxing
+/// the `+Send` stream. This makes `E-CORE-003` reachable (deserialization failure at the
+/// blanket boundary), makes typed stages (e.g. `Runnable<String, String>`) coercible to
+/// `Box<dyn DynRunnable>` without E0277, and auto-derives `DynRunnable` for
+/// `RunnableSequence<I, O>`. The `Value, Value` case round-trips trivially; no separate
+/// blanket is needed and no E0119 coherence overlap is introduced. `Runnable`'s async
+/// methods carry explicit RPITIT `+ Send` — required for the `Pin<Box<dyn Future + Send>>`
+/// box cast to compile on stable Rust. Authority: ADR-005 §Adjacent Trait Object-Safety
+/// Adjudications §Send-Bounded RPITIT.
 ///
 /// # Errors
-/// `Err(PregolyaError { code: "E-CORE-004", .. })` when a
-/// type boundary mismatch between adjacent stages is detected at the first `invoke`
-/// call (BC-2.01.004 PC5/EC-001/TV-004).
+/// - `Err(PregolyaError { code: "E-CORE-003", .. })` — `Value → I` deserialization
+///   failure at the blanket boundary (BC-2.01.003 {PC-001}).
+/// - `Err(PregolyaError { code: "E-CORE-004", .. })` — type boundary mismatch
+///   between adjacent stages detected at the first `invoke` call
+///   (BC-2.01.004 PC5/EC-001/TV-004).
 #[async_trait]
 pub trait DynRunnable: Send + Sync {
     /// Invoke with JSON input; return JSON output.
@@ -952,7 +961,7 @@ pub struct SkillDescriptor {
 
 > **SkillStore scope encapsulation (F-P175-B102 / ADR-012 Decision 1 Amendment):** `SkillStore`
 > trait methods carry NO scope parameter. Scope is encapsulated at construction time:
-> `SkillStore::new(store: Arc<dyn MemoryStore>, app_id: String)`. All `load_skill` /
+> the SkillStore implementor's `new(store: Arc<dyn MemoryStore>, app_id: String)` constructor. All `load_skill` /
 > `list_skills` / `skill_exists` calls resolve within `MemoryScope::App(app_id)`. If
 > `app_id` is empty at construction, the implementation returns `Err(E-MEMORY-004
 > NoScopeContext)` — fail-closed. External callers do not supply or observe the scope.

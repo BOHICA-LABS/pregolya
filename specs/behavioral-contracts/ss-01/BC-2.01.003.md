@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.5"
+version: "2.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "2.3 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] — signature citations updated from bare `async fn` to explicit RPITIT + Send form per interface-definitions.md §Runnable<Input,Output> canon (ADR-005 §Send-Bounded RPITIT). Description: `async fn invoke(...)` → `fn invoke(...) -> impl std::future::Future<Output = ...> + Send`. PRE-001: `async fn invoke(...)` → `fn invoke(...) -> impl Future<Output = ...> + Send` with Send-bounded RPITIT rationale added. F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/base.rs` → `src/runnable/base.rs`; `src/runnables/config.rs` → `src/runnable/config.rs` per module-decomposition.md §core::runnable canonical singular form."
   - "2.4 (round-36/F-P2A152-01+F-P2A152-02/2026-08-29): F-P2A152-01 [HIGH] — three structural contradictions reconciled to interface-definitions.md §Runnable<Input,Output> authority. (a) Associated-type form (`Self::Input`/`Self::Output`) replaced throughout with generic-parameter form (`Input`/`Output`) — associated types are non-realizable with multiple blanket impls (E0107). Description, all PCs, TVs updated. (b) Borrowed `config: &RunnableConfig` replaced with owned `config: Option<RunnableConfig>` at all call sites (Description, {PC-001}, {PC-002}, {PC-003}, EC-006, TVs). (c) `stream()` reconciled to async form: the outer future returns `Result<impl Stream<...>, PregolyaError>` (not a synchronous `BoxStream`); {PC-002} and EC-006 updated to describe `Ok(stream)` outer result with error surfaced as stream item in the default non-streaming fallback. F-P2A152-02 [MED] — phantom RunnableConfig surface purged. {PRE-003}: phantom fields `max_concurrency`, `tags`, `metadata`, `callbacks`, `run_name`, `run_id` removed; canonical 5 fields enumerated (`recursion_limit`, `thread_id`, `budget_config`, `context_mutations`, `configurable`). {PC-003}: `config.max_concurrency` phantom reference removed; Tokio-runtime bounded concurrency documented. {PC-004}: phantom `batch_as_completed` method replaced with `pipe` postcondition (canonical four-method surface stated). {PC-006}: phantom tag/metadata/callback/run_name/run_id inheritance replaced with correct Option<RunnableConfig> pass-through statement. {INV-002}: `batch_as_completed` reference removed. {INV-003}: phantom field propagation replaced with correct config-forwarding statement. EC-002: `max_concurrency=Some(1)` scenario replaced with `config=None` batch scenario. Corpus grep confirms `max_concurrency`/`batch_as_completed`/`run_name` appear ONLY in BC-2.01.003 (no sibling sweep required). `callbacks` also appears in BC-2.01.004 {PC-006} — flagged for product-owner to address in a follow-on burst (outside this mandate). TVs updated to `Option<RunnableConfig>` call form and outer-Ok for batch."
   - "2.5 (round-37/F-P2A158-01/2026-08-29): F-P2A158-01 [HIGH] — §Architecture Anchors: `RunnableConfig` module anchor corrected from `pregolya-core/src/runnable/config.rs` to `pregolya-core/src/config.rs` (`core::config`) with re-export at crate root, per ADR-025 / interface-definitions.md canon and architect directive (canonical anchor `pregolya-core/src/config.rs`, `core::config`, re-exported at crate root; `src/runnable/config.rs` is the former stale path)."
+  - "2.6 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] — Mirror architect's serde-bounded DynRunnable blanket canon into BC layer. (1) {INV-006}: replaced stale 'associated types' phrasing with 'generic type parameters'; formalizes that the serde-bounded blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static, I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static` handles the `Value ↔ I/O` round-trip INTERNALLY — the blanket deserializes `Value → I` (raising E-CORE-003 on failure), calls `Runnable<I,O>::invoke`, then serializes `O → Value`; callers are NOT responsible for JSON round-tripping. (2) {PC-001}: added DynRunnable-boundary note specifying E-CORE-003 is raised when `serde_json::from_value::<I>(input)` fails at the blanket boundary (before typed invoke is called). interface-definitions.md §DynRunnable is the authoritative canon (R38)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -81,6 +82,9 @@ pattern (semport/core/behavioral-intent.md §1 "Runnables (LCEL)").
 1. {PC-001} `runnable.invoke(input, config).await` (where `config: Option<RunnableConfig>`) returns
    `Ok(output)` for a valid input, or `Err(PregolyaError { category: VAL, code: E-CORE-003, .. })`
    on input-type mismatch.
+   When invoked via the `DynRunnable` serde-bounded blanket impl, `E-CORE-003` is specifically
+   raised when `serde_json::from_value::<I>(input)` fails at the blanket boundary — before
+   `Runnable<I, O>::invoke` is called on the concrete typed impl.
 2. {PC-002} `runnable.stream(input, config).await` (where `config: Option<RunnableConfig>`) returns
    `Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>`.
    The outer `Result` covers pre-stream initialization failures; each item yielded by the inner stream
@@ -119,8 +123,13 @@ pattern (semport/core/behavioral-intent.md §1 "Runnables (LCEL)").
   with `serde_json::Value` as the runtime input/output boundary type — NOT a generic
   `DynRunnable<Input, Output>`. Type-erased invocation sites hold `Arc<dyn DynRunnable>`.
   This design enables heterogeneous Runnables to be composed at runtime without monomorphization.
-  The `Value` boundary applies at the DynRunnable call surface; the concrete `Runnable` impls
-  retain their own typed `Input`/`Output` associated types internally.
+  The serde-bounded blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static,
+  I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static` handles
+  the `Value ↔ I/O` round-trip INTERNALLY: it deserializes `Value → I` via
+  `serde_json::from_value::<I>` (raising `E-CORE-003` on failure), calls `Runnable<I, O>::invoke`,
+  then serializes `O → Value`. Concrete `Runnable` impls retain their own typed `Input`/`Output`
+  generic type parameters internally; callers are NOT responsible for JSON round-tripping at the
+  `DynRunnable` boundary.
 - {INV-005} **`recursion_limit` layer disambiguation (F-P49-02):** `config.recursion_limit` (default 25)
   is read by TWO independent enforcement layers that share the same `RunnableConfig` key:
   (1) **This BC (Runnable-layer):** counts nested `invoke`/`stream` call depth across chained

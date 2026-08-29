@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.011
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (2026-07-14): Architecture Anchor pregolya-core/src/graph/builder.rs corrected to pregolya-graph/src/graph/state.rs — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42)"
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.4 (round-38-ss08/F-P2A163-01/2026-08-29): F-P2A163-01 [MED] same-class sweep — §Architecture Anchors phantom `pregolya-graph/src/graph/state.rs` corrected to architect-confirmed canonical `pregolya-graph/src/definition.rs` (module `graph::definition`). No behavioral change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-008-proc-macro-attributes.md
-input-hash: "7175152"
+input-hash: "361ee99"
 extracted_from: null
 modified: []
 deprecated: null
@@ -122,7 +123,7 @@ references an unregistered node. Error message: `GraphBuildError::UnknownNode("n
 ## Architecture Anchors
 
 - `pregolya-macros/src/entrypoint.rs` — `#[entrypoint]` proc-macro implementation
-- `pregolya-graph/src/graph/state.rs` — StateGraph builder START edge wiring (add_edge API the macro calls)
+- `pregolya-graph/src/definition.rs` (module `graph::definition`) — StateGraph builder START edge wiring (add_edge API the macro calls)
 - `architecture/decisions/ADR-008-proc-macro-attributes.md` — proc-macro design rationale
 
 ## Story Anchor
@@ -152,6 +153,7 @@ S-1.07
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.4 | 2026-08-29 | F-P2A163-01 [MED] same-class sweep — §Architecture Anchors phantom `pregolya-graph/src/graph/state.rs` corrected to architect-confirmed canonical `pregolya-graph/src/definition.rs` (module `graph::definition`); no behavioral change | round-38-ss08/F-P2A163-01 |
 | 1.3 | 2026-08-23 | stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change | M1/ADR-027 |
 | 1.2 | 2026-08-22 | §Story Anchor backfilled to S-1.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change) | story-anchor-backfill |
 | 1.1 | 2026-07-14 | Architecture Anchor `pregolya-core/src/graph/builder.rs` corrected to `pregolya-graph/src/graph/state.rs` — StateGraph builder is owned by pregolya-graph per ADR-007 / module-decomposition.md / BC-2.02.001 (F-P42-01, ADV-P1D-PASS-42) | F-P42-01 |

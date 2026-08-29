@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.005
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.15 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Two gaps closed. (1) Gap MED — side-effecting path_fn declared 'not defined behavior' without a concrete outcome. Decision (production-grade default): side effects ARE executed (graph provides no sandbox); they are NOT covered by checkpoint/rollback boundaries. Rewrote {INV-002} to specify this explicitly. (2) Gap LOW — multi-edge union with conflicting End + NodeName was ambiguous (INV-004 said 'union determines scheduling' but PC-003 said 'End → no further nodes'; tension unresolved). Decision: End is added to the scheduling union as a terminus marker, but does NOT preempt live-node scheduling from other concurrent edges; live nodes run to completion before the terminus takes effect. Added {INV-005} and {EC-006} to specify this."
+  - "1.7 (round-38/F-P2A163-01/2026-08-29): F-P2A163-01 [MED] — §Architecture Anchors: phantom `pregolya-graph/src/graph/state.rs` replaced with architect-confirmed canonical `pregolya-graph/src/definition.rs` (`graph::definition`). There is no `graph/` subdir in pregolya-graph; `add_conditional_edges` and `path_map` compilation live in `definition.rs`. SS-02 sibling sweep: BC-2.02.001 also had this phantom anchor (fixed in the same burst)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "df1bbf6"
+input-hash: "4119aa3"
 extracted_from: null
 modified: []
 deprecated: null
@@ -173,7 +174,7 @@ The caller does NOT see an immediate halt after the `"router"` step.
 
 ## Architecture Anchors
 
-- `pregolya-graph/src/graph/state.rs` — `add_conditional_edges`, `path_map` compilation
+- `pregolya-graph/src/definition.rs` (`graph::definition`) — `add_conditional_edges`, `path_map` compilation
 - `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `prepare_next_tasks`, routing function evaluation
 - `pregolya-graph/src/types.rs` — `RouteResult` enum (NodeName, NodeNames, End, Send)
 

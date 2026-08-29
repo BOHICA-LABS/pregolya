@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.012
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (burst-B-SS07-08/bc-completeness-scan-P2/2026-08-26): Resolve Phase-2 BC-completeness-scan gap SS-07..08: EC-004 reserved-name behavior decided as HARD compile-time error (decision: accepting a reserved name silently produces unreachable nodes or routing-symbol shadowing at runtime; a warn-only outcome is insufficient because graph execution would misroute without surfacing the error at the call site; failing closed at compile time is the production-grade default). TV-006 added: function named `start` → compile-time error."
   - "1.5 (round-12/GAP-01-type-grounding/2026-08-27): {PC-001} `register_into(graph: &mut StateGraph<S>)` → `register_into(graph: &mut StateGraph)` (non-generic; architect-confirmed BC-2.02.001 {PC-001} / ADR-029 §Symbol Grounding). The node-fn parameter `state: S` retains `S` — that is the user's concrete state type, NOT a StateGraph type parameter. Zero residual `StateGraph<S>` in live body."
+  - "1.6 (round-38-ss08/F-P2A163-01/2026-08-29): F-P2A163-01 [MED] same-class sweep — §Architecture Anchors phantom `pregolya-graph/src/graph/state.rs` corrected to architect-confirmed canonical `pregolya-graph/src/definition.rs` (module `graph::definition`); no behavioral change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - architecture/decisions/ADR-008-proc-macro-attributes.md
@@ -138,7 +139,7 @@ directly with an explicitly chosen non-reserved name string.
 ## Architecture Anchors
 
 - `pregolya-macros/src/task.rs` — `#[task]` proc-macro implementation
-- `pregolya-graph/src/graph/state.rs` — `add_node` API that the generated code calls
+- `pregolya-graph/src/definition.rs` (module `graph::definition`) — `add_node` API that the generated code calls
 - `architecture/decisions/ADR-008-proc-macro-attributes.md` — proc-macro design rationale
 
 ## Story Anchor
@@ -168,6 +169,7 @@ S-1.07
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.6 | 2026-08-29 | F-P2A163-01 [MED] same-class sweep — §Architecture Anchors phantom `pregolya-graph/src/graph/state.rs` corrected to architect-confirmed canonical `pregolya-graph/src/definition.rs` (module `graph::definition`); no behavioral change | round-38-ss08/F-P2A163-01 |
 | 1.5 | 2026-08-27 | {PC-001} `register_into(graph: &mut StateGraph<S>)` → `register_into(graph: &mut StateGraph)` (non-generic; architect-confirmed BC-2.02.001 {PC-001}) | round-12/GAP-01-type-grounding |
 | 1.4 | 2026-08-26 | EC-004 reserved-name behavior decided as HARD compile-time error (warn-only produces silent runtime misrouting); TV-006 added for reserved-name path | burst-B-SS07-08/bc-completeness-scan-P2 |
 | 1.3 | 2026-08-23 | stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change | M1/ADR-027 |

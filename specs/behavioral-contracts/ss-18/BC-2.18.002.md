@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "2.5"
+version: "2.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -32,7 +32,8 @@ changelog:
   - "2.2 (P2A-043-F-02/2026-08-24): INV-006 added — TemplateInput is #[non_exhaustive] enum with three stable variants (Scalar, Messages, FewShotExamples); Send+Sync; wildcard arm required. Closes SS-18 escalation F-02; AC-012 and compliance-table row in S-2.04 re-anchor from PRE-002 to INV-006."
   - "2.3 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
   - "2.4 (P2A-046-F1/2026-08-24): INV-007 added — SlotTrustPolicy enum shape (variants TrustRequired/TrustAll, derives Copy+PartialEq+Debug, from_messages parameter role, slot_trust_policy field anchor). Authored so AC-014 in S-2.04 can re-anchor from BC-2.18.005 PC-001 (semantic mis-anchor — PC-001 specifies the E-TMPL-002 construction guard, not the enum shape) to BC-2.18.002 INV-007. Additive; no existing clauses altered."
-  - "2.5 (round-37/F-P2A156-02+F-P2A157-01/2026-08-29): F-P2A156-02 [HIGH] — {PC-007}: E0229 associated-type-binding form `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>` replaced with positional generic-parameter form `Runnable<HashMap<String, TemplateInput>, PromptValue>` per ADR-025 / interface-definitions.md canon. F-P2A157-01 [MED] — TV-001: `PromptValue { messages: [...] }` struct-literal notation replaced with canonical enum-variant notation `PromptValue::Messages([...])` (PromptValue is a #[non_exhaustive] enum per {INV-005}, not a struct; struct-notation is semantically incorrect). EC-004: `PromptValue.messages` struct-field dot-notation replaced with `PromptValue::Messages` enum-variant notation. L-227 sibling sweep: TV-002/TV-003/TV-004/TV-005 already use correct enum-variant form; no further changes required."
+  - "2.5 (round-37/F-P2A156-02+F-P2A157-01/2026-08-29): F-P2A156-02 [HIGH] — {PC-007}: E0229 associated-type-binding form `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>` replaced with positional generic-parameter form `Runnable<HashMap<String, TemplateInput>, PromptValue>` per ADR-025 / interface-definitions.md canon. F-P2A157-01 [MED] — TV-001: `PromptValue { messages: [...] }` struct-literal notation replaced with canonical enum-variant notation `PromptValue::Messages([...])` (PromptValue is a #[non_exhaustive] enum per {INV-005}, not a struct; struct-notation is semantically incorrect). EC-004: `PromptValue.messages` struct-field dot-notation replaced with `PromptValue::Messages` enum-variant notation. L-227 sibling sweep: TV-002/TV-003/TV-004/TV-005 already use correct enum-variant form; no further changes required. NOTE: this sweep claim was FALSE — TV-003 still carried `Ok(PromptValue { messages: [...] })` struct-literal form; corrected in v2.6 under F-P2A162-01."
+  - "2.6 (round-38/F-P2A162-01/2026-08-29): F-P2A162-01 [HIGH] — TV-003: `Ok(PromptValue { messages: [...] })` struct-literal form corrected to canonical enum-variant form `Ok(PromptValue::Messages([...]))` (PromptValue is a #[non_exhaustive] enum per {INV-005}; struct-literal is semantically invalid). CORRECTION: the v2.5 changelog sweep-completeness claim 'TV-002/TV-003/TV-004/TV-005 already use correct enum-variant form; no further changes required' was FALSE for TV-003 — POL-21 changelog-claim-applied + POL-23 paper-fix violation. L-227 comprehensive re-sweep of all TVs/ECs/PCs/INVs in BC-2.18.002 AND sibling BC-2.18.001: TV-003 fixed as stated; TV-001/TV-002/TV-004/TV-005 confirmed correct enum-variant form; all PCs/INVs/ECs in BC-2.18.002 confirmed no other PromptValue struct-literal residue; BC-2.18.001 confirmed clean (no PromptValue struct-literal; all PromptValue references use PromptValue::String(...) enum-variant form)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -170,7 +171,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 |---|-------|-----------------|----------|
 | TV-001 | `template = [System("You are helpful."), Human("{question}")]`, `vars = {"question": TemplateVar { value: "What is Rust?", trust_level: None }}` | `Ok(PromptValue::Messages([(SystemMessage("You are helpful."), Provenance { highest_trust_level: None, policy: TrustRequired }), (HumanMessage("What is Rust?"), Provenance { highest_trust_level: None, policy: TrustAll })]))` | happy-path |
 | TV-002 | Same template, `vars = {"question": TemplateVar { value: "...", trust_level: Some(TrustLevel::UserInput) }}` | HumanMessage slot: `Provenance { highest_trust_level: Some(TrustLevel::UserInput), policy: TrustAll }` | happy-path (provenance threading) |
-| TV-003 | `template.format_messages({})` with all variables pre-bound as partials | `Ok(PromptValue { messages: [...] })` | happy-path (partial binding only) |
+| TV-003 | `template.format_messages({})` with all variables pre-bound as partials | `Ok(PromptValue::Messages([...]))` | happy-path (partial binding only) |
 | TV-004 | `into_messages()` on TV-001 result | `Vec<Message>` with `[SystemMessage("You are helpful."), HumanMessage("What is Rust?")]` | happy-path (extraction) |
 | TV-005 | Same template and vars as TV-001 invoked via `Runnable::invoke(vars, None)` rather than `format_messages` directly | `Ok(PromptValue::Messages([...]))` — result is structurally identical to TV-001; invoke delegates to format_messages without modification | happy-path (Runnable delegation; PC-007) |
 
