@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.8"
+version: "1.9"
 status: draft
 producer: story-writer
 timestamp: 2026-08-29T00:00:00Z
@@ -16,13 +16,14 @@ changelog:
   - "1.6 (R37/F-P2A156-01+F-P2A156-02+F-P2A156-03+F-P2A156-04+F-P2A158-01+F-P2A158-02+F-P2A158-03/2026-08-29): F-P2A156-01/F-P2A158-02 [HIGH/MED]: AC-013 outer-Result contradiction resolved — stream() returns Ok(stream) outer Result; Err is yielded as single stream item (callers poll to discover error); removed erroneous 'stream() does NOT return an outer Result' clause per BC-2.01.003 {PC-002}/{EC-006}. F-P2A156-03/F-P2A158-03 [HIGH/MED]: AC-004 + Task 5 recursion_limit type corrected u32 → usize per BC-2.01.003 {PRE-003}. F-P2A156-04 [HIGH]: AC-008 RunnableSequence 3-param → 2-param (RunnableSequence<I, O>); pipe sig updated to canonical form. F-P2A156-02 [HIGH, POL-18]: AC-008 Runnable associated-type binding (Input=I/Output=M) replaced with positional (I, M) per ADR-010/ADR-025 canon (E0229-invalid binding form). F-P2A158-01 [HIGH, POL-4]: Architecture Mapping + Purity Classification + Task 5 + File Structure RunnableConfig anchor corrected src/runnable/config.rs → src/config.rs (core::config, re-exported at crate root) per BC-2.01.003 §Architecture Anchors."
   - "1.7 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH]: AC-007 updated to reflect BC-2.01.003 {PC-001} — E-CORE-003 is raised at the serde-bounded blanket boundary when `serde_json::from_value::<I>` fails, before typed `Runnable<I,O>::invoke` is called; callers are NOT responsible for pre-deserializing Value input; trace updated to EC-001/{PC-001}. AC-008 updated to reflect BC-2.01.004 {PC-001} — typed stages (e.g. `impl Runnable<String,String>`) auto-satisfy `DynRunnable` via the serde-bounded blanket without any `Runnable<Value,Value>` requirement; `RunnableSequence<I,O>` also auto-derives `DynRunnable` and can be stored as `Box<dyn DynRunnable>` directly. Sweep of story body confirmed: no residual 'callers do JSON round-tripping' or `Runnable<Value,Value>` requirement language present. input-hash refreshed (BC-2.01.003 and BC-2.01.004 updated round-38)."
   - "1.8 (round-39/F-P2A164-01+F-P2A164-02/2026-08-29): F-P2A164-01 [CRIT] — AC-007 updated to adapter model per BC-2.01.003 {INV-006} v2.7: 'serde-bounded blanket boundary' replaced with 'ADAPTER boundary'; 'typed Runnable<I,O>::invoke' replaced with 'R::invoke'; DynRunnableAdapter<I,O,R> construct description added (DynRunnableAdapter implements DynRunnable for R: Runnable<I,O>+Send+Sync+'static; construct via IntoDynRunnable::into_dyn(); E-CORE-003 raised at ADAPTER boundary on Value→I deserialization failure). F-P2A164-02 [MED] — AC-008 blanket auto-coercion language replaced with adapter model per BC-2.01.004 {PC-001} v2.0: pipe serde bounds (Input: DeserializeOwned+Send+'static, Output: Serialize+DeserializeOwned+Send+'static, NextOutput: Serialize+Send+'static); erases via into_dyn() constructing DynRunnableAdapter; 'directly coercible without adapter' claim removed; compile test verifies RunnableSequence fields are DynRunnableAdapter via into_dyn()."
+  - "1.9 (round-40/F-P2A168-01/2026-08-29): F-P2A168-01 [HIGH, POL-18] — AC-008 pipe serde bounds symmetric per BC-2.01.004 {PC-001}: Input gains Serialize bound (was DeserializeOwned-only); NextOutput gains DeserializeOwned bound (was Serialize-only). Canonical where-clause: Self: Sized+Send+Sync+'static, Input: Serialize+DeserializeOwned+Send+'static, Output: Serialize+DeserializeOwned+Send+'static (unchanged), NextOutput: Serialize+DeserializeOwned+Send+'static. Reason updated: returned RunnableSequence's invoke needs Input: Serialize to feed erased first stage + NextOutput: DeserializeOwned to decode erased last stage. Compile-test coverage (a)-(d) added per architect R40: (a) Input: DeserializeOwned-only call fails to compile; (b) NextOutput: Serialize-only call fails to compile; (c) RunnableSequence fields pub(crate) — external construction fails to compile; (d) RunnableParallel::new/RunnablePassthrough::assign take generic K: Into<String> (NOT impl Into<String> in item-binding position). Residual r39 asymmetric-bound language removed. input-hash refreshed (BC-2.01.004 {PC-001} updated R40)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "2381dcc"
+input-hash: "25c49e3"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -102,14 +103,19 @@ binding form `Runnable<Input=I, Output=M>` is E0229-invalid and MUST NOT be used
 with `first: a`, `middle: []`, `last: b`. Invoking the sequence calls `a.invoke(input)` then
 feeds output to `b.invoke(m)`.
 `Runnable::pipe` requires `Self: Sized + Send + Sync + 'static`,
-`Input: serde::de::DeserializeOwned + Send + 'static`,
+`Input: serde::Serialize + serde::de::DeserializeOwned + Send + 'static`,
 `Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static`,
-`NextOutput: serde::Serialize + Send + 'static` — because `pipe` erases `self` and `next`
-via `.into_dyn()` constructing `DynRunnableAdapter<I, O, R>`. `RunnableSequence.first` and `.last`
-are `DynRunnableAdapter` instances, not raw typed stages; the compile test exercises
-`stage1.pipe(stage2)` with a concrete typed pair and verifies that the `RunnableSequence` fields
-are `DynRunnableAdapter` instances constructed via `into_dyn()` (NOT blanket auto-coercion).
-Verified by `test_BC_2_01_004_pipe_two_stages()`.
+`NextOutput: serde::Serialize + serde::de::DeserializeOwned + Send + 'static` — because the
+returned `RunnableSequence`'s own `Runnable::invoke` needs `Input: Serialize` to feed the erased
+first stage and `NextOutput: DeserializeOwned` to decode the erased last stage; `pipe` erases
+`self` and `next` via `.into_dyn()` constructing `DynRunnableAdapter<I, O, R>`. `RunnableSequence.first`
+and `.last` are `DynRunnableAdapter` instances, not raw typed stages.
+**Compile-test coverage (four tests required, per architect R40):**
+- **(a)** A `pipe()` call where `Input: serde::de::DeserializeOwned` only (NOT `serde::Serialize`) MUST fail to compile — verifies the symmetric `Serialize` bound on `Input`.
+- **(b)** A `pipe()` call where `NextOutput: serde::Serialize` only (NOT `serde::de::DeserializeOwned`) MUST fail to compile — verifies the symmetric `DeserializeOwned` bound on `NextOutput`.
+- **(c)** `RunnableSequence` fields are `pub(crate)` (NOT `pub`) — an attempt to construct `RunnableSequence { .. }` directly from outside the crate MUST fail to compile.
+- **(d)** `RunnableParallel::new` and `RunnablePassthrough::assign` take `K: Into<String>` as a generic type parameter (NOT `impl Into<String>` in associated-type or item-binding position).
+Verified by `test_BC_2_01_004_pipe_two_stages()` (runtime) and four compile-fail tests in `tests/compile-fail/` (compile-time).
 
 ### AC-009 (traces to BC-2.01.004 PC-004)
 `a.pipe(b).pipe(c)` flattens into `RunnableSequence { first: a, middle: [b], last: c }` — NOT nested `RunnableSequence<RunnableSequence<...>, c>`. The `first` field is always the first runnable in the chain. Verified by `test_BC_2_01_004_pipe_flattens_sequence()`.

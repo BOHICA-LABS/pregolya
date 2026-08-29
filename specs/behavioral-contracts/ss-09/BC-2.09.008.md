@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "3.1"
+version: "3.2"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -37,6 +37,7 @@ changelog:
   - "2.9 (round-36/F-P2A155-01/2026-08-29): F-P2A155-01 [MED]: {PC-003} call-direction seam-collapse corrected. OLD text stated `GraphAgentTool::invoke_dyn` calls `CompiledStateGraph::invoke(arguments, config)` directly — collapsing the 3-layer seam. NEW text: `invoke_dyn` delegates to `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run` calls `CompiledStateGraph::invoke(arguments, config)` internally (statically in `ConcreteGraphRunner<S>::run`); error propagates through `run()` and `invoke_dyn` surfaces it as `isError: true`. Exhaustive call-direction sweep of all PC/INV/EC/TV clauses: {PC-003} was the ONLY seam-collapse; {PC-004}/{INV-001} correctly state GraphRunner::run wraps CompiledStateGraph::invoke and invoke_dyn wraps run(); {PC-005} correctly states GraphRunner::run detects RunStatus::Interrupted; all EC/TV clauses state correct layering. No sibling sweep required (BC-2.09.006 and BC-2.09.007 confirmed clean in round-35 sweep)."
   - "3.0 (round-37/O-P2A157-01/2026-08-29): O-P2A157-01 [OBS] — {INV-003}: invariant-strength phrasing brought to symmetric MUST-language consistent with sibling invariants {INV-001}/{INV-002}/{INV-004}. Descriptive 'pass through ... before' replaced with imperative 'MUST pass through'; 'Only ... is used' replaced with 'Only ... MUST be used / MUST NOT be used'; trailing 'This obligation is unconditional per ...' qualifier condensed into parenthetical per symmetric pattern. No semantic change — existing behavior mandate is preserved exactly."
   - "3.1 (round-39/F-P2A165-01/2026-08-29): F-P2A165-01 [MED, CWE-862] — Unconditional pre-hook gate for ForceApproveHooks. {INV-004}: 'Before overriding PendingHumanApproval → Approve, the hook checks' replaced with 'runs the ActionRisk gate BEFORE invoking the inner PreToolCallHook'; gate fires for ALL tool invocations regardless of inner hook policy; added 'This covers AlwaysApprovePolicy / no-hook default Approve paths (not only PendingHumanApproval)'; conclusion 'the override proceeds to Approve' replaced with 'the inner PreToolCallHook is invoked normally'. {PC-006}: 'overrides ONLY PreToolDecision::PendingHumanApproval to Approve (subject to ActionRisk check)' rewritten to unconditional gate form: ActionRisk gate fires before inner hook; None/Some(>=Medium) denied WITHOUT calling inner hook; Some(<Medium) proceeds to inner hook invocation; PendingHumanApproval from inner hook overridden to Approve. EC-009: scenario updated from 'PreToolCallHook returns PendingHumanApproval' to 'BoundaryApprovalHook runs ActionRisk gate'; 'before overriding' → 'BEFORE invoking the inner hook'; AlwaysApprovePolicy coverage note added. TV-018 minted: ForceApproveHooks + AlwaysApprovePolicy inner hook + Some(ActionRisk::High) → Deny WITHOUT calling inner hook + E-MCP-011 emitted. TV count 17→18 in this BC (global 758→759). interface-definitions.md §ForceApproveHooks + ADR-005 §Send-Bounded RPITIT + ADR-029 §Decision 5 are the authoritative canon (R39)."
+  - "3.2 (round-40/F-P2A169-02/2026-08-29): F-P2A169-02 [MED, CWE-862/POL-46] — EC-006 scenario and TV-005 Input lacked the `action_risk` precondition required for the `PendingHumanApproval`-overridden-to-`Approve` path under `ForceApproveHooks` to be reachable. EC-006 scenario updated: tool has `action_risk = Some(ActionRisk::ReadOnly)` (gate approves, `ReadOnly < Medium`) — inner hook is invoked; `PendingHumanApproval` overridden to `Approve`; note added that `None`/`>= Medium` would be gate-denied per EC-009 (inner hook never called, interrupt path unreachable for that tool). TV-005 Input updated to specify `action_risk = Some(ActionRisk::ReadOnly)` with note about `None`/`>= Medium` gate-denied path. interface-definitions.md §ForceApproveHooks + {INV-004}/{PC-006} are the authoritative canon (R40)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -282,12 +283,16 @@ holds.
 
 ### EC-006: ForceApproveHooks + node-level interrupt() — ForceApproveHooks does NOT apply
 **Scenario:** `approval_policy = ForceApproveHooks`; a `PreToolCallHook` returns
-`PendingHumanApproval` (overridden to `Approve`); later in the same run a node calls
-`interrupt()`.
-**Expected behavior:** The `PendingHumanApproval` is overridden to `Approve` — the tool
+`PendingHumanApproval` for a tool with `action_risk = Some(ActionRisk::ReadOnly)` (gate
+approves, `ReadOnly < Medium`); later in the same run a node calls `interrupt()`.
+**Expected behavior:** The `ActionRisk` gate approves (`ReadOnly < Medium`) — the inner
+`PreToolCallHook` is invoked; `PendingHumanApproval` is overridden to `Approve` — the tool
 proceeds. The subsequent `interrupt()` call causes `RunStatus::Interrupted` →
 `Err(E-MCP-010)`. `ForceApproveHooks` does NOT override node-level interrupt semantics;
 the binary invariant {INV-002} holds even under `ForceApproveHooks`.
+**Note:** If the tool had `action_risk = None` (undeclared) or `Some(r >= Medium)`, the
+`ActionRisk` gate would deny WITHOUT calling the inner hook (per EC-009, {INV-004}); the
+`PendingHumanApproval` path would never be reached for that tool.
 
 ### EC-007: STATE-ISOLATION — extra fields in GraphState not in extract_output
 **Scenario:** The graph's final state is a channel-composed `serde_json::Value` with keys
@@ -348,7 +353,7 @@ devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
 | TV-002 | Same setup; graph node calls `interrupt()` under DenyInterrupts | `{ "content": [{ "type": "text", "text": "graph agent tool invocation interrupted at MCP boundary: ..." }], "isError": true }` | Interrupt denied (EC-004) |
 | TV-003 | tools/call with args missing required field for `S`'s JSON Schema | JSON-RPC `{ "code": -32602, "message": "Invalid arguments for tool '...': ..." }` | Schema validation (EC-001) |
 | TV-004 | `S` has `answer`, `internal_checkpoint_id`, `messages`; `extract_output` selects only `answer`; graph succeeds | Response contains ONLY `"answer"` key; `internal_checkpoint_id` and `messages` absent | STATE-ISOLATION (EC-007, {INV-001}) |
-| TV-005 | `ForceApproveHooks` policy; PreToolCallHook returns `PendingHumanApproval`; later node calls `interrupt()` | `isError: true`, E-MCP-010 message — interrupt not suppressed by ForceApproveHooks | EC-006, {INV-002} |
+| TV-005 | `ForceApproveHooks` policy; tool has `action_risk = Some(ActionRisk::ReadOnly)` (gate approves, `ReadOnly < Medium`); `PreToolCallHook` returns `PendingHumanApproval` (overridden to `Approve`); later node calls `interrupt()` | `isError: true`, E-MCP-010 message — interrupt not suppressed by `ForceApproveHooks`; note: a tool with `action_risk = None` or `>= Medium` would instead be gate-denied per EC-009 (inner hook never called) | EC-006, {INV-002} |
 | TV-006 | `extract_output = `\|`_`\|` Value::Null`; graph succeeds | `{ "content": [{ "type": "text", "text": "null" }], "isError": false }` | Null output valid (EC-008) |
 | TV-007 | Graph returns `Err(PregolyaError { message: "failed: sk-ant-abc123XYZXYZXYZ12345678901234567", .. })` | `isError: true`, message contains `<redacted>` not the key material | Credential redaction ({INV-003}) |
 | TV-008 | `approval_policy = ForceApproveHooks`; `PreToolCallHook` returns `PendingHumanApproval` for tool with `action_risk = ActionRisk::High` | `isError: true`, E-MCP-011 ForceApproveWriteBlocked message; tool NOT invoked; ERROR-level (highest severity) log (tracing::error!) emitted at `mcp.graph_tool.force_approve_write_blocked` | ActionRisk runtime gate — Some(High) path (EC-009, {INV-004}) |

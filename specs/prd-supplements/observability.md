@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-observability
 level: L3
-version: "1.10"
+version: "1.11"
 status: active
 producer: product-owner
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 phase: 1d
 changelog:
+  - "1.11 (round-40/F-P2A169-01+F-P2A171-01/2026-08-29): §mcp.graph_tool.force_approve_write_blocked — three pre-fix framing corrections. (1) Catalog table Emitting BC column: TV-018 added (ForceApproveHooks + AlwaysApprovePolicy inner hook + Some(ActionRisk::High) → gate fires before inner hook call; minted r39 per BC-2.09.008 {INV-004}; F-P2A165-01). (2) Catalog table Recurrence column: 'once per PendingHumanApproval decision that fails the ActionRisk gate' replaced with unconditional gate framing — fires for each tool invocation where ActionRisk blocks (None or >= Medium), regardless of inner hook policy (covers AlwaysApprovePolicy / no-hook default Approve and PendingHumanApproval; BC-2.09.008 {INV-004}/{PC-006}; F-P2A165-01). (3) Field Schema Details `tool_name` Description corrected from 'whose PendingHumanApproval decision was denied by the ActionRisk gate' to full unconditional-gate framing with BC anchor."
   - "1.10 (round-27/OBS-P2A117/2026-08-28): §mcp.graph_tool.force_approve_write_blocked Catalog table Description column: 'CRITICAL-level security signal' → 'highest-severity security signal'. The Rust tracing crate has no CRITICAL level; ERROR is the highest level. Prose-only fix; log level column (ERROR) and all field schema details unchanged."
   - "1.9 (round-18/F-P2A085-01/2026-08-27): F-P2A085-01 [MED] §mcp.graph_tool.force_approve_write_blocked: `%action_risk` (Display sigil) replaced with `?action_risk` (Debug sigil) — `Option<ActionRisk>` does not implement `Display` (E0277); ADR-029 §Decision-4 uses Debug. Three sites corrected: (1) main Catalog table Field Schema column: `action_risk: &str` → `action_risk: Option<ActionRisk>`; (2) Field Schema Details code sketch: `action_risk = %action_risk` → `action_risk = ?action_risk`; comment 'Display' → 'Debug'; message positional `(action_risk={})` → `(action_risk={:?})`; (3) Field Schema Details table row: `&str (Display)` → `Option<ActionRisk> (Debug)`. No behavioral change — Debug representation (`None` / `Some(Medium)` / `Some(High)`) matches the previously described output."
   - "1.8 (round-8/F-P2A069-03+SAP-1/2026-08-26): Add missing catalog row for `mcp.graph_tool.force_approve_write_blocked` (F-P2A069-03 SAP-1 P1). This emission is BC-mandated by BC-2.09.008 {INV-004}/EC-009/TV-008/TV-012 (BoundaryApprovalHook under ForceApproveHooks policy when action_risk is None or >= Medium → Deny + E-MCP-011 + CRITICAL log). Field schema: `event_type`, `tool_name`, `action_risk`. Emitting crate/module: `pregolya-mcp` / `mcp::graph_tool` (`BoundaryApprovalHook`). Log level: ERROR (CRITICAL in semantic role — highest tracing level). Active event_type count 11→12. BC-2.09.008 added to inputs list."
@@ -31,7 +32,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.008.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "2551722"
+input-hash: "a8ae6d4"
 ---
 
 # Canonical Structured Event Catalog
@@ -83,7 +84,7 @@ grep -r "event_type" .factory/specs/behavioral-contracts/ .factory/specs/archite
 | `retry.circuit_probe_failed` | active | `DEBUG` | `pregolya-core` / `core::retry` | BC-2.16.003 EC-003 | HALF-OPEN probe call for a tool fails; circuit returns to OPEN | `event_type: &str`, `tool_name: &str` | Diagnostic signal: the circuit breaker attempted to recover from OPEN state via a probe call, but the probe failed. Circuit re-enters OPEN with `reset_timeout` restarted. Supports tracing circuit state machine transitions during incident investigation and integration testing. | Per failed HALF-OPEN probe attempt — distinct from CLOSED→OPEN transitions (no event_type emitted on initial trip). |
 | `server.cron_schedule_queue_full` | active | `WARN` | `pregolya-server` / `server::cron` | BC-2.12.004 EC-004 | Schedule fires when run queue depth meets or exceeds `max_queue_depth` | `event_type: &str`, `cron_id: Uuid`, `queue_depth: usize` | Operator signal that a scheduled run firing was skipped due to run queue saturation. Enables back-pressure monitoring and alerting on schedule overload. Repeated firing indicates the schedule interval is too short relative to run completion time; operator should increase interval or max_queue_depth. | Per schedule firing skip when `queue_depth >= max_queue_depth`. |
 | `eval.judge_infra_error` | active | `WARN` | `pregolya-standard-tests` / `eval::judge` | BC-2.08.008 PC3 | `JudgeResult::InfraError` returned for an eval case (judge LLM unavailable, timeout, or unparseable response) | `event_type: &str`, `reason: &str` | Signals judge infrastructure failure for a specific eval case, distinguishing it from a quality failure. Prevents false quality alarms when the judge LLM is degraded. `InfraError` cases are excluded from aggregate eval score per BC-2.08.008 PC3. | Per eval case where `JudgeResult::InfraError` is returned. |
-| `mcp.graph_tool.force_approve_write_blocked` | active | `ERROR` | `pregolya-mcp` / `mcp::graph_tool` (`BoundaryApprovalHook`) | BC-2.09.008 {INV-004}, EC-009, TV-008, TV-012 | `approval_policy = ForceApproveHooks` AND `BoundaryApprovalHook` pre-invoke check finds `preview.action_risk` is `None` (undeclared, fail-closed) OR `Some(r)` where `r >= ActionRisk::Medium` | `event_type: &str`, `tool_name: &str`, `action_risk: Option<ActionRisk>` | Security gate — write-class or undeclared-risk tool blocked at MCP boundary under `ForceApproveHooks` policy; `E-MCP-011 ForceApproveWriteBlocked` is also emitted. Prevents accidental invocation of write-class tools in graphs incorrectly configured as read-only. highest-severity security signal; operators should alert on every occurrence. | Per occurrence — once per `PendingHumanApproval` decision that fails the `ActionRisk` gate (`None` or `>= Medium`). |
+| `mcp.graph_tool.force_approve_write_blocked` | active | `ERROR` | `pregolya-mcp` / `mcp::graph_tool` (`BoundaryApprovalHook`) | BC-2.09.008 {INV-004}, EC-009, TV-008, TV-012, TV-018 | `approval_policy = ForceApproveHooks` AND `BoundaryApprovalHook` pre-invoke check finds `preview.action_risk` is `None` (undeclared, fail-closed) OR `Some(r)` where `r >= ActionRisk::Medium` | `event_type: &str`, `tool_name: &str`, `action_risk: Option<ActionRisk>` | Security gate — write-class or undeclared-risk tool blocked at MCP boundary under `ForceApproveHooks` policy; `E-MCP-011 ForceApproveWriteBlocked` is also emitted. Prevents accidental invocation of write-class tools in graphs incorrectly configured as read-only. highest-severity security signal; operators should alert on every occurrence. | Per occurrence — fires for each tool invocation where the `ActionRisk` gate blocks (`preview.action_risk` is `None` or `>= Medium`), regardless of inner hook policy (covers `AlwaysApprovePolicy` / no-hook default `Approve` and `PendingHumanApproval`; BC-2.09.008 {INV-004}/{PC-006}; F-P2A165-01). |
 
 ---
 
@@ -277,7 +278,7 @@ tracing::error!(
 | Field | Type | Description |
 |-------|------|-------------|
 | `event_type` | `&'static str` | Always `"mcp.graph_tool.force_approve_write_blocked"` |
-| `tool_name` | `&str` (Display) | The MCP tool name whose `PendingHumanApproval` decision was denied by the `ActionRisk` gate |
+| `tool_name` | `&str` (Display) | The MCP tool name denied by the `ActionRisk` gate. The gate runs before the inner `PreToolCallHook` and fires regardless of the inner hook's decision — including `AlwaysApprovePolicy`/no-hook default `Approve` and `PendingHumanApproval` (BC-2.09.008 {INV-004}/{PC-006}; F-P2A165-01). |
 | `action_risk` | `Option<ActionRisk>` (Debug) | Debug format of the `preview.action_risk` value — `None` for undeclared tools, or `Some(Medium)` / `Some(High)` etc. for declared write-class tools |
 
 ---

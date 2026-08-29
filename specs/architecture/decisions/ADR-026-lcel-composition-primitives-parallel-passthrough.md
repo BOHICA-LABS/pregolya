@@ -11,11 +11,12 @@ date: "2026-08-17"
 subsystems_affected: ["SS-01"]
 supersedes: []
 superseded_by: null
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D_BURST302_TBD]
 changelog:
+  - "1.7 (round-40/F-P2A168-02/2026-08-29): Fix nested impl Trait in associated-type binding (E0562-class, non-realizable on stable Rust) at all 4 ADR-026 sites. The form `impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>` uses impl Trait inside an associated-type projection, which is only permitted at the outermost argument position on stable Rust. Replaced with named generic K: Into<String> at all 4 sites: §Decision 1 constructor (RunnableParallel::new), §Decision 4 assign method body, §Interface-Definitions Additions RunnableParallel::new signature, §Interface-Definitions Additions RunnablePassthrough::assign signature. Canonical form: `pub fn new<K: Into<String>>(steps: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>) -> Self`. Source: F-P2A168-02 [MED] round-40 full-re-derivation; sibling fix at interface-definitions.md §RunnableParallel and §RunnablePassthrough."
   - "1.6 (P1D-208/F-P208-01/2026-08-18): §Decision 2 Key behavioral properties item 4 — E-CORE-011 INTERNAL category rendered as bare `Internal` corrected to ALL-CAPS taxonomy code `INTERNAL` per ADR-010 §Category casing canon (matches sibling item 3 `EXEC` form)."
   - "1.5 (burst-315/F-B1/2026-08-17): Decision 2 collect-loop sketch: replace `.unwrap()` with `.ok_or_else(|| PregolyaError::new(Component::Core, Category::Internal, RetryHint::Never, \"E-CORE-011\", format!(\"RunnableParallelTaskPanic: task panicked: missing branch key '{key}'\")))?` — eliminates no-unwrap convention violation (CLAUDE.md §Code Conventions). The key-presence invariant holds when the JoinSet loop completes without early-return error, but `.unwrap()` on an `Option` is forbidden in non-test code regardless of logical guarantee. E-CORE-011 (INTERNAL, minted burst-309) is the canonical expression for this programming-error invariant violation on the task-panic path. Disclaimer note retained."
   - "1.4 (burst-309/F-P201-01/2026-08-17): Mint E-CORE-011 (INTERNAL, broken, BC-2.01.006 PC-4, RetryHint Never) for the RunnableParallel JoinError/task-panic path. Highest existing CORE code was E-CORE-010; no existing INTERNAL code covers a JoinSet task panic (E-CORE-007 is GuardrailHookPanic; E-CORE-004 is pipe-composition failure; E-CORE-006 is recursion-limit). (1) §Decision 2 collect-loop sketch JoinError branch: `'E-CORE-NNN'` → `'E-CORE-011'`; comment updated. (2) Behavioral property 4: code field added (`code: E-CORE-011`). (3) §Error codes minted: E-CORE-011 row added. Near-name check: RunnableParallelTaskPanic vs RunnableParallelBranchFailure (E-CORE-009) — distinct paths (task panic at JoinSet level vs branch Err return) — no collision. Branch key is NOT available at the JoinError catch site (JoinSet::join_next yields JoinError only; key lives inside the task closure); message template omits `<key>`."
@@ -116,8 +117,8 @@ Rationale for `IndexMap` over `HashMap`:
 Constructor:
 ```rust
 impl RunnableParallel {
-    pub fn new(
-        steps: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    pub fn new<K: Into<String>>(
+        steps: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>
     ) -> Self { .. }
 }
 ```
@@ -281,8 +282,8 @@ impl RunnablePassthrough {
     /// # Errors
     /// Returns `Err(PregolyaError { category: VAL, code: E-CORE-010, .. })` at invoke time
     /// if the input is not a JSON object.
-    pub fn assign(
-        pairs: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    pub fn assign<K: Into<String>>(
+        pairs: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>
     ) -> RunnableAssign {
         RunnableAssign {
             mapper: RunnableParallel::new(pairs),
@@ -453,8 +454,8 @@ pub struct RunnableParallel {
 
 impl RunnableParallel {
     /// Construct from an ordered iterator of (key, branch) pairs.
-    pub fn new(
-        steps: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    pub fn new<K: Into<String>>(
+        steps: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>
     ) -> Self;
 }
 
@@ -478,8 +479,8 @@ impl RunnablePassthrough {
     /// `Err(E-CORE-010)` otherwise.
     ///
     /// Authority: BC-2.01.008, ADR-026 §Decision 4.
-    pub fn assign(
-        pairs: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    pub fn assign<K: Into<String>>(
+        pairs: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>
     ) -> RunnableAssign;
 }
 

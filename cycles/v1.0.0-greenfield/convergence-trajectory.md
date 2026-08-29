@@ -4151,3 +4151,47 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **SIGNIFICANCE: round-39 caught round-38's OWN non-realizable fix (F-P2A164-01) + THREE incomplete-sweeps of prior rounds (F-P2A166-01=r38 Red-Gate 2/7; F-P2A167-01=r37 tools/call; F-P2A167-02=r25 rename). 3-CLEAN protocol working as designed. L-232 codified.**
 
 **NEXT: round-40 on new frozen HEAD post-D-312 push. Streak resets to 0/3 on push.**
+
+---
+
+## Round-40 (P2A-168/169/170/171 + GATE-READY) — D-313
+
+**Frozen HEAD: post-D-312-push (round-40 new frozen HEAD)**
+
+**Adversary passes on frozen HEAD:**
+
+| Pass | Lens | Findings | Severity | Status |
+|------|------|----------|----------|--------|
+| P2A-168 | realizability | 4 | 1 HIGH (F-P2A168-01 Runnable::pipe ASYMMETRIC serde bounds — r39 left Input:DeserializeOwned-only+NextOutput:Serialize-only) + 1 MED (F-P2A168-02 nested impl Trait E0562 at 6 sites) + 1 MED (F-P2A168-03 RunnableSequence PhantomData<(I,O)>) + 1 MED (F-P2A168-04 ADR-023 private-vs-pub contradiction) | NOT CLEAN |
+| P2A-169 | security | 2 | 1 MED (F-P2A169-01 observability §force_approve_write_blocked pre-fix framing, CWE-862) + 1 MED (F-P2A169-02 BC-2.09.008 ReadOnly precondition missing, CWE-862) | NOT CLEAN |
+| P2A-170 | consistency/census/records | 1 | 1 MED (F-P2A170-01 test-vectors BC-2.09.008 row 17→18 + v3.15 false-claim, POL-21) | NOT CLEAN |
+| P2A-171 | SS-09/SS-11 deep-audit | 1 | 1 MED (F-P2A171-01 = F-P2A169-01 observability unconditional-gate framing — duplicate across lenses) | NOT CLEAN |
+| GATE-READY audit | — | N/A | GATE-READY=YES (31/32 gates PASS; HRQ-1 sole blocker; census 39/134/17/137/303 reconciled) | GATE-READY |
+
+**Finding Progression trajectory-tail: →4→2→1→1**
+
+**NOTE: P2A-171-01 == P2A-169-01 (duplicate finding across lenses); 7 unique findings total.**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony — 1 HIGH + 6 MED present.**
+
+**CLEAN(strict): NO | CLEAN(PR-merge): NO (HIGH finding present)**
+
+**Streak: 0/3 (frozen-HEAD reset on D-313 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A168-01 | HIGH | CLOSED: Runnable::pipe serde bounds ASYMMETRIC — r39 fixed outer constraint but left Input:DeserializeOwned-only+NextOutput:Serialize-only; FIXED to FULL symmetric Serialize+DeserializeOwned on all 3 params (Self, Input, NextOutput); interface-definitions §Changelog+BC-2.01.004 §Changelog {PC-001}+S-1.04 §Changelog AC-008+4 compile-fail tests [architect/product-owner/story-writer]. |
+| F-P2A168-02 | MED | CLOSED: nested impl Trait in assoc-type binding non-realizable (E0562) at 6 sites → named generic K:Into<String>; interface-definitions §RunnableParallel+§Passthrough; ADR-026 §Changelog [architect]. |
+| F-P2A168-03 | MED | CLOSED: RunnableSequence PhantomData<(I,O)>→PhantomData<fn(I)->O> (sibling-consistent variance); interface-definitions §Changelog [architect]. |
+| F-P2A168-04 | MED | CLOSED: ADR-023 private fields vs interface-definitions pub contradiction+SemVer hazard → pub(crate); ADR-023 §Criterion-B/§Decision-3 [architect]. |
+| F-P2A169-01=F-P2A171-01 | MED, CWE-862, POL-4 | CLOSED: observability §force_approve_write_blocked 3 sites retained pre-fix framing → unconditional-gate framing corrected+TV-018 narrative added (TV-018 minted r39; observability prose not updated atomically); observability §Changelog [product-owner]. |
+| F-P2A169-02 | MED, CWE-862 | CLOSED: BC-2.09.008 EC-006+TV-005 added Some(ActionRisk::ReadOnly) precondition+None/>=Medium gate-denied note; BC-2.09.008 §Changelog+S-2.11 §Changelog AC-022/024/EC-009 [product-owner/story-writer]. |
+| F-P2A170-01 | MED, POL-21 | CLOSED: test-vectors BC-2.09.008 row 17→18+v3.15 false-claim corrected; test-vectors §Changelog [product-owner]. |
+
+**Census UNCHANGED 39/134/17/137/303. TV 759 UNCHANGED. VP 17 UNCHANGED. streak 0/3. GATE-READY=YES.**
+
+**SIGNIFICANCE: ALL 7 r40 findings are r39-fix siblings. Architect 6-step re-derivation confirms composition surface FULLY REALIZABLE on stable Rust edition 2024 (E0562 resolved via named generics; PhantomData variance corrected; serde bounds now full symmetric). L-233 codified (S-7.02 durable fix: mechanical lint for sweep-completeness claims, deferred to first-self-improvement-wave). INCOMPLETE-SWEEP-GATE drift item updated with r40 recurrence evidence.**
+
+**NEXT: round-41 on new frozen HEAD post-D-313 push. Streak resets to 0/3 on push.**

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.96"
+version: "2.97"
 status: active
 producer: product-owner
 timestamp: 2026-08-29T00:00:00Z
 phase: 1d
 changelog:
+  - "2.97 (round-40/F-P2A168-01+F-P2A168-02+F-P2A168-03+F-P2A168-04/2026-08-29): Full LCEL composition surface re-derivation — breaks 3-round recurrence. F-P2A168-01 [HIGH] Runnable::pipe serde bounds asymmetric: r39 declared Input: DeserializeOwned only and NextOutput: Serialize only — this covers adapter construction via into_dyn() but NOT the RunnableSequence own Runnable impl which must (1) serialize typed Input→Value to feed erased first stage and (2) deserialize final Value→NextOutput from erased last stage. Corrected to full symmetric bounds: Input: Serialize+DeserializeOwned+Send+'static, Output: Serialize+DeserializeOwned+Send+'static, NextOutput: Serialize+DeserializeOwned+Send+'static. Doc-comment updated to document all three axes. BC-2.01.004 {PC-001} canonical bounds updated. F-P2A168-02 [MED] Nested impl Trait in associated-type binding non-realizable (E0562-class on stable Rust): `impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>` uses impl Trait inside an associated-type projection, which is not permitted on stable Rust. Fixed at all 2 interface-definitions sites: RunnableParallel::new and RunnablePassthrough::assign now use named generic K: Into<String>: `pub fn new<K: Into<String>>(steps: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>) -> Self`. F-P2A168-03 [MED] RunnableSequence PhantomData<(I,O)> imposes spurious Send+Sync/dropck bounds — sibling DynRunnableAdapter correctly uses PhantomData<fn(I)->O>. POL-24 sibling-consistency: changed _phantom to PhantomData<fn(I) -> O>. Enables a.pipe(b).pipe(c) chaining without requiring I: Sync or O: Sync (function pointers are always Send+Sync). F-P2A168-04 [MED] RunnableSequence fields declared pub contradicts ADR-023 §Criterion-B private-field-seal rationale. Adjudicated pub(crate): restores Criterion-B seal, satisfies BC-2.01.004 TV-002 in-crate inspectability, prevents external construction and exhaustive match without requiring #[non_exhaustive]. All four fields (first, middle, last, _phantom) changed to pub(crate). PO must mirror BC-2.01.004 {PC-001} pipe bounds (symmetric serde). Story-writer must mirror S-1.04 AC-008 (symmetric serde bounds on all three type params)."
   - "2.96 (round-39/F-P2A164-01+F-P2A164-02+F-P2A165-01-blast-radius/2026-08-29): F-P2A164-01 [CRIT] DynRunnable erasure seam E0207 — R38 serde-bounded blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O>...` is non-realizable: `I` and `O` appear only in the where-clause, not in Self type `T` (RFC 447 → E0207). Replaced with adapter-wrapper model: `pub struct DynRunnableAdapter<I, O, R> { inner: R, _phantom: PhantomData<fn(I)->O> }` with `#[async_trait] impl<I, O, R> DynRunnable for DynRunnableAdapter<I, O, R> where R: Runnable<I,O>+Send+Sync+'static, I: DeserializeOwned+Send+'static, O: Serialize+Send+'static`. Self-validation: (a) all three params on Self → E0207 cleared; (b) each (I,O,R) triple is a distinct Self type → no E0119; (c) Runnable::invoke +Send RPITIT → Pin<Box<dyn Future+Send>> box cast compiles on stable. Added `IntoDynRunnable<I,O>` ergonomic extension trait providing `.into_dyn()`. Updated: §DynRunnable blanket impl domain paragraph → adapter model; §DynRunnable # Errors E-CORE-003 'blanket boundary' → 'adapter boundary'; DynRunnableAdapter struct + impl + IntoDynRunnable added after DynRunnable trait body. ADR-005 §Send-Bounded RPITIT updated. F-P2A164-02 [MED] Runnable::pipe serde bounds: `next: impl Runnable<Output, NextOutput> + Send + Sync + 'static`; where: `Self: Sized + Send + Sync + 'static, Input: serde::de::DeserializeOwned + Send + 'static, Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static, NextOutput: serde::Serialize + Send + 'static`; pipe erases self/next via `.into_dyn()`. F-P2A165-01-blast-radius: §GraphAgentTool ForceApproveHooks doc-comment updated — ActionRisk gate now runs BEFORE inner hook (covers AlwaysApprovePolicy / no-hook Approve path, not just PendingHumanApproval; CWE-862 closure). PO must mirror: BC-2.09.008 {INV-004} ActionRisk pre-check canon; BC-2.01.004 {PC-001} pipe serde bounds; +1 TV (write-class + AlwaysApprovePolicy + ForceApproveHooks → Deny + E-MCP-011, TV census 758→759). Story-writer: S-1.04 AC-007/AC-008/{INV-006}/compile-test — adapter model + pipe serde bounds."
   - "2.95 (round-38/F-P2A160-01+OBS-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] DynRunnable blanket-impl domain non-realizable (Runnable<Value,Value> bound prevents typed-stage coercion; E-CORE-003 dead code). Replaced blanket `impl<T: Runnable<Value, Value> + Send + Sync + 'static> DynRunnable for T` with serde-bounded bridging blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static, I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static` — blanket now performs concrete serde round-trip internally (deserialize Value→I, Runnable::invoke, serialize O→Value). Makes E-CORE-003 reachable (deserialization failure at the blanket boundary), typed stages coercible to Box<dyn DynRunnable> without E0277, and RunnableSequence<I,O> auto-derives DynRunnable; Value,Value case round-trips trivially with no E0119 coherence overlap. DynRunnable doc-comment updated: 'callers are responsible for JSON round-tripping at the boundary' → blanket performs round-trip internally; §Blanket impl domain paragraph updated to reflect serde-bounded blanket; # Errors updated with E-CORE-003 entry. ADR-005 §Send-Bounded RPITIT updated to reflect serde-bounded blanket domain (R38). OBS-P2A160-01 sibling: §SkillStore scope-encapsulation note 'SkillStore::new(...)' names a constructor on a TRAIT — reworded to 'the SkillStore implementor's new(store, app_id) constructor'; v2.93 changelog narrative updated accordingly. PO must mirror into BC-2.01.003 {INV-006}/{PC-001} and BC-2.01.004 {PC-001}: serde-bounded blanket is the authoritative model for typed-stage coercion and E-CORE-003 reachability. Story-writer must mirror into S-1.04 AC-007/008: typed-stage coercion guarantee."
   - "2.94 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] Runnable native-async-to-async_trait-façade blanket-bridge non-realizability on stable Rust (E0277 Send-future). Exhaustive Send-RPITIT sweep mandate applied. §Runnable<Input,Output> async methods changed from bare `async fn` (no +Send bound on RPITIT future) to explicit RPITIT form `fn ... -> impl Future<Output = ...> + Send` — the only stable-Rust mechanism to impose Send on an RPITIT future without nightly Return-Type-Notation. `invoke` and `batch` carry `+ Send` on the outer future. `stream` carries `+ Send` on both the outer future and the inner `impl Stream` (required for `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`). `invoke` doc-comment updated: replaced misleading 'synchronously (blocks async task)' with 'completes when the full result is available (non-streaming)'; added §Send-Bounded RPITIT rationale. DynRunnable doc-comment updated: added §Blanket impl realizability prerequisite paragraph explaining that `Runnable`'s RPITIT `+Send` is the prerequisite for the blanket DynRunnable and DynTool impls to compile on stable Rust. ADR-005 §Adjacent Trait Object-Safety Adjudications updated: added §Send-Bounded RPITIT subsection with canon rule and exhaustive native-async-bridge inventory table (Tool: inherits Runnable fix — no own async methods; BaseChatModel: not behind dyn, stream_chat future need not be Send; SkillStore: not behind dyn — confirmed zero dyn SkillStore sites in corpus). BC signature rows referencing Runnable/Tool async signatures — PO routing flagged for Phase B propagation; architect does NOT edit BCs: BC-2.01.003 (invoke/stream/batch postconditions), BC-2.08.010 (Tool invoke inherited from Runnable), and any BC that cites async fn invoke/stream/batch method shapes. F-P2A144-02 [MED] module-path drift runnables/ (plural) → runnable/ (singular): changed four doc-comment module-path strings in §RunnableSequence, §RunnableParallel, §RunnablePassthrough, §RunnableAssign from pregolya-core/src/runnables/ to pregolya-core/src/runnable/ per module-decomposition.md §core::runnable canonical form. Wider-corpus sweep: BC-2.01.003/004/005/006/007/008 have live-body src/runnables/ occurrences — DO NOT edit (product-owner propagates in Phase B); VP-014 src/runnables/ occurrence is in a historical changelog entry (grandfathered)."
@@ -163,16 +164,24 @@ pub trait Runnable<Input, Output>: Send + Sync {
     /// `first=a, middle=[b], last=c` — NOT nested sequences (BC-2.01.004 PC4, TV-002).
     ///
     /// Serde bounds are required because `pipe` erases `self` and `next` via
-    /// `.into_dyn()` into `Box<dyn DynRunnable>` fields of `RunnableSequence`. `Output`
-    /// needs both `Serialize` (as the output of `self`) and `DeserializeOwned` (as the
-    /// input of `next`) for the adapter round-trip. Authority: ADR-005 §Send-Bounded RPITIT.
+    /// `.into_dyn()` into `Box<dyn DynRunnable>` fields of `RunnableSequence`.
+    /// Symmetric bounds (all three type params carry both Serialize + DeserializeOwned):
+    /// `Input` needs `Serialize` to feed the erased `first` stage with a `Value` at
+    /// invoke time, and `DeserializeOwned` for the `into_dyn()` adapter construction.
+    /// `Output` needs both as it is simultaneously the output of `self` and the input
+    /// of `next`. `NextOutput` needs `Serialize` for the `into_dyn()` adapter, and
+    /// `DeserializeOwned` to yield the typed result by deserializing the erased `last`
+    /// stage's `Value` output. Chaining `a.pipe(b).pipe(c)` also requires the symmetric
+    /// bounds because `RunnableSequence<A,B>` must satisfy `Self: Sync` for the second
+    /// `pipe` call; `PhantomData<fn(A)->B>` is always Sync regardless of A and B.
+    /// Authority: ADR-005 §Send-Bounded RPITIT.
     fn pipe<NextOutput>(self, next: impl Runnable<Output, NextOutput> + Send + Sync + 'static)
         -> RunnableSequence<Input, NextOutput>
     where
         Self: Sized + Send + Sync + 'static,
-        Input: serde::de::DeserializeOwned + Send + 'static,
+        Input: serde::Serialize + serde::de::DeserializeOwned + Send + 'static,
         Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static,
-        NextOutput: serde::Serialize + Send + 'static;
+        NextOutput: serde::Serialize + serde::de::DeserializeOwned + Send + 'static;
 }
 ```
 
@@ -324,12 +333,16 @@ impl<I, O, T: Runnable<I, O> + Sized> IntoDynRunnable<I, O> for T {
 /// Module: `pregolya-core/src/runnable/sequence.rs`.
 pub struct RunnableSequence<I, O> {
     /// The first stage in the pipeline.
-    pub first: Box<dyn DynRunnable>,
+    pub(crate) first: Box<dyn DynRunnable>,
     /// Zero or more intermediate stages (empty when `pipe` was called exactly once).
-    pub middle: Vec<Box<dyn DynRunnable>>,
+    pub(crate) middle: Vec<Box<dyn DynRunnable>>,
     /// The final stage whose output type is `O`.
-    pub last: Box<dyn DynRunnable>,
-    pub _phantom: std::marker::PhantomData<(I, O)>,
+    pub(crate) last: Box<dyn DynRunnable>,
+    /// `fn(I) -> O` phantom: always Send+Sync regardless of I/O (function pointers
+    /// are unconditionally Send+Sync), so chaining pipe().pipe() does not impose
+    /// spurious I: Sync or O: Sync bounds. Sibling-consistent with DynRunnableAdapter.
+    /// Authority: ADR-005 §Send-Bounded RPITIT; POL-24 sibling-consistency.
+    pub(crate) _phantom: std::marker::PhantomData<fn(I) -> O>,
 }
 ```
 
@@ -353,8 +366,8 @@ pub struct RunnableParallel {
     steps: IndexMap<String, Arc<dyn DynRunnable>>,
 }
 impl RunnableParallel {
-    pub fn new(
-        steps: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    pub fn new<K: Into<String>>(
+        steps: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>
     ) -> Self;
 }
 ```
@@ -374,8 +387,8 @@ pub struct RunnablePassthrough {
 impl RunnablePassthrough {
     pub fn new() -> Self;
     pub fn with_inspect(f: impl Fn(&serde_json::Value) + Send + Sync + 'static) -> Self;
-    pub fn assign(
-        pairs: impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>
+    pub fn assign<K: Into<String>>(
+        pairs: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>
     ) -> RunnableAssign;
 }
 ```

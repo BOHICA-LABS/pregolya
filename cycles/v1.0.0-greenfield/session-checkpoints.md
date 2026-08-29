@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "e977d4c"
+input-hash: "16b0f6b"
 traces_to: STATE.md
 ---
 
@@ -3656,3 +3656,26 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-311 round-38 fix-burst (2026-08-29): ALL substantive CLOSED (2 HIGH + 2 MED + 1 LOW); 3 adjudicated non-defects. trajectory-tail →2→1→5→2. Census UNCHANGED 39/134/17/137/303. TV 758 UNCHANGED. VP 17. streak 0/3. STATE.md v6.21→v6.22.
 
 ### STATE: v6.22, timestamp 2026-08-29T22:30:00Z
+
+---
+
+## Checkpoint D-312 (archived 2026-08-29 by D-313 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence, streak 0/3. Round-39 fix-burst is CLOSED (D-312). NEXT = run round-40 on new frozen HEAD (post-D-312 push). Census 39 CAP / 134 BC / 17 VP / 137 EC / 303 pts / 759 TV / 770 grand / 29 ADR — UNCHANGED except TV 758→759. GATE-READY=YES (31/32 gates PASS; HRQ-1 sole blocker — 3/3 CLEAN streak).
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED. (Phase-2 is spec-only; NO code work this session.)
+- factory-artifacts: D-312 round-39 fix-burst — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+### PER-WORKSTREAM — Phase-2 DynRunnable-ADAPTER + CWE-862 + Red-Gate-sweep re-convergence
+Rounds 38-39 CLOSED (D-311..D-312 (exhaustive)). Round-39 resolved: DynRunnable ADAPTER model (DynRunnableAdapter<I,O,R>; E0207 cleared), ForceApproveHooks unconditional ActionRisk pre-hook gate (CWE-862; TV-018), BC-INDEX §Red Gate 5 residual title cells verbatim-H1 (full 11-cell sweep), S-2.11 tools/list+tools/call attribution split + phantom anchors. L-232 codified (systemic incomplete-sweep intervention). Drift item INCOMPLETE-SWEEP-GATE added (story deferred to first-self-improvement-wave). NEXT-ACTION: round-40 on new frozen HEAD (post-D-312 push). Streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+#### DECISION DELTA (this session)
+D-312 round-39 fix-burst (2026-08-29): ALL 6 substantive CLOSED (1 CRIT + 4 MED + 1 LOW). DynRunnable ADAPTER model (E0207+E0119 cleared); ForceApproveHooks CWE-862; BC-INDEX §Red Gate 5-cell verbatim-H1 sweep; S-2.11 attribution/anchors. trajectory-tail →2→1→1→2. Census UNCHANGED 39/134/17/137/303. TV 759. VP 17. streak 0/3. L-232 codified. STATE.md v6.22→v6.23.
+
+### STATE: v6.23, timestamp 2026-08-29T23:30:00Z

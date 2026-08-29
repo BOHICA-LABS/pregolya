@@ -8,7 +8,7 @@ status: accepted
 producer: architect
 timestamp: 2026-08-17T00:00:00Z
 date: "2026-08-17"
-version: "1.9"
+version: "1.10"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
@@ -16,6 +16,7 @@ subsystems_affected: ["all"]
 supersedes: null
 superseded_by: null
 changelog:
+  - "1.10 (round-40/F-P2A168-04/2026-08-29): §Decision 3 Exempt Structs RunnableSequence row — reconcile field-visibility claim with interface-definitions.md. Prior text stated 'struct fields are private composition internals' without specifying the visibility qualifier; interface-definitions.md carried `pub` fields, directly contradicting the Criterion-B private-field-seal rationale (ADR-023 §Decision 2 Criterion B). Adjudication: pub(crate) is the production-grade option — restores the Criterion-B private-field seal, satisfies BC-2.01.004 TV-002 in-crate inspectability for tests, and prevents external construction or exhaustive match without the overhead of #[non_exhaustive]. Row updated: 'struct fields are private' → 'first, middle, last, and _phantom fields are pub(crate) — invisible outside the crate'. Source: F-P2A168-04 [MED] round-40 full-re-derivation."
   - "1.9 (round-25/F-P2A108-02/2026-08-28): Normalize seven §Required Inventory table cells from doubled path form to parenthetical form per TD-VSDD-091 notation consistency. The doubled form `pregolya-core::core::action_risk` was inconsistent with the parenthetical form `pregolya-core (core::action_risk)` already used for burst-288 additions in the same table. Cells normalized: ActionRisk → pregolya-core (core::action_risk); PreToolDecision → pregolya-graph (graph::hitl); ToolOutput → pregolya-core (core::tool); CompactionTrigger → pregolya-core (core::budget); TrustLevel → pregolya-prompts (injection_guard); Document → pregolya-core (core::documents); ToolCallPreview → pregolya-graph (graph::hitl). No semantic changes; parenthetical form is the canonical spec-document convention."
   - "1.8 (burst-315/L9b-depin/2026-08-17): De-pin doc-version citations introduced in v1.7 — TD-VSDD-091 L9b forbids doc-name followed by vN.N version pins in authored prose. Four occurrences of the violating form replaced with burst-reference + section-anchor form `interface-definitions.md §ToolCallPreview (burst-288)`. Sites: v1.7 changelog description (two occurrences), Required Inventory D-02 cross-owner note (one occurrence), §Consequences D-02 closure line (one occurrence). Semantic meaning preserved — D-02 CLOSED, attribute applied at §ToolCallPreview in burst-288."
   - "1.7 (burst-315/F-B3/2026-08-17): Close D-02 action item — annotate ToolCallPreview closure. Confirmed `#[non_exhaustive]` is present on `pub struct ToolCallPreview` in interface-definitions.md §ToolCallPreview (burst-288). Two annotation sites updated (append-only; historical text preserved): (1) Required Inventory struct table D-02 cross-owner note: appended 'Applied in interface-definitions.md §ToolCallPreview (burst-288); D-02 CLOSED.' (2) Consequences section: 'Product-owner action required' updated to 'Product-owner action completed' with closure reference."
@@ -99,7 +100,7 @@ The following types are explicitly exempt from the `#[non_exhaustive]` requireme
 | Type | Crate | Criterion | Rationale |
 |------|-------|-----------|-----------|
 | `GuardedDocuments` | pregolya-core (core::retriever) | B | Tuple struct with private inner field (`Vec<Document>` declared without `pub`). External crates cannot construct it regardless of `#[non_exhaustive]`; callers receive `GuardedDocuments` only via `rag_ingress()` return value. Adding `#[non_exhaustive]` provides no additional protection beyond the private-field seal. (burst-288, D-03) |
-| `RunnableSequence<I, O>` | pregolya-core | B | Generic pipeline composition type returned from `.pipe()`. External callers receive it as a result of calling API methods but cannot construct it (struct fields are private composition internals; the generic parameters are inferred by the compiler). Adding `#[non_exhaustive]` on this return-only type provides no protection beyond the private-field seal. (burst-288, D-03) |
+| `RunnableSequence<I, O>` | pregolya-core | B | Generic pipeline composition type returned from `.pipe()`. External callers receive it as a result of calling API methods but cannot construct it (`first`, `middle`, `last`, and `_phantom` fields are `pub(crate)` — invisible outside the crate; the generic parameters are inferred by the compiler). Adding `#[non_exhaustive]` provides no additional protection beyond the `pub(crate)`-field seal. (burst-288, D-03; field-visibility clarified round-40/F-P2A168-04) |
 
 ---
 
@@ -198,7 +199,7 @@ The `#[non_exhaustive]` attribute is the Rust standard mechanism for library-sid
 - ADR-010: applied to `PregolyaError` at F-P173-619 for exactly this reason.
 - ADR-015 Decision 3 Amendment: applied to `TrustLevel` at F-P175-B208.
 
-The Exempt Inventory (Decision 3) is small and principled: all nine exempt enums are closed by an external protocol contract or represent a fundamental operation set, where exhaustive matching is the correct behavior for downstream correctness. The two exempt structs (GuardedDocuments, RunnableSequence) are sealed by private fields regardless of `#[non_exhaustive]`, making the attribute redundant.
+The Exempt Inventory (Decision 3) is small and principled: all nine exempt enums are closed by an external protocol contract or represent a fundamental operation set, where exhaustive matching is the correct behavior for downstream correctness. The two exempt structs are sealed from external construction regardless of `#[non_exhaustive]`: `GuardedDocuments` by a fully private inner field; `RunnableSequence` by `pub(crate)` fields (invisible outside the crate — round-40/F-P2A168-04). In both cases `#[non_exhaustive]` would add no additional protection.
 
 The Required Inventory is the authoritative scope definition for the compile-fail gate once authored. No compile-fail gate for the Required Inventory exists yet (no `tests/external/non_exhaustive_gate/` directory exists; no BC defines this gate — F-P176-C028's claim to the contrary was a false positive). This ADR supplies the scope that Phase 2 BC authorship requires. The assertion "BC-2.22.001 is the enforcement mechanism" was incorrect and has been removed (burst-288, A02).
 
