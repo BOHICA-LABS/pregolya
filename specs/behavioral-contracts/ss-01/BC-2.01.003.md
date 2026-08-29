@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.4"
+version: "2.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "2.2 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Gap BC-2.01.003 LOW — default-stream item type and invoke-Err streaming behavior were unspecified. Updated PC-002 to name the stream item type as `Result<Self::Output, PregolyaError>` and specify that an invoke Err is yielded as a single `Err(e)` stream item (stream does not propagate as an outer error). Added {EC-006} as a canonical test vector for the error-in-stream path."
   - "2.3 (round-34/F-P2A144-01+F-P2A144-02/2026-08-29): F-P2A144-01 [HIGH] — signature citations updated from bare `async fn` to explicit RPITIT + Send form per interface-definitions.md §Runnable<Input,Output> canon (ADR-005 §Send-Bounded RPITIT). Description: `async fn invoke(...)` → `fn invoke(...) -> impl std::future::Future<Output = ...> + Send`. PRE-001: `async fn invoke(...)` → `fn invoke(...) -> impl Future<Output = ...> + Send` with Send-bounded RPITIT rationale added. F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/base.rs` → `src/runnable/base.rs`; `src/runnables/config.rs` → `src/runnable/config.rs` per module-decomposition.md §core::runnable canonical singular form."
   - "2.4 (round-36/F-P2A152-01+F-P2A152-02/2026-08-29): F-P2A152-01 [HIGH] — three structural contradictions reconciled to interface-definitions.md §Runnable<Input,Output> authority. (a) Associated-type form (`Self::Input`/`Self::Output`) replaced throughout with generic-parameter form (`Input`/`Output`) — associated types are non-realizable with multiple blanket impls (E0107). Description, all PCs, TVs updated. (b) Borrowed `config: &RunnableConfig` replaced with owned `config: Option<RunnableConfig>` at all call sites (Description, {PC-001}, {PC-002}, {PC-003}, EC-006, TVs). (c) `stream()` reconciled to async form: the outer future returns `Result<impl Stream<...>, PregolyaError>` (not a synchronous `BoxStream`); {PC-002} and EC-006 updated to describe `Ok(stream)` outer result with error surfaced as stream item in the default non-streaming fallback. F-P2A152-02 [MED] — phantom RunnableConfig surface purged. {PRE-003}: phantom fields `max_concurrency`, `tags`, `metadata`, `callbacks`, `run_name`, `run_id` removed; canonical 5 fields enumerated (`recursion_limit`, `thread_id`, `budget_config`, `context_mutations`, `configurable`). {PC-003}: `config.max_concurrency` phantom reference removed; Tokio-runtime bounded concurrency documented. {PC-004}: phantom `batch_as_completed` method replaced with `pipe` postcondition (canonical four-method surface stated). {PC-006}: phantom tag/metadata/callback/run_name/run_id inheritance replaced with correct Option<RunnableConfig> pass-through statement. {INV-002}: `batch_as_completed` reference removed. {INV-003}: phantom field propagation replaced with correct config-forwarding statement. EC-002: `max_concurrency=Some(1)` scenario replaced with `config=None` batch scenario. Corpus grep confirms `max_concurrency`/`batch_as_completed`/`run_name` appear ONLY in BC-2.01.003 (no sibling sweep required). `callbacks` also appears in BC-2.01.004 {PC-006} — flagged for product-owner to address in a follow-on burst (outside this mandate). TVs updated to `Option<RunnableConfig>` call form and outer-Ok for batch."
+  - "2.5 (round-37/F-P2A158-01/2026-08-29): F-P2A158-01 [HIGH] — §Architecture Anchors: `RunnableConfig` module anchor corrected from `pregolya-core/src/runnable/config.rs` to `pregolya-core/src/config.rs` (`core::config`) with re-export at crate root, per ADR-025 / interface-definitions.md canon and architect directive (canonical anchor `pregolya-core/src/config.rs`, `core::config`, re-exported at crate root; `src/runnable/config.rs` is the former stale path)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -199,7 +200,7 @@ The error is surfaced as a stream item inside the `Ok(stream)` outer result; the
 ## Architecture Anchors
 
 - `pregolya-core/src/runnable/base.rs` — `Runnable` trait definition with default `batch`/`stream` (to be created)
-- `pregolya-core/src/runnable/config.rs` — `RunnableConfig` struct and `merge_configs` (to be created)
+- `pregolya-core/src/config.rs` (`core::config`) — `RunnableConfig` struct and `merge_configs`, re-exported at crate root (to be created)
 
 ## Story Anchor
 

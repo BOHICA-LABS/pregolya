@@ -3,23 +3,24 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (M3c/ADR-027/2026-08-24): ADR-027 M3c: escalation-resolution AC re-citations."
   - "1.3 (M4/ADR-027/2026-08-24): ADR-027 M4: normalize edge-case citations to stable EC-NNN tag."
   - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.01.003 PC-002: AC-002 updated with BoxStream return type and Ok(chunk) wrapping. {EC-006}: AC-013 added — invoke-Err yielded as single Err stream item. BC table version bumped."
   - "1.5 (R36/F-P2A152-01-propagation/2026-08-29): BC-2.01.003 reconciled to canonical form in R36. AC-001: associated-type form (Self::Input/Self::Output/&RunnableConfig/async fn) replaced with generic-parameter form (Input/Output/Option<RunnableConfig>/fn...->impl Future+Send). AC-002: BoxStream replaced with async outer-Ok stream return. input-hash refreshed (BC-2.01.003 updated in R36)."
+  - "1.6 (R37/F-P2A156-01+F-P2A156-02+F-P2A156-03+F-P2A156-04+F-P2A158-01+F-P2A158-02+F-P2A158-03/2026-08-29): F-P2A156-01/F-P2A158-02 [HIGH/MED]: AC-013 outer-Result contradiction resolved — stream() returns Ok(stream) outer Result; Err is yielded as single stream item (callers poll to discover error); removed erroneous 'stream() does NOT return an outer Result' clause per BC-2.01.003 {PC-002}/{EC-006}. F-P2A156-03/F-P2A158-03 [HIGH/MED]: AC-004 + Task 5 recursion_limit type corrected u32 → usize per BC-2.01.003 {PRE-003}. F-P2A156-04 [HIGH]: AC-008 RunnableSequence 3-param → 2-param (RunnableSequence<I, O>); pipe sig updated to canonical form. F-P2A156-02 [HIGH, POL-18]: AC-008 Runnable associated-type binding (Input=I/Output=M) replaced with positional (I, M) per ADR-010/ADR-025 canon (E0229-invalid binding form). F-P2A158-01 [HIGH, POL-4]: Architecture Mapping + Purity Classification + Task 5 + File Structure RunnableConfig anchor corrected src/runnable/config.rs → src/config.rs (core::config, re-exported at crate root) per BC-2.01.003 §Architecture Anchors v2.5."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "e166d33"
+input-hash: "bfa4626"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -69,7 +70,7 @@ The default `stream` method on `Runnable` is async and returns `Result<impl Stre
 The default `batch` method on `Runnable` calls `invoke` concurrently for each input with bounded concurrency (default max 10 in-flight). A batch of 5 inputs returns 5 outputs in order. Verified by `test_BC_2_01_003_default_batch_order_preserved()`.
 
 ### AC-004 (traces to BC-2.01.003 PC-005)
-`RunnableConfig` has a `recursion_limit: u32` field with default value 25. Accessing `config.recursion_limit` from within `invoke` is possible. Verified by `test_BC_2_01_003_runnable_config_recursion_limit()`.
+`RunnableConfig` has a `recursion_limit: usize` field with default value 25. Accessing `config.recursion_limit` from within `invoke` is possible. Verified by `test_BC_2_01_003_runnable_config_recursion_limit()`.
 
 ### AC-005 (traces to BC-2.01.003 INV-006)
 `DynRunnable` is a non-generic trait (not `DynRunnable<Input, Output>`) that uses `serde_json::Value` as both input and output. It has methods `async fn invoke(&self, input: Value, config: Option<RunnableConfig>) -> Result<Value, PregolyaError>` and `fn stream(...)`. `Arc<dyn DynRunnable>` is the type-erased composition handle. Verified by `test_BC_2_01_003_dyn_runnable_non_generic()`.
@@ -81,7 +82,12 @@ When `recursion_limit` is exceeded (checked by a graph-level depth counter, not 
 When `DynRunnable::invoke` is called with a `Value` that cannot be deserialized into the expected concrete input type, the error is `Err(PregolyaError { code: "E-CORE-003", message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", .. })`. Verified by `test_BC_2_01_003_input_type_mismatch_error()`.
 
 ### AC-008 (traces to BC-2.01.004 PC-001 and PC-002)
-`a.pipe(b)` where `a: Runnable<Input=I, Output=M>` and `b: Runnable<Input=M, Output=O>` returns `RunnableSequence<I, M, O>` with `first: a`, `middle: []`, `last: b`. Invoking the sequence calls `a.invoke(input)` then feeds output to `b.invoke(m)`. Verified by `test_BC_2_01_004_pipe_two_stages()`.
+`a.pipe(b)` where `a: Runnable<I, M>` and `b: Runnable<M, O>` (positional type params; the
+binding form `Runnable<Input=I, Output=M>` is E0229-invalid and MUST NOT be used) returns
+`RunnableSequence<I, O>` (2-param; canonical `pipe` sig:
+`fn pipe<NextOutput>(self, next: impl Runnable<Output, NextOutput>) -> RunnableSequence<Input, NextOutput>`)
+with `first: a`, `middle: []`, `last: b`. Invoking the sequence calls `a.invoke(input)` then
+feeds output to `b.invoke(m)`. Verified by `test_BC_2_01_004_pipe_two_stages()`.
 
 ### AC-009 (traces to BC-2.01.004 PC-004)
 `a.pipe(b).pipe(c)` flattens into `RunnableSequence { first: a, middle: [b], last: c }` — NOT nested `RunnableSequence<RunnableSequence<...>, c>`. The `first` field is always the first runnable in the chain. Verified by `test_BC_2_01_004_pipe_flattens_sequence()`.
@@ -95,15 +101,20 @@ Streaming through a `RunnableSequence` propagates chunks: each step must buffer 
 ### AC-012 (traces to BC-2.01.004 INV-004)
 `RunnableSequence::first` is never a `RunnableSequence` (flattening invariant). This prevents unbounded nesting. Verified by `test_BC_2_01_004_sequence_not_nested()` asserting the type of `first` in a multi-stage chain.
 
-### AC-013 (traces to BC-2.01.003 §{EC-006} — invoke-Err yielded as single stream item)
-When a `Runnable::invoke` returns `Err(e)`, calling `stream()` on the same runnable yields exactly one stream item: `Err(e)`. The stream then terminates. `stream()` itself does NOT return an outer `Result` wrapping the stream — the error is surfaced as a stream item, not as a stream-creation failure. The stream does not panic. Verified by `test_BC_2_01_003_stream_invoke_err_yielded_as_single_item()`.
+### AC-013 (traces to BC-2.01.003 PC-002 and {EC-006} — invoke-Err yielded as single stream item)
+When a `Runnable::invoke` returns `Err(e)`, calling `stream()` on the same runnable returns
+`Ok(stream)` (outer `Ok`); polling the stream yields exactly one item: `Err(e)`. The stream
+then terminates. The error is surfaced as a stream item inside the `Ok(stream)` outer result —
+callers must poll stream items to discover the error; the outer `Result` is `Ok` in the default
+non-streaming fallback (per BC-2.01.003 {PC-002}/{EC-006}). The `stream()` call does not panic.
+Verified by `test_BC_2_01_003_stream_invoke_err_yielded_as_single_item()`.
 
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|----------------|
 | `Runnable` trait | `pregolya-core/src/runnable/trait.rs` | pure-core (trait definition) |
-| `RunnableConfig` | `pregolya-core/src/runnable/config.rs` | pure-core |
+| `RunnableConfig` | `pregolya-core/src/config.rs` (`core::config`) | pure-core |
 | `DynRunnable` trait | `pregolya-core/src/runnable/dyn_runnable.rs` | pure-core (trait definition) |
 | `RunnableSequence` | `pregolya-core/src/runnable/sequence.rs` | effectful (async invoke calls) |
 | Module root | `pregolya-core/src/runnable/mod.rs` | re-export-only |
@@ -113,7 +124,7 @@ When a `Runnable::invoke` returns `Err(e)`, calling `stream()` on the same runna
 | Module | Classification | Justification |
 |--------|---------------|---------------|
 | `pregolya-core/src/runnable/trait.rs` | pure-core | Trait definition only; no implementation-side I/O. |
-| `pregolya-core/src/runnable/config.rs` | pure-core | Plain data struct. |
+| `pregolya-core/src/config.rs` | pure-core | Plain data struct; re-exported at crate root. |
 | `pregolya-core/src/runnable/sequence.rs` | effectful | `invoke` on a sequence calls sub-runnables which may do I/O (LLM calls, tool calls). |
 
 ## Edge Cases
@@ -147,10 +158,10 @@ When a `Runnable::invoke` returns `Err(e)`, calling `stream()` on the same runna
 2. [ ] Verify Red Gate
 3. [ ] Create `pregolya-core/src/runnable/mod.rs` — re-exports only
 4. [ ] Create `pregolya-core/src/runnable/trait.rs` — `Runnable` trait with `invoke`, `stream`, `batch` defaults
-5. [ ] Create `pregolya-core/src/runnable/config.rs` — `RunnableConfig` with `recursion_limit: u32 = 25`
+5. [ ] Create `pregolya-core/src/config.rs` — `RunnableConfig` with `recursion_limit: usize = 25`, `merge_configs`; re-exported at crate root (`pub use config::RunnableConfig;` in `lib.rs`)
 6. [ ] Create `pregolya-core/src/runnable/dyn_runnable.rs` — `DynRunnable` trait (non-generic)
 7. [ ] Create `pregolya-core/src/runnable/sequence.rs` — `RunnableSequence` with `pipe` method and flattening
-8. [ ] Add `pub mod runnable;` to `pregolya-core/src/lib.rs`
+8. [ ] Add `pub mod runnable;`, `pub mod config;`, and re-export `RunnableConfig` at crate root (`pub use config::RunnableConfig;`) in `pregolya-core/src/lib.rs`
 9. [ ] Implement E-CORE-003, E-CORE-004, E-CORE-006 error constructions
 10. [ ] Wire streaming through sequence (buffer non-streaming, propagate streaming)
 11. [ ] Write failing test `test_BC_2_01_003_stream_invoke_err_yielded_as_single_item()` for AC-013 (test-writer)
@@ -187,7 +198,7 @@ S-1.01 error codes: `E-CORE-003`, `E-CORE-004`, `E-CORE-006` must be present in 
 |------|--------|---------|
 | `pregolya-core/src/runnable/mod.rs` | CREATE | Re-export-only module root |
 | `pregolya-core/src/runnable/trait.rs` | CREATE | `Runnable` trait |
-| `pregolya-core/src/runnable/config.rs` | CREATE | `RunnableConfig` |
+| `pregolya-core/src/config.rs` | CREATE | `RunnableConfig`, `merge_configs`; re-exported at crate root |
 | `pregolya-core/src/runnable/dyn_runnable.rs` | CREATE | `DynRunnable` non-generic trait |
 | `pregolya-core/src/runnable/sequence.rs` | CREATE | `RunnableSequence` + `pipe` |
-| `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod runnable;` |
+| `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod runnable;`, `pub mod config;`, re-export `RunnableConfig` at crate root |

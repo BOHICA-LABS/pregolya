@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.25"
+version: "1.26"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.006.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b923faf"
+input-hash: "d085465"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.10, S-1.14]
@@ -57,6 +57,7 @@ changelog:
   - "1.23 (R31/F-P2A135-01/2026-08-28): mcp::registry registrar attribution corrected in §Previous Story Intelligence and §File Structure registry.rs row. R30 phantom 'mcp::client (populates at session startup via mcp::discovery conversion)' replaced at both live-body sites with canonical attribution corroborated against BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002} + S-2.10 wiring: read by mcp::server (tools/list + tools/call dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard ToolRegistry registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); typical flow: caller calls client.get_tools() then caller registers returned tools via registry.register(name, tool); mcp::client does NOT write the registry. BC-2.09.008 clause verified: standard-registration-API text lives at {PC-002}; arch-doc citation ({PC-001}) is a mismatch — escalated for architect correction (story-writer scope does not include arch docs). input-hash updated (module-decomposition.md R31 edit)."
   - "1.24 (R33/F-P2A143-02/2026-08-29): v1.23 {PC-001}/{PC-002} anchor mismatch escalation RESOLVED — architect corrected module-decomposition.md in R31 (v1.57 cites {PC-002}); story-writer {PC-002} usage confirmed correct (F-P2A135-01 closed). Records-tier resolution note only; no live-body content changed."
   - "1.25 (R36/F-P2A155-01/2026-08-29): AC-019 seam-collapse corrected per BC-2.09.008 {PC-003} — OLD: invoke_dyn called CompiledStateGraph::invoke directly (collapsed 3-layer seam). NEW: invoke_dyn delegates to runner.run(arguments, policy) via Arc<dyn GraphRunner>; GraphRunner::run (ConcreteGraphRunner<S>::run) calls CompiledStateGraph::invoke internally. Exhaustive call-direction sweep: AC-020 (GraphRunner::run wraps CompiledStateGraph::invoke; invoke_dyn wraps run), Task-23, Arch-Compliance STATE-ISOLATION row — all correct; AC-019 was the sole seam-collapse in S-2.11. input-hash refreshed (BC-2.09.008 updated in R36)."
+  - "1.26 (R37/O-P2A157-01/2026-08-29): O-P2A157-01 [OBS] BC-2.09.008 {INV-003} (v2.9→v3.0) symmetric MUST-language propagation. AC-025 body: all GraphAgentTool isError paths MUST pass through redact_credentials; Only PregolyaError::message MUST be used as text source; .source()/Debug/Display MUST NOT be used. §Architecture Compliance Rules row BC-2.09.008 INV-003 (sweep find): source-restriction aligned to AC-025 canon — .source()/Debug/Display MUST NOT be used on GraphAgentTool isError paths; '(mandatory, no hedge)' qualifier added matching BC-2.09.007 {INV-003} row pattern. No other live-body {INV-003} references required MUST-language alignment (parenthetical cross-references at AC-019/AC-026 are citations, not normative definitions). input-hash unchanged (no BC input file changes in R37)."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -315,12 +316,11 @@ node-level interrupt() only; Deny-path continues to own terminal, not E-MCP-010)
 ### AC-025 (traces to BC-2.09.008 INV-003 — Red Gate)
 **Red Gate / Mandatory credential redaction on all `GraphAgentTool` isError paths:** All
 `isError: true` paths from `GraphAgentTool` invocations — including `E-MCP-010`
-interrupt-denied errors and any `Err(PregolyaError)` propagated from graph execution — pass
-through `pregolya_mcp::sanitize::redact_credentials` before the MCP server populates
-`content[0].text`. Only `PregolyaError::message` is used as the text source; the `.source()`
-chain, `Debug` output, and `Display` output of the error are NEVER included in the MCP
-response text. This obligation is unconditional per BC-2.09.007 {INV-003} extended to all
-`GraphAgentTool` error paths. Verified by
+interrupt-denied errors and any `Err(PregolyaError)` propagated from graph execution — MUST
+pass through `pregolya_mcp::sanitize::redact_credentials` before the MCP server populates
+`content[0].text` (unconditional, per BC-2.09.007 {INV-003}). Only `PregolyaError::message`
+MUST be used as the text source; `.source()`, `Debug`, and `Display` output MUST NOT be used.
+Verified by
 `test_BC_2_09_008_graph_agent_error_paths_credential_redaction()` (mock graph returning
 `Err(PregolyaError { message: "failed: sk-ant-abc123XYZabc123XYZ1234567890123456", .. })`;
 assert `content[0].text` contains `<redacted>`, not the key material).
@@ -664,7 +664,7 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 | STATE-ISOLATION is enforced by `GraphRunner::run` via `extract_output(&final_state)`; `invoke_dyn` performs no re-filtering (ADR-029 §Decision 3 canonical seam statement). If `invoke_dyn` applies any output filtering of its own, this violates the seam contract. | BC-2.09.008 INV-001; VP-016; ADR-029 §Decision 3 | Test AC-023 Red Gate |
 | Node-level `interrupt()` parking under DenyInterrupts → `Err(E-MCP-010)`; `BoundaryApprovalHook::Deny` continues to own terminal (NOT E-MCP-010); NO `Ok` when `RunStatus::Interrupted` | BC-2.09.008 INV-002 binary interrupt invariant | Test AC-024 Red Gate |
 | `E-MCP-010` (not E-MCP-006) is the error code for `GraphAgentInterruptDenied` | BC-2.09.008 §Error Codes; ADR-029 §Decision 5 | Error taxonomy; test AC-026 |
-| All `GraphAgentTool` isError paths apply `redact_credentials` on `PregolyaError::message` | BC-2.09.008 INV-003 | Test AC-025 Red Gate |
+| All `GraphAgentTool` isError paths MUST pass through `redact_credentials`; source-restriction: only `PregolyaError::message` MUST be used as text source; `.source()`/`Debug`/`Display` MUST NOT be used | BC-2.09.008 INV-003 (mandatory, no hedge) | Test AC-025 Red Gate |
 | `ForceApproveHooks` overrides ONLY `PreToolDecision::PendingHumanApproval` (subject to `ActionRisk` check); `Deny` passes through UNCHANGED; node-level `interrupt()` still → E-MCP-010 | BC-2.09.008 PC-006, INV-002, INV-004 | Tests AC-022, AC-029, AC-030 |
 | `preview.action_risk` is `None` (un-annotated, fail-closed per {INV-004}) or `>= ActionRisk::Medium` under `ForceApproveHooks` → `Deny` + `E-MCP-011 ForceApproveWriteBlocked` (NOT `E-MCP-010`) + ERROR log (`tracing::error!`) at `mcp.graph_tool.force_approve_write_blocked`; `None` fails closed identically to `Some(>= Medium)` | BC-2.09.008 INV-004, EC-009 | Tests AC-030 Red Gate (TV-008 Some(High); TV-012 None) |
 | `isError: true` error paths apply two unconditional sanitization passes: (1) `redact_credentials`, (2) `sanitize_internal_ids` — two-pattern union (both case-insensitive): pattern (1) hyphenated `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; pattern (2) simple no-hyphen `\b[0-9a-f]{32}\b` (covers `Uuid::simple()` rendering; `\b` prevents 64-hex-split and underscore-flanked-strip); covers `run_id` and server-layer `thread_id` only; `u64` `CheckpointId` is NOT UUID-shaped and passes through unchanged; in that order | BC-2.09.008 INV-001 | Tests AC-031 Red Gate (TV-013/TV-014), AC-036 correctness boundary |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.002
-version: "2.4"
+version: "2.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -32,6 +32,7 @@ changelog:
   - "2.2 (P2A-043-F-02/2026-08-24): INV-006 added — TemplateInput is #[non_exhaustive] enum with three stable variants (Scalar, Messages, FewShotExamples); Send+Sync; wildcard arm required. Closes SS-18 escalation F-02; AC-012 and compliance-table row in S-2.04 re-anchor from PRE-002 to INV-006."
   - "2.3 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
   - "2.4 (P2A-046-F1/2026-08-24): INV-007 added — SlotTrustPolicy enum shape (variants TrustRequired/TrustAll, derives Copy+PartialEq+Debug, from_messages parameter role, slot_trust_policy field anchor). Authored so AC-014 in S-2.04 can re-anchor from BC-2.18.005 PC-001 (semantic mis-anchor — PC-001 specifies the E-TMPL-002 construction guard, not the enum shape) to BC-2.18.002 INV-007. Additive; no existing clauses altered."
+  - "2.5 (round-37/F-P2A156-02+F-P2A157-01/2026-08-29): F-P2A156-02 [HIGH] — {PC-007}: E0229 associated-type-binding form `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>` replaced with positional generic-parameter form `Runnable<HashMap<String, TemplateInput>, PromptValue>` per ADR-025 / interface-definitions.md canon. F-P2A157-01 [MED] — TV-001: `PromptValue { messages: [...] }` struct-literal notation replaced with canonical enum-variant notation `PromptValue::Messages([...])` (PromptValue is a #[non_exhaustive] enum per {INV-005}, not a struct; struct-notation is semantically incorrect). EC-004: `PromptValue.messages` struct-field dot-notation replaced with `PromptValue::Messages` enum-variant notation. L-227 sibling sweep: TV-002/TV-003/TV-004/TV-005 already use correct enum-variant form; no further changes required."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -40,7 +41,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "09c85f7"
+input-hash: "465ad42"
 extracted_from: null
 modified: []
 deprecated: null
@@ -100,7 +101,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
    string is returned. (See INV-005 for the canonical PromptValue enum shape.)
 6. {PC-006} A `ChatPromptTemplate` with zero message slots constructs and renders successfully, returning
    a `PromptValue::Messages` variant with an empty inner Vec.
-7. {PC-007} `ChatPromptTemplate` implements `Runnable<Input = HashMap<String, TemplateInput>, Output = PromptValue>`.
+7. {PC-007} `ChatPromptTemplate` implements `Runnable<HashMap<String, TemplateInput>, PromptValue>`.
    `invoke(&self, input: HashMap<String, TemplateInput>, config: Option<RunnableConfig>)`
    delegates to `self.format_messages(input)` and returns the result directly
    (`Result<PromptValue, PregolyaError>`); all errors from `format_messages` propagate unchanged.
@@ -160,14 +161,14 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 | EC-001 | HumanMessage slot gets a var with TrustLevel::Untrusted | Renders successfully (TrustAll policy); `MessageProvenance.highest_trust_level = Some(TrustLevel::Untrusted)` |
 | EC-002 | Slot has two variables — one `TrustLevel::Trusted`, one `TrustLevel::UserInput` | `MessageProvenance.highest_trust_level = Some(TrustLevel::UserInput)` (higher severity wins) |
 | EC-003 | Template literal SystemMessage (no variable substitutions) | Renders normally; `MessageProvenance.highest_trust_level = None`; `slot_trust_policy = TrustRequired` |
-| EC-004 | ChatPromptTemplate with a single HumanMessage slot | Valid construction; renders a single-element `PromptValue.messages` |
+| EC-004 | ChatPromptTemplate with a single HumanMessage slot | Valid construction; renders a `PromptValue::Messages` variant with a single-element inner Vec |
 | EC-005 | `into_messages()` called twice | Second call is a compile-time error (moves `PromptValue`); not a runtime concern |
 
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Category |
 |---|-------|-----------------|----------|
-| TV-001 | `template = [System("You are helpful."), Human("{question}")]`, `vars = {"question": TemplateVar { value: "What is Rust?", trust_level: None }}` | `Ok(PromptValue { messages: [(SystemMessage("You are helpful."), Provenance { highest_trust_level: None, policy: TrustRequired }), (HumanMessage("What is Rust?"), Provenance { highest_trust_level: None, policy: TrustAll })] })` | happy-path |
+| TV-001 | `template = [System("You are helpful."), Human("{question}")]`, `vars = {"question": TemplateVar { value: "What is Rust?", trust_level: None }}` | `Ok(PromptValue::Messages([(SystemMessage("You are helpful."), Provenance { highest_trust_level: None, policy: TrustRequired }), (HumanMessage("What is Rust?"), Provenance { highest_trust_level: None, policy: TrustAll })]))` | happy-path |
 | TV-002 | Same template, `vars = {"question": TemplateVar { value: "...", trust_level: Some(TrustLevel::UserInput) }}` | HumanMessage slot: `Provenance { highest_trust_level: Some(TrustLevel::UserInput), policy: TrustAll }` | happy-path (provenance threading) |
 | TV-003 | `template.format_messages({})` with all variables pre-bound as partials | `Ok(PromptValue { messages: [...] })` | happy-path (partial binding only) |
 | TV-004 | `into_messages()` on TV-001 result | `Vec<Message>` with `[SystemMessage("You are helpful."), HumanMessage("What is Rust?")]` | happy-path (extraction) |
@@ -178,7 +179,7 @@ hard-coded to `TrustRequired` and cannot be changed (BC-2.18.005).
 | VP-ID | Property | Proof Method |
 |-------|----------|-------------|
 | VP-2.18.002-A | For each slot, `MessageProvenance.highest_trust_level` is exactly the maximum-severity `TrustLevel` from all substituted variables | unit test — enumerate severity combinations |
-| VP-2.18.002-B | Slot ordering in `PromptValue.messages` matches declaration order | unit test — verify index correspondence |
+| VP-2.18.002-B | Slot ordering in `PromptValue::Messages` inner Vec matches declaration order | unit test — verify index correspondence |
 
 ## Related BCs
 

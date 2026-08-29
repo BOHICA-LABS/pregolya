@@ -4022,3 +4022,46 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 
 **Census UNCHANGED 39/134/17/137/303. TV 757. VP 17. streak 0/3 (new HEAD push resets per frozen-HEAD rule). GATE-READY=NO (HRQ-1 sole-blocker; spec-quality CLEAN; HRQ-3 CLOSED). NEXT: round-30 P2A-128/129/130/131 + GATE-READY re-run on new HEAD.**
 
+---
+
+## Round-37 Adversary Pass (P2A-156/157/158/159) + D-310 Fix-Burst Closure
+
+**Frozen HEAD: afff151 / 0e7f60c (spec-identical; mid-round sidecar hygiene commit interposed)**
+
+**Adversary passes on frozen HEAD afff151:**
+
+| Pass | Findings | Delta | Severity | Status |
+|------|----------|-------|----------|--------|
+| P2A-156 (realizability) | 4 | — | 4 HIGH — AC-013 outer-Result, Runnable E0229 binding at 5 sites, recursion_limit u32→usize, RunnableSequence 3→2-param | NOT CLEAN |
+| P2A-157 (security) | 2 | — | 1 MED (F-P2A157-01 PromptValue TV enum-notation), 1 OBS (O-P2A157-01 {INV-003} MUST symmetry) | NOT CLEAN |
+| P2A-158 (consistency/census/records) | 3 | — | 1 HIGH POL-4 RunnableConfig anchor mis-attribution + 2 correlated HIGH/MED with P2A-156 | NOT CLEAN |
+| P2A-159 (SS-09/SS-11 deep-audit) | 1 | — | 1 LOW POL-4 tools/call anchor→BC-2.09.007 | NOT CLEAN |
+| GATE-READY audit | N/A | — | GATE-READY=YES (16 machine gates PASS; HRQ-1 sole blocker; census 39/134/17/137/303 reconciled). | GATE-READY |
+
+**Finding Progression trajectory-tail: →4→2→3→1**
+
+**All findings CLOSED in D-310 fix-burst (per DIRECTIVE 2 fix-in-scope):**
+
+| Finding | Severity | Closure |
+|---------|----------|---------|
+| F-P2A156-01 / F-P2A158-02 | HIGH/MED | S-1.04 AC-013 asserted "stream() does NOT return outer Result" contradicting AC-002/BC-2.01.003 EC-006; FIXED async outer-Ok(stream) form; story-writer. |
+| F-P2A156-02 | HIGH, POL-18 | Runnable<Input=I,Output=O> associated-type BINDING (E0229) at 5 sites: BC-2.01.004 {PRE-001}/{PC-001}, BC-2.18.001 {PC-007}, BC-2.18.002 {PC-007}, S-1.04 AC-008, S-2.04 AC-005/009; FIXED positional Runnable<I,M>/Runnable<M,O>/Runnable<I,O> form; product-owner + story-writer. |
+| F-P2A156-03 / F-P2A158-03 | HIGH/MED | S-1.04 recursion_limit: u32 (AC-004+Task-5); canon is usize per interface-definitions+BC-2.01.003 {PRE-003}; FIXED; story-writer. |
+| F-P2A156-04 | HIGH | S-1.04 AC-008 declared RunnableSequence<I,M,O> (3 params); canon is <I,O> (2 params; N-stage flattening); FIXED; story-writer. |
+| F-P2A158-01 | HIGH, POL-4 | RunnableConfig anchor src/runnable/config.rs→src/config.rs (core::config) in BC-2.01.003 §Architecture Anchors + S-1.04; FIXED; product-owner + story-writer. |
+| F-P2A157-01 | MED, POL-18 | BC-2.18.002 TV-001/TV-003/TV-004/EC-004 rendered PromptValue {messages:[]} (struct-notation); canon is PromptValue::Messages(vec![...]) enum-variant per INV-005; FIXED; product-owner. |
+| F-P2A159-01 | LOW, POL-4 | tools/call anchor cited BC-2.09.006 {PC-002} (tools/LIST only); tools/call is BC-2.09.007 {PC-001}; FIXED in 3 arch docs (module-decomp, purity-boundary-map, vcm); architect. |
+| O-P2A157-01 | OBS | BC-2.09.008 {INV-003} redact_credentials MUST symmetric with sanitize_internal_ids; FIXED MUST phrasing; product-owner. BC-2.09.008 §Changelog. Also propagated to S-2.11 AC-025; story-writer. |
+
+**RECORDS-ONLY MICRO-BURST: No — findings include HIGH/MED. Full cascade ceremony applied.**
+
+**LABEL: RECORDS-ONLY pass: NO. Full ceremony.**
+
+**Artifacts bumped:** BC-INDEX §Changelog, BC-2.01.003, BC-2.01.004, BC-2.18.001, BC-2.18.002, BC-2.09.008, module-decomposition, purity-boundary-map, verification-coverage-matrix, STORY-S-1.04, STORY-S-2.04, STORY-S-2.11, STORY-INDEX.
+
+**interface-definitions.md + ADRs 005/021/023/025 confirmed ALREADY canonical (architect — no edit required). L-227 comprehensive-class-audit + L-230 whole-artifact-reconcile applied: 0 residual real drift across 134 BCs + all story files.**
+
+**NOTE: round-37 story-writer initial dispatch died on an API error mid-S-2.11; completed via idempotent re-dispatch (no duplication). records-lint FAIL=0 across all touched files.**
+
+**Census UNCHANGED 39/134/17/137/303. TV 758 UNCHANGED. VP 17. streak 0/3 (push resets frozen-HEAD rule). GATE-READY=YES (16 machine gates PASS; HRQ-1 sole blocker). NEXT: round-38 (P2A-160/161/162/163 + GATE-READY) on new frozen HEAD post-D-310-push.**
+

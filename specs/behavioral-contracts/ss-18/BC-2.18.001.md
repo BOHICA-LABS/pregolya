@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.18.001
-version: "2.2"
+version: "2.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "2.0 (P2A-037-gaps/2026-08-22): Four additions closing P2A-037 class-audit spec gaps for STORY-S-2.04 AC-005/AC-006. (1) PC-7 (new): PromptTemplate implements Runnable<Input=HashMap<String,TemplateVar>, Output=PromptValue>; invoke delegates to format() and wraps Ok(s) as Ok(PromptValue::String(s)); errors propagate unchanged. (2) INV-6 (new): PromptTemplate is pure-core — no I/O, no OS handles, no mutable shared state; PromptTemplate: Send+Sync. (3) TV-008 (new): Runnable invoke happy-path vector; TV count 7→8. (4) H1 updated to include Runnable impl per bc_h1_is_title_source_of_truth; BC-INDEX title column updated in same burst."
   - "2.1 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "2.2 (P2A-044-F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "2.3 (round-37/F-P2A156-02/2026-08-29): F-P2A156-02 [HIGH] — {PC-007}: E0229 associated-type-binding form `Runnable<Input = HashMap<String, TemplateVar>, Output = PromptValue>` replaced with positional generic-parameter form `Runnable<HashMap<String, TemplateVar>, PromptValue>` per ADR-025 / interface-definitions.md canon. Binding form is E0229-invalid; positional form is canonical and compilable."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-022
   - architecture/decisions/ADR-015-prompt-template-injection-safety.md
@@ -39,7 +40,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-015-prompt-template-injection-safety.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "09c85f7"
+input-hash: "465ad42"
 extracted_from: null
 modified: []
 deprecated: null
@@ -88,7 +89,7 @@ E-TMPL-003 is engine-neutral and not gated on any configuration flag (ADR-015 De
    points and do NOT appear in `input_variables()`.
 6. {PC-006} Nested attribute access (`{x.y}`) is treated as a single flat variable name `x.y` (not
    deep access) in f-string mode — the caller must pre-compute the value.
-7. {PC-007} `PromptTemplate` implements `Runnable<Input = HashMap<String, TemplateVar>, Output = PromptValue>`.
+7. {PC-007} `PromptTemplate` implements `Runnable<HashMap<String, TemplateVar>, PromptValue>`.
    `invoke(&self, input: HashMap<String, TemplateVar>, config: Option<RunnableConfig>)`
    calls `self.format(input)` and on `Ok(rendered)` returns `Ok(PromptValue::String(rendered))`;
    errors from `format` propagate as `Err(_)` unchanged. The `batch` default delegates to

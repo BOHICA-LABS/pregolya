@@ -3582,3 +3582,27 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-308 round-36 CLOSED: F-P2A152-01[HIGH] BC-2.01.003 Runnable generic-param reconcile (Self::Input/Self::Output → Runnable<Input,Output>; &RunnableConfig → Option<RunnableConfig>; sync BoxStream → async Result<impl Stream+Send>); F-P2A152-02[MED] BC-2.01.003 phantom RunnableConfig fields + batch_as_completed purged; F-P2A155-01[MED] BC-2.09.008 {PC-003} 3-layer seam; L-227 siblings: BC-2.01.004 (phantom-field class) + S-1.04 (old Runnable form). Specs bumped: BC-INDEX, BC-2.01.003, BC-2.01.004, BC-2.09.008, S-2.11, S-1.04. L-230 WHOLE-ARTIFACT-RECONCILE. Census stable 39/134/17/137/303 UNCHANGED; TV 758 UNCHANGED; VP 17.
 
 ### STATE: v6.19, timestamp 2026-08-29T14:00:00Z
+
+---
+
+### D-309 CHECKPOINT (archived 2026-08-29 — superseded by D-310)
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence, streak 0/3. Round-37 adversarial pass COMPLETE (all 4 lenses + GATE-READY collected) but fix-burst NOT yet done. Rounds 30-36 CLOSED (D-296..D-308 (exhaustive)). GATE-READY=YES every round; ONLY gate blocker HRQ-1 (BC-5.39.001 3-CLEAN streak). Census 39/134/17/137/303. TV 758. VP 17. NEXT = run round-37 fix-burst (7 substantive + 1 OBS findings), close D-310, then round-38.
+
+#### HEADS (at time of archival)
+- develop: `644d1ad` — clean, PUSHED.
+- factory-artifacts: D-309 SESSION WRAP — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+- Untracked STATE.md.bak/bak2/bak3 (7-byte sentinels) — harmless.
+
+#### PER-WORKSTREAM (at time of archival)
+Phase-2 GAP-01/Runnable-canon re-convergence only active workstream. Frozen-HEAD for round-37 passes: afff151/0e7f60c (spec-identical; mid-round sidecar hygiene + skip-worktree-then-reversed interposed). PENDING FIX-LIST: F-P2A156-01/F-P2A158-02 S-1.04 AC-013 outer-Result; F-P2A156-02 Runnable E0229 binding at 5 sites; F-P2A156-03/F-P2A158-03 recursion_limit u32→usize; F-P2A156-04 RunnableSequence 3→2-param; F-P2A158-01 RunnableConfig module anchor→src/config.rs; F-P2A157-01 BC-2.18.002 PromptValue enum-variant; F-P2A159-01 tools/call anchor LOW; O-P2A157-01 {INV-003} MUST symmetry OBS.
+
+#### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+#### DECISION DELTA (this session)
+D-309 SESSION WRAP (2026-08-29): round-37 pass COMPLETE (trajectory-tail →4→2→3→1). SIDECAR skip-worktree attempt REVERSED; COMMIT-PER-DISPATCH mitigation human-directed. STATE.md v6.19→v6.20.
+
+### STATE: v6.20, timestamp 2026-08-29T20:00:00Z

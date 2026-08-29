@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (round-34/F-P2A144-02/2026-08-29): F-P2A144-02 [MED] — §Architecture Anchors module-path drift: `src/runnables/sequence.rs` → `src/runnable/sequence.rs`; `src/runnables/base.rs` → `src/runnable/base.rs` per module-decomposition.md §core::runnable canonical singular form."
   - "1.7 (round-36/F-P2A152-02-sibling/2026-08-29): L-227 comprehensive-class-audit — same phantom-RunnableConfig-field class as F-P2A152-02. {PC-006}: phantom fields `tags`, `metadata`, `callbacks` removed from RunnableConfig inheritance claim; `seq:step:N` tag-label concept removed (no `tags` field on RunnableConfig); replaced with canonical `Option<RunnableConfig>` pass-through statement. {PC-002}: borrowed `&config` → `config: Option<RunnableConfig>` (owned). {PC-003}: borrowed `&config` → `config: Option<RunnableConfig>` (owned); stream noted as async (returns outer Result per BC-2.01.003 {PC-002} authority). TV-001/TV-005: `&cfg` → `None`. TV-005: batch return wrapped in outer `Ok`. §Related BCs: `seq:step:N` parenthetical removed. Corpus sweep confirms phantom fields `tags`/`metadata`/`callbacks` appear in no other live-body spec or story file (only BC-2.01.003 and BC-2.01.004 were affected; BC-2.01.003 fixed in round-36 burst)."
+  - "1.8 (round-37/F-P2A156-02/2026-08-29): F-P2A156-02 [HIGH] — {PRE-001} and {PC-001}: E0229 associated-type-binding form `Runnable<Input=I, Output=M>` / `Runnable<Input=M, Output=O>` / `Runnable<Input=I, Output=O>` replaced with positional generic-parameter form `Runnable<I, M>` / `Runnable<M, O>` / `Runnable<I, O>` per ADR-025 / interface-definitions.md canon (binding-form is E0229-invalid in Rust; positional form is the canonical and compilable form)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -54,14 +55,14 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
 
 ## Preconditions
 
-1. {PRE-001} Two Runnables `A: Runnable<Input=I, Output=M>` and `B: Runnable<Input=M, Output=O>` are in scope.
+1. {PRE-001} Two Runnables `A: Runnable<I, M>` and `B: Runnable<M, O>` are in scope.
 2. {PRE-002} The output type of `A` matches the input type of `B` (enforced at compile time for typed
    Runnables; checked at runtime for type-erased `Arc<dyn DynRunnable>` pipelines).
 3. {PRE-003} The resulting `RunnableSequence` will be used in non-test code.
 
 ## Postconditions
 
-1. {PC-001} `a.pipe(b)` returns a `RunnableSequence` that implements `Runnable<Input=I, Output=O>`.
+1. {PC-001} `a.pipe(b)` returns a `RunnableSequence` that implements `Runnable<I, O>`.
 2. {PC-002} `seq.invoke(input, config).await` (where `config: Option<RunnableConfig>`) runs `a.invoke(input, config)`, then feeds the result to
    `b.invoke(result, config)`, returning the final output or the first error encountered.
 3. {PC-003} `seq.stream(input, config).await` (where `config: Option<RunnableConfig>`; async, returns `Result<impl Stream, PregolyaError>` per BC-2.01.003 {PC-002}) passes the output chunks of `a` into `b` incrementally when

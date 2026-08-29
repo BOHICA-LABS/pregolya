@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-2.04
 epic_id: E-18
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
-timestamp: 2026-08-24T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.001.md
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c23ad27"
+input-hash: "1d3a308"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
@@ -78,7 +78,7 @@ The error message contains the variable name (dynamic interpolation for E-TMPL-0
 Verified by `test_BC_2_18_001_missing_var_returns_e_tmpl_003()`.
 
 ### AC-005 (traces to BC-2.18.001 PC-007)
-`PromptTemplate` implements `Runnable<Input=HashMap<String, TemplateVar>, Output=PromptValue>`.
+`PromptTemplate` implements `Runnable<HashMap<String, TemplateVar>, PromptValue>` (positional type params; the binding form `Runnable<Input=..., Output=...>` is E0229-invalid and MUST NOT be used).
 `invoke(input, config)` calls `format` and wraps the result in `PromptValue::String`.
 An empty variable map formats a template with no placeholders successfully.
 Verified by `test_BC_2_18_001_prompt_template_is_runnable()`.
@@ -103,7 +103,7 @@ Returns `PromptValue::Messages(Vec<(Message, MessageProvenance)>)`.
 Verified by `test_BC_2_18_002_format_messages_all_input_types()`.
 
 ### AC-009 (traces to BC-2.18.002 PC-007)
-`ChatPromptTemplate` implements `Runnable<Input=HashMap<String, TemplateInput>, Output=PromptValue>`.
+`ChatPromptTemplate` implements `Runnable<HashMap<String, TemplateInput>, PromptValue>` (positional type params; the binding form `Runnable<Input=..., Output=...>` is E0229-invalid and MUST NOT be used).
 `invoke(input, config)` delegates to `format_messages`.
 Verified by `test_BC_2_18_002_chat_prompt_template_is_runnable()`.
 
@@ -335,4 +335,5 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 - "1.3 (P2A-046/2026-08-24): F-1 remove SS-18 BC 5 (SlotTrustPolicy fail-closed enforcement; reference-not-coverage in this story; full coverage anchored to S-2.05); F-2 inputs+Token-Budget corrected to 3 BCs; AC-014 re-anchored from removed BC PC-001 → BC-2.18.002 INV-007 (SlotTrustPolicy enum shape)."
 - "1.4 (P2A-047/2026-08-24): F-047-01: verification_properties frontmatter cleared to [] — VP-2.18.003-A and VP-2.18.003-B are BC-local (BC-2.18.003) and are not registered in VP-INDEX; they remain documented in AC-017 and AC-018 body traces per STORY-INDEX §Conventions."
 - "1.5 (SW-4/BC-completeness/2026-08-26): BC-2.18.003 propagation — AC-023 added for PC-009 FewShot output provenance (HumanMessage.trust_level = example_input.trust_level; AiMessage.trust_level = example_output.trust_level; None treated as Trusted downstream); input-hash updated c23ad27."
+- "1.6 (R37/F-P2A156-02-propagation/2026-08-29): F-P2A156-02 [HIGH, POL-18]: L-227 sweep — two Runnable E0229-invalid associated-type-binding forms corrected to positional. AC-005: Runnable<Input=HashMap<String,TemplateVar>,Output=PromptValue> → Runnable<HashMap<String,TemplateVar>,PromptValue>. AC-009: Runnable<Input=HashMap<String,TemplateInput>,Output=PromptValue> → Runnable<HashMap<String,TemplateInput>,PromptValue>. Both ACs note the E0229 prohibition. input-hash updated 1d3a308."
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "2.9"
+version: "3.0"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -35,6 +35,7 @@ changelog:
   - "2.7 (round-30/F-P2A129-01/2026-08-28): F-P2A129-01 [MED, CWE-209/spec-contradiction]: TV-015 full-pipeline expected output corrected. The mandatory pipeline (`sanitize_internal_ids(redact_credentials(message))` per ADR-029 §Decision 3 and Decision 5) applies `redact_credentials` FIRST; its rule `[A-Za-z0-9]{64,}` matches a 64-char lowercase hex SHA-256 digest token → `<redacted>`; `sanitize_internal_ids` then sees no UUID pattern in the already-redacted message. TV-015 corrected from 'content[0].text contains 64-char hex UNCHANGED' to `\"digest: <redacted>\"` (full-pipeline output). TV-017 added (append-only per POL-1): `sanitize_internal_ids` unit-isolation test — documents that pattern (2) `\\b[0-9a-f]{32}\\b` does NOT independently match a 64-char hex sequence (the `\\b` end-boundary guard; tests the non-over-match property at the correct isolation layer, not the full pipeline). {INV-001} §Framework sanitization pass scope: pipeline-interaction note added after the `\\b` non-over-match sentence — clarifies that in the full pipeline `redact_credentials` catches a 64-char lowercase hex token before `sanitize_internal_ids` runs (see TV-017 for unit-isolation test). OPTION CHOSEN: (b) — correct TV-015 as full-pipeline vector AND add TV-017 as isolation vector; provides complete coverage at both layers; story-writer to propagate TV-015/TV-017 reference updates to S-2.11 Task-35 body under bc_array_changes_propagate_to_body_and_acs. Architect note: ADR-029 §Decision 3 and Decision 5 already specify the chain; no ADR change required."
   - "2.8 (round-35/F-P2A151-01/2026-08-29): F-P2A151-01 [MED]: {PC-004} opening clause call-direction inversion corrected per ADR-029 §Decision 2 and §Decision 5 canonical seam. OLD opening: 'CompiledStateGraph::invoke runs the graph to a terminal state via GraphRunner::run, which calls extract_output(&final_state)' — inverted containment (made CompiledStateGraph::invoke the outer caller of GraphRunner::run). NEW opening: 'GraphRunner::run runs the graph to a terminal state via CompiledStateGraph::invoke, then calls extract_output(&final_state) on the returned serde_json::Value' — correct containment: invoke_dyn wraps GraphRunner::run which wraps CompiledStateGraph::invoke; extract_output is called inside GraphRunner::run on the value returned by CompiledStateGraph::invoke. Trailing note and all return-type semantics preserved unchanged. POL-24 sibling sweep: BC-2.09.006 and BC-2.09.007 contain no GraphRunner/CompiledStateGraph::invoke direction statements (BC-2.09.006 covers tools/list only; BC-2.09.007 covers invoke_dyn→DynTool seam only; neither references the internal graph execution containment); no sibling fixes required."
   - "2.9 (round-36/F-P2A155-01/2026-08-29): F-P2A155-01 [MED]: {PC-003} call-direction seam-collapse corrected. OLD text stated `GraphAgentTool::invoke_dyn` calls `CompiledStateGraph::invoke(arguments, config)` directly — collapsing the 3-layer seam. NEW text: `invoke_dyn` delegates to `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run` calls `CompiledStateGraph::invoke(arguments, config)` internally (statically in `ConcreteGraphRunner<S>::run`); error propagates through `run()` and `invoke_dyn` surfaces it as `isError: true`. Exhaustive call-direction sweep of all PC/INV/EC/TV clauses: {PC-003} was the ONLY seam-collapse; {PC-004}/{INV-001} correctly state GraphRunner::run wraps CompiledStateGraph::invoke and invoke_dyn wraps run(); {PC-005} correctly states GraphRunner::run detects RunStatus::Interrupted; all EC/TV clauses state correct layering. No sibling sweep required (BC-2.09.006 and BC-2.09.007 confirmed clean in round-35 sweep)."
+  - "3.0 (round-37/O-P2A157-01/2026-08-29): O-P2A157-01 [OBS] — {INV-003}: invariant-strength phrasing brought to symmetric MUST-language consistent with sibling invariants {INV-001}/{INV-002}/{INV-004}. Descriptive 'pass through ... before' replaced with imperative 'MUST pass through'; 'Only ... is used' replaced with 'Only ... MUST be used / MUST NOT be used'; trailing 'This obligation is unconditional per ...' qualifier condensed into parenthetical per symmetric pattern. No semantic change — existing behavior mandate is preserved exactly."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -192,11 +193,11 @@ overrides `PreToolCallHook` approval decisions only.
 
 - {INV-003} **Mandatory credential redaction (DI-010):** All `isError: true` paths from
   `GraphAgentTool` invocations — including `E-MCP-010` interrupt-denied errors and any
-  `Err(PregolyaError)` propagated from graph execution — pass through
+  `Err(PregolyaError)` propagated from graph execution — MUST pass through
   `pregolya_mcp::sanitize::redact_credentials` before the MCP server populates
-  `content[0].text`. This obligation is unconditional per BC-2.09.007 {INV-003}. Only
-  `PregolyaError::message` is used as the text source (never `.source()`, `Debug`, or
-  `Display` output).
+  `content[0].text` (unconditional, per BC-2.09.007 {INV-003}). Only
+  `PregolyaError::message` MUST be used as the text source; `.source()`, `Debug`, and
+  `Display` output MUST NOT be used.
 
 - {INV-004} **`ForceApproveHooks` ActionRisk runtime gate:**
   `ForceApproveHooks` is appropriate ONLY for read-only tool graphs (graphs composed
