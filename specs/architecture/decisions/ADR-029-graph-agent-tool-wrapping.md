@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-26"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.11"
+version: "2.12"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.12 (R31/F-P2A133-01/2026-08-28): F-P2A133-01 OBS — §Decision 4 tracing code sketch: added observability note that the code sketch message string and field-value expressions are illustrative; observability.md §mcp.graph_tool.force_approve_write_blocked is the authoritative source (canonical message includes the 'E-MCP-011 ForceApproveWriteBlocked emitted' audit-correlation clause absent from this sketch). Note mirrors the existing E-MCP-011 error-template alignment note in §Decision 4."
   - "2.11 (round-29/F-P2A125-01/2026-08-28): F-P2A125-01 HIGH/CWE-670/CWE-209 — §Decision 3 SEC-005 + §Decision 5 sanitization bullet: single-pattern UUID regex replaced with the canonical two-pattern union at both normative sites. The `sanitize_internal_ids` pass now applies two patterns (union, case-insensitive): (1) the canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple (no-hyphen) form `\\b[0-9a-f]{32}\\b`. Pattern (2) closes the leak where `Uuid::simple()` (32-contiguous-hex) `run_id`/`thread_id` values escape into `isError` MCP responses. URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. BC-2.09.008 {INV-001} v2.0 changelog already declared the two-pattern union; this edit restores ADR-029 as the verbatim-mirror source-of-truth for both normative sites."
   - "2.10 (round-27/O-P2A119-04/2026-08-28): §Decision 4 BoundaryApprovalHook code-sketch: message literal in the `_ =>` Deny branch had 'CRITICAL: ForceApproveHooks policy violation — tool has undeclared ...' — 'CRITICAL: ' prefix removed (Rust tracing crate has no CRITICAL level; the emit call is tracing::error!; observability.md and BC-2.09.008 §INV-004 are authoritative). No other occurrences of 'CRITICAL:' prefix in live body code sketches."
   - "2.9 (round-26/F-P2A113-01+F-P2A113-02/2026-08-28): F-P2A113-01 MED — §Symbol Grounding: E-MCP-010 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 136)'; E-MCP-011 status updated from 'PLANNED — PO must mint in error-taxonomy.md' to 'EXISTS — minted in error-taxonomy.md (catalog entry 137)'. Both codes are live rows in error-taxonomy.md per BC-2.09.008 assertions; the PLANNED future-tense obligation is stale. F-P2A113-02 MED — §Decision 4 two prose occurrences of 'CRITICAL-level' corrected to 'ERROR-level (tracing::error!)': (1) body sentence describing BoundaryApprovalHook Deny return 'with a CRITICAL-level structured log'; (2) §Rationale sentence describing E-MCP-011 as 'emitted (as a CRITICAL-level log entry and Deny reason)'. The Rust tracing crate has no CRITICAL level (levels are error/warn/info/debug/trace); observability.md and BC-2.09.008 §INV-004 both specify tracing::error! as the emit call. Historical changelog entries exempt per TD-VSDD-091."
@@ -419,6 +420,13 @@ impl PreToolCallHook for BoundaryApprovalHook {
     }
 }
 ```
+
+> **Observability note (F-P2A133-01):** The `tracing::error!` code sketch above is an
+> illustrative Rust rendering and is NOT authoritative for the log message string or
+> field-value expressions. `observability.md` §`mcp.graph_tool.force_approve_write_blocked`
+> is the authoritative source for this emission; the catalog row — including the
+> `"E-MCP-011 ForceApproveWriteBlocked emitted"` audit-correlation clause — supersedes any
+> wording shown in this ADR.
 
 **New Error Code — `E-MCP-011 ForceApproveWriteBlocked` (PO must mint):**
 

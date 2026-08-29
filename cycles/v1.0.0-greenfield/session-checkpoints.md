@@ -1,13 +1,13 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.2"
+version: "1.3"
 status: archive
 producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "82d373f"
+input-hash: "f23b6a0"
 traces_to: STATE.md
 ---
 
@@ -3426,3 +3426,28 @@ HRQ-1 (3/3 CLEAN streak — sole current gate blocker); HRQ-2 (CompiledStateGrap
 D-296 round-26 CLOSED; D-297 round-27 CLOSED; D-298 round-28 CLOSED (TV ground-truth 754→757; 19-BC §Story-Anchor backfill SS-04/11/13; sanitizer simple-UUID two-pattern); D-299 round-29 CLOSED (sanitizer two-pattern→ADR-029 §Decision 3/5 + S-2.11 tables; ToolRegistry 4-bracket in S-2.11; S-1.19 AC-025 mechanism Red Gate); D-300 STATE.md compaction (207→194 lines; D-290..296 archived to burst-log); D-301 session wrap. Census stable 39/134/17/137/303 throughout; TV 754→757 at D-298; VP 17. Two mid-burst agent stalls (round-26 PO, round-29 story-writer) recovered via working-tree inspection + scoped continuation.
 
 ### STATE: v6.12, timestamp 2026-08-28T23:30:00Z
+
+---
+
+### Archived Checkpoint — STATE.md v6.13 (archived 2026-08-28 — replaced by v6.14/D-303)
+
+*From STATE.md v6.13 (post-D-302 round-30 fix-burst). Superseded by v6.14 upon D-303 round-31 fix-burst CLOSED.*
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence; round-30 fix-burst CLOSED (D-302). 7 findings closed (3 MED + 3 LOW/records + 1 LOW/process-gap). GATE-READY=YES measured on pre-fix HEAD be9c6bd (HRQ-1 sole-blocker = 3-CLEAN streak). Census 39/134/17/137/303. TV 758 (+1 TV-017; grand total 769). VP 17. streak 0/3. NEXT = round-31 (P2A-132/133/134/135 + GATE-READY) on the NEW HEAD — frozen-HEAD rule: this push resets streak to 0/3; round-31 counts fresh.
+
+#### HEADS (at time of archival)
+- develop: `644d1ad` — clean, PUSHED.
+- factory-artifacts: D-302 round-30 burst — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+#### PER-WORKSTREAM (at time of archival)
+Phase-2 GAP-01/MCP re-convergence ONLY active workstream. NEXT-ACTION: round-31 P2A-132/133/134/135 + GATE-READY on new HEAD.
+
+#### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+#### DECISION DELTA (this session)
+D-302 round-30 CLOSED. F-P2A129-01[MED] TV-015 pipeline-composition + TV-017; F-P2A129-02[MED] S-2.11 AC-031 two-pattern; F-P2A131-01[MED] mcp::registry consumer-set ADJUDICATED; F-P2A130-01/02[LOW/records] ADR-005 de-pin; F-P2A130-03[LOW/records] BC-2.04.005 de-pin; F-P2A128-01[LOW/process-gap] VP Kani harness imports. L-222+L-223. Census stable 39/134/17/137/303; TV 757→758; VP 17.
+
+### STATE: v6.13, timestamp 2026-08-28T23:59:00Z

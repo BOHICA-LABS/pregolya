@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.37"
+version: "1.38"
 status: active
 producer: architect
 timestamp: 2026-08-28T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "12ac4b8"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.38 (R31/F-P2A135-01/2026-08-28): F-P2A135-01 HIGH — mcp::registry Boundary row Effectful Part corrected against BCs. R30's 'mcp::client (populates at session startup via mcp::discovery conversion)' is a phantom per BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002} which place registration on the application/caller layer. Corrected: registry read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. input-hash unchanged."
   - "1.37 (R30/F-P2A131-01/2026-08-28): F-P2A131-01 MED — mcp::registry consumer-set reconciliation. mcp::registry Boundary row Effectful Part column corrected: 'mcp::discovery (population at session startup)' replaced with 'mcp::client (populates at session startup via mcp::discovery conversion)'. Canonical set: mcp::server (reader) and mcp::client (writer/populator). input-hash unchanged."
   - "1.36 (round-27/F-P2A116-01+F-P2A119-01+F-P2A119-02/2026-08-28): (1) F-P2A116-01 PRIMARY TASK — Intro paragraph stale counts corrected: '80 module-decomposition modules (74 tiered + 6 definitions-only/exempt)' → '81 module-decomposition modules (75 tiered + 6 definitions-only/exempt)'; '88 total rows after round-25: 36 Pure Core + 40 Effectful Shell + 12 Boundary' → '89 total rows after round-26: 36 Pure Core + 40 Effectful Shell + 13 Boundary'. v1.34 added round-25 Effectful Shell rows (+2) but did not update the Boundary count; v1.35 added mcp::registry Boundary row (+1, Boundary 12→13) but did not update the intro paragraph. (2) F-P2A119-01 — mcp::sanitize Pure Core row VP annotation: 'VP-015 (integration P1; module logic is pure)' → 'VP-015 (unit P1; module logic is pure)'. D-273/v3.13 correction in verification-coverage-matrix.md had already corrected integration→unit in the VP-to-Module table; this file lagged. (3) F-P2A119-02 — mcp::sanitize Pure Core row description: `sanitize_internal_ids` function added alongside `redact_credentials`; consumer set corrected from implicit mcp::server-only to explicit {mcp::server, mcp::graph_tool}."
   - "1.35 (round-26/F-P2A115-04-sibling-sweep/2026-08-28): Iron Law sibling-sweep — add `mcp::registry` Boundary row (pregolya-mcp; `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>` concurrent access; register/get/list pure dispatch logic; shared by mcp::server and mcp::discovery; BC-2.09.006/007/008 §Architecture-Anchors; SS-09). Required by module-decomposition.md mcp::registry row addition (round-26). Boundary 12→13; total 88→89."
@@ -182,7 +183,7 @@ dispatch is integration-tested.
 | `core::retry` | pregolya-core | Policy evaluation: `ToolRetryPolicy`, `CircuitBreaker` state transitions (allow/deny/open/half-open), `global_limit` counter | Retry execution (actual re-invoke) is effectful; the pure policy layer returns `BreakerDecision` to the caller |
 | `checkpoint::saver` (trait impl) | pregolya-checkpoint | put_writes validation | Backend I/O (sqlite/postgres/memory) |
 | `mcp::ingress` | pregolya-mcp | Untrusted-ingress routing decision | GuardrailHook dispatch |
-| `mcp::registry` | pregolya-mcp | `register(name, tool)` / `get(name)` / `list()` dispatch logic; pure HashMap key validation and collection traversal | `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>` concurrent access; blocking write-lock guards; shared by `mcp::server` (inbound dispatch) and `mcp::client` (populates at session startup via mcp::discovery conversion); BC-2.09.006/007/008 §Architecture-Anchors; SS-09 |
+| `mcp::registry` | pregolya-mcp | `register(name, tool)` / `get(name)` / `list()` dispatch logic; pure HashMap key validation and collection traversal | `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>` concurrent access; blocking write-lock guards; read by `mcp::server` (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); `mcp::client` does NOT write the registry; BC-2.09.006/007/008 §Architecture-Anchors; SS-09 |
 | `server::stores` | pregolya-server | `IdempotencyStore`/`RateLimitStore`/`RunStore` trait interface definitions (pure seams per NE-08) | Backend I/O when trait impl is dispatched (store reads/writes) |
 | `sandbox::policy` | pregolya-sandbox | `SandboxPolicy` evaluation: pure compatibility check of policy requirements against backend capabilities; `Err(PolicyNotEnforceable)` on mismatch (NE-01 / SS-13) | Effectful backend enforcement when policy is applied (calls sandbox backend) |
 | `memory::write_guard` | pregolya-memory | pure `MemoryWriteGuard::validate()` call (synchronous, no I/O per ADR-012 Decision 1); returns `WriteGuardDecision` (Allow/Deny/Transform) | effectful `MemoryStore` write commit/abort; injection-scanner guard enforcement (ADR-012 / BC-2.15.005) |

@@ -9,7 +9,7 @@ timestamp: 2026-08-28T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "23b4827"
+input-hash: "e12a16f"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.09.008
 bc_anchor: BC-2.09.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "2.2"
+version: "2.3"
 changelog:
+  - "2.3 (R31/F-P2A132-01/2026-08-28): F-P2A132-01 HIGH — §Proof Harness Skeleton restructured for proptest compilability and falsifiability. Prior harness placed all setup and prop_assert!/prop_assert_eq! inside rt.block_on(async { ... }) and discarded the block_on return value; prop_assert! expands to early-return Err(TestCaseError) which cannot cross the async boundary (E0308 type mismatch) and would be silently swallowed if it could (false-green). Fix: all synchronous setup (state_value, stub_graph, input_schema, tool) hoisted to function body level; only tool.invoke_dyn(input).await remains inside block_on, bound as let result: Result<serde_json::Value, _>; entire match result { ... } with all prop_assert!/prop_assert_eq! calls moved to function body level. §Feasibility Proof complexity cell: 'no async, no I/O in the harness' replaced with accurate description (harness drives one async invoke_dyn call per case via tokio current-thread runtime; stub_terminal resolves synchronously). input-hash refreshed (BC-2.09.008 drift from rounds 22-31 corrections)."
   - "2.2 (round-22/F-P2A099-03/2026-08-28): F-P2A099-03 [LOW/records]: input-hash reconciled — updated from 985c8e9 to 23b4827 to reflect BC-2.09.008 revisions through rounds 19–22 (F-P2A087-02, F-P2A088-01, F-P2A094-01, F-P2A094-02, F-P2A098-01, F-P2A098-02); the hash was silently out of sync with BC-2.09.008 §INV-001 content. No VP property-statement or harness changes."
   - "2.1 (round-21/F-P2A093-01/2026-08-28): §Proof Harness Skeleton: corrected false 'accessible as a dev-dependency' claim for `CompiledStateGraph::stub_terminal` — bare `#[cfg(test)]` items in the defining crate (pregolya-graph) are NOT visible in dev-dependency builds of pregolya-mcp (E0599); the correct mechanism is the `test-util` feature gate: pregolya-graph exposes `#[cfg(any(test, feature = \"test-util\"))] pub fn stub_terminal(...)`, pregolya-graph/Cargo.toml adds `[features] test-util = []`, pregolya-mcp/Cargo.toml dev-dependencies adds `features = [\"test-util\"]`. Updated harness crate-import comment and §Proof Obligations Stub Graph Obligation description to reflect feature-gate mechanism. ADR-029 §Symbol Grounding `CompiledStateGraph::stub_terminal` row updated in same burst."
   - "2.0 (round-18/F-P2A084-01+F-P2A084-02/2026-08-27): Exhaustive title/H1/frontmatter/table-cell/code-sketch sweep. Frontmatter `title:` and H1: 'ToolOutput Contains Only extract_output-Selected Fields' → 'the Returned `serde_json::Value` Contains Only extract_output-Selected Fields' (F-P2A084-01). §Proof Method table Bounded? cell: 'Unbounded over GraphState values' → 'Unbounded over `serde_json::Value` graph states'; Coverage cell: 'For any generated `S` instance' → 'For any generated `TestGraphState` instance (as `serde_json::Value`)' (F-P2A084-02). TestGraphState struct doc: 'GraphState carrying' → 'Test graph-state value carrying'; 'leaking into ToolOutput' → 'leaking into the `serde_json::Value` returned by `invoke_dyn`'; 'MUST NOT appear in ToolOutput' → 'MUST NOT appear in the `serde_json::Value` returned by `invoke_dyn`' (F-P2A084-01). Prose FALSE-GREEN GUARD (1): 'extra fields appear in `ToolOutput`' → 'extra fields appear in the `serde_json::Value` returned by `invoke_dyn`'. Harness proptest macro doc: 'into ToolOutput FAILS' → 'into the `serde_json::Value` returned by `invoke_dyn` FAILS'. Code-sketch: inline comment 'ToolOutput must contain EXACTLY' → 'the returned `serde_json::Value` must contain EXACTLY'; three prop_assert! messages 'must not appear in ToolOutput' → 'must not appear in the `serde_json::Value` returned by `invoke_dyn`'; prop_assert_eq! message 'ToolOutput must contain exactly' → 'the returned `serde_json::Value` must contain exactly'. input-hash updated 2e9c2d7 → e57e95f (BC-2.09.008 drift)."
@@ -227,115 +228,124 @@ mod tests {
                 .build()
                 .unwrap();
 
-            rt.block_on(async {
-                // Convert TestGraphState → serde_json::Value so it can feed the
-                // non-generic CompiledStateGraph stub (ADR-029 §Decision 1 grounding:
-                // CompiledStateGraph is non-generic; GraphState is not a trait).
-                // All four fields (output, checkpoint_id, run_id, accumulated_messages)
-                // are present in state_value — full serialization for F-P2A069-01 closure.
-                let state_value = serde_json::to_value(&state).unwrap();
+            // All setup is synchronous — build OUTSIDE block_on so that prop_assert!/prop_assert_eq!
+            // can run at function-body level. Stock proptest has no async support: prop_assert!
+            // expands to `if !cond { return Err(TestCaseError) }` which cannot cross the async
+            // boundary (E0308) and, if somehow coerced, would be silently swallowed by the
+            // discarded block_on return value — making every case a false-green pass.
 
-                // Build a stub CompiledStateGraph that emits `state_value` as terminal output.
-                // (Stub Graph Obligation — see §Proof Obligations; test-writer implements
-                // CompiledStateGraph::stub_terminal as #[cfg(test)] on CompiledStateGraph in
-                // pregolya-graph — canonical type per BC-2.02.001 {PC-001}.)
-                // The stub produces the full channel-value JSON — checkpoint_id, run_id,
-                // and accumulated_messages are ALL present and MUST NOT appear in
-                // the serde_json::Value returned by invoke_dyn after ConcreteGraphRunner::run
-                // applies extract_output.
-                let stub_graph: Arc<CompiledStateGraph> =
-                    CompiledStateGraph::stub_terminal(state_value.clone());
+            // Convert TestGraphState → serde_json::Value so it can feed the
+            // non-generic CompiledStateGraph stub (ADR-029 §Decision 1 grounding:
+            // CompiledStateGraph is non-generic; GraphState is not a trait).
+            // All four fields (output, checkpoint_id, run_id, accumulated_messages)
+            // are present in state_value — full serialization for F-P2A069-01 closure.
+            let state_value = serde_json::to_value(&state).unwrap();
 
-                // Derive inputSchema from TestGraphState (caller's responsibility per
-                // ADR-029 §Decision 2 grounding: CompiledStateGraph has no schema-introspection
-                // method; schema is passed explicitly to from_graph).
-                let input_schema: schemars::Schema = schemars::schema_for!(TestGraphState);
+            // Build a stub CompiledStateGraph that emits `state_value` as terminal output.
+            // (Stub Graph Obligation — see §Proof Obligations; test-writer implements
+            // CompiledStateGraph::stub_terminal as #[cfg(test)] on CompiledStateGraph in
+            // pregolya-graph — canonical type per BC-2.02.001 {PC-001}.)
+            // The stub produces the full channel-value JSON — checkpoint_id, run_id,
+            // and accumulated_messages are ALL present and MUST NOT appear in
+            // the serde_json::Value returned by invoke_dyn after ConcreteGraphRunner::run
+            // applies extract_output.
+            let stub_graph: Arc<CompiledStateGraph> =
+                CompiledStateGraph::stub_terminal(state_value.clone());
 
-                // from_graph creates a ConcreteGraphRunner (non-generic) that stores
-                // BOTH stub_graph (Arc<CompiledStateGraph>) AND the extract_output closure.
-                // When ConcreteGraphRunner::run is called (via invoke_dyn), it:
-                //   1. Calls CompiledStateGraph::invoke(input_value) → receives terminal
-                //      serde_json::Value (channel-keyed map with all four fields)
-                //   2. Calls (self.extract_output)(&final_state_value) → returns ONLY
-                //      serde_json::json!({ "output": s["output"] })
-                // invoke_dyn receives the already-filtered serde_json::Value and returns
-                // Ok(filtered_value) directly — no ToolOutput::Structured wrapping.
-                // This is the PRODUCTION isolation path per ADR-029 §Decision 3.
-                let tool = GraphAgentTool::from_graph(
-                    "test-agent".to_string(),
-                    "VP-016 state-isolation test agent".to_string(),
-                    stub_graph,
-                    input_schema,
-                    |s: &serde_json::Value| -> serde_json::Value {
-                        serde_json::json!({ "output": s["output"] })
-                    },
-                );
+            // Derive inputSchema from TestGraphState (caller's responsibility per
+            // ADR-029 §Decision 2 grounding: CompiledStateGraph has no schema-introspection
+            // method; schema is passed explicitly to from_graph).
+            let input_schema: schemars::Schema = schemars::schema_for!(TestGraphState);
 
-                // Invoke via the REAL production path:
-                // invoke_dyn → ConcreteGraphRunner::run → stub_graph terminal →
-                //   extract_output(&final_state) → filtered serde_json::Value.
-                //
-                // COMPLETE INPUT (F-P2A069-01 closure): state_value contains all four required
-                // fields. CompiledStateGraph::invoke receives a complete channel-value JSON.
-                // Since there is no serde_json::from_value::<S> step (CompiledStateGraph takes
-                // serde_json::Value directly — ADR-029 §Decision 2 grounding), every generated
-                // case succeeds deserialization; the Ok-arm is always reached.
-                let input = state_value.clone();
-                let result = tool.invoke_dyn(input).await;
+            // from_graph creates a ConcreteGraphRunner (non-generic) that stores
+            // BOTH stub_graph (Arc<CompiledStateGraph>) AND the extract_output closure.
+            // When ConcreteGraphRunner::run is called (via invoke_dyn), it:
+            //   1. Calls CompiledStateGraph::invoke(input_value) → receives terminal
+            //      serde_json::Value (channel-keyed map with all four fields)
+            //   2. Calls (self.extract_output)(&final_state_value) → returns ONLY
+            //      serde_json::json!({ "output": s["output"] })
+            // invoke_dyn receives the already-filtered serde_json::Value and returns
+            // Ok(filtered_value) directly — no ToolOutput::Structured wrapping.
+            // This is the PRODUCTION isolation path per ADR-029 §Decision 3.
+            let tool = GraphAgentTool::from_graph(
+                "test-agent".to_string(),
+                "VP-016 state-isolation test agent".to_string(),
+                stub_graph,
+                input_schema,
+                |s: &serde_json::Value| -> serde_json::Value {
+                    serde_json::json!({ "output": s["output"] })
+                },
+            );
 
-                match result {
-                    Ok(tool_output) => {
-                        // tool_output IS a serde_json::Value — invoke_dyn return type is
-                        // Result<serde_json::Value, PregolyaError> per interface-definitions.md §Tool.
-                        // No .as_value() call needed (F-P2A072-01 closure).
-                        let obj = tool_output.as_object()
-                            .expect("invoke_dyn result must be a JSON object for TestGraphState");
-
-                        // Selected field must be present.
-                        prop_assert!(obj.contains_key("output"),
-                            "extract_output must include the `output` field");
-
-                        // Extra internal fields must NOT appear — any leak FAILS VP-016.
-                        prop_assert!(!obj.contains_key("checkpoint_id"),
-                            "checkpoint_id must not appear in the `serde_json::Value` returned by `invoke_dyn` \
-                             (STATE-ISOLATION {INV-001} violation)");
-                        prop_assert!(!obj.contains_key("run_id"),
-                            "run_id must not appear in the `serde_json::Value` returned by `invoke_dyn` \
-                             (STATE-ISOLATION {INV-001} violation)");
-                        prop_assert!(!obj.contains_key("accumulated_messages"),
-                            "accumulated_messages must not appear in the `serde_json::Value` returned by `invoke_dyn` \
-                             (STATE-ISOLATION {INV-001} violation)");
-
-                        // Exact key-set check: the returned `serde_json::Value` must contain EXACTLY the
-                        // extract_output-selected keys.
-                        let keys: Vec<&str> = obj.keys().map(|k| k.as_str()).collect();
-                        prop_assert_eq!(
-                            keys, vec!["output"],
-                            "the returned `serde_json::Value` must contain exactly the extract_output-selected keys; \
-                             any extra key is a STATE-ISOLATION leak ({INV-001})"
-                        );
-                    }
-                    Err(e) => {
-                        // FALSE-GREEN GUARD (vacuous-Err, F-P2A069-01 + F-P2A072-03 closure):
-                        // stub_terminal always produces a clean terminal; CompiledStateGraph::invoke
-                        // takes serde_json::Value directly (no from_value::<S> step — F-P2A072-03).
-                        // A complete input guarantees no invoke-level deserialization failure.
-                        // Reaching this arm means a harness infrastructure failure —
-                        // the STATE-ISOLATION prop_assert!s above did NOT execute; the
-                        // prior vacuous-pass behaviour would have falsely confirmed VP-016.
-                        // Fail explicitly so this can never be mistaken for a real proof.
-                        // (See §Realizability Trace for the end-to-end path proof.)
-                        prop_assert!(false,
-                            "VP-016 FALSE-GREEN GUARD (vacuous-Err): invoke_dyn returned \
-                             Err on a complete valid input. The Ok-arm was not reached; \
-                             STATE-ISOLATION prop_assert!s did not execute. \
-                             Error: {:?}. Investigate CompiledStateGraph::stub_terminal and \
-                             ConcreteGraphRunner::run execution path.",
-                            e
-                        );
-                    }
-                }
+            // Invoke via the REAL production path:
+            // invoke_dyn → ConcreteGraphRunner::run → stub_graph terminal →
+            //   extract_output(&final_state) → filtered serde_json::Value.
+            //
+            // COMPLETE INPUT (F-P2A069-01 closure): state_value contains all four required
+            // fields. CompiledStateGraph::invoke receives a complete channel-value JSON.
+            // Since there is no serde_json::from_value::<S> step (CompiledStateGraph takes
+            // serde_json::Value directly — ADR-029 §Decision 2 grounding), every generated
+            // case succeeds deserialization; the Ok-arm is always reached.
+            //
+            // Only invoke_dyn is async; bind the result OUTSIDE block_on so that all
+            // prop_assert! calls execute at the proptest function body level.
+            let input = state_value.clone();
+            let result: Result<serde_json::Value, _> = rt.block_on(async {
+                tool.invoke_dyn(input).await
             });
+
+            match result {
+                Ok(tool_output) => {
+                    // tool_output IS a serde_json::Value — invoke_dyn return type is
+                    // Result<serde_json::Value, PregolyaError> per interface-definitions.md §Tool.
+                    // No .as_value() call needed (F-P2A072-01 closure).
+                    let obj = tool_output.as_object()
+                        .expect("invoke_dyn result must be a JSON object for TestGraphState");
+
+                    // Selected field must be present.
+                    prop_assert!(obj.contains_key("output"),
+                        "extract_output must include the `output` field");
+
+                    // Extra internal fields must NOT appear — any leak FAILS VP-016.
+                    prop_assert!(!obj.contains_key("checkpoint_id"),
+                        "checkpoint_id must not appear in the `serde_json::Value` returned by `invoke_dyn` \
+                         (STATE-ISOLATION {INV-001} violation)");
+                    prop_assert!(!obj.contains_key("run_id"),
+                        "run_id must not appear in the `serde_json::Value` returned by `invoke_dyn` \
+                         (STATE-ISOLATION {INV-001} violation)");
+                    prop_assert!(!obj.contains_key("accumulated_messages"),
+                        "accumulated_messages must not appear in the `serde_json::Value` returned by `invoke_dyn` \
+                         (STATE-ISOLATION {INV-001} violation)");
+
+                    // Exact key-set check: the returned `serde_json::Value` must contain EXACTLY the
+                    // extract_output-selected keys.
+                    let keys: Vec<&str> = obj.keys().map(|k| k.as_str()).collect();
+                    prop_assert_eq!(
+                        keys, vec!["output"],
+                        "the returned `serde_json::Value` must contain exactly the extract_output-selected keys; \
+                         any extra key is a STATE-ISOLATION leak ({INV-001})"
+                    );
+                }
+                Err(e) => {
+                    // FALSE-GREEN GUARD (vacuous-Err, F-P2A069-01 + F-P2A072-03 closure):
+                    // stub_terminal always produces a clean terminal; CompiledStateGraph::invoke
+                    // takes serde_json::Value directly (no from_value::<S> step — F-P2A072-03).
+                    // A complete input guarantees no invoke-level deserialization failure.
+                    // Reaching this arm means a harness infrastructure failure —
+                    // the STATE-ISOLATION prop_assert!s above did NOT execute; the
+                    // prior vacuous-pass behaviour would have falsely confirmed VP-016.
+                    // Fail explicitly so this can never be mistaken for a real proof.
+                    // (See §Realizability Trace for the end-to-end path proof.)
+                    prop_assert!(false,
+                        "VP-016 FALSE-GREEN GUARD (vacuous-Err): invoke_dyn returned \
+                         Err on a complete valid input. The Ok-arm was not reached; \
+                         STATE-ISOLATION prop_assert!s did not execute. \
+                         Error: {:?}. Investigate CompiledStateGraph::stub_terminal and \
+                         ConcreteGraphRunner::run execution path.",
+                        e
+                    );
+                }
+            }
         }
     }
 }
@@ -348,7 +358,7 @@ mod tests {
 | Factor | Assessment | Notes |
 |--------|-----------|-------|
 | Input space | Open (arbitrary `TestGraphState` as `serde_json::Value`) | proptest covers via `Arbitrary` derive |
-| Proof complexity | Low | Structural containment check on JSON objects; no async, no I/O in the harness |
+| Proof complexity | Low | Structural containment check on JSON objects; harness drives one async `invoke_dyn` call per case via tokio current-thread runtime; `stub_terminal` resolves synchronously (no network, no checkpoint I/O) |
 | Tool support | Supported | `proptest` + `proptest-derive`; no blocking dependencies |
 | Async concern | Low | Harness calls `invoke_dyn` which is async; `tokio::runtime::Builder::new_current_thread()` wraps each proptest case; no actual I/O occurs (`CompiledStateGraph::stub_terminal` resolves synchronously — no network, no checkpoint I/O) |
 | Estimated proof time | < 1s per proptest case | 10k cases × negligible per case |

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.22"
+version: "3.23"
 status: active
 producer: architect
 timestamp: 2026-08-28T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "4220617"
+input-hash: "030142c"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.23 (R31/F-P2A135-01/2026-08-28): F-P2A135-01 HIGH — mcp::registry Notes column corrected against BCs. R30's 'mcp::client (populates at session startup via mcp::discovery conversion)' is a phantom per BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}. Corrected: registry read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. input-hash refreshed (module-decomposition.md R31/F-P2A135-01 mcp::registry body-row edit)."
   - "3.22 (R30/F-P2A131-01/2026-08-28): F-P2A131-01 MED — mcp::registry consumer-set reconciliation. mcp::registry Notes column corrected: 'mcp::discovery (population at session startup)' replaced with 'mcp::client (populates at session startup via mcp::discovery conversion)'. Canonical set: mcp::server (reader) and mcp::client (writer/populator). input-hash updated: 99fb6a7 (module-decomposition.md input drift from R28/R30 edits corrected)."
   - "3.21 (round-27/F-P2A116-01+F-P2A118-02+F-P2A119-02/2026-08-28): (1) F-P2A116-01/F-P2A118-02 PRIMARY TASK — Per-Module Coverage Status preamble: first sentence '91 physical rows' corrected to '90 physical rows' (measured: 90 data rows between table header and §Coverage by Criticality Tier; the second sentence '90 physical rows to 88 distinct modules' was already correct). Arithmetic removed from first sentence to avoid re-drift; additions sourced from round labels only. (2) F-P2A119-02 — mcp::sanitize Notes: `sanitize_internal_ids` added alongside `redact_credentials`; consumer set extended from implicit mcp::server-only to explicit {mcp::server, mcp::graph_tool}."
   - "3.20 (round-26/F-P2A115-04-sibling-sweep/2026-08-28): Iron Law sibling-sweep — add `mcp::registry` MEDIUM row (pregolya-mcp; runtime ToolRegistry store; Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>> concurrent access; register/get/list operations; shared by mcp::server and mcp::discovery; BC-2.09.006/007/008 §Architecture-Anchors; SS-09; integration tests). Required by module-decomposition.md mcp::registry row addition (round-26). Physical rows: 90→91. MEDIUM: 39→40. Tiered total: 81→82. Coverage by Criticality Tier MEDIUM: 39→40. input-hash refreshed."
@@ -170,7 +171,7 @@ changelog:
 | mcp::ingress | pregolya-mcp | — | — | — | yes | HIGH tier (F-P172b-15 elevation); untrusted-ingress routing; DI-012 guardrail seam; external-input boundary (BC-2.09.003); parity with graph::provenance HIGH; unit + integration tests |
 | mcp::session | pregolya-mcp | — | — | — | yes | MEDIUM; SS-09; McpSessionGuard RAII no-retained-session invariant; BC-2.09.005 {INV-002} / BC-2.09.002 (session lifecycle); integration tests |
 | mcp::interceptor | pregolya-mcp | — | — | — | yes | MEDIUM; SS-09; ToolCallInterceptor trait; onion-order chain enforcement (BC-2.09.002 {PC-001}); integration tests |
-| mcp::registry | pregolya-mcp | — | — | — | yes | MEDIUM; SS-09; runtime ToolRegistry store; Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>> concurrent access; register/get/list operations; shared by mcp::server (inbound dispatch) and mcp::client (populates at session startup via mcp::discovery conversion); BC-2.09.006/007/008 §Architecture-Anchors; integration tests |
+| mcp::registry | pregolya-mcp | — | — | — | yes | MEDIUM; SS-09; runtime ToolRegistry store; Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>> concurrent access; register/get/list operations; read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry; BC-2.09.006/007/008 §Architecture-Anchors; integration tests |
 | memory::sqlite | pregolya-memory | — | — | — | yes | SQLite durable backend for long-horizon memory; integration tests |
 | memory::in_memory | pregolya-memory | — | — | — | yes | Ephemeral in-memory backend for test/dev; unit tests |
 | memory::search | pregolya-memory | — | — | — | yes | Keyword, vector, and hybrid search; integration tests |
