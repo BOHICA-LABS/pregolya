@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.13"
+version: "3.14"
 status: active
 producer: product-owner
 timestamp: 2026-08-28T00:00:00Z
@@ -14,6 +14,7 @@ input-hash: "1d64308"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.14 (round-30/F-P2A129-01/2026-08-28): BC-2.09.008 TV count 16→17 (+1 TV: TV-017 `sanitize_internal_ids` unit-isolation test — `\\b` non-over-match property for 64-char hex sequences at the sanitizer isolation layer; TV-015 corrected to full-pipeline expected output `\"digest: <redacted>\"` — `redact_credentials` rule `[A-Za-z0-9]{64,}` fires first in mandatory chain (ADR-029 §Decision 3 and Decision 5) and catches 64-char lowercase hex token before `sanitize_internal_ids` runs). Grand total 757→758 canonical + 11 GTV = 768→769."
   - "3.13 (round-28/GATE-READY-finding/2026-08-28): Ground-truth reconciliation — column sum was 724 vs declared 754; body ground-truth measured at 757 canonical (33-unit delta from column sum). Corrected 21 stale BC rows: BC-2.04.001 (4→5), BC-2.04.005 (5→6), BC-2.04.008 (7→8), BC-2.05.004 (6→9), BC-2.06.006 (4→5), BC-2.08.001 (4→5), BC-2.08.013 (6→7), BC-2.09.006 (6→8), BC-2.09.008 (13→16), BC-2.10.005 (6→9), BC-2.12.001 (7→9), BC-2.12.002 (8→9), BC-2.12.003 (7→10), BC-2.15.001 (7→8), BC-2.15.004 (9→10), BC-2.15.005 (7→8), BC-2.16.001 (5→6), BC-2.21.002 (6→7), BC-2.22.002 (5→7), BC-2.23.003 (5→6), BC-2.23.005 (6→8). Authoritative canonical total: 757 canonical + 11 GTV = 768 grand total. Note: v3.10 contained a +9-claimed/+6-recorded arithmetic error (746→752 instead of correct 755), now superseded by this ground-truth count; if corrected, declared total progression after v3.10 would have been 755→756→757 matching ground truth. Unlabelled-format BCs (SS-04 001–007, SS-11, SS-13 001–006) body count measured as table data rows excluding header row."
   - "3.12 (round-19/F-P2A088-01/2026-08-27): BC-2.09.008 TV count 12→13 (+1 TV: TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids framework pass; authoring-site convention sole guarantee per {INV-001} / ADR-029 §Decision 3 SEC-005 canonical text). Grand total 753→754 canonical + 11 GTV = 764→765."
   - "3.11 (P2A-057-round-2/D-277/2026-08-26): BC-2.09.008 TV count 11→12 (+1 TV: TV-012 None/undeclared action_risk path, F-057-01 {INV-004} coverage). Grand total 752→753 canonical + 11 GTV = 764."
@@ -122,7 +123,7 @@ changelog:
 | BC-2.09.005 | SS-09 | 5 | — | `TV-NNN` | **RG** | MultiServerMcpClient no live connections |
 | BC-2.09.006 | SS-09 | 8 | — | `TV-NNN` | | MCP server tool advertisement (tools/list; mcp::server) |
 | BC-2.09.007 | SS-09 | 9 | — | `TV-NNN` | | MCP server tool invocation (tools/call; external client) |
-| BC-2.09.008 | SS-09 | 16 | — | `TV-NNN` | | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); VP-016 proptest P1 seed ({INV-001} STATE-ISOLATION); TV-012 None/undeclared action_risk path ({INV-004}); TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids (authoring-site convention sole guarantee; {INV-001}); TV-014/015/016 simple-UUID and SHA-256 sanitize_internal_ids coverage (F-P2A121-01) |
+| BC-2.09.008 | SS-09 | 17 | — | `TV-NNN` | | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); VP-016 proptest P1 seed ({INV-001} STATE-ISOLATION); TV-012 None/undeclared action_risk path ({INV-004}); TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids (authoring-site convention sole guarantee; {INV-001}); TV-014/016 simple-UUID sanitize_internal_ids coverage; TV-015 full-pipeline (redact_credentials catches 64-char hex first — corrected F-P2A129-01); TV-017 sanitize_internal_ids isolation (non-over-match property at unit layer; F-P2A121-01/F-P2A129-01) |
 | BC-2.10.001 | SS-10 | 5 | — | `TV-NNN` | | Budget allow/escalate/deny evaluation |
 | BC-2.10.002 | SS-10 | 5 | — | `TV-NNN` | | EvidenceJournal append-only |
 | BC-2.10.003 | SS-10 | 7 | — | `TV-NNN` | | Graceful halt \| summarize on ceiling (v1.2 adds TV-006/007) |
@@ -194,7 +195,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 8 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (134 authored BCs):** 757 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **768 total vectors** across 134 BC files.
+**Total vectors (134 authored BCs):** 758 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **769 total vectors** across 134 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -345,6 +346,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.14 | 2026-08-28 | round-30/F-P2A129-01: BC-2.09.008 TV count 16→17 — TV-017 added (sanitize_internal_ids isolation) + TV-015 corrected to full-pipeline output "digest: <redacted>" (F-P2A129-01 [MED]). Grand total 757→758 canonical + 11 GTV = 769. | round-30 F-P2A129-01 |
 | 3.13 | 2026-08-28 | round-28/GATE-READY-finding: Ground-truth reconciliation — column sum was 724 vs declared 754; body ground-truth 757 canonical. Corrected 21 stale BC rows (see frontmatter changelog for full list). Grand total 754→757 canonical + 11 GTV = 768. Note: v3.10 arithmetic error (+9 claimed / +6 recorded) now superseded. | round-28 GATE-READY |
 | 3.12 | 2026-08-27 | round-19/F-P2A088-01: BC-2.09.008 TV count 12→13 (+TV-013 u64 CheckpointId NOT covered by sanitize_internal_ids framework pass; authoring-site convention sole guarantee per {INV-001}). Grand total 753→754 canonical + 11 GTV = 765. | round-19 F-P2A088-01 |
 | 3.11 | 2026-08-26 | P2A-057-round-2/D-277: BC-2.09.008 TV count 11→12 (+TV-012 None/undeclared action_risk path, F-057-01 {INV-004} coverage). Grand total 752→753 canonical + 11 GTV = 764. | P2A-057 D-277 |

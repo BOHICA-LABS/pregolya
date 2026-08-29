@@ -3398,3 +3398,31 @@ D-299 = round-29 fix-burst close. Key closes: F-P2A125-01[HIGH,CWE-670/209] ADR-
 Rounds 19-29: 11 consecutive NOT CLEAN. Round-29 pass counts: P2A-124=1(OBS), P2A-125=2(1HIGH+1LOW), P2A-126=0(CLEAN strict), P2A-127=2(2MED). GATE-READY=NO (HRQ-1 streak-gate sole-blocker). Round-30 is first pass on this new HEAD.
 
 ### STATE: v6.11, timestamp 2026-08-28T23:00:00Z
+
+---
+
+## ARCHIVED CHECKPOINT D-301 (2026-08-28) — Superseded by D-302
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence; this session drove rounds 26-29 fix-bursts CLOSED + STATE.md compacted (D-300). Corpus is SPEC-CLEAN — P2A-126 (consistency/census) and the GATE-READY audit both report zero spec defects; the SOLE Phase-2 gate blocker is HRQ-1 (the BC-5.39.001 3-CLEAN streak, currently 0/3). Census 39/134/17/137/303, TV 757, VP 17. NEXT = run round-30 (P2A-128/129/130/131 + GATE-READY) on the wrap HEAD — if all CLEAN(strict)+GATE-READY=YES, streak advances 1/3.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED (Phase-2 is spec-only; no code work this session).
+- factory-artifacts: D-301 wrap commit — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+- Untracked STATE.md.bak/bak2/bak3 (7-byte "deleted" sentinels) — harmless; remove when a human authorizes.
+
+### PER-WORKSTREAM
+Phase-2 GAP-01/MCP re-convergence is the ONLY active workstream. Frozen at the wrap HEAD; 3-CLEAN streak 0/3 (frozen-HEAD rule: any push resets to 0/3, so round-30 counts fresh on the wrap HEAD). RESUME NEXT-ACTION: dispatch 4 fresh-context adversary passes — P2A-128 (realizability), P2A-129 (security), P2A-130 (consistency/census/records), P2A-131 (SS-09 MCP + SS-11 guardrail sibling deep-audit) — plus a consistency-validator GATE-READY audit, ALL anchored on the wrap HEAD. Before each adversary dispatch, inject the .factory/policies.yaml Phase-1-active rubric (POL-1..31, POL-46, POL-47) + the POL-46 evidence discipline (verbatim-quote Form-B evidence; verify citations/filenames before writing; treat historical/changelog rows as historical, not live defects). If all 4 report CLEAN(strict) AND GATE-READY=YES — streak 1/3; else run a coordinated fix-burst (route by owner: architect / product-owner / story-writer; state-manager commits LAST, single commit). MANDATE on every fix that changes a canonical form (regex/type/identifier/count): exhaustive corpus-wide grep of ALL occurrences in the same burst (lesson L-220 — rounds 27/28/29 each spent a full cascade cleaning the prior round's un-swept siblings).
+
+### STANDING HUMAN-GATE OBS (carry to the Phase-2 human gate)
+HRQ-1 (3/3 CLEAN streak — sole current gate blocker); HRQ-2 (CompiledStateGraph non-generic redesign — human ack before Phase-3); HRQ-4 (verify-ac-pc-trace CHECK-2 ADVISORY→BLOCKING decision); HRQ-5 (interface-definitions↔BC-prose gate decision); HRQ-6 (ss-TBD empty dir cleanup). HRQ-3 CLOSED (VP-filename keep-as-is). First-self-improvement-wave process-gap candidates already in Drift/Deferrals: TV-ground-truth gate, §Story-Anchor-placeholder gate, module-registry-count validator, story-changelog-monotonicity lint, EXHAUSTIVE-SWEEP-ENFORCE, BURST-PRE-SPLIT-DISCIPLINE.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion — starts AFTER the Phase-2 approval gate.
+- DTU clones (openai/anthropic/ollama): Phase-4 prerequisite; dtu_clones_built: pending.
+
+### DECISION DELTA (this session)
+D-296 round-26 CLOSED; D-297 round-27 CLOSED; D-298 round-28 CLOSED (TV ground-truth 754→757; 19-BC §Story-Anchor backfill SS-04/11/13; sanitizer simple-UUID two-pattern); D-299 round-29 CLOSED (sanitizer two-pattern→ADR-029 §Decision 3/5 + S-2.11 tables; ToolRegistry 4-bracket in S-2.11; S-1.19 AC-025 mechanism Red Gate); D-300 STATE.md compaction (207→194 lines; D-290..296 archived to burst-log); D-301 session wrap. Census stable 39/134/17/137/303 throughout; TV 754→757 at D-298; VP 17. Two mid-burst agent stalls (round-26 PO, round-29 story-writer) recovered via working-tree inspection + scoped continuation.
+
+### STATE: v6.12, timestamp 2026-08-28T23:30:00Z

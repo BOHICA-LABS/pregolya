@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.005
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -30,6 +30,7 @@ changelog:
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (P2-BC-SS04-06-hardening/2026-08-26): EC-007 added — pending_writes reapply read/deserialize failure. EC-006 covered `get_tuple()` failure during checkpoint load but did not specify the failure surface for the subsequent `_reapply_writes_to_succeeded_nodes` storage query and entry deserialization step. EC-007 specifies both sub-cases (storage I/O error and deserialization failure) with E-CHKPT-003 REUSE (DURABILITY, broken — 'cannot restore state' semantic covers both sub-cases; `<reason>` field discriminates between I/O error and deserialization failure). TV row added for EC-007. BC-completeness-scan Phase-2 BURST-B gap BC-2.04.005."
   - "1.7 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
+  - "1.8 (round-30/F-P2A130-03/2026-08-28): F-P2A130-03 [LOW/records, POL-12/TD-VSDD-091]: {INV-003} Source field de-pinned — stale line-range citation replaced with section anchor `semport/graph/behavioral-intent.md §2.4` per TD-VSDD-091 anti-volatile-pin policy. Adjudication: semport Source line-ranges are NOT exempt; production-grade default applies. The Traceability §Source Analysis row already uses section-anchor form (§2.4, §5.2) — {INV-003} Source field now aligns to the same convention. Corpus sweep (BC bodies + stories): BC-2.04.005 was the sole semport line-range pin in all `.factory/specs/behavioral-contracts/` and `.factory/stories/` files; ADR-005 also contains a semport line-range citation but is an ADR (architect scope) — noted for architect. No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -90,7 +91,7 @@ them freshly rather than replaying stale control state.
      and encounter them freshly: `ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME`.
      Note: `ERROR_SOURCE_NODE` does not have a dedicated negative index but IS skipped.
      Note: `SCHEDULED` has index -2 but is NOT skipped (its write is re-applied normally).
-   - Source: semport/graph/behavioral-intent.md:176-181 + validation-certification-6
+   - Source: semport/graph/behavioral-intent.md §2.4 + validation-certification-6
 4. {INV-004} No committed task's node body is called more than once across a crash-and-resume cycle
 
 ## Edge Cases

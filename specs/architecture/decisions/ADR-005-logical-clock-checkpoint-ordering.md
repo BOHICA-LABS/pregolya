@@ -14,8 +14,9 @@ timestamp: 2026-07-14T12:00:00Z
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D11]
-version: "1.14"
+version: "1.15"
 changelog:
+  - "1.15 (R30/F-P2A130-01+F-P2A130-02/2026-08-28): F-P2A130-01 LOW + F-P2A130-02 LOW — TD-VSDD-091 exhaustive normative-body line-pin sweep in §Receiver rationale, §Object-Safety intro, §Adjacent Adjudications, and §MonotonicClock verification sections. Five normative-body file:NNN citations replaced with section/symbol anchors: bounded-contexts.md §Context 3: Checkpoint / Durability (two sites — §Receiver rationale item 1 and §Object-Safety intro sentence); semport/core/rust-translation-strategy.md §Cross-cutting open design questions (one site — §Receiver rationale item 1); system-overview.md §Crate Topology (one site — §BaseChatModel adjudication); module-decomposition.md §Provider Crates and Standard Tests (one site — §BaseChatModel adjudication); verification-architecture.md §Kani Async Constraint (one site — §MonotonicClock get_next_version verification note). Pre-existing v1.4 changelog entry grandfathered per records-lint L9a addition-only scope."
   - "1.14 (burst-304/F-P195-04/2026-08-17): F-P195-04 (MED) — §Adjacent Trait Object-Safety Adjudications §Runnable<Input,Output> section: replace generic `DynRunnable<Value, Value>` type-form with canonical non-generic `Arc<dyn DynRunnable>` at three live-body sites. (1) Body sentence: 'through a separate `DynRunnable<Value, Value>` type-erased object-safe trait' → 'through a separate `Arc<dyn DynRunnable>` type-erased composition path'. (2) Authority citation: '(spec `DynRunnable<Value, Value>` as the type-erased composition path)' → '(spec `Arc<dyn DynRunnable>` as the type-erased composition path)'. (3) §Tool section: 'mirroring the `DynRunnable<Value, Value>` pattern' → 'mirroring the `Arc<dyn DynRunnable>` pattern'. POL-4 semantic anchoring: cited content must match current BC-2.01.003/BC-2.01.004 bodies, which were reconciled to Arc<dyn DynRunnable> by O-P194-A (burst-303). The DynTool code sketch `invoke_dyn` sites remain unchanged — those are DynTool's method, not DynRunnable's."
   - "1.13 (burst-291/anchor-gate-fix/2026-08-16): Two citation fixes in §Adjacent Trait Object-Safety Adjudications. (1) B2 anchor-gate phantom: sentence-fragment §-citation `interface-definitions.md §Runnable are required` (gate extractor parsed §Runnable with trailing prose as the section name) replaced with prose form `the Runnable<Input, Output> section of interface-definitions.md` — §-citation syntax dropped because angle-bracket headings are truncated at `<` by the extractor. (2) L9a line-cite ban: volatile line-number citation to interface-definitions.md (line 824, E-CORE-004 note, introduced in v1.4) replaced with anchor form `interface-definitions.md §DynRunnable and RunnableSequence, E-CORE-004 note` per TD-VSDD-091."
   - "1.12 (FIX-BURST-278/Wave-C-S4-complete/2026-07-28): S4 body annotations applied and §Failure Mode struct literal corrected. (1) S4 body: four Wave C migration routing lines annotated with (non-object-safe, E0038) qualifier — all four are classification (b) hazard-naming prose (migration origin notation), not live normative signatures. The preceding changelog entry described these edits but the prior dispatch died before applying the body changes. (2) §Failure Mode: `Err(PregolyaError { category: DURABILITY, code: E-CHKPT-003, ... })` struct literal replaced with prose error-code reference per ADR-010 Direction B PascalCase canon."
@@ -189,7 +190,7 @@ fn get_next_version(
 
 **Receiver rationale (`&self` required, not optional):** Three independent reasons mandate an `&self` receiver:
 
-1. **dyn-compatibility (E0038 avoidance):** A receiver-less associated function on a trait makes the trait NOT dyn-compatible under E0038 unless the method carries a `where Self: Sized` bound. `bounded-contexts.md:64` mandates `Arc<dyn CheckpointSaver>`; `semport/rust-translation-strategy.md:183-184` confirms dyn dispatch at the effectful-shell seam. Without `&self` (and without a `where Self: Sized` bound, which would exclude the method from the vtable entirely), the compiler rejects the trait object construction.
+1. **dyn-compatibility (E0038 avoidance):** A receiver-less associated function on a trait makes the trait NOT dyn-compatible under E0038 unless the method carries a `where Self: Sized` bound. `bounded-contexts.md §Context 3: Checkpoint / Durability` mandates `Arc<dyn CheckpointSaver>`; `semport/core/rust-translation-strategy.md §Cross-cutting open design questions` confirms dyn dispatch at the effectful-shell seam. Without `&self` (and without a `where Self: Sized` bound, which would exclude the method from the vtable entirely), the compiler rejects the trait object construction.
 
 2. **Virtual dispatch of backend overrides:** Static methods are not virtually dispatched through trait objects — the override use case (e.g., a distributed backend using a server-side sequence counter) is only reachable through the vtable when the method carries a receiver. A receiver-less method's override is dead code when called through `Arc<dyn CheckpointSaver>`.
 
@@ -205,7 +206,7 @@ fn get_next_version(
 
 ### Object-Safety of the 5-Method CheckpointSaver Trait
 
-`bounded-contexts.md:64` mandates `Arc<dyn CheckpointSaver>`. The following table states the dyn-compatibility status of each method explicitly so this axis is settled.
+`bounded-contexts.md §Context 3: Checkpoint / Durability` mandates `Arc<dyn CheckpointSaver>`. The following table states the dyn-compatibility status of each method explicitly so this axis is settled.
 
 | Method | Receiver | Async | Return type | dyn-compatible? |
 |--------|----------|-------|-------------|-----------------|
@@ -233,7 +234,7 @@ fn get_next_version(
 
 **`BaseChatModel` — axis settled, dyn NOT required:**
 
-`BaseChatModel: Runnable<Vec<Message>, AiMessage>` inherits all of `Runnable`'s non-dyn characteristics and adds its own: `stream_chat()` returns `impl Stream`, `bind_tools()` returns `impl BaseChatModel`, and `with_structured_output<T>()` has a generic type parameter. The spec corpus contains **zero** instances of `dyn BaseChatModel` or `Arc<dyn BaseChatModel>`. Provider crates exclusively use static dispatch: `impl BaseChatModel for ChatOpenAI`, `impl BaseChatModel for ChatAnthropic`, `impl BaseChatModel for ChatOllama` (architecture/system-overview.md:72–76, module-decomposition.md:161–165). No changes to interface-definitions.md §BaseChatModel are required.
+`BaseChatModel: Runnable<Vec<Message>, AiMessage>` inherits all of `Runnable`'s non-dyn characteristics and adds its own: `stream_chat()` returns `impl Stream`, `bind_tools()` returns `impl BaseChatModel`, and `with_structured_output<T>()` has a generic type parameter. The spec corpus contains **zero** instances of `dyn BaseChatModel` or `Arc<dyn BaseChatModel>`. Provider crates exclusively use static dispatch: `impl BaseChatModel for ChatOpenAI`, `impl BaseChatModel for ChatAnthropic`, `impl BaseChatModel for ChatOllama` (system-overview.md §Crate Topology, module-decomposition.md §Provider Crates and Standard Tests). No changes to interface-definitions.md §BaseChatModel are required.
 
 **`Tool` — axis settled, DynTool required (option b):**
 
@@ -266,7 +267,7 @@ The following 3 sites — all non-object-safe (E0038) — MUST change `Arc<dyn p
 
 **`MonotonicClock::get_next_version` Kani target — description confirmed accurate:**
 
-`verification-architecture.md:43` describes the Kani verification target as "pure `get_next_version(current)` successor function; stateless, no atomic counter." This refers to `MonotonicClock::get_next_version(current: Option<CheckpointId>, _channel: &ChannelName)` — a receiver-less associated function on the `MonotonicClock` ZST in `checkpoint::clock`. This function is correctly receiver-less (associated function on a zero-size type, not a trait method) and correctly described as pure and stateless. The v1.3 change adding `&self` to the `CheckpointSaver` trait method does not affect the `MonotonicClock` associated function — these are two different functions. No edit to verification-architecture.md is required.
+`verification-architecture.md §Kani Async Constraint (sync-core mandate table, checkpoint::clock row)` describes the Kani verification target as "pure `get_next_version(current)` successor function; stateless, no atomic counter." This refers to `MonotonicClock::get_next_version(current: Option<CheckpointId>, _channel: &ChannelName)` — a receiver-less associated function on the `MonotonicClock` ZST in `checkpoint::clock`. This function is correctly receiver-less (associated function on a zero-size type, not a trait method) and correctly described as pure and stateless. The v1.3 change adding `&self` to the `CheckpointSaver` trait method does not affect the `MonotonicClock` associated function — these are two different functions. No edit to verification-architecture.md is required.
 
 ## Rationale
 
