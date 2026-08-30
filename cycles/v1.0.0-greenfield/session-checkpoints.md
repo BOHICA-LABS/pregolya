@@ -3733,3 +3733,26 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-314 round-41 fix-burst (2026-08-29): ALL 7 unique findings CLOSED (1 HIGH + 1 MED + 4 LOW + 1 OBS). MILESTONE: P2A-174 FIRST CLEAN(strict) lens. S-1.04 batch no-cap/JoinSet; DynRunnableAdapter ADR-023 governance; panic-recovery graph-node-body; PC-004 result_text; census 39/134/17/137/303 UNCHANGED. TV 759. VP 17. streak 0/3. STATE.md v6.25→v6.26.
 
 ### STATE: v6.26, timestamp 2026-08-29T23:59:00Z
+
+---
+
+## Checkpoint D-316 (archived 2026-08-30 by D-317 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence, round-42 fix-burst IN PROGRESS at session wrap. Architect + product-owner stages COMMITTED; story-writer + state-manager-close PENDING. streak 0/3. NEXT: dispatch story-writer to propagate round-42 canon to stories, then state-manager close (D-317), then round-43.
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED. (Phase-2 is spec-only; NO code work this session.)
+- factory-artifacts: D-316 SESSION WRAP — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+### PER-WORKSTREAM — Phase-2 round-42 fix-burst (batch join_all + non-generic runner + node-panic server)
+Architect + PO completed: F-P2A176-01 [HIGH] batch default in-task join_all/FuturesOrdered (BC-2.01.003 {PC-003}); F-P2A177-01 [HIGH, CWE-248/703] server node-panic FutureExt::catch_unwind (BC-2.12.003 + E-GRAPH-019 minted); F-P2A177-02 [MED, CWE-209] MCP static-replace (BC-2.09.008 EC-003); F-P2A179-01 [HIGH] ConcreteGraphRunner non-generic (BC-2.09.008 {PC-003}). P2A-178 consistency CLEAN(strict)=YES. Story-writer next: S-1.04 AC-003, S-2.11 AC-019/AC-038/TV-019, S-1.26 AC-018/EC-019 (SS-12 server story). EC 137→138 (E-GRAPH-019). TV 759→761 canonical. NEXT-ACTION: story-writer round-42 propagation → state-manager D-317. Streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+#### DECISION DELTA (this session)
+D-316 SESSION WRAP (2026-08-30): round-42 fix-burst WIP COMMITTED (architect+PO). trajectory-tail r42 →1→2→0→1; 3 HIGH + 1 MED CLOSED at BC/ADR layer. EC 137→138 (E-GRAPH-019 minted). TV 759→761 canonical (772 incl GTV). BC 134 / VP 17 / stories 39 UNCHANGED. streak 0/3. STATE.md v6.26→v6.27.
+
+### STATE: v6.27, timestamp 2026-08-30T00:05:00Z

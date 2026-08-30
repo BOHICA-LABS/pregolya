@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.26
 epic_id: E-14
-version: "1.7"
+version: "1.8"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,6 +15,7 @@ changelog:
   - "1.5 (P2A-043 F-05/2026-08-24): escalated EC citations redirected/repointed per PO adjudication (incl. new BC-2.12.001 EC-006)"
   - "1.6 (P2A-044 F-01 (9th arc queued→cancelled) + F-07 (EC-005→PC-024) + F-08 (EC-008→EC-006/E-SERVER-018)/2026-08-24)"
   - "1.7 (SW-3/P2A-BC-scan-hardening/2026-08-26): BC-completeness hardening — 7 new ACs (AC-011..AC-017) and 8 new ECs (EC-011..EC-018). BC-2.12.001: AC-011 (EC-007 POST /state thread-not-found → 404 E-SERVER-003), AC-012 (EC-008/EC-009 POST /state invalid as_node or malformed delta → 422 E-SERVER-022 reason-discriminated). BC-2.12.003: AC-013 (EC-007 enqueue queue-full → 429 E-SERVER-019), AC-014 (PC-004 ADR-028 D1 multitask=interrupt pre-empted run → cancelled), AC-015 (PC-004 ADR-028 D2 multitask=rollback → latest_completed_checkpoint_id). BC-2.12.002: AC-016 (EC-003 delete_threads=true active constituent run → 409 E-SERVER-008 atomic-abort), AC-017 (EC-007 PATCH empty graph_id → 400 E-SERVER-020). BC-table version column removed (D-50 anti-version-pin). Token-budget revised (~52,500)."
+  - "1.8 (round-42/F-P2A177-01/2026-08-29): F-P2A177-01 [HIGH, CWE-248/703, SEC-008] — Propagate BC-2.12.003 EC-003 node-body-panic recovery and {INV-007} panic-text-isolation invariant. AC-018 added: pregolya-server run-executor wraps graph execution in FutureExt::catch_unwind(AssertUnwindSafe(...)); node-body panic caught during .await polling → Err(PregolyaError { code: E-GRAPH-019, category: INTERNAL, message: 'NodePanic: graph node panicked during execution — see server error log for details', retry_hint: Never, .. }); run transitions in_progress → failed with E-GRAPH-019 STATIC message; raw panic text logged server-side at ERROR only, MUST NEVER appear in Run.error.message ({INV-007}); run MUST NOT remain in_progress ({INV-005} no orphan runs); SEC-008 obligation noted (panic = unwind required on pregolya-server release profile). EC-019 added to edge cases table (node-body-panic path). Architecture Compliance Rule 9 added (panic = unwind on pregolya-server release profile). New Task for catch_unwind implementation added. E-GRAPH-019 NodePanic referenced in new AC and error taxonomy. Test vector BC-2.12.003 TV-011 anchored to AC-018. input-hash refreshed (BC-2.12.003 updated round-42)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.001.md
@@ -22,7 +23,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c9149ea"
+input-hash: "0cfcec4"
 traces_to:
   - behavioral-contracts/BC-2.12.001
   - behavioral-contracts/BC-2.12.002
@@ -70,7 +71,7 @@ Comfortable within context window. No split required.
 |-------|-------|-----------|
 | BC-2.12.001 | Thread CRUD — create, get, list, delete with cascade-delete | No |
 | BC-2.12.002 | Assistant CRUD — immutable version snapshots, configurable map | No |
-| BC-2.12.003 | Run lifecycle — 9-arc state machine, Run-Config Merge | No |
+| BC-2.12.003 | Run lifecycle — 9-arc state machine, Run-Config Merge, node-body-panic recovery ({INV-007}, E-GRAPH-019) | No |
 
 ## Acceptance Criteria
 
@@ -142,6 +143,10 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 `PATCH /assistants/:id { "graph_id": "" }` returns HTTP 400 `{ code: "E-SERVER-020", message: "Validation failed for 'graph_id': must not be empty" }`. No new version is created; the assistant record is not modified. `graph_id` is a required non-empty field (BC-2.12.002 INV-004); the empty-string update is rejected at request validation time before any store operation.
 (traces to BC-2.12.002 EC-007, BC-2.12.002 INV-004)
 
+### AC-018: Node-body panic → failed + E-GRAPH-019 + panic-text-isolation (SEC-008)
+The `pregolya-server` run-executor wraps graph execution in `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(...))`. When a graph node body panics during `.await` polling, the panic is caught and converted to `Err(PregolyaError { code: "E-GRAPH-019", category: INTERNAL, message: "NodePanic: graph node panicked during execution — see server error log for details", retry_hint: Never, .. })`. The run transitions `in_progress → failed`; `Run.error` is populated from the E-GRAPH-019 STATIC message. Raw panic text is logged server-side at ERROR severity only — it MUST NEVER appear in `Run.error.message` ({INV-007} panic-text-isolation). The run MUST NOT remain in `in_progress` state after the panic is caught ({INV-005}, no orphan runs). **SEC-008:** This panic recovery requires `panic = "unwind"` on the `pregolya-server` release profile; `panic = "abort"` voids the catch and causes process termination (CWE-248). Test vector BC-2.12.003 TV-011: Run `r1` on thread `t1` is `in_progress`; a graph node body calls `panic!("unexpected node failure")`; poll `GET /threads/t1/runs/r1`; result: `status == "failed"`, `error.code == "E-GRAPH-019"`, `error.message == "NodePanic: graph node panicked during execution — see server error log for details"` (STATIC — literal string equality), `error.message` does NOT contain `"unexpected node failure"` or any other panic text, no run remains orphaned in `in_progress` state.
+(traces to BC-2.12.003 EC-003 — node-body-panic path; BC-2.12.003 {INV-007} panic-text-isolation; BC-2.12.003 {INV-005} no-orphan-runs)
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
@@ -192,6 +197,7 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 | EC-016 | BC-2.12.003 PC-004 | multitask=rollback — pre-empted run + checkpoint state | Pre-empted → `cancelled`; checkpoint rows above `latest_completed_checkpoint_id` deleted; pointer reset |
 | EC-017 | BC-2.12.002 EC-003 | DELETE assistant delete_threads=true with active constituent run | HTTP 409 E-SERVER-008; no partial deletion (ADR-028 D4) |
 | EC-018 | BC-2.12.002 EC-007 | PATCH assistant with empty graph_id | HTTP 400 E-SERVER-020 AssistantFieldInvalid |
+| EC-019 | BC-2.12.003 EC-003 — node-body-panic path | Graph node body panics during execution | `in_progress → failed`; `error.code == "E-GRAPH-019"`; `error.message` is the STATIC E-GRAPH-019 message (no raw panic text); panic text logged at ERROR server-side; {INV-007} panic-text-isolation; {INV-005} no orphan runs upheld |
 
 ## Tasks
 
@@ -214,6 +220,7 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 - [ ] Implement multitask_strategy dispatch: interrupt (pre-empted → cancelled, new → queued, ADR-028 D1, AC-014)
 - [ ] Implement multitask_strategy dispatch: rollback (pre-empted → cancelled, delete checkpoint rows above latest_completed_checkpoint_id, reset pointer, ADR-028 D2, AC-015)
 - [ ] Implement multitask_strategy dispatch: enqueue (FIFO queue, max_queued_runs=10 configurable, 429 E-SERVER-019 on full, ADR-028 D3, AC-013)
+- [ ] Implement `FutureExt::catch_unwind(AssertUnwindSafe(...))` in the run-executor around graph execution dispatch; on panic catch → construct `PregolyaError { code: "E-GRAPH-019", category: INTERNAL, message: "NodePanic: graph node panicked during execution — see server error log for details", retry_hint: Never, .. }`; transition run `in_progress → failed` with E-GRAPH-019 STATIC message (never embed raw panic text in Run.error.message per {INV-007}); log raw panic text at ERROR severity (`tracing::error!`) server-side only; verify {INV-005} no orphan `in_progress` runs and {INV-007} panic-text-isolation via BC-2.12.003 TV-011 (AC-018)
 - [ ] Run `just iter pregolya-server` — all tests green
 
 ## Previous Story Intelligence
@@ -236,6 +243,7 @@ A run in `interrupted` state (awaiting HITL approval) can be transitioned to `ca
 6. **No `unwrap()` / `expect()` in production code.**
 7. **`#[non_exhaustive]`** on `RunState` enum (public API surface).
 8. **`mod.rs` re-export only** in all route and store modules.
+9. **`panic = "unwind"` required on `pregolya-server` release profile (SEC-008, CWE-248).** `FutureExt::catch_unwind(AssertUnwindSafe(...))` in the run-executor catches node-body panics ONLY when `panic = "unwind"` is set; `panic = "abort"` causes process termination on panic (remote DoS). DevOps asserts this pin at Phase-3 Cargo.toml authoring; implementer must add an inline comment at the `catch_unwind` call site citing SEC-008 and BC-2.12.003 EC-003. Error code: E-GRAPH-019 NodePanic (INTERNAL, Never).
 
 ## Library & Framework Requirements
 

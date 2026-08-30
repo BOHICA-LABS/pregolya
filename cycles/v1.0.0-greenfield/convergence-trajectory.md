@@ -4239,3 +4239,39 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **MILESTONE: P2A-174 CLEAN(strict)=YES — FIRST fully-clean adversarial lens of Phase-2 re-convergence. Census/records lens has converged; all 7 findings were incomplete-sweeps of prior decisions (r36 cap-removal, r39 adapter, r40 sig-fix, records glosses). Core abstractions (realizability pipe/adapter, ForceApprove gate, census) VERIFIED HELD/converged. L-233 incomplete-sweep-pattern reaffirmed.**
 
 **NEXT: round-42 (P2A-176/177/178/179 + GATE-READY) on new frozen HEAD post-D-314 push. Streak resets to 0/3 on push.**
+
+---
+
+## Round-42 (P2A-176/177/178/179) — D-317
+
+**Frozen HEAD: post-D-316-SESSION-WRAP-push (round-42 new frozen HEAD)**
+
+**Adversary passes on frozen HEAD:**
+
+| Pass | Lens | Findings | Severity | Status |
+|------|------|----------|----------|--------|
+| P2A-176 | realizability | 1 | 1 HIGH (F-P2A176-01 batch default join_all/FuturesOrdered in-task; JoinSet::spawn borrows &self — prohibited) | NOT CLEAN |
+| P2A-177 | security | 2 | 1 HIGH (F-P2A177-01 server-run async node-panic boundary FutureExt::catch_unwind; E-GRAPH-019 minted, CWE-248/703, SEC-008) + 1 MED (F-P2A177-02 internal-panic codes → static "internal error" at MCP boundary, CWE-209) | NOT CLEAN |
+| P2A-178 | consistency/census/records | 0 | ZERO findings — census EC 138 / TV 761 / BC 134 / VP 17 / stories 40 fully reconciled | CLEAN(strict)=YES |
+| P2A-179 | SS-09/SS-11 deep-audit | 1 | 1 HIGH (F-P2A179-01 phantom ConcreteGraphRunner<S> generic type parameter → non-generic per ADR-029 §Decision-2) | NOT CLEAN |
+
+**Finding Progression trajectory-tail: →1→2→0→1**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony — 3 HIGH + 1 MED present.**
+
+**CLEAN(strict): NO | CLEAN(PR-merge): NO (HIGH findings present)**
+
+**Streak: 0/3 (frozen-HEAD reset on D-317 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A176-01 | HIGH | CLOSED: S-1.04 batch default → in-task join_all/FuturesOrdered per BC-2.01.003 {PC-003} v2.8; JoinSet::spawn prohibited (borrows &self across await boundary); no max_concurrency cap; AC-003 + §Library-Requirements + §Architecture-Compliance corrected (story-writer). |
+| F-P2A177-01 | HIGH, CWE-248/703, SEC-008 | CLOSED: S-1.26 AC-018 + EC-019: pregolya-server run-executor wraps graph execution in FutureExt::catch_unwind(AssertUnwindSafe(...)); node-body panic → E-GRAPH-019 NodePanic (minted); run in_progress→failed; panic text server-side-only ({INV-007}); Architecture Compliance Rule 9 (panic=unwind release profile). BC-2.12.003 {EC-003}/{INV-007} + BC-2.09.008 {SEC-008} + error-taxonomy.md E-GRAPH-019 + ADR-001 rev-3 DONE at BC layer (architect+PO); S-1.26 propagation DONE (story-writer). |
+| F-P2A177-02 | MED, CWE-209 | CLOSED: S-2.11 AC-038 TV-019: internal-panic codes (E-GRAPH-011/E-GRAPH-019) → static "internal error" replacement at MCP boundary per ADR-029 §Decision-3 Option A; TV-019 minted (+1 TV). BC-2.09.008 EC-003 + test-vectors.md DONE at BC layer (PO); S-2.11 propagation DONE (story-writer). |
+| F-P2A179-01 | HIGH | CLOSED: S-2.11 AC-019: ConcreteGraphRunner non-generic per ADR-029 §Decision-2 and BC-2.09.008 {PC-003} v3.4; phantom ConcreteGraphRunner<S> generic removed. BC-2.09.008 {PC-003} DONE at BC layer (PO); S-2.11 propagation DONE (story-writer). |
+
+**Census delta: EC 137→138 (E-GRAPH-019 NodePanic minted). TV 759→761 canonical (772 incl GTV; TV-011+TV-019 minted, +2). BC 134 UNCHANGED. VP 17 UNCHANGED. Stories 40 (39 product + 1 maint) UNCHANGED. Points 303 UNCHANGED. streak 0/3 (frozen-HEAD reset on D-317 push).**
+
+**NEXT: round-43 on new frozen HEAD post-D-317 push. Streak resets to 0/3 on push.**
