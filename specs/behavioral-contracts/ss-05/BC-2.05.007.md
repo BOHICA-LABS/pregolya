@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.05.007
-version: "1.8"
+version: "1.9"
 status: draft
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.6 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.23 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.7 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.8 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
+  - "1.9 (round-46/SEC-008-class-audit/2026-08-30): catch_unwind class-audit closure — {INV-003} and TV-006. {INV-003}: async panic-catch mechanism specified: hook.pre_invoke is wrapped in FutureExt::catch_unwind(AssertUnwindSafe(...)); panic during .await polling caught and converted to Deny via shield_hook_result ({PC-007}); synchronous std::panic::catch_unwind cannot catch it. SEC-008 build-profile dependency note added (canonical workspace-root form): AUTHORITATIVE pin is workspace-root [profile.release] governing pregolya-server binary; library-member [profile.release] panic override silently ignored by Cargo; panic=\"abort\" voids catch (CWE-248/703). TV-006 Notes: async catch mechanism and SEC-008 note added. R05 gate (catch_unwind implies SEC-008 note) satisfied — zero remaining BC-layer catch_unwind-without-SEC-008 sites in this BC."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-034
   - architecture/decisions/ADR-018-per-tool-call-approval-hook.md
@@ -37,7 +38,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-018-per-tool-call-approval-hook.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "5a451cb"
+input-hash: "fd9ce03"
 extracted_from: null
 modified: []
 deprecated: null
@@ -144,7 +145,17 @@ under no code path does a `Deny` decision allow the tool to execute.
 - {INV-002} `pre_tool_dispatch` is called for EVERY tool invocation — there is no bypass, no
   tool-whitelist that skips the hook.
 - {INV-003} Hook failure (panic or error) is treated as Deny, not Approve. This is the fail-closed
-  safety property.
+  safety property. The async hook invocation `hook.pre_invoke(&preview, &run_ctx)` is wrapped in
+  `FutureExt::catch_unwind(AssertUnwindSafe(...))` so that a panic during `.await` polling is caught
+  and converted to `PreToolDecision::Deny { reason: "hook error: <panic_detail>" }` via
+  `shield_hook_result` (per {PC-007}); a synchronous `std::panic::catch_unwind` around
+  future-construction cannot catch it because the hook body fires during the polled future.
+  **SEC-008 build-profile dependency:** This recovery depends on `panic = "unwind"`. The
+  AUTHORITATIVE pin point is the workspace-root `[profile.release]` governing the `pregolya-server`
+  binary; Cargo honors `[profile.release] panic` ONLY at the workspace root (applied at link time);
+  a library-member `[profile.release] panic` override (e.g., in `pregolya-graph`'s own manifest) is
+  silently ignored by Cargo and MUST NOT be relied upon; `panic = "abort"` at the workspace root
+  voids the catch and causes process termination (CWE-248/703).
 - {INV-004} `AlwaysApprovePolicy` is the default; the behavior change is opt-in via `GraphConfig`.
 - {INV-005} **DI-014 (No Silent Swallowing):** `ToolOutput::Error(reason)` is returned to the model
   context on Deny; the Deny reason is never silently discarded.
@@ -173,7 +184,7 @@ under no code path does a `Deny` decision allow the tool to execute.
 | TV-003 | Hook returns `Edit { modified_args: {"cmd": "ls"} }` where original was `{"cmd": "rm -rf /"}` | Tool invoked with `{"cmd": "ls"}` — args replaced | edit path |
 | TV-004 | Hook returns `Edit { modified_args: "not-an-object" }` | Fallback to Deny — `ToolOutput::Error("invalid modified_args")` | edit-validation |
 | TV-005 | No hook configured (GraphConfig.pre_tool_hook = None) | Tool invoked with original args; no pre_invoke call | default (no hook) |
-| TV-006 | Hook panics | `ToolOutput::Error("hook error: ...")` — tool not invoked | fail-closed (panic) |
+| TV-006 | Hook panics | `ToolOutput::Error("hook error: ...")` — tool not invoked | fail-closed (panic); async hook panic caught via `FutureExt::catch_unwind(AssertUnwindSafe(hook.pre_invoke(...)))` inside `pre_tool_dispatch`; caught panic constructs `Deny { reason: "hook error: <detail>" }` via `shield_hook_result` ({PC-007}); SEC-008: requires workspace-root `[profile.release]` `panic = "unwind"` governing `pregolya-server` binary (library-member override silently ignored by Cargo; `panic = "abort"` voids catch, causes process termination, CWE-248/703) |
 
 ## Verification Properties
 

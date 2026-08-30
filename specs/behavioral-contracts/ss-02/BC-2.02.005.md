@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.005
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.6 (P2-bc-completeness-burst-B/SS-01..03/2026-08-26): Two gaps closed. (1) Gap MED — side-effecting path_fn declared 'not defined behavior' without a concrete outcome. Decision (production-grade default): side effects ARE executed (graph provides no sandbox); they are NOT covered by checkpoint/rollback boundaries. Rewrote {INV-002} to specify this explicitly. (2) Gap LOW — multi-edge union with conflicting End + NodeName was ambiguous (INV-004 said 'union determines scheduling' but PC-003 said 'End → no further nodes'; tension unresolved). Decision: End is added to the scheduling union as a terminus marker, but does NOT preempt live-node scheduling from other concurrent edges; live nodes run to completion before the terminus takes effect. Added {INV-005} and {EC-006} to specify this."
   - "1.7 (round-38/F-P2A163-01/2026-08-29): F-P2A163-01 [MED] — §Architecture Anchors: phantom `pregolya-graph/src/graph/state.rs` replaced with architect-confirmed canonical `pregolya-graph/src/definition.rs` (`graph::definition`). There is no `graph/` subdir in pregolya-graph; `add_conditional_edges` and `path_map` compilation live in `definition.rs`. SS-02 sibling sweep: BC-2.02.001 also had this phantom anchor (fixed in the same burst)."
+  - "1.8 (round-46/F-193-02b/2026-08-30): F-193-02 [HIGH, CWE-248/703] — SEC-008 build-profile dependency added to {PC-005} and EC-003. The Pregel executor catches path_fn panics via std::panic::catch_unwind (synchronous; path_fn is a synchronous function per {PRE-004}); this recovery holds ONLY under panic=\"unwind\" at the workspace-root [profile.release] governing the pregolya-server binary. panic=\"abort\" at the workspace root voids the catch and causes process termination (CWE-248); a library-member override (e.g., pregolya-graph manifest) is silently ignored by Cargo. Workspace-root canonical form mirrors BC-2.09.008 EC-010 v3.5."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
 inputs:
@@ -76,6 +77,14 @@ edge routing function. Static edges and `Send` fan-out (BC-2.02.006) are distinc
 5. {PC-005} If `path_fn` raises a Rust panic or returns an `Err`, the graph transitions to `failed`
    with `Err(E-GRAPH-011 ConditionalEdgePanic { source_node: "source_node", message: "<captured panic text>" })`,
    preserving both the edge source node name and the captured panic text in the error struct.
+   **SEC-008 build-profile dependency:** The panic is caught via `std::panic::catch_unwind`
+   in the Pregel executor (synchronous; `path_fn` is a synchronous function per {PRE-004}).
+   This recovery depends on `panic = "unwind"`. A `panic = "abort"` release profile at the
+   workspace-root `[profile.release]` governing the `pregolya-server` binary voids the catch
+   and causes process termination on any `path_fn` panic (remote DoS, CWE-248); a
+   library-member `[profile.release] panic` override (e.g., in `pregolya-graph`'s own
+   manifest) is silently ignored by Cargo and MUST NOT be relied upon. Devops asserts the
+   workspace-root pin at Phase-3 workspace `Cargo.toml` authoring.
 
 ## Invariants
 
@@ -120,11 +129,18 @@ drop the routing result.
 ### EC-003: path_fn panics (unwind)
 **Scenario:** `path_fn` panics due to a programming error (index out of bounds, unwrap on
 None, etc.).
-**Expected behavior:** The panic is caught by the Pregel executor (via `std::panic::catch_unwind`
-or equivalent); the run transitions to `failed` with
+**Expected behavior:** The panic is caught by the Pregel executor via `std::panic::catch_unwind`
+(synchronous; `path_fn` is a synchronous function per {PRE-004}); the run transitions to
+`failed` with
 `Err(E-GRAPH-011 ConditionalEdgePanic { source_node: "source_node", message: "<captured panic text>" })`,
 preserving both the edge source node name (for routing context) and the captured panic text
 (the panic payload stringified) in the two-field error struct.
+**SEC-008 build-profile dependency:** This recovery depends on `panic = "unwind"`. A
+`panic = "abort"` release profile at the workspace-root `[profile.release]` governing the
+`pregolya-server` binary voids the catch and causes process termination on any `path_fn`
+panic (CWE-248); a library-member `[profile.release] panic` override (e.g., in
+`pregolya-graph`'s own manifest) is silently ignored by Cargo and MUST NOT be relied upon.
+Devops asserts the workspace-root pin at Phase-3 workspace `Cargo.toml` authoring.
 
 ### EC-004: path_fn returns empty list
 **Scenario:** `path_fn` returns `NodeNames([])` (empty routing result, not `End`).

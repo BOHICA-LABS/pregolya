@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: dependency-graph
-version: "1.10"
+version: "1.11"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -11,10 +11,11 @@ inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/prd.md
   - .factory/specs/module-criticality.md
-input-hash: "69778ab"
+input-hash: "e2207b1"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D21, D23]
 changelog:
+  - "1.11 (R46/F-193-01-sibling/2026-08-30): CLASS-AUDIT-2 CompiledGraph phantom sweep — Edge Table `pregolya` facade→pregolya-graph row: `CompiledGraph` (phantom bare name, non-canonical per ADR-029 §Symbol Grounding) replaced with `CompiledStateGraph` (canonical non-generic type per BC-2.02.001 {PC-001}). Sibling sweep: this was the sole remaining live-body `CompiledGraph` (bare, non-grandfathered) occurrence in this file; changelog entries v1.8/v1.10 retain old names as historical records (grandfathered per TD-VSDD-091). input-hash updated to e2207b1."
   - "1.10 (round-10-sibling-sweep/2026-08-27): GAP-01 type-grounding straggler sweep — three `CompiledGraph<S>` live-body sites replaced with `CompiledStateGraph` (non-generic; BC-2.02.001 {PC-001}): (1) Crate DAG pregolya-mcp annotation; (2) Edge Table pregolya-mcp→pregolya-graph rationale; (3) Build Order Wave 2 position-19 annotation. Sibling sweep: no additional CompiledGraph<S> or Fn(&S) sites in this file (v1.8 changelog entry retains old symbol as historical record; grandfathered per TD-VSDD-091). input-hash updated to 69778ab."
   - "1.9 (round-6/BLOCKER-3/2026-08-26): §Cross-Cutting Dependencies proptest row: add `pregolya-prompts [VP-006-B]` (injection_guard Multi-Pair FewShotExamples fail-closed; proptest P1; multi-pair injection-guard mandate SEC-003 per VP-INDEX). Proptest crate now covers 7 crates: pregolya-graph, pregolya-checkpoint, pregolya-splitters, pregolya-core, pregolya-memory, pregolya-mcp, pregolya-prompts."
   - "1.8 (GAP-01/ADR-029/2026-08-26): Add new runtime edge `pregolya-mcp → pregolya-graph` (mcp::graph_tool module wraps CompiledGraph<S> as DynTool; ADR-029 Decision 1). (1) Crate DAG: update pregolya-mcp leaf annotation to include `CompiledGraph<S>` from pregolya-graph. (2) Edge Table: add pregolya-mcp → pregolya-graph runtime row. (3) Build Order: update pregolya-mcp annotation (position 19, Wave 2 — topological order valid since pregolya-graph is position 8, Wave 1). (4) Cross-Cutting Dependencies proptest row: add pregolya-mcp [VP-016 STATE-ISOLATION]. Input-hash refresh pending (state-manager task)."
@@ -115,7 +116,7 @@ pregolya (facade)             (re-exports public API from all impl crates; termi
 | pregolya-splitters | pregolya-core | runtime | PregolyaError for Result |
 | pregolya-macros | (none) | — | Proc-macro crate; no pregolya-core dep at compile time |
 | `pregolya` (facade) | pregolya-core | runtime | Public API re-export: re-exports core trait surface, message types, error types |
-| `pregolya` (facade) | pregolya-graph | runtime | Public API re-export: StateGraph, CompiledGraph, graph execution |
+| `pregolya` (facade) | pregolya-graph | runtime | Public API re-export: StateGraph, CompiledStateGraph, graph execution |
 | `pregolya` (facade) | pregolya-checkpoint | runtime | Public API re-export: CheckpointSaver, backend types |
 | `pregolya` (facade) | pregolya-server | runtime | Public API re-export: Axum server builder, RunConfig |
 | `pregolya` (facade) | pregolya-splitters | runtime | Public API re-export: RecursiveSplitter, PariTySplitter |

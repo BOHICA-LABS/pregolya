@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.13
 epic_id: E-06
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "16763b4"
+input-hash: "5125118"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.12, S-1.04, S-1.14, S-1.17]
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.3 (R46/R05-catch_unwind-SEC-008/2026-08-30): AC-007 extended with SEC-008 build-profile dependency note — std::panic::catch_unwind in pregolya_memory::write_guard requires panic=\"unwind\" in workspace-root Cargo.toml [profile.release] (pregolya-server binary); library-member profile override is silently ignored by Cargo and MUST NOT be relied upon; panic=\"abort\" at workspace root voids the fail-closed catch (CWE-248/703). Governing BC: BC-2.15.005."
   - "1.2 (SW-2/bc-completeness-hardening/2026-08-26): BC-2.15.004 -> AC-018 (EC-007/INV-003 SkillStore name-collision -> E-MEMORY-009; memory::skills encapsulates check; callers delegate, do NOT self-check); BC-2.15.005 -> AC-019 (PC-006/EC-007 Replace variant scans new_value only; old_value unchanged on Deny/E-MEMORY-007). EC-009/EC-010 added to edge cases. BC table: version column added."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
@@ -73,6 +74,8 @@ changelog:
 
 ### AC-007 (traces to BC-2.15.005 INV-001 — fail-closed on panic)
 If a custom `MemoryWriteGuard` implementation panics inside `validate`, the panic is caught via `std::panic::catch_unwind` and the result is `Deny { reason: "write guard panicked" }`. The memory write does NOT proceed when the guard panics. Verified by `test_BC_2_15_005_panic_fails_closed()` (custom guard that always panics).
+
+**Build-profile prerequisite (SEC-008) — `panic = "unwind"` required in the workspace-root release profile (pregolya-server binary):** This `std::panic::catch_unwind` recovery requires `panic = "unwind"` in the workspace-root `Cargo.toml` `[profile.release]` governing the `pregolya-server` binary. Cargo honors `[profile.release] panic` ONLY at the workspace root, applying it to the final binary at link time. A library-member `[profile.release] panic` override — including a `[profile.release] panic = "unwind"` line inside `pregolya-memory/Cargo.toml` or any other workspace-member manifest — is silently ignored by the Cargo linker and MUST NOT be relied upon as the SEC-008 gate. If the workspace-root release profile sets `panic = "abort"`, `std::panic::catch_unwind` in `pregolya_memory::write_guard` is voided — the process aborts on panic instead of unwinding, bypassing the fail-closed `Deny { reason: "write guard panicked" }` and exposing a denial-of-service vector (CWE-248/703). This is a Phase-3 devops-engineer obligation (workspace-root `Cargo.toml` authoring; assert on the `pregolya-server` binary profile, NOT any library-member profile). The implementing engineer MUST add a `// SEC-008: panic = "unwind" required in workspace-root release profile (pregolya-server) — library-member profile override is inert (silently ignored by Cargo); std::panic::catch_unwind voids under abort` comment at the `std::panic::catch_unwind` dispatch site in `pregolya_memory::write_guard` to document this workspace-root dependency. The devops-engineer asserts the workspace-root release profile at Phase-3 workspace init. Verified by devops-engineer at Phase-3; implementer obligation is the comment annotation. (See BC-2.15.005 SEC-008 obligation; mirrors S-1.19 AC-024 and S-2.11 AC-037 for the analogous fail-closed catch obligations on other paths.)
 
 ### AC-008 (traces to BC-2.15.005 PC-002 — E-MEMORY-007 on Deny)
 When `validate` returns `Deny`, the memory write returns `Err(PregolyaError { code: "E-MEMORY-007", message: "MemoryWriteGuardDenied: ...", category: SECURITY, severity: broken, .. })`. The error is classified SECURITY and severity `broken` (never a transient retry). Verified by `test_BC_2_15_005_deny_produces_e_memory_007()`.

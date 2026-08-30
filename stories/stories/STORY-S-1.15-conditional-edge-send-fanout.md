@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.15
 epic_id: E-07
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "ed2ea5b"
+input-hash: "5b4ede1"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -30,6 +30,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.3 (R46/R05-catch_unwind-SEC-008/2026-08-30): AC-002 extended with SEC-008 build-profile dependency note — std::panic::catch_unwind in pregolya-graph/src/bsp_engine.rs requires panic=\"unwind\" in workspace-root Cargo.toml [profile.release] (pregolya-server binary); library-member profile override is silently ignored by Cargo and MUST NOT be relied upon; panic=\"abort\" at workspace root voids the E-GRAPH-011 recovery path (CWE-248/703). Governing BC: BC-2.02.005."
   - "1.2 (P2-bc-completeness-burst-B/2026-08-26): BC-2.02.005 {INV-002}: AC-012 side-effecting path_fn executes (not sandboxed). {INV-005}/{EC-006}: AC-013 multi-edge End+NodeName live-node runs before terminus. BC table version bumped."
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors"
 ---
@@ -60,6 +61,8 @@ changelog:
 
 ### AC-002 (traces to BC-2.02.005 PC-005 — path_fn panic caught and routed to error)
 If `path_fn` panics, the panic is caught via `std::panic::catch_unwind`; the super-step returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-011, .. })` with `{ source_node, message }`. The graph does not propagate the panic. Verified by `test_BC_2_02_005_path_fn_panic_caught()`.
+
+**Build-profile prerequisite (SEC-008) — `panic = "unwind"` required in the workspace-root release profile (pregolya-server binary):** This `std::panic::catch_unwind` recovery requires `panic = "unwind"` in the workspace-root `Cargo.toml` `[profile.release]` governing the `pregolya-server` binary. Cargo honors `[profile.release] panic` ONLY at the workspace root, applying it to the final binary at link time. A library-member `[profile.release] panic` override — including a `[profile.release] panic = "unwind"` line inside `pregolya-graph/Cargo.toml` or any other workspace-member manifest — is silently ignored by the Cargo linker and MUST NOT be relied upon as the SEC-008 gate. If the workspace-root release profile sets `panic = "abort"`, `std::panic::catch_unwind` in `pregolya-graph/src/bsp_engine.rs` is voided — the process aborts on panic instead of unwinding, bypassing the `E-GRAPH-011` recovery path and exposing a denial-of-service vector (CWE-248/703). This is a Phase-3 devops-engineer obligation (workspace-root `Cargo.toml` authoring; assert on the `pregolya-server` binary profile, NOT the `pregolya-graph` library-member profile). The implementing engineer MUST add a `// SEC-008: panic = "unwind" required in workspace-root release profile (pregolya-server) — library-member (pregolya-graph) profile override is inert (silently ignored by Cargo); std::panic::catch_unwind voids under abort` comment at the `std::panic::catch_unwind` dispatch site in `pregolya-graph/src/bsp_engine.rs` to document this workspace-root dependency. The devops-engineer asserts the workspace-root release profile at Phase-3 workspace init. Verified by devops-engineer at Phase-3; implementer obligation is the comment annotation. (See BC-2.02.005 SEC-008 obligation; mirrors S-1.19 AC-024 and S-2.11 AC-037 for the analogous fail-closed catch obligations on other paths.)
 
 ### AC-003 (traces to BC-2.02.005 PC-004 — path_map validates routing targets at compile time)
 When `path_map` is provided, `compile()` validates that every value in `path_map` is a registered node name. If not, `compile()` returns `Err(PregolyaError { category: GRAPH, code: E-GRAPH-012, .. })`. Verified by `test_BC_2_02_005_path_map_validated_at_compile()`.

@@ -58,8 +58,23 @@
 #              the authoritative control — library-member [profile.release] overrides are
 #              silently ignored by Cargo; authoritative pin is workspace-root [profile.release]
 #         PASS form: workspace-root [profile.release] framing present (BC-2.09.008 EC-010 v3.5)
-#         WARN form: library-member pin claim present without workspace-root framing
+#         WARN form: library-member/binary pin claim present without workspace-root framing
 #              (e.g. BC-2.11.002 {INV-005} pre-fix: "pregolya-graph release profile MUST pin")
+#         WORD-ORDER EXTENSION (round-46 F-193-04): broadened to also match reverse word order
+#              "MUST pin ... in the pregolya-<crate> release profile" (ADR-001 obligation 3 form)
+#              — the original trigger only matched "pregolya-\w+ release profile MUST pin"
+#
+#   R05 — catch_unwind implies SEC-008 build-profile dependency note (round-46 F-193-04)
+#         Authority: BC-2.09.008 EC-010 / ADR-029 §Decision 5 SEC-008 / BC-2.12.003 EC-003
+#         Defect class: a BC/ADR/story that uses catch_unwind (std::panic::catch_unwind OR
+#              FutureExt::catch_unwind) without citing the SEC-008 build-profile invariant
+#              (`panic = "unwind"` workspace-root requirement) is structurally invisible to R04
+#              because R04 gates on `\bSEC-008\b` as the related_re.
+#         TRIGGER: any normative body mention of `catch_unwind`
+#         REQUIRED: `\bSEC-008\b` somewhere in the same normative body
+#         LIVE VIOLATIONS (round-46): BC-2.15.005 + BC-2.02.005 (std::panic::catch_unwind
+#              without SEC-008 note — survived because they never wrote "SEC-008")
+#         Scope: BC + ADR + story corpus (same anchor_glob as R04)
 #
 # EXCLUSIONS
 # ──────────
@@ -72,7 +87,7 @@
 #
 # SELF-PROBE (POL-31)
 # ───────────────────
-# Eight self-probes run before the live check:
+# Eleven self-probes run before the live check:
 #   R01-pos: synthetic story body with v4-specific regex fragment → WARN reported
 #   R01-neg: synthetic story body with version-agnostic regex → no WARN
 #   R02-pos: synthetic story body with "UUID v4 removal" → WARN reported
@@ -84,6 +99,12 @@
 #            WITHOUT workspace-root framing → R04-PREC WARN (inert library-member pin)
 #   R04-neg: synthetic BC body with SEC-008 ref + workspace-root framing + library-member
 #            crate mentioned as "silently ignored" → no R04-PREC WARN (correctly structured)
+#   R04-PREC-WO-pos: synthetic ADR body with REVERSE word order
+#            "MUST pin ... in the pregolya-server release profile" + SEC-008 ref +
+#            NO workspace-root framing → R04-PREC WARN (word-order extension, round-46)
+#            Mirrors CURRENT ADR-001 obligation 3 text (F-193-01 live violation form)
+#   R05-pos: synthetic BC body with catch_unwind but NO SEC-008 note → R05 WARN
+#   R05-neg: synthetic BC body with catch_unwind AND SEC-008 note → no R05 WARN
 #
 # EXIT CONTRACT
 # ─────────────
@@ -315,8 +336,18 @@ RULES = [
         ],
         # Presence of SEC-008 is required for this rule to apply
         "related_re": re.compile(r"\bSEC-008\b"),
-        # Matches inert library-member pin claim: "pregolya-<crate> release profile MUST pin"
-        "trigger_re": re.compile(r"pregolya-\w+\s+release\s+profile\s+MUST\s+pin", re.IGNORECASE),
+        # Matches inert library-member/binary pin claim in EITHER word order:
+        #   (1) "pregolya-<crate> release profile MUST pin"  — original order
+        #       (crate name may not have surrounding backticks in this position)
+        #   (2) "MUST pin ... in the `pregolya-<crate>` release profile" — reverse order
+        #       e.g. ADR-001 obligation 3: "MUST pin `panic = \"unwind\"` in the
+        #       `pregolya-server` release profile" (word-order extension, round-46 F-193-04)
+        #       [^\s]* after crate name allows for closing backtick before the space
+        "trigger_re": re.compile(
+            r"pregolya-\w+\s+release\s+profile\s+MUST\s+pin"
+            r"|MUST\s+pin\b[^.]*\bpregolya-\w+[^\s]*\s+release\s+profile",
+            re.IGNORECASE
+        ),
         # Workspace-root framing confirms the doc is correctly structured — rule does not fire
         "workspace_re": re.compile(
             r"workspace[-\s]root.*\[profile|workspace[-\s]root.*profile.*release"
@@ -336,6 +367,50 @@ RULES = [
             "library-member [profile.release] panic overrides (e.g. pregolya-graph, pregolya-mcp) "
             "are silently ignored by Cargo and MUST NOT be relied upon; "
             "canonical form: BC-2.09.008 EC-010 v3.5 / ADR-029 §Decision 5 v2.16 / S-2.11 AC-037 v1.31"
+        ),
+        "sec_ref": "SEC-008 / CWE-248",
+    },
+    {
+        # R05 — catch_unwind implies SEC-008 build-profile dependency note
+        # Defect class: BC/ADR/story uses catch_unwind without citing the SEC-008 invariant.
+        # R04 gates on `\bSEC-008\b` as the related_re; a file that never writes "SEC-008"
+        # is structurally invisible to R04 even if it mandates catch_unwind behavior.
+        # LIVE VIOLATIONS (round-46): BC-2.15.005 + BC-2.02.005 (std::panic::catch_unwind
+        # without SEC-008 note — survived R45/R46 because neither file wrote "SEC-008").
+        "id": "R05",
+        "check_type": "requires_coexistence",
+        "description": (
+            "artifact uses catch_unwind without SEC-008 build-profile dependency note "
+            "(catch_unwind requires panic=unwind in workspace-root [profile.release]; "
+            "SEC-008 / CWE-248)"
+        ),
+        "authority": (
+            "BC-2.09.008 EC-010 / ADR-029 §Decision 5 SEC-008 / BC-2.12.003 EC-003: "
+            "catch_unwind (both std::panic and FutureExt forms) requires panic = \"unwind\" "
+            "in workspace-root [profile.release]; panic = \"abort\" voids recovery (CWE-248)"
+        ),
+        # EXTENDED round-45 R04-DETECTION-ENHANCEMENT scope: stories + BC + ADR corpus
+        "anchor_glob": [
+            "stories/stories/*.md",
+            "specs/behavioral-contracts/**/*.md",
+            "specs/architecture/**/*.md",
+        ],
+        # Trigger: any catch_unwind mention (both std::panic::catch_unwind and
+        # FutureExt::catch_unwind — both forms share the "catch_unwind" substring)
+        "trigger_re": re.compile(r"\bcatch_unwind\b"),
+        # Required: explicit SEC-008 build-profile reference somewhere in normative body
+        "required_re": re.compile(r"\bSEC-008\b"),
+        # Negation: trigger lines that describe catch_unwind as incorrect/historical
+        "negation_re": re.compile(
+            r"INADEQUATE|inadequate|corrected|STALE|REMOVED|RETIRED"
+            r"|round-\d+\s+correction|was\s+incorrect|cannot\s+catch",
+            re.IGNORECASE
+        ),
+        "canonical_hint": (
+            "add a reference to the SEC-008 build-profile obligation: "
+            "`panic = \"unwind\"` in workspace-root [profile.release] (governs "
+            "pregolya-server binary at link time) per BC-2.09.008 EC-010 + "
+            "BC-2.12.003 EC-003; `panic = \"abort\"` voids catch_unwind recovery (CWE-248)"
         ),
         "sec_ref": "SEC-008 / CWE-248",
     },
@@ -741,6 +816,76 @@ PROBE_R04_NEG_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R04_NEG" 2>/dev/null 
 PROBE_R04_NEG_WARNS="$(echo "$PROBE_R04_NEG_OUT" | grep -c '^\[WARN\] R04-PREC' || true)"
 probe_expect_pass "R04-neg" "workspace-root framing present — R04-PREC passes" "$PROBE_R04_NEG_WARNS"
 
+# R04-PREC-WO-pos: ADR body with REVERSE word order "MUST pin ... in the pregolya-server
+# release profile" + SEC-008 ref + NO workspace-root framing → R04-PREC WARN expected.
+# Mirrors the CURRENT ADR-001 obligation 3 text (F-193-01 live violation before architect fix).
+PROBE_R04_PREC_WO_POS="$PROBE_TMP/probe-r04-prec-wo-pos.md"
+cat > "$PROBE_R04_PREC_WO_POS" <<'STALE_EOF'
+---
+document_type: architecture_decision_record
+adr_id: ADR-9.99
+version: "1.0"
+---
+# ADR-9.99 Synthetic Probe
+
+## §Graph Run-Executor Panic Boundary
+
+**Obligations:**
+
+3. **SEC-008 scope extension:** devops-engineer MUST pin `panic = "unwind"` in the `pregolya-server` release profile at Phase 3; `panic = "abort"` voids `catch_unwind` recovery (CWE-248/703 remote DoS).
+STALE_EOF
+
+PROBE_R04_PREC_WO_POS_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R04_PREC_WO_POS" 2>/dev/null || true)"
+PROBE_R04_PREC_WO_POS_WARNS="$(echo "$PROBE_R04_PREC_WO_POS_OUT" | grep -c '^\[WARN\] R04-PREC' || true)"
+probe_expect_warn "R04-PREC-WO-pos" \
+  "reverse word order 'MUST pin ... in the pregolya-server release profile' (ADR-001 obligation 3 form)" \
+  "$PROBE_R04_PREC_WO_POS_WARNS"
+
+# R05-pos: BC body with catch_unwind but NO SEC-008 note → R05 WARN expected.
+# Mirrors the live defect class in BC-2.15.005 + BC-2.02.005 (round-46 survivors).
+PROBE_R05_POS="$PROBE_TMP/probe-r05-pos.md"
+cat > "$PROBE_R05_POS" <<'STALE_EOF'
+---
+document_type: behavioral_contract
+bc_id: BC-9.99
+version: "1.0"
+---
+# BC-9.99 Synthetic Probe
+
+## {INV-TEST} Panic recovery at write-guard boundary
+
+**Expected behavior:** `memory::write_guard` catches the panic (via `std::panic::catch_unwind`
+on the closure body) and returns an error response instead of crashing the thread.
+Recovery wraps the execution to ensure the process continues even when individual
+write operations panic unexpectedly.
+STALE_EOF
+
+PROBE_R05_POS_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R05_POS" 2>/dev/null || true)"
+PROBE_R05_POS_WARNS="$(echo "$PROBE_R05_POS_OUT" | grep -c '^\[WARN\] R05' || true)"
+probe_expect_warn "R05-pos" "catch_unwind without SEC-008 note → R05 WARN" "$PROBE_R05_POS_WARNS"
+
+# R05-neg: BC body with catch_unwind AND SEC-008 note → no R05 WARN expected.
+PROBE_R05_NEG="$PROBE_TMP/probe-r05-neg.md"
+cat > "$PROBE_R05_NEG" <<'CANONICAL_EOF'
+---
+document_type: behavioral_contract
+bc_id: BC-9.99
+version: "1.0"
+---
+# BC-9.99 Synthetic Probe
+
+## {INV-TEST} Panic recovery at write-guard boundary
+
+**Expected behavior:** `memory::write_guard` catches the panic (via `std::panic::catch_unwind`
+on the closure body) and returns an error response. This recovery requires `panic = "unwind"`
+in the workspace-root `[profile.release]` per the SEC-008 build-profile invariant
+(BC-2.09.008 EC-010); `panic = "abort"` voids `catch_unwind` recovery (CWE-248).
+CANONICAL_EOF
+
+PROBE_R05_NEG_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R05_NEG" 2>/dev/null || true)"
+PROBE_R05_NEG_WARNS="$(echo "$PROBE_R05_NEG_OUT" | grep -c '^\[WARN\] R05' || true)"
+probe_expect_pass "R05-neg" "catch_unwind WITH SEC-008 note — R05 passes" "$PROBE_R05_NEG_WARNS"
+
 # ── Self-probe gate ───────────────────────────────────────────────────────────
 if [ "$SELF_PROBE_FAIL" -gt 0 ]; then
   echo ""
@@ -750,7 +895,7 @@ if [ "$SELF_PROBE_FAIL" -gt 0 ]; then
   exit 2
 fi
 
-echo "[SELF-PROBE PASS] All 8 self-probes passed — checks are not false-green on synthetic fixtures."
+echo "[SELF-PROBE PASS] All 11 self-probes passed — checks are not false-green on synthetic fixtures."
 
 # ── Live check ────────────────────────────────────────────────────────────────
 echo ""
@@ -783,6 +928,12 @@ if [ "$LIVE_WARNS" -gt 0 ]; then
   echo "         per BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003; library-member profile"
   echo "         overrides are silently ignored by Cargo — do NOT pin pregolya-mcp release profile;"
   echo "         pregolya-mcp obligation is the S-2.11 AC-037 source comment only"
+  echo "    R04-PREC (WO): same as R04-PREC but triggered by reverse word order"
+  echo "         'MUST pin ... in the pregolya-<crate> release profile' — add workspace-root"
+  echo "         framing to the obligation note (ADR-001 obligation 3 canonical fix)"
+  echo "    R05: add SEC-008 build-profile obligation alongside any catch_unwind mention;"
+  echo "         canonical: 'requires panic = \"unwind\" in workspace-root [profile.release]"
+  echo "         per SEC-008 / BC-2.09.008 EC-010; panic = \"abort\" voids catch_unwind (CWE-248)'"
 fi
 
 # Advisory gate: always exits 0 (commit not blocked by WARN findings)

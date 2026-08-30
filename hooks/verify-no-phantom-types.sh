@@ -24,6 +24,8 @@
 #   schema_for!(S)                   — construction-time schema derivation; caller must supply
 #   DynTool::invoke (word-boundary)  — no such method; canonical is DynTool::invoke_dyn (ADR-029 v1.7)
 #   PreToolCallHook::PendingHumanApproval — no such path; canonical is PreToolDecision::PendingHumanApproval (BC-2.05.007)
+#   CompiledGraph::run               — phantom method; canonical is CompiledStateGraph::invoke (round-46 F-193)
+#   CompiledGraph.invoke             — phantom Python-style call; canonical is CompiledStateGraph::invoke (round-46 F-193)
 #
 # GAP-01 SCOPING NOTE
 # ───────────────────
@@ -91,6 +93,11 @@
 #   probe_14a_args_schema_dyntool_flagged:        args_schema in DynTool-scoped file → WARN fired
 #   probe_14b_dyntool_schema_method_exempt:       canonical DynTool::schema() in DynTool file → NOT flagged
 #   probe_14c_args_schema_non_dyntool_exempt:     args_schema in non-DynTool file → NOT flagged (dyntool_scope)
+#   probe_15a_compiledgraph_run_flagged:          CompiledGraph::run in body → WARN fired (round-46 F-193)
+#   probe_15b_compiledgraph_run_symbol_grounding_exempt: CompiledGraph::run in ## Symbol Grounding → NOT flagged
+#   probe_15c_compiledstategraph_invoke_exempt:   canonical CompiledStateGraph::invoke → NOT flagged
+#   probe_16a_compiledgraph_dot_invoke_flagged:   CompiledGraph.invoke (Python-style) in body → WARN fired
+#   probe_16b_compiledgraph_dot_invoke_not_negation_exempt: CompiledGraph.invoke with NOT negation → NOT flagged
 # POL-30: probe fixtures live in $TMPDIR, never under .factory/specs/ or .factory/stories/.
 #
 # EXIT CONTRACT
@@ -105,6 +112,7 @@
 #   2. Incrementing EXPECTED_BLOCKING_COUNT from 16 to 17
 #   3. Changing exit contract in this script from "exit 0" to "exit $rc"
 #   4. Updating the ADVISORY VALIDATORS header comment in pre-commit-validators.sh
+#   (Self-probe count: 29 — update "All 29 self-probes" assertion when adding new probes)
 #
 # Usage:  bash .factory/hooks/verify-no-phantom-types.sh
 # Called: standalone advisory check; also run_advisory in pre-commit-validators.sh.
@@ -358,6 +366,30 @@ PHANTOM_PATTERNS = [
     ("args_schema (phantom DynTool field/method — canonical is DynTool::schema() → schemars::Schema; F-P2A104-01)",
      re.compile(r'\bargs_schema\b'),
      "dyntool_scope"),
+
+    # ── Round-46 F-193 ── CompiledGraph::run phantom method (R45→R46 recurrence gate)
+    # CompiledGraph::run recurred R45→R46 in STORY-S-1.27 (lines 120, 207, 227).
+    # ADR-029 §Symbol Grounding lists the CompiledGraph family as PHANTOM.
+    # Canonical: CompiledStateGraph::invoke (BC-2.02.001 {PC-001}).
+    # The existing CompiledGraph< pattern catches the generic form but NOT method calls.
+    # This pattern catches the ::run phantom method regardless of source file.
+    # SCOPE NOTE: domain-spec/entities-graph.md and dependency-graph.md use bare
+    # "CompiledGraph" as an informal domain synonym — those do NOT contain "::run" or
+    # ".invoke" so they are correctly NOT flagged by these patterns.
+    # ALWAYS scoped: CompiledGraph::run is a phantom method name in ALL spec files.
+    # NEGATION: Symbol Grounding section (MD_SYMBOL_GND_RE) + standard NEGATION_RES
+    # cover "PHANTOM", "NOT", etc. — no additional negation needed.
+    ("CompiledGraph::run (phantom method — canonical is CompiledStateGraph::invoke; round-46 F-193)",
+     re.compile(r'\bCompiledGraph::run\b'),
+     "always"),
+
+    # ── Round-46 F-193 ── CompiledGraph.invoke phantom method (Python-style call form)
+    # The Python-style dot-call "CompiledGraph.invoke" is a phantom in Rust spec prose.
+    # Canonical: CompiledStateGraph::invoke (BC-2.02.001 {PC-001}).
+    # ALWAYS scoped: phantom in all spec files.
+    ("CompiledGraph.invoke (phantom Python-style call — canonical is CompiledStateGraph::invoke; round-46 F-193)",
+     re.compile(r'\bCompiledGraph\.invoke\b'),
+     "always"),
 ]
 
 # Anchor patterns for GAP-01 scope detection (live-body content only)
@@ -1293,6 +1325,159 @@ SPECEOF
   echo "[SELF-PROBE PASS] probe_14c_args_schema_non_dyntool_exempt: args_schema in non-DynTool file is not flagged."
 }
 
+# ── Self-probe 15a: CompiledGraph::run in story body MUST be flagged ──────────
+# CompiledGraph::run is a phantom method — canonical is CompiledStateGraph::invoke.
+# This 'always'-scoped pattern fires without any GAP-01 anchor.
+# Mirrors the live violation in STORY-S-1.27 (round-46 F-193 recurrence).
+probe_15a_compiledgraph_run_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## AC-011 — SSE streaming
+
+The SSE endpoint invokes the same `CompiledGraph::run` execution path as the unary endpoint.
+There is no separate streaming engine. Both code paths call `CompiledGraph::run`.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_15a_compiledgraph_run_flagged: CompiledGraph::run in body was NOT flagged."
+    echo "  Expected a HIT for 'CompiledGraph::run (phantom method)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'CompiledGraph::run'; then
+    echo "[SELF-PROBE FAIL] probe_15a_compiledgraph_run_flagged: HIT found but not for CompiledGraph::run."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_15a_compiledgraph_run_flagged: CompiledGraph::run phantom method is detected."
+}
+
+# ── Self-probe 15b: CompiledGraph::run in ## Symbol Grounding MUST NOT be flagged ──
+# The Symbol Grounding section in ADR-029 lists CompiledGraph family as PHANTOM for
+# documentation purposes — it must NOT be flagged by this check.
+probe_15b_compiledgraph_run_symbol_grounding_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The graph executor is accessed via `CompiledStateGraph::invoke`.
+
+## Symbol Grounding
+
+| Symbol | Status | Canonical |
+|--------|--------|-----------|
+| CompiledGraph::run | PHANTOM | CompiledStateGraph::invoke |
+| CompiledGraph.invoke | PHANTOM | CompiledStateGraph::invoke |
+
+## Postconditions
+
+Callers invoke `CompiledStateGraph::invoke` to execute the compiled graph.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_15b_compiledgraph_run_symbol_grounding_exempt: CompiledGraph::run inside ## Symbol Grounding was incorrectly flagged."
+    echo "  The Symbol Grounding section is excluded by MD_SYMBOL_GND_RE — must not generate HIT."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_15b_compiledgraph_run_symbol_grounding_exempt: CompiledGraph::run in Symbol Grounding section is exempt."
+}
+
+# ── Self-probe 15c: canonical CompiledStateGraph::invoke MUST NOT be flagged ──
+# The canonical method name contains 'State' — ensure the pattern does NOT match it.
+probe_15c_compiledstategraph_invoke_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The runner calls `CompiledStateGraph::invoke(input_json)` to execute the compiled graph.
+The method `CompiledStateGraph::invoke` returns a `serde_json::Value` channel snapshot.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_15c_compiledstategraph_invoke_exempt: canonical CompiledStateGraph::invoke was incorrectly flagged."
+    echo "  Pattern must only match CompiledGraph::run (without 'State'), not CompiledStateGraph."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_15c_compiledstategraph_invoke_exempt: canonical CompiledStateGraph::invoke is not flagged."
+}
+
+# ── Self-probe 16a: CompiledGraph.invoke in story body MUST be flagged ────────
+# Python-style dot-call `CompiledGraph.invoke` is a phantom in Rust spec prose.
+probe_16a_compiledgraph_dot_invoke_flagged() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Postconditions
+
+The executor calls `CompiledGraph.invoke(state_json)` and collects the output snapshot.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -z "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_16a_compiledgraph_dot_invoke_flagged: CompiledGraph.invoke in body was NOT flagged."
+    echo "  Expected a HIT for 'CompiledGraph.invoke (phantom Python-style call)'."
+    clean_probe_tmp; exit 2
+  fi
+  if ! echo "$hits" | grep -qF 'CompiledGraph.invoke'; then
+    echo "[SELF-PROBE FAIL] probe_16a_compiledgraph_dot_invoke_flagged: HIT found but not for CompiledGraph.invoke pattern."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_16a_compiledgraph_dot_invoke_flagged: CompiledGraph.invoke phantom Python-style call is detected."
+}
+
+# ── Self-probe 16b: CompiledGraph.invoke in NOT-negation line MUST NOT be flagged ─
+probe_16b_compiledgraph_dot_invoke_not_negation_exempt() {
+  init_probe_tmp
+  mkdir -p "$PROBE_TMP/spec"
+  cat > "$PROBE_TMP/spec/probe.md" <<'SPECEOF'
+---
+version: "1.0"
+---
+
+## Description
+
+The dispatcher does NOT use `CompiledGraph.invoke` — the canonical method is
+`CompiledStateGraph::invoke` which returns a `serde_json::Value` snapshot.
+SPECEOF
+  local hits
+  hits="$(run_probe_scan "$PROBE_TMP/spec")"
+  if [ -n "$hits" ]; then
+    echo "[SELF-PROBE FAIL] probe_16b_compiledgraph_dot_invoke_not_negation_exempt: CompiledGraph.invoke with NOT negation was incorrectly flagged."
+    echo "  Output: $hits"
+    clean_probe_tmp; exit 2
+  fi
+  clean_probe_tmp
+  echo "[SELF-PROBE PASS] probe_16b_compiledgraph_dot_invoke_not_negation_exempt: CompiledGraph.invoke in NOT-negation line is exempt."
+}
+
 # ── Main live check ───────────────────────────────────────────────────────────
 check_phantom_types() {
   local raw_output
@@ -1340,6 +1525,8 @@ check_phantom_types() {
     echo "    DynTool::invoke          → DynTool::invoke_dyn (object-safe dispatch; ADR-029 v1.7)"
     echo "    PreToolCallHook::PendingHumanApproval → PreToolDecision::PendingHumanApproval (BC-2.05.007)"
     echo "    args_schema              → DynTool::schema() (schemars::Schema; F-P2A104-01)"
+    echo "    CompiledGraph::run       → CompiledStateGraph::invoke (BC-2.02.001 {PC-001}; round-46 F-193)"
+    echo "    CompiledGraph.invoke     → CompiledStateGraph::invoke (BC-2.02.001 {PC-001}; round-46 F-193)"
     echo "    Reference: ADR-029 §Symbol Grounding"
   fi
 }
@@ -1380,7 +1567,12 @@ probe_13b_pretoolcalldecision_pa_exempt
 probe_14a_args_schema_dyntool_flagged
 probe_14b_dyntool_schema_method_exempt
 probe_14c_args_schema_non_dyntool_exempt
-echo "[SELF-PROBE] All 24 self-probes passed — check is not false-green."
+probe_15a_compiledgraph_run_flagged
+probe_15b_compiledgraph_run_symbol_grounding_exempt
+probe_15c_compiledstategraph_invoke_exempt
+probe_16a_compiledgraph_dot_invoke_flagged
+probe_16b_compiledgraph_dot_invoke_not_negation_exempt
+echo "[SELF-PROBE] All 29 self-probes passed — check is not false-green."
 echo ""
 
 echo "════════════════════════════════════════════"

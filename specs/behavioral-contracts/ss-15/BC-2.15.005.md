@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.15.005
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,13 +21,14 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-012-self-improvement-primitives.md
   - .factory/planning/holdout-domains/domain-d-hermes-agent.md
-input-hash: "bda5443"
+input-hash: "5816506"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (burst-290/P1D-180-phantom-sweep, 2026-08-16): Fix live-body phantom ADR §-citation in Traceability §Error Code Minted: `ADR-012 §Consequences/Error Codes` → `ADR-012 §Error Codes` (no heading §Consequences/Error Codes exists in ADR-012; the error-codes section is `### Error Codes` under `## Consequences`)."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.13 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (B-SS15-18-hardening/2026-08-26): Phase-2 bc-completeness-scan (D-270, burst B). {PC-006} added: MemoryWriteRequest::Replace scanner behavior — new_value is scanned (not old_value, which was already committed via a prior guarded write); Transform applies to new_value only; old_value passes unchanged for CAS comparison. {EC-007} added: Replace with injection in new_value. TV-008 added."
+  - "1.5 (round-46/F-193-02a/2026-08-30): F-193-02 [HIGH, CWE-248/703] — SEC-008 build-profile dependency added to {INV-001} and EC-004. The fail-closed invariant and EC-004 recovery use std::panic::catch_unwind (synchronous; validate is a pure sync method per {INV-002}); this recovery holds ONLY under panic=\"unwind\" at the workspace-root [profile.release] governing the pregolya-server binary. panic=\"abort\" at the workspace root voids the catch and causes process termination (CWE-248); a library-member override (e.g., pregolya-memory manifest) is silently ignored by Cargo. Workspace-root canonical form mirrors BC-2.09.008 EC-010 v3.5."
 extracted_from: null
 modified: []
 deprecated: null
@@ -107,6 +108,16 @@ custom `MemoryWriteGuard` implementations.
   the enforcement module treats the panic as a `Deny` and returns `E-MEMORY-007` — it does
   NOT propagate the panic to the caller and does NOT forward the write. (Same fail-closed
   pattern as `GuardrailHook` panic → E-CORE-007.)
+  **SEC-008 build-profile dependency:** The panic is caught via `std::panic::catch_unwind`
+  (synchronous; `validate` is a pure synchronous trait method per {INV-002}). This recovery
+  depends on `panic = "unwind"`. A `panic = "abort"` release profile voids the catch and
+  causes process termination on any `MemoryWriteGuard` panic (remote DoS, CWE-248). The
+  AUTHORITATIVE pin point is the workspace-root `[profile.release]` governing the
+  `pregolya-server` binary: Cargo honors `[profile.release] panic` ONLY at the workspace
+  root (applied at link time); a library-member `[profile.release] panic` override (e.g., in
+  `pregolya-memory`'s own manifest) is silently ignored by Cargo and MUST NOT be relied upon.
+  `panic = "abort"` at the workspace root voids the catch and causes process termination.
+  Devops asserts the workspace-root pin at Phase-3 workspace `Cargo.toml` authoring.
 - {INV-002} `MemoryWriteGuard::validate` is a **pure synchronous trait method** (no `async`, no `&mut self`).
   Implementors that require async validation must pre-compute their decisions outside the
   write path and consult cached results in `validate`.
@@ -144,10 +155,18 @@ after stripping a suspicious prefix from the original value.
 
 ### EC-004: MemoryWriteGuard panics during validate
 **Scenario:** A buggy custom `MemoryWriteGuard` panics in `validate`.
-**Expected behavior:** `memory::write_guard` catches the panic (via `std::panic::catch_unwind`
-or equivalent). Returns `Err(E-MEMORY-007 MemoryWriteGuardDenied { reason: "guard panicked —
-fail-closed" })`. Write is NOT forwarded to `MemoryStore`. (Fail-closed, same pattern as
-E-CORE-007 / BC-2.11.002.)
+**Expected behavior:** `memory::write_guard` catches the panic via `std::panic::catch_unwind`
+(synchronous; `validate` is a pure synchronous trait method per {INV-002}). Returns
+`Err(E-MEMORY-007 MemoryWriteGuardDenied { reason: "guard panicked — fail-closed" })`.
+Write is NOT forwarded to `MemoryStore`. (Fail-closed, same pattern as E-CORE-007 / BC-2.11.002.)
+**SEC-008 build-profile dependency:** This recovery depends on `panic = "unwind"`. A
+`panic = "abort"` release profile voids the catch and causes process termination on any
+`MemoryWriteGuard` panic (remote DoS, CWE-248). The AUTHORITATIVE pin point is the
+workspace-root `[profile.release]` governing the `pregolya-server` binary; Cargo honors
+`[profile.release] panic` ONLY at the workspace root (applied at link time); a
+library-member `[profile.release] panic` override (e.g., in `pregolya-memory`'s own
+manifest) is silently ignored by Cargo and MUST NOT be relied upon. Devops asserts the
+workspace-root pin at Phase-3 workspace `Cargo.toml` authoring.
 
 ### EC-005: Remove operation on guarded namespace
 **Scenario:** `MemoryWriteRequest::Remove { namespace: "skills", key: "py_helpers" }` issued

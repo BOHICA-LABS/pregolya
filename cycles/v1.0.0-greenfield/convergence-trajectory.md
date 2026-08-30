@@ -4340,3 +4340,65 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **Census delta: UNCHANGED. BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39 product + 1 maint) / points 303. streak 0/3 (frozen-HEAD reset on D-321 push).**
 
 **NEXT: round-45 on new frozen HEAD post-D-321 push. Streak 0/3.**
+
+---
+
+## Round 45 (D-322, 2026-08-30)
+
+**Passes: P2A-188 (realizability) / P2A-189 (security) / P2A-190 (consistency/census/records) / P2A-191 (SS-09/SS-11 deep-audit) + GATE-READY consistency-validator audit**
+
+**Frozen spec HEAD: post-D-321 push**
+
+**Finding Progression trajectory-tail: →0/CLEAN(strict)→1H→1LOW-records→1M**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony. MILESTONE: P2A-188 realizability CLEAN(strict)=YES — realizability axis CONVERGED.**
+
+**CLEAN(strict): P2A-188 YES / P2A-190 YES / P2A-189 NO (1H) / P2A-191 NO (1M) | CLEAN(PR-merge): N/A (HIGH in P2A-189) | GATE-READY: YES 13/13**
+
+**Streak: 0/3 (frozen-HEAD reset on D-322 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A189-01 | HIGH, CWE-248/703 | CLOSED: BC-2.11.002 {INV-005}/EC-001/TV-panic-row — SEC-008 workspace-root framing corrected (SS-11; 3rd subsystem hit of SEC-008 class; INCOMPLETE-SWEEP SIBLING-MIRROR of R43). BC-2.11.002 §INV-005 updated; S-1.19 §workspace-root-pin propagated. |
+| F-P2A191-01 | MED | CLOSED: module-decomposition §graph::scheduler — phantom `CompiledGraph::run()` replaced with canonical `CompiledStateGraph::invoke(input, config)`; BC-2.11.005 §Architecture-Anchors mirrored. |
+| O-P2A190 | LOW/records | CLOSED: ADR-026 frontmatter decisions field [D_BURST302_TBD] → [D-170] (LCEL scope expansion decision; TD-VSDD-091). |
+| R04-DETECTION-ENHANCEMENT | PROCESS-GAP | CLOSED/IMPLEMENTED: verify-security-literal-propagation.sh R04-PREC precision rule added (BC/ADR/story corpus scan; library-member vs workspace-root pin check; 8 self-probes PASS; advisory exit 0). L-236 codified. |
+
+**Census delta: UNCHANGED. BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39 product + 1 maint) / points 303. streak 0/3 (frozen-HEAD reset on D-322 push).**
+
+**NEXT: round-46 on new frozen HEAD post-D-322 push. Streak 0/3.**
+
+---
+
+## Round 46 (D-323, 2026-08-30)
+
+**Passes: P2A-192 (realizability) / P2A-193 (security) / P2A-194 (consistency/census/records) / P2A-195 (SS-09/SS-11 deep-audit) + GATE-READY consistency-validator audit**
+
+**Frozen spec HEAD: post-D-322 push (ba313b1)**
+
+**Finding Progression trajectory-tail: →0/CLEAN(strict)→2H+1M+pgap→0/CLEAN(strict)→2H+1M+1LOW**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony. P2A-192 CLEAN(strict)=YES; P2A-194 CLEAN(strict)=YES. GATE-READY=YES 13/13.**
+
+**CLEAN(strict): P2A-192 YES / P2A-194 YES / P2A-193 NO (2H+1M+pgap) / P2A-195 NO (2H+1M+1LOW) | CLEAN(PR-merge): N/A (HIGH present) | GATE-READY: YES 13/13**
+
+**Streak: 0/3 (frozen-HEAD reset on D-323 push)**
+
+**All findings CLOSED — TWO RECURRING CLASSES CLOSED CORPUS-WIDE + MECHANICALLY GATED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-193-01 | HIGH, CWE-248/703 | CLOSED: ADR-001 Obligation 3 stale SEC-008 crate-member framing corrected to workspace-root canonical form (ORIGINATING authority). ADR-001 §Obligation-3 updated (versioned). |
+| F-193-02 | HIGH, CWE-248/703 | CLOSED: BC-2.15.005 (1.4→1.5) + BC-2.02.005 (1.7→1.8) — catch_unwind BCs lacked SEC-008 workspace-root framing. SEC-008 class-audit also closed: BC-2.11.003 (1.13→1.14) + BC-2.11.004 (1.13→1.14) async GuardrailHook panic; BC-2.05.007 (1.8→1.9) async hook-panic; S-1.26 (1.8→1.9; 2 stale sites); S-1.13 (1.2→1.3); S-1.15 (1.2→1.3). |
+| F-193-03 | MED, CWE-209 | CLOSED: BC-2.09.008 TV-019 catch-layer contradiction — Notes + Expected Output corrected to Pregel-executor sync-catch/code-match. BC-2.09.008 3.6→3.7→3.8. |
+| F-P2A195-01 | HIGH | CLOSED: BC-2.12.007 CompiledGraph phantom VP-DI011-02 + 6 type-name sites → CompiledStateGraph. BC-2.12.007 1.8→1.9. CompiledGraph class-audit also closed: dependency-graph.md 1.10→1.11 Edge Table; S-1.27 (1.6→1.7; 7 sites). |
+| F-P2A195-02 | HIGH | CLOSED: S-1.27 phantom CompiledGraph::run (7 sites) → CompiledStateGraph::invoke. S-1.27 1.6→1.7. |
+| F-P2A195-03 | MED | CLOSED: BC-2.12.007 CompiledGraph phantom type-name sites (part of F-P2A195-01 class-audit). |
+| O-P2A195-01 | LOW/records | CLOSED: S-2.11 body §Changelog v1.26+v1.28 entries restored. S-2.11 1.32→1.33. |
+| R05-IMPLEMENTATION | PROCESS-GAP→IMPLEMENTED | CLOSED/IMPLEMENTED: verify-security-literal-propagation.sh R05 rule added (catch_unwind implies SEC-008; 11 self-probes PASS). verify-no-phantom-types.sh CompiledGraph::run + CompiledGraph.invoke patterns added (29 self-probes PASS). Both advisory exit 0. |
+
+**Census delta: UNCHANGED. BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39 product + 1 maint) / points 303. streak 0/3 (frozen-HEAD reset on D-323 push).**
+
+**NEXT: round-47 on new frozen HEAD post-D-323 push. Streak 0/3. realizability (P2A-192) + consistency (P2A-194) lenses CONVERGED. SEC-008 class + CompiledGraph phantom class mechanically gated.**

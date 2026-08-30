@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/platform/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "577002e"
+input-hash: "a1ab276"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-29): F-P29-03 — replace non-canonical `node_delta` with canonical `node_stream` at PC2, EC-004, and TV-002. BC-2.06.001 is the streaming taxonomy authority; `node_delta` was never a valid variant. Added to retired-identifier registry (bc-authoring-plan.md gate #19)."
@@ -35,6 +35,7 @@ changelog:
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (P2A-043/F-05 adjudication/2026-08-24): Author EC-006 — non-first-node mid-run failure, run_end NOT emitted. EC-001 was scoped to 'first node'; INV-003 covers error equivalence but did not explicitly state the no-run_end rule for mid-run failure. EC-006 closes that gap; authority is BC-2.06.001 EC-005 (completion-only RunEnd contract)."
   - "1.8 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.9 (round-46/F-P2A195-01+F-P2A195-03/2026-08-30): F-P2A195-01 [HIGH] — VP-DI011-02 static-analysis anchor corrected: phantom `CompiledGraph.invoke` (dot notation, non-canonical type) → `CompiledStateGraph::invoke` (canonical per BC-2.02.001 {PC-001}; Rust :: path). VP-DI011-02 is the SOLE mechanized DI-011 defense against the CONFLICT-10/NE-13 streaming-stub counter-example. F-P2A195-03 [MED] — non-canonical type `CompiledGraph` corrected to `CompiledStateGraph` at five live-body sites: §Description, {PRE-001}, {PC-005}, {INV-001}, §Architecture Anchors. Historical changelog entries grandfathered per append_only_numbering policy."
 extracted_from: null
 modified: []
 deprecated: null
@@ -52,7 +53,7 @@ removal_reason: null
 `pregolya-server` exposes two run execution surfaces: `GET /threads/{thread_id}/runs/{run_id}/stream`
 (server-sent events) and `GET /threads/{thread_id}/runs/{run_id}` (unary polling response
 after a Run reaches `completed` status). Both surfaces must be driven by the
-**same `CompiledGraph` execution engine** for the same inputs and produce
+**same `CompiledStateGraph` execution engine** for the same inputs and produce
 an **identical final answer**. There is no stub path, no cached task-state replay, and
 no code divergence between the two handlers beyond how output is surfaced to the HTTP
 client. This contract is the direct correction of the adk-rust counter-example
@@ -61,7 +62,7 @@ graph engine, producing output that could diverge from the unary path.
 
 ## Preconditions
 
-1. {PRE-001} A `CompiledGraph` is registered with an `Assistant` (`assistant_id`).
+1. {PRE-001} A `CompiledStateGraph` is registered with an `Assistant` (`assistant_id`).
 2. {PRE-002} A `Run` is created for that `Assistant` on a given `thread_id` with a given input.
 3. {PRE-003} Both the streaming endpoint (`GET /threads/{thread_id}/runs/{run_id}/stream`)
    and the unary polling endpoint (`GET /threads/{thread_id}/runs/{run_id}`,
@@ -85,11 +86,11 @@ graph engine, producing output that could diverge from the unary path.
 4. {PC-004} The streaming endpoint's `run_end` event carries the same `run_id`, `status`,
    and `output` fields as the unary endpoint response.
 5. {PC-005} There is no code path in the streaming handler that produces output without invoking
-   the `CompiledGraph` (no stub, no hardcoded response, no mock event sequence).
+   the `CompiledStateGraph` (no stub, no hardcoded response, no mock event sequence).
 
 ## Invariants
 
-- {INV-001} **DI-011 (Streaming / Unary Run Equivalence):** The same `CompiledGraph` instance is
+- {INV-001} **DI-011 (Streaming / Unary Run Equivalence):** The same `CompiledStateGraph` instance is
   invoked by both handlers; the only difference is the output adapter (stream vs. collect).
 - {INV-002} A `Run` cannot be simultaneously executed via both the streaming and unary endpoints
   for the same `run_id`; the first request claims execution and the second receives
@@ -175,7 +176,7 @@ normally.
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-DI011-01 | Streaming and unary endpoints produce identical `output` JSON for the same graph + input | Integration test (deterministic graph; compare outputs byte-for-byte) | Phase 1 |
-| VP-DI011-02 | Streaming handler code path passes through `CompiledGraph.invoke`; no stub path exists | Static analysis (ensure no streaming handler returns a response without calling graph execute) | Phase 1 |
+| VP-DI011-02 | Streaming handler code path passes through `CompiledStateGraph::invoke`; no stub path exists | Static analysis (ensure no streaming handler returns a response without calling graph execute) | Phase 1 |
 
 ## Related BCs
 
@@ -186,8 +187,8 @@ normally.
 ## Architecture Anchors
 
 - `pregolya-server/src/routes/runs.rs` — both streaming and unary handlers call shared `execute_run(graph, input, config)` fn
-- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — single `CompiledGraph` execution path shared by both handlers
-- `pregolya-server/src/sse.rs` — SSE adapter wraps `CompiledGraph` stream output for HTTP transport
+- `pregolya-graph/src/scheduler.rs` (`graph::scheduler`) — single `CompiledStateGraph` execution path shared by both handlers
+- `pregolya-server/src/sse.rs` — SSE adapter wraps `CompiledStateGraph` stream output for HTTP transport
 
 ## Story Anchor
 

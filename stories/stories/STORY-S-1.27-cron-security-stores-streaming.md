@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.27
 epic_id: E-14
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,6 +14,7 @@ changelog:
   - "1.4 (P2A-043 F-05/2026-08-24): escalated EC citations redirected/repointed per PO adjudication (incl. new BC-2.12.007 EC-006)"
   - "1.5 (P2A-044/2026-08-24): F-05 (BC-2.06.001 reference-not-coverage revert) + F-02 (AC-004 Failed-Run correction)"
   - "1.6 (SW-3/P2A-BC-scan-hardening/2026-08-26): BC-completeness hardening — 3 new ACs (AC-014..AC-016) and 3 new ECs (EC-012..EC-014). BC-2.12.004: AC-014 (EC-006 invalid RunnableConfig at POST /schedules → 400 E-CRON-004). BC-2.12.006: AC-015 (EC-001 idempotency TTL-from-submission per ADR-028 D5), AC-016 (EC-006 API rate-limit exceeded → 429 E-SERVER-021). BC-table version column removed (D-50 anti-version-pin). Token-budget revised (~51,500)."
+  - "1.7 (round-46/F-P2A195-02/2026-08-30): F-P2A195-02 [HIGH] — CompiledGraph phantom corrected at all live-body occurrences (7 sites: AC-011 heading, AC-011 body, §Subsystem anchor, §Purity Classification, §Tasks, §Architecture Compliance Rules rule 1, §File Structure comment). `CompiledGraph::run` → `CompiledStateGraph::invoke`; bare `CompiledGraph` type descriptor → `CompiledStateGraph`. Canonical public entry is `CompiledStateGraph::invoke(input, config)` per BC-2.02.001 {PC-005}."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
@@ -22,7 +23,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "7e8abcb"
+input-hash: "b646108"
 traces_to:
   - behavioral-contracts/BC-2.12.004
   - behavioral-contracts/BC-2.12.005
@@ -116,8 +117,8 @@ The `/_debug` route is disabled unless `debug_route_key: Some("non-empty-string"
 `RunStore` trait has two implementations: in-memory (non-durable, test use) and SQLite (durable across restarts). The SQLite implementation satisfies VP-STORE-02 (run state survives process restart). Route handlers use `Arc<dyn RunStore>` — never the concrete type.
 (traces to BC-2.12.006 PC-009)
 
-### AC-011: SSE streaming uses same CompiledGraph engine as unary execution (DI-011)
-The SSE endpoint (`GET /threads/:id/runs/:run_id/stream`) invokes the same `CompiledGraph::run` execution path as the unary `POST /threads/:id/runs/:run_id/execute`. There is no separate streaming engine. This corrects NE-13.
+### AC-011: SSE streaming uses same CompiledStateGraph engine as unary execution (DI-011)
+The SSE endpoint (`GET /threads/:id/runs/:run_id/stream`) invokes the same `CompiledStateGraph::invoke` execution path as the unary `POST /threads/:id/runs/:run_id/execute`. There is no separate streaming engine. This corrects NE-13.
 (traces to BC-2.12.007 INV-001)
 
 ### AC-012: SSE event types — run_start, node_start, node_stream, node_end, run_end
@@ -153,7 +154,7 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 | `InMemoryRunStore` | `pregolya_server::store::run_memory` | pregolya-server | Effectful (in-memory state) |
 | `SqliteRunStore` | `pregolya_server::store::run_sqlite` | pregolya-server | Effectful (SQLite I/O) |
 
-**Subsystem anchor:** SS-12 owns this story's scope because SS-12 is the Server subsystem per ARCH-INDEX Subsystem Registry. CronSchedule, SecurityConfig, store trait seams, and SSE streaming are all server-layer concerns within SS-12. The SSE stream shares the CompiledGraph engine (SS-05/SS-10) but the HTTP layer and event marshaling are SS-12 responsibilities.
+**Subsystem anchor:** SS-12 owns this story's scope because SS-12 is the Server subsystem per ARCH-INDEX Subsystem Registry. CronSchedule, SecurityConfig, store trait seams, and SSE streaming are all server-layer concerns within SS-12. The SSE stream shares the CompiledStateGraph engine (SS-05/SS-10) but the HTTP layer and event marshaling are SS-12 responsibilities.
 
 **Dependency anchor:**
 - Depends on S-1.26: Thread, Assistant, Run store traits and models are established in S-1.26. S-1.27 adds CronSchedule (which creates threads + runs), SecurityConfig (server-level), store seam completions, and SSE routing.
@@ -166,7 +167,7 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 | `SecurityConfig::validate` | Pure | Rejects empty debug key; no I/O |
 | `CronSchedule::parse` | Pure | Parses cron expression; returns E-CRON-002 (InvalidCronExpression) on parse error |
 | `CronScheduler::fire` | Effectful | Creates thread + run; schedules next firing |
-| `SseRoutes::stream_run` | Effectful | Runs CompiledGraph, emits SSE events |
+| `SseRoutes::stream_run` | Effectful | Runs CompiledStateGraph, emits SSE events |
 | `InMemoryRunStore` operations | Effectful | Mutates in-memory map |
 | `SqliteRunStore` operations | Effectful | SQLite I/O |
 
@@ -204,7 +205,7 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 - [ ] Implement CORS wildcard startup WARN with canonical event_type
 - [ ] Implement in-memory RateLimitStore with startup WARN
 - [ ] Implement `SqliteRunStore` — durable across restart (VP-STORE-02)
-- [ ] Implement `SseRoutes::stream_run` — same `CompiledGraph::run` as unary
+- [ ] Implement `SseRoutes::stream_run` — same `CompiledStateGraph::invoke` as unary
 - [ ] Verify `node_stream` event name (grep codebase for `node_delta` — must be zero occurrences)
 - [ ] Implement cron skip policy — no missed-fire accumulation
 - [ ] Implement RunnableConfig validation at POST /schedules handler — reject unknown fields and constraint-violating values (e.g., `recursion_limit: -1`) before any persistence; return 400 E-CRON-004 (AC-014)
@@ -224,7 +225,7 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 
 ## Architecture Compliance Rules
 
-1. **SSE and unary use the same CompiledGraph engine.** No separate streaming engine. Both call `CompiledGraph::run`. This is the DI-011 / NE-13 correction — any code creating a separate "streaming executor" is a behavioral defect.
+1. **SSE and unary use the same CompiledStateGraph engine.** No separate streaming engine. Both call `CompiledStateGraph::invoke`. This is the DI-011 / NE-13 correction — any code creating a separate "streaming executor" is a behavioral defect.
 2. **`node_stream` is the canonical event name.** `node_delta` is retired. Zero occurrences of `node_delta` are acceptable after this story. The final Task item above enforces this via grep.
 3. **`run_end` on completion only.** Do not emit `run_end` on failed or interrupted runs. The SSE stream closes without `run_end` on non-completion paths.
 4. **SecurityConfig defaults are secure.** `SecurityConfig::default()` must have `allowed_origins: vec![]` and `debug_route_key: None`. Any default that opens CORS or enables debug route is a DI-013 violation.
@@ -263,7 +264,7 @@ crates/pregolya-server/
       rate_limit.rs                  # RateLimitStore trait + InMemoryRateLimitStore (token-bucket)
       run_memory.rs                  # InMemoryRunStore
       run_sqlite.rs                  # SqliteRunStore (durable)
-    streaming.rs                     # SSE streaming endpoint (same CompiledGraph engine) — flat; no routes/ subdir (server::streaming, DI-011)
+    streaming.rs                     # SSE streaming endpoint (same CompiledStateGraph engine) — flat; no routes/ subdir (server::streaming, DI-011)
   tests/
     cron_tests.rs                    # firing isolation, skip policy, queue-full WARN
     security_config_tests.rs         # defaults, CORS wildcard WARN, empty debug key rejection

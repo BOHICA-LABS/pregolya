@@ -3857,3 +3857,31 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
 ### STATE: v6.31, timestamp 2026-08-30T09:30:00Z
+
+---
+
+## Archived checkpoint: D-322 (round-45 close — 2026-08-30)
+
+*Archived from STATE.md when D-323 (round-46) checkpoint replaced it.*
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. round-45 CLOSED (D-322). Frozen-HEAD streak gates on new spec HEAD post-D-322 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. MILESTONE: P2A-188 realizability CLEAN(strict)=YES — realizability axis CONVERGED. NEXT: dispatch round-46 (P2A-192/193/194/195 + GATE-READY) on NEW frozen spec HEAD post-D-322 push; streak 0/3; E0562 + SEC-008 classes mechanically gated.
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts = D-322 round-45 close commit — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+
+### D-322 ROUND-45 CLOSE
+- F-P2A189-01 [HIGH, CWE-248/703] BC-2.11.002 {INV-005}/EC-001/TV-panic-row — SEC-008 workspace-root framing (SS-11; 3rd subsystem R43 incomplete-sweep); BC-2.11.002 §INV-005; STORY-S-1.19 §workspace-root-pin (input-hash refreshed); library-member-inert clause propagated.
+- F-P2A191-01 [MED] module-decomposition §graph::scheduler: phantom CompiledGraph::run() → canonical CompiledStateGraph::invoke(input, config); module-decomposition §graph::scheduler; BC-2.11.005 §Architecture-Anchors.
+- O-P2A190 [LOW/records] ADR-026 frontmatter decisions [D_BURST302_TBD] → [D-170]; ADR-026 §decisions-field bumped.
+- R04-DETECTION-ENHANCEMENT IMPLEMENTED: verify-security-literal-propagation.sh R04-PREC precision rule added (BC/ADR/story corpus scan; library-member vs workspace-root pin check); 8 self-probes PASS; POL-31 confirmed; POL-30 self-scope intact; exit 0 advisory.
+- P2A-188 CLEAN(strict)=YES. GATE-READY=YES 13/13. ARCH-INDEX §Changelog (v1.55); BC-INDEX §Changelog (v4.06); STORY-INDEX §Changelog (v1.32).
+- Census: BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39+1) / points 303. streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+### STATE: v6.33, timestamp 2026-08-30T18:00:00Z
