@@ -8,7 +8,8 @@
 #   (b) factory-artifacts HEAD == origin/factory-artifacts (push currency).
 #       Prints WARN (not FAIL) if local is ahead of remote.
 #   (c) Tracked-file dirty check. FAIL if any tracked files are dirty
-#       EXCEPT logs/*.jsonl files, which are excluded.
+#       EXCEPT logs/*.jsonl files and sidecar-learning.md, which are excluded
+#       (Stop-hook-managed churn files; see SIDECAR-STOP-HOOK-CHURN / D-315).
 #
 # TODO (workspace-init): Add develop_head cross-check. At workspace-init
 # the orchestrator should write the develop branch HEAD SHA into STATE.md
@@ -86,16 +87,24 @@ else
   emit WARN "factory-artifacts is $AHEAD commit(s) ahead of origin/factory-artifacts — push pending (run: git -C .factory push origin factory-artifacts)"
 fi
 
-# ── (c) Tracked-file dirty check (excluding logs/*.jsonl) ────────────────────
+# ── (c) Tracked-file dirty check (excluding logs/*.jsonl and sidecar-learning.md) ──
 
-# Get list of dirty tracked files, exclude logs/*.jsonl
+# SIDECAR-STOP-HOOK-CHURN / D-315: sidecar-learning.md is Stop-hook-managed
+# session-scratch churn (like logs/*.jsonl) — the plugin Stop hook appends a
+# timestamped "Session ended at <TS>" line on EVERY agent stop, including the
+# state-manager's own hygiene commits.  Excluding it here (same rationale as
+# logs/*.jsonl) breaks the churn-block deadlock: each hygiene commit's own stop
+# re-dirties the file, causing validate-wave-gate-prerequisite to block all
+# subsequent dispatches.  sidecar-learning.md remains git-tracked for
+# /session-review consumption; it is committed opportunistically with the next
+# substantive burst rather than on every stop.
 DIRTY_FILES="$(git -C "$FACTORY_DIR" diff --name-only HEAD 2>/dev/null \
-  | grep -v '^logs/.*\.jsonl$' || true)"
+  | grep -vE '^(logs/.*\.jsonl|sidecar-learning\.md)$' || true)"
 
 if [ -z "$DIRTY_FILES" ]; then
-  emit PASS "No dirty tracked files (excluding logs/*.jsonl)"
+  emit PASS "No dirty tracked files (excluding logs/*.jsonl and sidecar-learning.md)"
 else
-  emit FAIL "Dirty tracked files found (excluding logs/*.jsonl):"
+  emit FAIL "Dirty tracked files found (excluding logs/*.jsonl and sidecar-learning.md):"
   while IFS= read -r f; do
     echo "       $f"
   done <<< "$DIRTY_FILES"
