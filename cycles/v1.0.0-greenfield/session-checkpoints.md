@@ -3706,3 +3706,30 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-312 round-39 fix-burst (2026-08-29): ALL 6 substantive CLOSED (1 CRIT + 4 MED + 1 LOW). DynRunnable ADAPTER model (E0207+E0119 cleared); ForceApproveHooks CWE-862; BC-INDEX §Red Gate 5-cell verbatim-H1 sweep; S-2.11 attribution/anchors. trajectory-tail →2→1→1→2. Census UNCHANGED 39/134/17/137/303. TV 759. VP 17. streak 0/3. L-232 codified. STATE.md v6.22→v6.23.
 
 ### STATE: v6.23, timestamp 2026-08-29T23:30:00Z
+
+---
+
+## Checkpoint D-314 (archived 2026-08-29 by D-316 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence, streak 0/3. Round-41 fix-burst is CLOSED (D-314). NEXT = run round-42 on new frozen HEAD (post-D-314 push). Census 39 CAP / 134 BC / 17 VP / 137 EC / 303 pts / 759 TV / 770 grand / 29 ADR — UNCHANGED. GATE-READY=YES (31/32 gates PASS; HRQ-1 sole blocker — 3/3 CLEAN streak). MILESTONE: P2A-174 FIRST CLEAN(strict) lens (census/records converged).
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED. (Phase-2 is spec-only; NO code work this session.)
+- factory-artifacts: D-314 round-41 fix-burst — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+### PER-WORKSTREAM — Phase-2 DynRunnableAdapter governance + panic-recovery scope + incomplete-sweep class
+Rounds 39-41 CLOSED (D-312..D-314 (exhaustive)). Round-41 resolved: S-1.04 batch max_concurrency stale cap→no-cap/JoinSet canon (F-P2A172-01 HIGH; r36-fix sibling), DynRunnableAdapter ADR-023 #[non_exhaustive] governance→§Exempt Criterion B (F-P2A172-02 MED), _phantom pub→pub(crate) (F-P2A172-03 LOW), RunnableParallel::new doc-comment K:Into<String> (F-P2A172-04 LOW), panic-recovery scope graph-node-body (F-P2A173-01 LOW; CWE-248/703), TV-018 Deny-reason ADR-029 §Decision-4 form (F-P2A173-02 OBS), {PC-004} result_text gloss (F-P2A175-01 LOW). ALL 7 = incomplete-sweeps prior decisions. MILESTONE: P2A-174 CLEAN(strict)=YES — FIRST fully-clean lens Phase-2 re-convergence. L-233 reaffirmed. NEXT-ACTION: round-42 on new frozen HEAD (post-D-314 push). Streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate.
+- DTU clones (openai/anthropic/ollama): Phase-4 prerequisite; dtu_clones_built: pending.
+
+#### DECISION DELTA (this session)
+D-314 round-41 fix-burst (2026-08-29): ALL 7 unique findings CLOSED (1 HIGH + 1 MED + 4 LOW + 1 OBS). MILESTONE: P2A-174 FIRST CLEAN(strict) lens. S-1.04 batch no-cap/JoinSet; DynRunnableAdapter ADR-023 governance; panic-recovery graph-node-body; PC-004 result_text; census 39/134/17/137/303 UNCHANGED. TV 759. VP 17. streak 0/3. STATE.md v6.25→v6.26.
+
+### STATE: v6.26, timestamp 2026-08-29T23:59:00Z

@@ -9,7 +9,7 @@ gate: D9-PASSED
 gate_note: "D9 human gate passed 2026-07-14. Alternative B (Hybrid orchestrator-loop + actor-scheduler) selected per D11.1 steering."
 producer: architect
 timestamp: 2026-07-14T14:00:00Z
-version: "rev-2"
+version: "rev-3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D9, D11, D17, D18]
@@ -18,6 +18,7 @@ superseded_by: null
 date: 2026-07-14
 subsystems_affected: [SS-03, SS-05, SS-10]
 changelog:
+  - "rev-3 (R42/F-P2A177-01/2026-08-29): §Graph Run-Executor Panic Boundary section added (F-P2A177-01 HIGH/CWE-248/703). The pregolya-server run-executor MUST wrap each graph invocation in `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(graph_future))` — the only mechanism spanning the async boundary for node-body panics. Obligations: (1) catch → Run.status in_progress→failed (BC-2.12.003 {INV-005} no-orphan-run); (2) E-GRAPH-019 NodePanic flagged for PO (EC census 137→138); (3) SEC-008 `panic = 'unwind'` build-profile invariant extended to pregolya-server (previously scoped to pregolya-mcp in ADR-029 §Decision 5); (4) captured panic text MUST NOT populate Run.error.message — static string + ERROR-level server log only."
   - "rev-2 (F-P95-01, D18-P84-A, 2026-07-17): Reconcile budget-evaluation placement with BC canon. Four stale 'between-super-steps' characterizations corrected: (1) §Orchestrator responsibilities item 7: 'Evaluating budget policy between super-steps' → per-LLM-call and per-tool-invocation within tick() during Collecting; halt execution lands at super-step boundary after in-flight tasks settle; budget_info populated before task dispatch. (2) §Alternative B Pros table 'Budget governance fit': 'between orchestrator state transitions' → evaluation call sites within Collecting, halt dispatch is post-Collecting gate. (3) §Decision rationale item 2: 'orchestrator transition concern' → evaluation call sites in Collecting phase, halt not woven into JoinSet loop. (4) §Consequences 'Budget governance': 'transition hook between Reducing and Checkpointing' → per-call evaluation during Collecting (BC-2.10.001 PC1/PC2) with super-step-boundary halt landing (BC-2.10.003 EC-001) and pre-dispatch budget_info population (BC-2.10.003 PC9). Reconciled model: EVALUATION is per-LLM-call/per-tool-invocation within tick() during Collecting; HALT EXECUTION lands at the current super-step boundary (in-flight tasks settle, then no new super-step); BUDGET-INFO POPULATION is the legitimate super-step-boundary budget activity (before task dispatch)."
   - "rev-1 (ADV-P1D-PASS-36): F-P36-02 adjudicate interrupt-queue check timing. Line ~101 'after reduction' retired — corrected to 'at the Collecting→Reducing transition' to match line 163 and LangGraph HITL semantics. Consequences section expanded with precise nuanced rule: completed-sibling writes are reduced and checkpointed; interrupted node's in-progress writes are discarded; only the INTERRUPT marker is written for the interrupted task. Both references now agree on Collecting→Reducing as the detection point."
 ---
@@ -181,6 +182,39 @@ Alternative B (Hybrid orchestrator-loop + actor-scheduler) was selected per D11.
 - `graph::bsp_engine` contains the pure reducer function (VP-001 Kani target).
 - HITL interrupt: orchestrator checks interrupt queue at the Collecting→Reducing transition (DI-003). Precise rule: when the orchestrator detects an INTERRUPT marker among the collected task outputs, it (1) runs reducers on outputs from COMPLETED sibling tasks only — the interrupted node contributes no state delta; (2) writes the INTERRUPT marker as the interrupted task's sole output; (3) proceeds through Checkpointing so the reduced sibling state and the INTERRUPT marker are durably persisted together; (4) suspends after Checkpointing rather than initiating the next Idle→Dispatching cycle. The interrupted node's in-progress writes from the halted execution attempt are NOT included in the reduction or checkpoint state. On resume (BC-2.05.003), the interrupted node re-executes from its function entry — sibling writes from the interrupted super-step are already checkpointed and those nodes do not re-run.
 - `put_writes` called per completed task in the Collecting phase (DI-002 sync durability default).
+
+## Graph Run-Executor Panic Boundary (F-P2A177-01/R42)
+
+The `pregolya-server` run-executor MUST wrap each graph invocation in an async panic boundary
+using `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(graph_future))`, analogous to
+the MCP-layer boundary in ADR-029 §Decision 5. A synchronous `std::panic::catch_unwind` CANNOT
+span the async boundary — a node-body panic fires during `.await` polling of the graph future,
+not during future construction; only `FutureExt::catch_unwind` applied to the entire awaited
+expression spans the async boundary correctly.
+
+### Executor Obligations
+
+1. **Async catch:** apply `FutureExt::catch_unwind(AssertUnwindSafe(bsp_engine.run(run_id, input)))` (or
+   the equivalent graph-invocation call site) inside the executor task driving each run.
+2. **Run-state transition:** when the catch yields `Err`, transition `Run.status: in_progress → failed`
+   and populate `Run.error` with `E-GRAPH-019 NodePanic` — no orphan `in_progress` run is
+   permissible (BC-2.12.003 {INV-005}).
+3. **SEC-008 scope extension:** the `panic = "unwind"` build-profile invariant (established in
+   ADR-029 §Decision 5 for `pregolya-mcp`) is hereby extended to `pregolya-server`. The
+   devops-engineer MUST pin `panic = "unwind"` in the `pregolya-server` release profile at
+   Phase 3; `panic = "abort"` voids `catch_unwind` recovery (CWE-248/703 remote DoS).
+4. **Panic text isolation:** the captured panic payload MUST NOT populate `Run.error.message`
+   visible to the API caller. A static message is used (e.g., `"node execution failed — see
+   server logs for details"`); the raw panic text is logged at ERROR level before being
+   discarded from the client-facing path.
+
+### Error Code
+
+E-GRAPH-019 NodePanic is the designated code for node-body panics caught at the server-executor
+boundary, distinct from E-GRAPH-011 ConditionalEdgePanic (scoped to routing-function panics in
+`graph::bsp_engine`). **PO obligation:** mint E-GRAPH-019 NodePanic in `error-taxonomy.md` (EC
+census 137→138); mirror the catch mechanism and `in_progress → failed` transition into
+BC-2.12.003 EC-003; add BC-2.12.003 TV for the node-panic → `Run.status=failed` path.
 
 ## Source / Origin
 

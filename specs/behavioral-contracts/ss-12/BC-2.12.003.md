@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.13"
+version: "1.14"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/semport/platform/behavioral-intent.md
-input-hash: "68ed851"
+input-hash: "f898ec5"
 changelog:
   - "1.1 (ADV-P1D-PASS-31): F-P31-01 PC18 list-runs endpoint — add limit (default 10, max 100; values > 100 clamped) and offset pagination params + declare created_at DESC ordering (pagination coherence canon)."
   - "1.2 (ADV-P1D-PASS-33): F-P33-02 add Run-Config Merge Precedence invariant — run-supplied config/metadata/context deep-merge over Assistant's stored values, run wins at leaf key. Upstream-check result: no contradicting semantics in BC-2.01.003 or semport behavioral-intent §2.3; leaf-level deep-merge adopted as spec canon."
@@ -36,6 +36,7 @@ changelog:
   - "1.11 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
   - "1.12 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
   - "1.13 (P2A-BC-scan-B/2026-08-26): ADR-028 D1-D3 multitask propagation — PC-004 expanded with full lifecycle semantics for multitask_strategy interrupt, rollback, and enqueue: pre-empted run terminal state (cancelled, not interrupted per ADR-028 D1); rollback target (latest_completed_checkpoint_id, delete rows with checkpoint_id > anchor per ADR-028 D2); enqueue FIFO order, max_queued_runs=10 configurable cap, queue-full → E-SERVER-019 RunQueueFull HTTP 429 per ADR-028 D3. EC-007 added for enqueue-queue-full path. TV-008/009/010 added for interrupt/rollback/enqueue strategies. ADR-028 anchor cited throughout new clauses."
+  - "1.14 (round-42/F-P2A177-01/2026-08-29): F-P2A177-01 [HIGH, CWE-248/703] — Substantiate node-body panic recovery in EC-003 and mint {INV-007} panic-text-isolation invariant. EC-003 expanded to cover both Err and panic paths: node Err path is unchanged; node-body panic path now specifies `FutureExt::catch_unwind(AssertUnwindSafe(...))` mechanism — panic caught during `.await` polling → `Err(PregolyaError { code: \"E-GRAPH-019\", category: INTERNAL, message: \"NodePanic: graph node panicked during execution — see server error log for details\", retry_hint: Never, .. })`; run transitions `in_progress → failed`; raw panic text logged server-side at ERROR only; NEVER in `Run.error.message` per new {INV-007}; {INV-005} (no orphan runs) upheld — run MUST NOT remain `in_progress` after panic caught. SEC-008 note added to EC-003: `panic = \"unwind\"` required on pregolya-server release profile. {INV-007} added: panic-text-isolation — raw panic text MUST NOT appear in `Run.error.message`; E-GRAPH-019 STATIC message invariant. TV-011 minted: node-body-panic → failed + E-GRAPH-019 + static message + no orphan `in_progress` (TV count 10→11). Traceability Error Codes row added citing E-GRAPH-019."
 extracted_from: null
 modified: []
 deprecated: null
@@ -171,6 +172,15 @@ LangGraph Platform (D13).
   §2.3 declares no explicit merge rule for run-over-assistant config — no contradiction found.
   Leaf-level deep-merge is adopted as spec canon. Cross-ref: BC-2.12.002 §Description.
 
+- {INV-007} **Panic-text-isolation:** Raw panic text from node-body panics MUST NOT appear in
+  `Run.error.message`. The `pregolya-server` run-executor converts node-body panics caught by
+  `FutureExt::catch_unwind(AssertUnwindSafe(...))` to `E-GRAPH-019 NodePanic` with a STATIC
+  message; the raw panic text is logged at ERROR severity server-side only. `Run.error.message`
+  derives SOLELY from the E-GRAPH-019 STATIC message:
+  `"NodePanic: graph node panicked during execution — see server error log for details"`.
+  No dynamic content from the panic (backtrace, panic message, source location) is included.
+  This prevents information disclosure (CWE-209) via the Run status polling endpoint.
+
 ## Edge Cases
 
 ### EC-001: Create Run on non-existent thread
@@ -182,11 +192,26 @@ LangGraph Platform (D13).
 default `multitask_strategy`.
 **Expected behavior:** HTTP 409 `{ code: "E-SERVER-012", message: "ConcurrentRun: thread 't1' already has an active run; use multitask_strategy to override" }`.
 
-### EC-003: Run fails due to unhandled graph error
-**Scenario:** A node in the graph panics or returns `Err(PregolyaError { .. })`.
-**Expected behavior:** Run transitions to `failed` with `error` field populated from the
-`PregolyaError`. DI-014 ensures the error is not silently swallowed. The thread's
-checkpoint state reverts to the last successful checkpoint before the failed Run.
+### EC-003: Run fails due to unhandled graph error or node-body panic
+**Scenario:** A graph node returns `Err(PregolyaError { .. })` or panics during execution.
+**Expected behavior (node returns Err):** `GraphRunner` propagates `Err(PregolyaError { .. })`.
+Run transitions `in_progress → failed` with `error` populated from the `PregolyaError`.
+DI-014 ensures the error is not silently swallowed. The thread's checkpoint state reverts
+to the last successful checkpoint before the failed Run.
+**Expected behavior (node body PANICS):** The `pregolya-server` run-executor wraps graph
+execution in `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(...))`. A panic in
+a node body during `.await` polling is caught; the executor converts it to:
+`Err(PregolyaError { code: "E-GRAPH-019", category: INTERNAL,
+message: "NodePanic: graph node panicked during execution — see server error log for details",
+retry_hint: Never, .. })`.
+Run transitions `in_progress → failed` with `error` populated from the E-GRAPH-019 STATIC
+message. Raw panic text is logged server-side at ERROR severity only — it MUST NEVER appear
+in `Run.error.message` (panic-text-isolation per {INV-007}). The run MUST NOT remain in
+`in_progress` state after the panic is caught — {INV-005} (no orphan runs) is upheld.
+The thread's checkpoint state reverts to the last successful checkpoint before the failed Run.
+**Both paths:** DI-014 ensures neither error is silently swallowed.
+**SEC-008:** This panic recovery requires `panic = "unwind"` on the `pregolya-server`
+release profile; `panic = "abort"` voids the catch and causes process termination (CWE-248).
 
 ### EC-004: Get run with wrong thread_id
 **Scenario:** `GET /threads/t2/runs/<run_id>` where the run belongs to thread `t1`.
@@ -219,6 +244,7 @@ scoped to a different thread — cross-thread run access is not permitted.
 | TV-008 | Thread `t1` has active `in_progress` Run `r1`; `POST /threads/t1/runs { multitask_strategy: "interrupt" }` | HTTP 202, new Run `r2` in `queued`; `r1` transitions to `cancelled`; after `r1` cancelled durably, `r2` transitions to `in_progress` | multitask_strategy=interrupt |
 | TV-009 | Thread `t1` has active Run `r1` (3 checkpoints written); `POST /threads/t1/runs { multitask_strategy: "rollback" }` | HTTP 202, new Run `r2`; `r1` transitions to `cancelled`; checkpoint rows from `r1` deleted (only rows up to `latest_completed_checkpoint_id` retained); `r2` starts against rolled-back state | multitask_strategy=rollback |
 | TV-010 | Thread `t1` has active `in_progress` Run `r1` and 10 `queued` Runs (queue at capacity); `POST /threads/t1/runs { multitask_strategy: "enqueue" }` | HTTP 429 `E-SERVER-019 RunQueueFull` | multitask_strategy=enqueue queue-full |
+| TV-011 | Run `r1` on thread `t1` is `in_progress`; a graph node body calls `panic!("unexpected node failure")`; poll `GET /threads/t1/runs/r1` | Run `r1` transitions to `status: "failed"` (NOT `in_progress`); `error.code == "E-GRAPH-019"`; `error.message == "NodePanic: graph node panicked during execution — see server error log for details"` (STATIC — literal string equality); `error.message` does NOT contain `"unexpected node failure"` or any other panic text; no run remains orphaned in `in_progress` state | Node-body panic → E-GRAPH-019 STATIC message; panic-text-isolation ({INV-007}); no orphan `in_progress` ({INV-005}); EC-003 node-body-panic path; SEC-008 requires `panic = "unwind"` on pregolya-server release profile (CWE-248) |
 
 ## Verification Properties
 
@@ -258,3 +284,4 @@ None
 | Wave | Wave 1 |
 | Test Types | I (integration), E2E (end-to-end) |
 | Module | pregolya-server |
+| Error Codes | E-GRAPH-019 NodePanic (INTERNAL, broken, Never) — minted at this BC's EC-003 node-body-panic path ({INV-007} panic-text-isolation enforcer); STATIC message: "NodePanic: graph node panicked during execution — see server error log for details"; raised by pregolya-server run-executor when `FutureExt::catch_unwind` catches a node-body panic during `.await` polling; raw panic text suppressed at BC boundary (CWE-209) |

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.7"
+version: "2.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -32,6 +32,7 @@ changelog:
   - "2.5 (round-37/F-P2A158-01/2026-08-29): F-P2A158-01 [HIGH] — §Architecture Anchors: `RunnableConfig` module anchor corrected from `pregolya-core/src/runnable/config.rs` to `pregolya-core/src/config.rs` (`core::config`) with re-export at crate root, per ADR-025 / interface-definitions.md canon and architect directive (canonical anchor `pregolya-core/src/config.rs`, `core::config`, re-exported at crate root; `src/runnable/config.rs` is the former stale path)."
   - "2.6 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] — Mirror architect's serde-bounded DynRunnable blanket canon into BC layer. (1) {INV-006}: replaced stale 'associated types' phrasing with 'generic type parameters'; formalizes that the serde-bounded blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static, I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static` handles the `Value ↔ I/O` round-trip INTERNALLY — the blanket deserializes `Value → I` (raising E-CORE-003 on failure), calls `Runnable<I,O>::invoke`, then serializes `O → Value`; callers are NOT responsible for JSON round-tripping. (2) {PC-001}: added DynRunnable-boundary note specifying E-CORE-003 is raised when `serde_json::from_value::<I>(input)` fails at the blanket boundary (before typed invoke is called). interface-definitions.md §DynRunnable is the authoritative canon (R38)."
   - "2.7 (round-39/F-P2A164-01+OPT-PC1/2026-08-29): F-P2A164-01 [CRIT] — DynRunnable adapter model replacing non-realizable E0207 serde-bounded blanket. {INV-006}: serde-bounded blanket `impl<I, O, T> DynRunnable for T` replaced with adapter model: 'Typed-stage coercion to Box<dyn DynRunnable> is performed via DynRunnableAdapter<I, O, R> where R: Runnable<I, O>. DynRunnableAdapter handles the Value↔I/O round-trip INTERNALLY; E-CORE-003 raised at the ADAPTER boundary (not the blanket boundary); R::invoke called.' {PC-001}: 'via the DynRunnable serde-bounded blanket impl' and 'at the blanket boundary' replaced with 'via DynRunnableAdapter<I, O, R>' and 'at the ADAPTER boundary'; 'Runnable<I, O>::invoke called on the concrete typed impl' corrected to 'R::invoke called on the concrete typed impl'. OPT-PC1 [OBS] — {PC-004}: 'BC-2.01.004 PC1' old-form ordinal corrected to 'BC-2.01.004 {PC-001}' stable-tag form (verify-ordinal-form-residue advisory). interface-definitions.md §DynRunnable + ADR-005 §Send-Bounded RPITIT + ADR-029 §Decision 5 are the authoritative canon (R39)."
+  - "2.8 (round-42/F-P2A176-01/2026-08-29): F-P2A176-01 [HIGH] — Replace Tokio-thread-pool-bounded batch language with architect canon. Description: 'via the Tokio runtime' → 'via `futures::future::join_all` within the calling task — no spawn, no Tokio thread-pool'. {PC-003}: 'Concurrency is bounded by the Tokio thread-pool; there is no per-invocation concurrency cap in `RunnableConfig` (no `max_concurrency` field).' replaced with full join_all canon: default `batch` uses in-task cooperative concurrency via `futures::future::join_all` (or `FuturesOrdered`) — polls all `invoke` futures concurrently within the calling task; no spawn, no thread-pool parallelism; input order preserved. Includes `JoinSet::spawn` impossibility rationale: `+ Send` RPITIT future from `invoke(&self, ..)` borrows `&self` and is NOT `'static`; `JoinSet::spawn` (requires `F: Future + Send + 'static`) CANNOT be used in a default `&self` method. Notes implementor override path for `'static`/`Arc<Self>` state. EC-002 updated to use 'in-task cooperative concurrency via `futures::future::join_all`' language. {INV-002} order-preservation unchanged. No per-invocation cap language remains."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -63,7 +64,8 @@ implementor must provide
 (generic-parameter form; RPITIT + Send form per ADR-005 §Send-Bounded RPITIT).
 The trait provides a default implementation of `stream` (async; outer future resolves to `Ok(stream)` that
 yields a single chunk equal to the `invoke` result as a stream item) and `batch` (maps `invoke` across
-inputs concurrently via the Tokio runtime) so that a type implementing only `invoke` automatically satisfies
+inputs concurrently via `futures::future::join_all` within the calling task — no spawn, no Tokio
+thread-pool) so that a type implementing only `invoke` automatically satisfies
 the full `Runnable` surface. This contract encodes the LangChain v1 `Runnable` ABC `invoke` abstract-method
 pattern (semport/core/behavioral-intent.md §1 "Runnables (LCEL)").
 
@@ -99,8 +101,13 @@ pattern (semport/core/behavioral-intent.md §1 "Runnables (LCEL)").
    A streaming-native implementor may override `stream` to yield multiple chunks; each chunk is still a `Result`.
 3. {PC-003} `runnable.batch(inputs, config).await` (where `config: Option<RunnableConfig>`) returns
    `Result<Vec<Result<Output, PregolyaError>>, PregolyaError>` with inner results in input-insertion
-   order — even though execution is concurrent. Concurrency is bounded by the Tokio thread-pool;
-   there is no per-invocation concurrency cap in `RunnableConfig` (no `max_concurrency` field).
+   order — even though execution is concurrent. The default `batch` uses in-task cooperative
+   concurrency via `futures::future::join_all` (or `FuturesOrdered`) — polls all `invoke` futures
+   concurrently within the calling task; no spawn, no thread-pool parallelism; input order preserved.
+   The `+ Send` RPITIT future from `invoke(&self, ..)` borrows `&self` and is NOT `'static`;
+   `JoinSet::spawn` (requires `F: Future + Send + 'static`) CANNOT be used in a default `&self`
+   method. Implementors owning `'static`/`Arc<Self>` state MAY override `batch` to spawn via
+   `JoinSet` for true parallelism.
 4. {PC-004} `runnable.pipe(next)` returns a concrete `RunnableSequence<Input, NextOutput>`
    (BC-2.01.004 {PC-001}). The canonical `Runnable<Input, Output>` surface has exactly four methods:
    `invoke`, `stream`, `batch`, `pipe`. There is no `batch_as_completed` method on the `Runnable` trait.
@@ -152,10 +159,11 @@ message: "Runnable input type mismatch: expected '<expected>', got '<actual>'", 
 
 ### EC-002: batch with config=None (default config)
 **Scenario:** Caller invokes `runnable.batch(vec!["a","b","c"], None).await`.
-**Expected behavior:** Each input is processed concurrently using Tokio-runtime concurrency with
+**Expected behavior:** Each input is processed concurrently via `futures::future::join_all` within
+the calling task (in-task cooperative concurrency — no spawn, no thread-pool) with
 `RunnableConfig::default()` semantics for recursion limit and other fields. Results are returned
 in input-insertion order regardless of completion order. `RunnableConfig` has no `max_concurrency`
-field — concurrency is bounded by the Tokio runtime, not by a per-invocation cap.
+field — concurrency is bounded by the number of polled futures, not by a per-invocation cap.
 Returns `Ok(vec![Ok("A"), Ok("B"), Ok("C")])`. No timeout or panic occurs.
 
 ### EC-003: stream on a non-streaming implementor

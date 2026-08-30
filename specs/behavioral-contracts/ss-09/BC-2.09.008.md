@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "3.3"
+version: "3.4"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -39,12 +39,13 @@ changelog:
   - "3.1 (round-39/F-P2A165-01/2026-08-29): F-P2A165-01 [MED, CWE-862] — Unconditional pre-hook gate for ForceApproveHooks. {INV-004}: 'Before overriding PendingHumanApproval → Approve, the hook checks' replaced with 'runs the ActionRisk gate BEFORE invoking the inner PreToolCallHook'; gate fires for ALL tool invocations regardless of inner hook policy; added 'This covers AlwaysApprovePolicy / no-hook default Approve paths (not only PendingHumanApproval)'; conclusion 'the override proceeds to Approve' replaced with 'the inner PreToolCallHook is invoked normally'. {PC-006}: 'overrides ONLY PreToolDecision::PendingHumanApproval to Approve (subject to ActionRisk check)' rewritten to unconditional gate form: ActionRisk gate fires before inner hook; None/Some(>=Medium) denied WITHOUT calling inner hook; Some(<Medium) proceeds to inner hook invocation; PendingHumanApproval from inner hook overridden to Approve. EC-009: scenario updated from 'PreToolCallHook returns PendingHumanApproval' to 'BoundaryApprovalHook runs ActionRisk gate'; 'before overriding' → 'BEFORE invoking the inner hook'; AlwaysApprovePolicy coverage note added. TV-018 minted: ForceApproveHooks + AlwaysApprovePolicy inner hook + Some(ActionRisk::High) → Deny WITHOUT calling inner hook + E-MCP-011 emitted. TV count 17→18 in this BC (global 758→759). interface-definitions.md §ForceApproveHooks + ADR-005 §Send-Bounded RPITIT + ADR-029 §Decision 5 are the authoritative canon (R39)."
   - "3.2 (round-40/F-P2A169-02/2026-08-29): F-P2A169-02 [MED, CWE-862/POL-46] — EC-006 scenario and TV-005 Input lacked the `action_risk` precondition required for the `PendingHumanApproval`-overridden-to-`Approve` path under `ForceApproveHooks` to be reachable. EC-006 scenario updated: tool has `action_risk = Some(ActionRisk::ReadOnly)` (gate approves, `ReadOnly < Medium`) — inner hook is invoked; `PendingHumanApproval` overridden to `Approve`; note added that `None`/`>= Medium` would be gate-denied per EC-009 (inner hook never called, interrupt path unreachable for that tool). TV-005 Input updated to specify `action_risk = Some(ActionRisk::ReadOnly)` with note about `None`/`>= Medium` gate-denied path. interface-definitions.md §ForceApproveHooks + {INV-004}/{PC-006} are the authoritative canon (R40)."
   - "3.3 (round-41/F-P2A173-01+F-P2A173-02+F-P2A175-01/2026-08-29): F-P2A173-01 [LOW, CWE-248/703] — EC-010 scope note added: `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` contains ALL panics during future polling, including graph-node-body panics (higher-probability CWE-248 vector); node-body panics yield the same static `isError:true`/`content[0].text == \"internal error\"` response as `extract_output` panics. TV-011 Notes extended: containment scope note added — `AssertUnwindSafe(runner.run(...))` covers all panics during `.await` polling, not only `extract_output` panics. No new TV minted — EC-010 prose extension + TV-011 note is sufficient coverage per POL-23 (census stays 759). F-P2A173-02 [OBS] — TV-018 `Deny { reason }` string aligned to ADR-029 §Decision 4 canonical `format!` output form: `\"ForceApproveHooks policy violation: tool '<tool_name>' has ActionRisk Some(High) (None or >= Medium); ForceApproveHooks is valid only for read-only tool graphs with declared ActionRisk < Medium\"` (stable assertion prefix: `\"ForceApproveHooks policy violation: tool '\"`; `format!` interpolates `preview.tool_name` and `{:?}` of `preview.action_risk`). F-P2A175-01 [LOW] — {PC-004} result_text parenthetical corrected: prior gloss `(result_text = serde_json::to_string(&extract_output_result))` implied universal serialization; replaced with canonical BC-2.09.007 {PC-002} branching rule: `Value::String(s)` → `s` verbatim; all other `Value` variants → `serde_json::to_string(&extract_output_result)` (prevents double-encoding of `Value::String` returns). BC census UNCHANGED: 134. VP UNCHANGED: 17. EC UNCHANGED: 137. TV UNCHANGED: 759."
+  - "3.4 (round-42/F-P2A179-01+F-P2A177-01+F-P2A177-02/2026-08-29): F-P2A179-01 [HIGH]: {PC-003} `ConcreteGraphRunner<S>::run ... where S is statically known` replaced with non-generic form per ADR-029 §Decision 2 / F-P2A072-03: `ConcreteGraphRunner::run` (non-generic, no `<S>`; holds `Arc<CompiledStateGraph>` + `Box<dyn Fn(&serde_json::Value) -> serde_json::Value + Send + Sync>`). Exhaustive sweep of all live-body BC text confirms this was the only `ConcreteGraphRunner<S>` / 'where S is statically known' live-body occurrence. F-P2A177-01 [HIGH, CWE-248/703] (SEC-008 scope): EC-010 SEC-008 invariant extended — the pregolya-server release profile MUST ALSO pin `panic = \"unwind\"` alongside pregolya-mcp; `panic = \"abort\"` on either voids the `catch_unwind` boundary. TV-019 minted: path_fn conditional-edge panic → E-GRAPH-011 ConditionalEdgePanic → static `\"internal error\"` at MCP boundary per ADR-029 §Decision 5. F-P2A177-02 [MED, CWE-209]: EC-003 amended — E-GRAPH-011 ConditionalEdgePanic and E-GRAPH-019 NodePanic are EXCEPTIONS to the 'original graph error code is propagated' rule: these internal-panic codes receive STATIC replacement per ADR-029 §Decision 5; the MCP server substitutes `content[0].text = \"internal error\"` (no panic text, no dynamic fields forwarded) rather than the redacted `PregolyaError::message`. Traceability Error Codes row updated to add E-GRAPH-019 NodePanic. TV count 18→19."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "fabcc25"
+input-hash: "4cdbf1f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -101,7 +102,9 @@ overrides `PreToolCallHook` approval decisions only.
    returns JSON-RPC `-32602` ("Invalid arguments for tool '...': <schema_error>") before
    `invoke_dyn` is called. If schema validation passes, `GraphAgentTool::invoke_dyn` delegates
    to `runner.run(arguments, policy)` via `Arc<dyn GraphRunner>`; `GraphRunner::run`
-   (`ConcreteGraphRunner<S>::run` at the concrete layer, where `S` is statically known) calls
+   (`ConcreteGraphRunner::run` at the concrete layer — non-generic, no `<S>`; holds
+   `Arc<CompiledStateGraph>` + `Box<dyn Fn(&serde_json::Value) -> serde_json::Value + Send + Sync>`
+   per ADR-029 §Decision 2 / F-P2A072-03) calls
    `CompiledStateGraph::invoke(arguments, config)` internally — which takes `serde_json::Value`
    directly (BC-2.02.001 {PC-005}); there is no separate type-parameterized deserialization step.
    If `CompiledStateGraph::invoke` returns `Err(PregolyaError { .. })`, the error propagates
@@ -260,6 +263,18 @@ fails with E-PROV-002 ProviderTimeout).
 `GraphAgentTool::invoke_dyn` returns the error. `mcp::server` surfaces as `isError: true`
 with redacted `PregolyaError::message` per BC-2.09.007 {PC-003} and {INV-003}. The
 `E-MCP-010` code is NOT raised; the original graph error code is propagated.
+**Exception for internal-panic codes (ADR-029 §Decision 5):** When the original error
+carries an internal-panic code — specifically `E-GRAPH-011 ConditionalEdgePanic`
+(path_fn panicked during conditional edge routing) or `E-GRAPH-019 NodePanic` (node body
+panicked during execution) — the MCP server applies STATIC replacement instead of
+forwarding the redacted `PregolyaError::message`. The response is `isError: true` with
+`content[0].text == "internal error"` (no panic text, no source_node, no captured message
+forwarded). This is the ADR-029 §Decision 5 internal-panic routing-table rule: these codes
+carry non-static messages with dynamic context (e.g., E-GRAPH-011 carries `<source_node>`
+and `<message>` dynamic placeholders) that would expose internal implementation details at
+the MCP boundary even after credential redaction; static replacement is the correct defense
+(CWE-209). All other graph error codes continue to have their redacted `PregolyaError::message`
+forwarded normally.
 
 ### EC-004: Node-level interrupt() under DenyInterrupts (default)
 **Scenario:** A graph node calls `interrupt()` during execution; `approval_policy =
@@ -349,8 +364,11 @@ a graph node body during `.await` polling (e.g., `panic!("node error")` inside a
 implementation) is caught by the same `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` boundary and yields the same static `isError:true`, `content[0].text == "internal error"` response — no panic message, backtrace, or internal state forwarded. Node-body panics are a higher-probability CWE-248 vector than caller-supplied `extract_output` panics; the documented `catch_unwind` containment covers both. TV-011 exercises the `extract_output` panic path; the same `AssertUnwindSafe(runner.run(...))` outer boundary provides structural containment for node-body panics (same mechanism, same response).
 **SEC-008 build-profile invariant:** This recovery depends on `panic = "unwind"`. A
 `panic = "abort"` release profile voids the catch and causes process termination on panic
-(remote DoS, CWE-248). The pregolya-mcp release profile MUST pin `panic = "unwind"` —
-devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
+(remote DoS, CWE-248). The `pregolya-mcp` AND `pregolya-server` release profiles MUST BOTH
+pin `panic = "unwind"` — the `catch_unwind` boundary operates inside the MCP server request
+handler (`pregolya-server`) which calls `invoke_dyn` (`pregolya-mcp`); `panic = "abort"` on
+EITHER crate voids the catch and causes process termination. Devops asserts both pins at
+Phase-3 workspace `Cargo.toml` authoring.
 
 ## Canonical Test Vectors
 
@@ -374,6 +392,7 @@ devops asserts this at Phase-3 workspace `Cargo.toml` authoring.
 | TV-016 | Graph node returns `Err(PregolyaError { message: "key_{SIMPLE-UUID}_suffix", .. })` where `{SIMPLE-UUID}` is a 32-char lowercase hex UUID flanked by underscore characters on both sides (forming `key_{SIMPLE-UUID}_suffix`) | `isError: true`; `content[0].text` contains `"key_{SIMPLE-UUID}_suffix"` UNCHANGED — `\b` does not fire between an underscore (`_`) and a hex digit because underscore is a word character (`[A-Za-z0-9_]`); the 32-hex sequence is embedded within a continuous word-character run and is NOT matched by pattern (2). NEGATIVE control: documents an acceptable residual; authoring-site convention is the defense for underscore-flanked internal keys. | Underscore-flanked simple UUID passthrough — `\b` boundary semantics; underscore is a word char so no boundary fires (F-P2A121-01; {INV-001} two-pattern union; documented acceptable residual) |
 | TV-017 | `sanitize_internal_ids` function called directly in isolation (unit-level; `redact_credentials` NOT applied) on input string `"digest: {SHA256-DIGEST}"` where `{SHA256-DIGEST}` is a 64-char lowercase hex SHA-256 digest | Output string is `"digest: {SHA256-DIGEST}"` UNCHANGED — pattern (1) requires hyphens (none present in a 64-char contiguous hex sequence); pattern (2) `\b[0-9a-f]{32}\b` checks for a word boundary after position 32 of the hex sequence, but position 33 is still a hex digit (word character), so no word boundary fires at position 32; neither pattern matches. NEGATIVE control for `sanitize_internal_ids` in isolation: the `\b` end-boundary guard prevents over-stripping SHA-256 digests at the sanitizer layer. Note: the FULL pipeline (`redact_credentials` applied first) DOES redact this input via the `[A-Za-z0-9]{64,}` rule — see TV-015 for the full-pipeline behavior. | `sanitize_internal_ids` unit-isolation — `\b` end-boundary non-over-match property at the correct isolation layer; TV-015 is the full-pipeline complement showing `redact_credentials` redacts the token first (F-P2A129-01; F-P2A121-01 complement; {INV-001} two-pattern union) |
 | TV-018 | `approval_policy = ForceApproveHooks`; inner hook policy is `AlwaysApprovePolicy` (would return `Approve` unconditionally for any tool); tool has `preview.action_risk = Some(ActionRisk::High)` (write-class tool) | `BoundaryApprovalHook::pre_invoke` returns `Deny { reason: "ForceApproveHooks policy violation: tool '<tool_name>' has ActionRisk Some(High) (None or >= Medium); ForceApproveHooks is valid only for read-only tool graphs with declared ActionRisk < Medium" }`; `E-MCP-011 ForceApproveWriteBlocked` emitted; inner `AlwaysApprovePolicy` hook's `Approve` return NEVER reached; tool NOT invoked. Stable assertion prefix: `"ForceApproveHooks policy violation: tool '"` (tool name and `ActionRisk` variant are dynamically interpolated via `format!`; `{:?}` of `Some(ActionRisk::High)` = `Some(High)` per ADR-029 §Decision 4 canonical `format!`) | Unconditional pre-hook gate: `ActionRisk` check fires BEFORE inner hook regardless of inner hook policy; covers `AlwaysApprovePolicy` / no-hook default `Approve` paths (not only `PendingHumanApproval`); {INV-004} (F-P2A165-01); Deny-reason aligned to ADR-029 §Decision 4 canonical format (F-P2A173-02) |
+| TV-019 | Graph wraps a graph that includes a conditional edge whose path_fn panics (e.g., `panic!("routing error")` inside the path function); `tools/call` invokes the graph agent tool; `ConcreteGraphRunner::run` → `CompiledStateGraph::invoke` → conditional edge routing calls path_fn which panics | `{ "content": [{ "type": "text", "text": "internal error" }], "isError": true }` — `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` catches the path_fn panic during `.await` polling; the resulting `E-GRAPH-011 ConditionalEdgePanic` internal-panic code triggers ADR-029 §Decision 5 static replacement at the MCP boundary: `content[0].text == "internal error"` (NOT the redacted E-GRAPH-011 message which contains `<source_node>` and `<message>` dynamic fields that would leak internal routing topology); `isError: true`; server continues serving | EC-003 internal-panic static-replace exception (F-P2A177-02); EC-010 containment scope (F-P2A177-01); ADR-029 §Decision 5 routing-table rule: E-GRAPH-011 ConditionalEdgePanic → static `"internal error"` at MCP boundary; CWE-209 — dynamic fields (`source_node`, panic message) suppressed even after credential redaction |
 
 ## Verification Properties
 
@@ -414,4 +433,4 @@ S-2.11
 | Wave | Wave 2 |
 | Test Types | I (integration), P (property-based: VP-016 proptest) |
 | Module | pregolya-mcp (`mcp::graph_tool`) |
-| Error Codes | E-MCP-010 GraphAgentInterruptDenied (EXEC, broken, Never) — minted by this BC per ADR-029 §Decision 5; note: the initial ADR-029 draft cited E-MCP-006, which was already taken by McpContentUnsupported (minted burst-240); corrected to E-MCP-010 in ADR-029 §Changelog. E-MCP-011 ForceApproveWriteBlocked (EXEC, broken, Never) — minted by this BC ({INV-004}/EC-009; anchor F-P2A-061-02): emitted by BoundaryApprovalHook under ForceApproveHooks policy when action_risk is None or >= ActionRisk::Medium; library-layer Err return, never direct HTTP terminal in v1 |
+| Error Codes | E-MCP-010 GraphAgentInterruptDenied (EXEC, broken, Never) — minted by this BC per ADR-029 §Decision 5; note: the initial ADR-029 draft cited E-MCP-006, which was already taken by McpContentUnsupported (minted burst-240); corrected to E-MCP-010 in ADR-029 §Changelog. E-MCP-011 ForceApproveWriteBlocked (EXEC, broken, Never) — minted by this BC ({INV-004}/EC-009; anchor F-P2A-061-02): emitted by BoundaryApprovalHook under ForceApproveHooks policy when action_risk is None or >= ActionRisk::Medium; library-layer Err return, never direct HTTP terminal in v1. E-GRAPH-011 ConditionalEdgePanic (INTERNAL, broken, Never) — referenced by EC-003 static-replace exception and TV-019; raised by BC-2.02.005 raise-site when path_fn panics; at MCP boundary: ADR-029 §Decision 5 static-replace applies (content[0].text = "internal error"). E-GRAPH-019 NodePanic (INTERNAL, broken, Never) — referenced by EC-003 static-replace exception; raised by pregolya-server run-executor when a graph node body panics (BC-2.12.003 {EC-003}); at MCP boundary: ADR-029 §Decision 5 static-replace applies (content[0].text = "internal error") |

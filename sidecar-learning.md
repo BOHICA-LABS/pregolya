@@ -1230,3 +1230,10 @@ ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.
 - Session ended at 2026-08-30T02:14:50Z (awaiting /session-review)
 - Session ended at 2026-08-30T02:17:53Z (awaiting /session-review)
 - Session ended at 2026-08-30T02:20:45Z (awaiting /session-review)
+
+- Session ended at 2026-08-29T00:00:00Z (awaiting /session-review)
+- Session ended at 2026-08-30T02:28:41Z (awaiting /session-review)
+- Session ended at 2026-08-30T02:35:19Z (awaiting /session-review)
+- Session ended at 2026-08-30T03:06:11Z (awaiting /session-review)
+- Session ended at 2026-08-30T03:31:33Z (awaiting /session-review)
+- Session ended at 2026-08-30T03:38:07Z (awaiting /session-review)
