@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.7"
+version: "1.8"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,6 +15,7 @@ changelog:
   - "1.5 (R28/F-P2A123-03/2026-08-28): AC-024 re-anchored from BC-2.11.002 {PC-001} to BC-2.11.002 {INV-005} — SEC-008 async panic-recovery obligation now lives in {INV-005} (added R27/v1.15); {PC-001} covers unconditional hook dispatch only, not panic recovery. Task 11 BC trace annotation updated from PC-001 to INV-005. Input-hash refreshed."
   - "1.6 (R29/F-P2A127-02+O-P2A125-02/2026-08-28): (1) AC-025 added: SEC-008 async-catch MECHANISM Red Gate — `GuardrailHook::evaluate` panic during `.await` polling caught via `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` in `provenance.rs`; content treated as Fail (fail-closed); `Err(PregolyaError { code: \"E-CORE-007\", .. })` propagated; Red Gate test `test_BC_2_11_002_hook_panic_caught_fail_closed_e_core_007()` MUST drive panic through `.await` (synchronous `std::panic::catch_unwind` substitute must NOT satisfy it); traces to BC-2.11.002 {INV-005}/EC-001 (F-P2A127-02). (2) §Library & Framework Requirements `futures` row: secondary anchor updated from `ADR-029 §Decision 5` to `BC-2.11.002 {INV-005}` (cross-subsystem anchor correction; EC-001 retained) (O-P2A125-02). (3) BC-2.11.002 covered-ACs updated to include AC-025. Token Budget updated (~5,500 → ~5,700 spec; total ~25,500 → ~25,700). input-hash unchanged — no BC input file changes in round-29."
   - "1.7 (R33/F-P2A143-01/2026-08-29): Exhaustive sibling-sweep for ADR-029 §Decision 5 cross-subsystem mis-anchor (F-P2A143-01). Re-anchored 3 remaining SS-11 mis-anchor sites from ADR-029 §Decision 5 to BC-2.11.002 {INV-005}/EC-001: (1) §Edge Cases EC-001 row; (2) §Tasks Task 5; (3) §Previous Story Intelligence S-1.04 row. CWE-248/703 citations and FutureExt::catch_unwind mechanism text preserved. SS-09 sibling see-also note added at each corrected site. Input-hash refreshed — drift caused by BC input updates since R29 (no story-input-file edits in this burst)."
+  - "1.8 (R45/F-P2A189-01/2026-08-30): Workspace-root panic=unwind pin propagated to all four stale sites (F-P2A189-01 [HIGH, CWE-248/703]). Task 5: replaced 'devops must assert this for pregolya-graph at Phase-3 CI setup' with workspace-root form — library-member (pregolya-graph) [profile.release] override is silently ignored by Cargo and MUST NOT be relied upon; devops-engineer asserts workspace-root Cargo.toml at Phase-3 init. AC-024: heading updated to 'workspace-root release profile (pregolya-server binary)'; body extended with library-member-inert clause (Cargo honors [profile.release] panic ONLY at workspace root); devops obligation updated to 'assert on pregolya-server binary profile, NOT pregolya-graph library-member profile'; comment annotation updated to cite library-member-inert caveat. Task 11: comment annotation text updated to workspace-root form with library-member-inert caveat. EC-001: 'Recovery requires panic=unwind build profile' replaced with workspace-root form plus library-member-inert MUST NOT note. Mirrors S-2.11 AC-037 (v1.31). Input-hash refreshed by state-manager."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.001.md
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "2487085"
+input-hash: "83861da"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.04]
@@ -138,11 +139,27 @@ When no hook is registered, exactly one `WARN`-level structured log entry with `
 The `WARN` log entry uses canonical `event_type = "guardrail.unregistered_passthrough"` with structured fields, enabling automated alerting. The log entry is emitted via `tracing::warn!` not `eprintln!`. Verified by `test_BC_2_11_006_warn_log_is_machine_parseable()`.
 
 ### AC-024 (traces to BC-2.11.002 INV-005 — SEC-008 panic-profile build obligation)
-**Build-profile prerequisite (SEC-008) — `panic = "unwind"` required in release profile:**
-The workspace `Cargo.toml` release profile MUST pin `panic = "unwind"`. If the release profile
-sets `panic = "abort"`, `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` in `pregolya-graph/src/provenance.rs` is voided — the process aborts on panic instead of unwinding, bypassing the fail-closed catch and exposing a remote denial-of-service (CWE-248/703). This is a Phase-3 devops-engineer obligation (workspace `Cargo.toml` authoring). The pregolya-graph story-level obligation: the implementing engineer MUST add a
-`// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace profile at Phase-3 init`
-comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` dispatch site in `pregolya-graph/src/provenance.rs` to document the `panic = "unwind"` dependency of the ingress fail-closed catch. The devops-engineer asserts the workspace release profile at Phase-3 workspace init. Verified by devops-engineer at Phase-3; implementer obligation is the comment annotation. (See EC-001 for the `catch_unwind` mechanism; see S-2.11 AC-037 for the analogous SEC-008 obligation on the `GraphAgentTool` path.)
+**Build-profile prerequisite (SEC-008) — `panic = "unwind"` required in the workspace-root release profile (pregolya-server binary):**
+The workspace-root `Cargo.toml` release profile MUST pin `panic = "unwind"`. This is the
+authoritative and ONLY effective setting — Cargo honors `[profile.release] panic` ONLY at the
+workspace root, applying it to the final binary at link time. A library-member profile override
+(e.g., a `[profile.release] panic = "unwind"` line inside `pregolya-graph/Cargo.toml` itself)
+is silently ignored by the Cargo linker and MUST NOT be relied upon as the SEC-008 gate.
+The `catch_unwind` boundary lives in `pregolya-graph/src/provenance.rs`, executed within the
+`pregolya-server` binary — it is the `pregolya-server` binary's workspace-root profile setting
+that determines the effective panic mode at runtime. If the workspace-root release profile sets
+`panic = "abort"`, `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` in
+`pregolya-graph/src/provenance.rs` is voided — the process aborts on panic instead of unwinding,
+bypassing the fail-closed catch and exposing a remote denial-of-service (CWE-248/703). This is a
+Phase-3 devops-engineer obligation (workspace-root `Cargo.toml` authoring; assert on the
+`pregolya-server` binary profile, NOT the `pregolya-graph` library-member profile). The
+pregolya-graph story-level obligation: the implementing engineer MUST add a
+`// SEC-008: panic = "unwind" required in workspace-root release profile (pregolya-server) — library-member (pregolya-graph) profile override is inert (silently ignored by Cargo); FutureExt::catch_unwind voids under abort`
+comment at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag)))` dispatch site
+in `pregolya-graph/src/provenance.rs` to document the workspace-root `panic = "unwind"` dependency
+of the ingress fail-closed catch. The devops-engineer asserts the workspace-root release profile at
+Phase-3 workspace init. Verified by devops-engineer at Phase-3; implementer obligation is the
+comment annotation. (See EC-001 for the `catch_unwind` mechanism; see S-2.11 AC-037 for the analogous SEC-008 obligation on the `GraphAgentTool` path.)
 
 ### AC-025 (traces to BC-2.11.002 INV-005 + EC-001 — Red Gate, SEC-008 async-catch mechanism)
 **Red Gate / SEC-008 async-catch mechanism:** When `GuardrailHook::evaluate` panics DURING
@@ -180,7 +197,7 @@ the analogous `GraphAgentTool::invoke_dyn` path.)
 
 | ID | Scenario | Expected Behavior |
 |----|----------|-------------------|
-| EC-001 | `GuardrailHook::evaluate` panics during async dispatch | Caught via `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` at dispatch site in `provenance.rs` — synchronous `std::panic::catch_unwind` is INADEQUATE (cannot catch panics fired during `.await` polling; BC-2.11.002 {INV-005}/EC-001 / CWE-248/703). Content treated as `Fail` (fail-closed); `Err(PregolyaError { code: "E-CORE-007", .. })` propagated. Recovery requires `panic = "unwind"` build profile. (SS-09 sibling: ADR-029 §Decision 5) |
+| EC-001 | `GuardrailHook::evaluate` panics during async dispatch | Caught via `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` at dispatch site in `provenance.rs` — synchronous `std::panic::catch_unwind` is INADEQUATE (cannot catch panics fired during `.await` polling; BC-2.11.002 {INV-005}/EC-001 / CWE-248/703). Content treated as `Fail` (fail-closed); `Err(PregolyaError { code: "E-CORE-007", .. })` propagated. Recovery requires `panic = "unwind"` in the workspace-root release profile (pregolya-server binary) — a library-member (pregolya-graph) `[profile.release]` override is silently ignored by Cargo and MUST NOT be relied upon (AC-024 / SEC-008). (SS-09 sibling: ADR-029 §Decision 5) |
 | EC-002 | Multiple `ContentBlock`s in one `ToolMessage` | Each evaluated independently; single `Fail` does not block others unless `Critical` |
 | EC-003 | Zero-item RAG result | No `evaluate` calls; no `WARN` emitted; empty result forwarded |
 | EC-004 | Two parallel hooks: one `Pass`, one `Fail` | `Fail` wins (fail-closed); content rejected |
@@ -208,13 +225,13 @@ the analogous `GraphAgentTool::invoke_dyn` path.)
 2. [ ] Write remaining failing tests for AC-001..AC-016, AC-021..AC-023
 3. [ ] Create `pregolya-core/src/guardrail.rs` — `GuardrailHook` trait, `GuardrailResult`, `IngressContent`, `GuardrailSeverity`, `ProvenanceTag`, `BoundaryType`
 4. [ ] Create `pregolya-graph/src/provenance.rs` — `ProvenanceTag` attachment at all 3 boundaries; `GuardrailHook` dispatch; atomic rejection; parallel hook composition
-5. [ ] Implement fail-closed panic catch in `provenance.rs` dispatch: `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` — synchronous `std::panic::catch_unwind` is INADEQUATE for async callees (cannot catch panics fired during `.await` polling; BC-2.11.002 {INV-005}/EC-001 / CWE-248/703). Map caught panic → `GuardrailResult::Fail { .. }` + `Err(PregolyaError { code: "E-CORE-007", .. })`. NOTE: recovery requires `panic = "unwind"` build profile — devops must assert this for `pregolya-graph` at Phase-3 CI setup. (SS-09 sibling: ADR-029 §Decision 5)
+5. [ ] Implement fail-closed panic catch in `provenance.rs` dispatch: `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` — synchronous `std::panic::catch_unwind` is INADEQUATE for async callees (cannot catch panics fired during `.await` polling; BC-2.11.002 {INV-005}/EC-001 / CWE-248/703). Map caught panic → `GuardrailResult::Fail { .. }` + `Err(PregolyaError { code: "E-CORE-007", .. })`. NOTE: recovery requires `panic = "unwind"` in the workspace-root release profile (pregolya-server binary) — a library-member (pregolya-graph) `[profile.release]` override is silently ignored by Cargo and MUST NOT be relied upon; devops-engineer asserts the workspace-root `Cargo.toml` profile at Phase-3 init (AC-024 / SEC-008). (SS-09 sibling: ADR-029 §Decision 5)
 6. [ ] Implement no-hook WARN log: `tracing::warn!(event_type = "guardrail.unregistered_passthrough", ...)`
 7. [ ] Wire `GuardrailDecision` stream event emission in `provenance.rs` (before `ToolEnd` / within `NodeStart-NodeEnd` window)
 8. [ ] Register `guardrail.unregistered_passthrough` in Canonical Structured Event Catalog (SAP-1)
 9. [ ] Export from `pregolya-core/src/lib.rs` and `pregolya-graph/src/lib.rs`
 10. [ ] Run `cargo nextest run -p pregolya-graph -p pregolya-core --no-fail-fast` — all tests green
-11. [ ] Add SEC-008 comment annotation at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` dispatch site in `pregolya-graph/src/provenance.rs`: `// SEC-008: panic = "unwind" required in release profile — FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace Cargo.toml profile at Phase-3 init` (AC-024 / BC-2.11.002 INV-005)
+11. [ ] Add SEC-008 comment annotation at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` dispatch site in `pregolya-graph/src/provenance.rs`: `// SEC-008: panic = "unwind" required in workspace-root release profile (pregolya-server) — library-member (pregolya-graph) profile override is inert (silently ignored by Cargo); FutureExt::catch_unwind voids under abort; devops-engineer asserts workspace-root Cargo.toml profile at Phase-3 init` (AC-024 / BC-2.11.002 INV-005)
 
 ## Previous Story Intelligence (MANDATORY)
 

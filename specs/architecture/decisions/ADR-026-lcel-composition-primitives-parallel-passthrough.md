@@ -11,11 +11,12 @@ date: "2026-08-17"
 subsystems_affected: ["SS-01"]
 supersedes: []
 superseded_by: null
-version: "1.7"
+version: "1.8"
 phase: 1b
 traces_to: ARCH-INDEX.md
-decisions: [D_BURST302_TBD]
+decisions: [D-170]
 changelog:
+  - "1.8 (round-45/O-P2A190/2026-08-30): Fix frontmatter decisions placeholder — `decisions: [D_BURST302_TBD]` → `decisions: [D-170]`. D-170 is the canonical anchor per ARCH-INDEX ADR Registry ('accepted (D-170)') and ARCH-INDEX changelog v1.30 ('ADR-026 registered ... D-170 human ruling'). Hyphenated D-NNN form follows ADR-027 [D-175] precedent. §Citations verified: BC-2.01.003–008, ADR-005/010/023, interface-definitions body references all unchanged; historical Source/Origin `D_BURST302_TBD` backtick reference is descriptive history, not a functional citation."
   - "1.7 (round-40/F-P2A168-02/2026-08-29): Fix nested impl Trait in associated-type binding (E0562-class, non-realizable on stable Rust) at all 4 ADR-026 sites. The form `impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>` uses impl Trait inside an associated-type projection, which is only permitted at the outermost argument position on stable Rust. Replaced with named generic K: Into<String> at all 4 sites: §Decision 1 constructor (RunnableParallel::new), §Decision 4 assign method body, §Interface-Definitions Additions RunnableParallel::new signature, §Interface-Definitions Additions RunnablePassthrough::assign signature. Canonical form: `pub fn new<K: Into<String>>(steps: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>) -> Self`. Source: F-P2A168-02 [MED] round-40 full-re-derivation; sibling fix at interface-definitions.md §RunnableParallel and §RunnablePassthrough."
   - "1.6 (P1D-208/F-P208-01/2026-08-18): §Decision 2 Key behavioral properties item 4 — E-CORE-011 INTERNAL category rendered as bare `Internal` corrected to ALL-CAPS taxonomy code `INTERNAL` per ADR-010 §Category casing canon (matches sibling item 3 `EXEC` form)."
   - "1.5 (burst-315/F-B1/2026-08-17): Decision 2 collect-loop sketch: replace `.unwrap()` with `.ok_or_else(|| PregolyaError::new(Component::Core, Category::Internal, RetryHint::Never, \"E-CORE-011\", format!(\"RunnableParallelTaskPanic: task panicked: missing branch key '{key}'\")))?` — eliminates no-unwrap convention violation (CLAUDE.md §Code Conventions). The key-presence invariant holds when the JoinSet loop completes without early-return error, but `.unwrap()` on an `Option` is forbidden in non-test code regardless of logical guarantee. E-CORE-011 (INTERNAL, minted burst-309) is the canonical expression for this programming-error invariant violation on the task-panic path. Disclaimer note retained."

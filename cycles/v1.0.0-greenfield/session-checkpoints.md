@@ -3825,4 +3825,35 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 ### PENDING USER-APPROVED WORK
 DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
+### STATE: v6.32, timestamp 2026-08-30T12:00:00Z
+
+---
+
+## Checkpoint D-321 (archived 2026-08-30 by D-322 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. round-44 CLOSED (D-321). Frozen-HEAD streak gates on new spec HEAD post-D-321 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. NEXT: dispatch `vsdd-factory:adversary` for round-45 on new frozen spec HEAD (Phase-2 3-CLEAN convergence, streak 0/3).
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts = D-321 round-44 close commit — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+
+### D-321 ROUND-44 CLOSE
+- F-P2A184-01 [HIGH] stream_chat E0562 boxing: interface-definitions §stream_chat → Pin<Box<dyn Stream<...> + Send>>; ADR-005 §BaseChatModel+§RPITIT table updated; ADR-025 §RPITIT BaseChatModel row updated.
+- F-P2A184-02 [MED] DynRunnableAdapter::stream sketch corrected: interface-definitions §DynRunnableAdapter.
+- F-P2A184-03 [MED] §DynTool doc-comment updated: interface-definitions §DynTool + api-surface.md §DynTool.
+- F-P2A185-01 [MED] verify-security-literal-propagation.sh R04 workspace-root-only scope (prior cross-workspace false positive removed).
+- O-P2A186 [LOW] ADR-029 §Decision 5 E-GRAPH-019 "anticipated"→"live" + discharged census annotations removed (TD-VSDD-091).
+- F-P2A187-01 [MED, CWE-209] BC-2.09.008 §EC-003 E-GRAPH-011=dynamic primary (catch_unwind→isError:true) + E-GRAPH-019=static defense-in-depth (BC-2.12.003 §INV-007).
+- F-P2A187-02 [MED] ADR-029 §Decision 5 E-GRAPH-019 anticipated→live (deduplicated with O-P2A186; single fix site).
+- F-P2A187-03 [MED] S-2.11 Red-Gate count corrected 13→12 (R43 AC-038-sweep residue corrected); S-2.11 v1.31→v1.32.
+- F-R44-CV-001 [OBS] STATE.md HRQ-2 label corrected to "CompiledStateGraph AND ConcreteGraphRunner non-generic".
+- NOT CLEAN(strict). P2A-186 CLEAN(PR-merge)=YES. GATE-READY=YES. BC-INDEX §Changelog (v4.04→v4.05); STORY-INDEX §Changelog (v1.30→v1.31); ARCH-INDEX §Changelog (v1.53→v1.54).
+- Census: BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39+1) / points 303. streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
 ### STATE: v6.31, timestamp 2026-08-30T09:30:00Z

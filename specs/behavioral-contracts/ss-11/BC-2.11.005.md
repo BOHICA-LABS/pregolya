@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.005
-version: "1.8"
+version: "1.9"
 status: active
 producer: product-owner
 timestamp: 2026-08-24T00:00:00Z
@@ -30,6 +30,7 @@ changelog:
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-005}, {PRE-001..PRE-003} added; purely additive, no content change."
   - "1.7 (P2A-046 F-3/2026-08-24): same-BC self-ref compressed ordinals normalized to stable tags."
   - "1.8 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.19; §Architecture Module corrected to pregolya-graph (model input buffer construction) — §Architecture Anchors names only module-decomposition.md §pregolya-graph; 'pregolya-core /' prefix removed as pregolya-core does not appear in this BC's §Architecture Anchors. No behavioral change."
+  - "1.9 (F-P2A191-01/2026-08-30): §Architecture Anchors §graph::scheduler row corrected — phantom `CompiledGraph::run()` replaced with canonical `CompiledStateGraph::invoke(input, config)` to mirror architect-adjudicated module-decomposition.md §pregolya-graph correction. No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -149,7 +150,7 @@ single synchronous operation in the current super-step.
 ## Architecture Anchors
 
 - `prd-supplements/interface-definitions.md §GuardrailHook` — `GuardrailResult::Fail{reason,severity}`; `GuardrailSeverity::Critical` triggers run-halt ({PC-004}); non-Critical severity triggers error-block substitution and run continuation ({PC-005})
-- `architecture/module-decomposition.md §pregolya-graph` — `graph::provenance` row: atomic rejection enforcement (HIGH, SS-11); `graph::scheduler` row: `CompiledGraph::run()` pre-inference buffer finalization (CRITICAL, SS-03)
+- `architecture/module-decomposition.md §pregolya-graph` — `graph::provenance` row: atomic rejection enforcement (HIGH, SS-11); `graph::scheduler` row: `CompiledStateGraph::invoke(input, config)` pre-inference buffer finalization (CRITICAL, SS-03)
 - `architecture/purity-boundary-map.md §Boundary Modules` — `graph::provenance` row: pure route decision / effectful `GuardrailHook` dispatch; rejection atomicity enforced via causal ordering before inference
 
 ## Story Anchor
