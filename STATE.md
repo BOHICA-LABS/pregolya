@@ -1,29 +1,29 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "6.28"
+version: "6.29"
 status: in-progress
 producer: state-manager
-timestamp: "2026-08-30T00:15:00Z"
+timestamp: "2026-08-29T23:00:00Z"
 phase: 2
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: pregolya
 mode: greenfield+semport
-current_step: "D-317 (2026-08-30) — round-42 fix-burst CLOSED (all 4 findings; architect+PO+story-writer DONE). trajectory-tail →1→2→0→1. 3 HIGH + 1 MED ALL CLOSED. EC 138 / TV 761 canonical (772 incl GTV) / BC 134 / VP 17 / stories 40. streak 0/3 (reset on D-317 push; round-43 gates on new frozen HEAD). NEXT: round-43."
+current_step: "D-318 (2026-08-29) — heartbeat auto-recovery protocol created (human-mandated docs/ops burst). trajectory-tail →1→2→0→1 (carry-forward r42; docs/ops burst does not advance trajectory). Durable cron 60FC8EB8 @ 8,23,38,53 * * * *; policy AUTO-RECOVER + DRIVE TO CONVERGENCE (DIRECTIVE 3). Two rule docs + CLAUDE.md update. Census UNCHANGED: stories 40 / BC 134 / VP 17 / EC 138 / TV 761 / points 303. streak 0/3 NOT RESET (docs/ops; no spec-perimeter change; frozen-HEAD streak gates on post-D-317 spec HEAD). NEXT: round-43."
 current_cycle: v1.0.0-greenfield
-convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase-2 IN PROGRESS — D-317 (2026-08-30): round-42 fix-burst CLOSED; all 4 findings CLOSED (3 HIGH + 1 MED); trajectory-tail →1→2→0→1 (P2A-176/177/178/179); EC 138 (E-GRAPH-019); TV 761 canonical (772 incl GTV); BC 134 / VP 17 / stories 40 / points 303; streak 0/3 (reset on D-317 push); NEXT: round-43."
+convergence_status: "Phase-1 CLOSED (burst-325; D-197; 2026-08-18). 3/3 CONVERGED on frozen anchor 79eb2f3 (D-195). Phase-2 IN PROGRESS — D-317 (2026-08-30): round-42 fix-burst CLOSED; all 4 findings CLOSED (3 HIGH + 1 MED); trajectory-tail →1→2→0→1 (P2A-176/177/178/179); EC 138 (E-GRAPH-019); TV 761 canonical (772 incl GTV); BC 134 / VP 17 / stories 40 / points 303; streak 0/3 (reset on D-317 push). D-318 (2026-08-29): docs/ops burst only — heartbeat auto-recovery; census UNCHANGED; streak 0/3 NOT RESET. NEXT: round-43."
 pipeline: IN_PROGRESS
 dtu_required: true
 dtu_assessment: 2026-07-14
 dtu_clones_built: pending
 dtu_services: [openai, anthropic, ollama]
 total_bcs: "134"
-user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix."
+user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit convergence protocol. Convergence will happen, it can just take some time. Don't ask me if I want to continue — my answer will always be yes. DIRECTIVE 2 (2026-07-29): fix-in-scope is the DEFAULT posture; deferral requires explicit per-case human permission; CLAUDE.md Canonical Principle Rule 3 UNCHANGED. Agents may NOT self-authorize deferrals. Orchestrator may PROPOSE deferrals but default action is to fix. DIRECTIVE 3 (2026-08-29): heartbeat auto-recovery standing policy — AUTO-RECOVER + DRIVE TO CONVERGENCE. Durable cron 60FC8EB8 @ 8,23,38,53 * * * * re-dispatches dead/stalled agents and drives to convergence autonomously. STOP + alert only at human-approval gates, force-push, or budget exhaustion. Protocol: .factory/rules/heartbeat-recovery-protocol.md."
 ---
 
-<!-- STATE.md SIZE BUDGET: 213 lines (wc-l) | margin from soft-target (200L→500L): +287 lines | margin from actual (hard-cap 500L): 500 - 213 = 287 (dual-margin form) | D-317 (2026-08-30): v6.27→v6.28; D-317 row added to decisions log + current phase steps; round-42 fix-burst CLOSED (all 4 findings; EC 138 / TV 761 canonical / BC 134 / VP 17 / stories 40); D-316 checkpoint archived to session-checkpoints.md. streak 0/3. NEXT: round-43. -->
+<!-- STATE.md SIZE BUDGET: 213 lines (wc-l) | margin from soft-target (200L→500L): +287 lines | margin from actual (hard-cap 500L): 500 - 213 = 287 (dual-margin form) | D-318 (2026-08-29): v6.28→v6.29; D-318 row added to decisions log + current phase steps; D-313 archived; docs/ops burst — heartbeat auto-recovery protocol + portable setup guide; DIRECTIVE 3 added; CLAUDE.md §Heartbeat-Auto-Recovery added; census UNCHANGED. streak 0/3. NEXT: round-43. -->
 
 # Pipeline State: pregolya
 
@@ -38,7 +38,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-08-30 — D-317: round-42 fix-burst CLOSED. trajectory-tail →4→2→0→1 (r41 final); r42 →1→2→0→1 CLOSED (3H+1M ALL CLOSED). EC 137→138 (E-GRAPH-019 minted); TV 759→761 canonical (772 incl GTV; TV-011+TV-019 minted). BC 134 / VP 17 / stories 40 / points 303 UNCHANGED. streak 0/3 (reset on D-317 push). NEXT: round-43. |
+| **Last Updated** | 2026-08-29 — D-318: docs/ops burst — heartbeat auto-recovery protocol + portable setup guide created (human-mandated). trajectory-tail →1→2→0→1 (carry-forward r42; docs/ops does not advance trajectory). Durable cron 60FC8EB8 @ 8,23,38,53 * * * *; AUTO-RECOVER + DRIVE TO CONVERGENCE policy (DIRECTIVE 3). CLAUDE.md §Heartbeat-Auto-Recovery subsection added. Census UNCHANGED: EC 138 / TV 761 canonical / BC 134 / VP 17 / stories 40 / points 303. streak 0/3 NOT RESET (no spec-perimeter change). |
 
 ## Phase Progress
 
@@ -59,11 +59,11 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
+| D-318 docs/ops (2026-08-29): heartbeat auto-recovery protocol created (human-mandated). trajectory-tail →1→2→0→1 (carry-forward r42; docs/ops does not advance trajectory). Durable cron 60FC8EB8 @ 8,23,38,53 * * * *; policy AUTO-RECOVER + DRIVE TO CONVERGENCE (DIRECTIVE 3). Files created: .factory/rules/heartbeat-recovery-protocol.md (authoritative), .factory/rules/heartbeat-setup-guide.md (portable). CLAUDE.md §Heartbeat-Auto-Recovery subsection added. Census UNCHANGED: stories 40 / BC 134 / VP 17 / EC 138 / TV 761 canonical / points 303. streak 0/3 NOT RESET (docs/ops; no spec-perimeter change; frozen-HEAD streak gates on post-D-317 spec HEAD per D-143-style rule). | state-manager | COMPLETE | STATE.md v6.29. Single commit per TD-VSDD-053. |
 | D-317 round-42 fix-burst CLOSED (2026-08-30): trajectory-tail r42 →1→2→0→1. 4 findings ALL CLOSED (3H+1M): F-P2A176-01[HIGH] S-1.04 batch join_all in-task per BC-2.01.003 {PC-003}; F-P2A177-01[HIGH,CWE-248/703] S-1.26 AC-018+EC-019 node-body-panic (E-GRAPH-019 minted; EC 137→138); F-P2A177-02[MED,CWE-209] S-2.11 AC-038+TV-019 MCP static-replace; F-P2A179-01[HIGH] S-2.11 AC-019 non-generic ConcreteGraphRunner. P2A-178 CLEAN(strict)=YES. TV 759→761 canonical (772 incl GTV). BC 134 / VP 17 / stories 40 / points 303 UNCHANGED. D-316 checkpoint archived to session-checkpoints.md. streak 0/3. NEXT: round-43. | state-manager | COMPLETE | STATE.md v6.28. Single commit per TD-VSDD-053. |
 | D-316 SESSION WRAP (2026-08-30): round-42 fix-burst WIP COMMITTED (architect+PO). trajectory-tail →4→2→0→1 (carry-forward r41; r42 →1→2→0→1 IN PROGRESS). 4 adversary passes (P2A-176/177/178/179). 3 HIGH + 1 MED CLOSED at BC/ADR layer; story-writer PENDING. EC 137→138 (E-GRAPH-019 minted). TV 759→761 canonical (772 incl GTV). BC 134 / VP 17 / stories 39 UNCHANGED. streak 0/3. D-314 checkpoint archived to session-checkpoints.md. | state-manager | COMPLETE | STATE.md v6.27. Single commit per TD-VSDD-053. |
 | D-315 ops-fix (2026-08-29): verify-sha-currency.sh sidecar-learning.md excluded from dirty-gate (SIDECAR-STOP-HOOK-CHURN deadlock resolved; D-315). Census UNCHANGED 39/134/17/137/303. TV 759. VP 17. streak 0/3. | ops | COMPLETE | STATE.md v6.26. Single commit per TD-VSDD-053. |
 | D-314 round-41 fix-burst CLOSED (2026-08-29): trajectory-tail →4→2→0→1. 7 unique findings. MILESTONE: P2A-174 CLEAN(strict)=YES — FIRST clean census/records lens of Phase-2 re-convergence. NOT CLEAN(strict) (1 HIGH + 1 MED + 4 LOW + 1 OBS). ALL CLOSED: F-P2A172-01[HIGH] S-1.04 batch max_concurrency stale cap→no-cap/JoinSet canon; F-P2A172-02[MED] DynRunnableAdapter absent ADR-023 #[non_exhaustive]→§Exempt Criterion B; F-P2A172-03[LOW] DynRunnableAdapter._phantom pub→pub(crate); F-P2A172-04[LOW] RunnableParallel::new doc-comment K:Into<String>; F-P2A173-01[LOW,CWE-248/703] panic-recovery scope extended: EC-010/TV-011/AC-033/EC-012; F-P2A173-02[OBS] TV-018 Deny-reason ADR-029 §Decision-4 canon; F-P2A175-01[LOW] BC-2.09.008 {PC-004} result_text gloss. Census 39/134/17/137/303 UNCHANGED. TV 759. VP 17. streak 0/3. NEXT: round-42. | state-manager | COMPLETE | STATE.md v6.25. Single commit per TD-VSDD-053. |
-| D-313 round-40 fix-burst CLOSED (2026-08-29): trajectory-tail →4→2→1→1. 7 unique findings (P2A-171-01==P2A-169-01). NOT CLEAN(strict) (1 HIGH + 6 MED). ALL CLOSED: F-P2A168-01[HIGH] Runnable::pipe ASYMMETRIC serde bounds→FULL symmetric; F-P2A168-02[MED] nested impl Trait E0562→named K:Into<String>; F-P2A168-03[MED] RunnableSequence PhantomData<fn(I)->O>; F-P2A168-04[MED] ADR-023 pub(crate); F-P2A169-01=F-P2A171-01[MED,CWE-862] observability unconditional-gate framing; F-P2A169-02[MED,CWE-862] BC-2.09.008 ReadOnly precondition; F-P2A170-01[MED,POL-21] test-vectors §Changelog. ALL r39-fix siblings. Architect re-derivation: FULLY REALIZABLE. Census 39/134/17/137/303 UNCHANGED. TV 759. VP 17. streak 0/3. L-233 codified. NEXT: round-41. | state-manager | COMPLETE | STATE.md v6.24. Single commit per TD-VSDD-053. |
 
 ## Decisions Log
 
@@ -104,6 +104,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | D-315 | **ops-fix: verify-sha-currency.sh dirty-gate excludes sidecar-learning.md (SIDECAR-STOP-HOOK-CHURN deadlock resolved, 2026-08-29). Root cause: plugin Stop hook appends a timestamped "Session ended at <TS>" line to sidecar-learning.md on EVERY agent stop; validate-wave-gate-prerequisite treated re-dirtied file as a gate violation after each hygiene commit, blocking all adversary/work Agent dispatches (pipeline deadlock). Durable fix: extend §(c) grep -vE exclusion in verify-sha-currency.sh to match both logs/*.jsonl and sidecar-learning.md — Stop-hook-managed session-scratch churn files excluded from dirty gate. sidecar-learning.md remains git-tracked for /session-review; committed opportunistically with next substantive burst. Supersedes per-burst COMMIT-PER-DISPATCH workaround for this file. Census UNCHANGED 39/134/17/137/303. TV 759. VP 17. streak 0/3.** | SIDECAR-STOP-HOOK-CHURN deadlock resolved; sidecar-learning.md excluded from dirty-gate (same class as logs/*.jsonl); round-42 dispatches now unblocked | Phase 2 ops | 2026-08-29 | state-manager |
 | D-316 | **SESSION WRAP (2026-08-30) — round-42 fix-burst WIP COMMITTED (architect+PO); story-writer+state-manager-close PENDING. trajectory-tail →4→2→0→1 (carry-forward r41); r42 →1→2→0→1 IN PROGRESS (P2A-176/177/178/179). 3 HIGH + 1 MED CLOSED at BC/ADR layer. F-P2A176-01[HIGH]: batch default → in-task join_all/FuturesOrdered (JoinSet::spawn prohibited; borrows &self). BC-2.01.003 {PC-003} + interface-definitions §Batch-Execution + ADR-005 §Checkpoint-Ordering DONE. F-P2A177-01[HIGH, CWE-248/703]: server-run async node-panic boundary FutureExt::catch_unwind; E-GRAPH-019 NodePanic minted (EC 137→138); SEC-008 panic=unwind extended to pregolya-server; in_progress→failed. BC-2.12.003 {EC-003}/{INV-007} + BC-2.09.008 {SEC-008} + error-taxonomy.md (E-GRAPH-019) + ADR-001 rev-3 DONE. F-P2A177-02[MED, CWE-209]: internal-panic codes → static "internal error" at MCP boundary (ADR-029 §Decision-3 Option A). BC-2.09.008 EC-003 + test-vectors.md DONE. F-P2A179-01[HIGH]: phantom ConcreteGraphRunner<S> → non-generic (ADR-029 §Decision-2 canon). BC-2.09.008 {PC-003} DONE. P2A-178 (consistency/census) = CLEAN(strict) [no fix]. Census: EC 138 / TV 761 canonical (772 incl GTV) / BC 134 / VP 17 / stories 39. D-314 checkpoint archived to session-checkpoints.md. STORY-WRITER NEXT: S-1.04 AC-003/§Library-Requirements/§Architecture-Compliance; SS-12 server story + S-2.11 AC-037; S-2.11 AC-019/MCP-error-mapping ACs. STATE.md v6.26→v6.27.** | SESSION WRAP mid-round-42-fix-burst; architect+PO COMMITTED; story-writer+state-manager-close PENDING; EC 138; TV 761; D-314 checkpoint archived | Phase 2 | 2026-08-30 | state-manager |
 | D-317 | **round-42 fix-burst CLOSED (2026-08-30) — 4 adversary passes P2A-176/177/178/179; trajectory-tail →1→2→0→1; ALL 4 findings CLOSED (3 HIGH + 1 MED). F-P2A176-01[HIGH]: S-1.04 batch default corrected to in-task join_all/FuturesOrdered per BC-2.01.003 {PC-003} v2.8; JoinSet::spawn prohibited (borrows &self); no max_concurrency cap; AC-003+§Library-Requirements+§Architecture-Compliance (story-writer). F-P2A177-01[HIGH, CWE-248/703, SEC-008]: S-1.26 AC-018+EC-019 node-body-panic recovery per BC-2.12.003 EC-003/{INV-007}; E-GRAPH-019 NodePanic (EC 137→138); FutureExt::catch_unwind; in_progress→failed; Architecture Compliance Rule 9; TV-011 anchor (story-writer). F-P2A177-02[MED, CWE-209]: S-2.11 AC-038+TV-019 MCP static-replace exception for E-GRAPH-011/E-GRAPH-019 at MCP boundary per ADR-029 §Decision-3 Option A; TV 759→761 canonical (TV-011+TV-019 minted +2; 772 incl GTV) (story-writer). F-P2A179-01[HIGH]: S-2.11 AC-019 non-generic ConcreteGraphRunner::run per ADR-029 §Decision-2 + BC-2.09.008 {PC-003} v3.4 (story-writer). P2A-178 (consistency/census) CLEAN(strict)=YES. CLEAN(strict): NO; CLEAN(PR-merge): NO. Census: EC 138 / TV 761 canonical (772 incl GTV) / BC 134 / VP 17 / stories 40 (39 product + 1 maint) / points 303. D-316 checkpoint archived to session-checkpoints.md. streak 0/3 (push resets frozen-HEAD per BC-5.39.001; round-43 gates on new HEAD). STATE.md v6.27→v6.28.** | round-42 fix-burst CLOSED — batch join_all in-task; S-1.26 node-panic AC-018+EC-019 (E-GRAPH-019); S-2.11 non-generic runner + MCP static-replace TV-019; EC 138; TV 761 canonical | Phase 2 | 2026-08-30 | state-manager |
+| D-318 | **docs/ops burst COMPLETE (2026-08-29) — heartbeat auto-recovery protocol created (human-mandated). trajectory-tail →1→2→0→1 (carry-forward r42; docs/ops burst does not advance trajectory). Standing policy: AUTO-RECOVER + DRIVE TO CONVERGENCE. Durable cron 60FC8EB8 @ 8,23,38,53 * * * * registered; fires ~every 15 min while REPL idle; 7-day auto-expiry + self-re-arm at each fire; idle-only. Two docs created: .factory/rules/heartbeat-recovery-protocol.md (authoritative pregolya protocol — 5-state classification, escalation boundary, cron facts, worked example round-42 story-writer recovery) + .factory/rules/heartbeat-setup-guide.md (portable guide — CronCreate params, canonical prompt template with placeholders, teardown, portability checklist). CLAUDE.md §Heartbeat-Auto-Recovery subsection added under §Operational-Discipline-TDs. DIRECTIVE 3 added to STATE.md frontmatter user_directive_persistent. Docs/ops burst — census UNCHANGED: stories 40 / BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / points 303. streak 0/3 NOT RESET (docs/ops commit does not cross spec-perimeter boundary; frozen-HEAD streak still gates on post-D-317 spec HEAD per D-143-style rule). records-lint PASS. STATE.md v6.28→v6.29.** | heartbeat auto-recovery protocol + portable setup guide created; durable cron 60FC8EB8 registered; DIRECTIVE 3; docs/ops burst; census UNCHANGED | Phase 2 ops | 2026-08-29 | state-manager |
 
 ## Risk Register
 
@@ -177,20 +178,19 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 
 ## Session Resume Checkpoint
 
-<!-- D-317 checkpoint replaces D-316 — D-316 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+<!-- D-318 checkpoint replaces D-317 — D-317 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-pregolya Phase-2 re-convergence, round-42 fix-burst CLOSED (D-317). streak 0/3. Push D-317 resets frozen-HEAD; round-43 gates on new HEAD. NEXT: dispatch adversary for round-43 (4 fresh-context lenses + GATE-READY audit).
+pregolya Phase-2 re-convergence. D-317: round-42 fix-burst CLOSED. D-318: docs/ops burst — heartbeat auto-recovery protocol + DIRECTIVE 3. streak 0/3. Frozen-HEAD streak gates on post-D-317 spec HEAD (no spec change in D-318). NEXT: dispatch adversary for round-43 (4 fresh-context lenses + GATE-READY audit).
 
 ### HEADS
-- develop: `644d1ad` (no code, spec-only); factory-artifacts = D-317 round-42 fix-burst CLOSED — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+- develop: `644d1ad` (no code, spec-only); factory-artifacts = D-318 docs/ops burst CLOSED — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
 
-### ROUND-42 CLOSED (all 4 findings)
-- F-P2A176-01 [HIGH] CLOSED: S-1.04 batch join_all in-task per BC-2.01.003 {PC-003} v2.8 (v1.10→v1.11).
-- F-P2A177-01 [HIGH, CWE-248/703, SEC-008] CLOSED: S-1.26 AC-018+EC-019 node-body-panic; E-GRAPH-019 NodePanic (EC 138); FutureExt::catch_unwind (v1.7→v1.8).
-- F-P2A177-02 [MED, CWE-209] CLOSED: S-2.11 AC-038+TV-019 MCP static-replace E-GRAPH-011/E-GRAPH-019; TV 761 canonical (772 incl GTV; TV-011+TV-019 +2).
-- F-P2A179-01 [HIGH] CLOSED: S-2.11 AC-019 non-generic ConcreteGraphRunner::run per ADR-029 §Decision-2 (v1.29→v1.30).
-- Census: EC 138 / TV 761 canonical (772 incl GTV) / BC 134 / VP 17 / stories 40 (39+1) / points 303. CLEAN(strict): NO; CLEAN(PR-merge): NO.
+### D-318 DOCS/OPS (heartbeat auto-recovery)
+- Durable cron 60FC8EB8 @ 8,23,38,53 * * * * (AUTO-RECOVER + DRIVE TO CONVERGENCE).
+- Protocol: .factory/rules/heartbeat-recovery-protocol.md. Setup guide: .factory/rules/heartbeat-setup-guide.md.
+- DIRECTIVE 3 added to user_directive_persistent. CLAUDE.md §Heartbeat-Auto-Recovery subsection added.
+- Census: EC 138 / TV 761 canonical (772 incl GTV) / BC 134 / VP 17 / stories 40 (39+1) / points 303. Streak 0/3 NOT RESET.
 
 ### STANDING HUMAN-GATE OBS
 HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
