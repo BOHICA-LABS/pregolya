@@ -74,6 +74,77 @@ recorded in STATE.md (D-318 decision row) and in `.factory/rules/heartbeat-recov
 
 ---
 
+## SessionStart Hook (auto-setup on every new session)
+
+The SessionStart hook provides a second durability layer that runs `ensure-heartbeat.sh`
+automatically at the start of every Claude Code session. This closes two gaps the cron
+alone cannot close:
+
+1. **7-day expiry gap:** if the REPL was offline when the cron expired, the cron is
+   silently gone — no alert, no retry. The SessionStart hook re-seeds it on the next
+   session start.
+2. **No-re-verification gap:** the heartbeat prompt is refreshed from the canonical
+   template file at `.factory/hooks/heartbeat-cron-prompt.txt` at every re-arm, so
+   prompt edits propagate automatically.
+
+### `.claude/settings.json` snippet
+
+Add the following to `.claude/settings.json` in the **project root** (not `~/.claude/`).
+This scopes the hook to this project only.
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.factory/hooks/ensure-heartbeat.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+For pregolya, this file is at `/Users/jmagady/Dev/pregolya/.claude/settings.json`,
+committed to `develop` at `bfe0592`.
+
+### `ensure-heartbeat.sh` resolution strategy
+
+The script uses this priority order to resolve the project root:
+
+1. `$CLAUDE_PROJECT_DIR` — set by Claude Code's SessionStart hook mechanism; most
+   reliable because it is injected by the harness before the script runs.
+2. Path traversal: `$(cd "${SCRIPT_DIR}/../.." && pwd)` — strips two levels from the
+   script's directory (`.factory/hooks/` → project root).
+3. Belt-and-suspenders: strip any `/.factory` suffix from the resolved root — guards
+   against edge-case double-traversal where `SCRIPT_DIR` resolved into the worktree.
+
+### PORTABILITY GOTCHA — nested git worktrees
+
+> **Do NOT resolve the project root with `git rev-parse --show-toplevel`** in any
+> script or hook that runs from inside a nested git worktree directory.
+
+**Why:** `.factory/` is mounted as a git worktree via
+`git worktree add .factory factory-artifacts`. When you run
+`git rev-parse --show-toplevel` from inside `.factory/` (or any subdirectory of it),
+git returns the worktree root — `.factory/` itself — NOT the parent project root. This
+causes the script to compute the wrong store path (e.g., resolving
+`.factory/.claude/scheduled_tasks.json` instead of `.claude/scheduled_tasks.json`),
+silently writing to or reading from the wrong location with no error.
+
+**Affected directories in pregolya:** `.factory/` (always) and `.factory-project/` in
+multi-repo mode.
+
+**Correct approach:** use `$CLAUDE_PROJECT_DIR` (injected by the SessionStart hook) or
+explicit path traversal from the script's known location. Both avoid git entirely.
+
+---
+
 ## Canonical Heartbeat Prompt Template
 
 Replace `<WORKSPACE_PATH>`, `<PROJECT_NAME>`, `<PROTOCOL_PATH>`, and `<POLICY_NAME>`
@@ -224,8 +295,14 @@ Use this checklist to stand up the heartbeat on a new project in under 5 minutes
 [ ] Run CronList to confirm job appears
 [ ] Record job identifier in project state (decision log or equivalent)
 [ ] Add re-arm check to protocol file §Cron-Facts
+[ ] Install SessionStart hook in .claude/settings.json (project root, NOT ~/.claude/)
+    using "bash ${CLAUDE_PROJECT_DIR}/.factory/hooks/ensure-heartbeat.sh"
+[ ] Commit ensure-heartbeat.sh + heartbeat-cron-prompt.txt to factory-artifacts branch
+[ ] PORTABILITY GOTCHA: if .factory/ is a nested git worktree, do NOT use
+    git rev-parse --show-toplevel in ensure-heartbeat.sh — use $CLAUDE_PROJECT_DIR
+    or path traversal (see §PORTABILITY-GOTCHA above)
 [ ] Test: wait for one heartbeat fire; confirm it reads state correctly
-[ ] Note: job will auto-expire in 7 days — self-re-arm step handles this
+[ ] Note: job will auto-expire in 7 days — SessionStart self-heal + cron re-arm handle this
 ```
 
-Total: ~3-5 minutes if you have the workspace path and policy ready.
+Total: ~5-8 minutes if you have the workspace path and policy ready.

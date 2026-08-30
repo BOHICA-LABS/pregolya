@@ -217,6 +217,98 @@ heartbeat fire will re-arm the cron if it is missing.
 
 ---
 
+## Session-Start Self-Heal
+
+The SessionStart hook provides an additional durability layer beyond the 7-day cron
+auto-expiry. Every time a new Claude Code session starts in the pregolya workspace,
+the hook runs `ensure-heartbeat.sh` before the REPL becomes interactive.
+
+### What it does
+
+`ensure-heartbeat.sh` (`.factory/hooks/ensure-heartbeat.sh`) examines
+`.claude/scheduled_tasks.json` and applies one of three idempotent operations:
+
+| Case | Detection | Action |
+|------|-----------|--------|
+| No `[HEARTBEAT]` task in store | `jq` finds no task with `startswith("[HEARTBEAT]")` | **Seed:** write a new task entry with the canonical schedule + prompt from `.factory/hooks/heartbeat-cron-prompt.txt` |
+| Task exists but `createdAt` ≥ 6 days ago | Age math in milliseconds | **Re-arm:** refresh `createdAt` and `prompt` from template; resets the 7-day expiry clock |
+| Task exists and fresh (< 6 days old) | Same age check | **No-op:** log `present, fresh` and exit 0 |
+
+The script is idempotent — running it multiple times produces the same result.
+
+### What it closes
+
+- **7-day expiry gap:** if the cron expired between sessions (REPL was offline for
+  7+ days), the next session re-seeds it automatically — no manual `CronCreate` required.
+- **No-re-verification gap:** the heartbeat prompt is kept fresh from the canonical
+  template file at `.factory/hooks/heartbeat-cron-prompt.txt` on every re-arm. If
+  the prompt is edited, the next re-arm picks up the edit automatically.
+
+### Path resolution (nested worktree safety)
+
+`ensure-heartbeat.sh` resolves the project root using `$CLAUDE_PROJECT_DIR` (set by
+the SessionStart hook), falling back to path traversal (`SCRIPT_DIR/../..`), then
+strips any `/.factory` suffix as a belt-and-suspenders check. It NEVER uses `git
+rev-parse --show-toplevel` — this would return `.factory/` (the nested worktree root)
+rather than the actual project root. See `.factory/rules/heartbeat-setup-guide.md`
+§SessionStart-Hook for the full PORTABILITY GOTCHA explanation.
+
+### Setup
+
+The hook is installed in `.claude/settings.json` (project-scoped, committed to
+`develop` at `bfe0592`). The hook entry runs:
+
+```
+bash ${CLAUDE_PROJECT_DIR}/.factory/hooks/ensure-heartbeat.sh
+```
+
+at every SessionStart event for this project.
+
+---
+
+## Recovery Worked-Examples (this session, 2026-08-30)
+
+Two agents died on API transport errors during the round-42 fix-burst + hook-builder
+session and were recovered inline using the verify-then-continue /
+verify-then-re-dispatch-specific-gap pattern. These are evidence the loop works.
+
+### Example 1 — story-writer round-42 (2026-08-30)
+
+**Failure:** story-writer was dispatched to close findings F-P2A176-01, F-P2A177-01,
+F-P2A177-02, and F-P2A179-01 across S-1.04, S-1.26, and S-2.11. The agent died
+mid-task via API transport error after writing S-1.04 changes but before completing
+S-2.11.
+
+**Detection:** D-316 session-wrap state recorded "story-writer PENDING."
+
+**Recovery:**
+1. Read STATE.md §Session-Resume-Checkpoint to identify the incomplete scope.
+2. Grepped S-1.04, S-1.26, and S-2.11 to verify which ACs were already written vs still missing.
+3. Re-dispatched story-writer with narrowed scope: "complete only the remaining ACs
+   per the D-316 session-wrap scope list; do NOT re-write ACs already present."
+4. After completion, state-manager closed D-317.
+
+**Pattern:** verify completeness by reading actual files; never trust self-disclosure;
+re-dispatch only the gap.
+
+### Example 2 — hook-builder (2026-08-30)
+
+**Failure:** the agent building `ensure-heartbeat.sh` died on an API transport error
+partway through implementation.
+
+**Detection:** working tree showed partial file; the agent's final message was cut off
+before all logic was written.
+
+**Recovery:**
+1. Read the partial file to see exactly what was already written.
+2. Identified the specific remaining gap (path-resolution logic and re-arm branch).
+3. Re-dispatched with a narrowed scope targeting only the missing code sections.
+4. Tests A-D all passed after re-dispatch completed.
+
+**Pattern:** same verify-then-re-dispatch-specific-gap discipline. No full re-write.
+
+---
+
 ## Standing Orchestrator Constraints (always apply during heartbeat recovery)
 
 These constraints from CLAUDE.md apply unconditionally during heartbeat-fired

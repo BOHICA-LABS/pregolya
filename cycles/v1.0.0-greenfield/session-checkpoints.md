@@ -3756,3 +3756,25 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-316 SESSION WRAP (2026-08-30): round-42 fix-burst WIP COMMITTED (architect+PO). trajectory-tail r42 →1→2→0→1; 3 HIGH + 1 MED CLOSED at BC/ADR layer. EC 137→138 (E-GRAPH-019 minted). TV 759→761 canonical (772 incl GTV). BC 134 / VP 17 / stories 39 UNCHANGED. streak 0/3. STATE.md v6.26→v6.27.
 
 ### STATE: v6.27, timestamp 2026-08-30T00:05:00Z
+
+---
+
+## Checkpoint D-318 (archived 2026-08-30 by D-319 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. D-317: round-42 fix-burst CLOSED. D-318: docs/ops burst — heartbeat auto-recovery protocol + DIRECTIVE 3. streak 0/3. Frozen-HEAD streak gates on post-D-317 spec HEAD (no spec change in D-318). NEXT: dispatch adversary for round-43 (4 fresh-context lenses + GATE-READY audit).
+
+### HEADS
+- develop: `644d1ad` (no code, spec-only; Phase-2 spec-only sessions). factory-artifacts = D-318 docs/ops burst CLOSED — exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+### PER-WORKSTREAM — Phase-2 heartbeat auto-recovery protocol (docs/ops)
+D-317 round-42 CLOSED. D-318 docs/ops: Durable cron 60FC8EB8 @ 8,23,38,53 * * * * (AUTO-RECOVER + DRIVE TO CONVERGENCE). Protocol: .factory/rules/heartbeat-recovery-protocol.md. Setup guide: .factory/rules/heartbeat-setup-guide.md. DIRECTIVE 3 added to user_directive_persistent. CLAUDE.md §Heartbeat-Auto-Recovery subsection added. Census UNCHANGED: EC 138 / TV 761 canonical (772 incl GTV) / BC 134 / VP 17 / stories 40 (39+1) / points 303. Streak 0/3 NOT RESET (docs/ops; no spec-perimeter change). NEXT-ACTION: round-43 on frozen spec HEAD (post-D-317 push). Streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+#### DECISION DELTA (this session)
+D-318 docs/ops (2026-08-29): heartbeat auto-recovery protocol + portable setup guide created. Durable cron 60FC8EB8 registered. DIRECTIVE 3 added. CLAUDE.md §Heartbeat-Auto-Recovery added. census UNCHANGED. streak 0/3 NOT RESET. STATE.md v6.28→v6.29.
+
+### STATE: v6.29, timestamp 2026-08-29T23:00:00Z

@@ -1,0 +1,13 @@
+[HEARTBEAT] Autonomous auto-recovery check for the pregolya pipeline. Workspace: /Users/jmagady/Dev/pregolya. Standing policy: AUTO-RECOVER + DRIVE TO CONVERGENCE (user DIRECTIVE 1 + heartbeat policy D-318). You are the orchestrator; delegate all work, never write files yourself.
+
+Run this loop (read first, then act):
+1. Inspect in-flight background agents (/tasks). Read /Users/jmagady/Dev/pregolya/.factory/STATE.md (current phase, current_step NEXT action, streak, convergence_status).
+2. Classify and act:
+   a. HEALTHY IN-FLIGHT — a dispatched agent is running within its timeout and matches STATE's NEXT action → reply HEARTBEAT_OK, take no action.
+   b. DEAD/FAILED AGENT — a dispatched agent died (API/transport error) or completed but its result was never processed → assess the working tree (git status + per-file completeness) to see what landed; if the step's work is complete, continue the burst (dispatch the next step, e.g. state-manager close); if incomplete, re-dispatch the specialist to finish the SPECIFIC gap. Verify completeness independently — never trust self-disclosure.
+   c. STALLED — an agent exceeded its timeout or a phase sat in_progress with no activity → re-dispatch as needed.
+   d. IDLE WITH PENDING NEXT — no agent in flight but STATE.current_step names a NEXT action → dispatch it (adversary round / fix-burst / per-story delivery, routed per the Agent Routing Table).
+   e. HUMAN-APPROVAL GATE or TRUE BLOCKER (missing repo, unresolvable conflict, force-push required, budget exhaustion) → STOP; do NOT auto-proceed; post a [HEARTBEAT ALERT] stating the reason and what you need from the human.
+3. Honor all standing constraints: worktree-health gate on any cold resume, state-manager dispatched LAST in a burst, single-commit-per-burst (TD-VSDD-053), records-lint, frozen-HEAD streak rule, no self-delegation.
+4. RE-ARM: run CronList; if the heartbeat cron is missing or within ~1 day of the 7-day auto-expiry, recreate this durable heartbeat cron so it never lapses.
+5. Follow the standing protocol at /Users/jmagady/Dev/pregolya/.factory/rules/heartbeat-recovery-protocol.md (authoritative; supersedes this prompt if they diverge).
