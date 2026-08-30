@@ -3800,3 +3800,29 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-319 docs/ops (2026-08-30): SessionStart heartbeat self-heal hook committed (ensure-heartbeat.sh + heartbeat-cron-prompt.txt). Rule docs extended: heartbeat-recovery-protocol.md +§Session-Start-Self-Heal+§Recovery-Worked-Examples; heartbeat-setup-guide.md +§SessionStart-Hook+PORTABILITY-GOTCHA. Nested-worktree gotcha codified. census UNCHANGED. streak 0/3 NOT RESET. STATE.md v6.29→v6.30.
 
 ### STATE: v6.30, timestamp 2026-08-30T00:30:00Z
+
+---
+
+## Checkpoint D-320 (archived 2026-08-30 by D-321 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. round-43 CLOSED (D-320). Frozen-HEAD streak gates on new spec HEAD post-D-320 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. NEXT: dispatch `vsdd-factory:adversary` for round-44 on new frozen spec HEAD (Phase-2 3-CLEAN convergence, streak 0/3).
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts = D-320 round-43 close commit — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+
+### D-320 ROUND-43 CLOSE
+- F-P2A180-01 [HIGH] Runnable::stream E0562 boxing: interface-definitions.md §stream → Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>> (v2.99→v3.00); BC-2.01.003 {PC-002} v2.8→v2.9; BC-2.01.004 {PC-003} v2.1→v2.2; ADR-005 §RPITIT table v1.19→v1.20; S-1.04 AC-002 v1.11→v1.12.
+- F-P2A181-01 [HIGH, CWE-248/703] SEC-008 workspace-root scope: BC-2.09.008 EC-010 v3.4→v3.5; BC-2.12.003 EC-003 v1.14→v1.15; ADR-029 §Decision 5 v2.15→v2.16 (library-member Cargo.toml [profile.release] override silently ignored by Cargo; authoritative pin = workspace-root).
+- F-P2A183-01 [MED] S-2.11 AC-038 task-plan orphan: pregolya-server TCP/OS port-allocation added to task-16 impl note; S-2.11 v1.30→v1.31.
+- O-P2A183-01 [LOW/records] S-2.11 §Changelog reordered ascending (records-lint PASS).
+- P2A-182 CLEAN(strict)=YES. GATE-READY=YES. BC-INDEX §Changelog; STORY-INDEX §Changelog; ARCH-INDEX §Changelog.
+- Census: BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39+1) / points 303. streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+### STATE: v6.31, timestamp 2026-08-30T09:30:00Z

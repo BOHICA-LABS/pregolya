@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.00"
+version: "3.01"
 status: active
 producer: product-owner
 timestamp: 2026-08-30T00:00:00Z
 phase: 1d
 changelog:
+  - "3.01 (round-44/F-P2A184-01+F-P2A184-02+F-P2A184-03/2026-08-30): F-P2A184-01 [HIGH] §BaseChatModel::stream_chat E0562 fix — `async fn stream_chat(...)` desugars to nested `impl Trait` inside `impl Future<Output = Result<impl Stream<...>, PregolyaError>>`, which is not permitted on stable Rust (E0562 class; same as Runnable::stream R43 / F-P2A180-01). Boxed the return: changed `async fn stream_chat(...) -> Result<impl Stream<Item = Result<AiMessageChunk, PregolyaError>>, PregolyaError>` to `fn stream_chat(...) -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<AiMessageChunk, PregolyaError>> + Send>>, PregolyaError>> + Send`. ADR-005 §BaseChatModel adjudication updated and §Send-Bounded RPITIT table BaseChatModel row updated in same burst (see ADR-005 §BaseChatModel adjudication and §Send-Bounded RPITIT table). F-P2A184-02 [MED] §DynRunnableAdapter::stream sketch body corrected: `R::stream(...).await` yields `Result<Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>, PregolyaError>` (outer Result must be matched). Sketch updated: on `Err(e)` → fold to single-item error stream via `futures::stream::once`; on `Ok(stream)` → `.map()` to convert O→Value then `Box::pin` (item-type change O→Value requires re-boxing in the adapter). §Runnable::stream doc-comment corrected: 'no re-boxing needed in the adapter' replaced with outer-Result + item-type-change note (re-boxing IS needed in the adapter for O→Value conversion). F-P2A184-03 [MED] §DynTool doc-comment stale 'impl Stream return' updated to 'RPITIT `impl Future` return — opaque, non-dyn-compatible' (post-R43, `Runnable::stream` returns an RPITIT `impl Future` whose output boxes the stream; calling it 'impl Stream return' is inaccurate)."
   - "3.00 (round-43/F-P2A180-01/2026-08-30): F-P2A180-01 [HIGH] §Runnable::stream E0562 fix — nested `impl Stream<Item = Result<Output, PregolyaError>> + Send` inside `impl Future<Output = Result<.., PregolyaError>>` is not permitted on stable Rust (E0562 class; nested `impl Trait` inside an associated-type binding). Boxed the yielded stream to `Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>`, removing the nested `impl Trait` while preserving the outer `+ Send` guarantee on the future. Doc-comment for `stream` updated: replaced 'Both the outer future and the yielded `impl Stream` carry `+ Send`, enabling `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`' with 'The outer future carries `+ Send`. The yielded stream is `Pin<Box<dyn Stream<Item = ..> + Send>>` — boxed to remove nested `impl Trait` inside `impl Future<Output = ..>` (E0562); the boxed form is directly compatible with `DynRunnable::stream` (no re-boxing needed in the adapter)'. `DynRunnableAdapter::stream` comment updated: `R::stream().await` now yields `Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>`; adapter maps `Ok(O) → serde_json::to_value(O)`. ADR-005 §Send-Bounded RPITIT inventory table Runnable row updated in same burst. POL-24 sibling sites outside architect domain: BC-2.01.003 §PC-002 live body cites `impl Stream<Item = Result<Output, PregolyaError>> + Send` return form; BC-INDEX §Changelog (round-36 Runnable E0562 entry); STORY-S-1.04 §stream prose — these are in BC / story domain and require product-owner + story-writer routing to mirror the boxed form."
   - "2.99 (round-42/F-P2A176-01/2026-08-29): F-P2A176-01 [HIGH] §Runnable batch doc-comment expanded with in-task cooperative concurrency canon and `'static` corollary. Default `batch` uses `futures::future::join_all` / `FuturesOrdered` — all `invoke` futures polled concurrently within the calling task; no spawn, no thread-pool parallelism; output order matches input order (BC-2.01.003 {INV-002}). `'static` corollary: the `+ Send` RPITIT future from `invoke(&self, ..)` borrows `&self` and is NOT `'static`; `JoinSet::spawn` (requires `F: Future + Send + 'static`) CANNOT be used in a default `&self` batch implementation; implementors holding `'static` / `Arc<Self>` state MAY override `batch` to spawn via `JoinSet`. Authority: ADR-005 §Send-Bounded RPITIT (corollary added in same burst). Realizability self-validation: (a) futures borrow `&self`, do not escape method — no `'static` requirement; (b) `join_all` / `FuturesOrdered` preserve input order ({INV-002}); (c) all futures carry `+ Send` (RPITIT) so combined future is `Send`. PO: BC-2.01.003 {PC-003} drop Tokio-thread-pool claim — in-task `join_all`/`FuturesOrdered`, no concurrency cap, override-for-JoinSet note. Story-writer: S-1.04 AC-003 same."
   - "2.98 (round-41/F-P2A172-03+F-P2A172-04/2026-08-29): F-P2A172-03 [LOW] DynRunnableAdapter._phantom pub → pub(crate): changed `pub _phantom` to `pub(crate) _phantom` in `DynRunnableAdapter<I, O, R>` struct; `inner` was already `pub(crate)`. Final field visibilities: `pub(crate) inner: R` and `pub(crate) _phantom: std::marker::PhantomData<fn(I) -> O>`. Both fields are now sealed — Criterion-B basis for ADR-023 §Exempt Structs DynRunnableAdapter entry (F-P2A172-02). F-P2A172-04 [LOW] RunnableParallel::new doc-comment prose `(impl Into<String>, Arc<dyn DynRunnable>)` → `(K, Arc<dyn DynRunnable>) pairs where K: Into<String>` — closes prose residue from r40 E0562-class fix (r40 fixed the actual signature; this closes the prose). POL-24 sweep: grep `/// .*impl Into` and `/// .*impl Trait` across all doc-comment lines — sole occurrence was RunnableParallel::new construction line; zero occurrences on RunnablePassthrough::assign or any other constructor doc-comment. Architect mirrors: ADR-023 §Exempt Structs gains DynRunnableAdapter entry (F-P2A172-02)."
@@ -154,8 +155,10 @@ pub trait Runnable<Input, Output>: Send + Sync {
     /// The outer future carries `+ Send`. The yielded stream is
     /// `Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>` —
     /// boxed to remove the nested `impl Trait` inside `impl Future<Output = ..>`,
-    /// which is not permitted on stable Rust (E0562). The boxed form is directly
-    /// compatible with `DynRunnable::stream` (no re-boxing needed in the adapter).
+    /// which is not permitted on stable Rust (E0562). The outer `Result` from `.await`
+    /// must be matched in `DynRunnableAdapter::stream`: on `Err(e)`, fold to a
+    /// single-item error stream; on `Ok(stream)`, `.map()` to convert `O →
+    /// serde_json::Value` then `Box::pin` (item-type change requires re-boxing).
     fn stream(&self, input: Input, config: Option<RunnableConfig>)
         -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>, PregolyaError>> + Send;
 
@@ -304,9 +307,12 @@ where
         config: Option<RunnableConfig>,
     ) -> Result<serde_json::Value, PregolyaError>;
 
-    // stream: R::stream().await yields Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>
-    //         (Runnable::stream is now boxed at source — E0562 fix). Map Ok(O) → serde_json::to_value(O),
-    //         then Box::pin the mapped stream. See BC-2.01.003 {PC-002}.
+    // stream: R::stream(...).await yields Result<Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>, PregolyaError>
+    //         (Runnable::stream is RPITIT-boxed at source — E0562 fix; outer Result must be matched).
+    //         On Err(e): return Box::pin(futures::stream::once(async { Err(e) })) — single-item error stream.
+    //         On Ok(stream): .map(|r| r.and_then(|v| serde_json::to_value(v).map_err(PregolyaError::from)))
+    //         then Box::pin the mapped stream. Item type changes O → serde_json::Value (re-boxing required).
+    //         See BC-2.01.003 {PC-002}.
     async fn stream(
         &self,
         input: serde_json::Value,
@@ -618,8 +624,8 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
     ///
     /// Error fidelity: all provider HTTP 4xx/5xx responses MUST map to typed `PregolyaError`
     /// with the correct `category` field (BC-2.08.004 cross-cutting conformance).
-    async fn stream_chat(&self, messages: Vec<Message>, config: Option<ChatConfig>)
-        -> Result<impl Stream<Item = Result<AiMessageChunk, PregolyaError>>, PregolyaError>;
+    fn stream_chat(&self, messages: Vec<Message>, config: Option<ChatConfig>)
+        -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<AiMessageChunk, PregolyaError>> + Send>>, PregolyaError>> + Send;
 
     /// Bind tools to this model, enabling tool-call generation.
     ///
@@ -1657,8 +1663,9 @@ pub enum ToolOutput {
 /// Mirrors DynRunnable: `Arc<dyn DynTool>` is the concrete composition seam
 /// wherever `Arc<dyn Tool>` was specified — `dyn Tool` is non-object-safe (E0038); migrated per ADR-005 §Adjacent Adjudications Wave C PO routing.
 ///
-/// `Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable::stream()` (`impl Stream`
-/// return) which makes `dyn Tool` non-trivially non-object-safe (E0038).
+/// `Tool: Runnable<ToolInput, ToolOutput>` inherits `Runnable::stream()` (RPITIT
+/// `impl Future` return — opaque, non-dyn-compatible) which makes `dyn Tool`
+/// non-trivially non-object-safe (E0038).
 /// `DynTool` exposes only the object-safe subset: `invoke_dyn` (async, no opaque returns),
 /// plus the four metadata accessors.
 ///

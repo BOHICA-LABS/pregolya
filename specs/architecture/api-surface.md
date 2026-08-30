@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.27"
+version: "1.28"
 status: active
 producer: architect
 timestamp: 2026-08-22T00:00:00Z
 changelog:
+  - "1.28 (R44/F-P2A184-03/2026-08-30): F-P2A184-03 [MED] §Public Rust Traits DynTool blockquote — stale 'impl Stream return' description corrected. OLD: 'which exposes `stream()` (opaque `impl Stream` return)'. NEW: 'which exposes `stream()` (RPITIT `impl Future` return — opaque, non-dyn-compatible)'. Post-R43, `Runnable::stream` returns an RPITIT `impl Future` whose output boxes the stream via `Pin<Box<dyn Stream...>>`; describing it as 'impl Stream return' is inaccurate. The E0038 non-object-safety conclusion for `dyn Tool` is unchanged. input-hash refreshed."
   - "1.27 (round-25/F-P2A111-01+F-P2A111-02/2026-08-28): §Crates with No Public Traits — `pregolya-mcp` description updated to reflect the nine-module canonical structure established by the round-25 module→file mapping decision. Listed by role: invocation stack (mcp::client/session/interceptor), tool adaptation (mcp::discovery with canonical `pregolya-mcp/src/discovery.rs`), security seam (mcp::ingress DI-012 HIGH with `ingress.rs`), error handling (mcp::exception), server-side (mcp::sanitize/graph_tool/server). Consumer types updated: `DynTool` and `GuardrailHook` from pregolya-core (not `Tool` — Tool is non-object-safe E0038; DynTool is the wire type; GuardrailHook is the ingress seam). input-hash refreshed."
   - "1.26 (fix-burst-P2A026/P2A026-02/2026-08-22): Move StreamEvent row from §pregolya-graph Public Types to §pregolya-core Public Types. Canonical home is pregolya-core (`core::events`) per ADR-006 §Consequences ('StreamEvent is a public type in pregolya-core') and module-decomposition.md §F-P2A017-02 fix (v1.45 corrected the erroneous graph-defines-StreamEvent claim). Presenting it under §pregolya-graph Public Types mis-stated crate ownership. Inclusion criterion note extended to document StreamEvent's criterion (b) rationale. Sweep: all four §pregolya-graph Public Types rows verified — StateGraph (SS-02/graph::definition), GraphConfig (SS-03/graph::scheduler), Command (SS-05/graph::hitl) are correctly attributed; only StreamEvent was misattributed. No other cross-section misattributions found."
   - "1.25 (FIX-BURST-291/D-134-corpus-sweep/2026-08-16): Fix phantom §-citation in RunnableConfig table row. 'BC-2.12.003 §Run-Config Merge Precedence Invariant' → 'BC-2.12.003 §Invariants (Run-Config Merge Precedence)'. Rationale: BC-2.12.003 has no §Run-Config Merge Precedence Invariant subheading; the rule is a list item within §Invariants. Also sibling-fixed in ADR-021 Decision 2 body. input-hash refreshed (inputs changed since last hash computation; pre-existing drift resolved)."
@@ -39,7 +40,7 @@ phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "f128684"
+input-hash: "d55270a"
 traces_to: ARCH-INDEX.md
 decisions: [D13, D17]
 ---
@@ -73,7 +74,7 @@ This file documents pregolya's public API surface: the public Rust traits by cra
 
 > `DynTool` is the type-erased object-safety seam per ADR-005
 > §Adjacent Trait Object-Safety Adjudications (option b). `Tool` inherits from `Runnable`,
-> which exposes `stream()` (opaque `impl Stream` return) and `pipe()` (`impl Runnable` +
+> which exposes `stream()` (RPITIT `impl Future` return — opaque, non-dyn-compatible) and `pipe()` (`impl Runnable` +
 > `where Self: Sized`), making `dyn Tool` non-trivially non-object-safe (E0038). `DynTool`
 > re-exposes the tool API via object-safe `invoke_dyn(&self, Value) -> Result<Value, PregolyaError>`.
 > A blanket impl provides `T: Tool + Send + Sync + 'static → DynTool` automatically.

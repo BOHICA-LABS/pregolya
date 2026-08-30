@@ -4308,3 +4308,35 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **Census delta: UNCHANGED. BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39 product + 1 maint) / points 303. streak 0/3 (frozen-HEAD reset on D-320 push).**
 
 **NEXT: round-44 on new frozen HEAD post-D-320 push. Streak 0/3.**
+
+## Round-44 — D-321 (2026-08-30)
+
+**Passes: P2A-184 (realizability) / P2A-185 (security) / P2A-186 (consistency/census/records) / P2A-187 (SS-09/SS-11 deep-audit) + GATE-READY consistency-validator audit**
+
+**Frozen spec HEAD: d6b0a12 (post-D-320 push)**
+
+**Finding Progression trajectory-tail: →1H+2M→1M→1LOW→3M+2OBS**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony.**
+
+**CLEAN(strict): NO | CLEAN(PR-merge): YES (P2A-186 CLEAN(PR-merge)=YES; other passes have MED/HIGH findings) | GATE-READY: YES**
+
+**Streak: 0/3 (frozen-HEAD reset on D-321 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A184-01 | HIGH | CLOSED: stream_chat return type nested impl Trait in assoc-type binding non-realizable on stable Rust (E0562 — interface-definitions §stream_chat → Pin<Box<dyn Stream<...> + Send>>; ADR-005 §BaseChatModel+§RPITIT table; ADR-025 §RPITIT BaseChatModel row). E0562 class DEFINITIVELY CLOSED. |
+| F-P2A184-02 | MED | CLOSED: DynRunnableAdapter::stream sketch corrected in interface-definitions §DynRunnableAdapter. |
+| F-P2A184-03 | MED | CLOSED: §DynTool doc-comment updated in interface-definitions §DynTool + api-surface.md §DynTool. |
+| F-P2A185-01 | MED | CLOSED: verify-security-literal-propagation.sh R04 workspace-root-only scope corrected (prior cross-workspace false positive removed). |
+| O-P2A186 | LOW | CLOSED: ADR-029 §Decision 5 E-GRAPH-019 "anticipated"→"live" + discharged census annotations removed (TD-VSDD-091). |
+| F-P2A187-01 | MED, CWE-209 | CLOSED: BC-2.09.008 §EC-003 E-GRAPH-011=dynamic primary (catch_unwind→isError:true) + E-GRAPH-019=static uniform-treatment defense-in-depth (BC-2.12.003 §INV-007). |
+| F-P2A187-02 | MED | CLOSED: ADR-029 §Decision 5 E-GRAPH-019 anticipated→live (deduplicated with O-P2A186; single fix site). |
+| F-P2A187-03 | MED | CLOSED: S-2.11 Red-Gate count corrected 13→12 (R43 AC-038-sweep residue corrected); S-2.11 v1.31→v1.32. |
+| F-R44-CV-001 | OBS | CLOSED: STATE.md HRQ-2 label corrected to "CompiledStateGraph AND ConcreteGraphRunner non-generic". |
+
+**Census delta: UNCHANGED. BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39 product + 1 maint) / points 303. streak 0/3 (frozen-HEAD reset on D-321 push).**
+
+**NEXT: round-45 on new frozen HEAD post-D-321 push. Streak 0/3.**

@@ -45,9 +45,10 @@
 #
 #   R04 — SEC-008 panic = "unwind" obligation should appear in any story referencing SEC-008
 #         Authority: BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003 + ADR-029 §Decision 5
-#         Scope: obligation covers BOTH pregolya-mcp AND pregolya-server; authoritative pin
-#                is the workspace-root [profile.release] governing the pregolya-server binary
-#                (library crate profile overrides are ignored by Cargo);
+#         Scope: authoritative pin is workspace-root [profile.release] governing the
+#                pregolya-server binary (library-member profile overrides are silently
+#                ignored by Cargo — BC-2.09.008 EC-010); pregolya-mcp obligation is the
+#                S-2.11 AC-037 source comment only, NOT a release-profile pin;
 #                related_re (\bSEC-008\b) confines hits to stories that reference SEC-008
 #
 # EXCLUSIONS
@@ -264,8 +265,10 @@ RULES = [
         "canonical_hint": (
             "add a reference to the SEC-008 build-profile obligation: "
             "`panic = \"unwind\"` in workspace-root [profile.release] (governs "
-            "pregolya-server binary) AND pregolya-mcp Cargo.toml release profile "
-            "per BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003 "
+            "pregolya-server binary) per BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003; "
+            "library-member profile overrides are silently ignored by Cargo — "
+            "do NOT pin pregolya-mcp release profile; "
+            "pregolya-mcp obligation is the S-2.11 AC-037 source comment only "
             "(devops-engineer asserts at Phase 3 workspace authoring)"
         ),
         "sec_ref": "SEC-008 / CWE-248",
@@ -603,7 +606,9 @@ if [ "$LIVE_WARNS" -gt 0 ]; then
   echo "    R02: replace 'UUID v4 removal/pattern' with 'version-agnostic UUID removal/pattern'"
   echo "    R03: add FutureExt::catch_unwind(AssertUnwindSafe(...)) as explicit mechanism"
   echo "    R04: add panic = \"unwind\" in workspace-root [profile.release] (governs pregolya-server)"
-  echo "         AND in pregolya-mcp release profile — BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003"
+  echo "         per BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003; library-member profile"
+  echo "         overrides are silently ignored by Cargo — do NOT pin pregolya-mcp release profile;"
+  echo "         pregolya-mcp obligation is the S-2.11 AC-037 source comment only"
 fi
 
 # Advisory gate: always exits 0 (commit not blocked by WARN findings)

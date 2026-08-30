@@ -11,11 +11,12 @@ date: "2026-08-01"
 subsystems_affected: ["all"]
 supersedes: []
 superseded_by: null
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D43, D45, D48]
 changelog:
+  - "1.5 (R44/F-P2A184-03/2026-08-30): F-P2A184-03 [MED] §DynTool arc-dispatch discriminator:illustration block — 'stream()' description updated from 'returns `impl Stream` (opaque return type, non-dyn-compatible)' to 'RPITIT `impl Future` return (opaque, non-dyn-compatible; stream is `Pin<Box<dyn Stream...>>` inside the Future output — E0562 stable-Rust boxing)'. Post-R43 `Runnable::stream` uses an RPITIT `impl Future` return (stream boxed per F-P2A180-01); calling it 'impl Stream return' is inaccurate. The non-dyn-compatible conclusion for `dyn Tool` is unchanged."
   - "1.4 (R32/F-P2A136-01/2026-08-28): Three non-compilable dyn-phantom occurrences corrected. (1) §Decision item 3 (D-48): canonical return type `Arc<dyn VectorStoreRetriever + Send + Sync>` → `Result<VectorStoreRetriever, PregolyaError>` — the former is E0782/E0038 non-compilable (`VectorStoreRetriever` is a concrete struct, not a trait) and infallible, contradicting §as_retriever Receiver canonical form and interface-definitions.md authority. (2) §Alternatives Considered D-45 row: replaced `dyn VectorStoreRetriever trait objects` framing with `'static` ownership framing that names the actual compile-time failure (lifetime incompatibility → non-`'static` → `Arc<dyn Retriever + 'static>` coercion fails). (3) §Alternatives Considered D-48 row: replaced `Arc<dyn VectorStoreRetriever>` with concrete rationale citing the `Arc<dyn VectorStore>` construction requirement and the fallible `Result<VectorStoreRetriever, PregolyaError>` return. Corpus sweep: zero remaining `dyn VectorStoreRetriever` or `Arc<dyn VectorStoreRetriever>` occurrences in `.factory/specs/` live body."
   - "1.3 (burst-292/P1D-183-F2/2026-08-16): Fix internal rule-count contradiction. §Context and §Decision intro stated 'rules S2, S3, S4' / 'three canonical ... forms'; corrected to 'rules S1, S2, S3, S4' / 'four canonical ... forms'. S1 (as_retriever Arc<Self> receiver) is grounded by ADR-025 per §as_retriever Receiver §Rule origin (verify-signature-canon.sh S1), §Consequences (rules S1/S2/S3/S4), and §Source/Origin (CANON TABLE rules S1/S2/S3/S4). Three sites corrected: §Context inline-rule-comment reference, §Context canonical-form body reference, §Decision intro. No other 'S2, S3, S4' or 'three canonical' sites found in the live body (existing §Consequences and §Source/Origin were already correct)."
   - "1.2 (burst-288/F-P177-LOW-date/2026-08-15): Add missing frontmatter fields (date, subsystems_affected, superseded_by); add Alternatives Considered section per ADR template (LOW finding: date boundary conditions)."
@@ -80,7 +81,7 @@ Ratify four canonical type-signature forms as ADR headings, grounding `verify-si
 
 <!-- discriminator:illustration-start -->
 **Problem:** `Tool` inherits two non-dyn-compatible members from `Runnable`:
-- `stream()` — returns `impl Stream` (opaque return type, non-dyn-compatible)
+- `stream()` — RPITIT `impl Future` return (opaque, non-dyn-compatible; stream is `Pin<Box<dyn Stream...>>` inside the Future output — E0562 stable-Rust boxing per R43/F-P2A180-01)
 - `pipe()` — has `where Self: Sized` bound (explicitly excludes `dyn T`)
 
 These characteristics make `dyn Tool` non-object-safe (E0038 fires on `Arc<dyn Tool>`).

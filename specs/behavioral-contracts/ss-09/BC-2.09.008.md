@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "3.5"
+version: "3.6"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -41,6 +41,7 @@ changelog:
   - "3.3 (round-41/F-P2A173-01+F-P2A173-02+F-P2A175-01/2026-08-29): F-P2A173-01 [LOW, CWE-248/703] — EC-010 scope note added: `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` contains ALL panics during future polling, including graph-node-body panics (higher-probability CWE-248 vector); node-body panics yield the same static `isError:true`/`content[0].text == \"internal error\"` response as `extract_output` panics. TV-011 Notes extended: containment scope note added — `AssertUnwindSafe(runner.run(...))` covers all panics during `.await` polling, not only `extract_output` panics. No new TV minted — EC-010 prose extension + TV-011 note is sufficient coverage per POL-23 (census stays 759). F-P2A173-02 [OBS] — TV-018 `Deny { reason }` string aligned to ADR-029 §Decision 4 canonical `format!` output form: `\"ForceApproveHooks policy violation: tool '<tool_name>' has ActionRisk Some(High) (None or >= Medium); ForceApproveHooks is valid only for read-only tool graphs with declared ActionRisk < Medium\"` (stable assertion prefix: `\"ForceApproveHooks policy violation: tool '\"`; `format!` interpolates `preview.tool_name` and `{:?}` of `preview.action_risk`). F-P2A175-01 [LOW] — {PC-004} result_text parenthetical corrected: prior gloss `(result_text = serde_json::to_string(&extract_output_result))` implied universal serialization; replaced with canonical BC-2.09.007 {PC-002} branching rule: `Value::String(s)` → `s` verbatim; all other `Value` variants → `serde_json::to_string(&extract_output_result)` (prevents double-encoding of `Value::String` returns). BC census UNCHANGED: 134. VP UNCHANGED: 17. EC UNCHANGED: 137. TV UNCHANGED: 759."
   - "3.4 (round-42/F-P2A179-01+F-P2A177-01+F-P2A177-02/2026-08-29): F-P2A179-01 [HIGH]: {PC-003} `ConcreteGraphRunner<S>::run ... where S is statically known` replaced with non-generic form per ADR-029 §Decision 2 / F-P2A072-03: `ConcreteGraphRunner::run` (non-generic, no `<S>`; holds `Arc<CompiledStateGraph>` + `Box<dyn Fn(&serde_json::Value) -> serde_json::Value + Send + Sync>`). Exhaustive sweep of all live-body BC text confirms this was the only `ConcreteGraphRunner<S>` / 'where S is statically known' live-body occurrence. F-P2A177-01 [HIGH, CWE-248/703] (SEC-008 scope): EC-010 SEC-008 invariant extended — the pregolya-server release profile MUST ALSO pin `panic = \"unwind\"` alongside pregolya-mcp; `panic = \"abort\"` on either voids the `catch_unwind` boundary. TV-019 minted: path_fn conditional-edge panic → E-GRAPH-011 ConditionalEdgePanic → static `\"internal error\"` at MCP boundary per ADR-029 §Decision 5. F-P2A177-02 [MED, CWE-209]: EC-003 amended — E-GRAPH-011 ConditionalEdgePanic and E-GRAPH-019 NodePanic are EXCEPTIONS to the 'original graph error code is propagated' rule: these internal-panic codes receive STATIC replacement per ADR-029 §Decision 5; the MCP server substitutes `content[0].text = \"internal error\"` (no panic text, no dynamic fields forwarded) rather than the redacted `PregolyaError::message`. Traceability Error Codes row updated to add E-GRAPH-019 NodePanic. TV count 18→19."
   - "3.5 (round-43/F-P2A181-01/2026-08-30): F-P2A181-01 [HIGH, CWE-248/703] — EC-010 SEC-008 build-profile clause corrected for Cargo library-profile semantics. OLD: 'The `pregolya-mcp` AND `pregolya-server` release profiles MUST BOTH pin `panic = \"unwind\"` — the `catch_unwind` boundary operates inside the MCP server request handler (`pregolya-server`) which calls `invoke_dyn` (`pregolya-mcp`); `panic = \"abort\"` on EITHER crate voids the catch and causes process termination. Devops asserts both pins at Phase-3 workspace `Cargo.toml` authoring.' NEW: authoritative pin point is the workspace-root `[profile.release]` governing the `pregolya-server` binary; Cargo honors `[profile.release] panic` ONLY at the workspace root (applied at link time); a library-member `[profile.release] panic` override (e.g., in `pregolya-mcp`'s own manifest) is silently ignored by Cargo and MUST NOT be relied upon; `panic = \"abort\"` at the workspace root voids the catch (CWE-248). Aligns with ADR-029 §Decision 5 v2.16 and S-2.11 AC-037 v1.31."
+  - "3.6 (round-44/F-P2A187-01/2026-08-30): F-P2A187-01 [MED, CWE-209]: EC-003 rationale-correctness fix — OLD universally attributed 'non-static messages with dynamic context' to both E-GRAPH-011 and E-GRAPH-019. NEW scopes the dynamic-context justification to E-GRAPH-011 only (`<source_node>` and `<message>` dynamic placeholders per error-taxonomy.md E-GRAPH-011); E-GRAPH-019 has a STATIC message with no dynamic content (no panic text, no source location, no backtrace) per error-taxonomy.md E-GRAPH-019 mint row / BC-2.12.003 {INV-007}; E-GRAPH-019 static replacement is uniform-treatment / defense-in-depth of all internal-panic codes at the MCP boundary. MCP-boundary behavior unchanged — both codes still produce `isError:true` / `content[0].text == \"internal error\"`."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -270,11 +271,19 @@ carries an internal-panic code — specifically `E-GRAPH-011 ConditionalEdgePani
 panicked during execution) — the MCP server applies STATIC replacement instead of
 forwarding the redacted `PregolyaError::message`. The response is `isError: true` with
 `content[0].text == "internal error"` (no panic text, no source_node, no captured message
-forwarded). This is the ADR-029 §Decision 5 internal-panic routing-table rule: these codes
-carry non-static messages with dynamic context (e.g., E-GRAPH-011 carries `<source_node>`
-and `<message>` dynamic placeholders) that would expose internal implementation details at
-the MCP boundary even after credential redaction; static replacement is the correct defense
-(CWE-209). All other graph error codes continue to have their redacted `PregolyaError::message`
+forwarded). This is the ADR-029 §Decision 5 internal-panic routing-table rule, which applies uniform
+static replacement to ALL internal-panic codes at the MCP boundary.
+- **E-GRAPH-011:** carries `<source_node>` and `<message>` dynamic placeholders (per
+  error-taxonomy.md E-GRAPH-011 mint row) that would expose internal routing topology at the
+  MCP boundary even after credential redaction; static replacement is the primary CWE-209
+  information-hiding defense for this code.
+- **E-GRAPH-019:** carries a STATIC message with no dynamic content — no panic text, no
+  source location, no backtrace — per error-taxonomy.md E-GRAPH-019 mint row ("intentionally
+  STATIC; no panic text in message") and BC-2.12.003 {INV-007} ("E-GRAPH-019 STATIC message
+  invariant … No dynamic content from the panic is included"). Static replacement for
+  E-GRAPH-019 is uniform-treatment / defense-in-depth: the routing table treats all
+  internal-panic codes identically at the MCP boundary regardless of message shape.
+All other graph error codes continue to have their redacted `PregolyaError::message`
 forwarded normally.
 
 ### EC-004: Node-level interrupt() under DenyInterrupts (default)
