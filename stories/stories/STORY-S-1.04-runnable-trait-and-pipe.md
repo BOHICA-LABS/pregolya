@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.9"
+version: "1.10"
 status: draft
 producer: story-writer
 timestamp: 2026-08-29T00:00:00Z
@@ -17,13 +17,14 @@ changelog:
   - "1.7 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH]: AC-007 updated to reflect BC-2.01.003 {PC-001} — E-CORE-003 is raised at the serde-bounded blanket boundary when `serde_json::from_value::<I>` fails, before typed `Runnable<I,O>::invoke` is called; callers are NOT responsible for pre-deserializing Value input; trace updated to EC-001/{PC-001}. AC-008 updated to reflect BC-2.01.004 {PC-001} — typed stages (e.g. `impl Runnable<String,String>`) auto-satisfy `DynRunnable` via the serde-bounded blanket without any `Runnable<Value,Value>` requirement; `RunnableSequence<I,O>` also auto-derives `DynRunnable` and can be stored as `Box<dyn DynRunnable>` directly. Sweep of story body confirmed: no residual 'callers do JSON round-tripping' or `Runnable<Value,Value>` requirement language present. input-hash refreshed (BC-2.01.003 and BC-2.01.004 updated round-38)."
   - "1.8 (round-39/F-P2A164-01+F-P2A164-02/2026-08-29): F-P2A164-01 [CRIT] — AC-007 updated to adapter model per BC-2.01.003 {INV-006} v2.7: 'serde-bounded blanket boundary' replaced with 'ADAPTER boundary'; 'typed Runnable<I,O>::invoke' replaced with 'R::invoke'; DynRunnableAdapter<I,O,R> construct description added (DynRunnableAdapter implements DynRunnable for R: Runnable<I,O>+Send+Sync+'static; construct via IntoDynRunnable::into_dyn(); E-CORE-003 raised at ADAPTER boundary on Value→I deserialization failure). F-P2A164-02 [MED] — AC-008 blanket auto-coercion language replaced with adapter model per BC-2.01.004 {PC-001} v2.0: pipe serde bounds (Input: DeserializeOwned+Send+'static, Output: Serialize+DeserializeOwned+Send+'static, NextOutput: Serialize+Send+'static); erases via into_dyn() constructing DynRunnableAdapter; 'directly coercible without adapter' claim removed; compile test verifies RunnableSequence fields are DynRunnableAdapter via into_dyn()."
   - "1.9 (round-40/F-P2A168-01/2026-08-29): F-P2A168-01 [HIGH, POL-18] — AC-008 pipe serde bounds symmetric per BC-2.01.004 {PC-001}: Input gains Serialize bound (was DeserializeOwned-only); NextOutput gains DeserializeOwned bound (was Serialize-only). Canonical where-clause: Self: Sized+Send+Sync+'static, Input: Serialize+DeserializeOwned+Send+'static, Output: Serialize+DeserializeOwned+Send+'static (unchanged), NextOutput: Serialize+DeserializeOwned+Send+'static. Reason updated: returned RunnableSequence's invoke needs Input: Serialize to feed erased first stage + NextOutput: DeserializeOwned to decode erased last stage. Compile-test coverage (a)-(d) added per architect R40: (a) Input: DeserializeOwned-only call fails to compile; (b) NextOutput: Serialize-only call fails to compile; (c) RunnableSequence fields pub(crate) — external construction fails to compile; (d) RunnableParallel::new/RunnablePassthrough::assign take generic K: Into<String> (NOT impl Into<String> in item-binding position). Residual r39 asymmetric-bound language removed. input-hash refreshed (BC-2.01.004 {PC-001} updated R40)."
+  - "1.10 (round-41/F-P2A172-01/2026-08-29): F-P2A172-01 [HIGH] — AC-003: stale pre-round-36 cap language removed; corrected to Tokio-thread-pool-bounded no-cap canon per BC-2.01.003 {PC-003} (architect concurrency canon confirmed round-41; `max_concurrency` removed round-36). AC-003 now reads: batch invokes concurrently across all inputs; Tokio thread pool is the sole bound; no `max_concurrency` in `RunnableConfig`; tasks spawn via `tokio::task::JoinSet` with no application-level semaphore. Architecture Compliance Rules row corrected to match: removed old 'bounded concurrency (max 10 in-flight)' assertion; updated to 'no application-level cap' form; test description updated to 'asserting batch spawns all inputs concurrently with no application-level cap'. input-hash refreshed."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "25c49e3"
+input-hash: "943140b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.03, S-1.02]
@@ -69,8 +70,8 @@ returning `Ok(format!("{}{}", s, s))`. Verified by `test_BC_2_01_003_custom_runn
 ### AC-002 (traces to BC-2.01.003 PC-002)
 The default `stream` method on `Runnable` is async and returns `Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>` — an outer `Ok(stream)` wrapping a stream of `Result<Output, PregolyaError>` items. The non-streaming fallback calls `invoke` internally: if `invoke` returns `Ok(output)`, the outer future resolves to `Ok(stream)` where the stream yields `Ok(output)` as its single item and then terminates; if `invoke` returns `Err(e)`, the stream yields `Err(e)` as its single item (per EC-006). A `DoubleString` stream over input "hello" yields exactly one item: `Ok("hellohello".to_string())` then terminates. Verified by `test_BC_2_01_003_default_stream_single_item()`.
 
-### AC-003 (traces to BC-2.01.003 PC-003)
-The default `batch` method on `Runnable` calls `invoke` concurrently for each input with bounded concurrency (default max 10 in-flight). A batch of 5 inputs returns 5 outputs in order. Verified by `test_BC_2_01_003_default_batch_order_preserved()`.
+### AC-003 (traces to BC-2.01.003 {PC-003})
+The default `batch` method on `Runnable` calls `invoke` concurrently across all inputs; concurrency is bounded by the Tokio multi-threaded runtime thread pool ONLY — there is no per-invocation concurrency cap (no `max_concurrency` field in `RunnableConfig`; removed round-36). Concurrent tasks spawn via `tokio::task::JoinSet` (or equivalent) with no application-level semaphore; scheduler back-pressure is the sole bound. A batch of 5 inputs returns 5 outputs in order. Verified by `test_BC_2_01_003_default_batch_order_preserved()`.
 
 ### AC-004 (traces to BC-2.01.003 PC-005)
 `RunnableConfig` has a `recursion_limit: usize` field with default value 25. Accessing `config.recursion_limit` from within `invoke` is possible. Verified by `test_BC_2_01_003_runnable_config_recursion_limit()`.
@@ -208,7 +209,7 @@ S-1.01 error codes: `E-CORE-003`, `E-CORE-004`, `E-CORE-006` must be present in 
 | `runnable/mod.rs` is re-export-only | CLAUDE.md Code Conventions | Code review |
 | `DynRunnable` is non-generic (not `DynRunnable<I, O>`) | BC-2.01.003 INV-006 | Type signature inspection; compile test |
 | `RunnableSequence::first` is never a `RunnableSequence` (no nested sequences) | BC-2.01.004 PC-004 | Unit test + type-level enforcement |
-| `batch` default uses bounded concurrency (max 10 in-flight) | BC-2.01.003 PC-003 | Unit test counting concurrent executions |
+| `batch` default invokes all inputs concurrently; no application-level cap — Tokio thread pool is the sole bound; no `max_concurrency` in `RunnableConfig` | BC-2.01.003 {PC-003} | Test asserting batch spawns all inputs concurrently with no application-level cap |
 
 **Forbidden dependencies for `pregolya-core/src/runnable/trait.rs`, `config.rs`, `dyn_runnable.rs`:** No direct tokio import at trait-definition level. Tokio is used in the impl (sequence.rs) not the trait.
 

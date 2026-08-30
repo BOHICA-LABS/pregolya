@@ -4195,3 +4195,47 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **SIGNIFICANCE: ALL 7 r40 findings are r39-fix siblings. Architect 6-step re-derivation confirms composition surface FULLY REALIZABLE on stable Rust edition 2024 (E0562 resolved via named generics; PhantomData variance corrected; serde bounds now full symmetric). L-233 codified (S-7.02 durable fix: mechanical lint for sweep-completeness claims, deferred to first-self-improvement-wave). INCOMPLETE-SWEEP-GATE drift item updated with r40 recurrence evidence.**
 
 **NEXT: round-41 on new frozen HEAD post-D-313 push. Streak resets to 0/3 on push.**
+
+---
+
+## Round-41 (P2A-172/173/174/175 + GATE-READY) — D-314
+
+**Frozen HEAD: post-D-313-push (round-41 new frozen HEAD)**
+
+**Adversary passes on frozen HEAD:**
+
+| Pass | Lens | Findings | Severity | Status |
+|------|------|----------|----------|--------|
+| P2A-172 | realizability | 4 | 1 HIGH (F-P2A172-01 S-1.04 batch max_concurrency stale cap) + 1 MED (F-P2A172-02 DynRunnableAdapter absent ADR-023 #[non_exhaustive] governance) + 1 LOW (F-P2A172-03 DynRunnableAdapter._phantom pub→pub(crate)) + 1 LOW (F-P2A172-04 RunnableParallel::new doc-comment K:Into<String>) | NOT CLEAN |
+| P2A-173 | security | 2 | 1 LOW (F-P2A173-01 panic-recovery scope extended to graph-node-body, CWE-248/703) + 1 OBS (F-P2A173-02 BC-2.09.008 TV-018 Deny-reason→ADR-029 §Decision-4 canonical form) | NOT CLEAN |
+| P2A-174 | consistency/census/records | 0 | ZERO findings — census 39/134/17/137/303 fully reconciled | CLEAN(strict)=YES — FIRST clean census/records lens of Phase-2 re-convergence |
+| P2A-175 | SS-09/SS-11 deep-audit | 1 | 1 LOW (F-P2A175-01 BC-2.09.008 {PC-004} result_text gloss corrected to BC-2.09.007 {PC-002} branching rule) | NOT CLEAN |
+| GATE-READY audit | — | N/A | GATE-READY=YES (31/32 gates PASS; HRQ-1 sole blocker; census 39/134/17/137/303 reconciled) | GATE-READY |
+
+**Finding Progression trajectory-tail: →4→2→0→1**
+
+**NOTE: P2A-174 CLEAN(strict)=YES — FIRST fully-clean adversarial lens of Phase-2 re-convergence. ALL findings were incomplete-sweeps of prior decisions.**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony — 1 HIGH + 1 MED + 4 LOW + 1 OBS present.**
+
+**CLEAN(strict): NO | CLEAN(PR-merge): NO (HIGH finding present)**
+
+**Streak: 0/3 (frozen-HEAD reset on D-314 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A172-01 | HIGH | CLOSED: S-1.04 batch max_concurrency cap STALE (r36 removed cap per BC-2.01.003 {PC-003}; no per-invocation cap; JoinSet bounded by Tokio thread pool); AC-003 + Arch-Compliance corrected; S-1.04 §Changelog (story-writer). |
+| F-P2A172-02 | MED | CLOSED: DynRunnableAdapter absent ADR-023 #[non_exhaustive] governance → §Exempt Structs Criterion B (sealed by pub(crate) inner + _phantom field); ADR-023 §Changelog (architect). |
+| F-P2A172-03 | LOW | CLOSED: DynRunnableAdapter._phantom pub → pub(crate) (sibling-consistent with Criterion B sealing); interface-definitions §Changelog (architect). |
+| F-P2A172-04 | LOW | CLOSED: RunnableParallel::new doc-comment 'impl Into<String>' → 'K:Into<String>' (E0562 hygiene, named generic); interface-definitions §Changelog (architect). |
+| F-P2A173-01 | LOW, CWE-248/703 | CLOSED: panic-recovery scope extended to graph-node-body panics; BC-2.09.008 §Changelog EC-010 + TV-011 (product-owner); S-2.11 §Changelog AC-033 + EC-012 (story-writer). TV census 759 UNCHANGED (no new TV minted). |
+| F-P2A173-02 | OBS | CLOSED: BC-2.09.008 TV-018 Deny-reason → ADR-029 §Decision-4 canonical form; BC-2.09.008 §Changelog (product-owner). |
+| F-P2A175-01 | LOW | CLOSED: BC-2.09.008 {PC-004} result_text gloss corrected to BC-2.09.007 {PC-002} branching rule (Value::String→verbatim; else serde_json::to_string); BC-2.09.008 §Changelog (product-owner). |
+
+**Census UNCHANGED 39/134/17/137/303. TV 759 UNCHANGED. VP 17 UNCHANGED. streak 0/3 (frozen-HEAD reset on D-314 push). GATE-READY=YES.**
+
+**MILESTONE: P2A-174 CLEAN(strict)=YES — FIRST fully-clean adversarial lens of Phase-2 re-convergence. Census/records lens has converged; all 7 findings were incomplete-sweeps of prior decisions (r36 cap-removal, r39 adapter, r40 sig-fix, records glosses). Core abstractions (realizability pipe/adapter, ForceApprove gate, census) VERIFIED HELD/converged. L-233 incomplete-sweep-pattern reaffirmed.**
+
+**NEXT: round-42 (P2A-176/177/178/179 + GATE-READY) on new frozen HEAD post-D-314 push. Streak resets to 0/3 on push.**

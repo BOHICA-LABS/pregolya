@@ -3659,6 +3659,33 @@ D-311 round-38 fix-burst (2026-08-29): ALL substantive CLOSED (2 HIGH + 2 MED + 
 
 ---
 
+## Checkpoint D-313 (archived 2026-08-29 by D-314 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence, streak 0/3. Round-40 fix-burst is CLOSED (D-313). NEXT = run round-41 on new frozen HEAD (post-D-313 push). Census 39 CAP / 134 BC / 17 VP / 137 EC / 303 pts / 759 TV / 770 grand / 29 ADR — UNCHANGED. GATE-READY=YES (31/32 gates PASS; HRQ-1 sole blocker — 3/3 CLEAN streak).
+
+### HEADS
+- develop: `644d1ad` — clean, PUSHED. (Phase-2 is spec-only; NO code work this session.)
+- factory-artifacts: D-313 round-40 fix-burst — PUSHED; exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+### PER-WORKSTREAM — Phase-2 LCEL realizability + ForceApprove sibling sweep re-convergence
+Rounds 38-40 CLOSED (D-311..D-313 (exhaustive)). Round-40 resolved: Runnable::pipe symmetric serde bounds (F-P2A168-01 HIGH; r39-fix sibling), nested impl Trait E0562→named K:Into<String> (F-P2A168-02 MED), RunnableSequence PhantomData<fn(I)->O> (F-P2A168-03 MED), ADR-023 pub(crate) (F-P2A168-04 MED), observability unconditional-gate framing CWE-862 (F-P2A169-01=F-P2A171-01 MED), BC-2.09.008 ReadOnly precondition (F-P2A169-02 MED, CWE-862), TV v3.16 (F-P2A170-01 MED). ALL 7 findings are r39-fix siblings. Architect 6-step re-derivation: composition surface FULLY REALIZABLE. L-233 codified. NEXT-ACTION: round-41 on new frozen HEAD (post-D-313 push). Streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED-BUT-UNSTARTED
+- DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate.
+- DTU clones (openai/anthropic/ollama): Phase-4 prerequisite; dtu_clones_built: pending.
+
+#### DECISION DELTA (this session)
+D-313 round-40 fix-burst (2026-08-29): ALL 7 unique findings CLOSED (1 HIGH + 6 MED). Runnable::pipe symmetric serde bounds; LCEL composition FULLY REALIZABLE; ForceApprove sibling sweep; census UNCHANGED 39/134/17/137/303. TV 759. VP 17. streak 0/3. L-233 codified. STATE.md v6.23→v6.24.
+
+### STATE: v6.24, timestamp 2026-08-29T23:45:00Z
+
+---
+
 ## Checkpoint D-312 (archived 2026-08-29 by D-313 commit)
 
 ### RESUME IN ONE BREATH
