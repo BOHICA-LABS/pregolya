@@ -44,8 +44,11 @@
 #         Canonical: `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))`
 #
 #   R04 — SEC-008 panic = "unwind" obligation should appear in any story referencing SEC-008
-#         Authority: BC-2.09.008 §SEC-008 build-profile invariant / ADR-029 §Decision 5
-#         Scope: related_re (\bSEC-008\b) confines hits to stories that reference SEC-008
+#         Authority: BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003 + ADR-029 §Decision 5
+#         Scope: obligation covers BOTH pregolya-mcp AND pregolya-server; authoritative pin
+#                is the workspace-root [profile.release] governing the pregolya-server binary
+#                (library crate profile overrides are ignored by Cargo);
+#                related_re (\bSEC-008\b) confines hits to stories that reference SEC-008
 #
 # EXCLUSIONS
 # ──────────
@@ -249,16 +252,20 @@ RULES = [
         "check_type": "absence_when_related",
         "description": "story references SEC-008 but lacks `panic = \"unwind\"` obligation note",
         "authority": (
-            "BC-2.09.008 §SEC-008 build-profile invariant / ADR-029 §Decision 5: "
-            "pregolya-mcp release profile MUST pin `panic = \"unwind\"`; "
-            "`panic = \"abort\"` voids FutureExt::catch_unwind recovery (CWE-248)"
+            "BC-2.09.008 EC-010 v3.4 / BC-2.12.003 EC-003 / ADR-029 §Decision 5: "
+            "panic = \"unwind\" obligation covers BOTH pregolya-mcp AND pregolya-server; "
+            "authoritative pin is workspace-root [profile.release] governing the "
+            "pregolya-server binary (library crate profile overrides are ignored by Cargo); "
+            "`panic = \"abort\"` at workspace root voids FutureExt::catch_unwind recovery (CWE-248)"
         ),
         "anchor_glob": "stories/stories/*.md",
         "related_re": re.compile(r"\bSEC-008\b"),
         "required_re": re.compile(r'panic\s*=\s*["\']unwind["\']|panic.*=.*unwind|panic-profile'),
         "canonical_hint": (
             "add a reference to the SEC-008 build-profile obligation: "
-            "`panic = \"unwind\"` in pregolya-mcp Cargo.toml release profile "
+            "`panic = \"unwind\"` in workspace-root [profile.release] (governs "
+            "pregolya-server binary) AND pregolya-mcp Cargo.toml release profile "
+            "per BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003 "
             "(devops-engineer asserts at Phase 3 workspace authoring)"
         ),
         "sec_ref": "SEC-008 / CWE-248",
@@ -595,7 +602,8 @@ if [ "$LIVE_WARNS" -gt 0 ]; then
   echo "    R01: replace v4-specific fragment with version-agnostic UUID regex"
   echo "    R02: replace 'UUID v4 removal/pattern' with 'version-agnostic UUID removal/pattern'"
   echo "    R03: add FutureExt::catch_unwind(AssertUnwindSafe(...)) as explicit mechanism"
-  echo "    R04: add panic = \"unwind\" obligation reference (SEC-008 build-profile invariant)"
+  echo "    R04: add panic = \"unwind\" in workspace-root [profile.release] (governs pregolya-server)"
+  echo "         AND in pregolya-mcp release profile — BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003"
 fi
 
 # Advisory gate: always exits 0 (commit not blocked by WARN findings)

@@ -1,7 +1,7 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.4"
+version: "1.5"
 status: archive
 producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
@@ -3778,3 +3778,25 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-
 D-318 docs/ops (2026-08-29): heartbeat auto-recovery protocol + portable setup guide created. Durable cron 60FC8EB8 registered. DIRECTIVE 3 added. CLAUDE.md §Heartbeat-Auto-Recovery added. census UNCHANGED. streak 0/3 NOT RESET. STATE.md v6.28→v6.29.
 
 ### STATE: v6.29, timestamp 2026-08-29T23:00:00Z
+
+---
+
+## Checkpoint D-319 (archived 2026-08-30 by D-320 commit)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. D-319: docs/ops burst — SessionStart heartbeat self-heal hook + ensure-heartbeat.sh committed. streak 0/3. Frozen-HEAD streak gates on post-D-317 spec HEAD `ffa0767` (D-318+D-319 docs/ops commits do NOT reset streak per D-143-style rule). NEXT: dispatch adversary for round-43 on frozen spec HEAD `ffa0767` (4 fresh-context lenses + GATE-READY audit).
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet). factory-artifacts = D-319 docs/ops burst CLOSED — exact SHA via `git -C .factory log -1`.
+- No .worktrees/. No open PRs.
+
+### PER-WORKSTREAM — Phase-2 (round-42 CLOSED, round-43 NEXT)
+D-317 round-42 CLOSED: ALL CLOSED (3H+1M); EC 138; TV 761 canonical (772 incl GTV); BC 134 / VP 17 / stories 40 (39+1) / points 303; streak 0/3. D-318 docs/ops: durable cron 60FC8EB8; DIRECTIVE 3. D-319 docs/ops: ensure-heartbeat.sh (seed/re-arm-at-6-days/no-op; $CLAUDE_PROJECT_DIR path-traversal; nested-worktree gotcha codified); heartbeat-cron-prompt.txt; SessionStart hook in settings.json. NEXT: round-43 on frozen spec HEAD ffa0767. streak 0/3 NOT RESET.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+#### DECISION DELTA (this session)
+D-319 docs/ops (2026-08-30): SessionStart heartbeat self-heal hook committed (ensure-heartbeat.sh + heartbeat-cron-prompt.txt). Rule docs extended: heartbeat-recovery-protocol.md +§Session-Start-Self-Heal+§Recovery-Worked-Examples; heartbeat-setup-guide.md +§SessionStart-Hook+PORTABILITY-GOTCHA. Nested-worktree gotcha codified. census UNCHANGED. streak 0/3 NOT RESET. STATE.md v6.29→v6.30.
+
+### STATE: v6.30, timestamp 2026-08-30T00:30:00Z

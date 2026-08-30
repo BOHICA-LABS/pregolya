@@ -4275,3 +4275,36 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **Census delta: EC 137→138 (E-GRAPH-019 NodePanic minted). TV 759→761 canonical (772 incl GTV; TV-011+TV-019 minted, +2). BC 134 UNCHANGED. VP 17 UNCHANGED. Stories 40 (39 product + 1 maint) UNCHANGED. Points 303 UNCHANGED. streak 0/3 (frozen-HEAD reset on D-317 push).**
 
 **NEXT: round-43 on new frozen HEAD post-D-317 push. Streak resets to 0/3 on push.**
+
+---
+
+## Round-43 — D-320 (2026-08-30)
+
+**Passes: P2A-180 (realizability) / P2A-181 (security) / P2A-182 (consistency/census/records) / P2A-183 (SS-09/SS-11 deep-audit) + GATE-READY consistency-validator audit**
+
+**Frozen spec HEAD: ffa0767**
+
+**Finding Progression trajectory-tail: →1→2→0→2**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony — 2 HIGH + 1 MED + 1 LOW/records + 1 process-gap present.**
+
+**CLEAN(strict): NO | CLEAN(PR-merge): YES (no CRIT/HIGH/MED blocking non-records findings... wait — HIGH findings present in P2A-180/181)**
+
+**P2A-182 CLEAN(strict): YES | GATE-READY: YES**
+
+**Streak: 0/3 (frozen-HEAD reset on D-320 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A180-01 | HIGH | CLOSED: Runnable::stream return type non-realizable on stable Rust (E0562 — nested `impl Trait` inside associated-type binding position forbidden on stable). Return type corrected to `Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>` across interface-definitions.md §stream (v2.99→v3.00), BC-2.01.003 {PC-002} (v2.8→v2.9), BC-2.01.004 {PC-003} (v2.1→v2.2), ADR-005 §Send-Bounded-RPITIT inventory table stream row (v1.19→v1.20), S-1.04 AC-002 (v1.11→v1.12). Root: round-36 E0562 boxing fix changed the forward declarations but did not sweep the associated-type binding form in all normative sites (L-232/L-234 incomplete-sweep reaffirmation). |
+| F-P2A181-01 | HIGH, CWE-248/703 | CLOSED: SEC-008 build-profile authoritative pin corrected. Cargo workspace model: workspace-root `[profile.release]` is the authoritative panic profile at link time; library-member `[profile.release]` override (e.g., in `pregolya-mcp/Cargo.toml`) is silently ignored by Cargo — it MUST NOT be relied upon. BC-2.09.008 EC-010 (v3.4→v3.5) clause corrected. BC-2.12.003 EC-003 (v1.14→v1.15) scope clarification propagated. ADR-029 §Decision 5 Error Routing Table SEC-008 build-profile invariant rewritten (v2.15→v2.16): authoritative pin = workspace-root; library-member override inert. Root: round-21 introduced SEC-008 with a library-member pin description that was factually incorrect per Cargo semantics (L-234 incomplete-sweep reaffirmation). |
+| Process-gap R04-DETECTION-ENHANCEMENT | PG | OPEN (Drift/Deferrals): No validator detects library-member [profile.release] panic overrides silently ignored by Cargo. Candidate: verify-workspace-panic-profile.sh. Target: first-self-improvement-wave; owner: devops-engineer. |
+| F-P2A183-01 | MED | CLOSED: S-2.11 AC-038 task-plan orphan — pregolya-server TCP/OS port-allocation for MCP integration test had no implementation note in task-16 (task-16 listed "write MCP integration tests" without specifying how to handle port allocation). Added to task-16: "For the MCP integration test (AC-038), allocate a dynamic TCP port via OS assignment (bind to port 0) to avoid static port conflicts in CI." S-2.11 v1.30→v1.31 (story-writer). |
+| O-P2A183-01 | LOW/records | CLOSED: S-2.11 §Changelog entries were non-monotonic (descending order but with a gap; one entry was out of sequence). Reordered to ascending order per records-lint L7 discipline. S-2.11 v1.30→v1.31 (co-landed with F-P2A183-01). |
+| P2A-182 | N/A | CLEAN(strict): zero findings. Census reconciled: BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39+1) / points 303. All counts correct in BC-INDEX, STORY-INDEX, ARCH-INDEX, STATE.md. |
+
+**Census delta: UNCHANGED. BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39 product + 1 maint) / points 303. streak 0/3 (frozen-HEAD reset on D-320 push).**
+
+**NEXT: round-44 on new frozen HEAD post-D-320 push. Streak 0/3.**

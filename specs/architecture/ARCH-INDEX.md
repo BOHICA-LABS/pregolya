@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.52"
+version: "1.53"
 status: active
 producer: architect
-timestamp: 2026-08-28T09:00:00Z
+timestamp: 2026-08-30T09:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.53 (round-43/F-P2A180-01+F-P2A181-01/2026-08-30): interface-definitions.md (§Runnable-stream): F-P2A180-01 [HIGH] — §Runnable {stream} method return type corrected to `Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>` (E0562 stable Rust boxing fix); frontmatter L9b violation corrected (version-pin in changelog entry replaced with section anchor). ADR-005 (§stream-row): F-P2A180-01 [HIGH] — §Send-Bounded RPITIT inventory table Runnable stream row updated to boxed `Pin<Box<dyn Stream<...> + Send>>` form. ADR-029 (§Decision-5): F-P2A181-01 [HIGH, CWE-248/703] — §Decision 5 Error Routing Table SEC-008 build-profile invariant rewritten: authoritative pin = workspace-root `[profile.release]`; library-member `[profile.release]` in `pregolya-mcp/Cargo.toml` inert (Cargo silently ignores); MUST NOT be relied upon. Census UNCHANGED: 134 BC / 17 VP / 138 EC / 40 stories. ADR count UNCHANGED: 29."
   - "1.52 (round-26/F-P2A115-04/2026-08-28): Iron Law — `mcp::registry` MEDIUM module added to all four registries (pregolya-mcp; SS-09; `ToolRegistry` Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>> concurrent tool-registration store; register/get/list operations; shared by mcp::server inbound dispatch and mcp::discovery population at session startup; BC-2.09.006/007/008 §Architecture-Anchors; canonical file pregolya-mcp/src/registry.rs per S-2.11 Task 4). module-decomposition.md §mcp::registry-row: mcp::registry added; universe 80→81 total, 74→75 tiered (corrected prior running-count; 75 tiered + 6 definitions-only/exempt = 81). module-criticality.md §mcp::registry-row: MEDIUM row added; MEDIUM 39→40; total 87→88. purity-boundary-map.md §mcp::registry-row: Boundary row added; Boundary 12→13; total 88→89. verification-coverage-matrix.md §mcp::registry-row: MEDIUM row added; physical rows 90 (round-27 §preamble correction: claimed 91, actual 90); MEDIUM 39→40; tiered total 81→82. Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.51 (round-25/D-295/2026-08-28): SS-09 MCP module reconciliation + mcp::session/mcp::interceptor Iron Law additions. module-decomposition.md §pregolya-mcp (F-P2A111-01/02/03): canonical SS-09 module→file mapping established — mcp::ingress→ingress.rs (GuardrailHook invocation site, HIGH seam DI-012), mcp::discovery→discovery.rs (convert_mcp_tool/_list_all_tools), mcp::session→session.rs (McpSessionGuard RAII; added), mcp::interceptor→interceptor.rs (ToolCallInterceptor trait; added); Iron Law count 73→75 total, 71→73 tiered; module-criticality registry 85→87 total, 79→81 tiered. module-criticality.md §Module-Classification-Table: mcp::session/mcp::interceptor MEDIUM rows added (Iron Law; §pregolya-mcp SS-09; no Kani VP). purity-boundary-map.md §Effectful-Shell: mcp::session/mcp::interceptor Effectful Shell rows added. verification-coverage-matrix.md §SS-09: mcp::session/mcp::interceptor MEDIUM rows added (88→90 physical rows; MEDIUM 37→39; tiered total 79→81). api-surface.md, ADR-023, interface-definitions.md, verification-architecture.md, VP-012, capabilities-p1-p2.md: `::core::` path notation → parenthetical (core crate) (F-P2A108-02 [LOW/records]). Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."
   - "1.50 (round-23/D-293/2026-08-28): ADR-029 §Decision 4 E-MCP-010/E-MCP-011 message-text corrections; §Symbol-Grounding table — DynTool/ToolOutput path corrected (src/core/tool.rs → src/tool.rs); PreToolDecision Edit variant added. Census UNCHANGED: 39 stories / 134 BC / 17 VP / 137 EC / 29 ADR."

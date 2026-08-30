@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.04
 epic_id: E-01
-version: "1.11"
+version: "1.12"
 status: draft
 producer: story-writer
 timestamp: 2026-08-29T00:00:00Z
@@ -19,6 +19,7 @@ changelog:
   - "1.9 (round-40/F-P2A168-01/2026-08-29): F-P2A168-01 [HIGH, POL-18] — AC-008 pipe serde bounds symmetric per BC-2.01.004 {PC-001}: Input gains Serialize bound (was DeserializeOwned-only); NextOutput gains DeserializeOwned bound (was Serialize-only). Canonical where-clause: Self: Sized+Send+Sync+'static, Input: Serialize+DeserializeOwned+Send+'static, Output: Serialize+DeserializeOwned+Send+'static (unchanged), NextOutput: Serialize+DeserializeOwned+Send+'static. Reason updated: returned RunnableSequence's invoke needs Input: Serialize to feed erased first stage + NextOutput: DeserializeOwned to decode erased last stage. Compile-test coverage (a)-(d) added per architect R40: (a) Input: DeserializeOwned-only call fails to compile; (b) NextOutput: Serialize-only call fails to compile; (c) RunnableSequence fields pub(crate) — external construction fails to compile; (d) RunnableParallel::new/RunnablePassthrough::assign take generic K: Into<String> (NOT impl Into<String> in item-binding position). Residual r39 asymmetric-bound language removed. input-hash refreshed (BC-2.01.004 {PC-001} updated R40)."
   - "1.10 (round-41/F-P2A172-01/2026-08-29): F-P2A172-01 [HIGH] — AC-003: stale pre-round-36 cap language removed; corrected to Tokio-thread-pool-bounded no-cap canon per BC-2.01.003 {PC-003} (architect concurrency canon confirmed round-41; `max_concurrency` removed round-36). AC-003 now reads: batch invokes concurrently across all inputs; Tokio thread pool is the sole bound; no `max_concurrency` in `RunnableConfig`; tasks spawn via `tokio::task::JoinSet` with no application-level semaphore. Architecture Compliance Rules row corrected to match: removed old 'bounded concurrency (max 10 in-flight)' assertion; updated to 'no application-level cap' form; test description updated to 'asserting batch spawns all inputs concurrently with no application-level cap'. input-hash refreshed."
   - "1.11 (round-42/F-P2A176-01/2026-08-29): F-P2A176-01 [HIGH] — Replace JoinSet/Tokio-thread-pool batch language with architect join_all in-task cooperative concurrency canon per BC-2.01.003 {PC-003} v2.8. AC-003: 'Concurrent tasks spawn via tokio::task::JoinSet (or equivalent)...; scheduler back-pressure is the sole bound' superseded by join_all in-task form — default batch uses futures::future::join_all (or FuturesOrdered) within the calling task; no spawn; no thread-pool parallelism; input order preserved; JoinSet::spawn impossibility rationale added (RPITIT future from invoke(&self,..) borrows &self, is NOT 'static; JoinSet::spawn requires F: Future + Send + 'static; CANNOT be used in a default &self method; implementor override path for 'static/Arc<Self> state noted). Architecture Compliance row updated: removed Tokio-thread-pool-sole-bound and JoinSet language; updated to join_all in-task form with JoinSet impossibility note. input-hash refreshed (BC-2.01.003 updated round-42)."
+  - "1.12 (round-43/POL-24-E0562-sweep/2026-08-30): POL-24 stream sweep: AC-002 `stream` return type corrected from nested-impl E0562 form (async fn returning Result<impl Stream<...>, Error> desugars to impl Future<Output=Result<impl Stream<...>, Error>> — nested impl Trait, E0562) to RPITIT explicit boxed canonical form: fn stream(...) -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>, PregolyaError>> + Send. Pin<Box<dyn Stream<...>>> replaces impl Stream as the concrete inner type; E0562 rationale added to AC-002. Behavioral semantics unchanged."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.003.md
@@ -69,7 +70,23 @@ A custom `DoubleString` struct that implements `Runnable<String, String>` constr
 returning `Ok(format!("{}{}", s, s))`. Verified by `test_BC_2_01_003_custom_runnable_invoke()`.
 
 ### AC-002 (traces to BC-2.01.003 PC-002)
-The default `stream` method on `Runnable` is async and returns `Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>` — an outer `Ok(stream)` wrapping a stream of `Result<Output, PregolyaError>` items. The non-streaming fallback calls `invoke` internally: if `invoke` returns `Ok(output)`, the outer future resolves to `Ok(stream)` where the stream yields `Ok(output)` as its single item and then terminates; if `invoke` returns `Err(e)`, the stream yields `Err(e)` as its single item (per EC-006). A `DoubleString` stream over input "hello" yields exactly one item: `Ok("hellohello".to_string())` then terminates. Verified by `test_BC_2_01_003_default_stream_single_item()`.
+The default `stream` method on `Runnable` uses the RPITIT explicit non-async form (consistent
+with `invoke` per AC-001; bare `async fn` is not permitted — it lacks a `Send` bound on the
+returned future, required for the `DynRunnable` blanket impl per ADR-005 §Send-Bounded RPITIT;
+additionally, `async fn stream(...) -> Result<impl Stream<...>, Error>` desugars to
+`-> impl Future<Output = Result<impl Stream<...>, Error>>` — nested `impl Trait` inside
+`impl Future<Output=...>` — which triggers E0562 in stable Rust):
+`fn stream(&self, input: Input, config: Option<RunnableConfig>) -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>, PregolyaError>> + Send`
+(`impl Stream` cannot appear nested inside `impl Future<Output=...>` — E0562;
+`Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>` is the concrete type
+substitution that avoids the nested-impl constraint.)
+The method returns an outer `Ok(stream)` wrapping a stream of `Result<Output, PregolyaError>`
+items. The non-streaming fallback calls `invoke` internally: if `invoke` returns `Ok(output)`,
+the outer future resolves to `Ok(stream)` where the stream yields `Ok(output)` as its single
+item and then terminates; if `invoke` returns `Err(e)`, the stream yields `Err(e)` as its
+single item (per EC-006). A `DoubleString` stream over input "hello" yields exactly one item:
+`Ok("hellohello".to_string())` then terminates. Verified by
+`test_BC_2_01_003_default_stream_single_item()`.
 
 ### AC-003 (traces to BC-2.01.003 {PC-003})
 The default `batch` method on `Runnable` uses in-task cooperative concurrency via `futures::future::join_all` (or `FuturesOrdered`) — polls all `invoke` futures concurrently within the calling task; no spawn, no thread-pool parallelism; input order preserved. There is no per-invocation concurrency cap and no `max_concurrency` field in `RunnableConfig`. The `+ Send` RPITIT future from `invoke(&self, ..)` borrows `&self` and is NOT `'static`; `JoinSet::spawn` (requires `F: Future + Send + 'static`) CANNOT be used in a default `&self` method. Implementors owning `'static`/`Arc<Self>` state MAY override `batch` to spawn via `JoinSet` for true parallelism. A batch of 5 inputs returns 5 outputs in insertion order. Verified by `test_BC_2_01_003_default_batch_order_preserved()`.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.004
-version: "2.1"
+version: "2.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.9 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] — {PC-001}: added DynRunnable auto-satisfaction note. Typed stages `Runnable<I, O>` where `I: serde::de::DeserializeOwned + Send + 'static` and `O: serde::Serialize + Send + 'static` auto-satisfy `DynRunnable` via the serde-bounded blanket — there is no requirement that a stage be `Runnable<Value, Value>` to be stored as `Box<dyn DynRunnable>`. `RunnableSequence<I, O>` therefore also auto-derives `DynRunnable` and can be stored as `Box<dyn DynRunnable>` directly. interface-definitions.md §DynRunnable is the authoritative canon (R38)."
   - "2.0 (round-39/F-P2A164-01/2026-08-29): F-P2A164-01 [CRIT] — DynRunnable adapter model: {PC-001} serde-bounded blanket auto-satisfaction language replaced with adapter model + pipe serde bounds. Removes: 'By the serde-bounded DynRunnable blanket impl, any Runnable<I,O>... auto-satisfies DynRunnable... auto-derives DynRunnable and can be stored as Box<dyn DynRunnable> directly.' Adds: 'Runnable::pipe requires Self: Sized + Send + Sync + 'static, Input: serde::de::DeserializeOwned + Send + 'static, Output: serde::Serialize + serde::de::DeserializeOwned + Send + 'static, NextOutput: serde::Serialize + Send + 'static — because pipe erases self and next via .into_dyn() constructing DynRunnableAdapter<I, O, R>.' interface-definitions.md §DynRunnable + ADR-005 §Send-Bounded RPITIT are the authoritative canon (R39)."
   - "2.1 (round-40/F-P2A168-01/2026-08-29): F-P2A168-01 [HIGH, POL-18] — {PC-001} pipe serde bounds symmetric form per architect canon (R40): Input gains `Serialize` bound (was `DeserializeOwned`-only); NextOutput gains `DeserializeOwned` bound (was `Serialize`-only). Canonical where-clause: `Input: serde::Serialize + serde::de::DeserializeOwned + Send + 'static`; Output unchanged (already had both); `NextOutput: serde::Serialize + serde::de::DeserializeOwned + Send + 'static`. The returned `RunnableSequence`'s own `Runnable::invoke` needs `Input: Serialize` to feed the erased first stage and `NextOutput: DeserializeOwned` to decode the erased last stage. interface-definitions.md §Runnable::pipe is the authoritative canon (R40)."
+  - "2.2 (round-43/F-P2A180-01-sibling/2026-08-30): POL-24 sibling sweep — {PC-003} stream return type corrected from abbreviated nested `impl Trait` form to boxed form per BC-2.01.003 {PC-002} v2.9. OLD: `Result<impl Stream, PregolyaError>`. NEW: `Result<Pin<Box<dyn Stream<Item = Result<NextOutput, PregolyaError>> + Send>>, PregolyaError>`. Matches BC-2.01.003 {PC-002} canonical boxed stream form after F-P2A180-01 fix."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -73,7 +74,7 @@ assembled via `.pipe()` satisfies the full `Runnable` surface itself, enabling f
    via `.into_dyn()` constructing `DynRunnableAdapter<I, O, R>`.
 2. {PC-002} `seq.invoke(input, config).await` (where `config: Option<RunnableConfig>`) runs `a.invoke(input, config)`, then feeds the result to
    `b.invoke(result, config)`, returning the final output or the first error encountered.
-3. {PC-003} `seq.stream(input, config).await` (where `config: Option<RunnableConfig>`; async, returns `Result<impl Stream, PregolyaError>` per BC-2.01.003 {PC-002}) passes the output chunks of `a` into `b` incrementally when
+3. {PC-003} `seq.stream(input, config).await` (where `config: Option<RunnableConfig>`; async, returns `Result<Pin<Box<dyn Stream<Item = Result<NextOutput, PregolyaError>> + Send>>, PregolyaError>` per BC-2.01.003 {PC-002}) passes the output chunks of `a` into `b` incrementally when
    both `a` and `b` are streaming-native (`transform`-capable); otherwise buffers at each
    non-streaming step. Token-by-token throughput is preserved in an all-streaming pipeline.
 4. {PC-004} Sequence flattening: `a.pipe(b).pipe(c)` produces one `RunnableSequence` with

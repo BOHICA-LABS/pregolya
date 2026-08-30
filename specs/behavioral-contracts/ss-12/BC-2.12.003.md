@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -37,6 +37,7 @@ changelog:
   - "1.12 (P2A-052 F-052-01/2026-08-25): ## VP Anchors section corrected from duplicated Story-Anchor story-ID to 'None' (BC has no Kani VP seed; see §Verification Properties)."
   - "1.13 (P2A-BC-scan-B/2026-08-26): ADR-028 D1-D3 multitask propagation — PC-004 expanded with full lifecycle semantics for multitask_strategy interrupt, rollback, and enqueue: pre-empted run terminal state (cancelled, not interrupted per ADR-028 D1); rollback target (latest_completed_checkpoint_id, delete rows with checkpoint_id > anchor per ADR-028 D2); enqueue FIFO order, max_queued_runs=10 configurable cap, queue-full → E-SERVER-019 RunQueueFull HTTP 429 per ADR-028 D3. EC-007 added for enqueue-queue-full path. TV-008/009/010 added for interrupt/rollback/enqueue strategies. ADR-028 anchor cited throughout new clauses."
   - "1.14 (round-42/F-P2A177-01/2026-08-29): F-P2A177-01 [HIGH, CWE-248/703] — Substantiate node-body panic recovery in EC-003 and mint {INV-007} panic-text-isolation invariant. EC-003 expanded to cover both Err and panic paths: node Err path is unchanged; node-body panic path now specifies `FutureExt::catch_unwind(AssertUnwindSafe(...))` mechanism — panic caught during `.await` polling → `Err(PregolyaError { code: \"E-GRAPH-019\", category: INTERNAL, message: \"NodePanic: graph node panicked during execution — see server error log for details\", retry_hint: Never, .. })`; run transitions `in_progress → failed`; raw panic text logged server-side at ERROR only; NEVER in `Run.error.message` per new {INV-007}; {INV-005} (no orphan runs) upheld — run MUST NOT remain `in_progress` after panic caught. SEC-008 note added to EC-003: `panic = \"unwind\"` required on pregolya-server release profile. {INV-007} added: panic-text-isolation — raw panic text MUST NOT appear in `Run.error.message`; E-GRAPH-019 STATIC message invariant. TV-011 minted: node-body-panic → failed + E-GRAPH-019 + static message + no orphan `in_progress` (TV count 10→11). Traceability Error Codes row added citing E-GRAPH-019."
+  - "1.15 (round-43/F-P2A181-01-sibling/2026-08-30): F-P2A181-01 sibling — EC-003 SEC-008 clause and TV-011 Notes refined to workspace-root `[profile.release]` precision, aligning with ADR-029 §Decision 5 v2.16 and S-2.11 AC-037 v1.31. EC-003: 'on the `pregolya-server` release profile' → 'in the workspace-root `[profile.release]` governing the `pregolya-server` binary; a library-member `[profile.release] panic` override is silently ignored by Cargo and MUST NOT be relied upon'. TV-011 Notes: same workspace-root precision added. BC-2.09.008 EC-010 SEC-008 was the primary fix (F-P2A181-01); this sibling corrects residual release-profile framing for consistency."
 extracted_from: null
 modified: []
 deprecated: null
@@ -210,8 +211,10 @@ in `Run.error.message` (panic-text-isolation per {INV-007}). The run MUST NOT re
 `in_progress` state after the panic is caught — {INV-005} (no orphan runs) is upheld.
 The thread's checkpoint state reverts to the last successful checkpoint before the failed Run.
 **Both paths:** DI-014 ensures neither error is silently swallowed.
-**SEC-008:** This panic recovery requires `panic = "unwind"` on the `pregolya-server`
-release profile; `panic = "abort"` voids the catch and causes process termination (CWE-248).
+**SEC-008:** This panic recovery requires `panic = "unwind"` in the workspace-root
+`[profile.release]` governing the `pregolya-server` binary; a library-member
+`[profile.release] panic` override is silently ignored by Cargo and MUST NOT be relied upon;
+`panic = "abort"` at the workspace root voids the catch and causes process termination (CWE-248).
 
 ### EC-004: Get run with wrong thread_id
 **Scenario:** `GET /threads/t2/runs/<run_id>` where the run belongs to thread `t1`.
@@ -244,7 +247,7 @@ scoped to a different thread — cross-thread run access is not permitted.
 | TV-008 | Thread `t1` has active `in_progress` Run `r1`; `POST /threads/t1/runs { multitask_strategy: "interrupt" }` | HTTP 202, new Run `r2` in `queued`; `r1` transitions to `cancelled`; after `r1` cancelled durably, `r2` transitions to `in_progress` | multitask_strategy=interrupt |
 | TV-009 | Thread `t1` has active Run `r1` (3 checkpoints written); `POST /threads/t1/runs { multitask_strategy: "rollback" }` | HTTP 202, new Run `r2`; `r1` transitions to `cancelled`; checkpoint rows from `r1` deleted (only rows up to `latest_completed_checkpoint_id` retained); `r2` starts against rolled-back state | multitask_strategy=rollback |
 | TV-010 | Thread `t1` has active `in_progress` Run `r1` and 10 `queued` Runs (queue at capacity); `POST /threads/t1/runs { multitask_strategy: "enqueue" }` | HTTP 429 `E-SERVER-019 RunQueueFull` | multitask_strategy=enqueue queue-full |
-| TV-011 | Run `r1` on thread `t1` is `in_progress`; a graph node body calls `panic!("unexpected node failure")`; poll `GET /threads/t1/runs/r1` | Run `r1` transitions to `status: "failed"` (NOT `in_progress`); `error.code == "E-GRAPH-019"`; `error.message == "NodePanic: graph node panicked during execution — see server error log for details"` (STATIC — literal string equality); `error.message` does NOT contain `"unexpected node failure"` or any other panic text; no run remains orphaned in `in_progress` state | Node-body panic → E-GRAPH-019 STATIC message; panic-text-isolation ({INV-007}); no orphan `in_progress` ({INV-005}); EC-003 node-body-panic path; SEC-008 requires `panic = "unwind"` on pregolya-server release profile (CWE-248) |
+| TV-011 | Run `r1` on thread `t1` is `in_progress`; a graph node body calls `panic!("unexpected node failure")`; poll `GET /threads/t1/runs/r1` | Run `r1` transitions to `status: "failed"` (NOT `in_progress`); `error.code == "E-GRAPH-019"`; `error.message == "NodePanic: graph node panicked during execution — see server error log for details"` (STATIC — literal string equality); `error.message` does NOT contain `"unexpected node failure"` or any other panic text; no run remains orphaned in `in_progress` state | Node-body panic → E-GRAPH-019 STATIC message; panic-text-isolation ({INV-007}); no orphan `in_progress` ({INV-005}); EC-003 node-body-panic path; SEC-008 requires `panic = "unwind"` in the workspace-root `[profile.release]` governing the `pregolya-server` binary; library-member `[profile.release] panic` overrides are silently ignored by Cargo (CWE-248) |
 
 ## Verification Properties
 

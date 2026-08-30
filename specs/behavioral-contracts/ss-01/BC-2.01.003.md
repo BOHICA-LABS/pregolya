@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.01.003
-version: "2.8"
+version: "2.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "2.6 (round-38/F-P2A160-01/2026-08-29): F-P2A160-01 [HIGH] — Mirror architect's serde-bounded DynRunnable blanket canon into BC layer. (1) {INV-006}: replaced stale 'associated types' phrasing with 'generic type parameters'; formalizes that the serde-bounded blanket `impl<I, O, T> DynRunnable for T where T: Runnable<I, O> + Send + Sync + 'static, I: serde::de::DeserializeOwned + Send + 'static, O: serde::Serialize + Send + 'static` handles the `Value ↔ I/O` round-trip INTERNALLY — the blanket deserializes `Value → I` (raising E-CORE-003 on failure), calls `Runnable<I,O>::invoke`, then serializes `O → Value`; callers are NOT responsible for JSON round-tripping. (2) {PC-001}: added DynRunnable-boundary note specifying E-CORE-003 is raised when `serde_json::from_value::<I>(input)` fails at the blanket boundary (before typed invoke is called). interface-definitions.md §DynRunnable is the authoritative canon (R38)."
   - "2.7 (round-39/F-P2A164-01+OPT-PC1/2026-08-29): F-P2A164-01 [CRIT] — DynRunnable adapter model replacing non-realizable E0207 serde-bounded blanket. {INV-006}: serde-bounded blanket `impl<I, O, T> DynRunnable for T` replaced with adapter model: 'Typed-stage coercion to Box<dyn DynRunnable> is performed via DynRunnableAdapter<I, O, R> where R: Runnable<I, O>. DynRunnableAdapter handles the Value↔I/O round-trip INTERNALLY; E-CORE-003 raised at the ADAPTER boundary (not the blanket boundary); R::invoke called.' {PC-001}: 'via the DynRunnable serde-bounded blanket impl' and 'at the blanket boundary' replaced with 'via DynRunnableAdapter<I, O, R>' and 'at the ADAPTER boundary'; 'Runnable<I, O>::invoke called on the concrete typed impl' corrected to 'R::invoke called on the concrete typed impl'. OPT-PC1 [OBS] — {PC-004}: 'BC-2.01.004 PC1' old-form ordinal corrected to 'BC-2.01.004 {PC-001}' stable-tag form (verify-ordinal-form-residue advisory). interface-definitions.md §DynRunnable + ADR-005 §Send-Bounded RPITIT + ADR-029 §Decision 5 are the authoritative canon (R39)."
   - "2.8 (round-42/F-P2A176-01/2026-08-29): F-P2A176-01 [HIGH] — Replace Tokio-thread-pool-bounded batch language with architect canon. Description: 'via the Tokio runtime' → 'via `futures::future::join_all` within the calling task — no spawn, no Tokio thread-pool'. {PC-003}: 'Concurrency is bounded by the Tokio thread-pool; there is no per-invocation concurrency cap in `RunnableConfig` (no `max_concurrency` field).' replaced with full join_all canon: default `batch` uses in-task cooperative concurrency via `futures::future::join_all` (or `FuturesOrdered`) — polls all `invoke` futures concurrently within the calling task; no spawn, no thread-pool parallelism; input order preserved. Includes `JoinSet::spawn` impossibility rationale: `+ Send` RPITIT future from `invoke(&self, ..)` borrows `&self` and is NOT `'static`; `JoinSet::spawn` (requires `F: Future + Send + 'static`) CANNOT be used in a default `&self` method. Notes implementor override path for `'static`/`Arc<Self>` state. EC-002 updated to use 'in-task cooperative concurrency via `futures::future::join_all`' language. {INV-002} order-preservation unchanged. No per-invocation cap language remains."
+  - "2.9 (round-43/F-P2A180-01/2026-08-30): F-P2A180-01 [HIGH] — {PC-002} stream return type corrected from nested `impl Trait` form (E0562-invalid on stable Rust) to boxed form. OLD: `Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>`. NEW: `Result<Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>, PregolyaError>`. Nested `impl Trait` inside `impl Future<Output=...>` binding is rejected by stable Rust E0562; the canonical realizable form boxes the yielded stream via `Pin<Box<dyn Stream<...>>>`. Canonical function signature: `fn stream(&self, input: Input, config: Option<RunnableConfig>) -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>, PregolyaError>> + Send` per interface-definitions.md §Runnable (v3.00)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-002
 inputs:
@@ -89,7 +90,7 @@ pattern (semport/core/behavioral-intent.md §1 "Runnables (LCEL)").
    raised when `serde_json::from_value::<I>(input)` fails at the ADAPTER boundary — before
    `R::invoke` is called on the concrete typed impl.
 2. {PC-002} `runnable.stream(input, config).await` (where `config: Option<RunnableConfig>`) returns
-   `Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>`.
+   `Result<Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>, PregolyaError>`.
    The outer `Result` covers pre-stream initialization failures; each item yielded by the inner stream
    is a `Result<Output, PregolyaError>`.
    When the implementor does not override `stream` (non-streaming fallback): the outer future resolves to

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "2.99"
+version: "3.00"
 status: active
 producer: product-owner
-timestamp: 2026-08-29T00:00:00Z
+timestamp: 2026-08-30T00:00:00Z
 phase: 1d
 changelog:
+  - "3.00 (round-43/F-P2A180-01/2026-08-30): F-P2A180-01 [HIGH] §Runnable::stream E0562 fix — nested `impl Stream<Item = Result<Output, PregolyaError>> + Send` inside `impl Future<Output = Result<.., PregolyaError>>` is not permitted on stable Rust (E0562 class; nested `impl Trait` inside an associated-type binding). Boxed the yielded stream to `Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>`, removing the nested `impl Trait` while preserving the outer `+ Send` guarantee on the future. Doc-comment for `stream` updated: replaced 'Both the outer future and the yielded `impl Stream` carry `+ Send`, enabling `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`' with 'The outer future carries `+ Send`. The yielded stream is `Pin<Box<dyn Stream<Item = ..> + Send>>` — boxed to remove nested `impl Trait` inside `impl Future<Output = ..>` (E0562); the boxed form is directly compatible with `DynRunnable::stream` (no re-boxing needed in the adapter)'. `DynRunnableAdapter::stream` comment updated: `R::stream().await` now yields `Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>`; adapter maps `Ok(O) → serde_json::to_value(O)`. ADR-005 §Send-Bounded RPITIT inventory table Runnable row updated in same burst. POL-24 sibling sites outside architect domain: BC-2.01.003 §PC-002 live body cites `impl Stream<Item = Result<Output, PregolyaError>> + Send` return form; BC-INDEX §Changelog (round-36 Runnable E0562 entry); STORY-S-1.04 §stream prose — these are in BC / story domain and require product-owner + story-writer routing to mirror the boxed form."
   - "2.99 (round-42/F-P2A176-01/2026-08-29): F-P2A176-01 [HIGH] §Runnable batch doc-comment expanded with in-task cooperative concurrency canon and `'static` corollary. Default `batch` uses `futures::future::join_all` / `FuturesOrdered` — all `invoke` futures polled concurrently within the calling task; no spawn, no thread-pool parallelism; output order matches input order (BC-2.01.003 {INV-002}). `'static` corollary: the `+ Send` RPITIT future from `invoke(&self, ..)` borrows `&self` and is NOT `'static`; `JoinSet::spawn` (requires `F: Future + Send + 'static`) CANNOT be used in a default `&self` batch implementation; implementors holding `'static` / `Arc<Self>` state MAY override `batch` to spawn via `JoinSet`. Authority: ADR-005 §Send-Bounded RPITIT (corollary added in same burst). Realizability self-validation: (a) futures borrow `&self`, do not escape method — no `'static` requirement; (b) `join_all` / `FuturesOrdered` preserve input order ({INV-002}); (c) all futures carry `+ Send` (RPITIT) so combined future is `Send`. PO: BC-2.01.003 {PC-003} drop Tokio-thread-pool claim — in-task `join_all`/`FuturesOrdered`, no concurrency cap, override-for-JoinSet note. Story-writer: S-1.04 AC-003 same."
   - "2.98 (round-41/F-P2A172-03+F-P2A172-04/2026-08-29): F-P2A172-03 [LOW] DynRunnableAdapter._phantom pub → pub(crate): changed `pub _phantom` to `pub(crate) _phantom` in `DynRunnableAdapter<I, O, R>` struct; `inner` was already `pub(crate)`. Final field visibilities: `pub(crate) inner: R` and `pub(crate) _phantom: std::marker::PhantomData<fn(I) -> O>`. Both fields are now sealed — Criterion-B basis for ADR-023 §Exempt Structs DynRunnableAdapter entry (F-P2A172-02). F-P2A172-04 [LOW] RunnableParallel::new doc-comment prose `(impl Into<String>, Arc<dyn DynRunnable>)` → `(K, Arc<dyn DynRunnable>) pairs where K: Into<String>` — closes prose residue from r40 E0562-class fix (r40 fixed the actual signature; this closes the prose). POL-24 sweep: grep `/// .*impl Into` and `/// .*impl Trait` across all doc-comment lines — sole occurrence was RunnableParallel::new construction line; zero occurrences on RunnablePassthrough::assign or any other constructor doc-comment. Architect mirrors: ADR-023 §Exempt Structs gains DynRunnableAdapter entry (F-P2A172-02)."
   - "2.97 (round-40/F-P2A168-01+F-P2A168-02+F-P2A168-03+F-P2A168-04/2026-08-29): Full LCEL composition surface re-derivation — breaks 3-round recurrence. F-P2A168-01 [HIGH] Runnable::pipe serde bounds asymmetric: r39 declared Input: DeserializeOwned only and NextOutput: Serialize only — this covers adapter construction via into_dyn() but NOT the RunnableSequence own Runnable impl which must (1) serialize typed Input→Value to feed erased first stage and (2) deserialize final Value→NextOutput from erased last stage. Corrected to full symmetric bounds: Input: Serialize+DeserializeOwned+Send+'static, Output: Serialize+DeserializeOwned+Send+'static, NextOutput: Serialize+DeserializeOwned+Send+'static. Doc-comment updated to document all three axes. BC-2.01.004 {PC-001} canonical bounds updated. F-P2A168-02 [MED] Nested impl Trait in associated-type binding non-realizable (E0562-class on stable Rust): `impl IntoIterator<Item = (impl Into<String>, Arc<dyn DynRunnable>)>` uses impl Trait inside an associated-type projection, which is not permitted on stable Rust. Fixed at all 2 interface-definitions sites: RunnableParallel::new and RunnablePassthrough::assign now use named generic K: Into<String>: `pub fn new<K: Into<String>>(steps: impl IntoIterator<Item = (K, Arc<dyn DynRunnable>)>) -> Self`. F-P2A168-03 [MED] RunnableSequence PhantomData<(I,O)> imposes spurious Send+Sync/dropck bounds — sibling DynRunnableAdapter correctly uses PhantomData<fn(I)->O>. POL-24 sibling-consistency: changed _phantom to PhantomData<fn(I) -> O>. Enables a.pipe(b).pipe(c) chaining without requiring I: Sync or O: Sync (function pointers are always Send+Sync). F-P2A168-04 [MED] RunnableSequence fields declared pub contradicts ADR-023 §Criterion-B private-field-seal rationale. Adjudicated pub(crate): restores Criterion-B seal, satisfies BC-2.01.004 TV-002 in-crate inspectability, prevents external construction and exhaustive match without requiring #[non_exhaustive]. All four fields (first, middle, last, _phantom) changed to pub(crate). PO must mirror BC-2.01.004 {PC-001} pipe bounds (symmetric serde). Story-writer must mirror S-1.04 AC-008 (symmetric serde bounds on all three type params)."
@@ -150,10 +151,13 @@ pub trait Runnable<Input, Output>: Send + Sync {
 
     /// Invoke and stream output chunks.
     ///
-    /// Both the outer future and the yielded `impl Stream` carry `+ Send`, enabling
-    /// `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`.
+    /// The outer future carries `+ Send`. The yielded stream is
+    /// `Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>` —
+    /// boxed to remove the nested `impl Trait` inside `impl Future<Output = ..>`,
+    /// which is not permitted on stable Rust (E0562). The boxed form is directly
+    /// compatible with `DynRunnable::stream` (no re-boxing needed in the adapter).
     fn stream(&self, input: Input, config: Option<RunnableConfig>)
-        -> impl std::future::Future<Output = Result<impl Stream<Item = Result<Output, PregolyaError>> + Send, PregolyaError>> + Send;
+        -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>, PregolyaError>> + Send;
 
     /// Invoke in batch; returns results in input order.
     ///
@@ -300,7 +304,9 @@ where
         config: Option<RunnableConfig>,
     ) -> Result<serde_json::Value, PregolyaError>;
 
-    // stream: analogous with boxed +Send stream items. See BC-2.01.003 {PC-002}.
+    // stream: R::stream().await yields Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>
+    //         (Runnable::stream is now boxed at source — E0562 fix). Map Ok(O) → serde_json::to_value(O),
+    //         then Box::pin the mapped stream. See BC-2.01.003 {PC-002}.
     async fn stream(
         &self,
         input: serde_json::Value,

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "3.4"
+version: "3.5"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -40,12 +40,13 @@ changelog:
   - "3.2 (round-40/F-P2A169-02/2026-08-29): F-P2A169-02 [MED, CWE-862/POL-46] — EC-006 scenario and TV-005 Input lacked the `action_risk` precondition required for the `PendingHumanApproval`-overridden-to-`Approve` path under `ForceApproveHooks` to be reachable. EC-006 scenario updated: tool has `action_risk = Some(ActionRisk::ReadOnly)` (gate approves, `ReadOnly < Medium`) — inner hook is invoked; `PendingHumanApproval` overridden to `Approve`; note added that `None`/`>= Medium` would be gate-denied per EC-009 (inner hook never called, interrupt path unreachable for that tool). TV-005 Input updated to specify `action_risk = Some(ActionRisk::ReadOnly)` with note about `None`/`>= Medium` gate-denied path. interface-definitions.md §ForceApproveHooks + {INV-004}/{PC-006} are the authoritative canon (R40)."
   - "3.3 (round-41/F-P2A173-01+F-P2A173-02+F-P2A175-01/2026-08-29): F-P2A173-01 [LOW, CWE-248/703] — EC-010 scope note added: `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` contains ALL panics during future polling, including graph-node-body panics (higher-probability CWE-248 vector); node-body panics yield the same static `isError:true`/`content[0].text == \"internal error\"` response as `extract_output` panics. TV-011 Notes extended: containment scope note added — `AssertUnwindSafe(runner.run(...))` covers all panics during `.await` polling, not only `extract_output` panics. No new TV minted — EC-010 prose extension + TV-011 note is sufficient coverage per POL-23 (census stays 759). F-P2A173-02 [OBS] — TV-018 `Deny { reason }` string aligned to ADR-029 §Decision 4 canonical `format!` output form: `\"ForceApproveHooks policy violation: tool '<tool_name>' has ActionRisk Some(High) (None or >= Medium); ForceApproveHooks is valid only for read-only tool graphs with declared ActionRisk < Medium\"` (stable assertion prefix: `\"ForceApproveHooks policy violation: tool '\"`; `format!` interpolates `preview.tool_name` and `{:?}` of `preview.action_risk`). F-P2A175-01 [LOW] — {PC-004} result_text parenthetical corrected: prior gloss `(result_text = serde_json::to_string(&extract_output_result))` implied universal serialization; replaced with canonical BC-2.09.007 {PC-002} branching rule: `Value::String(s)` → `s` verbatim; all other `Value` variants → `serde_json::to_string(&extract_output_result)` (prevents double-encoding of `Value::String` returns). BC census UNCHANGED: 134. VP UNCHANGED: 17. EC UNCHANGED: 137. TV UNCHANGED: 759."
   - "3.4 (round-42/F-P2A179-01+F-P2A177-01+F-P2A177-02/2026-08-29): F-P2A179-01 [HIGH]: {PC-003} `ConcreteGraphRunner<S>::run ... where S is statically known` replaced with non-generic form per ADR-029 §Decision 2 / F-P2A072-03: `ConcreteGraphRunner::run` (non-generic, no `<S>`; holds `Arc<CompiledStateGraph>` + `Box<dyn Fn(&serde_json::Value) -> serde_json::Value + Send + Sync>`). Exhaustive sweep of all live-body BC text confirms this was the only `ConcreteGraphRunner<S>` / 'where S is statically known' live-body occurrence. F-P2A177-01 [HIGH, CWE-248/703] (SEC-008 scope): EC-010 SEC-008 invariant extended — the pregolya-server release profile MUST ALSO pin `panic = \"unwind\"` alongside pregolya-mcp; `panic = \"abort\"` on either voids the `catch_unwind` boundary. TV-019 minted: path_fn conditional-edge panic → E-GRAPH-011 ConditionalEdgePanic → static `\"internal error\"` at MCP boundary per ADR-029 §Decision 5. F-P2A177-02 [MED, CWE-209]: EC-003 amended — E-GRAPH-011 ConditionalEdgePanic and E-GRAPH-019 NodePanic are EXCEPTIONS to the 'original graph error code is propagated' rule: these internal-panic codes receive STATIC replacement per ADR-029 §Decision 5; the MCP server substitutes `content[0].text = \"internal error\"` (no panic text, no dynamic fields forwarded) rather than the redacted `PregolyaError::message`. Traceability Error Codes row updated to add E-GRAPH-019 NodePanic. TV count 18→19."
+  - "3.5 (round-43/F-P2A181-01/2026-08-30): F-P2A181-01 [HIGH, CWE-248/703] — EC-010 SEC-008 build-profile clause corrected for Cargo library-profile semantics. OLD: 'The `pregolya-mcp` AND `pregolya-server` release profiles MUST BOTH pin `panic = \"unwind\"` — the `catch_unwind` boundary operates inside the MCP server request handler (`pregolya-server`) which calls `invoke_dyn` (`pregolya-mcp`); `panic = \"abort\"` on EITHER crate voids the catch and causes process termination. Devops asserts both pins at Phase-3 workspace `Cargo.toml` authoring.' NEW: authoritative pin point is the workspace-root `[profile.release]` governing the `pregolya-server` binary; Cargo honors `[profile.release] panic` ONLY at the workspace root (applied at link time); a library-member `[profile.release] panic` override (e.g., in `pregolya-mcp`'s own manifest) is silently ignored by Cargo and MUST NOT be relied upon; `panic = \"abort\"` at the workspace root voids the catch (CWE-248). Aligns with ADR-029 §Decision 5 v2.16 and S-2.11 AC-037 v1.31."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "4cdbf1f"
+input-hash: "17ef1e8"
 extracted_from: null
 modified: []
 deprecated: null
@@ -364,11 +365,13 @@ a graph node body during `.await` polling (e.g., `panic!("node error")` inside a
 implementation) is caught by the same `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` boundary and yields the same static `isError:true`, `content[0].text == "internal error"` response — no panic message, backtrace, or internal state forwarded. Node-body panics are a higher-probability CWE-248 vector than caller-supplied `extract_output` panics; the documented `catch_unwind` containment covers both. TV-011 exercises the `extract_output` panic path; the same `AssertUnwindSafe(runner.run(...))` outer boundary provides structural containment for node-body panics (same mechanism, same response).
 **SEC-008 build-profile invariant:** This recovery depends on `panic = "unwind"`. A
 `panic = "abort"` release profile voids the catch and causes process termination on panic
-(remote DoS, CWE-248). The `pregolya-mcp` AND `pregolya-server` release profiles MUST BOTH
-pin `panic = "unwind"` — the `catch_unwind` boundary operates inside the MCP server request
-handler (`pregolya-server`) which calls `invoke_dyn` (`pregolya-mcp`); `panic = "abort"` on
-EITHER crate voids the catch and causes process termination. Devops asserts both pins at
-Phase-3 workspace `Cargo.toml` authoring.
+(remote DoS, CWE-248). The AUTHORITATIVE pin point is the workspace-root `[profile.release]`
+governing the `pregolya-server` binary: Cargo honors `[profile.release] panic` ONLY at the
+workspace root (applied to the final binary at link time); a library-member `[profile.release]
+panic` override (e.g., in `pregolya-mcp`'s own manifest) is silently ignored by Cargo and
+MUST NOT be relied upon. `panic = "abort"` at the workspace root voids the catch and causes
+process termination. Devops asserts the workspace-root pin at Phase-3 workspace `Cargo.toml`
+authoring (aligns with ADR-029 §Decision 5 and S-2.11 AC-037).
 
 ## Canonical Test Vectors
 
