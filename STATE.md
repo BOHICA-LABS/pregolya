@@ -194,7 +194,7 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 pregolya Phase-2 re-convergence. streak 0/3. round-49 CLOSED (D-326). Frozen-HEAD streak gates on new spec HEAD post-D-326 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. redact_credentials canonical set now 6 patterns (URL-userinfo+Basic-auth; BC-2.09.007 TV-011/012/013). SEC-BOUND-001 R06-PP partial-pipeline gate implemented. InvocationContext DI seam homed (pregolya-core::invocation_context). TV 770 canonical. NEXT: dispatch round-50 (P2A-208/209/210/211 + GATE-READY) on NEW frozen spec HEAD post-D-326 push; streak 0/3.
 
 ### HEADS
-- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts = D-326 round-49 close commit — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts: `81249c0` (D-326 round-49 fix-burst CLOSED — PUSHED). No .worktrees/. No open PRs.
 
 ### D-326 ROUND-49 CLOSE
 - F-P2A205-01 [HIGH, CWE-209/532]: BC-2.09.007 (v2.4 to v2.5) SEC-BOUND-001 2-step pipeline: step-1 N/A (DI-008 plain tools); step-2 `redact_credentials`; step-3 `sanitize_internal_ids` (UUID-shaped pass with u64-CheckpointId carve-out). TV-011 minted. ADR-029 (v2.18 to v2.19) mis-attribution corrected.
