@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.008
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-08-31T00:00:00Z
 changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — LedgerChannel first-appearance ordering; DI-001 invariant enforcement; ADR-030 Decision 3."
+  - "1.1 (round-50/Stage-B1-product-owner/2026-08-31): §Verification Properties VP-017 description updated to reflect dual-anchor: VP-017 proptest now explicitly anchors both BC-2.02.007 (dedup-idempotent append) and BC-2.02.008 (first-appearance ordering) — the ordering invariant is exercised by the same arbitrary-sequence proptest harness. VP-INDEX propagation to architect per vp_index_is_vp_catalog_source_of_truth policy."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -23,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "e6a76aa"
+input-hash: "a280d94"
 extracted_from: null
 modified: []
 deprecated: null
@@ -113,7 +114,7 @@ reference; task-identity sort (DI-001) determines first-appearance order.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-017 | LedgerChannel dedup-idempotent append covers this ordering invariant: the proptest exercises arbitrary sequences and asserts first-appearance order in the final `Vec<T>` | proptest | 3 |
+| VP-017 | **Dual-anchor: BC-2.02.007 + BC-2.02.008.** VP-017 proptest (harness `ledger_channel_dedup_idempotency`) exercises arbitrary entry sequences and asserts both dedup-idempotency ({INV-002} no-duplicate) AND first-appearance ordering (this BC's {INV-001}): the final `Vec<T>` contains entries in the order their `entry_id` first appeared across the full sequence. The ordering invariant is an emergent property of the same `Vec::push`-on-novel append operation that VP-017 already validates. | proptest | 3 |
 
 ## Related BCs
 

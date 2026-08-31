@@ -6968,3 +6968,13 @@ burst-306 COMPLETE (2026-08-17) — P1D-198 NOT CLEAN (0C/1H/1M): F-P198-01 HIGH
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | D-322 round-45 fix-burst CLOSED (2026-08-30): trajectory-tail →0/CLEAN(strict)→1H→1LOW-records→1M (P2A-188=0/CLEAN(strict)/realizability / P2A-189=1H / P2A-190=1LOW-records / P2A-191=1M). MILESTONE: P2A-188 realizability CLEAN(strict)=YES — realizability axis CONVERGED. GATE-READY=YES 13/13 PASS. ALL CLOSED: F-P2A189-01[HIGH,CWE-248/703] BC-2.11.002 SEC-008 workspace-root framing (SS-11; 3rd subsystem hit R43); F-P2A191-01[MED] module-decomposition §graph::scheduler CompiledStateGraph::invoke; O-P2A190[LOW/records] ADR-026 [D-170]. R04-PREC mechanical gate IMPLEMENTED (8 self-probes). L-236 codified. ARCH-INDEX §Changelog (v1.55); BC-INDEX §Changelog (v4.06); STORY-INDEX §Changelog (v1.32). Census UNCHANGED: BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39+1) / points 303. streak 0/3. NEXT: round-46. | state-manager | COMPLETE | STATE.md v6.33. Single commit per TD-VSDD-053. |
+
+---
+
+## Archived Step: D-323 (round-50 fix-burst burst; v6.39 5-row rolling window)
+
+*D-323 step row removed from STATE.md §Current Phase Steps to keep last-5 window; archived verbatim.*
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| D-323 round-46 fix-burst CLOSED (2026-08-30): trajectory-tail →0/CLEAN(strict)→2H+1M+pgap→0/CLEAN(strict)→2H+1M+1LOW (P2A-192=0/CLEAN(strict) / P2A-193=2H+1M+pgap / P2A-194=0/CLEAN(strict) / P2A-195=2H+1M+1LOW). GATE-READY=YES 13/13 PASS. NOT CLEAN(strict). TWO RECURRING CLASSES CLOSED CORPUS-WIDE + MECHANICALLY GATED: (1) SEC-008 catch_unwind — ADR-001 (ORIGINATING rev-3→rev-4) + BC-2.15.005 + BC-2.02.005 + BC-2.11.003 + BC-2.11.004 + BC-2.05.007 + S-1.26/S-1.13/S-1.15 + R05 gate (11 self-probes). (2) CompiledGraph phantom — BC-2.12.007 + S-1.27 (7 sites) + dependency-graph.md + phantom-type patterns (29 self-probes). ALL FINDINGS CLOSED: F-193-01[HIGH,CWE-248/703] + F-193-02[HIGH] + F-193-03[MED] + F-P2A195-01[HIGH] + F-P2A195-02[HIGH] + F-P2A195-03[MED] + O-P2A195-01[LOW/records]. L-237 codified. ARCH-INDEX §Changelog (v1.56); BC-INDEX §Changelog (v4.07); STORY-INDEX §Changelog (v1.33). Census UNCHANGED: BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 / points 303. streak 0/3. NEXT: round-47. | state-manager | COMPLETE | STATE.md v6.34. Single commit per TD-VSDD-053. |

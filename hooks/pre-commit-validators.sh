@@ -83,6 +83,17 @@
 #       (ADR-022 §Decision 5 prohibited); (2) bare §Section citations in normative
 #       prose without ADR-NNN prefix and without same-file heading resolution.
 #       Illustration regions (discriminator:illustration-start/end) are now excluded.
+#   verify-story-count-propagation.sh      — (FAILING) STORY-INDEX aggregate-summary count parity.
+#       Closes F-R50-01 / F-P2A210-01 (round-50 GATE-READY process-gap): D-327 authoring
+#       burst added S-1.28 + S-2.12 to Story Inventory and updated per-SS BC-count headers,
+#       but left Census table / opening header blockquote / BC-coverage-map intro showing
+#       stale pre-D-327 values (40/27/11/134 instead of 42/28/12/140). Gate validates that
+#       Census table, blockquote, and coverage intro agree with: (a) Story Inventory row
+#       count by wave, and (b) per-SS BC-count header sum / STATE.md total_bcs.
+#       4 self-probes (POL-31): 3 negative (census mismatch, blockquote mismatch,
+#       coverage-intro mismatch) + 1 positive (all agree). Wired 2026-08-31.
+#       Pre-existing violations: 12 FAILs (Census+blockquote+intro all stale from D-327).
+#       Routing: state-manager fix-burst to update STORY-INDEX Census/blockquote/intro.
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -225,7 +236,7 @@ PASSED_VALIDATORS=()
 PASS_COUNT=0
 # Single source of truth for the expected blocking validator roster size.
 # Update this constant when adding or removing a blocking validator.
-EXPECTED_BLOCKING_COUNT=16
+EXPECTED_BLOCKING_COUNT=17
 
 # run_blocking runs a validator and records failure in FAILED_VALIDATORS
 run_blocking() {
@@ -293,6 +304,7 @@ run_blocking "verify-tv-registry-count.sh"
 run_blocking "verify-adr-anchor-citations.sh"
 run_blocking "verify-ac-pc-trace.sh"
 run_blocking "verify-vp-anchors-grammar.sh"
+run_blocking "verify-story-count-propagation.sh"
 
 # ── Advisory validators (run but do not block; see header for promotion paths) ─
 echo ""

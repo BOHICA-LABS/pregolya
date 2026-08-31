@@ -4535,3 +4535,43 @@ CLEAN(strict) — zero findings. All census/consistency/records axes PASS. GATE-
 | OBS-P2A207-04 | OBS | CLOSED-OBS-IN-SCOPE: BC-2.09.008 {PC-001} arc-constructor tightened. |
 
 **NEXT: round-50 on new frozen HEAD post-D-326 push. Streak 0/3.**
+
+---
+
+## Round 50 — D-328 (2026-08-31) — FIRST ADVERSARIAL REVIEW OF PRAXIST SURFACE
+
+**Frozen HEAD:** `697e38d` (post-D-327 praxist authoring burst commit)
+**D-327 authoring burst:** CAP-040; +6 BC (BC-2.02.007/008/009 SS-02 + BC-2.04.009/010/011 SS-04); +2 VP (VP-017/018 proptest P1); +4 EC (E-TRAJ-001..004); +1 ADR (ADR-030); +7 holdout (Domain D, 22 total); +2 stories (S-1.28+S-2.12; 42 total, 316 pts).
+**Round-50 result:** 4 lenses ALL NOT CLEAN — high novelty (first-ever review of praxist surface). trajectory-tail →5→4→6→7.
+
+### Per-Pass Summary
+
+| Pass | Lens | Findings | CLEAN(strict) | Key Findings |
+|------|------|----------|---------------|-------------|
+| P2A-208 | realizability | 5 (2H+2M+1L) | NO | interface-definitions trajectory types; ADR-030 precision; VP-017 dual-anchor; STORY-INDEX census; validator #17 |
+| P2A-209 | security | 4 (2H+1M+1L) | NO | BC-2.04.009 at-rest EncryptedSerializer {INV-003}; BC-2.04.011 WAL crash-isolation; BC-2.02.007 serde bound; VP-019 not in index |
+| P2A-210 | consistency | 6 (2H+2M+2L) | NO | STORY-INDEX census 40→42/134→140; ARCH-INDEX annotation; BC title drift (BC-2.02.009/BC-2.04.011); VP-017 dual-anchor; VP-019 missing row |
+| P2A-211 | SS-02/SS-04 deep-audit | 7 (3H+2M+1L+1OBS) | NO | BC-2.04.011 {INV-003} crash-isolation invariant absent; phantom labels VP-TRAJ-01/VP-PROM-01/02; ADR-030 composition-phase underspecified; BC-2.02.007 reducer model; VP-018 tautological |
+
+**Total: 22 findings (9 HIGH + 7 MED + 4 LOW + 1 OBS + 1 LOW-records)**
+
+### Multi-Stage Cascade Disposition
+
+All 22 findings CLOSED in D-328 multi-stage cascade:
+- **architect A:** interface-definitions §trajectory-types; ADR-030 §composition-phase; VP-017 dual-anchor; VP-018 de-tautologized; VP-019 NEW crash-isolation; ARCH-INDEX body annotation; VP-INDEX (19→20)
+- **devops A:** verify-story-count-propagation.sh NEW blocking validator #17
+- **product-owner B1:** BC-2.04.009/010/011 (at-rest EncryptedSerializer, +TV-004, WAL crash-isolation, VP-018+VP-019 anchors); BC-2.02.007/008/009 (LedgerEntry serde bound, VP-017 dual, TST-PROM relabel, phantom labels removed)
+- **product-owner B2:** HS-D-008 NEW + HS-D-009 NEW; HS-INDEX (22→24; must-pass 16/24=66.7%)
+- **story-writer C:** S-2.12 + S-1.28 VP anchor entries
+- **state-manager:** STORY-INDEX (census 40→42 stories + 134→140 BCs + VP-017 dual + VP-019 row + BC canonical titles + Red Gate 8→10)
+
+### Post-Round-50 Status
+
+- VP: 19→20 (+VP-019 trajectory compaction crash-isolation integration P1 BC-2.04.011 {INV-003})
+- Holdout: 22→24 (+HS-D-008 ledger-dedup + HS-D-009 promote-retire; must-pass 16/24=66.7%)
+- TV: 792→793 canonical (+TV-004 BC-2.04.009 at-rest EncryptedSerializer)
+- GATE-READY: YES (all 17 blocking validators PASS; see GATE-READY-r50.md)
+- Streak: 0/3 (round-50 NOT CLEAN; frozen-HEAD reset on D-328 push)
+- L-244/L-245/L-246 codified
+
+**NEXT: round-51 on new frozen HEAD post-D-328 push. Streak 0/3.**

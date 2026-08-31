@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.009
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,7 +16,8 @@ producer: product-owner
 timestamp: 2026-08-31T00:00:00Z
 changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — PromoteRetireChannel promote/retire lifecycle; DI-014 invariant enforcement; ADR-030 Decision 3."
-  - "1.1 (ADR-030 Stage 2b/2026-08-31): Renumbered from BC-2.04.011 to BC-2.02.009; subsystem corrected SS-04 → SS-02 per architect ADR-030 §Decision 3 ruling. PromoteRetireChannel resides in pregolya-graph graph::channels (SS-02) — the 2.04 range attribution was an ARCH-INDEX reservation anomaly, now resolved. All contract content unchanged; anomaly notes removed."
+  - "1.1 (ADR-030 Stage 2b/2026-08-31): [INACCURATE — superseded by v1.2 provenance correction] Previously stated 'Renumbered from BC-2.04.011 to BC-2.02.009' — this is incorrect per ADR-030 §Renumber-Provenance Canonical Narrative (F-P2A210-02)."
+  - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): Provenance corrected per ADR-030 §Renumber-Provenance (F-P2A210-02): BC-2.02.009 was CREATED as a new SS-02 BC; PromoteRetireChannel content was physically relocated from an erroneous PO draft that used BC-2.04.011 (which was always reserved for Trajectory Compaction Isolation in SS-04; BC-2.04.011 continues as a separate active BC). BC-2.04.011 is NOT the prior_id of BC-2.02.009. Prior-ID: N/A (new creation). {PRE-001} supertrait bound corrected: T: LedgerEntry (supertrait already includes Clone + Serialize + DeserializeOwned + Send + Sync + 'static — use-site redundancy removed per F-P2A208-11). VP-PROM-01/02 phantom labels relabeled TST-PROM-01/02 in §Verification Properties; removed from §VP Anchors (not registered VPs)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "9f857f5"
+input-hash: "a280d94"
 extracted_from: null
 modified: []
 deprecated: null
@@ -50,7 +51,9 @@ to advance from pending to active and be retired when superseded or committed.
 ## Preconditions
 
 1. {PRE-001} A `StateGraph` channel of type `PromoteRetireChannel<T>` is declared for a state
-   field, where `T: LedgerEntry + Clone + Send + Sync + 'static`.
+   field, where `T: LedgerEntry`. (`LedgerEntry` is a supertrait that already requires
+   `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`; use-site repetition of
+   those bounds is redundant and should be omitted — supertrait form per F-P2A208-11.)
 2. {PRE-002} The reducer input type is `PromoteRetireOp<T>` — a `#[non_exhaustive]` enum
    with variants `Promote(T)` and `Retire(String)` (the `String` is the `entry_id` to remove).
 3. {PRE-003} Node outputs that write to this channel emit `PromoteRetireOp<T>` values via the
@@ -126,8 +129,8 @@ differs from EC-003 because task-identity order is deterministic per DI-001.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-PROM-01 | `Promote` is idempotent: applying it twice for the same `entry_id` yields the same active set as applying it once | Unit test | Wave 1 |
-| VP-PROM-02 | `Retire` is idempotent: applying it for an absent `entry_id` leaves the active set unchanged | Unit test | Wave 1 |
+| TST-PROM-01 | `Promote` is idempotent: applying it twice for the same `entry_id` yields the same active set as applying it once | Unit test — not a registered VP | Wave 1 |
+| TST-PROM-02 | `Retire` is idempotent: applying it for an absent `entry_id` leaves the active set unchanged | Unit test — not a registered VP | Wave 1 |
 
 ## Related BCs
 
@@ -147,7 +150,7 @@ S-TBD (assigned at story decomposition — Stage 3)
 
 ## VP Anchors
 
-- VP-PROM-01, VP-PROM-02
+None
 
 ## Traceability
 

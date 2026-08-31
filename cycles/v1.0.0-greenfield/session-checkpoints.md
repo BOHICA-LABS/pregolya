@@ -4003,3 +4003,12 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
 ### STATE: v6.37, timestamp 2026-08-31T00:00:00Z
+
+---
+
+## Archived Checkpoint: D-327 (archived 2026-08-31 at D-328 close)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. D-327 CLOSED (praxist research-orchestrator use case authored; authoring burst — 0 adversary passes; streak NOT RESET). Frozen-HEAD streak gates on spec HEAD post-D-326 push. Heartbeat auto-recovery ARMED: durable cron 60FC8EB8. NEW perimeter: CAP-040; ADR-030; BC 134→140 (BC-2.02.007/008/009 SS-02 + BC-2.04.009/010/011 SS-04); VP 17→19; EC 138→142 (E-TRAJ-001..004); Domain D holdout (22 total, must-pass 63.6%); S-1.28+S-2.12 (+13 pts). TV 792 canonical. Census: BC 140 / VP 19 / EC 142 / stories 42 / pts 316. NEXT: dispatch round-50 (P2A-208/209/210/211 + GATE-READY).
+
+### STATE: v6.38, timestamp 2026-08-31T12:00:00Z

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.007
-version: "1.0"
+version: "1.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -16,6 +16,7 @@ producer: product-owner
 timestamp: 2026-08-31T00:00:00Z
 changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — LedgerChannel dedup-idempotent append; VP-017 proptest anchor (harness ledger_channel_dedup_idempotency); DI-014 + DI-001 invariant enforcement; ADR-030 Decision 3."
+  - "1.1 (round-50/Stage-B1-product-owner/2026-08-31): {PRE-001} supertrait bound adopted: T: LedgerEntry (replaces T: LedgerEntry + Clone + Send + Sync + 'static — those bounds are already imposed by the LedgerEntry supertrait, use-site repetition removed per F-P2A208-11). §Architecture Anchors: LedgerEntry trait definition updated to show Serialize + DeserializeOwned supertrait bounds (F-P2A211-07 serde requirement for CheckpointSaver::put_writes checkpoint-resume; fn entry_id now returns &str not String). LedgerChannel reducer model stated as fn reduce(acc: Vec<T>, update: T) -> Vec<T> pure function — consistent with interface-definitions.md §LedgerChannel stateless-reducer-marker model and S-1.14 channel family (no Result, no Ok(()))."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -23,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "b876db4"
+input-hash: "a280d94"
 extracted_from: null
 modified: []
 deprecated: null
@@ -49,7 +50,11 @@ harness `ledger_channel_dedup_idempotency`).
 ## Preconditions
 
 1. {PRE-001} A `StateGraph` channel of type `LedgerChannel<T>` is declared for a state
-   field, where `T: LedgerEntry + Clone + Send + Sync + 'static`.
+   field, where `T: LedgerEntry`. (`LedgerEntry` is a supertrait defined as
+   `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static`
+   with `fn entry_id(&self) -> &str`; use-site repetition of the supertrait bounds is
+   redundant and must be omitted — supertrait form per F-P2A208-11 and
+   interface-definitions.md §LedgerChannel.)
 2. {PRE-002} `T::entry_id(&self) -> &str` returns a stable string identifier for each
    instance of `T`. Two logically distinct entries MUST have different `entry_id` values;
    two logically identical entries MUST have the same `entry_id` value.
@@ -134,7 +139,14 @@ meaningful within their domain; `LedgerChannel` imposes no minimum-length constr
 
 ## Architecture Anchors
 
-- `pregolya-graph/src/channels.rs` (`graph::channels`) — `LedgerEntry` trait definition; `LedgerChannel<T>` struct; reducer function `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` implementing the dedup-idempotent semantics
+- `pregolya-graph/src/channels.rs` (`graph::channels`) — `LedgerEntry` supertrait definition:
+  `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static`
+  with `fn entry_id(&self) -> &str` (stable dedup key; `Serialize + DeserializeOwned` bounds
+  required for `CheckpointSaver::put_writes` checkpoint-resume serialization — F-P2A211-07);
+  `LedgerChannel<T>` struct (zero instance state — stateless reducer marker per
+  interface-definitions.md §LedgerChannel); reducer pure function
+  `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no `Result`, no `Ok(())`) implementing
+  the dedup-idempotent semantics
 - `pregolya-graph/src/definition.rs` (`graph::definition`) — `StateGraph` channel registration API; `LedgerChannel` is registered as a channel type via the same mechanism as `Append` / `LastValue`
 - ADR-030 §Decision 3 — design rationale for `LedgerChannel` in `graph::channels`; `LedgerEntry` marker trait; `PromoteRetireOp` companion type
 

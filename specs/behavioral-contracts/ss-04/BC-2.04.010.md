@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.010
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-08-31T00:00:00Z
 changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — TrajectoryReader::replay ascending step_idx ordering; DI-004 + DI-014 invariant enforcement; ADR-030 Decision 2."
   - "1.1 (ADR-030/Stage-3.5-product-owner/2026-08-31): EC-004 category corrected INTERNAL→DURABILITY (E-TRAJ-003 minted as DURABILITY; read failures are DURABILITY per taxonomy convention matching E-CHKPT-003)."
+  - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): VP-TRAJ-01 phantom label relabeled TST-TRAJ-01 in §Verification Properties; removed from §VP Anchors (not a registered VP — durability-after-restart integration test concept only; no real VP covers BC-2.04.010 yet)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "9f857f5"
+input-hash: "a280d94"
 extracted_from: null
 modified: []
 deprecated: null
@@ -124,7 +125,7 @@ decide whether to retry or abort.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-TRAJ-01 | `put_record` followed by process restart: `replay` returns all committed records | Integration test (write + kill + restart fixture) | Wave 2 |
+| TST-TRAJ-01 | `put_record` followed by process restart: `replay` returns all committed records | Integration test (write + kill + restart fixture) — not a registered VP | Wave 2 |
 
 ## Related BCs
 
@@ -144,7 +145,7 @@ S-TBD (assigned at story decomposition — Stage 3)
 
 ## VP Anchors
 
-- VP-TRAJ-01
+None
 
 ## Traceability
 

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.04"
+version: "3.05"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
 phase: 1d
 changelog:
+  - "3.05 (round-50/F-P2A208-02+F-P2A208-03+F-P2A208-10+F-P2A211-07/2026-08-31): F-P2A208-02 [HIGH] §LedgerChannel reconcile to reducer model — LedgerEntry trait gains Serialize+DeserializeOwned bounds (F-P2A211-07 serde requirement for checkpoint resume); LedgerChannel<T> struct: #[non_exhaustive] added, 'Internal: IndexMap' comment removed (contradicted PhantomData<T> zero-storage), docstring rewritten to stateless-reducer-marker model (reducer fn reduce(acc: Vec<T>, update: T) -> Vec<T>, no Result); PromoteRetireChannel<T>: #[non_exhaustive] added (F-P2A208-10), docstring adds stateless-reducer-marker note; LedgerChannel Invariants table: append(e)->Ok(())/entries() replaced with reduce(acc, e)->Vec<T> form (no Result). F-P2A208-03 [MED] §Trajectory Primitive: add TrajectoryRetentionPolicy struct (core::trajectory, eligible-vs-retained frontier model) + TrajectoryCompactor trait (checkpoint::trajectory, async compact); BC anchor extended to include BC-2.04.011."
   - "3.04 (ADR-030 Stage 1/2026-08-31): Add §Trajectory Primitive section (pregolya-core core::trajectory + pregolya-checkpoint checkpoint::trajectory; ADR-030 Decision 2): TrajectoryRecord struct (#[non_exhaustive], run_id/step_idx/event_kind/payload), TrajectoryWriter trait (async put_record), TrajectoryReader trait (async replay). Add §LedgerChannel section (pregolya-graph graph::channels; ADR-030 Decision 3): LedgerEntry trait (entry_id), LedgerChannel<T> struct (dedup-idempotent append), PromoteRetireOp<T> enum (Promote/Retire variants), PromoteRetireChannel<T> struct (promote/retire lifecycle). BC anchors: BC-2.02.007, BC-2.02.008, BC-2.04.009, BC-2.04.010, BC-2.04.011. VP-017 (proptest P1 LedgerChannel dedup-idempotency, BC-2.02.007 anchor)."
   - "3.03 (round-49/F-P2A204-01/2026-08-31): F-P2A204-01 [HIGH] §CheckpointSaver::fts_search — `FtsSearchConfig` missing lifetime parameter. Updated §fts_search doc-comment `config` annotation: `FtsSearchConfig { thread_id: Option<&str> }` → `FtsSearchConfig<'_> { thread_id: Option<&'_ str> }`. Updated method signature: `config: FtsSearchConfig,` → `config: FtsSearchConfig<'_>,`. Lifetime required on stable Rust (E0106); BC-2.04.008 {PRE-003} is the authoritative BC (same burst)."
   - "3.02 (round-49/F-P2A207-02+F-P2A202-01/2026-08-30): F-P2A202-01 [OBS] §BaseChatModel — `bind_tools` and `with_structured_output` edition-2024 RPITIT capture adjudication. `bind_tools(&self) -> Result<impl BaseChatModel, PregolyaError>`: RPITIT in edition 2024 auto-captures `&self` lifetime, making the return non-`'static` and preventing pipeline composition, storage, and spawning. Decision: `Box<dyn BaseChatModel + Send + Sync>` (owned/escapable — `'static` by default; enables `.pipe()`, `Arc` storage, `JoinSet::spawn`). `with_structured_output<T>(&self) -> impl Runnable<Vec<Message>, T>`: same capture issue; `T` bound gains `+ Send + 'static` (required for `Box<dyn Runnable>` to be `Send + Sync`; enables multi-threaded pipeline composition). Decision: `Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`. ADR-005 §BaseChatModel adjudication + §Send-Bounded RPITIT table updated in same burst. F-P2A207-02 [HIGH] Add §InvocationContext section — canonical DI seam for per-run guardrail hook registry; SS-11; BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}; follows trait-in-core precedent."
@@ -120,7 +121,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "cf06b1a"
+input-hash: "977aef2"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -2927,7 +2928,56 @@ pub trait TrajectoryReader: Send + Sync {
 
 **Error:** `E-TRAJ-003 TrajectoryReadFailed` on backend I/O error.
 
-**BC anchor:** BC-2.04.009 (TrajectoryWriter::put_record durability), BC-2.04.010 (TrajectoryReader::replay ordering)
+### TrajectoryRetentionPolicy (core::trajectory)
+
+```rust
+// pregolya-core (core::trajectory) — definitions only (ADR-009 definitions-in-core pattern)
+
+/// Specifies which records are eligible for removal vs. retained during compaction.
+/// Defined in `core::trajectory`; `TrajectoryCompactor` lives in `checkpoint::trajectory`.
+///
+/// **Eligible** records: `step_idx < retention_frontier` AND NOT in `promoted` set.
+/// **Retained** records: `step_idx >= retention_frontier` OR in `promoted` set.
+/// The frontier record itself (highest `step_idx` ≤ retention_frontier) is always retained.
+#[non_exhaustive]
+pub struct TrajectoryRetentionPolicy {
+    /// Records with `step_idx < retention_frontier` are eligible for removal.
+    /// The frontier itself (`step_idx == retention_frontier`) is retained.
+    pub retention_frontier: u64,
+    /// Explicitly promoted step_idx values — always retained regardless of frontier.
+    pub promoted: Vec<u64>,
+}
+```
+
+**BC anchor:** BC-2.04.011 {PRE-002} (caller supplies `TrajectoryRetentionPolicy`); policy enforces {INV-004} (retained records are never eligible).
+
+### TrajectoryCompactor
+
+```rust
+// pregolya-checkpoint (checkpoint::trajectory) — execution
+
+/// Compacts an unbounded durable audit trajectory by atomically removing eligible records.
+///
+/// Compaction is crash-isolated per {INV-003}: uses SQLite `BEGIN IMMEDIATE` / `COMMIT`;
+/// a SIGKILL mid-compaction leaves the pre-compaction trajectory fully intact after recovery.
+/// Co-located in the same SQLite database file as `CheckpointSaver`, in a dedicated
+/// `trajectory_records` table (no FK joins to checkpoint tables; WAL mode; bounded batch
+/// size default 1000 records to prevent blocking `CheckpointSaver::put_writes`).
+#[async_trait]
+pub trait TrajectoryCompactor: Send + Sync {
+    async fn compact(
+        &self,
+        run_id: Uuid,
+        policy: TrajectoryRetentionPolicy,
+    ) -> Result<(), PregolyaError>;
+}
+```
+
+**Postcondition (BC-2.04.011 {PC-001}):** After `Ok(())`, every retained record appears in `replay(run_id)` unchanged. No retained record is lost or mutated.
+
+**Error:** `E-TRAJ-004 TrajectoryRetainedEligible (VAL)` when policy incorrectly marks a retained record eligible; `E-TRAJ-002 TrajectoryCompactionFailed` on backend I/O error. Crash mid-compaction: `Err(PregolyaError)` on next call; pre-compaction state intact per {INV-003}.
+
+**BC anchor:** BC-2.04.009 (TrajectoryWriter::put_record durability), BC-2.04.010 (TrajectoryReader::replay ordering), BC-2.04.011 (Trajectory Compaction Isolation)
 
 ---
 
@@ -2947,16 +2997,32 @@ pub trait TrajectoryReader: Send + Sync {
 
 /// Trait marking a type as a keyed ledger entry.
 /// `entry_id()` returns the dedup key; equal `entry_id()` values are the same logical entry.
-pub trait LedgerEntry: Clone + Send + Sync + 'static {
+///
+/// The `Serialize + DeserializeOwned` bounds are required for checkpoint resume: graph state
+/// containing a `LedgerChannel<T>` accumulator is serialized by `CheckpointSaver::put_writes`
+/// and deserialized on resume. `entry_id()` must produce the same value before and after a
+/// serde round-trip (ADR-030 §Decision 3 serialization seam; F-P2A211-07).
+pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static {
     fn entry_id(&self) -> &str;
 }
 
-/// Dedup-idempotent append-only channel.
-/// Appending an entry whose `entry_id()` is already present is a no-op (BC-2.02.007 INV-1).
-/// The first-appearance order of unique entries is preserved in iteration (BC-2.02.008).
+/// Dedup-idempotent append-only channel — **stateless pure reducer marker**.
+///
+/// `LedgerChannel<T>` carries no instance state. State lives in the `Vec<T>` channel
+/// accumulator supplied by the `StateGraph` runtime. The reducer signature is:
+///   `fn reduce(acc: Vec<T>, update: T) -> Vec<T>`  (pure function; no `Result`; no `Ok(())`)
+///
+/// Semantics:
+/// - Reducing with an entry whose `entry_id()` is **novel** appends it: `new_len = old_len + 1`.
+/// - Reducing with an entry whose `entry_id()` is **already present** is a no-op: `new_len = old_len`.
+/// - First-appearance order of unique entries is preserved in the accumulated `Vec<T>` (BC-2.02.008).
+///
+/// The internal dedup map (`IndexMap<String, T>`) is a **local variable** within `reduce` and is
+/// rebuilt on each call — not persisted on the struct (consistent with S-1.14 channel family:
+/// `LastValueChannel`, `AppendChannel`, etc. are all stateless reducer markers).
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct LedgerChannel<T: LedgerEntry> {
-    // Internal: IndexMap<String, T> preserving insertion order with O(1) dedup lookup.
     _inner: PhantomData<T>,
 }
 
@@ -2971,6 +3037,11 @@ pub enum PromoteRetireOp<T: LedgerEntry> {
 
 /// Channel that supports promote/retire lifecycle semantics for QD (Qualification/Disqualification)
 /// allocation in research orchestrator loops (BC-2.02.009 anchor).
+///
+/// **Stateless reducer marker**: carries no instance state. State lives in the `Vec<T>` channel
+/// accumulator (the current active set). Reducer signature:
+///   `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>`  (pure function; no `Result`)
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct PromoteRetireChannel<T: LedgerEntry> {
     _inner: PhantomData<T>,
@@ -2981,10 +3052,10 @@ pub struct PromoteRetireChannel<T: LedgerEntry> {
 
 | Invariant | Description | BC / VP Anchor |
 |-----------|-------------|----------------|
-| Novel-append adds entry | `append(e)` where `e.entry_id()` not present → entry appears in subsequent `entries()` | BC-2.02.007 {INV-1} |
-| Seen-noop is no-op | `append(e)` where `e.entry_id()` already present → `entries()` unchanged, returns `Ok(())` | BC-2.02.007 {INV-2} |
-| First-appearance ordering | `entries()` returns entries in the order of first-successful `append`, not lexicographic | BC-2.02.008 |
-| Dedup-idempotent append (formal) | proptest: ∀ entry sequence with duplicates, `LedgerChannel::append` on each entry ≡ append of deduplicated prefix | VP-017 |
+| Novel-reduce appends | `reduce(acc, e)` where `e.entry_id()` not present → returns `acc` with `e` appended; `len = old_len + 1` | BC-2.02.007 {INV-1} |
+| Seen-reduce is no-op | `reduce(acc, e)` where `e.entry_id()` already in `acc` → returns `acc` unchanged; `len = old_len`; no `Result`, no `Ok(())` | BC-2.02.007 {INV-2} |
+| First-appearance ordering | `reduce` preserves first-appearance order across all calls; accumulated `Vec<T>` is ordered by first insertion, not lexicographic | BC-2.02.008 |
+| Dedup-idempotent reduce (formal) | proptest: ∀ entry sequence with duplicates, applying `LedgerChannel::reduce` to each entry yields the same `Vec<T>` as applying to the deduplicated prefix | VP-017 |
 
 **BC anchor:** BC-2.02.007 (LedgerChannel dedup-idempotent append), BC-2.02.008 (first-appearance ordering), BC-2.02.009 (PromoteRetireChannel promote/retire lifecycle)
 

@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.30"
+version: "3.31"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "ffd6447"
+input-hash: "2135b61"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.31 (round-50/F-P2A209-03+F-P2A211-05/2026-08-31): VP-019 added: integration P1, Phase 6, checkpoint::trajectory, pregolya-checkpoint, BC-2.04.011 {INV-003}. VP-017 BC Anchor updated: BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (first-appearance ordering dual-anchor). VP-to-Module table: add VP-019 row; update VP-017 anchor. Totals: 19→20 VPs, integration 2→3. Per-Module Coverage Status: checkpoint::trajectory MEDIUM row updated — add VP-019 integration P1 to Notes ({INV-003} crash-isolation now covered by VP-019). Coverage by Criticality Tier MEDIUM: checkpoint::trajectory proptest+integration note updated. Arithmetic: total (20) = P0 (6) + P1 (14) = Kani (9) + proptest (7) + integration (3) + unit (1). input-hash updated."
   - "3.30 (BC-2.04.011/2026-08-31): VP-018 added: proptest P1, checkpoint::trajectory, pregolya-checkpoint, BC-2.04.011 {INV-001}, DI-002. VP-to-Module table: add VP-018 row. Totals: 18→19 VPs, proptest 6→7. Per-Module Coverage Status: add checkpoint::trajectory MEDIUM row (pregolya-checkpoint; VP-018 proptest P1; retention-integrity {INV-001}+{INV-002}); add core::trajectory definitions-only row (Tier=—; definitions-only per ADR-030; no VP target). Header: physical rows 90→92; distinct modules 88→90; tiered MEDIUM 40→41; total tiered 82→83; definitions-only corrected 6→8 (core::invocation_context was missing from prior count, now fixed + core::trajectory added). Coverage by Criticality Tier MEDIUM: 40→41 modules, proptest updated (checkpoint::trajectory/VP-018). Arithmetic: total (19) = P0 (6) + P1 (13) = Kani (9) + proptest (7) + integration (2) + unit (1)."
   - "3.29 (ADR-030 Stage 1/2026-08-31): VP-017 added: proptest P1, graph::channels, pregolya-graph, BC-2.02.007 (draft), DI-014. VP-to-Module table: add VP-017 row. Totals: 17→18 VPs, proptest 5→6. Per-Module Coverage Status: graph::channels proptest column updated from 'yes (BC-2.02.002)' to 'VP-017/yes (BC-2.02.002 + BC-2.02.007)'; Notes updated. Coverage by Criticality Tier: HIGH proptest list updated to graph::channels/VP-017. Arithmetic: total (18) = P0 (6) + P1 (12) = Kani (9) + proptest (6) + integration (2) + unit (1). input-hash pending state-manager refresh (VP-INDEX.md v1.34 drift)."
   - "3.28 (round-49/F-P2A207-02-sibling/2026-08-31): module-canonicality sync — add `core::invocation_context` definitions-only row following core::guardrail; Tier=— (no VP target, no kill rate obligation); SS-11; BC-2.11.001–006 {PRE-001}; input-hash updated. VP census UNCHANGED: 17 total (6 P0 / 11 P1). Mirrors module-decomposition.md round-49 addition."
@@ -72,7 +73,7 @@ changelog:
 ## [Section Content]
 
 > **VP-INDEX.md is the authoritative VP catalog.** This matrix derives from it.
-> Arithmetic invariant: VP total (19) = P0 (6) + P1 (13) = Kani (9) + proptest (7) + integration (2) + unit (1). Status is updated per gate.
+> Arithmetic invariant: VP total (20) = P0 (6) + P1 (14) = Kani (9) + proptest (7) + integration (3) + unit (1). Status is updated per gate.
 
 ## VP-to-Module Mapping
 
@@ -95,10 +96,11 @@ changelog:
 | VP-014 | RunnableParallel Key-Completeness | core::runnable | pregolya-core | proptest | BC-2.01.005 + BC-2.01.006 | 3 | draft |
 | VP-015 | MCP Credential Redaction | mcp::sanitize | pregolya-mcp | unit | BC-2.09.007 {INV-003} | 3 | draft |
 | VP-016 | GraphAgentTool State-Isolation | mcp::graph_tool | pregolya-mcp | proptest | BC-2.09.008 {INV-001} | 3 | draft |
-| VP-017 | LedgerChannel Dedup-Idempotent Append | graph::channels | pregolya-graph | proptest | BC-2.02.007 | 3 | draft |
+| VP-017 | LedgerChannel Dedup-Idempotent Append | graph::channels | pregolya-graph | proptest | BC-2.02.007 + BC-2.02.008 | 3 | draft |
 | VP-018 | Trajectory Compaction Retention Integrity | checkpoint::trajectory | pregolya-checkpoint | proptest | BC-2.04.011 {INV-001} | 3 | draft |
+| VP-019 | Trajectory Compaction Crash Isolation | checkpoint::trajectory | pregolya-checkpoint | integration | BC-2.04.011 {INV-003} | 6 | draft |
 
-**Totals: 19 VPs | Kani: 9 | proptest: 7 | fuzz: 0 | integration: 2 | unit: 1**
+**Totals: 20 VPs | Kani: 9 | proptest: 7 | fuzz: 0 | integration: 3 | unit: 1**
 
 ## Per-Module Coverage Status
 
@@ -164,7 +166,7 @@ changelog:
 | prompts::chat_template | pregolya-prompts | — | — | — | yes | D21/SS-18; multi-message template construction with MessageProvenance (ADR-015) |
 | prompts::few_shot | pregolya-prompts | — | — | — | yes | D21/SS-18; FewShotPromptTemplate assembly; snapshot-frozen golden fixture tests (ADR-015) |
 | checkpoint::saver | pregolya-checkpoint | — | — | — | yes | CheckpointSaver `put_writes` durability contract; integration-tested via backend implementations (sqlite/postgres/memory) |
-| checkpoint::trajectory | pregolya-checkpoint | — | VP-018/yes | — | yes | MEDIUM; SS-04; `TrajectoryCompactor` trait; atomic SQLite compaction of unbounded durable audit trajectory; VP-018 proptest P1 (BC-2.04.011 {INV-001}+{INV-002} retention-integrity; DI-002; ADR-030 §Decision 2); {INV-003} crash-isolation covered by integration tests |
+| checkpoint::trajectory | pregolya-checkpoint | — | VP-018/yes | — | yes | MEDIUM; SS-04; `TrajectoryCompactor` trait; atomic SQLite compaction of unbounded durable audit trajectory; VP-018 proptest P1 (BC-2.04.011 {INV-001}+{INV-002} retention-integrity; DI-002; ADR-030 §Decision 2); VP-019 integration P1 (BC-2.04.011 {INV-003} crash-isolation; SQLite atomicity under SIGKILL; Phase 6) |
 | core::events | pregolya-core | — | — | — | yes | StreamEvent taxonomy; BC-2.06.001; event construction tested in graph scheduler integration suite |
 | graph::definition | pregolya-graph | — | yes | — | yes | StateGraph builder; node/edge registration; property tests for topology invariants |
 | server::streaming | pregolya-server | — | — | — | yes | SSE streaming endpoint; same engine as unary (NE-13); integration + soak |
@@ -208,7 +210,7 @@ changelog:
 |------|---------|---------|---------|------|-----------------|
 | CRITICAL | 12 | 6 (VP-001, VP-002, VP-003, VP-009, VP-010, VP-011) | 3 of 12: graph::bsp_engine, checkpoint::session_index, checkpoint::clock | subset | ≥ 95% |
 | HIGH | 28 | 3 (VP-006, VP-012, VP-013) | 8 of 28: core::runnable (pipe assoc. + VP-014), core::message, core::serializable/VP-007, core::embeddings/VP-008, graph::definition, graph::channels/VP-017, graph::budget, prompts::injection_guard/VP-006-B | subset | ≥ 90% |
-| MEDIUM | 41 | 0 | some (checkpoint::trajectory/VP-018) | — | ≥ 80% |
+| MEDIUM | 41 | 0 | some (checkpoint::trajectory/VP-018) + integration (checkpoint::trajectory/VP-019) | — | ≥ 80% |
 | LOW | 2 | 0 | — | — | n/a (xtask and pregolya-community excluded from cargo-mutants per tooling-selection.md; advisory only) |
 
 > **Coverage gap — stated obligation:** Actual proptest coverage is 3 of 12 CRITICAL and 8 of 28 HIGH (derivation: counted unique modules with proptest column = yes/VP-NNN from per-module table above, grouped by tier; `core::runnable` counted once despite two per-module rows; `core::serializable`/VP-007 counted in HIGH tier; `prompts::injection_guard`/VP-006-B added in v3.15; `graph::channels`/VP-017 added in v3.29). MEDIUM proptest: `checkpoint::trajectory`/VP-018 added in v3.30. Modules with Kani VPs have formal verification coverage at the proof level, which is stronger than proptest. Modules with only integration tests and no Kani VP are proptest coverage gaps. **Coverage obligation:** expand proptest to all 12 CRITICAL and 28 HIGH modules is a Phase 5/6 obligation; the gate in tooling-selection.md reflects current 11-module coverage (3 CRITICAL + 8 HIGH) with the obligation stated explicitly.

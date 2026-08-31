@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario-index
 level: ops
-version: "1.6"
+version: "1.7"
 status: active
 producer: product-owner
 timestamp: 2026-08-31T00:00:00Z
@@ -10,9 +10,10 @@ inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "106f852"
+input-hash: "d381e81"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "1.7 (Round-50 B2/2026-08-31): F-P2A211-08 fix — HS-D-007 re-scoped from checkpoint super-step replay to dedicated trajectory recording primitive (BC-2.04.009/010/011); prior v1.0 was satisfiable with trajectory absent. HS-D-008 added (must-pass): dedup-idempotent evidence accumulation and first-appearance ordering (BC-2.02.007/008). HS-D-009 added (must-pass): active-set promote/retire lifecycle with idempotency (BC-2.02.009). Domain D totals updated to 9 scenarios, 6 must-pass, 3 should-pass (6/9 = 66.7%). Aggregate totals updated to 24 scenarios, 16 must-pass (16/24 = 66.7%). Capability Coverage Map extended with trajectory and ledger_channel areas."
   - "1.6 (Domain-D/Stage-2b/2026-08-31): Domain D (Autonomous Research Orchestrator) added — 7 scenarios HS-D-001..007 covering generation-loop resume, panel deliberation, DIG pre-code gate, QD diversity allocation, multi-provider peer nodes, budget/guardrail gating, and audit-grade trajectory replay. Must-pass subset: HS-D-001/002/003/005 (4/7 = 57%, consistent with Domain B ratio). Aggregate totals updated to 22 scenarios, 14 must-pass. Phase-4 gate extended to include Domain D. Capability coverage map extended with new Domain D entries. Asymmetry Confirmation updated for Domain D. Asymmetry confirmed clean via verify-holdout-asymmetry.sh (ZERO WARN across 23 files)."
   - "1.5 (round-24/F-P2A105-01+F-P2A105-02+GAP-R24-01+GAP-R24-02/2026-08-28): EXHAUSTIVE asymmetry scrub of HS-C-001 (round-23 scrub was incomplete). §Failure Guidance Check 5 fail bullet and §Evaluation Rubric must-pass threshold paragraph purged of residual internal identifiers. §Edge Conditions EC-006 stale '(Contingent on gap resolution.)' marker removed. §Information Asymmetry Confirmation in HS-C-001 rewritten as CLOSED-SET declaration enumerating confirmed-FREE evaluator-facing sections (Scenario, Verification Approach, Evaluation Rubric, Failure Guidance, Edge Conditions) and exempted non-evaluator metadata sections (BC Linkage table, Coverage Gap note). HS-INDEX §Asymmetry Confirmation updated to reflect expanded confirmed-free section list."
   - "1.4 (round-23/F-1/2026-08-28): F-1 [BLOCKER]: HS-C-001 §Acceptance-Criteria asymmetry scrub applied — §Verification Approach step 8 and §Evaluation Rubric Check 5 purged of BC/VP/error-code identifiers; replaced with observable behavioral descriptions. §Asymmetry Confirmation claim (Scenario, Verification Approach, Evaluation Rubric sections free of BC IDs, VP IDs, error code identifiers, and implementation structure references) is now confirmed accurate for all three sealed domains."
@@ -95,11 +96,13 @@ changelog:
 | HS-D-004 | QD Diversity Allocation — Cohort Diversity Cap Enforcement | edge-case-combinations | should-pass | graph_execution, structured_output, composition | active |
 | HS-D-005 | Multi-Provider Peer Agent Nodes with Shared MCP Tool Access | integration-boundaries | must-pass | graph_execution, providers, mcp, tools, composition | active |
 | HS-D-006 | Budget and Guardrail Gating — Structured Refusal and Ceiling Enforcement | edge-case-combinations | should-pass | graph_execution, checkpoint_resume, providers | active |
-| HS-D-007 | Durable Audit-Grade Trajectory Replay | edge-case-combinations | should-pass | graph_execution, checkpoint_resume, streaming | active |
+| HS-D-007 | Durable Audit-Grade Trajectory Replay | edge-case-combinations | should-pass | trajectory, checkpoint_resume, streaming | active |
+| HS-D-008 | Dedup-Idempotent Evidence Accumulation with First-Appearance Ordering | integration-boundaries | must-pass | graph_execution, ledger_channel, composition | active |
+| HS-D-009 | Active-Set Promote/Retire Lifecycle with Idempotency | integration-boundaries | must-pass | graph_execution, ledger_channel, composition | active |
 
-**Domain D totals:** 7 scenarios, 4 must-pass, 3 should-pass.
+**Domain D totals:** 9 scenarios, 6 must-pass, 3 should-pass.
 
-> **Must-pass subset rationale:** HS-D-001/002/003/005 (4/7 = 57%) selected as must-pass. These cover the critical integration-boundary behaviors: durable generation-loop resume, multi-agent panel deliberation, pre-implementation read-only gate enforcement, and multi-provider tool-access correctness. HS-D-004/006/007 (edge-case-combinations) are should-pass: they test important boundary conditions and determinism properties but are not blocking for the framework's core contract. This ratio is consistent with Domain B (4/7 = 57%) and maintains the overall must-pass ratio above 60%: 14/22 = 63.6%.
+> **Must-pass subset rationale:** HS-D-001/002/003/005/008/009 (6/9 = 66.7%) selected as must-pass. HS-D-001/002/003/005 cover the critical integration-boundary behaviors: durable generation-loop resume, multi-agent panel deliberation, pre-implementation read-only gate enforcement, and multi-provider tool-access correctness. HS-D-008 and HS-D-009 are promoted to must-pass to cover the SS-02 channel primitives (dedup-idempotent ledger accumulation and promote/retire active-set lifecycle) — these were newly authored in Round-50 B1 and had zero holdout coverage before this update (F-P2A211-08). HS-D-004/006/007 (edge-case-combinations) remain should-pass: they test important boundary conditions and determinism properties but are not blocking for the framework's core contract. Domain D ratio 6/9 = 66.7%; overall must-pass ratio 16/24 = 66.7% (> required 60%).
 
 ---
 
@@ -107,14 +110,14 @@ changelog:
 
 | Metric | Value |
 |--------|-------|
-| Total scenarios (Domain A + B + C + D) | 22 |
-| Must-pass scenarios | 14 |
+| Total scenarios (Domain A + B + C + D) | 24 |
+| Must-pass scenarios | 16 |
 | Should-pass scenarios | 8 |
-| Must-pass ratio | 14/22 = 63.6% (> required 60%) |
+| Must-pass ratio | 16/24 = 66.7% (> required 60%) |
 | real-world-corpus scenarios | 2 (HS-A-005, HS-B-007) |
 | security-probes | 1 (HS-A-007) |
 | edge-case-combinations | 6 (HS-A-006, HS-B-004, HS-B-006, HS-D-004, HS-D-006, HS-D-007) |
-| integration-boundaries | 13 |
+| integration-boundaries | 15 |
 
 ---
 
@@ -122,9 +125,11 @@ changelog:
 
 | Capability Area | Exercised By |
 |-----------------|-------------|
-| composition | HS-A-001, HS-A-005, HS-A-007, HS-B-001, HS-B-005, HS-B-007, HS-D-002, HS-D-003, HS-D-004, HS-D-005 |
-| graph_execution | HS-A-002, HS-A-003, HS-A-004, HS-A-006, HS-B-001, HS-B-002, HS-B-003, HS-B-004, HS-B-005, HS-B-006, HS-C-001, HS-D-001, HS-D-002, HS-D-003, HS-D-004, HS-D-005, HS-D-006, HS-D-007 |
+| composition | HS-A-001, HS-A-005, HS-A-007, HS-B-001, HS-B-005, HS-B-007, HS-D-002, HS-D-003, HS-D-004, HS-D-005, HS-D-008, HS-D-009 |
+| graph_execution | HS-A-002, HS-A-003, HS-A-004, HS-A-006, HS-B-001, HS-B-002, HS-B-003, HS-B-004, HS-B-005, HS-B-006, HS-C-001, HS-D-001, HS-D-002, HS-D-003, HS-D-004, HS-D-005, HS-D-006, HS-D-008, HS-D-009 |
 | checkpoint_resume | HS-A-003, HS-A-004, HS-B-002, HS-B-003, HS-B-004, HS-B-006, HS-C-001, HS-D-001, HS-D-006, HS-D-007 |
+| trajectory | HS-D-007 |
+| ledger_channel | HS-D-008, HS-D-009 |
 | hitl | HS-A-004, HS-B-003, HS-C-001 |
 | mcp | HS-A-002, HS-C-001, HS-D-005 |
 | tools | HS-A-002, HS-A-007, HS-C-001, HS-D-005 |
@@ -168,6 +173,11 @@ This confirmed-free claim was verified exhaustively in round-24 for all three se
 
 Domain D (HS-D-001 through HS-D-007) was verified clean at authoring time (2026-08-31,
 Stage-2b burst). verify-holdout-asymmetry.sh reported ZERO evaluator-facing internal
-identifiers across all 23 HS-*.md files (PASS=1 WARN=0 FAIL=0). Domain D §Behavioral
-Contract Linkage tables and frontmatter behavioral_contracts arrays legitimately retain
-BC IDs as traceability metadata per the exempted sections policy above.
+identifiers across all 23 HS-*.md files (PASS=1 WARN=0 FAIL=0).
+
+HS-D-007 (re-scoped v2.0), HS-D-008, and HS-D-009 were authored in Round-50 B2
+(2026-08-31) following F-P2A211-08 remediation. All three files were verified clean by
+verify-holdout-asymmetry.sh (ZERO evaluator-facing internal identifiers; PASS=1 WARN=0
+FAIL=0 across all 25 HS-*.md files). BC IDs (BC-2.04.009/010/011, BC-2.02.007/008/009)
+appear only in §Behavioral Contract Linkage tables and frontmatter behavioral_contracts
+arrays — both exempted sections per the traceability-metadata policy above.

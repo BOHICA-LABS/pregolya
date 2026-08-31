@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.12
 epic_id: E-05
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
 timestamp: 2026-08-31T00:00:00Z
@@ -14,13 +14,13 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "74493be"
+input-hash: "d45c679"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.10]
 blocks: []
 behavioral_contracts: [BC-2.04.009, BC-2.04.010, BC-2.04.011]
-verification_properties: [VP-018]
+verification_properties: [VP-018, VP-019]
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.1 (Round-50-Phase-2-fix-burst/2026-08-31): Fix error categories to canonical DURABILITY/VAL per TRAJ taxonomy (AC-005/007/011/019); add VP-019 crash-isolation integration anchor; add #[async_trait] dyn-compatibility rule; add EncryptedSerializer at-rest requirement for put_record; add WAL-mode crash-isolation rule for compact; correct BC-2.04.010 table title to match BC H1; add uuid serde feature requirement; reword TRAJ taxonomy task from mint to verify-canonical."
   - "1.0 (praxist-Stage-3/2026-08-31): Initial authoring — Durable Audit Trajectory and Compaction Isolation; core::trajectory type definitions (pregolya-core) + checkpoint::trajectory concrete impl (pregolya-checkpoint); BC-2.04.009 + BC-2.04.010 + BC-2.04.011; VP-018 proptest P1 anchor; Wave 2 / E-05 extension; depends on S-1.10."
 ---
 
@@ -51,7 +52,7 @@ changelog:
 | BC | Title | Covered ACs |
 |----|-------|------------|
 | BC-2.04.009 | TrajectoryWriter::put_record Durability | AC-001..AC-007 |
-| BC-2.04.010 | TrajectoryReader::replay Ascending step_idx Ordering | AC-008..AC-013 |
+| BC-2.04.010 | TrajectoryReader::replay Ascending step_idx Order | AC-008..AC-013 |
 | BC-2.04.011 | Trajectory Compaction Isolation | AC-014..AC-021 |
 
 ## Acceptance Criteria
@@ -60,7 +61,7 @@ changelog:
 `pregolya-core/src/trajectory.rs` declares `#[non_exhaustive] TrajectoryRecord` with fields `run_id: uuid::Uuid`, `step_idx: u64`, `event_kind: String`, `payload: serde_json::Value`. The `TrajectoryWriter` trait declares `async fn put_record(&self, record: TrajectoryRecord) -> Result<(), PregolyaError>`. The `TrajectoryReader` trait declares `async fn replay(&self, run_id: uuid::Uuid) -> Result<Vec<TrajectoryRecord>, PregolyaError>`. The `TrajectoryRetentionPolicy` type is declared in the same module per ADR-009 definitions-in-core. Verified by `test_BC_2_04_009_trajectory_types_exist()`.
 
 ### AC-002 (traces to BC-2.04.009 PC-001 — put_record returns Ok(()) on successful commit)
-`put_record(record)` returns `Ok(())` when the record has been durably committed to the backing `checkpoint::trajectory` SQLite slice. No `Ok(())` is returned unless the record is durably committed. Verified by `test_BC_2_04_009_put_record_returns_ok_on_commit()`.
+`put_record(record)` returns `Ok(())` when the record has been durably committed via the `EncryptedSerializer` at-rest layer to the backing `checkpoint::trajectory` SQLite slice. The `EncryptedSerializer` serializes and encrypts `TrajectoryRecord` fields before any SQLite write; no plaintext trajectory data is persisted (BC-2.04.009 {PC-001} security anchor). No `Ok(())` is returned unless the record is durably committed. Verified by `test_BC_2_04_009_put_record_returns_ok_on_commit()`.
 
 ### AC-003 (traces to BC-2.04.009 PC-002 — record visible in replay after put_record Ok)
 After `put_record(record_A)` returns `Ok(())`, `replay(record_A.run_id)` returns a `Vec<TrajectoryRecord>` containing `record_A` (matched by `run_id` + `step_idx` pair). Verified by `test_BC_2_04_009_put_then_replay_contains_record()`.
@@ -69,13 +70,13 @@ After `put_record(record_A)` returns `Ok(())`, `replay(record_A.run_id)` returns
 After `put_record(record_A)` returns `Ok(())`, a process restart (new `SqliteTrajectoryStore` pointing to the same database file) does not cause `record_A` to be absent from `replay(record_A.run_id)`. This test MUST be written first and MUST fail on stubs before implementation (Red Gate discipline — the stub will likely return `Ok(vec![])` after "restart"). Verified by `test_BC_2_04_009_durability_survives_restart()` (integration test; uses a temp SQLite file on disk).
 
 ### AC-005 (traces to BC-2.04.009 PC-004 — storage errors propagate as Err, no silent data loss)
-When the underlying SQLite layer returns an error during `put_record`, the method returns `Err(PregolyaError { category: INTERNAL, code: "E-TRAJ-001" (NEW — add to taxonomy), .. })`. No `Ok(())` is returned on a failed write. Verified by `test_BC_2_04_009_storage_error_returns_err()`.
+When the underlying SQLite layer returns an error during `put_record`, the method returns `Err(PregolyaError { category: DURABILITY, code: "E-TRAJ-001", .. })`. No `Ok(())` is returned on a failed write. Verified by `test_BC_2_04_009_storage_error_returns_err()`.
 
 ### AC-006 (traces to BC-2.04.009 PC-005 — trajectory records isolated from ADR-019 compaction)
 A compaction event on the `CheckpointSaver` conversation-context window (ADR-019 `OnWatermark` trigger) does NOT remove or modify any `TrajectoryRecord`. After a simulated compaction, `replay(run_id)` returns the same records as before compaction. Verified by `test_BC_2_04_009_records_survive_checkpoint_compaction()`.
 
 ### AC-007 (traces to BC-2.04.009 INV-001 — write-once per (run_id, step_idx); idempotent on matching payload)
-Calling `put_record` twice with the same `(run_id, step_idx)` and identical payload is idempotent: returns `Ok(())` and `replay` contains exactly one copy. Calling `put_record` a second time with the same `(run_id, step_idx)` but a DIFFERENT payload returns `Err(PregolyaError { category: INTERNAL, code: "E-TRAJ-002" (NEW — add to taxonomy), .. })` to preserve audit integrity. Verified by `test_BC_2_04_009_idempotent_matching_payload_and_error_on_conflict()`.
+Calling `put_record` twice with the same `(run_id, step_idx)` and identical payload is idempotent: returns `Ok(())` and `replay` contains exactly one copy. Calling `put_record` a second time with the same `(run_id, step_idx)` but a DIFFERENT payload returns `Err(PregolyaError { category: VAL, code: "E-TRAJ-002", .. })` to preserve audit integrity. Verified by `test_BC_2_04_009_idempotent_matching_payload_and_error_on_conflict()`.
 
 ### AC-008 (traces to BC-2.04.010 PC-001 — replay returns all records for run_id, no cross-run contamination)
 `replay(run_id_A)` returns only records whose `run_id` field equals `run_id_A`. Records belonging to other `run_id` values are excluded. Verified by `test_BC_2_04_010_replay_returns_only_matching_run_id()`.
@@ -87,7 +88,7 @@ The `Vec<TrajectoryRecord>` returned by `replay` is sorted in **strictly ascendi
 `replay(run_id_X)` for a `run_id` that has never had any `put_record` call returns `Ok(vec![])`. An unknown `run_id` is not an error condition. Verified by `test_BC_2_04_010_unknown_run_id_returns_empty()`.
 
 ### AC-011 (traces to BC-2.04.010 PC-005 — storage errors propagate as Err)
-When the SQLite backend returns an I/O error during `replay`, the method returns `Err(PregolyaError { category: INTERNAL, code: "E-TRAJ-003" (NEW — add to taxonomy), .. })`. No partial `Vec` is returned as `Ok`. Verified by `test_BC_2_04_010_storage_error_returns_err()`.
+When the SQLite backend returns an I/O error during `replay`, the method returns `Err(PregolyaError { category: DURABILITY, code: "E-TRAJ-003", .. })`. No partial `Vec` is returned as `Ok`. Verified by `test_BC_2_04_010_storage_error_returns_err()`.
 
 ### AC-012 (traces to BC-2.04.010 INV-002 — replay is deterministic across multiple calls)
 Calling `replay(run_id)` multiple times (with no intervening `put_record` calls) returns the same ordered `Vec<TrajectoryRecord>` each time. Verified by `test_BC_2_04_010_replay_is_deterministic()`.
@@ -110,11 +111,11 @@ Records designated as eligible for removal by the policy are absent from `replay
 ### AC-018 (traces to BC-2.04.011 PC-004 — compaction is atomic; no partial state on error)
 After any error from `compact` (storage error, policy violation), `replay(run_id)` returns the exact same result as before the attempted compaction. No partial compaction state is observable. Verified by `test_BC_2_04_011_compact_error_leaves_trajectory_intact()`.
 
-### AC-019 (traces to BC-2.04.011 PC-005 — policy attempting to mark retained record as eligible returns Err VALIDATION — RED GATE)
-When `policy` marks a retained (promoted or frontier) record as eligible for removal, `compact` returns `Err(PregolyaError { category: VALIDATION, code: "E-TRAJ-004" (NEW — add to taxonomy), .. })` without modifying any records. This test MUST fail on stubs before implementation (Red Gate discipline — stub will likely return `Ok(())` or not validate the policy). Verified by `test_BC_2_04_011_retained_record_eligible_returns_err()`.
+### AC-019 (traces to BC-2.04.011 PC-005 — policy attempting to mark retained record as eligible returns Err VAL — RED GATE)
+When `policy` marks a retained (promoted or frontier) record as eligible for removal, `compact` returns `Err(PregolyaError { category: VAL, code: "E-TRAJ-004", .. })` without modifying any records. This test MUST fail on stubs before implementation (Red Gate discipline — stub will likely return `Ok(())` or not validate the policy). Verified by `test_BC_2_04_011_retained_record_eligible_returns_err()`.
 
-### AC-020 (traces to BC-2.04.011 INV-003 — compaction is crash-isolated; SIGKILL mid-compact leaves pre-compaction trajectory intact — RED GATE)
-A process kill (SIGKILL) during compaction execution leaves the pre-compaction trajectory fully intact. After restart, `replay(run_id)` returns the exact pre-compaction record set. The implementation uses SQLite `BEGIN IMMEDIATE` / `COMMIT` atomic transaction — no torn state is possible. This test MUST fail on stubs before implementation (Red Gate discipline — a stub without transaction boundaries is not crash-safe). Verified by `test_BC_2_04_011_crash_isolated_compaction()` (integration test; uses a temp SQLite file).
+### AC-020 (traces to BC-2.04.011 INV-003 — compaction is crash-isolated; SIGKILL mid-compact leaves pre-compaction trajectory intact — RED GATE — VP-019 anchor)
+A process kill (SIGKILL) during compaction execution leaves the pre-compaction trajectory fully intact. After restart, `replay(run_id)` returns the exact pre-compaction record set. The implementation uses SQLite WAL mode (`PRAGMA journal_mode=WAL`) and a `BEGIN IMMEDIATE` / `COMMIT` atomic transaction — WAL single-file topology ensures the journal is applied atomically on restart, so no torn state is possible across a crash. This test MUST fail on stubs before implementation (Red Gate discipline — a stub without WAL-mode transaction boundaries is not crash-safe). Verified by `test_BC_2_04_011_crash_isolated_compaction()` (VP-019 integration test anchor; uses a temp SQLite file).
 
 ### AC-021 (traces to BC-2.04.011 INV-005 — trajectory compaction does not touch CheckpointSaver tables)
 The `TrajectoryCompactor::compact` implementation operates on the trajectory storage slice only. It issues no SQL statements against the `CheckpointSaver` conversation-context tables (established by S-1.10). The two compaction paths are independent. Verified by `test_BC_2_04_011_compact_does_not_touch_checkpoint_tables()` (inspects SQLite table state before and after compact; confirms CheckpointSaver tables unchanged).
@@ -126,7 +127,8 @@ The `TrajectoryCompactor::compact` implementation operates on the trajectory sto
 | `TrajectoryRecord` struct, `TrajectoryWriter` trait, `TrajectoryReader` trait, `TrajectoryRetentionPolicy` type | `pregolya_core::trajectory` (`core::trajectory`) | pregolya-core | Pure (definitions-only; no I/O; ADR-009 Option 3 exemption) |
 | `SqliteTrajectoryStore` (concrete `impl TrajectoryWriter + TrajectoryReader + TrajectoryCompactor`) | `pregolya_checkpoint::trajectory` (`checkpoint::trajectory`) | pregolya-checkpoint | Effectful Shell (SQLite reads and writes via `rusqlite`; isolated storage slice) |
 | `TrajectoryCompactor` trait | `pregolya_checkpoint::trajectory` (`checkpoint::trajectory`) | pregolya-checkpoint | Effectful Shell (SQLite `BEGIN IMMEDIATE` / `COMMIT` atomic transactions) |
-| VP-018 proptest harness `trajectory_compaction_retention_integrity` | `pregolya_checkpoint::trajectory` `#[cfg(test)]` | pregolya-checkpoint | Pure (test code; uses in-memory SQLite) |
+| VP-018 proptest harness `trajectory_compaction_retention_integrity` (retention invariant, proptest) | `pregolya_checkpoint::trajectory` `#[cfg(test)]` | pregolya-checkpoint | Pure (test code; uses in-memory SQLite) |
+| VP-019 integration test `test_BC_2_04_011_crash_isolated_compaction` (crash-isolation, integration) | `pregolya_checkpoint/tests/trajectory_tests.rs` | pregolya-checkpoint | Effectful (uses temp-file SQLite; WAL mode) |
 
 **Subsystem anchor:** SS-04 owns this story's scope because SS-04 is the Durable Checkpointing subsystem per ARCH-INDEX Subsystem Registry. `core::trajectory` is a definitions-only module (ADR-009 Option 3) in pregolya-core; its execution counterpart `checkpoint::trajectory` is a MEDIUM-criticality module in pregolya-checkpoint. The trajectory storage slice is separate from the `CheckpointSaver` conversation-context tables but shares the same SQLite database file via a dedicated table set.
 
@@ -144,29 +146,31 @@ The `TrajectoryCompactor::compact` implementation operates on the trajectory sto
 
 | Component | Estimated Tokens |
 |-----------|-----------------|
-| Story spec (this file) | ~4,000 |
+| Story spec (this file) | ~4,200 |
 | BC-2.04.009 | ~2,300 |
 | BC-2.04.010 | ~2,000 |
 | BC-2.04.011 | ~2,500 |
+| VP-018 spec file (proptest retention) | ~800 |
+| VP-019 spec file (crash-isolation integration) | ~800 |
 | Architecture module-decomposition.md (SS-04 section) | ~700 |
 | S-1.10 context (existing `pregolya-checkpoint` checkpoint infrastructure) | ~4,000 |
 | Test files (unit + integration) | ~3,500 |
-| **Total** | **~19,000** |
+| **Total** | **~20,800** |
 
 Within the 20-30% agent context window threshold; approach the upper bound. If the agent's context is tight, load only the SS-04 section of `module-decomposition.md` rather than the full file.
 
 ## Tasks
 
 - [ ] Declare `TrajectoryRecord` (`#[non_exhaustive]`, fields `run_id`, `step_idx`, `event_kind`, `payload`) in `pregolya-core/src/trajectory.rs`
-- [ ] Declare `TrajectoryWriter` trait (async `put_record`) and `TrajectoryReader` trait (async `replay`) in `pregolya-core/src/trajectory.rs`
+- [ ] Declare `TrajectoryWriter` trait (`#[async_trait]` annotated; async `put_record`) and `TrajectoryReader` trait (`#[async_trait]` annotated; async `replay`) in `pregolya-core/src/trajectory.rs`
 - [ ] Declare `TrajectoryRetentionPolicy` type in `pregolya-core/src/trajectory.rs` (specifies eligible vs retained record sets per BC-2.04.011 §PRE-002)
 - [ ] Re-export `core::trajectory` module from `pregolya-core/src/lib.rs`
 - [ ] Define trajectory table schema in `pregolya-checkpoint/src/trajectory.rs` (SQLite table `trajectory_records(run_id TEXT, step_idx INTEGER, event_kind TEXT, payload TEXT)` with `PRIMARY KEY(run_id, step_idx)`) — SEPARATE from `CheckpointSaver` tables
 - [ ] Implement `SqliteTrajectoryStore::put_record` — INSERT with idempotency: matching payload → no-op OK; conflicting payload → `Err(E-TRAJ-002)`; storage error → `Err(E-TRAJ-001)`
 - [ ] Implement `SqliteTrajectoryStore::replay` — SELECT ORDER BY step_idx ASC; storage error → `Err(E-TRAJ-003)`
-- [ ] Declare `TrajectoryCompactor` trait in `pregolya-checkpoint/src/trajectory.rs` (async `compact`)
-- [ ] Implement `SqliteTrajectoryStore::compact` using `BEGIN IMMEDIATE` / `DELETE` / `COMMIT` atomic transaction; policy-violation guard → `Err(E-TRAJ-004)` VALIDATION before any writes; storage error → `Err(PregolyaError { category: INTERNAL })` with full rollback
-- [ ] Mint error codes E-TRAJ-001 through E-TRAJ-004 in `.factory/specs/prd-supplements/error-taxonomy.md` under a new TRAJ namespace before closing this story
+- [ ] Declare `TrajectoryCompactor` trait in `pregolya-checkpoint/src/trajectory.rs` (`#[async_trait]` annotated; async `compact`)
+- [ ] Implement `SqliteTrajectoryStore::compact` using WAL mode (`PRAGMA journal_mode=WAL`) and `BEGIN IMMEDIATE` / `DELETE` / `COMMIT` atomic transaction; policy-violation guard → `Err(E-TRAJ-004)` VAL before any writes; storage error → `Err(PregolyaError { category: DURABILITY })` with full rollback
+- [ ] Verify E-TRAJ-001..E-TRAJ-004 are present in the already-canonical TRAJ taxonomy rows in `.factory/specs/prd-supplements/error-taxonomy.md` before closing this story (do NOT mint new entries — these codes are already registered)
 - [ ] Write VP-018 proptest (`trajectory_compaction_retention_integrity`) in `#[cfg(test)]` — MUST fail on stubs (Red Gate discipline)
 - [ ] Write integration tests for AC-004 (process-restart durability) and AC-020 (crash-isolated compaction) — use temp-file SQLite databases
 - [ ] Write unit tests for AC-001..AC-021 (red first, then implement)
@@ -187,22 +191,25 @@ Derived from `architecture/module-decomposition.md §pregolya-checkpoint` and AD
 1. `TrajectoryRecord`, `TrajectoryWriter`, `TrajectoryReader`, `TrajectoryRetentionPolicy` MUST be defined in `pregolya-core/src/trajectory.rs` (`core::trajectory`). This is a definitions-only module (ADR-009 Option 3 / exempt from Iron Law module counting). No I/O code in this file.
 2. `SqliteTrajectoryStore` (concrete impl) and `TrajectoryCompactor` trait MUST be defined in `pregolya-checkpoint/src/trajectory.rs` (`checkpoint::trajectory`).
 3. The trajectory SQLite table (`trajectory_records`) MUST be separate from `CheckpointSaver` tables. No `JOIN` or cross-table interaction is permitted between trajectory tables and `CheckpointSaver` tables.
-4. `TrajectoryCompactor::compact` MUST use an atomic SQLite transaction (`BEGIN IMMEDIATE` / `COMMIT`). No non-transactional DELETE is permitted — any mid-compact process crash must leave the trajectory fully intact (AC-020 / BC-2.04.011 {INV-003}).
+4. `TrajectoryCompactor::compact` MUST enable WAL mode (`PRAGMA journal_mode=WAL`) on the SQLite connection and MUST use an atomic transaction (`BEGIN IMMEDIATE` / `COMMIT`). No non-transactional DELETE is permitted — WAL single-file topology and the transaction boundary together ensure any mid-compact process crash leaves the trajectory fully intact (AC-020 / BC-2.04.011 {INV-003}).
 5. `TrajectoryRecord` MUST carry `#[non_exhaustive]`.
 6. No `unwrap()` / `expect()` in non-test code.
 7. No `println!` / `eprintln!` in library crate code.
 8. `put_record` MUST NOT return `Ok(())` when the storage write has not been durably committed (no write-back without fsync, no in-memory-only commit).
 9. `TrajectoryRetentionPolicy` MUST be named `TrajectoryRetentionPolicy` (not `CompactionPolicy`) to avoid collision with `CompactionPolicy` from CAP-035 rolling-context compaction in `core::budget_config` (BC-2.04.011 §Architecture Anchors note).
 10. **Forbidden dependencies:** `core::trajectory` MUST NOT import from `pregolya-checkpoint`, `pregolya-graph`, `pregolya-mcp`, or `pregolya-server`. It is a definitions-only leaf module.
-11. New error codes E-TRAJ-001 through E-TRAJ-004 are NEW codes — they MUST be added to the error taxonomy (`.factory/specs/prd-supplements/error-taxonomy.md`) in the same burst as the story implementation.
+11. Error codes E-TRAJ-001..E-TRAJ-004 are already-canonical TRAJ taxonomy rows. The implementer MUST verify their presence in `.factory/specs/prd-supplements/error-taxonomy.md` before the PR merges; do NOT add them as new codes. The categories are fixed: E-TRAJ-001 = DURABILITY, E-TRAJ-002 = VAL, E-TRAJ-003 = DURABILITY, E-TRAJ-004 = VAL.
+12. `TrajectoryWriter`, `TrajectoryReader`, and `TrajectoryCompactor` traits MUST be annotated with `#[async_trait]` (from the `async-trait` crate). Native `async fn` in trait is not dyn-compatible; `Arc<dyn TrajectoryWriter>` / `Arc<dyn TrajectoryReader>` / `Arc<dyn TrajectoryCompactor>` DI wiring requires the `async_trait` macro. Omitting `#[async_trait]` produces a compilation error on the `Arc<dyn …>` use-site.
+13. `SqliteTrajectoryStore::put_record` MUST serialize `TrajectoryRecord` via the `EncryptedSerializer` at-rest layer before any SQLite write. Plain-text trajectory records persisted to SQLite violate BC-2.04.009 {PC-001}. The `EncryptedSerializer` type is defined in the project's cryptographic primitives module; look up its location in BC-2.04.009 §Architecture Anchors before implementing.
 
 ## Library & Framework Requirements
 
 | Library | Version | Usage |
 |---------|---------|-------|
 | `rusqlite` | workspace pin (inherited from S-1.10) | SQLite operations in `checkpoint::trajectory` |
-| `uuid` | workspace pin (inherited from S-1.10) | `run_id: uuid::Uuid` field type |
+| `uuid` | workspace pin (inherited from S-1.10); `features = ["serde"]` required | `run_id: uuid::Uuid` field type; `serde` feature required for `Serialize`/`Deserialize` derives on `TrajectoryRecord` |
 | `serde` + `serde_json` | workspace pin (inherited from pregolya-core) | `TrajectoryRecord.payload: serde_json::Value`; serializing `run_id` to/from SQLite TEXT |
+| `async-trait` | workspace pin | `#[async_trait]` macro on `TrajectoryWriter`, `TrajectoryReader`, `TrajectoryCompactor` for dyn-compatible async trait methods |
 | `tokio` | workspace pin (inherited) | `async fn` impls in `SqliteTrajectoryStore` |
 | `proptest` | workspace pin (dev-dep) | VP-018 `proptest!` harness in `#[cfg(test)]` |
 
@@ -238,4 +245,5 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.1 | 2026-08-31 | Round-50 fix-burst: DURABILITY/VAL error categories; VP-019 crash-isolation anchor; async-trait rule; EncryptedSerializer at-rest anchor; WAL-mode compaction rule; BC-2.04.010 title fix; uuid serde feature; verify-canonical TRAJ taxonomy task | story-writer |
 | 1.0 | 2026-08-31 | Initial authoring — praxist Stage-3 story decomposition for BC-2.04.009/010/011 + VP-018 | story-writer |

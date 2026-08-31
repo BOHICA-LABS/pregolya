@@ -9,10 +9,10 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "389e7ea"
+input-hash: "42892e9"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.02.007
-bc_anchor: BC-2.02.007
+bc_anchor: BC-2.02.007 + BC-2.02.008
 di_anchor: DI-014
 module: graph::channels
 crate: pregolya-graph
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.0"
+version: "1.1"
 changelog:
+  - "1.1 (round-50/F-P2A211-05/2026-08-31): Dual anchor: BC-2.02.008 added alongside BC-2.02.007. VP-017 harness exercises first-appearance ordering (Property Statement point 3) which is the subject of BC-2.02.008; anchoring only BC-2.02.007 left first-appearance ordering without a VP attribution. Follows VP-014 two-BC precedent. bc_anchor updated, §Source Contract expanded, §BC-Traceability row added. Version bump: 1.0→1.1."
   - "1.0 (ADR-030/2026-08-31): Initial — LedgerChannel dedup-idempotency proptest P1. ADR-030 Decision 3; BC-2.02.007 (draft; PO authors in Stage 2)."
 ---
 
@@ -53,7 +54,8 @@ For any sequence of reduce operations against a `LedgerChannel<T>`:
 2. Reducing with an entry whose `entry_id()` **already exists** in the accumulated
    ledger is a no-op — `new_len == old_len` and no existing entry is modified.
 3. The accumulated `Vec<T>` contains entries in first-appearance order (the order of first
-   insertion for each unique `entry_id`).
+   insertion for each unique `entry_id`). **(BC-2.02.008 anchor — first-appearance ordering is
+   the primary subject of BC-2.02.008; this VP is dual-anchored per VP-014 precedent.)**
 
 ## Formal Invariant
 
@@ -69,8 +71,13 @@ entry in `entries`.
 
 ## Source Contract
 
-BC-2.02.007 (draft — PO authors in Stage 2): `LedgerChannel` dedup-idempotent append.
-ADR-030 §Decision 3 defines the reducer contract.
+BC-2.02.007 (draft — PO authors in Stage 2): `LedgerChannel` dedup-idempotent append —
+novel `entry_id` → append; seen `entry_id` → no-op.
+
+BC-2.02.008 (draft — PO authors in Stage 2): `LedgerChannel` first-appearance ordering —
+accumulated `Vec<T>` preserves first-appearance order of unique `entry_id` values.
+
+ADR-030 §Decision 3 defines the reducer contract for both properties.
 
 ## Proof Method
 
@@ -86,11 +93,12 @@ ADR-030 §Decision 3 defines the reducer contract.
 
 | BC | Clause | Coverage |
 |----|--------|---------|
-| BC-2.02.007 | Dedup-idempotent append (full BC — draft; PO authors Stage 2) | proptest: novel-append, seen-noop, first-appearance order |
+| BC-2.02.007 | Dedup-idempotent append — novel `entry_id` → append; seen `entry_id` → no-op | proptest: novel-append (Property 1), seen-noop (Property 2) |
+| BC-2.02.008 | First-appearance ordering — accumulated `Vec<T>` ordered by first insertion, not lexicographic | proptest: first-appearance order assertion (Property 3) |
 
 ## BC Contradictions Flagged
 
-None identified. BC-2.02.007 is a draft pending product-owner authoring.
+None identified. BC-2.02.007 and BC-2.02.008 are drafts pending product-owner authoring.
 
 ## Proof Harness Skeleton
 

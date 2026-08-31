@@ -1,7 +1,7 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.35"
+version: "1.36"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
@@ -9,6 +9,7 @@ phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.36 (round-50/F-P2A209-03+F-P2A211-05/2026-08-31): VP-019 added — trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; checkpoint::trajectory; pregolya-checkpoint; DI-002; Phase 6; n/a; file vp-019-trajectory-compaction-crash-isolation.md). Covers OS-level atomicity guarantee (SQLite BEGIN IMMEDIATE/COMMIT under SIGKILL) that VP-018 proptest explicitly excludes. VP-017 BC Anchor updated BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (F-P2A211-05 dual-anchor; first-appearance ordering is the subject of BC-2.02.008 and covered by Property 3 in VP-017 harness). Arithmetic: total 19→20 (P0 6 unchanged, P1 13→14); integration 2→3; Kani/proptest/unit unchanged. Status:draft 19→20."
   - "1.35 (BC-2.04.011/2026-08-31): VP-018 added — TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; checkpoint::trajectory; pregolya-checkpoint; DI-002; harness trajectory_compaction_retention_integrity; file vp-018-trajectory-compaction-retention-integrity.md). Human-approved VP mint: {INV-001}+{INV-002} corollary coverage; {INV-003} crash-isolation scoped to integration tests. Arithmetic: total 18→19 (P0 6→6 unchanged, P1 12→13); proptest 6→7; Kani/integration/unit unchanged. Status:draft 18→19."
   - "1.34 (ADR-030/2026-08-31): VP-017 added — LedgerChannel dedup-idempotent append proptest P1 (BC-2.02.007 draft; graph::channels; pregolya-graph; DI-014; harness ledger_channel_dedup_idempotency; file vp-017-ledger-channel-append-dedup.md). ADR-030 Decision 3 seeding. Arithmetic: total 17→18 (P0 6→6 unchanged, P1 11→12); proptest 5→6; Kani/integration/unit unchanged. Status:draft 17→18."
   - "1.33 (round-49/F-P2A205-02/2026-08-31): VP-015 covered-behavior updated — `redact_credentials` pattern set expanded from 4 to 6 (URL-userinfo pattern 5 + HTTP Basic auth pattern 6 per BC-2.09.007 {INV-003}(b) v2.5; CWE-522 closure). VP-015.md harness skeleton extended from 4 to 7 test cases; SEC-BOUND-001 steps-2+3 boundary context documented (VP-015 covers step 2; step 3 non-VP-elevated per R38/F-P2A161-01-Option-B, covered by BC-2.09.007 TV-011). VP catalog row UNCHANGED (BC-2.09.007 {INV-003} / unit / P1 / `credential_redaction_unit`). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
@@ -54,7 +55,7 @@ changelog:
 > (Provable Properties Catalog + P0 list) and `verification-coverage-matrix.md`
 > (VP-to-Module table + Totals row) in the same burst.
 >
-> Arithmetic invariant: total (19) = P0 (6) + P1 (13) = Kani (9) + proptest (7) + integration (2) + unit (1).
+> Arithmetic invariant: total (20) = P0 (6) + P1 (14) = Kani (9) + proptest (7) + integration (3) + unit (1).
 >
 > **VP Priority vs BC Priority (OBS-P156-B):** The `Priority` column here is the
 > **verification-priority axis** — it reflects proof criticality (how urgently this property
@@ -74,15 +75,15 @@ changelog:
 
 | Metric | Count |
 |--------|-------|
-| Total VPs | 19 |
+| Total VPs | 20 |
 | Priority P0 (verification-priority) | 6 |
-| Priority P1 (verification-priority) | 13 |
+| Priority P1 (verification-priority) | 14 |
 | Kani | 9 |
 | proptest | 7 |
 | fuzz | 0 |
-| integration | 2 |
+| integration | 3 |
 | unit | 1 |
-| Status: draft | 19 |
+| Status: draft | 20 |
 | Status: active | 0 |
 | Status: passed | 0 |
 
@@ -107,5 +108,6 @@ changelog:
 | VP-014 | BC-2.01.005 + BC-2.01.006 | core::runnable | proptest | 3 | P1 | draft | DI-016 | pregolya-core | n/a (proptest) | VP-014.md |
 | VP-015 | BC-2.09.007 {INV-003} | mcp::sanitize | unit | 3 | P1 | draft | DI-010 | pregolya-mcp | `credential_redaction_unit` | VP-015.md |
 | VP-016 | BC-2.09.008 {INV-001} | mcp::graph_tool | proptest | 3 | P1 | draft | DI-010 | pregolya-mcp | `graph_agent_tool_state_isolation` | vp-016-graph-agent-tool-state-isolation.md |
-| VP-017 | BC-2.02.007 | graph::channels | proptest | 3 | P1 | draft | DI-014 | pregolya-graph | `ledger_channel_dedup_idempotency` | vp-017-ledger-channel-append-dedup.md |
+| VP-017 | BC-2.02.007 + BC-2.02.008 | graph::channels | proptest | 3 | P1 | draft | DI-014 | pregolya-graph | `ledger_channel_dedup_idempotency` | vp-017-ledger-channel-append-dedup.md |
 | VP-018 | BC-2.04.011 {INV-001} | checkpoint::trajectory | proptest | 3 | P1 | draft | DI-002 | pregolya-checkpoint | `trajectory_compaction_retention_integrity` | vp-018-trajectory-compaction-retention-integrity.md |
+| VP-019 | BC-2.04.011 {INV-003} | checkpoint::trajectory | integration | 6 | P1 | draft | DI-002 | pregolya-checkpoint | n/a (integration test) | vp-019-trajectory-compaction-crash-isolation.md |

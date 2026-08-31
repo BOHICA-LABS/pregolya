@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.011
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-08-31T00:00:00Z
 changelog:
   - "1.0 (ADR-030 Stage 2b/2026-08-31): Initial greenfield spec — Trajectory Compaction Isolation; safe, atomic, crash-isolated compaction of an unbounded durable audit trajectory; DI-002 + DI-004 + DI-014 invariant enforcement; ADR-030 §Decision 2 Trajectory Compaction Isolation scope. Human-approved 6th additive BC."
   - "1.1 (ADR-030/Stage-3.5-product-owner/2026-08-31): PC-005, EC-004, INV-004, TV-003 wired to E-TRAJ-004 TrajectoryRetainedEligible (VAL, broken, Never); category notation corrected from VALIDATION→VAL throughout to match taxonomy category code convention."
+  - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): {PRE-001} reconciled to single-file SQLite WAL topology (ADR-030 §SQLite Topology Decision/F-P2A209-04). {INV-003} updated to VP-019 canonical wording (either complete pre-compaction OR complete post-compaction state visible after crash — previously stated pre-compaction only, ignoring committed after-sync case). {INV-005} rescoped to record-level table isolation + WAL non-blocking behavior + bounded compaction batch (1,000 records/BEGIN IMMEDIATE); dropped absolute 'cannot interfere' claim that ignores write serialization. {INV-006} added: at-rest encryption mirrored from BC-2.04.009 {INV-002} — compacted retained records remain encrypted when EncryptedSerializer is configured. §Verification Properties: VP-COMPACT-01→VP-018 (proptest, {INV-001} retention integrity), VP-COMPACT-02→VP-019 (integration, {INV-003} crash-isolation). Routing blockquote deleted (VP-018/019 are minted). §VP Anchors updated to VP-018, VP-019."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "9f857f5"
+input-hash: "a280d94"
 extracted_from: null
 modified: []
 deprecated: null
@@ -51,8 +52,10 @@ audit-grade record integrity.
 
 ## Preconditions
 
-1. {PRE-001} A `TrajectoryCompactor` implementation exists, backed by the same durable
-   storage tier as `TrajectoryWriter` / `TrajectoryReader` (BC-2.04.009, BC-2.04.010).
+1. {PRE-001} A `TrajectoryCompactor` implementation exists, backed by the dedicated
+   `trajectory_records` table within the same single-file SQLite database as `CheckpointSaver`
+   and `TrajectoryWriter` / `TrajectoryReader` (BC-2.04.009, BC-2.04.010), operated in WAL
+   mode (ADR-030 §SQLite Topology Decision).
 2. {PRE-002} The caller supplies a `TrajectoryRetentionPolicy` value specifying which records are
    eligible for removal (e.g., records with `step_idx` strictly below a retention frontier,
    where the frontier record itself and any promoted records are excluded from eligibility).
@@ -88,19 +91,35 @@ audit-grade record integrity.
 - {INV-002} **Replay determinism is preserved for retained records.** The post-compaction
   replay order is a strict ascending sub-sequence of the pre-compaction order. No retained
   record changes its relative position or `step_idx` value.
-- {INV-003} **Compaction is crash-isolated (atomic segment swap).** A process crash or
-  SIGKILL at any point during compaction execution leaves the pre-compaction trajectory
-  record fully intact. The implementation uses an atomic storage transaction (e.g., SQLite
-  `BEGIN IMMEDIATE` / `COMMIT`) — no torn state is allowed. After recovery, `replay(run_id)`
-  returns the pre-compaction result.
+- {INV-003} **Compaction is crash-isolated (atomic transaction boundary).** A SIGKILL
+  delivered at any point during `compact(run_id, policy)` leaves `replay(run_id)` in a
+  consistent state: either the **complete pre-compaction replay** (if the SQLite `BEGIN
+  IMMEDIATE` / `COMMIT` transaction did not commit) or the **complete post-compaction replay**
+  (if the transaction committed before the kill). No partial compaction state — some eligible
+  records removed and some not — is ever observable. The SQLite rollback journal restores
+  pre-compaction state on the next database open when the transaction is uncommitted at crash
+  time. Verified by VP-019 (integration, three crash-point matrix: before-begin, mid-txn,
+  after-sync).
 - {INV-004} **Retained records are never eligible.** A policy MUST NOT mark a record as
   eligible if that record is designated as retained (promoted or at the frontier). Any
   attempt to do so is a contract violation caught at `compact` call time with
   `Err(PregolyaError { code: E-TRAJ-004, category: VAL, .. })`.
-- {INV-005} **Compaction isolation from ADR-019.** Trajectory compaction operates on the
-  trajectory storage slice only; it has no access to and does not affect the conversation-
-  context checkpoint tables managed by `CheckpointSaver` (ADR-019). The two compaction paths
-  are independent and cannot interfere.
+- {INV-005} **Record-level table isolation from ADR-019.** Trajectory compaction operates on
+  the `trajectory_records` table only; it has no access to and does not affect the
+  conversation-context checkpoint tables (`checkpoint_*`) managed by `CheckpointSaver`
+  (ADR-019). The two storage paths are isolated at the table level — no FK joins, no shared
+  table operations. WAL mode on the shared database file enables concurrent reads from WAL
+  snapshots without blocking writes: `TrajectoryCompactor::compact` and
+  `CheckpointSaver::put_writes` do not block each other's reads. However, SQLite write
+  serialization applies: only one writer holds a write lock at a time. To prevent
+  writer-timeout blocking, `compact` uses bounded compaction batches (default 1,000 records
+  per `BEGIN IMMEDIATE` transaction), releasing the write lock between batches and allowing
+  `CheckpointSaver::put_writes` to interleave (ADR-030 §SQLite Topology Decision).
+- {INV-006} **At-rest encryption preserved across compaction.** When `EncryptedSerializer`
+  is configured in the `checkpoint::trajectory` implementation, the retained records written
+  back to `trajectory_records` after compaction MUST remain in their encrypted form.
+  Compaction MUST NOT rewrite retained record payloads in plaintext — the encryption boundary
+  is enforced at the storage layer, not the policy layer (mirrors BC-2.04.009 {INV-002}).
 
 ## Edge Cases
 
@@ -151,15 +170,8 @@ single retained record — in ascending `step_idx` order ({PC-002}).
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-COMPACT-01 | After `compact` returns `Ok(())`, every retained record appears in `replay` with identical `step_idx` and `payload` | Integration test (write N records + compact + replay) | Wave 2 |
-| VP-COMPACT-02 | Crash-isolated compaction: SIGKILL mid-compaction, restart, `replay` returns pre-compaction result | Integration test (write + compact + kill + restart fixture) | Wave 2 |
-
-> **VP candidate for architect routing:** {INV-001} (no committed retained record lost under
-> compaction) is a strong safety property expressible as a proptest or Kani bounded proof
-> over arbitrary compaction policies and trajectory sizes. Recommend architect evaluate
-> VP-COMPACT-01 for proptest upgrade (similar to VP-017 ledger-channel pattern). Routing to
-> architect per bc_array_changes_propagate_to_body_and_acs and vp_index_is_vp_catalog_source_of_truth
-> policies — do not self-mint a VP entry here.
+| VP-018 | For any trajectory and any retention policy, after `compact` returns `Ok(())`, every retained record appears in `replay` with identical `step_idx` and `payload`; retained set is the oracle-defined sub-sequence; eligible records are absent | proptest (harness `trajectory_compaction_retention_integrity`; independent oracle using `>=` + OR vs `is_eligible` `<` + AND + NOT — {INV-001}, {INV-002}, {PC-001}, {PC-002}, {PC-003}) | Phase 3 |
+| VP-019 | Crash-isolated compaction: SIGKILL at any of three crash points (before-begin, mid-txn, after-sync), restart, `replay` returns complete pre-compaction or complete post-compaction state — no partial compaction observable | Integration test (subprocess SIGKILL fixture, three cases, real SQLite WAL — {INV-003}, TV-002) | Phase 6 |
 
 ## Related BCs
 
@@ -190,7 +202,8 @@ S-TBD (assigned at story decomposition — Stage 3)
 
 ## VP Anchors
 
-- VP-COMPACT-01, VP-COMPACT-02
+- VP-018 (proptest, {INV-001} retention integrity — no retained record lost or mutated)
+- VP-019 (integration, {INV-003} crash-isolation — SQLite atomicity under SIGKILL)
 
 ## Traceability
 

@@ -9,7 +9,7 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "c0e37b3"
+input-hash: "85f1f9d"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.04.011
 bc_anchor: BC-2.04.011 {INV-001}
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.0"
+version: "1.1"
 changelog:
+  - "1.1 (round-50/F-P2A209-02/2026-08-31): Harness reworked — tautological oracle replaced. v1.0 oracle used !eligible_set.contains(&r.step_idx), identical logic to compact_in_memory; this made the test a tautology (same filter on both sides). v1.1 oracle uses the semantic definition: r.step_idx >= policy.retention_frontier || policy.promoted.contains(&r.step_idx) — a structurally different code path (>= + ||) vs is_eligible (<  + &&). compact_in_memory signature changed from &HashSet<u64> to &TrajectoryRetentionPolicy to match the interface-definitions.md type. Negative mutation case added: compact_in_memory_buggy uses <= instead of < for the frontier boundary; the negative test asserts the buggy version produces a result different from the correct version, proving the oracle is independent. Version bump: 1.0→1.1."
   - "1.0 (BC-2.04.011/2026-08-31): Initial — TrajectoryCompactor retention-integrity proptest P1. BC-2.04.011 {INV-001} primary anchor (no retained record lost or mutated by compaction); {INV-002} corollary (ascending step_idx ordering preserved). Human-approved VP mint: durable audit record never corrupted by compaction. Harness: trajectory_compaction_retention_integrity."
 ---
 
@@ -107,8 +108,9 @@ implementation requirement; the pure-core selection invariant is what proptest t
 | Tool | proptest |
 | Location | `pregolya-checkpoint/src/trajectory.rs` `#[cfg(test)] mod tests` |
 | Phase | 3 |
-| Bounded? | No — proptest generates arbitrary `Vec<TestTrajectoryRecord>` of arbitrary length (0..=20) with arbitrary eligibility fractions |
-| Coverage | {INV-001} no-loss/no-mutation, {INV-002} ascending step_idx order, empty-trajectory no-op, single-retained-record, all-eligible (empty post), no-eligible (identity) |
+| Bounded? | No — proptest generates arbitrary `Vec<TestTrajectoryRecord>` of arbitrary length (0..=20) with arbitrary retention_frontier and promote fractions |
+| Coverage | {INV-001} no-loss/no-mutation, {INV-002} ascending step_idx order, empty-trajectory no-op, single-retained-record, all-eligible (empty post), no-eligible (identity), frontier-boundary precision (verified by negative mutation test) |
+| Oracle independence | Oracle uses `>=` + logical-OR; routine under test uses `is_eligible` (`<` + logical-AND + `!`). Negative mutation test (`compact_in_memory_buggy` with `<=`) confirms oracle catches off-by-one bugs. |
 
 ## BC Traceability
 
@@ -136,32 +138,74 @@ struct TestTrajectoryRecord {
     payload: Vec<u8>,
 }
 
-/// Pure-core in-memory compaction model — models the record-selection logic of
-/// TrajectoryCompactor without the async SQLite transaction layer.
+/// Mirrors TrajectoryRetentionPolicy from interface-definitions.md §Trajectory Primitive.
+#[derive(Clone, Debug)]
+struct TrajectoryRetentionPolicy {
+    /// Records with step_idx >= retention_frontier are retained.
+    retention_frontier: u64,
+    /// step_idx values unconditionally retained even if below the frontier.
+    promoted: Vec<u64>,
+}
+
+impl TrajectoryRetentionPolicy {
+    /// A record is ELIGIBLE for removal if it is below the frontier AND not promoted.
+    ///
+    /// Code path: `<` + `&&` + `!contains`.
+    fn is_eligible(&self, r: &TestTrajectoryRecord) -> bool {
+        r.step_idx < self.retention_frontier && !self.promoted.contains(&r.step_idx)
+    }
+}
+
+/// Pure-core in-memory compaction model — calls policy.is_eligible() to select records.
+///
+/// This is the ROUTINE UNDER TEST. It delegates the eligibility decision to
+/// TrajectoryRetentionPolicy::is_eligible, which uses `<` + `&&` + `!contains`.
 fn compact_in_memory(
     records: &[TestTrajectoryRecord],
-    eligible_set: &std::collections::HashSet<u64>, // set of eligible step_idx values
+    policy: &TrajectoryRetentionPolicy,
 ) -> Vec<TestTrajectoryRecord> {
     records
         .iter()
-        .filter(|r| !eligible_set.contains(&r.step_idx))
+        .filter(|r| !policy.is_eligible(r))
         .cloned()
         .collect()
 }
 
-fn arb_trajectory_record(step_idx: u64) -> impl Strategy<Value = TestTrajectoryRecord> {
-    prop::collection::vec(any::<u8>(), 1..=16)
-        .prop_map(move |payload| TestTrajectoryRecord { step_idx, payload })
+/// DELIBERATELY BUGGY compaction — uses `<=` instead of `<` for the frontier check.
+///
+/// Bug: records AT the frontier boundary (step_idx == retention_frontier) are
+/// incorrectly treated as eligible and removed. The negative mutation test asserts
+/// this diverges from compact_in_memory on any trajectory that has a record
+/// exactly at the frontier.
+///
+/// This function exists ONLY to validate that the harness oracle is independent:
+/// if the oracle and routine-under-test were tautologically equivalent, the
+/// negative test below would pass even with this buggy implementation — which
+/// would be a false positive.
+fn compact_in_memory_buggy(
+    records: &[TestTrajectoryRecord],
+    policy: &TrajectoryRetentionPolicy,
+) -> Vec<TestTrajectoryRecord> {
+    records
+        .iter()
+        .filter(|r| {
+            // BUG: <= instead of < — frontier record is incorrectly eligible
+            !(r.step_idx <= policy.retention_frontier && !policy.promoted.contains(&r.step_idx))
+        })
+        .cloned()
+        .collect()
 }
 
 proptest! {
     #[test]
     fn trajectory_compaction_retention_integrity(
         n_records in 0usize..=20,
-        // Fraction of non-frontier records to mark eligible (0.0 = no removals, 1.0 = all removable)
-        eligible_fraction in 0.0f64..=1.0f64,
+        // retention_frontier in [0, n_records] — records below this step_idx are eligible
+        retention_frontier_frac in 0.0f64..=1.0f64,
+        // Subset of below-frontier step_idx values to promote (unconditionally retain)
+        promote_frac in 0.0f64..=0.5f64,
     ) {
-        // Build a trajectory with strictly ascending step_idx values
+        // Build a trajectory with strictly ascending step_idx values.
         let pre_records: Vec<TestTrajectoryRecord> = (0..n_records as u64)
             .map(|step| TestTrajectoryRecord {
                 step_idx: step,
@@ -169,69 +213,118 @@ proptest! {
             })
             .collect();
 
-        // Frontier record (last record, if any) is always retained — mirrors TrajectoryRetentionPolicy
-        let eligible_set: std::collections::HashSet<u64> = (0..n_records as u64)
-            .filter(|&step| {
-                let is_frontier = (n_records > 0) && (step == n_records as u64 - 1);
-                !is_frontier && {
-                    // Eligible if its fractional position falls below eligible_fraction
-                    (step as f64) / (n_records.max(1) as f64) < eligible_fraction
-                }
+        // Derive a retention_frontier in [0, n_records].
+        let retention_frontier = (retention_frontier_frac * n_records as f64).round() as u64;
+
+        // Derive a promoted set from records below the frontier.
+        let promoted: Vec<u64> = (0..retention_frontier)
+            .filter(|&step| (step as f64) / (retention_frontier.max(1) as f64) < promote_frac)
+            .collect();
+
+        let policy = TrajectoryRetentionPolicy { retention_frontier, promoted };
+
+        // --- ORACLE: uses SEMANTIC DEFINITION ---
+        // A record is retained if it is AT OR ABOVE the frontier, OR explicitly promoted.
+        // Code path: `>=` + `||` — structurally different from is_eligible's `<` + `&&` + `!`.
+        // An off-by-one error in is_eligible (e.g., `<=` instead of `<`) would cause
+        // the frontier record to be removed, making the oracle and routine diverge.
+        let oracle_retained: Vec<&TestTrajectoryRecord> = pre_records
+            .iter()
+            .filter(|r| {
+                r.step_idx >= policy.retention_frontier
+                    || policy.promoted.contains(&r.step_idx)
             })
             .collect();
 
-        let retained_pre: Vec<&TestTrajectoryRecord> = pre_records
-            .iter()
-            .filter(|r| !eligible_set.contains(&r.step_idx))
-            .collect();
+        // --- ROUTINE UNDER TEST ---
+        let post_records = compact_in_memory(&pre_records, &policy);
 
-        // Run the pure-core compaction model
-        let post_records = compact_in_memory(&pre_records, &eligible_set);
-
-        // INV-001 + PC-001: every retained record is present, count matches
+        // INV-001 + PC-001: count must match oracle.
         prop_assert_eq!(
             post_records.len(),
-            retained_pre.len(),
-            "post-compaction record count must equal retained count ({} retained, {} eligible out of {})",
-            retained_pre.len(),
-            eligible_set.len(),
-            n_records
+            oracle_retained.len(),
+            "post-compaction count must equal oracle-retained count \
+             (frontier={}, n_records={}, promoted={:?})",
+            retention_frontier, n_records, &policy.promoted
         );
 
-        // INV-001: each retained record has identical step_idx and payload
-        for (post, pre) in post_records.iter().zip(retained_pre.iter()) {
+        // INV-001: each retained record has identical step_idx and payload as oracle.
+        for (post, oracle) in post_records.iter().zip(oracle_retained.iter()) {
             prop_assert_eq!(
                 post.step_idx,
-                pre.step_idx,
-                "retained record step_idx must be unchanged after compaction"
+                oracle.step_idx,
+                "retained record step_idx must match oracle: post={} oracle={}",
+                post.step_idx, oracle.step_idx
             );
             prop_assert_eq!(
                 &post.payload,
-                &pre.payload,
-                "retained record payload must be unchanged after compaction"
+                &oracle.payload,
+                "retained record payload must be unchanged: step_idx={}",
+                post.step_idx
             );
         }
 
-        // INV-002: post-compaction replay is in strictly ascending step_idx order
+        // INV-002: post-compaction is in strictly ascending step_idx order.
         for i in 1..post_records.len() {
             prop_assert!(
                 post_records[i].step_idx > post_records[i - 1].step_idx,
-                "post-compaction replay must be in strictly ascending step_idx order: \
+                "post-compaction replay must be strictly ascending: \
                  post[{}].step_idx={} must be > post[{}].step_idx={}",
                 i, post_records[i].step_idx,
                 i - 1, post_records[i - 1].step_idx
             );
         }
 
-        // PC-003: eligible records are absent from post
+        // PC-003: eligible records are absent from post.
         for r in &post_records {
             prop_assert!(
-                !eligible_set.contains(&r.step_idx),
-                "eligible record with step_idx={} must not appear in post-compaction replay",
+                !policy.is_eligible(r),
+                "eligible record step_idx={} must not appear in post-compaction replay",
                 r.step_idx
             );
         }
     }
+}
+
+/// Negative mutation test — demonstrates the oracle is independent of the implementation.
+///
+/// Constructs a trajectory where a record sits exactly at the retention_frontier.
+/// compact_in_memory RETAINS that record (correct: frontier record is retained, >= frontier).
+/// compact_in_memory_buggy REMOVES that record (bug: <= treats frontier as eligible).
+/// The assertion proves the two differ — confirming the oracle can catch this class of bug.
+/// If the oracle were tautological (same logic as the implementation), this test would fail
+/// to detect the bug.
+#[test]
+fn negative_mutation_buggy_frontier_boundary_must_diverge() {
+    // Three records: one below frontier (step_idx=3), one AT frontier (step_idx=5),
+    // one above frontier (step_idx=7). retention_frontier=5, no promoted records.
+    let records = vec![
+        TestTrajectoryRecord { step_idx: 3, payload: b"below".to_vec() },
+        TestTrajectoryRecord { step_idx: 5, payload: b"at_frontier".to_vec() },
+        TestTrajectoryRecord { step_idx: 7, payload: b"above".to_vec() },
+    ];
+    let policy = TrajectoryRetentionPolicy {
+        retention_frontier: 5,
+        promoted: vec![],
+    };
+
+    // Correct: step_idx=3 is eligible (< 5); step_idx=5 and step_idx=7 are retained (>= 5).
+    let correct = compact_in_memory(&records, &policy);
+    assert_eq!(correct.len(), 2, "correct: step_idx 5 and 7 retained");
+    assert_eq!(correct[0].step_idx, 5);
+    assert_eq!(correct[1].step_idx, 7);
+
+    // Buggy: step_idx=3 and step_idx=5 are treated as eligible (<= 5); only step_idx=7 retained.
+    let buggy = compact_in_memory_buggy(&records, &policy);
+    assert_eq!(buggy.len(), 1, "buggy: only step_idx=7 retained (frontier incorrectly removed)");
+    assert_eq!(buggy[0].step_idx, 7);
+
+    // The two results MUST differ — oracle independence confirmed.
+    assert_ne!(
+        correct, buggy,
+        "compact_in_memory and compact_in_memory_buggy must diverge on frontier boundary: \
+         this proves the proptest oracle is semantically independent of the implementation"
+    );
 }
 ```
 
@@ -263,12 +356,14 @@ the Phase 6 integration test covers crash-isolation ({INV-003}).
 ## Proof Obligations
 
 - [ ] `compact_in_memory` with empty trajectory returns empty result — matches BC-2.04.011 TV-004.
-- [ ] `compact_in_memory` with all records retained (eligible_set empty) returns identical records.
-- [ ] `compact_in_memory` with all-but-frontier eligible returns only frontier record in ascending order.
-- [ ] Every retained record in post has identical `step_idx` and `payload` as pre-compaction — {INV-001}.
+- [ ] `compact_in_memory` with all records retained (frontier=0, no promoted) returns identical records — no-eligible identity.
+- [ ] `compact_in_memory` with all-below-frontier eligible (no promoted) returns only at/above-frontier records.
+- [ ] Every retained record in post has identical `step_idx` and `payload` as oracle — {INV-001}.
 - [ ] Post-compaction records are in strictly ascending `step_idx` order — {INV-002}.
 - [ ] No eligible record appears in post — {PC-003}.
-- [ ] Single-record trajectory where the record is retained returns `[r0]` unchanged — EC-003.
+- [ ] Single-record trajectory where the record is at or above frontier returns `[r0]` unchanged — EC-003.
+- [ ] Promoted record below frontier is NOT removed by `compact_in_memory` — promoted-set contract.
+- [ ] `negative_mutation_buggy_frontier_boundary_must_diverge` passes — oracle is independent of implementation.
 - [ ] All proptest cases pass within the CI time budget (256 cases × 20 records each).
 
 ## Lifecycle

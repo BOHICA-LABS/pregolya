@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.28
 epic_id: E-07
-version: "1.0"
+version: "1.1"
 status: draft
 producer: story-writer
 timestamp: 2026-08-31T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.009.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "cb4731d"
+input-hash: "4e24622"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.1 (Round-50-Phase-2-fix-burst/2026-08-31): LedgerEntry supertrait bounds Serialize+DeserializeOwned; channels/ directory module (ledger.rs + promote_retire.rs); VP-017 dual-anchor BC-2.02.007+BC-2.02.008; TST-PROM-01/02 non-VP labels; pure reducer no-Result rule; serde dependency; file-structure update."
   - "1.0 (praxist-Stage-3/2026-08-31): Initial authoring — LedgerChannel and PromoteRetireChannel additive primitives for the research-orchestrator use case; BC-2.02.007 + BC-2.02.008 + BC-2.02.009; VP-017 proptest P1 anchor; Wave 1 / E-07 extension; depends on S-1.14."
 ---
 
@@ -57,7 +58,7 @@ changelog:
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.02.007 PRE-001 / PRE-002 — LedgerEntry trait definition)
-The public trait `LedgerEntry` is declared in `graph::channels` (pregolya-graph) with a single required method `fn entry_id(&self) -> &str`. Any `T: LedgerEntry + Clone + Send + Sync + 'static` is a valid element type for both `LedgerChannel<T>` and `PromoteRetireChannel<T>`. Verified by `test_BC_2_02_007_ledger_entry_trait_exists()`.
+The public trait `LedgerEntry` is declared in `graph::channels` (pregolya-graph) with supertrait bounds `Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and a single required method `fn entry_id(&self) -> &str` — i.e., `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static { fn entry_id(&self) -> &str; }`. Any `T: LedgerEntry` is therefore also `T: Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and is a valid element type for both `LedgerChannel<T>` and `PromoteRetireChannel<T>`. Both `LedgerChannel<T>` and `PromoteRetireChannel<T>` structs carry `#[non_exhaustive]` per code conventions. Verified by `test_BC_2_02_007_ledger_entry_trait_exists()`.
 
 ### AC-002 (traces to BC-2.02.007 PC-001 — novel entry appended)
 `LedgerChannel<T>::reduce(acc: Vec<T>, incoming: T) -> Vec<T>` — when `incoming.entry_id()` is NOT in `acc`, the returned `Vec<T>` is `acc` with `incoming` appended at the end. Length grows by exactly one. Verified by `test_BC_2_02_007_novel_entry_appended()`.
@@ -69,7 +70,7 @@ The public trait `LedgerEntry` is declared in `graph::channels` (pregolya-graph)
 Processing a sequence `[T{id:"a"}, T{id:"b"}, T{id:"a"}, T{id:"c"}]` (in task-identity order per DI-001) from accumulated `vec![]` yields `vec![T{id:"a"}, T{id:"b"}, T{id:"c"}]` — exactly three elements, one per distinct `entry_id`. Verified by `test_BC_2_02_007_mixed_sequence_unique_entries()`.
 
 ### AC-005 (traces to BC-2.02.007 INV-001 — monotonically non-decreasing length)
-For any sequence of `reduce` calls, the `Vec<T>` length never decreases across calls. The proptest VP-017 (`ledger_channel_dedup_idempotency`) covers this property for arbitrary input sequences. Verified by `test_BC_2_02_007_length_never_decreases()` (unit) and VP-017 (proptest — RED GATE: this test MUST fail on a stub before implementation).
+For any sequence of `reduce` calls, the `Vec<T>` length never decreases across calls. VP-017 (`ledger_channel_dedup_idempotency`) is a dual-anchor proptest covering both BC-2.02.007 {INV-001}/{INV-002} (dedup/monotonicity) and BC-2.02.008 {INV-001}/{INV-003} (first-appearance ordering stability) — both invariants are exercised by the same proptest. Verified by `test_BC_2_02_007_length_never_decreases()` (unit) and VP-017 (proptest — RED GATE: this test MUST fail on a stub before implementation).
 
 ### AC-006 (traces to BC-2.02.007 INV-003 — reducer is a pure function)
 `LedgerChannel<T>::reduce` is stateless: given the same `acc` and the same `incoming`, the result is always identical. No global state, timestamps, or random numbers are consulted. Verified by `test_BC_2_02_007_reducer_is_deterministic()`.
@@ -84,7 +85,7 @@ Re-submitting a `T` with an already-seen `entry_id` does NOT change the position
 When multiple novel entries arrive in a single super-step, their relative order in the `Vec<T>` matches the task-identity-sorted write order (DI-001). The `reduce` function processes them in the order given to it; the BSP engine is responsible for providing task-identity order. Verified by `test_BC_2_02_008_within_step_task_identity_order()`.
 
 ### AC-010 (traces to BC-2.02.008 INV-003 — monotonically stable ordering)
-Elements already in the `Vec<T>` never change position. New entries are always appended at the end. No in-place reordering occurs after any `reduce` call. Verified by `test_BC_2_02_008_ordering_monotonically_stable()`.
+Elements already in the `Vec<T>` never change position. New entries are always appended at the end. No in-place reordering occurs after any `reduce` call. VP-017 (dual-anchor) also exercises this ordering stability invariant for arbitrary input sequences. Verified by `test_BC_2_02_008_ordering_monotonically_stable()` (unit) and VP-017 (proptest, BC-2.02.008 {INV-003} clause).
 
 ### AC-011 (traces to BC-2.02.009 PRE-002 — PromoteRetireOp enum declared non_exhaustive)
 `PromoteRetireOp<T>` is a `#[non_exhaustive]` enum in `graph::channels` with variants `Promote(T)` and `Retire(String)`. External `match` arms must include a wildcard `_ => {}` arm. Verified by compile-fail test `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()`.
@@ -102,18 +103,18 @@ When `op` is `Retire(entry_id)` and `entry_id` IS in the active set, the entry w
 When `op` is `Retire(entry_id)` and `entry_id` is NOT in the active set, the active set is unchanged. No `Err(PregolyaError)` is raised. Verified by `test_BC_2_02_009_retire_absent_noop_no_error()`.
 
 ### AC-016 (traces to BC-2.02.009 PC-006 — concurrent ops processed in task-identity order, DI-001)
-Within a single super-step, multiple `PromoteRetireOp` values are processed in task-identity-sorted order. EC-003 and EC-004 from BC-2.02.009 (Promote-then-Retire and Retire-then-Promote in same super-step) yield deterministic, distinct final active sets. Verified by `test_BC_2_02_009_concurrent_promote_retire_deterministic_order()`.
+Within a single super-step, multiple `PromoteRetireOp` values are processed in task-identity-sorted order. EC-003 and EC-004 from BC-2.02.009 (Promote-then-Retire and Retire-then-Promote in same super-step) yield deterministic, distinct final active sets. Verified by `test_BC_2_02_009_concurrent_promote_retire_deterministic_order()` (TST-PROM-01 non-VP label; deterministic ordering test for `PromoteRetireChannel`).
 
 ### AC-017 (traces to BC-2.02.009 INV-001 — active set contains no duplicate entry_id values at any time)
-`INV-001` holds after any `reduce` call: no two elements in the active `Vec<T>` share an `entry_id`. Verified by `test_BC_2_02_009_active_set_no_duplicate_entry_ids()`.
+`INV-001` holds after any `reduce` call: no two elements in the active `Vec<T>` share an `entry_id`. Verified by `test_BC_2_02_009_active_set_no_duplicate_entry_ids()` (TST-PROM-02 non-VP label; active-set uniqueness invariant test for `PromoteRetireChannel`).
 
 ## Architecture Mapping
 
 | Unit / Type | Module Path | Crate | Pure / Effectful |
 |-------------|-------------|-------|-----------------|
-| `LedgerEntry` trait, `LedgerChannel<T>` struct and reducer | `pregolya_graph::channels` (`graph::channels`) | pregolya-graph | Pure (stateless reducer over `Vec<T>`) |
-| `PromoteRetireOp<T>` enum, `PromoteRetireChannel<T>` struct and reducer | `pregolya_graph::channels` (`graph::channels`) | pregolya-graph | Pure (stateless reducer over `Vec<T>`) |
-| VP-017 proptest harness `ledger_channel_dedup_idempotency` | `pregolya_graph::channels` `#[cfg(test)]` | pregolya-graph | Pure (test code) |
+| `LedgerEntry` trait, `LedgerChannel<T>` struct and reducer | `pregolya_graph::channels::ledger` (`graph::channels/ledger.rs`) | pregolya-graph | Pure (stateless reducer over `Vec<T>`) |
+| `PromoteRetireOp<T>` enum, `PromoteRetireChannel<T>` struct and reducer | `pregolya_graph::channels::promote_retire` (`graph::channels/promote_retire.rs`) | pregolya-graph | Pure (stateless reducer over `Vec<T>`) |
+| VP-017 proptest harness `ledger_channel_dedup_idempotency` (dual-anchor: BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003}) | `pregolya_graph::channels::ledger` `#[cfg(test)]` | pregolya-graph | Pure (test code) |
 
 **Subsystem anchor:** SS-02 owns this story's scope because SS-02 is the StateGraph Definition subsystem (`graph::channels` in `pregolya-graph`) per ARCH-INDEX Subsystem Registry. `LedgerChannel` and `PromoteRetireChannel` are ledger-style channel reducer types that extend the existing channel family (`LastValue`/`Append`/`BarrierValue`/`EphemeralValue`) registered in the same `graph::channels` module per ADR-030 §Decision 3.
 
@@ -143,20 +144,22 @@ Well within the 20-30% agent context window threshold.
 
 ## Tasks
 
-- [ ] Read `pregolya-graph/src/channels.rs` (from S-1.14) to understand the existing channel infrastructure before adding anything
-- [ ] Declare `LedgerEntry` trait in `channels.rs` with `fn entry_id(&self) -> &str`
-- [ ] Declare `LedgerChannel<T>` struct and implement its reducer function (dedup-idempotent append)
-- [ ] Declare `#[non_exhaustive] PromoteRetireOp<T>` enum with variants `Promote(T)` and `Retire(String)`
-- [ ] Declare `PromoteRetireChannel<T>` struct and implement its reducer function (promote/retire active set)
-- [ ] Apply `#[non_exhaustive]` to `LedgerChannel<T>` and `PromoteRetireChannel<T>` structs
-- [ ] Write VP-017 proptest (`ledger_channel_dedup_idempotency`) in `#[cfg(test)]` — MUST fail on stubs (Red Gate discipline)
-- [ ] Write unit tests for AC-001 through AC-017 (red first, then implement)
+- [ ] Read `pregolya-graph/src/channels/mod.rs`, `channels/last_value.rs`, and `channels/append.rs` (from S-1.14) to understand the directory module layout and existing channel infrastructure before adding anything
+- [ ] Create `pregolya-graph/src/channels/ledger.rs` — declare `LedgerEntry` trait with supertrait bounds `Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and required method `fn entry_id(&self) -> &str`
+- [ ] In `channels/ledger.rs` — declare `#[non_exhaustive] LedgerChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no Result)
+- [ ] Create `pregolya-graph/src/channels/promote_retire.rs` — declare `#[non_exhaustive] PromoteRetireOp<T>` enum with variants `Promote(T)` and `Retire(String)`
+- [ ] In `channels/promote_retire.rs` — declare `#[non_exhaustive] PromoteRetireChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` (no Result)
+- [ ] Add `pub use` re-exports for all new symbols in `pregolya-graph/src/channels/mod.rs` (no logic)
+- [ ] Confirm `serde` is listed in `pregolya-graph/Cargo.toml` (workspace pin); add if absent
+- [ ] Write VP-017 proptest (`ledger_channel_dedup_idempotency`) in `channels/ledger.rs` `#[cfg(test)]` — MUST fail on stubs (Red Gate discipline; dual-anchor: BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003})
+- [ ] Write unit tests for AC-001..AC-010 in `channels/ledger.rs` `#[cfg(test)]` (red first, then implement)
+- [ ] Write unit tests for AC-011..AC-017 in `channels/promote_retire.rs` `#[cfg(test)]` (red first; label TST-PROM-01/TST-PROM-02 as noted in ACs)
 - [ ] Run `just iter pregolya-graph` — all tests green (including existing S-1.14 tests)
 - [ ] Confirm `PromoteRetireOp` compile-fail test AC-011 (missing wildcard arm must fail to compile)
 
 ## Previous Story Intelligence
 
-- S-1.14 (StateGraph Node and Channel Reducer Semantics) established `graph::channels` with `LastValue<T>`, `Append<T>`, `BarrierValue`, `NamedBarrierValue`, and `EphemeralValue` channel types. S-1.28 extends this module; load `pregolya-graph/src/channels.rs` as context before authoring. Do not modify any existing channel types — only add the new `LedgerEntry` trait, `LedgerChannel`, `PromoteRetireOp`, and `PromoteRetireChannel` symbols.
+- S-1.14 (StateGraph Node and Channel Reducer Semantics) established the `graph::channels` directory module (`pregolya-graph/src/channels/`) with `channels/last_value.rs` (`LastValue<T>`), `channels/append.rs` (`Append<T>`), and further channel types, plus a re-export-only `channels/mod.rs`. S-1.28 extends this directory by creating `channels/ledger.rs` and `channels/promote_retire.rs`. Load `pregolya-graph/src/channels/mod.rs` and the existing channel files as context before authoring. Do not modify any existing channel types — only add the new `LedgerEntry` trait, `LedgerChannel`, `PromoteRetireOp`, and `PromoteRetireChannel` symbols in their respective new files.
 - The `reduce` function pattern in `graph::channels` is established by the existing channel types. Follow the same function signature and module layout conventions.
 - BC-2.02.007 {INV-003} requires the reducer to be a pure function — do not introduce any `use std::time` or `rand` dependencies.
 
@@ -164,35 +167,38 @@ Well within the 20-30% agent context window threshold.
 
 Derived from `architecture/module-decomposition.md §pregolya-graph` and ADR-030 §Decision 3:
 
-1. `LedgerEntry` trait, `LedgerChannel<T>`, `PromoteRetireOp<T>`, and `PromoteRetireChannel<T>` MUST be defined in `pregolya-graph/src/channels.rs` (`graph::channels`). Do NOT create a new file or new module for these types — they are additive channel types in the existing module.
+1. `LedgerEntry` trait and `LedgerChannel<T>` MUST be defined in `pregolya-graph/src/channels/ledger.rs` (`graph::channels::ledger`). `PromoteRetireOp<T>` and `PromoteRetireChannel<T>` MUST be defined in `pregolya-graph/src/channels/promote_retire.rs` (`graph::channels::promote_retire`). `channels/mod.rs` is re-export-only — no logic per CLAUDE.md `mod.rs` rule. Creating these new files is REQUIRED; adding logic to `mod.rs` is FORBIDDEN.
 2. `LedgerChannel<T>::reduce` MUST be a pure function: `(Vec<T>, T) -> Vec<T>`. No mutation of the `acc` argument through shared state; return a new or modified `Vec<T>` without side effects.
 3. `PromoteRetireChannel<T>::reduce` MUST be a pure function: `(Vec<T>, PromoteRetireOp<T>) -> Vec<T>`.
 4. `PromoteRetireOp<T>` MUST carry `#[non_exhaustive]` per code convention (public API enum).
 5. `LedgerChannel<T>` and `PromoteRetireChannel<T>` structs MUST carry `#[non_exhaustive]` per code convention.
 6. No `unwrap()` / `expect()` in non-test code.
 7. No `println!` / `eprintln!` in library crate code.
-8. `LedgerEntry` requires `T: Clone + Send + Sync + 'static` as bounds — these must match BC-2.02.007 {PRE-001} exactly.
+8. `LedgerEntry` supertrait bounds MUST be exactly: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`; the single required method is `fn entry_id(&self) -> &str`. These MUST match BC-2.02.007 {PRE-001} exactly. Consequently `T: LedgerEntry` implies `T: Clone + Serialize + DeserializeOwned + Send + Sync + 'static` without additional explicit bounds at the use-site.
 9. The VP-017 proptest harness (`ledger_channel_dedup_idempotency`) MUST exercise arbitrary-length sequences via the `proptest!` macro, not fixed vectors. It must assert both the dedup-uniqueness invariant (BC-2.02.007 {INV-002}) and the first-appearance ordering invariant (BC-2.02.008 {INV-001}).
-10. **Forbidden dependencies:** `graph::channels` must NOT gain a dependency on `pregolya-checkpoint`, `pregolya-mcp`, `pregolya-server`, or any I/O crate. The channel reducers are pure types.
+10. **Forbidden dependencies:** `graph::channels` (including `channels/ledger.rs` and `channels/promote_retire.rs`) must NOT gain a dependency on `pregolya-checkpoint`, `pregolya-mcp`, `pregolya-server`, or any I/O crate. The channel reducers are pure types.
+11. `LedgerChannel<T>::reduce` and `PromoteRetireChannel<T>::reduce` MUST return `Vec<T>` directly — NOT `Result<Vec<T>, _>`. The canonical pure reducer signatures are `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (Ledger) and `fn reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` (PromoteRetire). Dedup and no-op paths are silent by spec (BC-2.02.007 {PC-002}, BC-2.02.009 {PC-002}/{PC-004}).
+12. `serde::Serialize` and `serde::de::DeserializeOwned` in the `LedgerEntry` supertrait bounds are satisfied via `serde` (workspace pin). Do NOT import these traits from any I/O-layer crate — use only `serde::{Serialize, Deserialize}` re-exports. The `serde` crate is already a workspace dependency; confirm it is listed in `pregolya-graph/Cargo.toml` before implementing.
 
 ## Library & Framework Requirements
 
 | Library | Version | Usage |
 |---------|---------|-------|
 | (inherited from S-1.14) | — | `pregolya-graph` existing crate context |
+| `serde` | workspace pin; confirm in `pregolya-graph/Cargo.toml` | `Serialize + DeserializeOwned` supertrait bounds on `LedgerEntry`; derive macros on implementor types |
 | `proptest` | workspace pin | VP-017 `proptest!` macro in `#[cfg(test)]` |
 
 No new crate-level dependencies are expected beyond `proptest` (dev-dependency) which is already present from S-1.16 / existing graph tests.
 
 ## File Structure Requirements
 
+Files to CREATE:
+- `pregolya-graph/src/channels/ledger.rs` — `LedgerEntry` trait (supertrait bounds: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`), `#[non_exhaustive] LedgerChannel<T>` struct, pure `reduce(acc: Vec<T>, update: T) -> Vec<T>` impl; `#[cfg(test)]` VP-017 proptest `ledger_channel_dedup_idempotency` + AC-001..AC-010 unit tests
+- `pregolya-graph/src/channels/promote_retire.rs` — `#[non_exhaustive] PromoteRetireOp<T>` enum, `#[non_exhaustive] PromoteRetireChannel<T>` struct, pure `reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` impl; `#[cfg(test)]` AC-011..AC-017 unit tests (TST-PROM-01: `test_BC_2_02_009_concurrent_promote_retire_deterministic_order`; TST-PROM-02: `test_BC_2_02_009_active_set_no_duplicate_entry_ids`)
+
 Files to MODIFY:
-- `pregolya-graph/src/channels.rs` — add `LedgerEntry` trait, `LedgerChannel<T>`, `PromoteRetireOp<T>`, `PromoteRetireChannel<T>` and their reducer impls; add `#[cfg(test)]` VP-017 proptest and unit tests for AC-001..AC-017
-
-Files to MODIFY (re-export):
-- `pregolya-graph/src/lib.rs` — ensure `LedgerEntry`, `LedgerChannel`, `PromoteRetireOp`, `PromoteRetireChannel` are publicly re-exported
-
-No new files are expected for this story. All new types live in the existing `channels.rs` module.
+- `pregolya-graph/src/channels/mod.rs` — `pub use` re-exports for `LedgerEntry`, `LedgerChannel`, `PromoteRetireOp`, `PromoteRetireChannel` (re-export-only; no logic per CLAUDE.md `mod.rs` rule)
+- `pregolya-graph/src/lib.rs` — ensure `LedgerEntry`, `LedgerChannel`, `PromoteRetireOp`, `PromoteRetireChannel` are publicly re-exported at the crate root
 
 ## Edge Cases
 
@@ -208,4 +214,5 @@ No new files are expected for this story. All new types live in the existing `ch
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.1 | 2026-08-31 | Round-50 fix-burst: LedgerEntry Serialize+DeserializeOwned supertrait bounds; channels/ directory module; VP-017 dual-anchor; TST-PROM-01/02 labels; pure reducer no-Result rule; serde dep; file-structure for ledger.rs+promote_retire.rs | story-writer |
 | 1.0 | 2026-08-31 | Initial authoring — praxist Stage-3 story decomposition for BC-2.02.007/008/009 + VP-017 | story-writer |
