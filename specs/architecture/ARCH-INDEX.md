@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.58"
+version: "1.60"
 status: active
 producer: architect
-timestamp: 2026-08-30T23:59:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,8 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.60 (round-49/F-P2A205-02-vp-catalog/2026-08-31): VP mirror — VP-015 description updated to document 6-pattern `redact_credentials` canonical set (URL-embedded userinfo pattern 5 + HTTP Basic auth pattern 6; CWE-522) and CWE-532/522 dual citation per BC-2.09.007 {INV-003}(b) v2.5. VP census UNCHANGED: 17 total (6 P0 / 11 P1). ADR count UNCHANGED: 29."
+  - "1.59 (round-49/F-P2A207-02+F-P2A207-03+F-P2A205-01+F-P2A204-01+F-P2A202-01/2026-08-30): ADR-029 (v2.18→v2.19): F-P2A205-01 [HIGH, CWE-209/532] §SEC-BOUND-001 BC mis-attribution corrected (BC-2.09.007 generic tools/call step-1-N/A + BC-2.09.008 GraphAgentTool all-3-steps). F-P2A204-01 [MED] FtsSearchConfig two note-only mirror occurrences updated to lifetime-parameterized form. ADR-005 (v1.21→v1.22): F-P2A202-01 [OBS] bind_tools/with_structured_output edition-2024 RPITIT capture adjudication — Box<dyn ...> owned/escapable decision; §Send-Bounded RPITIT table updated. interface-definitions.md §InvocationContext+§bind_tools: bind_tools return changed to Box<dyn BaseChatModel + Send + Sync>; with_structured_output T bound gains Send+'static, return changed to Box<dyn Runnable + Send + Sync>; §InvocationContext section added (canonical DI seam; pregolya-core/src/invocation_context.rs; SS-11). module-decomposition.md §InvocationContext: core::invocation_context definitions-only row added; Iron Law 81→82 total, 6→7 exempt. module-criticality.md §InvocationContext: core::invocation_context definitions-only row added; Classification Summary 88→89 total, 6→7 exempt. Census UNCHANGED: 134 BCs / 17 VP / 138 EC / 40 stories. ADR count UNCHANGED: 29."
   - "1.58 (round-48/F-P2A200-01/2026-08-30): ADR-001 (rev-4→rev-5): F-P2A200-01 [HIGH] — Obligation 4 illustrative E-GRAPH-019 wording corrected to marked illustrative-only (prevents misreading static-replace as a realizable obligation beyond the Pregel-executor boundary). Census UNCHANGED: 134 BCs / 17 VP / 138 EC / 40 stories. ADR count UNCHANGED: 29."
   - "1.57 (round-47/F-P2A197-01+F-P2A197-02/2026-08-30): ADR-029 (v2.17→v2.18): F-P2A197-01 [HIGH, CWE-209] + F-P2A197-02 [MED, CWE-209/532] — new §External-Boundary Error-Sanitization Parity (SEC-BOUND-001): every external error surface (MCP + HTTP + future boundaries) must apply uniform 3-step pipeline (internal-panic static-replace → redact_credentials → sanitize_internal_ids); documents the HTTP-boundary/MCP-boundary parity class once to prevent recurrence at future boundaries. Milestone: 3/4 adversary lenses CLEAN(strict)=YES this round (P2A-196/198/199). Census UNCHANGED: 134 BCs / 17 VP / 138 EC / 40 stories. ADR count UNCHANGED: 29."
   - "1.56 (round-46/F-193-01+F-P2A195-01+F-P2A195-02/2026-08-30): ADR-001 (rev-3→rev-4): F-193-01 [HIGH, CWE-248/703] — §Graph Run-Executor Panic Boundary Obligation 3: SEC-008 crate-member framing corrected to canonical workspace-root form. OLD: 'devops MUST pin panic=unwind in pregolya-server release profile' (crate-member; Cargo silently ignores [profile.release] in any member manifest). NEW: authoritative pin = workspace-root [profile.release] governing the pregolya-server binary build (applied at link time); library-member [profile.release] panic override silently ignored by Cargo; panic=abort at workspace root voids catch_unwind boundary (CWE-248/703 remote DoS). This is the ORIGINATING authority for the SEC-008 class that reached SS-09/SS-12/SS-11/SS-15/SS-02/SS-05 across rounds 43-46. dependency-graph.md §Edge-Table: CompiledGraph class-audit — Edge Table phantom CompiledGraph reference replaced with canonical CompiledStateGraph (F-P2A195-01/F-P2A195-02 sibling sweep; dependency-graph ADR section). Separate domain changes (specialist scope): BC-2.12.007 (v1.8→v1.9): F-P2A195-01+F-P2A195-03 — CompiledGraph phantom → CompiledStateGraph at VP-DI011-02 + 6 type-name sites. S-1.27 (v1.6→v1.7): F-P2A195-02 — phantom CompiledGraph::run (7 sites) → CompiledStateGraph::invoke. Hooks: verify-security-literal-propagation.sh R05 ADDED (catch_unwind implies SEC-008; 11 self-probes); verify-no-phantom-types.sh CompiledGraph::run + CompiledGraph.invoke patterns added (29 self-probes). Both gates advisory exit 0. Census UNCHANGED: 134 BCs / 17 VP / 138 EC / 40 stories. ADR count UNCHANGED: 29."
@@ -244,7 +246,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-012 | BC-2.10.005 (OnWatermark arithmetic) | `core::budget` | Kani | P1 | draft |
 | VP-013 | BC-2.23.005 (BashTool risk floor) | `tools::shell` | Kani | P1 | draft |
 | VP-014 | BC-2.01.005 + BC-2.01.006 (RunnableParallel key-completeness) | `core::runnable` | proptest | P1 | draft |
-| VP-015 | BC-2.09.007 {INV-003} (MCP credential redaction; CWE-532) | `mcp::sanitize` | unit | P1 | draft |
+| VP-015 | BC-2.09.007 {INV-003} (MCP credential redaction — 6-pattern `redact_credentials`; CWE-532/522) | `mcp::sanitize` | unit | P1 | draft |
 | VP-016 | BC-2.09.008 {INV-001} (GraphAgentTool state-isolation) | `mcp::graph_tool` | proptest | P1 | draft |
 
 > **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 §Postconditions (PC-4) category amended to VAL in burst-232 (error-taxonomy.md §Component: TOOLS; consistent with VP-013 harness).

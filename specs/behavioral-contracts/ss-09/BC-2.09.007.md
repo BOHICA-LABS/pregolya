@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "2.4"
+version: "2.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "2.2 (round-22/F-P2A099-04/2026-08-28): F-P2A099-04 [OBS]: §Verification Properties table — VP-015 Phase cell corrected from 'Wave 2' to 'Phase 3' (VP-015.md `proof_phase: 3` is authoritative per source-of-truth precedence rule 4; BC conflated wave axis with phase axis). VP-MCPCALL-01 and VP-MCPCALL-02 annotated as '(informal / non-registered)' — only VP-MCPCALL-03 was elevated to formal VP-015 per B-SS09-11-arch-adjudication v1.7; VP-MCPCALL-01/02 remain historical; annotation prevents reader confusion with promoted VP-015."
   - "2.3 (round-26/POL-24-sibling-consistency/2026-08-28): §Architecture Anchors registry.rs bullet annotated with `(mcp::registry standalone module, SS-09)` for sibling consistency with BC-2.09.006 §Architecture-Anchors (architect OPTION A: mcp::registry is a standalone module registered in module-decomposition and module-criticality)."
   - "2.4 (round-48/F-P2A203-02/2026-08-30): F-P2A203-02 [MED, CWE-522] — {INV-003}(b) canonical redact_credentials pattern set extended with pattern 4: Bearer token `Bearer\\s+[A-Za-z0-9._~+/=\\-]+` → `\"<redacted>\"` (entire `Bearer <token>` span). Short opaque Bearer tokens not matching patterns 1–3 (OpenAI sk-, Anthropic sk-ant-, 64+ alphanumeric) previously passed unredacted; pattern 4 closes this coverage gap. Pluggable-pattern-registry note updated from 'three' to 'four' patterns. TV-010 minted (Bearer-token redaction; TV count 9→10). Propagated to BC-2.09.008 {INV-003}, BC-2.12.003 {INV-008} step 2, and BC-2.12.007 {INV-004}. Final canonical set: sk-[A-Za-z0-9_\\-]{20,}; sk-ant-[A-Za-z0-9_\\-]{32,}; [A-Za-z0-9]{64,}; Bearer\\s+[A-Za-z0-9._~+/=\\-]+."
+  - "2.5 (round-49/F-P2A205-01+F-P2A205-02/2026-08-31): F-P2A205-01 [HIGH, CWE-209/532] — {INV-003} step-3 parity: {INV-003} restructured as SEC-BOUND-001 2-step pipeline (step 1 N/A — DI-008 no-panic plain tools cannot emit E-GRAPH-011/019; step 2 redact_credentials; step 3 sanitize_internal_ids UUID-shaped pass with u64-CheckpointId carve-out). {PC-003} updated to cite steps 2+3. TV-011 minted (UUID in plain-tool error message → `<redacted-id>` via step 3; TV count 10→11). F-P2A205-02 [HIGH, CWE-522/532] — {INV-003}(b) canonical pattern set extended from 4 to 6 patterns: pattern 5 URL-embedded userinfo `[a-zA-Z][a-zA-Z0-9+.\\-]*://[^/\\s:@]+:[^/\\s:@]+@` → `\"<redacted>\"` (covers `scheme://user:password@host`; OllamaBaseUrl auth-bearing URL is the live production vector per CLAUDE.md); pattern 6 HTTP Basic auth `Basic\\s+[A-Za-z0-9+/=]+` → `\"<redacted>\"` (covers base64-encoded `user:pass` in Authorization headers; base64 padding chars `+`/`=` prevent pattern 3's 64+ pure-alphanumeric rule from matching). 'four patterns' → 'six patterns' in pluggable-registry note. TV-012 minted (URL-userinfo redaction; TV count 11→12). TV-013 minted (Basic-auth redaction; TV count 12→13). Propagated to BC-2.09.008 {INV-003}, BC-2.12.003 {INV-008} step 2, BC-2.12.007 {INV-004} step 2."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -94,9 +95,11 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
    is a valid MCP response (not a JSON-RPC protocol error); the JSON-RPC result layer
    carries `isError: true` in the content.
    **Mandatory sanitization:** before populating `<error_message>`, the server applies the
-   credential redaction step specified in {INV-003}: only `PregolyaError::message` is used
-   as the source string (never `.source()`, `Debug`, or `Display`), and that string is passed
-   through `pregolya_mcp::sanitize::redact_credentials` before inclusion in the response.
+   2-step sanitization pipeline specified in {INV-003} (step 1 N/A; steps 2+3): only
+   `PregolyaError::message` is used as the source string (never `.source()`, `Debug`, or
+   `Display`); that string is passed through `pregolya_mcp::sanitize::redact_credentials`
+   (step 2, 6-pattern set) then `sanitize_internal_ids` (step 3) before inclusion in the
+   response.
 4. {PC-004} On **tool not found** (`<tool_name>` is not in the registry): the server responds with
    a JSON-RPC error: `{ "code": -32602, "message": "Tool not found: <tool_name>" }`.
    (JSON-RPC -32602 = InvalidParams — the tool name is an invalid parameter for this server.)
@@ -117,13 +120,15 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
   an error, but the MCP protocol transaction itself succeeded. The JSON-RPC layer returns
   `result` (not `error`) in both the success and tool-error cases. JSON-RPC `error` is only
   used for protocol-level failures (unknown method, invalid params, parse error).
-- {INV-003} **Mandatory credential redaction (DI-010):** Tool execution error messages included
-  in MCP `CallToolResult` responses MUST be sanitized before transmission. This invariant is
-  mandatory — there is no "best-effort" variant. The concrete redaction step:
+- {INV-003} **Mandatory credential redaction (SEC-BOUND-001; DI-010):** Tool execution error messages
+  included in MCP `CallToolResult` responses MUST be sanitized before transmission. This invariant
+  is mandatory — there is no "best-effort" variant. **Step 1 (internal-panic static-replace) is N/A
+  for this boundary** — plain first-party/partner tools are DI-008 no-panic and cannot emit
+  E-GRAPH-011/E-GRAPH-019; the pipeline is 2-step: step 2 then step 3.
   (a) **Source restriction:** only `PregolyaError::message` is used as the text source. The
       `.source()` chain, `Debug` output, and `Display` output of the error are NEVER included
       in the MCP response text.
-  (b) **Redaction function:** `pregolya_mcp::sanitize::redact_credentials(text: &str) ->
+  (b) **Step 2 — `redact_credentials`:** `pregolya_mcp::sanitize::redact_credentials(text: &str) ->
       Cow<str>` applies the following substitution rules in order:
       1. OpenAI key pattern `sk-[A-Za-z0-9_\-]{20,}` → `"<redacted>"`
       2. Anthropic key pattern `sk-ant-[A-Za-z0-9_\-]{32,}` → `"<redacted>"`
@@ -132,15 +137,27 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
          `Bearer <token>` span; covers HTTP Bearer tokens including JWTs and short opaque tokens
          not matching patterns 1–3; chosen regex covers RFC 6750 token characters and
          base64url/base64 padding)
-  (c) The sanitized string (post-substitution) is placed in `content[0].text`.
+      5. URL-embedded userinfo `[a-zA-Z][a-zA-Z0-9+.\-]*://[^/\s:@]+:[^/\s:@]+@` → `"<redacted>"`
+         (covers `scheme://user:password@host` patterns; auth-bearing `OllamaBaseUrl` values are
+         the live production vector per credential-safety rules)
+      6. HTTP Basic auth `Basic\s+[A-Za-z0-9+/=]+` → `"<redacted>"` (covers base64-encoded
+         `user:pass` credential spans in `Authorization` headers; base64-of-`user:pass` is <64 chars
+         and contains `+`/`=` padding, so it does NOT match pattern 3's 64+ pure-alphanumeric rule)
+  (c) **Step 3 — `sanitize_internal_ids`:** replace UUID-shaped internal identifiers (e.g.,
+      `run_id` and server-layer `thread_id`, both `Uuid`) with `"<redacted-id>"`. `u64`
+      `CheckpointId` is NOT UUID-shaped; authoring-site discipline is its sole framework guarantee
+      (DI-008 no-panic tools MUST NOT embed checkpoint IDs in externally surfaced error messages).
+      Symmetric with BC-2.12.003 {INV-008} step 3 and BC-2.12.007 {INV-004} step 3.
+  (d) The sanitized string (post steps 2+3) is placed in `content[0].text`.
   Rationale: untrusted tool output (e.g., from MCP-dispatched tools) may propagate error
   messages that embed provider API key material from the tool's own configuration. The server
   MUST apply redaction before transmitting any error detail to an external MCP client.
   (invariants.md §DI-010: Credential Opacity)
-  **Pluggable pattern registry:** the four patterns above cover the first-party providers and
-  standard HTTP Bearer tokens (OpenAI `sk-`, Anthropic `sk-ant-`, generic 64+ alphanumeric
-  token, Bearer header value). Partner crates that introduce new API key formats (e.g., a
-  provider with a distinct key prefix or length) SHOULD register additional patterns in
+  **Pluggable pattern registry:** the six patterns above cover the first-party providers,
+  standard HTTP Bearer tokens, URL-embedded userinfo, and HTTP Basic auth (OpenAI `sk-`,
+  Anthropic `sk-ant-`, generic 64+ alphanumeric token, Bearer header value, URL userinfo,
+  Basic credential). Partner crates that introduce new API key formats (e.g., a provider
+  with a distinct key prefix or length) SHOULD register additional patterns in
   `redact_credentials` via the pluggable pattern registry. Extending the registry does not
   alter the mandatory error-path redaction behavior — additional patterns add coverage without
   weakening the invariant.
@@ -219,6 +236,9 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 | TV-008 | Client sends non-JSON bytes (e.g., `"not json{{"`) via `tools/call` path | JSON-RPC response `{ "error": { "code": -32700, "message": "Parse error" } }` | Malformed JSON — parse error (EC-007) |
 | TV-009 | `tools/call { name: "mock_tool" }`; MockTool returns `Ok(Value::String("key=sk-abc123XYZabc123XYZabc".to_string()))` (success path) | MCP response `{ "content": [{ "type": "text", "text": "key=sk-abc123XYZabc123XYZabc" }], "isError": false }` — key material is preserved verbatim (Value::String → verbatim rule); success-path content is NOT framework-sanitized | Success-path credential boundary: framework does NOT strip; Tool implementation bears sole obligation ({PC-002} DI-010) |
 | TV-010 | `tools/call { name: "api_tool" }`; tool returns `Err(PregolyaError { message: "auth failed: Bearer eyJhbGciOiJIUzI1NiJ9.abc_shorttoken", .. })` | MCP response `{ "content": [{ "type": "text", "text": "auth failed: <redacted>" }], "isError": true }` — `Bearer <token>` span replaced by `"<redacted>"` per {INV-003}(b) pattern 4; the token does not match patterns 1–3 (not `sk-`, not `sk-ant-`, not 64+ alphanumeric) but is caught by the Bearer-token pattern | Bearer-token redaction: short opaque Bearer token not matched by provider-key patterns 1–3; pattern 4 closes this coverage gap (F-P2A203-02) |
+| TV-011 | `tools/call { name: "diag_tool" }`; tool returns `Err(PregolyaError { message: "run lookup failed for run_id=550E8400-E29B-41D4-A716-44665544BEEF", .. })` | MCP response `{ "content": [{ "type": "text", "text": "run lookup failed for run_id=<redacted-id>" }], "isError": true }` — UUID-shaped `run_id` replaced by `"<redacted-id>"` via `sanitize_internal_ids` (step 3); credential patterns 1–6 have no match | Step-3 UUID-identifier sanitization ({INV-003}(c)); `sanitize_internal_ids` replaces UUID-shaped internal IDs with `<redacted-id>`; no credential-shaped substring in this error; step 1 N/A (DI-008 no-panic tool; no E-GRAPH-011/019); SEC-BOUND-001 step 3 coverage (F-P2A205-01) |
+| TV-012 | `tools/call { name: "storage_tool" }`; tool returns `Err(PregolyaError { message: "connection failed: http://admin:secret@db.internal:5432/data", .. })` | MCP response `{ "content": [{ "type": "text", "text": "connection failed: <redacted>" }], "isError": true }` — URL-userinfo span `http://admin:secret@db.internal:5432/data` replaced by `"<redacted>"` per {INV-003}(b) pattern 5 | URL-embedded userinfo redaction (`scheme://user:password@host` pattern); auth-bearing `OllamaBaseUrl` is the live production vector; pattern 5 closes this CWE-522 gap (F-P2A205-02) |
+| TV-013 | `tools/call { name: "api_tool" }`; tool returns `Err(PregolyaError { message: "auth rejected: Basic dXNlcjpwYXNzd29yZA==", .. })` | MCP response `{ "content": [{ "type": "text", "text": "auth rejected: <redacted>" }], "isError": true }` — `Basic <token>` span replaced by `"<redacted>"` per {INV-003}(b) pattern 6; `dXNlcjpwYXNzd29yZA==` is base64 of `user:password` (<64 chars, contains `=` padding — does NOT match pattern 3's 64+ pure-alphanumeric rule) | HTTP Basic auth redaction (`Basic <base64-credential>` pattern); base64url padding chars (`+`, `=`) prevent pattern 3 from matching; pattern 6 closes this CWE-522 gap (F-P2A205-02) |
 
 ## Verification Properties
 

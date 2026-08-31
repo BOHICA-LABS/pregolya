@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.008
-version: "2.1"
+version: "2.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.9 (ADR-027 F-04/2026-08-24): ADR-027 F-04: old-form ordinal cross-refs converted to stable tags — all 4 occurrences of 'BC-2.04.007 invariant 3' converted to 'BC-2.04.007 {INV-003}' (INV-005 prose, blockquote, EC-007 error message, Traceability row)."
   - "2.0 (P2A-044 F-06/2026-08-24): P2A-044 F-06: compressed-ordinal citations normalized to stable tags."
   - "2.1 (P2-BC-SS04-06-hardening/2026-08-26): EC-008 added — `search_history` tool error surface: `ToolOutput::Error` (not run-halt). The existing EC-005 specified only the happy path (tool called mid-run, FTS results returned as ToolMessage). EC-008 specifies the error path: when `fts_search` returns `Err(PregolyaError)`, the `search_history` tool wrapper converts the Err to `ToolOutput::Error` and returns a `ToolMessage` with `status = 'error'` — the run does NOT halt. PC-005 extended with a cross-reference to EC-008 for the error path. TV-008 added for EC-008. BC-completeness-scan Phase-2 BURST-B gap BC-2.04.008."
+  - "2.2 (round-49/F-P2A204-01/2026-08-31): F-P2A204-01 [HIGH] — `FtsSearchConfig` missing lifetime parameter causes E0106 on stable Rust (`thread_id: Option<&str>` requires a named lifetime). §Description method signature updated: `FtsSearchConfig` → `FtsSearchConfig<'_>`. {PRE-003} updated: `FtsSearchConfig` → `FtsSearchConfig<'a>` with `thread_id: Option<&str>` → `Option<&'a str>` (lifetime named `'a` for clarity in the precondition; callers use `FtsSearchConfig<'_>` at invocation sites). BC-2.09.008 {INV-001} sibling note updated; interface-definitions.md §CheckpointSaver `fts_search` signature updated (same burst)."
 origin: greenfield
 priority: P1
 subsystem: SS-04
@@ -48,7 +49,7 @@ removal_reason: null
 ## Description
 
 `pregolya-checkpoint` exposes `CheckpointSaver::fts_search(query: &str, config:
-FtsSearchConfig) -> Result<Vec<FtsSearchResult>, PregolyaError>` — a full-text search
+FtsSearchConfig<'_>) -> Result<Vec<FtsSearchResult>, PregolyaError>` — a full-text search
 interface over conversation history stored in the checkpoint SQLite database. The FTS5
 index covers checkpoint bodies: conversation messages (human, AI, tool), tool call arguments,
 and tool results. This is a **single-process v1** implementation: multi-process WAL-safe
@@ -64,9 +65,9 @@ concurrent reads). The search capability is also registered as a callable `Tool`
    checkpoint writes).
 3. {PRE-003} `query: &str` is the standalone first parameter to `fts_search` — it is NOT a field of
    `FtsSearchConfig`. It may include FTS5 phrase syntax (e.g., `"\"Paris weather\""`).
-   `FtsSearchConfig` has exactly two fields: `thread_id: Option<&str>` (scope to a single
-   thread or `None` for all threads) and `limit: usize` (maximum number of results,
-   must be > 0).
+   `FtsSearchConfig<'a>` has exactly two fields: `thread_id: Option<&'a str>` (scope to a
+   single thread or `None` for all threads) and `limit: usize` (maximum number of results,
+   must be > 0). The lifetime `'a` is required on stable Rust — omitting it causes E0106.
 
 ## Postconditions
 

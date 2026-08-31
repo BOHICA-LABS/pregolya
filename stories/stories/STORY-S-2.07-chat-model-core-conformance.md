@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.07
 epic_id: E-19
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "da42f73"
+input-hash: "114398d"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-2.06, S-1.07, S-1.06]
@@ -95,9 +95,18 @@ call followed by a final assistant message. Verified by inspecting the test attr
 confirming `cargo nextest run -p pregolya-standard-tests` passes.
 
 ### AC-007 (traces to BC-2.08.002 EC-005)
-Calling `bind_tools(&tools)` on a chat model whose `has_tool_calling()` returns `false`
-returns `Err(PregolyaError { code: "E-CORE-005", .. })`. Verified by
-`test_BC_2_08_002_bind_tools_without_tool_calling_returns_e_core_005()`.
+The canonical `bind_tools` signature is:
+`fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>`
+On success, returns `Ok(Box<dyn BaseChatModel + Send + Sync>)` — an owned, type-erased model
+instance with the supplied tools bound (the caller no longer holds the original model;
+the new `Box<dyn BaseChatModel>` is ready for inference calls). On error, when
+`has_tool_calling()` returns `false` for the provider, returns
+`Err(PregolyaError { code: "E-CORE-005", .. })` (tools cannot be bound to a provider
+that lacks tool-calling capability). Verified by
+`test_BC_2_08_002_bind_tools_without_tool_calling_returns_e_core_005()` (model with
+`has_tool_calling() = false`; assert `Err(PregolyaError { code: "E-CORE-005", .. })`) and
+`test_BC_2_08_002_bind_tools_success_returns_boxed_model()` (model with
+`has_tool_calling() = true`; assert `Ok(Box<dyn BaseChatModel>)`).
 
 ### AC-008 (traces to BC-2.08.002 PC-003)
 Tool call `arguments` in the returned `AIMessage` is always a `serde_json::Value::Object`.
@@ -110,10 +119,18 @@ An agent loop configured with `recursion_limit: N` halts at step N+1 with
 `test_BC_2_08_002_recursion_limit_exceeded_returns_e_graph_017()`.
 
 ### AC-010 (traces to BC-2.08.003 PC-001)
-`with_structured_output::<T>()` where T implements `schemars::JsonSchema + serde::de::DeserializeOwned`
-invokes the model with the JSON schema injected (via `json_schema` param for OpenAI,
-`tools` extraction trick for Anthropic, `format` field for Ollama) and deserializes
-the response into `T`. Verified by `test_BC_2_08_003_structured_output_roundtrip()`.
+The canonical `with_structured_output` signature is:
+`fn with_structured_output<T: DeserializeOwned + schemars::JsonSchema + Send + 'static>(&self, schema: serde_json::Value) -> Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`
+The caller supplies the schema as an explicit `schema: serde_json::Value` parameter
+(typically derived via `schemars::schema_for!(T)` at the call site — NOT derived inside
+the method). The method returns an owned `Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`
+(not a `Result`; the schema injection is infallible at construction time). The returned
+`Runnable` invokes the model with the caller-supplied schema injected into the provider
+request (via `json_schema` param for OpenAI, `tools` extraction trick for Anthropic,
+`format` field for Ollama) and deserializes the response into `T`. Verified by
+`test_BC_2_08_003_structured_output_roundtrip()` (construct via
+`model.with_structured_output::<MySchema>(schemars::schema_for!(MySchema).to_value())`
+or equivalent; call `.invoke(messages)`; assert `Ok(MySchema { .. })`).
 
 ### AC-011 (traces to BC-2.08.003 EC-001)
 When the OpenAI provider returns a structured-output refusal (`finish_reason: "content_filter"`
@@ -269,14 +286,14 @@ Verified by `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()`.
 3. [ ] Add `UsageMetadata` sub-detail fields to `pregolya-core/src/message.rs`
 4. [ ] Implement `OpenAiChatModel::stream` — stream lifecycle, block index tracking, delta accumulation
 5. [ ] Implement `OpenAiChatModel` error classification: 401→E-PROV-004, 400→E-PROV-006, 429→E-PROV-001, 5xx→E-PROV-008
-6. [ ] Implement `OpenAiChatModel::with_structured_output` — `json_schema` param injection
+6. [ ] Implement `OpenAiChatModel::with_structured_output` — signature `fn with_structured_output<T: DeserializeOwned + JsonSchema + Send + 'static>(&self, schema: serde_json::Value) -> Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`; inject caller-supplied `schema` as `json_schema` param in the OpenAI request (AC-010)
 7. [ ] Implement per-chunk timeout stall detection → E-PROV-002; TCP reset → E-PROV-003
 8. [ ] Implement `AnthropicChatModel::stream` — Anthropic SSE event format, thinking block handling
 9. [ ] Implement `AnthropicChatModel` error classification and `with_structured_output` (disable thinking)
 10. [ ] Implement `OllamaChatModel::stream` and `with_structured_output` (`format` field)
 11. [ ] Add `stream_lifecycle` oracle and `streaming_unary_equivalence` fixture to `pregolya-standard-tests`
 12. [ ] Add `test_agent_loop()` (non-ignored) to `pregolya-standard-tests`
-13. [ ] Implement `bind_tools` guard: check `has_tool_calling()` before registering tools
+13. [ ] Implement `bind_tools` — signature `fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>`; check `has_tool_calling()` before accepting tools; return `Ok(Box<dyn BaseChatModel + Send + Sync>)` on success; return `Err(PregolyaError { code: "E-CORE-005", .. })` when `has_tool_calling()` is false (AC-007)
 14. [ ] Implement recursion limit guard in agent loop dispatch
 15. [ ] Implement Anthropic v3 SSE parse-error path: malformed `content-block-start` or any unparseable v3 event → typed `Err(E-PROV-013 StreamProtocolViolation)` with no panic (AC-027; distinct from E-PROV-003 transport error; register E-PROV-013 in error taxonomy)
 16. [ ] Run `cargo nextest run -p pregolya-openai -p pregolya-anthropic -p pregolya-ollama -p pregolya-standard-tests` — all 27 ACs green
@@ -343,5 +360,6 @@ fail via `cargo deny`.
 
 ## Changelog
 
+- **1.3 (round-49 / BC-propagation / 2026-08-31):** Round-49 Stage-3 interface-definitions.md §bind_tools changes propagated. (1) AC-007 updated — canonical `bind_tools` signature added: `fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>`; success case `Ok(Box<dyn BaseChatModel + Send + Sync>)` documented; error case `Err(E-CORE-005)` preserved; `test_BC_2_08_002_bind_tools_success_returns_boxed_model()` added. (2) AC-010 updated — canonical `with_structured_output` signature: `fn with_structured_output<T: DeserializeOwned + JsonSchema + Send + 'static>(&self, schema: serde_json::Value) -> Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`; `schema: serde_json::Value` parameter added (caller-supplied, not derived inside the method); `Box<dyn Runnable>` return type shown (infallible at construction). (3) Task-6 updated to reflect caller-supplied schema injection. (4) Task-13 updated to reflect `Box<dyn BaseChatModel + Send + Sync>` return. (5) input-hash updated to 114398d.
 - **1.2 (BC-2.08.001 / 2026-08-26):** BC-2.08.001 updated to v1.8 (burst-A2-error-coord EC-005+INV-005 hardening): AC-027 added — malformed v3 SSE payload (`content-block-start` with non-integer `index` field, or any unparseable v3 event structure) returns `Err(PregolyaError { code: "E-PROV-013", .. })` (`E-PROV-013 StreamProtocolViolation`); no panic guaranteed (INV-005); error is DISTINCT from `E-PROV-003` (transport-level connection reset, EC-003). Test: `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()` (cassette with `content-block-start` `"index": "not-a-number"`). Task 15 updated to reference AC-027 and E-PROV-013; Task 16 updated to "all 27 ACs green". BC table version column added.
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. BC-2.08.001: AC-001/002/003 postcondition 2→PC-002; AC-004 invariant 1→INV-001; AC-005 "edge case EC-003"→EC-003; AC-025 postcondition 1→PC-001; AC-026 postcondition 4→PC-004. BC-2.08.002: AC-006 postcondition 1→PC-001; AC-007 postcondition 2→EC-005 (semantic: bind_tools negative case); AC-008 postcondition 3→PC-003; AC-009 postcondition 4→INV-004 (semantic: recursion limit). BC-2.08.003: AC-010 postcondition 1→PC-001; AC-011 postcondition 2→EC-001 (semantic: refusal); AC-012 postcondition 3→EC-002 (semantic: deserialize failure); AC-013 postcondition 4→EC-004 (semantic: thinking disabled). BC-2.08.004: AC-014/015/016/017 postconditions 1-4→PC-001/002/003/004; AC-018 invariant 1→INV-001. BC-2.08.005: AC-019/020/021 postconditions 1-3→PC-001/002/003. BC-2.08.007: AC-022 postcondition 1→PC-001; AC-023 postcondition 2→PC-002; AC-024 invariant 1→INV-001 (semantic: no partial Ok; old annotation "DI-009/NE-04" was DI mis-reference). Architecture Compliance Rules table updated. No escalations.

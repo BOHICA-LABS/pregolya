@@ -1,12 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.01"
+version: "3.03"
 status: active
 producer: product-owner
-timestamp: 2026-08-30T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1d
 changelog:
+  - "3.03 (round-49/F-P2A204-01/2026-08-31): F-P2A204-01 [HIGH] §CheckpointSaver::fts_search — `FtsSearchConfig` missing lifetime parameter. Updated §fts_search doc-comment `config` annotation: `FtsSearchConfig { thread_id: Option<&str> }` → `FtsSearchConfig<'_> { thread_id: Option<&'_ str> }`. Updated method signature: `config: FtsSearchConfig,` → `config: FtsSearchConfig<'_>,`. Lifetime required on stable Rust (E0106); BC-2.04.008 {PRE-003} is the authoritative BC (same burst)."
+  - "3.02 (round-49/F-P2A207-02+F-P2A202-01/2026-08-30): F-P2A202-01 [OBS] §BaseChatModel — `bind_tools` and `with_structured_output` edition-2024 RPITIT capture adjudication. `bind_tools(&self) -> Result<impl BaseChatModel, PregolyaError>`: RPITIT in edition 2024 auto-captures `&self` lifetime, making the return non-`'static` and preventing pipeline composition, storage, and spawning. Decision: `Box<dyn BaseChatModel + Send + Sync>` (owned/escapable — `'static` by default; enables `.pipe()`, `Arc` storage, `JoinSet::spawn`). `with_structured_output<T>(&self) -> impl Runnable<Vec<Message>, T>`: same capture issue; `T` bound gains `+ Send + 'static` (required for `Box<dyn Runnable>` to be `Send + Sync`; enables multi-threaded pipeline composition). Decision: `Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`. ADR-005 §BaseChatModel adjudication + §Send-Bounded RPITIT table updated in same burst. F-P2A207-02 [HIGH] Add §InvocationContext section — canonical DI seam for per-run guardrail hook registry; SS-11; BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}; follows trait-in-core precedent."
   - "3.01 (round-44/F-P2A184-01+F-P2A184-02+F-P2A184-03/2026-08-30): F-P2A184-01 [HIGH] §BaseChatModel::stream_chat E0562 fix — `async fn stream_chat(...)` desugars to nested `impl Trait` inside `impl Future<Output = Result<impl Stream<...>, PregolyaError>>`, which is not permitted on stable Rust (E0562 class; same as Runnable::stream R43 / F-P2A180-01). Boxed the return: changed `async fn stream_chat(...) -> Result<impl Stream<Item = Result<AiMessageChunk, PregolyaError>>, PregolyaError>` to `fn stream_chat(...) -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<AiMessageChunk, PregolyaError>> + Send>>, PregolyaError>> + Send`. ADR-005 §BaseChatModel adjudication updated and §Send-Bounded RPITIT table BaseChatModel row updated in same burst (see ADR-005 §BaseChatModel adjudication and §Send-Bounded RPITIT table). F-P2A184-02 [MED] §DynRunnableAdapter::stream sketch body corrected: `R::stream(...).await` yields `Result<Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>, PregolyaError>` (outer Result must be matched). Sketch updated: on `Err(e)` → fold to single-item error stream via `futures::stream::once`; on `Ok(stream)` → `.map()` to convert O→Value then `Box::pin` (item-type change O→Value requires re-boxing in the adapter). §Runnable::stream doc-comment corrected: 'no re-boxing needed in the adapter' replaced with outer-Result + item-type-change note (re-boxing IS needed in the adapter for O→Value conversion). F-P2A184-03 [MED] §DynTool doc-comment stale 'impl Stream return' updated to 'RPITIT `impl Future` return — opaque, non-dyn-compatible' (post-R43, `Runnable::stream` returns an RPITIT `impl Future` whose output boxes the stream; calling it 'impl Stream return' is inaccurate)."
   - "3.00 (round-43/F-P2A180-01/2026-08-30): F-P2A180-01 [HIGH] §Runnable::stream E0562 fix — nested `impl Stream<Item = Result<Output, PregolyaError>> + Send` inside `impl Future<Output = Result<.., PregolyaError>>` is not permitted on stable Rust (E0562 class; nested `impl Trait` inside an associated-type binding). Boxed the yielded stream to `Pin<Box<dyn Stream<Item = Result<Output, PregolyaError>> + Send>>`, removing the nested `impl Trait` while preserving the outer `+ Send` guarantee on the future. Doc-comment for `stream` updated: replaced 'Both the outer future and the yielded `impl Stream` carry `+ Send`, enabling `DynRunnable::stream` to box the stream into `Pin<Box<dyn Stream + Send>>`' with 'The outer future carries `+ Send`. The yielded stream is `Pin<Box<dyn Stream<Item = ..> + Send>>` — boxed to remove nested `impl Trait` inside `impl Future<Output = ..>` (E0562); the boxed form is directly compatible with `DynRunnable::stream` (no re-boxing needed in the adapter)'. `DynRunnableAdapter::stream` comment updated: `R::stream().await` now yields `Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>`; adapter maps `Ok(O) → serde_json::to_value(O)`. ADR-005 §Send-Bounded RPITIT inventory table Runnable row updated in same burst. POL-24 sibling sites outside architect domain: BC-2.01.003 §PC-002 live body cites `impl Stream<Item = Result<Output, PregolyaError>> + Send` return form; BC-INDEX §Changelog (round-36 Runnable E0562 entry); STORY-S-1.04 §stream prose — these are in BC / story domain and require product-owner + story-writer routing to mirror the boxed form."
   - "2.99 (round-42/F-P2A176-01/2026-08-29): F-P2A176-01 [HIGH] §Runnable batch doc-comment expanded with in-task cooperative concurrency canon and `'static` corollary. Default `batch` uses `futures::future::join_all` / `FuturesOrdered` — all `invoke` futures polled concurrently within the calling task; no spawn, no thread-pool parallelism; output order matches input order (BC-2.01.003 {INV-002}). `'static` corollary: the `+ Send` RPITIT future from `invoke(&self, ..)` borrows `&self` and is NOT `'static`; `JoinSet::spawn` (requires `F: Future + Send + 'static`) CANNOT be used in a default `&self` batch implementation; implementors holding `'static` / `Arc<Self>` state MAY override `batch` to spawn via `JoinSet`. Authority: ADR-005 §Send-Bounded RPITIT (corollary added in same burst). Realizability self-validation: (a) futures borrow `&self`, do not escape method — no `'static` requirement; (b) `join_all` / `FuturesOrdered` preserve input order ({INV-002}); (c) all futures carry `+ Send` (RPITIT) so combined future is `Send`. PO: BC-2.01.003 {PC-003} drop Tokio-thread-pool claim — in-task `join_all`/`FuturesOrdered`, no concurrency cap, override-for-JoinSet note. Story-writer: S-1.04 AC-003 same."
@@ -634,18 +636,20 @@ pub trait BaseChatModel: Runnable<Vec<Message>, AiMessage> + Send + Sync {
     /// # Errors
     /// `Err(PregolyaError { code: "E-CORE-005", .. })`
     /// when `self.has_tool_calling() == false` (BC-2.08.002 EC-005/TV-005).
-    fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<impl BaseChatModel, PregolyaError>;
+    fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>;
 
     /// Wrap this model to produce structured output deserialized into `T`.
     ///
     /// `schema` is a `serde_json::Value` JSON Schema passed to the provider's
     /// structured-output API (BC-2.08.003 PC: `model.with_structured_output::<T>(schema)`).
-    /// `T` must implement both `serde::de::DeserializeOwned` and `schemars::JsonSchema`
-    /// (BC-2.08.009). Per-method anchors: BC-2.08.003 PC/EC-002/EC-003, BC-2.08.009.
-    fn with_structured_output<T: DeserializeOwned + schemars::JsonSchema>(
+    /// `T` must implement `serde::de::DeserializeOwned`, `schemars::JsonSchema`, `Send`, and
+    /// `'static` (BC-2.08.009). The `Send + 'static` bound enables the boxed runnable to be
+    /// composed into multi-threaded pipelines and stored in `Arc` (F-P2A202-01 adjudication).
+    /// Per-method anchors: BC-2.08.003 PC/EC-002/EC-003, BC-2.08.009.
+    fn with_structured_output<T: DeserializeOwned + schemars::JsonSchema + Send + 'static>(
         &self,
         schema: serde_json::Value,
-    ) -> impl Runnable<Vec<Message>, T>;
+    ) -> Box<dyn Runnable<Vec<Message>, T> + Send + Sync>;
 }
 ```
 
@@ -730,8 +734,8 @@ pub trait CheckpointSaver: Send + Sync {
     /// # Arguments
     /// - `query`: FTS5 query string; phrase syntax supported (e.g., `"\"Paris weather\""`).
     ///   Malformed FTS5 syntax returns `Err(E-CHKPT-008)` at call time (BC-2.04.008 EC-002).
-    /// - `config`: `FtsSearchConfig { thread_id: Option<&str>, limit: usize }`.
-    ///   `thread_id: Option<&str>` is legitimately a string-form FTS scope filter (not
+    /// - `config`: `FtsSearchConfig<'_> { thread_id: Option<&'_ str>, limit: usize }`.
+    ///   `thread_id: Option<&'_ str>` is legitimately a string-form FTS scope filter (not
     ///   `Option<Uuid>`): the FTS5 virtual table stores thread_ids as serialized strings;
     ///   `FtsSearchResult.thread_id: String` confirms FTS operates in string space; callers
     ///   with a server-layer `Uuid` thread_id pass `.to_string()` or the hyphenated-string
@@ -745,7 +749,7 @@ pub trait CheckpointSaver: Send + Sync {
     async fn fts_search(
         &self,
         query: &str,
-        config: FtsSearchConfig,
+        config: FtsSearchConfig<'_>,
     ) -> Result<Vec<FtsSearchResult>, PregolyaError>;
 }
 ```
@@ -846,6 +850,65 @@ BC-2.11.002 (tool-result boundary — primary trait-shape authority),
 BC-2.11.003 (RAG retrieval boundary), BC-2.11.004 (memory ingress boundary),
 BC-2.11.005 (fail-closed rejection guarantee — GuardrailResult::Fail closure contract),
 BC-2.11.006 (no-hook default — GuardrailHook not registered)
+
+### InvocationContext
+
+Per-run hook registry struct. Passed by reference into dispatch modules
+(`graph::provenance`, `mcp::ingress`) at invocation time. Default construction
+yields all-`None` slots (no-hook path, BC-2.11.006). Hook registration is additive
+and does not mutate any execution state; the struct owns the `Arc` handle.
+
+Canonical location: `pregolya-core/src/invocation_context.rs` (SS-11;
+follows trait-in-core precedent established by `core::guardrail` / ADR-014 Decision 6).
+
+```rust
+/// Per-run hook registry. Constructed once per invocation and passed by shared
+/// reference to dispatch modules. Definitions-only; no execution logic.
+/// BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}.
+pub struct InvocationContext {
+    guardrail_hook: Option<Arc<dyn GuardrailHook>>,
+}
+
+impl InvocationContext {
+    /// Construct with no hooks registered (BC-2.11.006 no-hook default).
+    pub fn new() -> Self {
+        Self { guardrail_hook: None }
+    }
+
+    /// Register a guardrail hook for this invocation context.
+    /// Overwrites any previously registered hook; the `Arc` is cloned.
+    pub fn register_guardrail(&mut self, hook: Arc<dyn GuardrailHook>) {
+        self.guardrail_hook = Some(hook);
+    }
+
+    /// Query the registered guardrail hook, if any.
+    /// Returns `None` on the no-hook fast path (BC-2.11.006).
+    pub fn guardrail_hook(&self) -> Option<&Arc<dyn GuardrailHook>> {
+        self.guardrail_hook.as_ref()
+    }
+}
+
+impl Default for InvocationContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+```
+
+**BC anchor:** BC-2.11.001–006 {PRE-001} (InvocationContext construction, hook
+registration, and dispatch preconditions); BC-2.09.003 {PRE-002}/{PRE-003}
+(mcp::ingress guardrail dispatch path — `InvocationContext` is the DI seam that
+enables `mcp::ingress` to call `GuardrailHook::evaluate` without a direct
+`pregolya-graph` dependency).
+
+> **Adjudication note (round-49/F-P2A207-02+F-P2A207-03):** `InvocationContext`
+> is definitions-only (no execution logic; no VP target; ADR-009 definitions-only
+> precedent). Canonical module: `core::invocation_context` in
+> `pregolya-core/src/invocation_context.rs` (SS-11 owner). This is the DI seam
+> for guardrail dispatch shared by `graph::provenance` and `mcp::ingress` — placing
+> it in `pregolya-core` prevents a `pregolya-mcp` → `pregolya-graph` compile-time
+> dependency cycle (trait-in-core precedent: `GuardrailHook`, `BudgetPolicy`,
+> `MemoryWriteGuard`, `ActionRisk` all follow this pattern).
 
 ### BudgetPolicy
 

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.8"
+version: "1.9"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -16,6 +16,7 @@ changelog:
   - "1.6 (R29/F-P2A127-02+O-P2A125-02/2026-08-28): (1) AC-025 added: SEC-008 async-catch MECHANISM Red Gate — `GuardrailHook::evaluate` panic during `.await` polling caught via `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` in `provenance.rs`; content treated as Fail (fail-closed); `Err(PregolyaError { code: \"E-CORE-007\", .. })` propagated; Red Gate test `test_BC_2_11_002_hook_panic_caught_fail_closed_e_core_007()` MUST drive panic through `.await` (synchronous `std::panic::catch_unwind` substitute must NOT satisfy it); traces to BC-2.11.002 {INV-005}/EC-001 (F-P2A127-02). (2) §Library & Framework Requirements `futures` row: secondary anchor updated from `ADR-029 §Decision 5` to `BC-2.11.002 {INV-005}` (cross-subsystem anchor correction; EC-001 retained) (O-P2A125-02). (3) BC-2.11.002 covered-ACs updated to include AC-025. Token Budget updated (~5,500 → ~5,700 spec; total ~25,500 → ~25,700). input-hash unchanged — no BC input file changes in round-29."
   - "1.7 (R33/F-P2A143-01/2026-08-29): Exhaustive sibling-sweep for ADR-029 §Decision 5 cross-subsystem mis-anchor (F-P2A143-01). Re-anchored 3 remaining SS-11 mis-anchor sites from ADR-029 §Decision 5 to BC-2.11.002 {INV-005}/EC-001: (1) §Edge Cases EC-001 row; (2) §Tasks Task 5; (3) §Previous Story Intelligence S-1.04 row. CWE-248/703 citations and FutureExt::catch_unwind mechanism text preserved. SS-09 sibling see-also note added at each corrected site. Input-hash refreshed — drift caused by BC input updates since R29 (no story-input-file edits in this burst)."
   - "1.8 (R45/F-P2A189-01/2026-08-30): Workspace-root panic=unwind pin propagated to all four stale sites (F-P2A189-01 [HIGH, CWE-248/703]). Task 5: replaced 'devops must assert this for pregolya-graph at Phase-3 CI setup' with workspace-root form — library-member (pregolya-graph) [profile.release] override is silently ignored by Cargo and MUST NOT be relied upon; devops-engineer asserts workspace-root Cargo.toml at Phase-3 init. AC-024: heading updated to 'workspace-root release profile (pregolya-server binary)'; body extended with library-member-inert clause (Cargo honors [profile.release] panic ONLY at workspace root); devops obligation updated to 'assert on pregolya-server binary profile, NOT pregolya-graph library-member profile'; comment annotation updated to cite library-member-inert caveat. Task 11: comment annotation text updated to workspace-root form with library-member-inert caveat. EC-001: 'Recovery requires panic=unwind build profile' replaced with workspace-root form plus library-member-inert MUST NOT note. Mirrors S-2.11 AC-037 (v1.31). Input-hash refreshed by state-manager."
+  - "1.9 (round-49/F-P2A207-02/2026-08-31): F-P2A207-02 [HIGH] — AC-026 added: create `pregolya-core/src/invocation_context.rs` with `InvocationContext` struct (guardrail_hook: Option<Arc<dyn GuardrailHook>> field), `new()`, `register_guardrail()`, `guardrail_hook()`, and `Default` impl per interface-definitions.md §InvocationContext. AC-026 traces to BC-2.11.001–006 {PRE-001}. BC table updated: AC-026 (PRE-001) added to all 6 BC rows. File Structure: `pregolya-core/src/invocation_context.rs` CREATE row added; lib.rs modify row updated. Task 12 added. Token Budget updated to include invocation_context.rs (~800 tokens; interface-definitions.md InvocationContext section ~1,200; total ~27,200). input-hash updated to 951a705."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.001.md
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "83861da"
+input-hash: "951a705"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.04]
@@ -60,12 +61,12 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary | AC-001..AC-004 |
-| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | AC-005..AC-009, AC-024, AC-025 |
-| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | AC-010..AC-013 |
-| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | AC-014..AC-016 |
-| BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | AC-017..AC-020 |
-| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG | AC-021..AC-023 |
+| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary | AC-001..AC-004, AC-026 (PRE-001) |
+| BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | AC-005..AC-009, AC-024, AC-025, AC-026 (PRE-001) |
+| BC-2.11.003 | GuardrailHook Fires at RAG Ingress | AC-010..AC-013, AC-026 (PRE-001) |
+| BC-2.11.004 | GuardrailHook Fires at Memory Ingress | AC-014..AC-016, AC-026 (PRE-001) |
+| BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | AC-017..AC-020, AC-026 (PRE-001) |
+| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG | AC-021..AC-023, AC-026 (PRE-001) |
 
 ## Acceptance Criteria
 
@@ -176,6 +177,40 @@ CWE-248/703). Verified by `test_BC_2_11_002_hook_panic_caught_fail_closed_e_core
 zero bytes of the original content appear in any downstream buffer). (Mirrors S-2.11 AC-033 for
 the analogous `GraphAgentTool::invoke_dyn` path.)
 
+### AC-026 (traces to BC-2.11.001–006 {PRE-001} — InvocationContext module creation, F-P2A207-02)
+**Create `core::invocation_context`:** `pregolya-core/src/invocation_context.rs` MUST be created
+with the `InvocationContext` struct and its full API surface as defined in
+`interface-definitions.md §InvocationContext`. The canonical implementation:
+```rust
+pub struct InvocationContext {
+    guardrail_hook: Option<Arc<dyn GuardrailHook>>,
+}
+
+impl InvocationContext {
+    pub fn new() -> Self { Self { guardrail_hook: None } }
+    pub fn register_guardrail(&mut self, hook: Arc<dyn GuardrailHook>) {
+        self.guardrail_hook = Some(hook);
+    }
+    pub fn guardrail_hook(&self) -> Option<&Arc<dyn GuardrailHook>> {
+        self.guardrail_hook.as_ref()
+    }
+}
+
+impl Default for InvocationContext {
+    fn default() -> Self { Self::new() }
+}
+```
+`InvocationContext` is a **definitions-only** struct living in `pregolya-core` (SS-11 owner;
+canonical home `core::invocation_context`). It carries the per-run hook registry. All BC-2.11.001–006
+preconditions require `InvocationContext` ({PRE-001}: "caller-constructed `InvocationContext`
+with the hook registered") before any guardrail boundary enforcement can proceed. Without this
+struct, none of the behaviors in BC-2.11.001–006 are reachable. Cross-subsystem note: this type
+also satisfies the `InvocationContext` precondition for `mcp::ingress` (see
+interface-definitions.md §InvocationContext). Verified by
+`test_invocation_context_register_and_query_guardrail_hook()` (register a mock `GuardrailHook`
+via `register_guardrail`; assert `guardrail_hook()` returns `Some`; construct default and assert
+`guardrail_hook()` returns `None`).
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -207,15 +242,16 @@ the analogous `GraphAgentTool::invoke_dyn` path.)
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~5,700 |
+| This story spec | ~6,000 |
 | BC files (6 BCs) | ~9,000 |
 | S-1.14 context (BSP engine, model context) | ~1,500 |
 | S-1.17 context (StreamEvent for GuardrailDecision) | ~1,000 |
 | `pregolya-core/src/guardrail.rs` | ~1,200 |
+| `pregolya-core/src/invocation_context.rs` (new; AC-026) | ~800 |
 | `pregolya-graph/src/provenance.rs` | ~2,000 |
 | Test files | ~4,500 |
-| Interface-definitions.md (GuardrailHook trait section) | ~800 |
-| **Total** | **~25,700** |
+| Interface-definitions.md (GuardrailHook + InvocationContext sections) | ~1,200 |
+| **Total** | **~27,200** |
 | Agent context window | ~200K (Sonnet) |
 | **Budget usage** | **~12.85%** |
 
@@ -232,6 +268,7 @@ the analogous `GraphAgentTool::invoke_dyn` path.)
 9. [ ] Export from `pregolya-core/src/lib.rs` and `pregolya-graph/src/lib.rs`
 10. [ ] Run `cargo nextest run -p pregolya-graph -p pregolya-core --no-fail-fast` — all tests green
 11. [ ] Add SEC-008 comment annotation at the `FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await` dispatch site in `pregolya-graph/src/provenance.rs`: `// SEC-008: panic = "unwind" required in workspace-root release profile (pregolya-server) — library-member (pregolya-graph) profile override is inert (silently ignored by Cargo); FutureExt::catch_unwind voids under abort; devops-engineer asserts workspace-root Cargo.toml profile at Phase-3 init` (AC-024 / BC-2.11.002 INV-005)
+12. [ ] Create `pregolya-core/src/invocation_context.rs` — `InvocationContext` struct with `guardrail_hook: Option<Arc<dyn GuardrailHook>>` field; `new()` constructor; `register_guardrail(&mut self, hook: Arc<dyn GuardrailHook>)` method (sets the slot); `guardrail_hook(&self) -> Option<&Arc<dyn GuardrailHook>>` accessor (queries the slot); `impl Default` returning `Self::new()`. Modify `pregolya-core/src/lib.rs` to re-export `InvocationContext`. Verified by `test_invocation_context_register_and_query_guardrail_hook()` (AC-026 / BC-2.11.001–006 {PRE-001})
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -271,7 +308,8 @@ the analogous `GraphAgentTool::invoke_dyn` path.)
 | File | Action | Purpose |
 |------|--------|---------|
 | `pregolya-core/src/guardrail.rs` | create | `GuardrailHook` trait, `GuardrailResult`, `IngressContent`, `GuardrailSeverity`, `ProvenanceTag`, `BoundaryType` |
-| `pregolya-core/src/lib.rs` | modify | Re-export guardrail types |
+| `pregolya-core/src/invocation_context.rs` | create | `InvocationContext` struct — `guardrail_hook: Option<Arc<dyn GuardrailHook>>` field; `new()`, `register_guardrail()`, `guardrail_hook()` methods; `Default` impl; definitions-only, no execution logic (AC-026; BC-2.11.001–006 {PRE-001}) |
+| `pregolya-core/src/lib.rs` | modify | Re-export guardrail types and `InvocationContext` |
 | `pregolya-graph/src/provenance.rs` | create | ProvenanceTag attachment; hook dispatch; atomic rejection; no-hook WARN path |
 | `pregolya-graph/src/lib.rs` | modify | Re-export provenance types |
 | `pregolya-graph/tests/guardrail_ingress.rs` | create | AC-001..AC-023 tests |

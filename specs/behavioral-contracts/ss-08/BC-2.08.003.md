@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.003
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.6 (FIX-BURST-281-WAVE-B-SS08-B1/D-72/2026-07-29): §EC-002 split-line form: PregolyaError on preceding line, `{ category: VAL, code: \"E-PROV-005\", message: \"StructuredOutputParseError: missing required field 'answer'\" }` on continuation — component and retry_hint absent; added `, ..` before closing `}`. Split-line form does not exempt from the Class 3 normative rule (mechanism blindness is not an exemption). All occurrences reconciled: 5 corrected (Class 3), 0 exempt."
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.9 (round-49/F-P2A204-02/2026-08-31): F-P2A204-02 [HIGH] — RPITIT adjudication mirror into BC body. `with_structured_output<T>` return type is `Box<dyn Runnable<Vec<Message>, T> + Send + Sync>` (owned/escapable; `T` bound gains `+ Send + 'static`; RPITIT `impl Runnable` captures `&self` in edition 2024 making the return non-`'static` and preventing pipeline composition). {PC-001} updated to surface the concrete return type. Authority: interface-definitions.md §BaseChatModel `with_structured_output` row v3.02 + ADR-005 §Send-Bounded RPITIT."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "86e470d"
+input-hash: "0e7476a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -70,9 +71,12 @@ correctly (not forced to present or silently dropped).
 ## Postconditions
 
 1. {PC-001} `test_structured_output` and `test_structured_output_async` (gated by
-   `has_structured_output`): calling `model.with_structured_output::<T>(schema)` and
+   `has_structured_output`): `model.with_structured_output::<T>(schema)` returns
+   `Box<dyn Runnable<Vec<Message>, T> + Send + Sync>` (owned/escapable; `T: DeserializeOwned + JsonSchema + Send + 'static`);
    invoking with an appropriate prompt returns a `T` that deserializes successfully from
    the provider response; the output does not panic or return `Err` on the happy path.
+   The `Box<dyn ...>` return is required because edition-2024 RPITIT captures `&self`,
+   making `impl Runnable` non-`'static` (ADR-005 §Send-Bounded RPITIT).
 2. {PC-002} `test_structured_output_optional_param` (gated): a schema with `Option<T>` fields
    is honored — the model may omit the optional field; the output deserializes to
    `None` for that field rather than failing.

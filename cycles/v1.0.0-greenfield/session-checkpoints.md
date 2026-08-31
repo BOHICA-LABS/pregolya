@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.6"
+version: "1.7"
 changelog:
+  - "1.7 (D-326/round-49/2026-08-31): D-325 checkpoint archived"
   - "1.6 (D-324/round-47/2026-08-30): D-323 checkpoint archived"
 status: archive
 producer: state-manager
@@ -3943,3 +3944,30 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
 ### STATE: v6.35, timestamp 2026-08-30T23:30:00Z
+
+---
+
+## D-325 (round-48 close — 2026-08-30) — ARCHIVED
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. round-48 CLOSED (D-325). Frozen-HEAD streak gates on new spec HEAD post-D-325 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. BOUNDARY-SANITIZATION-GATE Drift CLOSED: R06 gate (verify-security-literal-propagation.sh corpus-wide SEC-BOUND-001; 13 self-probes). SSE boundary SEC-BOUND-001 parity (BC-2.12.007 {INV-004} + S-1.27; TV-007/008/009) + Bearer-token BC-2.09.007 TV-010. TV 767 canonical. NEXT: dispatch round-49 (P2A-204/205/206/207 + GATE-READY) on NEW frozen spec HEAD post-D-325 push; streak 0/3.
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts = D-325 round-48 close commit — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+
+### D-325 ROUND-48 CLOSE
+- F-P2A200-01 [HIGH]: S-1.26 (v1.10 to v1.11) AC-019 catch-boundary mislocation — E-GRAPH-011 is Pregel-caught Err (BC-2.12.003/{INV-007}), not server-caught; AC-020 sanitizer step 2/3 drift (BC-2.12.003/{INV-008}). ADR-001 (rev-4 to rev-5) E-GRAPH-019 Obligation-4 wording marked illustrative-only.
+- F-P2A200-02 [MED]: S-1.26 AC-020 sanitizer pipeline step 2 (sanitize_internal_ids) and step 3 ordering corrected per BC-2.12.003 {INV-008}.
+- F-P2A201-01 [HIGH, CWE-209/532]: BC-2.12.007 {INV-004} SSE boundary SEC-BOUND-001 — S-1.27 (v1.7 to v1.8) AC-017/EC-015 SSE boundary sanitization pipeline (3rd external surface; TV-007/008/009 minted). S-1.17 (v1.4 to v1.5) R06 cross-ref added.
+- F-P2A202-01 [MED]: BC-2.09.007 Bearer-token pattern added to redact_credentials canonical 4-pattern sanitizer (CWE-522; TV-010 minted).
+- F-P2A203-01 [HIGH, CWE-209/532]: SSE boundary secondary sweep — S-1.27 AC-017/EC-015 fully propagated (BC-2.12.007 {INV-004}; TV-007/008/009 finalized).
+- trajectory-tail 2-2-1-1. GATE-READY=YES 13/13. ARCH-INDEX §Changelog (v1.58); BC-INDEX §Changelog (v4.09); STORY-INDEX §Changelog (v1.35).
+- Census: BC 134 / VP 17 / EC 138 / TV 767 canonical (778 incl GTV) / stories 40 (39+1) / points 303. streak 0/3. L-239 codified.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions<->BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+### STATE: v6.36, timestamp 2026-08-30T23:59:59Z

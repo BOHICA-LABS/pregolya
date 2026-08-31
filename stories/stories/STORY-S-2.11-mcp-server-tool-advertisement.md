@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.11
 epic_id: E-21
-version: "1.33"
+version: "1.34"
 status: draft
 producer: story-writer
 timestamp: 2026-08-29T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "f9c5f68"
+input-hash: "122ae8d"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.10, S-1.14]
@@ -65,6 +65,7 @@ changelog:
   - "1.31 (round-43/F-P2A181-01+F-P2A183-01+O-P2A183-01/2026-08-30): F-P2A181-01 [HIGH]: AC-037 extended — workspace-root Cargo.toml (pregolya-server binary) named as the authoritative panic=unwind pin; pregolya-mcp library-member profile override stated as inert and must not be relied upon; Cargo library-profile semantics (workspace-root-only enforcement) made explicit; SEC-008 comment annotation updated to reflect library-member-inert caveat; mirrors BC-2.09.008 EC-010 v3.4 + BC-2.12.003 EC-003 semantics. F-P2A183-01 [MED]: AC-038 swept into task plan — Task-1 updated to AC-001–AC-038 with test_BC_2_09_008_ec003_conditional_edge_panic_yields_static_internal_error_tv019() added to Red-Gates list (13 Red Gates); Task-40 updated to 38 ACs; Task-45 added for AC-038 Red Gate check+green; Token Budget updated to AC-001–AC-038 + 13 Red Gates (~230 lines). O-P2A183-01 [LOW]: frontmatter and body changelog restored to ascending order (1.29 before 1.30); version bumped to 1.31."
   - "1.32 (round-44/F-P2A187-03/2026-08-30): F-P2A187-03 [MED]: Red-Gate count corrected 13→12 (off-by-one introduced in R43 AC-038 sweep). Ground truth: 11 header-labeled Red Gate ACs (AC-013, AC-023, AC-024, AC-025, AC-026, AC-027, AC-028, AC-029, AC-030, AC-031, AC-033) + AC-038 (Red-Gate-class) = 12 total. Token Budget table corrected: 'AC-001–AC-038 + 13 Red Gates' → 'AC-001–AC-038 + 12 Red Gates'. Historical v1.31 entry preserved unchanged. Version bumped to 1.32."
   - "1.33 (round-46/O-P2A195-01/2026-08-30): O-P2A195-01 [LOW/records] — body §Changelog restored to frontmatter parity. Entries v1.26 (R37/O-P2A157-01) and v1.28 (round-40/F-P2A169-02) were present in the frontmatter changelog array but absent from the body §Changelog; inserted at correct ascending positions between v1.25↔v1.27 and v1.27↔v1.29 respectively. No live-body content changed; Token Budget and AC counts unchanged."
+  - "1.34 (round-49/BC-propagation/2026-08-31): Round-49 Stage-3 BC/interface changes propagated. (1) AC-013 updated from 3-pattern to 6-pattern redact_credentials per BC-2.09.007 {INV-003} v2.5: patterns 4 (Bearer), 5 (URL-userinfo TV-012), 6 (HTTP Basic TV-013) added; test renamed to test_BC_2_09_007_error_message_credential_redaction_applies_6_patterns(); fixture extended with TV-012 and TV-013 vectors. (2) Task-2 updated to reference 6-patterns test name. (3) Task-12 updated to 6-pattern substitution list. (4) Architecture Compliance INV-003 row updated to 6-pattern set + BC-2.09.007 {INV-003} v2.5 citation. (5) File Structure sanitize.rs row updated to 6 pattern substitutions. (6) AC-039 added (OBS-P2A207): BC-2.09.008 {PC-003} Arc-DI wiring assertion — from_graph constructs ConcreteGraphRunner { graph, extract_output } erased into stored runner: Arc<dyn GraphRunner>; verified by test_BC_2_09_008_from_graph_constructs_concrete_runner_erased_to_dyn_graphrunner(). (7) Task-1 updated to AC-001–AC-039; Task-18 updated to reference AC-039; Task-40 updated to 39 ACs; Task-46 added for AC-039 Arc-DI wiring. (8) Token Budget updated to AC-001–AC-039. (9) input-hash updated to 122ae8d (BC inputs updated in round-49 Stage-1/2)."
 ---
 
 # S-2.11: MCP Server — Tool Advertisement and External Client Invocation
@@ -160,17 +161,22 @@ the MCP response `content[0].text` MUST be `"request failed: key=<redacted>"` �
 message with the key value exposed. This is a **mandatory** sanitization (no "best-effort"
 variant). The server applies `pregolya_mcp::sanitize::redact_credentials(text: &str) -> Cow<str>`
 to `PregolyaError::message` before placing it in the response. The redaction function applies
-the following three substitution rules in order:
+the following six substitution rules in order:
 1. OpenAI key pattern `sk-[A-Za-z0-9_\-]{20,}` → `"<redacted>"`
 2. Anthropic key pattern `sk-ant-[A-Za-z0-9_\-]{32,}` → `"<redacted>"`
 3. Generic long alphanumeric token `[A-Za-z0-9]{64,}` → `"<redacted>"`
+4. Bearer token span `Bearer\s+[A-Za-z0-9._~+/=\-]+` → `"<redacted>"`
+5. URL-embedded userinfo `[a-zA-Z][a-zA-Z0-9+.\-]*://[^/\s:@]+:[^/\s:@]+@` → `"<redacted>"` (TV-012)
+6. HTTP Basic auth `Basic\s+[A-Za-z0-9+/=]+` → `"<redacted>"` (base64 padding `+`/`=` prevents pattern 3 from matching; TV-013)
 **Source restriction:** only `PregolyaError::message` is used as the text source. The
 `.source()` chain, `Debug` output, and `Display` output of the error are NEVER included in
 the MCP response text. This test is a Red Gate: without `redact_credentials`, the raw message
 containing key material would reach the external MCP client. Verified by
-`test_BC_2_09_007_error_message_credential_redaction_applies_3_patterns()` (mock tool returning
+`test_BC_2_09_007_error_message_credential_redaction_applies_6_patterns()` (mock tool returning
 `Err(PregolyaError { message: "key=sk-abc123XYZabc123XYZabc", .. })`; assert response
-`content[0].text` equals `"key=<redacted>"`).
+`content[0].text` equals `"key=<redacted>"`; additional fixture
+`"user=https://user:pw@host/path"` → `"user=<redacted>host/path"` covers TV-012;
+`"auth=Basic dXNlcjpwYXNz"` → `"auth=<redacted>"` covers TV-013).
 
 ### AC-014 (traces to BC-2.09.006 EC-006 + BC-2.09.007 EC-007)
 When the MCP server receives bytes on a connection that cannot be parsed as valid JSON (e.g.,
@@ -574,6 +580,21 @@ Verified by devops-engineer at Phase-3; implementer obligation is the comment an
 ### AC-038 (traces to BC-2.09.008 EC-003 — static-replace exception for E-GRAPH-011; TV-019)
 **EC-003 static-replace exception — conditional-edge path_fn panic → E-GRAPH-011 → static "internal error" at MCP boundary:** When a conditional edge's `path_fn` panics during execution (e.g., `panic!("routing error")` inside the routing closure), `FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...)))` catches the panic during `.await` polling. The resulting error carries code `E-GRAPH-011 ConditionalEdgePanic`. Per ADR-029 §Decision 5 internal-panic routing table, `E-GRAPH-011` is an EXCEPTION to the normal error-code forwarding rule — the MCP server applies STATIC replacement: `content[0].text == "internal error"` (NOT the redacted `PregolyaError::message`, which contains `<source_node>` and `<message>` dynamic fields that would expose internal routing topology even after credential redaction). The response is `isError: true`. The server continues serving subsequent `tools/call` requests. BC-2.09.008 TV-019 verifies this path: conditional-edge path_fn panic → `E-GRAPH-011 ConditionalEdgePanic` caught via `AssertUnwindSafe(runner.run(...))` → `isError: true`, `content[0].text == "internal error"`. Note: `E-GRAPH-019 NodePanic` is the parallel case for node-body panics and receives identical static-replace treatment per the same ADR-029 §Decision 5 routing table (BC-2.09.008 EC-003 exception clause covers both). Verified by `test_BC_2_09_008_ec003_conditional_edge_panic_yields_static_internal_error_tv019()`.
 
+### AC-039 (traces to BC-2.09.008 PC-003 — Arc-DI wiring assertion, OBS-P2A207)
+**Arc-DI constructor wiring:** `GraphAgentTool::from_graph` MUST construct a `ConcreteGraphRunner`
+by storing the caller-supplied `Arc<CompiledStateGraph>` in `ConcreteGraphRunner::graph` and the
+`extract_output` closure in `ConcreteGraphRunner::extract_output`, then erase it into a stored
+field `runner: Arc<dyn GraphRunner>`. The `GraphAgentTool` struct field MUST be typed
+`Arc<dyn GraphRunner>` (type-erased DI seam), NOT `Arc<ConcreteGraphRunner>` (which would pin the
+concrete type into the public struct ABI). This assertion verifies that the Arc-DI seam is wired
+at construction time — not at invocation time — and that `GraphAgentTool::invoke_dyn` always
+delegates through the `Arc<dyn GraphRunner>` seam. Verified by
+`test_BC_2_09_008_from_graph_constructs_concrete_runner_erased_to_dyn_graphrunner()`:
+substitute a `MockGraphRunner` (implements `GraphRunner`, returns a known
+`serde_json::Value`); pass it as the `runner` directly (or verify via the public field type);
+call `invoke_dyn`; assert the mock's return value is propagated unchanged — proving delegation
+goes through the `Arc<dyn GraphRunner>` seam and not a hardwired concrete path.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -623,23 +644,23 @@ Verified by devops-engineer at Phase-3; implementer obligation is the comment an
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~6,200 |
+| This story spec | ~6,400 |
 | BC files (3 BCs; BC-2.09.006, BC-2.09.007, BC-2.09.008) | ~10,400 |
 | `module-decomposition.md` SS-09 section | ~400 |
 | `pregolya-mcp/src/server.rs` (new) | ~1,200 |
 | `pregolya-mcp/src/registry.rs` (new) | ~500 |
 | `pregolya-mcp/src/graph_tool.rs` (new) | ~1,800 |
 | `pregolya-mcp/src/sanitize.rs` (new; includes `sanitize_internal_ids`) | ~550 |
-| Test files (~230 lines; AC-001–AC-038 + 12 Red Gates) | ~3,300 |
+| Test files (~245 lines; AC-001–AC-039 + 12 Red Gates) | ~3,500 |
 | Tool outputs | ~600 |
-| **Total** | **~24,850** |
+| **Total** | **~25,300** |
 | Agent context window | 200K (Sonnet) |
 | **Budget usage** | **~12%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-038, including Red Gates: AC-013 (credential redaction VP-015), AC-023 (STATE-ISOLATION VP-016), AC-024 (binary interrupt invariant), AC-025 (GraphAgentTool error paths redaction), AC-026 (node interrupt → E-MCP-010), AC-027 (extra fields excluded VP-016), AC-028 (invalid input → -32602), AC-029 (Deny passthrough under ForceApproveHooks), AC-030 (ActionRisk block → E-MCP-011), AC-031 (error-path UUID sanitization — fixture MUST include a non-v4 UUID), AC-033 (all panics during `.await` polling — graph-node-body + extract_output — → static 'internal error'), AC-038 (`test_BC_2_09_008_ec003_conditional_edge_panic_yields_static_internal_error_tv019()` — Red-Gate-class: conditional-edge path_fn panic → E-GRAPH-011 → static 'internal error' static-replace at MCP boundary, CWE-209 info-disclosure defense); AC-035 is a passing test (not a Red Gate — tests that correct closure excludes credentials); AC-036 is a correctness-boundary test (u64 passthrough); AC-037 is a build-profile annotation obligation (devops-engineer Phase-3) (test-writer step)
-2. [ ] **Red Gate check (AC-013):** confirm `test_BC_2_09_007_error_message_credential_redaction_applies_3_patterns()` FAILS before `pregolya_mcp::sanitize::redact_credentials` is implemented (raw key material reaches response text)
+1. [ ] Write failing tests for AC-001 through AC-039, including Red Gates: AC-013 (credential redaction VP-015 — 6-pattern set), AC-023 (STATE-ISOLATION VP-016), AC-024 (binary interrupt invariant), AC-025 (GraphAgentTool error paths redaction), AC-026 (node interrupt → E-MCP-010), AC-027 (extra fields excluded VP-016), AC-028 (invalid input → -32602), AC-029 (Deny passthrough under ForceApproveHooks), AC-030 (ActionRisk block → E-MCP-011), AC-031 (error-path UUID sanitization — fixture MUST include a non-v4 UUID), AC-033 (all panics during `.await` polling — graph-node-body + extract_output — → static 'internal error'), AC-038 (`test_BC_2_09_008_ec003_conditional_edge_panic_yields_static_internal_error_tv019()` — Red-Gate-class: conditional-edge path_fn panic → E-GRAPH-011 → static 'internal error' static-replace at MCP boundary, CWE-209 info-disclosure defense); AC-035 is a passing test (not a Red Gate — tests that correct closure excludes credentials); AC-036 is a correctness-boundary test (u64 passthrough); AC-037 is a build-profile annotation obligation (devops-engineer Phase-3); AC-039 (`test_BC_2_09_008_from_graph_constructs_concrete_runner_erased_to_dyn_graphrunner()` — Arc-DI wiring: `from_graph` constructs `ConcreteGraphRunner { graph, extract_output }` and erases it into stored `Arc<dyn GraphRunner>` seam) (test-writer step)
+2. [ ] **Red Gate check (AC-013):** confirm `test_BC_2_09_007_error_message_credential_redaction_applies_6_patterns()` FAILS before `pregolya_mcp::sanitize::redact_credentials` is implemented (raw key material reaches response text)
 3. [ ] Register `E-MCP-005 McpServerBindFailed` in error taxonomy (TRANSPORT, broken, Never)
 4. [ ] Create `pregolya-mcp/src/registry.rs` — `ToolRegistry` with `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>`
 5. [ ] Create `pregolya-mcp/src/server.rs` — `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` enum
@@ -649,13 +670,13 @@ Verified by devops-engineer at Phase-3; implementer obligation is the comment an
 9. [ ] Implement JSON-RPC error responses for tool-not-found (-32602) and invalid-params (-32602)
 10. [ ] Implement `McpServerHandle::shutdown()` — graceful connection teardown
 11. [ ] Verify `DynTool` object safety in server context (same seam as S-2.10)
-12. [ ] Implement `pregolya_mcp::sanitize::redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (sk-*, sk-ant-*, 64-char token → `<redacted>`); source-restrict to `PregolyaError::message` in `tools/call` error handler (AC-013 / BC-2.09.007 {INV-003})
+12. [ ] Implement `pregolya_mcp::sanitize::redact_credentials(text: &str) -> Cow<str>` — 6 pattern substitutions in order: (1) `sk-[A-Za-z0-9_\-]{20,}` OpenAI key; (2) `sk-ant-[A-Za-z0-9_\-]{32,}` Anthropic key; (3) `[A-Za-z0-9]{64,}` generic long alphanumeric token; (4) `Bearer\s+[A-Za-z0-9._~+/=\-]+` Bearer span; (5) `[a-zA-Z][a-zA-Z0-9+.\-]*://[^/\s:@]+:[^/\s:@]+@` URL-embedded userinfo (TV-012); (6) `Basic\s+[A-Za-z0-9+/=]+` HTTP Basic auth (TV-013; base64 padding prevents pattern 3 from matching) — all → `"<redacted>"`; source-restrict to `PregolyaError::message` in `tools/call` error handler (AC-013 / BC-2.09.007 {INV-003} v2.5)
 13. [ ] Implement JSON-RPC -32700 parse-error response for non-JSON bytes on both tools/list and tools/call paths (AC-014 / BC-2.09.006 EC-006 + BC-2.09.007 EC-007)
 14. [ ] Implement JSON-RPC -32600 invalid-request response for malformed-but-valid-JSON requests (AC-015 / BC-2.09.006 EC-007 + BC-2.09.007 EC-008)
 15. [ ] Implement `result_text` selection in `tools/call` handler: `Value::String(s)` → `result_text = s` verbatim; other `Value` variants → `result_text = serde_json::to_string(&value)` (compact JSON) (AC-016 / BC-2.09.007 {PC-002})
 16. [ ] Run `cargo nextest run -p pregolya-mcp` — AC-001–AC-016 green (server + registry baseline)
 17. [ ] Create `pregolya-mcp/src/graph_tool.rs` — `GraphAgentTool` struct (non-generic; runner erased via `Arc<dyn GraphRunner>`), `GraphToolApprovalPolicy` enum, `BoundaryApprovalHook` internal struct, `GraphRunner` type-erased trait; non-generic `from_graph` constructor (no type parameters; caller passes `Arc<CompiledStateGraph>`, `schemars::Schema`, and `extract_output: impl Fn(&serde_json::Value) -> serde_json::Value`)
-18. [ ] Implement `GraphAgentTool::from_graph` — accept `name`, `description`, `Arc<CompiledStateGraph>`, `input_schema: schemars::Schema` (caller-derived), `extract_output: impl Fn(&serde_json::Value) -> serde_json::Value` closure; store `input_schema` directly for `DynTool::schema()` (AC-017 / BC-2.09.008 PC-001)
+18. [ ] Implement `GraphAgentTool::from_graph` — accept `name`, `description`, `Arc<CompiledStateGraph>`, `input_schema: schemars::Schema` (caller-derived), `extract_output: impl Fn(&serde_json::Value) -> serde_json::Value` closure; store `input_schema` directly for `DynTool::schema()`; construct `ConcreteGraphRunner { graph: arc_graph, extract_output: closure }` and erase into stored `runner: Arc<dyn GraphRunner>` (Arc-DI seam — NOT `Arc<ConcreteGraphRunner>`; type-erased at construction time) (AC-017, AC-039 / BC-2.09.008 PC-001, PC-003)
 19. [ ] Implement `DynTool` for `GraphAgentTool` — `name()`, `description()`, `schema()` returning stored `schemars::Schema`, `invoke_dyn()` dispatching graph execution (AC-018 / BC-2.09.008 PC-002)
 20. [ ] **Red Gate check (AC-023):** confirm `test_BC_2_09_008_state_isolation_only_extract_output_in_result()` FAILS before STATE-ISOLATION enforcement is implemented (extra fields leak into the `serde_json::Value` returned by `invoke_dyn` without explicit exclusion)
 21. [ ] **Red Gate check (AC-026):** confirm `test_BC_2_09_008_ec004_node_interrupt_deny_policy_e_mcp_010()` FAILS before E-MCP-010 interrupt-denied path is implemented
@@ -677,12 +698,13 @@ Verified by devops-engineer at Phase-3; implementer obligation is the comment an
 37. [ ] Implement panic recovery inside `GraphAgentTool::invoke_dyn`: use `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(runner.run(input, policy)))` at the `.await` call site (NOT `std::panic::catch_unwind` — that is synchronous and inadequate for this async path); this wrap covers ALL panics during `.await` polling — both graph-node-body panics (a programming error in graph node code; higher-probability CWE-248 vector per BC-2.09.008 EC-010) and `extract_output` panics — yielding the same static `"internal error"` isError:true response in both cases; catch yields `isError: true`, `content[0].text == "internal error"` (static; no panic message or backtrace forwarded); ensure server continues serving subsequent requests; add `futures` to `pregolya-mcp/Cargo.toml` `[dependencies]` with workspace pin if not already present; `AssertUnwindSafe` is `std::panic::AssertUnwindSafe` (AC-033, AC-037 / BC-2.09.008 EC-010/SEC-008)
 38. [ ] Write boundary test confirming success-path `serde_json::Value` result is NOT framework-sanitized: `MockTool` returning `Ok(Value::String("key=sk-abc123XYZabc123XYZabc".to_string()))` → assert `content[0].text` equals `"key=sk-abc123XYZabc123XYZabc"` verbatim (AC-034 / BC-2.09.007 PC-002)
 39. [ ] Write boundary test confirming `extract_output` success-path result is NOT framework-sanitized: closure selecting `api_key` field → assert success response preserves value verbatim (AC-032 / BC-2.09.008 INV-005)
-40. [ ] Run `cargo nextest run -p pregolya-mcp` — all 38 ACs green (AC-001–AC-038)
+40. [ ] Run `cargo nextest run -p pregolya-mcp` — all 39 ACs green (AC-001–AC-039)
 41. [ ] Write passing test for AC-035 — `test_BC_2_09_008_inv005_credential_opacity_correct_closure_excludes_credentials()`: construct state value `json!({ "answer": "hello", "api_key": "sk-abc123XYZabc123XYZabc" })`; provide closure `|s: &serde_json::Value| json!({ "answer": s["answer"] })`; assert MCP response `content[0].text == "{\"answer\":\"hello\"}"` — no `api_key` field in output (AC-035 / BC-2.09.008 INV-005, DI-010)
 42. [ ] Write boundary test for AC-036 — `test_BC_2_09_008_tv013_u64_checkpoint_id_passes_through_sanitize_unchanged()`: construct graph returning `Err(PregolyaError { message: "failed to load checkpoint 42", .. })`; assert `content[0].text == "failed to load checkpoint 42"` verbatim after `sanitize_internal_ids` (u64 decimal integer is not UUID-shaped; no stripping applied; BC-2.09.008 TV-013)
 43. [ ] Verify `sanitize_internal_ids` does NOT over-strip `u64` CheckpointId values — run `test_BC_2_09_008_tv013_u64_checkpoint_id_passes_through_sanitize_unchanged()` both before and after implementing `sanitize_internal_ids`; both runs must pass (AC-036 correctness boundary; if this test fails after implementation, the regex is over-aggressive and strips non-UUID decimal content — fix the pattern)
 44. [ ] Add SEC-008 comment annotation in `pregolya-mcp/Cargo.toml` or at the `FutureExt::catch_unwind` call site in `invoke_dyn`: `// SEC-008: panic = "unwind" required in workspace-root release profile (pregolya-server) — library-member profile is inert; FutureExt::catch_unwind is voided under panic = "abort"; devops-engineer asserts workspace profile at Phase-3 init` (AC-037 / BC-2.09.008 EC-010)
 45. [ ] **Red Gate check + green (AC-038):** confirm `test_BC_2_09_008_ec003_conditional_edge_panic_yields_static_internal_error_tv019()` FAILS before the ADR-029 §Decision 5 static-replace routing is implemented for E-GRAPH-011 (without static-replace, the redacted `PregolyaError::message` with `<source_node>` and `<message>` dynamic fields would reach `content[0].text` instead of the static "internal error" string); then implement the E-GRAPH-011 static-replace branch inside `invoke_dyn` and verify the test goes green; assert `isError: true`, `content[0].text == "internal error"` (TV-019; AC-038 / BC-2.09.008 EC-003; CWE-209 info-disclosure defense)
+46. [ ] **Arc-DI wiring (AC-039):** confirm `test_BC_2_09_008_from_graph_constructs_concrete_runner_erased_to_dyn_graphrunner()` verifies the Arc-DI seam — `from_graph` stores `runner: Arc<dyn GraphRunner>` (NOT `Arc<ConcreteGraphRunner>`); substitute a `MockGraphRunner` that returns a known `serde_json::Value`; call `invoke_dyn`; verify the mock's return value is propagated unchanged (proving delegation goes through the `Arc<dyn GraphRunner>` seam and not a hardwired concrete path) (AC-039 / BC-2.09.008 PC-003)
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -712,7 +734,7 @@ as specified in BC-2.09.007 Architecture Anchors — `Option<Arc<dyn DynTool>>`,
 | `McpServer` in `mcp::server` module — distinct from `mcp::client` | ADR-013 §Consequences; BC-2.09.006 Architecture Anchors | Module structure |
 | `isError: true` is in the JSON-RPC `result` layer — not `error` | BC-2.09.007 {INV-002} | Test AC-012 |
 | `E-MCP-005` category: TRANSPORT, severity: broken, retry_hint: Never | BC-2.09.006 §Error code minted | Error taxonomy registration |
-| `pregolya_mcp::sanitize::redact_credentials` applied to `PregolyaError::message` before MCP response; source-restriction: never `.source()`/`Debug`/`Display` | BC-2.09.007 {INV-003} (mandatory, no hedge) | Test AC-013 Red Gate |
+| `pregolya_mcp::sanitize::redact_credentials` (6-pattern set: sk-*, sk-ant-*, 64-char alnum, Bearer, URL-userinfo, HTTP Basic) applied to `PregolyaError::message` before MCP response; source-restriction: never `.source()`/`Debug`/`Display` | BC-2.09.007 {INV-003} v2.5 (mandatory, no hedge) | Test AC-013 Red Gate |
 | Malformed JSON bytes → JSON-RPC `-32700 Parse error` (wire-protocol only, no PregolyaError) | BC-2.09.006 EC-006, BC-2.09.007 EC-007 | Tests AC-014 |
 | Invalid JSON-RPC structure → JSON-RPC `-32600 Invalid Request` (wire-protocol only) | BC-2.09.006 EC-007, BC-2.09.007 EC-008 | Tests AC-015 |
 | `DynTool::invoke_dyn` returns `serde_json::Value`; `Value::String(s)` → verbatim `result_text`; other variants → `serde_json::to_string` (compact) | BC-2.09.007 {PC-002} | Test AC-016 |
@@ -755,7 +777,7 @@ build MUST fail.
 |------|--------|---------|
 | `pregolya-mcp/src/server.rs` | CREATE | `McpServer`, `McpServerConfig`, `McpServerHandle`, `McpServerTransport` |
 | `pregolya-mcp/src/registry.rs` | CREATE | `ToolRegistry` — standalone `mcp::registry` module (SS-09; architect OPTION A); `Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>`; read by `mcp::server` (tools/list dispatch: BC-2.09.006 {PC-002}; tools/call dispatch: BC-2.09.007 {PC-001}); populated by the application/caller layer via the standard `ToolRegistry` registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); typical flow: caller calls `client.get_tools()` → caller registers returned tools via `registry.register(name, tool)`; `mcp::client` does NOT write the registry; injected via `Arc<ToolRegistry>`, not by embedding in either module |
-| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 3 pattern substitutions (AC-013; BC-2.09.007 {INV-003}); `pub fn sanitize_internal_ids(text: &str) -> Cow<str>` — two-pattern union (both case-insensitive): (1) hyphenated `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) simple no-hyphen `\b[0-9a-f]{32}\b` (covers `Uuid::simple()` rendering; `\b` prevents 64-hex-split and underscore-flanked-strip); covers `run_id` and server-layer `thread_id` only; `u64` `CheckpointId` passes through unsanitized; chained after `redact_credentials` on `isError: true` paths (AC-031, AC-036; BC-2.09.008 INV-001/TV-013/TV-014) |
+| `pregolya-mcp/src/sanitize.rs` | CREATE | `pub fn redact_credentials(text: &str) -> Cow<str>` — 6 pattern substitutions (patterns 1–3: sk-*/sk-ant-*/64-char alnum; pattern 4: Bearer; pattern 5: URL-userinfo TV-012; pattern 6: HTTP Basic TV-013; AC-013; BC-2.09.007 {INV-003} v2.5); `pub fn sanitize_internal_ids(text: &str) -> Cow<str>` — two-pattern union (both case-insensitive): (1) hyphenated `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) simple no-hyphen `\b[0-9a-f]{32}\b` (covers `Uuid::simple()` rendering; `\b` prevents 64-hex-split and underscore-flanked-strip); covers `run_id` and server-layer `thread_id` only; `u64` `CheckpointId` passes through unsanitized; chained after `redact_credentials` on `isError: true` paths (AC-031, AC-036; BC-2.09.008 INV-001/TV-013/TV-014) |
 | `pregolya-mcp/src/graph_tool.rs` | CREATE | `GraphAgentTool` (non-generic struct; non-generic `from_graph` constructor; caller passes `Arc<CompiledStateGraph>` + `schemars::Schema` + `extract_output: impl Fn(&serde_json::Value) -> serde_json::Value`), `GraphToolApprovalPolicy`, `BoundaryApprovalHook`, `GraphRunner` — STATE-ISOLATION enforcement via `ConcreteGraphRunner::run` (ADR-029 §Decision 3 canonical seam); E-MCP-010 interrupt-denied path (BC-2.09.008; ADR-029) |
 | `pregolya-mcp/src/lib.rs` | MODIFY | Re-export `McpServer`, `McpServerConfig`, `McpServerHandle`; expose `sanitize` module; re-export `GraphAgentTool`, `GraphToolApprovalPolicy`; expose `graph_tool` module |
 
@@ -792,3 +814,4 @@ build MUST fail.
 - **1.31 (round-43 / F-P2A181-01 + F-P2A183-01 + O-P2A183-01 / 2026-08-30):** Three round-43 findings closed. (1) F-P2A181-01 [HIGH, CWE-248/703] — AC-037 extended: workspace-root `Cargo.toml` (applied to the `pregolya-server` binary at link time) named as the authoritative `panic = "unwind"` pin per SEC-008 and BC-2.09.008 EC-010; Cargo library-profile semantics made explicit — a `[profile.release] panic` line inside `pregolya-mcp/Cargo.toml` is silently ignored by the Cargo linker and MUST NOT be relied upon as the SEC-008 gate; `pregolya-server` binary named as the site where the `catch_unwind` boundary lives; SEC-008 comment annotation updated to reference workspace-root / library-member-inert distinction. (2) F-P2A183-01 [MED, CWE-209] — AC-038 swept into task plan: Task-1 range extended to AC-001–AC-038 with `test_BC_2_09_008_ec003_conditional_edge_panic_yields_static_internal_error_tv019()` added as Red-Gate-class failing test (13 Red Gates total); Task-40 count updated to 38 ACs; Task-45 added for AC-038 Red Gate check + green (E-GRAPH-011 static-replace branch); Token Budget updated to AC-001–AC-038 + 13 Red Gates (~230 lines, ~3,300 tokens). (3) O-P2A183-01 [LOW/records] — frontmatter changelog array and body §Changelog both restored to ascending order (v1.29 before v1.30); version bumped to 1.31.
 - **1.32 (round-44 / F-P2A187-03 / 2026-08-30):** F-P2A187-03 [MED] — Red-Gate count corrected 13→12 (off-by-one introduced in R43 AC-038 sweep; F-P2A187-03). Ground truth: 11 header-labeled Red Gate ACs (AC-013, AC-023, AC-024, AC-025, AC-026, AC-027, AC-028, AC-029, AC-030, AC-031, AC-033) + AC-038 (Red-Gate-class, no `### AC-038 ... Red Gate` header) = 12 total. Token Budget table corrected: `AC-001–AC-038 + 13 Red Gates` → `AC-001–AC-038 + 12 Red Gates`. Historical v1.31 entry preserved unchanged per ascending-changelog convention. Version bumped to 1.32.
 - **1.33 (round-46 / O-P2A195-01 / 2026-08-30):** O-P2A195-01 [LOW/records] — body §Changelog restored to frontmatter parity. Entries v1.26 (R37/O-P2A157-01, MUST-language propagation for {INV-003}) and v1.28 (round-40/F-P2A169-02, `action_risk` precondition propagation) were present in the frontmatter changelog array but absent from the body §Changelog; inserted at correct ascending positions between v1.25↔v1.27 and v1.27↔v1.29 respectively. No live-body content changed; Token Budget and AC counts unchanged.
+- **1.34 (round-49 / BC-propagation / 2026-08-31):** Round-49 Stage-3 BC/interface changes propagated. (1) AC-013 updated from 3-pattern to 6-pattern `redact_credentials` per BC-2.09.007 {INV-003} v2.5: patterns 4 (`Bearer\s+[A-Za-z0-9._~+/=\-]+`), 5 URL-userinfo `[a-zA-Z][a-zA-Z0-9+.\-]*://[^/\s:@]+:[^/\s:@]+@` (TV-012), and 6 HTTP Basic `Basic\s+[A-Za-z0-9+/=]+` (TV-013) added; test function renamed to `test_BC_2_09_007_error_message_credential_redaction_applies_6_patterns()`; fixture extended with TV-012 and TV-013 vectors. (2) Task-2 updated to 6-patterns test name. (3) Task-12 updated to 6-pattern substitution list with URL-userinfo and HTTP Basic entries. (4) Architecture Compliance INV-003 row updated to `6-pattern set` with BC-2.09.007 {INV-003} v2.5 citation. (5) File Structure `sanitize.rs` row updated from `3 pattern substitutions` to `6 pattern substitutions`. (6) AC-039 added (OBS-P2A207): BC-2.09.008 {PC-003} Arc-DI wiring assertion — `from_graph` constructs `ConcreteGraphRunner { graph, extract_output }` and erases it into stored `runner: Arc<dyn GraphRunner>` seam; verified by `test_BC_2_09_008_from_graph_constructs_concrete_runner_erased_to_dyn_graphrunner()`. (7) Task-1 updated to AC-001–AC-039; Task-18 updated with Arc-DI wiring description and AC-039 reference; Task-40 updated to 39 ACs; Task-46 added for AC-039 Arc-DI wiring. (8) Token Budget updated to AC-001–AC-039 (~245 lines + 12 Red Gates, ~25,300 total). (9) input-hash updated to 122ae8d (BC input files updated through round-49 Stage-1/2).

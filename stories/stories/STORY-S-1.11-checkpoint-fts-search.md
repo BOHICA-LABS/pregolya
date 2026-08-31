@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.11
 epic_id: E-05
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "d9fa19b"
+input-hash: "622cd1e"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.10]
@@ -47,7 +47,7 @@ tdd_mode: strict
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.04.008 PRE-003)
-`CheckpointSaver` trait includes method `fts_search(query: &str, config: FtsSearchConfig) -> Result<Vec<FtsSearchResult>, PregolyaError>`. `FtsSearchConfig` has fields `thread_id: Option<&str>` (scope to one thread when `Some`) and `limit: usize`. Verified by `test_BC_2_04_008_fts_search_signature_exists()`.
+`CheckpointSaver` trait includes method `fts_search(&self, query: &str, config: FtsSearchConfig<'_>) -> Result<Vec<FtsSearchResult>, PregolyaError>`. `FtsSearchConfig<'a>` has fields `thread_id: Option<&'a str>` (scope to one thread when `Some`; the lifetime `'a` ties the thread_id borrow to the config's lifetime) and `limit: usize`. The `FtsSearchConfig<'_>` wildcard lifetime in the trait method signature is the canonical elided form (the caller's `&str` borrow need only live as long as the `fts_search` call, not longer). Verified by `test_BC_2_04_008_fts_search_signature_exists()`.
 
 ### AC-002 (traces to BC-2.04.008 PC-001)
 `FtsSearchResult` has fields: `checkpoint_id: CheckpointId`, `thread_id: String`, `checkpoint_ns: String`, `message_role: String`, `content_snippet: String`, `rank: f64`. All fields are present and non-nullable. Verified by `test_BC_2_04_008_result_struct_fields()`.
@@ -77,7 +77,7 @@ When a graph node calls the `search_history` tool and the underlying `fts_search
 
 | Unit / Type | Module Path | Crate | Pure / Effectful |
 |-------------|-------------|-------|-----------------|
-| `FtsSearchConfig`, `FtsSearchResult` structs | `pregolya_checkpoint::fts` | pregolya-checkpoint | Pure (data type definitions; no I/O) |
+| `FtsSearchConfig<'a>`, `FtsSearchResult` structs | `pregolya_checkpoint::fts` | pregolya-checkpoint | Pure (data type definitions; no I/O) |
 | `CheckpointSaver::fts_search` trait method | `pregolya_checkpoint::saver` | pregolya-checkpoint | Effectful Shell (executes SQLite FTS5 SELECT query via `rusqlite`) |
 | FTS5 virtual table schema creation and same-transaction index update (`SqliteCheckpointSaver`) | `pregolya_checkpoint::fts` | pregolya-checkpoint | Effectful Shell (SQLite DDL `CREATE VIRTUAL TABLE` + DML `INSERT` into FTS table via `rusqlite`) |
 | `search_history_tool()` factory function | `pregolya_checkpoint::fts` | pregolya-checkpoint | Effectful Shell (returns a `Tool` impl whose `invoke` delegates to `fts_search` and performs SQLite reads) |
@@ -88,7 +88,7 @@ When a graph node calls the `search_history` tool and the underlying `fts_search
 
 | Function / Type | Pure or Effectful | Reason |
 |----------------|-------------------|--------|
-| `FtsSearchConfig`, `FtsSearchResult` | Pure | Data type definitions; no I/O side effects |
+| `FtsSearchConfig<'a>`, `FtsSearchResult` | Pure | Data type definitions; no I/O side effects |
 | `SqliteCheckpointSaver::fts_search` | Effectful Shell | Executes SQLite FTS5 SELECT via `rusqlite`; reads from persistent storage |
 | FTS5 virtual table schema init | Effectful Shell | SQLite `CREATE VIRTUAL TABLE` DDL executed on connection init via `rusqlite` |
 | FTS5 index update (same-transaction as `put_writes`) | Effectful Shell | SQLite `INSERT` into FTS virtual table in the same `rusqlite` transaction as the checkpoint write |
@@ -110,7 +110,7 @@ Well within the 20-30% agent context window threshold.
 ## Tasks
 
 - [ ] Extend `pregolya-checkpoint/src/saver.rs` — add `fts_search` method to `CheckpointSaver` trait
-- [ ] Define `FtsSearchConfig` and `FtsSearchResult` structs in `pregolya-checkpoint/src/fts.rs`
+- [ ] Define `FtsSearchConfig<'a>` (with `thread_id: Option<&'a str>` lifetime-bearing field) and `FtsSearchResult` structs in `pregolya-checkpoint/src/fts.rs`
 - [ ] Implement SQLite FTS5 table creation in `SqliteCheckpointSaver` schema init
 - [ ] Implement FTS index update in the same SQLite transaction as `put_writes` and `put`
 - [ ] Implement `fts_search` query execution against FTS5 table
@@ -134,7 +134,7 @@ Derived from `architecture/module-decomposition.md §pregolya-checkpoint`:
 4. `E-CHKPT-008` (FtsLimitZero) and `E-CHKPT-009` (Fts5Unavailable) must be defined in the `pregolya-core` error taxonomy before being used. If they are not yet present, add them as part of this story's implementation.
 5. `search_history_tool` returns a value that implements `Tool` (from `pregolya-core`). It must NOT be an `Arc<dyn Tool>` — return a concrete type that can be boxed by the caller.
 6. No `unwrap()` / `expect()` in non-test code.
-7. `FtsSearchResult` and `FtsSearchConfig` must carry `#[non_exhaustive]`.
+7. `FtsSearchResult` and `FtsSearchConfig<'a>` must carry `#[non_exhaustive]`.
 8. When `EncryptedSerializer` is configured, FTS5 MUST NOT be enabled simultaneously. `SqliteCheckpointSaver::new()` MUST return `Err(E-CHKPT-010 FtsEncryptionIncompatible)` at construction time when both are set — before any DDL executes. The FTS5 virtual table stores plaintext payload content in the SQLite file, which violates the at-rest encryption guarantee when `EncryptedSerializer` is active. This is a VAL error (caller configuration mistake), not an INTERNAL error.
 
 ## Library & Framework Requirements
@@ -152,7 +152,7 @@ Same as S-1.10 (inherits crate context):
 ## File Structure Requirements
 
 Files to CREATE:
-- `/pregolya-checkpoint/src/fts.rs` — `FtsSearchConfig`, `FtsSearchResult`, FTS5 schema, FTS index update logic
+- `/pregolya-checkpoint/src/fts.rs` — `FtsSearchConfig<'a>` (lifetime-bearing; `thread_id: Option<&'a str>`), `FtsSearchResult`, FTS5 schema, FTS index update logic
 - `/pregolya-checkpoint/tests/fts_tests.rs` — tests for AC-001..AC-008
 
 Files to MODIFY:
@@ -175,6 +175,7 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-08-31 | Round-49 BC-propagation: AC-001 updated — `FtsSearchConfig<'a>` with lifetime; method signature `fts_search(&self, query: &str, config: FtsSearchConfig<'_>) -> Result<Vec<FtsSearchResult>, PregolyaError>`; field `thread_id: Option<&'a str>`. Architecture Mapping and File Structure updated to `FtsSearchConfig<'a>`. input-hash updated. | round-49 |
 | 1.2 | 2026-08-26 | SW-2/bc-completeness-hardening: BC-2.04.008 → AC-009 (EC-008 search_history tool error → ToolOutput::Error; run does NOT halt). EC-006 added to edge cases. | SW-2 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |
 | 1.0 | 2026-08-18 | Initial authoring | story-writer |

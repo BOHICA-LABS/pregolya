@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "2.0"
+version: "2.1"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -37,6 +37,7 @@ changelog:
   - "1.8 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.9 (round-46/F-P2A195-01+F-P2A195-03/2026-08-30): F-P2A195-01 [HIGH] — VP-DI011-02 static-analysis anchor corrected: phantom `CompiledGraph.invoke` (dot notation, non-canonical type) → `CompiledStateGraph::invoke` (canonical per BC-2.02.001 {PC-001}; Rust :: path). VP-DI011-02 is the SOLE mechanized DI-011 defense against the CONFLICT-10/NE-13 streaming-stub counter-example. F-P2A195-03 [MED] — non-canonical type `CompiledGraph` corrected to `CompiledStateGraph` at five live-body sites: §Description, {PRE-001}, {PC-005}, {INV-001}, §Architecture Anchors. Historical changelog entries grandfathered per append_only_numbering policy."
   - "2.0 (round-48/F-P2A201-01+F-P2A203-01/2026-08-30): F-P2A201-01 [HIGH, CWE-209/532] + F-P2A203-01 [HIGH, CWE-209/532] — SSE boundary bypasses SEC-BOUND-001 (3rd external boundary). {INV-003} reconciled: 'same PregolyaError cause' → 'same SANITIZED PregolyaError cause' per SEC-BOUND-001 parity requirement; both surfaces now explicitly apply the 3-step pipeline before emission. {INV-004} added: External-Boundary Error-Sanitization (SEC-BOUND-001) — mandatory 3-step pipeline (internal-panic static-replace [E-GRAPH-011 + E-GRAPH-019] → redact_credentials [4-pattern set] → sanitize_internal_ids [UUID-shaped only; u64-CheckpointId carve-out]) on BOTH the SSE `StreamEvent::Error.error_message` AND the unary non-2xx error body BEFORE emission; references ADR-029 §SEC-BOUND-001; mirrors BC-2.12.003 {INV-007}/{INV-008}; closes 3rd external boundary gap. EC-001 and EC-006 updated to reference sanitized error. TV-007 minted (E-GRAPH-011 static-replace on SSE surface; TV count 6→7). TV-008 minted (E-GRAPH-019 static-replace on SSE surface; TV count 7→8). TV-009 minted (Bearer-token credential redaction on SSE surface; TV count 8→9)."
+  - "2.1 (round-49/F-P2A205-02-sibling/2026-08-31): F-P2A205-02 sibling sweep — {INV-004} step 2 canonical pattern set extended from 4 to 6 patterns: pattern 5 URL-embedded userinfo `[a-zA-Z][a-zA-Z0-9+.\\-]*://[^/\\s:@]+:[^/\\s:@]+@` → `<redacted>`; pattern 6 HTTP Basic auth `Basic\\s+[A-Za-z0-9+/=]+` → `<redacted>`. 'four-pattern set' → 'six-pattern set'. BC-2.09.007 {INV-003}(b) is the canonical authority. No new TVs minted (TV-009 already tests Bearer-token path; URL-userinfo and Basic-auth coverage tested via TV-012/TV-013 in BC-2.09.007)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -112,10 +113,11 @@ graph engine, producing output that could diverge from the unary path.
        execution — see server error log for details"`
      - E-GRAPH-019: `"NodePanic: graph node panicked during execution — see server error
        log for details"`
-  2. **`redact_credentials`**: apply the canonical four-pattern set (BC-2.09.007 {INV-003}(b):
+  2. **`redact_credentials`**: apply the canonical six-pattern set (BC-2.09.007 {INV-003}(b)):
      (1) `sk-[A-Za-z0-9_\-]{20,}`, (2) `sk-ant-[A-Za-z0-9_\-]{32,}`, (3) `[A-Za-z0-9]{64,}`,
-     (4) `Bearer\s+[A-Za-z0-9._~+/=\-]+`) — replace each match with `"<redacted>"`. Symmetric
-     with BC-2.12.003 {INV-008} step 2.
+     (4) `Bearer\s+[A-Za-z0-9._~+/=\-]+`, (5) `[a-zA-Z][a-zA-Z0-9+.\-]*://[^/\s:@]+:[^/\s:@]+@`
+     (URL-embedded userinfo), (6) `Basic\s+[A-Za-z0-9+/=]+` (HTTP Basic auth) — replace each
+     match with `"<redacted>"`. Symmetric with BC-2.12.003 {INV-008} step 2.
   3. **`sanitize_internal_ids`**: replace UUID-shaped internal identifiers (run IDs, internal
      trace IDs, node instance IDs not already disclosed to the caller) with `"<redacted-id>"`.
      `u64` CheckpointId is NOT UUID-shaped and is NOT covered by this pass; authoring-site

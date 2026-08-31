@@ -4470,3 +4470,68 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **Census delta: TV 763→767 canonical (+4: TV-010 Bearer-token {BC-2.09.007}; TV-007 SSE normal-delta {INV-004}; TV-008 SSE credential-in-delta {INV-004}; TV-009 SSE event-internal-id {INV-004}). Grand total 774→778 incl GTV. BC 134 / VP 17 / EC 138 / stories 40 / points 303 UNCHANGED. L-239 codified. streak 0/3 (frozen-HEAD reset on D-325 push).**
 
 **NEXT: round-49 on new frozen HEAD post-D-325 push. Streak 0/3. BOUNDARY-SANITIZATION-GATE Drift CLOSED: R06 gate (13 self-probes) + L-238 parity-principle together form complete boundary-sanitization closure pattern.**
+
+---
+
+## Round 49 — P2A-204/205/206/207 (2026-08-31; D-326)
+
+**Trajectory: →2→3→0→4 | Numeric tail: →2→3→0→4 | NOT CLEAN(strict). GATE-READY=YES 13/13.**
+
+### Pass P2A-204
+
+|---------|----------|-------------|
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A204-01 | MED | CLOSED: FtsSearchConfig E0106 lifetime annotation absent at mirror sites — ADR-029 (v2.18→v2.19) two note-only mirror sites updated to `FtsSearchConfig<'a>` form. S-1.11 (v1.2→v1.3) AC-001 trait signature updated. |
+| F-P2A204-02 | OBS→adjudicated | CLOSED: bind_tools/with_structured_output edition-2024 RPITIT capture → `Box<dyn>` owned/escapable form — ADR-005 (v1.21→v1.22) §Send-Bounded RPITIT table updated; interface-definitions.md §bind_tools return types updated; S-2.07 (v1.2→v1.3) AC-007/AC-010 updated. |
+
+### Pass P2A-205
+
+|---------|----------|-------------|
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A205-01 | HIGH, CWE-209/532 | CLOSED: BC-2.09.007 {INV-003} generic tools/call boundary missing SEC-BOUND-001 step-3 (`sanitize_internal_ids`) + ADR-029 §SEC-BOUND-001 mis-attribution corrected (generic tools/call boundary → BC-2.09.007, step-1 N/A clause; GraphAgentTool → BC-2.09.008, all-3-steps). TV-011 minted (UUID in plain-tool error → `<redacted-id>`). TV count 10→11. |
+| F-P2A205-02 | HIGH, CWE-522/532 | CLOSED: BC-2.09.007 {INV-003}(b) `redact_credentials` extended from 4 to 6 patterns: pattern 5 URL-userinfo `scheme://user:pass@host` → `"<redacted>"`; pattern 6 HTTP Basic auth `Basic <base64>` → `"<redacted>"`. TV-012 (URL-userinfo; TV count 11→12) + TV-013 (Basic-auth; TV count 12→13) minted. Propagated to BC-2.09.008 {INV-003}, BC-2.12.003 {INV-008} step 2, BC-2.12.007 {INV-004} step 2. VP-015 (v1.1→v1.2) 4→7 test cases; 3-pattern → 6-pattern. |
+| O-P2A205-03 | MED, process-gap | CLOSED/IMPLEMENTED: `verify-security-literal-propagation.sh` extended with R06-PP partial-pipeline rule; 3 new self-probes (coverage-gap / correct-full-pipeline / explicit-N/A-carve-out); advisory exit 0. L-240 codified. |
+
+### Pass P2A-206
+
+CLEAN(strict) — zero findings. All census/consistency/records axes PASS. GATE-READY-OBS STORY-INDEX `level:` field — addressed in Stage-3 fix (STORY-INDEX §level-field).
+
+### Pass P2A-207
+
+|---------|----------|-------------|
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A207-01 | HIGH | CLOSED: S-2.10 (v1.4→v1.5) forbidden-deps clause corrected — `pregolya-mcp → pregolya-graph` removed from banned list; carve-out annotation added for `mcp::graph_tool` (GraphAgentTool) per ADR-029. |
+| F-P2A207-02 | HIGH | CLOSED: InvocationContext DI seam assigned canonical home — `interface-definitions.md` (v3.01→v3.02) §InvocationContext added (`pregolya-core/src/invocation_context.rs`; SS-11); `module-decomposition.md` (v1.59→v1.60) + `module-criticality.md` (v2.18→v2.19) rows added; S-1.19 (v1.8→v1.9) AC-026; BC-2.11.001 (v1.6→v1.8) + BC-2.11.002 (v1.18→v1.19) preconditions updated. L-241 codified. |
+| F-P2A207-03 | MED | CLOSED: BC-2.09.003 (v1.8→v1.9) phantom `context.rs` citation replaced with canonical `pregolya-core::invocation_context::InvocationContext`. |
+| OBS-P2A207-04 | OBS | CLOSED-OBS-IN-SCOPE: BC-2.09.008 {PC-001} arc-constructor assertion tightened; no new TV (OBS severity; VP-016 proptest covers construction path). |
+
+**Census delta: TV 767→770 canonical (+3: TV-011 UUID step-3 plain-tool {BC-2.09.007}; TV-012 URL-userinfo pattern-5 {BC-2.09.007}; TV-013 Basic-auth pattern-6 {BC-2.09.007}). SS-09 subtotal 69→72. Grand total 778→781 incl GTV. BC 134 / VP 17 / EC 138 / stories 40 / points 303 UNCHANGED. L-240/L-241/L-242 codified. streak 0/3 (frozen-HEAD reset on D-326 push).**
+
+**Frozen spec HEAD: 2c7ab45**
+
+**Finding Progression trajectory-tail: →2→3→0→4**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony. P2A-206 CLEAN(strict)=YES — consistency axis CLEAN (1/4 lenses). GATE-READY=YES 13/13.**
+
+**CLEAN(strict): P2A-204 NO (1M+1OBS-adj) / P2A-205 NO (2H+1pgap) / P2A-206 YES / P2A-207 NO (2H+1M+1OBS) | CLEAN(PR-merge): N/A (HIGH present) | GATE-READY: YES 13/13**
+
+**Streak: 0/3 (frozen-HEAD reset on D-326 push)**
+
+**All findings CLOSED:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A204-01 | MED | CLOSED: FtsSearchConfig<'a> lifetime annotation at mirror sites (ADR-029 §FtsSearchConfig-mirror; S-1.11 §AC-001). |
+| F-P2A204-02 | OBS→adjudicated | CLOSED: bind_tools/with_structured_output Box<dyn> owned return form (ADR-005 §Send-Bounded-RPITIT; interface-definitions.md §bind_tools; S-2.07 §AC-007). |
+| F-P2A205-01 | HIGH, CWE-209/532 | CLOSED: BC-2.09.007 {INV-003} step-3 parity + ADR-029 §SEC-BOUND-001 mis-attribution corrected. TV-011 minted (plain-tool UUID step-3). |
+| F-P2A205-02 | HIGH, CWE-522/532 | CLOSED: `redact_credentials` 4→6 patterns (URL-userinfo pattern-5 + Basic-auth pattern-6). TV-012+TV-013 minted. VP-015 (v1.1→v1.2) 4→7 test cases. |
+| O-P2A205-03 | MED, process-gap | CLOSED/IMPLEMENTED: R06-PP partial-pipeline rule added to verify-security-literal-propagation.sh (3 self-probes). L-240 codified. |
+| F-P2A207-01 | HIGH | CLOSED: S-2.10 forbidden-deps carve-out for mcp::graph_tool (ADR-029 compliant). |
+| F-P2A207-02 | HIGH | CLOSED: InvocationContext DI seam homed (interface-definitions.md + module-decomposition + module-criticality + S-1.19 + BC-2.11.001 + BC-2.11.002). L-241 codified. |
+| F-P2A207-03 | MED | CLOSED: BC-2.09.003 phantom context.rs anchor removed. |
+| OBS-P2A207-04 | OBS | CLOSED-OBS-IN-SCOPE: BC-2.09.008 {PC-001} arc-constructor tightened. |
+
+**NEXT: round-50 on new frozen HEAD post-D-326 push. Streak 0/3.**

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.002
-version: "1.17"
+version: "1.18"
 status: active
 producer: product-owner
 timestamp: 2026-08-24T00:00:00Z
@@ -39,6 +39,7 @@ changelog:
   - "1.15 (R27/F-P2A119-03/2026-08-28): Async panic-recovery mechanism and SEC-008 build-profile invariant added to EC-001 — panic caught via futures::future::FutureExt::catch_unwind(AssertUnwindSafe(hook.evaluate(content, tag))).await; synchronous std::panic::catch_unwind around future-construction is INADEQUATE (cannot catch panics during .await polling); panic=abort release profile voids the catch and causes process termination (CWE-248); pregolya-graph release profile MUST pin panic=unwind (devops Phase-3 obligation). {INV-005} added for the ingress-boundary async-catch + SEC-008 obligation. Panic test vector updated to cite async mechanism and SEC-008 build-profile requirement. Mirrors canonical form in BC-2.09.008 EC-010 (SS-09 sibling)."
   - "1.16 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.19; §Architecture Module confirmed as pregolya-core / pregolya-graph (InvocationContext GuardrailHook seam) — from STORY-INDEX forward map (SS-11 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-graph, §pregolya-core). No behavioral change."
   - "1.17 (F-P2A189-01/2026-08-30): [HIGH, CWE-248/703] SEC-008 build-profile pin corrected at three live-body sites — {INV-005} tail, EC-001 SEC-008 invariant clause, TV panic-row SEC-008 note. All three incorrectly named the pregolya-graph library-member profile as the SEC-008 pin point; a library-member [profile.release] panic override is silently ignored by Cargo. Replaced with workspace-root form mirroring BC-2.09.008 §EC-010 v3.5 canonical: the AUTHORITATIVE pin point is the workspace-root [profile.release] governing the pregolya-server binary (applied at link time); a library-member override (e.g., pregolya-graph) MUST NOT be relied upon."
+  - "1.18 (round-49/F-P2A207-03-sibling/2026-08-31): F-P2A207-03 sibling sweep — §Architecture Module updated with canonical InvocationContext module qualifier: `InvocationContext` struct lives in `core::invocation_context` (`pregolya-core/src/invocation_context.rs`) per interface-definitions.md §InvocationContext v3.02; guardrail invocation pipeline and GuardrailHook seam live in pregolya-graph. No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -158,7 +159,7 @@ substitute error block), or Transform (forward replacement content). This contra
 | Reference Evidence | No upstream positive reference implementation for guardrail-on-tool-result-ingress. P-55 provides the trait shape (ADAPT); P-59 is the negative counter-example (REJECT). adk-rust is upstream-silent on tool-result guardrailing — pregolya is greenfield here. Domain A domain-a-soc-analyst.md §5 provides the forcing function. |
 | Binding Decisions | D17-Q8 (tool-result ingress guardrail is Phase-1 BC); DI-012 source: NE-06, HS-8 |
 | Forcing Functions | Domain A SOC analyst §5 ("Prompt-injection isolation of untrusted tool output" marked NEW); domain-a-soc-analyst.md §4 "LLM-specific security risks — prompt injection via malicious log/alert content" |
-| Architecture Module | pregolya-core / pregolya-graph (InvocationContext GuardrailHook seam) |
+| Architecture Module | pregolya-core (`core::invocation_context` — `InvocationContext` struct at `pregolya-core/src/invocation_context.rs`) / pregolya-graph (InvocationContext GuardrailHook seam; guardrail invocation pipeline) |
 | Stories | S-1.19 |
 
 ## Related BCs

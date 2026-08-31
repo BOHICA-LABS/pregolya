@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.10
 epic_id: E-21
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-28T00:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "1c0a7f9"
+input-hash: "8588187"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -34,6 +34,7 @@ risk_mitigations: []
 tdd_mode: strict
 # BC status: all 5 BCs active; BC-2.09.004 (VP-004, R11) and BC-2.09.005 (VP-005, R11) are Red Gate BCs; status = draft per Spec-First Gate S-7.01
 changelog:
+  - "1.5 (round-49/F-P2A207-01/2026-08-31): F-P2A207-01 [HIGH] — Forbidden-dependencies clause amended per ADR-029 §forbidden-deps: pregolya-mcp → pregolya-graph runtime edge carved out for GraphAgentTool / mcp::graph_tool (S-2.11 scope). Ban on pregolya-graph now scoped to mcp::client and mcp::discovery modules only (NOT the crate-level Cargo.toml); bans on pregolya-server, pregolya-vectorstores, pregolya-prompts, and pregolya-standard-tests unchanged. input-hash updated to 940d385."
   - "1.4 (round-26/F-P2A115-01+F-P2A115-02+O-P2A115-05+O-P2A115-06/2026-08-28): EC-005 corrected to fail-closed: first server timeout/failure aborts whole call as Err(E-MCP-002); no partial tool list returned (BC-2.09.001 EC-004/{PC-005}). AC-013 fallback text aligned to BC-2.09.002 EC-001/TV-006 canonical: ToolMessage{status:Error, content:[\"MCP tool '<name>' returned an error with no content\"]}. EC-003 guardrail-reject fallback aligned to BC-2.09.003 EC-003 canonical: \"Tool result from '<server>/<tool>' was blocked by guardrail policy.\". AC-019 mechanism description corrected: bare ToolException is raised OUTSIDE the isError content-conversion path (not isError=false with metadata in content) per BC-2.09.004 {PRE-002}/{PRE-003}; E-MCP-001 outcome unchanged. Input-hash updated."
   - "1.3 (round-25/F-P2A108-01+F-P2A111-03+F-P2A111-06/2026-08-28): §Behavioral Contracts table: 4 titles synced to BC-INDEX canonical — BC-2.09.001 '...at Runtime', BC-2.09.002 '...Transport', BC-2.09.004 '...Preserving Type Identity (Red Gate — R11)', BC-2.09.005 '...Holds No Live Connections (Red Gate — R11)'. §Architecture Mapping + §File Structure Requirements + §Tasks: `tool.rs` → `discovery.rs`; `guardrail.rs` → `ingress.rs` (DI-012 seam; canonical module names per module-decomposition.md §pregolya-mcp). Input-hash updated."
   - "1.2 (round-24/F-P2A104-01/2026-08-28): AC-026 mirrored from BC-2.09.001 §Description/{PC-003}/{INV-001} (F-P2A104-01) — phantom field on `Arc<dyn DynTool>` replaced by `schema()` accessor; schema surface type corrected from `serde_json::Value` to `schemars::Schema`; test renamed `test_BC_2_09_001_schema_verbatim_passthrough`; `schemars` added to §Library & Framework Requirements. Input-hash updated per BC-2.09.001 §Description/{PC-003}/{INV-001} authoritative input."
@@ -331,11 +332,18 @@ becomes `McpSessionGuard::new()` must not panic; connection failures return `Err
 | `client.close()` is a compile-time error | BC-2.09.005 TV-005 | Compile-fail test AC-024 |
 | SID-1: `#[ignore]` live tests have companion non-ignored mock unit tests | SID-1; GAP-003 | ACs AC-019, AC-022 |
 
-**Forbidden dependencies:** `pregolya-mcp` must NOT depend on `pregolya-graph`, `pregolya-server`,
-`pregolya-vectorstores`, `pregolya-prompts`, or `pregolya-standard-tests`. It depends on
-`pregolya-core` (for `DynTool`, `GuardrailHook`, `RunnableConfig`, `PregolyaError`) and the
-`rmcp` SDK crate (MCP protocol). If `pregolya-mcp` gains a dependency on `pregolya-graph` or
-`pregolya-server`, the build MUST fail.
+**Forbidden dependencies:** `pregolya-mcp` (specifically the `mcp::client` and `mcp::discovery`
+modules from this story) must NOT depend on `pregolya-server`, `pregolya-vectorstores`,
+`pregolya-prompts`, or `pregolya-standard-tests`. It depends on `pregolya-core` (for `DynTool`,
+`GuardrailHook`, `RunnableConfig`, `PregolyaError`) and the `rmcp` SDK crate (MCP protocol).
+**Carve-out (ADR-029 §forbidden-deps / F-P2A207-01):** The `pregolya-mcp` crate as a whole DOES depend on
+`pregolya-graph` — this runtime edge is intentionally introduced by `GraphAgentTool` wrapping in
+S-2.11 (`mcp::graph_tool`; see ADR-029 §forbidden-deps). The `mcp::client` and `mcp::discovery`
+modules from THIS story do NOT import `pregolya-graph`; the dep edge originates exclusively from
+`mcp::graph_tool` (S-2.11 scope). The ban on `pregolya-graph` in the forbidden list applies only
+to `mcp::client` and `mcp::discovery` — NOT to the `pregolya-mcp` crate's top-level
+`Cargo.toml`. If `pregolya-mcp` gains a dependency on `pregolya-server`, `pregolya-vectorstores`,
+`pregolya-prompts`, or `pregolya-standard-tests`, the build MUST fail.
 
 ## Library & Framework Requirements (MANDATORY)
 

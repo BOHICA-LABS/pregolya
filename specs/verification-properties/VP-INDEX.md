@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.32"
+version: "1.33"
 status: active
 producer: architect
-timestamp: 2026-08-28T09:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.33 (round-49/F-P2A205-02/2026-08-31): VP-015 covered-behavior updated — `redact_credentials` pattern set expanded from 4 to 6 (URL-userinfo pattern 5 + HTTP Basic auth pattern 6 per BC-2.09.007 {INV-003}(b) v2.5; CWE-522 closure). VP-015.md harness skeleton extended from 4 to 7 test cases; SEC-BOUND-001 steps-2+3 boundary context documented (VP-015 covers step 2; step 3 non-VP-elevated per R38/F-P2A161-01-Option-B, covered by BC-2.09.007 TV-011). VP catalog row UNCHANGED (BC-2.09.007 {INV-003} / unit / P1 / `credential_redaction_unit`). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.32 (round-25/D-295/2026-08-28): VP-012 §Realizability-Sketch: `::core::` path notation → parenthetical (core crate) (F-P2A108-02 [LOW/records]). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.31 (round-22/D-292/2026-08-28): VP-016 body file bumped v2.1→v2.2 (F-P2A099-03 [LOW/records]): input-hash reconciled — hash was silently out of sync with BC-2.09.008 §INV-001 content revisions through rounds 19–22 (F-P2A087-02, F-P2A088-01, F-P2A094-01, F-P2A094-02, F-P2A098-01, F-P2A098-02); no VP property-statement or harness changes. VP census UNCHANGED: 17 total (6 P0 / 11 P1)."
   - "1.30 (round-21/D-291/2026-08-28): VP-016 body file bumped (round-21 F-P2A093-01: §Proof-Harness accessibility note corrected — stub_terminal exposed via test-util feature-gate, not bare #[cfg(test)]; cross-crate cfg(test) visibility is blocked by the Rust compiler; pregolya-mcp dev-dependency must declare features=[\"test-util\"] to access the stub). VP census UNCHANGED: 17 total (6 P0 / 11 P1)."

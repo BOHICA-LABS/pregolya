@@ -1,11 +1,11 @@
 ---
 document_type: prd-supplement-bc-authoring-plan
 level: L3
-version: "2.70"
+version: "2.71"
 status: active
 producer: product-owner
 total_standing_gates: 37
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -18,6 +18,7 @@ p0_count: 51
 p1_count: 80
 p2_count: 3
 changelog:
+  - "2.71 (round-49/F-P2A207-02-sibling/2026-08-31): §Architecture Disposition Table — guardrail invocation row updated: `InvocationContext` struct placement clarified as pregolya-core (`core::invocation_context` at `pregolya-core/src/invocation_context.rs` per interface-definitions.md §InvocationContext); guardrail pipeline row wording updated to distinguish InvocationContext struct (core) from pipeline invocation (graph). No census change."
   - "2.70 (round-20/F-P2A092-01/2026-08-27): GAP-01/D-275 sync miss corrected. Frontmatter: total_bcs 133→134, p1_count 79→80. Summary table: Total BCs 133→134, P1 (should-have) 79→80. Batch 14 header count 8→9 BCs; BC-2.09.008 row added after BC-2.09.007 (Title: StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool); P1; CAP-021; DI-008, DI-010, DI-014; Wave 2). DI coverage table: BC-2.09.008 appended to DI-008, DI-010, and DI-014 enforcer lists per BC-2.09.008 Traceability §L2 Domain Invariants. Canonical census is 134 = 51 P0 / 80 P1 / 3 P2 (matches BC-INDEX/STORY-INDEX/prd.md/STATE.md)."
   - "2.69 (P2A-052 F-052-01/2026-08-25): Convention note added to §Authoring Guidelines for Sub-Burst Agents — §VP Anchors section must contain VP identifiers only (VP-NNN or BC-local VP-<suffix>) or the literal 'None'; must never contain a story ID (story coverage belongs in §Story Anchor). Six BCs corrected: BC-2.09.001, BC-2.09.002, BC-2.09.003 (S-2.10 → None) and BC-2.12.001, BC-2.12.002, BC-2.12.003 (S-1.26 → None). Each BC bumped to next version."
   - "2.68 (P2A-049/F-049-01-sibling-sweep/2026-08-25): BC-2.18.002 and BC-2.18.004 title cells in Batch 16 table synced to canonical H1s (POL-7 downstream drift; FIX-BURST-256 H1 form superseded). BC-2.18.002: 'ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance' → 'ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>'. BC-2.18.004: 'injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed)' → 'injection_guard — SystemMessage Slot with TrustLevel::Untrusted Raises E-TMPL-001 (Fail-Closed at Render Time)' (missing 'at Render Time' suffix). BC-2.18.005 title cell verified correct — no change."
@@ -1514,7 +1515,7 @@ Split into two batches: Batch 19 (7 BCs, SS.05/06/10 extensions) and Batch 20 (6
     - StateGraph builder (`add_node`, `add_edge`, `compile`, `graph::definition`) → **pregolya-graph**
     - BSP engine, HITL, channels, scheduler, provenance → **pregolya-graph**
     - budget ENGINE (`BudgetEngine`, `EvidenceJournal`) → **pregolya-graph**; budget TRAIT/types (`BudgetPolicy`, `PolicyDecision`, `TokenUsage`, `RunContext`) → **pregolya-core/src/budget.rs** per ADR-009 Option 3
-    - guardrail hook trait (`GuardrailHook`) → **pregolya-core**; guardrail invocation pipeline (ingress call site, `InvocationContext` registration) → **pregolya-graph**
+    - guardrail hook trait (`GuardrailHook`) → **pregolya-core**; `InvocationContext` struct → **pregolya-core** (`core::invocation_context` at `pregolya-core/src/invocation_context.rs` per interface-definitions.md §InvocationContext v3.02); guardrail invocation pipeline (ingress call site, `InvocationContext` hook-slot read) → **pregolya-graph**
     - Runnable trait, Message types, error taxonomy, credentials, events, config, retry → **pregolya-core**
     - Proc-macro implementations (`#[tool]`, `#[entrypoint]`, `#[task]`) → **pregolya-macros**
     - Re-exported macro trait hooks (e.g., `Tool` re-export) → **pregolya-core** (defensible re-export)

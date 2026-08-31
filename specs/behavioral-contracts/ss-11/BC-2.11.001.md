@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.001
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
 timestamp: 2026-08-23T00:00:00Z
@@ -28,6 +28,7 @@ changelog:
   - "1.3 (BURST-315/F-A2/2026-08-17): Normalize traces_to — changed from generic `domain-spec/L2-INDEX.md` to direct-capability anchor `domain-spec/capabilities-p0.md#CAP-013`, matching corpus standard for capability-bearing BCs and aligning with the `capability: CAP-013` frontmatter and Traceability §CAP-013 citations already present."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-003} added; purely additive, no content change."
   - "1.5 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.19; §Architecture Module confirmed as pregolya-core / pregolya-graph (InvocationContext seam) — from STORY-INDEX forward map (SS-11 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-graph, §pregolya-core). No behavioral change."
+  - "1.6 (round-49/F-P2A207-03-sibling/2026-08-31): F-P2A207-03 sibling sweep — §Architecture Module updated with canonical InvocationContext module qualifier: `InvocationContext` struct lives in `core::invocation_context` (`pregolya-core/src/invocation_context.rs`) per interface-definitions.md §InvocationContext and module-decomposition.md §InvocationContext; guardrail invocation pipeline lives in pregolya-graph. No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -120,7 +121,7 @@ downstream hook evaluation.
 | Reference Evidence | No upstream LangChain/adk-rust equivalent for ProvenanceTag — greenfield design. P-59 is the counter-example driving this; no positive reference implementation. D17-Q8 is the mandate. |
 | Binding Decisions | D17-Q8 (content provenance-tag seam is Phase-1 BC), DI-012 |
 | Forcing Functions | Domain A SOC analyst §5 ("Prompt-injection isolation of untrusted tool output" marked NEW); Domain C OpenClaw §4 SEC (documented stance on indirect prompt injection + memory-poisoning) |
-| Architecture Module | pregolya-core / pregolya-graph (InvocationContext seam) |
+| Architecture Module | pregolya-core (`core::invocation_context` — `InvocationContext` struct at `pregolya-core/src/invocation_context.rs`) / pregolya-graph (InvocationContext seam; guardrail invocation pipeline) |
 | Stories | S-1.19 |
 
 ## Related BCs

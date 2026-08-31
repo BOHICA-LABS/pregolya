@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-30"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.18"
+version: "2.19"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.19 (round-49/F-P2A205-01+F-P2A204-01/2026-08-30): F-P2A205-01 [HIGH, CWE-209/532] §SEC-BOUND-001 BC mis-attribution corrected — 'BC-2.09.008 for the MCP tools/call boundary' corrected to 'BC-2.09.007 (generic tools/call boundary; step 1 N/A — plain first-party/partner tools are DI-008 no-panic and produce no internal-panic-code errors, so only steps 2–3 apply); BC-2.09.008 (GraphAgentTool wrapper subset; all three steps apply because graph execution can produce E-GRAPH-011/E-GRAPH-019 internal-panic codes)'. Rationale: BC-2.09.007 governs ALL inbound tools/call dispatches including first-party/partner tools; BC-2.09.008 is only the GraphAgentTool wrapping subset where panic-bearing graph execution paths exist. PO: extend BC-2.09.007 {INV-003} in Stage 2 to cite SEC-BOUND-001 with step-1-N/A scope note for the plain tools/call path. F-P2A204-01 [MED] §Decision 3 SEC-005 + §Decision 5 sanitization bullet — two occurrences of 'FtsSearchConfig.thread_id: Option<&str>' updated to 'FtsSearchConfig<\\'_>::thread_id: Option<&str>' to mirror the canonical lifetime-parameterized form FtsSearchConfig<'a> { thread_id: Option<&'a str>, limit: usize } (BC-2.04.008 E0106 fix). PO owns authoritative BC-2.04.008 + interface-definitions.md §CheckpointSaver edits in Stage 2; this is the ADR-029 note-only mirror so it does not contradict."
   - "2.18 (R47/F-P2A197-01+F-P2A197-02/2026-08-30): F-P2A197-01/F-P2A197-02 [SEC] §Decision 5 — new subsection §External-Boundary Error-Sanitization Parity (SEC-BOUND-001) added. Root cause of the HTTP/MCP boundary info-disclosure asymmetry found in round-47: the error-sanitization pipeline was specified per-boundary (MCP only), so the HTTP Run-status boundary (BC-2.12.003) was hardened only partially — E-GRAPH-011 ConditionalEdgePanic raw panic text was not static-replaced at the HTTP boundary (only E-GRAPH-019 was isolated there; the MCP boundary static-replaces both). SEC-BOUND-001 establishes a boundary-agnostic principle: every external surface (MCP tools/call content[0].text isError paths; HTTP Run.error/Run-status responses; any future external transport boundary) MUST apply the three-step pipeline before emitting error text to an external caller: (1) internal-panic-code static replacement for all INTERNAL-category panic-bearing codes (E-GRAPH-011, E-GRAPH-019, and any future code in that category); (2) redact_credentials; (3) sanitize_internal_ids two-pattern union. BCs governing future external surfaces MUST reference SEC-BOUND-001 rather than re-deriving per-boundary treatment."
   - "2.17 (R44/F-P2A187-02+O-1/2026-08-30): F-P2A187-02 [MED] §Decision 5 Error Routing Table internal-panic-code row — stale 'anticipated' status and discharged census obligations removed. (a) 'anticipated `E-GRAPH-019 NodePanic`' → 'live `E-GRAPH-019 NodePanic` (minted in error-taxonomy.md)' — E-GRAPH-019 was minted in R42 and is live in error-taxonomy.md; treated as live by BC-2.09.008 EC-003 and BC-2.12.003 {INV-007}; BC-2.09.008 TV-019 exists. (b) 'PO obligation: EC census 137→138' annotation removed from Condition cell — obligation discharged in R42 (EC census is at 138; E-GRAPH-019 live). (c) 'PO obligation: TV census 759→760' paragraph removed from MCP Layer Response cell — obligation discharged in R42 (BC-2.09.008 TV-019 exists). Both embedded census annotations are volatile-census-in-normative-prose (TD-VSDD-091/POL-14). R42 §Changelog row 2.15 retains the historical record of both annotations."
   - "2.16 (R43/F-P2A181-01/2026-08-30): F-P2A181-01 [HIGH/CWE-248/703] §Decision 5 Error Routing Table `extract_output panics` row — SEC-008 build-profile invariant rewritten. (a) Authoritative pin point corrected: the governing knob is the workspace-root `[profile.release]` that builds the `pregolya-server` binary, NOT a per-library override in `pregolya-mcp/Cargo.toml` — Cargo silently ignores `[profile.release]` in a library crate's own manifest; a library-member override is inert and MUST NOT be relied upon. (b) Scope aligned to BC-2.09.008 EC-010 v3.4: `catch_unwind` boundary physically lives in `pregolya-server` request handler calling `GraphAgentTool::invoke_dyn` (`pregolya-mcp`); both `pregolya-server` and `pregolya-mcp` are in scope. (c) Explicit prohibition on per-library manifest override added. Consistent with BC-2.09.008 EC-010 v3.4, BC-2.12.003 EC-003, and S-2.11 AC-037."
@@ -301,8 +302,8 @@ execution context. Convention:
   server/run/config path. Ground truth: `thread_id` is `Uuid` in `entities-server.md`
   §Thread, §Run, and `interface-definitions.md` §RunnableConfig (`thread_id: Option<Uuid>`);
   the UUID regex covers server-layer `thread_id` identically to `run_id`. The only
-  non-UUID `thread_id` form, `FtsSearchConfig.thread_id: Option<&str>`, is an FTS query
-  parameter that never reaches a `GraphAgentTool` error-message path and is outside
+  non-UUID `thread_id` form, `FtsSearchConfig<'_>::thread_id: Option<&str>`, is an FTS
+  query parameter that never reaches a `GraphAgentTool` error-message path and is outside
   SEC-005 scope. The pass is chained with the existing `redact_credentials` pass:
   `sanitize_internal_ids(redact_credentials(message))`.
 
@@ -553,7 +554,7 @@ Two passes are chained before populating `content[0].text`:
    Covers `run_id` (a
    `Uuid`, any version) and server-layer `thread_id` (`thread_id: Uuid` on all
    server/run/config paths per entities-server.md §Thread / §Run and
-   interface-definitions.md §RunnableConfig). The `FtsSearchConfig.thread_id: Option<&str>`
+   interface-definitions.md §RunnableConfig). The `FtsSearchConfig<'_>::thread_id: Option<&str>`
    FTS-query-parameter form never reaches a `GraphAgentTool` error-message path and is
    outside SEC-005 scope. `u64` checkpoint IDs (`CheckpointId` newtype per ADR-005 /
    BC-2.04.003 — not UUID-shaped) are NOT covered by the regex and require
@@ -594,10 +595,14 @@ to the MCP `tools/call` `content[0].text` (isError paths), the pregolya-server H
 
 **Boundary-agnostic obligation:** The pipeline above is boundary-agnostic. BCs that govern
 any external surface MUST reference this principle (SEC-BOUND-001) rather than re-deriving
-per-boundary treatment — BC-2.09.008 for the MCP `tools/call` boundary; BC-2.12.003 for
-the pregolya-server HTTP Run-status boundary; any future boundary BC. Per-BC sections MAY
-add boundary-specific steps (e.g., an additional domain-specific sanitization pass), but
-MUST NOT omit or weaken steps 1–3.
+per-boundary treatment — BC-2.09.007 (generic `tools/call` boundary; step 1 N/A — plain
+first-party/partner tools are DI-008 no-panic and do NOT produce internal-panic-code errors,
+so only steps 2–3 apply to this boundary); BC-2.09.008 (GraphAgentTool wrapper subset; all
+three steps apply because graph execution can produce E-GRAPH-011/E-GRAPH-019
+internal-panic codes); BC-2.12.003 for the pregolya-server HTTP Run-status boundary; any
+future boundary BC. Per-BC sections MAY add boundary-specific steps (e.g., an additional
+domain-specific sanitization pass), but MUST NOT omit or weaken the steps that ARE
+applicable (i.e., the applicable subset of steps 1–3 per the step-1-N/A note above).
 
 **Root-cause rationale (F-P2A197-01/F-P2A197-02):** Round-47 found that the HTTP
 Run-status boundary applied steps 2–3 (`redact_credentials` + `sanitize_internal_ids`) and
@@ -774,6 +779,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.19 | 2026-08-30 | architect | round-49/F-P2A205-01+F-P2A204-01 | F-P2A205-01 [HIGH, CWE-209/532]: §SEC-BOUND-001 "Boundary-agnostic obligation" — `BC-2.09.008 for the MCP tools/call boundary` split into `BC-2.09.007` (generic `tools/call` boundary; step 1 N/A — plain first-party/partner tools are DI-008 no-panic and produce no internal-panic-code errors, so only steps 2–3 apply) and `BC-2.09.008` (GraphAgentTool wrapper subset; all three steps apply because graph execution can produce E-GRAPH-011/E-GRAPH-019 internal-panic codes). F-P2A204-01 [MED]: §Decision 3 SEC-005 + §Decision 5 sanitization bullet — two occurrences of `FtsSearchConfig.thread_id: Option<&str>` updated to `FtsSearchConfig<'_>::thread_id: Option<&str>` mirroring canonical lifetime-parameterized form (BC-2.04.008 E0106 fix). |
 | 2.18 | 2026-08-30 | architect | R47/F-P2A197-01+F-P2A197-02 | F-P2A197-01/F-P2A197-02 [SEC]: §Decision 5 — new §External-Boundary Error-Sanitization Parity (SEC-BOUND-001) subsection. Establishes boundary-agnostic three-step sanitization pipeline (internal-panic-code static replacement → redact_credentials → sanitize_internal_ids) that EVERY external error surface MUST apply before emitting error text to an external caller. Root cause of round-47 HTTP/MCP asymmetry: pipeline was per-boundary (MCP only in BC-2.09.008), so HTTP boundary applied steps 2–3 and step 1 for E-GRAPH-019 but missed step 1 for E-GRAPH-011 (raw ConditionalEdgePanic text reachable at Run.error.message). BCs governing future external surfaces reference SEC-BOUND-001 instead of re-deriving treatment; primary BC consumers: BC-2.09.008 (MCP) and BC-2.12.003 (HTTP Run-status, fixed same burst by PO). |
 | 2.17 | 2026-08-30 | architect | R44/F-P2A187-02+O-1 | F-P2A187-02 MED + O-1 LOW: §Decision 5 Error Routing Table internal-panic-code row — stale 'anticipated E-GRAPH-019 NodePanic' updated to 'live E-GRAPH-019 NodePanic (minted in error-taxonomy.md)' (discharged in R42; BC-2.09.008 TV-019 exists; EC-003 live). Two embedded 'PO obligation: …census N→M' volatile-census annotations removed: (a) 'PO obligation: EC census 137→138' from Condition cell; (b) 'PO obligation: TV census 759→760' paragraph from MCP Layer Response cell. Both annotations are volatile-census-in-normative-prose (TD-VSDD-091/POL-14); both obligations were discharged in R42. R42 §Changelog row 2.15 retains historical record. |
 | 2.16 | 2026-08-30 | architect | R43/F-P2A181-01 | F-P2A181-01 HIGH/CWE-248/703: §Decision 5 Error Routing Table `extract_output panics` row — SEC-008 build-profile invariant rewritten. Authoritative pin point corrected to workspace-root `[profile.release]` governing `pregolya-server` binary; library-member `[profile.release]` in `pregolya-mcp/Cargo.toml` is inert (Cargo ignores it) and MUST NOT be relied upon. `catch_unwind` boundary physically in `pregolya-server` request handler calling `GraphAgentTool::invoke_dyn` (`pregolya-mcp`). Scope aligned to BC-2.09.008 EC-010 v3.4. Consistent with BC-2.12.003 EC-003 and S-2.11 AC-037. |

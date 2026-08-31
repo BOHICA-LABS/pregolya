@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.08.002
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-2.07 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.8 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.9 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "2.0 (round-49/F-P2A204-02/2026-08-31): F-P2A204-02 [HIGH] — RPITIT adjudication mirror into BC body. `bind_tools` return type is `Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>` (owned/escapable; `Box<dyn ...>` is `'static` by default, enabling `.pipe()`, `Arc` storage, `JoinSet::spawn`; RPITIT in edition-2024 auto-captures `&self` lifetime, making the return non-`'static` and preventing pipeline composition). §Description updated to surface the concrete return type. Authority: interface-definitions.md §BaseChatModel `bind_tools` row v3.02 + ADR-005 §Send-Bounded RPITIT."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-009
   - domain-spec/capabilities-p1-p2.md#CAP-011
@@ -33,7 +34,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/partners/behavioral-intent.md
   - .factory/semport/partners/test-inventory.md
-input-hash: "86e470d"
+input-hash: "0e7476a"
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,6 +55,11 @@ and completing the round-trip by supplying `ToolMessage` results back to the mod
 The mandatory ungated test `test_agent_loop` verifies that a tool-calling agent loop
 terminates correctly with the correct final answer, without requiring a `has_tool_calling`
 capability flag. Gated tool-call tests require the `has_tool_calling` capability flag.
+`bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>`:
+the owned/escapable return type is required because edition-2024 RPITIT auto-captures the
+`&self` lifetime, making `impl BaseChatModel` non-`'static` and preventing pipeline
+composition, `Arc` storage, and `JoinSet::spawn` (ADR-005 §Send-Bounded RPITIT;
+interface-definitions.md §BaseChatModel `bind_tools` row).
 
 ## Preconditions
 

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.11.006
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-08-26T00:00:00Z
@@ -28,6 +28,7 @@ changelog:
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC-001..PC-005}, {INV-001..INV-004}, {PRE-001..PRE-003} added; purely additive, no content change."
   - "1.6 (burst-B-SS09-11/bc-scan-hardening/2026-08-26): LOW gap — EC-002 cascading-log-failure observable: replaced vague 'tracked separately (cascading log failure)' with unobservable-by-design declaration citing tracing fire-and-forget semantics and operator resilience requirement. ADR-027 stable clause {EC-002} (existing anchor, content updated)."
   - "1.7 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.19; §Architecture Module confirmed as pregolya-core / pregolya-graph (InvocationContext hook-slot check and WARN emission) — from STORY-INDEX forward map (SS-11 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-graph, §pregolya-core). No behavioral change."
+  - "1.8 (round-49/F-P2A207-03-sibling/2026-08-31): F-P2A207-03 sibling sweep — §Architecture Module updated with canonical InvocationContext module qualifier: `InvocationContext` struct lives in `core::invocation_context` (`pregolya-core/src/invocation_context.rs`) per interface-definitions.md §InvocationContext v3.02; hook-slot check and WARN emission logic lives in pregolya-graph. No behavioral change."
 modified: []
 extracted_from: null
 deprecated: null
@@ -122,7 +123,7 @@ users who require guardrails must explicitly register a `GuardrailHook`.
 | Reference Evidence | Greenfield. No upstream reference. OQR-5 rationale: "A missing guardrail is valid for most non-SOC use cases. Domain A users must explicitly register a GuardrailHook. default-deny would break every RAG and MCP use case that doesn't need content filtering." |
 | Binding Decisions | D17-Q8 (defines the subsystem); OQR-5 (resolves default posture) |
 | Forcing Functions | Domain A SOC analyst §5 (forces explicit hook registration by Domain A users; the default-permit posture is justified because the framework must not break general-purpose RAG/MCP use cases) |
-| Architecture Module | pregolya-core / pregolya-graph (InvocationContext hook-slot check and WARN emission) |
+| Architecture Module | pregolya-core (`core::invocation_context` — `InvocationContext` struct at `pregolya-core/src/invocation_context.rs`) / pregolya-graph (InvocationContext hook-slot check and WARN emission) |
 | Stories | S-1.19 |
 
 ## Related BCs

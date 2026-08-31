@@ -105,7 +105,7 @@
 #
 # SELF-PROBE (POL-31)
 # ───────────────────
-# Thirteen self-probes run before the live check:
+# Sixteen self-probes run before the live check:
 #   R01-pos: synthetic story body with v4-specific regex fragment → WARN reported
 #   R01-neg: synthetic story body with version-agnostic regex → no WARN
 #   R02-pos: synthetic story body with "UUID v4 removal" → WARN reported
@@ -126,8 +126,19 @@
 #   R06-pos: synthetic BC body mirroring BC-2.12.007 EC-006 pre-fix form — StreamEvent::Error
 #            with error_message field but NO SEC-BOUND-001/redact reference → R06 WARN
 #            (POL-31: confirms gate fires on the KNOWN-LIVE BC-2.12.007 violation form)
-#   R06-neg: synthetic BC body with StreamEvent::Error AND SEC-BOUND-001 + redact_credentials
-#            reference → no R06 WARN (canonical sanitization-noted form)
+#   R06-neg: synthetic BC body with StreamEvent::Error AND full 3-step pipeline
+#            (internal-panic-isolation + redact_credentials + sanitize_internal_ids)
+#            → no R06 or R06-PP WARN (canonical 3-step form satisfying both rules)
+#   R06-PP-pos: synthetic BC body mimicking pre-fix BC-2.09.007 single-step form —
+#            isError+content[0].text trigger fires, only `redact_credentials` named (step 2),
+#            `sanitize_internal_ids` (step 3) absent → R06-PP WARN (regression guard: this
+#            is exactly the class of partial-pipeline gap that F-P2A205-01 introduced)
+#   R06-PP-neg-a: synthetic BC body with isError+content[0].text trigger, steps 2+3 present
+#            (redact_credentials + sanitize_internal_ids), DI-008 step 1 N/A marker present
+#            → no R06-PP WARN (corrected BC-2.09.007-style DI-008 2-step form)
+#   R06-PP-neg-b: synthetic BC body with StreamEvent::Error trigger, full 3-step pipeline
+#            (internal-panic-isolation + redact_credentials + sanitize_internal_ids)
+#            → no R06-PP WARN (BC-2.12.007-style full 3-step form)
 #
 # EXIT CONTRACT
 # ─────────────
@@ -505,6 +516,90 @@ RULES = [
         ),
         "sec_ref": "SEC-BOUND-001 / {INV-008} / CWE-209 / CWE-532",
     },
+    {
+        # R06-PP — external-boundary partial-pipeline sub-check (O-P2A205-03, round-49)
+        # Defect class: an external-boundary BC names ONE sanitization pipeline step
+        # (e.g., `redact_credentials` only) but omits the other applicable steps; the
+        # parent R06 `required_re` is an OR-disjunction so any single step satisfies it —
+        # a partial pipeline passes as a FALSE-GREEN.  R06-PP closes this gap by requiring
+        # ALL applicable steps once any individual step token appears in the normative body.
+        #
+        # Applicability rule:
+        #   All external boundaries: step 2 (redact_credentials) + step 3 (sanitize_internal_ids)
+        #   Panic-capable boundaries (can emit E-GRAPH-011/E-GRAPH-019): additionally step 1
+        #     (static-replace / internal-panic-isolation)
+        #   DI-008 no-panic plain-tool boundaries: step 1 is N/A — exempt when body carries
+        #     a DI-008 marker ("DI-008", "step 1 N/A", or "no-panic")
+        #
+        # BC distinction mirrored by this check:
+        #   BC-2.09.007 {INV-003}: 2-step (step 1 N/A — DI-008 plain tools; steps 2+3)
+        #   BC-2.09.008 / BC-2.12.003 / BC-2.12.007: 3-step (steps 1+2+3)
+        #
+        # Live gap caught: pre-fix BC-2.09.007 had only `redact_credentials` (step 2);
+        # `sanitize_internal_ids` (step 3) was missing until F-P2A205-01 (round-49).
+        "id": "R06-PP",
+        "check_type": "partial_pipeline",
+        "description": (
+            "external error surface names SOME sanitization pipeline steps but omits others "
+            "(partial-pipeline false-green: step 2 alone does not satisfy SEC-BOUND-001; "
+            "all applicable steps required: steps 2+3 for DI-008 no-panic boundaries, "
+            "steps 1+2+3 for panic-capable boundaries that can emit E-GRAPH-011/E-GRAPH-019)"
+        ),
+        "authority": (
+            "SEC-BOUND-001 / {INV-008} / {INV-004}: minimum 2-step pipeline "
+            "(step 2 redact_credentials + step 3 sanitize_internal_ids) for all external "
+            "boundaries; step 1 (internal-panic static-replace) additionally required for "
+            "panic-capable boundaries; DI-008 no-panic plain-tool boundaries are exempt from "
+            "step 1 per BC-2.09.007 {INV-003} vs BC-2.12.007 {INV-004} distinction (O-P2A205-03)"
+        ),
+        "anchor_glob": [
+            "specs/behavioral-contracts/**/*.md",
+            "stories/stories/*.md",
+        ],
+        # Same trigger as R06 — external error surface mention
+        "trigger_re": re.compile(
+            r"StreamEvent::Error"
+            r"|Run\.error\b"
+            r"|content\[0\]\.text\b.{0,80}isError"
+            r"|isError.{0,80}content\[0\]\.text\b"
+            r"|error_message\b.{0,80}(?:SSE|stream\s+event|error\s+event|error\s+payload|event\s+body)",
+            re.IGNORECASE
+        ),
+        # Individual pipeline step tokens
+        "step1_re": re.compile(r"static[-\s]replace|internal[-\s]panic[-\s]isolation", re.IGNORECASE),
+        "step2_re": re.compile(r"redact_credentials"),
+        "step3_re": re.compile(r"sanitize_internal_ids"),
+        # DI-008 no-panic exemption: step 1 is N/A for plain-tool boundaries.
+        # Matches:
+        #   "DI-008"                               — explicit domain invariant citation
+        #   "step 1 (... static-replace) is N/A"  — up to 60 chars between "1" and "N/A"
+        #   "no-panic" / "no panic"                — shorthand exemption marker
+        "di008_exempt_re": re.compile(
+            r"DI-008"
+            r"|step\s+1\b.{0,60}N/A"
+            r"|N/A\b.{0,60}step\s+1"
+            r"|no[-\s]panic\b",
+            re.IGNORECASE
+        ),
+        # Same negation as R06 — skip delegation notes and historical descriptions
+        "negation_re": re.compile(
+            r"delegates\s+saniti[sz]ation"
+            r"|saniti[sz]ation\s+delegated"
+            r"|INADEQUATE|inadequate|corrected|STALE|REMOVED|RETIRED"
+            r"|round-\d+\s+correction|was\s+incorrect",
+            re.IGNORECASE
+        ),
+        "canonical_hint": (
+            "add all applicable pipeline steps: "
+            "step 2 (redact_credentials) + step 3 (sanitize_internal_ids) for all external "
+            "boundaries; additionally step 1 (static-replace / internal-panic-isolation) for "
+            "panic-capable boundaries that can emit E-GRAPH-011/E-GRAPH-019; "
+            "for DI-008 no-panic plain-tool boundaries mark step 1 as N/A ('DI-008' or "
+            "'step 1 N/A' or 'no-panic') — see BC-2.09.007 {INV-003} (2-step) vs "
+            "BC-2.12.007 {INV-004} (3-step) for canonical forms"
+        ),
+        "sec_ref": "SEC-BOUND-001 / {INV-008} / CWE-209 / CWE-532",
+    },
 ]
 
 # ── Region utilities (mirrors spec_region_utils.py changelog_exempt_lines) ──
@@ -655,6 +750,75 @@ def run_rule(rule, factory_dir, probe_override):
                     "WARN", rule["id"], rel,
                     f"artifact references '{related_re.pattern}' but lacks "
                     f"'{required_re.pattern}' obligation reference"
+                ))
+
+        elif check_type == "partial_pipeline":
+            # R06-PP: fires when an external error surface names SOME pipeline steps but
+            # omits others.  Logic:
+            #   1. Trigger must fire on at least one non-negated line (same trigger as R06).
+            #   2. At least one individual step token must appear in normative body
+            #      (if none appear, parent R06 already handles the full-miss case).
+            #   3. Once individual steps are named, ALL applicable steps must be present:
+            #        - step 2 (redact_credentials): required for ALL external boundaries
+            #        - step 3 (sanitize_internal_ids): required for ALL external boundaries
+            #        - step 1 (static-replace / internal-panic-isolation): required for
+            #          panic-capable boundaries; exempt for DI-008 no-panic boundaries when
+            #          the body carries a DI-008 / "step 1 N/A" / "no-panic" marker
+            trigger_re      = rule["trigger_re"]
+            step1_re        = rule["step1_re"]
+            step2_re        = rule["step2_re"]
+            step3_re        = rule["step3_re"]
+            di008_exempt_re = rule["di008_exempt_re"]
+            negation_re     = rule.get("negation_re")
+
+            # Collect trigger lines (excluding negation)
+            trigger_lines = []
+            for lineno, line in normative_lines:
+                if trigger_re.search(line):
+                    if negation_re and negation_re.search(line):
+                        continue
+                    trigger_lines.append((lineno, line))
+
+            if not trigger_lines:
+                # No trigger → partial-pipeline check does not apply to this file
+                continue
+
+            all_text = "\n".join(l for _, l in normative_lines)
+
+            # Check which individual pipeline step tokens are present
+            has_step1 = bool(step1_re.search(all_text))
+            has_step2 = bool(step2_re.search(all_text))
+            has_step3 = bool(step3_re.search(all_text))
+
+            # Only apply partial check when the author has enumerated at least one individual
+            # step token.  If no individual steps are named at all, skip — the parent R06
+            # rule (requires_coexistence) already catches the full-miss case.
+            if not (has_step1 or has_step2 or has_step3):
+                continue
+
+            # DI-008 no-panic exemption: step 1 is N/A for plain-tool boundaries
+            is_di008_exempt = bool(di008_exempt_re.search(all_text))
+
+            missing = []
+            if not has_step2:
+                missing.append("step 2 (redact_credentials) — credential redaction pass")
+            if not has_step3:
+                missing.append("step 3 (sanitize_internal_ids) — UUID-shaped ID redaction pass")
+            if not has_step1 and not is_di008_exempt:
+                missing.append(
+                    "step 1 (static-replace / internal-panic-isolation) — required for "
+                    "panic-capable boundaries that can emit E-GRAPH-011/E-GRAPH-019; "
+                    "if this is a DI-008 no-panic boundary, mark with 'DI-008' or 'step 1 N/A'"
+                )
+
+            if missing:
+                first_lineno, first_line = trigger_lines[0]
+                results.append((
+                    "WARN", rule["id"], rel,
+                    f"partial pipeline: external error surface on body line {first_lineno+1} "
+                    f"names some but not all applicable pipeline steps; missing: "
+                    + "; ".join(missing)
+                    + f" — trigger: {first_line.strip()[:60]}"
                 ))
 
         elif check_type == "library_member_pin_without_workspace":
@@ -1007,8 +1171,10 @@ probe_expect_warn "R06-pos" \
   "StreamEvent::Error + error_message in SSE body WITHOUT SEC-BOUND-001/redact reference (BC-2.12.007 EC-006 pre-fix form)" \
   "$PROBE_R06_POS_WARNS"
 
-# R06-neg: BC body with StreamEvent::Error AND SEC-BOUND-001 + redact_credentials reference
-# → no R06 WARN expected (canonical sanitization-noted form after product-owner fix).
+# R06-neg: BC body with StreamEvent::Error AND full 3-step pipeline reference → no R06 or
+# R06-PP WARN expected.  Updated to canonical 3-step form (internal-panic-isolation +
+# redact_credentials + sanitize_internal_ids) so that R06-PP is also satisfied; represents
+# the BC-2.12.007 {INV-004} corrected form.
 PROBE_R06_NEG="$PROBE_TMP/probe-r06-neg.md"
 cat > "$PROBE_R06_NEG" <<'CANONICAL_EOF'
 ---
@@ -1016,22 +1182,106 @@ document_type: behavioral_contract
 bc_id: BC-9.99
 version: "1.0"
 ---
-# BC-9.99 Synthetic Probe — R06-neg: with sanitization reference
+# BC-9.99 Synthetic Probe — R06-neg: full 3-step canonical form (satisfies R06 + R06-PP)
 
 ### EC-006: Graph raises error in non-first node (mid-run) — no run_end emitted
 **Expected behavior:**
 - Streaming: then `StreamEvent::Error` with the sanitized error payload; stream closes.
-  SEC-BOUND-001 sanitization pipeline applies: `error_message` content passes through
-  `redact_credentials` + `sanitize_internal_ids` before emission to the SSE caller
-  (CWE-209 / CWE-532); internal PregolyaError variants must not transit the external
-  error surface unfiltered.
+  SEC-BOUND-001 3-step sanitization pipeline: step 1 internal-panic-isolation
+  (E-GRAPH-011/E-GRAPH-019 codes replaced with static message) → step 2
+  `redact_credentials` (credential patterns) → step 3 `sanitize_internal_ids`
+  (UUID-shaped IDs) — all applied before emission to the SSE caller (CWE-209 / CWE-532);
+  internal PregolyaError variants must not transit the external error surface unfiltered.
 CANONICAL_EOF
 
 PROBE_R06_NEG_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R06_NEG" 2>/dev/null || true)"
 PROBE_R06_NEG_WARNS="$(echo "$PROBE_R06_NEG_OUT" | grep -c '^\[WARN\] R06' || true)"
 probe_expect_pass "R06-neg" \
-  "StreamEvent::Error WITH SEC-BOUND-001 + redact_credentials reference — R06 passes" \
+  "StreamEvent::Error WITH full 3-step pipeline (internal-panic-isolation + redact_credentials + sanitize_internal_ids) — R06 and R06-PP pass" \
   "$PROBE_R06_NEG_WARNS"
+
+# R06-PP-pos: BC body mimicking pre-fix BC-2.09.007 single-step form —
+# isError+content[0].text trigger fires, only `redact_credentials` named (step 2),
+# `sanitize_internal_ids` (step 3) absent, no DI-008/step-1-N/A marker.
+# Regression guard: this is the exact partial-pipeline class that F-P2A205-01 exposed.
+PROBE_R06_PP_POS="$PROBE_TMP/probe-r06-pp-pos.md"
+cat > "$PROBE_R06_PP_POS" <<'STALE_EOF'
+---
+document_type: behavioral_contract
+bc_id: BC-9.99
+version: "1.0"
+---
+# BC-9.99 Synthetic Probe — R06-PP-pos: pre-fix single-step form (step 2 only)
+
+### {PC-003} Tool execution error response
+On tool execution error, the server responds with `isError: true`; `content[0].text`
+carries the tool error message.
+**Mandatory sanitization:** error messages MUST pass through `redact_credentials`
+before inclusion in the MCP response to prevent credential leakage (CWE-522).
+STALE_EOF
+
+PROBE_R06_PP_POS_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R06_PP_POS" 2>/dev/null || true)"
+PROBE_R06_PP_POS_WARNS="$(echo "$PROBE_R06_PP_POS_OUT" | grep -c '^\[WARN\] R06-PP' || true)"
+probe_expect_warn "R06-PP-pos" \
+  "isError+content[0].text trigger fires, only redact_credentials (step 2) named, sanitize_internal_ids (step 3) absent" \
+  "$PROBE_R06_PP_POS_WARNS"
+
+# R06-PP-neg-a: BC body matching corrected BC-2.09.007 DI-008 form —
+# isError+content[0].text trigger fires, steps 2+3 present, DI-008/step-1-N/A marker present.
+# Gate must PASS: all applicable steps present for a DI-008 no-panic boundary.
+PROBE_R06_PP_NEG_A="$PROBE_TMP/probe-r06-pp-neg-a.md"
+cat > "$PROBE_R06_PP_NEG_A" <<'CANONICAL_EOF'
+---
+document_type: behavioral_contract
+bc_id: BC-9.99
+version: "1.0"
+---
+# BC-9.99 Synthetic Probe — R06-PP-neg-a: corrected DI-008 2-step form (steps 2+3, step 1 N/A)
+
+### {PC-003} Tool execution error response
+On tool execution error, the server responds with `isError: true`; `content[0].text`
+carries the sanitized error message.
+**Mandatory sanitization (SEC-BOUND-001 2-step pipeline):**
+Step 1 (internal-panic static-replace) is N/A for this boundary — plain tools are
+DI-008 no-panic and cannot emit E-GRAPH-011/E-GRAPH-019; the pipeline is 2-step:
+step 2 `redact_credentials` (six-pattern credential set) then step 3
+`sanitize_internal_ids` (UUID-shaped internal ID replacement with `<redacted-id>`).
+CANONICAL_EOF
+
+PROBE_R06_PP_NEG_A_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R06_PP_NEG_A" 2>/dev/null || true)"
+PROBE_R06_PP_NEG_A_WARNS="$(echo "$PROBE_R06_PP_NEG_A_OUT" | grep -c '^\[WARN\] R06-PP' || true)"
+probe_expect_pass "R06-PP-neg-a" \
+  "corrected DI-008 form: steps 2+3 present, step 1 N/A marker present — R06-PP passes" \
+  "$PROBE_R06_PP_NEG_A_WARNS"
+
+# R06-PP-neg-b: BC body matching BC-2.12.007-style full 3-step form —
+# StreamEvent::Error trigger fires, all 3 steps present (internal-panic-isolation +
+# redact_credentials + sanitize_internal_ids).
+# Gate must PASS: all 3 steps present for a panic-capable SSE boundary.
+PROBE_R06_PP_NEG_B="$PROBE_TMP/probe-r06-pp-neg-b.md"
+cat > "$PROBE_R06_PP_NEG_B" <<'CANONICAL_EOF'
+---
+document_type: behavioral_contract
+bc_id: BC-9.99
+version: "1.0"
+---
+# BC-9.99 Synthetic Probe — R06-PP-neg-b: full 3-step form (BC-2.12.007-style SSE boundary)
+
+### {INV-004} External-Boundary Error-Sanitization
+`StreamEvent::Error` with the `error_message` field emitted to the SSE caller.
+**Mandatory 3-step sanitization pipeline (SEC-BOUND-001):**
+1. internal-panic-isolation (static-replace): E-GRAPH-011/E-GRAPH-019 internal-panic
+   codes are replaced with a static message before emission.
+2. `redact_credentials`: credential-shaped substrings replaced with `<redacted>`.
+3. `sanitize_internal_ids`: UUID-shaped internal identifiers replaced with `<redacted-id>`.
+Pipeline order is mandatory: step 1 THEN step 2 THEN step 3.
+CANONICAL_EOF
+
+PROBE_R06_PP_NEG_B_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R06_PP_NEG_B" 2>/dev/null || true)"
+PROBE_R06_PP_NEG_B_WARNS="$(echo "$PROBE_R06_PP_NEG_B_OUT" | grep -c '^\[WARN\] R06-PP' || true)"
+probe_expect_pass "R06-PP-neg-b" \
+  "full 3-step form (internal-panic-isolation + redact_credentials + sanitize_internal_ids) — R06-PP passes" \
+  "$PROBE_R06_PP_NEG_B_WARNS"
 
 # ── Self-probe gate ───────────────────────────────────────────────────────────
 if [ "$SELF_PROBE_FAIL" -gt 0 ]; then
@@ -1042,7 +1292,7 @@ if [ "$SELF_PROBE_FAIL" -gt 0 ]; then
   exit 2
 fi
 
-echo "[SELF-PROBE PASS] All 13 self-probes passed — checks are not false-green on synthetic fixtures."
+echo "[SELF-PROBE PASS] All 16 self-probes passed — checks are not false-green on synthetic fixtures."
 
 # ── Live check ────────────────────────────────────────────────────────────────
 echo ""
@@ -1087,6 +1337,12 @@ if [ "$LIVE_WARNS" -gt 0 ]; then
   echo "         applies: error_message content passes through redact_credentials +"
   echo "         sanitize_internal_ids before emission to caller (CWE-209 / CWE-532)'"
   echo "         D-324 BOUNDARY-SANITIZATION-GATE — route fix to product-owner"
+  echo "    R06-PP: add all applicable pipeline steps once any individual step token is named;"
+  echo "         minimum always: step 2 (redact_credentials) + step 3 (sanitize_internal_ids);"
+  echo "         additionally step 1 (static-replace / internal-panic-isolation) for panic-capable"
+  echo "         boundaries that can emit E-GRAPH-011/E-GRAPH-019; for DI-008 no-panic plain-tool"
+  echo "         boundaries mark step 1 as N/A ('DI-008' or 'step 1 N/A' or 'no-panic' marker);"
+  echo "         canonical 2-step: BC-2.09.007 {INV-003}; canonical 3-step: BC-2.12.007 {INV-004}"
 fi
 
 # Advisory gate: always exits 0 (commit not blocked by WARN findings)

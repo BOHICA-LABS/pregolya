@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.28"
+version: "2.29"
 status: active
 producer: architect
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "940e3bc"
+input-hash: "8d2dcc7"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -754,23 +754,31 @@ State-space is trivially finite for Kani. Estimated proof time: < 1 min. See `VP
 
 **VP-015 — MCP Credential Redaction** (`mcp::sanitize`) `unit P1 Phase 3`
 
-Property: For all `text: &str` containing provider API key patterns (OpenAI `sk-*`, Anthropic
-`sk-ant-*`, generic 64+ char token), `redact_credentials(text)` returns a `Cow<str>` in which
-NONE of the original key values appear verbatim. Correct redaction marks are substituted in their
-place (BC-2.09.007 {INV-003} / DI-010).
+Property: For all `text: &str` containing credential patterns from the 6-pattern canonical set in
+`redact_credentials`, the function returns a `Cow<str>` in which NONE of the original credential
+values appear verbatim. Correct `<redacted>` marks are substituted in their place
+(BC-2.09.007 {INV-003}(b) / DI-010 / CWE-532/522). The 6-pattern canonical set:
+(1) OpenAI `sk-[A-Za-z0-9_\-]{20,}`, (2) Anthropic `sk-ant-[A-Za-z0-9_\-]{32,}`,
+(3) generic `[A-Za-z0-9]{64,}`, (4) Bearer token `Bearer\s+[A-Za-z0-9._~+/=\-]+`,
+(5) URL-embedded userinfo `[a-zA-Z][a-zA-Z0-9+.\-]*://[^/\s:@]+:[^/\s:@]+@`,
+(6) HTTP Basic auth `Basic\s+[A-Za-z0-9+/=]+`.
+
+**SEC-BOUND-001 pipeline note:** BC-2.09.007 {PC-003} applies a 2-step sanitization pipeline
+(step 1 N/A; step 2 `redact_credentials`; step 3 `sanitize_internal_ids`). VP-015 covers step 2.
+Step 3 is non-VP-elevated, covered by BC-2.09.007 TV-011 directed test (R38/F-P2A161-01-Option-B
+adjudication).
 
 **Why unit test (not Kani):** `redact_credentials` operates on arbitrary `&str` input using regex
 pattern matching over a potentially unbounded alphabet. Kani symbolic execution over arbitrary
-strings is not tractable. The property is verified by parameterized unit tests with representative
-API key patterns drawn from the provider credential format specs, which provide deterministic
-coverage of all key format families.
+strings is not tractable. The property is verified by 7 parameterized unit tests with representative
+credential patterns drawn from the defined format specs.
 
 **Unit harness:** See `VP-015.md` §Proof Harness Skeleton for the complete harness.
-Tests cover OpenAI `sk-proj-*` and classic `sk-*` patterns, Anthropic `sk-ant-*`, and
-generic 64-char alpha-numeric token patterns.
+Tests cover all 6 patterns: OpenAI `sk-*`, Anthropic `sk-ant-*`, generic 64-char alphanumeric,
+Bearer token, URL-embedded userinfo, and HTTP Basic auth patterns, plus a clean-passthrough case.
 
 Feasibility: HIGH. Patterns are well-defined regular expressions; no I/O; no async;
-parameterized unit tests complete in < 1s. See `VP-015.md` §Feasibility Assessment.
+7 parameterized unit tests complete in < 1s. See `VP-015.md` §Feasibility Assessment.
 
 ---
 
@@ -837,6 +845,7 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.29 | 2026-08-31 | architect | round-49/F-P2A205-02 | VP-015 §Should Prove section updated — `redact_credentials` pattern set expanded from 3 to 6 (adding Bearer token pattern 4, URL-embedded userinfo pattern 5, HTTP Basic auth pattern 6 per BC-2.09.007 {INV-003}(b) v2.5; CWE-522 closure). SEC-BOUND-001 steps-2+3 pipeline context documented (VP-015 covers step 2; step 3 non-VP-elevated per R38/F-P2A161-01-Option-B). Unit harness note updated to 7 test cases. VP catalog table UNCHANGED; VP count UNCHANGED: 17 total (6 P0 / 11 P1). input-hash updated: BC-2.09.007 input drift from v2.5 changes. |
 | 2.28 | 2026-08-28 | architect | round-25/F-P2A108-02 | Normalize doubled-path notation in §VP-012 feasibility prose. One occurrence of `` `pregolya-core::core::budget` `` replaced with `` `pregolya-core (core::budget)` `` (matches ADR-023 §Required-Inventory parenthetical form). No VP catalog, coverage-matrix, or harness content changed. |
 | 2.27 | 2026-08-27 | architect | round-16/F-P2A081-01 | VP-016 §Why proptest (not Kani): 'arbitrary `GraphState` instances with extra internal fields' → 'arbitrary `TestGraphState` instances (serialized as `serde_json::Value`) with extra internal fields' (F-P2A081-01 MED — `GraphState` is not a type/trait per ADR-029 §Symbol Grounding PHANTOM row; canonical harness struct is `TestGraphState`). input-hash updated to c3a2086. |
 | 2.26 | 2026-08-27 | architect | round-14/F-P2A078-02+F-P2A078-03 | VP-016 §Property entry: 'fields from `GraphState S`' → 'fields from the non-generic `serde_json::Value` graph state'; 'the `ToolOutput` returned by a successful invocation' → 'the `serde_json::Value` returned by `invoke_dyn` on successful invocation' (F-P2A078-02 HIGH). VP-016 harness description: `VP-016.md` filename → `vp-016-graph-agent-tool-state-isolation.md` (canonical filename; F-P2A078-03 MED); TestGraphState fields `internal_checkpoint_id`/`intermediate_message`/`_internal_blob` → `checkpoint_id`/`run_id`/`accumulated_messages` (authoritative VP-016 harness; F-P2A078-03); 'Assertion: `ToolOutput` contains exactly' → 'Assertion: the `serde_json::Value` returned by `invoke_dyn` contains exactly'. input-hash updated to 18fa8b4. |

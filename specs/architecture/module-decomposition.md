@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.59"
+version: "1.60"
 status: active
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
@@ -11,10 +11,11 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "77a1a08"
+input-hash: "6c2dd18"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.60 (round-49/F-P2A207-02+F-P2A207-03/2026-08-30): F-P2A207-02+F-P2A207-03 [HIGH/MED] — add `core::invocation_context` definitions-only row to D21 additions table and blockquote note; canonical module path `pregolya-core/src/invocation_context.rs` (SS-11; trait-in-core precedent; follows core::guardrail pattern; BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}); Iron Law count updated 81→82 total, 6→7 definitions-only/exempt; module-criticality.md registry count updated 88→89 total, 6→7 definitions-only/exempt."
   - "1.59 (round-45/F-P2A191-01/2026-08-30): F-P2A191-01 MED — graph::scheduler row: phantom symbol `CompiledGraph::run()` replaced with canonical `CompiledStateGraph::invoke(input, config)`. Adjudication: `CompiledGraph::run()` exists in no authoritative contract; canonical public entry is `CompiledStateGraph::invoke(input, config)` per BC-2.02.001 {PC-005} ('Calling compiled_graph.invoke(input, config) ... starts a Pregel super-step loop') and BC-2.12.007 ('Streaming handler code path passes through CompiledGraph.invoke'). `tick()` internal Collecting-phase driver retained. 'top-level entry point' label transferred to canonical form. Disambiguates from `GraphRunner::run` (MCP layer, ADR-029 §Decision 2 3-layer seam). BC-2.11.005 §Architecture Anchors routing: PO to mirror `CompiledStateGraph::invoke(input, config)` — DO NOT edit BC-2.11.005 here. input-hash unchanged — no BC input changes."
   - "1.58 (R37/F-P2A159-01/2026-08-29): F-P2A159-01 LOW (POL-4 semantic_anchoring_integrity) — mcp::registry row: split mis-attributed dispatch citation. Prior text attributed both tools/list AND tools/call dispatch to BC-2.09.006 {PC-002}. Canonical ownership: tools/list dispatch → BC-2.09.006 {PC-002}; tools/call dispatch → BC-2.09.007 {PC-001}. L-230 whole-artifact sweep: purity-boundary-map.md and verification-coverage-matrix.md carried the same mis-attribution via 'inbound dispatch; BC-2.09.006 {PC-002}'; corrected in the same burst. input-hash unchanged — no BC input changes."
   - "1.57 (R31/F-P2A135-01/2026-08-28): F-P2A135-01 HIGH — mcp::registry registrar attribution corrected against BCs. R30's 'mcp::client (populates at session startup via mcp::discovery conversion)' is a phantom: this file's own mcp::client row carries no registry-write responsibility; S-2.10 ACs/Tasks show get_tools() returns Vec<Arc<dyn DynTool>> to the caller with zero registry.register calls; S-2.11 explicitly states S-2.10 does NOT create registry.rs; BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002} place registration on the application/caller layer; BC-2.09.006 {PC-002} places reading on mcp::server. Corrected: registry is read by mcp::server (BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard ToolRegistry registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. input-hash unchanged — no BC input changes."
@@ -246,7 +247,7 @@ The SDK crates have no pregolya-core dep and are publishable standalone. Enforce
 > coverage — it therefore satisfies Iron Law criteria requiring a module-level row. The
 > pre-existing `pregolya-standard-tests` crate-level row in module-criticality.md remains
 > as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law.
-> Current module universe: 81 total (75 tiered / 6 definitions-only/exempt: `core::documents`, `memory::skills`, `core::guardrail`, `core::action_risk`, `core::context_mutation`, `core::write_guard`) by this file's own crate::module-form rows. The module-criticality.md registry total is 88 (82 tiered + 6 definitions-only/exempt) — the 7-row difference is the 7 crate-level roll-up rows that appear in the registry but not in this file's tiered table. See module-criticality.md §Classification Summary for the authoritative registry count.
+> Current module universe: 82 total (75 tiered / 7 definitions-only/exempt: `core::documents`, `memory::skills`, `core::guardrail`, `core::action_risk`, `core::context_mutation`, `core::write_guard`, `core::invocation_context`) by this file's own crate::module-form rows. The module-criticality.md registry total is 89 (82 tiered + 7 definitions-only/exempt) — the 7-row difference is the 7 crate-level roll-up rows that appear in the registry but not in this file's tiered table. See module-criticality.md §Classification Summary for the authoritative registry count.
 
 ## pregolya-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, exception, graph_tool, interceptor, registry, sanitize, server, session)
 
@@ -339,6 +340,7 @@ Re-exported from pregolya-core.
 | `core::action_risk` | Definitions-only: `ActionRisk` enum (4 variants: ReadOnly/Low/Medium/High); `#[non_exhaustive]`; relocated from `graph::hitl` per dependency-inversion precedent enabling pregolya-tools compile-time access without pregolya-graph dep (F-P170-06 / ADR-020 Decision 3) | — | SS-05 |
 | `core::context_mutation` | Definitions-only: `ContextSourceSpec` (namespace + key), `ContextMutationConfig` (`Vec<ContextSourceSpec>`); enables `RunnableConfig.context_mutations`; loaded by `graph::scheduler` at run start; no execution logic (ADR-012 D20) | — | SS-01 |
 | `core::write_guard` | Definitions-only: `MemoryWriteRequest` enum (Add/Replace/Remove), `MemoryWriteGuard` trait (sync validation: `fn validate -> WriteGuardDecision`), `WriteGuardDecision` (Allow/Deny/Transform); write-path safety seam definitions; enforcement execution in `memory::write_guard` (ADR-012 D20) | — | SS-15 |
+| `core::invocation_context` | Definitions-only: `InvocationContext` struct — per-run hook registry with `guardrail_hook: Option<Arc<dyn GuardrailHook>>` slot; default construction yields all-`None` slots; `register_guardrail(Arc<dyn GuardrailHook>)` registration; `guardrail_hook() -> Option<&Arc<dyn GuardrailHook>>` query path; `graph::provenance` and `mcp::ingress` consume at dispatch time; SS-11 owner; follows trait-in-core precedent; canonical file `pregolya-core/src/invocation_context.rs` (BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}) | — | SS-11 |
 | `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes; `GuardedDocuments` newtype (no public constructor) + `GuardedDocuments::rag_ingress(docs, guardrail)` sole constructor enforcing DI-012 RAGRetrieval guardrail at call time (ADR-014 Decision 6) | MEDIUM | SS-20 |
 | `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep; credential-bearing HTTP surface (DI-009 timeout + DI-010 key opacity apply to all impls); VP-008 proptest P1. `pub fn validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` — production dimensionality gate called by all Embeddings impls; visibility `pub` (cross-crate callers: pregolya-openai, pregolya-ollama) | HIGH | SS-22 |
 | `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes; dual-aspect: Reviver (CRITICAL/VP-010 Kani P0 — allowlist containment security boundary) + LcSerializable round-trip (HIGH/VP-007 proptest P1) | CRITICAL | SS-19 |
@@ -393,6 +395,21 @@ Re-exported from pregolya-core.
 >   `ReadOnly`, `Low`, `Medium`, `High`. `#[non_exhaustive]` per workspace convention. BC-2.05.006
 >   anchor preserved. `pregolya-graph` re-exports `core::action_risk::ActionRisk` as
 >   `pregolya_graph::hitl::ActionRisk` for existing graph-layer consumers (zero BC changes required).
+
+> **InvocationContext definitions (SS-11 owner; follows trait-in-core precedent; definitions-only):** pregolya-core
+> hosts DEFINITIONS for the per-run guardrail hook registry (round-49/F-P2A207-02+F-P2A207-03). These
+> are pure struct definitions with no execution logic — no criticality-counted module row per ADR-009
+> definitions-only precedent.
+>
+> - `core::invocation_context` (`pregolya-core/src/invocation_context.rs`): `InvocationContext` struct —
+>   per-run hook registry holding `guardrail_hook: Option<Arc<dyn GuardrailHook>>`. Default construction
+>   yields all-`None` slots. `register_guardrail(Arc<dyn GuardrailHook>)` sets the slot;
+>   `guardrail_hook() -> Option<&Arc<dyn GuardrailHook>>` provides the query path. Dispatch modules
+>   `graph::provenance` and `mcp::ingress` receive `&InvocationContext` at invocation time and call
+>   `evaluate` when a hook is registered. Follows the trait-in-core precedent established by
+>   `core::guardrail` (ADR-014 Decision 6). BC traceability: BC-2.11.001–006 {PRE-001}
+>   (InvocationContext construction and hook-registration preconditions); BC-2.09.003 {PRE-002}/{PRE-003}
+>   (mcp::ingress hook dispatch path).
 
 ## pregolya-prompts (SS-18) — HIGH (injection_guard) / MEDIUM (template, chat_template, few_shot)
 

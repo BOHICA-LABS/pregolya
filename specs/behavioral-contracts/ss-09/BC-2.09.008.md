@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "3.9"
+version: "4.0"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -45,12 +45,13 @@ changelog:
   - "3.7 (round-46/F-193-03/2026-08-30): F-193-03 [MED, CWE-209] — TV-019 Notes corrected. OLD Notes attributed path_fn panic catch to FutureExt::catch_unwind (outer async MCP boundary) and cited EC-010 as the capture mechanism. NEW: path_fn panic is caught in the Pregel executor (std::panic::catch_unwind, synchronous per BC-2.02.005 {PRE-004}/{PC-005}) and surfaces as Err(E-GRAPH-011); invoke_dyn surfaces it as isError:true at the MCP boundary where E-GRAPH-011's internal-panic code triggers ADR-029 §Decision 5 static replacement by code-match — the outer FutureExt::catch_unwind (EC-010) is NOT involved (the panic never reaches the async boundary; it is converted to Err by the Pregel executor first). EC-010 reference removed from Notes; EC-003 is the correct authority. Source-of-Truth Precedence rule 1: BC-2.02.005 owns path_fn panic semantics."
   - "3.8 (round-46/F-193-03/2026-08-30): F-193-03 [MED, CWE-209] — TV-019 Expected Output column corrected (completes F-193-03). OLD Expected Output mechanism: 'FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...))) catches the path_fn panic during .await polling; the resulting E-GRAPH-011 ConditionalEdgePanic internal-panic code triggers ADR-029 §Decision 5 static replacement at the MCP boundary'. NEW: 'path_fn panic is caught in the Pregel executor (std::panic::catch_unwind, synchronous per BC-2.02.005 {PRE-004}/{PC-005}); surfaces as Err(E-GRAPH-011); the E-GRAPH-011 internal-panic code triggers ADR-029 §Decision 5 static replacement by code-match at the MCP boundary'. Notes column corrected in v3.7; this edit aligns the Expected Output column with the corrected catch mechanism. Observable outcome (static content[0].text == \"internal error\") unchanged."
   - "3.9 (round-48/F-P2A203-02-sibling/2026-08-30): F-P2A203-02 propagation — {INV-003} updated to explicitly enumerate the canonical four-pattern set per BC-2.09.007 {INV-003}(b), which now includes Bearer tokens (`Bearer\\s+[A-Za-z0-9._~+/=\\-]+`). Short opaque Bearer tokens not matching provider-key patterns 1–3 previously passed unredacted through `redact_credentials`; pattern 4 closes this gap. No behavioral change to this BC's mandatory redaction obligation — BC-2.09.007 {INV-003}(b) is the canonical authority; this entry adds explicit four-pattern enumeration for reader verification and to satisfy symmetry claims. Also corrects pre-existing input-hash drift: stored 3b0d09a → computed bbed510 (ADR-029 inputs updated in prior rounds)."
+  - "4.0 (round-49/F-P2A205-02-sibling+F-P2A204-01-sibling/2026-08-31): F-P2A205-02 sibling sweep — {INV-003} canonical pattern set extended from 4 to 6 patterns: pattern 5 URL-embedded userinfo `[a-zA-Z][a-zA-Z0-9+.\\-]*://[^/\\s:@]+:[^/\\s:@]+@` → `<redacted>`; pattern 6 HTTP Basic auth `Basic\\s+[A-Za-z0-9+/=]+` → `<redacted>`. 'four patterns' → 'six patterns'. BC-2.09.007 {INV-003}(b) is the canonical authority. F-P2A204-01 sibling sweep — {INV-001} FtsSearchConfig note updated: `FtsSearchConfig.thread_id: Option<&str>` → `FtsSearchConfig<'a>.thread_id: Option<&'a str>` (lifetime required; E0106; BC-2.04.008 {PRE-003} is authoritative). input-hash updated to 656e925."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "bbed510"
+input-hash: "656e925"
 extracted_from: null
 modified: []
 deprecated: null
@@ -192,9 +193,9 @@ overrides `PreToolCallHook` approval decisions only.
   `Uuid`):** The `sanitize_internal_ids` pass applies two patterns (union, case-insensitive): (1) the canonical hyphenated form `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`; (2) the simple (no-hyphen) form `\b[0-9a-f]{32}\b`. Together these cover all standard uuid-crate rendering forms including Display (hyphenated) and simple() (contiguous hex). URN and braced forms contain the hyphenated substring and are covered by pattern (1). The `\b` word-boundary prevents splitting a 64-char SHA-256 digest and prevents stripping a 32-hex sequence embedded within a longer alphanumeric/underscore token. Note: in the full error-path pipeline (`sanitize_internal_ids(redact_credentials(message))` per ADR-029 §Decision 3 and Decision 5), a 64-char lowercase hex sequence (e.g., a SHA-256 digest) is caught by `redact_credentials` rule `[A-Za-z0-9]{64,}` before `sanitize_internal_ids` runs; the `\b` non-over-match property here is a unit-isolation property of `sanitize_internal_ids` (see TV-017). Both patterns are applied case-insensitively (consistent with S-2.11 Task-35 which mandates the case-insensitive flag so that mixed-case UUID representations are also redacted). The `sanitize_internal_ids` pass covers `run_id` (a `Uuid`) and server-layer
   `thread_id` (also a `Uuid` per entities-server.md §Thread, §Run and
   interface-definitions.md §RunnableConfig (`thread_id: Option<Uuid>`)) identically.
-  Note: `FtsSearchConfig.thread_id: Option<&str>` is an FTS query-filter parameter (not a
-  graph execution identifier) and never reaches a `GraphAgentTool` error-message path; it
-  is outside the scope of this invariant.
+  Note: `FtsSearchConfig<'a>.thread_id: Option<&'a str>` is an FTS query-filter parameter
+  (not a graph execution identifier) and never reaches a `GraphAgentTool` error-message path;
+  it is outside the scope of this invariant.
 
 - {INV-002} **Binary interrupt invariant (fail-closed default):** Exactly one of two
   outcomes is possible for any `GraphAgentTool::invoke_dyn` call under
@@ -215,9 +216,11 @@ overrides `PreToolCallHook` approval decisions only.
   `content[0].text` (unconditional, per BC-2.09.007 {INV-003}). Only
   `PregolyaError::message` MUST be used as the text source; `.source()`, `Debug`, and
   `Display` output MUST NOT be used. The canonical pattern set (BC-2.09.007 {INV-003}(b))
-  covers four patterns in order: (1) OpenAI `sk-[A-Za-z0-9_\-]{20,}`, (2) Anthropic
+  covers six patterns in order: (1) OpenAI `sk-[A-Za-z0-9_\-]{20,}`, (2) Anthropic
   `sk-ant-[A-Za-z0-9_\-]{32,}`, (3) generic `[A-Za-z0-9]{64,}`, (4) Bearer token
-  `Bearer\s+[A-Za-z0-9._~+/=\-]+` — each replaced with `"<redacted>"`.
+  `Bearer\s+[A-Za-z0-9._~+/=\-]+`, (5) URL-embedded userinfo
+  `[a-zA-Z][a-zA-Z0-9+.\-]*://[^/\s:@]+:[^/\s:@]+@`, (6) HTTP Basic auth
+  `Basic\s+[A-Za-z0-9+/=]+` — each replaced with `"<redacted>"`.
 
 - {INV-004} **`ForceApproveHooks` ActionRisk runtime gate:**
   `ForceApproveHooks` is appropriate ONLY for read-only tool graphs (graphs composed
