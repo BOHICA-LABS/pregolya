@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.06.001
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,7 +24,7 @@ inputs:
   - .factory/specs/domain-spec/events.md
   - .factory/semport/core/behavioral-intent.md
   - .factory/comparative/assessment-parts/part-3-conflicts-negative-evidence.md
-input-hash: "9f36454"
+input-hash: "3e67602"
 changelog:
   - "1.0 (initial): base BC authored."
   - "1.1 (ADV-P1D-PASS-46): F-P46-01 adjudication — add EC-005 (failed-run stream termination). BC-2.06.001 PC2 states RunEnd emits 'once at run completion' (completion-only contract) but had no explicit edge case for failed runs. EC-005 makes the authority explicit: stream closes after error SSE event; no RunEnd emitted on failure. This resolves EC-001 hedge in BC-2.12.007 and establishes the source-of-truth for failure-termination across the streaming surface."
@@ -41,6 +41,7 @@ changelog:
   - "1.12 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.17 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.13 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.14 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.15 (R06-boundary-parity/2026-08-30): SEC-BOUND-001 cross-reference added to PC-002 StreamEvent::Error bullet and EC-005 — error_message content is sanitized at emission by BC-2.12.007 {INV-004} per ADR-029 §External-Boundary Error-Sanitization Parity; R06 boundary-sanitization gate passes."
 extracted_from: null
 modified: []
 deprecated: null
@@ -93,7 +94,7 @@ Wire format is pregolya-native (not LangChain astream_events v2 wire compat) per
    - `StreamEvent::ToolApprovalRequest` — emitted BEFORE `interrupt()` when `pre_tool_dispatch` returns `PreToolDecision::PendingHumanApproval`; carries `run_id`, `tool_name`, `tool_args`, `action_risk` (Option<ActionRisk>), `prompt` (human-facing approval request text); causal ordering and interrupt semantics specified in BC-2.06.004
    - `StreamEvent::ToolApprovalResolved` — emitted AFTER interrupt consumed, BEFORE decision applied, on `Command(resume=PreToolDecision)` delivery for a suspended approval; carries `run_id`, `tool_name`, `decision` (PreToolDecision variant), `reason` (Option<String>), `modified_args` (Option<ToolArgs>); causal ordering specified in BC-2.06.005
    - `StreamEvent::CompactionEvent` — emitted after a compaction cycle completes and the compacted checkpoint is durably written (step 6 of BC-2.10.006 7-step sequence); carries `run_id`, `parent_ids` (Vec<RunId>), `trigger` (CompactionTrigger variant), `compacted_start` (usize), `compacted_end` (usize), `summary_token_count` (u64), `tokens_remaining_after` (Option<i64>); causal ordering specified in BC-2.06.006
-   - `StreamEvent::Error` — emitted when a node returns `Err(PregolyaError)` during execution; carries `run_id`, `parent_ids` (Vec<RunId>), `error_code` (String), `error_message` (String); stream closes after this event; `RunEnd` is NOT emitted (EC-005); this is the 16th variant (ADR-023 §Exempt Enums — StreamEvent is exhaustively matched by consumers)
+   - `StreamEvent::Error` — emitted when a node returns `Err(PregolyaError)` during execution; carries `run_id`, `parent_ids` (Vec<RunId>), `error_code` (String), `error_message` (String); stream closes after this event; `RunEnd` is NOT emitted (EC-005); this is the 16th variant (ADR-023 §Exempt Enums — StreamEvent is exhaustively matched by consumers); **SEC-BOUND-001 cross-ref:** `error_message` content is sanitized at emission by the pregolya-server SSE handler (BC-2.12.007 {INV-004}) per ADR-029 §External-Boundary Error-Sanitization Parity — the 3-step pipeline (internal-panic static-replace → redact_credentials → sanitize_internal_ids) is applied before populating this field; raw panic text, credentials, and internal UUIDs never reach the wire (this BC defines the schema; the sanitization guarantee is owned by BC-2.12.007 {INV-004})
 3. {PC-003} Each event carries `run_id` (UUID) and `parent_ids` (ordered ancestry list) per BC-2.06.002.
 4. {PC-004} Events are emitted in the following causal ordering (updated F-P99-01):
    ```
@@ -155,7 +156,7 @@ by traversing `parent_ids` (see BC-2.06.002).
 **Scenario:** A node function returns `Err(PregolyaError)` during execution.
 **Expected behavior:** The execution engine emits `StreamEvent::Error` carrying `run_id`,
 `parent_ids` (Vec<RunId>), `error_code` (String from `PregolyaError::code`), `error_message`
-(String from `PregolyaError::message`); the event stream then closes. `RunEnd` is NOT emitted
+(String from `PregolyaError::message` — **SEC-BOUND-001 cross-ref:** sanitized at emission by BC-2.12.007 {INV-004} per ADR-029 §External-Boundary Error-Sanitization Parity before reaching the wire); the event stream then closes. `RunEnd` is NOT emitted
 for a failed run — `RunEnd` is reserved for the completion path (PC-002: "once at run completion").
 The run record transitions to `failed` status, queryable via `GET /threads/{thread_id}/runs/{run_id}`.
 No partial or ghost `RunEnd` event with `status: "failed"` is emitted.

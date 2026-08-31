@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.16"
+version: "1.17"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -39,6 +39,7 @@ changelog:
   - "1.14 (round-42/F-P2A177-01/2026-08-29): F-P2A177-01 [HIGH, CWE-248/703] — Substantiate node-body panic recovery in EC-003 and mint {INV-007} panic-text-isolation invariant. EC-003 expanded to cover both Err and panic paths: node Err path is unchanged; node-body panic path now specifies `FutureExt::catch_unwind(AssertUnwindSafe(...))` mechanism — panic caught during `.await` polling → `Err(PregolyaError { code: \"E-GRAPH-019\", category: INTERNAL, message: \"NodePanic: graph node panicked during execution — see server error log for details\", retry_hint: Never, .. })`; run transitions `in_progress → failed`; raw panic text logged server-side at ERROR only; NEVER in `Run.error.message` per new {INV-007}; {INV-005} (no orphan runs) upheld — run MUST NOT remain `in_progress` after panic caught. SEC-008 note added to EC-003: `panic = \"unwind\"` required on pregolya-server release profile. {INV-007} added: panic-text-isolation — raw panic text MUST NOT appear in `Run.error.message`; E-GRAPH-019 STATIC message invariant. TV-011 minted: node-body-panic → failed + E-GRAPH-019 + static message + no orphan `in_progress` (TV count 10→11). Traceability Error Codes row added citing E-GRAPH-019."
   - "1.15 (round-43/F-P2A181-01-sibling/2026-08-30): F-P2A181-01 sibling — EC-003 SEC-008 clause and TV-011 Notes refined to workspace-root `[profile.release]` precision, aligning with ADR-029 §Decision 5 v2.16 and S-2.11 AC-037 v1.31. EC-003: 'on the `pregolya-server` release profile' → 'in the workspace-root `[profile.release]` governing the `pregolya-server` binary; a library-member `[profile.release] panic` override is silently ignored by Cargo and MUST NOT be relied upon'. TV-011 Notes: same workspace-root precision added. BC-2.09.008 EC-010 SEC-008 was the primary fix (F-P2A181-01); this sibling corrects residual release-profile framing for consistency."
   - "1.16 (round-47/F-P2A197-01+F-P2A197-02/2026-08-30): F-P2A197-01 [HIGH, CWE-209] — E-GRAPH-011 ConditionalEdgePanic panic text leaks at HTTP boundary. {INV-007} extended from E-GRAPH-019-only to ALL internal-panic codes: E-GRAPH-011 ConditionalEdgePanic STATIC message added ('ConditionalEdgePanic: conditional edge function panicked during execution — see server error log for details'); source_node topology and captured panic text suppressed; MCP-boundary uniform treatment parity (ADR-029 §Decision 5). EC-003 'node returns Err' path extended with Internal-panic Err sanitization clause: pregolya-server run-executor MUST static-replace E-GRAPH-011 message before writing to Run.error.message. TV-012 minted (E-GRAPH-011 → STATIC message, source_node suppressed; TV count 11→12). F-P2A197-02 [MED, CWE-209/CWE-532] — no redaction contract on Run.error.message HTTP surface. {INV-008} External-Boundary Error-Sanitization invariant added: mandatory 3-step pipeline (internal-panic static-replace → redact_credentials → sanitize_internal_ids) on Run.error.message before surfacing via {PC-013}/{PC-016}; mirrors BC-2.09.008 {INV-003}; closes DI-010 Credential Opacity gap on HTTP Run-status surface. TV-013 minted (credential redaction path; TV count 12→13). Traceability Error Codes updated to reference E-GRAPH-011 STATIC replacement obligation."
+  - "1.17 (round-48/F-P2A201-02+F-P2A203-02/2026-08-30): F-P2A201-02 [MED, CWE-209/670] — {INV-008} step 3 falsely claimed 'checkpoint IDs' as UUID-shaped identifiers covered by `sanitize_internal_ids`. CheckpointId is a u64 newtype (ADR-005 / BC-2.04.003) — NOT UUID-shaped; the UUID regex cannot match it. 'checkpoint IDs' removed from the UUID-covered example list; u64-CheckpointId authoring-site-discipline carve-out added (mirrors BC-2.09.008 {INV-001} / ADR-029 SEC-BOUND-001 step 3). Canonical replacement token `<redacted-id>` confirmed. F-P2A203-02 propagation — {INV-008} step 2 updated from vague 'Bearer tokens, API key prefixes, and patterns matching the DI-010 credential opacity regex' to explicit four-pattern enumeration (BC-2.09.007 {INV-003}(b)): OpenAI sk-, Anthropic sk-ant-, generic 64+ alphanumeric, Bearer `Bearer\\s+[A-Za-z0-9._~+/=\\-]+`. Symmetry claim 'Symmetric with BC-2.09.008 {INV-003}' remains TRUE; BC-2.09.008 {INV-003} now also enumerates the four patterns. No new TVs minted in this BC (TV count unchanged at 13; TV-013 already tests credential redaction; Bearer coverage is tested via TV-010 in BC-2.09.007)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -199,12 +200,21 @@ LangGraph Platform (D13).
   1. **Internal-panic static-replace** (per {INV-007}): if `error.code ∈ {"E-GRAPH-011", "E-GRAPH-019"}`,
      replace `error.message` with the corresponding STATIC message — no dynamic panic text, no
      `source_node` topology.
-  2. **`redact_credentials`**: scan `error.message` for credential-shaped substrings (Bearer tokens,
-     API key prefixes, and patterns matching the DI-010 credential opacity regex) and replace each
-     match with `"<redacted>"`. Symmetric with BC-2.09.008 {INV-003}.
+  2. **`redact_credentials`**: scan `error.message` for credential-shaped substrings matching the
+     canonical four-pattern set (BC-2.09.007 {INV-003}(b)) and replace each match with `"<redacted>"`:
+     (1) OpenAI key `sk-[A-Za-z0-9_\-]{20,}`, (2) Anthropic key `sk-ant-[A-Za-z0-9_\-]{32,}`,
+     (3) generic long alphanumeric token `[A-Za-z0-9]{64,}`, (4) Bearer token
+     `Bearer\s+[A-Za-z0-9._~+/=\-]+` (entire `Bearer <token>` span). Symmetric with
+     BC-2.09.008 {INV-003}.
   3. **`sanitize_internal_ids`**: replace UUID-shaped internal identifiers that are opaque
-     implementation details (checkpoint IDs, internal trace IDs, node instance IDs not already
+     implementation details (internal trace IDs, node instance IDs, run IDs not already
      disclosed to the caller via the HTTP path or request body) with `"<redacted-id>"`.
+     **`u64` CheckpointId carve-out:** `CheckpointId` is a `u64` newtype (ADR-005 /
+     BC-2.04.003) — NOT UUID-shaped; the UUID regex cannot match it. `u64` checkpoint IDs
+     are NOT covered by this pass; authoring-site discipline (BC-2.09.008 {INV-001}) is their
+     sole framework guarantee — node implementations MUST NOT embed checkpoint IDs in
+     externally surfaced error messages (mirrors BC-2.09.008 {INV-001} / ADR-029
+     SEC-BOUND-001 step 3 verbatim).
   Pipeline order is mandatory: step 1 THEN step 2 THEN step 3. This matches the MCP boundary's
   uniform error-sanitization pipeline (ADR-029 §Decision 3 + ADR-029 §Decision 5; BC-2.09.008
   {INV-001}/{INV-003}). This invariant closes the DI-010 Credential Opacity gap on the HTTP

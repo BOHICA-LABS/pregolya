@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.007
-version: "1.9"
+version: "2.0"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -36,6 +36,7 @@ changelog:
   - "1.7 (P2A-043/F-05 adjudication/2026-08-24): Author EC-006 — non-first-node mid-run failure, run_end NOT emitted. EC-001 was scoped to 'first node'; INV-003 covers error equivalence but did not explicitly state the no-run_end rule for mid-run failure. EC-006 closes that gap; authority is BC-2.06.001 EC-005 (completion-only RunEnd contract)."
   - "1.8 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.9 (round-46/F-P2A195-01+F-P2A195-03/2026-08-30): F-P2A195-01 [HIGH] — VP-DI011-02 static-analysis anchor corrected: phantom `CompiledGraph.invoke` (dot notation, non-canonical type) → `CompiledStateGraph::invoke` (canonical per BC-2.02.001 {PC-001}; Rust :: path). VP-DI011-02 is the SOLE mechanized DI-011 defense against the CONFLICT-10/NE-13 streaming-stub counter-example. F-P2A195-03 [MED] — non-canonical type `CompiledGraph` corrected to `CompiledStateGraph` at five live-body sites: §Description, {PRE-001}, {PC-005}, {INV-001}, §Architecture Anchors. Historical changelog entries grandfathered per append_only_numbering policy."
+  - "2.0 (round-48/F-P2A201-01+F-P2A203-01/2026-08-30): F-P2A201-01 [HIGH, CWE-209/532] + F-P2A203-01 [HIGH, CWE-209/532] — SSE boundary bypasses SEC-BOUND-001 (3rd external boundary). {INV-003} reconciled: 'same PregolyaError cause' → 'same SANITIZED PregolyaError cause' per SEC-BOUND-001 parity requirement; both surfaces now explicitly apply the 3-step pipeline before emission. {INV-004} added: External-Boundary Error-Sanitization (SEC-BOUND-001) — mandatory 3-step pipeline (internal-panic static-replace [E-GRAPH-011 + E-GRAPH-019] → redact_credentials [4-pattern set] → sanitize_internal_ids [UUID-shaped only; u64-CheckpointId carve-out]) on BOTH the SSE `StreamEvent::Error.error_message` AND the unary non-2xx error body BEFORE emission; references ADR-029 §SEC-BOUND-001; mirrors BC-2.12.003 {INV-007}/{INV-008}; closes 3rd external boundary gap. EC-001 and EC-006 updated to reference sanitized error. TV-007 minted (E-GRAPH-011 static-replace on SSE surface; TV count 6→7). TV-008 minted (E-GRAPH-019 static-replace on SSE surface; TV count 7→8). TV-009 minted (Bearer-token credential redaction on SSE surface; TV count 8→9)."
 extracted_from: null
 modified: []
 deprecated: null
@@ -97,7 +98,33 @@ graph engine, producing output that could diverge from the unary path.
   `409 Conflict` with `E-SERVER-015 RunAlreadyExecuting { run_id }`.
 - {INV-003} If the graph raises an error mid-execution, both the streaming endpoint (as an
   `error` SSE event) and the unary endpoint (as a non-2xx response body) surface the
-  same `PregolyaError` cause.
+  same **sanitized** `PregolyaError` cause — both surfaces apply the SEC-BOUND-001 3-step
+  sanitization pipeline per {INV-004} before emission.
+
+- {INV-004} **External-Boundary Error-Sanitization (SEC-BOUND-001; DI-010 Credential Opacity; CWE-209/CWE-532):**
+  `pregolya-server` MUST apply the following 3-step sanitization pipeline to error content
+  BEFORE emission on BOTH the SSE surface (`StreamEvent::Error.error_message`) AND the
+  unary non-2xx error body. Pipeline order is mandatory: step 1 THEN step 2 THEN step 3.
+  1. **Internal-panic static-replace** (per BC-2.12.003 {INV-007}): if `error.code ∈
+     {"E-GRAPH-011", "E-GRAPH-019"}`, replace the error message with the corresponding STATIC
+     message — no dynamic panic text, no `source_node` topology:
+     - E-GRAPH-011: `"ConditionalEdgePanic: conditional edge function panicked during
+       execution — see server error log for details"`
+     - E-GRAPH-019: `"NodePanic: graph node panicked during execution — see server error
+       log for details"`
+  2. **`redact_credentials`**: apply the canonical four-pattern set (BC-2.09.007 {INV-003}(b):
+     (1) `sk-[A-Za-z0-9_\-]{20,}`, (2) `sk-ant-[A-Za-z0-9_\-]{32,}`, (3) `[A-Za-z0-9]{64,}`,
+     (4) `Bearer\s+[A-Za-z0-9._~+/=\-]+`) — replace each match with `"<redacted>"`. Symmetric
+     with BC-2.12.003 {INV-008} step 2.
+  3. **`sanitize_internal_ids`**: replace UUID-shaped internal identifiers (run IDs, internal
+     trace IDs, node instance IDs not already disclosed to the caller) with `"<redacted-id>"`.
+     `u64` CheckpointId is NOT UUID-shaped and is NOT covered by this pass; authoring-site
+     discipline (BC-2.09.008 {INV-001}) is its sole framework guarantee. Symmetric with
+     BC-2.12.003 {INV-008} step 3.
+  This closes the 3rd external boundary gap (SSE streaming + unary error body) under ADR-029
+  §External-Boundary Error-Sanitization Parity (SEC-BOUND-001). Boundary inventory after this
+  fix: MCP content (BC-2.09.008 {INV-003}); HTTP Run-status polling (BC-2.12.003 {INV-008});
+  SSE streaming + unary error body (this BC {INV-004}).
 
 ## Edge Cases
 
@@ -110,7 +137,7 @@ graph engine, producing output that could diverge from the unary path.
   completion-only `RunEnd` contract). Run status queryable via
   `GET /threads/{thread_id}/runs/{run_id}` = `failed`.
 - Unary: `422 Unprocessable Entity` (or `500`, depending on error category) with the
-  same `PregolyaError` payload.
+  same `PregolyaError` payload, sanitized per {INV-004}.
 
 ### EC-002: Streaming client disconnects mid-run
 **Scenario:** An HTTP client opens the SSE stream but closes the connection mid-execution.
@@ -148,7 +175,7 @@ already been emitted to the stream).
   event is emitted.** The completion-only `RunEnd` contract applies regardless of how many
   prior nodes executed successfully (authority: BC-2.06.001 EC-005).
   Run status queryable via `GET /threads/{thread_id}/runs/{run_id}` = `failed`.
-- Unary: `4xx/5xx` response with the same `PregolyaError` as the streaming path (INV-003).
+- Unary: `4xx/5xx` response with the same sanitized `PregolyaError` as the streaming path ({INV-003}/{INV-004}).
 **Distinction from EC-001:** EC-001 covers first-node failure (only `run_start` +
 `node_start` precede the error); EC-006 covers mid-run failure where partial successful
 output has already been streamed. The no-run_end rule is identical in both cases.
@@ -170,6 +197,9 @@ normally.
 | TV-004 | Graph with error in node 2; unary | `4xx/5xx` response with same `PregolyaError` as TV-003 | Error equivalence: streaming = unary |
 | TV-005 | Graph with `interrupt()` call; streaming | SSE emits `{"__interrupt__": [...]}` as the terminal frame; stream truncates; **no `run_end` event emitted**; run status = `interrupted` queryable via `GET /threads/{thread_id}/runs/{run_id}` | Interrupt via streaming surface; BC-2.06.001 TV-004 authority — completion-only RunEnd |
 | TV-006 | Concurrent `GET /threads/t1/runs/r1/stream` (streaming) and a second `GET /threads/t1/runs/r1/stream`; second arrives 10ms later | Second returns `409 Conflict`, `E-SERVER-015 RunAlreadyExecuting` | Concurrent execution guard |
+| TV-007 | A conditional-edge `path_fn` panics mid-run (surfaces as E-GRAPH-011 ConditionalEdgePanic); streaming endpoint | SSE: `run_start`, prior `node_start`/`node_end` pairs for preceding nodes, then `error` event with `error_message == "ConditionalEdgePanic: conditional edge function panicked during execution — see server error log for details"` (STATIC — literal string equality); `source_node` topology suppressed; no raw panic text in `error_message`; stream closes; run status = `failed` | E-GRAPH-011 static-replace on SSE surface per {INV-004} step 1; mirrors BC-2.12.003 TV-012 on HTTP Run-status surface; closes F-P2A201-01/F-P2A203-01 SSE boundary gap |
+| TV-008 | A graph node body panics during execution (surfaces as E-GRAPH-019 NodePanic via `FutureExt::catch_unwind`); streaming endpoint | SSE: `run_start`, `node_start` for failing node, then `error` event with `error_message == "NodePanic: graph node panicked during execution — see server error log for details"` (STATIC — literal string equality); no raw panic text in `error_message`; stream closes; run status = `failed` | E-GRAPH-019 static-replace on SSE surface per {INV-004} step 1; mirrors BC-2.12.003 TV-011 on HTTP Run-status surface; closes F-P2A201-01/F-P2A203-01 SSE boundary gap |
+| TV-009 | A graph node returns `Err(PregolyaError { code: "E-GRAPH-003", message: "provider auth failed: Bearer eyJhbGciOiJIUzI1NiJ9.short_opaque_token", .. })`; streaming endpoint | SSE: `error` event with `error_message` NOT containing `"Bearer eyJhbGciOiJIUzI1NiJ9.short_opaque_token"` or any Bearer-token span; `Bearer <token>` replaced with `"<redacted>"` per {INV-004} step 2 pattern 4; stream closes; run status = `failed` | Bearer-token credential redaction on SSE surface ({INV-004} step 2); Bearer pattern (BC-2.09.007 {INV-003}(b) pattern 4) closes gap for short opaque tokens not matching provider-key patterns 1–3; closes F-P2A203-01 |
 
 ## Verification Properties
 

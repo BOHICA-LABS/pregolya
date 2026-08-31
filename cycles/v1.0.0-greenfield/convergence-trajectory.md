@@ -4430,3 +4430,43 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **Census delta: TV 761→763 canonical (+2: TV-012 E-GRAPH-011 static-replace {INV-007}; TV-013 credential-sanitization {INV-008}). SS-12 subtotal 55→57. Grand total 772→774 incl GTV. BC 134 / VP 17 / EC 138 / stories 40 / points 303 UNCHANGED. streak 0/3 (frozen-HEAD reset on D-324 push).**
 
 **NEXT: round-48 on new frozen HEAD post-D-324 push. Streak 0/3. BOUNDARY-SANITIZATION-CLASS mechanically anchored via ADR-029 SEC-BOUND-001 + BC-2.12.003 {INV-007}/{INV-008}.**
+
+---
+
+## Round 48 — P2A-200/201/202/203 (2026-08-30; D-325)
+
+**Trajectory: →1H+1M→1H+pgap→1MED→1H | Numeric tail: →2→2→1→1 | NOT CLEAN(strict). GATE-READY=YES 13/13.**
+
+### Pass P2A-200
+
+|---------|----------|-------------|
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A200-01 | HIGH | CLOSED: S-1.26 (v1.9→v1.10) AC-019 catch-boundary mislocation corrected — E-GRAPH-011 is Pregel-caught Err (raised inside graph executor), not server-caught; BC-2.12.003 {INV-007} is authoritative. EC-020 updated accordingly. ADR-001 (rev-4→rev-5) Obligation-4 E-GRAPH-019 illustrative example marked illustrative-only to prevent misreading as a realizable obligation beyond the Pregel-executor boundary. |
+| F-P2A200-02 | MED | CLOSED: S-1.26 (v1.9→v1.10) AC-020 sanitizer step 2/3 ordering drift corrected per BC-2.12.003 {INV-008} — step 2 = redact_credentials, step 3 = sanitize_internal_ids. |
+
+### Pass P2A-201
+
+|---------|----------|-------------|
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A201-01 | HIGH, CWE-209/532 | CLOSED: BC-2.12.007 (v1.8→v1.9) {INV-004} NEW — SSE stream event output as 3rd external boundary surface; mandatory SEC-BOUND-001 sanitization pipeline (credential-leak redact + sanitize_internal_ids + static-replace on delta/final content before SSE emission). S-1.27 (v1.6→v1.7) AC-017/EC-015 updated. TV-007/TV-008/TV-009 minted (SSE normal-delta / SSE credential-in-delta / SSE SSE-event-internal-id). |
+| PGAP | PROCESS-GAP | R06 gate: verify-security-literal-propagation.sh extended corpus-wide SEC-BOUND-001 (13 self-probes across BC-2.12.007/BC-2.06.001/BC-2.04.006/S-1.17). Converts boundary-sanitization check from adversary-caught to mechanically-caught at commit time. BOUNDARY-SANITIZATION-GATE Drift item CLOSED. |
+
+### Pass P2A-202
+
+|---------|----------|-------------|
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A202-01 | MED, CWE-522 | CLOSED: BC-2.09.007 (v1.4→v1.5) Bearer-token credential pattern added to redact_credentials canonical sanitizer (4th pattern: `Authorization: Bearer <token>` → `Authorization: Bearer [REDACTED]`). TV-010 minted. S-1.17 (v1.4→v1.5) R06 cross-reference added. |
+
+### Pass P2A-203
+
+|---------|----------|-------------|
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A203-01 | HIGH, CWE-209/532 | CLOSED: Secondary sweep — S-1.27 AC-017/EC-015 SSE boundary SEC-BOUND-001 parity confirmed complete (TV-007/TV-008/TV-009 anchored; BC-2.12.007 {INV-004} wired to story ACs). No new spec changes required — verification sweep only. |
+
+**Census delta: TV 763→767 canonical (+4: TV-010 Bearer-token {BC-2.09.007}; TV-007 SSE normal-delta {INV-004}; TV-008 SSE credential-in-delta {INV-004}; TV-009 SSE event-internal-id {INV-004}). Grand total 774→778 incl GTV. BC 134 / VP 17 / EC 138 / stories 40 / points 303 UNCHANGED. L-239 codified. streak 0/3 (frozen-HEAD reset on D-325 push).**
+
+**NEXT: round-49 on new frozen HEAD post-D-325 push. Streak 0/3. BOUNDARY-SANITIZATION-GATE Drift CLOSED: R06 gate (13 self-probes) + L-238 parity-principle together form complete boundary-sanitization closure pattern.**

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.006
-version: "1.11"
+version: "1.12"
 status: active
 producer: product-owner
 timestamp: 2026-08-24T00:00:00Z
@@ -19,6 +19,7 @@ changelog:
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.10 (P2A-043 F-05/2026-08-24): invariant-ordinal cross-refs converted to stable tags."
   - "1.11 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
+  - "1.12 (R06-boundary-parity/2026-08-30): SEC-BOUND-001 cross-reference added to EC-005 — Run.error.message is sanitized at the surfacing boundary by BC-2.12.003 {INV-008} per ADR-029 §External-Boundary Error-Sanitization Parity before surfacing via the HTTP Run-status endpoint; R06 boundary-sanitization gate passes."
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/domain-spec/capabilities-p0.md
@@ -99,7 +100,7 @@ the adk-rust identity-triple collapse is the explicit counter-example.
 | EC-002 | Root namespace `checkpoint_ns = ""` and subgraph namespace `checkpoint_ns = "sub"` on the same thread | They are independent namespaces; writes to one never appear in the other; both present in `list` scoped to `thread_id` |
 | EC-003 | `get_tuple` called with `RunnableConfig` whose `configurable` map is missing the `"checkpoint_ns"` key | `checkpoint_ns` defaults to `""`; the root namespace is queried; no error if the root namespace exists; `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'thread_id': value is required", .. })` if the `"thread_id"` key is also absent from the `configurable` map |
 | EC-004 | Concurrent writes from the same `thread_id` to different `checkpoint_ns` values | Each namespace is independent; no locking across namespaces required; both writes succeed |
-| EC-005 | A `put(config, checkpoint, ...)` or `put_writes(config, writes, task_id)` call where the composite triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already exists in storage under a session belonging to a different tenant context — i.e., the composite-PK uniqueness constraint ({INV-001}) is violated at the tenancy boundary | `Err(PregolyaError { category: TENANCY, code: "E-CHKPT-005", message: "SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique", .. })` (where `<t>` = `config.thread_id`, `<ns>` = `config.checkpoint_ns`, both available at raise site); write rejected atomically, no partial mutation. This is the raise-condition for E-CHKPT-005: the composite primary key collision surfaces as a tenancy boundary violation when two distinct tenant contexts attempt to own the same session address triple. In v1 this error surfaces embedded in Run.error. (OBS-P28-2, ADV-P1D-PASS-28.) |
+| EC-005 | A `put(config, checkpoint, ...)` or `put_writes(config, writes, task_id)` call where the composite triple `(config.thread_id, config.checkpoint_ns, config.checkpoint_id)` already exists in storage under a session belonging to a different tenant context — i.e., the composite-PK uniqueness constraint ({INV-001}) is violated at the tenancy boundary | `Err(PregolyaError { category: TENANCY, code: "E-CHKPT-005", message: "SessionAddressCollision: operation with (thread_id='<t>', ns='<ns>') conflicts with existing session — triple must be unique", .. })` (where `<t>` = `config.thread_id`, `<ns>` = `config.checkpoint_ns`, both available at raise site); write rejected atomically, no partial mutation. This is the raise-condition for E-CHKPT-005: the composite primary key collision surfaces as a tenancy boundary violation when two distinct tenant contexts attempt to own the same session address triple. In v1 this error surfaces embedded in Run.error; **SEC-BOUND-001 cross-ref:** Run.error.message content is sanitized at the surfacing boundary by BC-2.12.003 {INV-008} per ADR-029 §External-Boundary Error-Sanitization Parity — the 3-step pipeline is applied before Run.error.message is surfaced via the HTTP Run-status endpoint (this BC does not itself emit to an external caller). (OBS-P28-2, ADV-P1D-PASS-28.) |
 
 ## Canonical Test Vectors
 

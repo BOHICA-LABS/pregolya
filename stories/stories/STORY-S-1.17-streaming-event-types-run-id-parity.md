@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.17
 epic_id: E-09
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "0340f03"
+input-hash: "70c134c"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14, S-1.04, S-1.15]
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.5 (round-48/R06-xref/2026-08-30): R06 gate — add cross-reference note after AC-005: StreamEvent::Error.error_message sanitized at emission per ADR-029 SEC-BOUND-001 / BC-2.12.007 {INV-004}; this story defines the StreamEvent type shape; sanitization guarantee owned by SSE emission boundary (S-1.27). No new ACs or TVs. input-hash refreshed (70c134c)."
   - "1.4 (P2-bc-completeness-burst-B/2026-08-26): BC-2.06.002 {EC-001}: AC-013 added — resume-run parent_ids copied verbatim from interrupted run; interrupted run_id NOT appended. BC table version bumped."
   - "1.3 (P2A-043 F-04/2026-08-24): old-form ordinal cross-refs converted to stable tags"
   - "1.2 (ADR-027 M3c/2026-08-24): escalation-resolution AC corrections — AC-008/AC-009 corrected to WITHIN-RUN (same run_id, unchanged parent_ids) per BC-2.06.002 INV-005+EC-002+TV-005; EC-003 swept (TD-VSDD-060)"
@@ -73,6 +74,8 @@ Events maintain causal order: `RunStart` precedes all other run events; `StepSta
 
 ### AC-005 (traces to BC-2.06.001 PC-002 — StreamEvent::Error as 16th variant)
 `StreamEvent::Error { run_id, error: PregolyaError, .. }` is the 16th variant. It can be emitted at any point during execution when an unrecoverable error occurs. Verified by `test_BC_2_06_001_error_variant_emittable()`.
+
+> **Sanitization cross-reference (R06 gate):** `StreamEvent::Error.error_message` content is sanitized at emission per ADR-029 SEC-BOUND-001 (SEC-BOUND-001 External-Boundary Error-Sanitization). This story defines the `StreamEvent` type shape only; the sanitization guarantee is owned by the SSE emission boundary in S-1.27.
 
 ### AC-006 (traces to BC-2.06.001 EC-005 — RunEnd only for completed and summary_halt)
 `RunEnd` is emitted only when the run transitions to `completed` or `summary_halt` final states. Runs that end in `failed`, `cancelled`, or `interrupted` states do NOT emit `RunEnd`. Verified by `test_BC_2_06_001_run_end_only_for_completed_or_summary_halt()`.

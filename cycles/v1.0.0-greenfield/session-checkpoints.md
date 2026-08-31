@@ -9,7 +9,7 @@ producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
-input-hash: "16b0f6b"
+input-hash: "509af18"
 traces_to: STATE.md
 ---
 
@@ -3917,3 +3917,29 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
 ### STATE: v6.34, timestamp 2026-08-30T23:30:00Z
+
+---
+
+## D-324 (round-47 close — 2026-08-30) — ARCHIVED
+
+### RESUME IN ONE BREATH
+round-47 CLOSED. MILESTONE: 3/4 adversary lenses CLEAN(strict)=YES (P2A-196/198/199) — cleanest round in Phase-2 re-convergence since SEC-008/CompiledGraph/E0562 classes were mechanically gated. BOUNDARY-SANITIZATION-CLASS CLOSED: ADR-029 SEC-BOUND-001 boundary-agnostic parity principle + BC-2.12.003 {INV-007}/{INV-008}. TV 761→763 canonical (+TV-012+TV-013). GATE-READY=YES 13/13. streak 0/3. NEXT: round-48 on new frozen HEAD post-D-324 push.
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts = D-324 round-47 close commit — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+
+### D-324 ROUND-47 CLOSE
+- F-P2A197-01 [HIGH, CWE-209]: BC-2.12.003 §INV-007 extended — E-GRAPH-011 conditional-edge panic propagating raw panic text to HTTP boundary (Run.error.message) now covered by static-replace clause (was E-GRAPH-019-only). TV-012 minted (E-GRAPH-011 → static 'internal error' + source_node suppressed). S-1.26 AC-019+EC-020 updated.
+- F-P2A197-02 [MED, CWE-209/532]: BC-2.12.003 §INV-008 NEW — External-Boundary Error-Sanitization mandatory 3-step pipeline (internal-panic static-replace → redact_credentials → sanitize_internal_ids on Run.error.message before HTTP surface). TV-013 minted (credential-in-Run.error.message → 3-step sanitization pipeline). S-1.26 AC-020+EC-021 updated. ADR-029 (v2.17→v2.18) §SEC-BOUND-001 boundary-agnostic parity principle.
+- F-P2A197-03 [LOW/records]: ADR-029 §SEC-BOUND-001 preamble records-tier clarification applied. Non-blocking.
+- P2A-196 CLEAN(strict)=YES. P2A-198 CLEAN(strict)=YES. P2A-199 CLEAN(strict)=YES. P2A-197 NOT-CLEAN (1H+1M+1OBS) — all findings CLOSED.
+- L-238 codified [OPERATIONAL/BOUNDARY-SANITIZATION-CLASS]. ARCH-INDEX §Changelog (v1.57); BC-INDEX §Changelog (v4.08); STORY-INDEX §Changelog (v1.34).
+- Census: BC 134 / VP 17 / EC 138 / TV 763 canonical (774 incl GTV) / stories 40 (39+1) / points 303. streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+### STATE: v6.35, timestamp 2026-08-30T23:30:00Z

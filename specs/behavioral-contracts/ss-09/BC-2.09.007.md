@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.007
-version: "2.3"
+version: "2.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "2.1 (round-14/F-P2A079-02/2026-08-27): F-P2A079-02 [LOW] — §Architecture Anchors server.rs bullet rewritten: `Tool::invoke` → `DynTool::invoke_dyn`; `ToolOutput` → `serde_json::Value`; ToolRegistry annotation added `(Arc<dyn DynTool>)`. {PC-003} and {INV-001} prose corrected: `Tool::invoke` → `DynTool::invoke_dyn` (MCP server dispatches via the object-safe seam, not the generic trait). EC-002 §Scenario corrected: `Tool::invoke` → `DynTool::invoke_dyn`. All four live-body `Tool::invoke` occurrences eliminated."
   - "2.2 (round-22/F-P2A099-04/2026-08-28): F-P2A099-04 [OBS]: §Verification Properties table — VP-015 Phase cell corrected from 'Wave 2' to 'Phase 3' (VP-015.md `proof_phase: 3` is authoritative per source-of-truth precedence rule 4; BC conflated wave axis with phase axis). VP-MCPCALL-01 and VP-MCPCALL-02 annotated as '(informal / non-registered)' — only VP-MCPCALL-03 was elevated to formal VP-015 per B-SS09-11-arch-adjudication v1.7; VP-MCPCALL-01/02 remain historical; annotation prevents reader confusion with promoted VP-015."
   - "2.3 (round-26/POL-24-sibling-consistency/2026-08-28): §Architecture Anchors registry.rs bullet annotated with `(mcp::registry standalone module, SS-09)` for sibling consistency with BC-2.09.006 §Architecture-Anchors (architect OPTION A: mcp::registry is a standalone module registered in module-decomposition and module-criticality)."
+  - "2.4 (round-48/F-P2A203-02/2026-08-30): F-P2A203-02 [MED, CWE-522] — {INV-003}(b) canonical redact_credentials pattern set extended with pattern 4: Bearer token `Bearer\\s+[A-Za-z0-9._~+/=\\-]+` → `\"<redacted>\"` (entire `Bearer <token>` span). Short opaque Bearer tokens not matching patterns 1–3 (OpenAI sk-, Anthropic sk-ant-, 64+ alphanumeric) previously passed unredacted; pattern 4 closes this coverage gap. Pluggable-pattern-registry note updated from 'three' to 'four' patterns. TV-010 minted (Bearer-token redaction; TV count 9→10). Propagated to BC-2.09.008 {INV-003}, BC-2.12.003 {INV-008} step 2, and BC-2.12.007 {INV-004}. Final canonical set: sk-[A-Za-z0-9_\\-]{20,}; sk-ant-[A-Za-z0-9_\\-]{32,}; [A-Za-z0-9]{64,}; Bearer\\s+[A-Za-z0-9._~+/=\\-]+."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
@@ -127,17 +128,22 @@ of intermediate tool results in v1 (the MCP `tools/call` response is a single re
       1. OpenAI key pattern `sk-[A-Za-z0-9_\-]{20,}` → `"<redacted>"`
       2. Anthropic key pattern `sk-ant-[A-Za-z0-9_\-]{32,}` → `"<redacted>"`
       3. Generic long alphanumeric token `[A-Za-z0-9]{64,}` → `"<redacted>"`
+      4. Bearer token `Bearer\s+[A-Za-z0-9._~+/=\-]+` → `"<redacted>"` (replaces the entire
+         `Bearer <token>` span; covers HTTP Bearer tokens including JWTs and short opaque tokens
+         not matching patterns 1–3; chosen regex covers RFC 6750 token characters and
+         base64url/base64 padding)
   (c) The sanitized string (post-substitution) is placed in `content[0].text`.
   Rationale: untrusted tool output (e.g., from MCP-dispatched tools) may propagate error
   messages that embed provider API key material from the tool's own configuration. The server
   MUST apply redaction before transmitting any error detail to an external MCP client.
   (invariants.md §DI-010: Credential Opacity)
-  **Pluggable pattern registry:** the three patterns above cover the first-party providers
-  (OpenAI `sk-`, Anthropic `sk-ant-`, generic 64+ alphanumeric token). Partner crates that
-  introduce new API key formats (e.g., a provider with a distinct key prefix or length) SHOULD
-  register additional patterns in `redact_credentials` via the pluggable pattern registry.
-  Extending the registry does not alter the mandatory error-path redaction behavior —
-  additional patterns add coverage without weakening the invariant.
+  **Pluggable pattern registry:** the four patterns above cover the first-party providers and
+  standard HTTP Bearer tokens (OpenAI `sk-`, Anthropic `sk-ant-`, generic 64+ alphanumeric
+  token, Bearer header value). Partner crates that introduce new API key formats (e.g., a
+  provider with a distinct key prefix or length) SHOULD register additional patterns in
+  `redact_credentials` via the pluggable pattern registry. Extending the registry does not
+  alter the mandatory error-path redaction behavior — additional patterns add coverage without
+  weakening the invariant.
 - {INV-004} **One invocation per request:** a single `tools/call` request invokes exactly one tool
   exactly once. No fan-out, no retry within the server handler.
 
@@ -212,6 +218,7 @@ JSON-RPC -32600 is the standard invalid-request code; wire-protocol response onl
 | TV-007 | `tools/call { name: "api_tool" }`; tool returns `Err(PregolyaError { message: "request failed: key=sk-abc123XYZabc123XYZabc", .. })` | MCP response `{ "content": [{ "type": "text", "text": "request failed: key=<redacted>" }], "isError": true }` — OpenAI-pattern key replaced by `<redacted>` | Credential redaction (INV-003) |
 | TV-008 | Client sends non-JSON bytes (e.g., `"not json{{"`) via `tools/call` path | JSON-RPC response `{ "error": { "code": -32700, "message": "Parse error" } }` | Malformed JSON — parse error (EC-007) |
 | TV-009 | `tools/call { name: "mock_tool" }`; MockTool returns `Ok(Value::String("key=sk-abc123XYZabc123XYZabc".to_string()))` (success path) | MCP response `{ "content": [{ "type": "text", "text": "key=sk-abc123XYZabc123XYZabc" }], "isError": false }` — key material is preserved verbatim (Value::String → verbatim rule); success-path content is NOT framework-sanitized | Success-path credential boundary: framework does NOT strip; Tool implementation bears sole obligation ({PC-002} DI-010) |
+| TV-010 | `tools/call { name: "api_tool" }`; tool returns `Err(PregolyaError { message: "auth failed: Bearer eyJhbGciOiJIUzI1NiJ9.abc_shorttoken", .. })` | MCP response `{ "content": [{ "type": "text", "text": "auth failed: <redacted>" }], "isError": true }` — `Bearer <token>` span replaced by `"<redacted>"` per {INV-003}(b) pattern 4; the token does not match patterns 1–3 (not `sk-`, not `sk-ant-`, not 64+ alphanumeric) but is caught by the Bearer-token pattern | Bearer-token redaction: short opaque Bearer token not matched by provider-key patterns 1–3; pattern 4 closes this coverage gap (F-P2A203-02) |
 
 ## Verification Properties
 

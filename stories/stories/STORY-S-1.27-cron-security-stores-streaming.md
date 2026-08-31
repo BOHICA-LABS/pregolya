@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.27
 epic_id: E-14
-version: "1.7"
+version: "1.8"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,6 +15,7 @@ changelog:
   - "1.5 (P2A-044/2026-08-24): F-05 (BC-2.06.001 reference-not-coverage revert) + F-02 (AC-004 Failed-Run correction)"
   - "1.6 (SW-3/P2A-BC-scan-hardening/2026-08-26): BC-completeness hardening — 3 new ACs (AC-014..AC-016) and 3 new ECs (EC-012..EC-014). BC-2.12.004: AC-014 (EC-006 invalid RunnableConfig at POST /schedules → 400 E-CRON-004). BC-2.12.006: AC-015 (EC-001 idempotency TTL-from-submission per ADR-028 D5), AC-016 (EC-006 API rate-limit exceeded → 429 E-SERVER-021). BC-table version column removed (D-50 anti-version-pin). Token-budget revised (~51,500)."
   - "1.7 (round-46/F-P2A195-02/2026-08-30): F-P2A195-02 [HIGH] — CompiledGraph phantom corrected at all live-body occurrences (7 sites: AC-011 heading, AC-011 body, §Subsystem anchor, §Purity Classification, §Tasks, §Architecture Compliance Rules rule 1, §File Structure comment). `CompiledGraph::run` → `CompiledStateGraph::invoke`; bare `CompiledGraph` type descriptor → `CompiledStateGraph`. Canonical public entry is `CompiledStateGraph::invoke(input, config)` per BC-2.02.001 {PC-005}."
+  - "1.8 (round-48/F-P2A201-01+F-P2A203-01/2026-08-30): F-P2A201-01 [HIGH, CWE-209/532] + F-P2A203-01 [HIGH, CWE-209/532] — SSE boundary bypasses SEC-BOUND-001 (3rd external boundary). AC-017 added: mandatory 3-step SEC-BOUND-001 pipeline on SSE StreamEvent::Error.error_message and unary non-2xx error body before emission (step 1 internal-panic static-replace E-GRAPH-011/E-GRAPH-019, step 2 redact_credentials 4-pattern set, step 3 sanitize_internal_ids UUID-only with <redacted-id>); BC-2.12.007 {INV-004} TV-007/TV-008/TV-009 anchored. EC-010 updated (add sanitized-per-SEC-BOUND-001 note). EC-015 added (SSE sanitization path). Task added for SSE handler sanitization. Architecture Compliance Rule 11 added. BC-2.12.007 BC-table row updated to include {INV-004}. Failing-test range extended to AC-001..AC-017. Token budget updated (~52,500). input-hash refreshed (f84a2c4 — BC-2.12.007 round-48 computed hash)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.004.md
@@ -23,7 +24,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b646108"
+input-hash: "f84a2c4"
 traces_to:
   - behavioral-contracts/BC-2.12.004
   - behavioral-contracts/BC-2.12.005
@@ -62,7 +63,7 @@ As a platform operator and API consumer, I want CronSchedule support for automat
 | Target source files (pregolya-server/src/) | ~14,000 |
 | Test files | ~12,000 |
 | S-1.26 (Thread/Run CRUD) store interface | ~3,000 |
-| **Total estimate** | **~51,500** |
+| **Total estimate** | **~52,500** |
 
 Comfortable within context window. No split required.
 
@@ -73,7 +74,7 @@ Comfortable within context window. No split required.
 | BC-2.12.004 | CronSchedule — fresh isolated session per firing, skip missed-fire policy | No |
 | BC-2.12.005 | SecurityConfig::default — CORS denied, debug route gated (DI-013) | No |
 | BC-2.12.006 | Store trait seams — IdempotencyStore, RateLimitStore, RunStore | No |
-| BC-2.12.007 | SSE streaming — same engine as unary (DI-011); 5 event types | No |
+| BC-2.12.007 | SSE streaming — same engine as unary (DI-011); 5 event types; SEC-BOUND-001 External-Boundary Error-Sanitization on SSE `StreamEvent::Error.error_message` + unary non-2xx error body ({INV-004}; TV-007/TV-008/TV-009) | No |
 
 ## Acceptance Criteria
 
@@ -142,6 +143,10 @@ The idempotency TTL 24-hour window begins when the first request carrying `Idemp
 When a caller exceeds the server's configured API request-rate limit, returns HTTP 429 `{ code: "E-SERVER-021", message: "ApiRateLimitExceeded: request rate limit exceeded; retry after <retry_after_ms>ms" }` with a `Retry-After: <seconds>` header. This is a distinct error from per-thread run queue overflow (E-SERVER-019 RunQueueFull); E-SERVER-021 is RATE category (per-caller throughput); E-SERVER-019 is POLICY category (per-thread queue depth).
 (traces to BC-2.12.006 EC-006)
 
+### AC-017: SEC-BOUND-001 External-Boundary Error-Sanitization on SSE `StreamEvent::Error.error_message` and unary non-2xx error body ({INV-004}, CWE-209/532)
+Before `StreamEvent::Error.error_message` is emitted on the SSE surface (`pregolya-server/src/sse.rs`) and before any unary non-2xx error body is returned, the `pregolya-server` SSE handler MUST apply the mandatory 3-step SEC-BOUND-001 sanitization pipeline in exact order (per BC-2.12.007 {INV-004}): (1) **internal-panic static-replace** (per BC-2.12.007 {INV-004} step 1): if `error.code ∈ {"E-GRAPH-011", "E-GRAPH-019"}`, replace the error message with the corresponding STATIC message — no dynamic panic text, no `source_node` topology (E-GRAPH-011 STATIC: `"ConditionalEdgePanic: conditional edge function panicked during execution — see server error log for details"`; E-GRAPH-019 STATIC: `"NodePanic: graph node panicked during execution — see server error log for details"`); (2) **`redact_credentials`**: apply the canonical four-pattern set (per BC-2.12.007 {INV-004} step 2) — replace each match with `"<redacted>"`: `sk-[A-Za-z0-9_\-]{20,}`, `sk-ant-[A-Za-z0-9_\-]{32,}`, `[A-Za-z0-9]{64,}`, `Bearer\s+[A-Za-z0-9._~+/=\-]+`; (3) **`sanitize_internal_ids`**: replace UUID-shaped internal identifiers with `"<redacted-id>"`; `u64` CheckpointId carve-out: NOT UUID-shaped, NOT covered by this pass. No step may be skipped or reordered (ADR-029 SEC-BOUND-001). Test vectors: TV-007 (E-GRAPH-011 static-replace on SSE surface); TV-008 (E-GRAPH-019 static-replace on SSE surface); TV-009 (Bearer-token credential redaction on SSE surface).
+(traces to BC-2.12.007 {INV-004} External-Boundary Error-Sanitization; BC-2.12.007 TV-007; BC-2.12.007 TV-008; BC-2.12.007 TV-009; ADR-029 SEC-BOUND-001)
+
 ## Architecture Mapping
 
 | Component | Module | Crate | Pure/Effectful |
@@ -184,11 +189,12 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 | EC-007 | BC-2.12.006 EC-005 | In-memory RateLimitStore used | Startup WARN with `event_type = "server.rate_limit_store_in_memory"` |
 | EC-008 | BC-2.12.006 EC-004 | RunStore fails | `E-SERVER-014` |
 | EC-009 | BC-2.12.007 EC-005 | Second SSE request for same run_id | `E-SERVER-015` (RunAlreadyExecuting) |
-| EC-010 | BC-2.12.007 EC-006 | Run fails mid-stream | `run_end` NOT emitted; SSE stream closes with error event |
+| EC-010 | BC-2.12.007 EC-006 | Run fails mid-stream | `run_end` NOT emitted; SSE stream closes with `StreamEvent::Error` event; `error_message` payload sanitized per SEC-BOUND-001 ({INV-004}) before emission |
 | EC-011 | BC-2.12.007 PC-002 | `node_delta` event name used anywhere (event-name taxonomy authority held in SS-06; S-1.17 is implementing story) | Forbidden — event name is `node_stream` (NE-13 correction) |
 | EC-012 | BC-2.12.004 EC-006 | POST /schedules with invalid RunnableConfig (unknown field or constraint-violating value, e.g. `recursion_limit: -1`) | HTTP 400 E-CRON-004; no CronSchedule record created |
 | EC-013 | BC-2.12.006 EC-001 | Re-submission of request with same Idempotency-Key within 24h TTL window (TTL clock starts at submission time, not completion time; ADR-028 D5) | Returns cached response with same `run_id` and output; no new Run created |
 | EC-014 | BC-2.12.006 EC-006 | Caller exceeds configured API request-rate limit | HTTP 429 E-SERVER-021 with `Retry-After: <seconds>` header (distinct from E-SERVER-019 RunQueueFull which is per-thread queue depth) |
+| EC-015 | BC-2.12.007 {INV-004} — SEC-BOUND-001 SSE sanitization path | SSE `StreamEvent::Error.error_message` contains E-GRAPH-011 or E-GRAPH-019 panic code, or credential-containing error message | Static-replace applied per step 1 before SSE emission; credential-shaped substrings replaced with `<redacted>` per step 2; UUID-shaped identifiers replaced with `<redacted-id>` per step 3; original panic text absent from emitted `error_message`; canonical SSE-surface test vectors: BC-2.12.007 TV-007 (E-GRAPH-011), TV-008 (E-GRAPH-019), TV-009 (Bearer credential) |
 
 ## Tasks
 
@@ -199,7 +205,7 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 - [ ] Create `crates/pregolya-server/src/store/run_memory.rs` — `InMemoryRunStore`
 - [ ] Create `crates/pregolya-server/src/store/run_sqlite.rs` — `SqliteRunStore`
 - [ ] Create `crates/pregolya-server/src/streaming.rs` — SSE streaming endpoint (flat; no `routes/` subdir)
-- [ ] Write failing tests for AC-001..AC-016 before any implementation
+- [ ] Write failing tests for AC-001..AC-017 before any implementation
 - [ ] Implement `SecurityConfig::default()` — empty allowed_origins, no debug key
 - [ ] Implement `SecurityConfig::validate()` — reject `debug_route_key: Some("")`
 - [ ] Implement CORS wildcard startup WARN with canonical event_type
@@ -211,6 +217,7 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 - [ ] Implement RunnableConfig validation at POST /schedules handler — reject unknown fields and constraint-violating values (e.g., `recursion_limit: -1`) before any persistence; return 400 E-CRON-004 (AC-014)
 - [ ] Implement idempotency TTL clock from submission time — TTL 24h window starts when the first request with `Idempotency-Key: <key>` arrives, NOT when the Run completes; document operator constraint in `IdempotencyStore` config reference (AC-015; ADR-028 D5)
 - [ ] Implement API rate-limit 429 response — return E-SERVER-021 with `Retry-After: <seconds>` header when per-caller request-rate limit is exceeded; verify this is distinct from E-SERVER-019 (AC-016)
+- [ ] Implement SEC-BOUND-001 sanitization pipeline on SSE handler (`pregolya-server/src/sse.rs`) and unary non-2xx error path — apply 3-step pipeline in mandatory order before emitting `StreamEvent::Error.error_message` or returning a non-2xx error body: (1) E-GRAPH-011/E-GRAPH-019 static-replace per BC-2.12.007 {INV-004} step 1; (2) `redact_credentials` 4-pattern set (replace with `<redacted>`); (3) `sanitize_internal_ids` UUID-only (replace with `<redacted-id>`); verify via BC-2.12.007 TV-007/TV-008/TV-009 (AC-017)
 - [ ] Add `event_type = "server.cron_schedule_queue_full"` to Canonical Structured Event Catalog
 - [ ] Add `event_type = "server.security_config_cors_wildcard"` to Catalog
 - [ ] Add `event_type = "server.rate_limit_store_in_memory"` to Catalog
@@ -235,6 +242,7 @@ When a caller exceeds the server's configured API request-rate limit, returns HT
 8. **No `unwrap()` / `expect()` in production code.**
 9. **`mod.rs` re-export only** in all modules.
 10. **`#[non_exhaustive]`** on `CronSchedule`, `SecurityConfig` (public API surface types).
+11. **SEC-BOUND-001 sanitization pipeline applied on SSE and unary error boundaries (BC-2.12.007 {INV-004}).** `StreamEvent::Error.error_message` and unary non-2xx error body MUST pass through the mandatory 3-step pipeline before emission: (1) internal-panic static-replace (E-GRAPH-011/E-GRAPH-019 → STATIC message); (2) `redact_credentials` canonical four-pattern set (replace with `<redacted>`); (3) `sanitize_internal_ids` UUID-shaped identifiers only (replace with `<redacted-id>`; `u64` CheckpointId NOT covered). Skipping or reordering any step is a CWE-209/532 violation (ADR-029 SEC-BOUND-001).
 
 ## Library & Framework Requirements
 

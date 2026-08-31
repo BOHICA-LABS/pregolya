@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.09.008
-version: "3.8"
+version: "3.9"
 status: draft
 lifecycle_status: draft
 introduced: v1.0.0-greenfield
@@ -44,12 +44,13 @@ changelog:
   - "3.6 (round-44/F-P2A187-01/2026-08-30): F-P2A187-01 [MED, CWE-209]: EC-003 rationale-correctness fix — OLD universally attributed 'non-static messages with dynamic context' to both E-GRAPH-011 and E-GRAPH-019. NEW scopes the dynamic-context justification to E-GRAPH-011 only (`<source_node>` and `<message>` dynamic placeholders per error-taxonomy.md E-GRAPH-011); E-GRAPH-019 has a STATIC message with no dynamic content (no panic text, no source location, no backtrace) per error-taxonomy.md E-GRAPH-019 mint row / BC-2.12.003 {INV-007}; E-GRAPH-019 static replacement is uniform-treatment / defense-in-depth of all internal-panic codes at the MCP boundary. MCP-boundary behavior unchanged — both codes still produce `isError:true` / `content[0].text == \"internal error\"`."
   - "3.7 (round-46/F-193-03/2026-08-30): F-193-03 [MED, CWE-209] — TV-019 Notes corrected. OLD Notes attributed path_fn panic catch to FutureExt::catch_unwind (outer async MCP boundary) and cited EC-010 as the capture mechanism. NEW: path_fn panic is caught in the Pregel executor (std::panic::catch_unwind, synchronous per BC-2.02.005 {PRE-004}/{PC-005}) and surfaces as Err(E-GRAPH-011); invoke_dyn surfaces it as isError:true at the MCP boundary where E-GRAPH-011's internal-panic code triggers ADR-029 §Decision 5 static replacement by code-match — the outer FutureExt::catch_unwind (EC-010) is NOT involved (the panic never reaches the async boundary; it is converted to Err by the Pregel executor first). EC-010 reference removed from Notes; EC-003 is the correct authority. Source-of-Truth Precedence rule 1: BC-2.02.005 owns path_fn panic semantics."
   - "3.8 (round-46/F-193-03/2026-08-30): F-193-03 [MED, CWE-209] — TV-019 Expected Output column corrected (completes F-193-03). OLD Expected Output mechanism: 'FutureExt::catch_unwind(AssertUnwindSafe(runner.run(...))) catches the path_fn panic during .await polling; the resulting E-GRAPH-011 ConditionalEdgePanic internal-panic code triggers ADR-029 §Decision 5 static replacement at the MCP boundary'. NEW: 'path_fn panic is caught in the Pregel executor (std::panic::catch_unwind, synchronous per BC-2.02.005 {PRE-004}/{PC-005}); surfaces as Err(E-GRAPH-011); the E-GRAPH-011 internal-panic code triggers ADR-029 §Decision 5 static replacement by code-match at the MCP boundary'. Notes column corrected in v3.7; this edit aligns the Expected Output column with the corrected catch mechanism. Observable outcome (static content[0].text == \"internal error\") unchanged."
+  - "3.9 (round-48/F-P2A203-02-sibling/2026-08-30): F-P2A203-02 propagation — {INV-003} updated to explicitly enumerate the canonical four-pattern set per BC-2.09.007 {INV-003}(b), which now includes Bearer tokens (`Bearer\\s+[A-Za-z0-9._~+/=\\-]+`). Short opaque Bearer tokens not matching provider-key patterns 1–3 previously passed unredacted through `redact_credentials`; pattern 4 closes this gap. No behavioral change to this BC's mandatory redaction obligation — BC-2.09.007 {INV-003}(b) is the canonical authority; this entry adds explicit four-pattern enumeration for reader verification and to satisfy symmetry claims. Also corrects pre-existing input-hash drift: stored 3b0d09a → computed bbed510 (ADR-029 inputs updated in prior rounds)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-021
 inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/architecture/decisions/ADR-029-graph-agent-tool-wrapping.md
-input-hash: "3b0d09a"
+input-hash: "bbed510"
 extracted_from: null
 modified: []
 deprecated: null
@@ -213,7 +214,10 @@ overrides `PreToolCallHook` approval decisions only.
   `pregolya_mcp::sanitize::redact_credentials` before the MCP server populates
   `content[0].text` (unconditional, per BC-2.09.007 {INV-003}). Only
   `PregolyaError::message` MUST be used as the text source; `.source()`, `Debug`, and
-  `Display` output MUST NOT be used.
+  `Display` output MUST NOT be used. The canonical pattern set (BC-2.09.007 {INV-003}(b))
+  covers four patterns in order: (1) OpenAI `sk-[A-Za-z0-9_\-]{20,}`, (2) Anthropic
+  `sk-ant-[A-Za-z0-9_\-]{32,}`, (3) generic `[A-Za-z0-9]{64,}`, (4) Bearer token
+  `Bearer\s+[A-Za-z0-9._~+/=\-]+` — each replaced with `"<redacted>"`.
 
 - {INV-004} **`ForceApproveHooks` ActionRisk runtime gate:**
   `ForceApproveHooks` is appropriate ONLY for read-only tool graphs (graphs composed

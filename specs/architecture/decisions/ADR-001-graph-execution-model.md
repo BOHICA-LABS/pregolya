@@ -9,7 +9,7 @@ gate: D9-PASSED
 gate_note: "D9 human gate passed 2026-07-14. Alternative B (Hybrid orchestrator-loop + actor-scheduler) selected per D11.1 steering."
 producer: architect
 timestamp: 2026-07-14T14:00:00Z
-version: "rev-4"
+version: "rev-5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: [D9, D11, D17, D18]
@@ -18,6 +18,7 @@ superseded_by: null
 date: 2026-07-14
 subsystems_affected: [SS-03, SS-05, SS-10]
 changelog:
+  - "rev-5 (R48/OBS-P2A203-ADR001/2026-08-30): §Graph Run-Executor Panic Boundary Obligation 4 — illustrative E-GRAPH-019 static message string explicitly marked as illustrative only; canonical form reference added: BC-2.12.003 {INV-007} ('NodePanic: graph node panicked during execution — see server error log for details'). Prevents future readers from citing the ADR 'e.g.' string as authoritative. Companion to round-48 sanitizer-sync edits (F-P2A203-02/F-P2A201-02) which confirmed ADR-029 §Decision 3 and §SEC-BOUND-001 enumerate no patterns and require no edit."
   - "rev-4 (R46/F-193-01/2026-08-30): §Graph Run-Executor Panic Boundary Executor Obligation 3 — SEC-008 crate-member framing corrected to canonical workspace-root form per BC-2.09.008 EC-010 v3.5 and ADR-029 §Decision 5 v2.16. OLD: 'devops-engineer MUST pin `panic = \"unwind\"` in the `pregolya-server` release profile' — crate-member framing; Cargo silently ignores `[profile.release]` in any member manifest. NEW: authoritative pin = workspace-root `[profile.release]` governing the `pregolya-server` binary build (applied at link time); a library-member or binary-member `[profile.release] panic` override — including in `pregolya-server`'s own manifest — is silently ignored by Cargo and MUST NOT be relied upon; `panic = \"abort\"` at the workspace root voids the `catch_unwind` boundary (CWE-248/703 remote DoS)."
   - "rev-3 (R42/F-P2A177-01/2026-08-29): §Graph Run-Executor Panic Boundary section added (F-P2A177-01 HIGH/CWE-248/703). The pregolya-server run-executor MUST wrap each graph invocation in `futures::future::FutureExt::catch_unwind(AssertUnwindSafe(graph_future))` — the only mechanism spanning the async boundary for node-body panics. Obligations: (1) catch → Run.status in_progress→failed (BC-2.12.003 {INV-005} no-orphan-run); (2) E-GRAPH-019 NodePanic flagged for PO (EC census 137→138); (3) SEC-008 `panic = 'unwind'` build-profile invariant extended to pregolya-server (previously scoped to pregolya-mcp in ADR-029 §Decision 5); (4) captured panic text MUST NOT populate Run.error.message — static string + ERROR-level server log only."
   - "rev-2 (F-P95-01, D18-P84-A, 2026-07-17): Reconcile budget-evaluation placement with BC canon. Four stale 'between-super-steps' characterizations corrected: (1) §Orchestrator responsibilities item 7: 'Evaluating budget policy between super-steps' → per-LLM-call and per-tool-invocation within tick() during Collecting; halt execution lands at super-step boundary after in-flight tasks settle; budget_info populated before task dispatch. (2) §Alternative B Pros table 'Budget governance fit': 'between orchestrator state transitions' → evaluation call sites within Collecting, halt dispatch is post-Collecting gate. (3) §Decision rationale item 2: 'orchestrator transition concern' → evaluation call sites in Collecting phase, halt not woven into JoinSet loop. (4) §Consequences 'Budget governance': 'transition hook between Reducing and Checkpointing' → per-call evaluation during Collecting (BC-2.10.001 PC1/PC2) with super-step-boundary halt landing (BC-2.10.003 EC-001) and pre-dispatch budget_info population (BC-2.10.003 PC9). Reconciled model: EVALUATION is per-LLM-call/per-tool-invocation within tick() during Collecting; HALT EXECUTION lands at the current super-step boundary (in-flight tasks settle, then no new super-step); BUDGET-INFO POPULATION is the legitimate super-step-boundary budget activity (before task dispatch)."
@@ -212,7 +213,7 @@ expression spans the async boundary correctly.
    (CWE-248/703 remote DoS).
 4. **Panic text isolation:** the captured panic payload MUST NOT populate `Run.error.message`
    visible to the API caller. A static message is used (e.g., `"node execution failed — see
-   server logs for details"`); the raw panic text is logged at ERROR level before being
+   server logs for details"` — illustrative only; canonical form pinned in BC-2.12.003 {INV-007}); the raw panic text is logged at ERROR level before being
    discarded from the client-facing path.
 
 ### Error Code

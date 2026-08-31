@@ -76,6 +76,24 @@
 #              without SEC-008 note — survived because they never wrote "SEC-008")
 #         Scope: BC + ADR + story corpus (same anchor_glob as R04)
 #
+#   R06 — external-error-surface → must reference SEC-BOUND-001 / sanitization pipeline
+#         (round-48 D-324 BOUNDARY-SANITIZATION-GATE; closes the SSE external boundary gap)
+#         Authority: SEC-BOUND-001 / {INV-008}: every external boundary emitting error text
+#              to callers must pass content through the sanitization pipeline
+#              (redact_credentials + sanitize_internal_ids); MCP + HTTP-polling hardened first;
+#              SSE was missed — discovered in round-48 on BC-2.12.007.
+#         TRIGGER: any normative body mention of an external error surface:
+#              StreamEvent::Error (SSE error event type) | Run\.error (external Run field) |
+#              content[0].text in isError context (MCP tool error) |
+#              error_message in SSE/event/payload context
+#         REQUIRED: SEC-BOUND-001 | {INV-008} | redact_credentials |
+#              sanitize_internal_ids | static-replace | internal-panic-isolation
+#              somewhere in the same normative body (or delegation note on trigger line)
+#         LIVE VIOLATION (round-48): BC-2.12.007 EC-006 — StreamEvent::Error emits
+#              error_message to SSE caller with no SEC-BOUND-001/redact reference
+#              (third external boundary after MCP + HTTP-polling)
+#         Scope: BC corpus + story corpus
+#
 # EXCLUSIONS
 # ──────────
 # All checks exclude:
@@ -87,7 +105,7 @@
 #
 # SELF-PROBE (POL-31)
 # ───────────────────
-# Eleven self-probes run before the live check:
+# Thirteen self-probes run before the live check:
 #   R01-pos: synthetic story body with v4-specific regex fragment → WARN reported
 #   R01-neg: synthetic story body with version-agnostic regex → no WARN
 #   R02-pos: synthetic story body with "UUID v4 removal" → WARN reported
@@ -105,6 +123,11 @@
 #            Mirrors CURRENT ADR-001 obligation 3 text (F-193-01 live violation form)
 #   R05-pos: synthetic BC body with catch_unwind but NO SEC-008 note → R05 WARN
 #   R05-neg: synthetic BC body with catch_unwind AND SEC-008 note → no R05 WARN
+#   R06-pos: synthetic BC body mirroring BC-2.12.007 EC-006 pre-fix form — StreamEvent::Error
+#            with error_message field but NO SEC-BOUND-001/redact reference → R06 WARN
+#            (POL-31: confirms gate fires on the KNOWN-LIVE BC-2.12.007 violation form)
+#   R06-neg: synthetic BC body with StreamEvent::Error AND SEC-BOUND-001 + redact_credentials
+#            reference → no R06 WARN (canonical sanitization-noted form)
 #
 # EXIT CONTRACT
 # ─────────────
@@ -413,6 +436,74 @@ RULES = [
             "BC-2.12.003 EC-003; `panic = \"abort\"` voids catch_unwind recovery (CWE-248)"
         ),
         "sec_ref": "SEC-008 / CWE-248",
+    },
+    {
+        # R06 — external-error-surface → must reference SEC-BOUND-001 / sanitization pipeline
+        # D-324 BOUNDARY-SANITIZATION-GATE (round-48): closes the SSE external boundary gap.
+        # MCP + HTTP-polling error surfaces were hardened (SEC-BOUND-001); SSE was the third
+        # external boundary and was missed until BC-2.12.007 EC-006 was reviewed in round-48.
+        # LIVE VIOLATION: BC-2.12.007 EC-006 — `StreamEvent::Error` emits `error_message` to
+        #   SSE caller with no SEC-BOUND-001 / redact reference (CWE-209 / CWE-532).
+        "id": "R06",
+        "check_type": "requires_coexistence",
+        "description": (
+            "external error surface emits error text to caller without SEC-BOUND-001 / "
+            "sanitization pipeline reference (StreamEvent::Error, Run.error, error_message "
+            "in SSE/event context, content[0].text+isError) — "
+            "SEC-BOUND-001 / {INV-008} / redact_credentials / sanitize_internal_ids required; "
+            "D-324 BOUNDARY-SANITIZATION-GATE (CWE-209 / CWE-532)"
+        ),
+        "authority": (
+            "SEC-BOUND-001 / {INV-008} (external error sanitization obligation): "
+            "every external boundary emitting error text to callers must pass content "
+            "through redact_credentials + sanitize_internal_ids; internal PregolyaError "
+            "details must not transit the external error surface unfiltered. "
+            "Round-48: BC-2.12.007 SSE error surface (third boundary after MCP + HTTP-polling)."
+        ),
+        "anchor_glob": [
+            "specs/behavioral-contracts/**/*.md",
+            "stories/stories/*.md",
+        ],
+        # Trigger: any mention of an external error surface emitting error content to a caller.
+        # StreamEvent::Error — SSE error event type (Rust path; specific enough alone)
+        # Run\.error — external Run resource field surfacing error to caller
+        # content[0].text in isError context — MCP tool error surface
+        # error_message in SSE/stream/event/payload context — SSE error payload schema field
+        "trigger_re": re.compile(
+            r"StreamEvent::Error"
+            r"|Run\.error\b"
+            r"|content\[0\]\.text\b.{0,80}isError"
+            r"|isError.{0,80}content\[0\]\.text\b"
+            r"|error_message\b.{0,80}(?:SSE|stream\s+event|error\s+event|error\s+payload|event\s+body)",
+            re.IGNORECASE
+        ),
+        # Required: sanitization obligation reference anywhere in normative body.
+        "required_re": re.compile(
+            r"SEC-BOUND-001"
+            r"|\{INV-008\}"
+            r"|redact_credentials"
+            r"|sanitize_internal_ids"
+            r"|static[-\s]replace"
+            r"|internal[-\s]panic[-\s]isolation",
+            re.IGNORECASE
+        ),
+        # Negation: lines that explicitly delegate sanitization to another cited BC,
+        # or that frame the trigger as a historical / corrected form.
+        "negation_re": re.compile(
+            r"delegates\s+saniti[sz]ation"
+            r"|saniti[sz]ation\s+delegated"
+            r"|INADEQUATE|inadequate|corrected|STALE|REMOVED|RETIRED"
+            r"|round-\d+\s+correction|was\s+incorrect",
+            re.IGNORECASE
+        ),
+        "canonical_hint": (
+            "add a reference to the sanitization obligation: "
+            "SEC-BOUND-001 / {INV-008} — every external error surface must pass error content "
+            "through `redact_credentials` + `sanitize_internal_ids` before emitting to caller; "
+            "internal PregolyaError details (including error_message field values) must not "
+            "transit the SSE/HTTP boundary unfiltered (CWE-209 / CWE-532)"
+        ),
+        "sec_ref": "SEC-BOUND-001 / {INV-008} / CWE-209 / CWE-532",
     },
 ]
 
@@ -886,6 +977,62 @@ PROBE_R05_NEG_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R05_NEG" 2>/dev/null 
 PROBE_R05_NEG_WARNS="$(echo "$PROBE_R05_NEG_OUT" | grep -c '^\[WARN\] R05' || true)"
 probe_expect_pass "R05-neg" "catch_unwind WITH SEC-008 note — R05 passes" "$PROBE_R05_NEG_WARNS"
 
+# R06-pos: BC body mirroring BC-2.12.007 EC-006 pre-fix form — StreamEvent::Error with
+# error_message field but NO SEC-BOUND-001/redact reference → R06 WARN expected.
+# POL-31: this probe uses the KNOWN-LIVE BC-2.12.007 violation text to confirm gate fires.
+PROBE_R06_POS="$PROBE_TMP/probe-r06-pos.md"
+cat > "$PROBE_R06_POS" <<'STALE_EOF'
+---
+document_type: behavioral_contract
+bc_id: BC-9.99
+version: "1.0"
+---
+# BC-9.99 Synthetic Probe — R06-pos: mirrors BC-2.12.007 EC-006 pre-fix form
+
+### EC-006: Graph raises error in non-first node (mid-run) — no run_end emitted
+**Scenario:** A multi-node graph executes nodes 1..N-1 successfully; node N returns
+`Err(PregolyaError)` mid-run.
+**Expected behavior:**
+- Streaming: `run_start`, `node_start`/`node_end` pairs for all prior nodes, then
+  `node_start` for the failing node N; then `StreamEvent::Error` with the error payload
+  (`run_id`, `parent_ids`, `error_code`, `error_message`); stream closes. **No `run_end`
+  event is emitted.**
+  Run status queryable via `GET /threads/{thread_id}/runs/{run_id}` = `failed`.
+- Unary: `4xx/5xx` response with the same `PregolyaError` as the streaming path.
+STALE_EOF
+
+PROBE_R06_POS_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R06_POS" 2>/dev/null || true)"
+PROBE_R06_POS_WARNS="$(echo "$PROBE_R06_POS_OUT" | grep -c '^\[WARN\] R06' || true)"
+probe_expect_warn "R06-pos" \
+  "StreamEvent::Error + error_message in SSE body WITHOUT SEC-BOUND-001/redact reference (BC-2.12.007 EC-006 pre-fix form)" \
+  "$PROBE_R06_POS_WARNS"
+
+# R06-neg: BC body with StreamEvent::Error AND SEC-BOUND-001 + redact_credentials reference
+# → no R06 WARN expected (canonical sanitization-noted form after product-owner fix).
+PROBE_R06_NEG="$PROBE_TMP/probe-r06-neg.md"
+cat > "$PROBE_R06_NEG" <<'CANONICAL_EOF'
+---
+document_type: behavioral_contract
+bc_id: BC-9.99
+version: "1.0"
+---
+# BC-9.99 Synthetic Probe — R06-neg: with sanitization reference
+
+### EC-006: Graph raises error in non-first node (mid-run) — no run_end emitted
+**Expected behavior:**
+- Streaming: then `StreamEvent::Error` with the sanitized error payload; stream closes.
+  SEC-BOUND-001 sanitization pipeline applies: `error_message` content passes through
+  `redact_credentials` + `sanitize_internal_ids` before emission to the SSE caller
+  (CWE-209 / CWE-532); internal PregolyaError variants must not transit the external
+  error surface unfiltered.
+CANONICAL_EOF
+
+PROBE_R06_NEG_OUT="$(run_rule_check "$FACTORY_DIR" "$PROBE_R06_NEG" 2>/dev/null || true)"
+PROBE_R06_NEG_WARNS="$(echo "$PROBE_R06_NEG_OUT" | grep -c '^\[WARN\] R06' || true)"
+probe_expect_pass "R06-neg" \
+  "StreamEvent::Error WITH SEC-BOUND-001 + redact_credentials reference — R06 passes" \
+  "$PROBE_R06_NEG_WARNS"
+
 # ── Self-probe gate ───────────────────────────────────────────────────────────
 if [ "$SELF_PROBE_FAIL" -gt 0 ]; then
   echo ""
@@ -895,7 +1042,7 @@ if [ "$SELF_PROBE_FAIL" -gt 0 ]; then
   exit 2
 fi
 
-echo "[SELF-PROBE PASS] All 11 self-probes passed — checks are not false-green on synthetic fixtures."
+echo "[SELF-PROBE PASS] All 13 self-probes passed — checks are not false-green on synthetic fixtures."
 
 # ── Live check ────────────────────────────────────────────────────────────────
 echo ""
@@ -934,6 +1081,12 @@ if [ "$LIVE_WARNS" -gt 0 ]; then
   echo "    R05: add SEC-008 build-profile obligation alongside any catch_unwind mention;"
   echo "         canonical: 'requires panic = \"unwind\" in workspace-root [profile.release]"
   echo "         per SEC-008 / BC-2.09.008 EC-010; panic = \"abort\" voids catch_unwind (CWE-248)'"
+  echo "    R06: add SEC-BOUND-001 sanitization obligation alongside any external error surface"
+  echo "         mention (StreamEvent::Error, Run.error, error_message in SSE context,"
+  echo "         content[0].text+isError); canonical: 'SEC-BOUND-001 sanitization pipeline"
+  echo "         applies: error_message content passes through redact_credentials +"
+  echo "         sanitize_internal_ids before emission to caller (CWE-209 / CWE-532)'"
+  echo "         D-324 BOUNDARY-SANITIZATION-GATE — route fix to product-owner"
 fi
 
 # Advisory gate: always exits 0 (commit not blocked by WARN findings)
