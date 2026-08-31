@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.005
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.4 (round-47/F-P2A197-03/2026-08-30): F-P2A197-03 [LOW/records] Debug form inconsistency adjudicated — canonical Debug form is exactly '<redacted>' per CLAUDE.md §Newtype + redacted Debug (f.write_str('<redacted>') emits exactly '<redacted>'); {PC-002} 'exactly' wording retained as authoritative source of truth. TV-001 expected output corrected from 'FooApiKey(<redacted>)' (or '<redacted>') to '<redacted>' (exact match). EC-003 expected behavior corrected from 'FooApiKey(<redacted>)' to '<redacted>' (exact match). Both aligned to {PC-002}/{INV-002}. {INV-002} log-scrubber substring guarantee unaffected."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-010
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "a8775d1"
+input-hash: "9516cc4"
 extracted_from: null
 modified: []
 deprecated: null
@@ -82,7 +83,7 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 
 ### EC-003: Log macro with API key struct
 **Scenario:** `tracing::debug!("{:?}", api_key)` is called with a key instance.
-**Expected behavior:** The log record contains the string `FooApiKey(<redacted>)` (or similar `<redacted>` output), never the key value.
+**Expected behavior:** The log record contains the string `"<redacted>"` (exact, per {PC-002} canonical `f.write_str("<redacted>")` impl), never the key value. The tuple-wrapper form `FooApiKey(<redacted>)` does NOT appear because the manual `Debug` impl writes the literal string `"<redacted>"` directly.
 
 ### EC-004: Clone does not expose inner value
 **Scenario:** A `FooApiKey` is `Clone`'d for use across threads.
@@ -96,7 +97,7 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `format!("{:?}", FooApiKey::new("sk-real-secret"))` | `"FooApiKey(<redacted>)"` (or `"<redacted>"`) | Happy path — debug output is opaque |
+| TV-001 | `format!("{:?}", FooApiKey::new("sk-real-secret"))` | `"<redacted>"` | Happy path — debug output is opaque; exact string per {PC-002}/{INV-002} canonical form |
 | TV-002 | `serde_json::to_string(&FooApiKey::new("sk-real-secret"))` | Compilation error (`Serialize` not impl'd) | Key type must not be serializable |
 | TV-003 | Attempt `let s: &str = &api_key` via `Deref` | Compilation error (`Deref` not impl'd) | No silent deref to str |
 | TV-004 | `api_key.expose_secret()` returns `"sk-real-secret"` | `"sk-real-secret"` — explicit access works | Explicit opt-in path |

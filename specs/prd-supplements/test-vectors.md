@@ -1,10 +1,10 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.17"
+version: "3.18"
 status: active
 producer: product-owner
-timestamp: 2026-08-29T23:35:00Z
+timestamp: 2026-08-30T23:59:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
@@ -14,6 +14,7 @@ input-hash: "1d64308"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.18 (round-47/F-P2A197-01+F-P2A197-02/2026-08-30): BC-2.12.003 TV count 11→13 (+2 TVs: TV-012 E-GRAPH-011 conditional-edge panic → static 'internal error' + source_node suppressed ({INV-007} extended; CWE-209; F-P2A197-01); TV-013 credential-in-Run.error.message → redact_credentials 3-step sanitization pipeline ({INV-008} External-Boundary Error-Sanitization; CWE-209/532; F-P2A197-02)). SS-12 subtotal 55→57. Grand total 761→763 canonical + 11 GTV = 772→774."
   - "3.17 (round-42/F-P2A177-01+F-P2A179-01+F-P2A177-02/2026-08-29): BC-2.09.008 TV count 18→19 (+1 TV: TV-019 path_fn conditional-edge panic → E-GRAPH-011 ConditionalEdgePanic → static 'internal error' at MCP boundary; ADR-029 §Decision 5 EC-003 static-replace exception; CWE-209; F-P2A177-02). BC-2.12.003 TV count 10→11 (+1 TV: TV-011 node-body-panic → Run.status=failed + E-GRAPH-019 STATIC message + no panic text + no orphan in_progress; {INV-007} panic-text-isolation; SEC-008 requires panic=unwind on pregolya-server; F-P2A177-01). Grand total 759→761 canonical + 11 GTV = 770→772."
   - "3.16 (round-40/F-P2A170-01/2026-08-29): F-P2A170-01 [MED, POL-21/census] — BC-2.09.008 inventory row TV Count cell corrected 17→18 (stale; changelog v3.15 claimed 17→18 applied but inventory row was not updated; ground-truth BC body has 18 canonical TVs TV-001..TV-018). Notes cell updated to append TV-018 ForceApproveHooks unconditional ActionRisk pre-hook gate ({INV-004}; F-P2A165-01). TV grand total is 759 canonical + 11 GTV = 770; no TV count change (TV-018 was minted in r39; this is a census-row fix only)."
   - "3.15 (round-39/F-P2A165-01/2026-08-29): BC-2.09.008 TV count 17→18 (+1 TV: TV-018 ForceApproveHooks ActionRisk gate pre-empts inner hook call — None/Some(>=Medium)→Deny+E-MCP-011 without calling inner hook; CWE-862 gate; product-owner). Grand total 758→759 canonical + 11 GTV = 769→770."
@@ -141,7 +142,7 @@ changelog:
 | BC-2.11.006 | SS-11 | 4 | — | table (unlabelled) | | No-hook default: WARNING LOG |
 | BC-2.12.001 | SS-12 | 9 | — | `TV-NNN` | | Thread CRUD |
 | BC-2.12.002 | SS-12 | 9 | — | `TV-NNN` | | Assistant CRUD |
-| BC-2.12.003 | SS-12 | 11 | — | `TV-NNN` | | Run lifecycle; TV-011 node-body-panic → failed + E-GRAPH-019 STATIC message + no orphan in_progress ({INV-007} panic-text-isolation; SEC-008 pregolya-server panic=unwind; F-P2A177-01) |
+| BC-2.12.003 | SS-12 | 13 | — | `TV-NNN` | | Run lifecycle; TV-011 node-body-panic → E-GRAPH-019 STATIC ({INV-007}); TV-012 E-GRAPH-011 conditional-edge panic → static + source_node suppressed ({INV-007}; F-P2A197-01); TV-013 credential-in-Run.error.message → redact_credentials ({INV-008}; F-P2A197-02) |
 | BC-2.12.004 | SS-12 | 7 | — | `TV-NNN` | | CronSchedule + proactive run |
 | BC-2.12.005 | SS-12 | 7 | — | `TV-NNN` | | SecurityConfig::default() deny-CORS |
 | BC-2.12.006 | SS-12 | 6 | — | `TV-NNN` | | Trait seams (IdempotencyStore etc.) |
@@ -198,7 +199,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 8 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (134 authored BCs):** 761 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **772 total vectors** across 134 BC files.
+**Total vectors (134 authored BCs):** 763 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **774 total vectors** across 134 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -349,6 +350,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.18 | 2026-08-30 | round-47/F-P2A197-01+F-P2A197-02: BC-2.12.003 TV count 11→13 (+TV-012 E-GRAPH-011 conditional-edge panic→static "internal error"+source_node suppressed {INV-007}; +TV-013 credential-in-Run.error.message→redact_credentials 3-step pipeline {INV-008}; both CWE-209/532). SS-12 subtotal 55→57. Grand total 761→763 canonical + 11 GTV = 774. | round-47 F-P2A197-01+F-P2A197-02 |
 | 3.17 | 2026-08-29 | round-42/F-P2A177-01+F-P2A179-01+F-P2A177-02: BC-2.09.008 TV count 18→19 (+TV-019 path_fn-panic E-GRAPH-011→static "internal error" at MCP boundary). BC-2.12.003 TV count 10→11 (+TV-011 node-body-panic→failed+E-GRAPH-019 STATIC message+no orphan in_progress). Grand total 759→761 canonical + 11 GTV = 772. | round-42 F-P2A177-01+F-P2A179-01+F-P2A177-02 |
 | 3.16 | 2026-08-29 | round-40/F-P2A170-01: BC-2.09.008 inventory row TV Count cell corrected 17→18 (stale; census-row fix only; TV-018 minted in r39). Grand total UNCHANGED: 759 canonical + 11 GTV = 770. | round-40 F-P2A170-01 |
 | 3.15 | 2026-08-29 | round-39/F-P2A165-01: BC-2.09.008 TV count 17→18 (+1 TV: TV-018 ForceApproveHooks ActionRisk gate pre-empts inner hook call — None/Some(>=Medium)→Deny+E-MCP-011 without calling inner hook; CWE-862 gate). Grand total 758→759 canonical + 11 GTV = 770. | round-39 F-P2A165-01 |

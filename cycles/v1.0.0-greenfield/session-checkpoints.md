@@ -1,7 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.5"
+version: "1.6"
+changelog:
+  - "1.6 (D-324/round-47/2026-08-30): D-323 checkpoint archived"
 status: archive
 producer: state-manager
 timestamp: 2026-08-17T18:00:00Z
@@ -3885,3 +3887,33 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
 ### STATE: v6.33, timestamp 2026-08-30T18:00:00Z
+
+---
+
+## D-323 (round-46 close — 2026-08-30) — ARCHIVED
+
+### RESUME IN ONE BREATH
+round-46 CLOSED. TWO CLASSES MECHANICALLY GATED: SEC-008 catch_unwind class (R05 rule in verify-security-literal-propagation.sh; 11 self-probes) + CompiledGraph phantom class (verify-no-phantom-types.sh 29 self-probes). P2A-192 CLEAN(strict)=YES; P2A-194 CLEAN(strict)=YES. P2A-193 NOT-CLEAN (2H+1M+pgap); P2A-195 NOT-CLEAN (2H+1M+1LOW) — all findings CLOSED. GATE-READY=YES 13/13. NEXT: round-47 on new frozen HEAD post-D-323 push. Streak 0/3.
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts = D-323 round-46 close commit — exact SHA via `git -C .factory log -1`. No .worktrees/. No open PRs.
+
+### D-323 ROUND-46 CLOSE
+- F-193-01 [HIGH, CWE-248/703] ADR-001 Obligation 3 stale SEC-008 crate-member framing corrected to workspace-root canonical form (ORIGINATING authority). ADR-001 §Obligation-3 updated (versioned).
+- F-193-02 [HIGH, CWE-248/703] BC-2.15.005 (1.4→1.5) + BC-2.02.005 (1.7→1.8) — catch_unwind BCs lacked SEC-008 workspace-root framing. SEC-008 class-audit also closed: BC-2.11.003 (1.13→1.14) + BC-2.11.004 (1.13→1.14) async GuardrailHook panic; BC-2.05.007 (1.8→1.9) async hook-panic; S-1.26 (1.8→1.9; 2 stale sites); S-1.13 (1.2→1.3); S-1.15 (1.2→1.3). R05 gate added.
+- F-193-03 [MED, CWE-209] BC-2.09.008 TV-019 catch-layer contradiction corrected. BC-2.09.008 3.6→3.7→3.8.
+- F-P2A195-01 [HIGH] BC-2.12.007 CompiledGraph phantom VP-DI011-02 + 6 type-name sites → CompiledStateGraph. BC-2.12.007 1.8→1.9. CompiledGraph class-audit: dependency-graph.md 1.10→1.11; S-1.27 (1.6→1.7; 7 sites). verify-no-phantom-types.sh CompiledGraph patterns added.
+- F-P2A195-02 [HIGH] S-1.27 phantom CompiledGraph::run (7 sites) → CompiledStateGraph::invoke. S-1.27 1.6→1.7.
+- F-P2A195-03 [MED] BC-2.12.007 CompiledGraph phantom type-name sites (part of F-P2A195-01 class-audit).
+- O-P2A195-01 [LOW/records] S-2.11 body §Changelog v1.26+v1.28 entries restored. S-2.11 1.32→1.33.
+- R05-IMPLEMENTATION [PROCESS-GAP→IMPLEMENTED] verify-security-literal-propagation.sh R05 rule + verify-no-phantom-types.sh CompiledGraph patterns. Both advisory exit 0.
+- L-237 codified [PROCESS-GAP/TWO-CLASS-SIMULTANEOUS-INCOMPLETE-SWEEP]. ARCH-INDEX §Changelog + BC-INDEX §Changelog + STORY-INDEX §Changelog bumped.
+- Census: BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39+1) / points 303. streak 0/3.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+### STATE: v6.34, timestamp 2026-08-30T23:30:00Z

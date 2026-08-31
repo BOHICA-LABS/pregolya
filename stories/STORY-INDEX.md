@@ -1,10 +1,11 @@
 ---
 document_type: story-index
-version: "1.33"
+version: "1.34"
 status: active
 producer: story-writer
-timestamp: 2026-08-30T23:30:00Z
+timestamp: 2026-08-30T23:59:00Z
 changelog:
+  - "1.34 (round-47/F-P2A197-01+F-P2A197-02/2026-08-30): 1 story version bump (story-writer round-47 fix-burst). S-1.26 (v1.9→v1.10): F-P2A197-01 [HIGH, CWE-209] — AC-019 + EC-020 (HTTP-boundary E-GRAPH-011 static-replace per BC-2.12.003 {INV-007}; E-GRAPH-011 ConditionalEdgePanic panics on HTTP path now statically replaced, not forwarded); F-P2A197-02 [MED, CWE-209/532] — AC-020 + EC-021 (3-step sanitization pipeline on Run.error.message per BC-2.12.003 {INV-008}; credential redaction path prior to HTTP surface); input-hash 3d8fb63. Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303; TV 761→763 canonical (774 incl GTV)."
   - "1.33 (round-46/F-193-02+F-P2A195-02+SEC-008-class-audit+CompiledGraph-class-audit/2026-08-30): 5 story version bumps (story-writer round-46 fix-burst). S-1.27 (v1.6→v1.7): F-P2A195-02 [HIGH] — phantom CompiledGraph::run (7 sites) replaced with CompiledStateGraph::invoke (BC-2.02.001 {PC-001} canonical). S-2.11 (v1.32→v1.33): O-P2A195-01 [LOW/records] — §Changelog v1.26+v1.28 entries restored (inadvertent omission). S-1.26 (v1.8→v1.9): class-audit-A SEC-008 — 2 stale SEC-008 sites corrected (architect-enumerated, story-sweep miss from round-42). S-1.13 (v1.2→v1.3): R05-gate catch_unwind — SEC-008 workspace-root build-profile obligation note added. S-1.15 (v1.2→v1.3): R05-gate catch_unwind — SEC-008 workspace-root build-profile obligation note added. Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303; TV 761 canonical (772 incl GTV)."
   - "1.32 (round-45/F-P2A189-01/2026-08-30): S-1.19 v1.7→v1.8 (F-P2A189-01 [HIGH, CWE-248/703]) — workspace-root panic=unwind pin propagated to all four stale sites (Task 5, AC-024, Task 11, EC-001); library-member-inert clause added throughout; mirrors S-2.11 AC-037 (v1.31). Input-hash refreshed (a4b9338→83861da). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303; TV 761 canonical (772 incl GTV)."
   - "1.31 (round-44/F-P2A187-03/2026-08-30): S-2.11 v1.31→v1.32 (F-P2A187-03 [MED]) — Red-Gate count corrected 13→12 (R43 AC-038-sweep residue; pregolya-server TCP/OS port-allocation AC-038 was added to task-16 in R43; Red-Gate count was 13 including the pre-R43 orphaned AC-038 reference; correct count is 12). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303; TV 761 canonical (772 incl GTV)."

@@ -4402,3 +4402,31 @@ Census UNCHANGED 39/133/14/120 (story counts, BC counts, VP counts, EC counts �
 **Census delta: UNCHANGED. BC 134 / VP 17 / EC 138 / TV 761 canonical (772 incl GTV) / stories 40 (39 product + 1 maint) / points 303. streak 0/3 (frozen-HEAD reset on D-323 push).**
 
 **NEXT: round-47 on new frozen HEAD post-D-323 push. Streak 0/3. realizability (P2A-192) + consistency (P2A-194) lenses CONVERGED. SEC-008 class + CompiledGraph phantom class mechanically gated.**
+
+## Round 47 (D-324, 2026-08-30)
+
+**Passes: P2A-196 (realizability) / P2A-197 (security) / P2A-198 (consistency/census/records) / P2A-199 (SS-09/SS-11 deep-audit) + GATE-READY consistency-validator audit**
+
+**Frozen spec HEAD: post-D-323 push**
+
+**Finding Progression trajectory-tail: →0/CLEAN(strict)→2H+1M+pgap→0/CLEAN(strict)→2H+1M+1LOW→0/CLEAN(strict)→1H+1M+1OBS→0/CLEAN(strict)→0/CLEAN(strict)**
+
+**LABEL: NOT-CLEAN (strict). Full cascade ceremony. P2A-196 CLEAN(strict)=YES; P2A-198 CLEAN(strict)=YES; P2A-199 CLEAN(strict)=YES. GATE-READY=YES 13/13.**
+
+**CLEAN(strict): P2A-196 YES / P2A-198 YES / P2A-199 YES / P2A-197 NO (1H+1M+1OBS) | CLEAN(PR-merge): N/A (HIGH present) | GATE-READY: YES 13/13**
+
+**MILESTONE: 3/4 adversary lenses CLEAN(strict)=YES — cleanest round in Phase-2 re-convergence since SEC-008/CompiledGraph/E0562 classes were mechanically gated.**
+
+**Streak: 0/3 (frozen-HEAD reset on D-324 push)**
+
+**All findings CLOSED — BOUNDARY-SANITIZATION-CLASS CLOSED + ADR-029 SEC-BOUND-001 parity principle established:**
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| F-P2A197-01 | HIGH, CWE-209 | CLOSED: BC-2.12.003 §INV-007 extended from E-GRAPH-019-only to cover E-GRAPH-011 (conditional-edge panic → static 'internal error' + source_node suppressed). TV-012 minted. S-1.26 AC-019+EC-020 (HTTP-boundary E-GRAPH-011 static-replace). |
+| F-P2A197-02 | MED, CWE-209/532 | CLOSED: BC-2.12.003 §INV-008 NEW — External-Boundary Error-Sanitization mandatory 3-step pipeline (internal-panic static-replace → redact_credentials → sanitize_internal_ids) on Run.error.message before HTTP surface. TV-013 minted. S-1.26 AC-020+EC-021. ADR-029 §SEC-BOUND-001 boundary-agnostic parity principle. |
+| F-P2A197-03 | LOW/records (OBS) | CLOSED: ADR-029 §SEC-BOUND-001 preamble records-tier clarification applied. Non-blocking. |
+
+**Census delta: TV 761→763 canonical (+2: TV-012 E-GRAPH-011 static-replace {INV-007}; TV-013 credential-sanitization {INV-008}). SS-12 subtotal 55→57. Grand total 772→774 incl GTV. BC 134 / VP 17 / EC 138 / stories 40 / points 303 UNCHANGED. streak 0/3 (frozen-HEAD reset on D-324 push).**
+
+**NEXT: round-48 on new frozen HEAD post-D-324 push. Streak 0/3. BOUNDARY-SANITIZATION-CLASS mechanically anchored via ADR-029 SEC-BOUND-001 + BC-2.12.003 {INV-007}/{INV-008}.**

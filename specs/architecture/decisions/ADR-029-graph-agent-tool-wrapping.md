@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-30"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.17"
+version: "2.18"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.18 (R47/F-P2A197-01+F-P2A197-02/2026-08-30): F-P2A197-01/F-P2A197-02 [SEC] §Decision 5 — new subsection §External-Boundary Error-Sanitization Parity (SEC-BOUND-001) added. Root cause of the HTTP/MCP boundary info-disclosure asymmetry found in round-47: the error-sanitization pipeline was specified per-boundary (MCP only), so the HTTP Run-status boundary (BC-2.12.003) was hardened only partially — E-GRAPH-011 ConditionalEdgePanic raw panic text was not static-replaced at the HTTP boundary (only E-GRAPH-019 was isolated there; the MCP boundary static-replaces both). SEC-BOUND-001 establishes a boundary-agnostic principle: every external surface (MCP tools/call content[0].text isError paths; HTTP Run.error/Run-status responses; any future external transport boundary) MUST apply the three-step pipeline before emitting error text to an external caller: (1) internal-panic-code static replacement for all INTERNAL-category panic-bearing codes (E-GRAPH-011, E-GRAPH-019, and any future code in that category); (2) redact_credentials; (3) sanitize_internal_ids two-pattern union. BCs governing future external surfaces MUST reference SEC-BOUND-001 rather than re-deriving per-boundary treatment."
   - "2.17 (R44/F-P2A187-02+O-1/2026-08-30): F-P2A187-02 [MED] §Decision 5 Error Routing Table internal-panic-code row — stale 'anticipated' status and discharged census obligations removed. (a) 'anticipated `E-GRAPH-019 NodePanic`' → 'live `E-GRAPH-019 NodePanic` (minted in error-taxonomy.md)' — E-GRAPH-019 was minted in R42 and is live in error-taxonomy.md; treated as live by BC-2.09.008 EC-003 and BC-2.12.003 {INV-007}; BC-2.09.008 TV-019 exists. (b) 'PO obligation: EC census 137→138' annotation removed from Condition cell — obligation discharged in R42 (EC census is at 138; E-GRAPH-019 live). (c) 'PO obligation: TV census 759→760' paragraph removed from MCP Layer Response cell — obligation discharged in R42 (BC-2.09.008 TV-019 exists). Both embedded census annotations are volatile-census-in-normative-prose (TD-VSDD-091/POL-14). R42 §Changelog row 2.15 retains the historical record of both annotations."
   - "2.16 (R43/F-P2A181-01/2026-08-30): F-P2A181-01 [HIGH/CWE-248/703] §Decision 5 Error Routing Table `extract_output panics` row — SEC-008 build-profile invariant rewritten. (a) Authoritative pin point corrected: the governing knob is the workspace-root `[profile.release]` that builds the `pregolya-server` binary, NOT a per-library override in `pregolya-mcp/Cargo.toml` — Cargo silently ignores `[profile.release]` in a library crate's own manifest; a library-member override is inert and MUST NOT be relied upon. (b) Scope aligned to BC-2.09.008 EC-010 v3.4: `catch_unwind` boundary physically lives in `pregolya-server` request handler calling `GraphAgentTool::invoke_dyn` (`pregolya-mcp`); both `pregolya-server` and `pregolya-mcp` are in scope. (c) Explicit prohibition on per-library manifest override added. Consistent with BC-2.09.008 EC-010 v3.4, BC-2.12.003 EC-003, and S-2.11 AC-037."
   - "2.15 (R42/F-P2A177-02+F-P2A179-01/2026-08-29): F-P2A177-02 [MED/CWE-209] Option A — §Decision 5 Error Routing Table: new row added for internal-panic error codes (`E-GRAPH-011 ConditionalEdgePanic`; anticipated `E-GRAPH-019 NodePanic` per ADR-001 §Graph Run-Executor Panic Boundary). These codes carry raw Rust panic text in `message`; `redact_credentials` + `sanitize_internal_ids` passes are insufficient (panic text contains internal state not covered by UUID/credential regexes). MCP boundary maps panic-code errors to static `isError: true, 'internal error'` — identical to `extract_output` panic path. PO obligation: TV census 759→760 — add BC-2.09.008 TV: E-GRAPH-011 conditional-edge-panic path → MCP response `'internal error'` NOT captured panic text. F-P2A179-01 [HIGH] ConcreteGraphRunner phantom: ADR-029 live body confirmed non-generic (no `<S>`) — no body edit required; `<S>` appears only in v1.9 historical changelog entry (grandfathered per TD-VSDD-091). Canonical string for PO (BC-2.09.008 {PC-003}) and story-writer (S-2.11 AC-019): `ConcreteGraphRunner::run` non-generic, no `<S>`."
@@ -563,6 +564,51 @@ Both passes are unconditional on all `isError: true` paths. Success paths are NO
 to framework-level sanitization (see §Decision 3 SEC-001 invariant — Tool implementations
 own the credential-opacity obligation for success output).
 
+### External-Boundary Error-Sanitization Parity (SEC-BOUND-001)
+
+**Normative principle:** EVERY external error/response surface in pregolya MUST apply the
+uniform, boundary-agnostic error-sanitization pipeline BEFORE emitting error text to any
+external caller. This obligation is not specific to the MCP boundary — it applies equally
+to the MCP `tools/call` `content[0].text` (isError paths), the pregolya-server HTTP
+`Run.error` and Run-status response surfaces, and any future external transport boundary.
+
+**Required pipeline (all three steps, in order):**
+
+1. **Internal-panic-code static replacement:** Any INTERNAL-category error code that carries
+   raw Rust panic text in its `message` field — currently `E-GRAPH-011 ConditionalEdgePanic`
+   (routing-function panic; §Decision 5 Error Routing Table, internal-panic-code row) and
+   `E-GRAPH-019 NodePanic` (node-body panic; ADR-001 §Graph Run-Executor Panic Boundary) —
+   MUST be replaced with the static string `"internal error"`. The dynamic `message` field
+   (which may contain source-node names, captured panic text, or internal execution state)
+   MUST NOT cross any external boundary. Any future code added to the INTERNAL-panic category
+   inherits this static-replacement obligation on the round it is minted.
+
+2. **`redact_credentials`:** Apply `mcp::sanitize::redact_credentials` to all error text
+   before it reaches any external surface (canonical definition and rationale:
+   §Decision 3 SEC-001; BC-2.09.007 {INV-003} / DI-010 credential opacity).
+
+3. **`sanitize_internal_ids`:** Apply the two-pattern UUID/hex union pass to all error text
+   before it reaches any external surface (canonical definition and pattern specification:
+   §Decision 3 SEC-005; covers `run_id`, UUID-shaped `thread_id`; `u64` `CheckpointId`
+   values require authoring-site discipline per BC-2.09.008 {INV-001}).
+
+**Boundary-agnostic obligation:** The pipeline above is boundary-agnostic. BCs that govern
+any external surface MUST reference this principle (SEC-BOUND-001) rather than re-deriving
+per-boundary treatment — BC-2.09.008 for the MCP `tools/call` boundary; BC-2.12.003 for
+the pregolya-server HTTP Run-status boundary; any future boundary BC. Per-BC sections MAY
+add boundary-specific steps (e.g., an additional domain-specific sanitization pass), but
+MUST NOT omit or weaken steps 1–3.
+
+**Root-cause rationale (F-P2A197-01/F-P2A197-02):** Round-47 found that the HTTP
+Run-status boundary applied steps 2–3 (`redact_credentials` + `sanitize_internal_ids`) and
+applied step 1 for `E-GRAPH-019 NodePanic`, but did NOT apply step 1 for
+`E-GRAPH-011 ConditionalEdgePanic` (raw panic text could reach `Run.error.message`). The
+root cause: the sanitization pipeline was originally specified per-boundary (MCP only in
+BC-2.09.008), so a second external boundary (HTTP / BC-2.12.003) was hardened only
+partially by the product-owner working without a cross-boundary principle to reference.
+SEC-BOUND-001 prevents recurrence: a new boundary BC that cites this principle inherits all
+three steps by reference and cannot diverge by omission.
+
 ---
 
 ## Rationale
@@ -728,6 +774,7 @@ must resolve to a declared location. Added in round-10 (F-P2A072-01+02+03 closur
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.18 | 2026-08-30 | architect | R47/F-P2A197-01+F-P2A197-02 | F-P2A197-01/F-P2A197-02 [SEC]: §Decision 5 — new §External-Boundary Error-Sanitization Parity (SEC-BOUND-001) subsection. Establishes boundary-agnostic three-step sanitization pipeline (internal-panic-code static replacement → redact_credentials → sanitize_internal_ids) that EVERY external error surface MUST apply before emitting error text to an external caller. Root cause of round-47 HTTP/MCP asymmetry: pipeline was per-boundary (MCP only in BC-2.09.008), so HTTP boundary applied steps 2–3 and step 1 for E-GRAPH-019 but missed step 1 for E-GRAPH-011 (raw ConditionalEdgePanic text reachable at Run.error.message). BCs governing future external surfaces reference SEC-BOUND-001 instead of re-deriving treatment; primary BC consumers: BC-2.09.008 (MCP) and BC-2.12.003 (HTTP Run-status, fixed same burst by PO). |
 | 2.17 | 2026-08-30 | architect | R44/F-P2A187-02+O-1 | F-P2A187-02 MED + O-1 LOW: §Decision 5 Error Routing Table internal-panic-code row — stale 'anticipated E-GRAPH-019 NodePanic' updated to 'live E-GRAPH-019 NodePanic (minted in error-taxonomy.md)' (discharged in R42; BC-2.09.008 TV-019 exists; EC-003 live). Two embedded 'PO obligation: …census N→M' volatile-census annotations removed: (a) 'PO obligation: EC census 137→138' from Condition cell; (b) 'PO obligation: TV census 759→760' paragraph from MCP Layer Response cell. Both annotations are volatile-census-in-normative-prose (TD-VSDD-091/POL-14); both obligations were discharged in R42. R42 §Changelog row 2.15 retains historical record. |
 | 2.16 | 2026-08-30 | architect | R43/F-P2A181-01 | F-P2A181-01 HIGH/CWE-248/703: §Decision 5 Error Routing Table `extract_output panics` row — SEC-008 build-profile invariant rewritten. Authoritative pin point corrected to workspace-root `[profile.release]` governing `pregolya-server` binary; library-member `[profile.release]` in `pregolya-mcp/Cargo.toml` is inert (Cargo ignores it) and MUST NOT be relied upon. `catch_unwind` boundary physically in `pregolya-server` request handler calling `GraphAgentTool::invoke_dyn` (`pregolya-mcp`). Scope aligned to BC-2.09.008 EC-010 v3.4. Consistent with BC-2.12.003 EC-003 and S-2.11 AC-037. |
 | 2.15 | 2026-08-29 | architect | R42/F-P2A177-02+F-P2A179-01 | F-P2A177-02 MED/CWE-209 Option A: §Decision 5 Error Routing Table — new row for internal-panic error codes (E-GRAPH-011 ConditionalEdgePanic; anticipated E-GRAPH-019 NodePanic per ADR-001 §Graph Run-Executor Panic Boundary); raw Rust panic text NEVER forwarded to MCP client regardless of sanitization passes; static `"internal error"` response at MCP boundary (CWE-209 closure). PO obligation: TV census 759→760 — add BC-2.09.008 TV: E-GRAPH-011 conditional-edge-panic path returns `isError: true, "internal error"` NOT captured panic text. F-P2A179-01 HIGH: ConcreteGraphRunner phantom confirmed non-generic (no `<S>`) — ADR-029 live body was already correct; `<S>` appears only in v1.9 historical changelog entry (grandfathered per TD-VSDD-091). Canonical string for PO (BC-2.09.008 {PC-003}) and story-writer (S-2.11 AC-019): `ConcreteGraphRunner::run` non-generic, no `<S>`. |

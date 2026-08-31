@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.12.003
-version: "1.15"
+version: "1.16"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -38,6 +38,7 @@ changelog:
   - "1.13 (P2A-BC-scan-B/2026-08-26): ADR-028 D1-D3 multitask propagation — PC-004 expanded with full lifecycle semantics for multitask_strategy interrupt, rollback, and enqueue: pre-empted run terminal state (cancelled, not interrupted per ADR-028 D1); rollback target (latest_completed_checkpoint_id, delete rows with checkpoint_id > anchor per ADR-028 D2); enqueue FIFO order, max_queued_runs=10 configurable cap, queue-full → E-SERVER-019 RunQueueFull HTTP 429 per ADR-028 D3. EC-007 added for enqueue-queue-full path. TV-008/009/010 added for interrupt/rollback/enqueue strategies. ADR-028 anchor cited throughout new clauses."
   - "1.14 (round-42/F-P2A177-01/2026-08-29): F-P2A177-01 [HIGH, CWE-248/703] — Substantiate node-body panic recovery in EC-003 and mint {INV-007} panic-text-isolation invariant. EC-003 expanded to cover both Err and panic paths: node Err path is unchanged; node-body panic path now specifies `FutureExt::catch_unwind(AssertUnwindSafe(...))` mechanism — panic caught during `.await` polling → `Err(PregolyaError { code: \"E-GRAPH-019\", category: INTERNAL, message: \"NodePanic: graph node panicked during execution — see server error log for details\", retry_hint: Never, .. })`; run transitions `in_progress → failed`; raw panic text logged server-side at ERROR only; NEVER in `Run.error.message` per new {INV-007}; {INV-005} (no orphan runs) upheld — run MUST NOT remain `in_progress` after panic caught. SEC-008 note added to EC-003: `panic = \"unwind\"` required on pregolya-server release profile. {INV-007} added: panic-text-isolation — raw panic text MUST NOT appear in `Run.error.message`; E-GRAPH-019 STATIC message invariant. TV-011 minted: node-body-panic → failed + E-GRAPH-019 + static message + no orphan `in_progress` (TV count 10→11). Traceability Error Codes row added citing E-GRAPH-019."
   - "1.15 (round-43/F-P2A181-01-sibling/2026-08-30): F-P2A181-01 sibling — EC-003 SEC-008 clause and TV-011 Notes refined to workspace-root `[profile.release]` precision, aligning with ADR-029 §Decision 5 v2.16 and S-2.11 AC-037 v1.31. EC-003: 'on the `pregolya-server` release profile' → 'in the workspace-root `[profile.release]` governing the `pregolya-server` binary; a library-member `[profile.release] panic` override is silently ignored by Cargo and MUST NOT be relied upon'. TV-011 Notes: same workspace-root precision added. BC-2.09.008 EC-010 SEC-008 was the primary fix (F-P2A181-01); this sibling corrects residual release-profile framing for consistency."
+  - "1.16 (round-47/F-P2A197-01+F-P2A197-02/2026-08-30): F-P2A197-01 [HIGH, CWE-209] — E-GRAPH-011 ConditionalEdgePanic panic text leaks at HTTP boundary. {INV-007} extended from E-GRAPH-019-only to ALL internal-panic codes: E-GRAPH-011 ConditionalEdgePanic STATIC message added ('ConditionalEdgePanic: conditional edge function panicked during execution — see server error log for details'); source_node topology and captured panic text suppressed; MCP-boundary uniform treatment parity (ADR-029 §Decision 5). EC-003 'node returns Err' path extended with Internal-panic Err sanitization clause: pregolya-server run-executor MUST static-replace E-GRAPH-011 message before writing to Run.error.message. TV-012 minted (E-GRAPH-011 → STATIC message, source_node suppressed; TV count 11→12). F-P2A197-02 [MED, CWE-209/CWE-532] — no redaction contract on Run.error.message HTTP surface. {INV-008} External-Boundary Error-Sanitization invariant added: mandatory 3-step pipeline (internal-panic static-replace → redact_credentials → sanitize_internal_ids) on Run.error.message before surfacing via {PC-013}/{PC-016}; mirrors BC-2.09.008 {INV-003}; closes DI-010 Credential Opacity gap on HTTP Run-status surface. TV-013 minted (credential redaction path; TV count 12→13). Traceability Error Codes updated to reference E-GRAPH-011 STATIC replacement obligation."
 extracted_from: null
 modified: []
 deprecated: null
@@ -173,14 +174,41 @@ LangGraph Platform (D13).
   §2.3 declares no explicit merge rule for run-over-assistant config — no contradiction found.
   Leaf-level deep-merge is adopted as spec canon. Cross-ref: BC-2.12.002 §Description.
 
-- {INV-007} **Panic-text-isolation:** Raw panic text from node-body panics MUST NOT appear in
-  `Run.error.message`. The `pregolya-server` run-executor converts node-body panics caught by
-  `FutureExt::catch_unwind(AssertUnwindSafe(...))` to `E-GRAPH-019 NodePanic` with a STATIC
-  message; the raw panic text is logged at ERROR severity server-side only. `Run.error.message`
-  derives SOLELY from the E-GRAPH-019 STATIC message:
-  `"NodePanic: graph node panicked during execution — see server error log for details"`.
-  No dynamic content from the panic (backtrace, panic message, source location) is included.
-  This prevents information disclosure (CWE-209) via the Run status polling endpoint.
+- {INV-007} **Panic-text-isolation:** Raw panic text from ANY internal-panic error code MUST NOT
+  appear in `Run.error.message`. The `pregolya-server` run-executor applies STATIC message
+  replacement for ALL internal-panic error codes before populating `Run.error.message`:
+  - **E-GRAPH-019 NodePanic** (node-body panic, caught by
+    `FutureExt::catch_unwind(AssertUnwindSafe(...))`): STATIC message:
+    `"NodePanic: graph node panicked during execution — see server error log for details"`.
+    Raw panic text is logged at ERROR severity server-side only.
+  - **E-GRAPH-011 ConditionalEdgePanic** (conditional-edge `path_fn` panic, caught by the Pregel
+    executor per BC-2.02.005 {PC-005}; surfaces as `Err(PregolyaError { code: "E-GRAPH-011", .. })`):
+    STATIC message:
+    `"ConditionalEdgePanic: conditional edge function panicked during execution — see server error log for details"`.
+    The `source_node` field and any captured panic text in the error's `message` are suppressed at
+    the HTTP boundary; the raw panic text is logged at ERROR severity server-side only.
+  No dynamic content from any panic (backtrace, panic message, source location, source_node topology)
+  is included in `Run.error.message` for any internal-panic code. This prevents information
+  disclosure (CWE-209) and internal graph topology leakage via the Run status polling endpoint.
+  Symmetric with the MCP boundary's uniform panic treatment (ADR-029 §Decision 5; BC-2.09.008 EC-003).
+
+- {INV-008} **External-Boundary Error-Sanitization (DI-010 Credential Opacity; CWE-209/CWE-532):**
+  `Run.error.message` MUST be processed through the following sanitization pipeline BEFORE it is
+  returned to an external caller via {PC-013} (`GET /threads/{thread_id}/runs/{run_id}`) or stored
+  as the `error` field on the Run record surfaced by {PC-016}:
+  1. **Internal-panic static-replace** (per {INV-007}): if `error.code ∈ {"E-GRAPH-011", "E-GRAPH-019"}`,
+     replace `error.message` with the corresponding STATIC message — no dynamic panic text, no
+     `source_node` topology.
+  2. **`redact_credentials`**: scan `error.message` for credential-shaped substrings (Bearer tokens,
+     API key prefixes, and patterns matching the DI-010 credential opacity regex) and replace each
+     match with `"<redacted>"`. Symmetric with BC-2.09.008 {INV-003}.
+  3. **`sanitize_internal_ids`**: replace UUID-shaped internal identifiers that are opaque
+     implementation details (checkpoint IDs, internal trace IDs, node instance IDs not already
+     disclosed to the caller via the HTTP path or request body) with `"<redacted-id>"`.
+  Pipeline order is mandatory: step 1 THEN step 2 THEN step 3. This matches the MCP boundary's
+  uniform error-sanitization pipeline (ADR-029 §Decision 3 + ADR-029 §Decision 5; BC-2.09.008
+  {INV-001}/{INV-003}). This invariant closes the DI-010 Credential Opacity gap on the HTTP
+  Run-status surface.
 
 ## Edge Cases
 
@@ -197,6 +225,15 @@ default `multitask_strategy`.
 **Scenario:** A graph node returns `Err(PregolyaError { .. })` or panics during execution.
 **Expected behavior (node returns Err):** `GraphRunner` propagates `Err(PregolyaError { .. })`.
 Run transitions `in_progress → failed` with `error` populated from the `PregolyaError`.
+**Internal-panic Err sanitization:** if the propagated error carries code `"E-GRAPH-011"`
+(ConditionalEdgePanic — conditional-edge `path_fn` panic caught by the Pregel executor per
+BC-2.02.005 {PC-005}), the `pregolya-server` run-executor MUST static-replace the error's
+`message` field BEFORE writing to `Run.error.message` (per {INV-007}). The STATIC replacement
+is: `"ConditionalEdgePanic: conditional edge function panicked during execution — see server
+error log for details"`. The original `message` (which contains captured panic text and may
+contain `source_node` topology) is logged at ERROR severity server-side only and MUST NEVER
+appear in `Run.error.message` (CWE-209). This static-replace applies uniformly for all
+E-GRAPH-011 errors — it is not conditional on whether panic text is present in the message.
 DI-014 ensures the error is not silently swallowed. The thread's checkpoint state reverts
 to the last successful checkpoint before the failed Run.
 **Expected behavior (node body PANICS):** The `pregolya-server` run-executor wraps graph
@@ -248,6 +285,8 @@ scoped to a different thread — cross-thread run access is not permitted.
 | TV-009 | Thread `t1` has active Run `r1` (3 checkpoints written); `POST /threads/t1/runs { multitask_strategy: "rollback" }` | HTTP 202, new Run `r2`; `r1` transitions to `cancelled`; checkpoint rows from `r1` deleted (only rows up to `latest_completed_checkpoint_id` retained); `r2` starts against rolled-back state | multitask_strategy=rollback |
 | TV-010 | Thread `t1` has active `in_progress` Run `r1` and 10 `queued` Runs (queue at capacity); `POST /threads/t1/runs { multitask_strategy: "enqueue" }` | HTTP 429 `E-SERVER-019 RunQueueFull` | multitask_strategy=enqueue queue-full |
 | TV-011 | Run `r1` on thread `t1` is `in_progress`; a graph node body calls `panic!("unexpected node failure")`; poll `GET /threads/t1/runs/r1` | Run `r1` transitions to `status: "failed"` (NOT `in_progress`); `error.code == "E-GRAPH-019"`; `error.message == "NodePanic: graph node panicked during execution — see server error log for details"` (STATIC — literal string equality); `error.message` does NOT contain `"unexpected node failure"` or any other panic text; no run remains orphaned in `in_progress` state | Node-body panic → E-GRAPH-019 STATIC message; panic-text-isolation ({INV-007}); no orphan `in_progress` ({INV-005}); EC-003 node-body-panic path; SEC-008 requires `panic = "unwind"` in the workspace-root `[profile.release]` governing the `pregolya-server` binary; library-member `[profile.release] panic` overrides are silently ignored by Cargo (CWE-248) |
+| TV-012 | Run `r1` on thread `t1` is `in_progress`; a conditional-edge `path_fn` panics with message `"unexpected routing failure"` and `source_node: "node_A"`; the Pregel executor catches it as `E-GRAPH-011 ConditionalEdgePanic`; poll `GET /threads/t1/runs/r1` | Run `r1` transitions to `status: "failed"` (NOT `in_progress`); `error.code == "E-GRAPH-011"`; `error.message == "ConditionalEdgePanic: conditional edge function panicked during execution — see server error log for details"` (STATIC — literal string equality); `error.message` does NOT contain `"unexpected routing failure"` or `"node_A"` or any other panic text or source_node topology; no run remains orphaned in `in_progress` state | Conditional-edge panic → E-GRAPH-011 STATIC message; source_node topology suppressed; panic-text-isolation ({INV-007}); no orphan `in_progress` ({INV-005}); EC-003 Internal-panic Err sanitization path; mirrors E-GRAPH-019/TV-011 pattern; closes F-P2A197-01 (CWE-209) |
+| TV-013 | Run `r1` fails; a graph node returned `Err(PregolyaError { code: "E-GRAPH-003", message: "provider auth failed: Bearer sk-ant-api03-XXXXX-secretsuffix", .. })`; poll `GET /threads/t1/runs/r1` | `error.code == "E-GRAPH-003"`; `error.message` does NOT contain `"Bearer sk-ant"` or any credential token substring; credential-shaped substring replaced with `"<redacted>"` per {INV-008} step 2 | Credential-in-error-message redaction; External-Boundary Error-Sanitization ({INV-008}); DI-010 Credential Opacity; symmetric with BC-2.09.008 {INV-003}; closes F-P2A197-02 (CWE-209/CWE-532) |
 
 ## Verification Properties
 
@@ -287,4 +326,4 @@ None
 | Wave | Wave 1 |
 | Test Types | I (integration), E2E (end-to-end) |
 | Module | pregolya-server |
-| Error Codes | E-GRAPH-019 NodePanic (INTERNAL, broken, Never) — minted at this BC's EC-003 node-body-panic path ({INV-007} panic-text-isolation enforcer); STATIC message: "NodePanic: graph node panicked during execution — see server error log for details"; raised by pregolya-server run-executor when `FutureExt::catch_unwind` catches a node-body panic during `.await` polling; raw panic text suppressed at BC boundary (CWE-209) |
+| Error Codes | E-GRAPH-019 NodePanic (INTERNAL, broken, Never) — minted at this BC's EC-003 node-body-panic path ({INV-007} panic-text-isolation enforcer); STATIC message: "NodePanic: graph node panicked during execution — see server error log for details"; raised by pregolya-server run-executor when `FutureExt::catch_unwind` catches a node-body panic during `.await` polling; raw panic text suppressed at HTTP boundary (CWE-209). E-GRAPH-011 ConditionalEdgePanic (INTERNAL) — defined at BC-2.02.005 {PC-005} (Pregel executor catches conditional-edge `path_fn` panic); referenced here because pregolya-server run-executor applies {INV-007} STATIC message replacement for E-GRAPH-011 (`"ConditionalEdgePanic: conditional edge function panicked during execution — see server error log for details"`) before populating `Run.error.message`; captured panic text and `source_node` topology suppressed at HTTP boundary (CWE-209; F-P2A197-01). |
