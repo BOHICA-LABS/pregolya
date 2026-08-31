@@ -2,19 +2,20 @@
 document_type: architecture-section
 level: L3
 section: module-decomposition
-version: "1.60"
+version: "1.61"
 status: active
 producer: architect
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/module-criticality.md
-input-hash: "6c2dd18"
+input-hash: "d26bf85"
 traces_to: ARCH-INDEX.md
 decisions: [D4, D6, D7, D12, D13, D17, D20, D21, D23]
 changelog:
+  - "1.61 (ADR-030 Stage 1/2026-08-31): Add `core::trajectory` definitions-only module (SS-04; ADR-030 Decision 2; TrajectoryRecord/TrajectoryWriter/TrajectoryReader). Add `checkpoint::trajectory` MEDIUM tiered module row (SS-04; ADR-030 Decision 2; execution of TrajectoryWriter+TrajectoryReader in pregolya-checkpoint). Extend `graph::channels` row description with LedgerChannel/PromoteRetireChannel types (ADR-030 Decision 3; VP-017 proptest P1 target). Iron Law count updated 82→84 total, 75→76 tiered, 7→8 definitions-only/exempt. module-criticality.md registry count updated 89→91 total, 82→83 tiered, 7→8 definitions-only/exempt. input-hash unchanged — no new BC inputs (BC-2.02.007 draft; not yet authored)."
   - "1.60 (round-49/F-P2A207-02+F-P2A207-03/2026-08-30): F-P2A207-02+F-P2A207-03 [HIGH/MED] — add `core::invocation_context` definitions-only row to D21 additions table and blockquote note; canonical module path `pregolya-core/src/invocation_context.rs` (SS-11; trait-in-core precedent; follows core::guardrail pattern; BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}); Iron Law count updated 81→82 total, 6→7 definitions-only/exempt; module-criticality.md registry count updated 88→89 total, 6→7 definitions-only/exempt."
   - "1.59 (round-45/F-P2A191-01/2026-08-30): F-P2A191-01 MED — graph::scheduler row: phantom symbol `CompiledGraph::run()` replaced with canonical `CompiledStateGraph::invoke(input, config)`. Adjudication: `CompiledGraph::run()` exists in no authoritative contract; canonical public entry is `CompiledStateGraph::invoke(input, config)` per BC-2.02.001 {PC-005} ('Calling compiled_graph.invoke(input, config) ... starts a Pregel super-step loop') and BC-2.12.007 ('Streaming handler code path passes through CompiledGraph.invoke'). `tick()` internal Collecting-phase driver retained. 'top-level entry point' label transferred to canonical form. Disambiguates from `GraphRunner::run` (MCP layer, ADR-029 §Decision 2 3-layer seam). BC-2.11.005 §Architecture Anchors routing: PO to mirror `CompiledStateGraph::invoke(input, config)` — DO NOT edit BC-2.11.005 here. input-hash unchanged — no BC input changes."
   - "1.58 (R37/F-P2A159-01/2026-08-29): F-P2A159-01 LOW (POL-4 semantic_anchoring_integrity) — mcp::registry row: split mis-attributed dispatch citation. Prior text attributed both tools/list AND tools/call dispatch to BC-2.09.006 {PC-002}. Canonical ownership: tools/list dispatch → BC-2.09.006 {PC-002}; tools/call dispatch → BC-2.09.007 {PC-001}. L-230 whole-artifact sweep: purity-boundary-map.md and verification-coverage-matrix.md carried the same mis-attribution via 'inbound dispatch; BC-2.09.006 {PC-002}'; corrected in the same burst. input-hash unchanged — no BC input changes."
@@ -145,6 +146,18 @@ credential security primitives, streaming event types.
 >   (ingress path). `BoundaryType` is NOT extended — write-path safety is a separate seam
 >   (PASS-58 canon unchanged; BoundaryType = ToolResult|RAGRetrieval|MemoryIngress, 3 variants).
 
+> **Trajectory definitions (SS-04, definitions-only — ADR-030 Decision 2):** pregolya-core hosts
+> DEFINITIONS for the trajectory audit primitive. These are pure types and traits with no execution
+> logic — no criticality-counted module row is added for `core::trajectory` (definitions-only/exempt
+> precedent per ADR-009 Option 3). Execution module (`checkpoint::trajectory`) lives in
+> pregolya-checkpoint per the definitions-in-core / execution-in-storage precedent.
+>
+> - `core::trajectory` (`pregolya-core/src/trajectory.rs`): `TrajectoryRecord` struct
+>   (`run_id: Uuid`, `step_idx: u64`, `event_kind: String`, `payload: serde_json::Value`),
+>   `TrajectoryWriter` trait (`async fn put_record(&self, record: TrajectoryRecord) -> Result<(), PregolyaError>`),
+>   `TrajectoryReader` trait (`async fn replay(&self, run_id: Uuid) -> Result<Vec<TrajectoryRecord>, PregolyaError>`).
+>   SS-04; ADR-030 Decision 2; `TrajectoryRecord` is `#[non_exhaustive]` per the public-API-surface convention.
+
 **NE anchors enforced:** NE-07 (constructor Result), NE-10 (credential opacity), NE-03 (no silent None)
 
 ## pregolya-graph (SS-02, SS-03, SS-05, SS-10, SS-11) — CRITICAL
@@ -155,7 +168,7 @@ content provenance.
 | Module | Responsibility | Criticality | SS |
 |--------|---------------|-------------|-----|
 | `graph::definition` | `StateGraph` builder, node/edge registration, conditional routing | HIGH | SS-02 |
-| `graph::channels` | LastValue / Append / BarrierValue / NamedBarrierValue / EphemeralValue reducers | HIGH | SS-02 |
+| `graph::channels` | LastValue / Append / BarrierValue / NamedBarrierValue / EphemeralValue reducers; `LedgerEntry` trait (dedup identity via `entry_id() -> &str`), `LedgerChannel<T: LedgerEntry>` (dedup-idempotent append reducer — VP-017 proptest P1 target, BC-2.02.007, ADR-030 Decision 3), `PromoteRetireOp<T>` enum (Promote/Retire), `PromoteRetireChannel<T: LedgerEntry>` (Quality-Diversity allocation lifecycle) | HIGH | SS-02 |
 | `graph::bsp_engine` | Super-step executor: task dispatch, `versions_seen` map, task-identity sort (`sort_by_task_id`), `reduce_super_step` (VP-001 pure-function Kani target), `apply_writes`, `InvalidUpdateError`; task-identity types: `WriteRecord { task_id, channel_name, value }`, `PregelTask`; `_reapply_writes_to_succeeded_nodes`; super-step-end `finish()` dispatch on channels (`pregolya-graph/src/bsp_engine.rs`) | CRITICAL | SS-03 |
 | `graph::hitl` | Interrupt queue (FIFO), suspend/resume protocol, risk-tiered classification; per-task interrupt bookkeeping: `InterruptScratchpad`, `interrupt_counter` (per-task resume-slot index); `PreToolCallHook` trait + `ToolCallPreview` + `PreToolDecision` (Approve/Deny/Edit/PendingHumanApproval) + `ToolApprovalRequest` + `AlwaysApprovePolicy` (ADR-018); `pre_tool_dispatch` routing function — fail-closed Deny invariant (VP-011, Kani P0, seeded burst-232); `GraphConfig.pre_tool_hook: Option<Arc<dyn PreToolCallHook>>` hook registration (`pregolya-graph/src/hitl.rs`) | CRITICAL | SS-05 |
 | `graph::scheduler` | Outer orchestrator loop + actor-scheduler synthesis (ADR-001 Alternative B; D9 gate passed 2026-07-14); orchestrator state machine (`Idle→Dispatching→Collecting→Reducing→Checkpointing→Idle`); actor scheduler (Tokio MPSC, `Dispatch(task_id, future)` / `Completed(task_id, output)` messages); `ExecutionContext { run_id: Uuid, parent_ids: Vec<Uuid> }` propagated into nested invocations; `CompiledStateGraph::invoke(input, config)` top-level entry point; tick() Collecting phase: LLM-call / tool-invocation evaluation callsites for budget and UntrackedValue sanitization (`pregolya-graph/src/scheduler.rs`) | CRITICAL | SS-03 |
@@ -179,6 +192,7 @@ Responsibilities: durable per-task checkpointing, monotonic clock, fork lineage,
 | `checkpoint::sqlite` | SQLite backend (default Cargo feature `checkpoint-sqlite`) | MEDIUM | SS-04 |
 | `checkpoint::memory` | In-memory backend for tests (`checkpoint-memory` feature) | MEDIUM | SS-04 |
 | `checkpoint::postgres` | PostgreSQL backend (stretch; `checkpoint-postgres` feature) | MEDIUM | SS-04 |
+| `checkpoint::trajectory` | `TrajectoryWriter` + `TrajectoryReader` implementation; SQLite/backend storage for durable audit-grade trajectory records (`TrajectoryRecord { run_id, step_idx, event_kind, payload }`); isolated from `CheckpointSaver` compaction path per ADR-030 Decision 2; per-run evidence accumulation for research orchestrators | MEDIUM | SS-04 |
 
 **VP anchors:** `checkpoint::session_index` is VP-002 target (session tenancy Kani harness).
 
@@ -247,7 +261,7 @@ The SDK crates have no pregolya-core dep and are publishable standalone. Enforce
 > coverage — it therefore satisfies Iron Law criteria requiring a module-level row. The
 > pre-existing `pregolya-standard-tests` crate-level row in module-criticality.md remains
 > as a crate-level annotation; `eval::judge` is the module-level row that satisfies Iron Law.
-> Current module universe: 82 total (75 tiered / 7 definitions-only/exempt: `core::documents`, `memory::skills`, `core::guardrail`, `core::action_risk`, `core::context_mutation`, `core::write_guard`, `core::invocation_context`) by this file's own crate::module-form rows. The module-criticality.md registry total is 89 (82 tiered + 7 definitions-only/exempt) — the 7-row difference is the 7 crate-level roll-up rows that appear in the registry but not in this file's tiered table. See module-criticality.md §Classification Summary for the authoritative registry count.
+> Current module universe: 84 total (76 tiered / 8 definitions-only/exempt: `core::documents`, `memory::skills`, `core::guardrail`, `core::action_risk`, `core::context_mutation`, `core::write_guard`, `core::invocation_context`, `core::trajectory`) by this file's own crate::module-form rows. The module-criticality.md registry total is 91 (83 tiered + 8 definitions-only/exempt) — the 7-row difference is the 7 crate-level roll-up rows that appear in the registry but not in this file's tiered table. See module-criticality.md §Classification Summary for the authoritative registry count.
 
 ## pregolya-mcp (SS-09) — HIGH (ingress) / MEDIUM (client, discovery, exception, graph_tool, interceptor, registry, sanitize, server, session)
 
@@ -341,6 +355,7 @@ Re-exported from pregolya-core.
 | `core::context_mutation` | Definitions-only: `ContextSourceSpec` (namespace + key), `ContextMutationConfig` (`Vec<ContextSourceSpec>`); enables `RunnableConfig.context_mutations`; loaded by `graph::scheduler` at run start; no execution logic (ADR-012 D20) | — | SS-01 |
 | `core::write_guard` | Definitions-only: `MemoryWriteRequest` enum (Add/Replace/Remove), `MemoryWriteGuard` trait (sync validation: `fn validate -> WriteGuardDecision`), `WriteGuardDecision` (Allow/Deny/Transform); write-path safety seam definitions; enforcement execution in `memory::write_guard` (ADR-012 D20) | — | SS-15 |
 | `core::invocation_context` | Definitions-only: `InvocationContext` struct — per-run hook registry with `guardrail_hook: Option<Arc<dyn GuardrailHook>>` slot; default construction yields all-`None` slots; `register_guardrail(Arc<dyn GuardrailHook>)` registration; `guardrail_hook() -> Option<&Arc<dyn GuardrailHook>>` query path; `graph::provenance` and `mcp::ingress` consume at dispatch time; SS-11 owner; follows trait-in-core precedent; canonical file `pregolya-core/src/invocation_context.rs` (BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}) | — | SS-11 |
+| `core::trajectory` | Definitions-only: `TrajectoryRecord` struct (`run_id: Uuid`, `step_idx: u64`, `event_kind: String`, `payload: serde_json::Value`); `TrajectoryWriter` trait (`put_record` durable write); `TrajectoryReader` trait (`replay` ordered read); `TrajectoryRetentionPolicy` type (compaction eligibility contract); definitions in pregolya-core per ADR-009 definitions-in-core separation; execution (`TrajectoryWriter`/`TrajectoryReader`/`TrajectoryCompactor` impls) lives in `checkpoint::trajectory` (pregolya-checkpoint); canonical file `pregolya-core/src/trajectory.rs`; SS-04; ADR-030 §Decision 2 | — | SS-04 |
 | `core::retriever` | `Retriever` trait: async dyn-compatible `get_relevant_documents(&self, query: &str)`; `Arc<dyn Retriever>` seam for graph RAG nodes; `GuardedDocuments` newtype (no public constructor) + `GuardedDocuments::rag_ingress(docs, guardrail)` sole constructor enforcing DI-012 RAGRetrieval guardrail at call time (ADR-014 Decision 6) | MEDIUM | SS-20 |
 | `core::embeddings` | `Embeddings` trait: async dyn-compatible `embed_documents` + `embed_query`; dimensionality contract (E-EMBED-001 on mismatch); no `ndarray` dep; credential-bearing HTTP surface (DI-009 timeout + DI-010 key opacity apply to all impls); VP-008 proptest P1. `pub fn validate_embedding_batch(texts: &[String], vecs: &[Vec<f32>]) -> Result<(), PregolyaError>` — production dimensionality gate called by all Embeddings impls; visibility `pub` (cross-crate callers: pregolya-openai, pregolya-ollama) | HIGH | SS-22 |
 | `core::serializable` | `LcSerializable` trait + `Serialized` wire enum + `Reviver` + `inventory`-based static registry (141 core entries); valid-namespace `OnceLock<HashSet>` derived from registry; E-SRLZ-001/002 error codes; dual-aspect: Reviver (CRITICAL/VP-010 Kani P0 — allowlist containment security boundary) + LcSerializable round-trip (HIGH/VP-007 proptest P1) | CRITICAL | SS-19 |

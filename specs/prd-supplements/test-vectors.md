@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.20"
+version: "3.22"
 status: active
 producer: product-owner
 timestamp: 2026-08-31T23:59:00Z
@@ -10,10 +10,12 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.001.md
   - .factory/specs/behavioral-contracts/ss-07/BC-2.07.002.md
-input-hash: "1d64308"
+input-hash: "92dbe15"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.22 (ADR-030-Stage2b/2026-08-31): PromoteRetireChannel BC renumbered (SS-04→SS-02; 4 TVs): BC-2.04.011 row retired from SS-04 inventory; BC-2.02.009 row registered under SS-02 (4 TVs, same contract). New BC-2.04.011 (SS-04, 5 TVs): Trajectory Compaction Isolation. SS-02 subtotal +4 (BC-2.02.009); SS-04 net +1 (−4 PromoteRetire row + 5 new compaction row). Grand total 787→792 canonical + 11 GTV = 798→803. BC count 139→140."
+  - "3.21 (ADR-030-Stage2a/2026-08-31): 5 new CAP-040 BC inventory rows registered (ADR-030 Research Orchestrator Composition). BC-2.02.007 (SS-02, 4 TVs): LedgerChannel dedup-idempotent append; VP-017 proptest anchor. BC-2.02.008 (SS-02, 3 TVs): LedgerChannel first-appearance ordering. BC-2.04.009 (SS-04, 3 TVs): TrajectoryWriter::put_record durability. BC-2.04.010 (SS-04, 3 TVs): TrajectoryReader::replay ascending step_idx order. BC-2.04.011 (SS-04, 4 TVs): PromoteRetireChannel promote/retire lifecycle. SS-02 subtotal +7; SS-04 subtotal +10. Grand total 770→787 canonical + 11 GTV = 781→798. BC count 134→139."
   - "3.20 (round-49/F-P2A205-01+F-P2A205-02/2026-08-31): BC-2.09.007 TV count 10→13 (+3 TVs: TV-011 step-3 UUID redaction — plain-tool error with UUID run_id → `<redacted-id>` via sanitize_internal_ids (SEC-BOUND-001 step 3; F-P2A205-01); TV-012 URL-userinfo redaction — `scheme://user:pass@host` → `<redacted>` (pattern 5; CWE-522; F-P2A205-02); TV-013 Basic-auth redaction — `Basic <base64>` → `<redacted>` (pattern 6; CWE-522; F-P2A205-02)). SS-09 subtotal 69→72. Grand total 767→770 canonical + 11 GTV = 778→781."
   - "3.19 (round-48/F-P2A203-02+F-P2A201-01/2026-08-30): BC-2.09.007 TV count 9→10 (+1 TV: TV-010 Bearer-token pattern added to canonical sanitizer — Authorization: Bearer <token> matched by redact_credentials 4th pattern; production-grade addition; CWE-522; F-P2A203-02). BC-2.12.007 TV count 6→9 (+3 TVs: TV-007 SSE boundary credential-leak redacted; TV-008 SSE boundary sanitize_internal_ids pass; TV-009 SSE boundary static-replace for panic; SEC-BOUND-001 3rd external boundary; F-P2A201-01/F-P2A203-01). SS-09 subtotal 68→69. SS-12 subtotal 57→60. Grand total 763→767 canonical + 11 GTV = 774→778."
   - "3.18 (round-47/F-P2A197-01+F-P2A197-02/2026-08-30): BC-2.12.003 TV count 11→13 (+2 TVs: TV-012 E-GRAPH-011 conditional-edge panic → static 'internal error' + source_node suppressed ({INV-007} extended; CWE-209; F-P2A197-01); TV-013 credential-in-Run.error.message → redact_credentials 3-step sanitization pipeline ({INV-008} External-Boundary Error-Sanitization; CWE-209/532; F-P2A197-02)). SS-12 subtotal 55→57. Grand total 761→763 canonical + 11 GTV = 772→774."
@@ -80,6 +82,9 @@ changelog:
 | BC-2.02.004 | SS-02 | 5 | — | `TV-NNN` | **RG** | EphemeralValue cleared after super-step |
 | BC-2.02.005 | SS-02 | 6 | — | `TV-NNN` | | Conditional edge routing |
 | BC-2.02.006 | SS-02 | 6 | — | `TV-NNN` | | Send API fan-out |
+| BC-2.02.007 | SS-02 | 4 | — | `TV-NNN` | | LedgerChannel dedup-idempotent append; VP-017 proptest anchor (CAP-040) |
+| BC-2.02.008 | SS-02 | 3 | — | `TV-NNN` | | LedgerChannel first-appearance ordering (CAP-040) |
+| BC-2.02.009 | SS-02 | 4 | — | `TV-NNN` | | PromoteRetireChannel promote/retire lifecycle; idempotent ops (CAP-040; renumbered from BC-2.04.011 per ADR-030 §Decision 3) |
 | BC-2.03.001 | SS-03 | 6 | — | `TV-NNN` | | BSP determinism; VP seed |
 | BC-2.03.002 | SS-03 | 5 | — | `TV-NNN` | | Concurrent LastValue → InvalidUpdateError |
 | BC-2.03.003 | SS-03 | 5 | — | `TV-NNN` | | Task-identity sort order |
@@ -91,6 +96,9 @@ changelog:
 | BC-2.04.006 | SS-04 | 4 | — | table (unlabelled) | | Triple-address uniqueness; VP seed |
 | BC-2.04.007 | SS-04 | 4 | — | table (unlabelled) | | Encryption covers state AND events |
 | BC-2.04.008 | SS-04 | 8 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process); §Invariant-5 EC-007+TV-007 FtsEncryptionIncompatible |
+| BC-2.04.009 | SS-04 | 3 | — | `TV-NNN` | | TrajectoryWriter::put_record durability; process-restart survival (CAP-040) |
+| BC-2.04.010 | SS-04 | 3 | — | `TV-NNN` | | TrajectoryReader::replay ascending step_idx order (CAP-040) |
+| BC-2.04.011 | SS-04 | 5 | — | `TV-NNN` | | Trajectory Compaction Isolation — atomic crash-safe compaction; crash-isolated segment swap; retained-record protection (CAP-040; ADR-030 §Decision 2) |
 | BC-2.05.001 | SS-05 | 5 | — | `TV-NNN` | | Interrupt + durable suspend |
 | BC-2.05.002 | SS-05 | 5 | — | `TV-NNN` | | FIFO resume order |
 | BC-2.05.003 | SS-05 | 5 | — | `TV-NNN` | | Node re-executes from start on resume |
@@ -201,7 +209,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 8 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (134 authored BCs):** 770 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **781 total vectors** across 134 BC files.
+**Total vectors (140 authored BCs):** 792 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **803 total vectors** across 140 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -352,6 +360,8 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.22 | 2026-08-31 | ADR-030-Stage2b: PromoteRetireChannel BC renumbered SS-04→SS-02 (BC-2.02.009, +4 TVs). New BC-2.04.011 (SS-04, +5 TVs): Trajectory Compaction Isolation. Grand total 787→792 canonical + 11 GTV = 803. BC count 139→140. | ADR-030-Stage2b |
+| 3.21 | 2026-08-31 | ADR-030-Stage2a: 5 new CAP-040 BC inventory rows added. BC-2.02.007 (+4 TVs), BC-2.02.008 (+3 TVs), BC-2.04.009 (+3 TVs), BC-2.04.010 (+3 TVs), BC-2.04.011 (+4 TVs). Grand total 770→787 canonical + 11 GTV = 798. BC count 134→139. | ADR-030-Stage2a |
 | 3.20 | 2026-08-31 | round-49/F-P2A205-01+F-P2A205-02: BC-2.09.007 TV count 10→13 (+TV-011 step-3 UUID sanitize_internal_ids; +TV-012 URL-userinfo pattern 5; +TV-013 Basic-auth pattern 6). SS-09 subtotal 69→72. Grand total 767→770 canonical + 11 GTV = 781. | round-49 F-P2A205-01+F-P2A205-02 |
 | 3.19 | 2026-08-30 | round-48/F-P2A203-02+F-P2A201-01: BC-2.09.007 TV count 9→10 (+TV-010 Bearer-token pattern in redact_credentials canonical sanitizer; CWE-522). BC-2.12.007 TV count 6→9 (+TV-007/008/009 SSE boundary SEC-BOUND-001 3rd external boundary). SS-09 subtotal 68→69. SS-12 subtotal 57→60. Grand total 763→767 canonical + 11 GTV = 778. | round-48 F-P2A203-02+F-P2A201-01 |
 | 3.18 | 2026-08-30 | round-47/F-P2A197-01+F-P2A197-02: BC-2.12.003 TV count 11→13 (+TV-012 E-GRAPH-011 conditional-edge panic→static "internal error"+source_node suppressed {INV-007}; +TV-013 credential-in-Run.error.message→redact_credentials 3-step pipeline {INV-008}; both CWE-209/532). SS-12 subtotal 55→57. Grand total 761→763 canonical + 11 GTV = 774. | round-47 F-P2A197-01+F-P2A197-02 |

@@ -1,20 +1,21 @@
 ---
 document_type: module-criticality
 level: L3
-version: "2.19"
+version: "2.20"
 status: active
 producer: architect
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd-supplements/module-criticality.md
   - .factory/specs/architecture/ARCH-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
-input-hash: "9a1c0fa"
+input-hash: "885ead3"
 traces_to: ARCH-INDEX.md
 lifecycle: "Mutable through Phase 5; frozen after Phase 5 gate passes."
 note: "This is the architecture-view criticality. The prd-supplements/module-criticality.md is the PO draft; this file is authoritative post-Phase 1b."
 changelog:
+  - "2.20 (ADR-030 Stage 1/2026-08-31): Add `checkpoint::trajectory` MEDIUM row (pregolya-checkpoint; SS-04; TrajectoryWriter+TrajectoryReader execution; no Kani VP — Effectful Shell; MEDIUM consistent with checkpoint::sqlite/memory/postgres sibling pattern; ADR-030 Decision 2). Add `core::trajectory` definitions-only row (pregolya-core; SS-04; TrajectoryRecord/TrajectoryWriter/TrajectoryReader type definitions only; no kill rate obligation; ADR-009 Option 3 precedent; ADR-030 Decision 2). Classification Summary: MEDIUM 40→41; definitions-only 7→8; Total 89→91; tiered 82→83. Breakdown note updated. input-hash updated (module-decomposition.md §Changelog (v1.61) input drift)."
   - "2.19 (round-49/F-P2A207-02+F-P2A207-03/2026-08-30): Add `core::invocation_context` definitions-only row (pregolya-core; SS-11; trait-in-core precedent; BC-2.11.001–006; no kill rate obligation). Classification Summary: definitions-only 6→7; Total 88→89. Breakdown note updated. input-hash refreshed (9a1c0fa — module-decomposition.md input changed: invocation_context row added there in same burst)."
   - "2.18 (round-26/F-P2A115-04+O-P2A115-07/2026-08-28): F-P2A115-04 MED — Iron Law: add `mcp::registry` MEDIUM row (pregolya-mcp; SS-09; `ToolRegistry` Arc<RwLock<HashMap<String, Arc<dyn DynTool>>>>; `register`/`get`/`list` operations; shared by mcp::server dispatch and mcp::discovery population; BC-2.09.006/007/008 §Architecture Anchors; no Kani VP; MEDIUM consistent with mcp::interceptor/mcp::session sibling pattern; canonical file `pregolya-mcp/src/registry.rs`). Classification Summary: MEDIUM 39→40; Total 87→88; tiered 81→82. Breakdown note: 38→39 MEDIUM module-level. O-P2A115-07 OBS — `mcp::ingress` HIGH VP obligation note added: concrete Phase-6 Kani P1 commitment for DI-012 guardrail-dispatch correctness invariant (BC-2.09.003); replaces prior open 'will be authored by the architect' deferral. VP census UNCHANGED at 17 (no new VP seeded; Phase-2 seed scheduled). input-hash refreshed (7ec5915)."
   - "2.17 (round-25/F-P2A111-03/2026-08-28): Iron Law — add `mcp::session` MEDIUM row (pregolya-mcp; SS-09; `McpSessionGuard` RAII; `SessionSource::OnDemand`; `Connection` enum; BC-2.09.002/005 anchors; no Kani VP — R11 RAII invariant testable by integration; MEDIUM consistent with mcp::client/mcp::discovery sibling pattern; canonical file `pregolya-mcp/src/session.rs`). Iron Law — add `mcp::interceptor` MEDIUM row (pregolya-mcp; SS-09; `ToolCallInterceptor` trait; `_build_interceptor_chain`; BC-2.09.002 anchor; no Kani VP; MEDIUM consistent with mcp sibling pattern; canonical file `pregolya-mcp/src/interceptor.rs`). Required by module-decomposition.md §pregolya-mcp (SS-09) mcp::session/mcp::interceptor row additions. Classification Summary: MEDIUM 37→39 (36→38 module-level); Total 85→87; tiered 79→81. Breakdown note updated."
@@ -125,6 +126,7 @@ changelog:
 | `core::config` | — | pregolya-core | SS-01 | MEDIUM | — | ≥ 80% | P5 |
 | `checkpoint::memory` | — | pregolya-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
 | `checkpoint::postgres` | — | pregolya-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
+| `checkpoint::trajectory` | — | pregolya-checkpoint | SS-04 | MEDIUM | — | ≥ 80% | P5 |
 | `server::cron` | — | pregolya-server | SS-12 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::container` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
 | `sandbox::seatbelt` | — | pregolya-sandbox | SS-13 | MEDIUM | — | ≥ 80% | P5 |
@@ -153,6 +155,7 @@ changelog:
 | `core::context_mutation` | definitions-only | pregolya-core | SS-01 | — | — | — (no kill rate obligation) | — |
 | `core::write_guard` | definitions-only | pregolya-core | SS-15 | — | — | — (no kill rate obligation) | — |
 | `core::invocation_context` | definitions-only | pregolya-core | SS-11 | — | — | — (no kill rate obligation) | — |
+| `core::trajectory` | definitions-only | pregolya-core | SS-04 | — | — | — (no kill rate obligation) | — |
 
 > **D21+burst-224 additions (v1.4):** `core::serializable` (Reviver) and `vectorstores::similarity` added as CRITICAL (Kani P0 proof obligations VP-010 and VP-009 respectively). `prompts::injection_guard`, `core::serializable` (LcSerializable), `core::embeddings` added as HIGH (Kani P1 and proptest P1 proof obligations VP-006/007/008). `vectorstores::mmr` added as MEDIUM (MMR-only selection algorithm; VP-009 relocated to vectorstores::similarity in burst-224). Definitions-only D21 artifacts (core::guardrail per ADR-014 Decision 6) excluded per no-row precedent.
 
@@ -198,12 +201,12 @@ changelog:
 |------|-------------|
 | CRITICAL | 12 |
 | HIGH | 28 |
-| MEDIUM | 40 |
+| MEDIUM | 41 |
 | LOW | 2 |
-| — (definitions-only/exempt) | 7 |
-| **Total** | **89** |
+| — (definitions-only/exempt) | 8 |
+| **Total** | **91** |
 
-> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 39 MEDIUM module-level (incl. mcp::graph_tool added GAP-01/ADR-029; mcp::session and mcp::interceptor added round-25; mcp::registry added round-26) + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 82 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier). 7 definitions-only/exempt (core::documents, memory::skills, core::guardrail, core::action_risk, core::context_mutation, core::write_guard, core::invocation_context added round-49).
+> Module/crate breakdown: 12 CRITICAL module-level (incl. core::serializable counted here — highest tier) + 24 HIGH module-level (incl. macros::tool, macros::entrypoint, macros::task added FIX-BURST-275-reopened; core::tool added FIX-BURST-278; core::serializable LcSerializable row excluded — counted once in CRITICAL per F-P210-01) + 4 HIGH crate-level (pregolya-openai/pregolya-anthropic/pregolya-ollama BaseChatModel + pregolya-macros crate-level roll-up) + 40 MEDIUM module-level (incl. mcp::graph_tool added GAP-01/ADR-029; mcp::session and mcp::interceptor added round-25; mcp::registry added round-26; checkpoint::trajectory added ADR-030) + 1 MEDIUM crate-level (pregolya-standard-tests) + 2 LOW crate-level (xtask + pregolya-community) = 83 tiered (distinct-module count; core::serializable has rows in both CRITICAL and HIGH but is one distinct module counted in its highest tier). 8 definitions-only/exempt (core::documents, memory::skills, core::guardrail, core::action_risk, core::context_mutation, core::write_guard, core::invocation_context added round-49, core::trajectory added ADR-030).
 
 ## CRITICAL Module — Security Profile
 

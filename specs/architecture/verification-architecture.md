@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.29"
+version: "2.31"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
@@ -27,7 +27,8 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.005.md
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
-input-hash: "8d2dcc7"
+  - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
+input-hash: "b368976"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 ---
@@ -39,7 +40,7 @@ decisions: [D17, D21, D23]
 
 ## [Section Content]
 
-This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the seventeen committed VP obligations (VP-001–VP-016 + VP-006-B), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-006-B is the SEC-003 multi-pair few-shot injection mandate (proptest P1 belt-and-suspenders for the VP-006 Arm 2 Kani harness). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}).
+This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the nineteen committed VP obligations (VP-001–VP-018 + VP-006-B), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-006-B is the SEC-003 multi-pair few-shot injection mandate (proptest P1 belt-and-suspenders for the VP-006 Arm 2 Kani harness). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}). VP-017 is the ADR-030 LedgerChannel dedup-idempotent append proptest P1 (BC-2.02.007 {DI-014}; praxist-pattern research orchestrator additive primitive). VP-018 is the BC-2.04.011 TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; no committed retained record lost or mutated by compaction; durable audit record integrity for the research orchestrator session trajectory).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -71,7 +72,7 @@ on a `Future` will fail at verification time. Consequences:
 
 ## Committed VP Obligations (D17-Q7 + R11 + D21 + D23)
 
-Seventeen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-006-B (SEC-003 multi-pair few-shot mandate) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction) plus VP-016 (GAP-01/ADR-029 GraphAgentTool state-isolation):
+Nineteen VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-006-B (SEC-003 multi-pair few-shot mandate) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction) plus VP-016 (GAP-01/ADR-029 GraphAgentTool state-isolation) plus VP-017 (ADR-030 LedgerChannel dedup-idempotency) plus VP-018 (BC-2.04.011 TrajectoryCompactor retention-integrity):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -92,11 +93,15 @@ Seventeen VPs committed before v1.0 release — VP-001..005 (original five) plus
 | VP-014 | BC-2.01.005 + BC-2.01.006 | DI-016 | `core::runnable` | proptest | 3 | P1 |
 | VP-015 | BC-2.09.007 {INV-003} | DI-010 | `mcp::sanitize` | unit | 3 | P1 |
 | VP-016 | BC-2.09.008 {INV-001} | DI-010 | `mcp::graph_tool` | proptest | 3 | P1 |
+| VP-017 | BC-2.02.007 | DI-014 | `graph::channels` | proptest | 3 | P1 |
+| VP-018 | BC-2.04.011 {INV-001} | DI-002 | `checkpoint::trajectory` | proptest | 3 | P1 |
 
-**Total: 17 VPs — 6 P0 / 11 P1 | Tool breakdown: Kani ×9, proptest ×5, integration ×2, unit ×1**
+**Total: 19 VPs — 6 P0 / 13 P1 | Tool breakdown: Kani ×9, proptest ×7, integration ×2, unit ×1**
 
 > **D-273 VP-015 tool-type fix (GAP-01/2026-08-26):** VP-015 tool corrected from 'integration' to 'unit' — VP-015.md frontmatter is authoritative per CLAUDE.md rule 4 (VP file supersedes architecture doc).
 > **SEC-003 VP-006-B (SEC-review-adjudication/2026-08-26):** VP-006-B proptest P1 added for multi-pair few-shot injection mandate. Total 16→17 VPs; P1 10→11; proptest 4→5.
+> **ADR-030 VP-017 (ADR-030 Stage 1/2026-08-31):** VP-017 proptest P1 added for LedgerChannel dedup-idempotency. Total 17→18 VPs; P1 11→12; proptest 5→6.
+> **BC-2.04.011 VP-018 (2026-08-31):** VP-018 proptest P1 added for TrajectoryCompactor retention-integrity. Total 18→19 VPs; P1 12→13; proptest 6→7.
 
 ## Provable Properties Catalog
 
@@ -184,7 +189,7 @@ fn workspace_confinement_harness() {
     let path = PathBuf::from_components(&path_components);
     match canonicalize_beneath_root_pure(&base, &path) {
         Ok(p) => kani::assert(p.starts_with(&base), "result must be within base"),
-        Err(PregolyaError { code: "E-SBXD-001", .. }) => {},
+        Err(e) if e.code == "E-SBXD-001" => {}, // WorkspaceEscape — path traversal detected
         Err(_) => {}, // other errors allowed (e.g., path does not exist in model)
     }
 }
@@ -805,6 +810,77 @@ Assertion: the `serde_json::Value` returned by `invoke_dyn` contains exactly the
 Feasibility: HIGH. Structural containment check on JSON objects; no async; no I/O in harness.
 See `vp-016-graph-agent-tool-state-isolation.md` §Feasibility Assessment for complete analysis.
 
+---
+
+**VP-017 — LedgerChannel Dedup-Idempotent Append** (`graph::channels`) `proptest P1 Phase 3`
+
+Property: For any sequence of `reduce` operations on a `LedgerChannel<T>`, reducing with an entry
+whose `entry_id()` is novel appends the entry; reducing with an entry whose `entry_id()` already
+exists in the ledger is a no-op. The accumulated `Vec<T>` contains entries in first-appearance order.
+
+Formal statement:
+```
+∀ entries: Vec<T>, let ledger = reduce_all(LedgerChannel::new(), entries):
+  ledger.len() == entries.iter().map(|e| e.entry_id()).collect::<IndexSet>().len()
+  ∧ ∀ i < ledger.len():
+      ledger[i].entry_id() == first_occurrence_id(entries, i)
+```
+
+**Why proptest (not Kani):** `LedgerChannel::reduce` is a pure function over an internal collection.
+The dedup invariant ranges over arbitrarily-long `Vec<T>` inputs. Kani's bounded model-checking
+is tractable for bounded-state machines and arithmetic but is not the right tool for collection
+invariants over variable-length sequences — proptest generates `Vec<TestEntry>` with a small-alphabet
+ID set to force frequent collision/dedup events, covering all three invariant branches with high probability.
+Consistent with VP-007, VP-008, VP-014, VP-016 which are all proptest for collection/sequence invariants.
+
+**Proptest harness:** See `vp-017-ledger-channel-append-dedup.md` §Proof Harness Skeleton for the complete harness.
+Harness function: `ledger_channel_dedup_idempotency`. Strategy: `Vec<TestEntry>` (0..20 entries, IDs from alphabet `[a-e]`).
+Three assertions: `ledger.len() == distinct_ids.len()`, no duplicate `entry_id`s, first-appearance order matches input.
+
+Feasibility: HIGH. Pure reducer function with no I/O or async. Small-alphabet ID generation ensures
+high collision probability. All three invariant branches exercised in a single proptest function.
+See `vp-017-ledger-channel-append-dedup.md` §Feasibility Assessment for complete analysis.
+
+---
+
+**VP-018 — TrajectoryCompactor Retention Integrity** (`checkpoint::trajectory`) `proptest P1 Phase 3`
+
+Property: For any trajectory of N records with ascending `step_idx` values, and any
+`TrajectoryRetentionPolicy` designating a subset as retained: (1) after `compact(run_id, policy)`
+returns `Ok(())`, every retained record appears in `replay(run_id)` with its original `step_idx`
+and `payload` unchanged — no retained record is removed or mutated ({INV-001}); (2) retained records
+appear in strictly ascending `step_idx` order in the post-compaction replay sequence — the retained
+sub-sequence preserves relative position ({INV-002}). {INV-003} crash-isolation (SQLite atomic
+transaction) is scoped to integration tests and is not covered by this proptest.
+
+Formal statement:
+```
+∀ records: Vec<TrajectoryRecord> (ascending step_idx), policy: TrajectoryRetentionPolicy:
+let retained = records.filter(|r| !policy.is_eligible(r));
+let post     = compact_and_replay(records, policy);  // Ok(post) branch
+  post.len() == retained.len()
+  ∧ ∀ i < post.len(): post[i].step_idx == retained[i].step_idx ∧ post[i].payload == retained[i].payload
+  ∧ ∀ i in 1..post.len(): post[i].step_idx > post[i-1].step_idx
+```
+
+**Why proptest (not Kani):** The retention-integrity property ranges over variable-length
+`Vec<TrajectoryRecord>` inputs — not tractable for Kani's bounded model checking. Additionally,
+`TrajectoryCompactor::compact` is async (SQLite backend I/O); Kani 0.67.0 has no native async
+support. The pure-core record-selection and ordering logic is extracted into an in-memory sync
+model for proptest verification. {INV-003} depends on SQLite `BEGIN IMMEDIATE` / `COMMIT`
+OS-level crash-recovery semantics, which cannot be modeled by proptest or Kani — covered by
+BC-2.04.011 TV-002 integration test.
+
+**Proptest harness:** See `vp-018-trajectory-compaction-retention-integrity.md` §Proof Harness Skeleton.
+Harness function: `trajectory_compaction_retention_integrity`. Strategy: `n_records in 0..=20`,
+`eligible_fraction in 0.0..=1.0` (frontier record always retained). Assertions: post length equals
+retained count, each retained record has identical `step_idx` + `payload`, post is strictly ascending.
+
+Feasibility: HIGH. The pure-core selection/filtering logic of `TrajectoryCompactor` is
+deterministic and sync. In-memory proptest model covers all path branches: empty trajectory,
+all-retained identity, frontier-only retained, partial compaction. No async I/O or OS-level
+crash semantics required. Phase 3 concurrent with the story implementing `checkpoint::trajectory`.
+
 ## Test-Sufficient (No Kani)
 
 Modules where behavioral testing is the primary verification method:
@@ -845,6 +921,8 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.31 | 2026-08-31 | architect | BC-2.04.011 | VP-018 added: proptest P1, `checkpoint::trajectory`, pregolya-checkpoint, BC-2.04.011 {INV-001}, DI-002, `trajectory_compaction_retention_integrity`. Human-approved VP mint: {INV-001}+{INV-002} corollary coverage; {INV-003} crash-isolation scoped to integration tests. Committed VP Obligations table: add VP-018 row; update total 18→19 VPs, P1 12→13, proptest ×6→×7. §Section Content narrative updated (eighteen→nineteen VPs). §Should Prove section: add VP-018 entry. BC-2.04.011 added to inputs list. input-hash updated. |
+| 2.30 | 2026-08-31 | architect | ADR-030 Stage 1 | VP-017 added: proptest P1, `graph::channels`, pregolya-graph, BC-2.02.007 (draft), DI-014, `ledger_channel_dedup_idempotency`. ADR-030 Decision 3 (LedgerChannel dedup-idempotency). Committed VP Obligations table: add VP-017 row; update total 17→18 VPs, P1 11→12, proptest ×5→×6. §Section Content narrative updated (seventeen→eighteen VPs). §Should Prove section: add VP-017 entry. BC-2.02.007 added to inputs list (draft; PO authors in Stage 2). input-hash pending (BC-2.02.007 not yet authored). |
 | 2.29 | 2026-08-31 | architect | round-49/F-P2A205-02 | VP-015 §Should Prove section updated — `redact_credentials` pattern set expanded from 3 to 6 (adding Bearer token pattern 4, URL-embedded userinfo pattern 5, HTTP Basic auth pattern 6 per BC-2.09.007 {INV-003}(b) v2.5; CWE-522 closure). SEC-BOUND-001 steps-2+3 pipeline context documented (VP-015 covers step 2; step 3 non-VP-elevated per R38/F-P2A161-01-Option-B). Unit harness note updated to 7 test cases. VP catalog table UNCHANGED; VP count UNCHANGED: 17 total (6 P0 / 11 P1). input-hash updated: BC-2.09.007 input drift from v2.5 changes. |
 | 2.28 | 2026-08-28 | architect | round-25/F-P2A108-02 | Normalize doubled-path notation in §VP-012 feasibility prose. One occurrence of `` `pregolya-core::core::budget` `` replaced with `` `pregolya-core (core::budget)` `` (matches ADR-023 §Required-Inventory parenthetical form). No VP catalog, coverage-matrix, or harness content changed. |
 | 2.27 | 2026-08-27 | architect | round-16/F-P2A081-01 | VP-016 §Why proptest (not Kani): 'arbitrary `GraphState` instances with extra internal fields' → 'arbitrary `TestGraphState` instances (serialized as `serde_json::Value`) with extra internal fields' (F-P2A081-01 MED — `GraphState` is not a type/trait per ADR-029 §Symbol Grounding PHANTOM row; canonical harness struct is `TestGraphState`). input-hash updated to c3a2086. |

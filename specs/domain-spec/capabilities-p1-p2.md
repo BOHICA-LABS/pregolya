@@ -828,6 +828,92 @@ grounded in D-170 and ADR-026, not invented.
 
 ---
 
+## P1 — Research Orchestrator Composition Primitives (Wave 1+2, ADR-030)
+
+> **ADR-030 (2026-08-31):** Human-directed Phase-1 scope expansion.
+> Adds two additive composition primitives: (1) `checkpoint::trajectory` — durable audit-grade
+> `TrajectoryRecord` write/replay in pregolya-checkpoint; (2) `graph::channels` ledger types —
+> `LedgerChannel<T>` (dedup-idempotent accumulator) and `PromoteRetireChannel<T>`
+> (promote/retire lifecycle) in pregolya-graph. Both primitives compose with existing
+> StateGraph and CheckpointSaver APIs without modifying them.
+> Clean-room behavioral inspiration from the praxist-pattern research orchestrator; no code or
+> documentation copied. The pattern is expressed natively in pregolya terms.
+
+### CAP-040: Durable Trajectory Records and Ledger-Style State Channels (Research Orchestrator Primitives)
+
+Provide two additive composition primitives that enable the autonomous research orchestrator
+pattern in pregolya — where a StateGraph drives multi-generation generation-evaluation-commit
+cycles with durable audit trails and quality-diversity candidate tracking:
+
+**(1) Trajectory Primitives** (definitions in pregolya-core `core::trajectory`; execution in
+pregolya-checkpoint `checkpoint::trajectory`):
+
+- **`TrajectoryRecord`** — a `#[non_exhaustive]` struct capturing a single audit event in a
+  research run: `run_id: Uuid` (research-session identifier), `step_idx: u64` (logical-clock
+  position sourced from the checkpoint clock; DI-004 Monotonic Checkpoint Clock), `event_kind:
+  String` (non-empty event label, e.g., `"generation_complete"`), `payload: serde_json::Value`
+  (structured JSON; no credential material per DI-010 Credential Opacity).
+- **`TrajectoryWriter`** — an async trait (`async fn put_record(&self, record: TrajectoryRecord)
+  -> Result<(), PregolyaError>`) that durably commits `TrajectoryRecord`s to a storage slice
+  **isolated** from the `CheckpointSaver` rolling-context compaction (ADR-019). After `Ok(())`
+  returns, the record survives process restart (DI-002 Per-Task Durability). Storage errors
+  propagate as `Err(PregolyaError)` — no silent swallowing (DI-014).
+- **`TrajectoryReader`** — an async trait (`async fn replay(run_id: Uuid) ->
+  Result<Vec<TrajectoryRecord>, PregolyaError>`) that returns all records for a `run_id` in
+  **strictly ascending `step_idx` order**. An unknown or unused `run_id` returns `Ok(vec![])`
+  without error. Completeness is absolute: all committed records are returned, no pagination.
+
+**(2) Ledger-Style State Channels** (pregolya-graph, `graph::channels`):
+
+- **`LedgerEntry`** — a marker trait (`fn entry_id(&self) -> &str`) shared by both channel
+  entry types. Implementations declare stable, semantically meaningful identity keys.
+- **`LedgerChannel<T: LedgerEntry>`** — a `StateGraph` channel reducer type that accumulates
+  entries in a `Vec<T>` with **dedup-idempotent** semantics: a `T` with a novel `entry_id` is
+  appended to the end (monotonically non-decreasing length); a `T` with an already-seen
+  `entry_id` is a no-op (no error). Iteration order is first-appearance order — stable under
+  duplicate submissions. VP-017 (proptest P1, harness `ledger_channel_dedup_idempotency`)
+  formally verifies this property.
+- **`PromoteRetireOp<T: LedgerEntry>`** — a `#[non_exhaustive]` enum:
+  `Promote(T)` adds an entry to the active set (idempotent if already present);
+  `Retire(String)` removes an entry by `entry_id` (idempotent on absent `entry_id`).
+  Within a super-step, operations are processed in deterministic task-identity order (DI-001).
+- **`PromoteRetireChannel<T: LedgerEntry>`** — a `StateGraph` channel reducer that maintains
+  a `Vec<T>` active set via `PromoteRetireOp<T>` operations. The active set contains no
+  duplicate `entry_id` values. Idempotent operations return the correct `Vec<T>` without
+  raising `Err` (DI-014). Used in quality-diversity allocation cycles where candidates
+  advance from pending to active and are retired when superseded or committed.
+
+**Composition pattern (clean-room, native pregolya):** A research orchestrator `StateGraph`
+can compose all three primitives independently:
+- A `LedgerChannel<Evidence>` field monotonically accumulates evidence entries across
+  generation super-steps; dedup ensures duplicate evidence from retry paths is harmless.
+- A `PromoteRetireChannel<Candidate>` field tracks which candidates are currently active;
+  the promote/retire lifecycle maps naturally onto generation → evaluation → commit/retire.
+- `TrajectoryWriter::put_record` records an audit event at each major step; the audit log
+  is isolated from compaction and replayable via `TrajectoryReader::replay` for reproducibility
+  review, debugging, or downstream quality-diversity analysis.
+The three types are independently composable — using one does not require using the others.
+
+**Authored BCs:**
+BC-2.02.007 (LedgerChannel dedup-idempotent append — VP-017 proptest anchor; DI-014/DI-001),
+BC-2.02.008 (LedgerChannel first-appearance ordering; DI-001),
+BC-2.02.009 (PromoteRetireChannel promote/retire lifecycle; DI-014/DI-001),
+BC-2.04.009 (TrajectoryWriter::put_record durability; DI-002/DI-014),
+BC-2.04.010 (TrajectoryReader::replay ascending step_idx order; DI-004/DI-014),
+BC-2.04.011 (Trajectory Compaction Isolation — atomic crash-safe compaction; DI-002/DI-004/DI-014).
+
+**Grounding:** ADR-030 human-directed Phase-1 scope expansion (2026-08-31). Behavioral
+inspiration is clean-room — no code or documentation from any Fair Source or proprietary
+implementation was copied. The composition primitives are expressed natively in pregolya terms
+via existing StateGraph channel infrastructure and CheckpointSaver tier isolation.
+**Architecture authority:** ADR-030.
+**Subsystems:** SS-02 (pregolya-graph, `graph::channels`) for ledger channel types;
+SS-04 (pregolya-checkpoint, `checkpoint::trajectory`) for trajectory primitives. **Wave:** 1
+(ledger channels — co-delivered with StateGraph infrastructure), 2 (trajectory — co-delivered
+with CheckpointSaver infrastructure).
+
+---
+
 ## P2 — Extended Capabilities (Post-v1 Candidates)
 
 > **D23 update (2026-07-22):** CAP-017 (cross-session memory) and CAP-018 (tool retry)

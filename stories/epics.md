@@ -1,17 +1,18 @@
 ---
 document_type: epics
-version: "1.4"
+version: "1.5"
 status: active
 producer: story-writer
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 2
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 ---
 
 # Epics — pregolya Phase 2
 
-> **22 epics spanning 39 stories across Wave 1 (27), Wave 2 (11), Wave 6 (1).**
+> **22 epics spanning 41 stories across Wave 1 (28), Wave 2 (12), Wave 6 (1).**
 > Epic IDs are stable references. Stories within each epic share a primary subsystem.
+> (Census preamble update to 42 total stories pending state-manager STATE.md sync.)
 
 ## Epic Catalog
 
@@ -21,9 +22,9 @@ traces_to: .factory/specs/architecture/ARCH-INDEX.md
 | E-02 | Proc-Macro Attributes | 1 | S-1.07 | 5 | SS-08 | pregolya-macros |
 | E-03 | Text Splitting — Recursive Unicode Splitter | 1 | S-1.08 | 8 | SS-07 | pregolya-splitters |
 | E-04 | Sandboxed Tool Execution | 1 | S-1.09 | 13 | SS-13 | pregolya-sandbox |
-| E-05 | Durable Checkpointing | 1 | S-1.10, S-1.11 | 16 | SS-04 | pregolya-checkpoint |
+| E-05 | Durable Checkpointing | 1+2 | S-1.10, S-1.11, S-2.12 | 24 | SS-04 | pregolya-checkpoint |
 | E-06 | Long-Horizon Memory | 1 | S-1.12, S-1.13 | 16 | SS-15 | pregolya-memory |
-| E-07 | StateGraph Definition | 1 | S-1.14, S-1.15 | 13 | SS-02 | pregolya-graph |
+| E-07 | StateGraph Definition + CAP-040 Channel Primitives | 1 | S-1.14, S-1.15, S-1.28 | 18 | SS-02 | pregolya-graph |
 | E-08 | BSP Execution Engine | 1 | S-1.16 | 13 | SS-03 | pregolya-graph |
 | E-09 | Streaming Event Taxonomy | 1 | S-1.17, S-1.24 | 10 | SS-06 | pregolya-graph |
 | E-10 | Budget Governance and Compaction | 1 | S-1.18, S-1.25 | 13 | SS-10 | pregolya-graph |
@@ -72,12 +73,20 @@ confinement via `canonicalize_beneath_root`, symlink escape prevention, macOS Se
 and env var sanitization. VP-003 (Kani P0) anchors BC-2.13.004 workspace confinement — Kani harness
 must be produced in Phase 6.
 
-### E-05 — Durable Checkpointing (Wave 1, 16 pts)
+### E-05 — Durable Checkpointing (Wave 1+2, 24 pts)
 
 Full checkpoint lifecycle: `put_writes` durability contract, monotonic logical-clock IDs, fork
 lineage, crash recovery (no re-execution), triple-address session uniqueness (VP-002), at-rest
 encryption, and FTS conversation search over checkpoint history. SQLite and in-memory backends.
 The graph execution engine (E-08) depends on this epic.
+
+**CAP-040 addition (S-2.12, Wave 2, 8 pts):** Durable audit trajectory (`TrajectoryWriter`,
+`TrajectoryReader`, `TrajectoryCompactor`) — write-once append (BC-2.04.009), ascending-step-index
+replay (BC-2.04.010), and crash-isolated compaction via SQLite `BEGIN IMMEDIATE`/`COMMIT`
+(BC-2.04.011). VP-018 (proptest P1) anchors BC-2.04.011 `{INV-001}` compaction isolation.
+New `trajectory_records` table is isolated from CheckpointSaver tables per ADR-009 definitions-in-core
+separation. Requires error codes E-TRAJ-001 through E-TRAJ-004 (flagged NEW — must be minted in
+error-taxonomy during S-2.12 implementation).
 
 ### E-06 — Long-Horizon Memory (Wave 1, 16 pts)
 
@@ -86,12 +95,18 @@ GDPR erasure (all tiers), SkillStore load-on-demand registry, guarded memory wri
 (`MemoryWriteGuard`), and frozen-snapshot context mutation. Security-sensitive: guards must
 be fail-closed.
 
-### E-07 — StateGraph Definition (Wave 1, 13 pts)
+### E-07 — StateGraph Definition + CAP-040 Channel Primitives (Wave 1, 18 pts)
 
 `StateGraph` node/edge API, `LastValue`/`Append`/`BarrierValue`/`EphemeralValue` channel reducers,
 conditional edge routing functions, and `Send` API dynamic fan-out. Red Gate BCs:
 `NamedBarrierValue` missing-writer boundary (BC-2.02.003) and `EphemeralValue` cleared-after-super-step
 (BC-2.02.004).
+
+**CAP-040 addition (S-1.28, 5 pts):** `LedgerChannel<T>` dedup-idempotent append and first-appearance
+ordering (BC-2.02.007/008) and `PromoteRetireChannel<T>` active-set lifecycle with idempotent
+`Promote`/`Retire` operations (BC-2.02.009). All three types are pure channel reducers in
+`pregolya-graph/src/channels.rs` (`graph::channels` module). VP-017 (proptest P1) anchors
+`LedgerChannel` dedup-idempotency per BC-2.02.007 `{PC-001, INV-001}`.
 
 ### E-08 — BSP Execution Engine (Wave 1, 13 pts)
 
@@ -180,6 +195,7 @@ not in S-6.01's pipeline. Gated until all Wave 1 + Wave 2 implementation stories
 
 ## Changelog
 
+- 1.5 (Stage-3/CAP-040/2026-08-31): E-07 extended with S-1.28 — LedgerChannel (BC-2.02.007/008) and PromoteRetireChannel (BC-2.02.009) pure channel reducers; VP-017 proptest P1 anchored to S-1.28. E-05 extended with S-2.12 — TrajectoryWriter/Reader/Compactor (BC-2.04.009/010/011); VP-018 proptest P1 anchored to S-2.12. E-07 points 13→18; E-05 points 16→24; product-epic point total 303→316. Story count 39→41 product stories; wave counts W1 27→28, W2 11→12.
 - 1.4 (round-8/O-P2A071-A+B/2026-08-26): E-22 VP description reworded — stale closed range "VP-001 through VP-014" replaced with accurate Kani-only scope statement; proptest/integration/unit VPs noted as Phase-3 anchor-story responsibility. Changelog backfilled with 1.0 initial row; 1.2 content unrecoverable from static analysis (git log is authoritative for 1.2 changes).
 - 1.3 (round-7/F-P2A068-01/2026-08-26): E-21 rollup 13→16 reconciled to constituent story points S-2.10(8)+S-2.11(8)=16; product-epic point total 300→303 (S-2.11 5→8 GAP-01 growth, D-275); F-P2A068-01 round-7.
 - 1.1 (P2A-044 F-09/2026-08-24): EPIC-MAINT points TBD→5 to match STORY-INDEX S-MAINT-001.

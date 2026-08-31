@@ -3971,3 +3971,35 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
 ### STATE: v6.36, timestamp 2026-08-30T23:59:59Z
+
+---
+
+## D-326 Checkpoint (archived from STATE.md v6.38 on 2026-08-31)
+
+<!-- D-326 checkpoint — archived when D-327 checkpoint replaced it. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. round-49 CLOSED (D-326). Frozen-HEAD streak gates on new spec HEAD post-D-326 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. redact_credentials canonical set now 6 patterns (URL-userinfo+Basic-auth; BC-2.09.007 TV-011/012/013). SEC-BOUND-001 R06-PP partial-pipeline gate implemented. InvocationContext DI seam homed (pregolya-core::invocation_context). TV 770 canonical. NEXT: dispatch round-50 (P2A-208/209/210/211 + GATE-READY) on NEW frozen spec HEAD post-D-326 push; streak 0/3.
+
+### HEADS
+- develop: `bfe0592` (settings.json SessionStart hook + CLAUDE.md §Heartbeat-Auto-Recovery added; spec-only — no code yet); factory-artifacts: `81249c0` (D-326 round-49 fix-burst CLOSED — PUSHED). No .worktrees/. No open PRs.
+
+### D-326 ROUND-49 CLOSE
+- F-P2A205-01 [HIGH, CWE-209/532]: BC-2.09.007 (v2.4 to v2.5) SEC-BOUND-001 2-step pipeline: step-1 N/A (DI-008 plain tools); step-2 `redact_credentials`; step-3 `sanitize_internal_ids` (UUID-shaped pass with u64-CheckpointId carve-out). TV-011 minted. ADR-029 (v2.18 to v2.19) mis-attribution corrected.
+- F-P2A205-02 [HIGH, CWE-522/532]: BC-2.09.007 {INV-003}(b) extended 4 to 6 patterns (pattern-5 URL-userinfo; pattern-6 HTTP Basic auth). TV-012/TV-013 minted. VP-015 harness 4 to 7 test cases. Propagated to BC-2.09.008/BC-2.12.003/BC-2.12.007.
+- O-P2A205-03 [MED, pgap]: verify-security-literal-propagation.sh R06-PP rule added; 3 self-probes. L-240 codified.
+- F-P2A207-01 [HIGH]: S-2.10 (v1.4 to v1.5) forbidden-deps carve-out: `mcp::graph_tool` REQUIRES `pregolya-graph::CompiledStateGraph` per ADR-029.
+- F-P2A207-02 [HIGH]: InvocationContext homed to `pregolya-core/src/invocation_context.rs`; interface-definitions §InvocationContext; module-decomp/criticality rows; BC-2.11.001/BC-2.11.002 preconditions. L-241 codified.
+- F-P2A207-03 [MED]: BC-2.09.003 (v1.8 to v1.9) phantom context.rs replaced with canonical InvocationContext.
+- F-P2A204-01 [MED]: FtsSearchConfig<'a> lifetime annotation at mirror sites (BC-2.04.008, S-1.11).
+- F-P2A204-02 [OBS adjudicated]: RPITIT Box<dyn> for `bind_tools`/`with_structured_output` (ADR-005 §Send-Bounded-RPITIT). L-242 codified.
+- trajectory-tail →2→3→0→4. GATE-READY=YES 13/13. BC-INDEX §Changelog (v4.10); VP-INDEX §Changelog (v1.33); ARCH-INDEX §Changelog (v1.60); STORY-INDEX §Changelog (v1.36).
+- Census: BC 134 / VP 17 / EC 138 / TV 770 canonical (781 incl GTV) / stories 40 (39+1) / points 303. streak 0/3. L-240/L-241/L-242 codified.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+### STATE: v6.37, timestamp 2026-08-31T00:00:00Z

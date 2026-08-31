@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.03"
+version: "3.04"
 status: active
-producer: product-owner
+producer: architect
 timestamp: 2026-08-31T00:00:00Z
 phase: 1d
 changelog:
+  - "3.04 (ADR-030 Stage 1/2026-08-31): Add §Trajectory Primitive section (pregolya-core core::trajectory + pregolya-checkpoint checkpoint::trajectory; ADR-030 Decision 2): TrajectoryRecord struct (#[non_exhaustive], run_id/step_idx/event_kind/payload), TrajectoryWriter trait (async put_record), TrajectoryReader trait (async replay). Add §LedgerChannel section (pregolya-graph graph::channels; ADR-030 Decision 3): LedgerEntry trait (entry_id), LedgerChannel<T> struct (dedup-idempotent append), PromoteRetireOp<T> enum (Promote/Retire variants), PromoteRetireChannel<T> struct (promote/retire lifecycle). BC anchors: BC-2.02.007, BC-2.02.008, BC-2.04.009, BC-2.04.010, BC-2.04.011. VP-017 (proptest P1 LedgerChannel dedup-idempotency, BC-2.02.007 anchor)."
   - "3.03 (round-49/F-P2A204-01/2026-08-31): F-P2A204-01 [HIGH] §CheckpointSaver::fts_search — `FtsSearchConfig` missing lifetime parameter. Updated §fts_search doc-comment `config` annotation: `FtsSearchConfig { thread_id: Option<&str> }` → `FtsSearchConfig<'_> { thread_id: Option<&'_ str> }`. Updated method signature: `config: FtsSearchConfig,` → `config: FtsSearchConfig<'_>,`. Lifetime required on stable Rust (E0106); BC-2.04.008 {PRE-003} is the authoritative BC (same burst)."
   - "3.02 (round-49/F-P2A207-02+F-P2A202-01/2026-08-30): F-P2A202-01 [OBS] §BaseChatModel — `bind_tools` and `with_structured_output` edition-2024 RPITIT capture adjudication. `bind_tools(&self) -> Result<impl BaseChatModel, PregolyaError>`: RPITIT in edition 2024 auto-captures `&self` lifetime, making the return non-`'static` and preventing pipeline composition, storage, and spawning. Decision: `Box<dyn BaseChatModel + Send + Sync>` (owned/escapable — `'static` by default; enables `.pipe()`, `Arc` storage, `JoinSet::spawn`). `with_structured_output<T>(&self) -> impl Runnable<Vec<Message>, T>`: same capture issue; `T` bound gains `+ Send + 'static` (required for `Box<dyn Runnable>` to be `Send + Sync`; enables multi-threaded pipeline composition). Decision: `Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`. ADR-005 §BaseChatModel adjudication + §Send-Bounded RPITIT table updated in same burst. F-P2A207-02 [HIGH] Add §InvocationContext section — canonical DI seam for per-run guardrail hook registry; SS-11; BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003}; follows trait-in-core precedent."
   - "3.01 (round-44/F-P2A184-01+F-P2A184-02+F-P2A184-03/2026-08-30): F-P2A184-01 [HIGH] §BaseChatModel::stream_chat E0562 fix — `async fn stream_chat(...)` desugars to nested `impl Trait` inside `impl Future<Output = Result<impl Stream<...>, PregolyaError>>`, which is not permitted on stable Rust (E0562 class; same as Runnable::stream R43 / F-P2A180-01). Boxed the return: changed `async fn stream_chat(...) -> Result<impl Stream<Item = Result<AiMessageChunk, PregolyaError>>, PregolyaError>` to `fn stream_chat(...) -> impl std::future::Future<Output = Result<Pin<Box<dyn Stream<Item = Result<AiMessageChunk, PregolyaError>> + Send>>, PregolyaError>> + Send`. ADR-005 §BaseChatModel adjudication updated and §Send-Bounded RPITIT table BaseChatModel row updated in same burst (see ADR-005 §BaseChatModel adjudication and §Send-Bounded RPITIT table). F-P2A184-02 [MED] §DynRunnableAdapter::stream sketch body corrected: `R::stream(...).await` yields `Result<Pin<Box<dyn Stream<Item = Result<O, PregolyaError>> + Send>>, PregolyaError>` (outer Result must be matched). Sketch updated: on `Err(e)` → fold to single-item error stream via `futures::stream::once`; on `Ok(stream)` → `.map()` to convert O→Value then `Box::pin` (item-type change O→Value requires re-boxing in the adapter). §Runnable::stream doc-comment corrected: 'no re-boxing needed in the adapter' replaced with outer-Result + item-type-change note (re-boxing IS needed in the adapter for O→Value conversion). F-P2A184-03 [MED] §DynTool doc-comment stale 'impl Stream return' updated to 'RPITIT `impl Future` return — opaque, non-dyn-compatible' (post-R43, `Runnable::stream` returns an RPITIT `impl Future` whose output boxes the stream; calling it 'impl Stream return' is inaccurate)."
@@ -119,7 +120,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "1711b89"
+input-hash: "cf06b1a"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -2871,6 +2872,123 @@ default_on_ceiling = "halt"    # "halt" | "escalate"
 ```
 
 **BC anchor:** BC-2.12.005, BC-2.13.001, BC-2.13.002
+
+## Trajectory Primitive
+
+**Crates:** `pregolya-core` (core::trajectory — definitions-only), `pregolya-checkpoint` (checkpoint::trajectory — execution)
+**Subsystem:** SS-04 (Checkpoint / State Persistence)
+**ADR:** ADR-030 Decision 2
+
+The trajectory primitive provides durable, append-only audit-grade recording of run-step events for research orchestrator loops and other iterative execution patterns. Type definitions live in `pregolya-core` (ADR-009 Option 3 pattern — definitions in core, execution in domain crate). Execution (SQLite/backend storage) lives in `checkpoint::trajectory`, isolated from the `CheckpointSaver` compaction path.
+
+```rust
+// pregolya-core (core::trajectory) — definitions only, no execution logic
+
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrajectoryRecord {
+    pub run_id: Uuid,
+    pub step_idx: u64,
+    pub event_kind: String,
+    pub payload: serde_json::Value,
+}
+
+#[async_trait]
+pub trait TrajectoryWriter: Send + Sync {
+    async fn put_record(&self, record: TrajectoryRecord) -> Result<(), PregolyaError>;
+}
+
+#[async_trait]
+pub trait TrajectoryReader: Send + Sync {
+    async fn replay(&self, run_id: Uuid) -> Result<Vec<TrajectoryRecord>, PregolyaError>;
+}
+```
+
+### TrajectoryRecord Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `run_id` | `Uuid` | Identifies the orchestrator run; groups all records for a single execution |
+| `step_idx` | `u64` | Monotonically increasing within a run; enables replay ordering |
+| `event_kind` | `String` | Semantic event label (e.g., `"hypothesis.proposed"`, `"experiment.result"`) |
+| `payload` | `serde_json::Value` | Arbitrary structured event data; schema determined by orchestration layer |
+
+### TrajectoryWriter::put_record
+
+**Preconditions:** `record.run_id` is a valid non-nil UUID; `record.step_idx` is consistent with prior records for the same `run_id` (backend enforces monotonicity).
+
+**Postcondition (BC-2.04.009 anchor):** After successful return, the record is durably persisted; a subsequent `TrajectoryReader::replay(record.run_id)` will include it in the returned sequence.
+
+**Error:** `E-TRAJ-001 TrajectoryWriteFailed` on backend I/O error.
+
+### TrajectoryReader::replay
+
+**Postcondition (BC-2.04.010 anchor):** Returns all `TrajectoryRecord` values persisted for `run_id` in ascending `step_idx` order. Returns `Ok(vec![])` for an unknown `run_id` (not an error).
+
+**Error:** `E-TRAJ-003 TrajectoryReadFailed` on backend I/O error.
+
+**BC anchor:** BC-2.04.009 (TrajectoryWriter::put_record durability), BC-2.04.010 (TrajectoryReader::replay ordering)
+
+---
+
+## LedgerChannel
+
+**Crate:** `pregolya-graph` (graph::channels)
+**Subsystem:** SS-02 (Graph / Execution Engine)
+**ADR:** ADR-030 Decision 3
+**VP:** VP-017 (proptest P1, dedup-idempotent append, BC-2.02.007 anchor)
+
+`LedgerChannel<T>` is a dedup-idempotent, append-only channel variant for accumulating evidence or results over iterative research loops. An entry is keyed by `entry_id()`; appending an entry whose `entry_id()` is already present is a no-op (idempotency). This enables safe retry of hypothesis/experiment steps without double-counting results.
+
+`PromoteRetireChannel<T>` extends the ledger model with explicit lifecycle transitions: entries can be promoted (added to active set) or retired (removed by entry ID). This supports hypothesis qualification/disqualification workflows.
+
+```rust
+// pregolya-graph (graph::channels) — execution
+
+/// Trait marking a type as a keyed ledger entry.
+/// `entry_id()` returns the dedup key; equal `entry_id()` values are the same logical entry.
+pub trait LedgerEntry: Clone + Send + Sync + 'static {
+    fn entry_id(&self) -> &str;
+}
+
+/// Dedup-idempotent append-only channel.
+/// Appending an entry whose `entry_id()` is already present is a no-op (BC-2.02.007 INV-1).
+/// The first-appearance order of unique entries is preserved in iteration (BC-2.02.008).
+#[derive(Debug, Clone)]
+pub struct LedgerChannel<T: LedgerEntry> {
+    // Internal: IndexMap<String, T> preserving insertion order with O(1) dedup lookup.
+    _inner: PhantomData<T>,
+}
+
+/// Lifecycle operation on a PromoteRetireChannel.
+#[non_exhaustive]
+pub enum PromoteRetireOp<T: LedgerEntry> {
+    /// Add or re-activate an entry (dedup: if entry_id() already active, no-op).
+    Promote(T),
+    /// Remove an entry by entry_id; no-op if the entry_id is not present.
+    Retire(String),
+}
+
+/// Channel that supports promote/retire lifecycle semantics for QD (Qualification/Disqualification)
+/// allocation in research orchestrator loops (BC-2.02.009 anchor).
+#[derive(Debug, Clone)]
+pub struct PromoteRetireChannel<T: LedgerEntry> {
+    _inner: PhantomData<T>,
+}
+```
+
+### LedgerChannel Invariants
+
+| Invariant | Description | BC / VP Anchor |
+|-----------|-------------|----------------|
+| Novel-append adds entry | `append(e)` where `e.entry_id()` not present → entry appears in subsequent `entries()` | BC-2.02.007 {INV-1} |
+| Seen-noop is no-op | `append(e)` where `e.entry_id()` already present → `entries()` unchanged, returns `Ok(())` | BC-2.02.007 {INV-2} |
+| First-appearance ordering | `entries()` returns entries in the order of first-successful `append`, not lexicographic | BC-2.02.008 |
+| Dedup-idempotent append (formal) | proptest: ∀ entry sequence with duplicates, `LedgerChannel::append` on each entry ≡ append of deduplicated prefix | VP-017 |
+
+**BC anchor:** BC-2.02.007 (LedgerChannel dedup-idempotent append), BC-2.02.008 (first-appearance ordering), BC-2.02.009 (PromoteRetireChannel promote/retire lifecycle)
+
+---
 
 ## Cargo Feature Flags
 

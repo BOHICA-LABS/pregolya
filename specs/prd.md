@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.29"
+version: "1.31"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "806aa8d"
+input-hash: "7658105"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
@@ -29,6 +29,8 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.31 (ADR-030-Stage2b/2026-08-31): PromoteRetireChannel subsystem ruling applied (architect ADR-030 §Decision 3). BC-2.04.011 (PromoteRetireChannel) renamed to BC-2.02.009 (SS-02, pregolya-graph) — BC-2.02.009 row added to §2.02; old anomaly note removed from §2.04 header; §7 RTM BC-2.02.009 row added. BC-2.04.011 reused for new 6th additive BC: Trajectory Compaction Isolation (SS-04, pregolya-checkpoint, P1, DI-002/DI-004/DI-014, Wave 2) — row added to §2.04; §7 RTM BC-2.04.011 updated (module pregolya-checkpoint; test types U, I). §5b BC file count 139→140. §7 RTM totals 139→140 (51 P0 / 85→86 P1 / 3 P2). §12.4 BC-2.04.011 row updated to Trajectory Compaction Isolation. §12.5 differentiator row updated. §12.6 cross-subsystem anomaly note removed."
+  - "v1.30 (ADR-030-Stage2a/2026-08-31): CAP-040 research orchestrator primitives propagated to PRD. §2.02 header updated (CAP-003 → CAP-003/CAP-040); BC-2.02.007 (LedgerChannel dedup-idempotent append, P1, DI-014/DI-001) and BC-2.02.008 (LedgerChannel first-appearance ordering, P1, DI-001) added. §2.04 header updated (CAP-005 → CAP-005/CAP-040); BC-2.04.009 (TrajectoryWriter::put_record durability, P1, DI-002/DI-014), BC-2.04.010 (TrajectoryReader::replay ascending step_idx order, P1, DI-004/DI-014), and BC-2.04.011 (PromoteRetireChannel promote/retire lifecycle, P1, DI-014) added. §5b BC file count 134→139. §7 RTM +5 rows; totals 134→139 (51 P0 / 80→85 P1 / 3 P2). §12 Use-Case Composition Reference: Autonomous Research Orchestrator added. input-hash updated (capabilities-p1-p2.md added CAP-040). Clean-room behavioral inspiration from the praxist-pattern research orchestrator; no code or documentation copied."
   - "v1.29 (round-7/F-P2A067-02/2026-08-26): §5 error-code name sibling sweep (TD-VSDD-060). Four stale names corrected to error-taxonomy.md canonical names: (1) E-CORE-001 InvalidContentBlock → StrictContentBlockValidation (taxonomy message prefix, per taxonomy §CORE row); (2) E-PROV-002 Timeout → ProviderTimeout (taxonomy message prefix, per taxonomy §PROV row); (3) E-MCP-002 TransportError → McpTransportError (taxonomy message prefix, per taxonomy §MCP row); (4) E-VS-001 ZeroNormVector → DegenerateNormEmbedding (taxonomy changelog v1.45 rename — ZeroNormVector was never canonical; pre-rename name was ZeroNormEmbedding, post-rename is DegenerateNormEmbedding). Taxonomy not modified — all four defects are PRD-side labels. Full sibling sweep performed: all other 34 code-name pairs in the table verified against taxonomy body rows — no additional stale names found."
   - "v1.28 (GAP-01/D-275/2026-08-26): BC census propagation — BC-2.09.008 (GraphAgentTool; mcp::graph_tool) added by ADR-029. §5b BC file count 133→134; §7 RTM Totals 133→134 (51 P0 / 79→80 P1 / 3 P2). test-vectors.md callout updated to 134 BC files."
   - "v1.27 (P2A-049/F-049-01-sibling-sweep/2026-08-25): BC-2.18.002 title cell synced to canonical H1 (POL-7 downstream drift; older FIX-BURST-256 H1 form superseded). §2.18 table: 'ChatPromptTemplate Multi-Message Rendering with PromptValue and Per-Message MessageProvenance' → 'ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue>'. BC-2.18.004 and BC-2.18.005 title cells verified correct — no change."
@@ -200,7 +202,13 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.01.007 | RunnablePassthrough Identity Pass-Through and Inspect Side-Effect Contract | P1 | DI-014 | ss-01/BC-2.01.007.md |
 | BC-2.01.008 | RunnableAssign Dict Augmentation — Merge Semantics and Dict-Input Validation | P1 | DI-014, DI-016 | ss-01/BC-2.01.008.md |
 
-### 2.02 StateGraph Definition (CAP-003) — P0
+### 2.02 StateGraph Definition (CAP-003, CAP-040) — P0/P1
+
+> **ADR-030 (2026-08-31) CAP-040 ledger channel expansion.** Two new ledger-style channel
+> types added to `graph::channels` (pregolya-graph): `LedgerChannel<T>` (dedup-idempotent
+> evidence accumulator; VP-017 proptest P1 anchor) and `PromoteRetireChannel<T>`
+> (promote/retire lifecycle for quality-diversity candidate tracking). Both compose freely
+> with existing StateGraph channels. Architecture authority: ADR-030.
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
@@ -210,6 +218,9 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.02.004 | EphemeralValue cleared-after-super-step semantics (R10) | P0 | — | ss-02/BC-2.02.004.md |
 | BC-2.02.005 | Conditional edge routing function | P0 | — | ss-02/BC-2.02.005.md |
 | BC-2.02.006 | Send API dynamic fan-out | P0 | — | ss-02/BC-2.02.006.md |
+| BC-2.02.007 | LedgerChannel dedup-idempotent append (CAP-040; VP-017 proptest anchor) | P1 | DI-014, DI-001 | ss-02/BC-2.02.007.md |
+| BC-2.02.008 | LedgerChannel first-appearance ordering (CAP-040) | P1 | DI-001 | ss-02/BC-2.02.008.md |
+| BC-2.02.009 | PromoteRetireChannel promote/retire lifecycle (CAP-040) | P1 | DI-014, DI-001 | ss-02/BC-2.02.009.md |
 
 ### 2.03 BSP Graph Execution (CAP-004) — P0
 
@@ -219,7 +230,15 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.03.002 | Concurrent LastValue write rejection (InvalidUpdateError) | P0 | DI-001 | ss-03/BC-2.03.002.md |
 | BC-2.03.003 | Deterministic reducer application order (task-identity sort) | P0 | DI-001, NE-17 | ss-03/BC-2.03.003.md |
 
-### 2.04 Durable Three-Tier Checkpointing (CAP-005) — P0
+### 2.04 Durable Three-Tier Checkpointing (CAP-005, CAP-040) — P0/P1
+
+> **ADR-030 (2026-08-31) CAP-040 trajectory expansion.** Three new trajectory primitives
+> added to `checkpoint::trajectory` (pregolya-checkpoint, definitions in pregolya-core):
+> `TrajectoryRecord` (audit event struct), `TrajectoryWriter::put_record` (durable write),
+> `TrajectoryReader::replay` (ordered read). Storage is isolated from ADR-019 compaction.
+> BC-2.04.011 (ADR-030 §Decision 2) adds `TrajectoryCompactor` — atomic, crash-isolated compaction
+> that prevents unbounded trajectory storage growth without losing retained records.
+> Architecture authority: ADR-030.
 
 | BC ID | Title | Priority | DI | File |
 |-------|-------|----------|----|------|
@@ -231,6 +250,9 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.04.006 | Session triple-address uniqueness (thread_id, checkpoint_ns, checkpoint_id) — VP seed | P0 | DI-005, NE-12 | ss-04/BC-2.04.006.md |
 | BC-2.04.007 | Encryption at rest for both state payloads AND event payloads; rotation errors propagate | P0 | — (NE-11) | ss-04/BC-2.04.007.md |
 | BC-2.04.008 | FTS conversation search over checkpoint history (single-process; SQLite FTS5) | P1 | DI-002, DI-008, DI-014 | ss-04/BC-2.04.008.md |
+| BC-2.04.009 | TrajectoryWriter::put_record durability (CAP-040) | P1 | DI-002, DI-014 | ss-04/BC-2.04.009.md |
+| BC-2.04.010 | TrajectoryReader::replay ascending step_idx order (CAP-040) | P1 | DI-004, DI-014 | ss-04/BC-2.04.010.md |
+| BC-2.04.011 | Trajectory Compaction Isolation — atomic crash-safe compaction (CAP-040) | P1 | DI-002, DI-004, DI-014 | ss-04/BC-2.04.011.md |
 
 ### 2.05 HITL Interrupt / Resume (CAP-006) — P0
 
@@ -575,7 +597,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 ## 5b. Test Vectors
 
 > **Supplement:** `prd-supplements/test-vectors.md` — consolidated test-vector catalog
-> indexing the canonical test vectors embedded in all 134 BC files.
+> indexing the canonical test vectors embedded in all 140 BC files.
 > Primary consumers: test-writer, holdout-evaluator.
 
 ---
@@ -653,6 +675,9 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.02.004 | CAP-003, R-005 | pregolya-graph | P0 | U |
 | BC-2.02.005 | CAP-003 | pregolya-graph | P0 | U, I |
 | BC-2.02.006 | CAP-003 | pregolya-graph | P0 | I |
+| BC-2.02.007 | CAP-040, DI-014, DI-001 | pregolya-graph | P1 | U, P |
+| BC-2.02.008 | CAP-040, DI-001 | pregolya-graph | P1 | U, P |
+| BC-2.02.009 | CAP-040, DI-014, DI-001 | pregolya-graph | P1 | U |
 | BC-2.03.001 | CAP-004, NE-17 | pregolya-graph | P0 | P, K |
 | BC-2.03.002 | CAP-004, DI-001 | pregolya-graph | P0 | U, P |
 | BC-2.03.003 | CAP-004, DI-001, NE-17 | pregolya-graph | P0 | P, K |
@@ -663,6 +688,9 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.04.005 | CAP-005, DI-002 | pregolya-checkpoint | P0 | I, S |
 | BC-2.04.006 | CAP-005, DI-005, NE-12 | pregolya-checkpoint | P0 | P, K |
 | BC-2.04.007 | CAP-005, NE-11 | pregolya-checkpoint | P0 | U, I |
+| BC-2.04.009 | CAP-040, DI-002, DI-014 | pregolya-checkpoint | P1 | U, I |
+| BC-2.04.010 | CAP-040, DI-004, DI-014 | pregolya-checkpoint | P1 | U, I |
+| BC-2.04.011 | CAP-040, DI-002, DI-004, DI-014 | pregolya-checkpoint | P1 | U, I |
 | BC-2.05.001 | CAP-006, DI-003 | pregolya-graph | P0 | I |
 | BC-2.05.002 | CAP-006, DI-003 | pregolya-graph | P0 | U, I |
 | BC-2.05.003 | CAP-006, DI-003 | pregolya-graph | P0 | I |
@@ -774,7 +802,7 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.23.005 | CAP-037, DI-014, DI-015 | pregolya-tools | P1 | U, K |
 | BC-2.23.006 | CAP-038, DI-014 | pregolya-tools | P1 | U |
 
-**Totals:** 134 BCs — 51 P0 / 80 P1 / 3 P2
+**Totals:** 140 BCs — 51 P0 / 86 P1 / 3 P2
 
 ---
 
@@ -861,3 +889,83 @@ Full catalog: `prd-supplements/observability.md`.
 
 **SAP-1 obligation:** implementers adding a new `event_type` emission in any `crates/` file must add a
 same-commit catalog row to `prd-supplements/observability.md`. Missing rows are P1 findings in adversarial review.
+
+---
+
+## 12. Use-Case Composition Reference: Autonomous Research Orchestrator
+
+> **Authority:** ADR-030 (2026-08-31). Clean-room behavioral inspiration from the
+> praxist-pattern research orchestrator — no code or documentation copied. This section
+> describes how pregolya's existing and new primitives compose for this use-case pattern.
+
+### 12.1 Pattern Overview
+
+An autonomous research orchestrator runs a StateGraph that iterates over generation-evaluation-commit cycles to answer a complex research question. Each cycle:
+1. **Generates** candidate answers (one or more LLM nodes in parallel).
+2. **Evaluates** candidates for quality, coverage, and diversity.
+3. **Commits** the best candidate and **retires** losers, or loops back for another generation.
+4. **Records** an audit trail of every major event for reproducibility review.
+
+pregolya's existing StateGraph, CheckpointSaver, and HITL infrastructure already support most of this pattern. CAP-040 adds the two primitives that complete it:
+- `LedgerChannel<T>` — monotonic, dedup-idempotent evidence accumulation.
+- `PromoteRetireChannel<T>` — bidirectional candidate lifecycle tracking.
+- `TrajectoryWriter` / `TrajectoryReader` — durable audit trail isolated from compaction.
+
+### 12.2 Composable Primitives
+
+The three CAP-040 types are independently composable. None requires the others.
+
+| Primitive | Type | Contract | Wave |
+|-----------|------|----------|------|
+| `LedgerChannel<T>` | `StateGraph` channel | Dedup-idempotent monotonic accumulator; `T: LedgerEntry`; `Vec<T>` in first-appearance order | Wave 1 |
+| `PromoteRetireChannel<T>` | `StateGraph` channel | Active-set lifecycle via `PromoteRetireOp<T>` (Promote / Retire); `Vec<T>` with no duplicates | Wave 1 |
+| `TrajectoryWriter` / `TrajectoryReader` | Async trait | Durable-write / ordered-replay API; isolated from ADR-019 compaction; per-run `Vec<TrajectoryRecord>` in ascending `step_idx` order | Wave 2 |
+
+### 12.3 State Type Composition Example
+
+A research orchestrator state type can combine all three with existing channel types:
+
+```rust
+// Illustrative state type — actual field types determined at implementation
+struct ResearchState {
+    // Existing pregolya-graph channel types:
+    question: LastValue<String>,          // the research question (immutable after init)
+    iteration: LastValue<u32>,            // current generation number
+
+    // CAP-040 — new ledger channel types:
+    evidence: LedgerChannel<Evidence>,    // monotonically accumulates distinct evidence entries
+    candidates: PromoteRetireChannel<Candidate>, // tracks active candidates via promote/retire
+
+    // Existing checkpointing: checkpoint is automatic via CheckpointSaver
+    // CAP-040 — trajectory audit is a separate side-channel:
+    // (TrajectoryWriter is called explicitly by nodes that want to record audit events)
+}
+```
+
+No change to `StateGraph` construction or `CheckpointSaver` configuration is needed. `LedgerChannel` and `PromoteRetireChannel` are registered exactly like `Append` or `LastValue`.
+
+### 12.4 Behavioral Contract Traceability
+
+| BC ID | Contract | Invariant | Priority |
+|-------|----------|-----------|----------|
+| BC-2.02.007 | `LedgerChannel` dedup-idempotent append | DI-014 (no silent error), DI-001 (deterministic reducer) | P1 |
+| BC-2.02.008 | `LedgerChannel` first-appearance ordering | DI-001 (deterministic task-identity sort) | P1 |
+| BC-2.02.009 | `PromoteRetireChannel` promote/retire lifecycle | DI-014 (idempotent ops return correct set), DI-001 (deterministic task-identity order) | P1 |
+| BC-2.04.009 | `TrajectoryWriter::put_record` durability | DI-002 (per-task durability), DI-014 | P1 |
+| BC-2.04.010 | `TrajectoryReader::replay` ascending `step_idx` order | DI-004 (monotonic clock), DI-014 | P1 |
+| BC-2.04.011 | Trajectory Compaction Isolation — atomic crash-safe compaction | DI-002 (retained records survive), DI-004 (ascending order preserved), DI-014 (errors propagate) | P1 |
+
+### 12.5 Differentiator Mapping
+
+| Differentiator | BC Backing |
+|----------------|------------|
+| Dedup-idempotent evidence accumulation (retry-safe multi-generation loops) | BC-2.02.007 (VP-017 proptest), BC-2.02.008 |
+| Promote/retire candidate lifecycle (quality-diversity allocation) | BC-2.02.009 |
+| Durable, compaction-isolated audit trail for reproducibility review | BC-2.04.009, BC-2.04.010, BC-2.04.011 |
+
+### 12.6 Architecture Authority
+
+All implementation decisions for CAP-040 are governed by ADR-030. The four types are placed as follows:
+- `core::trajectory` (`pregolya-core`) — `TrajectoryRecord`, `TrajectoryWriter`, `TrajectoryReader`, `CompactionPolicy` trait/type definitions (ADR-009 definitions-in-core separation).
+- `checkpoint::trajectory` (`pregolya-checkpoint`) — concrete `TrajectoryWriter`, `TrajectoryReader`, and `TrajectoryCompactor` implementations; compaction uses SQLite atomic transaction.
+- `graph::channels` (`pregolya-graph`) — `LedgerEntry` trait, `LedgerChannel<T>`, `PromoteRetireOp<T>`, `PromoteRetireChannel<T>`.

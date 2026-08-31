@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.60"
+version: "1.63"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
@@ -17,6 +17,9 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.63 (BC-2.04.011/2026-08-31): VP-018 added — TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; checkpoint::trajectory; pregolya-checkpoint; DI-002; harness trajectory_compaction_retention_integrity). VP census: 18→19 VPs (P1 12→13; proptest ×6→×7). §Verification Properties table updated: VP-018 row added, summary count 18→19."
+  - "1.62 (ADR-030 Stage-4-ruling/2026-08-31): SUBSYSTEM RULING — PromoteRetireChannel canonical subsystem is SS-02 (graph::channels, pregolya-graph), not SS-04. BC-2.04.011 was authored by product-owner with PromoteRetireChannel content; that content must be reassigned to BC-2.02.009 (product-owner sweep pending). SS-02 BC range extended 001–008 → 001–009. SS-04 BC range unchanged at 001–011: BC-2.04.011 is restored to its ADR-030-original purpose (Trajectory Compaction Isolation) and must be re-authored by product-owner. ADR-030 §Consequences BC reservation table patched: BC-2.02.008 description updated to reflect actual PO authoring (LedgerChannel first-appearance ordering); BC-2.02.009 row added (PromoteRetireChannel Lifecycle Semantics). Old-to-new mapping for product-owner: BC-2.04.011 content → BC-2.02.009 (subsystem SS-02, crate pregolya-graph)."
+  - "1.61 (ADR-030 Stage 1/2026-08-31): ADR-030 registered — Research Orchestrator Composition Reference Architecture (praxist-inspired, clean-room behavioral; human-approved scope addition). New additive primitives: TrajectoryRecord/TrajectoryWriter/TrajectoryReader (pregolya-core core::trajectory + pregolya-checkpoint checkpoint::trajectory); LedgerEntry/LedgerChannel/PromoteRetireOp/PromoteRetireChannel (pregolya-graph graph::channels). ADR count 29→30. Document Map 29→30 ADR files (ADR-001 to ADR-030). SS-02 BC range 001–006 → 001–008 (BC-2.02.007 + BC-2.02.008 reservations). SS-04 BC range 001–008 → 001–011 (BC-2.04.009 + BC-2.04.010 + BC-2.04.011 reservations). VP-017 added (proptest P1; LedgerChannel dedup-idempotent append; BC-2.02.007 anchor; DI-014). Census: 134 BCs UNCHANGED (5 IDs reserved pending product-owner Stage 2: BC-2.02.007, BC-2.02.008, BC-2.04.009, BC-2.04.010, BC-2.04.011) / 17→18 VP / 138 EC / 40 stories. New modules in module-decomposition.md (core::trajectory definitions-only, checkpoint::trajectory MEDIUM) + module-criticality.md + purity-boundary-map.md."
   - "1.60 (round-49/F-P2A205-02-vp-catalog/2026-08-31): VP mirror — VP-015 description updated to document 6-pattern `redact_credentials` canonical set (URL-embedded userinfo pattern 5 + HTTP Basic auth pattern 6; CWE-522) and CWE-532/522 dual citation per BC-2.09.007 {INV-003}(b) v2.5. VP census UNCHANGED: 17 total (6 P0 / 11 P1). ADR count UNCHANGED: 29."
   - "1.59 (round-49/F-P2A207-02+F-P2A207-03+F-P2A205-01+F-P2A204-01+F-P2A202-01/2026-08-30): ADR-029 (v2.18→v2.19): F-P2A205-01 [HIGH, CWE-209/532] §SEC-BOUND-001 BC mis-attribution corrected (BC-2.09.007 generic tools/call step-1-N/A + BC-2.09.008 GraphAgentTool all-3-steps). F-P2A204-01 [MED] FtsSearchConfig two note-only mirror occurrences updated to lifetime-parameterized form. ADR-005 (v1.21→v1.22): F-P2A202-01 [OBS] bind_tools/with_structured_output edition-2024 RPITIT capture adjudication — Box<dyn ...> owned/escapable decision; §Send-Bounded RPITIT table updated. interface-definitions.md §InvocationContext+§bind_tools: bind_tools return changed to Box<dyn BaseChatModel + Send + Sync>; with_structured_output T bound gains Send+'static, return changed to Box<dyn Runnable + Send + Sync>; §InvocationContext section added (canonical DI seam; pregolya-core/src/invocation_context.rs; SS-11). module-decomposition.md §InvocationContext: core::invocation_context definitions-only row added; Iron Law 81→82 total, 6→7 exempt. module-criticality.md §InvocationContext: core::invocation_context definitions-only row added; Classification Summary 88→89 total, 6→7 exempt. Census UNCHANGED: 134 BCs / 17 VP / 138 EC / 40 stories. ADR count UNCHANGED: 29."
   - "1.58 (round-48/F-P2A200-01/2026-08-30): ADR-001 (rev-4→rev-5): F-P2A200-01 [HIGH] — Obligation 4 illustrative E-GRAPH-019 wording corrected to marked illustrative-only (prevents misreading static-replace as a realizable obligation beyond the Pregel-executor boundary). Census UNCHANGED: 134 BCs / 17 VP / 138 EC / 40 stories. ADR count UNCHANGED: 29."
@@ -98,7 +101,7 @@ changelog:
 | Tooling Selection | tooling-selection.md | formal-verifier | Kani, cargo-fuzz, cargo-mutants, proptest versions + config |
 | Verification Coverage Matrix | verification-coverage-matrix.md | consistency-validator | VP-to-module coverage status |
 
-**ADRs:** `.factory/specs/architecture/decisions/` — 29 files (ADR-001 to ADR-029)
+**ADRs:** `.factory/specs/architecture/decisions/` — 30 files (ADR-001 to ADR-030)
 
 **Module Criticality:** `.factory/specs/module-criticality.md`
 
@@ -123,9 +126,9 @@ changelog:
 | SS ID | Name | PRD Section | Primary Crate(s) | BCs | Wave |
 |-------|------|-------------|------------------|-----|------|
 | SS-01 | Core Primitives | 2.01 | pregolya-core | BC-2.01.001–008 | 1 |
-| SS-02 | StateGraph Definition | 2.02 | pregolya-graph | BC-2.02.001–006 | 1 |
+| SS-02 | StateGraph Definition | 2.02 | pregolya-graph | BC-2.02.001–009 | 1 |
 | SS-03 | BSP Execution Engine | 2.03 | pregolya-graph | BC-2.03.001–003 | 1 |
-| SS-04 | Durable Checkpointing | 2.04 | pregolya-checkpoint | BC-2.04.001–008 | 1 |
+| SS-04 | Durable Checkpointing | 2.04 | pregolya-checkpoint | BC-2.04.001–011 | 1 |
 | SS-05 | HITL Interrupt / Resume | 2.05 | pregolya-graph | BC-2.05.001–008 | 1 |
 | SS-06 | Streaming Event Taxonomy | 2.06 | pregolya-graph, pregolya-core | BC-2.06.001–006 | 1 |
 | SS-07 | Text Splitting | 2.07 | pregolya-splitters | BC-2.07.001–003 | 1 |
@@ -224,10 +227,11 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | ADR-027 | Stable BC Clause Anchors: Restructure-Proof AC→BC Traceability Convention (2026-08-23) | accepted — architect adjudication D-175; ~136 mis-anchor root-cause fix | — |
 | ADR-028 | Server Run Lifecycle Semantics: multitask_strategy interrupt/rollback/enqueue, delete_threads cascade atomicity, idempotency-key TTL basis (P2A-BC-scan/2026-08-25) | accepted — architect adjudication of 5 Phase 2 BC completeness gaps in SS-12 | SS-12 |
 | ADR-029 | Agent-as-MCP-Tool (GraphAgentTool) Wrapping — StateGraph Registration in ToolRegistry for MCP Exposure (GAP-01/2026-08-26) | accepted — human-approved v1 scope addition; new BC-2.09.008 + VP-016 + E-MCP-010 | SS-09 |
+| ADR-030 | Research Orchestrator Composition Reference Architecture (praxist-inspired, clean-room behavioral; ADR-030 Stage 1/2026-08-31; v1.1 ruling: BC-2.02.009 added for PromoteRetireChannel) | accepted — human-approved scope addition; composition-only use case (no new product crate); two additive primitives: TrajectoryRecord/TrajectoryWriter/TrajectoryReader (SS-04) + LedgerEntry/LedgerChannel/PromoteRetireOp/PromoteRetireChannel (SS-02); new VP-017 proptest P1; BC IDs BC-2.02.007/008/009 (SS-02) + BC-2.04.009/010/011 (SS-04) reserved for product-owner Stage 2 | SS-02, SS-04 |
 
 ## Verification Properties (VP-INDEX)
 
-17 VPs total (6 Kani P0 + 3 Kani P1 + 5 proptest P1 + 2 integration P1 + 1 unit P1 — see VP-INDEX; mirror of VP-INDEX, kept in sync via POL-9):
+19 VPs total (6 Kani P0 + 3 Kani P1 + 7 proptest P1 + 2 integration P1 + 1 unit P1 — see VP-INDEX; mirror of VP-INDEX, kept in sync via POL-9):
 
 | VP | BC Anchor | Module | Tool | Priority | Status |
 |----|-----------|--------|------|----------|--------|
@@ -248,5 +252,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-014 | BC-2.01.005 + BC-2.01.006 (RunnableParallel key-completeness) | `core::runnable` | proptest | P1 | draft |
 | VP-015 | BC-2.09.007 {INV-003} (MCP credential redaction — 6-pattern `redact_credentials`; CWE-532/522) | `mcp::sanitize` | unit | P1 | draft |
 | VP-016 | BC-2.09.008 {INV-001} (GraphAgentTool state-isolation) | `mcp::graph_tool` | proptest | P1 | draft |
+| VP-017 | BC-2.02.007 (LedgerChannel dedup-idempotent append; DI-014) | `graph::channels` | proptest | P1 | draft |
+| VP-018 | BC-2.04.011 {INV-001} (TrajectoryCompactor retention-integrity; DI-002) | `checkpoint::trajectory` | proptest | P1 | draft |
 
 > **D23 VPs SEEDED (burst-232):** VP-011/012/013 minted with BC anchors, Kani harness skeletons, and input-hashes. VP-011 (graph::hitl / PreToolCallHook fail-closed — Kani P0); VP-012 (core-budget / OnWatermark arithmetic — Kani P1); VP-013 (tools-shell / BashTool risk floor — Kani P1). BC-2.23.005 category RESOLVED: BC-2.23.005 §Postconditions (PC-4) category amended to VAL in burst-232 (error-taxonomy.md §Component: TOOLS; consistent with VP-013 harness).

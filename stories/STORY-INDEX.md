@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.36"
+version: "1.37"
 status: active
 producer: story-writer
-timestamp: 2026-08-30T23:59:00Z
+timestamp: 2026-08-31T00:00:00Z
 changelog:
+  - "1.37 (praxist-Stage-3/2026-08-31): 2 new stories added for the praxist research-orchestrator use case. S-1.28 (STORY-S-1.28-ledger-channel-promote-retire.md, v1.0, 5 pts): LedgerEntry trait + LedgerChannel<T> + PromoteRetireOp<T> + PromoteRetireChannel<T> in graph::channels (pregolya-graph); BC-2.02.007 + BC-2.02.008 + BC-2.02.009; VP-017 proptest P1 anchor; Wave 1 batch-1e; depends_on [S-1.14]; blocks []. S-2.12 (STORY-S-2.12-trajectory-writer-reader-compaction.md, v1.0, 8 pts): TrajectoryRecord/TrajectoryWriter/TrajectoryReader/TrajectoryRetentionPolicy type defs (core::trajectory, pregolya-core) + SqliteTrajectoryStore + TrajectoryCompactor impl (checkpoint::trajectory, pregolya-checkpoint); BC-2.04.009 + BC-2.04.010 + BC-2.04.011; VP-018 proptest P1 anchor; Wave 2 batch-2a; depends_on [S-1.10]; blocks []. E-07 extended: +S-1.28 (wave-1). E-05 extended: +S-2.12 (wave-2). Topological sort: S-1.28 inserts into batch 1e (deps satisfied by 1d); S-2.12 inserts into batch 2a (deps satisfied by Wave 1). DAG acyclicity confirmed: no new cycles. Census updated: 40→42 total (39→41 product, 1 maint unchanged); Wave 1 27→28; Wave 2 11→12; Wave 6 1 unchanged; points 303→316 (+5+8); BC 134→140 (+6: BC-2.02.007/008/009 SS-02 + BC-2.04.009/010/011 SS-04); VP story-anchors 13→15 (VP-017 →S-1.28, VP-018 →S-2.12); Red Gate stories 8→10 (S-1.28 VP-017 proptest RG + S-2.12 AC-004/AC-019/AC-020 RG)."
   - "1.36 (round-49/BC-propagation/2026-08-31): 7 story version bumps (story-writer round-49 Stage-3 fix-burst). BC-2.09.007 {INV-003} extended 4→6 patterns (URL-userinfo + HTTP Basic): S-2.11 (v1.33→v1.34) AC-013 + AC-039 (Arc-DI OBS); S-1.26 (v1.11→v1.12) AC-020 step 2; S-1.27 (v1.8→v1.9) AC-017 step 2. FtsSearchConfig<'a> lifetime: S-1.11 (v1.2→v1.3) AC-001 trait sig. bind_tools/with_structured_output owned Box<dyn> returns: S-2.07 (v1.2→v1.3) AC-007/AC-010. InvocationContext canonical home + S-2.10 forbidden-dep carve-out: S-1.19 (v1.8→v1.9) AC-026; S-2.10 (v1.4→v1.5) forbidden-deps ADR-029 §forbidden-deps. STORY-INDEX: level: L3 field added (GATE-READY gate-obs). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303."
   - "1.35 (round-48/F-P2A200-01+F-P2A200-02+F-P2A201-01+F-P2A203-01+F-P2A203-02+R06/2026-08-30): 3 story version bumps (story-writer round-48 fix-burst). S-1.26 (v1.10→v1.11): F-P2A200-01 [HIGH] — AC-019 catch-boundary mislocation corrected (E-GRAPH-011 is Pregel-caught Err, not server-caught; BC-2.12.003/{INV-007} authority); F-P2A200-02 [MED] — AC-020 sanitizer step 2/3 drift corrected per BC-2.12.003 {INV-008}; input-hash 6483719. S-1.27 (v1.7→v1.8): F-P2A201-01/F-P2A203-01 [HIGH, CWE-209/532] — AC-017/EC-015 SSE boundary SEC-BOUND-001 sanitization pipeline added per BC-2.12.007 {INV-004} (3rd external boundary); input-hash f84a2c4. S-1.17 (v1.4→v1.5): R06 BOUNDARY-SANITIZATION-GATE cross-ref — SEC-BOUND-001 reference added per corpus-wide gate sweep; input-hash 70c134c. Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303; TV 763→767 canonical (778 incl GTV)."
   - "1.34 (round-47/F-P2A197-01+F-P2A197-02/2026-08-30): 1 story version bump (story-writer round-47 fix-burst). S-1.26 (v1.9→v1.10): F-P2A197-01 [HIGH, CWE-209] — AC-019 + EC-020 (HTTP-boundary E-GRAPH-011 static-replace per BC-2.12.003 {INV-007}; E-GRAPH-011 ConditionalEdgePanic panics on HTTP path now statically replaced, not forwarded); F-P2A197-02 [MED, CWE-209/532] — AC-020 + EC-021 (3-step sanitization pipeline on Run.error.message per BC-2.12.003 {INV-008}; credential redaction path prior to HTTP surface); input-hash 3d8fb63. Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303; TV 761→763 canonical (774 incl GTV)."
@@ -144,6 +145,12 @@ input-hash: "69ed6f6"
 | S-1.26 | Thread, Assistant and Run CRUD — Durable HTTP Server | BC-2.12.001, BC-2.12.002, BC-2.12.003 | SS-12 | pregolya-server | P1 | 8 | [S-1.16, S-1.10, S-1.04] | draft |
 | S-1.27 | CronSchedule, SecurityConfig, Store Seams, and SSE Streaming | BC-2.12.004, BC-2.12.005, BC-2.12.006, BC-2.12.007 | SS-12 | pregolya-server | P1 | 8 | [S-1.26] | draft |
 
+### Wave 1 — pregolya-graph CAP-040 additions (LedgerChannel and PromoteRetireChannel)
+
+| ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
+|----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
+| S-1.28 | LedgerChannel Dedup-Idempotent Append and PromoteRetireChannel Active-Set Lifecycle | BC-2.02.007, BC-2.02.008, BC-2.02.009 | SS-02 | pregolya-graph | P1 | 5 | [S-1.14] | draft |
+
 ---
 
 ### Wave 2 — pregolya-core D21 additions (LC Serialization and Retrieval)
@@ -181,6 +188,12 @@ input-hash: "69ed6f6"
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-2.10 | MCP Client — Tool Discovery, Invocation Routing and Untrusted Ingress | BC-2.09.001, BC-2.09.002, BC-2.09.003, BC-2.09.004, BC-2.09.005 | SS-09 | pregolya-mcp | P1 | 8 | [S-1.19, S-1.04, S-1.22] | draft |
 | S-2.11 | MCP Server — Tool Advertisement and External Client Invocation | BC-2.09.006, BC-2.09.007, BC-2.09.008 | SS-09 | pregolya-mcp | P1 | 8 | [S-2.10, S-1.14] | draft |
+
+### Wave 2 — pregolya-checkpoint CAP-040 additions (Trajectory Writer, Reader, and Compaction)
+
+| ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
+|----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
+| S-2.12 | Durable Audit Trajectory — TrajectoryWriter, TrajectoryReader, and Compaction Isolation | BC-2.04.009, BC-2.04.010, BC-2.04.011 | SS-04 | pregolya-checkpoint | P1 | 8 | [S-1.10] | draft |
 
 ---
 
@@ -242,7 +255,7 @@ input-hash: "69ed6f6"
 | BC-2.01.007 | RunnablePassthrough Identity Pass-Through | S-1.05 | P1 |
 | BC-2.01.008 | RunnableAssign Dict Augmentation | S-1.05 | P1 |
 
-### SS-02 StateGraph Definition (6 BCs)
+### SS-02 StateGraph Definition (9 BCs)
 
 | BC ID | Title (abbreviated) | Story | Priority |
 |-------|---------------------|-------|---------|
@@ -252,6 +265,9 @@ input-hash: "69ed6f6"
 | BC-2.02.004 | EphemeralValue Cleared-After-Super-Step (RG) | S-1.14 | P0 |
 | BC-2.02.005 | Conditional Edge Routing Function | S-1.15 | P0 |
 | BC-2.02.006 | Send API Dynamic Fan-Out | S-1.15 | P0 |
+| BC-2.02.007 | LedgerChannel Dedup-Idempotent Append (VP-017) | S-1.28 | P1 |
+| BC-2.02.008 | LedgerChannel First-Appearance Ordering | S-1.28 | P1 |
+| BC-2.02.009 | PromoteRetireChannel Active-Set Lifecycle | S-1.28 | P1 |
 
 ### SS-03 BSP Execution Engine (3 BCs)
 
@@ -261,7 +277,7 @@ input-hash: "69ed6f6"
 | BC-2.03.002 | Concurrent LastValue Write Rejection | S-1.16 | P0 |
 | BC-2.03.003 | Deterministic Reducer Application Order | S-1.16 | P0 |
 
-### SS-04 Durable Checkpointing (8 BCs)
+### SS-04 Durable Checkpointing (11 BCs)
 
 | BC ID | Title (abbreviated) | Story | Priority |
 |-------|---------------------|-------|---------|
@@ -273,6 +289,9 @@ input-hash: "69ed6f6"
 | BC-2.04.006 | Session Triple-Address Uniqueness (VP-002) | S-1.10 | P0 |
 | BC-2.04.007 | Encryption at Rest — State and Event Payloads | S-1.10 | P0 |
 | BC-2.04.008 | FTS Conversation Search | S-1.11 | P1 |
+| BC-2.04.009 | put_record Durability and Write-Once Integrity | S-2.12 | P1 |
+| BC-2.04.010 | replay Ascending Step-Index and Completeness | S-2.12 | P1 |
+| BC-2.04.011 | Trajectory Compaction Isolation and Crash Safety (VP-018) | S-2.12 | P1 |
 
 ### SS-05 HITL Interrupt / Resume (8 BCs)
 
@@ -501,3 +520,5 @@ input-hash: "69ed6f6"
 | VP-014 | BC-2.01.005 + BC-2.01.006 | S-1.05 | P1 | pregolya-core |
 | VP-015 | BC-2.09.007 {INV-003} | S-2.11 | P1 | pregolya-mcp |
 | VP-016 | BC-2.09.008 {INV-001} | S-2.11 | P1 | pregolya-mcp |
+| VP-017 | BC-2.02.007 {PC-001, INV-001} | S-1.28 | P1 | pregolya-graph |
+| VP-018 | BC-2.04.011 {INV-001} | S-2.12 | P1 | pregolya-checkpoint |

@@ -1,18 +1,19 @@
 ---
 document_type: holdout-scenario-index
 level: ops
-version: "1.5"
+version: "1.6"
 status: active
 producer: product-owner
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/prd.md
   - .factory/planning/holdout-domains/domain-a-soc-analyst.md
   - .factory/planning/holdout-domains/domain-b-dark-factory.md
-input-hash: "3102b0a"
+input-hash: "106f852"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "1.6 (Domain-D/Stage-2b/2026-08-31): Domain D (Autonomous Research Orchestrator) added — 7 scenarios HS-D-001..007 covering generation-loop resume, panel deliberation, DIG pre-code gate, QD diversity allocation, multi-provider peer nodes, budget/guardrail gating, and audit-grade trajectory replay. Must-pass subset: HS-D-001/002/003/005 (4/7 = 57%, consistent with Domain B ratio). Aggregate totals updated to 22 scenarios, 14 must-pass. Phase-4 gate extended to include Domain D. Capability coverage map extended with new Domain D entries. Asymmetry Confirmation updated for Domain D. Asymmetry confirmed clean via verify-holdout-asymmetry.sh (ZERO WARN across 23 files)."
   - "1.5 (round-24/F-P2A105-01+F-P2A105-02+GAP-R24-01+GAP-R24-02/2026-08-28): EXHAUSTIVE asymmetry scrub of HS-C-001 (round-23 scrub was incomplete). §Failure Guidance Check 5 fail bullet and §Evaluation Rubric must-pass threshold paragraph purged of residual internal identifiers. §Edge Conditions EC-006 stale '(Contingent on gap resolution.)' marker removed. §Information Asymmetry Confirmation in HS-C-001 rewritten as CLOSED-SET declaration enumerating confirmed-FREE evaluator-facing sections (Scenario, Verification Approach, Evaluation Rubric, Failure Guidance, Edge Conditions) and exempted non-evaluator metadata sections (BC Linkage table, Coverage Gap note). HS-INDEX §Asymmetry Confirmation updated to reflect expanded confirmed-free section list."
   - "1.4 (round-23/F-1/2026-08-28): F-1 [BLOCKER]: HS-C-001 §Acceptance-Criteria asymmetry scrub applied — §Verification Approach step 8 and §Evaluation Rubric Check 5 purged of BC/VP/error-code identifiers; replaced with observable behavioral descriptions. §Asymmetry Confirmation claim (Scenario, Verification Approach, Evaluation Rubric sections free of BC IDs, VP IDs, error code identifiers, and implementation structure references) is now confirmed accurate for all three sealed domains."
   - "1.3 (GAP-01-RESOLVED/2026-08-26): HS-C-001-GAP-01 RESOLVED — BC-2.09.008 (GraphAgentTool; mcp::graph_tool; ADR-029) human-approved v1 scope addition (2026-08-26). Check 5 promoted to first-class must-pass; contingency note removed. HS-C-001 now covers all 7 primitives including StateGraph→Tool wrapping. Domain C coverage gap closed."
@@ -33,9 +34,9 @@ changelog:
 
 - Mean holdout satisfaction ≥ 0.85 (across all active scenarios)
 - Each `must_pass` scenario individually ≥ 0.60
-- All three sealed holdout domains (Domain A, Domain B, Domain C) pass their domain-level gate
+- All four sealed holdout domains (Domain A, Domain B, Domain C, Domain D) pass their domain-level gate
 
-> **Note on domain count:** The product brief references five design-forcing holdout analysis domains (D8, D22). Of these, two were promoted to sealed Phase 4 acceptance scenarios at Phase 2: Domain A (Virtual SOC Analyst) and Domain B (Dark Factory / Autonomous Software Pipeline). Domain C (Flowloom Embedding Host) was added after Phase 2 via a targeted authoring request (2026-08-26) with provenance tag `origin: flowloom-embedding`. The three remaining design-forcing domains were not promoted to sealed scenarios. The gate criterion above applies to all three sealed domains.
+> **Note on domain count:** The product brief references five design-forcing holdout analysis domains (D8, D22). Of these, two were promoted to sealed Phase 4 acceptance scenarios at Phase 2: Domain A (Virtual SOC Analyst) and Domain B (Dark Factory / Autonomous Software Pipeline). Domain C (Flowloom Embedding Host) was added after Phase 2 via a targeted authoring request (2026-08-26) with provenance tag `origin: flowloom-embedding`. Domain D (Autonomous Research Orchestrator) was added via Stage 2b new use case authoring (2026-08-31) with provenance tag `origin: new-use-case-stage-2b`. The gate criterion above applies to all four sealed domains.
 
 ---
 
@@ -84,18 +85,36 @@ changelog:
 
 ---
 
+## Domain D — Autonomous Research Orchestrator
+
+| HS ID | Title | Category | Priority | Coverage Areas | Status |
+|-------|-------|----------|----------|----------------|--------|
+| HS-D-001 | Generation Loop Persistence and Evidence Resume | integration-boundaries | must-pass | graph_execution, checkpoint_resume, providers | active |
+| HS-D-002 | Panel-Topology Deliberation — Anonymized Cross-Review and Chair Reduction | integration-boundaries | must-pass | graph_execution, composition, providers, structured_output | active |
+| HS-D-003 | DIG Pre-Code Gate — Read-Only Contract Selection Before Implementation | integration-boundaries | must-pass | graph_execution, composition, structured_output, providers | active |
+| HS-D-004 | QD Diversity Allocation — Cohort Diversity Cap Enforcement | edge-case-combinations | should-pass | graph_execution, structured_output, composition | active |
+| HS-D-005 | Multi-Provider Peer Agent Nodes with Shared MCP Tool Access | integration-boundaries | must-pass | graph_execution, providers, mcp, tools, composition | active |
+| HS-D-006 | Budget and Guardrail Gating — Structured Refusal and Ceiling Enforcement | edge-case-combinations | should-pass | graph_execution, checkpoint_resume, providers | active |
+| HS-D-007 | Durable Audit-Grade Trajectory Replay | edge-case-combinations | should-pass | graph_execution, checkpoint_resume, streaming | active |
+
+**Domain D totals:** 7 scenarios, 4 must-pass, 3 should-pass.
+
+> **Must-pass subset rationale:** HS-D-001/002/003/005 (4/7 = 57%) selected as must-pass. These cover the critical integration-boundary behaviors: durable generation-loop resume, multi-agent panel deliberation, pre-implementation read-only gate enforcement, and multi-provider tool-access correctness. HS-D-004/006/007 (edge-case-combinations) are should-pass: they test important boundary conditions and determinism properties but are not blocking for the framework's core contract. This ratio is consistent with Domain B (4/7 = 57%) and maintains the overall must-pass ratio above 60%: 14/22 = 63.6%.
+
+---
+
 ## Aggregate Summary
 
 | Metric | Value |
 |--------|-------|
-| Total scenarios (Domain A + B + C) | 15 |
-| Must-pass scenarios | 10 |
-| Should-pass scenarios | 5 |
-| Must-pass ratio | 10/15 = 67% (> required 60%) |
+| Total scenarios (Domain A + B + C + D) | 22 |
+| Must-pass scenarios | 14 |
+| Should-pass scenarios | 8 |
+| Must-pass ratio | 14/22 = 63.6% (> required 60%) |
 | real-world-corpus scenarios | 2 (HS-A-005, HS-B-007) |
 | security-probes | 1 (HS-A-007) |
-| edge-case-combinations | 3 (HS-A-006, HS-B-004, HS-B-006) |
-| integration-boundaries | 9 |
+| edge-case-combinations | 6 (HS-A-006, HS-B-004, HS-B-006, HS-D-004, HS-D-006, HS-D-007) |
+| integration-boundaries | 13 |
 
 ---
 
@@ -103,15 +122,15 @@ changelog:
 
 | Capability Area | Exercised By |
 |-----------------|-------------|
-| composition | HS-A-001, HS-A-005, HS-A-007, HS-B-001, HS-B-005, HS-B-007 |
-| graph_execution | HS-A-002, HS-A-003, HS-A-004, HS-A-006, HS-B-001, HS-B-002, HS-B-003, HS-B-004, HS-B-005, HS-B-006, HS-C-001 |
-| checkpoint_resume | HS-A-003, HS-A-004, HS-B-002, HS-B-003, HS-B-004, HS-B-006, HS-C-001 |
+| composition | HS-A-001, HS-A-005, HS-A-007, HS-B-001, HS-B-005, HS-B-007, HS-D-002, HS-D-003, HS-D-004, HS-D-005 |
+| graph_execution | HS-A-002, HS-A-003, HS-A-004, HS-A-006, HS-B-001, HS-B-002, HS-B-003, HS-B-004, HS-B-005, HS-B-006, HS-C-001, HS-D-001, HS-D-002, HS-D-003, HS-D-004, HS-D-005, HS-D-006, HS-D-007 |
+| checkpoint_resume | HS-A-003, HS-A-004, HS-B-002, HS-B-003, HS-B-004, HS-B-006, HS-C-001, HS-D-001, HS-D-006, HS-D-007 |
 | hitl | HS-A-004, HS-B-003, HS-C-001 |
-| mcp | HS-A-002, HS-C-001 |
-| tools | HS-A-002, HS-A-007, HS-C-001 |
-| providers | HS-A-001, HS-A-002, HS-A-003, HS-A-005, HS-A-006, HS-B-001, HS-B-005, HS-B-007 |
-| streaming | HS-A-001, HS-A-006, HS-B-007, HS-C-001 |
-| structured_output | HS-A-001, HS-A-005, HS-B-001, HS-B-007 |
+| mcp | HS-A-002, HS-C-001, HS-D-005 |
+| tools | HS-A-002, HS-A-007, HS-C-001, HS-D-005 |
+| providers | HS-A-001, HS-A-002, HS-A-003, HS-A-005, HS-A-006, HS-B-001, HS-B-005, HS-B-007, HS-D-001, HS-D-002, HS-D-003, HS-D-005, HS-D-006 |
+| streaming | HS-A-001, HS-A-006, HS-B-007, HS-C-001, HS-D-007 |
+| structured_output | HS-A-001, HS-A-005, HS-B-001, HS-B-007, HS-D-002, HS-D-003, HS-D-004 |
 | retrieval | HS-B-007 |
 | server | HS-B-003, HS-C-001 |
 | tenancy | HS-C-001 |
@@ -146,3 +165,9 @@ evaluator's scenario narrative:
 
 This confirmed-free claim was verified exhaustively in round-24 for all three sealed domains
 (Domain A, B, C). HS-C-001 was the subject of the round-24 exhaustive scrub.
+
+Domain D (HS-D-001 through HS-D-007) was verified clean at authoring time (2026-08-31,
+Stage-2b burst). verify-holdout-asymmetry.sh reported ZERO evaluator-facing internal
+identifiers across all 23 HS-*.md files (PASS=1 WARN=0 FAIL=0). Domain D §Behavioral
+Contract Linkage tables and frontmatter behavioral_contracts arrays legitimately retain
+BC IDs as traceability metadata per the exempted sections policy above.

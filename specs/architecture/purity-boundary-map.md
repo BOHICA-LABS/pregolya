@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: purity-boundary-map
-version: "1.41"
+version: "1.42"
 status: active
 producer: architect
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -14,6 +14,7 @@ input-hash: "12ac4b8"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "1.42 (ADR-030 Stage 1/2026-08-31): Add `core::trajectory` Pure Core definitions-only row (pregolya-core; SS-04; TrajectoryRecord/TrajectoryWriter/TrajectoryReader type definitions only; no execution logic; ADR-030 Decision 2). Add `checkpoint::trajectory` Effectful Shell row (pregolya-checkpoint; SS-04; async SQLite/backend I/O; TrajectoryWriter+TrajectoryReader execution; ADR-030 Decision 2). Fix stale intro counts (v1.41 added core::invocation_context Pure Core row but did not update intro): 81→84 module-decomposition modules (75→76 tiered / 6→8 definitions-only/exempt); 89→92 total rows (36→38 Pure Core / 40→41 Effectful Shell / Boundary unchanged at 13). Combined fix for v1.41 invocation_context omission + ADR-030 additions."
   - "1.41 (round-49/F-P2A207-02-sibling/2026-08-31): module-canonicality sync — add `core::invocation_context` Pure Core definitions-only row following core::guardrail; canonical path `pregolya-core/src/invocation_context.rs`; SS-11; BC-2.11.001–006 {PRE-001} (ADR-014 Decision 6 / DI-012). Mirrors module-decomposition.md round-49 addition."
   - "1.40 (R37/F-P2A159-01/2026-08-29): F-P2A159-01 LOW (POL-4 semantic_anchoring_integrity) — mcp::registry Boundary row Effectful Part: 'inbound dispatch; BC-2.09.006 {PC-002}' corrected to split attribution: tools/list dispatch → BC-2.09.006 {PC-002}; tools/call dispatch → BC-2.09.007 {PC-001}. Sibling sweep: module-decomposition.md and verification-coverage-matrix.md corrected in the same burst. input-hash unchanged — no BC input changes."
   - "1.39 (round-35/F-P2A151-02-records/2026-08-29): Changelog reconciliation for R30 phantom registry-attribution. The live body mcp::registry Boundary row Effectful Part column was corrected at v1.38 (R31/F-P2A135-01) and independently confirmed at R33 (F-P2A143): the canonical attribution is registry read by mcp::server (inbound dispatch; BC-2.09.006 {PC-002}); populated by the application/caller layer via the standard registration API (BC-2.09.006 {PRE-001} + BC-2.09.008 {PC-002}); mcp::client does NOT write the registry. However the v1.37 terminal R30 changelog entry still records the superseded phantom attribution ('Canonical set: mcp::server (reader) and mcp::client (writer/populator)') with no subsequent entry documenting the reversal — an untracked body edit (POL-21) and a regression-vector for future readers. This entry closes the record gap: the v1.37 R30 'mcp::client (writer/populator)' attribution was superseded by the R31 F-P2A135-01 correction (v1.38) and independently confirmed by R33 F-P2A143. No live body changes; row counts and census UNCHANGED."
@@ -70,9 +71,9 @@ changelog:
 Every pregolya module appears in exactly one of three columns: **Pure Core** (deterministic,
 no I/O, Kani-provable), **Effectful Shell** (I/O, network, or async runtime, not Kani-provable),
 or **Boundary Modules** (pure validation/routing layer that delegates I/O to an injected
-effectful dependency). All 81 module-decomposition modules (75 tiered + 6 definitions-only/exempt) plus
+effectful dependency). All 84 module-decomposition modules (76 tiered + 8 definitions-only/exempt) plus
 structural and definitions-only modules are enumerated in `## Purity Classification` below
-(89 total rows after round-26: 36 Pure Core + 40 Effectful Shell + 13 Boundary).
+(92 total rows: 38 Pure Core + 41 Effectful Shell + 13 Boundary).
 Enforcement invariants follow in `## Purity Enforcement Rules`.
 
 ## Purity Classification
@@ -108,6 +109,7 @@ side effects. Kani proofs operate here.
 | `core::budget` | pregolya-core | definitions-only: `BudgetPolicy` trait (`evaluate()` pure, no async, no I/O per ADR-009 Option 3), `PolicyDecision` enum (Allow/Escalate/Deny), `OnCeiling` enum (Halt/Escalate/Summarize — BC-2.10.003 + BC-2.10.004), `BudgetConfig` struct (soft_limit, hard_limit, on_ceiling — BC-2.10.001 + ADR-009), `TokenUsage` struct, `RunContext` struct; no execution logic (dispatch engine lives in `graph::budget`) (ADR-009 Option 3 / BC-2.10.001) | — |
 | `core::guardrail` | pregolya-core | definitions-only: `GuardrailHook` trait (`async fn evaluate(&self, content: IngressContent, provenance_tag: ProvenanceTag) -> GuardrailResult` — `#[async_trait]` desugared; no execution logic in trait body per canonical definition in interface-definitions.md §GuardrailHook); `GuardrailResult` enum (Pass \| Fail{reason,severity} \| Transform{new_content}); `IngressContent` enum (ToolResult(ContentBlock) \| RagChunk(Value) \| MemoryItem(Value)); `GuardrailSeverity` enum (Critical/High/Medium/Low); `BoundaryType` enum (ToolResult \| RAGRetrieval \| MemoryIngress — 3 variants, PASS-58 canon; not `#[non_exhaustive]`; used in ProvenanceTag per BC-2.11.001); all definitions-only, no execution logic; promoted from graph::provenance/mcp::ingress per trait-in-core precedent matching ADR-009/ADR-012 pattern (ADR-014 Decision 6 / DI-012 / BC-2.20.002) | — |
 | `core::invocation_context` | pregolya-core | definitions-only: `InvocationContext` struct — per-run hook registry; holds optional `Arc<dyn GuardrailHook>` for guardrail dispatch at SS-11 ingress boundaries; canonical module `core::invocation_context` at `pregolya-core/src/invocation_context.rs`; follows trait-in-core precedent (core::guardrail pattern); no execution logic; BC-2.11.001–006 {PRE-001}; BC-2.09.003 {PRE-002}/{PRE-003} (ADR-014 Decision 6 / SS-11) | — |
+| `core::trajectory` | pregolya-core | definitions-only: `TrajectoryRecord` struct (`run_id: Uuid, step_idx: u64, event_kind: String, payload: serde_json::Value`; `#[non_exhaustive]`), `TrajectoryWriter` trait (`async fn put_record(&self, record: TrajectoryRecord) -> Result<(), PregolyaError>`), `TrajectoryReader` trait (`async fn replay(&self, run_id: Uuid) -> Result<Vec<TrajectoryRecord>, PregolyaError>`); no execution logic; execution dispatch lives in `checkpoint::trajectory`; SS-04; ADR-030 Decision 2 | — |
 | `core::action_risk` | pregolya-core | definitions-only: `ActionRisk` enum — 4 variants: `ReadOnly`, `Low`, `Medium`, `High` (`#[non_exhaustive]`); no execution logic; relocated from `pregolya-graph::hitl` per F-P170-06 adjudication (dependency-inversion precedent: BudgetPolicy → core::budget per ADR-009, GuardrailHook/BoundaryType → core::guardrail per ADR-014 Decision 6, MemoryWriteGuard → core::write_guard per ADR-012); required so `pregolya-tools` (Wave 1 position 7) can reference ActionRisk without a `pregolya-graph` compile-time dep (Wave 1 position 8); `pregolya-graph` re-exports `core::action_risk::ActionRisk` as `pregolya_graph::hitl::ActionRisk` for existing graph-layer consumers; BC-2.05.006 anchor preserved; SS-05 owner (ADR-018 / ADR-020 Decision 1) | — |
 | `core::documents` | pregolya-core | `Document { page_content, metadata, id }` pure data carrier; construction is pure type-system enforcement; no I/O (ADR-014 / SS-20) | — |
 | `core::embeddings` | pregolya-core | `Embeddings` trait definition; definitions-only: trait body + dimensionality contract types; no execution logic (ADR-017 / SS-22) | — |
@@ -140,6 +142,7 @@ Kani is not applicable here.
 | `graph::budget` (EvidenceJournal write) | pregolya-graph | append-only journal write | Integration |
 | `checkpoint::sqlite` | pregolya-checkpoint | SQLite file I/O | Integration + Soak |
 | `checkpoint::postgres` | pregolya-checkpoint | TCP database connection | Integration |
+| `checkpoint::trajectory` | pregolya-checkpoint | async SQLite/backend storage I/O; `TrajectoryWriter` + `TrajectoryReader` impl; durable audit-grade trajectory record persistence; isolated from `checkpoint::saver` compaction path per ADR-030 Decision 2; SS-04 | Integration |
 | `checkpoint::memory` | pregolya-checkpoint | in-memory HashMap (deterministic for tests) | Unit |
 | `checkpoint::encryption` | pregolya-checkpoint | random IV generation (CSPRNG) | Integration |
 | `server::handlers` | pregolya-server | HTTP request/response, async task spawn | Integration |
