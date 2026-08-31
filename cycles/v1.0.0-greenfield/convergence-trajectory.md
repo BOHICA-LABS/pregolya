@@ -4575,3 +4575,55 @@ All 22 findings CLOSED in D-328 multi-stage cascade:
 - L-244/L-245/L-246 codified
 
 **NEXT: round-51 on new frozen HEAD post-D-328 push. Streak 0/3.**
+
+## Round 51 — D-329 (2026-08-31) — SECOND ADVERSARIAL REVIEW OF PRAXIST SURFACE
+
+**Frozen HEAD:** `9039bb0` (factory-artifacts post-D-328 push)
+**Trajectory:** →2→0→6→2 (P2A-212=2[MED] / P2A-213=0/CLEAN(strict) / P2A-214=6[2M+4L-records] / P2A-215=2[1H+1M])
+**Total findings:** 10 (1 HIGH + 4 MED + 4 LOW/records + 0 OBS)
+**CLEAN(strict):** NO (1/4 lenses: P2A-213 security CLEAN)
+**CLEAN(PR-merge):** MIXED (P2A-212 YES / P2A-213 YES / P2A-214 YES / P2A-215 NO [1 HIGH])
+**Streak after:** 0/3
+
+### Pass Detail
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|-----------------|
+| P2A-212 | Realizability | 2 (0H+2M+0L) | NO | YES |
+| P2A-213 | Security | 0 | YES | YES |
+| P2A-214 | Consistency/Records | 6 (0H+2M+4L) | NO | YES |
+| P2A-215 | SS-02/SS-04 Deep-Audit | 2 (1H+1M+0L) | NO | NO |
+
+### Finding Summary
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F-P2A212-01 | MED | VP-019 integration VP misclassified in VP Seed BCs table |
+| F-P2A212-02 | MED (process-gap) | verify-vp-count-parity.sh + verify-bc-story-anchor-resolution.sh not wired to pre-commit-validators.sh |
+| F-P2A214-01 | MED | BC-INDEX header "19 VPs registered" stale (should be 20) |
+| F-P2A214-02 | MED | BC-INDEX VP-INDEX detail "17 VPs registered" stale (should be 20) |
+| F-P2A214-03 | LOW | BC-INDEX BC-2.02.008 VP column empty (VP-017 missing) |
+| F-P2A214-04 | LOW | BC-INDEX VP Seed table missing BC-2.02.008 row for VP-017 dual-anchor |
+| F-P2A214-05 | LOW | STORY-INDEX census prose "39" stale (should be 41) |
+| F-P2A214-06 | LOW | vcm graph::channels proptest column missing BC-2.02.008 |
+| F-P2A215-01 | HIGH | BC-2.02.007/008/009 + BC-2.04.009/010/011 Story Anchors S-TBD (6 BCs unresolved) |
+| F-P2A215-02 | MED | BC-2.02.007/008 Architecture Anchors cite phantom channels.rs → should be channels/ledger.rs |
+
+### Multi-Stage Cascade Disposition
+
+All 10 findings CLOSED in D-329 fix-burst:
+- **devops A:** verify-vp-count-parity.sh NEW blocking validator #18; verify-bc-story-anchor-resolution.sh NEW blocking validator #19; pre-commit-validators.sh EXPECTED_BLOCKING_COUNT 17→19
+- **product-owner B:** BC-2.02.007/008/009 Story Anchors resolved S-TBD→S-1.28; BC-2.04.009/010/011 Story Anchors resolved S-TBD→S-2.12; BC-2.02.007/008 phantom channels.rs→channels/ledger.rs corrected
+- **story-writer C:** S-1.28 v1.1→v1.2 (architecture section hardened); S-2.12 v1.1→v1.2 (architecture section hardened)
+- **state-manager:** BC-INDEX §Changelog (VP count parity + VP-017 dual-anchor BC-2.02.008 + VP-019 exclusion + Summary 18→17 unique VPs); STORY-INDEX §Changelog (Red-Gate label + S-1.28 title + census 39→41); vcm v3.31→v3.32 (graph::channels proptest BC-2.02.008 added)
+
+### Post-Round-51 Status
+
+- VP: UNCHANGED (20)
+- Holdout: UNCHANGED (24; must-pass 16/24=66.7%)
+- TV: UNCHANGED (793 canonical)
+- GATE-READY: YES (all 19 blocking validators PASS; see GATE-READY-r51.md)
+- Streak: 0/3 (round-51 NOT CLEAN(strict) — 1/4 lenses clean; frozen-HEAD reset on D-329 push)
+- L-247/L-248 codified
+
+**NEXT: round-52 on new frozen HEAD post-D-329 push. Streak 0/3.**

@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.38"
+version: "1.39"
 status: active
-producer: story-writer
-timestamp: 2026-08-31T00:00:00Z
+producer: state-manager
+timestamp: 2026-08-31T20:00:00Z
 changelog:
+  - "1.39 (round-51/D-329/2026-08-31): Round-51 records-tier fixes (state-manager). (1) Maintenance section census prose corrected: 'Product-story census is **39**' → '**41**' (stale from pre-D-327; census table correctly shows 41 product stories; F-P2A214-03). (2) S-1.28 story row title corrected: 'PromoteRetireChannel Active-Set Lifecycle' → 'PromoteRetireChannel Promote/Retire Lifecycle' (verbatim-H1 per BC-2.02.009; F-P2A214-04). (3) Summary census label corrected: 'Stories with Red Gate BCs' → 'Stories with Red-Gate obligations' (canonical label per adversary style guide; F-P2A214-05). Story/artifact census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142; points 316."
   - "1.38 (round-50/F-R50-01+F-P2A210-01+F-P2A208-07+F-P2A211-03/2026-08-31): STORY-INDEX aggregate summary reconciliation (state-manager round-50 fix-burst). (1) Census table, header blockquote, and BC-coverage-map intro updated from stale D-326 values (40/27/11/134) to post-D-327 correct values (42/28/12/140). Stories-with-VP-anchor 13→15 (VP-017 S-1.28 + VP-018/VP-019 S-2.12). Red-Gate stories 8→10 (S-1.28 VP-017 proptest RG + S-2.12 AC-004/AC-019/AC-020 RG). (2) BC-coverage-map title cells corrected to EXACT BC H1 canonical: BC-2.02.009 'PromoteRetireChannel Promote/Retire Lifecycle' (was 'PromoteRetireChannel Active-Set Lifecycle'); BC-2.04.009 'TrajectoryWriter::put_record Durability' (was 'put_record Durability and Write-Once Integrity'); BC-2.04.010 'TrajectoryReader::replay Ascending step_idx Order' (was 'replay Ascending Step-Index and Completeness'); BC-2.04.011 'Trajectory Compaction Isolation' (was 'Trajectory Compaction Isolation and Crash Safety (VP-018)'). (3) VP-to-Story Anchor Map: VP-017 BC anchor updated to dual BC-2.02.007 + BC-2.02.008 (v1.1 product-owner ruling); VP-019 row added (BC-2.04.011 {INV-003}; S-2.12; pregolya-checkpoint). Story/artifact census: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142; points 316. verify-story-count-propagation.sh exits 0."
   - "1.37 (praxist-Stage-3/2026-08-31): 2 new stories added for the praxist research-orchestrator use case. S-1.28 (STORY-S-1.28-ledger-channel-promote-retire.md, v1.0, 5 pts): LedgerEntry trait + LedgerChannel<T> + PromoteRetireOp<T> + PromoteRetireChannel<T> in graph::channels (pregolya-graph); BC-2.02.007 + BC-2.02.008 + BC-2.02.009; VP-017 proptest P1 anchor; Wave 1 batch-1e; depends_on [S-1.14]; blocks []. S-2.12 (STORY-S-2.12-trajectory-writer-reader-compaction.md, v1.0, 8 pts): TrajectoryRecord/TrajectoryWriter/TrajectoryReader/TrajectoryRetentionPolicy type defs (core::trajectory, pregolya-core) + SqliteTrajectoryStore + TrajectoryCompactor impl (checkpoint::trajectory, pregolya-checkpoint); BC-2.04.009 + BC-2.04.010 + BC-2.04.011; VP-018 proptest P1 anchor; Wave 2 batch-2a; depends_on [S-1.10]; blocks []. E-07 extended: +S-1.28 (wave-1). E-05 extended: +S-2.12 (wave-2). Topological sort: S-1.28 inserts into batch 1e (deps satisfied by 1d); S-2.12 inserts into batch 2a (deps satisfied by Wave 1). DAG acyclicity confirmed: no new cycles. Census updated: 40→42 total (39→41 product, 1 maint unchanged); Wave 1 27→28; Wave 2 11→12; Wave 6 1 unchanged; points 303→316 (+5+8); BC 134→140 (+6: BC-2.02.007/008/009 SS-02 + BC-2.04.009/010/011 SS-04); VP story-anchors 13→15 (VP-017 →S-1.28, VP-018 →S-2.12); Red Gate stories 8→10 (S-1.28 VP-017 proptest RG + S-2.12 AC-004/AC-019/AC-020 RG)."
   - "1.36 (round-49/BC-propagation/2026-08-31): 7 story version bumps (story-writer round-49 Stage-3 fix-burst). BC-2.09.007 {INV-003} extended 4→6 patterns (URL-userinfo + HTTP Basic): S-2.11 (v1.33→v1.34) AC-013 + AC-039 (Arc-DI OBS); S-1.26 (v1.11→v1.12) AC-020 step 2; S-1.27 (v1.8→v1.9) AC-017 step 2. FtsSearchConfig<'a> lifetime: S-1.11 (v1.2→v1.3) AC-001 trait sig. bind_tools/with_structured_output owned Box<dyn> returns: S-2.07 (v1.2→v1.3) AC-007/AC-010. InvocationContext canonical home + S-2.10 forbidden-dep carve-out: S-1.19 (v1.8→v1.9) AC-026; S-2.10 (v1.4→v1.5) forbidden-deps ADR-029 §forbidden-deps. STORY-INDEX: level: L3 field added (GATE-READY gate-obs). Story/artifact census UNCHANGED: 40 total (39 product + 1 maint) / 134 BC / 17 VP / 138 EC; points UNCHANGED 303."
@@ -77,7 +78,7 @@ input-hash: "69ed6f6"
 | Total Epics | 23 |
 | BCs covered | 140 / 140 |
 | Stories with VP anchor | 15 |
-| Stories with Red Gate BCs | 10 |
+| Stories with Red-Gate obligations | 10 |
 
 ## Story Inventory
 
@@ -150,7 +151,7 @@ input-hash: "69ed6f6"
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
-| S-1.28 | LedgerChannel Dedup-Idempotent Append and PromoteRetireChannel Active-Set Lifecycle | BC-2.02.007, BC-2.02.008, BC-2.02.009 | SS-02 | pregolya-graph | P1 | 5 | [S-1.14] | draft |
+| S-1.28 | LedgerChannel Dedup-Idempotent Append and PromoteRetireChannel Promote/Retire Lifecycle | BC-2.02.007, BC-2.02.008, BC-2.02.009 | SS-02 | pregolya-graph | P1 | 5 | [S-1.14] | draft |
 
 ---
 
@@ -208,7 +209,7 @@ input-hash: "69ed6f6"
 
 ### Maintenance — EPIC-MAINT (out-of-wave)
 
-> Product-story census is **39** (unchanged). S-MAINT-001 is a housekeeping story outside the wave schedule; it does not block Phase-3.
+> Product-story census is **41** (unchanged). S-MAINT-001 is a housekeeping story outside the wave schedule; it does not block Phase-3.
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|

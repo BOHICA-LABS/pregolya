@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.05"
+version: "3.06"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
 phase: 1d
 changelog:
+  - "3.06 (round-51/F-P2A212-01+F-P2A212-07/2026-08-31): F-P2A212-01 [HIGH] §Trajectory Primitive: TrajectoryRecord::new(run_id, step_idx, event_kind, payload) constructor added (impl block after struct — #[non_exhaustive] cross-crate construction fix; SqliteTrajectoryStore/pregolya-checkpoint and test callers unblocked); TrajectoryRetentionPolicy::new(retention_frontier, promoted) constructor added (same fix). §LedgerChannel: Default impls added for LedgerChannel<T> and PromoteRetireChannel<T> (zero-sized markers; defensive cross-crate construction; registration seam is type-level, BSP engine constructs internally). F-P2A212-07 [LOW] §LedgerChannel LedgerChannel<T> docstring: IndexMap<String,T> local-variable reference replaced with Vec linear-scan description (decision: no indexmap dependency — O(n) per reduce call is adequate for typical research accumulator sizes; story-writer: S-1.28 Library table requires no new indexmap entry)."
   - "3.05 (round-50/F-P2A208-02+F-P2A208-03+F-P2A208-10+F-P2A211-07/2026-08-31): F-P2A208-02 [HIGH] §LedgerChannel reconcile to reducer model — LedgerEntry trait gains Serialize+DeserializeOwned bounds (F-P2A211-07 serde requirement for checkpoint resume); LedgerChannel<T> struct: #[non_exhaustive] added, 'Internal: IndexMap' comment removed (contradicted PhantomData<T> zero-storage), docstring rewritten to stateless-reducer-marker model (reducer fn reduce(acc: Vec<T>, update: T) -> Vec<T>, no Result); PromoteRetireChannel<T>: #[non_exhaustive] added (F-P2A208-10), docstring adds stateless-reducer-marker note; LedgerChannel Invariants table: append(e)->Ok(())/entries() replaced with reduce(acc, e)->Vec<T> form (no Result). F-P2A208-03 [MED] §Trajectory Primitive: add TrajectoryRetentionPolicy struct (core::trajectory, eligible-vs-retained frontier model) + TrajectoryCompactor trait (checkpoint::trajectory, async compact); BC anchor extended to include BC-2.04.011."
   - "3.04 (ADR-030 Stage 1/2026-08-31): Add §Trajectory Primitive section (pregolya-core core::trajectory + pregolya-checkpoint checkpoint::trajectory; ADR-030 Decision 2): TrajectoryRecord struct (#[non_exhaustive], run_id/step_idx/event_kind/payload), TrajectoryWriter trait (async put_record), TrajectoryReader trait (async replay). Add §LedgerChannel section (pregolya-graph graph::channels; ADR-030 Decision 3): LedgerEntry trait (entry_id), LedgerChannel<T> struct (dedup-idempotent append), PromoteRetireOp<T> enum (Promote/Retire variants), PromoteRetireChannel<T> struct (promote/retire lifecycle). BC anchors: BC-2.02.007, BC-2.02.008, BC-2.04.009, BC-2.04.010, BC-2.04.011. VP-017 (proptest P1 LedgerChannel dedup-idempotency, BC-2.02.007 anchor)."
   - "3.03 (round-49/F-P2A204-01/2026-08-31): F-P2A204-01 [HIGH] §CheckpointSaver::fts_search — `FtsSearchConfig` missing lifetime parameter. Updated §fts_search doc-comment `config` annotation: `FtsSearchConfig { thread_id: Option<&str> }` → `FtsSearchConfig<'_> { thread_id: Option<&'_ str> }`. Updated method signature: `config: FtsSearchConfig,` → `config: FtsSearchConfig<'_>,`. Lifetime required on stable Rust (E0106); BC-2.04.008 {PRE-003} is the authoritative BC (same burst)."
@@ -2894,6 +2895,20 @@ pub struct TrajectoryRecord {
     pub payload: serde_json::Value,
 }
 
+impl TrajectoryRecord {
+    /// Constructor required for cross-crate use: `#[non_exhaustive]` prevents struct-literal
+    /// construction outside `pregolya-core` (e.g., `SqliteTrajectoryStore` in
+    /// `pregolya-checkpoint`, test code, orchestrator callers).
+    pub fn new(
+        run_id: Uuid,
+        step_idx: u64,
+        event_kind: impl Into<String>,
+        payload: serde_json::Value,
+    ) -> Self {
+        TrajectoryRecord { run_id, step_idx, event_kind: event_kind.into(), payload }
+    }
+}
+
 #[async_trait]
 pub trait TrajectoryWriter: Send + Sync {
     async fn put_record(&self, record: TrajectoryRecord) -> Result<(), PregolyaError>;
@@ -2946,6 +2961,15 @@ pub struct TrajectoryRetentionPolicy {
     pub retention_frontier: u64,
     /// Explicitly promoted step_idx values — always retained regardless of frontier.
     pub promoted: Vec<u64>,
+}
+
+impl TrajectoryRetentionPolicy {
+    /// Constructor required for cross-crate use: `#[non_exhaustive]` prevents struct-literal
+    /// construction outside `pregolya-core` (`TrajectoryCompactor` callers in
+    /// `pregolya-checkpoint` must pass a policy to `compact()`).
+    pub fn new(retention_frontier: u64, promoted: Vec<u64>) -> Self {
+        TrajectoryRetentionPolicy { retention_frontier, promoted }
+    }
 }
 ```
 
@@ -3017,13 +3041,21 @@ pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'sta
 /// - Reducing with an entry whose `entry_id()` is **already present** is a no-op: `new_len = old_len`.
 /// - First-appearance order of unique entries is preserved in the accumulated `Vec<T>` (BC-2.02.008).
 ///
-/// The internal dedup map (`IndexMap<String, T>`) is a **local variable** within `reduce` and is
-/// rebuilt on each call — not persisted on the struct (consistent with S-1.14 channel family:
+/// Dedup implementation: **linear scan** of `acc` within `reduce` — no `indexmap` dependency.
+/// For typical research accumulator sizes (tens to low hundreds of entries), O(n) per call is
+/// adequate. Not persisted on the struct (consistent with S-1.14 channel family:
 /// `LastValueChannel`, `AppendChannel`, etc. are all stateless reducer markers).
+///
+/// Channel registration is **type-level** (via `StateGraph` schema annotation); the BSP engine
+/// constructs instances internally. `Default` impl provided for cross-crate use (tests, etc.).
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct LedgerChannel<T: LedgerEntry> {
     _inner: PhantomData<T>,
+}
+
+impl<T: LedgerEntry> Default for LedgerChannel<T> {
+    fn default() -> Self { LedgerChannel { _inner: PhantomData } }
 }
 
 /// Lifecycle operation on a PromoteRetireChannel.
@@ -3041,10 +3073,17 @@ pub enum PromoteRetireOp<T: LedgerEntry> {
 /// **Stateless reducer marker**: carries no instance state. State lives in the `Vec<T>` channel
 /// accumulator (the current active set). Reducer signature:
 ///   `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>`  (pure function; no `Result`)
+///
+/// Channel registration is **type-level** (via `StateGraph` schema annotation); the BSP engine
+/// constructs instances internally. `Default` impl provided for cross-crate use (tests, etc.).
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct PromoteRetireChannel<T: LedgerEntry> {
     _inner: PhantomData<T>,
+}
+
+impl<T: LedgerEntry> Default for PromoteRetireChannel<T> {
+    fn default() -> Self { PromoteRetireChannel { _inner: PhantomData } }
 }
 ```
 

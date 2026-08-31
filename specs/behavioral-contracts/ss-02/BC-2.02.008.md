@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.008
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-08-31T00:00:00Z
 changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — LedgerChannel first-appearance ordering; DI-001 invariant enforcement; ADR-030 Decision 3."
   - "1.1 (round-50/Stage-B1-product-owner/2026-08-31): §Verification Properties VP-017 description updated to reflect dual-anchor: VP-017 proptest now explicitly anchors both BC-2.02.007 (dedup-idempotent append) and BC-2.02.008 (first-appearance ordering) — the ordering invariant is exercised by the same arbitrary-sequence proptest harness. VP-INDEX propagation to architect per vp_index_is_vp_catalog_source_of_truth policy."
+  - "1.2 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: LedgerChannel<T> canonical file corrected from phantom flat-file channels.rs to directory module channels/ledger.rs (F-P2A215-01; graph::channels module path unchanged)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "a280d94"
+input-hash: "5703511"
 extracted_from: null
 modified: []
 deprecated: null
@@ -124,12 +125,12 @@ reference; task-identity sort (DI-001) determines first-appearance order.
 
 ## Architecture Anchors
 
-- `pregolya-graph/src/channels.rs` (`graph::channels`) — `LedgerChannel<T>` struct; the `Vec<T>` accumulator preserves insertion order natively; the reducer appends novel entries at the end using `Vec::push`, guaranteeing first-appearance ordering without a separate sort pass
+- `pregolya-graph/src/channels/ledger.rs` (`graph::channels`) — `LedgerChannel<T>` struct; the `Vec<T>` accumulator preserves insertion order natively; the reducer appends novel entries at the end using `Vec::push`, guaranteeing first-appearance ordering without a separate sort pass
 - ADR-030 §Decision 3 — LedgerChannel semantics: "Reducing with a T whose entry_id() is novel appends it"; append-at-end is the specified operation, encoding first-appearance order
 
 ## Story Anchor
 
-S-TBD (assigned at story decomposition — Stage 3)
+S-1.28
 
 ## VP Anchors
 

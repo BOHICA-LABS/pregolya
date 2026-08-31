@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.011
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.0 (ADR-030 Stage 2b/2026-08-31): Initial greenfield spec — Trajectory Compaction Isolation; safe, atomic, crash-isolated compaction of an unbounded durable audit trajectory; DI-002 + DI-004 + DI-014 invariant enforcement; ADR-030 §Decision 2 Trajectory Compaction Isolation scope. Human-approved 6th additive BC."
   - "1.1 (ADR-030/Stage-3.5-product-owner/2026-08-31): PC-005, EC-004, INV-004, TV-003 wired to E-TRAJ-004 TrajectoryRetainedEligible (VAL, broken, Never); category notation corrected from VALIDATION→VAL throughout to match taxonomy category code convention."
   - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): {PRE-001} reconciled to single-file SQLite WAL topology (ADR-030 §SQLite Topology Decision/F-P2A209-04). {INV-003} updated to VP-019 canonical wording (either complete pre-compaction OR complete post-compaction state visible after crash — previously stated pre-compaction only, ignoring committed after-sync case). {INV-005} rescoped to record-level table isolation + WAL non-blocking behavior + bounded compaction batch (1,000 records/BEGIN IMMEDIATE); dropped absolute 'cannot interfere' claim that ignores write serialization. {INV-006} added: at-rest encryption mirrored from BC-2.04.009 {INV-002} — compacted retained records remain encrypted when EncryptedSerializer is configured. §Verification Properties: VP-COMPACT-01→VP-018 (proptest, {INV-001} retention integrity), VP-COMPACT-02→VP-019 (integration, {INV-003} crash-isolation). Routing blockquote deleted (VP-018/019 are minted). §VP Anchors updated to VP-018, VP-019."
+  - "1.3 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-2.12 (per STORY-INDEX; F-P2A214-01 hook #19 compliance)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "a280d94"
+input-hash: "5703511"
 extracted_from: null
 modified: []
 deprecated: null
@@ -198,7 +199,7 @@ single retained record — in ascending `step_idx` order ({PC-002}).
 
 ## Story Anchor
 
-S-TBD (assigned at story decomposition — Stage 3)
+S-2.12
 
 ## VP Anchors
 

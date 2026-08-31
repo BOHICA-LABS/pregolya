@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.12
 epic_id: E-05
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-31T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "d45c679"
+input-hash: "d04ebe2"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.10]
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.2 (Round-51-Phase-2-fix-burst/2026-08-31): F-P2A212-04: encryption changed to OPT-IN model per BC-2.04.009 INV-002; optional Serializer wired at construction; payload-only serialization; event_kind stays cleartext per PRE-002; no fail-closed guard; re-anchor from PC-001 to INV-002 in AC-002 and Rule 13. F-P2A212-01 follow-on: AC-001/AC-014/Tasks cite TrajectoryRecord::new and TrajectoryRetentionPolicy::new constructors with exact signatures; Rule 14 added for cross-crate constructor requirement."
   - "1.1 (Round-50-Phase-2-fix-burst/2026-08-31): Fix error categories to canonical DURABILITY/VAL per TRAJ taxonomy (AC-005/007/011/019); add VP-019 crash-isolation integration anchor; add #[async_trait] dyn-compatibility rule; add EncryptedSerializer at-rest requirement for put_record; add WAL-mode crash-isolation rule for compact; correct BC-2.04.010 table title to match BC H1; add uuid serde feature requirement; reword TRAJ taxonomy task from mint to verify-canonical."
   - "1.0 (praxist-Stage-3/2026-08-31): Initial authoring — Durable Audit Trajectory and Compaction Isolation; core::trajectory type definitions (pregolya-core) + checkpoint::trajectory concrete impl (pregolya-checkpoint); BC-2.04.009 + BC-2.04.010 + BC-2.04.011; VP-018 proptest P1 anchor; Wave 2 / E-05 extension; depends on S-1.10."
 ---
@@ -58,10 +59,10 @@ changelog:
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.04.009 PRE-001 / PRE-002 — TrajectoryRecord struct and core::trajectory type definitions)
-`pregolya-core/src/trajectory.rs` declares `#[non_exhaustive] TrajectoryRecord` with fields `run_id: uuid::Uuid`, `step_idx: u64`, `event_kind: String`, `payload: serde_json::Value`. The `TrajectoryWriter` trait declares `async fn put_record(&self, record: TrajectoryRecord) -> Result<(), PregolyaError>`. The `TrajectoryReader` trait declares `async fn replay(&self, run_id: uuid::Uuid) -> Result<Vec<TrajectoryRecord>, PregolyaError>`. The `TrajectoryRetentionPolicy` type is declared in the same module per ADR-009 definitions-in-core. Verified by `test_BC_2_04_009_trajectory_types_exist()`.
+`pregolya-core/src/trajectory.rs` declares `#[non_exhaustive] TrajectoryRecord` with fields `run_id: uuid::Uuid`, `step_idx: u64`, `event_kind: String`, `payload: serde_json::Value`, and provides the constructor `TrajectoryRecord::new(run_id: Uuid, step_idx: u64, event_kind: impl Into<String>, payload: serde_json::Value) -> TrajectoryRecord`. Because the type carries `#[non_exhaustive]`, cross-crate callers and tests MUST use this constructor — struct literal construction will not compile outside `pregolya-core`. The `TrajectoryWriter` trait declares `async fn put_record(&self, record: TrajectoryRecord) -> Result<(), PregolyaError>`. The `TrajectoryReader` trait declares `async fn replay(&self, run_id: uuid::Uuid) -> Result<Vec<TrajectoryRecord>, PregolyaError>`. The `TrajectoryRetentionPolicy` type is declared in the same module per ADR-009 definitions-in-core. Verified by `test_BC_2_04_009_trajectory_types_exist()`.
 
-### AC-002 (traces to BC-2.04.009 PC-001 — put_record returns Ok(()) on successful commit)
-`put_record(record)` returns `Ok(())` when the record has been durably committed via the `EncryptedSerializer` at-rest layer to the backing `checkpoint::trajectory` SQLite slice. The `EncryptedSerializer` serializes and encrypts `TrajectoryRecord` fields before any SQLite write; no plaintext trajectory data is persisted (BC-2.04.009 {PC-001} security anchor). No `Ok(())` is returned unless the record is durably committed. Verified by `test_BC_2_04_009_put_record_returns_ok_on_commit()`.
+### AC-002 (traces to BC-2.04.009 PC-001 / INV-002 — put_record returns Ok(()) on successful commit; opt-in encryption)
+`put_record(record)` returns `Ok(())` when the record has been durably committed to the backing `checkpoint::trajectory` SQLite slice. Encryption is OPT-IN per BC-2.04.009 {INV-002}: `SqliteTrajectoryStore` accepts an `Option<Arc<dyn Serializer + Send + Sync>>` at construction. When a serializer is wired, `TrajectoryRecord::payload` is serialized via that serializer before the SQLite write; `event_kind` is persisted as cleartext because it is a discriminator field per BC-2.04.009 {PRE-002}. When no serializer is provided, payload is persisted as-is — there is NO fail-closed guard. No `Ok(())` is returned unless the record is durably committed. Verified by `test_BC_2_04_009_put_record_returns_ok_on_commit()`.
 
 ### AC-003 (traces to BC-2.04.009 PC-002 — record visible in replay after put_record Ok)
 After `put_record(record_A)` returns `Ok(())`, `replay(record_A.run_id)` returns a `Vec<TrajectoryRecord>` containing `record_A` (matched by `run_id` + `step_idx` pair). Verified by `test_BC_2_04_009_put_then_replay_contains_record()`.
@@ -97,7 +98,7 @@ Calling `replay(run_id)` multiple times (with no intervening `put_record` calls)
 All records for the `run_id` are returned in a single call. No pagination, truncation, or sampling is performed by the implementation. Verified by `test_BC_2_04_010_replay_is_complete_not_paginated()` (writes 100 records, verifies all 100 returned).
 
 ### AC-014 (traces to BC-2.04.011 PRE-001 / PRE-002 — TrajectoryCompactor trait and TrajectoryRetentionPolicy type)
-`checkpoint::trajectory` declares the `TrajectoryCompactor` trait with `async fn compact(&self, run_id: uuid::Uuid, policy: TrajectoryRetentionPolicy) -> Result<(), PregolyaError>`. `TrajectoryRetentionPolicy` (in `core::trajectory` per ADR-009) specifies which records are eligible for removal vs retained. Verified by `test_BC_2_04_011_compactor_trait_exists()`.
+`checkpoint::trajectory` declares the `TrajectoryCompactor` trait with `async fn compact(&self, run_id: uuid::Uuid, policy: TrajectoryRetentionPolicy) -> Result<(), PregolyaError>`. `TrajectoryRetentionPolicy` (in `core::trajectory` per ADR-009) specifies which records are eligible for removal vs retained, and provides the constructor `TrajectoryRetentionPolicy::new(retention_frontier: u64, promoted: Vec<u64>) -> TrajectoryRetentionPolicy`. Because the type carries `#[non_exhaustive]`, cross-crate callers and tests MUST use this constructor — struct literal construction will not compile outside `pregolya-core`. Verified by `test_BC_2_04_011_compactor_trait_exists()`.
 
 ### AC-015 (traces to BC-2.04.011 PC-001 — retained records survive compact intact)
 After `compact(run_id, policy)` returns `Ok(())`, every record designated as retained by the policy is still present in `replay(run_id)` with its original `step_idx`, `event_kind`, and `payload` values unchanged. Verified by `test_BC_2_04_011_retained_records_survive_compact()`.
@@ -164,6 +165,8 @@ Within the 20-30% agent context window threshold; approach the upper bound. If t
 - [ ] Declare `TrajectoryRecord` (`#[non_exhaustive]`, fields `run_id`, `step_idx`, `event_kind`, `payload`) in `pregolya-core/src/trajectory.rs`
 - [ ] Declare `TrajectoryWriter` trait (`#[async_trait]` annotated; async `put_record`) and `TrajectoryReader` trait (`#[async_trait]` annotated; async `replay`) in `pregolya-core/src/trajectory.rs`
 - [ ] Declare `TrajectoryRetentionPolicy` type in `pregolya-core/src/trajectory.rs` (specifies eligible vs retained record sets per BC-2.04.011 §PRE-002)
+- [ ] Implement `TrajectoryRecord::new(run_id: Uuid, step_idx: u64, event_kind: impl Into<String>, payload: serde_json::Value) -> TrajectoryRecord` constructor (required for cross-crate construction; `#[non_exhaustive]` prevents struct literals from compiling externally per Architecture Rule 14)
+- [ ] Implement `TrajectoryRetentionPolicy::new(retention_frontier: u64, promoted: Vec<u64>) -> TrajectoryRetentionPolicy` constructor (required for cross-crate construction per Architecture Rule 14)
 - [ ] Re-export `core::trajectory` module from `pregolya-core/src/lib.rs`
 - [ ] Define trajectory table schema in `pregolya-checkpoint/src/trajectory.rs` (SQLite table `trajectory_records(run_id TEXT, step_idx INTEGER, event_kind TEXT, payload TEXT)` with `PRIMARY KEY(run_id, step_idx)`) — SEPARATE from `CheckpointSaver` tables
 - [ ] Implement `SqliteTrajectoryStore::put_record` — INSERT with idempotency: matching payload → no-op OK; conflicting payload → `Err(E-TRAJ-002)`; storage error → `Err(E-TRAJ-001)`
@@ -200,7 +203,8 @@ Derived from `architecture/module-decomposition.md §pregolya-checkpoint` and AD
 10. **Forbidden dependencies:** `core::trajectory` MUST NOT import from `pregolya-checkpoint`, `pregolya-graph`, `pregolya-mcp`, or `pregolya-server`. It is a definitions-only leaf module.
 11. Error codes E-TRAJ-001..E-TRAJ-004 are already-canonical TRAJ taxonomy rows. The implementer MUST verify their presence in `.factory/specs/prd-supplements/error-taxonomy.md` before the PR merges; do NOT add them as new codes. The categories are fixed: E-TRAJ-001 = DURABILITY, E-TRAJ-002 = VAL, E-TRAJ-003 = DURABILITY, E-TRAJ-004 = VAL.
 12. `TrajectoryWriter`, `TrajectoryReader`, and `TrajectoryCompactor` traits MUST be annotated with `#[async_trait]` (from the `async-trait` crate). Native `async fn` in trait is not dyn-compatible; `Arc<dyn TrajectoryWriter>` / `Arc<dyn TrajectoryReader>` / `Arc<dyn TrajectoryCompactor>` DI wiring requires the `async_trait` macro. Omitting `#[async_trait]` produces a compilation error on the `Arc<dyn …>` use-site.
-13. `SqliteTrajectoryStore::put_record` MUST serialize `TrajectoryRecord` via the `EncryptedSerializer` at-rest layer before any SQLite write. Plain-text trajectory records persisted to SQLite violate BC-2.04.009 {PC-001}. The `EncryptedSerializer` type is defined in the project's cryptographic primitives module; look up its location in BC-2.04.009 §Architecture Anchors before implementing.
+13. Encryption is OPT-IN per BC-2.04.009 {INV-002}: `SqliteTrajectoryStore` accepts an `Option<Arc<dyn Serializer + Send + Sync>>` at construction time. When a serializer is wired, `put_record` MUST serialize `TrajectoryRecord::payload` via that serializer before any SQLite write. `event_kind` is persisted as cleartext — it is a discriminator field per BC-2.04.009 {PRE-002}, not payload data. When no serializer is configured, payload is persisted as-is; there is NO fail-closed guard. This re-anchors the encryption guarantee from {PC-001} to {INV-002}: the invariant that payload data is protected applies only when a serializer is wired, not unconditionally.
+14. Cross-crate construction MUST use the provided constructors: `TrajectoryRecord::new(run_id: Uuid, step_idx: u64, event_kind: impl Into<String>, payload: serde_json::Value)` and `TrajectoryRetentionPolicy::new(retention_frontier: u64, promoted: Vec<u64>)`. Both types carry `#[non_exhaustive]` — struct literals will not compile in external crates. Cross-crate tests MUST use these constructors, not struct literals.
 
 ## Library & Framework Requirements
 
@@ -245,5 +249,6 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-08-31 | Round-51 fix-burst: F-P2A212-04 encryption changed to OPT-IN per INV-002 (optional Serializer, payload-only, event_kind cleartext, no fail-closed guard, re-anchored from PC-001 to INV-002 in AC-002 and Rule 13); F-P2A212-01 follow-on — AC-001/AC-014/Tasks cite TrajectoryRecord::new and TrajectoryRetentionPolicy::new constructors with exact signatures; Rule 13 revised to opt-in model; Rule 14 added for cross-crate constructor requirement | story-writer |
 | 1.1 | 2026-08-31 | Round-50 fix-burst: DURABILITY/VAL error categories; VP-019 crash-isolation anchor; async-trait rule; EncryptedSerializer at-rest anchor; WAL-mode compaction rule; BC-2.04.010 title fix; uuid serde feature; verify-canonical TRAJ taxonomy task | story-writer |
 | 1.0 | 2026-08-31 | Initial authoring — praxist Stage-3 story decomposition for BC-2.04.009/010/011 + VP-018 | story-writer |

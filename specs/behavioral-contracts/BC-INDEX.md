@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "4.12"
+version: "4.13"
 status: active
 producer: state-manager
-timestamp: 2026-08-31T00:00:00Z
+timestamp: 2026-08-31T20:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "4.13 (round-51/D-329/2026-08-31): Round-51 second adversarial review of praxist surface — VP count parity fixes (hook #18 F-P2A212-01/F-P2A214-01..06). (1) Header 'VPs registered' 19→20 (VP-INDEX canonical Total VPs = 20; header was stale from D-327 pre-VP-019 authoring). (2) VP-INDEX detail line '17 VPs registered' → '20 VPs registered' (stale from v3.x era, not updated in 4.11/4.12 cascade). (3) VP-019 removed from §VP Seed BCs table: integration VP (like VP-004/005); registered in VP-INDEX but not a formal verification seed; footnote extended to name VP-019 exclusion. (4) VP-017 dual-anchor: BC-2.02.008 row added to §VP Seed BCs table (VP-017 proptest P1 now dual-anchors BC-2.02.007+BC-2.02.008 per VP-INDEX §bc_anchor round-50 update). (5) BC-2.02.008 Full Catalog VP column: **VP-017** added (F-P2A214-02). (6) §Summary VP Seed BCs: '18 unique VPs (19 BC rows; ...)' → '17 unique VPs (19 BC rows; VP-014 dual-anchors...; VP-017 dual-anchors BC-2.02.007+BC-2.02.008; VP-006-B companion...)'; VP-019 detail removed. (7) Footnote: VP-019 added to integration-VP exclusion list alongside VP-004/005; VP body-files count 17→20 (+VP-017+VP-018+VP-019 seeded in D-327/round-50); VP-017/VP-018 seed dates added. BC-2.02.007/008 Story Anchor resolved S-1.28 (F-P2A215-01 product-owner B). BC-2.02.007/008 §Architecture Anchors: phantom flat-file channels.rs corrected to directory module channels/ledger.rs (F-P2A215-01). L-247/L-248 codified. All 19 blocking validators PASS (GATE-READY=YES). Census UNCHANGED: 140 BCs / 20 VPs / 17 VP Seeds."
   - "4.12 (D-328/round-50-fix-burst/2026-08-31): VP-019 integration tool P1 crash-isolation registered (bc_anchor=BC-2.04.011 {INV-003}; crate pregolya-checkpoint; DI-002); VP-Seed-BCs table 18→19 BC rows (VP-019 row added; BC-2.04.011 now carries VP-018+VP-019 dual VP anchors). BC-2.04.011 VP-Seed column updated VP-018→VP-018+VP-019. TV-delta: 792→793 canonical (+TV-004 BC-2.04.009 at-rest EncryptedSerializer; test-vectors.md §Changelog). Summary VP-Seed count updated 17→18 unique VPs (19 BC rows). POL-1 anomaly note added for BC-2.04.011 within-authoring transient reservation (BC-2.04.011 reserved in ADR-030 Stage-2b as VP-018 anchor; VP-019 {INV-003} crash-isolation anchor added post-D-327-authoring in round-50 cascade; handoff table has both). L-244/L-245/L-246 codified."
   - "4.11 (D-327/praxist-use-case/2026-08-31): 6 new BCs registered for praxist research-orchestrator use case (CAP-040; ADR-030; clean-room behavioral inspiration). SS-02 additions (graph::channels, pregolya-graph, Wave 1): BC-2.02.007 LedgerChannel Dedup-Idempotent Append (P1; DI-014,DI-001; VP-017 proptest anchor), BC-2.02.008 LedgerChannel First-Appearance Ordering (P1; DI-001), BC-2.02.009 PromoteRetireChannel Promote/Retire Lifecycle (P1; DI-014,DI-001). SS-04 additions (checkpoint::trajectory, pregolya-checkpoint, Wave 2): BC-2.04.009 TrajectoryWriter::put_record Durability (P1; DI-002,DI-014; E-TRAJ-001/002), BC-2.04.010 TrajectoryReader::replay Ascending step_idx Order (P1; DI-004,DI-014; E-TRAJ-003), BC-2.04.011 Trajectory Compaction Isolation (P1; DI-002,DI-004,DI-014; VP-018 proptest anchor; E-TRAJ-004). VP Seed table: VP-017 (BC-2.02.007 proptest P1 DI-014) + VP-018 (BC-2.04.011 proptest P1 DI-002) added. BC census 134→140 (51 P0 / 86 P1 / 3 P2). VP-INDEX §Changelog (v1.35): 17→19 VPs (VP-017+VP-018). No Red Gate BCs added (RG count unchanged at 11; VP proptest stories carry Red-Gate designation at story level). DTU UNCHANGED: openai/anthropic/ollama covers CAP-040 use case. Stories 40→42; points 303→316; EC 138→142 (+E-TRAJ-001/002/003/004); ADR 29→30 (ADR-030); holdout 15→22 (+7 Domain D). L-243 codified (ADR BC-reservation/handoff summary mismatch; subsystem/ID anomaly lesson)."
   - "4.10 (round-49/F-P2A205-01+F-P2A205-02+F-P2A207-01+F-P2A207-02+F-P2A207-03+F-P2A204-01+F-P2A204-02/2026-08-31): 11 BC version bumps + 2 ADR version bumps + TV census +3 (product-owner + architect + story-writer round-49 fix-burst). BC-2.09.007 (v2.4→v2.5): F-P2A205-01 [HIGH, CWE-209/532] — {INV-003} step-3 parity added (SEC-BOUND-001 2-step pipeline; step-1 N/A; step-2 `redact_credentials`; step-3 `sanitize_internal_ids`); {PC-003} updated. F-P2A205-02 [HIGH, CWE-522/532] — {INV-003}(b) extended from 4 to 6 patterns (pattern-5 URL-userinfo; pattern-6 HTTP Basic auth). TV-011/012/013 minted (TV count 10→13). SS-09 subtotal 69→72. BC-2.09.008 (v3.9→v4.0): F-P2A205-01 sibling propagation — {INV-003}(b) pattern count updated 4→6 (OllamaBaseUrl auth-bearing URL + Basic-auth). {PC-001} arc-constructor assertion tightened. BC-2.12.003 (v1.17→v1.18): F-P2A205-02 sibling propagation — {INV-008} step 2 updated: `redact_credentials` now covers 6 patterns. BC-2.12.007 (v2.0→v2.1): F-P2A205-02 sibling propagation — {INV-004} step 2 updated: 6-pattern set. BC-2.04.008 (v2.1→v2.2): F-P2A204-01 [MED] — FtsSearchConfig<'a> lifetime annotation added at two note-only mirror sites. BC-2.09.003 (v1.8→v1.9): F-P2A207-03 [MED] — phantom `context.rs` anchor replaced with canonical `pregolya-core::invocation_context::InvocationContext`. BC-2.11.001 (v1.6→v1.8): F-P2A207-02 [HIGH] — {PC} InvocationContext home canonicalized to `pregolya-core::invocation_context::InvocationContext`. BC-2.11.002 (v1.18→v1.19): F-P2A207-02 [HIGH] — same InvocationContext canonicalization. BC-2.11.006 (v1.7→v1.8): F-P2A207-02 sibling propagation — InvocationContext home aligned. BC-2.08.002 (v1.9→v2.0): F-P2A204-02 [OBS→adjudicated] sibling propagation — bind_tools return form updated. BC-2.08.003 (v1.8→v1.9): F-P2A204-02 [OBS→adjudicated] sibling propagation. ALSO: ADR-029 (v2.18→v2.19): F-P2A205-01 §SEC-BOUND-001 mis-attribution corrected + F-P2A207-01 forbidden-deps carve-out context added. ADR-005 (v1.21→v1.22): F-P2A204-02 §Send-Bounded RPITIT table updated. interface-definitions.md §InvocationContext+§bind_tools: §InvocationContext added; bind_tools/with_structured_output return types updated. module-decomposition.md §InvocationContext: core::invocation_context row added. module-criticality.md §InvocationContext: row added. VP-015 (v1.1→v1.2): 3→6 patterns, 4→7 harness test cases (F-P2A205-02 closure). VP-INDEX (v1.32→v1.33): VP-015 covered-behavior updated. S-2.10 (v1.4→v1.5): F-P2A207-01 forbidden-deps carve-out. S-1.11 (v1.2→v1.3): AC-001 FtsSearchConfig<'a> form. S-2.07 (v1.2→v1.3): AC-007/AC-010 Box<dyn> return form. S-1.19 (v1.8→v1.9): AC-026 InvocationContext canonical home. S-1.26 (v1.11→v1.12): AC-020 step-2 6-pattern propagation. S-1.27 (v1.8→v1.9): AC-017 step-2 6-pattern propagation. S-2.11 (v1.33→v1.34): AC-013 + AC-039. STORY-INDEX (v1.35→v1.36): level: field added. verify-security-literal-propagation.sh: R06-PP partial-pipeline rule + 3 self-probes. BC census UNCHANGED: 134 (51 P0 / 80 P1 / 3 P2). VP UNCHANGED: 17. EC UNCHANGED: 138. TV 767→770 canonical (778→781 incl GTV). Stories UNCHANGED: 40 (39+1). Points UNCHANGED: 303."
@@ -132,13 +133,13 @@ changelog:
 
 # BC-INDEX: pregolya Behavioral Contracts
 
-> **140 BCs total — 51 P0 / 86 P1 / 3 P2 | 11 Red Gate | 17 VP Seed | 19 VPs registered**
+> **140 BCs total — 51 P0 / 86 P1 / 3 P2 | 11 Red Gate | 17 VP Seed | 20 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
 > SS-23 (First-Party Tools) added D23 first-class approval hook + compaction expansion (2026-07-22).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
-> VP-INDEX: 17 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
+> VP-INDEX: 20 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
 > VP-006–VP-010 assigned in VP-INDEX (burst-223, 2026-07-21) and authored — VP-006.md–VP-010.md all complete;
 > VP-006-B proptest P1 seeded SEC-review-adjudication burst and authored — vp-006-b-injection-guard-multipair-fewshot.md complete;
 > VP-011–VP-013 seeds assigned D23 burst-232 and authored — VP-011.md–VP-013.md all complete;
@@ -158,7 +159,7 @@ changelog:
 | Priority P1 | 86 |
 | Priority P2 | 3 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 18 unique VPs (19 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006; VP-006-B companion to VP-006 on BC-2.18.004 {PC-005}; VP-019 distinct {INV-003} anchor on BC-2.04.011 alongside VP-018 {INV-001}) |
+| VP Seed BCs | 17 unique VPs (19 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006; VP-017 dual-anchors BC-2.02.007+BC-2.02.008; VP-006-B companion to VP-006 on BC-2.18.004 {PC-005}) |
 | Subsection groups | 23 (SS-01 – SS-23) |
 
 ## Red Gate BCs
@@ -198,10 +199,10 @@ changelog:
 | VP-015 | BC-2.09.007 | MCP Server Tool Invocation — Credential Redaction Before Transmission | unit | DI-010 credential opacity (CWE-532; BC-2.09.007 {INV-003}) |
 | VP-016 | BC-2.09.008 | StateGraph-as-MCP-Tool Wrapping (GraphAgentTool; mcp::graph_tool) | proptest | DI-010 state-isolation {INV-001} (STATE-ISOLATION proof target; {INV-002} is Red-Gate-tested, not a VP-016 proof anchor) |
 | VP-017 | BC-2.02.007 | LedgerChannel Dedup-Idempotent Append | proptest | DI-014 + DI-001 (dedup-idempotency under concurrent writes; harness `ledger_channel_dedup_idempotency`) |
+| VP-017 | BC-2.02.008 | LedgerChannel First-Appearance Ordering | proptest | DI-001 (first-appearance ordering; dual-anchor companion to BC-2.02.007; harness `ledger_channel_dedup_idempotency`) |
 | VP-018 | BC-2.04.011 {INV-001} | Trajectory Compaction Isolation | proptest | DI-002 + DI-004 (compaction retention-integrity; harness `trajectory_compaction_retention_integrity`) |
-| VP-019 | BC-2.04.011 {INV-003} | Trajectory Compaction Crash Isolation | integration | DI-002 (crash-isolation WAL durability; crate pregolya-checkpoint; distinct from VP-018 {INV-001}) |
 
-_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-006-B seeded SEC-review-adjudication burst (2026-08-26); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26); VP-016 seeded GAP-01/ADR-029 burst (2026-08-26). All 17 VP body files (VP-001 through VP-016 + VP-006-B) exist as of SEC-review-adjudication burst._
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-019 is an integration VP (BC-2.04.011 {INV-003}; crash-isolation WAL durability via pregolya-checkpoint integration test); registered in VP-INDEX but not a formal verification seed. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-006-B seeded SEC-review-adjudication burst (2026-08-26); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26); VP-016 seeded GAP-01/ADR-029 burst (2026-08-26); VP-017/VP-018 seeded D-327 praxist authoring burst (2026-08-31); VP-019 seeded round-50 cascade (crash-isolation; BC-2.04.011 {INV-003}; integration P1). All 20 VP body files (VP-001 through VP-019 + VP-006-B) exist as of round-51 fix-burst._
 
 ## Full BC Catalog
 
@@ -222,7 +223,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.02.005 | Conditional Edge Routing Function | CAP-003 | | | P0 | | | ss-02/BC-2.02.005.md |
 | BC-2.02.006 | Send API Dynamic Fan-Out | CAP-003 | | | P0 | | | ss-02/BC-2.02.006.md |
 | BC-2.02.007 | LedgerChannel Dedup-Idempotent Append | CAP-040 | | DI-014, DI-001 | P1 | | **VP-017** | ss-02/BC-2.02.007.md |
-| BC-2.02.008 | LedgerChannel First-Appearance Ordering | CAP-040 | | DI-001 | P1 | | | ss-02/BC-2.02.008.md |
+| BC-2.02.008 | LedgerChannel First-Appearance Ordering | CAP-040 | | DI-001 | P1 | | **VP-017** | ss-02/BC-2.02.008.md |
 | BC-2.02.009 | PromoteRetireChannel Promote/Retire Lifecycle | CAP-040 | | DI-014, DI-001 | P1 | | | ss-02/BC-2.02.009.md |
 | BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | CAP-004 | NE-17 | DI-001 | P0 | | **VP-001** | ss-03/BC-2.03.001.md |
 | BC-2.03.002 | Concurrent LastValue Write Rejection Raises InvalidUpdateError | CAP-004 | | DI-001 | P0 | | | ss-03/BC-2.03.002.md |

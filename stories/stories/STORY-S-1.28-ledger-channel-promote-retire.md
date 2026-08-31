@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.28
 epic_id: E-07
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-31T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.009.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "4e24622"
+input-hash: "a853782"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -31,6 +31,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.2 (Round-51-Phase-2-fix-burst/2026-08-31): F-P2A212-06 — AC-011 compile-fail gate moved to external crate tests/external/non-exhaustive-gate/; extends to LedgerChannel and PromoteRetireChannel. F-P2A212-08 — AC-002/AC-003 incoming->update; AC-012..AC-015 and Rules active/op->acc/update for PromoteRetireChannel. Default impls added for both structs (no new() beyond Default). Rule 2 specifies Vec-linear-scan reduce body. Rules 13-14 added. File structure updated."
   - "1.1 (Round-50-Phase-2-fix-burst/2026-08-31): LedgerEntry supertrait bounds Serialize+DeserializeOwned; channels/ directory module (ledger.rs + promote_retire.rs); VP-017 dual-anchor BC-2.02.007+BC-2.02.008; TST-PROM-01/02 non-VP labels; pure reducer no-Result rule; serde dependency; file-structure update."
   - "1.0 (praxist-Stage-3/2026-08-31): Initial authoring — LedgerChannel and PromoteRetireChannel additive primitives for the research-orchestrator use case; BC-2.02.007 + BC-2.02.008 + BC-2.02.009; VP-017 proptest P1 anchor; Wave 1 / E-07 extension; depends on S-1.14."
 ---
@@ -61,10 +62,10 @@ changelog:
 The public trait `LedgerEntry` is declared in `graph::channels` (pregolya-graph) with supertrait bounds `Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and a single required method `fn entry_id(&self) -> &str` — i.e., `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static { fn entry_id(&self) -> &str; }`. Any `T: LedgerEntry` is therefore also `T: Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and is a valid element type for both `LedgerChannel<T>` and `PromoteRetireChannel<T>`. Both `LedgerChannel<T>` and `PromoteRetireChannel<T>` structs carry `#[non_exhaustive]` per code conventions. Verified by `test_BC_2_02_007_ledger_entry_trait_exists()`.
 
 ### AC-002 (traces to BC-2.02.007 PC-001 — novel entry appended)
-`LedgerChannel<T>::reduce(acc: Vec<T>, incoming: T) -> Vec<T>` — when `incoming.entry_id()` is NOT in `acc`, the returned `Vec<T>` is `acc` with `incoming` appended at the end. Length grows by exactly one. Verified by `test_BC_2_02_007_novel_entry_appended()`.
+`LedgerChannel<T>::reduce(acc: Vec<T>, update: T) -> Vec<T>` — when `update.entry_id()` is NOT in `acc`, the returned `Vec<T>` is `acc` with `update` appended at the end. Length grows by exactly one. Verified by `test_BC_2_02_007_novel_entry_appended()`.
 
 ### AC-003 (traces to BC-2.02.007 PC-002 — duplicate entry is a silent no-op)
-`LedgerChannel<T>::reduce(acc, incoming)` — when `incoming.entry_id()` IS already in `acc`, the returned `Vec<T>` is identical to `acc` (same length, same elements, same order). No `Err(PregolyaError)` is raised. Verified by `test_BC_2_02_007_duplicate_entry_noop()`.
+`LedgerChannel<T>::reduce(acc, update)` — when `update.entry_id()` IS already in `acc`, the returned `Vec<T>` is identical to `acc` (same length, same elements, same order). No `Err(PregolyaError)` is raised. Verified by `test_BC_2_02_007_duplicate_entry_noop()`.
 
 ### AC-004 (traces to BC-2.02.007 PC-004 — mixed novel and duplicate sequence produces one element per distinct entry_id)
 Processing a sequence `[T{id:"a"}, T{id:"b"}, T{id:"a"}, T{id:"c"}]` (in task-identity order per DI-001) from accumulated `vec![]` yields `vec![T{id:"a"}, T{id:"b"}, T{id:"c"}]` — exactly three elements, one per distinct `entry_id`. Verified by `test_BC_2_02_007_mixed_sequence_unique_entries()`.
@@ -87,20 +88,20 @@ When multiple novel entries arrive in a single super-step, their relative order 
 ### AC-010 (traces to BC-2.02.008 INV-003 — monotonically stable ordering)
 Elements already in the `Vec<T>` never change position. New entries are always appended at the end. No in-place reordering occurs after any `reduce` call. VP-017 (dual-anchor) also exercises this ordering stability invariant for arbitrary input sequences. Verified by `test_BC_2_02_008_ordering_monotonically_stable()` (unit) and VP-017 (proptest, BC-2.02.008 {INV-003} clause).
 
-### AC-011 (traces to BC-2.02.009 PRE-002 — PromoteRetireOp enum declared non_exhaustive)
-`PromoteRetireOp<T>` is a `#[non_exhaustive]` enum in `graph::channels` with variants `Promote(T)` and `Retire(String)`. External `match` arms must include a wildcard `_ => {}` arm. Verified by compile-fail test `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()`.
+### AC-011 (traces to BC-2.02.009 PRE-002 — PromoteRetireOp enum and struct types declared non_exhaustive)
+`PromoteRetireOp<T>` is a `#[non_exhaustive]` enum in `graph::channels` with variants `Promote(T)` and `Retire(String)`. External `match` arms must include a wildcard `_ => {}` arm. The same `#[non_exhaustive]` obligation applies to `LedgerChannel<T>` and `PromoteRetireChannel<T>` (AC-001): external consumers must use `Default` construction — struct literal construction will not compile outside `pregolya-graph`. The compile-fail test verifying the wildcard requirement for `PromoteRetireOp` (and confirming `#[non_exhaustive]` on the struct types) MUST live in the external gate crate `tests/external/non-exhaustive-gate/` — NOT in the defining `pregolya-graph` crate, where `#[non_exhaustive]` is inert for match-completeness and struct-literal enforcement. Verified by `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()` in `tests/external/non-exhaustive-gate/`.
 
 ### AC-012 (traces to BC-2.02.009 PC-001 — Promote novel entry appends to active set)
-`PromoteRetireChannel<T>::reduce(active: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` — when `op` is `Promote(entry)` and `entry.entry_id()` is NOT in `active`, the returned `Vec<T>` is `active` with `entry` appended. Length grows by one. Verified by `test_BC_2_02_009_promote_novel_appends()`.
+`PromoteRetireChannel<T>::reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` — when `update` is `Promote(entry)` and `entry.entry_id()` is NOT in `acc`, the returned `Vec<T>` is `acc` with `entry` appended. Length grows by one. Verified by `test_BC_2_02_009_promote_novel_appends()`.
 
 ### AC-013 (traces to BC-2.02.009 PC-002 — Promote existing entry_id is idempotent)
-When `op` is `Promote(entry)` and `entry.entry_id()` IS already in `active`, the active set is unchanged (no duplicate added, same length). Verified by `test_BC_2_02_009_promote_duplicate_noop()`.
+When `update` is `Promote(entry)` and `entry.entry_id()` IS already in `acc`, the active set is unchanged (no duplicate added, same length). Verified by `test_BC_2_02_009_promote_duplicate_noop()`.
 
 ### AC-014 (traces to BC-2.02.009 PC-003 — Retire present entry_id removes it)
-When `op` is `Retire(entry_id)` and `entry_id` IS in the active set, the entry with that `entry_id` is removed. Active set shrinks by exactly one. Verified by `test_BC_2_02_009_retire_present_entry()`.
+When `update` is `Retire(entry_id)` and `entry_id` IS in the active set, the entry with that `entry_id` is removed. Active set shrinks by exactly one. Verified by `test_BC_2_02_009_retire_present_entry()`.
 
 ### AC-015 (traces to BC-2.02.009 PC-004 — Retire absent entry_id is idempotent, no error)
-When `op` is `Retire(entry_id)` and `entry_id` is NOT in the active set, the active set is unchanged. No `Err(PregolyaError)` is raised. Verified by `test_BC_2_02_009_retire_absent_noop_no_error()`.
+When `update` is `Retire(entry_id)` and `entry_id` is NOT in the active set, the active set is unchanged. No `Err(PregolyaError)` is raised. Verified by `test_BC_2_02_009_retire_absent_noop_no_error()`.
 
 ### AC-016 (traces to BC-2.02.009 PC-006 — concurrent ops processed in task-identity order, DI-001)
 Within a single super-step, multiple `PromoteRetireOp` values are processed in task-identity-sorted order. EC-003 and EC-004 from BC-2.02.009 (Promote-then-Retire and Retire-then-Promote in same super-step) yield deterministic, distinct final active sets. Verified by `test_BC_2_02_009_concurrent_promote_retire_deterministic_order()` (TST-PROM-01 non-VP label; deterministic ordering test for `PromoteRetireChannel`).
@@ -146,16 +147,18 @@ Well within the 20-30% agent context window threshold.
 
 - [ ] Read `pregolya-graph/src/channels/mod.rs`, `channels/last_value.rs`, and `channels/append.rs` (from S-1.14) to understand the directory module layout and existing channel infrastructure before adding anything
 - [ ] Create `pregolya-graph/src/channels/ledger.rs` — declare `LedgerEntry` trait with supertrait bounds `Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and required method `fn entry_id(&self) -> &str`
-- [ ] In `channels/ledger.rs` — declare `#[non_exhaustive] LedgerChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no Result)
+- [ ] In `channels/ledger.rs` — declare `#[non_exhaustive] LedgerChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no Result; Vec linear scan per Rule 2 — no indexmap)
+- [ ] In `channels/ledger.rs` — add `impl<T: LedgerEntry> Default for LedgerChannel<T>` yielding an empty-state instance; no `pub fn new()` beyond Default (Rule 13)
 - [ ] Create `pregolya-graph/src/channels/promote_retire.rs` — declare `#[non_exhaustive] PromoteRetireOp<T>` enum with variants `Promote(T)` and `Retire(String)`
-- [ ] In `channels/promote_retire.rs` — declare `#[non_exhaustive] PromoteRetireChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` (no Result)
+- [ ] In `channels/promote_retire.rs` — declare `#[non_exhaustive] PromoteRetireChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` (no Result; Vec linear scan for Promote-dedup per Rule 3 — no indexmap)
+- [ ] In `channels/promote_retire.rs` — add `impl<T: LedgerEntry> Default for PromoteRetireChannel<T>` yielding empty active set; no `pub fn new()` beyond Default (Rule 13)
 - [ ] Add `pub use` re-exports for all new symbols in `pregolya-graph/src/channels/mod.rs` (no logic)
 - [ ] Confirm `serde` is listed in `pregolya-graph/Cargo.toml` (workspace pin); add if absent
 - [ ] Write VP-017 proptest (`ledger_channel_dedup_idempotency`) in `channels/ledger.rs` `#[cfg(test)]` — MUST fail on stubs (Red Gate discipline; dual-anchor: BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003})
 - [ ] Write unit tests for AC-001..AC-010 in `channels/ledger.rs` `#[cfg(test)]` (red first, then implement)
 - [ ] Write unit tests for AC-011..AC-017 in `channels/promote_retire.rs` `#[cfg(test)]` (red first; label TST-PROM-01/TST-PROM-02 as noted in ACs)
 - [ ] Run `just iter pregolya-graph` — all tests green (including existing S-1.14 tests)
-- [ ] Confirm `PromoteRetireOp` compile-fail test AC-011 (missing wildcard arm must fail to compile)
+- [ ] Confirm AC-011 compile-fail test (missing wildcard `_ => {}` arm for `PromoteRetireOp` + non-exhaustive construction for `LedgerChannel` and `PromoteRetireChannel`) lives in `tests/external/non-exhaustive-gate/` — NOT in `pregolya-graph` where `#[non_exhaustive]` is inert for match-completeness and struct-literal enforcement (Rule 14 / AC-011)
 
 ## Previous Story Intelligence
 
@@ -168,8 +171,8 @@ Well within the 20-30% agent context window threshold.
 Derived from `architecture/module-decomposition.md §pregolya-graph` and ADR-030 §Decision 3:
 
 1. `LedgerEntry` trait and `LedgerChannel<T>` MUST be defined in `pregolya-graph/src/channels/ledger.rs` (`graph::channels::ledger`). `PromoteRetireOp<T>` and `PromoteRetireChannel<T>` MUST be defined in `pregolya-graph/src/channels/promote_retire.rs` (`graph::channels::promote_retire`). `channels/mod.rs` is re-export-only — no logic per CLAUDE.md `mod.rs` rule. Creating these new files is REQUIRED; adding logic to `mod.rs` is FORBIDDEN.
-2. `LedgerChannel<T>::reduce` MUST be a pure function: `(Vec<T>, T) -> Vec<T>`. No mutation of the `acc` argument through shared state; return a new or modified `Vec<T>` without side effects.
-3. `PromoteRetireChannel<T>::reduce` MUST be a pure function: `(Vec<T>, PromoteRetireOp<T>) -> Vec<T>`.
+2. `LedgerChannel<T>::reduce` MUST be a pure function: `(Vec<T>, T) -> Vec<T>`. The canonical implementation uses Vec linear scan — NO `indexmap` dependency: `fn reduce(acc: Vec<T>, update: T) -> Vec<T> { if acc.iter().any(|e| e.entry_id() == update.entry_id()) { acc } else { let mut result = acc; result.push(update); result } }`. No mutation through shared state; no side effects.
+3. `PromoteRetireChannel<T>::reduce` MUST be a pure function with signature `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>`. Apply Vec linear scan for the Promote-dedup path (same no-indexmap rule as Rule 2).
 4. `PromoteRetireOp<T>` MUST carry `#[non_exhaustive]` per code convention (public API enum).
 5. `LedgerChannel<T>` and `PromoteRetireChannel<T>` structs MUST carry `#[non_exhaustive]` per code convention.
 6. No `unwrap()` / `expect()` in non-test code.
@@ -177,8 +180,10 @@ Derived from `architecture/module-decomposition.md §pregolya-graph` and ADR-030
 8. `LedgerEntry` supertrait bounds MUST be exactly: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`; the single required method is `fn entry_id(&self) -> &str`. These MUST match BC-2.02.007 {PRE-001} exactly. Consequently `T: LedgerEntry` implies `T: Clone + Serialize + DeserializeOwned + Send + Sync + 'static` without additional explicit bounds at the use-site.
 9. The VP-017 proptest harness (`ledger_channel_dedup_idempotency`) MUST exercise arbitrary-length sequences via the `proptest!` macro, not fixed vectors. It must assert both the dedup-uniqueness invariant (BC-2.02.007 {INV-002}) and the first-appearance ordering invariant (BC-2.02.008 {INV-001}).
 10. **Forbidden dependencies:** `graph::channels` (including `channels/ledger.rs` and `channels/promote_retire.rs`) must NOT gain a dependency on `pregolya-checkpoint`, `pregolya-mcp`, `pregolya-server`, or any I/O crate. The channel reducers are pure types.
-11. `LedgerChannel<T>::reduce` and `PromoteRetireChannel<T>::reduce` MUST return `Vec<T>` directly — NOT `Result<Vec<T>, _>`. The canonical pure reducer signatures are `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (Ledger) and `fn reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` (PromoteRetire). Dedup and no-op paths are silent by spec (BC-2.02.007 {PC-002}, BC-2.02.009 {PC-002}/{PC-004}).
+11. `LedgerChannel<T>::reduce` and `PromoteRetireChannel<T>::reduce` MUST return `Vec<T>` directly — NOT `Result<Vec<T>, _>`. The canonical pure reducer signatures are `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (Ledger) and `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` (PromoteRetire). Dedup and no-op paths are silent by spec (BC-2.02.007 {PC-002}, BC-2.02.009 {PC-002}/{PC-004}).
 12. `serde::Serialize` and `serde::de::DeserializeOwned` in the `LedgerEntry` supertrait bounds are satisfied via `serde` (workspace pin). Do NOT import these traits from any I/O-layer crate — use only `serde::{Serialize, Deserialize}` re-exports. The `serde` crate is already a workspace dependency; confirm it is listed in `pregolya-graph/Cargo.toml` before implementing.
+13. `LedgerChannel<T>` and `PromoteRetireChannel<T>` MUST each provide `impl Default` (yielding an empty-state instance — empty `Vec<T>` — for cross-crate test construction). No `pub fn new()` constructor beyond `Default` is permitted. Use `LedgerChannel::default()` / `PromoteRetireChannel::default()` at call-sites. This is the only safe construction path from outside `pregolya-graph` because both types carry `#[non_exhaustive]`.
+14. `indexmap` MUST NOT appear in `pregolya-graph/Cargo.toml` (production or dev dependencies). The dedup scan is a Vec linear scan per Rule 2 — O(n) is acceptable for the channel element counts expected in research-orchestrator use. Verify the Library table in this story has no `indexmap` row before closing the PR.
 
 ## Library & Framework Requirements
 
@@ -190,11 +195,15 @@ Derived from `architecture/module-decomposition.md §pregolya-graph` and ADR-030
 
 No new crate-level dependencies are expected beyond `proptest` (dev-dependency) which is already present from S-1.16 / existing graph tests.
 
+**No `indexmap`:** The dedup scan in `LedgerChannel::reduce` and the Promote-dedup path in `PromoteRetireChannel::reduce` MUST use Vec linear scan (Architecture Rule 2). `indexmap` must NOT appear in `pregolya-graph/Cargo.toml` — production or dev dependencies (Architecture Rule 14).
+
 ## File Structure Requirements
 
 Files to CREATE:
-- `pregolya-graph/src/channels/ledger.rs` — `LedgerEntry` trait (supertrait bounds: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`), `#[non_exhaustive] LedgerChannel<T>` struct, pure `reduce(acc: Vec<T>, update: T) -> Vec<T>` impl; `#[cfg(test)]` VP-017 proptest `ledger_channel_dedup_idempotency` + AC-001..AC-010 unit tests
-- `pregolya-graph/src/channels/promote_retire.rs` — `#[non_exhaustive] PromoteRetireOp<T>` enum, `#[non_exhaustive] PromoteRetireChannel<T>` struct, pure `reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` impl; `#[cfg(test)]` AC-011..AC-017 unit tests (TST-PROM-01: `test_BC_2_02_009_concurrent_promote_retire_deterministic_order`; TST-PROM-02: `test_BC_2_02_009_active_set_no_duplicate_entry_ids`)
+- `pregolya-graph/src/channels/ledger.rs` — `LedgerEntry` trait (supertrait bounds: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`), `#[non_exhaustive] LedgerChannel<T>` struct, `Default` impl (empty state; no `pub fn new()`), pure `reduce(acc: Vec<T>, update: T) -> Vec<T>` impl (Vec linear scan — no indexmap); `#[cfg(test)]` VP-017 proptest `ledger_channel_dedup_idempotency` + AC-001..AC-010 unit tests
+- `pregolya-graph/src/channels/promote_retire.rs` — `#[non_exhaustive] PromoteRetireOp<T>` enum, `#[non_exhaustive] PromoteRetireChannel<T>` struct, `Default` impl (empty active set; no `pub fn new()`), pure `reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` impl (Vec linear scan for Promote-dedup; no indexmap); `#[cfg(test)]` AC-012..AC-017 unit tests (TST-PROM-01: `test_BC_2_02_009_concurrent_promote_retire_deterministic_order`; TST-PROM-02: `test_BC_2_02_009_active_set_no_duplicate_entry_ids`); compile-fail test for AC-011 is in the external gate crate (see below)
+- `tests/external/non-exhaustive-gate/Cargo.toml` — manifest for the external compile-fail gate crate; depends on `pregolya-graph`; `edition = "2024"`
+- `tests/external/non-exhaustive-gate/src/lib.rs` — `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()` compile-fail test verifying `#[non_exhaustive]` enforcement on `PromoteRetireOp<T>`, `LedgerChannel<T>`, and `PromoteRetireChannel<T>` from outside the defining crate (AC-011)
 
 Files to MODIFY:
 - `pregolya-graph/src/channels/mod.rs` — `pub use` re-exports for `LedgerEntry`, `LedgerChannel`, `PromoteRetireOp`, `PromoteRetireChannel` (re-export-only; no logic per CLAUDE.md `mod.rs` rule)
@@ -214,5 +223,6 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.2 | 2026-08-31 | Round-51 fix-burst: F-P2A212-06 AC-011 compile-fail gate to external crate (LedgerChannel+PromoteRetireChannel too); F-P2A212-08 incoming->update in AC-002/003, active/op->acc/update in AC-012..015+Rules; Default impls for both structs; Rule 2 Vec-linear-scan implementation; Rules 13-14 added; File structure updated | story-writer |
 | 1.1 | 2026-08-31 | Round-50 fix-burst: LedgerEntry Serialize+DeserializeOwned supertrait bounds; channels/ directory module; VP-017 dual-anchor; TST-PROM-01/02 labels; pure reducer no-Result rule; serde dep; file-structure for ledger.rs+promote_retire.rs | story-writer |
 | 1.0 | 2026-08-31 | Initial authoring — praxist Stage-3 story decomposition for BC-2.02.007/008/009 + VP-017 | story-writer |

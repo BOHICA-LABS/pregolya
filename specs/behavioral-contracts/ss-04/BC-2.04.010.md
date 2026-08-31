@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.010
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — TrajectoryReader::replay ascending step_idx ordering; DI-004 + DI-014 invariant enforcement; ADR-030 Decision 2."
   - "1.1 (ADR-030/Stage-3.5-product-owner/2026-08-31): EC-004 category corrected INTERNAL→DURABILITY (E-TRAJ-003 minted as DURABILITY; read failures are DURABILITY per taxonomy convention matching E-CHKPT-003)."
   - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): VP-TRAJ-01 phantom label relabeled TST-TRAJ-01 in §Verification Properties; removed from §VP Anchors (not a registered VP — durability-after-restart integration test concept only; no real VP covers BC-2.04.010 yet)."
+  - "1.3 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-2.12 (per STORY-INDEX; F-P2A214-01 hook #19 compliance)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "a280d94"
+input-hash: "5703511"
 extracted_from: null
 modified: []
 deprecated: null
@@ -141,7 +142,7 @@ decide whether to retry or abort.
 
 ## Story Anchor
 
-S-TBD (assigned at story decomposition — Stage 3)
+S-2.12
 
 ## VP Anchors
 

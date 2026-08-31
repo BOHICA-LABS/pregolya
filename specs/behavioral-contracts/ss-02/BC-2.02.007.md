@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.007
-version: "1.1"
+version: "1.2"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -17,6 +17,7 @@ timestamp: 2026-08-31T00:00:00Z
 changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — LedgerChannel dedup-idempotent append; VP-017 proptest anchor (harness ledger_channel_dedup_idempotency); DI-014 + DI-001 invariant enforcement; ADR-030 Decision 3."
   - "1.1 (round-50/Stage-B1-product-owner/2026-08-31): {PRE-001} supertrait bound adopted: T: LedgerEntry (replaces T: LedgerEntry + Clone + Send + Sync + 'static — those bounds are already imposed by the LedgerEntry supertrait, use-site repetition removed per F-P2A208-11). §Architecture Anchors: LedgerEntry trait definition updated to show Serialize + DeserializeOwned supertrait bounds (F-P2A211-07 serde requirement for CheckpointSaver::put_writes checkpoint-resume; fn entry_id now returns &str not String). LedgerChannel reducer model stated as fn reduce(acc: Vec<T>, update: T) -> Vec<T> pure function — consistent with interface-definitions.md §LedgerChannel stateless-reducer-marker model and S-1.14 channel family (no Result, no Ok(()))."
+  - "1.2 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: LedgerEntry + LedgerChannel canonical file corrected from phantom flat-file channels.rs to directory module channels/ledger.rs (F-P2A215-01; graph::channels module path unchanged)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -24,7 +25,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "a280d94"
+input-hash: "5703511"
 extracted_from: null
 modified: []
 deprecated: null
@@ -139,7 +140,7 @@ meaningful within their domain; `LedgerChannel` imposes no minimum-length constr
 
 ## Architecture Anchors
 
-- `pregolya-graph/src/channels.rs` (`graph::channels`) — `LedgerEntry` supertrait definition:
+- `pregolya-graph/src/channels/ledger.rs` (`graph::channels`) — `LedgerEntry` supertrait definition:
   `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static`
   with `fn entry_id(&self) -> &str` (stable dedup key; `Serialize + DeserializeOwned` bounds
   required for `CheckpointSaver::put_writes` checkpoint-resume serialization — F-P2A211-07);
@@ -152,7 +153,7 @@ meaningful within their domain; `LedgerChannel` imposes no minimum-length constr
 
 ## Story Anchor
 
-S-TBD (assigned at story decomposition — Stage 3)
+S-1.28
 
 ## VP Anchors
 

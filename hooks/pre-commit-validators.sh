@@ -94,6 +94,25 @@
 #       coverage-intro mismatch) + 1 positive (all agree). Wired 2026-08-31.
 #       Pre-existing violations: 12 FAILs (Census+blockquote+intro all stale from D-327).
 #       Routing: state-manager fix-burst to update STORY-INDEX Census/blockquote/intro.
+#   verify-vp-count-parity.sh              — (FAILING) BC-INDEX header VP count parity.
+#       Closes F-P2A214-02 (round-51 GATE-READY process-gap): BC-INDEX header blockquote
+#       "VPs registered" and "VP Seed" counts drift from VP-INDEX §Summary Total VPs and
+#       §VP Seed BCs table unique-VP count. Checks: (1) bold line "N VPs registered" ==
+#       VP-INDEX Total VPs; (2) bold line "N VP Seed" == unique VPs in VP Seed BCs table;
+#       (3) VP-INDEX detail line "VP-INDEX: N VPs registered" == VP-INDEX Total VPs;
+#       (4) BC-INDEX §Summary "N unique VPs" == VP Seed BCs table unique count.
+#       3 self-probes (POL-31): 2 negative + 1 positive. Wired 2026-08-31.
+#       Pre-existing violations: 3 FAILs (header 19/17, detail 17 all stale from D-328).
+#       Routing: state-manager/product-owner fix-burst to update BC-INDEX header blockquote.
+#   verify-bc-story-anchor-resolution.sh   — (FAILING) BC Story Anchor S-TBD resolution.
+#       Closes F-P2A214-01 (round-51 GATE-READY process-gap): BCs that STORY-INDEX §BC to
+#       Story Coverage Map assigns to real stories (S-N.NN) must not carry S-TBD in their
+#       body ## Story Anchor section. Checks all 140 BCs in coverage map; fails for any
+#       BC body still saying S-TBD while STORY-INDEX has assigned it. 2 self-probes
+#       (POL-31): 1 negative (S-TBD stale) + 1 positive (resolved). Wired 2026-08-31.
+#       Pre-existing violations: 6 FAILs (BC-2.02.007/008/009 → S-1.28,
+#       BC-2.04.009/010/011 → S-2.12 per D-327 story-writer burst; back-anchors not filled).
+#       Routing: product-owner/story-writer fix-burst to update BC body §Story Anchor.
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -236,7 +255,7 @@ PASSED_VALIDATORS=()
 PASS_COUNT=0
 # Single source of truth for the expected blocking validator roster size.
 # Update this constant when adding or removing a blocking validator.
-EXPECTED_BLOCKING_COUNT=17
+EXPECTED_BLOCKING_COUNT=19
 
 # run_blocking runs a validator and records failure in FAILED_VALIDATORS
 run_blocking() {
@@ -305,6 +324,8 @@ run_blocking "verify-adr-anchor-citations.sh"
 run_blocking "verify-ac-pc-trace.sh"
 run_blocking "verify-vp-anchors-grammar.sh"
 run_blocking "verify-story-count-propagation.sh"
+run_blocking "verify-vp-count-parity.sh"
+run_blocking "verify-bc-story-anchor-resolution.sh"
 
 # ── Advisory validators (run but do not block; see header for promotion paths) ─
 echo ""

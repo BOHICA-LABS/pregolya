@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.002
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (F-P140-01, 2026-07-23): Fix burst 240 Wave 2 — sweep stale pregel/*.rs Architecture Anchor file-path references to canonical flat graph:: layout per ADR-001 / module-decomposition v1.21."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.14 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (round-51/Stage-B2-product-owner/2026-08-31): §Architecture Anchors: BinaryOperatorAggregate<T, Op> + Overwrite<T> canonical file reconciled from channels/binary_operator.rs to channels/append.rs per story S-1.14 actual implementation file (F-P2A215-05; graph::channels module path unchanged)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-003
   - domain-spec/invariants.md#DI-001
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/domain-spec/edge-cases.md
   - .factory/semport/graph/behavioral-intent.md
-input-hash: "aab9b72"
+input-hash: "f87bda5"
 extracted_from: null
 modified: []
 deprecated: null
@@ -157,7 +158,7 @@ differ from task completion order at runtime).
 ## Architecture Anchors
 
 - `pregolya-graph/src/channels/last_value.rs` — `LastValue<T>` channel
-- `pregolya-graph/src/channels/binary_operator.rs` — `BinaryOperatorAggregate<T, Op>`, `Overwrite<T>`
+- `pregolya-graph/src/channels/append.rs` — `BinaryOperatorAggregate<T, Op>`, `Overwrite<T>`
 - `pregolya-graph/src/channels/barrier.rs` — `BarrierValue`
 - `pregolya-graph/src/bsp_engine.rs` (`graph::bsp_engine`) — `apply_writes` deterministic sort
 

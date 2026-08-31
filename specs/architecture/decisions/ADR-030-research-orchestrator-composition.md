@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-31"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "1.2"
+version: "1.3"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "1.3 (round-51/F-P2A212-01+F-P2A212-02+F-P2A212-03+F-P2A215-02+F-P2A215-03/2026-08-31): Decision 2: TrajectoryRecord::new() constructor added to code block (F-P2A212-01 — #[non_exhaustive] cross-crate construction fix; SqliteTrajectoryStore/pregolya-checkpoint callers unblocked); TrajectoryRetentionPolicy::new() note added (same fix). Decision 3: LedgerEntry code block bound corrected to Serialize+DeserializeOwned supertrait (F-P2A212-02 — code block was Clone+Send+Sync only, contradicting §Serialization Bound); §Serialization Bound Product-owner directive rewritten to T: LedgerEntry supertrait-only form (F-P2A212-03 — old text prescribed use-site T: LedgerEntry + Serialize + DeserializeOwned, contradicting F-P2A208-11); Default impls added for LedgerChannel<T>/PromoteRetireChannel<T> (F-P2A212-01 channel-marker defensive correctness; registration seam is type-level). §Decision 3 §VP: 'put_record' corrected to 'reduce'; BC Anchor extended to BC-2.02.007 + BC-2.02.008 (F-P2A215-02). §Consequences New-BCs table: BC-2.04.010 title corrected to canonical H1 'TrajectoryReader::replay Ascending step_idx Order' (F-P2A215-03)."
   - "1.2 (round-50/F-P2A209-01+F-P2A209-04+F-P2A211-06+F-P2A211-07+F-P2A211-09+F-P2A210-02+F-P2A208-09/2026-08-31): Decision 2: at-rest confidentiality decision added (Option A — route through EncryptedSerializer when configured; F-P2A209-01/CWE-311); SQLite topology pinned (same database file, dedicated trajectory_records table, WAL, bounded-batch compaction; F-P2A209-04); uuid serde feature noted (F-P2A208-09). Decision 3: LedgerEntry serde bound decision added (Serialize+DeserializeOwned on LedgerEntry trait; F-P2A211-07). Decision 1: panel-visibility wording corrected — no per-node channel-scoping primitive; realizable pattern is explicit transform node (F-P2A211-09). §Consequences New-VP table: VP-018 proptest P1 + VP-019 integration P1 rows added (F-P2A211-06/F-P2A210-03). §Renumber-provenance: canonical BC-2.02.009 creation narrative added (new creation, not renumber; F-P2A210-02)."
   - "1.1 (ADR-030 Stage-4-ruling/2026-08-31): §Consequences BC reservation table patched per architect subsystem ruling. BC-2.02.008 row updated to reflect actual PO authoring (LedgerChannel first-appearance ordering); BC-2.02.009 row added for PromoteRetireChannel Lifecycle Semantics (displaced from BC-2.02.008 by PO Stage 2a deviation). BC-2.04.011 row unchanged — retains Trajectory Compaction Isolation (SS-04) original intent. SS-02 BC range text updated 001–008 → 001–009. Total new BCs 5→6."
   - "1.0 (ADR-030/2026-08-31): Initial — use-case composition architecture and two additive library primitives (checkpoint::trajectory, ledger channel types in graph::channels). Spawned by human-directed Stage 1 scoping of the praxist-pattern research orchestrator use case."
@@ -81,11 +82,26 @@ crate):
 ```rust
 /// A single durable record in a run's audit trajectory.
 #[non_exhaustive]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrajectoryRecord {
     pub run_id: Uuid,
     pub step_idx: u64,              // logical-clock position (from checkpoint::clock)
     pub event_kind: String,         // e.g., "generation_complete", "peer_result"
     pub payload: serde_json::Value, // structured payload; no credential material
+}
+
+impl TrajectoryRecord {
+    /// Construct a trajectory record for cross-crate use.
+    /// Required because `#[non_exhaustive]` prevents struct-literal construction
+    /// outside `pregolya-core` (e.g., `SqliteTrajectoryStore` in `pregolya-checkpoint`).
+    pub fn new(
+        run_id: Uuid,
+        step_idx: u64,
+        event_kind: impl Into<String>,
+        payload: serde_json::Value,
+    ) -> Self {
+        TrajectoryRecord { run_id, step_idx, event_kind: event_kind.into(), payload }
+    }
 }
 
 /// Durable write path for audit-grade trajectory records (SS-04 type definitions).
@@ -100,6 +116,13 @@ pub trait TrajectoryReader: Send + Sync {
     async fn replay(&self, run_id: Uuid) -> Result<Vec<TrajectoryRecord>, PregolyaError>;
 }
 ```
+
+**`TrajectoryRetentionPolicy`** (also `core::trajectory`, `pregolya-core`) requires a constructor
+for the same reason: `#[non_exhaustive]` blocks struct-literal construction outside `pregolya-core`.
+`TrajectoryCompactor` callers (in `pregolya-checkpoint`) pass a `TrajectoryRetentionPolicy` and
+must be able to construct it. See interface-definitions §Trajectory Primitive for the full struct
+definition; the canonical constructor is:
+`pub fn new(retention_frontier: u64, promoted: Vec<u64>) -> Self`
 
 **`checkpoint::trajectory`** (execution, pregolya-checkpoint, SS-04):
 Concrete `impl TrajectoryWriter + TrajectoryReader` backed by the existing
@@ -174,15 +197,25 @@ pregolya-graph — no new module row is needed.
 ```rust
 /// Marker trait for ledger entries with a stable identity.
 /// T must implement LedgerEntry to be stored in LedgerChannel or PromoteRetireChannel.
-pub trait LedgerEntry: Clone + Send + Sync + 'static {
+///
+/// `Serialize + DeserializeOwned` bounds are required for checkpoint-resume: the `Vec<T>`
+/// channel accumulator is serialized by `CheckpointSaver::put_writes` on checkpoint and
+/// deserialized on resume. `entry_id()` must return the same value before and after a serde
+/// round-trip (stable identity invariant — ADR-030 §Decision 3 §Serialization Bound).
+pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static {
     fn entry_id(&self) -> &str;
 }
 
-/// Dedup-idempotent append-only channel.
-/// Reducing with a T whose entry_id() is novel appends it.
-/// Reducing with a T whose entry_id() is already present is a no-op.
-/// Channel value: Vec<T> (accumulated; never shrinks).
-pub struct LedgerChannel<T: LedgerEntry> { ... }
+/// Dedup-idempotent append-only channel — stateless reducer marker.
+/// Channel registration is type-level (via `StateGraph` schema annotation); the BSP engine
+/// constructs instances internally. `Default` impl provided for cross-crate use (tests, etc.).
+/// Reducer: `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (pure function; no `Result`).
+#[non_exhaustive]
+pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }
+
+impl<T: LedgerEntry> Default for LedgerChannel<T> {
+    fn default() -> Self { LedgerChannel { _inner: PhantomData } }
+}
 
 /// Enum of operations for the promote/retire lifecycle.
 #[non_exhaustive]
@@ -191,11 +224,15 @@ pub enum PromoteRetireOp<T: LedgerEntry> {
     Retire(String), // entry_id of the item to retire
 }
 
-/// Active-set channel with idempotent promote/retire operations.
-/// Promote adds to active set (idempotent if already present).
-/// Retire removes from active set (idempotent if already absent).
-/// Channel value: Vec<T> (active set).
-pub struct PromoteRetireChannel<T: LedgerEntry> { ... }
+/// Active-set channel — stateless reducer marker.
+/// `Default` impl provided for cross-crate use (tests, etc.).
+/// Reducer: `fn reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` (pure; no `Result`).
+#[non_exhaustive]
+pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }
+
+impl<T: LedgerEntry> Default for PromoteRetireChannel<T> {
+    fn default() -> Self { PromoteRetireChannel { _inner: PhantomData } }
+}
 ```
 
 ### Serialization Bound for Checkpoint Resume (F-P2A211-07)
@@ -213,20 +250,21 @@ Canonical bound: `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + 
 `entry_id()` must produce the same value before and after a serde round-trip (stable identity).
 
 **Product-owner:** update `BC-2.02.007 AC-001` and `S-1.28 AC-001` to carry:
-"The `T` type bound for `LedgerChannel<T>` is `T: LedgerEntry + Serialize + DeserializeOwned`;
-`entry_id()` is stable across serde round-trips."
+"The `T` type bound for `LedgerChannel<T>` is `T: LedgerEntry` (supertrait-only — `Serialize +
+DeserializeOwned` are already imposed by the `LedgerEntry` supertrait; use-site repetition of
+those bounds is forbidden per F-P2A208-11); `entry_id()` is stable across serde round-trips."
 
 ### VP
 
 `LedgerChannel` dedup-idempotency is a formally provable pure-function reducer property.
 **VP-017** (proptest P1, Phase 3) is seeded now:
 
-- Property: for any sequence of `put_record` calls against `LedgerChannel`, the final
+- Property: for any sequence of `reduce` calls on `LedgerChannel`, the final
   accumulated `Vec<T>` contains exactly the entries with distinct `entry_id` values, in
   first-appearance order.
 - Tool: proptest — exercise arbitrary sequences of novel and repeated entries; assert
   idempotency invariant holds for every prefix.
-- Module: `graph::channels` | Crate: `pregolya-graph` | BC Anchor: BC-2.02.007
+- Module: `graph::channels` | Crate: `pregolya-graph` | BC Anchor: BC-2.02.007 + BC-2.02.008
 
 ## Decision 4 — Clean-Room Posture
 
@@ -325,7 +363,7 @@ any StateGraph application can use.
 | BC ID | Subsystem | Title (draft) | One-line intent |
 |-------|-----------|---------------|-----------------|
 | BC-2.04.009 | SS-04 | `TrajectoryWriter::put_record` Durability | A written record is recoverable after process restart |
-| BC-2.04.010 | SS-04 | `TrajectoryReader::replay` Logical-Clock Ordering | Replay returns records in ascending step_idx order; complete; deterministic |
+| BC-2.04.010 | SS-04 | `TrajectoryReader::replay` Ascending step_idx Order | Replay returns records in ascending step_idx order; complete; deterministic |
 | BC-2.04.011 | SS-04 | Trajectory Compaction Isolation | Trajectory records are not pruned by ADR-019 compaction |
 | BC-2.02.007 | SS-02 | `LedgerChannel` Dedup-Idempotent Append | VP-017 target; seen entry_id on second write is a no-op |
 | BC-2.02.008 | SS-02 | `LedgerChannel` First-Appearance Ordering | Entry order in Vec<T> reflects first-appearance across all super-steps [PO Stage 2a actual authoring] |
