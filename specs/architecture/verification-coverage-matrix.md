@@ -2,18 +2,19 @@
 document_type: architecture-section
 level: L3
 section: verification-coverage-matrix
-version: "3.32"
+version: "3.33"
 status: active
 producer: state-manager
-timestamp: 2026-08-31T20:00:00Z
+timestamp: 2026-09-01T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/module-criticality.md
-input-hash: "cb4efca"
+input-hash: "dc443d9"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "3.33 (round-54/F-P2A224-02/2026-09-01): VP-017 DI anchor corrected DI-014 → DI-001 in Per-Module Coverage Status §graph::channels Notes column (VP-017 proptest P1 {DI-014} → {DI-001}). Sibling site missed by round-53 D-332 re-anchor. Authoritative value confirmed: VP-INDEX + ADR-030 §VP + VP-017 body all carry DI-001. Historical changelog entry v3.29 (original add with DI-014) grandfathered per POL-46. VP/module census UNCHANGED: 20 VPs. input-hash refreshed."
   - "3.32 (round-51/D-329/F-P2A214-06/2026-08-31): Per-Module Coverage Status §graph::channels proptest column: BC-2.02.008 added to BC anchor list (VP-017 dual-anchor — first-appearance ordering; BC-2.02.002 + BC-2.02.007 + BC-2.02.008). VP-to-Module table VP-017 row already had correct bc_anchor=BC-2.02.007+BC-2.02.008 from v3.31; Per-Module Coverage Status table was the only site with the stale single-anchor listing. VP/module census UNCHANGED: 20 VPs."
   - "3.31 (round-50/F-P2A209-03+F-P2A211-05/2026-08-31): VP-019 added: integration P1, Phase 6, checkpoint::trajectory, pregolya-checkpoint, BC-2.04.011 {INV-003}. VP-017 BC Anchor updated: BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (first-appearance ordering dual-anchor). VP-to-Module table: add VP-019 row; update VP-017 anchor. Totals: 19→20 VPs, integration 2→3. Per-Module Coverage Status: checkpoint::trajectory MEDIUM row updated — add VP-019 integration P1 to Notes ({INV-003} crash-isolation now covered by VP-019). Coverage by Criticality Tier MEDIUM: checkpoint::trajectory proptest+integration note updated. Arithmetic: total (20) = P0 (6) + P1 (14) = Kani (9) + proptest (7) + integration (3) + unit (1). input-hash updated."
   - "3.30 (BC-2.04.011/2026-08-31): VP-018 added: proptest P1, checkpoint::trajectory, pregolya-checkpoint, BC-2.04.011 {INV-001}, DI-002. VP-to-Module table: add VP-018 row. Totals: 18→19 VPs, proptest 6→7. Per-Module Coverage Status: add checkpoint::trajectory MEDIUM row (pregolya-checkpoint; VP-018 proptest P1; retention-integrity {INV-001}+{INV-002}); add core::trajectory definitions-only row (Tier=—; definitions-only per ADR-030; no VP target). Header: physical rows 90→92; distinct modules 88→90; tiered MEDIUM 40→41; total tiered 82→83; definitions-only corrected 6→8 (core::invocation_context was missing from prior count, now fixed + core::trajectory added). Coverage by Criticality Tier MEDIUM: 40→41 modules, proptest updated (checkpoint::trajectory/VP-018). Arithmetic: total (19) = P0 (6) + P1 (13) = Kani (9) + proptest (7) + integration (2) + unit (1)."
@@ -112,7 +113,7 @@ changelog:
 | Module | Crate | Kani | proptest | fuzz | Integration | Notes |
 |--------|-------|------|---------|------|-------------|-------|
 | graph::bsp_engine | pregolya-graph | VP-001 | yes (BC-2.03.003) | yes (BC-2.17.002) | yes | Core VP target |
-| graph::channels | pregolya-graph | — | VP-017/yes (BC-2.02.002 + BC-2.02.007 + BC-2.02.008) | — | yes | Reducer invariants + LedgerChannel dedup-idempotency + first-appearance ordering (VP-017 proptest P1 {DI-014}; ADR-030 Decision 3; dual-anchor BC-2.02.007+BC-2.02.008) |
+| graph::channels | pregolya-graph | — | VP-017/yes (BC-2.02.002 + BC-2.02.007 + BC-2.02.008) | — | yes | Reducer invariants + LedgerChannel dedup-idempotency + first-appearance ordering (VP-017 proptest P1 {DI-001}; ADR-030 Decision 3; dual-anchor BC-2.02.007+BC-2.02.008) |
 | graph::hitl | pregolya-graph | VP-011 | — | — | yes | D23/SS-05; PreToolCallHook fail-closed; Kani P0 (BC-2.05.007) |
 | graph::scheduler | pregolya-graph | — | — | — | yes | Pending ADR-001 |
 | graph::budget | pregolya-graph | — | yes | — | yes | EvidenceJournal ordering |

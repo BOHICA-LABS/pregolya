@@ -1,9 +1,9 @@
 ---
 document_type: dependency-graph
-version: "1.4"
+version: "1.5"
 status: active
 producer: story-writer
-timestamp: 2026-08-31T00:00:00Z
+timestamp: 2026-09-01T00:00:00Z
 phase: 2
 traces_to: .factory/stories/STORY-INDEX.md
 ---
@@ -90,7 +90,7 @@ S-1.13 (SkillStore/WriteGuard)
 ```
 S-1.14 (StateGraph Nodes + Channels)
   depends_on: [S-1.04, S-1.01]
-  blocks: S-1.13, S-1.15, S-1.16, S-1.17, S-1.18, S-1.19, S-2.11
+  blocks: S-1.13, S-1.15, S-1.16, S-1.17, S-1.18, S-1.19, S-1.28, S-2.11
 
 S-1.15 (Conditional Edges + Send)
   depends_on: [S-1.14]
@@ -432,6 +432,7 @@ S-6.01 (Kani + cargo-fuzz)
 
 ## Changelog
 
+- **1.5 (round-54/F-P2A224-05/2026-09-01):** S-1.14 `blocks:` extended to include S-1.28 (reverse edge fix — S-1.28 depends_on S-1.14, so S-1.14 must list S-1.28 in blocks). DAG acyclicity unaffected: S-1.28 depends on S-1.14 (Wave-1 upstream); topological sort batch-1e already correctly placed S-1.28 after S-1.14 (batch-1d); no new ordering constraints introduced.
 - **1.4 (Stage-3/CAP-040/2026-08-31):** Two new stories integrated: S-1.28 (LedgerChannel + PromoteRetireChannel, pregolya-graph, BC-2.02.007/008/009, VP-017 proptest P1 anchor) and S-2.12 (Durable Audit Trajectory, pregolya-checkpoint, BC-2.04.009/010/011, VP-018 proptest P1 anchor). DAG entries added for both. Wave-1 batch-1e extended: S-1.28 added (depends_on [S-1.14]; S-1.14 in batch-1d — no new deps required). Wave-2 batch-2a extended: S-2.12 added (depends_on [S-1.10]; Wave-1 dep satisfied before Wave 2 begins). BC to Stories Matrix: SS-02 range BC-2.02.001–006 → BC-2.02.001–009 / S-1.14+S-1.15+S-1.28; SS-04 range BC-2.04.001–008 → BC-2.04.001–011 / S-1.10+S-1.11+S-2.12. VP to Stories Matrix: VP-017 (BC-2.02.007 / proptest / P1 / S-1.28) and VP-018 (BC-2.04.011 / proptest / P1 / S-2.12) added. BC coverage header updated to 140 BCs / 41 product stories (preamble census pending state-manager STATE.md sync). DAG-acyclicity confirmed: S-1.28 depends_on S-1.14 (Wave 1 upstream) — no cycle; S-2.12 depends_on S-1.10 (Wave 1 upstream) — no cycle.
 - **1.3 (GAP-01-nongeneric/round-10/2026-08-27):** Crate-Level Dependency Edges live row updated to round-10 non-generic design: `Arc<CompiledGraph<S>>` → `Arc<CompiledStateGraph>`; `from_graph<S>` generic constructor clause removed (`from_graph` is now a non-generic constructor per ADR-029 §Symbol Grounding / BC-2.02.001 {PC-001}); `CompiledGraph<S>` type reference → `CompiledStateGraph`; ADR source updated to ADR-029 §Consequences, BC-2.02.001 {PC-001}, BC-2.09.008 {PC-001}. Historical §Changelog rows preserved as records.
 - **1.2 (F-P2A066-02/round-7/2026-08-26):** Crate-Level Dependency Edges: `GraphAgentTool<S>` → `GraphAgentTool` (struct is non-generic; `from_graph<S>` constructor and `Arc<CompiledGraph<S>>` remain generic per ADR-029 §Decision); clarification note added.

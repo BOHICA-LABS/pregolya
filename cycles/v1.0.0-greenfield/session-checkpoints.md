@@ -4033,3 +4033,15 @@ pregolya Phase-2 re-convergence. streak 0/3. D-330 CLOSED (round-52 fix-burst; t
 pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-52 closed (D-326/D-328/D-329/D-330). Round-53 adversarial sweep COMPLETE on frozen HEAD f7873df — trajectory-tail →4→2→4→8; 3H+7M+4L/OBS/PG; GATE-READY=YES 13/13; fix-burst NOT STARTED. Next action: round-53 fix-burst staged A (architect+formal-verifier) → B (product-owner) → C (story-writer) → D (state-manager), then round-54 on new HEAD.
 
 ### STATE: v6.42, timestamp 2026-08-31T22:00:00Z
+
+---
+
+## Archived Checkpoint: D-332 (archived 2026-09-01 at D-333 close)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-53 closed (D-326/D-328/D-329/D-330/D-332). Round-53 fix-burst CLOSED on frozen HEAD f7873df — all 14 findings closed (3H+7M+4LOW/PG); ADR-030 §Decision-3 + interface-definitions §TrajectoryCompactor + VP-019 §crash-isolation-four-point + BC-2.04.009 §keyed-MAC + BC-2.04.011 §atomicity + BC-2.02.007 §reduce-dispatch + HS-D-007 §must-pass + S-1.28 + S-2.12 + epics.md §E-TRAJ; BC-INDEX §Changelog 4.10-4.13 backfilled; VP-017 DI-001 sync; census UNCHANGED. D-332 push DONE (a8dcd3f). Next: round-54 adversary cascade on frozen HEAD f7873df.
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `a8dcd3f` — PUSHED.
+
+### STATE: v6.43, timestamp 2026-08-31T23:59:00Z

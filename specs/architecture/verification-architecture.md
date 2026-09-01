@@ -2,10 +2,10 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.32"
+version: "2.33"
 status: active
-producer: architect
-timestamp: 2026-08-31T00:00:00Z
+producer: state-manager
+timestamp: 2026-09-01T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/domain-spec/invariants.md
@@ -28,9 +28,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "4bd4096"
+input-hash: "72c17a1"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
+changelog:
+  - "2.33 (round-54/F-P2A224-02/2026-09-01): VP-017 DI anchor corrected DI-014 → DI-001 in §preamble narrative sentence and Provable Properties Catalog VP table row (two sibling sites missed by round-53 D-332 re-anchor). Authoritative value: VP-INDEX + ADR-030 §VP + VP-017 body all carry DI-001. Historical body notes (DI-014 at ADR-030 Stage 1 and round-50) grandfathered per POL-46. input-hash refreshed."
 ---
 
 # Verification Architecture: pregolya
@@ -40,7 +42,7 @@ decisions: [D17, D21, D23]
 
 ## [Section Content]
 
-This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the twenty committed VP obligations (VP-001–VP-019 + VP-006-B), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-006-B is the SEC-003 multi-pair few-shot injection mandate (proptest P1 belt-and-suspenders for the VP-006 Arm 2 Kani harness). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}). VP-017 is the ADR-030 LedgerChannel dedup-idempotent append proptest P1 (BC-2.02.007 + BC-2.02.008 {DI-014}; praxist-pattern research orchestrator additive primitive; dual-anchored per first-appearance ordering obligation in BC-2.02.008). VP-018 is the BC-2.04.011 TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; no committed retained record lost or mutated by compaction; durable audit record integrity for the research orchestrator session trajectory; harness reworked round-50 with independent frontier-based oracle and negative mutation test). VP-019 is the BC-2.04.011 trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL; OS-level atomicity guarantee that VP-018 proptest explicitly excludes; Phase 6 integration test).
+This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the twenty committed VP obligations (VP-001–VP-019 + VP-006-B), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-006-B is the SEC-003 multi-pair few-shot injection mandate (proptest P1 belt-and-suspenders for the VP-006 Arm 2 Kani harness). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}). VP-017 is the ADR-030 LedgerChannel dedup-idempotent append proptest P1 (BC-2.02.007 + BC-2.02.008 {DI-001}; praxist-pattern research orchestrator additive primitive; dual-anchored per first-appearance ordering obligation in BC-2.02.008). VP-018 is the BC-2.04.011 TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; no committed retained record lost or mutated by compaction; durable audit record integrity for the research orchestrator session trajectory; harness reworked round-50 with independent frontier-based oracle and negative mutation test). VP-019 is the BC-2.04.011 trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL; OS-level atomicity guarantee that VP-018 proptest explicitly excludes; Phase 6 integration test).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -93,7 +95,7 @@ Twenty VPs committed before v1.0 release — VP-001..005 (original five) plus VP
 | VP-014 | BC-2.01.005 + BC-2.01.006 | DI-016 | `core::runnable` | proptest | 3 | P1 |
 | VP-015 | BC-2.09.007 {INV-003} | DI-010 | `mcp::sanitize` | unit | 3 | P1 |
 | VP-016 | BC-2.09.008 {INV-001} | DI-010 | `mcp::graph_tool` | proptest | 3 | P1 |
-| VP-017 | BC-2.02.007 + BC-2.02.008 | DI-014 | `graph::channels` | proptest | 3 | P1 |
+| VP-017 | BC-2.02.007 + BC-2.02.008 | DI-001 | `graph::channels` | proptest | 3 | P1 |
 | VP-018 | BC-2.04.011 {INV-001} | DI-002 | `checkpoint::trajectory` | proptest | 3 | P1 |
 | VP-019 | BC-2.04.011 {INV-003} | DI-002 | `checkpoint::trajectory` | integration | 6 | P1 |
 
@@ -104,6 +106,7 @@ Twenty VPs committed before v1.0 release — VP-001..005 (original five) plus VP
 > **ADR-030 VP-017 (ADR-030 Stage 1/2026-08-31):** VP-017 proptest P1 added for LedgerChannel dedup-idempotency. Total 17→18 VPs; P1 11→12; proptest 5→6.
 > **BC-2.04.011 VP-018 (2026-08-31):** VP-018 proptest P1 added for TrajectoryCompactor retention-integrity. Total 18→19 VPs; P1 12→13; proptest 6→7.
 > **round-50 VP-017+VP-019 (2026-08-31):** VP-017 BC Anchor updated BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (F-P2A211-05 dual-anchor; first-appearance ordering covered by Property 3 in VP-017 harness is the subject of BC-2.02.008). VP-019 integration P1 added for trajectory compaction crash-isolation (BC-2.04.011 {INV-003}; SQLite atomicity under SIGKILL). Total 19→20 VPs; P1 13→14; integration 2→3.
+> **round-54 VP-017 DI correction (F-P2A224-02/2026-09-01):** VP-017 DI anchor corrected DI-014 → DI-001 in §preamble narrative sentence and Provable Properties Catalog VP table row. Authoritative value confirmed: VP-INDEX + ADR-030 §VP + VP-017.md body all carry DI-001. The round-53 re-anchor (D-332) updated BC-INDEX / VP-INDEX / ARCH-INDEX / ADR-030 §VP / VP-017 body but missed these two sibling sites. Historical entries above (DI-014 at ADR-030 Stage 1 / round-50) are grandfathered per POL-46 as records of the original authored value.
 
 ## Provable Properties Catalog
 

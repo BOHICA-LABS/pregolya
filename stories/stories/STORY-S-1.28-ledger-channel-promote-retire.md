@@ -3,10 +3,10 @@ document_type: story
 level: ops
 story_id: S-1.28
 epic_id: E-07
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
-timestamp: 2026-08-31T00:00:00Z
+timestamp: 2026-09-01T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.007.md
@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "914465a"
+input-hash: "1ad6532"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -32,6 +32,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.5 (round-54/F-P2A224-01b/2026-09-01): Rule 15 provenance clause corrected per ADR-030 §Channel Trait Definition Home — trailing sentence now reads that S-1.28 consumes the Channel trait defined in channels/channel.rs by S-1.14 and does NOT define it; Channel impls for LedgerChannel<T> and PromoteRetireChannel<T> go in channels/ledger.rs and channels/promote_retire.rs respectively."
   - "1.4 (Round-53-Phase-2-fix-burst/2026-08-31): F-P2A220-03: AC-018 added (BC-2.02.007 {INV-004}) — LedgerChannel<T> implements graph::channels::Channel (Accumulator=Vec<T>, Update=T); BSP engine dispatches to LedgerChannel::<T>::reduce in reduce phase; no extra bounds beyond T: LedgerEntry at call sites; PromoteRetireChannel<T> analogously implements Channel (Update=PromoteRetireOp<T>). BC table updated (BC-2.02.007 covers AC-001..AC-006, AC-018). F-P2A220-01: Rule 13 updated — #[derive(Default)] ONLY on marker structs, no Clone/Serialize/Deserialize derives; Rule 15 added for Channel trait impl + BSP dispatch contract. AC-001 struct shape updated with #[derive(Default)]. Architecture Mapping updated with Channel trait impl. Tasks updated: Default impl tasks use #[derive(Default)]; Channel trait task added. File Structure updated for ledger.rs and promote_retire.rs."
   - "1.3 (Round-52-Phase-2-fix-burst/2026-08-31): F-P2A216-04 — canonical struct shape specified: LedgerChannel and PromoteRetireChannel are zero-sized markers with private `_inner: PhantomData<T>` field; Default yields `{ _inner: PhantomData }` (NOT empty Vec<T>); Vec<T> accumulator is BSP-engine responsibility. AC-001 updated with canonical struct shape. AC-011 load-bearing gate re-focused to PromoteRetireOp<T> ENUM wildcard-arm (field privacy already blocks struct-literal construction independently). Rule 13 updated (PhantomData shape, not empty Vec). File Structure updated. interface-definitions.md added to inputs; input-hash refreshed to 914465a."
   - "1.2 (Round-51-Phase-2-fix-burst/2026-08-31): F-P2A212-06 — AC-011 compile-fail gate moved to external crate tests/external/non-exhaustive-gate/; extends to LedgerChannel and PromoteRetireChannel. F-P2A212-08 — AC-002/AC-003 incoming->update; AC-012..AC-015 and Rules active/op->acc/update for PromoteRetireChannel. Default impls added for both structs (no new() beyond Default). Rule 2 specifies Vec-linear-scan reduce body. Rules 13-14 added. File structure updated."
@@ -191,7 +192,7 @@ Derived from `architecture/module-decomposition.md §pregolya-graph` and ADR-030
 12. `serde::Serialize` and `serde::de::DeserializeOwned` in the `LedgerEntry` supertrait bounds are satisfied via `serde` (workspace pin). Do NOT import these traits from any I/O-layer crate — use only `serde::{Serialize, Deserialize}` re-exports. The `serde` crate is already a workspace dependency; confirm it is listed in `pregolya-graph/Cargo.toml` before implementing.
 13. `LedgerChannel<T>` and `PromoteRetireChannel<T>` MUST have the canonical zero-sized marker shape with `#[derive(Default)]` as the ONLY derive: `#[non_exhaustive] #[derive(Default)] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (and analogously `PromoteRetireChannel<T>`). The `Default` implementation MUST use `#[derive(Default)]` — NOT a manual `impl Default` block. No additional derives (`Clone`, `Serialize`, `Deserialize`, or any other) are permitted on the marker structs themselves — the marker type is a BSP dispatch tag, not a value type for serialization or cloning. The `Default` yield is `LedgerChannel { _inner: PhantomData }` / `PromoteRetireChannel { _inner: PhantomData }` (the zero-sized marker — NOT an empty `Vec<T>`; the accumulator `Vec<T>` is maintained externally by the BSP engine, not stored as a struct field). No `pub fn new()` constructor beyond `Default` is permitted. Use `LedgerChannel::default()` / `PromoteRetireChannel::default()` at call-sites. Cross-crate construction is blocked by both the private `_inner` field (primary: field privacy prevents struct-literal construction) and `#[non_exhaustive]` (secondary: confirms the annotation is present); both mechanisms are retained by design.
 14. `indexmap` MUST NOT appear in `pregolya-graph/Cargo.toml` (production or dev dependencies). The dedup scan is a Vec linear scan per Rule 2 — O(n) is acceptable for the channel element counts expected in research-orchestrator use. Verify the Library table in this story has no `indexmap` row before closing the PR.
-15. `LedgerChannel<T>` MUST implement `graph::channels::Channel` with associated types `Accumulator = Vec<T>` and `Update = T`. The BSP execution engine dispatches to `LedgerChannel::<T>::reduce` during the reduce phase; no additional bounds beyond `T: LedgerEntry` are imposed at call sites. `PromoteRetireChannel<T>` MUST analogously implement `graph::channels::Channel` with `Accumulator = Vec<T>` and `Update = PromoteRetireOp<T>`. The `Channel` trait impl is the integration contract between these channel types and the BSP engine (BC-2.02.007 {INV-004}). The `Channel` trait is defined in `graph::channels` (established by S-1.14); the impl goes in the respective channel module files.
+15. `LedgerChannel<T>` MUST implement `graph::channels::Channel` with associated types `Accumulator = Vec<T>` and `Update = T`. The BSP execution engine dispatches to `LedgerChannel::<T>::reduce` during the reduce phase; no additional bounds beyond `T: LedgerEntry` are imposed at call sites. `PromoteRetireChannel<T>` MUST analogously implement `graph::channels::Channel` with `Accumulator = Vec<T>` and `Update = PromoteRetireOp<T>`. The `Channel` trait impl is the integration contract between these channel types and the BSP engine (BC-2.02.007 {INV-004}). The `Channel` trait is defined in `graph::channels` by S-1.14 (`channels/channel.rs` per ADR-030 §Channel Trait Definition Home); S-1.28 consumes the pre-existing trait and does NOT define it. The `Channel` impl for `LedgerChannel<T>` and `PromoteRetireChannel<T>` goes in the respective channel module files (`channels/ledger.rs` and `channels/promote_retire.rs`).
 
 ## Library & Framework Requirements
 

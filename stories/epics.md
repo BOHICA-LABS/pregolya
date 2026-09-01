@@ -10,9 +10,8 @@ traces_to: .factory/specs/architecture/ARCH-INDEX.md
 
 # Epics — pregolya Phase 2
 
-> **22 epics spanning 41 stories across Wave 1 (28), Wave 2 (12), Wave 6 (1).**
+> **22 epics spanning 42 stories across Wave 1 (28), Wave 2 (12), Wave 6 (1). One maintenance story (S-MAINT-001) is outside the wave schedule.**
 > Epic IDs are stable references. Stories within each epic share a primary subsystem.
-> (Census preamble update to 42 total stories pending state-manager STATE.md sync.)
 
 ## Epic Catalog
 

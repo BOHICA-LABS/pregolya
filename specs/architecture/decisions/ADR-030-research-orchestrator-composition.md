@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-31"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "1.5"
+version: "1.6"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "1.6 (round-54/F-P2A224-01+F-P2A224-03+F-P2A224-04/2026-09-01): F-P2A224-01 [HIGH] Channel trait ownership and ChannelKind coexistence resolved. Authoritative decision: the Channel trait is defined in graph::channels by S-1.14 (channels/channel.rs) per this ADR's direction; S-1.14 must additionally implement Channel for all five built-in types (LastValue<T>, BinaryOperatorAggregate<T,Op>, BarrierValue<T>, NamedBarrierValue<T>, EphemeralValue<T>). ChannelKind enum (types.rs) is a naming/discriminant for StateGraph schema configuration; Channel trait is the sole BSP dispatch mechanism — no hybrid dispatch path exists. §BSP Reduce-Dispatch Seam: Channel trait definition home and ChannelKind coexistence note added; S-1.14 story-writer instruction added. §Alternatives Alt C: repaired 'does not yet exist' — the Channel extension seam is defined by S-1.14 per this ADR; Alt C rejected on general-purpose-applicability grounds. 'For story-writer (S-1.28)' note updated: Channel trait is pre-existing when S-1.28 begins; corrected Rule 15 provenance text provided. F-P2A224-03 [HIGH] §Decision 3: LedgerChannel<T> and PromoteRetireChannel<T> struct definitions updated to canonical derive-set (F-P2A220-01 canon; S-1.28 Rule 13) — replaced manual impl Default blocks with #[derive(Default)] annotation form. F-P2A224-04 [LOW] §Consequences New-BCs table: BC-2.02.009 title corrected from 'PromoteRetireChannel Lifecycle Semantics' to canonical H1 'PromoteRetireChannel Promote/Retire Lifecycle' (BC-2.02.009 §H1 sync)."
   - "1.5 (round-53/F-P2A221-01+F-P2A221-02+F-P2A220-03+F-P2A223-01+F-P2A220-05/2026-08-31): Decision 2: §Content-Hash Oracle Decision added (F-P2A221-02/CWE-916/CWE-311) — conflict detection MUST use decrypt-then-compare exclusively; no auxiliary hash or HMAC may be stored on disk; key-provenance is the 256-bit AES-GCM key already held by EncryptedSerializer — no second secret required. §Compaction Atomicity Decision added (F-P2A221-01) — staging-table single-atomic-swap model: build phase copies retained records to trajectory_records_staging in bounded batches (no reader-visible lock held on trajectory_records); swap phase renames staging to trajectory_records in a single BEGIN IMMEDIATE/COMMIT (fast catalog op); crash mid-build leaves trajectory_records intact; crash mid-swap is WAL-atomic; reconciles BC-2.04.011 whole-operation atomicity with bounded-batch SQLite Topology; VP-019 crash-point matrix extended to four points. Decision 3: §BSP Reduce-Dispatch Seam added (F-P2A220-03) — Channel trait contract (Accumulator/Update assoc types, pure infallible reduce fn, Default required); LedgerChannel<T> and PromoteRetireChannel<T> Channel impls specified; derive-shape: T: LedgerEntry only (supertrait bundles all required bounds); BSP registration is type-level. §VP: di_anchor for VP-017 adjudicated DI-001 (BSP reducer determinism; DI-014 inapplicable — pure fn returns Vec<T> not Result); seeded-now directive text replaced with minted-active status. Consequences §VP: VP-COMPACT-01→VP-018/VP-COMPACT-02→VP-019 rename directive marked discharged (completed by product-owner in BC-2.04.011 §Verification Properties (round-50/D-328)). Records-tier cleanup (F-P2A220-05/F-P2A223-02)."
   - "1.4 (round-52/F-P2A217-02/2026-08-31): Decision 1 panel-topology row: removed holdout-disclosing phrase '(used in HS-D-002) is a standard node function that reads the full state and returns a projected subset' — disclosed the solution of sealed HS-D-002 by name; replaced with general library statement: 'author-metadata projection is user-space node logic'. No architectural content changed; the general statement is accurate and non-disclosing."
   - "1.3 (round-51/F-P2A212-01+F-P2A212-02+F-P2A212-03+F-P2A215-02+F-P2A215-03/2026-08-31): Decision 2: TrajectoryRecord::new() constructor added to code block (F-P2A212-01 — #[non_exhaustive] cross-crate construction fix; SqliteTrajectoryStore/pregolya-checkpoint callers unblocked); TrajectoryRetentionPolicy::new() note added (same fix). Decision 3: LedgerEntry code block bound corrected to Serialize+DeserializeOwned supertrait (F-P2A212-02 — code block was Clone+Send+Sync only, contradicting §Serialization Bound); §Serialization Bound Product-owner directive rewritten to T: LedgerEntry supertrait-only form (F-P2A212-03 — old text prescribed use-site T: LedgerEntry + Serialize + DeserializeOwned, contradicting F-P2A208-11); Default impls added for LedgerChannel<T>/PromoteRetireChannel<T> (F-P2A212-01 channel-marker defensive correctness; registration seam is type-level). §Decision 3 §VP: 'put_record' corrected to 'reduce'; BC Anchor extended to BC-2.02.007 + BC-2.02.008 (F-P2A215-02). §Consequences New-BCs table: BC-2.04.010 title corrected to canonical H1 'TrajectoryReader::replay Ascending step_idx Order' (F-P2A215-03)."
@@ -330,11 +331,8 @@ pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'sta
 /// constructs instances internally. `Default` impl provided for cross-crate use (tests, etc.).
 /// Reducer: `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (pure function; no `Result`).
 #[non_exhaustive]
+#[derive(Default)]
 pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }
-
-impl<T: LedgerEntry> Default for LedgerChannel<T> {
-    fn default() -> Self { LedgerChannel { _inner: PhantomData } }
-}
 
 /// Enum of operations for the promote/retire lifecycle.
 #[non_exhaustive]
@@ -347,11 +345,8 @@ pub enum PromoteRetireOp<T: LedgerEntry> {
 /// `Default` impl provided for cross-crate use (tests, etc.).
 /// Reducer: `fn reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T>` (pure; no `Result`).
 #[non_exhaustive]
+#[derive(Default)]
 pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }
-
-impl<T: LedgerEntry> Default for PromoteRetireChannel<T> {
-    fn default() -> Self { PromoteRetireChannel { _inner: PhantomData } }
-}
 ```
 
 ### Serialization Bound for Checkpoint Resume (F-P2A211-07)
@@ -380,7 +375,40 @@ the `Channel` trait in `graph::channels` (pregolya-graph). This section defines 
 contract and specifies how the BSP engine dispatches to the ledger-channel reducers, enabling
 story S-1.28 to wire the types into the `StateGraph` schema.
 
-**`Channel` trait (`graph::channels`, pregolya-graph):**
+#### Channel Trait Definition Home and ChannelKind Coexistence (F-P2A224-01)
+
+**Authoritative trait definition home: S-1.14 — `channels/channel.rs`.**
+
+The `Channel` trait is defined by S-1.14 in `pregolya-graph/src/channels/channel.rs` as
+part of the `graph::channels` module. S-1.14 is the story that owns the channel family;
+the `Channel` trait is the BSP extension seam that unifies all channel types under a single
+dispatch interface. S-1.28 consumes the pre-existing `Channel` trait and implements it for
+`LedgerChannel<T>` and `PromoteRetireChannel<T>` — S-1.28 does NOT define the trait.
+
+**S-1.14 required additions (per this ADR):**
+
+1. Define `pub trait Channel: Default + Send + Sync + 'static` in `channels/channel.rs`
+   with the exact signature shown in the code block below.
+2. Implement `Channel` for each of the five built-in types:
+   - `LastValue<T>` — `Accumulator = Option<T>` (or `T` per S-1.14 spec), `Update = T`
+   - `BinaryOperatorAggregate<T, Op>` — `Accumulator = T`, `Update = T`
+   - `BarrierValue<T>` — `Accumulator` and `Update` per S-1.14 barrier semantics
+   - `NamedBarrierValue<T>` — per S-1.14 named-barrier semantics
+   - `EphemeralValue<T>` — per S-1.14 ephemeral semantics
+   The exact `Accumulator`/`Update` types for the built-in impls are owned by S-1.14's
+   spec; the trait shape is authoritative from this ADR.
+
+**ChannelKind enum and Channel trait coexistence — no hybrid dispatch:**
+
+`ChannelKind` (in `types.rs`) is a **naming discriminant** for StateGraph schema
+configuration — it identifies WHICH channel type is active for a given field at the
+schema-declaration level. It is not a dispatch mechanism. The BSP execution engine
+dispatches to channel reducers exclusively through the `Channel` trait:
+`<C as Channel>::reduce(acc, update)`. There is ONE dispatch path: the `Channel` trait.
+The `ChannelKind` enum does not duplicate or shadow this path; the two constructs serve
+distinct roles (schema configuration vs. execution dispatch) and coexist without conflict.
+
+**`Channel` trait (`graph::channels`, pregolya-graph — defined by S-1.14):**
 
 ```rust
 /// Extension point for custom BSP channel reducers in a `StateGraph`.
@@ -467,9 +495,19 @@ are already imposed by the `LedgerEntry` supertrait. No additional bounds are re
 the call site — `T: LedgerEntry` is the complete derive-shape requirement.
 
 **For story-writer (S-1.28):** S-1.28 must implement the `Channel` trait for `LedgerChannel<T>`
-and `PromoteRetireChannel<T>` as shown above, confirm the `StateGraph` schema annotation
-mechanism dispatches to `<LedgerChannel<T> as Channel>::reduce` during the BSP reduce phase,
-and verify `PromoteRetireChannel<T>` is wired symmetrically with `Update = PromoteRetireOp<T>`.
+and `PromoteRetireChannel<T>` as shown above. The `Channel` trait is pre-existing when S-1.28
+begins — it is authored by S-1.14 per this ADR's direction (ADR-030 §BSP Reduce-Dispatch Seam
+§Channel Trait Definition Home and ChannelKind Coexistence). S-1.28 only implements the trait;
+it does not define it. Confirm the `StateGraph` schema annotation mechanism dispatches to
+`<LedgerChannel<T> as Channel>::reduce` during the BSP reduce phase, and verify
+`PromoteRetireChannel<T>` is wired symmetrically with `Update = PromoteRetireOp<T>`.
+
+**Corrected S-1.28 Rule 15 provenance (replace current Rule 15 text):**
+"The `Channel` trait is defined in `graph::channels` by S-1.14 (`channels/channel.rs` per
+ADR-030 §Channel Trait Definition Home); S-1.28 consumes the
+pre-existing trait and does NOT define it. The `Channel` impl for `LedgerChannel<T>` and
+`PromoteRetireChannel<T>` goes in the respective channel module files (`channels/ledger.rs`
+and `channels/promote_retire.rs`)."
 
 **For product-owner (BC-2.02.007 amendment):** Add to BC-2.02.007: "`LedgerChannel<T>`
 implements `graph::channels::Channel` with `Accumulator = Vec<T>` and `Update = T`; the BSP
@@ -562,10 +600,14 @@ must be addressable independently of the conversation context window.
 
 ### Alt C: LedgerChannel implemented as a user-defined type outside pregolya-graph
 
-Rejected. User code cannot implement the `Channel` trait for a type outside `graph::channels`
-without a public extension seam that does not yet exist. Adding these types to the canonical
-channel family is the correct production-grade path. They are general-purpose reducers that
-any StateGraph application can use.
+Rejected. The `Channel` trait is a public extension seam defined in `graph::channels` by
+S-1.14 per this ADR (ADR-030 §Channel Trait Definition Home),
+so user code CAN implement `Channel` for external types. However, `LedgerChannel` and
+`PromoteRetireChannel` are general-purpose reducers applicable beyond the research orchestrator
+use case — any `StateGraph` application accumulating keyed entries or managing promote/retire
+lifecycles benefits from them. Adding these types to the canonical channel family in
+`pregolya-graph` is the correct production-grade path: they ship as a maintained, tested, and
+versioned part of the library rather than as per-application boilerplate.
 
 ## Source / Origin
 
@@ -598,7 +640,7 @@ any StateGraph application can use.
 | BC-2.04.011 | SS-04 | Trajectory Compaction Isolation | Trajectory records are not pruned by ADR-019 compaction |
 | BC-2.02.007 | SS-02 | `LedgerChannel` Dedup-Idempotent Append | VP-017 target; seen entry_id on second write is a no-op |
 | BC-2.02.008 | SS-02 | `LedgerChannel` First-Appearance Ordering | Entry order in Vec<T> reflects first-appearance across all super-steps [PO Stage 2a actual authoring] |
-| BC-2.02.009 | SS-02 | `PromoteRetireChannel` Lifecycle Semantics | Promote/Retire are each idempotent; active set is the channel value [displaced from BC-2.02.008; see v1.1 changelog] |
+| BC-2.02.009 | SS-02 | `PromoteRetireChannel` Promote/Retire Lifecycle | Promote/Retire are each idempotent; active set is the channel value [displaced from BC-2.02.008; see changelog ADR-030 §1.1] |
 
 SS-04 BC range extends from 001–008 to **001–011**.
 SS-02 BC range extends from 001–006 to **001–009** (BC-2.02.009 added; BC-2.02.008 consumed by LedgerChannel first-appearance ordering per PO Stage 2a authoring).
