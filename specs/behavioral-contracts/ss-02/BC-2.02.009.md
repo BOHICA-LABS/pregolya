@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.009
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): Provenance corrected per ADR-030 §Renumber-Provenance (F-P2A210-02): BC-2.02.009 was CREATED as a new SS-02 BC; PromoteRetireChannel content was physically relocated from an erroneous PO draft that used BC-2.04.011 (which was always reserved for Trajectory Compaction Isolation in SS-04; BC-2.04.011 continues as a separate active BC). BC-2.04.011 is NOT the prior_id of BC-2.02.009. Prior-ID: N/A (new creation). {PRE-001} supertrait bound corrected: T: LedgerEntry (supertrait already includes Clone + Serialize + DeserializeOwned + Send + Sync + 'static — use-site redundancy removed per F-P2A208-11). VP-PROM-01/02 phantom labels relabeled TST-PROM-01/02 in §Verification Properties; removed from §VP Anchors (not registered VPs)."
   - "1.3 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: PromoteRetireOp<T> + PromoteRetireChannel<T> canonical file corrected from phantom flat-file channels.rs to directory module channels/promote_retire.rs (F-P2A215-01; graph::channels module path unchanged)."
   - "1.4 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `PromoteRetireChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized marker; `Default::default()` produces the zero-sized marker struct; the `Vec<T>` active-set accumulator is external to the marker, owned and managed by the BSP engine — F-P2A216-04). No behavioral change."
+  - "1.5 (round-55/F-P2A225-01/2026-09-01): §Traceability L2 Domain Invariants: DI-014 replaced with DI-001 per architect ADR-030 §VP ruling — PromoteRetireChannel::reduce is a pure infallible reducer returning Vec<T> with no Result/Err/None path; DI-014 (error propagation) is inapplicable (vacuously compliant, not meaningfully enforced). DI-001 (BSP Reducer Determinism) is the correct domain-invariant anchor: the reducer is deterministic given the same accumulated state and input sequence in task-identity order."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "9917852"
+input-hash: "5723c88"
 extracted_from: null
 modified: []
 deprecated: null
@@ -165,7 +166,7 @@ None
 |-------|-------|
 | Source L2 Capability | CAP-040 |
 | Capability Anchor Justification | CAP-040 ("Durable Trajectory Records and Ledger-Style State Channels (Research Orchestrator Primitives)") per capabilities-p1-p2.md §CAP-040 — `PromoteRetireChannel` is the second of the two new ledger-style channel types introduced by CAP-040; the promote/retire lifecycle enables the quality-diversity allocation cycle described in CAP-040 §PromoteRetireChannel |
-| L2 Domain Invariants | DI-014 (Error Propagation — No Silent Swallowing: idempotent `Promote` and `Retire` operations return the correct active set without raising `Err`; the contract is explicit no-op, not silent error; DI-014 prohibits returning `None` to represent these cases, which is satisfied by always returning `Vec<T>`) |
+| L2 Domain Invariants | DI-001 (BSP Reducer Determinism: `PromoteRetireChannel` reducer is deterministic; given the same accumulated state and input sequence in task-identity order, the result is always identical — per ADR-030 §VP round-55 architect ruling) |
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit) |

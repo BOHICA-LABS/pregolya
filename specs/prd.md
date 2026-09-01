@@ -1,7 +1,7 @@
 ---
 document_type: prd
 level: L3
-version: "1.31"
+version: "1.32"
 status: active
 producer: product-owner
 timestamp: 2026-07-28T00:00:00Z
@@ -17,7 +17,7 @@ inputs:
   - .factory/specs/domain-spec/differentiators.md
   - .factory/specs/domain-spec/assumptions.md
   - .factory/comparative/COMPARATIVE-ASSESSMENT.md
-input-hash: "7658105"
+input-hash: "3d9e447"
 traces_to: domain-spec/L2-INDEX.md
 decisions: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D11, D12, D13, D17, D19, D20, D21, D22, D23]
 supplements:
@@ -29,6 +29,7 @@ supplements:
   - prd-supplements/test-vectors.md
   - prd-supplements/observability.md
 changelog:
+  - "v1.32 (round-55/F-P2A225-01/2026-09-01): DI-014→DI-001 correction for BC-2.02.007 and BC-2.02.009 per architect ADR-030 §VP ruling — both reducers are pure infallible Vec<T> functions with no Result/Err/None path; DI-014 (error propagation) is inapplicable; DI-001 (BSP Reducer Determinism) is the correct anchor. §2.02 rows: BC-2.02.007 DI-014/DI-001 → DI-001; BC-2.02.009 DI-014/DI-001 → DI-001. §7 RTM rows: BC-2.02.007 CAP-040/DI-014/DI-001 → CAP-040/DI-001; BC-2.02.009 CAP-040/DI-014/DI-001 → CAP-040/DI-001. §12.4 rows: BC-2.02.007 DI-014/DI-001 → DI-001; BC-2.02.009 DI-014/DI-001 → DI-001."
   - "v1.31 (ADR-030-Stage2b/2026-08-31): PromoteRetireChannel subsystem ruling applied (architect ADR-030 §Decision 3). BC-2.04.011 (PromoteRetireChannel) renamed to BC-2.02.009 (SS-02, pregolya-graph) — BC-2.02.009 row added to §2.02; old anomaly note removed from §2.04 header; §7 RTM BC-2.02.009 row added. BC-2.04.011 reused for new 6th additive BC: Trajectory Compaction Isolation (SS-04, pregolya-checkpoint, P1, DI-002/DI-004/DI-014, Wave 2) — row added to §2.04; §7 RTM BC-2.04.011 updated (module pregolya-checkpoint; test types U, I). §5b BC file count 139→140. §7 RTM totals 139→140 (51 P0 / 85→86 P1 / 3 P2). §12.4 BC-2.04.011 row updated to Trajectory Compaction Isolation. §12.5 differentiator row updated. §12.6 cross-subsystem anomaly note removed."
   - "v1.30 (ADR-030-Stage2a/2026-08-31): CAP-040 research orchestrator primitives propagated to PRD. §2.02 header updated (CAP-003 → CAP-003/CAP-040); BC-2.02.007 (LedgerChannel dedup-idempotent append, P1, DI-014/DI-001) and BC-2.02.008 (LedgerChannel first-appearance ordering, P1, DI-001) added. §2.04 header updated (CAP-005 → CAP-005/CAP-040); BC-2.04.009 (TrajectoryWriter::put_record durability, P1, DI-002/DI-014), BC-2.04.010 (TrajectoryReader::replay ascending step_idx order, P1, DI-004/DI-014), and BC-2.04.011 (PromoteRetireChannel promote/retire lifecycle, P1, DI-014) added. §5b BC file count 134→139. §7 RTM +5 rows; totals 134→139 (51 P0 / 80→85 P1 / 3 P2). §12 Use-Case Composition Reference: Autonomous Research Orchestrator added. input-hash updated (capabilities-p1-p2.md added CAP-040). Clean-room behavioral inspiration from the praxist-pattern research orchestrator; no code or documentation copied."
   - "v1.29 (round-7/F-P2A067-02/2026-08-26): §5 error-code name sibling sweep (TD-VSDD-060). Four stale names corrected to error-taxonomy.md canonical names: (1) E-CORE-001 InvalidContentBlock → StrictContentBlockValidation (taxonomy message prefix, per taxonomy §CORE row); (2) E-PROV-002 Timeout → ProviderTimeout (taxonomy message prefix, per taxonomy §PROV row); (3) E-MCP-002 TransportError → McpTransportError (taxonomy message prefix, per taxonomy §MCP row); (4) E-VS-001 ZeroNormVector → DegenerateNormEmbedding (taxonomy changelog v1.45 rename — ZeroNormVector was never canonical; pre-rename name was ZeroNormEmbedding, post-rename is DegenerateNormEmbedding). Taxonomy not modified — all four defects are PRD-side labels. Full sibling sweep performed: all other 34 code-name pairs in the table verified against taxonomy body rows — no additional stale names found."
@@ -218,9 +219,9 @@ become first-class BCs, CI lint gates, or ADRs (see Section 9).
 | BC-2.02.004 | EphemeralValue cleared-after-super-step semantics (R10) | P0 | — | ss-02/BC-2.02.004.md |
 | BC-2.02.005 | Conditional edge routing function | P0 | — | ss-02/BC-2.02.005.md |
 | BC-2.02.006 | Send API dynamic fan-out | P0 | — | ss-02/BC-2.02.006.md |
-| BC-2.02.007 | LedgerChannel dedup-idempotent append (CAP-040; VP-017 proptest anchor) | P1 | DI-014, DI-001 | ss-02/BC-2.02.007.md |
+| BC-2.02.007 | LedgerChannel dedup-idempotent append (CAP-040; VP-017 proptest anchor) | P1 | DI-001 | ss-02/BC-2.02.007.md |
 | BC-2.02.008 | LedgerChannel first-appearance ordering (CAP-040) | P1 | DI-001 | ss-02/BC-2.02.008.md |
-| BC-2.02.009 | PromoteRetireChannel promote/retire lifecycle (CAP-040) | P1 | DI-014, DI-001 | ss-02/BC-2.02.009.md |
+| BC-2.02.009 | PromoteRetireChannel promote/retire lifecycle (CAP-040) | P1 | DI-001 | ss-02/BC-2.02.009.md |
 
 ### 2.03 BSP Graph Execution (CAP-004) — P0
 
@@ -675,9 +676,9 @@ See `prd-supplements/error-taxonomy.md` for the complete catalog.
 | BC-2.02.004 | CAP-003, R-005 | pregolya-graph | P0 | U |
 | BC-2.02.005 | CAP-003 | pregolya-graph | P0 | U, I |
 | BC-2.02.006 | CAP-003 | pregolya-graph | P0 | I |
-| BC-2.02.007 | CAP-040, DI-014, DI-001 | pregolya-graph | P1 | U, P |
+| BC-2.02.007 | CAP-040, DI-001 | pregolya-graph | P1 | U, P |
 | BC-2.02.008 | CAP-040, DI-001 | pregolya-graph | P1 | U, P |
-| BC-2.02.009 | CAP-040, DI-014, DI-001 | pregolya-graph | P1 | U |
+| BC-2.02.009 | CAP-040, DI-001 | pregolya-graph | P1 | U |
 | BC-2.03.001 | CAP-004, NE-17 | pregolya-graph | P0 | P, K |
 | BC-2.03.002 | CAP-004, DI-001 | pregolya-graph | P0 | U, P |
 | BC-2.03.003 | CAP-004, DI-001, NE-17 | pregolya-graph | P0 | P, K |
@@ -948,9 +949,9 @@ No change to `StateGraph` construction or `CheckpointSaver` configuration is nee
 
 | BC ID | Contract | Invariant | Priority |
 |-------|----------|-----------|----------|
-| BC-2.02.007 | `LedgerChannel` dedup-idempotent append | DI-014 (no silent error), DI-001 (deterministic reducer) | P1 |
+| BC-2.02.007 | `LedgerChannel` dedup-idempotent append | DI-001 (deterministic reducer) | P1 |
 | BC-2.02.008 | `LedgerChannel` first-appearance ordering | DI-001 (deterministic task-identity sort) | P1 |
-| BC-2.02.009 | `PromoteRetireChannel` promote/retire lifecycle | DI-014 (idempotent ops return correct set), DI-001 (deterministic task-identity order) | P1 |
+| BC-2.02.009 | `PromoteRetireChannel` promote/retire lifecycle | DI-001 (deterministic task-identity order) | P1 |
 | BC-2.04.009 | `TrajectoryWriter::put_record` durability | DI-002 (per-task durability), DI-014 | P1 |
 | BC-2.04.010 | `TrajectoryReader::replay` ascending `step_idx` order | DI-004 (monotonic clock), DI-014 | P1 |
 | BC-2.04.011 | Trajectory Compaction Isolation — atomic crash-safe compaction | DI-002 (retained records survive), DI-004 (ascending order preserved), DI-014 (errors propagate) | P1 |

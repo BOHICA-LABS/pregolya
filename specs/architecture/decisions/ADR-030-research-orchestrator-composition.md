@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-31"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "1.6"
+version: "1.7"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "1.7 (round-55/F-P2A225-01+F-P2A225-02/2026-09-01): F-P2A225-01 [HIGH] §VP DI adjudication extended to PromoteRetireChannel::reduce — DI-014 is inapplicable to both LedgerChannel::reduce and PromoteRetireChannel::reduce; both are pure infallible reducers returning Vec<T> (no Result, no error path); DI-001 (BSP reducer determinism) is the sole authoritative anchor for both; per-artifact propagation targets table added for product-owner. F-P2A225-02 [HIGH] Three chained double-§ citations eliminated per POL-19/ADR-022: (1) For-story-writer S-1.28 note chain §BSP Reduce-Dispatch Seam + §Channel Trait Definition Home → single §Channel Trait Definition Home and ChannelKind Coexistence. (2) LedgerEntry code-block doc-comment chain §Decision 3 + §Serialization Bound → single §Serialization Bound for Checkpoint Resume. (3) VP-019 Consequences note chain §Compaction Atomicity Decision + §BC-2.04.011 downstream notes → §BC-2.04.011 Downstream Notes (pseudo-heading promoted to real #### heading to enable single valid §-citation)."
   - "1.6 (round-54/F-P2A224-01+F-P2A224-03+F-P2A224-04/2026-09-01): F-P2A224-01 [HIGH] Channel trait ownership and ChannelKind coexistence resolved. Authoritative decision: the Channel trait is defined in graph::channels by S-1.14 (channels/channel.rs) per this ADR's direction; S-1.14 must additionally implement Channel for all five built-in types (LastValue<T>, BinaryOperatorAggregate<T,Op>, BarrierValue<T>, NamedBarrierValue<T>, EphemeralValue<T>). ChannelKind enum (types.rs) is a naming/discriminant for StateGraph schema configuration; Channel trait is the sole BSP dispatch mechanism — no hybrid dispatch path exists. §BSP Reduce-Dispatch Seam: Channel trait definition home and ChannelKind coexistence note added; S-1.14 story-writer instruction added. §Alternatives Alt C: repaired 'does not yet exist' — the Channel extension seam is defined by S-1.14 per this ADR; Alt C rejected on general-purpose-applicability grounds. 'For story-writer (S-1.28)' note updated: Channel trait is pre-existing when S-1.28 begins; corrected Rule 15 provenance text provided. F-P2A224-03 [HIGH] §Decision 3: LedgerChannel<T> and PromoteRetireChannel<T> struct definitions updated to canonical derive-set (F-P2A220-01 canon; S-1.28 Rule 13) — replaced manual impl Default blocks with #[derive(Default)] annotation form. F-P2A224-04 [LOW] §Consequences New-BCs table: BC-2.02.009 title corrected from 'PromoteRetireChannel Lifecycle Semantics' to canonical H1 'PromoteRetireChannel Promote/Retire Lifecycle' (BC-2.02.009 §H1 sync)."
   - "1.5 (round-53/F-P2A221-01+F-P2A221-02+F-P2A220-03+F-P2A223-01+F-P2A220-05/2026-08-31): Decision 2: §Content-Hash Oracle Decision added (F-P2A221-02/CWE-916/CWE-311) — conflict detection MUST use decrypt-then-compare exclusively; no auxiliary hash or HMAC may be stored on disk; key-provenance is the 256-bit AES-GCM key already held by EncryptedSerializer — no second secret required. §Compaction Atomicity Decision added (F-P2A221-01) — staging-table single-atomic-swap model: build phase copies retained records to trajectory_records_staging in bounded batches (no reader-visible lock held on trajectory_records); swap phase renames staging to trajectory_records in a single BEGIN IMMEDIATE/COMMIT (fast catalog op); crash mid-build leaves trajectory_records intact; crash mid-swap is WAL-atomic; reconciles BC-2.04.011 whole-operation atomicity with bounded-batch SQLite Topology; VP-019 crash-point matrix extended to four points. Decision 3: §BSP Reduce-Dispatch Seam added (F-P2A220-03) — Channel trait contract (Accumulator/Update assoc types, pure infallible reduce fn, Default required); LedgerChannel<T> and PromoteRetireChannel<T> Channel impls specified; derive-shape: T: LedgerEntry only (supertrait bundles all required bounds); BSP registration is type-level. §VP: di_anchor for VP-017 adjudicated DI-001 (BSP reducer determinism; DI-014 inapplicable — pure fn returns Vec<T> not Result); seeded-now directive text replaced with minted-active status. Consequences §VP: VP-COMPACT-01→VP-018/VP-COMPACT-02→VP-019 rename directive marked discharged (completed by product-owner in BC-2.04.011 §Verification Properties (round-50/D-328)). Records-tier cleanup (F-P2A220-05/F-P2A223-02)."
   - "1.4 (round-52/F-P2A217-02/2026-08-31): Decision 1 panel-topology row: removed holdout-disclosing phrase '(used in HS-D-002) is a standard node function that reads the full state and returns a projected subset' — disclosed the solution of sealed HS-D-002 by name; replaced with general library statement: 'author-metadata projection is user-space node logic'. No architectural content changed; the general statement is accurate and non-disclosing."
@@ -268,7 +269,7 @@ describes the build phase, which writes to `trajectory_records_staging`, not
 `trajectory_records`. The write-lock-release-between-batches concern is fully addressed:
 build-phase locks are on the staging table; the swap-phase lock is a fast catalog-only op.
 
-**BC-2.04.011 downstream notes:**
+#### BC-2.04.011 Downstream Notes
 - `{INV-003}`: "the SQLite `BEGIN IMMEDIATE` / `COMMIT` transaction" refers to the swap-phase
   transaction (the reader-visible atomicity boundary). The build phase uses separate per-batch
   transactions on the staging table only. Crash mid-build → pre-compaction state intact
@@ -321,7 +322,7 @@ pregolya-graph — no new module row is needed.
 /// `Serialize + DeserializeOwned` bounds are required for checkpoint-resume: the `Vec<T>`
 /// channel accumulator is serialized by `CheckpointSaver::put_writes` on checkpoint and
 /// deserialized on resume. `entry_id()` must return the same value before and after a serde
-/// round-trip (stable identity invariant — ADR-030 §Decision 3 §Serialization Bound).
+/// round-trip (stable identity invariant — ADR-030 §Serialization Bound for Checkpoint Resume).
 pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static {
     fn entry_id(&self) -> &str;
 }
@@ -496,8 +497,7 @@ the call site — `T: LedgerEntry` is the complete derive-shape requirement.
 
 **For story-writer (S-1.28):** S-1.28 must implement the `Channel` trait for `LedgerChannel<T>`
 and `PromoteRetireChannel<T>` as shown above. The `Channel` trait is pre-existing when S-1.28
-begins — it is authored by S-1.14 per this ADR's direction (ADR-030 §BSP Reduce-Dispatch Seam
-§Channel Trait Definition Home and ChannelKind Coexistence). S-1.28 only implements the trait;
+begins — it is authored by S-1.14 per this ADR's direction (ADR-030 §Channel Trait Definition Home and ChannelKind Coexistence). S-1.28 only implements the trait;
 it does not define it. Confirm the `StateGraph` schema annotation mechanism dispatches to
 `<LedgerChannel<T> as Channel>::reduce` during the BSP reduce phase, and verify
 `PromoteRetireChannel<T>` is wired symmetrically with `Update = PromoteRetireOp<T>`.
@@ -534,6 +534,31 @@ silent swallowing) does not apply: `reduce` is a pure function returning `Vec<T>
 `Result`; there is no error path to swallow or propagate. State-manager and all downstream
 VP-INDEX / BC-INDEX / ARCH-INDEX parentheticals that reference VP-017 MUST carry
 `di_anchor: DI-001`.
+
+**DI anchor adjudication — extended to PromoteRetireChannel::reduce (F-P2A225-01):** The
+inapplicability ruling above extends categorically to `PromoteRetireChannel::reduce`.
+`PromoteRetireChannel::reduce` is a pure, infallible function returning `Vec<T>`, not `Result`.
+The Promote operation is dedup-idempotent (no-op when `entry_id` already present); the Retire
+operation is a no-op when the `entry_id` is absent. Neither case is an error path: the
+function signature structurally precludes returning `Err` or `None`. `DI-014` (error
+propagation, no silent swallowing) does not apply — there is no error path to swallow or
+propagate. Authoritative anchor: **`DI-001`** (BSP reducer determinism). Round-53 adjudicated
+only `LedgerChannel::reduce` (F-P2A223-01); this entry corrects the omission for
+`PromoteRetireChannel::reduce`.
+
+**Downstream propagation required (F-P2A225-01) — product-owner action:** DI-014 is NOT
+orphaned (remains cited by 237+ other BCs; POL-2 not triggered).
+
+| Artifact | Location | Action |
+|----------|----------|--------|
+| BC-2.02.007 | §Traceability L2 Domain Invariants | Remove DI-014 entry; retain DI-001 |
+| BC-2.02.009 | §Traceability L2 Domain Invariants | Replace DI-014 entry with DI-001 |
+| prd.md §2 | BC-2.02.007 row Invariants column | Remove DI-014 |
+| prd.md §2 | BC-2.02.009 row Invariants column | DI-014 → DI-001 |
+| prd.md §7 RTM | BC-2.02.007 row | Remove DI-014 |
+| prd.md §7 RTM | BC-2.02.009 row | DI-014 → DI-001 |
+| prd.md §12 | BC-2.02.007 row | Remove DI-014 |
+| prd.md §12 | BC-2.02.009 row | DI-014 → DI-001 |
 
 ## Decision 4 — Clean-Room Posture
 
@@ -667,7 +692,7 @@ Promoted informal `VP-COMPACT-02` label in `BC-2.04.011 §Verification Propertie
 real VP. **Directive discharged:** `VP-COMPACT-01` → `VP-018` and `VP-COMPACT-02` → `VP-019`
 rename was completed by product-owner in BC-2.04.011 §Verification Properties (round-50/D-328). No further rename action required. **Formal-verifier note:** under the staging-table
 atomic-swap model (§Compaction Atomicity Decision above), VP-019 crash-point matrix should
-cover four points — see §Compaction Atomicity Decision §BC-2.04.011 downstream notes.
+cover four points — see §BC-2.04.011 Downstream Notes.
 
 ### BC-2.02.009 Renumber-Provenance Canonical Narrative (F-P2A210-02)
 

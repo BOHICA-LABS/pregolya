@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.007
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.2 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: LedgerEntry + LedgerChannel canonical file corrected from phantom flat-file channels.rs to directory module channels/ledger.rs (F-P2A215-01; graph::channels module path unchanged)."
   - "1.3 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `LedgerChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }`; `Default::default()` produces `LedgerChannel { _inner: PhantomData }` (the zero-sized marker struct); the `Vec<T>` accumulator is external to the marker, owned and managed by the BSP engine. No behavioral change."
   - "1.4 (round-53/F-P2A220-03+F-P2A220-01/2026-08-31): {INV-004} added — Channel trait dispatch contract: LedgerChannel<T> implements graph::channels::Channel with Accumulator = Vec<T> and Update = T; BSP engine dispatches to LedgerChannel::<T>::reduce during the reduce phase; no additional bounds beyond T: LedgerEntry required at call sites. Architecture Anchors: LedgerChannel<T> canonical derive set made explicit — #[derive(Default)] only; all Accumulator/serde/Clone/Send/Sync bounds come from LedgerEntry supertrait on T and Vec<T> derived properties (F-P2A220-01)."
+  - "1.5 (round-55/F-P2A225-01/2026-09-01): §Traceability L2 Domain Invariants: DI-014 entry removed per architect ADR-030 §VP ruling — LedgerChannel::reduce is a pure infallible reducer returning Vec<T> with no Result/Err/None path; DI-014 (error propagation) is inapplicable (vacuously compliant, not meaningfully enforced). DI-001 (BSP Reducer Determinism) retained as the correct domain-invariant anchor."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -27,7 +28,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "410c38d"
+input-hash: "5723c88"
 extracted_from: null
 modified: []
 deprecated: null
@@ -180,7 +181,7 @@ S-1.28
 |-------|-------|
 | Source L2 Capability | CAP-040 |
 | Capability Anchor Justification | CAP-040 ("Durable Trajectory Records and Ledger-Style State Channels (Research Orchestrator Primitives)") per capabilities-p1-p2.md §CAP-040 — `LedgerChannel` is one of the two new channel types introduced under CAP-040; the dedup-idempotent-append reducer is the core semantics defined in CAP-040 for evidence accumulation in multi-generation research loops |
-| L2 Domain Invariants | DI-014 (Error Propagation — No Silent Swallowing: the dedup no-op case returns the unchanged `Vec<T>` without raising `Err`, which is the specified contract, not silent error swallowing; DI-014 is enforced because {PC-003} prohibits returning `None` or silent `Err` to represent duplicate detection), DI-001 (BSP Reducer Determinism: `LedgerChannel` reducer is deterministic; given the same accumulated state and the same input sequence in task-identity order, the result is always identical per {INV-003}) |
+| L2 Domain Invariants | DI-001 (BSP Reducer Determinism: `LedgerChannel` reducer is deterministic; given the same accumulated state and the same input sequence in task-identity order, the result is always identical per {INV-003}) |
 | Priority | P1 |
 | Wave | Wave 1 |
 | Test Types | U (unit), P (property) |

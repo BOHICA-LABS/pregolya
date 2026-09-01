@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.29"
+version: "1.30"
 status: active
 producer: business-analyst
 timestamp: 2026-08-21T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "faffcd7"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170, D275]
 changelog:
+  - "1.30 (round-55/F-P2A225-01/2026-09-01): CAP-040 §Authored BCs: DI-014 removed from BC-2.02.007 and BC-2.02.009 per architect ADR-030 §VP ruling — both reducers are pure infallible Vec<T> functions; DI-014 inapplicable; DI-001 is the correct anchor. BC-2.02.007: DI-014/DI-001 → DI-001; BC-2.02.009: DI-014/DI-001 → DI-001."
   - "1.29 (Round-25/F-P2A108-02-blast-radius/2026-08-28): F-P2A108-02 notation fix — CAP-039 body: doubled non-resolving notation `pregolya-core::core::runnable` → canonical parenthetical `pregolya-core (core::runnable)` per ADR-023 normalization. Sibling sweep: zero other doubled `<crate>::<shorthand>::<module>` occurrences in live body. TD-VSDD-091: citation by symbol/module-path only."
   - "1.28 (Round-19/GAP-01-bidirectional-link/2026-08-27): CAP-021 body extended to describe GraphAgentTool wrapping behavior and cite BC-2.09.008 — closes the missing CAP→BC direction for the D-275/GAP-01 scope addition (2026-08-26). Added GraphAgentTool paragraph (CompiledStateGraph as DynTool, STATE-ISOLATION {INV-001}, DenyInterrupts fail-closed policy, E-MCP-010) and 'Authored BCs: BC-2.09.008' entry per D23/D-170 citation convention. No behavioral scope expansion beyond BC-2.09.008 + D-275 human approval. D275 added to decisions list. TD-VSDD-091: all citations by symbol/section name only."
   - "1.27 (P2A-021/2026-08-21): CAP-028 ingestion-method name reconciled: add_texts→add_documents (add_texts is legacy; add_documents(docs: Vec<Document>) is the canonical modern primary per LangChain reference). Four live-body sites updated in capabilities-p1-p2.md: (1) CAP-028 heading token; (2) CAP-028 method signature form; (3) CAP-028 &self-receiver rationale sentence; (4) CAP-029 'generated at ... time' clause. TD-VSDD-060 sweep: entities-graph.md §VectorStore also contains a live add_texts reference — outside business-analyst capability-doc scope; reported for routing to entities-doc owner."
@@ -895,9 +896,9 @@ can compose all three primitives independently:
 The three types are independently composable — using one does not require using the others.
 
 **Authored BCs:**
-BC-2.02.007 (LedgerChannel dedup-idempotent append — VP-017 proptest anchor; DI-014/DI-001),
+BC-2.02.007 (LedgerChannel dedup-idempotent append — VP-017 proptest anchor; DI-001),
 BC-2.02.008 (LedgerChannel first-appearance ordering; DI-001),
-BC-2.02.009 (PromoteRetireChannel promote/retire lifecycle; DI-014/DI-001),
+BC-2.02.009 (PromoteRetireChannel promote/retire lifecycle; DI-001),
 BC-2.04.009 (TrajectoryWriter::put_record durability; DI-002/DI-014),
 BC-2.04.010 (TrajectoryReader::replay ascending step_idx order; DI-004/DI-014),
 BC-2.04.011 (Trajectory Compaction Isolation — atomic crash-safe compaction; DI-002/DI-004/DI-014).

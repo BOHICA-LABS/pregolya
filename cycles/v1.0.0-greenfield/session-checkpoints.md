@@ -4045,3 +4045,13 @@ pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case inject
 - develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `a8dcd3f` — PUSHED.
 
 ### STATE: v6.43, timestamp 2026-08-31T23:59:00Z
+
+## Archived Checkpoint: D-333 (archived 2026-09-01 at D-334 close)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-54 closed (D-326/D-328/D-329/D-330/D-332/D-333). Round-54 fix-burst CLOSED (Stage D final) — all 6 findings closed (3H+2L+1OBS); verification-architecture §preamble+§VP-table + verification-coverage-matrix §graph::channels DI-001 propagation; STORY-INDEX §D-333-changelog S-1.14/S-1.28 §Rule-15-provenance changelog; epics.md preamble OBS-1 resolved; input-hashes refreshed; L-254 codified; census UNCHANGED. D-333 push DONE (4570fa5). Next: round-55 adversary cascade on new frozen HEAD.
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `4570fa5` — PUSHED (D-333 final). No .worktrees/. No open PRs.
+
+### STATE: v6.45, timestamp 2026-09-01T00:01:00Z

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.09"
+version: "3.10"
 status: active
 producer: architect
 timestamp: 2026-09-01T00:00:00Z
 phase: 1d
 changelog:
+  - "3.10 (round-55/F-P2A225-04/2026-09-01): F-P2A225-04 [MED] Two chained double-§ citations eliminated per POL-19: (1) §Runnable::invoke doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). (2) §DynRunnable doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). §Send-Bounded RPITIT is the most-specific heading in ADR-005 for both citations (subsection of §Adjacent Trait Object-Safety Adjudications)."
   - "3.09 (round-54/F-P2A224-03/2026-09-01): F-P2A224-03 [HIGH] §LedgerChannel: LedgerChannel<T> and PromoteRetireChannel<T> marker structs corrected to canonical round-53 derive-set (F-P2A220-01 canon; BC-2.02.007 §Architecture Anchors; S-1.28 Rule 13). (a) LedgerChannel<T>: removed #[derive(Debug, Clone)]; replaced with #[derive(Default)]; deleted manual impl<T: LedgerEntry> Default for LedgerChannel<T> block — derive form is the canonical shape. (b) PromoteRetireChannel<T>: same corrections. No other types in this section are modified — unrelated #[derive(Debug, Clone)] annotations on other types (RunnableConfig, StreamEvent, etc.) are untouched."
   - "3.08 (round-53/F-P2A220-04+F-P2A222-03+F-P2A223-02/2026-08-31): §TrajectoryCompactor error note: removed stale '(pending PO mint)' placeholder on E-TRAJ-005 — E-TRAJ-005 TrajectoryCompactionFailed is minted (error-taxonomy.md; BC-2.04.011 §Changelog (round-52)); replaced placeholder with '(minted; BC-2.04.011 {PC-006})'. Records-tier cleanup only; no structural changes."
   - "3.07 (round-52/F-P2A216-01+F-P2A216-02+F-P2A216-05+F-P2A216-06+F-P2A219-01+F-P2A217-03/2026-08-31): F-P2A216-02 [HIGH] Add §Serializer section (core::serializer, pregolya-core) — object-safe trait with serialize(&self, &[u8])->Result<Vec<u8>, PregolyaError> + deserialize inverse; EncryptedSerializer (checkpoint::serializer, pregolya-checkpoint) as concrete impl; Arc<dyn Serializer + Send + Sync> is the DI seam for both CheckpointSaver and checkpoint::trajectory concrete impl (ADR-030 §Decision 2 at-rest confidentiality, BC-2.04.007 {INV-003}, BC-2.04.009 {INV-002}). F-P2A216-01 [HIGH] §TrajectoryRetentionPolicy BC anchor: removed dead {INV-004} reference — eligible and retained are complements by construction; no external validation required; E-TRAJ-004 / {PC-005} / {INV-004} are retired as structurally unreachable (PO action: remove from BC-2.04.011 and error-taxonomy). F-P2A219-01 [HIGH] §TrajectoryCompactor error note: removed phantom 'E-TRAJ-002 TrajectoryCompactionFailed' (E-TRAJ-002 = ConflictingDuplicate/VAL, unrelated); removed E-TRAJ-004 (retired); replaced with generic DURABILITY note citing E-TRAJ-005 pending PO mint; fixed crash-recovery language to WAL-correct (F-P2A217-03 [MED]): 'rollback journal' → 'uncommitted WAL frames discarded on next open'. F-P2A216-05 [MED] §TrajectoryRetentionPolicy frontier doc: replaced contradictory parenthetical '(highest step_idx ≤ retention_frontier)' with unambiguous threshold definition — retention_frontier is exclusive lower bound for eligibility (< means eligible; >= means retained, including the frontier record). F-P2A216-06 [LOW] §LedgerChannel doc: LastValueChannel/AppendChannel replaced with canonical S-1.14 names LastValue<T>/BinaryOperatorAggregate<T, Op>."
@@ -154,7 +155,7 @@ pub trait Runnable<Input, Output>: Send + Sync {
     /// `DynRunnable` and `DynTool` impls compile on stable Rust. Bare `async fn`
     /// carries no `Send` bound on its RPITIT future, making the `#[async_trait]`
     /// blanket-impl's `Pin<Box<dyn Future + Send>>` box cast fail with E0277.
-    /// Authority: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT.
+    /// Authority: ADR-005 §Send-Bounded RPITIT.
     fn invoke(&self, input: Input, config: Option<RunnableConfig>)
         -> impl std::future::Future<Output = Result<Output, PregolyaError>> + Send;
 
@@ -261,7 +262,7 @@ Type-erased composition path and the concrete sequence type returned by `pipe`.
 /// `Runnable<I, O> + Sized`; `pipe()` uses `.into_dyn()` internally to erase its stages.
 /// `Runnable`'s async methods carry explicit RPITIT `+ Send` — required for the
 /// `Pin<Box<dyn Future + Send>>` box cast to compile on stable Rust. Authority: ADR-005
-/// §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT.
+/// §Send-Bounded RPITIT.
 ///
 /// # Errors
 /// - `Err(PregolyaError { code: "E-CORE-003", .. })` — `Value → I` deserialization
