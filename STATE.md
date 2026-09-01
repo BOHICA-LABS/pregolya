@@ -38,7 +38,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-09-01 — D-336 round-57 fix-burst CLOSED. trajectory-tail →4→0→0→0 (P2A-228=2M+1L+1OBS; zero HIGH). ALL 4 FINDINGS CLOSED: F-P2A228-01[MED] verification-architecture.md §VP-017 formal statement pure-fold/HashSet; F-P2A228-02[MED] capabilities §CAP-040 DI-014→DI-001; F-P2A228-03[LOW] VP-017 §Feasibility IndexSet→Vec/HashSet; O-P2A228-A[OBS] interface-definitions §LedgerChannel {INV-1}/{INV-2}→{PC-001}/{PC-002}. VP-INDEX §Changelog; ARCH-INDEX §Changelog; VP-017 input-hash 27e49fa→e7b31ef; L-260 codified. develop: bfe0592 LOCAL-ONLY. factory-artifacts: pending D-336 push. Census: BC 140 / VP 20 / EC 142 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. NEXT: round-58. |
+| **Last Updated** | 2026-09-01 — D-336 round-57 fix-burst CLOSED. trajectory-tail →4→0→0→0 (P2A-228=2M+1L+1OBS; zero HIGH). ALL 4 FINDINGS CLOSED: F-P2A228-01[MED] verification-architecture.md §VP-017 formal statement pure-fold/HashSet; F-P2A228-02[MED] capabilities §CAP-040 DI-014→DI-001; F-P2A228-03[LOW] VP-017 §Feasibility IndexSet→Vec/HashSet; O-P2A228-A[OBS] interface-definitions §LedgerChannel {INV-1}/{INV-2}→{PC-001}/{PC-002}. VP-INDEX §Changelog; ARCH-INDEX §Changelog; VP-017 input-hash 27e49fa→e7b31ef; L-260 codified. develop: bfe0592 LOCAL-ONLY. factory-artifacts: `427bf59` — PUSHED (D-336). Census: BC 140 / VP 20 / EC 142 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. NEXT: round-58. |
 
 ## Phase Progress
 
@@ -201,10 +201,10 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 <!-- D-336 checkpoint replaces D-335 — D-335 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-57 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334/D-335/D-336). Round-57 fix-burst CLOSED — all 4 findings closed (zero HIGH; all secondary-mirror residue); VP-INDEX §Changelog; ARCH-INDEX §Changelog; VP-017 input-hash corrected 27e49fa→e7b31ef; L-260 codified; census UNCHANGED. MILESTONE: P2A-228 first pass with ZERO HIGH since D-327 (severity trend converging). D-336 pushed — factory-artifacts pending push. Next: round-58 adversary cascade on new frozen HEAD.
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-57 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334/D-335/D-336). Round-57 fix-burst CLOSED — all 4 findings closed (zero HIGH; all secondary-mirror residue); VP-INDEX §Changelog; ARCH-INDEX §Changelog; VP-017 input-hash corrected 27e49fa→e7b31ef; L-260 codified; census UNCHANGED. MILESTONE: P2A-228 first pass with ZERO HIGH since D-327 (severity trend converging). D-336 pushed — factory-artifacts `427bf59` PUSHED. Next: round-58 adversary cascade on new frozen HEAD.
 
 ### HEADS
-- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: pending D-336 push. No .worktrees/. No open PRs.
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: `427bf59` — PUSHED (D-336). No .worktrees/. No open PRs.
 
 ### RESUME NEXT-ACTION
 Push factory-artifacts branch (D-336 commit is this burst). Then dispatch round-58 adversary cascade on new frozen HEAD. Streak 0/3 (D-336 push resets frozen-HEAD per BC-5.39.001). Standing directives DIRECTIVE 1/3 remain in force.
