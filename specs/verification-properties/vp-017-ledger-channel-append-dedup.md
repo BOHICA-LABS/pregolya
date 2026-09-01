@@ -9,7 +9,7 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "27e49fa"
+input-hash: "e7b31ef"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.02.007
 bc_anchor: BC-2.02.007 + BC-2.02.008
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.2"
+version: "1.3"
 changelog:
+  - "1.3 (round-57/F-P2A228-03/2026-09-01): F-P2A228-03 [LOW, spec-drift] §Feasibility Assessment no longer names the forbidden order-preserving hash-set structure as the dedup implementation exemplar; replaced with the mandated `Vec` linear scan over accumulator `entry_id` values per S-1.28 Rule 2 / Rule 14, with the harness oracle tracking seen IDs via `HashSet` — consistent with §Formal Invariant and the proof harness. Version bump: 1.2→1.3."
   - "1.2 (round-52/F-P2A217-04+F-P2A219-05/2026-08-31): F-P2A217-04 [HIGH] Harness rewritten to canonical pure-fold API — removed stale stateful LedgerChannel::new()/channel.reduce(e)/channel.value() API; harness now uses entries.iter().fold(Vec::new(), |acc, e| LedgerChannel::reduce(acc, e.clone())); TestEntry gains Serialize+Deserialize derives (required by LedgerEntry: Serialize+DeserializeOwned supertrait); §Formal Invariant updated to fold-form (removed LedgerChannel::new() / IndexSet reduce_all oracle; replaced with fold accumulation directly); §Proof Obligations updated (removed 'LedgerChannel::new() produces empty ledger' — now 'fold over empty input produces empty Vec'). F-P2A219-05 [LOW] di_anchor corrected DI-014→DI-001: VP-017 proves LedgerChannel::reduce idempotency/ordering/determinism (BSP reducer determinism = DI-001); DI-014 (error-propagation no-silent-swallow) is irrelevant since reduce is pure and returns Vec<T>, not Result."
   - "1.1 (round-50/F-P2A211-05/2026-08-31): Dual anchor: BC-2.02.008 added alongside BC-2.02.007. VP-017 harness exercises first-appearance ordering (Property Statement point 3) which is the subject of BC-2.02.008; anchoring only BC-2.02.007 left first-appearance ordering without a VP attribution. Follows VP-014 two-BC precedent. bc_anchor updated, §Source Contract expanded, §BC-Traceability row added. Version bump: 1.0→1.1."
   - "1.0 (ADR-030/2026-08-31): Initial — LedgerChannel dedup-idempotency proptest P1. ADR-030 Decision 3; BC-2.02.007 (draft; PO authors in Stage 2)."
@@ -179,8 +180,11 @@ proptest! {
 ## Feasibility Assessment
 
 **Feasible.** `LedgerChannel::reduce` is a pure-core function (takes `Vec<T>`, returns
-`Vec<T>`) with no I/O or async. The dedup invariant is structurally simple: an internal
-`IndexSet` (or equivalent) tracks seen IDs. proptest's `Vec` strategy with a small-alphabet
+`Vec<T>`) with no I/O or async. The dedup invariant is structurally simple: a `Vec` linear
+scan over the accumulator's existing `entry_id` values decides whether an update is novel
+(append) or already seen (no-op) — the mandated implementation per S-1.28 Rule 2 /
+Rule 14; the harness oracle tracks seen IDs with a `HashSet`, matching §Formal Invariant.
+proptest's `Vec` strategy with a small-alphabet
 ID generator will force frequent collision/dedup events, exercising all three invariant
 branches with high probability. No Kani constraint applies (this is a proptest target by
 design — see ADR-030 §Rationale).

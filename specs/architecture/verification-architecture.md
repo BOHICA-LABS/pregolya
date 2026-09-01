@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.34"
+version: "2.35"
 status: active
 producer: state-manager
 timestamp: 2026-09-01T00:00:00Z
@@ -32,6 +32,7 @@ input-hash: "8c23836"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "2.35 (round-57/F-P2A228-01/2026-09-01): VP-017 §Provable Properties Catalog formal statement rewritten to canonical pure-fold form — removed stale LedgerChannel::new() constructor (removed per ADR-030 §Decision 3 changelog; banned by S-1.28 Rule 13) and IndexSet oracle (banned by S-1.28 Rule 14); replaced with fold accumulation form and HashSet oracle matching VP-017 body §Formal Invariant verbatim. input-hash not updated (no BC input changes)."
   - "2.34 (round-57/F-P2A227-02/2026-09-01): F-P2A227-02 [HIGH] VP-019 §Property, §Formal statement, and §Why integration rewritten to the four-crash-point staging-table single-atomic-swap model (ADR-030 §Compaction Atomicity Decision). Old three-crash-point model (before_begin/mid_txn/after_sync with uniform pre_records outcome) retired as stale. New crash_point set: {before_build_begins, mid_build, mid_swap, after_swap_commit}. Cases 1–3 yield pre-compaction record set; case 4 (after_swap_commit) yields post-compaction retained_set(pre_records, policy). Formal statement updated with retained_set definition. Why-integration paragraph updated: 'three crash points (TV-002 three-case matrix)' → 'four crash points (TV-002 four-case matrix)'. VP count, module, tool, phase, BC anchor: all unchanged. input-hash updated."
   - "2.33 (round-54/F-P2A224-02/2026-09-01): VP-017 DI anchor corrected DI-014 → DI-001 in §preamble narrative sentence and Provable Properties Catalog VP table row (two sibling sites missed by round-53 D-332 re-anchor). Authoritative value: VP-INDEX + ADR-030 §VP + VP-017 body all carry DI-001. Historical body notes (DI-014 at ADR-030 Stage 1 and round-50) grandfathered per POL-46. input-hash refreshed."
 ---
@@ -826,11 +827,22 @@ exists in the ledger is a no-op. The accumulated `Vec<T>` contains entries in fi
 
 Formal statement:
 ```
-∀ entries: Vec<T>, let ledger = reduce_all(LedgerChannel::new(), entries):
-  ledger.len() == entries.iter().map(|e| e.entry_id()).collect::<IndexSet>().len()
+∀ entries: Vec<T>,
+  let ledger: Vec<T> = entries.iter().fold(Vec::new(), |acc, e| LedgerChannel::reduce(acc, e.clone())):
+
+  ledger.len() == count_distinct_entry_ids(entries)
   ∧ ∀ i < ledger.len():
       ledger[i].entry_id() == first_occurrence_id(entries, i)
 ```
+
+where:
+- `count_distinct_entry_ids(entries)` = `entries.iter().map(|e| e.entry_id()).collect::<HashSet<_>>().len()`
+- `first_occurrence_id(entries, i)` is the `entry_id` of the `i`-th entry (in first-appearance
+  order) in `entries`
+
+`LedgerChannel::reduce` is a pure function: `fn reduce(acc: Vec<T>, update: T) -> Vec<T>`.
+No mutable state; no constructor; no `.value()` accessor — the `Vec<T>` accumulator is
+threaded through `fold` and is the direct output of the harness.
 
 **Why proptest (not Kani):** `LedgerChannel::reduce` is a pure function over an internal collection.
 The dedup invariant ranges over arbitrarily-long `Vec<T>` inputs. Kani's bounded model-checking

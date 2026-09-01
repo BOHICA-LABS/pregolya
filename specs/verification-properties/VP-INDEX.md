@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.38"
+version: "1.39"
 status: active
 producer: architect
-timestamp: 2026-09-01T12:00:00Z
+timestamp: 2026-09-01T14:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.39 (round-57/D-336/2026-09-01): VP-017 §Feasibility revised (F-P2A228-03 [LOW]: §Feasibility Assessment replaced forbidden IndexSet exemplar with mandated Vec linear scan + HashSet oracle, consistent with §Formal Invariant and proof harness). VP-017 input-hash corrected (pre-existing drift: ADR-030 §Decision-3 had been revised in round-56 without input-hash refresh). VP census UNCHANGED: 20 total. VP-017 DI-001 / VP-018 DI-002 / VP-019 DI-002 cross-doc consistency confirmed."
   - "1.38 (round-56/D-335/2026-09-01): VP-019 §BC-Contradictions-Flagged (formal-verifier; §BC-Contradictions-Flagged marked RESOLVED — VP-019 no longer conflicts with VP-018 staging model; input-hash 6579f43; F-P2A227-03). VP-017/VP-018 DI anchors confirmed consistent (VP-017 DI-001, VP-018 DI-002, VP-019 DI-002). BC-INDEX §VP Seed BCs VP-018 DI cell corrected DI-002+DI-004→DI-002 (O-P2A227-A). VP census UNCHANGED: 20 total."
   - "1.37 (round-53/D-332/2026-08-31): VP-017 DI column corrected DI-014→DI-001 (F-P2A223-01 [MED]; architect adjudication; VP-017 body already carried DI-001 since round-52 pure-fold update; `ledger_channel_dedup_idempotency` harness anchors pure-fold DI-001 property). VP census UNCHANGED: 20 total."
   - "1.36 (round-50/F-P2A209-03+F-P2A211-05/2026-08-31): VP-019 added — trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; checkpoint::trajectory; pregolya-checkpoint; DI-002; Phase 6; n/a; file vp-019-trajectory-compaction-crash-isolation.md). Covers OS-level atomicity guarantee (SQLite BEGIN IMMEDIATE/COMMIT under SIGKILL) that VP-018 proptest explicitly excludes. VP-017 BC Anchor updated BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (F-P2A211-05 dual-anchor; first-appearance ordering is the subject of BC-2.02.008 and covered by Property 3 in VP-017 harness). Arithmetic: total 19→20 (P0 6 unchanged, P1 13→14); integration 2→3; Kani/proptest/unit unchanged. Status:draft 19→20."

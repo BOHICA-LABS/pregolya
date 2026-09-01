@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.65"
+version: "1.66"
 status: active
 producer: architect
-timestamp: 2026-08-31T00:00:00Z
+timestamp: 2026-09-01T14:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.66 (round-57/D-336/2026-09-01): verification-architecture.md §Provable-Properties VP-017 formal statement rewritten to canonical pure-fold form (removed stale LedgerChannel::new() constructor and IndexSet oracle; replaced with fold accumulation form and HashSet oracle matching VP-017 §Formal Invariant verbatim; F-P2A228-01 [MED]). interface-definitions §LedgerChannel Invariants tags {INV-1}/{INV-2} corrected to canonical {PC-001}/{PC-002} (O-P2A228-A [OBS]). capabilities-p1-p2.md §CAP-040 PromoteRetireChannel body prose DI-014→DI-001 (F-P2A228-02 [MED]). VP-INDEX §Changelog: VP-017 §Feasibility revised (IndexSet→Vec linear scan/HashSet oracle; F-P2A228-03 [LOW]); VP-017 input-hash corrected 27e49fa→e7b31ef. VP-017 DI-001 / VP-018 DI-002 / VP-019 DI-002 cross-doc consistency confirmed across VP-INDEX / ARCH-INDEX / verification-architecture.md / verification-coverage-matrix.md. Census UNCHANGED: 140 BCs / 20 VP / 142 EC / 794 TV canonical / 42 stories / 316 pts / 30 ADR / 24 holdout (must-pass 17/24=70.8%)."
   - "1.65 (round-53/D-332/2026-08-31): VP-017 §Verification Properties table parenthetical corrected DI-014→DI-001 (F-P2A223-01 [LOW/ARCH-INDEX]; architect adjudication; consistent with VP-017 body DI-001 pure-fold seam updated round-52). VP census UNCHANGED: 20 total."
   - "1.64 (round-50/F-P2A209-02+F-P2A209-03/2026-08-31): VP-019 added — trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; checkpoint::trajectory; pregolya-checkpoint; DI-002; SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL; Phase 6). VP-017 BC Anchor updated: BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (dual-anchor; LedgerChannel first-appearance ordering confirmed by product-owner). VP census: 19→20 VPs (P1 13→14; integration ×2→×3). §Verification Properties summary updated: count 19→20, integration breakdown 2→3."
   - "1.63 (BC-2.04.011/2026-08-31): VP-018 added — TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; checkpoint::trajectory; pregolya-checkpoint; DI-002; harness trajectory_compaction_retention_integrity). VP census: 18→19 VPs (P1 12→13; proptest ×6→×7). §Verification Properties table updated: VP-018 row added, summary count 18→19."

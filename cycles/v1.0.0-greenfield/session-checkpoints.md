@@ -4072,3 +4072,15 @@ HIGH (2) CLOSED: F-P2A225-01[HIGH] DI-014 INAPPLICABLE for channel reducers — 
 D-334 round-55 fix-burst closed (Stage D final; ALL 5 findings closed; BC-INDEX §Changelog BC-2.02.009 DI-014→DI-001; STORY-INDEX §D-334-changelog S-1.14 §AC-015-fix; input-hashes corrected; L-255/L-256 codified; census UNCHANGED).
 
 ### STATE: v6.46, timestamp 2026-09-01T12:00:00Z
+
+---
+
+## D-335 Checkpoint (archived when D-336 replaced it) — 2026-09-01
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-56 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334/D-335). Round-56 fix-burst CLOSED — all 4 findings + O-P2A227-A OBS closed; derive-only Default canon REVERSED to manual bound-free impl Default (rustc#26925); VP-019 §BC-Contradictions RESOLVED + POL-9 propagation to verification-architecture §Provable-Properties-Catalog; BC-INDEX §Changelog VP-018 DI-002 single-anchor; STORY-INDEX §Changelog; VP-INDEX §Changelog; L-257/L-258/L-259 codified; census UNCHANGED. MILESTONE: P2A-226 first CLEAN(strict) since D-327 praxist expansion (streak peaked 1/3, reset by P2A-227). D-335 pushed — factory-artifacts f5d44ce. Next: round-57 adversary cascade on frozen HEAD f5d44ce.
+
+### HEADS
+- develop: bfe0592 — LOCAL ONLY; factory-artifacts f5d44ce — PUSHED (D-335)
+
+### STATE: v6.47, timestamp 2026-09-01T12:00:00Z

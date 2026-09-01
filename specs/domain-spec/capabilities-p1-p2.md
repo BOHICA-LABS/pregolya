@@ -2,7 +2,7 @@
 document_type: domain-spec-section
 level: L2
 section: capabilities-p1-p2
-version: "1.30"
+version: "1.31"
 status: active
 producer: business-analyst
 timestamp: 2026-08-21T00:00:00Z
@@ -17,6 +17,7 @@ input-hash: "faffcd7"
 traces_to: L2-INDEX.md
 decisions: [D1, D3, D7, D8, D13, D17, D19, D20, D21, D23, D170, D275]
 changelog:
+  - "1.31 (round-57/F-P2A228-02/2026-09-01): CAP-040 §PromoteRetireChannel body: stale DI-014 parenthetical corrected to DI-001 — pure infallible Vec<T> reducer determinism (BSP reducer determinism = DI-001). Consistent with §Authored BCs footer BC-2.02.009 anchor (DI-001) already fixed in round-55. POL-24 sibling sweep: sole stale DI-014 in PromoteRetireChannel/LedgerChannel/BC-2.02.007/BC-2.02.009 context; no additional stale citations found. Neighboring TrajectoryWriter DI-014 (§error-propagation bullet, §Authored BCs BC-2.04.009/BC-2.04.010/BC-2.04.011) retained — legitimately fallible Result-returning operations."
   - "1.30 (round-55/F-P2A225-01/2026-09-01): CAP-040 §Authored BCs: DI-014 removed from BC-2.02.007 and BC-2.02.009 per architect ADR-030 §VP ruling — both reducers are pure infallible Vec<T> functions; DI-014 inapplicable; DI-001 is the correct anchor. BC-2.02.007: DI-014/DI-001 → DI-001; BC-2.02.009: DI-014/DI-001 → DI-001."
   - "1.29 (Round-25/F-P2A108-02-blast-radius/2026-08-28): F-P2A108-02 notation fix — CAP-039 body: doubled non-resolving notation `pregolya-core::core::runnable` → canonical parenthetical `pregolya-core (core::runnable)` per ADR-023 normalization. Sibling sweep: zero other doubled `<crate>::<shorthand>::<module>` occurrences in live body. TD-VSDD-091: citation by symbol/module-path only."
   - "1.28 (Round-19/GAP-01-bidirectional-link/2026-08-27): CAP-021 body extended to describe GraphAgentTool wrapping behavior and cite BC-2.09.008 — closes the missing CAP→BC direction for the D-275/GAP-01 scope addition (2026-08-26). Added GraphAgentTool paragraph (CompiledStateGraph as DynTool, STATE-ISOLATION {INV-001}, DenyInterrupts fail-closed policy, E-MCP-010) and 'Authored BCs: BC-2.09.008' entry per D23/D-170 citation convention. No behavioral scope expansion beyond BC-2.09.008 + D-275 human approval. D275 added to decisions list. TD-VSDD-091: all citations by symbol/section name only."
@@ -881,7 +882,7 @@ pregolya-checkpoint `checkpoint::trajectory`):
 - **`PromoteRetireChannel<T: LedgerEntry>`** — a `StateGraph` channel reducer that maintains
   a `Vec<T>` active set via `PromoteRetireOp<T>` operations. The active set contains no
   duplicate `entry_id` values. Idempotent operations return the correct `Vec<T>` without
-  raising `Err` (DI-014). Used in quality-diversity allocation cycles where candidates
+  raising `Err` (DI-001). Used in quality-diversity allocation cycles where candidates
   advance from pending to active and are retired when superseded or committed.
 
 **Composition pattern (clean-room, native pregolya):** A research orchestrator `StateGraph`

@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.11"
+version: "3.12"
 status: active
 producer: architect
 timestamp: 2026-09-01T00:00:00Z
 phase: 1d
 changelog:
+  - "3.12 (round-57/O-P2A228-A/2026-09-01): O-P2A228-A [OBS] §LedgerChannel Invariants table: BC clause tag format corrected from 2-digit ({INV-1}, {INV-2}) to canonical 3-digit form; semantic mapping corrected from {INV-001}/{INV-002} (monotonic-length and entry_id-set structural invariants) to {PC-001}/{PC-002} (novel-reduce appends / seen-reduce no-op postconditions per BC-2.02.007 §Postconditions — the behaviors described in those rows are postconditions of the reduce call, not the monotonicity/uniqueness invariants)."
   - "3.11 (round-57/F-P2A227-01/2026-09-01): F-P2A227-01 [HIGH] §LedgerChannel: derive(Default) dropped from both LedgerChannel<T> and PromoteRetireChannel<T> marker structs; manual bound-free Default impls restored for both. Rationale: derive(Default) on a generic struct emits a spurious T: Default bound (rustc issue #26925); LedgerEntry does not include Default; the Channel supertrait requires Default for all T: LedgerEntry; the spurious bound violates AC-018/BC-2.02.007 {INV-004}. The canonical form is: impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } } (and analogously PromoteRetireChannel). This reverses the derive-only mandate from F-P2A220-01/F-P2A224-03 (recorded as non-realizable in ADR-030 §Decision 3). Doc comments on both structs updated to state 'manual bound-free impl'. No other struct attributes modified."
   - "3.10 (round-55/F-P2A225-04/2026-09-01): F-P2A225-04 [MED] Two chained double-§ citations eliminated per POL-19: (1) §Runnable::invoke doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). (2) §DynRunnable doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). §Send-Bounded RPITIT is the most-specific heading in ADR-005 for both citations (subsection of §Adjacent Trait Object-Safety Adjudications)."
   - "3.09 (round-54/F-P2A224-03/2026-09-01): F-P2A224-03 [HIGH] §LedgerChannel: LedgerChannel<T> and PromoteRetireChannel<T> marker structs corrected to canonical round-53 derive-set (F-P2A220-01 canon; BC-2.02.007 §Architecture Anchors; S-1.28 Rule 13). (a) LedgerChannel<T>: removed #[derive(Debug, Clone)]; replaced with #[derive(Default)]; deleted manual impl<T: LedgerEntry> Default for LedgerChannel<T> block — derive form is the canonical shape. (b) PromoteRetireChannel<T>: same corrections. No other types in this section are modified — unrelated #[derive(Debug, Clone)] annotations on other types (RunnableConfig, StreamEvent, etc.) are untouched."
@@ -127,7 +128,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "80fe717"
+input-hash: "57e6447"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -3166,8 +3167,8 @@ impl<T: LedgerEntry> Default for PromoteRetireChannel<T> {
 
 | Invariant | Description | BC / VP Anchor |
 |-----------|-------------|----------------|
-| Novel-reduce appends | `reduce(acc, e)` where `e.entry_id()` not present → returns `acc` with `e` appended; `len = old_len + 1` | BC-2.02.007 {INV-1} |
-| Seen-reduce is no-op | `reduce(acc, e)` where `e.entry_id()` already in `acc` → returns `acc` unchanged; `len = old_len`; no `Result`, no `Ok(())` | BC-2.02.007 {INV-2} |
+| Novel-reduce appends | `reduce(acc, e)` where `e.entry_id()` not present → returns `acc` with `e` appended; `len = old_len + 1` | BC-2.02.007 {PC-001} |
+| Seen-reduce is no-op | `reduce(acc, e)` where `e.entry_id()` already in `acc` → returns `acc` unchanged; `len = old_len`; no `Result`, no `Ok(())` | BC-2.02.007 {PC-002} |
 | First-appearance ordering | `reduce` preserves first-appearance order across all calls; accumulated `Vec<T>` is ordered by first insertion, not lexicographic | BC-2.02.008 |
 | Dedup-idempotent reduce (formal) | proptest: ∀ entry sequence with duplicates, applying `LedgerChannel::reduce` to each entry yields the same `Vec<T>` as applying to the deduplicated prefix | VP-017 |
 

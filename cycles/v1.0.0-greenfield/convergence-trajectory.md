@@ -4900,3 +4900,54 @@ All 4 findings CLOSED in D-335 fix-burst:
 - L-257/L-258/L-259 codified
 
 **NEXT: round-57 on new frozen HEAD post-D-335 push. Streak 0/3.**
+
+## Round 57 — D-336 (2026-09-01) — EIGHTH ADVERSARIAL REVIEW OF PRAXIST SURFACE
+
+**Frozen HEAD:** `f5d44ce` (factory-artifacts post-D-335 push)
+**Pass:** P2A-228 (single pass)
+**Trajectory:** →4 (P2A-228=2 MED + 1 LOW + 1 OBS)
+**Total findings (unique):** 4 (0 HIGH + 2 MED + 1 LOW + 1 OBS)
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO (MED findings present; per CLEAN(PR-merge) definition, MED is blocking)
+**Streak after fix-burst:** 0/3 (push of D-336 commit resets frozen-HEAD; round-58 gates on new HEAD)
+**Severity trend (CAP-040 re-convergence):** round-53: 3H → round-54: 3H → round-55: 2H → round-56/P2A-227: 2H+1M → round-57/P2A-228: 0H/2M+1L+1OBS (converging — first pass since D-327 with zero HIGH findings)
+**NOTE:** P2A-228 confirmed the PRIMARY CAP-040 surface (BCs, stories, ADR, interface-definitions, VP bodies, indexes) coherent/complete — findings were all peripheral-mirror residue.
+
+### Pass Detail
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|-----------------|
+| P2A-228 | Praxist surface — secondary-mirror propagation audit | 4 (0H+2M+1L+1OBS) | NO | NO |
+
+### Finding Summary
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F-P2A228-01 | MED | verification-architecture.md §Provable Properties Catalog VP-017 formal statement contained stale LedgerChannel::new() constructor (removed per ADR-030 §Decision-3 changelog) and IndexSet oracle (banned by S-1.28 Rule 14) — not updated when VP-017 body was rewritten to pure-fold/HashSet in round-52; POL-9 secondary-mirror propagation gap |
+| F-P2A228-02 | MED | capabilities-p1-p2.md §CAP-040 PromoteRetireChannel body prose still cited DI-014 after round-55 DI-014-inapplicability ruling (BC-2.02.009/prd.md/BC-INDEX updated; capabilities mirror doc missed; POL-24 propagation gap) |
+| F-P2A228-03 | LOW | VP-017 §Feasibility Assessment named IndexSet as the dedup implementation exemplar — forbidden by S-1.28 Rule 14; should name the mandated Vec linear scan with HashSet oracle consistent with §Formal Invariant and proof harness |
+| O-P2A228-A | OBS | interface-definitions §LedgerChannel Invariants table used informal {INV-1}/{INV-2} tags instead of canonical {PC-001}/{PC-002} established in BC-2.02.009 |
+
+### Multi-Stage Cascade Disposition
+
+All 4 findings CLOSED in D-336 fix-burst:
+- **architect (verification-architecture.md §Provable-Properties + interface-definitions §LedgerChannel):** verification-architecture.md §Provable Properties Catalog VP-017 formal statement rewritten to pure-fold/HashSet (removed LedgerChannel::new()/IndexSet; F-P2A228-01). interface-definitions §LedgerChannel Invariants tags {INV-1}/{INV-2}→{PC-001}/{PC-002} (O-P2A228-A).
+- **business-analyst (capabilities-p1-p2.md §CAP-040):** §CAP-040 PromoteRetireChannel body prose DI-014→DI-001 (F-P2A228-02).
+- **formal-verifier (VP-017 §Feasibility):** §Feasibility Assessment IndexSet→Vec linear scan/HashSet oracle (F-P2A228-03).
+- **state-manager D (VP-INDEX §Changelog + ARCH-INDEX §Changelog + VP-017 input-hash + convergence-trajectory + lessons L-260 + STATE.md D-336):** VP-INDEX §Changelog update (VP-017 §Feasibility + input-hash corrected 27e49fa→e7b31ef; F-P2A228-03). ARCH-INDEX §Changelog update (verification-architecture.md §Provable-Properties + interface-definitions §LedgerChannel + capabilities-p1-p2.md §CAP-040 + VP-INDEX §Changelog; census UNCHANGED 140 BCs). VP-017 input-hash corrected 27e49fa→e7b31ef (pre-existing drift: stored hash did not reflect ADR-030 §Decision-3 revision from round-56). convergence-trajectory round-57 block. lessons L-260 (secondary-mirror propagation completeness).
+
+### Post-Round-57 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (20)
+- EC: UNCHANGED (142)
+- TV: UNCHANGED (794 canonical)
+- ADR: UNCHANGED (30)
+- Stories: UNCHANGED (42 total; 41 product + 1 maint)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- GATE-READY: YES (all blocking validators PASS after fix-burst)
+- Streak: 0/3 (D-336 push resets frozen HEAD; round-58 gates on new HEAD)
+- MILESTONE: P2A-228 first pass with ZERO HIGH findings since D-327 praxist surface expansion (severity trend converging: 3H→3H→2H→2H+1M→0H+2M+1L+1OBS)
+- L-260 codified
+
+**NEXT: round-58 on new frozen HEAD post-D-336 push. Streak 0/3.**
