@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.45"
+version: "1.46"
 status: active
 producer: state-manager
-timestamp: 2026-09-01T15:30:00Z
+timestamp: 2026-09-01T16:00:00Z
 changelog:
+  - "1.46 (round-59/D-338/2026-09-01): S-1.28 v1.7→v1.8 (story-writer; F-P2A230-01 AC-018 dual-test trace — BC-2.02.009 {INV-004} PromoteRetireChannel side now cited to new test_BC_2_02_009_promote_retire_channel_implements_channel_trait() in promote_retire.rs; BC-2.02.007 side retains test_BC_2_02_007_ledger_channel_implements_channel_trait() in ledger.rs; Tasks + File-Structure updated for promote_retire.rs; input-hash 17d12e4). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%)."
   - "1.45 (round-58/D-337/2026-09-01): S-1.28 §Rule-4/§Rule-13/AC-011/AC-018 (story-writer; PromoteRetireOp<T> gains #[derive(Clone, Debug)] to satisfy Channel::Update: Clone; Rule 4/Rule 13 exclusion updated — PromoteRetireOp<T> derives Clone because LedgerEntry⊃Clone (distinct from Default which requires manual impl); Tasks + File-Structure updated; input-hash 17d12e4; F-P2A229-01). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%)."
   - "1.44 (round-56/D-335/2026-09-01): S-1.28 v1.5→v1.6 (story-writer; Rule-13/AC-001/Tasks/File-Structure derive-only→manual bound-free impl Default reversal; AC-018 added dual-tracing BC-2.02.007/BC-2.02.009 {INV-004} Self:Default supertrait; input-hash 8797630; F-P2A227-01). S-1.14 v1.6→v1.7 (story-writer; built-in-channel manual-Default rule added; AC-016/Task-20/File-Structure updated; F-P2A227-01 sibling propagation). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24)."
   - "1.43 (round-55/D-334/2026-09-01): S-1.14 v1.5→v1.6 (story-writer round-55 fix-burst; AC-015 citation corrected per F-P2A225-03; input-hash already current 8ce605c). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24)."

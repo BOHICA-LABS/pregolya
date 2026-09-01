@@ -4103,3 +4103,27 @@ ALL 4 FINDINGS CLOSED in D-336 burst: F-P2A228-01[MED] verification-architecture
 
 ### DECISION-LOG DELTA (D-336 close)
 D-335 round-56 fix-burst closed; D-336 round-57 fix-burst closed (ALL 4 findings closed; VP-INDEX §Changelog; ARCH-INDEX §Changelog; VP-017 input-hash corrected; L-260 codified; census UNCHANGED; streak 0/3).
+
+---
+
+## Archived Checkpoint: D-337 (2026-09-01) — Replaced by D-338
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-58 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334/D-335/D-336/D-337). Round-58 fix-burst CLOSED — 1 MED closed (F-P2A229-01 PromoteRetireOp<T> #[derive(Clone, Debug)] for Channel::Update: Clone; ADR-030 §Decision-3; interface-definitions §LedgerChannel; BC-2.02.009 §INV-004; S-1.28 §Rule-4/§Rule-13); BC-INDEX §Changelog; STORY-INDEX §Changelog; L-261 codified; census UNCHANGED. ALL mirror + primary CAP-040 surfaces confirmed converged. Severity trend: 0 HIGH for 2 consecutive passes (monotone converging). D-337 pushed — factory-artifacts PUSHED. Next: round-59 adversary cascade on new frozen HEAD.
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-337) — run `git -C .factory log -1 --format='%h %s'` for current SHA. No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION
+Dispatch round-59 adversary cascade on new frozen HEAD (post-D-337 push). Streak 0/3 (D-337 push resets frozen-HEAD per BC-5.39.001). Standing directives DIRECTIVE 1/3 remain in force.
+
+### ROUND-58 FINDINGS (CLOSED)
+MED (1) CLOSED: F-P2A229-01[MED] PromoteRetireOp<T> missing #[derive(Clone, Debug)] for Channel::Update: Clone (architect + product-owner + story-writer).
+
+### DECISION-LOG DELTA (D-337 close)
+D-336 round-57 fix-burst closed; D-337 round-58 fix-burst closed (1 MED closed; ADR-030 §Decision-3; interface-definitions §LedgerChannel; BC-2.02.009 §INV-004; S-1.28 §Rule-4/§Rule-13; BC-INDEX §Changelog; STORY-INDEX §Changelog; L-261; census UNCHANGED; streak 0/3).
+
+### WORKTREE INVENTORY
+None (.worktrees/ absent). Phase-2; no story worktrees open.
+
+### STATE: v6.49, timestamp 2026-09-01T16:00:00Z
