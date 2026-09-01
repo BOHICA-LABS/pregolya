@@ -4019,3 +4019,10 @@ pregolya Phase-2 re-convergence. streak 0/3. D-327 CLOSED (praxist research-orch
 pregolya Phase-2 re-convergence. streak 0/3. D-329 CLOSED (round-51 fix-burst; trajectory-tail →2→0→6→2; 4 lenses; 1/4 CLEAN(strict) [P2A-213 security]; ALL 10 FINDINGS CLOSED). hook #18 verify-vp-count-parity.sh + hook #19 verify-bc-story-anchor-resolution.sh WIRED (19/19 blocking validators). Frozen-HEAD streak gates on spec HEAD post-D-329 push. Heartbeat auto-recovery ARMED: durable cron 60FC8EB8 @ 8,23,38,53 * * * * + SessionStart self-heal. Census: BC 140 / VP 20 / EC 142 / TV 793 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 16/24=66.7%). GATE-READY=YES 19/19. streak 0/3. L-247/248 codified. NEXT: dispatch round-52.
 
 ### STATE: v6.40, timestamp 2026-08-31T20:00:00Z
+
+## Archived Checkpoint: D-330 (archived 2026-08-31 at D-331 session wrap)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. D-330 CLOSED (round-52 fix-burst; trajectory-tail →5→4→1→3; 4 lenses; 0/4 CLEAN(strict); ALL 13 FINDINGS CLOSED). hook #20 verify-holdout-reverse-leak.sh ADDED (20/20 blocking validators). GATE-READY=YES 20/20. Frozen-HEAD streak gates on spec HEAD post-D-330 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. Census: BC 140 / VP 20 / EC 142 (net-neutral; E-TRAJ-004 RETIRED+E-TRAJ-005 MINTED) / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. L-249/250/251/252 codified. NEXT: dispatch round-53 on current perimeter.
+
+### STATE: v6.41, timestamp 2026-08-31T01:30:00Z
