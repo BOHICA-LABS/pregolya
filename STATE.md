@@ -38,7 +38,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-09-01 — D-335 round-56 fix-burst CLOSED. trajectory-tail →0→4→0→0 (P2A-226=0/CLEAN(strict) streak 1/3; P2A-227=4[2H+1M+1OBS] streak reset 0/3). ALL 4 FINDINGS CLOSED + O-P2A227-A OBS fixed. BC-INDEX §Changelog (VP-018 DI-002 single-anchor); STORY-INDEX §Changelog; VP-INDEX §Changelog; L-257/L-258/L-259 codified. develop: bfe0592 LOCAL-ONLY. factory-artifacts: PENDING_PUSH. Census: BC 140 / VP 20 / EC 142 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. NEXT: round-57. |
+| **Last Updated** | 2026-09-01 — D-335 round-56 fix-burst CLOSED. trajectory-tail →0→4→0→0 (P2A-226=0/CLEAN(strict) streak 1/3; P2A-227=4[2H+1M+1OBS] streak reset 0/3). ALL 4 FINDINGS CLOSED + O-P2A227-A OBS fixed. BC-INDEX §Changelog (VP-018 DI-002 single-anchor); STORY-INDEX §Changelog; VP-INDEX §Changelog; L-257/L-258/L-259 codified. develop: bfe0592 LOCAL-ONLY. factory-artifacts: f5d44ce PUSHED. Census: BC 140 / VP 20 / EC 142 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. NEXT: round-57. |
 
 ## Phase Progress
 
@@ -201,10 +201,10 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 <!-- D-335 checkpoint replaces D-334 — D-334 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
 
 ### RESUME IN ONE BREATH
-pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-56 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334/D-335). Round-56 fix-burst CLOSED — all 4 findings + O-P2A227-A OBS closed; derive-only Default canon REVERSED to manual bound-free impl Default (rustc#26925); VP-019 §BC-Contradictions RESOLVED + POL-9 propagation to verification-architecture §Provable-Properties-Catalog; BC-INDEX §Changelog VP-018 DI-002 single-anchor; STORY-INDEX §Changelog; VP-INDEX §Changelog; L-257/L-258/L-259 codified; census UNCHANGED. MILESTONE: P2A-226 first CLEAN(strict) since D-327 praxist expansion (streak peaked 1/3, reset by P2A-227). D-335 push PENDING (see HEADS). Next: round-57 adversary cascade on new frozen HEAD post-D-335 push.
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-56 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334/D-335). Round-56 fix-burst CLOSED — all 4 findings + O-P2A227-A OBS closed; derive-only Default canon REVERSED to manual bound-free impl Default (rustc#26925); VP-019 §BC-Contradictions RESOLVED + POL-9 propagation to verification-architecture §Provable-Properties-Catalog; BC-INDEX §Changelog VP-018 DI-002 single-anchor; STORY-INDEX §Changelog; VP-INDEX §Changelog; L-257/L-258/L-259 codified; census UNCHANGED. MILESTONE: P2A-226 first CLEAN(strict) since D-327 praxist expansion (streak peaked 1/3, reset by P2A-227). D-335 pushed — factory-artifacts `f5d44ce`. Next: round-57 adversary cascade on frozen HEAD f5d44ce.
 
 ### HEADS
-- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `PENDING_PUSH` (D-335 not yet pushed). No .worktrees/. No open PRs.
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `f5d44ce` — PUSHED (D-335). No .worktrees/. No open PRs.
 
 ### RESUME NEXT-ACTION
 Push factory-artifacts branch (D-335 commit). Then dispatch round-57 adversary cascade on new frozen HEAD. Streak 0/3 (P2A-227 reset streak; D-335 push resets frozen-HEAD per BC-5.39.001). Standing directives DIRECTIVE 1/3 remain in force.
