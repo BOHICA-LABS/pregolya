@@ -38,7 +38,7 @@ user_directive_persistent: "DIRECTIVE 1 (2026-07-13): Keep going until you hit c
 | **Target Workspace** | Single Cargo workspace (D4) |
 | **Reference Corpus** | .reference/ (gitignored) — langchain==1.3.13, langgraph==1.2.9, langchain-community==v0.4.2, langchain-mcp-adapters==0.3.0, adk-rust==1.0.0 (Corpus 5 per D16). Full version pins + commit SHAs recorded in semport/reference-manifest.md |
 | **Started** | 2026-07-12 |
-| **Last Updated** | 2026-09-01 — D-334 round-55 fix-burst CLOSED (Stage D final). trajectory-tail →5→0→0→0 (P2A-225=5[2H+2M+1OBS]; single-lens dispatch). ALL 5 FINDINGS CLOSED. BC-INDEX §Changelog (BC-2.02.009 DI-014→DI-001 last live residue); STORY-INDEX §D-334-changelog (S-1.14 §AC-015-fix); input-hashes corrected; L-255/L-256 codified. develop: bfe0592 LOCAL-ONLY. factory-artifacts: [pending this commit]. Census: BC 140 / VP 20 / EC 142 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. NEXT: round-56. |
+| **Last Updated** | 2026-09-01 — D-334 round-55 fix-burst CLOSED (Stage D final). trajectory-tail →5→0→0→0 (P2A-225=5[2H+2M+1OBS]; single-lens dispatch). ALL 5 FINDINGS CLOSED. BC-INDEX §Changelog (BC-2.02.009 DI-014→DI-001 last live residue); STORY-INDEX §D-334-changelog (S-1.14 §AC-015-fix); input-hashes corrected; L-255/L-256 codified. develop: bfe0592 LOCAL-ONLY. factory-artifacts: b3d6c7b PUSHED. Census: BC 140 / VP 20 / EC 142 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. NEXT: round-56. |
 
 ## Phase Progress
 
@@ -203,7 +203,7 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-55 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334). Round-55 fix-burst CLOSED (Stage D final) — all 5 findings closed (2H+2M+1OBS); DI-014 last live residue (BC-INDEX BC-2.02.009 Full Catalog DI-014→DI-001) + prd.md §2.02/§7/§12 + capabilities-p1-p2.md propagation CLOSED; ADR-030 §Decision-3 ALL chained-§/phantom-anchor cleared; S-1.14 §AC-015-fix AC-015 citation; interface-definitions §Send-Bounded-RPITIT; BC-INDEX §Changelog; STORY-INDEX §D-334-changelog; input-hashes corrected (BC-2.02.007/009 + prd.md); L-255/L-256 codified; census UNCHANGED. D-334 push DONE (see HEADS). Next: round-56 adversary cascade on new frozen HEAD.
 
 ### HEADS
-- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `[D-334 post-push; run git -C .factory log -1 --format='%h']` — PUSHED (D-334 final). No .worktrees/. No open PRs.
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `b3d6c7b` — PUSHED (D-334 final). No .worktrees/. No open PRs.
 
 ### RESUME NEXT-ACTION
 Dispatch round-56 adversary cascade on new frozen HEAD (D-334 push resets frozen HEAD per BC-5.39.001). Streak 0/3 (round-55 NOT CLEAN(strict) — single-lens pass; D-334 push resets frozen-HEAD). Standing directives DIRECTIVE 1/3 remain in force (drive to convergence autonomously; heartbeat cron active).
