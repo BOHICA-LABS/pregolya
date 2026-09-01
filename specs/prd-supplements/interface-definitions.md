@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.12"
+version: "3.13"
 status: active
 producer: architect
 timestamp: 2026-09-01T00:00:00Z
 phase: 1d
 changelog:
+  - "3.13 (round-58/F-P2A229-01/2026-09-01): F-P2A229-01 [MED] §LedgerChannel PromoteRetireOp<T> enum: add #[derive(Clone, Debug)]. Clone satisfies Channel::Update: Clone; derive is sound because LedgerEntry: Clone (supertrait bundles Clone), so no spurious bound beyond T: LedgerEntry is introduced (does not trigger rustc #26925 — contrast with Default, which is NOT in the LedgerEntry bundle and is why the marker structs use manual Default impls). Debug added conventionally for a data-bearing update enum; conditional on T: Debug (LedgerEntry does not bundle Debug). Doc-comment updated to state rationale. LedgerChannel<T> code block is unaffected (Update = T; T: LedgerEntry implies T: Clone — Channel::Update: Clone already satisfied)."
   - "3.12 (round-57/O-P2A228-A/2026-09-01): O-P2A228-A [OBS] §LedgerChannel Invariants table: BC clause tag format corrected from 2-digit ({INV-1}, {INV-2}) to canonical 3-digit form; semantic mapping corrected from {INV-001}/{INV-002} (monotonic-length and entry_id-set structural invariants) to {PC-001}/{PC-002} (novel-reduce appends / seen-reduce no-op postconditions per BC-2.02.007 §Postconditions — the behaviors described in those rows are postconditions of the reduce call, not the monotonicity/uniqueness invariants)."
   - "3.11 (round-57/F-P2A227-01/2026-09-01): F-P2A227-01 [HIGH] §LedgerChannel: derive(Default) dropped from both LedgerChannel<T> and PromoteRetireChannel<T> marker structs; manual bound-free Default impls restored for both. Rationale: derive(Default) on a generic struct emits a spurious T: Default bound (rustc issue #26925); LedgerEntry does not include Default; the Channel supertrait requires Default for all T: LedgerEntry; the spurious bound violates AC-018/BC-2.02.007 {INV-004}. The canonical form is: impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } } (and analogously PromoteRetireChannel). This reverses the derive-only mandate from F-P2A220-01/F-P2A224-03 (recorded as non-realizable in ADR-030 §Decision 3). Doc comments on both structs updated to state 'manual bound-free impl'. No other struct attributes modified."
   - "3.10 (round-55/F-P2A225-04/2026-09-01): F-P2A225-04 [MED] Two chained double-§ citations eliminated per POL-19: (1) §Runnable::invoke doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). (2) §DynRunnable doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). §Send-Bounded RPITIT is the most-specific heading in ADR-005 for both citations (subsection of §Adjacent Trait Object-Safety Adjudications)."
@@ -3134,7 +3135,16 @@ impl<T: LedgerEntry> Default for LedgerChannel<T> {
 }
 
 /// Lifecycle operation on a PromoteRetireChannel.
+///
+/// `derive(Clone)` is safe: `LedgerEntry: Clone` (supertrait bundles `Clone`), so
+/// `PromoteRetireOp<T>: Clone` holds for all `T: LedgerEntry` with no bound beyond the
+/// supertrait, satisfying `Channel::Update: Clone`. Does NOT trigger rustc #26925 —
+/// contrast with `Default` (not in the bundle), which forces manual bound-free impls on
+/// the marker structs. `Debug` added conventionally for a data-bearing update enum;
+/// conditional on `T: Debug` (not in the bundle) — acceptable, no declared bound
+/// requires unconditional `Debug`.
 #[non_exhaustive]
+#[derive(Clone, Debug)]
 pub enum PromoteRetireOp<T: LedgerEntry> {
     /// Add or re-activate an entry (dedup: if entry_id() already active, no-op).
     Promote(T),

@@ -4084,3 +4084,22 @@ pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case inject
 - develop: bfe0592 — LOCAL ONLY; factory-artifacts f5d44ce — PUSHED (D-335)
 
 ### STATE: v6.47, timestamp 2026-09-01T12:00:00Z
+
+---
+
+## Archived Checkpoint: D-336 (2026-09-01) — Replaced by D-337
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-57 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334/D-335/D-336). Round-57 fix-burst CLOSED — all 4 findings closed (zero HIGH; all secondary-mirror residue); VP-INDEX §Changelog; ARCH-INDEX §Changelog; VP-017 input-hash corrected 27e49fa→e7b31ef; L-260 codified; census UNCHANGED. MILESTONE: P2A-228 first pass with ZERO HIGH since D-327 (severity trend converging). D-336 pushed — factory-artifacts `427bf59` PUSHED. Next: round-58 adversary cascade on new frozen HEAD.
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY; factory-artifacts: `427bf59` — PUSHED (D-336).
+
+### RESUME NEXT-ACTION
+Push factory-artifacts branch (D-336 commit is this burst). Then dispatch round-58 adversary cascade on new frozen HEAD. Streak 0/3.
+
+### ROUND-57 FINDINGS (CLOSED)
+ALL 4 FINDINGS CLOSED in D-336 burst: F-P2A228-01[MED] verification-architecture.md §VP-017 formal statement pure-fold/HashSet; F-P2A228-02[MED] capabilities §CAP-040 DI-014→DI-001; F-P2A228-03[LOW] VP-017 §Feasibility IndexSet→Vec/HashSet; O-P2A228-A interface-definitions §LedgerChannel {INV-1}/{INV-2}→{PC-001}/{PC-002}.
+
+### DECISION-LOG DELTA (D-336 close)
+D-335 round-56 fix-burst closed; D-336 round-57 fix-burst closed (ALL 4 findings closed; VP-INDEX §Changelog; ARCH-INDEX §Changelog; VP-017 input-hash corrected; L-260 codified; census UNCHANGED; streak 0/3).

@@ -4951,3 +4951,50 @@ All 4 findings CLOSED in D-336 fix-burst:
 - L-260 codified
 
 **NEXT: round-58 on new frozen HEAD post-D-336 push. Streak 0/3.**
+
+## Round 58 — D-337 (2026-09-01) — NINTH ADVERSARIAL REVIEW OF PRAXIST SURFACE
+
+**Frozen HEAD:** `427bf59` (factory-artifacts post-D-336 push)
+**Pass:** P2A-229 (single pass)
+**Trajectory:** →1 (P2A-229=1 MED)
+**Total findings (unique):** 1 (0 HIGH + 1 MED + 0 LOW + 0 OBS)
+**CLEAN(strict):** NO
+**CLEAN(PR-merge):** NO (MED finding present)
+**Streak after fix-burst:** 0/3 (push of D-337 commit resets frozen-HEAD; round-59 gates on new HEAD)
+**Severity trend (CAP-040 re-convergence):** round-53: 3H → round-54: 3H → round-55: 2H → round-56/P2A-227: 2H+1M → round-57/P2A-228: 0H+2M+1L+1OBS → round-58/P2A-229: 0H+1M (monotone converging — second consecutive pass with ZERO HIGH; finding count at minimum since D-327)
+**NOTE:** P2A-229 confirmed ALL mirror surfaces + primary CAP-040 surface converged EXCEPT this single realizability gap — a well-executed multi-surface convergence. The sole finding was a missing `#[derive(Clone)]` on `PromoteRetireOp<T>` required by the `Channel::Update: Clone` bound.
+
+### Pass Detail
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|-----------------|
+| P2A-229 | Praxist surface — realizability audit | 1 (0H+1M) | NO | NO |
+
+### Finding Summary
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F-P2A229-01 | MED | PromoteRetireOp<T> lacked #[derive(Clone, Debug)] — the Channel trait requires `type Update: Clone + Send + Sync + 'static`; as the concrete Update type for PromoteRetireChannel, PromoteRetireOp<T> must implement Clone; #[derive(Clone)] is sound because LedgerEntry⊃Clone and PhantomData<T: Clone> is Clone; does NOT trigger rustc#26925 (unlike Default, which required manual bound-free impl in round-56); derives-Clone-OK vs manual-Default-required distinction not yet documented |
+
+### Multi-Stage Cascade Disposition
+
+All 1 finding CLOSED in D-337 fix-burst:
+- **architect (ADR-030 §Decision-3 + interface-definitions §LedgerChannel):** ADR-030 §Decision-3 updated — PromoteRetireOp<T> gains `#[derive(Clone, Debug)]` to satisfy Channel::Update: Clone; derives-Clone-OK vs manual-Default-required distinction documented; does NOT trigger rustc#26925 (Clone is bundled by LedgerEntry⊃Clone; Default is not, hence manual bound-free impl). interface-definitions §LedgerChannel PromoteRetireOp `#[derive(Clone, Debug)]` added (F-P2A229-01 mirror propagation).
+- **product-owner (BC-2.02.009):** §INV-004 extended with Clone obligation clause — PromoteRetireOp<T> must derive Clone to satisfy Channel::Update: Clone; input-hash b563e20 (F-P2A229-01).
+- **story-writer (S-1.28):** §Rule-4/§Rule-13/AC-011/AC-018/Tasks/File-Structure — PromoteRetireOp<T> `#[derive(Clone, Debug)]` propagated; derives-Clone-OK distinction documented; input-hash 17d12e4 (F-P2A229-01).
+- **state-manager D (BC-INDEX §Changelog + STORY-INDEX §Changelog + convergence-trajectory Round-58 block + lessons L-261 + STATE.md D-337):** BC-INDEX §Changelog (BC-2.02.009 §INV-004 + ADR-030 §Decision-3 + interface-definitions §LedgerChannel + S-1.28 §Rule-4/§Rule-13). STORY-INDEX §Changelog. convergence-trajectory this block. lessons L-261 (associated-type bound completeness). STATE.md D-337.
+
+### Post-Round-58 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (20)
+- EC: UNCHANGED (142)
+- TV: UNCHANGED (794 canonical)
+- ADR: UNCHANGED (30)
+- Stories: UNCHANGED (42 total; 41 product + 1 maint)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- GATE-READY: YES (all blocking validators PASS after fix-burst)
+- Streak: 0/3 (D-337 push resets frozen HEAD; round-59 gates on new HEAD)
+- L-261 codified
+
+**NEXT: round-59 on new frozen HEAD post-D-337 push. Streak 0/3.**

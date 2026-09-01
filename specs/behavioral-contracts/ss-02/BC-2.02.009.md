@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.009
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.4 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `PromoteRetireChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized marker; `Default::default()` produces the zero-sized marker struct; the `Vec<T>` active-set accumulator is external to the marker, owned and managed by the BSP engine — F-P2A216-04). No behavioral change."
   - "1.5 (round-55/F-P2A225-01/2026-09-01): §Traceability L2 Domain Invariants: DI-014 replaced with DI-001 per architect ADR-030 §VP ruling — PromoteRetireChannel::reduce is a pure infallible reducer returning Vec<T> with no Result/Err/None path; DI-014 (error propagation) is inapplicable (vacuously compliant, not meaningfully enforced). DI-001 (BSP Reducer Determinism) is the correct domain-invariant anchor: the reducer is deterministic given the same accumulated state and input sequence in task-identity order."
   - "1.6 (round-57/F-P2A227-01/2026-09-01): §Architecture Anchors: replaced implicit `Default::default()` annotation with an explicit manual bound-free `impl<T: LedgerEntry> Default for PromoteRetireChannel<T>` per ADR-030 §Decision 3 round-57 architect ruling — `#[derive(Default)]` would emit a spurious `T: Default` bound that breaks the `Channel: Default + Send + Sync + 'static` supertrait obligation for callers holding only `T: LedgerEntry`. {INV-004} added: explicit `Channel: Default` supertrait-obligation clause — satisfied by the manual bound-free impl, not a derive. Supersedes the implicit Default from round-52 (F-P2A216-04)."
+  - "1.7 (round-58/F-P2A229-01/2026-09-01): {INV-004} extended with Update-side Clone obligation — `PromoteRetireOp<T>` satisfies `Channel::Update: Clone + Send + Sync + 'static` via `#[derive(Clone)]`; sound because `LedgerEntry: Clone` (supertrait bundles Clone), so `PromoteRetireOp<T>: Clone` holds for all `T: LedgerEntry` with no bound beyond the supertrait; no use-site may add `T: Clone` as an explicit constraint — it is implied by `T: LedgerEntry` (per ADR-030 §Decision 3 round-58 / F-P2A229-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "5b89b25"
+input-hash: "b563e20"
 extracted_from: null
 modified: []
 deprecated: null
@@ -101,6 +102,12 @@ to advance from pending to active and be retired when superseded or committed.
   MANUAL bound-free `Default` impl — NOT `#[derive(Default)]`, which would emit a spurious
   `T: Default` bound and break call sites where `T: LedgerEntry` but `T: !Default`, violating the
   "no bounds beyond `T: LedgerEntry`" guarantee of this invariant (per ADR-030 §Decision 3 round-57).
+  The `Channel` trait additionally requires `Update: Clone + Send + Sync + 'static`;
+  `PromoteRetireOp<T>` satisfies this bound. `Clone` is satisfied via `#[derive(Clone)]` on
+  `PromoteRetireOp<T>` — sound because `LedgerEntry: Clone` (the supertrait bundles `Clone`),
+  so `PromoteRetireOp<T>: Clone` holds for all `T: LedgerEntry` with no bound beyond the supertrait.
+  No use-site may add `T: Clone` as an explicit constraint — it is implied by `T: LedgerEntry`
+  (per ADR-030 §Decision 3 round-58 / F-P2A229-01).
 
 ## Edge Cases
 

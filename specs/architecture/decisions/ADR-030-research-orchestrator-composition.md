@@ -8,7 +8,7 @@ status: accepted
 date: "2026-09-01"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "1.8"
+version: "1.9"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "1.9 (round-58/F-P2A229-01/2026-09-01): F-P2A229-01 [MED] §Decision 3 PromoteRetireOp<T>: add #[derive(Clone, Debug)]. Clone is required by the Channel::Update: Clone bound; LedgerEntry: Clone (supertrait bundles Clone), so derive(Clone) emits impl<T: Clone> Clone for PromoteRetireOp<T> which resolves for every T: LedgerEntry with no bound beyond the supertrait — does NOT trigger rustc #26925 spurious-bound problem (contrast: Default is NOT in the LedgerEntry bundle, which is why the marker structs use manual bound-free Default impls). Debug is conventionally added for a data-bearing update enum (diagnostic value); the derived impl is conditional on T: Debug (LedgerEntry does not bundle Debug); no declared bound requires unconditional Debug, so the conditional impl is acceptable. Rationale documented as doc-comment on PromoteRetireOp to prevent future incorrect removal. Derive-shape paragraph extended to confirm LedgerChannel<T> Update = T needs no separate Clone annotation (T: LedgerEntry implies T: Clone — already satisfies Channel::Update: Clone). LedgerChannel<T> code block is unaffected."
   - "1.8 (round-57/F-P2A227-01/2026-09-01): F-P2A227-01 [HIGH] §Decision 3 code block: the derive(Default)-ONLY mandate introduced by F-P2A220-01/F-P2A224-03 is NON-REALIZABLE and is hereby REVERSED. rustc's derive(Default) for a generic struct emits an impl that bounds every type parameter by Default (rustc issue #26925 — perfect-derive not implemented). Because LedgerEntry does not include Default, derive(Default) on LedgerChannel<T: LedgerEntry> emits impl<T: LedgerEntry + Default> Default for LedgerChannel<T> — a spurious T: Default bound that violates AC-018/BC-2.02.007 {INV-004}. The same defect applies to PromoteRetireChannel<T: LedgerEntry>. The previously-correct manual bound-free impl (present in v1.3, removed in v1.6) is restored for both structs: impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } } and analogously for PromoteRetireChannel. The derive(Default) annotation is dropped from both struct definitions. No other derive attributes are added or removed. This decision supersedes the derive-only mandate in F-P2A220-01 and F-P2A224-03, which are recorded as non-realizable. The no-Clone/Serialize/Deserialize-on-marker-struct rule and #[non_exhaustive] annotations remain intact."
   - "1.7 (round-55/F-P2A225-01+F-P2A225-02/2026-09-01): F-P2A225-01 [HIGH] §VP DI adjudication extended to PromoteRetireChannel::reduce — DI-014 is inapplicable to both LedgerChannel::reduce and PromoteRetireChannel::reduce; both are pure infallible reducers returning Vec<T> (no Result, no error path); DI-001 (BSP reducer determinism) is the sole authoritative anchor for both; per-artifact propagation targets table added for product-owner. F-P2A225-02 [HIGH] Three chained double-§ citations eliminated per POL-19/ADR-022: (1) For-story-writer S-1.28 note chain §BSP Reduce-Dispatch Seam + §Channel Trait Definition Home → single §Channel Trait Definition Home and ChannelKind Coexistence. (2) LedgerEntry code-block doc-comment chain §Decision 3 + §Serialization Bound → single §Serialization Bound for Checkpoint Resume. (3) VP-019 Consequences note chain §Compaction Atomicity Decision + §BC-2.04.011 downstream notes → §BC-2.04.011 Downstream Notes (pseudo-heading promoted to real #### heading to enable single valid §-citation)."
   - "1.6 (round-54/F-P2A224-01+F-P2A224-03+F-P2A224-04/2026-09-01): F-P2A224-01 [HIGH] Channel trait ownership and ChannelKind coexistence resolved. Authoritative decision: the Channel trait is defined in graph::channels by S-1.14 (channels/channel.rs) per this ADR's direction; S-1.14 must additionally implement Channel for all five built-in types (LastValue<T>, BinaryOperatorAggregate<T,Op>, BarrierValue<T>, NamedBarrierValue<T>, EphemeralValue<T>). ChannelKind enum (types.rs) is a naming/discriminant for StateGraph schema configuration; Channel trait is the sole BSP dispatch mechanism — no hybrid dispatch path exists. §BSP Reduce-Dispatch Seam: Channel trait definition home and ChannelKind coexistence note added; S-1.14 story-writer instruction added. §Alternatives Alt C: repaired 'does not yet exist' — the Channel extension seam is defined by S-1.14 per this ADR; Alt C rejected on general-purpose-applicability grounds. 'For story-writer (S-1.28)' note updated: Channel trait is pre-existing when S-1.28 begins; corrected Rule 15 provenance text provided. F-P2A224-03 [HIGH] §Decision 3: LedgerChannel<T> and PromoteRetireChannel<T> struct definitions updated to canonical derive-set (F-P2A220-01 canon; S-1.28 Rule 13) — replaced manual impl Default blocks with #[derive(Default)] annotation form. F-P2A224-04 [LOW] §Consequences New-BCs table: BC-2.02.009 title corrected from 'PromoteRetireChannel Lifecycle Semantics' to canonical H1 'PromoteRetireChannel Promote/Retire Lifecycle' (BC-2.02.009 §H1 sync)."
@@ -342,7 +343,20 @@ impl<T: LedgerEntry> Default for LedgerChannel<T> {
 }
 
 /// Enum of operations for the promote/retire lifecycle.
+///
+/// `derive(Clone)` is safe here: `LedgerEntry: Clone` (the supertrait bundles `Clone`),
+/// so the derived `impl<T: Clone> Clone for PromoteRetireOp<T>` resolves for every
+/// `T: LedgerEntry` with no bound beyond the supertrait. This satisfies the
+/// `Channel::Update: Clone` bound without introducing a spurious extra bound — it does
+/// NOT trigger the rustc #26925 problem that forced the marker structs to use manual
+/// bound-free `Default` impls. Contrast: `Default` is NOT in the `LedgerEntry` bundle,
+/// so `derive(Default)` on a generic struct would emit a spurious `T: Default` bound;
+/// `Clone` IS in the bundle, so `derive(Clone)` is the correct form here. `Debug` is
+/// added conventionally for a data-bearing update enum (diagnostic value); because
+/// `LedgerEntry` does not bundle `Debug`, the derived impl is conditional on `T: Debug`
+/// — acceptable since no declared bound requires unconditional `Debug` on `Update` types.
 #[non_exhaustive]
+#[derive(Clone, Debug)]
 pub enum PromoteRetireOp<T: LedgerEntry> {
     Promote(T),
     Retire(String), // entry_id of the item to retire
@@ -502,8 +516,12 @@ A concrete type `T` is valid as a `LedgerChannel<T>` element if and only if `T: 
 `LedgerEntry` is defined as:
 `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static`
 All bounds required by `Channel::Accumulator` (`Clone + Serialize + DeserializeOwned + Send + Sync + 'static`)
-are already imposed by the `LedgerEntry` supertrait. No additional bounds are required at
-the call site — `T: LedgerEntry` is the complete derive-shape requirement.
+and `Channel::Update` (`Clone + Send + Sync + 'static`) are already imposed by the
+`LedgerEntry` supertrait. For `LedgerChannel<T>`, `Update = T` and `T: LedgerEntry`
+implies `T: Clone` — no additional `#[derive(Clone)]` annotation on `T` is required;
+the `Channel::Update: Clone` bound is already satisfied by the supertrait alone.
+No additional bounds are required at the call site — `T: LedgerEntry` is the complete
+derive-shape requirement for both `LedgerChannel<T>` and `PromoteRetireChannel<T>`.
 
 **For story-writer (S-1.28):** S-1.28 must implement the `Channel` trait for `LedgerChannel<T>`
 and `PromoteRetireChannel<T>` as shown above. The `Channel` trait is pre-existing when S-1.28
