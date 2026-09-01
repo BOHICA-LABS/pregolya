@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.011
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (ADR-030/Stage-3.5-product-owner/2026-08-31): PC-005, EC-004, INV-004, TV-003 wired to E-TRAJ-004 TrajectoryRetainedEligible (VAL, broken, Never); category notation corrected from VALIDATION→VAL throughout to match taxonomy category code convention."
   - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): {PRE-001} reconciled to single-file SQLite WAL topology (ADR-030 §SQLite Topology Decision/F-P2A209-04). {INV-003} updated to VP-019 canonical wording (either complete pre-compaction OR complete post-compaction state visible after crash — previously stated pre-compaction only, ignoring committed after-sync case). {INV-005} rescoped to record-level table isolation + WAL non-blocking behavior + bounded compaction batch (1,000 records/BEGIN IMMEDIATE); dropped absolute 'cannot interfere' claim that ignores write serialization. {INV-006} added: at-rest encryption mirrored from BC-2.04.009 {INV-002} — compacted retained records remain encrypted when EncryptedSerializer is configured. §Verification Properties: VP-COMPACT-01→VP-018 (proptest, {INV-001} retention integrity), VP-COMPACT-02→VP-019 (integration, {INV-003} crash-isolation). Routing blockquote deleted (VP-018/019 are minted). §VP Anchors updated to VP-018, VP-019."
   - "1.3 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-2.12 (per STORY-INDEX; F-P2A214-01 hook #19 compliance)."
+  - "1.4 (round-52/F-P2A216-01+F-P2A216-03+F-P2A217-03+F-P2A216-05+F-P2A219-01/2026-08-31): Combined architectural corrections. (1) {PC-005}/{INV-004}/EC-004/TV-003 REMOVED — E-TRAJ-004 TrajectoryRetainedEligible was structurally unreachable: `TrajectoryRetentionPolicy` derives eligible/retained as complements by construction; a policy cannot simultaneously mark a record as both retained and eligible. The condition {PC-005} described could never be reached at `compact` call time. E-TRAJ-004 retired in error-taxonomy.md (tombstone). (2) {PC-006} wired to E-TRAJ-005 TrajectoryCompactionFailed (DURABILITY, broken, Maybe-retry) — minted in error-taxonomy.md for SQLite backend I/O error / disk-full / transaction abort before commit; pre-compaction state intact (uncommitted WAL frames discarded on next open). (3) {INV-003} WAL-mode wording: replaced 'SQLite rollback journal restores pre-compaction state' with canonical WAL behaviour (no rollback journal in WAL mode; uncommitted WAL frames after last commit marker are discarded by SQLite on next database open). (4) {PRE-002} frontier definition: replaced vague example with architect canonical wording (step_idx strictly < retention_frontier and not in promoted are eligible; step_idx >= retention_frontier (frontier record where step_idx == retention_frontier retained) and all promoted records retained; retention_frontier is exclusive lower bound for eligibility). (5) Traceability DI-014 citation updated: removed stale {PC-005} reference; {PC-006} reference updated to cite E-TRAJ-005. TV count 5→4 (TV-003 removed). TRAJ namespace: E-TRAJ-004 retired, E-TRAJ-005 minted (net-neutral; census stays 142)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "5703511"
+input-hash: "9917852"
 extracted_from: null
 modified: []
 deprecated: null
@@ -58,8 +59,10 @@ audit-grade record integrity.
    and `TrajectoryWriter` / `TrajectoryReader` (BC-2.04.009, BC-2.04.010), operated in WAL
    mode (ADR-030 §SQLite Topology Decision).
 2. {PRE-002} The caller supplies a `TrajectoryRetentionPolicy` value specifying which records are
-   eligible for removal (e.g., records with `step_idx` strictly below a retention frontier,
-   where the frontier record itself and any promoted records are excluded from eligibility).
+   eligible for removal: records with `step_idx` strictly less than `retention_frontier` and not
+   in `promoted` are eligible; records with `step_idx >= retention_frontier` (the frontier record
+   where `step_idx == retention_frontier` is retained) and all `promoted` records are retained;
+   `retention_frontier` is an exclusive lower bound for eligibility.
 3. {PRE-003} The storage backend is reachable (not shutdown, not out of disk space).
 
 ## Postconditions
@@ -76,12 +79,11 @@ audit-grade record integrity.
 4. {PC-004} Compaction is atomic: either all eligible records are removed and all retained
    records are preserved (`Ok(())`), or no change is made and an `Err(PregolyaError)` is
    returned. No intermediate partial state is observable by `replay`.
-5. {PC-005} If `policy` attempts to mark a retained (promoted/frontier) record as eligible,
-   `compact` returns `Err(PregolyaError { code: E-TRAJ-004, category: VAL, .. })` without
-   modifying any records. The pre-compaction trajectory remains intact.
-6. {PC-006} Storage errors (backend I/O failure, transaction abort, disk full) propagate as
-   `Err(PregolyaError)`. After any error, `replay(run_id)` returns the same result as before
-   the attempted compaction — the pre-compaction state is fully intact.
+5. {PC-006} Storage errors (backend I/O failure, transaction abort, disk full) propagate as
+   `Err(PregolyaError { code: E-TRAJ-005, message: "TrajectoryCompactionFailed: compact for run_id='<run_id>' failed — <backend_error>", category: DURABILITY, .. })`.
+   After any such error, `replay(run_id)` returns the same result as before the attempted
+   compaction — the pre-compaction state is fully intact (uncommitted WAL frames from the
+   incomplete transaction are discarded by SQLite on the next database open).
 
 ## Invariants
 
@@ -97,14 +99,10 @@ audit-grade record integrity.
   consistent state: either the **complete pre-compaction replay** (if the SQLite `BEGIN
   IMMEDIATE` / `COMMIT` transaction did not commit) or the **complete post-compaction replay**
   (if the transaction committed before the kill). No partial compaction state — some eligible
-  records removed and some not — is ever observable. The SQLite rollback journal restores
-  pre-compaction state on the next database open when the transaction is uncommitted at crash
-  time. Verified by VP-019 (integration, three crash-point matrix: before-begin, mid-txn,
-  after-sync).
-- {INV-004} **Retained records are never eligible.** A policy MUST NOT mark a record as
-  eligible if that record is designated as retained (promoted or at the frontier). Any
-  attempt to do so is a contract violation caught at `compact` call time with
-  `Err(PregolyaError { code: E-TRAJ-004, category: VAL, .. })`.
+  records removed and some not — is ever observable. In WAL mode, uncommitted WAL frames after
+  the last commit marker are discarded by SQLite on the next database open, restoring the
+  pre-compaction state (no rollback journal is used in WAL mode). Verified by VP-019
+  (integration, three crash-point matrix: before-begin, mid-txn, after-sync).
 - {INV-005} **Record-level table isolation from ADR-019.** Trajectory compaction operates on
   the `trajectory_records` table only; it has no access to and does not affect the
   conversation-context checkpoint tables (`checkpoint_*`) managed by `CheckpointSaver`
@@ -128,8 +126,9 @@ audit-grade record integrity.
 **Scenario:** `compact(run_id, policy)` begins executing. The process is killed (SIGKILL /
 OS crash) mid-transaction, before the atomic commit completes.
 **Expected behavior:** After process restart, `replay(run_id)` returns the exact set of
-records that were present before `compact` was called. The in-progress transaction was
-rolled back by the storage tier. No partial compaction result is visible.
+records that were present before `compact` was called. In WAL mode, the uncommitted WAL
+frames from the in-progress transaction are discarded by SQLite on the next database open.
+No partial compaction result is visible.
 
 ### EC-002: Compact an empty trajectory
 **Scenario:** `compact(run_id_X, policy)` is called for a `run_id` with zero committed
@@ -143,14 +142,6 @@ retained (e.g., it is the frontier record).
 **Expected behavior:** `compact(run_id_Y, policy)` returns `Ok(())`. `replay(run_id_Y)`
 still returns `[r0]`. Zero records were eligible; compaction was a no-op.
 
-### EC-004: Policy attempts to compact a retained record
-**Scenario:** The caller constructs a `TrajectoryRetentionPolicy` that incorrectly marks a promoted
-record as eligible for removal.
-**Expected behavior:** `compact(run_id, policy)` returns
-`Err(PregolyaError { code: E-TRAJ-004, message: "TrajectoryRetainedEligible: compact(run_id='<run_id>') attempted to remove retained record at step_idx=<step_idx> — retained records are never eligible for compaction", category: VAL, .. })`
-without modifying any records. The trajectory is unchanged; `replay(run_id)` returns the
-same result as before the call.
-
 ### EC-005: Compaction frontier equals the highest committed step_idx — retain only the frontier
 **Scenario:** `replay(run_id)` returns `[r0, r1, r2]` with `step_idx` = 0, 1, 2. The
 policy marks `r0` and `r1` as eligible and `r2` (the frontier) as retained.
@@ -162,8 +153,7 @@ single retained record — in ascending `step_idx` order ({PC-002}).
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
 | TV-001 | `replay(R)` = `[r0(step=0), r1(step=1), r2(step=2)]`; policy retains `r2`, marks `r0`/`r1` eligible; `compact(R, policy)` | `Ok(())`; `replay(R)` = `[r2(step=2)]` in ascending order | Happy-path compaction; {PC-001}, {PC-002}, {PC-003} |
-| TV-002 | `compact(R, policy)` begins; process SIGKILL before transaction commit; restart; `replay(R)` | `replay(R)` = pre-compaction `[r0, r1, r2]` (unchanged) | Crash isolation; {INV-003}, {PC-006} |
-| TV-003 | Policy marks promoted record `r0` as eligible; `compact(R, policy)` | `Err(PregolyaError { code: E-TRAJ-004, category: VAL, .. })` ; `replay(R)` unchanged | Retained-record protection; {INV-004}, {PC-005} |
+| TV-002 | `compact(R, policy)` begins; process SIGKILL before transaction commit; restart; `replay(R)` | `replay(R)` = pre-compaction `[r0, r1, r2]` (unchanged) | Crash isolation; {INV-003}, EC-001 |
 | TV-004 | `compact(run_id_X, policy)` where `replay(run_id_X)` = `Ok(vec![])` | `Ok(())`; `replay(run_id_X)` = `Ok(vec![])` | Empty trajectory; EC-002 |
 | TV-005 | `replay(R)` = `[r0(step=0)]`; policy retains `r0` (frontier); `compact(R, policy)` | `Ok(())`; `replay(R)` = `[r0(step=0)]` (unchanged) | Single retained record; EC-003 |
 
@@ -212,7 +202,7 @@ S-2.12
 |-------|-------|
 | Source L2 Capability | CAP-040 |
 | Capability Anchor Justification | CAP-040 ("Durable Trajectory Records and Ledger-Style State Channels (Research Orchestrator Primitives)") per capabilities-p1-p2.md §CAP-040 — `TrajectoryCompactor` extends the trajectory storage primitive introduced in CAP-040 with a safe compaction operation that prevents unbounded storage growth while preserving audit-grade record integrity for the research orchestrator pattern |
-| L2 Domain Invariants | DI-002 (Per-Task Durability: retained records survive compaction with the same durability guarantee as the initial `put_record`; no committed retained record is lost per {INV-001}), DI-004 (Monotonic Checkpoint Clock: `step_idx` ordering is preserved in the post-compaction replay sub-sequence per {INV-002}; {PC-002} enforces ascending order over retained records), DI-014 (Error Propagation — No Silent Swallowing: storage errors and policy violations propagate as `Err(PregolyaError)` per {PC-005} and {PC-006}; no `Ok(())` is returned unless compaction completed correctly) |
+| L2 Domain Invariants | DI-002 (Per-Task Durability: retained records survive compaction with the same durability guarantee as the initial `put_record`; no committed retained record is lost per {INV-001}), DI-004 (Monotonic Checkpoint Clock: `step_idx` ordering is preserved in the post-compaction replay sub-sequence per {INV-002}; {PC-002} enforces ascending order over retained records), DI-014 (Error Propagation — No Silent Swallowing: storage errors propagate as `Err(E-TRAJ-005 PregolyaError)` per {PC-006}; no `Ok(())` is returned unless compaction completed correctly) |
 | Priority | P1 |
 | Wave | Wave 2 |
 | Test Types | U (unit), I (integration) |

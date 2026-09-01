@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.06"
+version: "3.07"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
 phase: 1d
 changelog:
+  - "3.07 (round-52/F-P2A216-01+F-P2A216-02+F-P2A216-05+F-P2A216-06+F-P2A219-01+F-P2A217-03/2026-08-31): F-P2A216-02 [HIGH] Add §Serializer section (core::serializer, pregolya-core) — object-safe trait with serialize(&self, &[u8])->Result<Vec<u8>, PregolyaError> + deserialize inverse; EncryptedSerializer (checkpoint::serializer, pregolya-checkpoint) as concrete impl; Arc<dyn Serializer + Send + Sync> is the DI seam for both CheckpointSaver and checkpoint::trajectory concrete impl (ADR-030 §Decision 2 at-rest confidentiality, BC-2.04.007 {INV-003}, BC-2.04.009 {INV-002}). F-P2A216-01 [HIGH] §TrajectoryRetentionPolicy BC anchor: removed dead {INV-004} reference — eligible and retained are complements by construction; no external validation required; E-TRAJ-004 / {PC-005} / {INV-004} are retired as structurally unreachable (PO action: remove from BC-2.04.011 and error-taxonomy). F-P2A219-01 [HIGH] §TrajectoryCompactor error note: removed phantom 'E-TRAJ-002 TrajectoryCompactionFailed' (E-TRAJ-002 = ConflictingDuplicate/VAL, unrelated); removed E-TRAJ-004 (retired); replaced with generic DURABILITY note citing E-TRAJ-005 pending PO mint; fixed crash-recovery language to WAL-correct (F-P2A217-03 [MED]): 'rollback journal' → 'uncommitted WAL frames discarded on next open'. F-P2A216-05 [MED] §TrajectoryRetentionPolicy frontier doc: replaced contradictory parenthetical '(highest step_idx ≤ retention_frontier)' with unambiguous threshold definition — retention_frontier is exclusive lower bound for eligibility (< means eligible; >= means retained, including the frontier record). F-P2A216-06 [LOW] §LedgerChannel doc: LastValueChannel/AppendChannel replaced with canonical S-1.14 names LastValue<T>/BinaryOperatorAggregate<T, Op>."
   - "3.06 (round-51/F-P2A212-01+F-P2A212-07/2026-08-31): F-P2A212-01 [HIGH] §Trajectory Primitive: TrajectoryRecord::new(run_id, step_idx, event_kind, payload) constructor added (impl block after struct — #[non_exhaustive] cross-crate construction fix; SqliteTrajectoryStore/pregolya-checkpoint and test callers unblocked); TrajectoryRetentionPolicy::new(retention_frontier, promoted) constructor added (same fix). §LedgerChannel: Default impls added for LedgerChannel<T> and PromoteRetireChannel<T> (zero-sized markers; defensive cross-crate construction; registration seam is type-level, BSP engine constructs internally). F-P2A212-07 [LOW] §LedgerChannel LedgerChannel<T> docstring: IndexMap<String,T> local-variable reference replaced with Vec linear-scan description (decision: no indexmap dependency — O(n) per reduce call is adequate for typical research accumulator sizes; story-writer: S-1.28 Library table requires no new indexmap entry)."
   - "3.05 (round-50/F-P2A208-02+F-P2A208-03+F-P2A208-10+F-P2A211-07/2026-08-31): F-P2A208-02 [HIGH] §LedgerChannel reconcile to reducer model — LedgerEntry trait gains Serialize+DeserializeOwned bounds (F-P2A211-07 serde requirement for checkpoint resume); LedgerChannel<T> struct: #[non_exhaustive] added, 'Internal: IndexMap' comment removed (contradicted PhantomData<T> zero-storage), docstring rewritten to stateless-reducer-marker model (reducer fn reduce(acc: Vec<T>, update: T) -> Vec<T>, no Result); PromoteRetireChannel<T>: #[non_exhaustive] added (F-P2A208-10), docstring adds stateless-reducer-marker note; LedgerChannel Invariants table: append(e)->Ok(())/entries() replaced with reduce(acc, e)->Vec<T> form (no Result). F-P2A208-03 [MED] §Trajectory Primitive: add TrajectoryRetentionPolicy struct (core::trajectory, eligible-vs-retained frontier model) + TrajectoryCompactor trait (checkpoint::trajectory, async compact); BC anchor extended to include BC-2.04.011."
   - "3.04 (ADR-030 Stage 1/2026-08-31): Add §Trajectory Primitive section (pregolya-core core::trajectory + pregolya-checkpoint checkpoint::trajectory; ADR-030 Decision 2): TrajectoryRecord struct (#[non_exhaustive], run_id/step_idx/event_kind/payload), TrajectoryWriter trait (async put_record), TrajectoryReader trait (async replay). Add §LedgerChannel section (pregolya-graph graph::channels; ADR-030 Decision 3): LedgerEntry trait (entry_id), LedgerChannel<T> struct (dedup-idempotent append), PromoteRetireOp<T> enum (Promote/Retire variants), PromoteRetireChannel<T> struct (promote/retire lifecycle). BC anchors: BC-2.02.007, BC-2.02.008, BC-2.04.009, BC-2.04.010, BC-2.04.011. VP-017 (proptest P1 LedgerChannel dedup-idempotency, BC-2.02.007 anchor)."
@@ -2952,8 +2953,10 @@ pub trait TrajectoryReader: Send + Sync {
 /// Defined in `core::trajectory`; `TrajectoryCompactor` lives in `checkpoint::trajectory`.
 ///
 /// **Eligible** records: `step_idx < retention_frontier` AND NOT in `promoted` set.
-/// **Retained** records: `step_idx >= retention_frontier` OR in `promoted` set.
-/// The frontier record itself (highest `step_idx` ≤ retention_frontier) is always retained.
+/// **Retained** records: `step_idx >= retention_frontier` (including the frontier record
+///   where `step_idx == retention_frontier`) OR in `promoted` set.
+/// `retention_frontier` is an exclusive lower bound for eligibility: strictly less than
+/// (`<`) means eligible; greater-than-or-equal (`>=`) means retained.
 #[non_exhaustive]
 pub struct TrajectoryRetentionPolicy {
     /// Records with `step_idx < retention_frontier` are eligible for removal.
@@ -2973,7 +2976,7 @@ impl TrajectoryRetentionPolicy {
 }
 ```
 
-**BC anchor:** BC-2.04.011 {PRE-002} (caller supplies `TrajectoryRetentionPolicy`); policy enforces {INV-004} (retained records are never eligible).
+**BC anchor:** BC-2.04.011 {PRE-002} (caller supplies `TrajectoryRetentionPolicy`). Eligible and retained sets are complements by construction — `retention_frontier` and `promoted` fully determine both; no external validation is required.
 
 ### TrajectoryCompactor
 
@@ -2999,9 +3002,75 @@ pub trait TrajectoryCompactor: Send + Sync {
 
 **Postcondition (BC-2.04.011 {PC-001}):** After `Ok(())`, every retained record appears in `replay(run_id)` unchanged. No retained record is lost or mutated.
 
-**Error:** `E-TRAJ-004 TrajectoryRetainedEligible (VAL)` when policy incorrectly marks a retained record eligible; `E-TRAJ-002 TrajectoryCompactionFailed` on backend I/O error. Crash mid-compaction: `Err(PregolyaError)` on next call; pre-compaction state intact per {INV-003}.
+**Error:** Backend I/O failures propagate as `Err(PregolyaError)` — `E-TRAJ-005 TrajectoryCompactionFailed (DURABILITY, Maybe-retry)` (pending PO mint). Crash mid-compaction: in WAL mode, uncommitted WAL frames after the last commit marker are discarded on the next database open; the pre-compaction state is fully recovered ({INV-003}). On the next `compact` call, `Err(PregolyaError)` is returned and the caller retries.
 
 **BC anchor:** BC-2.04.009 (TrajectoryWriter::put_record durability), BC-2.04.010 (TrajectoryReader::replay ordering), BC-2.04.011 (Trajectory Compaction Isolation)
+
+### Serializer
+
+**Module:** `pregolya-core` (`core::serializer`)
+**Implementors:** `EncryptedSerializer` (`pregolya-checkpoint`, `checkpoint::serializer`)
+**ADR:** ADR-030 §Decision 2 (at-rest confidentiality), BC-2.04.007 {INV-003}, BC-2.04.009 {INV-002}
+
+Object-safe abstraction for at-rest encryption of durable storage payloads. Accepted as
+`Option<Arc<dyn Serializer + Send + Sync>>` at construction by both the
+`checkpoint::trajectory` concrete implementation (ADR-030 §Decision 2) and
+`CheckpointSaver` (BC-2.04.007 {INV-003}). When `Some(s)` is provided, payloads are
+serialized (encrypted) before storage and deserialized (decrypted) after retrieval.
+When `None`, storage is plaintext — this is the opt-in model; no fail-closed guard
+applies for the no-serializer case (ADR-030 at-rest confidentiality decision).
+
+```rust
+// pregolya-core (core::serializer) — definitions only
+
+/// Object-safe serializer abstraction for at-rest encryption of durable storage payloads.
+///
+/// Both methods take `&self` with no type parameters — `dyn Serializer` is valid;
+/// `Arc<dyn Serializer + Send + Sync>` compiles on stable Rust.
+///
+/// **BC anchor:** BC-2.04.007 {INV-003} (CheckpointSaver encryption),
+///   BC-2.04.009 {INV-002} (TrajectoryWriter encryption)
+pub trait Serializer: Send + Sync {
+    /// Serialize (encrypt) `plaintext` bytes for at-rest storage.
+    ///
+    /// # Errors
+    /// Propagates as `Err(PregolyaError)` (SRLZ namespace) on encryption failure.
+    fn serialize(&self, plaintext: &[u8]) -> Result<Vec<u8>, PregolyaError>;
+
+    /// Deserialize (decrypt) `ciphertext` bytes retrieved from storage.
+    ///
+    /// # Errors
+    /// Propagates as `Err(PregolyaError)` (SRLZ namespace) on decryption failure
+    /// (corrupted ciphertext, wrong key, truncated payload, etc.).
+    fn deserialize(&self, ciphertext: &[u8]) -> Result<Vec<u8>, PregolyaError>;
+}
+
+// pregolya-checkpoint (checkpoint::serializer) — execution
+
+/// Concrete AES-256-GCM at-rest encryption implementation of `Serializer`.
+///
+/// Key material is never exposed through `Debug` (redacted newtype pattern — CLAUDE.md).
+/// **BC anchor:** BC-2.04.007 {INV-003}, BC-2.04.009 {INV-002}
+pub struct EncryptedSerializer { /* opaque; key stored in memory only */ }
+
+impl EncryptedSerializer {
+    /// Construct with a 256-bit AES-GCM key.
+    pub fn new(key: &[u8; 32]) -> Self;
+}
+// impl Serializer for EncryptedSerializer
+```
+
+**Object-safety justification:** both `serialize` and `deserialize` are non-generic methods
+that take `&self` and byte slices — no associated types, no generic parameters. `dyn Serializer`
+is valid and `Arc<dyn Serializer + Send + Sync>` satisfies the Arc-DI wiring requirement
+(CLAUDE.md §Arc-DI wiring per constructor).
+
+**BC anchor:** BC-2.04.007 {INV-003} (EncryptedSerializer via CheckpointSaver), BC-2.04.009
+{INV-002} (EncryptedSerializer via TrajectoryWriter at-rest encryption)
+
+**Product-owner note:** BC-2.04.009 {INV-002} and BC-2.04.007 should both reference
+`Arc<dyn Serializer + Send + Sync>` as the DI seam (not just `EncryptedSerializer` directly)
+to permit alternative implementations without BC amendment.
 
 ---
 
@@ -3043,8 +3112,8 @@ pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'sta
 ///
 /// Dedup implementation: **linear scan** of `acc` within `reduce` — no `indexmap` dependency.
 /// For typical research accumulator sizes (tens to low hundreds of entries), O(n) per call is
-/// adequate. Not persisted on the struct (consistent with S-1.14 channel family:
-/// `LastValueChannel`, `AppendChannel`, etc. are all stateless reducer markers).
+/// adequate. Not persisted on the struct (consistent with the S-1.14 channel family:
+/// `LastValue<T>`, `BinaryOperatorAggregate<T, Op>`, etc. are all stateless reducer markers).
 ///
 /// Channel registration is **type-level** (via `StateGraph` schema annotation); the BSP engine
 /// constructs instances internally. `Default` impl provided for cross-crate use (tests, etc.).

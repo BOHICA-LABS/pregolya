@@ -4012,3 +4012,10 @@ DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU 
 pregolya Phase-2 re-convergence. streak 0/3. D-327 CLOSED (praxist research-orchestrator use case authored; authoring burst — 0 adversary passes; streak NOT RESET). Frozen-HEAD streak gates on spec HEAD post-D-326 push. Heartbeat auto-recovery ARMED: durable cron 60FC8EB8. NEW perimeter: CAP-040; ADR-030; BC 134→140 (BC-2.02.007/008/009 SS-02 + BC-2.04.009/010/011 SS-04); VP 17→19; EC 138→142 (E-TRAJ-001..004); Domain D holdout (22 total, must-pass 63.6%); S-1.28+S-2.12 (+13 pts). TV 792 canonical. Census: BC 140 / VP 19 / EC 142 / stories 42 / pts 316. NEXT: dispatch round-50 (P2A-208/209/210/211 + GATE-READY).
 
 ### STATE: v6.38, timestamp 2026-08-31T12:00:00Z
+
+## Archived Checkpoint: D-329 (archived 2026-08-31 at D-330 close)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. streak 0/3. D-329 CLOSED (round-51 fix-burst; trajectory-tail →2→0→6→2; 4 lenses; 1/4 CLEAN(strict) [P2A-213 security]; ALL 10 FINDINGS CLOSED). hook #18 verify-vp-count-parity.sh + hook #19 verify-bc-story-anchor-resolution.sh WIRED (19/19 blocking validators). Frozen-HEAD streak gates on spec HEAD post-D-329 push. Heartbeat auto-recovery ARMED: durable cron 60FC8EB8 @ 8,23,38,53 * * * * + SessionStart self-heal. Census: BC 140 / VP 20 / EC 142 / TV 793 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 16/24=66.7%). GATE-READY=YES 19/19. streak 0/3. L-247/248 codified. NEXT: dispatch round-52.
+
+### STATE: v6.40, timestamp 2026-08-31T20:00:00Z

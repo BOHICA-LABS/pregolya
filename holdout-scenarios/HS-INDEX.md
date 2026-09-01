@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario-index
 level: ops
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
 timestamp: 2026-08-31T00:00:00Z
@@ -13,6 +13,7 @@ inputs:
 input-hash: "d381e81"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "1.8 (Round-52 Stage-C/2026-08-31): F-P2A219-03 fix — HS-D-007 promoted from should-pass to must-pass. Durable trajectory persistence is the only Domain-D holdout exercising the SS-04 trajectory primitive (a core P1 contract); asymmetric classification with sibling ledger holdouts HS-D-008/009 was unjustified. Domain D totals updated: 7 must-pass, 2 should-pass (7/9 = 77.8%). Aggregate must-pass updated: 17/24 = 70.8% (> required 60%). Must-pass subset rationale paragraph updated."
   - "1.7 (Round-50 B2/2026-08-31): F-P2A211-08 fix — HS-D-007 re-scoped from checkpoint super-step replay to dedicated trajectory recording primitive (BC-2.04.009/010/011); prior v1.0 was satisfiable with trajectory absent. HS-D-008 added (must-pass): dedup-idempotent evidence accumulation and first-appearance ordering (BC-2.02.007/008). HS-D-009 added (must-pass): active-set promote/retire lifecycle with idempotency (BC-2.02.009). Domain D totals updated to 9 scenarios, 6 must-pass, 3 should-pass (6/9 = 66.7%). Aggregate totals updated to 24 scenarios, 16 must-pass (16/24 = 66.7%). Capability Coverage Map extended with trajectory and ledger_channel areas."
   - "1.6 (Domain-D/Stage-2b/2026-08-31): Domain D (Autonomous Research Orchestrator) added — 7 scenarios HS-D-001..007 covering generation-loop resume, panel deliberation, DIG pre-code gate, QD diversity allocation, multi-provider peer nodes, budget/guardrail gating, and audit-grade trajectory replay. Must-pass subset: HS-D-001/002/003/005 (4/7 = 57%, consistent with Domain B ratio). Aggregate totals updated to 22 scenarios, 14 must-pass. Phase-4 gate extended to include Domain D. Capability coverage map extended with new Domain D entries. Asymmetry Confirmation updated for Domain D. Asymmetry confirmed clean via verify-holdout-asymmetry.sh (ZERO WARN across 23 files)."
   - "1.5 (round-24/F-P2A105-01+F-P2A105-02+GAP-R24-01+GAP-R24-02/2026-08-28): EXHAUSTIVE asymmetry scrub of HS-C-001 (round-23 scrub was incomplete). §Failure Guidance Check 5 fail bullet and §Evaluation Rubric must-pass threshold paragraph purged of residual internal identifiers. §Edge Conditions EC-006 stale '(Contingent on gap resolution.)' marker removed. §Information Asymmetry Confirmation in HS-C-001 rewritten as CLOSED-SET declaration enumerating confirmed-FREE evaluator-facing sections (Scenario, Verification Approach, Evaluation Rubric, Failure Guidance, Edge Conditions) and exempted non-evaluator metadata sections (BC Linkage table, Coverage Gap note). HS-INDEX §Asymmetry Confirmation updated to reflect expanded confirmed-free section list."
@@ -96,13 +97,13 @@ changelog:
 | HS-D-004 | QD Diversity Allocation — Cohort Diversity Cap Enforcement | edge-case-combinations | should-pass | graph_execution, structured_output, composition | active |
 | HS-D-005 | Multi-Provider Peer Agent Nodes with Shared MCP Tool Access | integration-boundaries | must-pass | graph_execution, providers, mcp, tools, composition | active |
 | HS-D-006 | Budget and Guardrail Gating — Structured Refusal and Ceiling Enforcement | edge-case-combinations | should-pass | graph_execution, checkpoint_resume, providers | active |
-| HS-D-007 | Durable Audit-Grade Trajectory Replay | edge-case-combinations | should-pass | trajectory, checkpoint_resume, streaming | active |
+| HS-D-007 | Durable Audit-Grade Trajectory Replay | edge-case-combinations | must-pass | trajectory, checkpoint_resume, streaming | active |
 | HS-D-008 | Dedup-Idempotent Evidence Accumulation with First-Appearance Ordering | integration-boundaries | must-pass | graph_execution, ledger_channel, composition | active |
 | HS-D-009 | Active-Set Promote/Retire Lifecycle with Idempotency | integration-boundaries | must-pass | graph_execution, ledger_channel, composition | active |
 
-**Domain D totals:** 9 scenarios, 6 must-pass, 3 should-pass.
+**Domain D totals:** 9 scenarios, 7 must-pass, 2 should-pass.
 
-> **Must-pass subset rationale:** HS-D-001/002/003/005/008/009 (6/9 = 66.7%) selected as must-pass. HS-D-001/002/003/005 cover the critical integration-boundary behaviors: durable generation-loop resume, multi-agent panel deliberation, pre-implementation read-only gate enforcement, and multi-provider tool-access correctness. HS-D-008 and HS-D-009 are promoted to must-pass to cover the SS-02 channel primitives (dedup-idempotent ledger accumulation and promote/retire active-set lifecycle) — these were newly authored in Round-50 B1 and had zero holdout coverage before this update (F-P2A211-08). HS-D-004/006/007 (edge-case-combinations) remain should-pass: they test important boundary conditions and determinism properties but are not blocking for the framework's core contract. Domain D ratio 6/9 = 66.7%; overall must-pass ratio 16/24 = 66.7% (> required 60%).
+> **Must-pass subset rationale:** HS-D-001/002/003/005/007/008/009 (7/9 = 77.8%) selected as must-pass. HS-D-001/002/003/005 cover the critical integration-boundary behaviors: durable generation-loop resume, multi-agent panel deliberation, pre-implementation read-only gate enforcement, and multi-provider tool-access correctness. HS-D-008 and HS-D-009 cover the SS-02 channel primitives (dedup-idempotent ledger accumulation and promote/retire active-set lifecycle). HS-D-007 is promoted to must-pass (F-P2A219-03) because it is the only Domain-D holdout exercising the SS-04 trajectory primitive — durable audit-grade persistence and crash-isolated compaction are core P1 contracts, not boundary-condition niceties; asymmetric classification with HS-D-008/009 (both must-pass) was unjustified. HS-D-004 and HS-D-006 (edge-case-combinations) remain should-pass: they test cohort diversity-cap enforcement and budget/guardrail boundary conditions that are important but not blocking for the framework's core contract. Domain D ratio 7/9 = 77.8%; overall must-pass ratio 17/24 = 70.8% (> required 60%).
 
 ---
 
@@ -111,9 +112,9 @@ changelog:
 | Metric | Value |
 |--------|-------|
 | Total scenarios (Domain A + B + C + D) | 24 |
-| Must-pass scenarios | 16 |
-| Should-pass scenarios | 8 |
-| Must-pass ratio | 16/24 = 66.7% (> required 60%) |
+| Must-pass scenarios | 17 |
+| Should-pass scenarios | 7 |
+| Must-pass ratio | 17/24 = 70.8% (> required 60%) |
 | real-world-corpus scenarios | 2 (HS-A-005, HS-B-007) |
 | security-probes | 1 (HS-A-007) |
 | edge-case-combinations | 6 (HS-A-006, HS-B-004, HS-B-006, HS-D-004, HS-D-006, HS-D-007) |

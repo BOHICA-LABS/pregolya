@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.39"
+version: "1.40"
 status: active
 producer: state-manager
 timestamp: 2026-08-31T20:00:00Z
 changelog:
+  - "1.40 (round-52/D-330/2026-08-31): Round-52 fix-burst (state-manager). (1) BC-coverage-map SS-02: BC-2.02.008 'LedgerChannel First-Appearance Ordering' cell now carries '(VP-017)' annotation — VP-017 proptest P1 dual-anchors both BC-2.02.007 and BC-2.02.008; the asymmetric annotation (only BC-2.02.007 had it) was the OBS finding F-P2A218-01. Consistent annotation rule codified in §Conventions note: 'VP annotation in coverage-map is required for ALL BCs that serve as VP bc_anchor entries in VP-INDEX.' (2) Story versions S-1.28 v1.2→v1.3 (Round-52: PhantomData struct shape canonicalized; interface-definitions.md added to inputs). (3) Story versions S-2.12 v1.2→v1.3 (Round-52: AC-019 removed — E-TRAJ-004 RETIRED; plaintext comparison for conflict detection; TV-005/TV-006 anchors; AC-018 policy-violation path removed; E-TRAJ-005 minted). Story/artifact census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142; points 316. TV 793→794 canonical (must-pass 16→17 / holdout 24; HS-D-007 promoted)."
   - "1.39 (round-51/D-329/2026-08-31): Round-51 records-tier fixes (state-manager). (1) Maintenance section census prose corrected: 'Product-story census is **39**' → '**41**' (stale from pre-D-327; census table correctly shows 41 product stories; F-P2A214-03). (2) S-1.28 story row title corrected: 'PromoteRetireChannel Active-Set Lifecycle' → 'PromoteRetireChannel Promote/Retire Lifecycle' (verbatim-H1 per BC-2.02.009; F-P2A214-04). (3) Summary census label corrected: 'Stories with Red Gate BCs' → 'Stories with Red-Gate obligations' (canonical label per adversary style guide; F-P2A214-05). Story/artifact census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142; points 316."
   - "1.38 (round-50/F-R50-01+F-P2A210-01+F-P2A208-07+F-P2A211-03/2026-08-31): STORY-INDEX aggregate summary reconciliation (state-manager round-50 fix-burst). (1) Census table, header blockquote, and BC-coverage-map intro updated from stale D-326 values (40/27/11/134) to post-D-327 correct values (42/28/12/140). Stories-with-VP-anchor 13→15 (VP-017 S-1.28 + VP-018/VP-019 S-2.12). Red-Gate stories 8→10 (S-1.28 VP-017 proptest RG + S-2.12 AC-004/AC-019/AC-020 RG). (2) BC-coverage-map title cells corrected to EXACT BC H1 canonical: BC-2.02.009 'PromoteRetireChannel Promote/Retire Lifecycle' (was 'PromoteRetireChannel Active-Set Lifecycle'); BC-2.04.009 'TrajectoryWriter::put_record Durability' (was 'put_record Durability and Write-Once Integrity'); BC-2.04.010 'TrajectoryReader::replay Ascending step_idx Order' (was 'replay Ascending Step-Index and Completeness'); BC-2.04.011 'Trajectory Compaction Isolation' (was 'Trajectory Compaction Isolation and Crash Safety (VP-018)'). (3) VP-to-Story Anchor Map: VP-017 BC anchor updated to dual BC-2.02.007 + BC-2.02.008 (v1.1 product-owner ruling); VP-019 row added (BC-2.04.011 {INV-003}; S-2.12; pregolya-checkpoint). Story/artifact census: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142; points 316. verify-story-count-propagation.sh exits 0."
   - "1.37 (praxist-Stage-3/2026-08-31): 2 new stories added for the praxist research-orchestrator use case. S-1.28 (STORY-S-1.28-ledger-channel-promote-retire.md, v1.0, 5 pts): LedgerEntry trait + LedgerChannel<T> + PromoteRetireOp<T> + PromoteRetireChannel<T> in graph::channels (pregolya-graph); BC-2.02.007 + BC-2.02.008 + BC-2.02.009; VP-017 proptest P1 anchor; Wave 1 batch-1e; depends_on [S-1.14]; blocks []. S-2.12 (STORY-S-2.12-trajectory-writer-reader-compaction.md, v1.0, 8 pts): TrajectoryRecord/TrajectoryWriter/TrajectoryReader/TrajectoryRetentionPolicy type defs (core::trajectory, pregolya-core) + SqliteTrajectoryStore + TrajectoryCompactor impl (checkpoint::trajectory, pregolya-checkpoint); BC-2.04.009 + BC-2.04.010 + BC-2.04.011; VP-018 proptest P1 anchor; Wave 2 batch-2a; depends_on [S-1.10]; blocks []. E-07 extended: +S-1.28 (wave-1). E-05 extended: +S-2.12 (wave-2). Topological sort: S-1.28 inserts into batch 1e (deps satisfied by 1d); S-2.12 inserts into batch 2a (deps satisfied by Wave 1). DAG acyclicity confirmed: no new cycles. Census updated: 40→42 total (39→41 product, 1 maint unchanged); Wave 1 27→28; Wave 2 11→12; Wave 6 1 unchanged; points 303→316 (+5+8); BC 134→140 (+6: BC-2.02.007/008/009 SS-02 + BC-2.04.009/010/011 SS-04); VP story-anchors 13→15 (VP-017 →S-1.28, VP-018 →S-2.12); Red Gate stories 8→10 (S-1.28 VP-017 proptest RG + S-2.12 AC-004/AC-019/AC-020 RG)."
@@ -226,6 +227,12 @@ input-hash: "69ed6f6"
 > a paraphrase that may differ from the BC-INDEX H1 in wording while pointing to the same contract.
 > BC IDs and AC traces (`traces to BC-S.SS.NNN`) are the authoritative cross-references.
 
+> **VP annotation in BC-coverage-map** `(VP-NNN)` suffix is REQUIRED for ALL BCs that appear as
+> a `bc_anchor` entry in VP-INDEX (i.e., the BC is the primary anchor of a registered VP). When a
+> VP dual-anchors two BCs (e.g., VP-017 anchors both BC-2.02.007 and BC-2.02.008), BOTH cells
+> carry the `(VP-NNN)` annotation. Asymmetric annotation — one sibling annotated, the other not —
+> is a recordkeeping defect. Rule codified R52 / F-P2A218-01.
+
 > **`verification_properties` frontmatter field** holds canonical VP-INDEX IDs (`VP-0NN`) or `[]`.
 > BC-local VP IDs (defined within a BC's §Verification Properties section and deliberately NOT
 > registered in VP-INDEX) are documented in the story body, not in this frontmatter field.
@@ -268,7 +275,7 @@ input-hash: "69ed6f6"
 | BC-2.02.005 | Conditional Edge Routing Function | S-1.15 | P0 |
 | BC-2.02.006 | Send API Dynamic Fan-Out | S-1.15 | P0 |
 | BC-2.02.007 | LedgerChannel Dedup-Idempotent Append (VP-017) | S-1.28 | P1 |
-| BC-2.02.008 | LedgerChannel First-Appearance Ordering | S-1.28 | P1 |
+| BC-2.02.008 | LedgerChannel First-Appearance Ordering (VP-017) | S-1.28 | P1 |
 | BC-2.02.009 | PromoteRetireChannel Promote/Retire Lifecycle | S-1.28 | P1 |
 
 ### SS-03 BSP Execution Engine (3 BCs)

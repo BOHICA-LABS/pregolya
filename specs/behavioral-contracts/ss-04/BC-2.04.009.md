@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.009
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (ADR-030/Stage-3.5-product-owner/2026-08-31): EC-002 category corrected INTERNAL→DURABILITY (E-TRAJ-001 minted as DURABILITY; write failures are DURABILITY per taxonomy convention matching E-CHKPT-001); EC-005 added for ConflictingDuplicate — wires the {INV-001} mismatched-payload error path to its canonical taxonomy code E-TRAJ-002."
   - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): {INV-002} reframed from credential-opacity-caller-responsible to at-rest encryption fail-safe per ADR-030 §At-Rest Confidentiality Decision (F-P2A209-01/CWE-311): when EncryptedSerializer is wired at construction, TrajectoryWriter MUST encrypt payload with per-record nonce before persisting to SQLite; plaintext MUST NOT be observable in database file. {PRE-001} reconciled to single-file SQLite WAL topology (ADR-030 §SQLite Topology Decision/F-P2A209-04). TV-004 added: asserts plaintext not observable at rest when EncryptedSerializer configured. VP-TRAJ-01 phantom label relabeled TST-TRAJ-01 in §Verification Properties; removed from §VP Anchors (not a registered VP — no real VP covers BC-2.04.009)."
   - "1.3 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-2.12 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). {PRE-002} and {INV-002}: event_kind explicitly designated as cleartext index/discriminator field that MUST NOT carry sensitive or credential material — extends DI-010 credential-opacity constraint to event_kind (F-P2A213-01/CWE-312 metadata-confidentiality gap closure)."
+  - "1.4 (round-52/F-P2A216-02+F-P2A217-01/2026-08-31): DI seam explicit in {PRE-001}: `Option<Arc<dyn Serializer + Send + Sync>>` is the `core::serializer::Serializer` trait (pregolya-core); `EncryptedSerializer` (`checkpoint::serializer`, pregolya-checkpoint) is the canonical concrete implementor. {INV-001} extended with plaintext-comparison clause: per-record-nonce encryption requires that `(run_id, step_idx)` conflict detection compare the **plaintext** payload (decrypt-then-compare or deterministic content-hash of the pre-encryption plaintext), NOT the ciphertext — ciphertext is non-deterministic across calls with distinct nonces; comparing ciphertext would generate false E-TRAJ-002 on legitimate idempotent resume-retries. {INV-002} note added: plaintext comparison ensures per-record-nonce does not break write-once idempotency. TV-005 added (encryption + duplicate identical plaintext → Ok(())); TV-006 added (encryption + duplicate divergent plaintext → E-TRAJ-002). TV count 4→6."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "5703511"
+input-hash: "9917852"
 extracted_from: null
 modified: []
 deprecated: null
@@ -54,9 +55,10 @@ and are never pruned by the rolling-context compaction mechanism.
 1. {PRE-001} A concrete `impl TrajectoryWriter` (the `checkpoint::trajectory` implementation)
    has been constructed, backed by a dedicated `trajectory_records` table within the same
    single-file SQLite database as `CheckpointSaver`, operated in WAL mode (ADR-030 §SQLite
-   Topology Decision). An optional `EncryptedSerializer` is wired at construction time
-   (`Option<Arc<dyn Serializer + Send + Sync>>`) to configure at-rest encryption for payload
-   values ({INV-002}).
+   Topology Decision). An optional `Arc<dyn Serializer + Send + Sync>` (the
+   `core::serializer::Serializer` trait from `pregolya-core`) is wired at construction time
+   to configure at-rest encryption for payload values ({INV-002}); `EncryptedSerializer`
+   (`checkpoint::serializer`, `pregolya-checkpoint`) is the canonical concrete implementor.
 2. {PRE-002} A `TrajectoryRecord` is prepared with:
    - `run_id: Uuid` — a non-nil UUID identifying the research run
    - `step_idx: u64` — the logical-clock position sourced from the checkpoint clock
@@ -92,14 +94,24 @@ and are never pruned by the rolling-context compaction mechanism.
   at most one `TrajectoryRecord` in the store. Submitting a second `put_record` call with the
   same `(run_id, step_idx)` pair is idempotent: the stored record is unchanged (no duplicate
   created, no error raised on a matching payload; a mismatching payload for the same pair
-  returns `Err(PregolyaError)` to preserve audit integrity).
-- {INV-002} **At-rest encryption via EncryptedSerializer (fail-safe):** `checkpoint::trajectory`
-  receives an `Option<Arc<dyn Serializer + Send + Sync>>` at construction via Arc-DI. When an
-  `EncryptedSerializer` is provided, `put_record` MUST serialize `TrajectoryRecord::payload`
-  through `EncryptedSerializer` using a per-record nonce before persisting to SQLite. Plaintext
-  payload values MUST NOT be observable in the database file when encryption is configured — the
-  `TrajectoryWriter` implementation enforces encryption at the storage boundary; there is no
-  caller-bypass path. When no `EncryptedSerializer` is provided, records are stored in their
+  returns `Err(E-TRAJ-002)` to preserve audit integrity). **Conflict detection compares the
+  plaintext payload** — when `EncryptedSerializer` is configured, the implementation MUST
+  decrypt-then-compare (or compare a deterministic content-hash of the pre-encryption
+  plaintext stored alongside the ciphertext), NOT compare ciphertexts. Ciphertext is
+  non-deterministic across calls that use a per-record nonce; comparing ciphertexts would
+  generate false E-TRAJ-002 errors on legitimate idempotent resume-retries ({INV-002}).
+- {INV-002} **At-rest encryption via `core::serializer::Serializer` DI seam (fail-safe):**
+  `checkpoint::trajectory` receives an `Option<Arc<dyn Serializer + Send + Sync>>`
+  (the `core::serializer::Serializer` trait from `pregolya-core`) at construction via Arc-DI;
+  `EncryptedSerializer` (`checkpoint::serializer`, `pregolya-checkpoint`) is the canonical
+  concrete implementor. When an `EncryptedSerializer` is provided, `put_record` MUST serialize
+  `TrajectoryRecord::payload` through `EncryptedSerializer` using a per-record nonce before
+  persisting to SQLite. Plaintext payload values MUST NOT be observable in the database file
+  when encryption is configured — the `TrajectoryWriter` implementation enforces encryption at
+  the storage boundary; there is no caller-bypass path. **Per-record-nonce reconciliation:**
+  because each nonce is unique per call, the ciphertext of the same plaintext differs across
+  calls; conflict detection for {INV-001} MUST therefore operate on the plaintext (see {INV-001}),
+  not the ciphertext. When no `EncryptedSerializer` is provided, records are stored in their
   serialized (plaintext) form (opt-in encryption model per ADR-030 §At-Rest Confidentiality
   Decision). Regardless of encryption configuration, credential material MUST NOT be placed
   in `payload` or `event_kind` before calling `put_record`. `event_kind`, like `run_id` and
@@ -160,6 +172,8 @@ E-TRAJ-002 fires only when the content differs, protecting the write-once audit 
 | TV-002 | `put_record(r1)` where `r1.run_id = R`, `r1.step_idx = 0`; then `put_record(r2)` where `r2.run_id = R`, `r2.step_idx = 1` | Both `Ok(())`; `replay(R)` returns `[r1, r2]` (two records for same run) | Multiple records for one run |
 | TV-003 | `put_record(r1)`; kill process; restart with same storage backend; `replay(r1.run_id)` | `replay` returns `[r1]` | Durability across process restart; {PC-003} |
 | TV-004 | `EncryptedSerializer` configured at construction; `put_record(r1)` where `r1.payload = json!({"answer": "Paris"})` returns `Ok(())`; raw byte inspection of `trajectory_records` table in the SQLite file | No plaintext occurrence of `"Paris"` or the unencrypted JSON bytes observable in the raw database file; stored column bytes are ciphertext produced by `EncryptedSerializer` with per-record nonce | At-rest encryption; {INV-002} |
+| TV-005 | `EncryptedSerializer` configured at construction; `put_record(r1)` with `run_id=R`, `step_idx=0`, `payload=json!({"answer":"Paris"})` returns `Ok(())`; same call `put_record(r1)` again (identical plaintext payload) | Second call returns `Ok(())` — no false E-TRAJ-002; plaintext comparison identifies matching payloads despite per-record-nonce producing different ciphertexts across calls | Idempotency under encryption; {INV-001} + {INV-002} |
+| TV-006 | `EncryptedSerializer` configured at construction; `put_record(r1)` with `run_id=R`, `step_idx=0`, `payload=json!({"answer":"Paris"})` returns `Ok(())`; then `put_record(r2)` with same `run_id=R`, `step_idx=0`, but `payload=json!({"answer":"London"})` (divergent plaintext) | `Err(PregolyaError { code: E-TRAJ-002, message: "ConflictingDuplicate: put_record for (run_id='R', step_idx=0) conflicts with committed record — payload or event_kind differs", category: VAL, .. })` — plaintext comparison correctly detects divergence despite encryption | Conflict detection under encryption; {INV-001} + {INV-002} |
 
 ## Verification Properties
 

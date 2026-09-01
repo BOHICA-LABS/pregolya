@@ -4627,3 +4627,61 @@ All 10 findings CLOSED in D-329 fix-burst:
 - L-247/L-248 codified
 
 **NEXT: round-52 on new frozen HEAD post-D-329 push. Streak 0/3.**
+
+## Round 52 — D-330 (2026-08-31) — THIRD ADVERSARIAL REVIEW OF PRAXIST SURFACE
+
+**Frozen HEAD:** `7b7b7b8` (factory-artifacts post-D-329 push)
+**Trajectory:** →5→4→1→3 (P2A-216=5[2H+3M] / P2A-217=4[2H+2M] / P2A-218=1[1OBS] / P2A-219=3[2H+1M])
+**Total findings:** 13 (6 HIGH + 6 MED + 0 LOW + 1 OBS)
+**CLEAN(strict):** NO (0/4 lenses CLEAN)
+**CLEAN(PR-merge):** MIXED (P2A-218 YES / P2A-216 NO / P2A-217 NO / P2A-219 NO)
+**Streak after:** 0/3
+
+### Pass Detail
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|-----------------|
+| P2A-216 | Realizability | 5 (2H+3M+0L) | NO | NO |
+| P2A-217 | Security | 4 (2H+2M+0L) | NO | NO |
+| P2A-218 | Consistency | 1 (0H+0M+1OBS) | NO | YES |
+| P2A-219 | Deep-audit | 3 (2H+1M+0L) | NO | NO |
+
+### Finding Summary
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F-P2A216-01 | HIGH | BC-2.04.011 {PC-005}/{INV-004}: E-TRAJ-004 structurally unreachable dead-guard path (TrajectoryRetentionPolicy eligible/retained are complements by construction) |
+| F-P2A216-02 | HIGH | BC-2.04.009 {INV-001}/{INV-002}: conflict detection must compare PLAINTEXT not ciphertext — per-record nonce produces non-deterministic ciphertext for identical plaintext |
+| F-P2A216-03 | MED | S-2.12 AC-019 orphaned — traces to BC-2.04.011 {PC-005} dead-guard removed by F-P2A216-01 |
+| F-P2A216-04 | MED | S-1.28 struct shape underspecified — LedgerChannel/PromoteRetireChannel are PhantomData markers, not Vec<T> accumulators |
+| F-P2A216-05 | MED | ADR-029 §composition-phase panel-visibility reword introduced HS-C-001 reverse-leak |
+| F-P2A217-01 | HIGH | BC-2.04.009 (security lens): nonce-per-record produces E-TRAJ-002 false-positive on idempotent resume-retry |
+| F-P2A217-02 | HIGH | ADR-030 §eval-logistics retained prose mapping to sealed HS-D-002 rubric — reverse-leak |
+| F-P2A217-03 | MED | interface-definitions.md DI-001 seam cites Arc<dyn Serializer> but Serializer trait not yet defined |
+| F-P2A217-04 | MED | E-TRAJ-004 orphaned in error taxonomy without tombstone/retirement note |
+| F-P2A218-01 | OBS | STORY-INDEX coverage-map asymmetric annotation: BC-2.02.008 missing (VP-017) while sibling BC-2.02.007 has it |
+| F-P2A219-01 | HIGH | E-TRAJ-004 retirement leaves compaction-failure gap — no error code for SQLite I/O failure / disk-full at compact call |
+| F-P2A219-02 | HIGH | VP-017 harness-specification references stale stateful API post interface-definitions v3.07 Serializer redesign |
+| F-P2A219-03 | MED | HS-D-007 should-pass classification asymmetric with sibling HS-D-008/009 must-pass holdouts; only domain-D holdout exercising SS-04 trajectory primitive |
+
+### Multi-Stage Cascade Disposition
+
+All 13 findings CLOSED in D-330 fix-burst:
+- **architect A:** ADR-029 §sealed-holdout-leaks (HS-C-001 reverse-leak purged); ADR-030 §sealed-holdout-leaks (HS-D-002 reverse-leak purged); interface-definitions v3.07 (Serializer trait DI-001 seam defined); VP-017 §pure-fold (pure-fold property + Arc<dyn Serializer> harness)
+- **devops A:** verify-holdout-reverse-leak.sh NEW bidirectional reverse-leak gate #20; pre-commit-validators.sh EXPECTED_BLOCKING_COUNT 19→20
+- **product-owner B:** BC-2.04.011 {PC-005}/{INV-004}/EC-004/TV-003 removed; E-TRAJ-004 RETIRED (tombstone); E-TRAJ-005 TrajectoryCompactionFailed (DURABILITY) MINTED; BC-2.04.009 {INV-001}/{INV-002} plaintext-comparison semantics; TV-005+TV-006 minted (canonical 793→794); HS-D-007 v2.1 must-pass promoted
+- **story-writer C:** S-2.12 v1.3 (AC-019 removed; AC-002/AC-007/Rule 13 plaintext-compare; TV-005/TV-006 anchors; E-TRAJ-005 minted); S-1.28 v1.3 (PhantomData struct shape; interface-definitions.md added to inputs)
+- **state-manager:** STORY-INDEX §D-330 (BC-2.02.008 VP-017 annotation; Conventions VP dual-anchor rule); BC-INDEX §D-330 (TV-delta changelog + census); pass-216/217/218/219 + GATE-READY-r52 + convergence-trajectory + lessons L-249/250/251/252
+
+### Post-Round-52 Status
+
+- EC: net-neutral 142 (E-TRAJ-004 RETIRED + E-TRAJ-005 MINTED)
+- TV: 793→794 canonical (BC-2.04.009 +2 TV-005/TV-006; BC-2.04.011 -1 TV-003); 805 total (incl GTV)
+- VP: UNCHANGED (20)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%; HS-D-007 promoted)
+- ADR: UNCHANGED (30; ADR-029 §sealed-holdout-leaks + ADR-030 §sealed-holdout-leaks sealed)
+- GATE-READY: YES (all 20 blocking validators PASS; see GATE-READY-r52.md)
+- Streak: 0/3 (round-52 NOT CLEAN(strict) — 0/4 lenses clean; frozen-HEAD reset on D-330 push)
+- L-249/L-250/L-251/L-252 codified
+
+**NEXT: round-53 on new frozen HEAD post-D-330 push. Streak 0/3.**

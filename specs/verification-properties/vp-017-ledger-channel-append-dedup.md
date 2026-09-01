@@ -9,11 +9,11 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "42892e9"
+input-hash: "27e49fa"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.02.007
 bc_anchor: BC-2.02.007 + BC-2.02.008
-di_anchor: DI-014
+di_anchor: DI-001
 module: graph::channels
 crate: pregolya-graph
 tool: proptest
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (round-52/F-P2A217-04+F-P2A219-05/2026-08-31): F-P2A217-04 [HIGH] Harness rewritten to canonical pure-fold API — removed stale stateful LedgerChannel::new()/channel.reduce(e)/channel.value() API; harness now uses entries.iter().fold(Vec::new(), |acc, e| LedgerChannel::reduce(acc, e.clone())); TestEntry gains Serialize+Deserialize derives (required by LedgerEntry: Serialize+DeserializeOwned supertrait); §Formal Invariant updated to fold-form (removed LedgerChannel::new() / IndexSet reduce_all oracle; replaced with fold accumulation directly); §Proof Obligations updated (removed 'LedgerChannel::new() produces empty ledger' — now 'fold over empty input produces empty Vec'). F-P2A219-05 [LOW] di_anchor corrected DI-014→DI-001: VP-017 proves LedgerChannel::reduce idempotency/ordering/determinism (BSP reducer determinism = DI-001); DI-014 (error-propagation no-silent-swallow) is irrelevant since reduce is pure and returns Vec<T>, not Result."
   - "1.1 (round-50/F-P2A211-05/2026-08-31): Dual anchor: BC-2.02.008 added alongside BC-2.02.007. VP-017 harness exercises first-appearance ordering (Property Statement point 3) which is the subject of BC-2.02.008; anchoring only BC-2.02.007 left first-appearance ordering without a VP attribution. Follows VP-014 two-BC precedent. bc_anchor updated, §Source Contract expanded, §BC-Traceability row added. Version bump: 1.0→1.1."
   - "1.0 (ADR-030/2026-08-31): Initial — LedgerChannel dedup-idempotency proptest P1. ADR-030 Decision 3; BC-2.02.007 (draft; PO authors in Stage 2)."
 ---
@@ -60,14 +61,22 @@ For any sequence of reduce operations against a `LedgerChannel<T>`:
 ## Formal Invariant
 
 ```
-∀ entries: Vec<T>, let ledger = reduce_all(LedgerChannel::new(), entries):
-  ledger.len() == entries.iter().map(|e| e.entry_id()).collect::<IndexSet>().len()
+∀ entries: Vec<T>,
+  let ledger: Vec<T> = entries.iter().fold(Vec::new(), |acc, e| LedgerChannel::reduce(acc, e.clone())):
+
+  ledger.len() == count_distinct_entry_ids(entries)
   ∧ ∀ i < ledger.len():
       ledger[i].entry_id() == first_occurrence_id(entries, i)
 ```
 
-where `first_occurrence_id(entries, i)` is the `entry_id` of the `i`-th first-appearance
-entry in `entries`.
+where:
+- `count_distinct_entry_ids(entries)` = `entries.iter().map(|e| e.entry_id()).collect::<HashSet<_>>().len()`
+- `first_occurrence_id(entries, i)` is the `entry_id` of the `i`-th entry (in first-appearance
+  order) in `entries`
+
+`LedgerChannel::reduce` is a pure function: `fn reduce(acc: Vec<T>, update: T) -> Vec<T>`.
+No mutable state; no constructor; no `.value()` accessor — the `Vec<T>` accumulator is
+threaded through `fold` and is the direct output of the harness.
 
 ## Source Contract
 
@@ -104,9 +113,13 @@ None identified. BC-2.02.007 and BC-2.02.008 are drafts pending product-owner au
 
 ```rust
 use proptest::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 /// A minimal test entry type implementing LedgerEntry.
-#[derive(Clone, Debug, PartialEq)]
+/// Serialize + Deserialize required by the LedgerEntry supertrait (ADR-030 §Decision 3
+/// Serialization Bound — checkpoint-resume round-trip correctness).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 struct TestEntry {
     id: String,
     value: u64,
@@ -128,33 +141,37 @@ proptest! {
     fn ledger_channel_dedup_idempotency(
         entries in prop::collection::vec(arb_entry(), 0..20)
     ) {
-        let mut channel = LedgerChannel::<TestEntry>::new();
-        for entry in &entries {
-            channel.reduce(entry.clone());
-        }
-
-        let ledger = channel.value();
+        // Pure fold — no mutable channel state; LedgerChannel::reduce is a free function.
+        let ledger: Vec<TestEntry> = entries
+            .iter()
+            .fold(Vec::new(), |acc, e| LedgerChannel::reduce(acc, e.clone()));
 
         // 1. Length equals the count of distinct entry_ids
-        let distinct_ids: IndexSet<&str> = entries.iter().map(|e| e.entry_id()).collect();
+        let distinct_ids: HashSet<&str> = entries.iter().map(|e| e.entry_id()).collect();
         prop_assert_eq!(ledger.len(), distinct_ids.len(),
             "LedgerChannel length must equal distinct entry_id count");
 
         // 2. Every entry_id in the ledger is present exactly once
         let ledger_ids: Vec<&str> = ledger.iter().map(|e| e.entry_id()).collect();
-        prop_assert_eq!(ledger_ids.len(), ledger_ids.iter().collect::<HashSet<_>>().len(),
-            "LedgerChannel must not contain duplicate entry_ids");
+        prop_assert_eq!(
+            ledger_ids.len(),
+            ledger_ids.iter().cloned().collect::<HashSet<_>>().len(),
+            "LedgerChannel must not contain duplicate entry_ids"
+        );
 
         // 3. Order matches first-appearance order in the input sequence
-        let mut seen = IndexSet::<String>::new();
+        let mut seen = HashSet::<String>::new();
         let expected_order: Vec<String> = entries.iter()
             .filter_map(|e| {
                 if seen.insert(e.entry_id().to_owned()) { Some(e.entry_id().to_owned()) }
                 else { None }
             })
             .collect();
-        prop_assert_eq!(ledger_ids, expected_order.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
-            "LedgerChannel must maintain first-appearance order");
+        prop_assert_eq!(
+            ledger_ids,
+            expected_order.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            "LedgerChannel must maintain first-appearance order"
+        );
     }
 }
 ```
@@ -172,12 +189,12 @@ design — see ADR-030 §Rationale).
 
 ## Proof Obligations
 
-- [ ] `LedgerChannel::new()` produces an empty ledger.
-- [ ] `reduce(novel_entry)` appends; `len` increments.
-- [ ] `reduce(seen_entry)` is a no-op; `len` unchanged; existing entries unchanged.
-- [ ] Final ledger matches first-appearance ordering from input sequence.
-- [ ] Zero-entry input produces empty ledger.
-- [ ] Single-entry input produces single-element ledger.
+- [ ] Fold over empty input (`entries = vec![]`) produces empty `Vec<T>` — zero-entry identity.
+- [ ] Fold over a single entry produces a single-element `Vec<T>` with that entry.
+- [ ] `LedgerChannel::reduce(acc, novel_entry)` appends; `new_acc.len() == acc.len() + 1`.
+- [ ] `LedgerChannel::reduce(acc, seen_entry)` is a no-op; `new_acc.len() == acc.len()` and existing entries are unchanged.
+- [ ] Final ledger matches first-appearance ordering from the input sequence.
+- [ ] `TestEntry` round-trips through serde (Serialize + Deserialize derives satisfy LedgerEntry supertrait).
 - [ ] All proptest cases pass within the CI time budget.
 
 ## Lifecycle

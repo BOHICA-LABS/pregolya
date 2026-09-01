@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.009
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (ADR-030 Stage 2b/2026-08-31): [INACCURATE — superseded by v1.2 provenance correction] Previously stated 'Renumbered from BC-2.04.011 to BC-2.02.009' — this is incorrect per ADR-030 §Renumber-Provenance Canonical Narrative (F-P2A210-02)."
   - "1.2 (round-50/Stage-B1-product-owner/2026-08-31): Provenance corrected per ADR-030 §Renumber-Provenance (F-P2A210-02): BC-2.02.009 was CREATED as a new SS-02 BC; PromoteRetireChannel content was physically relocated from an erroneous PO draft that used BC-2.04.011 (which was always reserved for Trajectory Compaction Isolation in SS-04; BC-2.04.011 continues as a separate active BC). BC-2.04.011 is NOT the prior_id of BC-2.02.009. Prior-ID: N/A (new creation). {PRE-001} supertrait bound corrected: T: LedgerEntry (supertrait already includes Clone + Serialize + DeserializeOwned + Send + Sync + 'static — use-site redundancy removed per F-P2A208-11). VP-PROM-01/02 phantom labels relabeled TST-PROM-01/02 in §Verification Properties; removed from §VP Anchors (not registered VPs)."
   - "1.3 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: PromoteRetireOp<T> + PromoteRetireChannel<T> canonical file corrected from phantom flat-file channels.rs to directory module channels/promote_retire.rs (F-P2A215-01; graph::channels module path unchanged)."
+  - "1.4 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `PromoteRetireChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized marker; `Default::default()` produces the zero-sized marker struct; the `Vec<T>` active-set accumulator is external to the marker, owned and managed by the BSP engine — F-P2A216-04). No behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "5703511"
+input-hash: "9917852"
 extracted_from: null
 modified: []
 deprecated: null
@@ -141,7 +142,12 @@ differs from EC-003 because task-identity order is deterministic per DI-001.
 
 ## Architecture Anchors
 
-- `pregolya-graph/src/channels/promote_retire.rs` (`graph::channels`) — `PromoteRetireOp<T>` enum (`Promote(T)` / `Retire(String)`); `PromoteRetireChannel<T>` struct; reducer function operating on `Vec<T>` active set
+- `pregolya-graph/src/channels/promote_retire.rs` (`graph::channels`) — `PromoteRetireOp<T>` enum
+  (`Promote(T)` / `Retire(String)`); `PromoteRetireChannel<T>` struct canonical shape:
+  `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized
+  marker; `Default::default()` produces `PromoteRetireChannel { _inner: PhantomData }`; the `Vec<T>`
+  active-set accumulator is external to the marker, owned and managed by the BSP engine — F-P2A216-04);
+  reducer function operating on `Vec<T>` active set
 - `pregolya-graph/src/definition.rs` (`graph::definition`) — `StateGraph` channel registration; `PromoteRetireChannel` registered as a channel type with reducer `PromoteRetireOp<T>`
 - ADR-030 §Decision 3 — `PromoteRetireChannel` design; `LedgerEntry` as the common marker trait for both `LedgerChannel` and `PromoteRetireChannel` entries
 

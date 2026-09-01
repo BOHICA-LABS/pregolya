@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.008
-version: "1.2"
+version: "1.3"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -18,6 +18,7 @@ changelog:
   - "1.0 (ADR-030 Stage 2a/2026-08-31): Initial greenfield spec — LedgerChannel first-appearance ordering; DI-001 invariant enforcement; ADR-030 Decision 3."
   - "1.1 (round-50/Stage-B1-product-owner/2026-08-31): §Verification Properties VP-017 description updated to reflect dual-anchor: VP-017 proptest now explicitly anchors both BC-2.02.007 (dedup-idempotent append) and BC-2.02.008 (first-appearance ordering) — the ordering invariant is exercised by the same arbitrary-sequence proptest harness. VP-INDEX propagation to architect per vp_index_is_vp_catalog_source_of_truth policy."
   - "1.2 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: LedgerChannel<T> canonical file corrected from phantom flat-file channels.rs to directory module channels/ledger.rs (F-P2A215-01; graph::channels module path unchanged)."
+  - "1.3 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `LedgerChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized marker; the `Vec<T>` accumulator is external, BSP engine-owned); ordering is a property of the `Vec::push`-on-novel-append operation, not of the struct itself. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -25,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "5703511"
+input-hash: "9917852"
 extracted_from: null
 modified: []
 deprecated: null
@@ -125,7 +126,12 @@ reference; task-identity sort (DI-001) determines first-appearance order.
 
 ## Architecture Anchors
 
-- `pregolya-graph/src/channels/ledger.rs` (`graph::channels`) — `LedgerChannel<T>` struct; the `Vec<T>` accumulator preserves insertion order natively; the reducer appends novel entries at the end using `Vec::push`, guaranteeing first-appearance ordering without a separate sort pass
+- `pregolya-graph/src/channels/ledger.rs` (`graph::channels`) — `LedgerChannel<T>` struct canonical shape:
+  `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized
+  marker; `Default::default()` produces `LedgerChannel { _inner: PhantomData }`); the `Vec<T>`
+  accumulator is external to the marker, owned and managed by the BSP engine (F-P2A216-04); the
+  accumulator preserves insertion order natively; the reducer appends novel entries at the end using
+  `Vec::push`, guaranteeing first-appearance ordering without a separate sort pass
 - ADR-030 §Decision 3 — LedgerChannel semantics: "Reducing with a T whose entry_id() is novel appends it"; append-at-end is the specified operation, encoding first-appearance order
 
 ## Story Anchor

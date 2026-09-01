@@ -9,7 +9,7 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "85f1f9d"
+input-hash: "bc6917b"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.04.011
 bc_anchor: BC-2.04.011 {INV-001}
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.1"
+version: "1.2"
 changelog:
+  - "1.2 (round-52/F-P2A219-04/2026-08-31): §Formal Invariant: removed undefined 'policy.is_valid(records) == true' precondition guard. TrajectoryRetentionPolicy has no invalid states — eligible and retained are complements by construction (step_idx < frontier AND NOT promoted = eligible; complement = retained); the guard was undefined and vacuously true for all well-formed policies. Replaced with a note in the invariant explaining the structural guarantee. This aligns with the round-52 architect ruling to retire E-TRAJ-004 / {INV-004} as structurally unreachable."
   - "1.1 (round-50/F-P2A209-02/2026-08-31): Harness reworked — tautological oracle replaced. v1.0 oracle used !eligible_set.contains(&r.step_idx), identical logic to compact_in_memory; this made the test a tautology (same filter on both sides). v1.1 oracle uses the semantic definition: r.step_idx >= policy.retention_frontier || policy.promoted.contains(&r.step_idx) — a structurally different code path (>= + ||) vs is_eligible (<  + &&). compact_in_memory signature changed from &HashSet<u64> to &TrajectoryRetentionPolicy to match the interface-definitions.md type. Negative mutation case added: compact_in_memory_buggy uses <= instead of < for the frontier boundary; the negative test asserts the buggy version produces a result different from the correct version, proving the oracle is independent. Version bump: 1.0→1.1."
   - "1.0 (BC-2.04.011/2026-08-31): Initial — TrajectoryCompactor retention-integrity proptest P1. BC-2.04.011 {INV-001} primary anchor (no retained record lost or mutated by compaction); {INV-002} corollary (ascending step_idx ordering preserved). Human-approved VP mint: durable audit record never corrupted by compaction. Harness: trajectory_compaction_retention_integrity."
 ---
@@ -71,8 +72,10 @@ These three assertions correspond to BC-2.04.011 {INV-001} (no-loss/no-mutation)
 
 ```
 ∀ records: Vec<TrajectoryRecord> (strictly ascending step_idx),
-  policy: TrajectoryRetentionPolicy,
-  where policy.is_valid(records) == true:
+  policy: TrajectoryRetentionPolicy:
+  // Note: TrajectoryRetentionPolicy has no invalid states — eligible and retained are
+  // complements by construction. policy.is_eligible(r) ≡ (r.step_idx < frontier AND NOT promoted);
+  // retained ≡ complement. No external validity guard is needed or definable.
 
 let retained = records.iter().filter(|r| !policy.is_eligible(r)).collect::<Vec<_>>();
 let post     = compact_and_replay(records, policy);  // Ok(post_records) branch

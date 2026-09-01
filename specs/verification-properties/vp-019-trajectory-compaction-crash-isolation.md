@@ -9,7 +9,7 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "85f1f9d"
+input-hash: "bc6917b"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.04.011
 bc_anchor: BC-2.04.011 {INV-003}
@@ -37,8 +37,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.0"
+version: "1.1"
 changelog:
+  - "1.1 (round-52/F-P2A217-03/2026-08-31): WAL-correct language applied throughout. SQLite topology is WAL mode (ADR-030 §SQLite Topology Decision). Scenario 2 (mid-transaction crash): 'SQLite rollback journal restores pre-compaction state on restart' → 'uncommitted WAL frames after the last commit marker are discarded on the next database open; pre-compaction state is fully recovered'. §Property Statement introductory sentence corrected similarly. Integration test assert message updated. §Proof Obligations updated. Rollback journal is not used in WAL mode; the correct recovery mechanism is WAL frame discard on next open."
   - "1.0 (round-50/F-P2A209-03/2026-08-31): Initial — trajectory compaction crash-isolation integration P1. BC-2.04.011 {INV-003} anchor: SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL. Scoped from VP-018: VP-018 proptest covers pure-core selection/filtering ({INV-001}/{INV-002}); VP-019 covers OS-level crash-recovery semantics that proptest and Kani cannot model. Human-approved VP mint: crash-isolation test of durable audit trajectory compaction is a production-grade correctness obligation. Arithmetic: total 19→20 (P0 6 unchanged, P1 13→14); integration 2→3."
 ---
 
@@ -52,17 +53,19 @@ or after `COMMIT` sync — a subsequent `TrajectoryReader::replay(run_id)` call 
 restart returns the **complete pre-compaction trajectory record sequence** with no partial
 compaction, no record loss, and no record mutation.
 
-The property follows from SQLite's `BEGIN IMMEDIATE` / `COMMIT` atomicity: either the
-full compaction transaction commits or the database is left in its pre-compaction state.
-A partially written transaction (SIGKILL before `COMMIT`) is rolled back by SQLite on the
-next open.
+The property follows from SQLite's `BEGIN IMMEDIATE` / `COMMIT` atomicity in WAL mode:
+either the full compaction transaction commits or the database is left in its
+pre-compaction state. In WAL mode, uncommitted WAL frames after the last commit marker
+are discarded by SQLite on the next database open; the pre-compaction state is fully
+recovered (no rollback journal — WAL mode uses frame discard, not journal replay).
 
 Three crash scenarios (BC-2.04.011 TV-002 three-case matrix):
 
 1. **Before begin:** SIGKILL before `BEGIN IMMEDIATE` is issued. No transaction started;
    pre-compaction state is trivially preserved.
-2. **Mid-transaction:** SIGKILL after `BEGIN IMMEDIATE` but before `COMMIT`. SQLite
-   rollback journal restores pre-compaction state on restart.
+2. **Mid-transaction:** SIGKILL after `BEGIN IMMEDIATE` but before `COMMIT`. In WAL mode,
+   uncommitted WAL frames after the last commit marker are discarded on the next database
+   open; the pre-compaction state is fully recovered.
 3. **After sync:** SIGKILL after `COMMIT` returns. Compaction is fully committed; post-compaction
    state is the correct outcome (retained records only).
 
@@ -123,7 +126,11 @@ transaction window.
 None identified. BC-2.04.011 is authored and active (v1.0). ADR-030 §Decision 2 SQLite
 topology is consistent with this VP.
 
-## Integration Test Outline
+## Proof Harness Skeleton
+
+> **Integration VP note:** for integration-method VPs, the proof harness is an integration
+> test outline rather than a unit-test proptest skeleton. The harness below is the
+> authoritative test structure for Phase 6 implementation.
 
 ```rust
 /// Integration test: trajectory compaction crash isolation
@@ -156,7 +163,7 @@ fn trajectory_crash_isolation_before_begin() {
 #[test]
 fn trajectory_crash_isolation_mid_transaction() {
     // Crash after BEGIN IMMEDIATE, before COMMIT: SQLite rolls back.
-    // Expected: replay == pre_records (rollback journal restores pre-compaction state).
+    // Expected: replay == pre_records (WAL mode: uncommitted frames discarded on next open).
     let db = TempDb::new();
     let pre_records = write_fixture_trajectory(&db, /* n_records = */ 10);
     let policy = retention_frontier_policy(/* frontier = */ 5);
@@ -166,7 +173,7 @@ fn trajectory_crash_isolation_mid_transaction() {
 
     let post_replay = open_and_replay(&db);
     assert_eq!(post_replay, pre_records,
-        "crash mid-txn: SQLite rollback must restore pre-compaction state");
+        "crash mid-txn: uncommitted WAL frames discarded on next open; pre-compaction state recovered");
 }
 
 #[test]
@@ -206,8 +213,8 @@ SQLite backend (Phase 3 deliverable). Phase 6 integration tests run against real
 implementations; the crash-isolation test cannot be constructed against stubs.
 
 **Why integration (not proptest or Kani):** SIGKILL cannot be modeled by proptest (in-process,
-no crash semantics). Kani cannot model OS-level `BEGIN IMMEDIATE` / `COMMIT` / rollback
-journal interactions. The integration test is the only viable proof method for this property.
+no crash semantics). Kani cannot model OS-level `BEGIN IMMEDIATE` / `COMMIT` / WAL
+frame-discard semantics. The integration test is the only viable proof method for this property.
 
 **Phase 6** — requires `TrajectoryCompactor::compact` + SQLite backend (Phase 3).
 Follows the pattern of VP-004 and VP-005 (integration P1 tests that require a real
@@ -216,7 +223,7 @@ network or process boundary).
 ## Proof Obligations
 
 - [ ] Pre-compaction records are fully preserved after a before-begin crash (TV-002 case 1).
-- [ ] Pre-compaction records are fully preserved after a mid-transaction crash (TV-002 case 2; SQLite rollback journal).
+- [ ] Pre-compaction records are fully preserved after a mid-transaction crash (TV-002 case 2; uncommitted WAL frames discarded on next database open).
 - [ ] Post-compaction (correctly retained) records are present after an after-commit crash (TV-002 case 3).
 - [ ] No partial compaction state (some eligible records removed, some not) is observable in any crash scenario.
 - [ ] SQLite WAL mode is enabled for the test database (ADR-030 §Decision 2 WAL requirement).

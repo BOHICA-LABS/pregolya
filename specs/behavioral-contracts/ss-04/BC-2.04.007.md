@@ -2,10 +2,10 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.007
-version: "1.10"
+version: "1.11"
 status: active
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/domain-spec/L2-INDEX.md
@@ -36,6 +36,7 @@ changelog:
   - "1.8 (notation-sweep-wave-b-ss04/2026-07-29): Class 3 error-construction notation sweep (Wave B batch B4). Added `..` rest-pattern marker to 8 PregolyaError observations with elided fields: Description inline (E-CHKPT-004 cite), PC4 inline, PC5 inline, EC-001 table cell, EC-002 table cell, EC-003 table cell, EC-004 table cell, and test-vector empty-key row (ADR-010 §Error-Construction Notation Canon, Class 3)."
   - "1.9 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.10 (F-P2A123-01/2026-08-28): §Story Anchor backfilled to S-1.10; §Architecture Module confirmed as pregolya-checkpoint — from STORY-INDEX forward map (SS-04 coverage map) and self §Architecture Anchors (module-decomposition.md §pregolya-checkpoint). No behavioral change."
+  - "1.11 (round-52/F-P2A216-02/2026-08-31): DI seam applied to {PRE-001} and {INV-005} — `CheckpointSaver` accepts `Option<Arc<dyn Serializer + Send + Sync>>` at construction (the `core::serializer::Serializer` trait from `pregolya-core`); `EncryptedSerializer` (`checkpoint::serializer`, `pregolya-checkpoint`) is the canonical concrete implementor. No behavioral change — encryption coverage and error propagation semantics are unchanged."
 modified: []
 deprecated: null
 deprecated_by: null
@@ -61,8 +62,10 @@ swallowed or logged-only. This satisfies NE-11.
 
 ## Preconditions
 
-1. {PRE-001} A `CheckpointSaver` is instantiated with an `EncryptedSerializer` configured with at
-   least one active encryption key
+1. {PRE-001} A `CheckpointSaver` is instantiated with an `Option<Arc<dyn Serializer + Send + Sync>>`
+   at construction (the `core::serializer::Serializer` trait from `pregolya-core`); `EncryptedSerializer`
+   (`checkpoint::serializer`, `pregolya-checkpoint`) is the canonical concrete implementor. At least one
+   active encryption key is configured in the provided serializer.
 2. {PRE-002} The cipher and key material are validated at construction time (not lazily at first write)
 3. {PRE-003} The graph is running under any durability tier that calls `put_writes` mid-run
    (`Sync` or `Async`)
@@ -91,8 +94,10 @@ swallowed or logged-only. This satisfies NE-11.
    medium or flushed to disk, even temporarily
 4. {INV-004} Encryption failures propagate as `Err` and are never silently discarded or downgraded to
    a log warning
-5. {INV-005} The `EncryptedSerializer` is a wrapper/decorator over the underlying storage; it does not
-   require changes to the `CheckpointSaver` trait interface
+5. {INV-005} The `CheckpointSaver` accepts `Option<Arc<dyn Serializer + Send + Sync>>` at construction
+   (DI seam; the `core::serializer::Serializer` trait from `pregolya-core`); `EncryptedSerializer`
+   (`checkpoint::serializer`, `pregolya-checkpoint`) is the canonical concrete implementor. Wiring the
+   encryption layer does not require changes to the `CheckpointSaver` trait interface.
 
 ## Edge Cases
 

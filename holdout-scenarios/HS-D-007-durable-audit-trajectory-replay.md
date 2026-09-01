@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "2.0"
+version: "2.1"
 status: active
 producer: product-owner
 timestamp: 2026-08-31T00:00:00Z
@@ -11,8 +11,8 @@ domain_name: Autonomous Research Orchestrator
 id: HS-D-007
 title: "Durable Audit-Grade Trajectory Replay"
 category: edge-case-combinations
-must_pass: false
-priority: should-pass
+must_pass: true
+priority: must-pass
 epic_id: N/A
 behavioral_contracts:
   - BC-2.04.009
@@ -37,6 +37,7 @@ coverage_areas:
 changelog:
   - "1.0 (initial/2026-08-31): Domain D HS-D-007 authored for autonomous research orchestrator use case. Exercised checkpoint super-step replay against pre-existing checkpoint BCs only."
   - "2.0 (Round-50 B2 fix/2026-08-31): Re-scoped to genuinely exercise the dedicated trajectory recording primitive as observable black-box behavior. Prior v1.0 scenario was satisfiable with the trajectory primitive entirely absent (it reconstructed from ordinary super-step checkpoints). New scenario requires: (a) all written trajectory records returned by replay, (b) strict ascending step-index ordering, (c) protected records survive a compaction and ordering is preserved. BC linkage updated to BC-2.04.009/010/011 (trajectory subsystem). Checkpoint super-step content removed — that coverage is retained by HS-D-001/HS-D-002. coverage_areas updated: trajectory replaces graph_execution; checkpoint_resume and streaming retained."
+  - "2.1 (Round-52 Stage-C fix/2026-08-31): Promoted from should-pass to must-pass (F-P2A219-03). Durable trajectory persistence is the only Domain-D holdout exercising the SS-04 trajectory primitive, a core P1 contract. Asymmetric classification with sibling ledger holdouts HS-D-008/009 (must-pass) was unjustified. must_pass set true; priority updated to must-pass; Evaluation Rubric threshold relabeled accordingly."
 ---
 
 # Holdout Scenario HS-D-007: Durable Audit-Grade Trajectory Replay
@@ -151,7 +152,7 @@ and then the replay operation is called:
 | Check 3: protected records survive compaction; ordering preserved | 0.30 | Only protected records present after compaction; ascending order; payloads unchanged |
 | Check 4: deterministic ordering across two replay calls | 0.20 | Both calls return identical record sets in identical order |
 
-**Should-pass threshold:** weighted average ≥ 0.60.
+**Must-pass threshold:** weighted average ≥ 0.60.
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 document_type: prd-supplement-test-vectors
 level: L3
-version: "3.23"
+version: "3.24"
 status: active
 producer: product-owner
 timestamp: 2026-08-31T23:59:00Z
@@ -14,6 +14,7 @@ input-hash: "92dbe15"
 traces_to: prd.md
 primary_consumers: [test-writer, holdout-evaluator]
 changelog:
+  - "3.24 (round-52/F-P2A216-02+F-P2A217-01+F-P2A216-01+F-P2A219-01/2026-08-31): BC-2.04.009 TV count 4→6 (+2 TVs: TV-005 encryption+duplicate-identical-plaintext→Ok(()) no false E-TRAJ-002 — plaintext comparison under per-record-nonce; TV-006 encryption+duplicate-divergent-plaintext→E-TRAJ-002 — correct conflict detection under encryption; F-P2A217-01/{INV-001}+{INV-002}). BC-2.04.011 TV count 5→4 (TV-003 REMOVED — E-TRAJ-004 structurally unreachable; F-P2A216-01/F-P2A216-03). Net TV delta: +2-1=+1. SS-04 subtotal +1. Grand total 793→794 canonical + 11 GTV = 804→805."
   - "3.23 (round-50/D-328/2026-08-31): BC-2.04.009 TV count 3→4 (+1 TV: TV-004 at-rest EncryptedSerializer plaintext-not-observable — when EncryptedSerializer configured, TrajectoryWriter::put_record MUST encrypt payload before SQLite WAL write; plaintext MUST NOT be observable at rest; CWE-311; F-P2A209-01). SS-04 subtotal +1. Grand total 792→793 canonical + 11 GTV = 803→804."
   - "3.22 (ADR-030-Stage2b/2026-08-31): PromoteRetireChannel BC renumbered (SS-04→SS-02; 4 TVs): BC-2.04.011 row retired from SS-04 inventory; BC-2.02.009 row registered under SS-02 (4 TVs, same contract). New BC-2.04.011 (SS-04, 5 TVs): Trajectory Compaction Isolation. SS-02 subtotal +4 (BC-2.02.009); SS-04 net +1 (−4 PromoteRetire row + 5 new compaction row). Grand total 787→792 canonical + 11 GTV = 798→803. BC count 139→140."
   - "3.21 (ADR-030-Stage2a/2026-08-31): 5 new CAP-040 BC inventory rows registered (ADR-030 Research Orchestrator Composition). BC-2.02.007 (SS-02, 4 TVs): LedgerChannel dedup-idempotent append; VP-017 proptest anchor. BC-2.02.008 (SS-02, 3 TVs): LedgerChannel first-appearance ordering. BC-2.04.009 (SS-04, 3 TVs): TrajectoryWriter::put_record durability. BC-2.04.010 (SS-04, 3 TVs): TrajectoryReader::replay ascending step_idx order. BC-2.04.011 (SS-04, 4 TVs): PromoteRetireChannel promote/retire lifecycle. SS-02 subtotal +7; SS-04 subtotal +10. Grand total 770→787 canonical + 11 GTV = 781→798. BC count 134→139."
@@ -97,9 +98,9 @@ changelog:
 | BC-2.04.006 | SS-04 | 4 | — | table (unlabelled) | | Triple-address uniqueness; VP seed |
 | BC-2.04.007 | SS-04 | 4 | — | table (unlabelled) | | Encryption covers state AND events |
 | BC-2.04.008 | SS-04 | 8 | — | `TV-NNN` | | FTS conversation search (SQLite FTS5; single-process); §Invariant-5 EC-007+TV-007 FtsEncryptionIncompatible |
-| BC-2.04.009 | SS-04 | 4 | — | `TV-NNN` | | TrajectoryWriter::put_record durability; process-restart survival; at-rest EncryptedSerializer plaintext-not-observable TV-004 (CAP-040; F-P2A209-01/CWE-311) |
+| BC-2.04.009 | SS-04 | 6 | — | `TV-NNN` | | TrajectoryWriter::put_record durability; process-restart survival; at-rest EncryptedSerializer plaintext-not-observable TV-004; encryption idempotency TV-005 (no false E-TRAJ-002 on identical-plaintext duplicate); encryption conflict TV-006 (E-TRAJ-002 on divergent-plaintext duplicate) (CAP-040; F-P2A209-01/CWE-311; F-P2A217-01) |
 | BC-2.04.010 | SS-04 | 3 | — | `TV-NNN` | | TrajectoryReader::replay ascending step_idx order (CAP-040) |
-| BC-2.04.011 | SS-04 | 5 | — | `TV-NNN` | | Trajectory Compaction Isolation — atomic crash-safe compaction; crash-isolated segment swap; retained-record protection (CAP-040; ADR-030 §Decision 2) |
+| BC-2.04.011 | SS-04 | 4 | — | `TV-NNN` | | Trajectory Compaction Isolation — atomic crash-safe compaction; crash-isolated WAL-mode segment swap; E-TRAJ-005 {PC-006} storage-error propagation (TV-003 removed: E-TRAJ-004 structurally unreachable; CAP-040; ADR-030 §Decision 2; F-P2A216-01) |
 | BC-2.05.001 | SS-05 | 5 | — | `TV-NNN` | | Interrupt + durable suspend |
 | BC-2.05.002 | SS-05 | 5 | — | `TV-NNN` | | FIFO resume order |
 | BC-2.05.003 | SS-05 | 5 | — | `TV-NNN` | | Node re-executes from start on resume |
@@ -210,7 +211,7 @@ changelog:
 | BC-2.23.005 | SS-23 | 8 | — | `TV-NNN` | | BashTool — sandboxed shell; non-lowerable Medium risk floor; 256 KiB cap; 30 s timeout (VP-013 Kani seed) |
 | BC-2.23.006 | SS-23 | 6 | — | `TV-NNN` | | GrepTool — in-process regex; linear-time `regex`; max_results 100 cap; PathGuard scope; E-TOOLS-001/006/008/009 (TV-006 traversal I/O error) |
 
-**Total vectors (140 authored BCs):** 793 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **804 total vectors** across 140 BC files.
+**Total vectors (140 authored BCs):** 794 canonical test vectors (TV Count column) + 11 golden test vectors (GTV Count column, BC-2.07.002 only) = **805 total vectors** across 140 BC files.
 
 > **Ground-truth validation requirement:** The declared total above MUST equal the sum of TV Count values parsed from individual BC body files under `behavioral-contracts/ss-NN/BC-S.SS.NNN.md §Canonical Test Vectors`, counted as data rows with `^| TV-` prefix. A validator that only checks column arithmetic (sum of TV Count column == declared total) satisfies an internal identity, not a ground-truth comparison, and will not detect drift between BC bodies and this registry. The correct check is: `sum(BC body TV counts)` == `registry declared canonical total`. devops-engineer must implement this as a blocking gate before Phase 3.
 
@@ -361,6 +362,7 @@ delivery; no integration vectors exist at Phase 1a by design.
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 3.24 | 2026-08-31 | round-52/F-P2A216-02+F-P2A217-01+F-P2A216-01+F-P2A219-01: BC-2.04.009 TV count 4→6 (+TV-005 encryption idempotency no-false-E-TRAJ-002; +TV-006 encryption conflict E-TRAJ-002). BC-2.04.011 TV count 5→4 (TV-003 removed: E-TRAJ-004 structurally unreachable). Net +1. Grand total 793→794 canonical + 11 GTV = 805. | round-52 F-P2A216-02+F-P2A217-01+F-P2A216-01+F-P2A219-01 |
 | 3.23 | 2026-08-31 | round-50/D-328: BC-2.04.009 TV count 3→4 (+TV-004 at-rest EncryptedSerializer plaintext-not-observable; CWE-311; F-P2A209-01). SS-04 subtotal +1. Grand total 792→793 canonical + 11 GTV = 804. | round-50/D-328 |
 | 3.22 | 2026-08-31 | ADR-030-Stage2b: PromoteRetireChannel BC renumbered SS-04→SS-02 (BC-2.02.009, +4 TVs). New BC-2.04.011 (SS-04, +5 TVs): Trajectory Compaction Isolation. Grand total 787→792 canonical + 11 GTV = 803. BC count 139→140. | ADR-030-Stage2b |
 | 3.21 | 2026-08-31 | ADR-030-Stage2a: 5 new CAP-040 BC inventory rows added. BC-2.02.007 (+4 TVs), BC-2.02.008 (+3 TVs), BC-2.04.009 (+3 TVs), BC-2.04.010 (+3 TVs), BC-2.04.011 (+4 TVs). Grand total 770→787 canonical + 11 GTV = 798. BC count 134→139. | ADR-030-Stage2a |

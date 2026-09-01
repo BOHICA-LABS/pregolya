@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.28
 epic_id: E-07
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-31T00:00:00Z
@@ -14,7 +14,8 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.009.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "a853782"
+  - .factory/specs/prd-supplements/interface-definitions.md
+input-hash: "914465a"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -31,6 +32,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.3 (Round-52-Phase-2-fix-burst/2026-08-31): F-P2A216-04 — canonical struct shape specified: LedgerChannel and PromoteRetireChannel are zero-sized markers with private `_inner: PhantomData<T>` field; Default yields `{ _inner: PhantomData }` (NOT empty Vec<T>); Vec<T> accumulator is BSP-engine responsibility. AC-001 updated with canonical struct shape. AC-011 load-bearing gate re-focused to PromoteRetireOp<T> ENUM wildcard-arm (field privacy already blocks struct-literal construction independently). Rule 13 updated (PhantomData shape, not empty Vec). File Structure updated. interface-definitions.md added to inputs; input-hash refreshed to 914465a."
   - "1.2 (Round-51-Phase-2-fix-burst/2026-08-31): F-P2A212-06 — AC-011 compile-fail gate moved to external crate tests/external/non-exhaustive-gate/; extends to LedgerChannel and PromoteRetireChannel. F-P2A212-08 — AC-002/AC-003 incoming->update; AC-012..AC-015 and Rules active/op->acc/update for PromoteRetireChannel. Default impls added for both structs (no new() beyond Default). Rule 2 specifies Vec-linear-scan reduce body. Rules 13-14 added. File structure updated."
   - "1.1 (Round-50-Phase-2-fix-burst/2026-08-31): LedgerEntry supertrait bounds Serialize+DeserializeOwned; channels/ directory module (ledger.rs + promote_retire.rs); VP-017 dual-anchor BC-2.02.007+BC-2.02.008; TST-PROM-01/02 non-VP labels; pure reducer no-Result rule; serde dependency; file-structure update."
   - "1.0 (praxist-Stage-3/2026-08-31): Initial authoring — LedgerChannel and PromoteRetireChannel additive primitives for the research-orchestrator use case; BC-2.02.007 + BC-2.02.008 + BC-2.02.009; VP-017 proptest P1 anchor; Wave 1 / E-07 extension; depends on S-1.14."
@@ -59,7 +61,7 @@ changelog:
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.02.007 PRE-001 / PRE-002 — LedgerEntry trait definition)
-The public trait `LedgerEntry` is declared in `graph::channels` (pregolya-graph) with supertrait bounds `Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and a single required method `fn entry_id(&self) -> &str` — i.e., `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static { fn entry_id(&self) -> &str; }`. Any `T: LedgerEntry` is therefore also `T: Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and is a valid element type for both `LedgerChannel<T>` and `PromoteRetireChannel<T>`. Both `LedgerChannel<T>` and `PromoteRetireChannel<T>` structs carry `#[non_exhaustive]` per code conventions. Verified by `test_BC_2_02_007_ledger_entry_trait_exists()`.
+The public trait `LedgerEntry` is declared in `graph::channels` (pregolya-graph) with supertrait bounds `Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and a single required method `fn entry_id(&self) -> &str` — i.e., `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static { fn entry_id(&self) -> &str; }`. Any `T: LedgerEntry` is therefore also `T: Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and is a valid element type for both `LedgerChannel<T>` and `PromoteRetireChannel<T>`. Both `LedgerChannel<T>` and `PromoteRetireChannel<T>` structs carry `#[non_exhaustive]` per code conventions with canonical zero-sized marker shape: `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (and analogously `PromoteRetireChannel<T>`). These are zero-sized marker types; the accumulator `Vec<T>` is maintained externally by the BSP engine, not stored as a field. Verified by `test_BC_2_02_007_ledger_entry_trait_exists()`.
 
 ### AC-002 (traces to BC-2.02.007 PC-001 — novel entry appended)
 `LedgerChannel<T>::reduce(acc: Vec<T>, update: T) -> Vec<T>` — when `update.entry_id()` is NOT in `acc`, the returned `Vec<T>` is `acc` with `update` appended at the end. Length grows by exactly one. Verified by `test_BC_2_02_007_novel_entry_appended()`.
@@ -88,8 +90,8 @@ When multiple novel entries arrive in a single super-step, their relative order 
 ### AC-010 (traces to BC-2.02.008 INV-003 — monotonically stable ordering)
 Elements already in the `Vec<T>` never change position. New entries are always appended at the end. No in-place reordering occurs after any `reduce` call. VP-017 (dual-anchor) also exercises this ordering stability invariant for arbitrary input sequences. Verified by `test_BC_2_02_008_ordering_monotonically_stable()` (unit) and VP-017 (proptest, BC-2.02.008 {INV-003} clause).
 
-### AC-011 (traces to BC-2.02.009 PRE-002 — PromoteRetireOp enum and struct types declared non_exhaustive)
-`PromoteRetireOp<T>` is a `#[non_exhaustive]` enum in `graph::channels` with variants `Promote(T)` and `Retire(String)`. External `match` arms must include a wildcard `_ => {}` arm. The same `#[non_exhaustive]` obligation applies to `LedgerChannel<T>` and `PromoteRetireChannel<T>` (AC-001): external consumers must use `Default` construction — struct literal construction will not compile outside `pregolya-graph`. The compile-fail test verifying the wildcard requirement for `PromoteRetireOp` (and confirming `#[non_exhaustive]` on the struct types) MUST live in the external gate crate `tests/external/non-exhaustive-gate/` — NOT in the defining `pregolya-graph` crate, where `#[non_exhaustive]` is inert for match-completeness and struct-literal enforcement. Verified by `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()` in `tests/external/non-exhaustive-gate/`.
+### AC-011 (traces to BC-2.02.009 PRE-002 — PromoteRetireOp enum and struct types declared non_exhaustive; primary gate is enum wildcard)
+`PromoteRetireOp<T>` is a `#[non_exhaustive]` enum in `graph::channels` with variants `Promote(T)` and `Retire(String)`. External `match` arms must include a wildcard `_ => {}` arm — this is the PRIMARY, load-bearing effect of `#[non_exhaustive]` in this story. The same `#[non_exhaustive]` annotation applies to `LedgerChannel<T>` and `PromoteRetireChannel<T>` (AC-001); however, because both structs have a private `_inner: PhantomData<T>` field, field privacy ALREADY blocks external struct-literal construction independently of `#[non_exhaustive]` — the `#[non_exhaustive]` enforcement on the structs is therefore SECONDARY (it confirms the annotation is present but the privacy gate provides the primary enforcement). The compile-fail test MUST target the `PromoteRetireOp<T>` ENUM wildcard-arm case as its primary assertion; struct coverage is retained as secondary verification. The test MUST live in the external gate crate `tests/external/non-exhaustive-gate/` — NOT in the defining `pregolya-graph` crate, where `#[non_exhaustive]` is inert for match-completeness and struct-literal enforcement. Verified by `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()` in `tests/external/non-exhaustive-gate/`.
 
 ### AC-012 (traces to BC-2.02.009 PC-001 — Promote novel entry appends to active set)
 `PromoteRetireChannel<T>::reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` — when `update` is `Promote(entry)` and `entry.entry_id()` is NOT in `acc`, the returned `Vec<T>` is `acc` with `entry` appended. Length grows by one. Verified by `test_BC_2_02_009_promote_novel_appends()`.
@@ -137,9 +139,10 @@ Within a single super-step, multiple `PromoteRetireOp` values are processed in t
 | BC-2.02.008 | ~1,500 |
 | BC-2.02.009 | ~1,800 |
 | Architecture module-decomposition.md (SS-02 section) | ~700 |
+| interface-definitions.md (canonical channel struct shapes) | ~500 |
 | S-1.14 context (existing `graph::channels`) | ~3,500 |
 | Test files | ~2,500 |
-| **Total** | **~15,500** |
+| **Total** | **~16,000** |
 
 Well within the 20-30% agent context window threshold.
 
@@ -147,11 +150,11 @@ Well within the 20-30% agent context window threshold.
 
 - [ ] Read `pregolya-graph/src/channels/mod.rs`, `channels/last_value.rs`, and `channels/append.rs` (from S-1.14) to understand the directory module layout and existing channel infrastructure before adding anything
 - [ ] Create `pregolya-graph/src/channels/ledger.rs` — declare `LedgerEntry` trait with supertrait bounds `Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and required method `fn entry_id(&self) -> &str`
-- [ ] In `channels/ledger.rs` — declare `#[non_exhaustive] LedgerChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no Result; Vec linear scan per Rule 2 — no indexmap)
-- [ ] In `channels/ledger.rs` — add `impl<T: LedgerEntry> Default for LedgerChannel<T>` yielding an empty-state instance; no `pub fn new()` beyond Default (Rule 13)
+- [ ] In `channels/ledger.rs` — declare `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (canonical zero-sized marker shape per Rule 13; the Vec<T> accumulator lives outside the struct, managed by the BSP engine) and implement pure reducer `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no Result; Vec linear scan per Rule 2 — no indexmap)
+- [ ] In `channels/ledger.rs` — add `impl<T: LedgerEntry> Default for LedgerChannel<T>` yielding `LedgerChannel { _inner: PhantomData }` (the zero-sized marker — NOT an empty `Vec<T>`); no `pub fn new()` beyond Default (Rule 13)
 - [ ] Create `pregolya-graph/src/channels/promote_retire.rs` — declare `#[non_exhaustive] PromoteRetireOp<T>` enum with variants `Promote(T)` and `Retire(String)`
-- [ ] In `channels/promote_retire.rs` — declare `#[non_exhaustive] PromoteRetireChannel<T>` struct and implement pure reducer `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` (no Result; Vec linear scan for Promote-dedup per Rule 3 — no indexmap)
-- [ ] In `channels/promote_retire.rs` — add `impl<T: LedgerEntry> Default for PromoteRetireChannel<T>` yielding empty active set; no `pub fn new()` beyond Default (Rule 13)
+- [ ] In `channels/promote_retire.rs` — declare `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (canonical zero-sized marker shape per Rule 13; the active-set Vec<T> lives outside the struct, managed by the BSP engine) and implement pure reducer `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` (no Result; Vec linear scan for Promote-dedup per Rule 3 — no indexmap)
+- [ ] In `channels/promote_retire.rs` — add `impl<T: LedgerEntry> Default for PromoteRetireChannel<T>` yielding `PromoteRetireChannel { _inner: PhantomData }` (the zero-sized marker — NOT an empty `Vec<T>`); no `pub fn new()` beyond Default (Rule 13)
 - [ ] Add `pub use` re-exports for all new symbols in `pregolya-graph/src/channels/mod.rs` (no logic)
 - [ ] Confirm `serde` is listed in `pregolya-graph/Cargo.toml` (workspace pin); add if absent
 - [ ] Write VP-017 proptest (`ledger_channel_dedup_idempotency`) in `channels/ledger.rs` `#[cfg(test)]` — MUST fail on stubs (Red Gate discipline; dual-anchor: BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003})
@@ -182,7 +185,7 @@ Derived from `architecture/module-decomposition.md §pregolya-graph` and ADR-030
 10. **Forbidden dependencies:** `graph::channels` (including `channels/ledger.rs` and `channels/promote_retire.rs`) must NOT gain a dependency on `pregolya-checkpoint`, `pregolya-mcp`, `pregolya-server`, or any I/O crate. The channel reducers are pure types.
 11. `LedgerChannel<T>::reduce` and `PromoteRetireChannel<T>::reduce` MUST return `Vec<T>` directly — NOT `Result<Vec<T>, _>`. The canonical pure reducer signatures are `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (Ledger) and `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` (PromoteRetire). Dedup and no-op paths are silent by spec (BC-2.02.007 {PC-002}, BC-2.02.009 {PC-002}/{PC-004}).
 12. `serde::Serialize` and `serde::de::DeserializeOwned` in the `LedgerEntry` supertrait bounds are satisfied via `serde` (workspace pin). Do NOT import these traits from any I/O-layer crate — use only `serde::{Serialize, Deserialize}` re-exports. The `serde` crate is already a workspace dependency; confirm it is listed in `pregolya-graph/Cargo.toml` before implementing.
-13. `LedgerChannel<T>` and `PromoteRetireChannel<T>` MUST each provide `impl Default` (yielding an empty-state instance — empty `Vec<T>` — for cross-crate test construction). No `pub fn new()` constructor beyond `Default` is permitted. Use `LedgerChannel::default()` / `PromoteRetireChannel::default()` at call-sites. This is the only safe construction path from outside `pregolya-graph` because both types carry `#[non_exhaustive]`.
+13. `LedgerChannel<T>` and `PromoteRetireChannel<T>` MUST have the canonical zero-sized marker shape: `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (and analogously `PromoteRetireChannel<T>`). Each MUST provide `impl Default` yielding `LedgerChannel { _inner: PhantomData }` / `PromoteRetireChannel { _inner: PhantomData }` (the zero-sized marker — NOT an empty `Vec<T>`; the accumulator `Vec<T>` is maintained externally by the BSP engine, not stored as a struct field). No `pub fn new()` constructor beyond `Default` is permitted. Use `LedgerChannel::default()` / `PromoteRetireChannel::default()` at call-sites. Cross-crate construction is blocked by both the private `_inner` field (primary: field privacy prevents struct-literal construction) and `#[non_exhaustive]` (secondary: confirms the annotation is present); both mechanisms are retained by design.
 14. `indexmap` MUST NOT appear in `pregolya-graph/Cargo.toml` (production or dev dependencies). The dedup scan is a Vec linear scan per Rule 2 — O(n) is acceptable for the channel element counts expected in research-orchestrator use. Verify the Library table in this story has no `indexmap` row before closing the PR.
 
 ## Library & Framework Requirements
@@ -200,8 +203,8 @@ No new crate-level dependencies are expected beyond `proptest` (dev-dependency) 
 ## File Structure Requirements
 
 Files to CREATE:
-- `pregolya-graph/src/channels/ledger.rs` — `LedgerEntry` trait (supertrait bounds: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`), `#[non_exhaustive] LedgerChannel<T>` struct, `Default` impl (empty state; no `pub fn new()`), pure `reduce(acc: Vec<T>, update: T) -> Vec<T>` impl (Vec linear scan — no indexmap); `#[cfg(test)]` VP-017 proptest `ledger_channel_dedup_idempotency` + AC-001..AC-010 unit tests
-- `pregolya-graph/src/channels/promote_retire.rs` — `#[non_exhaustive] PromoteRetireOp<T>` enum, `#[non_exhaustive] PromoteRetireChannel<T>` struct, `Default` impl (empty active set; no `pub fn new()`), pure `reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` impl (Vec linear scan for Promote-dedup; no indexmap); `#[cfg(test)]` AC-012..AC-017 unit tests (TST-PROM-01: `test_BC_2_02_009_concurrent_promote_retire_deterministic_order`; TST-PROM-02: `test_BC_2_02_009_active_set_no_duplicate_entry_ids`); compile-fail test for AC-011 is in the external gate crate (see below)
+- `pregolya-graph/src/channels/ledger.rs` — `LedgerEntry` trait (supertrait bounds: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`), `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized marker; no Vec<T> field), `Default` impl (yields `LedgerChannel { _inner: PhantomData }`; no `pub fn new()`), pure `reduce(acc: Vec<T>, update: T) -> Vec<T>` impl (Vec linear scan — no indexmap); `#[cfg(test)]` VP-017 proptest `ledger_channel_dedup_idempotency` + AC-001..AC-010 unit tests
+- `pregolya-graph/src/channels/promote_retire.rs` — `#[non_exhaustive] PromoteRetireOp<T>` enum, `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized marker; no Vec<T> field), `Default` impl (yields `PromoteRetireChannel { _inner: PhantomData }`; no `pub fn new()`), pure `reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` impl (Vec linear scan for Promote-dedup; no indexmap); `#[cfg(test)]` AC-012..AC-017 unit tests (TST-PROM-01: `test_BC_2_02_009_concurrent_promote_retire_deterministic_order`; TST-PROM-02: `test_BC_2_02_009_active_set_no_duplicate_entry_ids`); compile-fail test for AC-011 is in the external gate crate (see below)
 - `tests/external/non-exhaustive-gate/Cargo.toml` — manifest for the external compile-fail gate crate; depends on `pregolya-graph`; `edition = "2024"`
 - `tests/external/non-exhaustive-gate/src/lib.rs` — `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()` compile-fail test verifying `#[non_exhaustive]` enforcement on `PromoteRetireOp<T>`, `LedgerChannel<T>`, and `PromoteRetireChannel<T>` from outside the defining crate (AC-011)
 
@@ -223,6 +226,7 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-08-31 | Round-52 fix-burst: PhantomData struct shape canonicalized (LedgerChannel + PromoteRetireChannel are zero-sized markers; Default yields marker not Vec<T>); AC-001 + AC-011 + Rule 13 + File Structure updated; AC-011 load-bearing gate re-focused to PromoteRetireOp enum wildcard; interface-definitions.md added to inputs | story-writer |
 | 1.2 | 2026-08-31 | Round-51 fix-burst: F-P2A212-06 AC-011 compile-fail gate to external crate (LedgerChannel+PromoteRetireChannel too); F-P2A212-08 incoming->update in AC-002/003, active/op->acc/update in AC-012..015+Rules; Default impls for both structs; Rule 2 Vec-linear-scan implementation; Rules 13-14 added; File structure updated | story-writer |
 | 1.1 | 2026-08-31 | Round-50 fix-burst: LedgerEntry Serialize+DeserializeOwned supertrait bounds; channels/ directory module; VP-017 dual-anchor; TST-PROM-01/02 labels; pure reducer no-Result rule; serde dep; file-structure for ledger.rs+promote_retire.rs | story-writer |
 | 1.0 | 2026-08-31 | Initial authoring — praxist Stage-3 story decomposition for BC-2.02.007/008/009 + VP-017 | story-writer |

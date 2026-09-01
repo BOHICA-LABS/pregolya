@@ -113,6 +113,22 @@
 #       Pre-existing violations: 6 FAILs (BC-2.02.007/008/009 → S-1.28,
 #       BC-2.04.009/010/011 → S-2.12 per D-327 story-writer burst; back-anchors not filled).
 #       Routing: product-owner/story-writer fix-burst to update BC body §Story Anchor.
+#   verify-holdout-reverse-leak.sh         — (FAILING) spec/story corpus sealed holdout-ID reverse-leak.
+#       Closes F-P2A217-02 (round-52 STAGE-A process-gap): the holdout information-asymmetry
+#       gate was UNIDIRECTIONAL — verify-holdout-asymmetry.sh scanned HS-*.md files for leaked
+#       internal identifiers, but no gate scanned specs/stories for references to sealed holdout
+#       IDs (HS-[A-Z]-[0-9]+) in body text. ADR-030 §Decision 1 was found citing "used in
+#       HS-D-002" and describing its anonymization-transform solution (the primary finding;
+#       already fixed by architect in the parallel burst stage before this gate wired).
+#       Gate scans .factory/specs/**/*.md and .factory/stories/**/*.md; exempts YAML frontmatter
+#       and ## Changelog sections (historical provenance records). Allowlist mechanism:
+#       .factory/hooks/holdout-reverse-leak-allowlist.txt for human-reviewed exceptions.
+#       4 self-probes (POL-31): 1 negative (HS-D-002 in §Decision table → FAIL) + 3 positive
+#       (clean spec → PASS; ## Changelog exempt → PASS; YAML frontmatter exempt → PASS).
+#       Wired 2026-08-31.
+#       Pre-existing violations: 2 FAILs (ADR-029 Problem context paragraph line 60 + §Source/Origin
+#       section line 728 — both cite HS-C-001 in normative body text outside changelog regions).
+#       Routing: architect (ADR-029 §Background/Problem context + §Source/Origin section purge).
 #
 # ADVISORY VALIDATORS (exit 0; WARN/FAIL output shown but commit not blocked)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -223,13 +239,14 @@
 #       Routing: story-writer (story file normalization where WARNs remain).
 #
 #   verify-holdout-asymmetry.sh — HS-*.md evaluator-facing section internal-identifier gate (advisory).
-#       Closes F-P2A105-03 / GAP-R24 process-gap (round-24): verify-ac-pc-trace.sh checks
-#       AC citation ID existence only — no prior gate verified that EVALUATOR-FACING holdout
-#       sections (§Scenario, §Verification Approach, §Evaluation Rubric, §Failure Guidance,
-#       §Edge Conditions) are free of internal implementation identifiers (BC IDs, BC clause
-#       tags, VP IDs, error codes, internal module paths).  Exempt sections: §Behavioral
-#       Contract Linkage, §Coverage Gap, §Changelog, §Information Asymmetry Confirmation,
-#       §Category, YAML frontmatter.  POL-31 self-probes included.
+#       Closes F-P2A105-03 / GAP-R24 process-gap (round-24): no prior gate verified that
+#       EVALUATOR-FACING holdout sections (§Scenario, §Verification Approach, §Evaluation Rubric,
+#       §Failure Guidance, §Edge Conditions) are free of internal implementation identifiers (BC
+#       IDs, BC clause tags, VP IDs, error codes, internal module paths).  Exempt sections:
+#       §Behavioral Contract Linkage, §Coverage Gap, §Changelog, §Information Asymmetry
+#       Confirmation, §Category, YAML frontmatter.  POL-31 self-probes included.
+#       COMPANION: verify-holdout-reverse-leak.sh (BLOCKING, wired round-52) guards the reverse
+#       direction — specs/stories must not reference sealed holdout IDs in body text.
 #       Baseline (round-24 gate creation, 2026-08-28):
 #         HS-C-001 §Failure Guidance: BC-2.09.008 {PC-002}, BC-2.09.008 {PC-003}/{PC-004},
 #           {INV-001}, VP-016, E-MCP-010, {INV-002} (concurrently scrubbed by product-owner).
@@ -255,7 +272,7 @@ PASSED_VALIDATORS=()
 PASS_COUNT=0
 # Single source of truth for the expected blocking validator roster size.
 # Update this constant when adding or removing a blocking validator.
-EXPECTED_BLOCKING_COUNT=19
+EXPECTED_BLOCKING_COUNT=20
 
 # run_blocking runs a validator and records failure in FAILED_VALIDATORS
 run_blocking() {
@@ -326,6 +343,7 @@ run_blocking "verify-vp-anchors-grammar.sh"
 run_blocking "verify-story-count-propagation.sh"
 run_blocking "verify-vp-count-parity.sh"
 run_blocking "verify-bc-story-anchor-resolution.sh"
+run_blocking "verify-holdout-reverse-leak.sh"
 
 # ── Advisory validators (run but do not block; see header for promotion paths) ─
 echo ""

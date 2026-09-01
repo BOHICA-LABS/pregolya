@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-30"
 producer: architect
 timestamp: 2026-08-26T00:00:00Z
-version: "2.19"
+version: "2.20"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-09"]
 changelog:
+  - "2.20 (round-52/F-P2A217-02-class/2026-08-31): Two sealed-holdout ID leaks removed from normative body prose (verify-holdout-reverse-leak.sh gate). §Background: 'HS-C-001: a host application that embeds a Pregolya agent...' — HS-C-001 holdout ID removed; rephrased as capability-gap description without naming the sealed holdout. §Source / Origin: '— HS-C-001 Flowloom-embedding holdout surfaced the gap' — HS-C-001 removed; 'A holdout scenario surfaced the gap' is the non-disclosing replacement. GAP-01 provenance retained in both locations. TD-VSDD-091: citations must be symbol/behavioral anchors only; sealed HS-NNN IDs in builder-visible normative prose violate information asymmetry."
   - "2.19 (round-49/F-P2A205-01+F-P2A204-01/2026-08-30): F-P2A205-01 [HIGH, CWE-209/532] §SEC-BOUND-001 BC mis-attribution corrected — 'BC-2.09.008 for the MCP tools/call boundary' corrected to 'BC-2.09.007 (generic tools/call boundary; step 1 N/A — plain first-party/partner tools are DI-008 no-panic and produce no internal-panic-code errors, so only steps 2–3 apply); BC-2.09.008 (GraphAgentTool wrapper subset; all three steps apply because graph execution can produce E-GRAPH-011/E-GRAPH-019 internal-panic codes)'. Rationale: BC-2.09.007 governs ALL inbound tools/call dispatches including first-party/partner tools; BC-2.09.008 is only the GraphAgentTool wrapping subset where panic-bearing graph execution paths exist. PO: extend BC-2.09.007 {INV-003} in Stage 2 to cite SEC-BOUND-001 with step-1-N/A scope note for the plain tools/call path. F-P2A204-01 [MED] §Decision 3 SEC-005 + §Decision 5 sanitization bullet — two occurrences of 'FtsSearchConfig.thread_id: Option<&str>' updated to 'FtsSearchConfig<\\'_>::thread_id: Option<&str>' to mirror the canonical lifetime-parameterized form FtsSearchConfig<'a> { thread_id: Option<&'a str>, limit: usize } (BC-2.04.008 E0106 fix). PO owns authoritative BC-2.04.008 + interface-definitions.md §CheckpointSaver edits in Stage 2; this is the ADR-029 note-only mirror so it does not contradict."
   - "2.18 (R47/F-P2A197-01+F-P2A197-02/2026-08-30): F-P2A197-01/F-P2A197-02 [SEC] §Decision 5 — new subsection §External-Boundary Error-Sanitization Parity (SEC-BOUND-001) added. Root cause of the HTTP/MCP boundary info-disclosure asymmetry found in round-47: the error-sanitization pipeline was specified per-boundary (MCP only), so the HTTP Run-status boundary (BC-2.12.003) was hardened only partially — E-GRAPH-011 ConditionalEdgePanic raw panic text was not static-replaced at the HTTP boundary (only E-GRAPH-019 was isolated there; the MCP boundary static-replaces both). SEC-BOUND-001 establishes a boundary-agnostic principle: every external surface (MCP tools/call content[0].text isError paths; HTTP Run.error/Run-status responses; any future external transport boundary) MUST apply the three-step pipeline before emitting error text to an external caller: (1) internal-panic-code static replacement for all INTERNAL-category panic-bearing codes (E-GRAPH-011, E-GRAPH-019, and any future code in that category); (2) redact_credentials; (3) sanitize_internal_ids two-pattern union. BCs governing future external surfaces MUST reference SEC-BOUND-001 rather than re-deriving per-boundary treatment."
   - "2.17 (R44/F-P2A187-02+O-1/2026-08-30): F-P2A187-02 [MED] §Decision 5 Error Routing Table internal-panic-code row — stale 'anticipated' status and discharged census obligations removed. (a) 'anticipated `E-GRAPH-019 NodePanic`' → 'live `E-GRAPH-019 NodePanic` (minted in error-taxonomy.md)' — E-GRAPH-019 was minted in R42 and is live in error-taxonomy.md; treated as live by BC-2.09.008 EC-003 and BC-2.12.003 {INV-007}; BC-2.09.008 TV-019 exists. (b) 'PO obligation: EC census 137→138' annotation removed from Condition cell — obligation discharged in R42 (EC census is at 138; E-GRAPH-019 live). (c) 'PO obligation: TV census 759→760' paragraph removed from MCP Layer Response cell — obligation discharged in R42 (BC-2.09.008 TV-019 exists). Both embedded census annotations are volatile-census-in-normative-prose (TD-VSDD-091/POL-14). R42 §Changelog row 2.15 retains the historical record of both annotations."
@@ -56,9 +57,9 @@ changelog:
 BC-2.09.006 (tools/list advertisement) and BC-2.09.007 (tools/call execution) specify how the
 pregolya MCP server advertises and dispatches tools that are already registered in the
 `ToolRegistry`. Neither BC specifies how a pregolya agent — a `CompiledStateGraph` — becomes
-such a registered tool. This gap was surfaced by the Flowloom-embedding holdout scenario
-HS-C-001: a host application that embeds a Pregolya agent and exposes it as an MCP tool to
-downstream orchestrators has no first-class contract for this wrapping path.
+such a registered tool. This gap was surfaced by a holdout scenario in which a host application embeds a Pregolya
+agent and exposes it as an MCP tool to downstream orchestrators — that host-embedding
+wrapping path had no first-class contract.
 
 The human approved this as v1 behavior (GAP-01 resolution, 2026-08-26). BC-2.09.008 is the
 new behavioral contract. This ADR governs the architectural decisions for the wrapping layer.
@@ -725,9 +726,9 @@ PO must mint the following two error codes in `error-taxonomy.md`:
 
 ## Source / Origin
 
-- **Decision mandate:** Human-approved v1 scope addition (GAP-01, 2026-08-26) — HS-C-001
-  Flowloom-embedding holdout surfaced the gap: BC-2.09.006/007 cover tools already in
-  ToolRegistry; no BC specifies how a StateGraph becomes such a tool.
+- **Decision mandate:** Human-approved v1 scope addition (GAP-01, 2026-08-26). A holdout
+  scenario surfaced the gap: BC-2.09.006/007 cover tools already in ToolRegistry; no BC
+  specifies how a StateGraph becomes such a tool.
 - **BC traceability:** BC-2.09.008 (authored by PO per this ADR spec outline).
 - **Upstream design basis:** ADR-013 (mcp::server placement + cohesion rationale),
   ADR-018 (PreToolCallHook / BoundaryApprovalHook pattern),
