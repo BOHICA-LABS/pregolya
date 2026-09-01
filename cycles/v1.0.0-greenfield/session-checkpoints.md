@@ -4026,3 +4026,10 @@ pregolya Phase-2 re-convergence. streak 0/3. D-329 CLOSED (round-51 fix-burst; t
 pregolya Phase-2 re-convergence. streak 0/3. D-330 CLOSED (round-52 fix-burst; trajectory-tail →5→4→1→3; 4 lenses; 0/4 CLEAN(strict); ALL 13 FINDINGS CLOSED). hook #20 verify-holdout-reverse-leak.sh ADDED (20/20 blocking validators). GATE-READY=YES 20/20. Frozen-HEAD streak gates on spec HEAD post-D-330 push (exact SHA via `git -C .factory log -1`). Heartbeat auto-recovery ARMED: durable cron `60FC8EB8` @ `8,23,38,53 * * * *` + SessionStart self-heal via `ensure-heartbeat.sh`. Census: BC 140 / VP 20 / EC 142 (net-neutral; E-TRAJ-004 RETIRED+E-TRAJ-005 MINTED) / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. L-249/250/251/252 codified. NEXT: dispatch round-53 on current perimeter.
 
 ### STATE: v6.41, timestamp 2026-08-31T01:30:00Z
+
+## Archived Checkpoint: D-331 (archived 2026-08-31 at D-332 close)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-52 closed (D-326/D-328/D-329/D-330). Round-53 adversarial sweep COMPLETE on frozen HEAD f7873df — trajectory-tail →4→2→4→8; 3H+7M+4L/OBS/PG; GATE-READY=YES 13/13; fix-burst NOT STARTED. Next action: round-53 fix-burst staged A (architect+formal-verifier) → B (product-owner) → C (story-writer) → D (state-manager), then round-54 on new HEAD.
+
+### STATE: v6.42, timestamp 2026-08-31T22:00:00Z

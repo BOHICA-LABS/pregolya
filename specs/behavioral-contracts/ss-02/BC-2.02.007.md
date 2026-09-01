@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.007
-version: "1.3"
+version: "1.4"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.1 (round-50/Stage-B1-product-owner/2026-08-31): {PRE-001} supertrait bound adopted: T: LedgerEntry (replaces T: LedgerEntry + Clone + Send + Sync + 'static — those bounds are already imposed by the LedgerEntry supertrait, use-site repetition removed per F-P2A208-11). §Architecture Anchors: LedgerEntry trait definition updated to show Serialize + DeserializeOwned supertrait bounds (F-P2A211-07 serde requirement for CheckpointSaver::put_writes checkpoint-resume; fn entry_id now returns &str not String). LedgerChannel reducer model stated as fn reduce(acc: Vec<T>, update: T) -> Vec<T> pure function — consistent with interface-definitions.md §LedgerChannel stateless-reducer-marker model and S-1.14 channel family (no Result, no Ok(()))."
   - "1.2 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: LedgerEntry + LedgerChannel canonical file corrected from phantom flat-file channels.rs to directory module channels/ledger.rs (F-P2A215-01; graph::channels module path unchanged)."
   - "1.3 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `LedgerChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }`; `Default::default()` produces `LedgerChannel { _inner: PhantomData }` (the zero-sized marker struct); the `Vec<T>` accumulator is external to the marker, owned and managed by the BSP engine. No behavioral change."
+  - "1.4 (round-53/F-P2A220-03+F-P2A220-01/2026-08-31): {INV-004} added — Channel trait dispatch contract: LedgerChannel<T> implements graph::channels::Channel with Accumulator = Vec<T> and Update = T; BSP engine dispatches to LedgerChannel::<T>::reduce during the reduce phase; no additional bounds beyond T: LedgerEntry required at call sites. Architecture Anchors: LedgerChannel<T> canonical derive set made explicit — #[derive(Default)] only; all Accumulator/serde/Clone/Send/Sync bounds come from LedgerEntry supertrait on T and Vec<T> derived properties (F-P2A220-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -26,7 +27,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "9917852"
+input-hash: "410c38d"
 extracted_from: null
 modified: []
 deprecated: null
@@ -89,6 +90,13 @@ harness `ledger_channel_dedup_idempotency`).
   same sequence of incoming `T` values (in task-identity order per DI-001), the resulting
   `Vec<T>` is always identical. No external state, random numbers, or wall-clock time are
   consulted.
+- {INV-004} **Channel trait dispatch contract:** `LedgerChannel<T>` implements
+  `graph::channels::Channel` with `Accumulator = Vec<T>` and `Update = T`; the BSP engine
+  dispatches to `LedgerChannel::<T>::reduce` during the reduce phase. No additional bounds
+  beyond `T: LedgerEntry` are required at call sites — the `LedgerEntry` supertrait
+  (`Clone + Serialize + DeserializeOwned + Send + Sync + 'static`) already satisfies the
+  `Accumulator` bounds of the `Channel` trait, and `T: Clone + Send + Sync + 'static`
+  (via `LedgerEntry`) satisfies the `Update` bounds.
 
 ## Edge Cases
 
@@ -146,10 +154,13 @@ meaningful within their domain; `LedgerChannel` imposes no minimum-length constr
   with `fn entry_id(&self) -> &str` (stable dedup key; `Serialize + DeserializeOwned` bounds
   required for `CheckpointSaver::put_writes` checkpoint-resume serialization — F-P2A211-07);
   `LedgerChannel<T>` struct canonical shape:
-  `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` —
-  the zero-sized marker type (`Default::default()` produces `LedgerChannel { _inner: PhantomData }`,
-  the zero-sized marker struct; the `Vec<T>` accumulator is external to the marker, owned and
-  managed by the BSP engine — F-P2A216-04); reducer pure function
+  `#[non_exhaustive] #[derive(Default)] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` —
+  the zero-sized marker type; canonical derive set: `Default` only (all `Accumulator` / serde /
+  `Clone` / `Send` / `Sync` bounds come from the `LedgerEntry` supertrait on `T` and from
+  `Vec<T>`'s derived properties — no additional derives on the marker struct itself);
+  `Default::default()` produces `LedgerChannel { _inner: PhantomData }` (F-P2A216-04);
+  the `Vec<T>` accumulator is external to the marker, owned and managed by the BSP engine;
+  reducer pure function
   `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no `Result`, no `Ok(())`) implementing
   the dedup-idempotent semantics
 - `pregolya-graph/src/definition.rs` (`graph::definition`) — `StateGraph` channel registration API; `LedgerChannel` is registered as a channel type via the same mechanism as `Append` / `LastValue`

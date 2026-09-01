@@ -1,6 +1,6 @@
 ---
 document_type: epics
-version: "1.5"
+version: "1.6"
 status: active
 producer: story-writer
 timestamp: 2026-08-31T00:00:00Z
@@ -82,11 +82,16 @@ The graph execution engine (E-08) depends on this epic.
 
 **CAP-040 addition (S-2.12, Wave 2, 8 pts):** Durable audit trajectory (`TrajectoryWriter`,
 `TrajectoryReader`, `TrajectoryCompactor`) — write-once append (BC-2.04.009), ascending-step-index
-replay (BC-2.04.010), and crash-isolated compaction via SQLite `BEGIN IMMEDIATE`/`COMMIT`
-(BC-2.04.011). VP-018 (proptest P1) anchors BC-2.04.011 `{INV-001}` compaction isolation.
-New `trajectory_records` table is isolated from CheckpointSaver tables per ADR-009 definitions-in-core
-separation. Requires error codes E-TRAJ-001 through E-TRAJ-004 (flagged NEW — must be minted in
-error-taxonomy during S-2.12 implementation).
+replay (BC-2.04.010), and crash-isolated compaction via two-phase staging-table swap
+(`trajectory_records_staging` → `trajectory_records`) under WAL mode (BC-2.04.011 {INV-003}).
+VP-018 (proptest P1) anchors `TrajectoryCompactor` retention-integrity invariants
+(BC-2.04.011 {INV-001}/{INV-002}). VP-019 (crash-isolation integration) covers the four-crash-point
+matrix per BC-2.04.011 {INV-003}: before-build-begins, mid-build (staging partially filled),
+mid-swap-transaction (after `BEGIN IMMEDIATE` before `COMMIT`), and after-swap-commit.
+New `trajectory_records` table (and `trajectory_records_staging` used during compaction swap) is
+isolated from CheckpointSaver tables per ADR-009 definitions-in-core separation. Error codes in
+scope: E-TRAJ-001 (DURABILITY, write failure), E-TRAJ-002 (VAL, conflict), E-TRAJ-003
+(DURABILITY, replay failure), E-TRAJ-005 (DURABILITY, compaction failure); E-TRAJ-004 is RETIRED.
 
 ### E-06 — Long-Horizon Memory (Wave 1, 16 pts)
 
@@ -104,9 +109,13 @@ conditional edge routing functions, and `Send` API dynamic fan-out. Red Gate BCs
 
 **CAP-040 addition (S-1.28, 5 pts):** `LedgerChannel<T>` dedup-idempotent append and first-appearance
 ordering (BC-2.02.007/008) and `PromoteRetireChannel<T>` active-set lifecycle with idempotent
-`Promote`/`Retire` operations (BC-2.02.009). All three types are pure channel reducers in
-`pregolya-graph/src/channels.rs` (`graph::channels` module). VP-017 (proptest P1) anchors
-`LedgerChannel` dedup-idempotency per BC-2.02.007 `{PC-001, INV-001}`.
+`Promote`/`Retire` operations (BC-2.02.009). All three types are pure channel reducers in the
+`pregolya-graph/src/channels/` directory module (`channels/ledger.rs` and
+`channels/promote_retire.rs`). Both `LedgerChannel<T>` and `PromoteRetireChannel<T>` implement
+`graph::channels::Channel` (`Accumulator = Vec<T>`), enabling BSP engine reduce-dispatch without
+additional bounds beyond `T: LedgerEntry` at call sites (BC-2.02.007 {INV-004}). VP-017
+(proptest P1) is a dual-anchor covering `LedgerChannel` dedup-idempotency and first-appearance
+ordering stability per BC-2.02.007 `{INV-001}/{INV-002}` and BC-2.02.008 `{INV-001}/{INV-003}`.
 
 ### E-08 — BSP Execution Engine (Wave 1, 13 pts)
 
@@ -195,6 +204,7 @@ not in S-6.01's pipeline. Gated until all Wave 1 + Wave 2 implementation stories
 
 ## Changelog
 
+- 1.6 (Round-53-Phase-2-fix-burst/2026-08-31): E-05 §S-2.12 updated — staging-table swap model (trajectory_records_staging → trajectory_records) for compaction; VP-018 anchor corrected to retention-integrity invariants (BC-2.04.011 {INV-001}/{INV-002}); VP-019 four-crash-point matrix cited; error code set corrected to E-TRAJ-001..003+005 (E-TRAJ-004 RETIRED). E-07 §S-1.28 updated — module path corrected to channels/ directory; Channel trait impl added (Accumulator=Vec<T>, BSP dispatch, BC-2.02.007 {INV-004}); VP-017 dual-anchor corrected to BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003}.
 - 1.5 (Stage-3/CAP-040/2026-08-31): E-07 extended with S-1.28 — LedgerChannel (BC-2.02.007/008) and PromoteRetireChannel (BC-2.02.009) pure channel reducers; VP-017 proptest P1 anchored to S-1.28. E-05 extended with S-2.12 — TrajectoryWriter/Reader/Compactor (BC-2.04.009/010/011); VP-018 proptest P1 anchored to S-2.12. E-07 points 13→18; E-05 points 16→24; product-epic point total 303→316. Story count 39→41 product stories; wave counts W1 27→28, W2 11→12.
 - 1.4 (round-8/O-P2A071-A+B/2026-08-26): E-22 VP description reworded — stale closed range "VP-001 through VP-014" replaced with accurate Kani-only scope statement; proptest/integration/unit VPs noted as Phase-3 anchor-story responsibility. Changelog backfilled with 1.0 initial row; 1.2 content unrecoverable from static analysis (git log is authoritative for 1.2 changes).
 - 1.3 (round-7/F-P2A068-01/2026-08-26): E-21 rollup 13→16 reconciled to constituent story points S-2.10(8)+S-2.11(8)=16; product-epic point total 300→303 (S-2.11 5→8 GAP-01 growth, D-275); F-P2A068-01 round-7.

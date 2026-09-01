@@ -1,7 +1,7 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.64"
+version: "1.65"
 status: active
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.65 (round-53/D-332/2026-08-31): VP-017 §Verification Properties table parenthetical corrected DI-014→DI-001 (F-P2A223-01 [LOW/ARCH-INDEX]; architect adjudication; consistent with VP-017 body DI-001 pure-fold seam updated round-52). VP census UNCHANGED: 20 total."
   - "1.64 (round-50/F-P2A209-02+F-P2A209-03/2026-08-31): VP-019 added — trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; checkpoint::trajectory; pregolya-checkpoint; DI-002; SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL; Phase 6). VP-017 BC Anchor updated: BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (dual-anchor; LedgerChannel first-appearance ordering confirmed by product-owner). VP census: 19→20 VPs (P1 13→14; integration ×2→×3). §Verification Properties summary updated: count 19→20, integration breakdown 2→3."
   - "1.63 (BC-2.04.011/2026-08-31): VP-018 added — TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; checkpoint::trajectory; pregolya-checkpoint; DI-002; harness trajectory_compaction_retention_integrity). VP census: 18→19 VPs (P1 12→13; proptest ×6→×7). §Verification Properties table updated: VP-018 row added, summary count 18→19."
   - "1.62 (ADR-030 Stage-4-ruling/2026-08-31): SUBSYSTEM RULING — PromoteRetireChannel canonical subsystem is SS-02 (graph::channels, pregolya-graph), not SS-04. BC-2.04.011 was authored by product-owner with PromoteRetireChannel content; that content must be reassigned to BC-2.02.009 (product-owner sweep pending). SS-02 BC range extended 001–008 → 001–009. SS-04 BC range unchanged at 001–011: BC-2.04.011 is restored to its ADR-030-original purpose (Trajectory Compaction Isolation) and must be re-authored by product-owner. ADR-030 §Consequences BC reservation table patched: BC-2.02.008 description updated to reflect actual PO authoring (LedgerChannel first-appearance ordering); BC-2.02.009 row added (PromoteRetireChannel Lifecycle Semantics). Old-to-new mapping for product-owner: BC-2.04.011 content → BC-2.02.009 (subsystem SS-02, crate pregolya-graph)."
@@ -253,7 +254,7 @@ R6 namespace reservation: publish-all.sh must cover all 21 published crates befo
 | VP-014 | BC-2.01.005 + BC-2.01.006 (RunnableParallel key-completeness) | `core::runnable` | proptest | P1 | draft |
 | VP-015 | BC-2.09.007 {INV-003} (MCP credential redaction — 6-pattern `redact_credentials`; CWE-532/522) | `mcp::sanitize` | unit | P1 | draft |
 | VP-016 | BC-2.09.008 {INV-001} (GraphAgentTool state-isolation) | `mcp::graph_tool` | proptest | P1 | draft |
-| VP-017 | BC-2.02.007 + BC-2.02.008 (LedgerChannel dedup-idempotent append; DI-014) | `graph::channels` | proptest | P1 | draft |
+| VP-017 | BC-2.02.007 + BC-2.02.008 (LedgerChannel dedup-idempotent append; DI-001) | `graph::channels` | proptest | P1 | draft |
 | VP-018 | BC-2.04.011 {INV-001} (TrajectoryCompactor retention-integrity; DI-002) | `checkpoint::trajectory` | proptest | P1 | draft |
 | VP-019 | BC-2.04.011 {INV-003} (trajectory compaction crash-isolation — SQLite atomicity under SIGKILL; DI-002) | `checkpoint::trajectory` | integration | P1 | draft |
 

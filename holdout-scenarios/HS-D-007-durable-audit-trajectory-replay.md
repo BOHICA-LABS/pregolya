@@ -1,7 +1,7 @@
 ---
 document_type: holdout-scenario
 level: ops
-version: "2.1"
+version: "2.2"
 status: active
 producer: product-owner
 timestamp: 2026-08-31T00:00:00Z
@@ -38,6 +38,7 @@ changelog:
   - "1.0 (initial/2026-08-31): Domain D HS-D-007 authored for autonomous research orchestrator use case. Exercised checkpoint super-step replay against pre-existing checkpoint BCs only."
   - "2.0 (Round-50 B2 fix/2026-08-31): Re-scoped to genuinely exercise the dedicated trajectory recording primitive as observable black-box behavior. Prior v1.0 scenario was satisfiable with the trajectory primitive entirely absent (it reconstructed from ordinary super-step checkpoints). New scenario requires: (a) all written trajectory records returned by replay, (b) strict ascending step-index ordering, (c) protected records survive a compaction and ordering is preserved. BC linkage updated to BC-2.04.009/010/011 (trajectory subsystem). Checkpoint super-step content removed — that coverage is retained by HS-D-001/HS-D-002. coverage_areas updated: trajectory replaces graph_execution; checkpoint_resume and streaming retained."
   - "2.1 (Round-52 Stage-C fix/2026-08-31): Promoted from should-pass to must-pass (F-P2A219-03). Durable trajectory persistence is the only Domain-D holdout exercising the SS-04 trajectory primitive, a core P1 contract. Asymmetric classification with sibling ledger holdouts HS-D-008/009 (must-pass) was unjustified. must_pass set true; priority updated to must-pass; Evaluation Rubric threshold relabeled accordingly."
+  - "2.2 (round-53/HS-label-fix/2026-08-31): Information Asymmetry Confirmation §Evaluation Rubric label corrected from 'should-pass threshold' to 'must-pass threshold' — stale label surviving after Round-52 promotion to must-pass (v2.1/F-P2A219-03); frontmatter was already correct (must_pass: true, priority: must-pass)."
 ---
 
 # Holdout Scenario HS-D-007: Durable Audit-Grade Trajectory Replay
@@ -215,7 +216,7 @@ failure modes:
 **Evaluator-facing sections confirmed FREE of internal traceability identifiers (BC IDs, VP IDs, error code identifiers, and internal module-path identifiers):**
 - §Scenario (Check 1 through Check 4)
 - §Verification Approach
-- §Evaluation Rubric (table rows and should-pass threshold)
+- §Evaluation Rubric (table rows and must-pass threshold)
 - §Failure Guidance
 - §Edge Conditions
 

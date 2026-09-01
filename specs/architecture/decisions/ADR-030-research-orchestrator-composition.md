@@ -8,7 +8,7 @@ status: accepted
 date: "2026-08-31"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "1.4"
+version: "1.5"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "1.5 (round-53/F-P2A221-01+F-P2A221-02+F-P2A220-03+F-P2A223-01+F-P2A220-05/2026-08-31): Decision 2: §Content-Hash Oracle Decision added (F-P2A221-02/CWE-916/CWE-311) — conflict detection MUST use decrypt-then-compare exclusively; no auxiliary hash or HMAC may be stored on disk; key-provenance is the 256-bit AES-GCM key already held by EncryptedSerializer — no second secret required. §Compaction Atomicity Decision added (F-P2A221-01) — staging-table single-atomic-swap model: build phase copies retained records to trajectory_records_staging in bounded batches (no reader-visible lock held on trajectory_records); swap phase renames staging to trajectory_records in a single BEGIN IMMEDIATE/COMMIT (fast catalog op); crash mid-build leaves trajectory_records intact; crash mid-swap is WAL-atomic; reconciles BC-2.04.011 whole-operation atomicity with bounded-batch SQLite Topology; VP-019 crash-point matrix extended to four points. Decision 3: §BSP Reduce-Dispatch Seam added (F-P2A220-03) — Channel trait contract (Accumulator/Update assoc types, pure infallible reduce fn, Default required); LedgerChannel<T> and PromoteRetireChannel<T> Channel impls specified; derive-shape: T: LedgerEntry only (supertrait bundles all required bounds); BSP registration is type-level. §VP: di_anchor for VP-017 adjudicated DI-001 (BSP reducer determinism; DI-014 inapplicable — pure fn returns Vec<T> not Result); seeded-now directive text replaced with minted-active status. Consequences §VP: VP-COMPACT-01→VP-018/VP-COMPACT-02→VP-019 rename directive marked discharged (completed by product-owner in BC-2.04.011 §Verification Properties (round-50/D-328)). Records-tier cleanup (F-P2A220-05/F-P2A223-02)."
   - "1.4 (round-52/F-P2A217-02/2026-08-31): Decision 1 panel-topology row: removed holdout-disclosing phrase '(used in HS-D-002) is a standard node function that reads the full state and returns a projected subset' — disclosed the solution of sealed HS-D-002 by name; replaced with general library statement: 'author-metadata projection is user-space node logic'. No architectural content changed; the general statement is accurate and non-disclosing."
   - "1.3 (round-51/F-P2A212-01+F-P2A212-02+F-P2A212-03+F-P2A215-02+F-P2A215-03/2026-08-31): Decision 2: TrajectoryRecord::new() constructor added to code block (F-P2A212-01 — #[non_exhaustive] cross-crate construction fix; SqliteTrajectoryStore/pregolya-checkpoint callers unblocked); TrajectoryRetentionPolicy::new() note added (same fix). Decision 3: LedgerEntry code block bound corrected to Serialize+DeserializeOwned supertrait (F-P2A212-02 — code block was Clone+Send+Sync only, contradicting §Serialization Bound); §Serialization Bound Product-owner directive rewritten to T: LedgerEntry supertrait-only form (F-P2A212-03 — old text prescribed use-site T: LedgerEntry + Serialize + DeserializeOwned, contradicting F-P2A208-11); Default impls added for LedgerChannel<T>/PromoteRetireChannel<T> (F-P2A212-01 channel-marker defensive correctness; registration seam is type-level). §Decision 3 §VP: 'put_record' corrected to 'reduce'; BC Anchor extended to BC-2.02.007 + BC-2.02.008 (F-P2A215-02). §Consequences New-BCs table: BC-2.04.010 title corrected to canonical H1 'TrajectoryReader::replay Ascending step_idx Order' (F-P2A215-03)."
   - "1.2 (round-50/F-P2A209-01+F-P2A209-04+F-P2A211-06+F-P2A211-07+F-P2A211-09+F-P2A210-02+F-P2A208-09/2026-08-31): Decision 2: at-rest confidentiality decision added (Option A — route through EncryptedSerializer when configured; F-P2A209-01/CWE-311); SQLite topology pinned (same database file, dedicated trajectory_records table, WAL, bounded-batch compaction; F-P2A209-04); uuid serde feature noted (F-P2A208-09). Decision 3: LedgerEntry serde bound decision added (Serialize+DeserializeOwned on LedgerEntry trait; F-P2A211-07). Decision 1: panel-visibility wording corrected — no per-node channel-scoping primitive; realizable pattern is explicit transform node (F-P2A211-09). §Consequences New-VP table: VP-018 proptest P1 + VP-019 integration P1 rows added (F-P2A211-06/F-P2A210-03). §Renumber-provenance: canonical BC-2.02.009 creation narrative added (new creation, not renumber; F-P2A210-02)."
@@ -146,6 +147,45 @@ fail-closed guard for the no-serializer case). This is consistent with the estab
 precedent. **Product-owner:** add `BC-2.04.009 {INV-002}` — "When `EncryptedSerializer` is
 configured, `put_record` encrypts the record payload before storage."
 
+### Content-Hash Oracle Decision — Conflict Detection Integrity (F-P2A221-02)
+
+`BC-2.04.009 {INV-001}` previously permitted "decrypt-then-compare OR compare a deterministic
+content-hash of the pre-encryption plaintext stored alongside the ciphertext." The second
+option is an oracle vulnerability: any hash (unkeyed or keyed) stored persistently alongside
+ciphertext enables an adversary with read access to the database file to confirm known
+plaintext against the stored value (CWE-916 preimage oracle; CWE-311 insufficient at-rest
+encryption protection).
+
+**Decision: decrypt-then-compare exclusively.**
+
+Conflict detection for `(run_id, step_idx)` duplicate `put_record` writes MUST decrypt the
+stored ciphertext and compare plaintext payloads in memory. No auxiliary hash, digest, HMAC,
+or any other derivation of the plaintext may be stored on disk.
+
+**Key provenance:** The decryption key is the 256-bit AES-GCM key already held in memory by
+`EncryptedSerializer` (passed at `EncryptedSerializer::new(key: &[u8; 32])` construction).
+No additional secret key is required for conflict detection. The comparison operates entirely
+in memory; no derivative of the plaintext is persisted to the database file.
+
+**Rationale for rejecting keyed MAC:**
+A HMAC keyed with the AES-GCM encryption key is architecturally unsound (key reuse across
+distinct cryptographic functions). A HMAC keyed with a separate key requires provisioning,
+storing, and rotating a second independent secret — operational complexity that provides zero
+benefit over decrypt-then-compare, since the decryption key is already present in memory.
+
+**Rationale for rejecting unkeyed hash:**
+A plaintext-deterministic hash (SHA-256, BLAKE3, etc.) stored in the clear is a preimage
+oracle: an attacker who can read the database and guess a candidate plaintext verifies it
+against the stored hash without needing the encryption key. Unkeyed hashes MUST NOT be
+stored alongside at-rest ciphertext.
+
+**Product-owner directive (F-P2A221-02):** `BC-2.04.009 {INV-001}` MUST be amended to remove
+the "(or compare a deterministic content-hash of the pre-encryption plaintext stored alongside
+the ciphertext)" clause. The required wording: "when `EncryptedSerializer` is configured,
+conflict detection MUST decrypt-then-compare — the implementation decrypts the stored record
+ciphertext and compares plaintext payloads in memory. No auxiliary hash or digest may be
+stored on disk for this purpose."
+
 ### SQLite Topology Decision (F-P2A209-04)
 
 **Decision:** Trajectory records reside in a **dedicated `trajectory_records` table** within the
@@ -165,6 +205,84 @@ conversation-context checkpoint tables") correctly describes table-level isolati
 no amendment. **Product-owner:** add to `BC-2.04.011 {INV-005}` a parenthetical: "bounded
 compaction batch (default 1 000 records per `BEGIN IMMEDIATE` transaction) prevents
 writer-timeout blocking of concurrent `CheckpointSaver::put_writes` calls."
+
+### Compaction Atomicity Decision — Staging-Table Single-Atomic-Swap Model (F-P2A221-01)
+
+**Problem:** The bounded-batch language in §SQLite Topology Decision creates an apparent
+contradiction with `BC-2.04.011 {PC-004}` / `{INV-003}`, which assert whole-operation
+atomicity ("either all eligible records are removed and all retained records are preserved,
+or no change is made"). Multiple `BEGIN IMMEDIATE` transactions across batches cannot satisfy
+whole-operation atomicity as a single SQLite transaction boundary.
+
+**Decision: staging-table single-atomic-swap model.**
+
+Compaction is a two-phase operation:
+
+**Phase 1 — Build (batched, shadow table, no write lock held on `trajectory_records`):**
+
+1. Create (or recreate after stale-staging cleanup) staging table
+   `trajectory_records_staging` with the same schema as `trajectory_records`.
+2. Copy all retained records (`step_idx >= retention_frontier` or `step_idx` in `promoted`)
+   from `trajectory_records` to `trajectory_records_staging` in bounded batches
+   (default 1 000 records per `BEGIN IMMEDIATE / COMMIT` on the staging table).
+   Each batch releases the write lock after committing; `CheckpointSaver::put_writes`
+   interleaves freely between batches.
+3. `TrajectoryReader::replay` reads from `trajectory_records` only — the staging table is
+   invisible to `replay` throughout the entire build phase.
+
+**Phase 2 — Swap (single atomic transaction, fast catalog operation):**
+
+```sql
+BEGIN IMMEDIATE;
+DROP TABLE trajectory_records;
+ALTER TABLE trajectory_records_staging RENAME TO trajectory_records;
+COMMIT;
+```
+
+This is the sole atomicity boundary visible to `replay`. The transaction contains only
+catalog operations (no row copies); it holds the write lock for milliseconds, not seconds.
+
+**Crash semantics:**
+
+- **Crash mid-build** (before the swap phase begins): `trajectory_records` is unchanged;
+  `trajectory_records_staging` is in an indeterminate state. The implementation MUST detect
+  and drop any stale `trajectory_records_staging` table at the start of each `compact` call
+  (before beginning a new build). `replay` returns the pre-compaction record set unchanged.
+- **Crash mid-swap** (inside the `BEGIN IMMEDIATE / COMMIT` transaction): SQLite WAL
+  atomicity applies — either the `COMMIT` was durably recorded (post-compaction `trajectory_records`
+  visible) or it was not (pre-compaction `trajectory_records` intact;
+  `trajectory_records_staging` dropped on recovery per the stale-staging cleanup).
+- **No intermediate state** is ever observable by `replay` because `replay` reads from
+  `trajectory_records` only and the build phase never modifies `trajectory_records`.
+
+**Reconciliation with `BC-2.04.011 {PC-004}` / `{INV-003}`:**
+"Whole-operation atomic" means reader-visible atomicity: `replay` always observes either
+the complete pre-compaction state or the complete post-compaction state. The swap phase's
+single `BEGIN IMMEDIATE / COMMIT` provides this guarantee. The build phase operates on a
+shadow table that is never visible to `replay`.
+
+**Reconciliation with §SQLite Topology bounded-batch wording:**
+"Bounded compaction batches (default 1 000 records per `BEGIN IMMEDIATE` transaction)"
+describes the build phase, which writes to `trajectory_records_staging`, not
+`trajectory_records`. The write-lock-release-between-batches concern is fully addressed:
+build-phase locks are on the staging table; the swap-phase lock is a fast catalog-only op.
+
+**BC-2.04.011 downstream notes:**
+- `{INV-003}`: "the SQLite `BEGIN IMMEDIATE` / `COMMIT` transaction" refers to the swap-phase
+  transaction (the reader-visible atomicity boundary). The build phase uses separate per-batch
+  transactions on the staging table only. Crash mid-build → pre-compaction state intact
+  (staging dropped on recovery). Crash mid-swap → WAL atomicity (pre or post depending on
+  whether COMMIT landed).
+- `{INV-005}`: "bounded compaction batches" are build-phase batches writing to the staging
+  table — not to `trajectory_records`. The `trajectory_records` table is touched only by the
+  single atomic swap.
+- **Formal-verifier note for `VP-019`:** The crash-point matrix should cover **four points**:
+  (1) before-build-begins (trivially pre-compaction state), (2) mid-build — staging table
+  partially filled, before swap begins (expected: pre-compaction state intact, staging dropped
+  on recovery), (3) mid-swap-transaction — after `BEGIN IMMEDIATE`, before `COMMIT` (expected:
+  pre-compaction state intact), (4) after-swap-commit (expected: post-compaction state).
+  Case (2) is new under the staging-table model and must be exercised in the VP-019
+  integration test matrix.
 
 ### Dependency Note: uuid serde Feature (F-P2A208-09)
 
@@ -255,10 +373,113 @@ Canonical bound: `pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + 
 DeserializeOwned` are already imposed by the `LedgerEntry` supertrait; use-site repetition of
 those bounds is forbidden per F-P2A208-11); `entry_id()` is stable across serde round-trips."
 
+### BSP Reduce-Dispatch Seam for LedgerChannel (F-P2A220-03)
+
+`LedgerChannel<T>` and `PromoteRetireChannel<T>` participate in the BSP reduce phase through
+the `Channel` trait in `graph::channels` (pregolya-graph). This section defines the trait
+contract and specifies how the BSP engine dispatches to the ledger-channel reducers, enabling
+story S-1.28 to wire the types into the `StateGraph` schema.
+
+**`Channel` trait (`graph::channels`, pregolya-graph):**
+
+```rust
+/// Extension point for custom BSP channel reducers in a `StateGraph`.
+///
+/// The BSP engine dispatches to `<C as Channel>::reduce` during the reduce phase for each
+/// update posted to a field annotated with channel type `C`. `Default` is required so the
+/// BSP engine can construct the zero-value accumulator for a newly-created channel field.
+pub trait Channel: Default + Send + Sync + 'static {
+    /// The accumulated channel state type, stored per-super-step per `StateGraph` field.
+    /// Must satisfy serde bounds for checkpoint-resume serialization.
+    type Accumulator: Clone + Serialize + DeserializeOwned + Send + Sync + 'static;
+    /// The type of a single update posted to this channel by a graph node.
+    /// Updates are ephemeral (not checkpointed); no serde bound required.
+    type Update: Clone + Send + Sync + 'static;
+    /// Pure, deterministic, infallible reducer: `(current_acc, update) -> new_acc`.
+    /// No `Result` — channel reducers must be infallible by contract.
+    fn reduce(acc: Self::Accumulator, update: Self::Update) -> Self::Accumulator;
+}
+```
+
+**`LedgerChannel<T>` `Channel` implementation:**
+
+```rust
+impl<T: LedgerEntry> Channel for LedgerChannel<T> {
+    type Accumulator = Vec<T>;
+    type Update = T;
+    /// Dedup-idempotent append: if `update.entry_id()` is already present in `acc`,
+    /// returns `acc` unchanged. Otherwise appends `update` in first-appearance position.
+    fn reduce(acc: Vec<T>, update: T) -> Vec<T> {
+        if acc.iter().any(|e| e.entry_id() == update.entry_id()) {
+            acc
+        } else {
+            let mut v = acc;
+            v.push(update);
+            v
+        }
+    }
+}
+```
+
+**`PromoteRetireChannel<T>` `Channel` implementation:**
+
+```rust
+impl<T: LedgerEntry> Channel for PromoteRetireChannel<T> {
+    type Accumulator = Vec<T>;
+    type Update = PromoteRetireOp<T>;
+    /// Promote: dedup-idempotent append to active set.
+    /// Retire: remove entry whose `entry_id()` matches the given ID (no-op if absent).
+    fn reduce(acc: Vec<T>, op: PromoteRetireOp<T>) -> Vec<T> {
+        match op {
+            PromoteRetireOp::Promote(entry) => {
+                if acc.iter().any(|e| e.entry_id() == entry.entry_id()) {
+                    acc
+                } else {
+                    let mut v = acc;
+                    v.push(entry);
+                    v
+                }
+            }
+            PromoteRetireOp::Retire(id) => {
+                acc.into_iter().filter(|e| e.entry_id() != id.as_str()).collect()
+            }
+        }
+    }
+}
+```
+
+**BSP registration mechanism (type-level, compile-time):**
+
+`StateGraph` schema declaration annotates each channel field with a `Channel` implementor
+type. The BSP engine stores channel accumulators keyed by field name; during the reduce phase
+it calls `<C as Channel>::reduce(acc, update)` for the `C` registered for that field.
+Registration is compile-time: the user declares `LedgerChannel<EvidenceItem>` as the channel
+type for an evidence field; the compiler resolves `<LedgerChannel<EvidenceItem> as Channel>::reduce`
+statically. No runtime lookup or reflection is required.
+
+**Derive-shape / `T: LedgerEntry` requirement:**
+
+A concrete type `T` is valid as a `LedgerChannel<T>` element if and only if `T: LedgerEntry`.
+`LedgerEntry` is defined as:
+`pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'static`
+All bounds required by `Channel::Accumulator` (`Clone + Serialize + DeserializeOwned + Send + Sync + 'static`)
+are already imposed by the `LedgerEntry` supertrait. No additional bounds are required at
+the call site — `T: LedgerEntry` is the complete derive-shape requirement.
+
+**For story-writer (S-1.28):** S-1.28 must implement the `Channel` trait for `LedgerChannel<T>`
+and `PromoteRetireChannel<T>` as shown above, confirm the `StateGraph` schema annotation
+mechanism dispatches to `<LedgerChannel<T> as Channel>::reduce` during the BSP reduce phase,
+and verify `PromoteRetireChannel<T>` is wired symmetrically with `Update = PromoteRetireOp<T>`.
+
+**For product-owner (BC-2.02.007 amendment):** Add to BC-2.02.007: "`LedgerChannel<T>`
+implements `graph::channels::Channel` with `Accumulator = Vec<T>` and `Update = T`; the BSP
+engine dispatches to `LedgerChannel::<T>::reduce` during the reduce phase. No additional
+bounds beyond `T: LedgerEntry` are required at call sites."
+
 ### VP
 
 `LedgerChannel` dedup-idempotency is a formally provable pure-function reducer property.
-**VP-017** (proptest P1, Phase 3) is seeded now:
+**VP-017** (proptest P1, Phase 3) is established (minted/active — VP-INDEX VP-017, v1.2):
 
 - Property: for any sequence of `reduce` calls on `LedgerChannel`, the final
   accumulated `Vec<T>` contains exactly the entries with distinct `entry_id` values, in
@@ -266,6 +487,15 @@ those bounds is forbidden per F-P2A208-11); `entry_id()` is stable across serde 
 - Tool: proptest — exercise arbitrary sequences of novel and repeated entries; assert
   idempotency invariant holds for every prefix.
 - Module: `graph::channels` | Crate: `pregolya-graph` | BC Anchor: BC-2.02.007 + BC-2.02.008
+
+**DI anchor adjudication for VP-017 (F-P2A223-01):** Authoritative anchor: **`DI-001`**
+(BSP reducer determinism). VP-017 proves `LedgerChannel::reduce` is deterministic, idempotent,
+and preserves first-appearance ordering across arbitrary entry sequences — all properties that
+fall under the BSP reducer determinism domain invariant. `DI-014` (error propagation, no
+silent swallowing) does not apply: `reduce` is a pure function returning `Vec<T>`, not
+`Result`; there is no error path to swallow or propagate. State-manager and all downstream
+VP-INDEX / BC-INDEX / ARCH-INDEX parentheticals that reference VP-017 MUST carry
+`di_anchor: DI-001`.
 
 ## Decision 4 — Clean-Room Posture
 
@@ -390,10 +620,12 @@ of retained records; ascending step_idx preservation). Harness extracts the sele
 the async SQLite layer.
 
 **VP-019** (integration P1, Phase 6): crash-isolation invariant — SIGKILL mid-compaction,
-restart, `replay(run_id)` returns pre-compaction result. Promotes informal `VP-COMPACT-02`
-label in `BC-2.04.011 §Verification Properties` to a real VP. **Product-owner:** rename
-`VP-COMPACT-01` → `VP-018` and `VP-COMPACT-02` → `VP-019` in `BC-2.04.011 §Verification
-Properties` table.
+restart, `replay(run_id)` returns pre-compaction or post-compaction state (never partial).
+Promoted informal `VP-COMPACT-02` label in `BC-2.04.011 §Verification Properties` to a
+real VP. **Directive discharged:** `VP-COMPACT-01` → `VP-018` and `VP-COMPACT-02` → `VP-019`
+rename was completed by product-owner in BC-2.04.011 §Verification Properties (round-50/D-328). No further rename action required. **Formal-verifier note:** under the staging-table
+atomic-swap model (§Compaction Atomicity Decision above), VP-019 crash-point matrix should
+cover four points — see §Compaction Atomicity Decision §BC-2.04.011 downstream notes.
 
 ### BC-2.02.009 Renumber-Provenance Canonical Narrative (F-P2A210-02)
 
