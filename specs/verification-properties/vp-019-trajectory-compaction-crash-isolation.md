@@ -10,7 +10,7 @@ phase: 1b
 inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "a226503"
+input-hash: "6579f43"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.04.011
 bc_anchor: BC-2.04.011 {INV-003}
@@ -38,8 +38,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.2"
+version: "1.3"
 changelog:
+  - "1.3 (round-57/F-P2A227-03/2026-09-01): §BC Contradictions Flagged updated from OPEN to RESOLVED. The prior text carried a stale present-tense claim that BC-2.04.011 {INV-003} and its §Verification Properties VP-019 row 'currently describe a three crash-point matrix (before-begin, mid-txn, after-sync) ... flagged for product-owner reconciliation and routed via the orchestrator/state-manager'. That claim is now false and the open action is complete: BC-2.04.011 adopted the four-crash-point matrix in its round-53-corrective revision — its live {INV-003} and its §Verification Properties VP-019 row both now read four crash points (before-build-begins, mid-build (staging partially filled before swap), mid-swap-transaction (after BEGIN IMMEDIATE, before COMMIT), after-swap-commit). Section rewritten to record the contradiction as resolved (BC and this VP now agree on the four-point matrix; no open reconciliation action remains). No property, invariant, formal-invariant, harness, or proof-obligation change; VP does not edit BC files."
   - "1.2 (round-53/F-P2A221-01/2026-08-31): Crash matrix extended from three to FOUR crash points under the staging-table single-atomic-swap compaction model (ADR-030 §Compaction Atomicity Decision). Under this model, `compact` builds a shadow `trajectory_records_staging` table in bounded per-batch transactions (default 1,000 records per BEGIN IMMEDIATE/COMMIT on the staging table) while `trajectory_records` is untouched, then performs a single BEGIN IMMEDIATE; DROP TABLE trajectory_records; ALTER TABLE trajectory_records_staging RENAME TO trajectory_records; COMMIT swap — the sole reader-visible atomicity boundary. New crash point (case 2) added: mid-build (staging partially filled, before swap begins) → pre-compaction state intact, stale `trajectory_records_staging` dropped on recovery (implementation drops any stale staging table at the start of the next `compact` entry before a new build). §Property Statement, §Formal Invariant, §Source Contract, §Proof Method, §BC Traceability, §Proof Harness Skeleton, §Feasibility Assessment, and §Proof Obligations rewritten for four cases + recovery-time stale-staging cleanup. Reader-visible atomicity kept coherent with BC-2.04.011 {PC-004}/{INV-003}: `replay` always observes complete pre-compaction OR complete post-compaction state, never a partial. ADR-030 §Compaction Atomicity Decision added to inputs; input-hash refreshed. BC-2.04.011 {INV-003}/§VP-table three-point wording predates ADR-030 §Compaction Atomicity Decision and is flagged for product-owner reconciliation in §BC Contradictions Flagged (surface, not silently diverge)."
   - "1.1 (round-52/F-P2A217-03/2026-08-31): WAL-correct language applied throughout. SQLite topology is WAL mode (ADR-030 §SQLite Topology Decision). Scenario 2 (mid-transaction crash): 'SQLite rollback journal restores pre-compaction state on restart' → 'uncommitted WAL frames after the last commit marker are discarded on the next database open; pre-compaction state is fully recovered'. §Property Statement introductory sentence corrected similarly. Integration test assert message updated. §Proof Obligations updated. Rollback journal is not used in WAL mode; the correct recovery mechanism is WAL frame discard on next open."
   - "1.0 (round-50/F-P2A209-03/2026-08-31): Initial — trajectory compaction crash-isolation integration P1. BC-2.04.011 {INV-003} anchor: SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL. Scoped from VP-018: VP-018 proptest covers pure-core selection/filtering ({INV-001}/{INV-002}); VP-019 covers OS-level crash-recovery semantics that proptest and Kani cannot model. Human-approved VP mint: crash-isolation test of durable audit trajectory compaction is a production-grade correctness obligation. Arithmetic: total 19→20 (P0 6 unchanged, P1 13→14); integration 2→3."
@@ -176,16 +177,19 @@ single-transaction narrative for this property (Source-of-Truth Precedence rule 
 
 ## BC Contradictions Flagged
 
-BC-2.04.011 {INV-003} and its §Verification Properties table (VP-019 row) currently describe a
-**three** crash-point matrix (before-begin, mid-txn, after-sync), which predates
-ADR-030 §Compaction Atomicity Decision (added round-53). Under the staging-table
-single-atomic-swap model that decision mandates, the correct matrix is **four** points (the
-new mid-build point, case 2, has no analogue in the pre-staging single-transaction model). This
-VP adopts the four-point matrix per Source-of-Truth Precedence (ADR-030 §Compaction Atomicity
-Decision is the later, more-specific artifact; the VP supersedes prose for the property it
-covers). The BC's three-point wording is flagged for product-owner reconciliation and routed
-via the orchestrator/state-manager — surfaced, not silently diverged. This VP does not edit BC
-files.
+**RESOLVED (round-57/F-P2A227-03).** An earlier revision of this VP flagged a contradiction:
+BC-2.04.011 {INV-003} and its §Verification Properties table (VP-019 row) described a **three**
+crash-point matrix (before-begin, mid-txn, after-sync) that predated the staging-table
+single-atomic-swap model, whereas that model requires a **four**-point matrix (the mid-build
+point, case 2, has no analogue in the pre-staging single-transaction model). That contradiction
+is now closed: BC-2.04.011 adopted the four-crash-point matrix in its round-53-corrective
+revision. BC-2.04.011 {INV-003} now records "Verified by VP-019 (integration, four-crash-point
+matrix: before-build-begins, mid-build (staging partially filled before swap),
+mid-swap-transaction (after BEGIN IMMEDIATE, before COMMIT), after-swap-commit)", and the
+BC-2.04.011 §Verification Properties VP-019 row now describes four crash points / four cases.
+This VP and BC-2.04.011 {INV-003} are therefore in agreement on the four-crash-point matrix; no
+open reconciliation action remains, and none is routed to product-owner or state-manager. This
+VP does not edit BC files.
 
 ## Proof Harness Skeleton
 

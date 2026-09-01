@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.43"
+version: "1.44"
 status: active
 producer: state-manager
-timestamp: 2026-09-01T08:00:00Z
+timestamp: 2026-09-01T12:00:00Z
 changelog:
+  - "1.44 (round-56/D-335/2026-09-01): S-1.28 v1.5→v1.6 (story-writer; Rule-13/AC-001/Tasks/File-Structure derive-only→manual bound-free impl Default reversal; AC-018 added dual-tracing BC-2.02.007/BC-2.02.009 {INV-004} Self:Default supertrait; input-hash 8797630; F-P2A227-01). S-1.14 v1.6→v1.7 (story-writer; built-in-channel manual-Default rule added; AC-016/Task-20/File-Structure updated; F-P2A227-01 sibling propagation). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24)."
   - "1.43 (round-55/D-334/2026-09-01): S-1.14 v1.5→v1.6 (story-writer round-55 fix-burst; AC-015 citation corrected per F-P2A225-03; input-hash already current 8ce605c). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24)."
   - "1.42 (round-54/D-333/2026-09-01): Story version bumps from round-54 fix-burst. S-1.14 v1.4→v1.5 (Channel trait ownership homed in S-1.14; AC-015/AC-016 added for Channel trait definition — these ACs trace to existing BCs BC-2.02.001–BC-2.02.004; story title UNCHANGED). S-1.28 v1.4→v1.5 (Rule 15 provenance trace added per F-P2A224-01; input-hash refreshed to 1ad6532). epics.md preamble OBS-1 resolved: '42 total stories' parenthetical resolved — preamble now reads '42 stories across Wave 1 (28) / Wave 2 (12) / Wave 6 (1) + 1 maintenance'. Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24)."
   - "1.41 (round-53/D-332/2026-08-31): Story versions S-1.28 (round-53 stage C: ADR-030 §Decision-3 BSP reduce-dispatch wiring + derive bounds) + S-2.12 (round-53 stage C: VP-019 §crash-isolation reconciliation + AC-020 incoherence resolved). Story/artifact census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142; points 316."

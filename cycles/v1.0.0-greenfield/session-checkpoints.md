@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.7"
+version: "1.8"
 changelog:
+  - "1.8 (D-335/round-56/2026-09-01): D-334 checkpoint archived"
   - "1.7 (D-326/round-49/2026-08-31): D-325 checkpoint archived"
   - "1.6 (D-324/round-47/2026-08-30): D-323 checkpoint archived"
 status: archive
@@ -4055,3 +4056,19 @@ pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case inject
 - develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `4570fa5` — PUSHED (D-333 final). No .worktrees/. No open PRs.
 
 ### STATE: v6.45, timestamp 2026-09-01T00:01:00Z
+
+## Archived Checkpoint: D-334 (archived 2026-09-01 at D-335 close)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-55 closed (D-326/D-328/D-329/D-330/D-332/D-333/D-334). Round-55 fix-burst CLOSED (Stage D final) — all 5 findings closed (2H+2M+1OBS); DI-014 last live residue (BC-INDEX BC-2.02.009 Full Catalog DI-014→DI-001) + prd.md §2.02/§7/§12 + capabilities-p1-p2.md propagation CLOSED; ADR-030 §Decision-3 ALL chained-§/phantom-anchor cleared; S-1.14 §AC-015-fix AC-015 citation; interface-definitions §Send-Bounded-RPITIT; BC-INDEX §Changelog; STORY-INDEX §D-334-changelog; input-hashes corrected (BC-2.02.007/009 + prd.md); L-255/L-256 codified; census UNCHANGED. D-334 push DONE (b3d6c7b). Next: round-56 adversary cascade on new frozen HEAD.
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts `b3d6c7b` — PUSHED (D-334 final). No .worktrees/. No open PRs.
+
+### ROUND-55 FINDINGS (all 5 CLOSED in D-334 burst)
+HIGH (2) CLOSED: F-P2A225-01[HIGH] DI-014 INAPPLICABLE for channel reducers — last live residue (BC-INDEX BC-2.02.009 DI-014→DI-001 + prd.md + capabilities); F-P2A225-02[HIGH] ADR-030 chained-§/phantom-anchor ALL 4 remaining sites cleared. MED (2) CLOSED: F-P2A225-03[MED] S-1.14 AC-015 citation (S-1.14 §AC-015-fix); F-P2A225-04[MED] interface-definitions chained-§ (§Send-Bounded-RPITIT). OBS (1) CLOSED: OBS-P2A225-01 trailing whitespace.
+
+### DECISION-LOG DELTA (D-334 close)
+D-334 round-55 fix-burst closed (Stage D final; ALL 5 findings closed; BC-INDEX §Changelog BC-2.02.009 DI-014→DI-001; STORY-INDEX §D-334-changelog S-1.14 §AC-015-fix; input-hashes corrected; L-255/L-256 codified; census UNCHANGED).
+
+### STATE: v6.46, timestamp 2026-09-01T12:00:00Z

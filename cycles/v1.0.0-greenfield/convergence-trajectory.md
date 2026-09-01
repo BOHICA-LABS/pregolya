@@ -4848,3 +4848,55 @@ All 5 findings CLOSED in D-334 fix-burst (4-stage cascade A→B→C→D):
 - L-255/L-256 codified
 
 **NEXT: round-56 on new frozen HEAD post-D-334 push. Streak 0/3.**
+
+## Round 56 — D-335 (2026-09-01) — SEVENTH ADVERSARIAL REVIEW OF PRAXIST SURFACE
+
+**Frozen HEAD:** `b3d6c7b` (factory-artifacts D-334 push)
+**Passes:** P2A-226 (single-lens pass 1), P2A-227 (single-lens pass 2)
+**Trajectory:** →0/CLEAN(strict) → 2H+1M+1OBS (streak peaked at 1/3 then reset)
+**Total findings (unique):** 4 across round (P2A-226=0; P2A-227=2H+1M+1OBS)
+**CLEAN(strict) P2A-226:** YES — first clean pass in round-56; streak 1/3
+**CLEAN(strict) P2A-227:** NO — 2 HIGH findings reset streak to 0/3
+**CLEAN(PR-merge) P2A-227:** NO (HIGH findings present)
+**Streak after fix-burst:** 0/3 (D-335 push resets frozen HEAD; round-57 gates on new HEAD)
+
+### Pass Detail
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) | Streak |
+|------|------|----------|---------------|-----------------|--------|
+| P2A-226 | Praxist surface — realizability / Default-bound audit | 0 | YES | YES | 1/3 |
+| P2A-227 | Praxist surface — derive-bound / POL-9 propagation | 4 (2H+1M+1OBS) | NO | NO | 0/3 (reset) |
+
+### Finding Summary
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F-P2A227-01 | HIGH | Derive-only canon for manual bound-free Default reverted — `#[derive(Default)]` on `LedgerChannel<T>` and `PromoteRetireChannel<T>` (T only in PhantomData) emits spurious `T: Default` bound (rustc#26925), breaking `Channel: Default` supertrait obligation; fix: manual bound-free `impl Default`; supersedes F-P2A220-01/F-P2A224-03 |
+| F-P2A227-02 | HIGH | VP-019 four-crash-point staging-table model NOT propagated to verification-architecture.md §Provable Properties Catalog — VP-INDEX row updated but architecture mirror doc still showed old three-point model; POL-9 propagation gap |
+| F-P2A227-03 | MED | VP-019 §BC Contradictions Flagged section still marked UNRESOLVED — contradiction between VP-018 proptest (compaction ok) and VP-019 crash-isolation (data loss possible) needed formal resolution note |
+| O-P2A227-A | OBS | BC-INDEX §VP Seed BCs VP-018 row DI cell: "DI-002 + DI-004" — VP-018 targets {INV-001} retention only; DI-004 (monotonic ordering) is not a compaction-retention anchor; single-primary-DI convention requires DI-002 only |
+
+### Multi-Stage Cascade Disposition
+
+All 4 findings CLOSED in D-335 fix-burst:
+- **architect A (ADR-030 §Decision-3 + interface-definitions §LedgerChannel):** ADR-030 §Decision-3 code — derive-only mandate REVERSED to manual bound-free impl Default; supersedes F-P2A220-01/F-P2A224-03 (F-P2A227-01). interface-definitions §LedgerChannel manual Default wired (F-P2A227-01 sibling propagation).
+- **formal-verifier A (VP-019 §BC-Contradictions-Flagged + verification-architecture.md §Provable-Properties-Catalog):** VP-019 §BC-Contradictions-Flagged marked RESOLVED — VP-018 and VP-019 model different failure classes (proptest vs crash-isolation); no contradiction (F-P2A227-03). verification-architecture.md §Provable-Properties-Catalog VP-019 — four-crash-point staging-table model added; POL-9 propagation complete (F-P2A227-02).
+- **product-owner B (BC-2.02.007 + BC-2.02.009):** manual bound-free `impl Default`; {INV-004} Self:Default supertrait obligation documented; BC-2.02.009 gained {INV-004}; input-hash 5b89b25 (F-P2A227-01).
+- **story-writer C (S-1.28 v1.6 + S-1.14 v1.7):** S-1.28 v1.5→v1.6 — Rule-13/AC-001/Tasks/File-Structure derive→manual reversal; AC-018 dual-traces BC-2.02.007/BC-2.02.009 {INV-004}; input-hash 8797630 (F-P2A227-01). S-1.14 v1.6→v1.7 — built-in-channel manual-Default rule; AC-016/Task-20/File-Structure (F-P2A227-01 sibling propagation).
+- **state-manager D (BC-INDEX §Changelog + VP-018 DI fix + STORY-INDEX §Changelog + VP-INDEX §Changelog + convergence-trajectory Round-56 + lessons L-257/L-258/L-259 + STATE.md D-335):** BC-INDEX §VP-Seed-BCs VP-018 DI cell corrected DI-002+DI-004→DI-002 (O-P2A227-A). BC-INDEX §Changelog. STORY-INDEX §Changelog. VP-INDEX §Changelog. convergence-trajectory this block. lessons L-257/L-258/L-259 codified.
+
+### Post-Round-56 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (20)
+- EC: UNCHANGED (142)
+- TV: UNCHANGED (794 canonical)
+- ADR: UNCHANGED (30)
+- Stories: UNCHANGED (42 total; 41 product + 1 maint)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- GATE-READY: YES (all blocking validators PASS after fix-burst)
+- Streak: 0/3 (D-335 push resets frozen HEAD; round-57 gates on new HEAD)
+- MILESTONE: P2A-226 was the FIRST CLEAN(strict) pass of round-56 (streak reached 1/3 — highest streak since praxist surface expansion at D-327)
+- L-257/L-258/L-259 codified
+
+**NEXT: round-57 on new frozen HEAD post-D-335 push. Streak 0/3.**

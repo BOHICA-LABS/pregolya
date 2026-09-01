@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.007
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.3 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `LedgerChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }`; `Default::default()` produces `LedgerChannel { _inner: PhantomData }` (the zero-sized marker struct); the `Vec<T>` accumulator is external to the marker, owned and managed by the BSP engine. No behavioral change."
   - "1.4 (round-53/F-P2A220-03+F-P2A220-01/2026-08-31): {INV-004} added — Channel trait dispatch contract: LedgerChannel<T> implements graph::channels::Channel with Accumulator = Vec<T> and Update = T; BSP engine dispatches to LedgerChannel::<T>::reduce during the reduce phase; no additional bounds beyond T: LedgerEntry required at call sites. Architecture Anchors: LedgerChannel<T> canonical derive set made explicit — #[derive(Default)] only; all Accumulator/serde/Clone/Send/Sync bounds come from LedgerEntry supertrait on T and Vec<T> derived properties (F-P2A220-01)."
   - "1.5 (round-55/F-P2A225-01/2026-09-01): §Traceability L2 Domain Invariants: DI-014 entry removed per architect ADR-030 §VP ruling — LedgerChannel::reduce is a pure infallible reducer returning Vec<T> with no Result/Err/None path; DI-014 (error propagation) is inapplicable (vacuously compliant, not meaningfully enforced). DI-001 (BSP Reducer Determinism) retained as the correct domain-invariant anchor."
+  - "1.6 (round-57/F-P2A227-01/2026-09-01): §Architecture Anchors: replaced `#[derive(Default)]` with a manual bound-free `impl<T: LedgerEntry> Default for LedgerChannel<T>` per ADR-030 §Decision 3 round-57 architect ruling — `#[derive(Default)]` emits a spurious `T: Default` bound that breaks the `Channel: Default + Send + Sync + 'static` supertrait obligation for callers holding only `T: LedgerEntry`, violating {INV-004}. {INV-004}: added explicit `Channel: Default` supertrait-obligation clause — satisfied by the manual bound-free impl, not a derive. Supersedes the derive-only canon established in round-53 (F-P2A220-01)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "5723c88"
+input-hash: "5b89b25"
 extracted_from: null
 modified: []
 deprecated: null
@@ -97,7 +98,12 @@ harness `ledger_channel_dedup_idempotency`).
   beyond `T: LedgerEntry` are required at call sites — the `LedgerEntry` supertrait
   (`Clone + Serialize + DeserializeOwned + Send + Sync + 'static`) already satisfies the
   `Accumulator` bounds of the `Channel` trait, and `T: Clone + Send + Sync + 'static`
-  (via `LedgerEntry`) satisfies the `Update` bounds.
+  (via `LedgerEntry`) satisfies the `Update` bounds. The `Channel` supertrait additionally
+  requires `Self: Default`; `LedgerChannel<T>: Default` for all `T: LedgerEntry` is
+  satisfied by a MANUAL bound-free `Default` impl — NOT `#[derive(Default)]`, which would
+  emit a spurious `T: Default` bound and break call sites where `T: LedgerEntry` but
+  `T: !Default`, violating the "no bounds beyond `T: LedgerEntry`" guarantee of this
+  invariant (per ADR-030 §Decision 3 round-57).
 
 ## Edge Cases
 
@@ -155,11 +161,14 @@ meaningful within their domain; `LedgerChannel` imposes no minimum-length constr
   with `fn entry_id(&self) -> &str` (stable dedup key; `Serialize + DeserializeOwned` bounds
   required for `CheckpointSaver::put_writes` checkpoint-resume serialization — F-P2A211-07);
   `LedgerChannel<T>` struct canonical shape:
-  `#[non_exhaustive] #[derive(Default)] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` —
-  the zero-sized marker type; canonical derive set: `Default` only (all `Accumulator` / serde /
+  `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` —
+  the zero-sized marker type; `Default` is provided by a MANUAL bound-free impl (NOT `#[derive(Default)]`,
+  which would emit a spurious `T: Default` bound incompatible with callers holding only `T: LedgerEntry`
+  and violating {INV-004} — per ADR-030 §Decision 3 round-57):
+  `impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } }`;
+  no `Clone` / `Serialize` / `Deserialize` derives on the marker struct itself — all `Accumulator` / serde /
   `Clone` / `Send` / `Sync` bounds come from the `LedgerEntry` supertrait on `T` and from
-  `Vec<T>`'s derived properties — no additional derives on the marker struct itself);
-  `Default::default()` produces `LedgerChannel { _inner: PhantomData }` (F-P2A216-04);
+  `Vec<T>`'s derived properties;
   the `Vec<T>` accumulator is external to the marker, owned and managed by the BSP engine;
   reducer pure function
   `fn reduce(acc: Vec<T>, update: T) -> Vec<T>` (no `Result`, no `Ok(())`) implementing

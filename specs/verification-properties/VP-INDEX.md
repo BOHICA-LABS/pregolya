@@ -1,14 +1,15 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.37"
+version: "1.38"
 status: active
 producer: architect
-timestamp: 2026-08-31T00:00:00Z
+timestamp: 2026-09-01T12:00:00Z
 phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.38 (round-56/D-335/2026-09-01): VP-019 §BC-Contradictions-Flagged (formal-verifier; §BC-Contradictions-Flagged marked RESOLVED — VP-019 no longer conflicts with VP-018 staging model; input-hash 6579f43; F-P2A227-03). VP-017/VP-018 DI anchors confirmed consistent (VP-017 DI-001, VP-018 DI-002, VP-019 DI-002). BC-INDEX §VP Seed BCs VP-018 DI cell corrected DI-002+DI-004→DI-002 (O-P2A227-A). VP census UNCHANGED: 20 total."
   - "1.37 (round-53/D-332/2026-08-31): VP-017 DI column corrected DI-014→DI-001 (F-P2A223-01 [MED]; architect adjudication; VP-017 body already carried DI-001 since round-52 pure-fold update; `ledger_channel_dedup_idempotency` harness anchors pure-fold DI-001 property). VP census UNCHANGED: 20 total."
   - "1.36 (round-50/F-P2A209-03+F-P2A211-05/2026-08-31): VP-019 added — trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; checkpoint::trajectory; pregolya-checkpoint; DI-002; Phase 6; n/a; file vp-019-trajectory-compaction-crash-isolation.md). Covers OS-level atomicity guarantee (SQLite BEGIN IMMEDIATE/COMMIT under SIGKILL) that VP-018 proptest explicitly excludes. VP-017 BC Anchor updated BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (F-P2A211-05 dual-anchor; first-appearance ordering is the subject of BC-2.02.008 and covered by Property 3 in VP-017 harness). Arithmetic: total 19→20 (P0 6 unchanged, P1 13→14); integration 2→3; Kani/proptest/unit unchanged. Status:draft 19→20."
   - "1.35 (BC-2.04.011/2026-08-31): VP-018 added — TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; checkpoint::trajectory; pregolya-checkpoint; DI-002; harness trajectory_compaction_retention_integrity; file vp-018-trajectory-compaction-retention-integrity.md). Human-approved VP mint: {INV-001}+{INV-002} corollary coverage; {INV-003} crash-isolation scoped to integration tests. Arithmetic: total 18→19 (P0 6→6 unchanged, P1 12→13); proptest 6→7; Kani/integration/unit unchanged. Status:draft 18→19."

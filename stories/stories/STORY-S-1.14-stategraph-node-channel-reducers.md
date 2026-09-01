@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.14
 epic_id: E-07
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-09-01T00:00:00Z
@@ -32,6 +32,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.7 (round-57/F-P2A227-01/2026-09-01): AC-016 updated — all five built-in channel types are generic over unconstrained type parameters and MUST use manual bound-free impl Default (NOT #[derive(Default)] — derive emits spurious T: Default or Op: Default breaking Channel: Default supertrait for unconstrained-T callers; ADR-030 §Decision 3 round-57); Task 20 updated; File Structure updated for all five channel files; Architecture Compliance Rule added for generic channel Default impls."
   - "1.6 (round-55/F-P2A225-03/2026-09-01): AC-015 §-citation corrected from non-resolving tail-substring form (§ChannelKind Coexistence) to full-heading-prefix form (§Channel Trait Definition Home and ChannelKind Coexistence) per POL-19/POL-4; no behavioral change."
   - "1.5 (round-54/F-P2A224-01a+F-P2A224-05/2026-09-01): Channel trait definition added as AC-015 (Task-19 + channels/channel.rs in File Structure + Architecture Mapping row) and five built-in Channel impls added as AC-016 (Task-20) per ADR-030 §Channel Trait Definition Home; BC-2.02.002 covered-ACs extended to include AC-015..AC-016; Token Budget updated (+channel.rs row, total ~17,500); blocks extended to include S-1.28 (F-P2A224-05); 8 pts unchanged."
   - "1.4 (round-21/F-P2A093-01/2026-08-28): AC-014 gate updated from bare `#[cfg(test)]` to `#[cfg(any(test, feature = \"test-util\"))]`; stub_terminal is now exposed via pregolya-graph `test-util` feature (dev-only) for cross-crate VP-016 harness; helper remains non-public-API. Task-18 updated to include `[features] test-util = []` in pregolya-graph/Cargo.toml. Library Requirements serde_json row and File Structure types.rs row updated to feature-gated form. Sibling sweep: all five live-body bare-`#[cfg(test)]` stub_terminal references replaced."
@@ -133,7 +134,7 @@ pub trait Channel: Default + Send + Sync + 'static {
 `Channel` is the SOLE BSP execution dispatch mechanism; `ChannelKind` remains the declaration-time schema-configuration discriminant and coexists without conflict (ADR-030 §Channel Trait Definition Home and ChannelKind Coexistence). Re-exported from `channels/mod.rs`. Downstream stories (S-1.28 and any future channel stories) consume the pre-existing trait from this file — they do NOT redefine it. Verified by `test_BC_2_02_002_channel_trait_defined_in_channel_rs()`.
 
 ### AC-016 (traces to BC-2.02.002 INV-001 — five built-in channel types implement Channel)
-`LastValue<T>`, `BinaryOperatorAggregate<T,Op>`, `BarrierValue<T>`, `NamedBarrierValue<T>`, and `EphemeralValue<T>` each implement `graph::channels::Channel` with their respective `Accumulator` and `Update` associated types matching their existing channel semantics (the reduce logic from AC-004 through AC-010 is the body of each `Channel::reduce` impl). The BSP engine dispatches via `<C as Channel>::reduce` during the reduce phase; no channel type reimplements reduce logic outside its own module. Points impact: none — trait definition + five delegating impls are within existing story scope (8 pts unchanged). Verified by `test_BC_2_02_002_builtin_channels_implement_channel_trait()`.
+`LastValue<T>`, `BinaryOperatorAggregate<T,Op>`, `BarrierValue<T>`, `NamedBarrierValue<T>`, and `EphemeralValue<T>` each implement `graph::channels::Channel` with their respective `Accumulator` and `Update` associated types matching their existing channel semantics (the reduce logic from AC-004 through AC-010 is the body of each `Channel::reduce` impl). The BSP engine dispatches via `<C as Channel>::reduce` during the reduce phase; no channel type reimplements reduce logic outside its own module. **Default impl requirement (ADR-030 §Decision 3 round-57):** All five types are generic over type parameters not constrained to `Default` in their `Channel` impl bounds; therefore all five MUST satisfy the `Channel: Default` supertrait via a MANUAL bound-free `impl Default` — `#[derive(Default)]` is FORBIDDEN for each because derive emits a spurious `T: Default` (or `T: Default + Op: Default`) bound that breaks BSP dispatch for callers with unconstrained T. Each type's manual `Default` impl constructs the type from concrete-Default or zero-valued fields only (e.g., `None` for `Option<T>` wrapper fields, empty collections for `Vec` fields) without placing a `Default` requirement on T or Op. Points impact: none — trait definition + five delegating impls + five bound-free Default impls are within existing story scope (8 pts unchanged). Verified by `test_BC_2_02_002_builtin_channels_implement_channel_trait()`.
 
 ## Architecture Mapping
 
@@ -207,7 +208,7 @@ pub trait Channel: Default + Send + Sync + 'static {
 17. [ ] Write failing test `test_BC_2_02_001_command_null_field_variants()` for AC-013 (test-writer)
 18. [ ] Implement `CompiledStateGraph::stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` gated `#[cfg(any(test, feature = "test-util"))]` as a `pub fn` in `pregolya-graph/src/types.rs` — single-node terminal graph that returns `terminal_state` verbatim from `invoke`; no LLM calls, no checkpointing. Also add `[features]\ntest-util = []\n` to `pregolya-graph/Cargo.toml` so the feature can be activated by dev-dependents (e.g., pregolya-mcp's `[dev-dependencies]` entry). Write test `test_BC_2_02_001_stub_terminal_constructs_minimal_graph()` confirming `invoke(json!({}), config)` returns the terminal state verbatim (AC-014 / BC-2.02.001 PC-001; consumed by VP-016 harness in S-2.11)
 19. [ ] Create `pregolya-graph/src/channels/channel.rs` — declare `pub trait Channel: Default + Send + Sync + 'static` with associated types `Accumulator: Clone + Serialize + DeserializeOwned + Send + Sync + 'static` and `Update: Clone + Send + Sync + 'static`, and required method `fn reduce(acc: Self::Accumulator, update: Self::Update) -> Self::Accumulator` (exact signature per ADR-030 §BSP Reduce-Dispatch Seam); add `pub use` re-export in `channels/mod.rs`; write test `test_BC_2_02_002_channel_trait_defined_in_channel_rs()` asserting the trait can be used as a type-bound (AC-015)
-20. [ ] Implement `Channel` for all five built-in channel types in their respective module files — `LastValue<T>` in `channels/last_value.rs`, `BinaryOperatorAggregate<T,Op>` in `channels/append.rs`, `BarrierValue<T>` in `channels/barrier.rs`, `NamedBarrierValue<T>` in `channels/named_barrier.rs`, and `EphemeralValue<T>` in `channels/ephemeral.rs` — each with `Accumulator` and `Update` associated types matching existing channel semantics (reduce body delegates to the existing pure reducer logic); write test `test_BC_2_02_002_builtin_channels_implement_channel_trait()` asserting all five types satisfy the `Channel` bound (AC-016)
+20. [ ] Implement `Channel` for all five built-in channel types in their respective module files — `LastValue<T>` in `channels/last_value.rs`, `BinaryOperatorAggregate<T,Op>` in `channels/append.rs`, `BarrierValue<T>` in `channels/barrier.rs`, `NamedBarrierValue<T>` in `channels/named_barrier.rs`, and `EphemeralValue<T>` in `channels/ephemeral.rs` — each with `Accumulator` and `Update` associated types matching existing channel semantics (reduce body delegates to the existing pure reducer logic); for each type provide a MANUAL bound-free `impl Default` rather than `#[derive(Default)]` — all five are generic over type parameters not constrained to `Default`, and derive would add spurious T: Default (or T: Default + Op: Default) bounds breaking `Channel: Default` for unconstrained-T callers (ADR-030 §Decision 3 round-57); write test `test_BC_2_02_002_builtin_channels_implement_channel_trait()` asserting all five types satisfy the `Channel` bound (AC-016)
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -229,6 +230,7 @@ N/A — S-1.14 is the first `pregolya-graph` story that writes channel logic. Th
 | Production file ≤ 500 code-lines soft target; ≤ 750 hard gate | CLAUDE.md §File size & module splitting | `cargo xtask check-file-size` CI gate |
 | `pregolya-graph` must NOT depend on `pregolya-openai`, `pregolya-anthropic`, `pregolya-ollama` | architecture/dependency-graph.md | `cargo deny` configuration |
 | `EphemeralValue` is not serialized to checkpoint | BC-2.02.004 INV-001 | `bsp_engine.rs finish()` must exclude ephemeral channels from checkpoint snapshot |
+| Generic channel types MUST use manual bound-free `impl Default`, NOT `#[derive(Default)]` | ADR-030 §Decision 3 round-57; AC-016 | `#[derive(Default)]` on generic channel types emits spurious T: Default (or Op: Default) bounds incompatible with the `Channel: Default` supertrait for unconstrained-T BSP dispatch callers; all five built-in channel types and any future generic channel type MUST use a manual bound-free `impl Default` |
 
 ## Library & Framework Requirements (MANDATORY)
 
@@ -250,11 +252,11 @@ Exact versions are pinned in the workspace root `Cargo.toml`. Consult `.factory/
 |------|--------|---------|
 | `pregolya-graph/src/channels/channel.rs` | create | `pub trait Channel: Default + Send + Sync + 'static { type Accumulator; type Update; fn reduce(acc, update) -> Accumulator }` — the BSP reduce-dispatch seam (ADR-030 §BSP Reduce-Dispatch Seam); re-exported from `channels/mod.rs`; consumed by S-1.28 and all future channel stories |
 | `pregolya-graph/src/channels/mod.rs` | create | Re-export only — `pub use` of all five channel types and the `Channel` trait |
-| `pregolya-graph/src/channels/last_value.rs` | create | `LastValue<T>` with concurrent-write detection |
-| `pregolya-graph/src/channels/append.rs` | create | `BinaryOperatorAggregate<T,Op>`, `WriteRecord`, deterministic sort |
-| `pregolya-graph/src/channels/barrier.rs` | create | `BarrierValue` (all-writers-required) |
-| `pregolya-graph/src/channels/named_barrier.rs` | create | `NamedBarrierValue` with declared-writers list |
-| `pregolya-graph/src/channels/ephemeral.rs` | create | `EphemeralValue<T>` — cleared in `bsp_engine.finish()`, not in checkpoint |
+| `pregolya-graph/src/channels/last_value.rs` | create | `LastValue<T>` with concurrent-write detection; manual bound-free `impl<T> Default` (NOT `#[derive(Default)]` — spurious T: Default bound; ADR-030 §Decision 3 round-57) |
+| `pregolya-graph/src/channels/append.rs` | create | `BinaryOperatorAggregate<T,Op>`, `WriteRecord`, deterministic sort; manual bound-free `impl<T, Op> Default` (NOT `#[derive(Default)]`) |
+| `pregolya-graph/src/channels/barrier.rs` | create | `BarrierValue<T>` (all-writers-required); manual bound-free `impl<T> Default` (NOT `#[derive(Default)]`) |
+| `pregolya-graph/src/channels/named_barrier.rs` | create | `NamedBarrierValue<T>` with declared-writers list; manual bound-free `impl<T> Default` (NOT `#[derive(Default)]`) |
+| `pregolya-graph/src/channels/ephemeral.rs` | create | `EphemeralValue<T>` — cleared in `bsp_engine.finish()`, not in checkpoint; manual bound-free `impl<T> Default` (NOT `#[derive(Default)]`) |
 | `pregolya-graph/src/definition.rs` | create | `StateGraph`, `StateGraphBuilder`, `compile()` returning `CompiledStateGraph` (flat layout; no `graph/` subdir) |
 | `pregolya-graph/src/types.rs` | create | `WriteRecord`, `CompiledStateGraph`, `ChannelKind`; `#[cfg(any(test, feature = "test-util"))] pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` — single-node terminal helper exposed via `test-util` feature for cross-crate VP-016 harness in S-2.11; NOT public API |
 | `pregolya-graph/src/bsp_engine.rs` | create (partial) | `reduce_super_step`, `finish` — shared with S-1.16 |

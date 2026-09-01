@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.33"
+version: "2.34"
 status: active
 producer: state-manager
 timestamp: 2026-09-01T00:00:00Z
@@ -28,10 +28,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "72c17a1"
+input-hash: "8c23836"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "2.34 (round-57/F-P2A227-02/2026-09-01): F-P2A227-02 [HIGH] VP-019 §Property, §Formal statement, and §Why integration rewritten to the four-crash-point staging-table single-atomic-swap model (ADR-030 §Compaction Atomicity Decision). Old three-crash-point model (before_begin/mid_txn/after_sync with uniform pre_records outcome) retired as stale. New crash_point set: {before_build_begins, mid_build, mid_swap, after_swap_commit}. Cases 1–3 yield pre-compaction record set; case 4 (after_swap_commit) yields post-compaction retained_set(pre_records, policy). Formal statement updated with retained_set definition. Why-integration paragraph updated: 'three crash points (TV-002 three-case matrix)' → 'four crash points (TV-002 four-case matrix)'. VP count, module, tool, phase, BC anchor: all unchanged. input-hash updated."
   - "2.33 (round-54/F-P2A224-02/2026-09-01): VP-017 DI anchor corrected DI-014 → DI-001 in §preamble narrative sentence and Provable Properties Catalog VP table row (two sibling sites missed by round-53 D-332 re-anchor). Authoritative value: VP-INDEX + ADR-030 §VP + VP-017 body all carry DI-001. Historical body notes (DI-014 at ADR-030 Stage 1 and round-50) grandfathered per POL-46. input-hash refreshed."
 ---
 
@@ -894,27 +895,46 @@ crash semantics required. Phase 3 concurrent with the story implementing `checkp
 **VP-019 — Trajectory Compaction Crash Isolation** (`checkpoint::trajectory`) `integration P1 Phase 6`
 
 Property: After a SIGKILL delivered at any point during `TrajectoryCompactor::compact`
-— before `BEGIN`, mid-transaction, or after `COMMIT` sync — a subsequent
-`TrajectoryReader::replay(run_id)` returns the complete pre-compaction trajectory, not a
-partially-compacted or corrupted result. SQLite `BEGIN IMMEDIATE` / `COMMIT` guarantees
-atomicity: either the full compaction commits or the database is left in its pre-compaction
-state (BC-2.04.011 {INV-003}).
+under the staging-table single-atomic-swap model (ADR-030 §Compaction Atomicity Decision),
+a subsequent `TrajectoryReader::replay(run_id)` returns the expected trajectory state
+— never a partially-compacted or corrupted result (BC-2.04.011 {INV-003}).
+
+The four crash points in the staging-table model:
+
+- **(1) before-build-begins** — before the build phase creates `trajectory_records_staging`;
+  `trajectory_records` is untouched; replay returns the complete pre-compaction record set.
+- **(2) mid-build** — staging table partially filled, before the swap phase begins;
+  `trajectory_records` is intact (build phase never modifies it); stale `trajectory_records_staging`
+  is dropped on recovery; replay returns the complete pre-compaction record set.
+- **(3) mid-swap** — inside the `BEGIN IMMEDIATE` / `COMMIT` swap transaction, before `COMMIT`
+  durably lands; SQLite WAL atomicity rolls back the catalog ops; replay returns the complete
+  pre-compaction record set.
+- **(4) after-swap-commit** — `COMMIT` has durably landed; `trajectory_records` is the
+  post-compaction retained set; replay returns the retained records (not the full pre-compaction set).
 
 Formal statement:
 ```
 ∀ run_id, pre_records: Vec<TrajectoryRecord> (committed),
-  policy: TrajectoryRetentionPolicy, crash_point ∈ {before_begin, mid_txn, after_sync}:
+  policy: TrajectoryRetentionPolicy,
+  crash_point ∈ {before_build_begins, mid_build, mid_swap, after_swap_commit}:
 
+  let expected = match crash_point {
+    before_build_begins | mid_build | mid_swap => pre_records,
+    after_swap_commit => retained_set(pre_records, policy),
+  };
   process_killed_at(crash_point) during compact(run_id, policy)
-    → replay(run_id) after restart == pre_records
+    → replay(run_id) after restart == expected
 ```
+where `retained_set(records, policy)` denotes records whose `step_idx >= policy.retention_frontier`
+or whose `step_idx` is in `policy.promoted`.
 
-**Why integration test (not Kani or proptest):** SQLite `BEGIN IMMEDIATE` / `COMMIT`
-semantics and SIGKILL recovery require a real database process and OS-level crash injection.
-Neither Kani (no OS I/O) nor proptest (in-process, no crash semantics) can model this.
-The integration test: (1) inserts pre-compaction records; (2) starts compaction;
-(3) sends SIGKILL at three crash points (TV-002 three-case matrix); (4) restarts;
-(5) asserts `replay` returns the complete pre-compaction sequence.
+**Why integration test (not Kani or proptest):** SQLite WAL atomicity, stale-staging-cleanup
+behavior, and SIGKILL crash injection all require a real database process and OS-level crash
+semantics. Neither Kani (no OS I/O) nor proptest (in-process, no crash semantics) can model
+this. The integration test: (1) inserts pre-compaction records; (2) starts compaction;
+(3) sends SIGKILL at four crash points (TV-002 four-case matrix); (4) restarts;
+(5) asserts `replay` returns the expected state per crash-point semantics — pre-compaction
+record set for points 1–3, post-compaction retained set for point 4.
 
 See `vp-019-trajectory-compaction-crash-isolation.md` for the complete integration test outline.
 **Phase 6** — requires a running SQLite-backed `TrajectoryCompactor` (Phase 3 deliverable).
@@ -959,6 +979,8 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.34 | 2026-09-01 | architect | round-57/F-P2A227-02 | VP-019 §Property, §Formal statement, and §Why integration rewritten to the four-crash-point staging-table model (ADR-030 §Compaction Atomicity Decision). crash_point set: {before_build_begins, mid_build, mid_swap, after_swap_commit}. Cases 1–3 → pre-compaction state; case 4 (after_swap_commit) → post-compaction retained set. TV-002 matrix updated three-case → four-case. input-hash updated. |
+| 2.33 | 2026-09-01 | architect | round-54/F-P2A224-02 | VP-017 DI anchor corrected DI-014 → DI-001 in preamble narrative and Provable Properties Catalog VP table row. input-hash refreshed. |
 | 2.32 | 2026-08-31 | architect | round-50/F-P2A209-02+F-P2A209-03+F-P2A211-05 | VP-019 added: integration P1, Phase 6, `checkpoint::trajectory`, pregolya-checkpoint, BC-2.04.011 {INV-003}, DI-002. Covers OS-level SQLite atomicity under SIGKILL that VP-018 proptest explicitly excludes. VP-017 BC Anchor updated BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (first-appearance ordering obligation). VP-018 §Should Prove description updated: proptest strategy updated to `TrajectoryRetentionPolicy` parameters + independent oracle + negative mutation test. Committed VP Obligations table: VP-017 anchor updated; VP-019 row added; total 19→20 VPs, P1 13→14, integration ×2→×3. §Section Content narrative updated (nineteen→twenty VPs). §Should Prove section: VP-019 entry added; VP-018 §should-prove references VP-019 for crash-isolation. input-hash updated. |
 | 2.31 | 2026-08-31 | architect | BC-2.04.011 | VP-018 added: proptest P1, `checkpoint::trajectory`, pregolya-checkpoint, BC-2.04.011 {INV-001}, DI-002, `trajectory_compaction_retention_integrity`. Human-approved VP mint: {INV-001}+{INV-002} corollary coverage; {INV-003} crash-isolation scoped to integration tests. Committed VP Obligations table: add VP-018 row; update total 18→19 VPs, P1 12→13, proptest ×6→×7. §Section Content narrative updated (eighteen→nineteen VPs). §Should Prove section: add VP-018 entry. BC-2.04.011 added to inputs list. input-hash updated. |
 | 2.30 | 2026-08-31 | architect | ADR-030 Stage 1 | VP-017 added: proptest P1, `graph::channels`, pregolya-graph, BC-2.02.007 (draft), DI-014, `ledger_channel_dedup_idempotency`. ADR-030 Decision 3 (LedgerChannel dedup-idempotency). Committed VP Obligations table: add VP-017 row; update total 17→18 VPs, P1 11→12, proptest ×5→×6. §Section Content narrative updated (seventeen→eighteen VPs). §Should Prove section: add VP-017 entry. BC-2.02.007 added to inputs list (draft; PO authors in Stage 2). input-hash pending (BC-2.02.007 not yet authored). |

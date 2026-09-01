@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.009
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,6 +21,7 @@ changelog:
   - "1.3 (round-51/Stage-B2-product-owner/2026-08-31): §Story Anchor resolved: S-1.28 (per STORY-INDEX; F-P2A214-01 hook #19 compliance). §Architecture Anchors: PromoteRetireOp<T> + PromoteRetireChannel<T> canonical file corrected from phantom flat-file channels.rs to directory module channels/promote_retire.rs (F-P2A215-01; graph::channels module path unchanged)."
   - "1.4 (round-52/F-P2A216-04/2026-08-31): §Architecture Anchors: `PromoteRetireChannel<T>` struct canonical shape added — `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized marker; `Default::default()` produces the zero-sized marker struct; the `Vec<T>` active-set accumulator is external to the marker, owned and managed by the BSP engine — F-P2A216-04). No behavioral change."
   - "1.5 (round-55/F-P2A225-01/2026-09-01): §Traceability L2 Domain Invariants: DI-014 replaced with DI-001 per architect ADR-030 §VP ruling — PromoteRetireChannel::reduce is a pure infallible reducer returning Vec<T> with no Result/Err/None path; DI-014 (error propagation) is inapplicable (vacuously compliant, not meaningfully enforced). DI-001 (BSP Reducer Determinism) is the correct domain-invariant anchor: the reducer is deterministic given the same accumulated state and input sequence in task-identity order."
+  - "1.6 (round-57/F-P2A227-01/2026-09-01): §Architecture Anchors: replaced implicit `Default::default()` annotation with an explicit manual bound-free `impl<T: LedgerEntry> Default for PromoteRetireChannel<T>` per ADR-030 §Decision 3 round-57 architect ruling — `#[derive(Default)]` would emit a spurious `T: Default` bound that breaks the `Channel: Default + Send + Sync + 'static` supertrait obligation for callers holding only `T: LedgerEntry`. {INV-004} added: explicit `Channel: Default` supertrait-obligation clause — satisfied by the manual bound-free impl, not a derive. Supersedes the implicit Default from round-52 (F-P2A216-04)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "5723c88"
+input-hash: "5b89b25"
 extracted_from: null
 modified: []
 deprecated: null
@@ -90,6 +91,16 @@ to advance from pending to active and be retired when superseded or committed.
 - {INV-003} `Retire` operates by `entry_id` matching only — it does not require the full `T`
   value. Any entry in the active set whose `entry_id()` equals the `Retire(entry_id)` argument
   is removed, regardless of the entry's other fields.
+- {INV-004} **Channel trait dispatch contract:** `PromoteRetireChannel<T>` implements
+  `graph::channels::Channel` with `Accumulator = Vec<T>` and `Update = PromoteRetireOp<T>`; the
+  BSP engine dispatches to `PromoteRetireChannel::<T>::reduce` during the reduce phase. No
+  additional bounds beyond `T: LedgerEntry` are required at call sites — the `LedgerEntry`
+  supertrait (`Clone + Serialize + DeserializeOwned + Send + Sync + 'static`) already satisfies
+  the `Accumulator` bounds of the `Channel` trait. The `Channel` supertrait additionally requires
+  `Self: Default`; `PromoteRetireChannel<T>: Default` for all `T: LedgerEntry` is satisfied by a
+  MANUAL bound-free `Default` impl — NOT `#[derive(Default)]`, which would emit a spurious
+  `T: Default` bound and break call sites where `T: LedgerEntry` but `T: !Default`, violating the
+  "no bounds beyond `T: LedgerEntry`" guarantee of this invariant (per ADR-030 §Decision 3 round-57).
 
 ## Edge Cases
 
@@ -146,8 +157,12 @@ differs from EC-003 because task-identity order is deterministic per DI-001.
 - `pregolya-graph/src/channels/promote_retire.rs` (`graph::channels`) — `PromoteRetireOp<T>` enum
   (`Promote(T)` / `Retire(String)`); `PromoteRetireChannel<T>` struct canonical shape:
   `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` (zero-sized
-  marker; `Default::default()` produces `PromoteRetireChannel { _inner: PhantomData }`; the `Vec<T>`
-  active-set accumulator is external to the marker, owned and managed by the BSP engine — F-P2A216-04);
+  marker; `Default` is provided by a MANUAL bound-free impl — NOT `#[derive(Default)]`, which would emit
+  a spurious `T: Default` bound incompatible with callers holding only `T: LedgerEntry` and violating
+  {INV-004} — per ADR-030 §Decision 3 round-57:
+  `impl<T: LedgerEntry> Default for PromoteRetireChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } }`;
+  no `Clone` / `Serialize` / `Deserialize` derives on the marker struct;
+  the `Vec<T>` active-set accumulator is external to the marker, owned and managed by the BSP engine);
   reducer function operating on `Vec<T>` active set
 - `pregolya-graph/src/definition.rs` (`graph::definition`) — `StateGraph` channel registration; `PromoteRetireChannel` registered as a channel type with reducer `PromoteRetireOp<T>`
 - ADR-030 §Decision 3 — `PromoteRetireChannel` design; `LedgerEntry` as the common marker trait for both `LedgerChannel` and `PromoteRetireChannel` entries

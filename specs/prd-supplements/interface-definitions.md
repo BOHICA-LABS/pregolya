@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.10"
+version: "3.11"
 status: active
 producer: architect
 timestamp: 2026-09-01T00:00:00Z
 phase: 1d
 changelog:
+  - "3.11 (round-57/F-P2A227-01/2026-09-01): F-P2A227-01 [HIGH] §LedgerChannel: derive(Default) dropped from both LedgerChannel<T> and PromoteRetireChannel<T> marker structs; manual bound-free Default impls restored for both. Rationale: derive(Default) on a generic struct emits a spurious T: Default bound (rustc issue #26925); LedgerEntry does not include Default; the Channel supertrait requires Default for all T: LedgerEntry; the spurious bound violates AC-018/BC-2.02.007 {INV-004}. The canonical form is: impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } } (and analogously PromoteRetireChannel). This reverses the derive-only mandate from F-P2A220-01/F-P2A224-03 (recorded as non-realizable in ADR-030 §Decision 3). Doc comments on both structs updated to state 'manual bound-free impl'. No other struct attributes modified."
   - "3.10 (round-55/F-P2A225-04/2026-09-01): F-P2A225-04 [MED] Two chained double-§ citations eliminated per POL-19: (1) §Runnable::invoke doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). (2) §DynRunnable doc-comment authority line: ADR-005 §Adjacent Trait Object-Safety Adjudications §Send-Bounded RPITIT → ADR-005 §Send-Bounded RPITIT (single heading). §Send-Bounded RPITIT is the most-specific heading in ADR-005 for both citations (subsection of §Adjacent Trait Object-Safety Adjudications)."
   - "3.09 (round-54/F-P2A224-03/2026-09-01): F-P2A224-03 [HIGH] §LedgerChannel: LedgerChannel<T> and PromoteRetireChannel<T> marker structs corrected to canonical round-53 derive-set (F-P2A220-01 canon; BC-2.02.007 §Architecture Anchors; S-1.28 Rule 13). (a) LedgerChannel<T>: removed #[derive(Debug, Clone)]; replaced with #[derive(Default)]; deleted manual impl<T: LedgerEntry> Default for LedgerChannel<T> block — derive form is the canonical shape. (b) PromoteRetireChannel<T>: same corrections. No other types in this section are modified — unrelated #[derive(Debug, Clone)] annotations on other types (RunnableConfig, StreamEvent, etc.) are untouched."
   - "3.08 (round-53/F-P2A220-04+F-P2A222-03+F-P2A223-02/2026-08-31): §TrajectoryCompactor error note: removed stale '(pending PO mint)' placeholder on E-TRAJ-005 — E-TRAJ-005 TrajectoryCompactionFailed is minted (error-taxonomy.md; BC-2.04.011 §Changelog (round-52)); replaced placeholder with '(minted; BC-2.04.011 {PC-006})'. Records-tier cleanup only; no structural changes."
@@ -126,7 +127,7 @@ inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/capabilities-p1-p2.md
-input-hash: "977aef2"
+input-hash: "80fe717"
 traces_to: prd.md
 primary_consumers: [implementer, test-writer, devops-engineer]
 note: "pregolya is a Rust library framework, not a CLI tool. 'Interface' covers public Rust traits/types, pregolya-server HTTP API, Cargo feature flags, and config schemas."
@@ -3119,11 +3120,16 @@ pub trait LedgerEntry: Clone + Serialize + DeserializeOwned + Send + Sync + 'sta
 /// `LastValue<T>`, `BinaryOperatorAggregate<T, Op>`, etc. are all stateless reducer markers).
 ///
 /// Channel registration is **type-level** (via `StateGraph` schema annotation); the BSP engine
-/// constructs instances internally. `Default` impl provided for cross-crate use (tests, etc.).
+/// constructs instances internally. `Default` is a **manual bound-free impl** — `derive(Default)`
+/// is intentionally absent because it would emit a spurious `T: Default` bound (rustc #26925),
+/// violating the `Channel: Default` supertrait obligation for all `T: LedgerEntry`.
 #[non_exhaustive]
-#[derive(Default)]
 pub struct LedgerChannel<T: LedgerEntry> {
     _inner: PhantomData<T>,
+}
+
+impl<T: LedgerEntry> Default for LedgerChannel<T> {
+    fn default() -> Self { Self { _inner: PhantomData } }
 }
 
 /// Lifecycle operation on a PromoteRetireChannel.
@@ -3143,11 +3149,16 @@ pub enum PromoteRetireOp<T: LedgerEntry> {
 ///   `fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>`  (pure function; no `Result`)
 ///
 /// Channel registration is **type-level** (via `StateGraph` schema annotation); the BSP engine
-/// constructs instances internally. `Default` impl provided for cross-crate use (tests, etc.).
+/// constructs instances internally. `Default` is a **manual bound-free impl** — `derive(Default)`
+/// is intentionally absent (same reason as `LedgerChannel<T>`: rustc #26925 spurious `T: Default`
+/// bound would violate `Channel: Default` for all `T: LedgerEntry`).
 #[non_exhaustive]
-#[derive(Default)]
 pub struct PromoteRetireChannel<T: LedgerEntry> {
     _inner: PhantomData<T>,
+}
+
+impl<T: LedgerEntry> Default for PromoteRetireChannel<T> {
+    fn default() -> Self { Self { _inner: PhantomData } }
 }
 ```
 
