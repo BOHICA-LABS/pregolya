@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.35"
+version: "2.36"
 status: active
 producer: state-manager
 timestamp: 2026-09-01T00:00:00Z
@@ -28,10 +28,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "8c23836"
+input-hash: "8837490"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "2.36 (round-62/F-P2A234-05/2026-09-01): VP-020 added — PromoteRetireChannel idempotency proptest P1 (BC-2.02.009 {INV-001}+{INV-002}; graph::channels; pregolya-graph; DI-001; Phase 3; harness promote_retire_channel_idempotency). Structurally analogous to VP-017 LedgerChannel; closes BC-2.02.009 unit-test-only gap. VP-019 §Should Prove description updated from four-crash-point staging-table model to two-crash-point per-run DELETE model (ADR-030 §Compaction Atomicity Decision F-P2A234-01 redesign). Committed VP Obligations table: VP-020 row added; total 20→21 VPs; P1 14→15; proptest 7→8. Preamble narrative updated twenty→twenty-one. input-hash not updated (BC-2.02.009 added as input; formal-verifier to refresh after VP-020 body authored)."
   - "2.35 (round-57/F-P2A228-01/2026-09-01): VP-017 §Provable Properties Catalog formal statement rewritten to canonical pure-fold form — removed stale LedgerChannel::new() constructor (removed per ADR-030 §Decision 3 changelog; banned by S-1.28 Rule 13) and IndexSet oracle (banned by S-1.28 Rule 14); replaced with fold accumulation form and HashSet oracle matching VP-017 body §Formal Invariant verbatim. input-hash not updated (no BC input changes)."
   - "2.34 (round-57/F-P2A227-02/2026-09-01): F-P2A227-02 [HIGH] VP-019 §Property, §Formal statement, and §Why integration rewritten to the four-crash-point staging-table single-atomic-swap model (ADR-030 §Compaction Atomicity Decision). Old three-crash-point model (before_begin/mid_txn/after_sync with uniform pre_records outcome) retired as stale. New crash_point set: {before_build_begins, mid_build, mid_swap, after_swap_commit}. Cases 1–3 yield pre-compaction record set; case 4 (after_swap_commit) yields post-compaction retained_set(pre_records, policy). Formal statement updated with retained_set definition. Why-integration paragraph updated: 'three crash points (TV-002 three-case matrix)' → 'four crash points (TV-002 four-case matrix)'. VP count, module, tool, phase, BC anchor: all unchanged. input-hash updated."
   - "2.33 (round-54/F-P2A224-02/2026-09-01): VP-017 DI anchor corrected DI-014 → DI-001 in §preamble narrative sentence and Provable Properties Catalog VP table row (two sibling sites missed by round-53 D-332 re-anchor). Authoritative value: VP-INDEX + ADR-030 §VP + VP-017 body all carry DI-001. Historical body notes (DI-014 at ADR-030 Stage 1 and round-50) grandfathered per POL-46. input-hash refreshed."
@@ -44,7 +45,7 @@ changelog:
 
 ## [Section Content]
 
-This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the twenty committed VP obligations (VP-001–VP-019 + VP-006-B), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-006-B is the SEC-003 multi-pair few-shot injection mandate (proptest P1 belt-and-suspenders for the VP-006 Arm 2 Kani harness). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}). VP-017 is the ADR-030 LedgerChannel dedup-idempotent append proptest P1 (BC-2.02.007 + BC-2.02.008 {DI-001}; praxist-pattern research orchestrator additive primitive; dual-anchored per first-appearance ordering obligation in BC-2.02.008). VP-018 is the BC-2.04.011 TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; no committed retained record lost or mutated by compaction; durable audit record integrity for the research orchestrator session trajectory; harness reworked round-50 with independent frontier-based oracle and negative mutation test). VP-019 is the BC-2.04.011 trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL; OS-level atomicity guarantee that VP-018 proptest explicitly excludes; Phase 6 integration test).
+This file documents pregolya's verification architecture: the Kani async constraint (0.67.0 has no native async/.await support), the twenty-one committed VP obligations (VP-001–VP-020 + VP-006-B), and the P0/P1 property catalog with proof harness skeleton patterns. VP-001..005 are the original five (three Kani P0 + two integration P1). VP-006..010 are the D21 ecosystem-parity expansion (three Kani P0/P1 + two proptest P1). VP-006-B is the SEC-003 multi-pair few-shot injection mandate (proptest P1 belt-and-suspenders for the VP-006 Arm 2 Kani harness). VP-011..013 are the D23 tools/budget layer (three Kani P0/P1). VP-014 is the burst-302b LCEL composition expansion (one proptest P1; D-170). VP-015 is the architect-reconcile-burst credential-redaction unit P1 (BC-2.09.007 {INV-003}; D-273 fix: tool was incorrectly listed as integration). VP-016 is the GAP-01/ADR-029 GraphAgentTool STATE-ISOLATION proptest P1 (BC-2.09.008 {INV-001}). VP-017 is the ADR-030 LedgerChannel dedup-idempotent append proptest P1 (BC-2.02.007 + BC-2.02.008 {DI-001}; praxist-pattern research orchestrator additive primitive; dual-anchored per first-appearance ordering obligation in BC-2.02.008). VP-018 is the BC-2.04.011 TrajectoryCompactor retention-integrity proptest P1 (BC-2.04.011 {INV-001}; no committed retained record lost or mutated by compaction; durable audit record integrity for the research orchestrator session trajectory; harness reworked round-50 with independent frontier-based oracle and negative mutation test). VP-019 is the BC-2.04.011 trajectory compaction crash-isolation integration P1 (BC-2.04.011 {INV-003}; SQLite BEGIN IMMEDIATE/COMMIT atomicity under SIGKILL; OS-level atomicity guarantee that VP-018 proptest explicitly excludes; Phase 6 integration test). VP-020 is the ADR-030 PromoteRetireChannel idempotency proptest P1 (BC-2.02.009 {INV-001}+{INV-002}; DI-001; structurally analogous to VP-017; closes the BC-2.02.009 unit-test-only coverage gap).
 
 ## Kani Async Constraint (Verified Kani 0.67.0)
 
@@ -76,7 +77,7 @@ on a `Future` will fail at verification time. Consequences:
 
 ## Committed VP Obligations (D17-Q7 + R11 + D21 + D23)
 
-Twenty VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-006-B (SEC-003 multi-pair few-shot mandate) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction) plus VP-016 (GAP-01/ADR-029 GraphAgentTool state-isolation) plus VP-017 (ADR-030 LedgerChannel dedup-idempotency, dual-anchored BC-2.02.007 + BC-2.02.008) plus VP-018 (BC-2.04.011 TrajectoryCompactor retention-integrity) plus VP-019 (BC-2.04.011 {INV-003} trajectory compaction crash-isolation integration P1):
+Twenty-one VPs committed before v1.0 release — VP-001..005 (original five) plus VP-006..010 (D21 ecosystem-parity expansion) plus VP-006-B (SEC-003 multi-pair few-shot mandate) plus VP-011..013 (D23 tools/budget layer) plus VP-014 (burst-302b LCEL composition expansion) plus VP-015 (architect-reconcile-burst MCP credential-redaction) plus VP-016 (GAP-01/ADR-029 GraphAgentTool state-isolation) plus VP-017 (ADR-030 LedgerChannel dedup-idempotency, dual-anchored BC-2.02.007 + BC-2.02.008) plus VP-018 (BC-2.04.011 TrajectoryCompactor retention-integrity) plus VP-019 (BC-2.04.011 {INV-003} trajectory compaction crash-isolation integration P1) plus VP-020 (ADR-030 PromoteRetireChannel idempotency proptest P1, BC-2.02.009 {INV-001}+{INV-002}):
 
 | VP | BC Anchor | DI | Module | Tool | Phase | Priority |
 |----|-----------|-----|--------|------|-------|---------|
@@ -100,8 +101,9 @@ Twenty VPs committed before v1.0 release — VP-001..005 (original five) plus VP
 | VP-017 | BC-2.02.007 + BC-2.02.008 | DI-001 | `graph::channels` | proptest | 3 | P1 |
 | VP-018 | BC-2.04.011 {INV-001} | DI-002 | `checkpoint::trajectory` | proptest | 3 | P1 |
 | VP-019 | BC-2.04.011 {INV-003} | DI-002 | `checkpoint::trajectory` | integration | 6 | P1 |
+| VP-020 | BC-2.02.009 {INV-001}+{INV-002} | DI-001 | `graph::channels` | proptest | 3 | P1 |
 
-**Total: 20 VPs — 6 P0 / 14 P1 | Tool breakdown: Kani ×9, proptest ×7, integration ×3, unit ×1**
+**Total: 21 VPs — 6 P0 / 15 P1 | Tool breakdown: Kani ×9, proptest ×8, integration ×3, unit ×1**
 
 > **D-273 VP-015 tool-type fix (GAP-01/2026-08-26):** VP-015 tool corrected from 'integration' to 'unit' — VP-015.md frontmatter is authoritative per CLAUDE.md rule 4 (VP file supersedes architecture doc).
 > **SEC-003 VP-006-B (SEC-review-adjudication/2026-08-26):** VP-006-B proptest P1 added for multi-pair few-shot injection mandate. Total 16→17 VPs; P1 10→11; proptest 4→5.
@@ -109,6 +111,7 @@ Twenty VPs committed before v1.0 release — VP-001..005 (original five) plus VP
 > **BC-2.04.011 VP-018 (2026-08-31):** VP-018 proptest P1 added for TrajectoryCompactor retention-integrity. Total 18→19 VPs; P1 12→13; proptest 6→7.
 > **round-50 VP-017+VP-019 (2026-08-31):** VP-017 BC Anchor updated BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (F-P2A211-05 dual-anchor; first-appearance ordering covered by Property 3 in VP-017 harness is the subject of BC-2.02.008). VP-019 integration P1 added for trajectory compaction crash-isolation (BC-2.04.011 {INV-003}; SQLite atomicity under SIGKILL). Total 19→20 VPs; P1 13→14; integration 2→3.
 > **round-54 VP-017 DI correction (F-P2A224-02/2026-09-01):** VP-017 DI anchor corrected DI-014 → DI-001 in §preamble narrative sentence and Provable Properties Catalog VP table row. Authoritative value confirmed: VP-INDEX + ADR-030 §VP + VP-017.md body all carry DI-001. The round-53 re-anchor (D-332) updated BC-INDEX / VP-INDEX / ARCH-INDEX / ADR-030 §VP / VP-017 body but missed these two sibling sites. Historical entries above (DI-014 at ADR-030 Stage 1 / round-50) are grandfathered per POL-46 as records of the original authored value.
+> **round-62 VP-020 (F-P2A234-05/2026-09-01):** VP-020 proptest P1 added for PromoteRetireChannel idempotency (BC-2.02.009 {INV-001}+{INV-002}; DI-001; graph::channels; Phase 3; harness `promote_retire_channel_idempotency`). Closes BC-2.02.009 unit-test-only coverage gap; structurally analogous to VP-017. Total 20→21; P1 14→15; proptest 7→8. VP-019 §Should Prove updated: four-crash-point staging-table model retired; replaced with two-crash-point per-run DELETE model per ADR-030 §Compaction Atomicity Decision F-P2A234-01 redesign.
 
 ## Provable Properties Catalog
 
@@ -907,32 +910,27 @@ crash semantics required. Phase 3 concurrent with the story implementing `checkp
 **VP-019 — Trajectory Compaction Crash Isolation** (`checkpoint::trajectory`) `integration P1 Phase 6`
 
 Property: After a SIGKILL delivered at any point during `TrajectoryCompactor::compact`
-under the staging-table single-atomic-swap model (ADR-030 §Compaction Atomicity Decision),
-a subsequent `TrajectoryReader::replay(run_id)` returns the expected trajectory state
-— never a partially-compacted or corrupted result (BC-2.04.011 {INV-003}).
+under the per-run single-transaction DELETE model (ADR-030 §Compaction Atomicity Decision,
+F-P2A234-01 redesign), a subsequent `TrajectoryReader::replay(run_id)` returns the expected
+trajectory state — never a partially-compacted or corrupted result (BC-2.04.011 {INV-003}).
 
-The four crash points in the staging-table model:
+The two crash points in the per-run DELETE model:
 
-- **(1) before-build-begins** — before the build phase creates `trajectory_records_staging`;
-  `trajectory_records` is untouched; replay returns the complete pre-compaction record set.
-- **(2) mid-build** — staging table partially filled, before the swap phase begins;
-  `trajectory_records` is intact (build phase never modifies it); stale `trajectory_records_staging`
-  is dropped on recovery; replay returns the complete pre-compaction record set.
-- **(3) mid-swap** — inside the `BEGIN IMMEDIATE` / `COMMIT` swap transaction, before `COMMIT`
-  durably lands; SQLite WAL atomicity rolls back the catalog ops; replay returns the complete
-  pre-compaction record set.
-- **(4) after-swap-commit** — `COMMIT` has durably landed; `trajectory_records` is the
-  post-compaction retained set; replay returns the retained records (not the full pre-compaction set).
+- **(1) before-commit** — SIGKILL before the `BEGIN IMMEDIATE` / `DELETE` / `COMMIT`
+  transaction commits; SQLite WAL atomicity discards uncommitted frames on next database open;
+  replay returns the complete pre-compaction record set (same as if compact never ran).
+- **(2) after-commit** — `COMMIT` has durably landed; eligible records have been removed;
+  replay returns the retained set (`step_idx >= retention_frontier` OR in `promoted`).
 
 Formal statement:
 ```
 ∀ run_id, pre_records: Vec<TrajectoryRecord> (committed),
   policy: TrajectoryRetentionPolicy,
-  crash_point ∈ {before_build_begins, mid_build, mid_swap, after_swap_commit}:
+  crash_point ∈ {before_commit, after_commit}:
 
   let expected = match crash_point {
-    before_build_begins | mid_build | mid_swap => pre_records,
-    after_swap_commit => retained_set(pre_records, policy),
+    before_commit => pre_records,
+    after_commit  => retained_set(pre_records, policy),
   };
   process_killed_at(crash_point) during compact(run_id, policy)
     → replay(run_id) after restart == expected
@@ -940,16 +938,53 @@ Formal statement:
 where `retained_set(records, policy)` denotes records whose `step_idx >= policy.retention_frontier`
 or whose `step_idx` is in `policy.promoted`.
 
-**Why integration test (not Kani or proptest):** SQLite WAL atomicity, stale-staging-cleanup
-behavior, and SIGKILL crash injection all require a real database process and OS-level crash
-semantics. Neither Kani (no OS I/O) nor proptest (in-process, no crash semantics) can model
-this. The integration test: (1) inserts pre-compaction records; (2) starts compaction;
-(3) sends SIGKILL at four crash points (TV-002 four-case matrix); (4) restarts;
-(5) asserts `replay` returns the expected state per crash-point semantics — pre-compaction
-record set for points 1–3, post-compaction retained set for point 4.
+**Why integration test (not Kani or proptest):** SQLite WAL atomicity and SIGKILL crash
+injection require a real database process and OS-level crash semantics. Neither Kani (no OS
+I/O) nor proptest (in-process, no crash semantics) can model this. The integration test:
+(1) inserts pre-compaction records for target run_id; (2) starts compaction;
+(3) sends SIGKILL at two crash points (TV-002 two-case matrix); (4) restarts;
+(5) asserts `replay` returns the expected state per crash-point semantics.
+
+> **VP-019 body update required (formal-verifier directive):** VP-019.md body was authored
+> against the four-crash-point staging-table model (round-57). The per-run DELETE redesign
+> (ADR-030 §Compaction Atomicity Decision, F-P2A234-01) reduces this to two crash points.
+> Formal-verifier must update the VP-019.md body: Property Statement section, Formal Statement
+> section, Why-integration section, and TV-002 matrix from four-case to two-case form.
+> This verification-architecture.md description is authoritative for the new model;
+> the VP-019.md body is the artifact to reconcile.
 
 See `vp-019-trajectory-compaction-crash-isolation.md` for the complete integration test outline.
 **Phase 6** — requires a running SQLite-backed `TrajectoryCompactor` (Phase 3 deliverable).
+
+---
+
+**VP-020 — PromoteRetireChannel Idempotency** (`graph::channels`) `proptest P1 Phase 3`
+
+Property: Applying the same promote/retire operation sequence twice to `PromoteRetireChannel`
+produces the same channel state as applying it once (BC-2.02.009 {INV-001}+{INV-002}, DI-001).
+
+Formal invariants:
+- **{INV-001}:** Promoting an already-promoted element is a no-op; the channel state is unchanged.
+- **{INV-002}:** Retiring an already-retired element is a no-op; the channel state is unchanged.
+
+Formal statement:
+```
+∀ channel: PromoteRetireChannel, ops: Vec<Op>:
+  let state1 = apply_ops(channel.clone(), &ops);
+  let state2 = apply_ops(state1.clone(), &ops);  // apply same ops again
+  state1 == state2
+```
+where `Op` is a `Promote(id)` or `Retire(id)` operation and `apply_ops` folds ops via the
+`reduce(acc, op) -> State` pure function.
+
+**Why proptest (not Kani):** The set of element IDs and channel states is unbounded. proptest
+generates arbitrary `Vec<Op>` sequences, applies them twice, and asserts equality.
+This matches the structural pattern of VP-017 (LedgerChannel dedup-idempotency).
+
+Feasibility: HIGH. `reduce` is a pure synchronous function (no async, no I/O). Phase 3 —
+same wave as `PromoteRetireChannel` implementation under BC-2.02.009.
+
+See `vp-020-promote-retire-channel-idempotency.md` for the complete harness specification.
 
 ## Test-Sufficient (No Kani)
 

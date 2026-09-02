@@ -10,7 +10,7 @@ phase: 1b
 inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "6579f43"
+input-hash: "86089f3"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.04.011
 bc_anchor: BC-2.04.011 {INV-003}
@@ -38,8 +38,9 @@ withdrawn: null
 withdrawal_reason: null
 removed: null
 removal_reason: null
-version: "1.3"
+version: "1.4"
 changelog:
+  - "1.4 (round-62/F-P2A234-01/2026-09-01): Compaction model rewritten from the staging-table single-atomic-swap (FOUR crash points) to the per-run single-transaction DELETE (TWO crash points) per ADR-030 §Compaction Atomicity Decision (F-P2A234-01 redesign; the staging-table swap silently destroyed all other run_ids' records). New crash_point set: {before_commit, after_commit}. §Property Statement, §Formal Invariant, §Source Contract, §Proof Method, §BC Traceability, §Proof Harness Skeleton, §Feasibility Assessment, and §Proof Obligations rewritten for the two-case matrix. Added per-run scope-safety invariant clause and harness witness (a second run_id's records untouched before OR after commit — supports the F-P2A234-01 scope-safety property; DELETE WHERE run_id = :run_id predicate). §BC Contradictions Flagged kept RESOLVED: BC-2.04.011 was reconciled in the same round-62 burst — its {INV-003}, §VP-table VP-019 row, §Description, §Architecture Anchors, and §Related BCs now describe the two-crash-point per-run DELETE model and cite VP-019's two-crash-point matrix, so BC and VP agree; no open reconciliation action remains. input-hash refreshed (ADR-030 advanced under F-P2A234-01). VP does not edit BC files."
   - "1.3 (round-57/F-P2A227-03/2026-09-01): §BC Contradictions Flagged updated from OPEN to RESOLVED. The prior text carried a stale present-tense claim that BC-2.04.011 {INV-003} and its §Verification Properties VP-019 row 'currently describe a three crash-point matrix (before-begin, mid-txn, after-sync) ... flagged for product-owner reconciliation and routed via the orchestrator/state-manager'. That claim is now false and the open action is complete: BC-2.04.011 adopted the four-crash-point matrix in its round-53-corrective revision — its live {INV-003} and its §Verification Properties VP-019 row both now read four crash points (before-build-begins, mid-build (staging partially filled before swap), mid-swap-transaction (after BEGIN IMMEDIATE, before COMMIT), after-swap-commit). Section rewritten to record the contradiction as resolved (BC and this VP now agree on the four-point matrix; no open reconciliation action remains). No property, invariant, formal-invariant, harness, or proof-obligation change; VP does not edit BC files."
   - "1.2 (round-53/F-P2A221-01/2026-08-31): Crash matrix extended from three to FOUR crash points under the staging-table single-atomic-swap compaction model (ADR-030 §Compaction Atomicity Decision). Under this model, `compact` builds a shadow `trajectory_records_staging` table in bounded per-batch transactions (default 1,000 records per BEGIN IMMEDIATE/COMMIT on the staging table) while `trajectory_records` is untouched, then performs a single BEGIN IMMEDIATE; DROP TABLE trajectory_records; ALTER TABLE trajectory_records_staging RENAME TO trajectory_records; COMMIT swap — the sole reader-visible atomicity boundary. New crash point (case 2) added: mid-build (staging partially filled, before swap begins) → pre-compaction state intact, stale `trajectory_records_staging` dropped on recovery (implementation drops any stale staging table at the start of the next `compact` entry before a new build). §Property Statement, §Formal Invariant, §Source Contract, §Proof Method, §BC Traceability, §Proof Harness Skeleton, §Feasibility Assessment, and §Proof Obligations rewritten for four cases + recovery-time stale-staging cleanup. Reader-visible atomicity kept coherent with BC-2.04.011 {PC-004}/{INV-003}: `replay` always observes complete pre-compaction OR complete post-compaction state, never a partial. ADR-030 §Compaction Atomicity Decision added to inputs; input-hash refreshed. BC-2.04.011 {INV-003}/§VP-table three-point wording predates ADR-030 §Compaction Atomicity Decision and is flagged for product-owner reconciliation in §BC Contradictions Flagged (surface, not silently diverge)."
   - "1.1 (round-52/F-P2A217-03/2026-08-31): WAL-correct language applied throughout. SQLite topology is WAL mode (ADR-030 §SQLite Topology Decision). Scenario 2 (mid-transaction crash): 'SQLite rollback journal restores pre-compaction state on restart' → 'uncommitted WAL frames after the last commit marker are discarded on the next database open; pre-compaction state is fully recovered'. §Property Statement introductory sentence corrected similarly. Integration test assert message updated. §Proof Obligations updated. Rollback journal is not used in WAL mode; the correct recovery mechanism is WAL frame discard on next open."
@@ -50,60 +51,56 @@ changelog:
 
 ## Property Statement
 
-For any `TrajectoryCompactor::compact` call that is interrupted by SIGKILL at any of
-**four crash points** across the staging-table single-atomic-swap compaction
-(ADR-030 §Compaction Atomicity Decision) — before the build phase begins, mid-build
-(the shadow table `trajectory_records_staging` partially filled, before the swap begins),
-mid-swap (after `BEGIN IMMEDIATE`, before `COMMIT`), or after the swap `COMMIT` returns —
-a subsequent `TrajectoryReader::replay(run_id)` call after process restart returns either
-the **complete pre-compaction trajectory record sequence** or the **complete post-compaction
-retained sequence**, with no partial compaction, no record loss, and no record mutation.
+For any `TrajectoryCompactor::compact(run_id, policy)` call that is interrupted by SIGKILL at
+either of **two crash points** across the per-run single-transaction DELETE compaction
+(ADR-030 §Compaction Atomicity Decision, F-P2A234-01 redesign) — before the `COMMIT` of the
+DELETE transaction is durably recorded, or after that `COMMIT` returns — a subsequent
+`TrajectoryReader::replay(run_id)` call after process restart returns either the **complete
+pre-compaction trajectory record sequence** (crash before commit) or the **complete
+post-compaction retained sequence** (crash after commit), with no partial compaction, no record
+loss, and no record mutation.
 
-The property follows from the staging-table single-atomic-swap model:
+The property follows from the per-run single-transaction DELETE model:
 
-- **Build phase** copies retained records from `trajectory_records` into
-  `trajectory_records_staging` in bounded per-batch transactions (default 1,000 records per
-  `BEGIN IMMEDIATE / COMMIT` on the staging table). `trajectory_records` is never modified
-  during the build phase, and `TrajectoryReader::replay` reads `trajectory_records` only —
-  `trajectory_records_staging` is invisible to `replay` throughout the build.
-- **Swap phase** is a single transaction — `BEGIN IMMEDIATE; DROP TABLE trajectory_records;
-  ALTER TABLE trajectory_records_staging RENAME TO trajectory_records; COMMIT` — that is the
-  **sole reader-visible atomicity boundary**. In WAL mode, if the process is killed after
-  `BEGIN IMMEDIATE` but before the `COMMIT` marker is durably recorded, the uncommitted WAL
-  frames of the swap transaction are discarded by SQLite on the next database open (no
-  rollback journal — WAL mode uses frame discard), leaving `trajectory_records` in its
-  pre-compaction state.
-- **Recovery-time stale-staging cleanup:** a `trajectory_records_staging` table left behind by
-  a mid-build or mid-swap crash is dropped unconditionally at the start of the next `compact`
-  entry, before a new build begins. This guarantees a crashed build never corrupts or
-  contaminates a subsequent compaction.
+- Compaction is a **single-phase** operation scoped to the target `run_id`: `BEGIN IMMEDIATE;
+  DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND
+  step_idx NOT IN (:promoted_step_idxs); COMMIT`. The single `BEGIN IMMEDIATE / COMMIT`
+  transaction is the **sole reader-visible atomicity boundary**.
+- **Per-run scope-safety:** the DELETE `WHERE` clause filters on `run_id = :run_id`, so only
+  records belonging to the target run are ever read, modified, or deleted. Records belonging to
+  every other `run_id` are structurally untouched — enforced by the query predicate, not by
+  documentation convention. This supports the F-P2A234-01 scope-safety property: a compaction of
+  `run_id_A` can never destroy `run_id_B`'s trajectory.
+- **WAL rollback on crash-before-commit:** in WAL mode, if the process is killed after
+  `BEGIN IMMEDIATE` but before the `COMMIT` marker is durably recorded, the uncommitted WAL frames
+  of the DELETE transaction are discarded by SQLite on the next database open (no rollback
+  journal — WAL mode uses frame discard), leaving `trajectory_records` in its pre-compaction
+  state.
+- **No stale-artifact cleanup:** no staging table is created; there is no
+  `trajectory_records_staging` to detect or drop on recovery. The redesign eliminates the two
+  intermediate crash points (mid-build, mid-swap) that existed under the prior staging-table
+  single-atomic-swap model.
 
 This yields reader-visible atomicity coherent with BC-2.04.011 {PC-004}/{INV-003}: `replay`
-always observes either the complete pre-compaction state or the complete post-compaction
-state, and never a partial compaction, regardless of when the SIGKILL lands.
+always observes either the complete pre-compaction state or the complete post-compaction state,
+and never a partial compaction, regardless of when the SIGKILL lands.
 
-Four crash scenarios (ADR-030 §Compaction Atomicity Decision four-point matrix):
+Two crash scenarios (ADR-030 §Compaction Atomicity Decision two-point matrix):
 
-1. **Before build begins:** SIGKILL before any staging batch is written and before the swap.
-   No reader-visible mutation occurred; `trajectory_records` is intact. Pre-compaction state
-   is trivially preserved.
-2. **Mid-build [NEW]:** SIGKILL after `BEGIN IMMEDIATE` on the staging table but before the
-   swap phase begins — `trajectory_records_staging` is partially filled (indeterminate state).
-   `trajectory_records` was never touched, so `replay` returns the complete pre-compaction
-   sequence. The stale `trajectory_records_staging` is dropped on recovery at the next
-   `compact` entry.
-3. **Mid-swap transaction:** SIGKILL after `BEGIN IMMEDIATE` of the swap transaction but before
-   `COMMIT`. In WAL mode the uncommitted swap-transaction WAL frames are discarded on the next
-   database open; `trajectory_records` is left in its pre-compaction state (and any residual
-   `trajectory_records_staging` is dropped on recovery at the next `compact` entry).
-4. **After swap commit:** SIGKILL after the swap `COMMIT` returns. The rename is durably
-   committed; `trajectory_records` is the retained-only post-compaction state, which is the
-   correct outcome.
+1. **Before commit:** SIGKILL during DELETE execution, before the `COMMIT` WAL record is durably
+   written. In WAL mode the uncommitted DELETE-transaction WAL frames are discarded on the next
+   database open; `trajectory_records` is fully intact at the pre-compaction state.
+   `replay(run_id)` returns the complete pre-compaction record sequence — the same result as if
+   `compact` had never run.
+2. **After commit:** SIGKILL after the `COMMIT` WAL record is durably flushed. Eligible records
+   for `run_id` have been removed; all retained records for `run_id` — and all records for every
+   other `run_id` — are present. `replay(run_id)` returns the complete post-compaction retained
+   sequence, which is the correct outcome.
 
 > **Scope note:** The pure-core record-selection invariant ({INV-001}/{INV-002}) is covered
 > by VP-018 proptest. VP-019 covers {INV-003} exclusively — the OS-level crash-recovery
-> property that proptest and Kani cannot model (no SIGKILL injection, no SQLite WAL semantics,
-> no staging-table swap topology).
+> property that proptest and Kani cannot model (no SIGKILL injection, no SQLite WAL
+> frame-discard semantics).
 
 ## Formal Invariant
 
@@ -111,26 +108,29 @@ Four crash scenarios (ADR-030 §Compaction Atomicity Decision four-point matrix)
 ∀ run_id: Uuid,
   pre_records: Vec<TrajectoryRecord> (committed to storage via put_record),
   policy: TrajectoryRetentionPolicy,
-  crash_point ∈ {before_build, mid_build, mid_swap, after_swap_commit}:
+  crash_point ∈ {before_commit, after_commit}:
 
-  let crash_outcome = process_killed_at(crash_point, compact(run_id, policy));
-  let post_replay   = restart_and_replay(run_id);  // TrajectoryReader::replay after process restart
+  let expected = match crash_point {
+    before_commit => pre_records,                        // uncommitted WAL frames discarded
+    after_commit  => retained_set(pre_records, policy),  // DELETE committed; correct
+  };
+  process_killed_at(crash_point, compact(run_id, policy))
+    → restart_and_replay(run_id) == expected             // TrajectoryReader::replay after restart
 
-  crash_point ∈ {before_build, mid_build, mid_swap}
-    → post_replay == pre_records               // pre-compaction state fully preserved
-  crash_point == after_swap_commit
-    → post_replay == filter(!policy.is_eligible, pre_records)  // swap committed; correct
-
-  // Recovery-time stale-staging cleanup (build/swap crashes):
-  crash_point ∈ {mid_build, mid_swap}
-    → after restart, a subsequent compact(run_id, policy) first DROPs any stale
-      trajectory_records_staging, rebuilds, swaps, and returns Ok(()) with
-      replay(run_id) == filter(!policy.is_eligible, pre_records)
+  where retained_set(records, policy) =
+    records.filter(|r| r.step_idx >= policy.retention_frontier
+                       || policy.promoted.contains(&r.step_idx))
 
   // Reader-visible atomicity holds in every case:
-  ∀ crash_point: post_replay ∈ {pre_records, filter(!policy.is_eligible, pre_records)}
-    // never a partial compaction — replay reads trajectory_records only,
-    // never trajectory_records_staging
+  ∀ crash_point: restart_and_replay(run_id) ∈ {pre_records, retained_set(pre_records, policy)}
+    // never a partial compaction — the single BEGIN IMMEDIATE/COMMIT DELETE is the
+    // sole reader-visible atomicity boundary
+
+  // Per-run scope-safety (F-P2A234-01):
+  ∀ other_run_id ≠ run_id, ∀ crash_point:
+    restart_and_replay(other_run_id) == pre_records_of(other_run_id)
+    // records of every other run_id are structurally untouched by compact(run_id, ...)
+    // — the DELETE WHERE run_id = :run_id predicate — before OR after commit
 ```
 
 ## Source Contract
@@ -141,19 +141,20 @@ complete pre-compaction replay (if the transaction did not commit) or the comple
 post-compaction replay (if the transaction committed). No partial compaction state is
 observable." BC-2.04.011 {PC-004} states the same reader-visible whole-operation atomicity.
 
-ADR-030 §Compaction Atomicity Decision — Staging-Table Single-Atomic-Swap Model — mandates
-the topology that realizes this invariant: the build phase copies retained records into
-`trajectory_records_staging` in bounded per-batch transactions (default 1,000 records per
-`BEGIN IMMEDIATE / COMMIT` on the staging table) while `trajectory_records` is untouched, and
-the swap phase performs the single `BEGIN IMMEDIATE; DROP TABLE trajectory_records; ALTER
-TABLE trajectory_records_staging RENAME TO trajectory_records; COMMIT` transaction as the sole
-reader-visible atomicity boundary. Per that decision's crash semantics: crash mid-build leaves
-`trajectory_records` intact with stale staging dropped on recovery; crash mid-swap is
-WAL-atomic (pre or post depending on whether `COMMIT` landed, stale staging dropped on
-recovery); and the implementation MUST drop any stale `trajectory_records_staging` table at the
-start of each `compact` call before beginning a new build. ADR-030 §Compaction Atomicity
-Decision (added round-53) is the later, more-specific artifact and supersedes the earlier
-single-transaction narrative for this property (Source-of-Truth Precedence rule 2 + rule 4).
+ADR-030 §Compaction Atomicity Decision — Per-Run Single-Transaction DELETE (F-P2A234-01
+redesign) — mandates the topology that realizes this invariant: compaction is a single-phase
+operation `BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx <
+:retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT`. The single
+`BEGIN IMMEDIATE / COMMIT` transaction is the sole reader-visible atomicity boundary. Per that
+decision's crash semantics: crash before `COMMIT` leaves `trajectory_records` fully intact
+(uncommitted WAL frames discarded on the next database open); crash after `COMMIT` yields the
+post-compaction retained state. The DELETE `WHERE run_id = :run_id` predicate makes the operation
+inherently per-run-scoped — records of every other `run_id` are structurally untouched, and no
+staging table is created (so there is no stale-artifact cleanup on recovery). ADR-030
+§Compaction Atomicity Decision (revised round-62, F-P2A234-01) is the later, more-specific
+artifact and supersedes both the earlier single-transaction narrative and the intervening
+staging-table single-atomic-swap model for this property (Source-of-Truth Precedence rule 2 +
+rule 4).
 
 ## Proof Method
 
@@ -162,34 +163,35 @@ single-transaction narrative for this property (Source-of-Truth Precedence rule 
 | Tool | integration |
 | Location | `pregolya-checkpoint/tests/trajectory_crash_isolation.rs` |
 | Phase | 6 |
-| Bounded? | Four discrete crash points per ADR-030 §Compaction Atomicity Decision; deterministic fixture |
-| Coverage | {INV-003} before-build crash (case 1), mid-build crash (case 2, NEW), mid-swap crash (case 3), after-swap-commit crash (case 4), plus recovery-time stale-staging cleanup |
-| Oracle | Independent `replay()` call after process restart vs pre-compaction fixture (cases 1–3) and vs retained-only oracle (case 4) |
+| Bounded? | Two discrete crash points per ADR-030 §Compaction Atomicity Decision; deterministic fixture |
+| Coverage | {INV-003} before-commit crash (case 1), after-commit crash (case 2), plus per-run scope-safety (a second `run_id`'s records untouched in both cases) |
+| Oracle | Independent `replay()` call after process restart vs pre-compaction fixture (case 1) and vs retained-only oracle (case 2); a second `run_id`'s replay asserted unchanged in both cases |
 
 ## BC Traceability
 
 | BC | Clause | Coverage |
 |----|--------|---------|
-| BC-2.04.011 | {INV-003} crash-isolation — no partial compaction observable after SIGKILL | integration: four crash-point cases (before_build, mid_build, mid_swap, after_swap_commit) |
-| BC-2.04.011 | {PC-004} reader-visible whole-operation atomicity — `replay` observes complete pre- OR complete post-compaction state | integration: all four cases assert `replay` == pre_records (cases 1–3) or retained-only oracle (case 4) |
-| BC-2.04.011 | {INV-005} bounded compaction batch (build phase writes staging table only; swap is fast catalog op) | integration: build-phase batches exercised against `trajectory_records_staging`; `trajectory_records` untouched until swap |
-| ADR-030 | §Compaction Atomicity Decision — staging-table single-atomic-swap model; recovery-time stale-staging cleanup | integration: mid_build/mid_swap cases assert stale `trajectory_records_staging` is dropped and a subsequent `compact` succeeds |
+| BC-2.04.011 | {INV-003} crash-isolation — no partial compaction observable after SIGKILL | integration: two crash-point cases (before_commit, after_commit) |
+| BC-2.04.011 | {PC-004} reader-visible whole-operation atomicity — `replay` observes complete pre- OR complete post-compaction state | integration: case 1 asserts `replay` == pre_records; case 2 asserts `replay` == retained-only oracle |
+| BC-2.04.011 | {INV-005} record-level table isolation + WAL non-blocking reads (single-transaction DELETE; no build-phase batching under the per-run DELETE model) | integration: DELETE transaction scoped to target `run_id`; other `run_id` records present after both crashes |
+| ADR-030 | §Compaction Atomicity Decision — per-run single-transaction DELETE; per-run scope-safety | integration: a second `run_id`'s records asserted unchanged after a `compact(target_run_id)` crash at both crash points |
 
 ## BC Contradictions Flagged
 
-**RESOLVED (round-57/F-P2A227-03).** An earlier revision of this VP flagged a contradiction:
-BC-2.04.011 {INV-003} and its §Verification Properties table (VP-019 row) described a **three**
-crash-point matrix (before-begin, mid-txn, after-sync) that predated the staging-table
-single-atomic-swap model, whereas that model requires a **four**-point matrix (the mid-build
-point, case 2, has no analogue in the pre-staging single-transaction model). That contradiction
-is now closed: BC-2.04.011 adopted the four-crash-point matrix in its round-53-corrective
-revision. BC-2.04.011 {INV-003} now records "Verified by VP-019 (integration, four-crash-point
-matrix: before-build-begins, mid-build (staging partially filled before swap),
-mid-swap-transaction (after BEGIN IMMEDIATE, before COMMIT), after-swap-commit)", and the
-BC-2.04.011 §Verification Properties VP-019 row now describes four crash points / four cases.
-This VP and BC-2.04.011 {INV-003} are therefore in agreement on the four-crash-point matrix; no
-open reconciliation action remains, and none is routed to product-owner or state-manager. This
-VP does not edit BC files.
+**RESOLVED (round-62/F-P2A234-01).** The staging-table single-atomic-swap model (four-crash-point
+matrix) was superseded by ADR-030 §Compaction Atomicity Decision (revised round-62, F-P2A234-01),
+which replaced it with the **per-run single-transaction DELETE** model and a **two**-crash-point
+matrix (before-commit, after-commit) — the staging-table build/swap crash points (mid-build,
+mid-swap) no longer exist. BC-2.04.011 was reconciled in the same round-62 burst: its {INV-003}
+now reads "the atomicity boundary is the single `BEGIN IMMEDIATE; DELETE ...; COMMIT` transaction
+— there is no build phase, no staging table, and no rename operation; the crash matrix collapses
+to two points: before-COMMIT ... and after-COMMIT ... Verified by VP-019 (integration,
+two-crash-point matrix: before-COMMIT, after-COMMIT)", its {INV-005} dropped the bounded-batch
+parenthetical and restated the concurrent-`put_record` guarantee, and its §Description,
+§Architecture Anchors, §Related BCs, and §Verification Properties VP-019 row were all updated to
+the per-run DELETE model. This VP and BC-2.04.011 {INV-003} are therefore in agreement on the
+two-crash-point per-run DELETE matrix; no open reconciliation action remains. This VP does not
+edit BC files.
 
 ## Proof Harness Skeleton
 
@@ -200,169 +202,113 @@ VP does not edit BC files.
 ```rust
 /// Integration test: trajectory compaction crash isolation
 ///
-/// Four test cases per ADR-030 §Compaction Atomicity Decision (staging-table
-/// single-atomic-swap model). Each case:
+/// Two test cases per ADR-030 §Compaction Atomicity Decision (per-run single-transaction
+/// DELETE model). Each case:
 ///  1. Start a fresh SQLite-backed CheckpointSaver + TrajectoryWriter (WAL mode).
-///  2. Write pre_records (N trajectory records, strictly ascending step_idx) to
-///     `trajectory_records`.
-///  3. Spawn a subprocess that runs compact(run_id, policy) and receives SIGKILL
+///  2. Write pre_records for the TARGET run_id (N records, strictly ascending step_idx),
+///     AND write other_pre_records for a SECOND run_id (scope-safety witness).
+///  3. Spawn a subprocess that runs compact(target_run_id, policy) and receives SIGKILL
 ///     at the designated crash_point.
 ///  4. Restart: open the same SQLite database in a new process.
-///  5. Call replay(run_id) and assert reader-visible atomicity:
-///       - before_build / mid_build / mid_swap → replay == pre_records (pre-compaction),
-///       - after_swap_commit → replay == retained-only oracle (post-compaction).
-///  6. For mid_build / mid_swap: additionally assert recovery-time stale-staging cleanup —
-///     a subsequent compact(run_id, policy) DROPs the stale `trajectory_records_staging`,
-///     rebuilds, swaps, and returns Ok(()) with replay == retained-only oracle.
+///  5. Call replay(target_run_id) and assert reader-visible atomicity:
+///       - before_commit → replay == pre_records (pre-compaction),
+///       - after_commit  → replay == retained-only oracle (post-compaction).
+///  6. Call replay(other_run_id) and assert per-run scope-safety: it equals
+///     other_pre_records UNCHANGED in both crash cases (compact of one run never
+///     touches another run's records — the DELETE WHERE run_id = :run_id predicate).
 
 enum CrashPoint {
-    /// Case 1: kill before the build phase writes any staging batch.
-    BeforeBuild,
-    /// Case 2 [NEW]: kill after BEGIN IMMEDIATE on the staging table, staging partially
-    /// filled, before the swap phase begins.
-    MidBuild,
-    /// Case 3: kill after BEGIN IMMEDIATE of the swap transaction, before its COMMIT.
-    MidSwap,
-    /// Case 4: kill after the swap COMMIT returns.
-    AfterSwapCommit,
+    /// Case 1: kill during DELETE execution, before the COMMIT WAL record is written.
+    BeforeCommit,
+    /// Case 2: kill after the COMMIT WAL record is durably flushed.
+    AfterCommit,
 }
 
 #[test]
-fn trajectory_crash_isolation_before_build() {
-    // Crash before the build phase begins: trajectory_records untouched, no staging.
-    // Expected: replay == pre_records (unchanged).
+fn trajectory_crash_isolation_before_commit() {
+    // Crash before COMMIT: uncommitted DELETE-transaction WAL frames are discarded on the
+    // next database open. Expected: replay(target) == pre_records (unchanged).
     let db = TempDb::new_wal();
-    let pre_records = write_fixture_trajectory(&db, /* n_records = */ 10);
+    let pre_records = write_fixture_trajectory(&db, TARGET_RUN_ID, /* n_records = */ 10);
+    let other_pre_records = write_fixture_trajectory(&db, OTHER_RUN_ID, /* n_records = */ 4);
     let policy = retention_frontier_policy(/* frontier = */ 5);
 
-    kill_subprocess_at(CrashPoint::BeforeBuild, &db, &policy);
+    kill_subprocess_at(CrashPoint::BeforeCommit, &db, TARGET_RUN_ID, &policy);
 
-    let post_replay = open_and_replay(&db);
+    let post_replay = open_and_replay(&db, TARGET_RUN_ID);
     assert_eq!(post_replay, pre_records,
-        "crash before build: pre-compaction state must be fully preserved");
+        "crash before commit: uncommitted WAL frames discarded on next open; pre-compaction state preserved");
+
+    // Per-run scope-safety: the second run's records are untouched.
+    let other_replay = open_and_replay(&db, OTHER_RUN_ID);
+    assert_eq!(other_replay, other_pre_records,
+        "scope-safety: compact(target) before-commit crash must not touch another run_id's records");
 }
 
 #[test]
-fn trajectory_crash_isolation_mid_build() {
-    // NEW under the staging-table model.
-    // Crash mid-build: trajectory_records_staging partially filled, swap not yet begun.
-    // Expected: replay == pre_records (trajectory_records never modified during build);
-    //           stale trajectory_records_staging dropped on recovery at next compact entry.
+fn trajectory_crash_isolation_after_commit() {
+    // Crash after COMMIT: DELETE durably committed.
+    // Expected: replay(target) == retained subset (post-compaction is the correct committed state).
     let db = TempDb::new_wal();
-    let pre_records = write_fixture_trajectory(&db, /* n_records = */ 10);
+    let pre_records = write_fixture_trajectory(&db, TARGET_RUN_ID, /* n_records = */ 10);
+    let other_pre_records = write_fixture_trajectory(&db, OTHER_RUN_ID, /* n_records = */ 4);
     let policy = retention_frontier_policy(/* frontier = */ 5);
     let expected_post: Vec<_> = pre_records.iter()
-        .filter(|r| !policy.is_eligible(r))
+        .filter(|r| r.step_idx >= policy.retention_frontier || policy.promoted.contains(&r.step_idx))
         .cloned()
         .collect();
 
-    // Subprocess kills itself after a staging batch commit, before the swap phase.
-    kill_subprocess_at(CrashPoint::MidBuild, &db, &policy);
+    kill_subprocess_at(CrashPoint::AfterCommit, &db, TARGET_RUN_ID, &policy);
 
-    // Reader-visible atomicity: trajectory_records is unchanged.
-    let post_replay = open_and_replay(&db);
-    assert_eq!(post_replay, pre_records,
-        "crash mid-build: trajectory_records untouched during build; pre-compaction state preserved");
-
-    // Recovery-time stale-staging cleanup: a stale staging table may remain until the next
-    // compact entry drops it. The subsequent compact must succeed (drop stale staging,
-    // rebuild, swap) and produce the correct post-compaction state.
-    let rerun = compact_in_process(&db, &policy);
-    assert!(rerun.is_ok(),
-        "recovery: subsequent compact must drop stale trajectory_records_staging and succeed");
-    let after_rerun = open_and_replay(&db);
-    assert_eq!(after_rerun, expected_post,
-        "recovery: after stale-staging cleanup + rebuild + swap, replay == retained-only oracle");
-}
-
-#[test]
-fn trajectory_crash_isolation_mid_swap() {
-    // Crash inside the swap transaction (after BEGIN IMMEDIATE, before COMMIT).
-    // Expected: replay == pre_records (WAL mode: uncommitted swap-transaction frames discarded
-    //           on next open); residual staging dropped on recovery at next compact entry.
-    let db = TempDb::new_wal();
-    let pre_records = write_fixture_trajectory(&db, /* n_records = */ 10);
-    let policy = retention_frontier_policy(/* frontier = */ 5);
-    let expected_post: Vec<_> = pre_records.iter()
-        .filter(|r| !policy.is_eligible(r))
-        .cloned()
-        .collect();
-
-    kill_subprocess_at(CrashPoint::MidSwap, &db, &policy);
-
-    let post_replay = open_and_replay(&db);
-    assert_eq!(post_replay, pre_records,
-        "crash mid-swap: uncommitted swap-transaction WAL frames discarded on next open; pre-compaction state recovered");
-
-    // Recovery-time stale-staging cleanup + successful re-compaction.
-    let rerun = compact_in_process(&db, &policy);
-    assert!(rerun.is_ok(),
-        "recovery: subsequent compact must drop any residual trajectory_records_staging and succeed");
-    let after_rerun = open_and_replay(&db);
-    assert_eq!(after_rerun, expected_post,
-        "recovery: after stale-staging cleanup + rebuild + swap, replay == retained-only oracle");
-}
-
-#[test]
-fn trajectory_crash_isolation_after_swap_commit() {
-    // Crash after the swap COMMIT returns: rename durably committed.
-    // Expected: replay == retained subset (post-compaction is the correct committed state).
-    let db = TempDb::new_wal();
-    let pre_records = write_fixture_trajectory(&db, /* n_records = */ 10);
-    let policy = retention_frontier_policy(/* frontier = */ 5);
-    let expected_post: Vec<_> = pre_records.iter()
-        .filter(|r| !policy.is_eligible(r))
-        .cloned()
-        .collect();
-
-    kill_subprocess_at(CrashPoint::AfterSwapCommit, &db, &policy);
-
-    let post_replay = open_and_replay(&db);
+    let post_replay = open_and_replay(&db, TARGET_RUN_ID);
     assert_eq!(post_replay, expected_post,
-        "crash after swap COMMIT: post-compaction state must match committed retained set");
+        "crash after commit: post-compaction state must match committed retained set");
+
+    // Per-run scope-safety: the second run's records are untouched (all present).
+    let other_replay = open_and_replay(&db, OTHER_RUN_ID);
+    assert_eq!(other_replay, other_pre_records,
+        "scope-safety: compact(target) after-commit crash must not touch another run_id's records");
 }
 ```
 
 ## Feasibility Assessment
 
 **Feasible.** The property depends on (a) SQLite `BEGIN IMMEDIATE` / `COMMIT` atomicity of the
-single swap transaction in WAL mode — a well-proven SQLite guarantee — and (b) the invariant
-that the build phase writes only `trajectory_records_staging` and never `trajectory_records`.
-The integration test requires:
+single per-run DELETE transaction in WAL mode — a well-proven SQLite guarantee — and (b) the
+`DELETE ... WHERE run_id = :run_id` predicate that structurally scopes the operation to the
+target run. The integration test requires:
 
 1. A real SQLite database in WAL mode (provided by the `pregolya-checkpoint` SQLite backend).
-2. Process crash injection at four deterministic crash points — achievable via a helper
+2. Process crash injection at two deterministic crash points — achievable via a helper
    subprocess that sends itself `SIGKILL` at a nominated crash point (controlled by an
-   environment variable or command argument): before the first staging batch, after a staging
-   batch commit but before the swap, inside the swap transaction before `COMMIT`, and after the
-   swap `COMMIT` returns.
-3. Database reopening and `replay()` call after restart, plus a re-entrant `compact` call to
-   exercise recovery-time stale-staging cleanup for the mid-build and mid-swap cases.
+   environment variable or command argument): during DELETE execution before `COMMIT`, and after
+   the `COMMIT` returns.
+3. Database reopening and a `replay(target_run_id)` call after restart, plus a
+   `replay(other_run_id)` call to witness per-run scope-safety (a second run's records untouched
+   in both crash cases).
 
 **Why Phase 6 (not Phase 3):** VP-019 requires a fully-implemented `TrajectoryCompactor`
-SQLite backend with the staging-table swap topology (Phase 3 deliverable). Phase 6 integration
+SQLite backend with the per-run DELETE compaction (Phase 3 deliverable). Phase 6 integration
 tests run against real implementations; the crash-isolation test cannot be constructed against
 stubs.
 
 **Why integration (not proptest or Kani):** SIGKILL cannot be modeled by proptest (in-process,
-no crash semantics). Kani cannot model OS-level `BEGIN IMMEDIATE` / `COMMIT` / WAL
-frame-discard semantics or the `DROP TABLE` / `ALTER TABLE ... RENAME TO` catalog swap. The
-integration test is the only viable proof method for this property.
+no crash semantics). Kani cannot model OS-level `BEGIN IMMEDIATE` / `COMMIT` / WAL frame-discard
+semantics or the SQLite `DELETE` execution and durable-commit boundary. The integration test is
+the only viable proof method for this property.
 
-**Phase 6** — requires `TrajectoryCompactor::compact` + SQLite staging-swap backend (Phase 3).
+**Phase 6** — requires `TrajectoryCompactor::compact` + SQLite per-run DELETE backend (Phase 3).
 Follows the pattern of VP-004 and VP-005 (integration P1 tests that require a real
 network or process boundary).
 
 ## Proof Obligations
 
-- [ ] Pre-compaction records are fully preserved after a before-build crash (case 1).
-- [ ] Pre-compaction records are fully preserved after a mid-build crash (case 2, NEW; `trajectory_records` untouched during the staging build).
-- [ ] Pre-compaction records are fully preserved after a mid-swap crash (case 3; uncommitted swap-transaction WAL frames discarded on next database open).
-- [ ] Post-compaction (correctly retained) records are present after an after-swap-commit crash (case 4).
-- [ ] Recovery-time stale-staging cleanup: after a mid-build or mid-swap crash, a subsequent `compact` drops any stale `trajectory_records_staging` table before rebuilding and returns `Ok(())` with the correct post-compaction `replay` result.
-- [ ] No partial compaction state (some eligible records removed, some not) is observable by `replay` in any crash scenario — `replay` reads `trajectory_records` only and never `trajectory_records_staging`.
+- [ ] Pre-compaction records are fully preserved after a before-commit crash (case 1; uncommitted DELETE-transaction WAL frames discarded on next database open).
+- [ ] Post-compaction (correctly retained) records are present after an after-commit crash (case 2).
+- [ ] Per-run scope-safety: a second `run_id`'s records are unchanged after a `compact(target_run_id)` crash at both crash points — the `DELETE WHERE run_id = :run_id` predicate never touches another run's records (F-P2A234-01).
+- [ ] No partial compaction state (some eligible records removed, some not) is observable by `replay` in either crash scenario — the single `BEGIN IMMEDIATE / COMMIT` DELETE is the sole reader-visible atomicity boundary.
 - [ ] SQLite WAL mode is enabled for the test database (ADR-030 §SQLite Topology Decision WAL requirement).
-- [ ] All four integration test functions pass in CI with a real SQLite backend.
+- [ ] Both integration test functions pass in CI with a real SQLite backend.
 
 ## Lifecycle
 

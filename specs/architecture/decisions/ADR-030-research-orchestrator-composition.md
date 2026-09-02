@@ -8,7 +8,7 @@ status: accepted
 date: "2026-09-01"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "1.9"
+version: "2.0"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "2.0 (round-62/F-P2A234-01+F-P2A234-02+F-P2A234-03+F-P2A234-04+F-P2A234-05+OBS-1+OBS-2+OBS-3/2026-09-01): STAGE A fix-burst. F-P2A234-01 [HIGH/CWE-459] §Compaction Atomicity Decision: staging-table single-atomic-swap model REPLACED with per-run single-transaction DELETE. The prior staging-table swap silently destroyed all other run_ids' records — trajectory_records is keyed (run_id, step_idx) and holds ALL runs; the build phase copied only the target run's retained records to staging, then the whole-table rename permanently destroyed every other run_id's records. Redesigned mechanism: BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT — inherently per-run-scoped (only target run records touched), single-transaction reader-visible-atomic, 2-point crash matrix (before COMMIT = pre-compaction intact; after COMMIT = post-compaction). F-P2A234-02 [HIGH/CWE-362] concurrent put_record safety resolved: BEGIN IMMEDIATE write-lock serializes any concurrent put_record that arrives while compaction is in progress; no build-to-swap clobber window exists under per-run DELETE; BC-2.04.011 §Related BCs false safety claim corrected (product-owner directive provided in §Compaction Atomicity Decision). F-P2A234-03 [MED/CWE-390+354] E-TRAJ-006 TrajectoryIntegrityCheckFailed: mint directive added to §Content-Hash Oracle Decision — covers AES-GCM auth-tag mismatch during conflict-detection decrypt; product-owner + state-manager directives. F-P2A234-04 [MED] NFR-015 trajectory durability: mint directive added to §SQLite Topology Decision — mirrors NFR-002 crash-cycle target anchored to BC-2.04.009 DI-002; product-owner directive. F-P2A234-05 [MED] VP-020 PromoteRetireChannel idempotency proptest P1: minted in §VP of Decision 3 — BC-2.02.009 {INV-001}+{INV-002}, DI-001, harness promote_retire_channel_idempotency, Phase 3; VP-INDEX, verification-architecture, verification-coverage-matrix updated same burst. OBS-1: nonce-uniqueness cross-reference directive added to §Content-Hash Oracle Decision. OBS-2: deletion-tamper-evidence explicitly declared out of scope for v1 in new §Deletion Tamper-Evidence Decision subsection. OBS-3: promoted Vec<u64> element semantics directive added to §Consequences."
   - "1.9 (round-58/F-P2A229-01/2026-09-01): F-P2A229-01 [MED] §Decision 3 PromoteRetireOp<T>: add #[derive(Clone, Debug)]. Clone is required by the Channel::Update: Clone bound; LedgerEntry: Clone (supertrait bundles Clone), so derive(Clone) emits impl<T: Clone> Clone for PromoteRetireOp<T> which resolves for every T: LedgerEntry with no bound beyond the supertrait — does NOT trigger rustc #26925 spurious-bound problem (contrast: Default is NOT in the LedgerEntry bundle, which is why the marker structs use manual bound-free Default impls). Debug is conventionally added for a data-bearing update enum (diagnostic value); the derived impl is conditional on T: Debug (LedgerEntry does not bundle Debug); no declared bound requires unconditional Debug, so the conditional impl is acceptable. Rationale documented as doc-comment on PromoteRetireOp to prevent future incorrect removal. Derive-shape paragraph extended to confirm LedgerChannel<T> Update = T needs no separate Clone annotation (T: LedgerEntry implies T: Clone — already satisfies Channel::Update: Clone). LedgerChannel<T> code block is unaffected."
   - "1.8 (round-57/F-P2A227-01/2026-09-01): F-P2A227-01 [HIGH] §Decision 3 code block: the derive(Default)-ONLY mandate introduced by F-P2A220-01/F-P2A224-03 is NON-REALIZABLE and is hereby REVERSED. rustc's derive(Default) for a generic struct emits an impl that bounds every type parameter by Default (rustc issue #26925 — perfect-derive not implemented). Because LedgerEntry does not include Default, derive(Default) on LedgerChannel<T: LedgerEntry> emits impl<T: LedgerEntry + Default> Default for LedgerChannel<T> — a spurious T: Default bound that violates AC-018/BC-2.02.007 {INV-004}. The same defect applies to PromoteRetireChannel<T: LedgerEntry>. The previously-correct manual bound-free impl (present in v1.3, removed in v1.6) is restored for both structs: impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } } and analogously for PromoteRetireChannel. The derive(Default) annotation is dropped from both struct definitions. No other derive attributes are added or removed. This decision supersedes the derive-only mandate in F-P2A220-01 and F-P2A224-03, which are recorded as non-realizable. The no-Clone/Serialize/Deserialize-on-marker-struct rule and #[non_exhaustive] annotations remain intact."
   - "1.7 (round-55/F-P2A225-01+F-P2A225-02/2026-09-01): F-P2A225-01 [HIGH] §VP DI adjudication extended to PromoteRetireChannel::reduce — DI-014 is inapplicable to both LedgerChannel::reduce and PromoteRetireChannel::reduce; both are pure infallible reducers returning Vec<T> (no Result, no error path); DI-001 (BSP reducer determinism) is the sole authoritative anchor for both; per-artifact propagation targets table added for product-owner. F-P2A225-02 [HIGH] Three chained double-§ citations eliminated per POL-19/ADR-022: (1) For-story-writer S-1.28 note chain §BSP Reduce-Dispatch Seam + §Channel Trait Definition Home → single §Channel Trait Definition Home and ChannelKind Coexistence. (2) LedgerEntry code-block doc-comment chain §Decision 3 + §Serialization Bound → single §Serialization Bound for Checkpoint Resume. (3) VP-019 Consequences note chain §Compaction Atomicity Decision + §BC-2.04.011 downstream notes → §BC-2.04.011 Downstream Notes (pseudo-heading promoted to real #### heading to enable single valid §-citation)."
@@ -190,6 +191,58 @@ conflict detection MUST decrypt-then-compare — the implementation decrypts the
 ciphertext and compares plaintext payloads in memory. No auxiliary hash or digest may be
 stored on disk for this purpose."
 
+**E-TRAJ-006 mint directive (F-P2A234-03/CWE-390+354):** The decrypt-then-compare path is
+FALLIBLE. When `EncryptedSerializer::deserialize` returns `Err` on the conflict-detection
+read (AES-GCM auth-tag mismatch — stored record is corrupted or tampered), no current error
+code covers this condition. E-TRAJ-002 (VAL/ConflictingDuplicate) is wrong — this is not a
+caller-supplied duplicate, it is a storage-layer integrity failure. E-TRAJ-001 (DURABILITY/
+TrajectoryWriteFailed) is wrong — this is a read failure on the conflict-detection path.
+
+**State-manager + product-owner directive:** Mint E-TRAJ-006 in error-taxonomy.md
+Component: TRAJ:
+- Code: `E-TRAJ-006`
+- Name: `TrajectoryIntegrityCheckFailed`
+- Category: DURABILITY
+- Severity: broken
+- RetryHint: Never (diverges from DURABILITY default Maybe — AES-GCM auth-tag mismatch
+  is permanent corruption; retrying will reproduce the same failure)
+- Message: `TrajectoryIntegrityCheckFailed: decrypt of stored record at (run_id='<run_id>', step_idx=<step_idx>) failed — AES-GCM auth-tag mismatch; stored data may be corrupted or tampered`
+- Placeholders: `<run_id>` = run UUID; `<step_idx>` = step_idx of the affected record
+- Raise site: `TrajectoryWriter::put_record` conflict-detection path — when
+  `EncryptedSerializer` is configured and `EncryptedSerializer::deserialize` of the stored
+  record returns `Err` (auth-tag mismatch); the stored record is not modifiable; the error
+  is returned to the caller immediately
+- BC anchor: BC-2.04.009 {INV-001}
+- Census delta: TRAJ namespace 4→5 live codes; individual 30→31; total 142→143
+  (50 HTTP + 31 individual + 62 blanket = 143)
+
+**Product-owner directive (EC for BC-2.04.009):** Add EC-006 to BC-2.04.009:
+"Scenario: `put_record` is called for `(run_id=R, step_idx=7)` where an encrypted record
+already exists at that position. `EncryptedSerializer::deserialize` of the stored ciphertext
+returns `Err` (AES-GCM auth-tag mismatch — stored data may be corrupted or tampered).
+Expected behavior: `put_record` returns `Err(PregolyaError { code: E-TRAJ-006, message:
+'TrajectoryIntegrityCheckFailed: decrypt of stored record at (run_id=\'R\', step_idx=7) failed
+— AES-GCM auth-tag mismatch; stored data may be corrupted or tampered', category: DURABILITY,
+.. })`. No modification is made to the stored record. DI-014 (error propagation — no silent
+swallowing) requires surfacing this failure as `Err` rather than silently swallowing it."
+
+**Nonce-uniqueness cross-reference (OBS-1):**
+`BC-2.04.009 {INV-001}` relies on per-record AES-GCM nonce uniqueness for the
+decrypt-then-compare to work correctly. The nonce uniqueness guarantee is a contract of
+`EncryptedSerializer`, not of `TrajectoryWriter`.
+
+**Product-owner directive (OBS-1):** Add a cross-reference sentence to BC-2.04.009 {INV-002}:
+"Per-record nonce uniqueness is guaranteed by `EncryptedSerializer`'s contract (see
+BC-2.04.007 for the nonce-source mechanism; for AES-GCM with a 96-bit nonce, the birthday
+probability of nonce collision becomes material only at approximately 2^48 encrypt operations
+per key — far exceeding any practical single-run trajectory size; the random-nonce approach is
+sound within the research orchestrator use case)."
+
+**Product-owner directive (OBS-1):** Verify that BC-2.04.007 explicitly states the nonce
+source mechanism for `EncryptedSerializer` (counter vs. random CSPRNG). If not, add the
+specification: "nonces are generated per-encrypt-call from the operating-system CSPRNG
+via the `aes-gcm` crate (96-bit, randomly generated)."
+
 ### SQLite Topology Decision (F-P2A209-04)
 
 **Decision:** Trajectory records reside in a **dedicated `trajectory_records` table** within the
@@ -210,83 +263,152 @@ no amendment. **Product-owner:** add to `BC-2.04.011 {INV-005}` a parenthetical:
 compaction batch (default 1 000 records per `BEGIN IMMEDIATE` transaction) prevents
 writer-timeout blocking of concurrent `CheckpointSaver::put_writes` calls."
 
-### Compaction Atomicity Decision — Staging-Table Single-Atomic-Swap Model (F-P2A221-01)
+### Compaction Atomicity Decision — Per-Run Single-Transaction DELETE (F-P2A221-01, revised F-P2A234-01)
 
-**Problem:** The bounded-batch language in §SQLite Topology Decision creates an apparent
-contradiction with `BC-2.04.011 {PC-004}` / `{INV-003}`, which assert whole-operation
-atomicity ("either all eligible records are removed and all retained records are preserved,
-or no change is made"). Multiple `BEGIN IMMEDIATE` transactions across batches cannot satisfy
-whole-operation atomicity as a single SQLite transaction boundary.
+**Defect in prior staging-table model (F-P2A234-01/CWE-459):**
+The staging-table single-atomic-swap model had a catastrophic multi-run data-loss path.
+`compact(run_id, policy)` is per-run-scoped: all postconditions reference only records for
+the given `run_id`. However, the `trajectory_records` table is keyed by `(run_id, step_idx)`
+and holds ALL runs' records simultaneously (BC-2.04.010 EC-003 shows `run_id_A` and
+`run_id_B` coexisting). The prior build phase copied only the target run's retained records
+to `trajectory_records_staging` — records belonging to all other runs were NEVER copied.
+The whole-table rename swap then permanently destroyed every other run's trajectory. This is
+a silent catastrophic data-loss path on any deployment where more than one research run has
+ever written trajectory records.
 
-**Decision: staging-table single-atomic-swap model.**
+**Decision: per-run single-transaction DELETE.**
 
-Compaction is a two-phase operation:
-
-**Phase 1 — Build (batched, shadow table, no write lock held on `trajectory_records`):**
-
-1. Create (or recreate after stale-staging cleanup) staging table
-   `trajectory_records_staging` with the same schema as `trajectory_records`.
-2. Copy all retained records (`step_idx >= retention_frontier` or `step_idx` in `promoted`)
-   from `trajectory_records` to `trajectory_records_staging` in bounded batches
-   (default 1 000 records per `BEGIN IMMEDIATE / COMMIT` on the staging table).
-   Each batch releases the write lock after committing; `CheckpointSaver::put_writes`
-   interleaves freely between batches.
-3. `TrajectoryReader::replay` reads from `trajectory_records` only — the staging table is
-   invisible to `replay` throughout the entire build phase.
-
-**Phase 2 — Swap (single atomic transaction, fast catalog operation):**
+Compaction is now a **single-phase operation** scoped to the target `run_id`:
 
 ```sql
 BEGIN IMMEDIATE;
-DROP TABLE trajectory_records;
-ALTER TABLE trajectory_records_staging RENAME TO trajectory_records;
+DELETE FROM trajectory_records
+  WHERE run_id = :run_id
+    AND step_idx < :retention_frontier
+    AND step_idx NOT IN (:promoted_step_idxs);
 COMMIT;
 ```
 
-This is the sole atomicity boundary visible to `replay`. The transaction contains only
-catalog operations (no row copies); it holds the write lock for milliseconds, not seconds.
+**Mechanism properties:**
 
-**Crash semantics:**
+- **Per-run scope-safety:** only records with `run_id = :run_id` are touched. Records
+  belonging to every other `run_id` are never read, modified, or deleted — structural
+  enforcement, not documentation convention.
+- **Reader-visible atomicity:** the single `BEGIN IMMEDIATE / COMMIT` transaction provides
+  atomicity for `BC-2.04.011 {PC-004}`. `TrajectoryReader::replay(run_id)` observes
+  either the complete pre-compaction state (transaction not yet committed) or the complete
+  post-compaction state (transaction committed). No intermediate partial state is observable.
+- **Bounded lock duration:** the DELETE transaction acquires the write lock proportionally
+  to the number of eligible records for the target `run_id`, not to the total table size.
+  For the research orchestrator use case, eligible records per compaction event are bounded
+  by the session length since the last frontier advance — typically O(hundreds) — well
+  within a single transaction's safe scope.
+- **No stale-artifact cleanup:** no staging table is created; there is no stale
+  `trajectory_records_staging` table to detect or drop on recovery.
 
-- **Crash mid-build** (before the swap phase begins): `trajectory_records` is unchanged;
-  `trajectory_records_staging` is in an indeterminate state. The implementation MUST detect
-  and drop any stale `trajectory_records_staging` table at the start of each `compact` call
-  (before beginning a new build). `replay` returns the pre-compaction record set unchanged.
-- **Crash mid-swap** (inside the `BEGIN IMMEDIATE / COMMIT` transaction): SQLite WAL
-  atomicity applies — either the `COMMIT` was durably recorded (post-compaction `trajectory_records`
-  visible) or it was not (pre-compaction `trajectory_records` intact;
-  `trajectory_records_staging` dropped on recovery per the stale-staging cleanup).
-- **No intermediate state** is ever observable by `replay` because `replay` reads from
-  `trajectory_records` only and the build phase never modifies `trajectory_records`.
+**Crash semantics (2-point matrix):**
+
+- **Before COMMIT** (process killed during DELETE execution, before the COMMIT WAL record
+  is written): SQLite WAL atomicity applies — uncommitted WAL frames are discarded on the
+  next database open; `trajectory_records` is fully intact at the pre-compaction state.
+  `replay(run_id)` returns the pre-compaction record set.
+- **After COMMIT** (process killed after the COMMIT WAL record is durably flushed):
+  `trajectory_records` reflects the post-compaction state — all eligible records for
+  `run_id` are absent; all retained records and all other runs' records are present.
+  `replay(run_id)` returns the post-compaction retained set.
+
+**Concurrent `put_record` safety (F-P2A234-02/CWE-362):**
+
+Under the prior staging-table model, a `put_record` call that committed AFTER the build
+phase read the table but BEFORE the swap was silently destroyed by the whole-table rename.
+Under the per-run DELETE model this window does not exist:
+
+SQLite `BEGIN IMMEDIATE` acquires a reserved lock that prevents any other writer from
+starting until this transaction commits. A concurrent `put_record` call that arrives while
+the compaction transaction is in progress will attempt its own `BEGIN IMMEDIATE` and will
+block until the compaction `COMMIT` releases the write lock. The `put_record` then executes
+against the post-compaction table state. No durably committed `put_record` result can
+be silently lost by a concurrent `compact` call.
+
+**Product-owner directive (F-P2A234-02):** Replace the false safety claim in
+BC-2.04.011 §Related BCs: the sentence "compaction never conflicts with in-flight
+`put_record` calls due to the atomic transaction boundary" is false under the prior
+staging-table model and must be replaced with the true guarantee:
+"compaction serializes against concurrent `put_record` calls via SQLite's `BEGIN IMMEDIATE`
+write-lock protocol; a `put_record` call that arrives while a compaction transaction is in
+progress blocks until the compaction `COMMIT` releases the write lock, then writes to the
+post-compaction table state; no durably committed `put_record` record can be silently lost
+by a concurrent `compact` call."
 
 **Reconciliation with `BC-2.04.011 {PC-004}` / `{INV-003}`:**
-"Whole-operation atomic" means reader-visible atomicity: `replay` always observes either
-the complete pre-compaction state or the complete post-compaction state. The swap phase's
-single `BEGIN IMMEDIATE / COMMIT` provides this guarantee. The build phase operates on a
-shadow table that is never visible to `replay`.
+Reader-visible atomicity is provided by the single `BEGIN IMMEDIATE / COMMIT` wrapping the
+DELETE. The pre/post observability mapping: before COMMIT → pre-compaction state; after
+COMMIT → post-compaction state. This directly satisfies BC-2.04.011 {PC-004}.
 
 **Reconciliation with §SQLite Topology bounded-batch wording:**
-"Bounded compaction batches (default 1 000 records per `BEGIN IMMEDIATE` transaction)"
-describes the build phase, which writes to `trajectory_records_staging`, not
-`trajectory_records`. The write-lock-release-between-batches concern is fully addressed:
-build-phase locks are on the staging table; the swap-phase lock is a fast catalog-only op.
+The "bounded compaction batches (default 1 000 records per `BEGIN IMMEDIATE` transaction)"
+language in §SQLite Topology Decision described the prior staging-table build phase, which
+no longer exists. **Product-owner directive:** remove the "bounded compaction batch"
+parenthetical from BC-2.04.011 {INV-005} — it described build-phase behavior that does
+not exist under the per-run DELETE model. The write-lock-duration concern no longer applies:
+the DELETE transaction's lock duration is proportional to the target-run eligible set, not
+the full table.
 
-#### BC-2.04.011 Downstream Notes
-- `{INV-003}`: "the SQLite `BEGIN IMMEDIATE` / `COMMIT` transaction" refers to the swap-phase
-  transaction (the reader-visible atomicity boundary). The build phase uses separate per-batch
-  transactions on the staging table only. Crash mid-build → pre-compaction state intact
-  (staging dropped on recovery). Crash mid-swap → WAL atomicity (pre or post depending on
-  whether COMMIT landed).
-- `{INV-005}`: "bounded compaction batches" are build-phase batches writing to the staging
-  table — not to `trajectory_records`. The `trajectory_records` table is touched only by the
-  single atomic swap.
-- **Formal-verifier note for `VP-019`:** The crash-point matrix should cover **four points**:
-  (1) before-build-begins (trivially pre-compaction state), (2) mid-build — staging table
-  partially filled, before swap begins (expected: pre-compaction state intact, staging dropped
-  on recovery), (3) mid-swap-transaction — after `BEGIN IMMEDIATE`, before `COMMIT` (expected:
-  pre-compaction state intact), (4) after-swap-commit (expected: post-compaction state).
-  Case (2) is new under the staging-table model and must be exercised in the VP-019
-  integration test matrix.
+**NFR-015 directive (F-P2A234-04):**
+**Product-owner:** add NFR-015 to nfr-catalog.md:
+- Category: Reliability
+- Requirement: Trajectory records durably committed via `put_record` must survive process
+  crash and appear in `replay` after restart — same durability guarantee as NFR-002
+  for `put_writes`.
+- Success Criterion: 0 trajectory records lost in 100 crash-restart cycles (SIGKILL after
+  `put_record` returns `Ok(())`; `replay(run_id)` after restart returns all such records).
+- Validation: `cargo test --test trajectory_crash_recovery -- --nocapture`
+- Priority: P0 (DI-002 per-task durability; BC-2.04.009 explicitly claims same guarantee
+  as `put_writes`).
+- BC Anchor: BC-2.04.009 (DI-002).
+
+#### BC-2.04.011 Downstream Notes (updated — F-P2A234-01)
+
+- `{INV-003}`: "the SQLite `BEGIN IMMEDIATE` / `COMMIT` transaction" refers to the
+  per-run DELETE transaction — the sole atomicity boundary. The **2-point crash matrix**
+  supersedes the prior 4-point matrix: (1) before COMMIT → pre-compaction state intact;
+  (2) after COMMIT → post-compaction state. The staging-table crash points (mid-build,
+  mid-swap) no longer exist.
+- `{INV-005}`: "bounded compaction batches" is removed. The single-transaction DELETE
+  is the compaction implementation; no build-phase bounded-batch concept exists.
+  **Product-owner:** amend {INV-005} to remove the bounded-batch parenthetical. The
+  table-isolation statement (no FK joins to checkpoint tables) and WAL non-blocking-reads
+  statement remain valid.
+- **Formal-verifier directive for `VP-019`:** The crash-point matrix MUST be updated from
+  four crash points to **TWO crash points**: (1) before-commit — SIGKILL during DELETE
+  execution (expected: pre-compaction record set); (2) after-commit — SIGKILL after WAL
+  COMMIT record flushed (expected: post-compaction retained set). The mid-build and
+  mid-swap crash points do not exist under the per-run DELETE model. Update the VP-019 body
+  Property Statement section, Formal Statement section, and TV-002 matrix accordingly.
+
+#### Deletion Tamper-Evidence Decision (OBS-2)
+
+`compact(run_id, policy)` is a legitimate deletion channel: the caller can permanently
+remove trajectory records. The question is whether v1 must provide tamper-evidence against
+compaction — a mechanism to prove that deletions were authorized and records were not
+modified by other means (append-only storage, hash-chain linking, compaction audit log).
+
+**Decision: deletion tamper-evidence is EXPLICITLY OUT OF SCOPE for v1.**
+
+Rationale:
+1. The trajectory primitive is designed for REPLAY and REPRODUCIBILITY of research runs
+   by the system owner — not as a tamper-evident log against the system owner. The use
+   case is researcher-grade reproducibility, not compliance-grade immutable audit.
+2. Append-only enforcement and hash chains require a storage backend that enforces
+   append-only semantics (WORM media, blockchain-style hash chains, or an external audit
+   service) — these are v2 / compliance-tier features beyond the scope of the research
+   orchestrator primitive.
+3. The compaction API is access-controlled at the system level; the v1 threat model
+   treats the system owner as trusted.
+4. If future compliance requirements (SOC2, GDPR evidence retention) demand tamper-evidence,
+   a dedicated v2 feature would extend `checkpoint::trajectory` with hash-chain record
+   linking or an external compaction audit log. That feature is deferred by explicit design
+   choice, not by oversight.
 
 ### Dependency Note: uuid serde Feature (F-P2A208-09)
 
@@ -574,6 +696,43 @@ propagate. Authoritative anchor: **`DI-001`** (BSP reducer determinism). Round-5
 only `LedgerChannel::reduce` (F-P2A223-01); this entry corrects the omission for
 `PromoteRetireChannel::reduce`.
 
+**VP-020 mint (F-P2A234-05):**
+
+`PromoteRetireChannel::reduce` is structurally identical to `LedgerChannel::reduce` in the
+properties that make proptest the correct verification tool: pure, infallible, returns
+`Vec<T>`, and the idempotency invariants require arbitrary operation-sequence coverage that
+fixed-point unit tests (TST-PROM-01/02) cannot provide. BC-2.02.009 {INV-001}/{INV-002} are
+formally provable pure-function reducer properties with the same DI-001 anchor as VP-017.
+
+**VP-020** (proptest P1, Phase 3):
+
+- BC Anchor: BC-2.02.009 {INV-001} (Promote idempotency, no-duplicate) + {INV-002} (Retire
+  idempotency, task-identity ordering)
+- Module: `graph::channels` | Crate: `pregolya-graph` | DI anchor: DI-001
+- harness_fn: `promote_retire_channel_idempotency`
+- File: `vp-020-promote-retire-channel-idempotency.md`
+- Properties for formal-verifier harness:
+  1. Promote idempotency: a second `Promote(e)` where `e.entry_id()` already exists in
+     the accumulator leaves the set unchanged (no-op; count does not grow).
+  2. Retire idempotency: `Retire(id)` where `id` is not in the accumulator is a no-op
+     (set unchanged; no panic; no spurious error).
+  3. No phantom duplicates: after any `Promote(e)`, `entry_id == e.entry_id()` appears
+     exactly once in the accumulator.
+  4. Retire removes exactly one entry with the matching `entry_id` when present; all
+     other entries are preserved in their original order.
+  Tool: proptest — generate arbitrary `Vec<PromoteRetireOp<TestEntry>>` sequences;
+  verify all four invariants hold for every prefix of every generated sequence.
+
+**Formal-verifier directive (F-P2A234-05):** Author VP-020 body file at
+`.factory/specs/verification-properties/vp-020-promote-retire-channel-idempotency.md`
+with the properties above. DI anchor: DI-001. DI-014 is inapplicable (pure function;
+same adjudication rationale as VP-017 and PromoteRetireChannel DI ruling above).
+
+**Product-owner directive (F-P2A234-05):** Add to BC-2.02.009 §VP Anchors: VP-020
+(proptest, {INV-001} + {INV-002} idempotency, no-duplicate, and identity preservation).
+Add to BC-2.02.009 §Verification Properties table:
+`VP-020 | PromoteRetireChannel promote idempotency, retire idempotency, no-duplicate, identity preservation across arbitrary operation sequences | proptest | Phase 3`
+
 **Downstream propagation required (F-P2A225-01) — product-owner action:** DI-014 is NOT
 orphaned (remains cited by 237+ other BCs; POL-2 not triggered).
 
@@ -706,6 +865,7 @@ Total new BCs: 6 (two SS-04 trajectory BCs + three SS-02 ledger-channel BCs + on
 | VP-017 | `graph::channels` | proptest | P1 | BC-2.02.007 + BC-2.02.008 | 3 |
 | VP-018 | `checkpoint::trajectory` | proptest | P1 | BC-2.04.011 {INV-001} | 3 |
 | VP-019 | `checkpoint::trajectory` | integration | P1 | BC-2.04.011 {INV-003} | 6 |
+| VP-020 | `graph::channels` | proptest | P1 | BC-2.02.009 {INV-001}+{INV-002} | 3 |
 
 **VP-017** dual anchor: BC-2.02.007 (dedup-idempotent append) + BC-2.02.008 (first-appearance
 ordering) — harness exercises both properties; VP-014 two-BC precedent.
@@ -718,9 +878,14 @@ the async SQLite layer.
 restart, `replay(run_id)` returns pre-compaction or post-compaction state (never partial).
 Promoted informal `VP-COMPACT-02` label in `BC-2.04.011 §Verification Properties` to a
 real VP. **Directive discharged:** `VP-COMPACT-01` → `VP-018` and `VP-COMPACT-02` → `VP-019`
-rename was completed by product-owner in BC-2.04.011 §Verification Properties (round-50/D-328). No further rename action required. **Formal-verifier note:** under the staging-table
-atomic-swap model (§Compaction Atomicity Decision above), VP-019 crash-point matrix should
-cover four points — see §BC-2.04.011 Downstream Notes.
+rename was completed by product-owner in BC-2.04.011 §Verification Properties (round-50/D-328). **Formal-verifier directive (F-P2A234-01):** under the per-run DELETE model
+(§Compaction Atomicity Decision revised), VP-019 crash-point matrix MUST be updated from
+four points to **two points** — see §BC-2.04.011 Downstream Notes.
+
+**VP-020** (proptest P1, Phase 3): PromoteRetireChannel promote/retire idempotency and
+ordering. See §Decision 3 §VP section above for full directive. Census: VP total 20→21,
+P1 14→15, proptest 7→8. Arithmetic: 21 = P0(6) + P1(15) = Kani(9) + proptest(8) +
+integration(3) + unit(1).
 
 ### BC-2.02.009 Renumber-Provenance Canonical Narrative (F-P2A210-02)
 
@@ -746,6 +911,19 @@ inaccurate. The canonical description: "BC-2.02.009 created as new SS-02 BC; Pro
 content relocated from erroneous PO draft at BC-2.04.011 (which was always reserved for
 Trajectory Compaction Isolation in SS-04; BC-2.04.011 continues as a separate active BC).
 Prior-ID: N/A (new creation)."
+
+### OBS-3: Promoted Element Semantics Directive
+
+**Product-owner directive (OBS-3):** Add a sentence to BC-2.04.011 {PRE-002} explicitly
+stating: "`promoted: Vec<u64>` contains the `step_idx` values of specific records to be
+retained regardless of their position relative to `retention_frontier`; a record whose
+`step_idx` appears in `promoted` is retained even if `step_idx < retention_frontier`. This
+allows milestone records (e.g., convergence evidence, landmark generation results) to survive
+compaction regardless of age."
+
+**Also:** Update interface-definitions.md §TrajectoryRetentionPolicy `promoted` field
+description to add: "step_idx values in this list are unconditionally retained — even if
+`step_idx < retention_frontier`."
 
 ### Architecture Invariants Unchanged
 

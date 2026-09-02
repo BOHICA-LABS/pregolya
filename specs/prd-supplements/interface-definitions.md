@@ -1,12 +1,13 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.13"
+version: "3.14"
 status: active
 producer: architect
 timestamp: 2026-09-01T00:00:00Z
 phase: 1d
 changelog:
+  - "3.14 (round-62/F-P2A234-01+F-P2A234-02+F-P2A234-03+OBS-3/2026-09-01): §TrajectoryCompactor: doc comment updated from staging-table to per-run single-transaction DELETE mechanism (ADR-030 §Compaction Atomicity Decision). Error note: add E-TRAJ-006 TrajectoryIntegrityCheckFailed (DURABILITY, Never) for AES-GCM auth-tag mismatch during conflict-detection decrypt (F-P2A234-03). §TrajectoryRetentionPolicy promoted field: add semantics note — step_idx values in promoted are retained even if < retention_frontier (OBS-3). No signature changes."
   - "3.13 (round-58/F-P2A229-01/2026-09-01): F-P2A229-01 [MED] §LedgerChannel PromoteRetireOp<T> enum: add #[derive(Clone, Debug)]. Clone satisfies Channel::Update: Clone; derive is sound because LedgerEntry: Clone (supertrait bundles Clone), so no spurious bound beyond T: LedgerEntry is introduced (does not trigger rustc #26925 — contrast with Default, which is NOT in the LedgerEntry bundle and is why the marker structs use manual Default impls). Debug added conventionally for a data-bearing update enum; conditional on T: Debug (LedgerEntry does not bundle Debug). Doc-comment updated to state rationale. LedgerChannel<T> code block is unaffected (Update = T; T: LedgerEntry implies T: Clone — Channel::Update: Clone already satisfied)."
   - "3.12 (round-57/O-P2A228-A/2026-09-01): O-P2A228-A [OBS] §LedgerChannel Invariants table: BC clause tag format corrected from 2-digit ({INV-1}, {INV-2}) to canonical 3-digit form; semantic mapping corrected from {INV-001}/{INV-002} (monotonic-length and entry_id-set structural invariants) to {PC-001}/{PC-002} (novel-reduce appends / seen-reduce no-op postconditions per BC-2.02.007 §Postconditions — the behaviors described in those rows are postconditions of the reduce call, not the monotonicity/uniqueness invariants)."
   - "3.11 (round-57/F-P2A227-01/2026-09-01): F-P2A227-01 [HIGH] §LedgerChannel: derive(Default) dropped from both LedgerChannel<T> and PromoteRetireChannel<T> marker structs; manual bound-free Default impls restored for both. Rationale: derive(Default) on a generic struct emits a spurious T: Default bound (rustc issue #26925); LedgerEntry does not include Default; the Channel supertrait requires Default for all T: LedgerEntry; the spurious bound violates AC-018/BC-2.02.007 {INV-004}. The canonical form is: impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } } (and analogously PromoteRetireChannel). This reverses the derive-only mandate from F-P2A220-01/F-P2A224-03 (recorded as non-realizable in ADR-030 §Decision 3). Doc comments on both structs updated to state 'manual bound-free impl'. No other struct attributes modified."
@@ -2969,6 +2970,8 @@ pub struct TrajectoryRetentionPolicy {
     /// The frontier itself (`step_idx == retention_frontier`) is retained.
     pub retention_frontier: u64,
     /// Explicitly promoted step_idx values — always retained regardless of frontier.
+    /// A step_idx listed here is retained even when `step_idx < retention_frontier`
+    /// (e.g., a compacted-but-significant milestone record; BC-2.04.011 {PRE-002}).
     pub promoted: Vec<u64>,
 }
 
@@ -2991,11 +2994,17 @@ impl TrajectoryRetentionPolicy {
 
 /// Compacts an unbounded durable audit trajectory by atomically removing eligible records.
 ///
-/// Compaction is crash-isolated per {INV-003}: uses SQLite `BEGIN IMMEDIATE` / `COMMIT`;
-/// a SIGKILL mid-compaction leaves the pre-compaction trajectory fully intact after recovery.
+/// Compaction is crash-isolated per {INV-003}: issues a single `BEGIN IMMEDIATE` /
+/// `DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier
+/// AND step_idx NOT IN (:promoted_step_idxs)` / `COMMIT` transaction.  The DELETE is
+/// scope-safe by construction — it touches only the caller-supplied `run_id`; no other
+/// run's records are affected.  Concurrent `put_record` calls on the same or other runs
+/// are serialized by SQLite WAL write-lock; no interleaving can corrupt any run's records.
+/// A SIGKILL mid-compaction leaves uncommitted WAL frames that are discarded on the next
+/// database open; the pre-compaction trajectory is fully recovered ({INV-003}).
 /// Co-located in the same SQLite database file as `CheckpointSaver`, in a dedicated
-/// `trajectory_records` table (no FK joins to checkpoint tables; WAL mode; bounded batch
-/// size default 1000 records to prevent blocking `CheckpointSaver::put_writes`).
+/// `trajectory_records` table keyed `(run_id, step_idx)` (no FK joins to checkpoint
+/// tables; WAL mode).
 #[async_trait]
 pub trait TrajectoryCompactor: Send + Sync {
     async fn compact(
@@ -3008,7 +3017,9 @@ pub trait TrajectoryCompactor: Send + Sync {
 
 **Postcondition (BC-2.04.011 {PC-001}):** After `Ok(())`, every retained record appears in `replay(run_id)` unchanged. No retained record is lost or mutated.
 
-**Error:** Backend I/O failures propagate as `Err(PregolyaError)` — `E-TRAJ-005 TrajectoryCompactionFailed (DURABILITY, Maybe-retry)` (minted; `BC-2.04.011 {PC-006}`). Crash mid-compaction: in WAL mode, uncommitted WAL frames after the last commit marker are discarded on the next database open; the pre-compaction state is fully recovered ({INV-003}). On the next `compact` call, `Err(PregolyaError)` is returned and the caller retries.
+**Errors:**
+- `E-TRAJ-005 TrajectoryCompactionFailed (DURABILITY, Maybe-retry)` (minted; `BC-2.04.011 {PC-006}`): backend I/O failure during the DELETE transaction. Crash mid-compaction: uncommitted WAL frames are discarded on the next database open; the pre-compaction state is fully recovered ({INV-003}). On the next `compact` call, `Err(PregolyaError)` is returned and the caller retries.
+- `E-TRAJ-006 TrajectoryIntegrityCheckFailed (DURABILITY, Never)` (pending PO mint; BC-2.04.009 {INV-001}): AES-GCM authentication-tag mismatch detected during decrypt-then-compare conflict detection on the `put_record` path. Signals that the stored ciphertext has been tampered with or corrupted. The record is not updated; the error surfaces to the caller for abort or escalation. Never retried (non-transient).
 
 **BC anchor:** BC-2.04.009 (TrajectoryWriter::put_record durability), BC-2.04.010 (TrajectoryReader::replay ordering), BC-2.04.011 (Trajectory Compaction Isolation)
 

@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "4.18"
+version: "4.19"
 status: active
 producer: state-manager
-timestamp: 2026-09-01T15:30:00Z
+timestamp: 2026-09-01T21:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "4.19 (round-62/D-340/2026-09-01): VP-020 minted → BC-2.02.009 {INV-001}+{INV-002} (formal-verifier; PromoteRetireChannel idempotency/ordering; proptest P1; harness promote_retire_channel_idempotency). §VP Seed BCs table: VP-020 row added. §Full Catalog BC-2.02.009 VP column: **VP-020** added. §Footnote: VP body-files 20→21; VP-020 seed date added. BC bumps: BC-2.04.011 (per-run single-txn DELETE compaction redesign; F-P2A234-01/02); BC-2.04.009 (fallible path completeness; F-P2A234-02 sibling); BC-2.02.009 (VP-020 anchor; {INV-001}+{INV-002} coverage; F-P2A234-04). error-taxonomy §E-TRAJ-006: TrajectoryCompactionStagingFailed minted (EC 142→143; F-P2A234-03). nfr-catalog §NFR-015: trajectory durability (NFR 14→15; F-P2A234-05). VP-019 (per-run staging model aligned). VP-020 authored. ADR-030 §Compaction Atomicity Decision (per-run single-txn DELETE redesign). interface-definitions §TrajectoryCompactor (E-TRAJ-006 + Serializer). verification-architecture §VP-020. verification-coverage-matrix §VP-020. S-2.12 (input-hash e151f9d). S-1.28 (VP-020 anchor; input-hash 310b574). VP-INDEX §VP-020 (20→21 VPs; 8 proptest P1). ARCH-INDEX §Verification Properties 20→21 VPs. STORY-INDEX §VP-to-Story Anchor Map (VP-020 row). dependency-graph §VP-to-Stories Matrix (VP-020 row). Census: BC 140 / VP 21 / EC 143 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "4.18 (round-58/D-337/2026-09-01): BC-2.02.009 §INV-004 (product-owner; PromoteRetireOp<T> gains #[derive(Clone, Debug)] to satisfy Channel::Update: Clone obligation; {INV-004} extended with Clone obligation clause — derives-Clone sound: LedgerEntry⊃Clone; distinct from Default which required manual bound-free impl; input-hash b563e20; F-P2A229-01). ADR-030 §Decision-3 (architect; PromoteRetireOp<T> #[derive(Clone, Debug)]: Clone mandatory for Channel::Update: Clone; derive-Clone-OK vs manual-Default-required distinction documented; does NOT trigger rustc#26925; all CAP-040 mirror surfaces + primary surface converged). interface-definitions §LedgerChannel (architect; PromoteRetireOp #[derive(Clone, Debug)] added; F-P2A229-01 sibling mirror). S-1.28 §Rule-4/§Rule-13/AC-011/AC-018 (story-writer; PromoteRetireOp<T> #[derive(Clone, Debug)] across exclusion/Tasks/File-Structure; input-hash 17d12e4; F-P2A229-01). STORY-INDEX §Changelog. Census UNCHANGED: 140 BCs / 20 VPs / TV 794 canonical / EC 142 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%)."
   - "4.17 (round-56/D-335/2026-09-01): O-P2A227-A [OBS] FIXED — VP-018 row §VP Seed BCs table DI cell corrected DI-002+DI-004 → DI-002 (single-primary-DI convention; formal-verifier ruling: VP-018 proptest targets {INV-001} only; DI-004 monotonic-ordering is NOT a compaction-retention property; BC-2.04.011 Full Catalog triple DI-002/DI-004/DI-014 is correct and UNCHANGED). BC version bumps: BC-2.02.007 (product-owner; derive-only canon REVERSED to manual bound-free impl Default per rustc#26925; {INV-004} Self:Default supertrait obligation; F-P2A227-01; input-hash 5b89b25). BC-2.02.009 (product-owner; same manual-Default fix; {INV-004} gained; input-hash 5b89b25). ADR-030 §Decision-3 (architect; derive-only→manual bound-free canon; supersedes F-P2A220-01/F-P2A224-03). interface-definitions §LedgerChannel (architect; §LedgerChannel manual Default). verification-architecture.md §Provable-Properties-Catalog (formal-verifier; VP-019 four-crash-point staging-table model F-P2A227-02; POL-9 propagation). VP-019 §BC-Contradictions-Flagged (formal-verifier; §BC-Contradictions-Flagged marked RESOLVED; input-hash 6579f43; F-P2A227-03). S-1.28 v1.5→v1.6 (story-writer; Rule-13/AC-001/Tasks/File-Structure derive→manual reversal; AC-018 dual-traces BC-2.02.007/009 {INV-004}; input-hash 8797630). S-1.14 v1.6→v1.7 (story-writer; built-in-channel manual-Default rule; AC-016/Task-20/File-Structure). STORY-INDEX §Changelog v1.44; VP-INDEX §Changelog v1.38. Census UNCHANGED: 140 BCs / 20 VPs / TV 794 canonical / EC 142 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%)."
   - "4.16 (round-55/D-334/2026-09-01): BC-2.02.009 Full Catalog DI Anchors column corrected DI-014,DI-001→DI-001 (F-P2A225-01: DI-014 ruled INAPPLICABLE for LedgerChannel::reduce + PromoteRetireChannel::reduce; DI-001 is the sole authoritative anchor corpus-wide for both channel reducers; BC-INDEX was the last live DI-014 residue). BC-2.02.007/BC-2.02.009 input-hashes corrected PO-written 97026a9→tool-computed 5723c88 (per compute-input-hash --update). STORY-INDEX §Changelog v1.43: S-1.14 v1.5→v1.6 (AC-015 citation fix; F-P2A225-03). Census UNCHANGED: 140 BCs / 20 VPs / TV 794 canonical / EC 142."
@@ -138,13 +139,13 @@ changelog:
 
 # BC-INDEX: pregolya Behavioral Contracts
 
-> **140 BCs total — 51 P0 / 86 P1 / 3 P2 | 11 Red Gate | 17 VP Seed | 20 VPs registered**
+> **140 BCs total — 51 P0 / 86 P1 / 3 P2 | 11 Red Gate | 18 VP Seed | 21 VPs registered**
 >
 > Subsystem IDs: SS-01 through SS-17 assigned by architect at Phase 1 Step D (2026-07-14).
 > SS-18 through SS-22 added D21 ecosystem-parity expansion (2026-07-20).
 > SS-23 (First-Party Tools) added D23 first-class approval hook + compaction expansion (2026-07-22).
 > All BCs reside under `specs/behavioral-contracts/ss-NN/` per ARCH-INDEX Subsystem Registry.
-> VP-INDEX: 20 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
+> VP-INDEX: 21 VPs registered (VP-001–VP-003 Kani P0, VP-004–VP-005 integration P1,
 > VP-006–VP-010 assigned in VP-INDEX (burst-223, 2026-07-21) and authored — VP-006.md–VP-010.md all complete;
 > VP-006-B proptest P1 seeded SEC-review-adjudication burst and authored — vp-006-b-injection-guard-multipair-fewshot.md complete;
 > VP-011–VP-013 seeds assigned D23 burst-232 and authored — VP-011.md–VP-013.md all complete;
@@ -153,7 +154,8 @@ changelog:
 > VP-016 proptest P1 seeded GAP-01/ADR-029 burst and authored — vp-016-graph-agent-tool-state-isolation.md complete;
 > VP-017 proptest P1 seeded ADR-030 Stage 1 burst and authored — vp-017-ledger-channel-append-dedup.md complete;
 > VP-018 proptest P1 seeded BC-2.04.011/ADR-030 Stage 2b burst and authored — vp-018-trajectory-compaction-retention-integrity.md complete;
-> VP-019 integration P1 seeded round-50 cascade (crash-isolation; BC-2.04.011 {INV-003}; distinct from VP-018 {INV-001}) and authored — vp-019-trajectory-compaction-crash-isolation.md complete).
+> VP-019 integration P1 seeded round-50 cascade (crash-isolation; BC-2.04.011 {INV-003}; distinct from VP-018 {INV-001}) and authored — vp-019-trajectory-compaction-crash-isolation.md complete;
+> VP-020 proptest P1 seeded round-62 cascade (PromoteRetireChannel idempotency; BC-2.02.009 {INV-001}+{INV-002}) and authored — vp-020-promote-retire-channel-idempotency.md complete).
 
 ## Summary
 
@@ -164,7 +166,7 @@ changelog:
 | Priority P1 | 86 |
 | Priority P2 | 3 |
 | Red Gate BCs | 11 |
-| VP Seed BCs | 17 unique VPs (19 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006; VP-017 dual-anchors BC-2.02.007+BC-2.02.008; VP-006-B companion to VP-006 on BC-2.18.004 {PC-005}) |
+| VP Seed BCs | 18 unique VPs (20 BC rows; VP-014 dual-anchors BC-2.01.005+BC-2.01.006; VP-017 dual-anchors BC-2.02.007+BC-2.02.008; VP-006-B companion to VP-006 on BC-2.18.004 {PC-005}; VP-020 seeds BC-2.02.009) |
 | Subsection groups | 23 (SS-01 – SS-23) |
 
 ## Red Gate BCs
@@ -206,8 +208,9 @@ changelog:
 | VP-017 | BC-2.02.007 | LedgerChannel Dedup-Idempotent Append | proptest | DI-001 (dedup-idempotency under concurrent writes; harness `ledger_channel_dedup_idempotency`) |
 | VP-017 | BC-2.02.008 | LedgerChannel First-Appearance Ordering | proptest | DI-001 (first-appearance ordering; dual-anchor companion to BC-2.02.007; harness `ledger_channel_dedup_idempotency`) |
 | VP-018 | BC-2.04.011 {INV-001} | Trajectory Compaction Isolation | proptest | DI-002 (compaction retention-integrity; harness `trajectory_compaction_retention_integrity`) |
+| VP-020 | BC-2.02.009 {INV-001}+{INV-002} | PromoteRetireChannel Promote/Retire Lifecycle | proptest | DI-001 (PromoteRetireChannel idempotency/ordering; harness `promote_retire_channel_idempotency`) |
 
-_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-019 is an integration VP (BC-2.04.011 {INV-003}; crash-isolation WAL durability via pregolya-checkpoint integration test); registered in VP-INDEX but not a formal verification seed. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-006-B seeded SEC-review-adjudication burst (2026-08-26); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26); VP-016 seeded GAP-01/ADR-029 burst (2026-08-26); VP-017/VP-018 seeded D-327 praxist authoring burst (2026-08-31); VP-019 seeded round-50 cascade (crash-isolation; BC-2.04.011 {INV-003}; integration P1). All 20 VP body files (VP-001 through VP-019 + VP-006-B) exist as of round-51 fix-burst._
+_VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-INDEX but not formal verification seeds. VP-019 is an integration VP (BC-2.04.011 {INV-003}; crash-isolation WAL durability via pregolya-checkpoint integration test); registered in VP-INDEX but not a formal verification seed. VP-006/007/008/009/010 seeds assigned burst-222 (2026-07-21); VP-006-B seeded SEC-review-adjudication burst (2026-08-26); VP-011/012/013 seeds assigned burst-231 (2026-07-22); VP-014 seeded burst-302b (2026-08-17); VP-015 seeded BC-completeness-propagation burst (2026-08-26); VP-016 seeded GAP-01/ADR-029 burst (2026-08-26); VP-017/VP-018 seeded D-327 praxist authoring burst (2026-08-31); VP-019 seeded round-50 cascade (crash-isolation; BC-2.04.011 {INV-003}; integration P1); VP-020 seeded round-62 cascade (PromoteRetireChannel idempotency/ordering; BC-2.02.009 {INV-001}+{INV-002}; proptest P1). All 21 VP body files (VP-001 through VP-020 + VP-006-B) exist as of round-62 fix-burst._
 
 ## Full BC Catalog
 
@@ -229,7 +232,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.02.006 | Send API Dynamic Fan-Out | CAP-003 | | | P0 | | | ss-02/BC-2.02.006.md |
 | BC-2.02.007 | LedgerChannel Dedup-Idempotent Append | CAP-040 | | DI-001 | P1 | | **VP-017** | ss-02/BC-2.02.007.md |
 | BC-2.02.008 | LedgerChannel First-Appearance Ordering | CAP-040 | | DI-001 | P1 | | **VP-017** | ss-02/BC-2.02.008.md |
-| BC-2.02.009 | PromoteRetireChannel Promote/Retire Lifecycle | CAP-040 | | DI-001 | P1 | | | ss-02/BC-2.02.009.md |
+| BC-2.02.009 | PromoteRetireChannel Promote/Retire Lifecycle | CAP-040 | | DI-001 | P1 | | **VP-020** | ss-02/BC-2.02.009.md |
 | BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | CAP-004 | NE-17 | DI-001 | P0 | | **VP-001** | ss-03/BC-2.03.001.md |
 | BC-2.03.002 | Concurrent LastValue Write Rejection Raises InvalidUpdateError | CAP-004 | | DI-001 | P0 | | | ss-03/BC-2.03.002.md |
 | BC-2.03.003 | Deterministic Reducer Application Order (Task-Identity Sort) | CAP-004 | NE-17 | DI-001 | P0 | | | ss-03/BC-2.03.003.md |
@@ -371,6 +374,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 4.19 | 2026-09-01 | round-62/D-340: VP-020 minted → BC-2.02.009 {INV-001}+{INV-002} (PromoteRetireChannel idempotency/ordering; proptest P1). §VP Seed BCs table VP-020 row added. §Full Catalog BC-2.02.009 VP column **VP-020** added. §Footnote VP body-files 20→21. BC bumps: BC-2.04.011 (per-run single-txn DELETE compaction; F-P2A234-01/02); BC-2.04.009 (fallible propagation); BC-2.02.009 (VP-020 anchor; F-P2A234-04). E-TRAJ-006 minted (EC 142→143). NFR-015 trajectory durability (NFR 14→15). VP-INDEX 20→21 VPs. Census: BC 140 / VP 21 / EC 143 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / NFR 15. | round-62 D-340 |
 | 4.18 | 2026-09-01 | round-58/D-337: BC-2.02.009 §INV-004 (PromoteRetireOp<T> #[derive(Clone, Debug)]; Clone obligation clause; input-hash b563e20; F-P2A229-01). ADR-030 §Decision-3 (Clone mandatory for Channel::Update: Clone; derive-Clone-OK; does NOT trigger rustc#26925). interface-definitions §LedgerChannel (PromoteRetireOp #[derive(Clone, Debug)]). S-1.28 §Rule-4/§Rule-13/AC-011/AC-018 (PromoteRetireOp #[derive(Clone, Debug)] across exclusion/Tasks/File-Structure; input-hash 17d12e4). STORY-INDEX §Changelog. Census UNCHANGED: 140 BCs / 20 VPs / TV 794 canonical / EC 142. | round-58 D-337 |
 | 4.17 | 2026-09-01 | round-56/D-335: O-P2A227-A [OBS] — VP-018 §VP Seed BCs DI cell corrected DI-002+DI-004→DI-002 (single-primary-DI; VP-018 targets {INV-001} retention only; DI-004 not a compaction-retention anchor). BC-2.02.007/009 v1.5→v1.6 (manual bound-free impl Default; {INV-004} Self:Default supertrait; input-hash 5b89b25; F-P2A227-01). ADR-030 §Decision-3 + interface-definitions §LedgerChannel + verification-architecture.md §Provable-Properties-Catalog + VP-019 §BC-Contradictions-Flagged + S-1.28 §Rule-13 + S-1.14 §manual-Default-rule (all specialist-authored). STORY-INDEX §Changelog v1.44; VP-INDEX §Changelog v1.38. Census UNCHANGED: 140 BCs / 20 VPs / TV 794 canonical / EC 142. | round-56 D-335 |
 | 4.16 | 2026-09-01 | round-55/D-334: BC-2.02.009 Full Catalog DI Anchors corrected DI-014,DI-001→DI-001 (F-P2A225-01: DI-014 INAPPLICABLE for channel reducers; DI-001 authoritative). BC-2.02.007/BC-2.02.009 input-hashes corrected 97026a9→5723c88. STORY-INDEX §Changelog v1.43: S-1.14 v1.5→v1.6 (AC-015 citation F-P2A225-03). Census UNCHANGED: 140 BCs / 20 VPs / TV 794 canonical / EC 142. | round-55 D-334 |

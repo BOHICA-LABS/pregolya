@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.47"
+version: "1.48"
 status: active
 producer: state-manager
-timestamp: 2026-09-01T17:30:00Z
+timestamp: 2026-09-01T21:00:00Z
 changelog:
+  - "1.48 (round-62/D-340/2026-09-01): VP-020 minted → BC-2.02.009 {INV-001}+{INV-002} (PromoteRetireChannel idempotency/ordering; proptest P1; S-1.28). BC coverage map: BC-2.02.009 row updated with (VP-020) annotation. VP-to-Story Anchor Map: VP-020 row added (BC-2.02.009 {INV-001}+{INV-002}; S-1.28; P1; pregolya-graph). Story version bumps: S-1.28 v1.8→v1.9 (input-hash 310b574); S-2.12 v1.4→v1.5 (input-hash e151f9d). Census: BC 140 / VP 20→21 / EC 142→143 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 14→15."
   - "1.47 (round-60/D-339/2026-09-01): ops-artifact propagation burst — S-1.28 and S-2.12 (added in D-327/CAP-040) propagated to machine-facing dispatch artifacts: sprint-state.yaml now includes per-story blocks for S-1.28 (Wave 1 sub-batch 1e; pregolya-graph; BC-2.02.007/BC-2.02.008/BC-2.02.009; VP-017; 5 pts) and S-2.12 (Wave 2 sub-batch 2a; pregolya-checkpoint; BC-2.04.009/BC-2.04.010/BC-2.04.011; VP-018/VP-019; 8 pts). wave-schedule.md §sub-batch-1e/2a (41 stories; S-1.28 sub-batch 1e; S-2.12 sub-batch 2a; input-hash 830a185) and dependency-graph.md §VP-to-Stories-matrix (S-1.10 blocks += S-2.12; VP-019 matrix row; 20 VPs) already completed by story-writer. STORY-INDEX story rows UNCHANGED. Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). Process-gap lesson L-262 codified (OPS-ARTIFACT SIBLING-SET COMPLETENESS). streak 0/3 (push resets frozen HEAD; round-61 gates on new HEAD)."
   - "1.46 (round-59/D-338/2026-09-01): S-1.28 v1.7→v1.8 (story-writer; F-P2A230-01 AC-018 dual-test trace — BC-2.02.009 {INV-004} PromoteRetireChannel side now cited to new test_BC_2_02_009_promote_retire_channel_implements_channel_trait() in promote_retire.rs; BC-2.02.007 side retains test_BC_2_02_007_ledger_channel_implements_channel_trait() in ledger.rs; Tasks + File-Structure updated for promote_retire.rs; input-hash 17d12e4). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%)."
   - "1.45 (round-58/D-337/2026-09-01): S-1.28 §Rule-4/§Rule-13/AC-011/AC-018 (story-writer; PromoteRetireOp<T> gains #[derive(Clone, Debug)] to satisfy Channel::Update: Clone; Rule 4/Rule 13 exclusion updated — PromoteRetireOp<T> derives Clone because LedgerEntry⊃Clone (distinct from Default which requires manual impl); Tasks + File-Structure updated; input-hash 17d12e4; F-P2A229-01). Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%)."
@@ -283,7 +284,7 @@ input-hash: "69ed6f6"
 | BC-2.02.006 | Send API Dynamic Fan-Out | S-1.15 | P0 |
 | BC-2.02.007 | LedgerChannel Dedup-Idempotent Append (VP-017) | S-1.28 | P1 |
 | BC-2.02.008 | LedgerChannel First-Appearance Ordering (VP-017) | S-1.28 | P1 |
-| BC-2.02.009 | PromoteRetireChannel Promote/Retire Lifecycle | S-1.28 | P1 |
+| BC-2.02.009 | PromoteRetireChannel Promote/Retire Lifecycle (VP-020) | S-1.28 | P1 |
 
 ### SS-03 BSP Execution Engine (3 BCs)
 
@@ -539,3 +540,4 @@ input-hash: "69ed6f6"
 | VP-017 | BC-2.02.007 + BC-2.02.008 | S-1.28 | P1 | pregolya-graph |
 | VP-018 | BC-2.04.011 {INV-001} | S-2.12 | P1 | pregolya-checkpoint |
 | VP-019 | BC-2.04.011 {INV-003} | S-2.12 | P1 | pregolya-checkpoint |
+| VP-020 | BC-2.02.009 {INV-001}+{INV-002} | S-1.28 | P1 | pregolya-graph |

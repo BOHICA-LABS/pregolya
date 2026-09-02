@@ -1,17 +1,18 @@
 ---
 document_type: prd-supplement-nfr-catalog
 level: L3
-version: "1.7"
+version: "1.8"
 status: active
 producer: product-owner
-timestamp: 2026-07-24T00:00:00Z
+timestamp: 2026-09-01T00:00:00Z
 phase: 1a
 inputs:
   - .factory/specs/prd.md
   - .factory/specs/domain-spec/risks.md
   - .factory/specs/domain-spec/invariants.md
-input-hash: "ea81137"
+input-hash: "8d94623"
 changelog:
+  - "1.8 (round-62/F-P2A234-05/2026-09-01): NFR-015 minted — trajectory `put_record` durability chaos test. Reliability category; P1; 100 SIGKILL crash-restart cycles across TrajectoryWriter→replay path; assert zero record loss on recovery; parity with NFR-002 crash-recovery format (DI-002 per-task durability invariant). Anchor: BC-2.04.009. Risk Source: N/A — DI-002 (per-task durability invariant) / NFR-002 parity. NFR count 14→15. NFR-to-Module map updated with NFR-015 row."
   - "1.7 (F-P150-01/burst-251/2026-07-24): TD-VSDD-060 sweep — 14-NFR consistency audit, 2 module-map rows corrected. (1) NFR-013: 'Batch-size guard before provider call; use provider-declared max batch size' directly contradicted the requirement row (EC-002 adjudication: no pre-send cap mandated; provider-limit behavior = structured provider-error passthrough); rewritten to: provider rejection propagated as structured Err; no pre-send batch-size cap; no panic; no silent truncation; vecs.len() == texts.len() on any Ok path. (2) NFR-014: Architectural Impact was f-string-only; requirement row already mandates the engine-neutral ≤100ms bound covering both f-string and jinja2/minijinja (v1.4 changelog baked both engines into the requirement but map was not swept); extended to add jinja2/minijinja bounded-traversal obligation. 12 of 14 NFRs confirmed consistent."
   - "1.6 (F-P149-02/burst-250/2026-07-24): NFR-012 Risk Source version pin de-pinned: 'N/A — ADR-014 v1.5 §Performance Note' → 'N/A — ADR-014 Decision 2 §VectorStore trait' (TD-VSDD-091 stable-anchor enforcement, F-P149-02; ADR-014 has no §Performance Note heading — the InMemoryVectorStore O(n·d) design is documented in Decision 2 §VectorStore trait)."
   - "1.5 (burst-241/Wave-2/2026-07-23): F-P141-02 VP-gate expansion — NFR-003 expanded from 3 to 6 P0 Kani proof targets (VP-001/002/003 from D17-Q7 + VP-009 zero-norm, VP-010 allowlist, VP-011 tool-deny from D21+D23). NFR-to-Module map updated to add pregolya-vectorstores and pregolya-core for VP-009/010, and P1 targets VP-006/012/013. Success Criteria row updated to '6 P0'."
@@ -48,6 +49,7 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 | NFR-012 | Performance | InMemoryVectorStore cosine similarity scan must not degrade unboundedly for large corpora | ≤ 5s for a corpus of 100,000 documents with 1,536-dim embeddings (OpenAI `text-embedding-3-small` dimension) on M1 Mac baseline hardware; linear O(n·d) time complexity confirmed by benchmark | Criterion benchmark: `cargo bench --bench vectorstore_scan_100k`; complexity verified by profiling against 10k, 50k, 100k corpus sizes | P1 | N/A — ADR-014 Decision 2 §VectorStore trait | BC-2.21.002, BC-2.21.003 |
 | NFR-013 | Reliability | `embed_documents` with an over-limit batch must complete deterministically — either `Ok` or a structured `Err` propagating the provider's rejection; no panic; zero silent truncation (BC-2.22.001 EC-002 adjudication: no pre-send cap is mandated; provider-limit behavior = structured provider-error passthrough) | 0 panics; 0 silent truncations; over-limit `embed_documents` returns either `Ok(vecs)` or a structured `Err`; memory bounded; `vecs.len() == texts.len()` on any `Ok` path (DI-014) | Integration test per provider: send an oversized batch; assert response is either `Ok` (if provider accepted) or a structured `Err` (if provider rejected) — never panic, never truncated-`Ok` with fewer vectors than inputs. Assert no `E-EMBED-001` dimension-mismatch is raised on an over-limit scenario (E-EMBED-001 is for vector-length inconsistency, not batch-size rejection) | P1 | N/A — ADR-017 Decision 2; BC-2.22.001 EC-002; DI-014 | BC-2.22.001 EC-002, BC-2.22.002, BC-2.22.003 |
 | NFR-014 | Security | Template render must complete in bounded time regardless of variable count — engine-neutral bound applies to both f-string and jinja2 engines | `ChatPromptTemplate::format_messages` (f-string engine) and `ChatPromptTemplate::format_messages` (jinja2/minijinja engine) each complete in ≤ 100ms for a template with 500 variables across 20 slots on M1 Mac | Criterion benchmark: `cargo bench --bench template_render_500vars_fstring` (f-string engine) and `cargo bench --bench template_render_500vars_jinja2` (jinja2/minijinja engine); both must satisfy ≤ 100ms independently; no unbounded regex backtracking in either engine (f-string: linear scan; jinja2/minijinja: bounded traversal) | P1 | N/A — ADR-015 Decision 4 (engine-neutral; both f-string and jinja2 must be bounded) | BC-2.18.001, BC-2.18.004 |
+| NFR-015 | Reliability | `TrajectoryWriter::put_record` durability must survive process crashes — zero record loss across SIGKILL crash-restart cycles on the TrajectoryWriter→replay path, at parity with NFR-002 durability guarantee | 0 committed records lost in 100 SIGKILL crash-restart cycles; every `put_record` that returned `Ok(())` before the kill must appear in `replay(run_id)` after restart | Chaos test: `cargo test --test trajectory_crash_recovery -- --nocapture`; inject SIGKILL at random points after `put_record` returns `Ok(())`; assert replay completeness across 100 cycles | P1 | N/A — DI-002 (per-task durability invariant) / NFR-002 parity | BC-2.04.009 |
 
 ## NFR Categories
 
@@ -79,6 +81,7 @@ primary_consumers: [architect, performance-engineer, formal-verifier]
 | NFR-012 | pregolya-vectorstores (InMemoryVectorStore) | O(n·d) linear scan — no index structure; use InMemoryVectorStore only within documented corpus size envelope |
 | NFR-013 | pregolya-core::embeddings trait, pregolya-openai (EmbeddingsOpenAI), pregolya-ollama (EmbeddingsOllama) | Provider rejection propagated as structured `Err`; no pre-send batch-size cap (EC-002 adjudication); no panic; no silent truncation; `vecs.len() == texts.len()` on any `Ok` path — over-limit batches pass through to the provider and are never intercepted pre-send |
 | NFR-014 | pregolya-prompts (ChatPromptTemplate::format_messages) | f-string engine: linear scan; no regex backtracking; bounded per-variable iteration. jinja2/minijinja engine: bounded traversal; no unbounded recursion or backtracking; same ≤ 100ms ceiling applies independently — both engines must satisfy the engine-neutral bound stated in the requirement row |
+| NFR-015 | pregolya-checkpoint (checkpoint::trajectory, TrajectoryWriter) | Crash recovery must restore all `put_record`-committed records; SQLite WAL sync-to-disk before `Ok(())` returns; no write-back buffering that could lose records post-commit; mirrors the sync-tier durability obligation of NFR-002 for the trajectory slice |
 
 ## Success Criteria Cross-Reference
 

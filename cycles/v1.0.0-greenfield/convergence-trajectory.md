@@ -5159,3 +5159,59 @@ All 4 P2A-232 findings CLOSED in D-339 fix-burst:
 - L-262 codified [process-gap]: OPS-ARTIFACT SIBLING-SET COMPLETENESS
 
 **NEXT: round-61 adversarial sweep on new frozen HEAD (post-D-339 push). Streak 0/3.**
+
+---
+
+## Rounds 61–62 — D-340 (2026-09-01) — VP-020 MINTED + E-TRAJ-006 + NFR-015 + ADR-030 (per-run single-txn DELETE compaction)
+
+### Pass P2A-233 (Round-61 — CLEAN(strict)=YES — streak 1/3)
+
+| Field | Value |
+|-------|-------|
+| Pass | P2A-233 |
+| Round | 61 |
+| Date | 2026-09-01 |
+| CLEAN(strict) | YES |
+| CLEAN(PR-merge) | YES |
+| Streak | 1/3 |
+| Findings | 0 |
+| Finding delta | n/a |
+
+**Summary:** Round-61 adversarial pass on frozen HEAD (post-D-339 push). Zero findings across all lenses. CLEAN(strict)=YES. Streak 1/3.
+
+### Pass P2A-234 (Round-62 adversarial pass — FINDINGS: 2H+3M+3OBS — streak reset 0/3)
+
+| Field | Value |
+|-------|-------|
+| Pass | P2A-234 |
+| Round | 62 |
+| Date | 2026-09-01 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Streak | RESET 0/3 |
+| Findings | 8 (2H + 3M + 3OBS) |
+
+**Findings closed in D-340 fix-burst:**
+
+- **F-P2A234-01 [HIGH] BC-2.04.011 per-run single-txn DELETE compaction** — staging-swap mechanism was catastrophically incorrect: multi-run compaction would silently delete records from other concurrent runs. Redesigned to per-run single-txn DELETE scoped to single run_id. ADR-030 §Compaction Atomicity Decision documents the pattern change. CLOSED: BC-2.04.011 (product-owner), ADR-030 (architect), S-2.12 (story-writer; input-hash e151f9d), VP-019 (formal-verifier; input-hash 86089f3).
+- **F-P2A234-02 [HIGH] BC-2.04.009 false concurrent-safety claim corrected** — BC-2.04.009 {INV-002} claimed optimistic concurrency for put_record; actual SQLite BEGIN IMMEDIATE serializes all concurrent writers. CLOSED: BC-2.04.009 (product-owner).
+- **F-P2A234-03 [MED] E-TRAJ-006 TrajectoryCompactionStagingFailed minted** — new error code for staging-swap failures not present in error taxonomy. CLOSED: error-taxonomy §E-TRAJ-006 (product-owner; EC 142→143).
+- **F-P2A234-04 [MED] VP-020 PromoteRetireChannel idempotency/ordering proptest P1 authored** — BC-2.02.009 {INV-001}+{INV-002} lacked a formal VP; promoted to proptest P1. CLOSED: VP-020 authored (formal-verifier; input-hash 8635de0); VP-INDEX §VP-020; BC-2.02.009 (product-owner; input-hash e5c46b2).
+- **F-P2A234-05 [MED] NFR-015 trajectory durability SLA added** — no NFR covered trajectory writer durability properties. CLOSED: nfr-catalog §NFR-015 (product-owner; NFR 14→15).
+- **OBS-1/OBS-2/OBS-3:** Records-tier observations CLOSED as part of fix-burst.
+
+### Post-Rounds-61/62 Status (D-340 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: 20 → **21** (+VP-020)
+- EC: 142 → **143** (+E-TRAJ-006)
+- TV: UNCHANGED (794 canonical)
+- ADR: UNCHANGED (30)
+- NFR: 14 → **15** (+NFR-015)
+- Stories: UNCHANGED (42 total; 41 product + 1 maint)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- GATE-READY: YES
+- Streak: 0/3 (push resets frozen HEAD; round-63 gates on new HEAD)
+
+**NEXT: round-63 adversarial sweep on new frozen HEAD (post-D-340 push). Streak 0/3.**

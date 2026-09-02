@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.28
 epic_id: E-07
-version: "1.8"
+version: "1.9"
 status: draft
 producer: story-writer
 timestamp: 2026-09-01T00:00:00Z
@@ -15,13 +15,13 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
   - .factory/specs/prd-supplements/interface-definitions.md
-input-hash: "17d12e4"
+input-hash: "310b574"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
 blocks: []
 behavioral_contracts: [BC-2.02.007, BC-2.02.008, BC-2.02.009]
-verification_properties: [VP-017]
+verification_properties: [VP-017, VP-020]
 priority: P1
 cycle: v1.0.0-greenfield
 wave: 1
@@ -32,6 +32,7 @@ assumption_validations: []
 risk_mitigations: []
 tdd_mode: strict
 changelog:
+  - "1.9 (round-62-Stage-D/2026-09-01): VP-020 registered — verification_properties extended to [VP-017, VP-020]; AC-017 extended with VP-020 trace (proptest P1, harness promote_retire_channel_idempotency, covers BC-2.02.009 {INV-001}+{INV-002}, DI-001; RED GATE); Architecture Mapping VP-020 row added (promote_retire.rs #[cfg(test)]); File Structure promote_retire.rs #[cfg(test)] list extended with VP-020 proptest; Tasks extended with VP-020 proptest write task; Token Budget updated."
   - "1.8 (round-59/F-P2A230-01/2026-09-01): records-only micro-burst — AC-018 dual-test fix: BC-2.02.009 {INV-004} (PromoteRetireChannel Channel-impl side) was only traced to test_BC_2_02_007_ledger_channel_implements_channel_trait (a LedgerChannel/BC-2.02.007-named test in ledger.rs); added new distinct verifying-test test_BC_2_02_009_promote_retire_channel_implements_channel_trait (in promote_retire.rs) asserting PromoteRetireChannel<T>: Channel with Accumulator = Vec<T>, Update = PromoteRetireOp<T>, and Update: Clone satisfied via PromoteRetireOp derive; AC-018 now cites both verifying tests one per BC side; Tasks and File Structure updated for promote_retire.rs."
   - "1.7 (round-58/F-P2A229-01/2026-09-01): ADR-030 §Decision 3 round-58 — PromoteRetireOp<T> MUST carry #[non_exhaustive] #[derive(Clone, Debug)]; Clone mandatory (satisfies Channel::Update: Clone; PromoteRetireChannel<T>::Update = PromoteRetireOp<T>; sound via LedgerEntry: Clone; does not hit rustc #26925); Debug conventional for data-bearing enum. Rule 4 updated with canonical form and rationale. Rule 13 clarified: no-derives applies to MARKER STRUCTS only, NOT PromoteRetireOp. AC-011 updated (derives on PromoteRetireOp). AC-018 updated (Channel::Update: Clone obligation; no extra T: Clone beyond T: LedgerEntry). Tasks + File Structure updated for promote_retire.rs."
   - "1.6 (round-57/F-P2A227-01/2026-09-01): Reversed derive-only mandate to manual bound-free impl — #[derive(Default)] on LedgerChannel<T>/PromoteRetireChannel<T> emits spurious T: Default bound breaking Channel: Default supertrait for T: LedgerEntry-only callers (ADR-030 §Decision 3 round-57). AC-001 updated; AC-018 dual-traces BC-2.02.009 INV-004 (PromoteRetireChannel Self: Default obligation); BC-2.02.009 covered-ACs extended to AC-011..AC-018; Rule 13 reversed; Tasks for ledger.rs/promote_retire.rs reversed; File Structure updated."
@@ -113,8 +114,8 @@ When `update` is `Retire(entry_id)` and `entry_id` is NOT in the active set, the
 ### AC-016 (traces to BC-2.02.009 PC-006 — concurrent ops processed in task-identity order, DI-001)
 Within a single super-step, multiple `PromoteRetireOp` values are processed in task-identity-sorted order. EC-003 and EC-004 from BC-2.02.009 (Promote-then-Retire and Retire-then-Promote in same super-step) yield deterministic, distinct final active sets. Verified by `test_BC_2_02_009_concurrent_promote_retire_deterministic_order()` (TST-PROM-01 non-VP label; deterministic ordering test for `PromoteRetireChannel`).
 
-### AC-017 (traces to BC-2.02.009 INV-001 — active set contains no duplicate entry_id values at any time)
-`INV-001` holds after any `reduce` call: no two elements in the active `Vec<T>` share an `entry_id`. Verified by `test_BC_2_02_009_active_set_no_duplicate_entry_ids()` (TST-PROM-02 non-VP label; active-set uniqueness invariant test for `PromoteRetireChannel`).
+### AC-017 (traces to BC-2.02.009 INV-001 / INV-002 — active set contains no duplicate entry_id values at any time; VP-020 proptest anchor)
+`INV-001` holds after any `reduce` call: no two elements in the active `Vec<T>` share an `entry_id`. VP-020 (`promote_retire_channel_idempotency` proptest P1; covers BC-2.02.009 {INV-001} no-duplicate and {INV-002} ordering stability; DI-001) exercises arbitrary-length Promote/Retire sequences via `proptest!` — this is the primary VP anchor for idempotency and ordering invariants on `PromoteRetireChannel`, analogous to VP-017 for `LedgerChannel`. RED GATE: this proptest MUST fail on stubs before implementation. Verified by `test_BC_2_02_009_active_set_no_duplicate_entry_ids()` (TST-PROM-02 non-VP label; active-set uniqueness invariant unit test) and VP-020 (proptest harness `promote_retire_channel_idempotency`).
 
 ### AC-018 (traces to BC-2.02.007 INV-004 / BC-2.02.009 INV-004 — LedgerChannel<T> and PromoteRetireChannel<T> implement graph::channels::Channel; Channel: Default supertrait satisfied via manual bound-free impl; Channel::Update: Clone satisfied via PromoteRetireOp derive)
 `LedgerChannel<T>` implements the `graph::channels::Channel` trait with associated types `Accumulator = Vec<T>` and `Update = T`. `PromoteRetireChannel<T>` analogously implements `graph::channels::Channel` with `Accumulator = Vec<T>` and `Update = PromoteRetireOp<T>`. The BSP execution engine dispatches to the respective `reduce` during the reduce phase without imposing additional bounds beyond `T: LedgerEntry` at call sites. The `Channel: Default` supertrait obligation is satisfied for both types by the manual bound-free `impl<T: LedgerEntry> Default` (Rule 13) — this impl does NOT require `T: Default`, enabling BSP dispatch for any `T: LedgerEntry` caller. The `Channel::Update: Clone` bound is satisfied for `PromoteRetireChannel<T>` because `PromoteRetireOp<T>` carries `#[derive(Clone)]` (Rule 4; ADR-030 §Decision 3 round-58); no additional `T: Clone` bound is needed beyond `T: LedgerEntry` at call sites — the supertrait already implies `T: Clone`. BC-2.02.007 {INV-004} side (LedgerChannel) verified by `test_BC_2_02_007_ledger_channel_implements_channel_trait()` (located in `channels/ledger.rs`). BC-2.02.009 {INV-004} side (PromoteRetireChannel) verified by `test_BC_2_02_009_promote_retire_channel_implements_channel_trait()` (located in `channels/promote_retire.rs`), asserting `PromoteRetireChannel<T>: Channel` with `Accumulator = Vec<T>`, `Update = PromoteRetireOp<T>`, and that the `Update: Clone` obligation is satisfied because `PromoteRetireOp<T>` derives `Clone`.
@@ -126,6 +127,7 @@ Within a single super-step, multiple `PromoteRetireOp` values are processed in t
 | `LedgerEntry` trait, `LedgerChannel<T>` struct, reducer, and `Channel` trait impl (`Accumulator = Vec<T>`, `Update = T`) | `pregolya_graph::channels::ledger` (`graph::channels/ledger.rs`) | pregolya-graph | Pure (stateless reducer over `Vec<T>`; `Channel` impl wires BSP dispatch) |
 | `PromoteRetireOp<T>` enum, `PromoteRetireChannel<T>` struct, reducer, and `Channel` trait impl (`Accumulator = Vec<T>`, `Update = PromoteRetireOp<T>`) | `pregolya_graph::channels::promote_retire` (`graph::channels/promote_retire.rs`) | pregolya-graph | Pure (stateless reducer over `Vec<T>`; `Channel` impl wires BSP dispatch) |
 | VP-017 proptest harness `ledger_channel_dedup_idempotency` (dual-anchor: BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003}) | `pregolya_graph::channels::ledger` `#[cfg(test)]` | pregolya-graph | Pure (test code) |
+| VP-020 proptest harness `promote_retire_channel_idempotency` (BC-2.02.009 {INV-001}+{INV-002}; DI-001) | `pregolya_graph::channels::promote_retire` `#[cfg(test)]` | pregolya-graph | Pure (test code) |
 
 **Subsystem anchor:** SS-02 owns this story's scope because SS-02 is the StateGraph Definition subsystem (`graph::channels` in `pregolya-graph`) per ARCH-INDEX Subsystem Registry. `LedgerChannel` and `PromoteRetireChannel` are ledger-style channel reducer types that extend the existing channel family (`LastValue`/`Append`/`BarrierValue`/`EphemeralValue`) registered in the same `graph::channels` module per ADR-030 §Decision 3.
 
@@ -146,11 +148,13 @@ Within a single super-step, multiple `PromoteRetireOp` values are processed in t
 | BC-2.02.007 | ~2,000 |
 | BC-2.02.008 | ~1,500 |
 | BC-2.02.009 | ~1,800 |
+| VP-017 spec file (proptest dedup+ordering) | ~600 |
+| VP-020 spec file (proptest idempotency+ordering for PromoteRetireChannel) | ~600 |
 | Architecture module-decomposition.md (SS-02 section) | ~700 |
 | interface-definitions.md (canonical channel struct shapes) | ~500 |
 | S-1.14 context (existing `graph::channels`) | ~3,500 |
 | Test files | ~2,500 |
-| **Total** | **~16,000** |
+| **Total** | **~17,200** |
 
 Well within the 20-30% agent context window threshold.
 
@@ -166,6 +170,7 @@ Well within the 20-30% agent context window threshold.
 - [ ] Add `pub use` re-exports for all new symbols in `pregolya-graph/src/channels/mod.rs` (no logic)
 - [ ] Confirm `serde` is listed in `pregolya-graph/Cargo.toml` (workspace pin); add if absent
 - [ ] Write VP-017 proptest (`ledger_channel_dedup_idempotency`) in `channels/ledger.rs` `#[cfg(test)]` — MUST fail on stubs (Red Gate discipline; dual-anchor: BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003})
+- [ ] Write VP-020 proptest (`promote_retire_channel_idempotency`) in `channels/promote_retire.rs` `#[cfg(test)]` — MUST fail on stubs (Red Gate discipline; covers BC-2.02.009 {INV-001}+{INV-002}; exercises arbitrary-length Promote/Retire sequences via `proptest!` macro; DI-001)
 - [ ] Write unit tests for AC-001..AC-010 in `channels/ledger.rs` `#[cfg(test)]` (red first, then implement)
 - [ ] Write unit tests for AC-011..AC-017 and the AC-018 PromoteRetireChannel side in `channels/promote_retire.rs` `#[cfg(test)]` (red first; label TST-PROM-01/TST-PROM-02 as noted in ACs; AC-018 PromoteRetireChannel side uses `test_BC_2_02_009_promote_retire_channel_implements_channel_trait()`, asserting `PromoteRetireChannel<T>: Channel` with `Accumulator = Vec<T>`, `Update = PromoteRetireOp<T>`, and that `PromoteRetireOp<T>: Clone` satisfies the `Update: Clone` bound)
 - [ ] Run `just iter pregolya-graph` — all tests green (including existing S-1.14 tests)
@@ -213,7 +218,7 @@ No new crate-level dependencies are expected beyond `proptest` (dev-dependency) 
 
 Files to CREATE:
 - `pregolya-graph/src/channels/ledger.rs` — `LedgerEntry` trait (supertrait bounds: `Clone + Serialize + DeserializeOwned + Send + Sync + 'static`), `#[non_exhaustive] pub struct LedgerChannel<T: LedgerEntry> { _inner: PhantomData<T> }` with MANUAL bound-free `impl<T: LedgerEntry> Default` (NOT `#[derive(Default)]` — derive emits spurious T: Default bound; no Clone/Serialize/Deserialize), `Channel` trait impl (`Accumulator = Vec<T>`, `Update = T`), pure `reduce(acc: Vec<T>, update: T) -> Vec<T>` impl (Vec linear scan — no indexmap); `#[cfg(test)]` VP-017 proptest `ledger_channel_dedup_idempotency` + AC-001..AC-010, AC-018 unit tests
-- `pregolya-graph/src/channels/promote_retire.rs` — `#[non_exhaustive] #[derive(Clone, Debug)] pub enum PromoteRetireOp<T: LedgerEntry> { Promote(T), Retire(String) }` (`Clone` mandatory per Rule 4 / `Channel::Update: Clone`; ADR-030 §Decision 3 round-58), `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` with MANUAL bound-free `impl<T: LedgerEntry> Default` (NOT `#[derive(Default)]` — derive emits spurious T: Default bound on the marker struct; no Clone/Serialize/Deserialize on the marker struct), `Channel` trait impl (`Accumulator = Vec<T>`, `Update = PromoteRetireOp<T>`), pure `reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` impl (Vec linear scan for Promote-dedup; no indexmap); `#[cfg(test)]` AC-012..AC-017 unit tests (TST-PROM-01: `test_BC_2_02_009_concurrent_promote_retire_deterministic_order`; TST-PROM-02: `test_BC_2_02_009_active_set_no_duplicate_entry_ids`) + AC-018 PromoteRetireChannel-side unit test `test_BC_2_02_009_promote_retire_channel_implements_channel_trait()` (asserts `PromoteRetireChannel<T>: Channel` with `Accumulator = Vec<T>`, `Update = PromoteRetireOp<T>`, and `PromoteRetireOp<T>: Clone` satisfies `Update: Clone`); compile-fail test for AC-011 is in the external gate crate (see below)
+- `pregolya-graph/src/channels/promote_retire.rs` — `#[non_exhaustive] #[derive(Clone, Debug)] pub enum PromoteRetireOp<T: LedgerEntry> { Promote(T), Retire(String) }` (`Clone` mandatory per Rule 4 / `Channel::Update: Clone`; ADR-030 §Decision 3 round-58), `#[non_exhaustive] pub struct PromoteRetireChannel<T: LedgerEntry> { _inner: PhantomData<T> }` with MANUAL bound-free `impl<T: LedgerEntry> Default` (NOT `#[derive(Default)]` — derive emits spurious T: Default bound on the marker struct; no Clone/Serialize/Deserialize on the marker struct), `Channel` trait impl (`Accumulator = Vec<T>`, `Update = PromoteRetireOp<T>`), pure `reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` impl (Vec linear scan for Promote-dedup; no indexmap); `#[cfg(test)]` VP-020 proptest `promote_retire_channel_idempotency` (RED GATE; BC-2.02.009 {INV-001}+{INV-002}; DI-001) + AC-012..AC-017 unit tests (TST-PROM-01: `test_BC_2_02_009_concurrent_promote_retire_deterministic_order`; TST-PROM-02: `test_BC_2_02_009_active_set_no_duplicate_entry_ids`) + AC-018 PromoteRetireChannel-side unit test `test_BC_2_02_009_promote_retire_channel_implements_channel_trait()` (asserts `PromoteRetireChannel<T>: Channel` with `Accumulator = Vec<T>`, `Update = PromoteRetireOp<T>`, and `PromoteRetireOp<T>: Clone` satisfies `Update: Clone`); compile-fail test for AC-011 is in the external gate crate (see below)
 - `tests/external/non-exhaustive-gate/Cargo.toml` — manifest for the external compile-fail gate crate; depends on `pregolya-graph`; `edition = "2024"`
 - `tests/external/non-exhaustive-gate/src/lib.rs` — `test_BC_2_02_009_promote_retire_op_non_exhaustive_requires_wildcard()` compile-fail test verifying `#[non_exhaustive]` enforcement on `PromoteRetireOp<T>`, `LedgerChannel<T>`, and `PromoteRetireChannel<T>` from outside the defining crate (AC-011)
 
@@ -235,6 +240,7 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.9 | 2026-09-01 | Round-62 Stage-D: VP-020 registered (proptest P1, harness promote_retire_channel_idempotency, BC-2.02.009 {INV-001}+{INV-002}, DI-001); verification_properties extended to [VP-017, VP-020]; AC-017 extended with VP-020 trace and RED GATE; Architecture Mapping VP-020 row added; File Structure promote_retire.rs extended with VP-020 proptest; Tasks extended with VP-020 write task; Token Budget updated | story-writer |
 | 1.8 | 2026-09-01 | Round-59 records-only micro-burst: F-P2A230-01 — AC-018 dual-test fix: BC-2.02.009 {INV-004} (PromoteRetireChannel Channel-impl side) lacked a distinctly-named/located verifying test; added `test_BC_2_02_009_promote_retire_channel_implements_channel_trait()` in `channels/promote_retire.rs`; AC-018 now cites both verifying tests (one per BC side); Tasks updated to include AC-018 PromoteRetireChannel-side test; File Structure updated (promote_retire.rs `#[cfg(test)]` list extended with the new test) | story-writer |
 | 1.7 | 2026-09-01 | Round-58 fix-burst: F-P2A229-01 — PromoteRetireOp<T> must carry #[non_exhaustive] #[derive(Clone, Debug)] (ADR-030 §Decision 3 round-58); Clone mandatory for Channel::Update: Clone (PromoteRetireChannel<T>::Update = PromoteRetireOp<T>); sound via LedgerEntry: Clone; Rule 4 updated with canonical form and rationale; Rule 13 clarified (no-derives applies to marker structs only, NOT PromoteRetireOp); AC-011 updated (derives on enum); AC-018 updated (Channel::Update: Clone obligation); Tasks and File Structure updated for promote_retire.rs | story-writer |
 | 1.6 | 2026-09-01 | Round-57 fix-burst: F-P2A227-01 — reversed derive-only mandate to manual bound-free impl for LedgerChannel<T> and PromoteRetireChannel<T>; Rule 13 updated (FORBIDDEN derive; canonical manual impl<T: LedgerEntry> Default); AC-001 updated with manual bound-free Default form; AC-018 extended to dual-trace BC-2.02.009 INV-004 (PromoteRetireChannel Self: Default obligation without T: Default); BC-2.02.009 covered-ACs extended to AC-011..AC-018; Tasks for ledger.rs/promote_retire.rs struct + Channel-impl reversed; File Structure updated | story-writer |

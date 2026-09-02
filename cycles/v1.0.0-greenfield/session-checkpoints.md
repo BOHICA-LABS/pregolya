@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.9"
+version: "2.0"
 changelog:
+  - "2.0 (D-340/round-62/2026-09-01): D-339 checkpoint archived"
   - "1.9 (D-339/round-60/2026-09-01): D-338 checkpoint archived"
   - "1.8 (D-335/round-56/2026-09-01): D-334 checkpoint archived"
   - "1.7 (D-326/round-49/2026-08-31): D-325 checkpoint archived"
@@ -4144,4 +4145,19 @@ pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case inject
 
 #### ROUND-59 FINDINGS (CLOSED — 1 finding)
 LOW (1) CLOSED: F-P2A230-01[LOW, POL-48] AC-018 dual-test trace gap — BC-2.02.009 {INV-004} PromoteRetireChannel side lacked distinct test; added test_BC_2_02_009_promote_retire_channel_implements_channel_trait() in promote_retire.rs (story-writer).
+
+---
+
+### D-339 ARCHIVED CHECKPOINT (round-60 fix-burst; archived by D-340)
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-60 closed. Round-60 fix-burst CLOSED (D-339) — ALL 4 P2A-232 findings closed: sprint-state.yaml S-1.28+S-2.12 blocks added (state-manager; F-P2A232-01); wave-schedule.md §sub-batch-1e/2a 41 stories (story-writer; F-P2A232-02); dependency-graph.md §VP-to-Stories-matrix S-1.10 blocks+=S-2.12 + VP-019 matrix row (story-writer; F-P2A232-03/04). P2A-231 was CLEAN(strict)=YES (streak 1/3) then P2A-232 reset streak to 0/3. Root cause: OPS-ARTIFACT SIBLING-SET gap — CAP-040 S-1.28/S-2.12 addition (D-327) updated human-facing indices but left machine-facing dispatch artifacts stale. L-262 codified. Census UNCHANGED: BC 140 / VP 20 / EC 142 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). streak 0/3. D-339 pushed. Next: round-61 adversary cascade on new frozen HEAD.
+
+#### HEADS (at time of archival)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`)
+- factory-artifacts: PUSHED (D-339)
+
+#### ROUND-60 FINDINGS (CLOSED — 4 findings)
+HIGH (3) CLOSED: F-P2A232-01[HIGH,POL-8] sprint-state.yaml omitted S-1.28+S-2.12; F-P2A232-02[HIGH] wave-schedule.md 39→41 stories; F-P2A232-03[HIGH] dependency-graph S-1.10 blocks missing S-2.12 reverse edge.
+MED (1) CLOSED: F-P2A232-04[MED] dependency-graph VP-019 matrix row missing (20 VPs).
 

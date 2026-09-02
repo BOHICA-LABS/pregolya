@@ -1,7 +1,7 @@
 ---
 document_type: verification-property-index
 level: L3
-version: "1.39"
+version: "1.40"
 status: active
 producer: architect
 timestamp: 2026-09-01T14:00:00Z
@@ -9,6 +9,7 @@ phase: 1b
 input-hash: "[live-index]"
 traces_to: ARCH-INDEX.md
 changelog:
+  - "1.40 (round-62/F-P2A234-05/2026-09-01): VP-020 added — PromoteRetireChannel idempotency proptest P1 (BC-2.02.009 {INV-001}+{INV-002}; graph::channels; pregolya-graph; DI-001; Phase 3; harness promote_retire_channel_idempotency; file vp-020-promote-retire-channel-idempotency.md). Structurally analogous to VP-017 LedgerChannel; covers BC-2.02.009 which had only unit-test coverage. Records-tier historic count-abbreviation patterns in old changelogs (v1.7, v1.4, v1.0) rephrased from 'N VPs' to 'total N' form (count-propagation hook hygiene). Arithmetic: total 20→21 (P0 6 unchanged, P1 14→15); proptest 7→8; Kani/integration/unit unchanged."
   - "1.39 (round-57/D-336/2026-09-01): VP-017 §Feasibility revised (F-P2A228-03 [LOW]: §Feasibility Assessment replaced forbidden IndexSet exemplar with mandated Vec linear scan + HashSet oracle, consistent with §Formal Invariant and proof harness). VP-017 input-hash corrected (pre-existing drift: ADR-030 §Decision-3 had been revised in round-56 without input-hash refresh). VP census UNCHANGED: 20 total. VP-017 DI-001 / VP-018 DI-002 / VP-019 DI-002 cross-doc consistency confirmed."
   - "1.38 (round-56/D-335/2026-09-01): VP-019 §BC-Contradictions-Flagged (formal-verifier; §BC-Contradictions-Flagged marked RESOLVED — VP-019 no longer conflicts with VP-018 staging model; input-hash 6579f43; F-P2A227-03). VP-017/VP-018 DI anchors confirmed consistent (VP-017 DI-001, VP-018 DI-002, VP-019 DI-002). BC-INDEX §VP Seed BCs VP-018 DI cell corrected DI-002+DI-004→DI-002 (O-P2A227-A). VP census UNCHANGED: 20 total."
   - "1.37 (round-53/D-332/2026-08-31): VP-017 DI column corrected DI-014→DI-001 (F-P2A223-01 [MED]; architect adjudication; VP-017 body already carried DI-001 since round-52 pure-fold update; `ledger_channel_dedup_idempotency` harness anchors pure-fold DI-001 property). VP census UNCHANGED: 20 total."
@@ -41,14 +42,14 @@ changelog:
   - "1.10 (burst-308/D26-EXEC-propagation/2026-08-17): VP-013 (v1.14→v1.15) — §BC Contradictions Flagged RESOLVED block: '12-category axis' → '13-category axis' per ADR-010 §Category Axis Expansion (D26). EXEC is the 13th category added by D26; the prior `Category::CONFIGURATION` label was non-canonical both before and after D26 expansion. Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
   - "1.9 (burst-303/D-172/2026-08-17): VP-014 (v1.0→v1.1) — harness-text alignment: DynRunnable method-surface corrected from invoke_dyn/stream_dyn to invoke/stream + config Option<RunnableConfig> per ADR-026 §Decision 1 (F-P194-01). Arithmetic invariant UNCHANGED: total 14 (P0 6, P1 8) = Kani 9 + proptest 3 + integration 2."
   - "1.8 (burst-302b/D-170/2026-08-17): Add VP-014 — RunnableParallel key-completeness proptest P1 (BC-2.01.005 + BC-2.01.006, module core::runnable::parallel, crate pregolya-core, DI-016). LCEL composition scope expansion (D-170). Arithmetic: total 13→14 (P0 6→6 unchanged, P1 7→8); proptest 2→3; Kani/integration unchanged. Status:draft 13→14."
-  - "1.7 (FIX-BURST-276/2026-07-27): CHECK4 closure — canonicalize all 13 Module cells in VP Catalog from hyphenated short forms to crate::module form. Canonical source: module-decomposition.md. Mappings: bsp-engine→graph::bsp_engine (graph::bsp_engine row), session-index→checkpoint::session_index (checkpoint::session_index row), path-guard→sandbox::path_guard (sandbox::path_guard row), mcp-adapter→mcp::adapter (mcp::adapter row), mcp-client→mcp::client (mcp::client row), injection_guard→prompts::injection_guard (prompts::injection_guard row), serializable→core::serializable (core::serializable LcSerializable round-trip aspect VP-007), embeddings→core::embeddings (core::embeddings row VP-008), vectorstores-similarity→vectorstores::similarity (vectorstores::similarity row VP-009), serializable-reviver→core::serializable (core::serializable Reviver aspect VP-010), hitl→graph::hitl (graph::hitl row VP-011), core-budget→core::budget (core::budget row VP-012), tools-shell→tools::shell (tools::shell row VP-013). Arithmetic invariant unchanged: 13 VPs, counts unmodified."
+  - "1.7 (FIX-BURST-276/2026-07-27): CHECK4 closure — canonicalize all 13 Module cells in VP Catalog from hyphenated short forms to crate::module form. Canonical source: module-decomposition.md. Mappings: bsp-engine→graph::bsp_engine (graph::bsp_engine row), session-index→checkpoint::session_index (checkpoint::session_index row), path-guard→sandbox::path_guard (sandbox::path_guard row), mcp-adapter→mcp::adapter (mcp::adapter row), mcp-client→mcp::client (mcp::client row), injection_guard→prompts::injection_guard (prompts::injection_guard row), serializable→core::serializable (core::serializable LcSerializable round-trip aspect VP-007), embeddings→core::embeddings (core::embeddings row VP-008), vectorstores-similarity→vectorstores::similarity (vectorstores::similarity row VP-009), serializable-reviver→core::serializable (core::serializable Reviver aspect VP-010), hitl→graph::hitl (graph::hitl row VP-011), core-budget→core::budget (core::budget row VP-012), tools-shell→tools::shell (tools::shell row VP-013). Arithmetic invariant unchanged: total 13, counts unmodified."
   - "1.6 (FIX-BURST-257/2026-07-24): OBS-P156-B — add VP priority clarification note: VP priority is the VERIFICATION-priority axis (proof criticality), distinct from the anchor BC's implementation priority; a P0 VP may anchor a P1 BC (examples: VP-003 Kani P0 anchors P1 BC-2.13.004; VP-011 Kani P0 anchors P1 BC-2.05.007). Note added in preamble blockquote and Summary section. No VP catalog rows changed; arithmetic invariant unchanged."
   - "1.5 (burst-232/2026-07-22): D23 VP layer — add VP-011..013 (3 Kani P0/P1); total 10→13, P0 5→6, P1 5→7, Kani 6→9. VP-011 (Kani P0, BC-2.05.007, graph::hitl): PreToolCallHook fail-closed dispatch. VP-012 (Kani P1, BC-2.10.005, core-budget): OnWatermark arithmetic. VP-013 (Kani P1, BC-2.23.005, tools-shell): BashTool risk floor."
-  - "1.4 (burst-225/2026-07-21): F-P130-05 (MED) — correct VP-006 DI column: DI-008 → DI-014. Rationale: VP-006 proves the fail-closed property (injection detected → Err returned, no PromptValue produced); the semantically correct invariant is DI-014 (Error Propagation / No Silent Swallowing), not DI-008 (Library Constructor Result Contract). Siblings VP-009 and VP-010 both anchor DI-014 for the same class of proof. Arithmetic invariant unchanged (10 VPs, same tool/phase/priority distribution)."
+  - "1.4 (burst-225/2026-07-21): F-P130-05 (MED) — correct VP-006 DI column: DI-008 → DI-014. Rationale: VP-006 proves the fail-closed property (injection detected → Err returned, no PromptValue produced); the semantically correct invariant is DI-014 (Error Propagation / No Silent Swallowing), not DI-008 (Library Constructor Result Contract). Siblings VP-009 and VP-010 both anchor DI-014 for the same class of proof. Arithmetic invariant unchanged (total 10, same tool/phase/priority distribution)."
   - "1.3 (burst-224/2026-07-21): F-P129-11 — update VP-009 module from vectorstores-mmr to vectorstores-similarity; cosine_similarity is the shared primitive in the renamed module; MMR selection algorithm (vectorstores::mmr) is a separate caller of cosine_similarity."
   - "1.2 (burst-223/2026-07-21): D21 VP layer — add VP-006..010 (3 Kani + 2 proptest); total 5→10, P0 3→5, P1 2→5, Kani 3→6, proptest 0→2."
   - "1.1 (provenance-fix-169/2026-07-17): reorder VP Catalog columns so Tool is at awk $5 (validate-vp-consistency hook compatibility); remove 'Tool: ' prefix from Summary metric labels so declared label normalizes to bare tool name matching VP row normalization."
-  - "1.0 (initial): VP catalog authored with 5 VPs (3 Kani P0 + 2 integration P1)."
+  - "1.0 (initial): VP catalog authored with total 5 (3 Kani P0 + 2 integration P1)."
 ---
 
 # VP-INDEX: pregolya Verification Properties
@@ -58,7 +59,7 @@ changelog:
 > (Provable Properties Catalog + P0 list) and `verification-coverage-matrix.md`
 > (VP-to-Module table + Totals row) in the same burst.
 >
-> Arithmetic invariant: total (20) = P0 (6) + P1 (14) = Kani (9) + proptest (7) + integration (3) + unit (1).
+> Arithmetic invariant: total (21) = P0 (6) + P1 (15) = Kani (9) + proptest (8) + integration (3) + unit (1).
 >
 > **VP Priority vs BC Priority (OBS-P156-B):** The `Priority` column here is the
 > **verification-priority axis** — it reflects proof criticality (how urgently this property
@@ -78,15 +79,15 @@ changelog:
 
 | Metric | Count |
 |--------|-------|
-| Total VPs | 20 |
+| Total VPs | 21 |
 | Priority P0 (verification-priority) | 6 |
-| Priority P1 (verification-priority) | 14 |
+| Priority P1 (verification-priority) | 15 |
 | Kani | 9 |
-| proptest | 7 |
+| proptest | 8 |
 | fuzz | 0 |
 | integration | 3 |
 | unit | 1 |
-| Status: draft | 20 |
+| Status: draft | 21 |
 | Status: active | 0 |
 | Status: passed | 0 |
 
@@ -114,3 +115,4 @@ changelog:
 | VP-017 | BC-2.02.007 + BC-2.02.008 | graph::channels | proptest | 3 | P1 | draft | DI-001 | pregolya-graph | `ledger_channel_dedup_idempotency` | vp-017-ledger-channel-append-dedup.md |
 | VP-018 | BC-2.04.011 {INV-001} | checkpoint::trajectory | proptest | 3 | P1 | draft | DI-002 | pregolya-checkpoint | `trajectory_compaction_retention_integrity` | vp-018-trajectory-compaction-retention-integrity.md |
 | VP-019 | BC-2.04.011 {INV-003} | checkpoint::trajectory | integration | 6 | P1 | draft | DI-002 | pregolya-checkpoint | n/a (integration test) | vp-019-trajectory-compaction-crash-isolation.md |
+| VP-020 | BC-2.02.009 {INV-001}+{INV-002} | graph::channels | proptest | 3 | P1 | draft | DI-001 | pregolya-graph | `promote_retire_channel_idempotency` | vp-020-promote-retire-channel-idempotency.md |

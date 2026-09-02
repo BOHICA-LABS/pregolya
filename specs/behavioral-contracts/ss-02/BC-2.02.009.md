@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.02.009
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.5 (round-55/F-P2A225-01/2026-09-01): §Traceability L2 Domain Invariants: DI-014 replaced with DI-001 per architect ADR-030 §VP ruling — PromoteRetireChannel::reduce is a pure infallible reducer returning Vec<T> with no Result/Err/None path; DI-014 (error propagation) is inapplicable (vacuously compliant, not meaningfully enforced). DI-001 (BSP Reducer Determinism) is the correct domain-invariant anchor: the reducer is deterministic given the same accumulated state and input sequence in task-identity order."
   - "1.6 (round-57/F-P2A227-01/2026-09-01): §Architecture Anchors: replaced implicit `Default::default()` annotation with an explicit manual bound-free `impl<T: LedgerEntry> Default for PromoteRetireChannel<T>` per ADR-030 §Decision 3 round-57 architect ruling — `#[derive(Default)]` would emit a spurious `T: Default` bound that breaks the `Channel: Default + Send + Sync + 'static` supertrait obligation for callers holding only `T: LedgerEntry`. {INV-004} added: explicit `Channel: Default` supertrait-obligation clause — satisfied by the manual bound-free impl, not a derive. Supersedes the implicit Default from round-52 (F-P2A216-04)."
   - "1.7 (round-58/F-P2A229-01/2026-09-01): {INV-004} extended with Update-side Clone obligation — `PromoteRetireOp<T>` satisfies `Channel::Update: Clone + Send + Sync + 'static` via `#[derive(Clone)]`; sound because `LedgerEntry: Clone` (supertrait bundles Clone), so `PromoteRetireOp<T>: Clone` holds for all `T: LedgerEntry` with no bound beyond the supertrait; no use-site may add `T: Clone` as an explicit constraint — it is implied by `T: LedgerEntry` (per ADR-030 §Decision 3 round-58 / F-P2A229-01)."
+  - "1.8 (round-62/F-P2A234-04/2026-09-01): §Verification Properties updated — promote/retire idempotency and ordering invariants ({INV-001}/{INV-002}) are now covered by registered VP-020 (proptest P1, Phase-3, harness `promote_retire_channel_idempotency`; DI-001); TST-PROM-01/TST-PROM-02 unit tests retained as supplementary verification alongside VP-020. §VP Anchors updated from None to VP-020."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "b563e20"
+input-hash: "e5c46b2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -150,8 +151,9 @@ differs from EC-003 because task-identity order is deterministic per DI-001.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| TST-PROM-01 | `Promote` is idempotent: applying it twice for the same `entry_id` yields the same active set as applying it once | Unit test — not a registered VP | Wave 1 |
-| TST-PROM-02 | `Retire` is idempotent: applying it for an absent `entry_id` leaves the active set unchanged | Unit test — not a registered VP | Wave 1 |
+| VP-020 | Promote/retire idempotency and deterministic ordering: for any sequence of `PromoteRetireOp` values in task-identity order, the resulting active set contains no duplicate `entry_id` values ({INV-001}) and the reducer produces the same output given the same inputs ({INV-002}); harness exercises idempotent promote, idempotent retire, and concurrent promote+retire ordering | proptest (harness `promote_retire_channel_idempotency`; DI-001 — {INV-001}, {INV-002}, {PC-001}–{PC-006}) | Phase 3 |
+| TST-PROM-01 | `Promote` is idempotent: applying it twice for the same `entry_id` yields the same active set as applying it once | Unit test (supplementary, alongside VP-020) | Wave 1 |
+| TST-PROM-02 | `Retire` is idempotent: applying it for an absent `entry_id` leaves the active set unchanged | Unit test (supplementary, alongside VP-020) | Wave 1 |
 
 ## Related BCs
 
@@ -180,7 +182,7 @@ S-1.28
 
 ## VP Anchors
 
-None
+- VP-020 (proptest P1, Phase-3, harness `promote_retire_channel_idempotency` — {INV-001} no-duplicate active set, {INV-002} deterministic pure reducer, DI-001)
 
 ## Traceability
 

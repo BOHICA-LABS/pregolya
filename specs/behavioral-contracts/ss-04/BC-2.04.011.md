@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.011
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.4 (round-52/F-P2A216-01+F-P2A216-03+F-P2A217-03+F-P2A216-05+F-P2A219-01/2026-08-31): Combined architectural corrections. (1) {PC-005}/{INV-004}/EC-004/TV-003 REMOVED — E-TRAJ-004 TrajectoryRetainedEligible was structurally unreachable: `TrajectoryRetentionPolicy` derives eligible/retained as complements by construction; a policy cannot simultaneously mark a record as both retained and eligible. The condition {PC-005} described could never be reached at `compact` call time. E-TRAJ-004 retired in error-taxonomy.md (tombstone). (2) {PC-006} wired to E-TRAJ-005 TrajectoryCompactionFailed (DURABILITY, broken, Maybe-retry) — minted in error-taxonomy.md for SQLite backend I/O error / disk-full / transaction abort before commit; pre-compaction state intact (uncommitted WAL frames discarded on next open). (3) {INV-003} WAL-mode wording: replaced 'SQLite rollback journal restores pre-compaction state' with canonical WAL behaviour (no rollback journal in WAL mode; uncommitted WAL frames after last commit marker are discarded by SQLite on next database open). (4) {PRE-002} frontier definition: replaced vague example with architect canonical wording (step_idx strictly < retention_frontier and not in promoted are eligible; step_idx >= retention_frontier (frontier record where step_idx == retention_frontier retained) and all promoted records retained; retention_frontier is exclusive lower bound for eligibility). (5) Traceability DI-014 citation updated: removed stale {PC-005} reference; {PC-006} reference updated to cite E-TRAJ-005. TV count 5→4 (TV-003 removed). TRAJ namespace: E-TRAJ-004 retired, E-TRAJ-005 minted (net-neutral; census stays 142)."
   - "1.5 (round-53/F-P2A221-01/2026-08-31): {PC-004} redefined as reader-visible atomicity — replay always observes complete pre- or post-compaction state, never a partial intermediate. {INV-003} amended — staging-table atomicity boundary explicit: the atomicity boundary is the swap-phase BEGIN IMMEDIATE / COMMIT that renames trajectory_records_staging to trajectory_records; a crash during the build phase leaves trajectory_records fully intact (staging table dropped on recovery); WAL-mode wording preserved for crash point. {INV-005} bounded-batch scope clarified to build phase on the staging table; swap-phase is a single brief atomic commit. Architecture Anchors and Description updated to reflect staging-table atomic-swap strategy."
   - "1.6 (round-53/F-P2A221-01-corrective/2026-08-31): Corrective micro-fix for VP-019 four-crash-point coherence. {INV-003} 'Verified by VP-019' clause updated from three-crash-point matrix (before-begin, mid-txn, after-sync) to authoritative four-crash-point matrix per VP-019 §four-crash-point matrix and ADR-030 §Compaction Atomicity Decision: (1) before-build-begins, (2) mid-build (staging partially filled before swap), (3) mid-swap-transaction (after BEGIN IMMEDIATE, before COMMIT), (4) after-swap-commit. §Verification Properties VP-019 row updated to match (three crash points / three cases → four crash points / four cases). No other content changes."
+  - "1.7 (round-62/F-P2A234-01+F-P2A234-02/2026-09-01): Compaction mechanism redesigned from staging-table atomic-swap to per-run single-transaction DELETE per ADR-030 §Decision 2 (round-62 update). §Description: staging-table strategy replaced with `BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT;`; run_id filter preserves all other runs' records — scope-safety explicit (F-P2A234-01); `BEGIN IMMEDIATE` write-lock serializes concurrent `put_record` — no build→swap window, no clobber possible (F-P2A234-02). {PRE-002}: `promoted` explicitly typed as `Vec<u64>` of `step_idx` values; entries below the frontier listed in `promoted` are retained (OBS-3). {INV-003}: four-crash-point staging matrix replaced with two-crash-point DELETE matrix (before-COMMIT → complete pre-compaction state; after-COMMIT → complete post-compaction state); atomicity boundary is the single `BEGIN IMMEDIATE`/`COMMIT` DELETE transaction; no staging table. {INV-005}: bounded-batch (1,000 records/batch, staging-table) parenthetical removed; concurrency semantics restated: `BEGIN IMMEDIATE` write-lock serializes `put_record` (a `put_record` either fully precedes or fully follows the DELETE; no clobber; the prior build→swap window no longer exists). OBS-2 note added: deletion-tamper-evidence explicitly OUT OF SCOPE for v1 per ADR-030 §Deletion Tamper-Evidence Decision. §Related BCs BC-2.04.009 sentence rewritten to true guarantee (concurrent `put_record` serialized by `BEGIN IMMEDIATE` write-lock). §Architecture Anchors first anchor updated to per-run DELETE mechanism. VP-019 Verification Properties updated from four-crash-point to two-crash-point matrix."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "410c38d"
+input-hash: "e5c46b2"
 extracted_from: null
 modified: []
 deprecated: null
@@ -47,11 +48,17 @@ removal_reason: null
 `TrajectoryCompactor` (trait in `checkpoint::trajectory`, pregolya-checkpoint) provides an
 operation to compact an unbounded durable audit trajectory by removing historical records
 that are no longer needed for replay, while guaranteeing that every retained record is
-preserved intact and in ascending `step_idx` order. Compaction is atomic — it uses a staging-table strategy where retained records are written to
-a staging table (`trajectory_records_staging`), then the staging table is swapped into place
-via a single atomic `BEGIN IMMEDIATE` / `COMMIT` rename, such that a process crash at any
-point during the operation leaves the pre-compaction trajectory fully intact. Records designated as retained (promoted
-or at the frontier) are never eligible for removal. The operation enables long-running
+preserved intact and in ascending `step_idx` order. Compaction is atomic — it uses a per-run single-transaction DELETE:
+`BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT;`.
+The `run_id` filter preserves all records for every other run — only eligible records belonging
+to the compacted run are removed, so compaction of different runs is inherently scope-safe
+(F-P2A234-01). The `BEGIN IMMEDIATE` write-lock acquired at transaction start serializes any
+concurrent `put_record` calls for the duration of the DELETE — a `put_record` either fully
+precedes or fully follows the compaction transaction; no build→swap window exists and no clobber
+is possible (F-P2A234-02). The crash matrix collapses to two points: a SIGKILL before the
+`COMMIT` leaves the pre-compaction state fully intact (uncommitted WAL frames discarded by
+SQLite on next open); a SIGKILL after the `COMMIT` leaves the post-compaction state. Records
+designated as retained (promoted or at the frontier) are never eligible for removal. The operation enables long-running
 research orchestrator sessions to prevent unbounded storage growth without compromising
 audit-grade record integrity.
 
@@ -65,7 +72,9 @@ audit-grade record integrity.
    eligible for removal: records with `step_idx` strictly less than `retention_frontier` and not
    in `promoted` are eligible; records with `step_idx >= retention_frontier` (the frontier record
    where `step_idx == retention_frontier` is retained) and all `promoted` records are retained;
-   `retention_frontier` is an exclusive lower bound for eligibility.
+   `retention_frontier` is an exclusive lower bound for eligibility. `promoted` is a
+   `Vec<u64>` of `step_idx` values; records with `step_idx < retention_frontier` that appear
+   in `promoted` are retained even though they fall below the frontier.
 3. {PRE-003} The storage backend is reachable (not shutdown, not out of disk space).
 
 ## Postconditions
@@ -101,38 +110,39 @@ audit-grade record integrity.
   record changes its relative position or `step_idx` value.
 - {INV-003} **Compaction is crash-isolated (atomic transaction boundary).** A SIGKILL
   delivered at any point during `compact(run_id, policy)` leaves `replay(run_id)` in a
-  consistent state: either the **complete pre-compaction replay** (if the SQLite `BEGIN
-  IMMEDIATE` / `COMMIT` transaction did not commit) or the **complete post-compaction replay**
+  consistent state: either the **complete pre-compaction replay** (if the `BEGIN IMMEDIATE`
+  DELETE transaction did not commit before the kill) or the **complete post-compaction replay**
   (if the transaction committed before the kill). No partial compaction state — some eligible
   records removed and some not — is ever observable. In WAL mode, uncommitted WAL frames after
   the last commit marker are discarded by SQLite on the next database open, restoring the
   pre-compaction state (no rollback journal is used in WAL mode). The atomicity boundary is
-  the swap-phase `BEGIN IMMEDIATE` / `COMMIT` that renames `trajectory_records_staging` to
-  `trajectory_records`; a crash at any point during the build phase (while populating the
-  staging table) leaves `trajectory_records` fully intact, and the staging table is dropped
-  on recovery. Verified by VP-019
-  (integration, four-crash-point matrix: before-build-begins, mid-build
-  (staging partially filled before swap), mid-swap-transaction (after BEGIN IMMEDIATE,
-  before COMMIT), after-swap-commit).
+  the single `BEGIN IMMEDIATE; DELETE ...; COMMIT` transaction — there is no build phase, no
+  staging table, and no rename operation; the crash matrix collapses to two points:
+  before-COMMIT (kill before `COMMIT` written to WAL → pre-compaction state intact) and
+  after-COMMIT (kill after `COMMIT` written to WAL → post-compaction state). Verified by
+  VP-019 (integration, two-crash-point matrix: before-COMMIT, after-COMMIT).
 - {INV-005} **Record-level table isolation from ADR-019.** Trajectory compaction operates on
   the `trajectory_records` table only; it has no access to and does not affect the
   conversation-context checkpoint tables (`checkpoint_*`) managed by `CheckpointSaver`
   (ADR-019). The two storage paths are isolated at the table level — no FK joins, no shared
   table operations. WAL mode on the shared database file enables concurrent reads from WAL
-  snapshots without blocking writes: `TrajectoryCompactor::compact` and
-  `CheckpointSaver::put_writes` do not block each other's reads. However, SQLite write
-  serialization applies: only one writer holds a write lock at a time. To prevent
-  writer-timeout blocking during the build phase, retained records are copied to
-  `trajectory_records_staging` in bounded batches (default 1,000 records per `BEGIN IMMEDIATE`
-  transaction on the staging table), releasing the write lock between batches and allowing
-  `CheckpointSaver::put_writes` to interleave (ADR-030 §SQLite Topology Decision). The final
-  atomic swap (rename staging table to live table) is a single brief `BEGIN IMMEDIATE` /
-  `COMMIT` that completes without batching.
+  snapshots without blocking writes. The `BEGIN IMMEDIATE` write-lock acquired by the DELETE
+  transaction serializes any concurrent `put_record` call: a `put_record` either fully precedes
+  the compaction transaction (completes before `BEGIN IMMEDIATE` is issued) or fully follows it
+  (blocks until `COMMIT` is written and then proceeds); no clobber is possible and no
+  build→swap window exists (ADR-030 §SQLite Topology Decision). There is no staging table and
+  no batching; the single DELETE transaction operates directly on `trajectory_records`.
 - {INV-006} **At-rest encryption preserved across compaction.** When `EncryptedSerializer`
   is configured in the `checkpoint::trajectory` implementation, the retained records written
   back to `trajectory_records` after compaction MUST remain in their encrypted form.
   Compaction MUST NOT rewrite retained record payloads in plaintext — the encryption boundary
   is enforced at the storage layer, not the policy layer (mirrors BC-2.04.009 {INV-002}).
+
+> **Deletion Tamper-Evidence (Out of Scope for v1):** The per-run DELETE mechanism provides no
+> cryptographic evidence of correct deletion (no deletion log, Merkle update, or proof of
+> erasure). Tamper-evidence for compaction events is explicitly OUT OF SCOPE for v1 per
+> ADR-030 §Deletion Tamper-Evidence Decision. A future hardening cycle may address this if
+> audit-grade deletion accountability requirements expand.
 
 ## Edge Cases
 
@@ -176,14 +186,16 @@ single retained record — in ascending `step_idx` order ({PC-002}).
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-018 | For any trajectory and any retention policy, after `compact` returns `Ok(())`, every retained record appears in `replay` with identical `step_idx` and `payload`; retained set is the oracle-defined sub-sequence; eligible records are absent | proptest (harness `trajectory_compaction_retention_integrity`; independent oracle using `>=` + OR vs `is_eligible` `<` + AND + NOT — {INV-001}, {INV-002}, {PC-001}, {PC-002}, {PC-003}) | Phase 3 |
-| VP-019 | Crash-isolated compaction: SIGKILL at any of four crash points (before-build-begins, mid-build (staging partially filled before swap), mid-swap-transaction (after BEGIN IMMEDIATE, before COMMIT), after-swap-commit), restart, `replay` returns complete pre-compaction or complete post-compaction state — no partial compaction observable | Integration test (subprocess SIGKILL fixture, four cases, real SQLite WAL — {INV-003}, TV-002) | Phase 6 |
+| VP-019 | Crash-isolated compaction: SIGKILL at either of two crash points (before-COMMIT (kill before `COMMIT` written to WAL), after-COMMIT (kill after `COMMIT` written to WAL)), restart, `replay` returns complete pre-compaction or complete post-compaction state — no partial compaction observable | Integration test (subprocess SIGKILL fixture, two cases, real SQLite WAL — {INV-003}, TV-002) | Phase 6 |
 
 ## Related BCs
 
 - BC-2.04.009 — composes with: `TrajectoryWriter::put_record` creates the records that
   compaction operates on; `put_record` durability guarantees make the pre-compaction record
-  authoritative; compaction never conflicts with in-flight `put_record` calls due to the
-  atomic transaction boundary
+  authoritative; concurrent `put_record` calls during compaction are serialized by the
+  compaction transaction's `BEGIN IMMEDIATE` write-lock — a `put_record` either fully precedes
+  or fully follows the DELETE transaction; no clobber is possible (the prior build→swap window
+  no longer exists)
 - BC-2.04.010 — composes with: `TrajectoryReader::replay` ascending `step_idx` ordering
   invariant applies to the post-compaction retained record set; {PC-002} explicitly requires
   the sub-sequence property
@@ -192,11 +204,12 @@ single retained record — in ascending `step_idx` order ({PC-002}).
 
 - `pregolya-checkpoint/src/trajectory.rs` (`checkpoint::trajectory`) — `TrajectoryCompactor`
   trait (`async fn compact(&self, run_id: Uuid, policy: TrajectoryRetentionPolicy) -> Result<(), PregolyaError>`);
-  concrete implementation using a staging-table atomic-swap strategy: retained records are
-  built into `trajectory_records_staging` (bounded-batch writes during the build phase),
-  then swapped atomically via a single `BEGIN IMMEDIATE` / `COMMIT` rename
-  (`trajectory_records_staging` → `trajectory_records`); a crash during the build phase
-  leaves `trajectory_records` intact (staging table dropped on recovery);
+  concrete implementation using a per-run single-transaction DELETE:
+  `BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT;`;
+  run_id filter preserves all records for other runs (scope-safe per F-P2A234-01);
+  `BEGIN IMMEDIATE` write-lock serializes concurrent `put_record` calls (F-P2A234-02);
+  crash matrix: before-COMMIT → pre-compaction state intact (uncommitted WAL frames discarded
+  on next open); after-COMMIT → post-compaction state; no staging table; no batching;
   storage slice isolated from ADR-019 conversation-context tables
 - `pregolya-core/src/trajectory.rs` (`core::trajectory`) — `TrajectoryRetentionPolicy` type definition
   (per ADR-009 definitions-in-core separation); specifies eligible vs retained record sets.
