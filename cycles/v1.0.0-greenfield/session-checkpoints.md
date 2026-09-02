@@ -4193,3 +4193,11 @@ HIGH (2) CLOSED: F-P2A234-01[HIGH] BC-2.04.011 per-run single-txn DELETE compact
 MED (3) CLOSED: F-P2A234-03[MED] E-TRAJ-006 TrajectoryCompactionStagingFailed minted (EC 143); F-P2A234-04[MED] VP-020 PromoteRetireChannel idempotency/ordering proptest P1 (VP 21); F-P2A234-05[MED] NFR-015 trajectory durability (NFR 15).
 OBS (3) CLOSED: OBS-1 ADR-030 §SQLite Topology residue; OBS-2 VP-020 {INV-002} gloss; OBS-3 nfr-catalog §NFR-015 priority.
 
+
+---
+
+## Archived Step Row — D-338 (from STATE.md Current Phase Steps, archived at D-343)
+
+| D-338 round-59 records-only micro-burst CLOSED (2026-09-01): trajectory-tail →1→0→0→0 (P2A-230=1 LOW; single-lens). F-P2A230-01 [LOW, POL-48] CLOSED. streak NOT RESET (TD-RECORDS-MICRO-BURST-001). | state-manager | COMPLETE | STATE.md v6.50. Single commit per TD-VSDD-053. |
+
+*Archived at D-343 (round-65 fix-burst close) to maintain STATE.md size budget.*

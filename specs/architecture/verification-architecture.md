@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.37"
+version: "2.38"
 status: active
 producer: state-manager
 timestamp: 2026-09-01T00:00:00Z
@@ -28,10 +28,11 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-01/BC-2.01.006.md
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.008.md
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "8837490"
+input-hash: "721a6e7"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "2.38 (round-65/F-P2A237-02/2026-09-01): F-P2A237-02 [MED] §VP-020 narrative corrected to canonical VP-020.md (source-of-truth per CLAUDE.md rule 4): (a) Property description rewritten from apply-twice-idempotency to the actual five-property statement ({INV-001} no-duplicate, {INV-002} reducer-determinism, {PC-002} promote-dedup-idempotent, {PC-004} retire-idempotent, order-sensitivity); (b) {INV-001} gloss corrected from promote-dedup-no-op description ({PC-002}) to 'the active set contains no duplicate entry_id values at any time'; (c) Formal statement replaced from non-canonical apply_ops-twice form with VP-020.md §Formal Invariant five-property form (fold-from-empty, no-duplicate, determinism, promote-dedup, retire-idempotent, order-sensitivity); (d) Op shape corrected from Promote(id)/Retire(id) to PromoteRetireOp::Promote(T) (full entry T) / Retire(String) (entry_id) per VP-020.md §Formal Invariant and ADR-030 §Decision 3. Note for state-manager: pre-existing input-hash drift (stored 8837490 != computed 721a6e7); run compute-input-hash verification-architecture.md --update."
   - "2.37 (round-63/F-P2A235-03+F-P2A235-08/2026-09-01): F-P2A235-03 [MED] §VP-019 stale completed-directive blockquote deleted — replaced with one-line completed note; VP-019.md is at the two-crash-point per-run DELETE model (v1.4); live directive was incorrect. F-P2A235-08 [MED] §VP-020 formal invariants {INV-002} bullet corrected from retire-idempotency gloss to reducer-determinism ({INV-002} is REDUCER DETERMINISM — deterministic output under task-identity ordering; {PC-004} is Retire idempotency; anchor IDs unchanged)."
   - "2.36 (round-62/F-P2A234-05/2026-09-01): VP-020 added — PromoteRetireChannel idempotency proptest P1 (BC-2.02.009 {INV-001}+{INV-002}; graph::channels; pregolya-graph; DI-001; Phase 3; harness promote_retire_channel_idempotency). Structurally analogous to VP-017 LedgerChannel; closes BC-2.02.009 unit-test-only gap. VP-019 §Should Prove description updated from four-crash-point staging-table model to two-crash-point per-run DELETE model (ADR-030 §Compaction Atomicity Decision F-P2A234-01 redesign). Committed VP Obligations table: VP-020 row added; total 20→21 VPs; P1 14→15; proptest 7→8. Preamble narrative updated twenty→twenty-one. input-hash not updated (BC-2.02.009 added as input; formal-verifier to refresh after VP-020 body authored)."
   - "2.35 (round-57/F-P2A228-01/2026-09-01): VP-017 §Provable Properties Catalog formal statement rewritten to canonical pure-fold form — removed stale LedgerChannel::new() constructor (removed per ADR-030 §Decision 3 changelog; banned by S-1.28 Rule 13) and IndexSet oracle (banned by S-1.28 Rule 14); replaced with fold accumulation form and HashSet oracle matching VP-017 body §Formal Invariant verbatim. input-hash not updated (no BC input changes)."
@@ -955,26 +956,57 @@ See `vp-019-trajectory-compaction-crash-isolation.md` for the complete integrati
 
 **VP-020 — PromoteRetireChannel Idempotency** (`graph::channels`) `proptest P1 Phase 3`
 
-Property: Applying the same promote/retire operation sequence twice to `PromoteRetireChannel`
-produces the same channel state as applying it once (BC-2.02.009 {INV-001}+{INV-002}, DI-001).
+Property: For any arbitrary sequence of `Promote`/`Retire` operations reduced via
+`<PromoteRetireChannel<T> as Channel>::reduce` into a `Vec<T>` active set, the resulting
+active set satisfies five invariants (BC-2.02.009 {INV-001}+{INV-002}, DI-001):
+(1) no duplicate `entry_id` in the active set ({INV-001}); (2) the reducer is deterministic —
+fold-from-empty-twice yields an identical `Vec<T>` ({INV-002}); (3) re-`Promote` of an
+already-present `entry_id` is a no-op ({PC-002}); (4) `Retire` of an absent `entry_id` is a
+no-op ({PC-004}); (5) operation order is deterministic — `Promote(a)` then
+`Retire(a.entry_id())` leaves `a` absent, and `Retire(a.entry_id())` then `Promote(a)`
+leaves `a` present (BC-2.02.009 EC-003/EC-004).
 
 Formal invariants:
-- **{INV-001}:** Promoting an already-promoted element is a no-op; the channel state is unchanged.
+- **{INV-001}:** The active set contains no duplicate `entry_id` values at any time — the `Vec<T>` accumulator never holds two entries with the same `entry_id()`.
 - **{INV-002}:** Given the same operation sequence applied to an identical starting state, the reducer always produces an identical active set — deterministic output under task-identity ordering (reducer determinism).
 
 Formal statement:
 ```
-∀ channel: PromoteRetireChannel, ops: Vec<Op>:
-  let state1 = apply_ops(channel.clone(), &ops);
-  let state2 = apply_ops(state1.clone(), &ops);  // apply same ops again
-  state1 == state2
-```
-where `Op` is a `Promote(id)` or `Retire(id)` operation and `apply_ops` folds ops via the
-`reduce(acc, op) -> State` pure function.
+∀ ops: Vec<PromoteRetireOp<T>>,
+  let active: Vec<T> =
+    ops.iter().fold(Vec::new(), |acc, op| PromoteRetireChannel::reduce(acc, op.clone())):
 
-**Why proptest (not Kani):** The set of element IDs and channel states is unbounded. proptest
-generates arbitrary `Vec<Op>` sequences, applies them twice, and asserts equality.
-This matches the structural pattern of VP-017 (LedgerChannel dedup-idempotency).
+  // (a) {INV-001}: no duplicate entry_id in the active set
+  active.iter().map(|e| e.entry_id()).collect::<HashSet<_>>().len() == active.len()
+
+  // (b) {INV-002}: determinism — fold from empty twice yields an identical Vec
+  ∧ ops.iter().fold(Vec::new(), |acc, op| PromoteRetireChannel::reduce(acc, op.clone())) == active
+
+  // (c) Promote is dedup-idempotent: re-Promote of a present entry_id is a no-op ({PC-002})
+  ∧ ∀ e: T where active.iter().any(|x| x.entry_id() == e.entry_id()):
+      PromoteRetireChannel::reduce(active.clone(), PromoteRetireOp::Promote(e)) == active
+
+  // (d) Retire is idempotent: Retire of an absent entry_id is a no-op ({PC-004})
+  ∧ ∀ id: String where !active.iter().any(|x| x.entry_id() == id):
+      PromoteRetireChannel::reduce(active.clone(), PromoteRetireOp::Retire(id)) == active
+
+  // (e) order-sensitivity (deterministic per DI-001 task-identity order)
+  ∧ reduce(reduce(Vec::new(), PromoteRetireOp::Promote(a)),
+           PromoteRetireOp::Retire(a.entry_id().to_owned())) == Vec::new()   // absent
+  ∧ reduce(reduce(Vec::new(), PromoteRetireOp::Retire(a.entry_id().to_owned())),
+           PromoteRetireOp::Promote(a)) == vec![a]                            // present
+```
+where `PromoteRetireOp<T>` is a `#[non_exhaustive]` enum with variants `Promote(T)` (carries
+the full entry `T: LedgerEntry`) and `Retire(String)` (the `entry_id` to remove).
+`PromoteRetireChannel::reduce` is a pure function
+`fn reduce(acc: Vec<T>, update: PromoteRetireOp<T>) -> Vec<T>` — no mutable state,
+no constructor. Authoritative definition: ADR-030 §Decision 3 (code block); formal invariant documented in vp-020-promote-retire-channel-idempotency.md.
+
+**Why proptest (not Kani):** The set of `entry_id` values and op sequences is unbounded;
+collection invariants over variable-length sequences are not tractable for Kani's bounded model
+checking. proptest generates `Vec<PromoteRetireOp<T>>` with a small-alphabet `entry_id` set
+to force frequent dedup / idempotent-retire / order-swap events, exercising all five properties
+with high probability. Consistent with VP-017 (LedgerChannel dedup-idempotency).
 
 Feasibility: HIGH. `reduce` is a pure synchronous function (no async, no I/O). Phase 3 —
 same wave as `PromoteRetireChannel` implementation under BC-2.02.009.
@@ -1021,6 +1053,10 @@ Modules where behavioral testing is the primary verification method:
 
 | Version | Date | Author | Decision | Change |
 |---------|------|--------|----------|--------|
+| 2.38 | 2026-09-01 | architect | round-65/F-P2A237-02 | §VP-020 narrative corrected to canonical VP-020.md (source-of-truth per CLAUDE.md rule 4): (a) property description rewritten from apply-twice-idempotency to five-property statement ({INV-001} no-duplicate, {INV-002} reducer-determinism, {PC-002} promote-dedup-idempotent, {PC-004} retire-idempotent, order-sensitivity); (b) {INV-001} gloss corrected from promote-dedup-no-op description to 'the active set contains no duplicate entry_id values at any time'; (c) formal statement replaced from non-canonical apply_ops-twice form with VP-020.md §Formal Invariant five-property form; (d) op shape corrected from Promote(id)/Retire(id) to PromoteRetireOp::Promote(T) / Retire(String) per VP-020.md §Formal Invariant and ADR-030 §Decision 3. input-hash updated 8837490→721a6e7. |
+| 2.37 | 2026-09-01 | architect | round-63/F-P2A235-03+F-P2A235-08 | §VP-019 stale completed-directive blockquote deleted — replaced with one-line completed note; VP-019.md is at the two-crash-point per-run DELETE model (v1.4); live directive was incorrect. §VP-020 formal invariants {INV-002} bullet corrected from retire-idempotency gloss to reducer-determinism ({INV-002} is REDUCER DETERMINISM — deterministic output under task-identity ordering; {PC-004} is Retire idempotency). |
+| 2.36 | 2026-09-01 | architect | round-62/F-P2A234-05 | VP-020 added — PromoteRetireChannel idempotency proptest P1 (BC-2.02.009 {INV-001}+{INV-002}; graph::channels; pregolya-graph; DI-001; Phase 3; harness promote_retire_channel_idempotency). Structurally analogous to VP-017; closes BC-2.02.009 unit-test-only gap. VP-019 §Should Prove description updated to two-crash-point per-run DELETE model. Committed VP Obligations table: VP-020 row added; total 20→21 VPs; proptest 7→8. Preamble narrative twenty→twenty-one. |
+| 2.35 | 2026-09-01 | architect | round-57/F-P2A228-01 | §VP-017 §Provable Properties Catalog formal statement rewritten to canonical pure-fold form — removed stale LedgerChannel::new() constructor and IndexSet oracle; replaced with fold accumulation form and HashSet oracle matching VP-017 body §Formal Invariant verbatim. |
 | 2.34 | 2026-09-01 | architect | round-57/F-P2A227-02 | VP-019 §Property, §Formal statement, and §Why integration rewritten to the four-crash-point staging-table model (ADR-030 §Compaction Atomicity Decision). crash_point set: {before_build_begins, mid_build, mid_swap, after_swap_commit}. Cases 1–3 → pre-compaction state; case 4 (after_swap_commit) → post-compaction retained set. TV-002 matrix updated three-case → four-case. input-hash updated. |
 | 2.33 | 2026-09-01 | architect | round-54/F-P2A224-02 | VP-017 DI anchor corrected DI-014 → DI-001 in preamble narrative and Provable Properties Catalog VP table row. input-hash refreshed. |
 | 2.32 | 2026-08-31 | architect | round-50/F-P2A209-02+F-P2A209-03+F-P2A211-05 | VP-019 added: integration P1, Phase 6, `checkpoint::trajectory`, pregolya-checkpoint, BC-2.04.011 {INV-003}, DI-002. Covers OS-level SQLite atomicity under SIGKILL that VP-018 proptest explicitly excludes. VP-017 BC Anchor updated BC-2.02.007 → BC-2.02.007 + BC-2.02.008 (first-appearance ordering obligation). VP-018 §Should Prove description updated: proptest strategy updated to `TrajectoryRetentionPolicy` parameters + independent oracle + negative mutation test. Committed VP Obligations table: VP-017 anchor updated; VP-019 row added; total 19→20 VPs, P1 13→14, integration ×2→×3. §Section Content narrative updated (nineteen→twenty VPs). §Should Prove section: VP-019 entry added; VP-018 §should-prove references VP-019 for crash-isolation. input-hash updated. |

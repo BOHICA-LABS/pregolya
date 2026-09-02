@@ -5307,3 +5307,58 @@ All 4 P2A-232 findings CLOSED in D-339 fix-burst:
 - Input-hashes refreshed (ADR-030 §Compaction Atomicity Decision dependents): BC-2.02.008→df596f3; BC-2.02.009→df596f3; BC-2.04.009→df596f3; BC-2.04.010→df596f3; BC-2.04.011→df596f3; VP-017→48e2813; VP-019→0a7f751; VP-020→8aa1bd7
 
 **NEXT: round-65 adversarial sweep on new frozen HEAD (post-D-342 push). Streak 0/3. Targeting first CLEAN(strict).**
+
+---
+
+## Round-65 — P2A-237 (2026-09-01)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-237 |
+| Round | 65 |
+| Frozen HEAD | 98caec86 |
+| Date | 2026-09-01 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 6 (1 HIGH + 4 MED + 1 LOW) |
+| Streak | RESET → 0/3 on push |
+| Label | FINDINGS_REMAIN |
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A237-01 | HIGH | S-2.12 VP-019 Phase-6 adjudication — story incorrectly assigned VP-019 crash-isolation as a Phase-3 red-gate obligation; VP-019 is a Phase-6 integration test (SQLite SIGKILL atomicity; cannot run in Phase-3 TDD); red-gate removed from S-2.12; phase-scope and AC corrections applied. | story-writer (S-2.12 §VP-019 Phase-6 adjudication) |
+| F-P2A237-02 | MED | verification-architecture.md §VP-020 narrative used incorrect op shape (Promote(id)/Retire(id)) and non-canonical property statement (apply-twice-idempotency); should reflect VP-020.md five-property formal statement with correct PromoteRetireOp::Promote(T)/Retire(String) op shapes per ADR-030 §Decision 3. | architect (verification-architecture §VP-020) |
+| F-P2A237-03 | MED | BC-2.02.009 §Traceability Test Types cell showed 'U (unit)' only; VP-020 proptest P1 was added (round-63) but Test Types cell was not updated; must read 'U (unit), P (property)' per sibling BC-2.02.007 canonical form. | product-owner (BC-2.02.009 §Traceability Test Types) |
+| F-P2A237-04 | MED | verification-architecture.md body Changelog table showed round-57 as most-recent row while frontmatter was at round-65 — body changelog had not been updated for four consecutive rounds (rounds 63–65 missing). Propagation gap. | state-manager (body changelog backfill rounds 63–65; this burst) |
+| F-P2A237-05 | MED | S-2.12 title in STORY-INDEX and S-1.28 title column did not match the verbatim H1 of the respective story files; title-column drift (records-tier style). | story-writer (STORY-INDEX title columns aligned) |
+| F-P2A237-06 | LOW | BC-2.02.009 §Traceability update (v1.9) was not reflected in BC-INDEX §Full Catalog version column or body Changelog. BC-INDEX sync omitted. | state-manager (BC-INDEX 4.20→4.21; STORY-INDEX 1.48→1.49; this burst) |
+
+**Fix-burst CLOSED (D-343).** All 6 findings closed by owning specialists. No process-gap findings tagged by adversary — cycle-closing checklist S-7.02 satisfied; no follow-up self-improvement story required.
+
+### Trajectory Tail Update
+
+Previous tail (post-round-64): →1→0→0→0 (RECORDS-ONLY)
+
+Round-65 appended: →6 (P2A-237; 1H+4M+1LOW; ALL CLOSED; fix-burst D-343 CLOSED)
+
+### Post-Round-65 Status (D-343 fix-burst close)
+
+- BC: UNCHANGED (140; BC-2.02.009 §Traceability Test Types records-tier cell correction)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total; S-2.12 §VP-019 phase-scope correction)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 0/3 (push resets frozen HEAD; round-66 gates on new HEAD)
+- Input-hashes refreshed: verification-architecture.md 8837490→721a6e7 (body-changelog backfill + input drift resolved)
+
+**LESSON OPPORTUNITY:** The VP Phase-scope-vs-red-gate contradiction class (VP-019 Phase-6 integration test incorrectly carried as a Phase-3 red-gate obligation in S-2.12) is a propagation-gap pattern from the round-62 VP-020 minting cascade — when VP-019 was aligned to the per-run DELETE model in round-62, the story-level gate designation was not simultaneously updated. The body-changelog propagation gap (verification-architecture body rows missing for 4 rounds through round-65) is the same class of propagation gap found in round-62 pass (F-P2A222-01 from D-332). Both are addressed by the state-manager's same-burst body-changelog discipline already codified.
+
+**NEXT: round-66 adversarial sweep on new frozen HEAD (post-D-343 push). Streak reset 0/3. Target: CLEAN(strict).**
