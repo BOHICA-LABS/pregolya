@@ -225,7 +225,7 @@ fn check_client_timeout() {
 
     if !all_findings.is_empty() {
         for f in &all_findings {
-            eprintln!("ERROR: reqwest Client::new() without timeout: {f}");
+            eprintln!("ERROR: reqwest::Client::new() without timeout: {f}");
         }
         eprintln!("Use Client::builder().timeout(Duration::from_secs(30)).build() instead.");
         exit(1);
@@ -258,10 +258,12 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
             continue;
         }
 
-        // Flag Client::new() (F-2 fix: removed the redundant `!line.contains("//")`
-        // guard — the early `continue` above already handles pure-comment lines, and
-        // the old guard incorrectly suppressed lines whose URL strings contain `//`).
-        if line.contains("Client::new()") {
+        // Flag reqwest::Client::new() (fully-qualified to avoid false positives on
+        // other crates' Client::new() such as mcp_sdk::Client::new() — S-3 fix).
+        // F-2 fix: removed the redundant `!line.contains("//")` guard — the early
+        // `continue` above already handles pure-comment lines, and the old guard
+        // incorrectly suppressed lines whose URL strings contain `//`.
+        if line.contains("reqwest::Client::new()") {
             findings.push(format!("{}:{}: {}", path, line_num, trimmed));
         }
 
@@ -280,9 +282,18 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
                     findings.push(format!("{}:{}: {}", path, line_num, trimmed));
                 }
                 in_builder_chain = false;
-            } else if line.contains(';') && !line.contains("Client::builder()") {
-                // Statement ended without seeing .build() — reset chain tracking.
+            } else if line.contains(';')
+                && !(line.contains("Client::builder()") && line.contains(".build()"))
+            {
+                // Statement ended without a complete .build() — reset chain tracking.
+                // This covers two cases (S-1 fix):
+                //   (a) `;` on a line that has nothing to do with Client::builder()
+                //   (b) `Client::builder()` stored in a variable (`;` present, but
+                //       `.build()` absent) — the stored builder's eventual .build()
+                //       call cannot be tracked statically; reset to avoid arming the
+                //       chain for unrelated .build() calls on subsequent lines.
                 in_builder_chain = false;
+                builder_chain_has_timeout = false;
             }
         }
     }
@@ -370,40 +381,78 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
         }
 
         // Walk characters to track brace depth and test-block entry/exit.
-        // String-literal awareness prevents an unbalanced `{` inside a string
-        // literal from permanently latching `in_test_block` (F-1 fix).
-        // `in_string_literal` and `prev_char` are declared per loop-iteration
-        // (per line) so they reset automatically — Rust non-raw string literals
-        // don't span lines.
+        // Uses an index-based loop so escape sequences (`\\`, `\"`, `\'`) can
+        // be skipped by advancing the index by 2, which correctly handles:
+        //
+        //   B-2a: `"C:\\"` — the double-backslash is one escape (`\\`); the
+        //          subsequent `"` is the real string terminator, not an escaped
+        //          quote.  The old `prev_char != '\\'` test misidentified it.
+        //
+        //   B-2b: `'{'` — a brace inside a char literal must not increment
+        //          `brace_depth`; handled by the `in_char_literal` state.
+        //
+        //   B-2c: `'"'` — a double-quote inside a char literal must not toggle
+        //          `in_string_literal`; also handled by `in_char_literal`.
+        //
+        // All state is per-line (declared inside this loop iteration) because
+        // Rust non-raw string and char literals do not span lines.
         let mut in_string_literal = false;
-        let mut prev_char = '\0';
-        for ch in line.chars() {
-            // Toggle string-literal mode on unescaped `"`.
-            if ch == '"' && prev_char != '\\' {
-                in_string_literal = !in_string_literal;
-            }
-            // Only count braces when not inside a string literal.
-            if !in_string_literal {
-                match ch {
-                    '{' => {
-                        brace_depth += 1;
-                        if pending_cfg_test {
-                            in_test_block = true;
-                            test_block_target = brace_depth;
-                            pending_cfg_test = false;
-                        }
-                    }
-                    '}' => {
-                        if in_test_block && brace_depth == test_block_target {
-                            in_test_block = false;
-                            test_block_target = -1;
-                        }
-                        brace_depth -= 1;
-                    }
-                    _ => {}
+        let mut in_char_literal = false;
+        let chars: Vec<char> = line.chars().collect();
+        let mut i = 0;
+        while i < chars.len() {
+            let ch = chars[i];
+
+            if in_string_literal {
+                if ch == '\\' {
+                    i += 2; // skip the escaped character
+                    continue;
                 }
+                if ch == '"' {
+                    in_string_literal = false;
+                }
+                i += 1;
+                continue;
             }
-            prev_char = ch;
+
+            if in_char_literal {
+                if ch == '\\' {
+                    i += 2; // skip the escaped character
+                    continue;
+                }
+                if ch == '\'' {
+                    in_char_literal = false;
+                }
+                i += 1;
+                continue;
+            }
+
+            // Not inside any literal — track structural characters.
+            match ch {
+                '"' => {
+                    in_string_literal = true;
+                }
+                '\'' => {
+                    in_char_literal = true;
+                }
+                '{' => {
+                    brace_depth += 1;
+                    if pending_cfg_test {
+                        in_test_block = true;
+                        test_block_target = brace_depth;
+                        pending_cfg_test = false;
+                    }
+                }
+                '}' => {
+                    if in_test_block && brace_depth == test_block_target {
+                        in_test_block = false;
+                        test_block_target = -1;
+                    }
+                    brace_depth -= 1;
+                }
+                _ => {}
+            }
+            i += 1;
         }
 
         // Skip lines inside test blocks and comment lines.
@@ -737,5 +786,93 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         // Must NOT flag arbitrary files that happen to have "test" in a directory name
         // other than a `tests/` component.
         assert!(!is_test_file("crates/pregolya-core/src/latest.rs"));
+    }
+
+    // ── B-2 regression tests ─────────────────────────────────────────────────
+
+    /// B-2 regression: double-backslash before closing quote must not misflag.
+    #[test]
+    fn test_no_panic_double_backslash_before_quote() {
+        let src = r#"
+#[cfg(test)]
+mod tests { const P: &str = "C:\\"; fn h() {} }
+pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "double-backslash before closing quote must not latch test block; got: {findings:?}"
+        );
+    }
+
+    /// B-2 regression: brace in char literal must not skew brace depth.
+    #[test]
+    fn test_no_panic_brace_in_char_literal() {
+        let src = r#"
+#[cfg(test)]
+mod tests { let c = '{'; fn h() {} }
+pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "brace in char literal must not skew depth; got: {findings:?}"
+        );
+    }
+
+    /// B-2 regression: double-quote in char literal must not toggle string mode.
+    #[test]
+    fn test_no_panic_quote_in_char_literal() {
+        let src = r#"
+#[cfg(test)]
+mod tests { let q = '"'; fn h() {} }
+pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "double-quote in char literal must not latch test block; got: {findings:?}"
+        );
+    }
+
+    // ── S-1 regression test ──────────────────────────────────────────────────
+
+    /// S-1 regression: Client::builder() stored in a variable (no .build() on same chain)
+    /// must not leave chain armed for later .build() calls on unrelated builders.
+    #[test]
+    fn test_timeout_scanner_builder_stored_in_var_does_not_leak() {
+        let src = "let b = reqwest::Client::builder();\nlet g = other::Builder::new().build()?;\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "stored builder without .build() must not arm chain for next .build(); got: {findings:?}"
+        );
+    }
+
+    // ── S-3 regression tests ─────────────────────────────────────────────────
+
+    /// S-3 regression: mcp_sdk::Client::new() must NOT be flagged.
+    #[test]
+    fn test_timeout_scanner_does_not_flag_non_reqwest_client_new() {
+        let src = "let c = mcp_sdk::Client::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "mcp_sdk::Client::new() must not be flagged; got: {findings:?}"
+        );
+    }
+
+    /// S-3 positive: reqwest::Client::new() IS still flagged after S-3 fix.
+    #[test]
+    fn test_timeout_scanner_still_flags_reqwest_client_new() {
+        let src = "let c = reqwest::Client::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "reqwest::Client::new() must still be flagged; got: {findings:?}"
+        );
     }
 }
