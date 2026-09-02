@@ -5736,3 +5736,63 @@ Full trajectory tail (rounds 68–72): P2A-240=1→P2A-241=0/CLEAN(streak1/3[res
 **NOTE:** This finding is the final un-recomputed downstream of the round-67 BC-2.14.005 co-anchor change. The multi-anchor propagation checklist (L-273) items 1–9 covered BC, Subsystem, behavioral_contracts, and sprint-state bcs — but NOT the DERIVED PRIORITY surfaces: story frontmatter `priority`, STORY-INDEX Story-Inventory Priority column, and sprint-state `priority`. L-273 is being extended in this burst to include these surfaces as checklist items 10–12. See lessons.md L-273 extension.
 
 **NEXT: round-73 adversarial sweep on new frozen HEAD (post-D-349 push). Streak reset 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-73 — P2A-245 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-245 |
+| Round | 73 |
+| Frozen HEAD | ea0c608 |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 2 (1 HIGH + 1 MED) |
+| Streak | RESET → 0/3 on fix push |
+| Label | FINDINGS_REMAIN |
+
+**Context note:** Fresh-context adversarial pass on new frozen HEAD ea0c608 (post-D-349 push). Found 1 HIGH and 1 MED, both in S-2.06. The S-2.06/BC-2.14.005 co-anchor downstream set was verified fully CLEAN this pass — that class is definitively closed. Both findings were in the residual BC-2.08.006 surface that the co-anchor cascade had not swept.
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A245-01 | HIGH | S-2.06 BC-table "Title" cell for BC-2.08.006 was a paraphrase ("Standalone SDK Crate Split Architecture") rather than the verbatim canonical H1 ("Standalone SDK Crate Split Architecture (pregolya-<provider>-sdk + Adapter)"). POL-7/POL-8: BC-table Title cells in story bodies must carry the verbatim H1 from BC-INDEX. Multi-round fix-bursts fixed the churned BC-2.14.005 sibling cell but left the BC-2.08.006 cell as a stale paraphrase. | story-writer; S-2.06 v1.7→v1.8 |
+| F-P2A245-02 | MED [process-gap] | S-2.06 §Changelog entries 1.6 and 1.7 were out of ascending order — 1.7 appeared before 1.6 due to a round-72 mis-insertion. Story body `## Changelog` direction has zero machine coverage; `verify-changelog-date-monotonicity.sh` and `verify-form-a-changelog-direction.sh` do not scope `.factory/stories/stories/`. POL-14/POL-15 `scope:` arrays also omit `story` class. | story-writer; §Changelog reordered to strict ascending 1.1→1.8 |
+
+**Fix-burst CLOSED (D-350).** Both findings closed. This fix push (D-350) resets the streak to 0/3 per the frozen-HEAD streak rule. Round-74 gates on the new frozen HEAD.
+
+**NOTE — co-anchor downstream class CLOSED:** The full S-2.06/BC-2.14.005 co-anchor downstream set (BC column, Subsystem field, inputs, input-hash, behavioral_contracts array, sprint-state bcs, Story-Inventory BC+Subsystem columns, derived priority) was verified CLEAN this pass. That propagation class is definitively closed. F-P2A245-01 and F-P2A245-02 are in the SEPARATE BC-2.08.006 surface (verbatim H1 sync; changelog monotonicity) and are NOT further co-anchor propagation stragglers.
+
+### Trajectory Tail Update
+
+Round-73 appended: →2 (P2A-245; 1H+1MED; CLOSED; D-350; streak reset 0/3)
+
+Full trajectory tail (rounds 69–73): P2A-241=0/CLEAN(streak1/3[reset])→P2A-242=1H→D-348(fix)→P2A-243=0/CLEAN(streak1/3[reset])→P2A-244=1MED→D-349(fix)→P2A-245=2(1H+1MED)→D-350(fix)→streak 0/3
+
+### Post-Round-73 Status (D-350 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 0/3 (fix push resets frozen HEAD; round-74 gates on new HEAD)
+- S-2.06 story: v1.7→v1.8 (story-writer; F-P2A245-01[HIGH] + F-P2A245-02[MED,process-gap]; D-350)
+- STORY-INDEX: §Changelog (1.54→1.55) (state-manager; D-350)
+- STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified)
+- S-2.06 input-hash: 33834e3 UNCHANGED (fix-burst modified story body and changelog only; BC input files not modified)
+
+**Open [process-gap] items for convergence-close follow-up:**
+1. Story-changelog machine-coverage gap (F-P2A245-02): extend changelog-direction/monotonicity hooks to scope `.factory/stories/stories/` body `## Changelog` sections; amend POL-14/POL-15 `scope:` to include `story` class. L-274 codified.
+2. Multi-anchor propagation hook (F-P2A245-01 root-cause class, per L-273): mechanical gate for "all BC-table Title cells must carry verbatim H1 for ALL rows, not just the changed row." No hook currently enforces POL-7 at story BC-table scope.
+
+**NEXT: round-74 adversarial sweep on new frozen HEAD (post-D-350 push). Streak 0/3. Target: CLEAN(strict).**

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.06
 epic_id: E-19
-version: "1.7"
+version: "1.8"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -43,7 +43,7 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.08.006 | Provider SDK Two-Crate Split: pregolya-<provider>-sdk (wire client, no pregolya-core dep) + pregolya-<provider> (adapter); reqwest rustls-tls mandatory; SDK builder timeout enforcement (E-CORE-005) | P1 |
+| BC-2.08.006 | Standalone SDK Crate Split Architecture (pregolya-<provider>-sdk + Adapter) | P1 |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | P0 |
 
 ## Acceptance Criteria
@@ -244,5 +244,6 @@ workspace — set the correct pattern from the start. Future crates inherit this
 - 1.3 (ADR-027 M4/2026-08-24): ADR-027 M4: rustls-tls ACs re-cited to BC-2.08.006 INV-005. AC-002 postcondition 2→INV-005; AC-007 invariant 1→INV-005; Architecture Compliance Rules table row updated to INV-005. Input-hash refreshed to da27500.
 - 1.4 (round-67 reconciliation/2026-09-02): PO adjudication confirmed BC-2.14.005 as legitimate co-anchor for this story. SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001; they define independent credential newtypes (OpenAiApiKey etc.) that are governed by BC-2.14.005's workspace-wide policy. behavioral_contracts array [BC-2.08.006, BC-2.14.005] confirmed correct. AC-006 trace to BC-2.14.005 PC-002 confirmed valid. STORY-INDEX BC-to-Story anchor map (exclusive S-1.02 → multi-anchor S-1.02+S-2.06) and sprint-state.yaml S-2.06 bcs array delegated to state-manager.
 - 1.5 (round-68 F-P2A240-01/2026-09-02): AC-006 test names corrected to match traced-BC prefix convention. `test_BC_2_08_006_api_key_debug_is_redacted` and `test_BC_2_08_006_api_key_no_display` renamed to `test_BC_2_14_005_api_key_debug_is_redacted` and `test_BC_2_14_005_api_key_no_display` respectively — AC-006 traces to BC-2.14.005 PC-002, so test names must carry the BC-2.14.005 prefix per corpus naming convention. Sibling sweep of .factory/ corpus confirmed no other spec artifact carried the old names (only immutable JSONL dispatcher logs, which are not spec artifacts).
-- 1.7 (round-72 F-P2A244-01/2026-09-02): priority corrected P1→P0. Derived-priority rule (STORY-INDEX §Story-Inventory convention): priority = max(P0>P1>P2) over all BCs in behavioral_contracts. BC-2.14.005 (P0, credential-opacity obligation, DI-010, AC-006→{PC-002}) is the highest-priority BC in this story; BC-2.08.006 (P1) does not cap it. Co-anchored BCs count toward derived priority per orchestrator adjudication. Under-prioritizing a P0 security obligation (credential opacity) is forbidden under the production-grade default.
 - 1.6 (round-70 F-P2A242-01/2026-09-02): subsystems expanded from [SS-08] to [SS-08, SS-14] per F-047-02 superset rule — BC-2.14.005 is owned by SS-14 (Credential Safety); .factory/specs/behavioral-contracts/ss-14/BC-2.14.005.md added to inputs (AC-006 traces to BC-2.14.005 PC-002, making it a genuine authoring input); input-hash updated to 33834e3. Corpus-wide sweep of all 43 stories confirmed no other story has a covered-BC-subsystem gap.
+- 1.7 (round-72 F-P2A244-01/2026-09-02): priority corrected P1→P0. Derived-priority rule (STORY-INDEX §Story-Inventory convention): priority = max(P0>P1>P2) over all BCs in behavioral_contracts. BC-2.14.005 (P0, credential-opacity obligation, DI-010, AC-006→{PC-002}) is the highest-priority BC in this story; BC-2.08.006 (P1) does not cap it. Co-anchored BCs count toward derived priority per orchestrator adjudication. Under-prioritizing a P0 security obligation (credential opacity) is forbidden under the production-grade default.
+- 1.8 (round-73 F-P2A245-01, F-P2A245-02/2026-09-02): F-P2A245-01 — BC-2.08.006 body BC-table title cell replaced with verbatim canonical H1 "Standalone SDK Crate Split Architecture (pregolya-<provider>-sdk + Adapter)" (POL-7/POL-8). F-P2A245-02 — changelog entries 1.6 and 1.7 reordered to strict ascending sequence (1.5→1.6→1.7); mis-insertion from round-72 edit corrected.
