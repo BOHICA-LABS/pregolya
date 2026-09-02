@@ -4435,3 +4435,34 @@ develop: `bfe0592` — LOCAL ONLY; factory-artifacts: PUSHED (D-352) at SHA 5694
 
 ### NEXT-ACTION (D-352)
 Dispatch round-78 adversary cascade on new frozen HEAD (post-D-352 push). Streak 0/3. 2 open [process-gap] items for convergence-close: (1) VP-INDEX-mirror propagation hook; (2) story-changelog machine-coverage extension per L-274.
+
+
+---
+
+## Archived D-353 Session Checkpoint (archived D-354; 2026-09-02)
+
+## Session Resume Checkpoint
+
+<!-- D-353 checkpoint replaces D-352 — D-352 archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. D-353 CLOSED (2026-09-02) — round-79 P2A-251 (2 LOW, RECORDS-ONLY): F-P2A251-01[LOW] S-1.09 NE-02 anchor mis-label; F-P2A251-02[LOW] corpus-wide verbatim-H1 BC-table title sweep (~30 spec files / ~90 cells corrected; orchestrator Option A human-confirmed). Round-78 (P2A-250) was CLEAN(strict), streak 1/3. story-writer: ~30 spec file version bumps. state-manager: STORY-INDEX §Changelog (1.57→1.58); §Conventions updated (verbatim-H1 enforced); L-276 codified. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. Streak reset 0/3 (material fix push).
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-353) — run `git -C .factory log -1 --format='%h %s'` for current SHA. No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION
+Dispatch round-80 adversary cascade on new frozen HEAD (post-D-353 push). Streak 0/3. Standing directives DIRECTIVE 1/2/3 remain in force. DU leftover files under develop-tree stories/stories/ are pre-existing; always use absolute .factory/ paths in dispatch prompts (L-272). 3 open [process-gap] items for convergence-close: (1) VP-INDEX-mirror propagation hook covering all 4 mirrors per L-275 (devops-engineer; requires human direction); (2) story-changelog machine-coverage hook + POL-14/15 story scope per L-274 (devops-engineer; requires human direction); (3) BC H1 angle-bracket escaping normalization per L-276(b) (product-owner; requires human direction). Orchestrator: evaluate mechanical gate stories per L-273/L-274/L-275/L-276.
+
+### DECISION-LOG DELTA (D-353 close)
+D-353 round-79 P2A-251 CLOSED — F-P2A251-01[LOW] S-1.09 NE-02 anchor; F-P2A251-02[LOW] corpus-wide verbatim-H1 title sweep (~30 spec files / ~90 cells; Option A human-confirmed); story-writer ~30 spec file bumps; STORY-INDEX §Changelog (1.58); §Conventions updated; L-276 codified (3-part); census UNCHANGED BC 140/VP 21/EC 143/TV 795/NFR 15; streak reset 0/3.
+
+### WORKTREE INVENTORY
+None (.worktrees/ absent). Phase-2; no story worktrees open.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+None outstanding. DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+

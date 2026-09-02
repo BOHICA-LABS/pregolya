@@ -6095,3 +6095,63 @@ Full trajectory tail (rounds 77–79): P2A-249=2[2MED]→D-352(fix,streak reset 
 - L-276 codified (3-part lesson: verbatim-H1 enforced; BC H1 angle-bracket inconsistency future task; corpus-sweep concurrency hazard)
 
 **NEXT: round-80 on new frozen HEAD (post-D-353 push). Streak 0/3. Target: CLEAN(strict).**
+
+---
+
+## Phase-2 CONVERGED — D-354 Gate Close (2026-09-02)
+
+### Summary
+
+| Field | Value |
+|-------|-------|
+| Frozen anchor | 81d16ca |
+| Convergence rounds | 80 / 81 / 82 (P2A-252 / P2A-253 / P2A-254) |
+| Streak | 3/3 CLEAN(strict) |
+| Axis diversity | parity/census (r80) · deep-semantics (r81) · completeness/coverage (r82) |
+| Total Phase-2 passes | P2A-001..P2A-254 (rounds 1–82) |
+| consistency-validator | PERIMETER-CONSISTENT |
+| input-drift | PASS |
+| Human gate | APPROVED 2026-09-02 |
+| C-2 fix | STORY-S-MAINT-001 v1.2→v1.3 — 9 BC-corpus count references updated 134→140 (story-writer; input-hash 9d09df5→21647fd) |
+| Deferrals | 4 human-authorized: C-1 / PG-1 / PG-2 / PG-3 (see Drift/Deferrals in STATE.md D-354) |
+| Census final | BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15 |
+
+### Three-CLEAN Sequence (axis-diverse)
+
+| Round | Pass | Axis | CLEAN(strict) | Streak |
+|-------|------|------|----------------|--------|
+| 80 | P2A-252 | parity / census | YES | 1/3 |
+| 81 | P2A-253 | deep-semantics | YES | 2/3 |
+| 82 | P2A-254 | completeness / coverage | YES | 3/3 — CONVERGED |
+
+**Per BC-5.39.001:** The frozen-HEAD streak requires 3 consecutive CLEAN(strict) passes taken against an UNCHANGED HEAD. All three passes (P2A-252/253/254) were on frozen anchor 81d16ca with no intervening pushes. Streak is valid.
+
+**Axis diversity note:** The three passes were on distinct adversarial axes (parity, deep-semantics, completeness) — the same multi-axis protocol that was found to be essential during this Phase-2 cascade (5 mid-cascade streak resets were all genuine mirror-drift catches under a different axis than the preceding pass). Fresh-context + axis-diverse passes are the convergence discipline that closed Phase-2 after 254 adversary passes and 82 rounds.
+
+### Trajectory Tail (rounds 78–82)
+
+```
+P2A-250=0/CLEAN(strict,streak1/3)
+→P2A-251=2[2LOW,RECORDS-ONLY,corpus-wide verbatim-H1 sweep]→D-353(fix,streak reset 0/3)
+→P2A-252=0/CLEAN(strict,streak1/3)
+→P2A-253=0/CLEAN(strict,streak2/3)
+→P2A-254=0/CLEAN(strict,streak3/3=CONVERGED)
+→D-354 Phase-2 GATE APPROVED
+```
+
+### Post-Phase-2 Status
+
+- BC: 140 (FINAL)
+- VP: 21 (FINAL)
+- EC: 143 (FINAL)
+- TV: 795 canonical (FINAL)
+- ADR: 30 (FINAL)
+- NFR: 15 (FINAL)
+- Stories: 42 total (41 product + 1 maint; FINAL)
+- Holdout: 24 (must-pass 17/24=70.8%; SEALED)
+- Census pts: 316 (FINAL)
+- STORY-INDEX: v1.59 (D-354)
+- L-277 codified
+- Phase-3 TDD: PENDING — wave order: pregolya-core → pregolya-graph → partners (D7)
+
+**NEXT: Phase-3 TDD Implementation.**
