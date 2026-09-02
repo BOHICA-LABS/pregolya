@@ -18,9 +18,15 @@ deny = [
     { name = "native-tls" },
     { name = "openssl" },
     { name = "openssl-sys" },
+    { name = "openssl-probe" },
 ]
 
 [advisories]
+version = 2
+vulnerability = "deny"
+unmaintained = "warn"
+yanked = "deny"
+notice = "warn"
 ignore = []
 
 [sources]
