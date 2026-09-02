@@ -1,10 +1,10 @@
 ---
 document_type: architecture-index
 level: L3
-version: "1.68"
+version: "1.69"
 status: active
 producer: architect
-timestamp: 2026-09-01T23:30:00Z
+timestamp: 2026-09-02T12:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/prd.md
@@ -17,6 +17,7 @@ traces_to: prd.md
 deployment_topology: single-service
 decisions: [D4, D6, D9, D11, D13, D17, D20, D21, D23]
 changelog:
+  - "1.69 (round-67/D-345/2026-09-02): P2A-239 fix-burst census reconciliation — F-P2A239-02[MED] CLOSED. Full cross-index census verification performed: BC-INDEX §Changelog / STORY-INDEX §Changelog / VP-INDEX §Changelog / test-vectors.md §Changelog / ARCH-INDEX §Changelog all confirmed at BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15 — fully consistent. At frozen HEAD 69ec78d (adversary P2A-239 review scope), ARCH-INDEX was at v1.67 which carried TV 794 canonical (pre-round-63); v1.68 committed D-341 already carried TV 795 canonical; this entry formally closes F-P2A239-02 and records the cross-index reconciliation sweep. sprint-state.yaml S-6.01 vps VP-015 spurious entry removed (F-P2A239-01[MED]; state-manager — story frontmatter source of truth = 12 VPs, no VP-015). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.68 (round-63/D-341/2026-09-01): ADR-030 §SQLite Topology single per-run-DELETE mechanism (contradictory directive removed; F-P2A235-01). ADR-030 §NFR-015 P0 directive (NFR-015 parity with NFR-002; F-P2A235-04). ADR-030 §E-TRAJ-006 STATIC message reconciled (F-P2A235-06). ADR-030 §{INV-002} gloss corrected reducer-determinism (F-P2A235-08). verification-architecture §VP-019 stale directive deleted + §VP-020 {INV-002} gloss fixed (F-P2A235-03/F-P2A235-08). Census: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.67 (round-62/D-340/2026-09-01): VP-020 added — PromoteRetireChannel idempotency/ordering proptest P1 (BC-2.02.009 {INV-001}+{INV-002}; graph::channels; pregolya-graph; DI-001; harness promote_retire_channel_idempotency). §Verification Properties summary updated: 20→21 VPs; proptest P1 ×7→×8. Census: 140 BCs / 21 VP / 143 EC / 794 TV canonical / 42 stories / 316 pts / 30 ADR / 24 holdout (must-pass 17/24=70.8%) / NFR 15."
   - "1.66 (round-57/D-336/2026-09-01): verification-architecture.md §Provable-Properties VP-017 formal statement rewritten to canonical pure-fold form (removed stale LedgerChannel::new() constructor and IndexSet oracle; replaced with fold accumulation form and HashSet oracle matching VP-017 §Formal Invariant verbatim; F-P2A228-01 [MED]). interface-definitions §LedgerChannel Invariants tags {INV-1}/{INV-2} corrected to canonical {PC-001}/{PC-002} (O-P2A228-A [OBS]). capabilities-p1-p2.md §CAP-040 PromoteRetireChannel body prose DI-014→DI-001 (F-P2A228-02 [MED]). VP-INDEX §Changelog: VP-017 §Feasibility revised (IndexSet→Vec linear scan/HashSet oracle; F-P2A228-03 [LOW]); VP-017 input-hash corrected 27e49fa→e7b31ef. VP-017 DI-001 / VP-018 DI-002 / VP-019 DI-002 cross-doc consistency confirmed across VP-INDEX / ARCH-INDEX / verification-architecture.md / verification-coverage-matrix.md. Census UNCHANGED: 140 BCs / 20 VP / 142 EC / 794 TV canonical / 42 stories / 316 pts / 30 ADR / 24 holdout (must-pass 17/24=70.8%)."

@@ -5421,3 +5421,76 @@ Full trajectory tail (rounds 62–66): P2A-233=0/CLEAN(strict)→P2A-234=8→P2A
 **LESSON OPPORTUNITY (codified as L-270):** The round-62 VP-020-mint cascade swept the BC/VP/index triangle but did not sweep story-corpus prose (epics.md §ENN sections) or VP-mirror arrays in machine-dispatch yaml (sprint-state.yaml vps fields). POL-24 sibling-sweep must explicitly include epics.md §ENN sections for affected epics and sprint-state.yaml vps arrays for affected stories.
 
 **NEXT: round-67 adversarial sweep on new frozen HEAD (post-D-344 push). Streak reset 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-67 — P2A-239 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-239 |
+| Round | 67 |
+| Frozen HEAD | 69ec78d |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 2 (0 HIGH + 2 MED) |
+| Streak | RESET → 0/3 on push |
+| Label | FINDINGS_REMAIN |
+
+**Focus perimeter:** CAP-040 perimeter verified CLEAN this pass — both findings were peripheral-tracker drift found via the widen-the-sweep directive, NOT in the primary CAP-040 surface. Findings class: same pattern as round-66 (peripheral-tracker propagation drift).
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A239-01 | MED | sprint-state.yaml S-6.01 vps contained VP-015 (13 entries) but story frontmatter verification_properties lists 12 entries (no VP-015). VP-015 is a unit VP anchored to S-2.11 (BC-2.09.007 {INV-003} — MCP credential redaction). It applies to S-2.11 only; epics.md §E-22 confirms VP-015 is validated in its Phase-3 anchor story, not in S-6.01's formal-verification pipeline. | state-manager (sprint-state.yaml S-6.01 vps VP-015 removed; 13→12 entries matching story frontmatter exactly) |
+| F-P2A239-02 | MED | ARCH-INDEX.md v1.67 changelog entry (most-recent census snapshot at frozen HEAD 69ec78d) reads "794 TV canonical". Authoritative current canonical TV = 795 (round-63 D-341 BC-2.04.009 TV-007 addition, already reflected in v1.68 which post-dates the frozen HEAD). Full cross-index census verification confirmed all indexes consistent at TV 795. | state-manager (ARCH-INDEX.md v1.68→v1.69 formal census-reconciliation entry; cross-index sweep confirmed UNCHANGED and CONSISTENT) |
+
+**Fix-burst CLOSED (D-345).** Both MED findings closed by state-manager.
+
+**Full-reconciliation-sweep result (POL-24 + POL-35):**
+
+sprint-state.yaml ↔ story frontmatter comparison (all 43 story entries):
+- S-6.01 vps: VP-015 spurious → FIXED (F-P2A239-01)
+- S-2.06 bcs: sprint-state has [BC-2.08.006]; story frontmatter has [BC-2.08.006, BC-2.14.005] — AMBIGUOUS: STORY-INDEX §Coverage-Map anchors BC-2.14.005 to S-1.02 exclusively; BC-2.14.005 appearing in S-2.06 frontmatter appears to be an authoring-burst residue; flagged for orchestrator routing (product-owner adjudication required before correction — not corrected in this burst per instructions)
+- All other 41 stories: bcs and vps exact-match between sprint-state.yaml and story frontmatter
+
+Cross-index census check (BC / VP / EC / TV / stories / pts / ADR / holdout / NFR):
+- BC-INDEX §Changelog: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (17/24=70.8%) / NFR 15 — CONSISTENT
+- STORY-INDEX §Changelog: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (17/24=70.8%) / NFR 15 — CONSISTENT
+- VP-INDEX §Changelog: 21 VPs total (6 P0 / 15 P1) — CONSISTENT
+- test-vectors.md §Changelog: 795 canonical + 11 GTV = 806 total — CONSISTENT
+- ARCH-INDEX §Changelog (post-fix): BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (17/24=70.8%) / NFR 15 — CONSISTENT
+All 5 indexes confirm canonical census. Zero outstanding census discrepancies.
+
+### Trajectory Tail Update
+
+Previous tail (post-round-66): →3 (P2A-238; 1H+1M+1LOW; ALL CLOSED; fix-burst D-344 CLOSED)
+
+Round-67 appended: →2 (P2A-239; 0H+2MED; ALL CLOSED; fix-burst D-345 CLOSED)
+
+Full trajectory tail (rounds 62–67): P2A-233=0/CLEAN(strict)→P2A-234=8→P2A-235=8→P2A-236=1(RECORDS-ONLY)→P2A-237=6→P2A-238=3→P2A-239=2
+
+### Post-Round-67 Status (D-345 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 0/3 (push resets frozen HEAD; round-68 gates on new HEAD)
+- ARCH-INDEX: v1.68→v1.69 (census reconciliation entry; no artifact content changed)
+- sprint-state.yaml: S-6.01 vps VP-015 removed (state-manager)
+
+**LESSON OPPORTUNITY (codified as L-271):** This is the 2nd consecutive round of peripheral-tracker propagation drift (round-66: epics.md/sprint-state.yaml; round-67: sprint-state.yaml/ARCH-INDEX census). Approaching the 3-recurrence threshold. A mechanical gate should verify (a) sprint-state.yaml vps/bcs match story frontmatter and (b) all index census snapshots agree. Flagged for orchestrator: if a 3rd recurrence occurs, a follow-up self-improvement story should be created for devops-engineer to implement the mechanical consistency hook. NOT self-authorized here per Canonical Principle Rule 3 — requires explicit human direction.
+
+**S-2.06 AMBIGUOUS CASE flagged for orchestrator routing:** sprint-state.yaml S-2.06 bcs = [BC-2.08.006] but S-2.06 story frontmatter behavioral_contracts = [BC-2.08.006, BC-2.14.005]. STORY-INDEX §Coverage-Map anchors BC-2.14.005 exclusively to S-1.02 (SS-14 Typed Error Taxonomy). S-2.06 is the provider SDK split story (BC-2.08.006). The extra BC-2.14.005 in S-2.06 frontmatter appears to be an authoring-burst residue. Product-owner adjudication required before correction: (a) remove BC-2.14.005 from S-2.06 frontmatter, or (b) confirm S-2.06 genuinely covers this BC (requires updating sprint-state.yaml S-2.06 bcs and STORY-INDEX coverage map). Not corrected in this burst — ambiguous case per sweep instructions.
+
+**NEXT: round-68 adversarial sweep on new frozen HEAD (post-D-345 push). Streak reset 0/3. Target: CLEAN(strict).**

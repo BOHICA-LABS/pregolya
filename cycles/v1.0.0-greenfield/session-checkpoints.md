@@ -4225,3 +4225,39 @@ LOW (1) CLOSED: F-P2A236-01[LOW,POL-24] ADR-030 §Compaction Atomicity Decision 
 | D-339 round-60 fix-burst CLOSED (2026-09-01): trajectory-tail →0→4→0→0 (P2A-231=0/CLEAN(strict) streak 1/3; P2A-232=4[3H+1M] streak reset 0/3). ALL 4 FINDINGS CLOSED: sprint-state.yaml S-1.28+S-2.12 added; wave-schedule.md §sub-batch-1e/2a (41 stories); dependency-graph §VP-to-Stories-matrix S-1.10+VP-019. Census UNCHANGED. streak 0/3. | state-manager | COMPLETE | STATE.md §D-339. Single commit per TD-VSDD-053. |
 
 *Archived at D-344 (round-66 fix-burst close) to maintain STATE.md size budget.*
+
+---
+
+## Archived Checkpoint: D-344 (2026-09-02 — round-66 P2A-238 fix-burst CLOSED)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-66 closed. Round-66 P2A-238 fix-burst CLOSED (D-344) — ALL 3 findings closed: epics.md §E-05 per-run single-txn DELETE / two-crash-point crash-matrix / E-TRAJ-006 added (F-P2A238-01[HIGH]; story-writer); sprint-state.yaml S-1.28 vps [VP-017]→[VP-017, VP-020] (F-P2A238-02[MED]; story-writer); epics.md §E-07 VP-020 reference added (F-P2A238-03[LOW]; story-writer). Root-cause: round-62 compaction-redesign + VP-020-mint half-sweep missed story-corpus prose (epics.md §E-05/§E-07) and machine-dispatch VP-mirror (sprint-state.yaml S-1.28 vps). Adversary confirmed round-65 edits propagated — NO new drift. STORY-INDEX 1.49→1.50. L-270 codified. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3 (push resets; round-67 gates on new HEAD).
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-344) — run `git -C .factory log -1 --format='%h %s'` for current SHA. No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION
+Dispatch round-67 adversary cascade on new frozen HEAD (post-D-344 push). Streak 0/3. Streak has reached 1/3 three times this session (P2A-226 D-335; P2A-231 D-339; P2A-233 D-340). Standing directives DIRECTIVE 1/3 remain in force.
+
+### ROUND-66 FINDINGS (CLOSED — 3: 1H+1M+1LOW)
+HIGH (1) CLOSED: F-P2A238-01[HIGH] epics.md §E-05 stale — pre-round-62 staging-swap model; per-run DELETE/crash-matrix/E-TRAJ-006 absent (story-writer; epics.md §E-07).
+MED (1) CLOSED: F-P2A238-02[MED] sprint-state.yaml S-1.28 vps missing VP-020 — [VP-017]→[VP-017, VP-020] (story-writer).
+LOW (1) CLOSED: F-P2A238-03[LOW] epics.md §E-07 missing VP-020 reference (story-writer).
+
+### DECISION-LOG DELTA (D-344 close)
+D-344 round-66 P2A-238 fix-burst closed (F-P2A238-01/02/03 ALL CLOSED; epics.md §E-05/§E-07; sprint-state.yaml S-1.28 vps+VP-020; STORY-INDEX §Changelog 1.50; L-270 codified; Census UNCHANGED BC 140/VP 21/EC 143/TV 795/NFR 15; streak 0/3 reset on push).
+
+### WORKTREE INVENTORY
+None (.worktrees/ absent). Phase-2; no story worktrees open.
+
+### STANDING HUMAN-GATE OBS
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK
+None outstanding. DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+---
+
+## Archived Step Row: D-340 (archived from STATE.md §Current Phase Steps on 2026-09-02 at D-345)
+
+D-340 round-62 fix-burst CLOSED (2026-09-01): trajectory-tail →0→0→8→0 (P2A-233=0/CLEAN(strict) streak 1/3; P2A-234=8[2H+3M+3OBS] streak reset 0/3). ALL 8 FINDINGS CLOSED: F-P2A234-01[HIGH] BC-2.04.011 per-run single-txn DELETE compaction; F-P2A234-02[HIGH] BC-2.04.009 false concurrent-safety false claim; F-P2A234-03[MED] E-TRAJ-006 minted (EC 143); F-P2A234-04[MED] VP-020 proptest P1 (VP 21); F-P2A234-05[MED] NFR-015 (NFR 15); OBS-1/OBS-2/OBS-3 CLOSED. ADR-030 §Compaction Atomicity Decision. Census: BC 140 / VP 21 / EC 143 / TV 794 / stories 42 / pts 316 / ADR 30 / NFR 15. streak 0/3.
