@@ -1,0 +1,20 @@
+[package]
+name = "pregolya-sandbox"
+version.workspace = true
+edition.workspace = true
+description = "Sandbox execution backends for pregolya — WASM, container, path guard"
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[features]
+default = ["sandbox-wasm"]
+sandbox-wasm = ["dep:wasmtime"]
+sandbox-container = []
+
+[dependencies]
+pregolya-core = { path = "../pregolya-core" }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+wasmtime = { version = "27", optional = true }
