@@ -5494,3 +5494,16 @@ Full trajectory tail (rounds 62–67): P2A-233=0/CLEAN(strict)→P2A-234=8→P2A
 **S-2.06 AMBIGUOUS CASE flagged for orchestrator routing:** sprint-state.yaml S-2.06 bcs = [BC-2.08.006] but S-2.06 story frontmatter behavioral_contracts = [BC-2.08.006, BC-2.14.005]. STORY-INDEX §Coverage-Map anchors BC-2.14.005 exclusively to S-1.02 (SS-14 Typed Error Taxonomy). S-2.06 is the provider SDK split story (BC-2.08.006). The extra BC-2.14.005 in S-2.06 frontmatter appears to be an authoring-burst residue. Product-owner adjudication required before correction: (a) remove BC-2.14.005 from S-2.06 frontmatter, or (b) confirm S-2.06 genuinely covers this BC (requires updating sprint-state.yaml S-2.06 bcs and STORY-INDEX coverage map). Not corrected in this burst — ambiguous case per sweep instructions.
 
 **NEXT: round-68 adversarial sweep on new frozen HEAD (post-D-345 push). Streak reset 0/3. Target: CLEAN(strict).**
+
+## D-346 — round-67 Reconciliation: BC-2.14.005 Multi-Anchor Adjudication CLOSED (2026-09-02)
+
+Product-owner adjudication Decision (a) confirmed: BC-2.14.005 is a legitimate multi-anchor contract. STORY-INDEX exclusive-S-1.02 anchor was incomplete — S-2.06 is a valid co-anchor because SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001, so SDK crates (pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk) define independent credential newtypes (OpenAiApiKey, AnthropicApiKey, OllamaBaseUrl) governed by BC-2.14.005 workspace-wide policy. S-2.06 AC-006 traces to BC-2.14.005 {PC-002} (credential newtype REDACTED Debug) — this trace is behaviorally exact.
+
+Trackers/indexes synced by state-manager:
+- sprint-state.yaml S-2.06 bcs: [BC-2.08.006] → [BC-2.08.006, BC-2.14.005]
+- STORY-INDEX §BC-to-Story anchor map BC-2.14.005 row: S-1.02 → S-1.02, S-2.06 (v1.51; input-hash 69ed6f6→0bcc4f8)
+- BC-INDEX BC-2.14.005 row annotation: v1.4 → v1.5 (v4.22)
+
+This closes the last open item from round-67 reconciliation sweep (ambiguous case flagged in D-345). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3.
+
+**NEXT: round-68 adversarial sweep on new frozen HEAD (post-D-346 push). Streak reset 0/3. Target: CLEAN(strict).**

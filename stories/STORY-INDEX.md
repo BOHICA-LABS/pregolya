@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.50"
+version: "1.51"
 status: active
 producer: state-manager
-timestamp: 2026-09-02T08:00:00Z
+timestamp: 2026-09-02T14:00:00Z
 changelog:
+  - "1.51 (round-67 reconciliation/D-346/2026-09-02): BC-to-Story anchor map §SS-14 BC-2.14.005 row updated S-1.02→S-1.02, S-2.06 per product-owner adjudication Decision (a): BC-2.14.005 is a legitimate multi-anchor co-anchored to S-1.02 (primary; credential newtypes in pregolya-core) + S-2.06 (co-anchor; SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001 so SDK crates define independent credential newtypes governed by same workspace-wide policy). Exclusive S-1.02 anchor was incomplete; S-2.06 AC-006 traces to BC-2.14.005 {PC-002}. sprint-state.yaml S-2.06 bcs synced: [BC-2.08.006]→[BC-2.08.006, BC-2.14.005]. BC-INDEX 4.21→4.22 BC-2.14.005 row v1.4→v1.5. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.50 (round-66/D-344/2026-09-02): sprint-state.yaml S-1.28 vps [VP-017]→[VP-017, VP-020] (story-writer; F-P2A238-02[MED]). epics.md §E-05: per-run single-txn DELETE / two-crash-point crash-matrix / E-TRAJ-006 added (story-writer; F-P2A238-01[HIGH]); §E-07 VP-020 reference added (story-writer; F-P2A238-03[LOW]). No INDEX carries a structured epics.md version field — INDEX version-row sync NOT required. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.49 (round-65/D-343/2026-09-01): S-2.12 §VP-019 Phase-6 adjudication (story-writer; F-P2A237-01[HIGH] — red-gate removed; phase-scope corrections; input-hash self-updated). S-1.28 title-column aligned to verbatim-H1 (title-only; version UNCHANGED). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.48 (round-62/D-340/2026-09-01): VP-020 minted → BC-2.02.009 {INV-001}+{INV-002} (PromoteRetireChannel idempotency/ordering; proptest P1; S-1.28). BC coverage map: BC-2.02.009 row updated with (VP-020) annotation. VP-to-Story Anchor Map: VP-020 row added (BC-2.02.009 {INV-001}+{INV-002}; S-1.28; P1; pregolya-graph). Story version bumps: S-1.28 v1.8→v1.9 (input-hash 310b574); S-2.12 v1.4→v1.5 (input-hash e151f9d). Census: BC 140 / VP 20→21 / EC 142→143 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 14→15."
@@ -64,7 +65,7 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/domain-spec/L2-INDEX.md
   - .factory/specs/verification-properties/VP-INDEX.md
-input-hash: "69ed6f6"
+input-hash: "0bcc4f8"
 ---
 
 # STORY-INDEX: pregolya Phase 2 Story Inventory
@@ -430,7 +431,7 @@ input-hash: "69ed6f6"
 | BC-2.14.002 | RFC-7807 Compatible Problem Emission | S-1.01 | P0 |
 | BC-2.14.003 | All Library Constructors Return Result; No unwrap | S-1.02 | P0 |
 | BC-2.14.004 | Every Outbound HTTP Client Must Set .timeout(30s) | S-1.02 | P0 |
-| BC-2.14.005 | API Key Newtype with Redacted Debug | S-1.02 | P0 |
+| BC-2.14.005 | API Key Newtype with Redacted Debug | S-1.02, S-2.06 | P0 |
 | BC-2.14.006 | Validation Failures Propagate Err; No Silent None | S-1.02 | P0 |
 
 ### SS-15 Long-Horizon Memory (6 BCs)

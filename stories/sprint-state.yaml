@@ -475,7 +475,7 @@ stories:
   - story_id: S-2.06
     wave: 2
     status: spec-ready
-    bcs: [BC-2.08.006]
+    bcs: [BC-2.08.006, BC-2.14.005]
     vps: []
     points: 3
     tdd_mode: strict

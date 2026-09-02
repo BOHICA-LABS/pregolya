@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.005
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.3 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.4 (round-47/F-P2A197-03/2026-08-30): F-P2A197-03 [LOW/records] Debug form inconsistency adjudicated — canonical Debug form is exactly '<redacted>' per CLAUDE.md §Newtype + redacted Debug (f.write_str('<redacted>') emits exactly '<redacted>'); {PC-002} 'exactly' wording retained as authoritative source of truth. TV-001 expected output corrected from 'FooApiKey(<redacted>)' (or '<redacted>') to '<redacted>' (exact match). EC-003 expected behavior corrected from 'FooApiKey(<redacted>)' to '<redacted>' (exact match). Both aligned to {PC-002}/{INV-002}. {INV-002} log-scrubber substring guarantee unaffected."
+  - "1.5 (round-67 reconciliation/2026-09-02): Story Anchor expanded to multi-anchor. S-1.02 remains primary anchor (creates credential newtypes in pregolya-core/src/credentials.rs). S-2.06 added as co-anchor: SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001, so SDK crates define independent credential newtypes (OpenAiApiKey etc. in pregolya-{openai,anthropic,ollama}-sdk) governed by the same workspace-wide policy. S-2.06 AC-006 traces to {PC-002} — the trace is behaviorally exact. No behavioral change; Story Anchor field corrected from exclusive to multi-anchor. STORY-INDEX BC-to-Story anchor map row and sprint-state.yaml S-2.06 bcs array delegated to state-manager."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-010
@@ -28,7 +29,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p0.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "9516cc4"
+input-hash: "646db6f"
 extracted_from: null
 modified: []
 deprecated: null
@@ -124,7 +125,7 @@ never expose the key value. The type must not `#[derive(Serialize)]` and must no
 
 ## Story Anchor
 
-S-1.02
+S-1.02 (primary — credential newtypes in `pregolya-core/src/credentials.rs`), S-2.06 (co-anchor — credential newtypes in SDK crates; SDK crates cannot depend on `pregolya-core` per BC-2.08.006 PC-001, so they define independent newtypes subject to this policy)
 
 ## VP Anchors
 

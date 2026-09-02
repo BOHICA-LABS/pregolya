@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.06
 epic_id: E-19
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "da27500"
+input-hash: "521e8a7"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.04]
@@ -241,3 +241,4 @@ workspace — set the correct pattern from the start. Future crates inherit this
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors. AC-001 postcondition 1→PC-001; AC-003 postcondition 3→EC-002 (semantic: timeout missing error); AC-004 postcondition 4→PC-002 (semantic: SDK client mandatory timeout positive case); AC-005 postcondition 1→PC-001; AC-006 BC-2.14.005 postcondition 2→PC-002; AC-008 invariant 2→EC-002 (semantic: no silent default timeout). Architecture Compliance Rules table updated accordingly. ESCALATION: AC-002 (BC-2.08.006 postcondition 2, rustls-tls Cargo config) and AC-007 (BC-2.08.006 invariant 1, TLS backend) have no matching clause in BC-2.08.006; recommend PO add an INV for TLS backend enforcement or a dedicated BC.
 - 1.2 (ADR-027 M3 straggler conversion to stable clause anchors/2026-08-24): M3 straggler audit confirmed — AC-002 and AC-007 retain ordinal citations; no BC-2.08.006 clause covers rustls-tls TLS backend enforcement (confirmed no semantic match across all PC/INV/PRE clauses); escalation to PO for new invariant authorship stands.
 - 1.3 (ADR-027 M4/2026-08-24): ADR-027 M4: rustls-tls ACs re-cited to BC-2.08.006 INV-005. AC-002 postcondition 2→INV-005; AC-007 invariant 1→INV-005; Architecture Compliance Rules table row updated to INV-005. Input-hash refreshed to da27500.
+- 1.4 (round-67 reconciliation/2026-09-02): PO adjudication confirmed BC-2.14.005 as legitimate co-anchor for this story. SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001; they define independent credential newtypes (OpenAiApiKey etc.) that are governed by BC-2.14.005's workspace-wide policy. behavioral_contracts array [BC-2.08.006, BC-2.14.005] confirmed correct. AC-006 trace to BC-2.14.005 PC-002 confirmed valid. STORY-INDEX BC-to-Story anchor map (exclusive S-1.02 → multi-anchor S-1.02+S-2.06) and sprint-state.yaml S-2.06 bcs array delegated to state-manager.

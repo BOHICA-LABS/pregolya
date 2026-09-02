@@ -4261,3 +4261,25 @@ None outstanding. DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 a
 ## Archived Step Row: D-340 (archived from STATE.md §Current Phase Steps on 2026-09-02 at D-345)
 
 D-340 round-62 fix-burst CLOSED (2026-09-01): trajectory-tail →0→0→8→0 (P2A-233=0/CLEAN(strict) streak 1/3; P2A-234=8[2H+3M+3OBS] streak reset 0/3). ALL 8 FINDINGS CLOSED: F-P2A234-01[HIGH] BC-2.04.011 per-run single-txn DELETE compaction; F-P2A234-02[HIGH] BC-2.04.009 false concurrent-safety false claim; F-P2A234-03[MED] E-TRAJ-006 minted (EC 143); F-P2A234-04[MED] VP-020 proptest P1 (VP 21); F-P2A234-05[MED] NFR-015 (NFR 15); OBS-1/OBS-2/OBS-3 CLOSED. ADR-030 §Compaction Atomicity Decision. Census: BC 140 / VP 21 / EC 143 / TV 794 / stories 42 / pts 316 / ADR 30 / NFR 15. streak 0/3.
+
+---
+
+## Archived Checkpoint: D-345 (archived from STATE.md §Session Resume Checkpoint on 2026-09-02 at D-346)
+
+<!-- D-345 checkpoint — archived at D-346; replaced in STATE.md by D-346 checkpoint -->
+
+### RESUME IN ONE BREATH (D-345)
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-67 closed. Round-67 P2A-239 fix-burst CLOSED (D-345) — 2 MED findings closed: sprint-state.yaml S-6.01 vps VP-015 spurious removed — VP-015 belongs to S-2.11 (BC-2.09.007 {INV-003} MCP credential redaction), not S-6.01; story frontmatter source-of-truth lists 12 VPs, no VP-015 (F-P2A239-01[MED]; state-manager); ARCH-INDEX §Changelog census reconciliation entry — at frozen HEAD 69ec78d (adversary review scope) ARCH-INDEX §Changelog carried TV 794 canonical; v1.68 (post-D-341) already corrected to 795; v1.69 formally closes finding (F-P2A239-02[MED]; state-manager). Full POL-24+POL-35 cross-index reconciliation sweep: all 42 story frontmatter bcs/vps vs sprint-state.yaml CONSISTENT (S-2.06 BC-2.14.005 ambiguous case flagged for orchestrator routing — routed, not corrected). Cross-index census sweep: ALL CONSISTENT. L-271 codified. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3 (push resets; round-68 gates on new HEAD).
+
+### HEADS (D-345)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-345). No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION (D-345)
+Dispatch round-68 adversary cascade on new frozen HEAD (post-D-345 push). Streak 0/3. S-2.06 BC-2.14.005 ambiguous case awaits orchestrator routing to product-owner for adjudication.
+
+### ROUND-67 FINDINGS (D-345 — CLOSED)
+MED (1) CLOSED: F-P2A239-01[MED] sprint-state.yaml S-6.01 vps spurious VP-015 — removed; story frontmatter source-of-truth = 12 VPs (VP-001..VP-014); VP-015 anchored to S-2.11 (state-manager).
+MED (1) CLOSED: F-P2A239-02[MED] ARCH-INDEX census TV 794 at frozen HEAD 69ec78d (v1.67) — v1.68 already carried 795; v1.69 entry formally closes finding + records cross-index reconciliation sweep (state-manager).
+
+### STEP ROW ARCHIVED AT D-346
+Archived step row D-341 (round-63 fix-burst CLOSED) from STATE.md §Current Phase Steps at D-346.
