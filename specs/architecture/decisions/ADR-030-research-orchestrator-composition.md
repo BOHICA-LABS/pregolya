@@ -8,7 +8,7 @@ status: accepted
 date: "2026-09-01"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "2.0"
+version: "2.1"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "2.1 (round-63/F-P2A235-01+F-P2A235-03+F-P2A235-04+F-P2A235-06+F-P2A235-08/2026-09-01): STAGE A fix-burst. F-P2A235-01 [HIGH] §SQLite Topology Decision: retired contradictory bounded-batch bullet — replaced with per-run single-transaction DELETE description (no batch-size limit; single BEGIN IMMEDIATE/COMMIT scoped to target run_id); replaced stale product-owner add-bounded-batch-parenthetical directive with supersession note pointing to §Compaction Atomicity Decision. F-P2A235-04 [HIGH] NFR-015 priority decided authoritatively as P0: BC-2.04.009 claims parity with put_writes durability; NFR-002 (put_writes NFR) is P0; parity requires identical priority; product-owner directed to update nfr-catalog.md Priority from P1 to P0. F-P2A235-06 [MED] E-TRAJ-006 message/placeholder updated to STATIC 0-placeholder canonical form per error-taxonomy.md (the taxonomy is the source of truth for error codes); EC-006 directive message aligned. F-P2A235-08 [MED] VP-020 BC Anchor: {INV-002} gloss corrected from 'Retire idempotency, task-identity ordering' to 'reducer determinism, task-identity ordering' ({INV-002} is REDUCER DETERMINISM; {PC-004} is Retire idempotency)."
   - "2.0 (round-62/F-P2A234-01+F-P2A234-02+F-P2A234-03+F-P2A234-04+F-P2A234-05+OBS-1+OBS-2+OBS-3/2026-09-01): STAGE A fix-burst. F-P2A234-01 [HIGH/CWE-459] §Compaction Atomicity Decision: staging-table single-atomic-swap model REPLACED with per-run single-transaction DELETE. The prior staging-table swap silently destroyed all other run_ids' records — trajectory_records is keyed (run_id, step_idx) and holds ALL runs; the build phase copied only the target run's retained records to staging, then the whole-table rename permanently destroyed every other run_id's records. Redesigned mechanism: BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT — inherently per-run-scoped (only target run records touched), single-transaction reader-visible-atomic, 2-point crash matrix (before COMMIT = pre-compaction intact; after COMMIT = post-compaction). F-P2A234-02 [HIGH/CWE-362] concurrent put_record safety resolved: BEGIN IMMEDIATE write-lock serializes any concurrent put_record that arrives while compaction is in progress; no build-to-swap clobber window exists under per-run DELETE; BC-2.04.011 §Related BCs false safety claim corrected (product-owner directive provided in §Compaction Atomicity Decision). F-P2A234-03 [MED/CWE-390+354] E-TRAJ-006 TrajectoryIntegrityCheckFailed: mint directive added to §Content-Hash Oracle Decision — covers AES-GCM auth-tag mismatch during conflict-detection decrypt; product-owner + state-manager directives. F-P2A234-04 [MED] NFR-015 trajectory durability: mint directive added to §SQLite Topology Decision — mirrors NFR-002 crash-cycle target anchored to BC-2.04.009 DI-002; product-owner directive. F-P2A234-05 [MED] VP-020 PromoteRetireChannel idempotency proptest P1: minted in §VP of Decision 3 — BC-2.02.009 {INV-001}+{INV-002}, DI-001, harness promote_retire_channel_idempotency, Phase 3; VP-INDEX, verification-architecture, verification-coverage-matrix updated same burst. OBS-1: nonce-uniqueness cross-reference directive added to §Content-Hash Oracle Decision. OBS-2: deletion-tamper-evidence explicitly declared out of scope for v1 in new §Deletion Tamper-Evidence Decision subsection. OBS-3: promoted Vec<u64> element semantics directive added to §Consequences."
   - "1.9 (round-58/F-P2A229-01/2026-09-01): F-P2A229-01 [MED] §Decision 3 PromoteRetireOp<T>: add #[derive(Clone, Debug)]. Clone is required by the Channel::Update: Clone bound; LedgerEntry: Clone (supertrait bundles Clone), so derive(Clone) emits impl<T: Clone> Clone for PromoteRetireOp<T> which resolves for every T: LedgerEntry with no bound beyond the supertrait — does NOT trigger rustc #26925 spurious-bound problem (contrast: Default is NOT in the LedgerEntry bundle, which is why the marker structs use manual bound-free Default impls). Debug is conventionally added for a data-bearing update enum (diagnostic value); the derived impl is conditional on T: Debug (LedgerEntry does not bundle Debug); no declared bound requires unconditional Debug, so the conditional impl is acceptable. Rationale documented as doc-comment on PromoteRetireOp to prevent future incorrect removal. Derive-shape paragraph extended to confirm LedgerChannel<T> Update = T needs no separate Clone annotation (T: LedgerEntry implies T: Clone — already satisfies Channel::Update: Clone). LedgerChannel<T> code block is unaffected."
   - "1.8 (round-57/F-P2A227-01/2026-09-01): F-P2A227-01 [HIGH] §Decision 3 code block: the derive(Default)-ONLY mandate introduced by F-P2A220-01/F-P2A224-03 is NON-REALIZABLE and is hereby REVERSED. rustc's derive(Default) for a generic struct emits an impl that bounds every type parameter by Default (rustc issue #26925 — perfect-derive not implemented). Because LedgerEntry does not include Default, derive(Default) on LedgerChannel<T: LedgerEntry> emits impl<T: LedgerEntry + Default> Default for LedgerChannel<T> — a spurious T: Default bound that violates AC-018/BC-2.02.007 {INV-004}. The same defect applies to PromoteRetireChannel<T: LedgerEntry>. The previously-correct manual bound-free impl (present in v1.3, removed in v1.6) is restored for both structs: impl<T: LedgerEntry> Default for LedgerChannel<T> { fn default() -> Self { Self { _inner: PhantomData } } } and analogously for PromoteRetireChannel. The derive(Default) annotation is dropped from both struct definitions. No other derive attributes are added or removed. This decision supersedes the derive-only mandate in F-P2A220-01 and F-P2A224-03, which are recorded as non-realizable. The no-Clone/Serialize/Deserialize-on-marker-struct rule and #[non_exhaustive] annotations remain intact."
@@ -206,8 +207,8 @@ Component: TRAJ:
 - Severity: broken
 - RetryHint: Never (diverges from DURABILITY default Maybe — AES-GCM auth-tag mismatch
   is permanent corruption; retrying will reproduce the same failure)
-- Message: `TrajectoryIntegrityCheckFailed: decrypt of stored record at (run_id='<run_id>', step_idx=<step_idx>) failed — AES-GCM auth-tag mismatch; stored data may be corrupted or tampered`
-- Placeholders: `<run_id>` = run UUID; `<step_idx>` = step_idx of the affected record
+- Message: `TrajectoryIntegrityCheckFailed: stored trajectory record failed AES-GCM integrity check during conflict-detection read — tamper, corruption, or wrong key`
+- Placeholders: none (static message — 0 placeholders; error-taxonomy.md is the source of truth for the canonical form)
 - Raise site: `TrajectoryWriter::put_record` conflict-detection path — when
   `EncryptedSerializer` is configured and `EncryptedSerializer::deserialize` of the stored
   record returns `Err` (auth-tag mismatch); the stored record is not modifiable; the error
@@ -221,8 +222,8 @@ Component: TRAJ:
 already exists at that position. `EncryptedSerializer::deserialize` of the stored ciphertext
 returns `Err` (AES-GCM auth-tag mismatch — stored data may be corrupted or tampered).
 Expected behavior: `put_record` returns `Err(PregolyaError { code: E-TRAJ-006, message:
-'TrajectoryIntegrityCheckFailed: decrypt of stored record at (run_id=\'R\', step_idx=7) failed
-— AES-GCM auth-tag mismatch; stored data may be corrupted or tampered', category: DURABILITY,
+'TrajectoryIntegrityCheckFailed: stored trajectory record failed AES-GCM integrity check
+during conflict-detection read — tamper, corruption, or wrong key', category: DURABILITY,
 .. })`. No modification is made to the stored record. DI-014 (error propagation — no silent
 swallowing) requires surfacing this failure as `Err` rather than silently swallowing it."
 
@@ -253,15 +254,18 @@ Isolation model:
 - **Record-level table isolation:** no FK joins between `checkpoint_*` tables and `trajectory_records`.
 - **WAL mode:** both `CheckpointSaver` and `TrajectoryWriter` share WAL mode on the database file;
   concurrent reads served from WAL snapshots without blocking writes.
-- **Bounded compaction batch:** `TrajectoryCompactor::compact` uses `BEGIN IMMEDIATE` with a
-  maximum batch size of 1 000 records per transaction to prevent blocking `CheckpointSaver::put_writes`
-  indefinitely (writer-timeout guard).
+- **Per-run single-transaction DELETE:** `TrajectoryCompactor::compact` executes one
+  `BEGIN IMMEDIATE` / `COMMIT` transaction scoped to the target `run_id`. Lock duration is
+  proportional to the eligible-record set for that run (typically O(hundreds) for a research
+  session), not to the total table size. No batch-size limit applies — the DELETE is a
+  single transaction whose scope is structurally bounded by the target run's eligible records.
+  See §Compaction Atomicity Decision for the full mechanism and crash semantics.
 
 `BC-2.04.011 {INV-005}` existing wording ("has no access to and does not affect the
 conversation-context checkpoint tables") correctly describes table-level isolation and requires
-no amendment. **Product-owner:** add to `BC-2.04.011 {INV-005}` a parenthetical: "bounded
-compaction batch (default 1 000 records per `BEGIN IMMEDIATE` transaction) prevents
-writer-timeout blocking of concurrent `CheckpointSaver::put_writes` calls."
+no amendment. The bounded-batch parenthetical described the prior staging-table build phase
+and has been superseded by §Compaction Atomicity Decision; product-owner must remove it
+per that section's directive.
 
 ### Compaction Atomicity Decision — Per-Run Single-Transaction DELETE (F-P2A221-01, revised F-P2A234-01)
 
@@ -366,6 +370,18 @@ the full table.
 - Priority: P0 (DI-002 per-task durability; BC-2.04.009 explicitly claims same guarantee
   as `put_writes`).
 - BC Anchor: BC-2.04.009 (DI-002).
+
+**Authoritative priority decision (F-P2A235-04):** NFR-015 priority is **P0**
+(convergence-gating). Rationale: BC-2.04.009 explicitly claims "the same durability guarantee
+as `put_writes`"; NFR-002 (the `put_writes` durability NFR, the declared parity target) is P0.
+Parity requires NFR-015 to carry the same priority. Any nfr-catalog.md value of P1 for
+NFR-015 is a divergence from this decision; P0 is authoritative.
+
+**Product-owner directive (F-P2A235-04):** Update NFR-015 in nfr-catalog.md: set
+`Priority: P0` in the registry row, the NFR-to-Module map row, and the changelog. Canonical
+rationale for the changelog entry: "BC-2.04.009 declares parity with `put_writes` durability
+(NFR-002 is P0); parity requires identical priority. Promoted P1 → P0 per ADR-030
+§NFR-015 directive (F-P2A235-04, round-63)."
 
 #### BC-2.04.011 Downstream Notes (updated — F-P2A234-01)
 
@@ -706,8 +722,8 @@ formally provable pure-function reducer properties with the same DI-001 anchor a
 
 **VP-020** (proptest P1, Phase 3):
 
-- BC Anchor: BC-2.02.009 {INV-001} (Promote idempotency, no-duplicate) + {INV-002} (Retire
-  idempotency, task-identity ordering)
+- BC Anchor: BC-2.02.009 {INV-001} (Promote idempotency, no-duplicate) + {INV-002} (reducer
+  determinism, task-identity ordering)
 - Module: `graph::channels` | Crate: `pregolya-graph` | DI anchor: DI-001
 - harness_fn: `promote_retire_channel_idempotency`
 - File: `vp-020-promote-retire-channel-idempotency.md`

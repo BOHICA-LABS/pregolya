@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.009
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.4 (round-52/F-P2A216-02+F-P2A217-01/2026-08-31): DI seam explicit in {PRE-001}: `Option<Arc<dyn Serializer + Send + Sync>>` is the `core::serializer::Serializer` trait (pregolya-core); `EncryptedSerializer` (`checkpoint::serializer`, pregolya-checkpoint) is the canonical concrete implementor. {INV-001} extended with plaintext-comparison clause: per-record-nonce encryption requires that `(run_id, step_idx)` conflict detection compare the **plaintext** payload (decrypt-then-compare or deterministic content-hash of the pre-encryption plaintext), NOT the ciphertext — ciphertext is non-deterministic across calls with distinct nonces; comparing ciphertext would generate false E-TRAJ-002 on legitimate idempotent resume-retries. {INV-002} note added: plaintext comparison ensures per-record-nonce does not break write-once idempotency. TV-005 added (encryption + duplicate identical plaintext → Ok(())); TV-006 added (encryption + duplicate divergent plaintext → E-TRAJ-002). TV count 4→6."
   - "1.5 (round-53/F-P2A221-02+F-P2A220-02/2026-08-31): {INV-001} amended — hash-oracle alternative REMOVED (CWE-916/311 finding F-P2A221-02); conflict detection is now DECRYPT-THEN-COMPARE exclusively: the implementation decrypts the stored record ciphertext and compares plaintext payloads in memory using the 256-bit AES-GCM key already held by EncryptedSerializer (EncryptedSerializer::new(key: &[u8;32])); no auxiliary hash or digest may be stored on disk. {INV-002} cross-reference updated to match. Architecture Anchors: TrajectoryRecord explicit pub-visibility stated — all fields pub (F-P2A220-02)."
   - "1.6 (round-62/F-P2A234-03+OBS-1/2026-09-01): {INV-001} extended — when `EncryptedSerializer` is configured, an AES-GCM authentication/decrypt failure during conflict-detection read MUST surface as `Err(E-TRAJ-006 TrajectoryIntegrityCheckFailed)` (never silently swallowed per DI-014); MUST NOT be mislabeled as E-TRAJ-002 (ConflictingDuplicate — implies successful read of divergent plaintext) or E-TRAJ-001 (TrajectoryWriteFailed — covers I/O layer failures, not integrity failures). {INV-002} OBS-1 cross-reference added: per-record AES-GCM nonce uniqueness (96-bit nonce; ~2^48 birthday bound) is guaranteed by the EncryptedSerializer contract per BC-2.04.007; TrajectoryWriter relies on that guarantee without independently managing nonce allocation."
+  - "1.7 (round-63/F-P2A235-05/2026-09-01): EC-006 added — AES-GCM authentication failure during conflict-detection decrypt; `put_record` returns `Err(E-TRAJ-006 TrajectoryIntegrityCheckFailed)` non-silent (DI-014), MUST NOT be mislabeled as E-TRAJ-002 (successful-decrypt-then-diverge) or E-TRAJ-001 (I/O layer failure); consistent with {INV-001} authentication-failure clause (round-62 extension). TV-007 added as canonical test vector for EC-006 path (single-byte ciphertext tamper → E-TRAJ-006 during conflict-detection decrypt)."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -29,7 +30,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "e5c46b2"
+input-hash: "9ccf3fd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -182,6 +183,23 @@ The audit trail is preserved intact. Distinct from EC-004 (matching payload retu
 E-TRAJ-002 fires only when the content differs, protecting the write-once audit contract
 ({INV-001}).
 
+### EC-006: AES-GCM authentication failure during conflict-detection decrypt
+**Scenario:** `EncryptedSerializer` is configured at construction. `put_record` is called for
+`(run_id=R, step_idx=7)` and a record is already committed at that position. During
+conflict-detection, the implementation attempts to decrypt the stored ciphertext but the
+AES-GCM authentication tag verification fails — caused by storage corruption, single-bit
+tamper, or use of a wrong decryption key.
+**Expected behavior:** `put_record` returns
+`Err(PregolyaError { code: E-TRAJ-006, message: "TrajectoryIntegrityCheckFailed: stored trajectory record failed AES-GCM integrity check during conflict-detection read — tamper, corruption, or wrong key", category: DURABILITY, .. })`.
+The error MUST NOT be silently swallowed (DI-014). It MUST NOT be returned as `E-TRAJ-002`
+(ConflictingDuplicate — that code implies a successful decrypt-then-compare found divergent
+plaintext) and MUST NOT be returned as `E-TRAJ-001` (TrajectoryWriteFailed — that code covers
+I/O layer failures, not AES-GCM integrity failures). The committed record at `(R, 7)` is
+unchanged; `replay(R)` still returns the original record at `step_idx=7`. Consistent with
+{INV-001} authentication-failure clause: the AES-GCM authentication failure is a non-transient
+integrity condition requiring operator investigation (key verification or storage restore) —
+not a conflict or write failure.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -192,6 +210,7 @@ E-TRAJ-002 fires only when the content differs, protecting the write-once audit 
 | TV-004 | `EncryptedSerializer` configured at construction; `put_record(r1)` where `r1.payload = json!({"answer": "Paris"})` returns `Ok(())`; raw byte inspection of `trajectory_records` table in the SQLite file | No plaintext occurrence of `"Paris"` or the unencrypted JSON bytes observable in the raw database file; stored column bytes are ciphertext produced by `EncryptedSerializer` with per-record nonce | At-rest encryption; {INV-002} |
 | TV-005 | `EncryptedSerializer` configured at construction; `put_record(r1)` with `run_id=R`, `step_idx=0`, `payload=json!({"answer":"Paris"})` returns `Ok(())`; same call `put_record(r1)` again (identical plaintext payload) | Second call returns `Ok(())` — no false E-TRAJ-002; plaintext comparison identifies matching payloads despite per-record-nonce producing different ciphertexts across calls | Idempotency under encryption; {INV-001} + {INV-002} |
 | TV-006 | `EncryptedSerializer` configured at construction; `put_record(r1)` with `run_id=R`, `step_idx=0`, `payload=json!({"answer":"Paris"})` returns `Ok(())`; then `put_record(r2)` with same `run_id=R`, `step_idx=0`, but `payload=json!({"answer":"London"})` (divergent plaintext) | `Err(PregolyaError { code: E-TRAJ-002, message: "ConflictingDuplicate: put_record for (run_id='R', step_idx=0) conflicts with committed record — payload or event_kind differs", category: VAL, .. })` — plaintext comparison correctly detects divergence despite encryption | Conflict detection under encryption; {INV-001} + {INV-002} |
+| TV-007 | `EncryptedSerializer` configured at construction; `put_record(r1)` with `run_id=R`, `step_idx=7`, `payload=json!({"step":"init"})` returns `Ok(())`; the stored ciphertext bytes for that record are then directly mutated in the SQLite file (single byte flip) to simulate storage corruption; `put_record(r2)` with same `run_id=R`, `step_idx=7` is called (triggers conflict-detection, which attempts to decrypt the now-corrupt ciphertext) | `Err(PregolyaError { code: E-TRAJ-006, message: "TrajectoryIntegrityCheckFailed: stored trajectory record failed AES-GCM integrity check during conflict-detection read — tamper, corruption, or wrong key", category: DURABILITY, .. })` — non-silent; not E-TRAJ-001; not E-TRAJ-002; original `r1` at `step_idx=7` remains in storage | AES-GCM auth failure during conflict detection; EC-006; {INV-001} |
 
 ## Verification Properties
 

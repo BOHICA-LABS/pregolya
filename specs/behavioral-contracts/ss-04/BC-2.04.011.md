@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.04.011
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.5 (round-53/F-P2A221-01/2026-08-31): {PC-004} redefined as reader-visible atomicity — replay always observes complete pre- or post-compaction state, never a partial intermediate. {INV-003} amended — staging-table atomicity boundary explicit: the atomicity boundary is the swap-phase BEGIN IMMEDIATE / COMMIT that renames trajectory_records_staging to trajectory_records; a crash during the build phase leaves trajectory_records fully intact (staging table dropped on recovery); WAL-mode wording preserved for crash point. {INV-005} bounded-batch scope clarified to build phase on the staging table; swap-phase is a single brief atomic commit. Architecture Anchors and Description updated to reflect staging-table atomic-swap strategy."
   - "1.6 (round-53/F-P2A221-01-corrective/2026-08-31): Corrective micro-fix for VP-019 four-crash-point coherence. {INV-003} 'Verified by VP-019' clause updated from three-crash-point matrix (before-begin, mid-txn, after-sync) to authoritative four-crash-point matrix per VP-019 §four-crash-point matrix and ADR-030 §Compaction Atomicity Decision: (1) before-build-begins, (2) mid-build (staging partially filled before swap), (3) mid-swap-transaction (after BEGIN IMMEDIATE, before COMMIT), (4) after-swap-commit. §Verification Properties VP-019 row updated to match (three crash points / three cases → four crash points / four cases). No other content changes."
   - "1.7 (round-62/F-P2A234-01+F-P2A234-02/2026-09-01): Compaction mechanism redesigned from staging-table atomic-swap to per-run single-transaction DELETE per ADR-030 §Decision 2 (round-62 update). §Description: staging-table strategy replaced with `BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT;`; run_id filter preserves all other runs' records — scope-safety explicit (F-P2A234-01); `BEGIN IMMEDIATE` write-lock serializes concurrent `put_record` — no build→swap window, no clobber possible (F-P2A234-02). {PRE-002}: `promoted` explicitly typed as `Vec<u64>` of `step_idx` values; entries below the frontier listed in `promoted` are retained (OBS-3). {INV-003}: four-crash-point staging matrix replaced with two-crash-point DELETE matrix (before-COMMIT → complete pre-compaction state; after-COMMIT → complete post-compaction state); atomicity boundary is the single `BEGIN IMMEDIATE`/`COMMIT` DELETE transaction; no staging table. {INV-005}: bounded-batch (1,000 records/batch, staging-table) parenthetical removed; concurrency semantics restated: `BEGIN IMMEDIATE` write-lock serializes `put_record` (a `put_record` either fully precedes or fully follows the DELETE; no clobber; the prior build→swap window no longer exists). OBS-2 note added: deletion-tamper-evidence explicitly OUT OF SCOPE for v1 per ADR-030 §Deletion Tamper-Evidence Decision. §Related BCs BC-2.04.009 sentence rewritten to true guarantee (concurrent `put_record` serialized by `BEGIN IMMEDIATE` write-lock). §Architecture Anchors first anchor updated to per-run DELETE mechanism. VP-019 Verification Properties updated from four-crash-point to two-crash-point matrix."
+  - "1.8 (round-63/F-P2A235-02/2026-09-01): §Architecture Anchors third anchor retired-model residue fixed: 'atomic segment-swap requirement' replaced with per-run single-transaction DELETE atomicity requirement (single `BEGIN IMMEDIATE`/`COMMIT` DELETE scoped to run_id; reader-visible atomic; no staging table; no segment-swap). Normative-text sweep result: all other 'swap'/'staging' occurrences in the BC body (lines describing 'no build→swap window', 'no staging table') correctly describe the ABSENCE of those mechanics and required no change — sole normative residue was the third anchor."
 traces_to:
   - domain-spec/capabilities-p1-p2.md#CAP-040
 inputs:
@@ -30,7 +31,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "e5c46b2"
+input-hash: "9ccf3fd"
 extracted_from: null
 modified: []
 deprecated: null
@@ -216,7 +217,9 @@ single retained record — in ascending `step_idx` order ({PC-002}).
   NOTE: named `TrajectoryRetentionPolicy` rather than `CompactionPolicy` to avoid collision
   with `CompactionPolicy` from CAP-035 (rolling-context compaction in `core::budget_config`).
 - ADR-030 §Decision 2 — Trajectory Compaction Isolation scope; isolation from ADR-019 rolling-context
-  compaction; atomic segment-swap requirement; retained-record protection contract
+  compaction; per-run single-transaction DELETE atomicity requirement (single `BEGIN IMMEDIATE`/`COMMIT`
+  DELETE scoped to run_id; reader-visible atomic; no staging table; no segment-swap); retained-record
+  protection contract
 
 ## Story Anchor
 

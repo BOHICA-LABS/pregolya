@@ -2,7 +2,7 @@
 document_type: architecture-section
 level: L3
 section: verification-architecture
-version: "2.36"
+version: "2.37"
 status: active
 producer: state-manager
 timestamp: 2026-09-01T00:00:00Z
@@ -32,6 +32,7 @@ input-hash: "8837490"
 traces_to: ARCH-INDEX.md
 decisions: [D17, D21, D23]
 changelog:
+  - "2.37 (round-63/F-P2A235-03+F-P2A235-08/2026-09-01): F-P2A235-03 [MED] §VP-019 stale completed-directive blockquote deleted — replaced with one-line completed note; VP-019.md is at the two-crash-point per-run DELETE model (v1.4); live directive was incorrect. F-P2A235-08 [MED] §VP-020 formal invariants {INV-002} bullet corrected from retire-idempotency gloss to reducer-determinism ({INV-002} is REDUCER DETERMINISM — deterministic output under task-identity ordering; {PC-004} is Retire idempotency; anchor IDs unchanged)."
   - "2.36 (round-62/F-P2A234-05/2026-09-01): VP-020 added — PromoteRetireChannel idempotency proptest P1 (BC-2.02.009 {INV-001}+{INV-002}; graph::channels; pregolya-graph; DI-001; Phase 3; harness promote_retire_channel_idempotency). Structurally analogous to VP-017 LedgerChannel; closes BC-2.02.009 unit-test-only gap. VP-019 §Should Prove description updated from four-crash-point staging-table model to two-crash-point per-run DELETE model (ADR-030 §Compaction Atomicity Decision F-P2A234-01 redesign). Committed VP Obligations table: VP-020 row added; total 20→21 VPs; P1 14→15; proptest 7→8. Preamble narrative updated twenty→twenty-one. input-hash not updated (BC-2.02.009 added as input; formal-verifier to refresh after VP-020 body authored)."
   - "2.35 (round-57/F-P2A228-01/2026-09-01): VP-017 §Provable Properties Catalog formal statement rewritten to canonical pure-fold form — removed stale LedgerChannel::new() constructor (removed per ADR-030 §Decision 3 changelog; banned by S-1.28 Rule 13) and IndexSet oracle (banned by S-1.28 Rule 14); replaced with fold accumulation form and HashSet oracle matching VP-017 body §Formal Invariant verbatim. input-hash not updated (no BC input changes)."
   - "2.34 (round-57/F-P2A227-02/2026-09-01): F-P2A227-02 [HIGH] VP-019 §Property, §Formal statement, and §Why integration rewritten to the four-crash-point staging-table single-atomic-swap model (ADR-030 §Compaction Atomicity Decision). Old three-crash-point model (before_begin/mid_txn/after_sync with uniform pre_records outcome) retired as stale. New crash_point set: {before_build_begins, mid_build, mid_swap, after_swap_commit}. Cases 1–3 yield pre-compaction record set; case 4 (after_swap_commit) yields post-compaction retained_set(pre_records, policy). Formal statement updated with retained_set definition. Why-integration paragraph updated: 'three crash points (TV-002 three-case matrix)' → 'four crash points (TV-002 four-case matrix)'. VP count, module, tool, phase, BC anchor: all unchanged. input-hash updated."
@@ -945,13 +946,7 @@ I/O) nor proptest (in-process, no crash semantics) can model this. The integrati
 (3) sends SIGKILL at two crash points (TV-002 two-case matrix); (4) restarts;
 (5) asserts `replay` returns the expected state per crash-point semantics.
 
-> **VP-019 body update required (formal-verifier directive):** VP-019.md body was authored
-> against the four-crash-point staging-table model (round-57). The per-run DELETE redesign
-> (ADR-030 §Compaction Atomicity Decision, F-P2A234-01) reduces this to two crash points.
-> Formal-verifier must update the VP-019.md body: Property Statement section, Formal Statement
-> section, Why-integration section, and TV-002 matrix from four-case to two-case form.
-> This verification-architecture.md description is authoritative for the new model;
-> the VP-019.md body is the artifact to reconcile.
+> **Directive completed (round-62):** VP-019.md body updated to the two-crash-point per-run DELETE model per ADR-030 §Compaction Atomicity Decision (F-P2A234-01).
 
 See `vp-019-trajectory-compaction-crash-isolation.md` for the complete integration test outline.
 **Phase 6** — requires a running SQLite-backed `TrajectoryCompactor` (Phase 3 deliverable).
@@ -965,7 +960,7 @@ produces the same channel state as applying it once (BC-2.02.009 {INV-001}+{INV-
 
 Formal invariants:
 - **{INV-001}:** Promoting an already-promoted element is a no-op; the channel state is unchanged.
-- **{INV-002}:** Retiring an already-retired element is a no-op; the channel state is unchanged.
+- **{INV-002}:** Given the same operation sequence applied to an identical starting state, the reducer always produces an identical active set — deterministic output under task-identity ordering (reducer determinism).
 
 Formal statement:
 ```

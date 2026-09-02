@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "2.0"
+version: "2.1"
 changelog:
+  - "2.1 (D-341/round-63/2026-09-01): D-340 checkpoint archived"
   - "2.0 (D-340/round-62/2026-09-01): D-339 checkpoint archived"
   - "1.9 (D-339/round-60/2026-09-01): D-338 checkpoint archived"
   - "1.8 (D-335/round-56/2026-09-01): D-334 checkpoint archived"
@@ -10,7 +11,7 @@ changelog:
   - "1.6 (D-324/round-47/2026-08-30): D-323 checkpoint archived"
 status: archive
 producer: state-manager
-timestamp: 2026-09-01T17:30:00Z
+timestamp: 2026-09-01T23:45:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
 input-hash: "509af18"
@@ -4160,4 +4161,20 @@ pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case inject
 #### ROUND-60 FINDINGS (CLOSED — 4 findings)
 HIGH (3) CLOSED: F-P2A232-01[HIGH,POL-8] sprint-state.yaml omitted S-1.28+S-2.12; F-P2A232-02[HIGH] wave-schedule.md 39→41 stories; F-P2A232-03[HIGH] dependency-graph S-1.10 blocks missing S-2.12 reverse edge.
 MED (1) CLOSED: F-P2A232-04[MED] dependency-graph VP-019 matrix row missing (20 VPs).
+
+---
+
+### D-340 ARCHIVED CHECKPOINT (round-62 fix-burst; archived by D-341)
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-62 closed. Round-62 fix-burst CLOSED (D-340) — ALL 8 P2A-234 findings closed: BC-2.04.011 per-run single-txn DELETE compaction redesign (F-P2A234-01[HIGH]); BC-2.04.009 false concurrent-safety claim corrected (F-P2A234-02[HIGH]); E-TRAJ-006 minted (F-P2A234-03[MED]; EC 143); VP-020 proptest P1 authored (F-P2A234-04[MED]; VP 21); NFR-015 (F-P2A234-05[MED]; NFR 15); OBS-1/2/3 CLOSED. P2A-233 (round-61) was CLEAN(strict)=YES (streak 1/3) then P2A-234 reset streak to 0/3. Census: BC 140 / VP 21 / EC 143 / TV 794 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3. D-340 pushed. Next: round-63 adversary cascade on new frozen HEAD.
+
+#### HEADS (at time of archival)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`)
+- factory-artifacts: PUSHED (D-340)
+
+#### ROUND-62 FINDINGS (CLOSED — 8 findings)
+HIGH (2) CLOSED: F-P2A234-01[HIGH] BC-2.04.011 per-run single-txn DELETE compaction (staging-swap anti-pattern replaced); F-P2A234-02[HIGH] BC-2.04.009 false concurrent-safety claim (BEGIN IMMEDIATE serializes put_record).
+MED (3) CLOSED: F-P2A234-03[MED] E-TRAJ-006 TrajectoryCompactionStagingFailed minted (EC 143); F-P2A234-04[MED] VP-020 PromoteRetireChannel idempotency/ordering proptest P1 (VP 21); F-P2A234-05[MED] NFR-015 trajectory durability (NFR 15).
+OBS (3) CLOSED: OBS-1 ADR-030 §SQLite Topology residue; OBS-2 VP-020 {INV-002} gloss; OBS-3 nfr-catalog §NFR-015 priority.
 

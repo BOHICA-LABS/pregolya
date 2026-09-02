@@ -9,7 +9,7 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.011.md
-input-hash: "bc6917b"
+input-hash: "bdcdf2e"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.04.011
 bc_anchor: BC-2.04.011 {INV-001}

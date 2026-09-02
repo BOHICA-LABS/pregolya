@@ -5215,3 +5215,50 @@ All 4 P2A-232 findings CLOSED in D-339 fix-burst:
 - Streak: 0/3 (push resets frozen HEAD; round-63 gates on new HEAD)
 
 **NEXT: round-63 adversarial sweep on new frozen HEAD (post-D-340 push). Streak 0/3.**
+
+---
+
+## Round-63 — D-341 (2026-09-01)
+
+**Pass: P2A-235** | Frozen HEAD: post-D-340 push | Adversary: fresh-context | Scope: full Phase-2 corpus
+
+### Pass P2A-235 Summary
+
+| Metric | Value |
+|--------|-------|
+| Total findings | 8 (2 HIGH + 6 MED) |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Streak after pass | 0/3 (RESET) |
+
+**Finding trajectory:** P2A-235 = 8 (2H+6M)
+
+**Root cause category:** Round-62 redesign propagation/reconciliation gaps — ADR-030 §SQLite Topology directive contradiction; BC/verification-architecture cross-doc reconciliation; input-hash per-file discipline.
+
+### P2A-235 Findings — ALL CLOSED (Round-63 Fix-Burst D-341)
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A235-01 | HIGH | ADR-030 §SQLite Topology contradictory directive — two conflicting mechanisms present (multi-pass DELETE + per-run-DELETE); single mechanism required | architect (ADR-030 §SQLite Topology) |
+| F-P2A235-02 | MED | BC-2.04.011 §Architecture Anchors segment-swap residue — stale text from pre-round-62 compaction model | product-owner (BC-2.04.011) |
+| F-P2A235-03 | MED | verification-architecture §VP-019 stale directive — referenced a compaction mechanism replaced by round-62 redesign | formal-verifier (verification-architecture §VP-019) |
+| F-P2A235-04 | MED | NFR-015 priority P1 while ADR-030 §NFR-015 directive requires P0 parity with NFR-002 put_writes durability | product-owner (nfr-catalog §NFR-015) |
+| F-P2A235-05 | MED | BC-2.04.009 missing EC-006 (AES-GCM auth failure path) and TV-007 covering the E-TRAJ-006 decrypt-auth failure during conflict-detection | product-owner (BC-2.04.009) |
+| F-P2A235-06 | HIGH | E-TRAJ-006 STATIC message inconsistency — ADR-030 and BC-2.04.009 used different message text for the same error code | architect + product-owner (ADR-030 + BC-2.04.009) |
+| F-P2A235-07 | MED | 3-BC input-hash per-file recompute — BC-2.02.009 had stale hash; extended sweep found BC-2.02.007/008, BC-2.04.009/010/011, VP-017/018/019/020 also stale after ADR-030 §Compaction Atomicity Decision update | state-manager (compute-input-hash --update, all dependents) |
+| F-P2A235-08 | MED | {INV-002} gloss reducer-determinism — ADR-030 and verification-architecture both used incorrect gloss for PromoteRetireChannel {INV-002} | architect (ADR-030 §{INV-002}) + formal-verifier (verification-architecture §VP-020) |
+
+### Post-Round-63 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: 794 → **795** canonical (+TV-007 BC-2.04.009 AES-GCM auth failure → E-TRAJ-006)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- NFR: UNCHANGED (15)
+- GATE-READY: YES (pending round-64)
+- Streak: 0/3 (fix-burst resets frozen HEAD; round-64 gates on new HEAD)
+
+**NEXT: round-64 adversarial sweep on new frozen HEAD (post-D-341 push). Streak 0/3.**
