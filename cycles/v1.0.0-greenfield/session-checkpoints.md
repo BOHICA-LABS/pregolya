@@ -4318,3 +4318,31 @@ Dispatch round-69 adversary cascade on new frozen HEAD (post-D-347 push). Streak
 
 ### STEP ROW ARCHIVED AT D-348
 No step row archived at D-348 (only D-347 row was in §Current Phase Steps; it is preserved in the step table).
+
+### STEP ROW ARCHIVED AT D-349
+D-342 round-64 RECORDS-ONLY micro-burst CLOSED (2026-09-01): trajectory-tail →1→0→0→0 (P2A-236=1[LOW,POL-24]; single-lens). F-P2A236-01 ADR-030 §Compaction Atomicity Decision + §SQLite Topology Decision stale-reconciliation-prose past-tense/discharged rewrite. CLEAN(PR-merge)=YES; CLEAN(strict)=NO; streak NOT RESET (TD-RECORDS-MICRO-BURST-001). Input-hashes refreshed: BC-2.02.008/009 + BC-2.04.009/010/011→df596f3; VP-017→48e2813; VP-019→0a7f751; VP-020→8aa1bd7. Census UNCHANGED.
+
+---
+
+## D-348 Checkpoint (archived at D-349)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-70 closed + D-346 reconciliation-burst. D-348 CLOSED (2026-09-02) — rounds 69+70: round-69 P2A-241 CLEAN(strict)=YES (streak 1/3 false-clean); round-70 P2A-242 (independent context, same HEAD 57bd1a3) found 1 HIGH F-P2A242-01 — the false-clean caught by cognitive-diversity. F-P2A242-01 CLOSED: S-2.06 subsystems [SS-08]→[SS-08, SS-14]; inputs +BC-2.14.005.md; input-hash 521e8a7→33834e3 (story-writer). STORY-INDEX §Story-Inventory row S-2.06 BC column →BC-2.08.006, BC-2.14.005; Subsystem column →SS-08, SS-14 (state-manager; STORY-INDEX §Changelog (1.52→1.53)). Corpus sweep confirmed only S-2.06 affected. L-273 codified: multi-anchor propagation half-sweep 3rd occurrence — full checklist items 1–9. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak reset 0/3.
+
+### HEADS (D-348)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-348) — run `git -C .factory log -1 --format='%h %s'` for current SHA. No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION (D-348)
+Dispatch round-71 adversary cascade on new frozen HEAD (post-D-348 push). Streak 0/3. Streak has reached 1/3 four times this session (P2A-226 D-335; P2A-231 D-339; P2A-233 D-340; P2A-241 D-348 false-clean). Standing directives DIRECTIVE 1/2/3 remain in force. DU leftover files under develop-tree stories/stories/ are pre-existing; always use absolute .factory/ paths in dispatch prompts (L-272). Orchestrator should evaluate mechanical gate story for multi-anchor propagation checklist (L-273) — 3rd recurrence threshold reached; requires explicit human direction.
+
+### DECISION-LOG DELTA (D-348 close)
+D-348 rounds 69+70 fix-burst closed — round-69 CLEAN(strict)=YES false-clean (streak 1/3); round-70 P2A-242 1 HIGH caught by independent context; S-2.06 subsystems+inputs+STORY-INDEX Story-Inventory row BC+Subsystem synced; STORY-INDEX §Changelog (1.53); L-273 multi-anchor propagation 3rd occurrence; census UNCHANGED BC 140/VP 21/EC 143/TV 795/NFR 15; streak reset 0/3.
+
+### WORKTREE INVENTORY (D-348)
+None (.worktrees/ absent). Phase-2; no story worktrees open.
+
+### STANDING HUMAN-GATE OBS (D-348)
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK (D-348)
+None outstanding. DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.

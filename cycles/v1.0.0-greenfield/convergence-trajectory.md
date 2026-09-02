@@ -5650,3 +5650,89 @@ Full trajectory tail (rounds 65–70): P2A-237=6→P2A-238=3→P2A-239=2→D-346
 **SIGNIFICANCE:** The false-clean in round-69 (caught by round-70's independent context) is the 3rd occurrence of the multi-anchor half-sweep class. Previous occurrences: D-346 (BC-2.14.005 anchor map + sprint-state.yaml but NOT story subsystems/inputs) and D-347 (AC-006 test names but NOT STORY-INDEX Story-Inventory row). The mechanical checklist for multi-anchor changes must cover: anchor map + behavioral_contracts + body BC table + AC traces + sprint-state bcs + Story-Inventory BC column + Story-Inventory Subsystem column + story subsystems field + inputs.
 
 **NEXT: round-71 adversarial sweep on new frozen HEAD (post-D-348 push). Streak reset 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-71 — P2A-243 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-243 |
+| Round | 71 |
+| Frozen HEAD | b6cee1b |
+| Date | 2026-09-02 |
+| CLEAN(strict) | YES |
+| CLEAN(PR-merge) | YES |
+| Findings | 0 |
+| Streak | 1/3 |
+| Label | CLEAN |
+
+**Context note:** Fresh-context adversarial pass on new frozen HEAD b6cee1b (post-D-348 push). Zero findings on all axes. Streak advanced to 1/3. However, round-72 (P2A-244) on the same frozen HEAD b6cee1b found 1 MED that round-71 missed — demonstrating again the cognitive-diversity value of the 3-CLEAN protocol: a single-pass CLEAN is not sufficient for convergence.
+
+- CLEAN(strict): yes
+- CLEAN(PR-merge): yes
+- Streak: 1/3 (SUBSEQUENTLY RESET to 0/3 by round-72 finding on same HEAD; see Round-72 below)
+
+### Trajectory Tail Update
+
+Round-71 appended: →0 (P2A-243; CLEAN(strict)=YES; streak 1/3 [SUBSEQUENTLY RESET])
+
+**NEXT: round-72 adversarial sweep on same frozen HEAD b6cee1b (cognitive-diversity independent context). Streak 1/3 → subsequently reset 0/3.**
+
+---
+
+## Round-72 — P2A-244 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-244 |
+| Round | 72 |
+| Frozen HEAD | b6cee1b |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 1 (0 HIGH + 1 MED) |
+| Streak | RESET → 0/3 on fix push |
+| Label | FINDINGS_REMAIN |
+
+**Context note:** Fresh-context adversarial pass on frozen HEAD b6cee1b — same HEAD as round-71. Independent context caught 1 MED that round-71 had missed. This is the final un-recomputed downstream of the round-67 BC-2.14.005 co-anchor change: BC-2.14.005 is P0, so any story co-anchored to it carries a derived priority of P0 (per Story-Inventory header rule: "Priority = derived from highest-priority BC in story (P0 > P1 > P2)"). S-2.06 still had `priority: P1` in story frontmatter, STORY-INDEX Story-Inventory Priority column, and sprint-state.yaml priority field. Product-owner corpus-wide derived-priority sweep confirmed S-2.06 is the SOLE mismatch; all other 41 stories were already correct. This is the 4th straggler of the BC-2.14.005 co-anchor propagation class (round-67 anchor map; round-68 test names; round-70 Story-Inventory BC+Subsystem columns; round-72 derived priority).
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A244-01 | MED | S-2.06 derived priority stale at P1 despite carrying P0 BC BC-2.14.005. Story frontmatter `priority: P1` must be `P0` (derived priority = highest-priority BC in story; BC-2.14.005 is P0 per BC-INDEX; Story-Inventory header note: "Priority = derived from highest-priority BC in story (P0 > P1 > P2)"). STORY-INDEX §Story-Inventory row Priority column shows `P1`; sprint-state.yaml S-2.06 `priority: P1`. All three surfaces inconsistent with the P0 derivation rule. Root cause: the D-346/D-347/D-348 BC-2.14.005 co-anchor propagation cascade correctly updated BC+Subsystem columns but did not recompute the derived priority field. This is the 4th straggler of the co-anchor-change propagation class. | product-owner: S-2.06 v1.6→v1.7 (`priority: P1`→`P0`; changelog v1.7 added). state-manager: STORY-INDEX §Story-Inventory row S-2.06 Priority column `P1`→`P0` (STORY-INDEX §Changelog 1.53→1.54); sprint-state.yaml S-2.06 `priority: P1`→`P0`. Product-owner corpus-wide derived-priority sweep confirmed S-2.06 is the SOLE mismatch. |
+
+**Fix-burst CLOSED (D-349).** 1 MED finding closed. This fix push (D-349) resets the streak to 0/3 per the frozen-HEAD streak rule. Round-73 gates on the new frozen HEAD.
+
+### Trajectory Tail Update
+
+Round-71 appended: →0 (P2A-243; CLEAN(strict)=YES; streak 1/3 [SUBSEQUENTLY RESET])
+Round-72 appended: →1 (P2A-244; 1MED; CLOSED; D-349; streak reset 0/3)
+
+Full trajectory tail (rounds 68–72): P2A-240=1→P2A-241=0/CLEAN(streak1/3[reset])→P2A-242=1H→D-348(fix)→P2A-243=0/CLEAN(streak1/3[reset])→P2A-244=1MED(derived-priority-stale)
+
+### Post-Round-72 Status (D-349 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 0/3 (fix push resets frozen HEAD; round-73 gates on new HEAD)
+- STORY-INDEX: §Changelog (1.53→1.54) (S-2.06 Story-Inventory Priority column P1→P0)
+- STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified)
+- sprint-state.yaml: S-2.06 priority P1→P0
+- S-2.06 story: v1.6→v1.7 (product-owner; priority P1→P0; D-349)
+
+**NOTE:** This finding is the final un-recomputed downstream of the round-67 BC-2.14.005 co-anchor change. The multi-anchor propagation checklist (L-273) items 1–9 covered BC, Subsystem, behavioral_contracts, and sprint-state bcs — but NOT the DERIVED PRIORITY surfaces: story frontmatter `priority`, STORY-INDEX Story-Inventory Priority column, and sprint-state `priority`. L-273 is being extended in this burst to include these surfaces as checklist items 10–12. See lessons.md L-273 extension.
+
+**NEXT: round-73 adversarial sweep on new frozen HEAD (post-D-349 push). Streak reset 0/3. Target: CLEAN(strict).**

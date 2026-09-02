@@ -479,7 +479,7 @@ stories:
     vps: []
     points: 3
     tdd_mode: strict
-    priority: P1
+    priority: P0
     crate: [pregolya-openai, pregolya-anthropic, pregolya-ollama, pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk]
     pr_url: ~
     merged_sha: ~
