@@ -26,7 +26,7 @@ inputs:
   - .factory/specs/domain-spec/capabilities-p1-p2.md
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "9ccf3fd"
+input-hash: "df596f3"
 extracted_from: null
 modified: []
 deprecated: null

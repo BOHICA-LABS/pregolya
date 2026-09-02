@@ -10,7 +10,7 @@ phase: 1b
 inputs:
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.009.md
-input-hash: "38a34db"
+input-hash: "8aa1bd7"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.02.009
 bc_anchor: BC-2.02.009 {INV-001} + {INV-002}

@@ -5262,3 +5262,48 @@ All 4 P2A-232 findings CLOSED in D-339 fix-burst:
 - Streak: 0/3 (fix-burst resets frozen HEAD; round-64 gates on new HEAD)
 
 **NEXT: round-64 adversarial sweep on new frozen HEAD (post-D-341 push). Streak 0/3.**
+
+---
+
+## Round-64 — D-342 (2026-09-01) — RECORDS-ONLY micro-burst (TD-RECORDS-MICRO-BURST-001)
+
+**Pass: P2A-236** | Frozen HEAD: post-D-341 push | Scope: ADR-030 §Reconciliation/§SQLite-Topology stale-prose only
+
+### Pass P2A-236 Summary (RECORDS-ONLY)
+
+| Field | Value |
+|-------|-------|
+| Pass | P2A-236 |
+| Round | 64 |
+| Date | 2026-09-01 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | YES |
+| Streak | 0/3 (NOT reset — records-only per TD-RECORDS-MICRO-BURST-001) |
+| Findings | 1 (LOW only) |
+| Finding delta | n/a |
+| Label | RECORDS-ONLY |
+
+**Adversary independent re-derivation:** The adversary confirmed the round-62/63 compaction redesign + reconciliation + E-TRAJ-006 + NFR-015-P0 + VP-020 all propagated correctly and coherently across the corpus. Zero CRIT/HIGH/MED findings. CAP-040 surface is at PR-merge convergence. Only records-tier residue remained.
+
+**Finding:**
+
+| ID | Severity | Policy | Description | Closed By |
+|----|----------|--------|-------------|-----------|
+| F-P2A236-01 | LOW | POL-24 | ADR-030 §Compaction Atomicity Decision "Reconciliation" paragraph and §SQLite Topology Decision imperative used stale present-tense/pending-directive form; rewritten to past-tense/discharged-resolved form. No normative mechanism content changed. | architect (ADR-030 §Compaction Atomicity Decision + §SQLite Topology Decision) |
+
+### Post-Round-64 Status (D-342 records-only micro-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- GATE-READY: YES (pending round-65)
+- Streak: 0/3 (NOT reset — records-only per TD-RECORDS-MICRO-BURST-001)
+- Input-hashes refreshed (ADR-030 §Compaction Atomicity Decision dependents): BC-2.02.008→df596f3; BC-2.02.009→df596f3; BC-2.04.009→df596f3; BC-2.04.010→df596f3; BC-2.04.011→df596f3; VP-017→48e2813; VP-019→0a7f751; VP-020→8aa1bd7
+
+**NEXT: round-65 adversarial sweep on new frozen HEAD (post-D-342 push). Streak 0/3. Targeting first CLEAN(strict).**

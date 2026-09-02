@@ -8,7 +8,7 @@ status: accepted
 date: "2026-09-01"
 producer: architect
 timestamp: 2026-08-31T00:00:00Z
-version: "2.1"
+version: "2.2"
 phase: 1b
 traces_to: ARCH-INDEX.md
 decisions: []
@@ -16,6 +16,7 @@ supersedes: []
 superseded_by: null
 subsystems_affected: ["SS-02", "SS-04"]
 changelog:
+  - "2.2 (round-64/F-P2A236-01/records-only-micro-burst/2026-09-01): F-P2A236-01 [LOW] stale discharged-directive residue cleanup. §Compaction Atomicity Decision: rewrote 'Reconciliation with §SQLite Topology bounded-batch wording' paragraph to past-tense settled form — prior bounded-batch language was superseded by the per-run DELETE model and BC-2.04.011 {INV-005} was updated in round-63; removed embedded product-owner directive imperative (discharged). §SQLite Topology Decision: replaced discharged 'product-owner must remove it per that section's directive' imperative with past-tense settled statement that the bounded-batch parenthetical was superseded and BC-2.04.011 {INV-005} was updated in round-63."
   - "2.1 (round-63/F-P2A235-01+F-P2A235-03+F-P2A235-04+F-P2A235-06+F-P2A235-08/2026-09-01): STAGE A fix-burst. F-P2A235-01 [HIGH] §SQLite Topology Decision: retired contradictory bounded-batch bullet — replaced with per-run single-transaction DELETE description (no batch-size limit; single BEGIN IMMEDIATE/COMMIT scoped to target run_id); replaced stale product-owner add-bounded-batch-parenthetical directive with supersession note pointing to §Compaction Atomicity Decision. F-P2A235-04 [HIGH] NFR-015 priority decided authoritatively as P0: BC-2.04.009 claims parity with put_writes durability; NFR-002 (put_writes NFR) is P0; parity requires identical priority; product-owner directed to update nfr-catalog.md Priority from P1 to P0. F-P2A235-06 [MED] E-TRAJ-006 message/placeholder updated to STATIC 0-placeholder canonical form per error-taxonomy.md (the taxonomy is the source of truth for error codes); EC-006 directive message aligned. F-P2A235-08 [MED] VP-020 BC Anchor: {INV-002} gloss corrected from 'Retire idempotency, task-identity ordering' to 'reducer determinism, task-identity ordering' ({INV-002} is REDUCER DETERMINISM; {PC-004} is Retire idempotency)."
   - "2.0 (round-62/F-P2A234-01+F-P2A234-02+F-P2A234-03+F-P2A234-04+F-P2A234-05+OBS-1+OBS-2+OBS-3/2026-09-01): STAGE A fix-burst. F-P2A234-01 [HIGH/CWE-459] §Compaction Atomicity Decision: staging-table single-atomic-swap model REPLACED with per-run single-transaction DELETE. The prior staging-table swap silently destroyed all other run_ids' records — trajectory_records is keyed (run_id, step_idx) and holds ALL runs; the build phase copied only the target run's retained records to staging, then the whole-table rename permanently destroyed every other run_id's records. Redesigned mechanism: BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT — inherently per-run-scoped (only target run records touched), single-transaction reader-visible-atomic, 2-point crash matrix (before COMMIT = pre-compaction intact; after COMMIT = post-compaction). F-P2A234-02 [HIGH/CWE-362] concurrent put_record safety resolved: BEGIN IMMEDIATE write-lock serializes any concurrent put_record that arrives while compaction is in progress; no build-to-swap clobber window exists under per-run DELETE; BC-2.04.011 §Related BCs false safety claim corrected (product-owner directive provided in §Compaction Atomicity Decision). F-P2A234-03 [MED/CWE-390+354] E-TRAJ-006 TrajectoryIntegrityCheckFailed: mint directive added to §Content-Hash Oracle Decision — covers AES-GCM auth-tag mismatch during conflict-detection decrypt; product-owner + state-manager directives. F-P2A234-04 [MED] NFR-015 trajectory durability: mint directive added to §SQLite Topology Decision — mirrors NFR-002 crash-cycle target anchored to BC-2.04.009 DI-002; product-owner directive. F-P2A234-05 [MED] VP-020 PromoteRetireChannel idempotency proptest P1: minted in §VP of Decision 3 — BC-2.02.009 {INV-001}+{INV-002}, DI-001, harness promote_retire_channel_idempotency, Phase 3; VP-INDEX, verification-architecture, verification-coverage-matrix updated same burst. OBS-1: nonce-uniqueness cross-reference directive added to §Content-Hash Oracle Decision. OBS-2: deletion-tamper-evidence explicitly declared out of scope for v1 in new §Deletion Tamper-Evidence Decision subsection. OBS-3: promoted Vec<u64> element semantics directive added to §Consequences."
   - "1.9 (round-58/F-P2A229-01/2026-09-01): F-P2A229-01 [MED] §Decision 3 PromoteRetireOp<T>: add #[derive(Clone, Debug)]. Clone is required by the Channel::Update: Clone bound; LedgerEntry: Clone (supertrait bundles Clone), so derive(Clone) emits impl<T: Clone> Clone for PromoteRetireOp<T> which resolves for every T: LedgerEntry with no bound beyond the supertrait — does NOT trigger rustc #26925 spurious-bound problem (contrast: Default is NOT in the LedgerEntry bundle, which is why the marker structs use manual bound-free Default impls). Debug is conventionally added for a data-bearing update enum (diagnostic value); the derived impl is conditional on T: Debug (LedgerEntry does not bundle Debug); no declared bound requires unconditional Debug, so the conditional impl is acceptable. Rationale documented as doc-comment on PromoteRetireOp to prevent future incorrect removal. Derive-shape paragraph extended to confirm LedgerChannel<T> Update = T needs no separate Clone annotation (T: LedgerEntry implies T: Clone — already satisfies Channel::Update: Clone). LedgerChannel<T> code block is unaffected."
@@ -264,8 +265,8 @@ Isolation model:
 `BC-2.04.011 {INV-005}` existing wording ("has no access to and does not affect the
 conversation-context checkpoint tables") correctly describes table-level isolation and requires
 no amendment. The bounded-batch parenthetical described the prior staging-table build phase
-and has been superseded by §Compaction Atomicity Decision; product-owner must remove it
-per that section's directive.
+and was superseded by §Compaction Atomicity Decision; BC-2.04.011 {INV-005} was updated in
+round-63 to remove the bounded-batch language (discharged — no further action required).
 
 ### Compaction Atomicity Decision — Per-Run Single-Transaction DELETE (F-P2A221-01, revised F-P2A234-01)
 
@@ -349,14 +350,12 @@ Reader-visible atomicity is provided by the single `BEGIN IMMEDIATE / COMMIT` wr
 DELETE. The pre/post observability mapping: before COMMIT → pre-compaction state; after
 COMMIT → post-compaction state. This directly satisfies BC-2.04.011 {PC-004}.
 
-**Reconciliation with §SQLite Topology bounded-batch wording:**
-The "bounded compaction batches (default 1 000 records per `BEGIN IMMEDIATE` transaction)"
-language in §SQLite Topology Decision described the prior staging-table build phase, which
-no longer exists. **Product-owner directive:** remove the "bounded compaction batch"
-parenthetical from BC-2.04.011 {INV-005} — it described build-phase behavior that does
-not exist under the per-run DELETE model. The write-lock-duration concern no longer applies:
-the DELETE transaction's lock duration is proportional to the target-run eligible set, not
-the full table.
+**Reconciliation with §SQLite Topology bounded-batch wording (resolved — round-63):**
+The prior bounded-batch language in §SQLite Topology Decision described the staging-table
+build phase, which no longer exists under the per-run DELETE model. That wording was
+superseded by the per-run DELETE redesign; BC-2.04.011 {INV-005} was updated in round-63
+to reflect the per-run single-transaction DELETE mechanism. No bounded-batch parenthetical
+or write-lock-duration concern applies under the current model.
 
 **NFR-015 directive (F-P2A234-04):**
 **Product-owner:** add NFR-015 to nfr-catalog.md:

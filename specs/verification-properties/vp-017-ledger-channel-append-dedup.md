@@ -9,7 +9,7 @@ timestamp: 2026-08-31T00:00:00Z
 phase: 1b
 inputs:
   - .factory/specs/architecture/decisions/ADR-030-research-orchestrator-composition.md
-input-hash: "711ffcf"
+input-hash: "48e2813"
 traces_to: ARCH-INDEX.md
 source_bc: BC-2.02.007
 bc_anchor: BC-2.02.007 + BC-2.02.008

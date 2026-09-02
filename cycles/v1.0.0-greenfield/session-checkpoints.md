@@ -4164,6 +4164,21 @@ MED (1) CLOSED: F-P2A232-04[MED] dependency-graph VP-019 matrix row missing (20 
 
 ---
 
+### D-341 ARCHIVED CHECKPOINT (round-63 fix-burst; archived by D-342)
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-63 closed. Round-63 fix-burst CLOSED (D-341) — ALL 8 P2A-235 findings closed: ADR-030 §SQLite Topology contradictory directive removed — single per-run DELETE mechanism (F-P2A235-01[HIGH]); BC-2.04.011 §Architecture Anchors segment-swap residue removed (F-P2A235-02[HIGH]); verification-architecture §VP-019 stale directive deleted (F-P2A235-03[MED]); nfr-catalog §NFR-015 P1→P0 (F-P2A235-04[MED]); BC-2.04.009 §EC-006 AES-GCM auth failure + TV-007 BC-local (F-P2A235-05[MED]; global EC UNCHANGED 143); STATIC E-TRAJ-006 message reconciled (F-P2A235-06[MED]); input-hashes refreshed per-file via compute-input-hash on 8 files (F-P2A235-07[MED]); ADR-030 §{INV-002} gloss corrected reducer-determinism + verification-architecture §VP-020 (F-P2A235-08[MED]). TV 794→795 (+TV-007). L-267/L-268/L-269 codified. Census: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3. D-341 pushed. Next: round-64 adversary cascade on new frozen HEAD.
+
+#### HEADS (at time of archival)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`)
+- factory-artifacts: PUSHED (D-341)
+
+#### ROUND-63 FINDINGS (CLOSED — 8 findings)
+HIGH (2) CLOSED: F-P2A235-01[HIGH] ADR-030 §SQLite Topology contradictory directive removed; F-P2A235-02[HIGH] BC-2.04.011 §Architecture Anchors segment-swap residue removed.
+MED (6) CLOSED: F-P2A235-03[MED] verification-architecture §VP-019 stale directive deleted; F-P2A235-04[MED] nfr-catalog §NFR-015 P1→P0; F-P2A235-05[MED] BC-2.04.009 §EC-006 + TV-007; F-P2A235-06[MED] STATIC E-TRAJ-006 message reconciled; F-P2A235-07[MED] input-hashes refreshed 8 files; F-P2A235-08[MED] ADR-030 §{INV-002} gloss corrected.
+
+---
+
 ### D-340 ARCHIVED CHECKPOINT (round-62 fix-burst; archived by D-341)
 
 #### RESUME IN ONE BREATH
