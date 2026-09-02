@@ -3,16 +3,17 @@ document_type: story
 level: ops
 story_id: S-2.06
 epic_id: E-19
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.006.md
+  - .factory/specs/behavioral-contracts/ss-14/BC-2.14.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "521e8a7"
+input-hash: "33834e3"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.04]
@@ -23,7 +24,7 @@ priority: P1
 cycle: v1.0.0-greenfield
 wave: 2
 target_module: [pregolya-openai, pregolya-anthropic, pregolya-ollama, pregolya-openai-sdk, pregolya-anthropic-sdk, pregolya-ollama-sdk]
-subsystems: [SS-08]
+subsystems: [SS-08, SS-14]
 estimated_days: 1
 assumption_validations: []
 risk_mitigations: []
@@ -243,3 +244,4 @@ workspace — set the correct pattern from the start. Future crates inherit this
 - 1.3 (ADR-027 M4/2026-08-24): ADR-027 M4: rustls-tls ACs re-cited to BC-2.08.006 INV-005. AC-002 postcondition 2→INV-005; AC-007 invariant 1→INV-005; Architecture Compliance Rules table row updated to INV-005. Input-hash refreshed to da27500.
 - 1.4 (round-67 reconciliation/2026-09-02): PO adjudication confirmed BC-2.14.005 as legitimate co-anchor for this story. SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001; they define independent credential newtypes (OpenAiApiKey etc.) that are governed by BC-2.14.005's workspace-wide policy. behavioral_contracts array [BC-2.08.006, BC-2.14.005] confirmed correct. AC-006 trace to BC-2.14.005 PC-002 confirmed valid. STORY-INDEX BC-to-Story anchor map (exclusive S-1.02 → multi-anchor S-1.02+S-2.06) and sprint-state.yaml S-2.06 bcs array delegated to state-manager.
 - 1.5 (round-68 F-P2A240-01/2026-09-02): AC-006 test names corrected to match traced-BC prefix convention. `test_BC_2_08_006_api_key_debug_is_redacted` and `test_BC_2_08_006_api_key_no_display` renamed to `test_BC_2_14_005_api_key_debug_is_redacted` and `test_BC_2_14_005_api_key_no_display` respectively — AC-006 traces to BC-2.14.005 PC-002, so test names must carry the BC-2.14.005 prefix per corpus naming convention. Sibling sweep of .factory/ corpus confirmed no other spec artifact carried the old names (only immutable JSONL dispatcher logs, which are not spec artifacts).
+- 1.6 (round-70 F-P2A242-01/2026-09-02): subsystems expanded from [SS-08] to [SS-08, SS-14] per F-047-02 superset rule — BC-2.14.005 is owned by SS-14 (Credential Safety); .factory/specs/behavioral-contracts/ss-14/BC-2.14.005.md added to inputs (AC-006 traces to BC-2.14.005 PC-002, making it a genuine authoring input); input-hash updated to 33834e3. Corpus-wide sweep of all 43 stories confirmed no other story has a covered-BC-subsystem gap.

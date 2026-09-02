@@ -5564,3 +5564,89 @@ Full trajectory tail (rounds 62–68): P2A-233=0/CLEAN(strict)→P2A-234=8→P2A
 **LESSON (codified as L-272):** Orchestrator dispatch used a relative story path; sub-agent (cwd=repo root) resolved to stale develop-tree copy stories/stories/ (DU leftover files) instead of canonical .factory/stories/stories/. The file existed in the stale copy, so no error was raised. Going-forward discipline: every orchestrator→specialist dispatch MUST cite full absolute .factory/… paths for every file; specialists must confirm each edited path begins with .factory/. OPERATIONAL HAZARD: develop working tree carries pre-existing DU leftover files under stories/stories/ that shadow canonical .factory/ artifacts — flagged for human cleanup; NOT resolved in this cascade.
 
 **NEXT: round-69 adversarial sweep on new frozen HEAD (post-D-347 push). Streak reset 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-69 — P2A-241 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-241 |
+| Round | 69 |
+| Frozen HEAD | 57bd1a3 |
+| Date | 2026-09-02 |
+| CLEAN(strict) | YES |
+| CLEAN(PR-merge) | YES |
+| Findings | 0 |
+| Streak | 1/3 |
+| Label | CLEAN |
+
+**Context note:** Fresh-context adversarial pass on frozen HEAD 57bd1a3 (post-D-347 push). Zero findings on all axes. Streak advanced to 1/3. However, round-70 (P2A-242) on the same frozen HEAD 57bd1a3 found 1 HIGH that round-69 missed — demonstrating that a single-pass CLEAN is not sufficient; cognitive-diversity independent contexts are required for reliable convergence detection.
+
+**LESSON OPPORTUNITY:** Round-69 CLEAN(strict)=YES was a false-clean; round-70 found 1 HIGH (F-P2A242-01) on the same HEAD. This confirms the BC-5.39.001 3-CLEAN protocol value: a single pass achieving CLEAN(strict) does NOT advance the streak to 1/3 unless it is genuinely the first of 3 consecutive independent CLEAN passes. The streak 1/3 from round-69 was correctly reset to 0/3 upon round-70 finding a HIGH on the same HEAD.
+
+### Post-Round-69 Status
+
+- Census: UNCHANGED (BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 / NFR 15)
+- Streak: 1/3 (SUBSEQUENTLY RESET to 0/3 by round-70 finding on same HEAD; see Round-70 below)
+
+**NEXT: round-70 adversarial sweep on same frozen HEAD 57bd1a3 (cognitive-diversity independent context). Streak 1/3 → subsequently reset 0/3.**
+
+---
+
+## Round-70 — P2A-242 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-242 |
+| Round | 70 |
+| Frozen HEAD | 57bd1a3 |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 1 (1 HIGH + 0 MED) |
+| Streak | RESET → 0/3 on fix push |
+| Label | FINDINGS_REMAIN |
+
+**Context note:** Fresh-context adversarial pass on frozen HEAD 57bd1a3 — same HEAD as round-69. Independent context caught 1 HIGH that round-69 had missed. This is the cognitive-diversity value of the 3-CLEAN protocol in practice: round-69 was a false-clean; round-70's independent context caught the residual finding. The false-clean finding (F-P2A242-01) traces to the D-346/D-347 multi-anchor cascade that propagated BC-2.14.005 co-anchor to most S-2.06 surfaces but skipped the STORY-INDEX §Story-Inventory row BC+Subsystem columns and the story `subsystems` field + `inputs`.
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A242-01 | HIGH | S-2.06 `subsystems` frontmatter field still listed `[SS-08]` only (not `[SS-08, SS-14]`). S-2.06 `inputs` did not include `.factory/specs/behavioral-contracts/ss-14/BC-2.14.005.md`. STORY-INDEX §Story-Inventory row for S-2.06 had BC column = `BC-2.08.006` (not `BC-2.08.006, BC-2.14.005`) and Subsystem column = `SS-08` (not `SS-08, SS-14`). Root cause: the D-346/D-347 BC-2.14.005 multi-anchor cascade correctly updated the BC-to-Story anchor map, `behavioral_contracts` frontmatter array, sprint-state.yaml `bcs`, and BC-INDEX annotation — but the STORY-INDEX §Story-Inventory row's BC and Subsystem columns and the story's `subsystems` field + `inputs` were not included in the propagation sweep. F-047-02 superset rule (established precedent: S-2.03 Subsystem SS-21→SS-21,SS-20) required the `subsystems` superset expansion. | story-writer: S-2.06 v1.5→v1.6 (`subsystems` [SS-08]→[SS-08, SS-14]; `inputs` +BC-2.14.005.md; input-hash 521e8a7→33834e3). state-manager: STORY-INDEX §Story-Inventory row S-2.06 BC column →BC-2.08.006, BC-2.14.005; Subsystem column →SS-08, SS-14 (v1.52→v1.53). Story-writer corpus sweep of all story files confirmed only S-2.06 had this gap. |
+
+**Fix-burst CLOSED (D-348).** 1 HIGH finding closed. This fix push (D-348) resets the streak to 0/3 per the frozen-HEAD streak rule. Round-71 gates on the new frozen HEAD.
+
+### Trajectory Tail Update
+
+Previous tail (post-round-68): →1 (P2A-240; 0H+1MED; CLOSED; D-347)
+
+Round-69 appended: →0 (P2A-241; CLEAN(strict)=YES; streak 1/3 [SUBSEQUENTLY RESET])
+Round-70 appended: →1 (P2A-242; 1H; CLOSED; D-348; streak reset 0/3)
+
+Full trajectory tail (rounds 65–70): P2A-237=6→P2A-238=3→P2A-239=2→D-346(reconciliation,0)→P2A-240=1→P2A-241=0/CLEAN(streak1/3)→P2A-242=1H(false-clean-caught)
+
+### Post-Round-70 Status (D-348 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 0/3 (fix push resets frozen HEAD; round-71 gates on new HEAD)
+- STORY-INDEX: §Changelog (1.52→1.53) (S-2.06 Story-Inventory row BC+Subsystem columns; S-2.06 v1.5→v1.6)
+- S-2.06 input-hash: 521e8a7→33834e3 (BC-2.14.005.md added to inputs)
+- STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified)
+
+**SIGNIFICANCE:** The false-clean in round-69 (caught by round-70's independent context) is the 3rd occurrence of the multi-anchor half-sweep class. Previous occurrences: D-346 (BC-2.14.005 anchor map + sprint-state.yaml but NOT story subsystems/inputs) and D-347 (AC-006 test names but NOT STORY-INDEX Story-Inventory row). The mechanical checklist for multi-anchor changes must cover: anchor map + behavioral_contracts + body BC table + AC traces + sprint-state bcs + Story-Inventory BC column + Story-Inventory Subsystem column + story subsystems field + inputs.
+
+**NEXT: round-71 adversarial sweep on new frozen HEAD (post-D-348 push). Streak reset 0/3. Target: CLEAN(strict).**

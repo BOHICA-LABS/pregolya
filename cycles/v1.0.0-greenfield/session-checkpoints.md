@@ -4302,3 +4302,19 @@ Dispatch round-68 adversary cascade on new frozen HEAD (post-D-346 push). Streak
 
 ### STEP ROW ARCHIVED AT D-347
 Archived step row D-345 (round-67 P2A-239 fix-burst CLOSED) from STATE.md §Current Phase Steps at D-347.
+
+---
+
+## D-347 Checkpoint (archived at D-348)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-68 closed + D-346 reconciliation-burst. D-347 CLOSED (2026-09-02) — round-68 P2A-240 fix-burst: F-P2A240-01[MED] S-2.06 AC-006 test names corrected (test_BC_2_14_005_api_key_debug_is_redacted, test_BC_2_14_005_api_key_no_display; AC-006 traces to BC-2.14.005 {PC-002}; story-writer; S-2.06 §Changelog (1.4→1.5)). Wrong-path misfire: initial dispatch used relative path resolved to stale develop-tree DU-leftover copy; re-applied to canonical .factory/stories/stories/ path. STORY-INDEX §Changelog (1.51→1.52). L-272 codified [process-gap]. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3 (push resets; round-69 gates on new HEAD).
+
+### HEADS (D-347)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-347) — SHA 57bd1a3. No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION (D-347)
+Dispatch round-69 adversary cascade on new frozen HEAD (post-D-347 push). Streak 0/3. Standing directives DIRECTIVE 1/2/3 in force. DU leftover files under develop-tree stories/stories/ are pre-existing; always use absolute .factory/ paths in dispatch prompts (L-272).
+
+### STEP ROW ARCHIVED AT D-348
+No step row archived at D-348 (only D-347 row was in §Current Phase Steps; it is preserved in the step table).
