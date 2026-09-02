@@ -1,14 +1,15 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.8"
+version: "1.9"
 changelog:
+  - "1.9 (D-339/round-60/2026-09-01): D-338 checkpoint archived"
   - "1.8 (D-335/round-56/2026-09-01): D-334 checkpoint archived"
   - "1.7 (D-326/round-49/2026-08-31): D-325 checkpoint archived"
   - "1.6 (D-324/round-47/2026-08-30): D-323 checkpoint archived"
 status: archive
 producer: state-manager
-timestamp: 2026-08-17T18:00:00Z
+timestamp: 2026-09-01T17:30:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
 input-hash: "509af18"
@@ -4127,3 +4128,20 @@ D-336 round-57 fix-burst closed; D-337 round-58 fix-burst closed (1 MED closed; 
 None (.worktrees/ absent). Phase-2; no story worktrees open.
 
 ### STATE: v6.49, timestamp 2026-09-01T16:00:00Z
+
+---
+
+### Archived Checkpoint — STATE.md v6.50 (archived 2026-09-01 — replaced by v6.51 / D-339)
+
+*From STATE.md v6.50 (post-D-338 round-59 micro-burst). Superseded by v6.51 upon round-60 fix-burst COMPLETE (D-339).*
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-59 closed. Round-59 records-only micro-burst CLOSED (TD-RECORDS-MICRO-BURST-001) — 1 LOW closed (F-P2A230-01 AC-018 dual-test trace gap; BC-2.02.009 {INV-004} PromoteRetireChannel side now traced to test_BC_2_02_009_promote_retire_channel_implements_channel_trait() in promote_retire.rs; S-1.28 §AC-018; input-hash 17d12e4); STORY-INDEX §Changelog; census UNCHANGED. adversary 10-axis re-derivation: CAP-040 surface GENUINELY CONVERGED at PR-merge level. CLEAN(strict)=NO, CLEAN(PR-merge)=YES. BC-5.39.001 3-CLEAN streak NOT RESET by records-only micro-burst; streak 0/3. D-338 pushed — factory-artifacts PUSHED. Next: round-60 adversary cascade on new frozen HEAD, targeting first CLEAN(strict).
+
+#### HEADS (at time of archival)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`)
+- factory-artifacts: PUSHED (D-338)
+
+#### ROUND-59 FINDINGS (CLOSED — 1 finding)
+LOW (1) CLOSED: F-P2A230-01[LOW, POL-48] AC-018 dual-test trace gap — BC-2.02.009 {INV-004} PromoteRetireChannel side lacked distinct test; added test_BC_2_02_009_promote_retire_channel_implements_channel_trait() in promote_retire.rs (story-writer).
+

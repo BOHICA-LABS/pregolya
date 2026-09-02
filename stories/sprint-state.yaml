@@ -381,6 +381,22 @@ stories:
     merged_sha: ~
 
   # -----------------------------------------------------------------------
+  # Wave 1 — pregolya-graph sub-batch 1e (E-07 CAP-040)
+  # -----------------------------------------------------------------------
+
+  - story_id: S-1.28
+    wave: 1
+    status: spec-ready
+    bcs: [BC-2.02.007, BC-2.02.008, BC-2.02.009]
+    vps: [VP-017]
+    points: 5
+    tdd_mode: strict
+    priority: P1
+    crate: pregolya-graph
+    pr_url: ~
+    merged_sha: ~
+
+  # -----------------------------------------------------------------------
   # Wave 2 — pregolya-core D21 additions (E-15, E-16)
   # -----------------------------------------------------------------------
 
@@ -529,6 +545,22 @@ stories:
     tdd_mode: strict
     priority: P1
     crate: pregolya-mcp
+    pr_url: ~
+    merged_sha: ~
+
+  # -----------------------------------------------------------------------
+  # Wave 2 — pregolya-checkpoint sub-batch 2a (E-05 CAP-040)
+  # -----------------------------------------------------------------------
+
+  - story_id: S-2.12
+    wave: 2
+    status: spec-ready
+    bcs: [BC-2.04.009, BC-2.04.010, BC-2.04.011]
+    vps: [VP-018, VP-019]
+    points: 8
+    tdd_mode: strict
+    priority: P1
+    crate: pregolya-checkpoint
     pr_url: ~
     merged_sha: ~
 

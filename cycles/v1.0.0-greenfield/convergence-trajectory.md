@@ -5045,3 +5045,117 @@ F-P2A230-01 CLOSED in D-338 micro-burst (TD-RECORDS-MICRO-BURST-001 — 2-step c
 
 **NEXT: round-60 on new frozen HEAD (post-D-338 push). Targeting first CLEAN(strict). Streak 0/3.**
 **NEXT: round-59 on new frozen HEAD post-D-337 push. Streak 0/3.**
+
+---
+
+## Round 60 — D-339 (2026-09-01) — OPS-ARTIFACT PROPAGATION BURST — CAP-040 SIBLING-SET COMPLETENESS
+
+**Frozen HEAD (pre-fix):** `d3ee965` (factory-artifacts post-D-338 push)
+**Passes:** P2A-231 (CLEAN(strict)=YES, streak 1/3), then P2A-232 (3H+1M, streak reset 0/3)
+**Trajectory:** P2A-231: 0 (CLEAN(strict)) → P2A-232: 4 (3H+1M)
+**Total findings P2A-232 (unique):** 4 (3 HIGH + 1 MED)
+**CLEAN(strict) P2A-231:** YES (streak advanced to 1/3)
+**CLEAN(strict) P2A-232:** NO (streak reset to 0/3)
+**CLEAN(PR-merge) P2A-232:** NO (MED/HIGH present)
+**Label:** OPS-ARTIFACT PROPAGATION GAP — CAP-040 stories (S-1.28/S-2.12) reached human-facing indices but not machine-facing dispatch artifacts
+**Root cause:** D-327 authoring burst updated STORY-INDEX/epics/HS-INDEX (human-facing) but left sprint-state.yaml/wave-schedule.md/one dependency-graph reverse-edge/one VP-to-Stories matrix row stale for ~30 rounds
+
+### Pass P2A-231 (Round-60 first pass — CLEAN(strict)=YES)
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|------------------|
+| P2A-231 | Structural-lens (ops-artifact completeness) | 0 | YES | YES |
+
+Streak advanced to 1/3. No fix-burst required.
+
+### Pass P2A-232 (Round-60 second pass — FINDINGS: 3H+1M)
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|------------------|
+| P2A-232 | Machine-dispatch-artifact audit | 4 (3H+1M) | NO | NO |
+
+### Finding Summary
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F-P2A232-01 | HIGH [POL-8] | sprint-state.yaml omits S-1.28 and S-2.12 entirely — both were added in D-327 (CAP-040) but were never propagated to the per-story machine-dispatch file |
+| F-P2A232-02 | HIGH | wave-schedule.md (pre-fix) had 39 stories; after D-327 it should show 41 (sub-batch 1e for S-1.28; sub-batch 2a for S-2.12) |
+| F-P2A232-03 | HIGH | dependency-graph.md missing reverse edge S-1.10 blocks → S-2.12; DAG symmetry broken (depends_on edge existed; blocks edge absent) |
+| F-P2A232-04 | MED | dependency-graph.md VP-to-Stories matrix missing VP-019 row (S-2.12; pregolya-checkpoint); only 19 VPs listed instead of 20 |
+
+### Multi-Stage Cascade Disposition
+
+All 4 P2A-232 findings CLOSED in D-339 fix-burst:
+
+- **story-writer (wave-schedule.md §sub-batch-1e/2a + dependency-graph.md §VP-to-Stories-matrix):** wave-schedule.md updated — Total 41 stories; S-1.28 added to sub-batch 1e; S-2.12 added to sub-batch 2a; input-hash 830a185. dependency-graph.md updated — S-1.10 blocks list extended with S-2.12; VP-019 row added to VP-to-Stories matrix; 20 VPs confirmed. Closes F-P2A232-02, F-P2A232-03, F-P2A232-04.
+- **state-manager (sprint-state.yaml + STORY-INDEX §Changelog + convergence-trajectory + lessons L-262 + STATE.md D-339):** sprint-state.yaml updated — S-1.28 block (Wave 1, sub-batch 1e, pregolya-graph, BC-2.02.007/BC-2.02.008/BC-2.02.009, VP-017, 5 pts, spec-ready, P1) and S-2.12 block (Wave 2, sub-batch 2a, pregolya-checkpoint, BC-2.04.009/BC-2.04.010/BC-2.04.011, VP-018/VP-019, 8 pts, spec-ready, P1) inserted in correct wave sections. STORY-INDEX §Changelog v1.47. convergence-trajectory this block. lessons L-262. STATE.md D-339. Closes F-P2A232-01.
+
+### Post-Round-60 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (20)
+- EC: UNCHANGED (142)
+- TV: UNCHANGED (794 canonical)
+- ADR: UNCHANGED (30)
+- Stories: UNCHANGED (42 total; 41 product + 1 maint)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8
+---
+
+## Round 60 — D-339 (2026-09-01) — OPS-ARTIFACT PROPAGATION BURST — CAP-040 SIBLING-SET COMPLETENESS
+
+**Frozen HEAD (pre-fix):** `d3ee965` (factory-artifacts post-D-338 push)
+**Passes:** P2A-231 (CLEAN(strict)=YES, streak 1/3), then P2A-232 (3H+1M, streak reset 0/3)
+**Trajectory:** P2A-231: 0 (CLEAN(strict)) then P2A-232: 4 (3H+1M)
+**Total findings P2A-232 (unique):** 4 (3 HIGH + 1 MED)
+**CLEAN(strict) P2A-231:** YES (streak advanced to 1/3)
+**CLEAN(strict) P2A-232:** NO (streak reset to 0/3)
+**CLEAN(PR-merge) P2A-232:** NO (MED/HIGH present)
+**Label:** OPS-ARTIFACT PROPAGATION GAP — CAP-040 stories (S-1.28/S-2.12) reached human-facing indices but not machine-facing dispatch artifacts
+**Root cause:** D-327 authoring burst updated STORY-INDEX/epics/HS-INDEX (human-facing) but left sprint-state.yaml/wave-schedule.md/one dependency-graph reverse-edge/one VP-to-Stories matrix row stale for ~30 rounds
+
+### Pass P2A-231 (Round-60 first pass — CLEAN(strict)=YES)
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|-----------------|
+| P2A-231 | Structural-lens (ops-artifact completeness) | 0 | YES | YES |
+
+Streak advanced to 1/3. No fix-burst required.
+
+### Pass P2A-232 (Round-60 second pass — FINDINGS: 3H+1M)
+
+| Pass | Lens | Findings | CLEAN(strict) | CLEAN(PR-merge) |
+|------|------|----------|---------------|-----------------|
+| P2A-232 | Machine-dispatch-artifact audit | 4 (3H+1M) | NO | NO |
+
+### Finding Summary
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F-P2A232-01 | HIGH [POL-8] | sprint-state.yaml omits S-1.28 and S-2.12 entirely — both were added in D-327 (CAP-040) but were never propagated to the per-story machine-dispatch file |
+| F-P2A232-02 | HIGH | wave-schedule.md (pre-fix) had 39 stories; after D-327 it should show 41 (sub-batch 1e for S-1.28; sub-batch 2a for S-2.12) |
+| F-P2A232-03 | HIGH | dependency-graph.md missing reverse edge S-1.10 blocks S-2.12; DAG symmetry broken (depends_on edge existed; blocks edge absent) |
+| F-P2A232-04 | MED | dependency-graph.md VP-to-Stories matrix missing VP-019 row (S-2.12; pregolya-checkpoint); only 19 VPs listed instead of 20 |
+
+### Multi-Stage Cascade Disposition
+
+All 4 P2A-232 findings CLOSED in D-339 fix-burst:
+
+- **story-writer (wave-schedule.md §sub-batch-1e/2a + dependency-graph.md §VP-to-Stories-matrix):** wave-schedule.md updated — Total 41 stories; S-1.28 added to sub-batch 1e; S-2.12 added to sub-batch 2a; input-hash 830a185. dependency-graph.md updated — S-1.10 blocks list extended with S-2.12; VP-019 row added to VP-to-Stories matrix; 20 VPs confirmed. Closes F-P2A232-02, F-P2A232-03, F-P2A232-04.
+- **state-manager (sprint-state.yaml + STORY-INDEX §Changelog + convergence-trajectory + lessons L-262 + STATE.md D-339):** sprint-state.yaml updated — S-1.28 block (Wave 1, sub-batch 1e, pregolya-graph, BC-2.02.007/BC-2.02.008/BC-2.02.009, VP-017, 5 pts, spec-ready, P1) and S-2.12 block (Wave 2, sub-batch 2a, pregolya-checkpoint, BC-2.04.009/BC-2.04.010/BC-2.04.011, VP-018/VP-019, 8 pts, spec-ready, P1) inserted in correct wave sections. STORY-INDEX §Changelog v1.47. convergence-trajectory this block. lessons L-262. STATE.md D-339. Closes F-P2A232-01.
+
+### Post-Round-60 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (20)
+- EC: UNCHANGED (142)
+- TV: UNCHANGED (794 canonical)
+- ADR: UNCHANGED (30)
+- Stories: UNCHANGED (42 total; 41 product + 1 maint)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316 in-wave product stories: Wave1=208/28 + Wave2=100/12 + Wave6=8/1)
+- S-MAINT-001 points: 5 (out-of-wave; not counted in census pts 316)
+- GATE-READY: YES (all blocking validators PASS after fix-burst)
+- Streak: 0/3 (push resets frozen HEAD; round-61 gates on new HEAD; note: P2A-231 reached streak 1/3 before P2A-232 reset it; streak has now reached 1/3 twice this session: P2A-226 and P2A-231)
+- L-262 codified [process-gap]: OPS-ARTIFACT SIBLING-SET COMPLETENESS
+
+**NEXT: round-61 adversarial sweep on new frozen HEAD (post-D-339 push). Streak 0/3.**
