@@ -1,9 +1,9 @@
 ---
 document_type: epics
-version: "1.6"
+version: "1.7"
 status: active
 producer: story-writer
-timestamp: 2026-08-31T00:00:00Z
+timestamp: 2026-09-02T00:00:00Z
 phase: 2
 traces_to: .factory/specs/architecture/ARCH-INDEX.md
 ---
@@ -81,16 +81,17 @@ The graph execution engine (E-08) depends on this epic.
 
 **CAP-040 addition (S-2.12, Wave 2, 8 pts):** Durable audit trajectory (`TrajectoryWriter`,
 `TrajectoryReader`, `TrajectoryCompactor`) — write-once append (BC-2.04.009), ascending-step-index
-replay (BC-2.04.010), and crash-isolated compaction via two-phase staging-table swap
-(`trajectory_records_staging` → `trajectory_records`) under WAL mode (BC-2.04.011 {INV-003}).
-VP-018 (proptest P1) anchors `TrajectoryCompactor` retention-integrity invariants
-(BC-2.04.011 {INV-001}/{INV-002}). VP-019 (crash-isolation integration) covers the four-crash-point
-matrix per BC-2.04.011 {INV-003}: before-build-begins, mid-build (staging partially filled),
-mid-swap-transaction (after `BEGIN IMMEDIATE` before `COMMIT`), and after-swap-commit.
-New `trajectory_records` table (and `trajectory_records_staging` used during compaction swap) is
-isolated from CheckpointSaver tables per ADR-009 definitions-in-core separation. Error codes in
-scope: E-TRAJ-001 (DURABILITY, write failure), E-TRAJ-002 (VAL, conflict), E-TRAJ-003
-(DURABILITY, replay failure), E-TRAJ-005 (DURABILITY, compaction failure); E-TRAJ-004 is RETIRED.
+replay (BC-2.04.010), and crash-isolated compaction via per-run single-transaction DELETE
+(`BEGIN IMMEDIATE; DELETE FROM trajectory_records WHERE run_id = :run_id AND step_idx < :retention_frontier AND step_idx NOT IN (:promoted_step_idxs); COMMIT`)
+under WAL mode (BC-2.04.011 {INV-003}). VP-018 (proptest P1) anchors `TrajectoryCompactor`
+retention-integrity invariants (BC-2.04.011 {INV-001}/{INV-002}). VP-019 (crash-isolation
+integration, Phase 6) covers the two-crash-point matrix per BC-2.04.011 {INV-003}: before-COMMIT
+(uncommitted WAL frames discarded on next open → pre-compaction state intact) and after-COMMIT
+(DELETE durably committed → post-compaction state). The `trajectory_records` table is isolated
+from CheckpointSaver tables per ADR-009 definitions-in-core separation; no staging table exists.
+Error codes in scope: E-TRAJ-001 (DURABILITY, write failure), E-TRAJ-002 (VAL, conflict),
+E-TRAJ-003 (DURABILITY, replay failure), E-TRAJ-005 (DURABILITY, compaction failure),
+E-TRAJ-006 (DURABILITY, AES-GCM integrity check failed); E-TRAJ-004 is RETIRED.
 
 ### E-06 — Long-Horizon Memory (Wave 1, 16 pts)
 
@@ -115,6 +116,10 @@ ordering (BC-2.02.007/008) and `PromoteRetireChannel<T>` active-set lifecycle wi
 additional bounds beyond `T: LedgerEntry` at call sites (BC-2.02.007 {INV-004}). VP-017
 (proptest P1) is a dual-anchor covering `LedgerChannel` dedup-idempotency and first-appearance
 ordering stability per BC-2.02.007 `{INV-001}/{INV-002}` and BC-2.02.008 `{INV-001}/{INV-003}`.
+VP-020 (proptest P1) anchors `PromoteRetireChannel<T>` idempotency invariants
+(BC-2.02.009 {INV-001}/{INV-002}): no-duplicate `entry_id` in the active set, reducer
+determinism, `Promote` dedup-idempotency, `Retire` absent-entry no-op, and order-sensitivity
+(harness `promote_retire_channel_idempotency`; anchored to S-1.28).
 
 ### E-08 — BSP Execution Engine (Wave 1, 13 pts)
 
@@ -203,6 +208,7 @@ not in S-6.01's pipeline. Gated until all Wave 1 + Wave 2 implementation stories
 
 ## Changelog
 
+- 1.7 (Round-66/F-P2A238-01/F-P2A238-03/2026-09-02): E-05 §S-2.12 — retired staging-table model (trajectory_records_staging, four-crash-point matrix) replaced with per-run single-transaction DELETE and two-crash-point matrix (before-COMMIT, after-COMMIT) per BC-2.04.011 {INV-003}/VP-019 (round-62 redesign, F-P2A234-01). E-TRAJ-006 (DURABILITY, AES-GCM integrity check failed) added to error code set per BC-2.04.009 {INV-001}/EC-006 (round-62/63). E-07 §S-1.28 — VP-020 (proptest P1, BC-2.02.009 {INV-001}/{INV-002}, harness promote_retire_channel_idempotency) added to verification narrative (round-62 mint, F-P2A234-05).
 - 1.6 (Round-53-Phase-2-fix-burst/2026-08-31): E-05 §S-2.12 updated — staging-table swap model (trajectory_records_staging → trajectory_records) for compaction; VP-018 anchor corrected to retention-integrity invariants (BC-2.04.011 {INV-001}/{INV-002}); VP-019 four-crash-point matrix cited; error code set corrected to E-TRAJ-001..003+005 (E-TRAJ-004 RETIRED). E-07 §S-1.28 updated — module path corrected to channels/ directory; Channel trait impl added (Accumulator=Vec<T>, BSP dispatch, BC-2.02.007 {INV-004}); VP-017 dual-anchor corrected to BC-2.02.007 {INV-001}/{INV-002} + BC-2.02.008 {INV-001}/{INV-003}.
 - 1.5 (Stage-3/CAP-040/2026-08-31): E-07 extended with S-1.28 — LedgerChannel (BC-2.02.007/008) and PromoteRetireChannel (BC-2.02.009) pure channel reducers; VP-017 proptest P1 anchored to S-1.28. E-05 extended with S-2.12 — TrajectoryWriter/Reader/Compactor (BC-2.04.009/010/011); VP-018 proptest P1 anchored to S-2.12. E-07 points 13→18; E-05 points 16→24; product-epic point total 303→316. Story count 39→41 product stories; wave counts W1 27→28, W2 11→12.
 - 1.4 (round-8/O-P2A071-A+B/2026-08-26): E-22 VP description reworded — stale closed range "VP-001 through VP-014" replaced with accurate Kani-only scope statement; proptest/integration/unit VPs noted as Phase-3 anchor-story responsibility. Changelog backfilled with 1.0 initial row; 1.2 content unrecoverable from static analysis (git log is authoritative for 1.2 changes).

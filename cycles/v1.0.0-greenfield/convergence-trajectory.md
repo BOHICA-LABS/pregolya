@@ -5362,3 +5362,62 @@ Round-65 appended: →6 (P2A-237; 1H+4M+1LOW; ALL CLOSED; fix-burst D-343 CLOSED
 **LESSON OPPORTUNITY:** The VP Phase-scope-vs-red-gate contradiction class (VP-019 Phase-6 integration test incorrectly carried as a Phase-3 red-gate obligation in S-2.12) is a propagation-gap pattern from the round-62 VP-020 minting cascade — when VP-019 was aligned to the per-run DELETE model in round-62, the story-level gate designation was not simultaneously updated. The body-changelog propagation gap (verification-architecture body rows missing for 4 rounds through round-65) is the same class of propagation gap found in round-62 pass (F-P2A222-01 from D-332). Both are addressed by the state-manager's same-burst body-changelog discipline already codified.
 
 **NEXT: round-66 adversarial sweep on new frozen HEAD (post-D-343 push). Streak reset 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-66 — P2A-238 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-238 |
+| Round | 66 |
+| Frozen HEAD | 041aa0c |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 3 (1 HIGH + 1 MED + 1 LOW) |
+| Streak | RESET → 0/3 on push |
+| Label | FINDINGS_REMAIN |
+
+**Root cause:** Round-62 compaction-redesign + VP-020-mint cascade swept the BC/VP/architecture triangle (BC-2.02.009, BC-2.04.011, VP-020, ARCH-INDEX, STORY-INDEX VP-to-Story map, BC-INDEX VP-seed) but missed two story-corpus siblings: epics.md (frozen since round-53/D-333) and sprint-state.yaml S-1.28 vps mirror array.
+
+**Post-fix regression check:** Adversary confirmed all round-65 (P2A-237) edits propagated correctly with NO new drift. Regression check PASS.
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A238-01 | HIGH | epics.md §E-05 stale — still described the pre-round-62 staging-swap compaction model; the per-run single-txn DELETE mechanism, the two-crash-point crash-matrix, and E-TRAJ-006 error code were absent from the epic narrative despite being established in round-62. epics.md had been frozen since round-53 (D-333). | story-writer (epics.md §E-05 reconciled) |
+| F-P2A238-02 | MED | sprint-state.yaml S-1.28 vps array missing VP-020 — field showed [VP-017] but VP-020 was minted in round-62 and anchored to BC-2.02.009 {INV-001}+{INV-002} / S-1.28; the machine-dispatch yaml mirror was not updated in the same burst. | story-writer (sprint-state.yaml S-1.28 vps [VP-017]→[VP-017, VP-020]) |
+| F-P2A238-03 | LOW | epics.md §E-07 did not mention VP-020 among the verification properties relevant to the PromoteRetireChannel epic; VP-020 was minted in round-62 anchored to S-1.28 which belongs to E-07. | story-writer (epics.md §E-07 VP-020 reference added) |
+
+**Fix-burst CLOSED (D-344).** All 3 findings closed by story-writer. No process-gap findings tagged by adversary — cycle-closing checklist S-7.02 satisfied; no follow-up self-improvement story required.
+
+### Trajectory Tail Update
+
+Previous tail (post-round-65): →6 (P2A-237; 1H+4M+1LOW; ALL CLOSED; fix-burst D-343 CLOSED)
+
+Round-66 appended: →3 (P2A-238; 1H+1M+1LOW; ALL CLOSED; fix-burst D-344 CLOSED)
+
+Full trajectory tail (rounds 62–66): P2A-233=0/CLEAN(strict)→P2A-234=8→P2A-235=8→P2A-236=1(RECORDS-ONLY)→P2A-237=6→P2A-238=3
+
+### Post-Round-66 Status (D-344 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 0/3 (push resets frozen HEAD; round-67 gates on new HEAD)
+- Input-hashes (git object): epics.md 7b07bbd→75ab41e; sprint-state.yaml b268b07→b545a06 (neither file carries inputs:/input-hash frontmatter; no dependent artifacts with declared inputs require refresh)
+- STORY-INDEX: 1.49→1.50 (round-66 ops-artifact sync)
+
+**LESSON OPPORTUNITY (codified as L-270):** The round-62 VP-020-mint cascade swept the BC/VP/index triangle but did not sweep story-corpus prose (epics.md §ENN sections) or VP-mirror arrays in machine-dispatch yaml (sprint-state.yaml vps fields). POL-24 sibling-sweep must explicitly include epics.md §ENN sections for affected epics and sprint-state.yaml vps arrays for affected stories.
+
+**NEXT: round-67 adversarial sweep on new frozen HEAD (post-D-344 push). Streak reset 0/3. Target: CLEAN(strict).**

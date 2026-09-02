@@ -388,7 +388,7 @@ stories:
     wave: 1
     status: spec-ready
     bcs: [BC-2.02.007, BC-2.02.008, BC-2.02.009]
-    vps: [VP-017]
+    vps: [VP-017, VP-020]
     points: 5
     tdd_mode: strict
     priority: P1

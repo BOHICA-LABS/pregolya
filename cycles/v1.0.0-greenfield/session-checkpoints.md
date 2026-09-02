@@ -4201,3 +4201,27 @@ OBS (3) CLOSED: OBS-1 ADR-030 §SQLite Topology residue; OBS-2 VP-020 {INV-002} 
 | D-338 round-59 records-only micro-burst CLOSED (2026-09-01): trajectory-tail →1→0→0→0 (P2A-230=1 LOW; single-lens). F-P2A230-01 [LOW, POL-48] CLOSED. streak NOT RESET (TD-RECORDS-MICRO-BURST-001). | state-manager | COMPLETE | STATE.md v6.50. Single commit per TD-VSDD-053. |
 
 *Archived at D-343 (round-65 fix-burst close) to maintain STATE.md size budget.*
+
+---
+
+### D-342 ARCHIVED CHECKPOINT (round-64 records-only micro-burst; archived by D-344)
+
+#### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-64 closed. Round-64 RECORDS-ONLY micro-burst CLOSED (D-342, TD-RECORDS-MICRO-BURST-001) — P2A-236=1[LOW,POL-24]: F-P2A236-01 ADR-030 §Compaction Atomicity Decision "Reconciliation" paragraph + §SQLite Topology Decision imperative rewritten from stale present-tense/pending-directive to past-tense/discharged-resolved form (no normative mechanism content changed). CLEAN(PR-merge)=YES; CLEAN(strict)=NO; streak NOT RESET. Adversary independent re-derivation confirmed round-62/63 compaction redesign + reconciliation + E-TRAJ-006 + NFR-015-P0 + VP-020 all propagated correctly and coherently — CAP-040 corpus substantively converged at PR-merge threshold. Dependent input-hashes refreshed (8 files, ADR-030 §Compaction Atomicity Decision dependents): BC-2.02.008/009 + BC-2.04.009/010/011→df596f3; VP-017→48e2813; VP-019→0a7f751; VP-020→8aa1bd7. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3. D-342 pushed. Next: round-65 adversary cascade on new frozen HEAD.
+
+#### HEADS (at time of archival)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`)
+- factory-artifacts: PUSHED (D-342)
+
+#### ROUND-64 FINDINGS (CLOSED — 1 LOW in D-342 records-only micro-burst)
+LOW (1) CLOSED: F-P2A236-01[LOW,POL-24] ADR-030 §Compaction Atomicity Decision + §SQLite Topology Decision stale-prose rewritten past-tense/discharged (no normative change).
+
+*Archived at D-344 (round-66 fix-burst close) to maintain STATE.md size budget.*
+
+---
+
+## Archived Step Row — D-339 (from STATE.md Current Phase Steps, archived at D-344)
+
+| D-339 round-60 fix-burst CLOSED (2026-09-01): trajectory-tail →0→4→0→0 (P2A-231=0/CLEAN(strict) streak 1/3; P2A-232=4[3H+1M] streak reset 0/3). ALL 4 FINDINGS CLOSED: sprint-state.yaml S-1.28+S-2.12 added; wave-schedule.md §sub-batch-1e/2a (41 stories); dependency-graph §VP-to-Stories-matrix S-1.10+VP-019. Census UNCHANGED. streak 0/3. | state-manager | COMPLETE | STATE.md §D-339. Single commit per TD-VSDD-053. |
+
+*Archived at D-344 (round-66 fix-burst close) to maintain STATE.md size budget.*

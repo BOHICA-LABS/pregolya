@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.49"
+version: "1.50"
 status: active
 producer: state-manager
-timestamp: 2026-09-02T05:00:00Z
+timestamp: 2026-09-02T08:00:00Z
 changelog:
+  - "1.50 (round-66/D-344/2026-09-02): sprint-state.yaml S-1.28 vps [VP-017]→[VP-017, VP-020] (story-writer; F-P2A238-02[MED]). epics.md §E-05: per-run single-txn DELETE / two-crash-point crash-matrix / E-TRAJ-006 added (story-writer; F-P2A238-01[HIGH]); §E-07 VP-020 reference added (story-writer; F-P2A238-03[LOW]). No INDEX carries a structured epics.md version field — INDEX version-row sync NOT required. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.49 (round-65/D-343/2026-09-01): S-2.12 §VP-019 Phase-6 adjudication (story-writer; F-P2A237-01[HIGH] — red-gate removed; phase-scope corrections; input-hash self-updated). S-1.28 title-column aligned to verbatim-H1 (title-only; version UNCHANGED). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.48 (round-62/D-340/2026-09-01): VP-020 minted → BC-2.02.009 {INV-001}+{INV-002} (PromoteRetireChannel idempotency/ordering; proptest P1; S-1.28). BC coverage map: BC-2.02.009 row updated with (VP-020) annotation. VP-to-Story Anchor Map: VP-020 row added (BC-2.02.009 {INV-001}+{INV-002}; S-1.28; P1; pregolya-graph). Story version bumps: S-1.28 v1.8→v1.9 (input-hash 310b574); S-2.12 v1.4→v1.5 (input-hash e151f9d). Census: BC 140 / VP 20→21 / EC 142→143 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 14→15."
   - "1.47 (round-60/D-339/2026-09-01): ops-artifact propagation burst — S-1.28 and S-2.12 (added in D-327/CAP-040) propagated to machine-facing dispatch artifacts: sprint-state.yaml now includes per-story blocks for S-1.28 (Wave 1 sub-batch 1e; pregolya-graph; BC-2.02.007/BC-2.02.008/BC-2.02.009; VP-017; 5 pts) and S-2.12 (Wave 2 sub-batch 2a; pregolya-checkpoint; BC-2.04.009/BC-2.04.010/BC-2.04.011; VP-018/VP-019; 8 pts). wave-schedule.md §sub-batch-1e/2a (41 stories; S-1.28 sub-batch 1e; S-2.12 sub-batch 2a; input-hash 830a185) and dependency-graph.md §VP-to-Stories-matrix (S-1.10 blocks += S-2.12; VP-019 matrix row; 20 VPs) already completed by story-writer. STORY-INDEX story rows UNCHANGED. Census UNCHANGED: 42 total (41 product + 1 maint) / BC 140 / VP 20 / EC 142 / TV 794 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%). Process-gap lesson L-262 codified (OPS-ARTIFACT SIBLING-SET COMPLETENESS). streak 0/3 (push resets frozen HEAD; round-61 gates on new HEAD)."
