@@ -252,22 +252,42 @@ jobs:
     name: CI / deny
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: hashFiles('Cargo.toml') != ''
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         # v4.2.2
+
       - name: Install Rust toolchain
+        if: hashFiles('Cargo.toml') != ''
         uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+        # master
         with:
           toolchain: stable
-      - name: Cache
+
+      - name: Cache Cargo registry and build artefacts
+        if: hashFiles('Cargo.toml') != ''
         uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
         # v2.7.5
+
       - name: Install cargo-deny
-        run: cargo install cargo-deny --locked
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo install cargo-deny --locked
+
       - name: Run cargo deny
-        run: cargo deny check
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo deny check
+
+      - name: Skip (no workspace yet)
+        if: hashFiles('Cargo.toml') == ''
+        run: |
+          set -euo pipefail
+          echo "NONCERTIFYING: No Cargo.toml present — this job cannot validate anything."
+          echo "This job fails intentionally until the Phase 3 workspace (Cargo.toml) is committed."
+          exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # audit — cargo audit (RUSTSEC advisory database)
@@ -276,19 +296,39 @@ jobs:
     name: CI / audit
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: hashFiles('Cargo.toml') != ''
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         # v4.2.2
+
       - name: Install Rust toolchain
+        if: hashFiles('Cargo.toml') != ''
         uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88
+        # master
         with:
           toolchain: stable
-      - name: Cache
+
+      - name: Cache Cargo registry and build artefacts
+        if: hashFiles('Cargo.toml') != ''
         uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
         # v2.7.5
+
       - name: Install cargo-audit
-        run: cargo install cargo-audit --locked
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo install cargo-audit --locked
+
       - name: Run cargo audit
-        run: cargo audit
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          cargo audit
+
+      - name: Skip (no workspace yet)
+        if: hashFiles('Cargo.toml') == ''
+        run: |
+          set -euo pipefail
+          echo "NONCERTIFYING: No Cargo.toml present — this job cannot validate anything."
+          echo "This job fails intentionally until the Phase 3 workspace (Cargo.toml) is committed."
+          exit 1
