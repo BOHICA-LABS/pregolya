@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.18
 epic_id: E-10
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8d53bd8"
+input-hash: "3400dad"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.14, S-1.04, S-1.10, S-1.17]
@@ -52,10 +52,10 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.10.001 | BudgetPolicy Trait — Pure evaluate, Chain Composition | AC-001..AC-004 |
-| BC-2.10.002 | EvidenceJournal — Append-Only Audit Log | AC-005..AC-008 |
-| BC-2.10.003 | Graceful Halt — OnCeiling::Halt and Summarize | AC-009..AC-012 |
-| BC-2.10.004 | Budget Escalation via interrupt() | AC-013..AC-016 |
+| BC-2.10.001 | BudgetPolicy allow/escalate/deny Evaluation per Run and per Sub-Agent | AC-001..AC-004 |
+| BC-2.10.002 | Append-Only EvidenceJournal Records Every Budget Evaluation | AC-005..AC-008 |
+| BC-2.10.003 | Graceful Halt When Budget Ceiling Reached (on_ceiling = halt \| summarize); Remaining-Budget Exposure | AC-009..AC-012 |
+| BC-2.10.004 | Budget Escalation to HITL Interrupt (Soft-Limit Escalate Path and Hard-Ceiling on_ceiling=Escalate Path) | AC-013..AC-016 |
 
 ## Acceptance Criteria
 
@@ -209,3 +209,9 @@ When `on_ceiling = OnCeiling::Escalate` and a `Deny` decision is returned, the r
 | `pregolya-graph/src/budget/types.rs` | create | `BudgetEscalation`, `BudgetResume` |
 | `pregolya-graph/src/scheduler.rs` | modify | Budget evaluation, halt/summarize/escalate dispatch |
 | `pregolya-graph/tests/budget_policy.rs` | create | AC-001..AC-016 tests |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.3 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

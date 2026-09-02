@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.25
 epic_id: E-10
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-10/BC-2.10.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8dccaa5"
+input-hash: "5d98ae9"
 traces_to:
   - behavioral-contracts/BC-2.10.005
   - behavioral-contracts/BC-2.10.006
@@ -64,8 +64,8 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Covered ACs | Red Gate? |
 |-------|-------|-------------|-----------|
-| BC-2.10.005 | CompactionTrigger — 4-variant configuration enum with watermark arithmetic | AC-001..AC-005, AC-011 | No |
-| BC-2.10.006 | Compaction execution cycle — 7-step atomic execution with abort-on-error | AC-006..AC-010 | No |
+| BC-2.10.005 | CompactionTrigger Configuration — Disabled/OnWatermark/OnMessageCount/OnTokenCount; BudgetConfig Extension; Watermark Arithmetic (VP-012 Kani Seed) | AC-001..AC-005, AC-011 | No |
+| BC-2.10.006 | Compaction Execution — ConversationSnapshot from FTS; Mid-Run Window REPLACEMENT; CompactionEvent → EvidenceJournal; Checkpoint Immutability; DefaultSummarizationPolicy | AC-006..AC-010 | No |
 
 ## Acceptance Criteria
 
@@ -235,3 +235,9 @@ crates/pregolya-graph/
 **Files to modify (existing):** `pregolya-core/src/lib.rs` (add `pub mod budget` if not already present from S-1.18), `pregolya-graph/src/budget/mod.rs` (add `pub use executor::*;` — S-1.18 already creates this file), `pregolya-graph/src/scheduler.rs` (super-step-loop compaction trigger check — calls `core::budget::check_watermark_trigger` at super-step boundary).
 
 **Scheduler.rs coordination note:** S-1.25 is in sub-batch 1l — transitively after all other scheduler modifiers (S-1.16 in 1h modifies ceiling/run-ID; S-1.18 in 1g modifies budget evaluation; both feed S-1.16 which feeds S-1.25 via the S-1.25→S-1.24→S-1.23→S-1.20→S-1.16 chain). No new `depends_on` edge is required: the existing DAG guarantees S-1.25 merges after S-1.16 and S-1.18. The compaction trigger check is additive in the per-super-step section — it must be positioned AFTER the budget evaluation from S-1.18 and AFTER the ceiling check from S-1.16.
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.5 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

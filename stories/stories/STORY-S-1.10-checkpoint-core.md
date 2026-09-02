@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.10
 epic_id: E-05
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "36f42b3"
+input-hash: "a17e084"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.04, S-1.02]
@@ -49,12 +49,12 @@ tdd_mode: strict
 | BC | Title | Covered ACs |
 |----|-------|------------|
 | BC-2.04.001 | Per-Task put_writes Completes Before Next Super-Step Begins | AC-001..AC-004, AC-023 |
-| BC-2.04.002 | DurabilityTier — Sync Default, Async Opt-in, Exit Opt-in | AC-005..AC-007 |
+| BC-2.04.002 | Sync Durability Tier Is Default; Async and Exit Are Explicit Opt-In | AC-005..AC-007 |
 | BC-2.04.003 | Monotonic Logical-Clock Checkpoint IDs — Wall-Clock UUIDs Rejected | AC-008..AC-010 |
 | BC-2.04.004 | Fork Lineage via parent_checkpoint_id Pointers; No State Copy on Fork | AC-011..AC-012 |
-| BC-2.04.005 | Crash Recovery — Committed Tasks Not Re-executed on Resume | AC-013..AC-015, AC-024 |
-| BC-2.04.006 | Session Triple-Address Uniqueness — VP-002 Kani Seed | AC-016..AC-019 |
-| BC-2.04.007 | Encryption at Rest — Symmetric Coverage (put AND put_writes) | AC-020..AC-022 |
+| BC-2.04.005 | Crash Recovery — Completed Tasks Not Re-Executed After Process Restart | AC-013..AC-015, AC-024 |
+| BC-2.04.006 | Session Triple-Address Uniqueness (thread_id, checkpoint_ns, checkpoint_id) — Kani VP Seed | AC-016..AC-019 |
+| BC-2.04.007 | Encryption at Rest Covers Both State AND Event Payloads; Rotation Errors Propagate | AC-020..AC-022 |
 
 ## VP-002 ANCHOR (Kani P0)
 
@@ -272,6 +272,7 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.4 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |
 | 1.3 | 2026-08-26 | SW-2/bc-completeness-hardening: BC-2.04.001 → AC-023 (EC-005 async join-failure at run exit → run failed, E-CHKPT-001; graph output NOT returned); BC-2.04.005 → AC-024 (EC-007 pending_writes reapply read/deserialize failure → E-CHKPT-003). EC-006/EC-007 added. | SW-2 |
 | 1.2 | 2026-08-24 | P2A-043 F-05: prose ordinal cross-refs converted to stable tags | P2A-043 F-05 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |

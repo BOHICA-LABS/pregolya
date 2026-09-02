@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (round-79/F-P2A251-02 verify-pass (byte-exact H1 escaping)/2026-09-02): BC-2.14.005 table title cell corrected from escaped Deref\\<Target=str\\> to unescaped Deref<Target=str> to byte-match canonical H1."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -17,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8df58c2"
+input-hash: "595f384"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]
@@ -49,7 +50,7 @@ tdd_mode: strict
 |----|-------|------------|
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003 |
 | BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006 |
-| BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref\<Target=str\> | AC-007..AC-010 |
+| BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | AC-007..AC-010 |
 | BC-2.14.006 | Validation Failures Propagate Err(PregolyaError); No Silent None | AC-011..AC-014 |
 
 ## Acceptance Criteria

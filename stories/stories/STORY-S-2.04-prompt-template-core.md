@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.04
 epic_id: E-18
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-29T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-18/BC-2.18.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "1d3a308"
+input-hash: "341be05"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
@@ -44,7 +44,7 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.18.001 | PromptTemplate — f-String Engine; from_template Fallible Constructor; format() Renders or Returns E-TMPL-003 / E-TMPL-004 | P1 |
+| BC-2.18.001 | PromptTemplate F-String Rendering, Partial Binding, Variable Detection, Strict-Undefined Guard, and Runnable<HashMap<String,TemplateVar>,PromptValue> | P1 |
 | BC-2.18.002 | ChatPromptTemplate Multi-Message Rendering, PromptValue Enum (String/Messages Variants, Send+Sync), and Runnable<HashMap<String,TemplateInput>,PromptValue> | P1 |
 | BC-2.18.003 | MessagesPlaceholder Vec<Message> In-Place Expansion and FewShotPromptTemplate Few-Shot Composition | P1 |
 
@@ -336,4 +336,5 @@ S-2.05 depends on this story for `ChatPromptTemplate::from_messages` being in pl
 - "1.4 (P2A-047/2026-08-24): F-047-01: verification_properties frontmatter cleared to [] — VP-2.18.003-A and VP-2.18.003-B are BC-local (BC-2.18.003) and are not registered in VP-INDEX; they remain documented in AC-017 and AC-018 body traces per STORY-INDEX §Conventions."
 - "1.5 (SW-4/BC-completeness/2026-08-26): BC-2.18.003 propagation — AC-023 added for PC-009 FewShot output provenance (HumanMessage.trust_level = example_input.trust_level; AiMessage.trust_level = example_output.trust_level; None treated as Trusted downstream); input-hash updated c23ad27."
 - "1.6 (R37/F-P2A156-02-propagation/2026-08-29): F-P2A156-02 [HIGH, POL-18]: L-227 sweep — two Runnable E0229-invalid associated-type-binding forms corrected to positional. AC-005: Runnable<Input=HashMap<String,TemplateVar>,Output=PromptValue> → Runnable<HashMap<String,TemplateVar>,PromptValue>. AC-009: Runnable<Input=HashMap<String,TemplateInput>,Output=PromptValue> → Runnable<HashMap<String,TemplateInput>,PromptValue>. Both ACs note the E0229 prohibition. input-hash updated 1d3a308."
+- "1.7 (round-79/F-P2A251-02/2026-09-02): BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02."
 

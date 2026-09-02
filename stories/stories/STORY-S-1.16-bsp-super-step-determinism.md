@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.16
 epic_id: E-08
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-03/BC-2.03.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "d953a3a"
+input-hash: "f9c2320"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.15, S-1.10, S-1.13, S-1.17, S-1.18]
@@ -50,9 +50,9 @@ changelog:
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.03.001 | BSP Determinism — Super-Step Ceiling and Reproducibility | AC-001..AC-005 |
-| BC-2.03.002 | Concurrent LastValue Write Rejection | AC-006..AC-007 |
-| BC-2.03.003 | Deterministic Reducer Sort — (task_id, channel_name) Ascending | AC-008..AC-010 |
+| BC-2.03.001 | BSP Super-Step Execution Determinism — Kani VP Seed (NE-17) | AC-001..AC-005, AC-009 |
+| BC-2.03.002 | Concurrent LastValue Write Rejection Raises InvalidUpdateError | AC-006..AC-007 |
+| BC-2.03.003 | Deterministic Reducer Application Order (Task-Identity Sort) | AC-008, AC-010 |
 
 ## Acceptance Criteria
 
@@ -179,3 +179,9 @@ The sort comparator uses the `task_id` string (not a numeric hash) as the primar
 | `pregolya-graph/src/proofs/mod.rs` | create | Re-export only |
 | `pregolya-graph/src/proofs/bsp_determinism.rs` | create | `bsp_determinism_harness` Kani proof (VP-001 test vehicle) |
 | `pregolya-graph/tests/bsp_determinism.rs` | create | AC-001..AC-010 tests |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.2 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02; AC-009 moved from BC-2.03.003 range to BC-2.03.001 range (traces to BC-2.03.001 INV-002). | round-79 F-P2A251-02 |

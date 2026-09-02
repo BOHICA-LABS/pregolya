@@ -4422,3 +4422,16 @@ develop: `bfe0592` — LOCAL ONLY; factory-artifacts: PUSHED (D-351). No .worktr
 
 ### NEXT-ACTION (D-351)
 Dispatch round-75 adversary cascade on new frozen HEAD (post-D-351 push). Streak 0/3.
+
+---
+
+## Session Checkpoint — D-352 (archived 2026-09-02; replaced by D-353)
+
+### RESUME IN ONE BREATH (D-352)
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-77 closed + D-346 reconciliation-burst. D-352 CLOSED (2026-09-02) — round-77 P2A-249 (2 MED): F-P2A249-01[MED] dependency-graph.md VP-017 BC-anchor BC-2.02.007→BC-2.02.007 + BC-2.02.008 (dual; round-50 anchor never propagated to VP matrix); F-P2A249-02[MED] VP-006-B Additional-Stories S-6.01→— (S-6.01 excludes VP-006-B). Full 21-row VP-to-Stories Matrix re-derived; all rows VP-INDEX byte-exact. Rounds 75+76 banked streak 2/3 (CLEAN(strict)) before round-77 caught drift; streak reset 0/3 on fix push. story-writer: dependency-graph.md §Changelog (v1.7→v1.8). state-manager: STORY-INDEX §Changelog (1.56→1.57); L-275 codified. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15.
+
+### HEADS (D-352)
+develop: `bfe0592` — LOCAL ONLY; factory-artifacts: PUSHED (D-352) at SHA 5694949. No .worktrees/. No open PRs.
+
+### NEXT-ACTION (D-352)
+Dispatch round-78 adversary cascade on new frozen HEAD (post-D-352 push). Streak 0/3. 2 open [process-gap] items for convergence-close: (1) VP-INDEX-mirror propagation hook; (2) story-changelog machine-coverage extension per L-274.

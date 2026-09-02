@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.17
 epic_id: E-09
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "70c134c"
+input-hash: "5aa1880"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14, S-1.04, S-1.15]
@@ -54,9 +54,9 @@ changelog:
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.06.001 | 16 StreamEvent Variants with Causal Ordering | AC-001..AC-006 |
-| BC-2.06.002 | run_id + parent_ids Correlation on Every Event | AC-007..AC-009, AC-013 |
-| BC-2.06.003 | Streaming/Unary Identical Final Answer (DI-011 / NE-13) | AC-010..AC-012 |
+| BC-2.06.001 | Typed Per-Phase Event Taxonomy (run/step/node/tool start-stream-end; guardrail_decision; tool_approval_request/resolved; compaction_event; error) — 16 Variants | AC-001..AC-006 |
+| BC-2.06.002 | run_id + parent_ids Correlation Across All Streaming Events | AC-007..AC-009, AC-013 |
+| BC-2.06.003 | Streaming and Unary Run Produce Identical Final Answer (NE-13) | AC-010..AC-012 |
 
 ## Acceptance Criteria
 
@@ -198,3 +198,9 @@ When a run is interrupted (via `interrupt()`) and the server creates a new `Run`
 | `pregolya-core/src/lib.rs` | modify | Re-export `StreamEvent` from `events` module |
 | `pregolya-graph/src/lib.rs` | modify | Re-export `event_emitter` module; re-export `StreamEvent` via `pregolya-core` |
 | `pregolya-graph/tests/streaming_events.rs` | create | AC-001..AC-012 tests |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.6 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

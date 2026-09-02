@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.11
 epic_id: E-05
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,7 +12,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-04/BC-2.04.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "622cd1e"
+input-hash: "a465b91"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 3
 depends_on: [S-1.10]
@@ -42,7 +42,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.04.008 | Full-Text Search Over Checkpoint History via SQLite FTS5 | AC-001..AC-009 |
+| BC-2.04.008 | FTS Conversation Search Over Checkpoint History (Single-Process; SQLite FTS5) | AC-001..AC-009 |
 
 ## Acceptance Criteria
 
@@ -175,6 +175,7 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.4 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |
 | 1.3 | 2026-08-31 | Round-49 BC-propagation: AC-001 updated — `FtsSearchConfig<'a>` with lifetime; method signature `fts_search(&self, query: &str, config: FtsSearchConfig<'_>) -> Result<Vec<FtsSearchResult>, PregolyaError>`; field `thread_id: Option<&'a str>`. Architecture Mapping and File Structure updated to `FtsSearchConfig<'a>`. input-hash updated. | round-49 |
 | 1.2 | 2026-08-26 | SW-2/bc-completeness-hardening: BC-2.04.008 → AC-009 (EC-008 search_history tool error → ToolOutput::Error; run does NOT halt). EC-006 added to edge cases. | SW-2 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |

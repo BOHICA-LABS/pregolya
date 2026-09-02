@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.57"
+version: "1.58"
 status: active
 producer: state-manager
-timestamp: 2026-09-02T21:00:00Z
+timestamp: 2026-09-02T23:30:00Z
 changelog:
+  - "1.58 (round-79 fix-burst/D-353/2026-09-02): Corpus-wide verbatim-H1 BC-table title sweep (story-writer; F-P2A251-02[LOW] ~30 spec files / ~90 title cells corrected to byte-exact BC canonical H1 per orchestrator Option A human-confirmed ruling). F-P2A251-01[LOW] S-1.09 NE-02 anchor mis-label corrected. Story version bumps: S-1.02→v1.2, S-1.07→v1.6, S-1.08→v1.4, S-1.09→v1.3, S-1.10→v1.4, S-1.11→v1.4, S-1.12→v1.3, S-1.13→v1.4, S-1.14→v1.8, S-1.15→v1.4, S-1.16→v1.2, S-1.17→v1.6, S-1.18→v1.3, S-1.19→v1.10, S-1.20→v1.4, S-1.21→v1.4, S-1.22→v1.3, S-1.23→v1.7, S-1.24→v1.7, S-1.25→v1.5, S-1.26→v1.13, S-1.27→v1.10, S-2.03→v1.7, S-2.04→v1.7, S-2.06→v1.11, S-2.07→v1.4, S-2.08→v1.3, S-2.09→v1.5, S-2.10→v1.6, S-6.01→v1.3. §Conventions note updated: verbatim-H1 is now enforced for story BC-table title cells corpus-wide (D-353; replaces former paraphrase convention). L-276 codified (3-part lesson). STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.57 (round-77 fix-burst/D-352/2026-09-02): dependency-graph.md §Changelog (v1.7→v1.8) (story-writer; F-P2A249-01[MED] VP-017 BC anchor corrected BC-2.02.007→BC-2.02.007 + BC-2.02.008 per VP-INDEX §VP Catalog dual-anchor form; F-P2A249-02[MED] VP-006-B Additional-Stories corrected S-6.01→— per S-6.01 frontmatter verification_properties exclusion; full 21-row VP-to-Stories Matrix re-derived from VP-INDEX source-of-truth; clause tags synced on VP-015/VP-016/VP-018/VP-006-B). dependency-graph.md input-hash 2dd0b6f→36ce19e. STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.56 (round-74 records-only micro-burst/D-351/2026-09-02): S-2.06 story v1.8→v1.9 (story-writer; F-P2A246-01[LOW] §Changelog entry 1.6 SS-14 parenthetical corrected from stale \"(Credential Safety)\" to canonical \"(Typed Error Taxonomy)\" per ARCH-INDEX Subsystem Registry SS-14 row; F-P2A246-02[LOW] §Behavioral Contracts BC-2.08.006 title cell corrected to byte-verbatim angle-bracket-escaped form per BC-2.08.006 canonical H1 (TD-RECORDS-MICRO-BURST-001 records-only micro-burst)). STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.55 (round-73 fix-burst/D-350/2026-09-02): S-2.06 story v1.7→v1.8 (story-writer; F-P2A245-01[HIGH] BC-2.08.006 BC-table title cell corrected to verbatim canonical H1 'Standalone SDK Crate Split Architecture (pregolya-<provider>-sdk + Adapter)' per POL-7/POL-8; F-P2A245-02[MED,process-gap] changelog entries reordered to strict ascending 1.1→1.8 sequence). S-2.06/BC-2.14.005 co-anchor downstream set verified CLEAN this pass (class closed). STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
@@ -237,11 +238,11 @@ input-hash: "0bcc4f8"
 
 ## Conventions
 
-> **Story title and BC-table "Title" cells** are story-scoped intent summaries written by the
-> story-writer to capture implementation focus. They are NOT canonical BC titles.
-> The canonical BC titles are authoritative in `BC-INDEX.md` (POL-7).
-> The story BC-table column labelled "Title" (or "Description") should be read as "Intent" —
-> a paraphrase that may differ from the BC-INDEX H1 in wording while pointing to the same contract.
+> **Story BC-table "Title" cells** must be BYTE-EXACT to the corresponding BC's canonical H1
+> as it appears in the BC file, including any angle-bracket escaping as-is (e.g., `pregolya-\<provider\>-sdk`
+> stays escaped; `<Target=str>` stays unescaped — NOT normalized to a house style).
+> Enforced corpus-wide since round-79 (D-353; F-P2A251-02; orchestrator Option A, human-confirmed 2026-09-02).
+> The canonical BC H1 is authoritative per `BC-INDEX.md` (POL-7/POL-8).
 > BC IDs and AC traces (`traces to BC-S.SS.NNN`) are the authoritative cross-references.
 
 > **VP annotation in BC-coverage-map** `(VP-NNN)` suffix is REQUIRED for ALL BCs that appear as

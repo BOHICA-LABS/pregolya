@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.26
 epic_id: E-14
-version: "1.12"
+version: "1.13"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "033617f"
+input-hash: "c6273e3"
 traces_to:
   - behavioral-contracts/BC-2.12.001
   - behavioral-contracts/BC-2.12.002
@@ -73,9 +73,9 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
-| BC-2.12.001 | Thread CRUD — create, get, list, delete with cascade-delete | No |
-| BC-2.12.002 | Assistant CRUD — immutable version snapshots, configurable map | No |
-| BC-2.12.003 | Run lifecycle — 9-arc state machine, Run-Config Merge, node-body-panic recovery ({INV-007}: E-GRAPH-019 NodePanic + E-GRAPH-011 ConditionalEdgePanic), External-Boundary Error-Sanitization ({INV-008}: internal-panic static-replace → redact_credentials → sanitize_internal_ids; TV-012, TV-013) | No |
+| BC-2.12.001 | Thread Resource CRUD (Create, Read, List, Delete Durable Conversation History) | No |
+| BC-2.12.002 | Assistant Resource CRUD (Named Agent Config with Graph Reference) | No |
+| BC-2.12.003 | Run Creation and Execution Lifecycle (queued → in_progress → completed/failed/cancelled/summary_halt; interrupted is pausable/resumable) | No |
 
 ## Acceptance Criteria
 
@@ -301,3 +301,9 @@ crates/pregolya-server/
 
 **Files to create (new):** all routes/, models/, store/ files.
 **Files to modify (existing):** `pregolya-server/src/lib.rs` (register routes), `Cargo.toml` (add axum if not present).
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.13 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

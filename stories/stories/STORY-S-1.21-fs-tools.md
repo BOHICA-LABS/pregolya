@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.21
 epic_id: E-13
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -19,7 +19,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.004.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "7903b1c"
+input-hash: "b21d13d"
 traces_to:
   - behavioral-contracts/BC-2.23.001
   - behavioral-contracts/BC-2.23.002
@@ -66,10 +66,10 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
-| BC-2.23.001 | ReadFileTool — PathGuard-confined byte read, 1 MiB cap | No |
-| BC-2.23.002 | WriteFileTool — PathGuard-confined atomic write | No |
-| BC-2.23.003 | EditFileTool — exact-match / fuzzy replace with atomic write | No |
-| BC-2.23.004 | ListDirTool — depth-1 directory listing with DirEntry | No |
+| BC-2.23.001 | ReadFileTool — PathGuard-Confined File Read; max_bytes 1 MiB Limit; E-TOOLS-001/002/008 | No |
+| BC-2.23.002 | WriteFileTool — PathGuard-Confined Atomic Write; High ActionRisk; No Auto-Retry; E-TOOLS-001/008 | No |
+| BC-2.23.003 | EditFileTool — Exact-Match String Replace; E-TOOLS-003 on No-Match; Opt-In Fuzzy Fallback (EditConfig::fuzzy_threshold); Conditional Retry Safe; E-TOOLS-001/003/008 | No |
+| BC-2.23.004 | ListDirTool — PathGuard-Confined Directory Listing; ReadOnly; E-TOOLS-001/008; DirEntry Struct | No |
 
 ## Acceptance Criteria
 
@@ -256,3 +256,9 @@ crates/pregolya-tools/
 
 **Files to create (new):** all of the above.
 **Files to modify (existing):** workspace root `Cargo.toml` (add `pregolya-tools` to `members`).
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.4 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.27
 epic_id: E-14
-version: "1.9"
+version: "1.10"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -25,7 +25,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-12/BC-2.12.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "b5934d3"
+input-hash: "44e8215"
 traces_to:
   - behavioral-contracts/BC-2.12.004
   - behavioral-contracts/BC-2.12.005
@@ -72,10 +72,10 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
-| BC-2.12.004 | CronSchedule — fresh isolated session per firing, skip missed-fire policy | No |
-| BC-2.12.005 | SecurityConfig::default — CORS denied, debug route gated (DI-013) | No |
-| BC-2.12.006 | Store trait seams — IdempotencyStore, RateLimitStore, RunStore | No |
-| BC-2.12.007 | SSE streaming — same engine as unary (DI-011); 5 event types; SEC-BOUND-001 External-Boundary Error-Sanitization on SSE `StreamEvent::Error.error_message` + unary non-2xx error body ({INV-004}; TV-007/TV-008/TV-009) | No |
+| BC-2.12.004 | CronSchedule Creation and Proactive Run Execution | No |
+| BC-2.12.005 | SecurityConfig::default() Denies CORS; Debug Route Gated on Explicit Opt-In Key (NE-14) | No |
+| BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Trait Seams with Durable Backends (NE-08) | No |
+| BC-2.12.007 | Streaming Endpoint and Unary Endpoint Drive Same Graph Engine, Same Final Answer | No |
 
 ## Acceptance Criteria
 
@@ -283,3 +283,9 @@ crates/pregolya-server/
 
 **Files to create (new):** all cron/ files, `security.rs` (flat), new store/ files, and `streaming.rs` (flat).
 **Files to modify (existing):** `pregolya-server/src/lib.rs` (register new routes, store construction), `pregolya-server/Cargo.toml` (add cron, rusqlite if not present), Canonical Structured Event Catalog (3 new event_type rows).
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.10 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

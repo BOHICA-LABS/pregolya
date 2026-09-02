@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.06
 epic_id: E-19
-version: "1.9"
+version: "1.11"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -248,3 +248,5 @@ workspace — set the correct pattern from the start. Future crates inherit this
 - 1.7 (round-72 F-P2A244-01/2026-09-02): priority corrected P1→P0. Derived-priority rule (STORY-INDEX §Story-Inventory convention): priority = max(P0>P1>P2) over all BCs in behavioral_contracts. BC-2.14.005 (P0, credential-opacity obligation, DI-010, AC-006→{PC-002}) is the highest-priority BC in this story; BC-2.08.006 (P1) does not cap it. Co-anchored BCs count toward derived priority per orchestrator adjudication. Under-prioritizing a P0 security obligation (credential opacity) is forbidden under the production-grade default.
 - 1.8 (round-73 F-P2A245-01, F-P2A245-02/2026-09-02): F-P2A245-01 — BC-2.08.006 body BC-table title cell replaced with verbatim canonical H1 "Standalone SDK Crate Split Architecture (pregolya-<provider>-sdk + Adapter)" (POL-7/POL-8). F-P2A245-02 — changelog entries 1.6 and 1.7 reordered to strict ascending sequence (1.5→1.6→1.7); mis-insertion from round-72 edit corrected.
 - 1.9 (round-74 F-P2A246-01, F-P2A246-02/2026-09-02): F-P2A246-01 — changelog entry §1.6 SS-14 parenthetical corrected from stale "(Credential Safety)" to canonical "(Typed Error Taxonomy)" per ARCH-INDEX Subsystem Registry SS-14 row. F-P2A246-02 — §Behavioral Contracts table BC-2.08.006 title cell corrected from unescaped angle-bracket form to byte-verbatim canonical H1 form "Standalone SDK Crate Split Architecture (pregolya-\<provider\>-sdk + Adapter)" per BC-2.08.006 §H1 (POL-12/records-only micro-burst TD-RECORDS-MICRO-BURST-001).
+- 1.10 (round-79/F-P2A251-02/2026-09-02): BC-2.14.005 title cell corrected from unescaped `Deref<Target=str>` to byte-verbatim canonical H1 form `Deref\<Target=str\>` per POL-7/F-P2A251-02.
+- 1.11 (round-79/F-P2A251-02 verify-pass/2026-09-02): BC-2.14.005 title cell corrected back to canonical unescaped `Deref<Target=str>` — BC file H1 is UNESCAPED; version 1.10 erroneously added escaping; this verify-pass restores byte-exact match to canonical H1. BC-2.08.006 `\<provider\>` form verified unchanged (canonical H1 IS escaped).

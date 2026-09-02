@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.09
 epic_id: E-20
-version: "1.3"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-22/BC-2.22.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "229b592"
+input-hash: "01c2667"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.06, S-1.02]
@@ -45,9 +45,9 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.22.001 | Embeddings Trait — Async, Vec<f32>, Arc<dyn Embeddings> Object-Safety | P1 |
-| BC-2.22.002 | EmbeddingsOpenAI — Credential Opacity Red Gate, Model Selection, Batch Behavior | P1 |
-| BC-2.22.003 | EmbeddingsOllama — Batch and Legacy Endpoint Behavior | P1 |
+| BC-2.22.001 | Embeddings Trait — embed_documents Batch; embed_query; Dimensionality Contract → E-EMBED-001; Batch Partial-Failure as Err; Arc<dyn Embeddings> Dyn-Safe (VP-008 Proptest Seed) | P1 |
+| BC-2.22.002 | EmbeddingsOpenAI — text-embedding-3-small/large/ada-002-legacy; OpenAiApiKey Redacted-Debug Credential Opacity (DI-010); reqwest/rustls-tls/.timeout(30s); Batch Partial-Failure as Err | P1 |
+| BC-2.22.003 | EmbeddingsOllama — No API Key; POST /api/embed Preferred; use_legacy_endpoint Toggle for /api/embeddings; reqwest/rustls-tls/.timeout(30s) Unconditional | P1 |
 
 ## Acceptance Criteria
 
@@ -367,6 +367,8 @@ dependency from `pregolya-core` to any provider adapter crate MUST fail the buil
 
 ## Changelog
 
+- **1.4 (round-79/F-P2A251-02/2026-09-02):** BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02.
+- **1.5 (round-79/F-P2A251-02 verify-pass/2026-09-02):** Byte-exact H1 escaping verify-pass — BC-2.22.001 `Arc\<dyn Embeddings\>` → `Arc<dyn Embeddings>` (canonical H1 is UNESCAPED; prior sweep wrote changelog entry without fixing the cell).
 - **1.3 (BC-2.22.002 + BC-2.22.003 / 2026-08-26):** BC-2.22.002 updated to v1.5 (B-SS19-23 HIGH provider-error-code gap closure — EC-007 HTTP 401→E-PROV-004, EC-008 connection-refused→E-PROV-012 added; PC-006/EC-003/004/005 specific E-PROV codes added). BC-2.22.003 updated to v1.6 (EC-001/002/004/005: bare Err→E-PROV-008/012 specific codes). Story changes: (1) AC-011 trace corrected from BC-2.22.002 PC-006 → BC-2.22.001 PC-002 (PC-006 v1.5 now covers HTTP errors; count-mismatch behavior belongs to BC-2.22.001 PC-002). (2) AC-018–AC-022 added for BC-2.22.002 EC-003/004/005/007/008 (OpenAI: 429→E-PROV-008, 5xx→E-PROV-008, timeout→E-PROV-012, 401→E-PROV-004, conn-refused→E-PROV-012). (3) AC-023–AC-027 added for BC-2.22.003 EC-001/002/003/004/005 (Ollama: 404-no-fallback→E-PROV-008, 500-serial→E-PROV-008, conn-refused→E-PROV-012, model-not-found→E-PROV-008, timeout→E-PROV-012). (4) Edge Cases table extended with EC-006 through EC-011. (5) Tasks 14–17 updated to implement and verify all 27 ACs. BC table version column added.
 - **1.2 (P2A-043 F-05 / 2026-08-24):** P2A-043 F-05: prose ordinal cross-refs converted to stable tags.
 - **1.1 (ADR-027 M3 / 2026-08-24):** ADR-027 M3: AC traces re-cited to stable clause anchors. Mis-anchors corrected across all 17 ACs: AC-001 PC-001→PC-002 (one-per-input is in PC-002, not PC-001 which is object safety), AC-002 PC-002→PC-003 (embed_query is PC-003), AC-003 PC-003→INV-002 (consistent inner length is INV-002), AC-004 PC-004→PC-002 (no-partial-batch is in PC-002 last bullet, not PC-004 which is about dimension being model-specific), AC-005 INV-001→PC-001 (object safety is PC-001; INV-001 is one-vector-per-input), AC-006 PC-001→PC-004 (credential opacity is PC-004), AC-007 PC-002→PC-003 (model names/defaults is PC-003), AC-008 PC-003→PC-003 (direct ordinal match confirmed), AC-009 PC-004→PC-003 (ada-002 legacy warning is in PC-003, not PC-004 credential opacity), AC-010 PC-005→PC-005 (direct ordinal match confirmed), AC-011 PC-006→PC-006 (direct ordinal match confirmed), AC-012 PC-001→PC-001 (direct ordinal match confirmed), AC-013 PC-002→PC-002 (direct ordinal match confirmed), AC-014 PC-003→PC-004 (30s timeout is PC-004; PC-003 is no-API-key), AC-015 PC-004→INV-001 (no auto-fallback is INV-001), AC-016 PC-005→INV-003 (batch DI-014 legacy is INV-003; PC-005 is model validation), AC-017 INV-006→INV-006 (direct ordinal match confirmed). Architecture Compliance Rules table updated to match.

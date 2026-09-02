@@ -5999,3 +5999,99 @@ Full trajectory tail (rounds 74–77): P2A-246=2[LOW,RECORDS-ONLY]→D-351(recor
 - L-275 codified: VP-to-Stories Matrix as 4th VP-INDEX mirror; 5th occurrence of propagation-gap class
 
 **NEXT: round-78 on new frozen HEAD (post-D-352 push). Streak 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-78 — P2A-250 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-250 |
+| Round | 78 |
+| Frozen HEAD | 5694949 (post-D-352 push) |
+| Date | 2026-09-02 |
+| CLEAN(strict) | YES |
+| CLEAN(PR-merge) | YES |
+| Findings | 0 |
+| Streak | 1/3 (advanced from 0/3) |
+| Label | CLEAN |
+
+**Context note:** Fresh-context adversarial pass against frozen HEAD 5694949 (post-D-352 push). Streak advanced to 1/3.
+
+**Fix-burst:** None required.
+
+### Trajectory Tail Update
+
+Round-78 appended: →0 (P2A-250; CLEAN(strict)=YES; streak 1/3)
+
+### Post-Round-78 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 1/3 (advanced from 0/3; P2A-250 CLEAN(strict))
+
+**NEXT: round-79 on same frozen HEAD 5694949. Streak 1/3.**
+
+---
+
+## Round-79 — P2A-251 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-251 |
+| Round | 79 |
+| Frozen HEAD | 5694949 (same frozen HEAD as round-78) |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | YES |
+| Findings | 2 (2 LOW) |
+| Streak | RESET 1/3→0/3 (material multi-story fix push) |
+| Label | RECORDS-ONLY (2 LOW; no MED/HIGH/CRIT) |
+
+**Context note:** Fresh-context adversarial pass against frozen HEAD 5694949. Round-78 had banked 1/3 streak. Round-79 found 2 LOW findings: F-P2A251-01 (S-1.09 BC-2.13.002 NE-02 note-editor anchor mis-labelled) and F-P2A251-02 (Wave-1 story BC-table title cells were paraphrases, not verbatim-H1 — corpus-wide class). Orchestrator adjudicated Option A: every story-body `## Behavioral Contracts` table title cell must be BYTE-EXACT to its BC's canonical H1 (escaping mirrored as-is; NOT normalized to house style; human-confirmed convention ruling). ~30 stories / ~90 cells corrected. This fix-burst push resets streak to 0/3 per frozen-HEAD streak rule (material multi-story change). Round-80 gates on new frozen HEAD.
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A251-01 | LOW | S-1.09 §Behavioral Contracts table: BC-2.13.002 "NE-02" note-editor anchor was mis-labelled; correct anchor per BC file. | story-writer; S-1.09 NE-02 anchor corrected; v1.2→v1.3 |
+| F-P2A251-02 | LOW | Wave-1 story BC-table title cells (corpus-wide): ~29 stories carried paraphrase titles instead of verbatim-H1 as it appears in each BC's canonical H1 (including angle-bracket escaping as-is). Orchestrator adjudicated Option A (byte-exact, escaping mirrored; human-confirmed). | story-writer; corpus-wide sweep; ~30 stories / ~90 cells corrected; version bumps per story |
+
+**Fix-burst CLOSED (D-353).** Both LOW findings closed. Orchestrator Option A convention ruling codified as L-276 (3-part lesson). Streak reset 0/3 per frozen-HEAD streak rule (material multi-story change). Round-80 gates on new frozen HEAD.
+
+**NOTABLE (convention ruling):** The orchestrator adjudicated Option A: story BC-table title cells must be BYTE-EXACT to the canonical BC H1 as it appears in the BC file (including angle-bracket escaping as-is, e.g., `pregolya-\<provider\>-sdk` stays escaped, `<Target=str>` stays unescaped — NOT normalized to a house style). This is a human-confirmed convention ruling (2026-09-02). BC H1s themselves escape angle brackets INCONSISTENTLY across the corpus (a separate future BC-level normalization task for product-owner). The STORY-INDEX §Conventions note has been updated to reflect the verbatim-H1 rule.
+
+### Trajectory Tail Update
+
+Round-79 appended: →2 (P2A-251; 2 LOW; CLOSED; D-353; streak reset 0/3)
+
+Full trajectory tail (rounds 77–79): P2A-249=2[2MED]→D-352(fix,streak reset 0/3)→P2A-250=0/CLEAN(strict,streak 1/3)→P2A-251=2[2LOW,RECORDS-ONLY,corpus-wide verbatim-H1 sweep]→D-353(fix,streak reset 0/3)
+
+### Post-Round-79 Status (D-353 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total; version bumps only)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: RESET 0/3 (material multi-story fix push; new frozen HEAD for round-80)
+- STORY-INDEX: §Changelog (1.57→1.58); §Conventions note updated to verbatim-H1 rule (state-manager; D-353)
+- STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified)
+- L-276 codified (3-part lesson: verbatim-H1 enforced; BC H1 angle-bracket inconsistency future task; corpus-sweep concurrency hazard)
+
+**NEXT: round-80 on new frozen HEAD (post-D-353 push). Streak 0/3. Target: CLEAN(strict).**

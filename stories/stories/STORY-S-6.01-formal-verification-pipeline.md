@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-6.01
 epic_id: E-22
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/verification-architecture.md
-input-hash: "78ea975"
+input-hash: "7ac670b"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09, S-2.05, S-1.22]
@@ -33,6 +33,7 @@ tdd_mode: strict
 changelog:
   - "1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (2026-08-24): P2A-043 F-04: old-form ordinal cross-refs converted to stable tags"
+  - "1.3 (round-79/F-P2A251-02/2026-09-02): BC-2.17.001 title cell corrected to verbatim canonical H1 per POL-7/F-P2A251-02."
 ---
 
 # S-6.01: Formal Verification Pipeline — Kani Proof Execution, cargo-fuzz Smoke Gate, and Phase-7 Convergence Gate
@@ -49,7 +50,7 @@ changelog:
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.17.001 | Six P0 Kani VP Obligations + Three P1 Kani VP Obligations — D17-Q7+D21+D23 lock | P2 |
+| BC-2.17.001 | Six P0 Kani VP Obligations + Three P1 Kani VP Obligations | P2 |
 | BC-2.17.002 | cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths | P2 |
 
 ## Acceptance Criteria

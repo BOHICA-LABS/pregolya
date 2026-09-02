@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.20
 epic_id: E-12
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "2fee760"
+input-hash: "04e5cb9"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.16, S-1.17, S-1.10]
@@ -55,12 +55,12 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.05.001 | interrupt() Suspends Run with INTERRUPT Marker Checkpoint | AC-001..AC-004 |
-| BC-2.05.002 | FIFO Resume-Value Delivery via Per-Task Scratchpad | AC-005..AC-007 |
-| BC-2.05.003 | Interrupted Node Re-Executes from START on Resume | AC-008..AC-010 |
-| BC-2.05.004 | Command Struct Variants and Validation | AC-011..AC-014, AC-024..AC-026 |
-| BC-2.05.005 | Empty Queue and Invalid-State Guards | AC-015..AC-018 |
-| BC-2.05.006 | Risk-Tiered ActionRisk Interrupts | AC-019..AC-023 |
+| BC-2.05.001 | Interrupt Suspension with Durable State Persistence | AC-001..AC-004 |
+| BC-2.05.002 | FIFO Resume-Value Delivery Order | AC-005..AC-007 |
+| BC-2.05.003 | Interrupted Node Re-Executes from Start of Super-Step on Resume | AC-008..AC-010 |
+| BC-2.05.004 | Command(resume=value) API Contract for Programmatic Resume | AC-011..AC-014, AC-024..AC-026 |
+| BC-2.05.005 | Resume on Empty Interrupt Queue Returns Err(NoActiveInterrupt) | AC-015..AC-018 |
+| BC-2.05.006 | Risk-Tiered Interrupt Classification (Typed Action-Risk Levels for Domain A SOC) | AC-019..AC-023 |
 
 ## Acceptance Criteria
 
@@ -247,3 +247,9 @@ When the run IS in interrupted state and `Command(resume={interrupt_id: value})`
 | `pregolya-graph/src/types.rs` | modify | Add `Command`, `InterruptPayload`, `SendTarget`, per-task scratchpad type |
 | `pregolya-graph/src/scheduler.rs` | modify | `interrupt()` impl; resume dispatch; 7-guard state machine; risk gate |
 | `pregolya-graph/tests/hitl_interrupt_resume.rs` | create | AC-001..AC-023 tests |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.4 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

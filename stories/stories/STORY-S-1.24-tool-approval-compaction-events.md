@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.24
 epic_id: E-09
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -21,7 +21,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-06/BC-2.06.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "9cc4c11"
+input-hash: "9cb489d"
 traces_to:
   - behavioral-contracts/BC-2.06.004
   - behavioral-contracts/BC-2.06.005
@@ -67,9 +67,9 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
-| BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — payload, causal ordering before interrupt | No |
-| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — payload, emission on resume | No |
-| BC-2.06.006 | `compaction_event` StreamEvent (Event 15) — payload, parent_ids mandatory | No |
+| BC-2.06.004 | `tool_approval_request` StreamEvent (Event 13) — Payload; Emission Timing; Causal Ordering Before Interrupt | No |
+| BC-2.06.005 | `tool_approval_resolved` StreamEvent (Event 14) — Payload; Emission on Command(resume=…); Decision Outcome | No |
+| BC-2.06.006 | `compaction_event` StreamEvent (Event 15) — Payload; Emission After Compaction Completes; Trigger Variant | No |
 
 ## Acceptance Criteria
 
@@ -229,6 +229,7 @@ crates/pregolya-graph/
 
 | Version | Round / Date | Summary |
 |---------|-------------|---------|
+| 1.7 | round-79/F-P2A251-02 / 2026-09-02 | BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. |
 | 1.6 | R23-fix-burst / 2026-08-28 | O-P2A102-04 propagation — AC-002 ToolApprovalRequest `prompt` field confirmed `Option<String>` per interface-definitions.md canonical; no body type-shape change required (AC-002 already correct). Changelog direction flipped to descending (newest-first). |
 | 1.5 | P2-bc-completeness-burst-B / 2026-08-26 | BC-2.06.006 {INV-006}/{EC-006}: AC-011 Halt-over-compaction-failure precedence rule. BC table version bumped. |
 | 1.4 | P2A-043 F-05 / 2026-08-24 | Escalated EC citations redirected to PC/INV per PO adjudication. |

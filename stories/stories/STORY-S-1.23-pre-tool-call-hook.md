@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.23
 epic_id: E-12
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T14:00:00Z
@@ -20,7 +20,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-05/BC-2.05.008.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "1b3760d"
+input-hash: "ce117fc"
 traces_to:
   - behavioral-contracts/BC-2.05.007
   - behavioral-contracts/BC-2.05.008
@@ -65,8 +65,8 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
-| BC-2.05.007 | PreToolCallHook — 4-branch pre-invoke dispatch gate | No |
-| BC-2.05.008 | Skip-hook-on-resume invariant after PendingHumanApproval | No |
+| BC-2.05.007 | PreToolCallHook Dispatch — pre_invoke Contract; Approve/Deny/Edit/PendingHumanApproval; Fail-Closed Deny (VP-011 Kani Seed) | No |
+| BC-2.05.008 | Skip-Hook-on-Resume Invariant — ToolApprovalRequest Checkpoint Persistence; Command(resume=PreToolDecision); No Re-Invocation of pre_invoke | No |
 
 ## Acceptance Criteria
 
@@ -233,3 +233,9 @@ crates/pregolya-graph/
 
 **Files to create (new):** `src/hitl.rs` (all HITL surface items per above), `src/proofs/pre_tool_hook.rs` (VP-011 Kani harness stub — `deny_excludes_tool_invocation`; body `todo!()` for Phase 6).
 **Files to modify (existing):** `pregolya-graph/src/lib.rs` (add `pub mod hitl;` declaration).
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.7 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

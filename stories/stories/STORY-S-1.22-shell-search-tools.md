@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.22
 epic_id: E-13
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-23/BC-2.23.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "970624c"
+input-hash: "9b78ad8"
 traces_to:
   - behavioral-contracts/BC-2.23.005
   - behavioral-contracts/BC-2.23.006
@@ -62,8 +62,8 @@ Comfortable within context window. No split required.
 
 | BC ID | Title | Red Gate? |
 |-------|-------|-----------|
-| BC-2.23.005 | BashTool — sandboxed shell with non-lowerable Medium risk floor | No |
-| BC-2.23.006 | GrepTool — hermetic in-process regex search with confinement | No |
+| BC-2.23.005 | BashTool — Sandboxed Shell Execution; Non-Lowerable Medium Risk Floor; BashOutput; 256 KiB Output Cap; 30 s Timeout; E-TOOLS-004/007 (VP-013 Kani Seed) | No |
+| BC-2.23.006 | GrepTool — In-Process Regex Search; Linear-Time `regex` Crate; max_results 100 Cap; Hermetic; PathGuard Scope; E-TOOLS-001/008/009 | No |
 
 ## Acceptance Criteria
 
@@ -239,3 +239,9 @@ crates/pregolya-tools/
 
 **Files to create (new):** all shell/ and search/ modules; config.rs; `src/proofs/risk_floor.rs` (VP-013 Kani harness stub — `risk_floor_rejects_below_medium`; body `todo!()` for Phase 6).
 **Files to modify (existing):** `pregolya-tools/Cargo.toml` (add regex dep), `src/lib.rs` (add pub use).
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.3 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

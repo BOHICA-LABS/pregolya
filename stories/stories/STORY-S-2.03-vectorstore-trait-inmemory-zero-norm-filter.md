@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.03
 epic_id: E-17
-version: "1.5"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-20/BC-2.20.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c3c9bee"
+input-hash: "73ba057"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 10
 depends_on: [S-2.02, S-1.04, S-2.09]
@@ -46,11 +46,11 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.21.001 | VectorStore Trait — Core Methods, `&self` Receivers, Async Dyn-Compatible; VectorStoreFactory Sized-Bound Split | P1 |
-| BC-2.21.002 | InMemoryVectorStore — Arc<dyn Embeddings> DI, RwLock Storage, Vec<f32> Cosine Similarity | P1 |
-| BC-2.21.003 | InMemoryVectorStore Cosine Similarity Zero-Norm Guard: norm == 0.0 OR !norm.is_finite() → E-VS-001; VP-009 Kani P0 Proof | P0 |
-| BC-2.21.004 | MetadataFilter — FilterClause::Eq / Ne / In #[non_exhaustive]; Default similarity_search_with_filter Impl Returns Err(E-VS-005) on Non-Empty Filter | P1 |
-| BC-2.20.003 | VectorStoreRetriever — SearchType Enum (Similarity / SimilarityScoreThreshold / Mmr); k / fetch_k / lambda_mult Configuration; Constructed via as_retriever() | P1 |
+| BC-2.21.001 | VectorStore Trait — Instance-Method Surface; VectorStoreFactory Sized-Bounded Separation; Arc<dyn VectorStore> Dyn-Safety | P1 |
+| BC-2.21.002 | InMemoryVectorStore — Arc<dyn Embeddings> DI; RwLock Interior Mutability; Vec<f32> Cosine; VectorStoreFactory Constructor | P1 |
+| BC-2.21.003 | Zero-Norm Vector Guard — Vec<f32> Cosine Denominator Check Returns E-VS-001 Before Division (VP-009 Kani Candidate) | P0 |
+| BC-2.21.004 | MetadataFilter — Eq / Ne / In FilterClause; Additive similarity_search_with_filter; Native Pre-Filter vs InMemoryVectorStore Post-Filter; #[non_exhaustive] | P1 |
+| BC-2.20.003 | VectorStoreRetriever — SearchType Enum (Similarity \| SimilarityScoreThreshold \| Mmr); k / fetch_k / lambda_mult Configuration; Constructed via as_retriever() | P1 |
 
 ## Acceptance Criteria
 
@@ -371,3 +371,5 @@ The zero-norm guard `if norm == 0.0 || !norm.is_finite()` is EXACT — both cond
 - "1.3 (P2A-043/2026-08-24): P2A-043 F-03: PC-003 anchor confirmed by PO; escalation note cleared"
 - "1.4 (P2A-047/2026-08-24): F-047-02: SS-20 added to subsystems — BC-2.20.003 is owned by SS-20 (Document Retrieval) per ARCH-INDEX Subsystem Registry; subsystems must be a superset of covered-BC owners; STORY-INDEX S-2.03 Subsystem column updated to SS-21, SS-20."
 - "1.5 (SW-4b/BC-completeness/2026-08-26): B-SS19-23 propagation — AC-006 retrace BC-2.21.001 PC-002 → §{EC-003} (delete idempotent mandate per ADR-014 Decision 8); AC-026 added (BC-2.20.003 §{PC-003} + BC-2.21.001 §{PC-002}: Carbonell–Goldstein MMR formula, empty-set=0.0, lowest-index tie-break, pool-exhaustion→partial-return); AC-027 added (BC-2.21.003 §{VP-2.21.003-C}: per-round argmax score sequence weakly non-increasing); AC-028 added (BC-2.21.004 §{PC-006}: InMemory post-filter scan-all strategy); AC-029 added (BC-2.21.002 §{INV-006}: validate_embedding_batch → E-EMBED-001 before any write); BC-table version column removed (D-50 anti-version-pin); task 1 range updated AC-025→AC-029; task 6 expanded with scan-all and validate_embedding_batch notes; task 9 updated with E-EMBED-001 check; input-hash updated 6c33900."
+- "1.6 (round-79/F-P2A251-02/2026-09-02): BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02."
+- "1.7 (round-79/F-P2A251-02 verify-pass/2026-09-02): Byte-exact H1 escaping verify-pass — BC-2.21.001 `Arc\<dyn VectorStore\>` → `Arc<dyn VectorStore>`; BC-2.21.002 `Arc\<dyn Embeddings\>` → `Arc<dyn Embeddings>` and `Vec\<f32\>` → `Vec<f32>`; BC-2.21.003 `Vec\<f32\>` → `Vec<f32>`; BC-2.20.003 `\|` retained (structurally required by Markdown table syntax — canonical H1 bare `|` must be escaped in table cells). Canonical H1 source: BC files (UNESCAPED angle brackets)."

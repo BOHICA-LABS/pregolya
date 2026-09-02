@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.19
 epic_id: E-11
-version: "1.9"
+version: "1.10"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -27,7 +27,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "951a705"
+input-hash: "2e7fed6"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.14, S-1.04]
@@ -61,12 +61,12 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary | AC-001..AC-004, AC-026 (PRE-001) |
+| BC-2.11.001 | ProvenanceTag Attached at Every Ingress Boundary (Tool-Result, RAG, Memory) | AC-001..AC-004, AC-026 (PRE-001) |
 | BC-2.11.002 | GuardrailHook Fires Unconditionally at Tool-Result Ingress | AC-005..AC-009, AC-024, AC-025, AC-026 (PRE-001) |
 | BC-2.11.003 | GuardrailHook Fires at RAG Ingress | AC-010..AC-013, AC-026 (PRE-001) |
 | BC-2.11.004 | GuardrailHook Fires at Memory Ingress | AC-014..AC-016, AC-026 (PRE-001) |
 | BC-2.11.005 | Rejected Content Does Not Enter Model Context Under Any Code Path | AC-017..AC-020, AC-026 (PRE-001) |
-| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG | AC-021..AC-023, AC-026 (PRE-001) |
+| BC-2.11.006 | No-Hook Default — Content Passes Through with WARNING LOG (Default-Permit) | AC-021..AC-023, AC-026 (PRE-001) |
 
 ## Acceptance Criteria
 
@@ -313,3 +313,9 @@ via `register_guardrail`; assert `guardrail_hook()` returns `Some`; construct de
 | `pregolya-graph/src/provenance.rs` | create | ProvenanceTag attachment; hook dispatch; atomic rejection; no-hook WARN path |
 | `pregolya-graph/src/lib.rs` | modify | Re-export provenance types |
 | `pregolya-graph/tests/guardrail_ingress.rs` | create | AC-001..AC-023 tests |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.10 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

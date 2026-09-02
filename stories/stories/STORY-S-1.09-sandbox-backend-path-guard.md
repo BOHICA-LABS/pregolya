@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.09
 epic_id: E-04
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,7 +18,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-13/BC-2.13.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c80cc25"
+input-hash: "81146a0"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 13
 depends_on: [S-1.01, S-1.02]
@@ -49,12 +49,12 @@ tdd_mode: strict
 | BC | Title | Covered ACs |
 |----|-------|------------|
 | BC-2.13.001 | Enforcing Sandbox Backend (WASM or Container) Is Default (NE-01) | AC-001..AC-003, AC-022 |
-| BC-2.13.002 | ProcessBackend Emits WARN Log Before Every Execute (NE-02) | AC-004..AC-005, AC-023..AC-024 |
-| BC-2.13.003 | Strict Policy + Non-Enforcing Backend = Err(E-SBXD-002) | AC-006..AC-007 |
-| BC-2.13.004 | canonicalize_beneath_root at Access Time — VP-003 Kani Seed | AC-008..AC-012, AC-025 |
+| BC-2.13.002 | Process Backend Requires Explicit Opt-In and Emits Loud Runtime Warning | AC-004..AC-005, AC-023..AC-024 |
+| BC-2.13.003 | Strict Policy + Non-Enforcing Backend Returns Err(PolicyNotEnforceable) | AC-006..AC-007 |
+| BC-2.13.004 | All Workspace File Ops Call canonicalize_beneath_root at Access Time (NE-02) — Kani VP Seed | AC-008..AC-012, AC-025 |
 | BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | AC-013..AC-014 |
 | BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | AC-015..AC-018 |
-| BC-2.13.007 | Environment Variable Sanitization — Strip All, Allowlist Explicit | AC-019..AC-021 |
+| BC-2.13.007 | Environment Variable Sanitization at Sandbox Execution Boundary | AC-019..AC-021 |
 
 ## VP-003 ANCHOR (Kani P0)
 
@@ -276,3 +276,4 @@ Files to MODIFY:
 - 1.0 (2026-08-18): initial story authoring.
 - 1.1 (ADR-027 M3/2026-08-24): AC traces re-cited to stable clause anchors.
 - 1.2 (SW-2/bc-completeness-hardening/2026-08-26): BC-2.13.001 → AC-022 (PC-005 WASM memory-limit breach → E-SBXD-009; no Ok-with-partial); BC-2.13.002 → AC-023 (PC-007 spawn failure → E-SBXD-007; no WARN log emitted), AC-024 (PC-008 non-zero exit → E-SBXD-008; stderr MUST NOT reach model context without sanitization per DI-009); BC-2.13.004 → AC-025 (EC-006 non-escape canonicalize OS error → E-SBXD-010). EC-006..EC-009 added to edge cases. Tasks updated for new test functions. Corrections: AC-002 PC-002→PC-003 (unsafe constructor naming; old PC-002 was BackendCapabilities); AC-003 PC-003→PC-004 (no enforcing backend error; old PC-003 was unsafe constructor); AC-005 PC-003→PC-006 (kill_on_drop; old PC-003 was execute-and-return); AC-007 PC-002→PC-004 (no silent fallback; old PC-002 was tool-not-called); AC-009 PC-002→INV-002 (WorkspaceFs facade; old PC-002 was calls-canonicalize); AC-012 EC-001→PC-005 (two-phase non-existent path; old BC-2.13.004 EC-001 is benign traversal); AC-013 PC-001→PC-004 (WorkspaceEscape result; old PC-001 was calls-canonicalize); AC-014 EC-002→EC-003 (dangling symlink PathNotFound; old EC-002 is chained symlinks); AC-021 PC-003→PC-005 (wildcard rejection; old PC-003 was filtering-timing). No escalations.
+- 1.3 (round-79/F-P2A251-01+F-P2A251-02/2026-09-02): BC-2.13.002 NE-02 mis-anchor fixed; all BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-01+F-P2A251-02.

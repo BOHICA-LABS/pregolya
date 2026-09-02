@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.14
 epic_id: E-07
-version: "1.7"
+version: "1.8"
 status: draft
 producer: story-writer
 timestamp: 2026-09-01T00:00:00Z
@@ -57,10 +57,10 @@ changelog:
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.02.001 | StateGraph Builder API — Node and Channel Registration | AC-001..AC-003, AC-012..AC-014 |
-| BC-2.02.002 | Channel Semantics — LastValue, Append, BarrierValue | AC-004..AC-007, AC-015..AC-016 |
-| BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate) | AC-008, AC-011 |
-| BC-2.02.004 | EphemeralValue Cleared After Each Super-Step (Red Gate) | AC-009..AC-010 |
+| BC-2.02.001 | StateGraph Node Definition with Typed Channel Assignment | AC-001..AC-003, AC-012..AC-014 |
+| BC-2.02.002 | LastValue / Append / BarrierValue Channel Semantics and Reducer Wiring | AC-004..AC-007, AC-015..AC-016 |
+| BC-2.02.003 | NamedBarrierValue Missing-Writer Boundary Behavior (Red Gate — R10) | AC-008, AC-011 |
+| BC-2.02.004 | EphemeralValue Cleared-After-Super-Step Semantics (Red Gate — R10) | AC-009..AC-010 |
 
 ## Acceptance Criteria
 
@@ -261,3 +261,9 @@ Exact versions are pinned in the workspace root `Cargo.toml`. Consult `.factory/
 | `pregolya-graph/src/types.rs` | create | `WriteRecord`, `CompiledStateGraph`, `ChannelKind`; `#[cfg(any(test, feature = "test-util"))] pub fn stub_terminal(terminal_state: serde_json::Value) -> Arc<CompiledStateGraph>` — single-node terminal helper exposed via `test-util` feature for cross-crate VP-016 harness in S-2.11; NOT public API |
 | `pregolya-graph/src/bsp_engine.rs` | create (partial) | `reduce_super_step`, `finish` — shared with S-1.16 |
 | `pregolya-graph/tests/channel_semantics.rs` | create | AC-001..AC-011 + Red Gate tests |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.8 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.12
 epic_id: E-06
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T12:00:00Z
@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-15/BC-2.15.003.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "86f8392"
+input-hash: "f5b75ee"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.04, S-1.02]
@@ -44,9 +44,9 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.15.001 | MemoryStore CRUD — KV, Vector, Hybrid Search, Orthogonal to Checkpoint | AC-001..AC-005 |
-| BC-2.15.002 | Scope Isolation — User/App/Session Tiers (NE-12 tenancy analogue) | AC-006..AC-010 |
-| BC-2.15.003 | GDPR Erasure — Atomic Across All Three Memory Tiers | AC-011..AC-015 |
+| BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | AC-001..AC-005 |
+| BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Scopes | AC-006..AC-010 |
+| BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | AC-011..AC-015 |
 
 ## Acceptance Criteria
 
@@ -215,6 +215,7 @@ Files to MODIFY:
 
 | Version | Date | Change | Source |
 |---------|------|--------|--------|
+| 1.3 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |
 | 1.2 | 2026-08-24 | ADR-027 M3c: escalation-resolution AC corrections — AC-015 log level DEBUG→WARN per BC-2.15.003 EC-004 (BC canonical) | M3c/ADR-027 |
 | 1.1 | 2026-08-24 | ADR-027 M3: AC traces re-cited to stable clause anchors | M3/ADR-027 |
 | 1.0 | 2026-08-18 | Initial authoring | story-writer |

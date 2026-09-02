@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.10
 epic_id: E-21
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-28T00:00:00Z
@@ -16,7 +16,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-09/BC-2.09.005.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "8588187"
+input-hash: "00ce050"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.19, S-1.04, S-1.22]
@@ -34,6 +34,7 @@ risk_mitigations: []
 tdd_mode: strict
 # BC status: all 5 BCs active; BC-2.09.004 (VP-004, R11) and BC-2.09.005 (VP-005, R11) are Red Gate BCs; status = draft per Spec-First Gate S-7.01
 changelog:
+  - "1.6 (round-79/F-P2A251-02/2026-09-02): BC-2.09.003 title cell corrected to verbatim canonical H1 per POL-7/F-P2A251-02."
   - "1.5 (round-49/F-P2A207-01/2026-08-31): F-P2A207-01 [HIGH] — Forbidden-dependencies clause amended per ADR-029 §forbidden-deps: pregolya-mcp → pregolya-graph runtime edge carved out for GraphAgentTool / mcp::graph_tool (S-2.11 scope). Ban on pregolya-graph now scoped to mcp::client and mcp::discovery modules only (NOT the crate-level Cargo.toml); bans on pregolya-server, pregolya-vectorstores, pregolya-prompts, and pregolya-standard-tests unchanged. input-hash updated to 940d385."
   - "1.4 (round-26/F-P2A115-01+F-P2A115-02+O-P2A115-05+O-P2A115-06/2026-08-28): EC-005 corrected to fail-closed: first server timeout/failure aborts whole call as Err(E-MCP-002); no partial tool list returned (BC-2.09.001 EC-004/{PC-005}). AC-013 fallback text aligned to BC-2.09.002 EC-001/TV-006 canonical: ToolMessage{status:Error, content:[\"MCP tool '<name>' returned an error with no content\"]}. EC-003 guardrail-reject fallback aligned to BC-2.09.003 EC-003 canonical: \"Tool result from '<server>/<tool>' was blocked by guardrail policy.\". AC-019 mechanism description corrected: bare ToolException is raised OUTSIDE the isError content-conversion path (not isError=false with metadata in content) per BC-2.09.004 {PRE-002}/{PRE-003}; E-MCP-001 outcome unchanged. Input-hash updated."
   - "1.3 (round-25/F-P2A108-01+F-P2A111-03+F-P2A111-06/2026-08-28): §Behavioral Contracts table: 4 titles synced to BC-INDEX canonical — BC-2.09.001 '...at Runtime', BC-2.09.002 '...Transport', BC-2.09.004 '...Preserving Type Identity (Red Gate — R11)', BC-2.09.005 '...Holds No Live Connections (Red Gate — R11)'. §Architecture Mapping + §File Structure Requirements + §Tasks: `tool.rs` → `discovery.rs`; `guardrail.rs` → `ingress.rs` (DI-012 seam; canonical module names per module-decomposition.md §pregolya-mcp). Input-hash updated."
@@ -55,7 +56,7 @@ changelog:
 |----|-------|---------|
 | BC-2.09.001 | MCP Server Tool Discovery and Registration at Runtime | P1 |
 | BC-2.09.002 | ToolInvocation Routing to Correct MCP Server Transport | P1 |
-| BC-2.09.003 | Tool-Result Content Treated as Untrusted Ingress | P1 |
+| BC-2.09.003 | Tool-Result Content Treated as Untrusted Ingress (DI-012 Applies) | P1 |
 | BC-2.09.004 | MCP Bare ToolException Re-Raise Preserving Type Identity (Red Gate — R11) | P1 |
 | BC-2.09.005 | MultiServerMcpClient Holds No Live Connections (Red Gate — R11) | P1 |
 

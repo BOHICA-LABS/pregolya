@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.15
 epic_id: E-07
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,7 +13,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-02/BC-2.02.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "5b4ede1"
+input-hash: "ce75598"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.14]
@@ -51,8 +51,8 @@ changelog:
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.02.005 | Conditional Edges — path_fn Routing with Panic Safety | AC-001..AC-005, AC-012..AC-013 |
-| BC-2.02.006 | Send API — Dynamic Fan-Out, PUSH Tasks, Task ID Determinism | AC-006..AC-011 |
+| BC-2.02.005 | Conditional Edge Routing Function | AC-001..AC-005, AC-012..AC-013 |
+| BC-2.02.006 | Send API Dynamic Fan-Out | AC-006..AC-011 |
 
 ## Acceptance Criteria
 
@@ -191,3 +191,9 @@ When two `add_conditional_edges` calls are registered for the same source node `
 | `pregolya-graph/src/scheduler.rs` | create | PUSH task queue, TASKS topic, `ctx.send()` — S-1.15 creates this file (scheduler.rs skeleton) |
 | `pregolya-graph/src/types.rs` | modify | Add `task_id` hash fn, `UntrackedValue`, `PushTask` struct |
 | `pregolya-graph/tests/conditional_send_fanout.rs` | create | AC-001..AC-011 tests |
+
+## Changelog
+
+| Version | Date | Change | Source |
+|---------|------|--------|--------|
+| 1.4 | 2026-09-02 | round-79/F-P2A251-02: BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02. | round-79 F-P2A251-02 |

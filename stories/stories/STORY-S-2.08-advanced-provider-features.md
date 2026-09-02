@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.08
 epic_id: E-19
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,7 +15,7 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-08/BC-2.08.014.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "c81e09c"
+input-hash: "76742d1"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-2.07]
@@ -46,10 +46,10 @@ tdd_mode: strict
 
 | BC | Title | Priority |
 |----|-------|---------|
-| BC-2.08.008 | Eval Score Aggregation — Arithmetic Mean + InfraError | P1 |
-| BC-2.08.009 | Tool Schema Naming Stability | P1 |
-| BC-2.08.013 | Pluggable Tool-Call Dialect Seam | P1 |
-| BC-2.08.014 | Provider Failover Chain | P1 |
+| BC-2.08.008 | Eval Score Aggregation: Arithmetic Mean + JudgeResult::InfraError Third Outcome (NE-15) | P1 |
+| BC-2.08.009 | Tool Schema Naming Stability (Snapshot Test Anchor) | P1 |
+| BC-2.08.013 | Pluggable Tool-Call Dialect Seam (ToolCallDialect; Hermes ChatML XML) | P1 |
+| BC-2.08.014 | Provider Failover Chain (ProviderFallbackPolicy; Ordered Fallback on 429/5xx/Auth) | P1 |
 
 ## Acceptance Criteria
 
@@ -324,5 +324,6 @@ list, the build MUST fail via `cargo deny`.
 
 ## Changelog
 
+- **1.3 (round-79/F-P2A251-02/2026-09-02):** BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02.
 - **1.2 (BC-2.08.013 / 2026-08-26):** BC-2.08.013 updated to v1.5 (burst-B-SS07-08 INV-005+EC-006+TV-007 fail-fast hardening): AC-025 added — multi-tool-call mixed-validity response (HermesChatMlXml or NativeOpenAiJson with ≥2 tool call entries where any entry fails to parse) returns `Err(E-PROV-009 ToolCallDialectParseError)` with zero `ContentBlock::ToolCall` objects; no partial list returned (DI-014 fail-fast, INV-005). Test: `test_BC_2_08_013_multi_tool_call_mixed_validity_fail_fast()` (TV-007 cassette). Task 1 updated to "AC-001 through AC-025"; Task 15 (new impl task) and Task 16 (count 25) added. BC table version column added.
 - **1.1 (ADR-027 M3 / 2026-08-24):** ADR-027 M3: AC traces re-cited to stable clause anchors. Mis-anchors corrected: AC-006 PC-002→INV-002 (canonicalized JSON is an invariant, not a postcondition), AC-007 PC-003→PC-004 (field reorder non-breaking is PC-004), AC-008 PC-004→EC-001 (field rename breaking is EC-001 edge case), AC-018 INV-004 citation confirmed (INV-004 = empty-chain construction guard), AC-024 INV-005 citation corrected (DI-010 annotation removed; PC-007+INV-005 is the correct dual-clause trace). Architecture Compliance Rules table updated to match.
