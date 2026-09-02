@@ -233,25 +233,43 @@ fn check_client_timeout() {
     println!("check-client-timeout PASSED.");
 }
 
-/// Returns true when `line` contains a `reqwest::Client::new()` violation.
+/// Returns true when `needle` appears in `line` at a word-boundary position —
+/// i.e., NOT immediately preceded by an identifier character (`a-z`, `A-Z`,
+/// `0-9`, `_`) or `:`.
 ///
-/// Detects two patterns:
-/// 1. `reqwest::Client::new()` — fully-qualified; catches the explicit prefix form.
-/// 2. `Client::new()` NOT preceded by `::` — catches the unqualified form that
-///    arises from `use reqwest::Client;` imports, while excluding other crates'
-///    Client types (e.g., `mcp_sdk::Client::new()` contains `::Client::new()`
-///    so condition 2 is false).
-fn is_reqwest_client_new_violation(line: &str) -> bool {
-    if line.contains("reqwest::Client::new()") {
-        return true;
-    }
-    // Unqualified Client::new() — flag it unless a different namespace owns it.
-    // `reqwest::Client::new()` already satisfies the first branch, so this branch
-    // only fires for truly bare `Client::new()` calls.
-    if line.contains("Client::new()") && !line.contains("::Client::new()") {
-        return true;
+/// Used to distinguish standalone `Client::new()` (reqwest import) from
+/// compound names like `OpenAiClient::new()` or `mcp_sdk::Client::new()`.
+fn needle_has_standalone_occurrence(line: &str, needle: &str) -> bool {
+    let bytes = line.as_bytes();
+    let needle_bytes = needle.as_bytes();
+    let mut i = 0;
+    while i + needle_bytes.len() <= bytes.len() {
+        if bytes[i..i + needle_bytes.len()] == *needle_bytes {
+            let before = if i > 0 { bytes[i - 1] } else { 0 };
+            if !before.is_ascii_alphanumeric() && before != b'_' && before != b':' {
+                return true;
+            }
+        }
+        i += 1;
     }
     false
+}
+
+/// Returns true when `line` contains a `reqwest::Client::new()` violation.
+///
+/// Flags fully-qualified `reqwest::Client::new()` and unqualified `Client::new()`
+/// (from `use reqwest::Client;` imports) while excluding compound names such as
+/// `OpenAiClient::new()` and namespace-prefixed `mcp_sdk::Client::new()`.
+fn is_reqwest_client_new_violation(line: &str) -> bool {
+    line.contains("reqwest::Client::new()")
+        || needle_has_standalone_occurrence(line, "Client::new()")
+}
+
+/// Returns true when `line` contains a `Client::builder()` call that is NOT
+/// part of a compound type name (e.g., `OpenAiClient::builder()` is excluded).
+fn contains_standalone_client_builder(line: &str) -> bool {
+    line.contains("reqwest::Client::builder()")
+        || needle_has_standalone_occurrence(line, "Client::builder()")
 }
 
 /// Scan `src` for `reqwest::Client::new()` and `Client::builder().build()`
@@ -292,7 +310,8 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
 
         // Builder-chain tracking (F-3 fix): detect Client::builder().build()
         // without an intervening .timeout(), even across multiple lines.
-        if line.contains("Client::builder()") {
+        // B-5 fix: use word-boundary check so SomethingClient::builder() is excluded.
+        if contains_standalone_client_builder(line) {
             in_builder_chain = true;
             builder_chain_has_timeout = false;
         }
@@ -395,14 +414,22 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
     for (line_idx, line) in src.lines().enumerate() {
         let line_num = line_idx + 1;
 
-        // Detect `#[cfg(test)]` — but only latch when this is NOT a semicolon-terminated
-        // file-module declaration (`#[cfg(test)] mod tests;`).  A semicolon-terminated form
-        // means the module body lives in a separate file; there is no inline block to skip.
-        if line.contains("#[cfg(test)]") {
-            let trimmed_line = line.trim();
-            let is_file_module_decl = trimmed_line.contains("mod ") && trimmed_line.ends_with(';');
-            if !is_file_module_decl {
-                pending_cfg_test = true;
+        // Detect `#[cfg(test)]` — but only latch when this is NOT:
+        //   (a) inside a `//` comment (`// #[cfg(test)]` must not latch), or
+        //   (b) a semicolon-terminated file-module declaration (`#[cfg(test)] mod tests;`).
+        //       A semicolon-terminated form means the module body lives in a separate file;
+        //       there is no inline block to skip.
+        // B-6 fix: use find() directly so we have the position for the comment
+        // check without a separate `.unwrap()`.
+        if let Some(cfg_pos) = line.find("#[cfg(test)]") {
+            let is_commented = line[..cfg_pos].contains("//");
+            if !is_commented {
+                let trimmed_line = line.trim();
+                let is_file_module_decl =
+                    trimmed_line.contains("mod ") && trimmed_line.ends_with(';');
+                if !is_file_module_decl {
+                    pending_cfg_test = true;
+                }
             }
         }
 
@@ -452,6 +479,17 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
                 }
                 i += 1;
                 continue;
+            }
+
+            // Not inside any literal — stop at `//` line comments before
+            // processing any structural characters. B-6 fix: braces inside a
+            // `//` comment must not affect brace_depth.
+            if ch == '/'
+                && !in_string_literal
+                && !in_char_literal
+                && line.as_bytes().get(i + 1) == Some(&b'/')
+            {
+                break; // rest of line is a comment
             }
 
             // Not inside any literal — track structural characters.
@@ -970,6 +1008,56 @@ pub fn foo<'a>(x: &'a str) -> i32 {
         assert!(
             findings.is_empty(),
             "mcp_sdk::Client::new() must not be flagged; got: {findings:?}"
+        );
+    }
+
+    // ── B-5 regression tests ─────────────────────────────────────────────────
+
+    /// B-5 regression: OpenAiClient::new() must NOT be flagged.
+    #[test]
+    fn test_timeout_scanner_does_not_flag_openai_client_new() {
+        let src = "let c = OpenAiClient::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "OpenAiClient::new() must not be flagged; got: {findings:?}"
+        );
+    }
+
+    /// B-5 regression: AnthropicClient::new() must NOT be flagged.
+    #[test]
+    fn test_timeout_scanner_does_not_flag_anthropic_client_new() {
+        let src = "let c = AnthropicClient::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-anthropic/src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "AnthropicClient::new() must not be flagged; got: {findings:?}"
+        );
+    }
+
+    // ── B-6 regression tests ─────────────────────────────────────────────────
+
+    /// B-6 regression: #[cfg(test)] in a // comment must NOT latch test suppression.
+    #[test]
+    fn test_no_panic_cfg_test_in_comment_does_not_latch() {
+        let src = "// #[cfg(test)]\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "cfg(test) in comment must not suppress production code; got: {findings:?}"
+        );
+    }
+
+    /// B-6 regression: braces in // comments must NOT skew brace_depth.
+    #[test]
+    fn test_no_panic_braces_in_comment_do_not_skew_depth() {
+        let src = "#[cfg(test)]\nmod tests {\n    // }\n}\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "brace in comment must not skew depth; got: {findings:?}"
         );
     }
 }
