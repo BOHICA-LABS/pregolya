@@ -8,15 +8,23 @@ _default:
 
 # TDD inner loop — single crate, fast iteration (~10-30s warm)
 iter crate filter="":
-    cargo nextest run -p {{crate}} {{ if filter != "" { "--filter-expr 'test(" + filter + ")'" } else { "" } }}
+    cargo nextest run -p {{crate}} --no-tests=warn {{ if filter != "" { "--filter-expr 'test(" + filter + ")'" } else { "" } }}
+
+# Run all xtask lint gates (client-timeout, no-panic, anyhow-ban, cache-key-ban, file-size)
+lint-extra:
+    cargo xtask check-file-size
+    cargo xtask check-client-timeout
+    cargo xtask check-no-panic
+    cargo xtask deny-anyhow-in-lib
+    cargo xtask deny-description-cache-key
 
 # Pre-push gate — full strict workspace check
 check:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
-    cargo nextest run --workspace --no-tests=warn
+    cargo nextest run --workspace --all-features --no-tests=warn
     cargo test --workspace --doc
-    cargo xtask check-file-size
+    just lint-extra
 
 # Clippy + layout only (no tests; for refactor sweeps)
 check-fast:
@@ -27,9 +35,9 @@ check-fast:
 check-ci:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
-    cargo nextest run --workspace --no-tests=warn
+    cargo nextest run --workspace --all-features --no-tests=warn
     cargo test --workspace --doc
-    cargo xtask check-file-size
+    just lint-extra
     cargo deny check
     cargo audit
     cargo semver-checks

@@ -22,3 +22,6 @@ pregolya-openai = { path = "../pregolya-openai" }
 pregolya-anthropic = { path = "../pregolya-anthropic" }
 pregolya-ollama = { path = "../pregolya-ollama" }
 pregolya-mcp = { path = "../pregolya-mcp" }
+
+[lints]
+workspace = true

@@ -53,7 +53,7 @@ async-trait = "0.1"
 uuid = { version = "1", features = ["v4", "serde"] }
 
 # HTTP client — rustls-tls mandatory; native-tls forbidden workspace-wide
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "http2", "json", "stream"] }
 
 # HTTP server
 axum = { version = "0.8", features = ["json"] }
@@ -61,3 +61,22 @@ tower = "0.5"
 
 # Testing
 proptest = "1.4"
+
+# JSON Schema derivation — ADR-004 mandates schemars 1.x (0.8 is the anti-pattern)
+schemars = "1"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Workspace-wide lints (B4/B5)
+# Note: "warn" here is intentional — individual CI steps add -D warnings which
+# promotes these warns to errors.  Using "deny" at workspace level would cause
+# compile errors on `cargo check` which is too aggressive for scaffolding.
+# ─────────────────────────────────────────────────────────────────────────────
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+too_many_lines = "warn"

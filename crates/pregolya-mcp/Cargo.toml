@@ -17,7 +17,10 @@ thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 reqwest = { workspace = true }
-schemars = "0.8"
+schemars = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
+
+[lints]
+workspace = true

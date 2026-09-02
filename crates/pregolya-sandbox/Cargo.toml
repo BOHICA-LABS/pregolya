@@ -8,13 +8,17 @@ repository.workspace = true
 publish = false
 
 [features]
-default = ["sandbox-wasm"]
-sandbox-wasm = ["dep:wasmtime"]
+default = []
 sandbox-container = []
+# sandbox-wasm feature is reserved for Phase 3 implementation; wasmtime version
+# will be chosen by the implementer when sandbox WASM functionality is built.
+# Do NOT add wasmtime here speculatively — wasmtime 27 has 17 RUSTSEC advisories.
 
 [dependencies]
 pregolya-core = { path = "../pregolya-core" }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true }
-wasmtime = { version = "27", optional = true }
+
+[lints]
+workspace = true

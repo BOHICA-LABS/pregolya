@@ -28,3 +28,6 @@ tokio-postgres = { version = "0.7", optional = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
+
+[lints]
+workspace = true
