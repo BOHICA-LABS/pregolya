@@ -233,7 +233,8 @@ fn check_client_timeout() {
     println!("check-client-timeout PASSED.");
 }
 
-/// Scan `src` for `reqwest::Client::new()` patterns outside test files.
+/// Scan `src` for `reqwest::Client::new()` and `Client::builder().build()`
+/// patterns outside test files that lack a `.timeout()` call.
 ///
 /// Returns a `Vec<String>` of `"path:line_num: trimmed_line"` findings.
 /// Returns empty when `path` is a test file (per `is_test_file`).
@@ -245,6 +246,10 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
     }
 
     let mut findings = Vec::new();
+    // F-3: track multi-line Client::builder() chains.
+    let mut in_builder_chain = false;
+    let mut builder_chain_has_timeout = false;
+
     for (line_idx, line) in src.lines().enumerate() {
         let line_num = line_idx + 1;
         let trimmed = line.trim();
@@ -252,9 +257,33 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
         if trimmed.starts_with("//") {
             continue;
         }
-        // Flag Client::new() that isn't already commented out.
-        if line.contains("Client::new()") && !line.contains("//") {
+
+        // Flag Client::new() (F-2 fix: removed the redundant `!line.contains("//")`
+        // guard — the early `continue` above already handles pure-comment lines, and
+        // the old guard incorrectly suppressed lines whose URL strings contain `//`).
+        if line.contains("Client::new()") {
             findings.push(format!("{}:{}: {}", path, line_num, trimmed));
+        }
+
+        // Builder-chain tracking (F-3 fix): detect Client::builder().build()
+        // without an intervening .timeout(), even across multiple lines.
+        if line.contains("Client::builder()") {
+            in_builder_chain = true;
+            builder_chain_has_timeout = false;
+        }
+        if in_builder_chain {
+            if line.contains(".timeout(") {
+                builder_chain_has_timeout = true;
+            }
+            if line.contains(".build()") {
+                if !builder_chain_has_timeout {
+                    findings.push(format!("{}:{}: {}", path, line_num, trimmed));
+                }
+                in_builder_chain = false;
+            } else if line.contains(';') && !line.contains("Client::builder()") {
+                // Statement ended without seeing .build() — reset chain tracking.
+                in_builder_chain = false;
+            }
         }
     }
     findings
@@ -341,25 +370,40 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
         }
 
         // Walk characters to track brace depth and test-block entry/exit.
+        // String-literal awareness prevents an unbalanced `{` inside a string
+        // literal from permanently latching `in_test_block` (F-1 fix).
+        // `in_string_literal` and `prev_char` are declared per loop-iteration
+        // (per line) so they reset automatically — Rust non-raw string literals
+        // don't span lines.
+        let mut in_string_literal = false;
+        let mut prev_char = '\0';
         for ch in line.chars() {
-            match ch {
-                '{' => {
-                    brace_depth += 1;
-                    if pending_cfg_test {
-                        in_test_block = true;
-                        test_block_target = brace_depth;
-                        pending_cfg_test = false;
-                    }
-                }
-                '}' => {
-                    if in_test_block && brace_depth == test_block_target {
-                        in_test_block = false;
-                        test_block_target = -1;
-                    }
-                    brace_depth -= 1;
-                }
-                _ => {}
+            // Toggle string-literal mode on unescaped `"`.
+            if ch == '"' && prev_char != '\\' {
+                in_string_literal = !in_string_literal;
             }
+            // Only count braces when not inside a string literal.
+            if !in_string_literal {
+                match ch {
+                    '{' => {
+                        brace_depth += 1;
+                        if pending_cfg_test {
+                            in_test_block = true;
+                            test_block_target = brace_depth;
+                            pending_cfg_test = false;
+                        }
+                    }
+                    '}' => {
+                        if in_test_block && brace_depth == test_block_target {
+                            in_test_block = false;
+                            test_block_target = -1;
+                        }
+                        brace_depth -= 1;
+                    }
+                    _ => {}
+                }
+            }
+            prev_char = ch;
         }
 
         // Skip lines inside test blocks and comment lines.
@@ -372,9 +416,12 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
         }
 
         // Flag panic-potential patterns.
+        // F-2 fix: removed redundant `!line.contains("//")` guard — the early
+        // `continue` above already handles pure-comment lines, and the old guard
+        // incorrectly suppressed lines with `//` inside URL string literals.
         let has_unwrap = line.contains(".unwrap()");
         let has_expect = line.contains(".expect(");
-        if (has_unwrap || has_expect) && !line.contains("//") {
+        if has_unwrap || has_expect {
             findings.push(format!("{}:{}: {}", path, line_num, trimmed));
         }
     }
@@ -615,6 +662,62 @@ pub fn production_fn() -> i32 {
         assert!(
             findings.is_empty(),
             "should suppress files under tests/ directory; got: {findings:?}"
+        );
+    }
+
+    // ── F-1 / F-2 / F-3 regression tests ───────────────────────────────────
+
+    /// F-1 regression: unbalanced { in string literal inside cfg(test) must NOT
+    /// suppress production code that follows.
+    #[test]
+    fn test_no_panic_string_literal_brace_does_not_latch_test_block() {
+        let src = r#"
+#[cfg(test)]
+mod tests { const S: &str = "{"; fn h() {} }
+pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "string-literal {{ must not latch in_test_block; got: {findings:?}"
+        );
+    }
+
+    /// F-2 regression: line with Client::new() AND a URL string containing //
+    /// must still be flagged.
+    #[test]
+    fn test_timeout_scanner_flags_client_new_on_line_with_url_string() {
+        let src = r#"let c = reqwest::Client::new(); let u = "https://api.openai.com/v1";"#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "Client::new() on line with URL string must be flagged; got: {findings:?}"
+        );
+    }
+
+    /// F-3 regression: Client::builder().build() on same line without .timeout() must be flagged.
+    #[test]
+    fn test_timeout_scanner_flags_builder_build_without_timeout_single_line() {
+        let src = r#"let c = reqwest::Client::builder().build()?;"#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "Client::builder().build() without .timeout() must be flagged; got: {findings:?}"
+        );
+    }
+
+    /// F-3 negative: Client::builder() with .timeout() must NOT be flagged.
+    #[test]
+    fn test_timeout_scanner_does_not_flag_builder_with_timeout() {
+        let src =
+            r#"let c = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;"#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "Client::builder().timeout(...).build() must NOT be flagged; got: {findings:?}"
         );
     }
 
