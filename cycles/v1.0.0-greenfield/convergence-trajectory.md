@@ -5796,3 +5796,59 @@ Full trajectory tail (rounds 69–73): P2A-241=0/CLEAN(streak1/3[reset])→P2A-2
 2. Multi-anchor propagation hook (F-P2A245-01 root-cause class, per L-273): mechanical gate for "all BC-table Title cells must carry verbatim H1 for ALL rows, not just the changed row." No hook currently enforces POL-7 at story BC-table scope.
 
 **NEXT: round-74 adversarial sweep on new frozen HEAD (post-D-350 push). Streak 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-74 — P2A-246 [RECORDS-ONLY] (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-246 |
+| Round | 74 |
+| Frozen HEAD | 0dc0b08 |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | YES |
+| Findings | 2 (2 LOW) |
+| Streak | UNCHANGED at 0/3 (records-only does NOT reset/advance per TD-RECORDS-MICRO-BURST-001) |
+| Label | RECORDS-ONLY |
+
+**Context note:** Fresh-context adversarial pass on frozen HEAD 0dc0b08 (post-D-350 push). Found 2 LOW findings only — both records-tier in S-2.06. Per TD-RECORDS-MICRO-BURST-001, LOW/OBS do not reset the 3-CLEAN streak. This is a records-only micro-burst; the BC-5.39.001 3-CLEAN streak stays UNCHANGED at 0/3.
+
+**NOTABLE:** The adversary conducted a broad multi-subsystem re-derivation and confirmed ZERO HIGH or MED findings — none of the recently-fixed classes (BC-2.08.006 verbatim H1 sync, §Changelog monotonicity, derived priority, co-anchor propagation) replicated to other stories or artifacts. The corpus is clean at PR-merge threshold.
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A246-01 | LOW | S-2.06 §Changelog entry 1.6 still carried the stale SS-14 parenthetical "(Credential Safety)" — the subsystem was renamed to "Typed Error Taxonomy" per ARCH-INDEX Subsystem Registry SS-14 row; this label was corrected in the story subsystems field and inputs but the changelog prose retained the old name. Records-tier: label-only, no normative content affected. | story-writer; S-2.06 §Changelog 1.6 SS-14 parenthetical updated to "(Typed Error Taxonomy)"; v1.8→v1.9 |
+| F-P2A246-02 | LOW | S-2.06 §Behavioral Contracts table BC-2.08.006 title cell used unescaped angle-bracket form of the canonical H1 — the byte-verbatim form requires `pregolya-\<provider\>-sdk` (backslash-escaped) per BC-2.08.006 §H1 and POL-12 records-cite discipline. Records-tier: rendering artifact, no normative meaning change. | story-writer; BC-2.08.006 title cell corrected to byte-verbatim escaped form; v1.8→v1.9 |
+
+**Fix-burst CLOSED (D-351, records-only micro-burst).** Both LOW findings closed via records-only micro-burst ceremony per TD-RECORDS-MICRO-BURST-001. Streak UNCHANGED at 0/3 (LOW/OBS do not gate CLEAN(PR-merge)).
+
+### Trajectory Tail Update
+
+Round-74 appended: →2[LOW] (P2A-246; 2 LOW; RECORDS-ONLY; CLOSED; D-351; streak UNCHANGED 0/3)
+
+Full trajectory tail (rounds 71–74): P2A-243=0/CLEAN(strict,streak1/3)→P2A-244=1MED→D-349(fix,streak reset 0/3)→P2A-245=2(1H+1MED)→D-350(fix,streak reset 0/3)→P2A-246=2[LOW,RECORDS-ONLY]→D-351(records-micro-burst,streak UNCHANGED 0/3)
+
+### Post-Round-74 Status (D-351 records-only micro-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: UNCHANGED 0/3 (records-only micro-burst does NOT reset or advance streak per TD-RECORDS-MICRO-BURST-001)
+- S-2.06 story: v1.8→v1.9 (story-writer; F-P2A246-01[LOW] + F-P2A246-02[LOW]; D-351)
+- STORY-INDEX: §Changelog (1.55→1.56) (state-manager; D-351)
+- STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified)
+- S-2.06 input-hash: 33834e3 UNCHANGED (fix-burst modified story body and changelog only; BC input files not modified)
+
+**NEXT: round-75 on new frozen HEAD (post-D-351 push). Streak 0/3. Target: CLEAN(strict).**

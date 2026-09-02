@@ -4356,6 +4356,31 @@ D-342 round-64 RECORDS-ONLY micro-burst CLOSED (2026-09-01): trajectory-tail →
 
 ---
 
+## D-350 Checkpoint (archived at D-351)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-73 closed + D-346 reconciliation-burst. D-350 CLOSED (2026-09-02) — round-73 P2A-245 (1H+1MED): F-P2A245-01[HIGH] S-2.06 BC-2.08.006 BC-table title cell corrected to verbatim canonical H1 (POL-7/POL-8; sibling cell left as paraphrase by multi-round cascade); F-P2A245-02[MED,process-gap] S-2.06 §Changelog entries 1.6/1.7 reordered to strict ascending (story body changelog has ZERO machine coverage). S-2.06/BC-2.14.005 co-anchor downstream set verified CLEAN — that class definitively closed. story-writer: S-2.06 v1.7→v1.8. state-manager: STORY-INDEX §Changelog (1.54→1.55); L-274 codified. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak reset 0/3.
+
+### HEADS (D-350)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-350) — run `git -C .factory log -1 --format='%h %s'` for current SHA. No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION (D-350)
+Dispatch round-74 adversary cascade on new frozen HEAD (post-D-350 push). Streak 0/3. Streak has reached 1/3 five times this session (P2A-226 D-335; P2A-231 D-339; P2A-233 D-340; P2A-241 D-348 false-clean; P2A-243 D-349). Standing directives DIRECTIVE 1/2/3 remain in force. DU leftover files under develop-tree stories/stories/ are pre-existing; always use absolute .factory/ paths in dispatch prompts (L-272). 2 open [process-gap] items for convergence-close: (1) story-changelog hook scope extension per L-274 (devops-engineer; requires human direction); (2) multi-anchor POL-7 sibling-sweep gate per L-274 (requires human direction). Orchestrator: evaluate mechanical gate stories per L-273/L-274.
+
+### DECISION-LOG DELTA (D-350 close)
+D-350 round-73 P2A-245 closed — F-P2A245-01[HIGH] S-2.06 BC-2.08.006 title-cell verbatim H1 sync; F-P2A245-02[MED,process-gap] §Changelog reorder; co-anchor class CLOSED; story-writer S-2.06 v1.7→v1.8; STORY-INDEX §Changelog (1.55); L-274 codified; census UNCHANGED BC 140/VP 21/EC 143/TV 795/NFR 15; streak reset 0/3.
+
+### WORKTREE INVENTORY (D-350)
+None (.worktrees/ absent). Phase-2; no story worktrees open.
+
+### STANDING HUMAN-GATE OBS (D-350)
+HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-generic); HRQ-4 (verify-ac-pc-trace CHECK-2); HRQ-5 (interface-definitions↔BC-prose gate); HRQ-6 (ss-TBD empty dir). HRQ-3 CLOSED.
+
+### PENDING USER-APPROVED WORK (D-350)
+None outstanding. DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+---
+
 ## D-348 Checkpoint (archived at D-349)
 
 ### RESUME IN ONE BREATH
