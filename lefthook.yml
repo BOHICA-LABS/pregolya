@@ -3,12 +3,17 @@ pre-commit:
     fmt:
       run: cargo fmt --all --check
     clippy:
-      run: cargo clippy --workspace --all-targets -- -D warnings
+      run: cargo clippy --workspace --all-targets --all-features -- -D warnings
     layout:
       run: cargo xtask check-file-size
 
 pre-push:
   commands:
+    # Guard: tokei must be installed before the file-size gate runs.
+    # Fail with a helpful message rather than a cryptic tokei-not-found error.
+    check-tokei:
+      run: |
+        command -v tokei >/dev/null 2>&1 || { echo "ERROR: tokei not found. Run 'just setup' to install required tools."; exit 1; }
     check:
       run: just check
 

@@ -30,7 +30,7 @@ edition = "2024"
 version = "0.1.0"
 authors = ["pregolya contributors"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/jmagady/pregolya"
+repository = "https://github.com/BOHICA-LABS/pregolya"
 
 [workspace.dependencies]
 # Async runtime

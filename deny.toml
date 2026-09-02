@@ -23,9 +23,15 @@ deny = [
 ]
 
 [advisories]
-# cargo-deny v2 schema: removed deprecated v1 keys (vulnerability, unmaintained="warn",
-# yanked, notice). Use the correct v2 unmaintained value and keep ignore list.
-unmaintained = "workspace"
+# cargo-deny v2 schema (validated against 0.20.2).
+# yanked="deny"     — reject any dep yanked from crates.io (SEC-003).  Action value.
+# unmaintained="all"  — enforce across ALL deps (workspace + transitive). Scope value.
+#   "workspace" is weaker: it only checks workspace-direct deps and misses transitive
+#   RUSTSEC advisories (e.g. wasmtime class of findings).  "all" restores full coverage.
+# unsound="all"     — reject crates with published unsoundness advisories across all deps.
+yanked = "deny"
+unmaintained = "all"
+unsound = "all"
 ignore = []
 
 [sources]

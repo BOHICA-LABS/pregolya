@@ -42,18 +42,56 @@ fn main() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Shared helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Returns true when `path` identifies a test-only file.
+///
+/// Matches:
+/// - Files named `tests.rs` (any directory depth, e.g. `src/tests.rs`)
+/// - Files ending with `_test.rs` or `_tests.rs`
+/// - Files under a `tests/` directory component (e.g. `crates/foo/tests/integration.rs`)
+///
+/// Does NOT use `.contains("test")` substring matching, which would
+/// incorrectly suppress production files in crates whose names contain
+/// "test" (e.g. `pregolya-standard-tests`).
+fn is_test_file(path: &str) -> bool {
+    path.ends_with("/tests.rs")
+        || path == "tests.rs"
+        || path.contains("/tests/")
+        || path.ends_with("_test.rs")
+        || path.ends_with("_tests.rs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // check-file-size
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn check_file_size() {
     // NOTE: tokei counts ALL code-lines in a file (including #[cfg(test)] blocks
     // that are inline in production files).  The test-file thresholds (1000/1500)
-    // apply only to files under `tests/` or ending with `_test.rs`.  Inline
-    // test modules contribute to the production file's code count — this is
+    // apply only to files under `tests/` or ending with `_test.rs` / `_tests.rs`.
+    // Inline test modules contribute to the production file's code count — this is
     // intentional: a production file whose inline tests push it over the
     // production hard gate (750 lines) should be split anyway.
+    //
+    // Exclusions (auto-skipped in post-processing):
+    //   *.gen.rs          — generated code, not subject to size gate
+    //   paths with /target/ or OUT_DIR  — build artifacts
+    //   paths with /tests/fixtures/     — test fixture data
+    //
+    // Scan paths: crates/ + xtask/src/ (both are workspace members).
     let output = Command::new("tokei")
-        .args(["--output", "json", "crates/"])
+        .args([
+            "--output",
+            "json",
+            "--exclude",
+            "*.gen.rs",
+            "--exclude",
+            "*/tests/fixtures/*",
+            "crates/",
+            "xtask/src/",
+        ])
         .output();
 
     let output = match output {
@@ -61,6 +99,7 @@ fn check_file_size() {
         Err(_) => {
             eprintln!("ERROR: tokei not found on PATH. Install with: cargo install tokei --locked");
             eprintln!("The file-size gate requires tokei to measure code lines.");
+            eprintln!("Run 'just setup' to install all required tools.");
             exit(1);
         }
     };
@@ -101,11 +140,20 @@ fn check_file_size() {
                 .and_then(|c| c.as_u64())
                 .unwrap_or(0);
 
+            // Skip generated code, build artifacts, and fixture data.
+            if name.contains("/target/")
+                || name.contains("OUT_DIR")
+                || name.ends_with(".gen.rs")
+                || name.contains("/tests/fixtures/")
+            {
+                continue;
+            }
+
             if allowlist.is_allowed(name) {
                 continue;
             }
 
-            let is_test = name.contains("/tests/") || name.ends_with("_test.rs");
+            let is_test = is_test_file(name);
             let (soft, hard) = if is_test {
                 (test_soft, test_hard)
             } else {
@@ -146,35 +194,70 @@ fn check_file_size() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn check_client_timeout() {
-    // Scan library crate src/ for reqwest Client::new() outside #[cfg(test)]
-    // This is the lint gate stub — full semgrep rule in xtask/semgrep-rules/
-    let output = Command::new("grep")
-        .args(["-r", "--include=*.rs", "Client::new()", "crates/"])
+    // Scan library crate src/ for reqwest Client::new() outside test files.
+    // Uses file-by-file scanning (same as check-no-panic) so that path-based
+    // exclusions are applied correctly — grep line filtering with contains("test")
+    // would incorrectly suppress production code in crates whose path contains
+    // "test" (e.g. pregolya-standard-tests).
+    let output = Command::new("find")
+        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
         .output();
 
-    match output {
-        Ok(o) => {
-            let stdout = String::from_utf8_lossy(&o.stdout);
-            let findings: Vec<&str> = stdout
-                .lines()
-                .filter(|l| !l.contains("test") && !l.contains("#[cfg(test)]"))
-                .collect();
-            if !findings.is_empty() {
-                for f in &findings {
-                    eprintln!("ERROR: reqwest Client::new() without timeout: {f}");
-                }
-                eprintln!(
-                    "Use Client::builder().timeout(Duration::from_secs(30)).build() instead."
-                );
-                exit(1);
-            }
-        }
+    let files_output = match output {
+        Ok(o) => o,
         Err(e) => {
-            eprintln!("grep failed: {e}");
+            eprintln!("find failed: {e}");
             exit(1);
         }
+    };
+
+    let files_str = String::from_utf8_lossy(&files_output.stdout);
+    let mut all_findings: Vec<String> = Vec::new();
+
+    for file_path in files_str.lines() {
+        let content = match std::fs::read_to_string(file_path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        let findings = scan_for_timeout_violations_in_source(&content, file_path);
+        all_findings.extend(findings);
+    }
+
+    if !all_findings.is_empty() {
+        for f in &all_findings {
+            eprintln!("ERROR: reqwest Client::new() without timeout: {f}");
+        }
+        eprintln!("Use Client::builder().timeout(Duration::from_secs(30)).build() instead.");
+        exit(1);
     }
     println!("check-client-timeout PASSED.");
+}
+
+/// Scan `src` for `reqwest::Client::new()` patterns outside test files.
+///
+/// Returns a `Vec<String>` of `"path:line_num: trimmed_line"` findings.
+/// Returns empty when `path` is a test file (per `is_test_file`).
+///
+/// This is the testable core extracted from `check_client_timeout`.
+fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
+    if is_test_file(path) {
+        return Vec::new();
+    }
+
+    let mut findings = Vec::new();
+    for (line_idx, line) in src.lines().enumerate() {
+        let line_num = line_idx + 1;
+        let trimmed = line.trim();
+        // Skip comment lines.
+        if trimmed.starts_with("//") {
+            continue;
+        }
+        // Flag Client::new() that isn't already commented out.
+        if line.contains("Client::new()") && !line.contains("//") {
+            findings.push(format!("{}:{}: {}", path, line_num, trimmed));
+        }
+    }
+    findings
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -205,7 +288,7 @@ fn check_no_panic() {
             Ok(c) => c,
             Err(_) => continue,
         };
-        let findings = find_panic_outside_tests(file_path, &content);
+        let findings = scan_for_panics_in_source(&content, file_path);
         all_findings.extend(findings);
     }
 
@@ -219,24 +302,45 @@ fn check_no_panic() {
     println!("check-no-panic PASSED.");
 }
 
-/// Scan `content` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]`
-/// blocks.  Uses brace-depth tracking to identify test module boundaries.
-fn find_panic_outside_tests(path: &str, content: &str) -> Vec<String> {
+/// Scan `src` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]` blocks.
+///
+/// Returns a `Vec<String>` of `"path:line_num: trimmed_line"` findings.
+/// Returns empty when `path` is a test file (per `is_test_file`).
+///
+/// ## Inline `#[cfg(test)]` block handling
+///
+/// Uses brace-depth tracking to identify test module boundaries.  Only INLINE
+/// test blocks (with `{`) are suppressed — file-module declarations of the form
+/// `#[cfg(test)] mod tests;` (semicolon-terminated, body in a separate file) do
+/// NOT latch the scanner.  This prevents the gate-bypass where a production
+/// `.unwrap()` immediately following such a declaration was incorrectly skipped.
+fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
+    // Entire-file exclusion for known test file paths.
+    if is_test_file(path) {
+        return Vec::new();
+    }
+
     let mut findings = Vec::new();
     let mut brace_depth: i32 = 0;
     let mut in_test_block = false;
-    let mut test_block_target: i32 = -1; // brace_depth at which test block was entered
-    let mut pending_cfg_test = false; // saw #[cfg(test)]; waiting for next `{`
+    let mut test_block_target: i32 = -1; // depth at which the test block was entered
+    let mut pending_cfg_test = false; // true after `#[cfg(test)]`; waiting for the opening `{`
 
-    for (line_idx, line) in content.lines().enumerate() {
+    for (line_idx, line) in src.lines().enumerate() {
         let line_num = line_idx + 1;
 
-        // Detect #[cfg(test)] attribute — the following `{` opens the test block
+        // Detect `#[cfg(test)]` — but only latch when this is NOT a semicolon-terminated
+        // file-module declaration (`#[cfg(test)] mod tests;`).  A semicolon-terminated form
+        // means the module body lives in a separate file; there is no inline block to skip.
         if line.contains("#[cfg(test)]") {
-            pending_cfg_test = true;
+            let trimmed_line = line.trim();
+            let is_file_module_decl = trimmed_line.contains("mod ") && trimmed_line.ends_with(';');
+            if !is_file_module_decl {
+                pending_cfg_test = true;
+            }
         }
 
-        // Walk characters to track brace depth and test-block entry/exit
+        // Walk characters to track brace depth and test-block entry/exit.
         for ch in line.chars() {
             match ch {
                 '{' => {
@@ -258,8 +362,7 @@ fn find_panic_outside_tests(path: &str, content: &str) -> Vec<String> {
             }
         }
 
-        // Skip lines inside test blocks, comment lines, and lines in integration
-        // test files (tests/ subdirectory)
+        // Skip lines inside test blocks and comment lines.
         if in_test_block {
             continue;
         }
@@ -267,11 +370,8 @@ fn find_panic_outside_tests(path: &str, content: &str) -> Vec<String> {
         if trimmed.starts_with("//") {
             continue;
         }
-        if path.contains("/tests/") || path.ends_with("_test.rs") {
-            continue;
-        }
 
-        // Flag panic-potential patterns
+        // Flag panic-potential patterns.
         let has_unwrap = line.contains(".unwrap()");
         let has_expect = line.contains(".expect(");
         if (has_unwrap || has_expect) && !line.contains("//") {
@@ -382,5 +482,157 @@ fn load_allowlist() -> AllowList {
     match std::fs::read_to_string(path) {
         Ok(content) => toml::from_str(&content).unwrap_or_default(),
         Err(_) => AllowList::default(),
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unit tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── check-no-panic gate ──────────────────────────────────────────────────
+
+    /// Gate-bypass regression: production `.unwrap()` that follows a
+    /// `#[cfg(test)] mod tests;` FILE-MODULE declaration must NOT be skipped.
+    ///
+    /// Before the M-1 fix the semicolon-terminated declaration latched
+    /// `pending_cfg_test = true`; the next `{` (the production function's opening
+    /// brace) then activated `in_test_block`, suppressing the finding.
+    #[test]
+    fn test_no_panic_finds_unwrap_after_cfg_test_mod_decl() {
+        let src = r#"
+#[cfg(test)] mod tests;
+
+pub fn production_fn() -> i32 {
+    let x: Option<i32> = Some(1);
+    x.unwrap()
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "should detect unwrap in production code after cfg(test) mod decl; got: {findings:?}"
+        );
+    }
+
+    /// Correctly suppressed: `.unwrap()` inside an inline `#[cfg(test)]` block
+    /// must NOT be reported.
+    #[test]
+    fn test_no_panic_ignores_unwrap_in_cfg_test_block() {
+        let src = r#"
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn my_test() {
+        let x: Option<i32> = Some(1);
+        assert_eq!(x.unwrap(), 1);
+    }
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "should NOT flag unwrap inside #[cfg(test)] block; got: {findings:?}"
+        );
+    }
+
+    /// Correctly suppressed: entire file is a test file (path ends with `tests.rs`).
+    #[test]
+    fn test_no_panic_ignores_tests_rs_file() {
+        let src = r#"
+pub fn test_helper() -> i32 {
+    let x: Option<i32> = Some(1);
+    x.unwrap()
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/tests.rs");
+        assert!(
+            findings.is_empty(),
+            "should NOT flag src/tests.rs; got: {findings:?}"
+        );
+    }
+
+    /// Production code after an inline cfg(test) block (which DOES have braces)
+    /// must still be scanned after the block closes.
+    #[test]
+    fn test_no_panic_finds_unwrap_after_cfg_test_block_closes() {
+        let src = r#"
+#[cfg(test)]
+mod tests {
+    fn helper() {
+        let _x: Option<i32> = Some(1);
+    }
+}
+
+pub fn production_fn() -> i32 {
+    let x: Option<i32> = Some(1);
+    x.unwrap()
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "should detect unwrap in production code after cfg(test) block closes; got: {findings:?}"
+        );
+    }
+
+    // ── check-client-timeout gate ────────────────────────────────────────────
+
+    /// M-3 regression: a crate whose PATH contains "test" (e.g. pregolya-standard-tests)
+    /// must NOT be suppressed by the timeout scanner.
+    #[test]
+    fn test_timeout_scanner_does_not_suppress_standard_tests_crate() {
+        let src = "let client = reqwest::Client::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-standard-tests/src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "should detect missing timeout in standard-tests crate; got: {findings:?}"
+        );
+    }
+
+    /// Actual test files (path ends with `tests.rs`) must be suppressed.
+    #[test]
+    fn test_timeout_scanner_suppresses_actual_test_file() {
+        let src = "let client = reqwest::Client::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/tests.rs");
+        assert!(
+            findings.is_empty(),
+            "should suppress actual test files; got: {findings:?}"
+        );
+    }
+
+    /// Files under a `tests/` directory component must be suppressed.
+    #[test]
+    fn test_timeout_scanner_suppresses_tests_dir_file() {
+        let src = "let client = reqwest::Client::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-core/tests/integration.rs");
+        assert!(
+            findings.is_empty(),
+            "should suppress files under tests/ directory; got: {findings:?}"
+        );
+    }
+
+    // ── is_test_file helper ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_is_test_file_patterns() {
+        assert!(is_test_file("src/tests.rs"));
+        assert!(is_test_file("crates/foo/src/tests.rs"));
+        assert!(is_test_file("crates/foo/tests/integration.rs"));
+        assert!(is_test_file("src/foo_test.rs"));
+        assert!(is_test_file("src/foo_tests.rs"));
+
+        // Must NOT flag production files in crates with "test" in the crate name.
+        assert!(!is_test_file("crates/pregolya-standard-tests/src/lib.rs"));
+        assert!(!is_test_file("crates/pregolya-standard-tests/src/main.rs"));
+        // Must NOT flag arbitrary files that happen to have "test" in a directory name
+        // other than a `tests/` component.
+        assert!(!is_test_file("crates/pregolya-core/src/latest.rs"));
     }
 }
