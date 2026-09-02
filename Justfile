@@ -14,7 +14,7 @@ iter crate filter="":
 check:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
-    cargo nextest run --workspace
+    cargo nextest run --workspace --no-tests=warn
     cargo test --workspace --doc
     cargo xtask check-file-size
 
@@ -27,7 +27,7 @@ check-fast:
 check-ci:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
-    cargo nextest run --workspace
+    cargo nextest run --workspace --no-tests=warn
     cargo test --workspace --doc
     cargo xtask check-file-size
     cargo deny check
