@@ -233,6 +233,27 @@ fn check_client_timeout() {
     println!("check-client-timeout PASSED.");
 }
 
+/// Returns true when `line` contains a `reqwest::Client::new()` violation.
+///
+/// Detects two patterns:
+/// 1. `reqwest::Client::new()` — fully-qualified; catches the explicit prefix form.
+/// 2. `Client::new()` NOT preceded by `::` — catches the unqualified form that
+///    arises from `use reqwest::Client;` imports, while excluding other crates'
+///    Client types (e.g., `mcp_sdk::Client::new()` contains `::Client::new()`
+///    so condition 2 is false).
+fn is_reqwest_client_new_violation(line: &str) -> bool {
+    if line.contains("reqwest::Client::new()") {
+        return true;
+    }
+    // Unqualified Client::new() — flag it unless a different namespace owns it.
+    // `reqwest::Client::new()` already satisfies the first branch, so this branch
+    // only fires for truly bare `Client::new()` calls.
+    if line.contains("Client::new()") && !line.contains("::Client::new()") {
+        return true;
+    }
+    false
+}
+
 /// Scan `src` for `reqwest::Client::new()` and `Client::builder().build()`
 /// patterns outside test files that lack a `.timeout()` call.
 ///
@@ -258,12 +279,14 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
             continue;
         }
 
-        // Flag reqwest::Client::new() (fully-qualified to avoid false positives on
-        // other crates' Client::new() such as mcp_sdk::Client::new() — S-3 fix).
+        // Flag reqwest::Client::new() violations — both fully-qualified and
+        // unqualified (from `use reqwest::Client;` imports).
         // F-2 fix: removed the redundant `!line.contains("//")` guard — the early
         // `continue` above already handles pure-comment lines, and the old guard
         // incorrectly suppressed lines whose URL strings contain `//`.
-        if line.contains("reqwest::Client::new()") {
+        // B-4 fix: also detect unqualified `Client::new()` that is NOT preceded by
+        // a different namespace prefix (e.g., `mcp_sdk::Client::new()` is skipped).
+        if is_reqwest_client_new_violation(line) {
             findings.push(format!("{}:{}: {}", path, line_num, trimmed));
         }
 
@@ -282,11 +305,14 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
                     findings.push(format!("{}:{}: {}", path, line_num, trimmed));
                 }
                 in_builder_chain = false;
-            } else if line.contains(';')
-                && !(line.contains("Client::builder()") && line.contains(".build()"))
-            {
-                // Statement ended without a complete .build() — reset chain tracking.
-                // This covers two cases (S-1 fix):
+            } else if line.contains(';') && !line.contains(".build()") {
+                // Statement ended without a .build() — reset chain tracking.
+                // The conjunct `!(line.contains("Client::builder()") && line.contains(".build()"))`
+                // was always true here: if .build() were present, the branch above would have
+                // already closed the chain before this else-if is reached. Simplified to
+                // just `!line.contains(".build()")` (S-4 fix).
+                //
+                // Covers two cases (S-1 fix):
                 //   (a) `;` on a line that has nothing to do with Client::builder()
                 //   (b) `Client::builder()` stored in a variable (`;` present, but
                 //       `.build()` absent) — the stored builder's eventual .build()
@@ -394,8 +420,9 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
         //   B-2c: `'"'` — a double-quote inside a char literal must not toggle
         //          `in_string_literal`; also handled by `in_char_literal`.
         //
-        // All state is per-line (declared inside this loop iteration) because
-        // Rust non-raw string and char literals do not span lines.
+        // All state is per-line (declared inside this loop iteration).
+        // Non-raw string literals cannot span lines; raw strings are unhandled
+        // (workspace crates don't use spanning raw literals in production code).
         let mut in_string_literal = false;
         let mut in_char_literal = false;
         let chars: Vec<char> = line.chars().collect();
@@ -433,7 +460,30 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
                     in_string_literal = true;
                 }
                 '\'' => {
-                    in_char_literal = true;
+                    // Lookahead to distinguish a char literal from a lifetime annotation.
+                    //
+                    // Char literals have the form:
+                    //   '\\' <escape_char> '   — e.g. '\n', '\\', '\''
+                    //   '<single_char>'         — e.g. 'a', '{', '"'
+                    //
+                    // Lifetime annotations have the form:
+                    //   '<ident_or_underscore>  — e.g. 'a, 'static, '_
+                    // They have NO closing apostrophe on the same lexical unit.
+                    //
+                    // Rule: enter char-literal mode only when the closing `'` is
+                    // visible at lookahead distance (i+2 for plain chars, i+3 for
+                    // escape sequences). Otherwise treat as a lifetime and skip.
+                    let next = chars.get(i + 1).copied();
+                    let after_next = chars.get(i + 2).copied();
+                    let is_char_lit = match next {
+                        Some('\\') => true, // escape sequence: '\n', '\\', '\'' — enter mode
+                        Some(_) => after_next == Some('\''), // plain char: closing ' is at i+2
+                        None => false,
+                    };
+                    if is_char_lit {
+                        in_char_literal = true;
+                    }
+                    // else: lifetime annotation ('a, 'static, '_) — do NOT enter char-literal mode
                 }
                 '{' => {
                     brace_depth += 1;
@@ -873,6 +923,53 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         assert!(
             !findings.is_empty(),
             "reqwest::Client::new() must still be flagged; got: {findings:?}"
+        );
+    }
+
+    // ── B-3 / B-4 regression tests ───────────────────────────────────────────
+
+    /// B-3 regression: lifetime annotation 'a must NOT enter char-literal mode.
+    /// When in_char_literal is latched by a lifetime, brace counting breaks, which
+    /// can cause production .unwrap() to be missed or test-block suppression to misfire.
+    #[test]
+    fn test_no_panic_lifetime_annotation_does_not_latch_char_literal() {
+        let src = r#"
+pub fn foo<'a>(x: &'a str) -> i32 {
+    let v: Vec<&'a str> = vec![];
+    let _ = v;
+    let opt: Option<i32> = Some(1);
+    opt.unwrap()
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "lifetime annotation must not latch char-literal mode; got: {findings:?}"
+        );
+    }
+
+    /// B-4 regression: unqualified Client::new() (from use import) must be flagged.
+    #[test]
+    fn test_timeout_scanner_flags_unqualified_client_new_from_import() {
+        // Simulates: use reqwest::Client; ... Client::new()
+        let src = "let c = Client::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "unqualified Client::new() (use reqwest::Client import) must be flagged; got: {findings:?}"
+        );
+    }
+
+    /// B-4 negative: mcp_sdk::Client::new() must NOT be flagged.
+    #[test]
+    fn test_timeout_scanner_does_not_flag_mcp_client_new() {
+        let src = "let c = mcp_sdk::Client::new();\n";
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "mcp_sdk::Client::new() must not be flagged; got: {findings:?}"
         );
     }
 }

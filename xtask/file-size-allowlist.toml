@@ -16,3 +16,9 @@
 # reason = "Cohesive state machine — splitting would break invariants"
 # approver = "architect"
 # date = "2026-09-01"
+
+[[allow]]
+path = "xtask/src/main.rs"
+reason = "Single-binary workspace task runner with 5 subcommands and their test suites; splitting into multiple files would require cross-module test access and reduce cohesion without benefit"
+approver = "pr-manager"
+date = "2026-09-02"
