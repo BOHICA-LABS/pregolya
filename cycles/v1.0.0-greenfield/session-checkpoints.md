@@ -4403,3 +4403,22 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 
 ### PENDING USER-APPROVED WORK (D-348)
 None outstanding. DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+
+---
+
+### Archived Step Row — D-347 (archived to make room for D-352; D-352 burst 2026-09-02)
+
+D-347 round-68 P2A-240 fix-burst CLOSED (2026-09-02): trajectory-tail →1→0→0→0 (P2A-240=1[1MED]; single-lens). 1 MED FINDING CLOSED: F-P2A240-01[MED] S-2.06 AC-006 test names corrected — test_BC_2_08_006_api_key_debug_is_redacted → test_BC_2_14_005_api_key_debug_is_redacted; test_BC_2_08_006_api_key_no_display → test_BC_2_14_005_api_key_no_display (story-writer; AC-006 traces to BC-2.14.005 {PC-002}; S-2.06 §Changelog (1.4→1.5); canonical .factory/ path). Wrong-path operational note: initial dispatch used relative path; sub-agent resolved to stale develop-tree DU-leftover copy; re-applied to canonical .factory/stories/stories/ path. STORY-INDEX §Changelog (1.51→1.52). L-272 codified [process-gap]. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3 (push resets; round-69 gates on new HEAD).
+
+---
+
+## Session Checkpoint — D-351 (archived 2026-09-02; replaced by D-352)
+
+### RESUME IN ONE BREATH (D-351)
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-74 closed + D-346 reconciliation-burst. D-351 CLOSED (2026-09-02) — round-74 P2A-246 RECORDS-ONLY (2 LOW): F-P2A246-01[LOW] S-2.06 §Changelog 1.6 SS-14 parenthetical "(Credential Safety)"→"(Typed Error Taxonomy)"; F-P2A246-02[LOW] S-2.06 §Behavioral Contracts BC-2.08.006 title cell corrected to byte-verbatim escaped form. Broad multi-subsystem re-derivation found ZERO HIGH/MED — recently-fixed classes did NOT replicate. Records-only micro-burst per TD-RECORDS-MICRO-BURST-001; streak UNCHANGED 0/3. story-writer: S-2.06 v1.8→v1.9. state-manager: STORY-INDEX §Changelog (1.55→1.56). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15.
+
+### HEADS (D-351)
+develop: `bfe0592` — LOCAL ONLY; factory-artifacts: PUSHED (D-351). No .worktrees/. No open PRs.
+
+### NEXT-ACTION (D-351)
+Dispatch round-75 adversary cascade on new frozen HEAD (post-D-351 push). Streak 0/3.

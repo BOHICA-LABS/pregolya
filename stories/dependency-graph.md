@@ -1,6 +1,6 @@
 ---
 document_type: dependency-graph
-version: "1.7"
+version: "1.8"
 status: active
 producer: story-writer
 timestamp: 2026-09-01T00:00:00Z
@@ -344,13 +344,13 @@ S-6.01 (Kani + cargo-fuzz)
 | VP-012 | BC-2.10.005 | Kani | 6 | P1 | S-1.25 | S-6.01 |
 | VP-013 | BC-2.23.005 | Kani | 6 | P1 | S-1.22 | S-6.01 |
 | VP-014 | BC-2.01.005 + BC-2.01.006 | proptest | 3 | P1 | S-1.05 | S-6.01 |
-| VP-015 | BC-2.09.007 | unit | 3 | P1 | S-2.11 | — |
-| VP-016 | BC-2.09.008 | proptest | 3 | P1 | S-2.11 | — |
-| VP-017 | BC-2.02.007 | proptest | 3 | P1 | S-1.28 | — |
-| VP-018 | BC-2.04.011 | proptest | 3 | P1 | S-2.12 | — |
+| VP-015 | BC-2.09.007 {INV-003} | unit | 3 | P1 | S-2.11 | — |
+| VP-016 | BC-2.09.008 {INV-001} | proptest | 3 | P1 | S-2.11 | — |
+| VP-017 | BC-2.02.007 + BC-2.02.008 | proptest | 3 | P1 | S-1.28 | — |
+| VP-018 | BC-2.04.011 {INV-001} | proptest | 3 | P1 | S-2.12 | — |
 | VP-019 | BC-2.04.011 {INV-003} | integration | 6 | P1 | S-2.12 | — |
 | VP-020 | BC-2.02.009 {INV-001}+{INV-002} | proptest | 3 | P1 | S-1.28 | — |
-| VP-006-B | BC-2.18.004 | proptest | 3 | P1 | S-2.05 | S-6.01 |
+| VP-006-B | BC-2.18.004 {PC-005} | proptest | 3 | P1 | S-2.05 | — |
 
 ### NFR to Stories Matrix
 
@@ -434,6 +434,7 @@ S-6.01 (Kani + cargo-fuzz)
 
 ## Changelog
 
+- **1.8 (round-77/F-P2A249-01+F-P2A249-02/2026-09-02):** Full VP-to-Stories Matrix re-derivation from source-of-truth (VP-INDEX.md §VP Catalog BC-Anchor column + STORY-INDEX §VP-to-Story Anchor Map + S-6.01 frontmatter `verification_properties`). (F-P2A249-01 MED) VP-017 BC anchor corrected `BC-2.02.007` → `BC-2.02.007 + BC-2.02.008` (dual anchor; VP-INDEX §VP Catalog VP-017 row, VP-017 body frontmatter `bc_anchor`, and STORY-INDEX §VP-to-Story Anchor Map all confirm dual form). (F-P2A249-02 MED) VP-006-B Additional-Stories corrected `S-6.01` → `—` (S-6.01 frontmatter `verification_properties: [VP-001...VP-014]` does not include VP-006-B; sibling Phase-3 proptests VP-016/017/018/020 all show `—` consistently). Clause tags synced to VP-INDEX exact BC-Anchor form in four additional rows: VP-015 `BC-2.09.007` → `BC-2.09.007 {INV-003}`; VP-016 `BC-2.09.008` → `BC-2.09.008 {INV-001}`; VP-018 `BC-2.04.011` → `BC-2.04.011 {INV-001}`; VP-006-B `BC-2.18.004` → `BC-2.18.004 {PC-005}`. All other 15 rows confirmed correct (no additional drift). Total changes: 6 cells across 5 rows.
 - **1.7 (round-62/D-340/2026-09-01):** VP-020 row added to VP-to-Stories Matrix (BC-2.02.009 {INV-001}+{INV-002} / proptest / 3 / P1 / S-1.28 / —); matrix now enumerates all 21 VPs. Version bump for census parity with VP-INDEX §VP-020.
 - **1.6 (round-60/F-P2A232-03+F-P2A232-04/2026-09-01):** (F-P2A232-03) S-1.10 `blocks:` extended to include S-2.12 — reverse-edge fix for S-2.12 `depends_on: [S-1.10]` asymmetry (sibling of v1.5 S-1.14→S-1.28 fix). Full DAG reverse-edge sweep performed: all other `depends_on`↔`blocks` pairs confirmed symmetric; no additional asymmetries found. (F-P2A232-04) VP-to-Stories Matrix: VP-019 row added (`BC-2.04.011 {INV-003} | integration | 6 | P1 | S-2.12 | —`) to match VP-INDEX source of truth; matrix now enumerates all 20 VPs. DAG acyclicity unaffected.
 - **1.5 (round-54/F-P2A224-05/2026-09-01):** S-1.14 `blocks:` extended to include S-1.28 (reverse edge fix — S-1.28 depends_on S-1.14, so S-1.14 must list S-1.28 in blocks). DAG acyclicity unaffected: S-1.28 depends on S-1.14 (Wave-1 upstream); topological sort batch-1e already correctly placed S-1.28 after S-1.14 (batch-1d); no new ordering constraints introduced.

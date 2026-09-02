@@ -5852,3 +5852,150 @@ Full trajectory tail (rounds 71–74): P2A-243=0/CLEAN(strict,streak1/3)→P2A-2
 - S-2.06 input-hash: 33834e3 UNCHANGED (fix-burst modified story body and changelog only; BC input files not modified)
 
 **NEXT: round-75 on new frozen HEAD (post-D-351 push). Streak 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-75 — P2A-247 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-247 |
+| Round | 75 |
+| Frozen HEAD | post-D-351 push |
+| Date | 2026-09-02 |
+| CLEAN(strict) | YES |
+| CLEAN(PR-merge) | YES |
+| Findings | 0 |
+| Streak | 1/3 |
+| Label | CLEAN(strict) |
+
+**Context note:** Fresh-context adversarial pass on new frozen HEAD (post-D-351 push). Census/parity angle. Zero findings on all axes. Streak advanced to 1/3.
+
+**Finding table:** None.
+
+**Fix-burst:** None required.
+
+### Trajectory Tail Update
+
+Round-75 appended: →0 (P2A-247; CLEAN(strict)=YES; streak 1/3)
+
+Full trajectory tail (rounds 72–75): P2A-244=1MED→D-349(fix,streak reset 0/3)→P2A-245=2(1H+1MED)→D-350(fix,streak reset 0/3)→P2A-246=2[LOW,RECORDS-ONLY]→D-351(records-micro-burst,streak UNCHANGED 0/3)→P2A-247=0/CLEAN(strict,streak 1/3)
+
+### Post-Round-75 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 1/3 (advanced from 0/3; P2A-247 CLEAN(strict))
+
+**NEXT: round-76 on same frozen HEAD. Streak 1/3. Target: CLEAN(strict) streak 2/3.**
+
+---
+
+## Round-76 — P2A-248 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-248 |
+| Round | 76 |
+| Frozen HEAD | same as round-75 (post-D-351 push) |
+| Date | 2026-09-02 |
+| CLEAN(strict) | YES |
+| CLEAN(PR-merge) | YES |
+| Findings | 0 |
+| Streak | 2/3 |
+| Label | CLEAN(strict) |
+
+**Context note:** Fresh-context adversarial pass on same frozen HEAD (post-D-351 push). Deep-semantic angle distinct from round-75 census/parity angle — cognitive diversity via different adversarial scope. Zero findings. Streak advanced to 2/3.
+
+**Finding table:** None.
+
+**Fix-burst:** None required.
+
+### Trajectory Tail Update
+
+Round-76 appended: →0 (P2A-248; CLEAN(strict)=YES; streak 2/3)
+
+Full trajectory tail (rounds 73–76): P2A-245=2(1H+1MED)→D-350(fix,streak reset 0/3)→P2A-246=2[LOW,RECORDS-ONLY]→D-351(records-micro-burst,streak UNCHANGED 0/3)→P2A-247=0/CLEAN(strict,streak 1/3)→P2A-248=0/CLEAN(strict,streak 2/3)
+
+### Post-Round-76 Status
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 2/3 (advanced from 1/3; P2A-248 CLEAN(strict))
+
+**NEXT: round-77 on same frozen HEAD. Streak 2/3. One pass from convergence — target CLEAN(strict) for 3/3.**
+
+---
+
+## Round-77 — P2A-249 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-249 |
+| Round | 77 |
+| Frozen HEAD | 710f502 (same frozen HEAD as rounds 75+76; post-D-351 push) |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 2 (2 MED) |
+| Streak | RESET 2/3→0/3 |
+| Label | FINDINGS_REMAIN |
+
+**Context note:** Fresh-context adversarial pass on frozen HEAD 710f502 (post-D-351 push). Completeness/coverage angle — VP-to-Stories Matrix in stories/dependency-graph.md. Found 2 MED findings: mirror drift between dependency-graph.md VP-to-Stories Matrix and VP-INDEX §VP Catalog. Rounds 75+76 banked 2 consecutive CLEAN(strict) from census/parity and deep-semantic angles before round-77's completeness/coverage angle surfaced the matrix drift. Streak reset 2/3→0/3 on this fix push (frozen-HEAD streak rule).
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A249-01 | MED | dependency-graph.md VP-to-Stories Matrix VP-017 BC-Anchor column read `BC-2.02.007` but VP-INDEX §VP Catalog VP-017 row, VP-017 body frontmatter `bc_anchor`, and STORY-INDEX §VP-to-Story Anchor Map all confirm the dual-anchor form `BC-2.02.007 + BC-2.02.008` (VP-017 anchors both the LedgerChannel trait BC and the Channel-registry parity BC; the dual anchor was established in round-50 but never propagated to the dependency-graph VP matrix). | story-writer; dependency-graph.md VP-017 BC-Anchor corrected to `BC-2.02.007 + BC-2.02.008`; full 21-row matrix re-derived; v1.7→v1.8 |
+| F-P2A249-02 | MED | dependency-graph.md VP-to-Stories Matrix VP-006-B Additional-Stories column read `S-6.01` but S-6.01 frontmatter `verification_properties: [VP-001..VP-014]` does not include VP-006-B; all sibling Phase-3 proptest VPs (VP-016/017/018/020) consistently show `—` in Additional-Stories; the `S-6.01` entry was a residual from an earlier (pre-round-50) state and was never removed when VP-006-B's coverage was finalized. | story-writer; dependency-graph.md VP-006-B Additional-Stories corrected to `—`; clause tags synced on VP-015/VP-016/VP-018/VP-006-B to VP-INDEX exact form; v1.7→v1.8 |
+
+**Fix-burst CLOSED (D-352).** Both MED findings closed via full 21-row VP-to-Stories Matrix re-derivation from VP-INDEX source-of-truth (all rows now match VP-INDEX byte-exactly; 15 previously-correct rows confirmed; 6 cells across 5 rows corrected). This fix push (D-352) resets the streak to 0/3 per the frozen-HEAD streak rule. Round-78 gates on the new frozen HEAD.
+
+**NOTABLE (propagation history):** The VP-017 dual-anchor (`BC-2.02.007 + BC-2.02.008`) was established in round-50 (D-327 praxist burst + D-328 fix-burst). The dependency-graph VP-to-Stories Matrix is the 4th mirror of VP-INDEX that drifted since round-50 without receiving the dual-anchor update. This is the 5th distinct occurrence of the "source-of-truth change not propagated to downstream mirror" class in this cascade (rounds 66/67/70/72/77). L-275 codified.
+
+### Trajectory Tail Update
+
+Round-77 appended: →2 (P2A-249; 2MED; CLOSED; D-352; streak reset 0/3)
+
+Full trajectory tail (rounds 74–77): P2A-246=2[LOW,RECORDS-ONLY]→D-351(records-micro-burst,streak UNCHANGED 0/3)→P2A-247=0/CLEAN(strict,streak 1/3)→P2A-248=0/CLEAN(strict,streak 2/3)→P2A-249=2[2MED,dep-graph VP-matrix mirror drift]→D-352(fix,streak reset 0/3)
+
+### Post-Round-77 Status (D-352 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: RESET 0/3 (fix push resets per frozen-HEAD streak rule; new frozen HEAD for round-78)
+- dependency-graph.md: v1.7→v1.8 (story-writer; F-P2A249-01[MED] + F-P2A249-02[MED]; D-352)
+- dependency-graph.md input-hash: 2dd0b6f→36ce19e
+- STORY-INDEX: §Changelog (1.56→1.57) (state-manager; D-352)
+- STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified)
+- L-275 codified: VP-to-Stories Matrix as 4th VP-INDEX mirror; 5th occurrence of propagation-gap class
+
+**NEXT: round-78 on new frozen HEAD (post-D-352 push). Streak 0/3. Target: CLEAN(strict).**
