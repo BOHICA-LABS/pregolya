@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "2.1"
+version: "2.2"
 changelog:
+  - "2.2 (D-347/round-68/2026-09-02): D-346 checkpoint archived"
   - "2.1 (D-341/round-63/2026-09-01): D-340 checkpoint archived"
   - "2.0 (D-340/round-62/2026-09-01): D-339 checkpoint archived"
   - "1.9 (D-339/round-60/2026-09-01): D-338 checkpoint archived"
@@ -4283,3 +4284,21 @@ MED (1) CLOSED: F-P2A239-02[MED] ARCH-INDEX census TV 794 at frozen HEAD 69ec78d
 
 ### STEP ROW ARCHIVED AT D-346
 Archived step row D-341 (round-63 fix-burst CLOSED) from STATE.md §Current Phase Steps at D-346.
+
+---
+
+## Archived Checkpoint: D-346 (archived from STATE.md §Session Resume Checkpoint on 2026-09-02 at D-347)
+
+<!-- D-346 checkpoint — archived at D-347; replaced in STATE.md by D-347 checkpoint -->
+
+### RESUME IN ONE BREATH (D-346)
+pregolya Phase-2 re-convergence. Praxist "research orchestrator" use case injected (D-327); rounds 49-67 closed + D-346 reconciliation-burst. D-346 CLOSED (2026-09-02) — product-owner adjudication Decision (a): BC-2.14.005 is a legitimate multi-anchor contract co-anchored to S-1.02 (primary; credential newtypes in pregolya-core) + S-2.06 (co-anchor; SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001; SDK crates define independent credential newtypes governed by BC-2.14.005 workspace-wide policy). State-manager synced: STORY-INDEX §BC-to-Story anchor map BC-2.14.005 row S-1.02→S-1.02, S-2.06 (v1.51; input-hash 69ed6f6→0bcc4f8); BC-INDEX BC-2.14.005 row annotation v1.4→v1.5 + changelog 4.22 (v4.22); sprint-state.yaml S-2.06 bcs synced [BC-2.08.006]→[BC-2.08.006, BC-2.14.005]; convergence-trajectory D-346 note appended. All round-67 open items now CLOSED. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3 (push resets; round-68 gates on new HEAD).
+
+### HEADS (D-346)
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-346). No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION (D-346)
+Dispatch round-68 adversary cascade on new frozen HEAD (post-D-346 push). Streak 0/3. BC-2.14.005 multi-anchor adjudication FULLY CLOSED (D-346); no open items from rounds 67.
+
+### STEP ROW ARCHIVED AT D-347
+Archived step row D-345 (round-67 P2A-239 fix-burst CLOSED) from STATE.md §Current Phase Steps at D-347.

@@ -5507,3 +5507,60 @@ Trackers/indexes synced by state-manager:
 This closes the last open item from round-67 reconciliation sweep (ambiguous case flagged in D-345). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. streak 0/3.
 
 **NEXT: round-68 adversarial sweep on new frozen HEAD (post-D-346 push). Streak reset 0/3. Target: CLEAN(strict).**
+
+---
+
+## Round-68 — P2A-240 (2026-09-02)
+
+### Pass Summary
+
+| Field | Value |
+|-------|-------|
+| Pass ID | P2A-240 |
+| Round | 68 |
+| Frozen HEAD | 31c3c35 |
+| Date | 2026-09-02 |
+| CLEAN(strict) | NO |
+| CLEAN(PR-merge) | NO |
+| Findings | 1 (0 HIGH + 1 MED) |
+| Streak | RESET → 0/3 on push |
+| Label | FINDINGS_REMAIN |
+
+**Context note:** This round's single finding is a residual of the round-67 multi-anchor reconciliation cascade. The broad re-derivation conducted during round-68 confirmed that all recently-churned surfaces (census, VP-020 multi-anchor, BC-2.14.005 adjudication, S-6.01 vps, TV=795) have genuinely converged with zero defects. The single finding (AC-006 test-name prefix drift in S-2.06) is a mechanical labeling correction.
+
+**Finding table:**
+
+| ID | Severity | Description | Closed By |
+|----|----------|-------------|-----------|
+| F-P2A240-01 | MED | S-2.06 AC-006 "Verified by" test names carried the BC-2.08.006 prefix (test_BC_2_08_006_api_key_debug_is_redacted / test_BC_2_08_006_api_key_no_display) but AC-006 traces to BC-2.14.005 {PC-002} (credential newtype REDACTED Debug). Per corpus naming convention, test names must carry the prefix of the traced BC. Residual of round-67 multi-anchor reconciliation — BC-2.14.005 was added as a legitimate co-anchor to S-2.06 in D-346, but the test names in AC-006 were not updated to match the new trace. | story-writer (S-2.06 §Changelog (1.4→1.5); AC-006 test names renamed to test_BC_2_14_005_api_key_debug_is_redacted() / test_BC_2_14_005_api_key_no_display(); sibling sweep confirmed no other spec artifact carried the old names; canonical .factory/stories/stories/ path) |
+
+**Fix-burst CLOSED (D-347).** 1 MED finding closed by story-writer.
+
+**Wrong-path operational note:** Initial sub-agent dispatch used a relative story path; sub-agent (cwd=repo root) resolved to stories/stories/ — a stale DU (deleted-by-us, unmerged) develop-tree copy — instead of canonical .factory/stories/stories/. The edit was silently applied to the stale copy without error. Story-writer re-applied the fix to the canonical path in this burst. Operational hazard flagged: develop working tree carries pre-existing DU leftover files under stories/stories/ that shadow canonical .factory/ artifacts; human cleanup required before Phase-3. L-272 codified (process-gap: absolute .factory/ path discipline for all dispatch).
+
+### Trajectory Tail Update
+
+Previous tail (post-round-67 + D-346): →2 (P2A-239; 0H+2MED; ALL CLOSED; fix-burst D-345 CLOSED) →0 (D-346 reconciliation-burst; no adversary pass)
+
+Round-68 appended: →1 (P2A-240; 0H+1MED; ALL CLOSED; fix-burst D-347 CLOSED)
+
+Full trajectory tail (rounds 62–68): P2A-233=0/CLEAN(strict)→P2A-234=8→P2A-235=8→P2A-236=1(RECORDS-ONLY)→P2A-237=6→P2A-238=3→P2A-239=2→D-346(reconciliation,0)→P2A-240=1
+
+### Post-Round-68 Status (D-347 fix-burst close)
+
+- BC: UNCHANGED (140)
+- VP: UNCHANGED (21)
+- EC: UNCHANGED (143)
+- TV: UNCHANGED (795 canonical)
+- ADR: UNCHANGED (30)
+- NFR: UNCHANGED (15)
+- Stories: UNCHANGED (42 total)
+- Holdout: UNCHANGED (24; must-pass 17/24=70.8%)
+- Census pts: UNCHANGED (316)
+- Streak: 0/3 (push resets frozen HEAD; round-69 gates on new HEAD)
+- STORY-INDEX: §Changelog (1.51→1.52) (S-2.06 §Changelog (1.4→1.5); AC-006 test-name fix; no census change)
+- S-2.06 input-hash: 521e8a7 UNCHANGED (rename-only; BC input files not modified)
+
+**LESSON (codified as L-272):** Orchestrator dispatch used a relative story path; sub-agent (cwd=repo root) resolved to stale develop-tree copy stories/stories/ (DU leftover files) instead of canonical .factory/stories/stories/. The file existed in the stale copy, so no error was raised. Going-forward discipline: every orchestrator→specialist dispatch MUST cite full absolute .factory/… paths for every file; specialists must confirm each edited path begins with .factory/. OPERATIONAL HAZARD: develop working tree carries pre-existing DU leftover files under stories/stories/ that shadow canonical .factory/ artifacts — flagged for human cleanup; NOT resolved in this cascade.
+
+**NEXT: round-69 adversarial sweep on new frozen HEAD (post-D-347 push). Streak reset 0/3. Target: CLEAN(strict).**

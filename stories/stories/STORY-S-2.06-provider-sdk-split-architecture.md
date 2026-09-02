@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.06
 epic_id: E-19
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -99,7 +99,7 @@ impl fmt::Debug for OpenAiApiKey {
 }
 ```
 No `Display` impl leaks key material. No `Serialize`/`Deserialize` impl on credential types.
-Verified by `test_BC_2_08_006_api_key_debug_is_redacted()` and `test_BC_2_08_006_api_key_no_display()`.
+Verified by `test_BC_2_14_005_api_key_debug_is_redacted()` and `test_BC_2_14_005_api_key_no_display()`.
 
 ### AC-007 (traces to BC-2.08.006 INV-005)
 `reqwest::Client` instances produced by SDK builders use `rustls-tls` as the TLS backend.
@@ -242,3 +242,4 @@ workspace — set the correct pattern from the start. Future crates inherit this
 - 1.2 (ADR-027 M3 straggler conversion to stable clause anchors/2026-08-24): M3 straggler audit confirmed — AC-002 and AC-007 retain ordinal citations; no BC-2.08.006 clause covers rustls-tls TLS backend enforcement (confirmed no semantic match across all PC/INV/PRE clauses); escalation to PO for new invariant authorship stands.
 - 1.3 (ADR-027 M4/2026-08-24): ADR-027 M4: rustls-tls ACs re-cited to BC-2.08.006 INV-005. AC-002 postcondition 2→INV-005; AC-007 invariant 1→INV-005; Architecture Compliance Rules table row updated to INV-005. Input-hash refreshed to da27500.
 - 1.4 (round-67 reconciliation/2026-09-02): PO adjudication confirmed BC-2.14.005 as legitimate co-anchor for this story. SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001; they define independent credential newtypes (OpenAiApiKey etc.) that are governed by BC-2.14.005's workspace-wide policy. behavioral_contracts array [BC-2.08.006, BC-2.14.005] confirmed correct. AC-006 trace to BC-2.14.005 PC-002 confirmed valid. STORY-INDEX BC-to-Story anchor map (exclusive S-1.02 → multi-anchor S-1.02+S-2.06) and sprint-state.yaml S-2.06 bcs array delegated to state-manager.
+- 1.5 (round-68 F-P2A240-01/2026-09-02): AC-006 test names corrected to match traced-BC prefix convention. `test_BC_2_08_006_api_key_debug_is_redacted` and `test_BC_2_08_006_api_key_no_display` renamed to `test_BC_2_14_005_api_key_debug_is_redacted` and `test_BC_2_14_005_api_key_no_display` respectively — AC-006 traces to BC-2.14.005 PC-002, so test names must carry the BC-2.14.005 prefix per corpus naming convention. Sibling sweep of .factory/ corpus confirmed no other spec artifact carried the old names (only immutable JSONL dispatcher logs, which are not spec artifacts).

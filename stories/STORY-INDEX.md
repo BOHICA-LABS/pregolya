@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.51"
+version: "1.52"
 status: active
 producer: state-manager
-timestamp: 2026-09-02T14:00:00Z
+timestamp: 2026-09-02T15:30:00Z
 changelog:
+  - "1.52 (round-68 fix-burst/D-347/2026-09-02): S-2.06 §Changelog (1.4→1.5) (story-writer; F-P2A240-01[MED] — AC-006 test names corrected to traced-BC prefix convention: test_BC_2_08_006_api_key_debug_is_redacted → test_BC_2_14_005_api_key_debug_is_redacted; test_BC_2_08_006_api_key_no_display → test_BC_2_14_005_api_key_no_display; AC-006 traces to BC-2.14.005 PC-002 so test names carry BC-2.14.005 prefix per corpus naming convention; sibling sweep of .factory/ corpus confirmed no other spec artifact carried the old names). Story-writer re-applied to canonical .factory/stories/stories/ path after initial misfire to develop-tree stale copy. S-2.06 input-hash: 521e8a7 UNCHANGED (rename-only burst; BC input files not modified). STORY-INDEX input-hash: 0bcc4f8 UNCHANGED (index inputs not modified). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.51 (round-67 reconciliation/D-346/2026-09-02): BC-to-Story anchor map §SS-14 BC-2.14.005 row updated S-1.02→S-1.02, S-2.06 per product-owner adjudication Decision (a): BC-2.14.005 is a legitimate multi-anchor co-anchored to S-1.02 (primary; credential newtypes in pregolya-core) + S-2.06 (co-anchor; SDK crates cannot depend on pregolya-core per BC-2.08.006 PC-001 so SDK crates define independent credential newtypes governed by same workspace-wide policy). Exclusive S-1.02 anchor was incomplete; S-2.06 AC-006 traces to BC-2.14.005 {PC-002}. sprint-state.yaml S-2.06 bcs synced: [BC-2.08.006]→[BC-2.08.006, BC-2.14.005]. BC-INDEX 4.21→4.22 BC-2.14.005 row v1.4→v1.5. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.50 (round-66/D-344/2026-09-02): sprint-state.yaml S-1.28 vps [VP-017]→[VP-017, VP-020] (story-writer; F-P2A238-02[MED]). epics.md §E-05: per-run single-txn DELETE / two-crash-point crash-matrix / E-TRAJ-006 added (story-writer; F-P2A238-01[HIGH]); §E-07 VP-020 reference added (story-writer; F-P2A238-03[LOW]). No INDEX carries a structured epics.md version field — INDEX version-row sync NOT required. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
   - "1.49 (round-65/D-343/2026-09-01): S-2.12 §VP-019 Phase-6 adjudication (story-writer; F-P2A237-01[HIGH] — red-gate removed; phase-scope corrections; input-hash self-updated). S-1.28 title-column aligned to verbatim-H1 (title-only; version UNCHANGED). Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 canonical / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15."
