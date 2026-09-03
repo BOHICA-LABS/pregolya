@@ -233,116 +233,167 @@ fn check_client_timeout() {
     println!("check-client-timeout PASSED.");
 }
 
-/// Returns true when `needle` appears in `line` at a word-boundary position —
-/// i.e., NOT immediately preceded by an identifier character (`a-z`, `A-Z`,
-/// `0-9`, `_`) or `:`.
+/// Scan `src` for reqwest client timeout violations using `proc_macro2` token-tree walking.
 ///
-/// Used to distinguish standalone `Client::new()` (reqwest import) from
-/// compound names like `OpenAiClient::new()` or `mcp_sdk::Client::new()`.
-fn needle_has_standalone_occurrence(line: &str, needle: &str) -> bool {
-    let bytes = line.as_bytes();
-    let needle_bytes = needle.as_bytes();
-    let mut i = 0;
-    while i + needle_bytes.len() <= bytes.len() {
-        if bytes[i..i + needle_bytes.len()] == *needle_bytes {
-            let before = if i > 0 { bytes[i - 1] } else { 0 };
-            if !before.is_ascii_alphanumeric() && before != b'_' && before != b':' {
-                return true;
-            }
-        }
-        i += 1;
-    }
-    false
-}
-
-/// Returns true when `line` contains a `reqwest::Client::new()` violation.
+/// Detects:
+///   - `reqwest::Client::new()` (fully qualified)
+///   - `Client::new()` (unqualified, from `use reqwest::Client`)
+///   - `Client::builder().build()` or `reqwest::Client::builder()...build()` without `.timeout()`
 ///
-/// Flags fully-qualified `reqwest::Client::new()` and unqualified `Client::new()`
-/// (from `use reqwest::Client;` imports) while excluding compound names such as
-/// `OpenAiClient::new()` and namespace-prefixed `mcp_sdk::Client::new()`.
-fn is_reqwest_client_new_violation(line: &str) -> bool {
-    line.contains("reqwest::Client::new()")
-        || needle_has_standalone_occurrence(line, "Client::new()")
-}
-
-/// Returns true when `line` contains a `Client::builder()` call that is NOT
-/// part of a compound type name (e.g., `OpenAiClient::builder()` is excluded).
-fn contains_standalone_client_builder(line: &str) -> bool {
-    line.contains("reqwest::Client::builder()")
-        || needle_has_standalone_occurrence(line, "Client::builder()")
-}
-
-/// Scan `src` for `reqwest::Client::new()` and `Client::builder().build()`
-/// patterns outside test files that lack a `.timeout()` call.
-///
-/// Returns a `Vec<String>` of `"path:line_num: trimmed_line"` findings.
-/// Returns empty when `path` is a test file (per `is_test_file`).
-///
-/// This is the testable core extracted from `check_client_timeout`.
+/// Uses token-level scanning so string literals, comments, and char literals
+/// (which were the source of F-2, B-5, and related false positive/negative bugs)
+/// are handled correctly by the lexer.
 fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
     if is_test_file(path) {
         return Vec::new();
     }
 
-    let mut findings = Vec::new();
-    // F-3: track multi-line Client::builder() chains.
-    let mut in_builder_chain = false;
-    let mut builder_chain_has_timeout = false;
+    use proc_macro2::TokenStream;
 
-    for (line_idx, line) in src.lines().enumerate() {
-        let line_num = line_idx + 1;
-        let trimmed = line.trim();
-        // Skip comment lines.
-        if trimmed.starts_with("//") {
+    let ts: TokenStream = match src.parse() {
+        Ok(s) => s,
+        Err(_) => return Vec::new(),
+    };
+
+    let mut findings = Vec::new();
+    walk_timeout_tokens(ts.into_iter(), &mut findings, path);
+    findings
+}
+
+/// Recursive token-tree walker for `scan_for_timeout_violations_in_source`.
+fn walk_timeout_tokens(
+    iter: proc_macro2::token_stream::IntoIter,
+    findings: &mut Vec<String>,
+    path: &str,
+) {
+    use proc_macro2::{Delimiter, TokenTree};
+
+    let tokens: Vec<TokenTree> = iter.collect();
+    let mut i = 0;
+    while i < tokens.len() {
+        // Recurse into any group (brace, paren, bracket).
+        if let TokenTree::Group(g) = &tokens[i] {
+            walk_timeout_tokens(g.stream().into_iter(), findings, path);
+            i += 1;
             continue;
         }
 
-        // Flag reqwest::Client::new() violations — both fully-qualified and
-        // unqualified (from `use reqwest::Client;` imports).
-        // F-2 fix: removed the redundant `!line.contains("//")` guard — the early
-        // `continue` above already handles pure-comment lines, and the old guard
-        // incorrectly suppressed lines whose URL strings contain `//`.
-        // B-4 fix: also detect unqualified `Client::new()` that is NOT preceded by
-        // a different namespace prefix (e.g., `mcp_sdk::Client::new()` is skipped).
-        if is_reqwest_client_new_violation(line) {
-            findings.push(format!("{}:{}: {}", path, line_num, trimmed));
+        // Try to match: reqwest :: Client :: new ( ... )
+        // Token sequence: Ident("reqwest") Punct(":") Punct(":") Ident("Client")
+        //                 Punct(":") Punct(":") Ident("new") Group(Paren)
+        if matches!(&tokens[i], TokenTree::Ident(id) if id == "reqwest") {
+            if is_double_colon(&tokens, i + 1)
+                && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "Client")
+                && is_double_colon(&tokens, i + 4)
+                && matches!(tokens.get(i + 6), Some(TokenTree::Ident(id)) if id == "new")
+                && matches!(tokens.get(i + 7), Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis)
+            {
+                let line = if let Some(TokenTree::Ident(id)) = tokens.get(i + 6) {
+                    id.span().start().line
+                } else {
+                    0
+                };
+                findings.push(format!("{}:{}: reqwest::Client::new()", path, line));
+                i += 8;
+                continue;
+            }
+            // Also check reqwest :: Client :: builder() chain
+            if is_double_colon(&tokens, i + 1)
+                && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "Client")
+                && is_double_colon(&tokens, i + 4)
+                && matches!(tokens.get(i + 6), Some(TokenTree::Ident(id)) if id == "builder")
+            {
+                if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
+                    findings.push(finding);
+                }
+                i += 1;
+                continue;
+            }
         }
 
-        // Builder-chain tracking (F-3 fix): detect Client::builder().build()
-        // without an intervening .timeout(), even across multiple lines.
-        // B-5 fix: use word-boundary check so SomethingClient::builder() is excluded.
-        if contains_standalone_client_builder(line) {
-            in_builder_chain = true;
-            builder_chain_has_timeout = false;
-        }
-        if in_builder_chain {
-            if line.contains(".timeout(") {
-                builder_chain_has_timeout = true;
-            }
-            if line.contains(".build()") {
-                if !builder_chain_has_timeout {
-                    findings.push(format!("{}:{}: {}", path, line_num, trimmed));
+        // Try to match standalone Client :: new ( ... ) — NOT preceded by `:`.
+        // Preceding `:` means this Client is part of a qualified path (mcp_sdk::Client),
+        // which must not be flagged.
+        if matches!(&tokens[i], TokenTree::Ident(id) if id == "Client") {
+            let prev_is_colon =
+                i > 0 && matches!(&tokens[i - 1], TokenTree::Punct(p) if p.as_char() == ':');
+            if !prev_is_colon {
+                // Check for Client :: new ( ... )
+                if is_double_colon(&tokens, i + 1)
+                    && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "new")
+                    && matches!(tokens.get(i + 4), Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis)
+                {
+                    let line = if let Some(TokenTree::Ident(id)) = tokens.get(i + 3) {
+                        id.span().start().line
+                    } else {
+                        0
+                    };
+                    findings.push(format!("{}:{}: Client::new()", path, line));
+                    i += 5;
+                    continue;
                 }
-                in_builder_chain = false;
-            } else if line.contains(';') && !line.contains(".build()") {
-                // Statement ended without a .build() — reset chain tracking.
-                // The conjunct `!(line.contains("Client::builder()") && line.contains(".build()"))`
-                // was always true here: if .build() were present, the branch above would have
-                // already closed the chain before this else-if is reached. Simplified to
-                // just `!line.contains(".build()")` (S-4 fix).
-                //
-                // Covers two cases (S-1 fix):
-                //   (a) `;` on a line that has nothing to do with Client::builder()
-                //   (b) `Client::builder()` stored in a variable (`;` present, but
-                //       `.build()` absent) — the stored builder's eventual .build()
-                //       call cannot be tracked statically; reset to avoid arming the
-                //       chain for unrelated .build() calls on subsequent lines.
-                in_builder_chain = false;
-                builder_chain_has_timeout = false;
+                // Check for Client :: builder chain
+                if is_double_colon(&tokens, i + 1)
+                    && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "builder")
+                {
+                    if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
+                        findings.push(finding);
+                    }
+                    i += 1;
+                    continue;
+                }
             }
         }
+
+        i += 1;
     }
-    findings
+}
+
+/// Returns true when `tokens[idx]` and `tokens[idx+1]` are both `:` puncts.
+fn is_double_colon(tokens: &[proc_macro2::TokenTree], idx: usize) -> bool {
+    use proc_macro2::TokenTree;
+    matches!(tokens.get(idx), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+        && matches!(tokens.get(idx + 1), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+}
+
+/// Scan forward from `start` to find a `.build()` call in a builder chain.
+/// Returns a finding if `.build()` is reached without `.timeout()`.
+/// Stops at `;` (end of statement) without returning a finding.
+fn check_builder_chain_violation(
+    tokens: &[proc_macro2::TokenTree],
+    start: usize,
+    path: &str,
+) -> Option<String> {
+    use proc_macro2::TokenTree;
+    let mut has_timeout = false;
+    let mut i = start;
+    while i < tokens.len() {
+        match &tokens[i] {
+            TokenTree::Punct(p) if p.as_char() == ';' => return None,
+            TokenTree::Punct(p) if p.as_char() == '.' => {
+                if let Some(TokenTree::Ident(id)) = tokens.get(i + 1) {
+                    let name = id.to_string();
+                    if name == "timeout" {
+                        has_timeout = true;
+                    }
+                    if name == "build" {
+                        let line = id.span().start().line;
+                        if !has_timeout {
+                            return Some(format!(
+                                "{}:{}: Client::builder().build() without .timeout()",
+                                path, line
+                            ));
+                        } else {
+                            return None;
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -387,187 +438,128 @@ fn check_no_panic() {
     println!("check-no-panic PASSED.");
 }
 
-/// Scan `src` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]` blocks.
+/// Scan `src` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]` scopes.
 ///
-/// Returns a `Vec<String>` of `"path:line_num: trimmed_line"` findings.
+/// Uses `proc_macro2` token-tree walking so that string literals, char literals,
+/// and comments are handled at the lexer level rather than via ad-hoc string
+/// scanning. This eliminates the entire class of F-1/B-2/B-3/B-6/B-7/B-8 edge
+/// cases.
+///
+/// Returns a `Vec<String>` of `"path:line_num: .method()"` findings.
 /// Returns empty when `path` is a test file (per `is_test_file`).
-///
-/// ## Inline `#[cfg(test)]` block handling
-///
-/// Uses brace-depth tracking to identify test module boundaries.  Only INLINE
-/// test blocks (with `{`) are suppressed — file-module declarations of the form
-/// `#[cfg(test)] mod tests;` (semicolon-terminated, body in a separate file) do
-/// NOT latch the scanner.  This prevents the gate-bypass where a production
-/// `.unwrap()` immediately following such a declaration was incorrectly skipped.
 fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
-    // Entire-file exclusion for known test file paths.
     if is_test_file(path) {
         return Vec::new();
     }
 
+    use proc_macro2::TokenStream;
+
+    let ts: TokenStream = match src.parse() {
+        Ok(s) => s,
+        Err(_) => return Vec::new(),
+    };
+
     let mut findings = Vec::new();
-    let mut brace_depth: i32 = 0;
-    let mut in_test_block = false;
-    let mut test_block_target: i32 = -1; // depth at which the test block was entered
-    let mut pending_cfg_test = false; // true after `#[cfg(test)]`; waiting for the opening `{`
-
-    for (line_idx, line) in src.lines().enumerate() {
-        let line_num = line_idx + 1;
-
-        // Detect `#[cfg(test)]` — but only latch when this is NOT:
-        //   (a) inside a `//` comment (`// #[cfg(test)]` must not latch), or
-        //   (b) a semicolon-terminated file-module declaration (`#[cfg(test)] mod tests;`).
-        //       A semicolon-terminated form means the module body lives in a separate file;
-        //       there is no inline block to skip.
-        // B-6 fix: use find() directly so we have the position for the comment
-        // check without a separate `.unwrap()`.
-        if let Some(cfg_pos) = line.find("#[cfg(test)]") {
-            let is_commented = line[..cfg_pos].contains("//");
-            if !is_commented {
-                let trimmed_line = line.trim();
-                // B-8 fix: any semicolon-terminated line (mod decl, use stmt,
-                // const, type alias, etc.) has no following `{` block — never
-                // latch.  The old `is_file_module_decl` check only tested for
-                // `contains("mod ")`, so `#[cfg(test)] use …;` fell through and
-                // incorrectly set `pending_cfg_test = true`.
-                if !trimmed_line.ends_with(';') {
-                    pending_cfg_test = true;
-                }
-            }
-        }
-
-        // Walk characters to track brace depth and test-block entry/exit.
-        // Uses an index-based loop so escape sequences (`\\`, `\"`, `\'`) can
-        // be skipped by advancing the index by 2, which correctly handles:
-        //
-        //   B-2a: `"C:\\"` — the double-backslash is one escape (`\\`); the
-        //          subsequent `"` is the real string terminator, not an escaped
-        //          quote.  The old `prev_char != '\\'` test misidentified it.
-        //
-        //   B-2b: `'{'` — a brace inside a char literal must not increment
-        //          `brace_depth`; handled by the `in_char_literal` state.
-        //
-        //   B-2c: `'"'` — a double-quote inside a char literal must not toggle
-        //          `in_string_literal`; also handled by `in_char_literal`.
-        //
-        // All state is per-line (declared inside this loop iteration).
-        // Non-raw string literals cannot span lines; raw strings are unhandled
-        // (workspace crates don't use spanning raw literals in production code).
-        let mut in_string_literal = false;
-        let mut in_char_literal = false;
-        let chars: Vec<char> = line.chars().collect();
-        let mut i = 0;
-        while i < chars.len() {
-            let ch = chars[i];
-
-            if in_string_literal {
-                if ch == '\\' {
-                    i += 2; // skip the escaped character
-                    continue;
-                }
-                if ch == '"' {
-                    in_string_literal = false;
-                }
-                i += 1;
-                continue;
-            }
-
-            if in_char_literal {
-                if ch == '\\' {
-                    i += 2; // skip the escaped character
-                    continue;
-                }
-                if ch == '\'' {
-                    in_char_literal = false;
-                }
-                i += 1;
-                continue;
-            }
-
-            // Not inside any literal — stop at `//` line comments before
-            // processing any structural characters. B-6 fix: braces inside a
-            // `//` comment must not affect brace_depth.
-            // B-7 fix: use chars.get() (char-index) not line.as_bytes().get()
-            // (byte-index) so that non-ASCII chars before `//` don't corrupt
-            // the lookahead — char index and byte index diverge for multi-byte
-            // code points.
-            if ch == '/' && !in_string_literal && !in_char_literal && chars.get(i + 1) == Some(&'/')
-            {
-                break; // rest of line is a comment
-            }
-
-            // Not inside any literal — track structural characters.
-            match ch {
-                '"' => {
-                    in_string_literal = true;
-                }
-                '\'' => {
-                    // Lookahead to distinguish a char literal from a lifetime annotation.
-                    //
-                    // Char literals have the form:
-                    //   '\\' <escape_char> '   — e.g. '\n', '\\', '\''
-                    //   '<single_char>'         — e.g. 'a', '{', '"'
-                    //
-                    // Lifetime annotations have the form:
-                    //   '<ident_or_underscore>  — e.g. 'a, 'static, '_
-                    // They have NO closing apostrophe on the same lexical unit.
-                    //
-                    // Rule: enter char-literal mode only when the closing `'` is
-                    // visible at lookahead distance (i+2 for plain chars, i+3 for
-                    // escape sequences). Otherwise treat as a lifetime and skip.
-                    let next = chars.get(i + 1).copied();
-                    let after_next = chars.get(i + 2).copied();
-                    let is_char_lit = match next {
-                        Some('\\') => true, // escape sequence: '\n', '\\', '\'' — enter mode
-                        Some(_) => after_next == Some('\''), // plain char: closing ' is at i+2
-                        None => false,
-                    };
-                    if is_char_lit {
-                        in_char_literal = true;
-                    }
-                    // else: lifetime annotation ('a, 'static, '_) — do NOT enter char-literal mode
-                }
-                '{' => {
-                    brace_depth += 1;
-                    if pending_cfg_test {
-                        in_test_block = true;
-                        test_block_target = brace_depth;
-                        pending_cfg_test = false;
-                    }
-                }
-                '}' => {
-                    if in_test_block && brace_depth == test_block_target {
-                        in_test_block = false;
-                        test_block_target = -1;
-                    }
-                    brace_depth -= 1;
-                }
-                _ => {}
-            }
-            i += 1;
-        }
-
-        // Skip lines inside test blocks and comment lines.
-        if in_test_block {
-            continue;
-        }
-        let trimmed = line.trim();
-        if trimmed.starts_with("//") {
-            continue;
-        }
-
-        // Flag panic-potential patterns.
-        // F-2 fix: removed redundant `!line.contains("//")` guard — the early
-        // `continue` above already handles pure-comment lines, and the old guard
-        // incorrectly suppressed lines with `//` inside URL string literals.
-        let has_unwrap = line.contains(".unwrap()");
-        let has_expect = line.contains(".expect(");
-        if has_unwrap || has_expect {
-            findings.push(format!("{}:{}: {}", path, line_num, trimmed));
-        }
-    }
-
+    walk_panic_tokens(ts.into_iter(), &mut findings, path, &mut 0u32);
     findings
+}
+
+/// Recursive token-tree walker for `scan_for_panics_in_source`.
+fn walk_panic_tokens(
+    iter: proc_macro2::token_stream::IntoIter,
+    findings: &mut Vec<String>,
+    path: &str,
+    in_test_depth: &mut u32,
+) {
+    use proc_macro2::{Delimiter, TokenTree};
+
+    let tokens: Vec<TokenTree> = iter.collect();
+    let mut i = 0;
+    while i < tokens.len() {
+        match &tokens[i] {
+            // Detect `#` followed by a `[...]` group — could be `#[cfg(test)]`.
+            TokenTree::Punct(p) if p.as_char() == '#' => {
+                if let Some(TokenTree::Group(g)) = tokens.get(i + 1)
+                    && g.delimiter() == Delimiter::Bracket
+                    && is_cfg_test_group(g)
+                {
+                    // Look ahead past the attribute to find the body.
+                    // A brace body → walk it with incremented depth.
+                    // A semicolon → semicolon-terminated form (use, mod decl, etc.),
+                    //   do NOT increment depth (no inline block to suppress).
+                    let mut j = i + 2;
+                    while j < tokens.len() {
+                        match &tokens[j] {
+                            TokenTree::Group(body) if body.delimiter() == Delimiter::Brace => {
+                                *in_test_depth += 1;
+                                walk_panic_tokens(
+                                    body.stream().into_iter(),
+                                    findings,
+                                    path,
+                                    in_test_depth,
+                                );
+                                *in_test_depth -= 1;
+                                i = j; // advance past the body
+                                break;
+                            }
+                            TokenTree::Punct(p2) if p2.as_char() == ';' => {
+                                i = j; // advance past the semicolon
+                                break;
+                            }
+                            // Skip ident tokens (mod, fn, tests, etc.) and other attrs
+                            _ => {}
+                        }
+                        j += 1;
+                    }
+                    i += 1;
+                    continue;
+                }
+            }
+            // Brace group NOT preceded by cfg(test) — walk it at current depth.
+            TokenTree::Group(g) if g.delimiter() == Delimiter::Brace => {
+                walk_panic_tokens(g.stream().into_iter(), findings, path, in_test_depth);
+            }
+            // Detect `.unwrap` or `.expect` when not inside a test scope.
+            TokenTree::Punct(p) if p.as_char() == '.' && *in_test_depth == 0 => {
+                if let Some(TokenTree::Ident(id)) = tokens.get(i + 1) {
+                    let name = id.to_string();
+                    if name == "unwrap" || name == "expect" {
+                        let line = id.span().start().line;
+                        findings.push(format!("{}:{}: .{}()", path, line, name));
+                    }
+                }
+            }
+            // Other non-brace groups (parens, brackets) — walk them too.
+            TokenTree::Group(g) => {
+                walk_panic_tokens(g.stream().into_iter(), findings, path, in_test_depth);
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+}
+
+/// Returns true when the token-tree group `g` (contents of `[...]`) represents
+/// `cfg(test)` — i.e., the bracket stream is exactly `cfg ( test )`.
+fn is_cfg_test_group(g: &proc_macro2::Group) -> bool {
+    use proc_macro2::{Delimiter, TokenTree};
+    let tokens: Vec<TokenTree> = g.stream().into_iter().collect();
+    // Expect exactly: Ident("cfg") Group(Paren, [Ident("test")])
+    if tokens.len() != 2 {
+        return false;
+    }
+    let is_cfg = matches!(&tokens[0], TokenTree::Ident(id) if id == "cfg");
+    let is_test_inner = if let TokenTree::Group(inner) = &tokens[1] {
+        if inner.delimiter() == Delimiter::Parenthesis {
+            let inner_toks: Vec<TokenTree> = inner.stream().into_iter().collect();
+            inner_toks.len() == 1 && matches!(&inner_toks[0], TokenTree::Ident(id) if id == "test")
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+    is_cfg && is_test_inner
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -375,10 +375,13 @@ fn test_no_panic_braces_in_comment_do_not_skew_depth() {
 
 // ── B-7 regression test ──────────────────────────────────────────────────
 
-/// B-7 regression: non-ASCII chars must not cause char/byte index mismatch.
+/// B-7 regression: non-ASCII chars in a `//` code comment must not corrupt brace
+/// tracking. The fixture places multi-byte UTF-8 BOTH before a `//` comment on a
+/// line with structural code AND inside the test block, exercising the case where
+/// char index and byte index diverge for string-based scanners.
 #[test]
 fn test_no_panic_non_ascii_line_does_not_corrupt_depth() {
-    let src = "/// Contains résumé — Unicode doc comment\n#[cfg(test)]\nmod tests {\n    fn h() {}\n}\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
+    let src = "// résumé check\n#[cfg(test)]\nmod tests {\n    fn h() {} // résumé\n}\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
     let findings = scan_for_panics_in_source(src, "src/lib.rs");
     assert!(
         !findings.is_empty(),
@@ -388,10 +391,12 @@ fn test_no_panic_non_ascii_line_does_not_corrupt_depth() {
 
 // ── B-8 regression test ──────────────────────────────────────────────────
 
-/// B-8 regression: #[cfg(test)] use statement must NOT latch pending_cfg_test.
+/// B-8 regression: #[cfg(test)] use statement must NOT latch test suppression.
+/// A semicolon-terminated attribute form has no following brace block; the
+/// production `.unwrap()` on the next line must still be reported.
 #[test]
 fn test_no_panic_cfg_test_use_statement_does_not_latch() {
-    let src = "#[cfg(test)] use std::collections::HashMap;\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
+    let src = "#[cfg(test)] use super::SomeType;\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
     let findings = scan_for_panics_in_source(src, "src/lib.rs");
     assert!(
         !findings.is_empty(),
