@@ -379,21 +379,26 @@ fn test_no_panic_braces_in_comment_do_not_skew_depth() {
 /// comment boundary to be missed due to byte/char index divergence.
 ///
 /// Pre-fix string scanners used `line.as_bytes().get(char_index + 1)` to check
-/// for `//`. When multi-byte chars appear before `//`, the byte offset of the
-/// `/` exceeds `char_index + 1`, so the check fetches the wrong byte, misses the
-/// comment break, and processes `{` characters in comment text as structural code.
-/// Here, `// { brace` inside the test module makes the pre-fix scanner inflate
-/// brace depth by 1, which prevents the test-block close from firing at the
-/// right depth — so the production `.unwrap()` is suppressed (false negative).
+/// for `//`. The byte-index/char-index drift must exceed the two-char `//` width
+/// for the boundary check to be missed: with drift ≤ 1 the lookahead window lands
+/// on the first `/`; with drift = 2 it lands on the second `/` (one char late but
+/// still fires a break before the comment body); only with drift ≥ 3 does the
+/// window slide past both `/` chars so `bytes[i+1]` never sees either slash and
+/// the break never fires. `h_réésumé` has **three** multi-byte `é` chars before
+/// the `//` — drift = 3 — so the pre-fix check misses the comment boundary,
+/// the `{ brace_in_comment` is processed as structural code, brace depth is
+/// inflated by 1, the test-block close does not fire at the right depth, and the
+/// production `.unwrap()` is suppressed (false negative).
 ///
 /// The proc_macro2 scanner is immune: comments are stripped at tokenisation,
 /// so no `{` from comment text is ever seen by the walker.
 #[test]
 fn test_no_panic_non_ascii_line_does_not_corrupt_depth() {
-    // `h_résumé` has two multi-byte `é` chars before the `//`. The `{` inside
-    // the comment is processed as structural code by byte-indexed scanners that
-    // miss the `//` boundary, corrupting brace depth and suppressing the finding.
-    let src = "#[cfg(test)]\nmod tests {\n    fn h_résumé() {} // { brace_in_comment\n}\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
+    // Three multi-byte `é` chars before `//` → drift = 3, which exceeds the
+    // two-char `//` width. The pre-fix byte-indexed lookahead slides past both
+    // slash chars, the comment `{ brace` corrupts brace depth, and the production
+    // `.unwrap()` is suppressed. The proc_macro2 scanner handles it correctly.
+    let src = "#[cfg(test)]\nmod tests {\n    fn h_réésumé() {} // { brace_in_comment\n}\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
     let findings = scan_for_panics_in_source(src, "src/lib.rs");
     assert!(
         !findings.is_empty(),
