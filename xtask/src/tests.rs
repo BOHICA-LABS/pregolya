@@ -375,17 +375,29 @@ fn test_no_panic_braces_in_comment_do_not_skew_depth() {
 
 // ── B-7 regression test ──────────────────────────────────────────────────
 
-/// B-7 regression: non-ASCII chars in a `//` code comment must not corrupt brace
-/// tracking. The fixture places multi-byte UTF-8 BOTH before a `//` comment on a
-/// line with structural code AND inside the test block, exercising the case where
-/// char index and byte index diverge for string-based scanners.
+/// B-7 regression: multi-byte UTF-8 chars BEFORE `//` must not cause the `//`
+/// comment boundary to be missed due to byte/char index divergence.
+///
+/// Pre-fix string scanners used `line.as_bytes().get(char_index + 1)` to check
+/// for `//`. When multi-byte chars appear before `//`, the byte offset of the
+/// `/` exceeds `char_index + 1`, so the check fetches the wrong byte, misses the
+/// comment break, and processes `{` characters in comment text as structural code.
+/// Here, `// { brace` inside the test module makes the pre-fix scanner inflate
+/// brace depth by 1, which prevents the test-block close from firing at the
+/// right depth — so the production `.unwrap()` is suppressed (false negative).
+///
+/// The proc_macro2 scanner is immune: comments are stripped at tokenisation,
+/// so no `{` from comment text is ever seen by the walker.
 #[test]
 fn test_no_panic_non_ascii_line_does_not_corrupt_depth() {
-    let src = "// résumé check\n#[cfg(test)]\nmod tests {\n    fn h() {} // résumé\n}\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
+    // `h_résumé` has two multi-byte `é` chars before the `//`. The `{` inside
+    // the comment is processed as structural code by byte-indexed scanners that
+    // miss the `//` boundary, corrupting brace depth and suppressing the finding.
+    let src = "#[cfg(test)]\nmod tests {\n    fn h_résumé() {} // { brace_in_comment\n}\npub fn prod() { let x: Option<i32> = Some(1); x.unwrap() }\n";
     let findings = scan_for_panics_in_source(src, "src/lib.rs");
     assert!(
         !findings.is_empty(),
-        "non-ASCII must not corrupt brace tracking; got: {findings:?}"
+        "non-ASCII before // must not cause comment boundary miss; got: {findings:?}"
     );
 }
 
@@ -401,5 +413,44 @@ fn test_no_panic_cfg_test_use_statement_does_not_latch() {
     assert!(
         !findings.is_empty(),
         "cfg(test) use stmt must not latch pending_cfg_test; got: {findings:?}"
+    );
+}
+
+// ── MED-1 lex-failure propagation tests ──────────────────────────────────
+
+/// MED-1: An unparseable source file must produce a non-empty findings vec
+/// (containing a FAILED TO LEX FILE message) rather than silently returning
+/// an empty vec.  Before the fix, `Err(_) => return Vec::new()` caused the
+/// scanner to treat all lex errors as "no violations found" — a false
+/// negative that hid corrupt files from CI.
+#[test]
+fn test_no_panic_lex_error_propagates_as_finding() {
+    // An unclosed string literal is unparseable by proc_macro2.
+    let src = "fn foo() { let s = \"unclosed string; }";
+    let findings = scan_for_panics_in_source(src, "src/foo.rs");
+    assert!(
+        !findings.is_empty(),
+        "lex error must produce a finding, not a silent empty vec; got: {findings:?}"
+    );
+    assert!(
+        findings[0].contains("FAILED TO LEX FILE"),
+        "finding must contain 'FAILED TO LEX FILE'; got: {}",
+        findings[0]
+    );
+}
+
+#[test]
+fn test_timeout_lex_error_propagates_as_finding() {
+    // An unclosed string literal is unparseable by proc_macro2.
+    let src = "fn foo() { let s = \"unclosed string; }";
+    let findings = scan_for_timeout_violations_in_source(src, "src/foo.rs");
+    assert!(
+        !findings.is_empty(),
+        "lex error must produce a finding in timeout scanner, not a silent empty vec; got: {findings:?}"
+    );
+    assert!(
+        findings[0].contains("FAILED TO LEX FILE"),
+        "finding must contain 'FAILED TO LEX FILE'; got: {}",
+        findings[0]
     );
 }

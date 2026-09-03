@@ -252,7 +252,7 @@ fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
 
     let ts: TokenStream = match src.parse() {
         Ok(s) => s,
-        Err(_) => return Vec::new(),
+        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
     };
 
     let mut findings = Vec::new();
@@ -456,7 +456,7 @@ fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
 
     let ts: TokenStream = match src.parse() {
         Ok(s) => s,
-        Err(_) => return Vec::new(),
+        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
     };
 
     let mut findings = Vec::new();
