@@ -4466,3 +4466,28 @@ HRQ-1 (3/3 CLEAN streak); HRQ-2 (CompiledStateGraph AND ConcreteGraphRunner non-
 ### PENDING USER-APPROVED WORK
 None outstanding. DEV-TOOLING-D255: v1 dev-tooling expansion — after Phase-2 approval gate. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
 
+---
+
+## Archived D-354 Session Checkpoint (archived D-355; 2026-09-05)
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 COMPLETE. D-354 CLOSED (2026-09-02) — Phase-2 CONVERGED + gate APPROVED. 3/3 CLEAN(strict) on frozen anchor 81d16ca (P2A-252/253/254, rounds 80/81/82; axis-diverse). C-2 fix: STORY-S-MAINT-001 v1.2→v1.3 (9 BC-corpus count refs 134→140). 4 deferrals (C-1/PG-1/PG-2/PG-3) human-authorized. STORY-INDEX §Changelog (1.58→1.59). L-277 codified. Census UNCHANGED: BC 140 / VP 21 / EC 143 / TV 795 / stories 42 / pts 316 / ADR 30 / holdout 24 (must-pass 17/24=70.8%) / NFR 15. Phase-3 TDD PENDING.
+
+### HEADS
+- develop: `bfe0592` — LOCAL ONLY (2 commits ahead of origin/develop at `644d1ad`; D-318+D-319 ops bursts; push required before Phase-3); factory-artifacts: PUSHED (D-354) — run `git -C .factory log -1 --format='%h %s'` for current SHA. No .worktrees/. No open PRs.
+
+### RESUME NEXT-ACTION
+Phase-2 COMPLETE. Begin Phase-3 TDD Implementation. Wave order per D7: pregolya-core → pregolya-graph → partners. DEV-TOOLING-D255 prerequisite (D-255) should be completed first. Standing directives DIRECTIVE 1/2/3 remain in force. 4 open convergence-close deferrals (C-1/PG-1/PG-2/PG-3) recorded in Drift table — see D-354 for targets. develop branch push to origin required before Phase-3 story worktrees.
+
+### DECISION-LOG DELTA (D-354 close)
+D-354 Phase-2 CONVERGED + gate APPROVED — 3-CLEAN on 81d16ca (P2A-252/253/254, rounds 80/81/82); C-2 STORY-S-MAINT-001 v1.2→v1.3; 4 deferrals (C-1/PG-1/PG-2/PG-3) human-authorized; STORY-INDEX §Changelog (1.59); L-277 codified; census UNCHANGED BC 140/VP 21/EC 143/TV 795/NFR 15; Phase-3 ready.
+
+### WORKTREE INVENTORY
+None (.worktrees/ absent). Phase-3 not started; no story worktrees open.
+
+### STANDING HUMAN-GATE OBS
+Phase-2 gate APPROVED. HRQ-1..HRQ-6 satisfied by convergence. Phase-3 human gate: per-wave readiness review per CLAUDE.md pipeline sequence.
+
+### PENDING USER-APPROVED WORK
+DEV-TOOLING-D255: v1 dev-tooling expansion — ready to start (post-Phase-2 approval gate met). DTU clones (openai/anthropic/ollama): Phase-4 prerequisite.
+

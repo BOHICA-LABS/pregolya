@@ -1,0 +1,1 @@
+{"status":"pass","timestamp":"2026-09-03T15:36:37Z","command":"cargo nextest run -p xtask --no-fail-fast 2>&1 | tail -45"}
