@@ -1,13 +1,37 @@
 //! Error taxonomy for the pregolya library family.
 //!
-//! Defines [`PregolyaError`], the universal error type, along with the
-//! [`Component`], [`Category`], and [`RetryHint`] orthogonal dimensions, and
-//! the RFC-7807 [`ProblemDetail`] emission type.
+//! This module implements the two-dimensional error model at the heart of
+//! pregolya: every error is a [`PregolyaError`] characterized by two orthogonal
+//! axes — [`Component`] (which crate emitted the error) and [`Category`] (the
+//! error class). Together they uniquely locate an error in the 17 × 13
+//! taxonomy grid defined by ADR-010.
 //!
-//! All function bodies in this module use `todo!()` per Red Gate discipline
-//! (BC-5.38.001). The implementer writes real logic; this file provides
-//! compilable shapes so the test-writer's failing tests compile before
-//! implementation begins.
+//! # Key types
+//!
+//! - [`PregolyaError`] — the universal struct; holds component, category,
+//!   [`RetryHint`], a stable `code` string (`E-<COMPONENT>-<NNN>`), a human
+//!   message, and an optional `Arc`-wrapped causal source chain.
+//! - [`ProblemDetail`] — the RFC-7807 `application/problem+json` projection.
+//!   Produced by [`PregolyaError::to_problem`]; safe to serialize into HTTP
+//!   responses. Excludes the source chain so internal errors never leak.
+//! - [`RetryHint`] — semantic retry guidance: `Never` (caller must fix input),
+//!   `Maybe` (transient; one retry is reasonable), or `Later(Duration)` (rate-
+//!   limited; wait the given duration before retrying).
+//!
+//! # Redaction and source-chain design
+//!
+//! The `source` field uses `Option<Arc<dyn Error + Send + Sync>>` (not `Box`)
+//! so that `#[derive(Clone)]` compiles without requiring the wrapped error to
+//! implement `Clone` — `Arc::clone` increments a reference count.
+//! `ProblemDetail` deliberately omits the source chain; HTTP responses only
+//! carry `type_uri`, `title`, `detail`, and the `extensions` block.
+//!
+//! # RFC-7807 profile
+//!
+//! `type_uri` is a stable `urn:pregolya:error:<code>` URN. Monitoring rules
+//! and API clients MUST key on `type_uri`, not `title` or `detail`.
+//! `PROBLEM_JSON_CONTENT_TYPE` (`"application/problem+json"`) is exported for
+//! use in `Content-Type` headers.
 
 use std::fmt;
 use std::sync::Arc;
@@ -297,11 +321,16 @@ fn component_lowercase(component: &Component) -> String {
 }
 
 /// Returns the humanized category name for RFC-7807 `title`.
+///
+/// Each title is grounded in the variant's own doc comment:
+/// Val → "Validation failure…", Auth → "Authentication / authorization…",
+/// Rate → "Rate limit exceeded", Exec → "Concurrent branch…execution failure",
+/// all others use their fully-spelled-out single-word names.
 fn category_title(category: &Category) -> &'static str {
     match category {
         Category::Val => "Validation",
         Category::Auth => "Authentication",
-        Category::Rate => "Rate",
+        Category::Rate => "Rate Limit",
         Category::Timeout => "Timeout",
         Category::Transport => "Transport",
         Category::Internal => "Internal",
@@ -353,7 +382,7 @@ mod tests {
     ///
     /// Verifies struct-literal construction within the defining crate; all five
     /// named fields and `source` are accessible by name. Then calls `to_string()`
-    /// (exercises `Display`, which is `todo!()`) — Red Gate fail point.
+    /// to verify `Display` outputs the expected message.
     #[test]
     fn test_BC_2_14_001_struct_construction() {
         let err = PregolyaError {
@@ -367,7 +396,7 @@ mod tests {
         // Field access must work
         assert_eq!(err.code, "E-CORE-001");
         assert_eq!(err.message, "Invalid ContentBlock type 'x'");
-        // TV-001: to_string() must contain the message — exercises Display todo!()
+        // TV-001: to_string() must contain the message
         let s = err.to_string();
         assert!(
             s.contains("Invalid ContentBlock type 'x'"),
@@ -377,8 +406,8 @@ mod tests {
 
     /// AC-001 (traces to BC-2.14.001 {PC-001}) — public constructor path
     ///
-    /// `PregolyaError::new()` is the external API; calling it exercises the
-    /// `todo!()` constructor body — Red Gate fail point.
+    /// `PregolyaError::new()` is the public external constructor; this test
+    /// verifies it builds the struct without panicking and returns control.
     #[test]
     fn test_BC_2_14_001_new_constructor() {
         let _err = PregolyaError::new(
@@ -489,7 +518,7 @@ mod tests {
     ///
     /// `static_assertions::assert_impl_all!` compile-time assertion is at module
     /// level above. Runtime: `Error::source()` returns `Some(&inner)` when the
-    /// `source` field is `Some(arc_inner)` — exercises `source()` `todo!()`.
+    /// `source` field is `Some(arc_inner)` — verifies the source chain is wired.
     #[test]
     fn test_BC_2_14_001_error_trait() {
         use std::error::Error;
@@ -502,7 +531,7 @@ mod tests {
             message: "wrapped error".into(),
             source: Some(Arc::clone(&inner)),
         };
-        // Error::source() must return Some(&inner) — hits todo!() Red Gate
+        // Error::source() must return Some when source field is populated
         let src = Error::source(&err);
         assert!(
             src.is_some(),
@@ -526,7 +555,7 @@ mod tests {
     ///
     /// `PregolyaError` is `#[non_exhaustive]`. Struct-literal construction is
     /// permitted within the defining crate. `PregolyaError::new()` is the public
-    /// external constructor — exercises `new()` `todo!()`.
+    /// external constructor; both paths are exercised here.
     #[test]
     fn test_BC_2_14_001_non_exhaustive() {
         // Within the defining crate: struct-literal construction is valid
@@ -538,7 +567,7 @@ mod tests {
             message: "test".into(),
             source: None,
         };
-        // External-facing API: PregolyaError::new() — exercises todo!() Red Gate
+        // External-facing API: PregolyaError::new() must construct correctly
         let _err2 = PregolyaError::new(
             Component::Graph,
             Category::Policy,
@@ -552,7 +581,7 @@ mod tests {
     ///
     /// `source` field is `Option<Arc<dyn Error + Send + Sync>>`. `#[derive(Clone)]`
     /// compiles because `Arc::clone` increments a refcount — the inner error need
-    /// not be `Clone`. Runtime: `source()` on the clone exercises `todo!()`.
+    /// not be `Clone`. Runtime: `source()` on the clone confirms the chain is preserved.
     #[test]
     fn test_BC_2_14_001_arc_source_clone() {
         use std::error::Error;
@@ -568,7 +597,6 @@ mod tests {
         // Clone must succeed — Arc::clone increments refcount without T: Clone
         let err2 = err.clone();
         assert!(err2.source.is_some(), "cloned error must retain source");
-        // source() on clone exercises todo!() Red Gate
         let _ = Error::source(&err2);
     }
 
@@ -589,7 +617,7 @@ mod tests {
             message: "Invalid ContentBlock type 'x'".into(),
             source: None,
         };
-        let problem = err.to_problem(); // todo!() Red Gate
+        let problem = err.to_problem();
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-CORE-001");
         assert_eq!(problem.title, "Validation");
         assert_eq!(problem.detail, "Invalid ContentBlock type 'x'");
@@ -601,6 +629,8 @@ mod tests {
     ///
     /// `to_problem()` for a `Rate` error with `Later(30s)` produces
     /// `extensions.retry_hint: "later:30"` and HTTP status 429 (via `http_status()`).
+    /// The `title` field is `"Rate Limit"` (grounded in `Category::Rate` doc:
+    /// "Rate limit exceeded").
     #[test]
     fn test_BC_2_14_002_to_problem_rate() {
         let err = PregolyaError {
@@ -611,9 +641,9 @@ mod tests {
             message: "RateLimited".into(),
             source: None,
         };
-        let problem = err.to_problem(); // todo!() Red Gate
+        let problem = err.to_problem();
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-PROV-001");
-        assert_eq!(problem.title, "Rate");
+        assert_eq!(problem.title, "Rate Limit");
         assert_eq!(problem.detail, "RateLimited");
         assert_eq!(problem.extensions.retry_hint, "later:30");
         assert_eq!(problem.extensions.component, "prov");
@@ -635,7 +665,7 @@ mod tests {
             message: "internal error".into(),
             source: None,
         };
-        let problem = err.to_problem(); // todo!() Red Gate
+        let problem = err.to_problem();
         let json = serde_json::to_string(&problem).expect("ProblemDetail must serialize to JSON");
         assert!(json.contains("\"type\""), "RFC-7807: 'type' field required");
         assert!(
@@ -689,7 +719,7 @@ mod tests {
                 message: "parameterized status test".into(),
                 source: None,
             };
-            let status = err.http_status(); // todo!() Red Gate
+            let status = err.http_status();
             assert_eq!(
                 status, *expected_status,
                 "Category::{:?} must map to HTTP {}",
@@ -714,8 +744,7 @@ mod tests {
     /// AC-013 (traces to BC-2.14.002 {PC-005})
     ///
     /// `to_problem()` is synchronous. Running in a plain `#[test]` (not
-    /// `#[tokio::test]`) proves no async runtime is required. The call exercises
-    /// `to_problem()` `todo!()` — Red Gate fail point.
+    /// `#[tokio::test]`) proves no async runtime is required.
     #[test]
     fn test_BC_2_14_002_sync_context() {
         // Not marked #[tokio::test] — verifies to_problem() needs no async runtime
@@ -727,7 +756,7 @@ mod tests {
             message: "sync test".into(),
             source: None,
         };
-        let _problem = err.to_problem(); // todo!() Red Gate
+        let _problem = err.to_problem();
     }
 
     /// AC-014 (traces to BC-2.14.002 {INV-001}, {INV-003})
@@ -746,7 +775,7 @@ mod tests {
             message: "never".into(),
             source: None,
         };
-        let p = err_never.to_problem(); // todo!() Red Gate
+        let p = err_never.to_problem();
         assert_eq!(p.extensions.retry_hint, "never");
         assert_eq!(p.type_uri, "urn:pregolya:error:E-CORE-001");
 
@@ -805,7 +834,7 @@ mod tests {
             source: None,
         };
         let original_code = err.code.clone();
-        let problem = err.to_problem(); // todo!() Red Gate
+        let problem = err.to_problem();
         assert_eq!(
             problem.type_uri,
             format!("urn:pregolya:error:{original_code}"),
@@ -818,7 +847,7 @@ mod tests {
     /// EC-001 (BC-2.14.001 EC-001, story edge case)
     ///
     /// Graph error wraps Chkpt error via `Arc` source chain. `Error::source()`
-    /// on the outer error must return `Some` — exercises `source()` `todo!()`.
+    /// on the outer error must return `Some`, confirming the source chain works.
     #[test]
     fn test_BC_2_14_001_ec001_arc_source_chain() {
         use std::error::Error;
@@ -838,7 +867,7 @@ mod tests {
             message: "graph persistence failed".into(),
             source: Some(Arc::new(inner_err) as Arc<dyn Error + Send + Sync>),
         };
-        // source() must return Some — exercises todo!() Red Gate
+        // source() must return Some
         let src = Error::source(&outer_err);
         assert!(
             src.is_some(),
@@ -861,8 +890,7 @@ mod tests {
 
     /// EC-003 (BC-2.14.001 EC-002): `Component::Custom("newcrate")` is accepted.
     ///
-    /// `to_problem()` returns `extensions.component: "newcrate"`. Exercises
-    /// `to_problem()` `todo!()` — Red Gate fail point.
+    /// `to_problem()` returns `extensions.component: "newcrate"`.
     #[test]
     fn test_BC_2_14_001_ec003_custom_component() {
         let err = PregolyaError {
@@ -873,7 +901,7 @@ mod tests {
             message: "custom component error".into(),
             source: None,
         };
-        let problem = err.to_problem(); // todo!() Red Gate
+        let problem = err.to_problem();
         assert_eq!(problem.extensions.component, "newcrate");
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-newcrate-001");
     }
@@ -881,12 +909,11 @@ mod tests {
     /// BC-2.14.001 TV-004: `anyhow` compatibility.
     ///
     /// `PregolyaError` wraps with `anyhow::Context`; `downcast_ref::<PregolyaError>()`
-    /// must succeed. `PregolyaError::new()` exercises `todo!()` — Red Gate fail point.
+    /// must succeed after wrapping with `anyhow::Context`.
     #[test]
     fn test_BC_2_14_001_anyhow_compat() {
         use anyhow::Context as _;
         let pregolya_err = PregolyaError::new(
-            // todo!() Red Gate
             Component::Core,
             Category::Val,
             RetryHint::Never,
@@ -904,7 +931,7 @@ mod tests {
     /// BC-2.14.002 {INV-001} invariant: no `Category` variant returns HTTP 200.
     ///
     /// Invariant property test complementing `test_BC_2_14_002_status_codes_all_categories`.
-    /// Exercises `http_status()` `todo!()` — Red Gate fail point.
+    /// Verifies `http_status()` never returns 200 for any variant.
     #[test]
     fn test_BC_2_14_002_invariant_no_200_status() {
         let all_categories = [
@@ -936,7 +963,7 @@ mod tests {
                 message: "invariant check".into(),
                 source: None,
             };
-            let status = err.http_status(); // todo!() Red Gate
+            let status = err.http_status();
             assert_ne!(status, 200, "Category {:?} must not return 200", cat);
         }
     }
