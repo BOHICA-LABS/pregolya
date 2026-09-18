@@ -1,19 +1,20 @@
 ---
 document_type: traceability-matrix
 level: governance
-version: "1.6"
+version: "1.7"
 status: active
 producer: spec-steward
-timestamp: 2026-09-17T00:00:00Z
+timestamp: 2026-09-18T00:00:00Z
 phase: 3
 traces_to: .factory/specs/behavioral-contracts/BC-INDEX.md
 inputs:
   - .factory/specs/behavioral-contracts/BC-INDEX.md
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/stories/STORY-INDEX.md
-input-hash: "8037015"
-baseline_event: "D-365/2026-09-17 — BC-INDEX §Changelog (D-365 S-1.01 LOCAL adv pass OBS-1; BC-2.14.002 §Changelog EC-005 records-only). VP-INDEX §Changelog unchanged. STORY-INDEX §Changelog unchanged"
+input-hash: "3afcdd8"
+baseline_event: "D-366/2026-09-18 — BC-INDEX §Changelog (D-366 S-1.01 LOCAL adv OBS-1; BC-2.14.002 §Changelog {INV-004}/§Architecture Anchors prose precision). VP-INDEX §Changelog unchanged. STORY-INDEX §Changelog unchanged"
 changelog:
+  - "1.7 (D-366/2026-09-18, state-manager): input-hash recomputed after BC-INDEX §Changelog bump (D-366 S-1.01 LOCAL adv OBS-1 records-only; BC-2.14.002 §Changelog (v1.13→v1.14) — {INV-004}/§Architecture Anchors prose precision corrected to reflect actual layering; no behavioral change). BC-INDEX is an input per §inputs list; combined three-input hash updated 8037015→3afcdd8. VP-INDEX §Changelog and STORY-INDEX §Changelog UNCHANGED. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.6 (D-365/2026-09-17, state-manager): input-hash recomputed after BC-INDEX §Changelog bump (D-365 S-1.01 LOCAL adv pass OBS-1 records-only; BC-2.14.002 §Changelog (v1.12→v1.13) — EC-005 restated to compile-time exhaustiveness). BC-INDEX is an input per §inputs list; combined three-input hash updated 43b7464→8037015. VP-INDEX §Changelog and STORY-INDEX §Changelog UNCHANGED. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.5 (D-364/2026-09-17, state-manager): input-hash recomputed after BC-INDEX §Changelog bump (D-364 SYS 14th-category fix-cascade). BC-INDEX is an input per §inputs list; combined three-input hash updated c14c505→43b7464. VP-INDEX §Changelog and STORY-INDEX §Changelog UNCHANGED. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.4 (D-362/2026-09-18, spec-steward+state-manager): Corrective fix-burst — SS-24 VP over-count corrected: §VP-2.24 section heading '21 VPs' → '20 VPs'; §VP-Priority-Distribution SS-24 row '(21 VPs) | 21' → '(20 VPs) | 20'. Actual VP-2.24 table contains exactly 20 rows (VP-2.24.001-A..VP-2.24.008-B). Post-fix §VP-Priority-Distribution Total=43 (P0=7, P1=36) confirmed consistent with §VP-Status-Summary. Input-hash recomputed (c14c505) after genuine F1 STORY-INDEX body edit (S-6.01 Target-Crate fuzz token actually removed; D-361/v1.3 hash 1acd327 was based on STORY-INDEX with fuzz token still present — paper-fix recompute; D-362 recompute reflects genuine content change). STORY-INDEX now v2.01. Census UNCHANGED: BC 149 / VP 43 / stories 53."

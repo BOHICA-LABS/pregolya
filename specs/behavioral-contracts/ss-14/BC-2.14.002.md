@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.13"
+version: "1.14"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.11 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.12 (S-1.01 adv pass-1 F1/2026-09-17): Align to error-taxonomy v1.59 SYS 14th-category. {PC-003} categorical HTTP-status table: `Category::Sys → 500` added as 14th entry (INTERNAL-tier fallback at pregolya-server; rationale: SYS = OS-level syscall failure — EACCES/ELOOP/EIO are unexpected infrastructure failures, not caller input errors and not network transport issues; 500 is the correct HTTP response; does NOT return 200, satisfying {INV-001}; no Known-overrides row presently — E-SBXD-010 CanonicalizationFailed, the first SYS code, is library-layer/blanket and does not reach the HTTP surface directly). VP-BC214002-02 description updated: '13 categories (EXEC included; no category returns 200)' → '14 categories (EXEC and SYS included; no category returns 200)'. §Notes SYS paragraph added mirroring EXEC disposition note. TD-VSDD-060 sibling sweep: all three category-count sites in BC-2.14.002 live body updated ({PC-003} table length, VP-BC214002-02 description, §Notes). No behavioral change to RFC-7807 emission."
   - "1.13 (S-1.01 LOCAL adv pass OBS-1/2026-09-17): EC-005 restated — compile-time exhaustiveness replaces the stale runtime 'Unknown'/500 fallback. The closed 14-variant #[non_exhaustive] Category enum with no wildcard match arm means adding a new Category variant is a source-breaking change detected at compile time at every mapping site (http_status, category_title). No reachable code path yields title: 'Unknown' or HTTP 500 for an unknown category because no unknown category can exist at runtime. This is strictly stronger than a runtime fallback. Records-only hygiene; no behavioral change."
+  - "1.14 (S-1.01 LOCAL adv OBS-1/2026-09-18): BC-prose precision fix only — {INV-004} and §Architecture Anchors corrected to reflect actual layering per S-1.01 implementation. {INV-004}: 'defined once in pregolya-server' → 'defined once in pregolya-core::error::PregolyaError::http_status()'; pregolya-server role restated as per-endpoint overrides + RFC-7807 response serialization delegating to core::http_status() rather than re-declaring the categorical table. §Architecture Anchors: pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause. INV-004 'defined once' guarantee now correctly identifies the site. No behavioral change; code is correct — this is spec-prose alignment only."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -143,14 +144,17 @@ requiring the HTTP layer to reach into the error's internal fields directly.
   (it is always the static code like `E-CORE-001`).
 - {INV-003} `retry_hint` in the extensions block uses the canonical string representation
   (`"never"`, `"maybe"`, `"later:<seconds>"`) for client machine readability.
-- {INV-004} The HTTP status code mapping is defined once in pregolya-server. A per-endpoint status
-  specified in a resource BC overrides the categorical default; the categorical map is the
-  fallback for errors with no per-endpoint specification. Legitimate per-endpoint divergences
-  (e.g., E-SERVER-016 TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup,
-  E-SERVER-008 POLICY→409 for thread state conflict, E-GRAPH-002 POLICY→422 on resume
-  endpoint) must be documented in {PC-003} and interface-definitions.md §HTTP Status Codes.
-  Note: E-SERVER-004 POLICY→403 is NOT a divergence — POLICY→403 is the categorical
-  default and requires no carve-out.
+- {INV-004} The categorical default Category→HTTP status mapping is defined once in
+  `pregolya-core::error::PregolyaError::http_status()` (the "defined once" site).
+  `pregolya-server` applies per-endpoint overrides and RFC-7807 response serialization on top
+  of that categorical default, delegating the categorical mapping to `core::http_status()`
+  rather than re-declaring the categorical table. A per-endpoint status specified in a resource
+  BC overrides the categorical default; the categorical map is the fallback for errors with no
+  per-endpoint specification. Legitimate per-endpoint divergences (e.g., E-SERVER-016
+  TIMEOUT→503, E-SERVER-009 VAL→404 for direct lookup, E-SERVER-008 POLICY→409 for thread
+  state conflict, E-GRAPH-002 POLICY→422 on resume endpoint) must be documented in {PC-003}
+  and interface-definitions.md §HTTP Status Codes. Note: E-SERVER-004 POLICY→403 is NOT a
+  divergence — POLICY→403 is the categorical default and requires no carve-out.
   The categorical map itself must not diverge; per-endpoint overrides must be explicit.
   Source: F-P25-01, OBS-1, ADV-P1D-PASS-25; F-P26-01, ADV-P1D-PASS-26; F-P27-01, ADV-P1D-PASS-27.
 
@@ -228,8 +232,8 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 
 ## Architecture Anchors
 
-- `pregolya-core/src/error.rs` — `ProblemDetail` struct and `PregolyaError::to_problem()` method (to be created)
-- `pregolya-server/src/error_response.rs` — HTTP status code mapping and response serialization (to be created)
+- `pregolya-core/src/error.rs` — `ProblemDetail` struct, `PregolyaError::to_problem()` method, and `PregolyaError::http_status()` categorical default mapping (the INV-004 "defined once" site) (to be created)
+- `pregolya-server/src/error_response.rs` — per-endpoint override application and RFC-7807 response serialization; delegates categorical HTTP status mapping to `pregolya-core::error::PregolyaError::http_status()` rather than re-declaring the categorical table (to be created)
 
 ## Story Anchor
 

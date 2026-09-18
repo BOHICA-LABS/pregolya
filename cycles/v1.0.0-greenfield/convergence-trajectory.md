@@ -6204,5 +6204,15 @@ DC-44 adversary pass — strict-streak pass 1 (streak 0/3 per TD-RECORDS-MICRO-B
 
 **OBS-1 [OBS]** — BC-2.14.002 EC-005: language imprecision — "runtime 'Unknown'/500 fallback NEVER triggered" is an inaccurate framing. Correct statement: the closed 14-variant #[non_exhaustive] Category enum with no wildcard match arm means adding a new Category variant is a source-breaking change at compile time at every mapping site ({http_status}, {category_title}); no reachable runtime code path yields title 'Unknown' or HTTP 500 for an unknown category because no unknown category can exist at runtime. This is strictly stronger than a runtime fallback. Fix: BC-2.14.002 EC-005 restated to compile-time exhaustiveness (product-owner; BC-2.14.002→v1.12→v1.13). Records-only hygiene; no behavioral change.
 
+### S-1.01 LOCAL Adversary Pass 3 (D-366, 2026-09-18) — RECORDS-ONLY
+- **Pass type:** RECORDS-ONLY adversary pass (TD-RECORDS-MICRO-BURST-001)
+- **Findings:** 1 OBS
+- **CLEAN(strict):** no
+- **CLEAN(PR-merge):** yes (zero CRIT/HIGH/MED)
+- **Strict streak:** NOT RESET per TD-RECORDS-MICRO-BURST-001 (holds at 0/3)
+- **Trajectory tail:** →1→0→0→1[RECORDS-ONLY-OBS]→1[RECORDS-ONLY-OBS]
+
+**OBS-1 [OBS]** — BC-2.14.002 {INV-004}/§Architecture Anchors prose precision: {INV-004} stated "defined once in pregolya-server" which was inaccurate — the S-1.01 implementation places the categorical default mapping in pregolya-core::error::PregolyaError::http_status(); pregolya-server only applies per-endpoint overrides and RFC-7807 response serialization on top, delegating the categorical map to core::http_status() rather than re-declaring it. §Architecture Anchors: pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause. Fix: BC-2.14.002 {INV-004} and §Architecture Anchors corrected (product-owner; BC-2.14.002→v1.13→v1.14). Records-only prose precision; no behavioral change; implementation verified correct.
+
 ### Next pass
-S-1.01 LOCAL adversary pass 3 — strict-streak pass 1 (streak 0/3; targeting CLEAN(strict)=yes on feature/S-1.01 aae3e19).
+S-1.01 LOCAL adversary pass 4 — strict-streak pass 1 (streak 0/3; targeting CLEAN(strict)=yes on feature/S-1.01 15158ee).
