@@ -14,7 +14,7 @@ inputs:
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/verification-architecture.md
-input-hash: "7ac670b"
+input-hash: "0158b7a"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 8
 depends_on: [S-1.16, S-1.10, S-1.09, S-2.01, S-2.03, S-1.23, S-1.25, S-1.05, S-2.09, S-2.05, S-1.22]
@@ -24,7 +24,7 @@ verification_properties: [VP-001, VP-002, VP-003, VP-006, VP-007, VP-008, VP-009
 priority: P2
 cycle: v1.0.0-greenfield
 wave: 6
-target_module: [xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools, fuzz]
+target_module: [xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools]
 subsystems: [SS-17]
 estimated_days: 3
 assumption_validations: []
@@ -262,9 +262,11 @@ Verified by `test_BC_2_17_001_proptest_vp_suite_passes_post_wave2()` (nextest wo
 | `injection_guard_fail_closed` | `prompts::injection_guard` (proofs submodule) | pregolya-prompts | pure-core (Kani proof function) |
 | `watermark_arithmetic_harness` | `core::budget` (proofs submodule) | pregolya-core | pure-core (Kani proof function) |
 | `risk_floor_rejects_below_medium` | `tools::shell` (proofs submodule) | pregolya-tools | pure-core (Kani proof function) |
-| `fuzz_checkpoint_serde` | `fuzz/fuzz_targets/` | fuzz (workspace member) | effectful (arbitrary I/O via libFuzzer) |
-| `fuzz_graph_execution` | `fuzz/fuzz_targets/` | fuzz (workspace member) | effectful (arbitrary I/O via libFuzzer) |
+| `fuzz_checkpoint_serde` | `fuzz/fuzz_targets/` | fuzz/ (cargo-fuzz managed, outside workspace) | effectful (arbitrary I/O via libFuzzer) |
+| `fuzz_graph_execution` | `fuzz/fuzz_targets/` | fuzz/ (cargo-fuzz managed, outside workspace) | effectful (arbitrary I/O via libFuzzer) |
 | `xtask verify` subcommand | `xtask/src/verify.rs` | xtask | effectful (spawns cargo processes) |
+
+> **Architecture note — fuzz directory:** `cargo fuzz` creates the `fuzz/` directory (with its own `Cargo.toml`) **outside** the Cargo workspace via `cargo fuzz init`. The `fuzz/` tree is NOT a `[workspace] members` entry and does not appear in the root `Cargo.toml`. This is a cargo-fuzz design constraint: the fuzz crate uses a separate nightly-only manifest so it does not pollute the workspace dependency resolver. The `fuzz` crate name is therefore NOT valid as a `target_module` entry and is not listed in this story's frontmatter.
 | Justfile recipes (`kani-local`, `fuzz-local`) | `Justfile` | — | effectful (shell commands) |
 
 ## Purity Classification

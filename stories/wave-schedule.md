@@ -7,7 +7,7 @@ producer: story-writer
 timestamp: 2026-09-01T00:00:00Z
 phase: 2
 inputs: [STORY-INDEX.md, dependency-graph.md]
-input-hash: "c526ad7"
+input-hash: "44a7871"
 traces_to: STORY-INDEX.md
 ---
 
@@ -19,6 +19,8 @@ traces_to: STORY-INDEX.md
 |--------|-------|
 | Total stories | 42 |
 | Total waves | 3 (Wave 1, Wave 2, Wave 6) |
+
+> **Story-count taxonomy (DC-36):** "42 stories" = buildable/wave-scheduled product stories. Total story files on disk = 53; product stories = 52 (42 buildable + 10 Wave-3 roadmap S-console-01..10); S-MAINT-001 is the one non-product story file, bringing the total file count to 53.
 | Max parallelism (groups per wave) | 6 groups in Wave 1 / sub-batch 1d (sub-batch 1e has 5 groups; sub-batch 1j has 3 groups after adding S-1.29) |
 | Estimated agent spawns | 42 implementer agents total |
 

@@ -28,17 +28,17 @@ inputs:
   - .factory/specs/behavioral-contracts/ss-11/BC-2.11.007.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "0fa1857"
+input-hash: "330ebf1"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
-depends_on: [S-1.19, S-1.26]
+depends_on: [S-1.19, S-1.26, S-1.10]
 blocks: [S-console-10]
 behavioral_contracts: [BC-2.11.007]
 verification_properties: [VP-2.11.007-A, VP-2.11.007-B]
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1
-target_module: pregolya-graph
+target_module: [pregolya-core, pregolya-graph, pregolya-checkpoint, pregolya-server]
 subsystems: [SS-04, SS-11, SS-12]
 estimated_days: 2
 assumption_validations: []

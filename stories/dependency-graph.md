@@ -78,7 +78,7 @@ S-1.09 (Sandbox)
 
 S-1.10 (Checkpoint Core)
   depends_on: [S-1.04, S-1.02]
-  blocks: S-1.11, S-1.16, S-1.18, S-1.20, S-1.25, S-1.26, S-2.12, S-6.01
+  blocks: S-1.11, S-1.16, S-1.18, S-1.20, S-1.25, S-1.26, S-1.29, S-2.12, S-6.01
 
 S-1.11 (FTS Search)
   depends_on: [S-1.10]
@@ -121,7 +121,7 @@ S-1.19 (GuardrailHook)
   blocks: S-2.02, S-2.10, S-1.29
 
 S-1.29 (GuardrailJournal Persistence)
-  depends_on: [S-1.19, S-1.26]
+  depends_on: [S-1.19, S-1.26, S-1.10]
   blocks: S-console-10
 
 S-1.20 (HITL Core)
@@ -353,7 +353,7 @@ S-6.01 (Kani + cargo-fuzz)
 | 1g | S-1.13, S-1.18 | S-1.13 dep S-1.17 (1f)+S-1.12+S-1.14 (1d); S-1.18 dep S-1.17 (1f)+S-1.14+S-1.10 (1d); concurrent — disjoint scheduler.rs regions per coordination note |
 | 1h | S-1.16 | Dep S-1.13+S-1.18 (1g)+S-1.17 (1f)+S-1.15 (1e)+S-1.14+S-1.10 (1d) |
 | 1i | S-1.20, S-1.26 | S-1.20 dep S-1.16 (1h)+S-1.17 (1f)+S-1.10 (1d); S-1.26 dep S-1.16 (1h)+S-1.10 (1d) |
-| 1j | S-1.23, S-1.27, S-1.29 | S-1.23 dep S-1.20 (1i)+S-1.17 (1f); S-1.27 dep S-1.26 (1i); S-1.29 dep S-1.19 (1e)+S-1.26 (1i) — all batch-1i deps satisfied |
+| 1j | S-1.23, S-1.27, S-1.29 | S-1.23 dep S-1.20 (1i)+S-1.17 (1f); S-1.27 dep S-1.26 (1i); S-1.29 dep S-1.19 (1e)+S-1.26 (1i)+S-1.10 (1d) — all deps satisfied |
 | 1k | S-1.24 | Dep S-1.23 (1j)+S-1.17 (1f)+S-1.18 (1g) |
 | 1l | S-1.25 | Dep S-1.10 (1d)+S-1.18 (1g)+S-1.24 (1k) |
 
@@ -454,6 +454,7 @@ S-6.01 (Kani + cargo-fuzz)
 | VP-020 | BC-2.02.009 {INV-001}+{INV-002} | proptest | 3 | P1 | S-1.28 | — |
 | VP-006-B | BC-2.18.004 {PC-005} | proptest | 3 | P1 | S-2.05 | — |
 | VP-2.11.007-A | BC-2.11.007 | integration | 3 | P0 | S-1.29 | — |
+| VP-2.11.007-B | BC-2.11.007 {INV-005} + BC-2.04.007 {INV-006} | integration | 3 | P1 | S-1.29 | — |
 | VP-2.24.001-A | BC-2.24.001 | unit | 3 | P1 | S-console-01 | — |
 | VP-2.24.001-B | BC-2.24.001 | unit | 3 | P1 | S-console-01 | — |
 | VP-2.24.001-C | BC-2.24.001 | compile-fail | 3 | P1 | S-console-01 | — |

@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.98"
+version: "1.99"
 status: active
 producer: state-manager
-timestamp: 2026-09-10T08:00:00Z
+timestamp: 2026-09-18T00:00:00Z
 changelog:
+  - "1.99 (D-360/2026-09-17, state-manager): Pre-Wave-1 spec reconciliation fix-burst — records/annotation fixes. SS-2: SS-24 §BC-to-Story Coverage Map section — added blockquote annotation clarifying BC-2.11.007 is an SS-11 cross-reference (header kept at '8 BCs' for machine-parsability); the 9th row (BC-2.11.007) is a cross-reference from SS-11, not an SS-24 BC; S-1.29 story column correct. SS-3: BC-2.12.003 BC-to-Story Coverage Map row — S-console-10 added as roadmap Wave-3 consumer (guardrail_journal? projection via {PC-013}; per DC-42; reverse-anchor gap closed; BC-2.12.003 is NOT orphan — S-1.26 canonical implementer). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "1.98 (DC-68/F-PDC68-01/2026-09-10, state-manager): DC-68 VP-2.11.007-B mirror propagation — VP-to-Story Anchor Map: VP-2.11.007-B→S-1.29 row added (anchors BC-2.11.007 {INV-005}+BC-2.04.007 {INV-006}; P1; pregolya-checkpoint; integration test in guardrail_journal_encryption_at_rest.rs per S-1.29 Task 15). sprint-state S-1.29 vps field extended: [VP-2.11.007-A]→[VP-2.11.007-A, VP-2.11.007-B]. Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "1.97 (DC-59/2026-09-09, state-manager): DC-59 fix-burst CLOSED — S-1.29 §Acceptance-Criteria: AC-006 (→{EC-007}: init_guardrail_journal+append_guardrail_entry failure → E-CHKPT-012) + AC-007 (→{EC-008}: get_guardrail_journal failure → E-CHKPT-013) added; TV-006+TV-007 rows added; Tasks 13+14 added (error propagation via CheckpointSaver ops); verify-ac-pc-trace PASS (citations=7 drift=0). Census: EC 145→147 (+E-CHKPT-012, +E-CHKPT-013); TV 841→843 (+TV-006, +TV-007). BC 149 / VP 42 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22 UNCHANGED. CLEAN(strict)=no CLEAN(PR-merge)=no. Strict streak RESET 0/3 (MED fixed + new HEAD pushed; BC-5.39.001 frozen-HEAD rule). DC-60 gates new HEAD as strict-streak pass 1."
   - "1.96 (D-356/records-straggler/2026-09-09, state-manager): Records-straggler scrub (post-DC-52 exhaustive audit) — CLASS B-05 S-1.29 §Architecture Mapping purity table pregolya-graph/src/provenance.rs Justification cell: 'each evaluate() call produces exactly one GuardrailEntry'→'each successfully-returning evaluate() call produces exactly one GuardrailEntry'; consistent with BC-2.11.007 {INV-002}/{EC-003} and AC-001/EC-006 already-correct sites. Census UNCHANGED: stories 53 / pts 377 / BC 149 / VP 42 / EC 145 / TV 841 / ADR 31 / SS 24 / crates 22. CLEAN(PR-merge)=yes CLEAN(strict)=no. Per TD-RECORDS-MICRO-BURST-001 strict streak NOT RESET (holds 0/3). DC-53 gates fully-scrubbed HEAD as pass 1."
@@ -481,7 +482,7 @@ input-hash: "34034c0"
 |-------|---------------------|-------|---------|
 | BC-2.12.001 | Thread Resource CRUD | S-1.26; S-console-07 (roadmap, Wave 3 — ?checkpoint_id PC-015 variant) | P1 |
 | BC-2.12.002 | Assistant Resource CRUD | S-1.26 | P1 |
-| BC-2.12.003 | Run Creation and Execution Lifecycle | S-1.26; S-console-07 (roadmap, Wave 3 — consumes {INV-009} fork-start via BC-2.24.005 {PC-003}) | P1 |
+| BC-2.12.003 | Run Creation and Execution Lifecycle | S-1.26; S-console-07 (roadmap, Wave 3 — consumes {INV-009} fork-start via BC-2.24.005 {PC-003}); S-console-10 (roadmap, Wave 3 — consumes guardrail_journal? projection via {PC-013}) | P1 |
 | BC-2.12.004 | CronSchedule Creation and Proactive Run | S-1.27 | P1 |
 | BC-2.12.005 | SecurityConfig::default() Denies CORS | S-1.27 | P1 |
 | BC-2.12.006 | IdempotencyStore / RateLimitStore / RunStore Seams | S-1.27 | P1 |
@@ -594,6 +595,8 @@ input-hash: "34034c0"
 | BC-2.23.006 | GrepTool — In-Process Regex; Linear-Time DFA | S-1.22 | P1 |
 
 ### SS-24 Developer Console (8 BCs — Wave 3 ROADMAP-ONLY)
+
+> **Cross-reference note.** This section contains 8 SS-24 behavioral contracts (BC-2.24.001..008). One additional row (BC-2.11.007) is an SS-11 cross-reference appearing here because S-console-10 depends on it; it is not counted in the SS-24 BC total of 8.
 
 | BC ID | Title (abbreviated) | Story | Priority |
 |-------|---------------------|-------|---------|
