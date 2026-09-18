@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.12"
+version: "1.13"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.12 (S-1.01 adv pass-1 F1/2026-09-17): Align to error-taxonomy v1.59 SYS 14th-category. {PC-003} categorical HTTP-status table: `Category::Sys → 500` added as 14th entry (INTERNAL-tier fallback at pregolya-server; rationale: SYS = OS-level syscall failure — EACCES/ELOOP/EIO are unexpected infrastructure failures, not caller input errors and not network transport issues; 500 is the correct HTTP response; does NOT return 200, satisfying {INV-001}; no Known-overrides row presently — E-SBXD-010 CanonicalizationFailed, the first SYS code, is library-layer/blanket and does not reach the HTTP surface directly). VP-BC214002-02 description updated: '13 categories (EXEC included; no category returns 200)' → '14 categories (EXEC and SYS included; no category returns 200)'. §Notes SYS paragraph added mirroring EXEC disposition note. TD-VSDD-060 sibling sweep: all three category-count sites in BC-2.14.002 live body updated ({PC-003} table length, VP-BC214002-02 description, §Notes). No behavioral change to RFC-7807 emission."
+  - "1.13 (S-1.01 LOCAL adv pass OBS-1/2026-09-17): EC-005 restated — compile-time exhaustiveness replaces the stale runtime 'Unknown'/500 fallback. The closed 14-variant #[non_exhaustive] Category enum with no wildcard match arm means adding a new Category variant is a source-breaking change detected at compile time at every mapping site (http_status, category_title). No reachable code path yields title: 'Unknown' or HTTP 500 for an unknown category because no unknown category can exist at runtime. This is strictly stronger than a runtime fallback. Records-only hygiene; no behavioral change."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -181,11 +182,19 @@ or a multi-error summary in `extensions.errors: [...]` if the API contract suppo
 responses. The contract for the specific endpoint governs which format is used; this BC covers
 single-error problem emission only.
 
-### EC-005: Unknown category in ProblemDetail (forward compatibility)
-**Scenario:** Application code uses `Component::Custom("newcrate")` with a category not in the
-standard set.
-**Expected behavior:** `to_problem()` uses a generic `title: "Unknown"` and derives the `type_uri`
-from the code string. The HTTP status code falls back to 500 for unknown categories.
+### EC-005: Forward-compatibility guarantee for Category variants (compile-time exhaustiveness)
+**Scenario:** A new `Category` variant is introduced in a future error-taxonomy iteration (e.g., a
+15th category beyond the current 14: Val/Auth/Policy/Rate/Timeout/Transport/Concurrency/Security/
+Tenancy/Durability/Internal/Tool/Exec/Sys).
+**Expected behavior:** Every `match` mapping site that dispatches on `Category` —
+specifically the categorical HTTP status map and the `category_title` mapping in
+`pregolya-core`/`pregolya-server` — fails to compile. Because `Category` is a closed
+`#[non_exhaustive]` enum with no wildcard arm in any of its match mappings, adding a new variant
+is a source-breaking change caught at build time at every mapping site. There is no reachable
+runtime path that yields `title: "Unknown"` or HTTP 500 for an "unknown" category; no unknown
+category can exist at runtime. Compile-time exhaustiveness is the production-grade forward-compat
+mechanism — strictly stronger than a runtime `title: "Unknown"` / 500 fallback. External crates
+cannot introduce new Category variants (non_exhaustive prevents external enum construction).
 
 ## Canonical Test Vectors
 

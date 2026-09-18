@@ -1898,3 +1898,8 @@ ADR-027 stable-anchor migration finished. M4 strict cutover: verify-ac-pc-trace.
 - Session ended at 2026-09-18T04:26:14Z (awaiting /session-review)
 - Session ended at 2026-09-18T04:40:32Z (awaiting /session-review)
 - OBS 2026-09-18: regression-state.json + PostToolUse STATE.md re-stamp leave factory-artifacts dirty after every worktree cargo run, forcing a hygiene commit before each wave-gated adversary dispatch — candidate: add regression-state.json to the verify-sha-currency exclusion list alongside logs/*.jsonl + sidecar-learning.md.
+- Session ended at 2026-09-18T04:45:38Z (awaiting /session-review)
+- Session ended at 2026-09-18T04:50:53Z (awaiting /session-review)
+- Session ended at 2026-09-18T04:53:03Z (awaiting /session-review)
+- Session ended at 2026-09-18T04:55:57Z (awaiting /session-review)
+- Session ended at 2026-09-18T05:11:09Z (awaiting /session-review)

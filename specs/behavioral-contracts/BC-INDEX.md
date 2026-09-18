@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "4.62"
+version: "4.63"
 status: active
 producer: state-manager
-timestamp: 2026-09-18T00:00:00Z
+timestamp: 2026-09-17T00:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "4.63 (D-365/S-1.01 LOCAL adv pass OBS-1/2026-09-17, state-manager): BC-2.14.002 §Changelog (v1.12→v1.13; product-owner; OBS-1 records-only — EC-005 restated to compile-time exhaustiveness; closed 14-variant #[non_exhaustive] Category enum means adding a new variant is source-breaking at every mapping site; runtime 'Unknown'/500 fallback retired as obsolete; no behavioral change). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.62 (D-364/S-1.01 adv pass-1/2026-09-17, state-manager): 2 BC version bumps — BC-2.14.001 (v1.11→v1.12): SYS added as 14th category (SYS→500 INTERNAL-tier; title System; RetryHint Maybe; aligned to error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26; description category counter updated from 13 to 14). BC-2.14.002 (v1.11→v1.12): {PC-003} categorical HTTP-status table SYS→500 added as 14th entry; VP-BC214002-02 description updated '13 categories (EXEC included)' → '14 categories (EXEC and SYS included)'; §Notes SYS paragraph added mirroring EXEC disposition note; TD-VSDD-060 sibling sweep all three category-count sites updated. S-1.01 (STORY-S-1.01-pregolya-error-struct) v1.1→v1.2: AC-003/AC-011 updated to 14 categories incl. SYS; stale BC-2.14.003 cross-ref removed. BC census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.61 (D-360/2026-09-17, state-manager): Pre-Wave-1 spec reconciliation fix-burst — records/annotation fixes. CV-1: §Red Gate BCs header annotated as cross-reference subset of §Full BC Catalog (11 rows are NOT additional BCs; unique BC count = 149 authoritative; grep false-count 160 explained). CV-2: VP Seed BCs footnote corrected — 'All 43 VP body files exist as of DC-62' → 'All 43 VP rows registered in VP-INDEX as of DC-62; 23 of 43 VP body files authored; 20 VP-2.24.* entries are SEED placeholders for Wave-3 console stories, authored during S-console-01..10 implementation.' Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.60 (DC-68/F-PDC68-01/2026-09-10, state-manager): DC-68 VP-2.11.007-B BC-INDEX mirror propagation — F-PDC68-01 state-manager share: BC-2.04.007 VP column EMPTY→VP-2.11.007-B (co-anchors {INV-006}; encryption-at-rest all-write-ops coverage); BC-2.11.007 VP column VP-2.11.007-A→VP-2.11.007-A+VP-2.11.007-B (adds at-rest encryption integration P1; DC-62 sibling-sweep miss resolved). Convention: VP listed under each BC it anchors (BC-2.11.007+BC-2.04.007 both listed per BC-2.02.007/008 dual-anchor precedent). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."

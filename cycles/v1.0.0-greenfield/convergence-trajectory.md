@@ -6179,3 +6179,30 @@ Phase-3 spec amendment cascade (D-356/D-357: developer-console ROADMAP-ONLY; Gua
 
 ### Next pass
 DC-44 adversary pass — strict-streak pass 1 (streak 0/3 per TD-RECORDS-MICRO-BURST-001 not-reset rule).
+
+---
+
+## Phase-3 Wave-1 S-1.01 LOCAL Adversary Cascade
+
+> Note: Phase-3 spec-amendment cascade DC-44..DC-71 passes are in git history (factory-artifacts); summary in STATE.md. D-363 re-gate dual-lens CLEAN (adversary+consistency CLEAN(strict)=yes on frozen HEAD cdf30ff). Phase-3 Wave-1 S-1.01 kickoff D-363.
+
+### S-1.01 LOCAL Adversary Pass 1 (pre-D-364, 2026-09-17)
+- **Pass type:** LOCAL adversary (fresh context) on feature/S-1.01 (pre-D-364 HEAD)
+- **Findings:** F1 (module-doc stub residue), F2 (AC-007 trybuild gate absent), F3 (stale todo!() test comments), F4 (Category titles non-humanized), F1-pass1-refire (SYS 14th-category spec-drift — error-taxonomy v1.59 had SYS; BC-2.14.001/002 lagged at 13 categories). Total: 5 findings.
+- **CLEAN(strict):** no
+- **CLEAN(PR-merge):** no (spec-drift refire is structural)
+- **Strict streak:** RESET 0/3 per BC-5.39.001 frozen-HEAD rule (fix push required)
+- **Action:** D-364 fix-burst; implementer added Category::Sys on feature/S-1.01 aae3e19; 25/25 tests green incl AC-007 trybuild gate; BC-2.14.001/002→v1.12 (SYS aligned to error-taxonomy authoritative)
+
+### S-1.01 LOCAL Adversary Pass 2 (D-365, 2026-09-17) — RECORDS-ONLY
+- **Pass type:** RECORDS-ONLY adversary pass (TD-RECORDS-MICRO-BURST-001)
+- **Findings:** 1 OBS
+- **CLEAN(strict):** no
+- **CLEAN(PR-merge):** yes (zero CRIT/HIGH/MED)
+- **Strict streak:** NOT RESET per TD-RECORDS-MICRO-BURST-001 (holds at 0/3)
+- **Trajectory tail:** →1→0→0→1[RECORDS-ONLY-OBS]
+
+**OBS-1 [OBS]** — BC-2.14.002 EC-005: language imprecision — "runtime 'Unknown'/500 fallback NEVER triggered" is an inaccurate framing. Correct statement: the closed 14-variant #[non_exhaustive] Category enum with no wildcard match arm means adding a new Category variant is a source-breaking change at compile time at every mapping site ({http_status}, {category_title}); no reachable runtime code path yields title 'Unknown' or HTTP 500 for an unknown category because no unknown category can exist at runtime. This is strictly stronger than a runtime fallback. Fix: BC-2.14.002 EC-005 restated to compile-time exhaustiveness (product-owner; BC-2.14.002→v1.12→v1.13). Records-only hygiene; no behavioral change.
+
+### Next pass
+S-1.01 LOCAL adversary pass 3 — strict-streak pass 1 (streak 0/3; targeting CLEAN(strict)=yes on feature/S-1.01 aae3e19).

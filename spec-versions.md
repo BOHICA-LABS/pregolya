@@ -1,12 +1,13 @@
 ---
 document_type: spec-version-registry
 level: governance
-version: "1.2"
+version: "1.3"
 status: active
 producer: spec-steward
-timestamp: 2026-09-18T00:00:00Z
+timestamp: 2026-09-17T00:00:00Z
 baseline_event: "D-359/2026-09-17 — pre-Phase-3 reconciliation; DEVELOP-DIVERGENCE resolved; census BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22"
 changelog:
+  - "1.3 (D-365/2026-09-17, state-manager): BC-INDEX §Changelog (v4.62→v4.63; S-1.01 LOCAL adv pass OBS-1 records-only); BC-2.14.002 §Changelog (v1.12→v1.13; EC-005 restated to compile-time exhaustiveness; no behavioral change). Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.2 (D-364/2026-09-17, state-manager): BC-INDEX row updated v4.61→v4.62 (S-1.01 adv pass-1 SYS 14th-category fix-cascade; BC-2.14.001/002 v1.11→v1.12; S-1.01 v1.1→v1.2). Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.1 (D-362/2026-09-18, spec-steward+state-manager): Governance-cadence consistency fix — row syncs from D-360/D-361 reflected in §L3 Behavioral Contracts and §L3 Story Index table rows (BC-INDEX §Changelog (v4.61); STORY-INDEX §Changelog (v2.01)). Note: spec-steward's initial D-362 burst set STORY-INDEX row to v2.00; state-manager D-362 body edits (F1 fuzz removal, F3 BC-2.17.002 title correction) advanced STORY-INDEX to v2.01; this row updated to v2.01 in same atomic commit. Bumped version 1.0→1.1; timestamp advanced to 2026-09-18T00:00:00Z. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.0 (D-359/2026-09-17, spec-steward): Initial baseline snapshot. Aggregated from frontmatter of all living spec artifacts as of post-reconciliation state. Census: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
@@ -61,7 +62,7 @@ changelog:
 
 | Artifact | Version | Last Updated | Changed By |
 |----------|---------|-------------|------------|
-| specs/behavioral-contracts/BC-INDEX.md | v4.62 | 2026-09-17 | state-manager |
+| specs/behavioral-contracts/BC-INDEX.md | v4.63 | 2026-09-17 | state-manager |
 | specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md (149 files) | varies | 2026-09-10 latest | product-owner |
 
 > Individual BC body files follow BC-INDEX versioning cadence; canonical current version is the `version:` field in each file's frontmatter. The BC-INDEX §Full BC Catalog is the authoritative roster.
