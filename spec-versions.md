@@ -59,7 +59,7 @@ changelog:
 
 | Artifact | Version | Last Updated | Changed By |
 |----------|---------|-------------|------------|
-| specs/behavioral-contracts/BC-INDEX.md | v4.60 | 2026-09-10T08:00:00Z | state-manager |
+| specs/behavioral-contracts/BC-INDEX.md | v4.61 | 2026-09-17 | state-manager |
 | specs/behavioral-contracts/ss-NN/BC-S.SS.NNN.md (149 files) | varies | 2026-09-10 latest | product-owner |
 
 > Individual BC body files follow BC-INDEX versioning cadence; canonical current version is the `version:` field in each file's frontmatter. The BC-INDEX §Full BC Catalog is the authoritative roster.
@@ -120,7 +120,7 @@ changelog:
 
 | Artifact | Version | Last Updated | Changed By |
 |----------|---------|-------------|------------|
-| stories/STORY-INDEX.md | v1.98 | 2026-09-10T08:00:00Z | state-manager |
+| stories/STORY-INDEX.md | v2.00 | 2026-09-18 | state-manager |
 | stories/stories/STORY-NNN.md (53 files) | varies | 2026-09-10 latest | story-writer |
 
 ## L4 Verification Properties

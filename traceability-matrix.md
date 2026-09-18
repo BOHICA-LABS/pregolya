@@ -1,7 +1,7 @@
 ---
 document_type: traceability-matrix
 level: governance
-version: "1.1"
+version: "1.3"
 status: active
 producer: spec-steward
 timestamp: 2026-09-18T00:00:00Z
@@ -11,9 +11,11 @@ inputs:
   - .factory/specs/behavioral-contracts/BC-INDEX.md
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/stories/STORY-INDEX.md
-input-hash: "c91d879"
-baseline_event: "D-360/2026-09-17 — post-reconciliation baseline. Sources: BC-INDEX §Changelog (v4.61) §BC-to-Story Coverage Map; STORY-INDEX §Changelog (v1.99) §VP-to-Story Anchor Map; VP-INDEX §Changelog (v1.60) §VP Catalog (unchanged)"
+input-hash: "1acd327"
+baseline_event: "D-361/2026-09-18 — post-C1-fuzz-removal baseline. Sources: BC-INDEX §Changelog (v4.61) §BC-to-Story Coverage Map; STORY-INDEX §Changelog (v2.00) §VP-to-Story Anchor Map; VP-INDEX §Changelog (v1.60) §VP Catalog (unchanged)"
 changelog:
+  - "1.3 (D-361/2026-09-18, state-manager): input-hash recomputed post STORY-INDEX §Changelog D-361/C1 edit (fuzz-crate removal from S-6.01 §Wave-6-Story-Inventory Target-Crate cell). STORY-INDEX is an input per §inputs list; combined three-input hash updated to 1acd327. No VP/BC/story matrix content changed. Census UNCHANGED: BC 149 / VP 43 / stories 53."
+  - "1.2 (D-361/2026-09-17, spec-steward): Confirmation-pass corrections — VP Traceability Chains table transposition errors fixed per VP-INDEX §VP Catalog (source of truth): VP-006 priority P0→P1; VP-007 priority/tool P0/Kani→P1/proptest; VP-009 priority/tool P1/proptest→P0/Kani; VP-010 priority/tool P1/proptest→P0/Kani; VP-2.24.002-A tool Kani→proptest. Forward Traceability VP-006 label P0→P1. VP Priority Distribution by Subsystem SS-16/17/18/other row corrected (P0 VP-009+VP-010; P1 VP-006+VP-006-B+VP-007+VP-008). P0=7/P1=36 aggregate confirmed correct after corrections. input-hash marked needs-refresh (state-manager to recompute on commit)."
   - "1.1 (D-360/2026-09-17, spec-steward): Input-hash refreshed post pre-Wave-1 reconciliation burst (7535fa6→c91d879). BC-INDEX §Changelog bumped (v4.60→v4.61; CV-1 Red-Gate annotation; CV-2 VP body-file count correction). STORY-INDEX §Changelog bumped (v1.98→v1.99; SS-2 SS-24 annotation; SS-3 BC-2.12.003 +S-console-10). VP-INDEX §Changelog (v1.60) unchanged. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.0 (D-359/2026-09-17, spec-steward): Initial baseline traceability aggregation. Sourced from BC-INDEX §Changelog (v4.60), VP-INDEX §Changelog (v1.60), STORY-INDEX §Changelog (v1.98). Census: BC 149 / VP 43 / stories 53. Code drift: N/A (Phase-3 not started)."
 ---
@@ -59,12 +61,12 @@ The VP-INDEX §VP Catalog (source of truth) records the full bc_anchor, module, 
 | VP-003 | P0 | Kani | BC-2.13.004 | sandbox::path_guard | VP-INDEX §VP Catalog |
 | VP-004 | P1 | integration | VP-INDEX §bc_anchor | mcp::exception | VP-INDEX §VP Catalog |
 | VP-005 | P1 | integration | VP-INDEX §bc_anchor | mcp::client | VP-INDEX §VP Catalog |
-| VP-006 | P0 | Kani | BC-2.18.004 | prompts::injection_guard | S-2.05 |
+| VP-006 | P1 | Kani | BC-2.18.004 | prompts::injection_guard | S-2.05 |
 | VP-006-B | P1 | proptest | BC-2.18.004 {PC-005} | prompts::injection_guard | S-2.05 |
-| VP-007 | P0 | Kani | VP-INDEX §bc_anchor | core::serializable | VP-INDEX §VP Catalog |
+| VP-007 | P1 | proptest | VP-INDEX §bc_anchor | core::serializable | VP-INDEX §VP Catalog |
 | VP-008 | P1 | proptest | VP-INDEX §bc_anchor | core::embeddings | VP-INDEX §VP Catalog |
-| VP-009 | P1 | proptest | VP-INDEX §bc_anchor | vectorstores::similarity | VP-INDEX §VP Catalog |
-| VP-010 | P1 | proptest | VP-INDEX §bc_anchor | core::serializable | VP-INDEX §VP Catalog |
+| VP-009 | P0 | Kani | VP-INDEX §bc_anchor | vectorstores::similarity | VP-INDEX §VP Catalog |
+| VP-010 | P0 | Kani | VP-INDEX §bc_anchor | core::serializable | VP-INDEX §VP Catalog |
 | VP-011 | P0 | Kani | BC-2.05.007 | graph::hitl | VP-INDEX §VP Catalog |
 | VP-012 | P1 | Kani | BC-2.10.005 | core::budget | VP-INDEX §VP Catalog |
 | VP-013 | P1 | Kani | BC-2.23.005 | tools::shell | VP-INDEX §VP Catalog |
@@ -90,7 +92,7 @@ The VP-INDEX §VP Catalog (source of truth) records the full bc_anchor, module, 
 | VP-2.24.001-A | P1 | unit | BC-2.24.001 | spa_components::run_inspector? | S-console-01 |
 | VP-2.24.001-B | P1 | unit | BC-2.24.001 | spa_components::run_inspector? | S-console-01 |
 | VP-2.24.001-C | P1 | compile-fail | BC-2.24.001 | spa_components::run_inspector? | S-console-01 |
-| VP-2.24.002-A | P1 | Kani | BC-2.24.002 | console::ring_buffer | S-console-02 |
+| VP-2.24.002-A | P1 | proptest | BC-2.24.002 | console::ring_buffer | S-console-02 |
 | VP-2.24.002-B | P1 | proptest | BC-2.24.002 | console::ring_buffer | S-console-02 |
 | VP-2.24.002-C | P1 | integration | BC-2.24.002 | server::debug_routes | S-console-03 |
 | VP-2.24.002-D | P1 | unit | BC-2.24.002 | console::span_exporter | S-console-02/03 |
@@ -185,7 +187,7 @@ Next drift detection run: after Wave-1 stories are delivered (Phase-3 wave-1 clo
 
 | L1 Vision | L2 Domain Spec | L3 BC | L4 VP | Proof Harness | Status |
 |-----------|---------------|-------|-------|---------------|--------|
-| Fail-closed security | DI-014 Error Propagation / No Silent Swallowing | BC-2.18.004 PromptTemplate Injection Guard | VP-006 (Kani P0) | injection_guard_fewshot_fail_closed | draft — Phase-6 pending |
+| Fail-closed security | DI-014 Error Propagation / No Silent Swallowing | BC-2.18.004 PromptTemplate Injection Guard | VP-006 (Kani P1) | injection_guard_fewshot_fail_closed | draft — Phase-6 pending |
 | Fail-closed security | DI-014 | BC-2.18.004 {PC-005} | VP-006-B (proptest P1) | injection_guard_multipair_fewshot_fail_closed | draft — Phase-6 pending |
 | Workspace confinement | DI-010 MCP Tool Safety | BC-2.13.004 Workspace Confinement | VP-003 (Kani P0) | sandbox::path_guard harness | draft — Phase-6 pending |
 | PreToolCallHook safety | DI-014 | BC-2.05.007 PreToolCallHook Fail-Closed | VP-011 (Kani P0) | graph::hitl harness | draft — Phase-6 pending |
@@ -253,7 +255,7 @@ Next drift detection run: after Wave-1 stories are delivered (Phase-3 wave-1 clo
 | SS-10 budget | — | VP-012 | 1 |
 | SS-11 GuardrailJournal | VP-2.11.007-A | VP-2.11.007-B | 2 |
 | SS-13 sandbox | VP-003 | — | 1 |
-| SS-16/17/18/other (injection, serializable, embeddings, vectorstores) | VP-006, VP-007 | VP-006-B, VP-008, VP-009, VP-010 | 6 |
+| SS-16/17/18/other (injection, serializable, embeddings, vectorstores) | VP-009, VP-010 | VP-006, VP-006-B, VP-007, VP-008 | 6 |
 | SS-23 tools::shell | — | VP-013 | 1 |
 | SS-24 Developer Console | — | VP-2.24.001..008 (21 VPs) | 21 |
 | Other (VP-001, VP-002, VP-004, VP-005) | VP-001, VP-002 | VP-004, VP-005 | 4 |

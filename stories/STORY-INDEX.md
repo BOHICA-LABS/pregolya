@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "1.99"
+version: "2.00"
 status: active
 producer: state-manager
 timestamp: 2026-09-18T00:00:00Z
 changelog:
+  - "2.00 (D-361/2026-09-18, state-manager): C1 fix — S-6.01 §Wave-6 Story Inventory Target Crate cell: removed stale 'fuzz' entry. D-360 burst corrected sprint-state S-6.01 crate field and story frontmatter target_module; this burst closes the third carrier (STORY-INDEX Story Inventory row); all three carriers now consistent: xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools. Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "1.99 (D-360/2026-09-17, state-manager): Pre-Wave-1 spec reconciliation fix-burst — records/annotation fixes. SS-2: SS-24 §BC-to-Story Coverage Map section — added blockquote annotation clarifying BC-2.11.007 is an SS-11 cross-reference (header kept at '8 BCs' for machine-parsability); the 9th row (BC-2.11.007) is a cross-reference from SS-11, not an SS-24 BC; S-1.29 story column correct. SS-3: BC-2.12.003 BC-to-Story Coverage Map row — S-console-10 added as roadmap Wave-3 consumer (guardrail_journal? projection via {PC-013}; per DC-42; reverse-anchor gap closed; BC-2.12.003 is NOT orphan — S-1.26 canonical implementer). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "1.98 (DC-68/F-PDC68-01/2026-09-10, state-manager): DC-68 VP-2.11.007-B mirror propagation — VP-to-Story Anchor Map: VP-2.11.007-B→S-1.29 row added (anchors BC-2.11.007 {INV-005}+BC-2.04.007 {INV-006}; P1; pregolya-checkpoint; integration test in guardrail_journal_encryption_at_rest.rs per S-1.29 Task 15). sprint-state S-1.29 vps field extended: [VP-2.11.007-A]→[VP-2.11.007-A, VP-2.11.007-B]. Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "1.97 (DC-59/2026-09-09, state-manager): DC-59 fix-burst CLOSED — S-1.29 §Acceptance-Criteria: AC-006 (→{EC-007}: init_guardrail_journal+append_guardrail_entry failure → E-CHKPT-012) + AC-007 (→{EC-008}: get_guardrail_journal failure → E-CHKPT-013) added; TV-006+TV-007 rows added; Tasks 13+14 added (error propagation via CheckpointSaver ops); verify-ac-pc-trace PASS (citations=7 drift=0). Census: EC 145→147 (+E-CHKPT-012, +E-CHKPT-013); TV 841→843 (+TV-006, +TV-007). BC 149 / VP 42 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22 UNCHANGED. CLEAN(strict)=no CLEAN(PR-merge)=no. Strict streak RESET 0/3 (MED fixed + new HEAD pushed; BC-5.39.001 frozen-HEAD rule). DC-60 gates new HEAD as strict-streak pass 1."

@@ -5,7 +5,7 @@ version: "1.0"
 status: active
 producer: spec-steward
 project: pregolya
-timestamp: 2026-09-17T00:00:00Z
+timestamp: 2026-09-18T00:00:00Z
 phase: 3
 traces_to: .factory/spec-versions.md
 inputs: []
@@ -37,6 +37,36 @@ changelog:
 ## [1.0.0] - 2026-09-17
 
 > Baseline establishment: pre-Phase-3 governance initialization. All spec artifacts authored and converged through Phase-2 (D-354) and D-356/D-357 amendment cascade. Phase-3 TDD pending.
+
+---
+
+## Entry SC-007 — D-360: pre-Wave-1 Spec Reconciliation Burst (2026-09-17)
+
+**Event:** D-360 pre-Wave-1 reconciliation fix-burst; D-361 confirmation-pass corrections applied in same-day follow-up burst  
+**Semver impact:** NONE (no spec content changed; annotation, records, and governance-baseline fixes only)
+
+**Summary:** Three-lens audit of all 43 VP rows, wave-schedule taxonomy, and BC/story cross-references returned 0 blockers. Records and annotation fixes applied across BC-INDEX, STORY-INDEX, traceability-matrix, spec-versions, and spec-changelog. Governance baseline files initialized (traceability-matrix.md, spec-versions.md, spec-changelog.md seeded at D-359 and updated at D-360). D-361 confirmation-pass found four VP priority/tool transposition errors and one VP-2.24.002-A tool error in traceability-matrix, plus stale BC-INDEX and STORY-INDEX version rows in spec-versions.md and missing SC-007 changelog entry — all corrected in the same-day follow-up burst (D-361).
+
+**Added:** Governance baseline files seeded: traceability-matrix.md §Changelog (D-359 baseline), spec-versions.md §Changelog (D-359 baseline), spec-changelog.md §Changelog (D-359 baseline); governance documents updated through D-360/D-361  
+**Changed (D-360 burst):**
+- traceability-matrix.md §Changelog: S-1.29 DAG edge corrected (depends_on S-1.10 restored); VP-2.11.007-B matrix row added; S-6.01 fuzz-crate story removed from matrix; S-2.05 sources annotation; wave-schedule taxonomy note; BC-INDEX §Red-Gate annotation (cross-reference subset note); BC-INDEX §VP-Seed annotation (body-file vs SEED distinction); STORY-INDEX §SS-24 blockquote annotation; STORY-INDEX §BC-2.12.003 S-console-10 reverse-anchor closure
+- BC-INDEX §Changelog bumped (D-360 annotation fixes)
+- STORY-INDEX §Changelog bumped (D-360 annotation fixes)
+**Changed (D-361 confirmation-pass corrections — spec-steward):**
+- spec-versions.md: BC-INDEX §Changelog row synced (2026-09-17); STORY-INDEX §L3-Story-Index row synced (D-360 interim; superseded by state-manager C1 below, 2026-09-18)
+- traceability-matrix.md §Changelog (D-361 spec-steward): VP-006 priority P0→P1; VP-007 priority/tool P0/Kani→P1/proptest; VP-009 priority/tool P1/proptest→P0/Kani; VP-010 priority/tool P1/proptest→P0/Kani; VP-2.24.002-A tool Kani→proptest; Forward Traceability VP-006 label updated; VP Priority Distribution by Subsystem SS-16/17/18/other row corrected
+- spec-changelog.md §SC-007 entry added
+
+**Changed (D-361 corrective burst — state-manager, 2026-09-18):**
+- STORY-INDEX.md §Changelog (C1): S-6.01 §Wave-6 Story Inventory Target Crate cell — removed stale fuzz entry; all three carriers (story frontmatter, sprint-state crate field, STORY-INDEX §Story-Inventory row) now consistent
+- sprint-state.yaml S-6.01 vps: [VP-001,VP-002,VP-003,VP-006,VP-009,VP-010,VP-011,VP-012,VP-013,VP-019,VP-2.24.003-B] → [] (C2): sprint-state `vps` = VPs ANCHORED to story; S-6.01 anchors zero VPs per §VP-to-Story Anchor Map
+- dependency-graph.md §Changelog (C3): §BC-to-Stories preamble corrected to authoritative census 149 BCs / 53 story files; stale "pending state-manager STATE.md sync" notes removed (2 sites)
+- traceability-matrix.md §Changelog (C5): input-hash refreshed post STORY-INDEX §Changelog D-361/C1 edit
+- spec-versions.md §L3-Story-Index row updated (2026-09-18)
+
+**Removed:** None
+
+**Impact:** No spec semantic content modified. Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22. VP-INDEX arithmetic invariant confirmed: P0=7 / P1=36 / Kani=10 / proptest=10 / integration=14 / unit=8 / compile-fail=1.
 
 ---
 
