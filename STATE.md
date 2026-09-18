@@ -4,7 +4,7 @@ level: ops
 version: "7.39"
 status: in-progress
 producer: state-manager
-timestamp: 2026-09-18T06:21:52Z
+timestamp: 2026-09-18T06:29:33Z
 phase: 3
 inputs: []
 input-hash: "[live-state]"
@@ -273,7 +273,7 @@ Counter: **Phase-1 CLOSED (burst-325; D-197; 2026-08-18)**: 3/3 CONVERGED on fro
 pregolya Phase-2 CONVERGED+gate-APPROVED (anchor 81d16ca); D-356/D-357 spec-amendment cascade CONVERGED 3/3 on d17c711. Phase-3 TDD Wave-1 IN PROGRESS. D-363 (2026-09-17): Pre-Wave-1 reconciliation gate CLOSED/CONVERGED at frozen HEAD cdf30ff — dual-lens re-gate CLEAN (adversary REGATE-ADVERSARIAL CLEAN(strict)=yes; consistency-validator REGATE-CONSISTENCY CLEAN; census 149/43/53 verified across 7 sources; zero orphan BCs; DAG acyclic; no phantom anchors). Phase-3 Wave-1 KICKOFF: S-1.01 (PregolyaError in pregolya-core; BC-2.14.001, BC-2.14.002) status spec-ready→in-progress. Census: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
 
 ### HEADS
-- develop: `6a50ebf` — FULLY SYNCED (develop + origin/develop both at 6a50ebf; 0/0 divergence). PR #1: MERGED 2026-09-06 (squash ae7b803 on origin/develop). factory-artifacts: `d8f95bc` — PUSHED (pre-D-366; D-366 commit pending). Main worktree on develop.
+- develop: `6a50ebf` — FULLY SYNCED (develop + origin/develop both at 6a50ebf; 0/0 divergence). PR #1: MERGED 2026-09-06 (squash ae7b803 on origin/develop). factory-artifacts: `5d45352` — PUSHED (hygiene-burst post-D-366; pre-adversary-pass). Main worktree on develop.
 
 ### RESUME NEXT-ACTION
 **D-366 S-1.01 LOCAL adversary pass = RECORDS-ONLY (1 OBS) CLOSED.** S-1.01 (feature/S-1.01 15158ee) in-progress: 25/25 tests green; BC-2.14.002 {INV-004}/§Architecture Anchors prose precision fix landed (v1.14). 3-CLEAN streak 0/3; CLEAN(PR-merge)=yes. Implementation verified converged (correct/complete/spec-faithful; all prior findings F1-F4/SYS/EC-005/dev-dep-pin closed regression-free). NEXT-ACTION: orchestrator re-dispatches LOCAL adversary on feature/S-1.01 15158ee targeting CLEAN(strict)=yes to advance streak toward 3/3 CLEAN. Standing directives DIRECTIVE 1/2/3/4 in force. Deferrals: C-1/PG-1/PG-2/PG-3/PG-4/PG-5/PG-6/PG-7(RESOLVED)/PG-DC32..DC46(all JUSTIFIED DEFERRAL, first self-improvement wave); CV-3/PGAP-VP-STORY-DAG-MATRIX/PGAP-DF030-MODIFIED-ARRAY/INTERPOSED-VERSION-PIN-SWEEP/PIN_RE-INTERPOSED-GAP/RUNID-UNDEFINED-TYPE/PG-DC64-STATEMGR-STORY-EDIT/PGAP-POL21-ADVISORY all JUSTIFIED DEFERRAL (first self-improvement wave). DTU: Wave-1 no-op; DTU clone build deferred to Wave-3.
