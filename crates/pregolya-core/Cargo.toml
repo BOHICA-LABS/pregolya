@@ -22,6 +22,9 @@ schemars = { workspace = true }
 static_assertions = "1"
 # anyhow compat test (BC-2.14.001 TV-004)
 anyhow = "1"
+# Compile-fail / compile-pass gate harness (AC-007 / BC-2.14.001 {PC-008})
+# Validates #[non_exhaustive] external-boundary behaviour from outside the crate.
+trybuild = "1"
 
 [lints]
 workspace = true
