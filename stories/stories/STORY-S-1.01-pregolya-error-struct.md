@@ -3,12 +3,13 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.1"
+version: "1.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
+  - "1.2 (adv-pass-1-F1/BC-2.14.001-v1.12/BC-2.14.002-v1.12/2026-09-17): SYS/System category alignment — Category::Sys variant added; total categories 14; AC-003 and AC-011 updated."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -16,7 +17,7 @@ inputs:
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
   - .factory/specs/prd-supplements/error-taxonomy.md
-input-hash: "b38053a"
+input-hash: "6354492"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: []
@@ -58,7 +59,7 @@ tdd_mode: strict
 The `Component` enum has exactly 17 variants: Core, Graph, Chkpt, Server, Prov, Mcp, Split, Sbxd, Retry, Cron, Memory, Budget, Tmpl, Srlz, Vs, Embed, Tools — plus `Custom(String)`. An exhaustive match on all 18 cases (including Custom) compiles without a wildcard arm. Verified by `test_BC_2_14_001_component_axis()`.
 
 ### AC-003 (traces to BC-2.14.001 PC-003)
-The `Category` enum has exactly 13 variants: Val, Auth, Rate, Timeout, Transport, Internal, Durability, Policy, Tool, Concurrency, Security, Tenancy, Exec. An exhaustive match on all 13 cases compiles without a wildcard arm. Verified by `test_BC_2_14_001_category_axis()`.
+The `Category` enum has exactly 14 variants: Val, Auth, Rate, Timeout, Transport, Internal, Durability, Policy, Tool, Concurrency, Security, Tenancy, Exec, Sys. `Sys` represents OS-level syscall failure (INTERNAL-tier, HTTP 500, default RetryHint Maybe). An exhaustive match on all 14 cases compiles without a wildcard arm. Verified by `test_BC_2_14_001_category_axis()`.
 
 ### AC-004 (traces to BC-2.14.001 PC-004)
 `RetryHint` has exactly three variants: `Never`, `Maybe`, `Later(std::time::Duration)`. `RetryHint::Later(Duration::from_secs(30))` constructs and the inner duration is accessible. Verified by `test_BC_2_14_001_retry_hint()`.
@@ -89,7 +90,7 @@ Verified by `test_BC_2_14_002_to_problem_val()` (TV-001) and `test_BC_2_14_002_t
 `serde_json::to_string(&problem_detail)` produces valid JSON conforming to RFC-7807 §3. No null fields for required RFC-7807 fields. Verified by `test_BC_2_14_002_rfc7807_json()` (TV-003).
 
 ### AC-011 (traces to BC-2.14.002 PC-003)
-A parameterized unit test iterates all 13 `Category` variants and asserts their HTTP status codes: Val→400, Auth→401, Policy→403, Rate→429, Timeout→504, Transport→502, Concurrency→409, Security→403, Tenancy→409, Durability→500, Internal→500, Tool→422, Exec→500. No variant returns 200. Verified by `test_BC_2_14_002_status_codes_all_categories()`.
+A parameterized unit test iterates all 14 `Category` variants and asserts their HTTP status codes: Val→400, Auth→401, Policy→403, Rate→429, Timeout→504, Transport→502, Concurrency→409, Security→403, Tenancy→409, Durability→500, Internal→500, Tool→422, Exec→500, Sys→500. No variant returns 200. Verified by `test_BC_2_14_002_status_codes_all_categories()`.
 
 ### AC-012 (traces to BC-2.14.002 PC-004)
 The `Content-Type` header constant for RFC-7807 responses is `"application/problem+json"` (not `"application/json"`). Verified by `test_BC_2_14_002_content_type_constant()` asserting the string literal.
@@ -150,7 +151,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `extensions.retry_h
 3. [ ] Create `pregolya-core/src/error.rs` with `PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail`, `to_problem()` — all `todo!()` bodies initially (implementer)
 4. [ ] Implement `PregolyaError` struct and all enum variants (minimum code for AC-001 through AC-008)
 5. [ ] Implement `to_problem()` and `ProblemDetail` serialization (AC-009 through AC-014)
-6. [ ] Implement `http_status()` categorical mapping — all 13 arms (AC-011)
+6. [ ] Implement `http_status()` categorical mapping — all 14 arms (AC-011)
 7. [ ] Add `static_assertions` assert and compile-fail tests (AC-005, AC-006)
 8. [ ] Register module in `pregolya-core/src/lib.rs`
 9. [ ] Run `cargo xtask check-file-size` — confirm `error.rs` < 500 code lines
@@ -169,7 +170,7 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | `source` field is `Option<Arc<...>>` not `Option<Box<...>>` | BC-2.14.001 EC-001, ADR-010 §Decision | Code review; compile test that clones error with source |
 | `Default` NOT implemented on `PregolyaError` | BC-2.14.001 PC-007 | `static_assertions::assert_not_impl_any!(PregolyaError: Default)` |
 | No `println!` in `error.rs` | CLAUDE.md Code Conventions | `cargo clippy -D clippy::print_stdout` |
-| No `unwrap()` / `expect()` in `error.rs` (non-test) | CLAUDE.md Code Conventions, BC-2.14.003 | `cargo xtask check-no-panic` (seeded by S-1.02) |
+| No `unwrap()` / `expect()` in `error.rs` (non-test) | CLAUDE.md Code Conventions | `cargo xtask check-no-panic` (seeded by S-1.02) |
 | `ProblemDetail` must `#[derive(Serialize)]` for RFC-7807 JSON | BC-2.14.002 PC-002 | `serde_json::to_string` unit test |
 | `pregolya-core/src/error.rs` must NOT import `tokio` | Architecture boundary | `cargo tree -p pregolya-core` must not show tokio under error.rs |
 | `Category::Exec` maps to HTTP 500 (INTERNAL fallback) per D26 | BC-2.14.002 Note (D26), ADR-010 §Category Axis Expansion | Parameterized status code test |

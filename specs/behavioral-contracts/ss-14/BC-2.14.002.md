@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -21,11 +21,12 @@ changelog:
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.12 (S-1.01 adv pass-1 F1/2026-09-17): Align to error-taxonomy v1.59 SYS 14th-category. {PC-003} categorical HTTP-status table: `Category::Sys → 500` added as 14th entry (INTERNAL-tier fallback at pregolya-server; rationale: SYS = OS-level syscall failure — EACCES/ELOOP/EIO are unexpected infrastructure failures, not caller input errors and not network transport issues; 500 is the correct HTTP response; does NOT return 200, satisfying {INV-001}; no Known-overrides row presently — E-SBXD-010 CanonicalizationFailed, the first SYS code, is library-layer/blanket and does not reach the HTTP surface directly). VP-BC214002-02 description updated: '13 categories (EXEC included; no category returns 200)' → '14 categories (EXEC and SYS included; no category returns 200)'. §Notes SYS paragraph added mirroring EXEC disposition note. TD-VSDD-060 sibling sweep: all three category-count sites in BC-2.14.002 live body updated ({PC-003} table length, VP-BC214002-02 description, §Notes). No behavioral change to RFC-7807 emission."
 capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-24T01:00:00Z
+timestamp: 2026-09-17T00:00:00Z
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
 inputs:
@@ -34,7 +35,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "9d456d5"
+input-hash: "79d6343"
 extracted_from: null
 modified: []
 deprecated: null
@@ -86,6 +87,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    - `Category::Internal` → 500
    - `Category::Tool` → 422
    - `Category::Exec` → 500 *(library-layer-only; INTERNAL-tier fallback at pregolya-server per ADR-010 §Category Axis Expansion (D26); no Known-overrides row)*
+   - `Category::Sys` → 500 *(INTERNAL-tier fallback at pregolya-server; SYS = OS-level syscall failure — EACCES/ELOOP/EIO are unexpected infrastructure failures that are neither caller input errors nor network transport errors; no Known-overrides row; E-SBXD-010 CanonicalizationFailed is the first SYS code and is library-layer/blanket — does not reach the HTTP surface directly; does NOT return 200, satisfying {INV-001})*
 
    **Per-endpoint status overrides (F-P25-01 — OBS-1 carve-out):** A resource BC may specify
    a status code that differs from the categorical default above. The per-endpoint status takes
@@ -202,11 +204,13 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-BC214002-01 | `ProblemDetail` output is valid RFC-7807 JSON (type_uri is a URI, title is a string, detail is present) | Unit test + JSON schema validation | Wave 0 |
-| VP-BC214002-02 | HTTP status code mapping covers all 13 categories (EXEC included; no category returns 200) | Parameterized unit test over Category enum variants | Wave 0 |
+| VP-BC214002-02 | HTTP status code mapping covers all 14 categories (EXEC and SYS included; no category returns 200) | Parameterized unit test over Category enum variants | Wave 0 |
 
 ## Notes
 
 - **EXEC category (D26):** `Category::Exec` is a library-layer-only error category added by D26 per ADR-010 §Category Axis Expansion (D26). At the `pregolya-server` HTTP layer, `EXEC` errors receive the categorical fallback `INTERNAL → 500`; there is no dedicated Known-overrides row for `EXEC` in {PC-003}. The parameterized test (VP-BC214002-02) must map `Category::Exec` to 500 via the INTERNAL-tier fallback — `EXEC` does not return 200 and the VP passes for this variant.
+
+- **SYS category (error-taxonomy v1.59):** `Category::Sys` is the OS-level syscall failure category (EACCES, ELOOP, EIO — path resolution, process control, IPC) introduced in error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26. At the `pregolya-server` HTTP layer, `SYS` errors receive the categorical default `500`; there is no dedicated Known-overrides row for `SYS` in {PC-003}. `E-SBXD-010 CanonicalizationFailed` is the first SYS code and is currently library-layer/blanket (does not reach the HTTP surface directly); however the categorical default of 500 is established so that any future SYS codes that do surface at HTTP have a defined mapping. The parameterized test (VP-BC214002-02) must map `Category::Sys` to 500 — `SYS` does not return 200 and the VP passes for this variant. Default RetryHint is `Maybe` (SYS default per error-taxonomy §Error Categories).
 
 ## Related BCs
 

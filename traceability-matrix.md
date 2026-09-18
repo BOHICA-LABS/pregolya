@@ -1,7 +1,7 @@
 ---
 document_type: traceability-matrix
 level: governance
-version: "1.4"
+version: "1.5"
 status: active
 producer: spec-steward
 timestamp: 2026-09-18T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/behavioral-contracts/BC-INDEX.md
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/stories/STORY-INDEX.md
-input-hash: "c14c505"
-baseline_event: "D-362/2026-09-18 — post-genuine-F1-body-edit baseline. Sources: BC-INDEX §Changelog (v4.61) §BC-to-Story Coverage Map; STORY-INDEX §Changelog (v2.01) §VP-to-Story Anchor Map; VP-INDEX §Changelog (v1.60) §VP Catalog (unchanged)"
+input-hash: "43b7464"
+baseline_event: "D-364/2026-09-17 — BC-INDEX §Changelog (D-364 SYS 14th-category addition). VP-INDEX §Changelog unchanged. STORY-INDEX §Changelog unchanged"
 changelog:
+  - "1.5 (D-364/2026-09-17, state-manager): input-hash recomputed after BC-INDEX §Changelog bump (D-364 SYS 14th-category fix-cascade). BC-INDEX is an input per §inputs list; combined three-input hash updated c14c505→43b7464. VP-INDEX §Changelog and STORY-INDEX §Changelog UNCHANGED. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.4 (D-362/2026-09-18, spec-steward+state-manager): Corrective fix-burst — SS-24 VP over-count corrected: §VP-2.24 section heading '21 VPs' → '20 VPs'; §VP-Priority-Distribution SS-24 row '(21 VPs) | 21' → '(20 VPs) | 20'. Actual VP-2.24 table contains exactly 20 rows (VP-2.24.001-A..VP-2.24.008-B). Post-fix §VP-Priority-Distribution Total=43 (P0=7, P1=36) confirmed consistent with §VP-Status-Summary. Input-hash recomputed (c14c505) after genuine F1 STORY-INDEX body edit (S-6.01 Target-Crate fuzz token actually removed; D-361/v1.3 hash 1acd327 was based on STORY-INDEX with fuzz token still present — paper-fix recompute; D-362 recompute reflects genuine content change). STORY-INDEX now v2.01. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.3 (D-361/2026-09-18, state-manager): input-hash recomputed post STORY-INDEX §Changelog D-361/C1 edit (fuzz-crate removal from S-6.01 §Wave-6-Story-Inventory Target-Crate cell). STORY-INDEX is an input per §inputs list; combined three-input hash updated to 1acd327. No VP/BC/story matrix content changed. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.2 (D-361/2026-09-17, spec-steward): Confirmation-pass corrections — VP Traceability Chains table transposition errors fixed per VP-INDEX §VP Catalog (source of truth): VP-006 priority P0→P1; VP-007 priority/tool P0/Kani→P1/proptest; VP-009 priority/tool P1/proptest→P0/Kani; VP-010 priority/tool P1/proptest→P0/Kani; VP-2.24.002-A tool Kani→proptest. Forward Traceability VP-006 label P0→P1. VP Priority Distribution by Subsystem SS-16/17/18/other row corrected (P0 VP-009+VP-010; P1 VP-006+VP-006-B+VP-007+VP-008). P0=7/P1=36 aggregate confirmed correct after corrections. input-hash marked needs-refresh (state-manager to recompute on commit)."

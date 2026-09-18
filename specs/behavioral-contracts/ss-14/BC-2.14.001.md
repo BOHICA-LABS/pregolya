@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-24T01:00:00Z
+timestamp: 2026-09-17T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.2 (D21/Batch-3b-i/2026-07-20): Component enum expanded 12→16 per ADR-010 v1.1. Added TMPL (pregolya-prompts, SS-18), SRLZ (pregolya-core::serializable, SS-19), VS (pregolya-vectorstores, SS-21), EMBED (pregolya-core::embeddings, SS-22) to Description and Postcondition 2 component list. Category axis unchanged at 12."
@@ -26,6 +26,7 @@ changelog:
   - "1.9 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.01 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
+  - "1.12 (S-1.01 adv pass-1 F1/2026-09-17): Align to error-taxonomy v1.59 SYS 14th-category. Description category list updated: SYS added as 14th category after EXEC; counter updated from '13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))' to '14 categories (EXEC added by D26, SYS added by error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26)'. This is propagation of an already-authorized taxonomy decision (SYS introduced in error-taxonomy v1.59 as the OS-level syscall failure category; Default RetryHint Maybe). Behavioral contract semantics of PregolyaError struct unchanged — only the enumerated category count in the description prose is updated. TD-VSDD-060 sibling sweep: no other site in BC-2.14.001 live body enumerates the category count or list outside the Description."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -36,7 +37,7 @@ inputs:
   - .factory/specs/domain-spec/invariants.md
   - .factory/specs/prd-supplements/error-taxonomy.md
   - .factory/semport/core/rust-translation-strategy.md
-input-hash: "9d456d5"
+input-hash: "79d6343"
 extracted_from: null
 modified: []
 deprecated: null
@@ -55,7 +56,7 @@ Every error emitted by the pregolya library crate family is an instance of `Preg
 a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE, GRAPH,
 CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET, TMPL, SRLZ, VS, EMBED, TOOLS —
 17 components as of D23) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
-INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY, EXEC — 13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
+INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY, EXEC, SYS — 14 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26); SYS added by error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26)). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
 a machine-readable `code` string (e.g. `E-CORE-001`), a human-readable `message` (MUST NOT
 contain credentials per DI-010), and a causal `source: Option<Arc<dyn std::error::Error + Send + Sync>>`
 (MUST NOT be exposed in HTTP responses; `Arc` not `Box` — `Arc::clone` increments the refcount
