@@ -17,5 +17,11 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 schemars = { workspace = true }
 
+[dev-dependencies]
+# Compile-time trait bound assertions (AC-005, AC-006 / VP-BC214001-02)
+static_assertions = "1"
+# anyhow compat test (BC-2.14.001 TV-004)
+anyhow = "1"
+
 [lints]
 workspace = true
