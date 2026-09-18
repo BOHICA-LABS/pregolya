@@ -19,12 +19,12 @@ schemars = { workspace = true }
 
 [dev-dependencies]
 # Compile-time trait bound assertions (AC-005, AC-006 / VP-BC214001-02)
-static_assertions = "1"
+static_assertions = { workspace = true }
 # anyhow compat test (BC-2.14.001 TV-004)
-anyhow = "1"
+anyhow = { workspace = true }
 # Compile-fail / compile-pass gate harness (AC-007 / BC-2.14.001 {PC-008})
 # Validates #[non_exhaustive] external-boundary behaviour from outside the crate.
-trybuild = "1"
+trybuild = { workspace = true }
 
 [lints]
 workspace = true
