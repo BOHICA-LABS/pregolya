@@ -168,13 +168,20 @@ impl PregolyaError {
     /// This is the public external constructor. Code within `pregolya-core` may
     /// also use struct-literal syntax.
     pub fn new(
-        _component: Component,
-        _category: Category,
-        _retry_hint: RetryHint,
-        _code: impl Into<String>,
-        _message: impl Into<String>,
+        component: Component,
+        category: Category,
+        retry_hint: RetryHint,
+        code: impl Into<String>,
+        message: impl Into<String>,
     ) -> Self {
-        todo!()
+        Self {
+            component,
+            category,
+            retry_hint,
+            code: code.into(),
+            message: message.into(),
+            source: None,
+        }
     }
 
     /// Produces an RFC-7807 [`ProblemDetail`] from this error.
@@ -182,7 +189,15 @@ impl PregolyaError {
     /// Synchronous — no Tokio runtime required. Safe to call in CLI tools and
     /// other non-async contexts.
     pub fn to_problem(&self) -> ProblemDetail {
-        todo!()
+        ProblemDetail {
+            type_uri: format!("urn:pregolya:error:{}", self.code),
+            title: category_title(&self.category).to_string(),
+            detail: self.message.clone(),
+            extensions: ProblemExtensions {
+                retry_hint: retry_hint_str(&self.retry_hint),
+                component: component_lowercase(&self.component),
+            },
+        }
     }
 
     /// Returns the categorical HTTP status code for this error's [`Category`].
@@ -191,19 +206,35 @@ impl PregolyaError {
     /// Per-endpoint overrides (documented in BC-2.14.002 Known-overrides) are
     /// applied by `pregolya-server`, not here.
     pub fn http_status(&self) -> u16 {
-        todo!()
+        match self.category {
+            Category::Val => 400,
+            Category::Auth => 401,
+            Category::Policy => 403,
+            Category::Security => 403,
+            Category::Rate => 429,
+            Category::Concurrency => 409,
+            Category::Tenancy => 409,
+            Category::Tool => 422,
+            Category::Transport => 502,
+            Category::Timeout => 504,
+            Category::Durability => 500,
+            Category::Internal => 500,
+            Category::Exec => 500, // D26: INTERNAL-tier fallback per ADR-010 §Category Axis Expansion
+        }
     }
 }
 
 impl fmt::Display for PregolyaError {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}] {}", self.code, self.message)
     }
 }
 
 impl std::error::Error for PregolyaError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        todo!()
+        self.source
+            .as_ref()
+            .map(|arc| arc.as_ref() as &(dyn std::error::Error + 'static))
     }
 }
 
@@ -237,6 +268,64 @@ pub struct ProblemExtensions {
     pub retry_hint: String,
     /// Lowercase component code (e.g. `"core"`, `"graph"`).
     pub component: String,
+}
+
+// ─── Private helpers ─────────────────────────────────────────────────────────
+
+/// Returns the lowercase component code string for RFC-7807 `extensions.component`.
+fn component_lowercase(component: &Component) -> String {
+    match component {
+        Component::Core => "core".to_string(),
+        Component::Graph => "graph".to_string(),
+        Component::Chkpt => "chkpt".to_string(),
+        Component::Server => "server".to_string(),
+        Component::Prov => "prov".to_string(),
+        Component::Mcp => "mcp".to_string(),
+        Component::Split => "split".to_string(),
+        Component::Sbxd => "sbxd".to_string(),
+        Component::Retry => "retry".to_string(),
+        Component::Cron => "cron".to_string(),
+        Component::Memory => "memory".to_string(),
+        Component::Budget => "budget".to_string(),
+        Component::Tmpl => "tmpl".to_string(),
+        Component::Srlz => "srlz".to_string(),
+        Component::Vs => "vs".to_string(),
+        Component::Embed => "embed".to_string(),
+        Component::Tools => "tools".to_string(),
+        Component::Custom(s) => s.to_lowercase(),
+    }
+}
+
+/// Returns the humanized category name for RFC-7807 `title`.
+fn category_title(category: &Category) -> &'static str {
+    match category {
+        Category::Val => "Validation",
+        Category::Auth => "Authentication",
+        Category::Rate => "Rate",
+        Category::Timeout => "Timeout",
+        Category::Transport => "Transport",
+        Category::Internal => "Internal",
+        Category::Durability => "Durability",
+        Category::Policy => "Policy",
+        Category::Tool => "Tool",
+        Category::Concurrency => "Concurrency",
+        Category::Security => "Security",
+        Category::Tenancy => "Tenancy",
+        Category::Exec => "Execution",
+    }
+}
+
+/// Encodes [`RetryHint`] as the canonical string form for RFC-7807 extensions.
+///
+/// - [`RetryHint::Never`] → `"never"`
+/// - [`RetryHint::Maybe`] → `"maybe"`
+/// - [`RetryHint::Later(d)`] → `"later:<whole_seconds>"` (e.g. `"later:30"`)
+fn retry_hint_str(hint: &RetryHint) -> String {
+    match hint {
+        RetryHint::Never => "never".to_string(),
+        RetryHint::Maybe => "maybe".to_string(),
+        RetryHint::Later(d) => format!("later:{}", d.as_secs()),
+    }
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
