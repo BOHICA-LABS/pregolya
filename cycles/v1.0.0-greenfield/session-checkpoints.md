@@ -4978,3 +4978,31 @@ Dispatch DC-69 adversary pass (fresh-context, strict-streak pass 1, streak 0/3).
 
 ### DECISION-LOG DELTA (at DC-68-FOLLOWUP close)
 D-356/D-357/D-358/DC-68 (2026-09-10): DC-68 = 1HIGH+1MED, FULL CASCADE. VP-2.11.007-B BC-INDEX mirrors + STORY-INDEX + sprint-state; S-1.10 DI-seam. Census UNCHANGED. STRICT STREAK RESET 0/3. DC-69 = strict-streak pass 1.
+
+
+---
+
+## D-362 Session Checkpoint (archived from STATE.md — D-363 Wave-1 kickoff close 2026-09-17)
+
+<!-- D-362 checkpoint replaces D-360 — prior D-360 checkpoint archived to cycles/v1.0.0-greenfield/session-checkpoints.md. Keep ONLY the latest checkpoint here. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-2 CONVERGED+gate-APPROVED (anchor 81d16ca); Phase-3 TDD READY. D-356/D-357 spec-amendment cascade CONVERGED 3/3 on frozen anchor d17c711 (DC-69/DC-70/DC-71 CLEAN(strict)). D-360 (2026-09-17): Pre-Wave-1 spec reconciliation CLOSED. D-361: paper-fix residual burst (v2.00 changelog-claimed C1 fuzz removal without body edit — POL-21 false-closure). D-362 (2026-09-18): Anti-paper-fix remediation CLOSED — F1/F3 STORY-INDEX body edits grep-verified; STORY-INDEX §Changelog (v2.01); traceability-matrix input-hash c14c505 (genuine recompute). DEVELOP-DIVERGENCE FULLY RESOLVED. Census: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22. trajectory-tail →4→0→0→0 (4 findings closed). Re-gate on new frozen HEAD, then S-1.01 NEXT.
+
+### HEADS
+- develop: `6a50ebf` — FULLY SYNCED (develop + origin/develop both at 6a50ebf; 0/0 divergence). PR #1: MERGED 2026-09-06 (squash ae7b803 on origin/develop). factory-artifacts: run `git -C .factory log -1 --format='%H'` for current SHA. Main worktree on develop.
+
+### RESUME NEXT-ACTION
+**D-362 ANTI-PAPER-FIX BURST CLOSED.** NEXT-ACTION: re-gate on new frozen HEAD (consistency-validator + adversary confirm F1/F2/F3/F4 CLOSED), then devops-engineer or orchestrator creates S-1.01 worktree (pregolya-core, Wave-1, first Phase-3 TDD story) and launches S-1.01 (PregolyaError) per TDD sub-workflow. Standing directives DIRECTIVE 1/2/3/4 in force. Deferrals: C-1/PG-1/PG-2/PG-3/PG-4/PG-5/PG-6/PG-7(RESOLVED)/PG-DC32..DC46(all JUSTIFIED DEFERRAL, first self-improvement wave); CV-3(pregolya-console absent from Cargo.toml→Wave-3/S-console-01; owner: devops-engineer)/process-gap(dependency-graph.md §VP-to-Stories Matrix + story depends_on/target_module outside POL-9 coverage→first self-improvement wave); PGAP-DF030-MODIFIED-ARRAY/INTERPOSED-VERSION-PIN-SWEEP/PIN_RE-INTERPOSED-GAP/RUNID-UNDEFINED-TYPE/PG-DC64-STATEMGR-STORY-EDIT/PGAP-POL21-ADVISORY all JUSTIFIED DEFERRAL (first self-improvement wave). DTU: Wave-1 no-op; DTU clone build deferred to Wave-3.
+
+### DECISION-LOG DELTA (D-362)
+D-362 (2026-09-18): Anti-paper-fix remediation CLOSED. F1[BLOCKER/CRITICAL] STORY-INDEX S-6.01 §Wave-6-Story-Inventory Target-Crate cell fuzz token ACTUALLY removed (grep-verified: S-6.01 §Wave-6-Story-Inventory Target-Crate = xtask..pregolya-tools (no fuzz)); D-361/v2.00 was POL-21 paper-fix. F2[HIGH] traceability-matrix SS-24 VP over-count 21→20 (spec-steward). F3[MED] BC-2.17.002 §BC-to-Story Coverage Map title corrected to full verbatim H1 (POL-7). F4[LOW] spec-versions self-cadence. STORY-INDEX §Changelog (v2.00→v2.01). traceability-matrix §Changelog (v1.4) input-hash 1acd327→c14c505 (genuine content change). spec-versions.md §L3-Story-Index row (v2.01). D-361 C2-C5 re-verified CORRECT. PGAP-POL21-ADVISORY codified. trajectory-tail →4→0→0→0. Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
+
+### WORKTREE INVENTORY
+Main worktree on `develop` at `6a50ebf` (FULLY SYNCED with origin/develop). .worktrees/ absent. PR #1 MERGED (ae7b803 on origin/develop 2026-09-06). S-1.01 worktree setup UNBLOCKED.
+
+### STANDING HUMAN-GATE OBS
+No outstanding human gates. DEVELOP-DIVERGENCE FULLY RESOLVED (D-360). S-1.01 can start immediately. Next human-approval gate: Wave-1 completion gate.
+
+### PENDING USER-APPROVED WORK
+D-360 PRE-WAVE-1 SPEC RECONCILIATION CLOSED (2026-09-17). DEVELOP-DIVERGENCE FULLY RESOLVED. D-356/D-357 CASCADE CONVERGED AND CLOSED (2026-09-10). S-1.01 (PregolyaError in pregolya-core) — first Phase-3 TDD story, UNBLOCKED. DEV-TOOLING-D255: v1 dev-tooling expansion — ready. DTU clones (openai/anthropic/ollama): Phase-4 prerequisite; Wave-3 earliest need.

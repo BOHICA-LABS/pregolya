@@ -23,7 +23,7 @@ stories:
 
   - story_id: S-1.01
     wave: 1
-    status: spec-ready
+    status: in-progress
     bcs: [BC-2.14.001, BC-2.14.002]
     vps: []
     points: 5
