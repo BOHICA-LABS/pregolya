@@ -1,0 +1,18 @@
+error[E0004]: non-exhaustive patterns: `_` not covered
+  --> tests/ui/retry_hint_match_without_wildcard_fails.rs:16:11
+   |
+16 |     match h {
+   |           ^ pattern `_` not covered
+   |
+note: `RetryHint` defined here
+  --> src/error.rs
+   |
+   | pub enum RetryHint {
+   | ^^^^^^^^^^^^^^^^^^
+   = note: the matched value is of type `RetryHint`
+   = note: `RetryHint` is marked as non-exhaustive, so a wildcard `_` is necessary to match exhaustively
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+   |
+19 ~         pregolya_core::RetryHint::Later(_) => "later",
+20 ~         _ => todo!(),
+   |

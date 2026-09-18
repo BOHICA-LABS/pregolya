@@ -1,0 +1,10 @@
+error[E0638]: `..` required with struct marked as non-exhaustive
+  --> tests/ui/problem_detail_match_without_dots_fails.rs:13:9
+   |
+13 |     let pregolya_core::ProblemDetail { type_uri, title, detail, extensions } = pd;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: add `..` at the end of the field list to ignore all other fields
+   |
+13 |     let pregolya_core::ProblemDetail { type_uri, title, detail, extensions , .. } = pd;
+   |                                                                            ++++
