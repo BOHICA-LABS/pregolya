@@ -1,12 +1,13 @@
 ---
 document_type: spec-version-registry
 level: governance
-version: "1.0"
+version: "1.1"
 status: active
 producer: spec-steward
-timestamp: 2026-09-17T00:00:00Z
+timestamp: 2026-09-18T00:00:00Z
 baseline_event: "D-359/2026-09-17 — pre-Phase-3 reconciliation; DEVELOP-DIVERGENCE resolved; census BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22"
 changelog:
+  - "1.1 (D-362/2026-09-18, spec-steward+state-manager): Governance-cadence consistency fix — row syncs from D-360/D-361 reflected in §L3 Behavioral Contracts and §L3 Story Index table rows (BC-INDEX §Changelog (v4.61); STORY-INDEX §Changelog (v2.01)). Note: spec-steward's initial D-362 burst set STORY-INDEX row to v2.00; state-manager D-362 body edits (F1 fuzz removal, F3 BC-2.17.002 title correction) advanced STORY-INDEX to v2.01; this row updated to v2.01 in same atomic commit. Bumped version 1.0→1.1; timestamp advanced to 2026-09-18T00:00:00Z. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.0 (D-359/2026-09-17, spec-steward): Initial baseline snapshot. Aggregated from frontmatter of all living spec artifacts as of post-reconciliation state. Census: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
 ---
 
@@ -120,7 +121,7 @@ changelog:
 
 | Artifact | Version | Last Updated | Changed By |
 |----------|---------|-------------|------------|
-| stories/STORY-INDEX.md | v2.00 | 2026-09-18 | state-manager |
+| stories/STORY-INDEX.md | v2.01 | 2026-09-18 | state-manager |
 | stories/stories/STORY-NNN.md (53 files) | varies | 2026-09-10 latest | story-writer |
 
 ## L4 Verification Properties

@@ -1,7 +1,7 @@
 ---
 document_type: traceability-matrix
 level: governance
-version: "1.3"
+version: "1.4"
 status: active
 producer: spec-steward
 timestamp: 2026-09-18T00:00:00Z
@@ -11,9 +11,10 @@ inputs:
   - .factory/specs/behavioral-contracts/BC-INDEX.md
   - .factory/specs/verification-properties/VP-INDEX.md
   - .factory/stories/STORY-INDEX.md
-input-hash: "1acd327"
-baseline_event: "D-361/2026-09-18 — post-C1-fuzz-removal baseline. Sources: BC-INDEX §Changelog (v4.61) §BC-to-Story Coverage Map; STORY-INDEX §Changelog (v2.00) §VP-to-Story Anchor Map; VP-INDEX §Changelog (v1.60) §VP Catalog (unchanged)"
+input-hash: "c14c505"
+baseline_event: "D-362/2026-09-18 — post-genuine-F1-body-edit baseline. Sources: BC-INDEX §Changelog (v4.61) §BC-to-Story Coverage Map; STORY-INDEX §Changelog (v2.01) §VP-to-Story Anchor Map; VP-INDEX §Changelog (v1.60) §VP Catalog (unchanged)"
 changelog:
+  - "1.4 (D-362/2026-09-18, spec-steward+state-manager): Corrective fix-burst — SS-24 VP over-count corrected: §VP-2.24 section heading '21 VPs' → '20 VPs'; §VP-Priority-Distribution SS-24 row '(21 VPs) | 21' → '(20 VPs) | 20'. Actual VP-2.24 table contains exactly 20 rows (VP-2.24.001-A..VP-2.24.008-B). Post-fix §VP-Priority-Distribution Total=43 (P0=7, P1=36) confirmed consistent with §VP-Status-Summary. Input-hash recomputed (c14c505) after genuine F1 STORY-INDEX body edit (S-6.01 Target-Crate fuzz token actually removed; D-361/v1.3 hash 1acd327 was based on STORY-INDEX with fuzz token still present — paper-fix recompute; D-362 recompute reflects genuine content change). STORY-INDEX now v2.01. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.3 (D-361/2026-09-18, state-manager): input-hash recomputed post STORY-INDEX §Changelog D-361/C1 edit (fuzz-crate removal from S-6.01 §Wave-6-Story-Inventory Target-Crate cell). STORY-INDEX is an input per §inputs list; combined three-input hash updated to 1acd327. No VP/BC/story matrix content changed. Census UNCHANGED: BC 149 / VP 43 / stories 53."
   - "1.2 (D-361/2026-09-17, spec-steward): Confirmation-pass corrections — VP Traceability Chains table transposition errors fixed per VP-INDEX §VP Catalog (source of truth): VP-006 priority P0→P1; VP-007 priority/tool P0/Kani→P1/proptest; VP-009 priority/tool P1/proptest→P0/Kani; VP-010 priority/tool P1/proptest→P0/Kani; VP-2.24.002-A tool Kani→proptest. Forward Traceability VP-006 label P0→P1. VP Priority Distribution by Subsystem SS-16/17/18/other row corrected (P0 VP-009+VP-010; P1 VP-006+VP-006-B+VP-007+VP-008). P0=7/P1=36 aggregate confirmed correct after corrections. input-hash marked needs-refresh (state-manager to recompute on commit)."
   - "1.1 (D-360/2026-09-17, spec-steward): Input-hash refreshed post pre-Wave-1 reconciliation burst (7535fa6→c91d879). BC-INDEX §Changelog bumped (v4.60→v4.61; CV-1 Red-Gate annotation; CV-2 VP body-file count correction). STORY-INDEX §Changelog bumped (v1.98→v1.99; SS-2 SS-24 annotation; SS-3 BC-2.12.003 +S-console-10). VP-INDEX §Changelog (v1.60) unchanged. Census UNCHANGED: BC 149 / VP 43 / stories 53."
@@ -85,7 +86,7 @@ The VP-INDEX §VP Catalog (source of truth) records the full bc_anchor, module, 
 | VP-2.11.007-A | P0 | integration | BC-2.11.007 {INV-002} | graph::provenance | S-1.29 |
 | VP-2.11.007-B | P1 | integration | BC-2.11.007 {INV-005} + BC-2.04.007 {INV-006} | checkpoint::serializer | S-1.29 |
 
-### VP-2.24.001-A through VP-2.24.008-B (SS-24 Developer Console, 21 VPs)
+### VP-2.24.001-A through VP-2.24.008-B (SS-24 Developer Console, 20 VPs)
 
 | VP | Priority | Tool | BC Anchor | Module | Story |
 |----|----------|------|-----------|--------|-------|
@@ -257,7 +258,7 @@ Next drift detection run: after Wave-1 stories are delivered (Phase-3 wave-1 clo
 | SS-13 sandbox | VP-003 | — | 1 |
 | SS-16/17/18/other (injection, serializable, embeddings, vectorstores) | VP-009, VP-010 | VP-006, VP-006-B, VP-007, VP-008 | 6 |
 | SS-23 tools::shell | — | VP-013 | 1 |
-| SS-24 Developer Console | — | VP-2.24.001..008 (21 VPs) | 21 |
+| SS-24 Developer Console | — | VP-2.24.001..008 (20 VPs) | 20 |
 | Other (VP-001, VP-002, VP-004, VP-005) | VP-001, VP-002 | VP-004, VP-005 | 4 |
 
 ---
