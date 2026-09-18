@@ -3,7 +3,7 @@
 //! This module implements the two-dimensional error model at the heart of
 //! pregolya: every error is a [`PregolyaError`] characterized by two orthogonal
 //! axes — [`Component`] (which crate emitted the error) and [`Category`] (the
-//! error class). Together they uniquely locate an error in the 17 × 13
+//! error class). Together they uniquely locate an error in the 17 × 14
 //! taxonomy grid defined by ADR-010.
 //!
 //! # Key types
@@ -98,8 +98,8 @@ pub enum Component {
 
 /// Identifies the error class, independent of the originating component.
 ///
-/// 13 variants as of ADR-010 §Category Axis Expansion (D26), which added
-/// [`Category::Exec`] as the 13th category.
+/// 14 variants as of BC-2.14.001/002 v1.12, which added [`Category::Sys`]
+/// as the 14th category (OS-level syscall failure).
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Category {
@@ -129,6 +129,8 @@ pub enum Category {
     Tenancy,
     /// Concurrent branch or subtask execution failure (library-layer only; added by D26).
     Exec,
+    /// OS-level syscall failure (path resolution, process control, IPC).
+    Sys,
 }
 
 // ─── RetryHint ───────────────────────────────────────────────────────────────
@@ -244,6 +246,7 @@ impl PregolyaError {
             Category::Durability => 500,
             Category::Internal => 500,
             Category::Exec => 500, // D26: INTERNAL-tier fallback per ADR-010 §Category Axis Expansion
+            Category::Sys => 500,  // BC-2.14.001/002 v1.12: INTERNAL-tier; OS syscall failure
         }
     }
 }
@@ -341,6 +344,7 @@ fn category_title(category: &Category) -> &'static str {
         Category::Security => "Security",
         Category::Tenancy => "Tenancy",
         Category::Exec => "Execution",
+        Category::Sys => "System",
     }
 }
 
@@ -458,7 +462,8 @@ mod tests {
 
     /// AC-003 (traces to BC-2.14.001 {PC-003})
     ///
-    /// Exhaustive match on all 13 `Category` variants (including `Exec` added by D26).
+    /// Exhaustive match on all 14 `Category` variants (including `Exec` added by D26
+    /// and `Sys` added by BC-2.14.001/002 v1.12).
     #[test]
     fn test_BC_2_14_001_category_axis() {
         let _verify_exhaustive = |c: Category| -> u8 {
@@ -476,10 +481,12 @@ mod tests {
                 Category::Security => 10,
                 Category::Tenancy => 11,
                 Category::Exec => 12, // D26 addition
+                Category::Sys => 13,  // BC-2.14.001/002 v1.12 addition
             }
         };
         assert_eq!(_verify_exhaustive(Category::Val), 0);
         assert_eq!(_verify_exhaustive(Category::Exec), 12); // 13th variant (0-indexed)
+        assert_eq!(_verify_exhaustive(Category::Sys), 13); // 14th variant (0-indexed)
     }
 
     /// AC-004 (traces to BC-2.14.001 {PC-004})
@@ -704,11 +711,12 @@ mod tests {
             (Category::Internal, 500),
             (Category::Tool, 422),
             (Category::Exec, 500), // D26: INTERNAL-tier fallback
+            (Category::Sys, 500),  // BC-2.14.001/002 v1.12: INTERNAL-tier; OS syscall failure
         ];
         assert_eq!(
             cases.len(),
-            13,
-            "parameterized test must cover all 13 Category variants"
+            14,
+            "parameterized test must cover all 14 Category variants"
         );
         for (category, expected_status) in cases {
             let err = PregolyaError {
@@ -948,11 +956,12 @@ mod tests {
             Category::Security,
             Category::Tenancy,
             Category::Exec,
+            Category::Sys,
         ];
         assert_eq!(
             all_categories.len(),
-            13,
-            "must cover all 13 Category variants"
+            14,
+            "must cover all 14 Category variants"
         );
         for cat in &all_categories {
             let err = PregolyaError {
@@ -966,5 +975,31 @@ mod tests {
             let status = err.http_status();
             assert_ne!(status, 200, "Category {:?} must not return 200", cat);
         }
+    }
+
+    /// BC-2.14.001/002 v1.12 — Sys category: `to_problem()` yields title "System"
+    /// and `http_status()` yields 500 (INTERNAL-tier; INV-001 no-200 guarantee).
+    #[test]
+    fn test_BC_2_14_001_002_sys_category() {
+        let err = PregolyaError {
+            component: Component::Core,
+            category: Category::Sys,
+            retry_hint: RetryHint::Maybe,
+            code: "E-CORE-014".into(),
+            message: "syscall failed: ENOENT".into(),
+            source: None,
+        };
+        // http_status must be 500 (INTERNAL-tier); must NOT be 200 (INV-001)
+        let status = err.http_status();
+        assert_eq!(status, 500, "Category::Sys must map to HTTP 500");
+        assert_ne!(status, 200, "Category::Sys must not return 200 (INV-001)");
+        // to_problem() title must be "System"
+        let problem = err.to_problem();
+        assert_eq!(
+            problem.title, "System",
+            "Category::Sys title must be 'System'"
+        );
+        assert_eq!(problem.type_uri, "urn:pregolya:error:E-CORE-014");
+        assert_eq!(problem.extensions.retry_hint, "maybe");
     }
 }
