@@ -45,12 +45,14 @@ fn main() {
 // Shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Returns true when `path` identifies a test-only file.
+/// Returns true when `path` identifies a non-production file (tests or examples).
 ///
 /// Matches:
 /// - Files named `tests.rs` (any directory depth, e.g. `src/tests.rs`)
 /// - Files ending with `_test.rs` or `_tests.rs`
 /// - Files under a `tests/` directory component (e.g. `crates/foo/tests/integration.rs`)
+/// - Files under an `examples/` directory component (demonstration executables, not
+///   library code; permitted to use `.expect()` and `println!` for clarity)
 ///
 /// Does NOT use `.contains("test")` substring matching, which would
 /// incorrectly suppress production files in crates whose names contain
@@ -61,6 +63,7 @@ fn is_test_file(path: &str) -> bool {
         || path.contains("/tests/")
         || path.ends_with("_test.rs")
         || path.ends_with("_tests.rs")
+        || path.contains("/examples/")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

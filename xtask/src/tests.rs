@@ -192,6 +192,15 @@ fn test_is_test_file_patterns() {
     // Must NOT flag arbitrary files that happen to have "test" in a directory name
     // other than a `tests/` component.
     assert!(!is_test_file("crates/pregolya-core/src/latest.rs"));
+
+    // Must exclude examples/ — demonstration executables are not library code
+    // and may legitimately use .expect() and println! for clarity.
+    assert!(is_test_file(
+        "crates/pregolya-core/examples/error_taxonomy_demo.rs"
+    ));
+    assert!(is_test_file(
+        "crates/pregolya-graph/examples/basic_graph.rs"
+    ));
 }
 
 // ── B-2 regression tests ─────────────────────────────────────────────────
