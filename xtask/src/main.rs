@@ -70,13 +70,95 @@ fn is_test_file(path: &str) -> bool {
 // check-file-size
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Count lines inside `#[cfg(test)] mod ...` blocks so they can be excluded
+/// from the production code-line count (CLAUDE.md §File size & module splitting).
+///
+/// CLAUDE.md specifies: "blanks, comments, doc-comments, `#[cfg(test)] mod` blocks,
+/// and generated code excluded from the count." This function counts lines belonging
+/// to `#[cfg(test)] mod` blocks (including the attribute line, any intervening
+/// attributes, and the closing brace), so they can be subtracted from tokei's Code
+/// count before applying the production file size thresholds.
+///
+/// Handles intervening attributes between `#[cfg(test)]` and `mod` (e.g.
+/// `#[allow(clippy::unwrap_used)]` inserted between the cfg attribute and the mod
+/// declaration — a common pattern in test modules).
+fn count_cfg_test_lines(path: &std::path::Path) -> usize {
+    let Ok(content) = std::fs::read_to_string(path) else {
+        return 0;
+    };
+    let mut count = 0usize;
+    let mut in_cfg_test = false;
+    let mut depth = 0i32;
+    // When true, we've seen #[cfg(test)] and are waiting for `mod` (possibly
+    // after intervening attribute lines like #[allow(...)]).
+    let mut pending_cfg_test = false;
+    // Lines accumulated while pending_cfg_test is true (to be added to count
+    // only if we confirm a `mod` follows).
+    let mut pending_count = 0usize;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+
+        if !in_cfg_test {
+            if trimmed == "#[cfg(test)]" || trimmed.starts_with("#[cfg(test)]") {
+                // Start accumulating lines for a potential cfg(test) block
+                pending_cfg_test = true;
+                pending_count = 1; // count this attribute line
+                continue;
+            }
+            if pending_cfg_test {
+                if trimmed.starts_with("mod ") || trimmed.starts_with("pub mod ") {
+                    // Confirmed: commit accumulated lines plus this mod line
+                    count += pending_count + 1;
+                    pending_cfg_test = false;
+                    pending_count = 0;
+                    in_cfg_test = true;
+                    for ch in line.chars() {
+                        match ch {
+                            '{' => depth += 1,
+                            '}' => depth -= 1,
+                            _ => {}
+                        }
+                    }
+                    if depth <= 0 {
+                        in_cfg_test = false;
+                        depth = 0;
+                    }
+                    continue;
+                } else if trimmed.starts_with('#') {
+                    // Another attribute (e.g. #[allow(...)]) — keep accumulating
+                    pending_count += 1;
+                    continue;
+                } else {
+                    // Non-attribute, non-mod line — this is not a cfg(test) mod block
+                    pending_cfg_test = false;
+                    pending_count = 0;
+                }
+            }
+        } else {
+            count += 1;
+            for ch in line.chars() {
+                match ch {
+                    '{' => depth += 1,
+                    '}' => depth -= 1,
+                    _ => {}
+                }
+            }
+            if depth <= 0 {
+                in_cfg_test = false;
+                depth = 0;
+            }
+        }
+    }
+    count
+}
+
 fn check_file_size() {
-    // NOTE: tokei counts ALL code-lines in a file (including #[cfg(test)] blocks
-    // that are inline in production files).  The test-file thresholds (1000/1500)
-    // apply only to files under `tests/` or ending with `_test.rs` / `_tests.rs`.
-    // Inline test modules contribute to the production file's code count — this is
-    // intentional: a production file whose inline tests push it over the
-    // production hard gate (750 lines) should be split anyway.
+    // Implements CLAUDE.md §File size: "#[cfg(test)] mod blocks...excluded from the count."
+    // For production files, the raw tokei Code count is adjusted by subtracting
+    // lines inside `#[cfg(test)] mod` blocks (see count_cfg_test_lines).
+    // Test files (under tests/ or ending with _test.rs/_tests.rs) use the higher
+    // test-file thresholds (1000/1500) without adjustment.
     //
     // Exclusions (auto-skipped in post-processing):
     //   *.gen.rs          — generated code, not subject to size gate
@@ -129,6 +211,7 @@ fn check_file_size() {
     let mut violations: Vec<String> = Vec::new();
     let mut warnings: Vec<String> = Vec::new();
     let mut files_measured: usize = 0;
+    let mut files_skipped: usize = 0;
 
     // F2 fix: exit with diagnostic when tokei found no Rust files or has empty reports.
     let rust = match json.get("Rust") {
@@ -176,6 +259,7 @@ fn check_file_size() {
         }
 
         if allowlist.is_allowed(name) {
+            files_skipped += 1;
             continue;
         }
 
@@ -188,13 +272,24 @@ fn check_file_size() {
             (prod_soft, prod_hard)
         };
 
-        if code > hard {
+        // For production files, subtract inline #[cfg(test)] block lines from the
+        // tokei Code count per CLAUDE.md §File size: "#[cfg(test)] mod blocks...
+        // excluded from the count."  Test files already use the test thresholds so
+        // no adjustment is applied to them.
+        let adjusted_code = if !is_test {
+            let cfg_test_lines = count_cfg_test_lines(std::path::Path::new(name));
+            code.saturating_sub(cfg_test_lines as u64)
+        } else {
+            code
+        };
+
+        if adjusted_code > hard {
             violations.push(format!(
-                "HARD GATE FAIL: {name} has {code} code lines (limit: {hard})"
+                "HARD GATE FAIL: {name} has {adjusted_code} code lines (limit: {hard})"
             ));
-        } else if code > soft {
+        } else if adjusted_code > soft {
             warnings.push(format!(
-                "soft warning: {name} has {code} code lines (soft limit: {soft})"
+                "soft warning: {name} has {adjusted_code} code lines (soft limit: {soft})"
             ));
         }
     }
@@ -213,8 +308,12 @@ fn check_file_size() {
         exit(1);
     }
 
+    assert!(
+        files_measured > 0,
+        "check-file-size: scanned 0 files — gate is vacuously true; check that crates/ exists and contains Rust source files"
+    );
     println!(
-        "check-file-size PASSED ({} warnings, {files_measured} files measured).",
+        "check-file-size PASSED ({} warnings, {files_measured} files measured, {files_skipped} allowlisted).",
         warnings.len()
     );
 }
@@ -789,6 +888,7 @@ fn walk_anyhow_tokens(
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn deny_description_cache_key() {
+    let mut lines_scanned: usize = 0;
     for pattern in &["cache_key", "CacheKey", "cache_key_for"] {
         let output = Command::new("grep")
             .args(["-rn", "--include=*.rs", pattern, "crates/"])
@@ -806,9 +906,12 @@ fn deny_description_cache_key() {
                     exit(1);
                 }
                 let stdout = String::from_utf8_lossy(&o.stdout);
+                let candidate_lines: Vec<&str> = stdout.lines().collect();
+                lines_scanned += candidate_lines.len();
                 // Only flag if it looks like description-proxy usage
-                let findings: Vec<&str> = stdout
-                    .lines()
+                let findings: Vec<&str> = candidate_lines
+                    .iter()
+                    .copied()
                     .filter(|l| l.contains("description") || l.contains("Description"))
                     .collect();
                 if !findings.is_empty() {
@@ -826,7 +929,9 @@ fn deny_description_cache_key() {
             }
         }
     }
-    println!("deny-description-cache-key PASSED.");
+    println!(
+        "deny-description-cache-key PASSED: {lines_scanned} candidate lines scanned across 3 patterns, 0 violations."
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -840,6 +945,7 @@ struct AllowList {
 }
 
 #[derive(serde::Deserialize)]
+#[cfg_attr(test, derive(Default))]
 struct AllowEntry {
     path: String,
     #[allow(dead_code)]
@@ -870,7 +976,28 @@ impl AllowList {
 fn load_allowlist() -> AllowList {
     match std::fs::read_to_string("xtask/file-size-allowlist.toml") {
         Ok(content) => match toml::from_str::<AllowList>(&content) {
-            Ok(a) => a,
+            Ok(a) => {
+                // Validate all entry paths to prevent over-broad matching.
+                for entry in &a.allow {
+                    if !entry.path.starts_with("crates/") && !entry.path.starts_with("xtask/") {
+                        eprintln!(
+                            "ERROR: file-size-allowlist.toml: entry path {:?} must start with \
+                             'crates/' or 'xtask/' (bare filenames match multiple crates)",
+                            entry.path
+                        );
+                        exit(1);
+                    }
+                    if entry.path.matches('/').count() < 2 {
+                        eprintln!(
+                            "ERROR: file-size-allowlist.toml: entry path {:?} is too shallow \
+                             (bare filename would match multiple crates — use a full workspace-relative path)",
+                            entry.path
+                        );
+                        exit(1);
+                    }
+                }
+                a
+            }
             Err(e) => {
                 eprintln!(
                     "ERROR: xtask/file-size-allowlist.toml is malformed and cannot be parsed: {e}"

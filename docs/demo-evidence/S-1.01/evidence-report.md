@@ -46,9 +46,9 @@ acceptance-criterion group and recording the output with VHS.
 **Note on AC-005 and AC-006:** These are compile-time assertions (`static_assertions::assert_impl_all!` and
 `static_assertions::assert_not_impl_any!`) placed at module level in `pregolya-core/src/error.rs`. Their
 "recording" is the passing test suite — they fail at compile time if the invariant is violated, leaving no
-runtime output to capture. The test `test_BC_2_14_001_not_default` is a runtime no-op whose compile-time
-enforcement is the module-level assertion. Runtime demo is not meaningful here; the compile-time enforcement
-is by definition shown whenever the test suite builds and passes.
+runtime output to capture.
+
+AC-006 (Default not implemented): enforced at compile time by `static_assertions::assert_not_impl_any!(PregolyaError: Default)` at module scope in `pregolya-core/src/error.rs`. No runtime test is needed or present; the compile-time assertion is the sole enforcement mechanism. Runtime demo is not meaningful here; the compile-time enforcement is by definition shown whenever the test suite builds and passes.
 
 ---
 

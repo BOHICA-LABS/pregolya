@@ -203,8 +203,18 @@ impl PregolyaError {
         let code = code.into();
         let message = message.into();
         debug_assert!(
-            code.starts_with("E-"),
-            "error code must follow E-COMPONENT-NNN format, got: {code:?}"
+            {
+                let parts: Vec<&str> = code.splitn(3, '-').collect();
+                parts.len() == 3
+                    && parts[0] == "E"
+                    && !parts[1].is_empty()
+                    && parts[1]
+                        .chars()
+                        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
+                    && parts[2].len() == 3
+                    && parts[2].chars().all(|c| c.is_ascii_digit())
+            },
+            "error code must follow E-COMPONENT-NNN format (uppercase alnum component, 3-digit numeric suffix), got: {code:?}"
         );
         Self {
             component,
@@ -382,7 +392,7 @@ fn retry_hint_str(hint: &RetryHint) -> String {
             // remains the sole source of "later:0" (the retry-immediately sentinel).
             // A 900ms wait would truncate to "later:0" without this fix (F3).
             let secs = if d.subsec_nanos() > 0 {
-                d.as_secs() + 1
+                d.as_secs().saturating_add(1)
             } else {
                 d.as_secs()
             };
@@ -971,6 +981,34 @@ mod tests {
         );
     }
 
+    /// HIGH-001 regression: Duration::MAX must not overflow with saturating_add.
+    ///
+    /// Before the fix, `d.as_secs() + 1` on Duration::MAX panicked in debug mode.
+    /// After the fix, `saturating_add(1)` on `u64::MAX` returns `u64::MAX`.
+    #[test]
+    fn test_BC_2_14_002_retry_hint_duration_max_no_overflow() {
+        // Duration::MAX: as_secs() = u64::MAX = 18446744073709551615, subsec_nanos() = 999_999_999
+        // saturating_add(1) on u64::MAX must return u64::MAX (not wrap to 0)
+        let err = PregolyaError {
+            component: Component::Prov,
+            category: Category::Rate,
+            retry_hint: RetryHint::Later(Duration::MAX),
+            code: "E-PROV-099".into(),
+            message: "duration max test".into(),
+            source: None,
+        };
+        let prob = err.to_problem();
+        let hint = &prob.extensions.retry_hint;
+        assert_eq!(
+            hint, "later:18446744073709551615",
+            "Duration::MAX must produce later:u64::MAX (saturating_add), not wrap to 0"
+        );
+        assert_ne!(
+            hint, "later:0",
+            "Duration::MAX must not collide with retry-immediately sentinel"
+        );
+    }
+
     /// AC-015 (traces to BC-2.14.001 {INV-003})
     ///
     /// `err.code` is preserved immutably through `to_problem()`. The `type_uri`
@@ -1118,6 +1156,122 @@ mod tests {
             };
             let status = err.http_status();
             assert_ne!(status, 200, "Category {:?} must not return 200", cat);
+        }
+    }
+
+    /// MED-003: debug_assert rejects malformed code — "E-" only has no component segment.
+    #[test]
+    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_rejects_malformed_code() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-",
+            "test",
+        );
+    }
+
+    /// MED-003: debug_assert rejects lowercase component segment.
+    #[test]
+    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_rejects_lowercase_component() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-core-001",
+            "test",
+        );
+    }
+
+    /// MED-002: Exhaustive table-driven test for all 18 Component variants → expected
+    /// `extensions.component` string emitted by `component_lowercase`.
+    #[test]
+    fn test_BC_2_14_002_component_mapping_exhaustive() {
+        use std::collections::HashSet;
+        // Table: (Component, expected extensions.component string)
+        let cases: &[(Component, &str)] = &[
+            (Component::Core, "core"),
+            (Component::Graph, "graph"),
+            (Component::Chkpt, "chkpt"),
+            (Component::Server, "server"),
+            (Component::Prov, "prov"),
+            (Component::Mcp, "mcp"),
+            (Component::Split, "split"),
+            (Component::Sbxd, "sbxd"),
+            (Component::Retry, "retry"),
+            (Component::Cron, "cron"),
+            (Component::Memory, "memory"),
+            (Component::Budget, "budget"),
+            (Component::Tmpl, "tmpl"),
+            (Component::Srlz, "srlz"),
+            (Component::Vs, "vs"),
+            (Component::Embed, "embed"),
+            (Component::Tools, "tools"),
+            (Component::Custom("newcrate".to_string()), "newcrate"),
+        ];
+        assert_eq!(cases.len(), 18, "must cover all 18 Component variants");
+        let mut seen: HashSet<&str> = HashSet::new();
+        for (comp, expected) in cases {
+            let err = PregolyaError {
+                code: "E-TEST-001".to_string(),
+                component: comp.clone(),
+                category: Category::Internal,
+                message: "test".to_string(),
+                retry_hint: RetryHint::Never,
+                source: None,
+            };
+            let prob = err.to_problem();
+            assert_eq!(
+                prob.extensions.component, *expected,
+                "Component::{comp:?} must map to {expected:?}"
+            );
+            assert!(seen.insert(*expected), "duplicate mapping: {expected:?}");
+        }
+    }
+
+    /// MED-002: Exhaustive table-driven test for all 14 Category variants → expected
+    /// `title` string emitted by `category_title`.
+    #[test]
+    fn test_BC_2_14_002_category_title_exhaustive() {
+        use std::collections::HashSet;
+        // Table: (Category, expected problem.title string)
+        let cases: &[(Category, &str)] = &[
+            (Category::Val, "Validation"),
+            (Category::Auth, "Authentication"),
+            (Category::Rate, "Rate Limit"),
+            (Category::Timeout, "Timeout"),
+            (Category::Transport, "Transport"),
+            (Category::Internal, "Internal"),
+            (Category::Durability, "Durability"),
+            (Category::Policy, "Policy"),
+            (Category::Tool, "Tool"),
+            (Category::Concurrency, "Concurrency"),
+            (Category::Security, "Security"),
+            (Category::Tenancy, "Tenancy"),
+            (Category::Exec, "Execution"),
+            (Category::Sys, "System"),
+        ];
+        assert_eq!(cases.len(), 14, "must cover all 14 Category variants");
+        let mut seen: HashSet<&str> = HashSet::new();
+        for (cat, expected) in cases {
+            let err = PregolyaError {
+                code: "E-TEST-001".to_string(),
+                component: Component::Core,
+                category: cat.clone(),
+                message: "test".to_string(),
+                retry_hint: RetryHint::Never,
+                source: None,
+            };
+            let prob = err.to_problem();
+            assert_eq!(
+                prob.title, *expected,
+                "Category::{cat:?} must map to title {expected:?}"
+            );
+            assert!(seen.insert(*expected), "duplicate title: {expected:?}");
         }
     }
 

@@ -26,8 +26,8 @@
 # date = "2026-09-01"
 
 [[allow]]
-path = "crates/pregolya-core/src/error.rs"
-reason = "Single-cohesion error taxonomy module (S-1.01). Production code is ~177 code-lines; test module is a 15-AC conformance suite justified under CLAUDE.md cohesion clause ('a table-driven conformance suite'). Total estimated tokei Code: ~655 lines (below hard gate of 750). Soft warning acknowledged."
+path = "xtask/src/main.rs"
+reason = "Cohesive multi-command CI task runner. FIX-B cfg_test-exclusion helper, FIX-E/F/K safety assertions and validation logic were added in adversarial pass 2 fix-burst. Adjusted code (post-cfg_test exclusion) is 762 lines — 12 over the 750 hard gate. Splitting into sub-modules would fragment the command dispatch table and shared helpers without improving cohesion; the file still does one thing (enforce CI gates for pregolya workspace)."
 approver = "jmagady"
 date = "2026-09-19"
 

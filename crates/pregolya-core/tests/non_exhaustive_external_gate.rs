@@ -144,130 +144,119 @@ fn test_non_exhaustive_inventory_matches_source() {
     println!("non_exhaustive gate: {} types validated", actual_count);
 }
 
-// ── PregolyaError (struct) ────────────────────────────────────────────────────
+// ── MED-007: Glob-based gate — every pub type must have #[non_exhaustive] ─────
 
-/// AC-007 (BC-2.14.001 {PC-008}): Attempting to match `PregolyaError` from
-/// an external crate WITHOUT the `..` wildcard MUST FAIL TO COMPILE.
+/// MED-007: Walks `src/` to find all `pub enum` and `pub struct` declarations
+/// and asserts each one is immediately preceded by `#[non_exhaustive]`.
 ///
-/// rustc E0638: `..` required with struct marked as non-exhaustive.
+/// This is stronger than the count-based `test_non_exhaustive_inventory_matches_source`:
+/// the count gate detects adding a `#[non_exhaustive]` attribute without updating the
+/// constant, but it cannot detect adding a `pub struct`/`pub enum` WITHOUT the
+/// `#[non_exhaustive]` attribute. This glob-based gate closes that gap.
 #[test]
-fn test_BC_2_14_001_non_exhaustive_external_match_without_dots_fails() {
+fn test_all_pub_types_have_non_exhaustive() {
+    use std::path::Path;
+
+    let mut violations: Vec<String> = Vec::new();
+    let mut pub_types_found = 0usize;
+
+    fn walk_src(dir: &Path, violations: &mut Vec<String>, count: &mut usize) {
+        let entries = std::fs::read_dir(dir).expect("read src/");
+        for entry in entries {
+            let entry = entry.expect("dir entry");
+            let path = entry.path();
+            if path.is_dir() {
+                walk_src(&path, violations, count);
+            } else if path.extension().is_some_and(|e| e == "rs") {
+                check_file_for_non_exhaustive(&path, violations, count);
+            }
+        }
+    }
+
+    fn check_file_for_non_exhaustive(path: &Path, violations: &mut Vec<String>, count: &mut usize) {
+        let content = std::fs::read_to_string(path).expect("read file");
+        let lines: Vec<&str> = content.lines().collect();
+        for (i, line) in lines.iter().enumerate() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("pub enum ") || trimmed.starts_with("pub struct ") {
+                *count += 1;
+                // Walk backwards through preceding non-blank lines to find #[non_exhaustive]
+                let has_attr = (0..i)
+                    .rev()
+                    .map(|j| lines[j].trim())
+                    .take_while(|l| !l.is_empty())
+                    .any(|l| l == "#[non_exhaustive]" || l.starts_with("#[non_exhaustive]"));
+                if !has_attr {
+                    violations.push(format!(
+                        "{}:{}: `{}` lacks #[non_exhaustive]",
+                        path.display(),
+                        i + 1,
+                        trimmed
+                    ));
+                }
+            }
+        }
+    }
+
+    // Cargo runs integration tests with cwd = package root (crates/pregolya-core/).
+    walk_src(Path::new("src"), &mut violations, &mut pub_types_found);
+
+    assert!(
+        pub_types_found > 0,
+        "expected to find at least 1 pub type in src/; count=0 suggests the glob is broken"
+    );
+    assert!(
+        violations.is_empty(),
+        "pub types missing #[non_exhaustive] (CI failure = type added without attribute):\n{}",
+        violations.join("\n")
+    );
+}
+
+// ── AC-007 compile-fail / compile-pass trybuild fixtures ─────────────────────
+//
+// All 12 fixture registrations are consolidated into a single `ui()` test to
+// avoid spawning 12 independent trybuild processes (LOW-001 finding from adv
+// pass-2). The `TestCases` object batches all fixtures into one compilation run.
+//
+// Per-type documentation preserved as comments for AC-007 traceability.
+
+/// AC-007 (BC-2.14.001 {PC-008}): Compile-fail and compile-pass gate for all
+/// 6 `#[non_exhaustive]` types in `pregolya-core`.
+///
+/// Fixtures are registered in type order: PregolyaError → ProblemDetail →
+/// ProblemExtensions → Component → Category → RetryHint.
+///
+/// - Structs: `..` wildcard required from external crate (E0638)
+/// - Enums: wildcard `_` arm required from external crate (E0004)
+///
+/// Trybuild compiles each fixture as an independent binary importing
+/// `pregolya_core` as an external dependency, reproducing the external-crate
+/// boundary.
+#[test]
+fn ui() {
     let t = trybuild::TestCases::new();
-    // This fixture must produce a compile error (E0638).
+
+    // PregolyaError (struct): E0638 — `..` required with non-exhaustive struct
     t.compile_fail("tests/ui/pregolya_error_match_without_dots_fails.rs");
-}
-
-/// AC-007 (BC-2.14.001 {PC-008}): Matching `PregolyaError` from an external
-/// crate WITH the `..` wildcard MUST COMPILE SUCCESSFULLY.
-///
-/// Proves the boundary precisely: only the missing `..` causes the error.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_external_match_with_dots_passes() {
-    let t = trybuild::TestCases::new();
-    // This fixture must compile without errors.
     t.pass("tests/ui/pregolya_error_match_with_dots_passes.rs");
-}
 
-// ── ProblemDetail (struct) ────────────────────────────────────────────────────
-
-/// AC-007 (BC-2.14.001 {PC-008}): Attempting to match `ProblemDetail` from
-/// an external crate WITHOUT the `..` wildcard MUST FAIL TO COMPILE.
-///
-/// rustc E0638: `..` required with struct marked as non-exhaustive.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_problem_detail_without_dots_fails() {
-    let t = trybuild::TestCases::new();
+    // ProblemDetail (struct): E0638
     t.compile_fail("tests/ui/problem_detail_match_without_dots_fails.rs");
-}
-
-/// AC-007 (BC-2.14.001 {PC-008}): Matching `ProblemDetail` from an external
-/// crate WITH the `..` wildcard MUST COMPILE SUCCESSFULLY.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_problem_detail_with_dots_passes() {
-    let t = trybuild::TestCases::new();
     t.pass("tests/ui/problem_detail_match_with_dots_passes.rs");
-}
 
-// ── ProblemExtensions (struct) ────────────────────────────────────────────────
-
-/// AC-007 (BC-2.14.001 {PC-008}): Attempting to match `ProblemExtensions` from
-/// an external crate WITHOUT the `..` wildcard MUST FAIL TO COMPILE.
-///
-/// rustc E0638: `..` required with struct marked as non-exhaustive.
-/// `ProblemExtensions` is at `pregolya_core::error::ProblemExtensions`.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_problem_extensions_without_dots_fails() {
-    let t = trybuild::TestCases::new();
+    // ProblemExtensions (struct): E0638 — at pregolya_core::error::ProblemExtensions
     t.compile_fail("tests/ui/problem_extensions_match_without_dots_fails.rs");
-}
-
-/// AC-007 (BC-2.14.001 {PC-008}): Matching `ProblemExtensions` from an external
-/// crate WITH the `..` wildcard MUST COMPILE SUCCESSFULLY.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_problem_extensions_with_dots_passes() {
-    let t = trybuild::TestCases::new();
     t.pass("tests/ui/problem_extensions_match_with_dots_passes.rs");
-}
 
-// ── Component (enum) ─────────────────────────────────────────────────────────
-
-/// AC-007 (BC-2.14.001 {PC-008}): Attempting to match `Component` from
-/// an external crate WITHOUT a wildcard `_ => {}` arm MUST FAIL TO COMPILE.
-///
-/// Even when all currently-defined variants are listed, the compiler requires
-/// a wildcard for non-exhaustive enums outside the defining crate (E0004).
-#[test]
-fn test_BC_2_14_001_non_exhaustive_component_without_wildcard_fails() {
-    let t = trybuild::TestCases::new();
+    // Component (enum): E0004 — wildcard `_ => {}` arm required
     t.compile_fail("tests/ui/component_match_without_wildcard_fails.rs");
-}
-
-/// AC-007 (BC-2.14.001 {PC-008}): Matching `Component` from an external crate
-/// WITH a wildcard `_ => {}` arm MUST COMPILE SUCCESSFULLY.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_component_with_wildcard_passes() {
-    let t = trybuild::TestCases::new();
     t.pass("tests/ui/component_match_with_wildcard_passes.rs");
-}
 
-// ── Category (enum) ──────────────────────────────────────────────────────────
-
-/// AC-007 (BC-2.14.001 {PC-008}): Attempting to match `Category` from
-/// an external crate WITHOUT a wildcard `_ => {}` arm MUST FAIL TO COMPILE.
-///
-/// Even when all currently-defined variants are listed, the compiler requires
-/// a wildcard for non-exhaustive enums outside the defining crate (E0004).
-#[test]
-fn test_BC_2_14_001_non_exhaustive_category_without_wildcard_fails() {
-    let t = trybuild::TestCases::new();
+    // Category (enum): E0004
     t.compile_fail("tests/ui/category_match_without_wildcard_fails.rs");
-}
-
-/// AC-007 (BC-2.14.001 {PC-008}): Matching `Category` from an external crate
-/// WITH a wildcard `_ => {}` arm MUST COMPILE SUCCESSFULLY.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_category_with_wildcard_passes() {
-    let t = trybuild::TestCases::new();
     t.pass("tests/ui/category_match_with_wildcard_passes.rs");
-}
 
-// ── RetryHint (enum) ─────────────────────────────────────────────────────────
-
-/// AC-007 (BC-2.14.001 {PC-008}): Attempting to match `RetryHint` from
-/// an external crate WITHOUT a wildcard `_ => {}` arm MUST FAIL TO COMPILE.
-///
-/// Even when all currently-defined variants are listed, the compiler requires
-/// a wildcard for non-exhaustive enums outside the defining crate (E0004).
-#[test]
-fn test_BC_2_14_001_non_exhaustive_retry_hint_without_wildcard_fails() {
-    let t = trybuild::TestCases::new();
+    // RetryHint (enum): E0004
     t.compile_fail("tests/ui/retry_hint_match_without_wildcard_fails.rs");
-}
-
-/// AC-007 (BC-2.14.001 {PC-008}): Matching `RetryHint` from an external crate
-/// WITH a wildcard `_ => {}` arm MUST COMPILE SUCCESSFULLY.
-#[test]
-fn test_BC_2_14_001_non_exhaustive_retry_hint_with_wildcard_passes() {
-    let t = trybuild::TestCases::new();
     t.pass("tests/ui/retry_hint_match_with_wildcard_passes.rs");
 }

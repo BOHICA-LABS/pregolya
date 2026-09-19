@@ -533,3 +533,63 @@ fn test_deny_anyhow_skips_examples_files() {
         "examples-file paths must be excluded from anyhow scan; got: {findings:?}"
     );
 }
+
+// ── AllowList unit tests ──────────────────────────────────────────────────────
+
+/// Exact match: the allowlist entry path exactly matches the input path.
+#[test]
+fn test_allowlist_exact_match() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/bar.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(al.is_allowed("crates/foo/src/bar.rs"));
+}
+
+/// Suffix match: an absolute path ending with the workspace-relative path is allowed.
+#[test]
+fn test_allowlist_path_prefix_match() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/bar.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(al.is_allowed("/workspace/crates/foo/src/bar.rs"));
+}
+
+/// Sibling crate must NOT be matched by an entry for a different crate's file.
+#[test]
+fn test_allowlist_sibling_crate_not_matched() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/error.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(
+        !al.is_allowed("crates/bar/src/error.rs"),
+        "sibling crate must not match"
+    );
+}
+
+/// A completely unrelated path must not match any allowlist entry.
+#[test]
+fn test_allowlist_unrelated_path_not_matched() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/error.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(!al.is_allowed("crates/totally/different/file.rs"));
+}
+
+/// Empty allowlist allows nothing.
+#[test]
+fn test_allowlist_empty_allows_nothing() {
+    let al = AllowList { allow: vec![] };
+    assert!(!al.is_allowed("crates/foo/src/bar.rs"));
+}

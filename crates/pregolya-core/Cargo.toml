@@ -8,13 +8,7 @@ repository.workspace = true
 publish = false
 
 [dependencies]
-pregolya-macros = { path = "../pregolya-macros" }
-async-trait = { workspace = true }
 serde = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
-schemars = { workspace = true }
 
 [dev-dependencies]
 # Compile-time trait bound assertions (AC-005, AC-006 / VP-BC214001-02)
