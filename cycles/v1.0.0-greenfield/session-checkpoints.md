@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "2.6"
+version: "2.7"
 changelog:
+  - "2.7 (D-368/2026-09-19): D-367 session-wrap checkpoint archived"
   - "2.6 (D-356/DC-40 fix-burst/2026-09-09): D-356/DC-39 checkpoint archived"
   - "2.5 (D-356/DC-34 fix-burst/2026-09-08): D-356/DC-33 checkpoint archived"
   - "2.4 (D-356/DC-33 fix-burst/2026-09-08): D-356/DC-32 checkpoint archived"
@@ -16,7 +17,7 @@ changelog:
   - "1.6 (D-324/round-47/2026-08-30): D-323 checkpoint archived"
 status: archive
 producer: state-manager
-timestamp: 2026-09-01T23:45:00Z
+timestamp: 2026-09-19T00:00:00Z
 cycle: v1.0.0-greenfield
 inputs: [STATE.md]
 input-hash: "509af18"
@@ -5022,3 +5023,38 @@ pregolya Phase-2 CONVERGED+gate-APPROVED (anchor 81d16ca); D-356/D-357 spec-amen
 
 ### DECISION-LOG DELTA (at D-366)
 D-365 (2026-09-17): S-1.01 LOCAL adversary re-pass = RECORDS-ONLY (1 OBS). BC-2.14.002 EC-005 restated to compile-time exhaustiveness; BC-2.14.002→v1.13. BC-INDEX→v4.63; spec-versions→v1.3; traceability-matrix→v1.6. streak NOT reset (records-only), remains 0/3. CLEAN(PR-merge)=yes on feature/S-1.01 aae3e19. Census UNCHANGED. D-366 (2026-09-18): S-1.01 LOCAL adversary pass = RECORDS-ONLY (1 OBS). BC-2.14.002 {INV-004}/§Architecture Anchors prose precision corrected; BC-2.14.002→v1.14. BC-INDEX→v4.64; spec-versions→v1.4; traceability-matrix→v1.7 (8037015→3afcdd8). streak NOT reset (records-only), remains 0/3. CLEAN(PR-merge)=yes on feature/S-1.01 15158ee. Census UNCHANGED.
+
+## D-367 Session Checkpoint (archived from STATE.md — D-368 session-resume 2026-09-19)
+
+<!-- Archived at D-368 session-resume; replaced by D-368 checkpoint in STATE.md. -->
+
+### RESUME IN ONE BREATH
+pregolya Phase-3 TDD Wave-1 IN PROGRESS. S-1.01 BC-5.39.001 LOCAL 3-CLEAN CONVERGED 3/3 on frozen HEAD 1443d3d (passes a3dab4/a6620b/ac3b6e all CLEAN(strict)). trajectory-tail →1→0→0→0 (D-366 OBS-1 + 3xCLEAN(strict)). 35/35 tests green; all findings closed. demo-recorder step COMPLETE (feature/S-1.01 HEAD 80f93e6; per-AC error_taxonomy_demo.rs). Census: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
+
+### HEADS (at D-367)
+- develop: `6a50ebf` — FULLY SYNCED (develop + origin/develop both at 6a50ebf; 0/0 divergence).
+- factory-artifacts: `5cd94a4` — PUSHED (D-367 session-wrap commit).
+- feature/S-1.01: `80f93e6` (demo commit above LOCAL 3-CLEAN anchor 1443d3d) — NOT yet pushed to origin.
+
+### PIPELINE POSITION
+Phase 3 TDD Implementation, IN PROGRESS. Wave 1 (pregolya-core), wave order pregolya-core→pregolya-graph→partners (D7).
+Pre-Wave-1 spec reconciliation: CLOSED/CONVERGED (D-363; dual-lens CLEAN). develop-divergence resolved (D-359, merge 6a50ebf).
+
+### CURRENT STORY: S-1.01 (PregolyaError, pregolya-core), status in-progress
+- Worktree: .worktrees/S-1.01/ on branch feature/S-1.01, HEAD = 1443d3d (LOCAL 3-CLEAN anchor; base develop 6a50ebf).
+- feature/S-1.01 commit chain: e6bc628 stubs → 783b766 Red-Gate tests → 94177a3 impl → 634a557 (F1/F3/F4) → d227de5 (F2 AC-007 trybuild gate) → aae3e19 (SYS 14th category) → 15158ee (dev-dep workspace-pin) → 1443d3d (POL-42 6-type non_exhaustive gate) → 80f93e6 (demo-recorder: error_taxonomy_demo.rs + per-AC evidence).
+- LOCAL adversary BC-5.39.001 3-CLEAN: CONVERGED 3/3 on frozen HEAD 1443d3d (passes a3dab4/a6620b/ac3b6e all CLEAN(strict)). 35/35 tests green; clippy/fmt clean; all findings closed (F1-F4, SYS, EC-005, dev-dep pin, INV-004, POL-42 6/6 gate).
+
+### RESUME NEXT-ACTIONS (S-1.01 remaining, per per-story-delivery.md)
+1. Push feature/S-1.01 (HEAD 80f93e6) to origin.
+2. pr-manager: full 9-step PR cycle (PR feature/S-1.01 → develop; CI; code-reviewer + security-reviewer + pr-reviewer; triage/fix; squash-merge — BLOCKED from agent-merge per DIRECTIVE 4 caveat: self-authored PR → route to human).
+3. state-manager POST-MERGE burst: POL-14 auto-promote BC-2.14.001/002 draft→active; sprint-state S-1.01 in-progress→merged→done; update develop_head; record S-1.01 DONE in trajectory.
+4. Then next Wave-1 story.
+
+### BRANCH STATE (at D-367)
+- develop = 6a50ebf (origin 0/0).
+- factory-artifacts = 5cd94a4 — PUSHED.
+- feature/S-1.01 = 80f93e6; NOT yet pushed to origin.
+
+### DECISION-LOG DELTA (at D-367)
+D-367 (2026-09-18): SESSION WRAP. S-1.01 BC-5.39.001 LOCAL 3-CLEAN CONVERGED 3/3 on frozen HEAD 1443d3d. demo-recorder step COMPLETE (80f93e6). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
