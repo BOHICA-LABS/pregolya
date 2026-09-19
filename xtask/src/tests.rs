@@ -23,6 +23,18 @@ pub fn production_fn() -> i32 {
         !findings.is_empty(),
         "should detect unwrap in production code after cfg(test) mod decl; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// Correctly suppressed: `.unwrap()` inside an inline `#[cfg(test)]` block
@@ -84,6 +96,18 @@ pub fn production_fn() -> i32 {
         !findings.is_empty(),
         "should detect unwrap in production code after cfg(test) block closes; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 // ── check-client-timeout gate ────────────────────────────────────────────
@@ -98,6 +122,18 @@ fn test_timeout_scanner_does_not_suppress_standard_tests_crate() {
     assert!(
         !findings.is_empty(),
         "should detect missing timeout in standard-tests crate; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -140,6 +176,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         !findings.is_empty(),
         "string-literal {{ must not latch in_test_block; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// F-2 regression: line with Client::new() AND a URL string containing //
@@ -152,6 +200,18 @@ fn test_timeout_scanner_flags_client_new_on_line_with_url_string() {
         !findings.is_empty(),
         "Client::new() on line with URL string must be flagged; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// F-3 regression: Client::builder().build() on same line without .timeout() must be flagged.
@@ -162,6 +222,18 @@ fn test_timeout_scanner_flags_builder_build_without_timeout_single_line() {
     assert!(
         !findings.is_empty(),
         "Client::builder().build() without .timeout() must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -218,6 +290,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         !findings.is_empty(),
         "double-backslash before closing quote must not latch test block; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-2 regression: brace in char literal must not skew brace depth.
@@ -233,6 +317,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         !findings.is_empty(),
         "brace in char literal must not skew depth; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-2 regression: double-quote in char literal must not toggle string mode.
@@ -247,6 +343,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
     assert!(
         !findings.is_empty(),
         "double-quote in char literal must not latch test block; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -286,6 +394,18 @@ fn test_timeout_scanner_still_flags_reqwest_client_new() {
         !findings.is_empty(),
         "reqwest::Client::new() must still be flagged; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 // ── B-3 / B-4 regression tests ───────────────────────────────────────────
@@ -308,6 +428,18 @@ pub fn foo<'a>(x: &'a str) -> i32 {
         !findings.is_empty(),
         "lifetime annotation must not latch char-literal mode; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-4 regression: unqualified Client::new() (from use import) must be flagged.
@@ -319,6 +451,18 @@ fn test_timeout_scanner_flags_unqualified_client_new_from_import() {
     assert!(
         !findings.is_empty(),
         "unqualified Client::new() (use reqwest::Client import) must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -369,6 +513,18 @@ fn test_no_panic_cfg_test_in_comment_does_not_latch() {
         !findings.is_empty(),
         "cfg(test) in comment must not suppress production code; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-6 regression: braces in // comments must NOT skew brace_depth.
@@ -379,6 +535,18 @@ fn test_no_panic_braces_in_comment_do_not_skew_depth() {
     assert!(
         !findings.is_empty(),
         "brace in comment must not skew depth; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -413,6 +581,18 @@ fn test_no_panic_non_ascii_line_does_not_corrupt_depth() {
         !findings.is_empty(),
         "non-ASCII before // must not cause comment boundary miss; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 // ── B-8 regression test ──────────────────────────────────────────────────
@@ -427,6 +607,18 @@ fn test_no_panic_cfg_test_use_statement_does_not_latch() {
     assert!(
         !findings.is_empty(),
         "cfg(test) use stmt must not latch pending_cfg_test; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -485,6 +677,16 @@ pub fn do_thing() -> anyhow::Result<()> {
     assert!(
         !findings.is_empty(),
         "production `use anyhow` must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("anyhow")),
+        "expected anyhow violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -775,6 +977,18 @@ fn test_description_cache_key_scanner_finds_violation() {
     assert!(
         !findings.is_empty(),
         "cache_key adjacent to description must produce a finding; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("cache_key") || f.contains("description")),
+        "expected cache_key violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 

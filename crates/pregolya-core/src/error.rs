@@ -233,16 +233,17 @@ impl PregolyaError {
         let code = code.into();
         let message = message.into();
         debug_assert!(
-            {
-                let parts: Vec<&str> = code.splitn(3, '-').collect();
-                parts.len() == 3
-                    && parts[0] == "E"
-                    && !parts[1].is_empty()
-                    && parts[1].chars().all(|c| c.is_ascii_alphanumeric())
-                    && parts[2].len() == 3
-                    && parts[2].chars().all(|c| c.is_ascii_digit())
-            },
-            "error code must follow E-COMPONENT-NNN format (alphanumeric component, 3-digit numeric suffix), got: {code:?}"
+            code.starts_with("E-")
+                && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
+                    !mid.is_empty()
+                        && mid
+                            .chars()
+                            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+                        && suffix.len() == 3
+                        && suffix.chars().all(|c| c.is_ascii_digit())
+                }),
+            "code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
+            code
         );
         Self {
             component,
@@ -631,10 +632,11 @@ mod tests {
             source: Some(Arc::clone(&inner)),
         };
         // Error::source() must return Some when source field is populated
-        let src = Error::source(&err);
-        assert!(
-            src.is_some(),
-            "source() must return Some when source field is populated"
+        let src = std::error::Error::source(&err).expect("source must be Some per TV-003");
+        assert_eq!(
+            src.to_string(),
+            "inner",
+            "source chain must point to the exact wrapped error"
         );
     }
 
@@ -684,7 +686,13 @@ mod tests {
         // Clone must succeed — Arc::clone increments refcount without T: Clone
         let err2 = err.clone();
         assert!(err2.source.is_some(), "cloned error must retain source");
-        let _ = Error::source(&err2);
+        let src2 =
+            std::error::Error::source(&err2).expect("cloned error must preserve source chain");
+        assert_eq!(
+            src2.to_string(),
+            "original",
+            "clone preserves source chain identity"
+        );
     }
 
     // ── BC-2.14.002 Tests ─────────────────────────────────────────────────────
@@ -1094,11 +1102,13 @@ mod tests {
             message: "graph persistence failed".into(),
             source: Some(Arc::new(inner_err) as Arc<dyn Error + Send + Sync>),
         };
-        // source() must return Some
-        let src = Error::source(&outer_err);
-        assert!(
-            src.is_some(),
-            "outer error must chain to inner via source()"
+        // source() must return Some and point to the exact inner error
+        let src = std::error::Error::source(&outer_err)
+            .expect("outer error must chain to inner via source()");
+        assert_eq!(
+            src.to_string(),
+            "[E-CHKPT-001] checkpoint write failed",
+            "source chain must point to the exact wrapped error"
         );
     }
 
@@ -1249,7 +1259,7 @@ mod tests {
 
     /// MED-003: debug_assert rejects malformed code — "E-" only has no component segment.
     #[test]
-    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
     fn test_debug_assert_rejects_malformed_code() {
         let _ = PregolyaError::new(
@@ -1280,7 +1290,7 @@ mod tests {
 
     /// MED-005: debug_assert rejects two-digit numeric suffix.
     #[test]
-    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
     fn test_debug_assert_rejects_two_digit_suffix() {
         let _ = PregolyaError::new(
@@ -1294,7 +1304,7 @@ mod tests {
 
     /// MED-005: debug_assert rejects four-digit numeric suffix.
     #[test]
-    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
     fn test_debug_assert_rejects_four_digit_suffix() {
         let _ = PregolyaError::new(
@@ -1308,7 +1318,7 @@ mod tests {
 
     /// MED-005: debug_assert rejects non-numeric suffix.
     #[test]
-    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
     fn test_debug_assert_rejects_non_numeric_suffix() {
         let _ = PregolyaError::new(
@@ -1322,7 +1332,7 @@ mod tests {
 
     /// MED-005: debug_assert rejects wrong prefix letter.
     #[test]
-    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
     fn test_debug_assert_rejects_wrong_prefix() {
         let _ = PregolyaError::new(
@@ -1434,6 +1444,35 @@ mod tests {
             );
             assert!(seen.insert(*expected), "duplicate title: {expected:?}");
         }
+    }
+
+    /// BC-2.14.001 EC-002: CUSTOM_NAME may contain hyphens (real crate names).
+    /// `E-my-crate-001` must be accepted by the debug_assert without panicking.
+    #[test]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_accepts_hyphenated_custom_component() {
+        // BC-2.14.001 EC-002: CUSTOM_NAME may contain hyphens (real crate names)
+        let _ = PregolyaError::new(
+            Component::Custom("my-crate".into()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-my-crate-001",
+            "test",
+        );
+    }
+
+    /// BC-2.14.001 EC-002: CUSTOM_NAME may contain underscores.
+    /// `E-my_crate-001` must be accepted by the debug_assert without panicking.
+    #[test]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_accepts_underscored_custom_component() {
+        let _ = PregolyaError::new(
+            Component::Custom("my_crate".into()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-my_crate-001",
+            "test",
+        );
     }
 
     /// BC-2.14.001/002 v1.12 — Sys category: `to_problem()` yields title "System"

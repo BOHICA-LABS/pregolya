@@ -1,8 +1,4 @@
 //! AC-007 compile-fail gate — `#[non_exhaustive]` external-boundary verification.
-// BC-naming convention requires UPPER_CASE in test names (test_BC_S_SS_NNN_xxx).
-// This deviates from Rust's snake_case convention; suppress the lint.
-#![allow(non_snake_case)]
-
 //!
 //! Traces to: BC-2.14.001 {PC-008}, S-1.01 AC-007.
 //! Adversary findings: F1 (adv pass-2; POL-42 — extend gate to all 6 types),

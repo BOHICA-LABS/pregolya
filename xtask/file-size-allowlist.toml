@@ -28,7 +28,7 @@
 
 [[allow]]
 path = "xtask/src/main.rs"
-reason = "xtask/src/main.rs implements 5 independent CI gate checkers (file-size, client-timeout, no-panic, deny-anyhow, deny-description-cache-key) plus allowlist parsing. Current adjusted count is over the 750 hard gate. A split into per-gate modules is the production-grade long-term fix; this entry covers the current story scope while all gates remain cohesive in one dispatch table."
+reason = "CI gate dispatch binary implementing 5 lint checkers (no-panic, client-timeout, anyhow-ban, description-cache-key, file-size) plus shared allowlist parsing and file-walking utilities. All gates share a common proc_macro2-based scan-and-report pattern; the file is cohesive by function. Adjusted code-line count (tokei Code minus #[cfg(test)] spans via proc_macro2 span-locations) exceeds the 750-line hard gate. Approved pending a dedicated split story."
 approver = "jmagady"
 date = "2026-09-19"
 

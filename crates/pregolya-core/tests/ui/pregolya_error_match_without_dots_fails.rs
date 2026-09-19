@@ -10,8 +10,8 @@
 fn check(err: pregolya_core::PregolyaError) -> String {
     // From outside pregolya_core, this pattern is illegal:
     //   `..` required with struct marked as non-exhaustive (E0638)
-    let pregolya_core::PregolyaError { code } = err;
-    code
+    let pregolya_core::PregolyaError { message } = err;
+    message
 }
 
 fn main() {}

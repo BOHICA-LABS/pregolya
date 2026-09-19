@@ -75,7 +75,7 @@ Runs: `cargo run -p pregolya-core --example error_taxonomy_demo -- enums`
 | Output Line Pattern | AC Evidenced |
 |---------------------|-------------|
 | `Named (17): Core Graph Chkpt Server Prov Mcp Split Sbxd Retry Cron Memory Budget Tmpl Srlz Vs Embed Tools` | AC-002 17 named variants exhaustively listed |
-| `Custom:    Component::Custom("newcrate")` | AC-002 Custom(String) variant |
+| `Custom:    Custom("newcrate")` | AC-002 Custom(String) variant |
 | `Total variants: 18` | AC-002 total count |
 | `All 14: Val Auth Rate Timeout Transport Internal Durability Policy Tool Concurrency Security Tenancy Exec Sys` | AC-003 14 variants |
 | `Sys is the 14th (INTERNAL-tier, HTTP 500, default RetryHint::Maybe)` | AC-003 Sys variant spec |
