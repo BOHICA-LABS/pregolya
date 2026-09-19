@@ -468,3 +468,68 @@ fn test_timeout_lex_error_propagates_as_finding() {
         findings[0]
     );
 }
+
+// ── deny-anyhow-in-lib scanner ───────────────────────────────────────────
+
+/// Production-scope `use anyhow` must be flagged.
+#[test]
+fn test_deny_anyhow_flags_production_use() {
+    let src = r#"
+use anyhow::Context as _;
+
+pub fn do_thing() -> anyhow::Result<()> {
+    Ok(())
+}
+"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "production `use anyhow` must be flagged; got: {findings:?}"
+    );
+}
+
+/// `use anyhow` inside `#[cfg(test)]` must NOT be flagged.
+#[test]
+fn test_deny_anyhow_skips_cfg_test_scope() {
+    let src = r#"
+pub fn production_fn() {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Context as _;
+
+    #[test]
+    fn compat_test() {
+        let _: anyhow::Result<()> = Ok(());
+    }
+}
+"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/error.rs");
+    assert!(
+        findings.is_empty(),
+        "`use anyhow` inside #[cfg(test)] must not be flagged; got: {findings:?}"
+    );
+}
+
+/// Test files must be excluded entirely from the anyhow scanner.
+#[test]
+fn test_deny_anyhow_skips_test_files() {
+    let src = r#"use anyhow::Result;"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/tests/compat.rs");
+    assert!(
+        findings.is_empty(),
+        "test-file paths must be excluded from anyhow scan; got: {findings:?}"
+    );
+}
+
+/// Examples files must be excluded entirely from the anyhow scanner.
+#[test]
+fn test_deny_anyhow_skips_examples_files() {
+    let src = r#"use anyhow::Result;"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/examples/error_demo.rs");
+    assert!(
+        findings.is_empty(),
+        "examples-file paths must be excluded from anyhow scan; got: {findings:?}"
+    );
+}

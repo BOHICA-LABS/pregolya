@@ -570,29 +570,143 @@ fn is_cfg_test_group(g: &proc_macro2::Group) -> bool {
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn deny_anyhow_in_lib() {
-    let output = Command::new("grep")
-        .args(["-rn", "--include=*.rs", "use anyhow", "crates/"])
+    // Use token-tree walking (proc_macro2) so that `use anyhow` inside
+    // `#[cfg(test)]` blocks is not flagged. The blunt `grep` approach fires
+    // even when the import is legitimately scoped to test code.
+    let output = Command::new("find")
+        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
         .output();
 
-    match output {
-        Ok(o) => {
-            let stdout = String::from_utf8_lossy(&o.stdout);
-            if !stdout.trim().is_empty() {
-                eprintln!(
-                    "ERROR: anyhow is banned from pregolya-* library crates (ADR-010 / NE-03):"
-                );
-                for line in stdout.lines() {
-                    eprintln!("  {line}");
-                }
-                exit(1);
-            }
-        }
+    let files_output = match output {
+        Ok(o) => o,
         Err(e) => {
-            eprintln!("grep failed: {e}");
+            eprintln!("find failed: {e}");
             exit(1);
         }
+    };
+
+    let files_str = String::from_utf8_lossy(&files_output.stdout);
+    let mut all_findings: Vec<String> = Vec::new();
+
+    for file_path in files_str.lines() {
+        let content = match std::fs::read_to_string(file_path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        let findings = scan_for_anyhow_in_source(&content, file_path);
+        all_findings.extend(findings);
+    }
+
+    if !all_findings.is_empty() {
+        eprintln!("ERROR: anyhow is banned from pregolya-* library crates (ADR-010 / NE-03):");
+        for f in &all_findings {
+            eprintln!("  {f}");
+        }
+        exit(1);
     }
     println!("deny-anyhow-in-lib PASSED.");
+}
+
+/// Scan `src` for `use anyhow` patterns outside `#[cfg(test)]` scopes.
+///
+/// Uses proc_macro2 token-tree walking so that anyhow imports in test code
+/// (which are legitimate for compatibility verification) are not flagged.
+///
+/// Returns a `Vec<String>` of `"path:line: use anyhow"` findings.
+/// Returns empty when `path` is a test or examples file (per `is_test_file`).
+fn scan_for_anyhow_in_source(src: &str, path: &str) -> Vec<String> {
+    if is_test_file(path) {
+        return Vec::new();
+    }
+
+    use proc_macro2::TokenStream;
+    let ts: TokenStream = match src.parse() {
+        Ok(s) => s,
+        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
+    };
+
+    let mut findings = Vec::new();
+    walk_anyhow_tokens(ts.into_iter(), &mut findings, path, &mut 0u32);
+    findings
+}
+
+/// Recursive token-tree walker for `scan_for_anyhow_in_source`.
+fn walk_anyhow_tokens(
+    iter: proc_macro2::token_stream::IntoIter,
+    findings: &mut Vec<String>,
+    path: &str,
+    in_test_depth: &mut u32,
+) {
+    use proc_macro2::{Delimiter, TokenTree};
+
+    let tokens: Vec<TokenTree> = iter.collect();
+    let mut i = 0;
+    while i < tokens.len() {
+        match &tokens[i] {
+            // Detect `#[cfg(test)]` — skip the body.
+            TokenTree::Punct(p) if p.as_char() == '#' => {
+                if let Some(TokenTree::Group(g)) = tokens.get(i + 1)
+                    && g.delimiter() == Delimiter::Bracket
+                    && is_cfg_test_group(g)
+                {
+                    let mut j = i + 2;
+                    while j < tokens.len() {
+                        match &tokens[j] {
+                            TokenTree::Group(body) if body.delimiter() == Delimiter::Brace => {
+                                *in_test_depth += 1;
+                                walk_anyhow_tokens(
+                                    body.stream().into_iter(),
+                                    findings,
+                                    path,
+                                    in_test_depth,
+                                );
+                                *in_test_depth -= 1;
+                                i = j;
+                                break;
+                            }
+                            TokenTree::Punct(p2) if p2.as_char() == ';' => {
+                                i = j;
+                                break;
+                            }
+                            _ => {}
+                        }
+                        j += 1;
+                    }
+                    i += 1;
+                    continue;
+                }
+            }
+            // Brace group NOT preceded by cfg(test) — walk it at current depth.
+            TokenTree::Group(g) if g.delimiter() == Delimiter::Brace => {
+                walk_anyhow_tokens(g.stream().into_iter(), findings, path, in_test_depth);
+            }
+            // Detect `use` keyword when not inside a test scope.
+            TokenTree::Ident(id) if id == "use" && *in_test_depth == 0 => {
+                let line = id.span().start().line;
+                // Scan forward in the same token list until `;` to find `anyhow`.
+                let mut j = i + 1;
+                while j < tokens.len() {
+                    match &tokens[j] {
+                        TokenTree::Ident(id2) if id2 == "anyhow" => {
+                            findings.push(format!("{}:{}: use anyhow", path, line));
+                            break;
+                        }
+                        TokenTree::Punct(p) if p.as_char() == ';' => break,
+                        // A brace group ends the use tree (e.g. `use foo::{a, b}`)
+                        TokenTree::Group(_) => break,
+                        _ => {}
+                    }
+                    j += 1;
+                }
+            }
+            // Other non-brace groups (parens, brackets) — walk them too.
+            TokenTree::Group(g) => {
+                walk_anyhow_tokens(g.stream().into_iter(), findings, path, in_test_depth);
+            }
+            _ => {}
+        }
+        i += 1;
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
