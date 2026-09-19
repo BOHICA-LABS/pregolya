@@ -289,7 +289,7 @@ Pre-Wave-1 spec reconciliation: CLOSED/CONVERGED (D-363; dual-lens CLEAN). devel
 
 ### BRANCH STATE (verify on resume)
 - develop = 6a50ebf (origin 0/0).
-- factory-artifacts `5cd94a4` — PUSHED.
+- factory-artifacts `0f72bfd` — PUSHED.
 - feature/S-1.01 = 80f93e6; NOT yet pushed to origin.
 
 ### SPEC AMENDMENTS DURING S-1.01 (census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22)
