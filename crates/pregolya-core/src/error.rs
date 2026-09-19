@@ -147,6 +147,32 @@ pub enum RetryHint {
     Later(std::time::Duration),
 }
 
+impl Category {
+    /// Returns the taxonomy-default [`RetryHint`] for this category.
+    ///
+    /// Authoritative source: `error-taxonomy.md §Error Categories` (Default RetryHint column).
+    /// Per BC-2.14.001 {INV-004}, per-code divergence from these defaults must be
+    /// documented explicitly; implementors must not invent new hint-category pairings.
+    pub fn default_retry_hint(&self) -> RetryHint {
+        match self {
+            Category::Val => RetryHint::Never,
+            Category::Auth => RetryHint::Maybe,
+            Category::Rate => RetryHint::Later(std::time::Duration::from_secs(60)),
+            Category::Timeout => RetryHint::Later(std::time::Duration::from_secs(30)),
+            Category::Transport => RetryHint::Later(std::time::Duration::from_secs(30)),
+            Category::Internal => RetryHint::Never,
+            Category::Durability => RetryHint::Maybe,
+            Category::Policy => RetryHint::Never,
+            Category::Tool => RetryHint::Maybe,
+            Category::Concurrency => RetryHint::Never,
+            Category::Security => RetryHint::Never,
+            Category::Tenancy => RetryHint::Never,
+            Category::Exec => RetryHint::Never,
+            Category::Sys => RetryHint::Maybe,
+        }
+    }
+}
+
 // ─── PregolyaError ───────────────────────────────────────────────────────────
 
 /// Universal error type for the pregolya library family.
@@ -341,7 +367,9 @@ fn component_lowercase(component: &Component) -> String {
 
 /// Returns the humanized category name for RFC-7807 `title`.
 ///
-/// Authoritative source: BC-2.14.002 {PC-001}.
+/// Authoritative source: `error-taxonomy.md §Error Categories` (Category column).
+/// BC-2.14.002 {PC-001} specifies the field contract (`title: <humanized category name>`);
+/// the concrete title strings are defined in the taxonomy.
 ///
 /// | `Category` variant | Returned title |
 /// |---------------------|----------------|
@@ -1081,19 +1109,22 @@ mod tests {
     /// EC-003 (BC-2.14.001 EC-002): `Component::Custom("newcrate")` is accepted.
     ///
     /// `to_problem()` returns `extensions.component: "newcrate"`.
+    /// The code field uses the canonical uppercase format `E-NEWCRATE-001`.
     #[test]
     fn test_BC_2_14_001_ec003_custom_component() {
         let err = PregolyaError {
             component: Component::Custom("newcrate".into()),
             category: Category::Internal,
             retry_hint: RetryHint::Never,
-            code: "E-newcrate-001".into(),
+            code: "E-NEWCRATE-001".into(),
             message: "custom component error".into(),
             source: None,
         };
         let problem = err.to_problem();
+        // component_lowercase("newcrate") = "newcrate" — Custom value is the display name
         assert_eq!(problem.extensions.component, "newcrate");
-        assert_eq!(problem.type_uri, "urn:pregolya:error:E-newcrate-001");
+        // type_uri uses the code field verbatim (uppercase)
+        assert_eq!(problem.type_uri, "urn:pregolya:error:E-NEWCRATE-001");
     }
 
     /// BC-2.14.001 TV-004: `anyhow` compatibility.
@@ -1159,6 +1190,42 @@ mod tests {
         }
     }
 
+    /// BC-2.14.001 {INV-004}: table-driven test for all 14 Category default RetryHints.
+    ///
+    /// Authoritative source: `error-taxonomy.md §Error Categories` (Default RetryHint column).
+    #[test]
+    fn test_BC_2_14_001_inv004_category_default_retry_hints() {
+        let cases: &[(Category, &str)] = &[
+            (Category::Val, "never"),
+            (Category::Auth, "maybe"),
+            (Category::Rate, "later"),
+            (Category::Timeout, "later"),
+            (Category::Transport, "later"),
+            (Category::Internal, "never"),
+            (Category::Durability, "maybe"),
+            (Category::Policy, "never"),
+            (Category::Tool, "maybe"),
+            (Category::Concurrency, "never"),
+            (Category::Security, "never"),
+            (Category::Tenancy, "never"),
+            (Category::Exec, "never"),
+            (Category::Sys, "maybe"),
+        ];
+        assert_eq!(cases.len(), 14, "must cover all 14 Category variants");
+        for (cat, expected_prefix) in cases {
+            let hint = cat.default_retry_hint();
+            let hint_str = match &hint {
+                RetryHint::Never => "never",
+                RetryHint::Maybe => "maybe",
+                RetryHint::Later(_) => "later",
+            };
+            assert_eq!(
+                hint_str, *expected_prefix,
+                "Category::{cat:?} default_retry_hint() must be {expected_prefix}"
+            );
+        }
+    }
+
     /// MED-003: debug_assert rejects malformed code — "E-" only has no component segment.
     #[test]
     #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
@@ -1183,6 +1250,76 @@ mod tests {
             Category::Internal,
             RetryHint::Never,
             "E-core-001",
+            "test",
+        );
+    }
+
+    /// MED-005: debug_assert rejects two-digit numeric suffix.
+    #[test]
+    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_rejects_two_digit_suffix() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-01",
+            "test",
+        );
+    }
+
+    /// MED-005: debug_assert rejects four-digit numeric suffix.
+    #[test]
+    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_rejects_four_digit_suffix() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-1000",
+            "test",
+        );
+    }
+
+    /// MED-005: debug_assert rejects non-numeric suffix.
+    #[test]
+    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_rejects_non_numeric_suffix() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-ABC",
+            "test",
+        );
+    }
+
+    /// MED-005: debug_assert rejects wrong prefix letter.
+    #[test]
+    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_rejects_wrong_prefix() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "X-CORE-001",
+            "test",
+        );
+    }
+
+    /// MED-005: debug_assert accepts a valid code with a different component label.
+    #[test]
+    #[cfg(debug_assertions)]
+    fn test_debug_assert_accepts_valid_code() {
+        // Must not panic — "E-PROV-042" is a valid code
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-PROV-042",
             "test",
         );
     }

@@ -66,91 +66,116 @@ fn is_test_file(path: &str) -> bool {
         || path.contains("/examples/")
 }
 
+/// Returns true for files exempt from lint scanners: test files, examples, and benchmarks.
+///
+/// Extends `is_test_file` to also cover `/benches/` (benchmark harnesses are not
+/// library code). Examples produce standalone binaries and may legitimately use
+/// `.expect()` and `println!` for demonstration clarity.
+///
+/// Used by: `check_no_panic`, `check_client_timeout`, `deny_anyhow_in_lib`.
+fn is_lint_exempt_file(path: &str) -> bool {
+    is_test_file(path) || path.contains("/benches/")
+}
+
+/// Returns true for files that qualify for TEST file-size thresholds (1000/1500 code-lines).
+///
+/// Only actual test files — NOT examples (demonstration programs use production thresholds)
+/// and NOT benchmarks (which are tuning tools, not test suites).
+///
+/// Used by: `check_file_size`.
+fn is_test_class_file(path: &str) -> bool {
+    path.ends_with("/tests.rs")
+        || path == "tests.rs"
+        || path.contains("/tests/")
+        || path.ends_with("_test.rs")
+        || path.ends_with("_tests.rs")
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // check-file-size
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Count lines inside `#[cfg(test)] mod ...` blocks so they can be excluded
-/// from the production code-line count (CLAUDE.md §File size & module splitting).
+/// Count code lines (non-blank, non-comment-only) inside `#[cfg(test)] mod` blocks.
 ///
-/// CLAUDE.md specifies: "blanks, comments, doc-comments, `#[cfg(test)] mod` blocks,
-/// and generated code excluded from the count." This function counts lines belonging
-/// to `#[cfg(test)] mod` blocks (including the attribute line, any intervening
-/// attributes, and the closing brace), so they can be subtracted from tokei's Code
-/// count before applying the production file size thresholds.
+/// Uses proc_macro2 span information to locate the block boundaries, then applies
+/// tokei-compatible line counting (skipping blank lines and lines whose first
+/// non-whitespace token is `//`).
 ///
-/// Handles intervening attributes between `#[cfg(test)]` and `mod` (e.g.
-/// `#[allow(clippy::unwrap_used)]` inserted between the cfg attribute and the mod
-/// declaration — a common pattern in test modules).
+/// Returns 0 if the file cannot be parsed or has no cfg(test) block.
+///
+/// The subtraction of this count from tokei's `Code` metric gives the adjusted
+/// production code line count per CLAUDE.md §File size: "#[cfg(test)] mod blocks
+/// excluded from the count."
 fn count_cfg_test_lines(path: &std::path::Path) -> usize {
-    let Ok(content) = std::fs::read_to_string(path) else {
+    use proc_macro2::{Delimiter, TokenStream, TokenTree};
+
+    let Ok(source) = std::fs::read_to_string(path) else {
         return 0;
     };
-    let mut count = 0usize;
-    let mut in_cfg_test = false;
-    let mut depth = 0i32;
-    // When true, we've seen #[cfg(test)] and are waiting for `mod` (possibly
-    // after intervening attribute lines like #[allow(...)]).
-    let mut pending_cfg_test = false;
-    // Lines accumulated while pending_cfg_test is true (to be added to count
-    // only if we confirm a `mod` follows).
-    let mut pending_count = 0usize;
+    let Ok(ts) = source.parse::<TokenStream>() else {
+        return 0;
+    };
 
-    for line in content.lines() {
-        let trimmed = line.trim();
+    let lines: Vec<&str> = source.lines().collect();
+    let mut total = 0usize;
 
-        if !in_cfg_test {
-            if trimmed == "#[cfg(test)]" || trimmed.starts_with("#[cfg(test)]") {
-                // Start accumulating lines for a potential cfg(test) block
-                pending_cfg_test = true;
-                pending_count = 1; // count this attribute line
-                continue;
-            }
-            if pending_cfg_test {
-                if trimmed.starts_with("mod ") || trimmed.starts_with("pub mod ") {
-                    // Confirmed: commit accumulated lines plus this mod line
-                    count += pending_count + 1;
-                    pending_cfg_test = false;
-                    pending_count = 0;
-                    in_cfg_test = true;
-                    for ch in line.chars() {
-                        match ch {
-                            '{' => depth += 1,
-                            '}' => depth -= 1,
-                            _ => {}
+    // Walk top-level token stream looking for:
+    //   #[cfg(test)]
+    //   <optional intervening #[...] attributes>
+    //   mod <ident> { ... }   ← count the Group's line span
+    let tokens: Vec<TokenTree> = ts.into_iter().collect();
+    let mut i = 0;
+    while i < tokens.len() {
+        // Look for `#` followed by `[cfg(test)]` bracket group.
+        // Edition 2024 let-chains collapse nested ifs without sacrificing readability.
+        if let TokenTree::Punct(p) = &tokens[i]
+            && p.as_char() == '#'
+            && let Some(TokenTree::Group(attr_group)) = tokens.get(i + 1)
+            && attr_group.delimiter() == Delimiter::Bracket
+        {
+            let attr_str = attr_group.to_string();
+            if attr_str.contains("cfg") && attr_str.contains("test") {
+                // Scan forward past optional intervening attributes
+                // (e.g. `#[allow(clippy::unwrap_used)]`) then find `mod <ident> { ... }`
+                let mut j = i + 2;
+                // Skip intervening `#[...]` attributes
+                while j + 1 < tokens.len() {
+                    if let TokenTree::Punct(p2) = &tokens[j]
+                        && p2.as_char() == '#'
+                        && let TokenTree::Group(_) = &tokens[j + 1]
+                    {
+                        j += 2;
+                        continue;
+                    }
+                    break;
+                }
+                // Expect `mod <ident> { ... }`
+                // tokens[j+1] = mod name ident, tokens[j+2] = body Group
+                if let Some(TokenTree::Ident(mod_kw)) = tokens.get(j)
+                    && mod_kw == "mod"
+                    && let Some(TokenTree::Group(mod_group)) = tokens.get(j + 2)
+                    && mod_group.delimiter() == Delimiter::Brace
+                {
+                    let span = mod_group.span();
+                    let start_line = span.start().line; // 1-based
+                    let end_line = span.end().line; // 1-based
+                    // Count non-blank, non-comment-only lines
+                    // in [start_line, end_line] (inclusive, 1-based).
+                    for line in lines[(start_line - 1)..end_line.min(lines.len())].iter() {
+                        let trimmed = line.trim();
+                        if !trimmed.is_empty() && !trimmed.starts_with("//") {
+                            total += 1;
                         }
                     }
-                    if depth <= 0 {
-                        in_cfg_test = false;
-                        depth = 0;
-                    }
+                    // Advance past the mod block
+                    i = j + 3;
                     continue;
-                } else if trimmed.starts_with('#') {
-                    // Another attribute (e.g. #[allow(...)]) — keep accumulating
-                    pending_count += 1;
-                    continue;
-                } else {
-                    // Non-attribute, non-mod line — this is not a cfg(test) mod block
-                    pending_cfg_test = false;
-                    pending_count = 0;
                 }
-            }
-        } else {
-            count += 1;
-            for ch in line.chars() {
-                match ch {
-                    '{' => depth += 1,
-                    '}' => depth -= 1,
-                    _ => {}
-                }
-            }
-            if depth <= 0 {
-                in_cfg_test = false;
-                depth = 0;
             }
         }
+        i += 1;
     }
-    count
+    total
 }
 
 fn check_file_size() {
@@ -265,7 +290,7 @@ fn check_file_size() {
 
         files_measured += 1;
 
-        let is_test = is_test_file(name);
+        let is_test = is_test_class_file(name);
         let (soft, hard) = if is_test {
             (test_soft, test_hard)
         } else {
@@ -389,7 +414,7 @@ fn check_client_timeout() {
 /// (which were the source of F-2, B-5, and related false positive/negative bugs)
 /// are handled correctly by the lexer.
 fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
-    if is_test_file(path) {
+    if is_lint_exempt_file(path) {
         return Vec::new();
     }
 
@@ -609,7 +634,7 @@ fn check_no_panic() {
 /// Returns a `Vec<String>` of `"path:line_num: .method()"` findings.
 /// Returns empty when `path` is a test file (per `is_test_file`).
 fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
-    if is_test_file(path) {
+    if is_lint_exempt_file(path) {
         return Vec::new();
     }
 
@@ -789,7 +814,7 @@ fn deny_anyhow_in_lib() {
 /// Returns a `Vec<String>` of `"path:line: use anyhow"` findings.
 /// Returns empty when `path` is a test or examples file (per `is_test_file`).
 fn scan_for_anyhow_in_source(src: &str, path: &str) -> Vec<String> {
-    if is_test_file(path) {
+    if is_lint_exempt_file(path) {
         return Vec::new();
     }
 
@@ -888,50 +913,67 @@ fn walk_anyhow_tokens(
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn deny_description_cache_key() {
-    let mut lines_scanned: usize = 0;
-    for pattern in &["cache_key", "CacheKey", "cache_key_for"] {
-        let output = Command::new("grep")
-            .args(["-rn", "--include=*.rs", pattern, "crates/"])
-            .output();
+    // Use file-by-file scanning (same pattern as check-no-panic and check-client-timeout)
+    // so that the PASSED message reports the number of files scanned — not grep match counts
+    // which are 0 in a clean codebase, making it impossible to distinguish a vacuous pass
+    // from a genuine scan.
+    let output = Command::new("find")
+        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
+        .output();
 
-        match output {
-            Ok(o) => {
-                // grep exits 1 on no-match (normal) and 2+ on error (abnormal).
-                // F2 fix: exit codes 2+ indicate a grep error; treat as gate failure.
-                let exit_code = o.status.code().unwrap_or(2);
-                if exit_code >= 2 {
-                    eprintln!(
-                        "ERROR: grep failed with exit code {exit_code} for pattern '{pattern}'"
-                    );
-                    exit(1);
-                }
-                let stdout = String::from_utf8_lossy(&o.stdout);
-                let candidate_lines: Vec<&str> = stdout.lines().collect();
-                lines_scanned += candidate_lines.len();
-                // Only flag if it looks like description-proxy usage
-                let findings: Vec<&str> = candidate_lines
-                    .iter()
-                    .copied()
-                    .filter(|l| l.contains("description") || l.contains("Description"))
-                    .collect();
-                if !findings.is_empty() {
-                    for f in &findings {
-                        eprintln!(
-                            "ERROR: description-proxy cache-key usage (ADR-011 / NE-05): {f}"
-                        );
-                    }
-                    exit(1);
-                }
-            }
-            Err(e) => {
-                eprintln!("grep failed: {e}");
-                exit(1);
+    let files_output = match output {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("find failed: {e}");
+            exit(1);
+        }
+    };
+
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
+
+    let files_str = String::from_utf8_lossy(&files_output.stdout);
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!(
+            "ERROR: deny-description-cache-key scanned 0 files — gate cannot certify anything"
+        );
+        exit(1);
+    }
+
+    let mut all_findings: Vec<String> = Vec::new();
+
+    for file_path in files_str.lines() {
+        let content = match std::fs::read_to_string(file_path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        // Scan for description-proxy cache-key patterns: lines containing a cache-key
+        // identifier AND a description reference indicate description-proxy cache-key usage.
+        for (line_num, line) in content.lines().enumerate() {
+            let has_cache_key = line.contains("cache_key")
+                || line.contains("CacheKey")
+                || line.contains("cache_key_for");
+            let has_description = line.contains("description") || line.contains("Description");
+            if has_cache_key && has_description {
+                all_findings.push(format!("{}:{}: {}", file_path, line_num + 1, line.trim()));
             }
         }
     }
-    println!(
-        "deny-description-cache-key PASSED: {lines_scanned} candidate lines scanned across 3 patterns, 0 violations."
-    );
+
+    if !all_findings.is_empty() {
+        eprintln!("ERROR: description-proxy cache-key usage (ADR-011 / NE-05):");
+        for f in &all_findings {
+            eprintln!("  {f}");
+        }
+        exit(1);
+    }
+    println!("deny-description-cache-key PASSED: {files_scanned} files scanned, 0 violations.");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -973,26 +1015,36 @@ impl AllowList {
     }
 }
 
+/// Validates that an allowlist entry path is workspace-relative and sufficiently deep.
+///
+/// Returns `Ok(())` if the path is valid, or `Err(String)` with a diagnostic message.
+///
+/// Rules:
+/// - Path MUST start with `"crates/"` or `"xtask/"` (prevents over-broad bare-filename matches).
+/// - Path MUST have at least 2 slashes (at least 3 components: prefix/crate/file.rs).
+fn validate_allowlist_entry_path(path: &str) -> Result<(), String> {
+    if !path.starts_with("crates/") && !path.starts_with("xtask/") {
+        return Err(format!(
+            "path {path:?} must start with 'crates/' or 'xtask/' (bare filenames match multiple crates)"
+        ));
+    }
+    if path.matches('/').count() < 2 {
+        return Err(format!(
+            "path {path:?} is too shallow (bare filename would match multiple crates \
+             — use a full workspace-relative path)"
+        ));
+    }
+    Ok(())
+}
+
 fn load_allowlist() -> AllowList {
     match std::fs::read_to_string("xtask/file-size-allowlist.toml") {
         Ok(content) => match toml::from_str::<AllowList>(&content) {
             Ok(a) => {
                 // Validate all entry paths to prevent over-broad matching.
                 for entry in &a.allow {
-                    if !entry.path.starts_with("crates/") && !entry.path.starts_with("xtask/") {
-                        eprintln!(
-                            "ERROR: file-size-allowlist.toml: entry path {:?} must start with \
-                             'crates/' or 'xtask/' (bare filenames match multiple crates)",
-                            entry.path
-                        );
-                        exit(1);
-                    }
-                    if entry.path.matches('/').count() < 2 {
-                        eprintln!(
-                            "ERROR: file-size-allowlist.toml: entry path {:?} is too shallow \
-                             (bare filename would match multiple crates — use a full workspace-relative path)",
-                            entry.path
-                        );
+                    if let Err(msg) = validate_allowlist_entry_path(&entry.path) {
+                        eprintln!("ERROR: file-size-allowlist.toml: {msg}");
                         exit(1);
                     }
                 }

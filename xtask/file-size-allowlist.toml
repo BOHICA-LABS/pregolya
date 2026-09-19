@@ -6,9 +6,10 @@
 # Generated code (OUT_DIR/, *.gen.rs) and tests/fixtures/ are auto-excluded by glob.
 # Inline opt-out comments are NOT permitted — this file is the only opt-out path.
 #
-# NOTE: tokei counts ALL code-lines in a file including inline #[cfg(test)] blocks
-# in production files. Inline test modules contribute to the production file's code
-# count — this is intentional (consistent with xtask/src/main.rs check_file_size NOTE).
+# NOTE: tokei reports raw Code lines (excluding blanks and comments). The xtask
+# check_file_size gate adjusts this by subtracting code lines inside
+# #[cfg(test)] mod blocks (using proc_macro2 span analysis), so only production
+# code lines count toward the thresholds.
 #
 # Thresholds (tokei Code metric):
 #   Production files: soft 500 / hard 750 code-lines
@@ -27,7 +28,7 @@
 
 [[allow]]
 path = "xtask/src/main.rs"
-reason = "Cohesive multi-command CI task runner. FIX-B cfg_test-exclusion helper, FIX-E/F/K safety assertions and validation logic were added in adversarial pass 2 fix-burst. Adjusted code (post-cfg_test exclusion) is 762 lines — 12 over the 750 hard gate. Splitting into sub-modules would fragment the command dispatch table and shared helpers without improving cohesion; the file still does one thing (enforce CI gates for pregolya workspace)."
+reason = "xtask/src/main.rs implements 5 independent CI gate checkers (file-size, client-timeout, no-panic, deny-anyhow, deny-description-cache-key) plus allowlist parsing. Current adjusted count is over the 750 hard gate. A split into per-gate modules is the production-grade long-term fix; this entry covers the current story scope while all gates remain cohesive in one dispatch table."
 approver = "jmagady"
 date = "2026-09-19"
 

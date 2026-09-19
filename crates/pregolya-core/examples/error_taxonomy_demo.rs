@@ -158,7 +158,22 @@ fn demo_enums() {
         print!("{v:?} ");
     }
     println!();
-    println!("  Custom:    Component::Custom(\"newcrate\")");
+
+    // AC-002: Custom variant — demonstrate actual construction and ProblemDetail emission
+    let custom_comp = Component::Custom("NEWCRATE".to_string());
+    println!("  Custom:    {custom_comp:?}");
+    let custom_err = PregolyaError::new(
+        custom_comp,
+        Category::Internal,
+        RetryHint::Never,
+        "E-NEWCRATE-001",
+        "custom component demo",
+    );
+    let custom_prob = custom_err.to_problem();
+    println!(
+        "  Custom component in ProblemDetail: component={:?}",
+        custom_prob.extensions.component
+    );
     println!(
         "  Total variants: {} (17 named + 1 Custom)",
         named_variants.len() + 1

@@ -29,4 +29,7 @@
 
 pub mod error;
 
-pub use error::{Category, Component, PregolyaError, ProblemDetail, RetryHint};
+pub use error::{
+    Category, Component, PROBLEM_JSON_CONTENT_TYPE, PregolyaError, ProblemDetail,
+    ProblemExtensions, RetryHint,
+};

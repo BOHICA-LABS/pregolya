@@ -548,9 +548,9 @@ fn test_allowlist_exact_match() {
     assert!(al.is_allowed("crates/foo/src/bar.rs"));
 }
 
-/// Suffix match: an absolute path ending with the workspace-relative path is allowed.
+/// Absolute-path suffix match: an absolute path ending with the workspace-relative path is allowed.
 #[test]
-fn test_allowlist_path_prefix_match() {
+fn test_allowlist_absolute_path_suffix_match() {
     let al = AllowList {
         allow: vec![AllowEntry {
             path: "crates/foo/src/bar.rs".to_string(),
@@ -592,4 +592,63 @@ fn test_allowlist_unrelated_path_not_matched() {
 fn test_allowlist_empty_allows_nothing() {
     let al = AllowList { allow: vec![] };
     assert!(!al.is_allowed("crates/foo/src/bar.rs"));
+}
+
+// ── validate_allowlist_entry_path unit tests ─────────────────────────────────
+
+/// Valid paths (crates/ and xtask/ prefixes with depth >= 2 slashes).
+#[test]
+fn test_validate_allowlist_entry_accepts_valid() {
+    assert!(validate_allowlist_entry_path("crates/pregolya-core/src/error.rs").is_ok());
+    assert!(validate_allowlist_entry_path("xtask/src/main.rs").is_ok());
+}
+
+/// Bare filename (no slash) must be rejected.
+#[test]
+fn test_validate_allowlist_entry_rejects_bare_filename() {
+    assert!(validate_allowlist_entry_path("error.rs").is_err());
+}
+
+/// Shallow path (only one slash, e.g. crates/foo.rs) must be rejected.
+#[test]
+fn test_validate_allowlist_entry_rejects_shallow_path() {
+    assert!(validate_allowlist_entry_path("crates/foo.rs").is_err());
+}
+
+/// Paths that don't start with crates/ or xtask/ must be rejected.
+#[test]
+fn test_validate_allowlist_entry_rejects_wrong_prefix() {
+    assert!(validate_allowlist_entry_path("/abs/path/crates/foo/src/bar.rs").is_err());
+    assert!(validate_allowlist_entry_path("src/error.rs").is_err());
+}
+
+// ── count_cfg_test_lines unit test ────────────────────────────────────────────
+
+/// Verifies that count_cfg_test_lines skips blank lines and comment-only lines
+/// inside the #[cfg(test)] block, counting only code lines (matching tokei's metric).
+#[test]
+fn test_count_cfg_test_lines_excludes_blanks_and_comments() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_pregolya.rs");
+    let content = r#"
+fn production() {}
+
+#[cfg(test)]
+mod tests {
+    // a comment line (should NOT be counted)
+
+    // blank line above also not counted
+    fn a_test() {}
+    fn b_test() {}
+}
+"#;
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    // The mod tests { line, fn a_test, fn b_test, and closing } are code lines.
+    // The comment lines and blank lines inside are excluded.
+    assert!(
+        count >= 2,
+        "expected at least 2 code lines in cfg(test) block, got {count}"
+    );
+    // Cleanup
+    let _ = std::fs::remove_file(&path);
 }

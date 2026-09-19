@@ -84,7 +84,7 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
 /// Runtime gate: verifies that `EXPECTED_NON_EXHAUSTIVE_COUNT` and
 /// `EXPECTED_NON_EXHAUSTIVE_SYMBOLS` match the actual source.
 ///
-/// 1. Reads `crates/pregolya-core/src/error.rs` and counts `#[non_exhaustive]` occurrences.
+/// 1. Reads all `.rs` files under `src/` recursively and counts `#[non_exhaustive]` occurrences.
 /// 2. Asserts the count equals `EXPECTED_NON_EXHAUSTIVE_COUNT`.
 /// 3. For each symbol in `EXPECTED_NON_EXHAUSTIVE_SYMBOLS`, asserts it is mentioned in the source.
 /// 4. Asserts the number of `_fails.rs` fixtures in `tests/ui/` equals the count.
@@ -94,8 +94,29 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
 #[test]
 fn test_non_exhaustive_inventory_matches_source() {
     // Cargo runs integration tests with cwd = package root (crates/pregolya-core/).
-    let source = std::fs::read_to_string("src/error.rs")
-        .expect("src/error.rs must be readable for the non-exhaustive inventory gate");
+    // Walk all src/*.rs recursively and concatenate into one string for search.
+    fn read_all_src_files() -> String {
+        let mut all = String::new();
+        fn walk(dir: &std::path::Path, out: &mut String) {
+            for entry in std::fs::read_dir(dir).expect("read src/") {
+                let entry = entry.expect("entry");
+                let p = entry.path();
+                if p.is_dir() {
+                    walk(&p, out);
+                } else if p.extension().is_some_and(|e| e == "rs") {
+                    out.push_str(&std::fs::read_to_string(&p).unwrap_or_default());
+                }
+            }
+        }
+        walk(std::path::Path::new("src"), &mut all);
+        all
+    }
+
+    let source = read_all_src_files();
+    assert!(
+        !source.is_empty(),
+        "src/ must contain at least one .rs file for the non-exhaustive inventory gate"
+    );
 
     // Count #[non_exhaustive] occurrences on actual Rust attribute lines only.
     // Doc comment lines (starting with `///` or `//!`) are excluded — they may
@@ -111,7 +132,7 @@ fn test_non_exhaustive_inventory_matches_source() {
     assert_eq!(
         actual_count, EXPECTED_NON_EXHAUSTIVE_COUNT,
         "EXPECTED_NON_EXHAUSTIVE_COUNT ({EXPECTED_NON_EXHAUSTIVE_COUNT}) does not match \
-         actual #[non_exhaustive] attribute occurrences in error.rs ({actual_count}). \
+         actual #[non_exhaustive] attribute occurrences across src/ ({actual_count}). \
          Update EXPECTED_NON_EXHAUSTIVE_COUNT and add a fixture pair."
     );
 
@@ -122,7 +143,7 @@ fn test_non_exhaustive_inventory_matches_source() {
         let bare_name = sym.rsplit("::").next().unwrap_or(sym);
         assert!(
             source.contains(bare_name),
-            "Inventory symbol '{sym}' (bare name: '{bare_name}') not found in error.rs source. \
+            "Inventory symbol '{sym}' (bare name: '{bare_name}') not found in src/ source. \
              Update EXPECTED_NON_EXHAUSTIVE_SYMBOLS to match the actual public types."
         );
     }
@@ -201,9 +222,11 @@ fn test_all_pub_types_have_non_exhaustive() {
     // Cargo runs integration tests with cwd = package root (crates/pregolya-core/).
     walk_src(Path::new("src"), &mut violations, &mut pub_types_found);
 
-    assert!(
-        pub_types_found > 0,
-        "expected to find at least 1 pub type in src/; count=0 suggests the glob is broken"
+    assert_eq!(
+        pub_types_found, EXPECTED_NON_EXHAUSTIVE_COUNT,
+        "found {pub_types_found} pub types in src/, expected {}; \
+         CI failure = a type was added without #[non_exhaustive] or count was not updated",
+        EXPECTED_NON_EXHAUSTIVE_COUNT
     );
     assert!(
         violations.is_empty(),
