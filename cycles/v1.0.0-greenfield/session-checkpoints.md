@@ -5033,7 +5033,7 @@ pregolya Phase-3 TDD Wave-1 IN PROGRESS. S-1.01 BC-5.39.001 LOCAL 3-CLEAN CONVER
 
 ### HEADS (at D-367)
 - develop: `6a50ebf` — FULLY SYNCED (develop + origin/develop both at 6a50ebf; 0/0 divergence).
-- factory-artifacts: `5cd94a4` — PUSHED (D-367 session-wrap commit).
+- factory-artifacts `5cd94a4` — PUSHED (D-367 session-wrap commit).
 - feature/S-1.01: `80f93e6` (demo commit above LOCAL 3-CLEAN anchor 1443d3d) — NOT yet pushed to origin.
 
 ### PIPELINE POSITION
@@ -5053,7 +5053,7 @@ Pre-Wave-1 spec reconciliation: CLOSED/CONVERGED (D-363; dual-lens CLEAN). devel
 
 ### BRANCH STATE (at D-367)
 - develop = 6a50ebf (origin 0/0).
-- factory-artifacts = 5cd94a4 — PUSHED.
+- factory-artifacts `5cd94a4` — PUSHED.
 - feature/S-1.01 = 80f93e6; NOT yet pushed to origin.
 
 ### DECISION-LOG DELTA (at D-367)
