@@ -150,9 +150,12 @@ pub enum RetryHint {
 impl Category {
     /// Returns the taxonomy-default [`RetryHint`] for this category.
     ///
-    /// Authoritative source: `error-taxonomy.md §Error Categories` (Default RetryHint column).
-    /// Per BC-2.14.001 {INV-004}, per-code divergence from these defaults must be
-    /// documented explicitly; implementors must not invent new hint-category pairings.
+    /// Authoritative source for variant kinds: `error-taxonomy.md §Error Categories`
+    /// (Default RetryHint column). The concrete `Later(...)` durations for
+    /// Rate (60 s), Timeout (30 s), and Transport (30 s) are crate-defined defaults;
+    /// the taxonomy specifies "Later (backoff required)" without exact values.
+    /// Per BC-2.14.001 {INV-004}, per-code divergence must be documented explicitly;
+    /// implementors must not invent new hint-category pairings.
     pub fn default_retry_hint(&self) -> RetryHint {
         match self {
             Category::Val => RetryHint::Never,
@@ -203,8 +206,9 @@ pub struct PregolyaError {
     /// Semantic retry guidance for the caller.
     pub retry_hint: RetryHint,
     /// Machine-readable error code following `E-<COMPONENT>-<NNN>` format
-    /// (e.g. `"E-CORE-001"`). Immutable once assigned.
-    pub code: String,
+    /// (e.g. `"E-CORE-001"`). Immutable once assigned. Private to enforce
+    /// immutability via the [`PregolyaError::code`] accessor.
+    code: String,
     /// Human-readable error description. MUST NOT contain credentials or
     /// API key material (DI-010).
     pub message: String,
@@ -234,13 +238,11 @@ impl PregolyaError {
                 parts.len() == 3
                     && parts[0] == "E"
                     && !parts[1].is_empty()
-                    && parts[1]
-                        .chars()
-                        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
+                    && parts[1].chars().all(|c| c.is_ascii_alphanumeric())
                     && parts[2].len() == 3
                     && parts[2].chars().all(|c| c.is_ascii_digit())
             },
-            "error code must follow E-COMPONENT-NNN format (uppercase alnum component, 3-digit numeric suffix), got: {code:?}"
+            "error code must follow E-COMPONENT-NNN format (alphanumeric component, 3-digit numeric suffix), got: {code:?}"
         );
         Self {
             component,
@@ -250,6 +252,13 @@ impl PregolyaError {
             message,
             source: None,
         }
+    }
+
+    /// Returns the error code string (e.g. `"E-CORE-001"`).
+    ///
+    /// BC-2.14.001 {INV-003}: the code is immutable once assigned.
+    pub fn code(&self) -> &str {
+        &self.code
     }
 
     /// Produces an RFC-7807 [`ProblemDetail`] from this error.
@@ -1109,22 +1118,21 @@ mod tests {
     /// EC-003 (BC-2.14.001 EC-002): `Component::Custom("newcrate")` is accepted.
     ///
     /// `to_problem()` returns `extensions.component: "newcrate"`.
-    /// The code field uses the canonical uppercase format `E-NEWCRATE-001`.
+    /// The code field uses the lowercase format `E-newcrate-001` per EC-003 spec.
     #[test]
     fn test_BC_2_14_001_ec003_custom_component() {
-        let err = PregolyaError {
-            component: Component::Custom("newcrate".into()),
-            category: Category::Internal,
-            retry_hint: RetryHint::Never,
-            code: "E-NEWCRATE-001".into(),
-            message: "custom component error".into(),
-            source: None,
-        };
+        let err = PregolyaError::new(
+            Component::Custom("newcrate".into()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-newcrate-001",
+            "custom component error",
+        );
         let problem = err.to_problem();
         // component_lowercase("newcrate") = "newcrate" — Custom value is the display name
         assert_eq!(problem.extensions.component, "newcrate");
-        // type_uri uses the code field verbatim (uppercase)
-        assert_eq!(problem.type_uri, "urn:pregolya:error:E-NEWCRATE-001");
+        // type_uri uses the code field verbatim (lowercase per EC-003)
+        assert_eq!(problem.type_uri, "urn:pregolya:error:E-newcrate-001");
     }
 
     /// BC-2.14.001 TV-004: `anyhow` compatibility.
@@ -1193,6 +1201,9 @@ mod tests {
     /// BC-2.14.001 {INV-004}: table-driven test for all 14 Category default RetryHints.
     ///
     /// Authoritative source: `error-taxonomy.md §Error Categories` (Default RetryHint column).
+    /// Also asserts exact `Later(...)` durations for the three later-categories
+    /// (Rate=60s, Timeout=30s, Transport=30s) per the crate-defined defaults
+    /// documented in `Category::default_retry_hint` doc comment.
     #[test]
     fn test_BC_2_14_001_inv004_category_default_retry_hints() {
         let cases: &[(Category, &str)] = &[
@@ -1214,6 +1225,16 @@ mod tests {
         assert_eq!(cases.len(), 14, "must cover all 14 Category variants");
         for (cat, expected_prefix) in cases {
             let hint = cat.default_retry_hint();
+            // For Later variants, also assert the exact duration.
+            if let RetryHint::Later(d) = &hint {
+                let expected_d = match cat {
+                    Category::Rate => Duration::from_secs(60),
+                    Category::Timeout => Duration::from_secs(30),
+                    Category::Transport => Duration::from_secs(30),
+                    _ => panic!("unexpected Later variant for {:?}", cat),
+                };
+                assert_eq!(d, &expected_d, "Category::{cat:?} Later duration mismatch");
+            }
             let hint_str = match &hint {
                 RetryHint::Never => "never",
                 RetryHint::Maybe => "maybe",
@@ -1240,17 +1261,20 @@ mod tests {
         );
     }
 
-    /// MED-003: debug_assert rejects lowercase component segment.
+    /// HIGH-001 positive: lowercase alphanumeric component segment is valid per EC-003.
+    ///
+    /// Story spec §Edge Cases EC-003 specifies `E-newcrate-001` as a valid code
+    /// (lowercase custom component). The debug_assert must NOT panic for this input.
     #[test]
-    #[should_panic(expected = "error code must follow E-COMPONENT-NNN format")]
     #[cfg(debug_assertions)]
-    fn test_debug_assert_rejects_lowercase_component() {
+    fn test_debug_assert_accepts_lowercase_component() {
+        // Must not panic — "E-newcrate-001" is valid (lowercase alphanumeric per EC-003)
         let _ = PregolyaError::new(
-            Component::Core,
+            Component::Custom("newcrate".into()),
             Category::Internal,
             RetryHint::Never,
-            "E-core-001",
-            "test",
+            "E-newcrate-001",
+            "custom component demo",
         );
     }
 

@@ -11,8 +11,10 @@
 
 fn check(err: pregolya_core::PregolyaError) -> String {
     // Correct external pattern: `..` is required and present.
-    let pregolya_core::PregolyaError { code, .. } = err;
-    code
+    // `code` is a private field; `message` is public. We extract `message`
+    // and access `code` via the `code()` accessor to confirm both work externally.
+    let pregolya_core::PregolyaError { message, .. } = err;
+    message
 }
 
 fn main() {}

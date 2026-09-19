@@ -7,8 +7,8 @@
 // This companion fixture proves the boundary precisely: it is the missing `..`
 // that causes the compile error, not some other aspect of the match.
 //
-// `ProblemExtensions` lives at `pregolya_core::error::ProblemExtensions`
-// (not re-exported at the crate root).
+// `ProblemExtensions` is re-exported at `pregolya_core::ProblemExtensions`
+// (also accessible at the module path `pregolya_core::error::ProblemExtensions`).
 //
 // Traces to: BC-2.14.001 {PC-008}, S-1.01 AC-007, adv F1 (POL-42).
 

@@ -63,7 +63,7 @@ fn demo_construction() {
 
     // Display format: "[<code>] <message>"
     println!("Display:  {err}");
-    println!("  .code:     {}", err.code);
+    println!("  .code:     {}", err.code());
     println!("  .message:  {}", err.message);
     println!("  .category: {:?}", err.category);
     println!("  .component:{:?}", err.component);
@@ -160,13 +160,13 @@ fn demo_enums() {
     println!();
 
     // AC-002: Custom variant — demonstrate actual construction and ProblemDetail emission
-    let custom_comp = Component::Custom("NEWCRATE".to_string());
+    let custom_comp = Component::Custom("newcrate".to_string());
     println!("  Custom:    {custom_comp:?}");
     let custom_err = PregolyaError::new(
         custom_comp,
         Category::Internal,
         RetryHint::Never,
-        "E-NEWCRATE-001",
+        "E-newcrate-001",
         "custom component demo",
     );
     let custom_prob = custom_err.to_problem();
@@ -358,7 +358,7 @@ fn demo_rfc7807() {
         "E-CORE-001",
         "immutability check",
     );
-    let original_code = immutable_err.code.clone();
+    let original_code = immutable_err.code().to_owned();
     let problem = immutable_err.to_problem();
     let expected_uri = format!("urn:pregolya:error:{original_code}");
     let preserved = problem.type_uri == expected_uri;

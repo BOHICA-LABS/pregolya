@@ -622,33 +622,185 @@ fn test_validate_allowlist_entry_rejects_wrong_prefix() {
     assert!(validate_allowlist_entry_path("src/error.rs").is_err());
 }
 
-// ── count_cfg_test_lines unit test ────────────────────────────────────────────
+// ── count_cfg_test_lines unit tests ──────────────────────────────────────────
 
-/// Verifies that count_cfg_test_lines skips blank lines and comment-only lines
-/// inside the #[cfg(test)] block, counting only code lines (matching tokei's metric).
+/// FIX-C: Verifies count_cfg_test_lines skips blank lines and comment-only lines
+/// inside the #[cfg(test)] block. The count must be EXACT (not just >= 2) so that
+/// the gate produces a stable, predictable subtraction budget.
+///
+/// The block contains:
+///   #[cfg(test)]   ← code line (FIX-K: attribute line included in count)
+///   mod tests {    ← code line
+///   // comment     ← NOT counted
+///   (blank)        ← NOT counted
+///   fn a_test() {} ← code line
+///   fn b_test() {} ← code line
+///   }              ← code line
+///
+/// Expected count = 5 code lines.
 #[test]
 fn test_count_cfg_test_lines_excludes_blanks_and_comments() {
-    let path = std::path::PathBuf::from("/tmp/test_cfg_count_pregolya.rs");
-    let content = r#"
-fn production() {}
-
-#[cfg(test)]
-mod tests {
-    // a comment line (should NOT be counted)
-
-    // blank line above also not counted
-    fn a_test() {}
-    fn b_test() {}
-}
-"#;
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_basic_pregolya_s101.rs");
+    let content = "\
+fn production() {}\n\
+\n\
+#[cfg(test)]\n\
+mod tests {\n\
+    // a comment line (should NOT be counted)\n\
+\n\
+    fn a_test() {}\n\
+    fn b_test() {}\n\
+}\n";
     std::fs::write(&path, content).expect("write temp file");
     let count = count_cfg_test_lines(&path);
-    // The mod tests { line, fn a_test, fn b_test, and closing } are code lines.
-    // The comment lines and blank lines inside are excluded.
-    assert!(
-        count >= 2,
-        "expected at least 2 code lines in cfg(test) block, got {count}"
+    // #[cfg(test)], mod tests {, fn a_test() {}, fn b_test() {}, closing } = 5
+    assert_eq!(
+        count, 5,
+        "expected exactly 5 code lines in cfg(test) block, got {count}"
     );
-    // Cleanup
     let _ = std::fs::remove_file(&path);
+}
+
+/// FIX-C: A file with no #[cfg(test)] block must return 0 (not a spurious count).
+#[test]
+fn test_count_cfg_test_lines_no_cfg_test_block_returns_zero() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_no_block_pregolya_s101.rs");
+    let content = "pub fn production() {}\npub fn another() {}\n";
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    assert_eq!(count, 0, "no cfg(test) block → expected 0, got {count}");
+    let _ = std::fs::remove_file(&path);
+}
+
+/// FIX-C: A file with #[cfg(not(test))] must return 0 — this is a FIX-B regression
+/// guard confirming that `is_cfg_test_group` does NOT match cfg(not(test)).
+#[test]
+fn test_count_cfg_test_lines_cfg_not_test_returns_zero() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_not_test_pregolya_s101.rs");
+    let content = "#[cfg(not(test))]\nmod non_test_mod {\n    fn foo() {}\n    fn bar() {}\n}\n";
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    assert_eq!(
+        count, 0,
+        "#[cfg(not(test))] must not be counted as cfg(test) block; got {count}"
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+/// FIX-C: A file with TWO #[cfg(test)] blocks must return the SUM of both counts.
+#[test]
+fn test_count_cfg_test_lines_two_blocks_sums_correctly() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_two_blocks_pregolya_s101.rs");
+    // Each block: #[cfg(test)], mod, one fn, closing } = 4 code lines
+    let content = "\
+pub fn production() {}\n\
+\n\
+#[cfg(test)]\n\
+mod tests_a {\n\
+    fn test_one() {}\n\
+}\n\
+\n\
+#[cfg(test)]\n\
+mod tests_b {\n\
+    fn test_two() {}\n\
+}\n";
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    // Block A: #[cfg(test)], mod tests_a {, fn test_one() {}, } = 4
+    // Block B: #[cfg(test)], mod tests_b {, fn test_two() {}, } = 4
+    // Total = 8
+    assert_eq!(count, 8, "two cfg(test) blocks → expected 8, got {count}");
+    let _ = std::fs::remove_file(&path);
+}
+
+// ── is_test_class_file tests ──────────────────────────────────────────────────
+
+/// FIX-D: is_test_class_file must return TRUE for test-tier paths and FALSE
+/// for non-test paths. This mirrors is_test_file coverage but is distinct:
+/// is_test_class_file excludes examples/ and benches/ (they use production thresholds).
+#[test]
+fn test_is_test_class_file_patterns() {
+    // --- TRUE cases (test-tier thresholds apply) ---
+    assert!(
+        is_test_class_file("crates/pregolya-core/tests/integration.rs"),
+        "tests/ directory component → test class"
+    );
+    assert!(
+        is_test_class_file("crates/pregolya-core/src/tests.rs"),
+        "tests.rs filename → test class"
+    );
+    assert!(
+        is_test_class_file("src/foo_test.rs"),
+        "_test.rs suffix → test class"
+    );
+    assert!(
+        is_test_class_file("src/foo_tests.rs"),
+        "_tests.rs suffix → test class"
+    );
+
+    // --- FALSE cases (production thresholds apply) ---
+    assert!(
+        !is_test_class_file("crates/pregolya-core/examples/error_taxonomy_demo.rs"),
+        "examples/ → NOT test class (production thresholds)"
+    );
+    assert!(
+        !is_test_class_file("crates/pregolya-core/benches/bench_errors.rs"),
+        "benches/ → NOT test class (production thresholds)"
+    );
+    assert!(
+        !is_test_class_file("crates/pregolya-core/src/lib.rs"),
+        "regular src file → NOT test class"
+    );
+    assert!(
+        !is_test_class_file("crates/pregolya-standard-tests/src/lib.rs"),
+        "crate name contains 'test' but path is under src/ → NOT test class"
+    );
+}
+
+// ── deny-description-cache-key scanner ───────────────────────────────────────
+
+/// FIX-E: A real code usage of cache_key adjacent to a description ident MUST
+/// produce a finding (positive case).
+///
+/// The scanner collects ALL idents from the token stream and checks for a
+/// `cache_key` ident within a 10-token window of a `description` ident.
+/// Function parameter lists provide a natural context for both to appear together.
+#[test]
+fn test_description_cache_key_scanner_finds_violation() {
+    // Both `cache_key` and `description` appear as ident tokens in the parameter
+    // list — they are within the 10-token window so the scanner must fire.
+    let src =
+        "fn store(description: &str, cache_key: &str) { let _ = (description, cache_key); }\n";
+    let findings = scan_for_description_cache_key_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "cache_key adjacent to description must produce a finding; got: {findings:?}"
+    );
+}
+
+/// FIX-E: A doc comment containing cache_key and description must NOT produce
+/// a finding. proc_macro2 strips doc comments at the lexer level — they never
+/// enter the token stream — so the window check cannot see them.
+#[test]
+fn test_description_cache_key_scanner_ignores_doc_comments() {
+    // Only a doc comment — no production-code identifiers.
+    let src = "/// Gets the cache_key for the description of this item.\npub fn nothing() {}\n";
+    let findings = scan_for_description_cache_key_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "doc comment with cache_key + description must NOT produce a finding; got: {findings:?}"
+    );
+}
+
+/// FIX-E: Test / examples files must be excluded from the scanner entirely.
+#[test]
+fn test_description_cache_key_scanner_skips_test_files() {
+    let src = "fn build_cache(description: &str) { let key = get_cache_key(description); }\n";
+    // Test file path — must be skipped.
+    let findings =
+        scan_for_description_cache_key_in_source(src, "crates/pregolya-core/tests/integration.rs");
+    assert!(
+        findings.is_empty(),
+        "test files must be excluded from description-cache-key scan; got: {findings:?}"
+    );
 }

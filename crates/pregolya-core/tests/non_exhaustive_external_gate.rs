@@ -57,7 +57,7 @@
 //!   "pregolya_core::Category",
 //!   "pregolya_core::RetryHint",
 //!   "pregolya_core::ProblemDetail",
-//!   "pregolya_core::error::ProblemExtensions",
+//!   "pregolya_core::ProblemExtensions",
 //! ]
 //! ```
 
@@ -76,7 +76,7 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
     "pregolya_core::Category",
     "pregolya_core::RetryHint",
     "pregolya_core::ProblemDetail",
-    "pregolya_core::error::ProblemExtensions",
+    "pregolya_core::ProblemExtensions",
 ];
 
 // ── Inventory load-bearing runtime gate (F1) ─────────────────────────────────

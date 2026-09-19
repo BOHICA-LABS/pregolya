@@ -102,77 +102,107 @@ fn is_test_class_file(path: &str) -> bool {
 /// non-whitespace token is `//`).
 ///
 /// Returns 0 if the file cannot be parsed or has no cfg(test) block.
+/// A warning is printed to stderr if the file cannot be read or parsed, so the
+/// caller knows the returned count of 0 is unadjusted (not a genuine zero).
 ///
 /// The subtraction of this count from tokei's `Code` metric gives the adjusted
 /// production code line count per CLAUDE.md §File size: "#[cfg(test)] mod blocks
-/// excluded from the count."
+/// excluded from the count." The count includes the attribute line itself
+/// (`#[cfg(test)]`) through the closing `}` of the mod block.
 fn count_cfg_test_lines(path: &std::path::Path) -> usize {
-    use proc_macro2::{Delimiter, TokenStream, TokenTree};
+    use proc_macro2::TokenStream;
 
     let Ok(source) = std::fs::read_to_string(path) else {
+        eprintln!(
+            "WARN: cfg(test) adjustment skipped for {} (read error) — reported count is unadjusted",
+            path.display()
+        );
         return 0;
     };
     let Ok(ts) = source.parse::<TokenStream>() else {
+        eprintln!(
+            "WARN: cfg(test) adjustment skipped for {} (parse error) — reported count is unadjusted",
+            path.display()
+        );
         return 0;
     };
 
     let lines: Vec<&str> = source.lines().collect();
-    let mut total = 0usize;
+    count_cfg_test_in_stream(ts.into_iter(), &lines)
+}
 
-    // Walk top-level token stream looking for:
-    //   #[cfg(test)]
-    //   <optional intervening #[...] attributes>
-    //   mod <ident> { ... }   ← count the Group's line span
-    let tokens: Vec<TokenTree> = ts.into_iter().collect();
+/// Recursive helper for [`count_cfg_test_lines`].
+///
+/// Walks `iter` looking for `#[cfg(test)] mod ... { ... }` patterns and counting
+/// their code lines. Also recurses into non-cfg-test mod blocks to find nested
+/// cfg(test) blocks. The `lines` slice spans the entire source file so that
+/// `proc_macro2` span line numbers (which are file-relative) map correctly.
+fn count_cfg_test_in_stream(iter: proc_macro2::token_stream::IntoIter, lines: &[&str]) -> usize {
+    use proc_macro2::{Delimiter, TokenTree};
+
+    let tokens: Vec<TokenTree> = iter.collect();
+    let mut total = 0usize;
     let mut i = 0;
     while i < tokens.len() {
         // Look for `#` followed by `[cfg(test)]` bracket group.
-        // Edition 2024 let-chains collapse nested ifs without sacrificing readability.
+        // FIX-B: use is_cfg_test_group() instead of contains("cfg") && contains("test")
+        // to prevent false matches on #[cfg(not(test))] and #[cfg(feature = "test-utils")].
         if let TokenTree::Punct(p) = &tokens[i]
             && p.as_char() == '#'
             && let Some(TokenTree::Group(attr_group)) = tokens.get(i + 1)
             && attr_group.delimiter() == Delimiter::Bracket
+            && is_cfg_test_group(attr_group)
         {
-            let attr_str = attr_group.to_string();
-            if attr_str.contains("cfg") && attr_str.contains("test") {
-                // Scan forward past optional intervening attributes
-                // (e.g. `#[allow(clippy::unwrap_used)]`) then find `mod <ident> { ... }`
-                let mut j = i + 2;
-                // Skip intervening `#[...]` attributes
-                while j + 1 < tokens.len() {
-                    if let TokenTree::Punct(p2) = &tokens[j]
-                        && p2.as_char() == '#'
-                        && let TokenTree::Group(_) = &tokens[j + 1]
-                    {
-                        j += 2;
-                        continue;
-                    }
-                    break;
-                }
-                // Expect `mod <ident> { ... }`
-                // tokens[j+1] = mod name ident, tokens[j+2] = body Group
-                if let Some(TokenTree::Ident(mod_kw)) = tokens.get(j)
-                    && mod_kw == "mod"
-                    && let Some(TokenTree::Group(mod_group)) = tokens.get(j + 2)
-                    && mod_group.delimiter() == Delimiter::Brace
+            // Scan forward past optional intervening attributes
+            // (e.g. `#[allow(clippy::unwrap_used)]`) then find `mod <ident> { ... }`
+            let mut j = i + 2;
+            // Skip intervening `#[...]` attributes
+            while j + 1 < tokens.len() {
+                if let TokenTree::Punct(p2) = &tokens[j]
+                    && p2.as_char() == '#'
+                    && let TokenTree::Group(_) = &tokens[j + 1]
                 {
-                    let span = mod_group.span();
-                    let start_line = span.start().line; // 1-based
-                    let end_line = span.end().line; // 1-based
-                    // Count non-blank, non-comment-only lines
-                    // in [start_line, end_line] (inclusive, 1-based).
-                    for line in lines[(start_line - 1)..end_line.min(lines.len())].iter() {
-                        let trimmed = line.trim();
-                        if !trimmed.is_empty() && !trimmed.starts_with("//") {
-                            total += 1;
-                        }
-                    }
-                    // Advance past the mod block
-                    i = j + 3;
+                    j += 2;
                     continue;
                 }
+                break;
+            }
+            // Expect `mod <ident> { ... }`
+            // tokens[j] = "mod", tokens[j+1] = mod name ident, tokens[j+2] = body Group
+            if let Some(TokenTree::Ident(mod_kw)) = tokens.get(j)
+                && mod_kw == "mod"
+                && let Some(TokenTree::Group(mod_group)) = tokens.get(j + 2)
+                && mod_group.delimiter() == Delimiter::Brace
+            {
+                // FIX-K: start counting from the `#` attribute line (tokens[i]) so that
+                // the `#[cfg(test)]` line itself is included in the subtraction budget.
+                let attr_start_line = tokens[i].span().start().line; // 1-based
+                let end_line = mod_group.span().end().line; // 1-based
+                // Count non-blank, non-comment-only lines
+                // in [attr_start_line, end_line] (inclusive, 1-based).
+                for line in lines[(attr_start_line - 1)..end_line.min(lines.len())].iter() {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() && !trimmed.starts_with("//") {
+                        total += 1;
+                    }
+                }
+                // Advance past the mod block
+                i = j + 3;
+                continue;
             }
         }
+
+        // FIX-K: Recurse into non-cfg(test) mod blocks looking for nested cfg(test) blocks.
+        // A bare `mod <ident> { ... }` (without preceding #[cfg(test)]) may contain
+        // nested cfg(test) blocks that also contribute to the adjustment budget.
+        if let TokenTree::Ident(kw) = &tokens[i]
+            && kw == "mod"
+            && let Some(TokenTree::Group(mod_group)) = tokens.get(i + 2)
+            && mod_group.delimiter() == Delimiter::Brace
+        {
+            total += count_cfg_test_in_stream(mod_group.stream().into_iter(), lines);
+        }
+
         i += 1;
     }
     total
@@ -383,16 +413,33 @@ fn check_client_timeout() {
     }
 
     let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
 
     for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
-            Err(_) => continue,
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
+            }
         };
+        files_analyzed += 1;
         let findings = scan_for_timeout_violations_in_source(&content, file_path);
         all_findings.extend(findings);
     }
 
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: check-client-timeout could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
     if !all_findings.is_empty() {
         for f in &all_findings {
             eprintln!("ERROR: reqwest::Client::new() without timeout: {f}");
@@ -400,7 +447,9 @@ fn check_client_timeout() {
         eprintln!("Use Client::builder().timeout(Duration::from_secs(30)).build() instead.");
         exit(1);
     }
-    println!("check-client-timeout PASSED: {files_scanned} files scanned, 0 violations.");
+    println!(
+        "check-client-timeout PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
 }
 
 /// Scan `src` for reqwest client timeout violations using `proc_macro2` token-tree walking.
@@ -604,16 +653,33 @@ fn check_no_panic() {
     }
 
     let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
 
     for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
-            Err(_) => continue,
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
+            }
         };
+        files_analyzed += 1;
         let findings = scan_for_panics_in_source(&content, file_path);
         all_findings.extend(findings);
     }
 
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: check-no-panic could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
     if !all_findings.is_empty() {
         for f in &all_findings {
             eprintln!("ERROR: panic-potential in library code: {f}");
@@ -621,7 +687,9 @@ fn check_no_panic() {
         eprintln!("Use ? propagation with structured error variants instead.");
         exit(1);
     }
-    println!("check-no-panic PASSED: {files_scanned} files scanned, 0 violations.");
+    println!(
+        "check-no-panic PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
 }
 
 /// Scan `src` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]` scopes.
@@ -786,16 +854,33 @@ fn deny_anyhow_in_lib() {
     }
 
     let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
 
     for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
-            Err(_) => continue,
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
+            }
         };
+        files_analyzed += 1;
         let findings = scan_for_anyhow_in_source(&content, file_path);
         all_findings.extend(findings);
     }
 
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: deny-anyhow-in-lib could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
     if !all_findings.is_empty() {
         eprintln!("ERROR: anyhow is banned from pregolya-* library crates (ADR-010 / NE-03):");
         for f in &all_findings {
@@ -803,7 +888,9 @@ fn deny_anyhow_in_lib() {
         }
         exit(1);
     }
-    println!("deny-anyhow-in-lib PASSED: {files_scanned} files scanned, 0 violations.");
+    println!(
+        "deny-anyhow-in-lib PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
 }
 
 /// Scan `src` for `use anyhow` patterns outside `#[cfg(test)]` scopes.
@@ -947,25 +1034,36 @@ fn deny_description_cache_key() {
     }
 
     let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
 
     for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
-            Err(_) => continue,
-        };
-        // Scan for description-proxy cache-key patterns: lines containing a cache-key
-        // identifier AND a description reference indicate description-proxy cache-key usage.
-        for (line_num, line) in content.lines().enumerate() {
-            let has_cache_key = line.contains("cache_key")
-                || line.contains("CacheKey")
-                || line.contains("cache_key_for");
-            let has_description = line.contains("description") || line.contains("Description");
-            if has_cache_key && has_description {
-                all_findings.push(format!("{}:{}: {}", file_path, line_num + 1, line.trim()));
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
             }
-        }
+        };
+        files_analyzed += 1;
+        // FIX-E: use proc_macro2-based scanner to avoid false positives on doc comments
+        // (e.g. `/// Gets the cache_key for the description` previously triggered the
+        // old line-contains scan; proc_macro2 discards comments at the lexer level).
+        let findings = scan_for_description_cache_key_in_source(&content, file_path);
+        all_findings.extend(findings);
     }
 
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: deny-description-cache-key could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
     if !all_findings.is_empty() {
         eprintln!("ERROR: description-proxy cache-key usage (ADR-011 / NE-05):");
         for f in &all_findings {
@@ -973,7 +1071,79 @@ fn deny_description_cache_key() {
         }
         exit(1);
     }
-    println!("deny-description-cache-key PASSED: {files_scanned} files scanned, 0 violations.");
+    println!(
+        "deny-description-cache-key PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
+}
+
+/// Collect all `Ident` tokens from a token stream into a flat `(name, line)` list.
+///
+/// Recurses into all groups (brace, paren, bracket) so that idents inside
+/// function bodies, attribute arguments, and macro invocations are all captured.
+/// Used by `scan_for_description_cache_key_in_source`.
+fn collect_idents(ts: proc_macro2::TokenStream) -> Vec<(String, usize)> {
+    use proc_macro2::TokenTree;
+    let mut out = Vec::new();
+    for tt in ts {
+        match tt {
+            TokenTree::Ident(id) => {
+                out.push((id.to_string(), id.span().start().line));
+            }
+            TokenTree::Group(g) => {
+                out.extend(collect_idents(g.stream()));
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
+/// Scan `src` for description-proxy cache-key usage using proc_macro2 token-tree walking.
+///
+/// Looks for a `cache_key`, `CacheKey`, or `cache_key_for` ident within a window of
+/// tokens before/after a `description` or `Description` ident. This is more precise
+/// than line-by-line string matching because proc_macro2 discards doc comments at the
+/// lexer level — doc lines like `/// Gets the cache_key for the description` cannot
+/// produce false positives.
+///
+/// The adjacency window is set to 10 tokens on each side of the cache-key ident.
+///
+/// Returns empty when `path` is a test or examples file (per `is_lint_exempt_file`).
+fn scan_for_description_cache_key_in_source(src: &str, path: &str) -> Vec<String> {
+    if is_lint_exempt_file(path) {
+        return Vec::new();
+    }
+
+    use proc_macro2::TokenStream;
+    let ts: TokenStream = match src.parse() {
+        Ok(s) => s,
+        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
+    };
+
+    let idents = collect_idents(ts);
+    const WINDOW: usize = 10;
+    let cache_key_names: &[&str] = &["cache_key", "CacheKey", "cache_key_for"];
+    let description_names: &[&str] = &["description", "Description"];
+
+    let mut findings = Vec::new();
+    for (i, (name, line)) in idents.iter().enumerate() {
+        if !cache_key_names.contains(&name.as_str()) {
+            continue;
+        }
+        // Check the surrounding window for a description ident.
+        let start = i.saturating_sub(WINDOW);
+        let end = (i + WINDOW + 1).min(idents.len());
+        let has_description = idents[start..end]
+            .iter()
+            .any(|(n, _)| description_names.contains(&n.as_str()));
+        if has_description {
+            findings.push(format!(
+                "{}:{}: cache_key ident adjacent to description ident (ADR-011 / NE-05)",
+                path, line
+            ));
+        }
+    }
+    findings
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
