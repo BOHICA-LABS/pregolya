@@ -200,12 +200,18 @@ impl PregolyaError {
         code: impl Into<String>,
         message: impl Into<String>,
     ) -> Self {
+        let code = code.into();
+        let message = message.into();
+        debug_assert!(
+            code.starts_with("E-"),
+            "error code must follow E-COMPONENT-NNN format, got: {code:?}"
+        );
         Self {
             component,
             category,
             retry_hint,
-            code: code.into(),
-            message: message.into(),
+            code,
+            message,
             source: None,
         }
     }
@@ -325,10 +331,24 @@ fn component_lowercase(component: &Component) -> String {
 
 /// Returns the humanized category name for RFC-7807 `title`.
 ///
-/// Each title is grounded in the variant's own doc comment:
-/// Val → "Validation failure…", Auth → "Authentication / authorization…",
-/// Rate → "Rate limit exceeded", Exec → "Concurrent branch…execution failure",
-/// all others use their fully-spelled-out single-word names.
+/// Authoritative source: BC-2.14.002 {PC-001}.
+///
+/// | `Category` variant | Returned title |
+/// |---------------------|----------------|
+/// | `Val`          | `"Validation"` |
+/// | `Auth`         | `"Authentication"` |
+/// | `Rate`         | `"Rate Limit"` |
+/// | `Timeout`      | `"Timeout"` |
+/// | `Transport`    | `"Transport"` |
+/// | `Internal`     | `"Internal"` |
+/// | `Durability`   | `"Durability"` |
+/// | `Policy`       | `"Policy"` |
+/// | `Tool`         | `"Tool"` |
+/// | `Concurrency`  | `"Concurrency"` |
+/// | `Security`     | `"Security"` |
+/// | `Tenancy`      | `"Tenancy"` |
+/// | `Exec`         | `"Execution"` |
+/// | `Sys`          | `"System"` |
 fn category_title(category: &Category) -> &'static str {
     match category {
         Category::Val => "Validation",
@@ -357,7 +377,17 @@ fn retry_hint_str(hint: &RetryHint) -> String {
     match hint {
         RetryHint::Never => "never".to_string(),
         RetryHint::Maybe => "maybe".to_string(),
-        RetryHint::Later(d) => format!("later:{}", d.as_secs()),
+        RetryHint::Later(d) => {
+            // Ceiling-round non-zero sub-second durations so that Duration::ZERO
+            // remains the sole source of "later:0" (the retry-immediately sentinel).
+            // A 900ms wait would truncate to "later:0" without this fix (F3).
+            let secs = if d.subsec_nanos() > 0 {
+                d.as_secs() + 1
+            } else {
+                d.as_secs()
+            };
+            format!("later:{secs}")
+        }
     }
 }
 
@@ -377,7 +407,8 @@ mod tests {
     static_assertions::assert_impl_all!(PregolyaError: std::error::Error, Send, Sync);
     //
     // AC-006 (BC-2.14.001 {PC-007}): Default must NOT be implemented.
-    // This assertion fails to COMPILE if `#[derive(Default)]` is ever added.
+    // This assertion FAILS TO COMPILE if `#[derive(Default)]` is ever added.
+    // No runtime test is needed — the compile-time assertion is the enforcement.
     static_assertions::assert_not_impl_any!(PregolyaError: Default);
 
     // ── BC-2.14.001 Tests ─────────────────────────────────────────────────────
@@ -414,13 +445,27 @@ mod tests {
     /// verifies it builds the struct without panicking and returns control.
     #[test]
     fn test_BC_2_14_001_new_constructor() {
-        let _err = PregolyaError::new(
+        let err = PregolyaError::new(
             Component::Core,
             Category::Val,
             RetryHint::Never,
             "E-CORE-001",
             "Invalid ContentBlock type",
         );
+        // F4 fix: assert all fields are assigned correctly by new()
+        // Use distinguishable literals so code/message transposition fails
+        assert_eq!(
+            err.code, "E-CORE-001",
+            "new() must assign code as first string arg"
+        );
+        assert_eq!(
+            err.message, "Invalid ContentBlock type",
+            "new() must assign message as second string arg"
+        );
+        assert_eq!(err.component, Component::Core);
+        assert_eq!(err.category, Category::Val);
+        assert!(matches!(err.retry_hint, RetryHint::Never));
+        assert!(err.source.is_none(), "new() must set source to None");
     }
 
     /// AC-002 (traces to BC-2.14.001 {PC-002})
@@ -546,18 +591,6 @@ mod tests {
         );
     }
 
-    /// AC-006 (traces to BC-2.14.001 {PC-007})
-    ///
-    /// `Default` is NOT derived on `PregolyaError`. Compile-time enforcement is
-    /// via `static_assertions::assert_not_impl_any!` at module level above;
-    /// this function body is intentionally empty (the guard is compile-time).
-    #[test]
-    fn test_BC_2_14_001_not_default() {
-        // Compile-time assertion is at module level.
-        // If `#[derive(Default)]` is ever added to `PregolyaError`, the
-        // module-level `assert_not_impl_any!` causes a COMPILE ERROR.
-    }
-
     /// AC-007 (traces to BC-2.14.001 {PC-008})
     ///
     /// `PregolyaError` is `#[non_exhaustive]`. Struct-literal construction is
@@ -674,18 +707,84 @@ mod tests {
         };
         let problem = err.to_problem();
         let json = serde_json::to_string(&problem).expect("ProblemDetail must serialize to JSON");
-        assert!(json.contains("\"type\""), "RFC-7807: 'type' field required");
+
+        // Parse and validate structure (VP-BC214002-01: JSON schema validation)
+        let v: serde_json::Value =
+            serde_json::from_str(&json).expect("serialized JSON must be parseable");
+        let obj = v
+            .as_object()
+            .expect("RFC-7807 response must be a JSON object");
+
+        // Required RFC-7807 fields must be non-null strings
         assert!(
-            json.contains("\"title\""),
-            "RFC-7807: 'title' field required"
+            obj.get("type")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "RFC-7807: 'type' must be a non-null string"
         );
         assert!(
-            json.contains("\"detail\""),
-            "RFC-7807: 'detail' field required"
+            obj.get("title")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "RFC-7807: 'title' must be a non-null string"
         );
         assert!(
-            !json.contains(":null"),
-            "RFC-7807 required fields must not be null"
+            obj.get("detail")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "RFC-7807: 'detail' must be a non-null string"
+        );
+
+        // Extension fields must be present and be strings
+        let exts = obj
+            .get("extensions")
+            .and_then(serde_json::Value::as_object)
+            .expect("extensions must be a JSON object");
+        assert!(
+            exts.get("retry_hint")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "extensions.retry_hint must be a string"
+        );
+        assert!(
+            exts.get("component")
+                .and_then(serde_json::Value::as_str)
+                .is_some(),
+            "extensions.component must be a string"
+        );
+
+        // No field in the top-level object is null
+        for (key, val) in obj {
+            assert!(!val.is_null(), "RFC-7807 field '{}' must not be null", key);
+        }
+    }
+
+    /// BC-2.14.001 MUST-NOT + BC-2.14.002 EC-003 regression:
+    /// The source chain MUST NOT appear in `to_problem()` JSON output.
+    /// A future `detail_chain` extension would leak internal errors without this test failing.
+    #[test]
+    fn test_BC_2_14_002_source_chain_not_leaked() {
+        use std::error::Error;
+        const SENTINEL: &str = "LEAK-SENTINEL-DO-NOT-EMIT-7f3a9b1c";
+        let inner_err = std::io::Error::other(SENTINEL);
+        let err = PregolyaError {
+            component: Component::Graph,
+            category: Category::Durability,
+            retry_hint: RetryHint::Never,
+            code: "E-GRAPH-001".into(),
+            message: "outer message".into(),
+            source: Some(Arc::new(inner_err) as Arc<dyn Error + Send + Sync>),
+        };
+        let problem = err.to_problem();
+        let json = serde_json::to_string(&problem).expect("ProblemDetail must serialize");
+        assert!(
+            !json.contains(SENTINEL),
+            "source chain sentinel MUST NOT appear in ProblemDetail JSON (BC-2.14.001 MUST-NOT, BC-2.14.002 EC-003)"
+        );
+        // The outer message IS in the JSON (detail field)
+        assert!(
+            json.contains("outer message"),
+            "outer message must be in detail"
         );
     }
 
@@ -825,6 +924,51 @@ mod tests {
         };
         let p4 = err_60.to_problem();
         assert_eq!(p4.extensions.retry_hint, "later:60");
+
+        // F3 regression: sub-second durations ceiling-round so they don't collide
+        // with the "later:0" sentinel (Duration::ZERO = retry immediately).
+        let err_subsec = PregolyaError {
+            component: Component::Prov,
+            category: Category::Rate,
+            retry_hint: RetryHint::Later(Duration::from_millis(1)),
+            code: "E-PROV-003".into(),
+            message: "subsec".into(),
+            source: None,
+        };
+        let p5 = err_subsec.to_problem();
+        assert_eq!(
+            p5.extensions.retry_hint, "later:1",
+            "sub-second duration must ceiling-round to 1, not 0"
+        );
+
+        let err_subsec2 = PregolyaError {
+            component: Component::Prov,
+            category: Category::Rate,
+            retry_hint: RetryHint::Later(Duration::from_millis(1500)),
+            code: "E-PROV-004".into(),
+            message: "subsec2".into(),
+            source: None,
+        };
+        let p6 = err_subsec2.to_problem();
+        assert_eq!(
+            p6.extensions.retry_hint, "later:2",
+            "1500ms must ceiling-round to 2 seconds"
+        );
+
+        // Duration::ZERO must still produce "later:0" (the retry-immediately sentinel)
+        let err_zero2 = PregolyaError {
+            component: Component::Prov,
+            category: Category::Rate,
+            retry_hint: RetryHint::Later(Duration::ZERO),
+            code: "E-PROV-005".into(),
+            message: "zero sentinel".into(),
+            source: None,
+        };
+        let p7 = err_zero2.to_problem();
+        assert_eq!(
+            p7.extensions.retry_hint, "later:0",
+            "Duration::ZERO must still produce 'later:0'"
+        );
     }
 
     /// AC-015 (traces to BC-2.14.001 {INV-003})

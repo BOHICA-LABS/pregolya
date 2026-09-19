@@ -79,6 +79,71 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
     "pregolya_core::error::ProblemExtensions",
 ];
 
+// ── Inventory load-bearing runtime gate (F1) ─────────────────────────────────
+
+/// Runtime gate: verifies that `EXPECTED_NON_EXHAUSTIVE_COUNT` and
+/// `EXPECTED_NON_EXHAUSTIVE_SYMBOLS` match the actual source.
+///
+/// 1. Reads `crates/pregolya-core/src/error.rs` and counts `#[non_exhaustive]` occurrences.
+/// 2. Asserts the count equals `EXPECTED_NON_EXHAUSTIVE_COUNT`.
+/// 3. For each symbol in `EXPECTED_NON_EXHAUSTIVE_SYMBOLS`, asserts it is mentioned in the source.
+/// 4. Asserts the number of `_fails.rs` fixtures in `tests/ui/` equals the count.
+///
+/// This makes the inventory constants load-bearing: adding a `#[non_exhaustive]` type
+/// without updating the constants will fail this test.
+#[test]
+fn test_non_exhaustive_inventory_matches_source() {
+    // Cargo runs integration tests with cwd = package root (crates/pregolya-core/).
+    let source = std::fs::read_to_string("src/error.rs")
+        .expect("src/error.rs must be readable for the non-exhaustive inventory gate");
+
+    // Count #[non_exhaustive] occurrences on actual Rust attribute lines only.
+    // Doc comment lines (starting with `///` or `//!`) are excluded — they may
+    // mention `#[non_exhaustive]` in explanatory prose without being attributes.
+    let actual_count = source
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            !trimmed.starts_with("///") && !trimmed.starts_with("//!")
+        })
+        .filter(|line| line.contains("#[non_exhaustive]"))
+        .count();
+    assert_eq!(
+        actual_count, EXPECTED_NON_EXHAUSTIVE_COUNT,
+        "EXPECTED_NON_EXHAUSTIVE_COUNT ({EXPECTED_NON_EXHAUSTIVE_COUNT}) does not match \
+         actual #[non_exhaustive] attribute occurrences in error.rs ({actual_count}). \
+         Update EXPECTED_NON_EXHAUSTIVE_COUNT and add a fixture pair."
+    );
+
+    // Verify each symbol in the inventory appears in the source
+    for sym in &EXPECTED_NON_EXHAUSTIVE_SYMBOLS {
+        // The symbol names are qualified (e.g. "pregolya_core::Component") —
+        // strip to the bare type name for source-file lookup.
+        let bare_name = sym.rsplit("::").next().unwrap_or(sym);
+        assert!(
+            source.contains(bare_name),
+            "Inventory symbol '{sym}' (bare name: '{bare_name}') not found in error.rs source. \
+             Update EXPECTED_NON_EXHAUSTIVE_SYMBOLS to match the actual public types."
+        );
+    }
+
+    // Count _fails.rs fixtures in tests/ui/ — must equal the inventory count
+    // Path is relative to the package root (crates/pregolya-core/).
+    let ui_dir = std::fs::read_dir("tests/ui/").expect("tests/ui/ must be readable");
+    let fails_count = ui_dir
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().ends_with("_fails.rs"))
+        .count();
+    assert_eq!(
+        fails_count, EXPECTED_NON_EXHAUSTIVE_COUNT,
+        "Number of _fails.rs fixtures in tests/ui/ ({fails_count}) does not match \
+         EXPECTED_NON_EXHAUSTIVE_COUNT ({EXPECTED_NON_EXHAUSTIVE_COUNT}). \
+         Add a compile-fail fixture for any new non-exhaustive type."
+    );
+
+    println!("non_exhaustive gate: {} types validated", actual_count);
+}
+
 // ── PregolyaError (struct) ────────────────────────────────────────────────────
 
 /// AC-007 (BC-2.14.001 {PC-008}): Attempting to match `PregolyaError` from
@@ -87,9 +152,6 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
 /// rustc E0638: `..` required with struct marked as non-exhaustive.
 #[test]
 fn test_BC_2_14_001_non_exhaustive_external_match_without_dots_fails() {
-    // Silence the unused-constant warning from the inventory declarations.
-    let _ = EXPECTED_NON_EXHAUSTIVE_SYMBOLS;
-
     let t = trybuild::TestCases::new();
     // This fixture must produce a compile error (E0638).
     t.compile_fail("tests/ui/pregolya_error_match_without_dots_fails.rs");

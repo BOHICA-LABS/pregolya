@@ -1,7 +1,9 @@
 //! Error taxonomy demo — S-1.01 per-AC visual evidence.
 //!
-//! Exercises the public `pregolya-core` error API across all 15 acceptance
+//! Exercises the public `pregolya-core` error API across 13 of the 15 acceptance
 //! criteria for story S-1.01:
+//! AC-005 and AC-006 are compile-time assertions verified by `static_assertions`
+//! and `trybuild` — they have no runtime-observable output to record.
 //!
 //! | Section          | ACs covered                                    |
 //! |------------------|------------------------------------------------|

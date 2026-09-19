@@ -11,7 +11,6 @@ publish = false
 pregolya-macros = { path = "../pregolya-macros" }
 async-trait = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
@@ -25,6 +24,8 @@ anyhow = { workspace = true }
 # Compile-fail / compile-pass gate harness (AC-007 / BC-2.14.001 {PC-008})
 # Validates #[non_exhaustive] external-boundary behaviour from outside the crate.
 trybuild = { workspace = true }
+# JSON serialization — tests and examples only (CR-001: serde_json not needed in production lib)
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

@@ -6,9 +6,17 @@
 # Generated code (OUT_DIR/, *.gen.rs) and tests/fixtures/ are auto-excluded by glob.
 # Inline opt-out comments are NOT permitted — this file is the only opt-out path.
 #
-# Thresholds (tokei Code metric — blanks, comments, cfg(test) blocks excluded):
+# NOTE: tokei counts ALL code-lines in a file including inline #[cfg(test)] blocks
+# in production files. Inline test modules contribute to the production file's code
+# count — this is intentional (consistent with xtask/src/main.rs check_file_size NOTE).
+#
+# Thresholds (tokei Code metric):
 #   Production files: soft 500 / hard 750 code-lines
 #   Test files:       soft 1000 / hard 1500 code-lines
+#
+# Allowlist entries MUST use workspace-relative paths (e.g. "crates/pregolya-core/src/error.rs")
+# to prevent over-broad matching. A bare filename like "error.rs" would match every crate's
+# error.rs — use the full path from workspace root instead.
 #
 # Example entry:
 # [[allow]]
@@ -16,4 +24,10 @@
 # reason = "Cohesive state machine — splitting would break invariants"
 # approver = "architect"
 # date = "2026-09-01"
+
+[[allow]]
+path = "crates/pregolya-core/src/error.rs"
+reason = "Single-cohesion error taxonomy module (S-1.01). Production code is ~177 code-lines; test module is a 15-AC conformance suite justified under CLAUDE.md cohesion clause ('a table-driven conformance suite'). Total estimated tokei Code: ~655 lines (below hard gate of 750). Soft warning acknowledged."
+approver = "jmagady"
+date = "2026-09-19"
 

@@ -128,50 +128,74 @@ fn check_file_size() {
 
     let mut violations: Vec<String> = Vec::new();
     let mut warnings: Vec<String> = Vec::new();
+    let mut files_measured: usize = 0;
 
-    if let Some(rust) = json.get("Rust")
-        && let Some(reports) = rust.get("reports").and_then(|r| r.as_array())
-    {
-        for report in reports {
-            let name = report
-                .get("name")
-                .and_then(|n| n.as_str())
-                .unwrap_or("<unknown>");
-            let code = report
-                .get("stats")
-                .and_then(|s| s.get("code"))
-                .and_then(|c| c.as_u64())
-                .unwrap_or(0);
+    // F2 fix: exit with diagnostic when tokei found no Rust files or has empty reports.
+    let rust = match json.get("Rust") {
+        Some(r) => r,
+        None => {
+            eprintln!(
+                "ERROR: tokei found no Rust files — gate cannot certify anything. \
+                 Is the scan path correct?"
+            );
+            exit(1);
+        }
+    };
+    let reports = match rust.get("reports").and_then(|r| r.as_array()) {
+        Some(r) if !r.is_empty() => r,
+        Some(_) => {
+            eprintln!("ERROR: tokei returned empty reports array — gate cannot certify anything.");
+            exit(1);
+        }
+        None => {
+            eprintln!(
+                "ERROR: tokei output missing 'reports' array — gate cannot certify anything."
+            );
+            exit(1);
+        }
+    };
 
-            // Skip generated code, build artifacts, and fixture data.
-            if name.contains("/target/")
-                || name.contains("OUT_DIR")
-                || name.ends_with(".gen.rs")
-                || name.contains("/tests/fixtures/")
-            {
-                continue;
-            }
+    for report in reports {
+        let name = report
+            .get("name")
+            .and_then(|n| n.as_str())
+            .unwrap_or("<unknown>");
+        let code = report
+            .get("stats")
+            .and_then(|s| s.get("code"))
+            .and_then(|c| c.as_u64())
+            .unwrap_or(0);
 
-            if allowlist.is_allowed(name) {
-                continue;
-            }
+        // Skip generated code, build artifacts, and fixture data.
+        if name.contains("/target/")
+            || name.contains("OUT_DIR")
+            || name.ends_with(".gen.rs")
+            || name.contains("/tests/fixtures/")
+        {
+            continue;
+        }
 
-            let is_test = is_test_file(name);
-            let (soft, hard) = if is_test {
-                (test_soft, test_hard)
-            } else {
-                (prod_soft, prod_hard)
-            };
+        if allowlist.is_allowed(name) {
+            continue;
+        }
 
-            if code > hard {
-                violations.push(format!(
-                    "HARD GATE FAIL: {name} has {code} code lines (limit: {hard})"
-                ));
-            } else if code > soft {
-                warnings.push(format!(
-                    "soft warning: {name} has {code} code lines (soft limit: {soft})"
-                ));
-            }
+        files_measured += 1;
+
+        let is_test = is_test_file(name);
+        let (soft, hard) = if is_test {
+            (test_soft, test_hard)
+        } else {
+            (prod_soft, prod_hard)
+        };
+
+        if code > hard {
+            violations.push(format!(
+                "HARD GATE FAIL: {name} has {code} code lines (limit: {hard})"
+            ));
+        } else if code > soft {
+            warnings.push(format!(
+                "soft warning: {name} has {code} code lines (soft limit: {soft})"
+            ));
         }
     }
 
@@ -189,7 +213,10 @@ fn check_file_size() {
         exit(1);
     }
 
-    println!("check-file-size PASSED ({} warnings).", warnings.len());
+    println!(
+        "check-file-size PASSED ({} warnings, {files_measured} files measured).",
+        warnings.len()
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -214,7 +241,23 @@ fn check_client_timeout() {
         }
     };
 
+    // F2 fix: check subprocess exit status
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
+
     let files_str = String::from_utf8_lossy(&files_output.stdout);
+    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!("ERROR: check-client-timeout scanned 0 files — gate cannot certify anything");
+        exit(1);
+    }
+
     let mut all_findings: Vec<String> = Vec::new();
 
     for file_path in files_str.lines() {
@@ -233,7 +276,7 @@ fn check_client_timeout() {
         eprintln!("Use Client::builder().timeout(Duration::from_secs(30)).build() instead.");
         exit(1);
     }
-    println!("check-client-timeout PASSED.");
+    println!("check-client-timeout PASSED: {files_scanned} files scanned, 0 violations.");
 }
 
 /// Scan `src` for reqwest client timeout violations using `proc_macro2` token-tree walking.
@@ -419,7 +462,23 @@ fn check_no_panic() {
         }
     };
 
+    // F2 fix: check subprocess exit status
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
+
     let files_str = String::from_utf8_lossy(&files_output.stdout);
+    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!("ERROR: check-no-panic scanned 0 files — gate cannot certify anything");
+        exit(1);
+    }
+
     let mut all_findings: Vec<String> = Vec::new();
 
     for file_path in files_str.lines() {
@@ -438,7 +497,7 @@ fn check_no_panic() {
         eprintln!("Use ? propagation with structured error variants instead.");
         exit(1);
     }
-    println!("check-no-panic PASSED.");
+    println!("check-no-panic PASSED: {files_scanned} files scanned, 0 violations.");
 }
 
 /// Scan `src` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]` scopes.
@@ -585,7 +644,23 @@ fn deny_anyhow_in_lib() {
         }
     };
 
+    // F2 fix: check subprocess exit status
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
+
     let files_str = String::from_utf8_lossy(&files_output.stdout);
+    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!("ERROR: deny-anyhow-in-lib scanned 0 files — gate cannot certify anything");
+        exit(1);
+    }
+
     let mut all_findings: Vec<String> = Vec::new();
 
     for file_path in files_str.lines() {
@@ -604,7 +679,7 @@ fn deny_anyhow_in_lib() {
         }
         exit(1);
     }
-    println!("deny-anyhow-in-lib PASSED.");
+    println!("deny-anyhow-in-lib PASSED: {files_scanned} files scanned, 0 violations.");
 }
 
 /// Scan `src` for `use anyhow` patterns outside `#[cfg(test)]` scopes.
@@ -721,6 +796,15 @@ fn deny_description_cache_key() {
 
         match output {
             Ok(o) => {
+                // grep exits 1 on no-match (normal) and 2+ on error (abnormal).
+                // F2 fix: exit codes 2+ indicate a grep error; treat as gate failure.
+                let exit_code = o.status.code().unwrap_or(2);
+                if exit_code >= 2 {
+                    eprintln!(
+                        "ERROR: grep failed with exit code {exit_code} for pattern '{pattern}'"
+                    );
+                    exit(1);
+                }
                 let stdout = String::from_utf8_lossy(&o.stdout);
                 // Only flag if it looks like description-proxy usage
                 let findings: Vec<&str> = stdout
@@ -767,18 +851,38 @@ struct AllowEntry {
 }
 
 impl AllowList {
+    // Allowlist entries MUST use workspace-relative paths (e.g. "crates/pregolya-core/src/error.rs")
+    // to prevent over-broad matching. A bare filename like "error.rs" would match every crate's
+    // error.rs — use the full path from workspace root instead.
     fn is_allowed(&self, path: &str) -> bool {
-        // Use ends_with only — contains() would match substrings (e.g.,
-        // "pregolya-core" matching "pregolya-core-extra"), causing false negatives.
-        self.allow.iter().any(|e| path.ends_with(&e.path))
+        self.allow.iter().any(|e| {
+            // Anchor: the allowlist path must match the full workspace-relative path exactly.
+            // Normalize both paths to forward slashes for cross-platform consistency.
+            let normalized_entry = e.path.replace('\\', "/");
+            let normalized_path = path.replace('\\', "/");
+            // Exact suffix match anchored at a path separator boundary
+            normalized_path == normalized_entry
+                || normalized_path.ends_with(&format!("/{normalized_entry}"))
+        })
     }
 }
 
 fn load_allowlist() -> AllowList {
-    let path = "xtask/file-size-allowlist.toml";
-    match std::fs::read_to_string(path) {
-        Ok(content) => toml::from_str(&content).unwrap_or_default(),
-        Err(_) => AllowList::default(),
+    match std::fs::read_to_string("xtask/file-size-allowlist.toml") {
+        Ok(content) => match toml::from_str::<AllowList>(&content) {
+            Ok(a) => a,
+            Err(e) => {
+                eprintln!(
+                    "ERROR: xtask/file-size-allowlist.toml is malformed and cannot be parsed: {e}"
+                );
+                exit(1);
+            }
+        },
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => AllowList::default(),
+        Err(e) => {
+            eprintln!("ERROR: cannot read xtask/file-size-allowlist.toml: {e}");
+            exit(1);
+        }
     }
 }
 
