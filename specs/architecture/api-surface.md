@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.39"
+version: "1.40"
 status: active
 producer: architect
 timestamp: 2026-09-08T00:00:00Z
 changelog:
+  - "1.40 (S-1.01-adv-pass-11/MED-002): §Error Type Accessors — Category::default_retry_hint() corrected to instance method fn default_retry_hint(&self) -> RetryHint; was documented as static method. Actual implementation takes &self; static/associated-function form Category::default_retry_hint() cannot compile."
   - "1.39 (adv-pass-10/MED-002+MED-003, architect): §Error Type — MED-002: §Components→§Error Catalog (heading did not exist in error-taxonomy.md; correct heading is §Error Catalog). MED-003: add http_status(), Category::default_retry_hint(), ProblemDetail, and PROBLEM_JSON_CONTENT_TYPE to §Error Type per BC-2.14.002 {INV-004}, {PC-001}, {PC-004}, ADR-010 §Category Axis Expansion (SYS)."
   - "1.38 (S-1.01-adv-pass-17/F-02, architect): §Error Type — code field corrected to String (private; use code() accessor); constructor signature code param corrected to impl Into<String>; accessors section added (code() -> &str and source_arc() -> Option<&Arc<dyn Error + Send + Sync>>); impl Into<String> EC-002 rationale note added."
   - "1.37 (2026-09-19/ADR-030-TRAJ, architect): Component axis expansion — TRAJ (17 → 18). §Error Type Component enumeration: added TRAJ between CHKPT and SERVER; updated count from '17 components as of D23' to '18 components (TRAJ added by ADR-030)'; updated #[non_exhaustive] gate count from 18 (17 named + Custom) to 19 (18 named + Custom). Companion: ADR-010 §Component Axis Expansion (ADR-030)."
@@ -348,7 +349,7 @@ Accessors:
 - `fn code(&self) -> &str` — returns the structured error code (e.g., `"E-GRAPH-001"`); `code` field is private and immutable per BC-2.14.001 {INV-003}.
 - `fn source_arc(&self) -> Option<&Arc<dyn std::error::Error + Send + Sync>>` — returns the Arc-wrapped causal error for EC-001 re-chaining patterns; unlike `std::error::Error::source()` (which returns `&dyn Error`), this preserves the `Arc` for direct re-chaining via `.with_source(Arc::clone(source_arc))`.
 - `fn http_status(&self) -> u16` — returns the HTTP status code for this error's category; defined once on `PregolyaError` so all callers share the same category→status mapping per BC-2.14.002 {INV-004}.
-- `Category::default_retry_hint() -> RetryHint` — static method on `Category`; returns the baked-in retry guidance for the category per `error-taxonomy.md` §Error Categories footnote F8-04 and ADR-010 §Category Axis Expansion (SYS).
+- `fn default_retry_hint(&self) -> RetryHint` — **instance method** on `Category`; returns the baked-in retry guidance for the category per `error-taxonomy.md` §Error Categories footnote F8-04 and ADR-010 §Category Axis Expansion (SYS).
 
 Emission:
 - `#[non_exhaustive] ProblemDetail { type_uri: String, title: String, detail: String, retry_hint: String, component: String }` — RFC-7807 wire type produced by `PregolyaError::to_problem()`; five-field closure per BC-2.14.002 {PC-001}; the `type_uri` field serializes to JSON key `"type"` per RFC-7807 §3.1.

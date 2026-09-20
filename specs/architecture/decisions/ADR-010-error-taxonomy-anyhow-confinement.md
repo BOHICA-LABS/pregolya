@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.28"
+version: "1.29"
 changelog:
+  - "1.29 (S-1.01-adv-pass-11/MED-001): §Components → §Error Catalog in §Decision struct block — sibling-sweep of api-surface.md §Error Type fix (pass-10, TD-VSDD-060). Phantom heading §Components does not exist in error-taxonomy.md; correct heading is §Error Catalog."
   - "1.28 (S-1.01-adv-pass-1/F-002/2026-09-20): EC-02 → EC-002 normalization in §Decision blockquote and changelog-1.27 — aligns with BC-2.14.001 canonical edge-case identifier."
   - "1.27 (S-1.01-adv-pass-17/F-01+F-05): §D23 gate-update tombstoned (matches §D26/§SYS treatment); §D26 component-axis sentence corrected to 18+Custom=19; §Decision new() body annotated with EC-002 guard requirement."
   - "1.26 (S-1.01-adv-pass-13): §D26 and §SYS gate-update subsections marked historical-record; gate semantics unified under §D21 item-2 public-types clarification; `tests/external/` path corrected to realized layout."
@@ -71,7 +72,7 @@ crate. All public functions return `Result<T, PregolyaError>`.
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct PregolyaError {
-    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the PregolyaError type definition (18 components as of ADR-030 TRAJ expansion): CORE | GRAPH | CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS | Custom
+    pub component: Component,     // authoritative list lives in error-taxonomy.md §Error Catalog; enum reproduced here for the PregolyaError type definition (18 components as of ADR-030 TRAJ expansion): CORE | GRAPH | CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS | Custom
     pub category: Category,       // canonical Category Codes (14 — expanded by D26: EXEC added; SYS added per error-taxonomy.md §Error Categories; see §Category Axis Expansion (D26) and §Category Axis Expansion (SYS)): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY | EXEC | SYS
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     code: String,                  // private; immutable per BC-2.14.001 {INV-003}; read via code(). "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
