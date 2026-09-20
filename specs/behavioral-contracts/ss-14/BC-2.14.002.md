@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.21"
+version: "1.22"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -31,6 +31,7 @@ changelog:
   - "1.19 (S-1.01-adv-pass-16/MED-001): EC-003/EC-004 aligned with PC-001 five-field closure; detail_chain orphan reference removed; errors:[] re-scoped to pregolya-server envelope; cross-refs to {PC-001} added."
   - "1.20 (S-1.01-adv-pass-18/F-05): VP-BC214002-01 Method column corrected — shipped mechanism is serde_json::Value structural conformance assertions, not JSON Schema validation (no jsonschema dep; ProblemDetail is closed via {PC-001})."
   - "1.21 (S-1.01-adv-pass-3/F-001/2026-09-20): POL-12 repair — error-taxonomy v1.59 version pin in §Notes SYS paragraph replaced with stable anchor error-taxonomy.md §Error Categories."
+  - "1.22 (S-1.01-adv-pass-5/F-001/2026-09-20): EC-002 — extend to_problem() panic carve-out from single Custom-name path to two-path enumeration (BC-2.14.001 EC-002 + BC-2.14.001 EC-007 emit-time binding); removes contradictory 'panics ONLY when Custom' restriction that contradicts BC-2.14.001 EC-007."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -183,11 +184,22 @@ The HTTP response may additionally include a `Retry-After: 60` header.
 **Scenario:** A CLI tool calls `err.to_problem()` to format an error for structured log output.
 **Expected behavior:** `to_problem()` is non-panicking under correct use — it returns a `ProblemDetail`
 struct without requiring a `tokio::Runtime`. The struct can be serialized to JSON with `serde_json::to_string`.
-`to_problem()` panics only on contract violation — specifically, when `self.component` has been assigned
-a `Component::Custom` that violates BC-2.14.001 EC-002 rules after construction (e.g., a name that,
-when lowercased, collides with a named component's identifier). This panic is intentional: it surfaces
-the programmer error before a malformed URN reaches an RFC-7807 response. Callers should use only
-well-formed `Component::Custom` names that pass the construction-time guard.
+
+`to_problem()` has two sanctioned panic paths, both corresponding to contract violations:
+
+1. **BC-2.14.001 EC-002 (Custom-name violation):** `self.component` is `Component::Custom(name)` where
+   `name`, when lowercased, either contains invalid characters or collides with a named component
+   identifier. This fires via `component_lowercase()` at emission time. Callers should use only
+   well-formed `Component::Custom` names that pass the construction-time guard.
+
+2. **BC-2.14.001 EC-007 (emit-time code↔component binding violation):** `self.component` (of ANY variant
+   — named or Custom) has been reassigned post-construction such that `code`'s COMPONENT segment no
+   longer case-insensitively matches `component_lowercase(&self.component)`. This fires the emit-time
+   binding assert at the head of `to_problem()`. Example: constructing with `Component::Core` and
+   `"E-CORE-001"` then setting `err.component = Component::Graph` before calling `to_problem()`.
+
+Both panics are intentional: they surface programmer errors before a malformed or misattributed URN
+reaches an RFC-7807 response.
 
 ### EC-003: Nested PregolyaError source in problem detail
 **Scenario:** A `PregolyaError` with a `source: Some(inner_err)` is converted to RFC-7807.

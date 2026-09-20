@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.21"
+version: "1.22"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -36,6 +36,7 @@ changelog:
   - "1.19 (S-1.01-adv-pass-2/F-005/2026-09-20): EC-006 and EC-007 added — code-format and code↔component binding construction/emission panics are now specified public API behavior."
   - "1.20 (S-1.01-adv-pass-3/F-001/2026-09-20): POL-12 repair — error-taxonomy v1.59 version pin in §Description replaced with stable anchor error-taxonomy.md §Error Categories."
   - "1.21 (S-1.01-adv-pass-3/F-005-followup/2026-09-20): §Description — remove chained double-§ form introduced by v1.20; error-taxonomy.md §Error Categories changed to error-taxonomy.md Error Categories section per ADR-022 §Decision 5 prohibition on chained §X §Y forms."
+  - "1.22 (S-1.01-adv-pass-5/F-001/2026-09-20): EC-007 cross-ref to BC-2.14.002 EC-002 (emission-path panic enumeration) added for bidirectional traceability."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -200,7 +201,9 @@ variants: named variants (e.g., `Component::Graph` → COMPONENT segment must be
 variants (e.g., `Component::Custom("MyExt")` → COMPONENT segment must be `MYEXT`). Both panics are
 intentional: they surface a programmer error before a misattributed URN reaches an RFC-7807 response.
 Cross-refs: EC-002 (Custom-name charset + collision guards, which also enforce the same binding at
-emit-time via `component_lowercase`); BC-2.14.002 {INV-001} (monitoring keys on `type_uri`).
+emit-time via `component_lowercase`); BC-2.14.002 {INV-001} (monitoring keys on `type_uri`);
+BC-2.14.002 EC-002 (emission-path panic enumeration — documents both sanctioned to_problem() panic
+paths including this EC-007 emit-time binding assert).
 
 ## Canonical Test Vectors
 
