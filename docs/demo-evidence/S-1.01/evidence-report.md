@@ -35,7 +35,7 @@ acceptance-criterion group and recording the output with VHS.
 | AC-006 | BC-2.14.001 PC-007 | `Default` NOT implemented (`assert_not_impl_any!` module-level) | compile-time (no runtime demo needed) | — | verified by test suite |
 | AC-007 | BC-2.14.001 PC-008 | `#[non_exhaustive]` — external callers use `PregolyaError::new` | [AC-001-007-008 GIF](AC-001-007-008-construction-display-source-chain.gif) | gif+webm | recorded |
 | AC-008 | BC-2.14.001 EC-001 | `source: Option<Arc<dyn Error+Send+Sync>>` — clone preserves source via Arc refcount | [AC-001-007-008 GIF](AC-001-007-008-construction-display-source-chain.gif) | gif+webm | recorded |
-| AC-009 | BC-2.14.002 PC-001 | `to_problem()` → type_uri, title, detail, extensions.retry_hint, extensions.component | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
+| AC-009 | BC-2.14.002 PC-001 | `to_problem()` → type_uri, title, detail, retry_hint, component | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
 | AC-010 | BC-2.14.002 PC-002 | `serde_json::to_string` produces valid RFC-7807 JSON, no null required fields | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
 | AC-011 | BC-2.14.002 PC-003 | `http_status()` — all 14 Category variants mapped; no variant returns 200 | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
 | AC-012 | BC-2.14.002 PC-004 | `PROBLEM_JSON_CONTENT_TYPE = "application/problem+json"` | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
@@ -92,8 +92,8 @@ Runs: `cargo run -p pregolya-core --example error_taxonomy_demo -- rfc7807`
 | `"type": "urn:pregolya:error:E-CORE-001"` | AC-009 type_uri format; AC-014 stable URN |
 | `"title": "Validation"` | AC-009 humanized category title |
 | `"detail": "Invalid ContentBlock type 'x'"` | AC-009 detail = message |
-| `"retry_hint": "never"` | AC-009 extensions.retry_hint; AC-014 canonical "never" form |
-| `"component": "core"` | AC-009 extensions.component lowercase |
+| `"retry_hint": "never"` | AC-009 retry_hint; AC-014 canonical "never" form |
+| `"component": "core"` | AC-009 component lowercase |
 | `"retry_hint": "later:30"` (Rate/Later(30s)) | AC-014 canonical "later:<secs>" form (not "30s" or debug) |
 | `"title": "System"` (Sys/Maybe) | AC-003 Sys title = "System"; AC-009 |
 | `"retry_hint": "maybe"` (Sys/Maybe) | AC-014 canonical "maybe" form |
@@ -104,6 +104,8 @@ Runs: `cargo run -p pregolya-core --example error_taxonomy_demo -- rfc7807`
 | `to_problem() called without async runtime: OK` | AC-013 synchronous |
 | `original code:  E-CORE-001` / `type_uri:       urn:pregolya:error:E-CORE-001` | AC-015 code immutable |
 | `code preserved: true` | AC-015 code unchanged through to_problem |
+
+**AC-009 wire shape note (BC-2.14.002 v1.15):** The serialized JSON contains no `extensions` key — `retry_hint` and `component` are emitted as direct top-level RFC-7807 §3.2 members (verified by `test_BC_2_14_002_rfc7807_json` which asserts `obj.get('extensions').is_none()`).
 
 ---
 
