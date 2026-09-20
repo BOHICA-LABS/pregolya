@@ -253,6 +253,18 @@ impl PregolyaError {
     ///
     /// This is the public external constructor. Code within `pregolya-core` may
     /// also use struct-literal syntax.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `code` does not match the `E-<COMPONENT>-NNN` format (uppercase letter prefix,
+    /// uppercase component segment, exactly three-digit numeric suffix).
+    ///
+    /// Also panics if `component` is `Component::Custom(name)` and:
+    /// - `name` is empty, contains non-ASCII-alphanumeric characters other than `-` or `_`,
+    ///   or has leading/trailing/consecutive separator characters (`is_valid_component_segment` fails); or
+    /// - `name` lowercased aliases a named component identifier (BC-2.14.001 EC-02).
+    ///
+    /// These are programmer-error invariants; they indicate a bug in the calling code.
     pub fn new(
         component: Component,
         category: Category,
@@ -329,8 +341,16 @@ impl PregolyaError {
 
     /// Produces an RFC-7807 [`ProblemDetail`] from this error.
     ///
-    /// Synchronous — no Tokio runtime required. Safe to call in CLI tools and
-    /// other non-async contexts.
+    /// Synchronous — no Tokio runtime required. Can be called in CLI tools and other
+    /// non-async contexts.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self.component` has been assigned a `Component::Custom(name)` after
+    /// construction that violates the EC-02 name rules (invalid chars or named-component alias).
+    /// This cannot occur if `component` is set only via `PregolyaError::new()`, which validates
+    /// at construction time; it is reachable if the public `component` field is reassigned
+    /// post-construction (BC-2.14.001 EC-02 emission-time guard).
     pub fn to_problem(&self) -> ProblemDetail {
         ProblemDetail {
             type_uri: format!("urn:pregolya:error:{}", self.code),
@@ -431,6 +451,10 @@ fn is_valid_component_segment(s: &str) -> bool {
 }
 
 /// Returns the lowercase component code string for RFC-7807 top-level `component` member.
+///
+/// # Panics (internal)
+///
+/// Panics on `Component::Custom` if the name violates EC-02 rules (called from `to_problem()`).
 fn component_lowercase(component: &Component) -> String {
     match component {
         Component::Core => "core".to_string(),
@@ -721,7 +745,7 @@ mod tests {
             component: Component::Core,
             category: Category::Internal,
             retry_hint: RetryHint::Never,
-            code: "E-CORE-002".into(),
+            code: "E-TEST-004".into(),
             message: "wrapped error".into(),
             source: Some(Arc::clone(&inner)),
         };
@@ -942,7 +966,7 @@ mod tests {
             component: Component::Graph,
             category: Category::Durability,
             retry_hint: RetryHint::Never,
-            code: "E-GRAPH-001".into(),
+            code: "E-TEST-001".into(),
             message: "outer message".into(),
             source: Some(Arc::new(inner_err) as Arc<dyn Error + Send + Sync>),
         };
@@ -1062,7 +1086,7 @@ mod tests {
             component: Component::Core,
             category: Category::Transport,
             retry_hint: RetryHint::Maybe,
-            code: "E-CORE-002".into(),
+            code: "E-TEST-004".into(),
             message: "maybe".into(),
             source: None,
         };
@@ -1089,7 +1113,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::from_secs(60)),
-            code: "E-PROV-002".into(),
+            code: "E-TEST-002".into(),
             message: "rate 60".into(),
             source: None,
         };
@@ -1131,7 +1155,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::ZERO),
-            code: "E-PROV-005".into(),
+            code: "E-TEST-003".into(),
             message: "zero sentinel".into(),
             source: None,
         };
@@ -1214,7 +1238,7 @@ mod tests {
             component: Component::Graph,
             category: Category::Durability,
             retry_hint: RetryHint::Never,
-            code: "E-GRAPH-001".into(),
+            code: "E-TEST-001".into(),
             message: "graph persistence failed".into(),
             source: Some(Arc::new(inner_err) as Arc<dyn Error + Send + Sync>),
         };
@@ -1651,7 +1675,7 @@ mod tests {
             Component::Core,
             Category::Internal,
             RetryHint::Never,
-            "E-CORE-002",
+            "E-TEST-004",
             "re-chain",
         )
         .with_source(Arc::clone(arc_ref));
