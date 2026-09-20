@@ -1801,6 +1801,22 @@ mod tests {
         }
     }
 
+    /// BC-2.14.001 EC-002: construction-time collision guard is case-insensitive —
+    /// the spec's canonical example `Custom("Core")` must panic at `new()`, not at emit time.
+    /// Closes the mutation-survivability gap: `to_lowercase()` in `new()` must fold the name
+    /// before the NAMED_COMPONENT_LOWERCASE lookup, so `Custom("Core")` ≡ `Custom("core")`.
+    #[test]
+    #[should_panic(expected = "collides with named component")]
+    fn test_BC_2_14_001_custom_collision_mixed_case_at_construction() {
+        let _ = PregolyaError::new(
+            Component::Custom("Core".into()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-Core-001",
+            "mixed-case collision must panic at construction, not at emit time",
+        );
+    }
+
     /// BC-2.14.001 EC-002 MED-003: assert rejects empty Custom name.
     #[test]
     #[should_panic(expected = "valid component segment")]
