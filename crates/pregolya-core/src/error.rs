@@ -257,7 +257,8 @@ impl PregolyaError {
     /// # Panics
     ///
     /// Panics if `code` does not match the `E-<COMPONENT>-NNN` format (uppercase letter prefix,
-    /// uppercase component segment, exactly three-digit numeric suffix).
+    /// component segment of ASCII alphanumerics, hyphens, and underscores (`[A-Za-z0-9_-]`) with
+    /// no leading/trailing/consecutive separators, exactly three-digit numeric suffix).
     ///
     /// Also panics if `component` is `Component::Custom(name)` and:
     /// - `name` is empty, contains non-ASCII-alphanumeric characters other than `-` or `_`,
