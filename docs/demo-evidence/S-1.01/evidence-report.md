@@ -62,8 +62,8 @@ Runs: `cargo run -p pregolya-core --example error_taxonomy_demo -- construction`
 |---------------------|-------------|
 | `Display:  [E-CORE-001] Invalid ContentBlock type 'x'` | AC-001 Display format `[code] message` |
 | `.code:`, `.message:`, `.category:`, `.component:`, `.retry:`, `.source:` fields printed | AC-001 five named fields + source accessible |
-| `Sys (14th Category): [E-CORE-014] syscall failed: ENOENT` | AC-003 Sys variant; AC-007 external constructor |
-| `Outer:  [E-GRAPH-001] graph persistence failed` | AC-008 outer error wraps inner |
+| `Sys (14th Category): [E-SBXD-010] CanonicalizationFailed: cannot resolve path '/tmp/link': EACCES: Permission denied` | AC-003 Sys variant; AC-007 external constructor |
+| `Outer:  [E-GRAPH-001] concurrent writes to LastValue channel` | AC-008 outer error wraps inner |
 | `source present: true` | AC-008 source field populated |
 | `source message: [E-CHKPT-001] checkpoint write failed` | AC-008 source chain accessible via Display |
 | `source preserved after clone: true` | AC-008 Arc::clone semantics; AC-008 Clone works without inner T: Clone |
@@ -105,7 +105,7 @@ Runs: `cargo run -p pregolya-core --example error_taxonomy_demo -- rfc7807`
 | `original code:  E-CORE-001` / `type_uri:       urn:pregolya:error:E-CORE-001` | AC-015 code immutable |
 | `code preserved: true` | AC-015 code unchanged through to_problem |
 
-**AC-009 wire shape note (BC-2.14.002 v1.15):** The serialized JSON contains no `extensions` key — `retry_hint` and `component` are emitted as direct top-level RFC-7807 §3.2 members (verified by `test_BC_2_14_002_rfc7807_json` which asserts `obj.get('extensions').is_none()`).
+**AC-009 wire shape note (BC-2.14.002 v1.16):** The serialized JSON contains no `extensions` key — `retry_hint` and `component` are emitted as direct top-level RFC-7807 §3.2 members (verified by `test_BC_2_14_002_rfc7807_json` which asserts `obj.get('extensions').is_none()`).
 
 ---
 

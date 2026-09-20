@@ -2,7 +2,7 @@
 # RFC-7807 to_problem(), http_status mapping, Content-Type, sync context, code immutability.
 #
 # ACs covered:
-#   AC-009: to_problem() → type_uri="urn:pregolya:error:<code>", title, detail, extensions
+#   AC-009: to_problem() → type_uri="urn:pregolya:error:<code>", title, detail; top-level RFC-7807 §3.2 fields (retry_hint, component)
 #   AC-010: serde_json::to_string_pretty → valid RFC-7807 JSON, no null required fields
 #   AC-011: http_status() → all 14 categories mapped, no variant returns 200
 #   AC-012: PROBLEM_JSON_CONTENT_TYPE = "application/problem+json" (not application/json)
