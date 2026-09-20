@@ -31,8 +31,8 @@ acceptance-criterion group and recording the output with VHS.
 | AC-002 | BC-2.14.001 PC-002 | Component axis — 18 named variants + Custom = 19 total | [AC-002-003-004 GIF](AC-002-003-004-enum-axes-retry-hint.gif) | gif+webm | recorded |
 | AC-003 | BC-2.14.001 PC-003 | Category axis — 14 variants incl. Sys (14th, INTERNAL-tier HTTP 500) | [AC-002-003-004 GIF](AC-002-003-004-enum-axes-retry-hint.gif) | gif+webm | recorded |
 | AC-004 | BC-2.14.001 PC-004 | RetryHint — Never/Maybe/Later(Duration); Duration::ZERO valid sentinel | [AC-002-003-004 GIF](AC-002-003-004-enum-axes-retry-hint.gif) | gif+webm | recorded |
-| AC-005 | BC-2.14.001 PC-006 | `Error + Send + Sync` compile-time assertion (static_assertions module-level) | compile-time (no runtime demo needed) | — | verified by test suite |
-| AC-006 | BC-2.14.001 PC-007 | `Default` NOT implemented (`assert_not_impl_any!` module-level) | compile-time (no runtime demo needed) | — | verified by test suite |
+| AC-005 | BC-2.14.001 PC-006 | `Error + Send + Sync` compile-time assertion + `Error::source` runtime clause — `source present: true` / `source preserved after clone: true` captured in Group-1 recording | [AC-001-007-008 GIF](AC-001-007-008-construction-display-source-chain.gif) | gif+webm | recorded |
+| AC-006 | BC-2.14.001 PC-007 | `Default` NOT implemented — `assert_not_impl_any!` compile-time + external API surface confirmation; runtime header `=== AC-006: PregolyaError: not Default ===` emitted in all three recordings | [AC-001-007-008 GIF](AC-001-007-008-construction-display-source-chain.gif) | gif+webm | recorded |
 | AC-007 | BC-2.14.001 PC-008 | `#[non_exhaustive]` — external callers use `PregolyaError::new` | [AC-001-007-008 GIF](AC-001-007-008-construction-display-source-chain.gif) | gif+webm | recorded |
 | AC-008 | BC-2.14.001 EC-001 | `source: Option<Arc<dyn Error+Send+Sync>>` — clone preserves source via Arc refcount | [AC-001-007-008 GIF](AC-001-007-008-construction-display-source-chain.gif) | gif+webm | recorded |
 | AC-009 | BC-2.14.002 PC-001 | `to_problem()` → type_uri, title, detail, retry_hint, component | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
@@ -43,12 +43,11 @@ acceptance-criterion group and recording the output with VHS.
 | AC-014 | BC-2.14.002 INV-001+003 | `type_uri` = `urn:pregolya:error:<code>`; retry_hint canonical `"never"`/`"maybe"`/`"later:<secs>"` | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
 | AC-015 | BC-2.14.001 INV-003 | `error.code` preserved unchanged in `to_problem().type_uri` | [AC-009-015 GIF](AC-009-015-rfc7807-http-status-content-type.gif) | gif+webm | recorded |
 
-**Note on AC-005 and AC-006:** These are compile-time assertions (`static_assertions::assert_impl_all!` and
-`static_assertions::assert_not_impl_any!`) placed at module level in `pregolya-core/src/error.rs`. Their
-"recording" is the passing test suite — they fail at compile time if the invariant is violated, leaving no
-runtime output to capture.
+**Note on AC-005 and AC-006:** Both ACs have compile-time assertion components AND runtime output captured in the recordings.
 
-AC-006 (Default not implemented): enforced at compile time by `static_assertions::assert_not_impl_any!(PregolyaError: Default)` at module scope in `pregolya-core/src/error.rs`. No runtime test is needed or present; the compile-time assertion is the sole enforcement mechanism. Runtime demo is not meaningful here; the compile-time enforcement is by definition shown whenever the test suite builds and passes.
+AC-005 has two clauses: (a) `static_assertions::assert_impl_all!(PregolyaError: Error + Send + Sync)` at module level in `pregolya-core/src/error.rs` (compile-time gate) and (b) the `Error::source` runtime clause — demonstrated in the `construction` section via `std::error::Error::source(&outer).is_some()` on an error built with `.with_source(Arc::clone(&inner_arc))`. The Group-1 recording captures the runtime clause via `source present: true` and `source preserved after clone: true` output lines under the `=== AC-005: Error + Send + Sync / Error::source runtime clause ===` header.
+
+AC-006 (`Default` not implemented): enforced at compile time by `static_assertions::assert_not_impl_any!(pregolya_core::PregolyaError: Default)` in the example itself — an external compilation unit, proving the guarantee on the public API surface. Additionally, all three recordings show the runtime confirmation lines `=== AC-006: PregolyaError: not Default ===` and `  assert_not_impl_any!(PregolyaError: Default) — verified externally`, printed by `main()` before any section-specific code runs.
 
 ---
 
@@ -60,13 +59,16 @@ Runs: `cargo run -p pregolya-core --example error_taxonomy_demo -- construction`
 
 | Output Line Pattern | AC Evidenced |
 |---------------------|-------------|
+| `=== AC-006: PregolyaError: not Default ===` | AC-006 runtime confirmation header (runs before any section) |
+| `  assert_not_impl_any!(PregolyaError: Default) — verified externally` | AC-006 external API surface confirmation |
 | `Display:  [E-CORE-001] Invalid ContentBlock type 'x'` | AC-001 Display format `[code] message` |
 | `.code:`, `.message:`, `.category:`, `.component:`, `.retry:`, `.source:` fields printed | AC-001 five named fields + source accessible |
 | `Sys (14th Category): [E-SBXD-010] CanonicalizationFailed: cannot resolve path '/tmp/link': EACCES: Permission denied` | AC-003 Sys variant; AC-007 external constructor |
+| `=== AC-005: Error + Send + Sync / Error::source runtime clause ===` | AC-005 runtime clause section header |
 | `Outer:  [E-GRAPH-001] concurrent writes to LastValue channel` | AC-008 outer error wraps inner |
-| `source present: true` | AC-008 source field populated |
+| `source present: true` | AC-005 `Error::source` populated; AC-008 source field populated |
 | `source message: [E-CHKPT-001] checkpoint write failed` | AC-008 source chain accessible via Display |
-| `source preserved after clone: true` | AC-008 Arc::clone semantics; AC-008 Clone works without inner T: Clone |
+| `source preserved after clone: true` | AC-005 `Error::source` preserved via Arc refcount after clone; AC-008 Arc::clone semantics |
 
 ### Group 2: `AC-002-003-004-enum-axes-retry-hint` (tape + gif + webm)
 
