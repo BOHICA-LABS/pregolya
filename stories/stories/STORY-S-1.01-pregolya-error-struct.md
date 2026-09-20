@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "2.3"
+version: "v2.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -22,6 +22,7 @@ changelog:
   - "2.1 (S-1.01-adv-pass-3/F-005/2026-09-20): §Architecture Compliance Rules — tighten ADR-010 §Category Axis Expansion to ADR-010 §Category Axis Expansion (D26) per ADR-022 disambiguation rule."
   - "2.2 (S-1.01-adv-pass-11/LOW-001/2026-09-20): §Architecture Mapping row and §Tasks item added for Category::default_retry_hint() — public API method had no story-spec trace to BC-2.14.001 {INV-004}."
   - "2.3 (pass-13/MED-002+LOW-001+LOW-002/2026-09-20): §Edge Cases EC-007 emission-time clause added (to_problem() re-validates E- prefix, BC-2.14.002 EC-002 path 3); fn F8-04 normalized to footnote F8-04 in §Architecture Mapping and §Tasks item 12; AC-016 added for Category::default_retry_hint (traces to BC-2.14.001 INV-004); §Behavioral Contracts table updated to include AC-016; §Tasks item 1 updated to AC-001..AC-016; §Tasks item 11 updated to 16 ACs; §File Structure examples row updated to 16 ACs."
+  - "2.4 (F-P14-HIGH-001/2026-09-20): AC-016 §Later-partition corrected to 3 variants (Rate/Timeout/Transport); phantom identifiers removed."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -117,7 +118,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 `PregolyaError.code` is a `String` that is set at construction and has no setter. The `ProblemDetail` returned by `to_problem()` embeds the original code unchanged in `type_uri` (as `urn:pregolya:error:<code>`). Note: `code` is a private field; read via `pub fn code(&self) -> &str`. Verified by `test_BC_2_14_001_code_immutable()`.
 
 ### AC-016 (traces to BC-2.14.001 INV-004)
-`Category::default_retry_hint(&self) -> RetryHint` returns the correct `RetryHint` for each of the 14 `Category` variants as specified by BC-2.14.001 {INV-004} and `error-taxonomy.md §Error Categories` footnote F8-04. The `Later` variants return exact durations: `RateLimit`/`Network`/`External` → `Later(60s)`, `Timeout`/`Dependency`/`PluginError`/`Transport` → `Later(30s)`. Verified by `test_BC_2_14_001_inv004_category_default_retry_hints` (all 14 variants including exact `Later` durations) and demonstrated externally in `examples/error_taxonomy_demo.rs`.
+`Category::default_retry_hint(&self) -> RetryHint` returns the correct `RetryHint` for each of the 14 `Category` variants as specified by BC-2.14.001 {INV-004} and `error-taxonomy.md §Error Categories` footnote F8-04. The three `Later` variants return exact durations: `Rate` → `Later(60s)`, `Timeout` → `Later(30s)`, `Transport` → `Later(30s)`. The remaining eleven variants return `Never` or `Maybe` per the Default RetryHint column. Verified by `test_BC_2_14_001_inv004_category_default_retry_hints` (all 14 variants including exact `Later` durations) and demonstrated externally in `examples/error_taxonomy_demo.rs`.
 
 ## Architecture Mapping
 
