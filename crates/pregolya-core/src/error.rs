@@ -215,7 +215,7 @@ pub struct PregolyaError {
     pub retry_hint: RetryHint,
     /// Machine-readable error code following `E-<COMPONENT>-<NNN>` format
     /// (e.g. `"E-CORE-001"`). Immutable once assigned. Private to enforce
-    /// immutability via the [`PregolyaError::code`] accessor.
+    /// immutability via the [`PregolyaError::code()`] accessor.
     code: String,
     /// Human-readable error description. MUST NOT contain credentials or
     /// API key material (DI-010).
@@ -227,9 +227,9 @@ pub struct PregolyaError {
     source: Option<Arc<dyn std::error::Error + Send + Sync>>,
 }
 
-/// The 18 lowercase identifiers emitted by [`component_lowercase`] for named variants.
+/// The 18 lowercase identifiers emitted by [`component_lowercase()`] for named variants.
 /// Used by the Custom-collision guard in [`PregolyaError::new`] and its test.
-/// Must be kept in sync with [`component_lowercase`].
+/// Must be kept in sync with [`component_lowercase()`].
 const NAMED_COMPONENT_LOWERCASE: [&str; 18] = [
     "core",   // Component::Core
     "graph",  // Component::Graph
@@ -904,7 +904,8 @@ mod tests {
         let problem = err.to_problem();
         let json = serde_json::to_string(&problem).expect("ProblemDetail must serialize to JSON");
 
-        // Parse and validate structure (VP-BC214002-01: JSON schema validation)
+        // VP-BC214002-01: structural conformance assertions — serde_json::Value field presence/absence checks
+        // over the closed five-field wire shape ({PC-001}). Not a JSON Schema validator; no jsonschema dep.
         let v: serde_json::Value =
             serde_json::from_str(&json).expect("serialized JSON must be parseable");
         let obj = v
