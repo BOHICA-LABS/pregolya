@@ -43,24 +43,23 @@
 //! Gate authority: CI failure == a type was added without `#[non_exhaustive]`
 //! or without a gate update.
 //!
-//! ### Current inventory (BC-2.14.001 {PC-008} S-1.01 Wave 1 — 6 types; adv F1/POL-42 complete)
+//! ### Current inventory (BC-2.14.001 {PC-008} S-1.01 Wave 1 — 5 types; pass-9b: ProblemExtensions removed per BC-2.14.002 v1.16 {PC-001} option ii)
 //!
 //! ```text
-//! EXPECTED_NON_EXHAUSTIVE_COUNT  = 6
+//! EXPECTED_NON_EXHAUSTIVE_COUNT  = 5
 //! EXPECTED_NON_EXHAUSTIVE_SYMBOLS = [
 //!   "pregolya_core::PregolyaError",
 //!   "pregolya_core::Component",
 //!   "pregolya_core::Category",
 //!   "pregolya_core::RetryHint",
 //!   "pregolya_core::ProblemDetail",
-//!   "pregolya_core::ProblemExtensions",
 //! ]
 //! ```
 
 /// Expected number of non-exhaustive types with compile-fail coverage.
 ///
 /// Increment when adding a new type to the inventory above.
-const EXPECTED_NON_EXHAUSTIVE_COUNT: usize = 6;
+const EXPECTED_NON_EXHAUSTIVE_COUNT: usize = 5;
 
 /// Symbolic list of non-exhaustive types covered by this gate.
 ///
@@ -72,7 +71,6 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
     "pregolya_core::Category",
     "pregolya_core::RetryHint",
     "pregolya_core::ProblemDetail",
-    "pregolya_core::ProblemExtensions",
 ];
 
 // ── BC-2.14.001 {PC-008} inventory load-bearing runtime gate (F1 provenance) ──────────────────
@@ -240,10 +238,11 @@ fn test_all_pub_types_have_non_exhaustive() {
 // Per-type documentation preserved as comments for AC-007 traceability.
 
 /// AC-007 (BC-2.14.001 {PC-008}): Compile-fail and compile-pass gate for all
-/// 6 `#[non_exhaustive]` types in `pregolya-core`.
+/// 5 `#[non_exhaustive]` types in `pregolya-core`.
 ///
 /// Fixtures are registered in type order: PregolyaError → ProblemDetail →
-/// ProblemExtensions → Component → Category → RetryHint.
+/// Component → Category → RetryHint.
+/// (`ProblemExtensions` removed in pass-9b per BC-2.14.002 v1.16 {PC-001} option ii.)
 ///
 /// - Structs: `..` wildcard required from external crate (E0638)
 /// - Enums: wildcard `_` arm required from external crate (E0004)
@@ -262,10 +261,6 @@ fn ui() {
     // ProblemDetail (struct): E0638
     t.compile_fail("tests/ui/problem_detail_match_without_dots_fails.rs");
     t.pass("tests/ui/problem_detail_match_with_dots_passes.rs");
-
-    // ProblemExtensions (struct): E0638 — at pregolya_core::ProblemExtensions (crate-root re-export; also at pregolya_core::error::ProblemExtensions)
-    t.compile_fail("tests/ui/problem_extensions_match_without_dots_fails.rs");
-    t.pass("tests/ui/problem_extensions_match_with_dots_passes.rs");
 
     // Component (enum): E0004 — wildcard `_ => {}` arm required
     t.compile_fail("tests/ui/component_match_without_wildcard_fails.rs");

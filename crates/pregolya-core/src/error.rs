@@ -336,10 +336,8 @@ impl PregolyaError {
             type_uri: format!("urn:pregolya:error:{}", self.code),
             title: category_title(&self.category).to_string(),
             detail: self.message.clone(),
-            extensions: ProblemExtensions {
-                retry_hint: retry_hint_str(&self.retry_hint),
-                component: component_lowercase(&self.component),
-            },
+            retry_hint: retry_hint_str(&self.retry_hint),
+            component: component_lowercase(&self.component),
         }
     }
 
@@ -388,6 +386,9 @@ impl std::error::Error for PregolyaError {
 ///
 /// Produced by [`PregolyaError::to_problem`]. Serializes to valid
 /// `application/problem+json` JSON per RFC-7807 §3.
+///
+/// The `retry_hint` and `component` fields are RFC-7807 §3.2 extension members
+/// carried as direct top-level fields — no nested wrapper type.
 #[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProblemDetail {
@@ -400,23 +401,11 @@ pub struct ProblemDetail {
     pub title: String,
     /// Human-readable detail from [`PregolyaError::message`].
     pub detail: String,
-    /// Extension fields required by the pregolya RFC-7807 profile.
-    ///
-    /// Serialized with `#[serde(flatten)]` so that `retry_hint` and `component`
-    /// appear as top-level JSON fields per RFC-7807 §3.2 (extension members are
-    /// merged into the top-level object, not nested under an `extensions` key).
-    /// The `ProblemExtensions` Rust type is retained for structured API access.
-    #[serde(flatten)]
-    pub extensions: ProblemExtensions,
-}
-
-/// Extension fields for RFC-7807 problem detail responses.
-#[non_exhaustive]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProblemExtensions {
-    /// Canonical retry hint: `"never"`, `"maybe"`, or `"later:<seconds>"`.
+    /// Canonical retry hint per RFC-7807 §3.2 extension member.
+    /// Values: `"never"`, `"maybe"`, or `"later:<seconds>"`.
     pub retry_hint: String,
-    /// Lowercase component code (e.g. `"core"`, `"graph"`).
+    /// Lowercase component code per RFC-7807 §3.2 extension member.
+    /// (e.g. `"core"`, `"graph"`).
     pub component: String,
 }
 
@@ -827,8 +816,8 @@ mod tests {
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-CORE-001");
         assert_eq!(problem.title, "Validation");
         assert_eq!(problem.detail, "Invalid ContentBlock type 'x'");
-        assert_eq!(problem.extensions.retry_hint, "never");
-        assert_eq!(problem.extensions.component, "core");
+        assert_eq!(problem.retry_hint, "never");
+        assert_eq!(problem.component, "core");
     }
 
     /// AC-009 (traces to BC-2.14.002 {PC-001}, TV-002)
@@ -851,8 +840,8 @@ mod tests {
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-PROV-001");
         assert_eq!(problem.title, "Rate Limit");
         assert_eq!(problem.detail, "RateLimited");
-        assert_eq!(problem.extensions.retry_hint, "later:30");
-        assert_eq!(problem.extensions.component, "prov");
+        assert_eq!(problem.retry_hint, "later:30");
+        assert_eq!(problem.component, "prov");
         assert_eq!(err.http_status(), 429);
     }
 
@@ -902,8 +891,8 @@ mod tests {
         );
 
         // RFC-7807 §3.2: extension members are top-level (no "extensions" wrapper key).
-        // `#[serde(flatten)]` on ProblemExtensions merges retry_hint and component
-        // directly into the top-level JSON object.
+        // retry_hint and component are direct top-level fields on ProblemDetail
+        // per BC-2.14.002 v1.16 {PC-001} option ii.
         assert!(
             obj.get("retry_hint")
                 .and_then(serde_json::Value::as_str)
@@ -1052,7 +1041,7 @@ mod tests {
             source: None,
         };
         let p = err_never.to_problem();
-        assert_eq!(p.extensions.retry_hint, "never");
+        assert_eq!(p.retry_hint, "never");
         assert_eq!(p.type_uri, "urn:pregolya:error:E-CORE-001");
 
         // "maybe"
@@ -1065,7 +1054,7 @@ mod tests {
             source: None,
         };
         let p2 = err_maybe.to_problem();
-        assert_eq!(p2.extensions.retry_hint, "maybe");
+        assert_eq!(p2.retry_hint, "maybe");
 
         // "later:30" — not "30s", not Duration debug repr
         let err_later = PregolyaError {
@@ -1078,7 +1067,7 @@ mod tests {
         };
         let p3 = err_later.to_problem();
         assert_eq!(
-            p3.extensions.retry_hint, "later:30",
+            p3.retry_hint, "later:30",
             "canonical form is 'later:<seconds>' not '30s' or debug format"
         );
 
@@ -1092,7 +1081,7 @@ mod tests {
             source: None,
         };
         let p4 = err_60.to_problem();
-        assert_eq!(p4.extensions.retry_hint, "later:60");
+        assert_eq!(p4.retry_hint, "later:60");
 
         // BC-2.14.002 {INV-003} — F3 regression: sub-second durations ceiling-round so they don't collide
         // with the "later:0" sentinel (Duration::ZERO = retry immediately).
@@ -1106,7 +1095,7 @@ mod tests {
         };
         let p5 = err_subsec.to_problem();
         assert_eq!(
-            p5.extensions.retry_hint, "later:1",
+            p5.retry_hint, "later:1",
             "sub-second duration must ceiling-round to 1, not 0"
         );
 
@@ -1120,7 +1109,7 @@ mod tests {
         };
         let p6 = err_subsec2.to_problem();
         assert_eq!(
-            p6.extensions.retry_hint, "later:2",
+            p6.retry_hint, "later:2",
             "1500ms must ceiling-round to 2 seconds"
         );
 
@@ -1135,7 +1124,7 @@ mod tests {
         };
         let p7 = err_zero2.to_problem();
         assert_eq!(
-            p7.extensions.retry_hint, "later:0",
+            p7.retry_hint, "later:0",
             "Duration::ZERO must still produce 'later:0'"
         );
     }
@@ -1157,7 +1146,7 @@ mod tests {
             source: None,
         };
         let prob = err.to_problem();
-        let hint = &prob.extensions.retry_hint;
+        let hint = &prob.retry_hint;
         assert_eq!(
             hint, "later:18446744073709551615",
             "Duration::MAX must produce later:u64::MAX (saturating_add), not wrap to 0"
@@ -1254,7 +1243,7 @@ mod tests {
         );
         let problem = err.to_problem();
         // component_lowercase("newcrate") = "newcrate" — Custom value is the display name
-        assert_eq!(problem.extensions.component, "newcrate");
+        assert_eq!(problem.component, "newcrate");
         // type_uri uses the code field verbatim (lowercase per EC-003)
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-newcrate-001");
     }
@@ -1516,7 +1505,7 @@ mod tests {
             };
             let prob = err.to_problem();
             assert_eq!(
-                prob.extensions.component, *expected,
+                prob.component, *expected,
                 "Component::{comp:?} must map to {expected:?}"
             );
             assert!(seen.insert(*expected), "duplicate mapping: {expected:?}");
@@ -1683,7 +1672,7 @@ mod tests {
         );
         let pd = err.to_problem();
         // component on wire is lowercased
-        assert_eq!(pd.extensions.component, "mycrate");
+        assert_eq!(pd.component, "mycrate");
         // type_uri preserves original casing
         assert!(pd.type_uri.contains("E-MyCrate-001"));
     }
@@ -1785,6 +1774,6 @@ mod tests {
             "Category::Sys title must be 'System'"
         );
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-CORE-014");
-        assert_eq!(problem.extensions.retry_hint, "maybe");
+        assert_eq!(problem.retry_hint, "maybe");
     }
 }

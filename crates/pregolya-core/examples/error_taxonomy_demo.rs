@@ -177,7 +177,7 @@ fn demo_enums() {
     let custom_prob = custom_err.to_problem();
     println!(
         "  Custom component in ProblemDetail: component={:?}",
-        custom_prob.extensions.component
+        custom_prob.component
     );
     println!(
         "  Total variants: {} (18 named + 1 Custom)",
