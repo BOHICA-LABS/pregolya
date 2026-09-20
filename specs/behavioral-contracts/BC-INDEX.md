@@ -1,7 +1,7 @@
 ---
 document_type: bc-index
 level: L3
-version: "4.64"
+version: "4.65"
 status: active
 producer: state-manager
 timestamp: 2026-09-18T00:00:00Z
@@ -10,6 +10,7 @@ cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "4.65 (pass-12/MED-001/2026-09-20, state-manager): BC-2.14.001 DI column: DI-008,DI-014 → DI-008,DI-010,DI-014; DI-010 was added to BC-2.14.001 at v1.17 but BC-INDEX sibling sweep was missed (TD-VSDD-060). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.64 (D-366/S-1.01 LOCAL adv OBS-1/2026-09-18, state-manager): BC-2.14.002 §Changelog (v1.13→v1.14; product-owner; OBS-1 records-only — {INV-004}/§Architecture Anchors prose precision corrected to reflect actual layering per S-1.01 implementation: categorical default Category→HTTP status mapping defined once in pregolya-core::error::PregolyaError::http_status(); pregolya-server role restated as per-endpoint overrides + RFC-7807 response serialization delegating to core::http_status() rather than re-declaring the categorical table; pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause; INV-004 'defined once' guarantee now correctly identifies the site; no behavioral change). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.63 (D-365/S-1.01 LOCAL adv pass OBS-1/2026-09-17, state-manager): BC-2.14.002 §Changelog (v1.12→v1.13; product-owner; OBS-1 records-only — EC-005 restated to compile-time exhaustiveness; closed 14-variant #[non_exhaustive] Category enum means adding a new variant is source-breaking at every mapping site; runtime 'Unknown'/500 fallback retired as obsolete; no behavioral change). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.62 (D-364/S-1.01 adv pass-1/2026-09-17, state-manager): 2 BC version bumps — BC-2.14.001 (v1.11→v1.12): SYS added as 14th category (SYS→500 INTERNAL-tier; title System; RetryHint Maybe; aligned to error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26; description category counter updated from 13 to 14). BC-2.14.002 (v1.11→v1.12): {PC-003} categorical HTTP-status table SYS→500 added as 14th entry; VP-BC214002-02 description updated '13 categories (EXEC included)' → '14 categories (EXEC and SYS included)'; §Notes SYS paragraph added mirroring EXEC disposition note; TD-VSDD-060 sibling sweep all three category-count sites updated. S-1.01 (STORY-S-1.01-pregolya-error-struct) v1.1→v1.2: AC-003/AC-011 updated to 14 categories incl. SYS; stale BC-2.14.003 cross-ref removed. BC census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
@@ -361,7 +362,7 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.13.005 | Symlink That Escapes Workspace Root Returns Err(WorkspaceEscape) | CAP-015 | NE-02 | DI-007 | P1 | | | ss-13/BC-2.13.005.md |
 | BC-2.13.006 | macOS Seatbelt Profile: Deny-by-Default with Explicit Allow Rules (NE-16) | CAP-015 | NE-16 | DI-006 | P1 | | | ss-13/BC-2.13.006.md |
 | BC-2.13.007 | Environment Variable Sanitization at Sandbox Execution Boundary | CAP-015 | | DI-006,DI-008,DI-010 | P1 | | | ss-13/BC-2.13.007.md |
-| BC-2.14.001 | PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | CAP-016 | | DI-008,DI-014 | P0 | | | ss-14/BC-2.14.001.md |
+| BC-2.14.001 | PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | CAP-016 | | DI-008,DI-010,DI-014 | P0 | | | ss-14/BC-2.14.001.md |
 | BC-2.14.002 | RFC-7807 Compatible Problem Emission from PregolyaError | CAP-016 | | | P0 | | | ss-14/BC-2.14.002.md |
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | CAP-016 | NE-07 | DI-008 | P0 | | | ss-14/BC-2.14.003.md |
 | BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | CAP-016 | NE-04 | DI-009 | P0 | | | ss-14/BC-2.14.004.md |
