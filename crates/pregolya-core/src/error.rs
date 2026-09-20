@@ -1428,7 +1428,7 @@ mod tests {
         }
     }
 
-    /// BC-2.14.001 EC-002 MED-003: assert rejects malformed code — "E-" only has no component segment.
+    /// BC-2.14.001 EC-006: rejects malformed code — "E-" only has no component segment.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     fn test_code_format_rejects_malformed_code() {
@@ -1457,7 +1457,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: assert rejects two-digit numeric suffix.
+    /// BC-2.14.001 EC-006: rejects two-digit numeric suffix — NNN must be exactly three digits.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     fn test_code_format_rejects_two_digit_suffix() {
@@ -1470,7 +1470,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: assert rejects four-digit numeric suffix.
+    /// BC-2.14.001 EC-006: rejects four-digit numeric suffix — NNN must be exactly three digits.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     fn test_code_format_rejects_four_digit_suffix() {
@@ -1483,7 +1483,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: assert rejects non-numeric suffix.
+    /// BC-2.14.001 EC-006: rejects non-numeric suffix — NNN must be all ASCII digits.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     fn test_code_format_rejects_non_numeric_suffix() {
@@ -1496,7 +1496,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: assert rejects wrong prefix letter.
+    /// BC-2.14.001 EC-006: rejects wrong prefix letter — code must start with "E-".
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     fn test_code_format_rejects_wrong_prefix() {
@@ -1522,6 +1522,7 @@ mod tests {
         );
     }
 
+    /// BC-2.14.001 EC-007: rejects code↔component mismatch for named component — PROV ≠ core.
     #[test]
     #[should_panic(expected = "code COMPONENT segment")]
     fn test_code_format_rejects_component_code_mismatch_named() {
@@ -1535,6 +1536,7 @@ mod tests {
         );
     }
 
+    /// BC-2.14.001 EC-007: rejects code↔component mismatch for Custom component — CORE ≠ newcrate.
     #[test]
     #[should_panic(expected = "code COMPONENT segment")]
     fn test_code_format_rejects_component_code_mismatch_custom() {
@@ -1667,7 +1669,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 FIX-D: assert rejects leading hyphen in component segment (`E--CORE-001`).
+    /// BC-2.14.001 EC-006: rejects leading hyphen in component segment (E--CORE-001 is malformed).
     #[test]
     #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_leading_hyphen_in_component() {
@@ -1680,7 +1682,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 FIX-D: assert rejects doubled hyphen in component segment (`E-CORE--001`).
+    /// BC-2.14.001 EC-006: rejects doubled hyphen in component segment (E-CORE--001 is malformed).
     #[test]
     #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_doubled_hyphen_in_component() {
@@ -1693,7 +1695,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 FIX-D: assert rejects trailing separator in component segment (`E-CORE_-001`).
+    /// BC-2.14.001 EC-006: rejects trailing separator in component segment (E-CORE_-001 is malformed).
     #[test]
     #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_trailing_hyphen_in_component() {
@@ -1951,6 +1953,7 @@ mod tests {
         );
     }
 
+    /// BC-2.14.001 EC-006: rejects consecutive underscores in component segment (E-A__B-001 is malformed).
     #[test]
     #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_double_underscore_segment() {
@@ -1964,6 +1967,7 @@ mod tests {
         );
     }
 
+    /// BC-2.14.001 EC-006: rejects mixed hyphen-underscore separator in component segment (E-A-_B-001 is malformed).
     #[test]
     #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_hyphen_underscore_segment() {
@@ -1977,6 +1981,7 @@ mod tests {
         );
     }
 
+    /// BC-2.14.001 EC-006: rejects mixed underscore-hyphen separator in component segment (E-A_-B-001 is malformed).
     #[test]
     #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_underscore_hyphen_segment() {
@@ -1990,6 +1995,7 @@ mod tests {
         );
     }
 
+    /// BC-2.14.001 EC-007: emit-time code↔component mismatch — to_problem() detects binding violation when pub field reassigned post-construction.
     #[test]
     #[should_panic(expected = "code COMPONENT segment")]
     fn test_BC_2_14_001_ec002_emit_time_code_component_mismatch() {
