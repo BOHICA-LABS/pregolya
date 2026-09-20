@@ -14,9 +14,10 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.27"
+version: "1.28"
 changelog:
-  - "1.27 (S-1.01-adv-pass-17/F-01+F-05): §D23 gate-update tombstoned (matches §D26/§SYS treatment); §D26 component-axis sentence corrected to 18+Custom=19; §Decision new() body annotated with EC-02 guard requirement."
+  - "1.28 (S-1.01-adv-pass-1/F-002/2026-09-20): EC-02 → EC-002 normalization in §Decision blockquote and changelog-1.27 — aligns with BC-2.14.001 canonical edge-case identifier."
+  - "1.27 (S-1.01-adv-pass-17/F-01+F-05): §D23 gate-update tombstoned (matches §D26/§SYS treatment); §D26 component-axis sentence corrected to 18+Custom=19; §Decision new() body annotated with EC-002 guard requirement."
   - "1.26 (S-1.01-adv-pass-13): §D26 and §SYS gate-update subsections marked historical-record; gate semantics unified under §D21 item-2 public-types clarification; `tests/external/` path corrected to realized layout."
   - "1.25 (S-1.01-adv-pass-10): §non_exhaustive gate update: component count corrected 18→19 (18 named + Custom); clarify gate counts public types not Component variants."
   - "1.24 (S-1.01-adv-pass-8/2026-09-19): Mark `source` field private; add `source_arc()` accessor to canonical impl preserving Arc for EC-001 re-chaining patterns."
@@ -117,7 +118,7 @@ impl PregolyaError {
 }
 ```
 
-> **EC-02 guard note (BC-2.14.001 {EC-02}, S-1.01-adv-pass-17/F-05):** `new()` contains always-on `assert!` checks for code-format validity (`is_valid_component_segment`) and `Component::Custom` name non-collision with named components. A second emission-time guard in `component_lowercase()` catches post-construction field reassignment (the `component` field is `pub`).
+> **EC-002 guard note (BC-2.14.001 {EC-002}, S-1.01-adv-pass-17/F-05):** `new()` contains always-on `assert!` checks for code-format validity (`is_valid_component_segment`) and `Component::Custom` name non-collision with named components. A second emission-time guard in `component_lowercase()` catches post-construction field reassignment (the `component` field is `pub`).
 
 **F-P174-303 adjudication — no `context` field:** A phantom `context: { "document_index": N }` field appeared in ADR-014 Decision 5 pseudocode but does not exist on `PregolyaError`. The resolution is REJECTION of a new `context` field. Structured diagnostics such as `document_index` MUST be interpolated into the `message` field using key=value notation: `format!("embedding vector has zero L2 norm at write time; document_index={}", i)`. No `serde_json::Map` dependency is incurred; the 6-field struct is final. ADR-014 Decision 5 is corrected per the ADR-014 F-P174-303 adjudication.
 
