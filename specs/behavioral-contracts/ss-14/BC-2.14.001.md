@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.17"
+version: "1.18"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -32,6 +32,7 @@ changelog:
   - "1.15 (S-1.01-adv-pass-8/2026-09-20): EC-002 — document Custom name lowercase normalization and named-component collision prohibition. Implementer action: add collision-detection test."
   - "1.16 (S-1.01-adv-pass-9/2026-09-20): EC-002 wire-path updated from extensions.component to top-level component per BC-2.14.002 §PC-001 RFC-7807 §3.2 flatten decision."
   - "1.17 (S-1.01-adv-pass-11): VP-BC214001-01 phase corrected to S-1.02 per story EC-004; DI-010 added to traces_to and traceability."
+  - "1.18 (S-1.01-adv-pass-12): EC-002 guard description updated from debug_assert to always-on assert; emission-time guard (component_lowercase) documented."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -147,7 +148,7 @@ The `Arc` wrapper (not `Box`) is load-bearing: it is what allows `#[derive(Clone
 for forward compatibility. The `code` field must still follow `E-<CUSTOM_NAME>-<NNN>` format.
 The retry_hint must be one of the three defined variants — no new variants allowed without a
 taxonomy amendment.
-The custom component name is lowercased in the wire `component` field (top-level per RFC-7807 §3.2) (`Component::Custom("MyCrate")` → `"mycrate"`). Custom names that, when lowercased, collide with a named component's lowercase identifier (e.g. `Custom("Core")` → `"core"` collides with `Component::Core`) are forbidden — the `debug_assert` in `PregolyaError::new()` SHOULD be extended to detect this collision. The `code` field retains the casing supplied by the caller per the `impl Into<String>` conversion.
+The custom component name is lowercased in the wire `component` field (top-level per RFC-7807 §3.2) (`Component::Custom("MyCrate")` → `"mycrate"`). Custom names that, when lowercased, collide with a named component's lowercase identifier (e.g. `Custom("Core")` → `"core"` collides with `Component::Core`) are forbidden — an always-on `assert!` in `PregolyaError::new()` detects this collision at construction time. A second always-on `assert!` guard in the wire-emission path (`component_lowercase`, reached from `to_problem()`) ensures the rule holds even if `component` is reassigned post-construction (ADR-010 §Decision keeps `component` as a `pub` field). Both panics are intentional: they surface a programmer error before a malformed URN reaches an RFC-7807 response. Callers should use only well-formed codes and `Component::Custom` names that are not collision-prone. The `code` field retains the casing supplied by the caller per the `impl Into<String>` conversion.
 
 ### EC-003: RetryHint::Later with zero duration
 **Scenario:** A provider returns a rate-limit response but includes no `Retry-After` header.

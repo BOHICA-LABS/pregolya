@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.17"
+version: "1.18"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.15 (S-1.01-adv-pass-8/2026-09-20): {INV-003} — add ceiling-round clause for sub-second Later durations; Duration::ZERO produces later:0 (retry-immediately sentinel per BC-2.14.001 EC-003); saturation at u64::MAX is the overflow behavior. Anchors Rate/Timeout/Transport Later default durations (60 s / 30 s / 30 s) in error-taxonomy §Error Categories. {PC-001}/{PC-002}/TV-001/TV-002 — flatten extension members to RFC-7807 §3.2 top-level; remove extensions wrapper; document implementer action required. Implementer action: merge/flatten ProblemExtensions into ProblemDetail using #[serde(flatten)] or direct fields; remove extensions: ProblemExtensions field; update all wire-shape tests."
   - "1.16 (S-1.01-adv-pass-9/2026-09-20): {PC-001} contradictory implementation sentences resolved — option ii ratified: ProblemExtensions removed; retry_hint and component are direct top-level fields on ProblemDetail (RFC-7807 §3.2). {INV-003} wire-path corrected from 'extensions block' to 'top-level member'. EC-001 wire-path corrected from extensions.retry_hint to retry_hint (top-level per RFC-7807 §3.2)."
   - "1.17 (S-1.01-adv-pass-10): {PC-001} implementer-action paragraph replaced with declarative postcondition — ProblemExtensions removal and field lowering is completed work, not a directive. EC-003 'extensions.detail_chain' → 'detail_chain (optional, internal-only top-level field)'. EC-004 'extensions.errors: [...]' → 'errors: [...] (top-level field)'. Per {PC-002} §RFC-7807 §3.2 all extension members are top-level."
+  - "1.18 (S-1.01-adv-pass-12): EC-002 panic carve-out added for contract-violation case."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -177,8 +178,13 @@ The HTTP response may additionally include a `Retry-After: 60` header.
 
 ### EC-002: ProblemDetail emitted outside HTTP context
 **Scenario:** A CLI tool calls `err.to_problem()` to format an error for structured log output.
-**Expected behavior:** `to_problem()` returns a `ProblemDetail` struct without panicking or
-requiring a `tokio::Runtime`. The struct can be serialized to JSON with `serde_json::to_string`.
+**Expected behavior:** `to_problem()` is non-panicking under correct use — it returns a `ProblemDetail`
+struct without requiring a `tokio::Runtime`. The struct can be serialized to JSON with `serde_json::to_string`.
+`to_problem()` panics only on contract violation — specifically, when `self.component` has been assigned
+a `Component::Custom` that violates BC-2.14.001 EC-002 rules after construction (e.g., a name that,
+when lowercased, collides with a named component's identifier). This panic is intentional: it surfaces
+the programmer error before a malformed URN reaches an RFC-7807 response. Callers should use only
+well-formed `Component::Custom` names that pass the construction-time guard.
 
 ### EC-003: Nested PregolyaError source in problem detail
 **Scenario:** A `PregolyaError` with a `source: Some(inner_err)` is converted to RFC-7807.
