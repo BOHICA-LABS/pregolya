@@ -368,6 +368,14 @@ impl PregolyaError {
     /// This cannot occur if `component` is set only via `PregolyaError::new()`, which validates
     /// at construction time; it is reachable if the public `component` field is reassigned
     /// post-construction (BC-2.14.001 EC-002 emission-time guard).
+    ///
+    /// Additionally panics if `self.component` (of any variant — named or Custom) has been
+    /// reassigned post-construction such that the `code` field's COMPONENT segment no longer
+    /// case-insensitively matches `component_lowercase(&self.component)`. This fires the
+    /// emit-time binding assert at the head of this function (BC-2.14.001 EC-007,
+    /// BC-2.14.002 EC-002 path 2). Example: constructing with `Component::Core` and
+    /// `"E-CORE-001"`, then setting `err.component = Component::Graph` before calling
+    /// `to_problem()`.
     pub fn to_problem(&self) -> ProblemDetail {
         // BC-2.14.001 EC-007: emission-time parity — component field may be reassigned post-construction
         // (it is `pub`), so verify the code↔component binding holds at emission time.
