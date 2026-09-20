@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.12 (S-1.01 adv pass-1 F1/2026-09-17): Align to error-taxonomy v1.59 SYS 14th-category. {PC-003} categorical HTTP-status table: `Category::Sys → 500` added as 14th entry (INTERNAL-tier fallback at pregolya-server; rationale: SYS = OS-level syscall failure — EACCES/ELOOP/EIO are unexpected infrastructure failures, not caller input errors and not network transport issues; 500 is the correct HTTP response; does NOT return 200, satisfying {INV-001}; no Known-overrides row presently — E-SBXD-010 CanonicalizationFailed, the first SYS code, is library-layer/blanket and does not reach the HTTP surface directly). VP-BC214002-02 description updated: '13 categories (EXEC included; no category returns 200)' → '14 categories (EXEC and SYS included; no category returns 200)'. §Notes SYS paragraph added mirroring EXEC disposition note. TD-VSDD-060 sibling sweep: all three category-count sites in BC-2.14.002 live body updated ({PC-003} table length, VP-BC214002-02 description, §Notes). No behavioral change to RFC-7807 emission."
   - "1.13 (S-1.01 LOCAL adv pass OBS-1/2026-09-17): EC-005 restated — compile-time exhaustiveness replaces the stale runtime 'Unknown'/500 fallback. The closed 14-variant #[non_exhaustive] Category enum with no wildcard match arm means adding a new Category variant is a source-breaking change detected at compile time at every mapping site (http_status, category_title). No reachable code path yields title: 'Unknown' or HTTP 500 for an unknown category because no unknown category can exist at runtime. This is strictly stronger than a runtime fallback. Records-only hygiene; no behavioral change."
   - "1.14 (S-1.01 LOCAL adv OBS-1/2026-09-18): BC-prose precision fix only — {INV-004} and §Architecture Anchors corrected to reflect actual layering per S-1.01 implementation. {INV-004}: 'defined once in pregolya-server' → 'defined once in pregolya-core::error::PregolyaError::http_status()'; pregolya-server role restated as per-endpoint overrides + RFC-7807 response serialization delegating to core::http_status() rather than re-declaring the categorical table. §Architecture Anchors: pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause. INV-004 'defined once' guarantee now correctly identifies the site. No behavioral change; code is correct — this is spec-prose alignment only."
+  - "1.15 (S-1.01-adv-pass-8/2026-09-20): {INV-003} — add ceiling-round clause for sub-second Later durations; Duration::ZERO produces later:0 (retry-immediately sentinel per BC-2.14.001 EC-003); saturation at u64::MAX is the overflow behavior. Anchors Rate/Timeout/Transport Later default durations (60 s / 30 s / 30 s) in error-taxonomy §Error Categories. {PC-001}/{PC-002}/TV-001/TV-002 — flatten extension members to RFC-7807 §3.2 top-level; remove extensions wrapper; document implementer action required. Implementer action: merge/flatten ProblemExtensions into ProblemDetail using #[serde(flatten)] or direct fields; remove extensions: ProblemExtensions field; update all wire-shape tests."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -72,9 +73,11 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    - `type_uri: "urn:pregolya:error:<code>"` (e.g. `"urn:pregolya:error:E-GRAPH-001"`)
    - `title: <humanized category name>` (e.g. `"Concurrency"` for `Category::Concurrency`)
    - `detail: <err.message>` — the human-readable message from `PregolyaError`
-   - `extensions.retry_hint: "never" | "maybe" | "later:<seconds>"` — derived from `RetryHint`
-   - `extensions.component: <lowercase component code>` (e.g. `"graph"`)
-2. {PC-002} The `ProblemDetail` serializes to valid JSON conforming to RFC-7807 §3.
+   - `retry_hint: "never" | "maybe" | "later:<seconds>"` — derived from `RetryHint`; emitted as a **top-level member** of the problem details object per RFC-7807 §3.2
+   - `component: <lowercase component code>` (e.g. `"graph"`); emitted as a **top-level member** of the problem details object per RFC-7807 §3.2
+
+   **Implementer action (F8-05):** The Rust struct `ProblemExtensions` must be merged/flattened into `ProblemDetail` using `#[serde(flatten)]` or by adding the fields directly to `ProblemDetail`. The `ProblemExtensions` struct and the `extensions: ProblemExtensions` field must be removed. All tests asserting the wire shape must be updated.
+2. {PC-002} Emits valid `application/problem+json` conforming to RFC-7807 §3. Extension members `retry_hint` and `component` are emitted as **top-level members** of the problem details object per RFC-7807 §3.2 — not nested under an `extensions` wrapper.
 3. {PC-003} HTTP status code mapping (categorical defaults; see per-endpoint overrides below):
    - `Category::Val` → 400
    - `Category::Auth` → 401
@@ -144,6 +147,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
   (it is always the static code like `E-CORE-001`).
 - {INV-003} `retry_hint` in the extensions block uses the canonical string representation
   (`"never"`, `"maybe"`, `"later:<seconds>"`) for client machine readability.
+  Sub-second `Duration` values ceiling-round to the next whole second (a 900 ms backoff hint emits `later:1`, not `later:0`). `Duration::ZERO` is the sole producer of `later:0` (retry-immediately / yield-to-scheduler sentinel per BC-2.14.001 EC-003). Saturation at `u64::MAX` is the overflow behavior — no panic.
 - {INV-004} The categorical default Category→HTTP status mapping is defined once in
   `pregolya-core::error::PregolyaError::http_status()` (the "defined once" site).
   `pregolya-server` applies per-endpoint overrides and RFC-7807 response serialization on top
@@ -206,8 +210,8 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 
 | # | Input | Expected Output | Notes |
 |---|-------|-----------------|-------|
-| TV-001 | `PregolyaError { component: CORE, category: VAL, code: "E-CORE-001", retry_hint: Never, message: "Invalid ContentBlock type 'x'" }.to_problem()` | `{ "type": "urn:pregolya:error:E-CORE-001", "title": "Validation", "detail": "Invalid ContentBlock type 'x'", "extensions": { "retry_hint": "never", "component": "core" } }` | Happy path — VAL error |
-| TV-002 | `PregolyaError { component: PROV, category: RATE, code: "E-PROV-001", retry_hint: Later(30s), message: "RateLimited" }.to_problem()` | HTTP status 429; `extensions.retry_hint: "later:30"` | Rate-limit with backoff |
+| TV-001 | `PregolyaError { component: CORE, category: VAL, code: "E-CORE-001", retry_hint: Never, message: "Invalid ContentBlock type 'x'" }.to_problem()` | `{ "type": "urn:pregolya:error:E-CORE-001", "title": "Validation", "detail": "Invalid ContentBlock type 'x'", "retry_hint": "never", "component": "core" }` | Happy path — VAL error; extension members are top-level per RFC-7807 §3.2 |
+| TV-002 | `PregolyaError { component: PROV, category: RATE, code: "E-PROV-001", retry_hint: Later(30s), message: "RateLimited" }.to_problem()` | HTTP status 429; `retry_hint: "later:30"` (top-level field per RFC-7807 §3.2) | Rate-limit with backoff |
 | TV-003 | `ProblemDetail` serialized via `serde_json::to_string` | Valid JSON, no `null` fields except optional ones | RFC-7807 conformance |
 | TV-004 | Response `Content-Type` header | `"application/problem+json"` | Correct MIME type |
 | TV-005 | `PregolyaError { category: INTERNAL, .. }.to_problem()` HTTP status | 500 | Internal error → 500 |

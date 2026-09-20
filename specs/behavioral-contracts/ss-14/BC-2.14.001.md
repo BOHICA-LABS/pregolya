@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.12 (S-1.01 adv pass-1 F1/2026-09-17): Align to error-taxonomy v1.59 SYS 14th-category. Description category list updated: SYS added as 14th category after EXEC; counter updated from '13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))' to '14 categories (EXEC added by D26, SYS added by error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26)'. This is propagation of an already-authorized taxonomy decision (SYS introduced in error-taxonomy v1.59 as the OS-level syscall failure category; Default RetryHint Maybe). Behavioral contract semantics of PregolyaError struct unchanged — only the enumerated category count in the description prose is updated. TD-VSDD-060 sibling sweep: no other site in BC-2.14.001 live body enumerates the category count or list outside the Description."
   - "1.13 (ADR-030-propagation/2026-09-19): Added Component::Traj (pregolya-checkpoint/trajectory, SS-04) per ADR-030 §Decision 2 — Durable Audit-Grade Trajectory Primitive. Component count: 17 → 18. Total (incl. Custom): 18 → 19. Description component enumeration updated from comma-separated to pipe-separated canonical form; TRAJ inserted after CHKPT, before SERVER. PC-002 example expanded to include Component::Traj. TD-VSDD-060 sibling sweep: sole component-list site in BC-2.14.001 live body is the Description paragraph — no other enumeration site. BC-INDEX title column sync required (v1.12→v1.13)."
   - "1.14 (S-1.01-adv-pass-7-corrigendum/2026-09-19): v1.13 changelog anchor corrected — ADR-030 §Decision 2 (not §Component Axis Expansion which belongs to ADR-010 §D23)."
+  - "1.15 (S-1.01-adv-pass-8/2026-09-20): EC-002 — document Custom name lowercase normalization and named-component collision prohibition. Implementer action: add collision-detection test."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -143,6 +144,7 @@ The `Arc` wrapper (not `Box`) is load-bearing: it is what allows `#[derive(Clone
 for forward compatibility. The `code` field must still follow `E-<CUSTOM_NAME>-<NNN>` format.
 The retry_hint must be one of the three defined variants — no new variants allowed without a
 taxonomy amendment.
+The custom component name is lowercased in the wire `extensions.component` field (`Component::Custom("MyCrate")` → `"mycrate"`). Custom names that, when lowercased, collide with a named component's lowercase identifier (e.g. `Custom("Core")` → `"core"` collides with `Component::Core`) are forbidden — the `debug_assert` in `PregolyaError::new()` SHOULD be extended to detect this collision. The `code` field retains the casing supplied by the caller per the `impl Into<String>` conversion.
 
 ### EC-003: RetryHint::Later with zero duration
 **Scenario:** A provider returns a rate-limit response but includes no `Retry-After` header.
