@@ -56,7 +56,7 @@ pub const PROBLEM_JSON_CONTENT_TYPE: &str = "application/problem+json";
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Component {
-    /// `pregolya-core` (SS-01, SS-14, SS-19, SS-22)
+    /// `pregolya-core` (SS-01, SS-14)
     Core,
     /// `pregolya-graph` (SS-02)
     Graph,
@@ -66,7 +66,7 @@ pub enum Component {
     Traj,
     /// `pregolya-server` (SS-12)
     Server,
-    /// Provider crates: `pregolya-openai`, `pregolya-anthropic`, `pregolya-ollama` (SS-03)
+    /// Provider crates: `pregolya-openai`, `pregolya-anthropic`, `pregolya-ollama` (SS-08)
     Prov,
     /// `pregolya-mcp` (SS-09)
     Mcp,
@@ -76,7 +76,7 @@ pub enum Component {
     Sbxd,
     /// Retry subsystem (SS-16)
     Retry,
-    /// Cron / scheduler subsystem (SS-17)
+    /// Cron / scheduler subsystem (SS-12)
     Cron,
     /// `pregolya-memory` (SS-15)
     Memory,
@@ -90,7 +90,7 @@ pub enum Component {
     Vs,
     /// Embeddings subsystem (SS-22)
     Embed,
-    /// `pregolya-tools` (SS-08, SS-23)
+    /// `pregolya-tools` (SS-23)
     Tools,
     /// Forward-compatibility catch-all for crates not in the standard taxonomy.
     Custom(String),
@@ -277,6 +277,16 @@ impl PregolyaError {
         }
     }
 
+    /// Returns a reference to the `Arc` wrapping the causal error.
+    ///
+    /// Unlike [`std::error::Error::source`] (which returns `&dyn Error`), this preserves
+    /// the `Arc` for direct re-chaining via `.with_source(Arc::clone(src))` in
+    /// EC-001 re-emission patterns without re-allocating.
+    /// Returns `None` if no source was chained via [`with_source`].
+    pub fn source_arc(&self) -> Option<&Arc<dyn std::error::Error + Send + Sync>> {
+        self.source.as_ref()
+    }
+
     /// Returns the error code string (e.g. `"E-CORE-001"`).
     ///
     /// BC-2.14.001 {INV-003}: the code is immutable once assigned.
@@ -451,7 +461,7 @@ fn retry_hint_str(hint: &RetryHint) -> String {
         RetryHint::Later(d) => {
             // Ceiling-round non-zero sub-second durations so that Duration::ZERO
             // remains the sole source of "later:0" (the retry-immediately sentinel).
-            // A 900ms wait would truncate to "later:0" without this fix (F3).
+            // BC-2.14.002 {INV-003} — ceiling-round regression: 900ms would truncate to "later:0" without this fix (F3 provenance)
             let secs = if d.subsec_nanos() > 0 {
                 d.as_secs().saturating_add(1)
             } else {
@@ -523,7 +533,7 @@ mod tests {
             "E-CORE-001",
             "Invalid ContentBlock type",
         );
-        // F4 fix: assert all fields are assigned correctly by new()
+        // BC-2.14.001 {PC-001} — new() field-assignment assertion: code/message must not transpose (F4 provenance)
         // Use distinguishable literals so code/message transposition fails
         assert_eq!(
             err.code, "E-CORE-001",
@@ -1023,7 +1033,7 @@ mod tests {
         let p4 = err_60.to_problem();
         assert_eq!(p4.extensions.retry_hint, "later:60");
 
-        // F3 regression: sub-second durations ceiling-round so they don't collide
+        // BC-2.14.002 {INV-003} — F3 regression: sub-second durations ceiling-round so they don't collide
         // with the "later:0" sentinel (Duration::ZERO = retry immediately).
         let err_subsec = PregolyaError {
             component: Component::Prov,
@@ -1069,7 +1079,7 @@ mod tests {
         );
     }
 
-    /// HIGH-001 regression: Duration::MAX must not overflow with saturating_add.
+    /// BC-2.14.002 {INV-003} HIGH-001 regression: Duration::MAX must not overflow with saturating_add.
     ///
     /// Before the fix, `d.as_secs() + 1` on Duration::MAX panicked in debug mode.
     /// After the fix, `saturating_add(1)` on `u64::MAX` returns `u64::MAX`.
@@ -1300,7 +1310,7 @@ mod tests {
         }
     }
 
-    /// MED-003: debug_assert rejects malformed code — "E-" only has no component segment.
+    /// BC-2.14.001 EC-002 MED-003: debug_assert rejects malformed code — "E-" only has no component segment.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
@@ -1314,7 +1324,7 @@ mod tests {
         );
     }
 
-    /// HIGH-001 positive: lowercase alphanumeric component segment is valid per EC-003.
+    /// BC-2.14.001 EC-003 HIGH-001 positive: lowercase alphanumeric component segment is valid per EC-003.
     ///
     /// Story spec §Edge Cases EC-003 specifies `E-newcrate-001` as a valid code
     /// (lowercase custom component). The debug_assert must NOT panic for this input.
@@ -1331,7 +1341,7 @@ mod tests {
         );
     }
 
-    /// MED-005: debug_assert rejects two-digit numeric suffix.
+    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects two-digit numeric suffix.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
@@ -1345,7 +1355,7 @@ mod tests {
         );
     }
 
-    /// MED-005: debug_assert rejects four-digit numeric suffix.
+    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects four-digit numeric suffix.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
@@ -1359,7 +1369,7 @@ mod tests {
         );
     }
 
-    /// MED-005: debug_assert rejects non-numeric suffix.
+    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects non-numeric suffix.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
@@ -1373,7 +1383,7 @@ mod tests {
         );
     }
 
-    /// MED-005: debug_assert rejects wrong prefix letter.
+    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects wrong prefix letter.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
     #[cfg(debug_assertions)]
@@ -1387,7 +1397,7 @@ mod tests {
         );
     }
 
-    /// MED-005: debug_assert accepts a valid code with a different component label.
+    /// BC-2.14.001 EC-002 MED-005: debug_assert accepts a valid code with a different component label.
     #[test]
     #[cfg(debug_assertions)]
     fn test_debug_assert_accepts_valid_code() {
@@ -1401,7 +1411,7 @@ mod tests {
         );
     }
 
-    /// MED-002: Exhaustive table-driven test for all 19 Component variants → expected
+    /// BC-2.14.001 §Component-Axis AC-002 MED-002: Exhaustive table-driven test for all 19 Component variants → expected
     /// `extensions.component` string emitted by `component_lowercase`.
     #[test]
     fn test_BC_2_14_002_component_mapping_exhaustive() {
@@ -1452,7 +1462,7 @@ mod tests {
         }
     }
 
-    /// MED-002: Exhaustive table-driven test for all 14 Category variants → expected
+    /// BC-2.14.001 §Component-Axis AC-002 MED-002: Exhaustive table-driven test for all 14 Category variants → expected
     /// `title` string emitted by `category_title`.
     #[test]
     fn test_BC_2_14_002_category_title_exhaustive() {
@@ -1523,7 +1533,7 @@ mod tests {
         );
     }
 
-    /// FIX-D: debug_assert rejects leading hyphen in component segment (`E--CORE-001`).
+    /// BC-2.14.001 EC-002 FIX-D: debug_assert rejects leading hyphen in component segment (`E--CORE-001`).
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "code must follow")]
@@ -1537,7 +1547,7 @@ mod tests {
         );
     }
 
-    /// FIX-D: debug_assert rejects doubled hyphen in component segment (`E-CORE--001`).
+    /// BC-2.14.001 EC-002 FIX-D: debug_assert rejects doubled hyphen in component segment (`E-CORE--001`).
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "code must follow")]
@@ -1551,7 +1561,7 @@ mod tests {
         );
     }
 
-    /// FIX-D: debug_assert rejects trailing separator in component segment (`E-CORE_-001`).
+    /// BC-2.14.001 EC-002 FIX-D: debug_assert rejects trailing separator in component segment (`E-CORE_-001`).
     #[test]
     #[cfg(debug_assertions)]
     #[should_panic(expected = "code must follow")]
@@ -1563,6 +1573,37 @@ mod tests {
             "E-CORE_-001",
             "test",
         );
+    }
+
+    /// ADR-010 §Error-Construction Notation Canon Class 1: `source_arc()` returns the `Arc`
+    /// wrapping the causal error — preserving re-chain capability without re-allocating.
+    #[test]
+    fn test_BC_2_14_001_source_arc_accessor() {
+        let inner: Arc<dyn std::error::Error + Send + Sync> =
+            Arc::new(std::io::Error::other("inner"));
+        let err = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-001",
+            "outer",
+        )
+        .with_source(Arc::clone(&inner));
+        // source_arc() returns the same Arc (pointer equality)
+        let arc_ref = err
+            .source_arc()
+            .expect("source_arc must be Some after with_source");
+        assert!(Arc::ptr_eq(arc_ref, &inner));
+        // re-chain without re-wrapping
+        let outer2 = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-002",
+            "re-chain",
+        )
+        .with_source(Arc::clone(arc_ref));
+        assert!(outer2.source_arc().is_some());
     }
 
     /// BC-2.14.001/002 v1.12 — Sys category: `to_problem()` yields title "System"

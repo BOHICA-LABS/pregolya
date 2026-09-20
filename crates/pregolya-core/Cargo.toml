@@ -18,7 +18,7 @@ anyhow = { workspace = true }
 # Compile-fail / compile-pass gate harness (AC-007 / BC-2.14.001 {PC-008})
 # Validates #[non_exhaustive] external-boundary behaviour from outside the crate.
 trybuild = { workspace = true }
-# JSON serialization — tests and examples only (CR-001: serde_json not needed in production lib)
+# CLAUDE.md §reqwest TLS backend — JSON serialization in tests/examples only; serde_json not needed in production lib (CR-001 provenance)
 serde_json = { workspace = true }
 
 [lints]

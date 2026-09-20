@@ -1,7 +1,7 @@
 //! AC-007 compile-fail gate — `#[non_exhaustive]` external-boundary verification.
 //!
 //! Traces to: BC-2.14.001 {PC-008}, S-1.01 AC-007.
-//! Adversary findings: F1 (adv pass-2; POL-42 — extend gate to all 6 types),
+//! BC-2.14.001 {PC-008} — adversary findings: F1 (adv pass-2; POL-42 — extend gate to all 6 types),
 //!                     OBS-1 (layout reconciliation note).
 //!
 //! ## What this gate proves
@@ -21,7 +21,7 @@
 //! `pregolya_core` as an external dependency, reproducing the external-crate
 //! boundary.
 //!
-//! ## Layout note (OBS-1 reconciliation)
+//! ## Layout note (BC-2.14.001 {PC-008} OBS-1 reconciliation)
 //!
 //! CLAUDE.md §`#[non_exhaustive] on public API surface types` documents the
 //! gate pattern as `tests/external/<gate-name>/`. This crate uses trybuild's
@@ -43,7 +43,7 @@
 //! Gate authority: CI failure == a type was added without `#[non_exhaustive]`
 //! or without a gate update.
 //!
-//! ### Current inventory (S-1.01 Wave 1 — 6 types; adv F1/POL-42 complete)
+//! ### Current inventory (BC-2.14.001 {PC-008} S-1.01 Wave 1 — 6 types; adv F1/POL-42 complete)
 //!
 //! ```text
 //! EXPECTED_NON_EXHAUSTIVE_COUNT  = 6
@@ -75,7 +75,7 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
     "pregolya_core::ProblemExtensions",
 ];
 
-// ── Inventory load-bearing runtime gate (F1) ─────────────────────────────────
+// ── BC-2.14.001 {PC-008} inventory load-bearing runtime gate (F1 provenance) ──────────────────
 
 /// Runtime gate: verifies that `EXPECTED_NON_EXHAUSTIVE_COUNT` and
 /// `EXPECTED_NON_EXHAUSTIVE_SYMBOLS` match the actual source.
@@ -161,9 +161,9 @@ fn test_non_exhaustive_inventory_matches_source() {
     println!("non_exhaustive gate: {} types validated", actual_count);
 }
 
-// ── MED-007: Glob-based gate — every pub type must have #[non_exhaustive] ─────
+// ── BC-2.14.001 {PC-008} MED-007: Glob-based gate — every pub type must have #[non_exhaustive] ─────
 
-/// MED-007: Walks `src/` to find all `pub enum` and `pub struct` declarations
+/// BC-2.14.001 {PC-008} MED-007: Walks `src/` to find all `pub enum` and `pub struct` declarations
 /// and asserts each one is immediately preceded by `#[non_exhaustive]`.
 ///
 /// This is stronger than the count-based `test_non_exhaustive_inventory_matches_source`:
@@ -233,9 +233,9 @@ fn test_all_pub_types_have_non_exhaustive() {
 
 // ── AC-007 compile-fail / compile-pass trybuild fixtures ─────────────────────
 //
-// All 12 fixture registrations are consolidated into a single `ui()` test to
-// avoid spawning 12 independent trybuild processes (LOW-001 finding from adv
-// pass-2). The `TestCases` object batches all fixtures into one compilation run.
+// BC-2.14.001 {PC-008} — all 12 fixture registrations consolidated into a single `ui()` test to
+// avoid spawning 12 independent trybuild processes (LOW-001 adv pass-2 provenance).
+// The `TestCases` object batches all fixtures into one compilation run.
 //
 // Per-type documentation preserved as comments for AC-007 traceability.
 
