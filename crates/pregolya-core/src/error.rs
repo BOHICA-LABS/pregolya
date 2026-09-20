@@ -101,7 +101,7 @@ pub enum Component {
 
 /// Identifies the error class, independent of the originating component.
 ///
-/// 14 variants as of BC-2.14.001 §Category Axis Expansion (SYS), which added [`Category::Sys`]
+/// 14 variants as of ADR-010 §Category Axis Expansion (SYS), which added [`Category::Sys`]
 /// as the 14th category (OS-level syscall failure).
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -369,6 +369,19 @@ impl PregolyaError {
     /// at construction time; it is reachable if the public `component` field is reassigned
     /// post-construction (BC-2.14.001 EC-002 emission-time guard).
     pub fn to_problem(&self) -> ProblemDetail {
+        // BC-2.14.001 EC-002: emission-time parity — component field may be reassigned post-construction
+        // (it is `pub`), so verify the code↔component binding holds at emission time.
+        let code_component_emit = self.code[2..]
+            .rsplit_once('-')
+            .map(|(mid, _)| mid)
+            .unwrap_or("");
+        assert!(
+            code_component_emit.eq_ignore_ascii_case(&component_lowercase(&self.component)),
+            "BC-2.14.001 EC-002: code COMPONENT segment '{}' does not match component identifier '{}' at emission time; \
+            component field may have been reassigned after construction",
+            code_component_emit,
+            component_lowercase(&self.component),
+        );
         ProblemDetail {
             type_uri: format!("urn:pregolya:error:{}", self.code),
             title: category_title(&self.category).to_string(),
@@ -397,7 +410,7 @@ impl PregolyaError {
             Category::Timeout => 504,
             Category::Durability => 500,
             Category::Internal => 500,
-            Category::Exec => 500, // D26: INTERNAL-tier fallback per ADR-010 §Category Axis Expansion
+            Category::Exec => 500, // D26: INTERNAL-tier fallback per ADR-010 §Category Axis Expansion (D26)
             Category::Sys => 500,  // BC-2.14.001 {PC-003}: INTERNAL-tier; OS syscall failure
         }
     }
@@ -691,7 +704,7 @@ mod tests {
     /// AC-003 (traces to BC-2.14.001 {PC-003})
     ///
     /// Exhaustive match on all 14 `Category` variants (including `Exec` added by D26
-    /// and `Sys` added by BC-2.14.001 §Category Axis Expansion (SYS)).
+    /// and `Sys` added by ADR-010 §Category Axis Expansion (SYS)).
     #[test]
     fn test_BC_2_14_001_category_axis() {
         let _verify_exhaustive = |c: Category| -> u8 {
@@ -984,7 +997,7 @@ mod tests {
             component: Component::Graph,
             category: Category::Durability,
             retry_hint: RetryHint::Never,
-            code: "E-TEST-001".into(),
+            code: "E-GRAPH-001".into(),
             message: "outer message".into(),
             source: Some(Arc::new(inner_err) as Arc<dyn Error + Send + Sync>),
         };
@@ -1104,7 +1117,7 @@ mod tests {
             component: Component::Core,
             category: Category::Transport,
             retry_hint: RetryHint::Maybe,
-            code: "E-TEST-004".into(),
+            code: "E-CORE-004".into(),
             message: "maybe".into(),
             source: None,
         };
@@ -1131,7 +1144,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::from_secs(60)),
-            code: "E-TEST-002".into(),
+            code: "E-PROV-002".into(),
             message: "rate 60".into(),
             source: None,
         };
@@ -1144,7 +1157,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::from_millis(1)),
-            code: "E-TEST-003".into(),
+            code: "E-PROV-003".into(),
             message: "subsec".into(),
             source: None,
         };
@@ -1158,7 +1171,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::from_millis(1500)),
-            code: "E-TEST-004".into(),
+            code: "E-PROV-004".into(),
             message: "subsec2".into(),
             source: None,
         };
@@ -1173,7 +1186,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::ZERO),
-            code: "E-TEST-003".into(),
+            code: "E-PROV-003".into(),
             message: "zero sentinel".into(),
             source: None,
         };
@@ -1535,8 +1548,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 §Component-Axis AC-002 MED-002: Exhaustive table-driven test for all 19 Component variants → expected
-    /// top-level `component` string emitted by `component_lowercase`.
+    /// BC-2.14.002 {PC-001}: Exhaustive table-driven test for all 19 Component variants → expected top-level component string emitted by component_lowercase per RFC-7807 top-level member.
     #[test]
     fn test_BC_2_14_002_component_mapping_exhaustive() {
         use std::collections::HashSet;
@@ -1569,8 +1581,9 @@ mod tests {
         );
         let mut seen: HashSet<&str> = HashSet::new();
         for (comp, expected) in cases {
+            let code = format!("E-{}-001", expected.to_ascii_uppercase());
             let err = PregolyaError {
-                code: "E-TEST-001".to_string(),
+                code,
                 component: comp.clone(),
                 category: Category::Internal,
                 message: "test".to_string(),
@@ -1586,8 +1599,7 @@ mod tests {
         }
     }
 
-    /// BC-2.14.001 §Component-Axis AC-002 MED-002: Exhaustive table-driven test for all 14 Category variants → expected
-    /// `title` string emitted by `category_title`.
+    /// BC-2.14.002 {PC-001}: Exhaustive table-driven test for all 14 Category variants → expected title string emitted by category_title per RFC-7807 title field.
     #[test]
     fn test_BC_2_14_002_category_title_exhaustive() {
         use std::collections::HashSet;
@@ -1612,7 +1624,7 @@ mod tests {
         let mut seen: HashSet<&str> = HashSet::new();
         for (cat, expected) in cases {
             let err = PregolyaError {
-                code: "E-TEST-001".to_string(),
+                code: "E-CORE-001".to_string(),
                 component: Component::Core,
                 category: cat.clone(),
                 message: "test".to_string(),
@@ -1940,7 +1952,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_double_underscore_segment() {
         // is_valid_component_segment blocks __ (consecutive underscores, BC-2.14.001 EC-002 charset)
         let _ = PregolyaError::new(
@@ -1953,7 +1965,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_hyphen_underscore_segment() {
         // is_valid_component_segment blocks -_ (mixed consecutive separator, BC-2.14.001 EC-002 charset)
         let _ = PregolyaError::new(
@@ -1966,7 +1978,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "code must follow")]
     fn test_code_format_rejects_underscore_hyphen_segment() {
         // is_valid_component_segment blocks _- (mixed consecutive separator, BC-2.14.001 EC-002 charset)
         let _ = PregolyaError::new(
@@ -1976,5 +1988,21 @@ mod tests {
             "E-A_-B-001",
             "test",
         );
+    }
+
+    #[test]
+    #[should_panic(expected = "code COMPONENT segment")]
+    fn test_BC_2_14_001_ec002_emit_time_code_component_mismatch() {
+        // Reassigning the pub component field post-construction creates a mismatch that
+        // to_problem() must detect at emission time.
+        let mut err = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-001",
+            "x",
+        );
+        err.component = Component::Graph; // bypass construction-time assert via pub field
+        let _ = err.to_problem(); // must panic
     }
 }
