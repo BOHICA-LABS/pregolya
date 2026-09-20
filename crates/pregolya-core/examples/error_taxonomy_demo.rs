@@ -1,16 +1,18 @@
 //! Error taxonomy demo — S-1.01 per-AC visual evidence.
 //!
-//! Exercises the public `pregolya-core` error API across 14 of the 15 acceptance
+//! Exercises the public `pregolya-core` error API across all 15 acceptance
 //! criteria for story S-1.01.
 //! AC-005 has two clauses: the `assert_impl_all!` compile-time assertion (no runtime
 //! output) and the `Error::source` runtime clause — the latter is demonstrated in
 //! the `construction` section via `std::error::Error::source(&outer).is_some()` on
 //! an error built with `.with_source(Arc::clone(&inner_arc))`.
-//! AC-006 (`assert_not_impl_any!(PregolyaError: Default)`) is compile-time only —
-//! no runtime-observable output to record.
+//! AC-006 (`assert_not_impl_any!(PregolyaError: Default)`) is now externally verified
+//! here via `static_assertions::assert_not_impl_any!` — this example is an external
+//! compilation unit, so the assertion proves the guarantee on the external API surface.
 //!
 //! | Section          | ACs covered                                                                         |
 //! |------------------|-------------------------------------------------------------------------------------|
+//! | module-level     | AC-006 (assert_not_impl_any — compile-time + external confirmation)                 |
 //! | `construction`   | AC-001 (struct/new), AC-005 (Error::source runtime clause), AC-007 (non_exhaustive::new), AC-008 (Arc clone) |
 //! | `enums`          | AC-002 (Component), AC-003 (Category), AC-004 (RetryHint) |
 //! | `rfc7807`        | AC-009 (to_problem), AC-010 (JSON), AC-011 (http_status), AC-012 (content-type), AC-013 (sync), AC-014 (retry_hint fmt), AC-015 (code immutable) |
@@ -33,6 +35,14 @@ use pregolya_core::error::{
 };
 
 fn main() {
+    // AC-006: PregolyaError does not implement Default.
+    // Verified externally — this example is an external compilation unit, so this assertion
+    // proves the guarantee on the external API surface (stronger than in-crate test).
+    static_assertions::assert_not_impl_any!(pregolya_core::PregolyaError: Default);
+    println!("=== AC-006: PregolyaError: not Default ===");
+    println!("  assert_not_impl_any!(PregolyaError: Default) — verified externally");
+    println!();
+
     let section = std::env::args().nth(1);
     let run_all = section.is_none();
     let section_str = section.as_deref().unwrap_or("");

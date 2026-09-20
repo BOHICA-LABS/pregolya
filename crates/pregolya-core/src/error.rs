@@ -331,7 +331,7 @@ impl PregolyaError {
     /// Unlike [`std::error::Error::source`] (which returns `&dyn Error`), this preserves
     /// the `Arc` for direct re-chaining via `.with_source(Arc::clone(src))` in
     /// EC-001 re-emission patterns without re-allocating.
-    /// Returns `None` if no source was chained via [`with_source`].
+    /// Returns `None` if no source was chained via [`PregolyaError::with_source`].
     pub fn source_arc(&self) -> Option<&Arc<dyn std::error::Error + Send + Sync>> {
         self.source.as_ref()
     }
@@ -541,7 +541,7 @@ fn category_title(category: &Category) -> &'static str {
 ///
 /// - [`RetryHint::Never`] → `"never"`
 /// - [`RetryHint::Maybe`] → `"maybe"`
-/// - [`RetryHint::Later(d)`] → `"later:<whole_seconds>"` (e.g. `"later:30"`)
+/// - [`RetryHint::Later`] → `"later:<whole_seconds>"` (e.g. `"later:30"`)
 fn retry_hint_str(hint: &RetryHint) -> String {
     match hint {
         RetryHint::Never => "never".to_string(),

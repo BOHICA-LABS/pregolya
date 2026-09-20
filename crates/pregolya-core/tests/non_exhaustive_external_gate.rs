@@ -61,6 +61,13 @@
 /// Increment when adding a new type to the inventory above.
 const EXPECTED_NON_EXHAUSTIVE_COUNT: usize = 5;
 
+/// Number of compile-fail fixtures testing struct-literal construction restriction
+/// (BC-2.14.001 {PC-008} clause 1). Separate from EXPECTED_NON_EXHAUSTIVE_COUNT
+/// which counts per-type match-exhaustiveness fixtures.
+const CONSTRUCTION_FAIL_FIXTURE_COUNT: usize = 1;
+const CONSTRUCTION_FAIL_FIXTURES: [&str; CONSTRUCTION_FAIL_FIXTURE_COUNT] =
+    ["pregolya_error_struct_literal_construction_fails"];
+
 /// Symbolic list of non-exhaustive types covered by this gate.
 ///
 /// Add an entry here AND add the corresponding `tests/ui/` fixture pair when a
@@ -142,7 +149,10 @@ fn test_non_exhaustive_inventory_matches_source() {
         );
     }
 
-    // Count _fails.rs fixtures in tests/ui/ — must equal the inventory count
+    // Count _fails.rs fixtures in tests/ui/:
+    //   - EXPECTED_NON_EXHAUSTIVE_COUNT per-type match-exhaustiveness fixtures
+    //   - CONSTRUCTION_FAIL_FIXTURE_COUNT struct-literal construction fixtures (BC-2.14.001 {PC-008} clause 1)
+    let expected_fails = EXPECTED_NON_EXHAUSTIVE_COUNT + CONSTRUCTION_FAIL_FIXTURE_COUNT;
     // Path is relative to the package root (crates/pregolya-core/).
     let ui_dir = std::fs::read_dir("tests/ui/").expect("tests/ui/ must be readable");
     let fails_count = ui_dir
@@ -150,15 +160,17 @@ fn test_non_exhaustive_inventory_matches_source() {
         .filter(|e| e.file_name().to_string_lossy().ends_with("_fails.rs"))
         .count();
     assert_eq!(
-        fails_count, EXPECTED_NON_EXHAUSTIVE_COUNT,
+        fails_count, expected_fails,
         "Number of _fails.rs fixtures in tests/ui/ ({fails_count}) does not match \
-         EXPECTED_NON_EXHAUSTIVE_COUNT ({EXPECTED_NON_EXHAUSTIVE_COUNT}). \
-         Add a compile-fail fixture for any new non-exhaustive type."
+         expected ({expected_fails} = {EXPECTED_NON_EXHAUSTIVE_COUNT} per-type + \
+         {CONSTRUCTION_FAIL_FIXTURE_COUNT} construction). \
+         Add a compile-fail fixture for any new non-exhaustive type or construction pattern."
     );
 
     // Count _passes.rs fixtures in tests/ui/ — must equal the inventory count (symmetric).
     // Bidirectional enforcement: the registry is authoritative in both directions — a fixture
     // on disk without a registry entry AND a registry entry without a fixture are both errors.
+    // No pass counterpart for construction restriction fixtures (external construction is always barred).
     let ui_dir2 = std::fs::read_dir("tests/ui/").expect("tests/ui/ must be readable");
     let passes_count = ui_dir2
         .filter_map(|e| e.ok())
@@ -172,8 +184,12 @@ fn test_non_exhaustive_inventory_matches_source() {
     );
 
     println!(
-        "non_exhaustive gate: {} types validated ({} fails, {} passes)",
-        actual_count, fails_count, passes_count
+        "non_exhaustive gate: {} types validated ({} fails [{} per-type + {} construction], {} passes)",
+        actual_count,
+        fails_count,
+        EXPECTED_NON_EXHAUSTIVE_COUNT,
+        CONSTRUCTION_FAIL_FIXTURE_COUNT,
+        passes_count
     );
 }
 
@@ -304,11 +320,17 @@ fn ui() {
     for path in PASS_FIXTURES {
         t.pass(path);
     }
+    for fixture in CONSTRUCTION_FAIL_FIXTURES.iter() {
+        t.compile_fail(format!("tests/ui/{}.rs", fixture));
+    }
 
+    let total_fails = FAIL_FIXTURES.len() + CONSTRUCTION_FAIL_FIXTURES.len();
     println!(
-        "ui gate: {} fixtures registered ({} compile_fail, {} pass)",
-        FAIL_FIXTURES.len() + PASS_FIXTURES.len(),
+        "ui gate: {} fixtures registered ({} compile_fail [{} per-type + {} construction], {} pass)",
+        total_fails + PASS_FIXTURES.len(),
+        total_fails,
         FAIL_FIXTURES.len(),
+        CONSTRUCTION_FAIL_FIXTURES.len(),
         PASS_FIXTURES.len()
     );
 }
