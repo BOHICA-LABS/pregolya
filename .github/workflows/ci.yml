@@ -150,7 +150,7 @@ jobs:
         if: hashFiles('Cargo.toml') != ''
         run: |
           set -euo pipefail
-          cargo test --workspace --all-features
+          cargo test --workspace --all-features -- --nocapture
 
       - name: Skip (no workspace yet)
         if: hashFiles('Cargo.toml') == ''
