@@ -20,6 +20,61 @@ Feature branch: feature/S-1.01
 | 9 | 7e46930 | 0 | yes | yes | 1/3 | First CLEAN(strict) on HEAD 7e46930; pass 10 dispatched |
 | 10 | 7e46930 | 3 MED + 2 LOW + 3 OBS | no | no | 0/3 | MED-001 EC-007 scope gap; MED-002 phantom §Components; MED-003 missing API in api-surface.md; LOW-001 ProblemDetail Deserialize untested; LOW-002 grammar |
 | push | 42f6f86 | — | — | — | — | MED-001/002/003 + LOW-001/002 fix burst; OBS-001 adjudicated; streak reset to 0/3 per frozen-HEAD rule; pass-11 dispatched on new frozen HEAD (post-push) |
+| 11 | 42f6f86 | 2 MED + 2 LOW + 3 OBS | no | no | 0/3 | Full cascade (MED present); MED-001 ADR-010 §Components anchor unswept; MED-002 api-surface static method doc error; LOW-001 default_retry_hint no story-spec trace; LOW-002 to_problem() unsanctioned panic path; OBS-001 Component enum doc anchor; OBS-002 demo version pins; OBS-003 deferred to wave gate |
+| push | b1d70d9 | — | — | — | — | MED-001+MED-002 closed by architect (6dc5724); LOW-001 closed by story-writer (d86744f); LOW-002+OBS-001+OBS-002 closed by implementer (b1d70d9); OBS-003 deferred to wave gate; streak reset to 0/3 per frozen-HEAD rule; pass-12 dispatched on new frozen HEAD |
+
+## Finding Detail — Pass 11
+
+**MED-001**: ADR-010 §Components anchor unswept.
+
+ADR-010 contains a §Components section anchor reference that was not swept when the
+component-binding invariant was updated in the pass-10 fix burst. The anchor survived
+in prose that cited it without a corresponding target section. Fix: architect burst on `factory-artifacts` (`6dc5724`) sweeps the stale
+§Components anchor reference from ADR-010.
+
+**MED-002**: api-surface.md static method doc error.
+
+`api-surface.md` described `default_retry_hint` as a static method when it is a free
+function. The method/function distinction is load-bearing for consumers reading the
+API surface catalog. Fix: architect burst on `factory-artifacts` (`6dc5724`) corrects the description to
+"free function" and aligns the calling convention notes.
+
+**LOW-001**: `default_retry_hint` entry in api-surface.md has no story-spec trace.
+
+The symbol was added to `api-surface.md` in the pass-10 fix burst without a traceability
+citation back to the story spec (S-1.01 or a BC). Fix: story-writer commit `d86744f`
+adds the traceability anchor (S-1.01 §AC-003) to the api-surface.md entry.
+
+**LOW-002**: `to_problem()` unsanctioned panic path.
+
+`to_problem()` contained a `panic!` invocation that was not enumerated in the BC-2.14.002
+`# Panics` section and not covered by the EC taxonomy. The path was reachable under
+an undocumented precondition violation. Fix: implementer commit `b1d70d9` on
+`feature/S-1.01` replaces the panic with a structured error return and adds the
+corresponding BC-2.14.002 `# Panics` entry covering the precondition.
+
+**OBS-001**: Component enum doc anchor.
+
+The `Component` enum rustdoc contained a `[see §Components]` anchor reference that
+points nowhere (no `§Components` section exists in the doc). Fix: implementer commit
+`b1d70d9` removes the phantom anchor reference and replaces it with inline prose.
+
+**OBS-002**: Demo version pins.
+
+Demo script referenced unpinned crate version numbers that have since been superseded.
+Fix: implementer commit `b1d70d9` updates the demo version pins to match the
+current `Cargo.lock`.
+
+**OBS-003**: Deferred to wave gate.
+
+OBS-003 is out of scope for S-1.01 and requires cross-story context unavailable in this
+cascade. Adjudicated: deferred to wave gate per orchestrator direction.
+
+Closure: MED-001+MED-002 CLOSED (architect `6dc5724`). LOW-001 CLOSED (story-writer `d86744f`).
+LOW-002+OBS-001+OBS-002 CLOSED (implementer `b1d70d9`). OBS-003 DEFERRED to wave gate.
+Ceremony: full cascade per TD-RECORDS-MICRO-BURST-001 (MED findings present).
+Per frozen-HEAD rule (BC-5.39.001), push of fix burst resets streak to 0/3.
+New frozen HEAD: `b1d70d9`. Pass-12 dispatched.
 
 ## Finding Detail — Pass 10
 
@@ -98,12 +153,17 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 0/3 — reset by pass-10 findings (3 MED + 2 LOW + 3 OBS).
+CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `b1d70d9`).
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
-against unchanged HEAD. Fix burst committed as `42f6f86` on `feature/S-1.01`; streak
-resets to 0/3 on push. Pass-11 required on new frozen HEAD.
+against unchanged HEAD. Fix burst from pass-11 landed as implementer commit `b1d70d9`
+on `feature/S-1.01`; streak resets to 0/3 on push per frozen-HEAD rule.
+
+Current frozen HEAD: `b1d70d9`
+Current streak: 0/3 on new frozen HEAD.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
 implementation impact, deferred to phase-5 spec-steward).
 
-Next: pass-11 to be dispatched on new frozen HEAD (post-push of feature/S-1.01).
+Deferred OBS-003: out of scope for S-1.01; deferred to wave gate per orchestrator direction.
+
+Next: pass-12 dispatched on frozen HEAD `b1d70d9`.
