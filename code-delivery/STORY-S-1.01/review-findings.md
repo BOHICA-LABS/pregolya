@@ -18,6 +18,47 @@ Feature branch: feature/S-1.01
 | 8 | 66fd4c8 | 1 MED + 1 LOW + 2 OBS | no | no | 0/3 | F-01 (MED) E-TEST fixture codes violate EC-007; F-02 (LOW) missing AC-005 external assert_impl_all. Fix: commit 7e46930. |
 | push | 7e46930 | — | — | — | — | F-01+F-02 fix burst; CI green (19/19); streak reset to 0/3 per frozen-HEAD rule; pass 9 dispatched |
 | 9 | 7e46930 | 0 | yes | yes | 1/3 | First CLEAN(strict) on HEAD 7e46930; pass 10 dispatched |
+| 10 | 7e46930 | 3 MED + 2 LOW + 3 OBS | no | no | 0/3 | MED-001 EC-007 scope gap; MED-002 phantom §Components; MED-003 missing API in api-surface.md; LOW-001 ProblemDetail Deserialize untested; LOW-002 grammar |
+| push | 42f6f86 | — | — | — | — | MED-001/002/003 + LOW-001/002 fix burst; OBS-001 adjudicated; streak reset to 0/3 per frozen-HEAD rule; pass-11 dispatched on new frozen HEAD (post-push) |
+
+## Finding Detail — Pass 10
+
+**MED-001**: EC-007 scope clause missing from BC-2.14.001.
+
+BC-2.14.001 lacked an explicit EC-007 scope clause tying the component-binding invariant
+to the `new()`/`to_problem()` boundary. Finding anchors to BC-2.14.001 §EC-007.
+
+Fix pt1: BC-2.14.001 §EC-007 — scope clause added with S-1.02 deferral anchor.
+Fix pt2: `new()` and `to_problem()` rustdoc scope notes added in commit `42f6f86` on
+`feature/S-1.01`.
+
+**MED-002**: Phantom §Components anchor reference in api-surface.md.
+
+`api-surface.md` contained a §Components section anchor reference that did not exist,
+producing a phantom link in the Error Catalog. Commit `f914400` on `factory-artifacts`
+fixes the anchor.
+
+**MED-003**: Missing API symbols in api-surface.md.
+
+`api-surface.md` omitted `http_status`, `ProblemDetail`, `PROBLEM_JSON_CONTENT_TYPE`, and
+`default_retry_hint` from the public API surface listing. All four symbols added.
+
+**LOW-001**: ProblemDetail round-trip deserialization untested.
+
+`ProblemDetail` lacked a round-trip deserialization assertion. Commit `42f6f86` adds the
+assertion to the test suite.
+
+**LOW-002**: Grammar defects in BC-2.14.002.
+
+Minor grammar issues in BC-2.14.002 prose. BC-2.14.002 §Prose grammar fixes applied.
+
+**OBS-001**: Citation form.
+
+Both citation forms are correct in context; adjudicated — no change required.
+
+Closure: MED-001/002/003 + LOW-001/002 CLOSED. OBS-001 adjudicated (no change).
+Per frozen-HEAD rule (BC-5.39.001), push of fix burst resets streak to 0/3.
+Pass-11 to be dispatched on new frozen HEAD (post-push of feature/S-1.01).
 
 ## Finding Detail — Pass 9
 
@@ -57,11 +98,12 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 1/3 — first CLEAN(strict) pass on frozen HEAD `7e46930` (pass 9).
+CLEAN(strict) streak: 0/3 — reset by pass-10 findings (3 MED + 2 LOW + 3 OBS).
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
-against unchanged HEAD. Passes 10 and 11 required for convergence.
+against unchanged HEAD. Fix burst committed as `42f6f86` on `feature/S-1.01`; streak
+resets to 0/3 on push. Pass-11 required on new frozen HEAD.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
 implementation impact, deferred to phase-5 spec-steward).
 
-Next: adversary pass 10 on frozen HEAD `7e46930`.
+Next: pass-11 to be dispatched on new frozen HEAD (post-push of feature/S-1.01).
