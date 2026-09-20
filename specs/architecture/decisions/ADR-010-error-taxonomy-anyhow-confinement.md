@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.22"
+version: "1.23"
 changelog:
+  - "1.23 (S-1.01-adv-pass-7/2026-09-19): Add Category::Sys to category axis (13→14); fix code field shape to String+private+accessor per BC-2.14.001 AC-001/EC-002."
   - "1.22 (2026-08-31/ADR-030-TRAJ): Component axis expansion — TRAJ (17 → 18). Added Component::Traj for pregolya-checkpoint / checkpoint::trajectory (SS-04) per ADR-030 §\"State-manager + product-owner directive\". Updated PregolyaError struct component comment (17 named → 18 named + Custom enumeration), component count summary table (new ADR-030 row), §Rationale component-axis-rationale sentence, §Source/Origin (ADR-030 entry). #[non_exhaustive] gate count 18 named + Custom = 19 total. Authoritative codes: E-TRAJ-001/002/003/005/006 (E-TRAJ-004 tombstoned); anchors BC-2.04.009, BC-2.04.010, BC-2.04.011."
   - "1.21 (burst-308/F-P200-01/2026-08-17): Category Axis Expansion D26 — adjudicate ADR-010 vs ADR-026 conflict on EXEC as 13th category. Decision: Option A — EXEC is a legitimate 13th category (none of CONCURRENCY/INTERNAL/TOOL/VAL fit 'an orchestrated branch returned an error and is being wrapped to identify which branch failed'). (1) Add §Category Axis Expansion (D26) section recording the adjudication, EXEC definition, HTTP mapping (library-layer-only, no new BC-2.14.002 row), and #[non_exhaustive] gate update requirement. (2) PregolyaError struct `category` comment: supersede '12 — unchanged' with '13 — expanded by D26 (EXEC added)'. (3) Component count summary table footer: mark 'Category axis: 12 — unchanged / No new category is warranted' as superseded-through-D23; add D26 expansion row. (4) §Rationale 'No new category was warranted for D21 or D23' — append supersession note referencing D26. POL-1 append-only applied to all three supersession sites."
   - "1.20 (burst-295/F-P186-F3/2026-08-16): Replace `(Wave TBD)` with `(Wave 1)` in §Component Axis Expansion (D23) non-exhaustive gate update requirement. pregolya-tools = SS-23; all SS-23 BCs carry wave: 1; wave is mechanically determinable in scope (CLAUDE.md Rule 6)."
@@ -66,9 +67,9 @@ crate. All public functions return `Result<T, PregolyaError>`.
 #[derive(Debug, Clone)]
 pub struct PregolyaError {
     pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the PregolyaError type definition (18 components as of ADR-030 TRAJ expansion): CORE | GRAPH | CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS | Custom
-    pub category: Category,       // canonical Category Codes (13 — expanded by D26: EXEC added; see §Category Axis Expansion (D26)): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY | EXEC
+    pub category: Category,       // canonical Category Codes (14 — expanded by D26: EXEC added; SYS added per error-taxonomy.md §Error Categories; see §Category Axis Expansion (D26) and §Category Axis Expansion (SYS)): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY | EXEC | SYS
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
-    pub code: &'static str,       // "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
+    code: String,                  // private; immutable per BC-2.14.001 {INV-003}; read via code(). "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
     pub message: String,          // Human-readable; MUST NOT contain credentials
     pub source: Option<Arc<dyn std::error::Error + Send + Sync>>,  // Causal error chain; MUST NOT be exposed in HTTP responses; Arc (not Box) preserves Clone
 }
@@ -83,10 +84,11 @@ impl PregolyaError {
         component: Component,
         category: Category,
         retry_hint: RetryHint,
-        code: &'static str,
+        // impl Into<String>: EC-002 custom component names are runtime values; &'static str cannot represent Component::Custom("…").
+        code: impl Into<String>,
         message: impl Into<String>,
     ) -> Self {
-        Self { component, category, retry_hint, code, message: message.into(), source: None }
+        Self { component, category, retry_hint, code: code.into(), message: message.into(), source: None }
     }
 
     /// Builder: attach a causal error chain. Consumes `self`; returns updated instance.
@@ -95,6 +97,10 @@ impl PregolyaError {
     pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self {
         Self { source: Some(source), ..self }
     }
+
+    /// Returns the structured error code (e.g., `"E-GRAPH-001"`).
+    /// The `code` field is private and immutable per BC-2.14.001 {INV-003}.
+    pub fn code(&self) -> &str { &self.code }
 }
 ```
 
@@ -635,6 +641,7 @@ enumeration.**
 |---------|-------|-----------|
 | v1.0–D23 (D17 through D23) | 12 | VAL AUTH RATE TIMEOUT TRANSPORT INTERNAL DURABILITY POLICY TOOL CONCURRENCY SECURITY TENANCY |
 | D26 (burst-308) | **13** | + EXEC |
+| burst-A2-error-coord (2026-08-26) | **14** | + SYS |
 
 ### #[non_exhaustive] gate update requirement (D26)
 
@@ -650,6 +657,44 @@ ALL three locations** when the non-exhaustive gate grows:
 The implementer who creates `pregolya-core/src/error.rs` (Wave 1) owns this gate update.
 This change is coordinate with the Component gate update (D23: 17 → 18); both updates
 occur in the same `pregolya-core/src/error.rs` commit.
+
+## Category Axis Expansion (SYS) — 13 → 14
+
+Added `Category::Sys` ("System error" — operating system or runtime error below the
+application layer). Source: error-taxonomy.md §Error Categories (SYS row).
+`http_status()` SYS → 500; `default_retry_hint` SYS → Maybe.
+BC-2.14.001 and BC-2.14.002 include SYS in their category tables.
+
+### SYS — System / OS / runtime error
+
+**Definition:** An error that originates from the operating system or runtime environment
+below the application layer — e.g., signal delivery, process spawn failure, OS resource
+exhaustion outside of I/O proper, or runtime-level traps not classifiable as INTERNAL
+(unexpected application-state) or TOOL (tool-execution failure).
+
+**`http_status()` mapping:** SYS → 500 (Internal Server Error).
+
+**Default RetryHint:** `Maybe` — some OS-level errors are transient (e.g. resource
+temporarily unavailable); others are permanent (e.g. missing binary). Callers inspect
+the error message or `source` chain to determine retry eligibility.
+
+**Library-layer disposition:** SYS is a library-layer category. No RFC-7807 Known-override
+row is needed in BC-2.14.002; the categorical fallback (SYS → 500) applies.
+
+### #[non_exhaustive] gate update requirement (SYS)
+
+The `Category` enum is a public API surface type and carries `#[non_exhaustive]`.
+Adding `Category::Sys` (one variant) triggers the gate update rule from CLAUDE.md:
+**update ALL three locations** when the non-exhaustive gate grows:
+
+1. **Gate crate** — `tests/external/<gate-name>/`: add `Category::Sys` to the expected
+   symbol list.
+2. **Expected count constant** — update from 13 to 14.
+3. **Expected symbol list** — add `Category::Sys`.
+
+The implementer who creates `pregolya-core/src/error.rs` (Wave 1) owns this gate update.
+This change is coordinated with the D26 EXEC gate update; both updates occur in the same
+`pregolya-core/src/error.rs` commit.
 
 ## Rationale
 

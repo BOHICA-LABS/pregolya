@@ -3,13 +3,15 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (adv-pass-1-F1/BC-2.14.001-v1.12/BC-2.14.002-v1.12/2026-09-17): SYS/System category alignment — Category::Sys variant added; total categories 14; AC-003 and AC-011 updated."
+  - "1.3a (S-1.01-fix-burst-6/2026-09-19): AC-002 updated — Component::Traj added at ordinal 3 (18 named variants / 19 total) per BC-2.14.001 §PC-002 ADR-030 §Decision 2 TRAJ propagation."
+  - "1.3b (S-1.01-fix-burst-5/2026-09-19): AC-007 updated — code field is private; pattern PregolyaError { code, .. } fails for field-privacy reasons; correct access is via pub fn code() accessor per BC-2.14.001 {INV-003}."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
