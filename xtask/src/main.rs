@@ -1,6 +1,6 @@
 //! cargo xtask — workspace task runner for pregolya.
 //!
-//! Usage: cargo xtask <subcommand>
+//! Usage: `cargo xtask <subcommand>`
 //!
 //! Subcommands:
 //!   check-file-size   Enforce production file size gates (CLAUDE.md §File size & module splitting)
