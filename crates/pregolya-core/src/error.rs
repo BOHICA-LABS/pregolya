@@ -783,7 +783,7 @@ mod tests {
             component: Component::Core,
             category: Category::Internal,
             retry_hint: RetryHint::Never,
-            code: "E-TEST-004".into(),
+            code: "E-CORE-004".into(),
             message: "wrapped error".into(),
             source: Some(Arc::clone(&inner)),
         };
@@ -1277,7 +1277,7 @@ mod tests {
             component: Component::Graph,
             category: Category::Durability,
             retry_hint: RetryHint::Never,
-            code: "E-TEST-001".into(),
+            code: "E-GRAPH-001".into(),
             message: "graph persistence failed".into(),
             source: Some(Arc::new(inner_err) as Arc<dyn Error + Send + Sync>),
         };

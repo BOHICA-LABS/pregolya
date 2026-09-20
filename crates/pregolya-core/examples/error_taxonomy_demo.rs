@@ -39,6 +39,7 @@ fn main() {
     // Verified externally — this example is an external compilation unit, so this assertion
     // proves the guarantee on the external API surface (stronger than in-crate test).
     static_assertions::assert_not_impl_any!(pregolya_core::PregolyaError: Default);
+    static_assertions::assert_impl_all!(pregolya_core::PregolyaError: std::error::Error, Send, Sync);
     println!("=== AC-006: PregolyaError: not Default ===");
     println!("  assert_not_impl_any!(PregolyaError: Default) — verified externally");
     println!();
