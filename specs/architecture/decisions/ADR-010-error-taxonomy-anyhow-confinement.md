@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.25"
+version: "1.26"
 changelog:
+  - "1.26 (S-1.01-adv-pass-13): §D26 and §SYS gate-update subsections marked historical-record; gate semantics unified under §D21 item-2 public-types clarification; `tests/external/` path corrected to realized layout."
   - "1.25 (S-1.01-adv-pass-10): §non_exhaustive gate update: component count corrected 18→19 (18 named + Custom); clarify gate counts public types not Component variants."
   - "1.24 (S-1.01-adv-pass-8/2026-09-19): Mark `source` field private; add `source_arc()` accessor to canonical impl preserving Arc for EC-001 re-chaining patterns."
   - "1.23 (S-1.01-adv-pass-7/2026-09-19): Add Category::Sys to category axis (13→14); fix code field shape to String+private+accessor per BC-2.14.001 AC-001/EC-002."
@@ -656,18 +657,11 @@ enumeration.**
 
 ### #[non_exhaustive] gate update requirement (D26)
 
-The `Category` enum is a public API surface type and carries `#[non_exhaustive]`.
-Adding `Category::Exec` (one variant) triggers the gate update rule from CLAUDE.md: **update
-ALL three locations** when the non-exhaustive gate grows:
+> **Historical record only — superseded by §D21 item-2 clarification (v1.25).** The directives below are no longer operative. Do not follow them.
 
-1. **Gate crate** — `tests/external/<gate-name>/`: add `Category::Exec` to the expected
-   symbol list.
-2. **Expected count constant** — update from 12 to 13.
-3. **Expected symbol list** — add `Category::Exec`.
+The `non_exhaustive_external_gate` counts **public types** with `#[non_exhaustive]`, not Category variants (see §D21 `#[non_exhaustive] gate update requirement`, item 2, which is the live statement of gate semantics). Adding a Category variant does NOT require updating `EXPECTED_NON_EXHAUSTIVE_COUNT` or `EXPECTED_NON_EXHAUSTIVE_SYMBOLS`. The exhaustive-match gate for Category is carried by the compiler-exhaustive closures in `test_BC_2_14_001_category_axis` and the 14-row table in `test_BC_2_14_002_category_title_exhaustive`.
 
-The implementer who creates `pregolya-core/src/error.rs` (Wave 1) owns this gate update.
-This change is coordinate with the Component gate update (D23: 17 → 18); both updates
-occur in the same `pregolya-core/src/error.rs` commit.
+The gate file is `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` (not a separate `tests/external/` subcrate).
 
 ## Category Axis Expansion (SYS) — 13 → 14
 
@@ -694,18 +688,11 @@ row is needed in BC-2.14.002; the categorical fallback (SYS → 500) applies.
 
 ### #[non_exhaustive] gate update requirement (SYS)
 
-The `Category` enum is a public API surface type and carries `#[non_exhaustive]`.
-Adding `Category::Sys` (one variant) triggers the gate update rule from CLAUDE.md:
-**update ALL three locations** when the non-exhaustive gate grows:
+> **Historical record only — superseded by §D21 item-2 clarification (v1.25).** The directives below are no longer operative. Do not follow them.
 
-1. **Gate crate** — `tests/external/<gate-name>/`: add `Category::Sys` to the expected
-   symbol list.
-2. **Expected count constant** — update from 13 to 14.
-3. **Expected symbol list** — add `Category::Sys`.
+The `non_exhaustive_external_gate` counts **public types** with `#[non_exhaustive]`, not Category variants (see §D21 `#[non_exhaustive] gate update requirement`, item 2, which is the live statement of gate semantics). Adding a Category variant does NOT require updating `EXPECTED_NON_EXHAUSTIVE_COUNT` or `EXPECTED_NON_EXHAUSTIVE_SYMBOLS`. The exhaustive-match gate for Category is carried by the compiler-exhaustive closures in `test_BC_2_14_001_category_axis` and the 14-row table in `test_BC_2_14_002_category_title_exhaustive`.
 
-The implementer who creates `pregolya-core/src/error.rs` (Wave 1) owns this gate update.
-This change is coordinated with the D26 EXEC gate update; both updates occur in the same
-`pregolya-core/src/error.rs` commit.
+The gate file is `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` (not a separate `tests/external/` subcrate).
 
 ## Rationale
 
