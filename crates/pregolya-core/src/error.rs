@@ -197,7 +197,7 @@ impl Category {
 /// callers must use [`PregolyaError::new`] — struct-literal construction by external
 /// crates is compiler-rejected (`E0639`; `#[non_exhaustive]` guarantee) — and chain a
 /// causal source via [`PregolyaError::with_source`]. Direct field assignment to `source`
-/// is not permitted from outside the crate (ADR-010 §Class 1).
+/// is not permitted from outside the crate (ADR-010 §Decision).
 ///
 /// # Clone semantics
 ///
@@ -307,13 +307,13 @@ impl PregolyaError {
                 name.to_lowercase()
             );
         }
-        // BC-2.14.001 EC-002: code COMPONENT segment must match component_lowercase(&component).
+        // BC-2.14.001 EC-007: code COMPONENT segment must match component_lowercase(&component).
         // Prevents URN namespace aliasing: Custom("newcrate") with code "E-CORE-001" would emit
         // `urn:pregolya:error:E-CORE-001` with `component: "newcrate"` — conflicting attribution.
         let code_component = code[2..].rsplit_once('-').map(|(mid, _)| mid).unwrap_or("");
         assert!(
             code_component.eq_ignore_ascii_case(&component_lowercase(&component)),
-            "BC-2.14.001 EC-002: code COMPONENT segment '{}' does not match component identifier '{}'; \
+            "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}'; \
             code must follow E-<COMPONENT>-NNN where COMPONENT matches the component field",
             code_component,
             component_lowercase(&component),
@@ -369,7 +369,7 @@ impl PregolyaError {
     /// at construction time; it is reachable if the public `component` field is reassigned
     /// post-construction (BC-2.14.001 EC-002 emission-time guard).
     pub fn to_problem(&self) -> ProblemDetail {
-        // BC-2.14.001 EC-002: emission-time parity — component field may be reassigned post-construction
+        // BC-2.14.001 EC-007: emission-time parity — component field may be reassigned post-construction
         // (it is `pub`), so verify the code↔component binding holds at emission time.
         let code_component_emit = self.code[2..]
             .rsplit_once('-')
@@ -377,7 +377,7 @@ impl PregolyaError {
             .unwrap_or("");
         assert!(
             code_component_emit.eq_ignore_ascii_case(&component_lowercase(&self.component)),
-            "BC-2.14.001 EC-002: code COMPONENT segment '{}' does not match component identifier '{}' at emission time; \
+            "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}' at emission time; \
             component field may have been reassigned after construction",
             code_component_emit,
             component_lowercase(&self.component),
@@ -411,7 +411,7 @@ impl PregolyaError {
             Category::Durability => 500,
             Category::Internal => 500,
             Category::Exec => 500, // D26: INTERNAL-tier fallback per ADR-010 §Category Axis Expansion (D26)
-            Category::Sys => 500,  // BC-2.14.001 {PC-003}: INTERNAL-tier; OS syscall failure
+            Category::Sys => 500,  // BC-2.14.002 {PC-003}: INTERNAL-tier; OS syscall failure
         }
     }
 }
@@ -1036,7 +1036,7 @@ mod tests {
             (Category::Internal, 500),
             (Category::Tool, 422),
             (Category::Exec, 500), // D26: INTERNAL-tier fallback
-            (Category::Sys, 500),  // BC-2.14.001 {PC-003}: INTERNAL-tier; OS syscall failure
+            (Category::Sys, 500),  // BC-2.14.002 {PC-003}: INTERNAL-tier; OS syscall failure
         ];
         assert_eq!(
             cases.len(),
@@ -1441,7 +1441,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-003 HIGH-001 positive: lowercase alphanumeric component segment is valid per EC-003.
+    /// BC-2.14.001 EC-002 / EC-006 (story EC-003): lowercase alphanumeric component segment is valid — new crate name Custom component accepted.
     ///
     /// Story spec §Edge Cases EC-003 specifies `E-newcrate-001` as a valid code
     /// (lowercase custom component). The assert must NOT panic for this input.
@@ -1509,7 +1509,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: assert accepts a valid code format with consistent component.
+    /// BC-2.14.001 EC-006: assert accepts a valid code format with consistent component.
     #[test]
     fn test_code_format_accepts_valid_format() {
         // Must not panic — "E-CORE-042" is a valid code format, Component::Core matches CORE segment
@@ -1708,7 +1708,7 @@ mod tests {
         );
     }
 
-    /// ADR-010 §Class 1: `source_arc()` returns the `Arc`
+    /// ADR-010 §Decision: `source_arc()` returns the `Arc`
     /// wrapping the causal error — preserving re-chain capability without re-allocating.
     #[test]
     fn test_BC_2_14_001_source_arc_accessor() {
@@ -1838,7 +1838,7 @@ mod tests {
     /// construction. `component_lowercase` must assert at emission time so that
     /// `to_problem()` never silently aliases a named component identifier.
     #[test]
-    #[should_panic(expected = "BC-2.14.001 EC-002")]
+    #[should_panic(expected = "aliases named component")]
     fn test_BC_2_14_001_ec002_emit_time_guard_blocks_alias() {
         let mut err = PregolyaError::new(
             Component::Core,
@@ -1856,7 +1856,7 @@ mod tests {
     /// BC-2.14.001 EC-002 F1 regression: emit-time charset guard rejects invalid Custom name
     /// even when set post-construction.
     #[test]
-    #[should_panic(expected = "BC-2.14.001 EC-002")]
+    #[should_panic(expected = "contains invalid characters at emission time")]
     fn test_BC_2_14_001_ec002_emit_time_guard_blocks_invalid_chars() {
         let mut err = PregolyaError::new(
             Component::Core,
@@ -1871,7 +1871,7 @@ mod tests {
         let _ = err.to_problem();
     }
 
-    /// BC-2.14.001 {PC-003} — Sys category: `to_problem()` yields title "System"
+    /// BC-2.14.002 {PC-001} / {PC-003} — Sys category: `to_problem()` yields title "System"
     /// and `http_status()` yields 500 (INTERNAL-tier; INV-001 no-200 guarantee).
     #[test]
     fn test_BC_2_14_001_002_sys_category() {
@@ -1998,7 +1998,7 @@ mod tests {
     /// BC-2.14.001 EC-007: emit-time code↔component mismatch — to_problem() detects binding violation when pub field reassigned post-construction.
     #[test]
     #[should_panic(expected = "code COMPONENT segment")]
-    fn test_BC_2_14_001_ec002_emit_time_code_component_mismatch() {
+    fn test_BC_2_14_001_ec007_emit_time_code_component_mismatch() {
         // Reassigning the pub component field post-construction creates a mismatch that
         // to_problem() must detect at emission time.
         let mut err = PregolyaError::new(
