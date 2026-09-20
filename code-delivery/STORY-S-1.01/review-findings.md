@@ -22,6 +22,41 @@ Feature branch: feature/S-1.01
 | push | 42f6f86 | — | — | — | — | MED-001/002/003 + LOW-001/002 fix burst; OBS-001 adjudicated; streak reset to 0/3 per frozen-HEAD rule; pass-11 dispatched on new frozen HEAD (post-push) |
 | 11 | 42f6f86 | 2 MED + 2 LOW + 3 OBS | no | no | 0/3 | Full cascade (MED present); MED-001 ADR-010 §Components anchor unswept; MED-002 api-surface static method doc error; LOW-001 default_retry_hint no story-spec trace; LOW-002 to_problem() unsanctioned panic path; OBS-001 Component enum doc anchor; OBS-002 demo version pins; OBS-003 deferred to wave gate |
 | push | b1d70d9 | — | — | — | — | MED-001+MED-002 closed by architect (6dc5724); LOW-001 closed by story-writer (d86744f); LOW-002+OBS-001+OBS-002 closed by implementer (b1d70d9); OBS-003 deferred to wave gate; streak reset to 0/3 per frozen-HEAD rule; pass-12 dispatched on new frozen HEAD |
+| 12 | b1d70d9 | 1 MED + 2 LOW | no | no | 0/3 | MED-001 BC-INDEX DI-010 missing from BC-2.14.001 row; LOW-001 demo §Section AC-005 attribution + println gap; LOW-002 api-surface §Error Type mixed receiver types — Category sub-header needed. Full cascade (MED-001 present). |
+| push | f339f9d | — | — | — | — | MED-001 closed by state-manager (c628d4e, BC-INDEX §BC-2.14.001 DI-010 column); LOW-001 closed by implementer (f339f9d); LOW-002 closed by architect (379a81d); streak reset to 0/3 per frozen-HEAD rule; pass-13 dispatched on new frozen HEAD |
+
+## Finding Detail — Pass 12
+
+**MED-001**: BC-INDEX DI-010 missing from BC-2.14.001 row.
+
+The BC-INDEX row for BC-2.14.001 did not include DI-010 in the dependency-injection
+dependency column. DI-010 is a load-bearing dependency for the component-binding
+invariant and its absence caused incomplete traceability for consumers reading the
+BC-INDEX dependency graph. Fix: state-manager commit `c628d4e` on `factory-artifacts`
+updates BC-INDEX §BC-2.14.001 dependency column to include DI-010.
+
+**LOW-001**: Demo §Section AC-005 attribution + println gap.
+
+The demo script's §Section AC-005 attribution comment was missing the story-spec
+traceability anchor and a `println!` in the demo body was not suppressed behind a
+feature flag, creating a library-crate println violation. Fix: implementer commit
+`f339f9d` on `feature/S-1.01` adds the traceability anchor to the demo comment and
+replaces the bare `println!` with a `tracing::info!` emission.
+
+**LOW-002**: api-surface.md §Error Type mixed receiver types — Category sub-header needed.
+
+The §Error Type section of `api-surface.md` listed methods with mixed receiver types
+(`&self`, `&mut self`, associated functions) without a Category sub-header to
+distinguish them. This made the section ambiguous for consumers scanning the API
+surface. Fix: architect commit `379a81d` on `factory-artifacts` adds a Category
+sub-header row separating instance methods from associated functions in §Error Type
+of api-surface.md.
+
+Closure: MED-001 CLOSED (state-manager `c628d4e`). LOW-001 CLOSED (implementer `f339f9d`).
+LOW-002 CLOSED (architect `379a81d`).
+Ceremony: full cascade per TD-RECORDS-MICRO-BURST-001 (MED-001 present).
+Per frozen-HEAD rule (BC-5.39.001), push of LOW-001 fix resets streak to 0/3.
+New frozen HEAD: `f339f9d`. Pass-13 dispatched.
 
 ## Finding Detail — Pass 11
 
@@ -153,12 +188,12 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `b1d70d9`).
+CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `f339f9d`).
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
-against unchanged HEAD. Fix burst from pass-11 landed as implementer commit `b1d70d9`
+against unchanged HEAD. Fix burst from pass-12 landed as implementer commit `f339f9d`
 on `feature/S-1.01`; streak resets to 0/3 on push per frozen-HEAD rule.
 
-Current frozen HEAD: `b1d70d9`
+Current frozen HEAD: `f339f9d`
 Current streak: 0/3 on new frozen HEAD.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
@@ -166,4 +201,4 @@ implementation impact, deferred to phase-5 spec-steward).
 
 Deferred OBS-003: out of scope for S-1.01; deferred to wave gate per orchestrator direction.
 
-Next: pass-12 dispatched on frozen HEAD `b1d70d9`.
+Next: pass-13 dispatched on frozen HEAD `f339f9d`.
