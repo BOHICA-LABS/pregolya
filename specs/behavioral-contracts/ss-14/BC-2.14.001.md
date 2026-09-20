@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.22"
+version: "1.23"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -37,6 +37,7 @@ changelog:
   - "1.20 (S-1.01-adv-pass-3/F-001/2026-09-20): POL-12 repair — error-taxonomy v1.59 version pin in §Description replaced with stable anchor error-taxonomy.md §Error Categories."
   - "1.21 (S-1.01-adv-pass-3/F-005-followup/2026-09-20): §Description — remove chained double-§ form introduced by v1.20; error-taxonomy.md §Error Categories changed to error-taxonomy.md Error Categories section per ADR-022 §Decision 5 prohibition on chained §X §Y forms."
   - "1.22 (S-1.01-adv-pass-5/F-001/2026-09-20): EC-007 cross-ref to BC-2.14.002 EC-002 (emission-path panic enumeration) added for bidirectional traceability."
+  - "1.23 (S-1.01-adv-pass-10/MED-001/2026-09-20): EC-007 scope clause added — binding covers code↔COMPONENT axis only; code↔category axis is normative but deferred to S-1.02 (VP-BC214001-01). OBS-001: citation form divergence adjudicated — BC-2.14.001 de-§ in Description is intentional per ADR-022 §Decision 5 (chained §-citation would result otherwise); BC-2.14.002 §-form in §Notes is correct (no chaining issue)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -204,6 +205,13 @@ Cross-refs: EC-002 (Custom-name charset + collision guards, which also enforce t
 emit-time via `component_lowercase`); BC-2.14.002 {INV-001} (monitoring keys on `type_uri`);
 BC-2.14.002 EC-002 (emission-path panic enumeration — documents both sanctioned to_problem() panic
 paths including this EC-007 emit-time binding assert).
+
+**Scope:** EC-007 binds `code`↔COMPONENT only. Consistency of `code` against the category column
+of the error taxonomy (each `E-<COMPONENT>-NNN` code maps to a single category) is normative but
+NOT enforced at construction or emission time in S-1.01; it is enforced by the code-registry CI
+gate in story S-1.02 (VP-BC214001-01). The compensating control for RFC-7807 consumers is
+BC-2.14.002 {INV-001}: clients MUST key monitoring and routing on `type_uri`, never `title` or
+HTTP status.
 
 ## Canonical Test Vectors
 

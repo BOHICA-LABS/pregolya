@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.38"
+version: "1.39"
 status: active
 producer: architect
 timestamp: 2026-09-08T00:00:00Z
 changelog:
+  - "1.39 (adv-pass-10/MED-002+MED-003, architect): §Error Type — MED-002: §Components→§Error Catalog (heading did not exist in error-taxonomy.md; correct heading is §Error Catalog). MED-003: add http_status(), Category::default_retry_hint(), ProblemDetail, and PROBLEM_JSON_CONTENT_TYPE to §Error Type per BC-2.14.002 {INV-004}, {PC-001}, {PC-004}, ADR-010 §Category Axis Expansion (SYS)."
   - "1.38 (S-1.01-adv-pass-17/F-02, architect): §Error Type — code field corrected to String (private; use code() accessor); constructor signature code param corrected to impl Into<String>; accessors section added (code() -> &str and source_arc() -> Option<&Arc<dyn Error + Send + Sync>>); impl Into<String> EC-002 rationale note added."
   - "1.37 (2026-09-19/ADR-030-TRAJ, architect): Component axis expansion — TRAJ (17 → 18). §Error Type Component enumeration: added TRAJ between CHKPT and SERVER; updated count from '17 components as of D23' to '18 components (TRAJ added by ADR-030)'; updated #[non_exhaustive] gate count from 18 (17 named + Custom) to 19 (18 named + Custom). Companion: ADR-010 §Component Axis Expansion (ADR-030)."
   - "1.36 (D-356/DC-47/OBS/2026-09-09, architect): OBS (LOW) CLASS-SWEEP — DC-02 historical delta note: strip LLM payload fields → redact credential values within LLM payload fields in place per BC-2.24.002 {PC-008}. SpanData shape §SpanData already 8-field with session_id (confirmed ✓; v1.33 added it). input-hash unchanged (inputs did not change)."
@@ -346,8 +347,14 @@ Construction (ADR-010 §Error-Construction Notation Canon — sole sanctioned pa
 Accessors:
 - `fn code(&self) -> &str` — returns the structured error code (e.g., `"E-GRAPH-001"`); `code` field is private and immutable per BC-2.14.001 {INV-003}.
 - `fn source_arc(&self) -> Option<&Arc<dyn std::error::Error + Send + Sync>>` — returns the Arc-wrapped causal error for EC-001 re-chaining patterns; unlike `std::error::Error::source()` (which returns `&dyn Error`), this preserves the `Arc` for direct re-chaining via `.with_source(Arc::clone(source_arc))`.
+- `fn http_status(&self) -> u16` — returns the HTTP status code for this error's category; defined once on `PregolyaError` so all callers share the same category→status mapping per BC-2.14.002 {INV-004}.
+- `Category::default_retry_hint() -> RetryHint` — static method on `Category`; returns the baked-in retry guidance for the category per `error-taxonomy.md` §Error Categories footnote F8-04 and ADR-010 §Category Axis Expansion (SYS).
 
-Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the PregolyaError type definition:
+Emission:
+- `#[non_exhaustive] ProblemDetail { type_uri: String, title: String, detail: String, retry_hint: String, component: String }` — RFC-7807 wire type produced by `PregolyaError::to_problem()`; five-field closure per BC-2.14.002 {PC-001}; the `type_uri` field serializes to JSON key `"type"` per RFC-7807 §3.1.
+- `PROBLEM_JSON_CONTENT_TYPE: &str` — constant value `"application/problem+json"` per BC-2.14.002 {PC-004}, AC-012; set as the `Content-Type` header on all problem-detail HTTP responses from `pregolya-server`.
+
+Authoritative list lives in `error-taxonomy.md` §Error Catalog; enum reproduced here for the PregolyaError type definition:
 `Component` = CORE | GRAPH | CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (18 components (TRAJ added by ADR-030); `#[non_exhaustive]` gate count 19: 18 named + `Custom`).
 Full catalog: `prd-supplements/error-taxonomy.md`.
 RFC-7807 serialization: `PregolyaError::to_problem()` (BC-2.14.002). Note: corrected from `to_problem_detail()` (F-P25-04; BC-2.14.002 is authoritative for method name).
