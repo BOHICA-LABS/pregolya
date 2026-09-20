@@ -256,6 +256,35 @@ impl PregolyaError {
             "code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
             code
         );
+        // BC-2.14.001 EC-02 collision prohibition: Custom names that lowercase to a named component
+        // identifier are forbidden (e.g. Custom("Core") → "core" aliases Component::Core on wire).
+        if let Component::Custom(ref name) = component {
+            debug_assert!(
+                !matches!(
+                    name.to_lowercase().as_str(),
+                    "core"
+                        | "graph"
+                        | "chkpt"
+                        | "traj"
+                        | "server"
+                        | "prov"
+                        | "mcp"
+                        | "embed"
+                        | "srlz"
+                        | "mem"
+                        | "eval"
+                        | "tel"
+                        | "cron"
+                        | "sec"
+                        | "cfg"
+                        | "mgmt"
+                        | "tools"
+                ),
+                "BC-2.14.001 EC-02: Component::Custom name '{}' collides with named component '{}' when lowercased",
+                name,
+                name.to_lowercase()
+            );
+        }
         Self {
             component,
             category,
@@ -368,6 +397,12 @@ pub struct ProblemDetail {
     /// Human-readable detail from [`PregolyaError::message`].
     pub detail: String,
     /// Extension fields required by the pregolya RFC-7807 profile.
+    ///
+    /// Serialized with `#[serde(flatten)]` so that `retry_hint` and `component`
+    /// appear as top-level JSON fields per RFC-7807 §3.2 (extension members are
+    /// merged into the top-level object, not nested under an `extensions` key).
+    /// The `ProblemExtensions` Rust type is retained for structured API access.
+    #[serde(flatten)]
     pub extensions: ProblemExtensions,
 }
 
@@ -843,22 +878,25 @@ mod tests {
             "RFC-7807: 'detail' must be a non-null string"
         );
 
-        // Extension fields must be present and be strings
-        let exts = obj
-            .get("extensions")
-            .and_then(serde_json::Value::as_object)
-            .expect("extensions must be a JSON object");
+        // RFC-7807 §3.2: extension members are top-level (no "extensions" wrapper key).
+        // `#[serde(flatten)]` on ProblemExtensions merges retry_hint and component
+        // directly into the top-level JSON object.
         assert!(
-            exts.get("retry_hint")
+            obj.get("retry_hint")
                 .and_then(serde_json::Value::as_str)
                 .is_some(),
-            "extensions.retry_hint must be a string"
+            "RFC-7807 §3.2: 'retry_hint' must be a top-level string (flattened, not nested)"
         );
         assert!(
-            exts.get("component")
+            obj.get("component")
                 .and_then(serde_json::Value::as_str)
                 .is_some(),
-            "extensions.component must be a string"
+            "RFC-7807 §3.2: 'component' must be a top-level string (flattened, not nested)"
+        );
+        // Verify no "extensions" wrapper key exists — RFC-7807 §3.2 conformance
+        assert!(
+            obj.get("extensions").is_none(),
+            "RFC-7807 §3.2: no 'extensions' wrapper key must exist — members are top-level"
         );
 
         // No field in the top-level object is null
@@ -1604,6 +1642,46 @@ mod tests {
         )
         .with_source(Arc::clone(arc_ref));
         assert!(outer2.source_arc().is_some());
+    }
+
+    /// BC-2.14.001 EC-02: Custom name is lowercased on wire via component_lowercase.
+    ///
+    /// `Component::Custom("MyCrate")` → `extensions.component == "mycrate"` on the
+    /// ProblemDetail. `type_uri` preserves the original code casing.
+    #[test]
+    fn test_BC_2_14_001_custom_wire_normalization() {
+        // BC-2.14.001 EC-02: Custom name is lowercased on wire (via component_lowercase).
+        let err = PregolyaError::new(
+            Component::Custom("MyCrate".into()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-MyCrate-001",
+            "test",
+        );
+        let pd = err.to_problem();
+        // component on wire is lowercased
+        assert_eq!(pd.extensions.component, "mycrate");
+        // type_uri preserves original casing
+        assert!(pd.type_uri.contains("E-MyCrate-001"));
+    }
+
+    /// BC-2.14.001 EC-02: Custom("Core") lowercases to "core" — same as Component::Core.
+    ///
+    /// This MUST panic in debug builds. In release builds the debug_assert is a no-op
+    /// (per Rust semantics); this test is gated on `#[cfg(debug_assertions)]`.
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic(expected = "collides with named component")]
+    fn test_BC_2_14_001_custom_collision_panic() {
+        // BC-2.14.001 EC-02: Custom("Core") lowercases to "core" — same as Component::Core.
+        // This MUST panic in debug builds.
+        let _ = PregolyaError::new(
+            Component::Custom("Core".into()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-Core-001",
+            "collision test",
+        );
     }
 
     /// BC-2.14.001/002 v1.12 — Sys category: `to_problem()` yields title "System"
