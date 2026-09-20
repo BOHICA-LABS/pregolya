@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.23"
+version: "1.24"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -38,6 +38,7 @@ changelog:
   - "1.21 (S-1.01-adv-pass-3/F-005-followup/2026-09-20): §Description — remove chained double-§ form introduced by v1.20; error-taxonomy.md §Error Categories changed to error-taxonomy.md Error Categories section per ADR-022 §Decision 5 prohibition on chained §X §Y forms."
   - "1.22 (S-1.01-adv-pass-5/F-001/2026-09-20): EC-007 cross-ref to BC-2.14.002 EC-002 (emission-path panic enumeration) added for bidirectional traceability."
   - "1.23 (S-1.01-adv-pass-10/MED-001/2026-09-20): EC-007 scope clause added — binding covers code↔COMPONENT axis only; code↔category axis is normative but deferred to S-1.02 (VP-BC214001-01). OBS-001: citation form divergence adjudicated — BC-2.14.001 de-§ in Description is intentional per ADR-022 §Decision 5 (chained §-citation would result otherwise); BC-2.14.002 §-form in §Notes is correct (no chaining issue)."
+  - "1.24 (S-1.01-adv-pass-13/MED-002/2026-09-20): EC-006 emission-time clause added — `to_problem()` re-validates the E- prefix at emission time (BC-2.14.002 EC-002 path 3); reachable via in-crate struct-literal construction ({PC-008} clause 1) where new() format check was bypassed. EC-007 Cross-refs updated from 'both sanctioned' to 'all three sanctioned' to_problem() panic paths."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -187,6 +188,10 @@ code strings serve as the machine-readable stable identifiers referenced in dash
 rules ({INV-003}), and the format constraint prevents malformed codes from silently entering those
 pipelines. Callers must supply a well-formed code string; a malformed code is a programming defect,
 not a runtime error path.
+Additionally, `to_problem()` re-validates the `E-` prefix at emission time: if `self.code` does not
+begin with `"E-"`, it panics with a BC-2.14.001 EC-006-citing message (BC-2.14.002 EC-002 path 3).
+This path is reachable only via the in-crate struct-literal construction form sanctioned by {PC-008}
+clause 1, where `new()`'s construction-time validate step was bypassed.
 
 ### EC-007: Code↔component binding at construction and emission
 **Scenario:** A caller constructs a `PregolyaError` where the COMPONENT segment of `code` does
@@ -203,7 +208,7 @@ variants (e.g., `Component::Custom("MyExt")` → COMPONENT segment must be `MYEX
 intentional: they surface a programmer error before a misattributed URN reaches an RFC-7807 response.
 Cross-refs: EC-002 (Custom-name charset + collision guards, which also enforce the same binding at
 emit-time via `component_lowercase`); BC-2.14.002 {INV-001} (monitoring keys on `type_uri`);
-BC-2.14.002 EC-002 (emission-path panic enumeration — documents both sanctioned to_problem() panic
+BC-2.14.002 EC-002 (emission-path panic enumeration — documents all three sanctioned to_problem() panic
 paths including this EC-007 emit-time binding assert).
 
 **Scope:** EC-007 binds `code`↔COMPONENT only. Consistency of `code` against the category column

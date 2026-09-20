@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.23"
+version: "1.24"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "1.21 (S-1.01-adv-pass-3/F-001/2026-09-20): POL-12 repair — error-taxonomy v1.59 version pin in §Notes SYS paragraph replaced with stable anchor error-taxonomy.md §Error Categories."
   - "1.22 (S-1.01-adv-pass-5/F-001/2026-09-20): EC-002 — extend to_problem() panic carve-out from single Custom-name path to two-path enumeration (BC-2.14.001 EC-002 + BC-2.14.001 EC-007 emit-time binding); removes contradictory 'panics ONLY when Custom' restriction that contradicts BC-2.14.001 EC-007."
   - "1.23 (S-1.01-adv-pass-10/LOW-002/2026-09-20): §Notes SYS bullet grammar fixed — (1) bold label simplified from SYS category (error-taxonomy.md §Error Categories) to SYS category; (2) double-per removed from introduction sentence; (3) trailing citation error-taxonomy §Error Categories corrected to error-taxonomy.md §Error Categories."
+  - "1.24 (S-1.01-adv-pass-13/MED-002/2026-09-20): EC-002 extended from two to three sanctioned to_problem() panic paths — added path 3 (BC-2.14.001 EC-006 strip_prefix guard: self.code does not begin with E-, reachable via in-crate struct-literal construction per BC-2.14.001 {PC-008} clause 1). 'two' → 'three' and 'Both panics' → 'All three panics' updated accordingly."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -186,7 +187,7 @@ The HTTP response may additionally include a `Retry-After: 60` header.
 **Expected behavior:** `to_problem()` is non-panicking under correct use — it returns a `ProblemDetail`
 struct without requiring a `tokio::Runtime`. The struct can be serialized to JSON with `serde_json::to_string`.
 
-`to_problem()` has two sanctioned panic paths, both corresponding to contract violations:
+`to_problem()` has three sanctioned panic paths, all corresponding to contract violations:
 
 1. **BC-2.14.001 EC-002 (Custom-name violation):** `self.component` is `Component::Custom(name)` where
    `name`, when lowercased, either contains invalid characters or collides with a named component
@@ -199,7 +200,12 @@ struct without requiring a `tokio::Runtime`. The struct can be serialized to JSO
    binding assert at the head of `to_problem()`. Example: constructing with `Component::Core` and
    `"E-CORE-001"` then setting `err.component = Component::Graph` before calling `to_problem()`.
 
-Both panics are intentional: they surface programmer errors before a malformed or misattributed URN
+3. **BC-2.14.001 EC-006 (code-format guard):** `self.code` does not begin with `"E-"` (BC-2.14.001 EC-006
+   code-format violation). Panics with a BC-2.14.001 EC-006-citing message at the head of `to_problem()`
+   before any `ProblemDetail` construction. Reachable via in-crate struct-literal construction
+   (BC-2.14.001 {PC-008} clause 1) where `new()`'s format check was bypassed.
+
+All three panics are intentional: they surface programmer errors before a malformed or misattributed URN
 reaches an RFC-7807 response.
 
 ### EC-003: Nested PregolyaError source in problem detail
