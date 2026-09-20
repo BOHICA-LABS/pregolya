@@ -271,6 +271,11 @@ impl PregolyaError {
     /// Also panics if the COMPONENT segment of `code` does not match `component` (case-insensitive).
     ///
     /// These are programmer-error invariants; they indicate a bug in the calling code.
+    ///
+    /// Note: construction does NOT validate `code`↔`category` consistency against the error
+    /// taxonomy. Each `E-<COMPONENT>-NNN` code maps to a single category in the taxonomy, but
+    /// that constraint is enforced by the code-registry CI gate in story S-1.02
+    /// (VP-BC214001-01), not at construction time.
     pub fn new(
         component: Component,
         category: Category,
@@ -376,6 +381,9 @@ impl PregolyaError {
     /// BC-2.14.002 EC-002 path 2). Example: constructing with `Component::Core` and
     /// `"E-CORE-001"`, then setting `err.component = Component::Graph` before calling
     /// `to_problem()`.
+    ///
+    /// Note: the emit-time assert validates `code`↔COMPONENT binding only. Code↔category
+    /// taxonomy consistency is enforced by the code-registry gate (S-1.02, VP-BC214001-01).
     pub fn to_problem(&self) -> ProblemDetail {
         // BC-2.14.001 EC-007: emission-time parity — component field may be reassigned post-construction
         // (it is `pub`), so verify the code↔component binding holds at emission time.
@@ -991,6 +999,15 @@ mod tests {
         for (key, val) in obj {
             assert!(!val.is_null(), "RFC-7807 field '{}' must not be null", key);
         }
+
+        // Round-trip: verify Deserialize direction (including rename = "type")
+        let rt: ProblemDetail =
+            serde_json::from_str(&json).expect("ProblemDetail must round-trip from JSON");
+        assert_eq!(rt.type_uri, problem.type_uri);
+        assert_eq!(rt.title, problem.title);
+        assert_eq!(rt.detail, problem.detail);
+        assert_eq!(rt.retry_hint, problem.retry_hint);
+        assert_eq!(rt.component, problem.component);
     }
 
     /// BC-2.14.001 MUST-NOT + BC-2.14.002 EC-003 regression:
