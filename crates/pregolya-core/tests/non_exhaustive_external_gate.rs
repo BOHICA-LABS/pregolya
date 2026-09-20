@@ -263,7 +263,7 @@ fn ui() {
     t.compile_fail("tests/ui/problem_detail_match_without_dots_fails.rs");
     t.pass("tests/ui/problem_detail_match_with_dots_passes.rs");
 
-    // ProblemExtensions (struct): E0638 — at pregolya_core::error::ProblemExtensions
+    // ProblemExtensions (struct): E0638 — at pregolya_core::ProblemExtensions (crate-root re-export; also at pregolya_core::error::ProblemExtensions)
     t.compile_fail("tests/ui/problem_extensions_match_without_dots_fails.rs");
     t.pass("tests/ui/problem_extensions_match_with_dots_passes.rs");
 

@@ -28,7 +28,7 @@ acceptance-criterion group and recording the output with VHS.
 | AC | BC Trace | Description | Recording | Format | Status |
 |----|----------|-------------|-----------|--------|--------|
 | AC-001 | BC-2.14.001 PC-001 | `PregolyaError::new()` constructs all 5 named fields; Display = `[code] message` | [AC-001-007-008 GIF](AC-001-007-008-construction-display-source-chain.gif) | gif+webm | recorded |
-| AC-002 | BC-2.14.001 PC-002 | Component axis — 17 named variants + Custom = 18 total | [AC-002-003-004 GIF](AC-002-003-004-enum-axes-retry-hint.gif) | gif+webm | recorded |
+| AC-002 | BC-2.14.001 PC-002 | Component axis — 18 named variants + Custom = 19 total | [AC-002-003-004 GIF](AC-002-003-004-enum-axes-retry-hint.gif) | gif+webm | recorded |
 | AC-003 | BC-2.14.001 PC-003 | Category axis — 14 variants incl. Sys (14th, INTERNAL-tier HTTP 500) | [AC-002-003-004 GIF](AC-002-003-004-enum-axes-retry-hint.gif) | gif+webm | recorded |
 | AC-004 | BC-2.14.001 PC-004 | RetryHint — Never/Maybe/Later(Duration); Duration::ZERO valid sentinel | [AC-002-003-004 GIF](AC-002-003-004-enum-axes-retry-hint.gif) | gif+webm | recorded |
 | AC-005 | BC-2.14.001 PC-006 | `Error + Send + Sync` compile-time assertion (static_assertions module-level) | compile-time (no runtime demo needed) | — | verified by test suite |
@@ -74,9 +74,9 @@ Runs: `cargo run -p pregolya-core --example error_taxonomy_demo -- enums`
 
 | Output Line Pattern | AC Evidenced |
 |---------------------|-------------|
-| `Named (17): Core Graph Chkpt Server Prov Mcp Split Sbxd Retry Cron Memory Budget Tmpl Srlz Vs Embed Tools` | AC-002 17 named variants exhaustively listed |
+| `Named (18): Core Graph Chkpt Traj Server Prov Mcp Split Sbxd Retry Cron Memory Budget Tmpl Srlz Vs Embed Tools` | AC-002 18 named variants exhaustively listed |
 | `Custom:    Custom("newcrate")` | AC-002 Custom(String) variant |
-| `Total variants: 18` | AC-002 total count |
+| `Total variants: 19` | AC-002 total count |
 | `All 14: Val Auth Rate Timeout Transport Internal Durability Policy Tool Concurrency Security Tenancy Exec Sys` | AC-003 14 variants |
 | `Sys is the 14th (INTERNAL-tier, HTTP 500, default RetryHint::Maybe)` | AC-003 Sys variant spec |
 | `Never: Never`, `Maybe: Maybe`, `Later(30s): Later(30s)` | AC-004 three variants |

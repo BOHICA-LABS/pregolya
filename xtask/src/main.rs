@@ -33,7 +33,7 @@ fn main() {
                 "  check-no-panic            Lint: .expect()/.unwrap() in library src/ is forbidden"
             );
             eprintln!(
-                "  deny-anyhow-in-lib        Lint: anyhow imports in pregolya-* library crates"
+                "  deny-anyhow-in-lib        Lint: anyhow usage (imports or qualified anyhow:: in production code)"
             );
             eprintln!("  deny-description-cache-key Lint: description-proxy cache-key usage");
             exit(1);
@@ -528,6 +528,18 @@ fn walk_timeout_tokens(
                 i += 1;
                 continue;
             }
+            // Check reqwest :: ClientBuilder :: new() — routes through chain check for .timeout()
+            if is_double_colon(&tokens, i + 1)
+                && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "ClientBuilder")
+                && is_double_colon(&tokens, i + 4)
+                && matches!(tokens.get(i + 6), Some(TokenTree::Ident(id)) if id == "new")
+            {
+                if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
+                    findings.push(finding);
+                }
+                i += 1;
+                continue;
+            }
         }
 
         // Try to match standalone Client :: new ( ... ) — NOT preceded by `:`.
@@ -554,6 +566,26 @@ fn walk_timeout_tokens(
                 // Check for Client :: builder chain
                 if is_double_colon(&tokens, i + 1)
                     && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "builder")
+                {
+                    if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
+                        findings.push(finding);
+                    }
+                    i += 1;
+                    continue;
+                }
+            }
+        }
+
+        // Try to match standalone ClientBuilder :: new ( ... ) — NOT preceded by `:`.
+        // Preceding `:` means it's part of a qualified path (reqwest::ClientBuilder),
+        // which is handled by the reqwest arm above.
+        if matches!(&tokens[i], TokenTree::Ident(id) if id == "ClientBuilder") {
+            let prev_is_colon =
+                i > 0 && matches!(&tokens[i - 1], TokenTree::Punct(p) if p.as_char() == ':');
+            if !prev_is_colon {
+                // Check for ClientBuilder :: new() — routes through chain check for .timeout()
+                if is_double_colon(&tokens, i + 1)
+                    && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "new")
                 {
                     if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
                         findings.push(finding);
@@ -966,23 +998,18 @@ fn walk_anyhow_tokens(
             TokenTree::Group(g) if g.delimiter() == Delimiter::Brace => {
                 walk_anyhow_tokens(g.stream().into_iter(), findings, path, in_test_depth);
             }
-            // Detect `use` keyword when not inside a test scope.
-            TokenTree::Ident(id) if id == "use" && *in_test_depth == 0 => {
-                let line = id.span().start().line;
-                // Scan forward in the same token list until `;` to find `anyhow`.
-                let mut j = i + 1;
-                while j < tokens.len() {
-                    match &tokens[j] {
-                        TokenTree::Ident(id2) if id2 == "anyhow" => {
-                            findings.push(format!("{}:{}: use anyhow", path, line));
-                            break;
-                        }
-                        TokenTree::Punct(p) if p.as_char() == ';' => break,
-                        // A brace group ends the use tree (e.g. `use foo::{a, b}`)
-                        TokenTree::Group(_) => break,
-                        _ => {}
-                    }
-                    j += 1;
+            // Detect `anyhow` ident followed by `::` outside test scope.
+            // Catches both `use anyhow::Foo` and `fn f() -> anyhow::Result<()>`
+            // patterns (ADR-010 boundary violation). Using the bare-ident arm
+            // instead of a `use`-keyword scan catches qualified usages like
+            // return types and function signatures that do not start with `use`.
+            TokenTree::Ident(id) if id == "anyhow" && *in_test_depth == 0 => {
+                if is_double_colon(&tokens, i + 1) {
+                    let line = id.span().start().line;
+                    findings.push(format!(
+                        "{}:{}: anyhow:: in non-test code (ADR-010 boundary violation)",
+                        path, line
+                    ));
                 }
             }
             // Other non-brace groups (parens, brackets) — walk them too.

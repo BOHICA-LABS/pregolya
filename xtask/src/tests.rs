@@ -959,6 +959,83 @@ fn test_is_test_class_file_patterns() {
     );
 }
 
+// ── FIX-B: anyhow:: qualified-usage detection ────────────────────────────────
+
+/// FIX-B: `fn f() -> anyhow::Result<()>` in non-test code IS flagged.
+#[test]
+fn test_deny_anyhow_flags_qualified_usage_in_return_type() {
+    let src = "pub fn do_thing() -> anyhow::Result<()> { Ok(()) }\n";
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "anyhow:: in return type must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("anyhow")),
+        "expected anyhow violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// FIX-B: The same `anyhow::Result` inside `#[cfg(test)] mod tests` is NOT flagged.
+#[test]
+fn test_deny_anyhow_skips_qualified_usage_in_cfg_test() {
+    let src = r#"
+pub fn production_fn() {}
+
+#[cfg(test)]
+mod tests {
+    fn do_thing() -> anyhow::Result<()> { Ok(()) }
+}
+"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "anyhow:: inside #[cfg(test)] must not be flagged; got: {findings:?}"
+    );
+}
+
+// ── FIX-C: ClientBuilder::new() detection ────────────────────────────────────
+
+/// FIX-C: `reqwest::ClientBuilder::new().build()?` without .timeout() IS flagged.
+#[test]
+fn test_timeout_scanner_flags_clientbuilder_new_without_timeout() {
+    let src = "let c = reqwest::ClientBuilder::new().build()?;\n";
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "reqwest::ClientBuilder::new().build() without .timeout() must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// FIX-C: `reqwest::ClientBuilder::new().timeout(...).build()?` is NOT flagged.
+#[test]
+fn test_timeout_scanner_does_not_flag_clientbuilder_with_timeout() {
+    let src = "let c = reqwest::ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;\n";
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "reqwest::ClientBuilder::new().timeout(...).build() must NOT be flagged; got: {findings:?}"
+    );
+}
+
 // ── deny-description-cache-key scanner ───────────────────────────────────────
 
 /// FIX-E: A real code usage of cache_key adjacent to a description ident MUST

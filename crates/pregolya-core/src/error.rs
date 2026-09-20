@@ -3,7 +3,7 @@
 //! This module implements the two-dimensional error model at the heart of
 //! pregolya: every error is a [`PregolyaError`] characterized by two orthogonal
 //! axes — [`Component`] (which crate emitted the error) and [`Category`] (the
-//! error class). Together they uniquely locate an error in the 17 × 14
+//! error class). Together they uniquely locate an error in the 18 × 14
 //! taxonomy grid defined by ADR-010.
 //!
 //! # Key types
@@ -50,7 +50,7 @@ pub const PROBLEM_JSON_CONTENT_TYPE: &str = "application/problem+json";
 
 /// Identifies which pregolya crate emitted the error.
 ///
-/// 17 named variants cover the standard component set (as of ADR-010 D23).
+/// 18 named variants cover the standard component set (as of ADR-010 D23 + ADR-030).
 /// [`Component::Custom`] provides forward-compatibility for new crates not yet
 /// in the taxonomy.
 #[non_exhaustive]
@@ -62,6 +62,8 @@ pub enum Component {
     Graph,
     /// `pregolya-checkpoint` (SS-04)
     Chkpt,
+    /// `pregolya-checkpoint / checkpoint::trajectory` (SS-04)
+    Traj,
     /// `pregolya-server` (SS-12)
     Server,
     /// Provider crates: `pregolya-openai`, `pregolya-anthropic`, `pregolya-ollama` (SS-03)
@@ -236,6 +238,12 @@ impl PregolyaError {
             code.starts_with("E-")
                 && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
                     !mid.is_empty()
+                        && !mid.starts_with('-')
+                        && !mid.starts_with('_')
+                        && !mid.ends_with('-')
+                        && !mid.ends_with('_')
+                        && !mid.contains("--")
+                        && !mid.contains("__")
                         && mid
                             .chars()
                             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
@@ -357,6 +365,7 @@ fn component_lowercase(component: &Component) -> String {
         Component::Core => "core".to_string(),
         Component::Graph => "graph".to_string(),
         Component::Chkpt => "chkpt".to_string(),
+        Component::Traj => "traj".to_string(),
         Component::Server => "server".to_string(),
         Component::Prov => "prov".to_string(),
         Component::Mcp => "mcp".to_string(),
@@ -518,7 +527,7 @@ mod tests {
 
     /// AC-002 (traces to BC-2.14.001 {PC-002})
     ///
-    /// Exhaustive match on all 18 `Component` variants (17 named + `Custom(String)`).
+    /// Exhaustive match on all 19 `Component` variants (18 named + `Custom(String)`).
     /// Compiles without a wildcard arm — if any variant is added or removed the
     /// closure fails to compile. `#[non_exhaustive]` does NOT restrict exhaustive
     /// matching within the defining crate.
@@ -530,27 +539,28 @@ mod tests {
                 Component::Core => 0,
                 Component::Graph => 1,
                 Component::Chkpt => 2,
-                Component::Server => 3,
-                Component::Prov => 4,
-                Component::Mcp => 5,
-                Component::Split => 6,
-                Component::Sbxd => 7,
-                Component::Retry => 8,
-                Component::Cron => 9,
-                Component::Memory => 10,
-                Component::Budget => 11,
-                Component::Tmpl => 12,
-                Component::Srlz => 13,
-                Component::Vs => 14,
-                Component::Embed => 15,
-                Component::Tools => 16,
-                Component::Custom(_) => 17,
+                Component::Traj => 3,
+                Component::Server => 4,
+                Component::Prov => 5,
+                Component::Mcp => 6,
+                Component::Split => 7,
+                Component::Sbxd => 8,
+                Component::Retry => 9,
+                Component::Cron => 10,
+                Component::Memory => 11,
+                Component::Budget => 12,
+                Component::Tmpl => 13,
+                Component::Srlz => 14,
+                Component::Vs => 15,
+                Component::Embed => 16,
+                Component::Tools => 17,
+                Component::Custom(_) => 18,
             }
         };
         // Spot-check first and last ordinals
         assert_eq!(_verify_exhaustive(Component::Core), 0);
-        assert_eq!(_verify_exhaustive(Component::Custom("x".into())), 17);
-        // 17 named variants (0–16) + 1 Custom = 18 total
+        assert_eq!(_verify_exhaustive(Component::Custom("x".into())), 18);
+        // 18 named variants (0–17) + 1 Custom = 19 total
     }
 
     /// AC-003 (traces to BC-2.14.001 {PC-003})
@@ -1358,7 +1368,7 @@ mod tests {
         );
     }
 
-    /// MED-002: Exhaustive table-driven test for all 18 Component variants → expected
+    /// MED-002: Exhaustive table-driven test for all 19 Component variants → expected
     /// `extensions.component` string emitted by `component_lowercase`.
     #[test]
     fn test_BC_2_14_002_component_mapping_exhaustive() {
@@ -1368,6 +1378,7 @@ mod tests {
             (Component::Core, "core"),
             (Component::Graph, "graph"),
             (Component::Chkpt, "chkpt"),
+            (Component::Traj, "traj"),
             (Component::Server, "server"),
             (Component::Prov, "prov"),
             (Component::Mcp, "mcp"),
@@ -1384,7 +1395,11 @@ mod tests {
             (Component::Tools, "tools"),
             (Component::Custom("newcrate".to_string()), "newcrate"),
         ];
-        assert_eq!(cases.len(), 18, "must cover all 18 Component variants");
+        assert_eq!(
+            cases.len(),
+            19,
+            "must cover all 19 Component variants (18 named + Custom)"
+        );
         let mut seen: HashSet<&str> = HashSet::new();
         for (comp, expected) in cases {
             let err = PregolyaError {
@@ -1471,6 +1486,48 @@ mod tests {
             Category::Internal,
             RetryHint::Never,
             "E-my_crate-001",
+            "test",
+        );
+    }
+
+    /// FIX-D: debug_assert rejects leading hyphen in component segment (`E--CORE-001`).
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "code must follow")]
+    fn test_debug_assert_rejects_leading_hyphen_in_component() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E--CORE-001",
+            "test",
+        );
+    }
+
+    /// FIX-D: debug_assert rejects doubled hyphen in component segment (`E-CORE--001`).
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "code must follow")]
+    fn test_debug_assert_rejects_doubled_hyphen_in_component() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE--001",
+            "test",
+        );
+    }
+
+    /// FIX-D: debug_assert rejects trailing separator in component segment (`E-CORE_-001`).
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "code must follow")]
+    fn test_debug_assert_rejects_trailing_hyphen_in_component() {
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE_-001",
             "test",
         );
     }

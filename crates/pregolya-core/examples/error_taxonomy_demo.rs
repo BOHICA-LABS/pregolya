@@ -131,13 +131,14 @@ fn demo_construction() {
 // ─── Section 2: Enum Axes & RetryHint ───────────────────────────────────────
 
 fn demo_enums() {
-    println!("=== AC-002: Component Axis (17 named + Custom = 18 total) ===");
+    println!("=== AC-002: Component Axis (18 named + Custom = 19 total) ===");
     println!();
 
     let named_variants = [
         Component::Core,
         Component::Graph,
         Component::Chkpt,
+        Component::Traj,
         Component::Server,
         Component::Prov,
         Component::Mcp,
@@ -175,7 +176,7 @@ fn demo_enums() {
         custom_prob.extensions.component
     );
     println!(
-        "  Total variants: {} (17 named + 1 Custom)",
+        "  Total variants: {} (18 named + 1 Custom)",
         named_variants.len() + 1
     );
     println!();

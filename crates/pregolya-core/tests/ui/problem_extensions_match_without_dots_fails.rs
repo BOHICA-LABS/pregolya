@@ -6,7 +6,7 @@
 // defining crate (rustc E0638).
 //
 // `ProblemExtensions` is re-exported at `pregolya_core::ProblemExtensions`
-// (also accessible at the module path `pregolya_core::ProblemExtensions`).
+// (also accessible at the module path `pregolya_core::error::ProblemExtensions`).
 //
 // Traces to: BC-2.14.001 {PC-008}, S-1.01 AC-007, adv F1 (POL-42).
 
