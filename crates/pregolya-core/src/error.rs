@@ -24,7 +24,8 @@
 //! so that `#[derive(Clone)]` compiles without requiring the wrapped error to
 //! implement `Clone` — `Arc::clone` increments a reference count.
 //! `ProblemDetail` deliberately omits the source chain; HTTP responses only
-//! carry `type_uri`, `title`, `detail`, and the `extensions` block.
+//! carry `type_uri`, `title`, `detail`, and the top-level `retry_hint` / `component`
+//! extension members (RFC-7807 §3.2).
 //!
 //! # RFC-7807 profile
 //!
@@ -223,6 +224,30 @@ pub struct PregolyaError {
     source: Option<Arc<dyn std::error::Error + Send + Sync>>,
 }
 
+/// The 18 lowercase identifiers emitted by [`component_lowercase`] for named variants.
+/// Used by the Custom-collision guard in [`PregolyaError::new`] and its test.
+/// Must be kept in sync with [`component_lowercase`].
+const NAMED_COMPONENT_LOWERCASE: [&str; 18] = [
+    "core",   // Component::Core
+    "graph",  // Component::Graph
+    "chkpt",  // Component::Chkpt
+    "traj",   // Component::Traj
+    "server", // Component::Server
+    "prov",   // Component::Prov
+    "mcp",    // Component::Mcp
+    "split",  // Component::Split
+    "sbxd",   // Component::Sbxd
+    "retry",  // Component::Retry
+    "cron",   // Component::Cron
+    "memory", // Component::Memory
+    "budget", // Component::Budget
+    "tmpl",   // Component::Tmpl
+    "srlz",   // Component::Srlz
+    "vs",     // Component::Vs
+    "embed",  // Component::Embed
+    "tools",  // Component::Tools
+];
+
 impl PregolyaError {
     /// Constructs a `PregolyaError`.
     ///
@@ -240,46 +265,25 @@ impl PregolyaError {
         debug_assert!(
             code.starts_with("E-")
                 && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
-                    !mid.is_empty()
-                        && !mid.starts_with('-')
-                        && !mid.starts_with('_')
-                        && !mid.ends_with('-')
-                        && !mid.ends_with('_')
-                        && !mid.contains("--")
-                        && !mid.contains("__")
-                        && mid
-                            .chars()
-                            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+                    is_valid_component_segment(mid)
                         && suffix.len() == 3
                         && suffix.chars().all(|c| c.is_ascii_digit())
                 }),
             "code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
             code
         );
-        // BC-2.14.001 EC-02 collision prohibition: Custom names that lowercase to a named component
-        // identifier are forbidden (e.g. Custom("Core") → "core" aliases Component::Core on wire).
+        // BC-2.14.001 EC-02: Custom names must be valid segments and must not alias named
+        // component identifiers when lowercased (e.g. Custom("Core") → "core" aliases
+        // Component::Core on wire). Both checks share the is_valid_component_segment predicate.
         if let Component::Custom(ref name) = component {
             debug_assert!(
-                !matches!(
-                    name.to_lowercase().as_str(),
-                    "core"
-                        | "graph"
-                        | "chkpt"
-                        | "traj"
-                        | "server"
-                        | "prov"
-                        | "mcp"
-                        | "embed"
-                        | "srlz"
-                        | "mem"
-                        | "eval"
-                        | "tel"
-                        | "cron"
-                        | "sec"
-                        | "cfg"
-                        | "mgmt"
-                        | "tools"
-                ),
+                is_valid_component_segment(name),
+                "BC-2.14.001 EC-02: Component::Custom name '{}' is not a valid component segment \
+                (must be non-empty, [A-Za-z0-9_-] only, no leading/trailing/consecutive -/_)",
+                name,
+            );
+            debug_assert!(
+                !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
                 "BC-2.14.001 EC-02: Component::Custom name '{}' collides with named component '{}' when lowercased",
                 name,
                 name.to_lowercase()
@@ -418,7 +422,26 @@ pub struct ProblemExtensions {
 
 // ─── Private helpers ─────────────────────────────────────────────────────────
 
-/// Returns the lowercase component code string for RFC-7807 `extensions.component`.
+/// Returns `true` if `s` is a valid component-segment identifier:
+/// non-empty, ASCII alphanumeric + `-` + `_` only, no leading/trailing `-`/`_`,
+/// no consecutive `-`/`_` sequences (including mixed `-_` / `_-`).
+///
+/// Used by the code-format `debug_assert` in [`PregolyaError::new`] (validates the
+/// `COMPONENT` segment of `E-<COMPONENT>-NNN`) and by the Custom-name guard
+/// (validates `Component::Custom` names before the collision check).
+fn is_valid_component_segment(s: &str) -> bool {
+    !s.is_empty()
+        && s.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        && !s.starts_with(['-', '_'])
+        && !s.ends_with(['-', '_'])
+        && !s.contains("--")
+        && !s.contains("__")
+        && !s.contains("-_")
+        && !s.contains("_-")
+}
+
+/// Returns the lowercase component code string for RFC-7807 top-level `component` member.
 fn component_lowercase(component: &Component) -> String {
     match component {
         Component::Core => "core".to_string(),
@@ -484,7 +507,7 @@ fn category_title(category: &Category) -> &'static str {
     }
 }
 
-/// Encodes [`RetryHint`] as the canonical string form for RFC-7807 extensions.
+/// Encodes [`RetryHint`] as the canonical string form for RFC-7807 top-level `retry_hint` member.
 ///
 /// - [`RetryHint::Never`] → `"never"`
 /// - [`RetryHint::Maybe`] → `"maybe"`
@@ -788,8 +811,8 @@ mod tests {
     /// AC-009 (traces to BC-2.14.002 {PC-001}, TV-001)
     ///
     /// `to_problem()` for a `Val` error maps to the correct `ProblemDetail` fields:
-    /// `type_uri`, `title: "Validation"`, `detail`, `extensions.retry_hint: "never"`,
-    /// `extensions.component: "core"`.
+    /// `type_uri`, `title: "Validation"`, `detail`, `retry_hint: "never"`,
+    /// `component: "core"` (all top-level RFC-7807 §3.2 members).
     #[test]
     fn test_BC_2_14_002_to_problem_val() {
         let err = PregolyaError {
@@ -811,7 +834,7 @@ mod tests {
     /// AC-009 (traces to BC-2.14.002 {PC-001}, TV-002)
     ///
     /// `to_problem()` for a `Rate` error with `Later(30s)` produces
-    /// `extensions.retry_hint: "later:30"` and HTTP status 429 (via `http_status()`).
+    /// `retry_hint: "later:30"` (top-level RFC-7807 §3.2 member) and HTTP status 429 (via `http_status()`).
     /// The `title` field is `"Rate Limit"` (grounded in `Category::Rate` doc:
     /// "Rate limit exceeded").
     #[test]
@@ -1665,22 +1688,77 @@ mod tests {
         assert!(pd.type_uri.contains("E-MyCrate-001"));
     }
 
-    /// BC-2.14.001 EC-02: Custom("Core") lowercases to "core" — same as Component::Core.
+    /// BC-2.14.001 EC-02: table-driven collision test — all 18 named component lowercase
+    /// identifiers MUST trigger a collision panic; legitimate names MUST NOT panic.
     ///
-    /// This MUST panic in debug builds. In release builds the debug_assert is a no-op
-    /// (per Rust semantics); this test is gated on `#[cfg(debug_assertions)]`.
+    /// Uses `std::panic::catch_unwind` to verify each case individually without
+    /// requiring one `#[should_panic]` test per identifier.
     #[cfg(debug_assertions)]
     #[test]
-    #[should_panic(expected = "collides with named component")]
-    fn test_BC_2_14_001_custom_collision_panic() {
-        // BC-2.14.001 EC-02: Custom("Core") lowercases to "core" — same as Component::Core.
-        // This MUST panic in debug builds.
+    fn test_BC_2_14_001_custom_collision_all_named() {
+        // All 18 named component lowercase identifiers must trigger a collision panic.
+        for &lower_name in super::NAMED_COMPONENT_LOWERCASE.iter() {
+            let result = std::panic::catch_unwind(|| {
+                let _ = PregolyaError::new(
+                    Component::Custom(lower_name.to_string()),
+                    Category::Internal,
+                    RetryHint::Never,
+                    format!("E-{lower_name}-001"),
+                    "collision table test",
+                );
+            });
+            assert!(
+                result.is_err(),
+                "Component::Custom({lower_name:?}) must panic with collision error (BC-2.14.001 EC-02)"
+            );
+        }
+        // Legitimate names (not in NAMED_COMPONENT_LOWERCASE) must NOT panic.
+        for &ok_name in &["newcrate", "my-crate", "my_crate"] {
+            let result = std::panic::catch_unwind(|| {
+                let _ = PregolyaError::new(
+                    Component::Custom(ok_name.to_string()),
+                    Category::Internal,
+                    RetryHint::Never,
+                    format!("E-{ok_name}-001"),
+                    "non-collision test",
+                );
+            });
+            assert!(
+                result.is_ok(),
+                "Component::Custom({ok_name:?}) must NOT panic (legitimate non-colliding name)"
+            );
+        }
+    }
+
+    /// BC-2.14.001 EC-02 MED-003: debug_assert rejects empty Custom name.
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic(expected = "valid component segment")]
+    fn test_BC_2_14_001_custom_empty_name_panic() {
+        // Use a valid code so the code-format assert passes; only the charset assert fires.
         let _ = PregolyaError::new(
-            Component::Custom("Core".into()),
+            Component::Custom("".into()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-valid-001",
+            "test",
+        );
+    }
+
+    /// BC-2.14.001 EC-02 MED-003: debug_assert rejects Custom name with trailing space.
+    ///
+    /// "Core " passes the collision check (not in NAMED_COMPONENT_LOWERCASE after
+    /// lowercase + space), but fails the charset check (space is not `[A-Za-z0-9_-]`).
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic(expected = "valid component segment")]
+    fn test_BC_2_14_001_custom_whitespace_name_panic() {
+        let _ = PregolyaError::new(
+            Component::Custom("Core ".into()), // trailing space fails charset
             Category::Internal,
             RetryHint::Never,
             "E-Core-001",
-            "collision test",
+            "test",
         );
     }
 
