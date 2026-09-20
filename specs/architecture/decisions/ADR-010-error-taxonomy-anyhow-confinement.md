@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.21"
+version: "1.22"
 changelog:
+  - "1.22 (2026-08-31/ADR-030-TRAJ): Component axis expansion — TRAJ (17 → 18). Added Component::Traj for pregolya-checkpoint / checkpoint::trajectory (SS-04) per ADR-030 §\"State-manager + product-owner directive\". Updated PregolyaError struct component comment (17 named → 18 named + Custom enumeration), component count summary table (new ADR-030 row), §Rationale component-axis-rationale sentence, §Source/Origin (ADR-030 entry). #[non_exhaustive] gate count 18 named + Custom = 19 total. Authoritative codes: E-TRAJ-001/002/003/005/006 (E-TRAJ-004 tombstoned); anchors BC-2.04.009, BC-2.04.010, BC-2.04.011."
   - "1.21 (burst-308/F-P200-01/2026-08-17): Category Axis Expansion D26 — adjudicate ADR-010 vs ADR-026 conflict on EXEC as 13th category. Decision: Option A — EXEC is a legitimate 13th category (none of CONCURRENCY/INTERNAL/TOOL/VAL fit 'an orchestrated branch returned an error and is being wrapped to identify which branch failed'). (1) Add §Category Axis Expansion (D26) section recording the adjudication, EXEC definition, HTTP mapping (library-layer-only, no new BC-2.14.002 row), and #[non_exhaustive] gate update requirement. (2) PregolyaError struct `category` comment: supersede '12 — unchanged' with '13 — expanded by D26 (EXEC added)'. (3) Component count summary table footer: mark 'Category axis: 12 — unchanged / No new category is warranted' as superseded-through-D23; add D26 expansion row. (4) §Rationale 'No new category was warranted for D21 or D23' — append supersession note referencing D26. POL-1 append-only applied to all three supersession sites."
   - "1.20 (burst-295/F-P186-F3/2026-08-16): Replace `(Wave TBD)` with `(Wave 1)` in §Component Axis Expansion (D23) non-exhaustive gate update requirement. pregolya-tools = SS-23; all SS-23 BCs carry wave: 1; wave is mechanically determinable in scope (CLAUDE.md Rule 6)."
   - "1.19 (burst-290/F-180-06/2026-08-16): Rewrite stale present-tense obligations in §Class 3 adjudication note (~line 178) to past-tense facts. The note formerly claimed `verify-error-notation-canon.sh` gates `FerrochainError` (not `PregolyaError`) and has no Class 3 `::new()` detection — this was the opposite of the current HEAD state. Corrected to: the hook gates `PregolyaError`; `NEW_FORM_VIOLATION` detection for `PregolyaError::new()` in prose contexts was added in burst-287. POL-17 scoping obligation was a separate spec-steward task; corrected note references the obligation as already routed rather than pending."
@@ -64,7 +65,7 @@ crate. All public functions return `Result<T, PregolyaError>`.
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct PregolyaError {
-    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the PregolyaError type definition (as of D23 — 17 components): CORE | GRAPH | CHKPT | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS
+    pub component: Component,     // authoritative list lives in error-taxonomy.md §Components; enum reproduced here for the PregolyaError type definition (18 components as of ADR-030 TRAJ expansion): CORE | GRAPH | CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS | Custom
     pub category: Category,       // canonical Category Codes (13 — expanded by D26: EXEC added; see §Category Axis Expansion (D26)): VAL | AUTH | RATE | TIMEOUT | TRANSPORT | INTERNAL | DURABILITY | POLICY | TOOL | CONCURRENCY | SECURITY | TENANCY | EXEC
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     pub code: &'static str,       // "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
@@ -508,6 +509,7 @@ surfaced directly (SECURITY→403, VAL→400) but no per-endpoint overrides are 
 | v1.0 (D17) | 12 | CORE GRAPH CHKPT SERVER PROV MCP SPLIT SBXD RETRY CRON MEMORY BUDGET |
 | v1.1 (D21) | **16** | + TMPL SRLZ VS EMBED |
 | as of D23 | **17** | + TOOLS |
+| ADR-030 (2026-08-31) | **18** | + TRAJ |
 
 Category axis through D23: **12** (VAL AUTH RATE TIMEOUT TRANSPORT INTERNAL DURABILITY POLICY TOOL CONCURRENCY SECURITY TENANCY). _[Superseded by D26: "No new category is warranted" was the D21/D23 position; EXEC was introduced as the 13th category by D26 (burst-308); see §Category Axis Expansion (D26).]_
 
@@ -570,6 +572,15 @@ The implementer who creates `pregolya-tools/src/error.rs` (Wave 1) owns this gat
 The gate file must be updated in the SAME commit that adds `Component::Tools` to `error.rs`.
 
 `Component::Tools` ↔ `TOOLS` in prose/code.
+
+## Component Axis Expansion (ADR-030) — 17 → 18
+
+### Component Axis Expansion: ADR-030 TRAJ (17 → 18 named variants)
+
+**Date:** 2026-08-31 (ADR-030 §"State-manager + product-owner directive")
+**Expansion:** Added `Component::Traj` for the `pregolya-checkpoint / checkpoint::trajectory` subsystem (SS-04).
+**Authoritative codes:** E-TRAJ-001, E-TRAJ-002, E-TRAJ-003, E-TRAJ-005, E-TRAJ-006 (E-TRAJ-004 tombstoned); anchors BC-2.04.009, BC-2.04.010, BC-2.04.011.
+**Impact:** `#[non_exhaustive]` gate count 18 named + Custom = 19 total. All axis-wide assertions (table-driven tests, `component_match_without_wildcard_fails` compile-fail fixture) updated in S-1.01 fix-burst 6.
 
 ## Category Axis Expansion (D26) — 12 → 13
 
@@ -657,7 +668,7 @@ at the public boundary.
 The CI lint gate (`cargo xtask deny-anyhow-in-lib`) is the enforcement mechanism — policy
 without tooling enforcement is not production-grade.
 
-The component axis expansion rationale (D21 and D23) is recorded inline in the §Component Axis
+The component axis expansion rationale (D21, D23, and ADR-030) is recorded inline in the §Component Axis
 Expansion sections above. The governing principle: new crate → new component; intra-crate logical
 subsystem → component following RETRY/CRON/BUDGET precedent; cross-crate concern → single component
 (PROV/EMBED pattern). No new category was warranted for either D21 or D23 — all error conditions
@@ -713,3 +724,4 @@ retry would be futile without caller action (E-TOOLS-004 BashTimeout).
 - **ADR-020** (BashTool / pregolya-tools): TOOLS namespace; original D23 codes E-TOOLS-001..007; E-TOOLS-008 FileIoError added burst-233; E-TOOLS-009 InvalidRegexPattern added burst-234; full range E-TOOLS-001..009 (excluding informational payload fields 005/006). TOOLS component adjudicated here. E-TOOLS-004 RetryHint::Never divergence rationale documented in §Component Axis Expansion (D23).
 - **error-taxonomy v1.31** (D23 BC layer): E-TOOLS-001..007 minted; error census 105.
 - **D23** (burst 232, 2026-07-22): pregolya-tools / SS-23 scope expansion triggering component axis review.
+- **ADR-030** (pregolya-checkpoint trajectory subsystem, 2026-08-31): coins `E-TRAJ-001/002/003/005/006` (E-TRAJ-004 tombstoned); TRAJ component adjudicated in §Component Axis Expansion (ADR-030). Anchors: BC-2.04.009, BC-2.04.010, BC-2.04.011.
