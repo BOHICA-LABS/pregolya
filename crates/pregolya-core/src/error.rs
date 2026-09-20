@@ -276,13 +276,13 @@ impl PregolyaError {
         // component identifiers when lowercased (e.g. Custom("Core") → "core" aliases
         // Component::Core on wire). Both checks share the is_valid_component_segment predicate.
         if let Component::Custom(ref name) = component {
-            debug_assert!(
+            assert!(
                 is_valid_component_segment(name),
                 "BC-2.14.001 EC-02: Component::Custom name '{}' is not a valid component segment \
                 (must be non-empty, [A-Za-z0-9_-] only, no leading/trailing/consecutive -/_)",
                 name,
             );
-            debug_assert!(
+            assert!(
                 !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
                 "BC-2.14.001 EC-02: Component::Custom name '{}' collides with named component '{}' when lowercased",
                 name,
