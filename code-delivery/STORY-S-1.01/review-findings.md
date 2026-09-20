@@ -28,6 +28,27 @@ Feature branch: feature/S-1.01
 | push | 639d12a | — | — | — | — | MED-001 + LOW-002 closed by implementer (639d12a; 59 tests pass); MED-002 closed by product-owner (85eb142, BC-2.14.001 §Panics + BC-2.14.002 §Panics); LOW-001 + LOW-002 AC-016 closed by story-writer (8601821, story §EC-007); streak reset to 0/3 per frozen-HEAD rule; pass-14 dispatched on new frozen HEAD |
 | 14 | 639d12a | HIGH-001 + MED-001 | no | no | 0/3 | HIGH-001 AC-016 phantom Category variants (correct 3-variant Later partition: Rate/Timeout/Transport); MED-001 demo header "15 acceptance criteria" stale after AC-016 addition. Full cascade (HIGH + MED present). |
 | push | 2b9371d | — | — | — | — | HIGH-001 closed by story-writer (a3ae216, story §AC-016 §Later-partition corrected to 3 variants; story v2.4); MED-001 closed by demo-recorder (demo header 15→16 acceptance criteria); streak reset to 0/3 per frozen-HEAD rule; pass-15 dispatched on new frozen HEAD |
+| 15 | 2b9371d | 1 LOW | no | yes | 0/3 | RECORDS-ONLY (TD-RECORDS-MICRO-BURST-001); LOW-001 AC-016 demo block missing Category::Transport; exhaustive-enumeration convention not followed; streak NOT advanced (CLEAN(strict)=no, records-only) |
+| push | bdefb70 | — | — | — | — | LOW-001 closed by demo-recorder (full 14-variant exhaustive enumeration matching AC-003/AC-011 convention); records-lint.sh PASS=5 WARN=0 FAIL=0; streak reset to 0/3 per frozen-HEAD rule; pass-16 dispatched on new frozen HEAD |
+
+## Finding Detail — Pass 15
+
+**LOW-001**: AC-016 demo block missing Category::Transport; exhaustive-enumeration convention not followed.
+
+The AC-016 demo block enumerated Category variants but omitted Category::Transport, leaving
+the demo coverage incomplete relative to the full 14-variant enum. The exhaustive-enumeration
+convention established by AC-003 and AC-011 demo blocks requires all variants to be
+explicitly covered. Omitting Category::Transport created a traceability gap between the
+demo evidence and the AC-016 acceptance criterion. Fix: demo-recorder commit `bdefb70` on
+`feature/S-1.01` promotes the AC-016 demo block to a full 14-variant exhaustive enumeration
+matching the AC-003/AC-011 convention. records-lint.sh PASS=5 WARN=0 FAIL=0.
+
+Closure: LOW-001 CLOSED (demo-recorder `bdefb70`).
+Ceremony: records-only micro-burst per TD-RECORDS-MICRO-BURST-001 (1 LOW finding, zero CRIT/HIGH/MED).
+Per TD-RECORDS-MICRO-BURST-001, the 3-CLEAN streak is NOT reset at pass-evaluation time by a
+records-only micro-burst pass.
+Per frozen-HEAD rule (BC-5.39.001), push of demo-recorder fix resets streak to 0/3.
+New frozen HEAD: `bdefb70`. Pass-16 dispatched.
 
 ## Finding Detail — Pass 14
 
@@ -262,12 +283,15 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `2b9371d`).
+CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `bdefb70`).
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
-against unchanged HEAD. Fix burst from pass-14 landed as demo-recorder commit `2b9371d`
-on `feature/S-1.01`; streak resets to 0/3 on push per frozen-HEAD rule.
+against unchanged HEAD. Fix burst from pass-15 (records-only micro-burst) landed as
+demo-recorder commit `bdefb70` on `feature/S-1.01`; streak resets to 0/3 on push per
+frozen-HEAD rule. Per TD-RECORDS-MICRO-BURST-001, the records-only micro-burst ceremony
+does NOT reset the streak at pass-evaluation time — only the push of the new HEAD resets
+it via the frozen-HEAD rule.
 
-Current frozen HEAD: `2b9371d`
+Current frozen HEAD: `bdefb70`
 Current streak: 0/3 on new frozen HEAD.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
@@ -275,4 +299,4 @@ implementation impact, deferred to phase-5 spec-steward).
 
 Deferred OBS-003: out of scope for S-1.01; deferred to wave gate per orchestrator direction.
 
-Next: pass-15 dispatched on frozen HEAD `2b9371d`.
+Next: pass-16 dispatched on frozen HEAD `bdefb70`.
