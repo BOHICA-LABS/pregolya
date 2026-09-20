@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "2.2"
+version: "2.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -21,6 +21,7 @@ changelog:
   - "2.0 (S-1.01-adv-pass-2/F-005+F-007/2026-09-20): §File Structure Requirements rows 1-2 normalized to crates/ workspace-relative paths (F-007); EC-007 and EC-008 added — code-format and code↔component binding panics now spec-traced (F-005, BC-2.14.001 EC-006/EC-007)."
   - "2.1 (S-1.01-adv-pass-3/F-005/2026-09-20): §Architecture Compliance Rules — tighten ADR-010 §Category Axis Expansion to ADR-010 §Category Axis Expansion (D26) per ADR-022 disambiguation rule."
   - "2.2 (S-1.01-adv-pass-11/LOW-001/2026-09-20): §Architecture Mapping row and §Tasks item added for Category::default_retry_hint() — public API method had no story-spec trace to BC-2.14.001 {INV-004}."
+  - "2.3 (pass-13/MED-002+LOW-001+LOW-002/2026-09-20): §Edge Cases EC-007 emission-time clause added (to_problem() re-validates E- prefix, BC-2.14.002 EC-002 path 3); fn F8-04 normalized to footnote F8-04 in §Architecture Mapping and §Tasks item 12; AC-016 added for Category::default_retry_hint (traces to BC-2.14.001 INV-004); §Behavioral Contracts table updated to include AC-016; §Tasks item 1 updated to AC-001..AC-016; §Tasks item 11 updated to 16 ACs; §File Structure examples row updated to 16 ACs."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -58,7 +59,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.14.001 | PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | AC-001..AC-008, AC-015 |
+| BC-2.14.001 | PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | AC-001..AC-008, AC-015, AC-016 |
 | BC-2.14.002 | RFC-7807 Compatible Problem Emission from PregolyaError | AC-009..AC-014 |
 
 ## Acceptance Criteria
@@ -115,6 +116,9 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 ### AC-015 (traces to BC-2.14.001 INV-003)
 `PregolyaError.code` is a `String` that is set at construction and has no setter. The `ProblemDetail` returned by `to_problem()` embeds the original code unchanged in `type_uri` (as `urn:pregolya:error:<code>`). Note: `code` is a private field; read via `pub fn code(&self) -> &str`. Verified by `test_BC_2_14_001_code_immutable()`.
 
+### AC-016 (traces to BC-2.14.001 INV-004)
+`Category::default_retry_hint(&self) -> RetryHint` returns the correct `RetryHint` for each of the 14 `Category` variants as specified by BC-2.14.001 {INV-004} and `error-taxonomy.md §Error Categories` footnote F8-04. The `Later` variants return exact durations: `RateLimit`/`Network`/`External` → `Later(60s)`, `Timeout`/`Dependency`/`PluginError`/`Transport` → `Later(30s)`. Verified by `test_BC_2_14_001_inv004_category_default_retry_hints` (all 14 variants including exact `Later` durations) and demonstrated externally in `examples/error_taxonomy_demo.rs`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -122,7 +126,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 | `PregolyaError`, `Component`, `Category`, `RetryHint` | `pregolya-core/src/error.rs` (`core::error`) | pure-core |
 | `ProblemDetail`, `to_problem()` | `pregolya-core/src/error.rs` | pure-core |
 | `PROBLEM_JSON_CONTENT_TYPE` constant | `pregolya-core/src/error.rs` | pure-core |
-| `Category::default_retry_hint(&self) -> RetryHint` | `pregolya-core/src/error.rs` (`core::error`) | pure-core — BC-2.14.001 {INV-004}; Default RetryHint column per `error-taxonomy.md §Error Categories` fn F8-04 |
+| `Category::default_retry_hint(&self) -> RetryHint` | `pregolya-core/src/error.rs` (`core::error`) | pure-core — BC-2.14.001 {INV-004}; Default RetryHint column per `error-taxonomy.md §Error Categories` footnote F8-04 |
 
 ## Purity Classification
 
@@ -140,7 +144,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 | EC-004 | Duplicate error codes (E-CORE-001 claimed twice) | CI integration test (future S-1.02 scope) detects collision; build fails |
 | EC-005 | `Category::Exec` HTTP status | Returns 500 via INTERNAL-tier fallback per ADR-010 §Category Axis Expansion (D26); no separate mapping row |
 | EC-006 | `Component::Custom("Core")` or any name whose lowercase form collides with a named component identifier, or a name with invalid charset (consecutive `--`/`__`, mixed `-_`/`_-`, leading/trailing `-`/`_`) | Panics at `PregolyaError::new()` via the construction-time always-on `assert!` guard (BC-2.14.001 EC-002). A second always-on `assert!` in `component_lowercase()` (emission-time guard) catches any post-construction mutation of the `pub component` field before `to_problem()`. Cross-ref: BC-2.14.001 EC-002 (construction + emission guards); BC-2.14.002 EC-002 (panic carve-out). |
-| EC-007 | `PregolyaError::new()` called with `code` not matching `E-<COMPONENT>-NNN` format (e.g. `"E-CORE-01"` — two-digit suffix, or `"E-A__B-001"` — double-underscore in COMPONENT) | Panics at construction with "code must follow E-<COMPONENT>-NNN format" (BC-2.14.001 EC-006) |
+| EC-007 | `PregolyaError::new()` called with `code` not matching `E-<COMPONENT>-NNN` format (e.g. `"E-CORE-01"` — two-digit suffix, or `"E-A__B-001"` — double-underscore in COMPONENT) | Panics at construction with "code must follow E-<COMPONENT>-NNN format" (BC-2.14.001 EC-006). Additionally, `to_problem()` re-validates the `E-` prefix via `strip_prefix("E-")` at emission time and panics with a BC-2.14.001 EC-006-citing message when the prefix is absent (BC-2.14.002 EC-002 path 3). This path is reachable via in-crate struct-literal construction (BC-2.14.001 {PC-008} clause 1) where `new()`'s format check was bypassed. |
 | EC-008 | Named-component code↔component mismatch: `PregolyaError::new(Component::Core, ..., "E-GRAPH-001", ...)` where COMPONENT segment of code doesn't match `core` | Panics at construction time "code COMPONENT segment does not match" (BC-2.14.001 EC-007); same guard fires at emit time if `component` field is reassigned post-construction (BC-2.14.001 EC-007 emission-time parity) |
 
 ## Token Budget Estimate (MANDATORY)
@@ -161,7 +165,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests — all ACs listed in **§Acceptance Criteria (AC-001..AC-015)** (test-writer)
+1. [ ] Write failing tests — all ACs listed in **§Acceptance Criteria (AC-001..AC-016)** (test-writer)
 2. [ ] Verify Red Gate — `cargo nextest run -p pregolya-core` must show all new tests as compile errors or runtime failures (Red Gate ≥ 0.5 required)
 3. [ ] Create `pregolya-core/src/error.rs` with `PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail`, `to_problem()` — all `todo!()` bodies initially (implementer)
 4. [ ] Implement `PregolyaError` struct and all enum variants (minimum code for AC-001 through AC-008)
@@ -171,8 +175,8 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 8. [ ] Register module in `pregolya-core/src/lib.rs`
 9. [ ] Run `cargo xtask check-file-size` — confirm `error.rs` < 500 code lines
 10. [ ] Run `cargo clippy -p pregolya-core -D warnings` — zero warnings
-11. [ ] Final `cargo nextest run -p pregolya-core` — all 15 AC tests pass
-12. [ ] Implement `Category::default_retry_hint(&self) -> RetryHint` per BC-2.14.001 {INV-004}: return value for each of the 14 variants is defined in the Default RetryHint column of `error-taxonomy.md §Error Categories` (fn F8-04). Verified by `test_BC_2_14_001_inv004_category_default_retry_hints` (all 14 variants plus exact `Later` durations).
+11. [ ] Final `cargo nextest run -p pregolya-core` — all 16 AC tests pass
+12. [ ] Implement `Category::default_retry_hint(&self) -> RetryHint` per BC-2.14.001 {INV-004}: return value for each of the 14 variants is defined in the Default RetryHint column of `error-taxonomy.md §Error Categories` (footnote F8-04). Verified by `test_BC_2_14_001_inv004_category_default_retry_hints` (all 14 variants plus exact `Later` durations).
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -211,4 +215,4 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | `crates/pregolya-core/src/lib.rs` | MODIFY | Add `pub mod error;` and `pub use error::{PregolyaError, Component, Category, RetryHint, ProblemDetail};` |
 | `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` | CREATE | `#[non_exhaustive]` public-type gate — 5 types, 11 trybuild fixtures (AC-007): 6 compile-fail + 5 compile-pass |
 | `crates/pregolya-core/tests/ui/*.rs` | CREATE | 6 compile-fail (5 per-type match-exhaustiveness + 1 struct-literal construction per BC-2.14.001 {PC-008} clause 1) + 5 compile-pass trybuild fixtures. Note: no compile-pass counterpart for the construction fixture — external struct-literal construction of `PregolyaError` is always barred. (AC-007) |
-| `crates/pregolya-core/examples/error_taxonomy_demo.rs` | CREATE | Per-AC demo evidence for all 15 ACs; used by demo-recorder for VHS/terminal recording |
+| `crates/pregolya-core/examples/error_taxonomy_demo.rs` | CREATE | Per-AC demo evidence for all 16 ACs; used by demo-recorder for VHS/terminal recording |
