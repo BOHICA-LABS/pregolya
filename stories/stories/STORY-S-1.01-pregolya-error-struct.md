@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.5"
+version: "1.6"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -14,6 +14,7 @@ changelog:
   - "1.3b (S-1.01-fix-burst-5/2026-09-19): AC-007 updated — code field is private; pattern PregolyaError { code, .. } fails for field-privacy reasons; correct access is via pub fn code() accessor per BC-2.14.001 {INV-003}."
   - "1.4 (S-1.01-adv-pass-9/2026-09-19): AC-009/AC-014/EC-003 updated — extensions.* wire paths changed to top-level per BC-2.14.002 §RFC-7807-flatten; extensions map rationale updated."
   - "1.5 (S-1.01-adv-pass-11/2026-09-19): verification_properties updated [VP-BC214001-02, VP-BC214002-01, VP-BC214002-02]; AC-015 return type corrected; AC-001/AC-015 code-privacy note added."
+  - "1.6 (S-1.01-adv-pass-14/RECORDS-ONLY): §Tasks item 1 re-pointed to AC list; §File Structure and §Library requirements completed with gate harness, UI fixtures, example, and trybuild."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -150,7 +151,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests — all ACs listed in Test Plan below (test-writer)
+1. [ ] Write failing tests — all ACs listed in **§Acceptance Criteria (AC-001..AC-015)** (test-writer)
 2. [ ] Verify Red Gate — `cargo nextest run -p pregolya-core` must show all new tests as compile errors or runtime failures (Red Gate ≥ 0.5 required)
 3. [ ] Create `pregolya-core/src/error.rs` with `PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail`, `to_problem()` — all `todo!()` bodies initially (implementer)
 4. [ ] Implement `PregolyaError` struct and all enum variants (minimum code for AC-001 through AC-008)
@@ -189,6 +190,7 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | `serde_json` | workspace pin | `to_string` in unit tests; JSON serialization of `ProblemDetail` (no extensions map — `retry_hint` and `component` are direct top-level fields on `ProblemDetail`) |
 | `static_assertions` | workspace pin (dev) | Compile-time trait bound assertions |
 | `anyhow` | workspace pin (dev) | TV-004 compat test: wrap PregolyaError with anyhow context |
+| `trybuild` | workspace pin (dev) | `pregolya-core/Cargo.toml [dev-dependencies]` — compile-fail / compile-pass UI test harness for the `#[non_exhaustive]` external gate (AC-007) |
 
 ## File Structure Requirements (MANDATORY)
 
@@ -196,3 +198,6 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 |------|--------|---------|
 | `pregolya-core/src/error.rs` | CREATE | `PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail` — `core::error` module |
 | `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod error;` and `pub use error::{PregolyaError, Component, Category, RetryHint, ProblemDetail};` |
+| `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` | CREATE | `#[non_exhaustive]` public-type gate — 5 types, 10 trybuild fixtures (AC-007) |
+| `crates/pregolya-core/tests/ui/*.rs` | CREATE | 5 compile-fail + 5 compile-pass trybuild fixtures exercising the `#[non_exhaustive]` external-crate pattern (AC-007) |
+| `crates/pregolya-core/examples/error_taxonomy_demo.rs` | CREATE | Per-AC demo evidence for all 15 ACs; used by demo-recorder for VHS/terminal recording |
