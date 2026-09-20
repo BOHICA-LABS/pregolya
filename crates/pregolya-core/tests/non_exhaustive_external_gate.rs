@@ -156,7 +156,25 @@ fn test_non_exhaustive_inventory_matches_source() {
          Add a compile-fail fixture for any new non-exhaustive type."
     );
 
-    println!("non_exhaustive gate: {} types validated", actual_count);
+    // Count _passes.rs fixtures in tests/ui/ — must equal the inventory count (symmetric).
+    // Bidirectional enforcement: the registry is authoritative in both directions — a fixture
+    // on disk without a registry entry AND a registry entry without a fixture are both errors.
+    let ui_dir2 = std::fs::read_dir("tests/ui/").expect("tests/ui/ must be readable");
+    let passes_count = ui_dir2
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().ends_with("_passes.rs"))
+        .count();
+    assert_eq!(
+        passes_count, EXPECTED_NON_EXHAUSTIVE_COUNT,
+        "Number of _passes.rs fixtures in tests/ui/ ({passes_count}) does not match \
+         EXPECTED_NON_EXHAUSTIVE_COUNT ({EXPECTED_NON_EXHAUSTIVE_COUNT}). \
+         Add a compile-pass fixture for any new non-exhaustive type."
+    );
+
+    println!(
+        "non_exhaustive gate: {} types validated ({} fails, {} passes)",
+        actual_count, fails_count, passes_count
+    );
 }
 
 // ── BC-2.14.001 {PC-008} MED-007: Glob-based gate — every pub type must have #[non_exhaustive] ─────

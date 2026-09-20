@@ -154,9 +154,11 @@ impl Category {
     /// Returns the taxonomy-default [`RetryHint`] for this category.
     ///
     /// Authoritative source for variant kinds: `error-taxonomy.md §Error Categories`
-    /// (Default RetryHint column). The concrete `Later(...)` durations for
-    /// Rate (60 s), Timeout (30 s), and Transport (30 s) are crate-defined defaults;
-    /// the taxonomy specifies "Later (backoff required)" without exact values.
+    /// (Default RetryHint column). `error-taxonomy.md §Error Categories` pins the
+    /// Rate / Timeout / Transport `Later` defaults at 60 s / 30 s / 30 s and anchors
+    /// them to this function (§Error Categories footnote F8-04); callers may pass a
+    /// context-specific `RetryHint::Later(d)`, and per-code catalog rows override the
+    /// category default per the RetryHint precedence rule.
     /// Per BC-2.14.001 {INV-004}, per-code divergence must be documented explicitly;
     /// implementors must not invent new hint-category pairings.
     pub fn default_retry_hint(&self) -> RetryHint {
@@ -192,9 +194,10 @@ impl Category {
 ///
 /// Code within `pregolya-core` may use struct-literal syntax (the `#[non_exhaustive]`
 /// attribute does **not** restrict construction within the defining crate). External
-/// callers must use [`PregolyaError::new`] and chain a causal source via
-/// [`PregolyaError::with_source`]. Direct field assignment to `source` is not permitted
-/// from outside the crate (ADR-010 Canon Class 1).
+/// callers must use [`PregolyaError::new`] — struct-literal construction by external
+/// crates is compiler-rejected (`E0639`; `#[non_exhaustive]` guarantee) — and chain a
+/// causal source via [`PregolyaError::with_source`]. Direct field assignment to `source`
+/// is not permitted from outside the crate (ADR-010 Canon Class 1).
 ///
 /// # Clone semantics
 ///
