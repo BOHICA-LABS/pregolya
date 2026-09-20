@@ -33,6 +33,14 @@ Feature branch: feature/S-1.01
 | 16 | bdefb70 | 1 MED + 1 LOW | no | no | 0/3 | MED-001 hint_map 3 wrong expected-kind labels (Auth/Tool→Never should be Maybe; Concurrency→Maybe should be Never); LOW-001 AC-016 loop lacked OK/FAIL per-row comparison unlike AC-011. Full cascade (MED present). |
 | push | 769c3fd | — | — | — | — | MED-001+LOW-001 closed by implementer (demo hint_map labels corrected + AC-016 OK/FAIL per-row comparison + 14/14 aggregate); streak reset to 0/3 per frozen-HEAD rule; pass-17 dispatched on new frozen HEAD |
 | 17 | 769c3fd | 0 | yes | yes | 1/3 | CLEAN(strict) and CLEAN(PR-merge); zero findings across all severities; F-P11–F-P16 closures confirmed; streak 1/3 on frozen HEAD 769c3fd; pass-18 dispatched on same frozen HEAD |
+| 18 | 769c3fd | 0 | yes | yes | 2/3 | CLEAN(strict) and CLEAN(PR-merge); zero findings across all severities; five supplementary axes checked, two candidate leads independently falsified; streak 2/3 on frozen HEAD 769c3fd; pass-19 dispatched on same frozen HEAD |
+
+## Finding Detail — Pass 18
+
+No findings. Pass 18 is CLEAN(strict) and CLEAN(PR-merge) on frozen HEAD `769c3fd`.
+All probes PASS. Five supplementary axes checked. Two candidate leads independently
+falsified; no regressions detected. Novelty: ZERO.
+Streak advances to 2/3. Pass 19 dispatched against same frozen HEAD (no intervening push).
 
 ## Finding Detail — Pass 17
 
@@ -318,18 +326,18 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 1/3 — first CLEAN(strict) pass on frozen HEAD `769c3fd` (pass 17).
+CLEAN(strict) streak: 2/3 — passes 17 and 18 both CLEAN(strict) on frozen HEAD `769c3fd`.
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
 against unchanged HEAD. No push has occurred since implementer commit `769c3fd`;
 frozen HEAD is unchanged.
 
 Current frozen HEAD: `769c3fd`
-Current streak: 1/3 on frozen HEAD `769c3fd`.
+Current streak: 2/3 on frozen HEAD `769c3fd`.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
 implementation impact, deferred to phase-5 spec-steward).
 
 Deferred OBS-003: out of scope for S-1.01; deferred to wave gate per orchestrator direction.
 
-Next: pass-18 dispatched on frozen HEAD `769c3fd` (no intervening push; streak requires
-passes 18 and 19 CLEAN(strict) on same HEAD for convergence).
+Next: pass-19 dispatched on frozen HEAD `769c3fd` (no intervening push; pass 19 CLEAN(strict)
+required for BC-5.39.001 convergence at 3/3).
