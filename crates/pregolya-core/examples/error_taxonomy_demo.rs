@@ -89,7 +89,7 @@ fn demo_construction() {
     );
     println!();
 
-    // Second example: Sys/Maybe — the 14th Category (added in v1.12)
+    // Second example: Sys/Maybe — the 14th Category (SYS per error-taxonomy.md §Error Categories)
     // E-SBXD-010 CanonicalizationFailed: SYS category, Component::Sbxd (per error-taxonomy.md)
     let sys_err = PregolyaError::new(
         Component::Sbxd,
@@ -220,7 +220,7 @@ fn demo_enums() {
         Category::Security,
         Category::Tenancy,
         Category::Exec,
-        Category::Sys, // 14th — added in BC-2.14.001/002 v1.12
+        Category::Sys, // SYS per error-taxonomy.md §Error Categories
     ];
     print!("  All 14: ");
     for cat in &all_categories {

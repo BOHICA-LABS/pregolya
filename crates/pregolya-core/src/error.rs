@@ -51,7 +51,7 @@ pub const PROBLEM_JSON_CONTENT_TYPE: &str = "application/problem+json";
 
 /// Identifies which pregolya crate emitted the error.
 ///
-/// 18 named variants cover the standard component set (as of ADR-010 §Component Axis Expansion (D23) + ADR-030).
+/// 18 named variants cover the standard component set (as of ADR-010 §Component Axis Expansion (ADR-030)).
 /// [`Component::Custom`] provides forward-compatibility for new crates not yet
 /// in the taxonomy.
 #[non_exhaustive]
@@ -382,12 +382,27 @@ impl PregolyaError {
     /// `"E-CORE-001"`, then setting `err.component = Component::Graph` before calling
     /// `to_problem()`.
     ///
+    /// Additionally panics if `self.code` does not start with `"E-"` (BC-2.14.001 EC-006
+    /// format violation). This cannot occur if constructed via [`PregolyaError::new`], which
+    /// validates the code format at construction time, but is reachable via in-crate
+    /// struct-literal construction (allowed in `pregolya-core` per BC-2.14.001 {PC-008}).
+    ///
     /// Note: the emit-time assert validates `code`↔COMPONENT binding only. Code↔category
     /// taxonomy consistency is enforced by the code-registry gate (S-1.02, VP-BC214001-01).
     pub fn to_problem(&self) -> ProblemDetail {
         // BC-2.14.001 EC-007: emission-time parity — component field may be reassigned post-construction
         // (it is `pub`), so verify the code↔component binding holds at emission time.
-        let code_component_emit = self.code[2..]
+        // BC-2.14.001 EC-006: guard against in-crate struct-literal construction that bypasses
+        // new() validation — strip_prefix panics with a BC-citing message rather than a raw
+        // byte-offset panic if self.code is shorter than 2 bytes or lacks the "E-" prefix.
+        let code_suffix = self.code.strip_prefix("E-").unwrap_or_else(|| {
+            panic!(
+                "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format; \
+                 got {:?} — cannot strip 'E-' prefix in to_problem()",
+                self.code
+            )
+        });
+        let code_component_emit = code_suffix
             .rsplit_once('-')
             .map(|(mid, _)| mid)
             .unwrap_or("");
