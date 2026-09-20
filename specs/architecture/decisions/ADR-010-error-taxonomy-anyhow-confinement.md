@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.23"
+version: "1.24"
 changelog:
+  - "1.24 (S-1.01-adv-pass-8/2026-09-19): Mark `source` field private; add `source_arc()` accessor to canonical impl preserving Arc for EC-001 re-chaining patterns."
   - "1.23 (S-1.01-adv-pass-7/2026-09-19): Add Category::Sys to category axis (13→14); fix code field shape to String+private+accessor per BC-2.14.001 AC-001/EC-002."
   - "1.22 (2026-08-31/ADR-030-TRAJ): Component axis expansion — TRAJ (17 → 18). Added Component::Traj for pregolya-checkpoint / checkpoint::trajectory (SS-04) per ADR-030 §\"State-manager + product-owner directive\". Updated PregolyaError struct component comment (17 named → 18 named + Custom enumeration), component count summary table (new ADR-030 row), §Rationale component-axis-rationale sentence, §Source/Origin (ADR-030 entry). #[non_exhaustive] gate count 18 named + Custom = 19 total. Authoritative codes: E-TRAJ-001/002/003/005/006 (E-TRAJ-004 tombstoned); anchors BC-2.04.009, BC-2.04.010, BC-2.04.011."
   - "1.21 (burst-308/F-P200-01/2026-08-17): Category Axis Expansion D26 — adjudicate ADR-010 vs ADR-026 conflict on EXEC as 13th category. Decision: Option A — EXEC is a legitimate 13th category (none of CONCURRENCY/INTERNAL/TOOL/VAL fit 'an orchestrated branch returned an error and is being wrapped to identify which branch failed'). (1) Add §Category Axis Expansion (D26) section recording the adjudication, EXEC definition, HTTP mapping (library-layer-only, no new BC-2.14.002 row), and #[non_exhaustive] gate update requirement. (2) PregolyaError struct `category` comment: supersede '12 — unchanged' with '13 — expanded by D26 (EXEC added)'. (3) Component count summary table footer: mark 'Category axis: 12 — unchanged / No new category is warranted' as superseded-through-D23; add D26 expansion row. (4) §Rationale 'No new category was warranted for D21 or D23' — append supersession note referencing D26. POL-1 append-only applied to all three supersession sites."
@@ -71,7 +72,7 @@ pub struct PregolyaError {
     pub retry_hint: RetryHint,    // canonical: Never | Maybe | Later(Duration)
     code: String,                  // private; immutable per BC-2.14.001 {INV-003}; read via code(). "E-GRAPH-001", "E-CHKPT-002", "E-TMPL-001", "E-VS-001", etc.
     pub message: String,          // Human-readable; MUST NOT contain credentials
-    pub source: Option<Arc<dyn std::error::Error + Send + Sync>>,  // Causal error chain; MUST NOT be exposed in HTTP responses; Arc (not Box) preserves Clone
+    source: Option<Arc<dyn std::error::Error + Send + Sync>>,  // private — immutable after construction via .with_source(); MUST NOT be exposed in HTTP responses (DI-010); Arc (not Box) preserves Clone and allows direct re-chaining without re-wrapping
 }
 
 impl PregolyaError {
@@ -96,6 +97,15 @@ impl PregolyaError {
     /// MUST NOT be exposed in HTTP responses (DI-010 credential-leak risk).
     pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self {
         Self { source: Some(source), ..self }
+    }
+
+    /// Returns a reference to the Arc wrapping the causal error.
+    ///
+    /// Unlike [`std::error::Error::source`] (which returns `&dyn Error`), this preserves
+    /// the `Arc` for direct re-chaining via `.with_source(Arc::clone(source_arc))` in
+    /// EC-001 re-emission patterns. Returns `None` if no source was chained.
+    pub fn source_arc(&self) -> Option<&Arc<dyn std::error::Error + Send + Sync>> {
+        self.source.as_ref()
     }
 
     /// Returns the structured error code (e.g., `"E-GRAPH-001"`).
