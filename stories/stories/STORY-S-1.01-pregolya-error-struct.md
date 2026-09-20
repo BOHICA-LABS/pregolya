@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "2.0"
+version: "2.1"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -19,6 +19,7 @@ changelog:
   - "1.8 (S-1.01-adv-pass-17/F-07): §Architecture Compliance Rules — trybuild (dev) added to permitted dependencies list."
   - "1.9 (S-1.01-adv-pass-18/F-01/F-02/F-03/F-04): AC-007 quoted pattern corrected to PregolyaError { message } (no ., ..); §File Structure Requirements updated to 11 fixtures (6 fail + 5 pass); serde_json marked (dev) in two sites; EC-006 added for Custom collision/charset prohibition."
   - "2.0 (S-1.01-adv-pass-2/F-005+F-007/2026-09-20): §File Structure Requirements rows 1-2 normalized to crates/ workspace-relative paths (F-007); EC-007 and EC-008 added — code-format and code↔component binding panics now spec-traced (F-005, BC-2.14.001 EC-006/EC-007)."
+  - "2.1 (S-1.01-adv-pass-3/F-005/2026-09-20): §Architecture Compliance Rules — tighten ADR-010 §Category Axis Expansion to ADR-010 §Category Axis Expansion (D26) per ADR-022 disambiguation rule."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -185,7 +186,7 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | No `unwrap()` / `expect()` in `error.rs` (non-test) | CLAUDE.md Code Conventions | `cargo xtask check-no-panic` (CI job `lint-extra`) |
 | `ProblemDetail` must `#[derive(Serialize)]` for RFC-7807 JSON | BC-2.14.002 PC-002 | `serde_json::to_string` unit test |
 | `pregolya-core/src/error.rs` must NOT import `tokio` | Architecture boundary | `cargo tree -p pregolya-core` must not show tokio under error.rs |
-| `Category::Exec` maps to HTTP 500 (INTERNAL fallback) per D26 | BC-2.14.002 Note (D26), ADR-010 §Category Axis Expansion | Parameterized status code test |
+| `Category::Exec` maps to HTTP 500 (INTERNAL fallback) per D26 | BC-2.14.002 Note (D26), ADR-010 §Category Axis Expansion (D26) | Parameterized status code test |
 
 **Forbidden dependencies for `pregolya-core/src/error.rs`:** `tokio`, `reqwest`, `axum`, `hyper`, any `pregolya-*` crate. Only `std`, `serde`, `serde_json` (dev), `static_assertions` (dev), `anyhow` (dev), `trybuild` (dev) are permitted.
 

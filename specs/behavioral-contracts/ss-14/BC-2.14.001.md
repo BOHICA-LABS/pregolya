@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.19"
+version: "1.21"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -34,6 +34,8 @@ changelog:
   - "1.17 (S-1.01-adv-pass-11): VP-BC214001-01 phase corrected to S-1.02 per story EC-004; DI-010 added to traces_to and traceability."
   - "1.18 (S-1.01-adv-pass-12): EC-002 guard description updated from debug_assert to always-on assert; emission-time guard (component_lowercase) documented."
   - "1.19 (S-1.01-adv-pass-2/F-005/2026-09-20): EC-006 and EC-007 added — code-format and code↔component binding construction/emission panics are now specified public API behavior."
+  - "1.20 (S-1.01-adv-pass-3/F-001/2026-09-20): POL-12 repair — error-taxonomy v1.59 version pin in §Description replaced with stable anchor error-taxonomy.md §Error Categories."
+  - "1.21 (S-1.01-adv-pass-3/F-005-followup/2026-09-20): §Description — remove chained double-§ form introduced by v1.20; error-taxonomy.md §Error Categories changed to error-taxonomy.md Error Categories section per ADR-022 §Decision 5 prohibition on chained §X §Y forms."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -64,7 +66,7 @@ Every error emitted by the pregolya library crate family is an instance of `Preg
 a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE | GRAPH |
 CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS —
 18 components as of ADR-030) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
-INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY, EXEC, SYS — 14 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26); SYS added by error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26)). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
+INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY, EXEC, SYS — 14 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26); SYS added by error-taxonomy.md Error Categories section per burst-A2-error-coord/2026-08-26)). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
 a machine-readable `code` string (e.g. `E-CORE-001`), a human-readable `message` (MUST NOT
 contain credentials per DI-010), and a causal `source: Option<Arc<dyn std::error::Error + Send + Sync>>`
 (MUST NOT be exposed in HTTP responses; `Arc` not `Box` — `Arc::clone` increments the refcount
