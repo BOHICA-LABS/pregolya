@@ -253,19 +253,32 @@ fn demo_enums() {
     println!();
 
     // AC-016: Category::default_retry_hint() per BC-2.14.001 {INV-004}
+    // Enumerate all 14 categories — matching AC-003/AC-011 exhaustive convention.
     println!("=== AC-016: Category::default_retry_hint() per BC-2.14.001 {{INV-004}} ===");
     println!();
-    println!(
-        "  Internal  -> {:?}",
-        Category::Internal.default_retry_hint()
-    );
-    println!("  Rate      -> {:?}", Category::Rate.default_retry_hint());
-    println!(
-        "  Timeout   -> {:?}",
-        Category::Timeout.default_retry_hint()
-    );
-    println!("  Auth      -> {:?}", Category::Auth.default_retry_hint());
-    println!("  Val       -> {:?}", Category::Val.default_retry_hint());
+    let hint_map: &[(Category, &str)] = &[
+        (Category::Val, "Never"),
+        (Category::Auth, "Never"),
+        (Category::Rate, "Later"),
+        (Category::Timeout, "Later"),
+        (Category::Transport, "Later"),
+        (Category::Internal, "Never"),
+        (Category::Durability, "Maybe"),
+        (Category::Policy, "Never"),
+        (Category::Tool, "Never"),
+        (Category::Concurrency, "Maybe"),
+        (Category::Security, "Never"),
+        (Category::Tenancy, "Never"),
+        (Category::Exec, "Never"),
+        (Category::Sys, "Maybe"),
+    ];
+    for (cat, expected_kind) in hint_map {
+        let hint = cat.default_retry_hint();
+        println!(
+            "  {:12?} -> {:?}  (expected kind: {})",
+            cat, hint, expected_kind
+        );
+    }
     println!();
 }
 
