@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.24"
+version: "1.25"
 changelog:
+  - "1.25 (S-1.01-adv-pass-10): §non_exhaustive gate update: component count corrected 18→19 (18 named + Custom); clarify gate counts public types not Component variants."
   - "1.24 (S-1.01-adv-pass-8/2026-09-19): Mark `source` field private; add `source_arc()` accessor to canonical impl preserving Arc for EC-001 re-chaining patterns."
   - "1.23 (S-1.01-adv-pass-7/2026-09-19): Add Category::Sys to category axis (13→14); fix code field shape to String+private+accessor per BC-2.14.001 AC-001/EC-002."
   - "1.22 (2026-08-31/ADR-030-TRAJ): Component axis expansion — TRAJ (17 → 18). Added Component::Traj for pregolya-checkpoint / checkpoint::trajectory (SS-04) per ADR-030 §\"State-manager + product-owner directive\". Updated PregolyaError struct component comment (17 named → 18 named + Custom enumeration), component count summary table (new ADR-030 row), §Rationale component-axis-rationale sentence, §Source/Origin (ADR-030 entry). #[non_exhaustive] gate count 18 named + Custom = 19 total. Authoritative codes: E-TRAJ-001/002/003/005/006 (E-TRAJ-004 tombstoned); anchors BC-2.04.009, BC-2.04.010, BC-2.04.011."
@@ -505,7 +506,7 @@ when the non-exhaustive gate grows:
 1. **Gate crate** — `tests/external/<gate-name>/`: add `Component::Tmpl`, `Component::Srlz`,
    `Component::Vs`, `Component::Embed` to the expected symbol list.
 2. **Expected count constant** — update from 13 (12 named + `Custom`) to **17**
-   (16 named + `Custom`). As of D23, the current value is 18 (17 named + `Custom`) — see §Component Axis Expansion (D23).
+   (16 named + `Custom`). As of ADR-030 TRAJ expansion, the Component axis has **19** total variants (18 named + `Custom`). The `non_exhaustive_external_gate` counts **public types** with `#[non_exhaustive]`, not Component variants — currently 5 (`PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail`). Component variant coverage is carried by the compiler-exhaustive closures in `test_BC_2_14_001_component_axis` and the 19-row exhaustive table in `test_BC_2_14_002_component_mapping_exhaustive`.
 3. **Expected symbol list** — add the four new variant symbols.
 
 The implementer who creates `pregolya-core/src/error.rs` (Wave 0) owns this gate update.

@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.16"
+version: "1.17"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.14 (S-1.01 LOCAL adv OBS-1/2026-09-18): BC-prose precision fix only — {INV-004} and §Architecture Anchors corrected to reflect actual layering per S-1.01 implementation. {INV-004}: 'defined once in pregolya-server' → 'defined once in pregolya-core::error::PregolyaError::http_status()'; pregolya-server role restated as per-endpoint overrides + RFC-7807 response serialization delegating to core::http_status() rather than re-declaring the categorical table. §Architecture Anchors: pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause. INV-004 'defined once' guarantee now correctly identifies the site. No behavioral change; code is correct — this is spec-prose alignment only."
   - "1.15 (S-1.01-adv-pass-8/2026-09-20): {INV-003} — add ceiling-round clause for sub-second Later durations; Duration::ZERO produces later:0 (retry-immediately sentinel per BC-2.14.001 EC-003); saturation at u64::MAX is the overflow behavior. Anchors Rate/Timeout/Transport Later default durations (60 s / 30 s / 30 s) in error-taxonomy §Error Categories. {PC-001}/{PC-002}/TV-001/TV-002 — flatten extension members to RFC-7807 §3.2 top-level; remove extensions wrapper; document implementer action required. Implementer action: merge/flatten ProblemExtensions into ProblemDetail using #[serde(flatten)] or direct fields; remove extensions: ProblemExtensions field; update all wire-shape tests."
   - "1.16 (S-1.01-adv-pass-9/2026-09-20): {PC-001} contradictory implementation sentences resolved — option ii ratified: ProblemExtensions removed; retry_hint and component are direct top-level fields on ProblemDetail (RFC-7807 §3.2). {INV-003} wire-path corrected from 'extensions block' to 'top-level member'. EC-001 wire-path corrected from extensions.retry_hint to retry_hint (top-level per RFC-7807 §3.2)."
+  - "1.17 (S-1.01-adv-pass-10): {PC-001} implementer-action paragraph replaced with declarative postcondition — ProblemExtensions removal and field lowering is completed work, not a directive. EC-003 'extensions.detail_chain' → 'detail_chain (optional, internal-only top-level field)'. EC-004 'extensions.errors: [...]' → 'errors: [...] (top-level field)'. Per {PC-002} §RFC-7807 §3.2 all extension members are top-level."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -77,7 +78,10 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    - `retry_hint: "never" | "maybe" | "later:<seconds>"` — derived from `RetryHint`; emitted as a **top-level member** of the problem details object per RFC-7807 §3.2
    - `component: <lowercase component code>` (e.g. `"graph"`); emitted as a **top-level member** of the problem details object per RFC-7807 §3.2
 
-   **Implementer action (F8-05 opt-ii, final):** Remove `ProblemExtensions` struct and the `extensions: ProblemExtensions` field from `ProblemDetail`. Add `pub retry_hint: String` and `pub component: String` directly to `ProblemDetail`. Update `lib.rs` to drop the `ProblemExtensions` re-export. Delete the `tests/ui/problem_extensions_match_*` fixture pair. Lower `EXPECTED_NON_EXHAUSTIVE_COUNT` and `EXPECTED_NON_EXHAUSTIVE_SYMBOLS` to 5 (both runtime gates assert on this constant). Update all callers of `problem.extensions.retry_hint` and `problem.extensions.component` to `problem.retry_hint` / `problem.component`.
+   `ProblemDetail` has exactly five public fields (in serialization order):
+   `type_uri` (serialized as `"type"`), `title`, `detail`, `retry_hint`, `component`.
+   No wrapper sub-struct (`ProblemExtensions` was removed in S-1.01). All five fields
+   are required members — none is optional in the wire encoding.
 2. {PC-002} Emits valid `application/problem+json` conforming to RFC-7807 §3. Extension members `retry_hint` and `component` are emitted as **top-level members** of the problem details object per RFC-7807 §3.2 — not nested under an `extensions` wrapper.
 3. {PC-003} HTTP status code mapping (categorical defaults; see per-endpoint overrides below):
    - `Category::Val` → 400
@@ -180,14 +184,13 @@ requiring a `tokio::Runtime`. The struct can be serialized to JSON with `serde_j
 **Scenario:** A `PregolyaError` with a `source: Some(inner_err)` is converted to RFC-7807.
 **Expected behavior:** The outer error's fields populate the top-level RFC-7807 fields. The inner
 error is NOT recursively expanded in the problem detail (RFC-7807 does not specify a chain format).
-If detailed debugging is needed, it is in the `extensions.detail_chain` field (optional, internal
-only — not emitted in production mode).
+If detailed debugging is needed, it is in the `detail_chain` field (optional, internal-only top-level field — not emitted in production mode).
 
 ### EC-004: Multiple errors from a batch operation
 **Scenario:** `batch()` returns `[Ok(r), Err(e1), Err(e2)]`. The server needs to emit an error
 response.
 **Expected behavior:** The server emits a single RFC-7807 response for the first error encountered,
-or a multi-error summary in `extensions.errors: [...]` if the API contract supports multi-error
+or a multi-error summary in `errors: [...]` (top-level field) if the API contract supports multi-error
 responses. The contract for the specific endpoint governs which format is used; this BC covers
 single-error problem emission only.
 

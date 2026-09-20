@@ -1,11 +1,12 @@
 ---
 document_type: prd-supplement-error-taxonomy
 level: L3
-version: "1.78"
+version: "1.79"
 status: active
 producer: product-owner
 timestamp: 2026-09-20T00:00:00Z
 changelog:
+  - "1.79 (S-1.01-adv-pass-10/2026-09-20, product-owner): §RFC-7807 mapping table corrected — retry_hint and component are top-level members per BC-2.14.002 {PC-002}; component also appears embedded in the type URI. Prior table incorrectly stated extensions.retry_hint and 'embedded in type URI' (no separate wire member). Census UNCHANGED: 147 live codes."
   - "1.78 (S-1.01-adv-pass-8/F8-04/2026-09-20, product-owner): §Error Categories — RATE Default RetryHint 'Later (backoff required)' → 'Later (60 s default — sufficient to clear most rate-limit windows)'; TIMEOUT 'Later' → 'Later (30 s default — allow retries after typical transient timeout)'; TRANSPORT 'Later' → 'Later (30 s default — allow retries after transient network failure)'. Added footnote blockquote: default Later durations are crate-defined starting points; callers may construct RetryHint::Later(custom_duration) for context-specific backoff. These values anchor the default_retry_hint() values for Rate/Timeout/Transport categories per F8-04 finding. Census UNCHANGED: 147 live codes."
   - "1.77 (D-356/DC-59/2026-09-09, product-owner): F-PDC59-01 [MED] resolution — mint dedicated guardrail-journal error codes following the E-TRAJ split pattern. (1) E-CHKPT-012 GuardrailJournalWriteFailed (DURABILITY, broken, Maybe) — raised by `graph::provenance` (pregolya-graph) when the checkpoint store returns an I/O error on `init_guardrail_journal(run_id)` (run-start empty-journal record creation) or `append_guardrail_entry(run_id, entry)` (per-evaluate() sync-durable append); fail-closed: graph execution aborted, no partial write observable by `get_guardrail_journal`; BC-2.11.007 {EC-007} is the authoritative gate #33 site. Three placeholders: `<op>`, `<run_id>`, `<backend_error>`. (2) E-CHKPT-013 GuardrailJournalReadFailed (DURABILITY, broken, Maybe) — raised by `server::handlers` (pregolya-server) when `get_guardrail_journal(run_id)` returns an I/O error at run-read time; no partial Vec returned as Ok; analogous to E-TRAJ-003 TrajectoryReadFailed; BC-2.11.007 {EC-008} is the authoritative gate #33 site. Two placeholders: `<run_id>`, `<backend_error>`. CHKPT namespace: 11→13 live codes. Census 145→147: 52 HTTP (unchanged) + 33 individual (+2: E-CHKPT-012 and E-CHKPT-013 are library-layer DURABILITY codes in pregolya-checkpoint guardrail-journal slice, not direct HTTP terminals; individual omission note: CHKPT codes are library-layer and do not appear in the server HTTP status table) + 62 blanket (unchanged) = 147. Arithmetic: 52 + 33 + 62 = 147 ✓."
   - "1.76 (D-356-fix/DC-07/2026-09-07, product-owner): F-PDC07-01 residual: E-SERVER-004 live-body annotation corrected — `debug_api_key` → `debug_route_key` in the annotation text (canonical field per BC-2.12.005 PRE-004/INV-001; ADR-021 §Decision 1). v1.74 changelog tombstone retains `debug_api_key` as historical record of the rationale at that time."
@@ -421,8 +422,8 @@ via HTTP (pregolya-server). The mapping is:
 | code (e.g., E-GRAPH-001) | `type` (URI: `urn:pregolya:error:<code>`) |
 | message | `detail` |
 | category | `title` (humanized category name) |
-| component | embedded in `type` URI |
-| retry_hint | `extensions.retry_hint` (never/maybe/later) |
+| component | `component` **(top-level RFC-7807 §3.2 member, lowercase component identifier)**; the component identifier also appears embedded in the `type` URI |
+| retry_hint | `retry_hint` **(top-level RFC-7807 §3.2 member, values: never/maybe/later)** |
 
 ## RetryHint Values
 
