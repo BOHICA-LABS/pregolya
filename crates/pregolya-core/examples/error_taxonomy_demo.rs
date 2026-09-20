@@ -258,27 +258,41 @@ fn demo_enums() {
     println!();
     let hint_map: &[(Category, &str)] = &[
         (Category::Val, "Never"),
-        (Category::Auth, "Never"),
+        (Category::Auth, "Maybe"), // AUTH=Maybe per error-taxonomy.md §Error Categories
         (Category::Rate, "Later"),
         (Category::Timeout, "Later"),
         (Category::Transport, "Later"),
         (Category::Internal, "Never"),
         (Category::Durability, "Maybe"),
         (Category::Policy, "Never"),
-        (Category::Tool, "Never"),
-        (Category::Concurrency, "Maybe"),
+        (Category::Tool, "Maybe"), // TOOL=Maybe per error-taxonomy.md §Error Categories
+        (Category::Concurrency, "Never"), // CONCURRENCY=Never per error-taxonomy.md §Error Categories
         (Category::Security, "Never"),
         (Category::Tenancy, "Never"),
         (Category::Exec, "Never"),
         (Category::Sys, "Maybe"),
     ];
+    let mut correct_count: u32 = 0;
     for (cat, expected_kind) in hint_map {
         let hint = cat.default_retry_hint();
-        println!(
-            "  {:12?} -> {:?}  (expected kind: {})",
-            cat, hint, expected_kind
-        );
+        let actual_kind = match &hint {
+            RetryHint::Never => "Never",
+            RetryHint::Maybe => "Maybe",
+            RetryHint::Later(_) => "Later",
+            _ => "Unknown",
+        };
+        let ok = if actual_kind == *expected_kind {
+            "OK"
+        } else {
+            "FAIL"
+        };
+        if ok == "OK" {
+            correct_count += 1;
+        }
+        println!("  {:12?} -> {:?}  [{}]", cat, hint, ok);
     }
+    println!();
+    println!("  AC-016: {correct_count}/14 categories correct");
     println!();
 }
 
