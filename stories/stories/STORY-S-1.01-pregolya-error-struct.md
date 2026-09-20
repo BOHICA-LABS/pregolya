@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -13,6 +13,7 @@ changelog:
   - "1.3a (S-1.01-fix-burst-6/2026-09-19): AC-002 updated — Component::Traj added at ordinal 3 (18 named variants / 19 total) per BC-2.14.001 §PC-002 ADR-030 §Decision 2 TRAJ propagation."
   - "1.3b (S-1.01-fix-burst-5/2026-09-19): AC-007 updated — code field is private; pattern PregolyaError { code, .. } fails for field-privacy reasons; correct access is via pub fn code() accessor per BC-2.14.001 {INV-003}."
   - "1.4 (S-1.01-adv-pass-9/2026-09-19): AC-009/AC-014/EC-003 updated — extensions.* wire paths changed to top-level per BC-2.14.002 §RFC-7807-flatten; extensions map rationale updated."
+  - "1.5 (S-1.01-adv-pass-11/2026-09-19): verification_properties updated [VP-BC214001-02, VP-BC214002-01, VP-BC214002-02]; AC-015 return type corrected; AC-001/AC-015 code-privacy note added."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -26,7 +27,7 @@ points: 5
 depends_on: []
 blocks: [S-1.02, S-1.03, S-1.08, S-1.09, S-1.14]
 behavioral_contracts: [BC-2.14.001, BC-2.14.002]
-verification_properties: []  # Phase 6 deferred: VP-BC214001-01, VP-BC214001-02, VP-BC214002-01, VP-BC214002-02
+verification_properties: [VP-BC214001-02, VP-BC214002-01, VP-BC214002-02]  # VP-BC214001-01 deferred to S-1.02 (code-registry CI gate, per EC-004)
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1
@@ -56,7 +57,7 @@ tdd_mode: strict
 ## Acceptance Criteria
 
 ### AC-001 (traces to BC-2.14.001 PC-001)
-`PregolyaError` with all five named fields (`component`, `category`, `retry_hint`, `code: String`, `message: String`) plus `source: Option<Arc<dyn std::error::Error + Send + Sync>>` constructs without error from within `pregolya-core` using struct-literal syntax. Verified by `test_BC_2_14_001_struct_construction()` which accesses each field by name.
+`PregolyaError` with all five named fields (`component`, `category`, `retry_hint`, `code: String`, `message: String`) plus `source: Option<Arc<dyn std::error::Error + Send + Sync>>` constructs without error from within `pregolya-core` using struct-literal syntax. Verified by `test_BC_2_14_001_struct_construction()` which accesses each field by name. Note: `code` is a private field; read via `pub fn code(&self) -> &str`.
 
 ### AC-002 (traces to BC-2.14.001 PC-002)
 The `Component` enum has exactly 18 named variants: Core, Graph, Chkpt, Traj, Server, Prov, Mcp, Split, Sbxd, Retry, Cron, Memory, Budget, Tmpl, Srlz, Vs, Embed, Tools — plus `Custom(String)`. An exhaustive match on all 19 cases (including Custom) compiles without a wildcard arm. Verified by `test_BC_2_14_001_component_axis()`.
@@ -105,7 +106,7 @@ The `Content-Type` header constant for RFC-7807 responses is `"application/probl
 The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses canonical string form (emitted as a top-level RFC-7807 field): `"never"`, `"maybe"`, `"later:30"` (not "30s" or `Duration` debug output). Verified by `test_BC_2_14_002_retry_hint_format()`.
 
 ### AC-015 (traces to BC-2.14.001 INV-003)
-`PregolyaError.code` is a `String` that is set at construction and has no setter. A `PregolyaError` returned by `to_problem()` includes the original code unchanged. Verified by `test_BC_2_14_001_code_immutable()`.
+`PregolyaError.code` is a `String` that is set at construction and has no setter. The `ProblemDetail` returned by `to_problem()` embeds the original code unchanged in `type_uri` (as `urn:pregolya:error:<code>`). Note: `code` is a private field; read via `pub fn code(&self) -> &str`. Verified by `test_BC_2_14_001_code_immutable()`.
 
 ## Architecture Mapping
 

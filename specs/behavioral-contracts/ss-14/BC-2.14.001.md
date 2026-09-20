@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.16"
+version: "1.17"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -31,9 +31,11 @@ changelog:
   - "1.14 (S-1.01-adv-pass-7-corrigendum/2026-09-19): v1.13 changelog anchor corrected — ADR-030 §Decision 2 (not §Component Axis Expansion which belongs to ADR-010 §D23)."
   - "1.15 (S-1.01-adv-pass-8/2026-09-20): EC-002 — document Custom name lowercase normalization and named-component collision prohibition. Implementer action: add collision-detection test."
   - "1.16 (S-1.01-adv-pass-9/2026-09-20): EC-002 wire-path updated from extensions.component to top-level component per BC-2.14.002 §PC-001 RFC-7807 §3.2 flatten decision."
+  - "1.17 (S-1.01-adv-pass-11): VP-BC214001-01 phase corrected to S-1.02 per story EC-004; DI-010 added to traces_to and traceability."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
+  - domain-spec/invariants.md#DI-010
   - domain-spec/invariants.md#DI-014
 inputs:
   - .factory/specs/prd.md
@@ -177,7 +179,7 @@ chain preserves the original `PregolyaError`'s fields when downcast with `anyhow
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC214001-01 | Every `E-<COMPONENT>-<NNN>` code in error-taxonomy.md is unique (no collision) | CI integration test enumerating all error variant codes | Wave 0 CI |
+| VP-BC214001-01 | Every `E-<COMPONENT>-<NNN>` code in error-taxonomy.md is unique (no collision) | CI integration test enumerating all error variant codes | S-1.02 (code-registry CI gate) |
 | VP-BC214001-02 | `PregolyaError` satisfies `Send + Sync + 'static` | `static_assertions::assert_impl_all!` | Wave 0 CI |
 
 ## Related BCs
@@ -207,7 +209,7 @@ S-1.01
 |-------|-------|
 | Source L2 Capability | CAP-016 |
 | Capability Anchor Justification | CAP-016 ("Typed Error Taxonomy (PregolyaError 2D Struct)") per capabilities-p0.md §CAP-016 — this BC directly implements the 2D component × category struct with RetryHint and machine code that CAP-016 defines as its primary deliverable |
-| L2 Domain Invariants | DI-008 (Library Constructor Result Contract), DI-014 (Error Propagation (No Silent Swallowing)) |
+| L2 Domain Invariants | DI-008 (Library Constructor Result Contract), DI-010 (Credential Opacity — `message` MUST NOT contain credentials), DI-014 (Error Propagation (No Silent Swallowing)) |
 | NE References | — |
 | Priority | P0 |
 | Wave | Wave 0 |
