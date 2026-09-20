@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.12"
+version: "1.13"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.10 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.11 (P2A-044 F-06/2026-08-24): compressed-ordinal citations normalized to stable tags."
   - "1.12 (S-1.01 adv pass-1 F1/2026-09-17): Align to error-taxonomy v1.59 SYS 14th-category. Description category list updated: SYS added as 14th category after EXEC; counter updated from '13 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26))' to '14 categories (EXEC added by D26, SYS added by error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26)'. This is propagation of an already-authorized taxonomy decision (SYS introduced in error-taxonomy v1.59 as the OS-level syscall failure category; Default RetryHint Maybe). Behavioral contract semantics of PregolyaError struct unchanged — only the enumerated category count in the description prose is updated. TD-VSDD-060 sibling sweep: no other site in BC-2.14.001 live body enumerates the category count or list outside the Description."
+  - "1.13 (ADR-030-propagation/2026-09-19): Added Component::Traj (pregolya-checkpoint/trajectory, SS-04) per ADR-030 §Component Axis Expansion. Component count: 17 → 18. Total (incl. Custom): 18 → 19. Description component enumeration updated from comma-separated to pipe-separated canonical form; TRAJ inserted after CHKPT, before SERVER. PC-002 example expanded to include Component::Traj. TD-VSDD-060 sibling sweep: sole component-list site in BC-2.14.001 live body is the Description paragraph — no other enumeration site. BC-INDEX title column sync required (v1.12→v1.13)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -53,9 +54,9 @@ removal_reason: null
 ## Description
 
 Every error emitted by the pregolya library crate family is an instance of `PregolyaError`,
-a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE, GRAPH,
-CHKPT, SERVER, PROV, MCP, SPLIT, SBXD, RETRY, CRON, MEMORY, BUDGET, TMPL, SRLZ, VS, EMBED, TOOLS —
-17 components as of D23) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
+a struct with two orthogonal dimensions: `component` (which crate emitted the error: CORE | GRAPH |
+CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS —
+18 components as of ADR-030) and `category` (the error class: VAL, AUTH, RATE, TIMEOUT, TRANSPORT,
 INTERNAL, DURABILITY, POLICY, TOOL, CONCURRENCY, SECURITY, TENANCY, EXEC, SYS — 14 categories (EXEC added by D26 per ADR-010 §Category Axis Expansion (D26); SYS added by error-taxonomy v1.59 per burst-A2-error-coord/2026-08-26)). Each error also carries a `retry_hint` (Never / Maybe / Later(Duration)),
 a machine-readable `code` string (e.g. `E-CORE-001`), a human-readable `message` (MUST NOT
 contain credentials per DI-010), and a causal `source: Option<Arc<dyn std::error::Error + Send + Sync>>`
@@ -87,7 +88,8 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
    `#[non_exhaustive]` does not bar struct-literal construction by the defining crate. External callers
    must use `PregolyaError::new(...)` per {PC-008} and ADR-010 §Decision. Do not convert this notation.)_
 2. {PC-002} The `component` field identifies the originating crate (e.g. `Component::Graph` for graph
-   errors, `Component::Chkpt` for checkpoint errors).
+   errors, `Component::Chkpt` for checkpoint errors, `Component::Traj` for checkpoint trajectory
+   errors (pregolya-checkpoint/trajectory, SS-04, added per ADR-030)).
 3. {PC-003} The `category` field identifies the error class independently of the component; a
    `(Component::Prov, Category::Rate)` error is a rate-limit from a provider, while
    `(Component::Server, Category::Policy)` is a policy violation from the server crate.

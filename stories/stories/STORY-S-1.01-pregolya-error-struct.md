@@ -56,7 +56,7 @@ tdd_mode: strict
 `PregolyaError` with all five named fields (`component`, `category`, `retry_hint`, `code: String`, `message: String`) plus `source: Option<Arc<dyn std::error::Error + Send + Sync>>` constructs without error from within `pregolya-core` using struct-literal syntax. Verified by `test_BC_2_14_001_struct_construction()` which accesses each field by name.
 
 ### AC-002 (traces to BC-2.14.001 PC-002)
-The `Component` enum has exactly 17 variants: Core, Graph, Chkpt, Server, Prov, Mcp, Split, Sbxd, Retry, Cron, Memory, Budget, Tmpl, Srlz, Vs, Embed, Tools — plus `Custom(String)`. An exhaustive match on all 18 cases (including Custom) compiles without a wildcard arm. Verified by `test_BC_2_14_001_component_axis()`.
+The `Component` enum has exactly 18 named variants: Core, Graph, Chkpt, Traj, Server, Prov, Mcp, Split, Sbxd, Retry, Cron, Memory, Budget, Tmpl, Srlz, Vs, Embed, Tools — plus `Custom(String)`. An exhaustive match on all 19 cases (including Custom) compiles without a wildcard arm. Verified by `test_BC_2_14_001_component_axis()`.
 
 ### AC-003 (traces to BC-2.14.001 PC-003)
 The `Category` enum has exactly 14 variants: Val, Auth, Rate, Timeout, Transport, Internal, Durability, Policy, Tool, Concurrency, Security, Tenancy, Exec, Sys. `Sys` represents OS-level syscall failure (INTERNAL-tier, HTTP 500, default RetryHint Maybe). An exhaustive match on all 14 cases compiles without a wildcard arm. Verified by `test_BC_2_14_001_category_axis()`.
@@ -71,7 +71,7 @@ A `static_assertions::assert_impl_all!(PregolyaError: std::error::Error, Send, S
 `PregolyaError::default()` fails to compile — `Default` is not derived. Verified by a `compile-fail` test or `static_assertions::assert_not_impl_any!(PregolyaError: Default)`.
 
 ### AC-007 (traces to BC-2.14.001 PC-008)
-`PregolyaError` carries `#[non_exhaustive] #[derive(Debug, Clone)]`. External-crate code that attempts to match `PregolyaError { code, .. }` without the `..` wildcard fails to compile (validated by compile-fail test referencing external usage pattern). Internal (same-crate) struct-literal construction is permitted. `PregolyaError::new(component, category, retry_hint, code, message)` is the public external constructor. Verified by `test_BC_2_14_001_non_exhaustive()`.
+`PregolyaError` carries `#[non_exhaustive] #[derive(Debug, Clone)]`. External-crate code that attempts exhaustive struct pattern matching on `PregolyaError { message, .. }` without the `..` wildcard fails to compile due to the `#[non_exhaustive]` constraint (validated by compile-fail test referencing external usage pattern). Note: `code` is a private field accessed via `pub fn code(&self) -> &str`; a pattern `PregolyaError { code, .. }` fails for field-privacy reasons, not the `#[non_exhaustive]` requirement — compile-fail tests must use a public field (e.g., `message`) to correctly exercise the non-exhaustive guard. Internal (same-crate) struct-literal construction is permitted. `PregolyaError::new(component, category, retry_hint, code, message)` is the public external constructor. Verified by `test_BC_2_14_001_non_exhaustive()`.
 
 ### AC-008 (traces to BC-2.14.001 EC-001)
 The `source` field type is `Option<Arc<dyn std::error::Error + Send + Sync>>`. Cloning a `PregolyaError` with a populated source succeeds without requiring the inner error to be `Clone`. `Arc::clone` semantics are load-bearing. Verified by `test_BC_2_14_001_arc_source_clone()`.
