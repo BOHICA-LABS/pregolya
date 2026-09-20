@@ -26,6 +26,32 @@ Feature branch: feature/S-1.01
 | push | f339f9d | — | — | — | — | MED-001 closed by state-manager (c628d4e, BC-INDEX §BC-2.14.001 DI-010 column); LOW-001 closed by implementer (f339f9d); LOW-002 closed by architect (379a81d); streak reset to 0/3 per frozen-HEAD rule; pass-13 dispatched on new frozen HEAD |
 | 13 | f339f9d | 2 MED + 2 LOW | no | no | 0/3 | MED-001 EC-006 strip_prefix guard zero test coverage; MED-002 BC panic enumeration "two" vs three shipped paths + story §EC-007 asymmetry; LOW-001 fn F8-04 → footnote F8-04; LOW-002 Category::default_retry_hint no AC-016 no demo. Full cascade (MED findings present). |
 | push | 639d12a | — | — | — | — | MED-001 + LOW-002 closed by implementer (639d12a; 59 tests pass); MED-002 closed by product-owner (85eb142, BC-2.14.001 §Panics + BC-2.14.002 §Panics); LOW-001 + LOW-002 AC-016 closed by story-writer (8601821, story §EC-007); streak reset to 0/3 per frozen-HEAD rule; pass-14 dispatched on new frozen HEAD |
+| 14 | 639d12a | HIGH-001 + MED-001 | no | no | 0/3 | HIGH-001 AC-016 phantom Category variants (correct 3-variant Later partition: Rate/Timeout/Transport); MED-001 demo header "15 acceptance criteria" stale after AC-016 addition. Full cascade (HIGH + MED present). |
+| push | 2b9371d | — | — | — | — | HIGH-001 closed by story-writer (a3ae216, story §AC-016 §Later-partition corrected to 3 variants; story v2.4); MED-001 closed by demo-recorder (demo header 15→16 acceptance criteria); streak reset to 0/3 per frozen-HEAD rule; pass-15 dispatched on new frozen HEAD |
+
+## Finding Detail — Pass 14
+
+**HIGH-001**: AC-016 phantom Category variants — correct 3-variant Later partition is Rate/Timeout/Transport.
+
+The story §AC-016 §Later-partition section enumerated Category variants that did not match
+the implementation. The correct 3-variant Later partition shipped in production is
+Rate/Timeout/Transport. The variants listed in the spec prior to this pass were phantom
+entries inconsistent with the actual enum definition, creating a traceability gap between
+the acceptance criterion and the live API surface. Fix: story-writer commit `a3ae216` on
+`factory-artifacts` corrects §AC-016 §Later-partition to enumerate exactly the three
+correct variants (Rate/Timeout/Transport) and bumps the story to v2.4.
+
+**MED-001**: Demo header "15 acceptance criteria" stale after AC-016 addition.
+
+The demo script header cited "15 acceptance criteria." The addition of AC-016 brought the
+total to 16, making the header count stale. Fix: demo-recorder commit on `feature/S-1.01`
+updates the demo header from "15 acceptance criteria" to "16 acceptance criteria." This
+commit is the new frozen HEAD `2b9371d`.
+
+Closure: HIGH-001 CLOSED (story-writer `a3ae216`). MED-001 CLOSED (demo-recorder `2b9371d`).
+Ceremony: full cascade per BC-5.39.001 (HIGH + MED findings present).
+Per frozen-HEAD rule (BC-5.39.001), push of demo-recorder fix resets streak to 0/3.
+New frozen HEAD: `2b9371d`. Pass-15 dispatched.
 
 ## Finding Detail — Pass 13
 
@@ -236,12 +262,12 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `639d12a`).
+CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `2b9371d`).
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
-against unchanged HEAD. Fix burst from pass-13 landed as implementer commit `639d12a`
+against unchanged HEAD. Fix burst from pass-14 landed as demo-recorder commit `2b9371d`
 on `feature/S-1.01`; streak resets to 0/3 on push per frozen-HEAD rule.
 
-Current frozen HEAD: `639d12a`
+Current frozen HEAD: `2b9371d`
 Current streak: 0/3 on new frozen HEAD.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
@@ -249,4 +275,4 @@ implementation impact, deferred to phase-5 spec-steward).
 
 Deferred OBS-003: out of scope for S-1.01; deferred to wave gate per orchestrator direction.
 
-Next: pass-14 dispatched on frozen HEAD `639d12a`.
+Next: pass-15 dispatched on frozen HEAD `2b9371d`.
