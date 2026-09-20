@@ -24,6 +24,54 @@ Feature branch: feature/S-1.01
 | push | b1d70d9 | — | — | — | — | MED-001+MED-002 closed by architect (6dc5724); LOW-001 closed by story-writer (d86744f); LOW-002+OBS-001+OBS-002 closed by implementer (b1d70d9); OBS-003 deferred to wave gate; streak reset to 0/3 per frozen-HEAD rule; pass-12 dispatched on new frozen HEAD |
 | 12 | b1d70d9 | 1 MED + 2 LOW | no | no | 0/3 | MED-001 BC-INDEX DI-010 missing from BC-2.14.001 row; LOW-001 demo §Section AC-005 attribution + println gap; LOW-002 api-surface §Error Type mixed receiver types — Category sub-header needed. Full cascade (MED-001 present). |
 | push | f339f9d | — | — | — | — | MED-001 closed by state-manager (c628d4e, BC-INDEX §BC-2.14.001 DI-010 column); LOW-001 closed by implementer (f339f9d); LOW-002 closed by architect (379a81d); streak reset to 0/3 per frozen-HEAD rule; pass-13 dispatched on new frozen HEAD |
+| 13 | f339f9d | 2 MED + 2 LOW | no | no | 0/3 | MED-001 EC-006 strip_prefix guard zero test coverage; MED-002 BC panic enumeration "two" vs three shipped paths + story §EC-007 asymmetry; LOW-001 fn F8-04 → footnote F8-04; LOW-002 Category::default_retry_hint no AC-016 no demo. Full cascade (MED findings present). |
+| push | 639d12a | — | — | — | — | MED-001 + LOW-002 closed by implementer (639d12a; 59 tests pass); MED-002 closed by product-owner (85eb142, BC-2.14.001 §Panics + BC-2.14.002 §Panics); LOW-001 + LOW-002 AC-016 closed by story-writer (8601821, story §EC-007); streak reset to 0/3 per frozen-HEAD rule; pass-14 dispatched on new frozen HEAD |
+
+## Finding Detail — Pass 13
+
+**MED-001**: EC-006 strip_prefix guard — zero test coverage.
+
+The EC-006 code path (strip_prefix guard logic) had no test coverage at all. The guard
+was implemented but never exercised in the test suite, meaning any regression in the
+strip_prefix boundary would be invisible. Fix: implementer commit `639d12a` on
+`feature/S-1.01` adds a dedicated test for the EC-006 strip_prefix guard (59 tests
+pass post-fix).
+
+**MED-002**: BC panic enumeration lists "two" panic paths; three are now shipped +
+story §Edge Cases EC-007 asymmetry.
+
+BC-2.14.001 and BC-2.14.002 `# Panics` sections enumerated exactly "two" panic paths.
+Post pass-12 implementation, three distinct panic paths are exercised by the production
+code. The BC prose saying "two" was factually incorrect and created a traceability gap.
+Additionally, the story §Edge Cases section EC-007 entry was asymmetric relative to the
+BC — the BC covered the guard condition but the story omitted the third path entirely.
+Fix: product-owner commit `85eb142` on `factory-artifacts` updates BC-2.14.001 §Panics and
+BC-2.14.002 §Panics with corrected panic enumeration (three paths, explicitly listed).
+Story-writer commit `8601821` on `factory-artifacts` updates the story spec §EC-007,
+aligning §Edge Cases with the corrected BC inventory.
+
+**LOW-001**: "fn F8-04" should be "footnote F8-04".
+
+A spec prose reference used the abbreviation "fn F8-04" where the correct form is
+"footnote F8-04". The `fn` prefix is a Rust keyword and the collision creates ambiguity
+when readers scan prose for symbol references. Fix: story-writer commit `8601821`
+corrects all "fn F8-04" occurrences to "footnote F8-04" in the story spec (story v2.3).
+
+**LOW-002**: Category::default_retry_hint — no AC-016 traceability, no demo coverage.
+
+The `Category::default_retry_hint` symbol was added to the API surface in a prior
+fix-burst but lacked an AC-016 acceptance criterion traceability anchor in the story
+spec, and the demo script had no coverage of the symbol. Both gaps were required by
+the story's traceability contract. Fix: implementer commit `639d12a` on `feature/S-1.01`
+adds demo coverage for `default_retry_hint`. Story-writer commit `8601821` on
+`factory-artifacts` adds the AC-016 acceptance criterion to the story spec (story v2.3).
+
+Closure: MED-001 CLOSED (implementer `639d12a`). MED-002 CLOSED (product-owner `85eb142`
++ story-writer `8601821`). LOW-001 CLOSED (story-writer `8601821`). LOW-002 CLOSED
+(implementer `639d12a` demo + story-writer `8601821` AC-016).
+Ceremony: full cascade per BC-5.39.001 (MED findings present).
+Per frozen-HEAD rule (BC-5.39.001), push of implementer fix resets streak to 0/3.
+New frozen HEAD: `639d12a`. Pass-14 dispatched.
 
 ## Finding Detail — Pass 12
 
@@ -188,12 +236,12 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `f339f9d`).
+CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `639d12a`).
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
-against unchanged HEAD. Fix burst from pass-12 landed as implementer commit `f339f9d`
+against unchanged HEAD. Fix burst from pass-13 landed as implementer commit `639d12a`
 on `feature/S-1.01`; streak resets to 0/3 on push per frozen-HEAD rule.
 
-Current frozen HEAD: `f339f9d`
+Current frozen HEAD: `639d12a`
 Current streak: 0/3 on new frozen HEAD.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
@@ -201,4 +249,4 @@ implementation impact, deferred to phase-5 spec-steward).
 
 Deferred OBS-003: out of scope for S-1.01; deferred to wave gate per orchestrator direction.
 
-Next: pass-13 dispatched on frozen HEAD `f339f9d`.
+Next: pass-14 dispatched on frozen HEAD `639d12a`.
