@@ -383,8 +383,9 @@ jobs:
           exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # doc — cargo doc (deny broken intra-doc links; RUSTDOCFLAGS=-D warnings)
-  # OBS-02: gates broken rustdoc links on CI.
+  # doc — cargo doc (deny broken intra-doc links; RUSTDOCFLAGS=-D warnings --document-private-items)
+  # OBS-02: gates broken rustdoc links on CI — public and private API surface.
+  # Positive-coverage assertion: fails if zero crate docs generated (vacuity guard).
   # ─────────────────────────────────────────────────────────────────────────────
   doc:
     name: CI / doc
@@ -411,7 +412,19 @@ jobs:
         if: hashFiles('Cargo.toml') != ''
         run: |
           set -euo pipefail
-          RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
+          RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features --document-private-items
+
+      - name: Verify documentation was generated
+        if: hashFiles('Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          doc_count=$(find target/doc -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+          if [ "${doc_count}" -eq "0" ]; then
+            echo "ERROR: No crate documentation was generated under target/doc/."
+            echo "The workspace may be empty or all members may be excluded."
+            exit 1
+          fi
+          echo "Check passed: ${doc_count} crates documented."
 
       - name: Skip (no workspace yet)
         if: hashFiles('Cargo.toml') == ''
