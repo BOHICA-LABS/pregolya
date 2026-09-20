@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.8"
+version: "1.9"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -17,6 +17,7 @@ changelog:
   - "1.6 (S-1.01-adv-pass-14/RECORDS-ONLY): §Tasks item 1 re-pointed to AC list; §File Structure and §Library requirements completed with gate harness, UI fixtures, example, and trybuild."
   - "1.7 (S-1.01-adv-pass-16/LOW-001): §Architecture Compliance Rules — check-no-panic enforcement cell corrected (gate is live, not seeded-by-S-1.02)."
   - "1.8 (S-1.01-adv-pass-17/F-07): §Architecture Compliance Rules — trybuild (dev) added to permitted dependencies list."
+  - "1.9 (S-1.01-adv-pass-18/F-01/F-02/F-03/F-04): AC-007 quoted pattern corrected to PregolyaError { message } (no ., ..); §File Structure Requirements updated to 11 fixtures (6 fail + 5 pass); serde_json marked (dev) in two sites; EC-006 added for Custom collision/charset prohibition."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -78,7 +79,7 @@ A `static_assertions::assert_impl_all!(PregolyaError: std::error::Error, Send, S
 `PregolyaError::default()` fails to compile — `Default` is not derived. Verified by a `compile-fail` test or `static_assertions::assert_not_impl_any!(PregolyaError: Default)`.
 
 ### AC-007 (traces to BC-2.14.001 PC-008)
-`PregolyaError` carries `#[non_exhaustive] #[derive(Debug, Clone)]`. External-crate code that attempts exhaustive struct pattern matching on `PregolyaError { message, .. }` without the `..` wildcard fails to compile due to the `#[non_exhaustive]` constraint (validated by compile-fail test referencing external usage pattern). Note: `code` is a private field accessed via `pub fn code(&self) -> &str`; a pattern `PregolyaError { code, .. }` fails for field-privacy reasons, not the `#[non_exhaustive]` requirement — compile-fail tests must use a public field (e.g., `message`) to correctly exercise the non-exhaustive guard. Internal (same-crate) struct-literal construction is permitted. `PregolyaError::new(component, category, retry_hint, code, message)` is the public external constructor. Verified by `test_BC_2_14_001_non_exhaustive()`.
+`PregolyaError` carries `#[non_exhaustive] #[derive(Debug, Clone)]`. External-crate code that attempts exhaustive struct pattern matching on `PregolyaError { message }` without the `..` wildcard fails to compile due to the `#[non_exhaustive]` constraint (validated by compile-fail test referencing external usage pattern). Note: `code` is a private field accessed via `pub fn code(&self) -> &str`; a pattern `PregolyaError { code, .. }` fails for field-privacy reasons, not the `#[non_exhaustive]` requirement — compile-fail tests must use a public field (e.g., `message`) to correctly exercise the non-exhaustive guard. Internal (same-crate) struct-literal construction is permitted. `PregolyaError::new(component, category, retry_hint, code, message)` is the public external constructor. Verified by `test_BC_2_14_001_non_exhaustive()`.
 
 ### AC-008 (traces to BC-2.14.001 EC-001)
 The `source` field type is `Option<Arc<dyn std::error::Error + Send + Sync>>`. Cloning a `PregolyaError` with a populated source succeeds without requiring the inner error to be `Clone`. `Arc::clone` semantics are load-bearing. Verified by `test_BC_2_14_001_arc_source_clone()`.
@@ -134,6 +135,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 | EC-003 | `Component::Custom("newcrate")` | Accepted; code string `E-newcrate-001` valid; `to_problem()` returns `component: "newcrate"` (top-level field) |
 | EC-004 | Duplicate error codes (E-CORE-001 claimed twice) | CI integration test (future S-1.02 scope) detects collision; build fails |
 | EC-005 | `Category::Exec` HTTP status | Returns 500 via INTERNAL-tier fallback per ADR-010 §Category Axis Expansion (D26); no separate mapping row |
+| EC-006 | `Component::Custom("Core")` or any name whose lowercase form collides with a named component identifier, or a name with invalid charset (consecutive `--`/`__`, mixed `-_`/`_-`, leading/trailing `-`/`_`) | Panics at `PregolyaError::new()` via the construction-time always-on `assert!` guard (BC-2.14.001 EC-002). A second always-on `assert!` in `component_lowercase()` (emission-time guard) catches any post-construction mutation of the `pub component` field before `to_problem()`. Cross-ref: BC-2.14.001 EC-002 (construction + emission guards); BC-2.14.002 EC-002 (panic carve-out). |
 
 ## Token Budget Estimate (MANDATORY)
 
@@ -182,14 +184,14 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | `pregolya-core/src/error.rs` must NOT import `tokio` | Architecture boundary | `cargo tree -p pregolya-core` must not show tokio under error.rs |
 | `Category::Exec` maps to HTTP 500 (INTERNAL fallback) per D26 | BC-2.14.002 Note (D26), ADR-010 §Category Axis Expansion | Parameterized status code test |
 
-**Forbidden dependencies for `pregolya-core/src/error.rs`:** `tokio`, `reqwest`, `axum`, `hyper`, any `pregolya-*` crate. Only `std`, `serde`, `serde_json`, `static_assertions` (dev), `anyhow` (dev), `trybuild` (dev) are permitted.
+**Forbidden dependencies for `pregolya-core/src/error.rs`:** `tokio`, `reqwest`, `axum`, `hyper`, any `pregolya-*` crate. Only `std`, `serde`, `serde_json` (dev), `static_assertions` (dev), `anyhow` (dev), `trybuild` (dev) are permitted.
 
 ## Library & Framework Requirements (MANDATORY)
 
 | Tool | Version | Purpose |
 |------|---------|---------|
 | `serde` | workspace pin | `#[derive(Serialize, Deserialize)]` on `ProblemDetail` |
-| `serde_json` | workspace pin | `to_string` in unit tests; JSON serialization of `ProblemDetail` (no extensions map — `retry_hint` and `component` are direct top-level fields on `ProblemDetail`) |
+| `serde_json` | workspace pin (dev) | JSON assertion tests + `error_taxonomy_demo` example (dev-only; `ProblemDetail` serialization is via `serde` derive — `serde_json` is not a production dependency) |
 | `static_assertions` | workspace pin (dev) | Compile-time trait bound assertions |
 | `anyhow` | workspace pin (dev) | TV-004 compat test: wrap PregolyaError with anyhow context |
 | `trybuild` | workspace pin (dev) | `pregolya-core/Cargo.toml [dev-dependencies]` — compile-fail / compile-pass UI test harness for the `#[non_exhaustive]` external gate (AC-007) |
@@ -200,6 +202,6 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 |------|--------|---------|
 | `pregolya-core/src/error.rs` | CREATE | `PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail` — `core::error` module |
 | `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod error;` and `pub use error::{PregolyaError, Component, Category, RetryHint, ProblemDetail};` |
-| `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` | CREATE | `#[non_exhaustive]` public-type gate — 5 types, 10 trybuild fixtures (AC-007) |
-| `crates/pregolya-core/tests/ui/*.rs` | CREATE | 5 compile-fail + 5 compile-pass trybuild fixtures exercising the `#[non_exhaustive]` external-crate pattern (AC-007) |
+| `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` | CREATE | `#[non_exhaustive]` public-type gate — 5 types, 11 trybuild fixtures (AC-007): 6 compile-fail + 5 compile-pass |
+| `crates/pregolya-core/tests/ui/*.rs` | CREATE | 6 compile-fail (5 per-type match-exhaustiveness + 1 struct-literal construction per BC-2.14.001 {PC-008} clause 1) + 5 compile-pass trybuild fixtures. Note: no compile-pass counterpart for the construction fixture — external struct-literal construction of `PregolyaError` is always barred. (AC-007) |
 | `crates/pregolya-core/examples/error_taxonomy_demo.rs` | CREATE | Per-AC demo evidence for all 15 ACs; used by demo-recorder for VHS/terminal recording |

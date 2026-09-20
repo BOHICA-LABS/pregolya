@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.19"
+version: "1.20"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.17 (S-1.01-adv-pass-10): {PC-001} implementer-action paragraph replaced with declarative postcondition — ProblemExtensions removal and field lowering is completed work, not a directive. EC-003 'extensions.detail_chain' → 'detail_chain (optional, internal-only top-level field)'. EC-004 'extensions.errors: [...]' → 'errors: [...] (top-level field)'. Per {PC-002} §RFC-7807 §3.2 all extension members are top-level."
   - "1.18 (S-1.01-adv-pass-12): EC-002 panic carve-out added for contract-violation case."
   - "1.19 (S-1.01-adv-pass-16/MED-001): EC-003/EC-004 aligned with PC-001 five-field closure; detail_chain orphan reference removed; errors:[] re-scoped to pregolya-server envelope; cross-refs to {PC-001} added."
+  - "1.20 (S-1.01-adv-pass-18/F-05): VP-BC214002-01 Method column corrected — shipped mechanism is serde_json::Value structural conformance assertions, not JSON Schema validation (no jsonschema dep; ProblemDetail is closed via {PC-001})."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -253,7 +254,7 @@ _TV-001/TV-002/TV-005 use BC-2.14.001 rendering convention (ALL-CAPS taxonomy co
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC214002-01 | `ProblemDetail` output is valid RFC-7807 JSON (type_uri is a URI, title is a string, detail is present) | Unit test + JSON schema validation | Wave 0 |
+| VP-BC214002-01 | `ProblemDetail` output is valid RFC-7807 JSON (type_uri is a URI, title is a string, detail is present) | Unit test with `serde_json::Value` structural conformance assertions over the closed five-field wire shape (`type`/`title`/`detail` presence, `retry_hint`/`component` as top-level strings, no `extensions` wrapper key, no null values) | Wave 0 |
 | VP-BC214002-02 | HTTP status code mapping covers all 14 categories (EXEC and SYS included; no category returns 200) | Parameterized unit test over Category enum variants | Wave 0 |
 
 ## Notes
