@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.9"
+version: "2.0"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,6 +18,7 @@ changelog:
   - "1.7 (S-1.01-adv-pass-16/LOW-001): §Architecture Compliance Rules — check-no-panic enforcement cell corrected (gate is live, not seeded-by-S-1.02)."
   - "1.8 (S-1.01-adv-pass-17/F-07): §Architecture Compliance Rules — trybuild (dev) added to permitted dependencies list."
   - "1.9 (S-1.01-adv-pass-18/F-01/F-02/F-03/F-04): AC-007 quoted pattern corrected to PregolyaError { message } (no ., ..); §File Structure Requirements updated to 11 fixtures (6 fail + 5 pass); serde_json marked (dev) in two sites; EC-006 added for Custom collision/charset prohibition."
+  - "2.0 (S-1.01-adv-pass-2/F-005+F-007/2026-09-20): §File Structure Requirements rows 1-2 normalized to crates/ workspace-relative paths (F-007); EC-007 and EC-008 added — code-format and code↔component binding panics now spec-traced (F-005, BC-2.14.001 EC-006/EC-007)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -136,6 +137,8 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 | EC-004 | Duplicate error codes (E-CORE-001 claimed twice) | CI integration test (future S-1.02 scope) detects collision; build fails |
 | EC-005 | `Category::Exec` HTTP status | Returns 500 via INTERNAL-tier fallback per ADR-010 §Category Axis Expansion (D26); no separate mapping row |
 | EC-006 | `Component::Custom("Core")` or any name whose lowercase form collides with a named component identifier, or a name with invalid charset (consecutive `--`/`__`, mixed `-_`/`_-`, leading/trailing `-`/`_`) | Panics at `PregolyaError::new()` via the construction-time always-on `assert!` guard (BC-2.14.001 EC-002). A second always-on `assert!` in `component_lowercase()` (emission-time guard) catches any post-construction mutation of the `pub component` field before `to_problem()`. Cross-ref: BC-2.14.001 EC-002 (construction + emission guards); BC-2.14.002 EC-002 (panic carve-out). |
+| EC-007 | `PregolyaError::new()` called with `code` not matching `E-<COMPONENT>-NNN` format (e.g. `"E-CORE-01"` — two-digit suffix, or `"E-A__B-001"` — double-underscore in COMPONENT) | Panics at construction with "code must follow E-<COMPONENT>-NNN format" (BC-2.14.001 EC-006) |
+| EC-008 | Named-component code↔component mismatch: `PregolyaError::new(Component::Core, ..., "E-GRAPH-001", ...)` where COMPONENT segment of code doesn't match `core` | Panics at construction time "code COMPONENT segment does not match" (BC-2.14.001 EC-007); same guard fires at emit time if `component` field is reassigned post-construction (BC-2.14.001 EC-007 emission-time parity) |
 
 ## Token Budget Estimate (MANDATORY)
 
@@ -200,8 +203,8 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-core/src/error.rs` | CREATE | `PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail` — `core::error` module |
-| `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod error;` and `pub use error::{PregolyaError, Component, Category, RetryHint, ProblemDetail};` |
+| `crates/pregolya-core/src/error.rs` | CREATE | `PregolyaError`, `Component`, `Category`, `RetryHint`, `ProblemDetail` — `core::error` module |
+| `crates/pregolya-core/src/lib.rs` | MODIFY | Add `pub mod error;` and `pub use error::{PregolyaError, Component, Category, RetryHint, ProblemDetail};` |
 | `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` | CREATE | `#[non_exhaustive]` public-type gate — 5 types, 11 trybuild fixtures (AC-007): 6 compile-fail + 5 compile-pass |
 | `crates/pregolya-core/tests/ui/*.rs` | CREATE | 6 compile-fail (5 per-type match-exhaustiveness + 1 struct-literal construction per BC-2.14.001 {PC-008} clause 1) + 5 compile-pass trybuild fixtures. Note: no compile-pass counterpart for the construction fixture — external struct-literal construction of `PregolyaError` is always barred. (AC-007) |
 | `crates/pregolya-core/examples/error_taxonomy_demo.rs` | CREATE | Per-AC demo evidence for all 15 ACs; used by demo-recorder for VHS/terminal recording |

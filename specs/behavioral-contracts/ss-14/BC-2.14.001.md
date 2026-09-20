@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.18"
+version: "1.19"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -33,6 +33,7 @@ changelog:
   - "1.16 (S-1.01-adv-pass-9/2026-09-20): EC-002 wire-path updated from extensions.component to top-level component per BC-2.14.002 §PC-001 RFC-7807 §3.2 flatten decision."
   - "1.17 (S-1.01-adv-pass-11): VP-BC214001-01 phase corrected to S-1.02 per story EC-004; DI-010 added to traces_to and traceability."
   - "1.18 (S-1.01-adv-pass-12): EC-002 guard description updated from debug_assert to always-on assert; emission-time guard (component_lowercase) documented."
+  - "1.19 (S-1.01-adv-pass-2/F-005/2026-09-20): EC-006 and EC-007 added — code-format and code↔component binding construction/emission panics are now specified public API behavior."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -83,8 +84,12 @@ one-to-one; `DURABILITY` in prose ↔ `Category::Durability` in Rust, `CHKPT` �
 1. {PRE-001} A pregolya library crate is constructing or propagating an error condition.
 2. {PRE-002} The `pregolya-core` crate defines and exports `PregolyaError`, `Component`, `Category`,
    and `RetryHint` as public types.
-3. {PRE-003} The error code string follows the convention `E-<COMPONENT>-<NNN>` using the component
-   abbreviations defined in the error taxonomy.
+3. {PRE-003} The error code string follows the convention `E-<COMPONENT>-NNN` using the component
+   abbreviations defined in the error taxonomy. This convention is enforced as an always-on
+   programmer-error invariant: `PregolyaError::new()` panics at construction time if `code` is
+   malformed or the COMPONENT segment does not match the supplied `component` variant, and
+   `PregolyaError::to_problem()` re-validates the code↔component binding at emission time
+   (see EC-006, EC-007).
 
 ## Postconditions
 
@@ -165,6 +170,35 @@ across all registered error taxonomy entries. The build fails on a collision.
 **Scenario:** Application code wraps a `PregolyaError` with `anyhow::Context`.
 **Expected behavior:** The wrap succeeds because `PregolyaError: Error + Send + Sync`. The anyhow
 chain preserves the original `PregolyaError`'s fields when downcast with `anyhow.downcast_ref::<PregolyaError>()`.
+
+### EC-006: Code format invariant at construction
+**Scenario:** A caller passes a `code` string to `PregolyaError::new()` that does not match the
+`E-<COMPONENT>-NNN` format (e.g., `"CORE-001"`, `"E-CORE-1"`, `"E--001"`, `"E-CORE-0001"`).
+**Expected behavior:** `PregolyaError::new()` panics at construction time via an always-on `assert!`.
+The required format is: starts with `E-`, the middle COMPONENT segment satisfies `[A-Za-z0-9_-]`
+with no leading, trailing, or consecutive separator characters, and the suffix is exactly three
+ASCII digits. This is a programmer-error invariant; it fires for any caller regardless of whether
+`component` is a named variant or `Component::Custom`. The `E-` prefix ensures temporal stability:
+code strings serve as the machine-readable stable identifiers referenced in dashboards and alerting
+rules ({INV-003}), and the format constraint prevents malformed codes from silently entering those
+pipelines. Callers must supply a well-formed code string; a malformed code is a programming defect,
+not a runtime error path.
+
+### EC-007: Code↔component binding at construction and emission
+**Scenario:** A caller constructs a `PregolyaError` where the COMPONENT segment of `code` does
+not case-insensitively match `component_lowercase(&component)` — for example, `Component::Graph`
+paired with `code: "E-CORE-001"`, or `Component::Custom("MyExt")` paired with `code: "E-GRAPH-001"`.
+**Expected behavior:** `PregolyaError::new()` panics at construction time via an always-on `assert!`.
+`PregolyaError::to_problem()` additionally enforces this binding at emission time, because `component`
+is a `pub` field that may be reassigned post-construction (ADR-010 §Decision keeps `component` `pub`).
+Purpose: prevents URN namespace aliasing — a `Component::Graph` error with `code: "E-CORE-001"` would
+emit `type_uri: "urn:pregolya:error:E-CORE-001"` with `component: "graph"`, producing conflicting
+attribution in RFC-7807 responses and monitoring dashboards. The binding applies to all component
+variants: named variants (e.g., `Component::Graph` → COMPONENT segment must be `GRAPH`) and Custom
+variants (e.g., `Component::Custom("MyExt")` → COMPONENT segment must be `MYEXT`). Both panics are
+intentional: they surface a programmer error before a misattributed URN reaches an RFC-7807 response.
+Cross-refs: EC-002 (Custom-name charset + collision guards, which also enforce the same binding at
+emit-time via `component_lowercase`); BC-2.14.002 {INV-001} (monitoring keys on `type_uri`).
 
 ## Canonical Test Vectors
 
