@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.15"
+version: "1.16"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.13 (S-1.01 LOCAL adv pass OBS-1/2026-09-17): EC-005 restated — compile-time exhaustiveness replaces the stale runtime 'Unknown'/500 fallback. The closed 14-variant #[non_exhaustive] Category enum with no wildcard match arm means adding a new Category variant is a source-breaking change detected at compile time at every mapping site (http_status, category_title). No reachable code path yields title: 'Unknown' or HTTP 500 for an unknown category because no unknown category can exist at runtime. This is strictly stronger than a runtime fallback. Records-only hygiene; no behavioral change."
   - "1.14 (S-1.01 LOCAL adv OBS-1/2026-09-18): BC-prose precision fix only — {INV-004} and §Architecture Anchors corrected to reflect actual layering per S-1.01 implementation. {INV-004}: 'defined once in pregolya-server' → 'defined once in pregolya-core::error::PregolyaError::http_status()'; pregolya-server role restated as per-endpoint overrides + RFC-7807 response serialization delegating to core::http_status() rather than re-declaring the categorical table. §Architecture Anchors: pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause. INV-004 'defined once' guarantee now correctly identifies the site. No behavioral change; code is correct — this is spec-prose alignment only."
   - "1.15 (S-1.01-adv-pass-8/2026-09-20): {INV-003} — add ceiling-round clause for sub-second Later durations; Duration::ZERO produces later:0 (retry-immediately sentinel per BC-2.14.001 EC-003); saturation at u64::MAX is the overflow behavior. Anchors Rate/Timeout/Transport Later default durations (60 s / 30 s / 30 s) in error-taxonomy §Error Categories. {PC-001}/{PC-002}/TV-001/TV-002 — flatten extension members to RFC-7807 §3.2 top-level; remove extensions wrapper; document implementer action required. Implementer action: merge/flatten ProblemExtensions into ProblemDetail using #[serde(flatten)] or direct fields; remove extensions: ProblemExtensions field; update all wire-shape tests."
+  - "1.16 (S-1.01-adv-pass-9/2026-09-20): {PC-001} contradictory implementation sentences resolved — option ii ratified: ProblemExtensions removed; retry_hint and component are direct top-level fields on ProblemDetail (RFC-7807 §3.2). {INV-003} wire-path corrected from 'extensions block' to 'top-level member'. EC-001 wire-path corrected from extensions.retry_hint to retry_hint (top-level per RFC-7807 §3.2)."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -76,7 +77,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
    - `retry_hint: "never" | "maybe" | "later:<seconds>"` — derived from `RetryHint`; emitted as a **top-level member** of the problem details object per RFC-7807 §3.2
    - `component: <lowercase component code>` (e.g. `"graph"`); emitted as a **top-level member** of the problem details object per RFC-7807 §3.2
 
-   **Implementer action (F8-05):** The Rust struct `ProblemExtensions` must be merged/flattened into `ProblemDetail` using `#[serde(flatten)]` or by adding the fields directly to `ProblemDetail`. The `ProblemExtensions` struct and the `extensions: ProblemExtensions` field must be removed. All tests asserting the wire shape must be updated.
+   **Implementer action (F8-05 opt-ii, final):** Remove `ProblemExtensions` struct and the `extensions: ProblemExtensions` field from `ProblemDetail`. Add `pub retry_hint: String` and `pub component: String` directly to `ProblemDetail`. Update `lib.rs` to drop the `ProblemExtensions` re-export. Delete the `tests/ui/problem_extensions_match_*` fixture pair. Lower `EXPECTED_NON_EXHAUSTIVE_COUNT` and `EXPECTED_NON_EXHAUSTIVE_SYMBOLS` to 5 (both runtime gates assert on this constant). Update all callers of `problem.extensions.retry_hint` and `problem.extensions.component` to `problem.retry_hint` / `problem.component`.
 2. {PC-002} Emits valid `application/problem+json` conforming to RFC-7807 §3. Extension members `retry_hint` and `component` are emitted as **top-level members** of the problem details object per RFC-7807 §3.2 — not nested under an `extensions` wrapper.
 3. {PC-003} HTTP status code mapping (categorical defaults; see per-endpoint overrides below):
    - `Category::Val` → 400
@@ -145,7 +146,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
   classification.
 - {INV-002} `detail` may contain dynamic content (e.g. the invalid field name), but `type_uri` must not
   (it is always the static code like `E-CORE-001`).
-- {INV-003} `retry_hint` in the extensions block uses the canonical string representation
+- {INV-003} `retry_hint` top-level member uses the canonical string representation
   (`"never"`, `"maybe"`, `"later:<seconds>"`) for client machine readability.
   Sub-second `Duration` values ceiling-round to the next whole second (a 900 ms backoff hint emits `later:1`, not `later:0`). `Duration::ZERO` is the sole producer of `later:0` (retry-immediately / yield-to-scheduler sentinel per BC-2.14.001 EC-003). Saturation at `u64::MAX` is the overflow behavior — no panic.
 - {INV-004} The categorical default Category→HTTP status mapping is defined once in
@@ -167,7 +168,7 @@ requiring the HTTP layer to reach into the error's internal fields directly.
 ### EC-001: PregolyaError with RetryHint::Later in problem extension
 **Scenario:** A rate-limited error `(Component::Prov, Category::Rate, retry_hint: Later(60s))` is
 serialized to RFC-7807.
-**Expected behavior:** `extensions.retry_hint` is `"later:60"` (seconds as integer string).
+**Expected behavior:** `retry_hint` (top-level per RFC-7807 §3.2) is `"later:60"` (seconds as integer string).
 The HTTP response may additionally include a `Retry-After: 60` header.
 
 ### EC-002: ProblemDetail emitted outside HTTP context

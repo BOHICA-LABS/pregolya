@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -12,6 +12,7 @@ changelog:
   - "1.2 (adv-pass-1-F1/BC-2.14.001-v1.12/BC-2.14.002-v1.12/2026-09-17): SYS/System category alignment — Category::Sys variant added; total categories 14; AC-003 and AC-011 updated."
   - "1.3a (S-1.01-fix-burst-6/2026-09-19): AC-002 updated — Component::Traj added at ordinal 3 (18 named variants / 19 total) per BC-2.14.001 §PC-002 ADR-030 §Decision 2 TRAJ propagation."
   - "1.3b (S-1.01-fix-burst-5/2026-09-19): AC-007 updated — code field is private; pattern PregolyaError { code, .. } fails for field-privacy reasons; correct access is via pub fn code() accessor per BC-2.14.001 {INV-003}."
+  - "1.4 (S-1.01-adv-pass-9/2026-09-19): AC-009/AC-014/EC-003 updated — extensions.* wire paths changed to top-level per BC-2.14.002 §RFC-7807-flatten; extensions map rationale updated."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -83,8 +84,8 @@ The `source` field type is `Option<Arc<dyn std::error::Error + Send + Sync>>`. C
 - `type_uri: "urn:pregolya:error:E-CORE-001"` (format exactly `urn:pregolya:error:<code>`)
 - `title`: humanized category name (e.g., `"Validation"` for `Category::Val`)
 - `detail`: the error's `message` field
-- `extensions.retry_hint`: `"never" | "maybe" | "later:<seconds>"`
-- `extensions.component`: lowercase component code (e.g., `"core"`)
+- `retry_hint`: `"never" | "maybe" | "later:<seconds>"` (at the top level of the problem document, per RFC-7807 §3.2)
+- `component`: lowercase component code (e.g., `"core"`) (at the top level)
 
 Verified by `test_BC_2_14_002_to_problem_val()` (TV-001) and `test_BC_2_14_002_to_problem_rate()` (TV-002).
 
@@ -101,7 +102,7 @@ The `Content-Type` header constant for RFC-7807 responses is `"application/probl
 `to_problem()` is a synchronous method — no `async`, no `tokio` dependency. It is callable without a Tokio runtime. Verified by `test_BC_2_14_002_sync_context()` running in a regular (non-async) `#[test]`.
 
 ### AC-014 (traces to BC-2.14.002 INV-001 and INV-003)
-The `type_uri` format `urn:pregolya:error:<code>` is stable. `extensions.retry_hint` uses canonical string form: `"never"`, `"maybe"`, `"later:30"` (not "30s" or `Duration` debug output). Verified by `test_BC_2_14_002_retry_hint_format()`.
+The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses canonical string form (emitted as a top-level RFC-7807 field): `"never"`, `"maybe"`, `"later:30"` (not "30s" or `Duration` debug output). Verified by `test_BC_2_14_002_retry_hint_format()`.
 
 ### AC-015 (traces to BC-2.14.001 INV-003)
 `PregolyaError.code` is a `String` that is set at construction and has no setter. A `PregolyaError` returned by `to_problem()` includes the original code unchanged. Verified by `test_BC_2_14_001_code_immutable()`.
@@ -126,7 +127,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `extensions.retry_h
 |----|----------|-------------------|
 | EC-001 | Graph error wraps Chkpt error in source chain | Outer component is Graph; inner error preserved via `Arc<dyn Error + Send + Sync>` source chain; `source()` returns Some |
 | EC-002 | `RetryHint::Later(Duration::ZERO)` | Valid; sentinel for "retry immediately"; no validation error at construction |
-| EC-003 | `Component::Custom("newcrate")` | Accepted; code string `E-newcrate-001` valid; `to_problem()` returns `extensions.component: "newcrate"` |
+| EC-003 | `Component::Custom("newcrate")` | Accepted; code string `E-newcrate-001` valid; `to_problem()` returns `component: "newcrate"` (top-level field) |
 | EC-004 | Duplicate error codes (E-CORE-001 claimed twice) | CI integration test (future S-1.02 scope) detects collision; build fails |
 | EC-005 | `Category::Exec` HTTP status | Returns 500 via INTERNAL-tier fallback per ADR-010 §Category Axis Expansion (D26); no separate mapping row |
 
@@ -184,7 +185,7 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | Tool | Version | Purpose |
 |------|---------|---------|
 | `serde` | workspace pin | `#[derive(Serialize, Deserialize)]` on `ProblemDetail` |
-| `serde_json` | workspace pin | `to_string` in unit tests; `Value` in extensions map |
+| `serde_json` | workspace pin | `to_string` in unit tests; JSON serialization of `ProblemDetail` (no extensions map — `retry_hint` and `component` are direct top-level fields on `ProblemDetail`) |
 | `static_assertions` | workspace pin (dev) | Compile-time trait bound assertions |
 | `anyhow` | workspace pin (dev) | TV-004 compat test: wrap PregolyaError with anyhow context |
 

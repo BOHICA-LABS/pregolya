@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.15"
+version: "1.16"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -30,6 +30,7 @@ changelog:
   - "1.13 (ADR-030-propagation/2026-09-19): Added Component::Traj (pregolya-checkpoint/trajectory, SS-04) per ADR-030 §Decision 2 — Durable Audit-Grade Trajectory Primitive. Component count: 17 → 18. Total (incl. Custom): 18 → 19. Description component enumeration updated from comma-separated to pipe-separated canonical form; TRAJ inserted after CHKPT, before SERVER. PC-002 example expanded to include Component::Traj. TD-VSDD-060 sibling sweep: sole component-list site in BC-2.14.001 live body is the Description paragraph — no other enumeration site. BC-INDEX title column sync required (v1.12→v1.13)."
   - "1.14 (S-1.01-adv-pass-7-corrigendum/2026-09-19): v1.13 changelog anchor corrected — ADR-030 §Decision 2 (not §Component Axis Expansion which belongs to ADR-010 §D23)."
   - "1.15 (S-1.01-adv-pass-8/2026-09-20): EC-002 — document Custom name lowercase normalization and named-component collision prohibition. Implementer action: add collision-detection test."
+  - "1.16 (S-1.01-adv-pass-9/2026-09-20): EC-002 wire-path updated from extensions.component to top-level component per BC-2.14.002 §PC-001 RFC-7807 §3.2 flatten decision."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -144,7 +145,7 @@ The `Arc` wrapper (not `Box`) is load-bearing: it is what allows `#[derive(Clone
 for forward compatibility. The `code` field must still follow `E-<CUSTOM_NAME>-<NNN>` format.
 The retry_hint must be one of the three defined variants — no new variants allowed without a
 taxonomy amendment.
-The custom component name is lowercased in the wire `extensions.component` field (`Component::Custom("MyCrate")` → `"mycrate"`). Custom names that, when lowercased, collide with a named component's lowercase identifier (e.g. `Custom("Core")` → `"core"` collides with `Component::Core`) are forbidden — the `debug_assert` in `PregolyaError::new()` SHOULD be extended to detect this collision. The `code` field retains the casing supplied by the caller per the `impl Into<String>` conversion.
+The custom component name is lowercased in the wire `component` field (top-level per RFC-7807 §3.2) (`Component::Custom("MyCrate")` → `"mycrate"`). Custom names that, when lowercased, collide with a named component's lowercase identifier (e.g. `Custom("Core")` → `"core"` collides with `Component::Core`) are forbidden — the `debug_assert` in `PregolyaError::new()` SHOULD be extended to detect this collision. The `code` field retains the casing supplied by the caller per the `impl Into<String>` conversion.
 
 ### EC-003: RetryHint::Later with zero duration
 **Scenario:** A provider returns a rate-limit response but includes no `Retry-After` header.
