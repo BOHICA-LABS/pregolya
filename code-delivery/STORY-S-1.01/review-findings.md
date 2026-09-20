@@ -30,6 +30,34 @@ Feature branch: feature/S-1.01
 | push | 2b9371d | — | — | — | — | HIGH-001 closed by story-writer (a3ae216, story §AC-016 §Later-partition corrected to 3 variants; story v2.4); MED-001 closed by demo-recorder (demo header 15→16 acceptance criteria); streak reset to 0/3 per frozen-HEAD rule; pass-15 dispatched on new frozen HEAD |
 | 15 | 2b9371d | 1 LOW | no | yes | 0/3 | RECORDS-ONLY (TD-RECORDS-MICRO-BURST-001); LOW-001 AC-016 demo block missing Category::Transport; exhaustive-enumeration convention not followed; streak NOT advanced (CLEAN(strict)=no, records-only) |
 | push | bdefb70 | — | — | — | — | LOW-001 closed by demo-recorder (full 14-variant exhaustive enumeration matching AC-003/AC-011 convention); records-lint.sh PASS=5 WARN=0 FAIL=0; streak reset to 0/3 per frozen-HEAD rule; pass-16 dispatched on new frozen HEAD |
+| 16 | bdefb70 | 1 MED + 1 LOW | no | no | 0/3 | MED-001 hint_map 3 wrong expected-kind labels (Auth/Tool→Never should be Maybe; Concurrency→Maybe should be Never); LOW-001 AC-016 loop lacked OK/FAIL per-row comparison unlike AC-011. Full cascade (MED present). |
+| push | 769c3fd | — | — | — | — | MED-001+LOW-001 closed by implementer (demo hint_map labels corrected + AC-016 OK/FAIL per-row comparison + 14/14 aggregate); streak reset to 0/3 per frozen-HEAD rule; pass-17 dispatched on new frozen HEAD |
+
+## Finding Detail — Pass 16
+
+**MED-001**: Demo hint_map 3 wrong expected-kind labels.
+
+Three entries in the demo `hint_map` carried incorrect expected-kind labels:
+Auth and Tool entries were labeled `Never` when the correct label is `Maybe`;
+Concurrency entry was labeled `Maybe` when the correct label is `Never`.
+The mislabeling created a traceability gap between the demo evidence and the
+acceptance criteria for `hint_map` coverage. Fix: implementer commit `769c3fd`
+on `feature/S-1.01` corrects all three expected-kind label misassignments in
+the demo `hint_map`.
+
+**LOW-001**: AC-016 demo loop lacked OK/FAIL per-row comparison unlike AC-011.
+
+The AC-011 demo block used an explicit OK/FAIL per-row comparison pattern to
+evidence each variant result against its expected value. The AC-016 demo loop
+omitted this per-row comparison, relying only on a 14/14 aggregate count
+without row-level pass/fail evidence. Fix: implementer commit `769c3fd` on
+`feature/S-1.01` adds OK/FAIL per-row comparison to the AC-016 demo loop,
+matching the AC-011 convention, plus retains the 14/14 aggregate summary.
+
+Closure: MED-001 CLOSED (implementer `769c3fd`). LOW-001 CLOSED (implementer `769c3fd`).
+Ceremony: full cascade per BC-5.39.001 (MED finding present).
+Per frozen-HEAD rule (BC-5.39.001), push of implementer fix resets streak to 0/3.
+New frozen HEAD: `769c3fd`. Pass-17 dispatched.
 
 ## Finding Detail — Pass 15
 
@@ -283,15 +311,13 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `bdefb70`).
+CLEAN(strict) streak: 0/3 — reset by push of fix burst (new frozen HEAD `769c3fd`).
 BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
-against unchanged HEAD. Fix burst from pass-15 (records-only micro-burst) landed as
-demo-recorder commit `bdefb70` on `feature/S-1.01`; streak resets to 0/3 on push per
-frozen-HEAD rule. Per TD-RECORDS-MICRO-BURST-001, the records-only micro-burst ceremony
-does NOT reset the streak at pass-evaluation time — only the push of the new HEAD resets
-it via the frozen-HEAD rule.
+against unchanged HEAD. Fix burst from pass-16 (full cascade, MED present) landed as
+implementer commit `769c3fd` on `feature/S-1.01`; streak resets to 0/3 on push per
+frozen-HEAD rule.
 
-Current frozen HEAD: `bdefb70`
+Current frozen HEAD: `769c3fd`
 Current streak: 0/3 on new frozen HEAD.
 
 Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
@@ -299,4 +325,4 @@ implementation impact, deferred to phase-5 spec-steward).
 
 Deferred OBS-003: out of scope for S-1.01; deferred to wave gate per orchestrator direction.
 
-Next: pass-16 dispatched on frozen HEAD `bdefb70`.
+Next: pass-17 dispatched on frozen HEAD `769c3fd`.
