@@ -1131,7 +1131,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::from_millis(1)),
-            code: "E-PROV-003".into(),
+            code: "E-TEST-003".into(),
             message: "subsec".into(),
             source: None,
         };
@@ -1145,7 +1145,7 @@ mod tests {
             component: Component::Prov,
             category: Category::Rate,
             retry_hint: RetryHint::Later(Duration::from_millis(1500)),
-            code: "E-PROV-004".into(),
+            code: "E-TEST-004".into(),
             message: "subsec2".into(),
             source: None,
         };
@@ -1824,10 +1824,10 @@ mod tests {
     #[test]
     fn test_BC_2_14_001_002_sys_category() {
         let err = PregolyaError {
-            component: Component::Core,
+            component: Component::Sbxd,
             category: Category::Sys,
             retry_hint: RetryHint::Maybe,
-            code: "E-CORE-014".into(),
+            code: "E-SBXD-010".into(),
             message: "syscall failed: ENOENT".into(),
             source: None,
         };
@@ -1841,7 +1841,7 @@ mod tests {
             problem.title, "System",
             "Category::Sys title must be 'System'"
         );
-        assert_eq!(problem.type_uri, "urn:pregolya:error:E-CORE-014");
+        assert_eq!(problem.type_uri, "urn:pregolya:error:E-SBXD-010");
         assert_eq!(problem.retry_hint, "maybe");
     }
 

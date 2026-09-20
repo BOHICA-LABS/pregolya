@@ -127,6 +127,7 @@ fn demo_construction() {
     )
     .with_source(Arc::clone(&inner_arc));
 
+    println!("\n=== AC-005: Error + Send + Sync / Error::source runtime clause ===");
     println!("Outer:  {outer}");
     println!(
         "  source present: {}",

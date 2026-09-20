@@ -265,8 +265,8 @@ fn test_all_pub_types_have_non_exhaustive() {
 
 // ── AC-007 compile-fail / compile-pass trybuild fixtures ─────────────────────
 //
-// BC-2.14.001 {PC-008} — all 10 fixture registrations consolidated into a single `ui()` test to
-// avoid spawning 10 independent trybuild processes (LOW-001 adv pass-2 provenance).
+// BC-2.14.001 {PC-008} — all 11 fixture registrations consolidated into a single `ui()` test to
+// avoid spawning 11 independent trybuild processes (LOW-001 adv pass-2 provenance).
 // The `TestCases` object batches all fixtures into one compilation run.
 //
 // Per-type documentation preserved as comments for AC-007 traceability.
@@ -275,7 +275,7 @@ fn test_all_pub_types_have_non_exhaustive() {
 /// 5 `#[non_exhaustive]` types in `pregolya-core`.
 ///
 /// Fixtures are registered in type order: PregolyaError → ProblemDetail →
-/// Component → Category → RetryHint.
+/// Component → Category → RetryHint (+ struct-literal construction).
 /// (`ProblemExtensions` removed in pass-9b per BC-2.14.002 v1.16 {PC-001} option ii.)
 ///
 /// - Structs: `..` wildcard required from external crate (E0638)
@@ -286,7 +286,7 @@ fn test_all_pub_types_have_non_exhaustive() {
 /// boundary.
 #[test]
 fn ui() {
-    // BC-2.14.001 {PC-008}: all EXPECTED_NON_EXHAUSTIVE_COUNT × 2 fixtures registered.
+    // BC-2.14.001 {PC-008}: all EXPECTED_NON_EXHAUSTIVE_COUNT × 2 + CONSTRUCTION_FAIL_FIXTURE_COUNT (= 11) fixtures registered.
     // The list is the authority — CI fails if a fixture is on disk but not here (or vice versa).
     const FAIL_FIXTURES: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
         "tests/ui/pregolya_error_match_without_dots_fails.rs",
@@ -303,11 +303,14 @@ fn ui() {
         "tests/ui/retry_hint_match_with_wildcard_passes.rs",
     ];
 
-    // Verify list length is consistent with the count constant (compile-time).
+    // Array type annotation [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] is the compile-time enforcement mechanism;
+    // this assert is redundant but harmless.
     const _: () = assert!(
         FAIL_FIXTURES.len() == EXPECTED_NON_EXHAUSTIVE_COUNT,
         "fail fixture count mismatch with EXPECTED_NON_EXHAUSTIVE_COUNT"
     );
+    // Array type annotation [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] is the compile-time enforcement mechanism;
+    // this assert is redundant but harmless.
     const _: () = assert!(
         PASS_FIXTURES.len() == EXPECTED_NON_EXHAUSTIVE_COUNT,
         "pass fixture count mismatch with EXPECTED_NON_EXHAUSTIVE_COUNT"
