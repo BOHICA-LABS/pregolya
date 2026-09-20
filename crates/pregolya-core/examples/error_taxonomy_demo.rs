@@ -14,7 +14,7 @@
 //! |------------------|-------------------------------------------------------------------------------------|
 //! | module-level     | AC-005 (assert_impl_all — compile-time + external confirmation), AC-006 (assert_not_impl_any — compile-time + external confirmation) |
 //! | `construction`   | AC-001 (struct/new), AC-005 (Error::source runtime clause), AC-007 (non_exhaustive::new), AC-008 (Arc clone) |
-//! | `enums`          | AC-002 (Component), AC-003 (Category), AC-004 (RetryHint) |
+//! | `enums`          | AC-002 (Component), AC-003 (Category), AC-004 (RetryHint), AC-016 (Category::default_retry_hint — BC-2.14.001 {INV-004}) |
 //! | `rfc7807`        | AC-009 (to_problem), AC-010 (JSON), AC-011 (http_status), AC-012 (content-type), AC-013 (sync), AC-014 (retry_hint fmt), AC-015 (code immutable) |
 //!
 //! Usage:
@@ -250,6 +250,22 @@ fn demo_enums() {
     if let RetryHint::Later(d) = later_30 {
         println!("  Inner duration accessible: {}s", d.as_secs());
     }
+    println!();
+
+    // AC-016: Category::default_retry_hint() per BC-2.14.001 {INV-004}
+    println!("=== AC-016: Category::default_retry_hint() per BC-2.14.001 {{INV-004}} ===");
+    println!();
+    println!(
+        "  Internal  -> {:?}",
+        Category::Internal.default_retry_hint()
+    );
+    println!("  Rate      -> {:?}", Category::Rate.default_retry_hint());
+    println!(
+        "  Timeout   -> {:?}",
+        Category::Timeout.default_retry_hint()
+    );
+    println!("  Auth      -> {:?}", Category::Auth.default_retry_hint());
+    println!("  Val       -> {:?}", Category::Val.default_retry_hint());
     println!();
 }
 

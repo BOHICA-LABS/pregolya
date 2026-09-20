@@ -2067,4 +2067,26 @@ mod tests {
         err.component = Component::Graph; // bypass construction-time assert via pub field
         let _ = err.to_problem(); // must panic
     }
+
+    /// BC-2.14.001 EC-006 / BC-2.14.002 {PC-002} path 3 — MED-001:
+    /// `to_problem()` EC-006 strip_prefix guard fires when `self.code` lacks the "E-" prefix.
+    ///
+    /// Struct-literal construction (BC-2.14.001 {PC-008} clause 1) bypasses `new()` validation,
+    /// so a code without the "E-" prefix is reachable. `to_problem()` must panic with a
+    /// BC-citing message at emission time, not produce a silently malformed URN.
+    #[test]
+    #[should_panic(expected = "cannot strip 'E-' prefix in to_problem()")]
+    fn test_BC_2_14_002_ec002_path3_emit_time_ec006_strip_prefix_guard() {
+        // Struct-literal construction bypasses new() validation (BC-2.14.001 {PC-008} clause 1).
+        // A code without the "E-" prefix triggers the EC-006 strip_prefix guard in to_problem().
+        let err = PregolyaError {
+            component: Component::Core,
+            category: Category::Internal,
+            retry_hint: RetryHint::Never,
+            code: "CORE-001".into(), // valid format for new() but lacks "E-" prefix entirely
+            message: "test EC-006 emit guard".into(),
+            source: None,
+        };
+        let _ = err.to_problem();
+    }
 }
