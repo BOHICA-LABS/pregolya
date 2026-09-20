@@ -1,6 +1,6 @@
 //! Error taxonomy demo — S-1.01 per-AC visual evidence.
 //!
-//! Exercises the public `pregolya-core` error API across all 15 acceptance
+//! Exercises the public `pregolya-core` error API across all 16 acceptance
 //! criteria for story S-1.01.
 //! AC-005 has two clauses: the `assert_impl_all!` compile-time assertion (no runtime
 //! output) and the `Error::source` runtime clause — the latter is demonstrated in
