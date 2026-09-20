@@ -287,7 +287,7 @@ impl PregolyaError {
                         && suffix.len() == 3
                         && suffix.chars().all(|c| c.is_ascii_digit())
                 }),
-            "code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
+            "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
             code
         );
         // BC-2.14.001 EC-002: Custom names must be valid segments and must not alias named
