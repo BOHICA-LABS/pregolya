@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.6"
+version: "1.7"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -15,6 +15,7 @@ changelog:
   - "1.4 (S-1.01-adv-pass-9/2026-09-19): AC-009/AC-014/EC-003 updated — extensions.* wire paths changed to top-level per BC-2.14.002 §RFC-7807-flatten; extensions map rationale updated."
   - "1.5 (S-1.01-adv-pass-11/2026-09-19): verification_properties updated [VP-BC214001-02, VP-BC214002-01, VP-BC214002-02]; AC-015 return type corrected; AC-001/AC-015 code-privacy note added."
   - "1.6 (S-1.01-adv-pass-14/RECORDS-ONLY): §Tasks item 1 re-pointed to AC list; §File Structure and §Library requirements completed with gate harness, UI fixtures, example, and trybuild."
+  - "1.7 (S-1.01-adv-pass-16/LOW-001): §Architecture Compliance Rules — check-no-panic enforcement cell corrected (gate is live, not seeded-by-S-1.02)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -175,7 +176,7 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | `source` field is `Option<Arc<...>>` not `Option<Box<...>>` | BC-2.14.001 EC-001, ADR-010 §Decision | Code review; compile test that clones error with source |
 | `Default` NOT implemented on `PregolyaError` | BC-2.14.001 PC-007 | `static_assertions::assert_not_impl_any!(PregolyaError: Default)` |
 | No `println!` in `error.rs` | CLAUDE.md Code Conventions | `cargo clippy -D clippy::print_stdout` |
-| No `unwrap()` / `expect()` in `error.rs` (non-test) | CLAUDE.md Code Conventions | `cargo xtask check-no-panic` (seeded by S-1.02) |
+| No `unwrap()` / `expect()` in `error.rs` (non-test) | CLAUDE.md Code Conventions | `cargo xtask check-no-panic` (CI job `lint-extra`) |
 | `ProblemDetail` must `#[derive(Serialize)]` for RFC-7807 JSON | BC-2.14.002 PC-002 | `serde_json::to_string` unit test |
 | `pregolya-core/src/error.rs` must NOT import `tokio` | Architecture boundary | `cargo tree -p pregolya-core` must not show tokio under error.rs |
 | `Category::Exec` maps to HTTP 500 (INTERNAL fallback) per D26 | BC-2.14.002 Note (D26), ADR-010 §Category Axis Expansion | Parameterized status code test |

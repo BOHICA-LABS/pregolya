@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.002
-version: "1.18"
+version: "1.19"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.16 (S-1.01-adv-pass-9/2026-09-20): {PC-001} contradictory implementation sentences resolved — option ii ratified: ProblemExtensions removed; retry_hint and component are direct top-level fields on ProblemDetail (RFC-7807 §3.2). {INV-003} wire-path corrected from 'extensions block' to 'top-level member'. EC-001 wire-path corrected from extensions.retry_hint to retry_hint (top-level per RFC-7807 §3.2)."
   - "1.17 (S-1.01-adv-pass-10): {PC-001} implementer-action paragraph replaced with declarative postcondition — ProblemExtensions removal and field lowering is completed work, not a directive. EC-003 'extensions.detail_chain' → 'detail_chain (optional, internal-only top-level field)'. EC-004 'extensions.errors: [...]' → 'errors: [...] (top-level field)'. Per {PC-002} §RFC-7807 §3.2 all extension members are top-level."
   - "1.18 (S-1.01-adv-pass-12): EC-002 panic carve-out added for contract-violation case."
+  - "1.19 (S-1.01-adv-pass-16/MED-001): EC-003/EC-004 aligned with PC-001 five-field closure; detail_chain orphan reference removed; errors:[] re-scoped to pregolya-server envelope; cross-refs to {PC-001} added."
 capability: CAP-016
 wave: 0
 phase: 1a
@@ -190,15 +191,37 @@ well-formed `Component::Custom` names that pass the construction-time guard.
 **Scenario:** A `PregolyaError` with a `source: Some(inner_err)` is converted to RFC-7807.
 **Expected behavior:** The outer error's fields populate the top-level RFC-7807 fields. The inner
 error is NOT recursively expanded in the problem detail (RFC-7807 does not specify a chain format).
-If detailed debugging is needed, it is in the `detail_chain` field (optional, internal-only top-level field — not emitted in production mode).
+For in-process debugging, the causal chain is accessible via `PregolyaError::source_arc()` (and
+`std::error::Error::source`) — this access is in-process only and does not require any wire-format
+change. The source chain is deliberately absent from `ProblemDetail`;
+`test_BC_2_14_002_source_chain_not_leaked` verifies this non-emission property.
+
+**{PC-001} authority:** {PC-001} closes the `ProblemDetail` wire shape at exactly five required
+fields (`type_uri`, `title`, `detail`, `retry_hint`, `component`). There is no `detail_chain` field
+on `ProblemDetail` — the causal chain is intentionally excluded from the wire encoding.
+Future implementors: mechanical rewording of this edge case must not reintroduce a `detail_chain`
+field name or any other name not listed in {PC-001}.
 
 ### EC-004: Multiple errors from a batch operation
+**Scope note:** This edge case concerns `pregolya-server`-level response envelope design for batch
+results — it does NOT describe a field of `ProblemDetail` itself. See {PC-001} for the closed
+five-field `ProblemDetail` wire shape; `errors: [...]` is not one of those five fields.
+
 **Scenario:** `batch()` returns `[Ok(r), Err(e1), Err(e2)]`. The server needs to emit an error
 response.
-**Expected behavior:** The server emits a single RFC-7807 response for the first error encountered,
-or a multi-error summary in `errors: [...]` (top-level field) if the API contract supports multi-error
-responses. The contract for the specific endpoint governs which format is used; this BC covers
-single-error problem emission only.
+**Expected behavior:** The server emits a single RFC-7807 `ProblemDetail` response for the first
+error encountered. When the API contract for a specific endpoint supports multi-error responses, the
+server may wrap multiple `ProblemDetail` objects in a `pregolya-server`-owned multi-error response
+envelope (e.g., `{ "errors": [ ... ] }`) — this envelope is a server-layer concern, not a member of
+`ProblemDetail` itself. The contract for the specific endpoint governs which format is used.
+
+**This BC covers single-error problem emission only** (one `ProblemDetail` per response). Multi-error
+envelope design is out of scope for this BC.
+
+**{PC-001} authority:** {PC-001} closes the `ProblemDetail` wire shape at exactly five required
+fields (`type_uri`, `title`, `detail`, `retry_hint`, `component`). Future implementors: mechanical
+rewording of this edge case must not introduce an `errors` field or any other name not listed in
+{PC-001} as a member of `ProblemDetail`.
 
 ### EC-005: Forward-compatibility guarantee for Category variants (compile-time exhaustiveness)
 **Scenario:** A new `Category` variant is introduced in a future error-taxonomy iteration (e.g., a
