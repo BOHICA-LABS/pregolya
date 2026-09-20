@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "2.1"
+version: "2.2"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -20,6 +20,7 @@ changelog:
   - "1.9 (S-1.01-adv-pass-18/F-01/F-02/F-03/F-04): AC-007 quoted pattern corrected to PregolyaError { message } (no ., ..); §File Structure Requirements updated to 11 fixtures (6 fail + 5 pass); serde_json marked (dev) in two sites; EC-006 added for Custom collision/charset prohibition."
   - "2.0 (S-1.01-adv-pass-2/F-005+F-007/2026-09-20): §File Structure Requirements rows 1-2 normalized to crates/ workspace-relative paths (F-007); EC-007 and EC-008 added — code-format and code↔component binding panics now spec-traced (F-005, BC-2.14.001 EC-006/EC-007)."
   - "2.1 (S-1.01-adv-pass-3/F-005/2026-09-20): §Architecture Compliance Rules — tighten ADR-010 §Category Axis Expansion to ADR-010 §Category Axis Expansion (D26) per ADR-022 disambiguation rule."
+  - "2.2 (S-1.01-adv-pass-11/LOW-001/2026-09-20): §Architecture Mapping row and §Tasks item added for Category::default_retry_hint() — public API method had no story-spec trace to BC-2.14.001 {INV-004}."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -121,6 +122,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 | `PregolyaError`, `Component`, `Category`, `RetryHint` | `pregolya-core/src/error.rs` (`core::error`) | pure-core |
 | `ProblemDetail`, `to_problem()` | `pregolya-core/src/error.rs` | pure-core |
 | `PROBLEM_JSON_CONTENT_TYPE` constant | `pregolya-core/src/error.rs` | pure-core |
+| `Category::default_retry_hint(&self) -> RetryHint` | `pregolya-core/src/error.rs` (`core::error`) | pure-core — BC-2.14.001 {INV-004}; Default RetryHint column per `error-taxonomy.md §Error Categories` fn F8-04 |
 
 ## Purity Classification
 
@@ -170,6 +172,7 @@ The `type_uri` format `urn:pregolya:error:<code>` is stable. `retry_hint` uses c
 9. [ ] Run `cargo xtask check-file-size` — confirm `error.rs` < 500 code lines
 10. [ ] Run `cargo clippy -p pregolya-core -D warnings` — zero warnings
 11. [ ] Final `cargo nextest run -p pregolya-core` — all 15 AC tests pass
+12. [ ] Implement `Category::default_retry_hint(&self) -> RetryHint` per BC-2.14.001 {INV-004}: return value for each of the 14 variants is defined in the Default RetryHint column of `error-taxonomy.md §Error Categories` (fn F8-04). Verified by `test_BC_2_14_001_inv004_category_default_retry_hints` (all 14 variants plus exact `Later` durations).
 
 ## Previous Story Intelligence (MANDATORY)
 
