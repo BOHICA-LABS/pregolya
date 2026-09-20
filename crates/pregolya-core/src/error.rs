@@ -1027,7 +1027,7 @@ mod tests {
     /// AC-014 (traces to BC-2.14.002 {INV-001}, {INV-003})
     ///
     /// `type_uri` uses stable `urn:pregolya:error:<code>` format.
-    /// `extensions.retry_hint` uses canonical string representations:
+    /// `retry_hint (top-level per RFC-7807 §3.2)` uses canonical string representations:
     /// `"never"`, `"maybe"`, `"later:<seconds>"` (not `"30s"` or debug output).
     #[test]
     fn test_BC_2_14_002_retry_hint_format() {
@@ -1230,7 +1230,7 @@ mod tests {
 
     /// EC-003 (BC-2.14.001 EC-002): `Component::Custom("newcrate")` is accepted.
     ///
-    /// `to_problem()` returns `extensions.component: "newcrate"`.
+    /// `to_problem()` returns `component (top-level per RFC-7807 §3.2): "newcrate"`.
     /// The code field uses the lowercase format `E-newcrate-001` per EC-003 spec.
     #[test]
     fn test_BC_2_14_001_ec003_custom_component() {
@@ -1462,11 +1462,11 @@ mod tests {
     }
 
     /// BC-2.14.001 §Component-Axis AC-002 MED-002: Exhaustive table-driven test for all 19 Component variants → expected
-    /// `extensions.component` string emitted by `component_lowercase`.
+    /// top-level `component` string emitted by `component_lowercase`.
     #[test]
     fn test_BC_2_14_002_component_mapping_exhaustive() {
         use std::collections::HashSet;
-        // Table: (Component, expected extensions.component string)
+        // Table: (Component, expected top-level component string)
         let cases: &[(Component, &str)] = &[
             (Component::Core, "core"),
             (Component::Graph, "graph"),
@@ -1658,7 +1658,7 @@ mod tests {
 
     /// BC-2.14.001 EC-02: Custom name is lowercased on wire via component_lowercase.
     ///
-    /// `Component::Custom("MyCrate")` → `extensions.component == "mycrate"` on the
+    /// `Component::Custom("MyCrate")` → `component == "mycrate"` (top-level) on the
     /// ProblemDetail. `type_uri` preserves the original code casing.
     #[test]
     fn test_BC_2_14_001_custom_wire_normalization() {
@@ -1775,5 +1775,61 @@ mod tests {
         );
         assert_eq!(problem.type_uri, "urn:pregolya:error:E-CORE-014");
         assert_eq!(problem.retry_hint, "maybe");
+    }
+
+    /// BC-2.14.001 EC-02: `NAMED_COMPONENT_LOWERCASE` must equal the set of strings
+    /// `component_lowercase` returns for the 18 named variants. TD-VSDD-059: doc-comment-only
+    /// invariants are not closures. This test is the load-bearing assertion.
+    #[test]
+    fn test_NAMED_COMPONENT_LOWERCASE_sync_with_component_lowercase() {
+        use std::collections::HashSet;
+
+        // Enumerate all 18 named variants explicitly.
+        // If a new variant is added to Component, the exhaustive-match closure in
+        // test_BC_2_14_001_component_axis will fail to compile (ensuring this list is updated).
+        let named_variants: [Component; 18] = [
+            Component::Core,
+            Component::Graph,
+            Component::Chkpt,
+            Component::Traj,
+            Component::Server,
+            Component::Prov,
+            Component::Mcp,
+            Component::Split,
+            Component::Sbxd,
+            Component::Retry,
+            Component::Cron,
+            Component::Memory,
+            Component::Budget,
+            Component::Tmpl,
+            Component::Srlz,
+            Component::Vs,
+            Component::Embed,
+            Component::Tools,
+        ];
+
+        let from_fn: HashSet<String> = named_variants
+            .iter()
+            .map(super::component_lowercase)
+            .collect();
+
+        let from_const: HashSet<String> = super::NAMED_COMPONENT_LOWERCASE
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+
+        assert_eq!(
+            from_fn,
+            from_const,
+            "NAMED_COMPONENT_LOWERCASE is out of sync with component_lowercase. \
+            Const has {:?} but function returns {:?}",
+            from_const.difference(&from_fn).collect::<Vec<_>>(),
+            from_fn.difference(&from_const).collect::<Vec<_>>(),
+        );
+        assert_eq!(
+            super::NAMED_COMPONENT_LOWERCASE.len(),
+            18,
+            "Expected 18 named component identifiers"
+        );
     }
 }

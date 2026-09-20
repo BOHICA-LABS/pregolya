@@ -75,12 +75,13 @@ fn demo_construction() {
     println!();
 
     // Second example: Sys/Maybe — the 14th Category (added in v1.12)
+    // E-SBXD-010 CanonicalizationFailed: SYS category, Component::Sbxd (per error-taxonomy.md)
     let sys_err = PregolyaError::new(
-        Component::Core,
+        Component::Sbxd,
         Category::Sys,
         RetryHint::Maybe,
-        "E-CORE-014",
-        "syscall failed: ENOENT",
+        "E-SBXD-010",
+        "CanonicalizationFailed: cannot resolve path '/tmp/link': EACCES: Permission denied",
     );
     println!("Sys (14th Category): {sys_err}");
     println!("  .category: {:?}", sys_err.category);
@@ -102,12 +103,13 @@ fn demo_construction() {
 
     // ADR-010 Canon Class 1: use `.with_source(arc)` to chain a causal error.
     // Direct field assignment is not permitted from outside the crate.
+    // E-GRAPH-001 InvalidUpdateError: CONCURRENCY category (concurrent writes to LastValue channel)
     let outer = PregolyaError::new(
         Component::Graph,
-        Category::Durability,
+        Category::Concurrency,
         RetryHint::Never,
         "E-GRAPH-001",
-        "graph persistence failed",
+        "concurrent writes to LastValue channel",
     )
     .with_source(Arc::clone(&inner_arc));
 
@@ -272,12 +274,13 @@ fn demo_rfc7807() {
     println!("=== AC-003 / AC-009: RFC-7807 — System (Sys/Maybe, 14th Category) ===");
     println!();
 
+    // E-SBXD-010 CanonicalizationFailed: SYS category, Component::Sbxd (per error-taxonomy.md)
     let sys_err = PregolyaError::new(
-        Component::Core,
+        Component::Sbxd,
         Category::Sys,
         RetryHint::Maybe,
-        "E-CORE-014",
-        "syscall failed: ENOENT",
+        "E-SBXD-010",
+        "CanonicalizationFailed: cannot resolve path '/tmp/link': EACCES: Permission denied",
     );
     let problem_sys = sys_err.to_problem();
     let json_sys =
