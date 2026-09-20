@@ -17,6 +17,12 @@ Feature branch: feature/S-1.01
 | 7 | 0aed506 | 1 LOW | no | yes | 1/3 | RECORDS-ONLY (TD-RECORDS-MICRO-BURST-001); F-P7-001 closed by commit 66fd4c8 |
 | 8 | 66fd4c8 | 1 MED + 1 LOW + 2 OBS | no | no | 0/3 | F-01 (MED) E-TEST fixture codes violate EC-007; F-02 (LOW) missing AC-005 external assert_impl_all. Fix: commit 7e46930. |
 | push | 7e46930 | — | — | — | — | F-01+F-02 fix burst; CI green (19/19); streak reset to 0/3 per frozen-HEAD rule; pass 9 dispatched |
+| 9 | 7e46930 | 0 | yes | yes | 1/3 | First CLEAN(strict) on HEAD 7e46930; pass 10 dispatched |
+
+## Finding Detail — Pass 9
+
+No findings. Pass 9 is CLEAN(strict) and CLEAN(PR-merge) on frozen HEAD `7e46930`.
+Streak advances to 1/3. Pass 10 dispatched against same frozen HEAD.
 
 ## Finding Detail — Pass 8
 
@@ -51,7 +57,11 @@ Closure: CLOSED — fix committed, records micro-burst complete per TD-RECORDS-M
 
 ## Status
 
-CLEAN(strict) streak: 0/3 — reset by frozen-HEAD rule (BC-5.39.001) after fix burst push
-to `7e46930`. Pass 8 had 1 MED finding; F-01+F-02 fixed in commit `7e46930`.
+CLEAN(strict) streak: 1/3 — first CLEAN(strict) pass on frozen HEAD `7e46930` (pass 9).
+BC-5.39.001 frozen-HEAD rule: streak advances only on consecutive CLEAN(strict) passes
+against unchanged HEAD. Passes 10 and 11 required for convergence.
 
-Next: adversary pass 9 on frozen HEAD `7e46930`.
+Deferred D-001: BC `wave: 0` frontmatter inconsistency (13 BCs corpus-wide, no
+implementation impact, deferred to phase-5 spec-steward).
+
+Next: adversary pass 10 on frozen HEAD `7e46930`.
