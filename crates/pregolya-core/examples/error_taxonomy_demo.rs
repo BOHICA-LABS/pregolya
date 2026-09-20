@@ -12,7 +12,7 @@
 //!
 //! | Section          | ACs covered                                                                         |
 //! |------------------|-------------------------------------------------------------------------------------|
-//! | module-level     | AC-006 (assert_not_impl_any — compile-time + external confirmation)                 |
+//! | module-level     | AC-005 (assert_impl_all — compile-time + external confirmation), AC-006 (assert_not_impl_any — compile-time + external confirmation) |
 //! | `construction`   | AC-001 (struct/new), AC-005 (Error::source runtime clause), AC-007 (non_exhaustive::new), AC-008 (Arc clone) |
 //! | `enums`          | AC-002 (Component), AC-003 (Category), AC-004 (RetryHint) |
 //! | `rfc7807`        | AC-009 (to_problem), AC-010 (JSON), AC-011 (http_status), AC-012 (content-type), AC-013 (sync), AC-014 (retry_hint fmt), AC-015 (code immutable) |
@@ -40,6 +40,11 @@ fn main() {
     // proves the guarantee on the external API surface (stronger than in-crate test).
     static_assertions::assert_not_impl_any!(pregolya_core::PregolyaError: Default);
     static_assertions::assert_impl_all!(pregolya_core::PregolyaError: std::error::Error, Send, Sync);
+    println!("=== AC-005: PregolyaError: Error + Send + Sync ===");
+    println!(
+        "  assert_impl_all!(PregolyaError: std::error::Error, Send, Sync) — verified externally"
+    );
+    println!();
     println!("=== AC-006: PregolyaError: not Default ===");
     println!("  assert_not_impl_any!(PregolyaError: Default) — verified externally");
     println!();
