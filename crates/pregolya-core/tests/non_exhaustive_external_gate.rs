@@ -43,7 +43,7 @@
 //! Gate authority: CI failure == a type was added without `#[non_exhaustive]`
 //! or without a gate update.
 //!
-//! ### Current inventory (BC-2.14.001 {PC-008} S-1.01 Wave 1 — 5 types; pass-9b: ProblemExtensions removed per BC-2.14.002 v1.16 {PC-001} option ii)
+//! ### Current inventory (BC-2.14.001 {PC-008} S-1.01 Wave 1 — 5 types; pass-9b: ProblemExtensions removed per BC-2.14.002 {PC-001} option ii)
 //!
 //! ```text
 //! EXPECTED_NON_EXHAUSTIVE_COUNT  = 5
@@ -276,7 +276,7 @@ fn test_all_pub_types_have_non_exhaustive() {
 ///
 /// Fixtures are registered in type order: PregolyaError → ProblemDetail →
 /// Component → Category → RetryHint (+ struct-literal construction).
-/// (`ProblemExtensions` removed in pass-9b per BC-2.14.002 v1.16 {PC-001} option ii.)
+/// (`ProblemExtensions` removed in pass-9b per BC-2.14.002 {PC-001} option ii.)
 ///
 /// - Structs: `..` wildcard required from external crate (E0638)
 /// - Enums: wildcard `_` arm required from external crate (E0004)

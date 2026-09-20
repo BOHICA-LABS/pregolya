@@ -4,7 +4,7 @@
 //! pregolya: every error is a [`PregolyaError`] characterized by two orthogonal
 //! axes — [`Component`] (which crate emitted the error) and [`Category`] (the
 //! error class). Together they uniquely locate an error in the 18 × 14
-//! taxonomy grid defined by ADR-010.
+//! taxonomy grid (ADR-010 §Component Axis Expansion (ADR-030), ADR-010 §Category Axis Expansion (SYS)).
 //!
 //! # Key types
 //!
@@ -51,7 +51,7 @@ pub const PROBLEM_JSON_CONTENT_TYPE: &str = "application/problem+json";
 
 /// Identifies which pregolya crate emitted the error.
 ///
-/// 18 named variants cover the standard component set (as of ADR-010 D23 + ADR-030).
+/// 18 named variants cover the standard component set (as of ADR-010 §Component Axis Expansion (D23) + ADR-030).
 /// [`Component::Custom`] provides forward-compatibility for new crates not yet
 /// in the taxonomy.
 #[non_exhaustive]
@@ -101,7 +101,7 @@ pub enum Component {
 
 /// Identifies the error class, independent of the originating component.
 ///
-/// 14 variants as of BC-2.14.001/002 v1.12, which added [`Category::Sys`]
+/// 14 variants as of BC-2.14.001 §Category Axis Expansion (SYS), which added [`Category::Sys`]
 /// as the 14th category (OS-level syscall failure).
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -197,7 +197,7 @@ impl Category {
 /// callers must use [`PregolyaError::new`] — struct-literal construction by external
 /// crates is compiler-rejected (`E0639`; `#[non_exhaustive]` guarantee) — and chain a
 /// causal source via [`PregolyaError::with_source`]. Direct field assignment to `source`
-/// is not permitted from outside the crate (ADR-010 Canon Class 1).
+/// is not permitted from outside the crate (ADR-010 §Class 1).
 ///
 /// # Clone semantics
 ///
@@ -266,7 +266,9 @@ impl PregolyaError {
     /// Also panics if `component` is `Component::Custom(name)` and:
     /// - `name` is empty, contains non-ASCII-alphanumeric characters other than `-` or `_`,
     ///   or has leading/trailing/consecutive separator characters (`is_valid_component_segment` fails); or
-    /// - `name` lowercased aliases a named component identifier (BC-2.14.001 EC-02).
+    /// - `name` lowercased aliases a named component identifier (BC-2.14.001 EC-002).
+    ///
+    /// Also panics if the COMPONENT segment of `code` does not match `component` (case-insensitive).
     ///
     /// These are programmer-error invariants; they indicate a bug in the calling code.
     pub fn new(
@@ -288,23 +290,34 @@ impl PregolyaError {
             "code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
             code
         );
-        // BC-2.14.001 EC-02: Custom names must be valid segments and must not alias named
+        // BC-2.14.001 EC-002: Custom names must be valid segments and must not alias named
         // component identifiers when lowercased (e.g. Custom("Core") → "core" aliases
         // Component::Core on wire). Both checks share the is_valid_component_segment predicate.
         if let Component::Custom(ref name) = component {
             assert!(
                 is_valid_component_segment(name),
-                "BC-2.14.001 EC-02: Component::Custom name '{}' is not a valid component segment \
+                "BC-2.14.001 EC-002: Component::Custom name '{}' is not a valid component segment \
                 (must be non-empty, [A-Za-z0-9_-] only, no leading/trailing/consecutive -/_)",
                 name,
             );
             assert!(
                 !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
-                "BC-2.14.001 EC-02: Component::Custom name '{}' collides with named component '{}' when lowercased",
+                "BC-2.14.001 EC-002: Component::Custom name '{}' collides with named component '{}' when lowercased",
                 name,
                 name.to_lowercase()
             );
         }
+        // BC-2.14.001 EC-002: code COMPONENT segment must match component_lowercase(&component).
+        // Prevents URN namespace aliasing: Custom("newcrate") with code "E-CORE-001" would emit
+        // `urn:pregolya:error:E-CORE-001` with `component: "newcrate"` — conflicting attribution.
+        let code_component = code[2..].rsplit_once('-').map(|(mid, _)| mid).unwrap_or("");
+        assert!(
+            code_component.eq_ignore_ascii_case(&component_lowercase(&component)),
+            "BC-2.14.001 EC-002: code COMPONENT segment '{}' does not match component identifier '{}'; \
+            code must follow E-<COMPONENT>-NNN where COMPONENT matches the component field",
+            code_component,
+            component_lowercase(&component),
+        );
         Self {
             component,
             category,
@@ -317,7 +330,7 @@ impl PregolyaError {
 
     /// Chains a causal error onto this `PregolyaError`.
     ///
-    /// ADR-010 §Error-Construction Notation Canon Class 1: use `.with_source(arc)` to chain a
+    /// ADR-010 §Class 1: use `.with_source(arc)` to chain a
     /// causal error from a lower subsystem. Implements [`std::error::Error::source`].
     pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self {
         Self {
@@ -351,10 +364,10 @@ impl PregolyaError {
     /// # Panics
     ///
     /// Panics if `self.component` has been assigned a `Component::Custom(name)` after
-    /// construction that violates the EC-02 name rules (invalid chars or named-component alias).
+    /// construction that violates the EC-002 name rules (invalid chars or named-component alias).
     /// This cannot occur if `component` is set only via `PregolyaError::new()`, which validates
     /// at construction time; it is reachable if the public `component` field is reassigned
-    /// post-construction (BC-2.14.001 EC-02 emission-time guard).
+    /// post-construction (BC-2.14.001 EC-002 emission-time guard).
     pub fn to_problem(&self) -> ProblemDetail {
         ProblemDetail {
             type_uri: format!("urn:pregolya:error:{}", self.code),
@@ -385,7 +398,7 @@ impl PregolyaError {
             Category::Durability => 500,
             Category::Internal => 500,
             Category::Exec => 500, // D26: INTERNAL-tier fallback per ADR-010 §Category Axis Expansion
-            Category::Sys => 500,  // BC-2.14.001/002 v1.12: INTERNAL-tier; OS syscall failure
+            Category::Sys => 500,  // BC-2.14.001 {PC-003}: INTERNAL-tier; OS syscall failure
         }
     }
 }
@@ -458,7 +471,7 @@ fn is_valid_component_segment(s: &str) -> bool {
 ///
 /// # Panics (internal)
 ///
-/// Panics on `Component::Custom` if the name violates EC-02 rules (called from `to_problem()`).
+/// Panics on `Component::Custom` if the name violates EC-002 rules (called from `to_problem()`).
 fn component_lowercase(component: &Component) -> String {
     match component {
         Component::Core => "core".to_string(),
@@ -482,12 +495,12 @@ fn component_lowercase(component: &Component) -> String {
         Component::Custom(name) => {
             assert!(
                 is_valid_component_segment(name),
-                "BC-2.14.001 EC-02: Component::Custom name '{}' contains invalid characters at emission time",
+                "BC-2.14.001 EC-002: Component::Custom name '{}' contains invalid characters at emission time",
                 name
             );
             assert!(
                 !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
-                "BC-2.14.001 EC-02: Component::Custom name '{}' aliases named component '{}' at emission time",
+                "BC-2.14.001 EC-002: Component::Custom name '{}' aliases named component '{}' at emission time",
                 name,
                 name.to_lowercase()
             );
@@ -678,7 +691,7 @@ mod tests {
     /// AC-003 (traces to BC-2.14.001 {PC-003})
     ///
     /// Exhaustive match on all 14 `Category` variants (including `Exec` added by D26
-    /// and `Sys` added by BC-2.14.001/002 v1.12).
+    /// and `Sys` added by BC-2.14.001 §Category Axis Expansion (SYS)).
     #[test]
     fn test_BC_2_14_001_category_axis() {
         let _verify_exhaustive = |c: Category| -> u8 {
@@ -696,7 +709,7 @@ mod tests {
                 Category::Security => 10,
                 Category::Tenancy => 11,
                 Category::Exec => 12, // D26 addition
-                Category::Sys => 13,  // BC-2.14.001/002 v1.12 addition
+                Category::Sys => 13,  // BC-2.14.001 {PC-003} addition
             }
         };
         assert_eq!(_verify_exhaustive(Category::Val), 0);
@@ -762,7 +775,7 @@ mod tests {
         );
     }
 
-    /// ADR-010 §Error-Construction Notation Canon Class 1: `.with_source()` builder chains
+    /// ADR-010 §Class 1: `.with_source()` builder chains
     /// a causal error; `std::error::Error::source()` returns `Some` afterward.
     #[test]
     fn test_BC_2_14_001_with_source_builder() {
@@ -934,7 +947,7 @@ mod tests {
 
         // RFC-7807 §3.2: extension members are top-level (no "extensions" wrapper key).
         // retry_hint and component are direct top-level fields on ProblemDetail
-        // per BC-2.14.002 v1.16 {PC-001} option ii.
+        // per BC-2.14.002 {PC-001} option ii.
         assert!(
             obj.get("retry_hint")
                 .and_then(serde_json::Value::as_str)
@@ -1010,7 +1023,7 @@ mod tests {
             (Category::Internal, 500),
             (Category::Tool, 422),
             (Category::Exec, 500), // D26: INTERNAL-tier fallback
-            (Category::Sys, 500),  // BC-2.14.001/002 v1.12: INTERNAL-tier; OS syscall failure
+            (Category::Sys, 500),  // BC-2.14.001 {PC-003}: INTERNAL-tier; OS syscall failure
         ];
         assert_eq!(
             cases.len(),
@@ -1483,16 +1496,41 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: assert accepts a valid code format (tests format validation only,
-    /// not component↔code consistency — E-PROV-042 with Component::Core is intentional).
+    /// BC-2.14.001 EC-002 MED-005: assert accepts a valid code format with consistent component.
     #[test]
     fn test_code_format_accepts_valid_format() {
-        // Must not panic — "E-PROV-042" is a valid code format
+        // Must not panic — "E-CORE-042" is a valid code format, Component::Core matches CORE segment
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-042",
+            "test",
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "code COMPONENT segment")]
+    fn test_code_format_rejects_component_code_mismatch_named() {
+        // Component::Core with E-PROV-042 must panic — code segment PROV ≠ component identifier "core"
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
             RetryHint::Never,
             "E-PROV-042",
+            "test",
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "code COMPONENT segment")]
+    fn test_code_format_rejects_component_code_mismatch_custom() {
+        // Custom("newcrate") with E-CORE-001 must panic — code segment CORE ≠ "newcrate"
+        let _ = PregolyaError::new(
+            Component::Custom("newcrate".to_string()),
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-001",
             "test",
         );
     }
@@ -1656,7 +1694,7 @@ mod tests {
         );
     }
 
-    /// ADR-010 §Error-Construction Notation Canon Class 1: `source_arc()` returns the `Arc`
+    /// ADR-010 §Class 1: `source_arc()` returns the `Arc`
     /// wrapping the causal error — preserving re-chain capability without re-allocating.
     #[test]
     fn test_BC_2_14_001_source_arc_accessor() {
@@ -1680,20 +1718,20 @@ mod tests {
             Component::Core,
             Category::Internal,
             RetryHint::Never,
-            "E-TEST-004",
+            "E-CORE-004",
             "re-chain",
         )
         .with_source(Arc::clone(arc_ref));
         assert!(outer2.source_arc().is_some());
     }
 
-    /// BC-2.14.001 EC-02: Custom name is lowercased on wire via component_lowercase.
+    /// BC-2.14.001 EC-002: Custom name is lowercased on wire via component_lowercase.
     ///
     /// `Component::Custom("MyCrate")` → `component == "mycrate"` (top-level) on the
     /// ProblemDetail. `type_uri` preserves the original code casing.
     #[test]
     fn test_BC_2_14_001_custom_wire_normalization() {
-        // BC-2.14.001 EC-02: Custom name is lowercased on wire (via component_lowercase).
+        // BC-2.14.001 EC-002: Custom name is lowercased on wire (via component_lowercase).
         let err = PregolyaError::new(
             Component::Custom("MyCrate".into()),
             Category::Internal,
@@ -1708,7 +1746,7 @@ mod tests {
         assert!(pd.type_uri.contains("E-MyCrate-001"));
     }
 
-    /// BC-2.14.001 EC-02: table-driven collision test — all 18 named component lowercase
+    /// BC-2.14.001 EC-002: table-driven collision test — all 18 named component lowercase
     /// identifiers MUST trigger a collision panic; legitimate names MUST NOT panic.
     ///
     /// Uses `std::panic::catch_unwind` to verify each case individually without
@@ -1728,7 +1766,7 @@ mod tests {
             });
             assert!(
                 result.is_err(),
-                "Component::Custom({lower_name:?}) must panic with collision error (BC-2.14.001 EC-02)"
+                "Component::Custom({lower_name:?}) must panic with collision error (BC-2.14.001 EC-002)"
             );
         }
         // Legitimate names (not in NAMED_COMPONENT_LOWERCASE) must NOT panic.
@@ -1749,7 +1787,7 @@ mod tests {
         }
     }
 
-    /// BC-2.14.001 EC-02 MED-003: assert rejects empty Custom name.
+    /// BC-2.14.001 EC-002 MED-003: assert rejects empty Custom name.
     #[test]
     #[should_panic(expected = "valid component segment")]
     fn test_BC_2_14_001_custom_empty_name_panic() {
@@ -1763,7 +1801,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-02 MED-003: assert rejects Custom name with trailing space.
+    /// BC-2.14.001 EC-002 MED-003: assert rejects Custom name with trailing space.
     ///
     /// "Core " passes the collision check (not in NAMED_COMPONENT_LOWERCASE after
     /// lowercase + space), but fails the charset check (space is not `[A-Za-z0-9_-]`).
@@ -1779,15 +1817,15 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-02 F1 regression: emit-time guard in `component_lowercase` blocks
+    /// BC-2.14.001 EC-002 F1 regression: emit-time guard in `component_lowercase` blocks
     /// post-construction bypass of the Custom collision check.
     ///
     /// `component` is `pub`, so callers can bypass `new()` guards by reassigning after
     /// construction. `component_lowercase` must assert at emission time so that
     /// `to_problem()` never silently aliases a named component identifier.
     #[test]
-    #[should_panic(expected = "BC-2.14.001 EC-02")]
-    fn test_BC_2_14_001_ec02_emit_time_guard_blocks_alias() {
+    #[should_panic(expected = "BC-2.14.001 EC-002")]
+    fn test_BC_2_14_001_ec002_emit_time_guard_blocks_alias() {
         let mut err = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1801,11 +1839,11 @@ mod tests {
         let _ = err.to_problem();
     }
 
-    /// BC-2.14.001 EC-02 F1 regression: emit-time charset guard rejects invalid Custom name
+    /// BC-2.14.001 EC-002 F1 regression: emit-time charset guard rejects invalid Custom name
     /// even when set post-construction.
     #[test]
-    #[should_panic(expected = "BC-2.14.001 EC-02")]
-    fn test_BC_2_14_001_ec02_emit_time_guard_blocks_invalid_chars() {
+    #[should_panic(expected = "BC-2.14.001 EC-002")]
+    fn test_BC_2_14_001_ec002_emit_time_guard_blocks_invalid_chars() {
         let mut err = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1819,7 +1857,7 @@ mod tests {
         let _ = err.to_problem();
     }
 
-    /// BC-2.14.001/002 v1.12 — Sys category: `to_problem()` yields title "System"
+    /// BC-2.14.001 {PC-003} — Sys category: `to_problem()` yields title "System"
     /// and `http_status()` yields 500 (INTERNAL-tier; INV-001 no-200 guarantee).
     #[test]
     fn test_BC_2_14_001_002_sys_category() {
@@ -1845,7 +1883,7 @@ mod tests {
         assert_eq!(problem.retry_hint, "maybe");
     }
 
-    /// BC-2.14.001 EC-02: `NAMED_COMPONENT_LOWERCASE` must equal the set of strings
+    /// BC-2.14.001 EC-002: `NAMED_COMPONENT_LOWERCASE` must equal the set of strings
     /// `component_lowercase` returns for the 18 named variants. TD-VSDD-059: doc-comment-only
     /// invariants are not closures. This test is the load-bearing assertion.
     #[test]
@@ -1904,7 +1942,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_code_format_rejects_double_underscore_segment() {
-        // is_valid_component_segment blocks __ (consecutive underscores, BC-2.14.001 EC-02 charset)
+        // is_valid_component_segment blocks __ (consecutive underscores, BC-2.14.001 EC-002 charset)
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1917,7 +1955,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_code_format_rejects_hyphen_underscore_segment() {
-        // is_valid_component_segment blocks -_ (mixed consecutive separator, BC-2.14.001 EC-02 charset)
+        // is_valid_component_segment blocks -_ (mixed consecutive separator, BC-2.14.001 EC-002 charset)
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1930,7 +1968,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_code_format_rejects_underscore_hyphen_segment() {
-        // is_valid_component_segment blocks _- (mixed consecutive separator, BC-2.14.001 EC-02 charset)
+        // is_valid_component_segment blocks _- (mixed consecutive separator, BC-2.14.001 EC-002 charset)
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
