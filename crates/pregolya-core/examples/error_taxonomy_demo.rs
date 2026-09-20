@@ -95,7 +95,7 @@ fn demo_construction() {
     let inner = PregolyaError::new(
         Component::Chkpt,
         Category::Durability,
-        RetryHint::Never,
+        RetryHint::Maybe,
         "E-CHKPT-001",
         "checkpoint write failed",
     );

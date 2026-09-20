@@ -816,7 +816,7 @@ mod tests {
         let err = PregolyaError {
             component: Component::Graph,
             category: Category::Policy,
-            retry_hint: RetryHint::Maybe,
+            retry_hint: RetryHint::Never,
             code: "E-GRAPH-002".into(),
             message: "chkpt error".into(),
             source: Some(Arc::clone(&inner)),
@@ -1894,6 +1894,45 @@ mod tests {
             super::NAMED_COMPONENT_LOWERCASE.len(),
             18,
             "Expected 18 named component identifiers"
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_code_format_rejects_double_underscore_segment() {
+        // is_valid_component_segment blocks __ (consecutive underscores, BC-2.14.001 EC-02 charset)
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-A__B-001",
+            "test",
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_code_format_rejects_hyphen_underscore_segment() {
+        // is_valid_component_segment blocks -_ (mixed consecutive separator, BC-2.14.001 EC-02 charset)
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-A-_B-001",
+            "test",
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_code_format_rejects_underscore_hyphen_segment() {
+        // is_valid_component_segment blocks _- (mixed consecutive separator, BC-2.14.001 EC-02 charset)
+        let _ = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-A_-B-001",
+            "test",
         );
     }
 }
