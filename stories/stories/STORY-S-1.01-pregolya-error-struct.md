@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.01
 epic_id: E-01
-version: "1.7"
+version: "1.8"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -16,6 +16,7 @@ changelog:
   - "1.5 (S-1.01-adv-pass-11/2026-09-19): verification_properties updated [VP-BC214001-02, VP-BC214002-01, VP-BC214002-02]; AC-015 return type corrected; AC-001/AC-015 code-privacy note added."
   - "1.6 (S-1.01-adv-pass-14/RECORDS-ONLY): §Tasks item 1 re-pointed to AC list; §File Structure and §Library requirements completed with gate harness, UI fixtures, example, and trybuild."
   - "1.7 (S-1.01-adv-pass-16/LOW-001): §Architecture Compliance Rules — check-no-panic enforcement cell corrected (gate is live, not seeded-by-S-1.02)."
+  - "1.8 (S-1.01-adv-pass-17/F-07): §Architecture Compliance Rules — trybuild (dev) added to permitted dependencies list."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -181,7 +182,7 @@ N/A — S-1.01 is the root story in Wave 1 batch 1a. No predecessors. This is th
 | `pregolya-core/src/error.rs` must NOT import `tokio` | Architecture boundary | `cargo tree -p pregolya-core` must not show tokio under error.rs |
 | `Category::Exec` maps to HTTP 500 (INTERNAL fallback) per D26 | BC-2.14.002 Note (D26), ADR-010 §Category Axis Expansion | Parameterized status code test |
 
-**Forbidden dependencies for `pregolya-core/src/error.rs`:** `tokio`, `reqwest`, `axum`, `hyper`, any `pregolya-*` crate. Only `std`, `serde`, `serde_json`, `static_assertions` (dev), `anyhow` (dev) are permitted.
+**Forbidden dependencies for `pregolya-core/src/error.rs`:** `tokio`, `reqwest`, `axum`, `hyper`, any `pregolya-*` crate. Only `std`, `serde`, `serde_json`, `static_assertions` (dev), `anyhow` (dev), `trybuild` (dev) are permitted.
 
 ## Library & Framework Requirements (MANDATORY)
 

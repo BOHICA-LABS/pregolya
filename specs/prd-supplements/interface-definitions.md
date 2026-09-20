@@ -1,13 +1,14 @@
 ---
 document_type: prd-supplement-interface-definitions
 level: L3
-version: "3.22"
+version: "3.23"
 status: active
 producer: architect
 timestamp: 2026-09-10T00:00:00Z
 phase: 1d
 modified: [DC-62, DC-63, DC-64, DC-65, DC-66]
 changelog:
+  - "3.23 (S-1.01-adv-pass-17/F-02-sibling-sweep, architect): §PregolyaError constructor — code param corrected from &'static str to impl Into<String>; constructor body updated to code: code.into(). TD-VSDD-060 sibling sweep from api-surface.md F-02 fix."
   - "3.22 (DC-66/F-PDC66-02/F-PDC66-04/2026-09-10, architect): F-PDC66-02 [MED] — §Concrete Implementor Module/file adjudicated: checkpoint::saver (saver.rs) → checkpoint::sqlite (sqlite.rs). Justification: module-decomposition assigns 'SQLite backend' to checkpoint::sqlite and 'CheckpointSaver TRAIT + put_writes contract' to checkpoint::saver — the concrete struct SqliteCheckpointSaver and impl CheckpointSaver for SqliteCheckpointSaver belong in the backend module (checkpoint::sqlite/sqlite.rs); purity-boundary-map confirms checkpoint::sqlite = Effectful Shell (SQLite I/O) while checkpoint::saver = Boundary Module (trait + validation). S-1.29 Task 4 already correctly places guardrail methods in sqlite.rs — the contradiction was in S-1.10 (base methods) and interface-definitions (both pointing to saver.rs). Module field + code comment updated; §Concrete Implementor body unchanged. S-1.10 changes required (route to story-writer): (1) architecture mapping + purity classification module ref for SqliteCheckpointSaver: pregolya_checkpoint::saver → pregolya_checkpoint::sqlite; (2) saver.rs task → defines CheckpointSaver TRAIT only; (3) add sqlite.rs CREATE task for struct SqliteCheckpointSaver + impl. S-1.29: no changes needed — already correct. F-PDC66-04 [LOW, records] — §Concrete Implementor Established line attribution corrected: prior text attributed both Store→Saver rejection AND qualifier-prefix form to F-PDC65-04; corrected so P2A-025/D-232 owns the Store→Saver rejection and F-PDC65-04 owns only the qualifier-prefix (CheckpointSaverSqlite→SqliteCheckpointSaver) adjudication. records-lint exit 0."
   - "3.21 (DC-65/F-PDC65-04/2026-09-10, architect): F-PDC65-04 [MED] — define SqliteCheckpointSaver as the canonical concrete CheckpointSaver trait implementor for the SQLite backend (module checkpoint::saver; pregolya-checkpoint/src/saver.rs). Constructor accepts Option<Arc<dyn Serializer + Send + Sync>> DI seam (BC-2.04.007 {PRE-001}/{INV-005}); Some(enc_ser) activates at-rest encryption on ALL write paths (put, put_writes, init_guardrail_journal, append_guardrail_entry per F-PDC62-03/DC-62). Definition added as #### Concrete Implementor subsection within §CheckpointSaver section (after Gate #31 type note, before §GuardrailHook). Adjudication: SqliteCheckpointSaver is canonical (majority form matching 4 Wave-1 stories: S-1.10/S-1.11/S-1.18/S-2.12; idiomatic Rust qualifier-prefix; convergence-trajectory.md P2A-025 established canonical name). CheckpointSaverSqlite was non-canonical and is retired. records-lint exit 0."
   - "3.20 (DC-64/F-PDC64-01-adj/2026-09-10, architect): F-PDC64-01 adjudication — EncryptedSerializer::new infallibility. §Serializer EncryptedSerializer::new doc comment updated: added explicit infallibility note and compile-time key-length guarantee rationale. The &[u8; 32] fixed-size-array type enforces key length at compile time; there is no runtime empty-key path; BC-2.04.007 EC-003 E-CORE-005 empty-key construction path is UNREACHABLE when this signature is used. Product-owner routing documented: BC-2.04.007 EC-003 should be retired or updated to reflect the &[u8; 32] compile-time enforcement (see VP-2.11.007-B §BC Contradictions Flagged for exact routing). records-lint exit 0."
@@ -612,10 +613,10 @@ impl PregolyaError {
         component: Component,
         category: Category,
         retry_hint: RetryHint,
-        code: &'static str,
+        code: impl Into<String>,
         message: impl Into<String>,
     ) -> Self {
-        Self { component, category, retry_hint, code, message: message.into(), source: None }
+        Self { component, category, retry_hint, code: code.into(), message: message.into(), source: None }
     }
 
     /// Builder: attach a causal error chain. Consumes `self`; returns updated instance.

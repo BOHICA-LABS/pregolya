@@ -2,11 +2,12 @@
 document_type: architecture-section
 level: L3
 section: api-surface
-version: "1.37"
+version: "1.38"
 status: active
 producer: architect
 timestamp: 2026-09-08T00:00:00Z
 changelog:
+  - "1.38 (S-1.01-adv-pass-17/F-02, architect): §Error Type — code field corrected to String (private; use code() accessor); constructor signature code param corrected to impl Into<String>; accessors section added (code() -> &str and source_arc() -> Option<&Arc<dyn Error + Send + Sync>>); impl Into<String> EC-002 rationale note added."
   - "1.37 (2026-09-19/ADR-030-TRAJ, architect): Component axis expansion — TRAJ (17 → 18). §Error Type Component enumeration: added TRAJ between CHKPT and SERVER; updated count from '17 components as of D23' to '18 components (TRAJ added by ADR-030)'; updated #[non_exhaustive] gate count from 18 (17 named + Custom) to 19 (18 named + Custom). Companion: ADR-010 §Component Axis Expansion (ADR-030)."
   - "1.36 (D-356/DC-47/OBS/2026-09-09, architect): OBS (LOW) CLASS-SWEEP — DC-02 historical delta note: strip LLM payload fields → redact credential values within LLM payload fields in place per BC-2.24.002 {PC-008}. SpanData shape §SpanData already 8-field with session_id (confirmed ✓; v1.33 added it). input-hash unchanged (inputs did not change)."
   - "1.35 (D-356/DC-46/2026-09-09, architect): DC-46 gate-backlog fix — chained anchor citation `ADR-031 §Decision 2 and §Decision 6 D6-3` in debug-endpoints Cargo Feature row simplified to `ADR-031 §Decision 2` (verify-adr-anchor-citations.sh chained-§ prohibition). input-hash unchanged (inputs did not change)."
@@ -335,12 +336,16 @@ is added by D-356. The debug endpoints are unary REST (JSON request/response), n
 
 ## Error Type
 
-`#[non_exhaustive] PregolyaError { component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: String /* Human-readable; MUST NOT contain credentials */, source: Option<Arc<dyn std::error::Error + Send + Sync>> /* Causal chain; MUST NOT appear in HTTP responses (DI-010); Arc not Box — Arc preserves Clone (F-P173-211 adjudication, ADR-010 §Decision) */ }`
+`#[non_exhaustive] PregolyaError { component: Component, category: Category, retry_hint: RetryHint, code: String /* private — use code() accessor; immutable per BC-2.14.001 {INV-003} */, message: String /* Human-readable; MUST NOT contain credentials */, source: Option<Arc<dyn std::error::Error + Send + Sync>> /* private — use source_arc() accessor; Causal chain; MUST NOT appear in HTTP responses (DI-010); Arc not Box — Arc preserves Clone (F-P173-211 adjudication, ADR-010 §Decision) */ }`
 
 Construction (ADR-010 §Error-Construction Notation Canon — sole sanctioned paths):
-- `PregolyaError::new(component: Component, category: Category, retry_hint: RetryHint, code: &'static str, message: impl Into<String>) -> Self` — `source` defaults to `None`.
+- `PregolyaError::new(component: Component, category: Category, retry_hint: RetryHint, code: impl Into<String>, message: impl Into<String>) -> Self` — `source` defaults to `None`. Note: `impl Into<String>` is required because EC-002 custom component names are runtime values; `&'static str` cannot represent `Component::Custom("…")` (ADR-010 §Decision).
 - `.with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self` — builder; threads a causal error into the chain. Chain as needed: `PregolyaError::new(...).with_source(Arc::new(e))`.
 - Struct literal construction is barred by `#[non_exhaustive]` (E0639) from external crates.
+
+Accessors:
+- `fn code(&self) -> &str` — returns the structured error code (e.g., `"E-GRAPH-001"`); `code` field is private and immutable per BC-2.14.001 {INV-003}.
+- `fn source_arc(&self) -> Option<&Arc<dyn std::error::Error + Send + Sync>>` — returns the Arc-wrapped causal error for EC-001 re-chaining patterns; unlike `std::error::Error::source()` (which returns `&dyn Error`), this preserves the `Arc` for direct re-chaining via `.with_source(Arc::clone(source_arc))`.
 
 Authoritative list lives in `error-taxonomy.md` §Components; enum reproduced here for the PregolyaError type definition:
 `Component` = CORE | GRAPH | CHKPT | TRAJ | SERVER | PROV | MCP | SPLIT | SBXD | RETRY | CRON | MEMORY | BUDGET | TMPL | SRLZ | VS | EMBED | TOOLS (18 components (TRAJ added by ADR-030); `#[non_exhaustive]` gate count 19: 18 named + `Custom`).

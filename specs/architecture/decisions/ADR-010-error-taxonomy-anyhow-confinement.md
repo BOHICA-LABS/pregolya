@@ -14,8 +14,9 @@ date: "2026-07-14"
 subsystems_affected: [SS-14]
 supersedes: null
 superseded_by: null
-version: "1.26"
+version: "1.27"
 changelog:
+  - "1.27 (S-1.01-adv-pass-17/F-01+F-05): §D23 gate-update tombstoned (matches §D26/§SYS treatment); §D26 component-axis sentence corrected to 18+Custom=19; §Decision new() body annotated with EC-02 guard requirement."
   - "1.26 (S-1.01-adv-pass-13): §D26 and §SYS gate-update subsections marked historical-record; gate semantics unified under §D21 item-2 public-types clarification; `tests/external/` path corrected to realized layout."
   - "1.25 (S-1.01-adv-pass-10): §non_exhaustive gate update: component count corrected 18→19 (18 named + Custom); clarify gate counts public types not Component variants."
   - "1.24 (S-1.01-adv-pass-8/2026-09-19): Mark `source` field private; add `source_arc()` accessor to canonical impl preserving Arc for EC-001 re-chaining patterns."
@@ -115,6 +116,8 @@ impl PregolyaError {
     pub fn code(&self) -> &str { &self.code }
 }
 ```
+
+> **EC-02 guard note (BC-2.14.001 {EC-02}, S-1.01-adv-pass-17/F-05):** `new()` contains always-on `assert!` checks for code-format validity (`is_valid_component_segment`) and `Component::Custom` name non-collision with named components. A second emission-time guard in `component_lowercase()` catches post-construction field reassignment (the `component` field is `pub`).
 
 **F-P174-303 adjudication — no `context` field:** A phantom `context: { "document_index": N }` field appeared in ADR-014 Decision 5 pseudocode but does not exist on `PregolyaError`. The resolution is REJECTION of a new `context` field. Structured diagnostics such as `document_index` MUST be interpolated into the `message` field using key=value notation: `format!("embedding vector has zero L2 norm at write time; document_index={}", i)`. No `serde_json::Map` dependency is incurred; the 6-field struct is final. ADR-014 Decision 5 is corrected per the ADR-014 F-P174-303 adjudication.
 
@@ -578,6 +581,8 @@ BC-2.23.006 PC-2).
 
 #### #[non_exhaustive] gate update requirement (D23)
 
+> **Historical record only — superseded by §D21 item-2 clarification (v1.25 and v1.26). The directives below are no longer operative. Realized gate: `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` (constant `EXPECTED_NON_EXHAUSTIVE_COUNT = 5` counts public non-exhaustive types, not Component variants).**
+
 Adding `Component::Tools` (one variant) to the D21 gate update requirement:
 
 1. **Gate crate** — `tests/external/<gate-name>/`: add `Component::Tools` to the expected
@@ -603,7 +608,7 @@ The gate file must be updated in the SAME commit that adds `Component::Tools` to
 ## Category Axis Expansion (D26) — 12 → 13
 
 D26 (burst-308, 2026-08-17) introduced `EXEC` as the 13th error category, minted by
-ADR-026 for E-CORE-009 (RunnableParallel branch failure). The component axis is unchanged at 17.
+ADR-026 for E-CORE-009 (RunnableParallel branch failure). The component axis is now 18 named variants + `Custom` = 19 total (ADR-030 + D23; see `## Component Axis Expansion` sections).
 
 ### Adjudication: why EXEC is a legitimate 13th category
 
