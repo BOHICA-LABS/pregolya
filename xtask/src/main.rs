@@ -1080,7 +1080,9 @@ fn deny_description_cache_key() {
         files_analyzed += 1;
         // FIX-E: use proc_macro2-based scanner to avoid false positives on doc comments
         // (e.g. `/// Gets the cache_key for the description` previously triggered the
-        // old line-contains scan; proc_macro2 discards comments at the lexer level).
+        // old line-contains scan; proc_macro2 lowers `///` doc comments to #[doc = "..."]
+        // attributes whose payload is a string literal — collect_idents walks Ident tokens
+        // only, so doc text cannot match. Plain `//` comments are discarded by the lexer).
         let findings = scan_for_description_cache_key_in_source(&content, file_path);
         all_findings.extend(findings);
     }
@@ -1129,9 +1131,10 @@ fn collect_idents(ts: proc_macro2::TokenStream) -> Vec<(String, usize)> {
 ///
 /// Looks for a `cache_key`, `CacheKey`, or `cache_key_for` ident within a window of
 /// tokens before/after a `description` or `Description` ident. This is more precise
-/// than line-by-line string matching because proc_macro2 discards doc comments at the
-/// lexer level — doc lines like `/// Gets the cache_key for the description` cannot
-/// produce false positives.
+/// than line-by-line string matching because proc_macro2 lowers `///` doc comments to
+/// `#[doc = "…"]` attributes whose payload is a string literal; `collect_idents` walks
+/// `Ident` tokens only, so doc text cannot match. Plain `//` comments are discarded by
+/// the lexer, so they cannot produce false positives either.
 ///
 /// The adjacency window is set to 10 tokens on each side of the cache-key ident.
 ///

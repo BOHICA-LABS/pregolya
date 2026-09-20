@@ -1070,8 +1070,9 @@ fn test_description_cache_key_scanner_finds_violation() {
 }
 
 /// FIX-E: A doc comment containing cache_key and description must NOT produce
-/// a finding. proc_macro2 strips doc comments at the lexer level — they never
-/// enter the token stream — so the window check cannot see them.
+/// a finding. proc_macro2 lowers `///` doc comments to `#[doc = "…"]` attributes
+/// whose payload is a string literal; `collect_idents` walks `Ident` tokens only,
+/// so doc text cannot match.
 #[test]
 fn test_description_cache_key_scanner_ignores_doc_comments() {
     // Only a doc comment — no production-code identifiers.

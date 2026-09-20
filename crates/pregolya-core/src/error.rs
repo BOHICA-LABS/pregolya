@@ -191,7 +191,9 @@ impl Category {
 ///
 /// Code within `pregolya-core` may use struct-literal syntax (the `#[non_exhaustive]`
 /// attribute does **not** restrict construction within the defining crate). External
-/// callers must use [`PregolyaError::new`].
+/// callers must use [`PregolyaError::new`] and chain a causal source via
+/// [`PregolyaError::with_source`]. Direct field assignment to `source` is not permitted
+/// from outside the crate (ADR-010 Canon Class 1).
 ///
 /// # Clone semantics
 ///
@@ -216,8 +218,9 @@ pub struct PregolyaError {
     pub message: String,
     /// Optional causal error chain. Uses `Arc` — not `Box` — so that
     /// `#[derive(Clone)]` compiles without requiring `T: Clone`.
+    /// Set via [`PregolyaError::with_source`]; read via [`std::error::Error::source`].
     /// MUST NOT be serialized into HTTP responses.
-    pub source: Option<Arc<dyn std::error::Error + Send + Sync>>,
+    source: Option<Arc<dyn std::error::Error + Send + Sync>>,
 }
 
 impl PregolyaError {
@@ -260,6 +263,17 @@ impl PregolyaError {
             code,
             message,
             source: None,
+        }
+    }
+
+    /// Chains a causal error onto this `PregolyaError`.
+    ///
+    /// ADR-010 §Error-Construction Notation Canon Class 1: use `.with_source(arc)` to chain a
+    /// causal error from a lower subsystem. Implements [`std::error::Error::source`].
+    pub fn with_source(self, source: Arc<dyn std::error::Error + Send + Sync>) -> Self {
+        Self {
+            source: Some(source),
+            ..self
         }
     }
 
@@ -648,6 +662,25 @@ mod tests {
             "inner",
             "source chain must point to the exact wrapped error"
         );
+    }
+
+    /// ADR-010 §Error-Construction Notation Canon Class 1: `.with_source()` builder chains
+    /// a causal error; `std::error::Error::source()` returns `Some` afterward.
+    #[test]
+    fn test_BC_2_14_001_with_source_builder() {
+        let inner: Arc<dyn std::error::Error + Send + Sync> =
+            Arc::new(std::io::Error::other("inner error"));
+        let err = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-001",
+            "test",
+        )
+        .with_source(Arc::clone(&inner));
+        let src =
+            std::error::Error::source(&err).expect("source must be Some after .with_source()");
+        assert_eq!(src.to_string(), "inner error");
     }
 
     /// AC-007 (traces to BC-2.14.001 {PC-008})

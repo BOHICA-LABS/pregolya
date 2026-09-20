@@ -68,7 +68,10 @@ fn demo_construction() {
     println!("  .category: {:?}", err.category);
     println!("  .component:{:?}", err.component);
     println!("  .retry:    {:?}", err.retry_hint);
-    println!("  .source:   {:?}", err.source.is_some());
+    println!(
+        "  .source:   {:?}",
+        std::error::Error::source(&err).is_some()
+    );
     println!();
 
     // Second example: Sys/Maybe — the 14th Category (added in v1.12)
@@ -97,24 +100,25 @@ fn demo_construction() {
     );
     let inner_arc: Arc<dyn std::error::Error + Send + Sync> = Arc::new(inner);
 
-    let mut outer = PregolyaError::new(
+    // ADR-010 Canon Class 1: use `.with_source(arc)` to chain a causal error.
+    // Direct field assignment is not permitted from outside the crate.
+    let outer = PregolyaError::new(
         Component::Graph,
         Category::Durability,
         RetryHint::Never,
         "E-GRAPH-001",
         "graph persistence failed",
-    );
-    // source is a pub field; direct assignment is valid from external code.
-    // (#[non_exhaustive] only restricts struct-literal construction and exhaustive matching.)
-    outer.source = Some(Arc::clone(&inner_arc));
+    )
+    .with_source(Arc::clone(&inner_arc));
 
     println!("Outer:  {outer}");
-    println!("  source present: {}", outer.source.is_some());
+    println!(
+        "  source present: {}",
+        std::error::Error::source(&outer).is_some()
+    );
     println!(
         "  source message: {}",
-        outer
-            .source
-            .as_ref()
+        std::error::Error::source(&outer)
             .map(|s| s.to_string())
             .unwrap_or_default()
     );
@@ -123,7 +127,7 @@ fn demo_construction() {
     let outer_cloned = outer.clone();
     println!(
         "  source preserved after clone: {}",
-        outer_cloned.source.is_some()
+        std::error::Error::source(&outer_cloned).is_some()
     );
     println!();
 }
