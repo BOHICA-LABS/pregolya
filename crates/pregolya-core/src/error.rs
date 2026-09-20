@@ -262,7 +262,7 @@ impl PregolyaError {
     ) -> Self {
         let code = code.into();
         let message = message.into();
-        debug_assert!(
+        assert!(
             code.starts_with("E-")
                 && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
                     is_valid_component_segment(mid)
@@ -415,7 +415,7 @@ pub struct ProblemDetail {
 /// non-empty, ASCII alphanumeric + `-` + `_` only, no leading/trailing `-`/`_`,
 /// no consecutive `-`/`_` sequences (including mixed `-_` / `_-`).
 ///
-/// Used by the code-format `debug_assert` in [`PregolyaError::new`] (validates the
+/// Used by the code-format `assert` in [`PregolyaError::new`] (validates the
 /// `COMPONENT` segment of `E-<COMPONENT>-NNN`) and by the Custom-name guard
 /// (validates `Component::Custom` names before the collision check).
 fn is_valid_component_segment(s: &str) -> bool {
@@ -451,7 +451,20 @@ fn component_lowercase(component: &Component) -> String {
         Component::Vs => "vs".to_string(),
         Component::Embed => "embed".to_string(),
         Component::Tools => "tools".to_string(),
-        Component::Custom(s) => s.to_lowercase(),
+        Component::Custom(name) => {
+            assert!(
+                is_valid_component_segment(name),
+                "BC-2.14.001 EC-02: Component::Custom name '{}' contains invalid characters at emission time",
+                name
+            );
+            assert!(
+                !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
+                "BC-2.14.001 EC-02: Component::Custom name '{}' aliases named component '{}' at emission time",
+                name,
+                name.to_lowercase()
+            );
+            name.to_lowercase()
+        }
     }
 }
 
@@ -750,7 +763,7 @@ mod tests {
         // Within the defining crate: struct-literal construction is valid
         let _err = PregolyaError {
             component: Component::Graph,
-            category: Category::Policy,
+            category: Category::Concurrency,
             retry_hint: RetryHint::Never,
             code: "E-GRAPH-001".into(),
             message: "test".into(),
@@ -759,7 +772,7 @@ mod tests {
         // External-facing API: PregolyaError::new() must construct correctly
         let _err2 = PregolyaError::new(
             Component::Graph,
-            Category::Policy,
+            Category::Concurrency,
             RetryHint::Never,
             "E-GRAPH-001",
             "test",
@@ -777,7 +790,7 @@ mod tests {
         let inner: Arc<dyn Error + Send + Sync> = Arc::new(std::io::Error::other("original"));
         let err = PregolyaError {
             component: Component::Graph,
-            category: Category::Durability,
+            category: Category::Policy,
             retry_hint: RetryHint::Maybe,
             code: "E-GRAPH-002".into(),
             message: "chkpt error".into(),
@@ -1192,7 +1205,7 @@ mod tests {
         let inner_err = PregolyaError {
             component: Component::Chkpt,
             category: Category::Durability,
-            retry_hint: RetryHint::Never,
+            retry_hint: RetryHint::Maybe,
             code: "E-CHKPT-001".into(),
             message: "checkpoint write failed".into(),
             source: None,
@@ -1360,11 +1373,10 @@ mod tests {
         }
     }
 
-    /// BC-2.14.001 EC-002 MED-003: debug_assert rejects malformed code — "E-" only has no component segment.
+    /// BC-2.14.001 EC-002 MED-003: assert rejects malformed code — "E-" only has no component segment.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_rejects_malformed_code() {
+    fn test_code_format_rejects_malformed_code() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1377,10 +1389,9 @@ mod tests {
     /// BC-2.14.001 EC-003 HIGH-001 positive: lowercase alphanumeric component segment is valid per EC-003.
     ///
     /// Story spec §Edge Cases EC-003 specifies `E-newcrate-001` as a valid code
-    /// (lowercase custom component). The debug_assert must NOT panic for this input.
+    /// (lowercase custom component). The assert must NOT panic for this input.
     #[test]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_accepts_lowercase_component() {
+    fn test_code_format_accepts_lowercase_component() {
         // Must not panic — "E-newcrate-001" is valid (lowercase alphanumeric per EC-003)
         let _ = PregolyaError::new(
             Component::Custom("newcrate".into()),
@@ -1391,11 +1402,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects two-digit numeric suffix.
+    /// BC-2.14.001 EC-002 MED-005: assert rejects two-digit numeric suffix.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_rejects_two_digit_suffix() {
+    fn test_code_format_rejects_two_digit_suffix() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1405,11 +1415,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects four-digit numeric suffix.
+    /// BC-2.14.001 EC-002 MED-005: assert rejects four-digit numeric suffix.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_rejects_four_digit_suffix() {
+    fn test_code_format_rejects_four_digit_suffix() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1419,11 +1428,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects non-numeric suffix.
+    /// BC-2.14.001 EC-002 MED-005: assert rejects non-numeric suffix.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_rejects_non_numeric_suffix() {
+    fn test_code_format_rejects_non_numeric_suffix() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1433,11 +1441,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: debug_assert rejects wrong prefix letter.
+    /// BC-2.14.001 EC-002 MED-005: assert rejects wrong prefix letter.
     #[test]
     #[should_panic(expected = "code must follow E-<COMPONENT>-NNN format")]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_rejects_wrong_prefix() {
+    fn test_code_format_rejects_wrong_prefix() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1447,11 +1454,11 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 MED-005: debug_assert accepts a valid code with a different component label.
+    /// BC-2.14.001 EC-002 MED-005: assert accepts a valid code format (tests format validation only,
+    /// not component↔code consistency — E-PROV-042 with Component::Core is intentional).
     #[test]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_accepts_valid_code() {
-        // Must not panic — "E-PROV-042" is a valid code
+    fn test_code_format_accepts_valid_format() {
+        // Must not panic — "E-PROV-042" is a valid code format
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1555,10 +1562,9 @@ mod tests {
     }
 
     /// BC-2.14.001 EC-002: CUSTOM_NAME may contain hyphens (real crate names).
-    /// `E-my-crate-001` must be accepted by the debug_assert without panicking.
+    /// `E-my-crate-001` must be accepted by the assert without panicking.
     #[test]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_accepts_hyphenated_custom_component() {
+    fn test_code_format_accepts_hyphenated_custom_component() {
         // BC-2.14.001 EC-002: CUSTOM_NAME may contain hyphens (real crate names)
         let _ = PregolyaError::new(
             Component::Custom("my-crate".into()),
@@ -1570,10 +1576,9 @@ mod tests {
     }
 
     /// BC-2.14.001 EC-002: CUSTOM_NAME may contain underscores.
-    /// `E-my_crate-001` must be accepted by the debug_assert without panicking.
+    /// `E-my_crate-001` must be accepted by the assert without panicking.
     #[test]
-    #[cfg(debug_assertions)]
-    fn test_debug_assert_accepts_underscored_custom_component() {
+    fn test_code_format_accepts_underscored_custom_component() {
         let _ = PregolyaError::new(
             Component::Custom("my_crate".into()),
             Category::Internal,
@@ -1583,11 +1588,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 FIX-D: debug_assert rejects leading hyphen in component segment (`E--CORE-001`).
+    /// BC-2.14.001 EC-002 FIX-D: assert rejects leading hyphen in component segment (`E--CORE-001`).
     #[test]
-    #[cfg(debug_assertions)]
     #[should_panic(expected = "code must follow")]
-    fn test_debug_assert_rejects_leading_hyphen_in_component() {
+    fn test_code_format_rejects_leading_hyphen_in_component() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1597,11 +1601,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 FIX-D: debug_assert rejects doubled hyphen in component segment (`E-CORE--001`).
+    /// BC-2.14.001 EC-002 FIX-D: assert rejects doubled hyphen in component segment (`E-CORE--001`).
     #[test]
-    #[cfg(debug_assertions)]
     #[should_panic(expected = "code must follow")]
-    fn test_debug_assert_rejects_doubled_hyphen_in_component() {
+    fn test_code_format_rejects_doubled_hyphen_in_component() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1611,11 +1614,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-002 FIX-D: debug_assert rejects trailing separator in component segment (`E-CORE_-001`).
+    /// BC-2.14.001 EC-002 FIX-D: assert rejects trailing separator in component segment (`E-CORE_-001`).
     #[test]
-    #[cfg(debug_assertions)]
     #[should_panic(expected = "code must follow")]
-    fn test_debug_assert_rejects_trailing_hyphen_in_component() {
+    fn test_code_format_rejects_trailing_hyphen_in_component() {
         let _ = PregolyaError::new(
             Component::Core,
             Category::Internal,
@@ -1682,7 +1684,6 @@ mod tests {
     ///
     /// Uses `std::panic::catch_unwind` to verify each case individually without
     /// requiring one `#[should_panic]` test per identifier.
-    #[cfg(debug_assertions)]
     #[test]
     fn test_BC_2_14_001_custom_collision_all_named() {
         // All 18 named component lowercase identifiers must trigger a collision panic.
@@ -1719,8 +1720,7 @@ mod tests {
         }
     }
 
-    /// BC-2.14.001 EC-02 MED-003: debug_assert rejects empty Custom name.
-    #[cfg(debug_assertions)]
+    /// BC-2.14.001 EC-02 MED-003: assert rejects empty Custom name.
     #[test]
     #[should_panic(expected = "valid component segment")]
     fn test_BC_2_14_001_custom_empty_name_panic() {
@@ -1734,11 +1734,10 @@ mod tests {
         );
     }
 
-    /// BC-2.14.001 EC-02 MED-003: debug_assert rejects Custom name with trailing space.
+    /// BC-2.14.001 EC-02 MED-003: assert rejects Custom name with trailing space.
     ///
     /// "Core " passes the collision check (not in NAMED_COMPONENT_LOWERCASE after
     /// lowercase + space), but fails the charset check (space is not `[A-Za-z0-9_-]`).
-    #[cfg(debug_assertions)]
     #[test]
     #[should_panic(expected = "valid component segment")]
     fn test_BC_2_14_001_custom_whitespace_name_panic() {
@@ -1749,6 +1748,46 @@ mod tests {
             "E-Core-001",
             "test",
         );
+    }
+
+    /// BC-2.14.001 EC-02 F1 regression: emit-time guard in `component_lowercase` blocks
+    /// post-construction bypass of the Custom collision check.
+    ///
+    /// `component` is `pub`, so callers can bypass `new()` guards by reassigning after
+    /// construction. `component_lowercase` must assert at emission time so that
+    /// `to_problem()` never silently aliases a named component identifier.
+    #[test]
+    #[should_panic(expected = "BC-2.14.001 EC-02")]
+    fn test_BC_2_14_001_ec02_emit_time_guard_blocks_alias() {
+        let mut err = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-001",
+            "test",
+        );
+        // Post-construction bypass: set an aliasing Custom name
+        err.component = Component::Custom("Core".into());
+        // to_problem() calls component_lowercase, which must assert at emission time
+        let _ = err.to_problem();
+    }
+
+    /// BC-2.14.001 EC-02 F1 regression: emit-time charset guard rejects invalid Custom name
+    /// even when set post-construction.
+    #[test]
+    #[should_panic(expected = "BC-2.14.001 EC-02")]
+    fn test_BC_2_14_001_ec02_emit_time_guard_blocks_invalid_chars() {
+        let mut err = PregolyaError::new(
+            Component::Core,
+            Category::Internal,
+            RetryHint::Never,
+            "E-CORE-001",
+            "test",
+        );
+        // Post-construction bypass: set an invalid-charset Custom name
+        err.component = Component::Custom("has space".into());
+        // to_problem() must assert at emission time
+        let _ = err.to_problem();
     }
 
     /// BC-2.14.001/002 v1.12 — Sys category: `to_problem()` yields title "System"

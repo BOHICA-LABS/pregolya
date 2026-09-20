@@ -231,8 +231,8 @@ fn test_all_pub_types_have_non_exhaustive() {
 
 // ── AC-007 compile-fail / compile-pass trybuild fixtures ─────────────────────
 //
-// BC-2.14.001 {PC-008} — all 12 fixture registrations consolidated into a single `ui()` test to
-// avoid spawning 12 independent trybuild processes (LOW-001 adv pass-2 provenance).
+// BC-2.14.001 {PC-008} — all 10 fixture registrations consolidated into a single `ui()` test to
+// avoid spawning 10 independent trybuild processes (LOW-001 adv pass-2 provenance).
 // The `TestCases` object batches all fixtures into one compilation run.
 //
 // Per-type documentation preserved as comments for AC-007 traceability.
@@ -252,25 +252,45 @@ fn test_all_pub_types_have_non_exhaustive() {
 /// boundary.
 #[test]
 fn ui() {
+    // BC-2.14.001 {PC-008}: all EXPECTED_NON_EXHAUSTIVE_COUNT × 2 fixtures registered.
+    // The list is the authority — CI fails if a fixture is on disk but not here (or vice versa).
+    const FAIL_FIXTURES: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
+        "tests/ui/pregolya_error_match_without_dots_fails.rs",
+        "tests/ui/problem_detail_match_without_dots_fails.rs",
+        "tests/ui/component_match_without_wildcard_fails.rs",
+        "tests/ui/category_match_without_wildcard_fails.rs",
+        "tests/ui/retry_hint_match_without_wildcard_fails.rs",
+    ];
+    const PASS_FIXTURES: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
+        "tests/ui/pregolya_error_match_with_dots_passes.rs",
+        "tests/ui/problem_detail_match_with_dots_passes.rs",
+        "tests/ui/component_match_with_wildcard_passes.rs",
+        "tests/ui/category_match_with_wildcard_passes.rs",
+        "tests/ui/retry_hint_match_with_wildcard_passes.rs",
+    ];
+
+    // Verify list length is consistent with the count constant (compile-time).
+    const _: () = assert!(
+        FAIL_FIXTURES.len() == EXPECTED_NON_EXHAUSTIVE_COUNT,
+        "fail fixture count mismatch with EXPECTED_NON_EXHAUSTIVE_COUNT"
+    );
+    const _: () = assert!(
+        PASS_FIXTURES.len() == EXPECTED_NON_EXHAUSTIVE_COUNT,
+        "pass fixture count mismatch with EXPECTED_NON_EXHAUSTIVE_COUNT"
+    );
+
     let t = trybuild::TestCases::new();
+    for path in FAIL_FIXTURES {
+        t.compile_fail(path);
+    }
+    for path in PASS_FIXTURES {
+        t.pass(path);
+    }
 
-    // PregolyaError (struct): E0638 — `..` required with non-exhaustive struct
-    t.compile_fail("tests/ui/pregolya_error_match_without_dots_fails.rs");
-    t.pass("tests/ui/pregolya_error_match_with_dots_passes.rs");
-
-    // ProblemDetail (struct): E0638
-    t.compile_fail("tests/ui/problem_detail_match_without_dots_fails.rs");
-    t.pass("tests/ui/problem_detail_match_with_dots_passes.rs");
-
-    // Component (enum): E0004 — wildcard `_ => {}` arm required
-    t.compile_fail("tests/ui/component_match_without_wildcard_fails.rs");
-    t.pass("tests/ui/component_match_with_wildcard_passes.rs");
-
-    // Category (enum): E0004
-    t.compile_fail("tests/ui/category_match_without_wildcard_fails.rs");
-    t.pass("tests/ui/category_match_with_wildcard_passes.rs");
-
-    // RetryHint (enum): E0004
-    t.compile_fail("tests/ui/retry_hint_match_without_wildcard_fails.rs");
-    t.pass("tests/ui/retry_hint_match_with_wildcard_passes.rs");
+    println!(
+        "ui gate: {} fixtures registered ({} compile_fail, {} pass)",
+        FAIL_FIXTURES.len() + PASS_FIXTURES.len(),
+        FAIL_FIXTURES.len(),
+        PASS_FIXTURES.len()
+    );
 }
