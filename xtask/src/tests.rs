@@ -1735,3 +1735,125 @@ fn test_BC_2_14_004_does_not_flag_timeout_thirty_seconds() {
          got: {findings:?}"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 AC-017) — EC-007 two-exemption gate discipline
+//
+// BC-2.14.003 §EC-007 (BC v1.5): check-no-panic must apply TWO distinct
+// exemptions for programmer-error-guard patterns:
+//   FLAG:   _ => unreachable!() wildcard arms (latent panic under enum evolution)
+//   FLAG:   bare assert! without # Panics doc section and without BC-ID in message
+//   EXEMPT: fully-enumerated explicit-variant unreachable!() (no wildcard arm)
+//   EXEMPT: documented assert! (function has # Panics section + BC-ID in message)
+//
+// RED GATE against HEAD 7c7a590:
+//   - assertion (b) FAILS: scanner blanket-exempts ALL unreachable! (paper-fix);
+//     wildcard unreachable! must be flagged but currently is not
+//   - assertion (ii) FAILS: scanner flags ALL assert! with no exemption logic;
+//     documented assert! must be exempt but currently is not
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// AC-017 (traces to BC-2.14.003 §EC-007, POL-31)
+///
+/// check-no-panic EC-007 gate: two-exemption discipline.
+///
+/// FLAGS:
+///   (a) bare `assert!` on a function WITHOUT `# Panics` doc section
+///       and WITHOUT a BC-ID in the message
+///   (b) `_ => unreachable!()` wildcard arm
+///
+/// EXEMPTS:
+///   (i)  fully-enumerated explicit-variant `unreachable!()` — no wildcard arm
+///   (ii) documented programmer-error-guard `assert!`
+///        (function has `# Panics` doc section AND message contains a BC-NNN ID)
+///
+/// RED GATE: assertions (b) and (ii) FAIL against current code because:
+///   - scanner blanket-exempts ALL unreachable! (b FAILS)
+///   - scanner has no exemption logic for documented assert! (ii FAILS)
+#[test]
+fn test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions() {
+    // (a) Bare assert! without # Panics doc section and without BC-ID in message
+    // must be FLAGGED. PASSES now (scanner flags all assert! in production code).
+    let violation_assert_no_doc =
+        include_str!("../tests/fixtures/violations/violation_assert_no_doc.rs");
+    let findings_a =
+        scan_for_panics_in_source(violation_assert_no_doc, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings_a.is_empty(),
+        "BC-2.14.003 EC-007(a): assert! without # Panics doc and BC-ID must be flagged; \
+         got: {findings_a:?}"
+    );
+
+    // (b) _ => unreachable!() wildcard arm must be FLAGGED.
+    // RED GATE: scanner blanket-exempts ALL unreachable! — this assertion FAILS now
+    let violation_unreachable_wildcard =
+        include_str!("../tests/fixtures/violations/violation_unreachable_wildcard.rs");
+    let findings_b = scan_for_panics_in_source(
+        violation_unreachable_wildcard,
+        "crates/pregolya-core/src/lib.rs",
+    );
+    assert!(
+        !findings_b.is_empty(),
+        "BC-2.14.003 EC-007(b): _ => unreachable!() wildcard arm must be flagged \
+         (paper-fix blanket-exempts ALL unreachable!; implementer must add wildcard-arm \
+         detection per BC-2.14.003 §EC-007); got: {findings_b:?}"
+    );
+
+    // (i) EXEMPT: fully-enumerated explicit-variant unreachable!() — no wildcard arm.
+    // An explicit variant arm (not `_`) with unreachable!() is a programmer-error-guard;
+    // it is NOT a wildcard catch-all and should remain exempt.
+    // PASSES now (all unreachable! exempt) and must remain PASS after the fix.
+    let exempt_explicit_variant = r#"
+#[allow(dead_code)]
+pub enum Phase { Init, Running, Done }
+/// Returns the numeric index for Phase::Init or Phase::Running.
+///
+/// # Panics
+///
+/// Panics if called with Phase::Done (BC-2.14.003 EC-007: programmer error —
+/// Done phase must be filtered upstream before reaching this function).
+pub fn phase_index(p: Phase) -> u8 {
+    match p {
+        Phase::Init => 0,
+        Phase::Running => 1,
+        Phase::Done => unreachable!(
+            "BC-2.14.003 EC-007: Phase::Done handled upstream; \
+             reaching phase_index with Done is a programmer error"
+        ),
+    }
+}
+"#;
+    let findings_i =
+        scan_for_panics_in_source(exempt_explicit_variant, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings_i.is_empty(),
+        "BC-2.14.003 EC-007(i): fully-enumerated explicit-variant unreachable!() \
+         (no wildcard `_` arm) must be EXEMPT; got: {findings_i:?}"
+    );
+
+    // (ii) EXEMPT: documented programmer-error-guard assert! with # Panics doc and BC-ID.
+    // RED GATE: scanner flags ALL assert! with no exemption logic — this assertion FAILS now
+    let exempt_documented_assert = r#"
+/// Validates that the error code follows the E-<COMPONENT>-NNN format.
+///
+/// # Panics
+///
+/// Panics if `code` does not start with "E-" (BC-2.14.001 EC-006: programmer error —
+/// code format is validated at construction time; callers must not pass malformed codes).
+pub fn validate_code_format(code: &str) {
+    assert!(
+        code.starts_with("E-"),
+        "BC-2.14.001 EC-006: code must start with E-, got: {}",
+        code
+    );
+}
+"#;
+    let findings_ii =
+        scan_for_panics_in_source(exempt_documented_assert, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings_ii.is_empty(),
+        "BC-2.14.003 EC-007(ii): documented assert! with # Panics doc section and BC-ID in \
+         message must be EXEMPT (paper-fix has no exemption logic; implementer must add \
+         # Panics doc + BC-ID exemption per BC-2.14.003 §EC-007); got: {findings_ii:?}"
+    );
+}

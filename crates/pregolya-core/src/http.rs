@@ -275,6 +275,50 @@ mod tests {
         );
     }
 
+    // ─── AC-019 / BC-2.14.004 F-C (SID-1 / POL-34) ────────────────────────────
+    //
+    // S-1.02 pass-2: the E-CORE-012 mapping must be extracted to a shared production
+    // function so that test_BC_2_14_004_build_failure_maps_to_e_core_012 exercises
+    // the PRODUCTION mapping path, not a test-only duplicate.
+    //
+    // RED GATE against HEAD 7c7a590:
+    //   Current http.rs has only make_build_error_for_test in #[cfg(test)] scope —
+    //   the shared production mapping function does NOT yet exist. The assertion FAILS.
+    //
+    // NOTE: search pattern built via concat() at runtime to prevent self-reference —
+    // include_str! embeds the entire file including this test module, so any literal
+    // match in test code or doc comments would trivially satisfy contains().
+
+    /// AC-019 (traces to BC-2.14.004 F-C / SID-1 / POL-34)
+    ///
+    /// The E-CORE-012 error mapping inside build_client() must be extracted to a
+    /// shared production-scope function (not buried in cfg(test)) so that the
+    /// non-ignored test `test_BC_2_14_004_build_failure_maps_to_e_core_012` exercises
+    /// the PRODUCTION mapping path, not a test-only duplicate.
+    ///
+    /// SID-1 / POL-34: a non-ignored test exercising a duplicated test-only helper
+    /// instead of the production path fails the load-bearing requirement.
+    ///
+    /// RED GATE: the production mapping function does not yet exist in http.rs.
+    /// The assertion reads the source to confirm it exists outside test scope.
+    #[test]
+    fn test_BC_2_14_004_build_failure_load_bearing_on_production() {
+        let src = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/http.rs"));
+        // Pattern built via concat() to prevent self-reference through include_str!.
+        // include_str! embeds the whole file; a literal match in doc comments or
+        // assertion messages would trivially satisfy contains() against current HEAD.
+        //
+        // The production mapping function must appear OUTSIDE #[cfg(test)] scope.
+        // RED GATE: current http.rs only has make_build_error_for_test in test scope.
+        let prod_fn = ["pub(crate) fn ", "map_build_failure"].concat();
+        assert!(
+            src.contains(&prod_fn),
+            "BC-2.14.004 F-C (SID-1): the E-CORE-012 mapping must be a production \
+             pub(crate) fn (not buried in cfg(test) as make_build_error_for_test); \
+             implementer must extract the shared mapping fn and wire build_client() to it"
+        );
+    }
+
     /// AC-015 (traces to BC-2.14.004 {EC-006}) — live build-failure path
     ///
     /// When `ClientBuilder::build()` fails (e.g. TLS backend unavailable, proxy

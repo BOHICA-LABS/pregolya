@@ -2097,4 +2097,64 @@ mod tests {
         };
         let _ = err.to_problem();
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // BC-2.14.003 (S-1.02 AC-018) — error.rs programmer-error guards compliant
+    //
+    // BC-2.14.003 §EC-006 (BC v1.5): programmer-error-guard assert! is EXEMPT from
+    // the no-panic gate when the function has a `# Panics` doc section AND the assert
+    // message contains a BC-NNN identifier. The always-on semantics of BC-2.14.001
+    // are preserved — assert! panics in both debug and release builds.
+    //
+    // RED GATE against HEAD 7c7a590:
+    //   Current error.rs uses the non-compliant unreachable! guard pattern at the
+    //   guard sites in new(). The assertions below FAIL because:
+    //     (a) the compliant assert! guard form does NOT yet exist in production code
+    //     (b) the non-compliant if !(cond) guard form IS present in production code
+    //
+    // NOTE: search patterns are built via concat() at runtime to prevent self-reference —
+    // include_str! embeds the entire file including this test module, so any literal
+    // pattern in test code would trivially satisfy contains().
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// AC-018 (traces to BC-2.14.003 §EC-006)
+    ///
+    /// The programmer-error guards in `new()` and `to_problem()` must use documented
+    /// assert! (function has a `# Panics` doc section; message contains a BC-NNN ID),
+    /// NOT the non-compliant unreachable! guard form.
+    ///
+    /// After the implementer's fix the compliant guard form replaces each non-compliant
+    /// guard. The existing `#[should_panic]` tests (test_code_format_rejects_*) must
+    /// still pass because assert! panics in both debug and release builds.
+    ///
+    /// RED GATE: current code uses the non-compliant guard — both assertions fail.
+    #[test]
+    fn test_BC_2_14_003_programmer_error_guards_compliant() {
+        let src = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/error.rs"));
+
+        // Patterns are built via concat() to prevent self-reference through include_str!.
+        // include_str! embeds the whole file; a literal match in comments or assertions
+        // would trivially satisfy contains() against current (paper-fix) HEAD.
+
+        // (a) The compliant guard form must appear in production code after the fix.
+        // RED GATE: current code does NOT contain the compliant assert! guard form.
+        let compliant_guard = ["assert!(code", ".starts_with(\"E-\")"].concat();
+        assert!(
+            src.contains(&compliant_guard),
+            "BC-2.14.003 EC-006: new() code-format guard must use the documented assert! \
+             form with a BC-2.14.001 EC-006 citation; current code uses the non-compliant \
+             unreachable! guard; implementer must replace unreachable! guards with \
+             documented assert!"
+        );
+
+        // (b) The non-compliant guard form must NOT remain in the production code.
+        // RED GATE: current code DOES contain the non-compliant if !(cond) guard form.
+        let noncompliant_guard = ["if !(code", ".starts_with"].concat();
+        assert!(
+            !src.contains(&noncompliant_guard),
+            "BC-2.14.003 EC-006: new() must not use the non-compliant guard pattern; \
+             replace with documented assert! so the check-no-panic EC-007 exemption \
+             applies (# Panics doc + BC-ID in message)"
+        );
+    }
 }
