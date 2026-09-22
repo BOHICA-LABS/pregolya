@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.8"
+version: "1.9"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -23,6 +23,7 @@ changelog:
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (S-1.02-adv-pass-1/F-02+F-06/2026-09-22, product-owner): F-02 — EC-006 added for `ClientBuilder::build()` failure path citing E-CORE-012 (HttpClientBuildFailed, TRANSPORT, Never); E-CORE-012 minted in error-taxonomy.md §E-CORE-012 same burst. F-06 — Wave-0 scoped-coverage note added to {PRE-001} and §Description documenting that the xtask mechanical gate enforces the reqwest `ClientBuilder` surface only; non-reqwest HTTP clients (hyper, async-openai, etc.) are enforced by code-convention and adversarial review until a later wave introduces them and the gate is extended."
   - "1.8 (S-1.02-adv-pass-2/F-D/2026-09-22, product-owner): {PC-006} clarified — reqwest's total .timeout(duration) covers the full elapsed time including the TCP connection-establishment phase, so it satisfies DI-009 ('no indefinite hang') without requiring a separate .connect_timeout() call. Setting .connect_timeout() is recommended for faster failure-detection on providers with unreliable network paths, but is not required when a total .timeout(duration > 0) is already set. The prior text 'both must be set' was ambiguous about reqwest's semantics; the amended text aligns with the S-1.01 implementation (which sets .timeout() only) and the fundamental DI-009 guarantee."
+  - "1.9 (S-1.02-adv-pass-4/F-06/2026-09-22, product-owner): {PC-005} pregolya-core scoping clarification added — build_client() satisfies DI-009 by setting .timeout(d > 0); the E-PROV-002 error-shape conversion is the provider adapter's responsibility (pregolya-openai/anthropic/ollama), verified in S-2.07 (unary invoke() path traces to this {PC-005}; streaming stall path is BC-2.08.007/AC-022 in S-2.07). TV-004 illustrative-path note added below Canonical Test Vectors table. pregolya-core does NOT produce E-PROV-002 directly."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -87,6 +88,13 @@ Connection Timeout) uniformly.
    message: "ProviderTimeout: request timed out after <duration>", .. })`
    (where `<duration>` is the configured HTTP client timeout, e.g., "30s")
    — not a hang, not a panic.
+
+   > **pregolya-core scoping note (F-06/2026-09-22):** pregolya-core's load-bearing obligation
+   > under this postcondition is that `build_client()` configures `.timeout(d > 0)`, satisfying
+   > DI-009. The conversion of the reqwest timeout error into E-PROV-002 error shape is the
+   > responsibility of the provider adapter crates (`pregolya-openai`, `pregolya-anthropic`,
+   > `pregolya-ollama`), verified in S-2.07. pregolya-core does NOT produce E-PROV-002 directly.
+
 6. {PC-006} When the HTTP crate distinguishes connection timeout from total request timeout (as
    `reqwest` does via `.connect_timeout()` and `.timeout()` respectively), setting `.timeout(d > 0)`
    is sufficient to satisfy DI-009 — reqwest's `.timeout(duration)` measures total elapsed time
@@ -172,6 +180,13 @@ immediately on retry; recovery requires fixing the TLS or proxy configuration.
 | TV-003 | `ClientBuilder::new().build()` (no `.timeout()` call) | CI lint error: missing `.timeout()` call on `ClientBuilder` | Missing timeout |
 | TV-004 | Mock server with 35s response delay; client timeout set to 30s | `Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002", message: "ProviderTimeout: request timed out after 30s", .. })` received before server responds | Timeout fires correctly |
 | TV-005 | `Client::new()` inside `#[cfg(test)]` block | CI lint passes — test exemption | Test code exempt |
+
+> **TV-004 illustrative-path note (F-06/2026-09-22):** TV-004 illustrates the end-to-end path
+> from client timeout through the provider adapter to the E-PROV-002 error shape. The load-bearing
+> E-PROV-002 shape assertion belongs in S-2.07 (provider-crate story). S-1.02 verifies that the
+> timeout fires on the client side (DI-009 compliance); the E-PROV-002 shape conversion is the
+> provider adapter's responsibility, anchored in S-2.07 under BC-2.14.004 {PC-005} (unary path)
+> and BC-2.08.007/AC-022 (streaming path).
 
 ## Verification Properties
 

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-2.07
 epic_id: E-19
-version: "1.4"
+version: "1.5"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -231,6 +231,19 @@ v3 stream content); the stream terminates cleanly with the typed error. The test
 cassette-backed mock that injects a `content-block-start` event with `"index": "not-a-number"`.
 Verified by `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()`.
 
+### AC-028 (traces to BC-2.14.004 PC-005)
+When a unary `invoke()` call times out (the `reqwest` total timeout from `build_client()` fires
+before the provider returns a response), the provider adapter returns
+`Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002", message: "ProviderTimeout: request timed out after 30s", .. })`.
+This AC is the deferral anchor for the adapter-level E-PROV-002 error shape established in
+S-1.02 AC-006: S-1.02 (pregolya-core) configures the timeout; S-2.07 (provider adapters) verifies
+the complete error shape when the timeout fires. This is consistent with AC-022 (streaming
+per-chunk stall → E-PROV-002 via BC-2.08.007 PC-001); both paths produce the same error code.
+Verified by `test_BC_2_14_004_pc005_unary_timeout_adapter_shape_openai()`,
+`test_BC_2_14_004_pc005_unary_timeout_adapter_shape_anthropic()`, and
+`test_BC_2_14_004_pc005_unary_timeout_adapter_shape_ollama()` — each using a mock server that
+accepts the connection but never sends a response within the configured timeout.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -281,7 +294,7 @@ Verified by `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()`.
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-027 (test-writer step)
+1. [ ] Write failing tests for AC-001 through AC-028 (test-writer step)
 2. [ ] Confirm no Red Gate BCs in this story — proceed to implementation after test stubs
 3. [ ] Add `UsageMetadata` sub-detail fields to `pregolya-core/src/message.rs`
 4. [ ] Implement `OpenAiChatModel::stream` — stream lifecycle, block index tracking, delta accumulation
@@ -296,7 +309,8 @@ Verified by `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()`.
 13. [ ] Implement `bind_tools` — signature `fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>`; check `has_tool_calling()` before accepting tools; return `Ok(Box<dyn BaseChatModel + Send + Sync>)` on success; return `Err(PregolyaError { code: "E-CORE-005", .. })` when `has_tool_calling()` is false (AC-007)
 14. [ ] Implement recursion limit guard in agent loop dispatch
 15. [ ] Implement Anthropic v3 SSE parse-error path: malformed `content-block-start` or any unparseable v3 event → typed `Err(E-PROV-013 StreamProtocolViolation)` with no panic (AC-027; distinct from E-PROV-003 transport error; register E-PROV-013 in error taxonomy)
-16. [ ] Run `cargo nextest run -p pregolya-openai -p pregolya-anthropic -p pregolya-ollama -p pregolya-standard-tests` — all 27 ACs green
+16. [ ] Implement unary invoke() timeout adapter shape: when reqwest total timeout fires, adapter returns `Err(PregolyaError { category: TIMEOUT, code: "E-PROV-002", .. })` — test with mock server that never responds (AC-028; deferral anchor from S-1.02 AC-006; BC-2.14.004 {PC-005})
+17. [ ] Run `cargo nextest run -p pregolya-openai -p pregolya-anthropic -p pregolya-ollama -p pregolya-standard-tests` — all 28 ACs green
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -360,6 +374,7 @@ fail via `cargo deny`.
 
 ## Changelog
 
+- **1.5 (pass-4/S-1.02-F-06-deferral-anchor/2026-09-22):** AC-028 added — deferral anchor for BC-2.14.004 {PC-005} unary invoke() timeout adapter shape (E-PROV-002). S-1.02 AC-006 verifies timeout is configured (DI-009); S-2.07 AC-028 verifies the complete E-PROV-002 error shape at the adapter layer when timeout fires. Three tests added per provider: test_BC_2_14_004_pc005_unary_timeout_adapter_shape_openai/anthropic/ollama using mock servers. Task-16 added; Task-17 (formerly Task-16) updated to "all 28 ACs green". bcs frontmatter array unchanged (6 BCs).
 - **1.4 (round-79/F-P2A251-02/2026-09-02):** BC table title cells corrected to verbatim canonical H1 per POL-7/F-P2A251-02.
 - **1.3 (round-49 / BC-propagation / 2026-08-31):** Round-49 Stage-3 interface-definitions.md §bind_tools changes propagated. (1) AC-007 updated — canonical `bind_tools` signature added: `fn bind_tools(&self, tools: Vec<ToolDefinition>) -> Result<Box<dyn BaseChatModel + Send + Sync>, PregolyaError>`; success case `Ok(Box<dyn BaseChatModel + Send + Sync>)` documented; error case `Err(E-CORE-005)` preserved; `test_BC_2_08_002_bind_tools_success_returns_boxed_model()` added. (2) AC-010 updated — canonical `with_structured_output` signature: `fn with_structured_output<T: DeserializeOwned + JsonSchema + Send + 'static>(&self, schema: serde_json::Value) -> Box<dyn Runnable<Vec<Message>, T> + Send + Sync>`; `schema: serde_json::Value` parameter added (caller-supplied, not derived inside the method); `Box<dyn Runnable>` return type shown (infallible at construction). (3) Task-6 updated to reflect caller-supplied schema injection. (4) Task-13 updated to reflect `Box<dyn BaseChatModel + Send + Sync>` return. (5) input-hash updated to 114398d.
 - **1.2 (BC-2.08.001 / 2026-08-26):** BC-2.08.001 updated to v1.8 (burst-A2-error-coord EC-005+INV-005 hardening): AC-027 added — malformed v3 SSE payload (`content-block-start` with non-integer `index` field, or any unparseable v3 event structure) returns `Err(PregolyaError { code: "E-PROV-013", .. })` (`E-PROV-013 StreamProtocolViolation`); no panic guaranteed (INV-005); error is DISTINCT from `E-PROV-003` (transport-level connection reset, EC-003). Test: `test_BC_2_08_001_malformed_v3_sse_payload_returns_e_prov_013()` (cassette with `content-block-start` `"index": "not-a-number"`). Task 15 updated to reference AC-027 and E-PROV-013; Task 16 updated to "all 27 ACs green". BC table version column added.
