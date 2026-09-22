@@ -5109,3 +5109,31 @@ Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→preg
 - develop = 086c0dc (origin/develop synced after squash-merge PR #2).
 - factory-artifacts: HEAD per D-370 commit — PUSHED.
 - feature/S-1.01: DELETED. feature/S-1.02: NOT YET CREATED.
+
+## D-373 Session Checkpoint (archived from STATE.md — D-374 pass-15 AC-body fix close 2026-09-22)
+
+<!-- Archived at D-374 pass-15 AC-body fix close; replaced by D-374 checkpoint in STATE.md. -->
+
+### PIPELINE POSITION
+Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→pregolya-graph→partners (D7). S-1.01 MERGED (PR #2; 086c0dc). S-1.02 LOCAL adversary pass-8 F-03 records fix-burst COMPLETE (D-373). F-03 (LOW records, AC-017 prose accuracy) fixed: STORY-S-1.02→v1.6; STORY-INDEX→v2.05. 3-CLEAN streak 0/3. Census: BC 149 / VP 43 / EC 148 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
+
+### DEVELOP STATE
+- develop = 086c0dc (squash-merge of feature/S-1.01; origin/develop synced). .worktrees/S-1.01 and feature/S-1.01 REMOVED.
+- feature/S-1.02: NOT YET CREATED. Code fix-burst IN PROGRESS on feature branch (F-01 ref/mut catch-alls + F-02 trait-method leak → structural rewrite of check_no_panic detection: allowlist catch-all + direct-arm-body exemption).
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-373 state)
+1. Orchestrator dispatches S-1.02 code fix-burst on feature/S-1.02:
+   - F-01: check-no-panic ref/mut catch-all arms must also flag (not only `_ =>` bare wildcard patterns).
+   - F-02: check-no-panic trait-method call in direct arm body must flag (structural rewrite: allowlist catch-all + direct-arm-body exemption).
+   - O-1: zero-timeout forms (`Duration::ZERO`, `Duration::default()`, `Duration::from_secs(0)`) must be flagged.
+   - Honest S-1.02 timeout test: test_BC_2_14_004_timeout_error_shape() must verify timeout fires (not just build_client() success).
+   - Revert error.rs unreachable!() → documented assert! per BC-2.14.003 EC-006.
+2. LOCAL adversary pass-9 UPCOMING after code fix-burst completes.
+3. S-1.03 (Message Types) and S-1.08 (Recursive Splitter) also READY (unblocked by S-1.01).
+4. S-2.07 AC-028 ↔ BC-2.14.004 bcs-array gap: route story-writer to add BC-2.14.004 to S-2.07 behavioral_contracts array (non-blocking for S-1.02; Wave-2 story).
+
+### BRANCH STATE (at D-373)
+- develop = 086c0dc (origin/develop synced after squash-merge PR #2).
+- factory-artifacts: HEAD at D-373 records-tier close — PUSHED (post-commit).
+- feature/S-1.01: DELETED (worktree removed, local + remote branches deleted after merge).
+- feature/S-1.02: NOT YET CREATED. Awaiting code fix-burst dispatch.
