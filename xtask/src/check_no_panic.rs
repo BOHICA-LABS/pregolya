@@ -36,6 +36,11 @@ use std::process::exit;
 /// `unreachable!()` arms outside `#[cfg(test)]` blocks (BC-2.14.003 §EC-007).
 /// Exits non-zero on any violation (BC-2.14.003 {PC-004}/{PC-005}/{PC-006}).
 pub fn run() {
+    // Scan root is "crates/" only — xtask itself is excluded.
+    // BC-2.14.003 {PC-004}/{PC-005} binds "non-test library code" in crates/;
+    // xtask is a build-tool binary crate operating outside that scope.
+    // xtask programmer-error guards (assert! in check_file_size etc.) are
+    // intentionally exempt from the no-panic library rule.
     let output = std::process::Command::new("find")
         .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
         .output();
@@ -171,13 +176,28 @@ fn is_catch_all_pat(pat: &syn::Pat) -> bool {
         // `ref other`, `mut other`, `ref mut other` are all catch-alls.
         // Only a sub-pattern (e.g. `name @ Variant`) makes the arm specific.
         // Uppercase-initial identifiers are enum/const names, not bindings.
+        //
+        // ACCEPTED FALSE NEGATIVE: uppercase-initial bare identifiers in pattern position
+        // (e.g., `Category` in `match x { Category => unreachable!() }`) are exempted as
+        // probable imported unit variants rather than catch-all bindings. This avoids
+        // false positives when unqualified unit variants are used (e.g., `Val => ...`).
+        // Consequence: a bare catch-all binding named `Other` (uppercase) evades the gate.
+        // Accepted because: (a) Rust convention strongly associates uppercase identifiers
+        // with types/variants, not bindings; (b) the false-negative risk is narrow
+        // (would require an intentionally deceptive binding name). Pinned by test
+        // test_BC_2_14_003_uppercase_binding_is_accepted_false_negative.
+        //
+        // Underscore-prefixed identifiers (`_other`, `_unused`) ARE catch-alls:
+        // `_other =>` is irrefutable (matches any remaining value) even though the
+        // `_` prefix suppresses the unused-variable warning. BC-2.14.003 EC-004
+        // explicitly says `_other => unreachable!()` is NOT exempt.
         syn::Pat::Ident(p) => {
             p.subpat.is_none()
                 && p.ident
                     .to_string()
                     .chars()
                     .next()
-                    .map(|c| c.is_ascii_lowercase())
+                    .map(|c| c == '_' || c.is_ascii_lowercase())
                     .unwrap_or(false)
                 && !matches!(p.ident.to_string().as_str(), "true" | "false")
         }
@@ -204,17 +224,142 @@ fn is_catch_all_pat(pat: &syn::Pat) -> bool {
     }
 }
 
-fn syn_macro_has_bc_id(mac: &syn::Macro) -> bool {
-    let s = mac.tokens.to_string();
-    if let Some(pos) = s.find("BC-") {
-        s[pos + 3..]
-            .chars()
-            .next()
-            .map(|c| c.is_ascii_digit())
-            .unwrap_or(false)
-    } else {
-        false
+/// Returns `true` if `s` contains a well-formed BC-ID matching `BC-\d+\.\d{2}\.\d{3}`.
+///
+/// Requires:
+/// - `"BC-"` literal prefix
+/// - one or more major-version decimal digits (`\d+`)
+/// - literal `'.'`
+/// - **exactly two** minor-version decimal digits (`\d{2}`)
+/// - literal `'.'`
+/// - **exactly three** patch decimal digits (`\d{3}`)
+///
+/// Implemented with char iteration — no external `regex` crate required.
+pub(crate) fn is_valid_bc_id(s: &str) -> bool {
+    let mut remaining = s;
+    while let Some(pos) = remaining.find("BC-") {
+        let after_prefix = &remaining[pos + 3..];
+        if check_bc_id_shape(after_prefix) {
+            return true;
+        }
+        remaining = &remaining[pos + 3..];
     }
+    false
+}
+
+/// Validate the BC-ID shape starting immediately after the `"BC-"` prefix.
+fn check_bc_id_shape(s: &str) -> bool {
+    let mut chars = s.chars();
+
+    // \d+ — one or more major-version digits
+    let mut major_count = 0usize;
+    loop {
+        match chars.as_str().chars().next() {
+            Some(c) if c.is_ascii_digit() => {
+                chars.next();
+                major_count += 1;
+            }
+            _ => break,
+        }
+    }
+    if major_count == 0 {
+        return false;
+    }
+
+    // literal '.'
+    if chars.next() != Some('.') {
+        return false;
+    }
+
+    // \d{2} — exactly two minor digits
+    let m1 = chars.next();
+    let m2 = chars.next();
+    if !m1.is_some_and(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    if !m2.is_some_and(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    // Reject a third minor digit (would be \d{3}, not \d{2})
+    if chars
+        .as_str()
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_digit())
+    {
+        return false;
+    }
+
+    // literal '.'
+    if chars.next() != Some('.') {
+        return false;
+    }
+
+    // \d{3} — exactly three patch digits
+    let p1 = chars.next();
+    let p2 = chars.next();
+    let p3 = chars.next();
+    if !p1.is_some_and(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    if !p2.is_some_and(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    if !p3.is_some_and(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    // Reject a fourth patch digit (would be \d{4}, not \d{3})
+    if chars
+        .as_str()
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_digit())
+    {
+        return false;
+    }
+
+    true
+}
+
+/// Returns `true` when the assert/panic macro has a BC-ID in its **message argument**
+/// (after the first top-level comma) that satisfies `BC-\d+\.\d{2}\.\d{3}`.
+///
+/// # Why message-only?
+///
+/// BC-2.14.003 EC-007 requires the BC-ID in the assert MESSAGE, not the condition.
+/// `assert!(code.starts_with("BC-2.14.003"), "no id in msg")` must be FLAGGED —
+/// the BC-ID is in the condition expression, not the message string.
+///
+/// # Top-level comma detection
+///
+/// The macro token stream is iterated at the TOP level only (proc_macro2 groups
+/// parens/brackets/braces as `Group` tokens, so `foo(a, b)` in the condition
+/// has no top-level commas). The first top-level `Punct(',')` separates the
+/// condition from the message.
+fn syn_macro_has_bc_id(mac: &syn::Macro) -> bool {
+    use proc_macro2::TokenTree;
+    let tokens_vec: Vec<TokenTree> = mac.tokens.clone().into_iter().collect();
+
+    // Find the index of the first top-level comma (separates condition from message).
+    let Some(comma_idx) = tokens_vec.iter().enumerate().find_map(|(i, tt)| {
+        if let TokenTree::Punct(p) = tt
+            && p.as_char() == ','
+        {
+            return Some(i);
+        }
+        None
+    }) else {
+        return false; // no comma → no message argument
+    };
+
+    // Stringify the message argument tokens (everything after the first comma).
+    let message: String = tokens_vec[comma_idx + 1..]
+        .iter()
+        .map(|tt| tt.to_string())
+        .collect::<Vec<_>>()
+        .join("");
+
+    is_valid_bc_id(&message)
 }
 
 impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
@@ -324,12 +469,10 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
 
     fn visit_expr_macro(&mut self, node: &'ast syn::ExprMacro) {
         self.handle_macro_invocation(&node.mac);
-        // Macro token streams are opaque in syn; we don't recurse into them.
     }
 
     fn visit_stmt_macro(&mut self, node: &'ast syn::StmtMacro) {
         self.handle_macro_invocation(&node.mac);
-        // Macro token streams are opaque in syn; we don't recurse into them.
     }
 }
 
@@ -376,6 +519,20 @@ impl PanicVisitor<'_> {
             }
             _ => {} // debug_assert!* and everything else: exempt
         }
+
+        // MED-4: scan the macro's token stream for .unwrap()/.expect() method calls.
+        // Macro arguments are opaque to syn's AST visitor — e.g. `.unwrap()` inside
+        // `format!("{}", opt.unwrap())` is invisible to `visit_expr_method_call`.
+        //
+        // Coverage vs clippy: clippy's `unwrap_used` lint catches most of these.
+        // The gate catches `.unwrap()`/`.expect()` in macro arguments in cases
+        // clippy may not cover under all configurations, providing defense in depth.
+        // Both gates are kept because they serve different enforcement roles.
+        scan_method_calls_in_tokens(
+            mac.tokens.clone().into_iter(),
+            &mut self.findings,
+            self.path,
+        );
     }
 }
 
@@ -533,10 +690,29 @@ pub fn run_fixture_mode(dir: &str) {
         }
     };
 
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    let mut all_findings: Vec<String> = Vec::new();
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
 
-    for file_path in files_str.lines() {
+    let files_str = String::from_utf8_lossy(&files_output.stdout);
+    let fixture_files: Vec<&str> = files_str.lines().collect();
+    if fixture_files.is_empty() {
+        eprintln!(
+            "ERROR: check-no-panic --fixture-mode {dir}: \
+             scanned 0 fixture files — gate cannot certify scanner coverage"
+        );
+        exit(1);
+    }
+
+    let total_fixtures = fixture_files.len();
+    let mut all_findings: Vec<String> = Vec::new();
+    let mut files_with_findings = 0usize;
+
+    for file_path in &fixture_files {
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
             Err(_) => continue,
@@ -546,6 +722,9 @@ pub fn run_fixture_mode(dir: &str) {
         // xtask/tests/fixtures/violations/), the exceptions in scan_for_panics_in_source
         // ensure they are scanned.
         let findings = scan_for_panics_in_source(&content, file_path);
+        if !findings.is_empty() {
+            files_with_findings += 1;
+        }
         all_findings.extend(findings);
     }
 
@@ -554,7 +733,16 @@ pub fn run_fixture_mode(dir: &str) {
         for f in &all_findings {
             eprintln!("  {f}");
         }
+        eprintln!(
+            "fixture-mode: {files_with_findings}/{total_fixtures} fixture files had findings, \
+             {} total violations",
+            all_findings.len()
+        );
         exit(1);
     }
+    // Reaching here means 0 violations in the fixture dir — unexpected for a violations dir.
+    eprintln!(
+        "fixture-mode: WARNING: 0/{total_fixtures} fixture files had findings — scanner may be broken"
+    );
     println!("check-no-panic --fixture-mode {dir}: 0 violations found.");
 }

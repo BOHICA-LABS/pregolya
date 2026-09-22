@@ -266,6 +266,20 @@ fn flatten_tokens_no_test(
 /// - Flag bare `Client::new()` only if NOT preceded by a `::` that names a non-reqwest module.
 /// - Specifically: if the token before `Client` is `::`  and the token before that is an Ident
 ///   that is NOT "reqwest", do NOT flag it.
+///
+/// # Known Limitations
+///
+/// **KNOWN-LIMITATION 1 — `use`-import false positives:** Pattern 2 (bare `Client::new()`)
+/// flags unqualified calls conservatively. If a crate uses `use some_sdk::Client;` and then
+/// calls `Client::new()`, the scanner cannot distinguish it from a reqwest `Client::new()`.
+/// Full fix requires tracking `use` imports at file scope (not implemented).
+///
+/// **KNOWN-LIMITATION 2 — split-statement builder chains:** A `ClientBuilder` stored in a
+/// variable and then used in a subsequent statement is not detected as a timeout violation.
+/// Example: `let b = reqwest::ClientBuilder::new(); let c = b.build()?;` would NOT be
+/// flagged because `has_build_without_timeout` terminates the chain scan at `;`. Full fix
+/// requires cross-statement binding-flow analysis (not implemented). The test
+/// `test_timeout_scanner_split_statement_false_negative_known_limitation` documents this.
 fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &mut Vec<String>) {
     let n = flat.len();
     let mut i = 0;

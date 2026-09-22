@@ -4,6 +4,7 @@
 #![allow(non_snake_case)]
 
 use super::*;
+use crate::check_no_panic::is_valid_bc_id;
 
 // ── check-no-panic gate ──────────────────────────────────────────────────
 
@@ -365,16 +366,39 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
 
 // ── S-1 regression test ──────────────────────────────────────────────────
 
-/// S-1 regression: Client::builder() stored in a variable (no .build() on same chain)
-/// must not leave chain armed for later .build() calls on unrelated builders.
+/// S-1 regression: `reqwest::Client::builder()` stored in a variable (no `.build()` on
+/// same chain) must not contaminate the next unrelated builder call.
+///
+/// This tests that `other::Builder::new().build()` (a non-reqwest builder) is NOT flagged
+/// simply because a reqwest builder was stored earlier in the same statement sequence.
 #[test]
-fn test_timeout_scanner_builder_stored_in_var_does_not_leak() {
+fn test_timeout_scanner_stored_reqwest_builder_without_build_does_not_contaminate() {
     let src = "let b = reqwest::Client::builder();\nlet g = other::Builder::new().build()?;\n";
     let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
     assert!(
         findings.is_empty(),
-        "stored builder without .build() must not arm chain for next .build(); got: {findings:?}"
+        "stored reqwest builder without .build() must not arm chain for next non-reqwest \
+         .build(); got: {findings:?}"
     );
+}
+
+/// KNOWN-LIMITATION: Split-statement `ClientBuilder` chains are NOT detected as violations.
+///
+/// The pattern `let b = reqwest::ClientBuilder::new();\nlet c = b.build()?;\n` SHOULD
+/// produce a finding (missing `.timeout()` before `.build()`) but currently does NOT because
+/// `has_build_without_timeout` terminates chain scanning at `;`. Full cross-statement
+/// binding-flow analysis is required to detect this shape (see KNOWN-LIMITATION 2 in the
+/// `scan_flat_for_timeout_violations` doc). This test documents the false negative without
+/// asserting it is correct behavior.
+#[test]
+fn test_timeout_scanner_split_statement_false_negative_known_limitation() {
+    let src = "let b = reqwest::ClientBuilder::new();\nlet c = b.build()?;\n";
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    // KNOWN LIMITATION: `b.build()` on a subsequent statement is not detected.
+    // This false negative is acknowledged — the test exists to document it.
+    // When/if cross-statement tracking is implemented, this test should be updated
+    // to assert `!findings.is_empty()`.
+    let _ = findings; // acknowledged false negative; see KNOWN-LIMITATION 2 in module doc
 }
 
 // ── S-3 regression tests ─────────────────────────────────────────────────
@@ -1326,9 +1350,8 @@ pub fn make_client() -> reqwest::Client {
 ///
 /// Blocked dependency: requires `cargo build -p xtask` (~30s cold) on each run.
 #[test]
-#[ignore = "EXT-BC214005: subprocess test requires cargo build (~30s cold); \
-            run manually or in the xtask-subprocess CI job. \
-            Unit boundary: credentials.rs static_assertions (test_BC_2_14_005_*)"]
+#[ignore = "EXT-BC214005: requires cargo build as subprocess; gate is wired in CI \
+            via the lint-extra job's deny-bare-api-key step — see .github/workflows/ci.yml"]
 fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
     use std::process::{Command, Stdio};
 
@@ -1360,9 +1383,8 @@ fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
 ///
 /// Blocked dependency: requires `cargo build -p xtask` (~30s cold).
 #[test]
-#[ignore = "EXT-BC214003: subprocess test requires cargo build (~30s cold); \
-            run manually or in the xtask-subprocess CI job. \
-            Unit boundary: test_BC_2_14_003_scan_* above."]
+#[ignore = "EXT-BC214003: requires cargo build as subprocess; fixture-mode gate is wired \
+            in CI via the lint-extra job — see .github/workflows/ci.yml"]
 fn test_BC_2_14_003_check_no_panic_subprocess_wired() {
     use std::process::{Command, Stdio};
 
@@ -1385,9 +1407,8 @@ fn test_BC_2_14_003_check_no_panic_subprocess_wired() {
 ///
 /// Blocked dependency: requires `cargo build -p xtask` (~30s cold).
 #[test]
-#[ignore = "EXT-BC214004: subprocess test requires cargo build (~30s cold); \
-            run manually or in the xtask-subprocess CI job. \
-            Unit boundary: test_BC_2_14_004_scan_* above."]
+#[ignore = "EXT-BC214004: requires cargo build as subprocess; gate is wired in CI \
+            via the lint-extra job — see .github/workflows/ci.yml"]
 fn test_BC_2_14_004_check_client_timeout_subprocess_wired() {
     use std::process::{Command, Stdio};
 
@@ -2189,10 +2210,8 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
 /// SID-1: the non-ignored in-process companion above provides CI coverage without
 /// subprocess overhead.
 #[test]
-#[ignore = "EXT-F03: subprocess requires cargo build (~30s cold); \
-            run manually or in the xtask-subprocess CI job. \
-            In-process companion: test_BC_2_14_003_fixture_mode_in_process_violation_found. \
-            S-2.07 owns E-PROV-002 error-shape verification."]
+#[ignore = "EXT-BC214003: requires cargo build as subprocess; fixture-mode gate is wired \
+            in CI via the lint-extra job — see .github/workflows/ci.yml"]
 fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
     use std::process::{Command, Stdio};
 
@@ -3246,6 +3265,218 @@ pub fn process(r: Result<i32, String>) -> i32 {
     assert!(
         findings.iter().any(|f| f.contains("unreachable")),
         "BC-2.14.003 pass-8 impl-method boundary: finding must reference unreachable!; \
+         got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HIGH-1: `_other =>` underscore-prefixed binding is a catch-all (EC-004)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// HIGH-1 — BC-2.14.003 EC-004/EC-007
+///
+/// `_other => unreachable!(...)` must be FLAGGED. An underscore-prefixed irrefutable
+/// binding is a catch-all: it matches every value not covered by earlier arms.
+/// is_catch_all_pat must return `true` when the identifier starts with `_`.
+///
+/// Before the HIGH-1 fix, the first-char check was `c.is_ascii_lowercase()` — `'_'`
+/// is NOT ascii_lowercase, so `_other` was incorrectly treated as a named variant and
+/// EXEMPT. Now the check is `c == '_' || c.is_ascii_lowercase()`.
+#[test]
+fn test_BC_2_14_003_underscore_binding_catch_all_is_flagged() {
+    let src = r#"
+pub fn process_status(n: u32) -> u32 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _other => unreachable!("should not reach: {}", _other),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 EC-004: `_other => unreachable!()` must be FLAGGED as a catch-all \
+         binding arm (HIGH-1: underscore-prefixed identifiers are irrefutable bindings, \
+         not named variants); got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("unreachable") || f.contains("wildcard")),
+        "HIGH-1: finding must reference the unreachable!/wildcard violation; got: {findings:?}"
+    );
+}
+
+/// HIGH-1 — fixture scan: `violation_underscore_binding_catch_all.rs` must be flagged.
+#[test]
+fn test_BC_2_14_003_underscore_binding_fixture_detected() {
+    let fixture =
+        include_str!("../tests/fixtures/violations/violation_underscore_binding_catch_all.rs");
+    let findings = scan_for_panics_in_source(
+        fixture,
+        "xtask/tests/fixtures/violations/violation_underscore_binding_catch_all.rs",
+    );
+    assert!(
+        !findings.is_empty(),
+        "HIGH-1: violation_underscore_binding_catch_all.rs fixture must produce a finding; \
+         got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOW-3: Accepted false negative — uppercase binding is not a catch-all
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// LOW-3 — BC-2.14.003 §EC-007 accepted false negative
+///
+/// An UPPERCASE-initial bare identifier in pattern position (e.g. `Other =>`) is
+/// treated as a probable imported unit variant and is NOT flagged as a catch-all.
+/// This is an accepted false negative documented in `is_catch_all_pat`.
+///
+/// Pinned here so that any future change to the uppercase-initial check will
+/// require a deliberate update to this test rather than accidentally closing
+/// the exemption without discussion.
+#[test]
+fn test_BC_2_14_003_uppercase_binding_is_accepted_false_negative() {
+    let src = r#"
+pub fn process_item(n: u32) -> u32 {
+    match n {
+        0 => 0,
+        Other => unreachable!("accepted false negative: uppercase binding"),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    // ACCEPTED FALSE NEGATIVE: `Other` starts with uppercase and is treated as a
+    // probable imported unit variant. is_catch_all_pat returns false for uppercase-initial
+    // identifiers. See LOW-3 doc comment in is_catch_all_pat.
+    assert!(
+        findings.is_empty(),
+        "LOW-3 accepted false negative: uppercase-initial binding `Other` is exempt from \
+         catch-all detection (treated as probable unit variant); got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MED-2: syn_macro_has_bc_id must check the MESSAGE arg with full BC-ID pattern
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// MED-2 — BC-2.14.003 §EC-007
+///
+/// `assert!` with # Panics doc and `"BC-9 short id"` in the message must be FLAGGED.
+/// `BC-9` does not satisfy `BC-\d+\.\d{2}\.\d{3}` — the full canonical pattern is required.
+///
+/// Fixture: `violation_assert_bc_id_short.rs`
+#[test]
+fn test_BC_2_14_003_assert_bc_id_short_format_flagged() {
+    let fixture = include_str!("../tests/fixtures/violations/violation_assert_bc_id_short.rs");
+    let findings = scan_for_panics_in_source(
+        fixture,
+        "xtask/tests/fixtures/violations/violation_assert_bc_id_short.rs",
+    );
+    assert!(
+        !findings.is_empty(),
+        "MED-2: assert! with # Panics doc but invalid short BC-ID ('BC-9') must be FLAGGED; \
+         the gate requires BC-\\d+\\.\\d{{2}}\\.\\d{{3}}; got: {findings:?}"
+    );
+}
+
+/// MED-2 — BC-2.14.003 §EC-007
+///
+/// `assert!` with # Panics doc and BC-ID in the CONDITION (not message) must be FLAGGED.
+/// `syn_macro_has_bc_id` must search the message argument only (after first top-level comma).
+///
+/// Fixture: `violation_assert_bc_id_in_condition.rs`
+#[test]
+fn test_BC_2_14_003_assert_bc_id_in_condition_flagged() {
+    let fixture =
+        include_str!("../tests/fixtures/violations/violation_assert_bc_id_in_condition.rs");
+    let findings = scan_for_panics_in_source(
+        fixture,
+        "xtask/tests/fixtures/violations/violation_assert_bc_id_in_condition.rs",
+    );
+    assert!(
+        !findings.is_empty(),
+        "MED-2: assert! with BC-ID in the CONDITION (not message) must be FLAGGED; \
+         syn_macro_has_bc_id must search the message argument after the first comma; \
+         got: {findings:?}"
+    );
+}
+
+/// MED-2 inline: verify `is_valid_bc_id` accepts full canonical patterns and rejects short ones.
+#[test]
+fn test_is_valid_bc_id_accepts_canonical_patterns() {
+    // Valid canonical BC-IDs
+    assert!(is_valid_bc_id("BC-2.14.003"), "BC-2.14.003 must be valid");
+    assert!(is_valid_bc_id("BC-5.39.001"), "BC-5.39.001 must be valid");
+    assert!(is_valid_bc_id("BC-10.01.100"), "BC-10.01.100 must be valid");
+    assert!(
+        is_valid_bc_id("assert must cite BC-2.14.001 EC-006"),
+        "BC-ID embedded in text must be found"
+    );
+    // Invalid: short major, missing minor, missing patch
+    assert!(
+        !is_valid_bc_id("BC-9"),
+        "BC-9 must be invalid (missing .XX.XXX)"
+    );
+    assert!(
+        !is_valid_bc_id("BC-2.1.003"),
+        "BC-2.1.003 must be invalid (minor has only 1 digit)"
+    );
+    assert!(
+        !is_valid_bc_id("BC-2.14.03"),
+        "BC-2.14.03 must be invalid (patch has only 2 digits)"
+    );
+    assert!(
+        !is_valid_bc_id("BC-2.14.0030"),
+        "BC-2.14.0030 must be invalid (patch has 4 digits)"
+    );
+    assert!(
+        !is_valid_bc_id("no bc id here"),
+        "string without BC- must be invalid"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MED-4: .unwrap() inside macro token streams must be flagged
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// MED-4 — BC-2.14.003 {PC-004}
+///
+/// `.unwrap()` inside a macro argument (`format!("{}", opt.unwrap())`) must be FLAGGED.
+/// Before the MED-4 fix, `handle_macro_invocation` only checked the macro itself and
+/// did not recurse into `mac.tokens` — `.unwrap()` inside format! was invisible.
+#[test]
+fn test_BC_2_14_003_unwrap_in_format_macro_is_flagged() {
+    let src = r#"
+pub fn format_value(opt: Option<i32>) -> String {
+    format!("{}", opt.unwrap())
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "MED-4: .unwrap() inside format!() must be FLAGGED; \
+         handle_macro_invocation must recurse into mac.tokens; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains(".unwrap()")),
+        "MED-4: finding must reference .unwrap(); got: {findings:?}"
+    );
+}
+
+/// MED-4 — fixture scan: `violation_unwrap_in_format_macro.rs` must be flagged.
+#[test]
+fn test_BC_2_14_003_unwrap_in_format_macro_fixture_detected() {
+    let fixture = include_str!("../tests/fixtures/violations/violation_unwrap_in_format_macro.rs");
+    let findings = scan_for_panics_in_source(
+        fixture,
+        "xtask/tests/fixtures/violations/violation_unwrap_in_format_macro.rs",
+    );
+    assert!(
+        !findings.is_empty(),
+        "MED-4: violation_unwrap_in_format_macro.rs fixture must produce a finding; \
          got: {findings:?}"
     );
 }
