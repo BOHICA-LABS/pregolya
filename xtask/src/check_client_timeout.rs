@@ -132,8 +132,10 @@ enum FlatToken {
     ParenGroup(usize),
     /// A brace group — used to reset chain state between statements.
     BraceGroup(usize),
-    /// Anything else (literals, etc.) — carries the line for context.
-    Other(usize),
+    /// A literal (integer, float, string, etc.) with its string representation and line.
+    /// Preserved so zero-literal forms like `Duration::from_secs(0)` can be detected
+    /// (BC-2.14.004 {PC-001}/{INV-004} — O-1 zero-timeout detection).
+    Literal(String, usize),
 }
 
 impl FlatToken {
@@ -143,7 +145,7 @@ impl FlatToken {
             | FlatToken::Punct(_, l)
             | FlatToken::ParenGroup(l)
             | FlatToken::BraceGroup(l)
-            | FlatToken::Other(l) => *l,
+            | FlatToken::Literal(_, l) => *l,
         }
     }
 }
@@ -239,7 +241,9 @@ fn flatten_tokens_no_test(
             }
             TokenTree::Literal(lit) => {
                 if *in_test_depth == 0 {
-                    out.push(FlatToken::Other(lit.span().start().line));
+                    // Preserve the literal value so zero-form detectors can inspect it
+                    // (e.g. Duration::from_secs(0) — BC-2.14.004 {PC-001} O-1 fix).
+                    out.push(FlatToken::Literal(lit.to_string(), lit.span().start().line));
                 }
             }
         }
@@ -498,26 +502,99 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
     found_build && !found_timeout_before_build
 }
 
-/// Returns `true` if the `.timeout(...)` call at `timeout_idx` uses `Duration::ZERO`
-/// as its argument.
+/// Returns `true` if the `.timeout(...)` call at `timeout_idx` uses a zero duration
+/// as its argument (BC-2.14.004 {PC-001}/{INV-004}).
 ///
 /// `flatten_tokens_no_test` pushes a `ParenGroup` marker then inlines the paren
-/// group's contents into the flat list. For `.timeout(Duration::ZERO)` the flat
-/// layout starting at `timeout_idx` (the leading `.`) is:
+/// group's contents immediately after it. Detected forms:
 ///
-/// | offset | token |
-/// |--------|-------|
-/// | `+0` | `Punct('.')` |
-/// | `+1` | `Ident("timeout")` |
-/// | `+2` | `ParenGroup` (marker) |
-/// | `+3` | `Ident("Duration")` ← inlined arg |
-/// | `+4` | `Punct(':')` |
-/// | `+5` | `Punct(':')` |
-/// | `+6` | `Ident("ZERO")` |
+/// **Form A — short constant `Duration::ZERO`** (offsets +3..+6):
+/// ```text
+/// +2  ParenGroup
+/// +3  Ident("Duration")
+/// +4  Punct(':')  +5  Punct(':')
+/// +6  Ident("ZERO")
+/// ```
+///
+/// **Form B — fully-qualified `std::time::Duration::ZERO` / `core::time::Duration::ZERO`**
+/// (offsets +3..+12):
+/// ```text
+/// +2  ParenGroup
+/// +3  Ident("std"|"core")
+/// +4  Punct(':')  +5  Punct(':')
+/// +6  Ident("time")
+/// +7  Punct(':')  +8  Punct(':')
+/// +9  Ident("Duration")
+/// +10 Punct(':')  +11 Punct(':')
+/// +12 Ident("ZERO")
+/// ```
+///
+/// **Form C — zero-literal constructor `Duration::from_secs(0)` / `from_millis(0)` /
+/// `from_nanos(0)` / `from_secs_f64(0.0)`** (offsets +3..+8):
+/// ```text
+/// +2  ParenGroup       (outer paren marker)
+/// +3  Ident("Duration")
+/// +4  Punct(':')  +5  Punct(':')
+/// +6  Ident("from_secs"|"from_millis"|"from_nanos"|"from_secs_f64")
+/// +7  ParenGroup       (inner paren marker for constructor args)
+/// +8  Literal("0"|"0u64"|"0u32"|"0i64"|"0usize"|"0.0"|"0.0f64"|"0.0f32")
+/// ```
 fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool {
-    matches!(flat.get(timeout_idx + 2), Some(FlatToken::ParenGroup(_)))
-        && matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "Duration")
+    if !matches!(flat.get(timeout_idx + 2), Some(FlatToken::ParenGroup(_))) {
+        return false;
+    }
+
+    // Form A: Duration :: ZERO
+    if matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "Duration")
         && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
         && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
         && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if n == "ZERO")
+    {
+        return true;
+    }
+
+    // Form B: std::time::Duration::ZERO  or  core::time::Duration::ZERO
+    if matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "std" || n == "core")
+        && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if n == "time")
+        && matches!(flat.get(timeout_idx + 7), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 8), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 9), Some(FlatToken::Ident(n, _)) if n == "Duration")
+        && matches!(flat.get(timeout_idx + 10), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 11), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 12), Some(FlatToken::Ident(n, _)) if n == "ZERO")
+    {
+        return true;
+    }
+
+    // Form C: Duration :: from_secs|from_millis|from_nanos|from_secs_f64 ( zero_literal )
+    if matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "Duration")
+        && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if matches!(
+            n.as_str(), "from_secs" | "from_millis" | "from_nanos" | "from_secs_f64"
+        ))
+        && matches!(flat.get(timeout_idx + 7), Some(FlatToken::ParenGroup(_)))
+    {
+        // Check the first inlined argument is a zero literal.
+        if let Some(FlatToken::Literal(s, _)) = flat.get(timeout_idx + 8)
+            && matches!(
+                s.as_str(),
+                "0" | "0u64"
+                    | "0u32"
+                    | "0u128"
+                    | "0usize"
+                    | "0i64"
+                    | "0i32"
+                    | "0.0"
+                    | "0.0f64"
+                    | "0.0f32"
+            )
+        {
+            return true;
+        }
+    }
+
+    false
 }
