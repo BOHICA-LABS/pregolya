@@ -22,6 +22,8 @@ anyhow = { workspace = true }
 trybuild = { workspace = true }
 # serde_json dev-only: ProblemDetail derives Serialize/Deserialize via serde only; serde_json needed solely for JSON assertion tests and the error_taxonomy_demo example (CR-001 provenance)
 serde_json = { workspace = true }
+# Async test runtime for BC-2.14.004 timeout integration test (AC-006 / S-1.02)
+tokio = { workspace = true }
 
 [lints]
 workspace = true
