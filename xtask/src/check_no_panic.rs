@@ -163,6 +163,10 @@ fn is_catch_all_pat(pat: &syn::Pat) -> bool {
                 && !matches!(p.ident.to_string().as_str(), "true" | "false")
         }
         syn::Pat::Or(p) => p.cases.iter().any(is_catch_all_pat),
+        // Wrapper patterns that do not restrict the set of matched values:
+        // `&other =>` and `(other) =>` are irrefutable-binding catch-alls.
+        syn::Pat::Reference(r) => is_catch_all_pat(&r.pat),
+        syn::Pat::Paren(p) => is_catch_all_pat(&p.pat),
         _ => false,
     }
 }
@@ -231,6 +235,16 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
         // a closure nested within a named arm is evaluated without arm context.
         let old_arm_stack = std::mem::take(&mut self.arm_stack);
         syn::visit::visit_expr_closure(self, node);
+        self.arm_stack = old_arm_stack;
+    }
+
+    fn visit_expr_async(&mut self, node: &'ast syn::ExprAsync) {
+        // An async block body is deferred execution (a Future) — it does NOT run as the
+        // arm's direct synchronous evaluation.  Save and clear arm_stack so that
+        // unreachable! inside an async / async move block nested within a named arm is
+        // evaluated without any match-arm context (BC-2.14.003 §PC-006 / §EC-007).
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        syn::visit::visit_expr_async(self, node);
         self.arm_stack = old_arm_stack;
     }
 
