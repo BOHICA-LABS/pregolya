@@ -14,7 +14,8 @@
 //! - `_ => unreachable!()` wildcard match arms (latent panic under enum evolution)
 //!
 //! ## Exempt patterns:
-//! - `unreachable!()` in a fully-enumerated explicit-variant match arm (no `_` wildcard)
+//! - `unreachable!()` in a fully-enumerated NAMED match arm (no `_` wildcard arm)
+//!   e.g. `Phase::Done => unreachable!(...)` — this is Exemption 1
 //! - `assert!` / `assert_eq!` / `assert_ne!` where the enclosing function has a
 //!   `# Panics` doc section AND the assert message contains a BC-ID
 //! - `debug_assert!*` (compiles out in release; BC-2.14.003 {INV-003})
@@ -107,9 +108,10 @@ pub fn run() {
 ///
 /// # Two-exemption discipline (BC-2.14.003 §EC-007)
 ///
-/// Exemption 1 — explicit-variant unreachable: `unreachable!()` in a
-/// fully-enumerated match arm where the arm pattern is a named variant (NOT `_`)
-/// is an exhaustiveness witness and is NOT flagged.
+/// Exemption 1 — explicit named-arm unreachable: `unreachable!()` in a named
+/// (non-wildcard) match arm pattern, e.g. `Phase::Done => unreachable!(...)`, is an
+/// exhaustiveness witness and is NOT flagged. A wildcard `_ => unreachable!(...)` is
+/// always flagged regardless of what precedes it (BC-2.14.003 §EC-004).
 ///
 /// Exemption 2 — documented programmer-error-guard assert: `assert!`/`assert_eq!`/
 /// `assert_ne!` where the enclosing function has a `# Panics` doc section AND the
@@ -188,30 +190,6 @@ fn is_doc_group(g: &proc_macro2::Group) -> bool {
     )
 }
 
-/// Returns true if `tokens[0..before_idx]` contains a `::` path-separator pattern,
-/// indicating the enclosing brace group has qualified enum-variant arm patterns
-/// (e.g. `Color::Red`, `Phase::Init`) before the `_` wildcard arm.
-///
-/// Used to exempt `_ => unreachable!(...)` arms that serve as exhaustiveness
-/// handlers for `#[non_exhaustive]` enums — the preceding explicit-variant arms
-/// (with `::`) establish that every known variant is handled, making the wildcard
-/// arm a forward-compatibility witness rather than a latent panic path.
-///
-/// (BC-2.14.003 §EC-007 — unreachable-in-match exemption)
-fn has_qualified_path_before(tokens: &[proc_macro2::TokenTree], before_idx: usize) -> bool {
-    use proc_macro2::TokenTree;
-    let end = before_idx.saturating_sub(1);
-    for j in 0..end {
-        if let (TokenTree::Punct(p1), TokenTree::Punct(p2)) = (&tokens[j], &tokens[j + 1])
-            && p1.as_char() == ':'
-            && p2.as_char() == ':'
-        {
-            return true;
-        }
-    }
-    false
-}
-
 /// Returns true if any literal in the macro-call argument group `(...)` contains
 /// a BC-ID pattern: the text `"BC-"` immediately followed by an ASCII digit.
 ///
@@ -244,10 +222,12 @@ fn args_contain_bc_id(g: &proc_macro2::Group) -> bool {
 /// - bare `assert!` / `assert_eq!` / `assert_ne!` / `panic!` where the assert
 ///   message does NOT contain a BC-ID OR the enclosing function has no `# Panics`
 ///   doc section
-/// - `_ => unreachable!()` wildcard match arms (Exemption 1 does NOT cover these)
+/// - `_ => unreachable!()` wildcard match arms (ALWAYS flagged; §EC-004)
+/// - `unreachable!()` outside any match arm (let-else, if-block, etc.; §PC-006)
 ///
 /// **EXEMPTS:**
-/// - Exemption 1: `unreachable!()` in a non-wildcard match arm (explicit variant)
+/// - Exemption 1: `unreachable!()` in a named (non-wildcard) match arm
+///   e.g. `Phase::Done => unreachable!(...)` — requires no wildcard `_` in the arm
 /// - Exemption 2: `assert!` where `fn_has_panics_doc` is true AND message has BC-ID
 /// - `debug_assert!*` (compile-out in release)
 /// - `#[cfg(test)]` blocks (tracked via `in_test_depth`)
@@ -407,14 +387,16 @@ fn walk_panic_tokens(
             }
 
             // ── `_ => unreachable!()` wildcard arm detection ─────────────────
-            // Wildcard arms are flagged as latent panic paths under enum evolution
-            // (BC-2.14.003 §EC-007), with one exemption:
+            // Wildcard arms are ALWAYS flagged as latent panic paths under enum
+            // evolution (BC-2.14.003 §EC-004/EC-007). There is NO exemption for
+            // wildcard arms regardless of whether qualified enum-variant arms
+            // precede them — the presence of named-variant arms only proves current
+            // exhaustiveness; it does NOT prove future-proof safety. A new variant
+            // added downstream makes the `_` arm reachable and causes a production
+            // panic.
             //
-            // EXEMPT (unreachable-in-match exemption): when the enclosing match
-            // body contains qualified enum-variant arm patterns (e.g. `Color::Red`,
-            // `Phase::Init` — detected via `::` path separators before the `_`
-            // position), the `_` arm is an exhaustiveness handler for a
-            // `#[non_exhaustive]` enum and is NOT a latent panic path.
+            // Exemption 1 applies ONLY to explicit named arms WITHOUT a wildcard:
+            //   `Phase::Done => unreachable!(...)` — not `_ => unreachable!(...)`
             TokenTree::Ident(id) if id == "_" && *in_test_depth == 0 => {
                 pending_panics_doc = false;
                 // Check for the pattern: `_` `=` `>` `unreachable` `!` `(...)`
@@ -430,23 +412,67 @@ fn walk_panic_tokens(
                     tokens.get(i + 3),
                     tokens.get(i + 4),
                     tokens.get(i + 5),
-                )
-                    && fat_eq.as_char() == '='
+                ) && fat_eq.as_char() == '='
                     && fat_gt.as_char() == '>'
                     && ur_id == "unreachable"
                     && bang.as_char() == '!'
                     && args.delimiter() == Delimiter::Parenthesis
-                    // Only flag when NO qualified enum-variant arm patterns precede
-                    // the `_` arm in this match body (unreachable-in-match exemption).
-                    && !has_qualified_path_before(&tokens, i)
                 {
                     let line = ur_id.span().start().line;
                     findings.push(format!(
                         "{}:{}: wildcard-arm unreachable!() in non-test code \
-                         (BC-2.14.003 EC-007 violation: _ => unreachable! is a \
-                         latent panic path under enum evolution)",
+                         (BC-2.14.003 EC-004/EC-007 violation: _ => unreachable! is a \
+                         latent panic path under enum evolution; use explicit named arm \
+                         unreachable! or documented assert!)",
                         path, line
                     ));
+                }
+            }
+
+            // ── bare `unreachable!()` outside exhaustive-match named arms ─────
+            // §PC-006: unreachable! is ONLY permitted in explicit named match arms
+            // (e.g. `Phase::Done => unreachable!(...)`). Using it in let-else
+            // else-blocks, if-blocks, or other non-arm contexts is a POL-31
+            // violation — those call-sites ARE reachable on in-crate struct-literal
+            // construction or future code paths.
+            //
+            // Detection: `unreachable` followed by `!` and `(...)`.
+            //   - If immediately preceded by `=>` (tokens `=` `>`):
+            //     - Named arm → Exemption 1 applies; EXEMPT.
+            //     - Wildcard `_ =>` arm → already flagged by the `_` handler;
+            //       skip to avoid duplicate finding.
+            //   - Otherwise (not in a match arm position): ALWAYS FLAG.
+            TokenTree::Ident(id) if id == "unreachable" && *in_test_depth == 0 => {
+                pending_panics_doc = false;
+                if matches!(tokens.get(i + 1), Some(TokenTree::Punct(p)) if p.as_char() == '!')
+                    && matches!(
+                        tokens.get(i + 2),
+                        Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis
+                    )
+                {
+                    // Check if this `unreachable!` is immediately after `=>` (match arm).
+                    // In a match body the token sequence around a match arm is:
+                    //   <pattern> `=` `>` unreachable ...
+                    // so tokens[i-1] == `>` and tokens[i-2] == `=` if in a match arm.
+                    let in_match_arm_position = if i >= 2 {
+                        matches!(tokens.get(i - 2), Some(TokenTree::Punct(p)) if p.as_char() == '=')
+                            && matches!(tokens.get(i - 1), Some(TokenTree::Punct(p)) if p.as_char() == '>')
+                    } else {
+                        false
+                    };
+                    if !in_match_arm_position {
+                        // Bare unreachable! outside any match arm — §PC-006 violation.
+                        let line = id.span().start().line;
+                        findings.push(format!(
+                            "{}:{}: unreachable!() outside exhaustive-match named arm \
+                             in non-test code (BC-2.14.003 §PC-006 violation: \
+                             unreachable! is only permitted in explicit named match arms; \
+                             use documented assert!() for programmer-error guards)",
+                            path, line
+                        ));
+                    }
+                    // If in_match_arm_position: either a named arm (Exemption 1 → EXEMPT)
+                    // or the wildcard `_ =>` case (already flagged by the `_` handler above).
                 }
             }
 
