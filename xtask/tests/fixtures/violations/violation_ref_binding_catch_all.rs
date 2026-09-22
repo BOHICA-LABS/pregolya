@@ -11,9 +11,10 @@
 // patterns (e.g. `Phase::Done`). A `ref other =>` binding-mode arm is not a named
 // variant pattern regardless of the `ref` keyword.
 //
-// Current false-negative: is_catch_all_pat checks `p.by_ref.is_none()` for
-// Pat::Ident. When `ref` is present, `by_ref` is Some(...) → check returns false →
-// arm_stack push(false) → Exemption 1 incorrectly applied.
+// Red-gate provenance: authored when is_catch_all_pat checked `p.by_ref.is_none()` for
+// Pat::Ident; a `ref` binding had `by_ref` as Some(...), causing the check to return
+// false and Exemption 1 to be incorrectly applied. The shipped syn/AST scanner treats
+// `ref other` as an irrefutable binding (catch-all) and FLAGS this fixture.
 pub fn process_ref(n: u32) -> u32 {
     match n {
         0 => 0,

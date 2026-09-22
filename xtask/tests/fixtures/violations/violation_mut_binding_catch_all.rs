@@ -11,9 +11,10 @@
 // patterns (e.g. `Phase::Done`). A `mut other =>` binding-mode arm is not a named
 // variant pattern regardless of the `mut` keyword.
 //
-// Current false-negative: is_catch_all_pat checks `p.mutability.is_none()` for
-// Pat::Ident. When `mut` is present, `mutability` is Some(...) → check returns false →
-// arm_stack push(false) → Exemption 1 incorrectly applied.
+// Red-gate provenance: authored when is_catch_all_pat checked `p.mutability.is_none()` for
+// Pat::Ident; a `mut` binding had `mutability` as Some(...), causing the check to return
+// false and Exemption 1 to be incorrectly applied. The shipped syn/AST scanner treats
+// `mut other` as an irrefutable binding (catch-all) and FLAGS this fixture.
 pub fn process_mut(n: u32) -> u32 {
     match n {
         0 => 0,
