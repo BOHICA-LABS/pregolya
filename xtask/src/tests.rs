@@ -2719,3 +2719,229 @@ fn test_BC_2_14_003_pass6_syn_parse_failure_yields_fail_safe_finding() {
          got: {findings:?}"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-7) — async-block arm_stack leak (F-A),
+// reference/paren catch-all patterns (F-B)
+//
+// BC-2.14.003 §PC-006/§EC-007 v1.5:
+//
+// F-A: unreachable!() inside an `async { ... }` or `async move { ... }` block
+// that is lexically within a NAMED match arm MUST be FLAGGED. The async block
+// is deferred execution — its body runs as a callable future, independently of
+// the arm that created it. The named-arm Exemption 1 covers only the DIRECT arm
+// body expression; it does NOT extend into async blocks (same class as the
+// closure/nested-fn cases corrected in pass-6).
+//
+// Current failure (no visit_expr_async override): visit_arm pushes false (named
+// arm) onto arm_stack, then visits the arm body. The async block is visited by
+// the default syn visitor while arm_stack.last() == Some(&false). Since there is
+// no visit_expr_async that saves-and-clears arm_stack, handle_macro_invocation
+// sees the leaked named-arm exempt flag and silently skips the finding.
+//
+// F-B: Pat::Reference (&other =>) and Pat::Paren ((other) =>) wrapping an
+// irrefutable binding are catch-alls — they match any value not covered by
+// earlier arms, identical to bare `other =>`. is_catch_all_pat currently handles
+// Pat::Wild, Pat::Ident, and Pat::Or only; Pat::Reference and Pat::Paren fall to
+// `_ => false`, causing the scanner to push false (named-arm exempt) and silently
+// exempt unreachable!() inside these arms.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-A (MED) — BC-2.14.003 §PC-006/§EC-007 pass-7
+///
+/// `unreachable!()` inside an ASYNC BLOCK (`async { ... }` / `async move { ... }`)
+/// that is lexically within a NAMED (non-catch-all) match arm MUST be FLAGGED.
+/// The async block body is deferred execution — it runs as a callable future after
+/// the match arm exits. The named-arm Exemption 1 covers only the DIRECT arm body
+/// expression; it does NOT extend into async blocks, which are independently
+/// reachable at runtime (same class as the closure and nested-fn cases corrected
+/// in pass-6).
+///
+/// RED GATE: `visit_expr_async` is not overridden in PanicVisitor. `visit_arm`
+/// pushes `false` (named-arm exempt) onto `arm_stack`, then calls
+/// `syn::visit::visit_expr` on the arm body. The `async move { ... }` ExprAsync
+/// node is visited by the default syn visitor, which descends into the async block
+/// body while `arm_stack.last() == Some(&false)`. `handle_macro_invocation` sees
+/// the leaked named-arm exempt flag and silently skips the finding. Test asserts a
+/// finding IS produced → FAILS until `visit_expr_async` saves and clears `arm_stack`
+/// on async-block entry (restoring on exit), identical to the pass-6 closure fix.
+#[test]
+fn test_BC_2_14_003_async_block_inside_named_arm_flagged() {
+    let src = r#"
+pub fn process(r: Result<i32, String>) -> i32 {
+    match r {
+        Ok(_v) => {
+            let _fut = async move {
+                unreachable!("BC-2.14.003: async block is deferred execution not covered by Exemption 1")
+            };
+            0
+        }
+        Err(_) => 1,
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §PC-006 pass-7 F-A: unreachable!() inside an async block within a named \
+         match arm MUST be flagged (the async block is deferred execution; Exemption 1 applies \
+         only to the direct named-arm body expression, not to nested async blocks; \
+         visit_expr_async not overridden → arm_stack leaks the named-arm exempt flag into \
+         the async block body); got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-7 F-A: finding must reference unreachable!; got: {findings:?}"
+    );
+}
+
+/// F-A companion guard — BC-2.14.003 §PC-006 pass-7
+///
+/// An `unreachable!()` in an async block NOT inside any match arm (top-level
+/// async expression) is still flagged under §PC-006 (unreachable! outside an
+/// exhaustive-match named arm). This guard confirms the class is closed: top-level
+/// async unreachable! was already flagged before the F-A fix and must remain
+/// flagged after it.
+///
+/// GREEN both before and after the F-A fix: arm_stack is empty at the point of the
+/// unreachable! invocation → the §PC-006 handler fires regardless of async context.
+#[test]
+fn test_BC_2_14_003_async_block_toplevel_still_flagged() {
+    let src = r#"
+pub fn process() -> i32 {
+    let _fut = async {
+        unreachable!("BC-2.14.003: top-level async block has no arm context")
+    };
+    0
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §PC-006 pass-7 companion: unreachable!() in a top-level async block \
+         (not inside any match arm) MUST still be flagged (arm_stack is empty → §PC-006 \
+         fires regardless of async context); got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-7 companion: finding must reference unreachable!; got: {findings:?}"
+    );
+}
+
+/// F-A boundary guard — BC-2.14.003 §EC-007/§PC-006 pass-7
+///
+/// An inline `unsafe { unreachable!() }` block that IS the direct body of a NAMED
+/// match arm remains EXEMPT (Exemption 1). An unsafe block executes synchronously
+/// as the arm's direct evaluation — it is NOT independently callable and runs
+/// exactly when the arm is selected. Unlike async blocks (deferred execution,
+/// callable future) or closures (independently callable), an unsafe block body is
+/// the arm's direct evaluation path: the named-arm Exemption 1 applies.
+///
+/// This guard pins the boundary so the implementer's pass-7 fix (visit_expr_async
+/// saves/clears arm_stack on async-block entry) does NOT extend to unsafe blocks
+/// (which would be an over-reach: unsafe blocks do not change the execution model).
+///
+/// GREEN both before and after the F-A fix: arm_stack has false (named arm context)
+/// and visit_expr_unsafe is not overridden → arm_stack is not cleared → EXEMPT.
+#[test]
+fn test_BC_2_14_003_unsafe_block_direct_named_arm_body_exempt() {
+    let src = r#"
+pub fn process(r: Result<i32, String>) -> i32 {
+    match r {
+        Ok(_v) => unsafe {
+            unreachable!(
+                "BC-2.14.003 boundary: unsafe block is Exemption-1 compliant as direct arm evaluation"
+            )
+        },
+        Err(_) => 1,
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-7 boundary: unreachable!() inside `unsafe {{ ... }}` that \
+         IS the direct body of a named match arm MUST remain EXEMPT (unsafe blocks execute \
+         synchronously as the arm's direct evaluation; visit_expr_async clears arm_stack for \
+         async blocks only — unsafe blocks must not be affected by the F-A fix); \
+         got: {findings:?}"
+    );
+}
+
+/// F-B (LOW) — BC-2.14.003 §PC-006/§EC-007 pass-7
+///
+/// `&other => unreachable!(...)` (Pat::Reference wrapping a lowercase-binding
+/// Pat::Ident) is an irrefutable-binding catch-all and MUST be FLAGGED. A reference
+/// wrapper `&` does not restrict pattern reachability — `&other` matches any
+/// reference value just as bare `other` does. The §EC-007 exhaustive-match
+/// exemption requires every arm to be a named variant pattern; an irrefutable
+/// reference-binding is semantically a catch-all.
+///
+/// RED GATE: `is_catch_all_pat` handles `Pat::Wild`, `Pat::Ident`, and `Pat::Or`
+/// only; `Pat::Reference` falls to the `_ => false` arm. A `&other =>` arm
+/// therefore pushes `false` (named-arm exempt) onto `arm_stack`, and the
+/// `unreachable!()` inside is incorrectly exempted via Exemption 1.
+#[test]
+fn test_BC_2_14_003_reference_catch_all_flagged() {
+    let src = r#"
+pub fn categorize(x: &u32) -> &'static str {
+    match x {
+        &0 => "zero",
+        &1 => "one",
+        &other => unreachable!("BC-2.14.003: &other is an irrefutable-binding reference catch-all"),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-7 F-B: `&other => unreachable!(...)` (Pat::Reference) \
+         must be FLAGGED — a reference-wrapped irrefutable binding is a catch-all; \
+         is_catch_all_pat returns false for Pat::Reference → arm_stack push(false) → \
+         Exemption 1 incorrectly applied; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-7 F-B reference: finding must reference unreachable!; \
+         got: {findings:?}"
+    );
+}
+
+/// F-B (LOW) — BC-2.14.003 §PC-006/§EC-007 pass-7
+///
+/// `(other) => unreachable!(...)` (Pat::Paren wrapping a lowercase-binding
+/// Pat::Ident) is an irrefutable-binding catch-all and MUST be FLAGGED. A paren
+/// grouping wrapper `( )` does not add any restriction — `(other)` matches any
+/// value just as bare `other` does. The §EC-007 exhaustive-match exemption
+/// requires every arm to be a named variant pattern; an irrefutable paren-binding
+/// is semantically a catch-all.
+///
+/// RED GATE: `is_catch_all_pat` handles `Pat::Wild`, `Pat::Ident`, and `Pat::Or`
+/// only; `Pat::Paren` falls to the `_ => false` arm. A `(other) =>` arm
+/// therefore pushes `false` (named-arm exempt) onto `arm_stack`, and the
+/// `unreachable!()` inside is incorrectly exempted via Exemption 1.
+#[test]
+fn test_BC_2_14_003_paren_catch_all_flagged() {
+    let src = r#"
+pub fn categorize(x: u32) -> &'static str {
+    match x {
+        0 => "zero",
+        1 => "one",
+        (other) => unreachable!("BC-2.14.003: (other) is an irrefutable-binding paren catch-all"),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-7 F-B: `(other) => unreachable!(...)` (Pat::Paren) \
+         must be FLAGGED — a paren-wrapped irrefutable binding is a catch-all; \
+         is_catch_all_pat returns false for Pat::Paren → arm_stack push(false) → \
+         Exemption 1 incorrectly applied; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-7 F-B paren: finding must reference unreachable!; \
+         got: {findings:?}"
+    );
+}
