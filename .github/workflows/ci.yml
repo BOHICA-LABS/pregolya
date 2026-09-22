@@ -334,7 +334,7 @@ jobs:
           exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # lint-extra — xtask lint gates (client-timeout, no-panic, anyhow-ban, cache-key-ban)
+  # lint-extra — xtask lint gates (file-size, client-timeout, no-panic, anyhow-ban, cache-key-ban, error-code-registry, deny-bare-api-key)
   # Guarded on BOTH Cargo.toml (workspace) AND xtask/Cargo.toml (xtask crate).
   # ─────────────────────────────────────────────────────────────────────────────
   lint-extra:
@@ -367,13 +367,17 @@ jobs:
       - name: Check out factory-artifacts (error taxonomy for registry gate)
         if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
         run: |
-          git fetch origin factory-artifacts:factory-artifacts --depth=1 2>/dev/null || true
-          if git show-ref --verify --quiet refs/heads/factory-artifacts; then
+          set -euo pipefail
+          # Fetch factory-artifacts branch if it exists. Use `if` to handle the
+          # branch-not-found case (exit 128) without masking real errors.
+          if git fetch origin factory-artifacts:factory-artifacts --depth=1 2>/dev/null; then
             git worktree add .factory-ci-checkout factory-artifacts
             echo "FACTORY_DIR=.factory-ci-checkout" >> "$GITHUB_ENV"
           else
+            # factory-artifacts branch not yet created (normal in early development).
+            # check-error-code-registry will use its .factory/ local path fallback.
             echo "FACTORY_DIR=" >> "$GITHUB_ENV"
-            echo "Warning: factory-artifacts branch not found; check-error-code-registry will use local path fallback"
+            echo "Warning: factory-artifacts branch not found; check-error-code-registry will use local path fallback."
           fi
 
       - name: Run xtask lint gates
