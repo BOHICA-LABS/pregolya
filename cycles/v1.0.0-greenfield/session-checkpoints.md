@@ -5058,3 +5058,27 @@ Pre-Wave-1 spec reconciliation: CLOSED/CONVERGED (D-363; dual-lens CLEAN). devel
 
 ### DECISION-LOG DELTA (at D-367)
 D-367 (2026-09-18): SESSION WRAP. S-1.01 BC-5.39.001 LOCAL 3-CLEAN CONVERGED 3/3 on frozen HEAD 1443d3d. demo-recorder step COMPLETE (80f93e6). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
+
+## D-368 Session Checkpoint (archived from STATE.md — D-369 post-merge burst 2026-09-22)
+
+<!-- Archived at D-369 post-merge burst; replaced by D-369 checkpoint in STATE.md. -->
+
+### PIPELINE POSITION
+Phase 3 TDD Implementation, IN PROGRESS. Wave 1 (pregolya-core), wave order pregolya-core→pregolya-graph→partners (D7).
+Pre-Wave-1 spec reconciliation: CLOSED/CONVERGED (D-363; dual-lens CLEAN). develop-divergence resolved (D-359, merge 6a50ebf).
+
+### CURRENT STORY: S-1.01 (PregolyaError, pregolya-core), status in-progress
+- Worktree: .worktrees/S-1.01/ on branch feature/S-1.01, HEAD = 80f93e6 (demo commit above LOCAL 3-CLEAN anchor 1443d3d; base develop 6a50ebf).
+- feature/S-1.01 commit chain: e6bc628 stubs → 783b766 Red-Gate tests → 94177a3 impl → 634a557 (F1/F3/F4) → d227de5 (F2 AC-007 trybuild gate) → aae3e19 (SYS 14th category) → 15158ee (dev-dep workspace-pin) → 1443d3d (POL-42 6-type non_exhaustive gate) → 80f93e6 (demo-recorder: error_taxonomy_demo.rs + per-AC evidence).
+- LOCAL adversary BC-5.39.001 3-CLEAN: CONVERGED 3/3 on frozen HEAD 1443d3d (passes a3dab4/a6620b/ac3b6e all CLEAN(strict)). 35/35 tests green; all findings closed.
+
+### HEADS (at D-368)
+- develop: `6a50ebf` — FULLY SYNCED.
+- factory-artifacts: `5cd94a4` — PUSHED.
+- feature/S-1.01: `80f93e6`; NOT yet pushed to origin.
+
+### RESUME NEXT-ACTIONS (at D-368)
+1. Push feature/S-1.01 (HEAD 80f93e6) to origin.
+2. pr-manager: full 9-step PR cycle (PR → develop; self-authored → route to human for merge per DIRECTIVE 4).
+3. state-manager POST-MERGE burst.
+4. Then next Wave-1 story.

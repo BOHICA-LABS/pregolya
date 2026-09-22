@@ -23,15 +23,15 @@ stories:
 
   - story_id: S-1.01
     wave: 1
-    status: in-progress
+    status: merged
     bcs: [BC-2.14.001, BC-2.14.002]
     vps: []
     points: 5
     tdd_mode: strict
     priority: P0
     crate: pregolya-core
-    pr_url: ~
-    merged_sha: ~
+    pr_url: "https://github.com/BOHICA-LABS/pregolya/pull/2"
+    merged_sha: 086c0dc
 
   - story_id: S-1.02
     wave: 1
