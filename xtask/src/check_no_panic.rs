@@ -30,9 +30,11 @@ use std::process::exit;
 
 /// Entry point for `cargo xtask check-no-panic`.
 ///
-/// Scans `crates/**/*.rs` using token-tree analysis to detect `.unwrap()` and
-/// `.expect(...)` calls outside `#[cfg(test)]` blocks. Exits non-zero on any
-/// violation (BC-2.14.003 {PC-004}).
+/// Scans `crates/**/*.rs` using syn AST analysis to detect `.unwrap()`,
+/// `.expect(...)`, bare `assert!`/`assert_eq!`/`assert_ne!`/`panic!` (without
+/// `# Panics` doc + BC-ID exemption), and wildcard/irrefutable-binding
+/// `unreachable!()` arms outside `#[cfg(test)]` blocks (BC-2.14.003 §EC-007).
+/// Exits non-zero on any violation (BC-2.14.003 {PC-004}/{PC-005}/{PC-006}).
 pub fn run() {
     let output = std::process::Command::new("find")
         .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
@@ -90,7 +92,9 @@ pub fn run() {
         exit(1);
     }
     if !all_findings.is_empty() {
-        eprintln!("ERROR: .unwrap()/.expect() in non-test library code (BC-2.14.003):");
+        eprintln!(
+            "ERROR: no-panic violations (unwrap/expect/bare-assert/panic!/wildcard-unreachable) in non-test library code (BC-2.14.003 §EC-007):"
+        );
         for f in &all_findings {
             eprintln!("  {f}");
         }

@@ -5,8 +5,8 @@
 //! Subcommands:
 //!   check-file-size        Enforce production file size gates (CLAUDE.md §File size & module splitting)
 //!   check-client-timeout   CI lint gate: reject reqwest Client::new() outside tests (BC-2.14.004)
-//!   check-no-panic         CI lint gate: reject .expect()/.unwrap() in library src/ (BC-2.14.003)
-//!   deny-bare-api-key      CI lint gate: reject bare API key string literals (BC-2.14.005)
+//!   check-no-panic         CI lint gate: reject unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)
+//!   deny-bare-api-key      CI lint gate: reject credential-sentinel-named public structs that derive Debug/Serialize or impl Deref<Target=str> (BC-2.14.005 {PC-006})
 //!   deny-anyhow-in-lib     CI lint gate: reject anyhow imports in library crates
 //!   deny-description-cache-key  CI lint gate: reject description-proxy cache-key usage
 
@@ -53,10 +53,10 @@ fn main() {
                 "  check-client-timeout      Lint: reqwest Client::new() outside tests is forbidden (BC-2.14.004)"
             );
             eprintln!(
-                "  check-no-panic            Lint: .expect()/.unwrap() in library src/ is forbidden (BC-2.14.003)"
+                "  check-no-panic            Lint: no-panic gate: unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)"
             );
             eprintln!(
-                "  deny-bare-api-key         Lint: bare API key string literals in production code (BC-2.14.005)"
+                "  deny-bare-api-key         Lint: reject credential-sentinel-named public structs that derive Debug/Serialize or impl Deref<Target=str> (BC-2.14.005 {{PC-006}})"
             );
             eprintln!(
                 "  deny-anyhow-in-lib        Lint: anyhow usage (imports or qualified anyhow:: in production code)"
