@@ -2945,3 +2945,309 @@ pub fn categorize(x: u32) -> &'static str {
          got: {findings:?}"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-8) — ref/mut binding-mode catch-alls (F-01),
+// trait default-method arm-stack leak (F-02),
+// structural-rewrite safety-net boundary guards
+//
+// BC-2.14.003 §PC-006/§EC-007 v1.5:
+//
+// F-01 (MED): `ref other =>` and `mut other =>` are irrefutable-binding
+// catch-alls — binding mode (ref/mut) does NOT change irrefutability.
+// is_catch_all_pat checks `p.by_ref.is_none()` and `p.mutability.is_none()`,
+// causing ref/mut bindings to return false (named-arm exempt) instead of
+// true (catch-all, must be flagged).
+//
+// F-02 (LOW): unreachable!() inside a trait default-method body that is
+// lexically within a named match arm MUST be FLAGGED. PanicVisitor overrides
+// visit_item_fn, visit_impl_item_fn, visit_expr_closure, and visit_expr_async —
+// each saves and clears arm_stack on entry. But visit_trait_item_fn is NOT
+// overridden: a trait default method nested inside a named arm body is visited
+// while arm_stack.last() == Some(&false) → unreachable!() inside it is
+// incorrectly EXEMPT (false negative).
+//
+// BOUNDARY GUARDS: the implementer will rewrite detection using (a) an
+// "all arms are specific variant/literal patterns" allowlist exemption and
+// (b) a direct-arm-body-only unreachable! exemption. The boundary guard tests
+// below pin the expected CORRECT behavior for every variant so the structural
+// rewrite cannot accidentally regress working cases or over-reach into cases
+// that must remain exempt.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── pass-8 F-01: ref binding catch-all ─────────────────────────────────────
+
+/// F-01 (MED) — BC-2.14.003 §PC-006/§EC-007 pass-8
+///
+/// `scan_for_panics_in_source` must FLAG `ref other => unreachable!(...)` — a
+/// reference-mode irrefutable binding catch-all. The `ref` keyword changes how
+/// `other` is bound (by reference) but does NOT restrict which values the pattern
+/// matches. Binding mode does not change irrefutability: `ref other` is a catch-all
+/// that matches any value not covered by earlier arms.
+///
+/// §EC-007 Exemption 1 applies ONLY to named variant patterns. A `ref other =>`
+/// binding-mode arm is NOT a named variant pattern.
+///
+/// RED GATE: `is_catch_all_pat` for Pat::Ident checks `p.by_ref.is_none()`.
+/// When `ref` is present, `by_ref` is Some(Token![ref]) → check returns false →
+/// arm_stack push(false) → unreachable!() inside the arm is EXEMPT. The finding
+/// is never emitted. Test asserts a finding IS produced → FAILS until
+/// is_catch_all_pat is extended to treat `ref <binding>` as a catch-all.
+#[test]
+fn test_BC_2_14_003_ref_binding_catch_all_flagged() {
+    let violation_ref_binding =
+        include_str!("../tests/fixtures/violations/violation_ref_binding_catch_all.rs");
+    let findings =
+        scan_for_panics_in_source(violation_ref_binding, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-8 F-01: `ref other => unreachable!(...)` \
+         (ref binding-mode catch-all) MUST be FLAGGED — `ref` changes binding mode \
+         but not irrefutability; is_catch_all_pat checks p.by_ref.is_none() → \
+         returns false for ref bindings → arm_stack push(false) → Exemption 1 \
+         incorrectly applied; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-8 F-01 ref: finding must reference unreachable!; \
+         got: {findings:?}"
+    );
+}
+
+// ── pass-8 F-01: mut binding catch-all ─────────────────────────────────────
+
+/// F-01 (MED) — BC-2.14.003 §PC-006/§EC-007 pass-8
+///
+/// `scan_for_panics_in_source` must FLAG `mut other => unreachable!(...)` — a
+/// mutable-binding irrefutable catch-all. The `mut` keyword changes how `other`
+/// is bound (mutable binding) but does NOT restrict which values the pattern
+/// matches. Binding mode does not change irrefutability: `mut other` is a catch-all
+/// that matches any value not covered by earlier arms.
+///
+/// §EC-007 Exemption 1 applies ONLY to named variant patterns. A `mut other =>`
+/// binding-mode arm is NOT a named variant pattern.
+///
+/// RED GATE: `is_catch_all_pat` for Pat::Ident checks `p.mutability.is_none()`.
+/// When `mut` is present, `mutability` is Some(Token![mut]) → check returns false →
+/// arm_stack push(false) → unreachable!() inside the arm is EXEMPT. The finding
+/// is never emitted. Test asserts a finding IS produced → FAILS until
+/// is_catch_all_pat is extended to treat `mut <binding>` as a catch-all.
+#[test]
+fn test_BC_2_14_003_mut_binding_catch_all_flagged() {
+    let violation_mut_binding =
+        include_str!("../tests/fixtures/violations/violation_mut_binding_catch_all.rs");
+    let findings =
+        scan_for_panics_in_source(violation_mut_binding, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-8 F-01: `mut other => unreachable!(...)` \
+         (mut binding-mode catch-all) MUST be FLAGGED — `mut` changes binding mode \
+         but not irrefutability; is_catch_all_pat checks p.mutability.is_none() → \
+         returns false for mut bindings → arm_stack push(false) → Exemption 1 \
+         incorrectly applied; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-8 F-01 mut: finding must reference unreachable!; \
+         got: {findings:?}"
+    );
+}
+
+// ── pass-8 F-02: trait default-method arm-stack leak ───────────────────────
+
+/// F-02 (LOW) — BC-2.14.003 §PC-006/§EC-007 pass-8
+///
+/// `unreachable!()` inside a TRAIT DEFAULT METHOD body that is lexically within
+/// a NAMED (non-catch-all) match arm MUST be FLAGGED. A trait default method
+/// body is independently callable code — it is NOT covered by the named-arm
+/// Exemption 1.
+///
+/// The named-arm exemption applies only when `unreachable!` is the DIRECT body
+/// expression of the arm (evaluated synchronously as the arm's result). A default
+/// method defined inside an arm body is a CALLABLE; the `unreachable!` inside it
+/// is reachable any time a caller invokes that method — completely independently
+/// of the match arm's context.
+///
+/// RED GATE: PanicVisitor overrides `visit_item_fn`, `visit_impl_item_fn`,
+/// `visit_expr_closure`, and `visit_expr_async` — each saves and clears
+/// `arm_stack` on entry so nested callables don't inherit the named-arm exempt
+/// flag. But `visit_trait_item_fn` is NOT overridden. When a trait with a
+/// default method is defined inside a named arm body, the default method is
+/// visited by the default syn visitor while `arm_stack.last() == Some(&false)`.
+/// `handle_macro_invocation` sees the leaked named-arm exempt flag and silently
+/// skips the finding. Test asserts a finding IS produced → FAILS until
+/// `visit_trait_item_fn` saves and clears `arm_stack` on entry (restoring on exit),
+/// identical to the existing closure/nested-fn/async-block isolation pattern.
+#[test]
+fn test_BC_2_14_003_trait_default_method_inside_named_arm_flagged() {
+    let src = r#"
+pub fn process(r: Result<i32, String>) -> i32 {
+    match r {
+        Ok(v) => {
+            trait Processor {
+                fn default_process(&self) {
+                    unreachable!(
+                        "BC-2.14.003: trait default method body is independently callable; \
+                         not covered by Exemption 1"
+                    )
+                }
+            }
+            let _ = v;
+            0
+        }
+        Err(_) => 1,
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §PC-006 pass-8 F-02: unreachable!() inside a trait default method \
+         body nested within a named match arm MUST be FLAGGED (the default method body is \
+         independently callable; Exemption 1 covers only the direct arm evaluation; \
+         visit_trait_item_fn is not overridden → arm_stack leaks named-arm exempt flag \
+         into the default method body); got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-8 F-02: finding must reference unreachable!; got: {findings:?}"
+    );
+}
+
+// ── pass-8 structural-rewrite safety-net boundary guards ───────────────────
+
+/// Boundary guard — BC-2.14.003 §EC-007 pass-8
+///
+/// `Variant => { unreachable!() }` (block-tail form) in a fully-enumerated
+/// no-catch-all match MUST remain EXEMPT (Exemption 1). A block body is the
+/// arm's DIRECT evaluation — the block executes synchronously as the arm's result
+/// and is not independently callable. The structural rewrite must not over-reach
+/// by treating a bare block tail as "nested" context.
+///
+/// GREEN both before and after the structural rewrite: the block is the arm's
+/// direct evaluation path; arm_stack.last() == Some(&false) → EXEMPT.
+#[test]
+fn test_BC_2_14_003_variant_block_tail_unreachable_exempt() {
+    let src = r#"
+pub enum Phase { Init, Running, Done }
+/// Returns the numeric index for Phase::Init or Phase::Running.
+///
+/// # Panics
+///
+/// Panics if called with Phase::Done (BC-2.14.003 EC-007: programmer error —
+/// Done phase must be filtered upstream before reaching this function).
+pub fn phase_index(p: Phase) -> u8 {
+    match p {
+        Phase::Init => 0,
+        Phase::Running => 1,
+        Phase::Done => {
+            unreachable!(
+                "BC-2.14.003 EC-007: Phase::Done handled upstream; \
+                 reaching phase_index with Done is a programmer error"
+            )
+        }
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-8 boundary: `Phase::Done => {{ unreachable!() }}` \
+         (block-tail form) in a fully-enumerated no-catch-all match MUST remain EXEMPT \
+         (the block is the direct arm evaluation; the structural rewrite must not \
+         treat a plain block tail as a nested callable context); got: {findings:?}"
+    );
+}
+
+/// Boundary guard — BC-2.14.003 §EC-007 pass-8
+///
+/// An inline `const { unreachable!() }` block that IS the direct body of a NAMED
+/// match arm remains EXEMPT (Exemption 1). A `const { ... }` block evaluates
+/// as the arm's direct synchronous result — it is NOT independently callable
+/// and executes only when the arm is selected. Unlike async blocks (deferred
+/// execution) or closures (independently callable), a const block body is the
+/// arm's direct evaluation path: Exemption 1 applies.
+///
+/// This guard pins the same boundary as the unsafe-block guard (pass-7) so
+/// the structural rewrite does NOT extend the async-block isolation pattern
+/// to const blocks (which would be an over-reach).
+///
+/// GREEN both before and after the structural rewrite: no visit_expr_const
+/// override → arm_stack is not cleared → arm_stack.last() == Some(&false) →
+/// EXEMPT.
+#[test]
+fn test_BC_2_14_003_const_block_direct_named_arm_body_exempt() {
+    let src = r#"
+pub enum Step { Start, End }
+pub fn handle_step(s: Step) -> i32 {
+    match s {
+        Step::Start => 0,
+        Step::End => const {
+            // const block evaluates synchronously as the arm's direct result.
+            // It is the arm's direct evaluation path, not an independent callable.
+            unreachable!(
+                "BC-2.14.003 boundary: const block is Exemption-1 compliant as direct arm evaluation"
+            )
+        },
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-8 boundary: unreachable!() inside `const {{ ... }}` \
+         that IS the direct body of a named match arm MUST remain EXEMPT (const blocks \
+         evaluate synchronously as the arm's direct result; the structural rewrite must \
+         not extend the async-block isolation to const blocks); got: {findings:?}"
+    );
+}
+
+/// Boundary guard — BC-2.14.003 §PC-006/§EC-007 pass-8
+///
+/// `unreachable!()` inside an IMPL METHOD body that is lexically within a NAMED
+/// match arm MUST be FLAGGED. An impl method is independently callable code;
+/// its body is NOT covered by the named-arm Exemption 1.
+///
+/// This guard verifies the CURRENT CORRECT behavior (PanicVisitor already
+/// overrides `visit_impl_item_fn` with arm_stack save/clear) is preserved by
+/// the structural rewrite. It is GREEN with the current code.
+///
+/// GREEN both before and after: visit_impl_item_fn saves and clears arm_stack
+/// → empty arm_stack inside the method body → §PC-006 fires.
+#[test]
+fn test_BC_2_14_003_impl_method_inside_named_arm_flagged() {
+    let src = r#"
+pub fn process(r: Result<i32, String>) -> i32 {
+    match r {
+        Ok(v) => {
+            struct Helper;
+            impl Helper {
+                fn execute(&self) {
+                    unreachable!(
+                        "BC-2.14.003: impl method body is independently callable; \
+                         not covered by Exemption 1"
+                    )
+                }
+            }
+            let _ = Helper;
+            v
+        }
+        Err(_) => 0,
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §PC-006 pass-8 boundary: unreachable!() inside an impl method body \
+         nested within a named match arm MUST be FLAGGED (the impl method is independently \
+         callable; Exemption 1 covers only the direct arm evaluation; visit_impl_item_fn \
+         saves and clears arm_stack so the method body is evaluated without arm context); \
+         got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-8 impl-method boundary: finding must reference unreachable!; \
+         got: {findings:?}"
+    );
+}
