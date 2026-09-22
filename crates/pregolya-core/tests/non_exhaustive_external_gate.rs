@@ -43,23 +43,25 @@
 //! Gate authority: CI failure == a type was added without `#[non_exhaustive]`
 //! or without a gate update.
 //!
-//! ### Current inventory (BC-2.14.001 {PC-008} S-1.01 Wave 1 — 5 types; pass-9b: ProblemExtensions removed per BC-2.14.002 {PC-001} option ii)
+//! ### Current inventory (S-1.01 Wave 1 — 5 types; S-1.02 stubs — 2 credential types added; BC-2.14.001 {PC-008})
 //!
 //! ```text
-//! EXPECTED_NON_EXHAUSTIVE_COUNT  = 5
+//! EXPECTED_NON_EXHAUSTIVE_COUNT  = 7
 //! EXPECTED_NON_EXHAUSTIVE_SYMBOLS = [
 //!   "pregolya_core::PregolyaError",
 //!   "pregolya_core::Component",
 //!   "pregolya_core::Category",
 //!   "pregolya_core::RetryHint",
 //!   "pregolya_core::ProblemDetail",
+//!   "pregolya_core::OpenAiApiKey",
+//!   "pregolya_core::AnthropicApiKey",
 //! ]
 //! ```
 
 /// Expected number of non-exhaustive types with compile-fail coverage.
 ///
 /// Increment when adding a new type to the inventory above.
-const EXPECTED_NON_EXHAUSTIVE_COUNT: usize = 5;
+const EXPECTED_NON_EXHAUSTIVE_COUNT: usize = 7;
 
 /// Number of compile-fail fixtures testing struct-literal construction restriction
 /// (BC-2.14.001 {PC-008} clause 1). Separate from EXPECTED_NON_EXHAUSTIVE_COUNT
@@ -78,6 +80,8 @@ const EXPECTED_NON_EXHAUSTIVE_SYMBOLS: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
     "pregolya_core::Category",
     "pregolya_core::RetryHint",
     "pregolya_core::ProblemDetail",
+    "pregolya_core::OpenAiApiKey",
+    "pregolya_core::AnthropicApiKey",
 ];
 
 // ── BC-2.14.001 {PC-008} inventory load-bearing runtime gate (F1 provenance) ──────────────────
@@ -275,7 +279,8 @@ fn test_all_pub_types_have_non_exhaustive() {
 /// 5 `#[non_exhaustive]` types in `pregolya-core`.
 ///
 /// Fixtures are registered in type order: PregolyaError → ProblemDetail →
-/// Component → Category → RetryHint (+ struct-literal construction).
+/// Component → Category → RetryHint → OpenAiApiKey → AnthropicApiKey
+/// (+ struct-literal construction for PregolyaError).
 /// (`ProblemExtensions` removed in pass-9b per BC-2.14.002 {PC-001} option ii.)
 ///
 /// - Structs: `..` wildcard required from external crate (E0638)
@@ -286,7 +291,7 @@ fn test_all_pub_types_have_non_exhaustive() {
 /// boundary.
 #[test]
 fn ui() {
-    // BC-2.14.001 {PC-008}: all EXPECTED_NON_EXHAUSTIVE_COUNT × 2 + CONSTRUCTION_FAIL_FIXTURE_COUNT (= 11) fixtures registered.
+    // BC-2.14.001 {PC-008}: all EXPECTED_NON_EXHAUSTIVE_COUNT × 2 + CONSTRUCTION_FAIL_FIXTURE_COUNT (= 15) fixtures registered.
     // The list is the authority — CI fails if a fixture is on disk but not here (or vice versa).
     const FAIL_FIXTURES: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
         "tests/ui/pregolya_error_match_without_dots_fails.rs",
@@ -294,6 +299,8 @@ fn ui() {
         "tests/ui/component_match_without_wildcard_fails.rs",
         "tests/ui/category_match_without_wildcard_fails.rs",
         "tests/ui/retry_hint_match_without_wildcard_fails.rs",
+        "tests/ui/open_ai_api_key_match_without_dots_fails.rs",
+        "tests/ui/anthropic_api_key_match_without_dots_fails.rs",
     ];
     const PASS_FIXTURES: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
         "tests/ui/pregolya_error_match_with_dots_passes.rs",
@@ -301,6 +308,8 @@ fn ui() {
         "tests/ui/component_match_with_wildcard_passes.rs",
         "tests/ui/category_match_with_wildcard_passes.rs",
         "tests/ui/retry_hint_match_with_wildcard_passes.rs",
+        "tests/ui/open_ai_api_key_match_with_dots_passes.rs",
+        "tests/ui/anthropic_api_key_match_with_dots_passes.rs",
     ];
 
     // Array type annotation [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] is the compile-time enforcement mechanism;

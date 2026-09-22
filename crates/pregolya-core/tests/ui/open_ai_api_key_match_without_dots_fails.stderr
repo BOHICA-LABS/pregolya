@@ -1,0 +1,16 @@
+error[E0603]: tuple struct constructor `OpenAiApiKey` is private
+  --> tests/ui/open_ai_api_key_match_without_dots_fails.rs:14:24
+   |
+14 |     let pregolya_core::OpenAiApiKey(_inner) = key;
+   |                        ^^^^^^^^^^^^ private tuple struct constructor
+   |
+note: the tuple struct constructor `OpenAiApiKey` is defined here
+  --> src/lib.rs
+   |
+   | pub use credentials::{AnthropicApiKey, OpenAiApiKey};
+   |                                        ^^^^^^^^^^^^
+   |
+  ::: src/credentials.rs
+   |
+   | #[non_exhaustive]
+   | ----------------- cannot be constructed because it is `#[non_exhaustive]`

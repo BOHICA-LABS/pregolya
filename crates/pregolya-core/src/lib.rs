@@ -27,8 +27,11 @@
 //! - `invocation_context` — `InvocationContext` (definitions-only, SS-11)
 //! - `trajectory` — `TrajectoryRecord`, `TrajectoryWriter`, `TrajectoryReader` (definitions-only, SS-04)
 
+pub mod credentials;
 pub mod error;
+pub mod http;
 
+pub use credentials::{AnthropicApiKey, OpenAiApiKey};
 pub use error::{
     Category, Component, PROBLEM_JSON_CONTENT_TYPE, PregolyaError, ProblemDetail, RetryHint,
 };

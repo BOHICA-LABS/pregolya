@@ -9,6 +9,8 @@ publish = false
 
 [dependencies]
 serde = { workspace = true }
+# Outbound HTTP client with 30s timeout (BC-2.14.004); rustls-tls mandatory (CLAUDE.md)
+reqwest = { workspace = true }
 
 [dev-dependencies]
 # Compile-time trait bound assertions (AC-005, AC-006 / VP-BC214001-02)
