@@ -24,7 +24,7 @@ status: complete
 | AC-003 | BC-2.14.003 INV-003/INV-004 | `debug_assert!` and exhaustive-match `unreachable!` are exempt — gate exits 0 | covered by AC-002 recording (same gate pass) | — | — | covered |
 | AC-005 | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` exits 0 — no missing `.timeout()` | [AC-005-check-client-timeout-pass.webm](AC-005-check-client-timeout-pass.webm) | [AC-005-check-client-timeout-pass.gif](AC-005-check-client-timeout-pass.gif) | [tape](AC-005-check-client-timeout-pass.tape) | recorded |
 | AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded |
-| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS bare `assert!` and `_ => unreachable!()` | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded |
+| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS 12 violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), `_ => unreachable!()` patterns (incl. underscore-binding), `.unwrap()` in macros — 12/13 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (refreshed 2026-09-22) |
 | AC-008 | BC-2.14.005 PC-002 | `Debug` emits exactly `"<redacted>"` — key material never appears in format output | [AC-008-AC-011-AC-016-credential-validation-redaction.webm](AC-008-AC-011-AC-016-credential-validation-redaction.webm) | [AC-008-AC-011-AC-016-credential-validation-redaction.gif](AC-008-AC-011-AC-016-credential-validation-redaction.gif) | [tape](AC-008-AC-011-AC-016-credential-validation-redaction.tape) | recorded |
 | AC-011 | BC-2.14.006 PC-001 | `OpenAiApiKey::new("")` → `Err(E-CORE-005 / VAL / Never)` | same recording as AC-008 | — | — | recorded |
 | AC-016 | BC-2.14.006 EC-006 | `new("   ")` whitespace-only rejected with same `E-CORE-005` error | same recording as AC-008 | — | — | recorded |
@@ -90,9 +90,25 @@ Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
 Shows: `test_BC_2_14_006_openai_whitespace_only_key_returns_err` PASS.
 
 ### AC-017 — check-no-panic flags violations (BC-2.14.003 EC-007)
-Recording: `AC-017-check-no-panic-flags-violations.{webm,gif}`
-Shows: `cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations` — exits non-zero, lists 8 violations (bare `assert!` + `_ => unreachable!()` patterns).
-Error path: demonstrates the gate detects the two POL-31-mandated violation types.
+Recording: `AC-017-check-no-panic-flags-violations.{webm,gif}` — refreshed 2026-09-22 (post-fix-burst-3)
+Shows: `cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations` — exits non-zero (exit code 1), reports `fixture-mode: 12/13 fixture files had findings`.
+The 13th fixture (`violation_pub_crate_debug_derive.rs`) targets `deny-bare-api-key`, not `check-no-panic`, and correctly produces no findings here.
+
+Detected violation classes (12 fixture files):
+1. `violation_assert_no_doc.rs` — bare `assert!()` in non-test code
+2. `violation_assert_brace.rs` — bare `assert!()` in non-test code
+3. `violation_unreachable_wildcard.rs` — wildcard-arm `_ => unreachable!()` in non-test code
+4. `violation_unreachable_wildcard_enum.rs` — wildcard-arm `_ => unreachable!()` in non-test code
+5. `violation_binding_catch_all.rs` — wildcard-arm `_ => unreachable!()` in non-test code
+6. `violation_ref_binding_catch_all.rs` — wildcard-arm `_ => unreachable!()` in non-test code
+7. `violation_mut_binding_catch_all.rs` — wildcard-arm `_ => unreachable!()` in non-test code
+8. `violation_guarded_binding_catch_all.rs` — wildcard-arm `_ => unreachable!()` in non-test code
+9. `violation_underscore_binding_catch_all.rs` — wildcard-arm `_ => unreachable!()` in non-test code (HIGH-1 fix-burst-3)
+10. `violation_assert_bc_id_short.rs` — bare `assert!()` with short BC-ID (MED-2 fix-burst-3)
+11. `violation_assert_bc_id_in_condition.rs` — bare `assert!()` with BC-ID in condition position (MED-2 fix-burst-3)
+12. `violation_unwrap_in_format_macro.rs` — `.unwrap()` inside macro arguments (MED-4 fix-burst-3)
+
+Error path: demonstrates the gate detects all POL-31-mandated violation types; fix-burst 3 expanded coverage from 8 to 12 fixture files.
 
 ### AC-018 — programmer-error guards compliant (BC-2.14.003 EC-006)
 Covered by: AC-002 recording — gate exits 0 despite programmer-error-guard asserts in `PregolyaError::new` etc., proving the EC-006 narrow exception is honoured.
