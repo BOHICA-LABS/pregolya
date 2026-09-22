@@ -41,7 +41,6 @@ use crate::error::PregolyaError;
 /// Only via the explicit [`OpenAiApiKey::expose_secret`] method — never via
 /// trait auto-deref.
 #[non_exhaustive]
-#[allow(dead_code)] // field read only via expose_secret(); todo!() until S-1.02 implemented
 pub struct OpenAiApiKey(pub(crate) String);
 
 impl fmt::Debug for OpenAiApiKey {
@@ -62,11 +61,18 @@ impl OpenAiApiKey {
     /// Returns `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005",
     /// message: "Validation failed for 'api_key': value must not be empty" })` when
     /// `key` is an empty string (BC-2.14.006 {PC-001}, BC-2.14.005 EC-004).
-    pub fn new(_key: impl Into<String>) -> Result<Self, PregolyaError> {
-        todo!(
-            "BC-2.14.005 PC-001 + BC-2.14.006 PC-001: \
-             validate non-empty key and return Err(E-CORE-005) for empty input"
-        )
+    pub fn new(key: impl Into<String>) -> Result<Self, PregolyaError> {
+        let key = key.into();
+        if key.is_empty() {
+            return Err(PregolyaError::new(
+                crate::error::Component::Core,
+                crate::error::Category::Val,
+                crate::error::RetryHint::Never,
+                "E-CORE-005",
+                "Validation failed for 'api_key': value must not be empty",
+            ));
+        }
+        Ok(Self(key))
     }
 
     /// Returns a reference to the inner key string.
@@ -80,7 +86,7 @@ impl OpenAiApiKey {
     /// let bearer = format!("Bearer {}", api_key.expose_secret());
     /// ```
     pub fn expose_secret(&self) -> &str {
-        todo!("BC-2.14.005 PC-005: return &self.0 for explicit secret access")
+        &self.0
     }
 }
 
@@ -91,7 +97,6 @@ impl OpenAiApiKey {
 /// Same invariants as [`OpenAiApiKey`]: `Debug` emits `"<redacted>"`, no
 /// `Serialize`, no `Deref<Target=str>`, no `AsRef<str>`.
 #[non_exhaustive]
-#[allow(dead_code)] // field read only via expose_secret(); todo!() until S-1.02 implemented
 pub struct AnthropicApiKey(pub(crate) String);
 
 impl fmt::Debug for AnthropicApiKey {
@@ -112,18 +117,25 @@ impl AnthropicApiKey {
     /// Returns `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005",
     /// message: "Validation failed for 'api_key': value must not be empty" })` when
     /// `key` is an empty string (BC-2.14.006 {PC-001}, BC-2.14.005 EC-004).
-    pub fn new(_key: impl Into<String>) -> Result<Self, PregolyaError> {
-        todo!(
-            "BC-2.14.005 PC-001 + BC-2.14.006 PC-001: \
-             validate non-empty key and return Err(E-CORE-005) for empty input"
-        )
+    pub fn new(key: impl Into<String>) -> Result<Self, PregolyaError> {
+        let key = key.into();
+        if key.is_empty() {
+            return Err(PregolyaError::new(
+                crate::error::Component::Core,
+                crate::error::Category::Val,
+                crate::error::RetryHint::Never,
+                "E-CORE-005",
+                "Validation failed for 'api_key': value must not be empty",
+            ));
+        }
+        Ok(Self(key))
     }
 
     /// Returns a reference to the inner key string.
     ///
     /// This is the ONLY intentional exposure path for the key value (BC-2.14.005 {PC-005}).
     pub fn expose_secret(&self) -> &str {
-        todo!("BC-2.14.005 PC-005: return &self.0 for explicit secret access")
+        &self.0
     }
 }
 

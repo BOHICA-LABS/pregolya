@@ -20,7 +20,9 @@
 //!  message: "ProviderTimeout: request timed out after 30s", .. })`
 //! per BC-2.14.004 {PC-005}.
 
-use crate::error::PregolyaError;
+use std::time::Duration;
+
+use crate::error::{Category, Component, PregolyaError, RetryHint};
 
 /// Constructs an outbound `reqwest::Client` with a 30-second request timeout.
 ///
@@ -40,11 +42,18 @@ use crate::error::PregolyaError;
 /// `reqwest::ClientBuilder::build()` fails (rare; typically a TLS initialisation
 /// error on misconfigured systems).
 pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
-    todo!(
-        "BC-2.14.004 PC-001 + PC-002: \
-         ClientBuilder::new().timeout(Duration::from_secs(30)).build() \
-         and map reqwest::Error to PregolyaError {{ category: Transport }}"
-    )
+    reqwest::ClientBuilder::new()
+        .timeout(Duration::from_secs(30))
+        .build()
+        .map_err(|e| {
+            PregolyaError::new(
+                Component::Core,
+                Category::Transport,
+                RetryHint::Later(Duration::from_secs(30)),
+                "E-CORE-004",
+                format!("HTTP client build failed: {e}"),
+            )
+        })
 }
 
 #[cfg(test)]
