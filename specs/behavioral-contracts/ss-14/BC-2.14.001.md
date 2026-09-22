@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.25"
+version: "1.26"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -40,6 +40,7 @@ changelog:
   - "1.23 (S-1.01-adv-pass-10/MED-001/2026-09-20): EC-007 scope clause added — binding covers code↔COMPONENT axis only; code↔category axis is normative but deferred to S-1.02 (VP-BC214001-01). OBS-001: citation form divergence adjudicated — BC-2.14.001 de-§ in Description is intentional per ADR-022 §Decision 5 (chained §-citation would result otherwise); BC-2.14.002 §-form in §Notes is correct (no chaining issue)."
   - "1.24 (S-1.01-adv-pass-13/MED-002/2026-09-20): EC-006 emission-time clause added — `to_problem()` re-validates the E- prefix at emission time (BC-2.14.002 EC-002 path 3); reachable via in-crate struct-literal construction ({PC-008} clause 1) where new() format check was bypassed. EC-007 Cross-refs updated from 'both sanctioned' to 'all three sanctioned' to_problem() panic paths."
   - "1.25 (S-1.02-adv-pass-2/CRITICAL-F-A/2026-09-22, product-owner): BC↔BC contradiction with BC-2.14.003 {PC-005}/{PC-006} resolved by Option-A adjudication (fail-fast governs). This BC's always-on assert! semantics (EC-002/EC-006/EC-007) are preserved unchanged. BC-2.14.003 §EC-006 (programmer-error-guard-assertion policy) explicitly encompasses the PregolyaError::new() precondition guards as the canonical example. No behavioral change to this BC; cross-reference added to Related BCs."
+  - "1.26 (adversary-pass-3-H02/2026-09-22): VP-BC214001-01 closed — cargo xtask check-error-code-registry implemented and wired to CI lint-extra in S-1.02."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -233,7 +234,7 @@ HTTP status.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC214001-01 | Every `E-<COMPONENT>-<NNN>` code in error-taxonomy.md is unique (no collision) | CI integration test enumerating all error variant codes | S-1.02 (code-registry CI gate) |
+| VP-BC214001-01 | Every `E-<COMPONENT>-<NNN>` code in error-taxonomy.md is unique (no collision) | `cargo xtask check-error-code-registry` — parses error-taxonomy.md, asserts uniqueness; wired in ci.yml lint-extra with factory-artifacts checkout; delivered in S-1.02 | S-1.02 (code-registry CI gate) |
 | VP-BC214001-02 | `PregolyaError` satisfies `Send + Sync + 'static` | `static_assertions::assert_impl_all!` | Wave 0 CI |
 
 ## Related BCs

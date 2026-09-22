@@ -36,7 +36,7 @@ points: 5
 depends_on: []
 blocks: [S-1.02, S-1.03, S-1.08, S-1.09, S-1.14]
 behavioral_contracts: [BC-2.14.001, BC-2.14.002]
-verification_properties: [VP-BC214001-02, VP-BC214002-01, VP-BC214002-02]  # VP-BC214001-01 deferred to S-1.02 (code-registry CI gate, per EC-004)
+verification_properties: [VP-BC214001-02, VP-BC214002-01, VP-BC214002-02]  # VP-BC214001-01 delivered in S-1.02 (cargo xtask check-error-code-registry, wired CI lint-extra, adversary-pass-3-H02/2026-09-22)
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1

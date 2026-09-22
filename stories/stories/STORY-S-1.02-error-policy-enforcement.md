@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.8"
+version: "1.9"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -16,6 +16,7 @@ changelog:
   - "1.6 (pass-8/F-03-records/2026-09-22): AC-017 prose corrected for spec-body accuracy drift (F-03 LOW): reworded to state the two POL-31-mandated fixtures (bare assert! without # Panics doc or BC-ID message, and _ => unreachable!() wildcard arm, per BC-2.14.003 EC-007) are REQUIRED minimums that must be detected; additional regression fixtures may reside alongside them under xtask/tests/fixtures/violations/ without prescribing an exact count. Verified-by test symbol (test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions) unchanged. No other AC, BC-body table, or frontmatter field changed."
   - "1.7 (pass-15/F-01-F-02-sweep/2026-09-22): F-01 (MED) — AC-014 body corrected: removed false claim of 'five different invalid inputs across three message types'; actual test exercises empty-string input across OpenAiApiKey and AnthropicApiKey (two credential newtypes), asserting code E-CORE-005, Category::Val, and canonical message prefix 'Validation failed for'. F-02 (LOW) — AC-012 body corrected: 'property test' reworded to 'table-driven test' (fixed input array, not randomized). Full sweep additional corrections: AC-001 body corrected from 'compile-fail test' to 'unit test' with accurate description of Ok/Err paths; AC-011 body corrected example from Message::human('') with S-1.03-scope 'content' field (out of S-1.02 scope) to OpenAiApiKey::new('') with actual error message. bcs frontmatter array unchanged (4 BCs)."
   - "1.8 (adversary-pass-1-MED-7/2026-09-22): AC-006 #[ignore] reason corrected — removed false citation of non-existent timeout-validation CI job; deferral now cites S-2.07 per BC-2.14.004 {PC-005}."
+  - "1.9 (adversary-pass-3-H02/2026-09-22): Added BC-2.14.001 + VP-BC214001-01 to deliver the error-code-registry CI gate anchored here from STORY-S-1.01. Gate implemented: cargo xtask check-error-code-registry."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -29,8 +30,17 @@ traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]
 blocks: [S-1.04, S-1.06, S-1.09, S-1.10, S-1.12, S-2.01, S-2.04, S-2.09]
-behavioral_contracts: [BC-2.14.003, BC-2.14.004, BC-2.14.005, BC-2.14.006]
-verification_properties: []
+behavioral_contracts:
+  - id: BC-2.14.001
+  - id: BC-2.14.003
+  - id: BC-2.14.004
+  - id: BC-2.14.005
+  - id: BC-2.14.006
+verification_properties:
+  - id: VP-BC214001-01
+    status: delivered
+    gate: cargo xtask check-error-code-registry
+    notes: "Wired in ci.yml lint-extra via factory-artifacts checkout; taxonomy path resolved via FACTORY_DIR env var or .factory/ fallback"
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1
@@ -182,6 +192,7 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 12. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
 13. [ ] Add two POL-31 live-violation fixtures under `xtask/tests/fixtures/violations/` (bare `assert!` without `# Panics` doc; `_ => unreachable!()` wildcard arm) and confirm `cargo xtask check-no-panic --fixture-mode` detects both
 14. [ ] Add CHANGELOG entry under [Unreleased] > Added describing shipped no-panic enforcement, HTTP timeout policy, credential newtype redaction, and validation propagation behavior before creating the PR
+15. [ ] Implement `cargo xtask check-error-code-registry` gate (VP-BC214001-01): parses error-taxonomy.md, asserts code uniqueness, wired to CI lint-extra
 
 ## Previous Story Intelligence (MANDATORY)
 
