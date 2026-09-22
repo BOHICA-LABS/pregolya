@@ -2544,3 +2544,178 @@ pub fn handle_step(s: Step) -> i32 {
          got: {findings:?}"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-6) — arm_stack leak into closure/nested-fn (F-01),
+// cfg(test) impl-block skip gap (F-02), syn-parse-fail fail-safe (F-03)
+//
+// BC-2.14.003 §PC-005/§PC-006/§EC-007 v1.5: the named-arm exemption (Exemption 1)
+// applies ONLY when unreachable! is the direct body expression of a named arm.
+// It does NOT extend into closures or nested fn definitions lexically within
+// the arm body — those are independently callable/reachable code paths.
+// cfg(test) exemption must cover item_impl as well as item_mod and item_fn.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-01a (MED) — BC-2.14.003 §PC-005/§PC-006/§EC-007 pass-6
+///
+/// `unreachable!()` inside a CLOSURE that is lexically within a NAMED
+/// (non-catch-all) match arm MUST be FLAGGED. The closure body is a
+/// runtime-reachable code path — it is NOT covered by Exemption 1. The
+/// named-arm exemption only applies when the `unreachable!` is the direct
+/// body expression of the arm, not when it is nested inside a closure.
+///
+/// RED GATE: `visit_arm` pushes `false` (named arm) onto `arm_stack`, then
+/// calls `syn::visit::visit_expr` on the arm body. The closure
+/// `|_x| unreachable!(...)` is visited while `arm_stack.last() == Some(&false)`,
+/// so `handle_macro_invocation` treats it as Exemption-1 and silently skips
+/// the finding. The test asserts a finding IS produced → FAILS until the fix
+/// (arm_stack must be saved and cleared on closure-body entry, then restored).
+#[test]
+fn test_BC_2_14_003_pass6_closure_inside_named_arm_flagged() {
+    // BC-2.14.003 §PC-006/§EC-007: unreachable! inside a closure nested within a
+    // named arm must be flagged. The closure's body is runtime-reachable code —
+    // Exemption 1 covers only the direct named-arm body, not nested closures.
+    let src = r#"
+pub fn process(r: Result<Vec<i32>, String>) -> Vec<i32> {
+    match r {
+        Ok(v) => v.iter().map(|_x| unreachable!("BC-2.14.003: closure body is runtime-reachable per element")).collect(),
+        Err(_) => vec![],
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §PC-006 pass-6 F-01a: unreachable!() inside a closure within a named \
+         match arm MUST be flagged (the closure body is runtime-reachable; Exemption 1 applies \
+         only to the direct named-arm body expression, not to nested closures; arm_stack \
+         leaks the named-arm exempt flag into the closure); got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-6 F-01a: finding must reference unreachable!; got: {findings:?}"
+    );
+}
+
+/// F-01b (MED) — BC-2.14.003 §PC-005/§PC-006/§EC-007 pass-6
+///
+/// `unreachable!()` inside a NESTED FUNCTION that is lexically within a NAMED
+/// match arm MUST be FLAGGED. The nested function's body is an independently
+/// callable code path — it is NOT covered by the named-arm Exemption 1.
+///
+/// RED GATE: same root cause as F-01a. `visit_item_fn` does not reset
+/// `arm_stack`, so the nested function body is visited while
+/// `arm_stack.last() == Some(&false)`. `handle_macro_invocation` sees
+/// a non-empty arm_stack with `false` at top → EXEMPT — the finding is
+/// never emitted. Test asserts a finding IS produced → FAILS until
+/// `visit_item_fn` (and `visit_impl_item_fn`) save and clear `arm_stack`
+/// on entry, restoring on exit.
+#[test]
+fn test_BC_2_14_003_pass6_nested_fn_inside_named_arm_flagged() {
+    // BC-2.14.003 §PC-006/§EC-007: unreachable! inside a nested fn definition
+    // within a named arm must be flagged. The nested fn is independently callable;
+    // its body is not covered by the outer arm's Exemption 1.
+    let src = r#"
+pub fn process(r: Result<i32, String>) -> i32 {
+    match r {
+        Ok(v) => {
+            fn inner_helper() {
+                unreachable!("BC-2.14.003: nested-fn body is not a named-arm exemption")
+            }
+            let _ = inner_helper;
+            v
+        }
+        Err(_) => 0,
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §PC-006 pass-6 F-01b: unreachable!() inside a nested fn within a named \
+         match arm MUST be flagged (the nested fn body is independently callable and is not \
+         covered by Exemption 1; arm_stack leaks the named-arm exempt flag into the nested fn \
+         because visit_item_fn does not reset arm_stack); got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("unreachable")),
+        "BC-2.14.003 pass-6 F-01b: finding must reference unreachable!; got: {findings:?}"
+    );
+}
+
+/// F-02 (LOW) — BC-2.14.003 §PC-005/§EC-007 pass-6
+///
+/// `.unwrap()`, `assert!`, and `panic!` inside a `#[cfg(test)]`-attributed
+/// IMPL BLOCK must NOT be flagged. The cfg(test) skip in `PanicVisitor` covers
+/// `item_mod` and `item_fn`/`item_impl_fn` (method-level attrs), but NOT
+/// `item_impl` (impl-block-level attrs). A `#[cfg(test)] impl Foo { ... }` is
+/// test-only code; its methods must be treated identically to methods inside
+/// a `#[cfg(test)] mod tests { ... }` block.
+///
+/// RED GATE: `PanicVisitor` has `visit_item_mod` (cfg(test) early return) and
+/// `visit_item_fn`/`visit_impl_item_fn` (cfg(test) early return on the function
+/// itself), but NO `visit_item_impl`. When the visitor traverses a
+/// `#[cfg(test)] impl Checker { fn check_state() { x.unwrap(); } }` block, it
+/// descends into the impl items. `visit_impl_item_fn` is called for
+/// `check_state`, which has no `#[cfg(test)]` on the METHOD — only on the
+/// enclosing impl — so the skip does not fire. `.unwrap()` and `assert!(false)`
+/// inside `check_state` are wrongly flagged. Test asserts ZERO findings →
+/// FAILS until `visit_item_impl` with cfg(test) early-return is added.
+#[test]
+fn test_BC_2_14_003_pass6_cfg_test_impl_block_not_flagged() {
+    // BC-2.14.003 §EC-007: .unwrap() and assert!() inside a #[cfg(test)]-
+    // attributed impl block must NOT be flagged. The cfg(test) attribute on
+    // the impl block marks all its methods as test-only code.
+    let src = r#"
+pub struct Checker;
+
+#[cfg(test)]
+impl Checker {
+    fn check_state(&self) -> i32 {
+        let x: Option<i32> = None;
+        let _ = x.unwrap();
+        assert!(false);
+        0
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-6 F-02: .unwrap() and assert!() inside a \
+         #[cfg(test)]-attributed impl block MUST NOT be flagged (the impl block is \
+         test-only code; cfg(test) skip must cover item_impl, not just item_mod and \
+         item_fn/impl_item_fn); got: {findings:?}"
+    );
+}
+
+/// F-03 (LOW/OBS) — BC-2.14.003 §PC-005 pass-6
+///
+/// A source file that syn CANNOT parse (invalid item syntax — module-scope
+/// `let` statement) but proc_macro2 CAN tokenize must yield at least one
+/// finding: either a fail-safe "FAILED TO PARSE FILE" message or a real
+/// violation detected by the lexer fallback. The scanner MUST NOT return a
+/// silent empty vec for parse failures.
+///
+/// This pins the post-removal behavior: once the dead proc_macro2 fallback
+/// is removed and replaced by a `parse-Err → finding` route, a syn parse
+/// error must surface as a non-empty findings vec. Currently the fallback is
+/// active and detects `.unwrap()` in the token stream (test passes now); after
+/// the fallback is removed and the parse-Err route is added, the test still
+/// passes because the parse-error finding is non-empty.
+#[test]
+fn test_BC_2_14_003_pass6_syn_parse_failure_yields_fail_safe_finding() {
+    // Module-scope `let` statement: valid tokens, invalid Rust item syntax.
+    // syn::parse_file fails; proc_macro2 can tokenize it.
+    // The source contains `.unwrap()` so the current fallback returns a finding.
+    // After the fallback is removed: a "FAILED TO PARSE FILE" finding must appear.
+    let src = "let val: Option<i32> = Some(42);\nval.unwrap()";
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §PC-005 pass-6 F-03: a syn-unparseable-but-lexable source must yield \
+         at least one finding (either FAILED TO PARSE FILE from a parse-error route, or a \
+         real violation from the lexer fallback), not a silent empty vec; \
+         got: {findings:?}"
+    );
+}
