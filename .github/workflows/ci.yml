@@ -369,15 +369,16 @@ jobs:
         run: |
           set -euo pipefail
           # Fetch factory-artifacts branch if it exists. Use `if` to handle the
-          # branch-not-found case (exit 128) without masking real errors.
-          if git fetch origin factory-artifacts:factory-artifacts --depth=1 2>/dev/null; then
+          # branch-not-found case (exit 128) — note: stderr is visible so auth/network
+          # failures are distinguishable from branch-not-found in CI logs.
+          if git fetch origin factory-artifacts:factory-artifacts --depth=1; then
             git worktree add .factory-ci-checkout factory-artifacts
             echo "FACTORY_DIR=.factory-ci-checkout" >> "$GITHUB_ENV"
           else
-            # factory-artifacts branch not yet created (normal in early development).
-            # check-error-code-registry will use its .factory/ local path fallback.
+            # factory-artifacts branch not yet created (normal in early development),
+            # or fetch failed — see stderr above for auth/network error details.
             echo "FACTORY_DIR=" >> "$GITHUB_ENV"
-            echo "Warning: factory-artifacts branch not found; check-error-code-registry will hard-fail (no taxonomy file reachable — fail-closed behavior)."
+            echo "Warning: factory-artifacts branch not found or fetch failed (see above); check-error-code-registry will hard-fail (no taxonomy file reachable — fail-closed behavior)."
           fi
 
       - name: Run xtask lint gates

@@ -474,6 +474,22 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
     fn visit_stmt_macro(&mut self, node: &'ast syn::StmtMacro) {
         self.handle_macro_invocation(&node.mac);
     }
+
+    fn visit_item_macro(&mut self, mac: &'ast syn::ItemMacro) {
+        // Skip #[cfg(test)] item macros so that e.g. a thread_local! inside
+        // a test module is not flagged.
+        if syn_has_cfg_test(&mac.attrs) {
+            return;
+        }
+        // KNOWN-LIMITATION: macro_rules! definition bodies are opaque token
+        // streams; this scanner walks the tokens of the invocation but cannot
+        // expand the macro at this point.  Complex nested macro patterns (e.g.
+        // a macro_rules! arm whose output contains .unwrap()) are checked at
+        // the call site (visit_expr_macro / visit_stmt_macro), not here.  Item
+        // macros such as thread_local! and lazy_static! are scanned below.
+        self.handle_macro_invocation(&mac.mac);
+        syn::visit::visit_item_macro(self, mac);
+    }
 }
 
 impl PanicVisitor<'_> {
@@ -812,7 +828,7 @@ pub(crate) fn fixture_mode_verdict(
 
 #[cfg(test)]
 mod tests {
-    use super::{CREDENTIAL_FIXTURE_COUNT, fixture_mode_verdict};
+    use super::{CREDENTIAL_FIXTURE_COUNT, fixture_mode_verdict, scan_for_panics_in_source};
 
     /// F-P6-M01 (MED) — BC-2.14.003
     ///
@@ -856,25 +872,65 @@ mod tests {
     /// with the actual credential-only fixtures in the violations directory. Adding a new
     /// credential-only fixture without updating the constant would cause the lower-bound
     /// guard to fire incorrectly (scanner falsely reported as regressed).
+    ///
+    /// `include_str!` causes a compile error if any fixture file is missing or renamed,
+    /// making CREDENTIAL_FIXTURE_COUNT a compile-time constant coupled to the filesystem.
+    /// Each fixture is also verified to produce zero no-panic findings, confirming it is
+    /// truly a credential-only fixture and not a no-panic fixture.
     #[test]
     fn test_bc_2_14_003_credential_fixture_count_matches_fixture_dir() {
-        // The violation fixture directory contains files for two different gates:
-        // - No-panic fixtures (the primary target)
-        // - Credential-only fixtures for deny-bare-api-key (3 files)
-        // This test pins the CREDENTIAL_FIXTURE_COUNT constant to the actual count
-        // so adding a new credential-only fixture without updating the constant
-        // is caught immediately.
-        //
-        // Credential-only fixtures (produce no no-panic findings):
-        const CREDENTIAL_FIXTURE_NAMES: &[&str] = &[
-            "violation_pub_crate_debug_derive.rs",
-            "violation_derive_deserialize.rs",
-            "violation_impl_display.rs",
+        // include_str! causes a compile error if any file is missing/renamed,
+        // pinning CREDENTIAL_FIXTURE_COUNT to the actual filesystem state.
+        // Each file is also verified to produce zero no-panic findings
+        // (confirming it's truly a credential-only fixture, not a no-panic fixture).
+        let fixtures: &[(&str, &str)] = &[
+            (
+                include_str!("../tests/fixtures/violations/violation_pub_crate_debug_derive.rs"),
+                "violation_pub_crate_debug_derive.rs",
+            ),
+            (
+                include_str!("../tests/fixtures/violations/violation_derive_deserialize.rs"),
+                "violation_derive_deserialize.rs",
+            ),
+            (
+                include_str!("../tests/fixtures/violations/violation_impl_display.rs"),
+                "violation_impl_display.rs",
+            ),
         ];
         assert_eq!(
             CREDENTIAL_FIXTURE_COUNT,
-            CREDENTIAL_FIXTURE_NAMES.len(),
-            "CREDENTIAL_FIXTURE_COUNT must equal the number of credential-only fixtures in xtask/tests/fixtures/violations/"
+            fixtures.len(),
+            "CREDENTIAL_FIXTURE_COUNT must equal number of credential-only fixtures"
+        );
+        for (content, name) in fixtures {
+            let findings = scan_for_panics_in_source(content, name);
+            assert!(
+                findings.is_empty(),
+                "credential-only fixture {name} must produce zero no-panic findings; got: {findings:?}"
+            );
+        }
+    }
+
+    /// F-P7-M01 — BC-2.14.003
+    ///
+    /// `visit_item_macro` override: `.unwrap()` inside a `thread_local!` item macro
+    /// (or any other item-position macro such as `lazy_static!`) must be flagged.
+    /// Previously, `PanicVisitor` had no `visit_item_macro` override so the token
+    /// stream of item-position macros was never scanned.
+    #[test]
+    fn test_bc_2_14_003_item_macro_unwrap_is_flagged() {
+        let src = r#"
+thread_local! {
+    static FOO: i32 = {
+        let x: Option<i32> = None;
+        x.unwrap()
+    };
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "unwrap in thread_local! item macro must be flagged; got: {findings:?}"
         );
     }
 }

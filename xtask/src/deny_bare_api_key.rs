@@ -316,13 +316,13 @@ fn check_impl_deref(
                 if deref_found
                     && for_found
                     && struct_name_has_sentinel(&struct_name)
-                    && impl_body_has_target_str(body)
+                    && let Some(target_type) = impl_body_has_target_str(body)
                 {
                     findings.push(format!(
-                        "{}:{}: BC-2.14.005 {{PC-006}}: impl Deref<Target=str> for '{}' \
+                        "{}:{}: BC-2.14.005 {{PC-006}}: impl Deref<Target={}> for '{}' \
                          — inner value exposed via auto-deref \
                          ({{INV-003}}: use expose_secret() instead)",
-                        path, struct_line, struct_name
+                        path, struct_line, target_type, struct_name
                     ));
                 }
                 walk_for_credential_violations(
@@ -556,13 +556,15 @@ fn skip_cfg_test_body(
     j
 }
 
-/// Returns `true` if the impl body group contains `type Target = str ;` or
-/// `type Target = String ;`.
+/// Returns the matched `Target` type name (`"str"` or `"String"`) if the impl body group
+/// contains `type Target = str ;` or `type Target = String ;`, or `None` otherwise.
 ///
 /// Both `Deref<Target=str>` and `Deref<Target=String>` expose the inner value
 /// via auto-deref coercion (`*key` and coercion to `&str`/`&String`). Both are
-/// forbidden on credential-sentinel structs (SEC-004 / {INV-003}).
-fn impl_body_has_target_str(body: &proc_macro2::Group) -> bool {
+/// forbidden on credential-sentinel structs (SEC-004 / {INV-003}). Returning the
+/// matched type name rather than a bare bool allows the caller to emit a precise
+/// diagnostic (`Target=str` vs `Target=String`).
+fn impl_body_has_target_str(body: &proc_macro2::Group) -> Option<&'static str> {
     use proc_macro2::TokenTree;
     let toks: Vec<TokenTree> = body.stream().into_iter().collect();
     let n = toks.len();
@@ -570,17 +572,47 @@ fn impl_body_has_target_str(body: &proc_macro2::Group) -> bool {
         if matches!(&toks[i], TokenTree::Ident(id) if id == "type")
             && matches!(toks.get(i + 1), Some(TokenTree::Ident(id)) if id == "Target")
             && matches!(toks.get(i + 2), Some(TokenTree::Punct(p)) if p.as_char() == '=')
-            && matches!(toks.get(i + 3), Some(TokenTree::Ident(id)) if id == "str" || id == "String")
         {
-            return true;
+            if matches!(toks.get(i + 3), Some(TokenTree::Ident(id)) if id == "str") {
+                return Some("str");
+            }
+            if matches!(toks.get(i + 3), Some(TokenTree::Ident(id)) if id == "String") {
+                return Some("String");
+            }
         }
     }
-    false
+    None
 }
 
 #[cfg(test)]
 mod tests {
     use super::scan_for_bare_api_keys_in_source;
+
+    /// F-P7-M04 — BC-2.14.005 {PC-006}: `Deref<Target=String>` diagnostic must name `String`.
+    ///
+    /// Previously `check_impl_deref` always emitted `Target=str` even when the body contained
+    /// `type Target = String`. The diagnostic must now reflect the actual matched target type.
+    #[test]
+    fn test_bc_2_14_005_deref_target_string_diagnostic_mentions_string() {
+        let src = r#"
+pub struct ApiKey(String);
+impl std::ops::Deref for ApiKey {
+    type Target = String;
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "crates/core/src/creds.rs");
+        assert!(
+            !findings.is_empty(),
+            "Deref<Target=String> must be flagged; got: {findings:?}"
+        );
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.contains("String") || f.contains("Target")),
+            "diagnostic must mention Target type; got: {findings:?}"
+        );
+    }
 
     /// F-P5-L03 — `impl<T: Deref> SomeTrait for ApiKey` must NOT be flagged.
     ///

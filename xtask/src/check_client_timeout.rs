@@ -530,34 +530,74 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
     found_build && !found_timeout_before_build
 }
 
-/// Returns `true` if a zero-duration literal matches the zero-literal normalisation rules.
+/// Returns `true` if the literal string `s` represents the value zero under Rust literal
+/// normalisation:
 ///
-/// Strips underscores (for `0_u64`, `0_u32`, etc.) and also recognises hex/binary/octal
-/// zero forms (`0x0`, `0b0`, `0o0`) which are equivalent to the integer zero at compile time.
+/// 1. Strip underscore separators (`0_u64` → `"0u64"`, `0_0` → `"00"`).
+/// 2. Strip a trailing integer or float type suffix (`u8`, `u16`, `u32`, `u64`, `u128`,
+///    `usize`, `i8`, `i16`, `i32`, `i64`, `i128`, `isize`, `f32`, `f64`) from the end.
+///    Longest-suffix-first to avoid stripping `u32` from `u128` prematurely.
+/// 3. Parse by detected radix:
+///    - `0x…` / `0X…` → hex integer; zero iff all post-prefix digits are `'0'`
+///    - `0b…` / `0B…` → binary integer; zero iff all post-prefix digits are `'0'`
+///    - `0o…` / `0O…` → octal integer; zero iff all post-prefix digits are `'0'`
+///    - contains `'.'`, `'e'`, or `'E'` → parse as `f64`, check `== 0.0`
+///    - otherwise → parse as decimal `u128`, check `== 0`
+///
+/// Handles: `0`, `00`, `0_0`, `0x0`, `0x00`, `0b0`, `0b00`, `0o0`, `0o00`,
+/// `0.0`, `0.00`, `0.`, `0f64`, `0f32`, `0.0f64`, `0.0f32`, `0e0`, `0.0e0`,
+/// and their underscore-separated variants.
 fn is_zero_literal(s: &str) -> bool {
-    let normalized = s.replace('_', "");
-    if matches!(
-        normalized.as_str(),
-        "0" | "0u64"
-            | "0u32"
-            | "0u128"
-            | "0usize"
-            | "0i64"
-            | "0i32"
-            | "0f64"
-            | "0f32"
-            | "0."
-            | "0.0"
-            | "0.0f64"
-            | "0.0f32"
-            // Hex/binary/octal zero forms
-            | "0x0"
-            | "0b0"
-            | "0o0"
-    ) {
-        return true;
+    // Step 1: strip underscore separators.
+    let no_underscores = s.replace('_', "");
+
+    // Step 2: strip trailing type suffix (longest first to avoid partial strips).
+    const TYPE_SUFFIXES: &[&str] = &[
+        "u128", "u64", "u32", "u16", "u8", "usize", "i128", "i64", "i32", "i16", "i8", "isize",
+        "f64", "f32",
+    ];
+    let stripped: &str = {
+        let mut result: &str = no_underscores.as_str();
+        for suffix in TYPE_SUFFIXES {
+            if let Some(base) = result.strip_suffix(suffix) {
+                result = base;
+                break;
+            }
+        }
+        result
+    };
+
+    // Step 3: parse by radix.
+    if let Some(hex_digits) = stripped
+        .strip_prefix("0x")
+        .or_else(|| stripped.strip_prefix("0X"))
+    {
+        // Hex zero: all digits after the prefix must be '0'.
+        return !hex_digits.is_empty() && hex_digits.chars().all(|c| c == '0');
     }
-    false
+    if let Some(bin_digits) = stripped
+        .strip_prefix("0b")
+        .or_else(|| stripped.strip_prefix("0B"))
+    {
+        // Binary zero: all digits after the prefix must be '0'.
+        return !bin_digits.is_empty() && bin_digits.chars().all(|c| c == '0');
+    }
+    if let Some(oct_digits) = stripped
+        .strip_prefix("0o")
+        .or_else(|| stripped.strip_prefix("0O"))
+    {
+        // Octal zero: all digits after the prefix must be '0'.
+        return !oct_digits.is_empty() && oct_digits.chars().all(|c| c == '0');
+    }
+
+    // Float or decimal integer.
+    if stripped.contains('.') || stripped.contains('e') || stripped.contains('E') {
+        // Float form (includes exponential notation such as `0e0`).
+        stripped.parse::<f64>().map(|v| v == 0.0).unwrap_or(false)
+    } else {
+        // Decimal integer form.
+        stripped.parse::<u128>().map(|v| v == 0).unwrap_or(false)
+    }
 }
 
 /// Returns `true` if the `.timeout(...)` call at `timeout_idx` uses a zero duration
@@ -596,8 +636,13 @@ fn is_zero_literal(s: &str) -> bool {
 /// +4  Punct(':')  +5  Punct(':')
 /// +6  Ident("from_secs"|"from_millis"|"from_nanos"|"from_secs_f64"|"from_micros"|"from_secs_f32")
 /// +7  ParenGroup       (inner paren marker for constructor args)
-/// +8  Literal("0"|"0u64"|"0u32"|"0i64"|"0usize"|"0f64"|"0f32"|"0."|"0.0"|"0.0f64"|"0.0f32"|"0x0"|"0b0"|"0o0")
+/// +8  Literal(<any zero literal per is_zero_literal normalisation>)
 /// ```
+///
+/// The `is_zero_literal` function applies a three-step normalisation: strip underscores,
+/// strip type suffix, then parse by radix (hex `0x…`, binary `0b…`, octal `0o…`, float
+/// with `'.'`/`'e'`/`'E'`, or decimal integer). This covers `00`, `0.00`, `0x00`, `0e0`,
+/// `0.0e0`, `0_u64`, etc. without an enumerated allowlist.
 ///
 /// **Form D — fully-qualified zero-literal constructor `std::time::Duration::from_secs(0)` /
 /// `core::time::Duration::from_millis(0)` etc.** (offsets +3..+13):
@@ -769,6 +814,62 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "from_secs_f32(0.) must be flagged as zero-duration timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `00` decimal double-zero must be flagged.
+    ///
+    /// `00` is a valid Rust decimal literal evaluating to 0; the numeric normalisation in
+    /// `is_zero_literal` (parse as u128 decimal) must recognise it as zero.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_double_zero() {
+        let src = "pub fn f() -> reqwest::Client { reqwest::ClientBuilder::new().timeout(Duration::from_secs(00)).build().unwrap() }";
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs(00) must be flagged as zero-duration timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `0.00` float zero must be flagged.
+    ///
+    /// `0.00` is a float literal evaluating to 0.0; the numeric normalisation in
+    /// `is_zero_literal` (parse as f64) must recognise it as zero.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_f64_zero_point_zero_zero() {
+        let src = "pub fn f() -> reqwest::Client { reqwest::ClientBuilder::new().timeout(Duration::from_secs_f64(0.00)).build().unwrap() }";
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs_f64(0.00) must be flagged as zero-duration timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `0x00` hex zero must be flagged.
+    ///
+    /// `0x00` is a hex integer literal evaluating to 0; the numeric normalisation in
+    /// `is_zero_literal` (all hex post-prefix digits are `0`) must recognise it.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_hex_double_zero() {
+        let src = "pub fn f() -> reqwest::Client { reqwest::ClientBuilder::new().timeout(Duration::from_secs(0x00)).build().unwrap() }";
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs(0x00) must be flagged as zero-duration timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `0e0` exponential float zero must be flagged.
+    ///
+    /// `0e0` is a float literal in exponential notation evaluating to 0.0; the numeric
+    /// normalisation in `is_zero_literal` (contains 'e' → parse as f64) must recognise it.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_f64_exp_zero() {
+        let src = "pub fn f() -> reqwest::Client { reqwest::ClientBuilder::new().timeout(Duration::from_secs_f64(0e0)).build().unwrap() }";
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs_f64(0e0) must be flagged as zero-duration timeout; got: {findings:?}"
         );
     }
 }
