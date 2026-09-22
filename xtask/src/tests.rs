@@ -1490,9 +1490,9 @@ impl std::ops::Deref for FooCredential {
 /// A COMPLIANT credential struct — manual `Debug` impl emitting `"<redacted>"`, no
 /// `#[derive(Serialize)]`, no `Deref<Target=str>` — must NOT be flagged.
 ///
-/// Note: with the current prefix-literal scanner this test passes vacuously (no
-/// sk-/sk-ant- literals present). After the implementer's structural fix this guard
-/// must continue to pass, verifying the scanner does not over-flag compliant code.
+/// Red-gate provenance: at authoring time the scanner was prefix-literal and this test
+/// passed vacuously (no sk-/sk-ant- literals present); the shipped scanner is structural,
+/// and this guard verifies it does not over-flag a compliant credential struct; now GREEN.
 #[test]
 fn test_BC_2_14_005_compliant_credential_struct_not_flagged() {
     let src = r#"
@@ -1636,10 +1636,10 @@ pub fn validate(a: i32, b: i32) {
 
 /// F-03 (MED) — assert! inside #[cfg(test)] block must NOT be flagged
 ///
-/// Guard test: the cfg(test)-block exemption that already covers .unwrap()/.expect()
-/// must extend to assert!/assert_eq!/assert_ne!/panic! after the implementer's fix.
-/// The scanner's `#[cfg(test)]` block exemption prevents flagging asserts inside
-/// test modules; this test is GREEN and must remain GREEN as scanner logic evolves.
+/// Guard test: the cfg(test)-block exemption that already covered .unwrap()/.expect()
+/// was extended to assert!/assert_eq!/assert_ne!/panic! when the scanner was overhauled;
+/// now GREEN. The scanner's `#[cfg(test)]` block exemption prevents flagging asserts
+/// inside test modules; must remain GREEN as scanner logic evolves.
 #[test]
 fn test_BC_2_14_003_assert_inside_cfg_test_not_flagged() {
     let src = r#"
@@ -1811,7 +1811,9 @@ fn test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions() {
     // (i) EXEMPT: fully-enumerated explicit-variant unreachable!() — no wildcard arm.
     // An explicit variant arm (not `_`) with unreachable!() is a programmer-error-guard;
     // it is NOT a wildcard catch-all and should remain exempt.
-    // PASSES now (all unreachable! exempt) and must remain PASS after the fix.
+    // At red-gate authoring time ALL unreachable! were blanket-exempt so this case
+    // PASSED vacuously; now GREEN after the scanner was updated to distinguish named-variant
+    // arms (Exemption 1 applies) from wildcard arms (flagged).
     let exempt_explicit_variant = r#"
 #[allow(dead_code)]
 pub enum Phase { Init, Running, Done }
