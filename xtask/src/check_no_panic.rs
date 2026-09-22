@@ -144,16 +144,31 @@ fn syn_has_panics_doc(attrs: &[syn::Attribute]) -> bool {
 }
 
 /// Returns true if the match-arm pattern is a catch-all:
-/// `_` wildcard, irrefutable lowercase binding (e.g. `other`), or an or-pattern
-/// containing any catch-all sub-pattern. Named-variant arms (e.g. `Phase::Done`,
-/// `Done`) are NOT catch-alls.
+/// `_` wildcard, irrefutable binding (e.g. `other`, `ref other`, `mut other`),
+/// `..` rest pattern, or an or-pattern containing any catch-all sub-pattern.
+/// Named-variant arms (e.g. `Phase::Done`, `Ok(v)`) are NOT catch-alls.
+///
+/// **Safe-by-default**: any pattern not positively recognised as a
+/// specific-variant/literal returns `true` (catch-all ⇒ deny Exemption 1).
+/// This prevents new `syn::Pat` variants introduced in future syn releases
+/// from silently opening false exemptions.
+///
+/// Binding mode does NOT change irrefutability: `ref other`, `mut other`, and
+/// `ref mut other` are all irrefutable bindings that match every value not
+/// covered by earlier arms (BC-2.14.003 §EC-007 pass-8 F-01).
 fn is_catch_all_pat(pat: &syn::Pat) -> bool {
     match pat {
+        // Definite catch-alls.
         syn::Pat::Wild(_) => true,
+        syn::Pat::Rest(_) => true,
+
+        // Pat::Ident is a catch-all iff it is a plain binding with no sub-pattern.
+        // `by_ref` and `mutability` change binding mode but NOT irrefutability —
+        // `ref other`, `mut other`, `ref mut other` are all catch-alls.
+        // Only a sub-pattern (e.g. `name @ Variant`) makes the arm specific.
+        // Uppercase-initial identifiers are enum/const names, not bindings.
         syn::Pat::Ident(p) => {
-            p.by_ref.is_none()
-                && p.mutability.is_none()
-                && p.subpat.is_none()
+            p.subpat.is_none()
                 && p.ident
                     .to_string()
                     .chars()
@@ -162,12 +177,26 @@ fn is_catch_all_pat(pat: &syn::Pat) -> bool {
                     .unwrap_or(false)
                 && !matches!(p.ident.to_string().as_str(), "true" | "false")
         }
+
+        // Or-patterns: catch-all if ANY sub-pattern is a catch-all.
         syn::Pat::Or(p) => p.cases.iter().any(is_catch_all_pat),
-        // Wrapper patterns that do not restrict the set of matched values:
-        // `&other =>` and `(other) =>` are irrefutable-binding catch-alls.
+
+        // Wrapper patterns that do not restrict the matched value set.
         syn::Pat::Reference(r) => is_catch_all_pat(&r.pat),
         syn::Pat::Paren(p) => is_catch_all_pat(&p.pat),
-        _ => false,
+
+        // Positively recognised specific-variant/literal patterns — NOT catch-alls.
+        syn::Pat::Path(_) => false,        // e.g. Phase::Done
+        syn::Pat::TupleStruct(_) => false, // e.g. Ok(v), Err(e)
+        syn::Pat::Struct(_) => false,      // e.g. Foo { field }
+        syn::Pat::Lit(_) => false,         // e.g. 0, "str"
+        syn::Pat::Tuple(_) => false,       // e.g. (a, b)
+        syn::Pat::Range(_) => false,       // e.g. 0..=10
+        syn::Pat::Slice(_) => false,       // e.g. [a, b]
+
+        // Safe-by-default: any unrecognised pattern variant is conservatively
+        // treated as a catch-all so the exemption is denied rather than granted.
+        _ => true,
     }
 }
 
@@ -245,6 +274,23 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
         // evaluated without any match-arm context (BC-2.14.003 §PC-006 / §EC-007).
         let old_arm_stack = std::mem::take(&mut self.arm_stack);
         syn::visit::visit_expr_async(self, node);
+        self.arm_stack = old_arm_stack;
+    }
+
+    fn visit_trait_item_fn(&mut self, node: &'ast syn::TraitItemFn) {
+        if syn_has_cfg_test(&node.attrs) {
+            return;
+        }
+        let old_doc = self.fn_has_panics_doc;
+        // A trait default method body is independently callable — the method may be
+        // invoked at any time by any implementor, completely independently of the match
+        // arm's evaluation context.  Save and clear arm_stack so that unreachable!
+        // inside a trait default method nested within a named arm is evaluated without
+        // match-arm context (BC-2.14.003 §PC-006 / §EC-007 pass-8 F-02).
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        self.fn_has_panics_doc = syn_has_panics_doc(&node.attrs);
+        syn::visit::visit_trait_item_fn(self, node);
+        self.fn_has_panics_doc = old_doc;
         self.arm_stack = old_arm_stack;
     }
 
