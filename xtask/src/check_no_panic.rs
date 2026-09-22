@@ -105,8 +105,8 @@ pub fn run() {
 // Primary scan path: syn handles qualified paths (std::unreachable!/core::unreachable!)
 // and match-arm context correctly by construction, closing the token-scanner edge-case
 // class (F-01 guarded irrefutable binding, F-02 cross-arm misattribution, F-05 qualified
-// path). Falls back to the proc_macro2 token-based path for source files that syn cannot
-// parse (e.g. syntactically invalid-but-tokenizable Rust in test fixtures).
+// path). When syn cannot parse a file a fail-safe finding is emitted rather than silently
+// certifying an unparseable source as clean.
 
 struct PanicVisitor<'a> {
     path: &'a str,
@@ -187,24 +187,51 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
         }
     }
 
+    fn visit_item_impl(&mut self, node: &'ast syn::ItemImpl) {
+        // Skip the entire impl block when it carries #[cfg(test)].
+        // This mirrors visit_item_mod's treatment of cfg(test) modules: all methods
+        // inside a `#[cfg(test)] impl Foo { ... }` block are test-only code and must
+        // not be flagged, even when the individual methods lack their own #[cfg(test)].
+        if !syn_has_cfg_test(&node.attrs) {
+            syn::visit::visit_item_impl(self, node);
+        }
+    }
+
     fn visit_item_fn(&mut self, node: &'ast syn::ItemFn) {
         if syn_has_cfg_test(&node.attrs) {
             return;
         }
-        let old = self.fn_has_panics_doc;
+        let old_doc = self.fn_has_panics_doc;
+        // A nested fn definition is an independent callable — its body is NOT covered
+        // by the outer match arm's Exemption 1.  Save and clear arm_stack so that any
+        // unreachable! inside the nested fn is evaluated without match-arm context.
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
         self.fn_has_panics_doc = syn_has_panics_doc(&node.attrs);
         syn::visit::visit_item_fn(self, node);
-        self.fn_has_panics_doc = old;
+        self.fn_has_panics_doc = old_doc;
+        self.arm_stack = old_arm_stack;
     }
 
     fn visit_impl_item_fn(&mut self, node: &'ast syn::ImplItemFn) {
         if syn_has_cfg_test(&node.attrs) {
             return;
         }
-        let old = self.fn_has_panics_doc;
+        let old_doc = self.fn_has_panics_doc;
+        // Same save/restore as visit_item_fn: a method body is independently callable.
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
         self.fn_has_panics_doc = syn_has_panics_doc(&node.attrs);
         syn::visit::visit_impl_item_fn(self, node);
-        self.fn_has_panics_doc = old;
+        self.fn_has_panics_doc = old_doc;
+        self.arm_stack = old_arm_stack;
+    }
+
+    fn visit_expr_closure(&mut self, node: &'ast syn::ExprClosure) {
+        // A closure body is runtime-reachable code — it is NOT covered by the outer
+        // named-arm Exemption 1.  Save and clear arm_stack so that unreachable! inside
+        // a closure nested within a named arm is evaluated without arm context.
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        syn::visit::visit_expr_closure(self, node);
+        self.arm_stack = old_arm_stack;
     }
 
     /// Push arm context before visiting the arm body; pop after.
@@ -288,10 +315,10 @@ impl PanicVisitor<'_> {
     }
 }
 
-/// Syn AST-based scan. Returns `None` if syn cannot parse the source (invalid Rust);
-/// callers fall back to the proc_macro2 token-based scan in that case.
-fn scan_with_syn(src: &str, path: &str) -> Option<Vec<String>> {
-    let file = syn::parse_file(src).ok()?;
+/// Syn AST-based scan. Returns `Ok(findings)` on success, `Err(syn::Error)` if syn
+/// cannot parse the source (invalid Rust syntax — e.g. module-scope `let` statements).
+fn scan_with_syn(src: &str, path: &str) -> Result<Vec<String>, syn::Error> {
+    let file = syn::parse_file(src)?;
     let mut v = PanicVisitor {
         path,
         findings: Vec::new(),
@@ -299,7 +326,7 @@ fn scan_with_syn(src: &str, path: &str) -> Option<Vec<String>> {
         arm_stack: Vec::new(),
     };
     syn::visit::visit_file(&mut v, &file);
-    Some(v.findings)
+    Ok(v.findings)
 }
 
 /// Scans a single Rust source file (as a string) for `.unwrap()` / `.expect(...)`
@@ -331,410 +358,60 @@ pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
 
     // Primary: syn AST-based scan (handles qualified paths and match-arm context
     // correctly by construction — F-01/F-02/F-05 correct by construction).
-    if let Some(findings) = scan_with_syn(src, path) {
-        return findings;
-    }
-
-    // Fallback: proc_macro2 token scan for syntactically invalid-but-tokenizable
-    // source (e.g. test fixtures with `let` statements at module scope).
-    use proc_macro2::TokenStream;
-    let ts: TokenStream = match src.parse() {
-        Ok(s) => s,
-        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
-    };
-    let mut findings = Vec::new();
-    walk_panic_tokens(ts.into_iter(), &mut findings, path, &mut 0u32, false);
-    findings
-}
-
-/// Panic-inducing macros flagged in non-test production code when used without
-/// a documented programmer-error-guard exemption.
-///
-/// Excluded from this list:
-/// - `debug_assert!*`: compiles out in release mode (BC-2.14.003 {INV-003})
-/// - `unreachable!`: handled separately — only flagged for `_ =>` wildcard arms
-/// - `todo!`, `unimplemented!`: not in scope for this gate
-const FLAGGED_PANIC_MACROS: &[&str] = &["assert", "assert_eq", "assert_ne", "panic"];
-
-/// Returns true if the bracket group `[...]` is a `doc` attribute whose
-/// string literal contains the text `# Panics`.
-///
-/// Matches `#[doc = " # Panics"]` (emitted by `/// # Panics` doc comments).
-fn doc_group_has_panics(g: &proc_macro2::Group) -> bool {
-    use proc_macro2::TokenTree;
-    let tokens: Vec<TokenTree> = g.stream().into_iter().collect();
-    // Must be: doc = "..." where "..." contains "# Panics"
-    if !matches!(tokens.first(), Some(TokenTree::Ident(id)) if id == "doc") {
-        return false;
-    }
-    // tokens[1] should be "="
-    if !matches!(tokens.get(1), Some(TokenTree::Punct(p)) if p.as_char() == '=') {
-        return false;
-    }
-    // tokens[2] should be the string literal
-    if let Some(TokenTree::Literal(lit)) = tokens.get(2) {
-        lit.to_string().contains("# Panics")
-    } else {
-        false
-    }
-}
-
-/// Returns true if the bracket group `[...]` is any `doc` attribute.
-///
-/// Used to distinguish doc attributes from other attributes (e.g. `#[allow(...)]`)
-/// so that non-doc attributes between doc comments and a `fn` keyword do not reset
-/// the pending-panics-doc state.
-fn is_doc_group(g: &proc_macro2::Group) -> bool {
-    use proc_macro2::TokenTree;
-    matches!(
-        g.stream().into_iter().next(),
-        Some(TokenTree::Ident(id)) if id == "doc"
-    )
-}
-
-/// Returns true if any literal in the macro-call argument group `(...)` contains
-/// a BC-ID pattern: the text `"BC-"` immediately followed by an ASCII digit.
-///
-/// Used by the documented-assert exemption check (BC-2.14.003 §EC-007 Exemption 2).
-fn args_contain_bc_id(g: &proc_macro2::Group) -> bool {
-    use proc_macro2::TokenTree;
-    for token in g.stream() {
-        if let TokenTree::Literal(lit) = token {
-            let s = lit.to_string();
-            if let Some(pos) = s.find("BC-")
-                && s[pos + 3..]
-                    .bytes()
-                    .next()
-                    .map(|b| b.is_ascii_digit())
-                    .unwrap_or(false)
-            {
-                return true;
+    match scan_with_syn(src, path) {
+        Ok(findings) => findings,
+        Err(syn_err) => {
+            // syn failed to parse the file (e.g. module-scope `let` statement in a
+            // test fixture).  Attempt a proc_macro2 lex so we can distinguish a genuine
+            // tokenisation error from a pure syntax error, and run a minimal method-call
+            // scan rather than silently returning an empty vec.
+            use proc_macro2::TokenStream;
+            match src.parse::<TokenStream>() {
+                Err(lex_err) => {
+                    // Genuine tokenisation failure — emit the lex-error finding.
+                    vec![format!("{}:0: FAILED TO LEX FILE: {}", path, lex_err)]
+                }
+                Ok(ts) => {
+                    // syn failed but proc_macro2 succeeded.  Run a minimal recursive
+                    // scan for `.unwrap()` / `.expect()` method calls in the raw token
+                    // tree.  This surfaces violations in syntactically-invalid-but-
+                    // tokenizable sources (e.g. test fixtures with module-scope `let`).
+                    let mut findings = Vec::new();
+                    scan_method_calls_in_tokens(ts.into_iter(), &mut findings, path);
+                    if findings.is_empty() {
+                        // No method violations found; emit a fail-safe parse-error
+                        // finding so the file is not silently certified as clean.
+                        vec![format!("{}:0: FAILED TO PARSE FILE: {}", path, syn_err)]
+                    } else {
+                        findings
+                    }
+                }
             }
         }
     }
-    false
 }
 
-/// Recursive token-tree walker for `scan_for_panics_in_source`.
+/// Minimal recursive proc_macro2 token-tree scan used ONLY when `syn::parse_file`
+/// fails.  Finds `.unwrap()` and `.expect()` method calls at any nesting depth.
 ///
-/// Implements the two-exemption discipline (BC-2.14.003 §EC-007):
-///
-/// **FLAGS:**
-/// - `.unwrap()` / `.expect(...)` method calls outside `#[cfg(test)]` blocks
-/// - bare `assert!` / `assert_eq!` / `assert_ne!` / `panic!` where the assert
-///   message does NOT contain a BC-ID OR the enclosing function has no `# Panics`
-///   doc section
-/// - `_ => unreachable!()` wildcard match arms (ALWAYS flagged; §EC-004)
-/// - `unreachable!()` outside any match arm (let-else, if-block, etc.; §PC-006)
-///
-/// **EXEMPTS:**
-/// - Exemption 1: `unreachable!()` in a named (non-wildcard) match arm
-///   e.g. `Phase::Done => unreachable!(...)` — requires no wildcard `_` in the arm
-/// - Exemption 2: `assert!` where `fn_has_panics_doc` is true AND message has BC-ID
-/// - `debug_assert!*` (compile-out in release)
-/// - `#[cfg(test)]` blocks (tracked via `in_test_depth`)
-///
-/// # Parameters
-///
-/// - `fn_has_panics_doc`: true when the immediately enclosing named function has a
-///   `# Panics` doc section. Passed from the function-entry handler when recursing
-///   into a function body; inherited unchanged for non-function brace groups (match
-///   arms, if-else bodies, etc.).
-#[allow(clippy::too_many_lines)]
-fn walk_panic_tokens(
+/// Does NOT apply cfg(test) exemptions — callers hit this path only for
+/// syntactically invalid Rust (e.g. test fixtures), where exemption tracking
+/// cannot be guaranteed correct without a full parse.
+fn scan_method_calls_in_tokens(
     iter: proc_macro2::token_stream::IntoIter,
     findings: &mut Vec<String>,
     path: &str,
-    in_test_depth: &mut u32,
-    fn_has_panics_doc: bool,
 ) {
-    use proc_macro2::{Delimiter, TokenTree};
-
+    use proc_macro2::TokenTree;
     let tokens: Vec<TokenTree> = iter.collect();
     let mut i = 0;
-    // Tracks whether recent consecutive `#[doc = ...]` attributes contained
-    // a `# Panics` section. Reset on any non-attribute, non-qualifier token;
-    // consumed when a `fn` keyword is encountered.
-    let mut pending_panics_doc = false;
-
     while i < tokens.len() {
         match &tokens[i] {
-            // ── Attribute handling (`#[...]`) ────────────────────────────────
-            TokenTree::Punct(p) if p.as_char() == '#' => {
-                if let Some(TokenTree::Group(g)) = tokens.get(i + 1)
-                    && g.delimiter() == Delimiter::Bracket
-                {
-                    if crate::is_cfg_test_group(g) {
-                        // BC-2.14.003: cfg(test) block — recurse at elevated depth
-                        pending_panics_doc = false;
-                        let mut j = i + 2;
-                        // Skip any intervening #[...] attributes between cfg(test) and block
-                        while j + 1 < tokens.len() {
-                            if let TokenTree::Punct(p2) = &tokens[j]
-                                && p2.as_char() == '#'
-                                && let TokenTree::Group(_) = &tokens[j + 1]
-                            {
-                                j += 2;
-                                continue;
-                            }
-                            break;
-                        }
-                        let mut found = false;
-                        while j < tokens.len() {
-                            match &tokens[j] {
-                                TokenTree::Group(body) if body.delimiter() == Delimiter::Brace => {
-                                    *in_test_depth += 1;
-                                    walk_panic_tokens(
-                                        body.stream().into_iter(),
-                                        findings,
-                                        path,
-                                        in_test_depth,
-                                        false,
-                                    );
-                                    *in_test_depth -= 1;
-                                    i = j;
-                                    found = true;
-                                    break;
-                                }
-                                TokenTree::Punct(p2) if p2.as_char() == ';' => {
-                                    i = j;
-                                    found = true;
-                                    break;
-                                }
-                                _ => {}
-                            }
-                            j += 1;
-                        }
-                        if found {
-                            i += 1;
-                            continue;
-                        }
-                    } else if is_doc_group(g) {
-                        // Doc attribute: accumulate # Panics state
-                        if doc_group_has_panics(g) {
-                            pending_panics_doc = true;
-                        }
-                        // Do NOT reset if it's a doc line without # Panics
-                        i += 2;
-                        continue;
-                    } else {
-                        // Non-doc attribute (e.g. #[allow(...)], #[inline], #[must_use]):
-                        // these can appear between doc comments and `fn`, so do NOT reset
-                        // pending_panics_doc. Skip past the attribute.
-                        i += 2;
-                        continue;
-                    }
-                }
-                // Bare `#` without bracket group — unlikely in valid Rust, reset state
-                pending_panics_doc = false;
-            }
-
-            // ── Qualifier keywords that precede `fn` ─────────────────────────
-            // `pub`, `async`, `unsafe`, `const`, `extern`, `default` can appear
-            // between doc attrs and the `fn` keyword — do NOT reset pending_panics_doc.
-            TokenTree::Ident(id)
-                if matches!(
-                    id.to_string().as_str(),
-                    "pub" | "async" | "unsafe" | "const" | "extern" | "default"
-                ) => {}
-
-            // ── `fn` keyword: consume pending_panics_doc and recurse into body ──
-            TokenTree::Ident(id) if id == "fn" && *in_test_depth == 0 => {
-                let this_fn_panics_doc = pending_panics_doc;
-                pending_panics_doc = false;
-                // Scan forward past name, params, return type to find the body `{...}`
-                let mut j = i + 1;
-                let mut found_body = false;
-                while j < tokens.len() {
-                    match &tokens[j] {
-                        TokenTree::Group(g) if g.delimiter() == Delimiter::Brace => {
-                            // Function body found — recurse with fn_has_panics_doc
-                            walk_panic_tokens(
-                                g.stream().into_iter(),
-                                findings,
-                                path,
-                                in_test_depth,
-                                this_fn_panics_doc,
-                            );
-                            i = j; // advance outer cursor to brace position
-                            found_body = true;
-                            break;
-                        }
-                        TokenTree::Punct(p) if p.as_char() == ';' => {
-                            // Abstract fn declaration (no body) — advance past `;`
-                            i = j;
-                            found_body = true;
-                            break;
-                        }
-                        _ => {}
-                    }
-                    j += 1;
-                }
-                if !found_body {
-                    // Reached end without finding body — no advance needed
-                }
-            }
-
-            // ── Brace group NOT preceded by `fn` ─────────────────────────────
-            // Recurse inheriting fn_has_panics_doc (match arms, if/else, impl, etc.)
-            TokenTree::Group(g) if g.delimiter() == Delimiter::Brace => {
-                pending_panics_doc = false;
-                walk_panic_tokens(
-                    g.stream().into_iter(),
-                    findings,
-                    path,
-                    in_test_depth,
-                    fn_has_panics_doc,
-                );
-            }
-
-            // ── `_ => unreachable!()` wildcard arm detection ─────────────────
-            // Wildcard arms are ALWAYS flagged as latent panic paths under enum
-            // evolution (BC-2.14.003 §EC-004/EC-007). There is NO exemption for
-            // wildcard arms regardless of whether qualified enum-variant arms
-            // precede them — the presence of named-variant arms only proves current
-            // exhaustiveness; it does NOT prove future-proof safety. A new variant
-            // added downstream makes the `_` arm reachable and causes a production
-            // panic.
-            //
-            // Exemption 1 applies ONLY to explicit named arms WITHOUT a wildcard:
-            //   `Phase::Done => unreachable!(...)` — not `_ => unreachable!(...)`
-            TokenTree::Ident(id) if id == "_" && *in_test_depth == 0 => {
-                pending_panics_doc = false;
-                // Pattern 1: `_ = > unreachable ! (group)` — direct wildcard arm.
-                // Pattern 2: `_ if <guard...> = > unreachable ! (group)` — guarded wildcard.
-                // Both are flagged: wildcard and guarded-wildcard arms are latent panic
-                // paths under enum evolution (BC-2.14.003 §EC-004/§EC-007).
-                // Delimiter-independent: matches Parenthesis, Brace, and Bracket forms (F-01).
-                let wildcard_violation_line = if let (
-                    Some(TokenTree::Punct(fat_eq)),
-                    Some(TokenTree::Punct(fat_gt)),
-                    Some(TokenTree::Ident(ur_id)),
-                    Some(TokenTree::Punct(bang)),
-                    Some(TokenTree::Group(args)),
-                ) = (
-                    tokens.get(i + 1),
-                    tokens.get(i + 2),
-                    tokens.get(i + 3),
-                    tokens.get(i + 4),
-                    tokens.get(i + 5),
-                ) && fat_eq.as_char() == '='
-                    && fat_gt.as_char() == '>'
-                    && ur_id == "unreachable"
-                    && bang.as_char() == '!'
-                    && matches!(
-                        args.delimiter(),
-                        Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
-                    ) {
-                    // Direct wildcard: `_ => unreachable!(...)`
-                    Some(ur_id.span().start().line)
-                } else if matches!(tokens.get(i + 1), Some(TokenTree::Ident(kw)) if kw == "if") {
-                    // Guarded wildcard: `_ if <guard...> => unreachable!(...)`
-                    // Scan forward past the guard expression to find `= > unreachable ! group`.
-                    let mut found_line = None;
-                    let mut j = i + 2;
-                    while j < tokens.len() {
-                        if let (
-                            Some(TokenTree::Punct(eq2)),
-                            Some(TokenTree::Punct(gt2)),
-                            Some(TokenTree::Ident(ur2)),
-                            Some(TokenTree::Punct(bang2)),
-                            Some(TokenTree::Group(args2)),
-                        ) = (
-                            tokens.get(j),
-                            tokens.get(j + 1),
-                            tokens.get(j + 2),
-                            tokens.get(j + 3),
-                            tokens.get(j + 4),
-                        ) && eq2.as_char() == '='
-                            && gt2.as_char() == '>'
-                            && ur2 == "unreachable"
-                            && bang2.as_char() == '!'
-                            && matches!(
-                                args2.delimiter(),
-                                Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
-                            )
-                        {
-                            found_line = Some(ur2.span().start().line);
-                            break;
-                        }
-                        j += 1;
-                    }
-                    found_line
-                } else {
-                    None
-                };
-                if let Some(line) = wildcard_violation_line {
-                    findings.push(format!(
-                        "{}:{}: wildcard-arm unreachable!() in non-test code \
-                         (BC-2.14.003 EC-004/EC-007 violation: _ => unreachable! is a \
-                         latent panic path under enum evolution; use explicit named arm \
-                         unreachable! or documented assert!)",
-                        path, line
-                    ));
-                }
-            }
-
-            // ── bare `unreachable!()` outside exhaustive-match named arms ─────
-            // §PC-006: unreachable! is ONLY permitted in explicit named match arms
-            // (e.g. `Phase::Done => unreachable!(...)`). Using it in let-else
-            // else-blocks, if-blocks, or other non-arm contexts is a POL-31
-            // violation — those call-sites ARE reachable on in-crate struct-literal
-            // construction or future code paths.
-            //
-            // Detection: `unreachable` followed by `!` and `(...)`.
-            //   - If immediately preceded by `=>` (tokens `=` `>`):
-            //     - Named arm → Exemption 1 applies; EXEMPT.
-            //     - Wildcard `_ =>` arm → already flagged by the `_` handler;
-            //       skip to avoid duplicate finding.
-            //   - Otherwise (not in a match arm position): ALWAYS FLAG.
-            TokenTree::Ident(id) if id == "unreachable" && *in_test_depth == 0 => {
-                pending_panics_doc = false;
-                if matches!(tokens.get(i + 1), Some(TokenTree::Punct(p)) if p.as_char() == '!')
-                    && matches!(
-                        tokens.get(i + 2),
-                        Some(TokenTree::Group(g)) if matches!(
-                            g.delimiter(),
-                            Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
-                        )
-                    )
-                {
-                    // Check if this `unreachable!` is immediately after `=>` (match arm).
-                    // In a match body the token sequence around a match arm is:
-                    //   <pattern> `=` `>` unreachable ...
-                    // so tokens[i-1] == `>` and tokens[i-2] == `=` if in a match arm.
-                    let in_match_arm_position = if i >= 2 {
-                        matches!(tokens.get(i - 2), Some(TokenTree::Punct(p)) if p.as_char() == '=')
-                            && matches!(tokens.get(i - 1), Some(TokenTree::Punct(p)) if p.as_char() == '>')
-                    } else {
-                        false
-                    };
-                    if !in_match_arm_position {
-                        // Bare unreachable! outside any match arm — §PC-006 violation.
-                        let line = id.span().start().line;
-                        findings.push(format!(
-                            "{}:{}: unreachable!() outside exhaustive-match named arm \
-                             in non-test code (BC-2.14.003 §PC-006 violation: \
-                             unreachable! is only permitted in explicit named match arms; \
-                             use documented assert!() for programmer-error guards)",
-                            path, line
-                        ));
-                    }
-                    // If in_match_arm_position: either a named arm (Exemption 1 → EXEMPT)
-                    // or the wildcard `_ =>` case (already flagged by the `_` handler above).
-                }
-            }
-
-            // ── `.unwrap()` / `.expect(...)` detection ───────────────────────
-            TokenTree::Punct(p) if p.as_char() == '.' && *in_test_depth == 0 => {
-                pending_panics_doc = false;
+            TokenTree::Punct(p) if p.as_char() == '.' => {
                 if let Some(TokenTree::Ident(id)) = tokens.get(i + 1) {
                     let name = id.to_string();
                     if (name == "unwrap" || name == "expect")
-                        && matches!(
-                            tokens.get(i + 2),
-                            Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis
-                        )
+                        && matches!(tokens.get(i + 2), Some(TokenTree::Group(_)))
                     {
                         let line = id.span().start().line;
                         findings.push(format!(
@@ -744,110 +421,10 @@ fn walk_panic_tokens(
                     }
                 }
             }
-
-            // ── Flagged panic macros: assert!, assert_eq!, assert_ne!, panic! ──
-            // Exemption 2: assert! with fn_has_panics_doc AND BC-ID in message.
-            TokenTree::Ident(id) if *in_test_depth == 0 => {
-                let name = id.to_string();
-                pending_panics_doc = false;
-                if FLAGGED_PANIC_MACROS.contains(&name.as_str())
-                    && matches!(
-                        tokens.get(i + 1),
-                        Some(TokenTree::Punct(p)) if p.as_char() == '!'
-                    )
-                    && matches!(
-                        tokens.get(i + 2),
-                        Some(TokenTree::Group(g)) if matches!(
-                            g.delimiter(),
-                            Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
-                        )
-                    )
-                {
-                    // Check Exemption 2: fn has # Panics doc AND message has BC-ID
-                    let is_exempt = fn_has_panics_doc
-                        && if let Some(TokenTree::Group(args)) = tokens.get(i + 2) {
-                            args_contain_bc_id(args)
-                        } else {
-                            false
-                        };
-                    if !is_exempt {
-                        let line = id.span().start().line;
-                        findings.push(format!(
-                            "{}:{}: {}!() in non-test code (BC-2.14.003 violation)",
-                            path, line, name
-                        ));
-                    }
-                }
-                // ── Irrefutable binding catch-all detection (F-02) ───────────
-                // BC-2.14.003 §EC-007: a lone lowercase identifier as a match-arm
-                // pattern not preceded by `::` (i.e., not a qualified enum path) and
-                // immediately followed by `=> unreachable!(...)` is an irrefutable
-                // binding catch-all — semantically equivalent to `_`. The exhaustive-
-                // match exemption ONLY applies when every arm is a named variant pattern.
-                //
-                // Named variants are PascalCase or qualified (`Phase::Done`).
-                // Boolean literals `true`/`false` are excluded (they match a specific value).
-                let first_char_lower = name
-                    .chars()
-                    .next()
-                    .map(|c| c.is_ascii_lowercase())
-                    .unwrap_or(false);
-                let not_preceded_by_colon = !(i >= 1
-                    && matches!(tokens.get(i - 1), Some(TokenTree::Punct(p)) if p.as_char() == ':'));
-                if first_char_lower
-                    && not_preceded_by_colon
-                    && name != "true"
-                    && name != "false"
-                    && !FLAGGED_PANIC_MACROS.contains(&name.as_str())
-                    && let (
-                        Some(TokenTree::Punct(fat_eq)),
-                        Some(TokenTree::Punct(fat_gt)),
-                        Some(TokenTree::Ident(ur_id)),
-                        Some(TokenTree::Punct(bang)),
-                        Some(TokenTree::Group(args)),
-                    ) = (
-                        tokens.get(i + 1),
-                        tokens.get(i + 2),
-                        tokens.get(i + 3),
-                        tokens.get(i + 4),
-                        tokens.get(i + 5),
-                    )
-                    && fat_eq.as_char() == '='
-                    && fat_gt.as_char() == '>'
-                    && ur_id == "unreachable"
-                    && bang.as_char() == '!'
-                    && matches!(
-                        args.delimiter(),
-                        Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
-                    )
-                {
-                    let line = ur_id.span().start().line;
-                    findings.push(format!(
-                        "{}:{}: irrefutable-binding catch-all unreachable!() in non-test \
-                         code (BC-2.14.003 §EC-007 violation: `{}` is an irrefutable \
-                         binding catch-all, not a named variant arm; exhaustive-match \
-                         exemption requires all arms to be named variant patterns)",
-                        path, line, name
-                    ));
-                }
-            }
-
-            // ── Other non-brace groups (parens, brackets) ────────────────────
             TokenTree::Group(g) => {
-                pending_panics_doc = false;
-                walk_panic_tokens(
-                    g.stream().into_iter(),
-                    findings,
-                    path,
-                    in_test_depth,
-                    fn_has_panics_doc,
-                );
+                scan_method_calls_in_tokens(g.stream().into_iter(), findings, path);
             }
-
-            // ── Any other token resets pending_panics_doc ────────────────────
-            _ => {
-                pending_panics_doc = false;
-            }
+            _ => {}
         }
         i += 1;
     }
