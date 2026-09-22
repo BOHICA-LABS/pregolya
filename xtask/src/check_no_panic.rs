@@ -96,6 +96,10 @@ pub fn run() {
         );
         exit(1);
     }
+    if let Err(msg) = crate::check_post_exemption_vacuity("check-no-panic", files_analyzed) {
+        eprintln!("{msg}");
+        exit(1);
+    }
     if !all_findings.is_empty() {
         eprintln!(
             "ERROR: no-panic violations (unwrap/expect/bare-assert/panic!/wildcard-unreachable) in non-test library code (BC-2.14.003 §EC-007):"
@@ -434,6 +438,76 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
         self.arm_stack = old_arm_stack;
     }
 
+    fn visit_local(&mut self, node: &'ast syn::Local) {
+        // For a `let PAT = EXPR else { DIVERGE }` binding, the diverge block fires on a
+        // runtime pattern mismatch — not on compiler exhaustiveness. An unreachable! inside
+        // the else block is Exemption 2 territory, NOT Exemption 1. Clear arm_stack only for
+        // the diverge block; the binding expression itself is visited with arm_stack intact
+        // so that an unreachable! in a plain direct arm body (e.g. `Variant => { expr }`)
+        // is not incorrectly stripped of arm context (F-P9-M01 fix; BC-2.14.003 §EC-007).
+        if let Some(init) = &node.init {
+            // Visit the pat and binding expression with arm_stack preserved.
+            syn::visit::visit_pat(self, &node.pat);
+            for attr in &node.attrs {
+                syn::visit::visit_attribute(self, attr);
+            }
+            syn::visit::visit_expr(self, &init.expr);
+            // Visit the else-diverge expression with arm_stack cleared.
+            // The diverge field is Box<Expr> (typically an ExprBlock), not Box<Block>.
+            if let Some((_else_token, diverge_expr)) = &init.diverge {
+                let old_arm_stack = std::mem::take(&mut self.arm_stack);
+                syn::visit::visit_expr(self, diverge_expr);
+                self.arm_stack = old_arm_stack;
+            }
+        } else {
+            // No initializer: visit normally.
+            syn::visit::visit_local(self, node);
+        }
+    }
+
+    fn visit_expr_if(&mut self, node: &'ast syn::ExprIf) {
+        // An `if` / `if let` expression introduces a runtime condition. An unreachable!
+        // inside the then/else branch of an `if` inside an arm body is guarded by a
+        // runtime condition, not by the match exhaustiveness — Exemption 1 does NOT apply.
+        // Clear arm_stack for the duration of the if-expression visit (F-P9-M01 fix).
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        syn::visit::visit_expr_if(self, node);
+        self.arm_stack = old_arm_stack;
+    }
+
+    fn visit_expr_loop(&mut self, node: &'ast syn::ExprLoop) {
+        // A `loop { ... }` body introduces a repeated runtime context — clear arm_stack
+        // so unreachable! inside the loop is not falsely granted Exemption 1 (F-P9-M01).
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        syn::visit::visit_expr_loop(self, node);
+        self.arm_stack = old_arm_stack;
+    }
+
+    fn visit_expr_while(&mut self, node: &'ast syn::ExprWhile) {
+        // A `while` / `while let` body introduces a runtime condition — clear arm_stack
+        // (F-P9-M01 fix).
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        syn::visit::visit_expr_while(self, node);
+        self.arm_stack = old_arm_stack;
+    }
+
+    fn visit_expr_for_loop(&mut self, node: &'ast syn::ExprForLoop) {
+        // A `for … in …` body iterates at runtime — clear arm_stack (F-P9-M01 fix).
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        syn::visit::visit_expr_for_loop(self, node);
+        self.arm_stack = old_arm_stack;
+    }
+
+    fn visit_expr_let(&mut self, node: &'ast syn::ExprLet) {
+        // A `let … else { … }` diverging block introduces a runtime pattern check.
+        // An unreachable! inside the else block is a runtime-condition guard (Exemption 2
+        // territory), not a compiler-exhaustiveness guard (Exemption 1). Clear arm_stack
+        // so the else body is evaluated without arm context (F-P9-M01 fix).
+        let old_arm_stack = std::mem::take(&mut self.arm_stack);
+        syn::visit::visit_expr_let(self, node);
+        self.arm_stack = old_arm_stack;
+    }
+
     fn visit_trait_item_fn(&mut self, node: &'ast syn::TraitItemFn) {
         if syn_has_cfg_test(&node.attrs) {
             return;
@@ -530,6 +604,19 @@ impl PanicVisitor<'_> {
         let name = seg.ident.to_string();
         let line = seg.ident.span().start().line;
         match name.as_str() {
+            // todo!() and unimplemented!() expand to panic! but are never acceptable in
+            // production library code — they mark work that is NOT DONE. No exemption
+            // applies: neither Exemption 1 (exhaustive-match guard) nor Exemption 2
+            // (documented programmer-error-guard) can justify leaving stubs in production
+            // code. Always flagged regardless of arm context or doc attributes.
+            n @ ("todo" | "unimplemented") => {
+                self.findings.push(format!(
+                    "{}:{}: {}!() in non-test code (BC-2.14.003 violation: \
+                     todo!/unimplemented! mark incomplete production code; \
+                     no exemption applies — implement the behavior or remove the call)",
+                    self.path, line, n
+                ));
+            }
             "unreachable" => {
                 if self.arm_stack.is_empty() {
                     self.findings.push(format!(
@@ -566,7 +653,12 @@ impl PanicVisitor<'_> {
                 // EXEMPT (Exemption 1). The match is fully exhaustive over named variants,
                 // so unreachable! is a valid exhaustiveness assertion.
             }
-            n @ ("panic" | "assert" | "assert_eq" | "assert_ne")
+            // assert_matches! (std::assert_matches) panics on mismatch — same semantics
+            // as assert!/assert_eq!/assert_ne!. Exemption 2 (# Panics doc + BC-ID message)
+            // applies identically.
+            // debug_assert_matches! compiles out in release — exempt like other debug_assert*
+            // (BC-2.14.003 {INV-003}).
+            n @ ("panic" | "assert" | "assert_eq" | "assert_ne" | "assert_matches")
                 if !(self.fn_has_panics_doc && syn_macro_has_bc_id(mac)) =>
             {
                 self.findings.push(format!(
@@ -574,7 +666,7 @@ impl PanicVisitor<'_> {
                     self.path, line, n
                 ));
             }
-            _ => {} // debug_assert!* and everything else: exempt
+            _ => {} // debug_assert!*, debug_assert_matches! and everything else: exempt
         }
 
         // MED-4: scan the macro's token stream for .unwrap()/.expect() method calls.
@@ -1025,6 +1117,136 @@ fn f(phase: Phase) -> i32 {
             !findings.is_empty(),
             "unreachable!() in named arm of a match with unguarded sibling '_' must be \
              flagged (BC-2.14.003 §EC-007 Exemption 1 requires all arms to be named); \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P9-M01 — BC-2.14.003 §EC-007
+    ///
+    /// `unreachable!()` nested inside an `if`-block within a named arm body must be
+    /// FLAGGED (not exempt). Exemption 1 applies only when unreachable! IS the arm body
+    /// expression directly — not when it is buried inside a runtime-condition block.
+    ///
+    /// ```rust
+    /// match phase {
+    ///     Phase::Done => {
+    ///         if runtime_value.is_empty() { unreachable!("cannot happen") }
+    ///     }
+    /// }
+    /// ```
+    /// The `unreachable!` inside the `if` is guarded by `runtime_value.is_empty()` (a
+    /// runtime condition), not by match exhaustiveness — it is Exemption 2 territory and
+    /// must be flagged without a `# Panics` doc + BC-ID.
+    #[test]
+    fn test_bc_2_14_003_unreachable_in_if_block_inside_named_arm_is_flagged() {
+        let src = r#"
+enum Phase { Init, Done }
+fn f(phase: Phase, runtime_value: &str) -> i32 {
+    match phase {
+        Phase::Init => 0,
+        Phase::Done => {
+            if runtime_value.is_empty() { unreachable!("cannot happen") }
+            1
+        }
+    }
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "unreachable!() inside an if-block within a named arm body must be FLAGGED \
+             (F-P9-M01: Exemption 1 applies only when unreachable! is the direct arm body, \
+             not nested inside runtime control-flow); got: {findings:?}"
+        );
+    }
+
+    /// F-P9-M01 — BC-2.14.003 §EC-007
+    ///
+    /// `unreachable!()` inside a `let … else` diverging block within a named arm body
+    /// must be FLAGGED. The let-else pattern introduces a runtime check — the `else`
+    /// branch fires when the pattern does not match at runtime, not as a result of
+    /// compiler exhaustiveness. Exemption 1 does NOT apply.
+    #[test]
+    fn test_bc_2_14_003_unreachable_in_let_else_inside_named_arm_is_flagged() {
+        let src = r#"
+enum Phase { Init, Done }
+enum Inner { Good(u32), Bad }
+fn f(phase: Phase, inner: Inner) -> u32 {
+    match phase {
+        Phase::Init => 0,
+        Phase::Done => {
+            let Inner::Good(v) = inner else { unreachable!("bad inner in Done") };
+            v
+        }
+    }
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "unreachable!() inside a let-else block within a named arm body must be FLAGGED \
+             (F-P9-M01: let-else is a runtime pattern check, not a compiler-exhaustiveness \
+             guard; Exemption 1 does not apply); got: {findings:?}"
+        );
+    }
+
+    /// F-P9-M02 — BC-2.14.003
+    ///
+    /// `todo!()` in non-test production code must always be flagged. No exemption applies —
+    /// todo! marks incomplete work, never a legitimate production guard.
+    ///
+    /// The fixture file `violation_todo_stub.rs` contains a `todo!("implement this")` call.
+    /// The scanner must produce at least one finding when scanning it.
+    #[test]
+    fn test_bc_2_14_003_todo_stub_is_flagged() {
+        let src = include_str!("../tests/fixtures/violations/violation_todo_stub.rs");
+        let findings = scan_for_panics_in_source(
+            src,
+            "xtask/tests/fixtures/violations/violation_todo_stub.rs",
+        );
+        assert!(
+            !findings.is_empty(),
+            "todo!() in non-test code must be flagged (BC-2.14.003 F-P9-M02); got: {findings:?}"
+        );
+    }
+
+    /// F-P9-M02 — BC-2.14.003
+    ///
+    /// `unimplemented!()` in non-test production code must always be flagged.
+    /// Like `todo!()`, it marks incomplete work and no exemption applies.
+    #[test]
+    fn test_bc_2_14_003_unimplemented_is_flagged() {
+        let src = r#"
+pub fn stub() -> u32 {
+    unimplemented!("not done yet")
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "unimplemented!() in non-test code must be flagged (BC-2.14.003 F-P9-M02); \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P9-M02 — BC-2.14.003
+    ///
+    /// `todo!()` inside a named arm must STILL be flagged (no Exemption 1 or 2).
+    #[test]
+    fn test_bc_2_14_003_todo_in_named_arm_is_flagged() {
+        let src = r#"
+enum Phase { Init, Done }
+fn f(phase: Phase) -> i32 {
+    match phase {
+        Phase::Init => 0,
+        Phase::Done => todo!("implement done handling"),
+    }
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "todo!() in a named arm must still be flagged (F-P9-M02: no exemption for todo!); \
              got: {findings:?}"
         );
     }

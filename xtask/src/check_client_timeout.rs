@@ -80,6 +80,10 @@ pub fn run() {
         );
         exit(1);
     }
+    if let Err(msg) = crate::check_post_exemption_vacuity("check-client-timeout", files_analyzed) {
+        eprintln!("{msg}");
+        exit(1);
+    }
     if !all_findings.is_empty() {
         eprintln!(
             "ERROR: reqwest Client without .timeout() in non-test library code (BC-2.14.004):"

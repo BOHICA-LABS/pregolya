@@ -107,6 +107,10 @@ pub fn run() {
         );
         exit(1);
     }
+    if let Err(msg) = crate::check_post_exemption_vacuity("deny-bare-api-key", files_analyzed) {
+        eprintln!("{msg}");
+        exit(1);
+    }
     if !all_findings.is_empty() {
         eprintln!("ERROR: credential struct safety violations (BC-2.14.005 {{PC-006}}):");
         for f in &all_findings {

@@ -5,7 +5,7 @@
 //! Subcommands:
 //!   check-file-size           Enforce production file size gates (CLAUDE.md §File size & module splitting)
 //!   check-client-timeout      CI lint gate: reject reqwest Client::new() outside tests (BC-2.14.004)
-//!   check-no-panic [--fixture-mode <dir>]
+//!   check-no-panic [--fixture-mode `<dir>`]
 //!                             CI lint gate: reject unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)
 //!   check-error-code-registry CI lint gate: verify all `E-<COMPONENT>-<NNN>` codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-007, VP-BC214001-01)
 //!   deny-bare-api-key         CI lint gate: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl `Deref<Target=str/String>` (BC-2.14.005 {PC-006})
@@ -29,12 +29,54 @@ pub(crate) use deny_bare_api_key::scan_for_bare_api_keys_in_source;
 
 use std::process::{Command, exit};
 
+/// Returns `Ok(())` when `files_analyzed > 0`, or `Err(message)` when all files were
+/// exempted and the gate certified nothing (post-exemption vacuity, F-P9-M04).
+///
+/// Callers should print the error and call `exit(1)` when `Err` is returned.
+/// Extracted as a testable helper so the vacuity condition can be verified by
+/// unit tests without invoking `process::exit`.
+pub(crate) fn check_post_exemption_vacuity(
+    gate_name: &str,
+    files_analyzed: usize,
+) -> Result<(), String> {
+    if files_analyzed == 0 {
+        Err(format!(
+            "ERROR: {gate_name} analyzed 0 non-exempt files — \
+             post-exemption vacuity; gate cannot certify anything"
+        ))
+    } else {
+        Ok(())
+    }
+}
+
+/// Reject any extra arguments passed to a subcommand that accepts no arguments.
+///
+/// Prints an error message and exits with code 1 when `args[2]` is present.
+/// Called at the start of each simple (no-argument) subcommand branch so that
+/// mistyped invocations like `cargo xtask check-file-size --fixup` fail loudly
+/// instead of silently ignoring the unknown flag (F-P9-L01 fix).
+///
+/// NOT called for `check-no-panic`, which has its own `--fixture-mode <dir>` handling.
+fn reject_extra_args(subcommand: &str, args: &[String]) {
+    if let Some(extra) = args.get(2) {
+        eprintln!("error: unrecognised argument '{extra}' for {subcommand}");
+        eprintln!("usage: cargo xtask {subcommand}");
+        std::process::exit(1);
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let subcommand = args.get(1).map(String::as_str).unwrap_or("");
     match subcommand {
-        "check-file-size" => check_file_size(),
-        "check-client-timeout" => check_client_timeout::run(),
+        "check-file-size" => {
+            reject_extra_args("check-file-size", &args);
+            check_file_size();
+        }
+        "check-client-timeout" => {
+            reject_extra_args("check-client-timeout", &args);
+            check_client_timeout::run();
+        }
         "check-no-panic" => {
             if args.get(2).map(String::as_str) == Some("--fixture-mode") {
                 let dir = match args.get(3).map(String::as_str) {
@@ -56,10 +98,22 @@ fn main() {
                 check_no_panic::run();
             }
         }
-        "check-error-code-registry" => check_error_code_registry::run(),
-        "deny-bare-api-key" => deny_bare_api_key::run(),
-        "deny-anyhow-in-lib" => deny_anyhow_in_lib(),
-        "deny-description-cache-key" => deny_description_cache_key(),
+        "check-error-code-registry" => {
+            reject_extra_args("check-error-code-registry", &args);
+            check_error_code_registry::run();
+        }
+        "deny-bare-api-key" => {
+            reject_extra_args("deny-bare-api-key", &args);
+            deny_bare_api_key::run();
+        }
+        "deny-anyhow-in-lib" => {
+            reject_extra_args("deny-anyhow-in-lib", &args);
+            deny_anyhow_in_lib();
+        }
+        "deny-description-cache-key" => {
+            reject_extra_args("deny-description-cache-key", &args);
+            deny_description_cache_key();
+        }
         _ => {
             eprintln!("Usage: cargo xtask <subcommand>");
             eprintln!("Subcommands:");
@@ -91,14 +145,15 @@ fn main() {
 // Shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Returns true when `path` identifies a non-production file (tests or examples).
+/// Returns true when `path` identifies a non-production test file.
 ///
 /// Matches:
 /// - Files named `tests.rs` (any directory depth, e.g. `src/tests.rs`)
 /// - Files ending with `_test.rs` or `_tests.rs`
 /// - Files under a `tests/` directory component (e.g. `crates/foo/tests/integration.rs`)
-/// - Files under an `examples/` directory component (demonstration executables, not
-///   library code; permitted to use `.expect()` and `println!` for clarity)
+///
+/// Does NOT exempt `examples/` or `benches/` — those are not enumerated in
+/// BC-2.14.003 {INV-004} as exempt from the no-panic lint gate.
 ///
 /// Does NOT use `.contains("test")` substring matching, which would
 /// incorrectly suppress production files in crates whose names contain
@@ -109,18 +164,17 @@ fn is_test_file(path: &str) -> bool {
         || path.contains("/tests/")
         || path.ends_with("_test.rs")
         || path.ends_with("_tests.rs")
-        || path.contains("/examples/")
 }
 
-/// Returns true for files exempt from lint scanners: test files, examples, and benchmarks.
+/// Returns true for files exempt from lint scanners (test files only).
 ///
-/// Extends `is_test_file` to also cover `/benches/` (benchmark harnesses are not
-/// library code). Examples produce standalone binaries and may legitimately use
-/// `.expect()` and `println!` for demonstration clarity.
+/// BC-2.14.003 {INV-004} enumerates only test files as exempt. `examples/` and
+/// `benches/` are NOT exempt — they are not listed in the BC and no crate currently
+/// contains them, so the exclusion was unsanctioned.
 ///
 /// Used by: `check_no_panic`, `check_client_timeout`, `deny_anyhow_in_lib`.
 fn is_lint_exempt_file(path: &str) -> bool {
-    is_test_file(path) || path.contains("/benches/")
+    is_test_file(path)
 }
 
 /// Returns true for files that qualify for TEST file-size thresholds (1000/1500 code-lines).
@@ -514,6 +568,10 @@ fn deny_anyhow_in_lib() {
         );
         exit(1);
     }
+    if let Err(msg) = check_post_exemption_vacuity("deny-anyhow-in-lib", files_analyzed) {
+        eprintln!("{msg}");
+        exit(1);
+    }
     if !all_findings.is_empty() {
         eprintln!("ERROR: anyhow is banned from pregolya-* library crates (ADR-010 / NE-03):");
         for f in &all_findings {
@@ -692,6 +750,10 @@ fn deny_description_cache_key() {
         eprintln!(
             "ERROR: deny-description-cache-key could not read {files_unreadable} file(s) — gate cannot certify anything"
         );
+        exit(1);
+    }
+    if let Err(msg) = check_post_exemption_vacuity("deny-description-cache-key", files_analyzed) {
+        eprintln!("{msg}");
         exit(1);
     }
     if !all_findings.is_empty() {

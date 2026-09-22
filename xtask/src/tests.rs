@@ -271,12 +271,12 @@ fn test_is_test_file_patterns() {
     // other than a `tests/` component.
     assert!(!is_test_file("crates/pregolya-core/src/latest.rs"));
 
-    // Must exclude examples/ — demonstration executables are not library code
-    // and may legitimately use .expect() and println! for clarity.
-    assert!(is_test_file(
+    // examples/ are NOT exempt per BC-2.14.003 {INV-004} which enumerates only test
+    // files as exempt (F-P9-L02 fix: unsanctioned examples/ exemption removed).
+    assert!(!is_test_file(
         "crates/pregolya-core/examples/error_taxonomy_demo.rs"
     ));
-    assert!(is_test_file(
+    assert!(!is_test_file(
         "crates/pregolya-graph/examples/basic_graph.rs"
     ));
 }
@@ -754,14 +754,22 @@ fn test_deny_anyhow_skips_test_files() {
     );
 }
 
-/// Examples files must be excluded entirely from the anyhow scanner.
+/// Examples files are NOT exempt from the anyhow scanner per BC-2.14.003 {INV-004}.
+///
+/// F-P9-L02 fix: the unsanctioned `examples/` exemption was removed from
+/// `is_lint_exempt_file`. BC-2.14.003 {INV-004} enumerates only test files as exempt;
+/// examples/ is not listed. Since no workspace crate currently has an `examples/`
+/// directory, this has no impact on CI results — but the gate correctly reflects spec.
 #[test]
-fn test_deny_anyhow_skips_examples_files() {
+fn test_deny_anyhow_examples_files_are_scanned() {
     let src = r#"use anyhow::Result;"#;
+    // `anyhow::` appears as an ident followed by `::`, so the scanner flags it.
     let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/examples/error_demo.rs");
+    // examples/ is no longer in is_lint_exempt_file — anyhow:: usage IS flagged.
     assert!(
-        findings.is_empty(),
-        "examples-file paths must be excluded from anyhow scan; got: {findings:?}"
+        !findings.is_empty(),
+        "examples/ files are no longer exempt from anyhow scan (F-P9-L02); \
+         use anyhow::Result in an example must be flagged; got: {findings:?}"
     );
 }
 
@@ -3759,4 +3767,78 @@ fn build() -> reqwest::Client {
         findings.is_empty(),
         "Known limitation: constant-valued zero timeout is not detected; findings: {findings:?}"
     );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// F-P9-M04: post-exemption vacuity guard (check_post_exemption_vacuity)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-P9-M04 — post-exemption vacuity: `files_analyzed == 0` must return `Err`.
+///
+/// Each CI gate must fail when ALL files were exempted (e.g. every file matched
+/// the lint-exempt predicate), because the gate would otherwise vacuously certify
+/// a clean codebase without scanning anything. `check_post_exemption_vacuity(…, 0)`
+/// must return `Err` containing the gate name and a description.
+#[test]
+fn test_check_post_exemption_vacuity_zero_analyzed_returns_err() {
+    let result = check_post_exemption_vacuity("check-no-panic", 0);
+    assert!(
+        result.is_err(),
+        "files_analyzed=0 must return Err (post-exemption vacuity gate cannot certify anything); \
+         got: {result:?}"
+    );
+    let msg = result.unwrap_err();
+    assert!(
+        msg.contains("check-no-panic"),
+        "error message must contain the gate name; got: {msg}"
+    );
+    assert!(
+        msg.contains("0 non-exempt"),
+        "error message must mention 0 non-exempt files; got: {msg}"
+    );
+}
+
+/// F-P9-M04 — post-exemption vacuity: `files_analyzed > 0` must return `Ok`.
+///
+/// When at least one non-exempt file was analyzed, the gate is not vacuous
+/// and `check_post_exemption_vacuity` must return `Ok(())`.
+#[test]
+fn test_check_post_exemption_vacuity_nonzero_analyzed_returns_ok() {
+    // Single analyzed file → gate has certified something
+    let result = check_post_exemption_vacuity("check-client-timeout", 1);
+    assert!(
+        result.is_ok(),
+        "files_analyzed=1 must return Ok (gate certifies at least one file); got: {result:?}"
+    );
+    // Many analyzed files → also Ok
+    let result = check_post_exemption_vacuity("deny-bare-api-key", 100);
+    assert!(
+        result.is_ok(),
+        "files_analyzed=100 must return Ok; got: {result:?}"
+    );
+}
+
+/// F-P9-M04 — post-exemption vacuity: error message includes the gate name for
+/// each of the five affected gates to confirm the helper is wired to all of them.
+#[test]
+fn test_check_post_exemption_vacuity_gate_names_are_distinct() {
+    let gates = [
+        "check-no-panic",
+        "check-client-timeout",
+        "deny-bare-api-key",
+        "deny-anyhow-in-lib",
+        "deny-description-cache-key",
+    ];
+    for gate in &gates {
+        let result = check_post_exemption_vacuity(gate, 0);
+        assert!(
+            result.is_err(),
+            "gate={gate}: files_analyzed=0 must return Err; got: {result:?}"
+        );
+        let msg = result.unwrap_err();
+        assert!(
+            msg.contains(gate),
+            "gate={gate}: error message must contain gate name; got: {msg}"
+        );
+    }
 }
