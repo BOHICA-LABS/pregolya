@@ -436,7 +436,7 @@ mod tests {
     /// AC-012 (traces to BC-2.14.006 {PC-003})
     ///
     /// Validation failures NEVER return `None`, empty `Vec`, or zero-value defaults.
-    /// A property-style table test over known invalid inputs asserts all return `Err(...)`.
+    /// A table-driven test over fixed inputs `["", "   "]` asserts both return `Err(PregolyaError)`.
     /// Additionally, valid inputs return `Ok(T)` where the inner value is accessible
     /// (not a silent empty/default).
     ///
@@ -445,8 +445,8 @@ mod tests {
     fn test_BC_2_14_006_no_silent_default_on_invalid_inputs() {
         // All of these must return Err — no silent None, no empty default
         let invalid_inputs = ["", "   "];
-        // Note: whitespace-only may or may not be valid depending on implementation;
-        // empty string is the canonical BC-2.14.006 EC-004 case.
+        // Both inputs are definitively rejected (E-CORE-005 / VAL / Never):
+        // "" → EC-004 (empty string); "   " → EC-006 (whitespace-only, per BC-2.14.006 v1.6).
         let empty_result = OpenAiApiKey::new(invalid_inputs[0]);
         assert!(
             empty_result.is_err(),
@@ -468,8 +468,9 @@ mod tests {
 
     /// AC-014 (traces to BC-2.14.006 {PC-004}) — table-driven coverage
     ///
-    /// Five distinct invalid inputs across credential types all return `Err` with
-    /// code `"E-CORE-005"` and message format `"Validation failed for '<field>': <reason>"`.
+    /// Two credential newtypes (`OpenAiApiKey` and `AnthropicApiKey`), each supplied an
+    /// empty-string input, both return `Err` with code `"E-CORE-005"` (category `VAL`)
+    /// and a message starting with `"Validation failed for"`.
     ///
     /// GREEN: `new("")` is implemented — returns `Err` with code `"E-CORE-005"` and the canonical message format.
     #[test]
