@@ -285,44 +285,49 @@ impl PregolyaError {
     ) -> Self {
         let code = code.into();
         let message = message.into();
-        assert!(
-            code.starts_with("E-")
-                && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
-                    is_valid_component_segment(mid)
-                        && suffix.len() == 3
-                        && suffix.chars().all(|c| c.is_ascii_digit())
-                }),
-            "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
-            code
-        );
+        if !(code.starts_with("E-")
+            && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
+                is_valid_component_segment(mid)
+                    && suffix.len() == 3
+                    && suffix.chars().all(|c| c.is_ascii_digit())
+            }))
+        {
+            unreachable!(
+                "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
+                code
+            );
+        }
         // BC-2.14.001 EC-002: Custom names must be valid segments and must not alias named
         // component identifiers when lowercased (e.g. Custom("Core") → "core" aliases
         // Component::Core on wire). Both checks share the is_valid_component_segment predicate.
         if let Component::Custom(ref name) = component {
-            assert!(
-                is_valid_component_segment(name),
-                "BC-2.14.001 EC-002: Component::Custom name '{}' is not a valid component segment \
-                (must be non-empty, [A-Za-z0-9_-] only, no leading/trailing/consecutive -/_)",
-                name,
-            );
-            assert!(
-                !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
-                "BC-2.14.001 EC-002: Component::Custom name '{}' collides with named component '{}' when lowercased",
-                name,
-                name.to_lowercase()
-            );
+            if !is_valid_component_segment(name) {
+                unreachable!(
+                    "BC-2.14.001 EC-002: Component::Custom name '{}' is not a valid component segment \
+                    (must be non-empty, [A-Za-z0-9_-] only, no leading/trailing/consecutive -/_)",
+                    name,
+                );
+            }
+            if NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()) {
+                unreachable!(
+                    "BC-2.14.001 EC-002: Component::Custom name '{}' collides with named component '{}' when lowercased",
+                    name,
+                    name.to_lowercase()
+                );
+            }
         }
         // BC-2.14.001 EC-007: code COMPONENT segment must match component_lowercase(&component).
         // Prevents URN namespace aliasing: Custom("newcrate") with code "E-CORE-001" would emit
         // `urn:pregolya:error:E-CORE-001` with `component: "newcrate"` — conflicting attribution.
         let code_component = code[2..].rsplit_once('-').map(|(mid, _)| mid).unwrap_or("");
-        assert!(
-            code_component.eq_ignore_ascii_case(&component_lowercase(&component)),
-            "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}'; \
-            code must follow E-<COMPONENT>-NNN where COMPONENT matches the component field",
-            code_component,
-            component_lowercase(&component),
-        );
+        if !code_component.eq_ignore_ascii_case(&component_lowercase(&component)) {
+            unreachable!(
+                "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}'; \
+                code must follow E-<COMPONENT>-NNN where COMPONENT matches the component field",
+                code_component,
+                component_lowercase(&component),
+            );
+        }
         Self {
             component,
             category,
@@ -395,24 +400,25 @@ impl PregolyaError {
         // BC-2.14.001 EC-006: guard against in-crate struct-literal construction that bypasses
         // new() validation — strip_prefix panics with a BC-citing message rather than a raw
         // byte-offset panic if self.code is shorter than 2 bytes or lacks the "E-" prefix.
-        let code_suffix = self.code.strip_prefix("E-").unwrap_or_else(|| {
-            panic!(
+        let Some(code_suffix) = self.code.strip_prefix("E-") else {
+            unreachable!(
                 "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format; \
                  got {:?} — cannot strip 'E-' prefix in to_problem()",
                 self.code
             )
-        });
+        };
         let code_component_emit = code_suffix
             .rsplit_once('-')
             .map(|(mid, _)| mid)
             .unwrap_or("");
-        assert!(
-            code_component_emit.eq_ignore_ascii_case(&component_lowercase(&self.component)),
-            "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}' at emission time; \
-            component field may have been reassigned after construction",
-            code_component_emit,
-            component_lowercase(&self.component),
-        );
+        if !code_component_emit.eq_ignore_ascii_case(&component_lowercase(&self.component)) {
+            unreachable!(
+                "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}' at emission time; \
+                component field may have been reassigned after construction",
+                code_component_emit,
+                component_lowercase(&self.component),
+            );
+        }
         ProblemDetail {
             type_uri: format!("urn:pregolya:error:{}", self.code),
             title: category_title(&self.category).to_string(),
@@ -537,17 +543,19 @@ fn component_lowercase(component: &Component) -> String {
         Component::Embed => "embed".to_string(),
         Component::Tools => "tools".to_string(),
         Component::Custom(name) => {
-            assert!(
-                is_valid_component_segment(name),
-                "BC-2.14.001 EC-002: Component::Custom name '{}' contains invalid characters at emission time",
-                name
-            );
-            assert!(
-                !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
-                "BC-2.14.001 EC-002: Component::Custom name '{}' aliases named component '{}' at emission time",
-                name,
-                name.to_lowercase()
-            );
+            if !is_valid_component_segment(name) {
+                unreachable!(
+                    "BC-2.14.001 EC-002: Component::Custom name '{}' contains invalid characters at emission time",
+                    name
+                );
+            }
+            if NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()) {
+                unreachable!(
+                    "BC-2.14.001 EC-002: Component::Custom name '{}' aliases named component '{}' at emission time",
+                    name,
+                    name.to_lowercase()
+                );
+            }
             name.to_lowercase()
         }
     }

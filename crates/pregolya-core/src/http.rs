@@ -49,9 +49,9 @@ pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
             PregolyaError::new(
                 Component::Core,
                 Category::Transport,
-                RetryHint::Later(Duration::from_secs(30)),
-                "E-CORE-004",
-                format!("HTTP client build failed: {e}"),
+                RetryHint::Never,
+                "E-CORE-012",
+                format!("HttpClientBuildFailed: failed to build HTTP client: {e}"),
             )
         })
 }
@@ -78,15 +78,12 @@ mod tests {
     // AC-015 non-ignored test (test_BC_2_14_004_build_failure_maps_to_e_core_012)
     // calls this helper.  The #[ignore]'d test below covers the live path.
     fn make_build_error_for_test(reason: &str) -> PregolyaError {
-        // Implementer: change this to produce the correct shape per BC-2.14.004 EC-006.
-        // Also update build_client()'s map_err closure:
-        //   - code:       "E-CORE-012"   (currently "E-CORE-004")
-        //   - retry_hint: RetryHint::Never (currently RetryHint::Later(30s))
-        //   - message:    "HttpClientBuildFailed: failed to build HTTP client: {reason}"
-        todo!(
-            "BC-2.14.004 {{EC-006}}: implement — return PregolyaError {{ code: E-CORE-012, \
-             category: Transport, retry_hint: Never, \
-             message: HttpClientBuildFailed: failed to build HTTP client: {reason} }}"
+        PregolyaError::new(
+            Component::Core,
+            Category::Transport,
+            RetryHint::Never,
+            "E-CORE-012",
+            format!("HttpClientBuildFailed: failed to build HTTP client: {reason}"),
         )
     }
 

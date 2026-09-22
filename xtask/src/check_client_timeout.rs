@@ -9,7 +9,10 @@
 //! - Scans `crates/**/*.rs` for `reqwest::Client::new()` (fully qualified) and
 //!   `Client::new()` (unqualified) in non-test source.
 //! - Also scans for `ClientBuilder` chains that call `.build()` without a
-//!   preceding `.timeout(d)` call where `d > Duration::ZERO`.
+//!   preceding `.timeout(d)` call where `d > Duration::ZERO`
+//!   (BC-2.14.004 {PC-001}, {INV-004}).
+//! - `.timeout(Duration::ZERO)` is treated as a missing timeout and flagged —
+//!   a zero duration is not a valid request timeout.
 //! - Files under `tests/` directories, `#[cfg(test)]` blocks, and files ending
 //!   in `_test.rs`/`_tests.rs` are fully exempt (BC-2.14.004 {INV-003}).
 //! - Exits non-zero when any violation is found; exits 0 on a clean scan.
@@ -448,33 +451,73 @@ fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
     i
 }
 
-/// Check if a chain from `start` to `end` calls `.build()` without a prior `.timeout()`.
+/// Check if a chain from `start` calls `.build()` without a prior valid `.timeout()`.
 ///
-/// Returns true if `.build()` is present and `.timeout()` is NOT present before it.
-fn has_build_without_timeout(flat: &[FlatToken], start: usize, end: usize) -> bool {
-    let segment = &flat[start..end.min(flat.len())];
+/// Scans forward from `start` in the full `flat` list, stopping at the first `;`
+/// or `BraceGroup` boundary. The `_end` hint produced by `find_chain_end` is
+/// intentionally ignored: when method arguments are present, `find_chain_end`
+/// truncates at the first argument token (which is inlined by
+/// `flatten_tokens_no_test` immediately after the `ParenGroup` marker), placing
+/// the subsequent `.build()` call beyond the `_end` boundary.
+///
+/// Returns `true` if `.build()` is present and no valid `.timeout(d)` where
+/// `d > Duration::ZERO` precedes it. `.timeout(Duration::ZERO)` is treated as
+/// absent (BC-2.14.004 {PC-001}, {INV-004}).
+fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> bool {
+    let n = flat.len();
     let mut found_build = false;
     let mut found_timeout_before_build = false;
-
-    let m = segment.len();
-    let mut i = 0;
-    while i < m {
-        if matches!(&segment[i], FlatToken::Punct('.', _))
-            && let Some(FlatToken::Ident(name, _)) = segment.get(i + 1)
-        {
-            if name == "timeout" {
-                found_timeout_before_build = true;
-            } else if name == "build"
-                && matches!(segment.get(i + 2), Some(FlatToken::ParenGroup(_)))
-            {
-                // build() call found — was there a timeout before it?
-                found_build = true;
-                if found_timeout_before_build {
-                    return false; // compliant
+    let mut i = start;
+    while i < n {
+        // Statement/block boundaries terminate the chain scan.
+        match &flat[i] {
+            FlatToken::BraceGroup(_) => break,
+            FlatToken::Punct(c, _) if *c == ';' => break,
+            FlatToken::Punct(c, _) if *c == '.' => {
+                if let Some(FlatToken::Ident(name, _)) = flat.get(i + 1) {
+                    if name == "timeout" {
+                        // Only credit a timeout whose argument is not Duration::ZERO.
+                        if !is_zero_duration_timeout_arg(flat, i) {
+                            found_timeout_before_build = true;
+                        }
+                    } else if name == "build"
+                        && matches!(flat.get(i + 2), Some(FlatToken::ParenGroup(_)))
+                    {
+                        // build() call found — was there a valid timeout before it?
+                        found_build = true;
+                        if found_timeout_before_build {
+                            return false; // compliant
+                        }
+                    }
                 }
             }
+            _ => {}
         }
         i += 1;
     }
     found_build && !found_timeout_before_build
+}
+
+/// Returns `true` if the `.timeout(...)` call at `timeout_idx` uses `Duration::ZERO`
+/// as its argument.
+///
+/// `flatten_tokens_no_test` pushes a `ParenGroup` marker then inlines the paren
+/// group's contents into the flat list. For `.timeout(Duration::ZERO)` the flat
+/// layout starting at `timeout_idx` (the leading `.`) is:
+///
+/// | offset | token |
+/// |--------|-------|
+/// | `+0` | `Punct('.')` |
+/// | `+1` | `Ident("timeout")` |
+/// | `+2` | `ParenGroup` (marker) |
+/// | `+3` | `Ident("Duration")` ← inlined arg |
+/// | `+4` | `Punct(':')` |
+/// | `+5` | `Punct(':')` |
+/// | `+6` | `Ident("ZERO")` |
+fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool {
+    matches!(flat.get(timeout_idx + 2), Some(FlatToken::ParenGroup(_)))
+        && matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "Duration")
+        && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if n == "ZERO")
 }

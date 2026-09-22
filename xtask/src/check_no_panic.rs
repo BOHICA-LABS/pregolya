@@ -1,15 +1,21 @@
-//! CI lint gate: reject `.unwrap()` and `.expect()` in library source files.
+//! CI lint gate: reject `.unwrap()`, `.expect()`, `assert!`, `assert_eq!`,
+//! `assert_ne!`, and `panic!` in library source files.
 //!
-//! Implements `cargo xtask check-no-panic` (BC-2.14.003 {PC-004}, VP-DI008-01).
+//! Implements `cargo xtask check-no-panic` (BC-2.14.003 {PC-004}/{PC-005}/{PC-006},
+//! VP-DI008-01).
 //!
 //! # Scanning rules
 //!
 //! - Scans `crates/**/*.rs` for `.unwrap()` and `.expect(...)` outside
 //!   `#[cfg(test)]` scopes.
+//! - Also scans for bare `assert!`, `assert_eq!`, `assert_ne!`, and `panic!`
+//!   macro invocations in non-test library code (BC-2.14.003 {PC-005}/{PC-006}).
 //! - Files under `tests/` directories, files ending in `_test.rs`/`_tests.rs`,
 //!   and files ending in `/tests.rs` are fully exempt (BC-2.14.003 {INV-004}).
-//! - `debug_assert!()` is NOT flagged — it compiles out in release mode
-//!   (BC-2.14.003 {INV-003}).
+//! - `debug_assert!`, `debug_assert_eq!`, `debug_assert_ne!` are NOT flagged —
+//!   they compile out in release mode (BC-2.14.003 {INV-003}).
+//! - `unreachable!` is NOT flagged — it is an exhaustiveness witness, not a
+//!   reachable panic path (BC-2.14.003 product-owner guidance).
 //! - Exits non-zero when any violation is found; exits 0 on a clean scan.
 
 use std::process::exit;
@@ -111,10 +117,19 @@ pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
     findings
 }
 
+/// Panic-inducing macros flagged in non-test production code.
+///
+/// `debug_assert!*`, `unreachable!`, `todo!`, `unimplemented!` are NOT in this
+/// list — see module-level scanning rules for exemption rationale.
+const FLAGGED_PANIC_MACROS: &[&str] = &["assert", "assert_eq", "assert_ne", "panic"];
+
 /// Recursive token-tree walker for `scan_for_panics_in_source`.
 ///
-/// Detects `.unwrap()` and `.expect(...)` method calls outside `#[cfg(test)]`
-/// blocks. Skips `debug_assert!` (compiles out in release; BC-2.14.003 {INV-003}).
+/// Detects `.unwrap()` / `.expect(...)` method calls AND bare `assert!` /
+/// `assert_eq!` / `assert_ne!` / `panic!` macro invocations outside
+/// `#[cfg(test)]` blocks (BC-2.14.003 {PC-004}/{PC-005}/{PC-006}).
+/// Skips `debug_assert!*` (compiles out in release; BC-2.14.003 {INV-003}).
+/// Skips `unreachable!` (exhaustiveness witness; product-owner guidance).
 fn walk_panic_tokens(
     iter: proc_macro2::token_stream::IntoIter,
     findings: &mut Vec<String>,
@@ -203,6 +218,28 @@ fn walk_panic_tokens(
                             path, line, name
                         ));
                     }
+                }
+            }
+            // Detect bare macro invocations: assert!, assert_eq!, assert_ne!, panic!
+            // Pattern: Ident(name) Punct('!') Group(Paren)
+            // Exempt: debug_assert!*, unreachable!, todo!, unimplemented!
+            TokenTree::Ident(id) if *in_test_depth == 0 => {
+                let name = id.to_string();
+                if FLAGGED_PANIC_MACROS.contains(&name.as_str())
+                    && matches!(
+                        tokens.get(i + 1),
+                        Some(TokenTree::Punct(p)) if p.as_char() == '!'
+                    )
+                    && matches!(
+                        tokens.get(i + 2),
+                        Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis
+                    )
+                {
+                    let line = id.span().start().line;
+                    findings.push(format!(
+                        "{}:{}: {}!() in non-test code (BC-2.14.003 violation)",
+                        path, line, name
+                    ));
                 }
             }
             // Other non-brace groups (parens, brackets) — recurse at same depth

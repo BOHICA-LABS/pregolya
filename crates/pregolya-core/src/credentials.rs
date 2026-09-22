@@ -59,17 +59,18 @@ impl OpenAiApiKey {
     /// # Errors
     ///
     /// Returns `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005",
-    /// message: "Validation failed for 'api_key': value must not be empty" })` when
-    /// `key` is an empty string (BC-2.14.006 {PC-001}, BC-2.14.005 EC-004).
+    /// message: "Validation failed for 'api_key': value must not be empty or whitespace-only" })`
+    /// when `key` is empty or whitespace-only (BC-2.14.006 {PC-001}, {PC-004} v1.6, EC-004,
+    /// EC-006). A whitespace-only key produces a malformed bearer token at the HTTP layer.
     pub fn new(key: impl Into<String>) -> Result<Self, PregolyaError> {
         let key = key.into();
-        if key.is_empty() {
+        if key.trim().is_empty() {
             return Err(PregolyaError::new(
                 crate::error::Component::Core,
                 crate::error::Category::Val,
                 crate::error::RetryHint::Never,
                 "E-CORE-005",
-                "Validation failed for 'api_key': value must not be empty",
+                "Validation failed for 'api_key': value must not be empty or whitespace-only",
             ));
         }
         Ok(Self(key))
@@ -115,17 +116,18 @@ impl AnthropicApiKey {
     /// # Errors
     ///
     /// Returns `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005",
-    /// message: "Validation failed for 'api_key': value must not be empty" })` when
-    /// `key` is an empty string (BC-2.14.006 {PC-001}, BC-2.14.005 EC-004).
+    /// message: "Validation failed for 'api_key': value must not be empty or whitespace-only" })`
+    /// when `key` is empty or whitespace-only (BC-2.14.006 {PC-001}, {PC-004} v1.6, EC-004,
+    /// EC-006). A whitespace-only key produces a malformed bearer token at the HTTP layer.
     pub fn new(key: impl Into<String>) -> Result<Self, PregolyaError> {
         let key = key.into();
-        if key.is_empty() {
+        if key.trim().is_empty() {
             return Err(PregolyaError::new(
                 crate::error::Component::Core,
                 crate::error::Category::Val,
                 crate::error::RetryHint::Never,
                 "E-CORE-005",
-                "Validation failed for 'api_key': value must not be empty",
+                "Validation failed for 'api_key': value must not be empty or whitespace-only",
             ));
         }
         Ok(Self(key))
