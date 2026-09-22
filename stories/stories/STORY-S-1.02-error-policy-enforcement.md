@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.12"
+version: "1.13"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -20,6 +20,7 @@ changelog:
   - "1.10 (adversary-pass-4-H01-M07/2026-09-22): H01 — Added BC-2.14.001 row to body §Behavioral Contracts table; authored AC-020 tracing BC-2.14.001 EC-007 / VP-BC214001-01 for check-error-code-registry gate. M07 — Swept xtask/src/check_error_code_registry.rs into §Architecture Mapping, §Purity Classification, §File Structure Requirements; corrected Task 9 count from three to four subcommands; extended Task 14 CHANGELOG topics to include registry gate."
   - "1.11 (adversary-pass-5-M01-M03/2026-09-22): M01 — AC-010 updated to reflect full deny-bare-api-key implementation: 5 patterns (derive(Debug), derive(Serialize), derive(Deserialize), impl Display, impl Deref<Target=str|String>) and 8 sentinel keywords (key, token, secret, credential, auth, bearer, password, passphrase); added missing Verified-by test symbols test_BC_2_14_005_impl_display_flagged, test_BC_2_14_005_derive_deserialize_flagged, test_BC_2_14_005_pub_crate_debug_derive_fixture_detected; Task 8 prose expanded to match. M03 — AC-020 Verified-by corrected from non-load-bearing test_error_code_registry_zero_codes_is_error to load-bearing test_registry_verdict_zero_codes_returns_err (calls registry_verdict(&HashMap::new()) and asserts Err) plus test_registry_verdict_collision_returns_err (load-bearing collision guard)."
   - "1.12 (adversary-pass-7-M05-L01-L02/2026-09-22): M05 — File Structure Requirements: deny_bare_api_key.rs Purpose cell corrected from 'bare API key string scan' to 'structural credential-struct safety scan (8 sentinels × 5 patterns; no string-literal matching)' (AC-010 explicitly states the gate does not scan string literals). L01 — Task 1 range extended from AC-019 to AC-020 (AC-020 was added in v1.10 but Task 1 was not swept). L02 — Architecture Compliance Rules: Enforcement cell for credentials.rs Deref prohibition corrected from assert_not_impl_any!(OpenAiApiKey: AsRef<str>) to assert_not_impl_any!(OpenAiApiKey: std::ops::Deref) and assert_not_impl_any!(AnthropicApiKey: std::ops::Deref) (both newtypes; matches actual static_assertions enforcement)."
+  - "1.13 (adversary-pass-9-L03/2026-09-22): L03 — §Purity Classification: added missing rows for check_client_timeout.rs and deny_bare_api_key.rs (both effectful/file-scan; were in §Architecture Mapping but absent from §Purity Classification)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -153,6 +154,8 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 | `pregolya-core/src/credentials.rs` | pure-core | Newtype structs with no I/O. `Debug` impl is a pure string transformation. |
 | `pregolya-core/src/http.rs` | effectful | Builds `reqwest::Client` which opens TCP sockets; async I/O dependency. |
 | `xtask/src/check_no_panic.rs` | effectful | File system scan using `grep`/`ripgrep` subprocess. |
+| `xtask/src/check_client_timeout.rs` | effectful | token-stream scan over crates/**/*.rs via find subprocess |
+| `xtask/src/deny_bare_api_key.rs` | effectful | token-stream scan over crates/**/*.rs via find subprocess |
 | `xtask/src/check_error_code_registry.rs` | effectful | Reads `.factory/specs/prd-supplements/error-taxonomy.md` from disk; filesystem I/O dependency. |
 
 ## Edge Cases
