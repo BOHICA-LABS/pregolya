@@ -1383,8 +1383,7 @@ fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
 ///
 /// Blocked dependency: requires `cargo build -p xtask` (~30s cold).
 #[test]
-#[ignore = "EXT-BC214003: requires cargo build as subprocess; fixture-mode gate is wired \
-            in CI via the lint-extra job — see .github/workflows/ci.yml"]
+#[ignore = "EXT-BC214003: subprocess; plain check-no-panic wired in CI lint-extra job — see .github/workflows/ci.yml"]
 fn test_BC_2_14_003_check_no_panic_subprocess_wired() {
     use std::process::{Command, Stdio};
 
@@ -1396,8 +1395,12 @@ fn test_BC_2_14_003_check_no_panic_subprocess_wired() {
         .expect("cargo run must be invocable");
 
     // run() is implemented; exits 0 on a clean workspace, non-zero only on violations.
-    // The test verifies the command is wired and executable.
-    let _ = output.status;
+    assert!(
+        output.status.success(),
+        "BC-2.14.003 {{PC-004}}: cargo xtask check-no-panic must exit 0 on a clean workspace;\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 /// AC-005 (traces to BC-2.14.004 {PC-003}) — subprocess integration test
@@ -1420,7 +1423,12 @@ fn test_BC_2_14_004_check_client_timeout_subprocess_wired() {
         .expect("cargo run must be invocable");
 
     // run() is implemented; exits 0 on a clean workspace, non-zero only on violations.
-    let _ = output.status;
+    assert!(
+        output.status.success(),
+        "BC-2.14.004 {{PC-003}}: cargo xtask check-client-timeout must exit 0 on a clean workspace;\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2210,8 +2218,10 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
 /// SID-1: the non-ignored in-process companion above provides CI coverage without
 /// subprocess overhead.
 #[test]
-#[ignore = "EXT-BC214003: requires cargo build as subprocess; fixture-mode gate is wired \
-            in CI via the lint-extra job — see .github/workflows/ci.yml"]
+#[ignore = "EXT-BC214003: subprocess test for exit-code contract; covered non-ignored by \
+            test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error + \
+            test_BC_2_14_003_fixture_mode_in_process_violation_found; \
+            wired in CI via lint-extra"]
 fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
     use std::process::{Command, Stdio};
 
@@ -3370,6 +3380,16 @@ pub fn process_item(n: u32) -> u32 {
 /// Fixture: `violation_assert_bc_id_short.rs`
 #[test]
 fn test_BC_2_14_003_assert_bc_id_short_format_flagged() {
+    // Negative control: short BC-ID in message must be flagged
+    let src = r#"
+/// # Panics
+/// Panics if not valid.
+pub fn bad(x: i32) { assert!(x > 0, "BC-9 short — wrong"); }
+"#;
+    let findings = scan_for_panics_in_source(src, "src/bad.rs");
+    assert!(!findings.is_empty(), "short BC-ID must be flagged");
+
+    // Also test via the fixture file
     let fixture = include_str!("../tests/fixtures/violations/violation_assert_bc_id_short.rs");
     let findings = scan_for_panics_in_source(
         fixture,
@@ -3379,6 +3399,18 @@ fn test_BC_2_14_003_assert_bc_id_short_format_flagged() {
         !findings.is_empty(),
         "MED-2: assert! with # Panics doc but invalid short BC-ID ('BC-9') must be FLAGGED; \
          the gate requires BC-\\d+\\.\\d{{2}}\\.\\d{{3}}; got: {findings:?}"
+    );
+
+    // Positive control: valid full BC-ID in message must NOT be flagged (message branch)
+    let src_ok = r#"
+/// # Panics
+/// Panics if not valid.
+pub fn good(x: i32) { assert!(x > 0, "BC-2.14.003: value must be positive"); }
+"#;
+    let ok_findings = scan_for_panics_in_source(src_ok, "src/good.rs");
+    assert!(
+        ok_findings.is_empty(),
+        "valid full BC-ID must not be flagged; findings: {ok_findings:?}"
     );
 }
 
@@ -3390,6 +3422,19 @@ fn test_BC_2_14_003_assert_bc_id_short_format_flagged() {
 /// Fixture: `violation_assert_bc_id_in_condition.rs`
 #[test]
 fn test_BC_2_14_003_assert_bc_id_in_condition_flagged() {
+    // Negative control: BC-ID in condition must be flagged
+    let src_cond = r#"
+/// # Panics
+/// Panics if prefix is wrong.
+pub fn check(code: &str) { assert!(code.starts_with("BC-2.14.003"), "no bc id in msg — check prefix"); }
+"#;
+    let findings_cond = scan_for_panics_in_source(src_cond, "src/check.rs");
+    assert!(
+        !findings_cond.is_empty(),
+        "BC-ID in condition (not message) must be flagged; got: {findings_cond:?}"
+    );
+
+    // Also test via the fixture file
     let fixture =
         include_str!("../tests/fixtures/violations/violation_assert_bc_id_in_condition.rs");
     let findings = scan_for_panics_in_source(
@@ -3401,6 +3446,18 @@ fn test_BC_2_14_003_assert_bc_id_in_condition_flagged() {
         "MED-2: assert! with BC-ID in the CONDITION (not message) must be FLAGGED; \
          syn_macro_has_bc_id must search the message argument after the first comma; \
          got: {findings:?}"
+    );
+
+    // Positive control: valid BC-ID in message must NOT be flagged
+    let src_ok = r#"
+/// # Panics
+/// Panics if prefix is wrong.
+pub fn check_ok(code: &str) { assert!(code.starts_with("prefix"), "BC-2.14.003: prefix check failed"); }
+"#;
+    let ok_findings = scan_for_panics_in_source(src_ok, "src/check_ok.rs");
+    assert!(
+        ok_findings.is_empty(),
+        "valid full BC-ID in message must not be flagged; findings: {ok_findings:?}"
     );
 }
 
@@ -3478,5 +3535,115 @@ fn test_BC_2_14_003_unwrap_in_format_macro_fixture_detected() {
         !findings.is_empty(),
         "MED-4: violation_unwrap_in_format_macro.rs fixture must produce a finding; \
          got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// F-P2-H01: fixture_mode_verdict pure helper tests (BC-2.14.003)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-P2-H01 (HIGH) — BC-2.14.003
+///
+/// `fixture_mode_verdict(N, 0)` must return `Err` — zero findings means the
+/// scanner is BROKEN.
+#[test]
+fn test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error() {
+    assert!(crate::check_no_panic::fixture_mode_verdict(8, 0).is_err());
+    let err = crate::check_no_panic::fixture_mode_verdict(8, 0).unwrap_err();
+    assert!(err.contains("BROKEN"), "err was: {err}");
+}
+
+/// F-P2-H01 (HIGH) — BC-2.14.003
+///
+/// `fixture_mode_verdict(N, M)` where M > 0 must return `Ok` — some files had
+/// findings, scanner is working.
+#[test]
+fn test_BC_2_14_003_fixture_mode_verdict_nonzero_findings_is_ok() {
+    assert!(crate::check_no_panic::fixture_mode_verdict(12, 12).is_ok());
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// F-P2-L04: check_impl_display false positive on generic bounds (BC-2.14.005)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-P2-L04 (LOW) — BC-2.14.005 {PC-006}
+///
+/// `check_impl_display` must NOT fire a false positive when `Display` appears
+/// as a GENERIC BOUND, not as the impl trait itself.
+///
+/// `impl<T: std::fmt::Display> Render for AuthToken {}` — `Display` is the bound
+/// on `T`, NOT the trait being implemented. The impl trait is `Render`.
+#[test]
+fn test_BC_2_14_005_check_impl_display_no_false_positive_on_generic_bound() {
+    let src = "impl<T: std::fmt::Display> Render for AuthToken {}";
+    assert!(
+        !crate::deny_bare_api_key::check_impl_display(src, "AuthToken"),
+        "Display as a generic bound must NOT be flagged as impl Display for AuthToken"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// F-P2-L05: pub(crate) struct flagged (BC-2.14.005)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-P2-L05 (LOW) — BC-2.14.005 {PC-006}
+///
+/// `pub(crate) struct` with Debug derive must be flagged.
+/// The scanner must handle `pub(crate)` visibility (group after `pub` ident)
+/// not just plain `pub`.
+#[test]
+fn test_BC_2_14_005_pub_crate_struct_flagged() {
+    let src = "#[derive(Debug)]\npub(crate) struct InternalAuthToken(String);";
+    let findings = scan_for_bare_api_keys_in_source(src, "src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "pub(crate) credential struct with Debug derive must be flagged; got: {findings:?}"
+    );
+}
+
+/// F-P2-L05 — fixture file scan for pub(crate) struct
+///
+/// The fixture file content is scanned with a production-like path so the
+/// lint-exempt filter does not suppress it (the scanner exempts /tests/ paths).
+#[test]
+fn test_BC_2_14_005_pub_crate_debug_derive_fixture_detected() {
+    let fixture = include_str!("../tests/fixtures/violations/violation_pub_crate_debug_derive.rs");
+    // Use a production-like path so the lint-exempt guard does not suppress the scan.
+    let findings =
+        scan_for_bare_api_keys_in_source(fixture, "crates/pregolya-core/src/credentials.rs");
+    assert!(
+        !findings.is_empty(),
+        "pub(crate) struct with Debug derive (from violation_pub_crate_debug_derive.rs) must be flagged; \
+         got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// F-P2-L06: constant-valued zero timeout is a known false-negative (BC-2.14.004)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-P2-L06 (LOW) — BC-2.14.004 {PC-001}
+///
+/// KNOWN LIMITATION 3: `.timeout(Duration::from_secs(CONST))` where CONST is a
+/// named constant evaluating to 0 at runtime is NOT detected by the current scanner.
+/// This test pins the accepted false-negative so it is explicitly documented.
+#[test]
+fn test_timeout_scanner_constant_zero_false_negative_known_limitation() {
+    // KNOWN-LIMITATION 3: a constant-valued zero argument evades Form C detection.
+    // This is an accepted false negative documented in check_client_timeout.rs.
+    let src = r#"
+const ZERO: u64 = 0;
+fn build() -> reqwest::Client {
+    reqwest::ClientBuilder::new()
+        .timeout(std::time::Duration::from_secs(ZERO))
+        .build()
+        .unwrap()
+}
+"#;
+    let findings = scan_for_timeout_violations_in_source(src, "src/lib.rs");
+    // KNOWN FALSE NEGATIVE: this must NOT be flagged by the current scanner (constant, not literal)
+    assert!(
+        findings.is_empty(),
+        "Known limitation: constant-valued zero timeout is not detected; findings: {findings:?}"
     );
 }

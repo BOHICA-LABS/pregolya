@@ -280,6 +280,13 @@ fn flatten_tokens_no_test(
 /// flagged because `has_build_without_timeout` terminates the chain scan at `;`. Full fix
 /// requires cross-statement binding-flow analysis (not implemented). The test
 /// `test_timeout_scanner_split_statement_false_negative_known_limitation` documents this.
+///
+/// **KNOWN-LIMITATION 3 — constant-valued zero timeout:** `.timeout(Duration::from_secs(CONST))`
+/// where `CONST` is a named constant evaluating to 0 at runtime is credited as a valid positive
+/// timeout (the literal form would be caught as Form C zero-timeout, but a constant is not a
+/// literal). Full mitigation requires const-evaluation. At present, `HTTP_CLIENT_TIMEOUT_SECS = 30`
+/// is enforced via code review; `test_timeout_scanner_constant_zero_false_negative_known_limitation`
+/// pins this accepted false-negative.
 fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &mut Vec<String>) {
     let n = flat.len();
     let mut i = 0;

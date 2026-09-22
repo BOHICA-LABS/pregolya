@@ -728,21 +728,41 @@ pub fn run_fixture_mode(dir: &str) {
         all_findings.extend(findings);
     }
 
-    if !all_findings.is_empty() {
-        eprintln!("check-no-panic --fixture-mode {dir}: violations found (BC-2.14.003):");
-        for f in &all_findings {
-            eprintln!("  {f}");
+    match fixture_mode_verdict(total_fixtures, files_with_findings) {
+        Ok(msg) => {
+            eprintln!("check-no-panic --fixture-mode {dir}: violations found (BC-2.14.003):");
+            for f in &all_findings {
+                eprintln!("  {f}");
+            }
+            eprintln!("{msg}");
+            exit(1);
         }
-        eprintln!(
-            "fixture-mode: {files_with_findings}/{total_fixtures} fixture files had findings, \
-             {} total violations",
-            all_findings.len()
-        );
-        exit(1);
+        Err(err) => {
+            eprintln!(
+                "ERROR: 0/{total_fixtures} fixture files had findings — no-panic scanner is BROKEN \
+                 (detected no violations in violation fixtures)."
+            );
+            eprintln!("{err}");
+            std::process::exit(1);
+        }
     }
-    // Reaching here means 0 violations in the fixture dir — unexpected for a violations dir.
-    eprintln!(
-        "fixture-mode: WARNING: 0/{total_fixtures} fixture files had findings — scanner may be broken"
-    );
-    println!("check-no-panic --fixture-mode {dir}: 0 violations found.");
+}
+
+/// Pure verdict helper for fixture-mode: returns `Ok(msg)` when ≥1 fixture file had
+/// findings (scanner working), or `Err(msg)` when 0 files had findings (scanner broken).
+///
+/// Extracted for testability — the exit(1) side-effect lives in `run_fixture_mode`.
+pub(crate) fn fixture_mode_verdict(
+    total_fixtures: usize,
+    files_with_findings: usize,
+) -> Result<String, String> {
+    if files_with_findings == 0 {
+        Err(format!(
+            "0/{total_fixtures} fixture files had findings — scanner BROKEN"
+        ))
+    } else {
+        Ok(format!(
+            "fixture-mode: {files_with_findings}/{total_fixtures} fixture files had findings"
+        ))
+    }
 }

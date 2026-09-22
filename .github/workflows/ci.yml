@@ -371,7 +371,11 @@ jobs:
           cargo xtask check-file-size
           cargo xtask check-client-timeout
           cargo xtask check-no-panic
-          ! cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations
+          if cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations; then
+            echo "ERROR: no-panic fixture-mode exited 0 — scanner failed to detect planted violations. Scanner is broken."
+            exit 1
+          fi
+          echo "Check passed: no-panic fixture-mode correctly detected planted violations."
           cargo xtask deny-bare-api-key
           cargo xtask deny-anyhow-in-lib
           cargo xtask deny-description-cache-key

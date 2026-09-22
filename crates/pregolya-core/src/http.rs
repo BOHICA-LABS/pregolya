@@ -28,7 +28,8 @@ use crate::error::{Category, Component, PregolyaError, RetryHint};
 ///
 /// This constant is used by [`build_client`] and referenced in tests to assert
 /// the timeout is observable in the built client's debug representation.
-/// Changing this value automatically propagates to both the factory and the assertions.
+/// Changing this value propagates to the factory; `test_BC_2_14_004_default_timeout_applied`
+/// derives its assertion string from this constant via `format!()` to remain coupled.
 pub(crate) const HTTP_CLIENT_TIMEOUT_SECS: u64 = 30;
 
 /// Constructs an outbound `reqwest::Client` with a 30-second request timeout.
@@ -157,15 +158,6 @@ mod tests {
     use super::*;
     use crate::error::{Category, RetryHint};
 
-    // ── AC-015 test-support stub ──────────────────────────────────────────────
-    //
-    // BC-2.14.004 F-C (SID-1): delegates to the production map_build_failure fn
-    // so that test_BC_2_14_004_build_failure_maps_to_e_core_012 exercises the
-    // real production mapping, not a test-only duplicate (BC-2.14.004 F-C/POL-34).
-    fn make_build_error_for_test(reason: &str) -> PregolyaError {
-        map_build_failure(reason)
-    }
-
     // ── BC-2.14.004 Tests ─────────────────────────────────────────────────────
 
     /// AC-004 (traces to BC-2.14.004 {PC-001}, {PC-002})
@@ -211,9 +203,10 @@ mod tests {
         // HTTP_CLIENT_TIMEOUT_SECS constant — removing .timeout() from build_client()
         // would remove "30s" from the Debug output and break this assertion.
         let debug_repr = format!("{:?}", client);
+        let expected_timeout_str = format!("{HTTP_CLIENT_TIMEOUT_SECS}s");
         assert!(
-            debug_repr.contains("30s"),
-            "BC-2.14.004 {{PC-002}}: reqwest Client Debug output must contain '30s' \
+            debug_repr.contains(&expected_timeout_str),
+            "BC-2.14.004 {{PC-002}}: reqwest Client Debug output must contain '{expected_timeout_str}' \
              confirming the timeout is configured; if this fails, .timeout() may have \
              been removed from build_client(); debug repr: {debug_repr}"
         );
@@ -251,7 +244,7 @@ mod tests {
     ///
     /// Blocked dependency: requires a Tokio runtime and a local TCP listener that stalls
     /// for > 30s. This test takes ~30 seconds in CI and is therefore `#[ignore]`'d.
-    /// It must be ungated in a dedicated timeout-validation job.
+    /// Deferred to S-2.07 per BC-2.14.004 {PC-005}.
     ///
     /// SID-1 note: the unit tests above (test_BC_2_14_004_build_client_returns_ok and
     /// test_BC_2_14_004_timeout_error_shape) drive the factory at the dependency boundary
@@ -261,7 +254,7 @@ mod tests {
     /// fires as expected against a stalled server.
     #[tokio::test]
     #[ignore = "EXT-BC214004: requires live mock HTTP server to verify timeout fires; \
-                full E-PROV-002 error shape verified in S-2.07 (BC-2.14.004 {PC-005})"]
+                deferred to S-2.07 per BC-2.14.004 {PC-005}"]
     async fn test_BC_2_14_004_timeout_fires_against_mock_server() {
         use std::io::Read as _;
         use std::net::TcpListener;
@@ -311,16 +304,16 @@ mod tests {
     /// GREEN: `build_client()` maps build errors to `E-CORE-012` / `Category::Transport` /
     /// `RetryHint::Never` per BC-2.14.004 {EC-006} v1.7.
     ///
-    /// This non-ignored test drives the mapping BOUNDARY via `make_build_error_for_test`,
-    /// which delegates to the production `map_build_failure` fn. The production mapping
-    /// path is exercised directly — not a test-only duplicate.
+    /// This non-ignored test drives the mapping BOUNDARY via `map_build_failure` directly.
+    /// The production mapping path is exercised directly — not a test-only duplicate
+    /// (AC-019: no separate test-only mapping helper is introduced).
     ///
     /// SID-1: the `#[ignore]`'d test below exercises the live ClientBuilder::build() failure
     /// path; this non-ignored test covers the mapping boundary without requiring a broken
     /// TLS stack.
     #[test]
     fn test_BC_2_14_004_build_failure_maps_to_e_core_012() {
-        let e = make_build_error_for_test("simulated TLS stack unavailable");
+        let e = map_build_failure("simulated TLS stack unavailable");
         assert_eq!(
             e.code(),
             "E-CORE-012",
@@ -511,23 +504,29 @@ mod tests {
     ///
     /// Blocked dependency (SID-1): triggering `ClientBuilder::build()` failure
     /// deterministically requires a broken TLS stack or invalid proxy configuration,
-    /// which is not available in standard CI. Ungated in a dedicated TLS-failure job.
-    ///
-    /// The non-ignored test above (`test_BC_2_14_004_build_failure_maps_to_e_core_012`)
-    /// covers the mapping boundary without a live failure.
+    /// which is not available in standard CI. This test must only be ungated in an
+    /// environment where ClientBuilder::build() is forced to fail (e.g. TLS stack
+    /// sabotaged); the error-mapping logic is covered non-ignored by
+    /// test_BC_2_14_004_build_failure_maps_to_e_core_012 and
+    /// test_BC_2_14_004_build_failure_production_path_invariant.
     #[test]
     #[ignore = "EXT-BC214004-LIVE: requires a TLS configuration that forces \
                 ClientBuilder::build() to fail in a real environment; \
                 the E-CORE-012 mapping is covered non-ignored in \
-                test_BC_2_14_004_build_failure_maps_to_e_core_012"]
+                test_BC_2_14_004_build_failure_maps_to_e_core_012 and \
+                test_BC_2_14_004_build_failure_production_path_invariant"]
     fn test_BC_2_14_004_build_failure_live_path_e_core_012() {
         // When this test is ungated (TLS stack broken by CI config):
         // The client build MUST fail and return the E-CORE-012 shape.
         // Actual invocation requires environment-level TLS sabotage (e.g.
         // SSLKEYLOGFILE=/dev/full or reqwest built without any TLS feature).
         let result = build_client();
-        // In the normal test environment, build_client() succeeds — this body
-        // only exercises when run in a deliberately broken TLS environment.
+        assert!(
+            result.is_err(),
+            "BC-2.14.004 {{EC-006}}: this test must only be ungated in an environment where \
+             ClientBuilder::build() is forced to fail (e.g., TLS stack sabotaged); \
+             got Ok — the sabotage precondition was not applied"
+        );
         if let Err(e) = result {
             assert_eq!(
                 e.code(),

@@ -213,9 +213,20 @@ fn check_struct_derives(
     path: &str,
     findings: &mut Vec<String>,
 ) {
-    use proc_macro2::TokenTree;
+    use proc_macro2::{Delimiter, TokenTree};
     let is_pub = matches!(tokens.get(j), Some(TokenTree::Ident(id)) if id == "pub");
-    let struct_kw_j = if is_pub { j + 1 } else { j };
+    // After `pub`, skip an optional visibility group like `(crate)`, `(super)`,
+    // or `(in path)` — e.g. `pub(crate) struct` has a Group at j+1.
+    let struct_kw_j = if is_pub {
+        if matches!(tokens.get(j + 1), Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis)
+        {
+            j + 2 // pub(crate) / pub(super) / pub(in ...) — skip the visibility group
+        } else {
+            j + 1 // plain pub
+        }
+    } else {
+        j
+    };
 
     if matches!(tokens.get(struct_kw_j), Some(TokenTree::Ident(id)) if id == "struct")
         && let Some(TokenTree::Ident(struct_name_tok)) = tokens.get(struct_kw_j + 1)
@@ -330,9 +341,14 @@ fn check_impl_deref(
 /// - `impl fmt::Display for NAME` (module-qualified)
 /// - `impl std::fmt::Display for NAME` (fully-qualified)
 ///
+/// Correctly ignores `Display` appearing as a generic bound (e.g.
+/// `impl<T: std::fmt::Display> Render for AuthToken {}`): angle-bracket depth
+/// tracking ensures only idents at depth 0 are considered as the impl trait
+/// target (F-P2-L04 fix).
+///
 /// (BC-2.14.005 {PC-006}: Display output is invoked by `format!("{}", key)` and the
 /// `{key}` shorthand; credential values must not appear in any format output.)
-fn check_impl_display(
+fn check_impl_display_in_tokens(
     tokens: &[proc_macro2::TokenTree],
     start: usize,
     path: &str,
@@ -341,41 +357,60 @@ fn check_impl_display(
     use proc_macro2::TokenTree;
     let n = tokens.len();
     let mut j = start;
-    let mut display_found = false;
-    let mut for_found = false;
+    let mut angle_depth: i32 = 0;
+    // Track the last ident seen AT DEPTH 0 before `for` — that is the impl trait name.
+    let mut last_depth0_ident: Option<String> = None;
     let mut struct_name = String::new();
     let mut struct_line = 0usize;
+    let mut found_for = false;
 
     while j < n {
         match &tokens[j] {
-            // Detect `Display` ident before `for` (may appear after path segments like `fmt::`)
-            TokenTree::Ident(id) if id == "Display" && !for_found => {
-                display_found = true;
-                j += 1;
+            TokenTree::Punct(p) if p.as_char() == '<' => {
+                angle_depth += 1;
             }
-            TokenTree::Ident(id) if id == "for" && display_found => {
-                for_found = true;
+            TokenTree::Punct(p) if p.as_char() == '>' => {
+                if angle_depth > 0 {
+                    angle_depth -= 1;
+                }
+            }
+            TokenTree::Ident(id) if id == "for" && angle_depth == 0 => {
+                found_for = true;
                 j += 1;
-                // The next ident is the implementing type name
-                if let Some(TokenTree::Ident(sname)) = tokens.get(j) {
-                    struct_name = sname.to_string();
-                    struct_line = sname.span().start().line;
+                // The next ident (or path) is the implementing type name
+                while j < n {
+                    match &tokens[j] {
+                        TokenTree::Ident(sname) => {
+                            struct_name = sname.to_string();
+                            struct_line = sname.span().start().line;
+                            break;
+                        }
+                        TokenTree::Punct(p) if p.as_char() == ':' => {
+                            j += 1;
+                        }
+                        _ => break,
+                    }
                     j += 1;
                 }
+                break;
+            }
+            TokenTree::Ident(id) if angle_depth == 0 => {
+                last_depth0_ident = Some(id.to_string());
             }
             // Stop at the impl body brace group — we have what we need
             TokenTree::Group(_) => break,
             TokenTree::Punct(p) if p.as_char() == ';' => break,
-            _ => {
-                j += 1;
-            }
+            _ => {}
         }
+        j += 1;
     }
 
-    if display_found
-        && for_found
-        && !struct_name.is_empty()
-        && struct_name_has_sentinel(&struct_name)
+    let is_display = last_depth0_ident
+        .as_deref()
+        .map(|s| s == "Display")
+        .unwrap_or(false);
+
+    if found_for && is_display && !struct_name.is_empty() && struct_name_has_sentinel(&struct_name)
     {
         findings.push(format!(
             "{}:{}: BC-2.14.005 {{PC-006}}: impl Display for '{}' \
@@ -385,6 +420,78 @@ fn check_impl_display(
             path, struct_line, struct_name
         ));
     }
+}
+
+/// Returns `true` if `source` contains `impl … Display for struct_name` where
+/// `struct_name` is a credential-sentinel struct.
+///
+/// Exposed as `pub(crate)` for direct unit testing. Generic bounds containing
+/// `Display` (e.g. `impl<T: Display> Render for AuthToken`) are correctly ignored
+/// via angle-bracket depth tracking (F-P2-L04 fix).
+#[cfg(test)]
+pub(crate) fn check_impl_display(source: &str, struct_name: &str) -> bool {
+    use proc_macro2::{TokenStream, TokenTree};
+    let ts: TokenStream = source.parse().unwrap_or_default();
+    let tokens: Vec<TokenTree> = ts.into_iter().collect();
+    let n = tokens.len();
+    let mut i = 0;
+    while i < n {
+        if let TokenTree::Ident(id) = &tokens[i]
+            && id == "impl"
+        {
+            let mut j = i + 1;
+            let mut angle_depth: i32 = 0;
+            let mut last_ident_before_for: Option<String> = None;
+            let mut found_for = false;
+            let mut target_name: Option<String> = None;
+            while j < tokens.len() {
+                match &tokens[j] {
+                    TokenTree::Punct(p) if p.as_char() == '<' => {
+                        angle_depth += 1;
+                    }
+                    TokenTree::Punct(p) if p.as_char() == '>' => {
+                        if angle_depth > 0 {
+                            angle_depth -= 1;
+                        }
+                    }
+                    TokenTree::Ident(id2) if id2 == "for" && angle_depth == 0 => {
+                        found_for = true;
+                        let mut k = j + 1;
+                        while k < tokens.len() {
+                            if let TokenTree::Ident(id3) = &tokens[k] {
+                                target_name = Some(id3.to_string());
+                                break;
+                            }
+                            k += 1;
+                        }
+                        break;
+                    }
+                    TokenTree::Ident(id2) if angle_depth == 0 => {
+                        last_ident_before_for = Some(id2.to_string());
+                    }
+                    TokenTree::Group(_) => break,
+                    TokenTree::Punct(p) if p.as_char() == ';' => break,
+                    _ => {}
+                }
+                j += 1;
+            }
+            if found_for {
+                let is_display = last_ident_before_for
+                    .as_deref()
+                    .map(|s| s == "Display")
+                    .unwrap_or(false);
+                let is_target = target_name
+                    .as_deref()
+                    .map(|s| s == struct_name)
+                    .unwrap_or(false);
+                if is_display && is_target {
+                    return true;
+                }
+            }
+        }
+        i += 1;
+    }
+    false
 }
 
 /// Recursive walker that detects credential struct safety violations.
@@ -443,7 +550,7 @@ fn walk_for_credential_violations(
             && kw == "impl"
         {
             // Read-only Display check (doesn't advance position)
-            check_impl_display(&tokens, i + 1, path, findings);
+            check_impl_display_in_tokens(&tokens, i + 1, path, findings);
             // Deref check advances position past the impl block brace group
             i = check_impl_deref(&tokens, i + 1, path, findings, in_test_depth);
             continue;
