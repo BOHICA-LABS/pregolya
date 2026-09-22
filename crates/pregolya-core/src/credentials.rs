@@ -379,11 +379,16 @@ mod tests {
         );
     }
 
-    /// AC-014 (traces to BC-2.14.006 {PC-004}, TV-005)
+    /// AC-014 (traces to BC-2.14.006 {PC-004}, TV-005, v1.6)
     ///
     /// Validation error message format is `"Validation failed for '<field>': <reason>"`.
+    /// Per BC-2.14.006 PC-004 v1.6, the reason must cover BOTH the empty-string and
+    /// whitespace-only cases: `"value must not be empty or whitespace-only"`.
     ///
-    /// RED GATE: `new("")` is `todo!()` — panics until implementation.
+    /// RED GATE: current implementation emits the narrower message
+    /// `"value must not be empty"` (no "or whitespace-only") — the
+    /// `contains("whitespace-only")` assertion fails until the implementer
+    /// widens the message per BC-2.14.006 PC-004 v1.6 / EC-006.
     #[test]
     fn test_BC_2_14_006_openai_error_message_format() {
         let err = OpenAiApiKey::new("").unwrap_err();
@@ -397,6 +402,15 @@ mod tests {
         assert!(
             err.message.contains("api_key") || err.message.contains("key"),
             "BC-2.14.006 {{PC-004}}: message must name the field ('api_key' or 'key'); got: {:?}",
+            err.message
+        );
+        // BC-2.14.006 {PC-004} v1.6 / EC-006: reason must cover the whitespace-only case.
+        // The widened canonical form is "value must not be empty or whitespace-only".
+        assert!(
+            err.message.contains("whitespace-only"),
+            "BC-2.14.006 {{PC-004}} v1.6: message reason must contain 'whitespace-only' \
+             (a whitespace-only key produces a malformed bearer token — reject at construction); \
+             got: {:?}",
             err.message
         );
     }
@@ -472,5 +486,111 @@ mod tests {
         // Both errors must carry VAL category
         assert!(matches!(openai_err.category, Category::Val));
         assert!(matches!(anthropic_err.category, Category::Val));
+    }
+
+    // ── BC-2.14.006 v1.6 / EC-006 (S-1.02 AC-016 / F-07) — whitespace-only ────
+
+    /// AC-016 (traces to BC-2.14.006 {EC-006}, TV-006, v1.6)
+    ///
+    /// `OpenAiApiKey::new("   ")` (whitespace-only string) must return
+    /// `Err(PregolyaError { category: VAL, code: E-CORE-005, retry_hint: Never })`.
+    /// A whitespace-only key produces `"Bearer   "` at the HTTP layer — a malformed
+    /// bearer token that fails silently at the provider boundary.
+    ///
+    /// RED GATE: current implementation only checks `key.is_empty()`. A string of
+    /// spaces passes the empty check and `new("   ")` returns `Ok(...)` instead of
+    /// `Err(...)` — the assertion `result.is_err()` fails until the implementer
+    /// adds `.trim()` + empty check per BC-2.14.006 PC-004 v1.6 / EC-006.
+    #[test]
+    fn test_BC_2_14_006_openai_whitespace_only_key_returns_err() {
+        let result = OpenAiApiKey::new("   ");
+        assert!(
+            result.is_err(),
+            "BC-2.14.006 {{EC-006}}: whitespace-only key must return Err — would produce \
+             malformed bearer token 'Bearer   ' at provider boundary; got: Ok"
+        );
+    }
+
+    /// AC-016 (traces to BC-2.14.006 {EC-006}, TV-006, v1.6)
+    ///
+    /// `AnthropicApiKey::new("   ")` must return `Err` — same contract as OpenAI.
+    ///
+    /// RED GATE: same as OpenAI — current `is_empty()` check misses whitespace-only.
+    #[test]
+    fn test_BC_2_14_006_anthropic_whitespace_only_key_returns_err() {
+        let result = AnthropicApiKey::new("   ");
+        assert!(
+            result.is_err(),
+            "BC-2.14.006 {{EC-006}}: AnthropicApiKey::new(\"   \") whitespace-only must return \
+             Err; got: Ok"
+        );
+    }
+
+    /// AC-016 (traces to BC-2.14.006 {EC-006} / {PC-004} v1.6, TV-006)
+    ///
+    /// The whitespace-only rejection error must carry:
+    /// - `code: "E-CORE-005"`
+    /// - `category: Category::Val`
+    /// - `retry_hint: RetryHint::Never`
+    /// - message containing "whitespace-only"
+    ///
+    /// RED GATE: `new("   ")` currently returns `Ok(...)` so `unwrap_err()` panics,
+    /// failing this test even before the field assertions are reached.
+    #[test]
+    fn test_BC_2_14_006_whitespace_key_error_fields() {
+        let err = OpenAiApiKey::new("   ").unwrap_err();
+        assert_eq!(
+            err.code(),
+            "E-CORE-005",
+            "BC-2.14.006 {{EC-006}}: whitespace-only rejection must use code 'E-CORE-005'; \
+             got: {:?}",
+            err.code()
+        );
+        assert!(
+            matches!(err.category, Category::Val),
+            "BC-2.14.006 {{EC-006}}: whitespace-only rejection must carry Category::Val; \
+             got: {:?}",
+            err.category
+        );
+        assert!(
+            matches!(err.retry_hint, RetryHint::Never),
+            "BC-2.14.006 {{EC-006}} / {{INV-003}}: VAL errors must carry RetryHint::Never; \
+             got: {:?}",
+            err.retry_hint
+        );
+        assert!(
+            err.message.contains("whitespace-only"),
+            "BC-2.14.006 {{EC-006}} / {{PC-004}} v1.6: message must contain 'whitespace-only'; \
+             got: {:?}",
+            err.message
+        );
+    }
+
+    /// AC-016 (traces to BC-2.14.006 {PC-004} v1.6 / TV-005 update)
+    ///
+    /// The empty-key error message must ALSO contain "whitespace-only" now that
+    /// BC-2.14.006 PC-004 v1.6 widens the message to
+    /// `"value must not be empty or whitespace-only"`.
+    ///
+    /// RED GATE: current error message is `"value must not be empty"` (no
+    /// "whitespace-only") — fails until the implementer widens both the message
+    /// AND the validation check per BC-2.14.006 PC-004 v1.6.
+    #[test]
+    fn test_BC_2_14_006_empty_key_error_message_widened_to_whitespace() {
+        let err = OpenAiApiKey::new("").unwrap_err();
+        assert!(
+            err.message.contains("whitespace-only"),
+            "BC-2.14.006 {{PC-004}} v1.6: empty-key error message must include \
+             'whitespace-only' (widened canonical form covers both empty and \
+             whitespace-only inputs); got: {:?}",
+            err.message
+        );
+        // Canonical full message per BC-2.14.006 PC-004 v1.6:
+        assert!(
+            err.message
+                .contains("value must not be empty or whitespace-only"),
+            "BC-2.14.006 {{PC-004}} v1.6 canonical message fragment not found; got: {:?}",
+            err.message
+        );
     }
 }

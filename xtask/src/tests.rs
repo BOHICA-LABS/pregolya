@@ -1405,3 +1405,333 @@ fn test_BC_2_14_004_check_client_timeout_subprocess_wired() {
     // With the stub, exit is non-zero; once implemented, exit 0 on clean workspace.
     let _ = output.status;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.005 (S-1.02 F-01) — deny-bare-api-key struct-level scanner tests
+//
+// BC-2.14.005 {PC-006} / TV-005: the gate must FAIL when a public struct whose
+// name contains key/token/secret/credential (case-insensitive):
+//   (a) derives Debug without a manual impl,
+//   (b) derives Serialize,
+//   (c) impls Deref<Target=str>.
+// The current implementation only scans for sk-/sk-ant- prefix literals —
+// struct-level detection is absent until the implementer rewrites the scanner.
+// Tests (a), (b), (c) are RED against the current code; (d) is a negative guard.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-01 (HIGH) — BC-2.14.005 {PC-006} / TV-005 (a)
+///
+/// A public struct whose name contains "token" that derives `Debug` without a
+/// manual impl must be FLAGGED by `scan_for_bare_api_keys_in_source`.
+///
+/// RED GATE: current scanner checks only for sk-/sk-ant- string literal prefixes —
+/// struct-level `derive(Debug)` detection is absent until the implementer fixes it.
+#[test]
+fn test_BC_2_14_005_flags_derive_debug_on_token_struct() {
+    let src = r#"
+#[derive(Debug)]
+pub struct FooToken(String);
+"#;
+    let findings = scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/credentials.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.005 {{PC-006}}: derive(Debug) on a 'token'-named struct must be flagged \
+         (no manual Debug impl → key material could leak); got: {findings:?}"
+    );
+}
+
+/// F-01 (HIGH) — BC-2.14.005 {PC-006} / TV-005 (b)
+///
+/// A public struct whose name contains "secret" that derives `Serialize` must be
+/// FLAGGED — serialization would expose the credential in JSON/TOML/etc. artifacts.
+///
+/// RED GATE: current scanner does not inspect derive macros on structs.
+#[test]
+fn test_BC_2_14_005_flags_serialize_on_secret_struct() {
+    let src = r#"
+#[derive(Serialize)]
+pub struct FooSecret(String);
+"#;
+    let findings = scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/credentials.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.005 {{PC-006}}: derive(Serialize) on a 'secret'-named struct must be flagged \
+         (DI-010: credentials must not appear in serialized artifacts); got: {findings:?}"
+    );
+}
+
+/// F-01 (HIGH) — BC-2.14.005 {PC-006} / TV-005 (c)
+///
+/// An `impl Deref<Target = str>` on a struct whose name contains "credential" must
+/// be FLAGGED — Deref coercion silently exposes the inner value via auto-deref.
+///
+/// RED GATE: current scanner does not inspect impl blocks for Deref.
+#[test]
+fn test_BC_2_14_005_flags_deref_str_on_credential_struct() {
+    let src = r#"
+pub struct FooCredential(String);
+
+impl std::ops::Deref for FooCredential {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+"#;
+    let findings = scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/credentials.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.005 {{PC-006}}: impl Deref<Target=str> on a 'credential'-named struct must be \
+         flagged ({{INV-003}}: inner value must only be accessible via expose_secret()); \
+         got: {findings:?}"
+    );
+}
+
+/// F-01 (HIGH) — BC-2.14.005 {PC-006} / TV-005 (d) — negative guard
+///
+/// A COMPLIANT credential struct — manual `Debug` impl emitting `"<redacted>"`, no
+/// `#[derive(Serialize)]`, no `Deref<Target=str>` — must NOT be flagged.
+///
+/// Note: with the current prefix-literal scanner this test passes vacuously (no
+/// sk-/sk-ant- literals present). After the implementer's structural fix this guard
+/// must continue to pass, verifying the scanner does not over-flag compliant code.
+#[test]
+fn test_BC_2_14_005_compliant_credential_struct_not_flagged() {
+    let src = r#"
+use std::fmt;
+
+pub struct FooApiKey(String);
+
+impl fmt::Debug for FooApiKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("<redacted>")
+    }
+}
+
+impl FooApiKey {
+    pub fn expose_secret(&self) -> &str {
+        &self.0
+    }
+}
+"#;
+    let findings = scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/credentials.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.005 {{PC-006}}: a compliant credential struct with manual Debug, no Serialize, \
+         no Deref must NOT be flagged; got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 F-03) — assert!/panic! detection in production code
+//
+// BC-2.14.003 {PC-005}/{PC-006}: scan_for_panics_in_source must ALSO detect
+// bare assert!, assert_eq!, assert_ne!, and panic! in non-test library code.
+// Exemptions: debug_assert!/debug_assert_eq!, #[cfg(test)] blocks, test paths,
+// and unreachable!() in a statically-exhaustive match (product-owner guidance).
+//
+// The current scanner only detects .unwrap()/.expect() — tests for the new macro
+// categories are RED against the current implementation.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-03 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG bare `assert!()` in non-test library code.
+///
+/// RED GATE: current implementation detects only .unwrap()/.expect(); assert! is
+/// absent from the detection set until the implementer extends it.
+#[test]
+fn test_BC_2_14_003_flags_assert_in_production_code() {
+    let src = r#"
+pub fn check_positive(x: i32) {
+    assert!(x > 0, "x must be positive");
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}}: bare assert! in production code must be flagged; \
+         got: {findings:?}"
+    );
+}
+
+/// F-03 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG `assert_eq!()` in non-test library code.
+///
+/// RED GATE: same as assert! — the current scanner misses macro-based panic paths.
+#[test]
+fn test_BC_2_14_003_flags_assert_eq_in_production_code() {
+    let src = r#"
+pub fn require_equal(a: i32, b: i32) {
+    assert_eq!(a, b, "values must be equal");
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}}: assert_eq! in production code must be flagged; \
+         got: {findings:?}"
+    );
+}
+
+/// F-03 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG `assert_ne!()` in non-test library code.
+///
+/// RED GATE: current scanner misses macro-based panic paths including assert_ne!.
+#[test]
+fn test_BC_2_14_003_flags_assert_ne_in_production_code() {
+    let src = r#"
+pub fn require_distinct(a: i32, b: i32) {
+    assert_ne!(a, b, "values must be distinct");
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}}: assert_ne! in production code must be flagged; \
+         got: {findings:?}"
+    );
+}
+
+/// F-03 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG `panic!()` in non-test library code.
+///
+/// RED GATE: current scanner misses explicit panic! macro calls.
+#[test]
+fn test_BC_2_14_003_flags_bare_panic_in_production_code() {
+    let src = r#"
+pub fn unreachable_path() {
+    panic!("this code path should never be reached");
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}}: bare panic! in production code must be flagged; \
+         got: {findings:?}"
+    );
+}
+
+/// F-03 (MED) — BC-2.14.003 {INV-003} — debug_assert_eq! exemption preserved
+///
+/// `debug_assert_eq!()` must NOT be flagged: it compiles out in release builds
+/// and is therefore not a runtime panic path.
+///
+/// This is a guard test: passes vacuously with current code (debug_assert_eq! is
+/// not detected), and must continue to pass after the implementer adds
+/// assert!/panic! detection with proper exemptions.
+#[test]
+fn test_BC_2_14_003_debug_assert_eq_not_flagged_in_production() {
+    let src = r#"
+pub fn validate(a: i32, b: i32) {
+    debug_assert_eq!(a, b, "must match in debug builds");
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 {{INV-003}}: debug_assert_eq! must NOT be flagged; got: {findings:?}"
+    );
+}
+
+/// F-03 (MED) — assert! inside #[cfg(test)] block must NOT be flagged
+///
+/// Guard test: the cfg(test)-block exemption that already covers .unwrap()/.expect()
+/// must extend to assert!/assert_eq!/assert_ne!/panic! after the implementer's fix.
+/// Passes vacuously with current code (assert! not detected at all).
+#[test]
+fn test_BC_2_14_003_assert_inside_cfg_test_not_flagged() {
+    let src = r#"
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn my_test() {
+        assert!(1 == 1, "trivially true");
+        assert_eq!(2 + 2, 4);
+        assert_ne!(1, 2);
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003: assert!/assert_eq!/assert_ne! inside #[cfg(test)] must NOT be flagged; \
+         got: {findings:?}"
+    );
+}
+
+/// F-03 (MED) — unreachable!() in a wildcard match arm must NOT be flagged
+///
+/// Product-owner guidance (BC-2.14.003): unreachable!() in a statically-exhaustive
+/// match's wildcard arm is an exhaustiveness witness, not a reachable panic path.
+/// Guard test: passes vacuously with current code (unreachable! not detected);
+/// must continue to pass after the implementer adds macro detection with
+/// the unreachable-in-match exemption.
+#[test]
+fn test_BC_2_14_003_unreachable_in_exhaustive_match_arm_not_flagged() {
+    let src = r#"
+#[non_exhaustive]
+pub enum Color { Red, Green, Blue }
+
+pub fn color_name(c: &Color) -> &'static str {
+    match c {
+        Color::Red => "red",
+        Color::Green => "green",
+        Color::Blue => "blue",
+        _ => unreachable!("non-exhaustive enum wildcard arm"),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003: unreachable!() in exhaustive match wildcard arm must NOT be flagged; \
+         got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.004 (S-1.02 F-04) — timeout scanner Duration::ZERO detection
+//
+// BC-2.14.004 {PC-001} / {INV-004}: timeout duration must be > Duration::ZERO.
+// The current scanner accepts any .timeout() call regardless of the argument,
+// allowing .timeout(Duration::ZERO) to slip through as "compliant".
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-04 (MED) — BC-2.14.004 {PC-001} / {INV-004}
+///
+/// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::ZERO)`
+/// as a violation — {PC-001} requires the timeout duration to be > Duration::ZERO.
+///
+/// RED GATE: current `has_build_without_timeout` only checks for PRESENCE of
+/// `.timeout()`; it does not verify the argument is non-zero. A chain with
+/// `.timeout(Duration::ZERO)` is currently accepted as compliant — it should be flagged.
+#[test]
+fn test_BC_2_14_004_flags_timeout_zero() {
+    let src = r#"let c = reqwest::ClientBuilder::new().timeout(Duration::ZERO).build()?;"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.004 {{PC-001}}: .timeout(Duration::ZERO) must be flagged — duration must be \
+         > Duration::ZERO per {{INV-004}}; got: {findings:?}"
+    );
+}
+
+/// F-04 (MED) — BC-2.14.004 {PC-001} negative case
+///
+/// `.timeout(Duration::from_secs(30))` is a valid non-zero duration and must NOT
+/// be flagged. This test is GREEN with current code and must remain GREEN after
+/// the implementer adds Duration::ZERO detection.
+#[test]
+fn test_BC_2_14_004_does_not_flag_timeout_thirty_seconds() {
+    let src = r#"let c = reqwest::ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.004 {{PC-001}}: .timeout(Duration::from_secs(30)) must NOT be flagged; \
+         got: {findings:?}"
+    );
+}

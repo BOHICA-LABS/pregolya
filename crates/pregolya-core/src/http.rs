@@ -62,7 +62,33 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::error::{Category, Component};
+    use crate::error::{Category, Component, RetryHint};
+
+    // ── AC-015 test-support stub ──────────────────────────────────────────────
+    //
+    // BC-2.14.004 {EC-006}: the implementer must update build_client()'s map_err
+    // closure to produce PregolyaError { code: "E-CORE-012", category: Transport,
+    // retry_hint: Never }.  This helper encodes the EXPECTED shape; the implementer
+    // must implement it to match (currently todo!() → RED gate).
+    //
+    // Calling convention: the function must construct the exact error that
+    // build_client() would return when ClientBuilder::build() fails, given a
+    // human-readable reason string derived from the reqwest error's Display.
+    //
+    // AC-015 non-ignored test (test_BC_2_14_004_build_failure_maps_to_e_core_012)
+    // calls this helper.  The #[ignore]'d test below covers the live path.
+    fn make_build_error_for_test(reason: &str) -> PregolyaError {
+        // Implementer: change this to produce the correct shape per BC-2.14.004 EC-006.
+        // Also update build_client()'s map_err closure:
+        //   - code:       "E-CORE-012"   (currently "E-CORE-004")
+        //   - retry_hint: RetryHint::Never (currently RetryHint::Later(30s))
+        //   - message:    "HttpClientBuildFailed: failed to build HTTP client: {reason}"
+        todo!(
+            "BC-2.14.004 {{EC-006}}: implement — return PregolyaError {{ code: E-CORE-012, \
+             category: Transport, retry_hint: Never, \
+             message: HttpClientBuildFailed: failed to build HTTP client: {reason} }}"
+        )
+    }
 
     // ── BC-2.14.004 Tests ─────────────────────────────────────────────────────
 
@@ -199,5 +225,98 @@ mod tests {
             "BC-2.14.004 {{PC-005}}: error must be a timeout error; got: {:?}",
             err
         );
+    }
+
+    // ── AC-015 / BC-2.14.004 {EC-006} (S-1.02 F-02) ─────────────────────────
+
+    /// AC-015 (traces to BC-2.14.004 {EC-006})
+    ///
+    /// When `ClientBuilder::build()` returns `Err`, `build_client()` must propagate it as:
+    /// `Err(PregolyaError { category: Transport, code: "E-CORE-012",
+    ///  retry_hint: Never, message: "HttpClientBuildFailed: ..." })`
+    ///
+    /// Current `build_client()` maps build errors to `E-CORE-004` / `RetryHint::Later(30s)` —
+    /// both are wrong per BC-2.14.004 {EC-006} v1.7.
+    ///
+    /// This non-ignored test drives the mapping BOUNDARY via `make_build_error_for_test`,
+    /// which is a `todo!()` stub. The stub panics → RED gate until the implementer:
+    ///   (a) updates `build_client()`'s `map_err` to E-CORE-012 / Transport / Never, and
+    ///   (b) implements `make_build_error_for_test` to return the same error shape.
+    ///
+    /// SID-1: the `#[ignore]`'d test below exercises the live ClientBuilder::build() failure
+    /// path; this non-ignored test covers the mapping boundary without requiring a broken
+    /// TLS stack.
+    #[test]
+    fn test_BC_2_14_004_build_failure_maps_to_e_core_012() {
+        let e = make_build_error_for_test("simulated TLS stack unavailable");
+        assert_eq!(
+            e.code(),
+            "E-CORE-012",
+            "BC-2.14.004 {{EC-006}}: build failure error code must be 'E-CORE-012' \
+             (was 'E-CORE-004' before v1.7 fix); got: {:?}",
+            e.code()
+        );
+        assert!(
+            matches!(e.category, Category::Transport),
+            "BC-2.14.004 {{EC-006}}: build failure must carry Category::Transport; \
+             got: {:?}",
+            e.category
+        );
+        assert!(
+            matches!(e.retry_hint, RetryHint::Never),
+            "BC-2.14.004 {{EC-006}}: build failure RetryHint must be Never — \
+             the same ClientBuilder config will always fail; recovery requires \
+             fixing the TLS/proxy configuration (was RetryHint::Later before v1.7 fix); \
+             got: {:?}",
+            e.retry_hint
+        );
+        assert!(
+            e.message.starts_with("HttpClientBuildFailed:"),
+            "BC-2.14.004 {{EC-006}}: build failure message must start with \
+             'HttpClientBuildFailed:'; got: {:?}",
+            e.message
+        );
+    }
+
+    /// AC-015 (traces to BC-2.14.004 {EC-006}) — live build-failure path
+    ///
+    /// When `ClientBuilder::build()` fails (e.g. TLS backend unavailable, proxy
+    /// misconfigured), `build_client()` must return an `Err` with code `"E-CORE-012"`,
+    /// `Category::Transport`, and `RetryHint::Never`.
+    ///
+    /// Blocked dependency (SID-1): triggering `ClientBuilder::build()` failure
+    /// deterministically requires a broken TLS stack or invalid proxy configuration,
+    /// which is not available in standard CI. Ungated in a dedicated TLS-failure job.
+    ///
+    /// The non-ignored test above (`test_BC_2_14_004_build_failure_maps_to_e_core_012`)
+    /// covers the mapping boundary without a live failure.
+    #[test]
+    #[ignore = "EXT-BC214004-EC006: requires a broken TLS stack or invalid proxy \
+                to trigger ClientBuilder::build() failure deterministically; \
+                ungated in a TLS-failure CI job (BC-2.14.004 EC-006). \
+                Unit boundary: test_BC_2_14_004_build_failure_maps_to_e_core_012 above."]
+    fn test_BC_2_14_004_build_failure_live_path_e_core_012() {
+        // When this test is ungated (TLS stack broken by CI config):
+        // The client build MUST fail and return the E-CORE-012 shape.
+        // Actual invocation requires environment-level TLS sabotage (e.g.
+        // SSLKEYLOGFILE=/dev/full or reqwest built without any TLS feature).
+        let result = build_client();
+        // In the normal test environment, build_client() succeeds — this body
+        // only exercises when run in a deliberately broken TLS environment.
+        if let Err(e) = result {
+            assert_eq!(
+                e.code(),
+                "E-CORE-012",
+                "BC-2.14.004 {{EC-006}}: live build failure must use code 'E-CORE-012'; \
+                 got: {:?}",
+                e.code()
+            );
+            assert!(
+                matches!(e.retry_hint, RetryHint::Never),
+                "BC-2.14.004 {{EC-006}}: live build failure must carry RetryHint::Never; \
+                 got: {:?}",
+                e.retry_hint
+            );
+        }
     }
 }

@@ -21,6 +21,8 @@ mod deny_bare_api_key;
 pub(crate) use check_client_timeout::scan_for_timeout_violations_in_source;
 #[cfg(test)]
 pub(crate) use check_no_panic::scan_for_panics_in_source;
+#[cfg(test)]
+pub(crate) use deny_bare_api_key::scan_for_bare_api_keys_in_source;
 
 use std::process::{Command, exit};
 
