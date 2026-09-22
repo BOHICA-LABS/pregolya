@@ -2152,8 +2152,8 @@ pub fn process_status(n: u32) -> &'static str {
 // BC-2.14.003 (S-1.02 pass-4 F-03) — --fixture-mode e2e gate (AC-017/Task-13)
 //
 // check-no-panic --fixture-mode <dir> must scan the given directory (not crates/)
-// and exit 0 when scanner healthy (>=1 fixture file had findings). The current run() fn
-// ignores argv[2] and scans crates/ (which is clean) → exits 0.
+// and exit 0 when scanner healthy (>=1 fixture file had findings). Pre-fix, run() ignored
+// argv[2] and scanned crates/ (which was clean) → exited 0.
 //
 // Red-gate provenance (in-process): the brace-delimiter fixture violation_assert_brace.rs
 // produced no findings with the pre-fix scanner (F-01 gap), causing the second
@@ -2254,6 +2254,10 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_zero_when_scanner_healthy() {
 
     // Red-gate provenance: --fixture-mode was not implemented; run() scanned crates/ (clean) → exited 0.
     // Now GREEN: violation fixtures are present → exits 0 (scanner healthy).
+    // Contract pin: `output.status.success()` confirms the exit-0 contract holds (scanner healthy
+    // path). The genuine red-gate discriminators are the fixture-name `contains()` assertions below —
+    // pre-fix, run() scanned crates/ and never printed violation file names, so those assertions
+    // would have failed regardless of the exit code.
     assert!(
         output.status.success(),
         "BC-2.14.003 F-03: check-no-panic --fixture-mode must exit 0 when scanner healthy \
@@ -2262,7 +2266,7 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_zero_when_scanner_healthy() {
         String::from_utf8_lossy(&output.stderr)
     );
 
-    // Secondary assertions (only reached once exit code is non-zero):
+    // Secondary assertions (only reached once exit code is zero — scanner healthy path):
     // both violation fixtures must appear in the combined output.
     let combined = format!(
         "{}{}",
@@ -3602,7 +3606,7 @@ fn test_BC_2_14_003_unwrap_in_format_macro_fixture_detected() {
 
 /// F-P2-H01 (HIGH) — BC-2.14.003
 ///
-/// `fixture_mode_verdict(N, 0)` must return `Err` — zero findings means the
+/// `fixture_mode_verdict(N, 0, None)` must return `Err` — zero findings means the
 /// scanner is BROKEN.
 #[test]
 fn test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error() {

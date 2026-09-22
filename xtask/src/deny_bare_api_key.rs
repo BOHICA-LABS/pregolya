@@ -211,7 +211,7 @@ fn collect_derives(tokens: &[proc_macro2::TokenTree], start: usize) -> (Vec<Stri
 /// Check a `pub struct NAME` declaration that follows a derive attribute run.
 ///
 /// Appends violation messages to `findings` when the struct name contains a
-/// credential sentinel and has a dangerous derive (`Debug` or `Serialize`).
+/// credential sentinel and has a dangerous derive (`Debug`, `Serialize`, or `Deserialize`).
 fn check_struct_derives(
     tokens: &[proc_macro2::TokenTree],
     derives: &[String],
@@ -270,7 +270,7 @@ fn check_struct_derives(
     }
 }
 
-/// Scan an `impl … Deref for NAME { … }` block for `type Target = str`.
+/// Scan an `impl … Deref for NAME { … }` block for `type Target = str|String`.
 ///
 /// Returns the index after the impl body brace group, or `start` unchanged if
 /// this is not a recognised Deref impl.

@@ -809,3 +809,72 @@ pub(crate) fn fixture_mode_verdict(
         "fixture-mode: {files_with_findings}/{total_fixtures} fixture files had findings"
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{CREDENTIAL_FIXTURE_COUNT, fixture_mode_verdict};
+
+    /// F-P6-M01 (MED) — BC-2.14.003
+    ///
+    /// Lower-bound guard Err path: when the scanner finds fewer files with findings
+    /// than the expected minimum, `fixture_mode_verdict` must return `Err` citing
+    /// the expected minimum. This exercises the scanner-regression detection path.
+    #[test]
+    fn test_bc_2_14_003_fixture_mode_verdict_lower_bound_regression_detected() {
+        // When scanner finds only 1/15 files with violations but minimum is 12,
+        // the lower-bound guard must fire (scanner-regression scenario).
+        let result = fixture_mode_verdict(15, 1, Some(12));
+        assert!(
+            result.is_err(),
+            "1/15 with min=12 must be Err; got: {:?}",
+            result
+        );
+        let msg = result.unwrap_err();
+        assert!(
+            msg.contains("expected at least 12") || msg.contains("12"),
+            "error must cite expected minimum; got: {msg}"
+        );
+    }
+
+    /// F-P6-M01 (MED) — BC-2.14.003
+    ///
+    /// Lower-bound guard Ok path: when `files_with_findings` exactly meets `min_expected`,
+    /// `fixture_mode_verdict` must return `Ok` (boundary-satisfied).
+    #[test]
+    fn test_bc_2_14_003_fixture_mode_verdict_lower_bound_at_minimum_is_ok() {
+        let result = fixture_mode_verdict(15, 12, Some(12));
+        assert!(
+            result.is_ok(),
+            "12/15 with min=12 must be Ok; got: {:?}",
+            result
+        );
+    }
+
+    /// F-P6-M01 (MED) — BC-2.14.003
+    ///
+    /// CREDENTIAL_FIXTURE_COUNT coupling assertion — ensures the constant stays in sync
+    /// with the actual credential-only fixtures in the violations directory. Adding a new
+    /// credential-only fixture without updating the constant would cause the lower-bound
+    /// guard to fire incorrectly (scanner falsely reported as regressed).
+    #[test]
+    fn test_bc_2_14_003_credential_fixture_count_matches_fixture_dir() {
+        // The violation fixture directory contains files for two different gates:
+        // - No-panic fixtures (the primary target)
+        // - Credential-only fixtures for deny-bare-api-key (3 files)
+        // This test pins the CREDENTIAL_FIXTURE_COUNT constant to the actual count
+        // so adding a new credential-only fixture without updating the constant
+        // is caught immediately.
+        //
+        // Credential-only fixtures (produce no no-panic findings):
+        const CREDENTIAL_FIXTURE_NAMES: &[&str] = &[
+            "violation_pub_crate_debug_derive.rs",
+            "violation_derive_deserialize.rs",
+            "violation_impl_display.rs",
+        ];
+        assert_eq!(
+            CREDENTIAL_FIXTURE_COUNT,
+            CREDENTIAL_FIXTURE_NAMES.len(),
+            "CREDENTIAL_FIXTURE_COUNT must equal the number of credential-only fixtures in xtask/tests/fixtures/violations/"
+        );
+    }
+}

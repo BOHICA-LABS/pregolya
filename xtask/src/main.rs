@@ -6,7 +6,7 @@
 //!   check-file-size           Enforce production file size gates (CLAUDE.md §File size & module splitting)
 //!   check-client-timeout      CI lint gate: reject reqwest Client::new() outside tests (BC-2.14.004)
 //!   check-no-panic            CI lint gate: reject unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)
-//!   check-error-code-registry CI lint gate: verify all `E-<COMPONENT>-<NNN>` codes in error-taxonomy.md are unique (BC-2.14.001 EC-007, VP-BC214001-01)
+//!   check-error-code-registry CI lint gate: verify all `E-<COMPONENT>-<NNN>` codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-007, VP-BC214001-01)
 //!   deny-bare-api-key         CI lint gate: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl `Deref<Target=str/String>` (BC-2.14.005 {PC-006})
 //!   deny-anyhow-in-lib        CI lint gate: reject anyhow imports in library crates
 //!   deny-description-cache-key  CI lint gate: reject description-proxy cache-key usage
@@ -59,7 +59,7 @@ fn main() {
                 "  check-no-panic            Lint: no-panic gate: unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)"
             );
             eprintln!(
-                "  check-error-code-registry Lint: error-code-registry uniqueness: verify all E-<COMPONENT>-<NNN> codes in error-taxonomy.md are unique (BC-2.14.001 EC-007, VP-BC214001-01)"
+                "  check-error-code-registry Lint: error-code-registry uniqueness: verify all E-<COMPONENT>-<NNN> codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-007, VP-BC214001-01)"
             );
             eprintln!(
                 "  deny-bare-api-key         Lint: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl Deref<Target=str/String> (BC-2.14.005 {{PC-006}})"

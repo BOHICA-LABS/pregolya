@@ -544,6 +544,9 @@ fn is_zero_literal(s: &str) -> bool {
             | "0usize"
             | "0i64"
             | "0i32"
+            | "0f64"
+            | "0f32"
+            | "0."
             | "0.0"
             | "0.0f64"
             | "0.0f32"
@@ -585,14 +588,15 @@ fn is_zero_literal(s: &str) -> bool {
 /// ```
 ///
 /// **Form C — zero-literal constructor `Duration::from_secs(0)` / `from_millis(0)` /
-/// `from_nanos(0)` / `from_secs_f64(0.0)`** (offsets +3..+8):
+/// `from_nanos(0)` / `from_secs_f64(0.0)` / `from_micros(0)` / `from_secs_f32(0.0)`**
+/// (offsets +3..+8):
 /// ```text
 /// +2  ParenGroup       (outer paren marker)
 /// +3  Ident("Duration")
 /// +4  Punct(':')  +5  Punct(':')
-/// +6  Ident("from_secs"|"from_millis"|"from_nanos"|"from_secs_f64")
+/// +6  Ident("from_secs"|"from_millis"|"from_nanos"|"from_secs_f64"|"from_micros"|"from_secs_f32")
 /// +7  ParenGroup       (inner paren marker for constructor args)
-/// +8  Literal("0"|"0u64"|"0u32"|"0i64"|"0usize"|"0.0"|"0.0f64"|"0.0f32"|"0x0"|"0b0"|"0o0")
+/// +8  Literal("0"|"0u64"|"0u32"|"0i64"|"0usize"|"0f64"|"0f32"|"0."|"0.0"|"0.0f64"|"0.0f32"|"0x0"|"0b0"|"0o0")
 /// ```
 ///
 /// **Form D — fully-qualified zero-literal constructor `std::time::Duration::from_secs(0)` /
@@ -723,6 +727,48 @@ mod tests {
             !findings.is_empty(),
             "BC-2.14.004 {{PC-001}} F-P5-M02: .timeout(Duration::from_secs(0x0)) must be \
              flagged as zero-timeout (hex zero is zero); got: {findings:?}"
+        );
+    }
+
+    /// F-P6-L03 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+    ///
+    /// `from_secs_f64(0f64)` must be flagged: `0f64` is the float zero literal with explicit
+    /// type suffix (no decimal point). `is_zero_literal` must recognise this suffix form.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_f64_zero_float() {
+        let src = r#"
+pub fn build_client() -> reqwest::Client {
+    reqwest::ClientBuilder::new()
+        .timeout(std::time::Duration::from_secs_f64(0f64))
+        .build()
+        .unwrap()
+}
+"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs_f64(0f64) must be flagged as zero-duration timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P6-L03 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+    ///
+    /// `from_secs_f32(0.)` must be flagged: `0.` is the bare trailing-dot float literal
+    /// (shorthand for `0.0`). `is_zero_literal` must recognise this form.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_f32_zero_dot() {
+        let src = r#"
+pub fn build_client() -> reqwest::Client {
+    reqwest::ClientBuilder::new()
+        .timeout(Duration::from_secs_f32(0.))
+        .build()
+        .unwrap()
+}
+"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs_f32(0.) must be flagged as zero-duration timeout; got: {findings:?}"
         );
     }
 }

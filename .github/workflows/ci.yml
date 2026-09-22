@@ -377,7 +377,7 @@ jobs:
             # factory-artifacts branch not yet created (normal in early development).
             # check-error-code-registry will use its .factory/ local path fallback.
             echo "FACTORY_DIR=" >> "$GITHUB_ENV"
-            echo "Warning: factory-artifacts branch not found; check-error-code-registry will use local path fallback."
+            echo "Warning: factory-artifacts branch not found; check-error-code-registry will hard-fail (no taxonomy file reachable — fail-closed behavior)."
           fi
 
       - name: Run xtask lint gates

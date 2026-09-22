@@ -2,10 +2,11 @@
 //!
 //! Parses `.factory/specs/prd-supplements/error-taxonomy.md` and verifies:
 //! 1. Every `E-<COMPONENT>-<NNN>` code appears exactly once (no collision).
+//! 2. At least one code was extracted (non-zero validated count — vacuity guard against taxonomy-format change).
 //!
 //! ## Exit semantics
 //! - Exit 0: gate passed — N codes validated, 0 collisions.
-//! - Exit 1: gate failed — M collision(s) found or taxonomy file unreadable.
+//! - Exit 1: gate failed — M collision(s) found, zero codes extracted (vacuity guard), or taxonomy file unreadable.
 //!
 //! ## Taxonomy file location
 //! Resolved in order:
