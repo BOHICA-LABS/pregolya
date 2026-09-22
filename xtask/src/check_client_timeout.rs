@@ -548,6 +548,13 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
 /// `0.0`, `0.00`, `0.`, `0f64`, `0f32`, `0.0f64`, `0.0f32`, `0e0`, `0.0e0`,
 /// and their underscore-separated variants.
 fn is_zero_literal(s: &str) -> bool {
+    // Handle negative-zero forms: "-0.0", "-0.", "-0", "-0e0", etc. (all mathematically zero).
+    // These arise when proc_macro2 emits the literal part of a negative literal separately
+    // (the `-` is a `Punct` token, not part of the literal string), but callers may also
+    // pass the combined form directly.  Stripping a leading `-` and checking the remainder
+    // is sufficient because negative zero equals positive zero in every numeric type.
+    let s = s.strip_prefix('-').unwrap_or(s);
+
     // Step 1: strip underscore separators.
     let no_underscores = s.replace('_', "");
 
@@ -707,11 +714,51 @@ fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool 
         && matches!(flat.get(dur_offset + 4), Some(FlatToken::ParenGroup(_)))
     {
         // Check the first inlined argument is a zero literal.
+        // Handle normal zero: `from_secs(0)` — literal at dur_offset+5.
         if let Some(FlatToken::Literal(s, _)) = flat.get(dur_offset + 5)
             && is_zero_literal(s)
         {
             return true;
         }
+        // Handle negative zero: `from_secs(-0.0)` — the `-` is a separate Punct token
+        // at dur_offset+5, and the literal is at dur_offset+6 (F-P8-L01 fix).
+        if matches!(flat.get(dur_offset + 5), Some(FlatToken::Punct('-', _)))
+            && let Some(FlatToken::Literal(s, _)) = flat.get(dur_offset + 6)
+            && is_zero_literal(s)
+        {
+            return true;
+        }
+    }
+
+    // Form E: Duration :: new ( zero_secs , zero_nanos )
+    // `Duration::new(0, 0)` is zero; `Duration::new(30, 0)` is NOT zero.
+    // Both secs and nanos must be zero literals (F-P8-M01 fix).
+    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
+        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if n == "new")
+        && matches!(flat.get(dur_offset + 4), Some(FlatToken::ParenGroup(_)))
+    {
+        // Flat layout after ParenGroup: Literal(secs), Punct(','), Literal(nanos)
+        if let Some(FlatToken::Literal(secs_s, _)) = flat.get(dur_offset + 5)
+            && matches!(flat.get(dur_offset + 6), Some(FlatToken::Punct(',', _)))
+            && let Some(FlatToken::Literal(nanos_s, _)) = flat.get(dur_offset + 7)
+            && is_zero_literal(secs_s)
+            && is_zero_literal(nanos_s)
+        {
+            return true;
+        }
+    }
+
+    // Form F: Duration :: default ()
+    // `Duration::default()` is always Duration::ZERO (F-P8-M01 fix).
+    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
+        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if n == "default")
+        && matches!(flat.get(dur_offset + 4), Some(FlatToken::ParenGroup(_)))
+    {
+        return true;
     }
 
     false
@@ -870,6 +917,112 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "from_secs_f64(0e0) must be flagged as zero-duration timeout; got: {findings:?}"
+        );
+    }
+
+    // ── F-P8-M01: Duration::new and Duration::default ────────────────────────
+
+    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `Duration::new(0, 0)` must be flagged.
+    ///
+    /// `Duration::new(0, 0)` is semantically identical to `Duration::ZERO`; both secs
+    /// and nanos being zero literals must be detected as a zero-duration timeout.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_duration_new_zero_zero() {
+        let src = r#"pub fn f() -> reqwest::Client {
+    reqwest::ClientBuilder::new().timeout(Duration::new(0, 0)).build().unwrap()
+}"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P8-M01: .timeout(Duration::new(0, 0)) must be flagged \
+             as zero-timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `std::time::Duration::new(0, 0)` must be flagged.
+    ///
+    /// Fully-qualified `std::time::Duration::new(0, 0)` is semantically identical to
+    /// `Duration::new(0, 0)` — the fully-qualified path form must also be detected.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_std_duration_new_zero_zero() {
+        let src = r#"pub fn f() -> reqwest::Client {
+    reqwest::ClientBuilder::new().timeout(std::time::Duration::new(0, 0)).build().unwrap()
+}"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P8-M01: .timeout(std::time::Duration::new(0, 0)) must be \
+             flagged as zero-timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `Duration::default()` must be flagged.
+    ///
+    /// `Duration::default()` always evaluates to `Duration::ZERO`; an explicit
+    /// `Duration::default()` call as a timeout argument must be detected as zero.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_duration_default() {
+        let src = r#"pub fn f() -> reqwest::Client {
+    reqwest::ClientBuilder::new().timeout(Duration::default()).build().unwrap()
+}"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P8-M01: .timeout(Duration::default()) must be flagged \
+             as zero-timeout; got: {findings:?}"
+        );
+    }
+
+    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `Duration::new(30, 0)` must NOT be flagged.
+    ///
+    /// `Duration::new(30, 0)` is a valid 30-second timeout and must not be falsely flagged.
+    /// The detection must require BOTH secs and nanos to be zero literals.
+    #[test]
+    fn test_bc_2_14_004_does_not_flag_duration_new_30_zero() {
+        let src = r#"pub fn f() -> reqwest::Client {
+    reqwest::ClientBuilder::new().timeout(Duration::new(30, 0)).build().unwrap()
+}"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "BC-2.14.004 F-P8-M01: .timeout(Duration::new(30, 0)) must NOT be flagged \
+             (30-second timeout is valid); got: {findings:?}"
+        );
+    }
+
+    // ── F-P8-L01: negative zero float ────────────────────────────────────────
+
+    /// F-P8-L01 — BC-2.14.004 {PC-001}/{INV-004}: `from_secs_f64(-0.0)` must be flagged.
+    ///
+    /// `-0.0` lexes as `Punct('-')` + `Literal("0.0")`. The scanner must handle the
+    /// case where the literal position is offset by one due to the preceding `-` sign.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_f64_negative_zero() {
+        let src = r#"pub fn f() -> reqwest::Client {
+    reqwest::ClientBuilder::new().timeout(Duration::from_secs_f64(-0.0)).build().unwrap()
+}"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P8-L01: .timeout(Duration::from_secs_f64(-0.0)) must be \
+             flagged as zero-timeout (negative zero is zero); got: {findings:?}"
+        );
+    }
+
+    /// F-P8-L01 — BC-2.14.004 {PC-001}/{INV-004}: `from_secs_f32(-0.)` must be flagged.
+    ///
+    /// `-0.` is the bare trailing-dot float negative zero literal; the scanner must
+    /// recognise it as zero through the negative zero handling path.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_from_secs_f32_negative_zero_dot() {
+        let src = r#"pub fn f() -> reqwest::Client {
+    reqwest::ClientBuilder::new().timeout(Duration::from_secs_f32(-0.)).build().unwrap()
+}"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P8-L01: .timeout(Duration::from_secs_f32(-0.)) must be \
+             flagged as zero-timeout (negative zero is zero); got: {findings:?}"
         );
     }
 }

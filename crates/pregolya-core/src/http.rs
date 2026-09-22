@@ -253,8 +253,11 @@ mod tests {
     /// GREEN: `build_client()` is implemented — the client is constructed and the timeout
     /// fires as expected against a stalled server.
     #[tokio::test]
-    #[ignore = "EXT-BC214004: requires live mock HTTP server to verify timeout fires; \
-                deferred to S-2.07 per BC-2.14.004 {PC-005}"]
+    #[ignore = "PERF-BC214004: test takes ~35 s wall-clock (stall server sleeps 35 s waiting \
+                for the 30-second timeout to fire) — ungated in CI when the S-2.07 integration \
+                suite runs with explicit timing budget; unit substitute: \
+                test_BC_2_14_004_timeout_configured_on_client (checks timeout is set without \
+                the live wait) and test_BC_2_14_004_default_timeout_applied (Debug repr coupling)"]
     async fn test_BC_2_14_004_timeout_fires_against_mock_server() {
         use std::io::Read as _;
         use std::net::TcpListener;

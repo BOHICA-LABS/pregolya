@@ -124,8 +124,16 @@ struct PanicVisitor<'a> {
     /// Stack of `is_catch_all` flags for nested match-arm bodies.
     /// Empty = not inside any match-arm body; unreachable! there is §PC-006.
     /// true = catch-all arm (wildcard or irrefutable binding); unreachable! → FLAG.
-    /// false = named-variant arm; unreachable! → EXEMPT (Exemption 1).
+    /// false = named-variant arm; unreachable! → EXEMPT only when !match_has_unguarded_catchall.
     arm_stack: Vec<bool>,
+    /// True when the enclosing match expression has at least one unguarded catch-all arm
+    /// (i.e., an arm whose pattern is `_`, an irrefutable binding, etc. AND whose guard is
+    /// `None`). When true, Exemption 1 is denied for ALL arms in the match — including
+    /// named-variant arms — because the presence of an unguarded catch-all sibling means
+    /// the named arm is not part of a fully-exhaustive named enumeration.
+    ///
+    /// Save/restore across nested matches is handled in `visit_expr_match`.
+    match_has_unguarded_catchall: bool,
 }
 
 fn syn_has_cfg_test(attrs: &[syn::Attribute]) -> bool {
@@ -443,6 +451,23 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
         self.arm_stack = old_arm_stack;
     }
 
+    /// Set `match_has_unguarded_catchall` for the duration of the match visit,
+    /// then restore the prior value (handles nested matches correctly).
+    ///
+    /// BC-2.14.003 §EC-007 Exemption 1 requires that the match has NO unguarded
+    /// catch-all arm. If any arm has `arm.guard.is_none() && is_catch_all_pat(arm.pat)`,
+    /// Exemption 1 is denied for ALL arms including named-variant arms.
+    fn visit_expr_match(&mut self, node: &'ast syn::ExprMatch) {
+        let has_unguarded_catchall = node
+            .arms
+            .iter()
+            .any(|arm| arm.guard.is_none() && is_catch_all_pat(&arm.pat));
+        let prior = self.match_has_unguarded_catchall;
+        self.match_has_unguarded_catchall = has_unguarded_catchall;
+        syn::visit::visit_expr_match(self, node);
+        self.match_has_unguarded_catchall = prior;
+    }
+
     /// Push arm context before visiting the arm body; pop after.
     /// Guard expressions are visited WITHOUT arm context (unreachable! in a guard
     /// is not "inside the arm body" and triggers §PC-006).
@@ -481,12 +506,12 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
         if syn_has_cfg_test(&mac.attrs) {
             return;
         }
-        // KNOWN-LIMITATION: macro_rules! definition bodies are opaque token
-        // streams; this scanner walks the tokens of the invocation but cannot
-        // expand the macro at this point.  Complex nested macro patterns (e.g.
-        // a macro_rules! arm whose output contains .unwrap()) are checked at
-        // the call site (visit_expr_macro / visit_stmt_macro), not here.  Item
-        // macros such as thread_local! and lazy_static! are scanned below.
+        // `macro_rules!` definition bodies are lexically scanned for `.unwrap()`/
+        // `.expect()` calls and panic-family macro invocations in the token stream.
+        // Only token-pasted or procedurally-derived constructions that do not appear
+        // as literal method-call tokens in the definition body are outside this
+        // gate's reach.  Item macros such as `thread_local!` and `lazy_static!`
+        // are also scanned via `handle_macro_invocation` below.
         self.handle_macro_invocation(&mac.mac);
         syn::visit::visit_item_macro(self, mac);
     }
@@ -522,8 +547,24 @@ impl PanicVisitor<'_> {
                          unreachable! or documented assert!())",
                         self.path, line
                     ));
+                } else if self.match_has_unguarded_catchall {
+                    // Exemption 1 requires ALL arms to be named patterns.  An unguarded
+                    // catch-all sibling (e.g. `_ => 99`) defeats the exhaustive-named-arm
+                    // guarantee: the enum is NOT fully covered by named arms, so the
+                    // `unreachable!()` in the named arm is a latent panic path.
+                    self.findings.push(format!(
+                        "{}:{}: named-arm unreachable!() in non-test code where match has \
+                         an unguarded catch-all sibling \
+                         (BC-2.14.003 §EC-007 Exemption 1 violation: all arms must be \
+                         named patterns — the unguarded '_' or binding arm defeats the \
+                         exhaustive-named-arm guarantee; use explicit named arms for all \
+                         variants or replace unreachable! with documented assert!())",
+                        self.path, line
+                    ));
                 }
-                // Named arm (arm_stack.last() == Some(&false)): EXEMPT (Exemption 1)
+                // Named arm in a match where ALL arms are named (no unguarded catch-all):
+                // EXEMPT (Exemption 1). The match is fully exhaustive over named variants,
+                // so unreachable! is a valid exhaustiveness assertion.
             }
             n @ ("panic" | "assert" | "assert_eq" | "assert_ne")
                 if !(self.fn_has_panics_doc && syn_macro_has_bc_id(mac)) =>
@@ -561,6 +602,7 @@ fn scan_with_syn(src: &str, path: &str) -> Result<Vec<String>, syn::Error> {
         findings: Vec::new(),
         fn_has_panics_doc: false,
         arm_stack: Vec::new(),
+        match_has_unguarded_catchall: false,
     };
     syn::visit::visit_file(&mut v, &file);
     Ok(v.findings)
@@ -873,17 +915,19 @@ mod tests {
     /// credential-only fixture without updating the constant would cause the lower-bound
     /// guard to fire incorrectly (scanner falsely reported as regressed).
     ///
-    /// `include_str!` causes a compile error if any fixture file is missing or renamed,
-    /// making CREDENTIAL_FIXTURE_COUNT a compile-time constant coupled to the filesystem.
-    /// Each fixture is also verified to produce zero no-panic findings, confirming it is
-    /// truly a credential-only fixture and not a no-panic fixture.
+    /// Uses `read_dir` to enumerate all `.rs` files in the violations directory, classifies
+    /// each via `scan_for_panics_in_source`, and asserts that `CREDENTIAL_FIXTURE_COUNT`
+    /// matches the count of files that produce zero no-panic findings (i.e., the credential-
+    /// only fixtures). This provides genuine coupling: adding a new credential-only fixture
+    /// WITHOUT updating CREDENTIAL_FIXTURE_COUNT causes this test to fail.
+    ///
+    /// `include_str!` compile-time coupling is retained as a secondary guard to cause a
+    /// compile error if the three currently-known credential fixtures are renamed or removed.
     #[test]
     fn test_bc_2_14_003_credential_fixture_count_matches_fixture_dir() {
-        // include_str! causes a compile error if any file is missing/renamed,
-        // pinning CREDENTIAL_FIXTURE_COUNT to the actual filesystem state.
-        // Each file is also verified to produce zero no-panic findings
-        // (confirming it's truly a credential-only fixture, not a no-panic fixture).
-        let fixtures: &[(&str, &str)] = &[
+        // Compile-time coupling: fails to compile if any known credential fixture is renamed.
+        // (Keep in sync if new credential-only fixtures are added.)
+        let _compile_guard: &[(&str, &str)] = &[
             (
                 include_str!("../tests/fixtures/violations/violation_pub_crate_debug_derive.rs"),
                 "violation_pub_crate_debug_derive.rs",
@@ -897,18 +941,42 @@ mod tests {
                 "violation_impl_display.rs",
             ),
         ];
-        assert_eq!(
-            CREDENTIAL_FIXTURE_COUNT,
-            fixtures.len(),
-            "CREDENTIAL_FIXTURE_COUNT must equal number of credential-only fixtures"
-        );
-        for (content, name) in fixtures {
-            let findings = scan_for_panics_in_source(content, name);
-            assert!(
-                findings.is_empty(),
-                "credential-only fixture {name} must produce zero no-panic findings; got: {findings:?}"
-            );
+
+        // Runtime coupling via read_dir: enumerate all .rs files in the violations directory
+        // and count how many produce zero no-panic findings (i.e., credential-only fixtures).
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+        let violations_dir = format!("{}/tests/fixtures/violations", manifest_dir);
+
+        let mut zero_findings_count = 0usize;
+        let mut total_files = 0usize;
+        for entry in std::fs::read_dir(&violations_dir)
+            .unwrap_or_else(|e| panic!("cannot read violations dir {violations_dir}: {e}"))
+        {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.extension().map(|e| e == "rs").unwrap_or(false) {
+                total_files += 1;
+                let content = std::fs::read_to_string(&path)
+                    .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+                let path_str = path.to_string_lossy().to_string();
+                let findings = scan_for_panics_in_source(&content, &path_str);
+                if findings.is_empty() {
+                    zero_findings_count += 1;
+                }
+            }
         }
+
+        assert!(
+            total_files > 0,
+            "violations directory {violations_dir} must contain at least one .rs fixture file"
+        );
+        assert_eq!(
+            CREDENTIAL_FIXTURE_COUNT, zero_findings_count,
+            "CREDENTIAL_FIXTURE_COUNT ({CREDENTIAL_FIXTURE_COUNT}) must equal the number of \
+             credential-only fixtures that produce zero no-panic findings (found \
+             {zero_findings_count}/{total_files}); update CREDENTIAL_FIXTURE_COUNT when \
+             adding or removing credential-only fixtures"
+        );
     }
 
     /// F-P7-M01 — BC-2.14.003
@@ -931,6 +999,58 @@ thread_local! {
         assert!(
             !findings.is_empty(),
             "unwrap in thread_local! item macro must be flagged; got: {findings:?}"
+        );
+    }
+
+    /// F-P8-H01 — BC-2.14.003 §EC-007 Exemption 1
+    ///
+    /// A named arm `Phase::Done => unreachable!()` must be FLAGGED when the same match
+    /// expression contains an unguarded catch-all sibling arm (`_ => 99`). Exemption 1
+    /// requires ALL arms to be named patterns; the presence of an unguarded catch-all
+    /// defeats the exhaustive-named-arm guarantee.
+    #[test]
+    fn test_bc_2_14_003_unreachable_in_named_arm_with_unguarded_sibling_is_flagged() {
+        let src = r#"
+enum Phase { Init, Done }
+fn f(phase: Phase) -> i32 {
+    match phase {
+        Phase::Init => 0,
+        Phase::Done => unreachable!("should never be Done"),
+        _ => 99,
+    }
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "unreachable!() in named arm of a match with unguarded sibling '_' must be \
+             flagged (BC-2.14.003 §EC-007 Exemption 1 requires all arms to be named); \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P8-H01 — BC-2.14.003 §EC-007 Exemption 1
+    ///
+    /// A named arm `Phase::Done => unreachable!()` must be EXEMPT when ALL arms in the
+    /// match are named patterns (no unguarded catch-all). This is the valid use of
+    /// Exemption 1 — the match is fully exhaustive over named variants.
+    #[test]
+    fn test_bc_2_14_003_unreachable_in_named_arm_all_named_is_exempt() {
+        let src = r#"
+enum Phase { Init, Done }
+fn f(phase: Phase) -> i32 {
+    match phase {
+        Phase::Init => 0,
+        Phase::Done => unreachable!("should never be Done"),
+    }
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "unreachable!() in named arm of a fully-named match must be exempt \
+             (BC-2.14.003 §EC-007 Exemption 1 — all arms are named patterns); \
+             got: {findings:?}"
         );
     }
 }

@@ -306,11 +306,32 @@ fn check_impl_deref(
             TokenTree::Ident(id) if id == "for" && deref_found => {
                 for_found = true;
                 j += 1;
-                if let Some(TokenTree::Ident(sname)) = tokens.get(j) {
-                    struct_name = sname.to_string();
-                    struct_line = sname.span().start().line;
-                    j += 1;
+                // Collect ALL consecutive path segments (idents separated by `::`) and
+                // use the LAST ident as the implementing type name.  This handles both
+                // plain `impl Deref for OpenAiApiKey` and path-qualified forms such as
+                // `impl std::ops::Deref for crate::credentials::OpenAiApiKey`
+                // (F-P8-M03 fix: first ident was previously used, which is the path root).
+                let mut last_ident: Option<(String, usize)> = None;
+                while j < n {
+                    match tokens.get(j) {
+                        Some(TokenTree::Ident(sname)) => {
+                            last_ident = Some((sname.to_string(), sname.span().start().line));
+                            j += 1;
+                            // Don't break — keep collecting for path-qualified forms.
+                        }
+                        Some(TokenTree::Punct(p)) if p.as_char() == ':' => {
+                            j += 1;
+                        }
+                        _ => break,
+                    }
                 }
+                if let Some((name, line)) = last_ident {
+                    struct_name = name;
+                    struct_line = line;
+                }
+                // j is now positioned at the first non-path token; the outer loop
+                // continues from here (no further increment needed in this arm).
+                continue;
             }
             TokenTree::Group(body) if body.delimiter() == Delimiter::Brace => {
                 if deref_found
@@ -391,20 +412,28 @@ fn check_impl_display_in_tokens(
             TokenTree::Ident(id) if id == "for" && angle_depth == 0 => {
                 found_for = true;
                 j += 1;
-                // The next ident (or path) is the implementing type name
+                // Collect ALL consecutive path segments (idents separated by `::`) and
+                // use the LAST ident as the implementing type name.  This handles both
+                // plain `impl Display for OpenAiApiKey` and path-qualified forms such as
+                // `impl std::fmt::Display for crate::credentials::OpenAiApiKey`
+                // (F-P8-M03 fix: first ident was previously used, which is the path root).
+                let mut last_ident: Option<(String, usize)> = None;
                 while j < n {
                     match &tokens[j] {
                         TokenTree::Ident(sname) => {
-                            struct_name = sname.to_string();
-                            struct_line = sname.span().start().line;
-                            break;
+                            last_ident = Some((sname.to_string(), sname.span().start().line));
+                            // Don't break — keep collecting for path-qualified forms.
                         }
                         TokenTree::Punct(p) if p.as_char() == ':' => {
-                            j += 1;
+                            // Skip `:` tokens that form `::` path separators.
                         }
                         _ => break,
                     }
                     j += 1;
+                }
+                if let Some((name, line)) = last_ident {
+                    struct_name = name;
+                    struct_line = line;
                 }
                 break;
             }
@@ -586,7 +615,7 @@ fn impl_body_has_target_str(body: &proc_macro2::Group) -> Option<&'static str> {
 
 #[cfg(test)]
 mod tests {
-    use super::scan_for_bare_api_keys_in_source;
+    use super::{CREDENTIAL_SENTINELS, scan_for_bare_api_keys_in_source};
 
     /// F-P7-M04 — BC-2.14.005 {PC-006}: `Deref<Target=String>` diagnostic must name `String`.
     ///
@@ -633,6 +662,100 @@ impl<T: std::ops::Deref> Render for ApiKey {
             findings.is_empty(),
             "impl<T: Deref> generic bound must not be flagged (no type Target = str in body); \
              got: {findings:?}"
+        );
+    }
+
+    /// F-P8-M02 — BC-2.14.005 {PC-006}: CREDENTIAL_SENTINELS coupling test.
+    ///
+    /// AC-010 specifies exactly 8 sentinel keywords. This test asserts the count and
+    /// the exact set, and verifies each sentinel triggers detection for a derive(Debug)
+    /// struct. If a sentinel is removed or misspelled, this test fails.
+    #[test]
+    fn test_bc_2_14_005_credential_sentinels_all_8_produce_findings() {
+        // Assert count matches AC-010 specification.
+        assert_eq!(
+            CREDENTIAL_SENTINELS.len(),
+            8,
+            "AC-010 specifies exactly 8 sentinel keywords; got {}",
+            CREDENTIAL_SENTINELS.len()
+        );
+        // Assert exact sentinel set matches AC-010.
+        let expected: &[&str] = &[
+            "key",
+            "token",
+            "secret",
+            "credential",
+            "auth",
+            "bearer",
+            "password",
+            "passphrase",
+        ];
+        assert_eq!(
+            CREDENTIAL_SENTINELS, expected,
+            "sentinel set must match AC-010 exactly"
+        );
+
+        // Assert each sentinel triggers detection for a derive(Debug) struct.
+        for sentinel in CREDENTIAL_SENTINELS {
+            let upper = sentinel
+                .chars()
+                .next()
+                .unwrap()
+                .to_ascii_uppercase()
+                .to_string()
+                + &sentinel[1..];
+            let struct_name = format!("{}Holder", upper);
+            let src = format!("#[derive(Debug)]\npub struct {struct_name}(String);\n");
+            let findings = scan_for_bare_api_keys_in_source(&src, "crates/core/src/creds.rs");
+            assert!(
+                !findings.is_empty(),
+                "sentinel '{sentinel}' must trigger detection for derive(Debug) struct \
+                 '{struct_name}'; got zero findings"
+            );
+        }
+    }
+
+    /// F-P8-M03 — BC-2.14.005 {PC-006}: path-qualified Display impl must be flagged.
+    ///
+    /// `impl std::fmt::Display for crate::credentials::OpenAiApiKey` has its type name
+    /// as the LAST path segment, not the first. The scanner must collect all path segments
+    /// after `for` and use the last one.
+    #[test]
+    fn test_bc_2_14_005_path_qualified_display_impl_is_flagged() {
+        let src = r#"
+pub struct OpenAiApiKey(String);
+impl std::fmt::Display for crate::credentials::OpenAiApiKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "crates/core/src/creds.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.005 F-P8-M03: impl Display for path-qualified crate::credentials::OpenAiApiKey \
+             must be flagged; got: {findings:?}"
+        );
+    }
+
+    /// F-P8-M03 — BC-2.14.005 {PC-006}: path-qualified Deref impl must be flagged.
+    ///
+    /// `impl std::ops::Deref for crate::credentials::OpenAiApiKey` has its type name
+    /// as the LAST path segment. The scanner must use the last ident as the type name.
+    #[test]
+    fn test_bc_2_14_005_path_qualified_deref_impl_is_flagged() {
+        let src = r#"
+pub struct OpenAiApiKey(String);
+impl std::ops::Deref for crate::credentials::OpenAiApiKey {
+    type Target = str;
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "crates/core/src/creds.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.005 F-P8-M03: impl Deref for path-qualified crate::credentials::OpenAiApiKey \
+             must be flagged; got: {findings:?}"
         );
     }
 }

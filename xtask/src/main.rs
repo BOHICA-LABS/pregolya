@@ -5,7 +5,8 @@
 //! Subcommands:
 //!   check-file-size           Enforce production file size gates (CLAUDE.md §File size & module splitting)
 //!   check-client-timeout      CI lint gate: reject reqwest Client::new() outside tests (BC-2.14.004)
-//!   check-no-panic            CI lint gate: reject unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)
+//!   check-no-panic [--fixture-mode <dir>]
+//!                             CI lint gate: reject unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)
 //!   check-error-code-registry CI lint gate: verify all `E-<COMPONENT>-<NNN>` codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-007, VP-BC214001-01)
 //!   deny-bare-api-key         CI lint gate: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl `Deref<Target=str/String>` (BC-2.14.005 {PC-006})
 //!   deny-anyhow-in-lib        CI lint gate: reject anyhow imports in library crates
@@ -36,8 +37,21 @@ fn main() {
         "check-client-timeout" => check_client_timeout::run(),
         "check-no-panic" => {
             if args.get(2).map(String::as_str) == Some("--fixture-mode") {
-                let dir = args.get(3).map(String::as_str).unwrap_or(".");
+                let dir = match args.get(3).map(String::as_str) {
+                    Some(d) => d,
+                    None => {
+                        eprintln!("error: --fixture-mode requires a <dir> argument");
+                        eprintln!("usage: cargo xtask check-no-panic [--fixture-mode <dir>]");
+                        std::process::exit(1);
+                    }
+                };
                 check_no_panic::run_fixture_mode(dir);
+            } else if let Some(flag) = args.get(2) {
+                // Unrecognised second argument — fail loudly rather than silently
+                // falling through to `check_no_panic::run()` (F-P8-L03 fix).
+                eprintln!("error: unrecognised argument '{}' for check-no-panic", flag);
+                eprintln!("usage: cargo xtask check-no-panic [--fixture-mode <dir>]");
+                std::process::exit(1);
             } else {
                 check_no_panic::run();
             }
