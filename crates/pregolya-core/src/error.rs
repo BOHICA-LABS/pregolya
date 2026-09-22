@@ -2137,8 +2137,8 @@ mod tests {
         // include_str! embeds the whole file; a literal match in comments or assertions
         // would trivially satisfy contains() against current (paper-fix) HEAD.
 
-        // (a) The compliant guard form must appear in production code after the fix.
-        // RED GATE: current code does NOT contain the compliant assert! guard form.
+        // (a) The compliant guard form must appear in production code.
+        // Green: production code uses the compliant assert! guard form.
         let compliant_guard = ["assert!(code", ".starts_with(\"E-\")"].concat();
         assert!(
             src.contains(&compliant_guard),
@@ -2149,7 +2149,7 @@ mod tests {
         );
 
         // (b) The non-compliant guard form must NOT remain in the production code.
-        // RED GATE: current code DOES contain the non-compliant if !(cond) guard form.
+        // Green: the non-compliant if !(cond) guard form has been removed from production code.
         let noncompliant_guard = ["if !(code", ".starts_with"].concat();
         assert!(
             !src.contains(&noncompliant_guard),

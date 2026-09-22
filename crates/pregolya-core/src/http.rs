@@ -301,7 +301,7 @@ mod tests {
         // assertion messages would trivially satisfy contains() against current HEAD.
         //
         // The production mapping function must appear OUTSIDE #[cfg(test)] scope.
-        // RED GATE: current http.rs only has make_build_error_for_test in test scope.
+        // Green: map_build_failure is pub(crate) in production scope; this assertion verifies it remains present.
         let prod_fn = ["pub(crate) fn ", "map_build_failure"].concat();
         assert!(
             src.contains(&prod_fn),

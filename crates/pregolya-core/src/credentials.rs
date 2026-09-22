@@ -238,13 +238,14 @@ mod tests {
     /// `format!("{:?}", OpenAiApiKey("..."))` returns exactly `"<redacted>"` — the canonical
     /// log-scrubber sentinel per {INV-002}. No substring of the actual key value appears.
     ///
-    /// GREEN-BY-DESIGN: the `Debug` implementation is already in the stub; this test does NOT
-    /// call `new()` and therefore does NOT red-gate on the todo!() constructor.
+    /// Green-by-design: the `Debug` implementation is fully implemented and does not depend on
+    /// `new()`; this test constructs directly via struct-literal to keep the Debug assertion
+    /// independent of constructor validation logic.
     #[test]
     fn test_BC_2_14_005_openai_debug_emits_redacted_sentinel() {
         // Construct directly within the crate (struct-literal allowed inside the defining crate
         // even though the type is non_exhaustive externally).
-        // This avoids calling the todo!() new() constructor.
+        // This avoids calling new() to keep the Debug assertion independent of constructor validation logic.
         let key = OpenAiApiKey("sk-real-secret-value".to_string());
         let debug_output = format!("{:?}", key);
         assert_eq!(
@@ -277,7 +278,7 @@ mod tests {
     /// The `Debug` output must NOT contain any substring of the actual key value.
     /// Verifies the redaction is structural — not just a prefix/suffix trim.
     ///
-    /// GREEN-BY-DESIGN: does NOT call the todo!() constructor.
+    /// Green-by-design: constructs directly via struct-literal, independent of constructor logic.
     #[test]
     fn test_BC_2_14_005_debug_does_not_leak_key_material() {
         let sentinel = "LEAK_SENTINEL_ABC123_DO_NOT_LOG";

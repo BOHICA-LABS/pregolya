@@ -1111,7 +1111,7 @@ fn test_description_cache_key_scanner_skips_test_files() {
 /// `scan_for_panics_in_source` detects `.unwrap()` in non-test production code
 /// and returns a non-empty violation list.
 ///
-/// RED GATE: `scan_for_panics_in_source` is `todo!()` — panics until implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub; now GREEN.
 #[test]
 fn test_BC_2_14_003_scan_finds_unwrap_in_production_code() {
     // BC-2.14.003 {PC-004} TV-001: canonical no-panic violation
@@ -1131,7 +1131,7 @@ pub fn get_value(x: Option<i32>) -> i32 {
 ///
 /// `scan_for_panics_in_source` detects `.expect("msg")` in non-test production code.
 ///
-/// RED GATE: `scan_for_panics_in_source` is `todo!()` — panics until implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub; now GREEN.
 #[test]
 fn test_BC_2_14_003_scan_finds_expect_in_production_code() {
     // BC-2.14.003 {PC-004} TV-002
@@ -1152,7 +1152,7 @@ pub fn get_value(x: Option<i32>) -> i32 {
 /// Clean production source — no `.unwrap()` or `.expect()` — returns an empty
 /// violation list.
 ///
-/// RED GATE: `scan_for_panics_in_source` is `todo!()` — panics until implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub; now GREEN.
 #[test]
 fn test_BC_2_14_003_scan_clean_on_no_panics_in_source() {
     // BC-2.14.003 {PC-004}: clean source must return empty findings
@@ -1174,7 +1174,7 @@ pub fn get_value(x: Option<i32>) -> Result<i32, String> {
 /// `debug_assert!()` is NOT flagged by the scanner. It compiles out in release builds
 /// and is therefore not a panic-path violation.
 ///
-/// RED GATE: `scan_for_panics_in_source` is `todo!()` — panics until implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub; now GREEN.
 #[test]
 fn test_BC_2_14_003_debug_assert_not_flagged() {
     // BC-2.14.003 {INV-003}: debug_assert exempt
@@ -1195,7 +1195,7 @@ pub fn validate(x: i32) {
 /// Files under `tests/` paths are fully exempt — `.unwrap()` inside a test file
 /// must NOT produce a violation.
 ///
-/// RED GATE: `scan_for_panics_in_source` is `todo!()` — panics until implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub; now GREEN.
 #[test]
 fn test_BC_2_14_003_test_file_path_exempt() {
     // BC-2.14.003 {INV-004}: test file paths are exempt
@@ -1224,8 +1224,8 @@ fn my_test() {
 /// `scan_for_timeout_violations_in_source` detects `reqwest::Client::new()` in
 /// non-test production code and returns a non-empty violation list.
 ///
-/// RED GATE: `scan_for_timeout_violations_in_source` is `todo!()` — panics until
-/// implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub;
+/// now GREEN.
 #[test]
 fn test_BC_2_14_004_scan_finds_client_new_violation() {
     // BC-2.14.004 {PC-003}: Client::new() without .timeout() is forbidden
@@ -1249,8 +1249,8 @@ pub fn make_client() -> Client {
 /// A `ClientBuilder` that calls `.timeout(d)` before `.build()` is compliant
 /// and must return an empty violation list.
 ///
-/// RED GATE: `scan_for_timeout_violations_in_source` is `todo!()` — panics until
-/// implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub;
+/// now GREEN.
 #[test]
 fn test_BC_2_14_004_scan_clean_on_compliant_builder() {
     // BC-2.14.004 {PC-003}: ClientBuilder with .timeout() is compliant
@@ -1279,8 +1279,8 @@ pub fn make_client() -> reqwest::Client {
 /// A `ClientBuilder` chain that calls `.build()` WITHOUT a preceding `.timeout(d)`
 /// call is a violation and must be detected.
 ///
-/// RED GATE: `scan_for_timeout_violations_in_source` is `todo!()` — panics until
-/// implementation.
+/// Red-gate provenance: authored failing against the pre-implementation `todo!()` stub;
+/// now GREEN.
 #[test]
 fn test_BC_2_14_004_scan_finds_builder_without_timeout() {
     // BC-2.14.004 {PC-003}: ClientBuilder without .timeout() must be flagged
@@ -1304,8 +1304,8 @@ pub fn make_client() -> reqwest::Client {
 //
 // `deny_bare_api_key::run()` has no per-source scanner exposed as pub(crate),
 // so these tests exercise the gate via subprocess (cargo xtask deny-bare-api-key).
-// Since run() is todo!() it panics → non-zero exit → the assertions below fail
-// if the command exits 0, giving us the Red Gate signal in the other direction.
+// Since run() was authored as todo!() it panicked → non-zero exit → the assertions below failed
+// if the command exited 0, giving us the Red Gate signal in the other direction.
 //
 // These tests are #[ignore]'d because they require a full `cargo build` per
 // invocation, which is expensive in CI. SID-1 is satisfied by the compile-time
@@ -1341,8 +1341,8 @@ fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
         .output()
         .expect("cargo run must be invocable");
 
-    // Stub is todo!() — must exit non-zero until implemented.
-    // Once implemented: a clean workspace exits 0; a workspace with bare api keys exits non-zero.
+    // Red-gate provenance: stub was todo!() — was authored to exit non-zero until implemented.
+    // A clean workspace exits 0; a workspace with bare api keys exits non-zero.
     // This test verifies the subprocess contract is exercised (not a vacuous pass).
     assert!(
         !output.status.success() || {
@@ -1414,9 +1414,9 @@ fn test_BC_2_14_004_check_client_timeout_subprocess_wired() {
 //   (a) derives Debug without a manual impl,
 //   (b) derives Serialize,
 //   (c) impls Deref<Target=str>.
-// The current implementation only scans for sk-/sk-ant- prefix literals —
-// struct-level detection is absent until the implementer rewrites the scanner.
-// Tests (a), (b), (c) are RED against the current code; (d) is a negative guard.
+// At authoring time the implementation only scanned for sk-/sk-ant- prefix literals —
+// struct-level detection was absent; tests (a), (b), (c) were authored RED; (d) is a negative guard.
+// All four tests are now GREEN after the scanner was rewritten for structural detection.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-01 (HIGH) — BC-2.14.005 {PC-006} / TV-005 (a)
@@ -1424,8 +1424,8 @@ fn test_BC_2_14_004_check_client_timeout_subprocess_wired() {
 /// A public struct whose name contains "token" that derives `Debug` without a
 /// manual impl must be FLAGGED by `scan_for_bare_api_keys_in_source`.
 ///
-/// RED GATE: current scanner checks only for sk-/sk-ant- string literal prefixes —
-/// struct-level `derive(Debug)` detection is absent until the implementer fixes it.
+/// Red-gate provenance: authored when the scanner checked only for sk-/sk-ant- string literal prefixes;
+/// struct-level `derive(Debug)` detection was absent; now GREEN after the structural fix.
 #[test]
 fn test_BC_2_14_005_flags_derive_debug_on_token_struct() {
     let src = r#"
@@ -1445,7 +1445,7 @@ pub struct FooToken(String);
 /// A public struct whose name contains "secret" that derives `Serialize` must be
 /// FLAGGED — serialization would expose the credential in JSON/TOML/etc. artifacts.
 ///
-/// RED GATE: current scanner does not inspect derive macros on structs.
+/// Red-gate provenance: authored when the scanner did not inspect derive macros on structs; now GREEN.
 #[test]
 fn test_BC_2_14_005_flags_serialize_on_secret_struct() {
     let src = r#"
@@ -1465,7 +1465,7 @@ pub struct FooSecret(String);
 /// An `impl Deref<Target = str>` on a struct whose name contains "credential" must
 /// be FLAGGED — Deref coercion silently exposes the inner value via auto-deref.
 ///
-/// RED GATE: current scanner does not inspect impl blocks for Deref.
+/// Red-gate provenance: authored when the scanner did not inspect impl blocks for Deref; now GREEN.
 #[test]
 fn test_BC_2_14_005_flags_deref_str_on_credential_struct() {
     let src = r#"
@@ -1530,16 +1530,16 @@ impl FooApiKey {
 // Exemptions: debug_assert!/debug_assert_eq!, #[cfg(test)] blocks, test paths,
 // and unreachable!() in a statically-exhaustive match (product-owner guidance).
 //
-// The current scanner only detects .unwrap()/.expect() — tests for the new macro
-// categories are RED against the current implementation.
+// At authoring time the scanner only detected .unwrap()/.expect() — tests for the new macro
+// categories were authored RED; now GREEN after the scanner was extended.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-03 (MED) — BC-2.14.003 {PC-005}/{PC-006}
 ///
 /// `scan_for_panics_in_source` must FLAG bare `assert!()` in non-test library code.
 ///
-/// RED GATE: current implementation detects only .unwrap()/.expect(); assert! is
-/// absent from the detection set until the implementer extends it.
+/// Red-gate provenance: authored when the implementation detected only .unwrap()/.expect();
+/// assert! was absent from the detection set; now GREEN after the scanner was extended.
 #[test]
 fn test_BC_2_14_003_flags_assert_in_production_code() {
     let src = r#"
@@ -1559,7 +1559,7 @@ pub fn check_positive(x: i32) {
 ///
 /// `scan_for_panics_in_source` must FLAG `assert_eq!()` in non-test library code.
 ///
-/// RED GATE: same as assert! — the current scanner misses macro-based panic paths.
+/// Red-gate provenance: same root cause as assert! — the scanner missed macro-based panic paths; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_assert_eq_in_production_code() {
     let src = r#"
@@ -1579,7 +1579,7 @@ pub fn require_equal(a: i32, b: i32) {
 ///
 /// `scan_for_panics_in_source` must FLAG `assert_ne!()` in non-test library code.
 ///
-/// RED GATE: current scanner misses macro-based panic paths including assert_ne!.
+/// Red-gate provenance: authored when the scanner missed macro-based panic paths including assert_ne!; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_assert_ne_in_production_code() {
     let src = r#"
@@ -1599,7 +1599,7 @@ pub fn require_distinct(a: i32, b: i32) {
 ///
 /// `scan_for_panics_in_source` must FLAG `panic!()` in non-test library code.
 ///
-/// RED GATE: current scanner misses explicit panic! macro calls.
+/// Red-gate provenance: authored when the scanner missed explicit panic! macro calls; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_bare_panic_in_production_code() {
     let src = r#"
@@ -1671,10 +1671,10 @@ mod tests {
 /// qualified-path arms does NOT grant exemption — qualified arms only prove current
 /// exhaustiveness, not future-proof safety.
 ///
-/// RED GATE (F-GATE-01): has_qualified_path_before currently exempts this case because
-/// the scanner sees `::` in the Color::* arms and skips the `_` wildcard detection.
-/// This is the wrong behavior per BC-2.14.003 EC-004. After the implementer's fix this
-/// wildcard arm IS flagged and this test passes.
+/// Red-gate provenance (F-GATE-01): has_qualified_path_before incorrectly exempted this case because
+/// the scanner saw `::` in the Color::* arms and skipped the `_` wildcard detection.
+/// This was wrong per BC-2.14.003 EC-004; now GREEN after the fix restricts the exemption
+/// to non-wildcard named arms only.
 ///
 /// Exemption 1 applies ONLY to explicit named arms (e.g. `Color::Unknown => unreachable!()`)
 /// with NO wildcard `_` arm present.
@@ -1708,8 +1708,8 @@ pub fn color_name(c: &Color) -> &'static str {
 // BC-2.14.004 (S-1.02 F-04) — timeout scanner Duration::ZERO detection
 //
 // BC-2.14.004 {PC-001} / {INV-004}: timeout duration must be > Duration::ZERO.
-// The current scanner accepts any .timeout() call regardless of the argument,
-// allowing .timeout(Duration::ZERO) to slip through as "compliant".
+// At authoring time the scanner accepted any .timeout() call regardless of the argument,
+// allowing .timeout(Duration::ZERO) to slip through as "compliant"; now GREEN after zero-duration detection.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-04 (MED) — BC-2.14.004 {PC-001} / {INV-004}
@@ -1717,9 +1717,9 @@ pub fn color_name(c: &Color) -> &'static str {
 /// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::ZERO)`
 /// as a violation — {PC-001} requires the timeout duration to be > Duration::ZERO.
 ///
-/// RED GATE: current `has_build_without_timeout` only checks for PRESENCE of
-/// `.timeout()`; it does not verify the argument is non-zero. A chain with
-/// `.timeout(Duration::ZERO)` is currently accepted as compliant — it should be flagged.
+/// Red-gate provenance: authored when `has_build_without_timeout` only checked for PRESENCE of
+/// `.timeout()` and did not verify the argument was non-zero. A chain with
+/// `.timeout(Duration::ZERO)` was accepted as compliant; now GREEN after zero-duration detection was added.
 #[test]
 fn test_BC_2_14_004_flags_timeout_zero() {
     let src = r#"let c = reqwest::ClientBuilder::new().timeout(Duration::ZERO).build()?;"#;
@@ -1757,11 +1757,11 @@ fn test_BC_2_14_004_does_not_flag_timeout_thirty_seconds() {
 //   EXEMPT: fully-enumerated explicit-variant unreachable!() (no wildcard arm)
 //   EXEMPT: documented assert! (function has # Panics section + BC-ID in message)
 //
-// RED GATE against HEAD 7c7a590:
-//   - assertion (b) FAILS: scanner blanket-exempts ALL unreachable! (paper-fix);
-//     wildcard unreachable! must be flagged but currently is not
-//   - assertion (ii) FAILS: scanner flags ALL assert! with no exemption logic;
-//     documented assert! must be exempt but currently is not
+// Red-gate provenance (against pre-fix HEAD):
+//   - assertion (b): scanner blanket-exempted ALL unreachable! (paper-fix);
+//     wildcard unreachable! was not being flagged; now GREEN after fix
+//   - assertion (ii): scanner flagged ALL assert! with no exemption logic;
+//     documented assert! was not being exempted; now GREEN after fix
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// AC-017 (traces to BC-2.14.003 §EC-007, POL-31)
@@ -1778,9 +1778,9 @@ fn test_BC_2_14_004_does_not_flag_timeout_thirty_seconds() {
 ///   (ii) documented programmer-error-guard `assert!`
 ///        (function has `# Panics` doc section AND message contains a BC-NNN ID)
 ///
-/// RED GATE: assertions (b) and (ii) FAIL against current code because:
-///   - scanner blanket-exempts ALL unreachable! (b FAILS)
-///   - scanner has no exemption logic for documented assert! (ii FAILS)
+/// Red-gate provenance: assertions (b) and (ii) were authored failing because:
+///   - scanner blanket-exempted ALL unreachable! (b was failing)
+///   - scanner had no exemption logic for documented assert! (ii was failing)
 #[test]
 fn test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions() {
     // (a) Bare assert! without # Panics doc section and without BC-ID in message
@@ -1796,7 +1796,7 @@ fn test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions() {
     );
 
     // (b) _ => unreachable!() wildcard arm must be FLAGGED.
-    // RED GATE: scanner blanket-exempts ALL unreachable! — this assertion FAILS now
+    // Red-gate provenance: scanner blanket-exempted ALL unreachable! — this assertion was authored failing; now GREEN.
     let violation_unreachable_wildcard =
         include_str!("../tests/fixtures/violations/violation_unreachable_wildcard.rs");
     let findings_b = scan_for_panics_in_source(
@@ -1843,7 +1843,7 @@ pub fn phase_index(p: Phase) -> u8 {
     );
 
     // (ii) EXEMPT: documented programmer-error-guard assert! with # Panics doc and BC-ID.
-    // RED GATE: scanner flags ALL assert! with no exemption logic — this assertion FAILS now
+    // Red-gate provenance: scanner flagged ALL assert! with no exemption logic — this assertion was authored failing; now GREEN.
     let exempt_documented_assert = r#"
 /// Validates that the error code follows the E-<COMPONENT>-NNN format.
 ///
@@ -1869,8 +1869,8 @@ pub fn validate_code_format(code: &str) {
     );
 
     // (b2) _ => unreachable!() WITH enum::variant arms before the wildcard must be FLAGGED.
-    // RED GATE (F-GATE-01): has_qualified_path_before incorrectly exempts this case —
-    // FAILS now because the scanner sees `::` in Status::Active etc. and returns early.
+    // Red-gate provenance (F-GATE-01): has_qualified_path_before incorrectly exempted this case —
+    // authored failing because the scanner saw `::` in Status::Active etc. and returned early; now GREEN.
     //
     // EC-004: qualified-path arms only prove current exhaustiveness, not future-proof safety.
     // Adding a new Status variant downstream makes the `_` arm reachable. The exemption
@@ -1892,8 +1892,8 @@ pub fn validate_code_format(code: &str) {
     );
 
     // (iii) bare unreachable!() in a let-else block (NOT a match arm) must be FLAGGED.
-    // RED GATE (F-GATE-01): gate only inspects `_ => unreachable!()` token shape;
-    // let-else else-block unreachable!() is not detected — FAILS now.
+    // Red-gate provenance (F-GATE-01): gate only inspected `_ => unreachable!()` token shape;
+    // let-else else-block unreachable!() was not detected — authored failing; now GREEN.
     //
     // §PC-006: unreachable! is permitted only in exhaustive-match arms; using it in
     // let-else or if-block error paths is a POL-31 violation because the expression
@@ -1924,9 +1924,9 @@ pub fn extract_prefix(code: &str) -> &str {
 //
 // BC-2.14.003 {PC-005}/{PC-006}: the scanner must flag assert!, assert_eq!,
 // assert_ne!, panic!, and wildcard unreachable! regardless of macro invocation
-// delimiter. The current scanner checks only Delimiter::Parenthesis in the
+// delimiter. At authoring time the scanner checked only Delimiter::Parenthesis in the
 // FLAGGED_PANIC_MACROS handler and in the `_` wildcard handler; brace-delimited
-// (!{...}) and bracket-delimited (![...]) forms evade detection.
+// (!{...}) and bracket-delimited (![...]) forms evaded detection; now GREEN.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-01 (MED) — BC-2.14.003 {PC-005}/{PC-006}
@@ -1935,9 +1935,9 @@ pub fn extract_prefix(code: &str) -> &str {
 /// (brace-delimited) in non-test production code. BC-2.14.003 prohibits
 /// these macros regardless of the macro invocation delimiter.
 ///
-/// RED GATE: the FLAGGED_PANIC_MACROS handler guards with
+/// Red-gate provenance: authored when the FLAGGED_PANIC_MACROS handler guarded with
 /// `g.delimiter() == Delimiter::Parenthesis`; a brace-delimited invocation
-/// fails that guard and produces no finding.
+/// failed that guard and produced no finding; now GREEN after delimiter-independent detection.
 #[test]
 fn test_BC_2_14_003_flags_assert_brace_delimiter_in_production_code() {
     // BC-2.14.003 {PC-005}: assert!{...} must be flagged (delimiter-independent)
@@ -1960,7 +1960,7 @@ pub fn check_nonneg(x: i32) {
 /// `scan_for_panics_in_source` must FLAG `assert![condition, "msg"]`
 /// (bracket-delimited) in non-test production code.
 ///
-/// RED GATE: FLAGGED_PANIC_MACROS handler checks only Delimiter::Parenthesis.
+/// Red-gate provenance: authored when FLAGGED_PANIC_MACROS checked only Delimiter::Parenthesis; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_assert_bracket_delimiter_in_production_code() {
     // BC-2.14.003 {PC-005}: assert![...] must be flagged (delimiter-independent)
@@ -1982,7 +1982,7 @@ pub fn check_nonneg(x: i32) {
 ///
 /// `scan_for_panics_in_source` must FLAG `assert_eq!{a, b}` (brace-delimited).
 ///
-/// RED GATE: FLAGGED_PANIC_MACROS handler checks only Delimiter::Parenthesis.
+/// Red-gate provenance: authored when FLAGGED_PANIC_MACROS checked only Delimiter::Parenthesis; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_assert_eq_brace_delimiter_in_production_code() {
     // BC-2.14.003 {PC-005}: assert_eq!{...} must be flagged (delimiter-independent)
@@ -2003,7 +2003,7 @@ pub fn check_equal(a: i32, b: i32) {
 ///
 /// `scan_for_panics_in_source` must FLAG `panic!{msg}` (brace-delimited).
 ///
-/// RED GATE: FLAGGED_PANIC_MACROS handler checks only Delimiter::Parenthesis.
+/// Red-gate provenance: authored when FLAGGED_PANIC_MACROS checked only Delimiter::Parenthesis; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_panic_brace_delimiter_in_production_code() {
     // BC-2.14.003 {PC-005}: panic!{...} must be flagged (delimiter-independent)
@@ -2028,8 +2028,8 @@ pub fn unreachable_path() {
 /// fallback `unreachable` handler then sees `in_match_arm_position=true` (the
 /// fat-arrow tokens are still present) and exempts it as a named arm.
 ///
-/// RED GATE: `_` handler: `args.delimiter() == Delimiter::Parenthesis` rejects
-/// brace form; `unreachable` fallback handler exempts all match-arm-position calls.
+/// Red-gate provenance: authored when the `_` handler used `args.delimiter() == Delimiter::Parenthesis`,
+/// rejecting brace form; the `unreachable` fallback handler exempted match-arm-position calls; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_unreachable_wildcard_brace_delimiter() {
     // BC-2.14.003 {PC-006}/{EC-007}: _ => unreachable!{...} must be flagged
@@ -2057,9 +2057,9 @@ pub fn categorize(n: u32) -> &'static str {
 //
 // BC-2.14.003 §EC-007: exhaustive-match exemption applies ONLY when every arm
 // is a named variant pattern (no `_`, no irrefutable binding, no guarded wildcard).
-// The scanner currently exempts ALL match-arm-position unreachable!() that are not
+// At authoring time the scanner exempted ALL match-arm-position unreachable!() that were not
 // the exact `_ = > unreachable!` token shape, missing irrefutable binding catch-alls
-// and guarded wildcards.
+// and guarded wildcards; now GREEN after the detection gaps were closed.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-02 (MED) — BC-2.14.003 {PC-006}/{EC-007}
@@ -2068,10 +2068,10 @@ pub fn categorize(n: u32) -> &'static str {
 /// binding catch-all). §EC-007: exhaustive-match exemption ONLY for named variant
 /// patterns; an irrefutable binding `other` is semantically a catch-all pattern.
 ///
-/// RED GATE: the `_` handler only fires when `id == "_"`; `other` falls through to
-/// the catch-all arm which resets `pending_panics_doc` only. The `unreachable` handler
-/// then sees `in_match_arm_position=true` (fat-arrow tokens i-2/i-1 match) and
-/// exempts it as if it were a named variant arm — incorrect per §EC-007.
+/// Red-gate provenance: authored when the `_` handler only fired when `id == "_"`; `other` fell through to
+/// the catch-all arm which reset `pending_panics_doc` only. The `unreachable` handler
+/// then saw `in_match_arm_position=true` (fat-arrow tokens i-2/i-1 match) and
+/// exempted it as if it were a named variant arm — incorrect per §EC-007; now GREEN after fix.
 #[test]
 fn test_BC_2_14_003_flags_binding_catch_all_unreachable() {
     // BC-2.14.003 §EC-007 F-02: irrefutable binding catch-all must be flagged
@@ -2094,11 +2094,11 @@ fn test_BC_2_14_003_flags_binding_catch_all_unreachable() {
 /// wildcard). §EC-007: a guarded wildcard is not an exhaustive named-variant arm — a
 /// value not matched by the guard condition can reach a future new match arm and panic.
 ///
-/// RED GATE: the `_` handler looks for the exact consecutive token pattern
-/// `_ = > unreachable!`. When a guard (`if condition`) appears between `_` and `=>`,
-/// `tokens[i+1]` is `if` (not `=`), so the multi-token lookahead fails and no finding
-/// is added. The `unreachable` handler then sees `in_match_arm_position=true` (the
-/// fat-arrow tokens directly precede `unreachable` in the flat stream) and exempts it.
+/// Red-gate provenance: authored when the `_` handler looked for the exact consecutive token pattern
+/// `_ = > unreachable!`. When a guard (`if condition`) appeared between `_` and `=>`,
+/// `tokens[i+1]` was `if` (not `=`), so the multi-token lookahead failed and no finding
+/// was added. The `unreachable` handler then saw `in_match_arm_position=true` (the
+/// fat-arrow tokens directly precede `unreachable` in the flat stream) and exempted it; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_guarded_wildcard_unreachable() {
     // BC-2.14.003 §EC-007 F-02: guarded wildcard must be flagged
@@ -2128,11 +2128,11 @@ pub fn process_status(n: u32) -> &'static str {
 // and exit non-zero when violation fixtures are present. The current run() fn
 // ignores argv[2] and scans crates/ (which is clean) → exits 0.
 //
-// RED GATE (in-process): the brace-delimiter fixture violation_assert_brace.rs
-// produces no findings with the current scanner (F-01 gap), making the second
-// assertion below fail.
-// RED GATE (subprocess, #[ignore]): --fixture-mode not implemented; current code
-// scans crates/ (clean) → exits 0; test asserts non-zero → fails.
+// Red-gate provenance (in-process): the brace-delimiter fixture violation_assert_brace.rs
+// produced no findings with the pre-fix scanner (F-01 gap), causing the second
+// assertion to fail; now GREEN after delimiter-independent detection.
+// Red-gate provenance (subprocess, #[ignore]): --fixture-mode was not implemented; pre-fix code
+// scanned crates/ (clean) → exited 0; test asserted non-zero and was authored failing; now GREEN.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-03 (MED process-gap) — AC-017/Task-13 (BC-2.14.003)
@@ -2143,9 +2143,9 @@ pub fn process_status(n: u32) -> &'static str {
 /// Scans the violation fixture files that `--fixture-mode` would scan and asserts
 /// each produces at least one violation finding.
 ///
-/// RED GATE: `violation_assert_brace.rs` contains `assert!{...}` (brace-delimited);
-/// the scanner only checks `Delimiter::Parenthesis` (F-01 gap) → empty findings →
-/// the second assertion FAILS.
+/// Red-gate provenance: `violation_assert_brace.rs` contained `assert!{...}` (brace-delimited);
+/// the scanner only checked `Delimiter::Parenthesis` (F-01 gap) → empty findings →
+/// the second assertion was authored failing; now GREEN after delimiter-independent detection.
 #[test]
 fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
     // Fixture 1: assert! without # Panics doc section and BC-ID (parenthesis form).
@@ -2163,8 +2163,8 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
     );
 
     // Fixture 2: assert!{...} brace-delimited form (F-01 gap fixture).
-    // RED GATE: scanner only checks Delimiter::Parenthesis → brace form not detected →
-    // findings_brace is empty → this assertion FAILS.
+    // Red-gate provenance: scanner only checked Delimiter::Parenthesis → brace form was not detected →
+    // findings_brace was empty → this assertion was authored failing; now GREEN.
     let violation_assert_brace =
         include_str!("../tests/fixtures/violations/violation_assert_brace.rs");
     let findings_brace = scan_for_panics_in_source(
@@ -2184,9 +2184,9 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
 /// `cargo xtask check-no-panic --fixture-mode <violations_dir>` must exit non-zero
 /// when run against the violation fixtures and exit 0 when the fixtures are clean.
 ///
-/// RED GATE: `--fixture-mode` is not implemented. `run()` ignores extra argv,
-/// scans `crates/` (clean workspace), and exits 0. This test asserts non-zero
-/// → FAILS against current code.
+/// Red-gate provenance: `--fixture-mode` was not implemented. `run()` ignored extra argv,
+/// scanned `crates/` (clean workspace), and exited 0. This test asserted non-zero
+/// and was authored failing; now GREEN after --fixture-mode was implemented.
 ///
 /// SID-1: the non-ignored in-process companion above provides CI coverage without
 /// subprocess overhead.
@@ -2224,8 +2224,8 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
         .output()
         .expect("cargo run must be invocable");
 
-    // RED GATE: --fixture-mode not implemented; run() scans crates/ (clean) → exits 0.
-    // After implementation: violation fixtures found → exits 1.
+    // Red-gate provenance: --fixture-mode was not implemented; run() scanned crates/ (clean) → exited 0.
+    // Now GREEN: violation fixtures are found → exits 1.
     assert!(
         !output.status.success(),
         "BC-2.14.003 F-03: check-no-panic --fixture-mode must exit non-zero when \
@@ -2269,9 +2269,9 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
 /// as a zero/non-positive-timeout violation. {PC-001} requires d > Duration::ZERO;
 /// `Duration::from_secs(0)` evaluates to `Duration::ZERO` at runtime.
 ///
-/// RED GATE: `is_zero_duration_timeout_arg` checks `flat[timeout_idx+6]` for the
-/// ident `"ZERO"`; `Duration::from_secs(0)` places `"from_secs"` at that offset
-/// (not `"ZERO"`) → returns `false` → timeout credited as valid → chain not flagged.
+/// Red-gate provenance: authored when `is_zero_duration_timeout_arg` checked `flat[timeout_idx+6]` for the
+/// ident `"ZERO"`; `Duration::from_secs(0)` placed `"from_secs"` at that offset
+/// (not `"ZERO"`) → returned `false` → timeout credited as valid → chain not flagged; now GREEN.
 #[test]
 fn test_BC_2_14_004_flags_timeout_from_secs_zero() {
     // BC-2.14.004 {PC-001}/{INV-004}: Duration::from_secs(0) == Duration::ZERO
@@ -2292,10 +2292,10 @@ fn test_BC_2_14_004_flags_timeout_from_secs_zero() {
 /// `.timeout(std::time::Duration::ZERO)`. The value is identical to `Duration::ZERO`;
 /// the fully-qualified path form must also be detected.
 ///
-/// RED GATE: `is_zero_duration_timeout_arg` checks `flat[timeout_idx+3]` for the
+/// Red-gate provenance: authored when `is_zero_duration_timeout_arg` checked `flat[timeout_idx+3]` for the
 /// ident `"Duration"`. With `std::time::Duration::ZERO`, the flat token sequence at
-/// `timeout_idx+3` is `"std"` (not `"Duration"`) because the three extra tokens
-/// `std :: time ::` appear before `Duration` → check returns `false` → not detected.
+/// `timeout_idx+3` was `"std"` (not `"Duration"`) because the three extra tokens
+/// `std :: time ::` appeared before `Duration` → check returned `false` → was not detected; now GREEN.
 #[test]
 fn test_BC_2_14_004_flags_timeout_fully_qualified_duration_zero() {
     // BC-2.14.004 {PC-001}/{INV-004}: std::time::Duration::ZERO is Duration::ZERO
@@ -2319,9 +2319,9 @@ fn test_BC_2_14_004_flags_timeout_fully_qualified_duration_zero() {
 // when every arm is a named variant pattern (no `_`, no irrefutable binding).
 // `name if <guard> => unreachable!(...)` is a guarded irrefutable-binding catch-all
 // — semantically equivalent to a catch-all `name =>`, because the binding `name` is
-// irrefutable regardless of the guard. The scanner currently detects `name =>
+// irrefutable regardless of the guard. At authoring time the scanner detected `name =>
 // unreachable!(...)` (bare, no guard) but NOT the guarded form where `if <guard>`
-// sits between the binding and `=>`, causing the lookahead to miss the pattern.
+// sat between the binding and `=>`; the lookahead missed the pattern; now GREEN.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-01 (MED) — BC-2.14.003 §EC-007 pass-5
@@ -2330,11 +2330,11 @@ fn test_BC_2_14_004_flags_timeout_fully_qualified_duration_zero() {
 /// `other if guard() => unreachable!(...)`. The binding `other` is irrefutable regardless
 /// of the guard; the §EC-007 exemption requires every arm to be a named variant pattern.
 ///
-/// RED GATE: the irrefutable-binding detection in the Ident handler checks
+/// Red-gate provenance: authored when the irrefutable-binding detection in the Ident handler checked
 /// `tokens[i+1]` == `=` and `tokens[i+2]` == `>` (direct pattern `name => unreachable!`).
-/// When a guard appears, `tokens[i+1]` is `if` (not `=`), so the lookahead fails and no
-/// finding is produced. The `unreachable` fallback handler then sees `in_match_arm_position=true`
-/// (the fat-arrow tokens immediately precede `unreachable`) and incorrectly exempts it.
+/// When a guard appeared, `tokens[i+1]` was `if` (not `=`), so the lookahead failed and no
+/// finding was produced. The `unreachable` fallback handler then saw `in_match_arm_position=true`
+/// (the fat-arrow tokens immediately precede `unreachable`) and incorrectly exempted it; now GREEN.
 #[test]
 fn test_BC_2_14_003_flags_guarded_irrefutable_binding_catch_all() {
     let violation_guarded_binding =
@@ -2375,11 +2375,11 @@ fn test_BC_2_14_003_flags_guarded_irrefutable_binding_catch_all() {
 /// arm has body `99`, so no guarded-wildcard finding applies. `Phase::Done` is a named
 /// arm — Exemption-1 applies. Correct behavior: ZERO findings.
 ///
-/// RED GATE: the guarded-wildcard scan in the `_` handler iterates without a
-/// `,`-boundary stop. After seeing `_ if is_special() => 99 ,` it continues scanning,
-/// finds `Phase::Done => unreachable!(...)`, and emits a finding attributed to the
-/// `_ if` arm. The finding message points to the line of `Phase::Done`'s unreachable!,
-/// not to the `_ if` arm itself.
+/// Red-gate provenance: authored when the guarded-wildcard scan in the `_` handler iterated without a
+/// `,`-boundary stop. After seeing `_ if is_special() => 99 ,` it continued scanning,
+/// found `Phase::Done => unreachable!(...)`, and emitted a finding attributed to the
+/// `_ if` arm. The finding message pointed to the line of `Phase::Done's unreachable!,
+/// not to the `_ if` arm itself; now GREEN after boundary-stop fix.
 #[test]
 fn test_BC_2_14_003_guarded_wildcard_does_not_misattribute_cross_arm_unreachable() {
     // `_ if is_special() => 99` is benign (body is `99`, not unreachable!).
@@ -2431,10 +2431,10 @@ pub fn process(phase: Phase) -> i32 {
 /// as a zero-timeout violation. `Duration::from_micros(0)` evaluates to `Duration::ZERO`
 /// at runtime; {PC-001} requires d > Duration::ZERO.
 ///
-/// RED GATE: `is_zero_duration_timeout_arg` Form C checks for constructor names
+/// Red-gate provenance: authored when `is_zero_duration_timeout_arg` Form C checked for constructor names
 /// `from_secs | from_millis | from_nanos | from_secs_f64` at offset +6 in the flat
-/// token stream. `from_micros` is absent from the match list → returns `false` →
-/// the timeout is credited as valid → chain is reported compliant → no finding.
+/// token stream. `from_micros` was absent from the match list → returned `false` →
+/// the timeout was credited as valid → chain was reported compliant → no finding; now GREEN.
 #[test]
 fn test_BC_2_14_004_flags_timeout_from_micros_zero() {
     let src =
@@ -2456,9 +2456,9 @@ fn test_BC_2_14_004_flags_timeout_from_micros_zero() {
 /// as a zero-timeout violation. `Duration::from_secs_f32(0.0)` evaluates to `Duration::ZERO`
 /// at runtime; {PC-001} requires d > Duration::ZERO.
 ///
-/// RED GATE: `is_zero_duration_timeout_arg` Form C only matches `from_secs_f64` for
-/// floating-point constructors; `from_secs_f32` is absent → returns `false` → timeout
-/// credited as valid → no finding.
+/// Red-gate provenance: authored when `is_zero_duration_timeout_arg` Form C only matched `from_secs_f64` for
+/// floating-point constructors; `from_secs_f32` was absent → returned `false` → timeout
+/// was credited as valid → no finding; now GREEN.
 #[test]
 fn test_BC_2_14_004_flags_timeout_from_secs_f32_zero() {
     let src =
@@ -2490,10 +2490,10 @@ fn test_BC_2_14_004_flags_timeout_from_secs_f32_zero() {
 /// `Foo::Bar => std::unreachable!(...)` in a fully-enumerated no-wildcard exhaustive
 /// match MUST NOT be flagged. `std::unreachable!` is a legitimate Exemption-1 named arm.
 ///
-/// RED GATE: the `unreachable` handler's `in_match_arm_position` check inspects
+/// Red-gate provenance: authored when the `unreachable` handler's `in_match_arm_position` check inspected
 /// `tokens[i-2].as_char() == '='` and `tokens[i-1].as_char() == '>'`. For
-/// `std::unreachable!`, the token at i-1 is `::` (the second `:` of the path separator),
-/// not `>`, so `in_match_arm_position = false` → §PC-006 violation handler fires.
+/// `std::unreachable!`, the token at i-1 was `::` (not `>`), so `in_match_arm_position`
+/// was `false` → §PC-006 violation handler fired incorrectly; now GREEN after qualified-path fix.
 #[test]
 fn test_BC_2_14_003_std_qualified_unreachable_in_named_arm_not_flagged() {
     let src = r#"
@@ -2521,8 +2521,8 @@ pub fn handle_status(s: Status) -> i32 {
 /// `Foo::Bar => core::unreachable!(...)` in a fully-enumerated no-wildcard exhaustive
 /// match MUST NOT be flagged. Same root cause as the std:: variant.
 ///
-/// RED GATE: same as std::unreachable! — tokens[i-1] is `::` not `>` →
-/// `in_match_arm_position = false` → §PC-006 handler fires incorrectly.
+/// Red-gate provenance: same root cause as std::unreachable! — tokens[i-1] was `::` not `>` →
+/// `in_match_arm_position = false` → §PC-006 handler fired incorrectly; now GREEN.
 #[test]
 fn test_BC_2_14_003_core_qualified_unreachable_in_named_arm_not_flagged() {
     let src = r#"
@@ -2564,12 +2564,12 @@ pub fn handle_step(s: Step) -> i32 {
 /// named-arm exemption only applies when the `unreachable!` is the direct
 /// body expression of the arm, not when it is nested inside a closure.
 ///
-/// RED GATE: `visit_arm` pushes `false` (named arm) onto `arm_stack`, then
-/// calls `syn::visit::visit_expr` on the arm body. The closure
-/// `|_x| unreachable!(...)` is visited while `arm_stack.last() == Some(&false)`,
-/// so `handle_macro_invocation` treats it as Exemption-1 and silently skips
-/// the finding. The test asserts a finding IS produced → FAILS until the fix
-/// (arm_stack must be saved and cleared on closure-body entry, then restored).
+/// Red-gate provenance: authored when `visit_arm` pushed `false` (named arm) onto `arm_stack`, then
+/// called `syn::visit::visit_expr` on the arm body. The closure
+/// `|_x| unreachable!(...)` was visited while `arm_stack.last() == Some(&false)`,
+/// so `handle_macro_invocation` treated it as Exemption-1 and silently skipped
+/// the finding. The test asserted a finding IS produced and was authored failing
+/// until arm_stack was saved and cleared on closure-body entry; now GREEN.
 #[test]
 fn test_BC_2_14_003_pass6_closure_inside_named_arm_flagged() {
     // BC-2.14.003 §PC-006/§EC-007: unreachable! inside a closure nested within a
@@ -2603,13 +2603,13 @@ pub fn process(r: Result<Vec<i32>, String>) -> Vec<i32> {
 /// match arm MUST be FLAGGED. The nested function's body is an independently
 /// callable code path — it is NOT covered by the named-arm Exemption 1.
 ///
-/// RED GATE: same root cause as F-01a. `visit_item_fn` does not reset
-/// `arm_stack`, so the nested function body is visited while
-/// `arm_stack.last() == Some(&false)`. `handle_macro_invocation` sees
-/// a non-empty arm_stack with `false` at top → EXEMPT — the finding is
-/// never emitted. Test asserts a finding IS produced → FAILS until
-/// `visit_item_fn` (and `visit_impl_item_fn`) save and clear `arm_stack`
-/// on entry, restoring on exit.
+/// Red-gate provenance: same root cause as F-01a. `visit_item_fn` did not reset
+/// `arm_stack`, so the nested function body was visited while
+/// `arm_stack.last() == Some(&false)`. `handle_macro_invocation` saw
+/// a non-empty arm_stack with `false` at top → EXEMPT — the finding was
+/// never emitted. Test asserted a finding IS produced and was authored failing until
+/// `visit_item_fn` (and `visit_impl_item_fn`) saved and cleared `arm_stack`
+/// on entry, restoring on exit; now GREEN.
 #[test]
 fn test_BC_2_14_003_pass6_nested_fn_inside_named_arm_flagged() {
     // BC-2.14.003 §PC-006/§EC-007: unreachable! inside a nested fn definition
@@ -2652,15 +2652,15 @@ pub fn process(r: Result<i32, String>) -> i32 {
 /// test-only code; its methods must be treated identically to methods inside
 /// a `#[cfg(test)] mod tests { ... }` block.
 ///
-/// RED GATE: `PanicVisitor` has `visit_item_mod` (cfg(test) early return) and
+/// Red-gate provenance: authored when `PanicVisitor` had `visit_item_mod` (cfg(test) early return) and
 /// `visit_item_fn`/`visit_impl_item_fn` (cfg(test) early return on the function
-/// itself), but NO `visit_item_impl`. When the visitor traverses a
+/// itself), but NO `visit_item_impl`. When the visitor traversed a
 /// `#[cfg(test)] impl Checker { fn check_state() { x.unwrap(); } }` block, it
-/// descends into the impl items. `visit_impl_item_fn` is called for
-/// `check_state`, which has no `#[cfg(test)]` on the METHOD — only on the
-/// enclosing impl — so the skip does not fire. `.unwrap()` and `assert!(false)`
-/// inside `check_state` are wrongly flagged. Test asserts ZERO findings →
-/// FAILS until `visit_item_impl` with cfg(test) early-return is added.
+/// descended into the impl items. `visit_impl_item_fn` was called for
+/// `check_state`, which had no `#[cfg(test)]` on the METHOD — only on the
+/// enclosing impl — so the skip did not fire. `.unwrap()` and `assert!(false)`
+/// inside `check_state` were wrongly flagged. Test asserted ZERO findings and was
+/// authored failing until `visit_item_impl` with cfg(test) early-return was added; now GREEN.
 #[test]
 fn test_BC_2_14_003_pass6_cfg_test_impl_block_not_flagged() {
     // BC-2.14.003 §EC-007: .unwrap() and assert!() inside a #[cfg(test)]-
@@ -2757,14 +2757,14 @@ fn test_BC_2_14_003_pass6_syn_parse_failure_yields_fail_safe_finding() {
 /// reachable at runtime (same class as the closure and nested-fn cases corrected
 /// in pass-6).
 ///
-/// RED GATE: `visit_expr_async` is not overridden in PanicVisitor. `visit_arm`
-/// pushes `false` (named-arm exempt) onto `arm_stack`, then calls
+/// Red-gate provenance: authored when `visit_expr_async` was not overridden in PanicVisitor. `visit_arm`
+/// pushed `false` (named-arm exempt) onto `arm_stack`, then called
 /// `syn::visit::visit_expr` on the arm body. The `async move { ... }` ExprAsync
-/// node is visited by the default syn visitor, which descends into the async block
-/// body while `arm_stack.last() == Some(&false)`. `handle_macro_invocation` sees
-/// the leaked named-arm exempt flag and silently skips the finding. Test asserts a
-/// finding IS produced → FAILS until `visit_expr_async` saves and clears `arm_stack`
-/// on async-block entry (restoring on exit), identical to the pass-6 closure fix.
+/// node was visited by the default syn visitor, which descended into the async block
+/// body while `arm_stack.last() == Some(&false)`. `handle_macro_invocation` saw
+/// the leaked named-arm exempt flag and silently skipped the finding. The test asserted a
+/// finding IS produced and was authored failing until `visit_expr_async` saved and cleared `arm_stack`
+/// on async-block entry (restoring on exit); now GREEN.
 #[test]
 fn test_BC_2_14_003_async_block_inside_named_arm_flagged() {
     let src = r#"
@@ -2877,10 +2877,10 @@ pub fn process(r: Result<i32, String>) -> i32 {
 /// exemption requires every arm to be a named variant pattern; an irrefutable
 /// reference-binding is semantically a catch-all.
 ///
-/// RED GATE: `is_catch_all_pat` handles `Pat::Wild`, `Pat::Ident`, and `Pat::Or`
-/// only; `Pat::Reference` falls to the `_ => false` arm. A `&other =>` arm
-/// therefore pushes `false` (named-arm exempt) onto `arm_stack`, and the
-/// `unreachable!()` inside is incorrectly exempted via Exemption 1.
+/// Red-gate provenance: authored when `is_catch_all_pat` handled `Pat::Wild`, `Pat::Ident`, and `Pat::Or`
+/// only; `Pat::Reference` fell to the `_ => false` arm. A `&other =>` arm
+/// therefore pushed `false` (named-arm exempt) onto `arm_stack`, and the
+/// `unreachable!()` inside was incorrectly exempted via Exemption 1; now GREEN.
 #[test]
 fn test_BC_2_14_003_reference_catch_all_flagged() {
     let src = r#"
@@ -2916,10 +2916,10 @@ pub fn categorize(x: &u32) -> &'static str {
 /// requires every arm to be a named variant pattern; an irrefutable paren-binding
 /// is semantically a catch-all.
 ///
-/// RED GATE: `is_catch_all_pat` handles `Pat::Wild`, `Pat::Ident`, and `Pat::Or`
-/// only; `Pat::Paren` falls to the `_ => false` arm. A `(other) =>` arm
-/// therefore pushes `false` (named-arm exempt) onto `arm_stack`, and the
-/// `unreachable!()` inside is incorrectly exempted via Exemption 1.
+/// Red-gate provenance: authored when `is_catch_all_pat` handled `Pat::Wild`, `Pat::Ident`, and `Pat::Or`
+/// only; `Pat::Paren` fell to the `_ => false` arm. A `(other) =>` arm
+/// therefore pushed `false` (named-arm exempt) onto `arm_stack`, and the
+/// `unreachable!()` inside was incorrectly exempted via Exemption 1; now GREEN.
 #[test]
 fn test_BC_2_14_003_paren_catch_all_flagged() {
     let src = r#"
@@ -2988,11 +2988,11 @@ pub fn categorize(x: u32) -> &'static str {
 /// §EC-007 Exemption 1 applies ONLY to named variant patterns. A `ref other =>`
 /// binding-mode arm is NOT a named variant pattern.
 ///
-/// RED GATE: `is_catch_all_pat` for Pat::Ident checks `p.by_ref.is_none()`.
-/// When `ref` is present, `by_ref` is Some(Token![ref]) → check returns false →
-/// arm_stack push(false) → unreachable!() inside the arm is EXEMPT. The finding
-/// is never emitted. Test asserts a finding IS produced → FAILS until
-/// is_catch_all_pat is extended to treat `ref <binding>` as a catch-all.
+/// Red-gate provenance: authored when `is_catch_all_pat` for Pat::Ident checked `p.by_ref.is_none()`.
+/// When `ref` was present, `by_ref` was Some(Token![ref]) → check returned false →
+/// arm_stack push(false) → unreachable!() inside the arm was EXEMPT. The finding
+/// was never emitted. Test asserted a finding IS produced and was authored failing until
+/// is_catch_all_pat was extended to treat `ref <binding>` as a catch-all; now GREEN.
 #[test]
 fn test_BC_2_14_003_ref_binding_catch_all_flagged() {
     let violation_ref_binding =
@@ -3027,11 +3027,11 @@ fn test_BC_2_14_003_ref_binding_catch_all_flagged() {
 /// §EC-007 Exemption 1 applies ONLY to named variant patterns. A `mut other =>`
 /// binding-mode arm is NOT a named variant pattern.
 ///
-/// RED GATE: `is_catch_all_pat` for Pat::Ident checks `p.mutability.is_none()`.
-/// When `mut` is present, `mutability` is Some(Token![mut]) → check returns false →
-/// arm_stack push(false) → unreachable!() inside the arm is EXEMPT. The finding
-/// is never emitted. Test asserts a finding IS produced → FAILS until
-/// is_catch_all_pat is extended to treat `mut <binding>` as a catch-all.
+/// Red-gate provenance: authored when `is_catch_all_pat` for Pat::Ident checked `p.mutability.is_none()`.
+/// When `mut` was present, `mutability` was Some(Token![mut]) → check returned false →
+/// arm_stack push(false) → unreachable!() inside the arm was EXEMPT. The finding
+/// was never emitted. Test asserted a finding IS produced and was authored failing until
+/// is_catch_all_pat was extended to treat `mut <binding>` as a catch-all; now GREEN.
 #[test]
 fn test_BC_2_14_003_mut_binding_catch_all_flagged() {
     let violation_mut_binding =
@@ -3068,16 +3068,16 @@ fn test_BC_2_14_003_mut_binding_catch_all_flagged() {
 /// is reachable any time a caller invokes that method — completely independently
 /// of the match arm's context.
 ///
-/// RED GATE: PanicVisitor overrides `visit_item_fn`, `visit_impl_item_fn`,
-/// `visit_expr_closure`, and `visit_expr_async` — each saves and clears
-/// `arm_stack` on entry so nested callables don't inherit the named-arm exempt
-/// flag. But `visit_trait_item_fn` is NOT overridden. When a trait with a
-/// default method is defined inside a named arm body, the default method is
+/// Red-gate provenance: authored when PanicVisitor overrode `visit_item_fn`, `visit_impl_item_fn`,
+/// `visit_expr_closure`, and `visit_expr_async` — each saved and cleared
+/// `arm_stack` on entry so nested callables didn't inherit the named-arm exempt
+/// flag. But `visit_trait_item_fn` was NOT overridden. When a trait with a
+/// default method was defined inside a named arm body, the default method was
 /// visited by the default syn visitor while `arm_stack.last() == Some(&false)`.
-/// `handle_macro_invocation` sees the leaked named-arm exempt flag and silently
-/// skips the finding. Test asserts a finding IS produced → FAILS until
-/// `visit_trait_item_fn` saves and clears `arm_stack` on entry (restoring on exit),
-/// identical to the existing closure/nested-fn/async-block isolation pattern.
+/// `handle_macro_invocation` saw the leaked named-arm exempt flag and silently
+/// skipped the finding. Test asserted a finding IS produced and was authored failing until
+/// `visit_trait_item_fn` saved and cleared `arm_stack` on entry (restoring on exit),
+/// identical to the existing closure/nested-fn/async-block isolation pattern; now GREEN.
 #[test]
 fn test_BC_2_14_003_trait_default_method_inside_named_arm_flagged() {
     let src = r#"
