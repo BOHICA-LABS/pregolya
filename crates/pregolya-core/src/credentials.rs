@@ -436,22 +436,76 @@ mod tests {
     /// AC-012 (traces to BC-2.14.006 {PC-003})
     ///
     /// Validation failures NEVER return `None`, empty `Vec`, or zero-value defaults.
-    /// A table-driven test over fixed inputs `["", "   "]` asserts both return `Err(PregolyaError)`.
+    /// A table-driven test over ALL invalid inputs `["", "   "]` asserts each returns
+    /// `Err(PregolyaError { code: "E-CORE-005", category: Val, retry_hint: Never })`
+    /// for BOTH `OpenAiApiKey` and `AnthropicApiKey`.
     /// Additionally, valid inputs return `Ok(T)` where the inner value is accessible
     /// (not a silent empty/default).
     ///
-    /// GREEN: `new()` is implemented — invalid inputs return `Err`, valid inputs return `Ok(T)`.
+    /// GREEN: `new()` is implemented — all invalid inputs return `Err` with the canonical
+    /// error fields, and valid inputs return `Ok(T)`.
     #[test]
     fn test_BC_2_14_006_no_silent_default_on_invalid_inputs() {
-        // All of these must return Err — no silent None, no empty default
-        let invalid_inputs = ["", "   "];
+        // All of these must return Err — no silent None, no empty default.
         // Both inputs are definitively rejected (E-CORE-005 / VAL / Never):
         // "" → EC-004 (empty string); "   " → EC-006 (whitespace-only, per BC-2.14.006 v1.6).
-        let empty_result = OpenAiApiKey::new(invalid_inputs[0]);
-        assert!(
-            empty_result.is_err(),
-            "BC-2.14.006 {{PC-003}}: empty string must return Err, not None or Ok(default)"
-        );
+        let invalid_inputs = ["", "   "];
+
+        for input in invalid_inputs {
+            let openai_result = OpenAiApiKey::new(input);
+            assert!(
+                openai_result.is_err(),
+                "BC-2.14.006 {{PC-003}}: OpenAiApiKey input {:?} must return Err, not None or Ok(default)",
+                input
+            );
+            let openai_err = openai_result.unwrap_err();
+            assert_eq!(
+                openai_err.code(),
+                "E-CORE-005",
+                "BC-2.14.006 {{PC-003}}: OpenAiApiKey input {:?} must yield code 'E-CORE-005'; got: {:?}",
+                input,
+                openai_err.code()
+            );
+            assert!(
+                matches!(openai_err.category, Category::Val),
+                "BC-2.14.006 {{PC-003}}: OpenAiApiKey input {:?} must yield Category::Val; got: {:?}",
+                input,
+                openai_err.category
+            );
+            assert!(
+                matches!(openai_err.retry_hint, RetryHint::Never),
+                "BC-2.14.006 {{PC-003}}: OpenAiApiKey input {:?} must yield RetryHint::Never; got: {:?}",
+                input,
+                openai_err.retry_hint
+            );
+
+            let anthropic_result = AnthropicApiKey::new(input);
+            assert!(
+                anthropic_result.is_err(),
+                "BC-2.14.006 {{PC-003}}: AnthropicApiKey input {:?} must return Err, not None or Ok(default)",
+                input
+            );
+            let anthropic_err = anthropic_result.unwrap_err();
+            assert_eq!(
+                anthropic_err.code(),
+                "E-CORE-005",
+                "BC-2.14.006 {{PC-003}}: AnthropicApiKey input {:?} must yield code 'E-CORE-005'; got: {:?}",
+                input,
+                anthropic_err.code()
+            );
+            assert!(
+                matches!(anthropic_err.category, Category::Val),
+                "BC-2.14.006 {{PC-003}}: AnthropicApiKey input {:?} must yield Category::Val; got: {:?}",
+                input,
+                anthropic_err.category
+            );
+            assert!(
+                matches!(anthropic_err.retry_hint, RetryHint::Never),
+                "BC-2.14.006 {{PC-003}}: AnthropicApiKey input {:?} must yield RetryHint::Never; got: {:?}",
+                input,
+                anthropic_err.retry_hint
+            );
+        }
 
         // Valid input must return Ok(T) where expose_secret() returns a non-empty value
         let valid_result = OpenAiApiKey::new("sk-valid-key");

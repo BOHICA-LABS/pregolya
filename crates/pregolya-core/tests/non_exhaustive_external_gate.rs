@@ -269,14 +269,14 @@ fn test_all_pub_types_have_non_exhaustive() {
 
 // ── AC-007 compile-fail / compile-pass trybuild fixtures ─────────────────────
 //
-// BC-2.14.001 {PC-008} — all 11 fixture registrations consolidated into a single `ui()` test to
-// avoid spawning 11 independent trybuild processes (LOW-001 adv pass-2 provenance).
+// BC-2.14.001 {PC-008} — all 15 fixture registrations consolidated into a single `ui()` test to
+// avoid spawning 15 independent trybuild processes (LOW-001 adv pass-2 provenance).
 // The `TestCases` object batches all fixtures into one compilation run.
 //
 // Per-type documentation preserved as comments for AC-007 traceability.
 
 /// AC-007 (BC-2.14.001 {PC-008}): Compile-fail and compile-pass gate for all
-/// 5 `#[non_exhaustive]` types in `pregolya-core`.
+/// 7 `#[non_exhaustive]` types in `pregolya-core`.
 ///
 /// Fixtures are registered in type order: PregolyaError → ProblemDetail →
 /// Component → Category → RetryHint → OpenAiApiKey → AnthropicApiKey
