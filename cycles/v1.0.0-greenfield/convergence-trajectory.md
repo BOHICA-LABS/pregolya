@@ -6214,5 +6214,81 @@ DC-44 adversary pass — strict-streak pass 1 (streak 0/3 per TD-RECORDS-MICRO-B
 
 **OBS-1 [OBS]** — BC-2.14.002 {INV-004}/§Architecture Anchors prose precision: {INV-004} stated "defined once in pregolya-server" which was inaccurate — the S-1.01 implementation places the categorical default mapping in pregolya-core::error::PregolyaError::http_status(); pregolya-server only applies per-endpoint overrides and RFC-7807 response serialization on top, delegating the categorical map to core::http_status() rather than re-declaring it. §Architecture Anchors: pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause. Fix: BC-2.14.002 {INV-004} and §Architecture Anchors corrected (product-owner; BC-2.14.002→v1.13→v1.14). Records-only prose precision; no behavioral change; implementation verified correct.
 
-### Next pass
-S-1.01 LOCAL adversary pass 4 — strict-streak pass 1 (streak 0/3; targeting CLEAN(strict)=yes on feature/S-1.01 15158ee).
+### Next pass (S-1.01)
+S-1.01 LOCAL adversary passes 4-16 completed (passes 4-16 on feature/S-1.01 across multiple sessions; LOCAL 3-CLEAN CONVERGED 3/3 on frozen HEAD 1443d3d; D-367 SESSION WRAP; D-368 resumed + demo-recorder COMPLETE; PR-LEVEL 3-CLEAN CONVERGED on 769c3fd4 passes 17/18/19; D-369 S-1.01 MERGED PR #2 086c0dc).
+
+---
+
+## Phase-3 Wave-1 S-1.02 LOCAL Adversary Cascade
+
+> S-1.02 covers Error Policy enforcement (BC-2.14.003/004/005/006) in pregolya-core. Feature branch: feature/S-1.02. Kicked off immediately after S-1.01 merge (D-369).
+
+### S-1.02 LOCAL Cascade Overview (21 passes total)
+
+- **Behavioral convergence:** ~pass 9 (syn AST rewrite of check_no_panic detection closed the token-scanner class; allowlist catch-all + direct-arm-body exemption)
+- **Passes 1-9:** behavioral implementation findings — spec-drift (E-CORE-012 minted, BC updates), adjudication (Option-A fail-fast governs), code structural rewrites (check_no_panic, programmer-error-guard, timeout test)
+- **Passes 10-18:** descriptive-text/comment-accuracy + AC-body-accuracy stragglers (1 region per pass under fresh-context variance; passes 15/18 included genuine test-quality improvements)
+- **Passes 19-21:** CLEAN(strict)=yes + CLEAN(PR-merge)=yes; 3-CLEAN streak 1/3 → 2/3 → 3/3 CONVERGED
+- **Frozen HEAD:** 46727b0dd5c0f970c662d9643b106e2fcd3993d3
+- **Decision:** D-375 (2026-09-22)
+
+### Pass 15 (D-374, 2026-09-22) — AC-body accuracy fix
+
+- **Pass type:** LOCAL adversary fix-burst (AC-body accuracy)
+- **Findings closed:** F-01 (MED) AC-014 body corrected (empty-string/two-credential-newtypes; removed false claim of five inputs/three message types); F-02 (LOW) AC-012 corrected (property test→table-driven test); AC-001 sweep (compile-fail→unit test); AC-011 sweep (out-of-scope Message::human→OpenAiApiKey)
+- **CLEAN(strict):** no
+- **CLEAN(PR-merge):** no (MED finding present)
+- **Strict streak:** 0/3
+- **Artifacts bumped:** STORY-S-1.02→v1.7; STORY-INDEX→v2.06
+
+### Passes 16-18 — Descriptive-text straggler region (AC-body accuracy oscillation)
+
+- **Pattern:** Each fresh-context pass surfaced one additional AC-body descriptive accuracy gap under fresh-context variance. All findings were LOW or OBS (descriptive-text/comment-accuracy class).
+- **Pass 16:** LOW/OBS — descriptive-text accuracy in a distinct AC region; fix-burst applied same-burst; streak remains 0/3.
+- **Pass 17:** LOW/OBS — additional descriptive-text region; fix-burst applied; streak remains 0/3.
+- **Pass 18:** LOW + genuine test-quality improvement — AC-body accuracy + test strengthened (no-silent-default test asserted both invalid inputs: empty-string and whitespace-only); fix-burst applied; streak 0/3 (fix push per frozen-HEAD rule).
+- **Root cause (PGAP-AC-BODY-DESCRIPTIVE-TEXT-SWEEP, D-374):** Fix-bursts 10-18 applied minimal-scope corrections per-finding rather than sweeping ALL AC bodies in the same burst. Remediation: whole-story AC-body sweep required when any AC-body accuracy finding is closed.
+
+### Pass 19 (2026-09-22) — CLEAN — Streak 1/3
+
+- **Pass type:** LOCAL adversary (fresh context) on frozen HEAD 46727b0
+- **Findings:** ZERO
+- **CLEAN(strict):** yes
+- **CLEAN(PR-merge):** yes
+- **Strict streak:** 1/3 STREAK ACTIVE
+
+### Pass 20 (2026-09-22) — CLEAN — Streak 2/3
+
+- **Pass type:** LOCAL adversary (fresh context) on unchanged frozen HEAD 46727b0
+- **Findings:** ZERO
+- **CLEAN(strict):** yes
+- **CLEAN(PR-merge):** yes
+- **Strict streak:** 2/3 STREAK ACTIVE
+
+### Pass 21 (2026-09-22) — CLEAN — Streak 3/3 — CONVERGED
+
+- **Pass type:** LOCAL adversary (fresh context) on unchanged frozen HEAD 46727b0
+- **Findings:** ZERO
+- **CLEAN(strict):** yes
+- **CLEAN(PR-merge):** yes
+- **Strict streak:** 3/3 CONVERGED
+- **Frozen-HEAD rule:** All three streak passes (19/20/21) taken against unchanged HEAD 46727b0 with no intervening pushes. Streak valid per BC-5.39.001.
+
+### Trajectory Tail (passes 15-21)
+
+```
+pass-15 = 2[1MED+1LOW] AC-body accuracy fix (D-374) → streak 0/3
+→ pass-16 = 1LOW[RECORDS-class descriptive-text] → fix-burst → streak 0/3
+→ pass-17 = 1LOW[RECORDS-class descriptive-text] → fix-burst → streak 0/3
+→ pass-18 = 1LOW[RECORDS-class AC-body + test-quality improvement] → fix-burst + HEAD push → streak 0/3 (frozen-HEAD reset)
+→ pass-19 = 0/CLEAN(strict,streak1/3)
+→ pass-20 = 0/CLEAN(strict,streak2/3)
+→ pass-21 = 0/CLEAN(strict,streak3/3=CONVERGED)
+→ D-375 S-1.02 LOCAL 3-CLEAN CONVERGED on 46727b0
+```
+
+### S-1.02 Post-Convergence Status
+
+- Census UNCHANGED: BC 149 / VP 43 / EC 148 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22
+- PGAP-AC-BODY-DESCRIPTIVE-TEXT-SWEEP OPEN (cycle-close; D-374/D-375)
+- NEXT: demo-recorder per-AC evidence → push feature/S-1.02 → pr-manager 9-step PR cycle (PR-LEVEL adversary 3-CLEAN on pushed HEAD) → HUMAN merge (AI-authored PR, DIRECTIVE 4 caveat) → post-merge burst
