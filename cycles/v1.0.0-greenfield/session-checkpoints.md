@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "2.7"
+version: "2.8"
 changelog:
+  - "2.8 (D-371/2026-09-22): D-370 SPEC fix-burst checkpoint archived"
   - "2.7 (D-368/2026-09-19): D-367 session-wrap checkpoint archived"
   - "2.6 (D-356/DC-40 fix-burst/2026-09-09): D-356/DC-39 checkpoint archived"
   - "2.5 (D-356/DC-34 fix-burst/2026-09-08): D-356/DC-33 checkpoint archived"
@@ -5082,3 +5083,29 @@ Pre-Wave-1 spec reconciliation: CLOSED/CONVERGED (D-363; dual-lens CLEAN). devel
 2. pr-manager: full 9-step PR cycle (PR → develop; self-authored → route to human for merge per DIRECTIVE 4).
 3. state-manager POST-MERGE burst.
 4. Then next Wave-1 story.
+
+## D-370 Session Checkpoint (archived from STATE.md — D-371 pass-2 adjudication close 2026-09-22)
+
+<!-- Archived at D-371 pass-2 adjudication close; replaced by D-371 checkpoint in STATE.md. -->
+
+### PIPELINE POSITION
+Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→pregolya-graph→partners (D7). S-1.01 MERGED (PR #2; 086c0dc). S-1.02 LOCAL adversary pass-1 SPEC fix-burst COMPLETE (D-370). 3-CLEAN streak 0/3 (pass 1 had findings). Census: BC 149 / VP 43 / EC 148 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
+
+### DEVELOP STATE
+- develop = 086c0dc (squash-merge of feature/S-1.01; origin/develop synced). .worktrees/S-1.01 and feature/S-1.01 REMOVED.
+- feature/S-1.02: NOT YET CREATED. Code fix-burst pending.
+
+### RESUME NEXT-ACTIONS (at D-370)
+1. Orchestrator dispatches S-1.02 code fix-burst on feature/S-1.02:
+   - F-01: All library constructors return Result — no unwrap/expect in non-test code
+   - F-03: BC-2.14.003 scope clarification (code side: verify test coverage)
+   - F-04: BC-2.14.003 AC coverage gaps
+   - F-05: additional validation coverage
+   - error.rs D-01: implementation alignment
+2. After code fix-burst: LOCAL adversary pass-2 (targeting CLEAN(strict) to advance 3-CLEAN streak toward 1/3).
+3. S-1.03 (Message Types) and S-1.08 (Recursive Splitter) also READY (unblocked by S-1.01).
+
+### HEADS (at D-370)
+- develop = 086c0dc (origin/develop synced after squash-merge PR #2).
+- factory-artifacts: HEAD per D-370 commit — PUSHED.
+- feature/S-1.01: DELETED. feature/S-1.02: NOT YET CREATED.

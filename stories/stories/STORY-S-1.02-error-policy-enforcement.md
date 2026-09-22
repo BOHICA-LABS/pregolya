@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.3"
+version: "1.4"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -11,6 +11,7 @@ changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (round-79/F-P2A251-02 verify-pass (byte-exact H1 escaping)/2026-09-02): BC-2.14.005 table title cell corrected from escaped Deref\\<Target=str\\> to unescaped Deref<Target=str> to byte-match canonical H1."
   - "1.3 (POL-8 bc_array_changes_propagate_to_body_and_acs/2026-09-22): AC-015 added tracing BC-2.14.004 EC-006 (HttpClientBuildFailed, E-CORE-012, Category TRANSPORT, RetryHint Never); AC-016 added tracing BC-2.14.006 EC-006 (whitespace-only credential rejection, E-CORE-005, Category VAL, RetryHint Never). bcs frontmatter array unchanged (4 BCs)."
+  - "1.4 (POL-8 pass-2-adjudication/2026-09-22): AC-017 added tracing BC-2.14.003 EC-007 (check-no-panic FLAGS bare assert! without # Panics doc or BC-ID message and FLAGS wildcard unreachable!; EXEMPTS exhaustive-match unreachable! and documented programmer-error-guard assert!; two POL-31 live-violation fixtures); AC-018 added tracing BC-2.14.003 EC-006 (PregolyaError::new/to_problem/component_lowercase programmer-error guards compliant under narrow EC-006 exception — assert! with # Panics doc + BC-ID message, no unreachable!); AC-019 added tracing BC-2.14.004 EC-006 (E-CORE-012 build-failure test is non-ignored and exercises same production mapping path as build_client(), no duplicated test-only helper). bcs frontmatter array unchanged (4 BCs)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -49,8 +50,8 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003 |
-| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006, AC-015 |
+| BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003, AC-017, AC-018 |
+| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006, AC-015, AC-019 |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | AC-007..AC-010 |
 | BC-2.14.006 | Validation Failures Propagate Err(PregolyaError); No Silent None | AC-011..AC-014, AC-016 |
 
@@ -104,6 +105,15 @@ When `reqwest::ClientBuilder::build()` fails (e.g., due to an invalid TLS config
 ### AC-016 (traces to BC-2.14.006 EC-006)
 `OpenAiApiKey::new("   ")` and `AnthropicApiKey::new("   ")` (whitespace-only strings) return `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005", message: "value must not be empty or whitespace-only", .. })` — identical rejection semantics to an empty string. Whitespace-only values are never accepted as valid credentials. Verified by `test_BC_2_14_006_whitespace_only_rejected()`.
 
+### AC-017 (traces to BC-2.14.003 EC-007)
+`cargo xtask check-no-panic` enforces the programmer-error-guard gate per BC-2.14.003 EC-007: it FLAGS any `assert!` or `assert_eq!` call whose enclosing function doc comment lacks a `# Panics` section, and FLAGS any `_ => unreachable!(...)` wildcard match arm. It EXEMPTS a `unreachable!()` that appears only in fully-enumerated exhaustive match arms (every variant explicitly named; no wildcard `_` arm present in the same match expression), and EXEMPTS an `assert!` whose enclosing function has a `# Panics` doc section and whose assert message string contains a BC-ID matching the pattern `BC-\d+\.\d{2}\.\d{3}`. Two POL-31 live-violation fixtures reside under `xtask/tests/fixtures/violations/` — one containing a bare `assert!` (no `# Panics` doc) and one containing `_ => unreachable!()`. Both are detected and reported when `cargo xtask check-no-panic --fixture-mode` is invoked. Verified by `test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions()`.
+
+### AC-018 (traces to BC-2.14.003 EC-006)
+The programmer-error-guard asserts in `PregolyaError::new`, `PregolyaError::to_problem`, and `component_lowercase` satisfy the EC-006 narrow exception and are NOT flagged by `check-no-panic`: each enclosing function carries a `# Panics` doc section, and each assert message string contains a BC-ID (BC-2.14.001 and/or BC-2.14.003). These functions do NOT use `unreachable!()` macros in place of programmer-error guards, and contain NO bare asserts. Consequently, `cargo xtask check-no-panic` exits 0 on the completed `pregolya-core` crate tree despite these always-on programmer-error-guard asserts. Verified by `test_BC_2_14_003_programmer_error_guards_compliant()`.
+
+### AC-019 (traces to BC-2.14.004 EC-006)
+The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annotated `#[ignore]` and invokes the identical production error-mapping code path exercised by `build_client()` at runtime — no separate test-only mapping helper is introduced. The test must break if the production mapping path changes without a corresponding test update. Verified by `test_BC_2_14_004_build_failure_returns_transport_error()` (same test name as AC-015; this AC adds non-ignore and production-path constraints to AC-015's verifiable scope).
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -133,25 +143,28 @@ When `reqwest::ClientBuilder::build()` fails (e.g., due to an invalid TLS config
 | EC-005 | Validation field name contains special chars | Message escapes/sanitizes field name; no format injection |
 | EC-006a | `ClientBuilder::build()` fails (BC-2.14.004) | Returns `Err(PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never })`; build failure never panics |
 | EC-006b | Whitespace-only credential string, e.g. `"   "` (BC-2.14.006) | Rejected with same `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "value must not be empty or whitespace-only" })` as empty string |
+| EC-007 | Bare `assert!` in production function without `# Panics` doc section | `check-no-panic` FLAGS it; bare assert does not satisfy the EC-007 narrow exception |
+| EC-008 | `_ => unreachable!(...)` wildcard arm in a match expression | `check-no-panic` FLAGS it; wildcard-arm `unreachable!` is never exempt regardless of context |
+| EC-009 | Programmer-error-guard `assert!` with `# Panics` doc + BC-ID in assert message, on a function whose precondition is not runtime-data-derived | `check-no-panic` EXEMPTS it; exits 0 for this pattern per BC-2.14.003 EC-007 narrow exception |
 
 ## Token Budget Estimate (MANDATORY)
 
 | Context Source | Estimated Tokens |
 |---------------|-----------------|
-| This story spec | ~3,500 |
+| This story spec | ~4,200 |
 | BC-2.14.003.md through BC-2.14.006.md (4 files, ~150 lines each) | ~10,000 |
 | `module-decomposition.md` (SS-14 section) | ~500 |
 | `credentials.rs` + `http.rs` (to create, ~80 lines each) | ~2,000 |
 | `xtask/src/` (3 new xtask modules, ~60 lines each) | ~2,000 |
 | Test files (~120 lines) | ~1,800 |
 | Tool outputs | ~500 |
-| **Total** | **~20,300** |
+| **Total** | **~21,000** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~10%** |
+| **Budget usage** | **~11%** |
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-016 (test-writer)
+1. [ ] Write failing tests for AC-001 through AC-019 (test-writer)
 2. [ ] Verify Red Gate — all new tests fail or error at start
 3. [ ] Create `pregolya-core/src/credentials.rs` — `OpenAiApiKey`, `AnthropicApiKey` newtypes with redacted Debug
 4. [ ] Create `pregolya-core/src/http.rs` — `build_client()` with 30s timeout, no `Client::new()`
@@ -163,6 +176,8 @@ When `reqwest::ClientBuilder::build()` fails (e.g., due to an invalid TLS config
 10. [ ] Add static-assertions for credential type constraints
 11. [ ] Run `cargo xtask check-no-panic && cargo xtask check-client-timeout && cargo xtask deny-bare-api-key` — all exit 0
 12. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
+13. [ ] Add two POL-31 live-violation fixtures under `xtask/tests/fixtures/violations/` (bare `assert!` without `# Panics` doc; `_ => unreachable!()` wildcard arm) and confirm `cargo xtask check-no-panic --fixture-mode` detects both
+14. [ ] Add CHANGELOG entry under [Unreleased] > Added describing shipped no-panic enforcement, HTTP timeout policy, credential newtype redaction, and validation propagation behavior before creating the PR
 
 ## Previous Story Intelligence (MANDATORY)
 

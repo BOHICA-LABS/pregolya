@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.003
-version: "1.4"
+version: "1.5"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -19,6 +19,7 @@ changelog:
   - "1.2 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: EC-002 `PregolyaError { ... }` — replaced `...` with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION); TV-002 Expected Output — added `, ..` (CLASS3 VIOLATION, 2/5 fields). Xtask rename (D-35/D-80): 5 occurrences of `cargo xtask lint-no-panic` → `cargo xtask check-no-panic` in PC4, TV-003, TV-004, VP-DI008-01, Architecture Anchors. No behavioral change."
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.5 (S-1.02-adv-pass-2/CRITICAL-F-A+F-B/2026-09-22, product-owner): CRITICAL-F-A — BC↔BC contradiction adjudicated (Option A: fail-fast governs). {PC-005} revised to carve a narrow programmer-error-guard exception; EC-006 added defining the programmer-error-guard-assertion policy and the precise boundary between programmer-error (panic) and runtime-data-error (Result). {PC-006} revised to enumerate both permitted panic paths and to explicitly state that an unconditional unreachable!() exemption does NOT exist in this contract. EC-004 clarified: the _other => unreachable!() wildcard form is NOT the exempt form; only the fully-enumerated no-wildcard form is exempt. F-B — EC-007 added specifying the exact check-no-panic gate discipline for the two narrow exemptions (exhaustive-match unreachable! and programmer-error-guard assert); records the implementer error-of-record (an unconditional unreachable! exemption was falsely cited as BC-2.14.003 product-owner guidance; no such guidance exists in this BC)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -69,11 +70,20 @@ implements DI-008 (Library Constructor Result Contract) uniformly.
 4. {PC-004} The codebase contains zero occurrences of `.unwrap()` or `.expect(...)` in non-test library
    source files. CI `cargo xtask check-no-panic` (or equivalent custom clippy lint) causes the
    build to fail on any violation.
-5. {PC-005} Bare `assert!` and `assert_eq!` macros are absent from non-test library code. `debug_assert!`
-   is permitted (it compiles out in release mode).
-6. {PC-006} `panic!` is absent from non-test library code except where the Rust type system guarantees
-   the panic path is statically unreachable (e.g. in an `unreachable!()` arm after an exhaustive
-   match on an enum with no unknown variants).
+5. {PC-005} Bare `assert!` and `assert_eq!` macros are absent from non-test library code, with one
+   narrow exception: programmer-error guard assertions in constructor-validation functions that
+   enforce a documented API precondition on a programmer-supplied value that cannot be expressed
+   as a compile-time type constraint (see EC-006 for the full policy and boundary definition).
+   `debug_assert!` is permitted without restriction ({INV-003}).
+6. {PC-006} `panic!` is absent from non-test library code except:
+   (a) in an `unreachable!()` arm of a match expression that enumerates every runtime-reachable
+       variant explicitly — with NO wildcard arm — such that the compiler enforces exhaustiveness
+       without the `unreachable!()` sentinel (see EC-004); and
+   (b) in programmer-error guard assertions satisfying the policy in EC-006.
+   An unconditional `unreachable!()` exemption (exempting all `unreachable!` calls regardless
+   of match context) does NOT exist in this contract. A `_ => unreachable!()` wildcard arm
+   is not a statically-unreachable path — it is trivially reachable by adding a new enum
+   variant — and is NOT exempt. See EC-004 for the correct form and EC-007 for gate discipline.
 
 ## Invariants
 
@@ -111,16 +121,99 @@ only (not macro-generated code or `OUT_DIR`). Macro-generated panics are a separ
 tracked via fuzz testing (CAP-019).
 
 ### EC-004: unreachable!() in exhaustive match
-**Scenario:** `match category { Category::Val => ..., ... /* all 12 arms covered */ _other => unreachable!() }`.
-**Expected behavior:** The lint accepts `unreachable!()` in exhaustive matches where every
-runtime-reachable variant is covered. Preferred form is `match category { ... }` with all enum
-arms enumerated — no `_other` wildcard — so the compiler enforces exhaustiveness without
-the `unreachable!()` sentinel.
+**Scenario:** `match category { Category::Val => ..., ... /* all 14 arms covered */ _other => unreachable!() }`.
+**Expected behavior:** The `_ => unreachable!()` form shown above is NOT exempt. The wildcard
+arm is trivially reachable at compile time (adding a new `Category` variant compiles fine and
+silently falls into the wildcard), which means the panic path is NOT statically unreachable —
+the compiler does not enforce exhaustiveness on `_`.
+**Exempt (correct) form:** `match category { Category::Val => ..., Category::Auth => ...,
+... /* all variants enumerated explicitly, no wildcard */ }`. When all variants are explicitly
+named, adding a new variant produces a compile error at every match site — the compiler
+enforces exhaustiveness without an `unreachable!()` sentinel. In this form `unreachable!()` is
+not needed and should be omitted. If a legacy match requires a fallback arm, prefer returning
+`Result::Err` or a defined default value over `unreachable!()`.
+**Gate implication:** `cargo xtask check-no-panic` must flag `_ => unreachable!()` as a
+violation. Only match arms where every named variant appears explicitly (verifiable via the
+compiler's exhaustiveness check) satisfy the static-unreachability requirement. See EC-007.
 
 ### EC-005: Test-only panic via expect
 **Scenario:** `#[cfg(test)] fn setup_test_graph() -> Graph { Graph::new(...).expect("test setup") }`.
 **Expected behavior:** The lint does not flag this — test code is explicitly exempt. The function
 is in `#[cfg(test)]` scope.
+
+### EC-006: Programmer-error guard assertions in constructor-validation functions
+**Scenario:** A library constructor validates an API precondition that is the caller's
+responsibility to satisfy — for example, `PregolyaError::new()` checking that `code` matches
+the `E-<COMPONENT>-NNN` format (BC-2.14.001 EC-006) or that `code`'s COMPONENT segment matches
+the supplied `component` variant (BC-2.14.001 EC-007), or that a `Component::Custom` name does
+not collide with a named component identifier (BC-2.14.001 EC-002).
+**Policy:** A bare `assert!` macro is permitted in non-test library code ONLY when ALL FIVE
+conditions are met:
+  1. **Programmer-supplied precondition, not runtime data.** The assertion guards a value that
+     the calling programmer is responsible to supply correctly — not a value read from external
+     input, a config file, a network response, or any source where failure is a normal runtime
+     outcome. Example: an error code string supplied as a string literal in the calling module
+     is programmer-supplied; a config string read from a file at runtime is not.
+  2. **Not expressible as a compile-time type constraint.** If the constraint could be enforced
+     by the type system (e.g., a newtype wrapper that validates at construction, or an enum
+     variant), that compile-time form is preferred. The assert is only justified when the
+     value's correctness invariant spans multiple arguments or requires cross-field validation
+     that the type system cannot express (e.g., code↔component binding, Custom-name charset).
+  3. **A fallible return creates infinite regress.** Returning `Err(PregolyaError)` is
+     semantically impossible when the error is "the PregolyaError being constructed is malformed"
+     — the returned PregolyaError itself would need a valid code, creating infinite regress.
+     This condition is specific to error-infrastructure types; it does NOT apply to ordinary
+     library constructors, which must return `Result` per {PC-001}.
+  4. **Documented `# Panics` section in the function's doc comment.** The function must include
+     an explicit Rust doc comment `# Panics` section listing each exact precondition that
+     triggers the assert, worded as "Panics if [precondition]."
+  5. **Assert message cites the BC-ID and EC-ID.** The `assert!` message must cite the
+     originating behavioral contract:
+     `assert!(well_formed, "BC-2.14.001 EC-006: code must match E-<COMPONENT>-NNN; got {code}")`.
+**Boundary — programmer-error vs runtime-data error:**
+  - `PregolyaError::new("CORE-001", ...)` — `"CORE-001"` is structurally malformed → programmer
+    error → assert! (all 5 conditions met per BC-2.14.001 EC-006).
+  - `Config::new("")` — `""` is structurally valid UTF-8, just semantically empty → runtime data
+    failure → must return `Err(PregolyaError { category: VAL, .. })`, never panic.
+  - `parse_url_from_config(config_value)` — config_value comes from a file at runtime → runtime
+    data failure → must return `Err`, never panic.
+**Canonical examples per BC-2.14.001:**
+  - BC-2.14.001 EC-002: Custom-name lowercased collision check in `PregolyaError::new()`.
+  - BC-2.14.001 EC-006: Code format (`E-<COMPONENT>-NNN`) check in `PregolyaError::new()`.
+  - BC-2.14.001 EC-007: Code↔component binding check in `PregolyaError::new()` and `to_problem()`.
+
+### EC-007: check-no-panic gate discipline (unreachable! scope and programmer-error-guard scope)
+**Gate requirements under this contract:**
+`cargo xtask check-no-panic` must implement exactly TWO narrow exemptions — and must add a
+live-violation fixture (per POL-31) confirming both exemptions and both violation forms are
+correctly identified:
+
+**Exemption 1 — exhaustive-match unreachable!():**
+Permitted only in a match arm where every runtime-reachable variant is explicitly enumerated
+without any wildcard arm, and the compiler's exhaustiveness check fires on a missing variant.
+The gate must detect and flag `_ => unreachable!()` (wildcard arm) as a violation — this form
+does not satisfy {PC-006}(a). Implementation: AST-walk to verify that in the same match block,
+every arm is a named pattern (not `_` or `..`), and the enum has `#[non_exhaustive]` absent
+or all variants present.
+
+**Exemption 2 — programmer-error-guard assert!:**
+Permitted only in functions whose doc comment contains a `# Panics` section AND whose `assert!`
+message string literal contains a BC-ID in the form `BC-N.NN.NNN`. The gate grants the
+exemption only when both syntactic conditions are verifiable from the AST; if either is absent,
+the `assert!` is flagged as a violation.
+
+**Live-violation fixture requirement (POL-31):** The `check-no-panic` xtask must ship two
+test fixtures:
+  - `fixtures/violation_assert_no_doc.rs`: bare `assert!` in non-test code without `# Panics`
+    doc and without BC-ID message → gate must flag as violation.
+  - `fixtures/violation_unreachable_wildcard.rs`: `_ => unreachable!()` wildcard form → gate
+    must flag as violation.
+The gate's own test suite verifies that both fixtures produce non-zero exit codes.
+
+**Implementer error-of-record (S-1.02 pass-2 cascade):** The implementer cited "BC-2.14.003
+product-owner guidance" for an unconditional `unreachable!()` exemption (exempting ALL
+`unreachable!` calls regardless of match context). No such guidance exists in this BC. The
+unconditional exemption is broader than {PC-006}(a) and the gate must be narrowed accordingly.
 
 ## Canonical Test Vectors
 

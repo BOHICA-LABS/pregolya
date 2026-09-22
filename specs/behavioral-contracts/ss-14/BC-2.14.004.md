@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.7"
+version: "1.8"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -22,6 +22,7 @@ changelog:
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.7 (S-1.02-adv-pass-1/F-02+F-06/2026-09-22, product-owner): F-02 — EC-006 added for `ClientBuilder::build()` failure path citing E-CORE-012 (HttpClientBuildFailed, TRANSPORT, Never); E-CORE-012 minted in error-taxonomy.md §E-CORE-012 same burst. F-06 — Wave-0 scoped-coverage note added to {PRE-001} and §Description documenting that the xtask mechanical gate enforces the reqwest `ClientBuilder` surface only; non-reqwest HTTP clients (hyper, async-openai, etc.) are enforced by code-convention and adversarial review until a later wave introduces them and the gate is extended."
+  - "1.8 (S-1.02-adv-pass-2/F-D/2026-09-22, product-owner): {PC-006} clarified — reqwest's total .timeout(duration) covers the full elapsed time including the TCP connection-establishment phase, so it satisfies DI-009 ('no indefinite hang') without requiring a separate .connect_timeout() call. Setting .connect_timeout() is recommended for faster failure-detection on providers with unreliable network paths, but is not required when a total .timeout(duration > 0) is already set. The prior text 'both must be set' was ambiguous about reqwest's semantics; the amended text aligns with the S-1.01 implementation (which sets .timeout() only) and the fundamental DI-009 guarantee."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -86,9 +87,16 @@ Connection Timeout) uniformly.
    message: "ProviderTimeout: request timed out after <duration>", .. })`
    (where `<duration>` is the configured HTTP client timeout, e.g., "30s")
    — not a hang, not a panic.
-6. {PC-006} Connection timeout and request timeout are both set (if the HTTP crate distinguishes them);
-   a connection timeout without a request timeout still leaves the system vulnerable to slow
-   responses, so both must be set to non-zero values.
+6. {PC-006} When the HTTP crate distinguishes connection timeout from total request timeout (as
+   `reqwest` does via `.connect_timeout()` and `.timeout()` respectively), setting `.timeout(d > 0)`
+   is sufficient to satisfy DI-009 — reqwest's `.timeout(duration)` measures total elapsed time
+   from the start of the request including the connection-establishment phase, so a stuck TCP
+   handshake is terminated once the total timeout fires. Setting a separate `.connect_timeout(d)`
+   is recommended for faster failure detection on providers with unreliable network paths (e.g.
+   multi-datacenter routing, high-latency upstreams), but is not required when a total
+   `.timeout(duration > 0)` is already set. If both are configured, `.connect_timeout()` must also
+   be a non-zero duration less than or equal to the total `.timeout()` (e.g.
+   `.connect_timeout(Duration::from_secs(10)).timeout(Duration::from_secs(30))`).
 
 ## Invariants
 
