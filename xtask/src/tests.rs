@@ -23,6 +23,18 @@ pub fn production_fn() -> i32 {
         !findings.is_empty(),
         "should detect unwrap in production code after cfg(test) mod decl; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// Correctly suppressed: `.unwrap()` inside an inline `#[cfg(test)]` block
@@ -84,6 +96,18 @@ pub fn production_fn() -> i32 {
         !findings.is_empty(),
         "should detect unwrap in production code after cfg(test) block closes; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 // ── check-client-timeout gate ────────────────────────────────────────────
@@ -98,6 +122,18 @@ fn test_timeout_scanner_does_not_suppress_standard_tests_crate() {
     assert!(
         !findings.is_empty(),
         "should detect missing timeout in standard-tests crate; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -140,6 +176,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         !findings.is_empty(),
         "string-literal {{ must not latch in_test_block; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// F-2 regression: line with Client::new() AND a URL string containing //
@@ -152,6 +200,18 @@ fn test_timeout_scanner_flags_client_new_on_line_with_url_string() {
         !findings.is_empty(),
         "Client::new() on line with URL string must be flagged; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// F-3 regression: Client::builder().build() on same line without .timeout() must be flagged.
@@ -162,6 +222,18 @@ fn test_timeout_scanner_flags_builder_build_without_timeout_single_line() {
     assert!(
         !findings.is_empty(),
         "Client::builder().build() without .timeout() must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -192,6 +264,15 @@ fn test_is_test_file_patterns() {
     // Must NOT flag arbitrary files that happen to have "test" in a directory name
     // other than a `tests/` component.
     assert!(!is_test_file("crates/pregolya-core/src/latest.rs"));
+
+    // Must exclude examples/ — demonstration executables are not library code
+    // and may legitimately use .expect() and println! for clarity.
+    assert!(is_test_file(
+        "crates/pregolya-core/examples/error_taxonomy_demo.rs"
+    ));
+    assert!(is_test_file(
+        "crates/pregolya-graph/examples/basic_graph.rs"
+    ));
 }
 
 // ── B-2 regression tests ─────────────────────────────────────────────────
@@ -209,6 +290,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         !findings.is_empty(),
         "double-backslash before closing quote must not latch test block; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-2 regression: brace in char literal must not skew brace depth.
@@ -224,6 +317,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
         !findings.is_empty(),
         "brace in char literal must not skew depth; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-2 regression: double-quote in char literal must not toggle string mode.
@@ -238,6 +343,18 @@ pub fn prod() -> i32 { let x: Option<i32> = Some(1); x.unwrap() }
     assert!(
         !findings.is_empty(),
         "double-quote in char literal must not latch test block; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -277,6 +394,18 @@ fn test_timeout_scanner_still_flags_reqwest_client_new() {
         !findings.is_empty(),
         "reqwest::Client::new() must still be flagged; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 // ── B-3 / B-4 regression tests ───────────────────────────────────────────
@@ -299,6 +428,18 @@ pub fn foo<'a>(x: &'a str) -> i32 {
         !findings.is_empty(),
         "lifetime annotation must not latch char-literal mode; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-4 regression: unqualified Client::new() (from use import) must be flagged.
@@ -310,6 +451,18 @@ fn test_timeout_scanner_flags_unqualified_client_new_from_import() {
     assert!(
         !findings.is_empty(),
         "unqualified Client::new() (use reqwest::Client import) must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -360,6 +513,18 @@ fn test_no_panic_cfg_test_in_comment_does_not_latch() {
         !findings.is_empty(),
         "cfg(test) in comment must not suppress production code; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 /// B-6 regression: braces in // comments must NOT skew brace_depth.
@@ -370,6 +535,18 @@ fn test_no_panic_braces_in_comment_do_not_skew_depth() {
     assert!(
         !findings.is_empty(),
         "brace in comment must not skew depth; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -404,6 +581,18 @@ fn test_no_panic_non_ascii_line_does_not_corrupt_depth() {
         !findings.is_empty(),
         "non-ASCII before // must not cause comment boundary miss; got: {findings:?}"
     );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
 }
 
 // ── B-8 regression test ──────────────────────────────────────────────────
@@ -418,6 +607,18 @@ fn test_no_panic_cfg_test_use_statement_does_not_latch() {
     assert!(
         !findings.is_empty(),
         "cfg(test) use stmt must not latch pending_cfg_test; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains(".unwrap()") || f.contains(".expect(") || f.contains("panic!")),
+        "expected no-panic violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
     );
 }
 
@@ -457,5 +658,441 @@ fn test_timeout_lex_error_propagates_as_finding() {
         findings[0].contains("FAILED TO LEX FILE"),
         "finding must contain 'FAILED TO LEX FILE'; got: {}",
         findings[0]
+    );
+}
+
+// ── deny-anyhow-in-lib scanner ───────────────────────────────────────────
+
+/// Production-scope `use anyhow` must be flagged.
+#[test]
+fn test_deny_anyhow_flags_production_use() {
+    let src = r#"
+use anyhow::Context as _;
+
+pub fn do_thing() -> anyhow::Result<()> {
+    Ok(())
+}
+"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "production `use anyhow` must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("anyhow")),
+        "expected anyhow violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// `use anyhow` inside `#[cfg(test)]` must NOT be flagged.
+#[test]
+fn test_deny_anyhow_skips_cfg_test_scope() {
+    let src = r#"
+pub fn production_fn() {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Context as _;
+
+    #[test]
+    fn compat_test() {
+        let _: anyhow::Result<()> = Ok(());
+    }
+}
+"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/error.rs");
+    assert!(
+        findings.is_empty(),
+        "`use anyhow` inside #[cfg(test)] must not be flagged; got: {findings:?}"
+    );
+}
+
+/// Test files must be excluded entirely from the anyhow scanner.
+#[test]
+fn test_deny_anyhow_skips_test_files() {
+    let src = r#"use anyhow::Result;"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/tests/compat.rs");
+    assert!(
+        findings.is_empty(),
+        "test-file paths must be excluded from anyhow scan; got: {findings:?}"
+    );
+}
+
+/// Examples files must be excluded entirely from the anyhow scanner.
+#[test]
+fn test_deny_anyhow_skips_examples_files() {
+    let src = r#"use anyhow::Result;"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/examples/error_demo.rs");
+    assert!(
+        findings.is_empty(),
+        "examples-file paths must be excluded from anyhow scan; got: {findings:?}"
+    );
+}
+
+// ── AllowList unit tests ──────────────────────────────────────────────────────
+
+/// Exact match: the allowlist entry path exactly matches the input path.
+#[test]
+fn test_allowlist_exact_match() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/bar.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(al.is_allowed("crates/foo/src/bar.rs"));
+}
+
+/// Absolute-path suffix match: an absolute path ending with the workspace-relative path is allowed.
+#[test]
+fn test_allowlist_absolute_path_suffix_match() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/bar.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(al.is_allowed("/workspace/crates/foo/src/bar.rs"));
+}
+
+/// Sibling crate must NOT be matched by an entry for a different crate's file.
+#[test]
+fn test_allowlist_sibling_crate_not_matched() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/error.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(
+        !al.is_allowed("crates/bar/src/error.rs"),
+        "sibling crate must not match"
+    );
+}
+
+/// A completely unrelated path must not match any allowlist entry.
+#[test]
+fn test_allowlist_unrelated_path_not_matched() {
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: "crates/foo/src/error.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    assert!(!al.is_allowed("crates/totally/different/file.rs"));
+}
+
+/// Empty allowlist allows nothing.
+#[test]
+fn test_allowlist_empty_allows_nothing() {
+    let al = AllowList { allow: vec![] };
+    assert!(!al.is_allowed("crates/foo/src/bar.rs"));
+}
+
+// ── validate_allowlist_entry_path unit tests ─────────────────────────────────
+
+/// Valid paths (crates/ and xtask/ prefixes with depth >= 2 slashes).
+#[test]
+fn test_validate_allowlist_entry_accepts_valid() {
+    assert!(validate_allowlist_entry_path("crates/pregolya-core/src/error.rs").is_ok());
+    assert!(validate_allowlist_entry_path("xtask/src/main.rs").is_ok());
+}
+
+/// Bare filename (no slash) must be rejected.
+#[test]
+fn test_validate_allowlist_entry_rejects_bare_filename() {
+    assert!(validate_allowlist_entry_path("error.rs").is_err());
+}
+
+/// Shallow path (only one slash, e.g. crates/foo.rs) must be rejected.
+#[test]
+fn test_validate_allowlist_entry_rejects_shallow_path() {
+    assert!(validate_allowlist_entry_path("crates/foo.rs").is_err());
+}
+
+/// Paths that don't start with crates/ or xtask/ must be rejected.
+#[test]
+fn test_validate_allowlist_entry_rejects_wrong_prefix() {
+    assert!(validate_allowlist_entry_path("/abs/path/crates/foo/src/bar.rs").is_err());
+    assert!(validate_allowlist_entry_path("src/error.rs").is_err());
+}
+
+// ── count_cfg_test_lines unit tests ──────────────────────────────────────────
+
+/// FIX-C: Verifies count_cfg_test_lines skips blank lines and comment-only lines
+/// inside the #[cfg(test)] block. The count must be EXACT (not just >= 2) so that
+/// the gate produces a stable, predictable subtraction budget.
+///
+/// The block contains:
+///   #[cfg(test)]   ← code line (FIX-K: attribute line included in count)
+///   mod tests {    ← code line
+///   // comment     ← NOT counted
+///   (blank)        ← NOT counted
+///   fn a_test() {} ← code line
+///   fn b_test() {} ← code line
+///   }              ← code line
+///
+/// Expected count = 5 code lines.
+#[test]
+fn test_count_cfg_test_lines_excludes_blanks_and_comments() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_basic_pregolya_s101.rs");
+    let content = "\
+fn production() {}\n\
+\n\
+#[cfg(test)]\n\
+mod tests {\n\
+    // a comment line (should NOT be counted)\n\
+\n\
+    fn a_test() {}\n\
+    fn b_test() {}\n\
+}\n";
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    // #[cfg(test)], mod tests {, fn a_test() {}, fn b_test() {}, closing } = 5
+    assert_eq!(
+        count, 5,
+        "expected exactly 5 code lines in cfg(test) block, got {count}"
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+/// FIX-C: A file with no #[cfg(test)] block must return 0 (not a spurious count).
+#[test]
+fn test_count_cfg_test_lines_no_cfg_test_block_returns_zero() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_no_block_pregolya_s101.rs");
+    let content = "pub fn production() {}\npub fn another() {}\n";
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    assert_eq!(count, 0, "no cfg(test) block → expected 0, got {count}");
+    let _ = std::fs::remove_file(&path);
+}
+
+/// FIX-C: A file with #[cfg(not(test))] must return 0 — this is a FIX-B regression
+/// guard confirming that `is_cfg_test_group` does NOT match cfg(not(test)).
+#[test]
+fn test_count_cfg_test_lines_cfg_not_test_returns_zero() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_not_test_pregolya_s101.rs");
+    let content = "#[cfg(not(test))]\nmod non_test_mod {\n    fn foo() {}\n    fn bar() {}\n}\n";
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    assert_eq!(
+        count, 0,
+        "#[cfg(not(test))] must not be counted as cfg(test) block; got {count}"
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+/// FIX-C: A file with TWO #[cfg(test)] blocks must return the SUM of both counts.
+#[test]
+fn test_count_cfg_test_lines_two_blocks_sums_correctly() {
+    let path = std::path::PathBuf::from("/tmp/test_cfg_count_two_blocks_pregolya_s101.rs");
+    // Each block: #[cfg(test)], mod, one fn, closing } = 4 code lines
+    let content = "\
+pub fn production() {}\n\
+\n\
+#[cfg(test)]\n\
+mod tests_a {\n\
+    fn test_one() {}\n\
+}\n\
+\n\
+#[cfg(test)]\n\
+mod tests_b {\n\
+    fn test_two() {}\n\
+}\n";
+    std::fs::write(&path, content).expect("write temp file");
+    let count = count_cfg_test_lines(&path);
+    // Block A: #[cfg(test)], mod tests_a {, fn test_one() {}, } = 4
+    // Block B: #[cfg(test)], mod tests_b {, fn test_two() {}, } = 4
+    // Total = 8
+    assert_eq!(count, 8, "two cfg(test) blocks → expected 8, got {count}");
+    let _ = std::fs::remove_file(&path);
+}
+
+// ── is_test_class_file tests ──────────────────────────────────────────────────
+
+/// FIX-D: is_test_class_file must return TRUE for test-tier paths and FALSE
+/// for non-test paths. This mirrors is_test_file coverage but is distinct:
+/// is_test_class_file excludes examples/ and benches/ (they use production thresholds).
+#[test]
+fn test_is_test_class_file_patterns() {
+    // --- TRUE cases (test-tier thresholds apply) ---
+    assert!(
+        is_test_class_file("crates/pregolya-core/tests/integration.rs"),
+        "tests/ directory component → test class"
+    );
+    assert!(
+        is_test_class_file("crates/pregolya-core/src/tests.rs"),
+        "tests.rs filename → test class"
+    );
+    assert!(
+        is_test_class_file("src/foo_test.rs"),
+        "_test.rs suffix → test class"
+    );
+    assert!(
+        is_test_class_file("src/foo_tests.rs"),
+        "_tests.rs suffix → test class"
+    );
+
+    // --- FALSE cases (production thresholds apply) ---
+    assert!(
+        !is_test_class_file("crates/pregolya-core/examples/error_taxonomy_demo.rs"),
+        "examples/ → NOT test class (production thresholds)"
+    );
+    assert!(
+        !is_test_class_file("crates/pregolya-core/benches/bench_errors.rs"),
+        "benches/ → NOT test class (production thresholds)"
+    );
+    assert!(
+        !is_test_class_file("crates/pregolya-core/src/lib.rs"),
+        "regular src file → NOT test class"
+    );
+    assert!(
+        !is_test_class_file("crates/pregolya-standard-tests/src/lib.rs"),
+        "crate name contains 'test' but path is under src/ → NOT test class"
+    );
+}
+
+// ── FIX-B: anyhow:: qualified-usage detection ────────────────────────────────
+
+/// FIX-B: `fn f() -> anyhow::Result<()>` in non-test code IS flagged.
+#[test]
+fn test_deny_anyhow_flags_qualified_usage_in_return_type() {
+    let src = "pub fn do_thing() -> anyhow::Result<()> { Ok(()) }\n";
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "anyhow:: in return type must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings.iter().any(|f| f.contains("anyhow")),
+        "expected anyhow violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// FIX-B: The same `anyhow::Result` inside `#[cfg(test)] mod tests` is NOT flagged.
+#[test]
+fn test_deny_anyhow_skips_qualified_usage_in_cfg_test() {
+    let src = r#"
+pub fn production_fn() {}
+
+#[cfg(test)]
+mod tests {
+    fn do_thing() -> anyhow::Result<()> { Ok(()) }
+}
+"#;
+    let findings = scan_for_anyhow_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "anyhow:: inside #[cfg(test)] must not be flagged; got: {findings:?}"
+    );
+}
+
+// ── FIX-C: ClientBuilder::new() detection ────────────────────────────────────
+
+/// FIX-C: `reqwest::ClientBuilder::new().build()?` without .timeout() IS flagged.
+#[test]
+fn test_timeout_scanner_flags_clientbuilder_new_without_timeout() {
+    let src = "let c = reqwest::ClientBuilder::new().build()?;\n";
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "reqwest::ClientBuilder::new().build() without .timeout() must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// FIX-C: `reqwest::ClientBuilder::new().timeout(...).build()?` is NOT flagged.
+#[test]
+fn test_timeout_scanner_does_not_flag_clientbuilder_with_timeout() {
+    let src = "let c = reqwest::ClientBuilder::new().timeout(Duration::from_secs(30)).build()?;\n";
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "reqwest::ClientBuilder::new().timeout(...).build() must NOT be flagged; got: {findings:?}"
+    );
+}
+
+// ── deny-description-cache-key scanner ───────────────────────────────────────
+
+/// FIX-E: A real code usage of cache_key adjacent to a description ident MUST
+/// produce a finding (positive case).
+///
+/// The scanner collects ALL idents from the token stream and checks for a
+/// `cache_key` ident within a 10-token window of a `description` ident.
+/// Function parameter lists provide a natural context for both to appear together.
+#[test]
+fn test_description_cache_key_scanner_finds_violation() {
+    // Both `cache_key` and `description` appear as ident tokens in the parameter
+    // list — they are within the 10-token window so the scanner must fire.
+    let src =
+        "fn store(description: &str, cache_key: &str) { let _ = (description, cache_key); }\n";
+    let findings = scan_for_description_cache_key_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "cache_key adjacent to description must produce a finding; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("cache_key") || f.contains("description")),
+        "expected cache_key violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// FIX-E: A doc comment containing cache_key and description must NOT produce
+/// a finding. proc_macro2 lowers `///` doc comments to `#[doc = "…"]` attributes
+/// whose payload is a string literal; `collect_idents` walks `Ident` tokens only,
+/// so doc text cannot match.
+#[test]
+fn test_description_cache_key_scanner_ignores_doc_comments() {
+    // Only a doc comment — no production-code identifiers.
+    let src = "/// Gets the cache_key for the description of this item.\npub fn nothing() {}\n";
+    let findings = scan_for_description_cache_key_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "doc comment with cache_key + description must NOT produce a finding; got: {findings:?}"
+    );
+}
+
+/// FIX-E: Test / examples files must be excluded from the scanner entirely.
+#[test]
+fn test_description_cache_key_scanner_skips_test_files() {
+    let src = "fn build_cache(description: &str) { let key = get_cache_key(description); }\n";
+    // Test file path — must be skipped.
+    let findings =
+        scan_for_description_cache_key_in_source(src, "crates/pregolya-core/tests/integration.rs");
+    assert!(
+        findings.is_empty(),
+        "test files must be excluded from description-cache-key scan; got: {findings:?}"
     );
 }

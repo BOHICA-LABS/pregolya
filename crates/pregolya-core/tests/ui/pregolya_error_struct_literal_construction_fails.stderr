@@ -1,0 +1,11 @@
+error[E0639]: cannot create non-exhaustive struct using struct expression
+  --> tests/ui/pregolya_error_struct_literal_construction_fails.rs:6:16
+   |
+ 6 |       let _err = pregolya_core::PregolyaError {
+   |  ________________^
+ 7 | |         component: pregolya_core::Component::Core,
+ 8 | |         category: pregolya_core::Category::Internal,
+ 9 | |         retry_hint: pregolya_core::RetryHint::Never,
+10 | |         message: "test".to_string(),
+11 | |     };
+   | |_____^

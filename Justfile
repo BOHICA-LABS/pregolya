@@ -29,7 +29,7 @@ lint-extra:
 check:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets --all-features -- -D warnings
-    cargo nextest run --workspace --all-features --no-tests=warn
+    cargo nextest run --workspace --all-features --no-tests=warn --success-output immediate
     cargo test --workspace --doc
     just lint-extra
 
@@ -42,7 +42,7 @@ check-fast:
 check-ci:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets --all-features -- -D warnings
-    cargo nextest run --workspace --all-features --no-tests=warn
+    cargo nextest run --workspace --all-features --no-tests=warn --success-output immediate
     cargo test --workspace --doc
     just lint-extra
     cargo deny check

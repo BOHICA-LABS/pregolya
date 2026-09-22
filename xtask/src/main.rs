@@ -1,6 +1,6 @@
 //! cargo xtask — workspace task runner for pregolya.
 //!
-//! Usage: cargo xtask <subcommand>
+//! Usage: `cargo xtask <subcommand>`
 //!
 //! Subcommands:
 //!   check-file-size   Enforce production file size gates (CLAUDE.md §File size & module splitting)
@@ -33,7 +33,7 @@ fn main() {
                 "  check-no-panic            Lint: .expect()/.unwrap() in library src/ is forbidden"
             );
             eprintln!(
-                "  deny-anyhow-in-lib        Lint: anyhow imports in pregolya-* library crates"
+                "  deny-anyhow-in-lib        Lint: anyhow usage (imports or qualified anyhow:: in production code)"
             );
             eprintln!("  deny-description-cache-key Lint: description-proxy cache-key usage");
             exit(1);
@@ -45,17 +45,45 @@ fn main() {
 // Shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Returns true when `path` identifies a test-only file.
+/// Returns true when `path` identifies a non-production file (tests or examples).
 ///
 /// Matches:
 /// - Files named `tests.rs` (any directory depth, e.g. `src/tests.rs`)
 /// - Files ending with `_test.rs` or `_tests.rs`
 /// - Files under a `tests/` directory component (e.g. `crates/foo/tests/integration.rs`)
+/// - Files under an `examples/` directory component (demonstration executables, not
+///   library code; permitted to use `.expect()` and `println!` for clarity)
 ///
 /// Does NOT use `.contains("test")` substring matching, which would
 /// incorrectly suppress production files in crates whose names contain
 /// "test" (e.g. `pregolya-standard-tests`).
 fn is_test_file(path: &str) -> bool {
+    path.ends_with("/tests.rs")
+        || path == "tests.rs"
+        || path.contains("/tests/")
+        || path.ends_with("_test.rs")
+        || path.ends_with("_tests.rs")
+        || path.contains("/examples/")
+}
+
+/// Returns true for files exempt from lint scanners: test files, examples, and benchmarks.
+///
+/// Extends `is_test_file` to also cover `/benches/` (benchmark harnesses are not
+/// library code). Examples produce standalone binaries and may legitimately use
+/// `.expect()` and `println!` for demonstration clarity.
+///
+/// Used by: `check_no_panic`, `check_client_timeout`, `deny_anyhow_in_lib`.
+fn is_lint_exempt_file(path: &str) -> bool {
+    is_test_file(path) || path.contains("/benches/")
+}
+
+/// Returns true for files that qualify for TEST file-size thresholds (1000/1500 code-lines).
+///
+/// Only actual test files — NOT examples (demonstration programs use production thresholds)
+/// and NOT benchmarks (which are tuning tools, not test suites).
+///
+/// Used by: `check_file_size`.
+fn is_test_class_file(path: &str) -> bool {
     path.ends_with("/tests.rs")
         || path == "tests.rs"
         || path.contains("/tests/")
@@ -67,13 +95,125 @@ fn is_test_file(path: &str) -> bool {
 // check-file-size
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Count code lines (non-blank, non-comment-only) inside `#[cfg(test)] mod` blocks.
+///
+/// Uses proc_macro2 span information to locate the block boundaries, then applies
+/// tokei-compatible line counting (skipping blank lines and lines whose first
+/// non-whitespace token is `//`).
+///
+/// Returns 0 if the file cannot be parsed or has no cfg(test) block.
+/// A warning is printed to stderr if the file cannot be read or parsed, so the
+/// caller knows the returned count of 0 is unadjusted (not a genuine zero).
+///
+/// The subtraction of this count from tokei's `Code` metric gives the adjusted
+/// production code line count per CLAUDE.md §File size: "#[cfg(test)] mod blocks
+/// excluded from the count." The count includes the attribute line itself
+/// (`#[cfg(test)]`) through the closing `}` of the mod block.
+fn count_cfg_test_lines(path: &std::path::Path) -> usize {
+    use proc_macro2::TokenStream;
+
+    let Ok(source) = std::fs::read_to_string(path) else {
+        eprintln!(
+            "WARN: cfg(test) adjustment skipped for {} (read error) — reported count is unadjusted",
+            path.display()
+        );
+        return 0;
+    };
+    let Ok(ts) = source.parse::<TokenStream>() else {
+        eprintln!(
+            "WARN: cfg(test) adjustment skipped for {} (parse error) — reported count is unadjusted",
+            path.display()
+        );
+        return 0;
+    };
+
+    let lines: Vec<&str> = source.lines().collect();
+    count_cfg_test_in_stream(ts.into_iter(), &lines)
+}
+
+/// Recursive helper for [`count_cfg_test_lines`].
+///
+/// Walks `iter` looking for `#[cfg(test)] mod ... { ... }` patterns and counting
+/// their code lines. Also recurses into non-cfg-test mod blocks to find nested
+/// cfg(test) blocks. The `lines` slice spans the entire source file so that
+/// `proc_macro2` span line numbers (which are file-relative) map correctly.
+fn count_cfg_test_in_stream(iter: proc_macro2::token_stream::IntoIter, lines: &[&str]) -> usize {
+    use proc_macro2::{Delimiter, TokenTree};
+
+    let tokens: Vec<TokenTree> = iter.collect();
+    let mut total = 0usize;
+    let mut i = 0;
+    while i < tokens.len() {
+        // Look for `#` followed by `[cfg(test)]` bracket group.
+        // FIX-B: use is_cfg_test_group() instead of contains("cfg") && contains("test")
+        // to prevent false matches on #[cfg(not(test))] and #[cfg(feature = "test-utils")].
+        if let TokenTree::Punct(p) = &tokens[i]
+            && p.as_char() == '#'
+            && let Some(TokenTree::Group(attr_group)) = tokens.get(i + 1)
+            && attr_group.delimiter() == Delimiter::Bracket
+            && is_cfg_test_group(attr_group)
+        {
+            // Scan forward past optional intervening attributes
+            // (e.g. `#[allow(clippy::unwrap_used)]`) then find `mod <ident> { ... }`
+            let mut j = i + 2;
+            // Skip intervening `#[...]` attributes
+            while j + 1 < tokens.len() {
+                if let TokenTree::Punct(p2) = &tokens[j]
+                    && p2.as_char() == '#'
+                    && let TokenTree::Group(_) = &tokens[j + 1]
+                {
+                    j += 2;
+                    continue;
+                }
+                break;
+            }
+            // Expect `mod <ident> { ... }`
+            // tokens[j] = "mod", tokens[j+1] = mod name ident, tokens[j+2] = body Group
+            if let Some(TokenTree::Ident(mod_kw)) = tokens.get(j)
+                && mod_kw == "mod"
+                && let Some(TokenTree::Group(mod_group)) = tokens.get(j + 2)
+                && mod_group.delimiter() == Delimiter::Brace
+            {
+                // FIX-K: start counting from the `#` attribute line (tokens[i]) so that
+                // the `#[cfg(test)]` line itself is included in the subtraction budget.
+                let attr_start_line = tokens[i].span().start().line; // 1-based
+                let end_line = mod_group.span().end().line; // 1-based
+                // Count non-blank, non-comment-only lines
+                // in [attr_start_line, end_line] (inclusive, 1-based).
+                for line in lines[(attr_start_line - 1)..end_line.min(lines.len())].iter() {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() && !trimmed.starts_with("//") {
+                        total += 1;
+                    }
+                }
+                // Advance past the mod block
+                i = j + 3;
+                continue;
+            }
+        }
+
+        // FIX-K: Recurse into non-cfg(test) mod blocks looking for nested cfg(test) blocks.
+        // A bare `mod <ident> { ... }` (without preceding #[cfg(test)]) may contain
+        // nested cfg(test) blocks that also contribute to the adjustment budget.
+        if let TokenTree::Ident(kw) = &tokens[i]
+            && kw == "mod"
+            && let Some(TokenTree::Group(mod_group)) = tokens.get(i + 2)
+            && mod_group.delimiter() == Delimiter::Brace
+        {
+            total += count_cfg_test_in_stream(mod_group.stream().into_iter(), lines);
+        }
+
+        i += 1;
+    }
+    total
+}
+
 fn check_file_size() {
-    // NOTE: tokei counts ALL code-lines in a file (including #[cfg(test)] blocks
-    // that are inline in production files).  The test-file thresholds (1000/1500)
-    // apply only to files under `tests/` or ending with `_test.rs` / `_tests.rs`.
-    // Inline test modules contribute to the production file's code count — this is
-    // intentional: a production file whose inline tests push it over the
-    // production hard gate (750 lines) should be split anyway.
+    // Implements CLAUDE.md §File size: "#[cfg(test)] mod blocks...excluded from the count."
+    // For production files, the raw tokei Code count is adjusted by subtracting
+    // lines inside `#[cfg(test)] mod` blocks (see count_cfg_test_lines).
+    // Test files (under tests/ or ending with _test.rs/_tests.rs) use the higher
+    // test-file thresholds (1000/1500) without adjustment.
     //
     // Exclusions (auto-skipped in post-processing):
     //   *.gen.rs          — generated code, not subject to size gate
@@ -125,50 +265,87 @@ fn check_file_size() {
 
     let mut violations: Vec<String> = Vec::new();
     let mut warnings: Vec<String> = Vec::new();
+    let mut files_measured: usize = 0;
+    let mut files_skipped: usize = 0;
 
-    if let Some(rust) = json.get("Rust")
-        && let Some(reports) = rust.get("reports").and_then(|r| r.as_array())
-    {
-        for report in reports {
-            let name = report
-                .get("name")
-                .and_then(|n| n.as_str())
-                .unwrap_or("<unknown>");
-            let code = report
-                .get("stats")
-                .and_then(|s| s.get("code"))
-                .and_then(|c| c.as_u64())
-                .unwrap_or(0);
+    // F2 fix: exit with diagnostic when tokei found no Rust files or has empty reports.
+    let rust = match json.get("Rust") {
+        Some(r) => r,
+        None => {
+            eprintln!(
+                "ERROR: tokei found no Rust files — gate cannot certify anything. \
+                 Is the scan path correct?"
+            );
+            exit(1);
+        }
+    };
+    let reports = match rust.get("reports").and_then(|r| r.as_array()) {
+        Some(r) if !r.is_empty() => r,
+        Some(_) => {
+            eprintln!("ERROR: tokei returned empty reports array — gate cannot certify anything.");
+            exit(1);
+        }
+        None => {
+            eprintln!(
+                "ERROR: tokei output missing 'reports' array — gate cannot certify anything."
+            );
+            exit(1);
+        }
+    };
 
-            // Skip generated code, build artifacts, and fixture data.
-            if name.contains("/target/")
-                || name.contains("OUT_DIR")
-                || name.ends_with(".gen.rs")
-                || name.contains("/tests/fixtures/")
-            {
-                continue;
-            }
+    for report in reports {
+        let name = report
+            .get("name")
+            .and_then(|n| n.as_str())
+            .unwrap_or("<unknown>");
+        let code = report
+            .get("stats")
+            .and_then(|s| s.get("code"))
+            .and_then(|c| c.as_u64())
+            .unwrap_or(0);
 
-            if allowlist.is_allowed(name) {
-                continue;
-            }
+        // Skip generated code, build artifacts, and fixture data.
+        if name.contains("/target/")
+            || name.contains("OUT_DIR")
+            || name.ends_with(".gen.rs")
+            || name.contains("/tests/fixtures/")
+        {
+            continue;
+        }
 
-            let is_test = is_test_file(name);
-            let (soft, hard) = if is_test {
-                (test_soft, test_hard)
-            } else {
-                (prod_soft, prod_hard)
-            };
+        if allowlist.is_allowed(name) {
+            files_skipped += 1;
+            continue;
+        }
 
-            if code > hard {
-                violations.push(format!(
-                    "HARD GATE FAIL: {name} has {code} code lines (limit: {hard})"
-                ));
-            } else if code > soft {
-                warnings.push(format!(
-                    "soft warning: {name} has {code} code lines (soft limit: {soft})"
-                ));
-            }
+        files_measured += 1;
+
+        let is_test = is_test_class_file(name);
+        let (soft, hard) = if is_test {
+            (test_soft, test_hard)
+        } else {
+            (prod_soft, prod_hard)
+        };
+
+        // For production files, subtract inline #[cfg(test)] block lines from the
+        // tokei Code count per CLAUDE.md §File size: "#[cfg(test)] mod blocks...
+        // excluded from the count."  Test files already use the test thresholds so
+        // no adjustment is applied to them.
+        let adjusted_code = if !is_test {
+            let cfg_test_lines = count_cfg_test_lines(std::path::Path::new(name));
+            code.saturating_sub(cfg_test_lines as u64)
+        } else {
+            code
+        };
+
+        if adjusted_code > hard {
+            violations.push(format!(
+                "HARD GATE FAIL: {name} has {adjusted_code} code lines (limit: {hard})"
+            ));
+        } else if adjusted_code > soft {
+            warnings.push(format!(
+                "soft warning: {name} has {adjusted_code} code lines (soft limit: {soft})"
+            ));
         }
     }
 
@@ -186,7 +363,14 @@ fn check_file_size() {
         exit(1);
     }
 
-    println!("check-file-size PASSED ({} warnings).", warnings.len());
+    assert!(
+        files_measured > 0,
+        "check-file-size: scanned 0 files — gate is vacuously true; check that crates/ exists and contains Rust source files"
+    );
+    println!(
+        "check-file-size PASSED ({} warnings, {files_measured} files measured, {files_skipped} allowlisted).",
+        warnings.len()
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -211,18 +395,51 @@ fn check_client_timeout() {
         }
     };
 
+    // F2 fix: check subprocess exit status
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
+
     let files_str = String::from_utf8_lossy(&files_output.stdout);
+    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!("ERROR: check-client-timeout scanned 0 files — gate cannot certify anything");
+        exit(1);
+    }
+
     let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
 
     for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
-            Err(_) => continue,
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
+            }
         };
+        files_analyzed += 1;
         let findings = scan_for_timeout_violations_in_source(&content, file_path);
         all_findings.extend(findings);
     }
 
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: check-client-timeout could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
     if !all_findings.is_empty() {
         for f in &all_findings {
             eprintln!("ERROR: reqwest::Client::new() without timeout: {f}");
@@ -230,7 +447,9 @@ fn check_client_timeout() {
         eprintln!("Use Client::builder().timeout(Duration::from_secs(30)).build() instead.");
         exit(1);
     }
-    println!("check-client-timeout PASSED.");
+    println!(
+        "check-client-timeout PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
 }
 
 /// Scan `src` for reqwest client timeout violations using `proc_macro2` token-tree walking.
@@ -244,7 +463,7 @@ fn check_client_timeout() {
 /// (which were the source of F-2, B-5, and related false positive/negative bugs)
 /// are handled correctly by the lexer.
 fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
-    if is_test_file(path) {
+    if is_lint_exempt_file(path) {
         return Vec::new();
     }
 
@@ -309,6 +528,18 @@ fn walk_timeout_tokens(
                 i += 1;
                 continue;
             }
+            // Check reqwest :: ClientBuilder :: new() — routes through chain check for .timeout()
+            if is_double_colon(&tokens, i + 1)
+                && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "ClientBuilder")
+                && is_double_colon(&tokens, i + 4)
+                && matches!(tokens.get(i + 6), Some(TokenTree::Ident(id)) if id == "new")
+            {
+                if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
+                    findings.push(finding);
+                }
+                i += 1;
+                continue;
+            }
         }
 
         // Try to match standalone Client :: new ( ... ) — NOT preceded by `:`.
@@ -335,6 +566,26 @@ fn walk_timeout_tokens(
                 // Check for Client :: builder chain
                 if is_double_colon(&tokens, i + 1)
                     && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "builder")
+                {
+                    if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
+                        findings.push(finding);
+                    }
+                    i += 1;
+                    continue;
+                }
+            }
+        }
+
+        // Try to match standalone ClientBuilder :: new ( ... ) — NOT preceded by `:`.
+        // Preceding `:` means it's part of a qualified path (reqwest::ClientBuilder),
+        // which is handled by the reqwest arm above.
+        if matches!(&tokens[i], TokenTree::Ident(id) if id == "ClientBuilder") {
+            let prev_is_colon =
+                i > 0 && matches!(&tokens[i - 1], TokenTree::Punct(p) if p.as_char() == ':');
+            if !prev_is_colon {
+                // Check for ClientBuilder :: new() — routes through chain check for .timeout()
+                if is_double_colon(&tokens, i + 1)
+                    && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "new")
                 {
                     if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
                         findings.push(finding);
@@ -416,18 +667,51 @@ fn check_no_panic() {
         }
     };
 
+    // F2 fix: check subprocess exit status
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
+
     let files_str = String::from_utf8_lossy(&files_output.stdout);
+    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!("ERROR: check-no-panic scanned 0 files — gate cannot certify anything");
+        exit(1);
+    }
+
     let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
 
     for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
-            Err(_) => continue,
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
+            }
         };
+        files_analyzed += 1;
         let findings = scan_for_panics_in_source(&content, file_path);
         all_findings.extend(findings);
     }
 
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: check-no-panic could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
     if !all_findings.is_empty() {
         for f in &all_findings {
             eprintln!("ERROR: panic-potential in library code: {f}");
@@ -435,7 +719,9 @@ fn check_no_panic() {
         eprintln!("Use ? propagation with structured error variants instead.");
         exit(1);
     }
-    println!("check-no-panic PASSED.");
+    println!(
+        "check-no-panic PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
 }
 
 /// Scan `src` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]` scopes.
@@ -448,7 +734,7 @@ fn check_no_panic() {
 /// Returns a `Vec<String>` of `"path:line_num: .method()"` findings.
 /// Returns empty when `path` is a test file (per `is_test_file`).
 fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
-    if is_test_file(path) {
+    if is_lint_exempt_file(path) {
         return Vec::new();
     }
 
@@ -567,29 +853,173 @@ fn is_cfg_test_group(g: &proc_macro2::Group) -> bool {
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn deny_anyhow_in_lib() {
-    let output = Command::new("grep")
-        .args(["-rn", "--include=*.rs", "use anyhow", "crates/"])
+    // Use token-tree walking (proc_macro2) so that `use anyhow` inside
+    // `#[cfg(test)]` blocks is not flagged. The blunt `grep` approach fires
+    // even when the import is legitimately scoped to test code.
+    let output = Command::new("find")
+        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
         .output();
 
-    match output {
-        Ok(o) => {
-            let stdout = String::from_utf8_lossy(&o.stdout);
-            if !stdout.trim().is_empty() {
-                eprintln!(
-                    "ERROR: anyhow is banned from pregolya-* library crates (ADR-010 / NE-03):"
-                );
-                for line in stdout.lines() {
-                    eprintln!("  {line}");
-                }
-                exit(1);
-            }
-        }
+    let files_output = match output {
+        Ok(o) => o,
         Err(e) => {
-            eprintln!("grep failed: {e}");
+            eprintln!("find failed: {e}");
             exit(1);
         }
+    };
+
+    // F2 fix: check subprocess exit status
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
     }
-    println!("deny-anyhow-in-lib PASSED.");
+
+    let files_str = String::from_utf8_lossy(&files_output.stdout);
+    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!("ERROR: deny-anyhow-in-lib scanned 0 files — gate cannot certify anything");
+        exit(1);
+    }
+
+    let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
+
+    for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
+        let content = match std::fs::read_to_string(file_path) {
+            Ok(c) => c,
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
+            }
+        };
+        files_analyzed += 1;
+        let findings = scan_for_anyhow_in_source(&content, file_path);
+        all_findings.extend(findings);
+    }
+
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: deny-anyhow-in-lib could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
+    if !all_findings.is_empty() {
+        eprintln!("ERROR: anyhow is banned from pregolya-* library crates (ADR-010 / NE-03):");
+        for f in &all_findings {
+            eprintln!("  {f}");
+        }
+        exit(1);
+    }
+    println!(
+        "deny-anyhow-in-lib PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
+}
+
+/// Scan `src` for `use anyhow` patterns outside `#[cfg(test)]` scopes.
+///
+/// Uses proc_macro2 token-tree walking so that anyhow imports in test code
+/// (which are legitimate for compatibility verification) are not flagged.
+///
+/// Returns a `Vec<String>` of `"path:line: use anyhow"` findings.
+/// Returns empty when `path` is a test or examples file (per `is_test_file`).
+fn scan_for_anyhow_in_source(src: &str, path: &str) -> Vec<String> {
+    if is_lint_exempt_file(path) {
+        return Vec::new();
+    }
+
+    use proc_macro2::TokenStream;
+    let ts: TokenStream = match src.parse() {
+        Ok(s) => s,
+        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
+    };
+
+    let mut findings = Vec::new();
+    walk_anyhow_tokens(ts.into_iter(), &mut findings, path, &mut 0u32);
+    findings
+}
+
+/// Recursive token-tree walker for `scan_for_anyhow_in_source`.
+fn walk_anyhow_tokens(
+    iter: proc_macro2::token_stream::IntoIter,
+    findings: &mut Vec<String>,
+    path: &str,
+    in_test_depth: &mut u32,
+) {
+    use proc_macro2::{Delimiter, TokenTree};
+
+    let tokens: Vec<TokenTree> = iter.collect();
+    let mut i = 0;
+    while i < tokens.len() {
+        match &tokens[i] {
+            // Detect `#[cfg(test)]` — skip the body.
+            TokenTree::Punct(p) if p.as_char() == '#' => {
+                if let Some(TokenTree::Group(g)) = tokens.get(i + 1)
+                    && g.delimiter() == Delimiter::Bracket
+                    && is_cfg_test_group(g)
+                {
+                    let mut j = i + 2;
+                    while j < tokens.len() {
+                        match &tokens[j] {
+                            TokenTree::Group(body) if body.delimiter() == Delimiter::Brace => {
+                                *in_test_depth += 1;
+                                walk_anyhow_tokens(
+                                    body.stream().into_iter(),
+                                    findings,
+                                    path,
+                                    in_test_depth,
+                                );
+                                *in_test_depth -= 1;
+                                i = j;
+                                break;
+                            }
+                            TokenTree::Punct(p2) if p2.as_char() == ';' => {
+                                i = j;
+                                break;
+                            }
+                            _ => {}
+                        }
+                        j += 1;
+                    }
+                    i += 1;
+                    continue;
+                }
+            }
+            // Brace group NOT preceded by cfg(test) — walk it at current depth.
+            TokenTree::Group(g) if g.delimiter() == Delimiter::Brace => {
+                walk_anyhow_tokens(g.stream().into_iter(), findings, path, in_test_depth);
+            }
+            // Detect `anyhow` ident followed by `::` outside test scope.
+            // Catches both `use anyhow::Foo` and `fn f() -> anyhow::Result<()>`
+            // patterns (ADR-010 boundary violation). Using the bare-ident arm
+            // instead of a `use`-keyword scan catches qualified usages like
+            // return types and function signatures that do not start with `use`.
+            TokenTree::Ident(id) if id == "anyhow" && *in_test_depth == 0 => {
+                if is_double_colon(&tokens, i + 1) {
+                    let line = id.span().start().line;
+                    findings.push(format!(
+                        "{}:{}: anyhow:: in non-test code (ADR-010 boundary violation)",
+                        path, line
+                    ));
+                }
+            }
+            // Other non-brace groups (parens, brackets) — walk them too.
+            TokenTree::Group(g) => {
+                walk_anyhow_tokens(g.stream().into_iter(), findings, path, in_test_depth);
+            }
+            _ => {}
+        }
+        i += 1;
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -597,35 +1027,153 @@ fn deny_anyhow_in_lib() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn deny_description_cache_key() {
-    for pattern in &["cache_key", "CacheKey", "cache_key_for"] {
-        let output = Command::new("grep")
-            .args(["-rn", "--include=*.rs", pattern, "crates/"])
-            .output();
+    // Use file-by-file scanning (same pattern as check-no-panic and check-client-timeout)
+    // so that the PASSED message reports the number of files scanned — not grep match counts
+    // which are 0 in a clean codebase, making it impossible to distinguish a vacuous pass
+    // from a genuine scan.
+    let output = Command::new("find")
+        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
+        .output();
 
-        match output {
-            Ok(o) => {
-                let stdout = String::from_utf8_lossy(&o.stdout);
-                // Only flag if it looks like description-proxy usage
-                let findings: Vec<&str> = stdout
-                    .lines()
-                    .filter(|l| l.contains("description") || l.contains("Description"))
-                    .collect();
-                if !findings.is_empty() {
-                    for f in &findings {
-                        eprintln!(
-                            "ERROR: description-proxy cache-key usage (ADR-011 / NE-05): {f}"
-                        );
-                    }
-                    exit(1);
-                }
+    let files_output = match output {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("find failed: {e}");
+            exit(1);
+        }
+    };
+
+    if !files_output.status.success() {
+        eprintln!(
+            "ERROR: file discovery command failed with status {}",
+            files_output.status
+        );
+        exit(1);
+    }
+
+    let files_str = String::from_utf8_lossy(&files_output.stdout);
+    let files_scanned = files_str.lines().count();
+    if files_scanned == 0 {
+        eprintln!(
+            "ERROR: deny-description-cache-key scanned 0 files — gate cannot certify anything"
+        );
+        exit(1);
+    }
+
+    let mut all_findings: Vec<String> = Vec::new();
+    let mut files_analyzed = 0usize;
+    let mut files_exempt = 0usize;
+    let mut files_unreadable = 0usize;
+
+    for file_path in files_str.lines() {
+        if is_lint_exempt_file(file_path) {
+            files_exempt += 1;
+            continue;
+        }
+        let content = match std::fs::read_to_string(file_path) {
+            Ok(c) => c,
+            Err(_) => {
+                files_unreadable += 1;
+                continue;
             }
-            Err(e) => {
-                eprintln!("grep failed: {e}");
-                exit(1);
+        };
+        files_analyzed += 1;
+        // FIX-E: use proc_macro2-based scanner to avoid false positives on doc comments
+        // (e.g. `/// Gets the cache_key for the description` previously triggered the
+        // old line-contains scan; proc_macro2 lowers `///` doc comments to #[doc = "..."]
+        // attributes whose payload is a string literal — collect_idents walks Ident tokens
+        // only, so doc text cannot match. Plain `//` comments are discarded by the lexer).
+        let findings = scan_for_description_cache_key_in_source(&content, file_path);
+        all_findings.extend(findings);
+    }
+
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: deny-description-cache-key could not read {files_unreadable} file(s) — gate cannot certify anything"
+        );
+        exit(1);
+    }
+    if !all_findings.is_empty() {
+        eprintln!("ERROR: description-proxy cache-key usage (ADR-011 / NE-05):");
+        for f in &all_findings {
+            eprintln!("  {f}");
+        }
+        exit(1);
+    }
+    println!(
+        "deny-description-cache-key PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
+    );
+}
+
+/// Collect all `Ident` tokens from a token stream into a flat `(name, line)` list.
+///
+/// Recurses into all groups (brace, paren, bracket) so that idents inside
+/// function bodies, attribute arguments, and macro invocations are all captured.
+/// Used by `scan_for_description_cache_key_in_source`.
+fn collect_idents(ts: proc_macro2::TokenStream) -> Vec<(String, usize)> {
+    use proc_macro2::TokenTree;
+    let mut out = Vec::new();
+    for tt in ts {
+        match tt {
+            TokenTree::Ident(id) => {
+                out.push((id.to_string(), id.span().start().line));
             }
+            TokenTree::Group(g) => {
+                out.extend(collect_idents(g.stream()));
+            }
+            _ => {}
         }
     }
-    println!("deny-description-cache-key PASSED.");
+    out
+}
+
+/// Scan `src` for description-proxy cache-key usage using proc_macro2 token-tree walking.
+///
+/// Looks for a `cache_key`, `CacheKey`, or `cache_key_for` ident within a window of
+/// tokens before/after a `description` or `Description` ident. This is more precise
+/// than line-by-line string matching because proc_macro2 lowers `///` doc comments to
+/// `#[doc = "…"]` attributes whose payload is a string literal; `collect_idents` walks
+/// `Ident` tokens only, so doc text cannot match. Plain `//` comments are discarded by
+/// the lexer, so they cannot produce false positives either.
+///
+/// The adjacency window is set to 10 tokens on each side of the cache-key ident.
+///
+/// Returns empty when `path` is a test or examples file (per `is_lint_exempt_file`).
+fn scan_for_description_cache_key_in_source(src: &str, path: &str) -> Vec<String> {
+    if is_lint_exempt_file(path) {
+        return Vec::new();
+    }
+
+    use proc_macro2::TokenStream;
+    let ts: TokenStream = match src.parse() {
+        Ok(s) => s,
+        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
+    };
+
+    let idents = collect_idents(ts);
+    const WINDOW: usize = 10;
+    let cache_key_names: &[&str] = &["cache_key", "CacheKey", "cache_key_for"];
+    let description_names: &[&str] = &["description", "Description"];
+
+    let mut findings = Vec::new();
+    for (i, (name, line)) in idents.iter().enumerate() {
+        if !cache_key_names.contains(&name.as_str()) {
+            continue;
+        }
+        // Check the surrounding window for a description ident.
+        let start = i.saturating_sub(WINDOW);
+        let end = (i + WINDOW + 1).min(idents.len());
+        let has_description = idents[start..end]
+            .iter()
+            .any(|(n, _)| description_names.contains(&n.as_str()));
+        if has_description {
+            findings.push(format!(
+                "{}:{}: cache_key ident adjacent to description ident (ADR-011 / NE-05)",
+                path, line
+            ));
+        }
+    }
+    findings
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -639,6 +1187,7 @@ struct AllowList {
 }
 
 #[derive(serde::Deserialize)]
+#[cfg_attr(test, derive(Default))]
 struct AllowEntry {
     path: String,
     #[allow(dead_code)]
@@ -650,18 +1199,69 @@ struct AllowEntry {
 }
 
 impl AllowList {
+    // Allowlist entries MUST use workspace-relative paths (e.g. "crates/pregolya-core/src/error.rs")
+    // to prevent over-broad matching. A bare filename like "error.rs" would match every crate's
+    // error.rs — use the full path from workspace root instead.
     fn is_allowed(&self, path: &str) -> bool {
-        // Use ends_with only — contains() would match substrings (e.g.,
-        // "pregolya-core" matching "pregolya-core-extra"), causing false negatives.
-        self.allow.iter().any(|e| path.ends_with(&e.path))
+        self.allow.iter().any(|e| {
+            // Anchor: the allowlist path must match the full workspace-relative path exactly.
+            // Normalize both paths to forward slashes for cross-platform consistency.
+            let normalized_entry = e.path.replace('\\', "/");
+            let normalized_path = path.replace('\\', "/");
+            // Exact suffix match anchored at a path separator boundary
+            normalized_path == normalized_entry
+                || normalized_path.ends_with(&format!("/{normalized_entry}"))
+        })
     }
 }
 
+/// Validates that an allowlist entry path is workspace-relative and sufficiently deep.
+///
+/// Returns `Ok(())` if the path is valid, or `Err(String)` with a diagnostic message.
+///
+/// Rules:
+/// - Path MUST start with `"crates/"` or `"xtask/"` (prevents over-broad bare-filename matches).
+/// - Path MUST have at least 2 slashes (at least 3 components: prefix/crate/file.rs).
+fn validate_allowlist_entry_path(path: &str) -> Result<(), String> {
+    if !path.starts_with("crates/") && !path.starts_with("xtask/") {
+        return Err(format!(
+            "path {path:?} must start with 'crates/' or 'xtask/' (bare filenames match multiple crates)"
+        ));
+    }
+    if path.matches('/').count() < 2 {
+        return Err(format!(
+            "path {path:?} is too shallow (bare filename would match multiple crates \
+             — use a full workspace-relative path)"
+        ));
+    }
+    Ok(())
+}
+
 fn load_allowlist() -> AllowList {
-    let path = "xtask/file-size-allowlist.toml";
-    match std::fs::read_to_string(path) {
-        Ok(content) => toml::from_str(&content).unwrap_or_default(),
-        Err(_) => AllowList::default(),
+    match std::fs::read_to_string("xtask/file-size-allowlist.toml") {
+        Ok(content) => match toml::from_str::<AllowList>(&content) {
+            Ok(a) => {
+                // Validate all entry paths to prevent over-broad matching.
+                for entry in &a.allow {
+                    if let Err(msg) = validate_allowlist_entry_path(&entry.path) {
+                        eprintln!("ERROR: file-size-allowlist.toml: {msg}");
+                        exit(1);
+                    }
+                }
+                a
+            }
+            Err(e) => {
+                eprintln!(
+                    "ERROR: xtask/file-size-allowlist.toml is malformed and cannot be parsed: {e}"
+                );
+                exit(1);
+            }
+        },
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => AllowList::default(),
+        Err(e) => {
+            eprintln!("ERROR: cannot read xtask/file-size-allowlist.toml: {e}");
+            exit(1);
+        }
     }
 }
 

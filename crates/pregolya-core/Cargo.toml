@@ -8,14 +8,18 @@ repository.workspace = true
 publish = false
 
 [dependencies]
-pregolya-macros = { path = "../pregolya-macros" }
-async-trait = { workspace = true }
 serde = { workspace = true }
+
+[dev-dependencies]
+# Compile-time trait bound assertions (AC-005, AC-006 / VP-BC214001-02)
+static_assertions = { workspace = true }
+# anyhow compat test (BC-2.14.001 TV-004)
+anyhow = { workspace = true }
+# Compile-fail / compile-pass gate harness (AC-007 / BC-2.14.001 {PC-008})
+# Validates #[non_exhaustive] external-boundary behaviour from outside the crate.
+trybuild = { workspace = true }
+# serde_json dev-only: ProblemDetail derives Serialize/Deserialize via serde only; serde_json needed solely for JSON assertion tests and the error_taxonomy_demo example (CR-001 provenance)
 serde_json = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
-schemars = { workspace = true }
 
 [lints]
 workspace = true

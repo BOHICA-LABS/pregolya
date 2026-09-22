@@ -26,3 +26,9 @@
 //! - `write_guard` — `MemoryWriteGuard` trait (definitions-only, SS-15)
 //! - `invocation_context` — `InvocationContext` (definitions-only, SS-11)
 //! - `trajectory` — `TrajectoryRecord`, `TrajectoryWriter`, `TrajectoryReader` (definitions-only, SS-04)
+
+pub mod error;
+
+pub use error::{
+    Category, Component, PROBLEM_JSON_CONTENT_TYPE, PregolyaError, ProblemDetail, RetryHint,
+};

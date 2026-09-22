@@ -61,6 +61,9 @@ tower = "0.5"
 
 # Testing
 proptest = "1.4"
+static_assertions = "1.1"
+anyhow = "1"
+trybuild = "1"
 
 # JSON Schema derivation — ADR-004 mandates schemars 1.x (0.8 is the anti-pattern)
 schemars = "1"

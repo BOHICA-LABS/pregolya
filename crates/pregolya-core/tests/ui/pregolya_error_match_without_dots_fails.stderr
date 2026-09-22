@@ -1,0 +1,29 @@
+error[E0638]: `..` required with struct marked as non-exhaustive
+  --> tests/ui/pregolya_error_match_without_dots_fails.rs:13:9
+   |
+13 |     let pregolya_core::PregolyaError { message } = err;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: add `..` at the end of the field list to ignore all other fields
+   |
+13 |     let pregolya_core::PregolyaError { message , .. } = err;
+   |                                                ++++
+
+error[E0027]: pattern does not mention fields `component`, `category`, `retry_hint` and inaccessible fields
+  --> tests/ui/pregolya_error_match_without_dots_fails.rs:13:9
+   |
+13 |     let pregolya_core::PregolyaError { message } = err;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ missing fields `component`, `category`, `retry_hint` and inaccessible fields
+   |
+help: include the missing fields in the pattern and ignore the inaccessible fields
+   |
+13 |     let pregolya_core::PregolyaError { message, component, category, retry_hint, .. } = err;
+   |                                               +++++++++++++++++++++++++++++++++++++
+help: if you don't care about these missing fields, you can explicitly ignore them
+   |
+13 |     let pregolya_core::PregolyaError { message, component: _, category: _, retry_hint: _, .. } = err;
+   |                                               ++++++++++++++++++++++++++++++++++++++++++++++
+help: or always ignore missing fields here
+   |
+13 |     let pregolya_core::PregolyaError { message, .. } = err;
+   |                                               ++++
