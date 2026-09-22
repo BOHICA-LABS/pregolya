@@ -1663,13 +1663,21 @@ mod tests {
     );
 }
 
-/// F-03 (MED) — unreachable!() in a wildcard match arm must NOT be flagged
+/// F-03 / F-GATE-01 — `_ => unreachable!()` wildcard arm in enum match must be FLAGGED.
 ///
-/// Product-owner guidance (BC-2.14.003): unreachable!() in a statically-exhaustive
-/// match's wildcard arm is an exhaustiveness witness, not a reachable panic path.
-/// Guard test: passes vacuously with current code (unreachable! not detected);
-/// must continue to pass after the implementer adds macro detection with
-/// the unreachable-in-match exemption.
+/// BC-2.14.003 EC-004/EC-007: a `_ => unreachable!()` wildcard arm is ALWAYS a latent
+/// panic path under enum evolution, even when all currently-known variants are listed
+/// before the wildcard. The presence of `Color::Red`, `Color::Green`, `Color::Blue`
+/// qualified-path arms does NOT grant exemption — qualified arms only prove current
+/// exhaustiveness, not future-proof safety.
+///
+/// RED GATE (F-GATE-01): has_qualified_path_before currently exempts this case because
+/// the scanner sees `::` in the Color::* arms and skips the `_` wildcard detection.
+/// This is the wrong behavior per BC-2.14.003 EC-004. After the implementer's fix this
+/// wildcard arm IS flagged and this test passes.
+///
+/// Exemption 1 applies ONLY to explicit named arms (e.g. `Color::Unknown => unreachable!()`)
+/// with NO wildcard `_` arm present.
 #[test]
 fn test_BC_2_14_003_unreachable_in_exhaustive_match_arm_not_flagged() {
     let src = r#"
@@ -1687,8 +1695,11 @@ pub fn color_name(c: &Color) -> &'static str {
 "#;
     let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
     assert!(
-        findings.is_empty(),
-        "BC-2.14.003: unreachable!() in exhaustive match wildcard arm must NOT be flagged; \
+        !findings.is_empty(),
+        "BC-2.14.003 EC-004/EC-007: _ => unreachable!() wildcard arm must be FLAGGED \
+         even when preceding arms are enum::variant forms; \
+         F-GATE-01: has_qualified_path_before incorrectly exempts this; \
+         implementer must restrict the exemption to non-wildcard named arms; \
          got: {findings:?}"
     );
 }
@@ -1855,5 +1866,55 @@ pub fn validate_code_format(code: &str) {
         "BC-2.14.003 EC-007(ii): documented assert! with # Panics doc section and BC-ID in \
          message must be EXEMPT (paper-fix has no exemption logic; implementer must add \
          # Panics doc + BC-ID exemption per BC-2.14.003 §EC-007); got: {findings_ii:?}"
+    );
+
+    // (b2) _ => unreachable!() WITH enum::variant arms before the wildcard must be FLAGGED.
+    // RED GATE (F-GATE-01): has_qualified_path_before incorrectly exempts this case —
+    // FAILS now because the scanner sees `::` in Status::Active etc. and returns early.
+    //
+    // EC-004: qualified-path arms only prove current exhaustiveness, not future-proof safety.
+    // Adding a new Status variant downstream makes the `_` arm reachable. The exemption
+    // must be restricted to EXPLICIT NAMED arms (e.g. Variant => unreachable!()) that
+    // carry no wildcard `_`; wildcard arms are always a latent panic path.
+    let violation_unreachable_wildcard_enum =
+        include_str!("../tests/fixtures/violations/violation_unreachable_wildcard_enum.rs");
+    let findings_b2 = scan_for_panics_in_source(
+        violation_unreachable_wildcard_enum,
+        "crates/pregolya-core/src/lib.rs",
+    );
+    assert!(
+        !findings_b2.is_empty(),
+        "BC-2.14.003 EC-004/EC-007(b2): _ => unreachable!() wildcard arm preceded by \
+         enum::variant arms (Status::Active etc.) must be FLAGGED; \
+         F-GATE-01: has_qualified_path_before incorrectly exempts this case; \
+         implementer must restrict the exemption to non-wildcard named arms only; \
+         got: {findings_b2:?}"
+    );
+
+    // (iii) bare unreachable!() in a let-else block (NOT a match arm) must be FLAGGED.
+    // RED GATE (F-GATE-01): gate only inspects `_ => unreachable!()` token shape;
+    // let-else else-block unreachable!() is not detected — FAILS now.
+    //
+    // §PC-006: unreachable! is permitted only in exhaustive-match arms; using it in
+    // let-else or if-block error paths is a POL-31 violation because the expression
+    // context (not a match arm) means the macro is reachable whenever strip_prefix
+    // returns None, which can happen via in-crate struct-literal construction.
+    let bare_unreachable_let_else = r#"
+pub fn extract_prefix(code: &str) -> &str {
+    let Some(rest) = code.strip_prefix("E-") else {
+        unreachable!("BC-2.14.003: code format validated at construction; cannot fail here");
+    };
+    rest
+}
+"#;
+    let findings_iii =
+        scan_for_panics_in_source(bare_unreachable_let_else, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings_iii.is_empty(),
+        "BC-2.14.003 §PC-006(iii): unreachable!() in a let-else else-block (not a wildcard \
+         match arm) must be FLAGGED; the gate currently only detects the `_ => unreachable!()` \
+         token shape; implementer must extend detection to bare unreachable!() invocations \
+         outside exhaustive-match arms (let-else else-blocks, if-block error paths); \
+         got: {findings_iii:?}"
     );
 }

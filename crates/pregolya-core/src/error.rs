@@ -2155,5 +2155,35 @@ mod tests {
              replace with documented assert! so the check-no-panic EC-007 exemption \
              applies (# Panics doc + BC-ID in message)"
         );
+
+        // (c) to_problem() and component_lowercase() must use NO unreachable!() guards.
+        //
+        // RED GATE (F-GUARD-01): current production code has 4 unreachable!() guard
+        // sites — 2 in to_problem() (EC-006 and EC-007 guards) and 2 in
+        // component_lowercase() (EC-002 invalid-chars guard and EC-002 collision guard).
+        // check-no-panic (BC-2.14.003) requires these guards to use documented assert!()
+        // or panic!() with a # Panics doc section and a BC-ID in the message (§EC-006).
+        //
+        // After the implementer's fix all four unreachable!() calls are replaced with
+        // assert!() or panic!(), which satisfy the §EC-007 documented-guard exemption
+        // (# Panics doc already present on both functions; BC-ID already in messages).
+        //
+        // Production scope: split at #[cfg(test)] boundary to exclude test module text.
+        // Pattern built via concat() to avoid self-reference through include_str! —
+        // the file includes this test module so any literal "unreachable!(" substring
+        // in the test source would trivially satisfy contains() against the include'd
+        // content; splitting the pattern across two string literals prevents that.
+        let production_src = src.split("#[cfg(test)]").next().unwrap_or(src);
+        let unreachable_call = ["unreachable", "!("].concat();
+        assert!(
+            !production_src.contains(&unreachable_call),
+            "BC-2.14.003 EC-006 (F-GUARD-01): to_problem() and component_lowercase() must \
+             use documented assert!() or panic!() programmer-error guards, NOT unreachable!(); \
+             found unreachable!() in production code; implementer must convert all four \
+             guard sites to documented assert!()/panic!() with # Panics doc and BC-ID in \
+             message: to_problem() EC-006 guard, to_problem() EC-007 guard, \
+             component_lowercase() EC-002 invalid-chars guard, \
+             component_lowercase() EC-002 collision guard"
+        );
     }
 }
