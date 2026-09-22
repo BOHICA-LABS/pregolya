@@ -276,6 +276,9 @@ impl PregolyaError {
     /// taxonomy. Each `E-<COMPONENT>-NNN` code maps to a single category in the taxonomy, but
     /// that constraint is enforced by the code-registry CI gate in story S-1.02
     /// (VP-BC214001-01), not at construction time.
+    // rustfmt::skip preserves assert!(code.starts_with("E-") on one line per BC-2.14.003 §EC-007
+    // pattern-match requirement (test_BC_2_14_003_programmer_error_guards_compliant).
+    #[rustfmt::skip]
     pub fn new(
         component: Component,
         category: Category,
@@ -285,49 +288,45 @@ impl PregolyaError {
     ) -> Self {
         let code = code.into();
         let message = message.into();
-        if !(code.starts_with("E-")
+        // BC-2.14.001 EC-006: programmer-error-guard assert! (exempt from check-no-panic per
+        // BC-2.14.003 §EC-007: function has # Panics doc section and message cites BC-ID).
+        assert!(code.starts_with("E-")
             && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
                 is_valid_component_segment(mid)
                     && suffix.len() == 3
                     && suffix.chars().all(|c| c.is_ascii_digit())
-            }))
-        {
-            unreachable!(
-                "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
-                code
-            );
-        }
+            }),
+            "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
+            code
+        );
         // BC-2.14.001 EC-002: Custom names must be valid segments and must not alias named
         // component identifiers when lowercased (e.g. Custom("Core") → "core" aliases
         // Component::Core on wire). Both checks share the is_valid_component_segment predicate.
         if let Component::Custom(ref name) = component {
-            if !is_valid_component_segment(name) {
-                unreachable!(
-                    "BC-2.14.001 EC-002: Component::Custom name '{}' is not a valid component segment \
-                    (must be non-empty, [A-Za-z0-9_-] only, no leading/trailing/consecutive -/_)",
-                    name,
-                );
-            }
-            if NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()) {
-                unreachable!(
-                    "BC-2.14.001 EC-002: Component::Custom name '{}' collides with named component '{}' when lowercased",
-                    name,
-                    name.to_lowercase()
-                );
-            }
+            assert!(
+                is_valid_component_segment(name),
+                "BC-2.14.001 EC-002: Component::Custom name '{}' is not a valid component segment \
+                (must be non-empty, [A-Za-z0-9_-] only, no leading/trailing/consecutive -/_)",
+                name,
+            );
+            assert!(
+                !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
+                "BC-2.14.001 EC-002: Component::Custom name '{}' collides with named component '{}' when lowercased",
+                name,
+                name.to_lowercase()
+            );
         }
         // BC-2.14.001 EC-007: code COMPONENT segment must match component_lowercase(&component).
         // Prevents URN namespace aliasing: Custom("newcrate") with code "E-CORE-001" would emit
         // `urn:pregolya:error:E-CORE-001` with `component: "newcrate"` — conflicting attribution.
         let code_component = code[2..].rsplit_once('-').map(|(mid, _)| mid).unwrap_or("");
-        if !code_component.eq_ignore_ascii_case(&component_lowercase(&component)) {
-            unreachable!(
-                "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}'; \
-                code must follow E-<COMPONENT>-NNN where COMPONENT matches the component field",
-                code_component,
-                component_lowercase(&component),
-            );
-        }
+        assert!(
+            code_component.eq_ignore_ascii_case(&component_lowercase(&component)),
+            "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}'; \
+            code must follow E-<COMPONENT>-NNN where COMPONENT matches the component field",
+            code_component,
+            component_lowercase(&component),
+        );
         Self {
             component,
             category,

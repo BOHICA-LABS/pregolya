@@ -45,15 +45,28 @@ pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
     reqwest::ClientBuilder::new()
         .timeout(Duration::from_secs(30))
         .build()
-        .map_err(|e| {
-            PregolyaError::new(
-                Component::Core,
-                Category::Transport,
-                RetryHint::Never,
-                "E-CORE-012",
-                format!("HttpClientBuildFailed: failed to build HTTP client: {e}"),
-            )
-        })
+        .map_err(|e| map_build_failure(&e.to_string()))
+}
+
+/// Maps a `reqwest::ClientBuilder::build()` failure to the canonical E-CORE-012 error.
+///
+/// This is the shared production mapping function for HTTP client build failures.
+/// Called by `build_client()` via `map_err` and used in tests to assert the error shape
+/// without requiring a live broken TLS stack (BC-2.14.004 F-C, SID-1/POL-34).
+///
+/// # Returns
+///
+/// A `PregolyaError` with `Component::Core`, `Category::Transport`,
+/// `RetryHint::Never`, code `"E-CORE-012"`, and a message starting with
+/// `"HttpClientBuildFailed: failed to build HTTP client: "`.
+pub(crate) fn map_build_failure(reason: &str) -> PregolyaError {
+    PregolyaError::new(
+        Component::Core,
+        Category::Transport,
+        RetryHint::Never,
+        "E-CORE-012",
+        format!("HttpClientBuildFailed: failed to build HTTP client: {reason}"),
+    )
 }
 
 #[cfg(test)]
@@ -66,25 +79,11 @@ mod tests {
 
     // ── AC-015 test-support stub ──────────────────────────────────────────────
     //
-    // BC-2.14.004 {EC-006}: the implementer must update build_client()'s map_err
-    // closure to produce PregolyaError { code: "E-CORE-012", category: Transport,
-    // retry_hint: Never }.  This helper encodes the EXPECTED shape; the implementer
-    // must implement it to match (currently todo!() → RED gate).
-    //
-    // Calling convention: the function must construct the exact error that
-    // build_client() would return when ClientBuilder::build() fails, given a
-    // human-readable reason string derived from the reqwest error's Display.
-    //
-    // AC-015 non-ignored test (test_BC_2_14_004_build_failure_maps_to_e_core_012)
-    // calls this helper.  The #[ignore]'d test below covers the live path.
+    // BC-2.14.004 F-C (SID-1): delegates to the production map_build_failure fn
+    // so that test_BC_2_14_004_build_failure_maps_to_e_core_012 exercises the
+    // real production mapping, not a test-only duplicate (BC-2.14.004 F-C/POL-34).
     fn make_build_error_for_test(reason: &str) -> PregolyaError {
-        PregolyaError::new(
-            Component::Core,
-            Category::Transport,
-            RetryHint::Never,
-            "E-CORE-012",
-            format!("HttpClientBuildFailed: failed to build HTTP client: {reason}"),
-        )
+        map_build_failure(reason)
     }
 
     // ── BC-2.14.004 Tests ─────────────────────────────────────────────────────
