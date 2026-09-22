@@ -654,29 +654,25 @@ fn scan_method_calls_in_tokens(
 /// Entry point for `cargo xtask check-no-panic --fixture-mode <dir>`.
 ///
 /// Scans all `*.rs` files under `dir` (not recursing into `target/`) for
-/// panic-path violations using the same scanner as the normal gate. Exits
-/// non-zero if any violation is found.
+/// panic-path violations using the same scanner as the normal gate.
 ///
 /// Purpose: verify that planted violation fixtures are correctly detected by
 /// the gate (AC-017/Task-13, POL-31). Since violation fixtures intentionally
-/// contain violations, a clean exit (0) from this mode indicates the scanner
-/// is broken and failing to detect them.
+/// contain violations, a zero-violations result indicates the scanner is broken.
 ///
 /// Called by `main()` when `argv == ["check-no-panic", "--fixture-mode", <dir>]`.
 ///
 /// # Exit semantics
 ///
-/// - Exits 1 when violations are found — scanner working correctly on a
-///   violation-containing directory.
-/// - Exits 0 when no violations are found — unexpected for the violations fixture
-///   directory; this indicates the scanner is broken and failing to detect the
-///   planted violations.
+/// - Exit 0: scanner healthy — ≥1 fixture file had findings (violations found in fixtures).
+/// - Exit 1: scanner broken — 0 fixture files had findings, no fixtures found,
+///   or ≥1 fixture file could not be read (gate cannot certify scanner coverage).
 ///
-/// CI self-test should assert that the scanner correctly detects violations:
+/// CI self-test (plain call under `set -e`):
 /// ```text
-/// ! cargo xtask check-no-panic --fixture-mode <violations-dir>
+/// cargo xtask check-no-panic --fixture-mode <violations-dir>
 /// ```
-/// (i.e., assert the command exits non-zero, confirming the scanner fires on the fixture).
+/// (exits 0 when the scanner correctly detects violations in the fixture directory).
 pub fn run_fixture_mode(dir: &str) {
     let output = std::process::Command::new("find")
         .args([dir, "-name", "*.rs", "-not", "-path", "*/target/*"])
@@ -711,11 +707,19 @@ pub fn run_fixture_mode(dir: &str) {
     let total_fixtures = fixture_files.len();
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_with_findings = 0usize;
+    let mut files_unreadable = 0usize;
 
     for file_path in &fixture_files {
         let content = match std::fs::read_to_string(file_path) {
             Ok(c) => c,
-            Err(_) => continue,
+            Err(e) => {
+                eprintln!(
+                    "ERROR: check-no-panic --fixture-mode could not read fixture file {}: {}",
+                    file_path, e
+                );
+                files_unreadable += 1;
+                continue;
+            }
         };
         // scan_for_panics_in_source exempts tests/ files EXCEPT fixtures/violations/.
         // For paths under the fixture dir that happen to contain tests/ (e.g.
@@ -728,16 +732,29 @@ pub fn run_fixture_mode(dir: &str) {
         all_findings.extend(findings);
     }
 
+    if files_unreadable > 0 {
+        eprintln!(
+            "ERROR: check-no-panic --fixture-mode could not read {} fixture file(s) — \
+             gate cannot certify scanner coverage",
+            files_unreadable
+        );
+        std::process::exit(1);
+    }
+
     match fixture_mode_verdict(total_fixtures, files_with_findings) {
         Ok(msg) => {
-            eprintln!("check-no-panic --fixture-mode {dir}: violations found (BC-2.14.003):");
+            // Scanner healthy: violations found in fixtures as expected.
+            // Exit 0 so CI can use a plain call under `set -e`.
+            println!("check-no-panic --fixture-mode {dir}: violations found (BC-2.14.003):");
             for f in &all_findings {
-                eprintln!("  {f}");
+                println!("  {f}");
             }
-            eprintln!("{msg}");
-            exit(1);
+            println!("{msg}");
+            std::process::exit(0);
         }
         Err(err) => {
+            // Scanner broken: no violations found in violation fixtures.
+            // Exit 1 to signal failure under `set -e`.
             eprintln!(
                 "ERROR: 0/{total_fixtures} fixture files had findings — no-panic scanner is BROKEN \
                  (detected no violations in violation fixtures)."

@@ -17,12 +17,13 @@ setup:
 iter crate filter="":
     cargo nextest run -p {{crate}} --no-tests=warn {{ if filter != "" { "--filter-expr 'test(" + filter + ")'" } else { "" } }}
 
-# Run all xtask lint gates (client-timeout, no-panic, anyhow-ban, cache-key-ban, file-size)
+# Run all xtask lint gates (client-timeout, no-panic, anyhow-ban, cache-key-ban, file-size, error-code-registry)
 lint-extra:
     cargo xtask check-file-size
     cargo xtask check-client-timeout
     cargo xtask check-no-panic
-    ! cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations
+    cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations
+    cargo xtask check-error-code-registry
     cargo xtask deny-bare-api-key
     cargo xtask deny-anyhow-in-lib
     cargo xtask deny-description-cache-key

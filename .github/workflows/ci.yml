@@ -364,6 +364,18 @@ jobs:
           set -euo pipefail
           cargo install tokei@13.0.0 --locked
 
+      - name: Check out factory-artifacts (error taxonomy for registry gate)
+        if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
+        run: |
+          git fetch origin factory-artifacts:factory-artifacts --depth=1 2>/dev/null || true
+          if git show-ref --verify --quiet refs/heads/factory-artifacts; then
+            git worktree add .factory-ci-checkout factory-artifacts
+            echo "FACTORY_DIR=.factory-ci-checkout" >> "$GITHUB_ENV"
+          else
+            echo "FACTORY_DIR=" >> "$GITHUB_ENV"
+            echo "Warning: factory-artifacts branch not found; check-error-code-registry will use local path fallback"
+          fi
+
       - name: Run xtask lint gates
         if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
         run: |
@@ -371,11 +383,8 @@ jobs:
           cargo xtask check-file-size
           cargo xtask check-client-timeout
           cargo xtask check-no-panic
-          if cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations; then
-            echo "ERROR: no-panic fixture-mode exited 0 — scanner failed to detect planted violations. Scanner is broken."
-            exit 1
-          fi
-          echo "Check passed: no-panic fixture-mode correctly detected planted violations."
+          cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations
+          cargo xtask check-error-code-registry
           cargo xtask deny-bare-api-key
           cargo xtask deny-anyhow-in-lib
           cargo xtask deny-description-cache-key

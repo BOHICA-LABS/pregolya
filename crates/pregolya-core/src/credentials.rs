@@ -89,7 +89,11 @@ impl OpenAiApiKey {
     pub fn new(key: impl Into<String>) -> Result<Self, PregolyaError> {
         let key = key.into();
         validate_api_key_non_empty(&key)?;
-        Ok(Self(key))
+        // Trim after validation: validate_api_key_non_empty rejects whitespace-only inputs;
+        // trimming here removes leading/trailing whitespace from otherwise-valid keys so that
+        // `expose_secret()` never returns a value that would produce a malformed bearer token
+        // (e.g. "Bearer sk-abc\n" is invalid; "Bearer sk-abc" is correct).
+        Ok(Self(key.trim().to_string()))
     }
 
     /// Returns a reference to the inner key string.
@@ -148,7 +152,8 @@ impl AnthropicApiKey {
     pub fn new(key: impl Into<String>) -> Result<Self, PregolyaError> {
         let key = key.into();
         validate_api_key_non_empty(&key)?;
-        Ok(Self(key))
+        // Trim after validation (same rationale as OpenAiApiKey::new).
+        Ok(Self(key.trim().to_string()))
     }
 
     /// Returns a reference to the inner key string.
@@ -658,6 +663,30 @@ mod tests {
             "BC-2.14.006 {{EC-006}} / {{PC-004}} v1.6: message must contain 'whitespace-only'; \
              got: {:?}",
             err.message
+        );
+    }
+
+    /// F-P3-L01 — BC-2.14.006 {PC-004} / credential safety
+    ///
+    /// `OpenAiApiKey::new("  sk-abc  ")` must trim the whitespace and store `"sk-abc"`.
+    /// Without trimming, `expose_secret()` would return `"  sk-abc  "` which becomes
+    /// `"Bearer   sk-abc  "` — a malformed HTTP Authorization header.
+    ///
+    /// The same trim is applied to `AnthropicApiKey::new()` (sibling sweep, TD-VSDD-060).
+    #[test]
+    fn test_BC_2_14_006_new_trims_whitespace() {
+        let key = OpenAiApiKey::new("  sk-abc  ").expect("non-empty after trim must succeed");
+        assert_eq!(
+            key.expose_secret(),
+            "sk-abc",
+            "new() must trim leading/trailing whitespace before storing"
+        );
+        let anthropic_key =
+            AnthropicApiKey::new("  sk-ant-xyz  ").expect("non-empty after trim must succeed");
+        assert_eq!(
+            anthropic_key.expose_secret(),
+            "sk-ant-xyz",
+            "AnthropicApiKey::new() must also trim leading/trailing whitespace"
         );
     }
 

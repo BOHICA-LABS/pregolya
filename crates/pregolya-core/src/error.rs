@@ -274,8 +274,8 @@ impl PregolyaError {
     ///
     /// Note: construction does NOT validate `code`↔`category` consistency against the error
     /// taxonomy. Each `E-<COMPONENT>-NNN` code maps to a single category in the taxonomy, but
-    /// that constraint is enforced by the code-registry CI gate in story S-1.02
-    /// (VP-BC214001-01), not at construction time.
+    /// that constraint is enforced by `cargo xtask check-error-code-registry`
+    /// (VP-BC214001-01, wired in CI lint-extra), not at construction time.
     // rustfmt::skip preserves assert!(code.starts_with("E-") on one line per BC-2.14.003 §EC-007
     // pattern-match requirement (test_BC_2_14_003_programmer_error_guards_compliant).
     #[rustfmt::skip]
@@ -392,7 +392,8 @@ impl PregolyaError {
     /// struct-literal construction (allowed in `pregolya-core` per BC-2.14.001 {PC-008}).
     ///
     /// Note: the emit-time assert validates `code`↔COMPONENT binding only. Code↔category
-    /// taxonomy consistency is enforced by the code-registry gate (S-1.02, VP-BC214001-01).
+    /// taxonomy uniqueness is enforced by `cargo xtask check-error-code-registry`
+    /// (VP-BC214001-01, wired in CI lint-extra).
     pub fn to_problem(&self) -> ProblemDetail {
         // BC-2.14.001 EC-006: documented programmer-error-guard assert! (BC-2.14.003 §EC-007
         // exempt: function has # Panics doc section and message cites BC-ID). Guards against
