@@ -181,7 +181,8 @@ mod tests {
     /// panics. `OpenAiApiKey::new` is the canonical example of a fallible constructor
     /// in `pregolya-core`.
     ///
-    /// RED GATE: `OpenAiApiKey::new` is `todo!()` — panics until implementation.
+    /// GREEN: `OpenAiApiKey::new` is implemented — trims the input, rejects empty/whitespace-only
+    /// strings with E-CORE-005, and returns `Ok(OpenAiApiKey)` for valid input.
     #[test]
     fn test_BC_2_14_003_constructor_returns_result() {
         // BC-2.14.003 {PC-001}: fallible constructor must return Result<T, PregolyaError>
@@ -206,7 +207,7 @@ mod tests {
     ///
     /// `OpenAiApiKey::new("sk-valid-key")` returns `Ok(OpenAiApiKey)` for a non-empty key.
     ///
-    /// RED GATE: `new()` is `todo!()` — panics until implementation.
+    /// GREEN: `new()` is implemented — non-empty input returns `Ok(OpenAiApiKey)`.
     #[test]
     fn test_BC_2_14_005_openai_new_valid_key_returns_ok() {
         let result = OpenAiApiKey::new("sk-valid-key-for-test");
@@ -221,7 +222,7 @@ mod tests {
     ///
     /// `AnthropicApiKey::new("sk-ant-valid-key")` returns `Ok(AnthropicApiKey)`.
     ///
-    /// RED GATE: `new()` is `todo!()` — panics until implementation.
+    /// GREEN: `new()` is implemented — non-empty input returns `Ok(AnthropicApiKey)`.
     #[test]
     fn test_BC_2_14_005_anthropic_new_valid_key_returns_ok() {
         let result = AnthropicApiKey::new("sk-ant-valid-key-for-test");
@@ -299,7 +300,7 @@ mod tests {
     /// `expose_secret()` is the ONLY intentional path to the inner key value.
     /// It returns the exact string passed to `new()`.
     ///
-    /// RED GATE: `new()` is `todo!()` — panics until implementation.
+    /// GREEN: `new()` is implemented — `expose_secret()` returns the exact key string.
     #[test]
     fn test_BC_2_14_005_openai_expose_secret_returns_inner_value() {
         let secret = "sk-the-exact-secret-value";
@@ -315,7 +316,7 @@ mod tests {
     ///
     /// `AnthropicApiKey::expose_secret()` returns the exact inner value.
     ///
-    /// RED GATE: `new()` is `todo!()` — panics until implementation.
+    /// GREEN: `new()` is implemented — `expose_secret()` returns the exact key string.
     #[test]
     fn test_BC_2_14_005_anthropic_expose_secret_returns_inner_value() {
         let secret = "sk-ant-the-exact-secret-value";
@@ -335,7 +336,7 @@ mod tests {
     /// Empty-string validation failure must propagate as `Err`, never panic,
     /// never return `None` or a default value.
     ///
-    /// RED GATE: `new()` is `todo!()` — panics until implementation.
+    /// GREEN: `new()` is implemented — empty input returns `Err` with category VAL.
     #[test]
     fn test_BC_2_14_006_openai_empty_key_returns_err() {
         let result = OpenAiApiKey::new("");
@@ -350,7 +351,7 @@ mod tests {
     ///
     /// `AnthropicApiKey::new("")` returns `Err` — same contract as OpenAI.
     ///
-    /// RED GATE: `new()` is `todo!()` — panics until implementation.
+    /// GREEN: `new()` is implemented — empty input returns `Err` with category VAL.
     #[test]
     fn test_BC_2_14_006_anthropic_empty_key_returns_err() {
         let result = AnthropicApiKey::new("");
@@ -364,7 +365,7 @@ mod tests {
     ///
     /// Validation error code is always `"E-CORE-005"` and the category is `Category::Val`.
     ///
-    /// RED GATE: `new("")` is `todo!()` — panics until implementation.
+    /// GREEN: `new("")` is implemented — returns `Err` with code `"E-CORE-005"` and `Category::Val`.
     #[test]
     fn test_BC_2_14_006_openai_error_code_is_e_core_005() {
         let err = OpenAiApiKey::new("").unwrap_err();
@@ -387,10 +388,8 @@ mod tests {
     /// Per BC-2.14.006 PC-004 v1.6, the reason must cover BOTH the empty-string and
     /// whitespace-only cases: `"value must not be empty or whitespace-only"`.
     ///
-    /// RED GATE: current implementation emits the narrower message
-    /// `"value must not be empty"` (no "or whitespace-only") — the
-    /// `contains("whitespace-only")` assertion fails until the implementer
-    /// widens the message per BC-2.14.006 PC-004 v1.6 / EC-006.
+    /// GREEN: implementation emits the widened canonical message containing
+    /// `"whitespace-only"` per BC-2.14.006 PC-004 v1.6 / EC-006.
     #[test]
     fn test_BC_2_14_006_openai_error_message_format() {
         let err = OpenAiApiKey::new("").unwrap_err();
@@ -422,7 +421,7 @@ mod tests {
     /// `VAL` category always implies `retry_hint: Never` — the input must change;
     /// retrying the same empty key will never succeed.
     ///
-    /// RED GATE: `new("")` is `todo!()` — panics until implementation.
+    /// GREEN: `new("")` is implemented — returns `Err` with `RetryHint::Never`.
     #[test]
     fn test_BC_2_14_006_val_retry_hint_is_never() {
         let err = OpenAiApiKey::new("").unwrap_err();
@@ -440,7 +439,7 @@ mod tests {
     /// Additionally, valid inputs return `Ok(T)` where the inner value is accessible
     /// (not a silent empty/default).
     ///
-    /// RED GATE: `new()` is `todo!()` — panics until implementation.
+    /// GREEN: `new()` is implemented — invalid inputs return `Err`, valid inputs return `Ok(T)`.
     #[test]
     fn test_BC_2_14_006_no_silent_default_on_invalid_inputs() {
         // All of these must return Err — no silent None, no empty default
@@ -471,7 +470,7 @@ mod tests {
     /// Five distinct invalid inputs across credential types all return `Err` with
     /// code `"E-CORE-005"` and message format `"Validation failed for '<field>': <reason>"`.
     ///
-    /// RED GATE: `new("")` is `todo!()` — panics until implementation.
+    /// GREEN: `new("")` is implemented — returns `Err` with code `"E-CORE-005"` and the canonical message format.
     #[test]
     fn test_BC_2_14_006_error_code_and_format_table() {
         // Table: (constructor, input, must_be_err)
@@ -499,10 +498,8 @@ mod tests {
     /// A whitespace-only key produces `"Bearer   "` at the HTTP layer — a malformed
     /// bearer token that fails silently at the provider boundary.
     ///
-    /// RED GATE: current implementation only checks `key.is_empty()`. A string of
-    /// spaces passes the empty check and `new("   ")` returns `Ok(...)` instead of
-    /// `Err(...)` — the assertion `result.is_err()` fails until the implementer
-    /// adds `.trim()` + empty check per BC-2.14.006 PC-004 v1.6 / EC-006.
+    /// GREEN: implementation applies `.trim()` then empty-check — whitespace-only inputs
+    /// are rejected with E-CORE-005 per BC-2.14.006 PC-004 v1.6 / EC-006.
     #[test]
     fn test_BC_2_14_006_openai_whitespace_only_key_returns_err() {
         let result = OpenAiApiKey::new("   ");
@@ -517,7 +514,7 @@ mod tests {
     ///
     /// `AnthropicApiKey::new("   ")` must return `Err` — same contract as OpenAI.
     ///
-    /// RED GATE: same as OpenAI — current `is_empty()` check misses whitespace-only.
+    /// GREEN: `.trim()` + empty-check applied — whitespace-only inputs are rejected.
     #[test]
     fn test_BC_2_14_006_anthropic_whitespace_only_key_returns_err() {
         let result = AnthropicApiKey::new("   ");
@@ -536,8 +533,8 @@ mod tests {
     /// - `retry_hint: RetryHint::Never`
     /// - message containing "whitespace-only"
     ///
-    /// RED GATE: `new("   ")` currently returns `Ok(...)` so `unwrap_err()` panics,
-    /// failing this test even before the field assertions are reached.
+    /// GREEN: `new("   ")` returns `Err(...)` — `unwrap_err()` succeeds and
+    /// all field assertions are reached.
     #[test]
     fn test_BC_2_14_006_whitespace_key_error_fields() {
         let err = OpenAiApiKey::new("   ").unwrap_err();
@@ -574,9 +571,8 @@ mod tests {
     /// BC-2.14.006 PC-004 v1.6 widens the message to
     /// `"value must not be empty or whitespace-only"`.
     ///
-    /// RED GATE: current error message is `"value must not be empty"` (no
-    /// "whitespace-only") — fails until the implementer widens both the message
-    /// AND the validation check per BC-2.14.006 PC-004 v1.6.
+    /// GREEN: error message is `"value must not be empty or whitespace-only"` —
+    /// the widened canonical form per BC-2.14.006 PC-004 v1.6 is in place.
     #[test]
     fn test_BC_2_14_006_empty_key_error_message_widened_to_whitespace() {
         let err = OpenAiApiKey::new("").unwrap_err();

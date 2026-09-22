@@ -2108,11 +2108,10 @@ mod tests {
     // message contains a BC-NNN identifier. The always-on semantics of BC-2.14.001
     // are preserved — assert! panics in both debug and release builds.
     //
-    // RED GATE against HEAD 7c7a590:
-    //   Current error.rs uses the non-compliant unreachable! guard pattern at the
-    //   guard sites in new(). The assertions below FAIL because:
-    //     (a) the compliant assert! guard form does NOT yet exist in production code
-    //     (b) the non-compliant if !(cond) guard form IS present in production code
+    // GREEN: error.rs uses documented assert!() guards throughout — no unreachable!()
+    //   in production scope. The assertions below PASS because:
+    //     (a) the compliant assert! guard form exists in production code
+    //     (b) the non-compliant if !(cond) guard form is absent from production code
     //
     // NOTE: search patterns are built via concat() at runtime to prevent self-reference —
     // include_str! embeds the entire file including this test module, so any literal
@@ -2125,11 +2124,11 @@ mod tests {
     /// assert! (function has a `# Panics` doc section; message contains a BC-NNN ID),
     /// NOT the non-compliant unreachable! guard form.
     ///
-    /// After the implementer's fix the compliant guard form replaces each non-compliant
-    /// guard. The existing `#[should_panic]` tests (test_code_format_rejects_*) must
-    /// still pass because assert! panics in both debug and release builds.
+    /// The existing `#[should_panic]` tests (test_code_format_rejects_*) continue to
+    /// pass because documented assert! panics in both debug and release builds.
     ///
-    /// RED GATE: current code uses the non-compliant guard — both assertions fail.
+    /// GREEN: production code uses the compliant documented assert!() guard form
+    /// throughout — both source-scan assertions in this test pass.
     #[test]
     fn test_BC_2_14_003_programmer_error_guards_compliant() {
         let src = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/error.rs"));
@@ -2161,15 +2160,11 @@ mod tests {
 
         // (c) to_problem() and component_lowercase() must use NO unreachable!() guards.
         //
-        // RED GATE (F-GUARD-01): current production code has 4 unreachable!() guard
-        // sites — 2 in to_problem() (EC-006 and EC-007 guards) and 2 in
-        // component_lowercase() (EC-002 invalid-chars guard and EC-002 collision guard).
-        // check-no-panic (BC-2.14.003) requires these guards to use documented assert!()
-        // or panic!() with a # Panics doc section and a BC-ID in the message (§EC-006).
-        //
-        // After the implementer's fix all four unreachable!() calls are replaced with
-        // assert!() or panic!(), which satisfy the §EC-007 documented-guard exemption
-        // (# Panics doc already present on both functions; BC-ID already in messages).
+        // GREEN (F-GUARD-01 closed): production code has ZERO unreachable!() guard sites.
+        // All four guard sites in to_problem() (EC-006 and EC-007 guards) and
+        // component_lowercase() (EC-002 invalid-chars guard and EC-002 collision guard)
+        // use documented assert!() with a # Panics doc section and a BC-ID in the message,
+        // satisfying the §EC-006 / §EC-007 documented-guard exemption from check-no-panic.
         //
         // Production scope: split at #[cfg(test)] boundary to exclude test module text.
         // Pattern built via concat() to avoid self-reference through include_str! —

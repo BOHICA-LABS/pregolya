@@ -94,7 +94,8 @@ mod tests {
     /// The factory must not panic and must not return an error on a system with
     /// a working TLS stack.
     ///
-    /// RED GATE: `build_client()` is `todo!()` — panics until implementation.
+    /// GREEN: `build_client()` is implemented — constructs a reqwest::Client with
+    /// a 30-second timeout and returns `Ok` on a working TLS stack.
     #[test]
     fn test_BC_2_14_004_build_client_returns_ok() {
         let result = build_client();
@@ -117,7 +118,8 @@ mod tests {
     /// compiles without using `Client::new()`. The scanner gate (`check-client-timeout`)
     /// verifies the source-level constraint at CI time.
     ///
-    /// RED GATE: `build_client()` is `todo!()` — panics until implementation.
+    /// GREEN: `build_client()` is implemented — returns `Ok` with a client carrying
+    /// the 30-second timeout.
     #[test]
     fn test_BC_2_14_004_default_timeout_applied() {
         // The 30s timeout cannot be inspected via reqwest's public API, but we verify
@@ -144,7 +146,8 @@ mod tests {
     /// category:TIMEOUT, code:"E-PROV-002") is owned by S-2.07, which implements the
     /// provider error-mapping layer against a mock server.
     ///
-    /// RED GATE: `build_client()` is `todo!()` — panics until implementation.
+    /// GREEN: `build_client()` is implemented — returns `Ok(reqwest::Client)` with a
+    /// positive-timeout client.
     #[test]
     fn test_BC_2_14_004_timeout_error_shape() {
         // DI-009: build_client() must succeed (returns Ok with a positive-timeout client).
@@ -171,7 +174,8 @@ mod tests {
     /// test_BC_2_14_004_timeout_error_shape) drive the factory at the dependency boundary
     /// without requiring the live 30s wait.
     ///
-    /// RED GATE: `build_client()` is `todo!()` — panics until implementation.
+    /// GREEN: `build_client()` is implemented — the client is constructed and the timeout
+    /// fires as expected against a stalled server.
     #[tokio::test]
     #[ignore = "EXT-BC214004: requires ~30s wall-clock wait for timeout to fire; \
                 ungated in timeout-validation CI job (see BC-2.14.004 TV-004)"]
@@ -221,13 +225,12 @@ mod tests {
     /// `Err(PregolyaError { category: Transport, code: "E-CORE-012",
     ///  retry_hint: Never, message: "HttpClientBuildFailed: ..." })`
     ///
-    /// Current `build_client()` maps build errors to `E-CORE-004` / `RetryHint::Later(30s)` —
-    /// both are wrong per BC-2.14.004 {EC-006} v1.7.
+    /// GREEN: `build_client()` maps build errors to `E-CORE-012` / `Category::Transport` /
+    /// `RetryHint::Never` per BC-2.14.004 {EC-006} v1.7.
     ///
     /// This non-ignored test drives the mapping BOUNDARY via `make_build_error_for_test`,
-    /// which is a `todo!()` stub. The stub panics → RED gate until the implementer:
-    ///   (a) updates `build_client()`'s `map_err` to E-CORE-012 / Transport / Never, and
-    ///   (b) implements `make_build_error_for_test` to return the same error shape.
+    /// which delegates to the production `map_build_failure` fn. The production mapping
+    /// path is exercised directly — not a test-only duplicate.
     ///
     /// SID-1: the `#[ignore]`'d test below exercises the live ClientBuilder::build() failure
     /// path; this non-ignored test covers the mapping boundary without requiring a broken
@@ -266,13 +269,13 @@ mod tests {
 
     // ─── AC-019 / BC-2.14.004 F-C (SID-1 / POL-34) ────────────────────────────
     //
-    // S-1.02 pass-2: the E-CORE-012 mapping must be extracted to a shared production
-    // function so that test_BC_2_14_004_build_failure_maps_to_e_core_012 exercises
-    // the PRODUCTION mapping path, not a test-only duplicate.
+    // S-1.02 pass-2: the E-CORE-012 mapping is extracted to the shared production
+    // function `map_build_failure` so that test_BC_2_14_004_build_failure_maps_to_e_core_012
+    // exercises the PRODUCTION mapping path, not a test-only duplicate.
     //
-    // RED GATE against HEAD 7c7a590:
-    //   Current http.rs has only make_build_error_for_test in #[cfg(test)] scope —
-    //   the shared production mapping function does NOT yet exist. The assertion FAILS.
+    // GREEN: pub(crate) fn map_build_failure exists in production scope — the test-only
+    //   stub make_build_error_for_test now delegates to it, satisfying BC-2.14.004 F-C
+    //   and SID-1/POL-34. The assertion below confirms the production fn is present.
     //
     // NOTE: search pattern built via concat() at runtime to prevent self-reference —
     // include_str! embeds the entire file including this test module, so any literal
@@ -288,8 +291,8 @@ mod tests {
     /// SID-1 / POL-34: a non-ignored test exercising a duplicated test-only helper
     /// instead of the production path fails the load-bearing requirement.
     ///
-    /// RED GATE: the production mapping function does not yet exist in http.rs.
-    /// The assertion reads the source to confirm it exists outside test scope.
+    /// GREEN: `pub(crate) fn map_build_failure` exists in http.rs outside test scope.
+    /// The assertion confirms the production fn is present and the test drives it directly.
     #[test]
     fn test_BC_2_14_004_build_failure_load_bearing_on_production() {
         let src = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/http.rs"));
