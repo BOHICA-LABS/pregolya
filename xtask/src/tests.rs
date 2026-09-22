@@ -3863,19 +3863,20 @@ fn test_check_post_exemption_vacuity_wiring_present_in_all_scanners() {
         ("check_no_panic.rs", check_no_panic),
         ("check_client_timeout.rs", check_client_timeout),
         ("deny_bare_api_key.rs", deny_bare_api_key),
-        ("main.rs (deny_anyhow_in_lib)", main_rs),
     ] {
         assert!(
             src.contains("check_post_exemption_vacuity("),
             "{name} must wire check_post_exemption_vacuity(); if missing the vacuity guard is absent"
         );
     }
-    // main.rs has two gates; verify two call sites
-    let count = main_rs.matches("check_post_exemption_vacuity(").count();
+    // Anchor on gate-name literals used at call sites — the definition has no gate name
     assert!(
-        count >= 2,
-        "main.rs must have >=2 check_post_exemption_vacuity() call sites \
-         (deny_anyhow_in_lib + deny_description_cache_key); found {count}"
+        main_rs.contains("check_post_exemption_vacuity(\"deny-anyhow-in-lib\""),
+        "main.rs must wire check_post_exemption_vacuity for deny-anyhow-in-lib"
+    );
+    assert!(
+        main_rs.contains("check_post_exemption_vacuity(\"deny-description-cache-key\""),
+        "main.rs must wire check_post_exemption_vacuity for deny-description-cache-key"
     );
 }
 

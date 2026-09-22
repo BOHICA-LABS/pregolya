@@ -782,6 +782,13 @@ pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
 /// fail-closed default: when syn cannot parse the file, the AST context needed for
 /// exemption reasoning is unavailable, so fail-closed is the correct posture.
 /// The primary scan path (`scan_with_syn`) applies full exemption logic.
+///
+/// Residual detection gap: panic-family macros produced by token-pasting or
+/// procedural macro expansion at compile time (not present as literal tokens in
+/// the source) cannot be detected by this scanner. For example, `quote! { panic!() }`
+/// in a proc-macro crate expands during compilation — the `panic!` ident never
+/// appears as a literal source token here. This gap affects only proc-macro
+/// authoring scenarios, not ordinary library code.
 fn scan_method_calls_in_tokens(
     iter: proc_macro2::token_stream::IntoIter,
     findings: &mut Vec<String>,
@@ -1288,36 +1295,52 @@ fn f(phase: Phase) -> i32 {
         );
     }
 
-    /// F-P10-M04 — BC-2.14.003
+    /// F-P10-M04 / F-P11-M01 — BC-2.14.003
     ///
-    /// Documents the boundary of `scan_method_calls_in_tokens` panic-family detection.
-    /// In the primary syn path, `panic!` inside `vec![panic!("nested panic")]` is found
-    /// via `visit_expr_macro` (direct AST node). In the fallback token-stream path,
-    /// the same case is covered by the PANIC_FAMILY ident+`!` detection added in F-P10-M04.
+    /// `panic!` nested inside another macro's token stream (e.g. `vec![panic!("boom")]`)
+    /// MUST be detected. In the primary syn path, `handle_macro_invocation` is called for
+    /// `vec!` and then `scan_method_calls_in_tokens` recursively walks the token stream,
+    /// finding `panic` followed by `!` via the PANIC_FAMILY ident arm. In the fallback
+    /// token-stream path (syn parse failure), the same PANIC_FAMILY arm fires directly.
     ///
-    /// This test documents the boundary — no assertion is made about the findings count
-    /// because the primary syn path handles valid Rust correctly.
-    ///
-    /// KNOWN-LIMITATION 4: In the token-stream fallback path, exemption logic
-    /// (Exemption 1 / Exemption 2) is NOT applied — all detected panic-family macros
-    /// are flagged unconditionally. This is fail-closed and acceptable.
+    /// The true remaining gap (KNOWN-LIMITATION 4) is only for panic-family macros
+    /// produced by token-pasting or procedural macro expansion at compile time — those
+    /// do not appear as literal source tokens and cannot be detected by this scanner.
     #[test]
-    fn test_bc_2_14_003_panic_in_macro_arg_known_false_negative() {
-        // KNOWN-LIMITATION 4: panic! nested inside another macro's token stream is not detected
-        // by the fallback scan_method_calls_in_tokens unless the outer macro's token stream
-        // is recursed into. The AST visitor handles `ExprMacro` and `StmtMacro` directly;
-        // this gap affects only macros nested inside other macros' token arguments that
-        // syn cannot parse. Accept this limitation — fail-closed is the primary guarantee.
+    fn test_bc_2_14_003_panic_in_macro_arg_detected_by_panic_family() {
         let src = r#"
 pub fn foo() {
-    let _x = vec![panic!("nested panic")];
+    let _x = vec![panic!("boom")];
 }
 "#;
-        // Note: this returns findings for panic! via visit_expr_macro (direct AST node),
-        // but a more deeply nested `panic!` inside a complex macro call may not be found
-        // in the fallback token-stream path. Accept this limitation.
-        let _ = scan_for_panics_in_source(src, "src/lib.rs");
-        // No assertion — documenting the boundary, not asserting a false negative.
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "panic! nested in vec! token stream must be detected by PANIC_FAMILY arm; \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P11-M01 — BC-2.14.003
+    ///
+    /// Verifies PANIC_FAMILY ident arm fires on panic! nested in macro args.
+    /// This exercises `scan_method_calls_in_tokens` directly — `handle_macro_invocation`
+    /// calls it for `vec!`'s token stream, which contains the literal `panic` ident
+    /// followed by `!`, triggering a finding.
+    #[test]
+    fn test_bc_2_14_003_panic_family_detected_in_token_stream() {
+        // Verifies PANIC_FAMILY ident arm fires on panic! nested in macro args.
+        // This exercises scan_method_calls_in_tokens directly.
+        let src = r#"
+pub fn foo() {
+    let _x = vec![panic!("boom")];
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "panic! nested in vec! token stream must be detected by PANIC_FAMILY arm; got: {findings:?}"
+        );
     }
 
     /// F-P8-H01 — BC-2.14.003 §EC-007 Exemption 1
