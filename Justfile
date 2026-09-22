@@ -22,6 +22,8 @@ lint-extra:
     cargo xtask check-file-size
     cargo xtask check-client-timeout
     cargo xtask check-no-panic
+    ! cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations
+    cargo xtask deny-bare-api-key
     cargo xtask deny-anyhow-in-lib
     cargo xtask deny-description-cache-key
 
