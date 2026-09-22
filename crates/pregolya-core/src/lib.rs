@@ -11,6 +11,7 @@
 //! - `message`   — `Message` enum + `ContentBlock` (SS-01)
 //! - `error`     — `PregolyaError` 2D struct (SS-14)
 //! - `credentials` — API key newtypes with redacted `Debug` (SS-14)
+//! - `http`        — authorised `reqwest::Client` factory with 30s timeout (SS-14)
 //! - `events`    — streaming event taxonomy (SS-06)
 //! - `config`    — `RunnableConfig`, `ChatConfig` (SS-01)
 //! - `retry`     — `ToolRetryPolicy`, `CircuitBreaker` (SS-16)

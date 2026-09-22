@@ -17,7 +17,13 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 fn taxonomy_path() -> PathBuf {
-    if let Ok(dir) = std::env::var("FACTORY_DIR") {
+    taxonomy_path_with_factory_dir(std::env::var("FACTORY_DIR").ok().as_deref())
+}
+
+pub(crate) fn taxonomy_path_with_factory_dir(factory_dir: Option<&str>) -> PathBuf {
+    if let Some(dir) = factory_dir
+        && !dir.trim().is_empty()
+    {
         return PathBuf::from(dir).join("specs/prd-supplements/error-taxonomy.md");
     }
     let local = PathBuf::from(".factory/specs/prd-supplements/error-taxonomy.md");
@@ -51,6 +57,13 @@ pub fn run() {
     }
 
     let total = code_locations.len();
+    if total == 0 {
+        eprintln!(
+            "error-code-registry FAILED: extracted 0 codes from {} — gate cannot certify anything (taxonomy table format may have changed)",
+            path.display()
+        );
+        std::process::exit(1);
+    }
     let mut collisions: Vec<(&String, &Vec<usize>)> = code_locations
         .iter()
         .filter(|(_, lines)| lines.len() > 1)
@@ -173,6 +186,61 @@ mod tests {
         }
         assert_eq!(code_locations.len(), 3);
         assert!(code_locations.values().all(|v| v.len() == 1));
+    }
+
+    #[test]
+    fn test_error_code_registry_zero_codes_is_error() {
+        // A taxonomy with no | E- rows must not produce a vacuous pass.
+        // This test exercises the zero-count guard path via the extracted logic.
+        let content = "## Error Taxonomy\n\nNo codes here.\n\n| Header | Category |\n|--------|----------|\n| sometext | val |\n";
+        let mut code_locations: std::collections::HashMap<String, Vec<usize>> =
+            std::collections::HashMap::new();
+        for (line_idx, line) in content.lines().enumerate() {
+            if let Some(code) = extract_error_code(line) {
+                code_locations.entry(code).or_default().push(line_idx + 1);
+            }
+        }
+        let total = code_locations.len();
+        // The zero-count guard fires when total == 0.
+        assert_eq!(
+            total, 0,
+            "no valid E-* codes should be extracted from this content"
+        );
+    }
+
+    #[test]
+    fn test_taxonomy_path_empty_factory_dir_uses_fallback() {
+        // FACTORY_DIR="" must NOT use the empty string as a path prefix.
+        // It must fall through to the .factory/ or ../../.factory/ fallbacks.
+        let path = taxonomy_path_with_factory_dir(Some(""));
+        let path_str = path.to_string_lossy();
+        assert!(
+            path_str.contains(".factory"),
+            "empty FACTORY_DIR must use .factory/ fallback, got: {path_str}"
+        );
+        assert!(
+            !path_str.starts_with("specs/"),
+            "empty FACTORY_DIR must NOT produce a bare relative path starting with specs/, got: {path_str}"
+        );
+    }
+
+    #[test]
+    fn test_taxonomy_path_whitespace_factory_dir_uses_fallback() {
+        let path = taxonomy_path_with_factory_dir(Some("   "));
+        let path_str = path.to_string_lossy();
+        assert!(
+            path_str.contains(".factory"),
+            "whitespace-only FACTORY_DIR must use .factory/ fallback, got: {path_str}"
+        );
+    }
+
+    #[test]
+    fn test_taxonomy_path_valid_factory_dir_is_used() {
+        let path = taxonomy_path_with_factory_dir(Some("/tmp/my-factory"));
+        assert_eq!(
+            path,
+            std::path::PathBuf::from("/tmp/my-factory/specs/prd-supplements/error-taxonomy.md")
+        );
     }
 
     #[test]

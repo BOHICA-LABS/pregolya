@@ -3595,13 +3595,10 @@ fn test_BC_2_14_005_check_impl_display_no_false_positive_on_generic_bound() {
 /// test-only copy), ensuring a real bug would be caught.
 #[test]
 fn test_BC_2_14_005_impl_display_flagged() {
-    let src = "pub struct OpenAiApiKey(String); \
-               impl fmt::Display for OpenAiApiKey { \
-                   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { \
-                       write!(f, \"{}\", self.0) \
-                   } \
-               }";
-    let findings = scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/lib.rs");
+    let src = include_str!("../tests/fixtures/violations/violation_impl_display.rs");
+    // Use a production-like path label so is_lint_exempt_file does not skip the scan.
+    // The fixture path contains /tests/ which would trigger the test-file exemption.
+    let findings = scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/credentials.rs");
     assert!(
         !findings.is_empty(),
         "impl Display for a credential-sentinel struct must be flagged; got: {findings:?}"
@@ -3622,27 +3619,18 @@ fn test_BC_2_14_005_impl_display_flagged() {
 /// ensuring the `Deserialize` sentinel is enforced end-to-end.
 #[test]
 fn test_BC_2_14_005_derive_deserialize_flagged() {
-    let src = "#[derive(serde::Deserialize)] pub struct FooApiKey(String);";
-    // Note: proc_macro2 parses the path serde::Deserialize; the derive scanner
-    // checks ident names so we also test the unqualified form.
-    let src_unqualified = "#[derive(Deserialize)] pub struct FooApiKey(String);";
-    let findings_qualified =
-        scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/lib.rs");
-    let findings_unqualified =
-        scan_for_bare_api_keys_in_source(src_unqualified, "crates/pregolya-core/src/lib.rs");
-    // At minimum the unqualified form must be flagged (the derive scanner harvests ident tokens)
+    let src = include_str!("../tests/fixtures/violations/violation_derive_deserialize.rs");
+    // Use a production-like path label so is_lint_exempt_file does not skip the scan.
+    // The fixture path contains /tests/ which would trigger the test-file exemption.
+    let findings = scan_for_bare_api_keys_in_source(src, "crates/pregolya-core/src/credentials.rs");
     assert!(
-        !findings_unqualified.is_empty(),
-        "#[derive(Deserialize)] on a credential struct must be flagged; got: {findings_unqualified:?}"
+        !findings.is_empty(),
+        "#[derive(Deserialize)] on a credential struct must be flagged; got: {findings:?}"
     );
     assert!(
-        findings_unqualified
-            .iter()
-            .any(|f| f.contains("Deserialize")),
-        "finding must mention Deserialize; got: {findings_unqualified:?}"
+        findings.iter().any(|f| f.contains("Deserialize")),
+        "finding must mention Deserialize; got: {findings:?}"
     );
-    // Suppress unused-variable warning for qualified variant (serde:: prefix changes ident walk)
-    let _ = findings_qualified;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
