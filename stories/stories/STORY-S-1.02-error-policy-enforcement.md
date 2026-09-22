@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.13"
+version: "1.14"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -21,6 +21,7 @@ changelog:
   - "1.11 (adversary-pass-5-M01-M03/2026-09-22): M01 — AC-010 updated to reflect full deny-bare-api-key implementation: 5 patterns (derive(Debug), derive(Serialize), derive(Deserialize), impl Display, impl Deref<Target=str|String>) and 8 sentinel keywords (key, token, secret, credential, auth, bearer, password, passphrase); added missing Verified-by test symbols test_BC_2_14_005_impl_display_flagged, test_BC_2_14_005_derive_deserialize_flagged, test_BC_2_14_005_pub_crate_debug_derive_fixture_detected; Task 8 prose expanded to match. M03 — AC-020 Verified-by corrected from non-load-bearing test_error_code_registry_zero_codes_is_error to load-bearing test_registry_verdict_zero_codes_returns_err (calls registry_verdict(&HashMap::new()) and asserts Err) plus test_registry_verdict_collision_returns_err (load-bearing collision guard)."
   - "1.12 (adversary-pass-7-M05-L01-L02/2026-09-22): M05 — File Structure Requirements: deny_bare_api_key.rs Purpose cell corrected from 'bare API key string scan' to 'structural credential-struct safety scan (8 sentinels × 5 patterns; no string-literal matching)' (AC-010 explicitly states the gate does not scan string literals). L01 — Task 1 range extended from AC-019 to AC-020 (AC-020 was added in v1.10 but Task 1 was not swept). L02 — Architecture Compliance Rules: Enforcement cell for credentials.rs Deref prohibition corrected from assert_not_impl_any!(OpenAiApiKey: AsRef<str>) to assert_not_impl_any!(OpenAiApiKey: std::ops::Deref) and assert_not_impl_any!(AnthropicApiKey: std::ops::Deref) (both newtypes; matches actual static_assertions enforcement)."
   - "1.13 (adversary-pass-9-L03/2026-09-22): L03 — §Purity Classification: added missing rows for check_client_timeout.rs and deny_bare_api_key.rs (both effectful/file-scan; were in §Architecture Mapping but absent from §Purity Classification)."
+  - "1.14 (adversary-pass-10-H01-M01-M02/2026-09-22): H01 — AC-020 EC-007 citation corrected to EC-004 (collision detection, not code-component binding); BC-2.14.001 body table Title corrected to canonical H1. M01 — 6 grep-based scanner descriptions updated to AST/token-stream; syn and proc-macro2 added to Library & Framework Requirements. M02 — BC-2.14.001 Behavioral Contracts table Title set to canonical H1."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -68,7 +69,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.14.001 | Error-code registry uniqueness gate (VP-BC214001-01) | AC-020 |
+| BC-2.14.001 | BC-2.14.001: PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | AC-020 |
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003, AC-017, AC-018 |
 | BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006, AC-015, AC-019 |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | AC-007..AC-010 |
@@ -83,7 +84,7 @@ Every fallible public constructor in `pregolya-core` returns `Result<T, Pregolya
 `cargo xtask check-no-panic` exits 0 on the initial `pregolya-core/src/` tree (no `unwrap()` or `expect()` in non-test code paths). The xtask itself is created as part of this story. Verified by the xtask executing successfully in CI.
 
 ### AC-003 (traces to BC-2.14.003 INV-003 and INV-004)
-`debug_assert!()`, `unreachable!()` in exhaustive match arms, and test files are exempt from the no-panic xtask scan. The xtask grep pattern excludes `#[cfg(test)]` blocks and the three documented exemptions. Verified by `test_BC_2_14_003_debug_assert_not_flagged()` which places a `debug_assert!` in a non-test context and confirms the xtask still exits 0.
+`debug_assert!()`, `unreachable!()` in exhaustive match arms, and test files are exempt from the no-panic xtask scan. The xtask **AST/token-stream scanner** excludes `#[cfg(test)]` blocks and the three documented exemptions. Verified by `test_BC_2_14_003_debug_assert_not_flagged()` which places a `debug_assert!` in a non-test context and confirms the xtask still exits 0.
 
 ### AC-004 (traces to BC-2.14.004 PC-001 and PC-003)
 A `reqwest::ClientBuilder`-based helper in `pregolya-core` (utility for provider crates) calls `.timeout(Duration::from_secs(30))` by default. `reqwest::Client::new()` is NOT used in any production path in `pregolya-core`. Verified by `test_BC_2_14_004_default_timeout_applied()`.
@@ -133,7 +134,7 @@ The programmer-error-guard asserts in `PregolyaError::new`, `PregolyaError::to_p
 ### AC-019 (traces to BC-2.14.004 EC-006)
 The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annotated `#[ignore]` and invokes the identical production error-mapping code path exercised by `build_client()` at runtime — no separate test-only mapping helper is introduced. The test must break if the production mapping path changes without a corresponding test update. Verified by `test_BC_2_14_004_build_failure_maps_to_e_core_012()` (same test name as AC-015; this AC adds non-ignore and production-path constraints to AC-015's verifiable scope).
 
-### AC-020 (traces to BC-2.14.001 EC-007 / VP-BC214001-01)
+### AC-020 (traces to BC-2.14.001 EC-004 / VP-BC214001-01)
 `cargo xtask check-error-code-registry` exits 0 when every `E-<COMPONENT>-<NNN>` code in `error-taxonomy.md` is unique and at least one code was extracted (non-zero validated count), and exits 1 when any code appears more than once or when zero codes are extracted (vacuity guard — taxonomy format change detection). Verified by `test_registry_verdict_zero_codes_returns_err()` (load-bearing vacuity guard — calls `registry_verdict(&HashMap::new())` and asserts `Err`) + `test_registry_verdict_collision_returns_err()` (load-bearing collision guard) and the CI lint-extra gate wired in `.github/workflows/ci.yml` with factory-artifacts checkout.
 
 ## Architecture Mapping
@@ -153,7 +154,7 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 |--------|---------------|---------------|
 | `pregolya-core/src/credentials.rs` | pure-core | Newtype structs with no I/O. `Debug` impl is a pure string transformation. |
 | `pregolya-core/src/http.rs` | effectful | Builds `reqwest::Client` which opens TCP sockets; async I/O dependency. |
-| `xtask/src/check_no_panic.rs` | effectful | File system scan using `grep`/`ripgrep` subprocess. |
+| `xtask/src/check_no_panic.rs` | effectful | File system scan using **`syn` AST visitor** and `proc_macro2` token-stream scan. |
 | `xtask/src/check_client_timeout.rs` | effectful | token-stream scan over crates/**/*.rs via find subprocess |
 | `xtask/src/deny_bare_api_key.rs` | effectful | token-stream scan over crates/**/*.rs via find subprocess |
 | `xtask/src/check_error_code_registry.rs` | effectful | Reads `.factory/specs/prd-supplements/error-taxonomy.md` from disk; filesystem I/O dependency. |
@@ -195,8 +196,8 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 3. [ ] Create `pregolya-core/src/credentials.rs` — `OpenAiApiKey`, `AnthropicApiKey` newtypes with redacted Debug
 4. [ ] Create `pregolya-core/src/http.rs` — `build_client()` with 30s timeout, no `Client::new()`
 5. [ ] Add `pub mod credentials;` and `pub mod http;` to `pregolya-core/src/lib.rs`
-6. [ ] Create `xtask/src/check_no_panic.rs` — grep scan for `unwrap()`/`expect()` outside test/exempt contexts
-7. [ ] Create `xtask/src/check_client_timeout.rs` — grep scan for `Client::new()` and missing `.timeout()`
+6. [ ] Create `xtask/src/check_no_panic.rs` — `syn` AST walk detecting `unwrap()`, `expect()`, `panic!`, `assert*!`, `todo!`, `unimplemented!`, `unreachable!` outside test/exempt contexts
+7. [ ] Create `xtask/src/check_client_timeout.rs` — `proc_macro2` token-stream scan for `ClientBuilder` chains without a positive `.timeout()` before `.build()`
 8. [ ] Create `xtask/src/deny_bare_api_key.rs` — structural scan: flags public credential-sentinel structs (name contains any of 8 sentinels: key/token/secret/credential/auth/bearer/password/passphrase, case-insensitive) with any of 5 patterns: auto-derived Debug, Serialize, or Deserialize; or impl Display; or impl Deref<Target=str|String>
 9. [ ] Wire four new xtask subcommands into `xtask/src/main.rs`
 10. [ ] Add static-assertions for credential type constraints
@@ -217,7 +218,7 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | `credentials.rs` must NOT implement `Deref<Target=str>` on any key newtype | BC-2.14.005 PC-004 | `static_assertions::assert_not_impl_any!(OpenAiApiKey: std::ops::Deref)` and `static_assertions::assert_not_impl_any!(AnthropicApiKey: std::ops::Deref)` (both newtypes) |
-| `debug_assert!` exempt from no-panic scan | BC-2.14.003 INV-003 | Xtask grep pattern; test by placing `debug_assert!(true)` in prod code |
+| `debug_assert!` exempt from no-panic scan | BC-2.14.003 INV-003 | Xtask `check-no-panic` **AST scanner**; test by placing `debug_assert!(true)` in prod code |
 | No `reqwest::Client::new()` in `http.rs` production path | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` |
 | Xtask crate must NOT be in `workspace.members` as a publishable crate | Architecture convention | `Cargo.toml` `xtask` entry has `publish = false` |
 
@@ -230,6 +231,8 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `reqwest` | workspace pin | `default-features = false, features = ["rustls-tls"]` — HTTP client with rustls |
 | `static_assertions` | workspace pin (dev) | Trait bound assertions for credential types |
 | `tokio` | workspace pin (dev) | Async test runtime for timeout test |
+| `syn = { version = "2", features = ["full", "visit"] }` | workspace pin (xtask) | AST parsing for `check_no_panic.rs` PanicVisitor — MANDATORY |
+| `proc-macro2 = { version = "1", features = ["span-locations"] }` | workspace pin (xtask) | Token-stream scanning and diagnostic spans — MANDATORY |
 
 ## File Structure Requirements (MANDATORY)
 
@@ -238,7 +241,7 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `pregolya-core/src/credentials.rs` | CREATE | `OpenAiApiKey`, `AnthropicApiKey` newtypes |
 | `pregolya-core/src/http.rs` | CREATE | `build_client()` returning `reqwest::Client` with 30s timeout |
 | `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod credentials;`, `pub mod http;` |
-| `xtask/src/check_no_panic.rs` | CREATE | CI xtask: no-unwrap/expect scan |
+| `xtask/src/check_no_panic.rs` | CREATE | CI xtask: no-panic AST gate (`unwrap`, `expect`, `panic!`, `assert*!`, `todo!`, `unimplemented!`, wildcard-`unreachable!`) |
 | `xtask/src/check_client_timeout.rs` | CREATE | CI xtask: reqwest timeout gate |
 | `xtask/src/deny_bare_api_key.rs` | CREATE | CI xtask: structural credential-struct safety scan (8 sentinels × 5 patterns; no string-literal matching) |
 | `xtask/src/check_error_code_registry.rs` | CREATE | CI xtask: error-code-registry uniqueness gate (BC-2.14.001, VP-BC214001-01) |
