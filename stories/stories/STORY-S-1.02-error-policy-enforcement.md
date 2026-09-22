@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.9"
+version: "1.10"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -17,6 +17,7 @@ changelog:
   - "1.7 (pass-15/F-01-F-02-sweep/2026-09-22): F-01 (MED) — AC-014 body corrected: removed false claim of 'five different invalid inputs across three message types'; actual test exercises empty-string input across OpenAiApiKey and AnthropicApiKey (two credential newtypes), asserting code E-CORE-005, Category::Val, and canonical message prefix 'Validation failed for'. F-02 (LOW) — AC-012 body corrected: 'property test' reworded to 'table-driven test' (fixed input array, not randomized). Full sweep additional corrections: AC-001 body corrected from 'compile-fail test' to 'unit test' with accurate description of Ok/Err paths; AC-011 body corrected example from Message::human('') with S-1.03-scope 'content' field (out of S-1.02 scope) to OpenAiApiKey::new('') with actual error message. bcs frontmatter array unchanged (4 BCs)."
   - "1.8 (adversary-pass-1-MED-7/2026-09-22): AC-006 #[ignore] reason corrected — removed false citation of non-existent timeout-validation CI job; deferral now cites S-2.07 per BC-2.14.004 {PC-005}."
   - "1.9 (adversary-pass-3-H02/2026-09-22): Added BC-2.14.001 + VP-BC214001-01 to deliver the error-code-registry CI gate anchored here from STORY-S-1.01. Gate implemented: cargo xtask check-error-code-registry."
+  - "1.10 (adversary-pass-4-H01-M07/2026-09-22): H01 — Added BC-2.14.001 row to body §Behavioral Contracts table; authored AC-020 tracing BC-2.14.001 EC-007 / VP-BC214001-01 for check-error-code-registry gate. M07 — Swept xtask/src/check_error_code_registry.rs into §Architecture Mapping, §Purity Classification, §File Structure Requirements; corrected Task 9 count from three to four subcommands; extended Task 14 CHANGELOG topics to include registry gate."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -64,6 +65,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
+| BC-2.14.001 | Error-code registry uniqueness gate (VP-BC214001-01) | AC-020 |
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003, AC-017, AC-018 |
 | BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006, AC-015, AC-019 |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | AC-007..AC-010 |
@@ -128,6 +130,9 @@ The programmer-error-guard asserts in `PregolyaError::new`, `PregolyaError::to_p
 ### AC-019 (traces to BC-2.14.004 EC-006)
 The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annotated `#[ignore]` and invokes the identical production error-mapping code path exercised by `build_client()` at runtime — no separate test-only mapping helper is introduced. The test must break if the production mapping path changes without a corresponding test update. Verified by `test_BC_2_14_004_build_failure_maps_to_e_core_012()` (same test name as AC-015; this AC adds non-ignore and production-path constraints to AC-015's verifiable scope).
 
+### AC-020 (traces to BC-2.14.001 EC-007 / VP-BC214001-01)
+`cargo xtask check-error-code-registry` exits 0 when every `E-<COMPONENT>-<NNN>` code in `error-taxonomy.md` is unique and at least one code was extracted (non-zero validated count), and exits 1 when any code appears more than once or when zero codes are extracted (vacuity guard — taxonomy format change detection). Verified by `test_error_code_registry_zero_codes_is_error()` (vacuity guard unit test) and the CI lint-extra gate wired in `.github/workflows/ci.yml` with factory-artifacts checkout.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -137,6 +142,7 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 | `cargo xtask deny-bare-api-key` | `xtask/src/deny_bare_api_key.rs` | effectful (file scan) |
 | `OpenAiApiKey`, `AnthropicApiKey` | `pregolya-core/src/credentials.rs` (`core::credentials`) | pure-core |
 | `reqwest::ClientBuilder` helper | `pregolya-core/src/http.rs` | effectful (I/O) |
+| `cargo xtask check-error-code-registry` | `xtask/src/check_error_code_registry.rs` | effectful (file scan) |
 
 ## Purity Classification
 
@@ -145,6 +151,7 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 | `pregolya-core/src/credentials.rs` | pure-core | Newtype structs with no I/O. `Debug` impl is a pure string transformation. |
 | `pregolya-core/src/http.rs` | effectful | Builds `reqwest::Client` which opens TCP sockets; async I/O dependency. |
 | `xtask/src/check_no_panic.rs` | effectful | File system scan using `grep`/`ripgrep` subprocess. |
+| `xtask/src/check_error_code_registry.rs` | effectful | Reads `.factory/specs/prd-supplements/error-taxonomy.md` from disk; filesystem I/O dependency. |
 
 ## Edge Cases
 
@@ -186,12 +193,12 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 6. [ ] Create `xtask/src/check_no_panic.rs` — grep scan for `unwrap()`/`expect()` outside test/exempt contexts
 7. [ ] Create `xtask/src/check_client_timeout.rs` — grep scan for `Client::new()` and missing `.timeout()`
 8. [ ] Create `xtask/src/deny_bare_api_key.rs` — structural scan: flags public credential-sentinel structs (name contains key/token/secret/credential) with auto-derived Debug, Serialize, or Deref<Target=str>
-9. [ ] Wire three new xtask subcommands into `xtask/src/main.rs`
+9. [ ] Wire four new xtask subcommands into `xtask/src/main.rs`
 10. [ ] Add static-assertions for credential type constraints
 11. [ ] Run `cargo xtask check-no-panic && cargo xtask check-client-timeout && cargo xtask deny-bare-api-key` — all exit 0
 12. [ ] Run `cargo nextest run -p pregolya-core` — all tests pass
 13. [ ] Add two POL-31 live-violation fixtures under `xtask/tests/fixtures/violations/` (bare `assert!` without `# Panics` doc; `_ => unreachable!()` wildcard arm) and confirm `cargo xtask check-no-panic --fixture-mode` detects both
-14. [ ] Add CHANGELOG entry under [Unreleased] > Added describing shipped no-panic enforcement, HTTP timeout policy, credential newtype redaction, and validation propagation behavior before creating the PR
+14. [ ] Add CHANGELOG entry under [Unreleased] > Added describing shipped no-panic enforcement, HTTP timeout policy, credential newtype redaction, validation propagation behavior, and error-code-registry uniqueness gate before creating the PR
 15. [ ] Implement `cargo xtask check-error-code-registry` gate (VP-BC214001-01): parses error-taxonomy.md, asserts code uniqueness, wired to CI lint-extra
 
 ## Previous Story Intelligence (MANDATORY)
@@ -229,4 +236,5 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `xtask/src/check_no_panic.rs` | CREATE | CI xtask: no-unwrap/expect scan |
 | `xtask/src/check_client_timeout.rs` | CREATE | CI xtask: reqwest timeout gate |
 | `xtask/src/deny_bare_api_key.rs` | CREATE | CI xtask: bare API key string scan |
-| `xtask/src/main.rs` | MODIFY | Wire three new xtask subcommands |
+| `xtask/src/check_error_code_registry.rs` | CREATE | CI xtask: error-code-registry uniqueness gate (BC-2.14.001, VP-BC214001-01) |
+| `xtask/src/main.rs` | MODIFY | Wire four new xtask subcommands |
