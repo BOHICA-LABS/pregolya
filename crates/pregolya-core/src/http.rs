@@ -54,6 +54,11 @@ pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
 /// Called by `build_client()` via `map_err` and used in tests to assert the error shape
 /// without requiring a live broken TLS stack (BC-2.14.004 F-C, SID-1/POL-34).
 ///
+/// The `reason` string is sanitized before inclusion in the error message —
+/// URL-embedded credentials (e.g. proxy `://user:password@host`) are redacted to
+/// `://***@host`, and the message is capped at 200 characters for defense-in-depth
+/// (SEC-007, CWE-209).
+///
 /// # Returns
 ///
 /// A `PregolyaError` with `Component::Core`, `Category::Transport`,
@@ -65,8 +70,59 @@ pub(crate) fn map_build_failure(reason: &str) -> PregolyaError {
         Category::Transport,
         RetryHint::Never,
         "E-CORE-012",
-        format!("HttpClientBuildFailed: failed to build HTTP client: {reason}"),
+        format!(
+            "HttpClientBuildFailed: failed to build HTTP client: {}",
+            sanitize_error_message(reason)
+        ),
     )
+}
+
+/// Sanitize a raw error message string before including it in a `PregolyaError`.
+///
+/// Performs two passes:
+/// 1. Redact URL-embedded credentials: `://user:pass@host` → `://***@host`.
+/// 2. Cap the result at 200 characters to bound information exposure.
+///
+/// This prevents proxy credentials (e.g. `http://corp-proxy:password@10.0.0.1:3128`)
+/// from leaking into structured error messages that may be logged or surfaced in
+/// API responses (SEC-007, CWE-209).
+pub(crate) fn sanitize_error_message(s: &str) -> String {
+    let sanitized = redact_url_credentials(s);
+    // Cap at 200 chars, respecting UTF-8 char boundaries.
+    if sanitized.len() <= 200 {
+        sanitized
+    } else {
+        // Find the last valid char boundary at or before byte 200.
+        let truncate_at = (0..=200)
+            .rev()
+            .find(|&i| sanitized.is_char_boundary(i))
+            .unwrap_or(0);
+        sanitized[..truncate_at].to_string()
+    }
+}
+
+/// Replace URL-embedded credential patterns `://ANYTHING@` with `://***@`.
+///
+/// Handles multiple occurrences and nested `://` sequences. Does not require
+/// the `regex` crate — pure string scanning.
+fn redact_url_credentials(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut remaining = s;
+
+    while let Some(scheme_end) = remaining.find("://") {
+        // Include everything up to and including `://`
+        result.push_str(&remaining[..scheme_end + 3]);
+        remaining = &remaining[scheme_end + 3..];
+
+        if let Some(at_pos) = remaining.find('@') {
+            // Credentials occupy the span between `://` and `@`; redact them.
+            result.push_str("***@");
+            remaining = &remaining[at_pos + 1..];
+        }
+        // No `@` found after `://` — no credentials in this segment; continue.
+    }
+    result.push_str(remaining);
+    result
 }
 
 #[cfg(test)]
@@ -308,6 +364,88 @@ mod tests {
             "BC-2.14.004 F-C (SID-1): the E-CORE-012 mapping must be a production \
              pub(crate) fn (not buried in cfg(test) as make_build_error_for_test); \
              implementer must extract the shared mapping fn and wire build_client() to it"
+        );
+    }
+
+    // ─── SEC-007 / CWE-209 — sanitize_error_message tests ────────────────────
+
+    /// SEC-007: URL-embedded credentials in a build-failure reason must be redacted.
+    ///
+    /// A misconfigured proxy (e.g. `http://user:password@proxy:3128`) may appear in the
+    /// reqwest error string. The canonical E-CORE-012 message must NOT include the
+    /// credential portion.
+    #[test]
+    fn test_sanitize_error_message_redacts_url_credentials() {
+        let raw = "failed to connect to proxy http://corp-proxy:secret123@10.0.0.1:3128";
+        let sanitized = sanitize_error_message(raw);
+        assert!(
+            !sanitized.contains("secret123"),
+            "sanitize_error_message must redact credential; got: {:?}",
+            sanitized
+        );
+        assert!(
+            sanitized.contains("10.0.0.1:3128"),
+            "sanitize_error_message must preserve host/port after @; got: {:?}",
+            sanitized
+        );
+        assert!(
+            sanitized.contains("***@"),
+            "sanitize_error_message must emit '***@' as redaction marker; got: {:?}",
+            sanitized
+        );
+    }
+
+    /// SEC-007: Error messages with no URL-embedded credentials must pass through unchanged.
+    #[test]
+    fn test_sanitize_error_message_passthrough_when_no_credentials() {
+        let raw = "TLS handshake failed: certificate verify failed";
+        let sanitized = sanitize_error_message(raw);
+        assert_eq!(
+            sanitized, raw,
+            "sanitize_error_message must not alter messages without credentials"
+        );
+    }
+
+    /// SEC-007: Error messages longer than 200 chars must be capped.
+    #[test]
+    fn test_sanitize_error_message_caps_at_200_chars() {
+        let raw = "x".repeat(300);
+        let sanitized = sanitize_error_message(&raw);
+        assert!(
+            sanitized.len() <= 200,
+            "sanitize_error_message must cap output at 200 chars; got len: {}",
+            sanitized.len()
+        );
+    }
+
+    /// SEC-007: Proxy URL credentials flow through map_build_failure and are absent from the
+    /// resulting PregolyaError message (end-to-end integration of the sanitize path).
+    #[test]
+    fn test_map_build_failure_redacts_proxy_credentials_in_message() {
+        let raw_reason = "could not connect to proxy http://admin:hunter2@proxy.corp.local:8080";
+        let e = map_build_failure(raw_reason);
+        assert!(
+            !e.message.contains("hunter2"),
+            "map_build_failure must redact proxy credentials from error message; got: {:?}",
+            e.message
+        );
+        assert!(
+            e.message.starts_with("HttpClientBuildFailed:"),
+            "message must still start with 'HttpClientBuildFailed:'; got: {:?}",
+            e.message
+        );
+    }
+
+    /// SEC-007: Error reason with no URL must pass through map_build_failure unaltered.
+    #[test]
+    fn test_map_build_failure_passthrough_no_url() {
+        let raw_reason = "simulated TLS stack unavailable";
+        let e = map_build_failure(raw_reason);
+        assert!(
+            e.message.contains(raw_reason),
+            "map_build_failure must include unmodified reason when no URL credentials present; \
+             got: {:?}",
+            e.message
         );
     }
 

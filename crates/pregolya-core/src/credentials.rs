@@ -7,8 +7,12 @@
 //!
 //! # Invariants
 //!
-//! - No `#[derive(Serialize)]` — credential values must not appear in API responses
-//!   or log artifacts (BC-2.14.005 {PC-003}).
+//! - No `#[derive(Serialize)]` or `#[derive(Deserialize)]` — credential values must not
+//!   appear in API responses or log artifacts, and `Deserialize` would bypass `new()`
+//!   validation (BC-2.14.005 {PC-003}, BC-2.14.006).
+//! - No `impl fmt::Display` — `Display` output is invoked by `format!("{}", key)` and
+//!   the `{key}` shorthand; key material must not appear in format output
+//!   (BC-2.14.005 {INV-002}).
 //! - No `impl Deref<Target=str>` or `impl AsRef<str>` — access to the inner value
 //!   is gated behind the explicit `.expose_secret()` method (BC-2.14.005 {PC-004},
 //!   {INV-003}).
@@ -41,7 +45,7 @@ use crate::error::PregolyaError;
 /// Only via the explicit [`OpenAiApiKey::expose_secret`] method — never via
 /// trait auto-deref.
 #[non_exhaustive]
-pub struct OpenAiApiKey(pub(crate) String);
+pub struct OpenAiApiKey(String);
 
 impl fmt::Debug for OpenAiApiKey {
     /// Emits exactly `"<redacted>"` — the canonical log-scrubber sentinel.
@@ -91,6 +95,16 @@ impl OpenAiApiKey {
     }
 }
 
+/// Test-only constructor — bypasses `new()` validation to allow direct construction
+/// in unit tests (e.g. to test `Debug` redaction without going through the validation path).
+/// Only compiled in `#[cfg(test)]` context; `pub(crate)` so tests in `mod tests` can call it.
+#[cfg(test)]
+impl OpenAiApiKey {
+    pub(crate) fn from_raw_for_tests(s: impl Into<String>) -> Self {
+        Self(s.into())
+    }
+}
+
 // ─── AnthropicApiKey ──────────────────────────────────────────────────────────
 
 /// API key for the Anthropic (Claude) provider.
@@ -98,7 +112,7 @@ impl OpenAiApiKey {
 /// Same invariants as [`OpenAiApiKey`]: `Debug` emits `"<redacted>"`, no
 /// `Serialize`, no `Deref<Target=str>`, no `AsRef<str>`.
 #[non_exhaustive]
-pub struct AnthropicApiKey(pub(crate) String);
+pub struct AnthropicApiKey(String);
 
 impl fmt::Debug for AnthropicApiKey {
     /// Emits exactly `"<redacted>"` — the canonical log-scrubber sentinel.
@@ -141,6 +155,16 @@ impl AnthropicApiKey {
     }
 }
 
+/// Test-only constructor — bypasses `new()` validation to allow direct construction
+/// in unit tests (e.g. to test `Debug` redaction without going through the validation path).
+/// Only compiled in `#[cfg(test)]` context; `pub(crate)` so tests in `mod tests` can call it.
+#[cfg(test)]
+impl AnthropicApiKey {
+    pub(crate) fn from_raw_for_tests(s: impl Into<String>) -> Self {
+        Self(s.into())
+    }
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -160,9 +184,22 @@ mod tests {
     static_assertions::assert_not_impl_any!(OpenAiApiKey: std::ops::Deref);
     static_assertions::assert_not_impl_any!(AnthropicApiKey: std::ops::Deref);
 
-    // AC-009: No Serialize impl (serde_json::to_string would fail to compile if present).
-    // Note: serde::Serialize assertion is not needed here — the type simply doesn't
-    // derive Serialize, so any attempt to serialize it fails at compile time.
+    // AC-009: No Serialize impl — credential values must not appear in serialized artifacts
+    // (BC-2.14.005 {PC-003}). Assertion catches anyone adding #[derive(Serialize)].
+    static_assertions::assert_not_impl_any!(OpenAiApiKey: serde::Serialize);
+    static_assertions::assert_not_impl_any!(AnthropicApiKey: serde::Serialize);
+
+    // AC-009: No Deserialize impl — #[derive(Deserialize)] would bypass new() validation
+    // (BC-2.14.006): callers could deserialize arbitrary strings (including empty/whitespace)
+    // without going through new() (SEC-002 / BC-2.14.006).
+    static_assertions::assert_not_impl_any!(OpenAiApiKey: serde::de::Deserialize<'static>);
+    static_assertions::assert_not_impl_any!(AnthropicApiKey: serde::de::Deserialize<'static>);
+
+    // AC-009: No Display impl — Display output is invoked by format!("{}", key) and the
+    // {key} shorthand; credential values must not appear in any format output
+    // (BC-2.14.005 {INV-002}, SEC-003 / CWE-532).
+    static_assertions::assert_not_impl_any!(OpenAiApiKey: std::fmt::Display);
+    static_assertions::assert_not_impl_any!(AnthropicApiKey: std::fmt::Display);
 
     // AC-013 (traces to BC-2.14.006 EC-005): fallible conversions use TryFrom, not From.
     // From<String> / From<&str> must NOT be implemented — such a conversion cannot fail,
@@ -243,10 +280,9 @@ mod tests {
     /// independent of constructor validation logic.
     #[test]
     fn test_BC_2_14_005_openai_debug_emits_redacted_sentinel() {
-        // Construct directly within the crate (struct-literal allowed inside the defining crate
-        // even though the type is non_exhaustive externally).
-        // This avoids calling new() to keep the Debug assertion independent of constructor validation logic.
-        let key = OpenAiApiKey("sk-real-secret-value".to_string());
+        // Construct via the test-only helper (field is private; from_raw_for_tests bypasses new()
+        // validation so the Debug assertion is independent of constructor validation logic).
+        let key = OpenAiApiKey::from_raw_for_tests("sk-real-secret-value");
         let debug_output = format!("{:?}", key);
         assert_eq!(
             debug_output, "<redacted>",
@@ -263,7 +299,7 @@ mod tests {
     /// GREEN-BY-DESIGN: same rationale as the OpenAI variant above.
     #[test]
     fn test_BC_2_14_005_anthropic_debug_emits_redacted_sentinel() {
-        let key = AnthropicApiKey("sk-ant-real-secret-value".to_string());
+        let key = AnthropicApiKey::from_raw_for_tests("sk-ant-real-secret-value");
         let debug_output = format!("{:?}", key);
         assert_eq!(
             debug_output, "<redacted>",
@@ -282,7 +318,7 @@ mod tests {
     #[test]
     fn test_BC_2_14_005_debug_does_not_leak_key_material() {
         let sentinel = "LEAK_SENTINEL_ABC123_DO_NOT_LOG";
-        let key = OpenAiApiKey(sentinel.to_string());
+        let key = OpenAiApiKey::from_raw_for_tests(sentinel);
         let debug_output = format!("{:?}", key);
         assert!(
             !debug_output.contains(sentinel),

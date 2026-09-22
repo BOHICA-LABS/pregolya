@@ -7,21 +7,43 @@
 //! # Scanning rules
 //!
 //! Scans `crates/**/*.rs` for STRUCTURAL violations on public structs whose
-//! names contain a credential sentinel (`key`, `token`, `secret`,
-//! `credential` — case-insensitive):
+//! names contain a credential sentinel (case-insensitive):
+//!
+//! **Credential sentinels:** `key`, `token`, `secret`, `credential`,
+//! `auth`, `bearer`, `password`, `passphrase`.
+//!
+//! Sentinel expansion policy: add new terms when new credential patterns
+//! emerge in the workspace. Sentinels are lowercase substrings — a struct
+//! named `OauthBearerToken` matches because it contains `bearer` and `token`.
 //!
 //! 1. **`#[derive(Debug)]` without a manual `impl Debug`** — auto-derived
 //!    `Debug` would emit the raw inner value and leak key material.
 //! 2. **`#[derive(Serialize)]`** — serialization exposes credentials in
 //!    JSON/TOML artifacts (BC-2.14.005 {PC-003}).
-//! 3. **`impl Deref for NAME` with `type Target = str`** — Deref coercion
-//!    silently exposes the inner value via auto-deref ({INV-003}).
+//! 3. **`#[derive(Deserialize)]`** — `Deserialize` bypasses `new()` validation
+//!    (BC-2.14.006): arbitrary strings (including empty/whitespace) could be
+//!    deserialized directly without going through the validated constructor.
+//! 4. **`impl fmt::Display for NAME`** — `Display` output is invoked by
+//!    `format!("{}", key)` and the `{key}` shorthand; credential values must
+//!    not appear in any format output (BC-2.14.005 {INV-002}).
+//! 5. **`impl Deref for NAME` with `type Target = str` or `type Target = String`**
+//!    — Deref coercion silently exposes the inner value via auto-deref ({INV-003}).
 //!
 //! Compliant pattern: manual `impl fmt::Debug` emitting `"<redacted>"`,
-//! no `Serialize` derive, access only via `expose_secret()`.
+//! no `Serialize`/`Deserialize` derive, no `Display` impl, access only via
+//! `expose_secret()`.
 //!
 //! - Files under `tests/` directories and `#[cfg(test)]` blocks are exempt.
 //! - Exits non-zero when any violation is found; exits 0 on a clean scan.
+//!
+//! # Known limitations
+//!
+//! KNOWN-LIMITATION: `#[cfg_attr(feature="...", derive(Debug/Serialize/Deserialize))]`
+//! conditional derives are not detected by the current AST walker. A developer who
+//! conditionally derives a dangerous trait under a feature flag would evade this gate.
+//! Full `cfg_attr` argument parsing requires deeper attribute token walk.
+//! Tracked for a future enhancement when feature-gated derives are introduced in the
+//! workspace.
 
 use std::process::exit;
 
@@ -124,7 +146,20 @@ pub(crate) fn scan_for_bare_api_keys_in_source(src: &str, path: &str) -> Vec<Str
 }
 
 /// Lowercase substrings that identify credential/key/secret struct names.
-const CREDENTIAL_SENTINELS: &[&str] = &["key", "token", "secret", "credential"];
+///
+/// Sentinels are case-insensitive substring matches. A struct named `OauthBearerToken`
+/// matches both `bearer` and `token`. Expand this list when new credential patterns
+/// appear in the workspace (see module-level expansion policy).
+const CREDENTIAL_SENTINELS: &[&str] = &[
+    "key",
+    "token",
+    "secret",
+    "credential",
+    "auth",
+    "bearer",
+    "password",
+    "passphrase",
+];
 
 /// Returns true if `name` (a struct identifier) contains any credential sentinel.
 fn struct_name_has_sentinel(name: &str) -> bool {
@@ -205,6 +240,15 @@ fn check_struct_derives(
                     path, line, sname
                 ));
             }
+            if derives.iter().any(|d| d == "Deserialize") {
+                findings.push(format!(
+                    "{}:{}: BC-2.14.005 {{PC-006}}: pub struct '{}' derives Deserialize \
+                     — #[derive(Deserialize)] bypasses new() validation (BC-2.14.006): \
+                     arbitrary strings (including empty/whitespace) could be deserialized \
+                     directly without going through the validated constructor",
+                    path, line, sname
+                ));
+            }
         }
     }
 }
@@ -276,6 +320,73 @@ fn check_impl_deref(
     j
 }
 
+/// Read-only scan from `start` to detect `impl … Display for NAME` on a credential-sentinel struct.
+///
+/// Does NOT advance the caller's position — only appends findings. Call alongside
+/// `check_impl_deref` so both Display and Deref violations on the same impl block are caught.
+///
+/// Detects:
+/// - `impl Display for NAME` (unqualified)
+/// - `impl fmt::Display for NAME` (module-qualified)
+/// - `impl std::fmt::Display for NAME` (fully-qualified)
+///
+/// (BC-2.14.005 {PC-006}: Display output is invoked by `format!("{}", key)` and the
+/// `{key}` shorthand; credential values must not appear in any format output.)
+fn check_impl_display(
+    tokens: &[proc_macro2::TokenTree],
+    start: usize,
+    path: &str,
+    findings: &mut Vec<String>,
+) {
+    use proc_macro2::TokenTree;
+    let n = tokens.len();
+    let mut j = start;
+    let mut display_found = false;
+    let mut for_found = false;
+    let mut struct_name = String::new();
+    let mut struct_line = 0usize;
+
+    while j < n {
+        match &tokens[j] {
+            // Detect `Display` ident before `for` (may appear after path segments like `fmt::`)
+            TokenTree::Ident(id) if id == "Display" && !for_found => {
+                display_found = true;
+                j += 1;
+            }
+            TokenTree::Ident(id) if id == "for" && display_found => {
+                for_found = true;
+                j += 1;
+                // The next ident is the implementing type name
+                if let Some(TokenTree::Ident(sname)) = tokens.get(j) {
+                    struct_name = sname.to_string();
+                    struct_line = sname.span().start().line;
+                    j += 1;
+                }
+            }
+            // Stop at the impl body brace group — we have what we need
+            TokenTree::Group(_) => break,
+            TokenTree::Punct(p) if p.as_char() == ';' => break,
+            _ => {
+                j += 1;
+            }
+        }
+    }
+
+    if display_found
+        && for_found
+        && !struct_name.is_empty()
+        && struct_name_has_sentinel(&struct_name)
+    {
+        findings.push(format!(
+            "{}:{}: BC-2.14.005 {{PC-006}}: impl Display for '{}' \
+             — Display output is invoked by format!(\"{{}}\", key) and the {{key}} shorthand; \
+             credential values must not appear in any format output \
+             ({{INV-002}}: use expose_secret() for intentional access only)",
+            path, struct_line, struct_name
+        ));
+    }
+}
+
 /// Recursive walker that detects credential struct safety violations.
 fn walk_for_credential_violations(
     iter: proc_macro2::token_stream::IntoIter,
@@ -326,10 +437,14 @@ fn walk_for_credential_violations(
             continue;
         }
 
-        // ── Pattern 3: impl [path] Deref for NAME { type Target = str; } ─────
+        // ── Pattern 3: impl [path] Deref for NAME { type Target = str|String; } ─
+        // Pattern 4: impl [path] Display for NAME { … } ───────────────────────
         if let TokenTree::Ident(kw) = &tokens[i]
             && kw == "impl"
         {
+            // Read-only Display check (doesn't advance position)
+            check_impl_display(&tokens, i + 1, path, findings);
+            // Deref check advances position past the impl block brace group
             i = check_impl_deref(&tokens, i + 1, path, findings, in_test_depth);
             continue;
         }
@@ -392,7 +507,12 @@ fn skip_cfg_test_body(
     j
 }
 
-/// Returns `true` if the impl body group contains `type Target = str ;`.
+/// Returns `true` if the impl body group contains `type Target = str ;` or
+/// `type Target = String ;`.
+///
+/// Both `Deref<Target=str>` and `Deref<Target=String>` expose the inner value
+/// via auto-deref coercion (`*key` and coercion to `&str`/`&String`). Both are
+/// forbidden on credential-sentinel structs (SEC-004 / {INV-003}).
 fn impl_body_has_target_str(body: &proc_macro2::Group) -> bool {
     use proc_macro2::TokenTree;
     let toks: Vec<TokenTree> = body.stream().into_iter().collect();
@@ -401,7 +521,7 @@ fn impl_body_has_target_str(body: &proc_macro2::Group) -> bool {
         if matches!(&toks[i], TokenTree::Ident(id) if id == "type")
             && matches!(toks.get(i + 1), Some(TokenTree::Ident(id)) if id == "Target")
             && matches!(toks.get(i + 2), Some(TokenTree::Punct(p)) if p.as_char() == '=')
-            && matches!(toks.get(i + 3), Some(TokenTree::Ident(id)) if id == "str")
+            && matches!(toks.get(i + 3), Some(TokenTree::Ident(id)) if id == "str" || id == "String")
         {
             return true;
         }
