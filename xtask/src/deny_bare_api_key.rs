@@ -121,12 +121,18 @@ pub fn run() {
 
 /// Scans a single Rust source file for structural credential safety violations.
 ///
-/// Detects three violation patterns on public structs with sentinel names
-/// (`key`, `token`, `secret`, `credential` — case-insensitive):
+/// Detects five violation patterns on public structs whose names contain any of the
+/// eight credential sentinels (`key`, `token`, `secret`, `credential`, `auth`,
+/// `bearer`, `password`, `passphrase` — case-insensitive substring match):
 ///
 /// 1. `#[derive(Debug)]` — auto-derived Debug leaks key material.
 /// 2. `#[derive(Serialize)]` — exposes credentials in serialized artifacts.
-/// 3. `impl Deref for NAME { type Target = str; }` — auto-deref exposes inner value.
+/// 3. `#[derive(Deserialize)]` — bypasses `new()` validation; arbitrary strings
+///    can be deserialized without going through the validated constructor.
+/// 4. `impl fmt::Display for NAME` — Display output is invoked by `format!("{}", key)`
+///    and the `{key}` shorthand; credential values must not appear in format output.
+/// 5. `impl Deref for NAME { type Target = str; }` or `type Target = String;` —
+///    auto-deref exposes the inner value via Deref coercion.
 ///
 /// Returns `Vec<String>` of violation messages. Returns empty when clean.
 pub(crate) fn scan_for_bare_api_keys_in_source(src: &str, path: &str) -> Vec<String> {
@@ -285,6 +291,14 @@ fn check_impl_deref(
 
     while j < n {
         match &tokens[j] {
+            // No angle-bracket depth tracking needed here: a false positive would also
+            // require `type Target = str|String` in the impl body (enforced by
+            // `impl_body_has_target_str`). A generic bound `impl<T: Deref> SomeTrait for ApiKey {}`
+            // does NOT have a `type Target` in that impl block, so it will never trigger
+            // `impl_body_has_target_str`. This asymmetry with `check_impl_display_in_tokens`
+            // (which does have angle-bracket depth tracking) is intentional: the `type Target`
+            // requirement in the body acts as the false-positive guard that angle-bracket depth
+            // tracking would otherwise provide. See test_BC_2_14_005_generic_deref_bound_not_flagged.
             TokenTree::Ident(id) if id == "Deref" && !for_found => {
                 deref_found = true;
                 j += 1;
@@ -562,4 +576,31 @@ fn impl_body_has_target_str(body: &proc_macro2::Group) -> bool {
         }
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::scan_for_bare_api_keys_in_source;
+
+    /// F-P5-L03 — `impl<T: Deref> SomeTrait for ApiKey` must NOT be flagged.
+    ///
+    /// The `check_impl_deref` path requires `type Target = str|String` in the impl body
+    /// (enforced by `impl_body_has_target_str`). A generic bound `impl<T: Deref>` that has
+    /// NO `type Target` in the body cannot trigger the violation; this negative test makes
+    /// that invariant load-bearing.
+    #[test]
+    fn test_bc_2_14_005_generic_deref_bound_not_flagged() {
+        let src = r#"
+pub struct ApiKey(String);
+impl<T: std::ops::Deref> Render for ApiKey {
+    fn render(&self) -> String { String::new() }
+}
+"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "crates/core/src/creds.rs");
+        assert!(
+            findings.is_empty(),
+            "impl<T: Deref> generic bound must not be flagged (no type Target = str in body); \
+             got: {findings:?}"
+        );
+    }
 }

@@ -741,7 +741,11 @@ pub fn run_fixture_mode(dir: &str) {
         std::process::exit(1);
     }
 
-    match fixture_mode_verdict(total_fixtures, files_with_findings) {
+    // Compute the expected minimum: all fixture files except the known credential-only
+    // fixtures (CREDENTIAL_FIXTURE_COUNT = 3) which are scanned by deny-bare-api-key,
+    // not check-no-panic, and correctly produce no findings here.
+    let min_expected = total_fixtures.saturating_sub(CREDENTIAL_FIXTURE_COUNT);
+    match fixture_mode_verdict(total_fixtures, files_with_findings, Some(min_expected)) {
         Ok(msg) => {
             // Scanner healthy: violations found in fixtures as expected.
             // Exit 0 so CI can use a plain call under `set -e`.
@@ -765,21 +769,43 @@ pub fn run_fixture_mode(dir: &str) {
     }
 }
 
-/// Pure verdict helper for fixture-mode: returns `Ok(msg)` when ≥1 fixture file had
-/// findings (scanner working), or `Err(msg)` when 0 files had findings (scanner broken).
+/// Number of fixture files in the violations directory that are NOT no-panic violations
+/// (e.g., credential-only fixtures scanned by `deny-bare-api-key`, not `check-no-panic`).
+/// These files are legitimately skipped by the no-panic scanner and must not be counted
+/// toward the expected minimum.
+///
+/// Kept as a named constant so a drop from 12/15 to e.g. 1/15 still trips the gate
+/// while still allowing the 3 credential-only fixtures to remain in the same directory.
+pub(crate) const CREDENTIAL_FIXTURE_COUNT: usize = 3;
+
+/// Pure verdict helper for fixture-mode: returns `Ok(msg)` when the scanner is healthy,
+/// or `Err(msg)` when it is broken.
+///
+/// - 0 files had findings → `Err` (scanner broken).
+/// - `files_with_findings < min_expected` (when `min_expected` is `Some(n)`) → `Err`
+///   (regression: fewer files than expected have findings, scanner may have regressed).
+/// - Otherwise → `Ok`.
 ///
 /// Extracted for testability — the exit(1) side-effect lives in `run_fixture_mode`.
 pub(crate) fn fixture_mode_verdict(
     total_fixtures: usize,
     files_with_findings: usize,
+    min_expected: Option<usize>,
 ) -> Result<String, String> {
     if files_with_findings == 0 {
-        Err(format!(
+        return Err(format!(
             "0/{total_fixtures} fixture files had findings — scanner BROKEN"
-        ))
-    } else {
-        Ok(format!(
-            "fixture-mode: {files_with_findings}/{total_fixtures} fixture files had findings"
-        ))
+        ));
     }
+    if let Some(min) = min_expected
+        && files_with_findings < min
+    {
+        return Err(format!(
+            "{files_with_findings}/{total_fixtures} fixture files had findings, \
+             but expected at least {min} — scanner may have regressed"
+        ));
+    }
+    Ok(format!(
+        "fixture-mode: {files_with_findings}/{total_fixtures} fixture files had findings"
+    ))
 }

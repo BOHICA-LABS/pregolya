@@ -33,6 +33,57 @@ pub(crate) fn taxonomy_path_with_factory_dir(factory_dir: Option<&str>) -> PathB
     PathBuf::from("../../.factory/specs/prd-supplements/error-taxonomy.md")
 }
 
+/// Extracts all `E-<COMPONENT>-<NNN>` codes from the content, mapping each code
+/// to the list of line numbers (1-indexed) where it appears.
+///
+/// Extracted for testability and called by both `run()` and tests.
+pub(crate) fn collect_code_locations(content: &str) -> HashMap<String, Vec<usize>> {
+    let mut code_locations: HashMap<String, Vec<usize>> = HashMap::new();
+    for (line_idx, line) in content.lines().enumerate() {
+        if let Some(code) = extract_error_code(line) {
+            code_locations.entry(code).or_default().push(line_idx + 1);
+        }
+    }
+    code_locations
+}
+
+/// Pure verdict helper: returns `Ok(msg)` when the registry is valid, or `Err(msg)`
+/// when it is empty (0 codes extracted) or has collisions.
+///
+/// - 0 codes extracted → `Err` (gate cannot certify anything; taxonomy format may have changed).
+/// - 1+ collision(s) → `Err` with details of each duplicate code.
+/// - All codes unique → `Ok` with a summary.
+///
+/// Extracted for testability — the `std::process::exit(1)` side-effect lives in `run()`.
+pub(crate) fn registry_verdict(
+    code_locations: &HashMap<String, Vec<usize>>,
+) -> Result<String, String> {
+    let total = code_locations.len();
+    if total == 0 {
+        return Err(
+            "extracted 0 codes — gate cannot certify anything (taxonomy table format may have changed)"
+                .to_string(),
+        );
+    }
+    let mut collisions: Vec<(&String, &Vec<usize>)> = code_locations
+        .iter()
+        .filter(|(_, lines)| lines.len() > 1)
+        .collect();
+    // Sort for deterministic output
+    collisions.sort_by_key(|(code, _)| code.as_str());
+    if !collisions.is_empty() {
+        let detail = collisions
+            .iter()
+            .map(|(code, lines)| {
+                format!("{} appears {} times (rows: {:?})", code, lines.len(), lines)
+            })
+            .collect::<Vec<_>>()
+            .join("; ");
+        return Err(format!("{} collision(s): {}", collisions.len(), detail));
+    }
+    Ok(format!("{total} codes validated, 0 collisions"))
+}
+
 pub fn run() {
     let path = taxonomy_path();
     let content = match std::fs::read_to_string(&path) {
@@ -49,49 +100,14 @@ pub fn run() {
         }
     };
 
-    let mut code_locations: HashMap<String, Vec<usize>> = HashMap::new();
-    for (line_idx, line) in content.lines().enumerate() {
-        if let Some(code) = extract_error_code(line) {
-            code_locations.entry(code).or_default().push(line_idx + 1);
+    let code_locations = collect_code_locations(&content);
+    match registry_verdict(&code_locations) {
+        Ok(msg) => println!("error-code-registry PASSED: {msg}."),
+        Err(err) => {
+            eprintln!("error-code-registry FAILED: {err}");
+            std::process::exit(1);
         }
     }
-
-    let total = code_locations.len();
-    if total == 0 {
-        eprintln!(
-            "error-code-registry FAILED: extracted 0 codes from {} — gate cannot certify anything (taxonomy table format may have changed)",
-            path.display()
-        );
-        std::process::exit(1);
-    }
-    let mut collisions: Vec<(&String, &Vec<usize>)> = code_locations
-        .iter()
-        .filter(|(_, lines)| lines.len() > 1)
-        .collect();
-    // Sort for deterministic output
-    collisions.sort_by_key(|(code, _)| code.as_str());
-
-    if !collisions.is_empty() {
-        for (code, lines) in &collisions {
-            eprintln!(
-                "error-code-registry COLLISION: {} appears {} times (lines: {:?})",
-                code,
-                lines.len(),
-                lines
-            );
-        }
-        eprintln!(
-            "error-code-registry FAILED: {} collision(s) found in {} codes",
-            collisions.len(),
-            total
-        );
-        std::process::exit(1);
-    }
-
-    println!(
-        "error-code-registry PASSED: {} codes validated, 0 collisions.",
-        total
-    );
 }
 
 /// Extracts an `E-<COMPONENT>-<NNN>` code from a markdown table row.
@@ -177,34 +193,35 @@ mod tests {
         let content = "| E-CORE-001 | VAL | broken | BC-2.01.001 | `msg` |\n\
                        | E-CORE-002 | IO | transient | BC-2.01.001 | `msg` |\n\
                        | E-MCP-001 | VAL | broken | BC-3.01.001 | `msg` |\n";
-        let mut code_locations: std::collections::HashMap<String, Vec<usize>> =
-            std::collections::HashMap::new();
-        for (line_idx, line) in content.lines().enumerate() {
-            if let Some(code) = extract_error_code(line) {
-                code_locations.entry(code).or_default().push(line_idx + 1);
-            }
-        }
-        assert_eq!(code_locations.len(), 3);
-        assert!(code_locations.values().all(|v| v.len() == 1));
+        let code_locations = collect_code_locations(content);
+        let result = registry_verdict(&code_locations);
+        assert!(
+            result.is_ok(),
+            "3 unique codes must produce Ok; got: {result:?}"
+        );
+        let msg = result.unwrap();
+        assert!(
+            msg.contains("3 codes validated"),
+            "Ok message must cite code count; got: {msg}"
+        );
     }
 
     #[test]
     fn test_error_code_registry_zero_codes_is_error() {
         // A taxonomy with no | E- rows must not produce a vacuous pass.
-        // This test exercises the zero-count guard path via the extracted logic.
+        // This test calls production code (collect_code_locations + registry_verdict)
+        // so deleting the zero-count guard from registry_verdict would cause this test to fail.
         let content = "## Error Taxonomy\n\nNo codes here.\n\n| Header | Category |\n|--------|----------|\n| sometext | val |\n";
-        let mut code_locations: std::collections::HashMap<String, Vec<usize>> =
-            std::collections::HashMap::new();
-        for (line_idx, line) in content.lines().enumerate() {
-            if let Some(code) = extract_error_code(line) {
-                code_locations.entry(code).or_default().push(line_idx + 1);
-            }
-        }
-        let total = code_locations.len();
-        // The zero-count guard fires when total == 0.
-        assert_eq!(
-            total, 0,
-            "no valid E-* codes should be extracted from this content"
+        let code_locations = collect_code_locations(content);
+        let result = registry_verdict(&code_locations);
+        assert!(
+            result.is_err(),
+            "zero codes must produce Err (zero-count guard); got: {result:?}"
+        );
+        let err_msg = result.unwrap_err();
+        assert!(
+            err_msg.contains("0 codes") || err_msg.contains("extracted 0"),
+            "Err message must mention zero codes; got: {err_msg}"
         );
     }
 
@@ -248,20 +265,57 @@ mod tests {
         let content = "| E-CORE-001 | VAL | broken | BC-2.01.001 | `msg` |\n\
                        | E-CORE-002 | IO | transient | BC-2.01.001 | `msg` |\n\
                        | E-CORE-001 | IO | transient | BC-2.01.002 | `duplicate` |\n";
-        let mut code_locations: std::collections::HashMap<String, Vec<usize>> =
-            std::collections::HashMap::new();
-        for (line_idx, line) in content.lines().enumerate() {
-            if let Some(code) = extract_error_code(line) {
-                code_locations.entry(code).or_default().push(line_idx + 1);
-            }
-        }
-        let collisions: Vec<_> = code_locations
-            .iter()
-            .filter(|(_, lines)| lines.len() > 1)
-            .collect();
-        assert_eq!(collisions.len(), 1);
-        let (code, lines) = collisions[0];
-        assert_eq!(code, "E-CORE-001");
-        assert_eq!(lines.len(), 2);
+        let code_locations = collect_code_locations(content);
+        let result = registry_verdict(&code_locations);
+        assert!(
+            result.is_err(),
+            "duplicate E-CORE-001 must produce Err; got: {result:?}"
+        );
+        let err_msg = result.unwrap_err();
+        assert!(
+            err_msg.contains("E-CORE-001"),
+            "Err message must name the colliding code; got: {err_msg}"
+        );
+        assert!(
+            err_msg.contains("1 collision"),
+            "Err message must report 1 collision; got: {err_msg}"
+        );
+    }
+
+    /// Explicit load-bearing test for the zero-codes guard in `registry_verdict`.
+    ///
+    /// Calls `registry_verdict` directly with an empty HashMap — verifying that
+    /// deleting the zero-count guard from `registry_verdict` causes this test to fail
+    /// (TD-VSDD-059 paper-fix prevention for F-P5-M03).
+    #[test]
+    fn test_registry_verdict_zero_codes_returns_err() {
+        let empty: HashMap<String, Vec<usize>> = HashMap::new();
+        let result = registry_verdict(&empty);
+        assert!(
+            result.is_err(),
+            "registry_verdict with 0 codes must return Err (zero-count guard); \
+             got: {result:?}"
+        );
+    }
+
+    /// Explicit load-bearing test for the collision detection in `registry_verdict`.
+    ///
+    /// Calls `registry_verdict` directly with a HashMap containing a duplicate code —
+    /// verifying collision detection independently of the `collect_code_locations` parser.
+    #[test]
+    fn test_registry_verdict_collision_returns_err() {
+        let mut map: HashMap<String, Vec<usize>> = HashMap::new();
+        map.insert("E-CORE-001".to_string(), vec![1, 2]);
+        map.insert("E-CORE-002".to_string(), vec![3]);
+        let result = registry_verdict(&map);
+        assert!(
+            result.is_err(),
+            "registry_verdict with a duplicate code must return Err; got: {result:?}"
+        );
+        let err_msg = result.unwrap_err();
+        assert!(
+            err_msg.contains("E-CORE-001"),
+            "Err message must identify the colliding code E-CORE-001; got: {err_msg}"
+        );
     }
 }

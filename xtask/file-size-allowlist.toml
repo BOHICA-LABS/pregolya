@@ -28,9 +28,9 @@
 
 [[allow]]
 path = "xtask/src/main.rs"
-reason = "CI gate dispatch binary implementing 5 lint checkers (no-panic, client-timeout, anyhow-ban, description-cache-key, file-size) plus shared allowlist parsing and file-walking utilities. All gates share a common proc_macro2-based scan-and-report pattern; the file is cohesive by function. Adjusted code-line count (tokei Code minus #[cfg(test)] spans via proc_macro2 span-locations) exceeds the 750-line hard gate."
+reason = "CI gate dispatch binary for 7 subcommands (check-file-size, check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow-in-lib, deny-description-cache-key), three in-file checker implementations (check_file_size, deny_anyhow_in_lib, deny_description_cache_key), and shared file-walking helpers (is_test_file, is_lint_exempt_file, is_cfg_test_group, allowlist parsing). All gates share a common proc_macro2-based scan-and-report pattern; the file is cohesive by function. Adjusted code-line count (tokei Code minus #[cfg(test)] spans via proc_macro2 span-locations) exceeds the 750-line hard gate."
 approver = "jmagady"
-date = "2026-09-19"
+date = "2026-09-22"
 
 [[allow]]
 path = "xtask/src/tests.rs"

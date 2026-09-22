@@ -530,6 +530,33 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
     found_build && !found_timeout_before_build
 }
 
+/// Returns `true` if a zero-duration literal matches the zero-literal normalisation rules.
+///
+/// Strips underscores (for `0_u64`, `0_u32`, etc.) and also recognises hex/binary/octal
+/// zero forms (`0x0`, `0b0`, `0o0`) which are equivalent to the integer zero at compile time.
+fn is_zero_literal(s: &str) -> bool {
+    let normalized = s.replace('_', "");
+    if matches!(
+        normalized.as_str(),
+        "0" | "0u64"
+            | "0u32"
+            | "0u128"
+            | "0usize"
+            | "0i64"
+            | "0i32"
+            | "0.0"
+            | "0.0f64"
+            | "0.0f32"
+            // Hex/binary/octal zero forms
+            | "0x0"
+            | "0b0"
+            | "0o0"
+    ) {
+        return true;
+    }
+    false
+}
+
 /// Returns `true` if the `.timeout(...)` call at `timeout_idx` uses a zero duration
 /// as its argument (BC-2.14.004 {PC-001}/{INV-004}).
 ///
@@ -565,69 +592,137 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
 /// +4  Punct(':')  +5  Punct(':')
 /// +6  Ident("from_secs"|"from_millis"|"from_nanos"|"from_secs_f64")
 /// +7  ParenGroup       (inner paren marker for constructor args)
-/// +8  Literal("0"|"0u64"|"0u32"|"0i64"|"0usize"|"0.0"|"0.0f64"|"0.0f32")
+/// +8  Literal("0"|"0u64"|"0u32"|"0i64"|"0usize"|"0.0"|"0.0f64"|"0.0f32"|"0x0"|"0b0"|"0o0")
 /// ```
+///
+/// **Form D — fully-qualified zero-literal constructor `std::time::Duration::from_secs(0)` /
+/// `core::time::Duration::from_millis(0)` etc.** (offsets +3..+13):
+/// ```text
+/// +2  ParenGroup       (outer paren marker)
+/// +3  Ident("std"|"core")
+/// +4  Punct(':')  +5  Punct(':')
+/// +6  Ident("time")
+/// +7  Punct(':')  +8  Punct(':')
+/// +9  Ident("Duration")
+/// +10 Punct(':')  +11 Punct(':')
+/// +12 Ident("from_secs"|"from_millis"|...)
+/// +13 ParenGroup       (inner paren marker for constructor args)
+/// +14 Literal("0"|...)
+/// ```
+///
+/// Forms A–D are all detected by first optionally consuming the `std :: time ::` or
+/// `core :: time ::` qualifier prefix (4 tokens), then applying the Duration::ZERO and
+/// Duration::from_*(0) checks at the resulting offset.
 fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool {
     if !matches!(flat.get(timeout_idx + 2), Some(FlatToken::ParenGroup(_))) {
         return false;
     }
 
-    // Form A: Duration :: ZERO
-    if matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "Duration")
-        && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if n == "ZERO")
+    // Detect and skip an optional `std :: time ::` or `core :: time ::` qualifier prefix.
+    // If present, the prefix occupies 4 tokens: Ident("std"|"core"), ':', ':', Ident("time"),
+    // followed by another ':', ':' before "Duration". We check for the qualifier pattern and
+    // set `dur_offset` to where "Duration" appears.
+    let base = timeout_idx + 3; // first token inside the outer paren group
+    let dur_offset = if matches!(flat.get(base), Some(FlatToken::Ident(n, _)) if n == "std" || n == "core")
+        && matches!(flat.get(base + 1), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(base + 2), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(base + 3), Some(FlatToken::Ident(n, _)) if n == "time")
+        && matches!(flat.get(base + 4), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(base + 5), Some(FlatToken::Punct(':', _)))
+    {
+        // Qualifier found — Duration starts at base + 6
+        base + 6
+    } else {
+        // No qualifier — Duration starts at base
+        base
+    };
+
+    // Form A / Form B-ZERO: Duration :: ZERO
+    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
+        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if n == "ZERO")
     {
         return true;
     }
 
-    // Form B: std::time::Duration::ZERO  or  core::time::Duration::ZERO
-    if matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "std" || n == "core")
-        && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if n == "time")
-        && matches!(flat.get(timeout_idx + 7), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 8), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 9), Some(FlatToken::Ident(n, _)) if n == "Duration")
-        && matches!(flat.get(timeout_idx + 10), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 11), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 12), Some(FlatToken::Ident(n, _)) if n == "ZERO")
-    {
-        return true;
-    }
-
-    // Form C: Duration :: from_secs|from_millis|from_nanos|from_secs_f64 ( zero_literal )
-    if matches!(flat.get(timeout_idx + 3), Some(FlatToken::Ident(n, _)) if n == "Duration")
-        && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if matches!(
+    // Form C / Form D: Duration :: from_secs|from_millis|... ( zero_literal )
+    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
+        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
+        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if matches!(
             n.as_str(),
             "from_secs" | "from_millis" | "from_nanos" | "from_secs_f64"
                 | "from_micros" | "from_secs_f32"
         ))
-        && matches!(flat.get(timeout_idx + 7), Some(FlatToken::ParenGroup(_)))
+        && matches!(flat.get(dur_offset + 4), Some(FlatToken::ParenGroup(_)))
     {
         // Check the first inlined argument is a zero literal.
-        // Normalize by stripping underscores before matching so that `0_u64`,
-        // `0_u32`, `0__u64`, etc. are handled without enumerating all variants.
-        if let Some(FlatToken::Literal(s, _)) = flat.get(timeout_idx + 8) {
-            let normalized = s.as_str().replace('_', "");
-            if matches!(
-                normalized.as_str(),
-                "0" | "0u64"
-                    | "0u32"
-                    | "0u128"
-                    | "0usize"
-                    | "0i64"
-                    | "0i32"
-                    | "0.0"
-                    | "0.0f64"
-                    | "0.0f32"
-            ) {
-                return true;
-            }
+        if let Some(FlatToken::Literal(s, _)) = flat.get(dur_offset + 5)
+            && is_zero_literal(s)
+        {
+            return true;
         }
     }
 
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::scan_for_timeout_violations_in_source;
+
+    /// BC-2.14.004 {PC-001}/{INV-004} — Form D: fully-qualified from_secs(0) must be flagged.
+    ///
+    /// `std::time::Duration::from_secs(0)` is semantically identical to Duration::ZERO;
+    /// the fully-qualified path + constructor form must be detected (F-P5-M02).
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_fully_qualified_from_secs_zero() {
+        let src = r#"let c = reqwest::ClientBuilder::new()
+            .timeout(std::time::Duration::from_secs(0))
+            .build()?;"#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P5-M02 Form D: \
+             .timeout(std::time::Duration::from_secs(0)) must be flagged as zero-timeout; \
+             got: {findings:?}"
+        );
+    }
+
+    /// BC-2.14.004 {PC-001}/{INV-004} — Form D: core::time::Duration::from_millis(0) must be flagged.
+    ///
+    /// `core::time::Duration::from_millis(0)` is also a zero duration via fully-qualified path.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_core_qualified_from_millis_zero() {
+        let src = r#"let c = reqwest::ClientBuilder::new()
+            .timeout(core::time::Duration::from_millis(0))
+            .build()?;"#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P5-M02 Form D: \
+             .timeout(core::time::Duration::from_millis(0)) must be flagged as zero-timeout; \
+             got: {findings:?}"
+        );
+    }
+
+    /// BC-2.14.004 {PC-001}/{INV-004} — hex literal zero: Duration::from_secs(0x0) must be flagged.
+    ///
+    /// `0x0` is the integer zero in hexadecimal form; it is equivalent to the literal `0`
+    /// and must be treated as a zero-timeout argument.
+    #[test]
+    fn test_bc_2_14_004_flags_timeout_duration_zero_hex_literal() {
+        let src =
+            r#"let c = reqwest::ClientBuilder::new().timeout(Duration::from_secs(0x0)).build()?;"#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.004 {{PC-001}} F-P5-M02: .timeout(Duration::from_secs(0x0)) must be \
+             flagged as zero-timeout (hex zero is zero); got: {findings:?}"
+        );
+    }
 }

@@ -2152,14 +2152,14 @@ pub fn process_status(n: u32) -> &'static str {
 // BC-2.14.003 (S-1.02 pass-4 F-03) — --fixture-mode e2e gate (AC-017/Task-13)
 //
 // check-no-panic --fixture-mode <dir> must scan the given directory (not crates/)
-// and exit non-zero when violation fixtures are present. The current run() fn
+// and exit 0 when scanner healthy (>=1 fixture file had findings). The current run() fn
 // ignores argv[2] and scans crates/ (which is clean) → exits 0.
 //
 // Red-gate provenance (in-process): the brace-delimiter fixture violation_assert_brace.rs
 // produced no findings with the pre-fix scanner (F-01 gap), causing the second
 // assertion to fail; now GREEN after delimiter-independent detection.
 // Red-gate provenance (subprocess, #[ignore]): --fixture-mode was not implemented; pre-fix code
-// scanned crates/ (clean) → exited 0; test asserted non-zero and was authored failing; now GREEN.
+// scanned crates/ (clean) → exited 0; now GREEN: violation fixtures are present → exits 0 (scanner healthy).
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-03 (MED process-gap) — AC-017/Task-13 (BC-2.14.003)
@@ -2208,8 +2208,9 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
 
 /// F-03 (MED process-gap) — AC-017/Task-13 (BC-2.14.003) — subprocess test
 ///
-/// `cargo xtask check-no-panic --fixture-mode <violations_dir>` must exit non-zero
-/// when run against the violation fixtures and exit 0 when the fixtures are clean.
+/// `cargo xtask check-no-panic --fixture-mode <violations_dir>` must exit 0
+/// when scanner healthy (>=1 fixture file had findings) and exit 1 when scanner
+/// broken (0 fixture files had findings).
 ///
 /// Red-gate provenance: `--fixture-mode` was not implemented. `run()` ignored extra argv,
 /// scanned `crates/` (clean workspace), and exited 0. This test asserted non-zero
@@ -2218,11 +2219,11 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
 /// SID-1: the non-ignored in-process companion above provides CI coverage without
 /// subprocess overhead.
 #[test]
-#[ignore = "EXT-BC214003: subprocess test for exit-code contract; covered non-ignored by \
-            test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error + \
+#[ignore = "EXT-BC214003: subprocess test for exit-code contract (healthy-scanner path); covered \
+            non-ignored by test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error + \
             test_BC_2_14_003_fixture_mode_in_process_violation_found; \
             wired in CI via lint-extra"]
-fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
+fn test_BC_2_14_003_fixture_mode_subprocess_exits_zero_when_scanner_healthy() {
     use std::process::{Command, Stdio};
 
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
@@ -2252,12 +2253,11 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
         .expect("cargo run must be invocable");
 
     // Red-gate provenance: --fixture-mode was not implemented; run() scanned crates/ (clean) → exited 0.
-    // Now GREEN: violation fixtures are found → exits 1.
+    // Now GREEN: violation fixtures are present → exits 0 (scanner healthy).
     assert!(
-        !output.status.success(),
-        "BC-2.14.003 F-03: check-no-panic --fixture-mode must exit non-zero when \
-         violation fixtures present; current code: flag ignored, crates/ is clean, \
-         exits 0; exit: {:?}, stderr: {}",
+        output.status.success(),
+        "BC-2.14.003 F-03: check-no-panic --fixture-mode must exit 0 when scanner healthy \
+         (>=1 fixture had findings); exit: {:?}, stderr: {}",
         output.status,
         String::from_utf8_lossy(&output.stderr)
     );
@@ -2277,6 +2277,64 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
         combined.contains("violation_assert_brace"),
         "BC-2.14.003 F-03: violation_assert_brace.rs (brace-delimiter form, F-01) must \
          be reported; output: {combined}"
+    );
+}
+
+/// F-03 (MED process-gap) — AC-017/Task-13 (BC-2.14.003) — subprocess test (broken-scanner path)
+///
+/// `cargo xtask check-no-panic --fixture-mode <empty_tmp_dir>` against a directory
+/// containing no `.rs` files must exit 1 (scanner broken / 0 findings).
+///
+/// SID-1: the non-ignored in-process companion `test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error`
+/// drives the same production code path without subprocess overhead.
+#[test]
+#[ignore = "EXT-BC214003: subprocess test for broken-scanner path; creates tmp dir; \
+            non-ignored in-process coverage via test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error"]
+fn test_BC_2_14_003_fixture_mode_subprocess_exits_one_when_no_findings() {
+    use std::process::{Command, Stdio};
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let workspace_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+
+    // Create a temporary directory with no .rs files so the scanner returns 0 findings.
+    let tmp_dir = std::env::temp_dir().join("pregolya-fixture-mode-empty-test");
+    let _ = std::fs::create_dir_all(&tmp_dir);
+    // Ensure the directory contains no .rs files (clean up any leftover from prior runs).
+    if let Ok(entries) = std::fs::read_dir(&tmp_dir) {
+        for entry in entries.flatten() {
+            if entry.path().extension().and_then(|e| e.to_str()) == Some("rs") {
+                let _ = std::fs::remove_file(entry.path());
+            }
+        }
+    }
+
+    let output = Command::new("cargo")
+        .args([
+            "run",
+            "--quiet",
+            "-p",
+            "xtask",
+            "--",
+            "check-no-panic",
+            "--fixture-mode",
+            tmp_dir.to_str().expect("tmp dir path must be valid UTF-8"),
+        ])
+        .stdin(Stdio::null())
+        .current_dir(&workspace_root)
+        .output()
+        .expect("cargo run must be invocable");
+
+    let _ = std::fs::remove_dir_all(&tmp_dir);
+
+    assert!(
+        !output.status.success(),
+        "BC-2.14.003 F-03: check-no-panic --fixture-mode must exit 1 when 0 fixture files \
+         had findings (scanner broken); exit: {:?}, stderr: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
     );
 }
 
@@ -3548,18 +3606,18 @@ fn test_BC_2_14_003_unwrap_in_format_macro_fixture_detected() {
 /// scanner is BROKEN.
 #[test]
 fn test_BC_2_14_003_fixture_mode_verdict_zero_findings_is_error() {
-    assert!(crate::check_no_panic::fixture_mode_verdict(8, 0).is_err());
-    let err = crate::check_no_panic::fixture_mode_verdict(8, 0).unwrap_err();
+    assert!(crate::check_no_panic::fixture_mode_verdict(8, 0, None).is_err());
+    let err = crate::check_no_panic::fixture_mode_verdict(8, 0, None).unwrap_err();
     assert!(err.contains("BROKEN"), "err was: {err}");
 }
 
 /// F-P2-H01 (HIGH) — BC-2.14.003
 ///
-/// `fixture_mode_verdict(N, M)` where M > 0 must return `Ok` — some files had
+/// `fixture_mode_verdict(N, M, None)` where M > 0 must return `Ok` — some files had
 /// findings, scanner is working.
 #[test]
 fn test_BC_2_14_003_fixture_mode_verdict_nonzero_findings_is_ok() {
-    assert!(crate::check_no_panic::fixture_mode_verdict(12, 12).is_ok());
+    assert!(crate::check_no_panic::fixture_mode_verdict(12, 12, None).is_ok());
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

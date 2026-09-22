@@ -17,7 +17,7 @@ setup:
 iter crate filter="":
     cargo nextest run -p {{crate}} --no-tests=warn {{ if filter != "" { "--filter-expr 'test(" + filter + ")'" } else { "" } }}
 
-# Run all xtask lint gates (client-timeout, no-panic, anyhow-ban, cache-key-ban, file-size, error-code-registry)
+# lint-extra — xtask lint gates (file-size, client-timeout, no-panic, anyhow-ban, cache-key-ban, error-code-registry, deny-bare-api-key)
 lint-extra:
     cargo xtask check-file-size
     cargo xtask check-client-timeout
