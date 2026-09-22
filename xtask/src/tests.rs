@@ -3818,8 +3818,12 @@ fn test_check_post_exemption_vacuity_nonzero_analyzed_returns_ok() {
     );
 }
 
-/// F-P9-M04 — post-exemption vacuity: error message includes the gate name for
-/// each of the five affected gates to confirm the helper is wired to all of them.
+/// F-P9-M04 — post-exemption vacuity: the helper logic returns `Err` with the
+/// correct gate name for each of the five gate name strings.
+///
+/// This test verifies only the pure helper logic — it does NOT verify that each
+/// scanner actually calls `check_post_exemption_vacuity`. For wiring coverage,
+/// see `test_check_post_exemption_vacuity_wiring_present_in_all_scanners`.
 #[test]
 fn test_check_post_exemption_vacuity_gate_names_are_distinct() {
     let gates = [
@@ -3841,4 +3845,81 @@ fn test_check_post_exemption_vacuity_gate_names_are_distinct() {
             "gate={gate}: error message must contain gate name; got: {msg}"
         );
     }
+}
+
+/// F-P10-M03 — source-coupling test: verify `check_post_exemption_vacuity(` is
+/// present in each of the five scanner source files.
+///
+/// This test verifies WIRING — that each scanner actually calls the helper,
+/// not just that the helper logic is correct. If a scanner drops the call,
+/// the vacuity guard becomes silently absent and a gate could certify 0 files.
+#[test]
+fn test_check_post_exemption_vacuity_wiring_present_in_all_scanners() {
+    let check_no_panic = include_str!("../src/check_no_panic.rs");
+    let check_client_timeout = include_str!("../src/check_client_timeout.rs");
+    let deny_bare_api_key = include_str!("../src/deny_bare_api_key.rs");
+    let main_rs = include_str!("../src/main.rs");
+    for (name, src) in [
+        ("check_no_panic.rs", check_no_panic),
+        ("check_client_timeout.rs", check_client_timeout),
+        ("deny_bare_api_key.rs", deny_bare_api_key),
+        ("main.rs (deny_anyhow_in_lib)", main_rs),
+    ] {
+        assert!(
+            src.contains("check_post_exemption_vacuity("),
+            "{name} must wire check_post_exemption_vacuity(); if missing the vacuity guard is absent"
+        );
+    }
+    // main.rs has two gates; verify two call sites
+    let count = main_rs.matches("check_post_exemption_vacuity(").count();
+    assert!(
+        count >= 2,
+        "main.rs must have >=2 check_post_exemption_vacuity() call sites \
+         (deny_anyhow_in_lib + deny_description_cache_key); found {count}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// F-P10-L01: extra_args_verdict helper tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-P10-L01 — `extra_args_verdict` returns `Ok(())` when no extra argument is present.
+///
+/// `args` has only 2 elements (program + subcommand), so `args.get(2)` is `None`.
+#[test]
+fn test_extra_args_verdict_no_extra_returns_ok() {
+    let args: Vec<String> = vec!["cargo-xtask".to_string(), "check-file-size".to_string()];
+    let result = extra_args_verdict("check-file-size", &args);
+    assert!(
+        result.is_ok(),
+        "no extra arg must return Ok; got: {result:?}"
+    );
+}
+
+/// F-P10-L01 — `extra_args_verdict` returns `Err` containing the subcommand name when
+/// an unrecognised argument is present.
+///
+/// The error message must name the subcommand so the user knows which command rejected
+/// the flag.
+#[test]
+fn test_extra_args_verdict_extra_arg_returns_err_with_subcommand_name() {
+    let args: Vec<String> = vec![
+        "cargo-xtask".to_string(),
+        "check-no-panic".to_string(),
+        "--fixup".to_string(),
+    ];
+    let result = extra_args_verdict("check-no-panic", &args);
+    assert!(
+        result.is_err(),
+        "extra arg must return Err; got: {result:?}"
+    );
+    let msg = result.unwrap_err();
+    assert!(
+        msg.contains("check-no-panic"),
+        "error message must contain subcommand name; got: {msg}"
+    );
+    assert!(
+        msg.contains("--fixup"),
+        "error message must contain the unrecognised argument; got: {msg}"
+    );
 }

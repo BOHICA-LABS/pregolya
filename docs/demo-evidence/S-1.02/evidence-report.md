@@ -25,7 +25,7 @@ status: complete
 | AC-005 | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` exits 0 — no missing `.timeout()` | [AC-005-check-client-timeout-pass.webm](AC-005-check-client-timeout-pass.webm) | [AC-005-check-client-timeout-pass.gif](AC-005-check-client-timeout-pass.gif) | [tape](AC-005-check-client-timeout-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-020 | BC-2.14.001 EC-007 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
-| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS 12 violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), `_ => unreachable!()` patterns (incl. underscore-binding), `.unwrap()` in macros — 12/15 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (refreshed 2026-09-22) |
+| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS 13 violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), `_ => unreachable!()` patterns (incl. underscore-binding), `.unwrap()` in macros, `todo!()/unimplemented!()` — 13/16 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22 frozen HEAD 2a7aca4) |
 | AC-008 | BC-2.14.005 PC-002 | `Debug` emits exactly `"<redacted>"` — key material never appears in format output | [AC-008-AC-011-AC-016-credential-validation-redaction.webm](AC-008-AC-011-AC-016-credential-validation-redaction.webm) | [AC-008-AC-011-AC-016-credential-validation-redaction.gif](AC-008-AC-011-AC-016-credential-validation-redaction.gif) | [tape](AC-008-AC-011-AC-016-credential-validation-redaction.tape) | recorded |
 | AC-011 | BC-2.14.006 PC-001 | `OpenAiApiKey::new("")` → `Err(E-CORE-005 / VAL / Never)` | same recording as AC-008 | — | — | recorded |
 | AC-016 | BC-2.14.006 EC-006 | `new("   ")` whitespace-only rejected with same `E-CORE-005` error | same recording as AC-008 | — | — | recorded |
@@ -38,8 +38,8 @@ status: complete
 Covered by: AC-008/AC-011/AC-016 recording (credential nextest run includes `test_BC_2_14_003_constructor_returns_result`).
 
 ### AC-002 — check-no-panic exits 0 (BC-2.14.003 PC-004)
-Recording: `AC-002-check-no-panic-pass.{webm,gif}` — refreshed 2026-09-22 (post-fix-burst-5)
-Shows: `cargo xtask check-no-panic` — output: `check-no-panic PASSED: 24 analyzed, 17 exempt, 0 unreadable, 0 violations`
+Recording: `AC-002-check-no-panic-pass.{webm,gif}` — re-recorded 2026-09-22 (frozen HEAD 2a7aca4)
+Shows: `cargo xtask check-no-panic` — output: `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-003 — debug_assert exempt (BC-2.14.003 INV-003/INV-004)
 Covered by: same gate exit-0 recording as AC-002. The gate scans the production tree without flagging `debug_assert!` — the PASS result proves the exemption is working.
@@ -48,8 +48,8 @@ Covered by: same gate exit-0 recording as AC-002. The gate scans the production 
 Covered by: AC-005 recording (gate verifies no Client::new() or missing timeout in production paths).
 
 ### AC-005 — check-client-timeout exits 0 (BC-2.14.004 PC-003)
-Recording: `AC-005-check-client-timeout-pass.{webm,gif}` — refreshed 2026-09-22 (post-fix-burst-5)
-Shows: `cargo xtask check-client-timeout` — output: `check-client-timeout PASSED: 24 analyzed, 17 exempt, 0 unreadable, 0 violations`
+Recording: `AC-005-check-client-timeout-pass.{webm,gif}` — re-recorded 2026-09-22 (frozen HEAD 2a7aca4)
+Shows: `cargo xtask check-client-timeout` — output: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-006 — build_client returns Ok (BC-2.14.004 PC-005)
 Covered by: AC-005 recording proves the production code compiles and the xtask gate passes.
@@ -65,8 +65,8 @@ Shows: nextest run of `test_BC_2_14_005_openai_debug_emits_redacted_sentinel` an
 Compile-time static assertion — no runtime demo required.
 
 ### AC-010 — deny-bare-api-key structural gate (BC-2.14.005 PC-006)
-Recording: `AC-010-deny-bare-api-key-pass.{webm,gif}` — refreshed 2026-09-22 (post-fix-burst-5)
-Shows: `cargo xtask deny-bare-api-key` — output: `deny-bare-api-key PASSED: 24 analyzed, 17 exempt, 0 unreadable, 0 violations`
+Recording: `AC-010-deny-bare-api-key-pass.{webm,gif}` — re-recorded 2026-09-22 (frozen HEAD 2a7aca4)
+Shows: `cargo xtask deny-bare-api-key` — output: `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-011 — empty key returns Err(E-CORE-005) (BC-2.14.006 PC-001)
 Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
@@ -91,11 +91,11 @@ Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
 Shows: `test_BC_2_14_006_openai_whitespace_only_key_returns_err` PASS.
 
 ### AC-017 — check-no-panic flags violations (BC-2.14.003 EC-007)
-Recording: `AC-017-check-no-panic-flags-violations.{webm,gif}` — refreshed 2026-09-22 (post-fix-burst-6)
-Shows: `cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations` — exits 0 (scanner-healthy verdict per BC-2.14.003 EC-007), reports `fixture-mode: 12/15 fixture files had findings`.
+Recording: `AC-017-check-no-panic-flags-violations.{webm,gif}` — re-recorded 2026-09-22 (frozen HEAD 2a7aca4)
+Shows: `cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations` — exits 0 (scanner-healthy verdict per BC-2.14.003 EC-007), reports `fixture-mode: 13/16 fixture files had findings`.
 The 3 non-no-panic fixtures produce no findings here: `violation_pub_crate_debug_derive.rs`, `violation_derive_deserialize.rs`, and `violation_impl_display.rs` all target `deny-bare-api-key`, not `check-no-panic`.
 
-Detected violation classes (12 fixture files):
+Detected violation classes (13 fixture files):
 1. `violation_assert_no_doc.rs` — bare `assert!()` in non-test code
 2. `violation_assert_brace.rs` — bare `assert!()` in non-test code
 3. `violation_unreachable_wildcard.rs` — wildcard-arm `_ => unreachable!()` in non-test code
@@ -108,11 +108,12 @@ Detected violation classes (12 fixture files):
 10. `violation_assert_bc_id_short.rs` — bare `assert!()` with short BC-ID (MED-2 fix-burst-3)
 11. `violation_assert_bc_id_in_condition.rs` — bare `assert!()` with BC-ID in condition position (MED-2 fix-burst-3)
 12. `violation_unwrap_in_format_macro.rs` — `.unwrap()` inside macro arguments (MED-4 fix-burst-3)
+13. `violation_todo_stub.rs` — `todo!()/unimplemented!()` in production path (F-P9-M02 fix-burst-9)
 
-Error path: demonstrates the gate detects all POL-31-mandated violation types; fix-burst 3 expanded coverage from 8 to 12 fixture files.
+Error path: demonstrates the gate detects all POL-31-mandated violation types; fix-burst 9 expanded coverage from 12 to 13 fixture files.
 
 ### AC-020 — check-error-code-registry exits 0 (BC-2.14.001 EC-007 / VP-BC214001-01)
-Evidence captured: 2026-09-22 (post-fix-burst-5, HEAD `24de28c`)
+Evidence captured: 2026-09-22 (frozen HEAD `2a7aca4`)
 Command: `FACTORY_DIR=/Users/jmagady/Dev/pregolya/.factory cargo xtask check-error-code-registry`
 Output: `error-code-registry PASSED: 148 codes validated, 0 collisions.`
 Demonstrates: verifies all 148 `E-<COMPONENT>-<NNN>` codes declared in `error-taxonomy.md` are unique (zero collisions); exits 1 when zero codes extracted (vacuity guard — taxonomy format change detection); does NOT cross-validate against Rust source.

@@ -1,4 +1,4 @@
-//! CI lint gate: error-code-registry uniqueness check (BC-2.14.001 EC-007, VP-BC214001-01).
+//! CI lint gate: error-code-registry uniqueness check (BC-2.14.001 EC-004, VP-BC214001-01).
 //!
 //! Parses `.factory/specs/prd-supplements/error-taxonomy.md` and verifies:
 //! 1. Every `E-<COMPONENT>-<NNN>` code appears exactly once (no collision).

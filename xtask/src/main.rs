@@ -7,7 +7,7 @@
 //!   check-client-timeout      CI lint gate: reject reqwest Client::new() outside tests (BC-2.14.004)
 //!   check-no-panic [--fixture-mode `<dir>`]
 //!                             CI lint gate: reject unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)
-//!   check-error-code-registry CI lint gate: verify all `E-<COMPONENT>-<NNN>` codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-007, VP-BC214001-01)
+//!   check-error-code-registry CI lint gate: verify all `E-<COMPONENT>-<NNN>` codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-004, VP-BC214001-01)
 //!   deny-bare-api-key         CI lint gate: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl `Deref<Target=str/String>` (BC-2.14.005 {PC-006})
 //!   deny-anyhow-in-lib        CI lint gate: reject anyhow imports in library crates
 //!   deny-description-cache-key  CI lint gate: reject description-proxy cache-key usage
@@ -49,6 +49,21 @@ pub(crate) fn check_post_exemption_vacuity(
     }
 }
 
+/// Pure verdict for extra-argument detection. Returns `Err(message)` when `args[2]`
+/// is present (unrecognised argument), or `Ok(())` when no extra argument is present.
+///
+/// Extracted from `reject_extra_args` for testability — the `process::exit(1)`
+/// side-effect lives in `reject_extra_args` (F-P10-L01 fix).
+pub(crate) fn extra_args_verdict(subcommand: &str, args: &[String]) -> Result<(), String> {
+    if let Some(extra) = args.get(2) {
+        Err(format!(
+            "unrecognised argument '{extra}' for {subcommand}\nusage: cargo xtask {subcommand}"
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 /// Reject any extra arguments passed to a subcommand that accepts no arguments.
 ///
 /// Prints an error message and exits with code 1 when `args[2]` is present.
@@ -58,9 +73,8 @@ pub(crate) fn check_post_exemption_vacuity(
 ///
 /// NOT called for `check-no-panic`, which has its own `--fixture-mode <dir>` handling.
 fn reject_extra_args(subcommand: &str, args: &[String]) {
-    if let Some(extra) = args.get(2) {
-        eprintln!("error: unrecognised argument '{extra}' for {subcommand}");
-        eprintln!("usage: cargo xtask {subcommand}");
+    if let Err(msg) = extra_args_verdict(subcommand, args) {
+        eprintln!("error: {msg}");
         std::process::exit(1);
     }
 }
@@ -127,7 +141,7 @@ fn main() {
                 "  check-no-panic            Lint: no-panic gate: unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)"
             );
             eprintln!(
-                "  check-error-code-registry Lint: error-code-registry uniqueness: verify all E-<COMPONENT>-<NNN> codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-007, VP-BC214001-01)"
+                "  check-error-code-registry Lint: error-code-registry uniqueness: verify all E-<COMPONENT>-<NNN> codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-004, VP-BC214001-01)"
             );
             eprintln!(
                 "  deny-bare-api-key         Lint: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl Deref<Target=str/String> (BC-2.14.005 {{PC-006}})"

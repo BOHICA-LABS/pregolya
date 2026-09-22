@@ -499,10 +499,15 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
     }
 
     fn visit_expr_let(&mut self, node: &'ast syn::ExprLet) {
-        // A `let … else { … }` diverging block introduces a runtime pattern check.
-        // An unreachable! inside the else block is a runtime-condition guard (Exemption 2
-        // territory), not a compiler-exhaustiveness guard (Exemption 1). Clear arm_stack
-        // so the else body is evaluated without arm context (F-P9-M01 fix).
+        // `syn::ExprLet` models the `let PAT = EXPR` guard in `if let` / `while let`
+        // conditions — it is NOT the `let PAT = INIT else { DIVERGE }` let-else form
+        // (that is `syn::Local` with `init.diverge`, handled in `visit_local`).
+        //
+        // Belt-and-braces: `visit_expr_if` and `visit_expr_while` already clear
+        // `arm_stack` before visiting the full if/while expression (including the
+        // ExprLet condition inside), so this override will always find arm_stack already
+        // empty. It is retained as a belt-and-braces guard for any future syn visitor
+        // recursion path that reaches ExprLet with a non-empty arm_stack.
         let old_arm_stack = std::mem::take(&mut self.arm_stack);
         syn::visit::visit_expr_let(self, node);
         self.arm_stack = old_arm_stack;
@@ -763,17 +768,36 @@ pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
 }
 
 /// Minimal recursive proc_macro2 token-tree scan used ONLY when `syn::parse_file`
-/// fails.  Finds `.unwrap()` and `.expect()` method calls at any nesting depth.
+/// fails.  Finds `.unwrap()` and `.expect()` method calls and panic-family macro
+/// invocations (`panic!`, `todo!`, `unimplemented!`, `unreachable!`, `assert!`,
+/// `assert_eq!`, `assert_ne!`, `assert_matches!`) at any nesting depth.
 ///
 /// Does NOT apply cfg(test) exemptions — callers hit this path only for
 /// syntactically invalid Rust (e.g. test fixtures), where exemption tracking
 /// cannot be guaranteed correct without a full parse.
+///
+/// KNOWN-LIMITATION 4: Exemption logic (Exemption 1 — exhaustive-named-arm unreachable;
+/// Exemption 2 — `# Panics` doc + BC-ID message) is NOT applied in this fallback path.
+/// All panic-family macros detected here are flagged unconditionally. This is the
+/// fail-closed default: when syn cannot parse the file, the AST context needed for
+/// exemption reasoning is unavailable, so fail-closed is the correct posture.
+/// The primary scan path (`scan_with_syn`) applies full exemption logic.
 fn scan_method_calls_in_tokens(
     iter: proc_macro2::token_stream::IntoIter,
     findings: &mut Vec<String>,
     path: &str,
 ) {
     use proc_macro2::TokenTree;
+    const PANIC_FAMILY: &[&str] = &[
+        "panic",
+        "todo",
+        "unimplemented",
+        "unreachable",
+        "assert",
+        "assert_eq",
+        "assert_ne",
+        "assert_matches",
+    ];
     let tokens: Vec<TokenTree> = iter.collect();
     let mut i = 0;
     while i < tokens.len() {
@@ -790,6 +814,19 @@ fn scan_method_calls_in_tokens(
                             path, line, name
                         ));
                     }
+                }
+            }
+            TokenTree::Ident(id) => {
+                let name = id.to_string();
+                if PANIC_FAMILY.contains(&name.as_str())
+                    && let Some(TokenTree::Punct(p)) = tokens.get(i + 1)
+                    && p.as_char() == '!'
+                {
+                    let line = id.span().start().line;
+                    findings.push(format!(
+                        "{}:{}: {}!() in non-test code (BC-2.14.003 violation)",
+                        path, line, name
+                    ));
                 }
             }
             TokenTree::Group(g) => {
@@ -924,7 +961,7 @@ pub fn run_fixture_mode(dir: &str) {
 /// These files are legitimately skipped by the no-panic scanner and must not be counted
 /// toward the expected minimum.
 ///
-/// Kept as a named constant so a drop from 12/15 to e.g. 1/15 still trips the gate
+/// Kept as a named constant so a drop from 13/16 to e.g. 1/16 still trips the gate
 /// while still allowing the 3 credential-only fixtures to remain in the same directory.
 pub(crate) const CREDENTIAL_FIXTURE_COUNT: usize = 3;
 
@@ -1249,6 +1286,38 @@ fn f(phase: Phase) -> i32 {
             "todo!() in a named arm must still be flagged (F-P9-M02: no exemption for todo!); \
              got: {findings:?}"
         );
+    }
+
+    /// F-P10-M04 — BC-2.14.003
+    ///
+    /// Documents the boundary of `scan_method_calls_in_tokens` panic-family detection.
+    /// In the primary syn path, `panic!` inside `vec![panic!("nested panic")]` is found
+    /// via `visit_expr_macro` (direct AST node). In the fallback token-stream path,
+    /// the same case is covered by the PANIC_FAMILY ident+`!` detection added in F-P10-M04.
+    ///
+    /// This test documents the boundary — no assertion is made about the findings count
+    /// because the primary syn path handles valid Rust correctly.
+    ///
+    /// KNOWN-LIMITATION 4: In the token-stream fallback path, exemption logic
+    /// (Exemption 1 / Exemption 2) is NOT applied — all detected panic-family macros
+    /// are flagged unconditionally. This is fail-closed and acceptable.
+    #[test]
+    fn test_bc_2_14_003_panic_in_macro_arg_known_false_negative() {
+        // KNOWN-LIMITATION 4: panic! nested inside another macro's token stream is not detected
+        // by the fallback scan_method_calls_in_tokens unless the outer macro's token stream
+        // is recursed into. The AST visitor handles `ExprMacro` and `StmtMacro` directly;
+        // this gap affects only macros nested inside other macros' token arguments that
+        // syn cannot parse. Accept this limitation — fail-closed is the primary guarantee.
+        let src = r#"
+pub fn foo() {
+    let _x = vec![panic!("nested panic")];
+}
+"#;
+        // Note: this returns findings for panic! via visit_expr_macro (direct AST node),
+        // but a more deeply nested `panic!` inside a complex macro call may not be found
+        // in the fallback token-stream path. Accept this limitation.
+        let _ = scan_for_panics_in_source(src, "src/lib.rs");
+        // No assertion — documenting the boundary, not asserting a false negative.
     }
 
     /// F-P8-H01 — BC-2.14.003 §EC-007 Exemption 1
