@@ -124,7 +124,11 @@ pub fn run() {
 /// Called by `run()` per-file and exposed as `pub(crate)` so unit tests in
 /// `xtask/src/tests.rs` can verify scanner behavior directly.
 pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
-    if crate::is_test_file(path) {
+    // Fixture violation files contain intentional violations for gate coverage testing.
+    // They live under tests/fixtures/violations/ but must be scanned as production code
+    // (BC-2.14.003 §EC-007, AC-017/Task-13 fixture coverage requirement). All other
+    // files under tests/ are genuine test code and remain exempt.
+    if crate::is_test_file(path) && !path.contains("fixtures/violations") {
         return Vec::new();
     }
 
@@ -399,8 +403,12 @@ fn walk_panic_tokens(
             //   `Phase::Done => unreachable!(...)` — not `_ => unreachable!(...)`
             TokenTree::Ident(id) if id == "_" && *in_test_depth == 0 => {
                 pending_panics_doc = false;
-                // Check for the pattern: `_` `=` `>` `unreachable` `!` `(...)`
-                if let (
+                // Pattern 1: `_ = > unreachable ! (group)` — direct wildcard arm.
+                // Pattern 2: `_ if <guard...> = > unreachable ! (group)` — guarded wildcard.
+                // Both are flagged: wildcard and guarded-wildcard arms are latent panic
+                // paths under enum evolution (BC-2.14.003 §EC-004/§EC-007).
+                // Delimiter-independent: matches Parenthesis, Brace, and Bracket forms (F-01).
+                let wildcard_violation_line = if let (
                     Some(TokenTree::Punct(fat_eq)),
                     Some(TokenTree::Punct(fat_gt)),
                     Some(TokenTree::Ident(ur_id)),
@@ -416,9 +424,49 @@ fn walk_panic_tokens(
                     && fat_gt.as_char() == '>'
                     && ur_id == "unreachable"
                     && bang.as_char() == '!'
-                    && args.delimiter() == Delimiter::Parenthesis
-                {
-                    let line = ur_id.span().start().line;
+                    && matches!(
+                        args.delimiter(),
+                        Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
+                    ) {
+                    // Direct wildcard: `_ => unreachable!(...)`
+                    Some(ur_id.span().start().line)
+                } else if matches!(tokens.get(i + 1), Some(TokenTree::Ident(kw)) if kw == "if") {
+                    // Guarded wildcard: `_ if <guard...> => unreachable!(...)`
+                    // Scan forward past the guard expression to find `= > unreachable ! group`.
+                    let mut found_line = None;
+                    let mut j = i + 2;
+                    while j < tokens.len() {
+                        if let (
+                            Some(TokenTree::Punct(eq2)),
+                            Some(TokenTree::Punct(gt2)),
+                            Some(TokenTree::Ident(ur2)),
+                            Some(TokenTree::Punct(bang2)),
+                            Some(TokenTree::Group(args2)),
+                        ) = (
+                            tokens.get(j),
+                            tokens.get(j + 1),
+                            tokens.get(j + 2),
+                            tokens.get(j + 3),
+                            tokens.get(j + 4),
+                        ) && eq2.as_char() == '='
+                            && gt2.as_char() == '>'
+                            && ur2 == "unreachable"
+                            && bang2.as_char() == '!'
+                            && matches!(
+                                args2.delimiter(),
+                                Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
+                            )
+                        {
+                            found_line = Some(ur2.span().start().line);
+                            break;
+                        }
+                        j += 1;
+                    }
+                    found_line
+                } else {
+                    None
+                };
+                if let Some(line) = wildcard_violation_line {
                     findings.push(format!(
                         "{}:{}: wildcard-arm unreachable!() in non-test code \
                          (BC-2.14.003 EC-004/EC-007 violation: _ => unreachable! is a \
@@ -447,7 +495,10 @@ fn walk_panic_tokens(
                 if matches!(tokens.get(i + 1), Some(TokenTree::Punct(p)) if p.as_char() == '!')
                     && matches!(
                         tokens.get(i + 2),
-                        Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis
+                        Some(TokenTree::Group(g)) if matches!(
+                            g.delimiter(),
+                            Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
+                        )
                     )
                 {
                     // Check if this `unreachable!` is immediately after `=>` (match arm).
@@ -508,7 +559,10 @@ fn walk_panic_tokens(
                     )
                     && matches!(
                         tokens.get(i + 2),
-                        Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis
+                        Some(TokenTree::Group(g)) if matches!(
+                            g.delimiter(),
+                            Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
+                        )
                     )
                 {
                     // Check Exemption 2: fn has # Panics doc AND message has BC-ID
@@ -525,6 +579,58 @@ fn walk_panic_tokens(
                             path, line, name
                         ));
                     }
+                }
+                // ── Irrefutable binding catch-all detection (F-02) ───────────
+                // BC-2.14.003 §EC-007: a lone lowercase identifier as a match-arm
+                // pattern not preceded by `::` (i.e., not a qualified enum path) and
+                // immediately followed by `=> unreachable!(...)` is an irrefutable
+                // binding catch-all — semantically equivalent to `_`. The exhaustive-
+                // match exemption ONLY applies when every arm is a named variant pattern.
+                //
+                // Named variants are PascalCase or qualified (`Phase::Done`).
+                // Boolean literals `true`/`false` are excluded (they match a specific value).
+                let first_char_lower = name
+                    .chars()
+                    .next()
+                    .map(|c| c.is_ascii_lowercase())
+                    .unwrap_or(false);
+                let not_preceded_by_colon = !(i >= 1
+                    && matches!(tokens.get(i - 1), Some(TokenTree::Punct(p)) if p.as_char() == ':'));
+                if first_char_lower
+                    && not_preceded_by_colon
+                    && name != "true"
+                    && name != "false"
+                    && !FLAGGED_PANIC_MACROS.contains(&name.as_str())
+                    && let (
+                        Some(TokenTree::Punct(fat_eq)),
+                        Some(TokenTree::Punct(fat_gt)),
+                        Some(TokenTree::Ident(ur_id)),
+                        Some(TokenTree::Punct(bang)),
+                        Some(TokenTree::Group(args)),
+                    ) = (
+                        tokens.get(i + 1),
+                        tokens.get(i + 2),
+                        tokens.get(i + 3),
+                        tokens.get(i + 4),
+                        tokens.get(i + 5),
+                    )
+                    && fat_eq.as_char() == '='
+                    && fat_gt.as_char() == '>'
+                    && ur_id == "unreachable"
+                    && bang.as_char() == '!'
+                    && matches!(
+                        args.delimiter(),
+                        Delimiter::Parenthesis | Delimiter::Brace | Delimiter::Bracket
+                    )
+                {
+                    let line = ur_id.span().start().line;
+                    findings.push(format!(
+                        "{}:{}: irrefutable-binding catch-all unreachable!() in non-test \
+                         code (BC-2.14.003 §EC-007 violation: `{}` is an irrefutable \
+                         binding catch-all, not a named variant arm; exhaustive-match \
+                         exemption requires all arms to be named variant patterns)",
+                        path, line, name
+                    ));
                 }
             }
 
@@ -547,4 +653,55 @@ fn walk_panic_tokens(
         }
         i += 1;
     }
+}
+
+/// Entry point for `cargo xtask check-no-panic --fixture-mode <dir>`.
+///
+/// Scans all `*.rs` files under `dir` (not recursing into `target/`) for
+/// panic-path violations using the same scanner as the normal gate. Exits
+/// non-zero if any violation is found.
+///
+/// Purpose: verify that planted violation fixtures are correctly detected by
+/// the gate (AC-017/Task-13, POL-31). Since violation fixtures intentionally
+/// contain violations, a clean exit (0) from this mode indicates the scanner
+/// is broken and failing to detect them.
+///
+/// Called by `main()` when `argv == ["check-no-panic", "--fixture-mode", <dir>]`.
+pub fn run_fixture_mode(dir: &str) {
+    let output = std::process::Command::new("find")
+        .args([dir, "-name", "*.rs", "-not", "-path", "*/target/*"])
+        .output();
+
+    let files_output = match output {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("find failed: {e}");
+            exit(1);
+        }
+    };
+
+    let files_str = String::from_utf8_lossy(&files_output.stdout);
+    let mut all_findings: Vec<String> = Vec::new();
+
+    for file_path in files_str.lines() {
+        let content = match std::fs::read_to_string(file_path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        // scan_for_panics_in_source exempts tests/ files EXCEPT fixtures/violations/.
+        // For paths under the fixture dir that happen to contain tests/ (e.g.
+        // xtask/tests/fixtures/violations/), the exceptions in scan_for_panics_in_source
+        // ensure they are scanned.
+        let findings = scan_for_panics_in_source(&content, file_path);
+        all_findings.extend(findings);
+    }
+
+    if !all_findings.is_empty() {
+        eprintln!("check-no-panic --fixture-mode {dir}: violations found (BC-2.14.003):");
+        for f in &all_findings {
+            eprintln!("  {f}");
+        }
+        exit(1);
+    }
+    println!("check-no-panic --fixture-mode {dir}: 0 violations found.");
 }

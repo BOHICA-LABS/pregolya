@@ -32,7 +32,14 @@ fn main() {
     match subcommand {
         "check-file-size" => check_file_size(),
         "check-client-timeout" => check_client_timeout::run(),
-        "check-no-panic" => check_no_panic::run(),
+        "check-no-panic" => {
+            if args.get(2).map(String::as_str) == Some("--fixture-mode") {
+                let dir = args.get(3).map(String::as_str).unwrap_or(".");
+                check_no_panic::run_fixture_mode(dir);
+            } else {
+                check_no_panic::run();
+            }
+        }
         "deny-bare-api-key" => deny_bare_api_key::run(),
         "deny-anyhow-in-lib" => deny_anyhow_in_lib(),
         "deny-description-cache-key" => deny_description_cache_key(),
