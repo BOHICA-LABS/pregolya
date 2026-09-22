@@ -2311,3 +2311,236 @@ fn test_BC_2_14_004_flags_timeout_fully_qualified_duration_zero() {
          got: {findings:?}"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-5 F-01) — guarded irrefutable-binding catch-all
+//
+// BC-2.14.003 §EC-007 / §PC-005: the exhaustive-match exemption applies ONLY
+// when every arm is a named variant pattern (no `_`, no irrefutable binding).
+// `name if <guard> => unreachable!(...)` is a guarded irrefutable-binding catch-all
+// — semantically equivalent to a catch-all `name =>`, because the binding `name` is
+// irrefutable regardless of the guard. The scanner currently detects `name =>
+// unreachable!(...)` (bare, no guard) but NOT the guarded form where `if <guard>`
+// sits between the binding and `=>`, causing the lookahead to miss the pattern.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-01 (MED) — BC-2.14.003 §EC-007 pass-5
+///
+/// `scan_for_panics_in_source` must FLAG a guarded irrefutable-binding catch-all
+/// `other if guard() => unreachable!(...)`. The binding `other` is irrefutable regardless
+/// of the guard; the §EC-007 exemption requires every arm to be a named variant pattern.
+///
+/// RED GATE: the irrefutable-binding detection in the Ident handler checks
+/// `tokens[i+1]` == `=` and `tokens[i+2]` == `>` (direct pattern `name => unreachable!`).
+/// When a guard appears, `tokens[i+1]` is `if` (not `=`), so the lookahead fails and no
+/// finding is produced. The `unreachable` fallback handler then sees `in_match_arm_position=true`
+/// (the fat-arrow tokens immediately precede `unreachable`) and incorrectly exempts it.
+#[test]
+fn test_BC_2_14_003_flags_guarded_irrefutable_binding_catch_all() {
+    let violation_guarded_binding =
+        include_str!("../tests/fixtures/violations/violation_guarded_binding_catch_all.rs");
+    let findings =
+        scan_for_panics_in_source(violation_guarded_binding, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-5 F-01: guarded irrefutable-binding catch-all \
+         `other if guard() => unreachable!(...)` must be FLAGGED; \
+         the irrefutable-binding detection checks tokens[i+1]=='=' and tokens[i+2]=='>' \
+         (direct `name => unreachable!` form only); a guard keyword `if` at tokens[i+1] \
+         causes the lookahead to miss the pattern, and the `unreachable` handler's \
+         in_match_arm_position check incorrectly exempts it as a named arm; \
+         got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-5 F-02) — cross-arm false-positive (guarded wildcard
+// boundary overrun)
+//
+// BC-2.14.003 §EC-007: `_ if <guard> => <non-unreachable-body>` must NOT produce a
+// finding. The current guarded-wildcard scan in the `_` handler scans forward without
+// stopping at the arm boundary (`,`), and can reach a LATER named arm's `=>
+// unreachable!(...)`, falsely attributing the finding to the `_ if` arm instead of
+// the named arm. Since the named arm is Exemption-1 compliant (no wildcard), the
+// correct result is ZERO findings.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-02 (MED) — BC-2.14.003 §EC-007 pass-5
+///
+/// A benign guarded-wildcard arm whose body is NOT `unreachable!` must NOT be flagged
+/// just because a LATER named arm in the same match legitimately uses `unreachable!`.
+///
+/// Canonical case: `match phase { Phase::Init => 0, _ if is_special() => 99,
+/// Phase::Done => unreachable!("handled upstream") }`. The `_ if is_special() => 99`
+/// arm has body `99`, so no guarded-wildcard finding applies. `Phase::Done` is a named
+/// arm — Exemption-1 applies. Correct behavior: ZERO findings.
+///
+/// RED GATE: the guarded-wildcard scan in the `_` handler iterates without a
+/// `,`-boundary stop. After seeing `_ if is_special() => 99 ,` it continues scanning,
+/// finds `Phase::Done => unreachable!(...)`, and emits a finding attributed to the
+/// `_ if` arm. The finding message points to the line of `Phase::Done`'s unreachable!,
+/// not to the `_ if` arm itself.
+#[test]
+fn test_BC_2_14_003_guarded_wildcard_does_not_misattribute_cross_arm_unreachable() {
+    // `_ if is_special() => 99` is benign (body is `99`, not unreachable!).
+    // `Phase::Done => unreachable!(...)` is a named arm — Exemption-1, should be exempt.
+    // ZERO findings expected. Current code produces 1 false finding (cross-arm attribution).
+    let src = r#"
+pub enum Phase { Init, Done }
+fn is_special() -> bool { false }
+pub fn process(phase: Phase) -> i32 {
+    match phase {
+        Phase::Init => 0,
+        _ if is_special() => 99,
+        Phase::Done => unreachable!("handled upstream"),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    // Primary assertion: no finding should be produced.
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-5 F-02: benign `_ if is_special() => 99` must NOT produce \
+         a finding; the guarded-wildcard scan does not stop at the `,` arm boundary, scans \
+         past `99,` and finds `Phase::Done => unreachable!(...)`, falsely attributing the \
+         finding to the `_ if` arm; correct behavior is ZERO findings (benign arm body, \
+         named arm exempt via Exemption-1); got: {findings:?}"
+    );
+    // Secondary guard: if any finding IS produced, it must not be attributed to Phase::Done.
+    for f in &findings {
+        assert!(
+            !f.contains("Phase") && !f.contains("Done"),
+            "BC-2.14.003 §EC-007 pass-5 F-02: any finding must NOT be attributed to \
+             Phase::Done — that is a legitimate Exemption-1 named arm; finding: {f}"
+        );
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.004 (S-1.02 pass-5 F-04) — zero-timeout constructor coverage gaps
+//
+// BC-2.14.004 {PC-001}/{INV-004}: timeout duration must be > Duration::ZERO.
+// `is_zero_duration_timeout_arg` Form C recognises from_secs, from_millis, from_nanos,
+// from_secs_f64 but NOT from_micros or from_secs_f32. Both constructors with a zero
+// argument evaluate to Duration::ZERO and must be flagged.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-04 (LOW) — BC-2.14.004 {PC-001}/{INV-004} pass-5
+///
+/// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::from_micros(0))`
+/// as a zero-timeout violation. `Duration::from_micros(0)` evaluates to `Duration::ZERO`
+/// at runtime; {PC-001} requires d > Duration::ZERO.
+///
+/// RED GATE: `is_zero_duration_timeout_arg` Form C checks for constructor names
+/// `from_secs | from_millis | from_nanos | from_secs_f64` at offset +6 in the flat
+/// token stream. `from_micros` is absent from the match list → returns `false` →
+/// the timeout is credited as valid → chain is reported compliant → no finding.
+#[test]
+fn test_BC_2_14_004_flags_timeout_from_micros_zero() {
+    let src =
+        r#"let c = reqwest::ClientBuilder::new().timeout(Duration::from_micros(0)).build()?;"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.004 {{PC-001}} pass-5 F-04: .timeout(Duration::from_micros(0)) must be \
+         flagged as zero-timeout (d must be > 0 per {{INV-004}}); \
+         is_zero_duration_timeout_arg Form C only matches from_secs/from_millis/from_nanos/\
+         from_secs_f64; from_micros is absent from the recognised constructor list; \
+         got: {findings:?}"
+    );
+}
+
+/// F-04 (LOW) — BC-2.14.004 {PC-001}/{INV-004} pass-5
+///
+/// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::from_secs_f32(0.0))`
+/// as a zero-timeout violation. `Duration::from_secs_f32(0.0)` evaluates to `Duration::ZERO`
+/// at runtime; {PC-001} requires d > Duration::ZERO.
+///
+/// RED GATE: `is_zero_duration_timeout_arg` Form C only matches `from_secs_f64` for
+/// floating-point constructors; `from_secs_f32` is absent → returns `false` → timeout
+/// credited as valid → no finding.
+#[test]
+fn test_BC_2_14_004_flags_timeout_from_secs_f32_zero() {
+    let src =
+        r#"let c = reqwest::ClientBuilder::new().timeout(Duration::from_secs_f32(0.0)).build()?;"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.004 {{PC-001}} pass-5 F-04: .timeout(Duration::from_secs_f32(0.0)) must be \
+         flagged as zero-timeout (d must be > 0 per {{INV-004}}); \
+         is_zero_duration_timeout_arg Form C only matches from_secs_f64 for f32/f64 constructors; \
+         from_secs_f32 is absent; got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-5 F-05) — qualified-path unreachable! over-flagging
+//
+// BC-2.14.003 §EC-007 Exemption 1: `unreachable!()` in a fully-enumerated named-arm
+// match (no wildcard) is exempt. This exemption must extend to qualified forms
+// `std::unreachable!(...)` and `core::unreachable!(...)` — they are the same macro
+// with a different path prefix. The `unreachable` handler's `in_match_arm_position`
+// check looks at tokens[i-2]=`=` and tokens[i-1]=`>` (fat-arrow tokens). For
+// `std::unreachable!`, the token before `unreachable` is `::` (not `>`), so the
+// check fails and the §PC-006 violation handler fires incorrectly.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-05 (LOW) — BC-2.14.003 §EC-007 Exemption 1 pass-5
+///
+/// `Foo::Bar => std::unreachable!(...)` in a fully-enumerated no-wildcard exhaustive
+/// match MUST NOT be flagged. `std::unreachable!` is a legitimate Exemption-1 named arm.
+///
+/// RED GATE: the `unreachable` handler's `in_match_arm_position` check inspects
+/// `tokens[i-2].as_char() == '='` and `tokens[i-1].as_char() == '>'`. For
+/// `std::unreachable!`, the token at i-1 is `::` (the second `:` of the path separator),
+/// not `>`, so `in_match_arm_position = false` → §PC-006 violation handler fires.
+#[test]
+fn test_BC_2_14_003_std_qualified_unreachable_in_named_arm_not_flagged() {
+    let src = r#"
+pub enum Status { Active, Done }
+pub fn handle_status(s: Status) -> i32 {
+    match s {
+        Status::Active => 1,
+        Status::Done => std::unreachable!("Done is handled upstream"),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-5 F-05: `Status::Done => std::unreachable!(...)` in a \
+         fully-enumerated no-wildcard named-arm match MUST NOT be flagged; \
+         `in_match_arm_position` checks tokens[i-2]='=' tokens[i-1]='>' but for \
+         `std::unreachable` tokens[i-1] is `::` (not `>`), so the check fails and the \
+         §PC-006 handler fires; got: {findings:?}"
+    );
+}
+
+/// F-05 (LOW) — BC-2.14.003 §EC-007 Exemption 1 pass-5 — core:: variant
+///
+/// `Foo::Bar => core::unreachable!(...)` in a fully-enumerated no-wildcard exhaustive
+/// match MUST NOT be flagged. Same root cause as the std:: variant.
+///
+/// RED GATE: same as std::unreachable! — tokens[i-1] is `::` not `>` →
+/// `in_match_arm_position = false` → §PC-006 handler fires incorrectly.
+#[test]
+fn test_BC_2_14_003_core_qualified_unreachable_in_named_arm_not_flagged() {
+    let src = r#"
+pub enum Step { Start, End }
+pub fn handle_step(s: Step) -> i32 {
+    match s {
+        Step::Start => 0,
+        Step::End => core::unreachable!("End is handled before this call"),
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "BC-2.14.003 §EC-007 pass-5 F-05: `Step::End => core::unreachable!(...)` in a \
+         fully-enumerated no-wildcard named-arm match MUST NOT be flagged; \
+         same root cause as std::unreachable! — tokens[i-1] is `::` not `>`, so \
+         `in_match_arm_position = false` and the §PC-006 handler fires; \
+         got: {findings:?}"
+    );
+}
