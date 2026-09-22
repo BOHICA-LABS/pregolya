@@ -303,7 +303,7 @@ Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→preg
 
 ### BRANCH STATE (at D-371)
 - develop = 086c0dc (origin/develop synced after squash-merge PR #2).
-- factory-artifacts: HEAD per this commit — to be PUSHED.
+- factory-artifacts: `4f2d034` — PUSHED.
 - feature/S-1.01: DELETED (worktree removed, local + remote branches deleted after merge).
 - feature/S-1.02: NOT YET CREATED. Awaiting adversary pass-2 CLEAN(strict) before code fix-burst.
 
