@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.10"
+version: "1.11"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -18,6 +18,7 @@ changelog:
   - "1.8 (adversary-pass-1-MED-7/2026-09-22): AC-006 #[ignore] reason corrected — removed false citation of non-existent timeout-validation CI job; deferral now cites S-2.07 per BC-2.14.004 {PC-005}."
   - "1.9 (adversary-pass-3-H02/2026-09-22): Added BC-2.14.001 + VP-BC214001-01 to deliver the error-code-registry CI gate anchored here from STORY-S-1.01. Gate implemented: cargo xtask check-error-code-registry."
   - "1.10 (adversary-pass-4-H01-M07/2026-09-22): H01 — Added BC-2.14.001 row to body §Behavioral Contracts table; authored AC-020 tracing BC-2.14.001 EC-007 / VP-BC214001-01 for check-error-code-registry gate. M07 — Swept xtask/src/check_error_code_registry.rs into §Architecture Mapping, §Purity Classification, §File Structure Requirements; corrected Task 9 count from three to four subcommands; extended Task 14 CHANGELOG topics to include registry gate."
+  - "1.11 (adversary-pass-5-M01-M03/2026-09-22): M01 — AC-010 updated to reflect full deny-bare-api-key implementation: 5 patterns (derive(Debug), derive(Serialize), derive(Deserialize), impl Display, impl Deref<Target=str|String>) and 8 sentinel keywords (key, token, secret, credential, auth, bearer, password, passphrase); added missing Verified-by test symbols test_BC_2_14_005_impl_display_flagged, test_BC_2_14_005_derive_deserialize_flagged, test_BC_2_14_005_pub_crate_debug_derive_fixture_detected; Task 8 prose expanded to match. M03 — AC-020 Verified-by corrected from non-load-bearing test_error_code_registry_zero_codes_is_error to load-bearing test_registry_verdict_zero_codes_returns_err (calls registry_verdict(&HashMap::new()) and asserts Err) plus test_registry_verdict_collision_returns_err (load-bearing collision guard)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -101,7 +102,7 @@ The `reqwest::Client` produced by `build_client()` has a positive total `.timeou
 No `#[derive(Serialize)]` on API key newtypes (they must not appear in API responses). No `impl Deref<Target=str>` or `impl AsRef<str>` that exposes the inner value (the `.as_str()` or `.expose_secret()` method is the only intentional exposure path). Verified by compile-fail test or `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)`.
 
 ### AC-010 (traces to BC-2.14.005 PC-006)
-`cargo xtask deny-bare-api-key` performs STRUCTURAL detection: it scans `crates/` for public structs whose names contain a credential sentinel (`key`, `token`, `secret`, `credential` — case-insensitive) and flags any that (1) `#[derive(Debug)]` without a manual `impl Debug` (auto-derived Debug would emit the raw inner value), (2) `#[derive(Serialize)]` (credentials must not appear in serialized artifacts per PC-003), or (3) `impl Deref for NAME { type Target = str; }` (Deref coercion silently exposes the inner value). The gate does NOT scan for string literals matching key prefixes such as `sk-` or `sk-ant-`. Files under `tests/` directories and `#[cfg(test)]` blocks are exempt. Exits non-zero when any structural violation is found; exits 0 on a clean scan. Verified by `test_BC_2_14_005_flags_derive_debug_on_token_struct()`, `test_BC_2_14_005_flags_serialize_on_secret_struct()`, `test_BC_2_14_005_flags_deref_str_on_credential_struct()`, `test_BC_2_14_005_compliant_credential_struct_not_flagged()`, and `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation()`.
+`cargo xtask deny-bare-api-key` performs STRUCTURAL detection: it scans `crates/` for public structs whose names contain a credential sentinel (`key`, `token`, `secret`, `credential`, `auth`, `bearer`, `password`, `passphrase` — case-insensitive, 8 sentinels) and flags any that (1) `#[derive(Debug)]` without a manual `impl Debug` (auto-derived Debug would emit the raw inner value), (2) `#[derive(Serialize)]` (credentials must not appear in serialized artifacts per PC-003), (3) `#[derive(Deserialize)]` (credentials must not be reconstructed from untrusted data), (4) `impl Display for NAME` (Display exposes the inner value via `{}` formatting), or (5) `impl Deref for NAME { type Target = str; }` or `impl Deref for NAME { type Target = String; }` (Deref coercion silently exposes the inner value). The gate does NOT scan for string literals matching key prefixes such as `sk-` or `sk-ant-`. Files under `tests/` directories and `#[cfg(test)]` blocks are exempt. Exits non-zero when any structural violation is found; exits 0 on a clean scan. Verified by `test_BC_2_14_005_flags_derive_debug_on_token_struct()`, `test_BC_2_14_005_flags_serialize_on_secret_struct()`, `test_BC_2_14_005_flags_deref_str_on_credential_struct()`, `test_BC_2_14_005_compliant_credential_struct_not_flagged()`, `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation()`, `test_BC_2_14_005_impl_display_flagged()`, `test_BC_2_14_005_derive_deserialize_flagged()`, and `test_BC_2_14_005_pub_crate_debug_derive_fixture_detected()`.
 
 ### AC-011 (traces to BC-2.14.006 PC-001)
 A validation failure on a credential constructor — e.g., `OpenAiApiKey::new("")` with an empty key string — returns `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", .. })`. Verified by `test_BC_2_14_006_openai_empty_key_returns_err()`.
@@ -131,7 +132,7 @@ The programmer-error-guard asserts in `PregolyaError::new`, `PregolyaError::to_p
 The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annotated `#[ignore]` and invokes the identical production error-mapping code path exercised by `build_client()` at runtime — no separate test-only mapping helper is introduced. The test must break if the production mapping path changes without a corresponding test update. Verified by `test_BC_2_14_004_build_failure_maps_to_e_core_012()` (same test name as AC-015; this AC adds non-ignore and production-path constraints to AC-015's verifiable scope).
 
 ### AC-020 (traces to BC-2.14.001 EC-007 / VP-BC214001-01)
-`cargo xtask check-error-code-registry` exits 0 when every `E-<COMPONENT>-<NNN>` code in `error-taxonomy.md` is unique and at least one code was extracted (non-zero validated count), and exits 1 when any code appears more than once or when zero codes are extracted (vacuity guard — taxonomy format change detection). Verified by `test_error_code_registry_zero_codes_is_error()` (vacuity guard unit test) and the CI lint-extra gate wired in `.github/workflows/ci.yml` with factory-artifacts checkout.
+`cargo xtask check-error-code-registry` exits 0 when every `E-<COMPONENT>-<NNN>` code in `error-taxonomy.md` is unique and at least one code was extracted (non-zero validated count), and exits 1 when any code appears more than once or when zero codes are extracted (vacuity guard — taxonomy format change detection). Verified by `test_registry_verdict_zero_codes_returns_err()` (load-bearing vacuity guard — calls `registry_verdict(&HashMap::new())` and asserts `Err`) + `test_registry_verdict_collision_returns_err()` (load-bearing collision guard) and the CI lint-extra gate wired in `.github/workflows/ci.yml` with factory-artifacts checkout.
 
 ## Architecture Mapping
 
@@ -192,7 +193,7 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 5. [ ] Add `pub mod credentials;` and `pub mod http;` to `pregolya-core/src/lib.rs`
 6. [ ] Create `xtask/src/check_no_panic.rs` — grep scan for `unwrap()`/`expect()` outside test/exempt contexts
 7. [ ] Create `xtask/src/check_client_timeout.rs` — grep scan for `Client::new()` and missing `.timeout()`
-8. [ ] Create `xtask/src/deny_bare_api_key.rs` — structural scan: flags public credential-sentinel structs (name contains key/token/secret/credential) with auto-derived Debug, Serialize, or Deref<Target=str>
+8. [ ] Create `xtask/src/deny_bare_api_key.rs` — structural scan: flags public credential-sentinel structs (name contains any of 8 sentinels: key/token/secret/credential/auth/bearer/password/passphrase, case-insensitive) with any of 5 patterns: auto-derived Debug, Serialize, or Deserialize; or impl Display; or impl Deref<Target=str|String>
 9. [ ] Wire four new xtask subcommands into `xtask/src/main.rs`
 10. [ ] Add static-assertions for credential type constraints
 11. [ ] Run `cargo xtask check-no-panic && cargo xtask check-client-timeout && cargo xtask deny-bare-api-key` — all exit 0
