@@ -1918,3 +1918,396 @@ pub fn extract_prefix(code: &str) -> &str {
          got: {findings_iii:?}"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-4 F-01) — non-parenthesis macro delimiter gap
+//
+// BC-2.14.003 {PC-005}/{PC-006}: the scanner must flag assert!, assert_eq!,
+// assert_ne!, panic!, and wildcard unreachable! regardless of macro invocation
+// delimiter. The current scanner checks only Delimiter::Parenthesis in the
+// FLAGGED_PANIC_MACROS handler and in the `_` wildcard handler; brace-delimited
+// (!{...}) and bracket-delimited (![...]) forms evade detection.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-01 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG `assert!{condition, "msg"}`
+/// (brace-delimited) in non-test production code. BC-2.14.003 prohibits
+/// these macros regardless of the macro invocation delimiter.
+///
+/// RED GATE: the FLAGGED_PANIC_MACROS handler guards with
+/// `g.delimiter() == Delimiter::Parenthesis`; a brace-delimited invocation
+/// fails that guard and produces no finding.
+#[test]
+fn test_BC_2_14_003_flags_assert_brace_delimiter_in_production_code() {
+    // BC-2.14.003 {PC-005}: assert!{...} must be flagged (delimiter-independent)
+    let src = r#"
+pub fn check_nonneg(x: i32) {
+    assert!{x >= 0, "x must be non-negative"};
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}} F-01: assert!{{...}} with brace delimiter must be flagged \
+         (FLAGGED_PANIC_MACROS handler checks Delimiter::Parenthesis only); \
+         got: {findings:?}"
+    );
+}
+
+/// F-01 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG `assert![condition, "msg"]`
+/// (bracket-delimited) in non-test production code.
+///
+/// RED GATE: FLAGGED_PANIC_MACROS handler checks only Delimiter::Parenthesis.
+#[test]
+fn test_BC_2_14_003_flags_assert_bracket_delimiter_in_production_code() {
+    // BC-2.14.003 {PC-005}: assert![...] must be flagged (delimiter-independent)
+    let src = r#"
+pub fn check_nonneg(x: i32) {
+    assert![x >= 0, "x must be non-negative"];
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}} F-01: assert![...] with bracket delimiter must be flagged \
+         (FLAGGED_PANIC_MACROS handler checks Delimiter::Parenthesis only); \
+         got: {findings:?}"
+    );
+}
+
+/// F-01 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG `assert_eq!{a, b}` (brace-delimited).
+///
+/// RED GATE: FLAGGED_PANIC_MACROS handler checks only Delimiter::Parenthesis.
+#[test]
+fn test_BC_2_14_003_flags_assert_eq_brace_delimiter_in_production_code() {
+    // BC-2.14.003 {PC-005}: assert_eq!{...} must be flagged (delimiter-independent)
+    let src = r#"
+pub fn check_equal(a: i32, b: i32) {
+    assert_eq!{a, b, "values must be equal"};
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}} F-01: assert_eq!{{...}} with brace delimiter must be \
+         flagged (delimiter-independent rule); got: {findings:?}"
+    );
+}
+
+/// F-01 (MED) — BC-2.14.003 {PC-005}/{PC-006}
+///
+/// `scan_for_panics_in_source` must FLAG `panic!{msg}` (brace-delimited).
+///
+/// RED GATE: FLAGGED_PANIC_MACROS handler checks only Delimiter::Parenthesis.
+#[test]
+fn test_BC_2_14_003_flags_panic_brace_delimiter_in_production_code() {
+    // BC-2.14.003 {PC-005}: panic!{...} must be flagged (delimiter-independent)
+    let src = r#"
+pub fn unreachable_path() {
+    panic!{"this code path must never be reached"};
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-005}} F-01: panic!{{...}} with brace delimiter must be flagged; \
+         got: {findings:?}"
+    );
+}
+
+/// F-01 (MED) — BC-2.14.003 {PC-006}/{EC-007}
+///
+/// `scan_for_panics_in_source` must FLAG `_ => unreachable!{msg}` (brace-delimited
+/// wildcard arm). The `_` wildcard handler checks `args.delimiter() ==
+/// Delimiter::Parenthesis`; a brace-delimited arg group fails that check. The
+/// fallback `unreachable` handler then sees `in_match_arm_position=true` (the
+/// fat-arrow tokens are still present) and exempts it as a named arm.
+///
+/// RED GATE: `_` handler: `args.delimiter() == Delimiter::Parenthesis` rejects
+/// brace form; `unreachable` fallback handler exempts all match-arm-position calls.
+#[test]
+fn test_BC_2_14_003_flags_unreachable_wildcard_brace_delimiter() {
+    // BC-2.14.003 {PC-006}/{EC-007}: _ => unreachable!{...} must be flagged
+    let src = r#"
+pub fn categorize(n: u32) -> &'static str {
+    match n {
+        0 => "zero",
+        1 => "one",
+        _ => unreachable!{"unexpected value: {}", n},
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{PC-006}} F-01: _ => unreachable!{{...}} with brace delimiter must \
+         be flagged (wildcard `_` handler checks Delimiter::Parenthesis only; brace form \
+         evades `_` handler AND is exempted by the `unreachable` handler's \
+         in_match_arm_position guard); got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-4 F-02) — non-`_` catch-all arm detection gap
+//
+// BC-2.14.003 §EC-007: exhaustive-match exemption applies ONLY when every arm
+// is a named variant pattern (no `_`, no irrefutable binding, no guarded wildcard).
+// The scanner currently exempts ALL match-arm-position unreachable!() that are not
+// the exact `_ = > unreachable!` token shape, missing irrefutable binding catch-alls
+// and guarded wildcards.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-02 (MED) — BC-2.14.003 {PC-006}/{EC-007}
+///
+/// `scan_for_panics_in_source` must FLAG `other => unreachable!(...)` (irrefutable
+/// binding catch-all). §EC-007: exhaustive-match exemption ONLY for named variant
+/// patterns; an irrefutable binding `other` is semantically a catch-all pattern.
+///
+/// RED GATE: the `_` handler only fires when `id == "_"`; `other` falls through to
+/// the catch-all arm which resets `pending_panics_doc` only. The `unreachable` handler
+/// then sees `in_match_arm_position=true` (fat-arrow tokens i-2/i-1 match) and
+/// exempts it as if it were a named variant arm — incorrect per §EC-007.
+#[test]
+fn test_BC_2_14_003_flags_binding_catch_all_unreachable() {
+    // BC-2.14.003 §EC-007 F-02: irrefutable binding catch-all must be flagged
+    let violation_binding =
+        include_str!("../tests/fixtures/violations/violation_binding_catch_all.rs");
+    let findings = scan_for_panics_in_source(violation_binding, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{EC-007}} F-02: `other => unreachable!()` irrefutable-binding \
+         catch-all must be flagged (not a named-variant arm; scanner exempts all \
+         match-arm-position unreachable!() lacking the exact `_ = > unreachable!` shape; \
+         irrefutable bindings are latent panic paths under enum/type evolution); \
+         got: {findings:?}"
+    );
+}
+
+/// F-02 (MED) — BC-2.14.003 {PC-006}/{EC-007}
+///
+/// `scan_for_panics_in_source` must FLAG `_ if guard => unreachable!(...)` (guarded
+/// wildcard). §EC-007: a guarded wildcard is not an exhaustive named-variant arm — a
+/// value not matched by the guard condition can reach a future new match arm and panic.
+///
+/// RED GATE: the `_` handler looks for the exact consecutive token pattern
+/// `_ = > unreachable!`. When a guard (`if condition`) appears between `_` and `=>`,
+/// `tokens[i+1]` is `if` (not `=`), so the multi-token lookahead fails and no finding
+/// is added. The `unreachable` handler then sees `in_match_arm_position=true` (the
+/// fat-arrow tokens directly precede `unreachable` in the flat stream) and exempts it.
+#[test]
+fn test_BC_2_14_003_flags_guarded_wildcard_unreachable() {
+    // BC-2.14.003 §EC-007 F-02: guarded wildcard must be flagged
+    let src = r#"
+pub fn process_status(n: u32) -> &'static str {
+    match n {
+        0 => "zero",
+        _ if n > 100 => unreachable!("BC-2.14.003: n > 100 is not a valid status"),
+        _ => "other",
+    }
+}
+"#;
+    let findings = scan_for_panics_in_source(src, "crates/pregolya-core/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.003 {{EC-007}} F-02: `_ if guard => unreachable!()` guarded-wildcard \
+         arm must be flagged (`_` handler lookahead breaks when guard tokens sit between \
+         `_` and `=>`; `unreachable` handler then erroneously exempts via \
+         in_match_arm_position); got: {findings:?}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.003 (S-1.02 pass-4 F-03) — --fixture-mode e2e gate (AC-017/Task-13)
+//
+// check-no-panic --fixture-mode <dir> must scan the given directory (not crates/)
+// and exit non-zero when violation fixtures are present. The current run() fn
+// ignores argv[2] and scans crates/ (which is clean) → exits 0.
+//
+// RED GATE (in-process): the brace-delimiter fixture violation_assert_brace.rs
+// produces no findings with the current scanner (F-01 gap), making the second
+// assertion below fail.
+// RED GATE (subprocess, #[ignore]): --fixture-mode not implemented; current code
+// scans crates/ (clean) → exits 0; test asserts non-zero → fails.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// F-03 (MED process-gap) — AC-017/Task-13 (BC-2.14.003)
+///
+/// SID-1 in-process companion: drives the fixture-mode scanner behavior at the
+/// dependency boundary without subprocess overhead.
+///
+/// Scans the violation fixture files that `--fixture-mode` would scan and asserts
+/// each produces at least one violation finding.
+///
+/// RED GATE: `violation_assert_brace.rs` contains `assert!{...}` (brace-delimited);
+/// the scanner only checks `Delimiter::Parenthesis` (F-01 gap) → empty findings →
+/// the second assertion FAILS.
+#[test]
+fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
+    // Fixture 1: assert! without # Panics doc section and BC-ID (parenthesis form).
+    // Currently detected by the scanner → non-empty → PASSES.
+    let violation_assert_no_doc =
+        include_str!("../tests/fixtures/violations/violation_assert_no_doc.rs");
+    let findings_doc = scan_for_panics_in_source(
+        violation_assert_no_doc,
+        "xtask/tests/fixtures/violations/violation_assert_no_doc.rs",
+    );
+    assert!(
+        !findings_doc.is_empty(),
+        "BC-2.14.003 F-03 (in-process): violation_assert_no_doc.rs must produce a \
+         violation finding; got: {findings_doc:?}"
+    );
+
+    // Fixture 2: assert!{...} brace-delimited form (F-01 gap fixture).
+    // RED GATE: scanner only checks Delimiter::Parenthesis → brace form not detected →
+    // findings_brace is empty → this assertion FAILS.
+    let violation_assert_brace =
+        include_str!("../tests/fixtures/violations/violation_assert_brace.rs");
+    let findings_brace = scan_for_panics_in_source(
+        violation_assert_brace,
+        "xtask/tests/fixtures/violations/violation_assert_brace.rs",
+    );
+    assert!(
+        !findings_brace.is_empty(),
+        "BC-2.14.003 F-03 (in-process) + F-01: violation_assert_brace.rs must produce a \
+         violation finding (assert!{{...}} brace-delimited form must be flagged); \
+         current scanner only checks Delimiter::Parenthesis; got: {findings_brace:?}"
+    );
+}
+
+/// F-03 (MED process-gap) — AC-017/Task-13 (BC-2.14.003) — subprocess test
+///
+/// `cargo xtask check-no-panic --fixture-mode <violations_dir>` must exit non-zero
+/// when run against the violation fixtures and exit 0 when the fixtures are clean.
+///
+/// RED GATE: `--fixture-mode` is not implemented. `run()` ignores extra argv,
+/// scans `crates/` (clean workspace), and exits 0. This test asserts non-zero
+/// → FAILS against current code.
+///
+/// SID-1: the non-ignored in-process companion above provides CI coverage without
+/// subprocess overhead.
+#[test]
+#[ignore = "EXT-F03: subprocess requires cargo build (~30s cold); \
+            run manually or in the xtask-subprocess CI job. \
+            In-process companion: test_BC_2_14_003_fixture_mode_in_process_violation_found. \
+            S-2.07 owns E-PROV-002 error-shape verification."]
+fn test_BC_2_14_003_fixture_mode_subprocess_exits_nonzero_on_violations() {
+    use std::process::{Command, Stdio};
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    // CARGO_MANIFEST_DIR for the xtask crate is xtask/; workspace root is one level up.
+    let workspace_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    let violation_dir = workspace_root.join("xtask/tests/fixtures/violations");
+
+    let output = Command::new("cargo")
+        .args([
+            "run",
+            "--quiet",
+            "-p",
+            "xtask",
+            "--",
+            "check-no-panic",
+            "--fixture-mode",
+            violation_dir
+                .to_str()
+                .expect("violation dir path must be valid UTF-8"),
+        ])
+        .stdin(Stdio::null())
+        .current_dir(&workspace_root)
+        .output()
+        .expect("cargo run must be invocable");
+
+    // RED GATE: --fixture-mode not implemented; run() scans crates/ (clean) → exits 0.
+    // After implementation: violation fixtures found → exits 1.
+    assert!(
+        !output.status.success(),
+        "BC-2.14.003 F-03: check-no-panic --fixture-mode must exit non-zero when \
+         violation fixtures present; current code: flag ignored, crates/ is clean, \
+         exits 0; exit: {:?}, stderr: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Secondary assertions (only reached once exit code is non-zero):
+    // both violation fixtures must appear in the combined output.
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        combined.contains("violation_assert_no_doc"),
+        "BC-2.14.003 F-03: violation_assert_no_doc.rs must be reported; output: {combined}"
+    );
+    assert!(
+        combined.contains("violation_assert_brace"),
+        "BC-2.14.003 F-03: violation_assert_brace.rs (brace-delimiter form, F-01) must \
+         be reported; output: {combined}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BC-2.14.004 (S-1.02 pass-4 O-1) — zero-timeout form detection gaps
+//
+// BC-2.14.004 {PC-001}/{INV-004}: timeout duration must be > Duration::ZERO.
+// The current is_zero_duration_timeout_arg recognises only the short constant form
+// `Duration :: ZERO`. Two additional zero-equivalent forms escape detection:
+//   - Duration::from_secs(0)       (zero via constructor)
+//   - std::time::Duration::ZERO    (fully-qualified constant path)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// O-1 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+///
+/// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::from_secs(0))`
+/// as a zero/non-positive-timeout violation. {PC-001} requires d > Duration::ZERO;
+/// `Duration::from_secs(0)` evaluates to `Duration::ZERO` at runtime.
+///
+/// RED GATE: `is_zero_duration_timeout_arg` checks `flat[timeout_idx+6]` for the
+/// ident `"ZERO"`; `Duration::from_secs(0)` places `"from_secs"` at that offset
+/// (not `"ZERO"`) → returns `false` → timeout credited as valid → chain not flagged.
+#[test]
+fn test_BC_2_14_004_flags_timeout_from_secs_zero() {
+    // BC-2.14.004 {PC-001}/{INV-004}: Duration::from_secs(0) == Duration::ZERO
+    let src = r#"let c = reqwest::ClientBuilder::new().timeout(Duration::from_secs(0)).build()?;"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.004 {{PC-001}} O-1: .timeout(Duration::from_secs(0)) must be flagged as \
+         zero-timeout (d must be > 0 per {{INV-004}}); is_zero_duration_timeout_arg only \
+         matches the `Duration::ZERO` constant form at fixed flat-token offsets; \
+         got: {findings:?}"
+    );
+}
+
+/// O-1 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+///
+/// `scan_for_timeout_violations_in_source` must FLAG fully-qualified
+/// `.timeout(std::time::Duration::ZERO)`. The value is identical to `Duration::ZERO`;
+/// the fully-qualified path form must also be detected.
+///
+/// RED GATE: `is_zero_duration_timeout_arg` checks `flat[timeout_idx+3]` for the
+/// ident `"Duration"`. With `std::time::Duration::ZERO`, the flat token sequence at
+/// `timeout_idx+3` is `"std"` (not `"Duration"`) because the three extra tokens
+/// `std :: time ::` appear before `Duration` → check returns `false` → not detected.
+#[test]
+fn test_BC_2_14_004_flags_timeout_fully_qualified_duration_zero() {
+    // BC-2.14.004 {PC-001}/{INV-004}: std::time::Duration::ZERO is Duration::ZERO
+    let src =
+        r#"let c = reqwest::ClientBuilder::new().timeout(std::time::Duration::ZERO).build()?;"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+    assert!(
+        !findings.is_empty(),
+        "BC-2.14.004 {{PC-001}} O-1: .timeout(std::time::Duration::ZERO) fully-qualified \
+         must be flagged ({{INV-004}}: zero-duration timeout is forbidden); \
+         is_zero_duration_timeout_arg only matches the short Duration::ZERO form; extra \
+         tokens in the fully-qualified path shift `Duration` past the +3 offset check; \
+         got: {findings:?}"
+    );
+}

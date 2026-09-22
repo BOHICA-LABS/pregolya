@@ -75,7 +75,7 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::error::{Category, Component, RetryHint};
+    use crate::error::{Category, RetryHint};
 
     // ── AC-015 test-support stub ──────────────────────────────────────────────
     //
@@ -134,37 +134,27 @@ mod tests {
         // If we got here, a Client was constructed. The scanner verifies .timeout() at CI.
     }
 
-    /// AC-006 (traces to BC-2.14.004 {PC-005}, TV-004)
+    /// DI-009 (BC-2.14.004 {PC-001}/{INV-004}) — build_client returns Ok
     ///
-    /// When a request exceeds the timeout, the provider adapter must convert the
-    /// reqwest timeout error into:
-    /// `PregolyaError { category: TIMEOUT, code: "E-PROV-002",
-    ///  message: "ProviderTimeout: request timed out after 30s" }`
+    /// S-1.02 scope: `build_client()` must return `Ok(reqwest::Client)` when called
+    /// with valid workspace configuration. This test verifies DI-009: the builder
+    /// succeeds and returns a usable client handle.
     ///
-    /// This test verifies the error SHAPE — category, code, and message prefix — by
-    /// asserting the PregolyaError shape can be constructed correctly. The actual
-    /// timeout-fires-against-live-endpoint scenario is tested in the #[ignore] variant
-    /// below.
+    /// E-PROV-002 error-shape verification (reqwest timeout fires → PregolyaError
+    /// category:TIMEOUT, code:"E-PROV-002") is owned by S-2.07, which implements the
+    /// provider error-mapping layer against a mock server.
     ///
     /// RED GATE: `build_client()` is `todo!()` — panics until implementation.
     #[test]
     fn test_BC_2_14_004_timeout_error_shape() {
-        // Verify build_client() returns Ok first (prerequisite for timeout testing)
+        // DI-009: build_client() must succeed (returns Ok with a positive-timeout client).
+        // The timeout value is verified by the xtask gate (check-no-panic, check-client-timeout).
         let result = build_client();
         assert!(
             result.is_ok(),
-            "BC-2.14.004 {{PC-005}}: prerequisite — build_client() must succeed before \
-             timeout error shape can be verified"
+            "BC-2.14.004 DI-009: build_client() must return Ok(reqwest::Client); \
+             got: {result:?}"
         );
-        // The timeout-fires behavior is end-to-end tested in the mock server test below.
-        // Here we verify the error category/code shape matches what the adapter must produce.
-        // Category::Timeout + code "E-PROV-002" is the contract; the implementer must
-        // produce exactly this shape when reqwest returns a timeout error.
-        let _expected_category = Category::Timeout;
-        let _expected_component = Component::Prov;
-        let _expected_code = "E-PROV-002";
-        let _expected_message_prefix = "ProviderTimeout: request timed out after";
-        // Shape verification is structural; timeout firing is confirmed in mock server test.
     }
 
     /// AC-006 (traces to BC-2.14.004 {PC-005}, TV-004) — integration test

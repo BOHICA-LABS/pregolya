@@ -32,3 +32,9 @@ reason = "CI gate dispatch binary implementing 5 lint checkers (no-panic, client
 approver = "jmagady"
 date = "2026-09-19"
 
+[[allow]]
+path = "xtask/src/tests.rs"
+reason = "Canonical conformance test suite for all xtask CI gate scanners (BC-2.14.003, BC-2.14.004, BC-2.14.005, file-size, anyhow-ban, description-cache-key). Table-driven and parameterised tests covering every scanner rule, violation fixture, and negative guard. The suite is cohesive by gate; splitting into per-gate files would fragment the shared fixture helpers and scan-and-report test pattern without improving reviewability. Pass-4 red-gate additions (F-01 delimiter gap, F-02 non-_ catch-all, F-03 fixture-mode, O-1 zero-timeout forms) pushed the code-line count past the 1500-line test hard gate."
+approver = "jmagady"
+date = "2026-09-22"
+
