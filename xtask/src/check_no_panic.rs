@@ -101,51 +101,249 @@ pub fn run() {
     );
 }
 
+// ── Syn AST-based scanner ────────────────────────────────────────────────────
+// Primary scan path: syn handles qualified paths (std::unreachable!/core::unreachable!)
+// and match-arm context correctly by construction, closing the token-scanner edge-case
+// class (F-01 guarded irrefutable binding, F-02 cross-arm misattribution, F-05 qualified
+// path). Falls back to the proc_macro2 token-based path for source files that syn cannot
+// parse (e.g. syntactically invalid-but-tokenizable Rust in test fixtures).
+
+struct PanicVisitor<'a> {
+    path: &'a str,
+    findings: Vec<String>,
+    fn_has_panics_doc: bool,
+    /// Stack of `is_catch_all` flags for nested match-arm bodies.
+    /// Empty = not inside any match-arm body; unreachable! there is §PC-006.
+    /// true = catch-all arm (wildcard or irrefutable binding); unreachable! → FLAG.
+    /// false = named-variant arm; unreachable! → EXEMPT (Exemption 1).
+    arm_stack: Vec<bool>,
+}
+
+fn syn_has_cfg_test(attrs: &[syn::Attribute]) -> bool {
+    attrs.iter().any(|a| {
+        a.path().is_ident("cfg")
+            && matches!(&a.meta, syn::Meta::List(l) if l.tokens.to_string().trim() == "test")
+    })
+}
+
+fn syn_has_panics_doc(attrs: &[syn::Attribute]) -> bool {
+    attrs.iter().any(|a| {
+        if !a.path().is_ident("doc") {
+            return false;
+        }
+        if let syn::Meta::NameValue(nv) = &a.meta
+            && let syn::Expr::Lit(syn::ExprLit {
+                lit: syn::Lit::Str(s),
+                ..
+            }) = &nv.value
+        {
+            return s.value().contains("# Panics");
+        }
+        false
+    })
+}
+
+/// Returns true if the match-arm pattern is a catch-all:
+/// `_` wildcard, irrefutable lowercase binding (e.g. `other`), or an or-pattern
+/// containing any catch-all sub-pattern. Named-variant arms (e.g. `Phase::Done`,
+/// `Done`) are NOT catch-alls.
+fn is_catch_all_pat(pat: &syn::Pat) -> bool {
+    match pat {
+        syn::Pat::Wild(_) => true,
+        syn::Pat::Ident(p) => {
+            p.by_ref.is_none()
+                && p.mutability.is_none()
+                && p.subpat.is_none()
+                && p.ident
+                    .to_string()
+                    .chars()
+                    .next()
+                    .map(|c| c.is_ascii_lowercase())
+                    .unwrap_or(false)
+                && !matches!(p.ident.to_string().as_str(), "true" | "false")
+        }
+        syn::Pat::Or(p) => p.cases.iter().any(is_catch_all_pat),
+        _ => false,
+    }
+}
+
+fn syn_macro_has_bc_id(mac: &syn::Macro) -> bool {
+    let s = mac.tokens.to_string();
+    if let Some(pos) = s.find("BC-") {
+        s[pos + 3..]
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
+    } else {
+        false
+    }
+}
+
+impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
+    fn visit_item_mod(&mut self, node: &'ast syn::ItemMod) {
+        if !syn_has_cfg_test(&node.attrs) {
+            syn::visit::visit_item_mod(self, node);
+        }
+    }
+
+    fn visit_item_fn(&mut self, node: &'ast syn::ItemFn) {
+        if syn_has_cfg_test(&node.attrs) {
+            return;
+        }
+        let old = self.fn_has_panics_doc;
+        self.fn_has_panics_doc = syn_has_panics_doc(&node.attrs);
+        syn::visit::visit_item_fn(self, node);
+        self.fn_has_panics_doc = old;
+    }
+
+    fn visit_impl_item_fn(&mut self, node: &'ast syn::ImplItemFn) {
+        if syn_has_cfg_test(&node.attrs) {
+            return;
+        }
+        let old = self.fn_has_panics_doc;
+        self.fn_has_panics_doc = syn_has_panics_doc(&node.attrs);
+        syn::visit::visit_impl_item_fn(self, node);
+        self.fn_has_panics_doc = old;
+    }
+
+    /// Push arm context before visiting the arm body; pop after.
+    /// Guard expressions are visited WITHOUT arm context (unreachable! in a guard
+    /// is not "inside the arm body" and triggers §PC-006).
+    fn visit_arm(&mut self, node: &'ast syn::Arm) {
+        if let Some((_, g)) = &node.guard {
+            syn::visit::visit_expr(self, g);
+        }
+        self.arm_stack.push(is_catch_all_pat(&node.pat));
+        syn::visit::visit_expr(self, &node.body);
+        self.arm_stack.pop();
+    }
+
+    fn visit_expr_method_call(&mut self, node: &'ast syn::ExprMethodCall) {
+        let m = node.method.to_string();
+        if m == "unwrap" || m == "expect" {
+            let line = node.method.span().start().line;
+            self.findings.push(format!(
+                "{}:{}: .{}() in non-test code (BC-2.14.003 violation)",
+                self.path, line, m
+            ));
+        }
+        syn::visit::visit_expr_method_call(self, node);
+    }
+
+    fn visit_expr_macro(&mut self, node: &'ast syn::ExprMacro) {
+        self.handle_macro_invocation(&node.mac);
+        // Macro token streams are opaque in syn; we don't recurse into them.
+    }
+
+    fn visit_stmt_macro(&mut self, node: &'ast syn::StmtMacro) {
+        self.handle_macro_invocation(&node.mac);
+        // Macro token streams are opaque in syn; we don't recurse into them.
+    }
+}
+
+impl PanicVisitor<'_> {
+    /// Core macro-invocation checker — called for both expression-context and
+    /// statement-context macro invocations (`ExprMacro` and `StmtMacro`).
+    /// `unreachable!` is checked against the current arm-stack context;
+    /// `panic!`/`assert!`/`assert_eq!`/`assert_ne!` are flagged unless
+    /// Exemption 2 (§PC-005: `# Panics` doc + BC-ID in message) applies.
+    fn handle_macro_invocation(&mut self, mac: &syn::Macro) {
+        let Some(seg) = mac.path.segments.last() else {
+            return;
+        };
+        let name = seg.ident.to_string();
+        let line = seg.ident.span().start().line;
+        match name.as_str() {
+            "unreachable" => {
+                if self.arm_stack.is_empty() {
+                    self.findings.push(format!(
+                        "{}:{}: unreachable!() outside exhaustive-match named arm \
+                         in non-test code (BC-2.14.003 §PC-006 violation: \
+                         unreachable! is only permitted in explicit named match arms; \
+                         use documented assert!() for programmer-error guards)",
+                        self.path, line
+                    ));
+                } else if *self.arm_stack.last().unwrap_or(&false) {
+                    self.findings.push(format!(
+                        "{}:{}: wildcard-arm unreachable!() in non-test code \
+                         (BC-2.14.003 EC-004/EC-007 violation: _ => unreachable! is a \
+                         latent panic path under enum evolution; use explicit named arm \
+                         unreachable! or documented assert!())",
+                        self.path, line
+                    ));
+                }
+                // Named arm (arm_stack.last() == Some(&false)): EXEMPT (Exemption 1)
+            }
+            n @ ("panic" | "assert" | "assert_eq" | "assert_ne")
+                if !(self.fn_has_panics_doc && syn_macro_has_bc_id(mac)) =>
+            {
+                self.findings.push(format!(
+                    "{}:{}: {}!() in non-test code (BC-2.14.003 violation)",
+                    self.path, line, n
+                ));
+            }
+            _ => {} // debug_assert!* and everything else: exempt
+        }
+    }
+}
+
+/// Syn AST-based scan. Returns `None` if syn cannot parse the source (invalid Rust);
+/// callers fall back to the proc_macro2 token-based scan in that case.
+fn scan_with_syn(src: &str, path: &str) -> Option<Vec<String>> {
+    let file = syn::parse_file(src).ok()?;
+    let mut v = PanicVisitor {
+        path,
+        findings: Vec::new(),
+        fn_has_panics_doc: false,
+        arm_stack: Vec::new(),
+    };
+    syn::visit::visit_file(&mut v, &file);
+    Some(v.findings)
+}
+
 /// Scans a single Rust source file (as a string) for `.unwrap()` / `.expect(...)`
 /// calls, bare `assert!`/`assert_eq!`/`assert_ne!`/`panic!` without documented
-/// programmer-error-guard exemption, and `_ => unreachable!()` wildcard arms
-/// outside `#[cfg(test)]` blocks.
+/// programmer-error-guard exemption, and wildcard/irrefutable-binding
+/// `unreachable!()` arms outside `#[cfg(test)]` blocks.
 ///
 /// # Two-exemption discipline (BC-2.14.003 §EC-007)
 ///
 /// Exemption 1 — explicit named-arm unreachable: `unreachable!()` in a named
-/// (non-wildcard) match arm pattern, e.g. `Phase::Done => unreachable!(...)`, is an
-/// exhaustiveness witness and is NOT flagged. A wildcard `_ => unreachable!(...)` is
-/// always flagged regardless of what precedes it (BC-2.14.003 §EC-004).
+/// (non-wildcard, non-irrefutable-binding) match arm is NOT flagged. Applies to
+/// qualified paths (`std::unreachable!`, `core::unreachable!`) via last-segment
+/// matching. A wildcard `_ => unreachable!(...)` or irrefutable-binding arm
+/// `other => unreachable!(...)` or guarded form `other if guard => unreachable!(...)`
+/// is ALWAYS flagged (BC-2.14.003 §EC-004).
 ///
 /// Exemption 2 — documented programmer-error-guard assert: `assert!`/`assert_eq!`/
 /// `assert_ne!` where the enclosing function has a `# Panics` doc section AND the
-/// assert message (any literal argument) contains a BC-ID (`BC-` followed by a digit)
-/// is NOT flagged.
+/// assert message contains a BC-ID is NOT flagged.
 ///
-/// Returns a `Vec<String>` of human-readable violation messages, one per
-/// detected call site. Returns an empty `Vec` when the source is clean.
+/// Returns a `Vec<String>` of human-readable violation messages.
 ///
-/// Called by `run()` per-file and exposed as `pub(crate)` so unit tests in
-/// `xtask/src/tests.rs` can verify scanner behavior directly.
+/// Called by `run()` per-file and exposed as `pub(crate)` for unit tests.
 pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
     // Fixture violation files contain intentional violations for gate coverage testing.
-    // They live under tests/fixtures/violations/ but must be scanned as production code
-    // (BC-2.14.003 §EC-007, AC-017/Task-13 fixture coverage requirement). All other
-    // files under tests/ are genuine test code and remain exempt.
     if crate::is_test_file(path) && !path.contains("fixtures/violations") {
         return Vec::new();
     }
 
+    // Primary: syn AST-based scan (handles qualified paths and match-arm context
+    // correctly by construction — F-01/F-02/F-05 correct by construction).
+    if let Some(findings) = scan_with_syn(src, path) {
+        return findings;
+    }
+
+    // Fallback: proc_macro2 token scan for syntactically invalid-but-tokenizable
+    // source (e.g. test fixtures with `let` statements at module scope).
     use proc_macro2::TokenStream;
     let ts: TokenStream = match src.parse() {
         Ok(s) => s,
         Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
     };
-
     let mut findings = Vec::new();
-    walk_panic_tokens(
-        ts.into_iter(),
-        &mut findings,
-        path,
-        &mut 0u32,
-        false, // fn_has_panics_doc: false at module level
-    );
+    walk_panic_tokens(ts.into_iter(), &mut findings, path, &mut 0u32, false);
     findings
 }
 

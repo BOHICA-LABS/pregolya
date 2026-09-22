@@ -573,7 +573,9 @@ fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool 
         && matches!(flat.get(timeout_idx + 4), Some(FlatToken::Punct(':', _)))
         && matches!(flat.get(timeout_idx + 5), Some(FlatToken::Punct(':', _)))
         && matches!(flat.get(timeout_idx + 6), Some(FlatToken::Ident(n, _)) if matches!(
-            n.as_str(), "from_secs" | "from_millis" | "from_nanos" | "from_secs_f64"
+            n.as_str(),
+            "from_secs" | "from_millis" | "from_nanos" | "from_secs_f64"
+                | "from_micros" | "from_secs_f32"
         ))
         && matches!(flat.get(timeout_idx + 7), Some(FlatToken::ParenGroup(_)))
     {
