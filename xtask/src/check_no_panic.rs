@@ -506,6 +506,20 @@ fn scan_method_calls_in_tokens(
 /// is broken and failing to detect them.
 ///
 /// Called by `main()` when `argv == ["check-no-panic", "--fixture-mode", <dir>]`.
+///
+/// # Exit semantics
+///
+/// - Exits 1 when violations are found — scanner working correctly on a
+///   violation-containing directory.
+/// - Exits 0 when no violations are found — unexpected for the violations fixture
+///   directory; this indicates the scanner is broken and failing to detect the
+///   planted violations.
+///
+/// CI self-test should assert that the scanner correctly detects violations:
+/// ```text
+/// ! cargo xtask check-no-panic --fixture-mode <violations-dir>
+/// ```
+/// (i.e., assert the command exits non-zero, confirming the scanner fires on the fixture).
 pub fn run_fixture_mode(dir: &str) {
     let output = std::process::Command::new("find")
         .args([dir, "-name", "*.rs", "-not", "-path", "*/target/*"])

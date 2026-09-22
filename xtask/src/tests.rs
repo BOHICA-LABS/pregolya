@@ -1341,17 +1341,15 @@ fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
         .expect("cargo run must be invocable");
 
     // Red-gate provenance: stub was todo!() — was authored to exit non-zero until implemented.
-    // A clean workspace exits 0; a workspace with bare api keys exits non-zero.
-    // This test verifies the subprocess contract is exercised (not a vacuous pass).
+    // A clean workspace exits 0 (BC-2.14.005 {PC-003}: deny-bare-api-key must exit 0 on a
+    // clean workspace). This test verifies the subprocess exits 0 when no violations are found.
     assert!(
-        !output.status.success() || {
-            // If the command exits 0 on the clean workspace, that is also correct
-            // (BC-2.14.005 {PC-003}: clean workspace must exit 0).
-            true
-        },
-        "BC-2.14.005: deny-bare-api-key must be invocable and return a process exit code; \
-         status: {:?}",
-        output.status
+        output.status.success(),
+        "BC-2.14.005 (PC-006): deny-bare-api-key must exit 0 on a clean workspace; \
+         status: {:?}\nstdout: {}\nstderr: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
     );
 }
 

@@ -329,6 +329,13 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
         // The B-4 test: use reqwest::Client; ... Client::new() should be flagged
         // The B-5 test: OpenAiClient::new() should NOT be flagged (name differs)
         // The S-3 test: mcp_sdk::Client::new() should NOT be flagged (preceded by mcp_sdk::)
+        //
+        // KNOWN-LIMITATION: Pattern 2 (bare Client::new()) only detects inline-qualified calls
+        // (e.g., reqwest::Client::new() or some::Client::new()). If a module uses
+        // `use reqwest::Client;` and then calls `Client::new()`, Pattern 2 cannot distinguish
+        // it from a non-reqwest Client::new(). False positives are possible for crates that
+        // `use` other Client types with the same name. Conservative behavior: flag and require
+        // manual suppression. Full fix requires tracking use-imports at file scope.
         if let FlatToken::Ident(name, _) = &flat[i]
             && name == "Client"
             && matches_double_colon(flat, i + 1)
@@ -580,9 +587,12 @@ fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool 
         && matches!(flat.get(timeout_idx + 7), Some(FlatToken::ParenGroup(_)))
     {
         // Check the first inlined argument is a zero literal.
-        if let Some(FlatToken::Literal(s, _)) = flat.get(timeout_idx + 8)
-            && matches!(
-                s.as_str(),
+        // Normalize by stripping underscores before matching so that `0_u64`,
+        // `0_u32`, `0__u64`, etc. are handled without enumerating all variants.
+        if let Some(FlatToken::Literal(s, _)) = flat.get(timeout_idx + 8) {
+            let normalized = s.as_str().replace('_', "");
+            if matches!(
+                normalized.as_str(),
                 "0" | "0u64"
                     | "0u32"
                     | "0u128"
@@ -592,9 +602,9 @@ fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool 
                     | "0.0"
                     | "0.0f64"
                     | "0.0f32"
-            )
-        {
-            return true;
+            ) {
+                return true;
+            }
         }
     }
 
