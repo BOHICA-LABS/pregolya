@@ -1,15 +1,16 @@
 ---
 document_type: bc-index
 level: L3
-version: "4.65"
+version: "4.66"
 status: active
 producer: state-manager
-timestamp: 2026-09-18T00:00:00Z
+timestamp: 2026-09-22T00:00:00Z
 project: pregolya
 cycle: v1.0.0-greenfield
 input-hash: "[live-index]"
 traces_to: .factory/specs/prd.md
 changelog:
+  - "4.66 (S-1.02-adv-pass-1/D-370/2026-09-22, state-manager): 2 BC version bumps — BC-2.14.004 (v1.6→v1.7): F-02 E-CORE-012 HttpClientBuildFailed minted; {EC-006} added as authoritative gate #33 raise site; Wave-0 scope note. BC-2.14.006 (v1.5→v1.6): F-07 whitespace-only credential rejection — EC-006 added (ApiKey::new(whitespace-only) → E-CORE-005 VAL same path as empty string); PC-004 message widened to include whitespace-only; TV-006 added (TV 844→845). test-vectors→v3.29 (BC-2.14.006 TV count 5→6). Census: EC 147→148 (+E-CORE-012); TV 844→845 (+TV-006/BC-2.14.006). BC 149 / VP 43 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22 (BC/VP/stories/pts/ADR/SS/crates UNCHANGED)."
   - "4.65 (pass-12/MED-001/2026-09-20, state-manager): BC-2.14.001 DI column: DI-008,DI-014 → DI-008,DI-010,DI-014; DI-010 was added to BC-2.14.001 at v1.17 but BC-INDEX sibling sweep was missed (TD-VSDD-060). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.64 (D-366/S-1.01 LOCAL adv OBS-1/2026-09-18, state-manager): BC-2.14.002 §Changelog (v1.13→v1.14; product-owner; OBS-1 records-only — {INV-004}/§Architecture Anchors prose precision corrected to reflect actual layering per S-1.01 implementation: categorical default Category→HTTP status mapping defined once in pregolya-core::error::PregolyaError::http_status(); pregolya-server role restated as per-endpoint overrides + RFC-7807 response serialization delegating to core::http_status() rather than re-declaring the categorical table; pregolya-core/src/error.rs bullet adds http_status() to the method list; pregolya-server/src/error_response.rs bullet drops 'HTTP status code mapping' and gains delegation clause; INV-004 'defined once' guarantee now correctly identifies the site; no behavioral change). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "4.63 (D-365/S-1.01 LOCAL adv pass OBS-1/2026-09-17, state-manager): BC-2.14.002 §Changelog (v1.12→v1.13; product-owner; OBS-1 records-only — EC-005 restated to compile-time exhaustiveness; closed 14-variant #[non_exhaustive] Category enum means adding a new variant is source-breaking at every mapping site; runtime 'Unknown'/500 fallback retired as obsolete; no behavioral change). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
@@ -365,9 +366,9 @@ _VP-004 and VP-005 are integration VPs (from BC-2.09.004/005); registered in VP-
 | BC-2.14.001 | PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | CAP-016 | | DI-008,DI-010,DI-014 | P0 | | | ss-14/BC-2.14.001.md |
 | BC-2.14.002 | RFC-7807 Compatible Problem Emission from PregolyaError | CAP-016 | | | P0 | | | ss-14/BC-2.14.002.md |
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | CAP-016 | NE-07 | DI-008 | P0 | | | ss-14/BC-2.14.003.md |
-| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | CAP-016 | NE-04 | DI-009 | P0 | | | ss-14/BC-2.14.004.md |
+| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | CAP-016 | NE-04 | DI-009 | P0 | | (v1.7; S-1.02-adv-pass-1/D-370/2026-09-22 F-02 E-CORE-012 HttpClientBuildFailed minted; {EC-006} authoritative raise site) | ss-14/BC-2.14.004.md |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref\<Target=str\> | CAP-016 | NE-10 | DI-010 | P0 | | (v1.5; round-67 reconciliation/D-346/2026-09-02 multi-anchor S-1.02+S-2.06 adjudication) | ss-14/BC-2.14.005.md |
-| BC-2.14.006 | Validation Failures Propagate Err(PregolyaError); No Silent None | CAP-016 | NE-03 | DI-014 | P0 | | | ss-14/BC-2.14.006.md |
+| BC-2.14.006 | Validation Failures Propagate Err(PregolyaError); No Silent None | CAP-016 | NE-03 | DI-014 | P0 | | (v1.6; S-1.02-adv-pass-1/D-370/2026-09-22 F-07 whitespace-only rejection EC-006 added; PC-004 message widened; Wave-0 scope note) | ss-14/BC-2.14.006.md |
 | BC-2.15.001 | KV and Vector Memory Persistence Across Threads (Not Per-Checkpoint) | CAP-017 | | | P1 | | | ss-15/BC-2.15.001.md |
 | BC-2.15.002 | User/App/Session Tier Isolation — User-Private Does Not Bleed Across Scopes | CAP-017 | | | P1 | | | ss-15/BC-2.15.002.md |
 | BC-2.15.003 | GDPR Erasure Removes All Traces from All Memory Tiers | CAP-017 | | | P1 | | | ss-15/BC-2.15.003.md |

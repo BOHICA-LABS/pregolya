@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "2.01"
+version: "2.02"
 status: active
 producer: state-manager
-timestamp: 2026-09-18T00:00:00Z
+timestamp: 2026-09-22T00:00:00Z
 changelog:
+  - "2.02 (S-1.02-adv-pass-1/D-370/2026-09-22, state-manager): S-1.02 story spec v1.2→v1.3 — AC-015 (whitespace-only API key rejection → E-CORE-005 VAL) and AC-016 (HttpClient build failure propagation → E-CORE-012 TRANSPORT) added; BC tables updated (BC-2.14.004 {EC-006} + BC-2.14.006 {EC-006}/TV-006); Token Budget updated. test-vectors→v3.29 (BC-2.14.006 TV count 5→6). Census: EC 147→148 (+E-CORE-012); TV 844→845 (+TV-006/BC-2.14.006). BC 149 / VP 43 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22 (BC/VP/stories/pts/ADR/SS/crates UNCHANGED)."
   - "2.01 (D-362/2026-09-18, state-manager): GENUINE body edits (grep-verified) — F1: S-6.01 §Wave-6-Story-Inventory Target-Crate cell fuzz token ACTUALLY removed; cell now = xtask..pregolya-tools (no fuzz); D-361 §Changelog (v2.00) claimed this change but body was UNCHANGED (POL-21 false-closure remediation; anti-paper-fix). F3: BC-2.17.002 §BC-to-Story Coverage Map title corrected to verbatim BC H1 — 'cargo-fuzz Targets — Serialization Round-Trip (Checkpoint) and Graph-Execution Paths' (POL-7; enriched-title exemption applies to Story-Inventory titles only, not BC-table title cells). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "2.00 (D-361/2026-09-18, state-manager): C1 fix — S-6.01 §Wave-6 Story Inventory Target Crate cell: removed stale 'fuzz' entry. D-360 burst corrected sprint-state S-6.01 crate field and story frontmatter target_module; this burst closes the third carrier (STORY-INDEX Story Inventory row); all three carriers now consistent: xtask, pregolya-graph, pregolya-checkpoint, pregolya-sandbox, pregolya-core, pregolya-vectorstores, pregolya-prompts, pregolya-tools. Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "1.99 (D-360/2026-09-17, state-manager): Pre-Wave-1 spec reconciliation fix-burst — records/annotation fixes. SS-2: SS-24 §BC-to-Story Coverage Map section — added blockquote annotation clarifying BC-2.11.007 is an SS-11 cross-reference (header kept at '8 BCs' for machine-parsability); the 9th row (BC-2.11.007) is a cross-reference from SS-11, not an SS-24 BC; S-1.29 story column correct. SS-3: BC-2.12.003 BC-to-Story Coverage Map row — S-console-10 added as roadmap Wave-3 consumer (guardrail_journal? projection via {PC-013}; per DC-42; reverse-anchor gap closed; BC-2.12.003 is NOT orphan — S-1.26 canonical implementer). Census UNCHANGED: BC 149 / VP 43 / EC 147 / TV 844 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."

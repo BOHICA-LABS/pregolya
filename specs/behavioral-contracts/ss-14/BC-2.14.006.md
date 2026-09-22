@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.006
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,13 +13,14 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-09-22T00:00:00Z
 changelog:
   - "1.1 (ADV-P1D-PASS-56): OBS-P56-2 codeless-error census (gate #30 first run) — EC-001, EC-004, TV-001, TV-004, TV-005 each had a specific 'Validation failed for...' message matching E-CORE-005 but no code field. Added code: E-CORE-005 to all five sites."
   - "1.2 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core per module-decomposition.md v1.10."
   - "1.3 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon). 8 violations corrected: Description `PregolyaError { category: VAL, ... }` — replaced `...` with `..` (CLASS3_ASCII_ELLIPSIS_VIOLATION); EC-002 `PregolyaError { category: VAL, ... }` — same fix; EC-001, EC-004, TV-001, TV-004, TV-005 — each added `, ..` (CLASS3 VIOLATION, 3/5 fields); TV-002 — added `, ..` (CLASS3 VIOLATION, 2/5 fields). PC1 unchanged — Class 3 VALID (all 5 non-source fields present). No behavioral change."
   - "1.4 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.5 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.6 (S-1.02-adv-pass-1/F-07/2026-09-22, product-owner): F-07 (OBS→production-grade) — whitespace-only credential rejection added. EC-006 added: whitespace-only string (all-whitespace, trim()→empty) is ALSO rejected with E-CORE-005 / VAL / Never, identical shape to EC-004 (empty string). A whitespace-only key passes the EC-004 empty-string check but yields a malformed bearer token at the provider boundary. TV-006 added with `ApiKey::new(\"   \")` canonical test vector. PC-004 updated to explicitly include whitespace-only as rejected: 'value must not be empty or whitespace-only (trim() → empty string)'."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-014
@@ -62,7 +63,7 @@ coordinator returns `None` on validation failure rather than propagating the err
 1. {PC-001} The function returns `Err(PregolyaError { component: <C>, category: VAL, retry_hint: Never, code: E-<C>-NNN, message: "<field>: <reason>" })`.
 2. {PC-002} The caller can inspect `.component`, `.category`, `.code`, and `.message` to identify the exact validation constraint that failed.
 3. {PC-003} The return type on the happy path is `Ok(T)` — the `None` / `Option<T>` pattern for validation-failure signaling is absent from the public API surface.
-4. {PC-004} The error message uses the format `"Validation failed for '<field>': <reason>"` (E-CORE-005 or the component-appropriate code).
+4. {PC-004} The error message uses the format `"Validation failed for '<field>': <reason>"` (E-CORE-005 or the component-appropriate code). For string fields that must be non-empty, `<reason>` must cover both the empty-string case and the whitespace-only case: `"value must not be empty or whitespace-only"` (i.e., a string that trims to empty is rejected identically to a zero-length string).
 5. {PC-005} No intermediate callsite between the validation site and the public API boundary discards or converts the error to `None` / empty.
 
 ## Invariants
@@ -94,6 +95,19 @@ coordinator returns `None` on validation failure rather than propagating the err
 **Scenario:** A `TryFrom` impl (the correct pattern) vs a `From` impl (which cannot fail).
 **Expected behavior:** Fallible conversions always use `TryFrom<T>`, returning `Result<Self, PregolyaError>`. `From<T>` is only used for infallible conversions. Using `From` to represent a conversion that can fail is a violation of this contract.
 
+### EC-006: Whitespace-only string for a required non-empty field
+**Scenario:** An API key or other required string field is set to `"   "` (whitespace-only string
+that trims to empty — e.g., spaces, tabs, newlines).
+**Expected behavior:** Constructor or setter applies `.trim()` and checks for empty result.
+Returns `Err(PregolyaError { category: VAL, code: E-CORE-005,
+message: "Validation failed for 'api_key': value must not be empty or whitespace-only", .. })`.
+A whitespace-only key is indistinguishable from an absent key from the provider's perspective
+and would produce a malformed bearer token (`"Bearer   "`) — failing silently at the HTTP layer
+rather than at the pregolya validation boundary. Rejection at construction time is mandatory.
+**RetryHint:** Never — the same whitespace-only string will always fail; recovery requires
+supplying a non-empty, non-whitespace key.
+**Reference:** DI-014 (Error Propagation — No Silent Swallowing); NE-03.
+
 ## Canonical Test Vectors
 
 | # | Input | Expected Output | Notes |
@@ -102,7 +116,8 @@ coordinator returns `None` on validation failure rather than propagating the err
 | TV-002 | `ChunkSize::new(0)` (chunk_size = 0) | `Err(PregolyaError { code: E-SPLIT-001, message: "ZeroChunkSize: chunk_size must be > 0 code points; got 0", .. })` | Zero-value constraint |
 | TV-003 | `ChunkSize::new(100)` | `Ok(ChunkSize(100))` | Happy path — valid input |
 | TV-004 | `DurabilityTier::from_str("turbo")` | `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'durability_tier': 'turbo' is not a recognized tier", .. })` | Enum parse failure |
-| TV-005 | `ApiKey::new("")` | `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'api_key': value must not be empty", .. })` | Empty-string constraint |
+| TV-005 | `ApiKey::new("")` | `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'api_key': value must not be empty or whitespace-only", .. })` | Empty-string constraint (message updated to cover whitespace-only per EC-006) |
+| TV-006 | `ApiKey::new("   ")` (three spaces) | `Err(PregolyaError { category: VAL, code: E-CORE-005, message: "Validation failed for 'api_key': value must not be empty or whitespace-only", .. })` | Whitespace-only string — identical rejection to empty string; would produce malformed bearer token if allowed through |
 
 ## Verification Properties
 

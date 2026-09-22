@@ -3,13 +3,14 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.2"
+version: "1.3"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (round-79/F-P2A251-02 verify-pass (byte-exact H1 escaping)/2026-09-02): BC-2.14.005 table title cell corrected from escaped Deref\\<Target=str\\> to unescaped Deref<Target=str> to byte-match canonical H1."
+  - "1.3 (POL-8 bc_array_changes_propagate_to_body_and_acs/2026-09-22): AC-015 added tracing BC-2.14.004 EC-006 (HttpClientBuildFailed, E-CORE-012, Category TRANSPORT, RetryHint Never); AC-016 added tracing BC-2.14.006 EC-006 (whitespace-only credential rejection, E-CORE-005, Category VAL, RetryHint Never). bcs frontmatter array unchanged (4 BCs)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
@@ -49,9 +50,9 @@ tdd_mode: strict
 | BC | Title | Covered ACs |
 |----|-------|------------|
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003 |
-| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006 |
+| BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006, AC-015 |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | AC-007..AC-010 |
-| BC-2.14.006 | Validation Failures Propagate Err(PregolyaError); No Silent None | AC-011..AC-014 |
+| BC-2.14.006 | Validation Failures Propagate Err(PregolyaError); No Silent None | AC-011..AC-014, AC-016 |
 
 ## Acceptance Criteria
 
@@ -97,6 +98,12 @@ Validation failures NEVER return `None`, empty `Vec::new()`, or zero-value defau
 ### AC-014 (traces to BC-2.14.006 PC-004)
 Validation error code is always `E-CORE-005` and message format is always `"Validation failed for '<field>': <reason>"`. A table-driven test exercises five different invalid inputs across three message types and asserts code and message format. Verified by `test_BC_2_14_006_error_code_and_format()`.
 
+### AC-015 (traces to BC-2.14.004 EC-006)
+When `reqwest::ClientBuilder::build()` fails (e.g., due to an invalid TLS configuration or unsupported feature), `build_client()` returns `Err(PregolyaError { category: TRANSPORT, retry_hint: Never, code: "E-CORE-012", .. })`. The error message communicates that the HTTP client could not be constructed. Verified by `test_BC_2_14_004_build_failure_returns_transport_error()`.
+
+### AC-016 (traces to BC-2.14.006 EC-006)
+`OpenAiApiKey::new("   ")` and `AnthropicApiKey::new("   ")` (whitespace-only strings) return `Err(PregolyaError { category: VAL, retry_hint: Never, code: "E-CORE-005", message: "value must not be empty or whitespace-only", .. })` — identical rejection semantics to an empty string. Whitespace-only values are never accepted as valid credentials. Verified by `test_BC_2_14_006_whitespace_only_rejected()`.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
@@ -124,6 +131,8 @@ Validation error code is always `E-CORE-005` and message format is always `"Vali
 | EC-003 | API key is a zero-length string | Returns `Err(PregolyaError { category: VAL, code: "E-CORE-005" })` — not an empty newtype |
 | EC-004 | `reqwest::Client::new()` in `#[cfg(test)]` | Exempt from `check-client-timeout` scan; test-only clients do not need production timeout |
 | EC-005 | Validation field name contains special chars | Message escapes/sanitizes field name; no format injection |
+| EC-006a | `ClientBuilder::build()` fails (BC-2.14.004) | Returns `Err(PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never })`; build failure never panics |
+| EC-006b | Whitespace-only credential string, e.g. `"   "` (BC-2.14.006) | Rejected with same `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "value must not be empty or whitespace-only" })` as empty string |
 
 ## Token Budget Estimate (MANDATORY)
 
@@ -142,7 +151,7 @@ Validation error code is always `E-CORE-005` and message format is always `"Vali
 
 ## Tasks (MANDATORY)
 
-1. [ ] Write failing tests for AC-001 through AC-014 (test-writer)
+1. [ ] Write failing tests for AC-001 through AC-016 (test-writer)
 2. [ ] Verify Red Gate — all new tests fail or error at start
 3. [ ] Create `pregolya-core/src/credentials.rs` — `OpenAiApiKey`, `AnthropicApiKey` newtypes with redacted Debug
 4. [ ] Create `pregolya-core/src/http.rs` — `build_client()` with 30s timeout, no `Client::new()`

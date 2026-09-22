@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.6"
+version: "1.7"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -13,7 +13,7 @@ capability: CAP-016
 wave: 0
 phase: 1a
 producer: product-owner
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-09-22T00:00:00Z
 changelog:
   - "1.1 (F-P96-01, 2026-07-17): Module field resolved from placeholder to pregolya-core (HTTP client factory) / xtask (lint gate) per module-decomposition.md v1.10."
   - "1.2 (F-P111-01, 2026-07-18): Gate #33 Form 3 wrapper-form sweep. PC5, EC-003, and TV-004 all carried `Err(PregolyaError { category: TIMEOUT, code: \"E-PROV-002\" })` bare wrappers; E-PROV-002 has `<duration>` placeholder. Added inline `message:` template at all three sites; `<duration>` sourced from the configured HTTP client timeout value at the raise site."
@@ -21,6 +21,7 @@ changelog:
   - "1.4 (WAVE-B-B3/2026-07-29): Error-construction notation sweep (ADR-010 §Error-Construction Notation Canon) + D-35 xtask rename (D-80). Notation: 5 CLASS3 VIOLATIONS corrected — PC5 multiline span added `, ..` before `}`; EC-003 multiline span added `, ..` before `}`; TV-004 Expected Output added `, ..`; Related BCs `PregolyaError { category: TIMEOUT }` added `, ..`; Traceability `PregolyaError { category: TIMEOUT }` added `, ..`. Xtask rename: 3 occurrences of `cargo xtask lint-no-timeout` → `cargo xtask check-client-timeout` in PC3, VP-DI009-01, Architecture Anchors. No behavioral change."
   - "1.5 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.6 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
+  - "1.7 (S-1.02-adv-pass-1/F-02+F-06/2026-09-22, product-owner): F-02 — EC-006 added for `ClientBuilder::build()` failure path citing E-CORE-012 (HttpClientBuildFailed, TRANSPORT, Never); E-CORE-012 minted in error-taxonomy.md §E-CORE-012 same burst. F-06 — Wave-0 scoped-coverage note added to {PRE-001} and §Description documenting that the xtask mechanical gate enforces the reqwest `ClientBuilder` surface only; non-reqwest HTTP clients (hyper, async-openai, etc.) are enforced by code-convention and adversarial review until a later wave introduces them and the gate is extended."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -52,10 +53,19 @@ enforces this. This contract addresses NE-04 (adk-rust had 8+ sites calling `Cli
 no `.timeout()`, causing indefinite hangs under network failure) and implements DI-009 (Outbound
 Connection Timeout) uniformly.
 
+> **Wave-0 scoped-coverage note (F-06/2026-09-22):** The mechanical gate (`cargo xtask check-client-timeout`)
+> currently enforces the `reqwest::ClientBuilder` surface only. PRE-001 references "hyper, async-openai, or
+> any other HTTP client crate" by intent, but the xtask AST scanner is bound to reqwest APIs in Wave 0.
+> Non-reqwest HTTP clients are enforced by code-convention and adversarial review until a later wave
+> introduces them and the gate is extended to cover those surfaces. Any Wave-0 story using a non-reqwest
+> client must include an explicit timeout citation in its PR description as a manual gate substitute.
+
 ## Preconditions
 
 1. {PRE-001} A pregolya crate is constructing an outbound HTTP client (via `reqwest`, `hyper`, `async-openai`,
-   or any other HTTP client crate).
+   or any other HTTP client crate). **Wave-0 scoped-coverage:** the `cargo xtask check-client-timeout`
+   mechanical gate enforces the reqwest `ClientBuilder` surface only; non-reqwest HTTP clients are covered
+   by code convention and adversarial review until a later wave extends the gate.
 2. {PRE-002} The construction is in non-test code (not `#[cfg(test)]` or `tests/` directory).
 3. {PRE-003} The HTTP client will be used to make outbound calls to provider APIs, MCP servers, or
    external endpoints.
@@ -130,6 +140,20 @@ no timeout (detectable via a wrapper type that tracks timeout configuration).
 requests over the lifetime of the application.
 **Expected behavior:** Client reuse is the intended pattern — not creating a new client per
 request. The timeout applies to each individual request, not the client's lifetime.
+
+### EC-006: ClientBuilder::build() returns Err (TLS or proxy configuration failure)
+**Scenario:** `reqwest::ClientBuilder::new().timeout(Duration::from_secs(30)).build()` returns
+`Err(...)` at construction time — e.g., the TLS backend is unavailable on this platform, the
+configured proxy URI has an unsupported scheme, or a required system certificate could not be
+loaded.
+**Expected behavior:** The HTTP client factory function propagates the build error as
+`Err(PregolyaError { category: TRANSPORT, code: "E-CORE-012",
+message: "HttpClientBuildFailed: failed to build HTTP client: <reason>", .. })`
+where `<reason>` is the display string from the `build()` Err return.
+No `Client` is constructed; the operation fails before any outbound connection is attempted.
+**RetryHint:** Never — the same `ClientBuilder` configuration will reproduce the build failure
+immediately on retry; recovery requires fixing the TLS or proxy configuration.
+**Reference:** error-taxonomy.md E-CORE-012.
 
 ## Canonical Test Vectors
 
