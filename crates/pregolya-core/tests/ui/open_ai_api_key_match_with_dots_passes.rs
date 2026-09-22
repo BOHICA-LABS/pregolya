@@ -11,7 +11,7 @@
 //
 // The companion `_fails.rs` shows what is NOT allowed (binding the private field).
 //
-// Traces to: BC-2.14.005 {PC-003}, S-1.02 stub non-exhaustive gate.
+// Traces to: BC-2.14.005 {PC-003}, S-1.02 non-exhaustive gate.
 
 fn consume(_key: pregolya_core::OpenAiApiKey) {
     // Opaque use — no field access, no pattern binding. This is always valid

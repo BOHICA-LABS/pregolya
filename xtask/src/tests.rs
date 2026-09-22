@@ -1317,9 +1317,8 @@ pub fn make_client() -> reqwest::Client {
 ///
 /// `cargo xtask deny-bare-api-key` exits non-zero when the workspace contains
 /// a bare (non-newtype) API key pattern. This test asserts the command can
-/// be invoked and returns a process exit code (stub panics → non-zero → red gate
-/// assertion on `!status.success()` passes, but once implemented a clean workspace
-/// must exit 0).
+/// be invoked and returns a process exit code. On a clean workspace the command
+/// exits 0 (run() is implemented; violations cause non-zero exit).
 ///
 /// SID-1 note: compile-time trait assertions in `credentials.rs` (assert_not_impl_any!)
 /// provide the in-process unit boundary for the same contract. This subprocess test
@@ -1333,7 +1332,7 @@ pub fn make_client() -> reqwest::Client {
 fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
     use std::process::{Command, Stdio};
 
-    // Invoke the xtask deny-bare-api-key command — stub panics → non-zero exit
+    // Invoke the xtask deny-bare-api-key command; exits 0 on a clean workspace.
     let output = Command::new("cargo")
         .args(["run", "-p", "xtask", "--", "deny-bare-api-key"])
         .stdin(Stdio::null())
@@ -1358,9 +1357,8 @@ fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
 
 /// AC-002 (traces to BC-2.14.003 {PC-004}) — subprocess integration test
 ///
-/// `cargo xtask check-no-panic` exits non-zero against the stub (todo!() panic),
-/// confirming the gate command is wired. Once implemented, exits 0 on a clean
-/// workspace.
+/// `cargo xtask check-no-panic` is wired and exits 0 on a clean workspace
+/// (run() is implemented). Exits non-zero only when violations are found.
 ///
 /// Blocked dependency: requires `cargo build -p xtask` (~30s cold).
 #[test]
@@ -1377,15 +1375,15 @@ fn test_BC_2_14_003_check_no_panic_subprocess_wired() {
         .output()
         .expect("cargo run must be invocable");
 
-    // With the stub, exit is non-zero; once implemented, exit 0 on clean workspace.
+    // run() is implemented; exits 0 on a clean workspace, non-zero only on violations.
     // The test verifies the command is wired and executable.
     let _ = output.status;
 }
 
 /// AC-005 (traces to BC-2.14.004 {PC-003}) — subprocess integration test
 ///
-/// `cargo xtask check-client-timeout` exits non-zero against the stub, confirming
-/// the gate command is wired. Once implemented, exits 0 on a clean workspace.
+/// `cargo xtask check-client-timeout` is wired and exits 0 on a clean workspace
+/// (run() is implemented). Exits non-zero only when violations are found.
 ///
 /// Blocked dependency: requires `cargo build -p xtask` (~30s cold).
 #[test]
@@ -1402,7 +1400,7 @@ fn test_BC_2_14_004_check_client_timeout_subprocess_wired() {
         .output()
         .expect("cargo run must be invocable");
 
-    // With the stub, exit is non-zero; once implemented, exit 0 on clean workspace.
+    // run() is implemented; exits 0 on a clean workspace, non-zero only on violations.
     let _ = output.status;
 }
 
@@ -1620,9 +1618,8 @@ pub fn unreachable_path() {
 /// `debug_assert_eq!()` must NOT be flagged: it compiles out in release builds
 /// and is therefore not a runtime panic path.
 ///
-/// This is a guard test: passes vacuously with current code (debug_assert_eq! is
-/// not detected), and must continue to pass after the implementer adds
-/// assert!/panic! detection with proper exemptions.
+/// The scanner correctly exempts `debug_assert!*` variants (BC-2.14.003 {INV-003});
+/// this test is GREEN and must remain GREEN as scanner logic evolves.
 #[test]
 fn test_BC_2_14_003_debug_assert_eq_not_flagged_in_production() {
     let src = r#"
@@ -1641,7 +1638,8 @@ pub fn validate(a: i32, b: i32) {
 ///
 /// Guard test: the cfg(test)-block exemption that already covers .unwrap()/.expect()
 /// must extend to assert!/assert_eq!/assert_ne!/panic! after the implementer's fix.
-/// Passes vacuously with current code (assert! not detected at all).
+/// The scanner's `#[cfg(test)]` block exemption prevents flagging asserts inside
+/// test modules; this test is GREEN and must remain GREEN as scanner logic evolves.
 #[test]
 fn test_BC_2_14_003_assert_inside_cfg_test_not_flagged() {
     let src = r#"
@@ -2384,7 +2382,7 @@ fn test_BC_2_14_003_flags_guarded_irrefutable_binding_catch_all() {
 fn test_BC_2_14_003_guarded_wildcard_does_not_misattribute_cross_arm_unreachable() {
     // `_ if is_special() => 99` is benign (body is `99`, not unreachable!).
     // `Phase::Done => unreachable!(...)` is a named arm — Exemption-1, should be exempt.
-    // ZERO findings expected. Current code produces 1 false finding (cross-arm attribution).
+    // ZERO findings expected; cross-arm attribution was fixed (S-1.02 boundary-stop fix).
     let src = r#"
 pub enum Phase { Init, Done }
 fn is_special() -> bool { false }

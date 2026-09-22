@@ -43,7 +43,7 @@
 //! Gate authority: CI failure == a type was added without `#[non_exhaustive]`
 //! or without a gate update.
 //!
-//! ### Current inventory (S-1.01 Wave 1 — 5 types; S-1.02 stubs — 2 credential types added; BC-2.14.001 {PC-008})
+//! ### Current inventory (S-1.01 Wave 1 — 5 types; S-1.02 — 2 credential newtypes added; BC-2.14.001 {PC-008})
 //!
 //! ```text
 //! EXPECTED_NON_EXHAUSTIVE_COUNT  = 7

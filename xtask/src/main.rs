@@ -15,8 +15,8 @@ mod check_no_panic;
 mod deny_bare_api_key;
 
 // Re-export scanner helpers so xtask unit tests (src/tests.rs) can call them
-// without module-path qualification. The helpers are todo!() stubs until
-// S-1.02 TDD implementation; tests will fail (red) against these stubs.
+// without module-path qualification. Scanners are implemented (S-1.02 GREEN);
+// this re-export provides module-path-free access in unit tests.
 #[cfg(test)]
 pub(crate) use check_client_timeout::scan_for_timeout_violations_in_source;
 #[cfg(test)]
