@@ -1545,4 +1545,91 @@ fn production_fn() {
              got: {findings:?}"
         );
     }
+
+    /// Turbofish `<T>` in assert condition is correctly handled: `angle_depth` increments
+    /// on `::<` and decrements on `>`, leaving the message-separator comma visible at top
+    /// level (HIGH-001 + MED-001 fix).
+    ///
+    /// Exercises BC-2.14.003 EC-007 Exemption 2: `assert_eq!` inside a function with a
+    /// `# Panics` doc section whose message argument contains a BC-ID is EXEMPT. The
+    /// turbofish `Vec::<u8>::new()` must NOT inflate `angle_depth` such that the
+    /// message-separator comma (after `0usize`) is hidden.
+    #[test]
+    fn test_no_panic_exemption2_bc_id_with_turbofish_condition() {
+        let src = r#"
+/// Does thing.
+///
+/// # Panics
+/// Panics if len is wrong.
+fn check_len<T>(v: &[T]) {
+    assert_eq!(Vec::<u8>::new().len(), 0usize, "BC-2.14.003 EC-007: invariant");
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "assert_eq! with turbofish Vec::<u8> in condition and BC-ID in message \
+             under # Panics doc must be exempt — turbofish angle_depth tracks ::< opener \
+             and > closer, leaving the message-separator comma visible (HIGH-001 + MED-001 fix); \
+             got: {findings:?}"
+        );
+    }
+
+    /// Regression test for F-P29-HIGH-001: bare `<` comparison in `assert!` condition no
+    /// longer inflates `angle_depth`. The message-separator comma is visible, BC-ID found,
+    /// Exemption 2 fires — zero findings.
+    ///
+    /// Before fix-burst-31, `syn_macro_has_bc_id` treated every `<` as a turbofish opener
+    /// and incremented `angle_depth`, causing the `,` separator between the condition and the
+    /// message to appear at depth > 0 (hidden). The BC-ID was never reached and the assert
+    /// was incorrectly flagged. fix-burst-31 restricts `angle_depth` increments to `<`
+    /// tokens that are immediately preceded by `::`.
+    #[test]
+    fn test_no_panic_exemption2_bc_id_with_comparison_condition() {
+        let src = r#"
+/// Does thing.
+///
+/// # Panics
+/// Panics if a is not less than b.
+fn check_order(a: usize, b: usize) {
+    assert!(a < b, "BC-2.14.003 EC-007: a must be less than b");
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "assert! with bare `<` comparison in condition and BC-ID in message \
+             under # Panics doc must be exempt — bare `<` must NOT increment angle_depth \
+             (regression test for F-P29-HIGH-001 fix in fix-burst-31); \
+             got: {findings:?}"
+        );
+    }
+
+    /// Negative control for HIGH-001 fix: `assert!` with `<` comparison and no BC-ID must
+    /// still be flagged. Confirms the turbofish fix did NOT suppress detection when no BC-ID
+    /// is present.
+    ///
+    /// Exemption 1 does not fire (no `panic!`/`unwrap`/`expect` — it is an `assert!`).
+    /// Exemption 2 does not fire (message argument contains no BC-ID pattern).
+    /// The assert must produce exactly 1 finding.
+    #[test]
+    fn test_no_panic_comparison_condition_no_bc_id_flagged() {
+        let src = r#"
+/// Does thing.
+///
+/// # Panics
+/// Panics if a is not less than b.
+fn check_order_plain(a: usize, b: usize) {
+    assert!(a < b, "a must be less than b");
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "assert! with bare `<` comparison and NO BC-ID in message must be flagged \
+             (negative control: HIGH-001 fix must not suppress detection when BC-ID absent); \
+             got: {findings:?}"
+        );
+    }
 }
