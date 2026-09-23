@@ -310,21 +310,30 @@ fn check_impl_deref(
             TokenTree::Ident(id) if id == "for" && deref_found => {
                 for_found = true;
                 j += 1;
-                // Collect ALL consecutive path segments (idents separated by `::`) and
-                // use the LAST ident as the implementing type name.  This handles both
-                // plain `impl Deref for OpenAiApiKey` and path-qualified forms such as
+                // Collect path segments (idents separated by `::`) and use the LAST ident
+                // as the implementing type name.  Handles both plain `impl Deref for
+                // OpenAiApiKey` and path-qualified forms such as
                 // `impl std::ops::Deref for crate::credentials::OpenAiApiKey`
                 // (F-P8-M03 fix: first ident was previously used, which is the path root).
+                //
+                // Path-qualified only: after collecting an ident, continue ONLY if the
+                // next two tokens are `::`.  Any other token (including the `where` keyword,
+                // a `{`, or a `<`) terminates collection so that `where` clause identifiers
+                // are not consumed into the struct name (F-P16-LOW-006).
                 let mut last_ident: Option<(String, usize)> = None;
                 while j < n {
                     match tokens.get(j) {
                         Some(TokenTree::Ident(sname)) => {
                             last_ident = Some((sname.to_string(), sname.span().start().line));
                             j += 1;
-                            // Don't break — keep collecting for path-qualified forms.
-                        }
-                        Some(TokenTree::Punct(p)) if p.as_char() == ':' => {
-                            j += 1;
+                            // Only continue collecting if followed by `::` (path separator).
+                            if matches!(tokens.get(j), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                                && matches!(tokens.get(j + 1), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                            {
+                                j += 2; // consume the `::`
+                            } else {
+                                break; // not a path continuation; stop
+                            }
                         }
                         _ => break,
                     }
@@ -416,24 +425,33 @@ fn check_impl_display_in_tokens(
             TokenTree::Ident(id) if id == "for" && angle_depth == 0 => {
                 found_for = true;
                 j += 1;
-                // Collect ALL consecutive path segments (idents separated by `::`) and
-                // use the LAST ident as the implementing type name.  This handles both
-                // plain `impl Display for OpenAiApiKey` and path-qualified forms such as
+                // Collect path segments (idents separated by `::`) and use the LAST ident
+                // as the implementing type name.  Handles both plain `impl Display for
+                // OpenAiApiKey` and path-qualified forms such as
                 // `impl std::fmt::Display for crate::credentials::OpenAiApiKey`
                 // (F-P8-M03 fix: first ident was previously used, which is the path root).
+                //
+                // Path-qualified only: after collecting an ident, continue ONLY if the
+                // next two tokens are `::`.  Any other token (including the `where` keyword,
+                // a `{`, or a `<`) terminates collection so that `where` clause identifiers
+                // are not consumed into the struct name (F-P16-LOW-006).
                 let mut last_ident: Option<(String, usize)> = None;
                 while j < n {
                     match &tokens[j] {
                         TokenTree::Ident(sname) => {
                             last_ident = Some((sname.to_string(), sname.span().start().line));
-                            // Don't break — keep collecting for path-qualified forms.
-                        }
-                        TokenTree::Punct(p) if p.as_char() == ':' => {
-                            // Skip `:` tokens that form `::` path separators.
+                            j += 1;
+                            // Only continue collecting if followed by `::` (path separator).
+                            if matches!(tokens.get(j), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                                && matches!(tokens.get(j + 1), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                            {
+                                j += 2; // consume the `::`
+                            } else {
+                                break; // not a path continuation; stop
+                            }
                         }
                         _ => break,
                     }
-                    j += 1;
                 }
                 if let Some((name, line)) = last_ident {
                     struct_name = name;
@@ -760,6 +778,57 @@ impl std::ops::Deref for crate::credentials::OpenAiApiKey {
             !findings.is_empty(),
             "BC-2.14.005 F-P8-M03: impl Deref for path-qualified crate::credentials::OpenAiApiKey \
              must be flagged; got: {findings:?}"
+        );
+    }
+
+    /// F-P16-LOW-006 — BC-2.14.005 {PC-006}: `impl Display for NAME where …` must still be
+    /// flagged when a `where` clause follows the implementing type name.
+    ///
+    /// The post-`for` ident collection loop previously accepted ANY ident as a path
+    /// segment, causing `where` and subsequent bound identifiers (`Clone`, `Sized`, etc.)
+    /// to overwrite the struct name. The scanner would either miss the violation (struct
+    /// name replaced by a non-sentinel ident) or emit a spurious finding for a
+    /// non-credential type.
+    #[test]
+    fn test_bc_2_14_005_display_impl_with_where_clause_is_flagged() {
+        let src = r#"
+pub struct OpenAiApiKey(String);
+impl std::fmt::Display for OpenAiApiKey where String: Clone {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "crates/core/src/creds.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.005 F-P16-LOW-006: impl Display for OpenAiApiKey with where clause \
+             must be flagged; where clause idents must not overwrite struct name; \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P16-LOW-006 — BC-2.14.005 {PC-006}: `impl Deref for NAME where …` must still be
+    /// flagged when a `where` clause follows the implementing type name.
+    ///
+    /// Same root cause as the Display variant: the post-`for` loop must stop collecting
+    /// at the first non-`::` boundary so `where` clause idents do not overwrite the
+    /// struct name (TD-VSDD-060 sibling sweep).
+    #[test]
+    fn test_bc_2_14_005_deref_impl_with_where_clause_is_flagged() {
+        let src = r#"
+pub struct OpenAiApiKey(String);
+impl std::ops::Deref for OpenAiApiKey where Self: Sized {
+    type Target = str;
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "crates/core/src/creds.rs");
+        assert!(
+            !findings.is_empty(),
+            "BC-2.14.005 F-P16-LOW-006: impl Deref for OpenAiApiKey with where clause \
+             must be flagged; where clause idents must not overwrite struct name; \
+             got: {findings:?}"
         );
     }
 }

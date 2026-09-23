@@ -134,8 +134,12 @@ enum FlatToken {
     Punct(char, usize),
     /// A paren group (call-site arguments) — represented as a marker with line.
     ParenGroup(usize),
-    /// A brace group — used to reset chain state between statements.
+    /// A brace group open marker — emitted before inlining the group's contents.
+    /// Pairs with `BraceGroupEnd` so chain scanners can track nesting depth and skip
+    /// `;` tokens inside brace-typed method arguments without terminating the chain scan.
     BraceGroup(usize),
+    /// A brace group close marker — emitted after inlining the group's contents.
+    BraceGroupEnd(usize),
     /// A literal (integer, float, string, etc.) with its string representation and line.
     /// Preserved so zero-literal forms like `Duration::from_secs(0)` can be detected
     /// (BC-2.14.004 {PC-001}/{INV-004} — O-1 zero-timeout detection).
@@ -149,6 +153,7 @@ impl FlatToken {
             | FlatToken::Punct(_, l)
             | FlatToken::ParenGroup(l)
             | FlatToken::BraceGroup(l)
+            | FlatToken::BraceGroupEnd(l)
             | FlatToken::Literal(_, l) => *l,
         }
     }
@@ -234,6 +239,7 @@ fn flatten_tokens_no_test(
             TokenTree::Group(g) => {
                 if *in_test_depth == 0 {
                     let line = g.span().start().line;
+                    let is_brace = g.delimiter() == Delimiter::Brace;
                     match g.delimiter() {
                         Delimiter::Parenthesis => out.push(FlatToken::ParenGroup(line)),
                         Delimiter::Brace => out.push(FlatToken::BraceGroup(line)),
@@ -241,6 +247,12 @@ fn flatten_tokens_no_test(
                     }
                     // Recurse into paren and brace groups for nested calls
                     flatten_tokens_no_test(g.stream().into_iter(), out, in_test_depth);
+                    // Emit a close marker after a brace group so chain scanners can
+                    // track nesting depth and skip ';' tokens inside brace method
+                    // arguments (e.g. `.default_headers({ let mut h = …; h })`).
+                    if is_brace {
+                        out.push(FlatToken::BraceGroupEnd(line));
+                    }
                 }
             }
             TokenTree::Literal(lit) => {
@@ -489,12 +501,16 @@ fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
 
 /// Check if a chain from `start` calls `.build()` without a prior valid `.timeout()`.
 ///
-/// Scans forward from `start` in the full `flat` list, stopping at the first `;`
-/// or `BraceGroup` boundary. The `_end` hint produced by `find_chain_end` is
-/// intentionally ignored: when method arguments are present, `find_chain_end`
-/// truncates at the first argument token (which is inlined by
+/// Scans forward from `start` in the full `flat` list, stopping at the first top-level
+/// `;` (a statement boundary at brace depth 0). The `_end` hint produced by
+/// `find_chain_end` is intentionally ignored: when method arguments are present,
+/// `find_chain_end` truncates at the first argument token (which is inlined by
 /// `flatten_tokens_no_test` immediately after the `ParenGroup` marker), placing
 /// the subsequent `.build()` call beyond the `_end` boundary.
+///
+/// Brace-typed method arguments (e.g. `.default_headers({...})`) are transparent:
+/// the `BraceGroup`/`BraceGroupEnd` depth counter suppresses `;` tokens inside the
+/// brace body from terminating the scan prematurely.
 ///
 /// Returns `true` if `.build()` is present and no valid `.timeout(d)` where
 /// `d > Duration::ZERO` precedes it. `.timeout(Duration::ZERO)` is treated as
@@ -503,12 +519,25 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
     let n = flat.len();
     let mut found_build = false;
     let mut found_timeout_before_build = false;
+    // Track brace nesting so that ';' tokens inside brace-typed method arguments
+    // (e.g. `.default_headers({ let mut h = Header::new(); h })`) do NOT terminate
+    // the chain scan.  Each `BraceGroup` marker increments the depth; the matching
+    // `BraceGroupEnd` marker decrements it.  A ';' is a chain terminator only at
+    // depth 0 (top-level statement boundary).
+    let mut brace_depth = 0u32;
     let mut i = start;
     while i < n {
-        // Statement/block boundaries terminate the chain scan.
         match &flat[i] {
-            FlatToken::BraceGroup(_) => break,
-            FlatToken::Punct(c, _) if *c == ';' => break,
+            FlatToken::BraceGroup(_) => brace_depth += 1,
+            FlatToken::BraceGroupEnd(_) => {
+                brace_depth = brace_depth.saturating_sub(1);
+            }
+            FlatToken::Punct(c, _) if *c == ';' => {
+                if brace_depth == 0 {
+                    break; // top-level statement boundary — terminate scan
+                }
+                // Inner ';' inside a brace argument — do not break.
+            }
             FlatToken::Punct(c, _) if *c == '.' => {
                 if let Some(FlatToken::Ident(name, _)) = flat.get(i + 1) {
                     if name == "timeout" {
@@ -1027,6 +1056,36 @@ pub fn build_client() -> reqwest::Client {
             !findings.is_empty(),
             "BC-2.14.004 {{PC-001}} F-P8-L01: .timeout(Duration::from_secs_f32(-0.)) must be \
              flagged as zero-timeout (negative zero is zero); got: {findings:?}"
+        );
+    }
+
+    /// F-P16-MED-002 — BC-2.14.004 {PC-001}: brace-group argument in a builder chain must
+    /// not terminate the scan before `.build()` is reached.
+    ///
+    /// When a builder method takes a brace-group argument (e.g. `.default_headers({…})`),
+    /// the previous `BraceGroup => break` would stop scanning before `.build()`, causing a
+    /// false-negative: the missing `.timeout()` was not reported.  The fix changes the arm
+    /// to `{}` (continue) so the `;` boundary arm still terminates cross-statement
+    /// contamination while brace-group method arguments no longer interrupt the scan.
+    #[test]
+    fn test_timeout_scanner_brace_group_in_builder_chain_does_not_break_scan() {
+        // BC-2.14.004 {PC-001}: brace-group arguments in a builder chain must not
+        // terminate the scan before .build() is reached.
+        let src = r#"
+        fn build_client() -> reqwest::Client {
+            reqwest::ClientBuilder::new()
+                .default_headers({
+                    let mut h = ::reqwest::header::HeaderMap::new();
+                    h
+                })
+                .build()
+                .unwrap()
+        }
+    "#;
+        let findings = scan_for_timeout_violations_in_source(src, "test.rs");
+        assert!(
+            !findings.is_empty(),
+            "builder chain with brace-group arg and no .timeout() must be flagged"
         );
     }
 }

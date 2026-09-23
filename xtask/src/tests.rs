@@ -116,6 +116,29 @@ pub fn production_fn() -> i32 {
     );
 }
 
+/// F-P16-MED-001 — BC-2.14.003 EC-007: `assert_eq!` / `assert_ne!` with BC-ID in
+/// comparand, not message, must be flagged.
+///
+/// `assert_eq!(x, "BC-2.14.003")` has the BC-ID as the right-hand comparand.
+/// Exemption-2 requires the BC-ID in the MESSAGE argument (after the 2nd top-level
+/// comma), not in the comparand (after the 1st top-level comma).  Without arity
+/// awareness the arity-blind implementation granted exemption here because the BC-ID
+/// appeared after the first comma — which is a false negative.
+#[test]
+fn test_bc_2_14_003_assert_eq_bc_id_in_comparand_is_flagged() {
+    // BC-2.14.003 EC-007: BC-ID must be in the assert MESSAGE, not the comparand.
+    // assert_eq!(x, "BC-2.14.003") grants exemption based on the second argument
+    // (the comparand) not the message — this must be flagged.
+    let src =
+        include_str!("../tests/fixtures/violations/violation_assert_eq_bc_id_in_comparand.rs");
+    let findings = scan_for_panics_in_source(src, "violation_assert_eq_bc_id_in_comparand.rs");
+    assert!(
+        !findings.is_empty(),
+        "assert_eq!(x, \"BC-2.14.003\") with no message must be flagged — \
+         BC-ID is in the comparand, not the message (EC-007 arity gap)"
+    );
+}
+
 // ── check-client-timeout gate ────────────────────────────────────────────
 
 /// M-3 regression: a crate whose PATH contains "test" (e.g. pregolya-standard-tests)

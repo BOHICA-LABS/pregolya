@@ -2177,10 +2177,10 @@ mod tests {
         assert!(
             !production_src.contains(&unreachable_call),
             "BC-2.14.003 EC-006 (F-GUARD-01): to_problem() and component_lowercase() must \
-             use documented assert!() or panic!() programmer-error guards, NOT unreachable!(); \
+             use documented assert!() programmer-error guards, NOT unreachable!(); \
              found unreachable!() in production code; implementer must convert all four \
-             guard sites to documented assert!()/panic!() with # Panics doc and BC-ID in \
-             message: to_problem() EC-006 guard, to_problem() EC-007 guard, \
+             guard sites to documented assert!() with # Panics doc and BC-ID in message: \
+             to_problem() EC-006 guard, to_problem() EC-007 guard, \
              component_lowercase() EC-002 invalid-chars guard, \
              component_lowercase() EC-002 collision guard"
         );

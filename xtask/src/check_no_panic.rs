@@ -339,39 +339,66 @@ fn check_bc_id_shape(s: &str) -> bool {
     true
 }
 
-/// Returns `true` when the assert/panic macro has a BC-ID in its **message argument**
-/// (after the first top-level comma) that satisfies `BC-\d+\.\d{2}\.\d{3}`.
+/// Returns `true` when the assert-family macro has a BC-ID in its **message argument**
+/// that satisfies `BC-\d+\.\d{2}\.\d{3}`.
 ///
 /// # Why message-only?
 ///
-/// BC-2.14.003 EC-007 requires the BC-ID in the assert MESSAGE, not the condition.
-/// `assert!(code.starts_with("BC-2.14.003"), "no id in msg")` must be FLAGGED —
-/// the BC-ID is in the condition expression, not the message string.
+/// BC-2.14.003 EC-007 requires the BC-ID in the assert MESSAGE, not the condition
+/// or the comparand.  `assert!(code.starts_with("BC-2.14.003"), "no id in msg")`
+/// must be FLAGGED — the BC-ID is in the condition expression, not the message string.
 ///
-/// # Top-level comma detection
+/// # Arity-aware argument boundary
 ///
-/// The macro token stream is iterated at the TOP level only (proc_macro2 groups
-/// parens/brackets/braces as `Group` tokens, so `foo(a, b)` in the condition
-/// has no top-level commas). The first top-level `Punct(',')` separates the
-/// condition from the message.
-fn syn_macro_has_bc_id(mac: &syn::Macro) -> bool {
+/// The message argument position depends on how many non-message arguments the macro
+/// takes.  The macro token stream is iterated at the TOP level only (proc_macro2 groups
+/// parens/brackets/braces as `Group` tokens, so `foo(a, b)` in a condition has no
+/// top-level commas).
+///
+/// - `assert!`: one condition argument.  Message starts after the **1st** top-level
+///   comma (comma index 0).
+/// - `assert_eq!`, `assert_ne!`, `assert_matches!`: two comparand arguments.  Message
+///   starts after the **2nd** top-level comma (comma index 1).
+///
+/// `assert_eq!(x, "BC-2.14.003")` has `"BC-2.14.003"` after the 1st comma (the RHS
+/// comparand), NOT after the 2nd comma (the message).  Without arity awareness this
+/// would be a false negative — Exemption-2 granted when the BC-ID is in the comparand.
+/// With arity awareness, the 2nd comma is required, so the call is correctly flagged.
+fn syn_macro_has_bc_id(mac: &syn::Macro, macro_name: &str) -> bool {
     use proc_macro2::TokenTree;
     let tokens_vec: Vec<TokenTree> = mac.tokens.clone().into_iter().collect();
 
-    // Find the index of the first top-level comma (separates condition from message).
-    let Some(comma_idx) = tokens_vec.iter().enumerate().find_map(|(i, tt)| {
-        if let TokenTree::Punct(p) = tt
-            && p.as_char() == ','
-        {
-            return Some(i);
-        }
-        None
-    }) else {
-        return false; // no comma → no message argument
+    // Determine which comma index separates the last non-message argument from the message.
+    // assert!         → 1 condition arg   → message after comma at index 0
+    // assert_eq!/ne!/matches! → 2 comparand args → message after comma at index 1
+    let message_comma_index: usize = match macro_name {
+        "assert_eq" | "assert_ne" | "assert_matches" => 1,
+        _ => 0, // assert! and any unknown assert-family macros
     };
 
-    // Stringify the message argument tokens (everything after the first comma).
-    let message: String = tokens_vec[comma_idx + 1..]
+    // Collect all top-level comma positions.
+    let top_level_commas: Vec<usize> = tokens_vec
+        .iter()
+        .enumerate()
+        .filter_map(|(i, tt)| {
+            if let TokenTree::Punct(p) = tt
+                && p.as_char() == ','
+            {
+                Some(i)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // The message argument starts after the comma at `message_comma_index`.
+    // If there are not enough commas, there is no message argument → return false.
+    let Some(&comma_pos) = top_level_commas.get(message_comma_index) else {
+        return false;
+    };
+
+    // Stringify the message argument tokens (everything after the selected comma).
+    let message: String = tokens_vec[comma_pos + 1..]
         .iter()
         .map(|tt| tt.to_string())
         .collect::<Vec<_>>()
@@ -684,7 +711,7 @@ impl PanicVisitor<'_> {
             // debug_assert_matches! compiles out in release — exempt like other debug_assert*
             // (BC-2.14.003 {INV-003}).
             n @ ("assert" | "assert_eq" | "assert_ne" | "assert_matches")
-                if !(self.fn_has_panics_doc && syn_macro_has_bc_id(mac)) =>
+                if !(self.fn_has_panics_doc && syn_macro_has_bc_id(mac, n)) =>
             {
                 self.findings.push(format!(
                     "{}:{}: {}!() in non-test code (BC-2.14.003 violation)",
