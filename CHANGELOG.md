@@ -16,6 +16,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+### Fixed (fix-burst-26)
+
+- **F-P24-HIGH-001** (`xtask/src/check_client_timeout.rs`) — Head-anchored blocking detection: `blocking::Client::new()` (use-imported form where `blocking` is the path head) now flagged conservatively; `other_sdk::blocking::Client::new()` still suppressed (head `other_sdk` is non-reqwest). Implemented via `preceded_by_non_reqwest_qualifier` helper (point-patch commit `5d50f79`), then structurally eliminated by the syn rewrite below.
+- **F-P24-MED-002** (`xtask/src/check_client_timeout.rs`) — Module doc `# Scanning rules` and `scan_flat_for_timeout_violations` Patterns detected list updated to include blocking patterns.
+- **F-P24-MED-003** (`xtask/src/check_client_timeout.rs`) — Updated `scan_flat_for_timeout_violations` doc summary paragraph from pre-fix-burst-24 suppression rule to current head-anchored rule.
+- **F-P24-LOW-004** (`xtask/src/check_client_timeout.rs`) — Corrected blocking test doc comments: `scan_reqwest_blocking_pattern` sibling helper, not "Pattern 1 extension".
+- **F-P24-LOW-005** (`crates/pregolya-core/src/http.rs`) — `sanitize_error_message` now uses char-count cap (`chars().take(200)`) to match spec BC-2.14.004 {EC-006}; added multibyte pinning test.
+- **Structural refactor** (`xtask/src/check_client_timeout.rs`) — Rewrote entire timeout gate from proc_macro2 flat-token scanner to `syn::visit::Visit`-based `TimeoutChecker` AST visitor (commit `ebea3e1`). Coordinator-directed structural intervention after 7 passes finding new syntactic forms in the manual token scanner. KNOWN-LIMITATION 4 (parenthesized/braced base subexpression GroupEnd false-negative) is **eliminated** — its tests inverted from `is_empty()` to detection assertions. KL-1 (bare name via `use` import) and KL-3 (constant-valued zero timeout) preserved. Net: −499 lines.
+
 ### Fixed (fix-burst-25)
 
 - **F-P23-HIGH-001** (`xtask/src/check_client_timeout.rs`) — Added `scan_reqwest_blocking_pattern` helper to detect `reqwest::blocking::Client::new()`, `reqwest::blocking::ClientBuilder::new().build()`, and `reqwest::blocking::Client::builder().build()` without `.timeout()`; previously evaded detection via `preceded_by_non_reqwest` treating `blocking` as non-reqwest. Added four pinning tests (three positive, one negative for `other_sdk::blocking`).
