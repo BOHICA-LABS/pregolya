@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.18"
+version: "1.19"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -27,6 +27,7 @@ changelog:
   - "1.16 (F-P24-LOW-006/2026-09-22): BC table Title column normalized to prefix-stripped form for BC-2.14.001 row (F-P24-LOW-006)."
   - "1.17 (add-VP-DI008-01-VP-DI009-01-VP-DI009-02/2026-09-23): Added VP-DI008-01 (check-no-panic gate, BC-2.14.003), VP-DI009-01 and VP-DI009-02 (check-client-timeout gate, BC-2.14.004) to verification_properties frontmatter."
   - "1.18 (fix-burst-34/F-P32-MED-002/2026-09-23): check_client_timeout.rs description corrected from proc_macro2 token-stream scan to syn::visit::Visit-based AST visitor (TimeoutChecker); Tasks item 7, Purity Classification row, and Library & Framework Requirements syn row all updated to reflect actual implementation introduced in fix-burst-26."
+  - "1.19 (fix-burst-36/F-P34-MED-001-MED-002-MED-003/2026-09-23): MED-001: deny_bare_api_key.rs Purity Classification updated to walkdir; MED-002: walkdir dep row added to Library Requirements; MED-003: VP-DI010-02 and VP-DI010-03 added to verification_properties frontmatter"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -61,6 +62,12 @@ verification_properties:
   - id: VP-DI009-02
     status: delivered
     gate: cargo xtask check-client-timeout
+  - id: VP-DI010-02
+    status: delivered
+    gate: cargo xtask deny-bare-api-key
+  - id: VP-DI010-03
+    status: delivered
+    gate: cargo xtask deny-bare-api-key
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1
@@ -170,9 +177,9 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 |--------|---------------|---------------|
 | `pregolya-core/src/credentials.rs` | pure-core | Newtype structs with no I/O. `Debug` impl is a pure string transformation. |
 | `pregolya-core/src/http.rs` | effectful | Builds `reqwest::Client` which opens TCP sockets; async I/O dependency. |
-| `xtask/src/check_no_panic.rs` | effectful | File system scan using **`syn` AST visitor** and `proc_macro2` token-stream scan. |
+| `xtask/src/check_no_panic.rs` | effectful | File system scan using **`syn` AST visitor** and `proc_macro2` token-stream scan; file discovery via collect_rust_files() (walkdir) |
 | `xtask/src/check_client_timeout.rs` | effectful | `syn::visit::Visit`-based AST visitor (`TimeoutChecker`) scanning `crates/**/*.rs` via `walkdir`; `syn::parse_file` + `syn::visit::visit_file` entry points; `scan_macro_body_as_ast` handles opaque macro invocations |
-| `xtask/src/deny_bare_api_key.rs` | effectful | token-stream scan over crates/**/*.rs via find subprocess |
+| `xtask/src/deny_bare_api_key.rs` | effectful | proc_macro2 token-tree scan over crates/**/*.rs; file discovery via collect_rust_files() (walkdir); no filesystem side-effects beyond file reads |
 | `xtask/src/check_error_code_registry.rs` | effectful | Reads `.factory/specs/prd-supplements/error-taxonomy.md` from disk; filesystem I/O dependency. |
 
 ## Edge Cases
@@ -249,6 +256,7 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `tokio` | workspace pin (dev) | Async test runtime for timeout test |
 | `syn = { version = "2", features = ["full", "visit"] }` | workspace pin (xtask) | AST parsing for `check_no_panic.rs` PanicVisitor and `check_client_timeout.rs` TimeoutChecker (both require `syn/visit` feature) — MANDATORY |
 | `proc-macro2 = { version = "1", features = ["span-locations"] }` | workspace pin (xtask) | Token-stream scanning and diagnostic spans — MANDATORY |
+| `walkdir = "2"` | workspace pin (xtask) | Cross-platform recursive Rust-file discovery for all six xtask lint gates via `collect_rust_files()` — replaces POSIX `find`; **MANDATORY** |
 
 ## File Structure Requirements (MANDATORY)
 
