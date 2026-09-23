@@ -80,23 +80,55 @@ pub fn test_helper() -> i32 {
     );
 }
 
-/// F-P39-HIGH-001: Windows-style fixture path must be handled without error.
+/// Windows-style path that is NOT in the test tree must produce no findings for clean source.
 ///
-/// `scan_for_panics_in_source` normalizes backslash separators before the fixture
-/// guard check. A path like `r"xtask\src\fixtures\violations\test.rs"` contains
-/// `fixtures\violations` — after normalization the `fixtures/violations` substring is
-/// present, so the path is not early-exempted and is scanned normally. Passing
-/// violation-free source content must produce no findings (not a lex error, not a
-/// false positive from a mis-parsed Windows path).
+/// `r"xtask\src\fixtures\violations\test.rs"` does NOT trigger `is_test_file` (the last
+/// segment is `test.rs`, not `tests.rs`, and the path does not contain a `/tests/`
+/// component), so this is treated as a production file. Clean source on any production-file
+/// path must produce zero findings regardless of OS separator style.
+///
+/// This test is NOT a regression pin for the `normalized_path` fixture-guard fix — see
+/// `test_scan_for_panics_violations_fixture_not_exempted_windows_path` for that.
 #[test]
-fn test_scan_for_panics_exempt_fixture_windows() {
+fn test_scan_for_panics_clean_source_windows_path_not_in_test_tree() {
     // Clean source: no unwrap, no expect, no panic! — no violations regardless of path.
     let src = "pub fn clean() -> i32 { 42 }\n";
     let findings = scan_for_panics_in_source(src, r"xtask\src\fixtures\violations\test.rs");
     assert!(
         findings.is_empty(),
-        "Windows-style fixture path must produce no findings for violation-free src; \
+        "Windows-style non-test-tree path with clean source must produce no findings; \
          got: {findings:?}"
+    );
+}
+
+/// F-P40-MED-001 regression pin: a violations fixture file on a Windows backslash path
+/// that IS in the test tree must be SCANNED (not early-exempted).
+///
+/// Logic trace:
+/// - `is_test_file(r"xtask\tests\fixtures\violations\violation_unwrap.rs")` normalizes to
+///   `xtask/tests/fixtures/violations/violation_unwrap.rs` which contains `/tests/` →
+///   returns TRUE.
+/// - `normalized_path.contains("fixtures/violations")` = TRUE → `!true` = FALSE →
+///   the fixture guard does NOT fire → function proceeds to scan → finds `.unwrap()` →
+///   returns non-empty findings.
+///
+/// Reversion test: if `normalized_path` is reverted to the raw `path`:
+/// - `path.contains("fixtures/violations")` = FALSE (backslash separators) →
+///   `!false` = TRUE → guard fires → returns empty → assertion FAILS.
+///
+/// This makes the `normalized_path` fix load-bearing under test.
+#[test]
+fn test_scan_for_panics_violations_fixture_not_exempted_windows_path() {
+    // On a Windows backslash path that IS a test-tree file AND is a violations fixture,
+    // the function must scan it (not early-return). This test FAILS if the fixture guard
+    // uses the raw (backslash) path instead of normalized_path — because raw.contains("fixtures/violations")
+    // returns false on the backslash form, causing the guard to exempt it erroneously.
+    let src = "pub fn bad() { let x: Option<i32> = None; x.unwrap(); }\n";
+    let findings =
+        scan_for_panics_in_source(src, r"xtask\tests\fixtures\violations\violation_unwrap.rs");
+    assert!(
+        !findings.is_empty(),
+        "A violations fixture file on a Windows backslash path must be scanned, not exempted"
     );
 }
 
