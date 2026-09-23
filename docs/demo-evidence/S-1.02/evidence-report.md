@@ -747,6 +747,43 @@ All pass-37 findings closed. See CHANGELOG fix-burst-39 for details.
 
 ---
 
+## fix-burst-42 re-verification
+
+**Adversary pass 40 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 1 LOW findings.
+
+All pass-40 findings closed. See CHANGELOG fix-burst-42 for details.
+
+**Test count: 250 run: 250 passed, 5 skipped.**
+
+**Clause (d) analysis:** fix-burst-42 changes `xtask/src/main.rs` (`check_file_size` loop: `name_n` normalization added to all four exclusion predicates) and `xtask/src/tests.rs` (discriminating test `test_scan_for_panics_violations_fixture_not_exempted_windows_path` added; `test_scan_for_panics_exempt_fixture_windows` renamed to `test_scan_for_panics_clean_source_windows_path_not_in_test_tree`). Clause (d) FIRES for the `main.rs` scanner change. The `name_n` normalization is a no-op on POSIX-path inputs (existing tests cover POSIX paths); the 1 new backslash discriminating test covers the regression path for the `scan_for_panics_in_source` fixture guard.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| `check_file_size` POSIX-path exclusion predicates (unchanged — `name_n` normalization is no-op on forward-slash paths) | All existing POSIX-path `check_file_size` tests; gate output counts unchanged | pass |
+| `scan_for_panics_in_source` fixture guard — discriminating regression pin (MED-001) | `test_scan_for_panics_violations_fixture_not_exempted_windows_path` — NON-empty findings; LOAD-BEARING: FAILS if `normalized_path` reverts to raw `path` | pass |
+| `scan_for_panics_in_source` renamed coverage test (MED-001) | `test_scan_for_panics_clean_source_windows_path_not_in_test_tree` — non-test-tree Windows path, clean source; asserts empty findings (unchanged coverage from renamed predecessor) | pass |
+
+**Gate output:** unchanged for POSIX inputs (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**Updated KL table:** 10 rows, unchanged from fix-burst-41. No new KL entries.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
 ## fix-burst-41 re-verification
 
 **Adversary pass 39 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH before novelty assessment; adversary found 1 HIGH + 1 MED. Result: CLEAN(strict)=no, CLEAN(PR-merge)=no.
@@ -763,8 +800,8 @@ All pass-37 findings closed. See CHANGELOG fix-burst-39 for details.
 |----------------|----------------------|------|
 | `is_test_file` POSIX-path exemption (unchanged) | All existing POSIX-path cases in `test_is_test_file_patterns` — normalization is no-op on forward-slash paths; gate output counts unchanged | pass |
 | `is_test_file` Windows-path normalization | Five new backslash-path cases in `test_is_test_file_patterns` — LOAD-BEARING: verify that `tests\\` backslash forms are correctly classified as test files; tests FAIL if normalization is removed | pass |
-| `is_test_class_file` Windows-path normalization | Three new backslash-path cases in `test_is_test_class_file_patterns` — LOAD-BEARING: verify backslash `_test.rs` and `_tests.rs` suffix forms are correctly classified | pass |
-| `scan_for_panics_in_source` fixture guard normalization | `test_scan_for_panics_exempt_fixture_windows` — LOAD-BEARING: verifies that `fixtures\violations` backslash form is recognized as an exempt path; test FAILS if normalization is removed | pass |
+| `is_test_class_file` Windows-path normalization | Three new backslash-path cases in `test_is_test_class_file_patterns` — LOAD-BEARING: (1) `crates\pregolya-core\tests\integration.rs` (backslash `tests\` directory component → `contains("/tests/")` branch), (2) `crates\pregolya-core\src\tests.rs` (backslash `tests.rs` filename → `ends_with("/tests.rs")` branch), (3) negative control `crates\pregolya-core\src\lib.rs` → false; tests FAIL if normalization is removed. Note: `_test.rs` / `_tests.rs` suffix claim from the prior attestation was incorrect and is corrected here (LOW-001 F-P40-LOW-001) | pass |
+| `scan_for_panics_in_source` fixture guard normalization | NOT load-bearing as shipped in fix-burst-41. Test path `xtask\src\fixtures\violations\test.rs` causes `is_test_file` to return false (no `/tests/` component, no `tests.rs` suffix match after normalization) — the `&&` short-circuits and `normalized_path` is never evaluated. Renamed to `test_scan_for_panics_clean_source_windows_path_not_in_test_tree` in fix-burst-42; discriminating regression pin `test_scan_for_panics_violations_fixture_not_exempted_windows_path` added (see fix-burst-42 F-P40-MED-001). | corrected (fix-burst-42) |
 
 **Gate output:** unchanged for POSIX inputs (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions). Windows-backslash exemption paths now correctly handled via normalization.
 

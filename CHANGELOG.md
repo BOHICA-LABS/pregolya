@@ -16,13 +16,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-42 (pass-40 findings)
+
+### xtask main / check_no_panic / check_file_size — discriminating fixture-guard test, POSIX-only exclusion predicates, STATE.md checkpoint staleness (4th recurrence), evidence-report row correction
+
+**MED-001 (F-P40-MED-001) — non-load-bearing fixture-guard test (TD-VSDD-059):** `test_scan_for_panics_exempt_fixture_windows` used path `xtask\src\fixtures\violations\test.rs` which causes `is_test_file` to return false (no `/tests/` directory component, no `tests.rs` suffix match after normalization) — the `&&` short-circuits and `normalized_path` is never consulted. Reverting the `normalized_path` fix in `scan_for_panics_in_source` would not fail this test. Fix: renamed the test to `test_scan_for_panics_clean_source_windows_path_not_in_test_tree` (which accurately describes its actual coverage: a non-test-tree Windows path with clean source). Added discriminating regression pin `test_scan_for_panics_violations_fixture_not_exempted_windows_path` using path `r"xtask\tests\fixtures\violations\violation_unwrap.rs"` (IS a test-tree path: contains `/tests/` after normalization), panicking source (bare `.unwrap()` call), asserts NON-empty findings — this assertion FAILS if `normalized_path` reverts to raw `path`. Also corrected the CHANGELOG fix-burst-41 HIGH-001 paragraph and evidence-report table row 4.
+
+**MED-002 (F-P40-MED-002) — POSIX-only exclusion predicates in `check_file_size` loop (TD-VSDD-060):** The per-report loop in `check_file_size` contained four exclusion predicates; two used hard-coded forward slashes (`/target/` and `/tests/fixtures/`). Fix: added `let name_n = name.replace('\\', "/");` at the top of the loop body and updated all four predicates to use `name_n`. Display and filesystem uses of `name` remain unchanged.
+
+**MED-003 (F-P40-MED-003) — STATE.md checkpoint staleness (4th recurrence):** §Session Resume Checkpoint, §Convergence Status, and §Phase Progress were not propagated at D-406. Fixed by state-manager (D-407): checkpoint re-stamped to D-406 state, D-406 entry appended to §Convergence Status, §Phase Progress extended through D-406.
+
+**LOW-001 (F-P40-LOW-001) — evidence-report row 3 wrong backslash forms:** Row 3 of the fix-burst-41 re-verification per-detection-class attestation table claimed the `test_is_test_class_file_patterns` additions verified `_test.rs` and `_tests.rs` suffix forms. The actual three cases added were: `crates\pregolya-core\tests\integration.rs` (backslash `tests\` directory component → `contains("/tests/")` branch), `crates\pregolya-core\src\tests.rs` (backslash `tests.rs` filename → `ends_with("/tests.rs")` branch), and a negative control `crates\pregolya-core\src\lib.rs` → false. Corrected in evidence-report.
+
+**Test count:** 250 run: 250 passed, 5 skipped (+1 discriminating test `test_scan_for_panics_violations_fixture_not_exempted_windows_path`; renamed test retains same count; net +1 from fix-burst-41's 249).
+
+### Known limitations after fix-burst-42
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 250 run: 250 passed, 5 skipped. Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-41 (pass-39 findings)
 
 ### xtask main / check_no_panic — Windows path-separator normalization in exemption predicates; STATE.md checkpoint staleness
 
 **HIGH-001 (F-P39-HIGH-001) — Windows path-separator normalization gap in exemption predicates:** The `walkdir` refactor (fix-burst-35) replaced POSIX `find` subprocess for file *discovery* but did not extend Windows portability to file *classification*. The exemption predicates `is_test_file`, `is_test_class_file` (in `main.rs`) and the `fixtures/violations` guard in `scan_for_panics_in_source` (in `check_no_panic.rs`) matched exclusively on POSIX forward-slash forms. On Windows, `WalkDir` and `Path::push` yield OS-native backslash-separated paths, so the exemptions silently failed: test-file `unwrap()`/`expect()` calls would be flagged as violations and `check-file-size` would apply the 750-line production gate to `xtask/src/tests.rs`. Contradicted by `AllowList::is_allowed` in the same file, which explicitly normalizes with `replace('\\', "/")`.
 
-Fix: added `let path = path.replace('\\', "/");` as the first statement in `is_test_file` and `is_test_class_file`; added `let normalized_path = path.replace('\\', "/");` and updated the fixture guard in `scan_for_panics_in_source` to use `normalized_path`. Nine load-bearing test assertions added: five new cases in `test_is_test_file_patterns`, three in `test_is_test_class_file_patterns`, and one new function `test_scan_for_panics_exempt_fixture_windows`. False "Windows portability restored" attestation in fix-burst-35 MED-002 corrected.
+Fix: added `let path = path.replace('\\', "/");` as the first statement in `is_test_file` and `is_test_class_file`; added `let normalized_path = path.replace('\\', "/");` and updated the fixture guard in `scan_for_panics_in_source` to use `normalized_path`. Eight load-bearing test assertions added across two extended test functions (`test_is_test_file_patterns`: 5 backslash cases, `test_is_test_class_file_patterns`: 3 backslash cases). A ninth function `test_scan_for_panics_exempt_fixture_windows` was added but proved non-load-bearing: the test path `xtask\src\fixtures\violations\test.rs` does not match any `is_test_file` predicate, so `normalized_path` was never evaluated — the guard short-circuits. A discriminating replacement was added in fix-burst-42 (F-P40-MED-001); the existing test was renamed. False "Windows portability restored" attestation in fix-burst-35 MED-002 corrected.
 
 `is_lint_exempt_file` was inspected and requires no change — it delegates entirely to `is_test_file`, which now normalizes.
 
