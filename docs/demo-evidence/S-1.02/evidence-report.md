@@ -638,6 +638,50 @@ Note: `INT_SUFFIXES` is now a single module-level const shared by the hex/bin/oc
 
 ---
 
+## fix-burst-37 re-verification
+
+**Adversary pass 35 result:** CLEAN(strict)=no, CLEAN(PR-merge)=yes — 0 CRIT + 0 HIGH + 1 MED + 1 LOW findings.
+
+All pass-35 findings closed. See CHANGELOG fix-burst-37 for details.
+
+**Test count: 248 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** fix-burst-37 LOW-001 added two negative-control test functions to `check_client_timeout.rs`. This is a test-only addition — no gate scanner logic changed. Gate output counts remain valid and unchanged (25 analyzed / 16 exempt / 0 violations per gate). Clause (d) does NOT fire (no scanner behavior changed; test additions to `check_client_timeout.rs` tests module are test-scope only).
+
+**Per-detection-class attestation:**
+- MED-001 (fix-burst-36 records added): records-only (CHANGELOG + evidence-report sections); no behavioral change.
+- LOW-001 (bin/oct negative controls): `test_timeout_checker_bin_nonzero_literal_not_flagged` (binary `0b11110` NOT flagged; asserts `findings.is_empty()`; LOAD-BEARING) and `test_timeout_checker_oct_nonzero_literal_not_flagged` (octal `0o36` NOT flagged; asserts `findings.is_empty()`; LOAD-BEARING).
+
+**Gate output (stable counts, unchanged from prior bursts):**
+
+| Gate | Output |
+|------|--------|
+| check-no-panic | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| check-client-timeout | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| deny-bare-api-key | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| check-error-code-registry | PASSED: 148 codes validated, 0 collisions |
+| deny-anyhow-in-lib | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| deny-description-cache-key | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| check-file-size | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
+| check-no-panic --fixture-mode | fixture-mode: 14/17 fixture files had findings |
+
+**Updated KL table:** 10-row table — same as fix-burst-36. No new entries.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
 ## Notes
 
 - All recordings produced with VHS 0.11.0 using `FiraCode Nerd Font Mono`, Catppuccin Mocha theme, 1200×600 or 1200×700 resolution.

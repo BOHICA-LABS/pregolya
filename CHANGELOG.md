@@ -16,6 +16,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-37 (pass-35 findings)
+
+### xtask check_client_timeout — records backfill, bin/oct negative controls, test count correction
+
+**MED-001 (F-P35-MED-001) — fix-burst-36 had no record in CHANGELOG or evidence-report; shipped code contained a dangling `fix-burst-36 OBS-001` citation in test doc comments; test count attestation was stale (244 vs actual 246):** Added `## fix-burst-36 (pass-34 findings)` CHANGELOG section and `## fix-burst-36 re-verification` evidence-report section documenting all pass-34 findings and their closures. Note that `INT_SUFFIXES` is now a single module-level const (superseding the "per-radix" phrasing in fix-burst-35 LOW-001). Correct test count of 246 now attested in both records.
+
+**LOW-001 (F-P35-LOW-001) — bin/oct radix paths had positive-direction tests only; no negative controls:** Two negative controls added to `check_client_timeout.rs`: `test_timeout_checker_bin_nonzero_literal_not_flagged` (binary `0b11110` = 30 seconds must NOT be flagged; LOAD-BEARING: fails without the all-zeros digit predicate in the binary branch of `is_zero_literal`) and `test_timeout_checker_oct_nonzero_literal_not_flagged` (octal `0o36` = 30 seconds must NOT be flagged; LOAD-BEARING: same predicate for the octal branch). Both assert `findings.is_empty()`. The hex radix path already had `test_timeout_checker_hex_literal_with_f64_suffix_not_zero` as a negative control; all three non-decimal radix paths now have symmetric positive + negative coverage.
+
+### Known limitations after fix-burst-37
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 248 xtask tests pass, 5 skipped. Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-36 (pass-34 findings)
 
 ### xtask deny_bare_api_key / check_no_panic / check_client_timeout — story spec VP frontmatter, walkdir row, symbol-trio correction, CHANGELOG extension, INT_SUFFIXES hoist
