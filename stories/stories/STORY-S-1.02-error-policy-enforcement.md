@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.17"
+version: "1.18"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -26,6 +26,7 @@ changelog:
   - "1.15 (adversary-pass-16-MED-003-LOW-007-LOW-008/2026-09-22): MED-003 — AC-015 extended with DI-010/BC-2.14.005 {INV-001} sanitization obligation (credential-redaction, 200-char cap; raw build() error string forbidden); Verified-by entries added for test_sanitize_error_message_redacts_url_credentials, test_sanitize_error_message_caps_at_200_chars, test_map_build_failure_redacts_proxy_credentials_in_message. AC-019 extended with sanitization regression language and same Verified-by entries. EC-006a extended with DI-010 sanitization note. LOW-007 — cargo xtask check-no-panic --fixture-mode command corrected to include required <dir> argument xtask/tests/fixtures/violations in AC-017 and Tasks item 13. LOW-008 — crates/pregolya-core/src/error.rs (MODIFY, AC-018), and four crates/pregolya-core/tests/ui/ trybuild files (CREATE, BC-2.14.006 {INV-003}) added to File Structure Requirements; error.rs added to Architecture Mapping."
   - "1.16 (F-P24-LOW-006/2026-09-22): BC table Title column normalized to prefix-stripped form for BC-2.14.001 row (F-P24-LOW-006)."
   - "1.17 (add-VP-DI008-01-VP-DI009-01-VP-DI009-02/2026-09-23): Added VP-DI008-01 (check-no-panic gate, BC-2.14.003), VP-DI009-01 and VP-DI009-02 (check-client-timeout gate, BC-2.14.004) to verification_properties frontmatter."
+  - "1.18 (fix-burst-34/F-P32-MED-002/2026-09-23): check_client_timeout.rs description corrected from proc_macro2 token-stream scan to syn::visit::Visit-based AST visitor (TimeoutChecker); Tasks item 7, Purity Classification row, and Library & Framework Requirements syn row all updated to reflect actual implementation introduced in fix-burst-26."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -170,7 +171,7 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 | `pregolya-core/src/credentials.rs` | pure-core | Newtype structs with no I/O. `Debug` impl is a pure string transformation. |
 | `pregolya-core/src/http.rs` | effectful | Builds `reqwest::Client` which opens TCP sockets; async I/O dependency. |
 | `xtask/src/check_no_panic.rs` | effectful | File system scan using **`syn` AST visitor** and `proc_macro2` token-stream scan. |
-| `xtask/src/check_client_timeout.rs` | effectful | token-stream scan over crates/**/*.rs via find subprocess |
+| `xtask/src/check_client_timeout.rs` | effectful | `syn::visit::Visit`-based AST visitor (`TimeoutChecker`) scanning `crates/**/*.rs` via `walkdir`; `syn::parse_file` + `syn::visit::visit_file` entry points; `scan_macro_body_as_ast` handles opaque macro invocations |
 | `xtask/src/deny_bare_api_key.rs` | effectful | token-stream scan over crates/**/*.rs via find subprocess |
 | `xtask/src/check_error_code_registry.rs` | effectful | Reads `.factory/specs/prd-supplements/error-taxonomy.md` from disk; filesystem I/O dependency. |
 
@@ -212,7 +213,7 @@ The test verifying the `E-CORE-012` build-failure mapping (AC-015) is NOT annota
 4. [ ] Create `pregolya-core/src/http.rs` — `build_client()` with 30s timeout, no `Client::new()`
 5. [ ] Add `pub mod credentials;` and `pub mod http;` to `pregolya-core/src/lib.rs`
 6. [ ] Create `xtask/src/check_no_panic.rs` — `syn` AST walk detecting `unwrap()`, `expect()`, `panic!`, `assert*!`, `todo!`, `unimplemented!`, `unreachable!` outside test/exempt contexts
-7. [ ] Create `xtask/src/check_client_timeout.rs` — `proc_macro2` token-stream scan for `ClientBuilder` chains without a positive `.timeout()` before `.build()`
+7. [ ] Create `xtask/src/check_client_timeout.rs` — `syn::visit::Visit`-based AST visitor (`TimeoutChecker`) scanning `crates/**/*.rs` via `walkdir` for `ClientBuilder` chains without a positive `.timeout()` before `.build()`; `analyze_build_chain` and `scan_macro_body_as_ast` handle opaque macro invocations via three progressive re-parse strategies (`syn::parse2::<syn::File>`, wrapped-function parse, and initializer-expression extraction)
 8. [ ] Create `xtask/src/deny_bare_api_key.rs` — structural scan: flags public credential-sentinel structs (name contains any of 8 sentinels: key/token/secret/credential/auth/bearer/password/passphrase, case-insensitive) with any of 5 patterns: auto-derived Debug, Serialize, or Deserialize; or impl Display; or impl Deref<Target=str|String>
 9. [ ] Wire four new xtask subcommands into `xtask/src/main.rs`
 10. [ ] Add static-assertions for credential type constraints
@@ -246,7 +247,7 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `reqwest` | workspace pin | `default-features = false, features = ["rustls-tls"]` — HTTP client with rustls |
 | `static_assertions` | workspace pin (dev) | Trait bound assertions for credential types |
 | `tokio` | workspace pin (dev) | Async test runtime for timeout test |
-| `syn = { version = "2", features = ["full", "visit"] }` | workspace pin (xtask) | AST parsing for `check_no_panic.rs` PanicVisitor — MANDATORY |
+| `syn = { version = "2", features = ["full", "visit"] }` | workspace pin (xtask) | AST parsing for `check_no_panic.rs` PanicVisitor and `check_client_timeout.rs` TimeoutChecker (both require `syn/visit` feature) — MANDATORY |
 | `proc-macro2 = { version = "1", features = ["span-locations"] }` | workspace pin (xtask) | Token-stream scanning and diagnostic spans — MANDATORY |
 
 ## File Structure Requirements (MANDATORY)
