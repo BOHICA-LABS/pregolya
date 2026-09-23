@@ -4105,3 +4105,80 @@ fn test_extra_args_verdict_extra_arg_returns_err_with_subcommand_name() {
         "error message must contain the unrecognised argument; got: {msg}"
     );
 }
+
+// ── fix-burst-30 pinning tests (HIGH-002/MED-001/LOW-002) ────────────────────
+
+/// `visit_stmt_macro` now checks `has_cfg_test_attr` — a `#[cfg(test)]`-attributed
+/// statement-position macro inside a non-test function is exempt from the gate
+/// (HIGH-002 fix).
+#[test]
+fn test_timeout_checker_cfg_test_stmt_macro_not_flagged() {
+    let src = r#"
+fn outer() {
+    #[cfg(test)]
+    thread_local! { static C: reqwest::Client = reqwest::Client::new(); }
+}
+"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "#[cfg(test)]-attributed thread_local! stmt macro containing Client::new() \
+         must NOT be flagged (HIGH-002 fix: visit_stmt_macro checks has_cfg_test_attr); \
+         got: {findings:?}"
+    );
+}
+
+/// Exercises Strategy 2 (`fn __macro_fragment__()` wrapper) of `scan_macro_body_as_ast` —
+/// a macro body that is a valid statement but not a valid file is caught by the AST wrapper
+/// (MED-001 coverage).
+#[test]
+fn test_timeout_checker_strategy2_detects_statement_macro_violation() {
+    // The macro body `{ let c = reqwest::Client::new(); }` is a brace-delimited block —
+    // a valid Rust statement but not a valid syn::File on its own.
+    // Strategy 1 (`syn::parse2::<syn::File>`) fails; Strategy 2 wraps in
+    // `fn __macro_fragment__() { ... }` and succeeds, detecting the Client::new() call.
+    let src = r#"fn f() { setup_client!({ let c = reqwest::Client::new(); }); }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "Client::new() inside a statement-macro body parseable via Strategy 2 \
+         (fn __macro_fragment__ wrapper) must be flagged (MED-001 coverage); \
+         got: {findings:?}"
+    );
+    assert_eq!(
+        findings.len(),
+        1,
+        "expected exactly 1 finding from Strategy 2 detection; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {findings:?}"
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "finding must be a real violation, not a lex-failure: {findings:?}"
+    );
+}
+
+/// KL-macro pinning test — a macro body that fails all three `scan_macro_body_as_ast`
+/// parse strategies yields zero findings (skip, not conservative flag). If this test
+/// starts failing with a finding, the scanner gained coverage for formerly-opaque macro
+/// bodies. If it fails with a panic, the strategy fallback chain broke (LOW-002 coverage).
+#[test]
+fn test_timeout_checker_unparseable_macro_body_known_limitation() {
+    // `opaque_dsl!(::::)` — the token stream `::::` (four colons) is syntactically valid
+    // proc_macro2 tokens but forms neither a valid Rust item sequence (Strategy 1 fails),
+    // nor a valid function body statement when wrapped as `fn __macro_fragment__() { :::: }`
+    // (Strategy 2 fails), nor a `static ref NAME: T = EXPR;` pattern (Strategy 3 yields
+    // nothing). KL-macro: all strategies fail → scanner skips, returns empty findings.
+    let src = r#"fn f() { opaque_dsl!(::::); }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "KL-macro: opaque_dsl!(::::) fails all three parse strategies and must yield \
+         zero findings (skip, not conservative flag — LOW-002 coverage); \
+         got: {findings:?}"
+    );
+}

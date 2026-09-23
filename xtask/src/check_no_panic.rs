@@ -1486,4 +1486,27 @@ fn f(phase: Phase) -> i32 {
             findings
         );
     }
+
+    /// `visit_stmt_macro` in `PanicVisitor` now checks `syn_has_cfg_test` — a
+    /// `#[cfg(test)]`-attributed statement-position macro containing `unwrap()` is exempt
+    /// from the no-panic gate (HIGH-002 fix for check_no_panic).
+    #[test]
+    fn test_no_panic_cfg_test_stmt_macro_not_flagged() {
+        // `some_test_setup!` is an unknown macro in statement position with `#[cfg(test)]`.
+        // After the HIGH-002 fix, `visit_stmt_macro` checks `syn_has_cfg_test(&node.attrs)`
+        // and returns early — the `unwrap()` inside the macro body is never scanned.
+        let src = r#"
+fn production_fn() {
+    #[cfg(test)]
+    some_test_setup! { let x = option_value.unwrap(); }
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "#[cfg(test)]-attributed statement-position macro containing unwrap() \
+             must NOT be flagged (HIGH-002 fix: visit_stmt_macro checks syn_has_cfg_test); \
+             got: {findings:?}"
+        );
+    }
 }
