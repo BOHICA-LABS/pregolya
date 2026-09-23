@@ -56,9 +56,10 @@ pub(crate) fn check_post_exemption_vacuity(
 /// etc.). The caller should add `unreadable_count` to its `files_unreadable` counter
 /// and fail-closed when it is non-zero.
 ///
-/// This replaces POSIX `find crates/ -name "*.rs" -not -path "*/target/*"` across all
-/// six gate entry points, providing cross-platform portability (Windows does not have
-/// `find`).
+/// This replaces POSIX `find crates/ -name "*.rs" -not -path "*/target/*"` across five
+/// of the seven xtask lint gates (six call sites — `check-no-panic` invokes it for both
+/// the normal scan and the `--fixture-mode` path), providing cross-platform portability
+/// (Windows does not have `find`).
 pub(crate) fn collect_rust_files(root_path: &str) -> (Vec<std::path::PathBuf>, usize) {
     use walkdir::WalkDir;
     let mut files = Vec::new();
