@@ -1546,14 +1546,10 @@ fn production_fn() {
         );
     }
 
-    /// Turbofish `<T>` in assert condition is correctly handled: `angle_depth` increments
-    /// on `::<` and decrements on `>`, leaving the message-separator comma visible at top
-    /// level (HIGH-001 + MED-001 fix).
-    ///
-    /// Exercises BC-2.14.003 EC-007 Exemption 2: `assert_eq!` inside a function with a
-    /// `# Panics` doc section whose message argument contains a BC-ID is EXEMPT. The
-    /// turbofish `Vec::<u8>::new()` must NOT inflate `angle_depth` such that the
-    /// message-separator comma (after `0usize`) is hidden.
+    /// Regression pin: `Vec::<u8>::new()` turbofish (no internal comma) in assert condition
+    /// — the message-separator comma remains visible at top level. Does NOT pin the
+    /// multi-argument-turbofish case; see
+    /// `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_exempt` for that.
     #[test]
     fn test_no_panic_exemption2_bc_id_with_turbofish_condition() {
         let src = r#"
@@ -1630,6 +1626,61 @@ fn check_order_plain(a: usize, b: usize) {
             "assert! with bare `<` comparison and NO BC-ID in message must be flagged \
              (negative control: HIGH-001 fix must not suppress detection when BC-ID absent); \
              got: {findings:?}"
+        );
+    }
+
+    /// Multi-argument turbofish EXEMPT positive test: `build::<String, u8>()` has a comma
+    /// inside angle brackets. With `angle_depth` tracking, that internal comma is skipped
+    /// (depth=1) and the BC-ID in the message is found at the correct position —
+    /// Exemption-2 fires. Complements
+    /// `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard`
+    /// which pins the actual mechanism.
+    #[test]
+    fn test_no_panic_exemption2_angle_depth_multi_arg_turbofish_exempt() {
+        let src = r#"
+/// Does the thing.
+///
+/// # Panics
+/// Panics if check fails.
+fn check_build() {
+    assert_eq!(build::<String, u8>(), 0usize, "BC-2.14.003 EC-007: invariant");
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "assert_eq! with multi-arg turbofish build::<String, u8>() and BC-ID in message \
+             under # Panics doc must be exempt — angle_depth skips the internal comma (depth=1) \
+             so the message-separator comma is correctly identified; got: {findings:?}"
+        );
+    }
+
+    /// **Load-bearing test for `angle_depth` mechanism (NP-KL-2 resolution).**
+    /// `build::<String, u8>()` has a comma inside angle brackets. The message arg
+    /// ('no id in msg') has NO BC-ID. Without `angle_depth`, the internal comma shifts
+    /// `message_comma_index` left by one, landing on the comparand `"BC-2.14.003"` which
+    /// has a BC-ID — a false-negative exemption. With depth tracking, the internal comma
+    /// is skipped (depth=1) and the true message arg is found → FLAGGED (1 finding).
+    /// **Delete `angle_depth` and this test fails.**
+    #[test]
+    fn test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard() {
+        let src = r#"
+/// Does the thing.
+///
+/// # Panics
+/// Panics if check fails.
+fn check_build_plain() {
+    assert_eq!(build::<String, u8>(), "BC-2.14.003", "no id in msg");
+}
+"#;
+        let findings = scan_for_panics_in_source(src, "src/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "assert_eq! with multi-arg turbofish and BC-ID only in comparand (not message) \
+             must be flagged — without angle_depth the internal comma would shift the message \
+             index left, falsely landing on the comparand 'BC-2.14.003' and granting a \
+             false-negative exemption (NP-KL-2); got: {findings:?}"
         );
     }
 }
