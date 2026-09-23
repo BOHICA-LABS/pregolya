@@ -214,6 +214,7 @@ fn main() {
 /// lint perimeter vs. file-size test-class threshold) that are expected to diverge when
 /// `examples/`/`benches/` exemption policy splits between the two subsystems.
 fn is_test_file(path: &str) -> bool {
+    let path = path.replace('\\', "/");
     path.ends_with("/tests.rs")
         || path == "tests.rs"
         || path.contains("/tests/")
@@ -243,6 +244,7 @@ fn is_lint_exempt_file(path: &str) -> bool {
 /// Intentionally duplicated from `is_test_file` — predicate bodies are identical.
 /// See `is_test_file` doc for the divergence rationale.
 fn is_test_class_file(path: &str) -> bool {
+    let path = path.replace('\\', "/");
     path.ends_with("/tests.rs")
         || path == "tests.rs"
         || path.contains("/tests/")

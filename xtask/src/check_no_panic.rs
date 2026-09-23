@@ -863,7 +863,10 @@ fn scan_with_syn(src: &str, path: &str) -> Result<Vec<String>, syn::Error> {
 /// Called by `run()` per-file and exposed as `pub(crate)` for unit tests.
 pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
     // Fixture violation files contain intentional violations for gate coverage testing.
-    if crate::is_test_file(path) && !path.contains("fixtures/violations") {
+    // Normalize backslashes before matching so that Windows paths (e.g. "fixtures\violations")
+    // are correctly recognised — same pattern as AllowList::is_allowed.
+    let normalized_path = path.replace('\\', "/");
+    if crate::is_test_file(path) && !normalized_path.contains("fixtures/violations") {
         return Vec::new();
     }
 
