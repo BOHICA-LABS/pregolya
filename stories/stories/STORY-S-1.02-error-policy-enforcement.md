@@ -3,10 +3,11 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.16"
+version: "1.17"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
+modified: 2026-09-23
 changelog:
   - "1.1 (M3/ADR-027/2026-08-24): AC traces re-cited to stable clause anchors."
   - "1.2 (round-79/F-P2A251-02 verify-pass (byte-exact H1 escaping)/2026-09-02): BC-2.14.005 table title cell corrected from escaped Deref\\<Target=str\\> to unescaped Deref<Target=str> to byte-match canonical H1."
@@ -24,6 +25,7 @@ changelog:
   - "1.14 (adversary-pass-10-H01-M01-M02/2026-09-22): H01 — AC-020 EC-007 citation corrected to EC-004 (collision detection, not code-component binding); BC-2.14.001 body table Title corrected to canonical H1. M01 — 6 grep-based scanner descriptions updated to AST/token-stream; syn and proc-macro2 added to Library & Framework Requirements. M02 — BC-2.14.001 Behavioral Contracts table Title set to canonical H1."
   - "1.15 (adversary-pass-16-MED-003-LOW-007-LOW-008/2026-09-22): MED-003 — AC-015 extended with DI-010/BC-2.14.005 {INV-001} sanitization obligation (credential-redaction, 200-char cap; raw build() error string forbidden); Verified-by entries added for test_sanitize_error_message_redacts_url_credentials, test_sanitize_error_message_caps_at_200_chars, test_map_build_failure_redacts_proxy_credentials_in_message. AC-019 extended with sanitization regression language and same Verified-by entries. EC-006a extended with DI-010 sanitization note. LOW-007 — cargo xtask check-no-panic --fixture-mode command corrected to include required <dir> argument xtask/tests/fixtures/violations in AC-017 and Tasks item 13. LOW-008 — crates/pregolya-core/src/error.rs (MODIFY, AC-018), and four crates/pregolya-core/tests/ui/ trybuild files (CREATE, BC-2.14.006 {INV-003}) added to File Structure Requirements; error.rs added to Architecture Mapping."
   - "1.16 (F-P24-LOW-006/2026-09-22): BC table Title column normalized to prefix-stripped form for BC-2.14.001 row (F-P24-LOW-006)."
+  - "1.17 (add-VP-DI008-01-VP-DI009-01-VP-DI009-02/2026-09-23): Added VP-DI008-01 (check-no-panic gate, BC-2.14.003), VP-DI009-01 and VP-DI009-02 (check-client-timeout gate, BC-2.14.004) to verification_properties frontmatter."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -49,6 +51,15 @@ verification_properties:
     status: delivered
     gate: cargo xtask check-error-code-registry
     notes: "Wired in ci.yml lint-extra via factory-artifacts checkout; taxonomy path resolved via FACTORY_DIR env var or .factory/ fallback"
+  - id: VP-DI008-01
+    status: delivered
+    gate: cargo xtask check-no-panic
+  - id: VP-DI009-01
+    status: delivered
+    gate: cargo xtask check-client-timeout
+  - id: VP-DI009-02
+    status: delivered
+    gate: cargo xtask check-client-timeout
 priority: P0
 cycle: v1.0.0-greenfield
 wave: 1

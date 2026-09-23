@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.13"
+version: "1.14"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -28,6 +28,7 @@ changelog:
   - "1.11 (F-P16-MED-004/2026-09-22, product-owner): EC-001 scoped-coverage note added: 'documented' qualifier enforced by {PC-002}/review, not by the mechanical gate (gate is comment-blind per token-stream parsing)."
   - "1.12 (F-PC006-scoped-coverage/2026-09-22, product-owner): {PC-006} scoped-coverage note added; conjunctive connect_timeout≤timeout constraint is review-enforced, not gate-enforced; gate extension deferred to first connect_timeout call site."
   - "1.13 (EC-006-disambiguate/2026-09-23, product-owner): EC-006 description disambiguated — the 200-char cap applies to the sanitized `<reason>` substring only (the string extracted from the underlying `build()` Err and redacted by `sanitize_error_message`); the full PregolyaError message field ('HttpClientBuildFailed: failed to build HTTP client: <reason>') is not itself capped. Aligns with `sanitize_error_message` behavior. No behavioral change."
+  - "1.14 (VP-DI009-02-method-fix/2026-09-23, product-owner): VP-DI009-02 Method corrected from 'CI custom clippy lint' to 'CI cargo xtask check-client-timeout'; the v1.4 sibling sweep missed this row."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -217,7 +218,7 @@ immediately on retry; recovery requires fixing the TLS or proxy configuration.
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
 | VP-DI009-01 | Zero `Client::new()` occurrences in non-test pregolya source across all crates | CI `cargo xtask check-client-timeout` | Wave 0 CI |
-| VP-DI009-02 | All `ClientBuilder` usages in non-test code have `.timeout(d)` with `d > 0` | CI custom clippy lint | Wave 0 CI |
+| VP-DI009-02 | All `ClientBuilder` usages in non-test code have `.timeout(d)` with `d > 0` | CI `cargo xtask check-client-timeout` | Wave 0 CI |
 
 ## Related BCs
 
