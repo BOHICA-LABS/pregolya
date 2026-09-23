@@ -27,10 +27,23 @@ pre-push:
           echo "[BURST-PARITY] No fix-burst sections found in CHANGELOG.md — skipping check."
           exit 0
         fi
-        EVIDENCE_REPORT="docs/demo-evidence/S-1.02/evidence-report.md"
+        # Derive story ID from current branch name (feature/S-X.XX → S-X.XX).
+        # Avoids hardcoding a story-specific path that breaks on every future branch.
+        BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+        STORY_ID=$(echo "$BRANCH" | grep -oE 'S-[0-9]+\.[0-9]+' | head -1)
+        if [ -z "$STORY_ID" ]; then
+          # Not a feature branch — check if any evidence report exists under docs/demo-evidence/.
+          EVIDENCE_REPORT=$(find docs/demo-evidence -name "evidence-report.md" 2>/dev/null | head -1)
+          if [ -z "$EVIDENCE_REPORT" ]; then
+            echo "[BURST-PARITY SKIP] Not a feature branch and no evidence-report.md found — skipping check"
+            exit 0
+          fi
+        else
+          EVIDENCE_REPORT="docs/demo-evidence/${STORY_ID}/evidence-report.md"
+        fi
         if [ ! -f "$EVIDENCE_REPORT" ]; then
-          echo "[BURST-PARITY] evidence-report.md not found at ${EVIDENCE_REPORT} — skipping check."
-          exit 0
+          echo "[BURST-PARITY FAIL] evidence-report.md not found at ${EVIDENCE_REPORT} — failing closed"
+          exit 1
         fi
         if ! grep -q "^## fix-burst-${NEWEST_BURST} re-verification" "$EVIDENCE_REPORT"; then
           echo "[BURST-PARITY FAIL] CHANGELOG.md has '## fix-burst-${NEWEST_BURST}' but evidence-report.md is missing '## fix-burst-${NEWEST_BURST} re-verification'."

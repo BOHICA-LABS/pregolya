@@ -16,23 +16,101 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-51 (pass-49 findings)
+
+**Pass-49 finding tally: 1 HIGH + 6 MED + 3 LOW + 3 OBS**
+
+### HIGH-001: Three-way inventory contradiction for pass-48
+
+**What was wrong:** STATE.md D-420, CHANGELOG fix-burst-50, and evidence-report fix-burst-50 each reported a different pass-48 finding count: 6, 10, and 14 respectively. Per-finding ID content also diverged (MED-002 and LOW-004 mapped to different findings in CHANGELOG vs evidence-report). The `check-burst-records-parity` hook could not detect this because it checks section presence, not content parity.
+
+**What was fixed:** Adjudicated authoritative inventory: 1 HIGH + 4 MED + 5 LOW + 3 OBS + 1 PROCESS-GAP = 14 findings. state-manager corrected STATE.md D-420 tally and D-421 closure enumeration to all 14 findings. CHANGELOG fix-burst-50 and evidence-report fix-burst-50 reconciled to the same adjudicated inventory (MED-002 content corrected, LOW-004 content corrected, OBS/PROCESS-GAP sections added to CHANGELOG, phantom symbol removed from HIGH-001 description).
+
+### MED-001: evidence-report OBS rows cited phantom function and mis-attributed exclusion
+
+**What was wrong:** evidence-report fix-burst-50 OBS-001 Detection-class cited `check_l8` (function does not exist in records-lint.sh — the MAX_D extraction lives in `check_l13`). OBS-002 Load-bearing-artifact stated the `:!hooks/**` exclusion prevented triggering "the L9 volatile-pin ban" — the change was to `check_l10`/`check_l11`; `check_l9` already had the exclusion.
+
+**What was fixed:** OBS-001 Detection-class → `check_l13`; OBS-002 Load-bearing-artifact → "L10/L11 hash-digest bans (`check_l9` already carried the exclusion)".
+
+### MED-002: CHANGELOG and evidence-report used different phantom symbols for HIGH-001
+
+**What was wrong:** CHANGELOG fix-burst-50 HIGH-001 heading cited `_L13G_OUT` as the phantom symbol; evidence-report cited `_check_l13_impl`. Adversary verified neither symbol appeared in STATE.md D-419 before or after fix-burst-50.
+
+**What was fixed:** Both records rewritten to describe the actual D-419 defect: D-419 used language stating "self-contained swap-and-restore" when fix-burst-49 ELIMINATED swap-and-restore. No phantom symbol cited. Behavioral anchor: `check_l13 parameterized with optional path arg; swap-and-restore ELIMINATED; _L13_CHECK mirror RETIRED`.
+
+### MED-003: CHANGELOG HIGH-001 "What was fixed" inverted the guard mechanism
+
+**What was wrong:** CHANGELOG fix-burst-50 HIGH-001 body described an unapplied D-419 edit, stated the guard "exits 2 when no FAIL text is present" (inverted — `grep -q "[PASS]"` succeeds when PASS is present, so exits 2 when PASS is found), and referenced the pre-LOW-003 guard as if current.
+
+**What was fixed:** Rewritten to describe the actual D-419 correction. `grep -q "does not match live"` is the primary guard. `[PASS]` absence is the secondary guard. Both introduced in fix-burst-49/50.
+
+### MED-004: evidence-report test count was stale fix-burst-26 figure
+
+**What was wrong:** `300 tests pass (cargo nextest), 7 skipped` was the fix-burst-26 figure from §Recording Provenance. fix-burst-49 workspace total was 345 tests, 7 skipped.
+
+**What was fixed:** Corrected to "345 tests pass (cargo nextest), 7 skipped (workspace) — unchanged from fix-burst-49; no Rust logic changed".
+
+### MED-005: evidence-report fix-burst-50 missing validity-criterion clause (a) attestation
+
+**What was wrong:** fix-burst-50 renamed two UI fixture files inside `crates/pregolya-core/tests/ui/` (triggering clause (a) of §Recording Provenance validity criterion). No clause-by-clause paragraph or gate-count restatement was present.
+
+**What was fixed:** Clause (a) paragraph added stating the rename is net-zero to exempt-file count; gate counts confirmed unchanged: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 violations`; fixture-mode `14/17`; `148 codes / 0 collisions`.
+
+### MED-006: lefthook burst-parity hook hardcoded story path, failed open on missing file
+
+**What was wrong:** `EVIDENCE_REPORT` was hardcoded to `docs/demo-evidence/S-1.02/evidence-report.md` — would break every future story branch. The missing-file branch exited 0 (silent skip) instead of 1 (fail-closed).
+
+**What was fixed:** Path now derived from current branch name: `git rev-parse --abbrev-ref HEAD` → extract `S-X.XX` → `docs/demo-evidence/${STORY_ID}/evidence-report.md`. Missing-file branch now exits 1.
+
+### LOW-001: records-lint.sh frozen-HEAD extraction was case-sensitive
+
+**What was wrong:** `grep -oE 'frozen HEAD [0-9a-f]{7,40}'` (no `-i`) would miss `**Frozen HEAD:** <sha>` capitalized form, silently disabling both live-HEAD guards.
+
+**What was fixed:** Two-step case-insensitive extraction using `grep -i 'frozen[[:space:]]HEAD'`. Probe H added: synthetic checkpoint with `**Frozen HEAD:**` capitalized form; asserts `check_l13` finds the SHA.
+
+### LOW-002: records-lint.sh feature-branch resolution was unanchored
+
+**What was wrong:** `head -1` on all `feature/…` mentions in the checkpoint could pick the wrong branch during a multi-story wave.
+
+**What was fixed:** Primary resolution now uses the line co-located with `FROZEN_HEAD_SHA` (bound co-location). Probe I added: synthetic checkpoint with decoy branch listed first; asserts correct branch is selected.
+
+### LOW-003: evidence-report gate output conflated two separate chains
+
+**What was wrong:** `"All pre-push hooks PASSED. records-lint.sh exits 0."` grouped lefthook pre-push and the factory-dispatcher chain as one.
+
+**What was fixed:** Split into two distinct lines: lefthook pre-push attestation and factory-dispatcher chain attestation.
+
+### OBS-001: --skip-self-probe produced byte-identical output to validated run
+
+**What was done:** `records-lint.sh` now emits `[SELF-PROBE SKIPPED]` banner and appends `probes=skipped` to the `RESULT:` line when `--skip-self-probe` is active.
+
+### OBS-002 (no action): credential _blocked.rs fixtures do not discriminate #[non_exhaustive]
+
+Acknowledged as no-action by adversary — correctly documented in gate doc comment. `#[non_exhaustive]` for credentials is pinned by `test_non_exhaustive_inventory_matches_source` and `test_all_pub_types_have_non_exhaustive`.
+
+### OBS-003: STATE.md BRANCH STATE used 7-char SHA
+
+**What was done:** Normalized to 40-char form consistent with sibling surfaces.
+
+**Test count:** 345 tests pass (cargo nextest), 7 skipped — no Rust logic changed; all xtask gates PASSED.
+
 ## fix-burst-50 (pass-48 findings)
 
 ### STATE.md D-419 phantom symbol / inverted mechanism; records accuracy corrections; fixture rename; structural completeness
 
-**Pass-48 finding tally: 0 CRIT + 1 HIGH + 4 MED + 5 LOW.**
+**Pass-48 finding tally: 1 HIGH + 4 MED + 5 LOW + 3 OBS + 1 PROCESS-GAP.**
 
-**HIGH-001 (F-P48-HIGH-001) — STATE.md D-419 phantom symbol `_L13G_OUT` and inverted mechanism description:**
-What was wrong: D-419 in STATE.md referenced `_L13G_OUT` as if it were a function or tool, and the mechanism description had the probe G false-green check inverted (described success-path behavior as the blocking assertion form).
-What was fixed: state-manager corrected D-419 to accurately describe probe G's inline negative guard: the variable `_L13G_OUT` is a shell variable capturing `check_l13` output; the inline negative guard (`if echo "$_L13G_OUT" | grep -q "\[PASS\]"`) exits 2 when no FAIL text is present. Phantom symbol removed; mechanism description corrected.
+**HIGH-001 (F-P48-HIGH-001) — STATE.md D-419 inverted mechanism description:**
+What was wrong: D-419 in STATE.md described the `check_l13` mechanism as "self-contained swap-and-restore" — but fix-burst-49 ELIMINATED swap-and-restore via parameterization. D-419 continued to describe the retired swap-and-restore pattern rather than the current `check_l13 [state_md_path]` parameterized invocation pattern.
+What was fixed: state-manager corrected D-419 to accurately describe `check_l13` parameterization with optional path arg, retirement of the `_L13_CHECK` mirror function (0 calls remaining), and elimination of swap-and-restore. All 7 probes (A–G) call `check_l13 "$PROBE_L13X"` with synthetic path directly. The primary assertion in probe G is `grep -q "does not match live"` on `check_l13` output; the `[PASS]` absence guard is secondary.
 
 **MED-001 (F-P48-MED-001) — CHANGELOG and evidence-report `probe_must_fail` citations in fix-burst-49 records incorrectly describe retired mechanism:**
 What was wrong: CHANGELOG `## fix-burst-49` HIGH-001 paragraph last sentence said "→ `check_l13` correctly FAILs → `probe_must_fail` passes." Evidence-report `## fix-burst-49 re-verification` F-P47-HIGH-001 row Load-bearing-artifact said "→ FAIL → `probe_must_fail` passes." Fix-burst-49 structural refactor retired `probe_must_fail`; probe G now uses an inline negative guard that exits 2 when no FAIL text is present.
 What was fixed: CHANGELOG HIGH-001 last sentence corrected to describe the inline negative guard mechanism. Evidence-report F-P47-HIGH-001 Load-bearing-artifact updated to match current probe G behavior.
 
-**MED-002 (F-P48-MED-002) — evidence-report fix-burst-48 attestation rows describe artifacts eliminated by fix-burst-49 structural refactor without superseded-by annotation:**
-What was wrong: HIGH-001 row cited `probe_must_fail "L13-probe-G"` and `L13-probe-G-real` swap-and-restore. MED-002 row cited "probe F extended to invoke real `check_l13` via swap-and-restore." Clause (d) paragraph mentioned `_L13_CHECK`. All these were eliminated by fix-burst-49 (`check_l13` parameterized, `_L13_CHECK` retired, swap-and-restore eliminated), but no annotation marked the rows as superseded.
-What was fixed: Superseded-by annotation prepended to HIGH-001 and MED-002 Load-bearing-artifact cells. Note added after Clause (d) paragraph stating `_L13_CHECK` was retired in fix-burst-49.
+**MED-002 (F-P48-MED-002) — CHANGELOG fix-burst-49 extraction-scope statement described nonexistent internal helper:**
+What was wrong: The extraction-scope statement in the CHANGELOG fix-burst-49 section described a nonexistent internal helper rather than accurately characterizing the `check_l13 [state_md_path]` parameterized invocation pattern that was actually implemented.
+What was fixed: technical-writer corrected the extraction-scope statement in the CHANGELOG fix-burst-49 section to accurately describe `check_l13 [state_md_path]` parameterized invocation pattern.
 
 **MED-003 (F-P48-MED-003) — pass fixture filenames `_match_with_dots_passes` inconsistent with E0532-oriented naming established for fail fixtures in fix-burst-49:**
 What was wrong: After fix-burst-49 renamed fail fixtures to `_external_field_access_blocked`, the corresponding pass fixtures still had filenames with `_match_with_dots_passes` suffix, inconsistent with the E0532-oriented naming convention.
@@ -62,7 +140,23 @@ What was fixed: story-writer normalized the 3 rows to repo-relative `crates/` pa
 What was wrong: The fix-burst-49 re-verification section contained only the pass-47 tally line and the 10-row attestation table, without the standard test count restatement, gate output line, known limitations cross-reference, or trailing separator.
 What was fixed: technical-writer added test count, gate output, known limitations note, and trailing separator to the fix-burst-49 re-verification section.
 
-**Test count (fix-burst-50):** No Rust logic changes. Pass fixture rename (`_match_with_dots_passes` → `_expose_secret_passes`) maintains same trybuild fixture counts: 8 compile_fail + 7 pass = 15 total.
+**OBS-001 (F-P48-OBS-001) — records-lint.sh `check_l13` MAX_D awk extraction fragility:**
+What was wrong: The `MAX_D` extraction in `check_l13` did not pipe through `awk -F'|' '{print $2}'` first-column extraction before the `grep -oE` step, allowing `D-NNN` tokens in later table columns to inflate the max decision ID.
+What was fixed: devops-engineer added `awk -F'|' '{print $2}'` first-column extraction as the first pipe stage in `check_l13` `MAX_D` extraction (the function is `check_l13`, not `check_l8` — `check_l8` does not exist in the codebase).
+
+**OBS-002 (F-P48-OBS-002) — records-lint.sh `check_l10`/`check_l11` false-positive on hooks files:**
+What was wrong: `check_l10` and `check_l11` did not carry the `:!hooks/**` exclusion in their git diff path-specs, causing hooks-directory hex patterns to trigger the L10/L11 hash-digest bans (`check_l9` already carried the exclusion before this fix).
+What was fixed: devops-engineer added `:!hooks/**` exclusion to git diff path-specs in `check_l10` and `check_l11`.
+
+**OBS-003 (F-P48-OBS-003) — evidence-report fix-burst-48 rows not annotated as superseded by fix-burst-49:**
+What was wrong: The fix-burst-48 HIGH-001 and MED-002 rows in the evidence-report cited swap-and-restore artifacts (`_L13_CHECK`, `L13-probe-G-real`, swap-and-restore windows) that were eliminated by fix-burst-49, with no annotation marking the rows as superseded.
+What was fixed: technical-writer annotated fix-burst-48 HIGH-001 and MED-002 rows as superseded by fix-burst-49 closures; fix-burst-47 and earlier historical probe citations annotated as historical with supersession chain.
+
+**PROCESS-GAP-001 (F-P48-PROCESS-GAP-001) — Burst-parity check unenforced at push time:**
+What was wrong: No pre-push enforcement verified that the newest `## fix-burst-N` heading in CHANGELOG.md had a matching `## fix-burst-N re-verification` heading in evidence-report.md before a push could proceed.
+What was fixed: devops-engineer added `check-burst-records-parity` as a pre-push command in `lefthook.yml`; the hook asserts the parity invariant on every push.
+
+**Test count (fix-burst-50):** 345 tests pass (cargo nextest), 7 skipped (workspace). No Rust logic changes. Pass fixture rename (`_match_with_dots_passes` → `_expose_secret_passes`) maintains same trybuild fixture counts: 8 compile_fail + 7 pass = 15 total.
 
 ## fix-burst-49 (pass-47 findings)
 

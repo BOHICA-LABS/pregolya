@@ -222,13 +222,43 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-51 re-verification
+
+**Adversary pass 49 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 6 MED + 3 LOW + 3 OBS.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P49-HIGH-001 | HIGH | Three-way inventory contradiction (STATE.md/CHANGELOG/evidence-report pass-48 tally diverged: 6 / 10 / 14) | STATE.md D-420 corrected to `1 HIGH + 4 MED + 5 LOW + 3 OBS + 1 PROCESS-GAP`; D-421 closure enumeration expanded to all 14 pass-48 findings; CHANGELOG/evidence-report reconciled from single adjudicated source |
+| F-P49-MED-001 | MED | Phantom-symbol citation + mis-attribution in OBS attestation rows | evidence-report OBS-001 Detection-class corrected to `check_l13`; OBS-002 Load-bearing-artifact corrected to "L10/L11 hash-digest bans (`check_l9` already carried exclusion)" |
+| F-P49-MED-002 | MED | Records contradiction: CHANGELOG and evidence-report cited different symbols for same HIGH finding, neither present in STATE.md D-419 | Both records rewritten to behavioral anchor: `check_l13 parameterized with optional path arg; swap-and-restore ELIMINATED; _L13_CHECK mirror RETIRED` |
+| F-P49-MED-003 | MED | Inverted mechanism description + unapplied-claim in CHANGELOG HIGH-001 "What was fixed" | CHANGELOG HIGH-001 rewritten: actual D-419 correction described accurately; `grep -q "does not match live"` as primary guard |
+| F-P49-MED-004 | MED | Stale test count (300/7 = fix-burst-26 figure, not fix-burst-49/50 figure) | Corrected to "345 tests pass (cargo nextest), 7 skipped (workspace) — unchanged from fix-burst-49" |
+| F-P49-MED-005 | MED | Missing validity-criterion clause (a) attestation (fixture rename triggered clause) | Clause (a) paragraph added; gate counts confirmed unchanged: `25 analyzed, 16 exempt, 0 violations`; fixture-mode `14/17`; `148 codes / 0 collisions` |
+| F-P49-MED-006 | MED | lefthook `check-burst-records-parity` hardcoded `S-1.02` path; missing-file exited 0 | Path derived from branch name via `STORY_ID` extraction from `feature/S-X.XX`; missing-file exits 1 (fail-closed) |
+| F-P49-LOW-001 | LOW | records-lint.sh case-sensitive frozen-HEAD extraction | `check_l13` extraction changed to case-insensitive; probe H added (capitalized `**Frozen HEAD:**` form assertion) |
+| F-P49-LOW-002 | LOW | records-lint.sh feature-branch resolution unanchored to frozen SHA line | Resolution anchored to co-located SHA line; probe I added (multi-branch decoy test) |
+| F-P49-LOW-003 | LOW | evidence-report gate output conflated lefthook and factory-dispatcher chains | Gate output split into two distinct attestation lines |
+| F-P49-OBS-001 | OBS | `--skip-self-probe` output byte-identical to validated run | `[SELF-PROBE SKIPPED]` banner + `probes=skipped` token on `RESULT:` line |
+| F-P49-OBS-002 | OBS | credential `_blocked.rs` fixtures don't discriminate `#[non_exhaustive]` | No action — acknowledged by adversary; attribute coverage provided by `test_non_exhaustive_inventory_matches_source` and `test_all_pub_types_have_non_exhaustive` |
+| F-P49-OBS-003 | OBS | STATE.md BRANCH STATE used 7-char SHA | Normalized to 40-char form |
+
+**Test count:** 345 tests pass (cargo nextest), 7 skipped (workspace) — no Rust logic changed in fix-burst-51.
+
+**Gate output:**
+- Lefthook pre-push: `just check` PASSED; `check-burst-records-parity` PASSED
+- Factory-dispatcher chain: `records-lint.sh` exits 0 on factory-artifacts branch (separate trigger)
+
+**Known limitations:** none — all pass-49 findings closed by fix-burst-51 (OBS-002 explicitly no-action per adversary).
+
+---
+
 ## fix-burst-50 re-verification
 
 **Adversary pass 48 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 5 LOW + 3 OBS + 1 PROCESS-GAP.
 
 | Finding | Severity | Detection class | Load-bearing artifact |
 |---------|----------|-----------------|-----------------------|
-| F-P48-HIGH-001 | HIGH | Records fidelity (phantom symbol + inverted description in D-419) | STATE.md D-419: phantom symbol `_check_l13_impl` replaced with behavioral anchor describing `check_l13 [state_md_path]` optional positional parameter; "self-contained swap-and-restore" corrected to "swap-and-restore eliminated by parameterization"; D-419 MED-001 attribution fixed; missing MED-002/MED-003 closures added |
+| F-P48-HIGH-001 | HIGH | Records fidelity (inverted mechanism description in D-419) | STATE.md D-419: "self-contained swap-and-restore" corrected to accurately describe `check_l13` parameterization with optional path arg; `_L13_CHECK` mirror RETIRED (0 calls remaining); swap-and-restore ELIMINATED; all 7 probes call `check_l13 "$PROBE_L13X"` with synthetic path directly; D-419 MED-001 attribution fixed; missing MED-002/MED-003 closures added |
 | F-P48-MED-001 | MED | Records accuracy (`probe_must_fail` citation stale post-fix-burst-49) | CHANGELOG fix-burst-49 section and evidence-report fix-burst-49 re-verification: `probe_must_fail "L13-probe-G"` references corrected to inline grep guard description; no `probe_must_fail` call exists in any L13 probe post-parameterization |
 | F-P48-MED-002 | MED | Records accuracy (CHANGELOG fix-burst-49 extraction-scope statement) | CHANGELOG fix-burst-49 section: extraction scope statement corrected to accurately describe `check_l13 [state_md_path]` parameterized invocation pattern; prior statement described a nonexistent internal helper |
 | F-P48-MED-003 | MED | Records-vs-code fidelity (UI pass fixture names contradict bodies) | UI fixture files renamed `_match_with_dots_passes.rs` → `_expose_secret_passes.rs`; `PASS_FIXTURES` constant updated in `non_exhaustive_external_gate::ui()`; story spec v1.26 `PASS_FIXTURES` table rows updated to `_expose_secret_passes` |
@@ -236,16 +266,20 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 | F-P48-LOW-001 | LOW | Records accuracy | CHANGELOG fix-burst-49 section: transient disposable branch name literal replaced with `<branch>` placeholder per TD-VSDD-091 behavioral-anchor convention |
 | F-P48-LOW-002 | LOW | records-lint.sh probe G cleanup race | `_PROBE_G_CLEANUP_REF` EXIT trap sentinel added; PID-unique disposable ref deleted on both success and error exit paths via `git update-ref -d "$_PROBE_G_CLEANUP_REF"` |
 | F-P48-LOW-003 | LOW | records-lint.sh probe G false-green gap (no positive assertion) | Probe G now asserts `grep -q "does not match live"` on `check_l13` output (primary) plus absence of `[PASS]` token (secondary); both must hold; inline exit guard fails on false-green |
-| F-P48-LOW-004 | LOW | Records accuracy (field-visibility scope description) | evidence-report fix-burst-49 re-verification MED-002 row: field-visibility scope description corrected to "accessible within the defining module and its descendants" (from overstated "accessible within the crate") |
+| F-P48-LOW-004 | LOW | Records accuracy (story spec path normalization) | story spec file structure rows: 3 rows corrected from `pregolya-core/src/...` to `crates/pregolya-core/src/...` in §File Structure Requirements |
 | F-P48-LOW-005 | LOW | Records accuracy | CHANGELOG fix-burst-49 section: `probe_must_fail` invocation description corrected to inline grep guard terminology consistent with shipped `records-lint.sh` |
-| F-P48-OBS-001 | OBS | records-lint.sh `check_l8` MAX_D awk extraction fragility | `MAX_D` extraction now pipes through `awk -F'|' '{print $2}'` before `grep -oE '^[[:space:]]*D-[0-9]+'`; prevents matching `D-NNN` tokens in later table columns from inflating the max decision ID |
-| F-P48-OBS-002 | OBS | records-lint.sh `check_l10`/`check_l11` false-positive on hooks files | `:!hooks/**` exclusion added to git diff path-specs in `check_l10` and `check_l11`; prevents hooks directory self-referential patterns from triggering the L9 volatile-pin ban |
+| F-P48-OBS-001 | OBS | records-lint.sh `check_l13` MAX_D awk extraction fragility | `MAX_D` extraction now pipes through `awk -F'|' '{print $2}'` before `grep -oE '^[[:space:]]*D-[0-9]+'`; prevents matching `D-NNN` tokens in later table columns from inflating the max decision ID |
+| F-P48-OBS-002 | OBS | records-lint.sh `check_l10`/`check_l11` false-positive on hooks files | `:!hooks/**` exclusion added to git diff path-specs in `check_l10` and `check_l11`; prevents hooks directory self-referential patterns from triggering the L10/L11 hash-digest bans (`check_l9` already carried the exclusion before this fix) |
 | F-P48-OBS-003 | OBS | evidence-report historical section annotations | fix-burst-48 HIGH-001 and MED-002 rows annotated as superseded by fix-burst-49 closures; fix-burst-47 and earlier historical probe citations annotated as historical with supersession chain |
 | F-P48-PROCESS-GAP-001 | PROCESS-GAP | Burst-parity check unenforced at push time | `check-burst-records-parity` bash command added to `lefthook.yml` pre-push section; asserts newest `## fix-burst-N` heading in CHANGELOG.md has a matching `## fix-burst-N re-verification` heading in evidence-report.md before any push proceeds |
 
-**Test count:** 300 tests pass (cargo nextest), 7 skipped. All xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key).
+**Validity-criterion clause (a):** Clause (a) triggered by rename of `open_ai_api_key_match_with_dots_passes.rs` → `open_ai_api_key_expose_secret_passes.rs` and the Anthropic sibling `anthropic_api_key_match_with_dots_passes.rs` → `anthropic_api_key_expose_secret_passes.rs`. Net change: renamed files remain `/tests/`-path-exempt; gate counts unchanged: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 violations`; fixture-mode `14/17`; `148 codes / 0 collisions` — all unchanged from fix-burst-49.
 
-**Gate output:** All pre-push hooks PASSED. `records-lint.sh` exits 0. `check-burst-records-parity` hook verified: CHANGELOG `## fix-burst-50` section present with matching `## fix-burst-50 re-verification` in evidence-report.
+**Test count:** 345 tests pass (cargo nextest), 7 skipped (workspace) — unchanged from fix-burst-49; no Rust logic changed. All xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key).
+
+**Gate output:**
+- Lefthook pre-push: `just check` PASSED; `check-burst-records-parity` PASSED (BURST-PARITY PASS)
+- Factory-dispatcher chain: `records-lint.sh` exits 0 on factory-artifacts branch (separate trigger)
 
 **Known limitations:** none — all pass-48 findings closed by fix-burst-50.
 
