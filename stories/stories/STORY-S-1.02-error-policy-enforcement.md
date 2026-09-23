@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.15"
+version: "1.16"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -23,6 +23,7 @@ changelog:
   - "1.13 (adversary-pass-9-L03/2026-09-22): L03 — §Purity Classification: added missing rows for check_client_timeout.rs and deny_bare_api_key.rs (both effectful/file-scan; were in §Architecture Mapping but absent from §Purity Classification)."
   - "1.14 (adversary-pass-10-H01-M01-M02/2026-09-22): H01 — AC-020 EC-007 citation corrected to EC-004 (collision detection, not code-component binding); BC-2.14.001 body table Title corrected to canonical H1. M01 — 6 grep-based scanner descriptions updated to AST/token-stream; syn and proc-macro2 added to Library & Framework Requirements. M02 — BC-2.14.001 Behavioral Contracts table Title set to canonical H1."
   - "1.15 (adversary-pass-16-MED-003-LOW-007-LOW-008/2026-09-22): MED-003 — AC-015 extended with DI-010/BC-2.14.005 {INV-001} sanitization obligation (credential-redaction, 200-char cap; raw build() error string forbidden); Verified-by entries added for test_sanitize_error_message_redacts_url_credentials, test_sanitize_error_message_caps_at_200_chars, test_map_build_failure_redacts_proxy_credentials_in_message. AC-019 extended with sanitization regression language and same Verified-by entries. EC-006a extended with DI-010 sanitization note. LOW-007 — cargo xtask check-no-panic --fixture-mode command corrected to include required <dir> argument xtask/tests/fixtures/violations in AC-017 and Tasks item 13. LOW-008 — crates/pregolya-core/src/error.rs (MODIFY, AC-018), and four crates/pregolya-core/tests/ui/ trybuild files (CREATE, BC-2.14.006 {INV-003}) added to File Structure Requirements; error.rs added to Architecture Mapping."
+  - "1.16 (F-P24-LOW-006/2026-09-22): BC table Title column normalized to prefix-stripped form for BC-2.14.001 row (F-P24-LOW-006)."
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -71,7 +72,7 @@ tdd_mode: strict
 
 | BC | Title | Covered ACs |
 |----|-------|------------|
-| BC-2.14.001 | BC-2.14.001: PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | AC-020 |
+| BC-2.14.001 | PregolyaError 2D Component × Category Struct with RetryHint and Machine Code | AC-020 |
 | BC-2.14.003 | All Library Constructors Return Result; No .unwrap()/.expect()/assert! in Non-Test Code | AC-001..AC-003, AC-017, AC-018 |
 | BC-2.14.004 | Every Outbound HTTP ClientBuilder Must Set .timeout(30s); Zero Client::new() Outside Tests | AC-004..AC-006, AC-015, AC-019 |
 | BC-2.14.005 | API Key Newtype with Redacted Debug; No Serialize; No Deref<Target=str> | AC-007..AC-010 |
