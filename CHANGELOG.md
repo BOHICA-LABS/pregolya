@@ -16,6 +16,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-29 (pass-27 findings, code commits `a98d8ae`, `c0d6783`)
+
+### xtask check_client_timeout — UFCS extension, dead-code removal, KL corrections
+
+**F-P27-MED-002 — UFCS qself extended to `new` and `builder`:** `visit_expr_call` qself branch and `analyze_build_chain` UFCS branch both previously guarded on `last_method == "default"` only. Extended to `matches!(last_method, "default" | "new" | "builder")`, enabling detection of `<reqwest::Client>::new()`, `<reqwest::Client>::builder().build()`, and `<reqwest::ClientBuilder>::new().build()` without `.timeout()`. Six new pinning tests cover qualified and clean forms.
+
+**F-P27-MED-004 — Strategy 3 (dead code) removed:** `scan_macro_body_as_ast` previously described four progressive parse strategies; Strategy 3 (`syn::parse2::<syn::Expr>`) was logically dead because any token stream it accepts is also accepted by Strategy 2's `fn __macro_fragment__()` wrapper. Strategy 3 removed; all four documentation sites updated to say "three strategies."
+
+**F-P27-HIGH-001 + F-P27-MED-003 — KL-1 module doc corrected:** KNOWN-LIMITATION 1 in the module doc now explicitly labels bare-name detection as a conservative false POSITIVE (not false negative). The workaround corrected from "use `reqwest::Client::new()`" (unconditional violation — wrong) to "qualify with owning-crate path (e.g., `other_sdk::Client::new()`)".
+
+**F-P27-MED-008 — KNOWN-LIMITATION 5 added:** Documents the module-alias re-export false negative: `http::Client::new()` (where `http` re-exports `reqwest::Client`) is suppressed because the gate classifies non-reqwest head segments as non-reqwest. Pinned by `test_timeout_checker_module_alias_false_negative_known_limitation`.
+
+**F-P27-HIGH-002 + F-P27-MED-001 — Pattern-A UFCS test added:** `test_timeout_checker_detects_client_ufcs_default_qualified` pins the `visit_expr_call` qself branch for `<reqwest::Client as Default>::default()`; `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` pins the non-reqwest negative.
+
+**F-P27-LOW-001 — blocking arm doc fixed:** Module doc `# Scanning rules` previously attributed bare `blocking::` detection to "the path-relative guard"; now correctly names "the `blocking`-head segment arm in `classify_client_new` / `classify_builder_constructor`."
+
+**F-P27-LOW-002 — stale KL-4 refs updated:** `analyze_build_chain` doc updated from "eliminating KNOWN-LIMITATION 4" to "parenthesized/braced base subexpression (formerly KL-4 of the flat-token scanner)". Tests renamed: `test_timeout_scanner_parenthesized_base_subexpr_known_limitation` → `..._handled_by_syn`; `test_timeout_scanner_braced_base_subexpr_known_limitation` → `..._handled_by_syn`.
+
+**F-P27-OBS-001 — check_error_code_registry doc fixed:** Module doc now says "every code declared in the canonical registry table (one code per leading `| E-` table cell)" instead of overstating coverage.
+
+### Known limitations after fix-burst-29
+
+| ID | Description | Status |
+|----|-------------|--------|
+| KL-1 | Bare `Client::new()` without a qualifying module path — conservative **false positive**: gate cannot distinguish reqwest vs other SDK clients, flags conservatively. Workaround: qualify with owning-crate path (e.g., `other_sdk::Client::new()`) | Preserved (now false-positive, per-syn-rewrite clarification) |
+| KL-2 | Split-statement builder chains (builder on line 1, `.build()` on line N via variable) | Preserved |
+| KL-3 | `.timeout(SOME_CONST_ZERO)` — constant-valued zero not detected | Preserved |
+| KL-4/macro | Macro bodies failing all three parse strategies are skipped | Preserved (renumbered from 4 to KL-macro, three strategies after Strategy-3 removal) |
+| KL-5 | Module-alias re-export (`http::Client::new()` where `http` re-exports reqwest) — false negative; head segment treated as non-reqwest | New |
+
+Test count: 229 passing (xtask), 5 skipped.
+
 ## fix-burst-28 (pass-26 findings, commit `2d2f6ece`)
 
 ### xtask check_client_timeout — recursive macro AST, ClientBuilder UFCS, doc hygiene
