@@ -364,6 +364,13 @@ fn check_bc_id_shape(s: &str) -> bool {
 /// comparand), NOT after the 2nd comma (the message).  Without arity awareness this
 /// would be a false negative — Exemption-2 granted when the BC-ID is in the comparand.
 /// With arity awareness, the 2nd comma is required, so the call is correctly flagged.
+///
+/// **KNOWN-LIMITATION N:** The top-level comma scan counts turbofish generic-argument
+/// commas (e.g. `Vec::<A, B>`) as argument-separator commas, because `<`/`>` lex as
+/// `Punct` and are not grouped by `proc_macro2`. A condition operand containing a
+/// comma-separated turbofish can shift the message-argument index. This pattern does
+/// not occur in the current `crates/` production code. Sound fix: track angle-bracket
+/// depth when collecting top-level commas.
 fn syn_macro_has_bc_id(mac: &syn::Macro, macro_name: &str) -> bool {
     use proc_macro2::TokenTree;
     let tokens_vec: Vec<TokenTree> = mac.tokens.clone().into_iter().collect();
@@ -1026,7 +1033,7 @@ pub fn run_fixture_mode(dir: &str) {
 /// These files are legitimately skipped by the no-panic scanner and must not be counted
 /// toward the expected minimum.
 ///
-/// Kept as a named constant so a drop from 13/16 to e.g. 1/16 still trips the gate
+/// Kept as a named constant so a drop from 14/17 to e.g. 1/17 still trips the gate
 /// while still allowing the 3 credential-only fixtures to remain in the same directory.
 pub(crate) const CREDENTIAL_FIXTURE_COUNT: usize = 3;
 
@@ -1401,6 +1408,61 @@ fn f(phase: Phase) -> i32 {
             "unreachable!() in named arm of a fully-named match must be exempt \
              (BC-2.14.003 §EC-007 Exemption 1 — all arms are named patterns); \
              got: {findings:?}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_14_003_assert_eq_with_bc_id_in_message_is_exempt() {
+        // BC-2.14.003 EC-007 Exemption-2: assert_eq! with BC-ID in message (3rd arg) is exempt.
+        let src = r#"
+        /// # Panics
+        ///
+        /// Panics if values differ — BC-2.14.003.
+        pub fn check_eq(a: &str, b: &str) {
+            assert_eq!(a, b, "BC-2.14.003 EC-007: values must match");
+        }
+    "#;
+        let findings = scan_for_panics_in_source(src, "production.rs");
+        assert!(
+            findings.is_empty(),
+            "assert_eq! with BC-ID in message under # Panics doc must be exempt: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn test_bc_2_14_003_assert_ne_with_bc_id_in_message_is_exempt() {
+        let src = r#"
+        /// # Panics
+        ///
+        /// Panics if values equal — BC-2.14.003.
+        pub fn check_ne(a: &str, b: &str) {
+            assert_ne!(a, b, "BC-2.14.003 EC-007: values must differ");
+        }
+    "#;
+        let findings = scan_for_panics_in_source(src, "production.rs");
+        assert!(
+            findings.is_empty(),
+            "assert_ne! with BC-ID in message under # Panics doc must be exempt: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn test_bc_2_14_003_assert_matches_with_bc_id_in_message_is_exempt() {
+        let src = r#"
+        /// # Panics
+        ///
+        /// Panics if pattern does not match — BC-2.14.003.
+        pub fn check_matches(x: &str) {
+            assert_matches!(x, "ok", "BC-2.14.003 EC-007: must match ok pattern");
+        }
+    "#;
+        let findings = scan_for_panics_in_source(src, "production.rs");
+        assert!(
+            findings.is_empty(),
+            "assert_matches! with BC-ID in message under # Panics doc must be exempt: {:?}",
+            findings
         );
     }
 }

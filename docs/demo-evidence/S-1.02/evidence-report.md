@@ -25,7 +25,7 @@ status: complete
 | AC-005 | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` exits 0 — no missing `.timeout()` | [AC-005-check-client-timeout-pass.webm](AC-005-check-client-timeout-pass.webm) | [AC-005-check-client-timeout-pass.gif](AC-005-check-client-timeout-pass.gif) | [tape](AC-005-check-client-timeout-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-020 | BC-2.14.001 EC-004 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
-| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS violations in 13 of 16 fixture files spanning four violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), catch-all `unreachable!()` arms (wildcard `_ =>` and irrefutable-binding forms `other =>`, `ref other =>`, `mut other =>`, guarded `other if ... =>`, `_other =>`), `.unwrap()` in macros, `todo!()` (unimplemented!() covered by inline unit test only) — 13/16 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22 frozen HEAD 1ab2d10) |
+| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS violations in 14 of 17 fixture files spanning five violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), catch-all `unreachable!()` arms (wildcard `_ =>` and irrefutable-binding forms `other =>`, `ref other =>`, `mut other =>`, guarded `other if ... =>`, `_other =>`), `.unwrap()` in macros, `todo!()` (unimplemented!() covered by inline unit test only), `assert_eq!`/`assert_ne!` with BC-ID in comparand — 14/17 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22 frozen HEAD 1ab2d10) |
 | AC-008 | BC-2.14.005 PC-002 | `Debug` emits exactly `"<redacted>"` — key material never appears in format output | [AC-008-AC-011-AC-016-credential-validation-redaction.webm](AC-008-AC-011-AC-016-credential-validation-redaction.webm) | [AC-008-AC-011-AC-016-credential-validation-redaction.gif](AC-008-AC-011-AC-016-credential-validation-redaction.gif) | [tape](AC-008-AC-011-AC-016-credential-validation-redaction.tape) | recorded |
 | AC-011 | BC-2.14.006 PC-001 | `OpenAiApiKey::new("")` → `Err(E-CORE-005 / VAL / Never)` | same recording as AC-008 | — | — | recorded |
 | AC-016 | BC-2.14.006 EC-006 | `new("   ")` whitespace-only rejected with same `E-CORE-005` error | same recording as AC-008 | — | — | recorded |
@@ -92,10 +92,10 @@ Shows: `test_BC_2_14_006_openai_whitespace_only_key_returns_err` PASS.
 
 ### AC-017 — check-no-panic flags violations (BC-2.14.003 EC-007)
 Recording: `AC-017-check-no-panic-flags-violations.{webm,gif}` — re-recorded 2026-09-22 (frozen HEAD 1ab2d10)
-Shows: `cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations` — exits 0 (scanner-healthy verdict per BC-2.14.003 EC-007), reports `fixture-mode: 13/16 fixture files had findings`.
+Shows: `cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations` — exits 0 (scanner-healthy verdict per BC-2.14.003 EC-007), reports `fixture-mode: 14/17 fixture files had findings`.
 The 3 non-no-panic fixtures produce no findings here: `violation_pub_crate_debug_derive.rs`, `violation_derive_deserialize.rs`, and `violation_impl_display.rs` all target `deny-bare-api-key`, not `check-no-panic`.
 
-Detected violation classes (13 fixture files):
+Detected violation classes (14 fixture files):
 1. `violation_assert_no_doc.rs` — bare `assert!()` in non-test code
 2. `violation_assert_brace.rs` — bare `assert!()` in non-test code
 3. `violation_unreachable_wildcard.rs` — wildcard-arm `_ => unreachable!()` in non-test code
@@ -109,8 +109,9 @@ Detected violation classes (13 fixture files):
 11. `violation_assert_bc_id_in_condition.rs` — bare `assert!()` with BC-ID in condition position (MED-2 fix-burst-3)
 12. `violation_unwrap_in_format_macro.rs` — `.unwrap()` inside macro arguments (MED-4 fix-burst-3)
 13. `violation_todo_stub.rs` — `todo!()` in production path (unimplemented!() covered by inline unit test only)
+14. `violation_assert_eq_bc_id_in_comparand.rs` — `assert_eq!`/`assert_ne!` with BC-ID in right-hand comparand (not message); both macros flagged (BC-2.14.003 EC-007, Exemption-2 requires BC-ID in message argument)
 
-Error path: demonstrates the gate detects all POL-31-mandated violation types; fix-burst 9 expanded coverage from 12 to 13 fixture files.
+Error path: demonstrates the gate detects all POL-31-mandated violation types; fix-burst 9 expanded coverage from 12 to 13 fixture files; fix-burst 18 added the 14th flagged fixture (`violation_assert_eq_bc_id_in_comparand.rs`, fifth violation class).
 
 ### AC-020 — check-error-code-registry exits 0 (BC-2.14.001 EC-004 / VP-BC214001-01)
 Evidence captured: 2026-09-22 (frozen HEAD `1ab2d10`)
@@ -162,7 +163,7 @@ Covered by: the nextest pass in AC-008/AC-011/AC-016 recording (test_BC_2_14_004
 
 ## Recording Provenance
 
-**Validity criterion:** Gate output remains valid at any HEAD where (a) no `crates/` files are added or deleted and (b) any `crates/` changes are doc-comment-only with no panic-family, timeout, or credential constructs added or removed. Future passes can apply this criterion directly rather than requiring a new per-burst paragraph.
+**Validity criterion:** Gate output remains valid at any HEAD where (a) no `crates/` files are added or deleted, (b) any `crates/` changes are doc-comment-only with no panic-family, timeout, or credential constructs added or removed, and (c) no files are added to, removed from, or renamed within `xtask/tests/fixtures/violations/`, and `CREDENTIAL_FIXTURE_COUNT` is unchanged. Future passes can apply this criterion directly rather than requiring a new per-burst paragraph. Note: a fixture-directory change (clause c) invalidates AC-017 counts and requires re-verification of the fixture-mode gate output before the evidence report counts can be considered current.
 
 Gate output was **recorded** at `1ab2d10` (frozen HEAD at time of recording). Recordings were **re-verified valid** at frozen review HEAD `36cb4da` (fix-burst-13) and again at `8619aa7` (fix-burst-14).
 
@@ -185,7 +186,7 @@ Rationale for fix-burst-15 re-verification: changes affect only the following fi
 - `docs/demo-evidence/S-1.02/evidence-report.md` — evidence artifact, not in `crates/` scan
 - `CHANGELOG.md` — not in `crates/` scan
 
-No changes were made to `crates/pregolya-core/` or any other `crates/`-rooted file. Fixture count (16 total, 13 flagged), `CREDENTIAL_FIXTURE_COUNT` (3), and all gate counts (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) are unchanged at `c31b6f6`.
+No changes were made to `crates/pregolya-core/` or any other `crates/`-rooted file. Fixture count (17 total, 14 flagged), `CREDENTIAL_FIXTURE_COUNT` (3), and all gate counts (25 analyzed / 16 exempt / 0 violations; 14/17 fixture-mode; 148 codes / 0 collisions) are unchanged at `c31b6f6`.
 
 Rationale for fix-burst-16 re-verification: changes affect only the following files, none of which participate in the recorded gate scan paths:
 - `xtask/src/check_no_panic.rs` — doc comment change; xtask is outside the `crates/`-rooted scan
@@ -197,7 +198,9 @@ Rationale for fix-burst-16 re-verification: changes affect only the following fi
 - `docs/demo-evidence/S-1.02/evidence-report.md` — evidence artifact, not in `crates/` scan
 - `CHANGELOG.md` — not in `crates/` scan
 
-Conclusion: all three recorded gate outputs (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) remain valid at `5261d2c`. The SHA `1ab2d10` in individual AC sections accurately reflects when recordings were made; re-verification at `36cb4da`, `8619aa7`, `c31b6f6`, and `5261d2c` confirms the evidence is current.
+Conclusion: all three recorded gate outputs (25 analyzed / 16 exempt / 0 violations; 14/17 fixture-mode; 148 codes / 0 collisions) remain valid at `ad4dea3d517cf8d490c0e9909f14c569970f88f8`. The SHA `1ab2d10` in individual AC sections accurately reflects when recordings were made; re-verification at `36cb4da`, `8619aa7`, `c31b6f6`, `5261d2c`, and `ad4dea3d517cf8d490c0e9909f14c569970f88f8` confirms the evidence is current.
+
+Rationale for fix-burst-19 re-verification: `xtask/tests/fixtures/violations/violation_assert_eq_bc_id_in_comparand.rs` was added at fix-burst-18, triggering validity criterion clause (c) (fixture-directory change). AC-017 counts updated from 13/16 to 14/17 and violation-class list extended to 14 entries (fifth class: `assert_eq!`/`assert_ne!` with BC-ID in comparand). Gate output confirmed `fixture-mode: 14/17 fixture files had findings` at `ad4dea3d517cf8d490c0e9909f14c569970f88f8` (2026-09-22). No `crates/`-rooted files changed; all other gate counts (25 analyzed / 16 exempt / 0 violations; 148 codes / 0 collisions) are unchanged.
 
 ---
 

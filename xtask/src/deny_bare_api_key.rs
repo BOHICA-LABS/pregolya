@@ -278,6 +278,11 @@ fn check_struct_derives(
 ///
 /// Returns the index after the impl body brace group, or `start` unchanged if
 /// this is not a recognised Deref impl.
+///
+/// Handles leading `::` before the implementing type name (absolute-path forms
+/// such as `impl std::ops::Deref for ::my_crate::AnthropicApiKey { … }`):
+/// before collecting path segments after `for`, any leading `::` is consumed
+/// so the first collected ident is the crate name, not a stray punctuation token.
 fn check_impl_deref(
     tokens: &[proc_macro2::TokenTree],
     start: usize,
@@ -310,6 +315,12 @@ fn check_impl_deref(
             TokenTree::Ident(id) if id == "for" && deref_found => {
                 for_found = true;
                 j += 1;
+                // Skip optional leading `::` (absolute path e.g. `impl Trait for ::crate::Type`)
+                if matches!(tokens.get(j), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                    && matches!(tokens.get(j + 1), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                {
+                    j += 2;
+                }
                 // Collect path segments (idents separated by `::`) and use the LAST ident
                 // as the implementing type name.  Handles both plain `impl Deref for
                 // OpenAiApiKey` and path-qualified forms such as
@@ -388,6 +399,12 @@ fn check_impl_deref(
 /// - `impl Display for NAME` (unqualified)
 /// - `impl fmt::Display for NAME` (module-qualified)
 /// - `impl std::fmt::Display for NAME` (fully-qualified)
+/// - `impl fmt::Display for ::crate::NAME` (absolute-path form with leading `::`)
+///
+/// Handles leading `::` before the implementing type name: before collecting path
+/// segments after `for`, any leading `::` is consumed so the first collected ident
+/// is the crate name rather than a stray punctuation token that would produce an
+/// empty struct name and silently pass the gate.
 ///
 /// Correctly ignores `Display` appearing as a generic bound (e.g.
 /// `impl<T: std::fmt::Display> Render for AuthToken {}`): angle-bracket depth
@@ -425,6 +442,12 @@ fn check_impl_display_in_tokens(
             TokenTree::Ident(id) if id == "for" && angle_depth == 0 => {
                 found_for = true;
                 j += 1;
+                // Skip optional leading `::` (absolute path e.g. `impl Trait for ::crate::Type`)
+                if matches!(tokens.get(j), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                    && matches!(tokens.get(j + 1), Some(TokenTree::Punct(p)) if p.as_char() == ':')
+                {
+                    j += 2;
+                }
                 // Collect path segments (idents separated by `::`) and use the LAST ident
                 // as the implementing type name.  Handles both plain `impl Display for
                 // OpenAiApiKey` and path-qualified forms such as
@@ -805,6 +828,45 @@ impl std::fmt::Display for OpenAiApiKey where String: Clone {
             "BC-2.14.005 F-P16-LOW-006: impl Display for OpenAiApiKey with where clause \
              must be flagged; where clause idents must not overwrite struct name; \
              got: {findings:?}"
+        );
+    }
+
+    /// F-P17-MED-004 — BC-2.14.005 {PC-006}: `impl Display for ::crate::OpenAiApiKey` must be
+    /// flagged even when the type path has a leading `::`.
+    ///
+    /// Before this fix, the post-`for` collection loop started at the first token after
+    /// `for` and broke immediately when it was `Punct(':')` → `struct_name == ""` → no
+    /// finding.  The fix consumes an optional leading `::` so the loop correctly
+    /// collects the path's ident segments.
+    #[test]
+    fn test_bc_2_14_005_display_impl_with_leading_colons_path_is_flagged() {
+        let src = r#"impl std::fmt::Display for ::my_crate::OpenAiApiKey {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "test.rs");
+        assert!(
+            !findings.is_empty(),
+            "Display impl with leading :: path must be flagged — BC-2.14.005 {{PC-006}}"
+        );
+    }
+
+    /// F-P17-MED-004 — BC-2.14.005 {PC-006}: `impl Deref for ::crate::AnthropicApiKey` must be
+    /// flagged even when the type path has a leading `::`.
+    ///
+    /// TD-VSDD-060 sibling sweep of `check_impl_display_in_tokens`: the same leading-`::` fix
+    /// applied to Display must also apply to Deref so both checkers handle absolute paths.
+    #[test]
+    fn test_bc_2_14_005_deref_impl_with_leading_colons_path_is_flagged() {
+        let src = r#"impl std::ops::Deref for ::my_crate::AnthropicApiKey {
+        type Target = str;
+        fn deref(&self) -> &Self::Target { &self.0 }
+    }"#;
+        let findings = scan_for_bare_api_keys_in_source(src, "test.rs");
+        assert!(
+            !findings.is_empty(),
+            "Deref impl with leading :: path must be flagged — BC-2.14.005 {{PC-006}}"
         );
     }
 
