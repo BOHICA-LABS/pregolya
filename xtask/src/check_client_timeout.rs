@@ -493,28 +493,43 @@ fn matches_ident(flat: &[FlatToken], idx: usize, name: &str) -> bool {
     matches!(flat.get(idx), Some(FlatToken::Ident(n, _)) if n == name)
 }
 
-/// Returns the index just past the opening [`ParenGroup`] of the base call
-/// (e.g., `new()` or `builder()`).
+/// Returns the index just past the base call's [`FlatToken::ParenGroup`] if one is
+/// immediately present after the ident path (e.g., `new()` or `builder()`), or just
+/// past the ident path itself if no `ParenGroup` follows (function-reference form,
+/// e.g., `new` without call parens).
 ///
-/// This is a conservative hint used by callers to avoid re-scanning the base call.
-/// The return value intentionally does not span the full chain — callers that need
-/// the full chain end must scan forward from this index.
+/// This is a conservative hint used by callers to advance the outer scan cursor past
+/// the base call without scanning ahead into unrelated tokens.  The return value
+/// intentionally does not span the full chain — callers use [`has_build_without_timeout`]
+/// to scan the full chain from `start`.
 ///
-/// Note: because [`flatten_tokens_no_test`] emits a [`FlatToken::ParenGroupEnd`]
-/// marker immediately after the inlined paren-group contents, the token at the
-/// returned index is always a `ParenGroupEnd` — not a `.method(` continuation.
-/// Callers that used to rely on a chain-step loop here should use
-/// [`has_build_without_timeout`] directly, which scans forward to `;` or `.build()`.
+/// Scanning advances through consecutive [`FlatToken::Ident`] and
+/// [`FlatToken::Punct`]`(':')` tokens to consume the ident path (e.g.
+/// `reqwest :: ClientBuilder :: new`), then stops at the first token that is neither
+/// an `Ident` nor a `':'`.  If that token is a [`FlatToken::ParenGroup`], it is the
+/// base call's argument list and is consumed; if it is anything else (`;`, `.`,
+/// a brace/bracket group, etc.), the function returns without advancing further.
+///
+/// This ensures that a function-reference base call (no call parens) does **not**
+/// advance the cursor past the enclosing statement boundary or into a following
+/// statement's [`FlatToken::ParenGroup`] (F-P20-HIGH-001 fix).
 fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
     let n = flat.len();
     let mut i = start;
-    // Advance past the base call's identifier tokens (e.g. `reqwest :: ClientBuilder :: new`)
-    // until the opening ParenGroup of the base call is found, then step past it.
+    // Advance past the base-call ident path: sequences of Ident and Punct(':').
+    // Stops at the first token that is neither an Ident nor a ':'.
     while i < n {
-        if matches!(flat[i], FlatToken::ParenGroup(_)) {
-            i += 1;
-            break;
+        match &flat[i] {
+            FlatToken::Ident(_, _) | FlatToken::Punct(':', _) => {
+                i += 1;
+            }
+            _ => break,
         }
+    }
+    // If the very next token is a ParenGroup (the base call's argument list, e.g. `new()`),
+    // advance past it.  If not present (function-reference form with no call parens), return
+    // the current position without scanning ahead into unrelated tokens.
+    if matches!(flat.get(i), Some(FlatToken::ParenGroup(_))) {
         i += 1;
     }
     i
@@ -549,6 +564,14 @@ fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
 /// `vec!(v; n)` array-repeat expression contains a `;` that must not be treated as
 /// a statement boundary).
 ///
+/// **`*GroupEnd` at depth-0 terminates the scan** (F-P20-HIGH-002 fix).  When a
+/// `ParenGroupEnd`, `BraceGroupEnd`, or `BracketGroupEnd` token arrives while the
+/// corresponding depth counter is already 0, the scan breaks immediately — the chain
+/// has exited its enclosing group.  This prevents the scanner from escaping into an
+/// outer context and claiming the outer chain's `.build()` as belonging to an inner
+/// nested builder that has no `.build()` of its own.  Semantically this is equivalent
+/// to the `;` terminator: both signal that the chain's own scope has ended.
+///
 /// Returns `true` if `.build()` is present at depth zero and no valid `.timeout(d)` where
 /// `d > Duration::ZERO` precedes it. `.timeout(Duration::ZERO)` is treated as
 /// absent (BC-2.14.004 {PC-001}, {INV-004}).
@@ -574,15 +597,24 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
         match &flat[i] {
             FlatToken::BraceGroup(_) => brace_depth += 1,
             FlatToken::BraceGroupEnd(_) => {
-                brace_depth = brace_depth.saturating_sub(1);
+                if brace_depth == 0 {
+                    break; // exited the chain's own brace group — stop scanning
+                }
+                brace_depth -= 1;
             }
             FlatToken::BracketGroup(_) => bracket_depth += 1,
             FlatToken::BracketGroupEnd(_) => {
-                bracket_depth = bracket_depth.saturating_sub(1);
+                if bracket_depth == 0 {
+                    break; // exited the chain's own bracket group — stop scanning
+                }
+                bracket_depth -= 1;
             }
             FlatToken::ParenGroup(_) => paren_depth += 1,
             FlatToken::ParenGroupEnd(_) => {
-                paren_depth = paren_depth.saturating_sub(1);
+                if paren_depth == 0 {
+                    break; // exited the chain's own paren group — stop scanning
+                }
+                paren_depth -= 1;
             }
             FlatToken::Punct(c, _) if *c == ';' => {
                 if brace_depth == 0 && bracket_depth == 0 && paren_depth == 0 {
@@ -1344,6 +1376,127 @@ pub fn build_client() -> reqwest::Client {
             !super::has_build_without_timeout(&flat, 0, flat.len()),
             "outer chain with depth-0 .timeout() should NOT be flagged regardless of inner \
              builder state; depth-aware fix must not un-credit a valid depth-0 timeout"
+        );
+    }
+
+    // ── F-P20-HIGH-001: find_chain_end over-advance on function-reference base call ──
+    //
+    // When a base call appears as a function reference (no call parens), find_chain_end
+    // scans past the function-reference token and consumes the first ParenGroup it finds
+    // anywhere in the flat stream — which may belong to a completely different statement's
+    // base call.  The outer scanner then sets i = chain_end, skipping that second statement
+    // entirely.  The following test pins this false-negative.
+
+    /// F-P20-HIGH-001 regression — function-reference base call must not consume a
+    /// following statement's ParenGroup.
+    ///
+    /// `reqwest::ClientBuilder::new` without call parens is a function reference.
+    /// `find_chain_end` must NOT advance past the semicolon boundary and consume the
+    /// `ParenGroup` of the immediately-following `reqwest::Client::builder()` call.
+    /// The `Client::builder()` chain that follows has no `.timeout()` and must be flagged.
+    ///
+    /// FAILS before fix (false-negative: second chain is silently skipped).
+    /// PASSES after fix (second chain is correctly flagged).
+    #[test]
+    fn test_timeout_scanner_function_reference_does_not_skip_following_violation() {
+        // reqwest::ClientBuilder::new without call-parens is a function reference.
+        // find_chain_end must NOT consume the following statement's ParenGroup.
+        // The Client::builder() chain that follows has no .timeout() → must be flagged.
+        let src = r#"
+            fn a() {
+                let _ctor = reqwest::ClientBuilder::new;
+                reqwest::Client::builder()
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "a.rs");
+        assert!(
+            !findings.is_empty(),
+            "Client::builder() with no .timeout() must be flagged even when a preceding \
+             function-reference base call appears; got: {:?}",
+            findings
+        );
+    }
+
+    // ── F-P20-HIGH-002: saturating_sub on GroupEnd at depth-0 escapes chain boundary ──
+    //
+    // When has_build_without_timeout is called on a nested inner builder that has no
+    // .build() of its own, the saturating_sub on ParenGroupEnd tokens that arrive while
+    // paren_depth is already 0 keeps the depth at 0 instead of signalling "we have left
+    // the inner builder's enclosing paren group".  The scan therefore escapes the inner
+    // chain's enclosing group and claims the OUTER chain's .build() as the inner chain's
+    // .build(), producing a false-positive violation on the inner builder.
+
+    /// F-P20-HIGH-002 regression — inner builder with no .build() must not produce a
+    /// false-positive by claiming the outer chain's .build().
+    ///
+    /// Outer chain is fully compliant: `.timeout(30s)` + `.build()`.
+    /// Inner chain inside `.proxy(make_proxy(…))` argument: `reqwest::ClientBuilder::new()`
+    /// with NO `.timeout()` and NO `.build()` of its own.
+    /// BC-2.14.004 {PC-001} only requires `.timeout()` BEFORE `.build()`; an inner builder
+    /// with no `.build()` has no timeout obligation.
+    /// Expected: ZERO findings (no false positive on the inner builder).
+    ///
+    /// FAILS before fix (false-positive: inner builder incorrectly flagged).
+    /// PASSES after fix (inner builder correctly not flagged).
+    #[test]
+    fn test_timeout_scanner_nested_inner_builder_no_build_does_not_false_positive() {
+        // Outer chain: compliant (.timeout(30s) + .build()).
+        // Inner chain inside proxy() arg: reqwest::ClientBuilder::new() with NO .timeout()
+        // and NO .build().
+        // The inner chain has no .build() obligation (BC-2.14.004 {PC-001} requires
+        // .timeout() BEFORE .build()).
+        // Expected: zero violations (the inner chain must NOT claim the outer .build()).
+        let src = r#"
+            fn f() {
+                reqwest::ClientBuilder::new()
+                    .timeout(std::time::Duration::from_secs(30))
+                    .proxy(make_proxy(reqwest::ClientBuilder::new()))
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert!(
+            findings.is_empty(),
+            "compliant outer chain with non-completing nested inner builder must not produce \
+             a false-positive violation; got: {:?}",
+            findings
+        );
+    }
+
+    /// F-P20-HIGH-002 non-regression — outer chain with no .timeout() is still detected
+    /// even when a nested inner builder inside a proxy argument has .timeout().
+    ///
+    /// Outer chain: NON-compliant (no `.timeout()`, has `.build()`).
+    /// Inner chain inside `.proxy(make_proxy(…))`: has `.timeout()` but no `.build()`.
+    /// The outer chain must be flagged regardless of the inner builder's timeout.
+    /// This guards against a fix for F-P20-HIGH-002 accidentally suppressing outer-chain
+    /// violation detection.
+    ///
+    /// PASSES both before and after fix (outer violation is detected via the existing
+    /// depth-aware .timeout() crediting from fix-burst-19 / F-P19-HIGH-001).
+    #[test]
+    fn test_timeout_scanner_outer_missing_timeout_with_nested_inner_is_flagged() {
+        // Outer chain: NON-compliant (no .timeout(), has .build()).
+        // Inner chain inside proxy() arg: has .timeout() at inner depth, no .build().
+        // The outer chain must be flagged.
+        let src = r#"
+            fn g() {
+                reqwest::ClientBuilder::new()
+                    .proxy(make_proxy(reqwest::ClientBuilder::new()
+                        .timeout(std::time::Duration::from_secs(30))))
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "g.rs");
+        assert!(
+            !findings.is_empty(),
+            "outer chain with no .timeout() must be flagged even with a nested inner builder \
+             that has .timeout(); got: {:?}",
+            findings
         );
     }
 }
