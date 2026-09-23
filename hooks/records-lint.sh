@@ -119,6 +119,9 @@
 #        Blocking FAIL (vacuity guards, F-P42-MED-005): STATE.md absent; zero
 #        `| D-NNN/YYYY-MM-DD … | COMPLETE |` rows in §Current Phase Steps;
 #        §Session Resume Checkpoint section absent or containing no D-NNN.
+#        Blocking FAIL (frozen-HEAD currency, F-P46-MED-002 + F-P46-HIGH-001):
+#        frozen HEAD from §Session Resume Checkpoint not found in any COMPLETE row;
+#        checkpoint frozen HEAD does not match live feature branch HEAD.
 #        Genuine skip (no assertion): §Convergence Status section absent or
 #        containing no `**D-NNN` bold entry (pre-convergence state — check emits
 #        a SKIPPED label, not FAIL).
@@ -689,9 +692,9 @@ EOF
   unset -f _L12_CHECK
 
   # ── L13 self-probes: STATE.md D-NNN parity ─────────────────────────────────
-  # Inline helper mirrors check_l13 logic: reads a synthetic STATE.md file,
-  # echoes 1 on parity violation, 0 on clean pass or skip.
-  # Seven probes (A–G):
+  # Seven probes (A–G) each call check_l13 directly with a synthetic STATE.md
+  # path argument. _L13_CHECK inline mirror retired — check_l13 is now
+  # parameterized (Fix 1/MED-004). Swap-and-restore windows eliminated.
   #   A — checkpoint-stale: checkpoint D-NNN older than newest COMPLETE → CAUGHT
   #   B — convergence-stale: convergence D-NNN older than newest COMPLETE → CAUGHT
   #   C — clean-pass: all surfaces match newest COMPLETE → NOT CAUGHT (PASS)
@@ -699,83 +702,6 @@ EOF
   #   E — convergence-absent: §Convergence Status absent → NOT CAUGHT (PASS, 2/2)
   #   F — frozen-head-not-in-complete: frozen HEAD SHA absent from COMPLETE rows → CAUGHT
   #   G — frozen-head-live-mismatch: checkpoint frozen HEAD ≠ live branch HEAD → CAUGHT
-
-  _L13_CHECK() {
-    local state_file="$1"
-    # Step 1: extract max D-NNN from §Current Phase Steps table rows
-    local max_num
-    max_num=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$state_file" 2>/dev/null \
-      | grep '| COMPLETE |' \
-      | grep -oE 'D-[0-9]+' \
-      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
-    [ -z "$max_num" ] && echo 1 && return  # no D-NNN rows → FAIL (vacuity guard)
-    local max_d="D-${max_num}"
-    # Step 2: extract checkpoint D-NNN from §Session Resume Checkpoint section
-    local cp_section
-    cp_section=$(awk '/^## Session Resume Checkpoint/{flag=1;next} /^## /{flag=0} flag' \
-      "$state_file" 2>/dev/null || true)
-    local cp1 cp2 cp_max
-    cp1=$(echo "$cp_section" \
-      | grep -oE 'D-[0-9]+ checkpoint is current' \
-      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
-    cp2=$(echo "$cp_section" \
-      | grep -oE 'post-D-[0-9]+ state' \
-      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
-    cp_max=$(printf '%s\n%s\n' "$cp1" "$cp2" \
-      | grep -v '^$' | sort -n | tail -1 || true)
-    if [ -z "$cp_max" ]; then
-      echo 1; return  # checkpoint absent/no D-NNN → FAIL (vacuity guard)
-    fi
-    if [ "D-${cp_max}" != "$max_d" ]; then
-      echo 1; return
-    fi
-    # Step 3: extract max D-NNN from §Convergence Status bold entries
-    local conv_section
-    conv_section=$(awk '/^## Convergence Status/{flag=1;next} /^## /{flag=0} flag' \
-      "$state_file" 2>/dev/null || true)
-    if [ -n "$conv_section" ]; then
-      local conv_num
-      conv_num=$(echo "$conv_section" \
-        | grep -oE '\*\*D-[0-9]+' \
-        | grep -oE '[0-9]+' | sort -n | tail -1 || true)
-      if [ -n "$conv_num" ] && [ "D-${conv_num}" != "$max_d" ]; then
-        echo 1; return
-      fi
-    fi
-    # Step 3.5: Frozen-HEAD SHA currency check.
-    # Extract frozen HEAD SHA from §Session Resume Checkpoint; verify it appears
-    # in at least one §Current Phase Steps COMPLETE row.
-    local frozen_head_sha=""
-    frozen_head_sha=$(echo "$cp_section" \
-      | grep -oE 'frozen HEAD [0-9a-f]{7,40}' \
-      | grep -oE '[0-9a-f]{7,40}' | tail -1 || true)
-    if [ -n "$frozen_head_sha" ]; then
-      local frozen_in_complete
-      frozen_in_complete=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$state_file" 2>/dev/null \
-        | grep '| COMPLETE |' \
-        | grep -F "$frozen_head_sha" || true)
-      if [ -z "$frozen_in_complete" ]; then
-        echo 1; return
-      fi
-      # Live branch HEAD check: verify frozen HEAD matches the actual live branch tip.
-      # Detects stale checkpoints where both checkpoint and a COMPLETE row contain the
-      # same old SHA, but the branch has since advanced (F-P46-HIGH-001).
-      # Extract from cp_section (not state_file) to stay scoped to current-state context;
-      # skip lines that flag the branch as DELETED/REMOVED/MERGED (inactive branches).
-      # Use --verify so git emits nothing to stdout when the ref does not exist.
-      local feature_branch live_branch_head
-      feature_branch=$(echo "$cp_section" \
-        | grep -v 'DELETED\|REMOVED\|MERGED' \
-        | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
-      if [ -n "$feature_branch" ]; then
-        live_branch_head=$(git -C "${FACTORY_DIR}/.." rev-parse --verify "refs/heads/${feature_branch}" 2>/dev/null || true)
-        if [ -n "$live_branch_head" ] && [ "$frozen_head_sha" != "$live_branch_head" ]; then
-          echo 1; return
-        fi
-      fi
-    fi
-    echo 0
-  }
 
   # Probe A: §Current Phase Steps max D-999, checkpoint references D-998 → CAUGHT
   PROBE_L13A="$PROBE_TMP/l13-violation-a.md"
@@ -796,8 +722,11 @@ EOF
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-998 state)
 EOF
 
-  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13A")
-  probe_must_fail "L13-probe-A" "newest COMPLETE D-999 but checkpoint references D-998 (D-1000 IN FLIGHT excluded)"
+  _L13A_OUT="$(check_l13 "$PROBE_L13A" 2>&1 || true)"
+  if ! echo "$_L13A_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-A: newest COMPLETE D-999 but checkpoint references D-998 (D-1000 IN FLIGHT excluded) — check_l13 did NOT emit FAIL"
+    exit 2
+  fi
 
   # Probe B: Convergence Status stale (D-201) while §Current Phase Steps/checkpoint agree on D-202 → CAUGHT
   PROBE_L13B="$PROBE_TMP/l13-violation-b.md"
@@ -817,8 +746,11 @@ EOF
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-202 state)
 EOF
 
-  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13B")
-  probe_must_fail "L13-probe-B" "§Current Phase Steps max D-202, Convergence Status terminal entry D-201"
+  _L13B_OUT="$(check_l13 "$PROBE_L13B" 2>&1 || true)"
+  if ! echo "$_L13B_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-B: §Current Phase Steps max D-202, Convergence Status terminal entry D-201 — check_l13 did NOT emit FAIL"
+    exit 2
+  fi
 
   # Probe C (clean pass): all three surfaces agree on D-101 → NOT caught
   PROBE_L13C="$PROBE_TMP/l13-clean.md"
@@ -838,8 +770,11 @@ EOF
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-101 state)
 EOF
 
-  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13C")
-  probe_must_not_fail "L13-probe-C" "all three surfaces reference D-101 — clean pass"
+  _L13C_OUT="$(check_l13 "$PROBE_L13C" 2>&1 || true)"
+  if echo "$_L13C_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-C: all three surfaces reference D-101 — check_l13 emitted FAIL but should be clean pass"
+    exit 2
+  fi
 
   # Probe D: valid §Current Phase Steps rows but no §Session Resume Checkpoint → CAUGHT
   # Exercises the NOT-FOUND checkpoint vacuity path (F-P42-MED-005 fix).
@@ -854,11 +789,14 @@ EOF
 **D-201 (burst-N done)**: trajectory.
 EOF
 
-  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13D")
-  probe_must_fail "L13-probe-D" "valid §Current Phase Steps rows but no §Session Resume Checkpoint — FAIL (vacuity guard)"
+  _L13D_OUT="$(check_l13 "$PROBE_L13D" 2>&1 || true)"
+  if ! echo "$_L13D_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-D: valid §Current Phase Steps rows but no §Session Resume Checkpoint — check_l13 did NOT emit FAIL (vacuity guard)"
+    exit 2
+  fi
 
   # Probe E: §Convergence Status absent — convergence-absent path → PASS (not FAIL)
-  # Also verifies Part 1 fix: PASS message emits "SKIPPED" and "2/2" (not "3/3 in sync").
+  # Also verifies PASS message emits "SKIPPED" and "2/2" (not "3/3 in sync").
   PROBE_L13E="$PROBE_TMP/l13-conv-absent.md"
   cat > "$PROBE_L13E" <<'EOF'
 ## Current Phase Steps
@@ -872,22 +810,11 @@ EOF
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
 EOF
 
-  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13E")
-  probe_must_not_fail "L13-probe-E" "§Convergence Status absent: convergence-absent path emits PASS with 2/2 (not FAIL)"
-
-  # Verify PASS message format: must contain "SKIPPED" (convergence label) and "2/2" (denominator).
-  # Temporarily swap STATE.md with probe file; restore unconditionally after output capture.
-  _L13E_BAK="$PROBE_TMP/STATE.md.probe-e-bak"
-  cp "${FACTORY_DIR}/STATE.md" "$_L13E_BAK" 2>/dev/null || true
-  cp "$PROBE_L13E" "${FACTORY_DIR}/STATE.md"
-  _L13E_OUT="$(check_l13 2>&1 || true)"
-  # Restore STATE.md unconditionally (backup takes priority; remove probe copy if no backup)
-  if [ -f "$_L13E_BAK" ]; then
-    cp "$_L13E_BAK" "${FACTORY_DIR}/STATE.md"
-  else
-    rm -f "${FACTORY_DIR}/STATE.md"
+  _L13E_OUT="$(check_l13 "$PROBE_L13E" 2>&1 || true)"
+  if echo "$_L13E_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-E: §Convergence Status absent — check_l13 emitted FAIL but should be clean pass (convergence-absent path)"
+    exit 2
   fi
-  unset _L13E_BAK
   if ! echo "$_L13E_OUT" | grep -q "SKIPPED"; then
     echo "[SELF-PROBE FAIL] L13-probe-E message: check_l13 PASS output missing 'SKIPPED' — dynamic denominator fix not applied to convergence-absent path"
     exit 2
@@ -896,7 +823,6 @@ EOF
     echo "[SELF-PROBE FAIL] L13-probe-E message: check_l13 PASS output missing '2/2' — dynamic denominator fix not applied to convergence-absent path"
     exit 2
   fi
-  unset _L13E_OUT
 
   # Probe F: frozen HEAD SHA in §Session Resume Checkpoint but absent from all COMPLETE rows → CAUGHT
   # Exercises the frozen-HEAD currency check added to detect false-green L13 when the
@@ -921,35 +847,26 @@ EOF
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
 EOF
 
-  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13F")
-  probe_must_fail "L13-probe-F" "frozen HEAD deadbeef1234567 in §Session Resume Checkpoint not found in any COMPLETE §Current Phase Steps row"
-
-  # Also verify the real check_l13 catches the same violation (F-P46-MED-002).
-  # Swap-and-restore pattern: temporarily replace STATE.md with the probe file.
-  _L13F_BAK="${PROBE_TMP}/STATE.md.bakF"
-  cp "${FACTORY_DIR}/STATE.md" "$_L13F_BAK" 2>/dev/null || true
-  cp "$PROBE_L13F" "${FACTORY_DIR}/STATE.md"
-  _L13F_REAL_OUT="$(check_l13 2>&1 || true)"
-  if [ -f "$_L13F_BAK" ]; then
-    cp "$_L13F_BAK" "${FACTORY_DIR}/STATE.md"
-  else
-    rm -f "${FACTORY_DIR}/STATE.md"
-  fi
-  unset _L13F_BAK
-  if ! echo "$_L13F_REAL_OUT" | grep -q "\[FAIL\]"; then
-    echo "[SELF-PROBE FAIL] L13-probe-F-real: real check_l13 did NOT fail on synthetic STATE.md with deadbeef1234567 absent from COMPLETE rows — Step 3.5 in shipped function is not load-bearing"
+  _L13F_OUT="$(check_l13 "$PROBE_L13F" 2>&1 || true)"
+  if ! echo "$_L13F_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-F: frozen HEAD deadbeef1234567 in §Session Resume Checkpoint not found in any COMPLETE §Current Phase Steps row — check_l13 did NOT emit FAIL — Step 3.5 in shipped function is not load-bearing"
     exit 2
   fi
-  unset _L13F_REAL_OUT
-
-  rm -f "$PROBE_L13F"
 
   # Probe G: frozen HEAD in checkpoint AND in a COMPLETE row, but does NOT match
-  # live branch HEAD → CAUGHT. Exercises the live-HEAD mismatch check (F-P46-HIGH-001).
-  # The all-zeros SHA cannot match any real git HEAD, so the check fires as long as
-  # feature/S-1.02 exists as a live branch and its HEAD != 0000...0001.
+  # live branch HEAD → CAUGHT. Uses a disposable throwaway ref
+  # (feature/records-lint-selfprobe-g-PID) so probe does not depend on any
+  # specific feature branch existing permanently (hermetic per MED-004).
+  # If ref creation fails (no git / no repo), probe is skipped with a SKIP notice.
+  PROBE_G_BRANCH="feature/records-lint-selfprobe-g-$$"
+  PROBE_G_REF="refs/heads/${PROBE_G_BRANCH}"
+  _L13G_SETUP=0
+  if git -C "${FACTORY_DIR}/.." update-ref "$PROBE_G_REF" HEAD 2>/dev/null; then
+    _L13G_SETUP=1
+  fi
+
   PROBE_L13G="$PROBE_TMP/l13-live-head.md"
-  cat > "$PROBE_L13G" <<'EOF'
+  cat > "$PROBE_L13G" <<EOF
 ## Current Phase Steps
 
 | D-201/2026-09-23 — latest decision with zeroed SHA. | orchestrator | COMPLETE | STATE.md D-201 frozen HEAD 0000000000000000000000000000000000000001. |
@@ -965,35 +882,22 @@ EOF
 3-CLEAN streak 0/3 on frozen HEAD 0000000000000000000000000000000000000001.
 
 ### DEVELOP STATE
-- feature/S-1.02: at 0000000000000000000000000000000000000001.
+- ${PROBE_G_BRANCH}: at 0000000000000000000000000000000000000001.
 
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
 EOF
 
-  # Inline mirror: frozen HEAD is in COMPLETE row (check passes) but live HEAD differs → return 1
-  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13G")
-  probe_must_fail "L13-probe-G" "frozen HEAD 000...1 present in COMPLETE row but does not match live feature/S-1.02 HEAD"
-
-  # Real check_l13 must also fail on the same synthetic input (swap-and-restore pattern).
-  _L13G_BAK="${PROBE_TMP}/STATE.md.bakG"
-  cp "${FACTORY_DIR}/STATE.md" "$_L13G_BAK" 2>/dev/null || true
-  cp "$PROBE_L13G" "${FACTORY_DIR}/STATE.md"
-  _L13G_REAL_OUT="$(check_l13 2>&1 || true)"
-  if [ -f "$_L13G_BAK" ]; then
-    cp "$_L13G_BAK" "${FACTORY_DIR}/STATE.md"
+  if [ "$_L13G_SETUP" -eq 1 ]; then
+    _L13G_OUT="$(check_l13 "$PROBE_L13G" 2>&1 || true)"
+    if echo "$_L13G_OUT" | grep -q "\[PASS\]"; then
+      echo "[SELF-PROBE FAIL] L13-probe-G: live-HEAD mismatch check false-green — check_l13 emitted PASS when checkpoint SHA != live branch HEAD"
+      git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_G_REF" 2>/dev/null || true
+      exit 2
+    fi
+    git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_G_REF" 2>/dev/null || true
   else
-    rm -f "${FACTORY_DIR}/STATE.md"
+    echo "[SELF-PROBE SKIP] L13-probe-G: could not create throwaway ref (git unavailable or repo missing) — probe skipped"
   fi
-  unset _L13G_BAK
-  if ! echo "$_L13G_REAL_OUT" | grep -q "\[FAIL\]"; then
-    echo "[SELF-PROBE FAIL] L13-probe-G-real: real check_l13 did NOT emit FAIL on synthetic STATE.md with frozen HEAD 000...1 not matching live branch HEAD — live-HEAD check in shipped function is not load-bearing"
-    exit 2
-  fi
-  unset _L13G_REAL_OUT
-
-  rm -f "$PROBE_L13G"
-
-  unset -f _L13_CHECK
 
   rm -rf "$PROBE_TMP"
   trap - EXIT
@@ -1481,17 +1385,25 @@ check_l12() {
 # Check reads STATE.md directly (not git diff) — the file is always present
 # for any commit that touches the factory-artifacts branch.
 #
-# Positive-coverage log on PASS:
+# Optional path argument: check_l13 [STATE_MD_PATH]
+#   Defaults to ${FACTORY_DIR}/STATE.md when called with no argument.
+#   Synthetic path accepted (used by self-probes to avoid swap-and-restore).
+#
+# Positive-coverage log on PASS includes live-HEAD assertion suffix:
 #   When §Convergence Status is present:
-#     "STATE.md D-NNN parity: newest=D-NNN, checkpoint=D-NNN, convergence=D-NNN
-#      — 3/3 surfaces in sync"
+#     "STATE.md D-NNN parity: ... — 3/3 surfaces in sync [live-HEAD: ...]"
 #   When §Convergence Status is absent (genuine skip):
-#     "STATE.md D-NNN parity: newest=D-NNN, checkpoint=D-NNN, convergence=SKIPPED
-#      — 2/2 surfaces asserted (convergence SKIPPED)"
+#     "STATE.md D-NNN parity: ... — 2/2 surfaces asserted (convergence SKIPPED) [live-HEAD: ...]"
+#   live-HEAD suffix forms:
+#     [live-HEAD: checked(BRANCH=matched)]        — branch resolved; SHA matched
+#     [live-HEAD: skipped(branch-not-found)]       — feature branch not resolved in git
+#     [live-HEAD: skipped(no-frozen-sha-in-checkpoint)] — no frozen HEAD in checkpoint
 # On FAIL: identifies which surface is stale and routes to state-manager.
+#   Also FAILs for: frozen HEAD not in any COMPLETE row (F-P46-MED-002);
+#   frozen HEAD does not match live branch HEAD (F-P46-HIGH-001).
 
 check_l13() {
-  local STATE_MD="${FACTORY_DIR}/STATE.md"
+  local STATE_MD="${1:-${FACTORY_DIR}/STATE.md}"
 
   # Guard: STATE.md absent — cannot verify D-NNN parity
   if [ ! -f "$STATE_MD" ]; then
@@ -1582,6 +1494,7 @@ check_l13() {
       | grep -oE '[0-9a-f]{7,40}' | tail -1 || true)
   fi
 
+  local LIVE_HEAD_COVERAGE=""
   if [ -n "$FROZEN_HEAD_SHA" ]; then
     local FROZEN_HEAD_IN_COMPLETE
     FROZEN_HEAD_IN_COMPLETE=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$STATE_MD" 2>/dev/null \
@@ -1608,7 +1521,16 @@ check_l13() {
         emit FAIL "L13: checkpoint frozen HEAD ${FROZEN_HEAD_SHA} does not match live ${FEATURE_BRANCH} HEAD ${LIVE_BRANCH_HEAD} — STATE.md checkpoint is stale; update STATE.md before running adversary pass"
         return
       fi
+      if [ -n "$LIVE_BRANCH_HEAD" ]; then
+        LIVE_HEAD_COVERAGE=" [live-HEAD: checked(${FEATURE_BRANCH}=matched)]"
+      else
+        LIVE_HEAD_COVERAGE=" [live-HEAD: skipped(branch-not-found)]"
+      fi
+    else
+      LIVE_HEAD_COVERAGE=" [live-HEAD: skipped(branch-not-found)]"
     fi
+  else
+    LIVE_HEAD_COVERAGE=" [live-HEAD: skipped(no-frozen-sha-in-checkpoint)]"
   fi
 
   # Step 4: Evaluate parity across surfaces
@@ -1642,9 +1564,9 @@ check_l13() {
 
   if [ "$PASS_CHECKPOINT" = true ] && [ "$PASS_CONVERGENCE" = true ]; then
     if [ "$CONVERGENCE_SKIPPED" = true ]; then
-      emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 2/2 surfaces asserted (convergence SKIPPED)"
+      emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 2/2 surfaces asserted (convergence SKIPPED)${LIVE_HEAD_COVERAGE}"
     else
-      emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 3/3 surfaces in sync"
+      emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 3/3 surfaces in sync${LIVE_HEAD_COVERAGE}"
     fi
   else
     if [ "$PASS_CHECKPOINT" = false ]; then
