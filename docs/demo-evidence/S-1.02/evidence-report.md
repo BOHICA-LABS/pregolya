@@ -590,6 +590,54 @@ No new KL entries. `walkdir` portability fix (MED-002) closes the Windows-portab
 
 ---
 
+## fix-burst-36 re-verification
+
+**Adversary pass 34 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 2 LOW + 1 OBS findings.
+
+All pass-34 findings closed. See CHANGELOG fix-burst-36 for details.
+
+**Test count: 246 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** fix-burst-36 OBS-001 (`INT_SUFFIXES` hoist) is a scanner-infrastructure refactor — behavior-preserving (no detection logic changed, only constant declaration site changed). Gate output counts remain valid (25 analyzed / 16 exempt / 0 violations per gate). Clause (d) fires for the scanner refactor; gate counts verified as unchanged from fix-burst-35.
+
+Note: `INT_SUFFIXES` is now a single module-level const shared by the hex/bin/oct paths of `is_zero_literal`, superseding the "per-radix `INT_SUFFIXES`" phrasing in the fix-burst-35 LOW-001 note. The fix-burst-34 longest-first ordering invariant applies to this single shared const.
+
+**Per-detection-class attestation:**
+- MED-001/002/003 (story spec): records-only (Purity Classification text, Library Requirements table row, frontmatter VP list). No behavioral change in gates.
+- LOW-001 (STATE.md D-398): records-only (symbol name correction in factory-artifacts).
+- LOW-002 (CHANGELOG): records-only (constant rename note appended).
+- OBS-001 (`INT_SUFFIXES` hoist): load-bearing behavioral change — `test_timeout_checker_bin_zero_literal_flagged` (binary zero is flagged; asserts `!findings.is_empty()`; LOAD-BEARING) and `test_timeout_checker_oct_zero_literal_flagged` (octal zero is flagged; same assertion; LOAD-BEARING).
+
+**Gate output (stable counts, unchanged from prior bursts):**
+
+| Gate | Output |
+|------|--------|
+| `check-no-panic` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `check-client-timeout` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `deny-bare-api-key` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `check-error-code-registry` | PASSED: 148 codes validated, 0 collisions |
+| `deny-anyhow-in-lib` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `deny-description-cache-key` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `check-file-size` | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
+| `check-no-panic --fixture-mode` | fixture-mode: 14/17 fixture files had findings |
+
+**Updated KL table:** 10-row table (CT-KL-1/2/3/4RETIRED/5/macro, NP-KL-1/2RESOLVED/3, BAK-KL-1) — same as fix-burst-35.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
 ## Notes
 
 - All recordings produced with VHS 0.11.0 using `FiraCode Nerd Font Mono`, Catppuccin Mocha theme, 1200×600 or 1200×700 resolution.

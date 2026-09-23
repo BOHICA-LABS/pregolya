@@ -16,6 +16,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-36 (pass-34 findings)
+
+### xtask deny_bare_api_key / check_no_panic / check_client_timeout — story spec VP frontmatter, walkdir row, symbol-trio correction, CHANGELOG extension, INT_SUFFIXES hoist
+
+**MED-001 — Story spec §Purity Classification `deny_bare_api_key.rs` row Justification and `check_no_panic.rs` row Justification stale:** `deny_bare_api_key.rs` Justification updated from "find subprocess" to `collect_rust_files() (walkdir)`. `check_no_panic.rs` Justification extended with "; file discovery via `collect_rust_files()` (walkdir)". `check_client_timeout.rs` row was already correct (walkdir) — no change needed.
+
+**MED-002 — `walkdir = "2"` row missing from story spec §Library & Framework Requirements MANDATORY table:** Added `walkdir = "2"` row — cross-platform recursive Rust-file discovery for all six xtask lint gates via `collect_rust_files()`, replaces POSIX `find`.
+
+**MED-003 — VP-DI010-02 and VP-DI010-03 absent from `verification_properties` frontmatter in story spec:** VP-DI010-02 and VP-DI010-03 added with `status: delivered`, `gate: cargo xtask deny-bare-api-key`. These VPs correspond to BC-2.14.005 enforcement: no `Serialize` derive and no `Deref<Target=str|String>` on credential newtypes. Story bumped to v1.19.
+
+**LOW-001 — STATE.md D-398 decision row cited incorrect symbol trio for `PanicVisitor` function visitors:** Symbol trio corrected from `visit_expr_call, visit_expr_method_call, visit_expr_macro` to `visit_item_fn, visit_impl_item_fn, visit_trait_item_fn` — these are the actual methods in `PanicVisitor` that carry the `#[test]`-family last-path-segment guard.
+
+**LOW-002 — CHANGELOG fix-burst-35 LOW-001 paragraph did not note the `TYPE_SUFFIXES` split into two named constants:** Added one sentence noting that `TYPE_SUFFIXES` was split into `DECIMAL_SUFFIXES` (decimal path, includes f64/f32 suffixes) and per-radix `INT_SUFFIXES` (hex/bin/oct paths, integer suffixes only), so the fix-burst-34 longest-first ordering attestation applies to both constants.
+
+**OBS-001 — `INT_SUFFIXES` declared inline three times in hex/bin/oct branches of `is_zero_literal`:** `INT_SUFFIXES` hoisted to module-level const in `check_client_timeout.rs`, removing three identical inline declarations from the hex/bin/oct branches of `is_zero_literal`. The module-level const is now the single source of truth for integer suffixes across all three radix paths. Two new regression tests added to pin radix parity: `test_timeout_checker_bin_zero_literal_flagged` (binary zero `0b0` is flagged; asserts `!findings.is_empty()`) and `test_timeout_checker_oct_zero_literal_flagged` (octal zero `0o0` is flagged; asserts `!findings.is_empty()`).
+
+### Known limitations after fix-burst-36
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 246 xtask tests pass, 5 skipped. Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-35 (pass-33 findings)
 
 ### xtask check_client_timeout / check_no_panic — BC authority correction, walkdir portability, clause-(d) re-attestation de-SHA sweep, hex-radix fix, doc-comment count correction, cross-reference label fix
