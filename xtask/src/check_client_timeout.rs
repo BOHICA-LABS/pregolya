@@ -644,6 +644,16 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
         }
     }
 
+    // Skip entire #[cfg(test)] trait declarations.
+    // A trait is an item; BC-2.14.004 {INV-003}(b) exempts any item carrying
+    // #[cfg(test)] — including trait declarations with default methods.
+    fn visit_item_trait(&mut self, node: &'ast syn::ItemTrait) {
+        if has_cfg_test_attr(&node.attrs) {
+            return;
+        }
+        syn::visit::visit_item_trait(self, node);
+    }
+
     // Skip #[cfg(test)] functions; mark test functions as test context.
     // Recognises `#[test]`, `#[tokio::test]`, `#[async_std::test]`, `#[rstest]`
     // and any other attribute whose last path segment is `test`.
@@ -842,9 +852,12 @@ fn is_zero_literal(s: &str) -> bool {
     let no_underscores = s.replace('_', "");
 
     // Step 2: strip trailing type suffix (longest first to avoid partial strips).
+    // Order: 5-char ("usize","isize"), 4-char ("u128","i128"), 3-char (u64/u32/u16/i64/i32/i16/f64/f32), 2-char (u8/i8).
+    // "usize" must precede "u8" and "isize" must precede "i8" to avoid stripping only the
+    // shared trailing characters and leaving a malformed digit sequence.
     const TYPE_SUFFIXES: &[&str] = &[
-        "u128", "u64", "u32", "u16", "u8", "usize", "i128", "i64", "i32", "i16", "i8", "isize",
-        "f64", "f32",
+        "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "f64", "f32",
+        "u8", "i8",
     ];
     let stripped: &str = {
         let mut result: &str = no_underscores.as_str();

@@ -489,6 +489,16 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
         }
     }
 
+    fn visit_item_trait(&mut self, node: &'ast syn::ItemTrait) {
+        // Guard: skip #[cfg(test)]-attributed traits entirely.
+        // A trait declaration is an item; BC-2.14.003 {INV-004}(b) exempts any item
+        // carrying #[cfg(test)] — including trait declarations with default methods.
+        if syn_has_cfg_test(&node.attrs) {
+            return;
+        }
+        syn::visit::visit_item_trait(self, node);
+    }
+
     fn visit_item_fn(&mut self, node: &'ast syn::ItemFn) {
         if node
             .attrs
