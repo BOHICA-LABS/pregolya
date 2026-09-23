@@ -36,7 +36,7 @@
 //!
 //! # Known Limitations
 //!
-//! **KNOWN-LIMITATION 1 — use-import false positives:** Bare `Client::new()`,
+//! **CT-KL-1 — use-import false positives:** Bare `Client::new()`,
 //! `ClientBuilder::new()`, and `Client::builder()` without a visible reqwest
 //! qualifier are flagged conservatively (false positive — spurious alarm, not a
 //! missed detection). If the type was `use`-imported from a non-reqwest crate
@@ -47,22 +47,27 @@
 //! whose head segment is neither `reqwest`, `blocking`, nor a path-relative keyword
 //! (`crate`, `self`, `super`, `Self`).
 //!
-//! **KNOWN-LIMITATION 2 — split-statement builder chains:** If a `ClientBuilder`
+//! **CT-KL-2 — split-statement builder chains:** If a `ClientBuilder`
 //! is stored in a `let` binding and `.build()` is called on that binding in a
 //! separate statement, the gate cannot trace the chain across the statement
 //! boundary and will not detect the missing `.timeout()`.
 //!
-//! **KNOWN-LIMITATION 3 — constant-valued zero timeout:** If the zero timeout is
+//! **CT-KL-3 — constant-valued zero timeout:** If the zero timeout is
 //! a named constant (e.g., `const NO_TIMEOUT: Duration = Duration::ZERO;
 //! .timeout(NO_TIMEOUT)`), the gate will not detect it as zero-valued. The gate
 //! only inspects the syntactic form of the timeout argument.
 //!
-//! **KL-macro — opaque macro bodies:** Macro bodies that fail all three
+//! CT-KL-4 — parenthesized/braced base subexpressions: **RETIRED** in fix-burst-26.
+//! Eliminated by the syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn`
+//! and `test_timeout_scanner_braced_base_subexpr_handled_by_syn`. The opaque-macro limitation
+//! was renumbered CT-KL-macro to avoid reusing a retired number.
+//!
+//! **CT-KL-macro — opaque macro bodies:** Macro bodies that fail all three
 //! syn parse strategies (not valid as Rust item sequence, wrapped-fn, or
 //! initializer-expression extraction) cannot be analyzed — these bodies are
 //! skipped rather than flagged conservatively.
 //!
-//! **KNOWN-LIMITATION 5 — module-alias re-export false negative:** A reqwest client
+//! **CT-KL-5 — module-alias re-export false negative:** A reqwest client
 //! reached through a local module re-export with a non-reqwest head segment
 //! (e.g., `mod http { pub use reqwest::Client; }` followed by `http::Client::new()`)
 //! is suppressed because `classify_client_new` treats `http` as a non-reqwest qualifier.
@@ -212,7 +217,7 @@ enum QualifierKind {
     /// Definitively reqwest — flag unconditionally.
     Reqwest,
     /// Ambiguous bare or path-relative qualifier — flag conservatively
-    /// (KNOWN-LIMITATION 1: may be a non-reqwest import).
+    /// (CT-KL-1: may be a non-reqwest import).
     Conservative,
     /// Definitively non-reqwest — suppress.
     NonReqwest,
@@ -372,7 +377,7 @@ struct ChainResult {
 ///
 /// Correctly unwraps parenthesized expressions (`(expr).build()`) and block expressions
 /// (`{ expr }.build()`), eliminating the parenthesized/braced base subexpression limitation
-/// (formerly KL-4 of the flat-token scanner, eliminated by the syn AST rewrite).
+/// (formerly CT-KL-4 of the flat-token scanner, eliminated by the syn AST rewrite).
 fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
     match expr {
         syn::Expr::MethodCall(mc) => {
@@ -490,7 +495,7 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
 ///    the first standalone `=` per statement — handles `lazy_static!`-style
 ///    `static ref NAME: TYPE = EXPR;` bodies whose `static ref` prefix is not valid Rust.
 ///
-/// If all strategies fail, returns an empty `Vec` (KL-macro).
+/// If all strategies fail, returns an empty `Vec` (CT-KL-macro).
 fn scan_macro_body_as_ast(tokens: proc_macro2::TokenStream, path: &str) -> Vec<String> {
     let mut sub = TimeoutChecker {
         path,
@@ -539,7 +544,7 @@ fn scan_macro_body_as_ast(tokens: proc_macro2::TokenStream, path: &str) -> Vec<S
         return sub.findings;
     }
 
-    // KL-macro: body failed all parse strategies — skip rather than false-positive.
+    // CT-KL-macro: body failed all parse strategies — skip rather than false-positive.
     Vec::new()
 }
 
@@ -770,6 +775,10 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
     // visitor to detect violations (e.g. `reqwest::Client::new()` inside
     // `thread_local!{}` or `lazy_static!{}`).
     fn visit_expr_macro(&mut self, node: &'ast syn::ExprMacro) {
+        // Defense-in-depth: `#[cfg(test)]` as an outer attribute on an expression-position
+        // macro call is not expressible in stable Rust, so this guard is not reachable by
+        // compliant code. It is retained to catch any edge cases that future language
+        // evolution or proc-macro expansion might introduce.
         if has_cfg_test_attr(&node.attrs) {
             return;
         }
@@ -1488,7 +1497,7 @@ pub fn build_client() -> reqwest::Client {
     /// correctly detected.
     #[test]
     fn test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn() {
-        // parenthesized base subexpression (formerly KL-4 of the flat-token scanner),
+        // parenthesized base subexpression (formerly CT-KL-4 of the flat-token scanner),
         // now handled by syn AST unwrapping.
         // (reqwest::ClientBuilder::new()).build() is correctly flagged.
         let src = r#"
@@ -1500,7 +1509,7 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "parenthesized base subexpression (reqwest::ClientBuilder::new()).build() \
-             must be flagged (formerly KL-4 of the flat-token scanner — eliminated); got: {findings:?}"
+             must be flagged (formerly CT-KL-4 of the flat-token scanner — eliminated); got: {findings:?}"
         );
     }
 
@@ -1577,7 +1586,7 @@ pub fn build_client() -> reqwest::Client {
     /// The syn visitor unwraps the block's tail expression, so the violation is correctly detected.
     #[test]
     fn test_timeout_scanner_braced_base_subexpr_handled_by_syn() {
-        // braced base subexpression (formerly KL-4 of the flat-token scanner),
+        // braced base subexpression (formerly CT-KL-4 of the flat-token scanner),
         // now handled by syn AST unwrapping.
         // { reqwest::ClientBuilder::new() }.build() is correctly flagged.
         let src = r#"
@@ -1589,7 +1598,7 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "braced base subexpression {{ reqwest::ClientBuilder::new() }}.build() \
-             must be flagged (formerly KL-4 of the flat-token scanner — eliminated); got: {findings:?}"
+             must be flagged (formerly CT-KL-4 of the flat-token scanner — eliminated); got: {findings:?}"
         );
     }
 
@@ -2145,19 +2154,19 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// KL-5 pinning test — module-alias re-export false negative.
+    /// CT-KL-5 pinning test — module-alias re-export false negative.
     ///
     /// `http::Client::new()` is suppressed because `classify_client_new` sees `http` as
     /// the head segment and returns `NonReqwest` (head is not `reqwest`, `blocking`, or a
-    /// path-relative keyword). This is a known false negative (KNOWN-LIMITATION 5).
+    /// path-relative keyword). This is a known false negative (CT-KL-5).
     #[test]
     fn test_timeout_checker_module_alias_false_negative_known_limitation() {
-        // KL-5: http::Client::new() suppressed because head is not "reqwest"
+        // CT-KL-5: http::Client::new() suppressed because head is not "reqwest"
         let src = r#"fn build() { let _c = http::Client::new(); }"#;
         let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
         assert!(
             findings.is_empty(),
-            "module-alias re-export is a known false negative (KL-5); got: {findings:?}"
+            "module-alias re-export is a known false negative (CT-KL-5); got: {findings:?}"
         );
     }
 }

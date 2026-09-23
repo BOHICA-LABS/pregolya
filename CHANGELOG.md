@@ -16,13 +16,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-31 (pass-29 findings)
+
+### xtask check_no_panic / check_client_timeout / deny_bare_api_key — turbofish-vs-comparison disambiguation, KL namespace canonicalization, defense-in-depth annotations
+
+**HIGH-001 — `syn_macro_has_bc_id` incorrectly increments `angle_depth` for bare comparison `<`:** The NP-KL-2 fix in fix-burst-30 incremented `angle_depth` on ANY `<` punct token. A bare comparison operator (`assert!(a < b, "BC-2.14.003 ...")`) inflated `angle_depth` to 1, hiding the message-argument comma from the top-level scan and causing `syn_macro_has_bc_id` to return `false` even when the message contained a valid BC-ID — a fully-compliant programmer-error guard was flagged as a violation. Fixed: `<` is now treated as a turbofish opener ONLY when preceded by `::` (tokens_vec[i-2] = `:` Joint, tokens_vec[i-1] = `:`). Bare comparison `<` (no `::` prefix) no longer increments `angle_depth`. Import updated from `use proc_macro2::TokenTree` to `use proc_macro2::{Spacing, TokenTree}`. NP-KL-2 fully resolved; module doc updated to `[RESOLVED in fix-burst-30/fix-burst-31]`.
+
+**MED-003 — Source module docs used generic `KNOWN-LIMITATION N` IDs colliding across modules:** Renamed all Known Limitation IDs in module docs to canonical namespaced form: `KNOWN-LIMITATION 1/2/3` → `CT-KL-1/2/3` in `check_client_timeout`; `KL-macro` → `CT-KL-macro` throughout `check_client_timeout` (module doc, `scan_macro_body_as_ast` doc, inline comment, `analyze_build_chain` doc, and five test-body sites); `CT-KL-4` retirement note added (RETIRED in fix-burst-26; renumbered to avoid reusing retired number); `KNOWN-LIMITATION 5` → `CT-KL-5` (module doc, test doc, two test body sites); `KNOWN-LIMITATION 1/2` → `NP-KL-1/NP-KL-2` in `check_no_panic` module doc, with NP-KL-2 moved to a `## Resolved Limitations` sub-section; `KNOWN-LIMITATION` → `BAK-KL-1` in `deny_bare_api_key` module doc.
+
+**LOW-001 — `visit_expr_macro` cfg-test guards undocumented as defense-in-depth:** Added inline doc comment before the `#[cfg(test)]` guard in `visit_expr_macro` in both `check_client_timeout` and `check_no_panic` explaining that the guard is defense-in-depth: stable Rust cannot express `#[cfg(test)]` as an outer attribute on an expression-position macro call, so the guard is not reachable by compliant code but is retained for future-proofing.
+
+### Known limitations after fix-burst-31
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **RESOLVED in fix-burst-30/fix-burst-31** | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation both implemented |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+Test count: 233 xtask tests pass, 5 skipped.
+
 ## fix-burst-30 (pass-28 findings, code commits `cf25c56`, `715aa72`, BC-2.14.004 v1.15)
 
 ### xtask check_client_timeout / check_no_panic / deny_bare_api_key — cfg-test guards, Strategy 2 positive detection, dead arm removal, KL namespace, NP-KL-2 resolution
 
 **ADV-P28-HIGH-001 — `KNOWN-LIMITATION 4` identifier collision resolved:** Module doc heading renamed to `KL-macro`; `scan_macro_body_as_ast` doc updated from `KNOWN-LIMITATION 4` to `KL-macro`; two `assert!` message strings in `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` updated from "KNOWN-LIMITATION 4 eliminated" to "formerly KL-4 of the flat-token scanner — eliminated".
 
-**ADV-P28-HIGH-002 — `#[cfg(test)]` guard missing from `visit_expr_macro` and `visit_stmt_macro`:** Added `has_cfg_test_attr` / `syn_has_cfg_test` guards as first statement in `visit_expr_macro` and `visit_stmt_macro` in both `check_client_timeout` and `check_no_panic`; all four previously-unguarded methods now skip macro calls inside `#[cfg(test)]`-gated contexts. Two pinning tests added: `test_timeout_checker_cfg_test_stmt_macro_not_flagged` (`check_client_timeout`) and `test_no_panic_cfg_test_stmt_macro_not_flagged` (`check_no_panic`).
+**ADV-P28-HIGH-002 — `#[cfg(test)]` guard missing from `visit_expr_macro` and `visit_stmt_macro`:** Added `has_cfg_test_attr` / `syn_has_cfg_test` guards as first statement in `visit_expr_macro` and `visit_stmt_macro` in both `check_client_timeout` and `check_no_panic`; all four previously-unguarded methods now skip macro calls inside `#[cfg(test)]`-gated contexts. Two pinning tests added: `test_timeout_checker_cfg_test_stmt_macro_not_flagged` (`check_client_timeout`) and `test_no_panic_cfg_test_stmt_macro_not_flagged` (`check_no_panic`); the expression-position `visit_expr_macro` guard is defense-in-depth (stable Rust cannot express `#[cfg(test)]` on an expression-position macro — see inline comment).
 
 **ADV-P28-MED-001 — Strategy 2 of `scan_macro_body_as_ast` had no positive-detection test:** Added `test_timeout_checker_strategy2_detects_statement_macro_violation` exercising the `fn __macro_fragment__()` wrapper path; evidence-report attestation row corrected to cite one test per strategy (S1/S2/S3).
 

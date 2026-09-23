@@ -32,16 +32,21 @@
 //!
 //! # Known Limitations
 //!
-//! **KNOWN-LIMITATION 1 — exemption-blind macro token scan:** `scan_method_calls_in_tokens`
+//! **NP-KL-1 — exemption-blind macro token scan:** `scan_method_calls_in_tokens`
 //! is called unconditionally for every macro invocation's token stream. On this path,
 //! exemption logic (cfg(test), `# Panics` doc, arm-context) is NOT applied — panic-family
 //! macros nested in macro arguments are flagged unconditionally even when the outer match
 //! arm would qualify for Exemption 1 or Exemption 2. This is intentional: macro arguments
 //! are opaque to the AST visitor.
 //!
-//! **KNOWN-LIMITATION 2** — turbofish comma counting: fixed. `syn_macro_has_bc_id` now
-//! tracks angle-bracket depth to avoid counting turbofish generic-argument commas
-//! (e.g. `Vec::<A, B>`) as argument-separator commas.
+//! ## Resolved Limitations
+//!
+//! **NP-KL-2 [RESOLVED in fix-burst-30/fix-burst-31]** — turbofish comma counting: fixed.
+//! `syn_macro_has_bc_id` now tracks angle-bracket depth to avoid counting turbofish
+//! generic-argument commas (e.g. `Vec::<A, B>`) as argument-separator commas.
+//! Additionally (fix-burst-31), the `<` opener is only treated as turbofish when preceded
+//! by `::` — bare comparison operators like `assert!(a < b, "BC-2.14.003 ...")` no longer
+//! inflate angle_depth and incorrectly hide the message-argument comma.
 
 use std::process::exit;
 
@@ -380,9 +385,9 @@ fn check_bc_id_shape(s: &str) -> bool {
 ///
 /// Angle-bracket depth is tracked when collecting top-level commas to avoid counting
 /// turbofish generic-argument commas (e.g. `Vec::<A, B>`) as argument-separator commas
-/// (formerly KNOWN-LIMITATION 2 of the flat-token scanner — eliminated).
+/// (formerly NP-KL-2 of the flat-token scanner — eliminated).
 fn syn_macro_has_bc_id(mac: &syn::Macro, macro_name: &str) -> bool {
-    use proc_macro2::TokenTree;
+    use proc_macro2::{Spacing, TokenTree};
     let tokens_vec: Vec<TokenTree> = mac.tokens.clone().into_iter().collect();
 
     // Determine which comma index separates the last non-message argument from the message.
@@ -397,13 +402,40 @@ fn syn_macro_has_bc_id(mac: &syn::Macro, macro_name: &str) -> bool {
     // groups (e.g. turbofish `Vec::<A, B>`) where `<` and `>` are not grouped by
     // proc_macro2. Angle-bracket depth tracking prevents turbofish commas from
     // shifting the message-argument index.
+    //
+    // Turbofish-vs-comparison disambiguation: `<` is treated as an angle-bracket
+    // opener ONLY when preceded by `::` (i.e., tokens_vec[i-2] is `:` with Joint
+    // spacing and tokens_vec[i-1] is `:`). A bare comparison `a < b` has no `::` prefix
+    // and must NOT increment angle_depth — otherwise the comma separating the condition
+    // from the message (`assert!(a < b, "BC-2.14.003 ...")`) would be swallowed inside
+    // a spurious angle-bracket group, causing `syn_macro_has_bc_id` to return `false`
+    // even when the message contains a valid BC-ID.
     let top_level_commas: Vec<usize> = {
         let mut commas = Vec::new();
         let mut angle_depth: u32 = 0;
         for (i, tt) in tokens_vec.iter().enumerate() {
             if let TokenTree::Punct(p) = tt {
                 match p.as_char() {
-                    '<' => angle_depth += 1,
+                    '<' => {
+                        // Only treat as turbofish `<` when preceded by `::`.
+                        // A comparison `a < b` has no `::` prefix — angle_depth stays 0,
+                        // so the separating `,` is correctly seen as a top-level comma.
+                        // Turbofish `Vec::<A, B>` has tokens_vec[i-2] = `:` Joint and
+                        // tokens_vec[i-1] = `:` — both must be present (i >= 2).
+                        let is_turbofish = i >= 2
+                            && matches!(
+                                &tokens_vec[i - 2],
+                                TokenTree::Punct(p2)
+                                    if p2.as_char() == ':' && p2.spacing() == Spacing::Joint
+                            )
+                            && matches!(
+                                &tokens_vec[i - 1],
+                                TokenTree::Punct(p1) if p1.as_char() == ':'
+                            );
+                        if is_turbofish {
+                            angle_depth += 1;
+                        }
+                    }
                     '>' => angle_depth = angle_depth.saturating_sub(1),
                     ',' if angle_depth == 0 => commas.push(i),
                     _ => {}
@@ -627,6 +659,10 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
     }
 
     fn visit_expr_macro(&mut self, node: &'ast syn::ExprMacro) {
+        // Defense-in-depth: `#[cfg(test)]` as an outer attribute on an expression-position
+        // macro call is not expressible in stable Rust, so this guard is not reachable by
+        // compliant code. It is retained to catch any edge cases that future language
+        // evolution or proc-macro expansion might introduce.
         if syn_has_cfg_test(&node.attrs) {
             return;
         }
@@ -863,7 +899,7 @@ pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
 /// belongs to the outer AST visitor (`PanicVisitor`), not to the token stream contents of
 /// macro arguments.
 ///
-/// KNOWN-LIMITATION 1: Because this scan is exemption-blind, callers on path (a) will
+/// NP-KL-1: Because this scan is exemption-blind, callers on path (a) will
 /// flag panic-family macros nested in macro arguments unconditionally — even when the
 /// outer match arm would otherwise qualify for Exemption 1 or Exemption 2. This is
 /// intentional: macro arguments are opaque to the AST visitor, so the exemption state of

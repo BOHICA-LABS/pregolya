@@ -405,13 +405,13 @@ fn test_timeout_scanner_stored_reqwest_builder_without_build_does_not_contaminat
     );
 }
 
-/// KNOWN-LIMITATION: Split-statement `ClientBuilder` chains are NOT detected as violations.
+/// CT-KL-2: Split-statement `ClientBuilder` chains are NOT detected as violations.
 ///
 /// The pattern `let b = reqwest::ClientBuilder::new();\nlet c = b.build()?;\n` SHOULD
 /// produce a finding (missing `.timeout()` before `.build()`) but currently does NOT because
 /// `analyze_build_chain` walks only the syntactic receiver chain of the `.build()` call; it
 /// cannot trace bindings across statement boundaries. Full cross-statement binding-flow
-/// analysis is required to detect this shape (KNOWN-LIMITATION 2). This test documents the
+/// analysis is required to detect this shape (CT-KL-2). This test documents the
 /// false negative without asserting it is correct behavior.
 #[test]
 fn test_timeout_scanner_split_statement_false_negative_known_limitation() {
@@ -423,7 +423,7 @@ fn test_timeout_scanner_split_statement_false_negative_known_limitation() {
     // to assert `!findings.is_empty()`.
     assert!(
         findings.is_empty(),
-        "KNOWN-LIMITATION 2: split-statement ClientBuilder chain is an accepted false negative; got: {findings:?}"
+        "CT-KL-2: split-statement ClientBuilder chain is an accepted false negative; got: {findings:?}"
     );
 }
 
@@ -3926,7 +3926,7 @@ fn test_BC_2_14_005_pub_crate_debug_derive_fixture_detected() {
 /// This test pins the accepted false-negative so it is explicitly documented.
 #[test]
 fn test_timeout_scanner_constant_zero_false_negative_known_limitation() {
-    // KNOWN-LIMITATION 3: a constant-valued zero argument evades Form C detection.
+    // CT-KL-3: a constant-valued zero argument evades Form C detection.
     // This is an accepted false negative documented in check_client_timeout.rs.
     let src = r#"
 const ZERO: u64 = 0;
@@ -4162,7 +4162,7 @@ fn test_timeout_checker_strategy2_detects_statement_macro_violation() {
     );
 }
 
-/// KL-macro pinning test — a macro body that fails all three `scan_macro_body_as_ast`
+/// CT-KL-macro pinning test — a macro body that fails all three `scan_macro_body_as_ast`
 /// parse strategies yields zero findings (skip, not conservative flag). If this test
 /// starts failing with a finding, the scanner gained coverage for formerly-opaque macro
 /// bodies. If it fails with a panic, the strategy fallback chain broke (LOW-002 coverage).
@@ -4172,12 +4172,12 @@ fn test_timeout_checker_unparseable_macro_body_known_limitation() {
     // proc_macro2 tokens but forms neither a valid Rust item sequence (Strategy 1 fails),
     // nor a valid function body statement when wrapped as `fn __macro_fragment__() { :::: }`
     // (Strategy 2 fails), nor a `static ref NAME: T = EXPR;` pattern (Strategy 3 yields
-    // nothing). KL-macro: all strategies fail → scanner skips, returns empty findings.
+    // nothing). CT-KL-macro: all strategies fail → scanner skips, returns empty findings.
     let src = r#"fn f() { opaque_dsl!(::::); }"#;
     let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
     assert!(
         findings.is_empty(),
-        "KL-macro: opaque_dsl!(::::) fails all three parse strategies and must yield \
+        "CT-KL-macro: opaque_dsl!(::::) fails all three parse strategies and must yield \
          zero findings (skip, not conservative flag — LOW-002 coverage); \
          got: {findings:?}"
     );

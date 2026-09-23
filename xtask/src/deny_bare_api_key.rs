@@ -38,7 +38,7 @@
 //!
 //! # Known limitations
 //!
-//! KNOWN-LIMITATION: `#[cfg_attr(feature="...", derive(Debug/Serialize/Deserialize))]`
+//! **BAK-KL-1 —** `#[cfg_attr(feature="...", derive(Debug/Serialize/Deserialize))]`
 //! conditional derives are not detected by the current AST walker. A developer who
 //! conditionally derives a dangerous trait under a feature flag would evade this gate.
 //! Full `cfg_attr` argument parsing requires deeper attribute token walk.
