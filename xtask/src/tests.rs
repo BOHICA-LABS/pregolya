@@ -380,6 +380,32 @@ fn test_is_test_file_patterns() {
     );
 }
 
+// ── is_size_gate_excluded helper ─────────────────────────────────────────
+
+/// F-P44-MED-003 regression pin: Windows backslash path separators are normalized
+/// before predicate matching in `is_size_gate_excluded`.
+///
+/// Logic trace (load-bearing):
+/// - With `replace('\\', "/")`: `crates\foo\target\build_output.rs` normalizes to
+///   `crates/foo/target/build_output.rs` → `.contains("/target/")` = TRUE → excluded.
+/// - Without normalization: `.contains("/target/")` on backslash string = FALSE →
+///   file would NOT be excluded → assertion `assert!(...)` FAILS.
+///
+/// This test FAILS if the `let name_n = name.replace('\\', "/")` normalization call is
+/// removed from `is_size_gate_excluded`.
+#[test]
+fn test_is_size_gate_excluded_windows_paths() {
+    // Windows path separators are normalized before predicate matching
+    assert!(is_size_gate_excluded(r"crates\foo\target\build_output.rs"));
+    assert!(is_size_gate_excluded(
+        r"crates\foo\tests\fixtures\violation.rs"
+    ));
+    assert!(is_size_gate_excluded(r"generated\output.gen.rs"));
+    // Negative controls: regular source files are NOT excluded
+    assert!(!is_size_gate_excluded(r"crates\foo\src\main.rs"));
+    assert!(!is_size_gate_excluded(r"crates\foo\src\lib.rs"));
+}
+
 // ── B-2 regression tests ─────────────────────────────────────────────────
 
 /// B-2 regression: double-backslash before closing quote must not misflag.
@@ -1036,6 +1062,8 @@ fn test_allowlist_exact_match() {
         }],
     };
     assert!(al.is_allowed("crates/foo/src/bar.rs"));
+    // Windows path separators are normalized before matching
+    assert!(al.is_allowed(r"crates\foo\src\bar.rs"));
 }
 
 /// Absolute-path suffix match: an absolute path ending with the workspace-relative path is allowed.

@@ -256,6 +256,21 @@ fn is_test_class_file(path: &str) -> bool {
 // check-file-size
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Returns true if a file path should be excluded from file-size gate measurement.
+///
+/// Exclusions (after Windows path-separator normalization):
+/// - `/target/` directory (build artifacts)
+/// - `OUT_DIR` path component (cargo build output)
+/// - `.gen.rs` suffix (generated code)
+/// - `/tests/fixtures/` path component (test fixture files)
+pub(crate) fn is_size_gate_excluded(name: &str) -> bool {
+    let name_n = name.replace('\\', "/");
+    name_n.contains("/target/")
+        || name_n.contains("OUT_DIR")
+        || name_n.ends_with(".gen.rs")
+        || name_n.contains("/tests/fixtures/")
+}
+
 /// Count code lines (non-blank, non-comment-only) inside `#[cfg(test)] mod` blocks.
 ///
 /// Uses proc_macro2 span information to locate the block boundaries, then applies
@@ -466,16 +481,7 @@ fn check_file_size() {
             .unwrap_or(0);
 
         // Skip generated code, build artifacts, and fixture data.
-        // Normalize to forward slashes for cross-platform consistency (F-P40-MED-002):
-        // tokei emits backslash-separated paths on Windows, so POSIX-only predicates
-        // like "/target/" and "/tests/fixtures/" would silently miss exclusions without
-        // this normalization. Pattern identical to AllowList::is_allowed and is_test_class_file.
-        let name_n = name.replace('\\', "/");
-        if name_n.contains("/target/")
-            || name_n.contains("OUT_DIR")
-            || name_n.ends_with(".gen.rs")
-            || name_n.contains("/tests/fixtures/")
-        {
+        if is_size_gate_excluded(name) {
             continue;
         }
 
