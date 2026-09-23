@@ -1072,6 +1072,54 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
+    /// `0b11110` (binary 30 — `Duration::from_secs(30)`) must NOT be flagged as a zero-duration
+    /// timeout. LOAD-BEARING: if this test fails, the all-zeros digit predicate in the binary
+    /// branch of `is_zero_literal` has been widened or the module-level `INT_SUFFIXES` const
+    /// was incorrectly modified.
+    #[test]
+    fn test_timeout_checker_bin_nonzero_literal_not_flagged() {
+        let source = r#"
+        fn make_client() -> reqwest::Client {
+            reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(0b11110))
+                .build()
+                .unwrap()
+        }
+    "#;
+        let findings = scan_for_timeout_violations_in_source(source, "src/lib.rs");
+        assert_eq!(
+            findings.len(),
+            0,
+            "binary literal 0b11110 (= 30 seconds, non-zero) must NOT be flagged as zero timeout; \
+             if this fails, the all-zeros digit predicate in the binary branch of is_zero_literal \
+             has been widened or INT_SUFFIXES was incorrectly modified (fix-burst-37 LOW-001)"
+        );
+    }
+
+    /// `0o36` (octal 30 — `Duration::from_secs(30)`) must NOT be flagged as a zero-duration
+    /// timeout. LOAD-BEARING: if this test fails, the all-zeros digit predicate in the octal
+    /// branch of `is_zero_literal` has been widened or the module-level `INT_SUFFIXES` const
+    /// was incorrectly modified.
+    #[test]
+    fn test_timeout_checker_oct_nonzero_literal_not_flagged() {
+        let source = r#"
+        fn make_client() -> reqwest::Client {
+            reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(0o36))
+                .build()
+                .unwrap()
+        }
+    "#;
+        let findings = scan_for_timeout_violations_in_source(source, "src/lib.rs");
+        assert_eq!(
+            findings.len(),
+            0,
+            "octal literal 0o36 (= 30 seconds, non-zero) must NOT be flagged as zero timeout; \
+             if this fails, the all-zeros digit predicate in the octal branch of is_zero_literal \
+             has been widened or INT_SUFFIXES was incorrectly modified (fix-burst-37 LOW-001)"
+        );
+    }
+
     /// F-P7-M02 — BC-2.14.004 {PC-001}: `0e0` exponential float zero must be flagged.
     ///
     /// `0e0` is a float literal in exponential notation evaluating to 0.0; the numeric
