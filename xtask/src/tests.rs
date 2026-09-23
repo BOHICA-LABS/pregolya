@@ -677,6 +677,155 @@ fn test_no_panic_cfg_test_use_statement_does_not_latch() {
     );
 }
 
+// ── fix-burst-29 UFCS qself tests (HIGH-002/MED-001/MED-002) ─────────────
+
+/// HIGH-002/MED-001 — Pattern A UFCS `<reqwest::Client as Default>::default()` must be flagged.
+///
+/// The fully-qualified UFCS form `<reqwest::Client as Default>::default()` is an
+/// `ExprCall` whose `func` is an `ExprPath` with a `QSelf` carrying `reqwest::Client`.
+/// `visit_expr_call` handles this via the qself branch: it extracts the qself type,
+/// appends the method name, and calls `classify_client_new` with the resulting lookup
+/// path — which returns `Reqwest` and emits a violation.
+#[test]
+fn test_timeout_checker_detects_client_ufcs_default_qualified() {
+    // Pattern A: UFCS form <reqwest::Client as Default>::default()
+    // exercises the qself branch in visit_expr_call
+    let src = r#"fn build() { let _c = <reqwest::Client as Default>::default(); }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "UFCS <reqwest::Client as Default>::default() must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// HIGH-002/MED-001 negative — non-reqwest UFCS `<other_sdk::Client as Default>::default()` must NOT be flagged.
+///
+/// `classify_client_new` returns `NonReqwest` when the head segment is `other_sdk`
+/// (a 3-segment path `other_sdk::Client::default` — the head is not `reqwest`, not
+/// path-relative, not `blocking`, and the path length is 3 so the bare-2 arm does not
+/// apply). The qself branch must not flag this.
+#[test]
+fn test_timeout_checker_ufcs_non_reqwest_client_as_default_clean() {
+    // Non-reqwest UFCS form should not be flagged
+    let src = r#"fn build() { let _c = <other_sdk::Client as Default>::default(); }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "Non-reqwest UFCS Client::default() must not be flagged; got: {findings:?}"
+    );
+}
+
+/// MED-002 — `<reqwest::Client>::new()` must be flagged (Pattern A UFCS qself, `new` method).
+///
+/// The type-qualified form `<reqwest::Client>::new()` is an `ExprCall` with a qself of
+/// `reqwest::Client` and path segment `new`. The qself branch in `visit_expr_call`
+/// appends `new` to `[reqwest, Client]` and calls `classify_client_new`, returning
+/// `Reqwest`.
+#[test]
+fn test_timeout_checker_detects_client_ufcs_new_qualified() {
+    let src = r#"fn build() { let _c = <reqwest::Client>::new(); }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "<reqwest::Client>::new() must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// MED-002 — `<reqwest::ClientBuilder>::new().build()` without `.timeout()` must be flagged.
+///
+/// The UFCS constructor `<reqwest::ClientBuilder>::new()` is recognized by `analyze_build_chain`
+/// via the qself path in `ExprCall`: it appends `new` to `[reqwest, ClientBuilder]` and
+/// calls `classify_builder_constructor`, returning `Reqwest`. The chain lacks `.timeout()`,
+/// so a violation is emitted.
+#[test]
+fn test_timeout_checker_detects_clientbuilder_ufcs_new_no_timeout() {
+    let src =
+        r#"fn build() -> reqwest::Client { <reqwest::ClientBuilder>::new().build().unwrap() }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "<reqwest::ClientBuilder>::new().build() without timeout must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
+/// MED-002 negative — `<reqwest::ClientBuilder>::new().timeout(...).build()` must NOT be flagged.
+///
+/// The UFCS builder chain includes a valid `.timeout(Duration::from_secs(30))` call
+/// before `.build()`, satisfying BC-2.14.004 {INV-004}. No violation should be emitted.
+#[test]
+fn test_timeout_checker_clientbuilder_ufcs_new_with_timeout_clean() {
+    let src = r#"fn build() -> reqwest::Client { <reqwest::ClientBuilder>::new().timeout(std::time::Duration::from_secs(30)).build().unwrap() }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        findings.is_empty(),
+        "<reqwest::ClientBuilder>::new().timeout(...).build() must not be flagged; got: {findings:?}"
+    );
+}
+
+/// MED-002 — `<reqwest::Client>::builder().build()` without `.timeout()` must be flagged.
+///
+/// `<reqwest::Client>::builder()` is an `ExprCall` recognized by `analyze_build_chain`
+/// via the qself path. The qself type is `reqwest::Client`; appending `builder` gives
+/// `classify_builder_constructor` the path `[reqwest, Client, builder]`, which returns
+/// `Reqwest`. The chain has no `.timeout()`, so a violation is emitted.
+#[test]
+fn test_timeout_checker_detects_client_ufcs_builder_no_timeout() {
+    let src = r#"fn build() -> reqwest::Client { <reqwest::Client>::builder().build().unwrap() }"#;
+    let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-openai/src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "<reqwest::Client>::builder().build() without timeout must be flagged; got: {findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.contains("Client") || f.contains("reqwest") || f.contains("timeout")),
+        "expected timeout violation finding, got: {:?}",
+        findings
+    );
+    assert!(
+        !findings.iter().any(|f| f.contains("FAILED TO LEX FILE")),
+        "test should detect violation, not lex-failure: {:?}",
+        findings
+    );
+}
+
 // ── MED-1 lex-failure propagation tests ──────────────────────────────────
 
 /// MED-1: An unparseable source file must produce a non-empty findings vec

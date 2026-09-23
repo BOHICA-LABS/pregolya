@@ -1466,17 +1466,17 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// Parenthesized base subexpression is now correctly detected (KNOWN-LIMITATION 4
-    /// eliminated by the syn AST visitor).
+    /// Parenthesized base subexpression is correctly detected by the syn AST visitor.
     ///
     /// A parenthesized base subexpression — `(reqwest::ClientBuilder::new()).build()` —
     /// is represented as `ExprMethodCall { receiver: ExprParen { .. }, method: "build" }`.
     /// The syn visitor unwraps `ExprParen` when walking the chain, so the violation is
     /// correctly detected.
     #[test]
-    fn test_timeout_scanner_parenthesized_base_subexpr_known_limitation() {
-        // KL-4 eliminated: the syn AST visitor unwraps ExprParen when analyzing the chain.
-        // (reqwest::ClientBuilder::new()).build() is now correctly flagged.
+    fn test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn() {
+        // parenthesized base subexpression (formerly KL-4 of the flat-token scanner),
+        // now handled by syn AST unwrapping.
+        // (reqwest::ClientBuilder::new()).build() is correctly flagged.
         let src = r#"
             fn f() {
                 let c = (reqwest::ClientBuilder::new()).build().unwrap();
@@ -1556,16 +1556,16 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// Braced base subexpression is now correctly detected (KNOWN-LIMITATION 4
-    /// eliminated by the syn AST visitor).
+    /// Braced base subexpression is correctly detected by the syn AST visitor.
     ///
     /// `{ reqwest::ClientBuilder::new() }.build()` is represented as
     /// `ExprMethodCall { receiver: ExprBlock { stmts: [Expr(ExprCall, None)] }, method: "build" }`.
     /// The syn visitor unwraps the block's tail expression, so the violation is correctly detected.
     #[test]
-    fn test_timeout_scanner_braced_base_subexpr_known_limitation() {
-        // KL-4 eliminated: the syn AST visitor unwraps the block tail expression.
-        // { reqwest::ClientBuilder::new() }.build() is now correctly flagged.
+    fn test_timeout_scanner_braced_base_subexpr_handled_by_syn() {
+        // braced base subexpression (formerly KL-4 of the flat-token scanner),
+        // now handled by syn AST unwrapping.
+        // { reqwest::ClientBuilder::new() }.build() is correctly flagged.
         let src = r#"
             fn f() {
                 let c = { reqwest::ClientBuilder::new() }.build().unwrap();
