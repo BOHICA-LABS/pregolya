@@ -539,7 +539,7 @@ Total: 240 xtask tests pass, 5 skipped.
 
 Total: 242 xtask tests pass, 5 skipped.
 
-**Gate output re-attestation (clause (d) — behavioral scanner changes):** `visit_item_trait` added to both `PanicVisitor` and `TimeoutChecker`. Gate output re-recorded at fix-burst-33 HEAD `3eb68be` baseline — counts unchanged (25 analyzed, 16 exempt, 0 violations for all scanning gates). No `crates/`-rooted production files changed in fix-burst-34; all 8 gate counts remain identical to the baseline recorded in the fix-burst-32 gate output re-attestation section.
+**Gate output re-attestation (clause (d) — behavioral scanner changes):** `visit_item_trait` added to both `PanicVisitor` and `TimeoutChecker`. Gate output re-recorded at fix-burst-33 HEAD `3eb68be` baseline — counts unchanged (25 analyzed, 16 exempt, 0 violations for all scanning gates). No `crates/`-rooted production files changed in fix-burst-34; all 8 gate counts remain identical to the baseline recorded in the fix-burst-32 re-verification §Gate output re-attestation (LOW-001 fix — recorded at HEAD `3eb68be`).
 
 | Gate | Stdout output |
 |------|--------------|
