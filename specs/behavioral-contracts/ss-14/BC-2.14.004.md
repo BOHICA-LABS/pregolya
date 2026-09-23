@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.10"
+version: "1.11"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -25,6 +25,7 @@ changelog:
   - "1.8 (S-1.02-adv-pass-2/F-D/2026-09-22, product-owner): {PC-006} clarified — reqwest's total .timeout(duration) covers the full elapsed time including the TCP connection-establishment phase, so it satisfies DI-009 ('no indefinite hang') without requiring a separate .connect_timeout() call. Setting .connect_timeout() is recommended for faster failure-detection on providers with unreliable network paths, but is not required when a total .timeout(duration > 0) is already set. The prior text 'both must be set' was ambiguous about reqwest's semantics; the amended text aligns with the S-1.01 implementation (which sets .timeout() only) and the fundamental DI-009 guarantee."
   - "1.9 (S-1.02-adv-pass-4/F-06/2026-09-22, product-owner): {PC-005} pregolya-core scoping clarification added — build_client() satisfies DI-009 by setting .timeout(d > 0); the E-PROV-002 error-shape conversion is the provider adapter's responsibility (pregolya-openai/anthropic/ollama), verified in S-2.07 (unary invoke() path traces to this {PC-005}; streaming stall path is BC-2.08.007/AC-022 in S-2.07). TV-004 illustrative-path note added below Canonical Test Vectors table. pregolya-core does NOT produce E-PROV-002 directly."
   - "1.10 (S-1.02-adv-pass-15/F-P15-M04/2026-09-22, product-owner): EC-006 <reason> redefined to include mandatory credential-redaction and 200-char cap per DI-010 / BC-2.14.005 {INV-001} (CWE-209). The raw build() error string MUST NOT appear verbatim in the structured error; sanitize_error_message (or equivalent) must be applied before constructing the PregolyaError message field. Reference to BC-2.14.005 {INV-001} added to EC-006 Reference line."
+  - "1.11 (F-P16-MED-004/2026-09-22, product-owner): EC-001 scoped-coverage note added: 'documented' qualifier enforced by {PC-002}/review, not by the mechanical gate (gate is comment-blind per token-stream parsing)."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -127,6 +128,11 @@ Connection Timeout) uniformly.
 (e.g. `Duration::from_secs(300)`) via a named constant or config field. The code includes a
 comment: `// Extended timeout for streaming inference completions (default 300s)`. The CI lint
 accepts non-default timeouts as long as they are non-zero and documented.
+
+> **Scoped-coverage note:** The *non-zero* criterion is enforced mechanically by the token-parsing
+> gate (which discards `//` source comments and cannot inspect inline documentation). The
+> *documented* qualifier is a code-convention expectation enforced by peer review and {PC-002};
+> it falls outside the mechanical gate's scope.
 
 ### EC-002: Client::new() in a test helper
 **Scenario:** `#[cfg(test)] fn make_test_client() -> Client { Client::new() }`.
