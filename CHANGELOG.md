@@ -47,7 +47,7 @@ Test count: 248 xtask tests pass, 5 skipped. Gate output unchanged: 25 analyzed 
 
 **MED-001 — Story spec §Purity Classification `deny_bare_api_key.rs` row Justification and `check_no_panic.rs` row Justification stale:** `deny_bare_api_key.rs` Justification updated from "find subprocess" to `collect_rust_files() (walkdir)`. `check_no_panic.rs` Justification extended with "; file discovery via `collect_rust_files()` (walkdir)". `check_client_timeout.rs` row was already correct (walkdir) — no change needed.
 
-**MED-002 — `walkdir = "2"` row missing from story spec §Library & Framework Requirements MANDATORY table:** Added `walkdir = "2"` row — cross-platform recursive Rust-file discovery for all six xtask lint gates via `collect_rust_files()`, replaces POSIX `find`.
+**MED-002 — `walkdir = "2"` row missing from story spec §Library & Framework Requirements MANDATORY table:** Added `walkdir = "2"` row — cross-platform recursive Rust-file discovery for five of seven xtask lint gates (six call sites — `check-no-panic` invokes `collect_rust_files()` for both the normal scan and `--fixture-mode` path) via `collect_rust_files()`, replaces POSIX `find`.
 
 **MED-003 — VP-DI010-02 and VP-DI010-03 absent from `verification_properties` frontmatter in story spec:** VP-DI010-02 and VP-DI010-03 added with `status: delivered`, `gate: cargo xtask deny-bare-api-key`. These VPs correspond to BC-2.14.005 enforcement: no `Serialize` derive and no `Deref<Target=str|String>` on credential newtypes. Story bumped to v1.19.
 
