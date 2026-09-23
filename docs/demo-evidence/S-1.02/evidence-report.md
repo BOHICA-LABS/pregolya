@@ -245,7 +245,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 ## fix-burst-58 re-verification
 
 [Reviewed HEAD (adversary pass 56): 359e8e0c9db2da0f0c022c0c06ec317a20efe6ab]
-[Re-verification HEAD (post-fix-burst-58): 359e8e0c9db2da0f0c022c0c06ec317a20efe6ab (pre-commit placeholder; will be superseded by fix-burst-58 commit)]
+[Re-verification HEAD (post-fix-burst-58): 4874dcc7901d3e5e3b60757359bbbdcf9a73a44c]
 
 **Test count:** 92 passed, 2 skipped (pregolya-core); 255 passed, 5 skipped (xtask). No production code logic changed. Clauses (a)–(d) remain valid (same rationale as CHANGELOG test-count paragraph above).
 
