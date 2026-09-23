@@ -575,8 +575,9 @@ mod tests {
     /// GREEN: `new("")` is implemented — returns `Err` with code `"E-CORE-005"` and the canonical message format.
     #[test]
     fn test_BC_2_14_006_error_code_and_format_table() {
-        // BC-2.14.006 {EC-005}: empty string and whitespace-only string return Err.
+        // BC-2.14.006 {EC-004}/{PC-004}: empty-string input returns Err.
         // Asserts directly over OpenAiApiKey::new("") and AnthropicApiKey::new("").
+        // Whitespace-only coverage: see test_BC_2_14_006_openai_whitespace_only_key_returns_err ({EC-006}).
         let openai_err = OpenAiApiKey::new("").unwrap_err();
         assert_eq!(openai_err.code(), "E-CORE-005");
         assert!(openai_err.message.starts_with("Validation failed for"));

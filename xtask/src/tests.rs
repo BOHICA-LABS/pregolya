@@ -1988,7 +1988,7 @@ pub fn check_nonneg(x: i32) {
     assert!(
         !findings.is_empty(),
         "BC-2.14.003 {{PC-005}} F-01: assert!{{...}} with brace delimiter must be flagged \
-         (FLAGGED_PANIC_MACROS handler checks Delimiter::Parenthesis only); \
+         (the former FLAGGED_PANIC_MACROS handler checked Delimiter::Parenthesis only); \
          got: {findings:?}"
     );
 }
@@ -2011,7 +2011,7 @@ pub fn check_nonneg(x: i32) {
     assert!(
         !findings.is_empty(),
         "BC-2.14.003 {{PC-005}} F-01: assert![...] with bracket delimiter must be flagged \
-         (FLAGGED_PANIC_MACROS handler checks Delimiter::Parenthesis only); \
+         (the former FLAGGED_PANIC_MACROS handler checked Delimiter::Parenthesis only); \
          got: {findings:?}"
     );
 }
@@ -2061,10 +2061,10 @@ pub fn unreachable_path() {
 /// F-01 (MED) — BC-2.14.003 {PC-006}/{EC-007}
 ///
 /// `scan_for_panics_in_source` must FLAG `_ => unreachable!{msg}` (brace-delimited
-/// wildcard arm). The `_` wildcard handler checks `args.delimiter() ==
-/// Delimiter::Parenthesis`; a brace-delimited arg group fails that check. The
-/// fallback `unreachable` handler then sees `in_match_arm_position=true` (the
-/// fat-arrow tokens are still present) and exempts it as a named arm.
+/// wildcard arm). The former `_` wildcard handler checked `args.delimiter() ==
+/// Delimiter::Parenthesis`; brace-delimited arg groups failed that check. The
+/// `unreachable` fallback handler then saw `in_match_arm_position=true` (the
+/// fat-arrow tokens were still present) and exempted it as a named arm.
 ///
 /// Red-gate provenance: authored when the `_` handler used `args.delimiter() == Delimiter::Parenthesis`,
 /// rejecting brace form; the `unreachable` fallback handler exempted match-arm-position calls; now GREEN.
@@ -2084,9 +2084,9 @@ pub fn categorize(n: u32) -> &'static str {
     assert!(
         !findings.is_empty(),
         "BC-2.14.003 {{PC-006}} F-01: _ => unreachable!{{...}} with brace delimiter must \
-         be flagged (wildcard `_` handler checks Delimiter::Parenthesis only; brace form \
-         evades `_` handler AND is exempted by the `unreachable` handler's \
-         in_match_arm_position guard); got: {findings:?}"
+         be flagged (the former wildcard `_` handler checked Delimiter::Parenthesis only; \
+         brace form evaded `_` handler AND was exempted by the `unreachable` handler's \
+         former in_match_arm_position guard); got: {findings:?}"
     );
 }
 
@@ -2153,9 +2153,9 @@ pub fn process_status(n: u32) -> &'static str {
     assert!(
         !findings.is_empty(),
         "BC-2.14.003 {{EC-007}} F-02: `_ if guard => unreachable!()` guarded-wildcard \
-         arm must be flagged (`_` handler lookahead breaks when guard tokens sit between \
-         `_` and `=>`; `unreachable` handler then erroneously exempts via \
-         in_match_arm_position); got: {findings:?}"
+         arm must be flagged (the former `_` handler lookahead broke when guard tokens sat \
+         between `_` and `=>`; the `unreachable` handler then erroneously exempted via \
+         the former in_match_arm_position check); got: {findings:?}"
     );
 }
 
@@ -2213,7 +2213,7 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
         !findings_brace.is_empty(),
         "BC-2.14.003 F-03 (in-process) + F-01: violation_assert_brace.rs must produce a \
          violation finding (assert!{{...}} brace-delimited form must be flagged); \
-         current scanner only checks Delimiter::Parenthesis; got: {findings_brace:?}"
+         got: {findings_brace:?}"
     );
 }
 
@@ -2445,10 +2445,10 @@ fn test_BC_2_14_003_flags_guarded_irrefutable_binding_catch_all() {
         !findings.is_empty(),
         "BC-2.14.003 §EC-007 pass-5 F-01: guarded irrefutable-binding catch-all \
          `other if guard() => unreachable!(...)` must be FLAGGED; \
-         the irrefutable-binding detection checks tokens[i+1]=='=' and tokens[i+2]=='>' \
+         the former irrefutable-binding detection checked tokens[i+1]=='=' and tokens[i+2]=='>' \
          (direct `name => unreachable!` form only); a guard keyword `if` at tokens[i+1] \
-         causes the lookahead to miss the pattern, and the `unreachable` handler's \
-         in_match_arm_position check incorrectly exempts it as a named arm; \
+         caused the lookahead to miss the pattern, and the former `unreachable` handler's \
+         in_match_arm_position check incorrectly exempted it as a named arm; \
          got: {findings:?}"
     );
 }
@@ -2579,10 +2579,10 @@ fn test_BC_2_14_004_flags_timeout_from_secs_f32_zero() {
 // BC-2.14.003 §EC-007 Exemption 1: `unreachable!()` in a fully-enumerated named-arm
 // match (no wildcard) is exempt. This exemption must extend to qualified forms
 // `std::unreachable!(...)` and `core::unreachable!(...)` — they are the same macro
-// with a different path prefix. The `unreachable` handler's `in_match_arm_position`
-// check looks at tokens[i-2]=`=` and tokens[i-1]=`>` (fat-arrow tokens). For
-// `std::unreachable!`, the token before `unreachable` is `::` (not `>`), so the
-// check fails and the §PC-006 violation handler fires incorrectly.
+// with a different path prefix. The former `unreachable` handler's
+// `in_match_arm_position` check looked at tokens[i-2]=`=` and tokens[i-1]=`>`
+// (fat-arrow tokens). For `std::unreachable!`, the token before `unreachable` was
+// `::` (not `>`), so the check failed and the §PC-006 violation handler fired incorrectly.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// F-05 (LOW) — BC-2.14.003 §EC-007 Exemption 1 pass-5

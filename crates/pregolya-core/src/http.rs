@@ -65,7 +65,7 @@ pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
 /// The `reason` string is sanitized before inclusion in the error message —
 /// URL-embedded credentials (e.g. proxy `://user:password@host`) are redacted to
 /// `://***@host`, and the message is capped at 200 characters for defense-in-depth
-/// (BC-2.14.004 {EC-006}, CWE-209).
+/// (BC-2.14.004 {EC-006}, BC-2.14.005 {INV-001} DI-010, CWE-209).
 ///
 /// # Returns
 ///
@@ -93,7 +93,7 @@ pub(crate) fn map_build_failure(reason: &str) -> PregolyaError {
 ///
 /// This prevents proxy credentials (e.g. `http://corp-proxy:password@10.0.0.1:3128`)
 /// from leaking into structured error messages that may be logged or surfaced in
-/// API responses (BC-2.14.004 {EC-006}, CWE-209).
+/// API responses (BC-2.14.004 {EC-006}, BC-2.14.005 {INV-001} DI-010, CWE-209).
 pub(crate) fn sanitize_error_message(s: &str) -> String {
     let sanitized = redact_url_credentials(s);
     // Cap at 200 chars, respecting UTF-8 char boundaries.

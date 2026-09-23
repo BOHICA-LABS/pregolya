@@ -613,7 +613,7 @@ fn deny_anyhow_in_lib() {
 /// (which are legitimate for compatibility verification) are not flagged.
 ///
 /// Returns a `Vec<String>` of `"path:line: use anyhow"` findings.
-/// Returns empty when `path` is a test file (per `is_test_file`).
+/// Returns empty when `path` is a test file (per `is_lint_exempt_file`).
 fn scan_for_anyhow_in_source(src: &str, path: &str) -> Vec<String> {
     if is_lint_exempt_file(path) {
         return Vec::new();

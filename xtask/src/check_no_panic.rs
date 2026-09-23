@@ -1,5 +1,6 @@
-//! CI lint gate: reject `.unwrap()`, `.expect()`, `assert!`, `assert_eq!`,
-//! `assert_ne!`, and `panic!` in library source files.
+//! CI lint gate: reject panic-family constructs — `.unwrap()`, `.expect()`,
+//! `assert!`/`assert_eq!`/`assert_ne!`/`assert_matches!`, `panic!`, `todo!`,
+//! `unimplemented!`, and conditional `unreachable!()` patterns — in library source files.
 //!
 //! Implements `cargo xtask check-no-panic` (BC-2.14.003 {PC-004}/{PC-005}/{PC-006},
 //! VP-DI008-01).
@@ -19,8 +20,8 @@
 //! ## Exempt patterns:
 //! - `unreachable!()` in a fully-enumerated NAMED match arm (no `_` wildcard arm)
 //!   e.g. `Phase::Done => unreachable!(...)` — this is Exemption 1
-//! - `assert!` / `assert_eq!` / `assert_ne!` where the enclosing function has a
-//!   `# Panics` doc section AND the assert message contains a BC-ID
+//! - `assert!` / `assert_eq!` / `assert_ne!` / `assert_matches!` where the enclosing
+//!   function has a `# Panics` doc section AND the assert message contains a BC-ID
 //! - `debug_assert!*` (compiles out in release; BC-2.14.003 {INV-003})
 //! - `#[cfg(test)]` blocks, files under `tests/`, `*_test.rs`, `*_tests.rs`, `*/tests.rs`
 //!
@@ -34,9 +35,11 @@ use std::process::exit;
 /// Entry point for `cargo xtask check-no-panic`.
 ///
 /// Scans `crates/**/*.rs` using syn AST analysis to detect `.unwrap()`,
-/// `.expect(...)`, bare `assert!`/`assert_eq!`/`assert_ne!`/`panic!` (without
-/// `# Panics` doc + BC-ID exemption), and wildcard/irrefutable-binding
-/// `unreachable!()` arms outside `#[cfg(test)]` blocks (BC-2.14.003 §EC-007).
+/// `.expect(...)`, `panic!`/`todo!`/`unimplemented!` (unconditionally flagged —
+/// no exemption applies), bare `assert!`/`assert_eq!`/`assert_ne!`/`assert_matches!`
+/// (without `# Panics` doc + BC-ID exemption — Exemption-2), and
+/// wildcard/irrefutable-binding `unreachable!()` arms outside `#[cfg(test)]`
+/// blocks (BC-2.14.003 §EC-007).
 /// Exits non-zero on any violation (BC-2.14.003 {PC-004}/{PC-005}/{PC-006}).
 pub fn run() {
     // Scan root is "crates/" only — xtask itself is excluded.
