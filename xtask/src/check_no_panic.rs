@@ -47,6 +47,17 @@
 //! Additionally (fix-burst-31), the `<` opener is only treated as turbofish when preceded
 //! by `::` — bare comparison operators like `assert!(a < b, "BC-2.14.003 ...")` no longer
 //! inflate angle_depth and incorrectly hide the message-argument comma.
+//!
+//! ### NP-KL-3 — Path-call form of panic-family methods not detected
+//!
+//! `Result::unwrap(r)`, `Option::expect(o, "msg")`, and UFCS variants
+//! (`<Option<T>>::unwrap(x)`) parse as `syn::ExprCall` rather than
+//! `syn::ExprMethodCall` and are not flagged by `PanicVisitor`. Accurate
+//! detection would require type information to distinguish `Result::unwrap`
+//! from a user-defined `SomeType::unwrap` — unavailable at AST-scan level.
+//! Rated LOW risk: path-call form of `unwrap`/`expect` is an unusual Rust
+//! idiom; the standard `.unwrap()`/`.expect()` dot-method form is fully
+//! detected.
 
 use std::process::exit;
 
@@ -479,6 +490,13 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
     }
 
     fn visit_item_fn(&mut self, node: &'ast syn::ItemFn) {
+        if node
+            .attrs
+            .iter()
+            .any(|a| a.path().segments.last().is_some_and(|s| s.ident == "test"))
+        {
+            return;
+        }
         if syn_has_cfg_test(&node.attrs) {
             return;
         }
@@ -494,6 +512,13 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
     }
 
     fn visit_impl_item_fn(&mut self, node: &'ast syn::ImplItemFn) {
+        if node
+            .attrs
+            .iter()
+            .any(|a| a.path().segments.last().is_some_and(|s| s.ident == "test"))
+        {
+            return;
+        }
         if syn_has_cfg_test(&node.attrs) {
             return;
         }
@@ -601,6 +626,13 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
     }
 
     fn visit_trait_item_fn(&mut self, node: &'ast syn::TraitItemFn) {
+        if node
+            .attrs
+            .iter()
+            .any(|a| a.path().segments.last().is_some_and(|s| s.ident == "test"))
+        {
+            return;
+        }
         if syn_has_cfg_test(&node.attrs) {
             return;
         }
