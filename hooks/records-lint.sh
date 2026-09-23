@@ -125,10 +125,11 @@
 #        Genuine skip (no assertion): §Convergence Status section absent or
 #        containing no `**D-NNN` bold entry (pre-convergence state — check emits
 #        a SKIPPED label, not FAIL).
-#        Self-probes: nine probes exercise this check (A: checkpoint-stale,
+#        Self-probes: ten probes exercise this check (A: checkpoint-stale,
 #        B: convergence-stale, C: clean-pass, D: checkpoint-absent, E: convergence-absent,
 #        F: frozen-head-not-in-complete, G: frozen-head-live-mismatch,
-#        H: frozen-head-capitalized-form, I: multi-branch-disambiguation).
+#        H: frozen-head-capitalized-form/hyphen-form, I: multi-branch-disambiguation,
+#        J: frozen-head-sha-absent-tbd-placeholder).
 #        Routing: state-manager (propagate newest D-NNN to §Session Resume
 #                 Checkpoint and §Convergence Status).
 #
@@ -699,7 +700,7 @@ EOF
   unset -f _L12_CHECK
 
   # ── L13 self-probes: STATE.md D-NNN parity ─────────────────────────────────
-  # Nine probes (A–I) each call check_l13 directly with a synthetic STATE.md
+  # Ten probes (A–J) each call check_l13 directly with a synthetic STATE.md
   # path argument. _L13_CHECK inline mirror retired — check_l13 is now
   # parameterized (Fix 1/MED-004). Swap-and-restore windows eliminated.
   #   A — checkpoint-stale: checkpoint D-NNN older than newest COMPLETE → CAUGHT
@@ -709,8 +710,9 @@ EOF
   #   E — convergence-absent: §Convergence Status absent → NOT CAUGHT (PASS, 2/2)
   #   F — frozen-head-not-in-complete: frozen HEAD SHA absent from COMPLETE rows → CAUGHT
   #   G — frozen-head-live-mismatch: checkpoint frozen HEAD ≠ live branch HEAD → CAUGHT
-  #   H — frozen-head-capitalized-form: "**Frozen HEAD:**" extraction (F-P49-LOW-001) → CAUGHT
+  #   H — frozen-head-capitalized-form/hyphen-form: extraction for bold/hyphen forms → CAUGHT
   #   I — multi-branch-disambiguation: SHA-co-location picks correct branch, not head-1 → CAUGHT (F-P49-LOW-002)
+  #   J — frozen-head-sha-absent: TBD placeholder produces FAIL not silent-skip → CAUGHT (F-P52-HIGH-002)
 
   # Probe A: §Current Phase Steps max D-999, checkpoint references D-998 → CAUGHT
   PROBE_L13A="$PROBE_TMP/l13-violation-a.md"
@@ -762,11 +764,13 @@ EOF
   fi
 
   # Probe C (clean pass): all three surfaces agree on D-101 → NOT caught
+  # F-P52-HIGH-002 update: frozen HEAD SHA added to checkpoint and COMPLETE row so
+  # the empty-SHA blocking FAIL does not trigger on this clean-pass probe.
   PROBE_L13C="$PROBE_TMP/l13-clean.md"
   cat > "$PROBE_L13C" <<'EOF'
 ## Current Phase Steps
 
-| D-101/2026-09-23 — latest decision. | orchestrator | COMPLETE | STATE.md D-101. |
+| D-101/2026-09-23 — latest decision. | orchestrator | COMPLETE | STATE.md D-101 frozen HEAD abcdef1234567890abcdef1234567890abcdef12. |
 
 ## Convergence Status
 
@@ -775,6 +779,8 @@ EOF
 ## Session Resume Checkpoint
 
 <!-- D-100 checkpoint archived. D-101 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+frozen HEAD abcdef1234567890abcdef1234567890abcdef12
 
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-101 state)
 EOF
@@ -806,15 +812,19 @@ EOF
 
   # Probe E: §Convergence Status absent — convergence-absent path → PASS (not FAIL)
   # Also verifies PASS message emits "SKIPPED" and "2/2" (not "3/3 in sync").
+  # F-P52-HIGH-002 update: frozen HEAD SHA added to checkpoint and COMPLETE row so
+  # the empty-SHA blocking FAIL does not trigger on this clean-pass probe.
   PROBE_L13E="$PROBE_TMP/l13-conv-absent.md"
   cat > "$PROBE_L13E" <<'EOF'
 ## Current Phase Steps
 
-| D-201/2026-01-01 — latest decision. | orchestrator | COMPLETE | STATE.md D-201. |
+| D-201/2026-01-01 — latest decision. | orchestrator | COMPLETE | STATE.md D-201 frozen HEAD abcdef1234567890abcdef1234567890abcdef12. |
 
 ## Session Resume Checkpoint
 
 <!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+frozen HEAD abcdef1234567890abcdef1234567890abcdef12
 
 ### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
 EOF
@@ -916,6 +926,9 @@ EOF
       exit 2
     fi
     git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_G_REF" 2>/dev/null || true
+    # Fix (F-P52-LOW-002): clear sentinel after self-cleanup on the happy path,
+    # matching probe I's pattern (TD-VSDD-060 sibling-site symmetry).
+    _PROBE_G_CLEANUP_REF=""
   else
     echo "[SELF-PROBE SKIP] L13-probe-G: could not create throwaway ref (git unavailable or repo missing) — probe skipped"
   fi
@@ -949,6 +962,37 @@ EOF
   _L13H_OUT="$(check_l13 "$PROBE_L13H" 2>&1 || true)"
   if ! echo "$_L13H_OUT" | grep -q "\[FAIL\]"; then
     echo "[SELF-PROBE FAIL] L13-probe-H: capitalized '**Frozen HEAD:** deadbeef...' in checkpoint — SHA absent from COMPLETE rows — check_l13 did NOT emit FAIL — case-insensitive FROZEN_HEAD_SHA extraction (F-P49-LOW-001 fix) not applied"
+    exit 2
+  fi
+
+  # ── L13 Probe H2: hyphen-separator form 'frozen-HEAD sha' (F-P52-LOW-003 coverage) ─
+  # Verifies FROZEN_HEAD_SHA extraction catches the 'frozen-HEAD sha' form with a
+  # hyphen separator. If the old `grep -i 'frozen[[:space:]]HEAD'` were used, this
+  # form would produce empty FROZEN_HEAD_SHA and (after FIX A) emit FAIL for the wrong
+  # reason. After FIX C the extract succeeds; the SHA is then absent from COMPLETE rows
+  # so the frozen-head-not-in-complete path fires — confirming correct extraction.
+  PROBE_L13H2="$PROBE_TMP/l13-frozen-head-hyphen.md"
+  cat > "$PROBE_L13H2" <<'EOF'
+## Current Phase Steps
+
+| D-201/2026-09-23 — COMPLETE row without the hyphen-form SHA. | orchestrator | COMPLETE | STATE.md D-201. |
+
+## Convergence Status
+
+**D-201 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+frozen-HEAD deadbeef1234567890abcdef1234567890abcdef
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
+EOF
+
+  _L13H2_OUT="$(check_l13 "$PROBE_L13H2" 2>&1 || true)"
+  if ! echo "$_L13H2_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-H2: 'frozen-HEAD deadbeef...' (hyphen separator) in checkpoint — SHA absent from COMPLETE rows — check_l13 did NOT emit FAIL — hyphen-form FROZEN_HEAD_SHA extraction (F-P52-LOW-003 fix) not applied"
     exit 2
   fi
 
@@ -1002,6 +1046,36 @@ EOF
     _PROBE_I_CLEANUP_REF=""
   else
     echo "[SELF-PROBE SKIP] L13-probe-I: could not create throwaway ref (git unavailable or repo missing) — probe skipped"
+  fi
+
+  # ── L13 Probe J: frozen-HEAD SHA absent / TBD placeholder (F-P52-HIGH-002 coverage) ─
+  # Verifies that a §Session Resume Checkpoint containing a non-extractable placeholder
+  # ("frozen HEAD after push = TBD") causes check_l13 to emit [FAIL] instead of
+  # silently skipping the live-HEAD guards (the old false-green path).
+  # No throwaway git ref needed — file cleanup is handled by the shared PROBE_TMP EXIT trap.
+  PROBE_L13J="$PROBE_TMP/l13-frozen-head-tbd.md"
+  cat > "$PROBE_L13J" <<'EOF'
+## Current Phase Steps
+
+| D-201/2026-09-23 — latest decision. | orchestrator | COMPLETE | STATE.md D-201. |
+
+## Convergence Status
+
+**D-201 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+frozen HEAD after push = TBD
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
+EOF
+
+  _L13J_OUT="$(check_l13 "$PROBE_L13J" 2>&1 || true)"
+  if ! echo "$_L13J_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-J: §Session Resume Checkpoint with 'frozen HEAD after push = TBD' placeholder — check_l13 did NOT emit FAIL — empty FROZEN_HEAD_SHA blocking gate (F-P52-HIGH-002 fix) not applied"
+    exit 2
   fi
 
   rm -rf "$PROBE_TMP"
@@ -1506,9 +1580,10 @@ check_l12() {
 #   live-HEAD suffix forms:
 #     [live-HEAD: checked(BRANCH=matched)]        — branch resolved; SHA matched
 #     [live-HEAD: skipped(branch-not-found)]       — feature branch not resolved in git
-#     [live-HEAD: skipped(no-frozen-sha-in-checkpoint)] — no frozen HEAD in checkpoint
+#     Note: skipped(no-frozen-sha-in-checkpoint) removed — empty SHA now emits FAIL
 # On FAIL: identifies which surface is stale and routes to state-manager.
-#   Also FAILs for: frozen HEAD not in any COMPLETE row (F-P46-MED-002);
+#   Also FAILs for: §Checkpoint frozen HEAD SHA absent/placeholder (F-P52-HIGH-002);
+#   frozen HEAD not in any COMPLETE row (F-P46-MED-002);
 #   frozen HEAD does not match live branch HEAD (F-P46-HIGH-001).
 
 check_l13() {
@@ -1521,10 +1596,10 @@ check_l13() {
   fi
 
   # Step 1: Extract max D-NNN from §Current Phase Steps table rows with `| COMPLETE |` status.
-  # Scoped to §Current Phase Steps rows exclusively (format: `| D-NNN/YYYY-MM-DD — ...`).
-  # Rows without a COMPLETE status column may include in-flight work; scoping to the
-  # date-formatted §Current Phase Steps rows with `| COMPLETE |` gives the correct
-  # newest-complete D-NNN.
+  # Corpus-wide scan over canonical `| D-NNN/YYYY-MM-DD |` row format; assumes matching
+  # rows only appear in §Current Phase Steps by convention (no section-boundary extraction).
+  # Rows without a `| COMPLETE |` status column are excluded; only COMPLETE rows contribute
+  # to MAX_D so that in-flight work does not inflate the newest-complete D-NNN.
   # When state-manager closes fix-burst-N, the §Current Phase Steps row transitions from
   # `| IN FLIGHT |` to `| COMPLETE |` AND the checkpoint is updated to match;
   # the two writes land in the same atomic commit (TD-VSDD-053).
@@ -1598,8 +1673,9 @@ check_l13() {
   fi
 
   # Step 3.5: Frozen-HEAD SHA currency check.
-  # Extract the frozen HEAD SHA from §Session Resume Checkpoint (pattern: `frozen HEAD <sha>`).
-  # If found, verify the SHA appears in at least one §Current Phase Steps COMPLETE row.
+  # Extract the frozen HEAD SHA from §Session Resume Checkpoint (pattern: `frozen HEAD <sha>`,
+  # `frozen-HEAD <sha>` with hyphen, or `**Frozen HEAD:** <sha>`).
+  # Verify the SHA appears in at least one §Current Phase Steps COMPLETE row.
   # Guards against false-green when the newest fix-burst row is left IN FLIGHT: MAX_D
   # downgrades to the previous COMPLETE row and may still satisfy checkpoint/convergence
   # parity while referencing a stale frozen HEAD.
@@ -1607,65 +1683,76 @@ check_l13() {
   if [ -n "$CHECKPOINT_SECTION" ]; then
     # Two-step extraction: (1) case-insensitive filter for lines mentioning
     # "frozen HEAD" (any capitalisation, e.g. `frozen HEAD <sha>` or
-    # `**Frozen HEAD:** <sha>`), then (2) extract the first 7–40-char hex run
-    # from those lines. `tail -1` picks the last SHA when multiple matches appear.
+    # `**Frozen HEAD:** <sha>`, or `frozen-HEAD <sha>` with hyphen separator),
+    # then (2) extract the first 7–40-char hex run from those lines. `tail -1`
+    # picks the last SHA when multiple matches appear.
     # F-P49-LOW-001 fix: old single-pass `grep -oE 'frozen HEAD ...'` was
     # case-sensitive and missed the capitalized `**Frozen HEAD:**` checkpoint form.
+    # F-P52-LOW-003 fix: extended to accept hyphen or one-or-more spaces as separator.
     FROZEN_HEAD_SHA=$(echo "$CHECKPOINT_SECTION" \
-      | grep -i 'frozen[[:space:]]HEAD' \
+      | grep -iE 'frozen[-[:space:]]+HEAD' \
       | grep -oE '[0-9a-f]{7,40}' | tail -1 || true)
   fi
 
+  # F-P52-HIGH-002 fix: empty FROZEN_HEAD_SHA is a blocking FAIL — absent SHA means a
+  # stale checkpoint (e.g., "frozen HEAD after push = TBD" placeholder was not replaced
+  # with the actual 40-char SHA). The old silent-skip path was a false-green: the guard
+  # was built to catch stale checkpoints and an absent SHA IS a stale checkpoint.
+  if [ -z "$FROZEN_HEAD_SHA" ]; then
+    emit FAIL "L13: §Session Resume Checkpoint contains no extractable frozen HEAD SHA."
+    echo "  Update STATE.md to record the feature branch frozen HEAD before running the adversary pass."
+    echo "  (Search for 'frozen HEAD after push = TBD' or similar placeholder and replace with the 40-char SHA.)"
+    return
+  fi
+
   local LIVE_HEAD_COVERAGE=""
-  if [ -n "$FROZEN_HEAD_SHA" ]; then
-    local FROZEN_HEAD_IN_COMPLETE
-    FROZEN_HEAD_IN_COMPLETE=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$STATE_MD" 2>/dev/null \
-      | grep '| COMPLETE |' \
-      | grep -F "$FROZEN_HEAD_SHA" || true)
-    if [ -z "$FROZEN_HEAD_IN_COMPLETE" ]; then
-      emit FAIL "L13: frozen HEAD ${FROZEN_HEAD_SHA} (from §Session Resume Checkpoint) not found in any COMPLETE §Current Phase Steps row — burst closure incomplete; update STATE.md to record the fix-burst COMPLETE with this SHA before running the adversary pass"
-      return
-    fi
-    # Live branch HEAD check: verify frozen HEAD matches the actual live branch tip.
-    # Detects stale checkpoints where both checkpoint and a COMPLETE row contain the
-    # same old SHA, but the branch has since advanced (F-P46-HIGH-001).
-    # Extract from CHECKPOINT_SECTION (not full STATE.md) to stay scoped to
-    # current-state context; skip lines that flag the branch as
-    # DELETED/REMOVED/MERGED (inactive branches).
-    # Use --verify so git emits nothing to stdout when the ref does not exist.
-    local FEATURE_BRANCH LIVE_BRANCH_HEAD
-    # Primary: extract feature/ branch from the same line as FROZEN_HEAD_SHA.
-    # Anchors FEATURE_BRANCH to the co-located narrative element, avoiding the
-    # head-1 ambiguity when multiple story branches share a checkpoint section
-    # in a multi-story wave (F-P49-LOW-002 fix).
+  # FROZEN_HEAD_SHA is guaranteed non-empty here (empty case FAILs and returns above).
+  local FROZEN_HEAD_IN_COMPLETE
+  FROZEN_HEAD_IN_COMPLETE=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$STATE_MD" 2>/dev/null \
+    | grep '| COMPLETE |' \
+    | grep -F "$FROZEN_HEAD_SHA" || true)
+  if [ -z "$FROZEN_HEAD_IN_COMPLETE" ]; then
+    emit FAIL "L13: frozen HEAD ${FROZEN_HEAD_SHA} (from §Session Resume Checkpoint) not found in any COMPLETE §Current Phase Steps row — burst closure incomplete; update STATE.md to record the fix-burst COMPLETE with this SHA before running the adversary pass"
+    return
+  fi
+  # Live branch HEAD check: verify frozen HEAD matches the actual live branch tip.
+  # Detects stale checkpoints where both checkpoint and a COMPLETE row contain the
+  # same old SHA, but the branch has since advanced (F-P46-HIGH-001).
+  # Extract from CHECKPOINT_SECTION (not full STATE.md) to stay scoped to
+  # current-state context; skip lines that flag the branch as
+  # DELETED/REMOVED/MERGED (inactive branches).
+  # Use --verify so git emits nothing to stdout when the ref does not exist.
+  local FEATURE_BRANCH LIVE_BRANCH_HEAD
+  # Primary: extract feature/ branch from the same line as FROZEN_HEAD_SHA.
+  # Anchors FEATURE_BRANCH to the co-located narrative element, avoiding the
+  # head-1 ambiguity when multiple story branches share a checkpoint section
+  # in a multi-story wave (F-P49-LOW-002 fix).
+  FEATURE_BRANCH=$(echo "$CHECKPOINT_SECTION" \
+    | grep -F "$FROZEN_HEAD_SHA" \
+    | grep -v 'DELETED\|REMOVED\|MERGED' \
+    | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
+  # Fallback: first feature/ branch anywhere in checkpoint (historical; may
+  # select the wrong branch when SHA and branch name appear on different lines).
+  if [ -z "$FEATURE_BRANCH" ]; then
     FEATURE_BRANCH=$(echo "$CHECKPOINT_SECTION" \
-      | grep -F "$FROZEN_HEAD_SHA" \
       | grep -v 'DELETED\|REMOVED\|MERGED' \
       | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
-    # Fallback: first feature/ branch anywhere in checkpoint (historical; may
-    # select the wrong branch when SHA and branch name appear on different lines).
-    if [ -z "$FEATURE_BRANCH" ]; then
-      FEATURE_BRANCH=$(echo "$CHECKPOINT_SECTION" \
-        | grep -v 'DELETED\|REMOVED\|MERGED' \
-        | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
+  fi
+  if [ -n "$FEATURE_BRANCH" ]; then
+    LIVE_BRANCH_HEAD=$(git -C "${FACTORY_DIR}/.." rev-parse --verify "refs/heads/${FEATURE_BRANCH}" 2>/dev/null || true)
+    if [ -n "$LIVE_BRANCH_HEAD" ] && [ "$FROZEN_HEAD_SHA" != "$LIVE_BRANCH_HEAD" ]; then
+      emit FAIL "L13: checkpoint frozen HEAD ${FROZEN_HEAD_SHA} does not match live ${FEATURE_BRANCH} HEAD ${LIVE_BRANCH_HEAD} — STATE.md checkpoint is stale; update STATE.md before running adversary pass"
+      return
     fi
-    if [ -n "$FEATURE_BRANCH" ]; then
-      LIVE_BRANCH_HEAD=$(git -C "${FACTORY_DIR}/.." rev-parse --verify "refs/heads/${FEATURE_BRANCH}" 2>/dev/null || true)
-      if [ -n "$LIVE_BRANCH_HEAD" ] && [ "$FROZEN_HEAD_SHA" != "$LIVE_BRANCH_HEAD" ]; then
-        emit FAIL "L13: checkpoint frozen HEAD ${FROZEN_HEAD_SHA} does not match live ${FEATURE_BRANCH} HEAD ${LIVE_BRANCH_HEAD} — STATE.md checkpoint is stale; update STATE.md before running adversary pass"
-        return
-      fi
-      if [ -n "$LIVE_BRANCH_HEAD" ]; then
-        LIVE_HEAD_COVERAGE=" [live-HEAD: checked(${FEATURE_BRANCH}=matched)]"
-      else
-        LIVE_HEAD_COVERAGE=" [live-HEAD: skipped(branch-not-found)]"
-      fi
+    if [ -n "$LIVE_BRANCH_HEAD" ]; then
+      LIVE_HEAD_COVERAGE=" [live-HEAD: checked(${FEATURE_BRANCH}=matched)]"
     else
       LIVE_HEAD_COVERAGE=" [live-HEAD: skipped(branch-not-found)]"
     fi
   else
-    LIVE_HEAD_COVERAGE=" [live-HEAD: skipped(no-frozen-sha-in-checkpoint)]"
+    LIVE_HEAD_COVERAGE=" [live-HEAD: skipped(branch-not-found)]"
   fi
+  # Note: skipped(no-frozen-sha-in-checkpoint) form removed — empty SHA now FAILs above.
 
   # Step 4: Evaluate parity across surfaces
   local CHECKPOINT_LABEL="${CHECKPOINT_D:-NOT-FOUND}"

@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.26"
+version: "1.27"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -277,6 +277,8 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `xtask/src/deny_bare_api_key.rs` | CREATE | CI xtask: structural credential-struct safety scan (8 sentinels × 5 patterns; no string-literal matching) |
 | `xtask/src/check_error_code_registry.rs` | CREATE | CI xtask: error-code-registry uniqueness gate (BC-2.14.001, VP-BC214001-01) |
 | `xtask/src/main.rs` | MODIFY | Wire four new xtask subcommands |
+| `xtask/src/tests.rs` | MODIFY | Gate unit tests for AC-002, AC-003 (`test_BC_2_14_003_debug_assert_not_flagged`), AC-010 (`test_BC_2_14_005_*` deny-gate suite), AC-017 (`test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions`) |
+| `xtask/tests/fixtures/violations/` | CREATE | POL-31-mandated violation fixture files; required by AC-017 + Task 13 (`--fixture-mode` integration test) |
 | `crates/pregolya-core/src/error.rs` | MODIFY | Add `test_BC_2_14_003_programmer_error_guards_compliant` — verifies programmer-error-guard asserts satisfy EC-006 narrow exception (AC-018) |
 | `crates/pregolya-core/tests/ui/open_ai_api_key_external_field_access_blocked.rs` | CREATE | E0532 compile-fail gate for `OpenAiApiKey` — field privacy blocks all external pattern destructuring (BC-2.14.006 {INV-003} / CLAUDE.md `#[non_exhaustive]` mandate; `#[non_exhaustive]` is pinned by inventory/glob gates) |
 | `crates/pregolya-core/tests/ui/open_ai_api_key_external_field_access_blocked.stderr` | CREATE | Expected rustc E0532 diagnostic output for `OpenAiApiKey` external-field-access compile-fail gate |
