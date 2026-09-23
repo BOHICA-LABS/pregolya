@@ -25,13 +25,14 @@ changelog:
   - "1.15 (adversary-pass-16-MED-003-LOW-007-LOW-008/2026-09-22): MED-003 — AC-015 extended with DI-010/BC-2.14.005 {INV-001} sanitization obligation (credential-redaction, 200-char cap; raw build() error string forbidden); Verified-by entries added for test_sanitize_error_message_redacts_url_credentials, test_sanitize_error_message_caps_at_200_chars, test_map_build_failure_redacts_proxy_credentials_in_message. AC-019 extended with sanitization regression language and same Verified-by entries. EC-006a extended with DI-010 sanitization note. LOW-007 — cargo xtask check-no-panic --fixture-mode command corrected to include required <dir> argument xtask/tests/fixtures/violations in AC-017 and Tasks item 13. LOW-008 — crates/pregolya-core/src/error.rs (MODIFY, AC-018), and four crates/pregolya-core/tests/ui/ trybuild files (CREATE, BC-2.14.006 {INV-003}) added to File Structure Requirements; error.rs added to Architecture Mapping."
 phase: 2
 inputs:
+  - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.003.md
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.004.md
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.005.md
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.006.md
   - .factory/specs/architecture/module-decomposition.md
   - .factory/specs/architecture/dependency-graph.md
-input-hash: "595f384"
+input-hash: "updated-2026-09-22-added-BC2.14.001"
 traces_to: .factory/stories/STORY-INDEX.md
 points: 5
 depends_on: [S-1.01]

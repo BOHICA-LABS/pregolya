@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.27"
+version: "1.28"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -42,6 +42,7 @@ changelog:
   - "1.25 (S-1.02-adv-pass-2/CRITICAL-F-A/2026-09-22, product-owner): BC↔BC contradiction with BC-2.14.003 {PC-005}/{PC-006} resolved by Option-A adjudication (fail-fast governs). This BC's always-on assert! semantics (EC-002/EC-006/EC-007) are preserved unchanged. BC-2.14.003 §EC-006 (programmer-error-guard-assertion policy) explicitly encompasses the PregolyaError::new() precondition guards as the canonical example. No behavioral change to this BC; cross-reference added to Related BCs."
   - "1.26 (adversary-pass-3-H02/2026-09-22): VP-BC214001-01 closed — cargo xtask check-error-code-registry implemented and wired to CI lint-extra in S-1.02."
   - "1.27 (S-1.02-adv-pass-12/F-P12-M07/2026-09-22, product-owner): EC-007 §Scope corrected — false claim that S-1.02 enforces code↔category cross-validation removed. S-1.02 gate enforces only: (1) taxonomy non-vacuity, (2) code uniqueness. It does NOT cross-validate Rust source callsite code values against the category column. Normative code↔category requirement preserved; full cross-validation deferred to S-1.30. VP-BC214001-01 description updated to state both actual checks explicitly and disclaim category cross-validation."
+  - "1.28 (F-P23-MED-004/2026-09-22, product-owner): §Story Anchor — S-1.02 added as co-anchor. S-1.01 established the PregolyaError hierarchy (primary delivering story); S-1.02 delivers the EC-004 enforcement gate (cargo xtask check-error-code-registry, VP-BC214001-01) that validates the hierarchy is correctly used. Both stories are correct anchors per STORY-S-1.02 frontmatter behavioral_contracts and AC-020 BC-2.14.001 EC-004 trace."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -55,7 +56,7 @@ inputs:
   - .factory/semport/core/rust-translation-strategy.md
 input-hash: "79d6343"
 extracted_from: null
-modified: []
+modified: ["2026-09-22"]
 deprecated: null
 deprecated_by: null
 replacement: null
@@ -260,7 +261,9 @@ and routing on `type_uri`, never `title` or HTTP status.
 
 ## Story Anchor
 
-S-1.01
+S-1.01 (primary — established the PregolyaError hierarchy: Component, Category, RetryHint, machine code)
+
+S-1.02 (co-anchor — delivers the EC-004 enforcement gate: `cargo xtask check-error-code-registry`, VP-BC214001-01, which validates that E-<COMPONENT>-NNN codes in error-taxonomy.md are unique and non-vacuous; AC-020 in STORY-S-1.02 traces directly to BC-2.14.001 EC-004 / VP-BC214001-01)
 
 ## VP Anchors
 
