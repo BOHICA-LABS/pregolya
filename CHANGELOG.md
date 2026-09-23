@@ -16,6 +16,80 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-52 (pass-50 findings)
+
+**Pass-50 finding tally: 3 HIGH + 5 MED + 3 LOW + 2 OBS**
+
+### HIGH-001: STATE.md D-422 tally 9 vs CHANGELOG/evidence-report tally 13
+
+**What was wrong:** STATE.md D-422 recorded "9 pass-49 findings closed" while CHANGELOG fix-burst-51 and evidence-report fix-burst-51 re-verification both enumerated 13 findings (1 HIGH + 6 MED + 3 LOW + 3 OBS). This was the same three-way inventory contradiction class as F-P49-HIGH-001, recurring on the burst that was supposed to close it.
+
+**What was fixed:** STATE.md D-422 corrected to "13 pass-49 findings closed (F-P49-HIGH-001/MED-001..006/LOW-001..003/OBS-001..003)".
+
+### HIGH-002: records-lint.sh check_l13 empty FROZEN_HEAD_SHA produced false-green PASS
+
+**What was wrong:** When `check_l13` extracted `FROZEN_HEAD_SHA` from the checkpoint and found no hex run (e.g., "frozen HEAD after push = TBD"), the empty-SHA condition fell to an `else` branch that set a label string and emitted `[PASS] … [live-HEAD: skipped(no-frozen-sha-in-checkpoint)]`. Both live-HEAD guards were nested inside `if [ -n "$FROZEN_HEAD_SHA" ]` and skipped entirely. This was a false-green — an absent frozen SHA IS a stale checkpoint (the exact condition the guard was built to catch). STATE.md was in exactly this state at pass-50 dispatch: grep found zero occurrences of the pass-49 frozen HEAD SHA in all of `.factory/`.
+
+**What was fixed:** Empty-`FROZEN_HEAD_SHA` now emits a blocking `[FAIL]` stating "§Session Resume Checkpoint contains no extractable frozen HEAD SHA" before any live-HEAD comparison. Probe J added: synthetic STATE.md with `frozen HEAD after push = TBD`; asserts `check_l13` emits `[FAIL]`. Probe count updated to 10 (A–J). Probes C and E (PASS-asserting probes) updated to include a valid frozen HEAD SHA in their synthetic checkpoint so the new blocking FAIL doesn't trigger on clean-pass scenarios.
+
+### HIGH-003: error-taxonomy E-CORE-012 defined `<reason>` as verbatim build() error string
+
+**What was wrong:** E-CORE-012's `<reason>` placeholder stated it equalled "the error string from the HTTP client builder's `build()` return" (verbatim). BC-2.14.004 §EC-006 states the exact opposite: raw `build()` Err MUST NOT appear verbatim — `sanitize_error_message` must be applied (URL credentials redacted to `://***@host`, capped at 200 `char`s per DI-010 / BC-2.14.005 {INV-001}, CWE-209). The two artifacts cross-referenced each other with contradictory definitions. The implementation was correct; only the taxonomy row was wrong. Blast radius included E-MCP-005 (noted as "parallel pattern") — verified not affected (OS socket errors contain no credentials).
+
+**What was fixed:** E-CORE-012 `<reason>` corrected to "sanitized builder error string — URL credentials redacted to `://***@host`, capped at 200 `char`s per DI-010/BC-2.14.005 {INV-001}; raw `build()` Err MUST NOT appear verbatim; `sanitize_error_message` required at raise site."
+
+### MED-001: STATE.md checkpoint stale — pass-50 frozen HEAD not recorded
+
+**What was wrong:** All five STATE.md surfaces asserted "push PENDING / frozen HEAD TBD" while the pass ran on a pushed commit. Sixth+ recurrence.
+
+**What was fixed:** Frozen HEAD `d96b686ca24bdcef1f4664ac86e9910d573e1d3d` recorded in all five surfaces. D-422 marked COMPLETE.
+
+### MED-002: evidence-report AC-003 attestation was vacuous
+
+**What was wrong:** AC-003 coverage was attributed to the `check-no-panic` gate PASS — but the production tree contains zero `debug_assert!` and zero `unreachable!` sites, so the gate PASS proved nothing about the exemption.
+
+**What was fixed:** Coverage reattributed to `test_BC_2_14_003_debug_assert_not_flagged` (places synthetic `debug_assert!` in non-test scope; discriminating; would fail if exemption removed).
+
+### MED-003: "all 7 probes (A–G)" stale in fix-burst-50 surfaces
+
+**What was wrong:** CHANGELOG fix-burst-50 HIGH-001 and evidence-report fix-burst-50 F-P48-HIGH-001 row both said "all 7 probes (A–G)" after fix-burst-51 raised the count to 9 (A–I).
+
+**What was fixed:** Updated to "all probes (A–I; probes H/I added fix-burst-51, probe J added fix-burst-52)" in both surfaces.
+
+### MED-004: story spec §File Structure Requirements missing two rows
+
+**What was wrong:** `xtask/src/tests.rs` (hosts AC-002/003/010/017 tests) and `xtask/tests/fixtures/violations/` (AC-017 + Task 13 fixtures) were absent.
+
+**What was fixed:** Both rows added in story spec v1.27.
+
+### MED-005: lefthook burst-parity hook non-feature-branch path hard-failed on arbitrary evidence report
+
+**What was wrong:** When `STORY_ID` was empty, the hook `find`-selected an arbitrary `evidence-report.md` then asserted the newest CHANGELOG burst appeared in it — deterministic fail on `develop` and `main` pushes post-merge.
+
+**What was fixed:** Non-feature-branch path now exits 0 with `[BURST-PARITY SKIP]` message; arbitrary `find` fallback removed.
+
+### LOW-001: NEWEST_BURST determined by document order not numeric maximum
+
+**What was fixed:** Extraction now uses `sort -rn | head -1` (numeric maximum, order-independent).
+
+### LOW-002: probe G did not clear _PROBE_G_CLEANUP_REF sentinel after self-cleanup
+
+**What was fixed:** `_PROBE_G_CLEANUP_REF=""` added after probe G's happy-path `git update-ref -d`, symmetric with probe I.
+
+### LOW-003: frozen-HEAD extraction filter rejected hyphen separator form
+
+**What was fixed:** Filter changed to `grep -iE 'frozen[-[:space:]]+HEAD'`. Probe H2 added (asserts hyphen form is detected).
+
+### OBS-001: check_l13 Step 1 comment claimed section scoping the implementation doesn't perform
+
+**What was fixed:** Comment corrected to "corpus-wide scan over canonical `| D-NNN/YYYY-MM-DD |` row format; assumes matching rows only appear in §Current Phase Steps by convention."
+
+### OBS-002: check-burst-records-parity checked section presence only, not finding-ID or tally parity
+
+**What was fixed:** Hook now extracts and compares sorted finding-ID sets (`F-P<NN>-<SEV>-<NNN>` patterns) and declared severity tallies from CHANGELOG and evidence-report; emits `[BURST-PARITY FAIL]` with ID diff on mismatch; positive-coverage PASS line reports ID count and tally verification.
+
+**Test count:** 345 tests pass (cargo nextest), 7 skipped — no Rust logic changed in fix-burst-52.
+
 ## fix-burst-51 (pass-49 findings)
 
 **Pass-49 finding tally: 1 HIGH + 6 MED + 3 LOW + 3 OBS**
@@ -102,7 +176,7 @@ Acknowledged as no-action by adversary — correctly documented in gate doc comm
 
 **HIGH-001 (F-P48-HIGH-001) — STATE.md D-419 inverted mechanism description:**
 What was wrong: D-419 in STATE.md described the `check_l13` mechanism as "self-contained swap-and-restore" — but fix-burst-49 ELIMINATED swap-and-restore via parameterization. D-419 continued to describe the retired swap-and-restore pattern rather than the current `check_l13 [state_md_path]` parameterized invocation pattern.
-What was fixed: state-manager corrected D-419 to accurately describe `check_l13` parameterization with optional path arg, retirement of the `_L13_CHECK` mirror function (0 calls remaining), and elimination of swap-and-restore. All 7 probes (A–G) call `check_l13 "$PROBE_L13X"` with synthetic path directly. The primary assertion in probe G is `grep -q "does not match live"` on `check_l13` output; the `[PASS]` absence guard is secondary.
+What was fixed: state-manager corrected D-419 to accurately describe `check_l13` parameterization with optional path arg, retirement of the `_L13_CHECK` mirror function (0 calls remaining), and elimination of swap-and-restore. All probes (A–I; probes H/I added in fix-burst-51, probe J added in fix-burst-52) call `check_l13 "$PROBE_L13X"` with synthetic path directly. The primary assertion in probe G is `grep -q "does not match live"` on `check_l13` output; the `[PASS]` absence guard is secondary.
 
 **MED-001 (F-P48-MED-001) — CHANGELOG and evidence-report `probe_must_fail` citations in fix-burst-49 records incorrectly describe retired mechanism:**
 What was wrong: CHANGELOG `## fix-burst-49` HIGH-001 paragraph last sentence said "→ `check_l13` correctly FAILs → `probe_must_fail` passes." Evidence-report `## fix-burst-49 re-verification` F-P47-HIGH-001 row Load-bearing-artifact said "→ FAIL → `probe_must_fail` passes." Fix-burst-49 structural refactor retired `probe_must_fail`; probe G now uses an inline negative guard that exits 2 when no FAIL text is present.

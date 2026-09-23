@@ -21,7 +21,7 @@ status: complete
 | AC | BC | Description | Recording (webm) | Recording (gif) | Tape | Status |
 |----|----|-------------|------------------|-----------------|------|--------|
 | AC-002 | BC-2.14.003 PC-004 | `cargo xtask check-no-panic` exits 0 — no unwrap/expect/panic in non-test code | [AC-002-check-no-panic-pass.webm](AC-002-check-no-panic-pass.webm) | [AC-002-check-no-panic-pass.gif](AC-002-check-no-panic-pass.gif) | [tape](AC-002-check-no-panic-pass.tape) | recorded (refreshed 2026-09-22) |
-| AC-003 | BC-2.14.003 INV-003/INV-004 | `debug_assert!` and exhaustive-match `unreachable!` are exempt — gate exits 0 | covered by AC-002 recording (same gate pass) | — | — | covered |
+| AC-003 | BC-2.14.003 INV-003/INV-004 | `debug_assert!` and exhaustive-match `unreachable!` are exempt — gate exits 0 | `test_BC_2_14_003_debug_assert_not_flagged` in `xtask::tests` — places synthetic `debug_assert!` in non-test scope; asserts gate returns Ok with 0 violations; discriminating (would fail if exemption was removed). Gate PASS is not itself load-bearing for the exemption since production tree contains zero `debug_assert!`/`unreachable!` sites. | — | — | covered |
 | AC-005 | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` exits 0 — no missing `.timeout()` | [AC-005-check-client-timeout-pass.webm](AC-005-check-client-timeout-pass.webm) | [AC-005-check-client-timeout-pass.gif](AC-005-check-client-timeout-pass.gif) | [tape](AC-005-check-client-timeout-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-020 | BC-2.14.001 EC-004 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
@@ -42,7 +42,7 @@ Recording: `AC-002-check-no-panic-pass.{webm,gif}` — re-recorded 2026-09-22
 Shows: `cargo xtask check-no-panic` — output: `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-003 — debug_assert exempt (BC-2.14.003 INV-003/INV-004)
-Covered by: same gate exit-0 recording as AC-002. The gate scans the production tree without flagging `debug_assert!` — the PASS result proves the exemption is working.
+Covered by: `test_BC_2_14_003_debug_assert_not_flagged` in `xtask::tests` — places a synthetic `debug_assert!` call in non-test scope and asserts the gate returns Ok with 0 violations; discriminating (the test would fail if the `debug_assert!` exemption was removed). The gate PASS recording (AC-002) is not itself load-bearing for the exemption because the production tree contains zero `debug_assert!` or exhaustive-match `unreachable!` sites; a gate PASS on an empty scan set proves nothing about the exemption path.
 
 ### AC-004 — build_client 30s timeout (BC-2.14.004 PC-001/PC-003)
 Covered by: AC-005 recording (gate verifies no Client::new() or missing timeout in production paths).
@@ -222,6 +222,36 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-52 re-verification
+
+**Adversary pass 50 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 3 HIGH + 5 MED + 3 LOW + 2 OBS.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P50-HIGH-001 | HIGH | Three-way inventory contradiction (STATE.md D-422 said 9; CHANGELOG/evidence-report both said 13) | STATE.md D-422 corrected to "13 pass-49 findings closed" in Decisions Log, Current Phase Steps, and Convergence Status |
+| F-P50-HIGH-002 | HIGH | records-lint.sh false-green (empty-`FROZEN_HEAD_SHA` silently passed) | `check_l13` empty-SHA path now emits blocking `[FAIL]`; probe J added (`frozen HEAD after push = TBD` → asserts FAIL) |
+| F-P50-HIGH-003 | HIGH | error-taxonomy E-CORE-012 `<reason>` = verbatim build() Err (contradicts BC-2.14.004 §EC-006 sanitization mandate) | E-CORE-012 `<reason>` corrected: "sanitized builder error string — URL credentials redacted to `://***@host`, capped at 200 `char`s per DI-010/BC-2.14.005 {INV-001}; `sanitize_error_message` required" |
+| F-P50-MED-001 | MED | Checkpoint staleness (6th+ recurrence) — frozen HEAD not recorded in STATE.md | Frozen HEAD `d96b686ca24bdcef1f4664ac86e9910d573e1d3d` recorded in all five STATE.md surfaces; D-422 marked COMPLETE |
+| F-P50-MED-002 | MED | Vacuous AC-003 attestation (gate PASS on empty scan set proves nothing) | Coverage reattributed to `test_BC_2_14_003_debug_assert_not_flagged` (synthetic `debug_assert!`; discriminating) |
+| F-P50-MED-003 | MED | Stale probe count "7 (A–G)" in fix-burst-50 CHANGELOG paragraph and evidence-report row | Updated to "all probes (A–I; probes H/I added fix-burst-51, probe J added fix-burst-52)" |
+| F-P50-MED-004 | MED | story spec §File Structure Requirements missing `xtask/src/tests.rs` (MODIFY) and `xtask/tests/fixtures/violations/` (CREATE) | Both rows added in story spec v1.27 with AC/Task anchors |
+| F-P50-MED-005 | MED | lefthook non-feature-branch path arbitrarily selected evidence report then hard-failed | Non-feature-branch path exits 0 with `[BURST-PARITY SKIP]`; `find` fallback removed |
+| F-P50-LOW-001 | LOW | `NEWEST_BURST` by document order not numeric max | `sort -rn | head -1` (numeric max, order-independent) |
+| F-P50-LOW-002 | LOW | probe G `_PROBE_G_CLEANUP_REF` not cleared after self-cleanup | `_PROBE_G_CLEANUP_REF=""` added after happy-path `update-ref -d` |
+| F-P50-LOW-003 | LOW | Frozen-HEAD extraction filter rejected hyphen separator form (`frozen-HEAD <sha>`) | Filter changed to `grep -iE 'frozen[-[:space:]]+HEAD'`; probe H2 added |
+| F-P50-OBS-001 | OBS | `check_l13` Step 1 comment claimed section scoping the implementation doesn't perform | Comment corrected to "corpus-wide scan ... by convention" |
+| F-P50-OBS-002 | OBS | `check-burst-records-parity` checked section-presence only; three-way contradiction undetectable | Hook now extracts and compares finding-ID sets and declared tally counts; emits runtime-computed `[BURST-PARITY PASS] fix-burst-N: M IDs matched; tally verified` |
+
+**Test count:** 345 tests pass (cargo nextest), 7 skipped (workspace) — unchanged from fix-burst-49; no Rust logic changed.
+
+**Gate output:**
+- Lefthook pre-push: `just check` PASSED; `check-burst-records-parity` PASSED
+- Factory-dispatcher chain: `records-lint.sh` exits 0 on factory-artifacts branch (separate trigger)
+
+**Known limitations:** none — all pass-50 findings closed by fix-burst-52.
+
+---
+
 ## fix-burst-51 re-verification
 
 **Adversary pass 49 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 6 MED + 3 LOW + 3 OBS.
@@ -258,7 +288,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 
 | Finding | Severity | Detection class | Load-bearing artifact |
 |---------|----------|-----------------|-----------------------|
-| F-P48-HIGH-001 | HIGH | Records fidelity (inverted mechanism description in D-419) | STATE.md D-419: "self-contained swap-and-restore" corrected to accurately describe `check_l13` parameterization with optional path arg; `_L13_CHECK` mirror RETIRED (0 calls remaining); swap-and-restore ELIMINATED; all 7 probes call `check_l13 "$PROBE_L13X"` with synthetic path directly; D-419 MED-001 attribution fixed; missing MED-002/MED-003 closures added |
+| F-P48-HIGH-001 | HIGH | Records fidelity (inverted mechanism description in D-419) | STATE.md D-419: "self-contained swap-and-restore" corrected to accurately describe `check_l13` parameterization with optional path arg; `_L13_CHECK` mirror RETIRED (0 calls remaining); swap-and-restore ELIMINATED; all probes (A–I; probes H/I added in fix-burst-51, probe J added in fix-burst-52) call `check_l13 "$PROBE_L13X"` with synthetic path directly; D-419 MED-001 attribution fixed; missing MED-002/MED-003 closures added. [Probe count updated in fix-burst-52; fix-burst-50 value was 7 (A–G).] |
 | F-P48-MED-001 | MED | Records accuracy (`probe_must_fail` citation stale post-fix-burst-49) | CHANGELOG fix-burst-49 section and evidence-report fix-burst-49 re-verification: `probe_must_fail "L13-probe-G"` references corrected to inline grep guard description; no `probe_must_fail` call exists in any L13 probe post-parameterization |
 | F-P48-MED-002 | MED | Records accuracy (CHANGELOG fix-burst-49 extraction-scope statement) | CHANGELOG fix-burst-49 section: extraction scope statement corrected to accurately describe `check_l13 [state_md_path]` parameterized invocation pattern; prior statement described a nonexistent internal helper |
 | F-P48-MED-003 | MED | Records-vs-code fidelity (UI pass fixture names contradict bodies) | UI fixture files renamed `_match_with_dots_passes.rs` → `_expose_secret_passes.rs`; `PASS_FIXTURES` constant updated in `non_exhaustive_external_gate::ui()`; story spec v1.26 `PASS_FIXTURES` table rows updated to `_expose_secret_passes` |
