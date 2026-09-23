@@ -19,26 +19,31 @@
 //!   same qualifier classification logic as the async surface.  Bare
 //!   `blocking::Client/ClientBuilder` (use-imported head form, e.g.
 //!   `use reqwest::blocking; blocking::Client::new()`) are flagged
-//!   conservatively by the path-relative guard.
+//!   conservatively by the `blocking`-head segment arm in `classify_client_new`
+//!   / `classify_builder_constructor`.
 //! - Files under `tests/` directories, `#[cfg(test)]` blocks, and files ending
 //!   in `_test.rs`/`_tests.rs` are fully exempt (BC-2.14.004 {INV-003}).
 //! - Exits non-zero when any violation is found; exits 0 on a clean scan.
 //! - Uses `syn` AST-based scanning (`syn::visit::Visit`) for accurate detection
 //!   that correctly handles parenthesized and braced base subexpressions.
 //! - Macro invocations opaque to the syn visitor (e.g. `thread_local!{}`,
-//!   `lazy_static!{}`) are scanned by re-parsing their token stream via four
+//!   `lazy_static!{}`) are scanned by re-parsing their token stream via three
 //!   progressive strategies: direct `syn::parse2::<syn::File>`, wrapped-function
-//!   parse, expression parse, and initializer-expression extraction for
+//!   parse, and initializer-expression extraction for
 //!   `lazy_static!`-style `static ref NAME: TYPE = EXPR;` bodies.
 //!
 //! # Known Limitations
 //!
 //! **KNOWN-LIMITATION 1 — use-import false positives:** Bare `Client::new()`,
 //! `ClientBuilder::new()`, and `Client::builder()` without a visible reqwest
-//! qualifier are flagged conservatively. If the type was `use`-imported from a
-//! non-reqwest crate (e.g., `use mcp_sdk::Client`), the gate will flag it. The
-//! workaround is to use the fully-qualified form `reqwest::Client::new()` rather
-//! than a bare imported name.
+//! qualifier are flagged conservatively (false positive — spurious alarm, not a
+//! missed detection). If the type was `use`-imported from a non-reqwest crate
+//! (e.g., `use mcp_sdk::Client`), the gate will flag it. Status: conservative
+//! flagging — may alarm on non-reqwest clients with the same name.
+//! If the false positive is for a non-reqwest `Client` type, qualify it with its
+//! owning crate path (e.g., `other_sdk::Client::new()`). The gate suppresses paths
+//! whose head segment is neither `reqwest`, `blocking`, nor a path-relative keyword
+//! (`crate`, `self`, `super`, `Self`).
 //!
 //! **KNOWN-LIMITATION 2 — split-statement builder chains:** If a `ClientBuilder`
 //! is stored in a `let` binding and `.build()` is called on that binding in a
@@ -50,10 +55,17 @@
 //! .timeout(NO_TIMEOUT)`), the gate will not detect it as zero-valued. The gate
 //! only inspects the syntactic form of the timeout argument.
 //!
-//! **KNOWN-LIMITATION 4 — opaque macro bodies:** Macro bodies that fail all four
-//! syn parse strategies (not valid as Rust item sequence, wrapped-fn, expression,
-//! or initializer-expression extraction) cannot be analyzed — these bodies are
+//! **KNOWN-LIMITATION 4 — opaque macro bodies:** Macro bodies that fail all three
+//! syn parse strategies (not valid as Rust item sequence, wrapped-fn, or
+//! initializer-expression extraction) cannot be analyzed — these bodies are
 //! skipped rather than flagged conservatively.
+//!
+//! **KNOWN-LIMITATION 5 — module-alias re-export false negative:** A reqwest client
+//! reached through a local module re-export with a non-reqwest head segment
+//! (e.g., `mod http { pub use reqwest::Client; }` followed by `http::Client::new()`)
+//! is suppressed because `classify_client_new` treats `http` as a non-reqwest qualifier.
+//! The convention is to call `build_client()` (the workspace helper) or use the
+//! `reqwest::`-qualified form directly.
 
 use std::process::exit;
 use syn::visit::Visit;
@@ -353,7 +365,8 @@ struct ChainResult {
 /// cannot be identified (e.g., a local variable).
 ///
 /// Correctly unwraps parenthesized expressions (`(expr).build()`) and block expressions
-/// (`{ expr }.build()`), eliminating KNOWN-LIMITATION 4 from the prior token scanner.
+/// (`{ expr }.build()`), eliminating the parenthesized/braced base subexpression limitation
+/// (formerly KL-4 of the flat-token scanner, eliminated by the syn AST rewrite).
 fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
     match expr {
         syn::Expr::MethodCall(mc) => {
@@ -401,10 +414,11 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
                 });
             }
 
-            // UFCS form: `<reqwest::ClientBuilder as Default>::default()`.
-            // The path is `Default::default`; the qself type carries `reqwest::ClientBuilder`.
+            // UFCS form: `<reqwest::ClientBuilder as Default>::default()`,
+            // `<reqwest::Client>::new()`, or `<reqwest::Client>::builder()`.
+            // The path carries the method name; the qself type carries the reqwest type.
             let last_seg = seg_strings.last().map(|s| s.as_str()).unwrap_or("");
-            if last_seg != "default" {
+            if !matches!(last_seg, "default" | "new" | "builder") {
                 return None;
             }
             let qself = p.qself.as_ref()?;
@@ -417,9 +431,9 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
                 .iter()
                 .map(|s| s.ident.to_string())
                 .collect();
-            // Append "default" to the qself type and reuse classify_builder_constructor.
+            // Append the actual method name to the qself type and reuse classify_builder_constructor.
             let mut lookup = qself_segs.clone();
-            lookup.push("default".to_string());
+            lookup.push(last_seg.to_string());
             let lookup_refs: Vec<&str> = lookup.iter().map(|s| s.as_str()).collect();
             if classify_builder_constructor(&lookup_refs) == QualifierKind::NonReqwest {
                 return None;
@@ -433,7 +447,7 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
             Some(ChainResult {
                 has_valid_timeout: false,
                 line,
-                constructor_name: format!("<{}>::default", qself_segs.join("::")),
+                constructor_name: format!("<{}>::{}", qself_segs.join("::"), last_seg),
             })
         }
         // Unwrap parenthesized expressions: (reqwest::ClientBuilder::new()).build()
@@ -453,7 +467,7 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
 
 // ── Macro body AST scanner ─────────────────────────────────────────────────────
 
-/// Re-parse a macro invocation's token stream via four progressive strategies,
+/// Re-parse a macro invocation's token stream via three progressive strategies,
 /// delegating to the same `TimeoutChecker` visitor used for top-level source.
 ///
 /// Called from [`TimeoutChecker::visit_expr_macro`], [`TimeoutChecker::visit_stmt_macro`],
@@ -466,9 +480,7 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
 ///    containing valid Rust items (e.g. `thread_local!{}` with `static NAME: T = expr;`).
 /// 2. **Wrapped-fn parse:** Wraps tokens in `fn __macro_fragment__() { … }` and parses
 ///    as `syn::File` — succeeds for statement/expression bodies not valid as top-level items.
-/// 3. **Expression parse:** `syn::parse2::<syn::Expr>(tokens)` — succeeds for bare
-///    expression bodies.
-/// 4. **Initializer extraction:** Splits at top-level `;`, extracts the expression after
+/// 3. **Initializer extraction:** Splits at top-level `;`, extracts the expression after
 ///    the first standalone `=` per statement — handles `lazy_static!`-style
 ///    `static ref NAME: TYPE = EXPR;` bodies whose `static ref` prefix is not valid Rust.
 ///
@@ -509,13 +521,7 @@ fn scan_macro_body_as_ast(tokens: proc_macro2::TokenStream, path: &str) -> Vec<S
         }
     }
 
-    // Strategy 3: bare expression parse.
-    if let Ok(expr) = syn::parse2::<syn::Expr>(tokens.clone()) {
-        syn::visit::visit_expr(&mut sub, &expr);
-        return sub.findings;
-    }
-
-    // Strategy 4: initializer extraction for lazy_static-style bodies.
+    // Strategy 3: initializer extraction for lazy_static-style bodies.
     // Splits at top-level `;`, extracts EXPR after the first standalone `=` per
     // statement. Handles `static ref NAME: TYPE = EXPR;` where `static ref` is
     // not accepted by syn but the initializer expression is valid Rust.
@@ -534,7 +540,7 @@ fn scan_macro_body_as_ast(tokens: proc_macro2::TokenStream, path: &str) -> Vec<S
 /// Split a token stream at top-level `;` separators and extract the expression
 /// that follows the first standalone `=` in each statement.
 ///
-/// Used as Strategy 4 in [`scan_macro_body_as_ast`] for `lazy_static!`-style
+/// Used as Strategy 3 in [`scan_macro_body_as_ast`] for `lazy_static!`-style
 /// bodies with `static ref NAME: TYPE = EXPR;` syntax not accepted by syn.
 fn extract_initializer_exprs_from_tokens(tokens: proc_macro2::TokenStream) -> Vec<syn::Expr> {
     let mut results = Vec::new();
@@ -694,12 +700,14 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
                 ));
             }
 
-            // UFCS form: `<reqwest::Client as Default>::default()` — an ExprPath with a
-            // QSelf carries the reqwest Client type in the qself, not in the path segments.
+            // UFCS form: `<reqwest::Client as Default>::default()`,
+            // `<reqwest::Client>::new()`, or `<reqwest::Client>::builder()` —
+            // an ExprPath with a QSelf carries the reqwest Client type in the qself,
+            // not in the path segments.
             // Emit a conservative violation unless the qself type is clearly non-reqwest.
             if let Some(qself) = &p.qself {
                 let last_method = seg_strings.last().map(|s| s.as_str()).unwrap_or("");
-                if last_method == "default"
+                if matches!(last_method, "default" | "new" | "builder")
                     && let syn::Type::Path(tp) = &*qself.ty
                 {
                     let qself_segs: Vec<String> = tp
@@ -708,9 +716,9 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
                         .iter()
                         .map(|s| s.ident.to_string())
                         .collect();
-                    // Append "default" to the qself path to reuse classify_client_new.
+                    // Append the actual method name to the qself path to reuse classify_client_new.
                     let mut lookup: Vec<String> = qself_segs.clone();
-                    lookup.push("default".to_string());
+                    lookup.push(last_method.to_string());
                     let lookup_refs: Vec<&str> = lookup.iter().map(|s| s.as_str()).collect();
                     if classify_client_new(&lookup_refs) != QualifierKind::NonReqwest {
                         let line = tp
@@ -719,7 +727,7 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
                             .first()
                             .map(|s| s.ident.span().start().line)
                             .unwrap_or(0);
-                        let name = format!("<{}>::default", qself_segs.join("::"));
+                        let name = format!("<{}>::{}", qself_segs.join("::"), last_method);
                         self.findings.push(format!(
                             "{}:{}: {}() without .timeout() — use build_client() (BC-2.14.004)",
                             self.path, line, name
@@ -2115,6 +2123,22 @@ pub fn build_client() -> reqwest::Client {
             findings.is_empty(),
             "#[cfg(test)] trait default method body must not be scanned (F-P26-LOW-001); \
              got: {findings:?}"
+        );
+    }
+
+    /// KL-5 pinning test — module-alias re-export false negative.
+    ///
+    /// `http::Client::new()` is suppressed because `classify_client_new` sees `http` as
+    /// the head segment and returns `NonReqwest` (head is not `reqwest`, `blocking`, or a
+    /// path-relative keyword). This is a known false negative (KNOWN-LIMITATION 5).
+    #[test]
+    fn test_timeout_checker_module_alias_false_negative_known_limitation() {
+        // KL-5: http::Client::new() suppressed because head is not "reqwest"
+        let src = r#"fn build() { let _c = http::Client::new(); }"#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "module-alias re-export is a known false negative (KL-5); got: {findings:?}"
         );
     }
 }

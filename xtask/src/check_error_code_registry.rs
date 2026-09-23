@@ -1,7 +1,8 @@
 //! CI lint gate: error-code-registry uniqueness check (BC-2.14.001 EC-004, VP-BC214001-01).
 //!
 //! Parses `.factory/specs/prd-supplements/error-taxonomy.md` and verifies:
-//! 1. Every `E-<COMPONENT>-<NNN>` code appears exactly once (no collision).
+//! 1. Every code declared in the canonical registry table (one code per leading `| E-` table cell)
+//!    appears exactly once (no collision).
 //! 2. At least one code was extracted (non-zero validated count — vacuity guard against taxonomy-format change).
 //!
 //! ## Exit semantics
