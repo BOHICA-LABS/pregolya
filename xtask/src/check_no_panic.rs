@@ -1715,4 +1715,55 @@ fn check_build_plain() {
              false-negative exemption (NP-KL-2); got: {findings:?}"
         );
     }
+
+    #[test]
+    fn test_no_panic_tokio_test_attr_fn_exempt() {
+        // LOAD-BEARING for MED-001 (fix-burst-33): #[test]-family attribute exemption
+        // in PanicVisitor. Deleting the last-path-segment "test" guard in visit_item_fn,
+        // visit_impl_item_fn, and visit_trait_item_fn causes this test to FAIL (returns
+        // 1 violation instead of 0).
+        let source = r#"
+        #[tokio::test]
+        async fn test_something() {
+            let x: Result<i32, &str> = Ok(42);
+            let _ = x.unwrap(); // should be exempt: #[tokio::test] is #[test]-family
+        }
+        #[async_std::test]
+        async fn test_async_std_something() {
+            let x: Option<i32> = Some(1);
+            let _ = x.expect("should work"); // exempt: #[async_std::test] is #[test]-family
+        }
+    "#;
+        let findings = scan_for_panics_in_source(source, "src/my_module.rs");
+        assert_eq!(
+            findings.len(),
+            0,
+            "#[test]-family attribute guard must exempt tokio::test / async_std::test functions; \
+             if this fails, the last-path-segment 'test' guard was removed or broken"
+        );
+    }
+
+    #[test]
+    fn test_no_panic_np_kl3_path_call_form_known_gap() {
+        // NP-KL-3 pin: path-call form of unwrap/expect is NOT detected (known limitation).
+        // Result::unwrap(r) parses as syn::ExprCall, not ExprMethodCall.
+        // Without type inference, flagging all path-calls ending in "unwrap" would produce
+        // false positives on user-defined SomeType::unwrap(key) methods.
+        // This test pins the known-zero-finding behavior for this form.
+        let source = r#"
+        fn path_call_form_not_detected() -> i32 {
+            let r: Result<i32, &str> = Ok(42);
+            // NP-KL-3: path-call form — not detected by PanicVisitor (ExprCall, not ExprMethodCall)
+            Result::unwrap(r)
+        }
+    "#;
+        let findings = scan_for_panics_in_source(source, "src/my_lib.rs");
+        assert_eq!(
+            findings.len(),
+            0,
+            "NP-KL-3: path-call form Result::unwrap(r) is a documented known gap — \
+             zero findings expected; if this changes, update NP-KL-3 in module doc, \
+             CHANGELOG KL table, and evidence-report KL table"
+        );
+    }
 }
