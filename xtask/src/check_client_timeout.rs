@@ -13,6 +13,11 @@
 //!   (BC-2.14.004 {PC-001}, {INV-004}).
 //! - `.timeout(Duration::ZERO)` is treated as a missing timeout and flagged —
 //!   a zero duration is not a valid request timeout.
+//! - `reqwest::blocking::Client/ClientBuilder` patterns are detected via the
+//!   `scan_reqwest_blocking_pattern` helper (called from within the `reqwest` token
+//!   block). Bare `blocking::Client/ClientBuilder` (use-imported head form, e.g.
+//!   `use reqwest::blocking; blocking::Client::new()`) are flagged conservatively
+//!   by the amended Patterns 2, 3, and 4.
 //! - Files under `tests/` directories, `#[cfg(test)]` blocks, and files ending
 //!   in `_test.rs`/`_tests.rs` are fully exempt (BC-2.14.004 {INV-003}).
 //! - Exits non-zero when any violation is found; exits 0 on a clean scan.
@@ -374,17 +379,30 @@ fn scan_reqwest_blocking_pattern(
 ///
 /// Patterns detected:
 /// 1. `reqwest :: Client :: new ( )` — always a violation
-/// 2. `Client :: new ( )` (not preceded by non-reqwest qualifier) — violation
-///    - `reqwest :: Client :: new ( )` is covered above
-///    - `mcp_sdk :: Client :: new ( )` is NOT a violation
+/// 2. `Client :: new ( )` (not preceded by a definitive non-reqwest path head) — violation
+///    - `reqwest :: Client :: new ( )` is covered above (Pattern 1)
+///    - `mcp_sdk :: Client :: new ( )` is NOT a violation (definitive non-reqwest head)
 ///    - `OpenAiClient :: new ( )` is NOT a violation (name is "OpenAiClient" not "Client")
+///    - `blocking :: Client :: new ( )` IS a violation (bare head — could be `use reqwest::blocking;`)
 /// 3. `ClientBuilder :: new ... .build ()` without intervening `.timeout (` — violation
+///    - `blocking :: ClientBuilder :: new ...` IS a violation (bare blocking head, conservative)
 /// 4. `Client :: builder ... .build ()` without intervening `.timeout (` — violation
+///    - `blocking :: Client :: builder ...` IS a violation (bare blocking head, conservative)
+/// 5. `reqwest::blocking::Client/ClientBuilder` patterns — detected via `scan_reqwest_blocking_pattern`
+///    (called from within the `reqwest` token block):
+///    - `reqwest :: blocking :: Client :: new ( )` — always a violation
+///    - `reqwest :: blocking :: ClientBuilder :: new ... .build ()` — violation when no `.timeout()`
+///    - `reqwest :: blocking :: Client :: builder ... .build ()` — violation when no `.timeout()`
 ///
 /// Non-reqwest `Client::new()` detection (B-4 / B-5 regressions):
-/// - Flag bare `Client::new()` only if NOT preceded by a `::` that names a non-reqwest module.
-/// - Specifically: if the token before `Client` is `::`  and the token before that is an Ident
-///   that is NOT "reqwest", do NOT flag it.
+/// - Flag `Client::new()` unless preceded by a `::` that names a definitive non-reqwest path head.
+///   The suppression logic performs a head-anchored check: when the token at `i-3` is `blocking`
+///   and there is a `::` at `i-5`/`i-4`, the true path head (ident at `i-6`) is inspected.
+/// - Suppressed forms: `other_sdk::Client`, `other_sdk::blocking::Client` (where `other_sdk`
+///   is a definitive non-reqwest, non-path-relative ident).
+/// - Flagged forms: `crate::Client`, `self::Client`, `super::Client`, `Self::Client`
+///   (path-relative qualifiers, not third-party crates), and `blocking::Client` (bare blocking
+///   head — could be `use reqwest::blocking; blocking::Client::new()`).
 ///
 /// # Known Limitations
 ///
@@ -489,37 +507,17 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
         // The S-3 test: mcp_sdk::Client::new() should NOT be flagged (preceded by mcp_sdk::)
         //
         // Pattern 2 matches `Client::new()` with or without qualification; bare unqualified
-        // calls are flagged conservatively (KNOWN-LIMITATION 1). If a module uses
-        // `use reqwest::Client;` and then calls `Client::new()`, Pattern 2 cannot distinguish
-        // it from a non-reqwest Client::new(). False positives are possible for crates that
-        // `use` other Client types with the same name. Conservative behavior: flag and require
-        // manual suppression. Full fix requires tracking use-imports at file scope.
+        // calls are flagged conservatively (KNOWN-LIMITATION 1). Suppression logic is
+        // head-anchored: see `preceded_by_non_reqwest_qualifier` for the `blocking` head check.
         if let FlatToken::Ident(name, _) = &flat[i]
             && name == "Client"
             && matches_double_colon(flat, i + 1)
             && matches_ident(flat, i + 3, "new")
             && matches!(flat.get(i + 4), Some(FlatToken::ParenGroup(_)))
         {
-            // Check if preceded by `:: something ::` (a module qualifier other than reqwest)
-            // If i >= 2 and flat[i-1] is '::' double-colon, check flat[i-2]
-            // crate/self/super/Self are path-relative qualifiers that do NOT identify a
-            // non-reqwest crate — `crate::Client::new()` must still be flagged.
-            let preceded_by_non_reqwest = i >= 3
-                && matches_double_colon(flat, i - 2)
-                && if let FlatToken::Ident(prev, _) = &flat[i - 3] {
-                    prev != "reqwest"
-                        && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
-                } else {
-                    false
-                };
             // De-duplication guard: prevents double-reporting of `reqwest::Client::new()`
-            // already reported by Pattern 1's reqwest block. If Pattern 1's cursor advance
-            // logic ever changes and this case reaches Pattern 2, this guard ensures we fall
-            // through rather than emit a duplicate finding.
-            let preceded_by_reqwest = i >= 3
-                && matches_double_colon(flat, i - 2)
-                && matches_ident(flat, i - 3, "reqwest");
-            if !preceded_by_non_reqwest && !preceded_by_reqwest {
+            // already reported by Pattern 1's reqwest block.
+            if !preceded_by_non_reqwest_qualifier(flat, i) && !preceded_by_reqwest_prefix(flat, i) {
                 let line = flat[i].line();
                 findings.push(format!(
                     "{}:{}: Client::new() without .timeout() — use build_client() (BC-2.14.004)",
@@ -533,32 +531,16 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
         // Pattern 3: ClientBuilder :: new ... .build() without .timeout()
         // (unqualified or qualified — qualified already handled above)
         // Only flag bare ClientBuilder::new() — not mcp_sdk::ClientBuilder::new() or other
-        // non-reqwest qualifiers. If preceded by a non-reqwest module qualifier, skip.
+        // non-reqwest qualifiers. Suppression logic is head-anchored: see
+        // `preceded_by_non_reqwest_qualifier` for the `blocking` head check.
         if let FlatToken::Ident(name, _) = &flat[i]
             && name == "ClientBuilder"
             && matches_double_colon(flat, i + 1)
             && matches_ident(flat, i + 3, "new")
         {
-            // Check if preceded by `:: something ::` (a module qualifier other than reqwest)
-            // If i >= 3 and flat[i-1..i-2] are '::' double-colon, check flat[i-3]
-            // crate/self/super/Self are path-relative qualifiers that do NOT identify a
-            // non-reqwest crate — `crate::ClientBuilder::new()` must still be flagged.
-            let preceded_by_non_reqwest = i >= 3
-                && matches_double_colon(flat, i - 2)
-                && if let FlatToken::Ident(prev, _) = &flat[i - 3] {
-                    prev != "reqwest"
-                        && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
-                } else {
-                    false
-                };
             // De-duplication guard: prevents double-reporting of `reqwest::ClientBuilder::new()`
-            // already reported by Pattern 1's reqwest block. If Pattern 1's cursor advance
-            // logic ever changes and this case reaches Pattern 3, this guard ensures we fall
-            // through rather than emit a duplicate finding.
-            let preceded_by_reqwest = i >= 3
-                && matches_double_colon(flat, i - 2)
-                && matches_ident(flat, i - 3, "reqwest");
-            if !preceded_by_non_reqwest && !preceded_by_reqwest {
+            // already reported by Pattern 1's reqwest block.
+            if !preceded_by_non_reqwest_qualifier(flat, i) && !preceded_by_reqwest_prefix(flat, i) {
                 let line = flat[i].line();
                 let chain_end = find_chain_end(flat, i);
                 if has_build_without_timeout(flat, i) {
@@ -573,31 +555,16 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
         }
 
         // Pattern 4: Client :: builder ... .build() without .timeout() (unqualified)
+        // Only flag bare Client::builder() — not SomeOtherClient::builder(). Suppression logic
+        // is head-anchored: see `preceded_by_non_reqwest_qualifier` for the `blocking` head check.
         if let FlatToken::Ident(name, _) = &flat[i]
             && name == "Client"
             && matches_double_colon(flat, i + 1)
             && matches_ident(flat, i + 3, "builder")
         {
-            // Only flag bare Client::builder() — not SomeOtherClient::builder()
-            // Check it's not preceded by a non-reqwest qualifier.
-            // crate/self/super/Self are path-relative qualifiers that do NOT identify a
-            // non-reqwest crate — `crate::Client::builder()` must still be flagged.
-            let preceded_by_non_reqwest = i >= 3
-                && matches_double_colon(flat, i - 2)
-                && if let FlatToken::Ident(prev, _) = &flat[i - 3] {
-                    prev != "reqwest"
-                        && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
-                } else {
-                    false
-                };
             // De-duplication guard: prevents double-reporting of `reqwest::Client::builder()`
-            // already reported by Pattern 1's reqwest block. If Pattern 1's cursor advance
-            // logic ever changes and this case reaches Pattern 4, this guard ensures we fall
-            // through rather than emit a duplicate finding.
-            let preceded_by_reqwest = i >= 3
-                && matches_double_colon(flat, i - 2)
-                && matches_ident(flat, i - 3, "reqwest");
-            if !preceded_by_non_reqwest && !preceded_by_reqwest {
+            // already reported by Pattern 1's reqwest block.
+            if !preceded_by_non_reqwest_qualifier(flat, i) && !preceded_by_reqwest_prefix(flat, i) {
                 let line = flat[i].line();
                 let chain_end = find_chain_end(flat, i);
                 if has_build_without_timeout(flat, i) {
@@ -613,6 +580,49 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
 
         i += 1;
     }
+}
+
+/// Returns `true` when `Client`/`ClientBuilder` at position `i` in `flat` is preceded by a
+/// definitive non-reqwest, non-path-relative path qualifier (Patterns 2, 3, 4 suppression gate).
+///
+/// Performs a head-anchored check when the immediate qualifier (`flat[i-3]`) is `blocking`:
+/// - **HEAD form** (`blocking::Client::new()`, no `::` before `blocking`): returns `false`
+///   to flag conservatively — this could be `use reqwest::blocking; blocking::Client::new()`.
+/// - **INTERMEDIATE form** (`other_sdk::blocking::Client::new()`, `::` precedes `blocking`):
+///   checks the true path head at `flat[i-6]`; returns `true` only when that head is a
+///   definitive non-reqwest, non-path-relative ident.
+///
+/// For all other qualifier idents: suppress when the ident is NOT `reqwest` and NOT in
+/// `{crate, self, super, Self}`.
+fn preceded_by_non_reqwest_qualifier(flat: &[FlatToken], i: usize) -> bool {
+    if i < 3 || !matches_double_colon(flat, i - 2) {
+        return false;
+    }
+    if let FlatToken::Ident(prev, _) = &flat[i - 3] {
+        if prev == "blocking" {
+            // Head-anchored check for the `blocking` qualifier.
+            if i >= 6 && matches_double_colon(flat, i - 5) {
+                // `blocking` is an intermediate segment; true head is at i-6.
+                if let FlatToken::Ident(head, _) = &flat[i - 6] {
+                    return head != "reqwest"
+                        && !matches!(head.as_str(), "crate" | "self" | "super" | "Self");
+                }
+            }
+            // `blocking` is the path head — flag conservatively.
+            false
+        } else {
+            prev != "reqwest" && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
+        }
+    } else {
+        false
+    }
+}
+
+/// Returns `true` when `Client`/`ClientBuilder` at position `i` is immediately preceded by a
+/// `reqwest ::` path prefix. Used as a de-duplication guard in Patterns 2–4 to prevent
+/// double-reporting of calls already handled by Pattern 1's `reqwest` block.
+fn preceded_by_reqwest_prefix(flat: &[FlatToken], i: usize) -> bool {
+    i >= 3 && matches_double_colon(flat, i - 2) && matches_ident(flat, i - 3, "reqwest")
 }
 
 /// Returns true if `flat[idx]` and `flat[idx+1]` are both `:` punctuation (double colon).
@@ -1767,10 +1777,11 @@ pub fn build_client() -> reqwest::Client {
 
     /// F-P23-HIGH-001 — `reqwest::blocking::Client::new()` must be flagged.
     ///
-    /// Pattern 1 is extended to handle the optional `blocking ::` module segment between
-    /// `reqwest ::` and the type ident. Without this fix, the blocking qualifier at offset
-    /// +3 causes Pattern 1 to fall through, and `preceded_by_non_reqwest` in Pattern 2
-    /// then suppresses detection (blocking is not in the path-relative exclusion set).
+    /// A `scan_reqwest_blocking_pattern` sibling helper is invoked from inside the `reqwest`
+    /// token block to detect the `reqwest::blocking::` path prefix. Without this helper,
+    /// the `blocking` qualifier at offset +3 causes the main `reqwest` block to fall through,
+    /// and `preceded_by_non_reqwest` in Pattern 2 would suppress detection (blocking was not
+    /// in the path-relative exclusion set before fix-burst-24).
     #[test]
     fn test_timeout_scanner_blocking_client_new_flagged() {
         let src = r#"
@@ -1789,9 +1800,9 @@ pub fn build_client() -> reqwest::Client {
     /// F-P23-HIGH-001 — `reqwest::blocking::ClientBuilder::new().build()` without
     /// `.timeout()` must be flagged.
     ///
-    /// The `reqwest::blocking::` module segment is detected by Pattern 1's extended
-    /// blocking sub-pattern, which calls `has_build_without_timeout` to verify the chain
-    /// is missing `.timeout()`.
+    /// A `scan_reqwest_blocking_pattern` sibling helper is invoked from inside the `reqwest`
+    /// token block to detect the `reqwest::blocking::` path prefix. The helper calls
+    /// `has_build_without_timeout` to verify the chain is missing `.timeout()`.
     #[test]
     fn test_timeout_scanner_blocking_client_builder_no_timeout_flagged() {
         let src = r#"
@@ -1813,8 +1824,9 @@ pub fn build_client() -> reqwest::Client {
     /// F-P23-HIGH-001 — `reqwest::blocking::Client::builder().build()` without
     /// `.timeout()` must be flagged.
     ///
-    /// The `reqwest::blocking::` module segment is detected by Pattern 1's extended
-    /// blocking sub-pattern for the `Client::builder()` form.
+    /// A `scan_reqwest_blocking_pattern` sibling helper is invoked from inside the `reqwest`
+    /// token block to detect the `reqwest::blocking::` path prefix for the `Client::builder()`
+    /// form.
     #[test]
     fn test_timeout_scanner_blocking_client_builder_flagged() {
         let src = r#"
@@ -1837,7 +1849,9 @@ pub fn build_client() -> reqwest::Client {
     ///
     /// The `blocking` module segment in a non-reqwest path must not be misidentified as
     /// reqwest. Pattern 1 only fires when `reqwest` is confirmed at the start of the path;
-    /// Pattern 2's `preceded_by_non_reqwest` guard correctly suppresses `blocking::Client`.
+    /// Pattern 2's `preceded_by_non_reqwest` guard suppresses the call because the true
+    /// path head (`other_sdk`) is a definitive non-reqwest ident (via the intermediate-segment
+    /// check introduced in fix-burst-24).
     #[test]
     fn test_timeout_scanner_other_sdk_blocking_not_flagged() {
         let src = r#"
@@ -1849,6 +1863,78 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             findings.is_empty(),
             "other_sdk::blocking::Client::new() must NOT be flagged; got: {findings:?}"
+        );
+    }
+
+    // ── F-P24-HIGH-001: use-imported blocking head form detection ───────────
+
+    /// F-P24-HIGH-001 — bare `blocking::Client::new()` (use-imported head form) must be flagged.
+    ///
+    /// When code does `use reqwest::blocking; blocking::Client::new()`, the flat tokens
+    /// start with `blocking` as the path HEAD. Before fix-burst-24, Pattern 2's
+    /// `preceded_by_non_reqwest` check found `blocking` as `flat[i-3]` and — since
+    /// `"blocking"` is not in `{reqwest, crate, self, super, Self}` — incorrectly suppressed
+    /// the finding. After the fix, a bare `blocking` head is flagged conservatively (it could
+    /// be a `use reqwest::blocking;` re-export).
+    #[test]
+    fn test_timeout_scanner_blocking_head_client_new_flagged() {
+        let src = r#"
+            fn f() {
+                blocking::Client::new()
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "blocking::Client::new() (use-imported head form) must produce exactly 1 finding; \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P24-HIGH-001 — bare `blocking::ClientBuilder::new().build()` (use-imported head form)
+    /// without `.timeout()` must be flagged.
+    ///
+    /// Pattern 3's `preceded_by_non_reqwest` guard now applies the head-anchored check:
+    /// a bare `blocking` head is not suppressed (flag conservatively).
+    #[test]
+    fn test_timeout_scanner_blocking_head_client_builder_new_flagged() {
+        let src = r#"
+            fn f() {
+                blocking::ClientBuilder::new()
+                    .build()
+                    .unwrap()
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "blocking::ClientBuilder::new().build() without .timeout() must produce exactly 1 finding; \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P24-HIGH-001 — bare `blocking::Client::builder().build()` (use-imported head form)
+    /// without `.timeout()` must be flagged.
+    ///
+    /// Pattern 4's `preceded_by_non_reqwest` guard now applies the head-anchored check:
+    /// a bare `blocking` head is not suppressed (flag conservatively).
+    #[test]
+    fn test_timeout_scanner_blocking_head_client_builder_flagged() {
+        let src = r#"
+            fn f() {
+                blocking::Client::builder()
+                    .build()
+                    .unwrap()
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "blocking::Client::builder().build() without .timeout() must produce exactly 1 finding; \
+             got: {findings:?}"
         );
     }
 

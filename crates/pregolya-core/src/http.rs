@@ -96,17 +96,8 @@ pub(crate) fn map_build_failure(reason: &str) -> PregolyaError {
 /// API responses (BC-2.14.004 {EC-006}, BC-2.14.005 {INV-001} DI-010, CWE-209).
 pub(crate) fn sanitize_error_message(s: &str) -> String {
     let sanitized = redact_url_credentials(s);
-    // Cap at 200 chars, respecting UTF-8 char boundaries.
-    if sanitized.len() <= 200 {
-        sanitized
-    } else {
-        // Find the last valid char boundary at or before byte 200.
-        let truncate_at = (0..=200)
-            .rev()
-            .find(|&i| sanitized.is_char_boundary(i))
-            .unwrap_or(0);
-        sanitized[..truncate_at].to_string()
-    }
+    // Cap at 200 characters (char count, not byte count) per BC-2.14.004 {EC-006}.
+    sanitized.chars().take(200).collect()
 }
 
 /// Replace URL-embedded credential patterns `://userinfo@host` with `://***@host`.
@@ -464,6 +455,29 @@ mod tests {
             sanitized.len() <= 200,
             "sanitize_error_message must cap output at 200 chars; got len: {}",
             sanitized.len()
+        );
+    }
+
+    /// F-P24-LOW-005 — `sanitize_error_message` caps at 200 chars (char count, not byte count).
+    ///
+    /// A 201-char string of multi-byte characters must be truncated to exactly 200 chars.
+    /// '©' (U+00A9) is 2 bytes in UTF-8: 201 × '©' = 201 chars = 402 bytes.
+    /// Char-based cap: result is 200 chars = 400 bytes.
+    /// Byte-based cap (at 200 bytes): result would be 100 chars — proving the two approaches differ.
+    #[test]
+    fn test_sanitize_error_message_caps_at_200_chars_multibyte() {
+        // '©' (copyright sign, U+00A9) is 2 bytes in UTF-8.
+        // 201 × '©' = 201 chars = 402 bytes.
+        // Char-based cap: 200 chars = 400 bytes.
+        // Byte-based cap (wrong): 100 chars (only 100 × 2-byte chars fit in 200 bytes).
+        let raw = "\u{00A9}".repeat(201);
+        let sanitized = sanitize_error_message(&raw);
+        assert_eq!(
+            sanitized.chars().count(),
+            200,
+            "sanitize_error_message must cap at 200 chars (char count, not byte count); \
+             got {} chars",
+            sanitized.chars().count()
         );
     }
 
