@@ -16,11 +16,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-30 (pass-28 findings, code commits `cf25c56`, `715aa72`, BC-2.14.004 v1.15)
+
+### xtask check_client_timeout / check_no_panic / deny_bare_api_key — cfg-test guards, Strategy 2 positive detection, dead arm removal, KL namespace, NP-KL-2 resolution
+
+**ADV-P28-HIGH-001 — `KNOWN-LIMITATION 4` identifier collision resolved:** Module doc heading renamed to `KL-macro`; `scan_macro_body_as_ast` doc updated from `KNOWN-LIMITATION 4` to `KL-macro`; two `assert!` message strings in `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` updated from "KNOWN-LIMITATION 4 eliminated" to "formerly KL-4 of the flat-token scanner — eliminated".
+
+**ADV-P28-HIGH-002 — `#[cfg(test)]` guard missing from `visit_expr_macro` and `visit_stmt_macro`:** Added `has_cfg_test_attr` / `syn_has_cfg_test` guards as first statement in `visit_expr_macro` and `visit_stmt_macro` in both `check_client_timeout` and `check_no_panic`; all four previously-unguarded methods now skip macro calls inside `#[cfg(test)]`-gated contexts. Two pinning tests added: `test_timeout_checker_cfg_test_stmt_macro_not_flagged` (`check_client_timeout`) and `test_no_panic_cfg_test_stmt_macro_not_flagged` (`check_no_panic`).
+
+**ADV-P28-MED-001 — Strategy 2 of `scan_macro_body_as_ast` had no positive-detection test:** Added `test_timeout_checker_strategy2_detects_statement_macro_violation` exercising the `fn __macro_fragment__()` wrapper path; evidence-report attestation row corrected to cite one test per strategy (S1/S2/S3).
+
+**ADV-P28-MED-002 — Three test doc comments referenced deleted `scan_macro_tokens_for_timeout_violations`:** Updated to reference `scan_macro_body_as_ast` Strategy 1 / Strategy 3 as appropriate.
+
+**ADV-P28-MED-003 — Dead `"builder"` arm in `visit_expr_call` Pattern-A UFCS qself branch:** Narrowed guard from `matches!(last_method, "default" | "new" | "builder")` to `matches!(last_method, "default" | "new")`; inline doc corrected (Pattern-A does not handle `<reqwest::Client>::builder()`; that is Pattern B via `analyze_build_chain`).
+
+**ADV-P28-MED-004 — `check_no_panic` and `deny_bare_api_key` KL disclosures absent from story records; NP-KL-2 sound fix implemented:** `KNOWN-LIMITATION 2` in `check_no_panic` (turbofish comma miscounting in `syn_macro_has_bc_id`) had a documented sound fix not yet applied — implemented angle-bracket depth tracking (`u32` with `saturating_sub`) in `syn_macro_has_bc_id`; NP-KL-2 is now resolved.
+
+**ADV-P28-LOW-001 — Three doc sites in `check_client_timeout` enumerated only `<reqwest::Client as Default>::default()` UFCS form:** Expanded to include `<reqwest::Client>::new()`, `<reqwest::ClientBuilder>::new().build()`, and `<reqwest::Client>::builder().build()`.
+
+**ADV-P28-LOW-002 — `KL-macro` was the only known limitation with no pinning test:** Added `test_timeout_checker_unparseable_macro_body_known_limitation` asserting zero findings for an opaque macro body failing all three strategies.
+
+**ADV-P28-LOW-003 — Correction to fix-burst-29 `F-P27-MED-002` attribution:** (See fix-burst-29 section below — "Six" corrected to "Four".)
+
+**ADV-P28-LOW-004 — BC-2.14.004 `{INV-003}` test-code exemption perimeter:** BC-2.14.004 `{INV-003}` expanded to enumerate full test-code exemption perimeter; handled by product-owner (BC-2.14.004 v1.15).
+
+### Known limitations after fix-burst-30
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **RESOLVED in fix-burst-30** | Turbofish comma miscounting — angle-bracket depth tracking implemented |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+Note: CT-KL-4 was retired (parenthesized/braced base subexpression eliminated by syn AST visitor in fix-burst-26; renumbered in fix-burst-28/29 → now CT-KL-macro for the opaque-macro limitation).
+
+Test count: 233 xtask tests pass, 5 skipped.
+
 ## fix-burst-29 (pass-27 findings, code commits `a98d8ae`, `c0d6783`)
 
 ### xtask check_client_timeout — UFCS extension, dead-code removal, KL corrections
 
-**F-P27-MED-002 — UFCS qself extended to `new` and `builder`:** `visit_expr_call` qself branch and `analyze_build_chain` UFCS branch both previously guarded on `last_method == "default"` only. Extended to `matches!(last_method, "default" | "new" | "builder")`, enabling detection of `<reqwest::Client>::new()`, `<reqwest::Client>::builder().build()`, and `<reqwest::ClientBuilder>::new().build()` without `.timeout()`. Six new pinning tests cover qualified and clean forms.
+**F-P27-MED-002 — UFCS qself extended to `new` and `builder`:** `visit_expr_call` qself branch and `analyze_build_chain` UFCS branch both previously guarded on `last_method == "default"` only. Extended to `matches!(last_method, "default" | "new" | "builder")`, enabling detection of `<reqwest::Client>::new()`, `<reqwest::Client>::builder().build()`, and `<reqwest::ClientBuilder>::new().build()` without `.timeout()`. Four new pinning tests cover qualified and clean forms.
 
 **F-P27-MED-004 — Strategy 3 (dead code) removed:** `scan_macro_body_as_ast` previously described four progressive parse strategies; Strategy 3 (`syn::parse2::<syn::Expr>`) was logically dead because any token stream it accepts is also accepted by Strategy 2's `fn __macro_fragment__()` wrapper. Strategy 3 removed; all four documentation sites updated to say "three strategies."
 

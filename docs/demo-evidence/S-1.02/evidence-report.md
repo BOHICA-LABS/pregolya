@@ -300,6 +300,51 @@ Total: 229 xtask tests pass (approximately 320 workspace-wide per pre-push hook)
 
 ---
 
+## fix-burst-30 re-verification
+
+**Adversary pass 28 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 4 MED + 4 LOW findings.
+
+**Implementation commits:** implementer `cf25c56` (code/doc fixes), test-writer `715aa72` (new pinning tests), product-owner BC-2.14.004 v1.15 (BC amendment for LOW-004).
+
+**Clause (d) analysis:** `check_client_timeout` and `check_no_panic` were modified (`has_cfg_test_attr` / `syn_has_cfg_test` guards added to `visit_expr_macro` and `visit_stmt_macro`; dead `"builder"` arm removed from Pattern-A UFCS qself branch in `visit_expr_call`; angle-bracket depth tracking added to `syn_macro_has_bc_id`). Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation (commits `cf25c56`, `715aa72`):**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
+| Pattern A — UFCS `<reqwest::Client>::new()` (qself) | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 1 | `test_timeout_checker_detects_reqwest_client_in_thread_local` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 2 positive detection | `test_timeout_checker_strategy2_detects_statement_macro_violation` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 3 | `test_timeout_checker_detects_builder_in_lazy_static` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_client_timeout` | `test_timeout_checker_cfg_test_stmt_macro_not_flagged` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_no_panic` | `test_no_panic_cfg_test_stmt_macro_not_flagged` | pass |
+| Known-limitation pinning — CT-KL-macro (opaque macro body) | `test_timeout_checker_unparseable_macro_body_known_limitation` | pass |
+| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+
+Total: 233 xtask tests pass, 5 skipped.
+
+**Updated known limitations (namespaced IDs):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **RESOLVED in fix-burst-30** | Turbofish comma miscounting — angle-bracket depth tracking implemented in `syn_macro_has_bc_id` |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+**Clause-(d) coverage summary:** All HIGH and MED findings closed with load-bearing tests. LOW findings: LOW-001 closed with doc expansion (three doc sites updated); LOW-002 closed with `test_timeout_checker_unparseable_macro_body_known_limitation`; LOW-003 closed with doc correction (fix-burst-29 `F-P27-MED-002` attribution "Six" → "Four"); LOW-004 closed by product-owner BC amendment (BC-2.14.004 v1.15).
+
+**Docs-only note:** The docs commit for this fix-burst-30 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
+
+---
+
 ## Notes
 
 - All recordings produced with VHS 0.11.0 using `FiraCode Nerd Font Mono`, Catppuccin Mocha theme, 1200×600 or 1200×700 resolution.
