@@ -1112,6 +1112,52 @@ fn test_allowlist_empty_allows_nothing() {
     assert!(!al.is_allowed("crates/foo/src/bar.rs"));
 }
 
+/// MED-002 regression pin: entry-side backslash normalization in `AllowList::is_allowed`
+/// is load-bearing.
+///
+/// Logic trace:
+/// - The entry's `path` field contains Windows backslashes: `crates\foo\src\bar.rs`.
+/// - `is_allowed` must normalize `e.path` via `replace('\\', "/")` BEFORE comparing.
+/// - Without the entry-side normalization (`let normalized_entry = e.path.replace(...)`)
+///   the entry's backslash string can never equal any forward-slash normalized_path, so
+///   both assertions below fail.
+///
+/// Assertion 1 (entry backslash, arg forward-slash):
+///   `normalized_path`  = "crates/foo/src/bar.rs"  (forward-slash arg, no-op replace)
+///   `normalized_entry` = "crates/foo/src/bar.rs"  (with entry-side normalization → TRUE)
+///   Without fix:        "crates\foo\src\bar.rs"    (backslash entry, not equal → FALSE)
+///
+/// Assertion 2 (entry backslash, arg backslash):
+///   `normalized_path`  = "crates/foo/src/bar.rs"  (path-side normalization still applies)
+///   `normalized_entry` = "crates/foo/src/bar.rs"  (with entry-side normalization → TRUE)
+///   Without fix:        "crates\foo\src\bar.rs"    (not equal → FALSE)
+///
+/// This test FAILS if `let normalized_entry = e.path.replace('\\', "/")` is removed
+/// from `AllowList::is_allowed`.
+#[test]
+fn test_allowlist_is_allowed_entry_side_normalization() {
+    // AllowEntry whose path field uses Windows backslash separators.
+    let al = AllowList {
+        allow: vec![AllowEntry {
+            path: r"crates\foo\src\bar.rs".to_string(),
+            ..Default::default()
+        }],
+    };
+    // Assertion 1: entry has backslashes, arg has forward slashes.
+    // Only passes when the entry-side normalize fires (converting entry to forward slashes).
+    assert!(
+        al.is_allowed("crates/foo/src/bar.rs"),
+        "entry with backslashes must match forward-slash arg after entry-side normalization"
+    );
+    // Assertion 2: both entry and arg have backslashes.
+    // path-side normalization converts arg → forward slashes; entry-side normalization
+    // converts entry → forward slashes; they must match.
+    assert!(
+        al.is_allowed(r"crates\foo\src\bar.rs"),
+        "entry with backslashes must match backslash arg after both entry- and path-side normalization"
+    );
+}
+
 // ── validate_allowlist_entry_path unit tests ─────────────────────────────────
 
 /// Valid paths (crates/ and xtask/ prefixes with depth >= 2 slashes).

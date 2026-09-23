@@ -764,14 +764,51 @@ All pass-44 findings closed. See CHANGELOG fix-burst-46 for details.
 | HIGH-001 (CHANGELOG fix-burst-43 OBS-001 labels) | Text correction: "§Current Phase Steps rows carrying `\| COMPLETE \|`" and "Four self-probes (A/B/C/D)" | pass |
 | MED-001 (fix-burst-45 test count basis) | Count corrected to "343 run: 343 passed, 7 skipped" with explicit workspace basis | pass |
 | MED-002 (§Convergence Status duplication) | STATE.md §Convergence Status: duplicate paragraph removed, inline heading fragment removed; `records-lint.sh` exits 0 | pass |
-| MED-003 (two normalization sites unpinned) | `test_is_size_gate_excluded_windows_paths` (3 positive backslash, 2 negative): reverting `replace('\\', "/")` in `is_size_gate_excluded` causes failures; `test_allowlist_exact_match` backslash assertion: reverting normalization in `AllowList::is_allowed` causes failure | pass |
-| MED-004 (L13 "3/3" hardcoded) | `check_l13` runtime denominator + `probe_must_fail "L13-probe-E"` (convergence-absent path); `records-lint.sh` exits 0 | pass |
+| MED-003 (two normalization sites unpinned) | `test_is_size_gate_excluded_windows_paths` (3 positive backslash, 2 negative): reverting `replace('\\', "/")` in `is_size_gate_excluded` causes failures; `test_allowlist_exact_match` backslash assertion: reverting path-side normalization (`let normalized_path = path.replace('\\', "/")`) in `AllowList::is_allowed` causes failure; entry-side normalization (`let normalized_entry = e.path.replace('\\', "/")`) not yet pinned in fix-burst-46 — load-bearing test added in fix-burst-47 | pass |
+| MED-004 (L13 "3/3" hardcoded) | `check_l13` runtime denominator + `probe_must_not_fail "L13-probe-E"` (convergence-absent path); `records-lint.sh` exits 0 | pass |
 | MED-005 (STATE.md checkpoint stale) | D-412 COMPLETE + D-413 IN FLIGHT recorded; checkpoint re-stamped to D-412; `records-lint.sh` L13 3/3 in sync | pass |
 | MED-006 (AC-009 phantom cite + AnthropicApiKey omission) | AC-009 Verified-by cites both `assert_not_impl_any!(OpenAiApiKey: AsRef<str>)` and `assert_not_impl_any!(AnthropicApiKey: AsRef<str>)`; phantom compile-fail removed; `.as_str()` removed | pass |
 
 **Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
 
 **KL table:** 10 rows, unchanged.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-47 re-verification
+
+**Adversary pass 45 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 2 LOW.
+
+Fix-burst-47 closed all 5 findings from adversary pass-45 (3 MED + 2 LOW). Test counts unchanged from fix-burst-46 plus one new xtask test: **253 run: 253 passed, 5 skipped** (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: **345 run: 345 passed, 7 skipped** (`cargo nextest run --workspace`). Net change from fix-burst-46: +1 xtask test (`test_allowlist_is_allowed_entry_side_normalization`).
+
+**Detection-class attestation:**
+
+| Finding | Load-bearing artifact | Verification |
+|---------|----------------------|--------------|
+| MED-001 (evidence-report MED-004 probe direction inverted) | Record correction: fix-burst-46 MED-004 row updated from `probe_must_fail "L13-probe-E"` to `probe_must_not_fail "L13-probe-E"`; no code change required — record-only | pass |
+| MED-002 (AllowList::is_allowed entry-side normalization unpinned) | New test `test_allowlist_is_allowed_entry_side_normalization`: reverting entry-side `let normalized_entry = e.path.replace('\\', "/")` in `AllowList::is_allowed` causes assertion failure; test is LOAD-BEARING | pass |
+| MED-003 (L13 false-green via IN FLIGHT newest D-NNN row / frozen-HEAD SHA currency) | New `L13-probe-F` in `records-lint.sh`: synthetic STATE.md with §Session Resume Checkpoint frozen HEAD SHA absent from all COMPLETE rows → `probe_must_fail "L13-probe-F"` asserts FAIL; `records-lint.sh` exits 0 on current STATE.md; `check_l13` function-header comment updated to document both "3/3 surfaces in sync" and "2/2 surfaces asserted (convergence SKIPPED)" PASS templates (LOW-001 bundled into this fix) | pass |
+| LOW-001 (check_l13 function-header comment incomplete) | Records fix bundled with MED-003: function-header banner updated to document both PASS templates | pass |
+| LOW-002 (AC-008 phantom tuple-struct construction form) | Records fix: AC-008 construction form corrected from non-compiling `OpenAiApiKey("sk-real".to_string())` to `OpenAiApiKey::from_raw_for_tests("sk-real")`; story spec version bumped to v1.22 | pass |
+
+**Clause (d) analysis:** fix-burst-47 modifies `xtask/src/tests.rs` (new test `test_allowlist_is_allowed_entry_side_normalization`). The new test exercises an existing production code path (`AllowList::is_allowed` entry-side normalization) — scanner logic in `AllowList::is_allowed` was not changed. Clause (d) does NOT fire for a test-only addition that exercises no new detection behavior. Gate output counts remain valid and unchanged.
+
+**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged from fix-burst-46. No new KL entries.
 
 | ID | Gate | Status | Description |
 |----|------|--------|-------------|

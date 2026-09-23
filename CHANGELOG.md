@@ -16,6 +16,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-47 (pass-45 findings)
+
+### Evidence-report attestation corrections, AllowList entry-side normalization pin, L13 frozen-HEAD SHA currency, story-spec AC-008 construction form
+
+**Pass-45 finding tally: 3 MED + 2 LOW.**
+
+**MED-001 (F-P45-MED-001) — evidence-report fix-burst-46 MED-004 attestation cited `probe_must_fail` for probe E (convergence-absent path); code uses `probe_must_not_fail`:**
+The MED-004 attestation row in the fix-burst-46 re-verification section incorrectly described the probe direction as `probe_must_fail "L13-probe-E"`. Probe E covers the convergence-absent path where `check_l13` skips the convergence surface and emits PASS — the probe must NOT fail (success expected). The fix inverts the label to `probe_must_not_fail "L13-probe-E"`. No code change required — record-only correction.
+
+**MED-002 (F-P45-MED-002) — `AllowList::is_allowed` entry-side normalization lacked a load-bearing regression pin:**
+Fix-burst-46 MED-003 added `test_allowlist_exact_match` with a backslash assertion pinning the path-side normalization (`let normalized_path = path.replace('\\', "/")`) in `AllowList::is_allowed`. The entry-side normalization (`let normalized_entry = e.path.replace('\\', "/")`) was not pinned — reverting it left the test suite green. Fixed by implementer: new test `test_allowlist_is_allowed_entry_side_normalization` added; reverting entry-side normalization causes the test assertion to fail. Test is load-bearing.
+
+**MED-003 (F-P45-MED-003) — L13 false-green when newest §Current Phase Steps row is IN FLIGHT (MAX_D degrades to previous COMPLETE, bypassing the parity check) / frozen-HEAD SHA currency:**
+When the most recent D-NNN row in §Current Phase Steps carries status IN FLIGHT rather than COMPLETE, `MAX_D` in `check_l13` degrades to the prior COMPLETE value. If the §Session Resume Checkpoint and §Convergence Status cite the IN FLIGHT D-NNN, the parity check passes on a stale baseline, silently hiding the mismatch between the checkpoint and the actual newest completed decision. Fixed by devops-engineer: frozen-HEAD SHA currency check added to `check_l13`; `L13-probe-F` added to `records-lint.sh` with a synthetic STATE.md containing a §Session Resume Checkpoint frozen HEAD SHA absent from all COMPLETE rows — `probe_must_fail "L13-probe-F"` asserts FAIL. `records-lint.sh` exits 0 on current STATE.md. LOW-001 bundled: `check_l13` function-header comment updated to document both "3/3 surfaces in sync" (convergence PRESENT) and "2/2 surfaces asserted (convergence SKIPPED)" PASS templates.
+
+**LOW-001 (F-P45-LOW-001) — `check_l13` function-header comment documented only the "3/3 surfaces in sync" PASS template; the convergence-SKIPPED "2/2 surfaces asserted" template was undocumented:**
+Function-header banner updated to enumerate both PASS templates explicitly. Bundled with MED-003 fix as a single records change. No new test required (comment-only correction).
+
+**LOW-002 (F-P45-LOW-002) — AC-008 in story spec cited non-compiling tuple-struct construction form `OpenAiApiKey("sk-real".to_string())`:**
+`OpenAiApiKey` is `#[non_exhaustive]` with a private inner field — the tuple-struct constructor is inaccessible. The correct form for test use is `OpenAiApiKey::from_raw_for_tests("sk-real")`. Fixed by story-writer: AC-008 Verified-by updated to use `from_raw_for_tests("sk-real")` form; story spec version bumped to v1.22.
+
+**Test count (fix-burst-47):** 253 run: 253 passed, 5 skipped (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: 345 run: 345 passed, 7 skipped (`cargo nextest run --workspace`; includes pregolya-core and other workspace crate tests; basis: full workspace per push hook convention established in fix-burst-45). Net change from fix-burst-46: +1 xtask test (`test_allowlist_is_allowed_entry_side_normalization`).
+
+### Known limitations after fix-burst-47
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 253 run: 253 passed, 5 skipped (xtask per-crate); 345 run: 345 passed, 7 skipped (workspace). Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-46 (pass-44 findings)
 
 ### CHANGELOG attestation correction, test-count reconciliation, STATE.md structural fixes, normalization regression pins, L13 denominator fix, story-spec AC-009 phantom cite
