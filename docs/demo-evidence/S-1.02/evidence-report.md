@@ -375,7 +375,7 @@ Total: 236 xtask tests pass, 5 skipped.
 
 **Clause-(d) coverage summary:**
 - HIGH-001: load-bearing test `test_no_panic_exemption2_bc_id_with_comparison_condition`
-- MED-001: three tests close the paper-fix; `NP-KL-2` confirmed RESOLVED
+- MED-001: three tests close the paper-fix; `NP-KL-2` confirmed RESOLVED; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` (added fix-burst-32) is the mechanism pin for the `angle_depth` counter
 - MED-002: BC amendment (v1.16), no code test needed (spec corrected to match code)
 - MED-003: doc rename across 4 files; grepped clean (zero `KNOWN-LIMITATION` in source)
 - LOW-001: defense-in-depth annotation; no test (stable Rust cannot express `#[cfg(test)]` on expr-position macro)
@@ -387,13 +387,55 @@ Total: 236 xtask tests pass, 5 skipped.
 | CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
 | CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
 | CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
 | CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
 | CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
 | NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_bc_id_with_turbofish_condition` and `test_no_panic_exemption2_bc_id_with_comparison_condition` validate the resolution |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_bc_id_with_turbofish_condition` and `test_no_panic_exemption2_bc_id_with_comparison_condition` validate the resolution |
 | BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
 
 **Docs-only note:** The docs commit for this fix-burst-31 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
+
+---
+
+## fix-burst-32 re-verification
+
+**Adversary pass 30 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 HIGH + 2 MED + 1 LOW findings.
+
+**Implementation commits:** test-writer `c71fdda` (2 load-bearing tests + doc fix), product-owner `7c4b5a4` (BC-2.14.003 v1.6).
+
+**Clause (d) analysis:** `check_no_panic` was modified (two new load-bearing tests added; doc comment on `test_no_panic_exemption2_bc_id_with_turbofish_condition` corrected). Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation (commit `c71fdda`):**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| `angle_depth` mechanism positive — Exemption-2 fires with multi-arg turbofish (MED-002) | `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_exempt` — EXEMPT, zero findings | pass |
+| `angle_depth` mechanism load-bearing pin — without `angle_depth` counter, returns EXEMPT instead of FLAGGED (MED-002) | `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` — FLAGGED, 1 finding; test FAILS if `angle_depth` tracking is removed | pass |
+| BC-2.14.003 amendment (MED-001) | BC spec change only (v1.6), no new gate behavior, no new test required | pass |
+
+Total: 238 xtask tests pass, 5 skipped.
+
+**Clause-(d) coverage summary:**
+- MED-001: BC-2.14.003 amended by product-owner (v1.6) to enumerate all three test-code contexts; no behavioral change to gate
+- MED-002: two load-bearing tests added; `NP-KL-2` **CONFIRMED RESOLVED** — `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin for the `angle_depth` counter
+- LOW-001: CT-KL-4 RETIRED row added to evidence-report fix-burst-31 KL table (records-only fix)
+
+**Updated known limitations (namespaced IDs):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+**Docs-only note:** The docs commit for this fix-burst-32 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
 
 ---
 

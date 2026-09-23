@@ -16,13 +16,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-32 (pass-30 findings)
+
+### xtask check_no_panic / check_client_timeout — BC-2.14.003 sibling-sweep, angle-depth mechanism pin, evidence-report table gap
+
+**MED-001 (F-P30-MED-001) — BC-2.14.003 `{INV-004}` not sibling-swept with BC-2.14.004 v1.16 `{INV-003}` fix:** Both BCs are enforced by the same `is_test_file` predicate, but BC-2.14.003 still described only `tests/` directory and `#[cfg(test)]`. Product-owner amended BC-2.14.003 to v1.6 (commit `7c4b5a4`): `{INV-004}` now enumerates all three test-code contexts matching BC-2.14.004 v1.16. No gate behavior change.
+
+**MED-002 (F-P30-MED-002) — `angle_depth` multi-argument turbofish mechanism in `syn_macro_has_bc_id` had zero load-bearing tests:** NP-KL-2 "CONFIRMED RESOLVED" in prior records was overstated. The mechanism's purpose (suppressing commas inside `<String, u8>` style turbofish) was unpin, so deleting `angle_depth` would leave all 236 tests green and silently reintroduce the false-negative. Two load-bearing tests added: `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_exempt` (positive — Exemption-2 fires with multi-arg turbofish condition) and `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` (the mechanism pin — WITHOUT `angle_depth`, this test fails, returning EXEMPT instead of FLAGGED). Also fixed doc comment on `test_no_panic_exemption2_bc_id_with_turbofish_condition` which overclaimed `angle_depth` coverage.
+
+**LOW-001 (F-P30-LOW-001) — evidence-report fix-burst-31 KL table was missing the `CT-KL-4 | RETIRED in fix-burst-26` row:** The CHANGELOG fix-burst-31 table carried the row; the evidence-report table had only 8 rows (CT-KL-4 absent). Fixed in evidence-report (CT-KL-4 row added).
+
+### Known limitations after fix-burst-32
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation both implemented; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+Test count: 238 xtask tests pass, 5 skipped.
+
 ## fix-burst-31 (pass-29 findings)
 
 ### xtask check_no_panic / check_client_timeout / deny_bare_api_key — turbofish-vs-comparison disambiguation, KL namespace canonicalization, defense-in-depth annotations
 
 **HIGH-001 — `syn_macro_has_bc_id` incorrectly increments `angle_depth` for bare comparison `<`:** The NP-KL-2 fix in fix-burst-30 incremented `angle_depth` on ANY `<` punct token. A bare comparison operator (`assert!(a < b, "BC-2.14.003 ...")`) inflated `angle_depth` to 1, hiding the message-argument comma from the top-level scan and causing `syn_macro_has_bc_id` to return `false` even when the message contained a valid BC-ID — a fully-compliant programmer-error guard was flagged as a violation. Fixed: `<` is now treated as a turbofish opener ONLY when preceded by `::` (tokens_vec[i-2] = `:` Joint, tokens_vec[i-1] = `:`). Bare comparison `<` (no `::` prefix) no longer increments `angle_depth`. Import updated from `use proc_macro2::TokenTree` to `use proc_macro2::{Spacing, TokenTree}`. NP-KL-2 fully resolved; module doc updated to `[RESOLVED in fix-burst-30/fix-burst-31]`.
 
-**MED-001 — `syn_macro_has_bc_id` paper-fix closure for NP-KL-2 required additional tests:** ADV-P28-MED-004 NP-KL-2 closure was a paper-fix — `syn_macro_has_bc_id`'s angle-bracket depth fix was untested and its implementation was incorrect (HIGH-001), and the evidence-report attestation table had no row for the Exemption-2 BC-ID detection class. Closed by: (1) HIGH-001 fix above makes the implementation correct; (2) three new pinning tests added: `test_no_panic_exemption2_bc_id_with_turbofish_condition` (Exemption-2 + turbofish condition — EXEMPT), `test_no_panic_exemption2_bc_id_with_comparison_condition` (Exemption-2 + comparison condition — EXEMPT, regression pin for HIGH-001), `test_no_panic_comparison_condition_no_bc_id_flagged` (no BC-ID — FLAGGED, negative control); (3) evidence-report fix-burst-31 re-verification section adds the Exemption-2 BC-ID detection class attestation row; `NP-KL-2` confirmed RESOLVED (both turbofish and comparison regression tests pass).
+**MED-001 — `syn_macro_has_bc_id` paper-fix closure for NP-KL-2 required additional tests:** ADV-P28-MED-004 NP-KL-2 closure was a paper-fix — `syn_macro_has_bc_id`'s angle-bracket depth fix was untested and its implementation was incorrect (HIGH-001), and the evidence-report attestation table had no row for the Exemption-2 BC-ID detection class. Closed by: (1) HIGH-001 fix above makes the implementation correct; (2) three new pinning tests added: `test_no_panic_exemption2_bc_id_with_turbofish_condition` (Exemption-2 + turbofish condition — EXEMPT), `test_no_panic_exemption2_bc_id_with_comparison_condition` (Exemption-2 + comparison condition — EXEMPT, regression pin for HIGH-001), `test_no_panic_comparison_condition_no_bc_id_flagged` (no BC-ID — FLAGGED, negative control); (3) evidence-report fix-burst-31 re-verification section adds the Exemption-2 BC-ID detection class attestation row; `NP-KL-2` confirmed RESOLVED (both turbofish and comparison regression tests pass). (See fix-burst-32 ADV-P30-MED-002: the multi-arg turbofish angle-depth mechanism was further pinned by load-bearing tests `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` and `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_exempt`.)
 
 **MED-002 — BC-2.14.004 `{INV-003}` clause (a) misdescribed test-file exemption perimeter:** BC-2.14.004 `{INV-003}` clause (a) declared `test/` (singular) as exempt when `is_test_file` only checks `/tests/` (directory form), and omitted the `tests.rs` / `_test.rs` / `_tests.rs` filename forms. Closed by: product-owner amended BC-2.14.004 to v1.16 (commit `369758b`) — clause (a) now reads: "source files whose path contains a `/tests/` directory component, or whose filename is exactly `tests.rs`, or whose filename ends with `_test.rs` or `_tests.rs`". No behavioral change to the gate itself.
 
@@ -41,7 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 | CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
 | CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
 | NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30 implementation + fix-burst-31 tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation both implemented |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31 implementation + fix-burst-32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation both implemented |
 | BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
 
 Test count: 236 xtask tests pass, 5 skipped.
