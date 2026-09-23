@@ -5137,3 +5137,27 @@ Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→preg
 - factory-artifacts: HEAD at D-373 records-tier close — PUSHED (post-commit).
 - feature/S-1.01: DELETED (worktree removed, local + remote branches deleted after merge).
 - feature/S-1.02: NOT YET CREATED. Awaiting code fix-burst dispatch.
+
+---
+
+## Session Resume Checkpoint — D-429 (archived 2026-09-23; superseded by D-430)
+
+### PIPELINE POSITION
+Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→pregolya-graph→partners (D7). S-1.01 MERGED (PR #2; 086c0dc). S-1.02 PR-LEVEL adversary cascade IN PROGRESS: adversary pass-53 COMPLETE (D-429); CLEAN(strict)=no CLEAN(PR-merge)=no; 2H+4M+1L+2OBS; fix-burst-55 dispatched; frozen HEAD c3ad11f867957790475bdf76e10fb1f6a4363662 UNCHANGED; streak 0/3. Census: BC 149 / VP 43 / EC 148 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
+
+### DEVELOP STATE
+- develop = 086c0dc (squash-merge of feature/S-1.01; origin/develop synced). .worktrees/S-1.01 and feature/S-1.01 REMOVED.
+- feature/S-1.02: frozen HEAD = c3ad11f867957790475bdf76e10fb1f6a4363662 (fix-burst-54 push; D-428); adversary pass-53 COMPLETE (D-429); CLEAN(strict)=no; fix-burst-55 dispatched; streak 0/3.
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-429 state)
+1. adversary pass-53 COMPLETE (D-429); CLEAN(strict)=no CLEAN(PR-merge)=no; 2H+4M+1L+2OBS; fix-burst-55 dispatched.
+2. fix-burst-55 IN PROGRESS: technical-writer (HIGH-001/HIGH-002/MED-002/OBS-002 AC-007/009/013 sweep + tally correction + row fix + AC-020 reorder), devops-engineer (MED-001/LOW-001 sum reconciliation + pass-number check), implementer (MED-003/MED-004/OBS-001 http.rs comment + rename + redundancy notes); frozen HEAD c3ad11f8 UNCHANGED; streak RESET 0/3.
+3. After 3-CLEAN (strict): Step 6 CI + Step 7 deps + Step 8 STOP (MERGE-READY to human per DIRECTIVE 4 — do NOT merge S-1.02 automatically).
+4. HUMAN merge (DIRECTIVE 4 caveat — AI-authored PR; agent-merge BLOCKED).
+5. Post-merge burst: state-manager POL-14 BC auto-promotion (BC-2.14.003/004/005/006 draft→active) + census update.
+6. story-writer opens follow-up story for records-lint.sh hardening (finding-ID parity check).
+
+### BRANCH STATE (at D-429)
+- develop = 086c0dc (origin/develop synced after squash-merge PR #2).
+- feature/S-1.02: frozen HEAD c3ad11f867957790475bdf76e10fb1f6a4363662 (fix-burst-54 push; D-428); adversary pass-53 COMPLETE (D-429); fix-burst-55 dispatched; streak 0/3.
+- feature/S-1.01: DELETED (worktree removed, local + remote branches deleted after merge).
