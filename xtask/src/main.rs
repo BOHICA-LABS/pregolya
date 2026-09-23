@@ -466,10 +466,15 @@ fn check_file_size() {
             .unwrap_or(0);
 
         // Skip generated code, build artifacts, and fixture data.
-        if name.contains("/target/")
-            || name.contains("OUT_DIR")
-            || name.ends_with(".gen.rs")
-            || name.contains("/tests/fixtures/")
+        // Normalize to forward slashes for cross-platform consistency (F-P40-MED-002):
+        // tokei emits backslash-separated paths on Windows, so POSIX-only predicates
+        // like "/target/" and "/tests/fixtures/" would silently miss exclusions without
+        // this normalization. Pattern identical to AllowList::is_allowed and is_test_class_file.
+        let name_n = name.replace('\\', "/");
+        if name_n.contains("/target/")
+            || name_n.contains("OUT_DIR")
+            || name_n.ends_with(".gen.rs")
+            || name_n.contains("/tests/fixtures/")
         {
             continue;
         }
