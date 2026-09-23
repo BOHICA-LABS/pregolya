@@ -105,6 +105,22 @@
 #                 equivalent: ferrochain→pregolya, ferrograph→pregolya-graph,
 #                 ferroctmp→pregolya-checkpoint, FerrochainError→PregolyaError).
 #
+#   L13 — STATE.md D-NNN Parity (BLOCKING): the newest D-NNN decision number in
+#        STATE.md's Decision Log / Phase Progress table rows (lines of the form
+#        `| D-NNN`) must equal the D-NNN referenced in §Session Resume Checkpoint
+#        (canonical forms: "D-NNN checkpoint is current" in the archival comment,
+#        OR "post-D-NNN state" in the §RESUME NEXT-ACTIONS heading) AND the
+#        §Convergence Status section (terminal bold **D-NNN entry; max number
+#        taken). Prevents the recurring checkpoint-staleness defect class:
+#        F-P39-MED-001, F-P40-MED-003, F-P41-MED-001 (5 consecutive recurrences;
+#        PGAP-RECORDS-LINT-FIXBURST-PARITY). Positive-coverage log line on PASS so
+#        the check cannot go silently inert.
+#        Skip conditions (PASS without blocking assertion): STATE.md absent (non-
+#        STATE.md commit); no `| D-NNN` rows in the file (Decision Log not yet
+#        started); §Convergence Status section absent (pre-convergence state).
+#        Routing: state-manager (propagate newest D-NNN to §Session Resume
+#                 Checkpoint and §Convergence Status).
+#
 # SELF-PROBE: Each check self-probes against a synthetic violation before running on
 #             the real corpus. A self-probe failure means the check would be false-green —
 #             the script exits 2 immediately (script bug, not lint violation).
@@ -665,6 +681,122 @@ EOF
 
   unset -f _L12_CHECK
 
+  # ── L13 self-probes: STATE.md D-NNN parity ─────────────────────────────────
+  # Inline helper mirrors check_l13 logic: reads a synthetic STATE.md file,
+  # echoes 1 on parity violation, 0 on clean pass or skip.
+  # Three probes:
+  #   A — checkpoint stale (Decision Log max D-999, checkpoint D-998) → CAUGHT
+  #   B — convergence stale (Decision Log/checkpoint D-202, convergence D-201) → CAUGHT
+  #   C — all three surfaces agree D-101 → NOT caught
+
+  _L13_CHECK() {
+    local state_file="$1"
+    # Step 1: extract max D-NNN from `| D-NNN` table rows
+    local max_num
+    max_num=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$state_file" 2>/dev/null \
+      | grep '| COMPLETE |' \
+      | grep -oE 'D-[0-9]+' \
+      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+    [ -z "$max_num" ] && echo 0 && return  # no D-NNN rows → skip/pass
+    local max_d="D-${max_num}"
+    # Step 2: extract checkpoint D-NNN from §Session Resume Checkpoint section
+    local cp_section
+    cp_section=$(awk '/^## Session Resume Checkpoint/{flag=1;next} /^## /{flag=0} flag' \
+      "$state_file" 2>/dev/null || true)
+    local cp1 cp2 cp_max
+    cp1=$(echo "$cp_section" \
+      | grep -oE 'D-[0-9]+ checkpoint is current' \
+      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+    cp2=$(echo "$cp_section" \
+      | grep -oE 'post-D-[0-9]+ state' \
+      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+    cp_max=$(printf '%s\n%s\n' "$cp1" "$cp2" \
+      | grep -v '^$' | sort -n | tail -1 || true)
+    if [ -n "$cp_max" ] && [ "D-${cp_max}" != "$max_d" ]; then
+      echo 1; return
+    fi
+    # Step 3: extract max D-NNN from §Convergence Status bold entries
+    local conv_section
+    conv_section=$(awk '/^## Convergence Status/{flag=1;next} /^## /{flag=0} flag' \
+      "$state_file" 2>/dev/null || true)
+    if [ -n "$conv_section" ]; then
+      local conv_num
+      conv_num=$(echo "$conv_section" \
+        | grep -oE '\*\*D-[0-9]+' \
+        | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+      if [ -n "$conv_num" ] && [ "D-${conv_num}" != "$max_d" ]; then
+        echo 1; return
+      fi
+    fi
+    echo 0
+  }
+
+  # Probe A: Decision Log max D-999, checkpoint references D-998 → CAUGHT
+  PROBE_L13A="$PROBE_TMP/l13-violation-a.md"
+  cat > "$PROBE_L13A" <<'EOF'
+## Phase Progress
+
+| D-999/2026-09-23 — latest COMPLETE decision. | orchestrator | COMPLETE | STATE.md D-999. |
+| D-1000/2026-09-23 — in-flight work. | orchestrator | IN FLIGHT | STATE.md D-1000. |
+
+## Convergence Status
+
+**D-998 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-997 checkpoint archived. D-998 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-998 state)
+EOF
+
+  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13A")
+  probe_must_fail "L13-probe-A" "newest COMPLETE D-999 but checkpoint references D-998 (D-1000 IN FLIGHT excluded)"
+
+  # Probe B: Convergence Status stale (D-201) while Decision Log/checkpoint agree on D-202 → CAUGHT
+  PROBE_L13B="$PROBE_TMP/l13-violation-b.md"
+  cat > "$PROBE_L13B" <<'EOF'
+## Phase Progress
+
+| D-202/2026-09-23 — latest decision. | orchestrator | COMPLETE | STATE.md D-202. |
+
+## Convergence Status
+
+**D-201 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-201 checkpoint archived. D-202 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-202 state)
+EOF
+
+  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13B")
+  probe_must_fail "L13-probe-B" "Decision Log max D-202, Convergence Status terminal entry D-201"
+
+  # Probe C (clean pass): all three surfaces agree on D-101 → NOT caught
+  PROBE_L13C="$PROBE_TMP/l13-clean.md"
+  cat > "$PROBE_L13C" <<'EOF'
+## Phase Progress
+
+| D-101/2026-09-23 — latest decision. | orchestrator | COMPLETE | STATE.md D-101. |
+
+## Convergence Status
+
+**D-101 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-100 checkpoint archived. D-101 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-101 state)
+EOF
+
+  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13C")
+  probe_must_not_fail "L13-probe-C" "all three surfaces reference D-101 — clean pass"
+
+  unset -f _L13_CHECK
+
   rm -rf "$PROBE_TMP"
   trap - EXIT
 }
@@ -1140,6 +1272,135 @@ check_l12() {
   fi
 }
 
+
+# ── Check L13 — STATE.md D-NNN Parity ────────────────────────────────────────
+# The newest D-NNN in STATE.md Decision Log / Phase Progress table rows must
+# equal the D-NNN referenced in §Session Resume Checkpoint and §Convergence
+# Status. Closes F-P41-OBS-001 (PGAP-RECORDS-LINT-FIXBURST-PARITY, 5
+# consecutive recurrences: F-P39-MED-001, F-P40-MED-003, F-P41-MED-001, plus
+# two earlier occurrences).
+#
+# Check reads STATE.md directly (not git diff) — the file is always present
+# for any commit that touches the factory-artifacts branch.
+#
+# Positive-coverage log on PASS: "STATE.md D-NNN parity: newest=D-NNN,
+# checkpoint=D-NNN, convergence=D-NNN — 3/3 surfaces in sync".
+# On FAIL: identifies which surface is stale and routes to state-manager.
+
+check_l13() {
+  local STATE_MD="${FACTORY_DIR}/STATE.md"
+
+  # Skip: STATE.md absent (non-STATE.md commit type)
+  if [ ! -f "$STATE_MD" ]; then
+    emit PASS "L13: STATE.md D-NNN parity — STATE.md absent; check skipped"
+    return
+  fi
+
+  # Step 1: Extract max D-NNN from Phase Progress table rows with `| COMPLETE |` status.
+  # Scoped to Phase Progress rows exclusively (format: `| D-NNN/YYYY-MM-DD — ...`).
+  # Decisions Log rows use a different format (`| D-NNN |`) and may include an
+  # in-flight row without an explicit status column; scoping to the date-formatted
+  # Phase Progress rows with `| COMPLETE |` gives the correct newest-complete D-NNN.
+  # When state-manager closes fix-burst-N, the Phase Progress row transitions from
+  # `| IN FLIGHT |` to `| COMPLETE |` AND the checkpoint is updated to match;
+  # the two writes land in the same atomic commit (TD-VSDD-053).
+  local MAX_D_NUM
+  MAX_D_NUM=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$STATE_MD" 2>/dev/null \
+    | grep '| COMPLETE |' \
+    | grep -oE 'D-[0-9]+' \
+    | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+
+  if [ -z "$MAX_D_NUM" ]; then
+    emit PASS "L13: STATE.md D-NNN parity — no D-NNN table rows found; check skipped"
+    return
+  fi
+
+  local MAX_D="D-${MAX_D_NUM}"
+
+  # Step 2: Extract §Session Resume Checkpoint section, then find canonical D-NNN
+  # Canonical patterns (either is sufficient):
+  #   (a) "D-NNN checkpoint is current" — archival comment in the section
+  #   (b) "post-D-NNN state" — in the §RESUME NEXT-ACTIONS heading
+  local CHECKPOINT_SECTION
+  CHECKPOINT_SECTION=$(awk \
+    '/^## Session Resume Checkpoint/{flag=1;next} /^## /{flag=0} flag' \
+    "$STATE_MD" 2>/dev/null || true)
+
+  local CHECKPOINT_D=""
+  if [ -n "$CHECKPOINT_SECTION" ]; then
+    local CP1 CP2 CP_MAX
+    CP1=$(echo "$CHECKPOINT_SECTION" \
+      | grep -oE 'D-[0-9]+ checkpoint is current' \
+      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+    CP2=$(echo "$CHECKPOINT_SECTION" \
+      | grep -oE 'post-D-[0-9]+ state' \
+      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+    CP_MAX=$(printf '%s\n%s\n' "$CP1" "$CP2" \
+      | grep -v '^$' | sort -n | tail -1 || true)
+    [ -n "$CP_MAX" ] && CHECKPOINT_D="D-${CP_MAX}"
+  fi
+
+  # Step 3: Extract §Convergence Status section, then find terminal D-NNN
+  # The section is one large narrative paragraph containing bold **D-NNN entries.
+  # Taking the max bold **D-NNN number gives the terminal (newest) entry.
+  local CONVERGENCE_SECTION
+  CONVERGENCE_SECTION=$(awk \
+    '/^## Convergence Status/{flag=1;next} /^## /{flag=0} flag' \
+    "$STATE_MD" 2>/dev/null || true)
+
+  local CONVERGENCE_D=""
+  local CONVERGENCE_SKIPPED=false
+  if [ -z "$CONVERGENCE_SECTION" ]; then
+    # §Convergence Status absent — skip that surface
+    CONVERGENCE_SKIPPED=true
+  else
+    local CONV_NUM
+    CONV_NUM=$(echo "$CONVERGENCE_SECTION" \
+      | grep -oE '\*\*D-[0-9]+' \
+      | grep -oE '[0-9]+' | sort -n | tail -1 || true)
+    if [ -n "$CONV_NUM" ]; then
+      CONVERGENCE_D="D-${CONV_NUM}"
+    else
+      # Section exists but no **D-NNN bold entries — skip
+      CONVERGENCE_SKIPPED=true
+    fi
+  fi
+
+  # Step 4: Evaluate parity across surfaces
+  local CHECKPOINT_LABEL="${CHECKPOINT_D:-NOT-FOUND}"
+  local CONVERGENCE_LABEL
+  if [ "$CONVERGENCE_SKIPPED" = true ]; then
+    CONVERGENCE_LABEL="SKIPPED"
+  else
+    CONVERGENCE_LABEL="${CONVERGENCE_D:-NOT-FOUND}"
+  fi
+
+  local PASS_CHECKPOINT=true
+  local PASS_CONVERGENCE=true
+
+  # Checkpoint check: only assert if a canonical D-NNN was found
+  if [ -n "$CHECKPOINT_D" ] && [ "$CHECKPOINT_D" != "$MAX_D" ]; then
+    PASS_CHECKPOINT=false
+  fi
+
+  # Convergence check: only assert if not skipped and a D-NNN was found
+  if [ "$CONVERGENCE_SKIPPED" = false ] && [ -n "$CONVERGENCE_D" ] && \
+     [ "$CONVERGENCE_D" != "$MAX_D" ]; then
+    PASS_CONVERGENCE=false
+  fi
+
+  if [ "$PASS_CHECKPOINT" = true ] && [ "$PASS_CONVERGENCE" = true ]; then
+    emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 3/3 surfaces in sync"
+  else
+    if [ "$PASS_CHECKPOINT" = false ]; then
+      emit FAIL "L13: STATE.md D-NNN parity — newest Decision Log entry is ${MAX_D} but §Session Resume Checkpoint references ${CHECKPOINT_LABEL}. Run state-manager to propagate."
+    fi
+    if [ "$PASS_CONVERGENCE" = false ]; then
+      emit FAIL "L13: STATE.md D-NNN parity — newest Decision Log entry is ${MAX_D} but §Convergence Status terminal entry references ${CONVERGENCE_LABEL}. Run state-manager to propagate."
+    fi
+  fi
+}
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 echo "records-lint: pregolya factory records discipline"
@@ -1177,6 +1438,10 @@ echo "--- L12: Dead-Brand-Token Recurrence Guard (newly-authored specs/ addition
 check_l12
 
 echo ""
+echo "--- L13: STATE.md D-NNN Parity ---"
+check_l13
+
+echo ""
 echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL UNVERIFIED=$UNVERIFIED"
 
 if [ "$FAIL" -gt 0 ]; then
@@ -1191,6 +1456,7 @@ if [ "$FAIL" -gt 0 ]; then
   echo "  L11 violations → finding author (replace 8+ char hex digest with artifact+section anchor cite)"
   echo "  L12 violations → finding author (replace dead brand token: ferrochain→pregolya,"
   echo "                   ferrograph→pregolya-graph, ferroctmp→pregolya-checkpoint, FerrochainError→PregolyaError)"
+  echo "  L13 violations → state-manager (propagate newest D-NNN to §Session Resume Checkpoint and §Convergence Status)"
   exit 1
 else
   echo "RESULT: PASS"
