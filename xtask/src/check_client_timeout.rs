@@ -14,7 +14,7 @@
 //!   in non-test source.
 //! - Also scans for `ClientBuilder` chains (including `ClientBuilder::default()`)
 //!   that call `.build()` without a preceding `.timeout(d)` call where
-//!   `d > Duration::ZERO` (BC-2.14.004 {PC-001}, {INV-004}).
+//!   `d > Duration::ZERO` (BC-2.14.004 {PC-001}).
 //! - `.timeout(Duration::ZERO)` is treated as a missing timeout and flagged —
 //!   a zero duration is not a valid request timeout.
 //! - `reqwest::blocking::Client/ClientBuilder` patterns are detected via the
@@ -87,29 +87,8 @@ use syn::visit::Visit;
 /// are scanned via recursive syn re-parsing (see module-level doc).
 /// Exits non-zero on any violation (BC-2.14.004 {PC-003}).
 pub fn run() {
-    let output = std::process::Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
+    let (rust_files, disc_unreadable) = crate::collect_rust_files("crates/");
+    if rust_files.is_empty() {
         eprintln!("ERROR: check-client-timeout scanned 0 files — gate cannot certify anything");
         exit(1);
     }
@@ -117,14 +96,16 @@ pub fn run() {
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_analyzed = 0usize;
     let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in files_str.lines() {
+    for path_buf in &rust_files {
+        let file_path = path_buf.to_string_lossy();
+        let file_path = file_path.as_ref();
         if crate::is_lint_exempt_file(file_path) {
             files_exempt += 1;
             continue;
         }
-        let content = match std::fs::read_to_string(file_path) {
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(_) => {
                 files_unreadable += 1;
@@ -384,10 +365,10 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
             let method = mc.method.to_string();
             let inner = analyze_build_chain(&mc.receiver)?;
             if method == "timeout" {
-                // A zero-duration timeout does not satisfy BC-2.14.004 {INV-004}.
+                // A zero-duration timeout does not satisfy BC-2.14.004 {PC-001}.
                 // Use the LAST `.timeout()` call's validity — the runtime honours
                 // the last-set value, so a later `.timeout(Duration::ZERO)` revokes
-                // a previously-set valid timeout ({INV-004} correctness).
+                // a previously-set valid timeout ({PC-001} correctness).
                 let is_zero = mc.args.first().map(is_zero_duration_arg).unwrap_or(false);
                 Some(ChainResult {
                     has_valid_timeout: !is_zero,
@@ -850,18 +831,57 @@ fn is_zero_literal(s: &str) -> bool {
 
     // Step 1: strip underscore separators.
     let no_underscores = s.replace('_', "");
+    let s = no_underscores.as_str();
 
-    // Step 2: strip trailing type suffix (longest first to avoid partial strips).
+    // Step 2: detect radix prefix FIRST — this determines which type suffixes are valid.
+    // For non-decimal (hex/bin/oct) literals, `f64`/`f32` are not valid suffixes and must
+    // NOT be stripped. Stripping them before radix detection would misclassify `0x0f64`
+    // (hex literal with digit `f` and digits `6`, `4`) as zero.
+    if let Some(hex_digits_raw) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
+        // Hex: only integer suffixes are valid (f64/f32 are not valid on hex literals).
+        const INT_SUFFIXES: &[&str] = &[
+            "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "u8", "i8",
+        ];
+        let hex_digits = INT_SUFFIXES
+            .iter()
+            .find_map(|&sfx| hex_digits_raw.strip_suffix(sfx))
+            .unwrap_or(hex_digits_raw);
+        return !hex_digits.is_empty() && hex_digits.chars().all(|c| c == '0');
+    }
+    if let Some(bin_digits_raw) = s.strip_prefix("0b").or_else(|| s.strip_prefix("0B")) {
+        // Binary: only integer suffixes are valid.
+        const INT_SUFFIXES: &[&str] = &[
+            "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "u8", "i8",
+        ];
+        let bin_digits = INT_SUFFIXES
+            .iter()
+            .find_map(|&sfx| bin_digits_raw.strip_suffix(sfx))
+            .unwrap_or(bin_digits_raw);
+        return !bin_digits.is_empty() && bin_digits.chars().all(|c| c == '0');
+    }
+    if let Some(oct_digits_raw) = s.strip_prefix("0o").or_else(|| s.strip_prefix("0O")) {
+        // Octal: only integer suffixes are valid.
+        const INT_SUFFIXES: &[&str] = &[
+            "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "u8", "i8",
+        ];
+        let oct_digits = INT_SUFFIXES
+            .iter()
+            .find_map(|&sfx| oct_digits_raw.strip_suffix(sfx))
+            .unwrap_or(oct_digits_raw);
+        return !oct_digits.is_empty() && oct_digits.chars().all(|c| c == '0');
+    }
+
+    // Step 3: decimal literal — strip all type suffixes including f64/f32.
     // Order: 5-char ("usize","isize"), 4-char ("u128","i128"), 3-char (u64/u32/u16/i64/i32/i16/f64/f32), 2-char (u8/i8).
     // "usize" must precede "u8" and "isize" must precede "i8" to avoid stripping only the
     // shared trailing characters and leaving a malformed digit sequence.
-    const TYPE_SUFFIXES: &[&str] = &[
+    const DECIMAL_SUFFIXES: &[&str] = &[
         "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "f64", "f32",
         "u8", "i8",
     ];
     let stripped: &str = {
-        let mut result: &str = no_underscores.as_str();
-        for suffix in TYPE_SUFFIXES {
+        let mut result: &str = s;
+        for suffix in DECIMAL_SUFFIXES {
             if let Some(base) = result.strip_suffix(suffix) {
                 result = base;
                 break;
@@ -869,29 +889,6 @@ fn is_zero_literal(s: &str) -> bool {
         }
         result
     };
-
-    // Step 3: parse by radix.
-    if let Some(hex_digits) = stripped
-        .strip_prefix("0x")
-        .or_else(|| stripped.strip_prefix("0X"))
-    {
-        // Hex zero: all digits after the prefix must be '0'.
-        return !hex_digits.is_empty() && hex_digits.chars().all(|c| c == '0');
-    }
-    if let Some(bin_digits) = stripped
-        .strip_prefix("0b")
-        .or_else(|| stripped.strip_prefix("0B"))
-    {
-        // Binary zero: all digits after the prefix must be '0'.
-        return !bin_digits.is_empty() && bin_digits.chars().all(|c| c == '0');
-    }
-    if let Some(oct_digits) = stripped
-        .strip_prefix("0o")
-        .or_else(|| stripped.strip_prefix("0O"))
-    {
-        // Octal zero: all digits after the prefix must be '0'.
-        return !oct_digits.is_empty() && oct_digits.chars().all(|c| c == '0');
-    }
 
     // Float or decimal integer.
     if stripped.contains('.') || stripped.contains('e') || stripped.contains('E') {
@@ -907,7 +904,7 @@ fn is_zero_literal(s: &str) -> bool {
 mod tests {
     use super::scan_for_timeout_violations_in_source;
 
-    /// BC-2.14.004 {PC-001}/{INV-004} — Form D: fully-qualified from_secs(0) must be flagged.
+    /// BC-2.14.004 {PC-001} — Form D: fully-qualified from_secs(0) must be flagged.
     ///
     /// `std::time::Duration::from_secs(0)` is semantically identical to Duration::ZERO;
     /// the fully-qualified path + constructor form must be detected (F-P5-M02).
@@ -926,7 +923,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.004 {PC-001}/{INV-004} — Form D: core::time::Duration::from_millis(0) must be flagged.
+    /// BC-2.14.004 {PC-001} — Form D: core::time::Duration::from_millis(0) must be flagged.
     ///
     /// `core::time::Duration::from_millis(0)` is also a zero duration via fully-qualified path.
     #[test]
@@ -944,7 +941,7 @@ mod tests {
         );
     }
 
-    /// BC-2.14.004 {PC-001}/{INV-004} — hex literal zero: Duration::from_secs(0x0) must be flagged.
+    /// BC-2.14.004 {PC-001} — hex literal zero: Duration::from_secs(0x0) must be flagged.
     ///
     /// `0x0` is the integer zero in hexadecimal form; it is equivalent to the literal `0`
     /// and must be treated as a zero-timeout argument.
@@ -961,7 +958,7 @@ mod tests {
         );
     }
 
-    /// F-P6-L03 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+    /// F-P6-L03 (LOW) — BC-2.14.004 {PC-001}
     ///
     /// `from_secs_f64(0f64)` must be flagged: `0f64` is the float zero literal with explicit
     /// type suffix (no decimal point). `is_zero_literal` must recognise this suffix form.
@@ -982,7 +979,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P6-L03 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+    /// F-P6-L03 (LOW) — BC-2.14.004 {PC-001}
     ///
     /// `from_secs_f32(0.)` must be flagged: `0.` is the bare trailing-dot float literal
     /// (shorthand for `0.0`). `is_zero_literal` must recognise this form.
@@ -1003,7 +1000,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `00` decimal double-zero must be flagged.
+    /// F-P7-M02 — BC-2.14.004 {PC-001}: `00` decimal double-zero must be flagged.
     ///
     /// `00` is a valid Rust decimal literal evaluating to 0; the numeric normalisation in
     /// `is_zero_literal` (parse as u128 decimal) must recognise it as zero.
@@ -1017,7 +1014,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `0.00` float zero must be flagged.
+    /// F-P7-M02 — BC-2.14.004 {PC-001}: `0.00` float zero must be flagged.
     ///
     /// `0.00` is a float literal evaluating to 0.0; the numeric normalisation in
     /// `is_zero_literal` (parse as f64) must recognise it as zero.
@@ -1031,7 +1028,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `0x00` hex zero must be flagged.
+    /// F-P7-M02 — BC-2.14.004 {PC-001}: `0x00` hex zero must be flagged.
     ///
     /// `0x00` is a hex integer literal evaluating to 0; the numeric normalisation in
     /// `is_zero_literal` (all hex post-prefix digits are `0`) must recognise it.
@@ -1045,7 +1042,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P7-M02 — BC-2.14.004 {PC-001}/{INV-004}: `0e0` exponential float zero must be flagged.
+    /// F-P7-M02 — BC-2.14.004 {PC-001}: `0e0` exponential float zero must be flagged.
     ///
     /// `0e0` is a float literal in exponential notation evaluating to 0.0; the numeric
     /// normalisation in `is_zero_literal` (contains 'e' → parse as f64) must recognise it.
@@ -1061,7 +1058,7 @@ pub fn build_client() -> reqwest::Client {
 
     // ── F-P8-M01: Duration::new and Duration::default ────────────────────────
 
-    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `Duration::new(0, 0)` must be flagged.
+    /// F-P8-M01 — BC-2.14.004 {PC-001}: `Duration::new(0, 0)` must be flagged.
     ///
     /// `Duration::new(0, 0)` is semantically identical to `Duration::ZERO`; both secs
     /// and nanos being zero literals must be detected as a zero-duration timeout.
@@ -1078,7 +1075,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `std::time::Duration::new(0, 0)` must be flagged.
+    /// F-P8-M01 — BC-2.14.004 {PC-001}: `std::time::Duration::new(0, 0)` must be flagged.
     ///
     /// Fully-qualified `std::time::Duration::new(0, 0)` is semantically identical to
     /// `Duration::new(0, 0)` — the fully-qualified path form must also be detected.
@@ -1095,7 +1092,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `Duration::default()` must be flagged.
+    /// F-P8-M01 — BC-2.14.004 {PC-001}: `Duration::default()` must be flagged.
     ///
     /// `Duration::default()` always evaluates to `Duration::ZERO`; an explicit
     /// `Duration::default()` call as a timeout argument must be detected as zero.
@@ -1112,7 +1109,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P8-M01 — BC-2.14.004 {PC-001}/{INV-004}: `Duration::new(30, 0)` must NOT be flagged.
+    /// F-P8-M01 — BC-2.14.004 {PC-001}: `Duration::new(30, 0)` must NOT be flagged.
     ///
     /// `Duration::new(30, 0)` is a valid 30-second timeout and must not be falsely flagged.
     /// The detection must require BOTH secs and nanos to be zero literals.
@@ -1131,7 +1128,7 @@ pub fn build_client() -> reqwest::Client {
 
     // ── F-P8-L01: negative zero float ────────────────────────────────────────
 
-    /// F-P8-L01 — BC-2.14.004 {PC-001}/{INV-004}: `from_secs_f64(-0.0)` must be flagged.
+    /// F-P8-L01 — BC-2.14.004 {PC-001}: `from_secs_f64(-0.0)` must be flagged.
     ///
     /// `-0.0` parses as `Unary(Neg, Lit(0.0))` in the syn AST. The scanner must handle
     /// the case where the literal is wrapped in a unary negation.
@@ -1148,7 +1145,7 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P8-L01 — BC-2.14.004 {PC-001}/{INV-004}: `from_secs_f32(-0.)` must be flagged.
+    /// F-P8-L01 — BC-2.14.004 {PC-001}: `from_secs_f32(-0.)` must be flagged.
     ///
     /// `-0.` is the bare trailing-dot float negative zero literal; the scanner must
     /// recognise it as zero through the negative zero handling path.

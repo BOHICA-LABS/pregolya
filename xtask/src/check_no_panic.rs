@@ -76,29 +76,8 @@ pub fn run() {
     // xtask is a build-tool binary crate outside that perimeter.
     // xtask production code currently contains no panic-family constructs;
     // failures are surfaced via stderr + non-zero exit.
-    let output = std::process::Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
+    let (rust_files, disc_unreadable) = crate::collect_rust_files("crates/");
+    if rust_files.is_empty() {
         eprintln!("ERROR: check-no-panic scanned 0 files — gate cannot certify anything");
         exit(1);
     }
@@ -106,14 +85,16 @@ pub fn run() {
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_analyzed = 0usize;
     let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in files_str.lines() {
+    for path_buf in &rust_files {
+        let file_path = path_buf.to_string_lossy();
+        let file_path = file_path.as_ref();
         if crate::is_lint_exempt_file(file_path) {
             files_exempt += 1;
             continue;
         }
-        let content = match std::fs::read_to_string(file_path) {
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(_) => {
                 files_unreadable += 1;
@@ -1032,29 +1013,8 @@ fn scan_method_calls_in_tokens(
 /// ```
 /// (exits 0 when the scanner correctly detects violations in the fixture directory).
 pub fn run_fixture_mode(dir: &str) {
-    let output = std::process::Command::new("find")
-        .args([dir, "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    let fixture_files: Vec<&str> = files_str.lines().collect();
-    if fixture_files.is_empty() {
+    let (rust_file_paths, disc_unreadable) = crate::collect_rust_files(dir);
+    if rust_file_paths.is_empty() {
         eprintln!(
             "ERROR: check-no-panic --fixture-mode {dir}: \
              scanned 0 fixture files — gate cannot certify scanner coverage"
@@ -1062,13 +1022,15 @@ pub fn run_fixture_mode(dir: &str) {
         exit(1);
     }
 
-    let total_fixtures = fixture_files.len();
+    let total_fixtures = rust_file_paths.len();
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_with_findings = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in &fixture_files {
-        let content = match std::fs::read_to_string(file_path) {
+    for path_buf in &rust_file_paths {
+        let file_path_cow = path_buf.to_string_lossy();
+        let file_path = file_path_cow.as_ref();
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(e) => {
                 eprintln!(
@@ -1731,7 +1693,7 @@ fn check_build_plain() {
         // LOAD-BEARING for MED-001 (fix-burst-33): #[test]-family attribute exemption
         // in PanicVisitor. Deleting the last-path-segment "test" guard in visit_item_fn,
         // visit_impl_item_fn, and visit_trait_item_fn causes this test to FAIL (returns
-        // 1 violation instead of 0).
+        // 2 violations instead of 0).
         let source = r#"
         #[tokio::test]
         async fn test_something() {
@@ -1781,7 +1743,7 @@ fn check_build_plain() {
     fn test_no_panic_cfg_test_item_trait_exempt() {
         // LOAD-BEARING for MED-001 (fix-burst-34): #[cfg(test)] on the enclosing ItemTrait
         // must exempt the entire trait body. Deleting the visit_item_trait guard causes
-        // this test to FAIL (returns 1 violation instead of 0).
+        // this test to FAIL (returns 2 violations instead of 0).
         let source = r#"
             #[cfg(test)]
             trait TestHelper {

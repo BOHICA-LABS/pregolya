@@ -52,29 +52,8 @@ use std::process::exit;
 /// Scans `crates/**/*.rs` for structural credential safety violations
 /// (BC-2.14.005 {PC-006}). Exits non-zero on any violation.
 pub fn run() {
-    let output = std::process::Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
+    let (rust_files, disc_unreadable) = crate::collect_rust_files("crates/");
+    if rust_files.is_empty() {
         eprintln!("ERROR: deny-bare-api-key scanned 0 files — gate cannot certify anything");
         exit(1);
     }
@@ -82,14 +61,16 @@ pub fn run() {
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_analyzed = 0usize;
     let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in files_str.lines() {
+    for path_buf in &rust_files {
+        let file_path = path_buf.to_string_lossy();
+        let file_path = file_path.as_ref();
         if crate::is_lint_exempt_file(file_path) {
             files_exempt += 1;
             continue;
         }
-        let content = match std::fs::read_to_string(file_path) {
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(_) => {
                 files_unreadable += 1;

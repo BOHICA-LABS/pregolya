@@ -787,7 +787,7 @@ fn test_timeout_checker_detects_clientbuilder_ufcs_new_no_timeout() {
 /// MED-002 negative — `<reqwest::ClientBuilder>::new().timeout(...).build()` must NOT be flagged.
 ///
 /// The UFCS builder chain includes a valid `.timeout(Duration::from_secs(30))` call
-/// before `.build()`, satisfying BC-2.14.004 {INV-004}. No violation should be emitted.
+/// before `.build()`, satisfying BC-2.14.004 {PC-001}. No violation should be emitted.
 #[test]
 fn test_timeout_checker_clientbuilder_ufcs_new_with_timeout_clean() {
     let src = r#"fn build() -> reqwest::Client { <reqwest::ClientBuilder>::new().timeout(std::time::Duration::from_secs(30)).build().unwrap() }"#;
@@ -1915,12 +1915,12 @@ pub fn color_name(c: &Color) -> &'static str {
 // ═══════════════════════════════════════════════════════════════════════════
 // BC-2.14.004 (S-1.02 F-04) — timeout scanner Duration::ZERO detection
 //
-// BC-2.14.004 {PC-001} / {INV-004}: timeout duration must be > Duration::ZERO.
+// BC-2.14.004 {PC-001}: timeout duration must be > Duration::ZERO.
 // At authoring time the scanner accepted any .timeout() call regardless of the argument,
 // allowing .timeout(Duration::ZERO) to slip through as "compliant"; now GREEN after zero-duration detection.
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// F-04 (MED) — BC-2.14.004 {PC-001} / {INV-004}
+/// F-04 (MED) — BC-2.14.004 {PC-001}
 ///
 /// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::ZERO)`
 /// as a violation — {PC-001} requires the timeout duration to be > Duration::ZERO.
@@ -1936,7 +1936,7 @@ fn test_BC_2_14_004_flags_timeout_zero() {
     assert!(
         !findings.is_empty(),
         "BC-2.14.004 {{PC-001}}: .timeout(Duration::ZERO) must be flagged — duration must be \
-         > Duration::ZERO per {{INV-004}}; got: {findings:?}"
+         > Duration::ZERO per {{PC-001}}; got: {findings:?}"
     );
 }
 
@@ -2529,14 +2529,14 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_one_when_no_findings() {
 // ═══════════════════════════════════════════════════════════════════════════
 // BC-2.14.004 (S-1.02 pass-4 O-1) — zero-timeout form detection gaps
 //
-// BC-2.14.004 {PC-001}/{INV-004}: timeout duration must be > Duration::ZERO.
+// BC-2.14.004 {PC-001}: timeout duration must be > Duration::ZERO.
 // The current is_zero_duration_timeout_arg recognises only the short constant form
 // `Duration :: ZERO`. Two additional zero-equivalent forms escape detection:
 //   - Duration::from_secs(0)       (zero via constructor)
 //   - std::time::Duration::ZERO    (fully-qualified constant path)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// O-1 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+/// O-1 (LOW) — BC-2.14.004 {PC-001}
 ///
 /// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::from_secs(0))`
 /// as a zero/non-positive-timeout violation. {PC-001} requires d > Duration::ZERO;
@@ -2547,19 +2547,19 @@ fn test_BC_2_14_003_fixture_mode_subprocess_exits_one_when_no_findings() {
 /// (not `"ZERO"`) → returned `false` → timeout credited as valid → chain not flagged; now GREEN.
 #[test]
 fn test_BC_2_14_004_flags_timeout_from_secs_zero() {
-    // BC-2.14.004 {PC-001}/{INV-004}: Duration::from_secs(0) == Duration::ZERO
+    // BC-2.14.004 {PC-001}: Duration::from_secs(0) == Duration::ZERO
     let src = r#"let c = reqwest::ClientBuilder::new().timeout(Duration::from_secs(0)).build()?;"#;
     let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
     assert!(
         !findings.is_empty(),
         "BC-2.14.004 {{PC-001}} O-1: .timeout(Duration::from_secs(0)) must be flagged as \
-         zero-timeout (d must be > 0 per {{INV-004}}); is_zero_duration_timeout_arg only \
+         zero-timeout (d must be > 0 per {{PC-001}}); is_zero_duration_timeout_arg only \
          matches the `Duration::ZERO` constant form at fixed flat-token offsets; \
          got: {findings:?}"
     );
 }
 
-/// O-1 (LOW) — BC-2.14.004 {PC-001}/{INV-004}
+/// O-1 (LOW) — BC-2.14.004 {PC-001}
 ///
 /// `scan_for_timeout_violations_in_source` must FLAG fully-qualified
 /// `.timeout(std::time::Duration::ZERO)`. The value is identical to `Duration::ZERO`;
@@ -2571,14 +2571,14 @@ fn test_BC_2_14_004_flags_timeout_from_secs_zero() {
 /// `std :: time ::` appeared before `Duration` → check returned `false` → was not detected; now GREEN.
 #[test]
 fn test_BC_2_14_004_flags_timeout_fully_qualified_duration_zero() {
-    // BC-2.14.004 {PC-001}/{INV-004}: std::time::Duration::ZERO is Duration::ZERO
+    // BC-2.14.004 {PC-001}: std::time::Duration::ZERO is Duration::ZERO
     let src =
         r#"let c = reqwest::ClientBuilder::new().timeout(std::time::Duration::ZERO).build()?;"#;
     let findings = scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
     assert!(
         !findings.is_empty(),
         "BC-2.14.004 {{PC-001}} O-1: .timeout(std::time::Duration::ZERO) fully-qualified \
-         must be flagged ({{INV-004}}: zero-duration timeout is forbidden); \
+         must be flagged ({{PC-001}}: zero-duration timeout is forbidden); \
          is_zero_duration_timeout_arg only matches the short Duration::ZERO form; extra \
          tokens in the fully-qualified path shift `Duration` past the +3 offset check; \
          got: {findings:?}"
@@ -2692,13 +2692,13 @@ pub fn process(phase: Phase) -> i32 {
 // ═══════════════════════════════════════════════════════════════════════════
 // BC-2.14.004 (S-1.02 pass-5 F-04) — zero-timeout constructor coverage gaps
 //
-// BC-2.14.004 {PC-001}/{INV-004}: timeout duration must be > Duration::ZERO.
+// BC-2.14.004 {PC-001}: timeout duration must be > Duration::ZERO.
 // `is_zero_duration_timeout_arg` Form C recognises from_secs, from_millis, from_nanos,
 // from_secs_f64 but NOT from_micros or from_secs_f32. Both constructors with a zero
 // argument evaluate to Duration::ZERO and must be flagged.
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// F-04 (LOW) — BC-2.14.004 {PC-001}/{INV-004} pass-5
+/// F-04 (LOW) — BC-2.14.004 {PC-001} pass-5
 ///
 /// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::from_micros(0))`
 /// as a zero-timeout violation. `Duration::from_micros(0)` evaluates to `Duration::ZERO`
@@ -2716,14 +2716,14 @@ fn test_BC_2_14_004_flags_timeout_from_micros_zero() {
     assert!(
         !findings.is_empty(),
         "BC-2.14.004 {{PC-001}} pass-5 F-04: .timeout(Duration::from_micros(0)) must be \
-         flagged as zero-timeout (d must be > 0 per {{INV-004}}); \
+         flagged as zero-timeout (d must be > 0 per {{PC-001}}); \
          is_zero_duration_timeout_arg Form C only matches from_secs/from_millis/from_nanos/\
          from_secs_f64; from_micros is absent from the recognised constructor list; \
          got: {findings:?}"
     );
 }
 
-/// F-04 (LOW) — BC-2.14.004 {PC-001}/{INV-004} pass-5
+/// F-04 (LOW) — BC-2.14.004 {PC-001} pass-5
 ///
 /// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::from_secs_f32(0.0))`
 /// as a zero-timeout violation. `Duration::from_secs_f32(0.0)` evaluates to `Duration::ZERO`
@@ -2740,7 +2740,7 @@ fn test_BC_2_14_004_flags_timeout_from_secs_f32_zero() {
     assert!(
         !findings.is_empty(),
         "BC-2.14.004 {{PC-001}} pass-5 F-04: .timeout(Duration::from_secs_f32(0.0)) must be \
-         flagged as zero-timeout (d must be > 0 per {{INV-004}}); \
+         flagged as zero-timeout (d must be > 0 per {{PC-001}}); \
          is_zero_duration_timeout_arg Form C only matches from_secs_f64 for f32/f64 constructors; \
          from_secs_f32 is absent; got: {findings:?}"
     );

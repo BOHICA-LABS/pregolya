@@ -49,6 +49,41 @@ pub(crate) fn check_post_exemption_vacuity(
     }
 }
 
+/// Collect all Rust source files under `root_path`, excluding `target/` directories.
+///
+/// Returns `(files_found, unreadable_count)` where `unreadable_count` is the number
+/// of directory entries that WalkDir could not access (permission error, broken symlink,
+/// etc.). The caller should add `unreadable_count` to its `files_unreadable` counter
+/// and fail-closed when it is non-zero.
+///
+/// This replaces POSIX `find crates/ -name "*.rs" -not -path "*/target/*"` across all
+/// six gate entry points, providing cross-platform portability (Windows does not have
+/// `find`).
+pub(crate) fn collect_rust_files(root_path: &str) -> (Vec<std::path::PathBuf>, usize) {
+    use walkdir::WalkDir;
+    let mut files = Vec::new();
+    let mut unreadable = 0usize;
+    for entry in WalkDir::new(root_path)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| {
+            // Skip `target/` directories to avoid scanning build artifacts.
+            e.file_name() != "target"
+        })
+    {
+        match entry {
+            Ok(e) if e.file_type().is_file() => {
+                if e.path().extension().is_some_and(|x| x == "rs") {
+                    files.push(e.path().to_path_buf());
+                }
+            }
+            Ok(_) => {}
+            Err(_) => unreadable += 1,
+        }
+    }
+    (files, unreadable)
+}
+
 /// Pure verdict for extra-argument detection. Returns `Err(message)` when `args[2]`
 /// is present (unrecognised argument), or `Ok(())` when no extra argument is present.
 ///
@@ -534,31 +569,8 @@ fn deny_anyhow_in_lib() {
     // Use token-tree walking (proc_macro2) so that `use anyhow` inside
     // `#[cfg(test)]` blocks is not flagged. The blunt `grep` approach fires
     // even when the import is legitimately scoped to test code.
-    let output = Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    // F2 fix: check subprocess exit status
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
+    let (rust_files, disc_unreadable) = collect_rust_files("crates/");
+    if rust_files.is_empty() {
         eprintln!("ERROR: deny-anyhow-in-lib scanned 0 files — gate cannot certify anything");
         exit(1);
     }
@@ -566,14 +578,16 @@ fn deny_anyhow_in_lib() {
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_analyzed = 0usize;
     let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in files_str.lines() {
+    for path_buf in &rust_files {
+        let file_path = path_buf.to_string_lossy();
+        let file_path = file_path.as_ref();
         if is_lint_exempt_file(file_path) {
             files_exempt += 1;
             continue;
         }
-        let content = match std::fs::read_to_string(file_path) {
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(_) => {
                 files_unreadable += 1;
@@ -713,29 +727,8 @@ fn deny_description_cache_key() {
     // so that the PASSED message reports the number of files scanned — not grep match counts
     // which are 0 in a clean codebase, making it impossible to distinguish a vacuous pass
     // from a genuine scan.
-    let output = Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
+    let (rust_files, disc_unreadable) = collect_rust_files("crates/");
+    if rust_files.is_empty() {
         eprintln!(
             "ERROR: deny-description-cache-key scanned 0 files — gate cannot certify anything"
         );
@@ -745,14 +738,16 @@ fn deny_description_cache_key() {
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_analyzed = 0usize;
     let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in files_str.lines() {
+    for path_buf in &rust_files {
+        let file_path = path_buf.to_string_lossy();
+        let file_path = file_path.as_ref();
         if is_lint_exempt_file(file_path) {
             files_exempt += 1;
             continue;
         }
-        let content = match std::fs::read_to_string(file_path) {
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(_) => {
                 files_unreadable += 1;
