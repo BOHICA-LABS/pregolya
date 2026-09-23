@@ -230,9 +230,9 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 
 | Detection class | Representative tests | Pass |
 |----------------|----------------------|------|
-| Pattern A — direct `Client::new` / `Client::builder` | `test_timeout_checker_detects_client_new_qualified`, `test_timeout_checker_detects_client_builder_qualified` | 8/8 |
+| Pattern A — direct `Client::new` / `Client::builder` | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_scanner_flags_clientbuilder_new_without_timeout` | 8/8 |
 | Pattern A — `Client::default` / UFCS | `test_timeout_checker_detects_client_default_qualified`, `test_timeout_checker_detects_client_default_bare` | 4/4 |
-| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_checker_detects_builder_no_timeout`, `test_timeout_checker_detects_builder_with_timeout` | 10/10 |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_scanner_does_not_flag_builder_with_timeout` | 10/10 |
 | Macro scanning — `scan_macro_tokens_for_timeout_violations` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_detects_builder_with_timeout_in_lazy_static` | 3/3 |
 | Test context suppression (including `#[tokio::test]`) | `test_timeout_checker_ignores_tokio_test_fns` | 5/5 |
 | Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | 2/2 |
@@ -262,11 +262,11 @@ Total: 309 pass, 7 skipped (pre-existing `#[ignore]` tests requiring live API ke
 | Test context suppression (including `#[tokio::test]`, trait `#[cfg(test)]`) | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
 | Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | pass |
 
-All 222 xtask tests pass. 5 skipped (pre-existing `#[ignore]` tests requiring live API keys).
+All 222 xtask tests pass (314 workspace-wide per pre-push hook). 5 skipped (pre-existing `#[ignore]` tests requiring live API keys).
 
 **Known limitations after fix-burst-28:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (macro bodies failing all four parse strategies skipped).
 
-**Docs-only note:** The docs commit that follows code commit `2d2f6ece` (adding this CHANGELOG + evidence-report section) is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for the docs commit.
+**Docs-only note (commit `25a4ba7711086c574297a577b0719f6d97fd9f64`):** The docs commit that follows code commit `2d2f6ece` is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for docs commit `25a4ba7711086c574297a577b0719f6d97fd9f64`.
 
 ---
 
