@@ -14,19 +14,41 @@
 //! - `.timeout(Duration::ZERO)` is treated as a missing timeout and flagged —
 //!   a zero duration is not a valid request timeout.
 //! - `reqwest::blocking::Client/ClientBuilder` patterns are detected via the
-//!   `scan_reqwest_blocking_pattern` helper (called from within the `reqwest` token
-//!   block). Bare `blocking::Client/ClientBuilder` (use-imported head form, e.g.
-//!   `use reqwest::blocking; blocking::Client::new()`) are flagged conservatively
-//!   by the amended Patterns 2, 3, and 4.
+//!   same qualifier classification logic as the async surface.  Bare
+//!   `blocking::Client/ClientBuilder` (use-imported head form, e.g.
+//!   `use reqwest::blocking; blocking::Client::new()`) are flagged
+//!   conservatively by the path-relative guard.
 //! - Files under `tests/` directories, `#[cfg(test)]` blocks, and files ending
 //!   in `_test.rs`/`_tests.rs` are fully exempt (BC-2.14.004 {INV-003}).
 //! - Exits non-zero when any violation is found; exits 0 on a clean scan.
+//! - Uses `syn` AST-based scanning (`syn::visit::Visit`) for accurate detection
+//!   that correctly handles parenthesized and braced base subexpressions.
+//!
+//! # Known Limitations
+//!
+//! **KNOWN-LIMITATION 1 — use-import false positives:** Bare `Client::new()`,
+//! `ClientBuilder::new()`, and `Client::builder()` without a visible reqwest
+//! qualifier are flagged conservatively. If the type was `use`-imported from a
+//! non-reqwest crate (e.g., `use mcp_sdk::Client`), the gate will flag it. The
+//! workaround is to use the fully-qualified form or to add the file to the
+//! lint-exempt allowlist.
+//!
+//! **KNOWN-LIMITATION 2 — split-statement builder chains:** If a `ClientBuilder`
+//! is stored in a `let` binding and `.build()` is called on that binding in a
+//! separate statement, the gate cannot trace the chain across the statement
+//! boundary and will not detect the missing `.timeout()`.
+//!
+//! **KNOWN-LIMITATION 3 — constant-valued zero timeout:** If the zero timeout is
+//! a named constant (e.g., `const NO_TIMEOUT: Duration = Duration::ZERO;
+//! .timeout(NO_TIMEOUT)`), the gate will not detect it as zero-valued. The gate
+//! only inspects the syntactic form of the timeout argument.
 
 use std::process::exit;
+use syn::visit::Visit;
 
 /// Entry point for `cargo xtask check-client-timeout`.
 ///
-/// Scans `crates/**/*.rs` using token-tree analysis to detect `Client::new()`
+/// Scans `crates/**/*.rs` using syn AST-based analysis to detect `Client::new()`
 /// and `ClientBuilder` chains missing `.timeout(...)`. Exits non-zero on any
 /// violation (BC-2.14.004 {PC-003}).
 pub fn run() {
@@ -116,710 +138,378 @@ pub(crate) fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Ve
         return Vec::new();
     }
 
+    // Try to parse as a complete Rust source file.
+    if let Ok(file) = syn::parse_file(src) {
+        let mut checker = TimeoutChecker {
+            path,
+            findings: Vec::new(),
+            in_test_context: false,
+        };
+        syn::visit::visit_file(&mut checker, &file);
+        return checker.findings;
+    }
+
+    // Fallback: wrap in a synthetic function for fragment sources (e.g., bare let-statements
+    // or bare expressions used in tests). Real production files always parse as complete files.
+    let wrapped = format!("fn __fragment__() {{\n{src}\n}}");
+    if let Ok(file) = syn::parse_file(&wrapped) {
+        let mut checker = TimeoutChecker {
+            path,
+            findings: Vec::new(),
+            in_test_context: false,
+        };
+        syn::visit::visit_file(&mut checker, &file);
+        return checker.findings;
+    }
+
+    // Fail-closed: neither parse attempt succeeded; emit a blocking finding rather than
+    // certifying unparseable source as clean.
     use proc_macro2::TokenStream;
-    let ts: TokenStream = match src.parse() {
-        Ok(s) => s,
-        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
-    };
-
-    let mut findings = Vec::new();
-    // Flatten all tokens into a list for pattern matching, suppressing cfg(test) blocks.
-    let mut flat: Vec<FlatToken> = Vec::new();
-    flatten_tokens_no_test(ts.into_iter(), &mut flat, &mut 0u32);
-    scan_flat_for_timeout_violations(&flat, path, &mut findings);
-    findings
-}
-
-/// A flattened token with its kind and source line.
-#[derive(Debug, Clone)]
-enum FlatToken {
-    /// An identifier: the name and line number.
-    Ident(String, usize),
-    /// A punctuation character and line.
-    Punct(char, usize),
-    /// A paren group open marker — emitted before inlining the group's contents.
-    /// Pairs with `ParenGroupEnd` so chain scanners can track nesting depth and skip
-    /// `;` tokens inside paren-typed method arguments (e.g. the `vec!(addr; 2)` macro
-    /// repeat expression inside `.resolve_to_addrs("host", &vec!(addr; 2))`)
-    /// without terminating the chain scan before `.build()` is reached.
-    ParenGroup(usize),
-    /// A paren group close marker — emitted after inlining the group's contents.
-    ParenGroupEnd(usize),
-    /// A brace group open marker — emitted before inlining the group's contents.
-    /// Pairs with `BraceGroupEnd` so chain scanners can track nesting depth and skip
-    /// `;` tokens inside brace-typed method arguments without terminating the chain scan.
-    BraceGroup(usize),
-    /// A brace group close marker — emitted after inlining the group's contents.
-    BraceGroupEnd(usize),
-    /// A bracket group open marker — emitted before inlining the group's contents.
-    /// Pairs with `BracketGroupEnd` so chain scanners can track nesting depth and
-    /// skip `;` tokens inside bracket-typed method arguments (e.g. the `vec![v; n]`
-    /// array-repeat expression inside `.resolve_to_addrs("host", &vec![addr; 2])`)
-    /// without terminating the chain scan before `.build()` is reached.
-    BracketGroup(usize),
-    /// A bracket group close marker — emitted after inlining the group's contents.
-    BracketGroupEnd(usize),
-    /// A literal (integer, float, string, etc.) with its string representation and line.
-    /// Preserved so zero-literal forms like `Duration::from_secs(0)` can be detected
-    /// (BC-2.14.004 {PC-001}/{INV-004} — O-1 zero-timeout detection).
-    Literal(String, usize),
-}
-
-impl FlatToken {
-    fn line(&self) -> usize {
-        match self {
-            FlatToken::Ident(_, l)
-            | FlatToken::Punct(_, l)
-            | FlatToken::ParenGroup(l)
-            | FlatToken::ParenGroupEnd(l)
-            | FlatToken::BraceGroup(l)
-            | FlatToken::BraceGroupEnd(l)
-            | FlatToken::BracketGroup(l)
-            | FlatToken::BracketGroupEnd(l)
-            | FlatToken::Literal(_, l) => *l,
-        }
+    match src.parse::<TokenStream>() {
+        Err(lex_err) => vec![format!("{}:0: FAILED TO LEX FILE: {}", path, lex_err)],
+        Ok(_) => vec![format!("{}:0: FAILED TO PARSE FILE AS RUST SOURCE", path)],
     }
 }
 
-/// Flatten the token stream into `FlatToken` entries, suppressing `#[cfg(test)]` blocks.
-fn flatten_tokens_no_test(
-    iter: proc_macro2::token_stream::IntoIter,
-    out: &mut Vec<FlatToken>,
-    in_test_depth: &mut u32,
-) {
-    use proc_macro2::{Delimiter, TokenTree};
+// ── Path qualifier classification ─────────────────────────────────────────────
 
-    let tokens: Vec<TokenTree> = iter.collect();
-    let mut i = 0;
-    while i < tokens.len() {
-        match &tokens[i] {
-            TokenTree::Punct(p) if p.as_char() == '#' => {
-                if let Some(TokenTree::Group(g)) = tokens.get(i + 1)
-                    && g.delimiter() == Delimiter::Bracket
-                    && crate::is_cfg_test_group(g)
-                {
-                    // Scan forward to the brace body or semicolon
-                    let mut j = i + 2;
-                    while j + 1 < tokens.len() {
-                        if let TokenTree::Punct(p2) = &tokens[j]
-                            && p2.as_char() == '#'
-                            && let TokenTree::Group(_) = &tokens[j + 1]
-                        {
-                            j += 2;
-                            continue;
-                        }
-                        break;
-                    }
-                    let mut found = false;
-                    while j < tokens.len() {
-                        match &tokens[j] {
-                            TokenTree::Group(body) if body.delimiter() == Delimiter::Brace => {
-                                // Skip the test body — do not add to flat list
-                                *in_test_depth += 1;
-                                let mut inner = Vec::new();
-                                flatten_tokens_no_test(
-                                    body.stream().into_iter(),
-                                    &mut inner,
-                                    in_test_depth,
-                                );
-                                // inner is suppressed (not added to out)
-                                *in_test_depth -= 1;
-                                i = j;
-                                found = true;
-                                break;
-                            }
-                            TokenTree::Punct(p2) if p2.as_char() == ';' => {
-                                i = j;
-                                found = true;
-                                break;
-                            }
-                            _ => {}
-                        }
-                        j += 1;
-                    }
-                    if found {
-                        i += 1;
-                        continue;
-                    }
-                }
-                // Not cfg(test) — emit as punct
-                let line = tokens[i].span().start().line;
-                if let TokenTree::Punct(p) = &tokens[i] {
-                    out.push(FlatToken::Punct(p.as_char(), line));
-                }
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum QualifierKind {
+    /// Definitively reqwest — flag unconditionally.
+    Reqwest,
+    /// Ambiguous bare or path-relative qualifier — flag conservatively
+    /// (KNOWN-LIMITATION 1: may be a non-reqwest import).
+    Conservative,
+    /// Definitively non-reqwest — suppress.
+    NonReqwest,
+}
+
+fn is_path_relative(s: &str) -> bool {
+    matches!(s, "crate" | "self" | "super" | "Self")
+}
+
+/// Classify a BUILDER CONSTRUCTOR path for Pattern B (chain ending in `.build()`).
+///
+/// Recognizes paths ending with `(Client|ClientBuilder)::(new|builder)`.
+/// Does NOT recognize `Client::new` (Pattern A only — direct construction).
+fn classify_builder_constructor(segments: &[&str]) -> QualifierKind {
+    if segments.len() < 2 {
+        return QualifierKind::NonReqwest;
+    }
+    let last = segments[segments.len() - 1];
+    let type_name = segments[segments.len() - 2];
+
+    // Pattern B builder entries: ClientBuilder::new OR Client::builder.
+    // Client::new is Pattern A (direct construction, no .build() required).
+    let is_builder_entry = matches!(
+        (type_name, last),
+        ("Client", "builder") | ("ClientBuilder", "new")
+    );
+    if !is_builder_entry {
+        return QualifierKind::NonReqwest;
+    }
+
+    let head = segments[0];
+    match head {
+        "reqwest" => QualifierKind::Reqwest,
+        h if is_path_relative(h) => QualifierKind::Conservative,
+        // bare `blocking::Client::builder` or `blocking::ClientBuilder::new` (use-imported head)
+        "blocking" if segments.len() == 3 => QualifierKind::Conservative,
+        // bare `Client::builder` or `ClientBuilder::new`
+        _ if segments.len() == 2 => QualifierKind::Conservative,
+        // other_sdk::Client::builder or other_sdk::ClientBuilder::new — suppress
+        _ => QualifierKind::NonReqwest,
+    }
+}
+
+/// Classify a DIRECT CONSTRUCTION path for Pattern A (`Client::new()`).
+///
+/// Recognizes paths ending with `Client::new` only.
+fn classify_client_new(segments: &[&str]) -> QualifierKind {
+    if segments.len() < 2 {
+        return QualifierKind::NonReqwest;
+    }
+    let last = segments[segments.len() - 1];
+    let type_name = segments[segments.len() - 2];
+    if last != "new" || type_name != "Client" {
+        return QualifierKind::NonReqwest;
+    }
+
+    let head = segments[0];
+    match head {
+        "reqwest" => QualifierKind::Reqwest,
+        h if is_path_relative(h) => QualifierKind::Conservative,
+        // bare `blocking::Client::new` (use-imported head)
+        "blocking" if segments.len() == 3 => QualifierKind::Conservative,
+        // bare `Client::new`
+        _ if segments.len() == 2 => QualifierKind::Conservative,
+        // other_sdk::blocking::Client::new or other_sdk::Client::new — suppress
+        _ => QualifierKind::NonReqwest,
+    }
+}
+
+// ── Zero-duration detection ────────────────────────────────────────────────────
+
+/// Returns `true` if the expression is a zero numeric literal, handling
+/// negation (e.g., `-0.0` is `Unary(Neg, Lit(0.0))`).
+fn is_zero_literal_expr(expr: &syn::Expr) -> bool {
+    match expr {
+        syn::Expr::Lit(l) => match &l.lit {
+            syn::Lit::Int(i) => is_zero_literal(&i.to_string()),
+            syn::Lit::Float(f) => is_zero_literal(&f.to_string()),
+            _ => false,
+        },
+        // Handle negative-zero forms: `-0.0`, `-0.`, `-0e0`, etc.
+        syn::Expr::Unary(u) if matches!(u.op, syn::UnOp::Neg(_)) => is_zero_literal_expr(&u.expr),
+        _ => false,
+    }
+}
+
+/// Returns `true` when the expression is a zero-valued `Duration` argument.
+///
+/// Detected forms (mirrors the flat-token forms A–F):
+/// - **Form A/B:** `Duration::ZERO`, `std::time::Duration::ZERO`, `core::time::Duration::ZERO`
+/// - **Form C/D:** `Duration::from_secs(0)`, `std::time::Duration::from_millis(0)`, etc.
+///   (all zero-literal constructors including hex, octal, float, and suffix forms)
+/// - **Form E:** `Duration::new(0, 0)` (both secs and nanos must be zero)
+/// - **Form F:** `Duration::default()` (always zero)
+fn is_zero_duration_arg(arg: &syn::Expr) -> bool {
+    match arg {
+        // Form A/B: Duration::ZERO, std::time::Duration::ZERO, core::time::Duration::ZERO
+        syn::Expr::Path(p) => {
+            let segs: Vec<String> = p
+                .path
+                .segments
+                .iter()
+                .map(|s| s.ident.to_string())
+                .collect();
+            segs.last().map(|s| s.as_str()) == Some("ZERO")
+                && segs.iter().rev().nth(1).map(|s| s.as_str()) == Some("Duration")
+        }
+        syn::Expr::Call(c) => {
+            let syn::Expr::Path(p) = &*c.func else {
+                return false;
+            };
+            let segs: Vec<String> = p
+                .path
+                .segments
+                .iter()
+                .map(|s| s.ident.to_string())
+                .collect();
+            // Must reference a Duration type somewhere in the path.
+            if !segs.iter().any(|s| s == "Duration") {
+                return false;
             }
-            TokenTree::Ident(id) => {
-                if *in_test_depth == 0 {
-                    out.push(FlatToken::Ident(id.to_string(), id.span().start().line));
+            let last = segs.last().map(|s| s.as_str()).unwrap_or("");
+            match last {
+                // Form F: Duration::default() is always zero.
+                "default" => true,
+                // Form C/D: zero-literal constructors.
+                "from_secs" | "from_millis" | "from_nanos" | "from_micros" | "from_secs_f64"
+                | "from_secs_f32" => c.args.first().map(is_zero_literal_expr).unwrap_or(false),
+                // Form E: Duration::new(secs, nanos) — both must be zero.
+                "new" => {
+                    let mut it = c.args.iter();
+                    let secs_zero = it.next().map(is_zero_literal_expr).unwrap_or(false);
+                    let nanos_zero = it.next().map(is_zero_literal_expr).unwrap_or(false);
+                    secs_zero && nanos_zero
                 }
-            }
-            TokenTree::Punct(p) => {
-                if *in_test_depth == 0 {
-                    out.push(FlatToken::Punct(p.as_char(), p.span().start().line));
-                }
-            }
-            TokenTree::Group(g) => {
-                if *in_test_depth == 0 {
-                    let line = g.span().start().line;
-                    let is_brace = g.delimiter() == Delimiter::Brace;
-                    let is_bracket = g.delimiter() == Delimiter::Bracket;
-                    let is_paren = g.delimiter() == Delimiter::Parenthesis;
-                    match g.delimiter() {
-                        Delimiter::Parenthesis => out.push(FlatToken::ParenGroup(line)),
-                        Delimiter::Brace => out.push(FlatToken::BraceGroup(line)),
-                        Delimiter::Bracket => out.push(FlatToken::BracketGroup(line)),
-                        _ => {}
-                    }
-                    // Recurse into all groups for nested calls
-                    flatten_tokens_no_test(g.stream().into_iter(), out, in_test_depth);
-                    // Emit close markers after paren, brace, and bracket groups so chain
-                    // scanners can track nesting depth and skip ';' tokens inside method
-                    // arguments (e.g. `.default_headers({ … })`,
-                    // `.resolve_to_addrs("h", &vec![v; n])`, or `vec!(addr; 2)`).
-                    if is_paren {
-                        out.push(FlatToken::ParenGroupEnd(line));
-                    }
-                    if is_brace {
-                        out.push(FlatToken::BraceGroupEnd(line));
-                    }
-                    if is_bracket {
-                        out.push(FlatToken::BracketGroupEnd(line));
-                    }
-                }
-            }
-            TokenTree::Literal(lit) => {
-                if *in_test_depth == 0 {
-                    // Preserve the literal value so zero-form detectors can inspect it
-                    // (e.g. Duration::from_secs(0) — BC-2.14.004 {PC-001} O-1 fix).
-                    out.push(FlatToken::Literal(lit.to_string(), lit.span().start().line));
-                }
+                _ => false,
             }
         }
-        i += 1;
+        _ => false,
     }
 }
 
-/// Scans a `reqwest::blocking::` path starting at cursor position `i` (the `reqwest` token)
-/// for Client/ClientBuilder timeout violations.
+// ── Builder chain analysis ─────────────────────────────────────────────────────
+
+struct ChainResult {
+    has_valid_timeout: bool,
+    line: usize,
+    constructor_name: String,
+}
+
+/// Walk a builder chain from a `.build()` call's receiver back to the base constructor.
 ///
-/// Returns `Some(new_i)` with the updated cursor position when a blocking pattern is matched
-/// (regardless of whether a finding was emitted — the `.blocking.` module segment was
-/// definitively consumed). Returns `None` when no blocking pattern matches (the caller should
-/// continue with non-blocking or fallthrough pattern matching).
+/// Returns `Some(ChainResult)` when the chain base looks like a reqwest or conservative
+/// client constructor. Returns `None` when the base is definitively non-reqwest or
+/// cannot be identified (e.g., a local variable).
 ///
-/// Token layout for the blocking path (offsets relative to `i`):
-/// ```text
-/// reqwest [i] :: [i+1,i+2] blocking [i+3] :: [i+4,i+5] <Type> [i+6]
-///   :: [i+7,i+8] new|builder [i+9] () [i+10]
-/// ```
-fn scan_reqwest_blocking_pattern(
-    flat: &[FlatToken],
-    i: usize,
-    path: &str,
-    findings: &mut Vec<String>,
-) -> Option<usize> {
-    // Require: reqwest :: blocking ::
-    if !matches_double_colon(flat, i + 1)
-        || !matches_ident(flat, i + 3, "blocking")
-        || !matches_double_colon(flat, i + 4)
-    {
-        return None;
+/// Correctly unwraps parenthesized expressions (`(expr).build()`) and block expressions
+/// (`{ expr }.build()`), eliminating KNOWN-LIMITATION 4 from the prior token scanner.
+fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
+    match expr {
+        syn::Expr::MethodCall(mc) => {
+            let method = mc.method.to_string();
+            let inner = analyze_build_chain(&mc.receiver)?;
+            if method == "timeout" {
+                // A zero-duration timeout does not satisfy BC-2.14.004 {INV-004}.
+                let is_zero = mc.args.first().map(is_zero_duration_arg).unwrap_or(false);
+                Some(ChainResult {
+                    has_valid_timeout: inner.has_valid_timeout || !is_zero,
+                    ..inner
+                })
+            } else {
+                // Other method call — pass through.
+                Some(inner)
+            }
+        }
+        syn::Expr::Call(call) => {
+            let syn::Expr::Path(p) = &*call.func else {
+                return None;
+            };
+            let seg_strings: Vec<String> = p
+                .path
+                .segments
+                .iter()
+                .map(|s| s.ident.to_string())
+                .collect();
+            let seg_refs: Vec<&str> = seg_strings.iter().map(|s| s.as_str()).collect();
+            if classify_builder_constructor(&seg_refs) == QualifierKind::NonReqwest {
+                return None;
+            }
+            let line = p
+                .path
+                .segments
+                .first()
+                .map(|s| s.ident.span().start().line)
+                .unwrap_or(0);
+            Some(ChainResult {
+                has_valid_timeout: false,
+                line,
+                constructor_name: seg_strings.join("::"),
+            })
+        }
+        // Unwrap parenthesized expressions: (reqwest::ClientBuilder::new()).build()
+        syn::Expr::Paren(p) => analyze_build_chain(&p.expr),
+        // Unwrap block tail expressions: { reqwest::ClientBuilder::new() }.build()
+        syn::Expr::Block(b) => {
+            if let Some(syn::Stmt::Expr(e, None)) = b.block.stmts.last() {
+                analyze_build_chain(e)
+            } else {
+                None
+            }
+        }
+        // Variable, path, or other expression — cannot trace to a constructor.
+        _ => None,
+    }
+}
+
+// ── Syn AST visitor ───────────────────────────────────────────────────────────
+
+fn has_cfg_test_attr(attrs: &[syn::Attribute]) -> bool {
+    attrs.iter().any(|a| {
+        a.path().is_ident("cfg")
+            && matches!(&a.meta, syn::Meta::List(l) if l.tokens.to_string().trim() == "test")
+    })
+}
+
+struct TimeoutChecker<'a> {
+    path: &'a str,
+    findings: Vec<String>,
+    in_test_context: bool,
+}
+
+impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
+    // Skip entire #[cfg(test)] modules — no timeout obligation inside them.
+    fn visit_item_mod(&mut self, node: &'ast syn::ItemMod) {
+        if !has_cfg_test_attr(&node.attrs) {
+            syn::visit::visit_item_mod(self, node);
+        }
     }
 
-    // reqwest :: blocking :: Client :: new ( ) — always a violation.
-    if matches_ident(flat, i + 6, "Client")
-        && matches_double_colon(flat, i + 7)
-        && matches_ident(flat, i + 9, "new")
-        && matches!(flat.get(i + 10), Some(FlatToken::ParenGroup(_)))
-    {
-        let line = flat[i].line();
-        findings.push(format!(
-            "{}:{}: reqwest::blocking::Client::new() without .timeout() — use build_client() (BC-2.14.004)",
-            path, line
-        ));
-        return Some(i + 11);
+    // Skip entire #[cfg(test)] impl blocks.
+    fn visit_item_impl(&mut self, node: &'ast syn::ItemImpl) {
+        if !has_cfg_test_attr(&node.attrs) {
+            syn::visit::visit_item_impl(self, node);
+        }
     }
 
-    // reqwest :: blocking :: Client :: builder ... .build() without .timeout()
-    if matches_ident(flat, i + 6, "Client")
-        && matches_double_colon(flat, i + 7)
-        && matches_ident(flat, i + 9, "builder")
-    {
-        let line = flat[i].line();
-        let chain_end = find_chain_end(flat, i);
-        if has_build_without_timeout(flat, i) {
-            findings.push(format!(
-                "{}:{}: reqwest::blocking::Client::builder() without .timeout() (BC-2.14.004)",
-                path, line
+    // Skip #[cfg(test)] functions; mark #[test] functions as test context.
+    fn visit_item_fn(&mut self, node: &'ast syn::ItemFn) {
+        if has_cfg_test_attr(&node.attrs) {
+            return;
+        }
+        let old = self.in_test_context;
+        if node.attrs.iter().any(|a| a.path().is_ident("test")) {
+            self.in_test_context = true;
+        }
+        syn::visit::visit_item_fn(self, node);
+        self.in_test_context = old;
+    }
+
+    // Skip #[cfg(test)] impl methods; mark #[test] methods as test context.
+    fn visit_impl_item_fn(&mut self, node: &'ast syn::ImplItemFn) {
+        if has_cfg_test_attr(&node.attrs) {
+            return;
+        }
+        let old = self.in_test_context;
+        if node.attrs.iter().any(|a| a.path().is_ident("test")) {
+            self.in_test_context = true;
+        }
+        syn::visit::visit_impl_item_fn(self, node);
+        self.in_test_context = old;
+    }
+
+    // Pattern A: `Client::new()` — direct Client construction is always a violation
+    // because reqwest::Client::new() provides no timeout.
+    fn visit_expr_call(&mut self, node: &'ast syn::ExprCall) {
+        if !self.in_test_context
+            && let syn::Expr::Path(p) = &*node.func
+        {
+            let seg_strings: Vec<String> = p
+                .path
+                .segments
+                .iter()
+                .map(|s| s.ident.to_string())
+                .collect();
+            let seg_refs: Vec<&str> = seg_strings.iter().map(|s| s.as_str()).collect();
+            if classify_client_new(&seg_refs) != QualifierKind::NonReqwest {
+                let line = p
+                    .path
+                    .segments
+                    .first()
+                    .map(|s| s.ident.span().start().line)
+                    .unwrap_or(0);
+                self.findings.push(format!(
+                    "{}:{}: {}() without .timeout() — use build_client() (BC-2.14.004)",
+                    self.path,
+                    line,
+                    seg_strings.join("::")
+                ));
+            }
+        }
+        // Always recurse into arguments to catch nested violations.
+        syn::visit::visit_expr_call(self, node);
+    }
+
+    // Pattern B: builder chains ending in `.build()` without a valid `.timeout()`.
+    fn visit_expr_method_call(&mut self, node: &'ast syn::ExprMethodCall) {
+        if !self.in_test_context
+            && node.method == "build"
+            && node.args.is_empty()
+            && let Some(result) = analyze_build_chain(&node.receiver)
+            && !result.has_valid_timeout
+        {
+            self.findings.push(format!(
+                "{}:{}: {}() without .timeout() (BC-2.14.004)",
+                self.path, result.line, result.constructor_name
             ));
         }
-        return Some(chain_end);
-    }
-
-    // reqwest :: blocking :: ClientBuilder :: new ... .build() without .timeout()
-    if matches_ident(flat, i + 6, "ClientBuilder")
-        && matches_double_colon(flat, i + 7)
-        && matches_ident(flat, i + 9, "new")
-    {
-        let line = flat[i].line();
-        let chain_end = find_chain_end(flat, i);
-        if has_build_without_timeout(flat, i) {
-            findings.push(format!(
-                "{}:{}: reqwest::blocking::ClientBuilder::new() without .timeout() (BC-2.14.004)",
-                path, line
-            ));
-        }
-        return Some(chain_end);
-    }
-
-    None
-}
-
-/// Scan the flat token list for timeout violations.
-///
-/// Patterns detected:
-/// 1. `reqwest :: Client :: new ( )` — always a violation
-/// 2. `Client :: new ( )` (not preceded by a definitive non-reqwest path head) — violation
-///    - `reqwest :: Client :: new ( )` is covered above (Pattern 1)
-///    - `mcp_sdk :: Client :: new ( )` is NOT a violation (definitive non-reqwest head)
-///    - `OpenAiClient :: new ( )` is NOT a violation (name is "OpenAiClient" not "Client")
-///    - `blocking :: Client :: new ( )` IS a violation (bare head — could be `use reqwest::blocking;`)
-/// 3. `ClientBuilder :: new ... .build ()` without intervening `.timeout (` — violation
-///    - `blocking :: ClientBuilder :: new ...` IS a violation (bare blocking head, conservative)
-/// 4. `Client :: builder ... .build ()` without intervening `.timeout (` — violation
-///    - `blocking :: Client :: builder ...` IS a violation (bare blocking head, conservative)
-/// 5. `reqwest::blocking::Client/ClientBuilder` patterns — detected via `scan_reqwest_blocking_pattern`
-///    (called from within the `reqwest` token block):
-///    - `reqwest :: blocking :: Client :: new ( )` — always a violation
-///    - `reqwest :: blocking :: ClientBuilder :: new ... .build ()` — violation when no `.timeout()`
-///    - `reqwest :: blocking :: Client :: builder ... .build ()` — violation when no `.timeout()`
-///
-/// Non-reqwest `Client::new()` detection (B-4 / B-5 regressions):
-/// - Flag `Client::new()` unless preceded by a `::` that names a definitive non-reqwest path head.
-///   The suppression logic performs a head-anchored check: when the token at `i-3` is `blocking`
-///   and there is a `::` at `i-5`/`i-4`, the true path head (ident at `i-6`) is inspected.
-/// - Suppressed forms: `other_sdk::Client`, `other_sdk::blocking::Client` (where `other_sdk`
-///   is a definitive non-reqwest, non-path-relative ident).
-/// - Flagged forms: `crate::Client`, `self::Client`, `super::Client`, `Self::Client`
-///   (path-relative qualifiers, not third-party crates), and `blocking::Client` (bare blocking
-///   head — could be `use reqwest::blocking; blocking::Client::new()`).
-///
-/// # Known Limitations
-///
-/// **KNOWN-LIMITATION 1 — `use`-import false positives:** Patterns 2, 3, and 4 (bare
-/// `Client::new()`, bare `ClientBuilder::new()`, bare `Client::builder()`) flag unqualified
-/// calls conservatively. If a crate uses `use some_sdk::Client;` or
-/// `use some_sdk::ClientBuilder;` and then calls `Client::new()`, `ClientBuilder::new()`,
-/// or `Client::builder()`, the scanner cannot distinguish them from their reqwest equivalents.
-/// Full fix requires tracking `use` imports at file scope (not implemented).
-///
-/// **KNOWN-LIMITATION 2 — split-statement builder chains:** A `ClientBuilder` stored in a
-/// variable and then used in a subsequent statement is not detected as a timeout violation.
-/// Example: `let b = reqwest::ClientBuilder::new(); let c = b.build()?;` would NOT be
-/// flagged because `has_build_without_timeout` terminates the chain scan at `;`. Full fix
-/// requires cross-statement binding-flow analysis (not implemented). The test
-/// `test_timeout_scanner_split_statement_false_negative_known_limitation` documents this.
-///
-/// **KNOWN-LIMITATION 3 — constant-valued zero timeout:** `.timeout(Duration::from_secs(CONST))`
-/// where `CONST` is a named constant evaluating to 0 at runtime is credited as a valid positive
-/// timeout (the literal form would be caught as Form C zero-timeout, but a constant is not a
-/// literal). Full mitigation requires const-evaluation. At present, `HTTP_CLIENT_TIMEOUT_SECS = 30`
-/// is enforced via code review; `test_timeout_scanner_constant_zero_false_negative_known_limitation`
-/// pins this accepted false-negative.
-///
-/// **KNOWN-LIMITATION 4 — parenthesized or braced base subexpression:** A parenthesized
-/// **or braced** base subexpression causes a depth-0 `ParenGroupEnd` **or `BraceGroupEnd`**
-/// to fire before the terminal `.build()`, so the violation is not reported.
-/// Example forms: `(reqwest::ClientBuilder::new()).build()` (depth-0 `ParenGroupEnd`
-/// terminator) and `{ reqwest::ClientBuilder::new() }.build()` (depth-0 `BraceGroupEnd`
-/// terminator). Pinned by:
-/// `test_timeout_scanner_parenthesized_base_subexpr_known_limitation` (paren form) and
-/// `test_timeout_scanner_braced_base_subexpr_known_limitation` (brace form)
-/// (BC-2.14.004 {PC-001}).
-fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &mut Vec<String>) {
-    let n = flat.len();
-    let mut i = 0;
-    while i < n {
-        // Pattern 1: reqwest :: Client :: new ( )
-        // Indices: [reqwest][::][Client][::][new][ParenGroup]
-        if let FlatToken::Ident(name, _) = &flat[i]
-            && name == "reqwest"
-        {
-            if matches_double_colon(flat, i + 1)
-                && matches_ident(flat, i + 3, "Client")
-                && matches_double_colon(flat, i + 4)
-                && matches_ident(flat, i + 6, "new")
-                && matches!(flat.get(i + 7), Some(FlatToken::ParenGroup(_)))
-            {
-                let line = flat[i].line();
-                findings.push(format!(
-                    "{}:{}: reqwest::Client::new() without .timeout() — use build_client() (BC-2.14.004)",
-                    path, line
-                ));
-                i += 8;
-                continue;
-            }
-            // Pattern: reqwest :: Client :: builder ... .build() without .timeout()
-            if matches_double_colon(flat, i + 1)
-                && matches_ident(flat, i + 3, "Client")
-                && matches_double_colon(flat, i + 4)
-                && matches_ident(flat, i + 6, "builder")
-            {
-                let line = flat[i].line();
-                let chain_end = find_chain_end(flat, i);
-                if has_build_without_timeout(flat, i) {
-                    findings.push(format!(
-                        "{}:{}: reqwest::Client::builder() without .timeout() (BC-2.14.004)",
-                        path, line
-                    ));
-                }
-                i = chain_end;
-                continue;
-            }
-            // Pattern: reqwest :: ClientBuilder :: new ... .build() without .timeout()
-            if matches_double_colon(flat, i + 1)
-                && matches_ident(flat, i + 3, "ClientBuilder")
-                && matches_double_colon(flat, i + 4)
-                && matches_ident(flat, i + 6, "new")
-            {
-                let line = flat[i].line();
-                let chain_end = find_chain_end(flat, i);
-                if has_build_without_timeout(flat, i) {
-                    findings.push(format!(
-                        "{}:{}: reqwest::ClientBuilder::new() without .timeout() (BC-2.14.004)",
-                        path, line
-                    ));
-                }
-                i = chain_end;
-                continue;
-            }
-            // reqwest::blocking::* patterns — extracted to keep this function within the
-            // clippy::too_many_lines threshold.
-            if let Some(new_i) = scan_reqwest_blocking_pattern(flat, i, path, findings) {
-                i = new_i;
-                continue;
-            }
-        }
-
-        // Pattern 2: bare Client :: new ( ) — but NOT if preceded by a non-reqwest qualifier
-        // The B-4 test: use reqwest::Client; ... Client::new() should be flagged
-        // The B-5 test: OpenAiClient::new() should NOT be flagged (name differs)
-        // The S-3 test: mcp_sdk::Client::new() should NOT be flagged (preceded by mcp_sdk::)
-        //
-        // Pattern 2 matches `Client::new()` with or without qualification; bare unqualified
-        // calls are flagged conservatively (KNOWN-LIMITATION 1). Suppression logic is
-        // head-anchored: see `preceded_by_non_reqwest_qualifier` for the `blocking` head check.
-        if let FlatToken::Ident(name, _) = &flat[i]
-            && name == "Client"
-            && matches_double_colon(flat, i + 1)
-            && matches_ident(flat, i + 3, "new")
-            && matches!(flat.get(i + 4), Some(FlatToken::ParenGroup(_)))
-        {
-            // De-duplication guard: prevents double-reporting of `reqwest::Client::new()`
-            // already reported by Pattern 1's reqwest block.
-            if !preceded_by_non_reqwest_qualifier(flat, i) && !preceded_by_reqwest_prefix(flat, i) {
-                let line = flat[i].line();
-                findings.push(format!(
-                    "{}:{}: Client::new() without .timeout() — use build_client() (BC-2.14.004)",
-                    path, line
-                ));
-                i += 5;
-                continue;
-            }
-        }
-
-        // Pattern 3: ClientBuilder :: new ... .build() without .timeout()
-        // (unqualified or qualified — qualified already handled above)
-        // Only flag bare ClientBuilder::new() — not mcp_sdk::ClientBuilder::new() or other
-        // non-reqwest qualifiers. Suppression logic is head-anchored: see
-        // `preceded_by_non_reqwest_qualifier` for the `blocking` head check.
-        if let FlatToken::Ident(name, _) = &flat[i]
-            && name == "ClientBuilder"
-            && matches_double_colon(flat, i + 1)
-            && matches_ident(flat, i + 3, "new")
-        {
-            // De-duplication guard: prevents double-reporting of `reqwest::ClientBuilder::new()`
-            // already reported by Pattern 1's reqwest block.
-            if !preceded_by_non_reqwest_qualifier(flat, i) && !preceded_by_reqwest_prefix(flat, i) {
-                let line = flat[i].line();
-                let chain_end = find_chain_end(flat, i);
-                if has_build_without_timeout(flat, i) {
-                    findings.push(format!(
-                        "{}:{}: ClientBuilder::new() without .timeout() (BC-2.14.004)",
-                        path, line
-                    ));
-                }
-                i = chain_end;
-                continue;
-            }
-        }
-
-        // Pattern 4: Client :: builder ... .build() without .timeout() (unqualified)
-        // Only flag bare Client::builder() — not SomeOtherClient::builder(). Suppression logic
-        // is head-anchored: see `preceded_by_non_reqwest_qualifier` for the `blocking` head check.
-        if let FlatToken::Ident(name, _) = &flat[i]
-            && name == "Client"
-            && matches_double_colon(flat, i + 1)
-            && matches_ident(flat, i + 3, "builder")
-        {
-            // De-duplication guard: prevents double-reporting of `reqwest::Client::builder()`
-            // already reported by Pattern 1's reqwest block.
-            if !preceded_by_non_reqwest_qualifier(flat, i) && !preceded_by_reqwest_prefix(flat, i) {
-                let line = flat[i].line();
-                let chain_end = find_chain_end(flat, i);
-                if has_build_without_timeout(flat, i) {
-                    findings.push(format!(
-                        "{}:{}: Client::builder() without .timeout() (BC-2.14.004)",
-                        path, line
-                    ));
-                }
-                i = chain_end;
-                continue;
-            }
-        }
-
-        i += 1;
+        // Always recurse to catch violations inside arguments and receiver chains.
+        syn::visit::visit_expr_method_call(self, node);
     }
 }
 
-/// Returns `true` when `Client`/`ClientBuilder` at position `i` in `flat` is preceded by a
-/// definitive non-reqwest, non-path-relative path qualifier (Patterns 2, 3, 4 suppression gate).
-///
-/// Performs a head-anchored check when the immediate qualifier (`flat[i-3]`) is `blocking`:
-/// - **HEAD form** (`blocking::Client::new()`, no `::` before `blocking`): returns `false`
-///   to flag conservatively — this could be `use reqwest::blocking; blocking::Client::new()`.
-/// - **INTERMEDIATE form** (`other_sdk::blocking::Client::new()`, `::` precedes `blocking`):
-///   checks the true path head at `flat[i-6]`; returns `true` only when that head is a
-///   definitive non-reqwest, non-path-relative ident.
-///
-/// For all other qualifier idents: suppress when the ident is NOT `reqwest` and NOT in
-/// `{crate, self, super, Self}`.
-fn preceded_by_non_reqwest_qualifier(flat: &[FlatToken], i: usize) -> bool {
-    if i < 3 || !matches_double_colon(flat, i - 2) {
-        return false;
-    }
-    if let FlatToken::Ident(prev, _) = &flat[i - 3] {
-        if prev == "blocking" {
-            // Head-anchored check for the `blocking` qualifier.
-            if i >= 6 && matches_double_colon(flat, i - 5) {
-                // `blocking` is an intermediate segment; true head is at i-6.
-                if let FlatToken::Ident(head, _) = &flat[i - 6] {
-                    return head != "reqwest"
-                        && !matches!(head.as_str(), "crate" | "self" | "super" | "Self");
-                }
-            }
-            // `blocking` is the path head — flag conservatively.
-            false
-        } else {
-            prev != "reqwest" && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
-        }
-    } else {
-        false
-    }
-}
+// ── Zero literal normalisation ────────────────────────────────────────────────
 
-/// Returns `true` when `Client`/`ClientBuilder` at position `i` is immediately preceded by a
-/// `reqwest ::` path prefix. Used as a de-duplication guard in Patterns 2–4 to prevent
-/// double-reporting of calls already handled by Pattern 1's `reqwest` block.
-fn preceded_by_reqwest_prefix(flat: &[FlatToken], i: usize) -> bool {
-    i >= 3 && matches_double_colon(flat, i - 2) && matches_ident(flat, i - 3, "reqwest")
-}
-
-/// Returns true if `flat[idx]` and `flat[idx+1]` are both `:` punctuation (double colon).
-fn matches_double_colon(flat: &[FlatToken], idx: usize) -> bool {
-    matches!(flat.get(idx), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(idx + 1), Some(FlatToken::Punct(':', _)))
-}
-
-/// Returns true if `flat[idx]` is an Ident with the given name.
-fn matches_ident(flat: &[FlatToken], idx: usize, name: &str) -> bool {
-    matches!(flat.get(idx), Some(FlatToken::Ident(n, _)) if n == name)
-}
-
-/// Returns the index just past the base call's [`FlatToken::ParenGroup`] if one is
-/// immediately present after the ident path (e.g., `new()` or `builder()`), or just
-/// past the ident path itself if no `ParenGroup` follows (function-reference form,
-/// e.g., `new` without call parens).
+/// Returns `true` when a literal string representation is numerically zero.
 ///
-/// This is a conservative hint used by callers to advance the outer scan cursor past
-/// the base call without scanning ahead into unrelated tokens.  The return value
-/// intentionally does not span the full chain — callers use [`has_build_without_timeout`]
-/// to scan the full chain from `start`.
-///
-/// Scanning advances through consecutive [`FlatToken::Ident`] and
-/// [`FlatToken::Punct`]`(':')` tokens to consume the ident path (e.g.
-/// `reqwest :: ClientBuilder :: new`), then stops at the first token that is neither
-/// an `Ident` nor a `':'`.  If that token is a [`FlatToken::ParenGroup`], it is the
-/// base call's argument list and is consumed; if it is anything else (`;`, `.`,
-/// a brace/bracket group, etc.), the function returns without advancing further.
-///
-/// This ensures that a function-reference base call (no call parens) does **not**
-/// advance the cursor past the enclosing statement boundary or into a following
-/// statement's [`FlatToken::ParenGroup`] (F-P20-HIGH-001 fix).
-fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
-    let n = flat.len();
-    let mut i = start;
-    // Advance past the base-call ident path: sequences of Ident and Punct(':').
-    // Stops at the first token that is neither an Ident nor a ':'.
-    while i < n {
-        match &flat[i] {
-            FlatToken::Ident(_, _) | FlatToken::Punct(':', _) => {
-                i += 1;
-            }
-            _ => break,
-        }
-    }
-    // If the very next token is a ParenGroup (the base call's argument list, e.g. `new()`),
-    // advance past it.  If not present (function-reference form with no call parens), return
-    // the current position without scanning ahead into unrelated tokens.
-    if matches!(flat.get(i), Some(FlatToken::ParenGroup(_))) {
-        i += 1;
-    }
-    i
-}
-
-/// Check if a chain from `start` calls `.build()` without a prior valid `.timeout()`.
-///
-/// Scans forward from `start` in the full `flat` list, stopping at the first top-level
-/// `;` (a statement boundary at all depths zero).
-///
-/// **Terminates at the first `.build()` encountered at nesting depth zero.**
-/// `.build()` calls at depth > 0 (inside method arguments) are attributed to inner
-/// builders and ignored. This prevents cross-chain verdict leakage: a compliant second
-/// chain in a `match` arm cannot credit an uncompliant first chain's `.build()`.
-///
-/// Both `.timeout()` crediting and `.build()` recognition are depth-gated: tokens
-/// inside nested paren/brace/bracket groups (depth > 0) are attributed to inner
-/// builders and not credited to the outer chain. A `.timeout()` call belonging to
-/// a nested inner builder (e.g. inside a `.proxy(make_proxy(…))` argument) is
-/// therefore NOT credited to the outer chain.
-///
-/// Brace-typed method arguments (e.g. `.default_headers({...})`),
-/// bracket-typed method arguments (e.g. `.resolve_to_addrs("host", &vec![addr; 2])`), and
-/// paren-typed method arguments (e.g. `.resolve_to_addrs("host", &vec!(addr; 2))`)
-/// are transparent: `BraceGroup`/`BraceGroupEnd`, `BracketGroup`/`BracketGroupEnd`,
-/// and `ParenGroup`/`ParenGroupEnd` depth counters suppress `;` tokens inside those
-/// argument bodies from terminating the scan prematurely (a `vec![v; n]` or
-/// `vec!(v; n)` array-repeat expression contains a `;` that must not be treated as
-/// a statement boundary).
-///
-/// **`*GroupEnd` at depth-0 terminates the scan** (F-P20-HIGH-002 fix).  When a
-/// `ParenGroupEnd`, `BraceGroupEnd`, or `BracketGroupEnd` token arrives while the
-/// corresponding depth counter is already 0, the scan breaks immediately — the chain
-/// has exited its enclosing group.  This prevents the scanner from escaping into an
-/// outer context and claiming the outer chain's `.build()` as belonging to an inner
-/// nested builder that has no `.build()` of its own.  A `*GroupEnd` at depth-0 means
-/// the scan has exited a group that was opened before `start`, which is treated as
-/// chain-end.  Unlike `;`, this can fire before a terminal `.build()` in
-/// explicitly-grouped base subexpressions — see KNOWN-LIMITATION 4.
-///
-/// Returns `true` if `.build()` is present at depth zero and no valid `.timeout(d)` where
-/// `d > Duration::ZERO` precedes it. `.timeout(Duration::ZERO)` is treated as
-/// absent (BC-2.14.004 {PC-001}, {INV-004}).
-fn has_build_without_timeout(flat: &[FlatToken], start: usize) -> bool {
-    let n = flat.len();
-    let mut found_timeout_before_build = false;
-    // Track brace nesting so that ';' tokens inside brace-typed method arguments
-    // (e.g. `.default_headers({ let mut h = Header::new(); h })`) do NOT terminate
-    // the chain scan.  Each `BraceGroup` marker increments the depth; the matching
-    // `BraceGroupEnd` marker decrements it.
-    let mut brace_depth = 0u32;
-    // Track bracket nesting so that ';' tokens inside bracket-typed method arguments
-    // (e.g. `&vec![addr; 2]` — the array-repeat ';' inside the bracket group) do NOT
-    // terminate the chain scan.
-    let mut bracket_depth = 0u32;
-    // Track paren nesting so that ';' tokens inside paren-typed method arguments
-    // (e.g. `&vec!(addr; 2)` — the array-repeat ';' inside the paren group) do NOT
-    // terminate the chain scan.  A ';' is a chain terminator only when ALL three
-    // depths are zero (top-level statement boundary).
-    let mut paren_depth = 0u32;
-    let mut i = start;
-    while i < n {
-        match &flat[i] {
-            FlatToken::BraceGroup(_) => brace_depth += 1,
-            FlatToken::BraceGroupEnd(_) => {
-                if brace_depth == 0 {
-                    break; // exited the chain's own brace group — stop scanning
-                }
-                brace_depth -= 1;
-            }
-            FlatToken::BracketGroup(_) => bracket_depth += 1,
-            FlatToken::BracketGroupEnd(_) => {
-                if bracket_depth == 0 {
-                    break; // exited the chain's own bracket group — stop scanning
-                }
-                bracket_depth -= 1;
-            }
-            FlatToken::ParenGroup(_) => paren_depth += 1,
-            FlatToken::ParenGroupEnd(_) => {
-                if paren_depth == 0 {
-                    break; // exited the chain's own paren group — stop scanning
-                }
-                paren_depth -= 1;
-            }
-            FlatToken::Punct(c, _) if *c == ';' => {
-                if brace_depth == 0 && bracket_depth == 0 && paren_depth == 0 {
-                    break; // top-level statement boundary — terminate scan
-                }
-                // Inner ';' inside a brace, bracket, or paren argument — do not break.
-            }
-            FlatToken::Punct(c, _) if *c == '.' => {
-                if let Some(FlatToken::Ident(name, _)) = flat.get(i + 1) {
-                    if name == "timeout" {
-                        if brace_depth == 0 && bracket_depth == 0 && paren_depth == 0 {
-                            // Only credit a timeout at top-level depth (depth 0).
-                            // A .timeout() inside a nested paren/brace/bracket argument
-                            // (depth > 0) belongs to an inner builder and must NOT be
-                            // credited to the outer chain (F-P19-HIGH-001 depth-asymmetry fix).
-                            if !is_zero_duration_timeout_arg(flat, i) {
-                                found_timeout_before_build = true;
-                            }
-                        }
-                    } else if name == "build"
-                        && matches!(flat.get(i + 2), Some(FlatToken::ParenGroup(_)))
-                    {
-                        // At nesting depth zero: this is the chain's terminal .build() call.
-                        // Terminate immediately — a compliant chain later in the same
-                        // statement (e.g. a match arm) must NOT credit this chain's build.
-                        if brace_depth == 0 && bracket_depth == 0 && paren_depth == 0 {
-                            return !found_timeout_before_build;
-                        }
-                        // At depth > 0: this .build() belongs to an inner builder
-                        // (e.g. inside a closure or method argument) — ignore it.
-                    }
-                }
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    // No .build() was encountered at depth zero — not a violation.
-    false
-}
-
-/// Returns `true` if the literal string `s` represents the value zero under Rust literal
-/// normalisation:
-///
-/// 1. Strip underscore separators (`0_u64` → `"0u64"`, `0_0` → `"00"`).
-/// 2. Strip a trailing integer or float type suffix (`u8`, `u16`, `u32`, `u64`, `u128`,
-///    `usize`, `i8`, `i16`, `i32`, `i64`, `i128`, `isize`, `f32`, `f64`) from the end.
-///    Longest-suffix-first to avoid stripping `u32` from `u128` prematurely.
-/// 3. Parse by detected radix:
-///    - `0x…` / `0X…` → hex integer; zero iff all post-prefix digits are `'0'`
-///    - `0b…` / `0B…` → binary integer; zero iff all post-prefix digits are `'0'`
-///    - `0o…` / `0O…` → octal integer; zero iff all post-prefix digits are `'0'`
-///    - contains `'.'`, `'e'`, or `'E'` → parse as `f64`, check `== 0.0`
-///    - otherwise → parse as decimal `u128`, check `== 0`
-///
-/// Handles: `0`, `00`, `0_0`, `0x0`, `0x00`, `0b0`, `0b00`, `0o0`, `0o00`,
-/// `0.0`, `0.00`, `0.`, `0f64`, `0f32`, `0.0f64`, `0.0f32`, `0e0`, `0.0e0`,
-/// and their underscore-separated variants.
+/// Handles: underscore separators (`0_u64`), type suffixes (`0f64`), hex (`0x0`),
+/// binary (`0b0`), octal (`0o0`), float (`0.0`, `0e0`, `0.`), and leading minus
+/// (negative-zero forms like `-0.0`). All are recognised as zero.
 fn is_zero_literal(s: &str) -> bool {
-    // Handle negative-zero forms: "-0.0", "-0.", "-0", "-0e0", etc. (all mathematically zero).
-    // These arise when proc_macro2 emits the literal part of a negative literal separately
-    // (the `-` is a `Punct` token, not part of the literal string), but callers may also
-    // pass the combined form directly.  Stripping a leading `-` and checking the remainder
-    // is sufficient because negative zero equals positive zero in every numeric type.
+    // Handle negative-zero forms: "-0.0", "-0.", "-0", "-0e0", etc.
     let s = s.strip_prefix('-').unwrap_or(s);
 
     // Step 1: strip underscore separators.
@@ -872,163 +562,6 @@ fn is_zero_literal(s: &str) -> bool {
         // Decimal integer form.
         stripped.parse::<u128>().map(|v| v == 0).unwrap_or(false)
     }
-}
-
-/// Returns `true` if the `.timeout(...)` call at `timeout_idx` uses a zero duration
-/// as its argument (BC-2.14.004 {PC-001}/{INV-004}).
-///
-/// `flatten_tokens_no_test` pushes a `ParenGroup` marker then inlines the paren
-/// group's contents immediately after it. Detected forms:
-///
-/// **Form A — short constant `Duration::ZERO`** (offsets +3..+6):
-/// ```text
-/// +2  ParenGroup
-/// +3  Ident("Duration")
-/// +4  Punct(':')  +5  Punct(':')
-/// +6  Ident("ZERO")
-/// ```
-///
-/// **Form B — fully-qualified `std::time::Duration::ZERO` / `core::time::Duration::ZERO`**
-/// (offsets +3..+12):
-/// ```text
-/// +2  ParenGroup
-/// +3  Ident("std"|"core")
-/// +4  Punct(':')  +5  Punct(':')
-/// +6  Ident("time")
-/// +7  Punct(':')  +8  Punct(':')
-/// +9  Ident("Duration")
-/// +10 Punct(':')  +11 Punct(':')
-/// +12 Ident("ZERO")
-/// ```
-///
-/// **Form C — zero-literal constructor `Duration::from_secs(0)` / `from_millis(0)` /
-/// `from_nanos(0)` / `from_secs_f64(0.0)` / `from_micros(0)` / `from_secs_f32(0.0)`**
-/// (offsets +3..+8):
-/// ```text
-/// +2  ParenGroup       (outer paren marker)
-/// +3  Ident("Duration")
-/// +4  Punct(':')  +5  Punct(':')
-/// +6  Ident("from_secs"|"from_millis"|"from_nanos"|"from_secs_f64"|"from_micros"|"from_secs_f32")
-/// +7  ParenGroup       (inner paren marker for constructor args)
-/// +8  Literal(<any zero literal per is_zero_literal normalisation>)
-/// ```
-///
-/// The `is_zero_literal` function applies a three-step normalisation: strip underscores,
-/// strip type suffix, then parse by radix (hex `0x…`, binary `0b…`, octal `0o…`, float
-/// with `'.'`/`'e'`/`'E'`, or decimal integer). This covers `00`, `0.00`, `0x00`, `0e0`,
-/// `0.0e0`, `0_u64`, etc. without an enumerated allowlist.
-///
-/// **Form D — fully-qualified zero-literal constructor `std::time::Duration::from_secs(0)` /
-/// `core::time::Duration::from_millis(0)` etc.** (offsets +3..+13):
-/// ```text
-/// +2  ParenGroup       (outer paren marker)
-/// +3  Ident("std"|"core")
-/// +4  Punct(':')  +5  Punct(':')
-/// +6  Ident("time")
-/// +7  Punct(':')  +8  Punct(':')
-/// +9  Ident("Duration")
-/// +10 Punct(':')  +11 Punct(':')
-/// +12 Ident("from_secs"|"from_millis"|...)
-/// +13 ParenGroup       (inner paren marker for constructor args)
-/// +14 Literal("0"|...)
-/// ```
-///
-/// Forms A–D are all detected by first optionally consuming the `std :: time ::` or
-/// `core :: time ::` qualifier prefix (4 tokens), then applying the Duration::ZERO and
-/// Duration::from_*(0) checks at the resulting offset.
-fn is_zero_duration_timeout_arg(flat: &[FlatToken], timeout_idx: usize) -> bool {
-    if !matches!(flat.get(timeout_idx + 2), Some(FlatToken::ParenGroup(_))) {
-        return false;
-    }
-
-    // Detect and skip an optional `std :: time ::` or `core :: time ::` qualifier prefix.
-    // If present, the prefix occupies 4 tokens: Ident("std"|"core"), ':', ':', Ident("time"),
-    // followed by another ':', ':' before "Duration". We check for the qualifier pattern and
-    // set `dur_offset` to where "Duration" appears.
-    let base = timeout_idx + 3; // first token inside the outer paren group
-    let dur_offset = if matches!(flat.get(base), Some(FlatToken::Ident(n, _)) if n == "std" || n == "core")
-        && matches!(flat.get(base + 1), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(base + 2), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(base + 3), Some(FlatToken::Ident(n, _)) if n == "time")
-        && matches!(flat.get(base + 4), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(base + 5), Some(FlatToken::Punct(':', _)))
-    {
-        // Qualifier found — Duration starts at base + 6
-        base + 6
-    } else {
-        // No qualifier — Duration starts at base
-        base
-    };
-
-    // Form A / Form B-ZERO: Duration :: ZERO
-    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
-        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if n == "ZERO")
-    {
-        return true;
-    }
-
-    // Form C / Form D: Duration :: from_secs|from_millis|... ( zero_literal )
-    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
-        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if matches!(
-            n.as_str(),
-            "from_secs" | "from_millis" | "from_nanos" | "from_secs_f64"
-                | "from_micros" | "from_secs_f32"
-        ))
-        && matches!(flat.get(dur_offset + 4), Some(FlatToken::ParenGroup(_)))
-    {
-        // Check the first inlined argument is a zero literal.
-        // Handle normal zero: `from_secs(0)` — literal at dur_offset+5.
-        if let Some(FlatToken::Literal(s, _)) = flat.get(dur_offset + 5)
-            && is_zero_literal(s)
-        {
-            return true;
-        }
-        // Handle negative zero: `from_secs(-0.0)` — the `-` is a separate Punct token
-        // at dur_offset+5, and the literal is at dur_offset+6 (F-P8-L01 fix).
-        if matches!(flat.get(dur_offset + 5), Some(FlatToken::Punct('-', _)))
-            && let Some(FlatToken::Literal(s, _)) = flat.get(dur_offset + 6)
-            && is_zero_literal(s)
-        {
-            return true;
-        }
-    }
-
-    // Form E: Duration :: new ( zero_secs , zero_nanos )
-    // `Duration::new(0, 0)` is zero; `Duration::new(30, 0)` is NOT zero.
-    // Both secs and nanos must be zero literals (F-P8-M01 fix).
-    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
-        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if n == "new")
-        && matches!(flat.get(dur_offset + 4), Some(FlatToken::ParenGroup(_)))
-    {
-        // Flat layout after ParenGroup: Literal(secs), Punct(','), Literal(nanos)
-        if let Some(FlatToken::Literal(secs_s, _)) = flat.get(dur_offset + 5)
-            && matches!(flat.get(dur_offset + 6), Some(FlatToken::Punct(',', _)))
-            && let Some(FlatToken::Literal(nanos_s, _)) = flat.get(dur_offset + 7)
-            && is_zero_literal(secs_s)
-            && is_zero_literal(nanos_s)
-        {
-            return true;
-        }
-    }
-
-    // Form F: Duration :: default ()
-    // `Duration::default()` is always Duration::ZERO (F-P8-M01 fix).
-    if matches!(flat.get(dur_offset), Some(FlatToken::Ident(n, _)) if n == "Duration")
-        && matches!(flat.get(dur_offset + 1), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 2), Some(FlatToken::Punct(':', _)))
-        && matches!(flat.get(dur_offset + 3), Some(FlatToken::Ident(n, _)) if n == "default")
-        && matches!(flat.get(dur_offset + 4), Some(FlatToken::ParenGroup(_)))
-    {
-        return true;
-    }
-
-    false
 }
 
 #[cfg(test)]
@@ -1261,8 +794,8 @@ pub fn build_client() -> reqwest::Client {
 
     /// F-P8-L01 — BC-2.14.004 {PC-001}/{INV-004}: `from_secs_f64(-0.0)` must be flagged.
     ///
-    /// `-0.0` lexes as `Punct('-')` + `Literal("0.0")`. The scanner must handle the
-    /// case where the literal position is offset by one due to the preceding `-` sign.
+    /// `-0.0` parses as `Unary(Neg, Lit(0.0))` in the syn AST. The scanner must handle
+    /// the case where the literal is wrapped in a unary negation.
     #[test]
     fn test_bc_2_14_004_flags_timeout_from_secs_f64_negative_zero() {
         let src = r#"pub fn f() -> reqwest::Client {
@@ -1408,24 +941,17 @@ pub fn build_client() -> reqwest::Client {
 
     // ── Depth-asymmetry false-negative regression tests ──────────────────────
     //
-    // Fix-burst-20 made `.build()` recognition depth-aware (only the depth-0
-    // `.build()` terminates the outer chain scan) but left `.timeout()` crediting
-    // depth-blind.  If a *nested inner* builder (inside a paren/brace/bracket
-    // argument) calls `.timeout()`, that credit is wrongly attributed to the
-    // *outer* chain, causing the outer chain's missing `.timeout()` to go
-    // unreported.  Tests 1 and 2 pin this false-negative; Test 3 pins the
-    // complementary true-negative (outer with depth-0 `.timeout()` must not be
-    // falsely flagged after the depth-aware fix).
+    // The syn AST visitor naturally handles depth correctly: each `.build()` call is
+    // analyzed by walking its own receiver chain. A nested inner builder inside an
+    // argument is a separate subexpression tree and does not affect the outer chain.
 
     /// Depth-asymmetry false-negative — paren-nested inner builder.
     ///
     /// Outer chain has no `.timeout()`.  Inner chain (inside `.proxy(make_proxy(…))`)
-    /// has `.timeout()`.  Under the bug, `has_build_without_timeout` credits the
-    /// inner timeout to the outer chain and returns `false` (no violation).
-    /// After the fix the credit is rejected (inner timeout is at paren depth > 0)
-    /// and the outer chain is correctly flagged.
+    /// has `.timeout()`.  The syn visitor must not credit the inner timeout to the
+    /// outer chain; each chain is analyzed independently.
     ///
-    /// FAILS before fix, PASSES after fix.
+    /// Expected: outer chain is flagged (at least 1 finding).
     #[test]
     fn test_timeout_scanner_nested_inner_builder_in_paren_outer_missing_timeout_is_flagged() {
         let src = r#"
@@ -1453,11 +979,10 @@ pub fn build_client() -> reqwest::Client {
     /// Depth-asymmetry false-negative — brace-nested inner builder.
     ///
     /// Outer chain has no `.timeout()`.  Inner chain inside a brace-group argument
-    /// (`.default_headers({{ … }})`) has `.timeout()`.  Under the bug the inner
-    /// timeout (at brace depth > 0) is wrongly credited to the outer chain.
-    /// After the fix the credit is rejected and the outer chain is correctly flagged.
+    /// (`.default_headers({{ … }})`) has `.timeout()`.  The syn visitor must not credit
+    /// the inner timeout to the outer chain.
     ///
-    /// FAILS before fix, PASSES after fix.
+    /// Expected: outer chain is flagged (at least 1 finding).
     #[test]
     fn test_timeout_scanner_nested_inner_builder_in_brace_outer_missing_timeout_is_flagged() {
         let src = r#"
@@ -1484,64 +1009,56 @@ pub fn build_client() -> reqwest::Client {
     }
 
     /// Depth-asymmetry stability test — outer depth-0 `.timeout()` is still credited
-    /// after the depth-aware fix.
+    /// after the syn rewrite.
     ///
-    /// Outer chain has `.timeout()` at depth 0 (before any paren/brace nesting).
-    /// Inner chain inside `.proxy(make_proxy(…))` has NO `.timeout()`.
-    /// `has_build_without_timeout` is called directly here so that the inner
-    /// chain's independent non-compliance does not pollute the outer-chain verdict.
+    /// Outer chain: compliant — `.timeout(30s)` at depth 0 before `.build()`.
+    /// Inner chain inside `.proxy(make_proxy(…))`: `reqwest::ClientBuilder::new().build()`
+    /// with no `.timeout()`.
     ///
-    /// Expected: `has_build_without_timeout` returns `false` (outer is compliant).
-    /// The depth-aware fix must not accidentally un-credit depth-0 `.timeout()` calls.
-    ///
-    /// PASSES both before and after fix (no regression introduced by the fix).
+    /// Expected: exactly 1 finding — only the inner non-compliant chain is flagged.
+    /// The outer compliant chain must NOT produce an additional finding.
     #[test]
     fn test_timeout_scanner_outer_has_depth_zero_timeout_inner_missing_is_not_flagged() {
-        // Source contains only the builder expression (no fn wrapper) so that
-        // flat[0] is the outer `reqwest` token and start = 0 is correct.
+        // Outer chain: compliant (.timeout(30s) + .build()).
+        // Inner chain: reqwest::ClientBuilder::new().build() — no timeout, has .build().
+        // Expected: exactly 1 finding (inner chain); outer chain must not produce a finding.
         let src = r#"
-            reqwest::ClientBuilder::new()
-                .timeout(std::time::Duration::from_secs(30))
-                .proxy(make_proxy(
-                    reqwest::ClientBuilder::new()
-                        .build()
-                        .unwrap()
-                ))
-                .build()
-                .unwrap()
+            fn f() {
+                reqwest::ClientBuilder::new()
+                    .timeout(std::time::Duration::from_secs(30))
+                    .proxy(make_proxy(
+                        reqwest::ClientBuilder::new()
+                            .build()
+                            .unwrap()
+                    ))
+                    .build()
+                    .unwrap();
+            }
         "#;
-        let ts: proc_macro2::TokenStream = src.parse().unwrap();
-        let mut flat = Vec::new();
-        super::flatten_tokens_no_test(ts.into_iter(), &mut flat, &mut 0u32);
-        assert!(
-            !super::has_build_without_timeout(&flat, 0),
-            "outer chain with depth-0 .timeout() should NOT be flagged regardless of inner \
-             builder state; depth-aware fix must not un-credit a valid depth-0 timeout"
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "outer chain with depth-0 .timeout() must not produce an additional finding; \
+             inner chain without .timeout() must produce exactly 1 finding; got: {findings:?}"
         );
     }
 
-    // ── F-P20-HIGH-001: find_chain_end over-advance on function-reference base call ──
-    //
-    // When a base call appears as a function reference (no call parens), find_chain_end
-    // scans past the function-reference token and consumes the first ParenGroup it finds
-    // anywhere in the flat stream — which may belong to a completely different statement's
-    // base call.  The outer scanner then sets i = chain_end, skipping that second statement
-    // entirely.  The following test pins this false-negative.
+    // ── F-P20-HIGH-001: function-reference base call ──────────────────────────
 
-    /// F-P20-HIGH-001 regression — function-reference base call must not consume a
-    /// following statement's ParenGroup.
+    /// F-P20-HIGH-001 regression — function-reference base call must not suppress
+    /// detection of a following statement's violation.
     ///
-    /// `reqwest::ClientBuilder::new` without call parens is a function reference.
-    /// `find_chain_end` must NOT advance past the semicolon boundary and consume the
-    /// `ParenGroup` of the immediately-following `reqwest::Client::builder()` call.
-    /// The `Client::builder()` chain that follows has no `.timeout()` and must be flagged.
+    /// `reqwest::ClientBuilder::new` without call parens is a function reference
+    /// (an `ExprPath` in the syn AST, not an `ExprCall`). The syn visitor processes
+    /// each statement independently so the following `Client::builder().build()` is
+    /// not skipped.
     ///
-    /// FAILS before fix (false-negative: second chain is silently skipped).
-    /// PASSES after fix (second chain is correctly flagged).
+    /// Expected: `Client::builder().build()` with no `.timeout()` is flagged.
     #[test]
     fn test_timeout_scanner_function_reference_does_not_skip_following_violation() {
         // reqwest::ClientBuilder::new without call-parens is a function reference.
-        // find_chain_end must NOT consume the following statement's ParenGroup.
+        // The syn visitor must not confuse it with a call or skip the following statement.
         // The Client::builder() chain that follows has no .timeout() → must be flagged.
         let src = r#"
             fn a() {
@@ -1560,15 +1077,6 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    // ── F-P20-HIGH-002: saturating_sub on GroupEnd at depth-0 escapes chain boundary ──
-    //
-    // When has_build_without_timeout is called on a nested inner builder that has no
-    // .build() of its own, the saturating_sub on ParenGroupEnd tokens that arrive while
-    // paren_depth is already 0 keeps the depth at 0 instead of signalling "we have left
-    // the inner builder's enclosing paren group".  The scan therefore escapes the inner
-    // chain's enclosing group and claims the OUTER chain's .build() as the inner chain's
-    // .build(), producing a false-positive violation on the inner builder.
-
     /// F-P20-HIGH-002 regression — inner builder with no .build() must not produce a
     /// false-positive by claiming the outer chain's .build().
     ///
@@ -1578,9 +1086,6 @@ pub fn build_client() -> reqwest::Client {
     /// BC-2.14.004 {PC-001} only requires `.timeout()` BEFORE `.build()`; an inner builder
     /// with no `.build()` has no timeout obligation.
     /// Expected: ZERO findings (no false positive on the inner builder).
-    ///
-    /// FAILS before fix (false-positive: inner builder incorrectly flagged).
-    /// PASSES after fix (inner builder correctly not flagged).
     #[test]
     fn test_timeout_scanner_nested_inner_builder_no_build_does_not_false_positive() {
         // Outer chain: compliant (.timeout(30s) + .build()).
@@ -1613,11 +1118,6 @@ pub fn build_client() -> reqwest::Client {
     /// Outer chain: NON-compliant (no `.timeout()`, has `.build()`).
     /// Inner chain inside `.proxy(make_proxy(…))`: has `.timeout()` but no `.build()`.
     /// The outer chain must be flagged regardless of the inner builder's timeout.
-    /// This guards against a fix for F-P20-HIGH-002 accidentally suppressing outer-chain
-    /// violation detection.
-    ///
-    /// PASSES both before and after fix (outer violation is detected via the existing
-    /// depth-aware .timeout() crediting from fix-burst-19 / F-P19-HIGH-001).
     #[test]
     fn test_timeout_scanner_outer_missing_timeout_with_nested_inner_is_flagged() {
         // Outer chain: NON-compliant (no .timeout(), has .build()).
@@ -1663,16 +1163,17 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P21-MED-002 — KNOWN-LIMITATION 4: parenthesized base subexpression is a known
-    /// false negative.
+    /// Parenthesized base subexpression is now correctly detected (KNOWN-LIMITATION 4
+    /// eliminated by the syn AST visitor).
     ///
     /// A parenthesized base subexpression — `(reqwest::ClientBuilder::new()).build()` —
-    /// causes a depth-0 `ParenGroupEnd` to fire before the terminal `.build()`, so the
-    /// violation is not reported.  This test pins the accepted false-negative behavior.
+    /// is represented as `ExprMethodCall { receiver: ExprParen { .. }, method: "build" }`.
+    /// The syn visitor unwraps `ExprParen` when walking the chain, so the violation is
+    /// correctly detected.
     #[test]
     fn test_timeout_scanner_parenthesized_base_subexpr_known_limitation() {
-        // KNOWN-LIMITATION 4: parenthesized base subexpression causes depth-0 ParenGroupEnd
-        // to fire before terminal .build(), so the violation is not reported.
+        // KL-4 eliminated: the syn AST visitor unwraps ExprParen when analyzing the chain.
+        // (reqwest::ClientBuilder::new()).build() is now correctly flagged.
         let src = r#"
             fn f() {
                 let c = (reqwest::ClientBuilder::new()).build().unwrap();
@@ -1680,9 +1181,9 @@ pub fn build_client() -> reqwest::Client {
         "#;
         let findings = scan_for_timeout_violations_in_source(src, "f.rs");
         assert!(
-            findings.is_empty(),
-            "KNOWN-LIMITATION 4: parenthesized base subexpression is a known false negative; \
-             if this test fails, the limitation has been fixed and this test should be updated"
+            !findings.is_empty(),
+            "parenthesized base subexpression (reqwest::ClientBuilder::new()).build() \
+             must be flagged (KNOWN-LIMITATION 4 eliminated by syn AST visitor); got: {findings:?}"
         );
     }
 
@@ -1750,16 +1251,16 @@ pub fn build_client() -> reqwest::Client {
         );
     }
 
-    /// F-P22-LOW-006 — KNOWN-LIMITATION 4 braced form: braced base subexpression is a known
-    /// false negative.
+    /// Braced base subexpression is now correctly detected (KNOWN-LIMITATION 4
+    /// eliminated by the syn AST visitor).
     ///
-    /// `{ reqwest::ClientBuilder::new() }.build()` causes a depth-0 `BraceGroupEnd` to fire
-    /// before the terminal `.build()`, so the violation is not reported. This test pins the
-    /// accepted false-negative behavior for the braced form alongside the parenthesized form.
+    /// `{ reqwest::ClientBuilder::new() }.build()` is represented as
+    /// `ExprMethodCall { receiver: ExprBlock { stmts: [Expr(ExprCall, None)] }, method: "build" }`.
+    /// The syn visitor unwraps the block's tail expression, so the violation is correctly detected.
     #[test]
     fn test_timeout_scanner_braced_base_subexpr_known_limitation() {
-        // KNOWN-LIMITATION 4: braced base subexpression — { reqwest::ClientBuilder::new() }.build()
-        // The depth-0 BraceGroupEnd fires before the terminal .build(), so the violation is not reported.
+        // KL-4 eliminated: the syn AST visitor unwraps the block tail expression.
+        // { reqwest::ClientBuilder::new() }.build() is now correctly flagged.
         let src = r#"
             fn f() {
                 let c = { reqwest::ClientBuilder::new() }.build().unwrap();
@@ -1767,9 +1268,9 @@ pub fn build_client() -> reqwest::Client {
         "#;
         let findings = scan_for_timeout_violations_in_source(src, "f.rs");
         assert!(
-            findings.is_empty(),
-            "KNOWN-LIMITATION 4: braced base subexpression is a known false negative; \
-             if this test fails, the limitation has been fixed and this test should be updated"
+            !findings.is_empty(),
+            "braced base subexpression {{ reqwest::ClientBuilder::new() }}.build() \
+             must be flagged (KNOWN-LIMITATION 4 eliminated by syn AST visitor); got: {findings:?}"
         );
     }
 
